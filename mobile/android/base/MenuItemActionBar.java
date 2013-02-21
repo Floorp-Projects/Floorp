@@ -29,11 +29,6 @@ public class MenuItemActionBar extends ImageButton
     }
 
     @Override
-    public View getLayout() {
-        return this;
-    }
-
-    @Override
     public void setIcon(Drawable icon) {
         if (icon != null) {
             setImageDrawable(icon);

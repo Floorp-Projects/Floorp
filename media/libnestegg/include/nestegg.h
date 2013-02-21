@@ -319,11 +319,20 @@ int nestegg_packet_count(nestegg_packet * packet, unsigned int * count);
 int nestegg_packet_data(nestegg_packet * packet, unsigned int item,
                         unsigned char ** data, size_t * length);
 
-/**
- * Query the presence of cues.
- * @retval 0 The media has no cues.
- * @retval 1 The media has cues. */
+/** Query the presence of cues.
+    @param context  Stream context initialized by #nestegg_init.
+    @retval 0 The media has no cues.
+    @retval 1 The media has cues. */
 int nestegg_has_cues(nestegg * context);
+
+/**
+ * Try to determine if the buffer looks like the beginning of a WebM file.
+ *
+ * @param buffer A buffer containing the beginning of a media file.
+ * @param length The size of the buffer.
+ * @retval 0 The file is not a WebM file.
+ * @retval 1 The file is a WebM file. */
+int nestegg_sniff(unsigned char const * buffer, size_t length);
 
 #ifdef __cplusplus
 }

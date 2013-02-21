@@ -349,7 +349,7 @@ def parse_manifest(root, path, fileobj=None):
     if not fileobj:
         fileobj = open(path)
     linenum = 0
-    for line in fileobj.readlines():
+    for line in fileobj:
         linenum += 1
         with errors.context(path, linenum):
             e = parse_manifest_line(base, line)

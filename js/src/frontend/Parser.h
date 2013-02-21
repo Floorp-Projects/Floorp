@@ -291,7 +291,7 @@ struct Parser : private AutoGCRooter
      * cx->tempLifoAlloc.
      */
     ObjectBox *newObjectBox(JSObject *obj);
-
+    ModuleBox *newModuleBox(Module *module, ParseContext *pc);
     FunctionBox *newFunctionBox(JSFunction *fun, ParseContext *pc, bool strict);
 
     /*
@@ -374,6 +374,7 @@ struct Parser : private AutoGCRooter
      * Some parsers have two versions:  an always-inlined version (with an 'i'
      * suffix) and a never-inlined version (with an 'n' suffix).
      */
+    ParseNode *moduleDecl();
     ParseNode *functionStmt();
     ParseNode *functionExpr();
     ParseNode *statements(bool *hasFunctionStmt = NULL);

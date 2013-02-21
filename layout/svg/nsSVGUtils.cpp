@@ -800,7 +800,7 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
       // GetCanvasTM().
       overflowRect = overflowRect + aFrame->GetPosition();
     }
-    uint32_t appUnitsPerDevPx = aFrame->PresContext()->AppUnitsPerDevPixel();
+    int32_t appUnitsPerDevPx = aFrame->PresContext()->AppUnitsPerDevPixel();
     gfxMatrix tm = GetCanvasTM(aFrame, nsISVGChildFrame::FOR_PAINTING);
     if (aFrame->IsFrameOfType(nsIFrame::eSVG | nsIFrame::eSVGContainer)) {
       gfxMatrix childrenOnlyTM;

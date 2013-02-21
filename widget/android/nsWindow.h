@@ -10,10 +10,7 @@
 #include "gfxPoint.h"
 #include "nsIIdleServiceInternal.h"
 #include "nsTArray.h"
-
-#ifdef MOZ_ANDROID_OMTC
 #include "AndroidJavaWrappers.h"
-#endif
 
 class gfxASurface;
 
@@ -145,7 +142,6 @@ public:
 
     NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent);
 
-#ifdef MOZ_ANDROID_OMTC
     virtual bool NeedsPaint();
     virtual void DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect);
     virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect);
@@ -159,7 +155,6 @@ public:
     static float ComputeRenderIntegrity();
 
     virtual bool WidgetPaintsBackground();
-#endif
 
 protected:
     void BringToFront();
@@ -229,14 +224,12 @@ private:
     void HandleSpecialKey(mozilla::AndroidGeckoEvent *ae);
     void RedrawAll();
 
-#ifdef MOZ_ANDROID_OMTC
     mozilla::AndroidLayerRendererFrame mLayerRendererFrame;
 
     static nsRefPtr<mozilla::layers::LayerManager> sLayerManager;
     static nsRefPtr<mozilla::layers::CompositorParent> sCompositorParent;
     static nsRefPtr<mozilla::layers::CompositorChild> sCompositorChild;
     static bool sCompositorPaused;
-#endif
 };
 
 #endif /* NSWINDOW_H_ */

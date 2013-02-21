@@ -12,7 +12,6 @@
 
 interface SVGAnimatedString;
 
-[PrefControlled]
 interface SVGElement : Element {
            attribute DOMString id;
 /*           [SetterThrows]

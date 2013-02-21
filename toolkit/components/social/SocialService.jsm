@@ -281,6 +281,8 @@ function SocialProvider(input) {
 
   this.name = input.name;
   this.iconURL = input.iconURL;
+  this.icon32URL = input.icon32URL;
+  this.icon64URL = input.icon64URL;
   this.workerURL = input.workerURL;
   this.sidebarURL = input.sidebarURL;
   this.origin = input.origin;

@@ -1,0 +1,152 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+
+import android.app.Activity;
+import android.content.SharedPreferences;
+import android.util.Log;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.ClassLoader;
+import java.lang.reflect.Method;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+/**
+ * Tests distribution customization.
+ * mock-package.zip should contain the following directory structure:
+ *
+ *   distribution/
+ *     preferences.json
+ *     bookmarks.json
+ */
+public class testDistribution extends ContentProviderTest {
+    private static final String MOCK_PACKAGE = "mock-package.zip";
+
+    // Test distribution values stored in preferences.json
+    private static final String TEST_DIST_ID = "test-partner";
+    private static final String TEST_DIST_ABOUT = "Test Partner";
+    private static final int TEST_DIST_VERSION = 1;
+
+    private Activity mActivity;
+
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
+    public void testDistribution() {
+        try {
+            JSONArray getPrefData = new JSONArray();
+            getPrefData.put("distribution.id");
+            getPrefData.put("distribution.about");
+            getPrefData.put("distribution.version");
+
+            JSONObject message = new JSONObject();
+            message.put("requestId", "testDistribution");
+            message.put("preferences", getPrefData);
+
+            Actions.RepeatedEventExpecter eventExpecter = mActions.expectGeckoEvent("Preferences:Data");
+            mActions.sendGeckoEvent("Preferences:Get", message.toString());
+
+            JSONObject data = null;
+            String requestId = "";
+
+            // Wait until we get the correct "Preferences:Data" event
+            while (!requestId.equals("testDistribution")) {
+                data = new JSONObject(eventExpecter.blockForEventData());
+                requestId = data.getString("requestId");
+            }
+
+            mAsserter.is(requestId, "testDistribution", "check requestId");
+
+            JSONArray preferences = data.getJSONArray("preferences");
+            for (int i = 0; i < preferences.length(); i++) {
+                JSONObject pref = (JSONObject) preferences.get(i);
+                String name = pref.getString("name");
+
+                if (name.equals("distribution.id")) {
+                    mAsserter.is(pref.getString("value"), TEST_DIST_ID, "check distribution.id");
+                } else if (name.equals("distribution.about")) {
+                    mAsserter.is(pref.getString("value"), TEST_DIST_ABOUT, "check distribution.about");
+                } else if (name.equals("distribution.version")) {
+                    mAsserter.is(pref.getInt("value"), TEST_DIST_VERSION, "check distribution.version");
+                }
+            }
+
+        } catch (JSONException e) {
+            mAsserter.ok(false, "exception getting preferences", e.toString());
+        }
+    }
+
+    // Copies the mock package to the data directory and returns the file path to it.
+    private String getMockPackagePath() throws IOException {
+        InputStream inStream = getAsset(MOCK_PACKAGE);
+        File dataDir = new File(mActivity.getApplicationInfo().dataDir);
+        File outFile = new File(dataDir, MOCK_PACKAGE);
+
+        OutputStream outStream = new FileOutputStream(outFile);
+        int b;
+        while ((b = inStream.read()) != -1) {
+            outStream.write(b);
+        }
+        inStream.close();
+        outStream.close();
+
+        return outFile.getPath();
+    }
+
+    // Clears the distribution pref to return distribution state to STATE_UNKNOWN
+    private void clearDistributionPref() {
+        SharedPreferences settings = mActivity.getSharedPreferences("GeckoApp", Activity.MODE_PRIVATE);
+        String keyName = mActivity.getPackageName() + ".distribution_state";
+        settings.edit().remove(keyName).commit();
+    }
+
+    public void setUp() throws Exception {
+        // TODO: Set up the content provider after setting the distribution.
+        super.setUp("@ANDROID_PACKAGE_NAME@.db.BrowserProvider", "AUTHORITY");
+
+        mActivity = getActivity();
+
+        // Clear the distribution pref in case Distribution.init has already run
+        clearDistributionPref();
+
+        // Call Distribution.init with the mock package.
+        ClassLoader classLoader = mActivity.getClassLoader();
+        Class distributionClass = classLoader.loadClass("org.mozilla.gecko.Distribution");
+        Class contextClass = classLoader.loadClass("android.content.Context");
+        Method init = distributionClass.getMethod("init", contextClass, String.class);
+
+        Actions.EventExpecter eventExpecter = mActions.expectGeckoEvent("Distribution:Set:OK");
+        init.invoke(null, mActivity, getMockPackagePath());
+        eventExpecter.blockForEvent();
+    }
+
+    public void tearDown() throws Exception {
+        File dataDir = new File(mActivity.getApplicationInfo().dataDir);
+
+        // Delete mock package from data directory.
+        File mockPackage = new File(dataDir, MOCK_PACKAGE);
+        mAsserter.ok(mockPackage.delete(), "clean up mock package", "deleted " + mockPackage.getPath());
+
+        // Delete distribution files that Distribution.init copied to data directory.
+        File distDir = new File(dataDir, "distribution");
+        File[] files = distDir.listFiles();
+        for (File f : files) {
+            mAsserter.ok(f.delete(), "clean up distribution files", "deleted " + f.getPath());
+        }
+        mAsserter.ok(distDir.delete(), "clean up distribution directory", "deleted distribution directory");
+
+        clearDistributionPref();
+
+        super.tearDown();
+    }
+}

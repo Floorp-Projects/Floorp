@@ -28,11 +28,12 @@ addLoadEvent(runTest);
 var gMisspeltWords;
 
 function getEditor() {
-  const Ci = Components.interfaces;
-  var editingSession = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIWebNavigation)
-                             .QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIEditingSession);
+  const Ci = SpecialPowers.Ci;
+  var editingSession = SpecialPowers.wrap(window)
+                                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                                    .getInterface(Ci.nsIWebNavigation)
+                                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                                    .getInterface(Ci.nsIEditingSession);
   return editingSession.getEditorForWindow(window);
 }
 
@@ -68,8 +69,6 @@ function runTest() {
 }
 
 function isSpellingCheckOk() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   var sel = getSpellCheckSelection();
   var numWords = sel.rangeCount;
 

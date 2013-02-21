@@ -245,7 +245,7 @@
       <item name="android:layout_centerHorizontal">true</item>
       <item name="android:layout_alignParentTop">true</item>
       <item name="android:src">@drawable/abouthome_thumbnail_bg</item>
-      <item name="android:background">#5FFF</item>
+      <item name="android:background">@color/abouthome_thumbnail_bg</item>
       <item name="android:paddingTop">0dip</item>
       <item name="android:paddingBottom">@dimen/abouthome_icon_radius</item>
       <item name="android:paddingLeft">0dip</item>

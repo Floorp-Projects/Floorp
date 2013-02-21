@@ -10,6 +10,7 @@
 #include "nsString.h"
 #include "nsMimeTypes.h"
 #include "mozilla/ModuleUtils.h"
+#include "nestegg/nestegg.h"
 
 #include "nsIClassInfoImpl.h"
 #include <algorithm>
@@ -26,8 +27,6 @@ nsMediaSniffer::nsMediaSnifferEntry nsMediaSniffer::sSnifferEntries[] = {
   PATTERN_ENTRY("\xFF\xFF\xFF\xFF\xFF", "OggS", APPLICATION_OGG),
   // The string RIFF, followed by four bytes, followed by the string WAVE
   PATTERN_ENTRY("\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF", "RIFF\x00\x00\x00\x00WAVE", AUDIO_WAV),
-  // WebM
-  PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "\x1A\x45\xDF\xA3", VIDEO_WEBM),
   // mp3 with ID3 tags, the string "ID3".
   PATTERN_ENTRY("\xFF\xFF\xFF", "ID3", AUDIO_MP3)
 };
@@ -65,6 +64,11 @@ static bool MatchesMP4(const uint8_t* aData, const uint32_t aLength)
     }
   }
   return false;
+}
+
+static bool MatchesWebM(const uint8_t* aData, const uint32_t aLength)
+{
+  return nestegg_sniff((uint8_t*)aData, aLength) ? true : false;
 }
 
 NS_IMETHODIMP
@@ -109,6 +113,11 @@ nsMediaSniffer::GetMIMETypeFromContent(nsIRequest* aRequest,
 
   if (MatchesMP4(aData, clampedLength)) {
     aSniffedType.AssignLiteral(VIDEO_MP4);
+    return NS_OK;
+  }
+
+  if (MatchesWebM(aData, clampedLength)) {
+    aSniffedType.AssignLiteral(VIDEO_WEBM);
     return NS_OK;
   }
 

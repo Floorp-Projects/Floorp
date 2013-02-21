@@ -64,7 +64,7 @@ gfxGDIShaper::ShapeText(gfxContext      *aContext,
         aShapedText->GetCharacterGlyphs();
     uint32_t i;
     int32_t lastWidth = 0;
-    uint32_t appUnitsPerDevPixel = aShapedText->GetAppUnitsPerDevUnit();
+    int32_t appUnitsPerDevPixel = aShapedText->GetAppUnitsPerDevUnit();
     for (i = 0; i < length; ++i) {
         uint32_t offset = aOffset + i;
         int32_t advancePixels = partialWidthArray[i] - lastWidth;

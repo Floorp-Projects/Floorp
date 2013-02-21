@@ -428,4 +428,8 @@ test-pref(layout.css.flexbox.enabled,true) load 798235-1.html
 test-pref(layout.css.flexbox.enabled,true) load 799207-1.html
 asserts(12) test-pref(layout.css.flexbox.enabled,true) load 799207-2.html
 test-pref(layout.css.flexbox.enabled,true) load 804089-1.xhtml
+test-pref(layout.css.flexbox.enabled,true) load 812822-1.html
+asserts(1) test-pref(layout.css.flexbox.enabled,true) load 824297-1.html # bug 399262
+asserts(1) test-pref(layout.css.flexbox.enabled,true) load 826532-1.html # bug 399262
+test-pref(layout.css.flexbox.enabled,true) load 827168-1.html
 load 842132-1.html

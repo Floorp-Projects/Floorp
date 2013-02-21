@@ -290,19 +290,32 @@ TypeInferenceOracle::inArrayIsPacked(UnrootedScript script, jsbytecode *pc)
 bool
 TypeInferenceOracle::elementReadIsDenseNative(RawScript script, jsbytecode *pc)
 {
-    return elementAccessIsDenseNative(script->analysis()->poppedTypes(pc, 1),
-                                     script->analysis()->poppedTypes(pc, 0));
+    // Check whether the object is a dense array and index is int32 or double.
+    StackTypeSet *obj = script->analysis()->poppedTypes(pc, 1);
+    StackTypeSet *id = script->analysis()->poppedTypes(pc, 0);
+
+    JSValueType idType = id->getKnownTypeTag();
+    if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
+        return false;
+
+    Class *clasp = obj->getKnownClass();
+    return clasp && clasp->isNative();
 }
 
 bool
 TypeInferenceOracle::elementReadIsTypedArray(RawScript script, jsbytecode *pc, int *arrayType)
 {
-    if (!elementAccessIsTypedArray(script->analysis()->poppedTypes(pc, 1),
-                                   script->analysis()->poppedTypes(pc, 0),
-                                   arrayType))
-    {
+    // Check whether the object is a typed array and index is int32 or double.
+    StackTypeSet *obj = script->analysis()->poppedTypes(pc, 1);
+    StackTypeSet *id = DropUnrooted(script)->analysis()->poppedTypes(pc, 0);
+
+    JSValueType idType = id->getKnownTypeTag();
+    if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
         return false;
-    }
+
+    *arrayType = obj->getTypedArrayType();
+    if (*arrayType == TypedArray::TYPE_MAX)
+        return false;
 
     JS_ASSERT(*arrayType >= 0 && *arrayType < TypedArray::TYPE_MAX);
 
@@ -369,13 +382,15 @@ TypeInferenceOracle::elementReadIsPacked(UnrootedScript script, jsbytecode *pc)
 }
 
 void
-TypeInferenceOracle::elementReadGeneric(UnrootedScript script, jsbytecode *pc, bool *cacheable, bool *monitorResult)
+TypeInferenceOracle::elementReadGeneric(UnrootedScript script, jsbytecode *pc, bool *cacheable, bool *monitorResult, bool *intIndex)
 {
     MIRType obj = getMIRType(script->analysis()->poppedTypes(pc, 1));
     MIRType id = getMIRType(script->analysis()->poppedTypes(pc, 0));
 
     *cacheable = (obj == MIRType_Object &&
                   (id == MIRType_Value || id == MIRType_Int32 || id == MIRType_String));
+
+    *intIndex = id == MIRType_Int32;
 
     // Turn off cacheing if the element is int32 and we've seen non-native objects as the target
     // of this getelem.
@@ -391,13 +406,14 @@ TypeInferenceOracle::elementReadGeneric(UnrootedScript script, jsbytecode *pc, b
 bool
 TypeInferenceOracle::elementWriteIsDenseNative(HandleScript script, jsbytecode *pc)
 {
-    return elementAccessIsDenseNative(script->analysis()->poppedTypes(pc, 2),
+    return elementWriteIsDenseNative(script->analysis()->poppedTypes(pc, 2),
                                      script->analysis()->poppedTypes(pc, 1));
 }
 
 bool
-TypeInferenceOracle::elementAccessIsDenseNative(StackTypeSet *obj, StackTypeSet *id)
+TypeInferenceOracle::elementWriteIsDenseNative(StackTypeSet *obj, StackTypeSet *id)
 {
+    // Check whether the object is a dense array and index is int32 or double.
     JSValueType idType = id->getKnownTypeTag();
     if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
         return false;
@@ -412,16 +428,15 @@ TypeInferenceOracle::elementAccessIsDenseNative(StackTypeSet *obj, StackTypeSet 
 bool
 TypeInferenceOracle::elementWriteIsTypedArray(RawScript script, jsbytecode *pc, int *arrayType)
 {
-    return elementAccessIsTypedArray(script->analysis()->poppedTypes(pc, 2),
-                                     script->analysis()->poppedTypes(pc, 1),
-                                     arrayType);
+    return elementWriteIsTypedArray(script->analysis()->poppedTypes(pc, 2),
+                                    script->analysis()->poppedTypes(pc, 1),
+                                    arrayType);
 }
 
 bool
-TypeInferenceOracle::elementAccessIsTypedArray(StackTypeSet *obj, StackTypeSet *id, int *arrayType)
+TypeInferenceOracle::elementWriteIsTypedArray(StackTypeSet *obj, StackTypeSet *id, int *arrayType)
 {
     // Check whether the object is a typed array and index is int32 or double.
-
     JSValueType idType = id->getKnownTypeTag();
     if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
         return false;

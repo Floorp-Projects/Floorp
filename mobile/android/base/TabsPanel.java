@@ -296,6 +296,9 @@ public class TabsPanel extends LinearLayout
     }
 
     public void show(Panel panel) {
+        if (!isShown())
+            setVisibility(View.VISIBLE);
+
         if (mPanel != null) {
             // Hide the old panel.
             mPanel.hide();

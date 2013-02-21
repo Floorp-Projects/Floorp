@@ -438,7 +438,8 @@ BrowserGlue.prototype = {
   },
 
   _trackSlowStartup: function () {
-    if (Services.prefs.getBoolPref("browser.slowStartup.notificationDisabled"))
+    if (Services.startup.interrupted ||
+        Services.prefs.getBoolPref("browser.slowStartup.notificationDisabled"))
       return;
 
     let currentTime = Date.now() - Services.startup.getStartupInfo().process;

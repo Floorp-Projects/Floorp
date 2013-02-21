@@ -3,20 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsAlertsService_h__
-#define nsAlertsService_h__
+#ifndef nsSystemAlertsService_h__
+#define nsSystemAlertsService_h__
 
 #include "nsIAlertsService.h"
 #include "nsCOMPtr.h"
 
-class nsAlertsService : public nsIAlertsService
+class nsSystemAlertsService : public nsIAlertsService
 {
 public:
   NS_DECL_NSIALERTSSERVICE
   NS_DECL_ISUPPORTS
 
-  nsAlertsService();
-  virtual ~nsAlertsService();
+  nsSystemAlertsService();
+  virtual ~nsSystemAlertsService();
 
   nsresult Init();
 
@@ -24,4 +24,4 @@ protected:
 
 };
 
-#endif /* nsAlertsService_h__ */
+#endif /* nsSystemAlertsService_h__ */

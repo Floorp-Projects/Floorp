@@ -31,6 +31,7 @@ MediaEngineWebRTCVideoSource::FrameSizeChange(
 {
   mWidth = w;
   mHeight = h;
+  LOG(("Video FrameSizeChange: %ux%u", w, h));
   return 0;
 }
 
@@ -82,7 +83,8 @@ MediaEngineWebRTCVideoSource::DeliverFrame(
 
 #ifdef DEBUG
   static uint32_t frame_num = 0;
-  LOGFRAME(("frame %d; timestamp %u, render_time %lu", frame_num++, time_stamp, render_time));
+  LOGFRAME(("frame %d (%dx%d); timestamp %u, render_time %lu", frame_num++,
+            mWidth, mHeight, time_stamp, render_time));
 #endif
 
   // we don't touch anything in 'this' until here (except for snapshot,
@@ -178,6 +180,7 @@ MediaEngineWebRTCVideoSource::ChooseCapability(uint32_t aWidth, uint32_t aHeight
       }
     }
   }
+  LOG(("chose cap %dx%d @%dfps", mOpts.mWidth, mOpts.mHeight, mOpts.mMaxFPS));
   mCapabilityChosen = true;
 }
 

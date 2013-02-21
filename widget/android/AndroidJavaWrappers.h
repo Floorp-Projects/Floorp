@@ -283,47 +283,6 @@ public:
     static jfieldID jDisplayportResolution;
 };
 
-class AndroidGeckoSurfaceView : public WrappedJavaObject
-{
-public:
-    static void InitGeckoSurfaceViewClass(JNIEnv *jEnv);
-
-    AndroidGeckoSurfaceView() { }
-    AndroidGeckoSurfaceView(jobject jobj) {
-        Init(jobj);
-    }
-
-    void Init(jobject jobj);
-
-    enum {
-        DRAW_ERROR = 0,
-        DRAW_GLES_2 = 1,
-        DRAW_2D = 2,
-        DRAW_DISABLED = 3
-    };
-
-    int BeginDrawing();
-    jobject GetSoftwareDrawBitmap(AutoLocalJNIFrame *jniFrame);
-    jobject GetSoftwareDrawBuffer(AutoLocalJNIFrame *jniFrame);
-    void EndDrawing();
-    void Draw2D(jobject bitmap, int width, int height);
-    void Draw2D(jobject buffer, int stride);
-
-    jobject GetSurface(AutoLocalJNIFrame *jniFrame);
-    jobject GetSurfaceHolder(AutoLocalJNIFrame *jniFrame);
-
-protected:
-    static jclass jGeckoSurfaceViewClass;
-    static jmethodID jBeginDrawingMethod;
-    static jmethodID jEndDrawingMethod;
-    static jmethodID jDraw2DBitmapMethod;
-    static jmethodID jDraw2DBufferMethod;
-    static jmethodID jGetSoftwareDrawBitmapMethod;
-    static jmethodID jGetSoftwareDrawBufferMethod;
-    static jmethodID jGetSurfaceMethod;
-    static jmethodID jGetHolderMethod;
-};
-
 class AndroidKeyEvent
 {
 public:

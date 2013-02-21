@@ -29,6 +29,7 @@ CPPSRCS = \
   Compatibility.cpp \
   EnumVariant.cpp \
   Platform.cpp \
+  ServiceProvider.cpp \
   RootAccessibleWrap.cpp \
   TextLeafAccessibleWrap.cpp \
   $(NULL)

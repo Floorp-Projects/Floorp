@@ -252,6 +252,13 @@ protected:
     // to an int number of intervals.
     int numElapsedIntervals = static_cast<int>((aNowTime - mTargetTime) / mRateDuration);
 
+    if (numElapsedIntervals < 0) {
+      // It's possible that numElapsedIntervals is negative (e.g. timer compensation
+      // may result in (aNowTime - mTargetTime) < -1.0/mRateDuration, which will result in
+      // negative numElapsedIntervals), so make sure we don't target the same timestamp.
+      numElapsedIntervals = 0;
+    }
+
     // the last "tick" that may or may not have been actually sent was
     // at this time.  For example, if the rate is 15ms, the target
     // time is 200ms, and it's now 225ms, the last effective tick

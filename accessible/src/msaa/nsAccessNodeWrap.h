@@ -53,8 +53,7 @@ namespace a11y {
 #pragma GCC diagnostic ignored "-Woverloaded-virtual"
 #endif
 
-class nsAccessNodeWrap : public nsAccessNode,
-                         public IServiceProvider
+class nsAccessNodeWrap : public nsAccessNode
 {
   public:
     NS_DECL_ISUPPORTS_INHERITED
@@ -62,15 +61,6 @@ class nsAccessNodeWrap : public nsAccessNode,
 public: // construction, destruction
   nsAccessNodeWrap(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~nsAccessNodeWrap();
-
-  // IUnknown
-  virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID aIID,
-                                                   void** aInstancePtr);
-
-  // IServiceProvider
-  virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID aGuidService,
-                                                 REFIID aIID,
-                                                 void** aInstancePtr);
 
     static int FilterA11yExceptions(unsigned int aCode, EXCEPTION_POINTERS *aExceptionInfo);
 

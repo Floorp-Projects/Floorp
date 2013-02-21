@@ -516,6 +516,19 @@ class CGHeaders(CGWrapper):
         callForEachType(descriptors + callbackDescriptors, dictionaries,
                         callbacks, addHeadersForType)
 
+        # Now for non-callback descriptors make sure we include any
+        # headers needed by Func declarations.
+        for desc in descriptors:
+            if desc.interface.isExternal():
+                continue
+            for m in desc.interface.members:
+                func = PropertyDefiner.getStringAttr(m, "Func")
+                # Include the right class header, which we can only do
+                # if this is a class member function.
+                if func is not None and "::" in func:
+                    # Strip out the function name and convert "::" to "/"
+                    bindingHeaders.add("/".join(func.split("::")[:-1]) + ".h")
+
         declareIncludes = set(declareIncludes)
         for d in dictionaries:
             if d.parent:
@@ -670,10 +683,16 @@ class Argument():
     """
     A class for outputting the type and name of an argument
     """
-    def __init__(self, argType, name):
+    def __init__(self, argType, name, default=None):
         self.argType = argType
         self.name = name
-    def __str__(self):
+        self.default = default
+    def declare(self):
+        string = self.argType + ' ' + self.name
+        if self.default is not None:
+            string += " = " + self.default
+        return string
+    def define(self):
         return self.argType + ' ' + self.name
 
 class CGAbstractMethod(CGThing):
@@ -712,8 +731,8 @@ class CGAbstractMethod(CGThing):
         self.alwaysInline = alwaysInline
         self.static = static
         self.templateArgs = templateArgs
-    def _argstring(self):
-        return ', '.join([str(a) for a in self.args])
+    def _argstring(self, declare):
+        return ', '.join([a.declare() if declare else a.define() for a in self.args])
     def _template(self):
         if self.templateArgs is None:
             return ''
@@ -731,15 +750,15 @@ class CGAbstractMethod(CGThing):
         return ' '.join(decorators) + maybeNewline
     def declare(self):
         if self.inline:
-            return self._define()
-        return "%s%s%s(%s);\n" % (self._template(), self._decorators(), self.name, self._argstring())
-    def _define(self):
-        return self.definition_prologue() + "\n" + self.definition_body() + self.definition_epilogue()
+            return self._define(True)
+        return "%s%s%s(%s);\n" % (self._template(), self._decorators(), self.name, self._argstring(True))
+    def _define(self, fromDeclare=False):
+        return self.definition_prologue(fromDeclare) + "\n" + self.definition_body() + self.definition_epilogue()
     def define(self):
         return "" if self.inline else self._define()
-    def definition_prologue(self):
+    def definition_prologue(self, fromDeclare):
         return "%s%s%s(%s)\n{" % (self._template(), self._decorators(),
-                                  self.name, self._argstring())
+                                  self.name, self._argstring(fromDeclare))
     def definition_epilogue(self):
         return "\n}\n"
     def definition_body(self):
@@ -993,6 +1012,27 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
 def isChromeOnly(m):
     return m.getExtendedAttribute("ChromeOnly")
 
+class MemberCondition:
+    """
+    An object representing the condition for a member to actually be
+    exposed.  Either pref or func or both can be None.  If not None,
+    they should be strings that have the pref name or function name.
+    """
+    def __init__(self, pref, func):
+        assert pref is None or isinstance(pref, str)
+        assert func is None or isinstance(func, str)
+        self.pref = pref
+        if func is None:
+            self.func = "nullptr"
+        else:
+            self.func = "&" + func
+
+    def __eq__(self, other):
+        return self.pref == other.pref and self.func == other.func
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 class PropertyDefiner:
     """
     A common superclass for defining things on prototype objects.
@@ -1036,17 +1076,24 @@ class PropertyDefiner:
         return str
 
     @staticmethod
-    def getControllingPref(interfaceMember):
-        prefName = interfaceMember.getExtendedAttribute("Pref")
-        if prefName is None:
+    def getStringAttr(member, name):
+        attr = member.getExtendedAttribute(name)
+        if attr is None:
             return None
         # It's a list of strings
-        assert(len(prefName) is 1)
-        assert(prefName[0] is not None)
-        return prefName[0]
+        assert(len(attr) is 1)
+        assert(attr[0] is not None)
+        return attr[0]
+
+    @staticmethod
+    def getControllingCondition(interfaceMember):
+        return MemberCondition(PropertyDefiner.getStringAttr(interfaceMember,
+                                                             "Pref"),
+                               PropertyDefiner.getStringAttr(interfaceMember,
+                                                             "Func"))
 
     def generatePrefableArray(self, array, name, specTemplate, specTerminator,
-                              specType, getPref, getDataTuple, doIdArrays):
+                              specType, getCondition, getDataTuple, doIdArrays):
         """
         This method generates our various arrays.
 
@@ -1061,8 +1108,8 @@ class PropertyDefiner:
 
         specType is the actual typename of our spec
 
-        getPref is a callback function that takes an array entry and returns
-          the corresponding pref value.
+        getCondition is a callback function that takes an array entry and
+          returns the corresponding MemberCondition.
 
         getDataTuple is a callback function that takes an array entry and
           returns a tuple suitable for substitution into specTemplate.
@@ -1075,34 +1122,35 @@ class PropertyDefiner:
         # pref control is added to members while still allowing us to define all
         # the members in the smallest number of JSAPI calls.
         assert(len(array) is not 0)
-        lastPref = getPref(array[0]) # So we won't put a specTerminator
-                                     # at the very front of the list.
+        lastCondition = getCondition(array[0]) # So we won't put a specTerminator
+                                               # at the very front of the list.
         specs = []
         prefableSpecs = []
 
-        prefableTemplate = '  { true, &%s[%d] }'
+        prefableTemplate = '  { true, %s, &%s[%d] }'
         prefCacheTemplate = '&%s[%d].enabled'
-        def switchToPref(props, pref):
+        def switchToCondition(props, condition):
             # Remember the info about where our pref-controlled
             # booleans live.
-            if pref is not None:
+            if condition.pref is not None:
                 props.prefCacheData.append(
-                    (pref, prefCacheTemplate % (name, len(prefableSpecs)))
+                    (condition.pref,
+                     prefCacheTemplate % (name, len(prefableSpecs)))
                     )
             # Set up pointers to the new sets of specs inside prefableSpecs
             prefableSpecs.append(prefableTemplate %
-                                 (name + "_specs", len(specs)))
+                                 (condition.func, name + "_specs", len(specs)))
 
-        switchToPref(self, lastPref)
+        switchToCondition(self, lastCondition)
 
         for member in array:
-            curPref = getPref(member)
-            if lastPref != curPref:
+            curCondition = getCondition(member)
+            if lastCondition != curCondition:
                 # Terminate previous list
                 specs.append(specTerminator)
                 # And switch to our new pref
-                switchToPref(self, curPref)
-                lastPref = curPref
+                switchToCondition(self, curCondition)
+                lastCondition = curCondition
             # And the actual spec
             specs.append(specTemplate % getDataTuple(member))
         specs.append(specTerminator)
@@ -1156,7 +1204,7 @@ class MethodDefiner(PropertyDefiner):
                        "methodInfo": not m.isStatic(),
                        "length": methodLength(m),
                        "flags": "JSPROP_ENUMERATE",
-                       "pref": PropertyDefiner.getControllingPref(m) }
+                       "condition": PropertyDefiner.getControllingCondition(m) }
             if isChromeOnly(m):
                 self.chrome.append(method)
             else:
@@ -1169,7 +1217,7 @@ class MethodDefiner(PropertyDefiner):
                                  "nativeName": "JS_ArrayIterator",
                                  "length": 0,
                                  "flags": "JSPROP_ENUMERATE",
-                                 "pref": None })
+                                 "condition": MemberCondition(None, None) })
 
         if (not descriptor.interface.parent and not static and
             descriptor.nativeOwnership == 'nsisupports' and
@@ -1178,7 +1226,7 @@ class MethodDefiner(PropertyDefiner):
                                 "methodInfo": False,
                                 "length": 1,
                                 "flags": "0",
-                                "pref": None })
+                                "condition": MemberCondition(None, None) })
 
         if not static:
             stringifier = descriptor.operations['Stringifier']
@@ -1187,7 +1235,7 @@ class MethodDefiner(PropertyDefiner):
                                  "nativeName": stringifier.identifier.name,
                                  "length": 0,
                                  "flags": "JSPROP_ENUMERATE",
-                                 "pref": PropertyDefiner.getControllingPref(stringifier) }
+                                 "condition": PropertyDefiner.getControllingCondition(stringifier) }
                 if isChromeOnly(stringifier):
                     self.chrome.append(toStringDesc)
                 else:
@@ -1206,8 +1254,8 @@ class MethodDefiner(PropertyDefiner):
         if len(array) == 0:
             return ""
 
-        def pref(m):
-            return m["pref"]
+        def condition(m):
+            return m["condition"]
 
         def specData(m):
             accessor = m.get("nativeName", m["name"])
@@ -1223,7 +1271,7 @@ class MethodDefiner(PropertyDefiner):
             '  JS_FNINFO("%s", %s, %s, %s, %s)',
             '  JS_FS_END',
             'JSFunctionSpec',
-            pref, specData, doIdArrays)
+            condition, specData, doIdArrays)
 
 class AttrDefiner(PropertyDefiner):
     def __init__(self, descriptor, name, static, unforgeable=False):
@@ -1298,7 +1346,7 @@ class AttrDefiner(PropertyDefiner):
             '  { "%s", 0, %s, %s, %s}',
             '  { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }',
             'JSPropertySpec',
-            PropertyDefiner.getControllingPref, specData, doIdArrays)
+            PropertyDefiner.getControllingCondition, specData, doIdArrays)
 
 class ConstDefiner(PropertyDefiner):
     """
@@ -1324,7 +1372,7 @@ class ConstDefiner(PropertyDefiner):
             '  { "%s", %s }',
             '  { 0, JSVAL_VOID }',
             'ConstantSpec',
-            PropertyDefiner.getControllingPref, specData, doIdArrays)
+            PropertyDefiner.getControllingCondition, specData, doIdArrays)
 
 class PropertyArrays():
     def __init__(self, descriptor):
@@ -3686,6 +3734,7 @@ class CGCallGenerator(CGThing):
 
         if isFallible:
             self.cgRoot.prepend(CGGeneric("ErrorResult rv;"))
+            self.cgRoot.append(CGGeneric("rv.WouldReportJSException();"));
             self.cgRoot.append(CGGeneric("if (rv.Failed()) {"))
             self.cgRoot.append(CGIndenter(errorReport))
             self.cgRoot.append(CGGeneric("}"))
@@ -5186,7 +5235,7 @@ class ClassMethod(ClassItem):
     def declare(self, cgClass):
         templateClause = 'template <%s>\n' % ', '.join(self.templateArgs) \
                          if self.bodyInHeader and self.templateArgs else ''
-        args = ', '.join([str(a) for a in self.args])
+        args = ', '.join([a.declare() for a in self.args])
         if self.bodyInHeader:
             body = CGIndenter(CGGeneric(self.getBody())).define()
             body = '\n{\n' + body + '\n}'
@@ -5222,7 +5271,7 @@ class ClassMethod(ClassItem):
         else:
             templateClause = ''
 
-        args = ', '.join([str(a) for a in self.args])
+        args = ', '.join([a.define() for a in self.args])
 
         body = CGIndenter(CGGeneric(self.getBody())).define()
 
@@ -5300,7 +5349,7 @@ class ClassConstructor(ClassItem):
         return self.body
 
     def declare(self, cgClass):
-        args = ', '.join([str(a) for a in self.args])
+        args = ', '.join([a.declare() for a in self.args])
         if self.bodyInHeader:
             body = '  ' + self.getBody();
             body = stripTrailingWhitespace(body.replace('\n', '\n  '))
@@ -5494,7 +5543,7 @@ class CGClass(CGThing):
     def declare(self):
         result = ''
         if self.templateArgs:
-            templateArgs = [str(a) for a in self.templateArgs]
+            templateArgs = [a.declare() for a in self.templateArgs]
             templateArgs = templateArgs[len(self.templateSpecialization):]
             result = result + self.indent + 'template <%s>\n' \
                      % ','.join([str(a) for a in templateArgs])
@@ -7702,11 +7751,16 @@ class CGCallback(CGClass):
         argnames = [arg.name for arg in args]
         argnamesWithThis = ["s.GetContext()", "thisObjJS"] + argnames
         argnamesWithoutThis = ["s.GetContext()", "nullptr"] + argnames
+        # Now that we've recorded the argnames for our call to our private
+        # method, insert our optional argument for deciding whether the
+        # CallSetup should re-throw exceptions on aRv.
+        args.append(Argument("ExceptionHandling", "aExceptionHandling",
+                             "eReportExceptions"))
         # And now insert our template argument.
         argsWithoutThis = list(args)
         args.insert(0, Argument("const T&",  "thisObj"))
 
-        setupCall = ("CallSetup s(mCallback);\n"
+        setupCall = ("CallSetup s(mCallback, aRv, aExceptionHandling);\n"
                      "if (!s.GetContext()) {\n"
                      "  aRv.Throw(NS_ERROR_UNEXPECTED);\n"
                      "  return${errorReturn};\n"
@@ -7958,7 +8012,10 @@ class CallbackMember(CGNativeMember):
     def getArgs(self, returnType, argList):
         args = CGNativeMember.getArgs(self, returnType, argList)
         if not self.needThisHandling:
-            return args
+            # Since we don't need this handling, we're the actual method that
+            # will be called, so we need an aRethrowExceptions argument.
+            return args + [Argument("ExceptionHandling", "aExceptionHandling",
+                                    "eReportExceptions")]
         # We want to allow the caller to pass in a "this" object, as
         # well as a JSContext.
         return [Argument("JSContext*", "cx"),
@@ -7969,7 +8026,7 @@ class CallbackMember(CGNativeMember):
             # It's been done for us already
             return ""
         return string.Template(
-            "CallSetup s(mCallback);\n"
+            "CallSetup s(mCallback, aRv, aExceptionHandling);\n"
             "JSContext* cx = s.GetContext();\n"
             "if (!cx) {\n"
             "  aRv.Throw(NS_ERROR_UNEXPECTED);\n"

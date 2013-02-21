@@ -185,23 +185,28 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     public int getCount(ContentResolver cr, String database) {
         Cursor cursor = null;
         int count = 0;
+        String[] columns = null;
         String constraint = null;
         try {
             Uri uri = null;
             if ("history".equals(database)) {
                 uri = mHistoryUriWithProfile;
+                columns = new String[] { History._ID };
                 constraint = Combined.VISITS + " > 0";
             } else if ("bookmarks".equals(database)) {
                 uri = mBookmarksUriWithProfile;
+                columns = new String[] { Bookmarks._ID };
                 // ignore folders, tags, keywords, separators, etc.
                 constraint = Bookmarks.TYPE + " = " + Bookmarks.TYPE_BOOKMARK;
             } else if ("thumbnails".equals(database)) {
                 uri = mThumbnailsUriWithProfile;
+                columns = new String[] { Thumbnails._ID };
             } else if ("favicons".equals(database)) {
                 uri = mFaviconsUriWithProfile;
+                columns = new String[] { Favicons._ID };
             }
             if (uri != null) {
-                cursor = cr.query(uri, null, constraint, null, null);
+                cursor = cr.query(uri, columns, constraint, null, null);
                 count = cursor.getCount();
             }
         } finally {
