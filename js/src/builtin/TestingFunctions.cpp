@@ -771,7 +771,7 @@ DumpHeapComplete(JSContext *cx, unsigned argc, jsval *vp)
         Value v = JS_ARGV(cx, vp)[0];
         if (v.isString()) {
             JSString *str = v.toString();
-            if (!fileNameBytes.encode(cx, str))
+            if (!fileNameBytes.encodeLatin1(cx, str))
                 return false;
             fileName = fileNameBytes.ptr();
         }
