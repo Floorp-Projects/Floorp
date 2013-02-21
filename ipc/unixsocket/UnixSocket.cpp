@@ -416,6 +416,33 @@ private:
   UnixSocketImpl* mImpl;
 };
 
+class RequestClosingSocketTask : public nsRunnable
+{
+public:
+  RequestClosingSocketTask(UnixSocketImpl* aImpl) : mImpl(aImpl)
+  {
+    MOZ_ASSERT(aImpl);
+  }
+
+  NS_IMETHOD Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if(!mImpl->mConsumer) {
+      NS_WARNING("CloseSocket has already been called! (mConsumer is null)");
+      // Since we've already explicitly closed and the close happened before
+      // this, this isn't really an error. Since we've warned, return OK.
+      return NS_OK;
+    }
+
+    // Start from here, same handling flow as calling CloseSocket() from upper layer
+    mImpl->mConsumer->CloseSocket();
+    return NS_OK;
+  }
+private:
+  UnixSocketImpl* mImpl;
+};
+
 class SocketAcceptTask : public CancelableTask {
   virtual void Run();
 
@@ -460,7 +487,6 @@ UnixSocketImpl::Close()
 
   nsRefPtr<nsIRunnable> t(new DeleteInstanceRunnable<UnixSocketImpl>(this));
   NS_ENSURE_TRUE_VOID(t);
-
   nsresult rv = NS_DispatchToMainThread(t);
   NS_ENSURE_SUCCESS_VOID(rv);
 }
@@ -625,8 +651,8 @@ UnixSocketConsumer::CloseSocket()
   mImpl = nullptr;
   // Line it up to be destructed on the IO Thread
   impl->mConsumer.forget();
-
   impl->CancelTask();
+
   XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new SocketCloseTask(impl));
 
   NotifyDisconnect();
@@ -668,7 +694,8 @@ UnixSocketImpl::OnFileCanReadWithoutBlocking(int aFd)
           // the socket anymore
           mReadWatcher.StopWatchingFileDescriptor();
           mWriteWatcher.StopWatchingFileDescriptor();
-          XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new SocketCloseTask(this));
+          nsRefPtr<RequestClosingSocketTask> t = new RequestClosingSocketTask(this);
+          NS_DispatchToMainThread(t);
           return;
         }
         if (ret) {
