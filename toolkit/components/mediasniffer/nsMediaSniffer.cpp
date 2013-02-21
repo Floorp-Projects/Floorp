@@ -10,7 +10,9 @@
 #include "nsString.h"
 #include "nsMimeTypes.h"
 #include "mozilla/ModuleUtils.h"
+#ifdef MOZ_WEBM
 #include "nestegg/nestegg.h"
+#endif
 
 #include "nsIClassInfoImpl.h"
 #include <algorithm>
@@ -68,7 +70,11 @@ static bool MatchesMP4(const uint8_t* aData, const uint32_t aLength)
 
 static bool MatchesWebM(const uint8_t* aData, const uint32_t aLength)
 {
+#ifdef MOZ_WEBM
   return nestegg_sniff((uint8_t*)aData, aLength) ? true : false;
+#else
+  return false;
+#endif
 }
 
 NS_IMETHODIMP
