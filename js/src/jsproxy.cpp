@@ -2342,8 +2342,14 @@ Proxy::get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id
 {
     JS_CHECK_RECURSION(cx, return false);
     BaseProxyHandler *handler = GetProxyHandler(proxy);
-    bool own = false;
-    if (!handler->hasPrototype() || (handler->hasOwn(cx, proxy, id, &own) && own))
+    bool own;
+    if (!handler->hasPrototype()) {
+        own = true;
+    } else {
+        if (!handler->hasOwn(cx, proxy, id, &own))
+            return false;
+    }
+    if (own)
         return handler->get(cx, proxy, receiver, id, vp.address());
     INVOKE_ON_PROTOTYPE(cx, handler, proxy, JSObject::getGeneric(cx, proto, receiver, id, vp));
 }
