@@ -5,7 +5,7 @@
 let { Cc, Ci } = require("chrome");
 const { Loader } = require('sdk/test/loader');
 const timer = require("sdk/timers");
-const self = require('self');
+const self = require('sdk/self');
 
 exports["test Panel"] = function(assert, done) {
   const { Panel } = require('sdk/panel');

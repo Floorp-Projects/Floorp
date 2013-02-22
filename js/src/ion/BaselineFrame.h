@@ -46,9 +46,6 @@ class BaselineFrame
         // A call object has been pushed on the scope chain.
         HAS_CALL_OBJ     = 1 << 2,
 
-        // The evalPrev_ field has been initialized.
-        HAS_EVAL_PREV    = 1 << 3,
-
         // Frame has an arguments object, argsObj_.
         HAS_ARGS_OBJ     = 1 << 4,
 
@@ -76,14 +73,6 @@ class BaselineFrame
     ArgumentsObject *argsObj_;      // If HAS_ARGS_OBJ, the arguments object.
     void *hookData_;                // If HAS_HOOK_DATA, debugger call hook data.
     uint32_t flags_;
-
-    // In debug mode, evalPrev_ is a pointer to the previous frame
-    // for eval frames. Only valid if HAS_EVAL_PREV is set.
-    AbstractFramePtr evalPrev_;
-
-#if JS_BITS_PER_WORD == 32
-    uint32_t padding_;
-#endif
 
   public:
     // Distance between the frame pointer and the frame header (return address).
@@ -290,14 +279,6 @@ class BaselineFrame
         JS_ASSERT(isEvalFrame());
         return evalScript_;
     }
-
-    AbstractFramePtr evalPrev() const {
-        JS_ASSERT(isEvalFrame());
-        JS_ASSERT(flags_ & HAS_EVAL_PREV);
-        return evalPrev_;
-    }
-
-    void initEvalPrev(JSContext *cx);
 
     bool hasHookData() const {
         return flags_ & HAS_HOOK_DATA;

@@ -247,6 +247,24 @@ StackFrame::copyRawFrameSlots(AutoValueVector *vec)
     return true;
 }
 
+static void
+CleanupTornValue(StackFrame *fp, Value *vp)
+{
+    if (vp->isObject() && !vp->toGCThing())
+        vp->setObject(fp->global());
+    if (vp->isString() && !vp->toGCThing())
+        vp->setString(fp->compartment()->rt->emptyString);
+}
+
+void
+StackFrame::cleanupTornValues()
+{
+    for (size_t i = 0; i < numFormalArgs(); i++)
+        CleanupTornValue(this, &formals()[i]);
+    for (size_t i = 0; i < script()->nfixed; i++)
+        CleanupTornValue(this, &slots()[i]);
+}
+
 static inline void
 AssertDynamicScopeMatchesStaticScope(JSContext *cx, JSScript *script, JSObject *scope)
 {
@@ -353,16 +371,8 @@ StackFrame::epilogue(JSContext *cx)
             if (cx->compartment->debugMode())
                 DebugScopes::onPopStrictEvalScope(this);
         } else if (isDirectEvalFrame()) {
-            if (isDebuggerFrame()) {
+            if (isDebuggerFrame())
                 JS_ASSERT(!scopeChain()->isScope());
-            } else {
-#ifdef DEBUG
-                ScriptFrameIter iter(cx);
-                JS_ASSERT(iter.abstractFramePtr() == AbstractFramePtr(this));
-                ++iter;
-                JS_ASSERT(scopeChain() == iter.scopeChain());
-#endif
-            }
         } else {
             /*
              * Debugger.Object.prototype.evalInGlobal creates indirect eval
@@ -1107,10 +1117,7 @@ ContextStack::pushExecuteFrame(JSContext *cx, HandleScript script, const Value &
         extend = CAN_EXTEND;
         if (maybefp()) {
             ScriptFrameIter iter(cx);
-            if (!iter.isIonOptimizedJS()) {
-                // For Ion optimized frames we don't need the caller frame.
-                prev = iter.abstractFramePtr();
-            }
+            prev = iter.isIonOptimizedJS() ? maybefp() : iter.abstractFramePtr();
         }
     }
 
@@ -1556,7 +1563,8 @@ StackIter::StackIter(JSRuntime *rt, StackSegment &seg)
 StackIter::StackIter(const StackIter &other)
   : data_(other.data_)
 #ifdef JS_ION
-    , ionInlineFrames_(other.data_.seg_->cx(), &other.ionInlineFrames_)
+    , ionInlineFrames_(other.data_.seg_->cx(),
+                       data_.ionFrames_.isScripted() ? &other.ionInlineFrames_ : NULL)
 #endif
 {
 }
@@ -2323,6 +2331,22 @@ AllFramesIter::abstractFramePtr() const
     }
     JS_NOT_REACHED("Unexpected state");
     return NullFramePtr();
+}
+
+JSObject *
+AbstractFramePtr::evalPrevScopeChain(JSRuntime *rt) const
+{
+    /* Find the stack segment containing this frame. */
+    AllFramesIter alliter(rt);
+    while (alliter.isIonOptimizedJS() || alliter.abstractFramePtr() != *this)
+        ++alliter;
+
+    /* Eval frames are not compiled by Ion, though their caller might be. */
+    StackIter iter(rt, *alliter.seg());
+    while (!iter.isScript() || iter.isIonOptimizedJS() || iter.abstractFramePtr() != *this)
+        ++iter;
+    ++iter;
+    return iter.scopeChain();
 }
 
 #ifdef DEBUG

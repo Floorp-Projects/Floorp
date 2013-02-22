@@ -42,9 +42,10 @@ class LogcatProc(ProcessHandlerMixin):
 class Emulator(object):
 
     deviceRe = re.compile(r"^emulator-(\d+)(\s*)(.*)$")
+    _default_res = '320x480'
 
     def __init__(self, homedir=None, noWindow=False, logcat_dir=None,
-                 arch="x86", emulatorBinary=None, res='480x800', sdcard=None,
+                 arch="x86", emulatorBinary=None, res=None, sdcard=None,
                  userdata=None):
         self.port = None
         self.dm = None
@@ -60,7 +61,7 @@ class Emulator(object):
         self.logcat_proc = None
         self.arch = arch
         self.binary = emulatorBinary
-        self.res = res
+        self.res = res or self._default_res
         self.battery = EmulatorBattery(self)
         self.geo = EmulatorGeo(self)
         self.screen = EmulatorScreen(self)

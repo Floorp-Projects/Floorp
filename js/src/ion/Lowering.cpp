@@ -410,6 +410,26 @@ LIRGenerator::visitApplyArgs(MApplyArgs *apply)
     return true;
 }
 
+bool
+LIRGenerator::visitCallDirectEval(MCallDirectEval *ins)
+{
+    MDefinition *scopeChain = ins->getScopeChain();
+    JS_ASSERT(scopeChain->type() == MIRType_Object);
+
+    MDefinition *string = ins->getString();
+    JS_ASSERT(string->type() == MIRType_String);
+
+    MDefinition *thisValue = ins->getThisValue();
+
+    LCallDirectEval *lir = new LCallDirectEval(useRegisterAtStart(scopeChain),
+                                               useRegisterAtStart(string));
+
+    if (!useBoxAtStart(lir, LCallDirectEval::ThisValueInput, thisValue))
+        return false;
+
+    return defineReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
 static JSOp
 ReorderComparison(JSOp op, MDefinition **lhsp, MDefinition **rhsp)
 {

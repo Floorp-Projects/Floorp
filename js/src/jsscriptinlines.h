@@ -118,6 +118,16 @@ JSScript::getCallerFunction()
     return getFunction(0);
 }
 
+inline JSFunction *
+JSScript::functionOrCallerFunction()
+{
+    if (function())
+        return function();
+    if (savedCallerFun)
+        return getCallerFunction();
+    return NULL;
+}
+
 inline js::RegExpObject *
 JSScript::getRegExp(size_t index)
 {

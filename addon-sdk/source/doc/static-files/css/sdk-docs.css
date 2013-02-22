@@ -441,8 +441,8 @@ ul.tree ul li:last-child {
   background: #fff url("../media/icons/lastnode.png") no-repeat;
 }
 
-ul.module-list,
-ul#module-index {
+ul#module-index,
+h2[id="Module Compatibility"] ~ ul {
   border-color: #a0d0fb;
   border: solid 1px #a0d0fb;
   padding: 1em;
@@ -455,8 +455,8 @@ ul#module-index {
   column-gap: 1em;
 }
 
-span.unsupported-on-mobile,
-ul.module-list li.unsupported-on-mobile,
-ul.module-list li.unsupported-on-mobile > a {
-  color: maroon;
+span.unsupported-on-mobile strong,
+h2[id="Module Compatibility"] ~ ul strong {
+  font-weight: normal;
+  text-decoration: line-through;
 }

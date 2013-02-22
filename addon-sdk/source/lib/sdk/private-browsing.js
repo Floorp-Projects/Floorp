@@ -7,10 +7,11 @@ module.metadata = {
   "stability": "stable"
 };
 
-const { setMode, getMode, on: onStateChange } = require('./private-browsing/utils');
+const { setMode, getMode, on: onStateChange, isWindowPrivate } = require('./private-browsing/utils');
 const { emit, on, once, off } = require('./event/core');
 const { when: unload } = require('./system/unload');
 const { deprecateUsage, deprecateFunction, deprecateEvent } = require('./util/deprecate');
+const { getOwnerWindow } = require('./private-browsing/window/utils');
 
 onStateChange('start', function onStart() {
   emit(exports, 'start');
@@ -35,6 +36,19 @@ exports.removeListener = deprecateEvents(function removeListener(type, listener)
   // causing misbehavior. This way we make sure all arguments are passed.
   off(exports, type, listener);
 });
+
+exports.isPrivate = function(thing) {
+  if (!!thing) {
+    if (isWindowPrivate(thing)) {
+      return true;
+    }
+
+    let window = getOwnerWindow(thing);
+    if (window)
+      return isWindowPrivate(window);
+  }
+  return getMode();
+};
 
 function deprecateEvents(func) deprecateEvent(
   func,
