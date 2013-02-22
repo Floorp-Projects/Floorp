@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.PropertyAnimator.Property;
+import org.mozilla.gecko.widget.TwoWayView;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -19,20 +20,17 @@ import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
-import android.widget.AbsListView.RecyclerListener;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class TabsTray extends ListView 
+public class TabsTray extends TwoWayView
                       implements TabsPanel.PanelView {
     private static final String LOGTAG = "GeckoTabsTray";
 
@@ -58,7 +56,7 @@ public class TabsTray extends ListView
         mCloseAnimationCount = 0;
         mPendingClosedTabs = new ArrayList<View>();
 
-        setItemsCanFocus(true);
+        //setItemsCanFocus(true);
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TabsTray);
         boolean isPrivate = (a.getInt(R.styleable.TabsTray_tabs, 0x0) == 1);
@@ -365,7 +363,7 @@ public class TabsTray extends ListView
         public TabSwipeGestureListener() {
             mSwipeView = null;
             mSwipeProxy = null;
-            mSwipeViewPosition = ListView.INVALID_POSITION;
+            mSwipeViewPosition = TwoWayView.INVALID_POSITION;
             mSwiping = false;
             mEnabled = true;
 
@@ -379,15 +377,15 @@ public class TabsTray extends ListView
             mEnabled = enabled;
         }
 
-        public AbsListView.OnScrollListener makeScrollListener() {
-            return new AbsListView.OnScrollListener() {
+        public TwoWayView.OnScrollListener makeScrollListener() {
+            return new TwoWayView.OnScrollListener() {
                 @Override
-                public void onScrollStateChanged(AbsListView absListView, int scrollState) {
-                    setEnabled(scrollState != AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL);
+                public void onScrollStateChanged(TwoWayView twoWayView, int scrollState) {
+                    setEnabled(scrollState != TwoWayView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL);
                 }
 
                 @Override
-                public void onScroll(AbsListView absListView, int i, int i1, int i2) {
+                public void onScroll(TwoWayView twoWayView, int i, int i1, int i2) {
                 }
             };
         }
@@ -463,7 +461,7 @@ public class TabsTray extends ListView
 
                     mVelocityTracker = null;
                     mSwipeView = null;
-                    mSwipeViewPosition = ListView.INVALID_POSITION;
+                    mSwipeViewPosition = TwoWayView.INVALID_POSITION;
                     mSwipeProxy = null;
 
                     mSwipeStartX = 0;
