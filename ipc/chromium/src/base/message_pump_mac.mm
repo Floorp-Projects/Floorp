@@ -226,28 +226,8 @@ void MessagePumpCFRunLoopBase::ScheduleWork() {
 // Must be called on the run loop thread.
 void MessagePumpCFRunLoopBase::ScheduleDelayedWork(
     const TimeTicks& delayed_work_time) {
-  // TODO(jar): We may need a more efficient way to go between these times, but
-  // the difference will change not only when we sleep/wake, it will also change
-  // when the user changes the wall clock time :-/.
-  Time absolute_work_time =
-      (delayed_work_time - TimeTicks::Now()) + Time::Now();
-
-  Time::Exploded exploded;
-  absolute_work_time.UTCExplode(&exploded);
-  double seconds = exploded.second +
-                   (static_cast<double>((absolute_work_time.ToInternalValue()) %
-                                        Time::kMicrosecondsPerSecond) /
-                    Time::kMicrosecondsPerSecond);
-  CFGregorianDate gregorian = {
-    exploded.year,
-    exploded.month,
-    exploded.day_of_month,
-    exploded.hour,
-    exploded.minute,
-    seconds
-  };
-  delayed_work_fire_time_ = CFGregorianDateGetAbsoluteTime(gregorian, NULL);
-
+  TimeDelta delta = delayed_work_time - TimeTicks::Now();
+  delayed_work_fire_time_ = CFAbsoluteTimeGetCurrent() + delta.InSecondsF();
   CFRunLoopTimerSetNextFireDate(delayed_work_timer_, delayed_work_fire_time_);
 }
 
