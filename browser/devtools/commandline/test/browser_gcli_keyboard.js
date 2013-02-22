@@ -203,6 +203,34 @@ exports.testIncrDecr = function() {
   check('tsu 10', KEY_DOWNS_TO, 'tsu 9');
   check('tsu 100', KEY_DOWNS_TO, 'tsu 10');
 
+  check('tsf -70', KEY_UPS_TO, 'tsf -6.5');
+  check('tsf -6.5', KEY_UPS_TO, 'tsf -6');
+  check('tsf -6', KEY_UPS_TO, 'tsf -4.5');
+  check('tsf -4.5', KEY_UPS_TO, 'tsf -3');
+  check('tsf -4', KEY_UPS_TO, 'tsf -3');
+  check('tsf -3', KEY_UPS_TO, 'tsf -1.5');
+  check('tsf -1.5', KEY_UPS_TO, 'tsf 0');
+  check('tsf 0', KEY_UPS_TO, 'tsf 1.5');
+  check('tsf 1.5', KEY_UPS_TO, 'tsf 3');
+  check('tsf 2', KEY_UPS_TO, 'tsf 3');
+  check('tsf 3', KEY_UPS_TO, 'tsf 4.5');
+  check('tsf 5', KEY_UPS_TO, 'tsf 6');
+  check('tsf 100', KEY_UPS_TO, 'tsf -6.5');
+
+  check('tsf -70', KEY_DOWNS_TO, 'tsf 11.5');
+  check('tsf -6.5', KEY_DOWNS_TO, 'tsf -6.5');
+  check('tsf -6', KEY_DOWNS_TO, 'tsf -6.5');
+  check('tsf -4.5', KEY_DOWNS_TO, 'tsf -6');
+  check('tsf -4', KEY_DOWNS_TO, 'tsf -4.5');
+  check('tsf -3', KEY_DOWNS_TO, 'tsf -4.5');
+  check('tsf -1.5', KEY_DOWNS_TO, 'tsf -3');
+  check('tsf 0', KEY_DOWNS_TO, 'tsf -1.5');
+  check('tsf 1.5', KEY_DOWNS_TO, 'tsf 0');
+  check('tsf 2', KEY_DOWNS_TO, 'tsf 1.5');
+  check('tsf 3', KEY_DOWNS_TO, 'tsf 1.5');
+  check('tsf 5', KEY_DOWNS_TO, 'tsf 4.5');
+  check('tsf 100', KEY_DOWNS_TO, 'tsf 11.5');
+
   // Bug 707007 - GCLI increment and decrement operations cycle through
   // selection options in the wrong order
   check('tselarr 1', KEY_DOWNS_TO, 'tselarr 2');
