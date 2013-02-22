@@ -17,11 +17,6 @@ namespace mozilla {
 namespace dom {
 
 
-HTMLLegendElement::HTMLLegendElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
-{
-}
-
 HTMLLegendElement::~HTMLLegendElement()
 {
 }
