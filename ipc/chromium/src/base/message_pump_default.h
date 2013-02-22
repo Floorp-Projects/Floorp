@@ -20,7 +20,7 @@ class MessagePumpDefault : public MessagePump {
   virtual void Run(Delegate* delegate);
   virtual void Quit();
   virtual void ScheduleWork();
-  virtual void ScheduleDelayedWork(const Time& delayed_work_time);
+  virtual void ScheduleDelayedWork(const TimeTicks& delayed_work_time);
 
  protected:
   // This flag is set to false when Run should return.
@@ -30,7 +30,7 @@ class MessagePumpDefault : public MessagePump {
   WaitableEvent event_;
 
   // The time at which we should call DoDelayedWork.
-  Time delayed_work_time_;
+  TimeTicks delayed_work_time_;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(MessagePumpDefault);
