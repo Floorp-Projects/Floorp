@@ -58,8 +58,7 @@ void nsCounterChangeNode::Calc(nsCounterList *aList)
         mValueAfter = mChangeValue;
     } else {
         NS_ASSERTION(mType == INCREMENT, "invalid type");
-        mValueAfter = nsCounterManager::IncrementCounter(aList->ValueBefore(this),
-                                                         mChangeValue);
+        mValueAfter = aList->ValueBefore(this) + mChangeValue;
     }
 }
 
