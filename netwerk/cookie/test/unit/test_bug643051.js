@@ -2,8 +2,12 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
+  // Allow all cookies.
+  Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
+
   let cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
 
   let uri = NetUtil.newURI("http://example.org/");

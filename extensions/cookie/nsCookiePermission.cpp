@@ -216,6 +216,24 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
       *aResult = false;
     break;
 
+  case nsICookiePermission::ACCESS_LIMIT_THIRD_PARTY:
+    mThirdPartyUtil->IsThirdPartyChannel(aChannel, aURI, &isThirdParty);
+    // If it's third party, check whether cookies are already set
+    if (isThirdParty) {
+      nsresult rv;
+      nsCOMPtr<nsICookieManager2> cookieManager = do_GetService(NS_COOKIEMANAGER_CONTRACTID, &rv);
+      if (NS_FAILED(rv)) {
+        *aResult = false;
+        break;
+      }
+      uint32_t priorCookieCount = 0;
+      nsAutoCString hostFromURI;
+      aURI->GetHost(hostFromURI);
+      cookieManager->CountCookiesFromHost(hostFromURI, &priorCookieCount);
+      *aResult = priorCookieCount != 0;
+    }
+    break;
+
   default:
     // the permission manager has nothing to say about this cookie -
     // so, we apply the default prefs to it.
