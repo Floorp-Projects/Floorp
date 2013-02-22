@@ -1763,10 +1763,15 @@ let RIL = {
       options.encodedBodyLength = options.segments[0].encodedBodyLength;
     }
 
-    Buf.newParcel(REQUEST_SEND_SMS, options);
-    Buf.writeUint32(2);
-    Buf.writeString(options.SMSC);
-    GsmPDUHelper.writeMessage(options);
+    if (this._isCdma) {
+      Buf.newParcel(REQUEST_CDMA_SEND_SMS, options);
+      CdmaPDUHelper.writeMessage(options);
+    } else {
+      Buf.newParcel(REQUEST_SEND_SMS, options);
+      Buf.writeUint32(2);
+      Buf.writeString(options.SMSC);
+      GsmPDUHelper.writeMessage(options);
+    }
     Buf.sendParcel();
   },
 
@@ -4968,7 +4973,9 @@ RIL[REQUEST_CDMA_QUERY_PREFERRED_VOICE_PRIVACY_MODE] = null;
 RIL[REQUEST_CDMA_FLASH] = null;
 RIL[REQUEST_CDMA_BURST_DTMF] = null;
 RIL[REQUEST_CDMA_VALIDATE_AND_WRITE_AKEY] = null;
-RIL[REQUEST_CDMA_SEND_SMS] = null;
+RIL[REQUEST_CDMA_SEND_SMS] = function REQUEST_CDMA_SEND_SMS(length, options) {
+  this._processSmsSendResult(length, options);
+};
 RIL[REQUEST_CDMA_SMS_ACKNOWLEDGE] = null;
 RIL[REQUEST_GSM_GET_BROADCAST_SMS_CONFIG] = null;
 RIL[REQUEST_GSM_SET_BROADCAST_SMS_CONFIG] = function REQUEST_GSM_SET_BROADCAST_SMS_CONFIG(length, options) {
