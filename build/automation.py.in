@@ -825,6 +825,14 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     env['XRE_NO_WINDOWS_CRASH_DIALOG'] = '1'
     env['NS_TRACE_MALLOC_DISABLE_STACKS'] = '1'
 
+    # Additional temporary logging while we try to debug some intermittent
+    # WebRTC conditions. This is necessary to troubleshoot bugs 841496,
+    # 841150, and 839677 (at least)
+    env['NSPR_LOG_MODULES'] = 'signaling:3,mtransport:3'
+    env['R_LOG_LEVEL'] = '5'
+    env['R_LOG_DESTINATION'] = 'stderr'
+    env['R_LOG_VERBOSE'] = '1'
+
     # ASan specific environment stuff
     if self.IS_ASAN and (self.IS_LINUX or self.IS_MAC):
       try:
