@@ -235,9 +235,9 @@ public:
         // modulo 2^bits (C++ 2011, 3.9.1 [basic.fundamental], clause 4);
         // addition of signed values is undefined (and clang does
         // something very strange if we use it here).  Likewise integral
-        // conversion from signed to unsigned is also defined as module
+        // conversion from signed to unsigned is also defined as modulo
         // 2^bits (C++ 2011, 4.7 [conv.integral], clause 2); conversion
-        // from unsigned to sign is however undefined (ibid., clause 3),
+        // from unsigned to signed is however undefined (ibid., clause 3),
         // but to do what we want we must nonetheless depend on that
         // small piece of undefined behavior.
         int32_t newValue = int32_t(uint32_t(aOldValue) + uint32_t(aIncrement));
