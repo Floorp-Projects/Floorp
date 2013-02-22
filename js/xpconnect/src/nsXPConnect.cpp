@@ -1053,8 +1053,7 @@ CheckTypeInference(JSContext *cx, JSClass *clasp, nsIPrincipal *principal)
 namespace xpc {
 
 JSObject*
-CreateGlobalObject(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
-                   JS::ZoneSpecifier zoneSpec)
+CreateGlobalObject(JSContext *cx, JSClass *clasp, nsIPrincipal *principal)
 {
     // Make sure that Type Inference is enabled for everything non-chrome.
     // Sandboxes and compilation scopes are exceptions. See bug 744034.
@@ -1063,7 +1062,7 @@ CreateGlobalObject(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "using a principal off the main thread?");
     MOZ_ASSERT(principal);
 
-    JSObject *global = JS_NewGlobalObject(cx, clasp, nsJSPrincipals::get(principal), zoneSpec);
+    JSObject *global = JS_NewGlobalObject(cx, clasp, nsJSPrincipals::get(principal));
     if (!global)
         return nullptr;
     JSAutoCompartment ac(cx, global);
@@ -1099,7 +1098,6 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
                                              nsISupports *aCOMObj,
                                              nsIPrincipal * aPrincipal,
                                              uint32_t aFlags,
-                                             JS::ZoneSpecifier zoneSpec,
                                              nsIXPConnectJSObjectHolder **_retval)
 {
     NS_ASSERTION(aJSContext, "bad param");
@@ -1120,7 +1118,6 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     nsresult rv =
         XPCWrappedNative::WrapNewGlobal(ccx, helper, aPrincipal,
                                         aFlags & nsIXPConnect::INIT_JS_STANDARD_CLASSES,
-                                        zoneSpec,
                                         getter_AddRefs(wrappedGlobal));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2407,17 +2404,17 @@ TraverseObjectShim(void *data, void *thing)
 }
 
 /*
- * The cycle collection participant for a Zone is intended to produce the same
- * results as if all of the gray GCthings in a zone were merged into a single node,
+ * The cycle collection participant for a JSCompartment is intended to produce the same
+ * results as if all of the gray GCthings in a compartment were merged into a single node,
  * except for self-edges. This avoids the overhead of representing all of the GCthings in
- * the zone in the cycle collector graph, which should be much faster if many of
- * the GCthings in the zone are gray.
+ * the compartment in the cycle collector graph, which should be much faster if many of
+ * the GCthings in the compartment are gray.
  *
- * Zone merging should not always be used, because it is a conservative
+ * Compartment merging should not always be used, because it is a conservative
  * approximation of the true cycle collector graph that can incorrectly identify some
  * garbage objects as being live. For instance, consider two cycles that pass through a
- * zone, where one is garbage and the other is live. If we merge the entire
- * zone, the cycle collector will think that both are alive.
+ * compartment, where one is garbage and the other is live. If we merge the entire
+ * compartment, the cycle collector will think that both are alive.
  *
  * We don't have to worry about losing track of a garbage cycle, because any such garbage
  * cycle incorrectly identified as live must contain at least one C++ to JS edge, and
@@ -2426,46 +2423,45 @@ TraverseObjectShim(void *data, void *thing)
  * purple buffer during every CC, which may contain the last reference to a garbage
  * cycle.)
  */
-class JSZoneParticipant : public nsCycleCollectionParticipant
+class JSCompartmentParticipant : public nsCycleCollectionParticipant
 {
 public:
-    static NS_METHOD TraverseImpl(JSZoneParticipant *that, void *p,
+    static NS_METHOD TraverseImpl(JSCompartmentParticipant *that, void *p,
                                   nsCycleCollectionTraversalCallback &cb)
     {
         MOZ_ASSERT(!cb.WantAllTraces());
-        JS::Zone *zone = static_cast<JS::Zone *>(p);
+        JSCompartment *c = static_cast<JSCompartment*>(p);
 
         /*
-         * We treat the zone as being gray. We handle non-gray GCthings in the
-         * zone by not reporting their children to the CC. The black-gray invariant
+         * We treat the compartment as being gray. We handle non-gray GCthings in the
+         * compartment by not reporting their children to the CC. The black-gray invariant
          * ensures that any JS children will also be non-gray, and thus don't need to be
          * added to the graph. For C++ children, not representing the edge from the
          * non-gray JS GCthings to the C++ object will keep the child alive.
          *
-         * We don't allow zone merging in a WantAllTraces CC, because then these
+         * We don't allow compartment merging in a WantAllTraces CC, because then these
          * assumptions don't hold.
          */
-        cb.DescribeGCedNode(false, "JS Zone");
+        cb.DescribeGCedNode(false, "JS Compartment");
 
         /*
-         * Every JS child of everything in the zone is either in the zone
+         * Every JS child of everything in the compartment is either in the compartment
          * or is a cross-compartment wrapper. In the former case, we don't need to
          * represent these edges in the CC graph because JS objects are not ref counted.
          * In the latter case, the JS engine keeps a map of these wrappers, which we
-         * iterate over. Edges between compartments in the same zone will add
-         * unnecessary loop edges to the graph (bug 842137).
+         * iterate over.
          */
         TraversalTracer trc(cb);
         JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
         JS_TracerInit(&trc, rt, NoteJSChildTracerShim);
         trc.eagerlyTraceWeakMaps = false;
-        js::VisitGrayWrapperTargets(zone, NoteJSChildGrayWrapperShim, &trc);
+        js::VisitGrayWrapperTargets(c, NoteJSChildGrayWrapperShim, &trc);
 
         /*
-         * To find C++ children of things in the zone, we scan every JS Object in
-         * the zone. Only JS Objects can have C++ children.
+         * To find C++ children of things in the compartment, we scan every JS Object in
+         * the compartment. Only JS Objects can have C++ children.
          */
-        js::IterateGrayObjects(zone, TraverseObjectShim, &cb);
+        js::IterateGrayObjects(c, TraverseObjectShim, &cb);
 
         return NS_OK;
     }
@@ -2474,7 +2470,7 @@ public:
     {
         return NS_OK;
     }
-
+    
     static NS_METHOD UnlinkImpl(void *p)
     {
         return NS_OK;
@@ -2490,15 +2486,15 @@ public:
     }
 };
 
-static const CCParticipantVTable<JSZoneParticipant>::Type
-JSZone_cycleCollectorGlobal = {
-    NS_IMPL_CYCLE_COLLECTION_NATIVE_VTABLE(JSZoneParticipant)
+static const CCParticipantVTable<JSCompartmentParticipant>::Type
+JSCompartment_cycleCollectorGlobal = {
+    NS_IMPL_CYCLE_COLLECTION_NATIVE_VTABLE(JSCompartmentParticipant)
 };
 
 nsCycleCollectionParticipant *
-xpc_JSZoneParticipant()
+xpc_JSCompartmentParticipant()
 {
-    return JSZone_cycleCollectorGlobal.GetParticipant();
+    return JSCompartment_cycleCollectorGlobal.GetParticipant();
 }
 
 NS_IMETHODIMP

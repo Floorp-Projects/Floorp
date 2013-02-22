@@ -236,8 +236,7 @@ public:
                         JS::Value* rval, bool* sharedBuffer)
     {
         if (buf == sCachedBuffer &&
-            js::GetGCThingZone(sCachedString) == js::GetContextZone(cx))
-        {
+            js::GetGCThingCompartment(sCachedString) == js::GetContextCompartment(cx)) {
             *rval = JS::StringValue(sCachedString);
             *sharedBuffer = false;
             return true;
@@ -394,7 +393,7 @@ Throw(JSContext *cx, nsresult rv);
 } // namespace xpc
 
 nsCycleCollectionParticipant *
-xpc_JSZoneParticipant();
+xpc_JSCompartmentParticipant();
 
 namespace mozilla {
 namespace dom {

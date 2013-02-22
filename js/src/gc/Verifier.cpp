@@ -515,9 +515,10 @@ gc::StartVerifyPreBarriers(JSRuntime *rt)
     rt->gcVerifyPreData = trc;
     rt->gcIncrementalState = MARK;
     rt->gcMarker.start();
+    for (CompartmentsIter c(rt); !c.done(); c.next())
+        PurgeJITCaches(c);
 
     for (ZonesIter zone(rt); !zone.done(); zone.next()) {
-        PurgeJITCaches(zone);
         zone->setNeedsBarrier(true, Zone::UpdateIon);
         zone->allocator.arenas.purge();
     }
@@ -596,8 +597,10 @@ gc::EndVerifyPreBarriers(JSRuntime *rt)
             compartmentCreated = true;
 
         zone->setNeedsBarrier(false, Zone::UpdateIon);
-        PurgeJITCaches(zone);
     }
+
+    for (CompartmentsIter c(rt); !c.done(); c.next())
+        PurgeJITCaches(c);
 
     /*
      * We need to bump gcNumber so that the methodjit knows that jitcode has

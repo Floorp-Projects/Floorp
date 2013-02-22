@@ -47,18 +47,17 @@ GetterSetterWriteBarrierPostRemove(JSRuntime *rt, JSObject **objp)
 }
 
 inline
-BaseShape::BaseShape(JSCompartment *comp, Class *clasp, JSObject *parent, uint32_t objectFlags)
+BaseShape::BaseShape(Class *clasp, JSObject *parent, uint32_t objectFlags)
 {
     JS_ASSERT(!(objectFlags & ~OBJECT_FLAG_MASK));
     PodZero(this);
     this->clasp = clasp;
     this->parent = parent;
     this->flags = objectFlags;
-    this->compartment_ = comp;
 }
 
 inline
-BaseShape::BaseShape(JSCompartment *comp, Class *clasp, JSObject *parent, uint32_t objectFlags,
+BaseShape::BaseShape(Class *clasp, JSObject *parent, uint32_t objectFlags,
                      uint8_t attrs, js::PropertyOp rawGetter, js::StrictPropertyOp rawSetter)
 {
     JS_ASSERT(!(objectFlags & ~OBJECT_FLAG_MASK));
@@ -76,7 +75,6 @@ BaseShape::BaseShape(JSCompartment *comp, Class *clasp, JSObject *parent, uint32
         this->flags |= HAS_SETTER_OBJECT;
         GetterSetterWriteBarrierPost(runtime(), &this->setterObj);
     }
-    this->compartment_ = comp;
 }
 
 inline
@@ -92,7 +90,6 @@ BaseShape::BaseShape(const StackBaseShape &base)
         GetterSetterWriteBarrierPost(runtime(), &this->getterObj);
     if ((base.flags & HAS_SETTER_OBJECT) && base.rawSetter)
         GetterSetterWriteBarrierPost(runtime(), &this->setterObj);
-    this->compartment_ = base.compartment;
 }
 
 inline BaseShape &
@@ -116,7 +113,6 @@ BaseShape::operator=(const BaseShape &other)
         rawSetter = other.rawSetter;
         GetterSetterWriteBarrierPostRemove(runtime(), &setterObj);
     }
-    compartment_ = other.compartment_;
     return *this;
 }
 
@@ -130,8 +126,7 @@ inline
 StackBaseShape::StackBaseShape(UnrootedShape shape)
   : flags(shape->getObjectFlags()),
     clasp(shape->getObjectClass()),
-    parent(shape->getObjectParent()),
-    compartment(shape->compartment())
+    parent(shape->getObjectParent())
 {
     updateGetterSetter(shape->attrs, shape->getter(), shape->setter());
 }

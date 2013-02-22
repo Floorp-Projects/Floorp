@@ -58,9 +58,6 @@ class IonRuntime
     typedef WeakCache<const VMFunction *, IonCode *> VMWrapperMap;
     VMWrapperMap *functionWrappers_;
 
-    // Keep track of memoryregions that are going to be flushed.
-    AutoFlushCache *flusher_;
-
   private:
     IonCode *generateEnterJIT(JSContext *cx);
     IonCode *generateArgumentsRectifier(JSContext *cx);
@@ -76,14 +73,6 @@ class IonRuntime
     bool initialize(JSContext *cx);
 
     static void Mark(JSTracer *trc);
-
-    AutoFlushCache *flusher() {
-        return flusher_;
-    }
-    void setFlusher(AutoFlushCache *fl) {
-        if (!flusher_ || !fl)
-            flusher_ = fl;
-    }
 };
 
 class IonCompartment
@@ -98,6 +87,9 @@ class IonCompartment
     // will eventually appear in this list asynchronously. Protected by the
     // runtime's analysis lock.
     OffThreadCompilationVector finishedOffThreadCompilations_;
+
+    // Keep track of memoryregions that are going to be flushed.
+    AutoFlushCache *flusher_;
 
   public:
     IonCode *getVMWrapper(const VMFunction &f);
@@ -139,17 +131,19 @@ class IonCompartment
     IonCode *valuePreBarrier() {
         return rt->valuePreBarrier_;
     }
-
+    
     IonCode *shapePreBarrier() {
         return rt->shapePreBarrier_;
     }
 
     AutoFlushCache *flusher() {
-        return rt->flusher();
+        return flusher_;
     }
     void setFlusher(AutoFlushCache *fl) {
-        rt->setFlusher(fl);
+        if (!flusher_ || !fl)
+            flusher_ = fl;
     }
+
 };
 
 class BailoutClosure;
@@ -230,7 +224,7 @@ class IonActivation
 };
 
 // Called from JSCompartment::discardJitCode().
-void InvalidateAll(FreeOp *fop, JS::Zone *zone);
+void InvalidateAll(FreeOp *fop, JSCompartment *comp);
 void FinishInvalidation(FreeOp *fop, UnrootedScript script);
 
 } // namespace ion

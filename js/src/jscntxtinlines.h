@@ -154,11 +154,6 @@ class CompartmentChecker
         MOZ_CRASH();
     }
 
-    static void fail(JS::Zone *z1, JS::Zone *z2) {
-        printf("*** Zone mismatch %p vs. %p\n", (void *) z1, (void *) z2);
-        MOZ_CRASH();
-    }
-
     /* Note: should only be used when neither c1 nor c2 may be the default compartment. */
     static void check(JSCompartment *c1, JSCompartment *c2) {
         JS_ASSERT(c1 != c1->rt->atomsCompartment);
@@ -176,11 +171,6 @@ class CompartmentChecker
         }
     }
 
-    void checkZone(JS::Zone *z) {
-        if (compartment && z != compartment->zone())
-            fail(compartment->zone(), z);
-    }
-
     void check(JSObject *obj) {
         if (obj)
             check(obj->compartment());
@@ -193,7 +183,7 @@ class CompartmentChecker
 
     void check(JSString *str) {
         if (!str->isAtom())
-            checkZone(str->zone());
+            check(str->compartment());
     }
 
     void check(const js::Value &v) {
@@ -254,7 +244,6 @@ class CompartmentChecker
  * depends on other objects not having been swept yet.
  */
 #define START_ASSERT_SAME_COMPARTMENT()                                       \
-    JS_ASSERT(cx->compartment->zone() == cx->zone());                         \
     if (cx->runtime->isHeapBusy())                                            \
         return;                                                               \
     CompartmentChecker c(cx)
@@ -488,7 +477,7 @@ JSContext::analysisLifoAlloc()
 inline js::LifoAlloc &
 JSContext::typeLifoAlloc()
 {
-    return zone()->types.typeLifoAlloc;
+    return compartment->typeLifoAlloc;
 }
 
 inline void
@@ -527,7 +516,7 @@ JSContext::setDefaultCompartmentObject(JSObject *obj)
          * defaultCompartmentObject->compartment()).
          */
         JS_ASSERT(!hasfp());
-        setCompartment(obj ? obj->compartment() : NULL);
+        compartment = obj ? obj->compartment() : NULL;
         if (throwing)
             wrapPendingException();
     }
@@ -544,7 +533,7 @@ inline void
 JSContext::enterCompartment(JSCompartment *c)
 {
     enterCompartmentDepth_++;
-    setCompartment(c);
+    compartment = c;
     c->enter();
     if (throwing)
         wrapPendingException();
@@ -567,33 +556,24 @@ JSContext::leaveCompartment(JSCompartment *oldCompartment)
      * oldCompartment.
      */
     if (hasEnteredCompartment() || !defaultCompartmentObject_)
-        setCompartment(oldCompartment);
+        compartment = oldCompartment;
     else
-        setCompartment(defaultCompartmentObject_->compartment());
+        compartment = defaultCompartmentObject_->compartment();
 
     if (throwing)
         wrapPendingException();
 }
 
 inline JS::Zone *
-JSContext::zone() const
+JSContext::zone()
 {
-    JS_ASSERT_IF(!compartment, !zone_);
-    JS_ASSERT_IF(compartment, compartment->zone() == zone_);
-    return zone_;
+    return compartment->zone();
 }
 
 inline void
 JSContext::updateMallocCounter(size_t nbytes)
 {
     runtime->updateMallocCounter(zone(), nbytes);
-}
-
-inline void
-JSContext::setCompartment(JSCompartment *comp)
-{
-    compartment = comp;
-    zone_ = comp ? comp->zone() : NULL;
 }
 
 #endif /* jscntxtinlines_h___ */
