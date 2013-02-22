@@ -51,11 +51,9 @@ class JS_FRIEND_API(Wrapper);
 class JS_FRIEND_API(BaseProxyHandler) {
     void *mFamily;
     bool mHasPrototype;
-    bool mHasPolicy;
   protected:
     // Subclasses may set this in their constructor.
     void setHasPrototype(bool aHasPrototype) { mHasPrototype = aHasPrototype; }
-    void setHasPolicy(bool aHasPolicy) { mHasPolicy = aHasPolicy; }
 
   public:
     explicit BaseProxyHandler(void *family);
@@ -65,10 +63,6 @@ class JS_FRIEND_API(BaseProxyHandler) {
         return mHasPrototype;
     }
 
-    bool hasPolicy() {
-        return mHasPolicy;
-    }
-
     inline void *family() {
         return mFamily;
     }
@@ -76,24 +70,6 @@ class JS_FRIEND_API(BaseProxyHandler) {
     virtual bool isOuterWindow() {
         return false;
     }
-
-    /* Policy enforcement traps.
-     *
-     * enter() allows the policy to specify whether the caller may perform |act|
-     * on the proxy's |id| property. In the case when |act| is CALL, |id| is
-     * generally JSID_VOID.
-     *
-     * The |act| parameter to enter() specifies the action being performed.
-     * If |bp| is false, the trap suggests that the caller throw (though it
-     * may still decide to squelch the error).
-     */
-    enum Action {
-        GET,
-        SET,
-        CALL
-    };
-    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Action act,
-                       bool *bp);
 
     /* ES5 Harmony fundamental proxy traps. */
     virtual bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
@@ -342,71 +318,6 @@ NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv,
 
 JSObject *
 RenewProxyObject(JSContext *cx, JSObject *obj, BaseProxyHandler *handler, Value priv);
-
-class AutoEnterPolicy {
-  public:
-    typedef BaseProxyHandler::Action Action;
-    AutoEnterPolicy(JSContext *cx, BaseProxyHandler *handler,
-                    JSObject *wrapper, jsid id, Action act, bool mayThrow)
-#ifdef DEBUG
-        : context(NULL)
-#endif
-    {
-        allow = handler->hasPolicy() ? handler->enter(cx, wrapper, id, act, &rv)
-                                     : true;
-        recordEnter(cx, wrapper, id);
-        if (!allow && !rv && mayThrow)
-            reportError(cx, id);
-    }
-
-    virtual ~AutoEnterPolicy() { recordLeave(); }
-    inline bool allowed() { return allow; }
-    inline bool returnValue() { JS_ASSERT(!allowed()); return rv; }
-
-  protected:
-    // no-op constructor for subclass
-    AutoEnterPolicy()
-#ifdef DEBUG
-        : context(NULL)
-#endif
-        {};
-    void reportError(JSContext *cx, jsid id);
-    bool allow;
-    bool rv;
-
-#ifdef DEBUG
-    JSContext *context;
-    mozilla::Maybe<RootedObject> enteredProxy;
-    mozilla::Maybe<RootedId> enteredId;
-    // NB: We explicitly don't track the entered action here, because sometimes
-    // SET traps do an implicit GET during their implementation, leading to
-    // spurious assertions.
-    AutoEnterPolicy *prev;
-    void recordEnter(JSContext *cx, JSObject *proxy, jsid id);
-    void recordLeave();
-
-    friend void assertEnteredPolicy(JSContext *cx, JSObject *proxy, jsid id);
-#else
-    inline void recordEnter(JSContext *cx, JSObject *proxy, jsid id) {}
-    inline void recordLeave() {}
-#endif
-
-};
-
-#ifdef DEBUG
-class AutoWaivePolicy : public AutoEnterPolicy {
-public:
-    AutoWaivePolicy(JSContext *cx, JSObject *proxy, jsid id)
-    {
-        allow = true;
-        recordEnter(cx, proxy, id);
-    }
-};
-#else
-class AutoWaivePolicy {
-    public: AutoWaivePolicy(JSContext *cx, JSObject *proxy, jsid id) {};
-};
-#endif
 
 } /* namespace js */
 

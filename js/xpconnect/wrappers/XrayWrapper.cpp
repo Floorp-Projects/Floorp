@@ -726,7 +726,8 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, JSObject *wrapp
 {
     MOZ_ASSERT(js::GetObjectJSClass(holder) == &HolderClass);
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
-    if (id == rt->GetStringID(XPCJSRuntime::IDX_MOZMATCHESSELECTOR) &&
+    if (!(flags & JSRESOLVE_ASSIGNING) &&
+        id == rt->GetStringID(XPCJSRuntime::IDX_MOZMATCHESSELECTOR) &&
         Is<nsIDOMElement>(wrapper))
     {
         // XPC calling mechanism cannot handle call/bind properly in some cases
@@ -983,8 +984,13 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWra
            id == rt->GetStringID(XPCJSRuntime::IDX_NODEPRINCIPAL)) &&
           Is<nsINode>(wrapper)) ||
           (id == rt->GetStringID(XPCJSRuntime::IDX_DOCUMENTURIOBJECT) &&
-          Is<nsIDocument>(wrapper))))
-    {
+          Is<nsIDocument>(wrapper)))) {
+        bool status;
+        Wrapper::Action action = (flags & JSRESOLVE_ASSIGNING) ? Wrapper::SET : Wrapper::GET;
+        desc->obj = NULL; // default value
+        if (!jsWrapper.enter(cx, wrapper, id, action, &status))
+            return status;
+
         desc->obj = wrapper;
         desc->attrs = JSPROP_ENUMERATE|JSPROP_SHARED;
         if (id == rt->GetStringID(XPCJSRuntime::IDX_BASEURIOBJECT))
@@ -1313,19 +1319,6 @@ GetNativePropertiesObject(JSContext *cx, JSObject *wrapper)
     return holder;
 }
 
-bool
-IsXrayResolving(JSContext *cx, JSObject *wrapper, jsid id)
-{
-    if (!WrapperFactory::IsXrayWrapper(wrapper) ||
-        GetXrayType(wrapper) != XrayForWrappedNative)
-    {
-        return false;
-    }
-    JSObject *holder =
-      XPCWrappedNativeXrayTraits::singleton.ensureHolder(cx, wrapper);
-    return XPCWrappedNativeXrayTraits::isResolving(cx, holder, id);
-}
-
 }
 
 static JSBool
@@ -1410,12 +1403,17 @@ bool
 XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
                                                  js::PropertyDescriptor *desc, unsigned flags)
 {
-    assertEnteredPolicy(cx, wrapper, id);
     JSObject *holder = Traits::singleton.ensureHolder(cx, wrapper);
     if (Traits::isResolving(cx, holder, id)) {
         desc->obj = NULL;
         return true;
     }
+
+    bool status;
+    Wrapper::Action action = (flags & JSRESOLVE_ASSIGNING) ? Wrapper::SET : Wrapper::GET;
+    desc->obj = NULL; // default value
+    if (!this->enter(cx, wrapper, id, action, &status))
+        return status;
 
     typename Traits::ResolvingIdImpl resolving(wrapper, id);
 
@@ -1442,6 +1440,12 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
     if (AccessCheck::wrapperSubsumes(wrapper) &&
         id == rt->GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT)) {
+        bool status;
+        Wrapper::Action action = (flags & JSRESOLVE_ASSIGNING) ? Wrapper::SET : Wrapper::GET;
+        desc->obj = NULL; // default value
+        if (!this->enter(cx, wrapper, id, action, &status))
+            return status;
+
         desc->obj = wrapper;
         desc->attrs = JSPROP_ENUMERATE|JSPROP_SHARED;
         desc->getter = wrappedJSObject_getter;
@@ -1529,12 +1533,17 @@ bool
 XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
                                                     PropertyDescriptor *desc, unsigned flags)
 {
-    assertEnteredPolicy(cx, wrapper, id);
     JSObject *holder = Traits::singleton.ensureHolder(cx, wrapper);
     if (Traits::isResolving(cx, holder, id)) {
         desc->obj = NULL;
         return true;
     }
+
+    bool status;
+    Wrapper::Action action = (flags & JSRESOLVE_ASSIGNING) ? Wrapper::SET : Wrapper::GET;
+    desc->obj = NULL; // default value
+    if (!this->enter(cx, wrapper, id, action, &status))
+        return status;
 
     typename Traits::ResolvingIdImpl resolving(wrapper, id);
 
@@ -1576,7 +1585,6 @@ bool
 XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
                                           js::PropertyDescriptor *desc)
 {
-    assertEnteredPolicy(cx, wrapper, id);
     // Redirect access straight to the wrapper if we should be transparent.
     if (XrayUtils::IsTransparent(cx, wrapper, id)) {
         JSObject *obj = Traits::getTargetObject(wrapper);
@@ -1588,8 +1596,6 @@ XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, JSObject *wrapper, jsid
                                      desc->attrs);
     }
 
-    // NB: We still need JSRESOLVE_ASSIGNING here for the time being, because it
-    // tells things like nodelists whether they should create the property or not.
     PropertyDescriptor existing_desc;
     if (!getOwnPropertyDescriptor(cx, wrapper, id, &existing_desc, JSRESOLVE_ASSIGNING))
         return false;
@@ -1629,7 +1635,6 @@ bool
 XrayWrapper<Base, Traits>::getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
                                                JS::AutoIdVector &props)
 {
-    assertEnteredPolicy(cx, wrapper, JSID_VOID);
     return enumerate(cx, wrapper, JSITER_OWNONLY | JSITER_HIDDEN, props);
 }
 
@@ -1637,7 +1642,6 @@ template <typename Base, typename Traits>
 bool
 XrayWrapper<Base, Traits>::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 {
-    assertEnteredPolicy(cx, wrapper, id);
     // Redirect access straight to the wrapper if we should be transparent.
     if (XrayUtils::IsTransparent(cx, wrapper, id)) {
         JSObject *obj = Traits::getTargetObject(wrapper);
@@ -1674,7 +1678,6 @@ bool
 XrayWrapper<Base, Traits>::enumerate(JSContext *cx, JSObject *wrapper, unsigned flags,
                                      JS::AutoIdVector &props)
 {
-    assertEnteredPolicy(cx, wrapper, JSID_VOID);
     // Redirect access straight to the wrapper if we should be transparent.
     if (XrayUtils::IsTransparent(cx, wrapper, JSID_VOID)) {
         JSObject *obj = Traits::getTargetObject(wrapper);
@@ -1768,7 +1771,6 @@ template <typename Base, typename Traits>
 bool
 XrayWrapper<Base, Traits>::call(JSContext *cx, JSObject *wrapper, unsigned argc, js::Value *vp)
 {
-    assertEnteredPolicy(cx, wrapper, JSID_VOID);
     return Traits::call(cx, wrapper, argc, vp);
 }
 
@@ -1777,7 +1779,6 @@ bool
 XrayWrapper<Base, Traits>::construct(JSContext *cx, JSObject *wrapper, unsigned argc,
                                      js::Value *argv, js::Value *rval)
 {
-    assertEnteredPolicy(cx, wrapper, JSID_VOID);
     return Traits::construct(cx, wrapper, argc, argv, rval);
 }
 
