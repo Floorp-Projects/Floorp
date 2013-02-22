@@ -184,6 +184,7 @@ CPPSRCS	= \
 	gfxUserFontSet.cpp \
 	gfxUtils.cpp \
 	gfxScriptItemizer.cpp \
+	gfxGraphiteShaper.cpp \
 	gfxHarfBuzzShaper.cpp \
 	gfxBaseSharedMemorySurface.cpp \
 	gfxReusableSurfaceWrapper.cpp \
@@ -193,13 +194,6 @@ CPPSRCS	= \
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),$(findstring $(MOZ_WIDGET_TOOLKIT),android gtk2 gonk qt))
 DEFINES += -DMOZ_ENABLE_FREETYPE
-endif
-
-ifdef MOZ_GRAPHITE
-DEFINES += -DGRAPHITE2_STATIC
-CPPSRCS	+= \
-	gfxGraphiteShaper.cpp \
-	$(NULL)
 endif
 
 # Are we targeting x86 or x64?  If so, build gfxAlphaRecoverySSE2.cpp.
@@ -348,8 +342,12 @@ CMMSRCS = \
 
 endif
 
-DEFINES += -DIMPL_THEBES -DHB_DONT_DEFINE_STDINT
-DEFINES += -DMOZ_OTS_REPORT_ERRORS
+DEFINES += \
+	-DIMPL_THEBES \
+	-DHB_DONT_DEFINE_STDINT \
+	-DMOZ_OTS_REPORT_ERRORS \
+	-DGRAPHITE2_STATIC \
+	$(NULL)
 
 ifeq (WINNT,$(OS_TARGET))
 DEFINES += -DOTS_DLL
