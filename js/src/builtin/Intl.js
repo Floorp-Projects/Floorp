@@ -575,11 +575,13 @@ function BestFitMatcher(availableLocales, requestedLocales) {
  * Spec: ECMAScript Internationalization API Specification, 9.2.5.
  */
 function ResolveLocale(availableLocales, requestedLocales, options, relevantExtensionKeys, localeData) {
+    /*jshint laxbreak: true */
+
     // Steps 1-3.
     var matcher = options.localeMatcher;
-    var r = (matcher === "lookup") ?
-            LookupMatcher(availableLocales, requestedLocales) :
-            BestFitMatcher(availableLocales, requestedLocales);
+    var r = (matcher === "lookup")
+            ? LookupMatcher(availableLocales, requestedLocales)
+            : BestFitMatcher(availableLocales, requestedLocales);
 
     // Step 4.
     var foundLocale = r.locale;
@@ -756,6 +758,8 @@ function BestFitSupportedLocales(availableLocales, requestedLocales) {
  * Spec: ECMAScript Internationalization API Specification, 9.2.8.
  */
 function SupportedLocales(availableLocales, requestedLocales, options) {
+    /*jshint laxbreak: true */
+
     // Step 1.
     var matcher;
     if (options !== undefined) {
@@ -772,9 +776,9 @@ function SupportedLocales(availableLocales, requestedLocales, options) {
     }
 
     // Steps 2-3.
-    var subset = (matcher === undefined || matcher === "best fit") ?
-                 BestFitSupportedLocales(availableLocales, requestedLocales) :
-                 LookupSupportedLocales(availableLocales, requestedLocales);
+    var subset = (matcher === undefined || matcher === "best fit")
+                 ? BestFitSupportedLocales(availableLocales, requestedLocales)
+                 : LookupSupportedLocales(availableLocales, requestedLocales);
 
     // Step 4.
     for (var i = 0; i < subset.length; i++)
@@ -994,14 +998,14 @@ function InitializeCollator(collator, locales, options) {
     for (key in collatorKeyMappings) {
         if (callFunction(std_Object_hasOwnProperty, collatorKeyMappings, key)) {
             mapping = collatorKeyMappings[key];
-    
+
             // Step 13.b.
             value = GetOption(options, mapping.property, mapping.type, mapping.values, undefined);
-    
+
             // Step 13.c.
             if (mapping.type === "boolean" && value !== undefined)
                 value = callFunction(std_Boolean_toString, value);
-    
+
             // Step 13.d.
             opt[key] = value;
         }
@@ -1072,4 +1076,139 @@ function InitializeCollator(collator, locales, options) {
 
     // Step 26.
     internals.initializedCollator = true;
+}
+
+
+/**
+ * Returns the subset of the given locale list for which this locale list has a
+ * matching (possibly fallback) locale. Locales appear in the same order in the
+ * returned list as in the input list.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 10.2.2.
+ */
+function Intl_Collator_supportedLocalesOf(locales /*, options*/) {
+    var options = arguments.length > 1 ? arguments[1] : undefined;
+
+    var availableLocales = collatorInternalProperties.availableLocales;
+    var requestedLocales = CanonicalizeLocaleList(locales);
+    return SupportedLocales(availableLocales, requestedLocales, options);
+}
+
+
+/**
+ * Collator internal properties.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.1 and 10.2.3.
+ */
+var collatorInternalProperties = {
+    sortLocaleData: collatorSortLocaleData,
+    searchLocaleData: collatorSearchLocaleData,
+    availableLocales: runtimeAvailableLocales, // stub
+    relevantExtensionKeys: ["co", "kn"]
+};
+
+
+function collatorSortLocaleData(locale) {
+    // the following data may or may not match any actual locale support
+    return {
+        co: [null],
+        kn: ["false", "true"]
+    };
+}
+
+
+function collatorSearchLocaleData(locale) {
+    // the following data may or may not match any actual locale support
+    return {
+        co: [null],
+        kn: ["false", "true"],
+        sensitivity: "variant"
+    };
+}
+
+
+/**
+ * Function to be bound and returned by Intl.Collator.prototype.format.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 12.3.2.
+ */
+function collatorCompareToBind(x, y) {
+    // Steps 1.a.i-ii implemented by ECMAScript declaration binding instantiation,
+    // ES5.1 10.5, step 4.d.ii.
+
+    // Step 1.a.iii-v.
+    var X = ToString(x);
+    var Y = ToString(y);
+    return CompareStrings(this, X, Y);
+}
+
+
+/**
+ * Returns a function bound to this Collator that compares x (converted to a
+ * String value) and y (converted to a String value),
+ * and returns a number less than 0 if x < y, 0 if x = y, or a number greater
+ * than 0 if x > y according to the sort order for the locale and collation
+ * options of this Collator object.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 10.3.2.
+ */
+function Intl_Collator_compare_get() {
+    // Check "this Collator object" per introduction of section 10.3.
+    var internals = checkIntlAPIObject(this, "Collator", "compare");
+
+    // Step 1.
+    if (internals.boundCompare === undefined) {
+        // Step 1.a.
+        var F = collatorCompareToBind;
+
+        // Step 1.b-d.
+        var bc = callFunction(std_Function_bind, F, this);
+        internals.boundCompare = bc;
+    }
+
+    // Step 2.
+    return internals.boundCompare;
+}
+
+
+/**
+ * Compares x (converted to a String value) and y (converted to a String value),
+ * and returns a number less than 0 if x < y, 0 if x = y, or a number greater
+ * than 0 if x > y according to the sort order for the locale and collation
+ * options of this Collator object.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 10.3.2.
+ */
+function CompareStrings(collator, x, y) {
+    assert(typeof x === "string", "CompareStrings");
+    assert(typeof y === "string", "CompareStrings");
+
+    // ??? stub
+    return x.localeCompare(y);
+}
+
+
+/**
+ * Returns the resolved options for a Collator object.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 10.3.3 and 10.4.
+ */
+function Intl_Collator_resolvedOptions() {
+    // Check "this Collator object" per introduction of section 10.3.
+    var internals = checkIntlAPIObject(this, "Collator", "resolvedOptions");
+
+    var result = {
+        locale: internals.locale,
+        usage: internals.usage,
+        sensitivity: internals.sensitivity,
+        ignorePunctuation: internals.ignorePunctuation
+    };
+
+    var relevantExtensionKeys = collatorInternalProperties.relevantExtensionKeys;
+    for (var i = 0; i < relevantExtensionKeys.length; i++) {
+        var key = relevantExtensionKeys[i];
+        var property = (key === "co") ? "collation" : collatorKeyMappings[key].property;
+        defineProperty(result, property, internals[property]);
+    }
+    return result;
 }
