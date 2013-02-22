@@ -349,6 +349,7 @@ MOCHITEST_FILES = \
 		test_mod_attributes_reflection.html \
 		test_mozaudiochannel.html \
 		test_style_attributes_reflection.html \
+		test_bug629801.html \
 		$(NULL)
 
 

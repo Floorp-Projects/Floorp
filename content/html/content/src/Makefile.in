@@ -72,6 +72,7 @@ EXPORTS_mozilla/dom = \
 		HTMLTableRowElement.h \
 		HTMLTableSectionElement.h \
 		HTMLTextAreaElement.h \
+		HTMLTimeElement.h \
 		HTMLTitleElement.h \
 		HTMLUnknownElement.h \
 		UndoManager.h \
@@ -136,6 +137,7 @@ CPPSRCS		= \
 		HTMLTableRowElement.cpp \
 		HTMLTableSectionElement.cpp \
 		HTMLTextAreaElement.cpp \
+		HTMLTimeElement.cpp \
 		HTMLTitleElement.cpp \
 		HTMLUnknownElement.cpp \
 		ValidityState.cpp \
