@@ -6691,6 +6691,9 @@ nsBlockFrame::RenumberLists(nsPresContext* aPresContext)
     for (nsIContent* kid = mContent->GetFirstChild(); kid;
          kid = kid->GetNextSibling()) {
       if (kid->IsHTML(nsGkAtoms::li)) {
+        // FIXME: This isn't right in terms of what CSS says to do for
+        // overflow of counters (but it only matters when this node has
+        // more than numeric_limits<int32_t>::max() children).
         ordinal -= increment;
       }
     }
