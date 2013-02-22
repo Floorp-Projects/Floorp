@@ -66,6 +66,7 @@ BRANDING_FILES := \
 endif
 
 BRANDING_DEST := $(DIST)/branding
+BRANDING_TARGET := export
 INSTALL_TARGETS += BRANDING
 
 include $(topsrcdir)/config/rules.mk
