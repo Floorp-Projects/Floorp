@@ -6148,6 +6148,20 @@ JS_EncodeString(JSContext *cx, JSRawString str)
     return LossyTwoByteCharsToNewLatin1CharsZ(cx, linear->range()).c_str();
 }
 
+JS_PUBLIC_API(char *)
+JS_EncodeStringToUTF8(JSContext *cx, JSRawString str)
+{
+    AutoAssertNoGC nogc;
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+
+    JSLinearString *linear = str->ensureLinear(cx);
+    if (!linear)
+        return NULL;
+
+    return TwoByteCharsToNewUTF8CharsZ(cx, linear->range()).c_str();
+}
+
 JS_PUBLIC_API(size_t)
 JS_GetStringEncodingLength(JSContext *cx, JSString *str)
 {

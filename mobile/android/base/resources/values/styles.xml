@@ -136,16 +136,20 @@
     </style>
 
     <!-- TabsTray List -->
-    <style name="TabsList" parent="android:style/Widget.ListView">
+    <style name="TabsListBase">
          <item name="android:background">@android:color/transparent</item>
-         <item name="android:cacheColorHint">@android:color/transparent</item>
-         <item name="android:divider">@android:color/transparent</item>
-         <item name="android:dividerHeight">0dip</item>
          <item name="android:listSelector">@android:color/transparent</item>
     </style>
 
+    <style name="TabsList" parent="TabsListBase">
+         <item name="android:orientation">vertical</item>
+    </style>
+
     <!-- RemoteTabsList -->
-    <style name="RemoteTabsList" parent="TabsList">
+    <style name="RemoteTabsList" parent="android:style/Widget.ListView">
+         <item name="android:listSelector">@android:color/transparent</item>
+         <item name="android:cacheColorHint">@android:color/transparent</item>
+         <item name="android:divider">@android:color/transparent</item>
          <item name="android:dividerHeight">1dip</item>
          <item name="android:childDivider">@drawable/remote_tabs_child_divider</item>
          <item name="android:groupIndicator">@android:color/transparent</item>

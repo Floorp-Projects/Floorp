@@ -35,6 +35,7 @@
 
 using base::Time;
 using base::TimeDelta;
+using base::TimeTicks;
 
 // A lazily created thread local storage for quick access to a thread's message
 // loop, if one exists.  This should be safe and free of static constructors.
@@ -281,7 +282,7 @@ void MessageLoop::PostTask_Helper(
 
   if (delay_ms > 0) {
     pending_task.delayed_run_time =
-        Time::Now() + TimeDelta::FromMilliseconds(delay_ms);
+        TimeTicks::Now() + TimeDelta::FromMilliseconds(delay_ms);
   } else {
     DCHECK(delay_ms == 0) << "delay should not be negative";
   }
@@ -448,13 +449,13 @@ bool MessageLoop::DoWork() {
   return false;
 }
 
-bool MessageLoop::DoDelayedWork(Time* next_delayed_work_time) {
+bool MessageLoop::DoDelayedWork(TimeTicks* next_delayed_work_time) {
   if (!nestable_tasks_allowed_ || delayed_work_queue_.empty()) {
-    *next_delayed_work_time = Time();
+    *next_delayed_work_time = TimeTicks();
     return false;
   }
 
-  if (delayed_work_queue_.top().delayed_run_time > Time::Now()) {
+  if (delayed_work_queue_.top().delayed_run_time > TimeTicks::Now()) {
     *next_delayed_work_time = delayed_work_queue_.top().delayed_run_time;
     return false;
   }

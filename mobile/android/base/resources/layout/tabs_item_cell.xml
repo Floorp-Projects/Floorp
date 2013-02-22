@@ -30,7 +30,7 @@
                       android:layout_height="wrap_content"
                       android:orientation="horizontal"
                       android:background="#EFFF"
-                      android:layout_alignParentBottom="true"
+                      android:layout_below="@id/thumbnail"
                       android:duplicateParentState="true">
 
             <TextView android:id="@+id/title"

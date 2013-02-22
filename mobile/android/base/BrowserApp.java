@@ -20,6 +20,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -224,8 +225,10 @@ abstract public class BrowserApp extends GeckoApp
         mBrowserToolbar = new BrowserToolbar(this);
         mBrowserToolbar.from(actionBar);
 
-        if (mTabsPanel != null)
+        if (mTabsPanel != null) {
             mTabsPanel.setTabsLayoutChangeListener(this);
+            updateSideBarState();
+        }
 
         mFindInPageBar = (FindInPageBar) findViewById(R.id.find_in_page);
 
@@ -345,6 +348,7 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         invalidateOptionsMenu();
+        updateSideBarState();
         mTabsPanel.refresh();
 
         if (mAboutHomeContent != null)
@@ -374,6 +378,52 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public boolean hasTabsSideBar() {
         return (mTabsPanel != null && mTabsPanel.isSideBar());
+    }
+
+    private void updateSideBarState() {
+        if (mMainLayoutAnimator != null)
+            mMainLayoutAnimator.stop();
+
+        boolean isSideBar = (GeckoAppShell.isTablet() && mOrientation == Configuration.ORIENTATION_LANDSCAPE);
+
+        ViewGroup.LayoutParams lp = mTabsPanel.getLayoutParams();
+        if (isSideBar) {
+            lp.width = getResources().getDimensionPixelSize(R.dimen.tabs_sidebar_width);
+        } else {
+            lp.width = ViewGroup.LayoutParams.FILL_PARENT;
+        }
+        mTabsPanel.requestLayout();
+
+        final boolean changed = (mTabsPanel.isSideBar() != isSideBar);
+        final boolean needsRelayout = (changed && mTabsPanel.isShown());
+
+        if (needsRelayout) {
+            final int width;
+            final int scrollY;
+
+            if (isSideBar) {
+                width = lp.width;
+                mMainLayout.scrollTo(0, 0);
+            } else {
+                width = 0;
+            }
+
+            mBrowserToolbar.adjustForTabsLayout(width);
+
+            ((LinearLayout.LayoutParams) mGeckoLayout.getLayoutParams()).setMargins(width, 0, 0, 0);
+            mGeckoLayout.requestLayout();
+        }
+
+        if (changed) {
+            // Cancel state of previous sidebar state
+            mBrowserToolbar.updateTabs(false);
+
+            mTabsPanel.setIsSideBar(isSideBar);
+            mBrowserToolbar.setIsSideBar(isSideBar);
+
+            // Update with new sidebar state
+            mBrowserToolbar.updateTabs(mTabsPanel.isShown());
+        }
     }
 
     @Override
@@ -557,20 +607,17 @@ abstract public class BrowserApp extends GeckoApp
             // Set the gecko layout for sliding.
             if (!mTabsPanel.isShown()) {
                 ((LinearLayout.LayoutParams) mGeckoLayout.getLayoutParams()).setMargins(0, 0, 0, 0);
-                if (!usingTextureView)
-                    mGeckoLayout.scrollTo(mTabsPanel.getWidth() * -1, 0);
+                mGeckoLayout.scrollTo(mTabsPanel.getWidth() * -1, 0);
                 mGeckoLayout.requestLayout();
             }
 
             mMainLayoutAnimator.attach(mGeckoLayout,
-                                       usingTextureView ? PropertyAnimator.Property.TRANSLATION_X :
-                                                          PropertyAnimator.Property.SCROLL_X,
-                                       usingTextureView ? width : -width);
+                                       PropertyAnimator.Property.SCROLL_X,
+                                       -width);
         } else {
             mMainLayoutAnimator.attach(mMainLayout,
-                                       usingTextureView ? PropertyAnimator.Property.TRANSLATION_Y :
-                                                          PropertyAnimator.Property.SCROLL_Y,
-                                       usingTextureView ? height : -height);
+                                       PropertyAnimator.Property.SCROLL_Y,
+                                       -height);
         }
 
         mMainLayoutAnimator.start();
@@ -599,14 +646,8 @@ abstract public class BrowserApp extends GeckoApp
 
         if (mTabsPanel.isShown()) {
             if (hasTabsSideBar()) {
-                boolean usingTextureView = mLayerView.shouldUseTextureView();
-
-                int leftMargin = (usingTextureView ? 0 : mTabsPanel.getWidth());
-                int rightMargin = (usingTextureView ? mTabsPanel.getWidth() : 0);
-                ((LinearLayout.LayoutParams) mGeckoLayout.getLayoutParams()).setMargins(leftMargin, 0, rightMargin, 0);
-
-                if (!usingTextureView)
-                    mGeckoLayout.scrollTo(0, 0);
+                ((LinearLayout.LayoutParams) mGeckoLayout.getLayoutParams()).setMargins(mTabsPanel.getWidth(), 0, 0, 0);
+                mGeckoLayout.scrollTo(0, 0);
             }
 
             mGeckoLayout.requestLayout();

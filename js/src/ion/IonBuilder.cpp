@@ -725,16 +725,15 @@ IonBuilder::snoopControlFlow(JSOp op)
             return processBreak(op, sn);
 
           case SRC_CONTINUE:
-          case SRC_CONT2LABEL:
-            return processContinue(op, sn);
+            return processContinue(op);
 
           case SRC_SWITCHBREAK:
-            return processSwitchBreak(op, sn);
+            return processSwitchBreak(op);
 
           case SRC_WHILE:
           case SRC_FOR_IN:
             // while (cond) { }
-            return whileOrForInLoop(op, sn);
+            return whileOrForInLoop(sn);
 
           default:
             // Hard assert for now - make an error later.
@@ -1714,7 +1713,7 @@ EffectiveContinue(jsbytecode *pc)
 }
 
 IonBuilder::ControlStatus
-IonBuilder::processContinue(JSOp op, jssrcnote *sn)
+IonBuilder::processContinue(JSOp op)
 {
     JS_ASSERT(op == JSOP_GOTO);
 
@@ -1743,7 +1742,7 @@ IonBuilder::processContinue(JSOp op, jssrcnote *sn)
 }
 
 IonBuilder::ControlStatus
-IonBuilder::processSwitchBreak(JSOp op, jssrcnote *sn)
+IonBuilder::processSwitchBreak(JSOp op)
 {
     JS_ASSERT(op == JSOP_GOTO);
 
@@ -1953,7 +1952,7 @@ IonBuilder::doWhileLoop(JSOp op, jssrcnote *sn)
 }
 
 IonBuilder::ControlStatus
-IonBuilder::whileOrForInLoop(JSOp op, jssrcnote *sn)
+IonBuilder::whileOrForInLoop(jssrcnote *sn)
 {
     // while (cond) { } loops have the following structure:
     //    GOTO cond   ; SRC_WHILE (offset to IFNE)
@@ -1964,8 +1963,8 @@ IonBuilder::whileOrForInLoop(JSOp op, jssrcnote *sn)
     //    ...
     //    IFNE        ; goes to LOOPHEAD
     // for (x in y) { } loops are similar; the cond will be a MOREITER.
-    size_t which = (SN_TYPE(sn) == SRC_FOR_IN) ? 1 : 0;
-    int ifneOffset = js_GetSrcNoteOffset(sn, which);
+    JS_ASSERT(SN_TYPE(sn) == SRC_FOR_IN || SN_TYPE(sn) == SRC_WHILE);
+    int ifneOffset = js_GetSrcNoteOffset(sn, 0);
     jsbytecode *ifne = pc + ifneOffset;
     JS_ASSERT(ifne > pc);
 
@@ -2120,7 +2119,7 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
     // .: Offset of case high
 
     JS_ASSERT(op == JSOP_TABLESWITCH);
-    JS_ASSERT(SN_TYPE(sn) == SRC_SWITCH);
+    JS_ASSERT(SN_TYPE(sn) == SRC_TABLESWITCH);
 
     // Pop input.
     MDefinition *ins = current->pop();
@@ -2261,6 +2260,7 @@ IonBuilder::jsop_condswitch()
 
     JS_ASSERT(JSOp(*pc) == JSOP_CONDSWITCH);
     jssrcnote *sn = info().getNote(cx, pc);
+    JS_ASSERT(SN_TYPE(sn) == SRC_CONDSWITCH);
 
     // Get the exit pc
     jsbytecode *exitpc = pc + js_GetSrcNoteOffset(sn, 0);
@@ -2908,7 +2908,7 @@ IonBuilder::inlineScriptedCall(HandleFunction target, CallInfo &callInfo)
 {
     AssertCanGC();
     JS_ASSERT(target->isInterpreted());
-    JS_ASSERT(callInfo.hasTypeInfo());
+    JS_ASSERT(callInfo.hasCallType());
 
     // Remove the MPassArg if still present.
     if (callInfo.isWrapped())
@@ -2944,9 +2944,21 @@ IonBuilder::inlineScriptedCall(HandleFunction target, CallInfo &callInfo)
     callInfo.popFormals(current);
     current->push(callInfo.fun());
 
+    RootedScript calleeScript(cx, target->nonLazyScript());
+    TypeInferenceOracle oracle;
+    if (!oracle.init(cx, calleeScript))
+        return false;
+
+    // Add exclude type barriers.
+    if (callInfo.argsBarrier()) {
+        addTypeBarrier(0, callInfo, oracle.thisTypeSet(calleeScript));
+        int32_t max = (callInfo.argc() < target->nargs) ? callInfo.argc() : target->nargs;
+        for (int32_t i = 1; i <= max; i++)
+            addTypeBarrier(i, callInfo, oracle.parameterTypeSet(calleeScript, i - 1));
+    }
+
     // Start inlining
     LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
-    RootedScript calleeScript(cx, target->nonLazyScript());
     CompileInfo *info = alloc->new_<CompileInfo>(calleeScript.get(), target,
                                                  (jsbytecode *)NULL, callInfo.constructing(),
                                                  SequentialExecution);
@@ -2955,10 +2967,6 @@ IonBuilder::inlineScriptedCall(HandleFunction target, CallInfo &callInfo)
 
     MIRGraphExits saveExits;
     AutoAccumulateExits aae(graph(), saveExits);
-
-    TypeInferenceOracle oracle;
-    if (!oracle.init(cx, calleeScript))
-        return false;
 
     IonBuilder inlineBuilder(cx, &temp(), &graph(), &oracle,
                              info, inliningDepth + 1, loopDepth_);
@@ -3005,6 +3013,68 @@ IonBuilder::inlineScriptedCall(HandleFunction target, CallInfo &callInfo)
     current = bottom;
 
     return true;
+}
+
+void
+IonBuilder::addTypeBarrier(uint32_t i, CallInfo &callinfo, types::StackTypeSet *calleeObs)
+{
+    MDefinition *ins = NULL;
+    types::StackTypeSet *callerObs = NULL;
+    types::TypeBarrier *excluded = callinfo.argsBarrier();
+
+    if (i == 0) {
+        ins = callinfo.thisArg();
+        callerObs = callinfo.thisType();
+    } else {
+        ins = callinfo.getArg(i - 1);
+        callerObs = callinfo.getArgType(i - 1);
+    }
+
+    while (excluded) {
+        if (excluded->target == calleeObs) {
+            JS_ASSERT(callerObs->hasType(excluded->type));
+
+            if (excluded->type == types::Type::DoubleType() &&
+                calleeObs->hasType(types::Type::Int32Type())) {
+                // The double type also implies int32, so this implies that
+                // double should be coerced into int if possible, and other
+                // types should remain.
+
+                JSValueType callerType = callerObs->getKnownTypeTag();
+                if (callerType == JSVAL_TYPE_DOUBLE) {
+                    MInstruction *bailType = MToInt32::New(ins);
+                    current->add(bailType);
+                    ins = bailType;
+                    break;
+                } else {
+                    // We expect either an Int or a Value, this variant is not
+                    // optimized and favor the int variant by filtering out all
+                    // other inputs.
+                    JS_ASSERT(callerType == JSVAL_TYPE_UNKNOWN);
+                    // Bail if the input is not a number.
+                    MInstruction *toDouble = MUnbox::New(ins, MIRType_Double, MUnbox::Fallible);
+                    // Bail if the double does not fit in an int.
+                    MInstruction *toInt = MToInt32::New(ins);
+                    current->add(toDouble);
+                    current->add(toInt);
+                    ins = toInt;
+                }
+            } else {
+                JS_ASSERT(!calleeObs->hasType(excluded->type));
+
+                // Filter out unexpected type which are not yet added to the set
+                // observed type but which are infered by type inference.
+                MInstruction *bailType = MExcludeType::New(ins, excluded->type);
+                current->add(bailType);
+            }
+        }
+        excluded = excluded->next;
+    }
+
+    if (i == 0)
+        callinfo.setThis(ins);
+    else
+        callinfo.setArg(i - 1, ins);
 }
 
 MDefinition *
@@ -3065,6 +3135,7 @@ IonBuilder::jsop_call_inline(HandleFunction callee, CallInfo &callInfo, MBasicBl
                              Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns)
 {
     AssertCanGC();
+    JS_ASSERT(callInfo.hasCallType());
 
     // Push formals to capture them in the inline resume point.
     int calleePos = -((int) callInfo.argc() + 2);
@@ -3086,8 +3157,20 @@ IonBuilder::jsop_call_inline(HandleFunction callee, CallInfo &callInfo, MBasicBl
     // Inlining JSOP_FUNCALL uses inlineScriptedCall
     JS_ASSERT(callInfo.argc() == GET_ARGC(inlineResumePoint->pc()));
 
-    LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
     RootedScript calleeScript(cx, callee->nonLazyScript());
+    TypeInferenceOracle oracle;
+    if (!oracle.init(cx, calleeScript))
+        return false;
+
+    // Add exclude type barriers.
+    if (callInfo.argsBarrier()) {
+        addTypeBarrier(0, callInfo, oracle.thisTypeSet(calleeScript));
+        int32_t max = (callInfo.argc() < callee->nargs) ? callInfo.argc() : callee->nargs;
+        for (int32_t i = 1; i <= max; i++)
+            addTypeBarrier(i, callInfo, oracle.parameterTypeSet(calleeScript, i - 1));
+    }
+
+    LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
     CompileInfo *info = alloc->new_<CompileInfo>(calleeScript.get(), callee,
                                                  (jsbytecode *)NULL, callInfo.constructing(),
                                                  SequentialExecution);
@@ -3096,10 +3179,6 @@ IonBuilder::jsop_call_inline(HandleFunction callee, CallInfo &callInfo, MBasicBl
 
     MIRGraphExits saveExits;
     AutoAccumulateExits aae(graph(), saveExits);
-
-    TypeInferenceOracle oracle;
-    if (!oracle.init(cx, calleeScript))
-        return false;
 
     IonBuilder inlineBuilder(cx, &temp(), &graph(), &oracle,
                              info, inliningDepth + 1, loopDepth_);
@@ -3508,14 +3587,19 @@ IonBuilder::inlineScriptedCalls(AutoObjectVector &targets, AutoObjectVector &ori
         // guaranteed to fail.
         JSFunction *func = originals[i]->toFunction();
         MConstant *constFun = MConstant::New(ObjectValue(*func));
+        top->add(constFun);
 
         // Create new entry block for the inlined callee graph.
         MBasicBlock *entryBlock = newBlock(current, pc);
         if (!entryBlock)
             return false;
 
+        // Modify the resume point to account for the callee selection.
+        int funIndex = entryBlock->entryResumePoint()->numOperands();
+        funIndex -= ((int) callInfo.argc() + 2);
+        entryBlock->entryResumePoint()->replaceOperand(funIndex, constFun);
+
         // Add case to PolyInlineDispatch
-        entryBlock->add(constFun);
         disp->addCallee(constFun, entryBlock);
     }
     top->end(disp);
@@ -4035,6 +4119,9 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
     if (!args.append(inlinedArguments_.begin(), inlinedArguments_.end()))
         return false;
     callInfo.setArgs(&args);
+    RootedScript scriptRoot(cx, script());
+    if (!callInfo.initFunApplyArguments(oracle, scriptRoot, pc, info().nargs()))
+        return false;
 
     // This
     MPassArg *passThis = current->pop()->toPassArg();
@@ -4119,6 +4206,8 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
     }
 
     // Inline scriped call(s).
+    if (!callInfo.initCallType(oracle, scriptRoot, pc))
+        return false;
     if (inliningEnabled() && targets.length() > 0 && makeInliningDecision(targets))
         return inlineScriptedCalls(targets, originals, callInfo);
 
