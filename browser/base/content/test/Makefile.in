@@ -161,6 +161,7 @@ _BROWSER_FILES = \
                  browser_bug783614.js \
                  browser_bug797677.js \
                  browser_bug816527.js \
+                 browser_bug817947.js \
                  browser_bug822367.js \
                  browser_bug832435.js \
                  browser_canonizeURL.js \
