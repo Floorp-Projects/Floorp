@@ -1143,7 +1143,7 @@ nsFrameScriptExecutor::InitTabChildGlobalInternal(nsISupports* aScope,
 
   nsresult rv =
     xpc->InitClassesWithNewWrappedGlobal(cx, aScope, mPrincipal,
-                                         flags, JS::SystemZone, getter_AddRefs(mGlobal));
+                                         flags, getter_AddRefs(mGlobal));
   NS_ENSURE_SUCCESS(rv, false);
 
     

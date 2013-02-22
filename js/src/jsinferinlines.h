@@ -379,8 +379,8 @@ struct AutoEnterAnalysis
          */
         if (!compartment->activeAnalysis) {
             TypeCompartment *types = &compartment->types;
-            if (compartment->zone()->types.pendingNukeTypes)
-                compartment->zone()->types.nukeTypes(freeOp);
+            if (types->pendingNukeTypes)
+                types->nukeTypes(freeOp);
             else if (types->pendingRecompiles)
                 types->processPendingRecompiles(freeOp);
         }
@@ -1420,7 +1420,7 @@ TypeSet::addType(JSContext *cx, Type type)
             goto unknownObject;
 
         LifoAlloc &alloc =
-            purged() ? cx->compartment->analysisLifoAlloc : cx->typeLifoAlloc();
+            purged() ? cx->compartment->analysisLifoAlloc : cx->compartment->typeLifoAlloc;
 
         uint32_t objectCount = baseObjectCount();
         TypeObjectKey *object = type.objectKey();
@@ -1591,7 +1591,7 @@ TypeObject::getProperty(JSContext *cx, RawId id, bool own)
 
     uint32_t propertyCount = basePropertyCount();
     Property **pprop = HashSetInsert<jsid,Property,Property>
-        (cx->typeLifoAlloc(), propertySet, propertyCount, id);
+                           (cx->compartment->typeLifoAlloc, propertySet, propertyCount, id);
     if (!pprop) {
         cx->compartment->types.setPendingNukeTypes(cx);
         return NULL;
@@ -1760,7 +1760,8 @@ JSScript::ensureRanInference(JSContext *cx)
         js::types::AutoEnterAnalysis enter(cx);
         analysis()->analyzeTypes(cx);
     }
-    return !analysis()->OOM() && !cx->zone()->types.pendingNukeTypes;
+    return !analysis()->OOM() &&
+        !cx->compartment->types.pendingNukeTypes;
 }
 
 inline bool

@@ -2247,6 +2247,7 @@ class JS_PUBLIC_API(JSAutoCompartment)
   public:
     JSAutoCompartment(JSContext *cx, JSRawObject target);
     JSAutoCompartment(JSContext *cx, JSScript *target);
+    JSAutoCompartment(JSContext *cx, JSString *target);
     ~JSAutoCompartment();
 };
 
@@ -3326,28 +3327,8 @@ JS_GetConstructor(JSContext *cx, JSObject *proto);
 extern JS_PUBLIC_API(JSBool)
 JS_GetObjectId(JSContext *cx, JSRawObject obj, jsid *idp);
 
-namespace JS {
-
-enum {
-    FreshZone,
-    SystemZone,
-    SpecificZones
-};
-
-typedef uintptr_t ZoneSpecifier;
-
-inline ZoneSpecifier
-SameZoneAs(JSObject *obj)
-{
-    JS_ASSERT(uintptr_t(obj) > SpecificZones);
-    return ZoneSpecifier(obj);
-}
-
-} /* namespace JS */
-
 extern JS_PUBLIC_API(JSObject *)
-JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals,
-                   JS::ZoneSpecifier zoneSpec = JS::FreshZone);
+JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);

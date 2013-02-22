@@ -94,7 +94,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         sps_(NULL) // no need for instrumentation in trampolines and such
     {
         constructRoot(cx);
-        ionContext_.construct(cx, (js::ion::TempAllocator *)NULL);
+        ionContext_.construct(cx, cx->compartment, (js::ion::TempAllocator *)NULL);
         alloc_.construct(cx);
 #ifdef JS_CPU_ARM
         m_buffer.id = GetIonContext()->getNextAssemblerId();
@@ -165,11 +165,11 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void loadJSContext(const Register &dest) {
-        movePtr(ImmWord(GetIonContext()->runtime), dest);
+        movePtr(ImmWord(GetIonContext()->compartment->rt), dest);
         loadPtr(Address(dest, offsetof(JSRuntime, mainThread.ionJSContext)), dest);
     }
     void loadIonActivation(const Register &dest) {
-        movePtr(ImmWord(GetIonContext()->runtime), dest);
+        movePtr(ImmWord(GetIonContext()->compartment->rt), dest);
         loadPtr(Address(dest, offsetof(JSRuntime, mainThread.ionActivation)), dest);
     }
 

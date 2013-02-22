@@ -1318,9 +1318,9 @@ JSContext::saveFrameChain()
     }
 
     if (defaultCompartmentObject_)
-        setCompartment(defaultCompartmentObject_->compartment());
+        compartment = defaultCompartmentObject_->compartment();
     else
-        setCompartment(NULL);
+        compartment = NULL;
     enterCompartmentDepth_ = 0;
 
     if (isExceptionPending())
@@ -1332,7 +1332,7 @@ void
 JSContext::restoreFrameChain()
 {
     SavedFrameChain sfc = savedFrameChains_.popCopy();
-    setCompartment(sfc.compartment);
+    compartment = sfc.compartment;
     enterCompartmentDepth_ = sfc.enterCompartmentCount;
 
     stack.restoreFrameChain();

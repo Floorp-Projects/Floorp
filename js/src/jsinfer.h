@@ -439,7 +439,7 @@ class TypeSet
 
     void print();
 
-    inline void sweep(JS::Zone *zone);
+    inline void sweep(JSCompartment *compartment);
 
     /* Whether this set contains a specific type. */
     inline bool hasType(Type type) const;
@@ -1341,6 +1341,15 @@ struct TypeCompartment
     /* Whether we are currently resolving the pending worklist. */
     bool resolving;
 
+    /* Whether type inference is enabled in this compartment. */
+    bool inferenceEnabled;
+
+    /*
+     * Bit set if all current types must be marked as unknown, and all scripts
+     * recompiled. Caused by OOM failure within inference operations.
+     */
+    bool pendingNukeTypes;
+
     /* Number of scripts in this compartment. */
     unsigned scriptCount;
 
@@ -1383,7 +1392,7 @@ struct TypeCompartment
     unsigned typeCounts[TYPE_COUNT_LIMIT];
     unsigned typeCountOver;
 
-    TypeCompartment();
+    void init(JSContext *cx);
     ~TypeCompartment();
 
     inline JSCompartment *compartment();
@@ -1410,10 +1419,12 @@ struct TypeCompartment
     /* Get or make an object for an allocation site, and add to the allocation site table. */
     TypeObject *addAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey key);
 
+    void nukeTypes(FreeOp *fop);
     void processPendingRecompiles(FreeOp *fop);
 
     /* Mark all types as needing destruction once inference has 'finished'. */
     void setPendingNukeTypes(JSContext *cx);
+    void setPendingNukeTypesNoReport();
 
     /* Mark a script as needing recompilation once inference has finished. */
     void addPendingRecompile(JSContext *cx, const RecompileInfo &info);
@@ -1432,37 +1443,6 @@ struct TypeCompartment
     void maybePurgeAnalysis(JSContext *cx, bool force = false);
 
     void finalizeObjects();
-};
-
-struct TypeZone
-{
-    JS::Zone                     *zone_;
-
-    /* Pool for type information in this zone. */
-    static const size_t TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 8 * 1024;
-    js::LifoAlloc                typeLifoAlloc;
-
-    /*
-     * Bit set if all current types must be marked as unknown, and all scripts
-     * recompiled. Caused by OOM failure within inference operations.
-     */
-    bool                         pendingNukeTypes;
-
-    /* Whether type inference is enabled in this compartment. */
-    bool                         inferenceEnabled;
-
-    TypeZone(JS::Zone *zone);
-    ~TypeZone();
-    void init(JSContext *cx);
-
-    JS::Zone *zone() const { return zone_; }
-
-    void sweep(FreeOp *fop, bool releaseTypes);
-
-    /* Mark all types as needing destruction once inference has 'finished'. */
-    void setPendingNukeTypes();
-
-    void nukeTypes(FreeOp *fop);
 };
 
 enum SpewChannel {

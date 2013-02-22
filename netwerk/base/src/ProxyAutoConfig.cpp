@@ -530,7 +530,7 @@ private:
 
     JSAutoRequest ar(mContext);
 
-    mGlobal = JS_NewGlobalObject(mContext, &sGlobalClass, nullptr, JS::SystemZone);
+    mGlobal = JS_NewGlobalObject(mContext, &sGlobalClass, nullptr);
     NS_ENSURE_TRUE(mGlobal, NS_ERROR_OUT_OF_MEMORY);
 
     JS_SetGlobalObject(mContext, mGlobal);
