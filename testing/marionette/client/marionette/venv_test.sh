@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-VIRTUAL_ENV_VERSION="1.8.2"
+VIRTUAL_ENV_VERSION="49f40128a9ca3824ebf253eca408596e135cf893"
 
 PYTHON=$1
 
