@@ -106,6 +106,11 @@ public class TabsTray extends TwoWayView
         mTabsAdapter.clear();
     }
 
+    @Override
+    public boolean shouldExpand() {
+        return isVertical();
+    }
+
     private void autoHidePanel() {
         mTabsPanel.autoHidePanel();
     }
