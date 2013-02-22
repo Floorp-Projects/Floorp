@@ -63,10 +63,9 @@ MIDL_GENERATED_FILES = \
 	dlldata.c \
 	$(NULL)
 
-EXTRA_PP_COMPONENTS = components.manifest \
-		$(NULL)
 EXTRA_COMPONENTS = MetroUIUtils.js \
-		$(NULL)
+	MetroUIUtils.manifest \
+	$(NULL)
 
 GARBAGE += $(MIDL_GENERATED_FILES) done_gen
 
