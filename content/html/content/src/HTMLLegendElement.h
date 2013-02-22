@@ -17,7 +17,11 @@ class HTMLLegendElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLLegendElement
 {
 public:
-  HTMLLegendElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLLegendElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+    : nsGenericHTMLElement(aNodeInfo)
+  {
+    SetIsDOMBinding();
+  }
   virtual ~HTMLLegendElement();
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLLegendElement, legend)
