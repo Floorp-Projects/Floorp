@@ -917,6 +917,9 @@ InitArrayElements(JSContext *cx, HandleObject obj, uint32_t start, uint32_t coun
         if (ObjectMayHaveExtraIndexedProperties(obj))
             break;
 
+        if (obj->shouldConvertDoubleElements())
+            break;
+
         JSObject::EnsureDenseResult result = obj->ensureDenseElements(cx, start, count);
         if (result != JSObject::ED_OK) {
             if (result == JSObject::ED_FAILED)
@@ -924,6 +927,7 @@ InitArrayElements(JSContext *cx, HandleObject obj, uint32_t start, uint32_t coun
             JS_ASSERT(result == JSObject::ED_SPARSE);
             break;
         }
+
         uint32_t newlen = start + count;
         if (newlen > obj->getArrayLength())
             obj->setArrayLengthInt32(newlen);

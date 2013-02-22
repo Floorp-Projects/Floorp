@@ -1012,6 +1012,31 @@ class LApplyArgsGeneric : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES +
     }
 };
 
+class LCallDirectEval : public LCallInstructionHelper<BOX_PIECES, 2 + BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(CallDirectEval)
+
+    LCallDirectEval(const LAllocation &scopeChain, const LAllocation &string)
+    {
+        setOperand(0, scopeChain);
+        setOperand(1, string);
+    }
+
+    static const size_t ThisValueInput = 2;
+
+    MCallDirectEval *mir() const {
+        return mir_->toCallDirectEval();
+    }
+
+    const LAllocation *getScopeChain() {
+        return getOperand(0);
+    }
+    const LAllocation *getString() {
+        return getOperand(1);
+    }
+};
+
 // Takes in either an integer or boolean input and tests it for truthiness.
 class LTestIAndBranch : public LInstructionHelper<0, 1, 0>
 {

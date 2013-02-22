@@ -91,18 +91,3 @@ BaselineFrame::heavyweightFunPrologue(JSContext *cx)
     flags_ |= HAS_CALL_OBJ;
     return true;
 }
-
-void
-BaselineFrame::initEvalPrev(JSContext *cx)
-{
-    JS_ASSERT(isEvalFrame());
-
-    if (flags_ & HAS_EVAL_PREV)
-        return;
-
-    ScriptFrameIter iter(cx);
-    JS_ASSERT(iter.abstractFramePtr() == this);
-    ++iter;
-    evalPrev_ = iter.abstractFramePtr();
-    flags_ |= HAS_EVAL_PREV;
-}

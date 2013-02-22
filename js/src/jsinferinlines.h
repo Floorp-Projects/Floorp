@@ -324,11 +324,11 @@ IsInlinableCall(jsbytecode *pc)
 {
     JSOp op = JSOp(*pc);
 
-    // CALL, FUNCALL, FUNAPPLY (Standard callsites)
+    // CALL, FUNCALL, FUNAPPLY, EVAL (Standard callsites)
     // NEW (IonMonkey-only callsite)
     // GETPROP, CALLPROP, and LENGTH. (Inlined Getters)
     // SETPROP, SETNAME, SETGNAME (Inlined Setters)
-    return op == JSOP_CALL || op == JSOP_FUNCALL || op == JSOP_FUNAPPLY ||
+    return op == JSOP_CALL || op == JSOP_FUNCALL || op == JSOP_FUNAPPLY || op == JSOP_EVAL ||
 #ifdef JS_ION
            op == JSOP_NEW ||
 #endif

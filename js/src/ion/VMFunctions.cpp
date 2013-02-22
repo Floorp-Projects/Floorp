@@ -520,12 +520,6 @@ DebugPrologue(JSContext *cx, BaselineFrame *frame, JSBool *mustReturn)
 {
     *mustReturn = false;
 
-    // For eval frames, ScopeIter needs access to the previous frame.
-    // To avoid quadratic behavior, initialize the evalPrev_ field
-    // here.
-    if (frame->isEvalFrame())
-        frame->initEvalPrev(cx);
-
     JSTrapStatus status = ScriptDebugPrologue(cx, frame);
     switch (status) {
       case JSTRAP_CONTINUE:

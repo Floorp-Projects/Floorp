@@ -10,9 +10,11 @@
 <body>
   <p id="paragraph">Lorem ipsum dolor sit amet.</p>
   <script>
-    addon.port.on('addon-to-document', function (arg) {
-      addon.port.emit('document-to-addon', arg);
-    });
+    if ("addon" in window) {
+      addon.port.on('addon-to-document', function (arg) {
+        addon.port.emit('document-to-addon', arg);
+      });
+    }
   </script>
 </body>
 </html>

@@ -10,6 +10,7 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
+#include "jsgcinlines.h"
 #include "jsopcode.h"
 #include "BaselineJIT.h"
 #include "BaselineRegisters.h"

@@ -11,6 +11,8 @@ const { getThumbnailURIForWindow } = require("../content/thumbnail");
 const { getFaviconURIForLocation } = require("../io/data");
 const { activateTab, getOwnerWindow, getBrowserForTab, getTabTitle, setTabTitle,
         getTabURL, setTabURL, getTabContentType, getTabId } = require('./utils');
+const { getOwnerWindow: getPBOwnerWindow } = require('../private-browsing/window/utils');
+const viewNS = require('sdk/core/namespace').ns();
 
 // Array of the inner instances of all the wrapped tabs.
 const TABS = [];
@@ -49,6 +51,9 @@ const TabTrait = Trait.compose(EventEmitter, {
 
     if (options.isPinned)
       this.pin();
+
+    viewNS(this._public).tab = this._tab;
+    getPBOwnerWindow.implement(this._public, getChromeTab);
 
     // Since we will have to identify tabs by a DOM elements facade function
     // is used as constructor that collects all the instances and makes sure
@@ -211,6 +216,10 @@ const TabTrait = Trait.compose(EventEmitter, {
     this._window.gBrowser.reloadTab(this._tab);
   }
 });
+
+function getChromeTab(tab) {
+  return getOwnerWindow(viewNS(tab).tab);
+}
 
 function Tab(options) {
   let chromeTab = options.tab;
