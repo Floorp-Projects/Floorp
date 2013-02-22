@@ -77,5 +77,28 @@
         <attr name="state_dark" format="boolean"/>
     </declare-styleable>
 
+    <declare-styleable name="TwoWayView">
+
+        <attr name="android:orientation"/>
+
+        <attr name="android:choiceMode"/>
+
+        <attr name="android:drawSelectorOnTop"/>
+        <attr name="android:listSelector"/>
+
+        <attr name="android:scrollbarAlwaysDrawHorizontalTrack"/>
+        <attr name="android:scrollbarAlwaysDrawVerticalTrack"/>
+        <attr name="android:scrollbarDefaultDelayBeforeFade"/>
+        <attr name="android:scrollbarFadeDuration"/>
+        <attr name="android:scrollbarSize"/>
+        <attr name="android:scrollbarStyle"/>
+        <attr name="android:scrollbarThumbHorizontal"/>
+        <attr name="android:scrollbarThumbVertical"/>
+        <attr name="android:scrollbarTrackHorizontal"/>
+        <attr name="android:scrollbarTrackVertical"/>
+        <attr name="android:scrollbars"/>
+
+    </declare-styleable>
+
 </resources>
 
