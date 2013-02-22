@@ -121,10 +121,10 @@ public class TabsTray extends TwoWayView
         TextView title;
         ImageView thumbnail;
         ImageButton close;
-        LinearLayout info;
+        ViewGroup info;
 
         public TabRow(View view) {
-            info = (LinearLayout) view;
+            info = (ViewGroup) view;
             title = (TextView) view.findViewById(R.id.title);
             thumbnail = (ImageView) view.findViewById(R.id.thumbnail);
             close = (ImageButton) view.findViewById(R.id.close);

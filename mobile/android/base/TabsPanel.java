@@ -152,11 +152,11 @@ public class TabsPanel extends LinearLayout
     @Override
     public void onTabChanged(int index) {
         if (index == 0)
-            show(Panel.NORMAL_TABS);
+            show(Panel.NORMAL_TABS, false);
         else if (index == 1)
-            show(Panel.PRIVATE_TABS);
+            show(Panel.PRIVATE_TABS, false);
         else
-            show(Panel.REMOTE_TABS);
+            show(Panel.REMOTE_TABS, false);
     }
 
     @Override
@@ -323,6 +323,10 @@ public class TabsPanel extends LinearLayout
     }
 
     public void show(Panel panel) {
+        show(panel, true);
+    }
+
+    public void show(Panel panel, boolean shouldResize) {
         if (!isShown())
             setVisibility(View.VISIBLE);
 
@@ -363,13 +367,15 @@ public class TabsPanel extends LinearLayout
             mMenuButton.setVisibility(View.VISIBLE);
         }
 
-        if (isSideBar()) {
-            if (showAnimation)
-                dispatchLayoutChange(getWidth(), getHeight());
-        } else {
-            int actionBarHeight = mContext.getResources().getDimensionPixelSize(R.dimen.browser_toolbar_height);
-            int height = actionBarHeight + getTabContainerHeight(mTabsContainer);
-            dispatchLayoutChange(getWidth(), height);
+        if (shouldResize) {
+            if (isSideBar()) {
+                if (showAnimation)
+                    dispatchLayoutChange(getWidth(), getHeight());
+            } else {
+                int actionBarHeight = mContext.getResources().getDimensionPixelSize(R.dimen.browser_toolbar_height);
+                int height = actionBarHeight + getTabContainerHeight(mTabsContainer);
+                dispatchLayoutChange(getWidth(), height);
+            }
         }
     }
 

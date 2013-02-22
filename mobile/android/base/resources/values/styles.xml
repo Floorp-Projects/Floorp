@@ -136,9 +136,12 @@
     </style>
 
     <!-- TabsTray List -->
-    <style name="TabsList">
+    <style name="TabsListBase">
          <item name="android:background">@android:color/transparent</item>
          <item name="android:listSelector">@android:color/transparent</item>
+    </style>
+
+    <style name="TabsList" parent="TabsListBase">
          <item name="android:orientation">vertical</item>
     </style>
 

@@ -381,7 +381,10 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void updateSideBarState() {
-        boolean isSideBar = GeckoAppShell.isLargeTablet();
+        if (mMainLayoutAnimator != null)
+            mMainLayoutAnimator.stop();
+
+        boolean isSideBar = (GeckoAppShell.isTablet() && mOrientation == Configuration.ORIENTATION_LANDSCAPE);
 
         ViewGroup.LayoutParams lp = mTabsPanel.getLayoutParams();
         if (isSideBar) {
@@ -391,8 +394,36 @@ abstract public class BrowserApp extends GeckoApp
         }
         mTabsPanel.requestLayout();
 
-        mTabsPanel.setIsSideBar(isSideBar);
-        mBrowserToolbar.setIsSideBar(isSideBar);
+        final boolean changed = (mTabsPanel.isSideBar() != isSideBar);
+        final boolean needsRelayout = (changed && mTabsPanel.isShown());
+
+        if (needsRelayout) {
+            final int width;
+            final int scrollY;
+
+            if (isSideBar) {
+                width = lp.width;
+                mMainLayout.scrollTo(0, 0);
+            } else {
+                width = 0;
+            }
+
+            mBrowserToolbar.adjustForTabsLayout(width);
+
+            ((LinearLayout.LayoutParams) mGeckoLayout.getLayoutParams()).setMargins(width, 0, 0, 0);
+            mGeckoLayout.requestLayout();
+        }
+
+        if (changed) {
+            // Cancel state of previous sidebar state
+            mBrowserToolbar.updateTabs(false);
+
+            mTabsPanel.setIsSideBar(isSideBar);
+            mBrowserToolbar.setIsSideBar(isSideBar);
+
+            // Update with new sidebar state
+            mBrowserToolbar.updateTabs(mTabsPanel.isShown());
+        }
     }
 
     @Override
