@@ -634,7 +634,6 @@ public:
   }
 
 public:
-  NS_IMETHOD PostCreatePrototype(JSContext * cx, JSObject * proto);
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, uint32_t flags,
                         JSObject **objp, bool *_retval);
