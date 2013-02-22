@@ -3894,7 +3894,7 @@ DoGetPropFallback(JSContext *cx, ICGetProp_Fallback *stub, MutableHandleValue va
 
 #if JS_HAS_NO_SUCH_METHOD
     // Handle objects with __noSuchMethod__.
-    if (op == JSOP_CALLPROP && JS_UNLIKELY(res.isPrimitive())) {
+    if (op == JSOP_CALLPROP && JS_UNLIKELY(res.isPrimitive()) && val.isObject()) {
         if (!OnUnknownMethod(cx, obj, IdToValue(id), res))
             return false;
     }
