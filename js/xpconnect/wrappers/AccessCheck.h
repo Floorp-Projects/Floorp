@@ -33,8 +33,6 @@ class AccessCheck {
     static bool needsSystemOnlyWrapper(JSObject *obj);
 
     static bool isScriptAccessOnly(JSContext *cx, JSObject *wrapper);
-
-    static void deny(JSContext *cx, jsid id);
 };
 
 struct Policy {
@@ -45,8 +43,7 @@ struct Opaque : public Policy {
     static bool check(JSContext *cx, JSObject *wrapper, jsid id, js::Wrapper::Action act) {
         return act == js::Wrapper::CALL;
     }
-    static bool deny(JSContext *cx, jsid id, js::Wrapper::Action act) {
-        AccessCheck::deny(cx, id);
+    static bool deny(js::Wrapper::Action act) {
         return false;
     }
     static bool allowNativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl)
@@ -62,8 +59,7 @@ struct OnlyIfSubjectIsSystem : public Policy {
         return AccessCheck::isSystemOnlyAccessPermitted(cx);
     }
 
-    static bool deny(JSContext *cx, jsid id, js::Wrapper::Action act) {
-        AccessCheck::deny(cx, id);
+    static bool deny(js::Wrapper::Action act) {
         return false;
     }
 
@@ -79,8 +75,7 @@ struct CrossOriginAccessiblePropertiesOnly : public Policy {
     static bool check(JSContext *cx, JSObject *wrapper, jsid id, js::Wrapper::Action act) {
         return AccessCheck::isCrossOriginAccessPermitted(cx, wrapper, id, act);
     }
-    static bool deny(JSContext *cx, jsid id, js::Wrapper::Action act) {
-        AccessCheck::deny(cx, id);
+    static bool deny(js::Wrapper::Action act) {
         return false;
     }
     static bool allowNativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl)
@@ -94,13 +89,9 @@ struct CrossOriginAccessiblePropertiesOnly : public Policy {
 struct ExposedPropertiesOnly : public Policy {
     static bool check(JSContext *cx, JSObject *wrapper, jsid id, js::Wrapper::Action act);
 
-    static bool deny(JSContext *cx, jsid id, js::Wrapper::Action act) {
-        // For gets, silently fail.
-        if (act == js::Wrapper::GET)
-            return true;
-        // For sets,throw an exception.
-        AccessCheck::deny(cx, id);
-        return false;
+    static bool deny(js::Wrapper::Action act) {
+        // Fail silently for GETs.
+        return act == js::Wrapper::GET;
     }
     static bool allowNativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl);
 };
@@ -109,8 +100,7 @@ struct ExposedPropertiesOnly : public Policy {
 struct ComponentsObjectPolicy : public Policy {
     static bool check(JSContext *cx, JSObject *wrapper, jsid id, js::Wrapper::Action act);
 
-    static bool deny(JSContext *cx, jsid id, js::Wrapper::Action act) {
-        AccessCheck::deny(cx, id);
+    static bool deny(js::Wrapper::Action act) {
         return false;
     }
     static bool allowNativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl) {
