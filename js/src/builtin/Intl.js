@@ -376,6 +376,43 @@ function CanonicalizeLanguageTag(locale) {
 }
 
 
+// mappings from some commonly used old-style language tags to current flavors
+// with script codes
+var oldStyleLanguageTagMappings = {
+    "pa-PK": "pa-Arab-PK",
+    "zh-CN": "zh-Hans-CN",
+    "zh-HK": "zh-Hant-HK",
+    "zh-SG": "zh-Hans-SG",
+    "zh-TW": "zh-Hant-TW"
+};
+
+
+/**
+ * Returns the BCP 47 language tag for the host environment's current locale.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 6.2.4.
+ */
+function DefaultLocale() {
+    var localeOfLastResort = "und";
+
+    var locale = RuntimeDefaultLocale();
+    if (!IsStructurallyValidLanguageTag(locale))
+        return localeOfLastResort;
+
+    locale = CanonicalizeLanguageTag(locale);
+    if (callFunction(std_Object_hasOwnProperty, oldStyleLanguageTagMappings, locale))
+        locale = oldStyleLanguageTagMappings[locale];
+
+    if (!(collatorInternalProperties.availableLocales[locale] &&
+          numberFormatInternalProperties.availableLocales[locale] &&
+          dateTimeFormatInternalProperties.availableLocales[locale]))
+    {
+        locale = localeOfLastResort;
+    }
+    return locale;
+}
+
+
 /**
  * Verifies that the given string is a well-formed ISO 4217 currency code.
  *
@@ -401,17 +438,12 @@ function IsWellFormedCurrencyCode(currency) {
  * Spec: ECMAScript Internationalization API Specification, 9.1.
  */
 function addOldStyleLanguageTags(availableLocales) {
-    // checking for commonly used old-style language tags only
-    if (availableLocales["pa-Arab-PK"])
-        availableLocales["pa-PK"] = true;
-    if (availableLocales["zh-Hans-CN"])
-        availableLocales["zh-CN"] = true;
-    if (availableLocales["zh-Hans-SG"])
-        availableLocales["zh-SG"] = true;
-    if (availableLocales["zh-Hant-HK"])
-        availableLocales["zh-HK"] = true;
-    if (availableLocales["zh-Hant-TW"])
-        availableLocales["zh-TW"] = true;
+    var oldStyleLocales = std_Object_getOwnPropertyNames(oldStyleLanguageTagMappings);
+    for (var i = 0; i < oldStyleLocales.length; i++) {
+        var oldStyleLocale = oldStyleLocales[i];
+        if (availableLocales[oldStyleLanguageTagMappings[oldStyleLocale]])
+            availableLocales[oldStyleLocale] = true;
+    }
     return availableLocales;
 }
 
@@ -503,16 +535,16 @@ function LookupMatcher(availableLocales, requestedLocales) {
 
     var result = new Record();
     if (availableLocale !== undefined) {
-        result.__locale = availableLocale;
+        result.locale = availableLocale;
         if (locale !== noExtensionsLocale) {
             var extensionMatch = callFunction(std_String_match, locale, unicodeLocaleExtensionSequenceRE);
             var extension = extensionMatch[0];
             var extensionIndex = extensionMatch.index;
-            result.__extension = extension;
-            result.__extensionIndex = extensionIndex;
+            result.extension = extension;
+            result.extensionIndex = extensionIndex;
         }
     } else {
-        result.__locale = DefaultLocale();
+        result.locale = DefaultLocale();
     }
     return result;
 }
@@ -530,4 +562,141 @@ function LookupMatcher(availableLocales, requestedLocales) {
 function BestFitMatcher(availableLocales, requestedLocales) {
     // this implementation doesn't have anything better
     return LookupMatcher(availableLocales, requestedLocales);
+}
+
+
+/**
+ * Compares a BCP 47 language priority list against availableLocales and
+ * determines the best available language to meet the request. Options specified
+ * through Unicode extension subsequences are negotiated separately, taking the
+ * caller's relevant extensions and locale data as well as client-provided
+ * options into consideration.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.2.5.
+ */
+function ResolveLocale(availableLocales, requestedLocales, options, relevantExtensionKeys, localeData) {
+    // Steps 1-3.
+    var matcher = options.localeMatcher;
+    var r = (matcher === "lookup") ?
+            LookupMatcher(availableLocales, requestedLocales) :
+            BestFitMatcher(availableLocales, requestedLocales);
+
+    // Step 4.
+    var foundLocale = r.locale;
+
+    // Step 5.a.
+    var extension = r.extension;
+    var extensionIndex, extensionSubtags, extensionSubtagsLength;
+
+    // Step 5.
+    if (extension !== undefined) {
+        // Step 5.b.
+        extensionIndex = r.extensionIndex;
+
+        // Steps 5.d-e.
+        extensionSubtags = callFunction(std_String_split, extension, "-");
+        extensionSubtagsLength = extensionSubtags.length;
+    }
+
+    // Steps 6-7.
+    var result = new Record();
+    result.dataLocale = foundLocale;
+
+    // Step 8.
+    var supportedExtension = "-u";
+
+    // Steps 9-11.
+    var i = 0;
+    var len = relevantExtensionKeys.length;
+    while (i < len) {
+        // Steps 11.a-c.
+        var key = relevantExtensionKeys[i];
+
+        // In this implementation, localeData is a function, not an object.
+        var foundLocaleData = localeData(foundLocale);
+        var keyLocaleData = foundLocaleData[key];
+
+        // Locale data provides default value.
+        // Step 11.d.
+        var value = keyLocaleData[0];
+
+        // Locale tag may override.
+
+        // Step 11.e.
+        var supportedExtensionAddition = "";
+
+        // Step 11.f is implemented by Utilities.js.
+
+        var valuePos;
+
+        // Step 11.g.
+        if (extensionSubtags !== undefined) {
+            // Step 11.g.i.
+            var keyPos = callFunction(std_Array_indexOf, extensionSubtags, key);
+
+            // Step 11.g.ii.
+            if (keyPos !== -1) {
+                // Step 11.g.ii.1.
+                if (keyPos + 1 < extensionSubtagsLength &&
+                    extensionSubtags[keyPos + 1].length > 2)
+                {
+                    // Step 11.g.ii.1.a.
+                    var requestedValue = extensionSubtags[keyPos + 1];
+
+                    // Step 11.g.ii.1.b.
+                    valuePos = callFunction(std_Array_indexOf, keyLocaleData, requestedValue);
+
+                    // Step 11.g.ii.1.c.
+                    if (valuePos !== -1) {
+                        value = requestedValue;
+                        supportedExtensionAddition = "-" + key + "-" + value;
+                    }
+                } else {
+                    // Step 11.g.ii.2.
+
+                    // According to the LDML spec, if there's no type value,
+                    // and true is an allowed value, it's used.
+
+                    // Step 11.g.ii.2.a.
+                    valuePos = callFunction(std_Array_indexOf, keyLocaleData, "true");
+
+                    // Step 11.g.ii.2.b.
+                    if (valuePos !== -1)
+                        value = "true";
+                }
+            }
+        }
+
+        // Options override all.
+
+        // Step 11.h.i.
+        var optionsValue = options[key];
+
+        // Step 11.h, 11.h.ii.
+        if (optionsValue !== undefined &&
+            callFunction(std_Array_indexOf, keyLocaleData, optionsValue) !== -1)
+        {
+            // Step 11.h.ii.1.
+            if (optionsValue !== value) {
+                value = optionsValue;
+                supportedExtensionAddition = "";
+            }
+        }
+
+        // Steps 11.i-k.
+        result[key] = value;
+        supportedExtension += supportedExtensionAddition;
+        i++;
+    }
+
+    // Step 12.
+    if (supportedExtension.length > 2) {
+        var preExtension = callFunction(std_String_substring, foundLocale, 0, extensionIndex);
+        var postExtension = callFunction(std_String_substring, foundLocale, extensionIndex);
+        foundLocale = preExtension + supportedExtension + postExtension;
+    }
+
+    // Steps 13-14.
+    result.locale = foundLocale;
+    return result;
 }
