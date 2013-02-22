@@ -2,6 +2,39 @@
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/licenses/publicdomain/
 
+// This file is a copy of clone-typed-array.js from before v2 structured clone
+// was implemented. If you run this test under a v1-writing engine with the
+// environment variable JS_RECORD_RESULTS set, then it will output a log of
+// structured clone buffers resulting from running this test. You can then use
+// that log as input to another run of this same test on a newer engine, to
+// verify that older-format structured clone data can be deserialized properly.
+
+var old_serialize = serialize;
+var captured = [];
+
+if ("JS_RECORD_RESULTS" in environment) {
+  serialize = function(o) {
+    var data;
+    try {
+      data = old_serialize(o);
+      captured.push(data);
+      return data;
+    } catch(e) {
+      captured.push(e);
+      throw(e);
+    }
+  };
+} else {
+  loadRelativeToScript("clone-v1-typed-array-data.dat");
+  serialize = function(d) {
+    var data = captured.shift();
+    if (data instanceof Error)
+      throw(data);
+    else
+      return data;
+  };
+}
+
 function assertArraysEqual(a, b) {
     assertEq(a.constructor, b.constructor);
     assertEq(a.length, b.length);
@@ -65,9 +98,9 @@ function test() {
 	checkPrototype(ctor);
     }
 
-    // Two TypedArrays backed by the same ArrayBuffer should be cloned into two
-    // TypedArrays still sharing a buffer. This also tests cloning TypedArrays
-    // where the arr->data pointer is not 8-byte-aligned.
+    // Cloning should separately copy two TypedArrays backed by the same
+    // ArrayBuffer. This also tests cloning TypedArrays where the arr->data
+    // pointer is not 8-byte-aligned.
 
     var base = Int8Array([0, 1, 2, 3]);
     b = [Int8Array(base.buffer, 0, 3), Int8Array(base.buffer, 1, 3)];
@@ -77,28 +110,19 @@ function test() {
     assertArraysEqual(b[0], Int8Array([0, -1, 2])); // shared with base
     assertArraysEqual(b[1], Int8Array([-1, 2, 3])); // shared with base
     assertArraysEqual(a[0], Int8Array([0, 1, -2])); // not shared with base
-    assertArraysEqual(a[1], Int8Array([1, -2, 3])); // not shared with base, shared with a[0]
-
-    assertEq(b[0].buffer, b[1].buffer);
-    assertEq(b[1].byteOffset, 1);
-    assertEq(b[1].byteLength, 3);
-    assertEq(b[1].buffer.byteLength, 4);
-
-    // ArrayBuffer clones do not preserve properties
-
-    base = Int8Array([0, 1, 2, 3]);
-    b = [Int8Array(base.buffer, 0, 3), Int8Array(base.buffer, 1, 3)];
-    base.buffer.prop = "yes";
-    base.buffer.loop = b[0];
-    base.buffer.loops = [ b[0], b[1] ];
-    a = deserialize(serialize(b));
-    assertEq("prop" in a[0].buffer, false);
-    assertEq("prop" in a[1].buffer, false);
-    assertEq("loop" in a[0].buffer, false);
-    assertEq("loop" in a[1].buffer, false);
-    assertEq("loops" in a[0].buffer, false);
-    assertEq("loops" in a[1].buffer, false);
+    assertArraysEqual(a[1], Int8Array([1, 2, 3]));  // not shared with base or a[0]
 }
 
 test();
 reportCompare(0, 0, 'ok');
+
+if ("JS_RECORD_RESULTS" in environment) {
+  print("var captured = [];");
+  for (var i in captured) {
+    var s = "captured[" + i + "] = ";
+    if (captured[i] instanceof Error)
+      print(s + captured[i].toSource() + ";");
+    else
+      print(s + "new Uint8Array(" + [...captured[i]].toSource() + ");");
+  }
+}
