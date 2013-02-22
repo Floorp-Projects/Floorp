@@ -881,6 +881,9 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     ionReturnOverride_(MagicValue(JS_ARG_POISON)),
     useHelperThreads_(useHelperThreads),
     requestedHelperThreadCount(-1),
+#ifdef DEBUG
+    enteredPolicy(NULL),
+#endif
     rngNonce(0)
 {
     /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */

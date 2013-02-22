@@ -569,7 +569,7 @@ struct MallocProvider
 namespace gc {
 class MarkingValidator;
 } // namespace gc
-
+class AutoEnterPolicy;
 } // namespace js
 
 struct JSRuntime : js::RuntimeFriendFields,
@@ -1301,7 +1301,11 @@ struct JSRuntime : js::RuntimeFriendFields,
         return 0;
 #endif
     }
+#ifdef DEBUG
+  public:
+    js::AutoEnterPolicy *enteredPolicy;
 
+#endif
   private:
     /*
      * Used to ensure that compartments created at the same time get different
