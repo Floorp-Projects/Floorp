@@ -21,7 +21,7 @@ const char kWorkScheduled = '\0';
 
 // Return a timeout suitable for the glib loop, -1 to block forever,
 // 0 to return right away, or a timeout in milliseconds from now.
-int GetTimeIntervalMilliseconds(base::Time from) {
+int GetTimeIntervalMilliseconds(const base::TimeTicks& from) {
   if (from.is_null())
     return -1;
 
@@ -29,7 +29,7 @@ int GetTimeIntervalMilliseconds(base::Time from) {
   // value in milliseconds.  If there are 5.5ms left, should the delay be 5 or
   // 6?  It should be 6 to avoid executing delayed work too early.
   int delay = static_cast<int>(
-      ceil((from - base::Time::Now()).InMillisecondsF()));
+      ceil((from - base::TimeTicks::Now()).InMillisecondsF()));
 
   // If this value is negative, then we need to run delayed work soon.
   return delay < 0 ? 0 : delay;
@@ -309,7 +309,7 @@ void MessagePumpForUI::ScheduleWork() {
   }
 }
 
-void MessagePumpForUI::ScheduleDelayedWork(const Time& delayed_work_time) {
+void MessagePumpForUI::ScheduleDelayedWork(const TimeTicks& delayed_work_time) {
   // We need to wake up the loop in case the poll timeout needs to be
   // adjusted.  This will cause us to try to do work, but that's ok.
   delayed_work_time_ = delayed_work_time;
