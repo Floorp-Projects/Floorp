@@ -7,9 +7,16 @@
 #include "CCProvider.h"
 #include "platform_api.h"
 
+#include <prcvar.h>
+#include <prlock.h>
+
 extern cprMsgQueue_t ccapp_msgq;
 extern void CCAppInit();
 static sll_lite_list_t sll_list;
+
+PRCondVar *ccAppReadyToStartCond = NULL;
+PRLock *ccAppReadyToStartLock = NULL;
+char ccAppReadyToStart = 0;
 
 /**
  * Add/Get ccapp task listener
@@ -153,6 +160,17 @@ void CCApp_task(void * arg)
     sll_lite_init(&sll_list);
 
     CCAppInit();
+
+    // If the "ready to start" condition variable has been created
+    // (is non-null), we're going to wait for it to be signaled
+    // before we start processing messages.
+    if (ccAppReadyToStartCond) {
+      PR_Lock(ccAppReadyToStartLock);
+      while (!ccAppReadyToStart) {
+        PR_WaitCondVar(ccAppReadyToStartCond, PR_INTERVAL_NO_TIMEOUT);
+      }
+      PR_Unlock(ccAppReadyToStartLock);
+    }
 
     while (1) {
         msg = cprGetMessage(ccapp_msgq, TRUE, (void **) &syshdr);
