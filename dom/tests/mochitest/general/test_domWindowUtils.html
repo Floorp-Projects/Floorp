@@ -85,7 +85,8 @@ function testElementFromPoint() {
       moveEl.style.left = moveX + "px";
       moveEl.style.top = moveY + "px";
     }
-    let found = domWindowUtils.elementFromPoint(x, y, ignoreScroll, flushLayout);
+    let found = SpecialPowers.unwrap(domWindowUtils.elementFromPoint(
+                                     x, y, ignoreScroll, flushLayout));
     is(found, expected, "at index " + i + " for data " + testData[i][0].toSource());
   }
 
