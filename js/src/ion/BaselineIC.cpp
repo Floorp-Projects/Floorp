@@ -2359,6 +2359,13 @@ static void GetFixedOrDynamicSlotOffset(HandleObject obj, uint32_t slot,
 static bool
 IsCacheableProtoChain(JSObject *obj, JSObject *holder)
 {
+    JS_ASSERT(obj->isNative());
+
+    // Don't handle objects which require a prototype guard. This should
+    // be uncommon so handling it is likely not worth the complexity.
+    if (obj->hasUncacheableProto())
+        return false;
+
     while (obj != holder) {
         // We cannot assume that we find the holder object on the prototype
         // chain and must check for null proto. The prototype chain can be
@@ -2367,8 +2374,6 @@ IsCacheableProtoChain(JSObject *obj, JSObject *holder)
         if (!proto || !proto->isNative())
             return false;
 
-        // Don't handle objects which require a prototype guard. This should
-        // be uncommon so handling it is likely not worth the complexity.
         if (proto->hasUncacheableProto())
             return false;
 
