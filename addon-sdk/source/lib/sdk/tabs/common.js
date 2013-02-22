@@ -13,6 +13,7 @@ function Options(options) {
     url: { is: ["string"] },
     inBackground: { is: ["undefined", "boolean"] },
     isPinned: { is: ["undefined", "boolean"] },
+    isPrivate: { is: ["undefined", "boolean"] },
     onOpen: { is: ["undefined", "function"] },
     onClose: { is: ["undefined", "function"] },
     onReady: { is: ["undefined", "function"] },

@@ -4,18 +4,60 @@
 'use strict';
 
 // TODO: BUG 792670 - remove dependency below
-const { browserWindows } = require('../windows');
+const { browserWindows: windows } = require('../windows');
 const { tabs } = require('../windows/tabs-firefox');
+const { isPrivate } = require('../private-browsing');
+const { isWindowPBSupported } = require('../private-browsing/utils')
+const { isPrivateBrowsingSupported } = require('sdk/self');
+
+const supportPrivateTabs = isPrivateBrowsingSupported && isWindowPBSupported;
 
 Object.defineProperties(tabs, {
   open: { value: function open(options) {
-    if (options.inNewWindow)
+    if (options.inNewWindow) {
         // `tabs` option is under review and may be removed.
-        return browserWindows.open({ tabs: [ options ] });
-    // Open in active window if new window was not required.
-    return browserWindows.activeWindow.tabs.open(options);
+        windows.open({
+          tabs: [ options ],
+          isPrivate: options.isPrivate
+        });
+        return undefined;
+    }
+    // Open in active window if new window was not required..
+
+
+    let activeWindow = windows.activeWindow;
+    let privateState = !!options.isPrivate;
+    // if the active window is in the state that we need then use it
+    if (!supportPrivateTabs || privateState === isPrivate(activeWindow)) {
+      activeWindow.tabs.open(options);
+    }
+    else {
+      // find a window in the state that we need
+      let window = getWindow(privateState);
+      if (window) {
+      	window.tabs.open(options);
+      }
+      // open a window in the state that we need
+      else {
+        windows.open({
+          tabs: [ options ],
+          isPrivate: options.isPrivate
+        });
+      }
+    }
+
+    return undefined;
   }}
 });
+
+function getWindow(privateState) {
+  for each (let window in windows) {
+  	if (privateState === isPrivate(window)) {
+  	  return window;
+  	}
+  }
+  return null;
+}
 
 // Workaround for bug 674195. Freezing objects from other compartments fail,
 // so we use `Object.freeze` from the same component as objects
