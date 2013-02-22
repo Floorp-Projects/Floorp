@@ -1047,8 +1047,7 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
     return true;
   }
 
-  JSObject* instance = js::UnwrapObject(&vp.toObject());
-
+  JSObject* instance = &vp.toObject();
   bool ok = InterfaceHasInstance(cx, obj, instance, bp);
   if (!ok || *bp) {
     return ok;
@@ -1056,7 +1055,8 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
 
   // FIXME Limit this to chrome by checking xpc::AccessCheck::isChrome(obj).
   nsISupports* native =
-    nsContentUtils::XPConnect()->GetNativeOfWrapper(cx, instance);
+    nsContentUtils::XPConnect()->GetNativeOfWrapper(cx,
+                                                    js::UnwrapObject(instance));
   nsCOMPtr<nsIDOM%s> qiResult = do_QueryInterface(native);
   *bp = !!qiResult;
   return true;""" % self.descriptor.interface.identifier.name
