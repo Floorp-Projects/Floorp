@@ -180,6 +180,10 @@ PRThread* gCycleCollectorThread = nullptr;
 //
 // XPCOM_CC_RUN_DURING_SHUTDOWN: In non-DEBUG or non-DEBUG_CC builds,
 // if this is set, run cycle collections at shutdown.
+//
+// MOZ_CC_LOG_DIRECTORY: The directory in which logs are placed (such as
+// logs from XPCOM_CC_LOG_ALL and XPCOM_CC_LOG_SHUTDOWN, or other uses
+// of nsICycleCollectorListener)
 
 MOZ_NEVER_INLINE void
 CC_AbortIfNull(void *ptr)
