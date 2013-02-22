@@ -1819,18 +1819,6 @@ def InitUnforgeableProperties(descriptor, properties):
             "// finalizer trying to drop its ownership of the C++ object.\n"),
             post="\n")).define() if len(unforgeables) > 0 else ""
 
-def AssertInheritanceChain(descriptor):
-    asserts = ""
-    iface = descriptor.interface
-    while iface:
-        desc = descriptor.getDescriptor(iface.identifier.name)
-        asserts += (
-            "  MOZ_ASSERT(static_cast<%s*>(aObject) == \n"
-            "             reinterpret_cast<%s*>(aObject));\n" %
-            (desc.nativeType, desc.nativeType))
-        iface = iface.parent
-    return asserts
-
 class CGWrapWithCacheMethod(CGAbstractMethod):
     """
     Create a wrapper JSObject for a given native that implements nsWrapperCache.
@@ -1851,8 +1839,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             return """  *aTriedToWrap = true;
   return aObject->GetJSObject();"""
 
-        return """%s
-  *aTriedToWrap = true;
+        return """  *aTriedToWrap = true;
 
   JSObject* parent = WrapNativeParent(aCx, aScope, aObject->GetParentObject());
   if (!parent) {
@@ -1881,8 +1868,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
 %s
   aCache->SetWrapper(obj);
 
-  return obj;""" % (AssertInheritanceChain(self.descriptor),
-                    CheckPref(self.descriptor, "global", "*aTriedToWrap", "NULL", "aCache"),
+  return obj;""" % (CheckPref(self.descriptor, "global", "*aTriedToWrap", "NULL", "aCache"),
                     CreateBindingJSObject(self.descriptor, "parent"),
                     InitUnforgeableProperties(self.descriptor, self.properties))
 
@@ -1913,7 +1899,7 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
         self.properties = properties
 
     def definition_body(self):
-        return """%s
+        return """
   JSObject* global = JS_GetGlobalForObject(aCx, aScope);
   JSObject* proto = GetProtoObject(aCx, global);
   if (!proto) {
@@ -1922,8 +1908,7 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
 
 %s
 %s
-  return obj;""" % (AssertInheritanceChain(self.descriptor),
-                    CreateBindingJSObject(self.descriptor, "global"),
+  return obj;""" % (CreateBindingJSObject(self.descriptor, "global"),
                     InitUnforgeableProperties(self.descriptor, self.properties))
 
 builtinNames = {

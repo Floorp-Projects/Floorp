@@ -108,8 +108,6 @@ webidl_files = \
   HTMLTableElement.webidl \
   HTMLTableRowElement.webidl \
   HTMLTableSectionElement.webidl \
-  HTMLTextAreaElement.webidl \
-  HTMLTimeElement.webidl \
   HTMLTitleElement.webidl \
   HTMLUListElement.webidl \
   ImageData.webidl \
@@ -128,7 +126,6 @@ webidl_files = \
   PerformanceNavigation.webidl \
   PerformanceTiming.webidl \
   ProcessingInstruction.webidl \
-  Range.webidl \
   Rect.webidl \
   RGBColor.webidl \
   RTCConfiguration.webidl \

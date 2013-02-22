@@ -1484,10 +1484,8 @@ nsWSRunObject::DeleteChars(nsIDOMNode *aStartNode, int32_t aStartOffset,
     {
       if (!range)
       {
-        nsCOMPtr<nsINode> startNode = do_QueryInterface(aStartNode);
-        NS_ENSURE_STATE(startNode);
-        range = new nsRange(startNode);
-        res = range->SetStart(startNode, aStartOffset);
+        range = new nsRange();
+        res = range->SetStart(aStartNode, aStartOffset);
         NS_ENSURE_SUCCESS(res, res);
         res = range->SetEnd(aEndNode, aEndOffset);
         NS_ENSURE_SUCCESS(res, res);
