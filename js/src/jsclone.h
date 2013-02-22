@@ -110,8 +110,9 @@ struct JSStructuredCloneReader {
 
     bool checkDouble(double d);
     JSString *readString(uint32_t nchars);
-    bool readTypedArray(uint32_t tag, uint32_t nelems, js::Value *vp);
+    bool readTypedArray(uint32_t arrayType, uint32_t nelems, js::Value *vp, bool v1Read = false);
     bool readArrayBuffer(uint32_t nbytes, js::Value *vp);
+    bool readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems, js::Value *vp);
     bool readId(jsid *idp);
     bool startRead(js::Value *vp);
 
