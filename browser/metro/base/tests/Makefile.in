@@ -26,6 +26,8 @@ BROWSER_TESTS = \
   browser_context_menu_tests.js \
   browser_context_menu_tests_01.html \
   browser_context_menu_tests_02.html \
+  browser_context_menu_tests_03.html \
+  text-block.html \
   $(NULL)
 
 BROWSER_TEST_RESOURCES = \
