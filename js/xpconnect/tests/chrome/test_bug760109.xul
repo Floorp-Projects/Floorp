@@ -31,12 +31,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=760109
     ok(protoProto === Object.prototype,
        "Object prototype remapped properly");
 
-    // Check |constructor|. The semantics of this weird for the case of an
-    // object with a custom chrome-implemented prototype, because we'll end up
-    // bouncing up the prototype chain to Object, even though that's not fully
-    // accurate. It's unlikely to be a problem though, so we just verify that
-    // it does what we expect.
-    ok(chromeObject.constructor === Object, "Object constructor does what we expect");
+    // Check |constructor|.
+    // Note that the 'constructor' property of the underlying chrome object
+    // will be resolved on SomeConstructor.prototype, which has an empty
+    // __exposedProps__. This means that we shouldn't remap the property, even
+    // though we'd also be able to find it on Object.prototype. Some recent
+    // refactoring has made it possible to do the right thing here.
+    is(typeof chromeObject.constructor, "undefined", "Object constructor does what we expect");
     ok(chromeArray.constructor === Array, "Array constructor remapped properly");
 
     // We should be able to .forEach on the Array.
