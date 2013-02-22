@@ -61,7 +61,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     private int mTitlePadding;
     private boolean mSiteSecurityVisible;
     private boolean mAnimateSiteSecurity;
-    private GeckoImageButton mTabs;
+    private TabsButton mTabs;
     private int mTabsPaneWidth;
     private ImageButton mBack;
     private ImageButton mForward;
@@ -186,7 +186,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             }
         });
 
-        mTabs = (GeckoImageButton) mLayout.findViewById(R.id.tabs);
+        mTabs = (TabsButton) mLayout.findViewById(R.id.tabs);
         mTabs.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
                 toggleTabs();
@@ -849,6 +849,10 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         // A level change will not trigger onMeasure() for the tabs, where the path is created.
         // Manually requesting a layout to re-calculate the path.
         mTabs.requestLayout();
+    }
+
+    public void setIsSideBar(boolean isSideBar) {
+        mTabs.setIsSideBar(isSideBar);
     }
 
     public void setProgressVisibility(boolean visible) {

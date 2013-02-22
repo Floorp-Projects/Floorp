@@ -24,7 +24,6 @@
                                       android:layout_alignParentLeft="true"
                                       gecko:curveTowards="left"
                                       gecko:cropped="true"
-                                      gecko:sidebar="true"
                                       android:background="@drawable/tabs_button"
                                       android:gravity="center_vertical"
                                       android:src="@drawable/tabs_level"

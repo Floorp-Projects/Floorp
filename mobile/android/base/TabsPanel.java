@@ -83,9 +83,7 @@ public class TabsPanel extends LinearLayout
         mCurrentPanel = Panel.NORMAL_TABS;
         mVisible = false;
 
-        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TabsPanel);
-        mIsSideBar = a.getBoolean(R.styleable.TabsPanel_sidebar, false);
-        a.recycle();
+        mIsSideBar = false;
 
         mPopupMenu = new GeckoPopupMenu(context);
         mPopupMenu.inflate(R.menu.tabs_menu);
@@ -409,6 +407,10 @@ public class TabsPanel extends LinearLayout
 
     public boolean isSideBar() {
         return mIsSideBar;
+    }
+
+    public void setIsSideBar(boolean isSideBar) {
+        mIsSideBar = isSideBar;
     }
 
     public Panel getCurrentPanel() {
