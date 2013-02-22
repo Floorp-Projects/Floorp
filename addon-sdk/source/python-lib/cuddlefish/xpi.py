@@ -22,7 +22,8 @@ def mkzipdir(zf, path):
     zf.writestr(dirinfo, "")
 
 def build_xpi(template_root_dir, manifest, xpi_path,
-              harness_options, limit_to=None, extra_harness_options={}):
+              harness_options, limit_to=None, extra_harness_options={},
+              bundle_sdk=True):
     zf = zipfile.ZipFile(xpi_path, "w", zipfile.ZIP_DEFLATED)
 
     open('.install.rdf', 'w').write(str(manifest))
@@ -84,6 +85,10 @@ def build_xpi(template_root_dir, manifest, xpi_path,
     # of all packages sections directories
     for packageName in harness_options['packages']:
       base_arcpath = ZIPSEP.join(['resources', packageName])
+      # Eventually strip sdk files. We need to do that in addition to the
+      # whilelist as the whitelist is only used for `cfx xpi`:
+      if not bundle_sdk and packageName == 'addon-sdk':
+          continue
       # Always write the top directory, even if it contains no files, since
       # the harness will try to access it.
       dirs_to_create.add(base_arcpath)

@@ -17,10 +17,14 @@ const { EventTarget } = require('../event/target');
 const { when: unload } = require('../system/unload');
 const { windowIterator } = require('../deprecated/window-utils');
 const { List, addListItem, removeListItem } = require('../util/list');
+const { isPrivateBrowsingSupported } = require('sdk/self');
+const { isTabPBSupported } = require('sdk/private-browsing/utils');
 
 const mainWindow = windowNS(browserWindows.activeWindow).window;
 
 const ERR_FENNEC_MSG = 'This method is not yet supported by Fennec';
+
+const supportPrivateTabs = isPrivateBrowsingSupported && isTabPBSupported;
 
 const Tabs = Class({
   implements: [ List ],
@@ -53,7 +57,8 @@ const Tabs = Class({
     }
 
     let rawTab = openTab(windowNS(activeWin).window, options.url, {
-      inBackground: options.inBackground
+      inBackground: options.inBackground,
+      isPrivate: supportPrivateTabs && options.isPrivate
     });
 
     // by now the tab has been created

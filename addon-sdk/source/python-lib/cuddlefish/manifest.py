@@ -260,7 +260,7 @@ class ManifestBuilder:
             used.add(package)
         return sorted(used)
 
-    def get_used_files(self):
+    def get_used_files(self, bundle_sdk_modules):
         # returns all .js files that we reference, plus data/ files. You will
         # need to add the loader, off-manifest files that it needs, and
         # generated metadata.
@@ -269,16 +269,22 @@ class ManifestBuilder:
                 yield absname
 
         for me in self.get_module_entries():
-            yield me.js_filename
+            # Do not add manifest entries for system modules,
+            # so that we won't ship SDK files.
+            if me.packageName != "addon-sdk" or bundle_sdk_modules:
+                yield me.js_filename
 
     def get_all_test_modules(self):
         return self.test_modules
 
-    def get_harness_options_manifest(self):
+    def get_harness_options_manifest(self, bundle_sdk_modules):
         manifest = {}
         for me in self.get_module_entries():
             path = me.get_path()
-            manifest[path] = me.get_entry_for_manifest()
+            # Do not add manifest entries for system modules,
+            # so that we won't ship SDK files.
+            if me.packageName != "addon-sdk" or bundle_sdk_modules:
+                manifest[path] = me.get_entry_for_manifest()
         return manifest
 
     def get_manifest_entry(self, package, section, module):
