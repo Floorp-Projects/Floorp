@@ -854,3 +854,222 @@ var runtimeAvailableLocales = (function () {
     o[RuntimeDefaultLocale()] = true;
     return addOldStyleLanguageTags(o);
 }());
+
+
+/********** Property access for Intl objects **********/
+
+
+/**
+ * Set a normal public property p of o to value v, but use Object.defineProperty
+ * to avoid interference from setters on Object.prototype.
+ */
+function defineProperty(o, p, v) {
+    std_Object_defineProperty(o, p, {value: v, writable: true, enumerable: true, configurable: true});
+}
+
+
+/**
+ * Weak map holding objects with the properties specified as "internal" for
+ * all Intl API objects. Presence of an object as a key within this map is
+ * considered equivalent to having the [[initializedIntlObject]] internal
+ * property set to true on this object.
+ *
+ * Ideally we'd be using private symbols for internal properties, but
+ * SpiderMonkey doesn't have those yet.
+ */
+var internalsMap = new WeakMap();
+
+
+/**
+ * Create an object holding the properties specified as "internal" for
+ * an Intl API object. This call is equivalent to setting the
+ * [[initializedIntlObject]] internal property of o to true.
+ */
+function initializeIntlObject(o) {
+    assert(IsObject(o), "initializeIntlObject");
+    var internals = std_Object_create(null);
+    callFunction(std_WeakMap_set, internalsMap, o, internals);
+    return internals;
+}
+
+
+/**
+ * Return whether the object has been initialized as an Intl object, equivalent
+ * to testing whether the [[initializedIntlObject]] internal property of o is
+ * true.
+ */
+function isInitializedIntlObject(o) {
+    return callFunction(std_WeakMap_has, internalsMap, o);
+}
+
+
+/**
+ * Returns the object holding the internal properties of o.
+ */
+function getInternals(o) {
+    return callFunction(std_WeakMap_get, internalsMap, o);
+}
+
+
+/**
+ * Check that the object on which certain functions are called
+ * meet the requirements for "this Collator object", "this NumberFormat object",
+ * "this DateTimeFormat object". If it meets the requirements, return the
+ * object holding its internal properties.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 10.3.
+ * Spec: ECMAScript Internationalization API Specification, 11.3.
+ * Spec: ECMAScript Internationalization API Specification, 12.3.
+ */
+function checkIntlAPIObject(o, className, methodName) {
+    assert(typeof className === "string", "checkIntlAPIObject");
+    var internals = getInternals(o);
+    if (internals === undefined || internals["initialized" + className] !== true)
+        ThrowError(JSMSG_INTL_OBJECT_NOT_INITED, className, methodName, className);
+    assert(IsObject(o), "checkIntlAPIObject");
+    return internals;
+}
+
+
+/********** Intl.Collator **********/
+
+
+/**
+ * Mapping from Unicode extension keys for collation to options properties,
+ * their types and permissible values.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 10.1.1.
+ */
+var collatorKeyMappings = {
+    kn: {property: "numeric", type: "boolean"},
+    kf: {property: "caseFirst", type: "string", values: ["upper", "lower", "false"]}
+};
+
+
+/**
+ * Initializes an object as a Collator.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 10.1.1.
+ */
+function InitializeCollator(collator, locales, options) {
+    assert(IsObject(collator), "InitializeCollator");
+
+    // Step 1.
+    if (isInitializedIntlObject(collator))
+        ThrowError(JSMSG_INTL_OBJECT_REINITED);
+
+    // Step 2.
+    var internals = initializeIntlObject(collator);
+
+    // Step 3.
+    var requestedLocales = CanonicalizeLocaleList(locales);
+
+    // Steps 4-5.
+    if (options === undefined)
+        options = {};
+    else
+        options = ToObject(options);
+
+    // Compute options that impact interpretation of locale.
+    // Steps 6-7.
+    var u = GetOption(options, "usage", "string", ["sort", "search"], "sort");
+    internals.usage = u;
+
+    // Step 8.
+    var Collator = collatorInternalProperties;
+
+    // Step 9.
+    var localeData = u === "sort" ? Collator.sortLocaleData : Collator.searchLocaleData;
+
+    // Step 10.
+    var opt = new Record();
+
+    // Steps 11-12.
+    var matcher = GetOption(options, "localeMatcher", "string", ["lookup", "best fit"], "best fit");
+    opt.localeMatcher = matcher;
+
+    // Check all allowed options properties and convert them to extension keys.
+    // Steps 13-13.a.
+    var key, mapping, property, value;
+    for (key in collatorKeyMappings) {
+        if (callFunction(std_Object_hasOwnProperty, collatorKeyMappings, key)) {
+            mapping = collatorKeyMappings[key];
+    
+            // Step 13.b.
+            value = GetOption(options, mapping.property, mapping.type, mapping.values, undefined);
+    
+            // Step 13.c.
+            if (mapping.type === "boolean" && value !== undefined)
+                value = callFunction(std_Boolean_toString, value);
+    
+            // Step 13.d.
+            opt[key] = value;
+        }
+    }
+
+    // Compute effective locale.
+    // Step 14.
+    var relevantExtensionKeys = Collator.relevantExtensionKeys;
+
+    // Step 15.
+    var r = ResolveLocale(Collator.availableLocales,
+                          requestedLocales, opt,
+                          relevantExtensionKeys,
+                          localeData);
+    // Step 16.
+    internals.locale = r.locale;
+
+    // Steps 17-19.
+    var i = 0, len = relevantExtensionKeys.length;
+    while (i < len) {
+        // Step 19.a.
+        key = relevantExtensionKeys[i];
+        if (key === "co") {
+            // Step 19.b.
+            property = "collation";
+            value = r.co === null ? "default" : r.co;
+        } else {
+            // Step 19.c.
+            mapping = collatorKeyMappings[key];
+            property = mapping.property;
+            value = r[key];
+            if (mapping.type === "boolean")
+                value = value === "true";
+        }
+
+        // Step 19.d.
+        internals[property] = value;
+
+        // Step 19.e.
+        i++;
+    }
+
+    // Compute remaining collation options.
+    // Steps 20-21.
+    var s = GetOption(options, "sensitivity", "string",
+                      ["base", "accent", "case", "variant"], undefined);
+    if (s === undefined) {
+        if (u === "sort") {
+            // Step 21.a.
+            s = "variant";
+        } else {
+            // Step 21.b.
+            var dataLocale = r.dataLocale;
+            var dataLocaleData = localeData(dataLocale);
+            s = dataLocaleData.sensitivity;
+        }
+    }
+
+    // Step 22.
+    internals.sensitivity = s;
+
+    // Steps 23-24.
+    var ip = GetOption(options, "ignorePunctuation", "boolean", undefined, false);
+    internals.ignorePunctuation = ip;
+
+    // Step 25.
+    internals.boundFormat = undefined;
+
+    // Step 26.
+    internals.initializedCollator = true;
+}
