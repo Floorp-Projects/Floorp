@@ -4251,7 +4251,6 @@ BUILD_CTYPES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_ANDROID_HISTORY=
 MOZ_WEBSMS_BACKEND=
-MOZ_GRAPHITE=1
 ACCESSIBILITY=1
 MOZ_SYS_MSG=
 MOZ_TIME_MANAGER=
@@ -8198,13 +8197,7 @@ AC_SUBST(MOZ_HARFBUZZ_LIBS)
 dnl ========================================================
 dnl SIL Graphite
 dnl ========================================================
-if test "$MOZ_GRAPHITE"; then
-  MOZ_GRAPHITE_LIBS='$(DEPTH)/gfx/graphite2/src/$(LIB_PREFIX)mozgraphite2.$(LIB_SUFFIX)'
-  AC_DEFINE(MOZ_GRAPHITE)
-else
-  MOZ_GRAPHITE_LIBS=
-fi
-AC_SUBST(MOZ_GRAPHITE)
+MOZ_GRAPHITE_LIBS='$(DEPTH)/gfx/graphite2/src/$(LIB_PREFIX)mozgraphite2.$(LIB_SUFFIX)'
 AC_SUBST(MOZ_GRAPHITE_LIBS)
 
 dnl ========================================================

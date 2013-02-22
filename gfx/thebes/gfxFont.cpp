@@ -431,7 +431,6 @@ gfxFontEntry::ShareFontTableAndGetBlob(uint32_t aTag,
     return entry->ShareTableAndGetBlob(*aBuffer, &mFontTableCache);
 }
 
-#ifdef MOZ_GRAPHITE
 void
 gfxFontEntry::CheckForGraphiteTables()
 {
@@ -439,7 +438,6 @@ gfxFontEntry::CheckForGraphiteTables()
     mHasGraphiteTables =
         NS_SUCCEEDED(GetFontTable(TRUETYPE_TAG('S','i','l','f'), buffer));
 }
-#endif
 
 /* static */ size_t
 gfxFontEntry::FontTableHashEntry::SizeOfEntryExcludingThis
@@ -2542,12 +2540,10 @@ gfxFont::ShapeText(gfxContext      *aContext,
 {
     bool ok = false;
 
-#ifdef MOZ_GRAPHITE
     if (mGraphiteShaper && gfxPlatform::GetPlatform()->UseGraphiteShaping()) {
         ok = mGraphiteShaper->ShapeText(aContext, aText, aOffset, aLength,
                                         aScript, aShapedText);
     }
-#endif
 
     if (!ok && mHarfBuzzShaper && !aPreferPlatformShaping) {
         if (gfxPlatform::GetPlatform()->UseHarfBuzzForScript(aScript)) {
