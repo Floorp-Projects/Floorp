@@ -15,6 +15,9 @@ function makeChan(uri, isPrivate) {
 }
 
 function run_test() {
+  // Allow all cookies.
+  Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
+  
   let publicNotifications = 0;
   let privateNotifications = 0;
   Services.obs.addObserver(function() {publicNotifications++;}, "cookie-changed", false);

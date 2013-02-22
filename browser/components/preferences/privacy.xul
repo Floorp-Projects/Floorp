@@ -183,12 +183,23 @@
                         label="&cookieExceptions.label;" accesskey="&cookieExceptions.accesskey;"
                         preference="pref.privacy.disable_button.cookie_exceptions"/>
               </hbox>
-              <checkbox id="acceptThirdParty" label="&acceptThirdParty.label;" class="indent"
-                        preference="network.cookie.cookieBehavior"
-                        accesskey="&acceptThirdParty.accesskey;"
-                        onsyncfrompreference="return gPrivacyPane.readAcceptThirdPartyCookies();"
-                        onsynctopreference="return gPrivacyPane.writeAcceptThirdPartyCookies();"/>
 
+              <hbox id="acceptThirdPartyRow" class="indent">
+                <hbox id="acceptThirdPartyBox" align="center">
+                  <label id="acceptThirdPartyLabel" control="acceptThirdPartyMenu"
+                         accesskey="&acceptThirdParty.pre.accesskey;">&acceptThirdParty.pre.label;</label>
+                  <menulist id="acceptThirdPartyMenu" preference="network.cookie.cookieBehavior"
+                  onsyncfrompreference="return gPrivacyPane.readAcceptThirdPartyCookies();"
+                  onsynctopreference="return gPrivacyPane.writeAcceptThirdPartyCookies();">
+                    <menupopup>
+                      <menuitem label="&acceptThirdParty.always.label;" value="always"/>
+                      <menuitem label="&acceptThirdParty.visited.label;" value="visited"/>
+                      <menuitem label="&acceptThirdParty.never.label;" value="never"/>
+                    </menupopup>
+                  </menulist>
+                </hbox>
+              </hbox>
+              
               <hbox id="keepRow" class="indent">
                 <hbox id="keepBox" align="center">
                   <label id="keepUntil"
