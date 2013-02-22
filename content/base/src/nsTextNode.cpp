@@ -185,17 +185,6 @@ void nsTextNode::UnbindFromTree(bool aDeep, bool aNullParent)
   nsGenericDOMDataNode::UnbindFromTree(aDeep, aNullParent);
 }
 
-already_AddRefed<nsTextNode>
-nsTextNode::SplitText(uint32_t aOffset, ErrorResult& rv)
-{
-  nsCOMPtr<nsIContent> newChild;
-  rv = SplitData(aOffset, getter_AddRefs(newChild));
-  if (rv.Failed()) {
-    return nullptr;
-  }
-  return static_cast<nsTextNode*>(newChild.forget().get());
-}
-
 #ifdef DEBUG
 void
 nsTextNode::List(FILE* out, int32_t aIndent) const
