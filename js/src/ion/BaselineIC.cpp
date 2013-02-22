@@ -2394,6 +2394,19 @@ IsCacheableGetPropReadSlot(JSObject *obj, JSObject *holder, UnrootedShape shape)
     return true;
 }
 
+static bool
+TypedArrayGetElemStubExists(ICGetElem_Fallback *stub, HandleObject obj)
+{
+    for (ICStub *cur = stub->icEntry()->firstStub(); cur != stub; cur = cur->next()) {
+        if (!cur->isGetElem_TypedArray())
+            continue;
+        if (obj->lastProperty() == cur->toGetElem_TypedArray()->shape())
+            return true;
+    }
+    return false;
+}
+
+
 static bool TryAttachNativeGetElemStub(JSContext *cx, HandleScript script,
                                        ICGetElem_Fallback *stub, HandleObject obj,
                                        HandleValue key)
@@ -2483,7 +2496,9 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, ICGetElem_Fallback *stu
     }
 
     // Check for TypedArray[int] => Number accesses.
-    if (obj->isTypedArray() && rhs.isInt32() && res.isNumber()) {
+    if (obj->isTypedArray() && rhs.isInt32() && res.isNumber() &&
+        !TypedArrayGetElemStubExists(stub, obj))
+    {
         IonSpew(IonSpew_BaselineIC, "  Generating GetElem(TypedArray[Int32]) stub");
         ICGetElem_TypedArray::Compiler compiler(cx, obj->lastProperty(), TypedArray::type(obj));
         ICStub *typedArrayStub = compiler.getStub(compiler.getStubSpace(script));
