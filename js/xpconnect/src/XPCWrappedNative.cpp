@@ -284,6 +284,7 @@ FinishCreate(XPCCallContext& ccx,
 nsresult
 XPCWrappedNative::WrapNewGlobal(XPCCallContext &ccx, xpcObjectHelper &nativeHelper,
                                 nsIPrincipal *principal, bool initStandardClasses,
+                                JS::ZoneSpecifier zoneSpec,
                                 XPCWrappedNative **wrappedGlobal)
 {
     nsISupports *identity = nativeHelper.GetCanonical();
@@ -313,7 +314,7 @@ XPCWrappedNative::WrapNewGlobal(XPCCallContext &ccx, xpcObjectHelper &nativeHelp
     MOZ_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
 
     // Create the global.
-    JSObject *global = xpc::CreateGlobalObject(ccx, clasp, principal);
+    JSObject *global = xpc::CreateGlobalObject(ccx, clasp, principal, zoneSpec);
     if (!global)
         return NS_ERROR_FAILURE;
     XPCWrappedNativeScope *scope = GetCompartmentPrivate(global)->scope;

@@ -205,7 +205,7 @@ ForkJoinShared::init()
         return false;
 
     for (unsigned i = 0; i < numSlices_; i++) {
-        Allocator *allocator = cx_->runtime->new_<Allocator>(cx_->compartment);
+        Allocator *allocator = cx_->runtime->new_<Allocator>(cx_->zone());
         if (!allocator)
             return false;
 

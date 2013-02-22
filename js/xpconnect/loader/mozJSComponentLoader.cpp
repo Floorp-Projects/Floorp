@@ -20,6 +20,7 @@
 #include <windows.h>
 #endif
 
+#include "jsapi.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsICategoryManager.h"
@@ -742,6 +743,7 @@ mozJSComponentLoader::PrepareObjectForLocation(JSCLContextHelper& aCx,
         rv = xpc->InitClassesWithNewWrappedGlobal(aCx, backstagePass,
                                                   mSystemPrincipal,
                                                   0,
+                                                  JS::SystemZone,
                                                   getter_AddRefs(holder));
         NS_ENSURE_SUCCESS(rv, nullptr);
 

@@ -14,13 +14,17 @@
 #include "jsprototypes.h"
 #include "jstypes.h"
 
+namespace JS {
+
 /*
  * Allow headers to reference JS::Value without #including the whole jsapi.h.
  * Unfortunately, typedefs (hence jsval) cannot be declared.
  */
-#ifdef __cplusplus
-namespace JS { class Value; }
-#endif
+class Value;
+
+struct Zone;
+
+} /* namespace JS */
 
 /*
  * In release builds, jsid is defined to be an integral type. This
@@ -258,8 +262,11 @@ struct ContextFriendFields {
     /* The current compartment. */
     JSCompartment       *compartment;
 
+    /* The current zone. */
+    JS::Zone            *zone_;
+
     explicit ContextFriendFields(JSRuntime *rt)
-      : runtime(rt), compartment(NULL)
+      : runtime(rt), compartment(NULL), zone_(NULL)
     { }
 
     static const ContextFriendFields *get(const JSContext *cx) {

@@ -141,9 +141,9 @@ AutoFlushCache::flushAnyway()
 
 AutoFlushCache::~AutoFlushCache()
 {
-    if (!myCompartment_)
+    if (!runtime_)
         return;
 
-    if (myCompartment_->flusher() == this)
-        myCompartment_->setFlusher(NULL);
+    if (runtime_->flusher() == this)
+        runtime_->setFlusher(NULL);
 }

@@ -1032,7 +1032,7 @@ mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimi
         AssertCompartmentUnchanged pcc(cx);
 
 #ifdef JS_ION
-        ion::IonContext ictx(cx, cx->compartment, NULL);
+        ion::IonContext ictx(cx, NULL);
         ion::IonActivation activation(cx, NULL);
         ion::AutoFlushInhibitor afi(cx->compartment->ionCompartment());
 #endif

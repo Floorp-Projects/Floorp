@@ -82,7 +82,6 @@ public:
     // Set the system timezone based on the current settings.
     if (aResult.isString()) {
       JSAutoRequest ar(cx);
-      JSAutoCompartment ac(cx, aResult.toString());
       return TimeZoneSettingObserver::SetTimeZone(aResult, cx);
     }
 

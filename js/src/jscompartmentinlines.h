@@ -8,6 +8,14 @@
 #ifndef jscompartment_inlines_h___
 #define jscompartment_inlines_h___
 
+inline void
+JSCompartment::initGlobal(js::GlobalObject &global)
+{
+    JS_ASSERT(global.compartment() == this);
+    JS_ASSERT(!global_);
+    global_ = &global;
+}
+
 js::GlobalObject *
 JSCompartment::maybeGlobal() const
 {
@@ -50,5 +58,35 @@ js::Allocator::parallelNewGCThing(gc::AllocKind thingKind, size_t thingSize)
 {
     return arenas.parallelAllocate(zone, thingKind, thingSize);
 }
+
+namespace js {
+
+/*
+ * Entering the atoms comaprtment is not possible with the AutoCompartment
+ * since the atoms compartment does not have a global.
+ *
+ * Note: since most of the VM assumes that cx->global is non-null, only a
+ * restricted set of (atom creating/destroying) operations may be used from
+ * inside the atoms compartment.
+ */
+class AutoEnterAtomsCompartment
+{
+    JSContext *cx;
+    JSCompartment *oldCompartment;
+  public:
+    AutoEnterAtomsCompartment(JSContext *cx)
+      : cx(cx),
+        oldCompartment(cx->compartment)
+    {
+        cx->setCompartment(cx->runtime->atomsCompartment);
+    }
+
+    ~AutoEnterAtomsCompartment()
+    {
+        cx->setCompartment(oldCompartment);
+    }
+};
+
+} /* namespace js */
 
 #endif /* jscompartment_inlines_h___ */

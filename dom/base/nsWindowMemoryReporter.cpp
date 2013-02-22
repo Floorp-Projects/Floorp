@@ -116,6 +116,7 @@ CollectWindowReports(nsGlobalWindow *aWindow,
                      nsWindowSizes *aWindowTotalSizes,
                      nsTHashtable<nsUint64HashKey> *aGhostWindowIDs,
                      WindowPaths *aWindowPaths,
+                     WindowPaths *aTopWindowPaths,
                      nsIMemoryMultiReporterCallback *aCb,
                      nsISupports *aClosure)
 {
@@ -135,10 +136,12 @@ CollectWindowReports(nsGlobalWindow *aWindow,
     AppendWindowURI(top, windowPath);
     windowPath += NS_LITERAL_CSTRING(", id=");
     windowPath.AppendInt(top->WindowID());
-    windowPath += NS_LITERAL_CSTRING(")/");
+    windowPath += NS_LITERAL_CSTRING(")");
 
-    windowPath += aWindow->IsFrozen() ? NS_LITERAL_CSTRING("cached/")
-                                      : NS_LITERAL_CSTRING("active/");
+    aTopWindowPaths->Put(aWindow->WindowID(), windowPath);
+
+    windowPath += aWindow->IsFrozen() ? NS_LITERAL_CSTRING("/cached/")
+                                      : NS_LITERAL_CSTRING("/active/");
   } else {
     if (aGhostWindowIDs->Contains(aWindow->WindowID())) {
       windowPath += NS_LITERAL_CSTRING("top(none)/ghost/");
@@ -314,18 +317,22 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
   WindowPaths windowPaths;
   windowPaths.Init();
 
+  WindowPaths topWindowPaths;
+  topWindowPaths.Init();
+
   // Collect window memory usage.
   nsWindowSizes windowTotalSizes(NULL);
   for (uint32_t i = 0; i < windows.Length(); i++) {
     nsresult rv = CollectWindowReports(windows[i], &windowTotalSizes,
-                                       &ghostWindows, &windowPaths,
+                                       &ghostWindows, &windowPaths, &topWindowPaths,
                                        aCb, aClosure);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Report JS memory usage.  We do this from here because the JS memory
   // multi-reporter needs to be passed |windowPaths|.
-  nsresult rv = xpc::JSMemoryMultiReporter::CollectReports(&windowPaths, aCb, aClosure);
+  nsresult rv = xpc::JSMemoryMultiReporter::CollectReports(&windowPaths, &topWindowPaths,
+                                                           aCb, aClosure);
   NS_ENSURE_SUCCESS(rv, rv);
 
 #define REPORT(_path, _amount, _desc)                                         \
