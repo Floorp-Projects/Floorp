@@ -51,7 +51,6 @@ EXPORTS_mozilla/dom = \
   DOMImplementation.h \
   EventSource.h \
   Link.h \
-  Text.h \
   $(NULL)
 
 CPPSRCS		= \
@@ -121,7 +120,6 @@ CPPSRCS		= \
 		nsStyledElement.cpp \
 		nsStyleLinkElement.cpp \
 		nsSyncLoadService.cpp \
-		Text.cpp \
 		nsTextFragment.cpp \
 		nsTextNode.cpp \
 		nsTraversal.cpp \

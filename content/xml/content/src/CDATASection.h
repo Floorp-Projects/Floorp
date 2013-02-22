@@ -7,17 +7,17 @@
 #define mozilla_dom_CDATASection_h
 
 #include "nsIDOMCDATASection.h"
-#include "mozilla/dom/Text.h"
+#include "nsGenericDOMDataNode.h"
 
 namespace mozilla {
 namespace dom {
 
-class CDATASection : public Text,
+class CDATASection : public nsGenericDOMDataNode,
                      public nsIDOMCDATASection
 {
 public:
   CDATASection(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : Text(aNodeInfo)
+    : nsGenericDOMDataNode(aNodeInfo)
   {
     NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::CDATA_SECTION_NODE,
                       "Bad NodeType in aNodeInfo");
