@@ -154,6 +154,26 @@ var ContextMenuHandler = {
    * Utility routines
    */
 
+   /*
+    * _translateToTopLevelWindow - Given a potential coordinate set within
+    * a subframe, translate up to the parent window which is what front
+    * end code expect.
+    */
+  _translateToTopLevelWindow: function _translateToTopLevelWindow(aPopupNode) {
+    let offsetX = 0;
+    let offsetY = 0;
+    let element = aPopupNode;
+    while (element &&
+           element.ownerDocument &&
+           element.ownerDocument.defaultView != content) {
+      element = element.ownerDocument.defaultView.frameElement;
+      let rect = element.getBoundingClientRect();
+      offsetX += rect.left;
+      offsetY += rect.top;
+    }
+    return { offsetX: offsetX, offsetY: offsetY };
+  },
+
   /*
    * _processPopupNode - Generate and send a Content:ContextMenu message
    * to browser detailing the underlying content types at this.popupNode.
@@ -163,6 +183,8 @@ var ContextMenuHandler = {
   _processPopupNode: function _processPopupNode(aPopupNode, aX, aY, aInputSrc) {
     if (!aPopupNode)
       return;
+    let { offsetX: offsetX, offsetY: offsetY } =
+      this._translateToTopLevelWindow(aPopupNode);
     let popupNode = this.popupNode = aPopupNode;
     let imageUrl = "";
 
@@ -294,8 +316,8 @@ var ContextMenuHandler = {
     }
 
     // populate position and event source
-    state.xPos = aX;
-    state.yPos = aY;
+    state.xPos = offsetX + aX;
+    state.yPos = offsetY + aY;
     state.source = aInputSrc;
 
     for (let i = 0; i < this._types.length; i++)
