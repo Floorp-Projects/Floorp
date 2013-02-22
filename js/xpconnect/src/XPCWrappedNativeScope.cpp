@@ -89,12 +89,6 @@ XPCWrappedNativeScope::GetNewOrUsed(JSContext *cx, JSObject* aGlobal)
     XPCWrappedNativeScope* scope = GetObjectScope(aGlobal);
     if (!scope) {
         scope = new XPCWrappedNativeScope(cx, aGlobal);
-    } else {
-        // We need to call SetGlobal in order to clear mPrototypeNoHelper (so we
-        // get a new new one if requested in the new scope) in the case where
-        // the global object is being reused (JS_SetAllNonReservedSlotsToUndefined
-        // has been called). NOTE: We are only called by nsXPConnect::InitClasses.
-        scope->SetGlobal(cx, aGlobal);
     }
     return scope;
 }
@@ -106,7 +100,7 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
         mMainThreadWrappedNativeProtoMap(ClassInfo2WrappedNativeProtoMap::newMap(XPC_NATIVE_PROTO_MAP_SIZE)),
         mComponents(nullptr),
         mNext(nullptr),
-        mGlobalJSObject(nullptr),
+        mGlobalJSObject(aGlobal),
         mPrototypeNoHelper(nullptr),
         mExperimentalBindingsEnabled(XPCJSRuntime::Get()->ExperimentalBindingsEnabled()),
         mIsXBLScope(false)
@@ -127,9 +121,6 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
         mContext = XPCContext::GetXPCContext(cx);
         mContext->AddScope(this);
     }
-
-    if (aGlobal)
-        SetGlobal(cx, aGlobal);
 
     DEBUG_TrackNewScope(this);
     MOZ_COUNT_CTOR(XPCWrappedNativeScope);
@@ -286,16 +277,6 @@ js::Class XPC_WN_NoHelper_Proto_JSClass = {
     XPC_WN_NoCall_ObjectOps
 };
 
-
-void
-XPCWrappedNativeScope::SetGlobal(JSContext *cx, JSObject* aGlobal)
-{
-    // We allow for calling this more than once. This feature is used by
-    // nsXPConnect::InitClassesWithNewWrappedGlobal.
-    mGlobalJSObject = aGlobal;
-
-}
-
 XPCWrappedNativeScope::~XPCWrappedNativeScope()
 {
     MOZ_COUNT_DTOR(XPCWrappedNativeScope);
@@ -338,7 +319,7 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
 JSObject *
 XPCWrappedNativeScope::GetPrototypeNoHelper(XPCCallContext& ccx)
 {
-    // We could create this prototype in SetGlobal(), but all scopes
+    // We could create this prototype in our constructor, but all scopes
     // don't need one, so we save ourselves a bit of space if we
     // create these when they're needed.
     if (!mPrototypeNoHelper) {
