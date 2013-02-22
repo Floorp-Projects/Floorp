@@ -25,8 +25,9 @@ tabbrowser {
   visibility: collapse;
 }
 
-#tabbrowser-tabs:not([overflow="true"])[using-closing-tabs-spacer] ~ #alltabs-button {
-  visibility: hidden; /* temporary space to keep a tab's close button under the cursor */
+#tabbrowser-tabs[overflow=true] > .tabbrowser-arrowscrollbox > .scrollbutton-up[collapsed=true],
+#tabbrowser-tabs[overflow=true] > .tabbrowser-arrowscrollbox > .scrollbutton-down[collapsed=true] {
+  visibility: visible; /* keep a tab's close button under the cursor while it's closing tabs */
 }
 
 .tabbrowser-tab {
