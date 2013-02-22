@@ -306,9 +306,10 @@ Wrapper::construct(JSContext *cx, JSObject *wrapperArg, unsigned argc, Value *ar
 bool
 Wrapper::nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args)
 {
-    const jsid id = JSID_VOID;
     RootedObject wrapper(cx, &args.thisv().toObject());
-    CHECKED(DirectProxyHandler::nativeCall(cx, test, impl, args), CALL);
+    // Note - we don't enter a policy here because our security architecture guards
+    // against nativeCall by overriding the trap itself in the right circumstances.
+    return DirectProxyHandler::nativeCall(cx, test, impl, args);
 }
 
 bool
