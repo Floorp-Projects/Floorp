@@ -267,7 +267,8 @@ js::intrinsic_UnsafeSetElement(JSContext *cx, unsigned argc, Value *vp)
             JS_ASSERT(idx < TypedArray::length(arrobj));
             RootedValue tmp(cx, args[elemi]);
             // XXX: Always non-strict.
-            JSObject::setElement(cx, arrobj, arrobj, idx, &tmp, false);
+            if (!JSObject::setElement(cx, arrobj, arrobj, idx, &tmp, false))
+                return false;
         }
     }
 
