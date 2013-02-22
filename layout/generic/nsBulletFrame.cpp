@@ -21,7 +21,6 @@
 #include "nsNetUtil.h"
 #include "prprf.h"
 #include "nsDisplayList.h"
-#include "nsCounterManager.h"
 
 #include "imgILoader.h"
 #include "imgIContainer.h"
@@ -418,7 +417,7 @@ nsBulletFrame::SetListItemOrdinal(int32_t aNextOrdinal,
 
   *aChanged = oldOrdinal != mOrdinal;
 
-  return nsCounterManager::IncrementCounter(mOrdinal, aIncrement);
+  return mOrdinal + aIncrement;
 }
 
 
