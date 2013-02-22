@@ -672,6 +672,8 @@ class BooleanHistogram : public LinearHistogram {
 
   virtual void AddBoolean(bool value);
 
+  virtual void Accumulate(Sample value, Count count, size_t index);
+
  protected:
   explicit BooleanHistogram(const std::string& name);
 
