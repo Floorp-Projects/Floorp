@@ -932,10 +932,12 @@ CodeGenerator::visitTypeBarrier(LTypeBarrier *lir)
     ValueOperand operand = ToValue(lir, LTypeBarrier::Input);
     Register scratch = ToRegister(lir->temp());
 
-    Label mismatched;
-    masm.guardTypeSet(operand, lir->mir()->typeSet(), scratch, &mismatched);
-    if (!bailoutFrom(&mismatched, lir->snapshot()))
+    Label matched, miss;
+    masm.guardTypeSet(operand, lir->mir()->typeSet(), scratch, &matched, &miss);
+    masm.jump(&miss);
+    if (!bailoutFrom(&miss, lir->snapshot()))
         return false;
+    masm.bind(&matched);
     return true;
 }
 
@@ -945,10 +947,26 @@ CodeGenerator::visitMonitorTypes(LMonitorTypes *lir)
     ValueOperand operand = ToValue(lir, LMonitorTypes::Input);
     Register scratch = ToRegister(lir->temp());
 
-    Label mismatched;
-    masm.guardTypeSet(operand, lir->mir()->typeSet(), scratch, &mismatched);
-    if (!bailoutFrom(&mismatched, lir->snapshot()))
+    Label matched, miss;
+    masm.guardTypeSet(operand, lir->mir()->typeSet(), scratch, &matched, &miss);
+    masm.jump(&miss);
+    if (!bailoutFrom(&miss, lir->snapshot()))
         return false;
+    masm.bind(&matched);
+    return true;
+}
+
+bool
+CodeGenerator::visitExcludeType(LExcludeType *lir)
+{
+    ValueOperand operand = ToValue(lir, LExcludeType::Input);
+    Register scratch = ToRegister(lir->temp());
+
+    Label matched, miss;
+    masm.guardType(operand, lir->mir()->type(), scratch, &matched, &miss);
+    if (matched.used() && !bailoutFrom(&matched, lir->snapshot()))
+        return false;
+    masm.bind(&miss);
     return true;
 }
 
@@ -1711,7 +1729,7 @@ CodeGenerator::generateArgumentsChecks()
     JS_ASSERT(info.scopeChainSlot() == 0);
     static const uint32_t START_SLOT = 1;
 
-    Label mismatched;
+    Label miss;
     for (uint32_t i = START_SLOT; i < CountArgSlots(info.fun()); i++) {
         // All initial parameters are guaranteed to be MParameters.
         MParameter *param = rp->getOperand(i)->toParameter();
@@ -1722,10 +1740,13 @@ CodeGenerator::generateArgumentsChecks()
         // Use ReturnReg as a scratch register here, since not all platforms
         // have an actual ScratchReg.
         int32_t offset = ArgToStackOffset((i - START_SLOT) * sizeof(Value));
-        masm.guardTypeSet(Address(StackPointer, offset), types, temp, &mismatched);
+        Label matched;
+        masm.guardTypeSet(Address(StackPointer, offset), types, temp, &matched, &miss);
+        masm.jump(&miss);
+        masm.bind(&matched);
     }
 
-    if (mismatched.used() && !bailoutFrom(&mismatched, graph.entrySnapshot()))
+    if (miss.used() && !bailoutFrom(&miss, graph.entrySnapshot()))
         return false;
 
     masm.freeStack(frameSize());

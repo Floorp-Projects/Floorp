@@ -70,7 +70,8 @@ int MessagePumpWin::GetCurrentDelay() const {
   // Be careful here.  TimeDelta has a precision of microseconds, but we want a
   // value in milliseconds.  If there are 5.5ms left, should the delay be 5 or
   // 6?  It should be 6 to avoid executing delayed work too early.
-  double timeout = ceil((delayed_work_time_ - Time::Now()).InMillisecondsF());
+  double timeout =
+      ceil((delayed_work_time_ - TimeTicks::Now()).InMillisecondsF());
 
   // If this value is negative, then we need to run delayed work soon.
   int delay = static_cast<int>(timeout);
@@ -104,7 +105,7 @@ void MessagePumpForUI::ScheduleWork() {
   PostMessage(message_hwnd_, WM_NULL, 0, 0);
 }
 
-void MessagePumpForUI::ScheduleDelayedWork(const Time& delayed_work_time) {
+void MessagePumpForUI::ScheduleDelayedWork(const TimeTicks& delayed_work_time) {
   //
   // We would *like* to provide high resolution timers.  Windows timers using
   // SetTimer() have a 10ms granularity.  We have to use WM_TIMER as a wakeup
@@ -431,7 +432,7 @@ void MessagePumpForIO::ScheduleWork() {
   DCHECK(ret);
 }
 
-void MessagePumpForIO::ScheduleDelayedWork(const Time& delayed_work_time) {
+void MessagePumpForIO::ScheduleDelayedWork(const TimeTicks& delayed_work_time) {
   // We know that we can't be blocked right now since this method can only be
   // called on the same thread as Run, so we only need to update our record of
   // how long to sleep when we do sleep.

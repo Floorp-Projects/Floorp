@@ -83,12 +83,12 @@ OPDEF(JSOP_NOP,       0,  "nop",        NULL,         1,  0,  0,  0,  JOF_BYTE)
 /* Long-standing JavaScript bytecodes. */
 OPDEF(JSOP_UNDEFINED, 1,  js_undefined_str, "",       1,  0,  1,  0,  JOF_BYTE)
 OPDEF(JSOP_POPV,      2,  "popv",       NULL,         1,  1,  0,  2,  JOF_BYTE)
-OPDEF(JSOP_ENTERWITH, 3,  "enterwith",  NULL,         1,  1,  1,  0,  JOF_BYTE|JOF_PARENHEAD)
+OPDEF(JSOP_ENTERWITH, 3,  "enterwith",  NULL,         1,  1,  1,  0,  JOF_BYTE)
 OPDEF(JSOP_LEAVEWITH, 4,  "leavewith",  NULL,         1,  1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_RETURN,    5,  "return",     NULL,         1,  1,  0,  2,  JOF_BYTE)
 OPDEF(JSOP_GOTO,      6,  "goto",       NULL,         5,  0,  0,  0,  JOF_JUMP)
 OPDEF(JSOP_IFEQ,      7,  "ifeq",       NULL,         5,  1,  0,  4,  JOF_JUMP|JOF_DETECTING)
-OPDEF(JSOP_IFNE,      8,  "ifne",       NULL,         5,  1,  0,  0,  JOF_JUMP|JOF_PARENHEAD)
+OPDEF(JSOP_IFNE,      8,  "ifne",       NULL,         5,  1,  0,  0,  JOF_JUMP)
 
 /* Get the arguments object for the current, lightweight function activation. */
 OPDEF(JSOP_ARGUMENTS, 9,  "arguments",  NULL,         1,  0,  1,  0,  JOF_BYTE)
@@ -121,9 +121,9 @@ OPDEF(JSOP_NOT,       32, "not",        "!",          1,  1,  1, 15,  JOF_BYTE|J
 OPDEF(JSOP_BITNOT,    33, "bitnot",     "~",          1,  1,  1, 15,  JOF_BYTE|JOF_ARITH)
 OPDEF(JSOP_NEG,       34, "neg",        "- ",         1,  1,  1, 15,  JOF_BYTE|JOF_ARITH)
 OPDEF(JSOP_POS,       35, "pos",        "+ ",         1,  1,  1, 15,  JOF_BYTE|JOF_ARITH)
-OPDEF(JSOP_DELNAME,   36, "delname",    NULL,         5,  0,  1, 15,  JOF_ATOM|JOF_NAME|JOF_DEL)
-OPDEF(JSOP_DELPROP,   37, "delprop",    NULL,         5,  1,  1, 15,  JOF_ATOM|JOF_PROP|JOF_DEL)
-OPDEF(JSOP_DELELEM,   38, "delelem",    NULL,         1,  2,  1, 15,  JOF_BYTE |JOF_ELEM|JOF_DEL)
+OPDEF(JSOP_DELNAME,   36, "delname",    NULL,         5,  0,  1, 15,  JOF_ATOM|JOF_NAME)
+OPDEF(JSOP_DELPROP,   37, "delprop",    NULL,         5,  1,  1, 15,  JOF_ATOM|JOF_PROP)
+OPDEF(JSOP_DELELEM,   38, "delelem",    NULL,         1,  2,  1, 15,  JOF_BYTE |JOF_ELEM)
 OPDEF(JSOP_TYPEOF,    39, js_typeof_str,NULL,         1,  1,  1, 15,  JOF_BYTE|JOF_DETECTING)
 OPDEF(JSOP_VOID,      40, js_void_str,  NULL,         1,  1,  1, 15,  JOF_BYTE)
 
@@ -159,7 +159,7 @@ OPDEF(JSOP_OR,        68, "or",         NULL,         5,  1,  1,  5,  JOF_JUMP|J
 OPDEF(JSOP_AND,       69, "and",        NULL,         5,  1,  1,  6,  JOF_JUMP|JOF_DETECTING|JOF_LEFTASSOC)
 
 /* The switch bytecodes have variable length. */
-OPDEF(JSOP_TABLESWITCH, 70, "tableswitch", NULL,     -1,  1,  0,  0,  JOF_TABLESWITCH|JOF_DETECTING|JOF_PARENHEAD)
+OPDEF(JSOP_TABLESWITCH, 70, "tableswitch", NULL,     -1,  1,  0,  0,  JOF_TABLESWITCH|JOF_DETECTING)
 OPDEF(JSOP_UNUSED71,  71, "unused71",   NULL,         1,  0,  0,  0,  JOF_BYTE)
 
 /* New, infallible/transitive identity ops. */
@@ -288,7 +288,7 @@ OPDEF(JSOP_LINENO,    119,"lineno",     NULL,         3,  0,  0,  0,  JOF_UINT16
  * CONDSWITCH is a decompilable NOP; CASE is ===, POP, jump if true, re-push
  * lval if false; and DEFAULT is POP lval and GOTO.
  */
-OPDEF(JSOP_CONDSWITCH,120,"condswitch", NULL,         1,  0,  0,  0,  JOF_BYTE|JOF_PARENHEAD)
+OPDEF(JSOP_CONDSWITCH,120,"condswitch", NULL,         1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_CASE,      121,"case",       NULL,         5,  2,  1,  0,  JOF_JUMP)
 OPDEF(JSOP_DEFAULT,   122,"default",    NULL,         5,  1,  0,  0,  JOF_JUMP)
 
@@ -375,8 +375,8 @@ OPDEF(JSOP_UNUSED147,     147,"unused147", NULL,      1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED148,     148,"unused148", NULL,      1,  0,  0,  0,  JOF_BYTE)
 
 /* Placeholders for a real jump opcode set during backpatch chain fixup. */
-OPDEF(JSOP_BACKPATCH,     149,"backpatch",NULL,       5,  0,  0,  0,  JOF_JUMP|JOF_BACKPATCH)
-OPDEF(JSOP_BACKPATCH_POP, 150,"backpatch_pop",NULL,   5,  1,  0,  0,  JOF_JUMP|JOF_BACKPATCH)
+OPDEF(JSOP_BACKPATCH,     149,"backpatch", NULL,      5,  0,  0,  0,  JOF_JUMP)
+OPDEF(JSOP_UNUSED150,     150,"unused150", NULL,      1,  0,  0,  0,  JOF_BYTE)
 
 /* Set pending exception from the stack, to trigger rethrow. */
 OPDEF(JSOP_THROWING,      151,"throwing", NULL,       1,  1,  0,  0,  JOF_BYTE)

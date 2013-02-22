@@ -427,7 +427,7 @@ DumpHeap(JSContext *cx,
         if (!str)
             return JS_FALSE;
         *vp = STRING_TO_JSVAL(str);
-        if (!fileName.encode(cx, str))
+        if (!fileName.encodeLatin1(cx, str))
             return JS_FALSE;
     }
 
@@ -618,7 +618,7 @@ ProcessFile(JSContext *cx,
                     str = JS_ValueToString(cx, result);
                     JSAutoByteString bytes;
                     if (str)
-                        bytes.encode(cx, str);
+                        bytes.encodeLatin1(cx, str);
                     JS_SetErrorReporter(cx, older);
 
                     if (!!bytes)

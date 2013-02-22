@@ -32,6 +32,8 @@ static char *DecodeQ(const char *, uint32_t);
 static bool Is7bitNonAsciiString(const char *, uint32_t);
 static void CopyRawHeader(const char *, uint32_t, const char *, nsACString &);
 static nsresult DecodeRFC2047Str(const char *, const char *, bool, nsACString&);
+static nsresult internalDecodeParameter(const nsACString&, const char*,
+                                        const char*, bool, bool, nsACString&);
 
 // XXX The chance of UTF-7 being used in the message header is really
 // low, but in theory it's possible. 
@@ -49,18 +51,18 @@ nsMIMEHeaderParamImpl::GetParameter(const nsACString& aHeaderVal,
                                     bool aTryLocaleCharset, 
                                     char **aLang, nsAString& aResult)
 {
-  return DoGetParameter(aHeaderVal, aParamName, RFC_2231_DECODING,
+  return DoGetParameter(aHeaderVal, aParamName, MIME_FIELD_ENCODING,
                         aFallbackCharset, aTryLocaleCharset, aLang, aResult);
 }
 
 NS_IMETHODIMP 
-nsMIMEHeaderParamImpl::GetParameter5987(const nsACString& aHeaderVal, 
+nsMIMEHeaderParamImpl::GetParameterHTTP(const nsACString& aHeaderVal, 
                                         const char *aParamName,
                                         const nsACString& aFallbackCharset, 
                                         bool aTryLocaleCharset, 
                                         char **aLang, nsAString& aResult)
 {
-  return DoGetParameter(aHeaderVal, aParamName, RFC_5987_DECODING,
+  return DoGetParameter(aHeaderVal, aParamName, HTTP_FIELD_ENCODING,
                         aFallbackCharset, aTryLocaleCharset, aLang, aResult);
 }
 
@@ -90,7 +92,8 @@ nsMIMEHeaderParamImpl::DoGetParameter(const nsACString& aHeaderVal,
     // if necessary.
     
     nsAutoCString str1;
-    rv = DecodeParameter(med, charset.get(), nullptr, false, str1);
+    rv = internalDecodeParameter(med, charset.get(), nullptr, false,
+                                 aDecoding == MIME_FIELD_ENCODING, str1);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!aFallbackCharset.IsEmpty())
@@ -347,7 +350,7 @@ nsMIMEHeaderParamImpl::GetParameterInternal(const char *aHeaderValue,
                                             char **aLang,
                                             char **aResult)
 {
-  return DoParameterInternal(aHeaderValue, aParamName, RFC_2231_DECODING,
+  return DoParameterInternal(aHeaderValue, aParamName, MIME_FIELD_ENCODING,
                              aCharset, aLang, aResult);
 }
 
@@ -371,7 +374,9 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
 
   nsAutoCString charset;
 
-  bool acceptContinuations = (aDecoding != RFC_5987_DECODING);
+  // change to (aDecoding != HTTP_FIELD_ENCODING) when we want to disable
+  // them for HTTP header fields later on, see bug 776324
+  bool acceptContinuations = true;
 
   const char *str = aHeaderValue;
 
@@ -722,13 +727,10 @@ increment_str:
   return *aResult ? NS_OK : NS_ERROR_INVALID_ARG;
 }
 
-
-NS_IMETHODIMP
-nsMIMEHeaderParamImpl::DecodeRFC2047Header(const char* aHeaderVal, 
-                                           const char* aDefaultCharset, 
-                                           bool aOverrideCharset, 
-                                           bool aEatContinuations,
-                                           nsACString& aResult)
+nsresult
+internalDecodeRFC2047Header(const char* aHeaderVal, const char* aDefaultCharset,
+                            bool aOverrideCharset, bool aEatContinuations,
+                            nsACString& aResult)
 {
   aResult.Truncate();
   if (!aHeaderVal)
@@ -761,6 +763,18 @@ nsMIMEHeaderParamImpl::DecodeRFC2047Header(const char* aHeaderVal,
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMIMEHeaderParamImpl::DecodeRFC2047Header(const char* aHeaderVal, 
+                                           const char* aDefaultCharset, 
+                                           bool aOverrideCharset, 
+                                           bool aEatContinuations,
+                                           nsACString& aResult)
+{
+  return internalDecodeRFC2047Header(aHeaderVal, aDefaultCharset,
+                                     aOverrideCharset, aEatContinuations,
+                                     aResult);
 }
 
 // true if the character is allowed in a RFC 5987 value
@@ -882,12 +896,10 @@ nsMIMEHeaderParamImpl::DecodeRFC5987Param(const nsACString& aParamVal,
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsMIMEHeaderParamImpl::DecodeParameter(const nsACString& aParamValue,
-                                       const char* aCharset,
-                                       const char* aDefaultCharset,
-                                       bool aOverrideCharset, 
-                                       nsACString& aResult)
+nsresult 
+internalDecodeParameter(const nsACString& aParamValue, const char* aCharset,
+                        const char* aDefaultCharset, bool aOverrideCharset,
+                        bool aDecode2047, nsACString& aResult)
 {
   aResult.Truncate();
   // If aCharset is given, aParamValue was obtained from RFC2231/5987 
@@ -921,17 +933,31 @@ nsMIMEHeaderParamImpl::DecodeParameter(const nsACString& aParamValue,
   }
 
   aResult = unQuoted;
+  nsresult rv = NS_OK;
   
-  nsAutoCString decoded;
+  if (aDecode2047) {
+    nsAutoCString decoded;
 
-  // Try RFC 2047 encoding, instead.
-  nsresult rv = DecodeRFC2047Header(unQuoted.get(), aDefaultCharset, 
-                                    aOverrideCharset, true, decoded);
-  
-  if (NS_SUCCEEDED(rv) && !decoded.IsEmpty())
-    aResult = decoded;
-  
+    // Try RFC 2047 encoding, instead.
+    rv = internalDecodeRFC2047Header(unQuoted.get(), aDefaultCharset,
+                                     aOverrideCharset, true, decoded);
+
+    if (NS_SUCCEEDED(rv) && !decoded.IsEmpty())
+      aResult = decoded;
+  }
+    
   return rv;
+}
+
+NS_IMETHODIMP
+nsMIMEHeaderParamImpl::DecodeParameter(const nsACString& aParamValue,
+                                       const char* aCharset,
+                                       const char* aDefaultCharset,
+                                       bool aOverrideCharset,
+                                       nsACString& aResult)
+{
+  return internalDecodeParameter(aParamValue, aCharset, aDefaultCharset,
+                                 aOverrideCharset, true, aResult);
 }
 
 #define ISHEXCHAR(c) \
