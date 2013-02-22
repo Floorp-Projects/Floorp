@@ -20,6 +20,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -224,8 +225,10 @@ abstract public class BrowserApp extends GeckoApp
         mBrowserToolbar = new BrowserToolbar(this);
         mBrowserToolbar.from(actionBar);
 
-        if (mTabsPanel != null)
+        if (mTabsPanel != null) {
             mTabsPanel.setTabsLayoutChangeListener(this);
+            updateSideBarState();
+        }
 
         mFindInPageBar = (FindInPageBar) findViewById(R.id.find_in_page);
 
@@ -345,6 +348,7 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         invalidateOptionsMenu();
+        updateSideBarState();
         mTabsPanel.refresh();
 
         if (mAboutHomeContent != null)
@@ -374,6 +378,21 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public boolean hasTabsSideBar() {
         return (mTabsPanel != null && mTabsPanel.isSideBar());
+    }
+
+    private void updateSideBarState() {
+        boolean isSideBar = GeckoAppShell.isLargeTablet();
+
+        ViewGroup.LayoutParams lp = mTabsPanel.getLayoutParams();
+        if (isSideBar) {
+            lp.width = getResources().getDimensionPixelSize(R.dimen.tabs_sidebar_width);
+        } else {
+            lp.width = ViewGroup.LayoutParams.FILL_PARENT;
+        }
+        mTabsPanel.requestLayout();
+
+        mTabsPanel.setIsSideBar(isSideBar);
+        mBrowserToolbar.setIsSideBar(isSideBar);
     }
 
     @Override
