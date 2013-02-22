@@ -19,6 +19,13 @@ const resourceHandler = ioService.getProtocolHandler('resource').
 const systemPrincipal = CC('@mozilla.org/systemprincipal;1', 'nsIPrincipal')();
 const scriptLoader = Cc['@mozilla.org/moz/jssubscript-loader;1'].
                      getService(Ci.mozIJSSubScriptLoader);
+const prefService = Cc['@mozilla.org/preferences-service;1'].
+                    getService(Ci.nsIPrefService);
+const appInfo = Cc["@mozilla.org/xre/app-info;1"].
+                getService(Ci.nsIXULAppInfo);
+const vc = Cc["@mozilla.org/xpcom/version-comparator;1"].
+           getService(Ci.nsIVersionComparator);
+
 
 const REASON = [ 'unknown', 'startup', 'shutdown', 'enable', 'disable',
                  'install', 'uninstall', 'upgrade', 'downgrade' ];
@@ -120,19 +127,54 @@ function startup(data, reasonCode) {
     if (name == 'addon-sdk')
       paths['tests/'] = prefixURI + name + '/tests/';
 
-    // Maps sdk module folders to their resource folder
-    paths['sdk/'] = prefixURI + 'addon-sdk/lib/sdk/';
-    paths['toolkit/'] = prefixURI + 'addon-sdk/lib/toolkit/';
-    // test.js is usually found in root commonjs or SDK_ROOT/lib/ folder,
-    // so that it isn't shipped in the xpi. Keep a copy of it in sdk/ folder
-    // until we no longer support SDK modules in XPI:
-    paths['test'] = prefixURI + 'addon-sdk/lib/sdk/test.js';
+    // Starting with Firefox 21.0a1, we start using modules shipped into firefox
+    // Still allow using modules from the xpi if the manifest tell us to do so.
+    // And only try to look for sdk modules in xpi if the xpi actually ship them
+    if (options['is-sdk-bundled'] &&
+        (vc.compare(appInfo.version, '21.0a1') < 0 ||
+         options['force-use-bundled-sdk'])) {
+      // Maps sdk module folders to their resource folder
+      paths[''] = prefixURI + 'addon-sdk/lib/';
+      // test.js is usually found in root commonjs or SDK_ROOT/lib/ folder,
+      // so that it isn't shipped in the xpi. Keep a copy of it in sdk/ folder
+      // until we no longer support SDK modules in XPI:
+      paths['test'] = prefixURI + 'addon-sdk/lib/sdk/test.js';
+    }
+
+    // Retrieve list of module folder overloads based on preferences in order to
+    // eventually used a local modules instead of files shipped into Firefox.
+    let branch = prefService.getBranch('extensions.modules.' + id + '.path');
+    paths = branch.getChildList('', {}).reduce(function (result, name) {
+      // Allows overloading of any sub folder by replacing . by / in pref name
+      let path = name.substr(1).split('.').join('/');
+      // Only accept overloading folder by ensuring always ending with `/`
+      if (path) path += '/';
+      let fileURI = branch.getCharPref(name);
+
+      // Maps the given file:// URI to a resource:// in order to avoid various
+      // failure that happens with file:// URI and be close to production env
+      let resourcesURI = ioService.newURI(fileURI, null, null);
+      let resName = 'extensions.modules.' + domain + '.commonjs.path' + name;
+      resourceHandler.setSubstitution(resName, resourcesURI);
+
+      result[path] = 'resource://' + resName + '/';
+      return result;
+    }, paths);
 
     // Make version 2 of the manifest
     let manifest = options.manifest;
 
     // Import `cuddlefish.js` module using a Sandbox and bootstrap loader.
-    let cuddlefishURI = prefixURI + options.loader;
+    let cuddlefishPath = 'loader/cuddlefish.js';
+    let cuddlefishURI = 'resource://gre/modules/commonjs/sdk/' + cuddlefishPath;
+    if (paths['sdk/']) { // sdk folder has been overloaded
+                         // (from pref, or cuddlefish is still in the xpi)
+      cuddlefishURI = paths['sdk/'] + cuddlefishPath;
+    }
+    else if (paths['']) { // root modules folder has been overloaded
+      cuddlefishURI = paths[''] + 'sdk/' + cuddlefishPath;
+    }
+
     cuddlefishSandbox = loadSandbox(cuddlefishURI);
     let cuddlefish = cuddlefishSandbox.exports;
 

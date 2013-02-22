@@ -19,7 +19,8 @@ const { Cc, Ci, Cr } = require('chrome'),
       { ns } = require('../core/namespace'),
       { observer: windowObserver } = require('./observer'),
       { getOwnerWindow } = require('../private-browsing/window/utils'),
-      viewNS = require('sdk/core/namespace').ns();
+      viewNS = require('../core/namespace').ns(),
+      { isPrivateBrowsingSupported } = require('../self');
 
 /**
  * Window trait composes safe wrappers for browser window that are E10S
@@ -68,7 +69,7 @@ const BrowserWindowTrait = Trait.compose(
         this._tabOptions = [ Options(options.url) ];
       }
 
-      this._private = !!options.private;
+      this._isPrivate = isPrivateBrowsingSupported && !!options.isPrivate;
 
       this._load();
 
@@ -209,9 +210,13 @@ const browserWindows = Trait.resolve({ toString: null }).compose(
       return window ? BrowserWindow({window: window}) : null;
     },
     open: function open(options) {
-      if (typeof options === "string")
+      if (typeof options === "string") {
         // `tabs` option is under review and may be removed.
-        options = { tabs: [Options(options)] };
+        options = {
+          tabs: [Options(options)],
+          isPrivate: isPrivateBrowsingSupported && options.isPrivate
+        };
+      }
       return BrowserWindow(options);
     },
 
