@@ -5,7 +5,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserContract;
-import org.mozilla.gecko.util.GeckoAsyncTask;
+import org.mozilla.gecko.util.UiAsyncTask;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -15,6 +15,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Handler;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -60,60 +61,20 @@ public final class TabsAccessor {
         public void onQueryTabsComplete(List<RemoteTab> tabs);
     }
 
-    public interface OnClientsAvailableListener {
-        public void areAvailable(boolean available);
-    }
-
-    // Helper method to check if there are any clients available
-    public static void areClientsAvailable(final Context context, final OnClientsAvailableListener listener) {
-        if (listener == null)
-            return;
-
-        (new GeckoAsyncTask<Void, Void, Boolean>(GeckoApp.mAppContext, GeckoAppShell.getHandler()) {
-            @Override
-            protected Boolean doInBackground(Void... unused) {
-                Uri uri = BrowserContract.Tabs.CONTENT_URI;
-                uri = uri.buildUpon()
-                         .appendQueryParameter(BrowserContract.PARAM_LIMIT, "1")
-                         .build();
-
-                Cursor cursor = context.getContentResolver().query(uri,
-                                                                   CLIENTS_AVAILABILITY_PROJECTION,
-                                                                   CLIENTS_SELECTION,
-                                                                   null,
-                                                                   null);
-                
-                if (cursor == null)
-                    return false;
-                
-                try {
-                    return cursor.moveToNext();
-                } finally {
-                    cursor.close();
-                }
-            }
-
-            @Override
-            protected void onPostExecute(Boolean availability) {
-                listener.areAvailable(availability);
-            }
-        }).setPriority(GeckoAsyncTask.Priority.HIGH).execute();
-    }
-
     // This method returns all tabs from all remote clients, 
     // ordered by most recent client first, most recent tab first 
-    public static void getTabs(final Context context, final OnQueryTabsCompleteListener listener) {
-        getTabs(context, 0, listener);
+    public static void getTabs(final Context context, final OnQueryTabsCompleteListener listener, Handler uiHandler) {
+        getTabs(context, 0, listener, uiHandler);
     }
 
     // This method returns limited number of tabs from all remote clients, 
     // ordered by most recent client first, most recent tab first 
-    public static void getTabs(final Context context, final int limit, final OnQueryTabsCompleteListener listener) {
+    public static void getTabs(final Context context, final int limit, final OnQueryTabsCompleteListener listener, Handler uiHandler) {
         // If there is no listener, no point in doing work.
         if (listener == null)
             return;
 
-        (new GeckoAsyncTask<Void, Void, List<RemoteTab>>(GeckoApp.mAppContext, GeckoAppShell.getHandler()) {
+        (new UiAsyncTask<Void, Void, List<RemoteTab>>(uiHandler, GeckoAppShell.getHandler()) {
             @Override
             protected List<RemoteTab> doInBackground(Void... unused) {
                 Uri uri = BrowserContract.Tabs.CONTENT_URI;

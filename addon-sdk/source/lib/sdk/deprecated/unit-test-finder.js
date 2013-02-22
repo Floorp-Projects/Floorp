@@ -11,7 +11,8 @@ module.metadata = {
 const file = require("../io/file");
 const memory = require('./memory');
 const suites = require('@test/options').allTestModules;
-
+const { Loader } = require("sdk/test/loader");
+const cuddlefish = require("sdk/loader/cuddlefish");
 
 const NOT_TESTS = ['setup', 'teardown'];
 
@@ -52,7 +53,11 @@ TestFinder.prototype = {
 
     suites.forEach(
       function(suite) {
-        var module = require(suite);
+        // Load each test file as a main module in its own loader instance
+        // `suite` is defined by cuddlefish/manifest.py:ManifestBuilder.build
+        var loader = Loader(module);
+        var module = cuddlefish.main(loader, suite);
+
         if (self.testInProcess)
           for each (let name in Object.keys(module).sort()) {
             if(NOT_TESTS.indexOf(name) === -1 && filter(suite, name)) {

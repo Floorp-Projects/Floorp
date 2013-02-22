@@ -47,10 +47,14 @@ exports.testGetIsActive = function (test) {
 
   test.assertEqual(pb.isActive, false,
                    "private-browsing.isActive is correct without modifying PB service");
+  test.assertEqual(pb.isPrivate(), false,
+                   "private-browsing.sPrivate() is correct without modifying PB service");
 
   pb.once("start", function() {
     test.assert(pb.isActive,
                   "private-browsing.isActive is correct after modifying PB service");
+    test.assert(pb.isPrivate(),
+                  "private-browsing.sPrivate() is correct after modifying PB service");
     // Switch back to normal mode.
     pb.deactivate();
   });
@@ -59,6 +63,8 @@ exports.testGetIsActive = function (test) {
   pb.once("stop", function() {
     test.assert(!pb.isActive,
                 "private-browsing.isActive is correct after modifying PB service");
+    test.assert(!pb.isPrivate(),
+                "private-browsing.sPrivate() is correct after modifying PB service");
     test.done();
   });
 };
@@ -72,6 +78,8 @@ exports.testStart = function(test) {
                 'private mode is active when "start" event is emitted');
     test.assert(pb.isActive,
                 '`isActive` is `true` when "start" event is emitted');
+    test.assert(pb.isPrivate(),
+                '`isPrivate` is `true` when "start" event is emitted');
     pb.removeListener("start", onStart);
     deactivate(function() test.done());
   });
@@ -86,6 +94,8 @@ exports.testStop = function(test) {
                      "private mode is disabled when stop event is emitted");
     test.assertEqual(pb.isActive, false,
                      "`isActive` is `false` when stop event is emitted");
+    test.assertEqual(pb.isPrivate(), false,
+                     "`isPrivate()` is `false` when stop event is emitted");
     test.done();
   });
   pb.activate();
@@ -106,6 +116,8 @@ exports.testBothListeners = function(test) {
                      "private mode is disabled when stop event is emitted");
     test.assertEqual(pb.isActive, false,
                      "`isActive` is `false` when stop event is emitted");
+    test.assertEqual(pb.isPrivate(), false,
+                     "`isPrivate()` is `false` when stop event is emitted");
 
     pb.on("start", finish);
     pb.removeListener("start", onStart);
@@ -121,6 +133,8 @@ exports.testBothListeners = function(test) {
                 "private mode is active when start event is emitted");
     test.assert(pb.isActive,
                 "`isActive` is `true` when start event is emitted");
+    test.assert(pb.isPrivate(),
+                "`isPrivate()` is `true` when start event is emitted");
 
     pb.on("stop", onStop);
     pb.deactivate();
@@ -137,6 +151,8 @@ exports.testBothListeners = function(test) {
                 "private mode is active when start event is emitted");
     test.assert(pb.isActive,
                 "`isActive` is `true` when start event is emitted");
+    test.assert(pb.isPrivate(),
+                "`isPrivate()` is `true` when start event is emitted");
 
     pb.removeListener("start", finish);
     pb.removeListener("stop", onStop);
@@ -145,6 +161,7 @@ exports.testBothListeners = function(test) {
     pb.once("stop", function () {
       test.assertEqual(pbUtils.getMode(), false);
       test.assertEqual(pb.isActive, false);
+      test.assertEqual(pb.isPrivate(), false);
 
       test.done();
     });

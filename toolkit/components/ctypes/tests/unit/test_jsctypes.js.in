@@ -176,6 +176,7 @@ function run_test()
   run_cast_tests();
 
   run_string_tests(library);
+  run_readstring_tests(library);
   run_struct_tests(library);
   run_function_tests(library);
   run_closure_tests(library);
@@ -237,7 +238,7 @@ function run_abstract_class_tests()
   do_check_true(ctypes.CType.hasOwnProperty("prototype"));
   do_check_throws(function() { ctypes.CType.prototype(); }, Error);
   do_check_throws(function() { new ctypes.CType.prototype() }, Error);
-  
+
   do_check_true(ctypes.CType.prototype.hasOwnProperty("constructor"));
   do_check_true(ctypes.CType.prototype.constructor === ctypes.CType);
 
@@ -645,7 +646,7 @@ function run_basic_abi_tests(library, t, name, toprimitive,
   // Check the alignment of the type, and its behavior in a struct,
   // against what C says.
   check_struct_stats(library, t);
-  
+
   // Check the ToSource functions defined in the namespace ABI
   do_check_eq(ctypes.default_abi.toSource(), "ctypes.default_abi");
 
@@ -2140,10 +2141,10 @@ function run_type_toString_tests() {
   // One type modifier, int base type.
   do_check_eq(c.int.ptr.toString(),                                     "type int*");
   do_check_eq(c.ArrayType(c.int).toString(),                            "type int[]");
-  do_check_eq(c.ArrayType(c.int, 4).toString(),                         "type int[4]");         
+  do_check_eq(c.ArrayType(c.int, 4).toString(),                         "type int[4]");
   do_check_eq(c.FunctionType(c.default_abi, c.int).toString(),          "type int()");
   do_check_eq(c.FunctionType(c.default_abi, c.int, [c.bool]).toString(), "type int(bool)");
-  do_check_eq(c.FunctionType(c.default_abi, c.int, [c.bool, c.short]).toString(), 
+  do_check_eq(c.FunctionType(c.default_abi, c.int, [c.bool, c.short]).toString(),
                                                                         "type int(bool, short)");
   if (haveStdCallABI)
      do_check_eq(c.FunctionType(c.stdcall_abi, c.int).toString(),       "type int __stdcall()");
@@ -2269,6 +2270,163 @@ function run_string_tests(library) {
   do_check_eq(ptrValue(test_ansi_echo(null)), 0);
 }
 
+function run_readstring_tests(library) {
+  // ASCII decode test, "hello world"
+  let ascii_string = ctypes.unsigned_char.array(12)();
+  ascii_string[0] = 0x68;
+  ascii_string[1] = 0x65;
+  ascii_string[2] = 0x6C;
+  ascii_string[3] = 0x6C;
+  ascii_string[4] = 0x6F;
+  ascii_string[5] = 0x20;
+  ascii_string[6] = 0x77;
+  ascii_string[7] = 0x6F;
+  ascii_string[8] = 0x72;
+  ascii_string[9] = 0x6C;
+  ascii_string[10] = 0x64;
+  ascii_string[11] = 0;
+  do_check_eq("hello world", ascii_string.readStringReplaceMalformed());
+
+  // UTF-8 decode test, "U+AC00 U+B098 U+B2E4"
+  let utf8_string = ctypes.unsigned_char.array(10)();
+  utf8_string[0] = 0xEA;
+  utf8_string[1] = 0xB0;
+  utf8_string[2] = 0x80;
+  utf8_string[3] = 0xEB;
+  utf8_string[4] = 0x82;
+  utf8_string[5] = 0x98;
+  utf8_string[6] = 0xEB;
+  utf8_string[7] = 0x8B;
+  utf8_string[8] = 0xA4;
+  utf8_string[9] = 0x00;
+  let utf8_result = utf8_string.readStringReplaceMalformed();
+  do_check_eq(0xAC00, utf8_result.charCodeAt(0));
+  do_check_eq(0xB098, utf8_result.charCodeAt(1));
+  do_check_eq(0xB2E4, utf8_result.charCodeAt(2));
+
+  // KS5601 decode test, invalid encoded byte should be replaced with U+FFFD
+  let ks5601_string = ctypes.unsigned_char.array(7)();
+  ks5601_string[0] = 0xB0;
+  ks5601_string[1] = 0xA1;
+  ks5601_string[2] = 0xB3;
+  ks5601_string[3] = 0xAA;
+  ks5601_string[4] = 0xB4;
+  ks5601_string[5] = 0xD9;
+  ks5601_string[6] = 0x00;
+  let ks5601_result = ks5601_string.readStringReplaceMalformed();
+  do_check_eq(0xFFFD, ks5601_result.charCodeAt(0));
+  do_check_eq(0xFFFD, ks5601_result.charCodeAt(1));
+  do_check_eq(0xFFFD, ks5601_result.charCodeAt(2));
+  do_check_eq(0xFFFD, ks5601_result.charCodeAt(3));
+  do_check_eq(0xFFFD, ks5601_result.charCodeAt(4));
+  do_check_eq(0xFFFD, ks5601_result.charCodeAt(5));
+
+  // Mixed decode test, "test" + "U+AC00 U+B098 U+B2E4" + "test"
+  // invalid encoded byte should be replaced with U+FFFD
+  let mixed_string = ctypes.unsigned_char.array(15)();
+  mixed_string[0] = 0x74;
+  mixed_string[1] = 0x65;
+  mixed_string[2] = 0x73;
+  mixed_string[3] = 0x74;
+  mixed_string[4] = 0xB0;
+  mixed_string[5] = 0xA1;
+  mixed_string[6] = 0xB3;
+  mixed_string[7] = 0xAA;
+  mixed_string[8] = 0xB4;
+  mixed_string[9] = 0xD9;
+  mixed_string[10] = 0x74;
+  mixed_string[11] = 0x65;
+  mixed_string[12] = 0x73;
+  mixed_string[13] = 0x74;
+  mixed_string[14] = 0x00;
+  let mixed_result = mixed_string.readStringReplaceMalformed();
+  do_check_eq(0x74,   mixed_result.charCodeAt(0));
+  do_check_eq(0x65,   mixed_result.charCodeAt(1));
+  do_check_eq(0x73,   mixed_result.charCodeAt(2));
+  do_check_eq(0x74,   mixed_result.charCodeAt(3));
+  do_check_eq(0xFFFD, mixed_result.charCodeAt(4));
+  do_check_eq(0xFFFD, mixed_result.charCodeAt(5));
+  do_check_eq(0xFFFD, mixed_result.charCodeAt(6));
+  do_check_eq(0xFFFD, mixed_result.charCodeAt(7));
+  do_check_eq(0xFFFD, mixed_result.charCodeAt(8));
+  do_check_eq(0xFFFD, mixed_result.charCodeAt(9));
+  do_check_eq(0x74,   mixed_result.charCodeAt(10));
+  do_check_eq(0x65,   mixed_result.charCodeAt(11));
+  do_check_eq(0x73,   mixed_result.charCodeAt(12));
+  do_check_eq(0x74,   mixed_result.charCodeAt(13));
+
+  // Test of all posible invalid encoded sequence
+  let invalid_string = ctypes.unsigned_char.array(27)();
+  invalid_string[0] = 0x80;  // 10000000
+  invalid_string[1] = 0xD0;  // 11000000 01110100
+  invalid_string[2] = 0x74;
+  invalid_string[3] = 0xE0;  // 11100000 01110100
+  invalid_string[4] = 0x74;
+  invalid_string[5] = 0xE0;  // 11100000 10100000 01110100
+  invalid_string[6] = 0xA0;
+  invalid_string[7] = 0x74;
+  invalid_string[8] = 0xE0;  // 11100000 10000000 01110100
+  invalid_string[9] = 0x80;
+  invalid_string[10] = 0x74;
+  invalid_string[11] = 0xF0; // 11110000 01110100
+  invalid_string[12] = 0x74;
+  invalid_string[13] = 0xF0; // 11110000 10010000 01110100
+  invalid_string[14] = 0x90;
+  invalid_string[15] = 0x74;
+  invalid_string[16] = 0xF0; // 11110000 10010000 10000000 01110100
+  invalid_string[17] = 0x90;
+  invalid_string[18] = 0x80;
+  invalid_string[19] = 0x74;
+  invalid_string[20] = 0xF0; // 11110000 10000000 10000000 01110100
+  invalid_string[21] = 0x80;
+  invalid_string[22] = 0x80;
+  invalid_string[23] = 0x74;
+  invalid_string[24] = 0xF0; // 11110000 01110100
+  invalid_string[25] = 0x74;
+  invalid_string[26] = 0x00;
+  let invalid_result = invalid_string.readStringReplaceMalformed();
+  do_check_eq(0xFFFD, invalid_result.charCodeAt(0));  // 10000000
+  do_check_eq(0xFFFD, invalid_result.charCodeAt(1));  // 11000000 01110100
+  do_check_eq(0x74,   invalid_result.charCodeAt(2));
+  do_check_eq(0xFFFD, invalid_result.charCodeAt(3));  // 11100000 01110100
+  do_check_eq(0x74,   invalid_result.charCodeAt(4));
+  do_check_eq(0xFFFD, invalid_result.charCodeAt(5));  // 11100000 10100000 01110100
+  do_check_eq(0x74,   invalid_result.charCodeAt(6));
+  do_check_eq(0xFFFD, invalid_result.charCodeAt(7));  // 11100000 10000000 01110100
+  do_check_eq(0xFFFD, invalid_result.charCodeAt(8));
+  do_check_eq(0x74,   invalid_result.charCodeAt(9));
+  do_check_eq(0xFFFD, invalid_result.charCodeAt(10)); // 11110000 01110100
+  do_check_eq(0x74,   invalid_result.charCodeAt(11));
+  do_check_eq(0xFFFD, invalid_result.charCodeAt(12)); // 11110000 10010000 01110100
+  do_check_eq(0x74,   invalid_result.charCodeAt(13));
+  do_check_eq(0xFFFD, invalid_result.charCodeAt(14)); // 11110000 10010000 10000000 01110100
+  do_check_eq(0x74,   invalid_result.charCodeAt(15));
+  do_check_eq(0xFFFD, invalid_result.charCodeAt(16)); // 11110000 10000000 10000000 01110100
+  do_check_eq(0xFFFD, invalid_result.charCodeAt(17));
+  do_check_eq(0xFFFD, invalid_result.charCodeAt(18));
+  do_check_eq(0x74,   invalid_result.charCodeAt(19));
+  do_check_eq(0xFFFD, invalid_result.charCodeAt(20)); // 11110000 01110100
+  do_check_eq(0x74,   invalid_result.charCodeAt(21));
+
+  // Test decoding of UTF-8 and CESU-8
+  let utf8_cesu8_string = ctypes.unsigned_char.array(10)();
+  utf8_cesu8_string[0] = 0xF0;  // U+10400 in UTF-8
+  utf8_cesu8_string[1] = 0x90;
+  utf8_cesu8_string[2] = 0x90;
+  utf8_cesu8_string[3] = 0x80;
+  utf8_cesu8_string[4] = 0xED;  // U+10400 in CESU-8
+  utf8_cesu8_string[5] = 0xA0;
+  utf8_cesu8_string[6] = 0x81;
+  utf8_cesu8_string[7] = 0xED;
+  utf8_cesu8_string[8] = 0xB0;
+  utf8_cesu8_string[9] = 0x80;
+  let utf8_cesu8_result = utf8_cesu8_string.readStringReplaceMalformed();
+  do_check_eq(0xD801, utf8_cesu8_result.charCodeAt(0));
+  do_check_eq(0xDC00, utf8_cesu8_result.charCodeAt(1));
+  do_check_eq(0xFFFD, utf8_cesu8_result.charCodeAt(2));
+  do_check_eq(0xFFFD, utf8_cesu8_result.charCodeAt(3));
+}
+
 function run_struct_tests(library) {
   const point_t = new ctypes.StructType("POINT",
                        [{ x: ctypes.int32_t },
@@ -2379,7 +2537,7 @@ function run_function_tests(library)
 
   // Test the function pointers still behave as regular pointers
   do_check_false(ptr.isNull(), "PointerType methods should still be valid");
-  
+
   // Test that library.declare() returns data of type FunctionType.ptr, and that
   // it is immutable.
   do_check_true(test_ansi_len.constructor.targetType.__proto__ ===
@@ -2560,7 +2718,7 @@ function run_variadic_tests(library) {
   do_check_eq(result[0], 8);
   do_check_eq(result[1], 13);
   do_check_eq(result[2], 16);
-  
+
   do_check_true(!!(sum_va_type().value = sum_va_type()));
   let sum_notva_type = ctypes.FunctionType(sum_va_type.targetType.abi,
                                            sum_va_type.targetType.returnType,

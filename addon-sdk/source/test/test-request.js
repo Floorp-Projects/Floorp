@@ -15,6 +15,9 @@ if (options.parseable || options.verbose)
   loader.sandbox("sdk/test/httpd").DEBUG = true;
 const { startServerAsync } = httpd;
 
+const { Cc, Ci, Cu } = require("chrome");
+const { Services } = Cu.import("resource://gre/modules/Services.jsm");
+
 // Use the profile directory for the temporary files as that will be deleted
 // when tests are complete
 const basePath = pathFor("ProfD")
@@ -136,6 +139,55 @@ exports.testComplexHeader = function (test) {
         test.assertEqual(response.headers[k], headers[k]);
       }
       srv.stop(function() test.done());
+    }
+  }).get();
+}
+
+// Force Allow Third Party cookies
+exports.test3rdPartyCookies = function (test) {
+  let srv = startServerAsync(port, basePath);
+
+  let basename = "test-request-3rd-party-cookies.sjs";
+
+  // Function to handle the requests in the server
+  let content = function handleRequest(request, response) {
+    var cookiePresent = request.hasHeader("Cookie");
+    // If no cookie, set it
+    if(!cookiePresent) {
+      response.setHeader("Set-Cookie", "cookie=monster;", "true");
+      response.setHeader("x-jetpack-3rd-party", "false", "true");
+    } else {
+      // We got the cookie, say so
+      response.setHeader("x-jetpack-3rd-party", "true", "true");
+    }
+
+    response.write("<html><body>This tests 3rd party cookies.</body></html>");
+  }.toString()
+
+  prepareFile(basename, content);
+
+  // Disable the 3rd party cookies
+  Services.prefs.setIntPref("network.cookie.cookieBehavior", 1);
+
+  test.waitUntilDone();
+  Request({
+    url: "http://localhost:" + port + "/test-request-3rd-party-cookies.sjs",
+    onComplete: function (response) {
+      // Check that the server created the cookie
+      test.assertEqual(response.headers['Set-Cookie'], 'cookie=monster;');
+
+      // Check it wasn't there before
+      test.assertEqual(response.headers['x-jetpack-3rd-party'], 'false');
+
+      // Make a second request, and check that the server this time
+      // got the cookie
+      Request({
+        url: "http://localhost:" + port + "/test-request-3rd-party-cookies.sjs",
+        onComplete: function (response) {
+          test.assertEqual(response.headers['x-jetpack-3rd-party'], 'true');
+          srv.stop(function() test.done());
+        }
+      }).get();
     }
   }).get();
 }

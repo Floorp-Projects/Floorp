@@ -172,8 +172,8 @@ HTMLRadioButtonAccessible::GetPositionAndSizeInternal(int32_t* aPosInSet,
     if (inputElm->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                               type, eCaseMatters) &&
         inputElm->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
-                              name, eCaseMatters)) {
-      count++;
+                              name, eCaseMatters) && mDoc->HasAccessible(inputElm)) {
+        count++;
       if (inputElm == mContent)
         indexOf = count;
     }

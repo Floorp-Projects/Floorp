@@ -14,12 +14,16 @@ const HTML = "<html>\
 
 const URL = "data:text/html;charset=utf-8," + encodeURIComponent(HTML);
 
+const FRAME_HTML = "<iframe src='" + URL + "'><iframe>";
+const FRAME_URL = "data:text/html;charset=utf-8," + encodeURIComponent(FRAME_HTML);
+
 const { defer } = require("sdk/core/promise");
 const tabs = require("sdk/tabs");
 const { getActiveTab, getTabContentWindow, closeTab } = require("sdk/tabs/utils")
 const { getMostRecentBrowserWindow } = require("sdk/window/utils");
 const { Loader } = require("sdk/test/loader");
 const { setTimeout } = require("sdk/timers");
+const { Cu } = require("chrome");
 
 // General purpose utility functions
 
@@ -81,6 +85,55 @@ function reload(window) {
 }
 
 // Selection's unit test utility function
+
+/**
+ * Returns the frame's window once the document is loaded
+ */
+function getFrameWindow(window) {
+  let { promise, resolve } = defer();
+
+  let frame = window.frames[0];
+  let { document } = frame;
+
+  frame.focus();
+
+  if (document.readyState === "complete")
+    return frame;
+
+  document.addEventListener("readystatechange", function readystate() {
+    if (this.readyState === "complete") {
+      this.removeEventListener("readystatechange", readystate);
+      frame.focus();
+      resolve(frame);
+    }
+  });
+
+  return promise;
+}
+
+/**
+ * Hide the frame in order to destroy the selection object, and show it again
+ * after ~500 msec, to give time to attach the code on `document-shown`
+ * notification.
+ * In the process, call `Cu.forgeGC` to ensure that the `document-shown` code
+ * is not garbaged.
+ */
+function hideAndShowFrame(window) {
+  let { promise, resolve } = defer();
+  let iframe = window.document.querySelector("iframe");
+
+  iframe.style.display = "none";
+
+  Cu.forceGC();
+
+  setTimeout(function(){
+    iframe.style.display = "";
+
+    setTimeout(resolve, 500, window);
+  }, 0)
+
+  return promise;
+}
 
 /**
  * Select the first div in the page, adding the range to the selection.
@@ -174,7 +227,7 @@ function dispatchOnSelectEvent(window) {
 
   event.initUIEvent("select", true, true, window, 1);
 
-  textarea.dispatchEvent(event)
+  textarea.dispatchEvent(event);
 }
 
 /**
@@ -728,6 +781,42 @@ exports["test Textarea OnSelect Listener on document reload"] = function(assert,
     then(dispatchOnSelectEvent).
     then(close).
     then(loader.unload);
+};
+
+exports["test Selection Listener on frame"] = function(assert, done) {
+  let loader = Loader(module);
+  let selection = loader.require("sdk/selection");
+
+  selection.once("select", function() {
+    assert.equal(selection.text, "fo");
+    done();
+  });
+
+  open(FRAME_URL).
+    then(hideAndShowFrame).
+    then(getFrameWindow).
+    then(selectContentFirstDiv).
+    then(dispatchSelectionEvent).
+    then(close).
+    then(loader.unload)
+};
+
+exports["test Textarea onSelect Listener on frame"] = function(assert, done) {
+  let loader = Loader(module);
+  let selection = loader.require("sdk/selection");
+
+  selection.once("select", function() {
+    assert.equal(selection.text, "noodles");
+    done();
+  });
+
+  open(FRAME_URL).
+    then(hideAndShowFrame).
+    then(getFrameWindow).
+    then(selectTextarea).
+    then(dispatchOnSelectEvent).
+    then(close).
+    then(loader.unload)
 };
 
 // TODO: test Selection Listener on long-held connection (Bug 661884)

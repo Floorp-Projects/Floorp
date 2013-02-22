@@ -20,7 +20,7 @@ const system = require("../system");
 
 // Trick manifest builder to make it think we need these modules ?
 const unit = require("../deprecated/unit-test");
-const test = require("../test");
+const test = require("../../test");
 const url = require("../url");
 
 var cService = Cc['@mozilla.org/consoleservice;1'].getService()

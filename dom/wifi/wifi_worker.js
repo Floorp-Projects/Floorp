@@ -59,7 +59,7 @@ self.onmessage = function(e) {
         else if (reply_len !== 4096)
           cbuf[reply_len] = 0;
 
-        reply = cbuf.readString();
+        reply = cbuf.readStringReplaceMalformed();
       }
 
       // Else if reply_len was 0, use the empty reply, set above.

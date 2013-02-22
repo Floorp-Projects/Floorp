@@ -1017,18 +1017,6 @@ AbstractFramePtr::setPrevUpToDate() const
     JS_NOT_REACHED("Invalid frame");
 #endif
 }
-inline AbstractFramePtr
-AbstractFramePtr::evalPrev() const
-{
-    JS_ASSERT(isEvalFrame());
-    if (isStackFrame())
-        return asStackFrame()->evalPrev();
-#ifdef JS_ION
-    return asBaselineFrame()->evalPrev();
-#else
-    JS_NOT_REACHED("Invalid frame");
-#endif
-}
 
 inline Value &
 AbstractFramePtr::thisValue() const
