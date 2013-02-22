@@ -24,7 +24,6 @@
 #include "jstypedarray.h"
 #include "jswrapper.h"
 
-#include "builtin/MapObject.h"
 #include "builtin/Iterator-inl.h"
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
