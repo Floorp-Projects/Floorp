@@ -7,6 +7,8 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.widget.IconTabWidget;
 
+import org.mozilla.gecko.widget.TwoWayView;
+
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Color;
@@ -41,6 +43,7 @@ public class TabsPanel extends LinearLayout
         public void setTabsPanel(TabsPanel panel);
         public void show();
         public void hide();
+        public boolean shouldExpand();
     }
 
     public static interface TabsLayoutChangeListener {
@@ -49,6 +52,7 @@ public class TabsPanel extends LinearLayout
 
     private Context mContext;
     private GeckoApp mActivity;
+    private TabsListContainer mTabsContainer;
     private PanelView mPanel;
     private PanelView mPanelNormal;
     private PanelView mPanelPrivate;
@@ -93,6 +97,8 @@ public class TabsPanel extends LinearLayout
     }
 
     private void initialize() {
+        mTabsContainer = (TabsListContainer) findViewById(R.id.tabs_container);
+
         mPanelNormal = (TabsTray) findViewById(R.id.normal_tabs);
         mPanelNormal.setTabsPanel(this);
 
@@ -174,15 +180,24 @@ public class TabsPanel extends LinearLayout
         }
     }
 
-    private static int getTabContainerHeight(View view) {
-        Context context = view.getContext();
+    private static int getTabContainerHeight(TabsListContainer listContainer) {
+        Context context = listContainer.getContext();
+
+        PanelView panelView = listContainer.getCurrentPanelView();
+        if (panelView != null && !panelView.shouldExpand()) {
+            final View v = (View) panelView;
+            final int sizeSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
+            v.measure(sizeSpec, sizeSpec);
+            return v.getMeasuredHeight();
+        }
 
         int actionBarHeight = context.getResources().getDimensionPixelSize(R.dimen.browser_toolbar_height);
         int screenHeight = context.getResources().getDisplayMetrics().heightPixels;
 
         Rect windowRect = new Rect();
-        view.getWindowVisibleDisplayFrame(windowRect);
+        listContainer.getWindowVisibleDisplayFrame(windowRect);
         int windowHeight = windowRect.bottom - windowRect.top;
+
 
         // The web content area should have at least 1.5x the height of the action bar.
         // The tabs panel shouldn't take less than 50% of the screen height and can take
@@ -232,6 +247,20 @@ public class TabsPanel extends LinearLayout
         public TabsListContainer(Context context, AttributeSet attrs) {
             super(context, attrs);
             mContext = context;
+        }
+
+        public PanelView getCurrentPanelView() {
+            final int childCount = getChildCount();
+            for (int i = 0; i < childCount; i++) {
+                View child = getChildAt(i);
+                if (!(child instanceof PanelView))
+                    continue;
+
+                if (child.getVisibility() == View.VISIBLE)
+                    return (PanelView) child;
+            }
+
+            return null;
         }
 
         @Override
@@ -341,7 +370,7 @@ public class TabsPanel extends LinearLayout
                 dispatchLayoutChange(getWidth(), getHeight());
         } else {
             int actionBarHeight = mContext.getResources().getDimensionPixelSize(R.dimen.browser_toolbar_height);
-            int height = actionBarHeight + getTabContainerHeight(this);
+            int height = actionBarHeight + getTabContainerHeight(mTabsContainer);
             dispatchLayoutChange(getWidth(), height);
         }
     }
