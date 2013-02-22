@@ -2514,21 +2514,21 @@ AutoFlushCache::update(uintptr_t newStart, size_t len)
 
 AutoFlushCache::~AutoFlushCache()
 {
-   if (!runtime_)
+   if (!myCompartment_)
         return;
 
     flushAnyway();
     IonSpewCont(IonSpew_CacheFlush, ">", name_);
-    if (runtime_->flusher() == this) {
+    if (myCompartment_->flusher() == this) {
         IonSpewFin(IonSpew_CacheFlush);
-        runtime_->setFlusher(NULL);
+        myCompartment_->setFlusher(NULL);
     }
-}
 
+}
 void
 AutoFlushCache::flushAnyway()
 {
-    if (!runtime_)
+    if (!myCompartment_)
         return;
 
     IonSpewCont(IonSpew_CacheFlush, "|", name_);
@@ -2537,11 +2537,11 @@ AutoFlushCache::flushAnyway()
         return;
 
     if (start_) {
-        JSC::ExecutableAllocator::cacheFlush((void *)start_, size_t(stop_ - start_ + sizeof(Instruction)));
+        JSC::ExecutableAllocator::cacheFlush((void*)start_, (size_t)(stop_ - start_ + sizeof(Instruction)));
     } else {
         JSC::ExecutableAllocator::cacheFlush(NULL, 0xff000000);
     }
     used_ = false;
-}
 
+}
 Assembler *Assembler::dummy = NULL;

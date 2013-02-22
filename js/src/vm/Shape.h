@@ -266,7 +266,6 @@ class BaseShape : public js::gc::Cell
   private:
     Class               *clasp;         /* Class of referring object. */
     HeapPtrObject       parent;         /* Parent of referring object. */
-    JSCompartment       *compartment_;  /* Compartment shape belongs to. */
     uint32_t            flags;          /* Vector of above flags. */
     uint32_t            slotSpan_;      /* Object slot span for BaseShapes at
                                          * dictionary last properties. */
@@ -289,17 +288,13 @@ class BaseShape : public js::gc::Cell
     /* For owned BaseShapes, the shape's shape table. */
     ShapeTable       *table_;
 
-#if JS_BITS_PER_WORD == 32
-    void             *padding;
-#endif
-
     BaseShape(const BaseShape &base) MOZ_DELETE;
 
   public:
     void finalize(FreeOp *fop);
 
-    inline BaseShape(JSCompartment *comp, Class *clasp, JSObject *parent, uint32_t objectFlags);
-    inline BaseShape(JSCompartment *comp, Class *clasp, JSObject *parent, uint32_t objectFlags,
+    inline BaseShape(Class *clasp, JSObject *parent, uint32_t objectFlags);
+    inline BaseShape(Class *clasp, JSObject *parent, uint32_t objectFlags,
                      uint8_t attrs, PropertyOp rawGetter, StrictPropertyOp rawSetter);
     inline BaseShape(const StackBaseShape &base);
 
@@ -331,8 +326,6 @@ class BaseShape : public js::gc::Cell
 
     uint32_t slotSpan() const { JS_ASSERT(isOwned()); return slotSpan_; }
     void setSlotSpan(uint32_t slotSpan) { JS_ASSERT(isOwned()); slotSpan_ = slotSpan; }
-
-    JSCompartment *compartment() const { return compartment_; }
 
     /* Lookup base shapes from the compartment's baseShapes table. */
     static UnownedBaseShape* getUnowned(JSContext *cx, const StackBaseShape &base);
@@ -397,24 +390,21 @@ struct StackBaseShape
     JSObject *parent;
     PropertyOp rawGetter;
     StrictPropertyOp rawSetter;
-    JSCompartment *compartment;
 
     explicit StackBaseShape(UnrootedBaseShape base)
       : flags(base->flags & BaseShape::OBJECT_FLAG_MASK),
         clasp(base->clasp),
         parent(base->parent),
         rawGetter(NULL),
-        rawSetter(NULL),
-        compartment(base->compartment())
+        rawSetter(NULL)
     {}
 
-    StackBaseShape(JSCompartment *comp, Class *clasp, JSObject *parent, uint32_t objectFlags)
+    StackBaseShape(Class *clasp, JSObject *parent, uint32_t objectFlags)
       : flags(objectFlags),
         clasp(clasp),
         parent(parent),
         rawGetter(NULL),
-        rawSetter(NULL),
-        compartment(comp)
+        rawSetter(NULL)
     {}
 
     inline StackBaseShape(UnrootedShape shape);
@@ -551,8 +541,9 @@ class Shape : public js::gc::Cell
         return !(flags & NON_NATIVE);
     }
 
-    const HeapPtrShape &previous() const { return parent; }
-    JSCompartment *compartment() const { return base()->compartment(); }
+    const HeapPtrShape &previous() const {
+        return parent;
+    }
 
     class Range {
       protected:

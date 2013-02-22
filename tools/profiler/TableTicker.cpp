@@ -575,7 +575,7 @@ public:
           JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
           JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
       };
-      JSObject *obj = JS_NewGlobalObject(cx, &c, NULL, JS::SystemZone);
+      JSObject *obj = JS_NewGlobalObject(cx, &c, NULL);
 
       std::ofstream stream;
       stream.open(tmpPath.get());

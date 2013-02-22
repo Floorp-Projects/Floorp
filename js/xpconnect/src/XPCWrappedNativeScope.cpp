@@ -219,7 +219,6 @@ XPCWrappedNativeScope::EnsureXBLScope(JSContext *cx)
     options.wantComponents = true;
     options.wantXHRConstructor = false;
     options.proto = global;
-    options.sameZoneAs = global;
 
     // Use an nsExpandedPrincipal to create asymmetric security.
     nsCOMPtr<nsIExpandedPrincipal> ep;

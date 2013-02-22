@@ -121,8 +121,7 @@ Bindings::initWithTemporaryStorage(JSContext *cx, InternalBindingsHandle self,
             return false;
 #endif
 
-        StackBaseShape base(cx->compartment, &CallClass, cx->global(),
-                            BaseShape::VAROBJ | BaseShape::DELEGATE);
+        StackBaseShape base(&CallClass, cx->global(), BaseShape::VAROBJ | BaseShape::DELEGATE);
 
         UnrootedUnownedBaseShape nbase = BaseShape::getUnowned(cx, base);
         if (!nbase)
@@ -1708,7 +1707,6 @@ JSScript::Create(JSContext *cx, HandleObject enclosingScope, bool savedCallerFun
 
     script->enclosingScope_ = enclosingScope;
     script->savedCallerFun = savedCallerFun;
-    script->compartment_ = cx->compartment;
 
     /* Establish invariant: principals implies originPrincipals. */
     if (options.principals) {
@@ -2752,8 +2750,6 @@ JSScript::markChildren(JSTracer *trc)
         MarkObject(trc, &enclosingScope_, "enclosing");
 
     if (IS_GC_MARKING_TRACER(trc)) {
-        compartment()->mark();
-
         if (filename)
             MarkScriptFilename(trc->runtime, filename);
         if (code)
@@ -2898,7 +2894,7 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
 
 #ifdef JS_METHODJIT
     if (script->hasMJITInfo()) {
-        mjit::ExpandInlineFrames(cx->zone());
+        mjit::ExpandInlineFrames(cx->compartment);
         mjit::Recompiler::clearStackReferences(cx->runtime->defaultFreeOp(), script);
         mjit::ReleaseScriptCode(cx->runtime->defaultFreeOp(), script);
     }
