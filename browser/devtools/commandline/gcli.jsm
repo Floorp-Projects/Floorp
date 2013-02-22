@@ -223,13 +223,23 @@ exports.StringType = StringType;
 
 
 /**
- * We don't currently plan to distinguish between integers and floats
+ * We distinguish between integers and floats with the _allowFloat flag.
  */
 function NumberType(typeSpec) {
+  // Default to integer values
+  this._allowFloat = !!typeSpec.allowFloat;
+
   if (typeSpec) {
     this._min = typeSpec.min;
     this._max = typeSpec.max;
     this._step = typeSpec.step || 1;
+
+    if (!this._allowFloat &&
+        (this._isFloat(this._min) ||
+         this._isFloat(this._max) ||
+         this._isFloat(this._step))) {
+      throw new Error('allowFloat is false, but non-integer values given in type spec');
+    }
   }
   else {
     this._step = 1;
@@ -274,7 +284,19 @@ NumberType.prototype.parse = function(arg) {
     return new Conversion(undefined, arg, Status.INCOMPLETE, '');
   }
 
-  var value = parseInt(arg.text, 10);
+  if (!this._allowFloat && (arg.text.indexOf('.') !== -1)) {
+    return new Conversion(undefined, arg, Status.ERROR,
+        l10n.lookupFormat('typesNumberNotInt', [ arg.text ]));
+  }
+
+  var value;
+  if (this._allowFloat) {
+    value = parseFloat(arg.text);
+  }
+  else {
+    value = parseInt(arg.text, 10);
+  }
+
   if (isNaN(value)) {
     return new Conversion(undefined, arg, Status.ERROR,
         l10n.lookupFormat('typesNumberNan', [ arg.text ]));
@@ -334,6 +356,14 @@ NumberType.prototype._boundsCheck = function(value) {
     return max;
   }
   return value;
+};
+
+/**
+ * Return true if the given value is a finite number and not an integer, else
+ * return false.
+ */
+NumberType.prototype._isFloat = function(value) {
+  return ((typeof value === 'number') && isFinite(value) && (value % 1 !== 0));
 };
 
 NumberType.prototype.name = 'number';
