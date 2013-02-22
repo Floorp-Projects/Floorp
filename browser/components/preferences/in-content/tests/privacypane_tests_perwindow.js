@@ -59,7 +59,8 @@ function test_dependent_elements(win) {
   });
   let independents = [
     win.document.getElementById("acceptCookies"),
-    win.document.getElementById("acceptThirdParty"),
+    win.document.getElementById("acceptThirdPartyLabel"),
+    win.document.getElementById("acceptThirdPartyMenu")
   ];
   independents.forEach(function(control) {
     ok(control, "the independent controls should exist");
@@ -124,7 +125,8 @@ function test_dependent_cookie_elements(win) {
   let pbautostart = win.document.getElementById("privateBrowsingAutoStart");
   ok(pbautostart, "the private browsing auto-start checkbox should exist");
   let controls = [
-    win.document.getElementById("acceptThirdParty"),
+    win.document.getElementById("acceptThirdPartyLabel"),
+    win.document.getElementById("acceptThirdPartyMenu"),
     win.document.getElementById("keepUntil"),
     win.document.getElementById("keepCookiesUntil"),
   ];
@@ -210,18 +212,22 @@ function test_dependent_prefs(win) {
   let controls = [
     win.document.getElementById("rememberHistory"),
     win.document.getElementById("rememberForms"),
-    win.document.getElementById("acceptCookies"),
-    win.document.getElementById("acceptThirdParty"),
+    win.document.getElementById("acceptCookies")
   ];
   controls.forEach(function(control) {
     ok(control, "the micro-management controls should exist");
   });
+
+  let thirdPartyCookieMenu = win.document.getElementById("acceptThirdPartyMenu");
+  ok(thirdPartyCookieMenu, "the third-party cookie control should exist");
 
   function expect_checked(checked) {
     controls.forEach(function(control) {
       is(control.checked, checked,
         control.getAttribute("id") + " should " + (checked ? "not " : "") + "be checked");
     });
+
+    is(thirdPartyCookieMenu.value == "always" || thirdPartyCookieMenu.value == "visited", checked, "third-party cookies should "  + (checked ? "not " : "") + "be limited");
   }
 
   // controls should be checked in remember mode
@@ -232,6 +238,8 @@ function test_dependent_prefs(win) {
   // even if they're unchecked in custom mode
   historymode.value = "custom";
   controlChanged(historymode);
+  thirdPartyCookieMenu.value = "never";
+  controlChanged(thirdPartyCookieMenu);
   controls.forEach(function(control) {
     control.checked = false;
     controlChanged(control);

@@ -182,8 +182,8 @@ var gPrivacyPane = {
       // select the remember forms history option
       document.getElementById("browser.formfill.enable").value = true;
 
-      // select the accept cookies option
-      document.getElementById("network.cookie.cookieBehavior").value = 0;
+      // select the limit cookies option
+      document.getElementById("network.cookie.cookieBehavior").value = 3;
       // select the cookie lifetime policy option
       document.getElementById("network.cookie.lifetimePolicy").value = 0;
 
@@ -366,9 +366,10 @@ var gPrivacyPane = {
    * network.cookie.cookieBehavior
    * - determines how the browser should handle cookies:
    *     0   means enable all cookies
-   *     1   means reject third party cookies; see
-   *         netwerk/cookie/src/nsCookieService.cpp for a hairier definition
+   *     1   means reject all third party cookies
    *     2   means disable all cookies
+   *     3   means reject third party cookies unless at least one is already set for the eTLD
+   *         see netwerk/cookie/src/nsCookieService.cpp for details
    * network.cookie.lifetimePolicy
    * - determines how long cookies are stored:
    *     0   means keep cookies until they expire
@@ -384,23 +385,18 @@ var gPrivacyPane = {
   readAcceptCookies: function ()
   {
     var pref = document.getElementById("network.cookie.cookieBehavior");
-    var acceptThirdParty = document.getElementById("acceptThirdParty");
+    var acceptThirdPartyLabel = document.getElementById("acceptThirdPartyLabel");
+    var acceptThirdPartyMenu = document.getElementById("acceptThirdPartyMenu");
     var keepUntil = document.getElementById("keepUntil");
     var menu = document.getElementById("keepCookiesUntil");
 
     // enable the rest of the UI for anything other than "disable all cookies"
     var acceptCookies = (pref.value != 2);
 
-    acceptThirdParty.disabled = !acceptCookies;
+    acceptThirdPartyLabel.disabled = acceptThirdPartyMenu.disabled = !acceptCookies;
     keepUntil.disabled = menu.disabled = this._autoStartPrivateBrowsing || !acceptCookies;
     
     return acceptCookies;
-  },
-
-  readAcceptThirdPartyCookies: function ()
-  {
-    var pref = document.getElementById("network.cookie.cookieBehavior");
-    return pref.value == 0;
   },
 
   /**
@@ -410,20 +406,50 @@ var gPrivacyPane = {
   writeAcceptCookies: function ()
   {
     var accept = document.getElementById("acceptCookies");
-    var acceptThirdParty = document.getElementById("acceptThirdParty");
+    var acceptThirdPartyMenu = document.getElementById("acceptThirdPartyMenu");
 
-    // if we're enabling cookies, automatically check 'accept third party'
+    // if we're enabling cookies, automatically select 'accept third party from visited'
     if (accept.checked)
-      acceptThirdParty.checked = true;
+      acceptThirdPartyMenu.selectedIndex = 1;
 
-    return accept.checked ? (acceptThirdParty.checked ? 0 : 1) : 2;
+    return accept.checked ? 3 : 2;
   },
-
+  
+  /**
+   * Converts between network.cookie.cookieBehavior and the third-party cookie UI
+   */
+  readAcceptThirdPartyCookies: function ()
+  {
+    var pref = document.getElementById("network.cookie.cookieBehavior");
+    switch (pref.value)
+    {
+      case 0:
+        return "always";
+      case 1:
+        return "never";
+      case 2:
+        return "never";
+      case 3:
+        return "visited";
+      default:
+        return undefined;
+    }
+  },
+  
   writeAcceptThirdPartyCookies: function ()
   {
-    var accept = document.getElementById("acceptCookies");
-    var acceptThirdParty = document.getElementById("acceptThirdParty");
-    return accept.checked ? (acceptThirdParty.checked ? 0 : 1) : 2;
+    var accept = document.getElementById("acceptThirdPartyMenu").selectedItem;
+    switch (accept.value)
+    {
+      case "always":
+        return 0;
+      case "visited":
+        return 3;
+      case "never":
+        return 1;
+      default:
+        return undefined;
+    }
   },
 
   /**
@@ -503,7 +529,7 @@ var gPrivacyPane = {
     var settingsButton = document.getElementById("clearDataSettings");
     var sanitizeOnShutdownPref = document.getElementById("privacy.sanitize.sanitizeOnShutdown");
     
-    settingsButton.disabled = !sanitizeOnShutdownPref.value;  	
+    settingsButton.disabled = !sanitizeOnShutdownPref.value;
    }
 
 };

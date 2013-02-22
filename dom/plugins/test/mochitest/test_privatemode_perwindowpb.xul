@@ -20,6 +20,11 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 function runTests() {
+  // Allow all cookies, then run the actual tests
+  SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 0]]}, runTestsCallback);
+}
+
+function runTestsCallback() {
   var pluginElement1 = document.getElementById("plugin1");
   var pluginElement2 = document.getElementById("plugin2");
 

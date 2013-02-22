@@ -8,6 +8,9 @@ function run_test() {
 
   cm.removeAll();
 
+  // Allow all cookies.
+  Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
+
   // test that variants of 'baz.com' get normalized appropriately, but that
   // malformed hosts are rejected
   cm.add("baz.com", "/", "foo", "bar", false, false, true, expiry);

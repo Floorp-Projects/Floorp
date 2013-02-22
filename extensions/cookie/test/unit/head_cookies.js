@@ -104,6 +104,13 @@ function do_load_profile(generator) {
   service.observe(null, "profile-do-change", "");
 }
 
+// Set a single session cookie using http and test the cookie count
+// against 'expected'
+function do_set_single_http_cookie(uri, channel, expected) {
+  Services.cookies.setCookieStringFromHttp(uri, null, null, "foo=bar", null, channel);
+  do_check_eq(Services.cookiemgr.countCookiesFromHost(uri.host), expected);
+}
+
 // Set four cookies; with & without channel, http and non-http; and test
 // the cookie count against 'expected' after each set.
 function do_set_cookies(uri, channel, session, expected) {

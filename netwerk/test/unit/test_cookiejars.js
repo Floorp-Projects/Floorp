@@ -14,10 +14,17 @@ const Cu = Components.utils;
 const Cr = Components.results;
 
 Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/Services.jsm");
 var httpserver = new HttpServer();
 
 var cookieSetPath = "/setcookie";
 var cookieCheckPath = "/checkcookie";
+
+function inChildProcess() {
+  return Cc["@mozilla.org/xre/app-info;1"]
+           .getService(Ci.nsIXULRuntime)
+           .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+}
 
 // Test array:
 //  - element 0: name for cookie, used both to set and later to check 
@@ -109,6 +116,10 @@ function completeCheckCookie(request, data, context) {
 
 function run_test()
 {
+  // Allow all cookies if the pref service is available in this process.
+  if (!inChildProcess())
+    Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
+
   httpserver.registerPathHandler(cookieSetPath, cookieSetHandler);
   httpserver.registerPathHandler(cookieCheckPath, cookieCheckHandler);
   httpserver.start(4444);
