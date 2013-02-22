@@ -14,7 +14,7 @@ import org.mozilla.gecko.gfx.PanZoomController;
 import org.mozilla.gecko.gfx.PluginLayer;
 import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.mozglue.GeckoLoader;
-import org.mozilla.gecko.util.GeckoAsyncTask;
+import org.mozilla.gecko.util.UiAsyncTask;
 import org.mozilla.gecko.util.GeckoBackgroundThread;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.GeckoEventResponder;
@@ -623,7 +623,7 @@ abstract public class GeckoApp
     }
 
     void handleFaviconRequest(final String url) {
-        (new GeckoAsyncTask<Void, Void, String>(mAppContext, GeckoAppShell.getHandler()) {
+        (new UiAsyncTask<Void, Void, String>(mMainHandler, GeckoAppShell.getHandler()) {
             @Override
             public String doInBackground(Void... params) {
                 return Favicons.getInstance().getFaviconUrlForPageUrl(url);
@@ -1237,7 +1237,7 @@ abstract public class GeckoApp
         notification.setLatestEventInfo(mAppContext, fileName, progText, emptyIntent );
         notification.flags |= Notification.FLAG_ONGOING_EVENT;
         notification.show();
-        new GeckoAsyncTask<Void, Void, Boolean>(mAppContext, GeckoAppShell.getHandler()){
+        new UiAsyncTask<Void, Void, Boolean>(mMainHandler, GeckoAppShell.getHandler()){
 
             @Override
             protected Boolean doInBackground(Void... params) {

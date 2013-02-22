@@ -918,7 +918,7 @@ exports['test ready event on new window tab'] = function(test) {
 exports['test unique tab ids'] = function(test) {
   test.waitUntilDone();
 
-  var windows = require('windows').browserWindows,
+  var windows = require('sdk/windows').browserWindows,
     tabIds = {}, win1, win2;
 
   let steps = [

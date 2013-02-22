@@ -71,6 +71,8 @@ function runRequest(mode, target) {
   // open the request
   xhr.open(mode, url);
 
+  xhr.forceAllowThirdPartyCookie();
+
   // request header must be set after open, but before send
   xhr.setRequestHeader("Content-Type", contentType);
 

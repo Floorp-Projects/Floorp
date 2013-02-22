@@ -204,6 +204,9 @@ function removeItemFromArray(array, item) {
   return array.filter(function(i) i !== item);
 }
 
+// Converts anything that isn't false, null or undefined into a string
+function stringOrNull(val) val ? String(val) : val;
+
 // Shared option validation rules for Item and Menu
 let baseItemRules = {
   parentMenu: {
@@ -254,13 +257,13 @@ let baseItemRules = {
 
 let labelledItemRules =  mix(baseItemRules, {
   label: {
-    map: String,
+    map: stringOrNull,
     is: ["string"],
     ok: function (v) !!v,
     msg: "The item must have a non-empty string label."
   },
   image: {
-    map: String,
+    map: stringOrNull,
     is: ["string", "undefined", "null"]
   }
 });
@@ -268,8 +271,8 @@ let labelledItemRules =  mix(baseItemRules, {
 // Additional validation rules for Item
 let itemRules = mix(labelledItemRules, {
   data: {
-    map: String,
-    is: ["string", "undefined"]
+    map: stringOrNull,
+    is: ["string", "undefined", "null"]
   }
 });
 

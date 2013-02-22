@@ -334,6 +334,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_funapply(uint32_t argc);
     bool jsop_funapplyarguments(uint32_t argc);
     bool jsop_call(uint32_t argc, bool constructing);
+    bool jsop_eval(uint32_t argc);
     bool jsop_ifeq(JSOp op);
     bool jsop_label();
     bool jsop_condswitch();

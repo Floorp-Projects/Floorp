@@ -168,7 +168,7 @@ class B2GRemoteAutomation(Automation):
         # Get the current status of the device.  If we know the device
         # serial number, we look for that, otherwise we use the (presumably
         # only) device shown in 'adb devices'.
-        serial = serial or self._devicemanager.deviceSerial
+        serial = serial or self._devicemanager._deviceSerial
         status = 'unknown'
 
         for line in self._devicemanager._runCmd(['devices']).stdout.readlines():

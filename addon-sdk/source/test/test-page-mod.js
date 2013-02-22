@@ -12,7 +12,7 @@ const { Cc, Ci } = require("chrome");
 const { open, getFrames, getMostRecentBrowserWindow } = require('sdk/window/utils');
 const windowUtils = require('sdk/deprecated/window-utils');
 const { getTabContentWindow, getActiveTab, openTab, closeTab } = require('sdk/tabs/utils');
-const { data } = require('self');
+const { data } = require('sdk/self');
 
 /* XXX This can be used to delay closing the test Firefox instance for interactive
  * testing or visual inspection. This test is registered first so that it runs
@@ -357,6 +357,27 @@ exports.testRelatedTab = function(test) {
   });
 };
 
+exports.testRelatedTabNoRequireTab = function(test) {
+  test.waitUntilDone();
+
+  let loader = Loader(module);
+  let tab;
+  let url = "data:text/html;charset=utf-8," + encodeURI("Test related worker tab 2");
+  let { PageMod } = loader.require("sdk/page-mod");
+  let pageMod = new PageMod({
+    include: url,
+    onAttach: function(worker) {
+      test.assertEqual(worker.tab.url, url, "Worker.tab.url is valid");
+      worker.tab.close();
+      pageMod.destroy();
+      loader.unload();
+      test.done();
+    }
+  });
+
+  tabs.open(url);
+};
+
 exports.testRelatedTabNoOtherReqs = function(test) {
   test.waitUntilDone();
 
@@ -633,7 +654,7 @@ exports['test111 attachTo [frame]'] = function(test) {
     this.destroy();
     if (++messageCount == 2) {
       mod.destroy();
-      require('tabs').activeTab.close(function() {
+      require('sdk/tabs').activeTab.close(function() {
         test.done();
       });
     }
@@ -792,7 +813,7 @@ exports.testPageModCssAutomaticDestroy = function(test) {
   test.waitUntilDone();
   let loader = Loader(module);
 
-  let pageMod = loader.require("page-mod").PageMod({
+  let pageMod = loader.require("sdk/page-mod").PageMod({
     include: "data:*",
     contentStyle: "div { width: 100px!important; }"
   });
@@ -832,7 +853,7 @@ exports.testPageModTimeout = function(test) {
   test.waitUntilDone();
   let tab = null
   let loader = Loader(module);
-  let { PageMod } = loader.require("page-mod");
+  let { PageMod } = loader.require("sdk/page-mod");
 
   let mod = PageMod({
     include: "data:*",
@@ -867,7 +888,7 @@ exports.testPageModcancelTimeout = function(test) {
   test.waitUntilDone();
   let tab = null
   let loader = Loader(module);
-  let { PageMod } = loader.require("page-mod");
+  let { PageMod } = loader.require("sdk/page-mod");
 
   let mod = PageMod({
     include: "data:*",
@@ -1029,4 +1050,3 @@ if (require("sdk/system/xul-app").is("Fennec")) {
     }
   }
 }
-

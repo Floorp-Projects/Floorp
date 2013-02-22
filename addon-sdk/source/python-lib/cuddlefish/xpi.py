@@ -29,6 +29,7 @@ def build_xpi(template_root_dir, manifest, xpi_path,
     zf.write('.install.rdf', 'install.rdf')
     os.remove('.install.rdf')
 
+    # Handle add-on icon
     if 'icon' in harness_options:
         zf.write(str(harness_options['icon']), 'icon.png')
         del harness_options['icon']
@@ -37,6 +38,7 @@ def build_xpi(template_root_dir, manifest, xpi_path,
         zf.write(str(harness_options['icon64']), 'icon64.png')
         del harness_options['icon64']
 
+    # Handle simple-prefs
     if 'preferences' in harness_options:
         from options_xul import parse_options, validate_prefs
 
@@ -133,7 +135,7 @@ def build_xpi(template_root_dir, manifest, xpi_path,
             parentpath = ZIPSEP.join(bits[0:i])
             dirs_to_create.add(parentpath)
 
-    # create zipfile in alphabetical order, with each directory before its
+    # Create zipfile in alphabetical order, with each directory before its
     # files
     for name in sorted(dirs_to_create.union(set(files_to_copy))):
         if name in dirs_to_create:
@@ -141,12 +143,15 @@ def build_xpi(template_root_dir, manifest, xpi_path,
         if name in files_to_copy:
             zf.write(files_to_copy[name], name)
 
+    # Add extra harness options
     harness_options = harness_options.copy()
     for key,value in extra_harness_options.items():
         if key in harness_options:
             msg = "Can't use --harness-option for existing key '%s'" % key
             raise HarnessOptionAlreadyDefinedError(msg)
         harness_options[key] = value
+
+    # Write harness-options.json
     open('.options.json', 'w').write(json.dumps(harness_options, indent=1,
                                                 sort_keys=True))
     zf.write('.options.json', 'harness-options.json')
