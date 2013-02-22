@@ -124,6 +124,7 @@ MAKEFILES_gfx="
   gfx/2d/Makefile
   gfx/angle/Makefile
   gfx/gl/Makefile
+  gfx/graphite2/src/Makefile
   gfx/harfbuzz/src/Makefile
   gfx/ipc/Makefile
   gfx/layers/Makefile
@@ -1333,12 +1334,6 @@ fi
 if [ "$MOZ_FEEDS" ]; then
   add_makefiles "
     toolkit/components/feeds/Makefile
-  "
-fi
-
-if [ "$MOZ_GRAPHITE" ]; then
-  add_makefiles "
-    gfx/graphite2/src/Makefile
   "
 fi
 
