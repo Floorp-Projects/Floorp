@@ -151,8 +151,7 @@ Wrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapperArg,
     RootedObject wrapper(cx, wrapperArg);
     JS_ASSERT(!hasPrototype()); // Should never be called when there's a prototype.
     desc->obj = NULL; // default result if we refuse to perform this action
-    CHECKED(DirectProxyHandler::getPropertyDescriptor(cx, wrapper, id, desc, flags),
-            (flags & JSRESOLVE_ASSIGNING) ? SET : GET);
+    CHECKED(DirectProxyHandler::getPropertyDescriptor(cx, wrapper, id, desc, flags), GET);
 }
 
 bool
