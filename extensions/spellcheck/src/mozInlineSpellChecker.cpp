@@ -132,10 +132,7 @@ mozInlineSpellStatus::InitForEditorChange(
   mOp = eOpChange;
 
   // range to check
-  nsCOMPtr<nsINode> prevNode = do_QueryInterface(aPreviousNode);
-  NS_ENSURE_STATE(prevNode);
-
-  mRange = new nsRange(prevNode);
+  mRange = new nsRange();
 
   // ...we need to put the start and end in the correct order
   int16_t cmpResult;

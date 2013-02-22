@@ -1939,10 +1939,6 @@ public:
   void ReleaseCapture() const;
   virtual void MozSetImageElement(const nsAString& aImageElementId,
                                   Element* aElement) = 0;
-  nsIURI* GetDocumentURIObject()
-  {
-    return GetDocumentURI();
-  }
   // Not const because all the full-screen goop is not const
   virtual bool MozFullScreenEnabled() = 0;
   virtual Element* GetMozFullScreenElement(mozilla::ErrorResult& rv) = 0;
@@ -2411,10 +2407,6 @@ NS_NewImageDocument(nsIDocument** aInstancePtrResult);
 nsresult
 NS_NewVideoDocument(nsIDocument** aInstancePtrResult);
 #endif
-
-already_AddRefed<mozilla::dom::DocumentFragment>
-NS_NewDocumentFragment(nsNodeInfoManager* aNodeInfoManager,
-                       mozilla::ErrorResult& aRv);
 
 nsresult
 NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
