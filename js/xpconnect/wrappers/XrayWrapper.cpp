@@ -1317,6 +1317,19 @@ GetNativePropertiesObject(JSContext *cx, JSObject *wrapper)
     return holder;
 }
 
+bool
+IsXrayResolving(JSContext *cx, JSObject *wrapper, jsid id)
+{
+    if (!WrapperFactory::IsXrayWrapper(wrapper) ||
+        GetXrayType(wrapper) != XrayForWrappedNative)
+    {
+        return false;
+    }
+    JSObject *holder =
+      XPCWrappedNativeXrayTraits::singleton.ensureHolder(cx, wrapper);
+    return XPCWrappedNativeXrayTraits::isResolving(cx, holder, id);
+}
+
 }
 
 static JSBool
