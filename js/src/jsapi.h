@@ -4444,6 +4444,12 @@ JS_PUBLIC_API(char *)
 JS_EncodeString(JSContext *cx, JSRawString str);
 
 /*
+ * Same behavior as JS_EncodeString(), but encode into UTF-8 string
+ */
+JS_PUBLIC_API(char *)
+JS_EncodeStringToUTF8(JSContext *cx, JSRawString str);
+
+/*
  * Get number of bytes in the string encoding (without accounting for a
  * terminating zero bytes. The function returns (size_t) -1 if the string
  * can not be encoded into bytes and reports an error using cx accordingly.
@@ -4496,6 +4502,13 @@ class JSAutoByteString
         return mBytes;
     }
 
+    char *encodeUtf8(JSContext *cx, JSString *str) {
+        JS_ASSERT(!mBytes);
+        JS_ASSERT(cx);
+        mBytes = JS_EncodeStringToUTF8(cx, str);
+        return mBytes;
+    }
+
     void clear() {
         js_free(mBytes);
         mBytes = NULL;
@@ -4507,6 +4520,12 @@ class JSAutoByteString
 
     bool operator!() const {
         return !mBytes;
+    }
+
+    size_t length() const {
+        if (!mBytes)
+            return 0;
+        return strlen(mBytes);
     }
 
   private:
