@@ -225,11 +225,17 @@ void MessagePumpCFRunLoopBase::ScheduleWork() {
 
 // Must be called on the run loop thread.
 void MessagePumpCFRunLoopBase::ScheduleDelayedWork(
-    const Time& delayed_work_time) {
+    const TimeTicks& delayed_work_time) {
+  // TODO(jar): We may need a more efficient way to go between these times, but
+  // the difference will change not only when we sleep/wake, it will also change
+  // when the user changes the wall clock time :-/.
+  Time absolute_work_time =
+      (delayed_work_time - TimeTicks::Now()) + Time::Now();
+
   Time::Exploded exploded;
-  delayed_work_time.UTCExplode(&exploded);
+  absolute_work_time.UTCExplode(&exploded);
   double seconds = exploded.second +
-                   (static_cast<double>((delayed_work_time.ToInternalValue()) %
+                   (static_cast<double>((absolute_work_time.ToInternalValue()) %
                                         Time::kMicrosecondsPerSecond) /
                     Time::kMicrosecondsPerSecond);
   CFGregorianDate gregorian = {
@@ -320,12 +326,12 @@ bool MessagePumpCFRunLoopBase::RunDelayedWork() {
   // released promptly even in the absence of UI events.
   MessagePumpScopedAutoreleasePool autorelease_pool(this);
 
-  Time next_time;
+  TimeTicks next_time;
   delegate_->DoDelayedWork(&next_time);
 
   bool more_work = !next_time.is_null();
   if (more_work) {
-    TimeDelta delay = next_time - Time::Now();
+    TimeDelta delay = next_time - TimeTicks::Now();
     if (delay > TimeDelta()) {
       // There's more delayed work to be done in the future.
       ScheduleDelayedWork(next_time);
