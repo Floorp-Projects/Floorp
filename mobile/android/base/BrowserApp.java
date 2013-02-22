@@ -576,20 +576,17 @@ abstract public class BrowserApp extends GeckoApp
             // Set the gecko layout for sliding.
             if (!mTabsPanel.isShown()) {
                 ((LinearLayout.LayoutParams) mGeckoLayout.getLayoutParams()).setMargins(0, 0, 0, 0);
-                if (!usingTextureView)
-                    mGeckoLayout.scrollTo(mTabsPanel.getWidth() * -1, 0);
+                mGeckoLayout.scrollTo(mTabsPanel.getWidth() * -1, 0);
                 mGeckoLayout.requestLayout();
             }
 
             mMainLayoutAnimator.attach(mGeckoLayout,
-                                       usingTextureView ? PropertyAnimator.Property.TRANSLATION_X :
-                                                          PropertyAnimator.Property.SCROLL_X,
-                                       usingTextureView ? width : -width);
+                                       PropertyAnimator.Property.SCROLL_X,
+                                       -width);
         } else {
             mMainLayoutAnimator.attach(mMainLayout,
-                                       usingTextureView ? PropertyAnimator.Property.TRANSLATION_Y :
-                                                          PropertyAnimator.Property.SCROLL_Y,
-                                       usingTextureView ? height : -height);
+                                       PropertyAnimator.Property.SCROLL_Y,
+                                       -height);
         }
 
         mMainLayoutAnimator.start();
@@ -618,14 +615,8 @@ abstract public class BrowserApp extends GeckoApp
 
         if (mTabsPanel.isShown()) {
             if (hasTabsSideBar()) {
-                boolean usingTextureView = mLayerView.shouldUseTextureView();
-
-                int leftMargin = (usingTextureView ? 0 : mTabsPanel.getWidth());
-                int rightMargin = (usingTextureView ? mTabsPanel.getWidth() : 0);
-                ((LinearLayout.LayoutParams) mGeckoLayout.getLayoutParams()).setMargins(leftMargin, 0, rightMargin, 0);
-
-                if (!usingTextureView)
-                    mGeckoLayout.scrollTo(0, 0);
+                ((LinearLayout.LayoutParams) mGeckoLayout.getLayoutParams()).setMargins(mTabsPanel.getWidth(), 0, 0, 0);
+                mGeckoLayout.scrollTo(0, 0);
             }
 
             mGeckoLayout.requestLayout();
