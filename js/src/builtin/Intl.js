@@ -700,3 +700,157 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
     result.locale = foundLocale;
     return result;
 }
+
+
+/**
+ * Returns the subset of requestedLocales for which availableLocales has a
+ * matching (possibly fallback) locale. Locales appear in the same order in the
+ * returned list as in the input list.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.2.6.
+ */
+function LookupSupportedLocales(availableLocales, requestedLocales) {
+    // Steps 1-2.
+    var len = requestedLocales.length;
+    var subset = new List();
+
+    // Steps 3-4.
+    var k = 0;
+    while (k < len) {
+        // Steps 4.a-b.
+        var locale = requestedLocales[k];
+        var noExtensionsLocale = callFunction(std_String_replace, locale, unicodeLocaleExtensionSequenceGlobalRE, "");
+
+        // Step 4.c-d.
+        var availableLocale = BestAvailableLocale(availableLocales, noExtensionsLocale);
+        if (availableLocale !== undefined)
+            subset.push(locale);
+
+        // Step 4.e.
+        k++;
+    }
+
+    // Steps 5-6.
+    return subset.slice(0);
+}
+
+
+/**
+ * Returns the subset of requestedLocales for which availableLocales has a
+ * matching (possibly fallback) locale. Locales appear in the same order in the
+ * returned list as in the input list.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.2.7.
+ */
+function BestFitSupportedLocales(availableLocales, requestedLocales) {
+    // don't have anything better
+    return LookupSupportedLocales(availableLocales, requestedLocales);
+}
+
+
+/**
+ * Returns the subset of requestedLocales for which availableLocales has a
+ * matching (possibly fallback) locale. Locales appear in the same order in the
+ * returned list as in the input list.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.2.8.
+ */
+function SupportedLocales(availableLocales, requestedLocales, options) {
+    // Step 1.
+    var matcher;
+    if (options !== undefined) {
+        // Steps 1.a-b.
+        options = ToObject(options);
+        matcher = options.localeMatcher;
+
+        // Step 1.c.
+        if (matcher !== undefined) {
+            matcher = ToString(matcher);
+            if (matcher !== "lookup" && matcher !== "best fit")
+                ThrowError(JSMSG_INVALID_LOCALE_MATCHER, matcher);
+        }
+    }
+
+    // Steps 2-3.
+    var subset = (matcher === undefined || matcher === "best fit") ?
+                 BestFitSupportedLocales(availableLocales, requestedLocales) :
+                 LookupSupportedLocales(availableLocales, requestedLocales);
+
+    // Step 4.
+    for (var i = 0; i < subset.length; i++)
+        std_Object_defineProperty(subset, i, {value: subset[i], writable: false, enumerable: true, configurable: false});
+//    ??? commented out because of SpiderMonkey bugs 591059 and 598996
+//    std_Object_defineProperty(subset, "length", {value: subset.length, writable: false, enumerable: false, configurable: false});
+
+    // Step 5.
+    return subset;
+}
+
+
+/**
+ * Extracts a property value from the provided options object, converts it to
+ * the required type, checks whether it is one of a list of allowed values,
+ * and fills in a fallback value if necessary.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.2.9.
+ */
+function GetOption(options, property, type, values, fallback) {
+    // Step 1.
+    var value = options[property];
+
+    // Step 2.
+    if (value !== undefined) {
+        // Steps 2.a-c.
+        if (type === "boolean")
+            value = ToBoolean(value);
+        else if (type === "string")
+            value = ToString(value);
+        else
+            assert(false, "GetOption");
+
+        // Step 2.d.
+        if (values !== undefined && callFunction(std_Array_indexOf, values, value) === -1)
+            ThrowError(JSMSG_INVALID_OPTION_VALUE, property, value);
+
+        // Step 2.e.
+        return value;
+    }
+
+    // Step 3.
+    return fallback;
+}
+
+/**
+ * Extracts a property value from the provided options object, converts it to a
+ * Number value, checks whether it is in the allowed range, and fills in a
+ * fallback value if necessary.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.2.10.
+ */
+function GetNumberOption(options, property, minimum, maximum, fallback) {
+    assert(typeof minimum === "number", "GetNumberOption");
+    assert(typeof maximum === "number", "GetNumberOption");
+    assert(fallback === undefined || (fallback >= minimum && fallback <= maximum), "GetNumberOption");
+
+    // Step 1.
+    var value = options[property];
+
+    // Step 2.
+    if (value !== undefined) {
+        value = ToNumber(value);
+        if (std_isNaN(value) || value < minimum || value > maximum)
+            ThrowError(JSMSG_INVALID_DIGITS_VALUE, value);
+        return std_Math_floor(value);
+    }
+
+    // Step 3.
+    return fallback;
+}
+
+
+// ??? stub
+var runtimeAvailableLocales = (function () {
+    var o = std_Object_create(null);
+    o[RuntimeDefaultLocale()] = true;
+    return addOldStyleLanguageTags(o);
+}());
