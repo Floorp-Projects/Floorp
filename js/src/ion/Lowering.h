@@ -102,6 +102,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitReturnFromCtor(MReturnFromCtor *ins);
     bool visitCall(MCall *call);
     bool visitApplyArgs(MApplyArgs *apply);
+    bool visitCallDirectEval(MCallDirectEval *ins);
     bool visitTest(MTest *test);
     bool visitPolyInlineDispatch(MPolyInlineDispatch *ins);
     bool visitCompare(MCompare *comp);

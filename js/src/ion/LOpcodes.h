@@ -43,6 +43,7 @@
     _(CallGeneric)                  \
     _(CallNative)                   \
     _(ApplyArgsGeneric)             \
+    _(CallDirectEval)               \
     _(StackArgT)                    \
     _(StackArgV)                    \
     _(CreateThis)                   \

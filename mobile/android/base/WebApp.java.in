@@ -33,6 +33,7 @@ import java.io.File;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.WebAppAllocator;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -59,8 +60,10 @@ public class WebApp extends GeckoApp {
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        overridePendingTransition(R.anim.grow_fade_in_center, android.R.anim.fade_out);
-        showSplash();
+        if (!GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
+            overridePendingTransition(R.anim.grow_fade_in_center, android.R.anim.fade_out);
+            showSplash();
+        }
 
         String action = getIntent().getAction();
         Bundle extras = getIntent().getExtras();

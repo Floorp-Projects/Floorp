@@ -4,7 +4,7 @@
 
 "use strict";
 
-const AssertBase = require("test/assert").Assert;
+const AssertBase = require("sdk/test/assert").Assert;
 
 /**
  * Generates custom assertion constructors that may be bundled with a test

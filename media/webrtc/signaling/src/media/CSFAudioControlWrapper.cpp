@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "CSFLogStream.h"
+#include "CSFLog.h"
 #include "CSFAudioControlWrapper.h"
 
 static const char* logTag = "VcmSipccBinding";
@@ -71,7 +71,8 @@ namespace CSF {
 		}
 		else
 		{
-			CSFLogWarnS( logTag, "Attempt to setRecordingDevice to " << name << " for expired audio control");
+			CSFLogWarn( logTag, "Attempt to setRecordingDevice to %s for expired audio control",
+				name.c_str());
 			return false;
 		}
 	}
@@ -84,7 +85,8 @@ namespace CSF {
 		}
 		else
 		{
-			CSFLogWarnS( logTag, "Attempt to setPlayoutDevice to " << name << " for expired audio control");
+			CSFLogWarn( logTag, "Attempt to setPlayoutDevice to %s for expired audio control",
+				name.c_str());
 			return false;
 		}
 	}

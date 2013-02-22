@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <string>
 
-#include "CSFLogStream.h"
+#include "CSFLog.h"
 
 #include "CC_SIPCCDevice.h"
 #include "CC_SIPCCDeviceInfo.h"
@@ -98,13 +98,14 @@ void CallControlManagerImpl::removeECCObserver ( ECC_Observer * observer )
 
 void CallControlManagerImpl::setMultiClusterMode(bool allowMultipleClusters)
 {
-    CSFLogInfoS(logTag, "setMultiClusterMode(" << allowMultipleClusters << ")");
+    CSFLogInfo(logTag, "setMultiClusterMode(%s)",
+      allowMultipleClusters ? "TRUE" : "FALSE");
     multiClusterMode = allowMultipleClusters;
 }
 
 void CallControlManagerImpl::setSIPCCLoggingMask(const cc_int32_t mask)
 {
-    CSFLogInfoS(logTag, "setSIPCCLoggingMask(" << mask << ")");
+    CSFLogInfo(logTag, "setSIPCCLoggingMask(%u)", mask);
     sipccLoggingMask = mask;
 }
 
@@ -116,7 +117,7 @@ void CallControlManagerImpl::setAuthenticationString(const std::string &authStri
 
 void CallControlManagerImpl::setSecureCachePath(const std::string &secureCachePath)
 {
-    CSFLogInfoS(logTag, "setSecureCachePath(" << secureCachePath << ")");
+    CSFLogInfo(logTag, "setSecureCachePath(%s)", secureCachePath.c_str());
     this->secureCachePath = secureCachePath;
 }
 
@@ -144,7 +145,7 @@ bool CallControlManagerImpl::registerUser( const std::string& deviceName, const 
 {
 	setConnectionState(ConnectionStatusEnum::eRegistering);
 
-    CSFLogInfoS(logTag, "registerUser(" << user << ", " << domain << " )");
+    CSFLogInfo(logTag, "registerUser(%s, %s )", user.c_str(), domain.c_str());
     if(phone != NULL)
     {
     	setConnectionState(ConnectionStatusEnum::eReady);
@@ -175,7 +176,7 @@ bool CallControlManagerImpl::startP2PMode(const std::string& user)
 {
 	setConnectionState(ConnectionStatusEnum::eRegistering);
 
-    CSFLogInfoS(logTag, "startP2PMode(" << user << " )");
+    CSFLogInfo(logTag, "startP2PMode(%s)", user.c_str());
     if(phone != NULL)
     {
     	setConnectionState(ConnectionStatusEnum::eReady);
@@ -309,7 +310,7 @@ bool CallControlManagerImpl::setProperty(ConfigPropertyKeysEnum::ConfigPropertyK
   unsigned long strtoul_result;
   char *strtoul_end;
 
-  CSFLogInfoS(logTag, "setProperty(" << value << " )");
+  CSFLogInfo(logTag, "setProperty( %s )", value.c_str());
 
   if (key == ConfigPropertyKeysEnum::eLocalVoipPort) {
     errno = 0;

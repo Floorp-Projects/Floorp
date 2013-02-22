@@ -1699,6 +1699,8 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
 
     void *calleeToken;
     if (fp->isFunctionFrame()) {
+        fp->cleanupTornValues();
+
         // CountArgSlot include |this| and the |scopeChain|.
         maxArgc = CountArgSlots(fp->fun()) - 1; // -1 = discard |scopeChain|
         maxArgv = fp->formals() - 1;            // -1 = include |this|
