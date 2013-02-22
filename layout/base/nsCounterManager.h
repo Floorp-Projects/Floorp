@@ -229,6 +229,21 @@ public:
     void Dump();
 #endif
 
+    static int32_t IncrementCounter(int32_t aOldValue, int32_t aIncrement)
+    {
+        int32_t newValue = aOldValue + aIncrement;
+        // The CSS Working Group resolved that a counter-increment that
+        // exceeds internal limits should not increment at all.
+        // http://lists.w3.org/Archives/Public/www-style/2013Feb/0392.html
+        // (This means, for example, that if aIncrement is 5, the
+        // counter will get stuck at the largest multiple of 5 less than
+        // the maximum 32-bit integer.)
+        if ((aIncrement > 0) != (newValue > aOldValue)) {
+          newValue = aOldValue;
+        }
+        return newValue;
+    }
+
 private:
     // for |AddCounterResetsAndIncrements| only
     bool AddResetOrIncrement(nsIFrame *aFrame, int32_t aIndex,

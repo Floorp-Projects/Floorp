@@ -61,3 +61,9 @@
 == counter-hebrew-test.html counter-hebrew-reference.html
 == counters-hebrew-test.html counters-hebrew-reference.html
 == counter-reset-integer-range.html counter-reset-integer-range-ref.html
+== counter-ua-limits-00.html counter-ua-limits-00-ref.html
+== counter-ua-limits-01.html counter-ua-limits-01-ref.html
+== counter-ua-limits-02.html counter-ua-limits-02-ref.html
+== counter-ua-limits-03.html counter-ua-limits-03-ref.html
+== counter-ua-limits-list-00.html counter-ua-limits-list-00-ref.html
+== counter-ua-limits-list-01.html counter-ua-limits-list-01-ref.html
