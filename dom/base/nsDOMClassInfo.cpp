@@ -6667,19 +6667,6 @@ nsNavigatorSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 
 // DOM Node helper
 
-template<nsresult (*func)(JSContext *cx, JSObject *obj, jsval *vp)>
-static JSBool
-GetterShim(JSContext *cx, JSHandleObject obj, JSHandleId /* unused */, JSMutableHandleValue vp)
-{
-  nsresult rv = (*func)(cx, obj, vp.address());
-  if (NS_FAILED(rv)) {
-    xpc::Throw(cx, rv);
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
 NS_IMETHODIMP
 nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
                     JSObject **parentObj)
@@ -7390,42 +7377,6 @@ nsNamedNodeMapSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
   nsINode *attr;
   *aCache = attr = map->GetNamedItem(aName);
   return attr;
-}
-
-// Can't be static so GetterShim will compile
-nsresult
-DocumentURIObjectGetter(JSContext *cx, JSObject *obj, jsval *vp)
-{
-  // This function duplicates some of the logic in XPC_WN_HelperGetProperty
-  XPCWrappedNative *wrapper =
-    XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
-
-  // The error checks duplicate code in THROW_AND_RETURN_IF_BAD_WRAPPER
-  NS_ENSURE_TRUE(!wrapper || wrapper->IsValid(), NS_ERROR_XPC_HAS_BEEN_SHUTDOWN);
-
-  nsCOMPtr<nsIDocument> doc = do_QueryWrappedNative(wrapper, obj);
-  NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
-
-  return WrapNative(cx, JS_GetGlobalForScopeChain(cx), doc->GetDocumentURI(),
-                    &NS_GET_IID(nsIURI), true, vp);
-}
-
-NS_IMETHODIMP
-nsDocumentSH::PostCreatePrototype(JSContext * cx, JSObject * proto)
-{
-  // XXXbz when this goes away, kill GetterShim as well.
-  // set up our proto first
-  nsresult rv = nsNodeSH::PostCreatePrototype(cx, proto);
-
-  if (xpc::AccessCheck::isChrome(js::GetObjectCompartment(proto))) {
-    // Stick a documentURIObject property on there
-    JS_DefinePropertyById(cx, proto, sDocumentURIObject_id,
-                          JSVAL_VOID, GetterShim<DocumentURIObjectGetter>,
-                          nullptr,
-                          JSPROP_READONLY | JSPROP_SHARED);
-  }
-
-  return rv;
 }
 
 NS_IMETHODIMP
