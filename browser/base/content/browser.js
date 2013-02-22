@@ -7,6 +7,7 @@ let Ci = Components.interfaces;
 let Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource:///modules/RecentWindow.jsm");
 
 const nsIWebNavigation = Ci.nsIWebNavigation;
 
@@ -4864,9 +4865,8 @@ nsBrowserAccess.prototype = {
         if (window.toolbar.visible)
           win = window;
         else {
-          win = Cc["@mozilla.org/browser/browserglue;1"]
-                  .getService(Ci.nsIBrowserGlue)
-                  .getMostRecentBrowserWindow();
+          let isPrivate = PrivateBrowsingUtils.isWindowPrivate(aOpener || window);
+          win = RecentWindow.getMostRecentBrowserWindow({private: isPrivate});
           needToFocusWin = true;
         }
 
