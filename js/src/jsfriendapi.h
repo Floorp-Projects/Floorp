@@ -1416,13 +1416,6 @@ class JS_FRIEND_API(AutoCTypesActivityCallback) {
     }
 };
 
-#ifdef DEBUG
-extern JS_FRIEND_API(void)
-assertEnteredPolicy(JSContext *cx, JSObject *obj, jsid id);
-#else
-inline void assertEnteredPolicy(JSContext *cx, JSObject *obj, jsid id) {};
-#endif
-
 } /* namespace js */
 
 #endif /* jsfriendapi_h___ */
