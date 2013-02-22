@@ -146,12 +146,7 @@ FilteringWrapper<Base, Policy>::enter(JSContext *cx, JSObject *wrapper, jsid id,
         return true;
     }
     if (!Policy::check(cx, wrapper, id, act)) {
-        if (JS_IsExceptionPending(cx)) {
-            *bp = false;
-            return false;
-        }
-        JSAutoCompartment ac(cx, wrapper);
-        *bp = Policy::deny(cx, id, act);
+        *bp = JS_IsExceptionPending(cx) ? false : Policy::deny(act);
         return false;
     }
     *bp = true;
