@@ -1897,6 +1897,7 @@
 
             // That's gBrowser for the other window, not the tab's browser!
             var remoteBrowser = aOtherTab.ownerDocument.defaultView.gBrowser;
+            var isPending = aOtherTab.hasAttribute("pending");
 
             // First, start teardown of the other browser.  Make sure to not
             // fire the beforeunload event in the process.  Close the other
@@ -1904,21 +1905,34 @@
             if (!remoteBrowser._beginRemoveTab(aOtherTab, true, true))
               return;
 
-            // Workarounds for bug 458697
-            // Icon might have been set on DOMLinkAdded, don't override that.
             let ourBrowser = this.getBrowserForTab(aOurTab);
             let otherBrowser = aOtherTab.linkedBrowser;
-            if (!ourBrowser.mIconURL && otherBrowser.mIconURL)
-              this.setIcon(aOurTab, otherBrowser.mIconURL);
-            var isBusy = aOtherTab.hasAttribute("busy");
-            if (isBusy) {
-              aOurTab.setAttribute("busy", "true");
-              this._tabAttrModified(aOurTab);
-              if (aOurTab.selected)
-                this.mIsBusy = true;
-            }
 
-            this._swapBrowserDocShells(aOurTab, otherBrowser);
+            // If the other tab is pending (i.e. has not been restored, yet)
+            // then do not switch docShells but retrieve the other tab's state
+            // and apply it to our tab.
+            if (isPending) {
+              let ss = Cc["@mozilla.org/browser/sessionstore;1"]
+                         .getService(Ci.nsISessionStore)
+              ss.setTabState(aOurTab, ss.getTabState(aOtherTab));
+
+              // Make sure to unregister any open URIs.
+              this._swapRegisteredOpenURIs(ourBrowser, otherBrowser);
+            } else {
+              // Workarounds for bug 458697
+              // Icon might have been set on DOMLinkAdded, don't override that.
+              if (!ourBrowser.mIconURL && otherBrowser.mIconURL)
+                this.setIcon(aOurTab, otherBrowser.mIconURL);
+              var isBusy = aOtherTab.hasAttribute("busy");
+              if (isBusy) {
+                aOurTab.setAttribute("busy", "true");
+                this._tabAttrModified(aOurTab);
+                if (aOurTab.selected)
+                  this.mIsBusy = true;
+              }
+
+              this._swapBrowserDocShells(aOurTab, otherBrowser);
+            }
 
             // Finish tearing down the tab that's going away.
             remoteBrowser._endRemoveTab(aOtherTab);
@@ -1949,15 +1963,8 @@
             ourBrowser.webProgress.removeProgressListener(filter);
             filter.removeProgressListener(tabListener);
 
-            // Restore current registered open URI.
-            if (ourBrowser.registeredOpenURI) {
-              this._placesAutocomplete.unregisterOpenPage(ourBrowser.registeredOpenURI);
-              delete ourBrowser.registeredOpenURI;
-            }
-            if (aOtherBrowser.registeredOpenURI) {
-              ourBrowser.registeredOpenURI = aOtherBrowser.registeredOpenURI;
-              delete aOtherBrowser.registeredOpenURI;
-            }
+            // Make sure to unregister any open URIs.
+            this._swapRegisteredOpenURIs(ourBrowser, aOtherBrowser);
 
             // Swap the docshells
             ourBrowser.swapDocShells(aOtherBrowser);
@@ -1969,6 +1976,26 @@
             const notifyAll = Ci.nsIWebProgress.NOTIFY_ALL;
             filter.addProgressListener(tabListener, notifyAll);
             ourBrowser.webProgress.addProgressListener(filter, notifyAll);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_swapRegisteredOpenURIs">
+        <parameter name="aOurBrowser"/>
+        <parameter name="aOtherBrowser"/>
+        <body>
+          <![CDATA[
+            // If the current URI is registered as open remove it from the list.
+            if (aOurBrowser.registeredOpenURI) {
+              this._placesAutocomplete.unregisterOpenPage(aOurBrowser.registeredOpenURI);
+              delete aOurBrowser.registeredOpenURI;
+            }
+
+            // If the other/new URI is registered as open then copy it over.
+            if (aOtherBrowser.registeredOpenURI) {
+              aOurBrowser.registeredOpenURI = aOtherBrowser.registeredOpenURI;
+              delete aOtherBrowser.registeredOpenURI;
+            }
           ]]>
         </body>
       </method>
