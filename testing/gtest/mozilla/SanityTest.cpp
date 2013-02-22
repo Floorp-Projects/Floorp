@@ -4,9 +4,28 @@
  * * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
+
+using ::testing::AtLeast;
 
 // Sanity test to make sure that GTest is hooked into
 // the mozilla build system correctly
 TEST(MozillaGTestSanity, Runs) {
   EXPECT_EQ(1, 1);
+}
+namespace {
+class TestMock {
+public:
+  TestMock() {}
+  MOCK_METHOD0(MockedCall, void());
+};
+}
+TEST(MozillaGMockSanity, Runs) {
+  TestMock mockedClass;
+  EXPECT_CALL(mockedClass, MockedCall())
+    .Times(AtLeast(3));
+
+  mockedClass.MockedCall();
+  mockedClass.MockedCall();
+  mockedClass.MockedCall();
 }

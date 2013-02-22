@@ -10,8 +10,9 @@ topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = \
   $(srcdir) \
-	$(srcdir)/gtest/src \
-	$(srcdir)/mozilla \
+  $(srcdir)/gtest/src \
+  $(srcdir)/mozilla \
+  $(srcdir)/gmock/src \
   $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
@@ -24,6 +25,7 @@ LIBXUL_LIBRARY = 1
 IS_COMPONENT = 1
 
 CPPSRCS = \
+  gmock-all.cc \
   gtest-all.cc \
   GTestRunner.cpp \
   $(NULL)
@@ -32,7 +34,7 @@ GTEST_CPPSRCS = \
   SanityTest.cpp \
   $(NULL)
 
-EXPORTS_NAMESPACES = gtest gtest/internal
+EXPORTS_NAMESPACES = gtest gtest/internal gmock gmock/internal
 
 EXPORTS_gtest = \
   gtest/include/gtest/gtest-death-test.h \
@@ -61,9 +63,31 @@ EXPORTS_gtest/internal = \
   gtest/include/gtest/internal/gtest-type-util.h \
   $(NULL)
 
+EXPORTS_gmock = \
+  gmock/include/gmock/gmock-actions.h \
+  gmock/include/gmock/gmock-cardinalities.h \
+  gmock/include/gmock/gmock-generated-actions.h \
+  gmock/include/gmock/gmock-generated-function-mockers.h \
+  gmock/include/gmock/gmock-generated-matchers.h \
+  gmock/include/gmock/gmock-generated-nice-strict.h \
+  gmock/include/gmock/gmock-matchers.h \
+  gmock/include/gmock/gmock-more-actions.h \
+  gmock/include/gmock/gmock-spec-builders.h \
+  gmock/include/gmock/gmock.h \
+  $(NULL)
+
+# gmock also includes internal interfaces in it's public header
+EXPORTS_gmock/internal = \
+  gmock/include/gmock/internal/gmock-generated-internal-utils.h \
+  gmock/include/gmock/internal/gmock-internal-utils.h \
+  gmock/include/gmock/internal/gmock-port.h \
+  $(NULL)
+
 LOCAL_INCLUDES += \
   -I$(srcdir)/gtest \
   -I$(srcdir)/gtest/include \
+  -I$(srcdir)/gmock \
+  -I$(srcdir)/gmock/include \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
