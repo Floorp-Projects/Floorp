@@ -442,6 +442,7 @@ WebRtc_Word32 VideoCaptureAndroid::StartCapture(
 
   bool isAttached = false;
   WebRtc_Word32 result = 0;
+  WebRtc_Word32 rotation = 0;
   // get the JNI env for this thread
   JNIEnv *env;
   if (g_jvm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
@@ -488,6 +489,21 @@ WebRtc_Word32 VideoCaptureAndroid::StartCapture(
                  "%s: Failed to find StartCapture id", __FUNCTION__);
   }
 
+  // get the method ID for the Android Java
+  // CaptureClass static GetRotateAmount  method.
+  cid = env->GetMethodID(g_javaCmClass, "GetRotateAmount", "()I");
+  if (cid != NULL) {
+    WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, -1,
+                 "%s: Call GetRotateAmount", __FUNCTION__);
+    rotation = env->CallIntMethod(_javaCaptureObj, cid);
+    WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, -1,
+                 "%s, GetRotateAmount = %d", __FUNCTION__, rotation);
+  }
+  else {
+    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
+                 "%s: Failed to find GetRotateAmount id", __FUNCTION__);
+  }
+
   // Detach this thread if it was attached
   if (isAttached) {
     if (g_jvm->DetachCurrentThread() < 0) {
@@ -495,6 +511,28 @@ WebRtc_Word32 VideoCaptureAndroid::StartCapture(
                    "%s: Could not detach thread from JVM", __FUNCTION__);
     }
   }
+
+  // I guess the libyuv rotate is CCW vs Android being CW,
+  // so we need to invert.
+  // Note that SetCaptureRotation calls SetDisplayOrientation,
+  // but we don't use a visible Surface so we can ignore that one.
+  rotation = (360 - rotation) % 360;
+  switch (rotation) {
+    case 90:
+      SetCaptureRotation(kCameraRotate90);
+      break;
+    case 180:
+      SetCaptureRotation(kCameraRotate180);
+      break;
+    case 270:
+      SetCaptureRotation(kCameraRotate270);
+      break;
+    case 0:
+    default:
+      SetCaptureRotation(kCameraRotate0);
+      break;
+  }
+
   if (result == 0) {
     _requestedCapability = capability;
     _captureStarted = true;
