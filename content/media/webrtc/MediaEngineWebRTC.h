@@ -74,7 +74,6 @@ public:
     , mCapabilityChosen(false)
     , mWidth(aWidth)
     , mHeight(aHeight)
-    , mLastEndTime(0)
     , mMonitor("WebRTCCamera.Monitor")
     , mFps(aFps)
     , mMinFps(aMinFps)
@@ -144,8 +143,6 @@ private:
   int mCaptureIndex;
   bool mCapabilityChosen;
   int mWidth, mHeight;
-  TrackID mTrackID;
-  TrackTicks mLastEndTime;
 
   // mMonitor protects mImage access/changes, and transitions of mState
   // from kStarted to kStopped (which are combined with EndTrack() and
