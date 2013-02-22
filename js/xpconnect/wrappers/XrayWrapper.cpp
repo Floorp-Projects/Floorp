@@ -983,12 +983,8 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWra
            id == rt->GetStringID(XPCJSRuntime::IDX_NODEPRINCIPAL)) &&
           Is<nsINode>(wrapper)) ||
           (id == rt->GetStringID(XPCJSRuntime::IDX_DOCUMENTURIOBJECT) &&
-          Is<nsIDocument>(wrapper)))) {
-        bool status;
-        desc->obj = NULL; // default value
-        if (!jsWrapper.enter(cx, wrapper, id, Wrapper::GET, &status))
-            return status;
-
+          Is<nsIDocument>(wrapper))))
+    {
         desc->obj = wrapper;
         desc->attrs = JSPROP_ENUMERATE|JSPROP_SHARED;
         if (id == rt->GetStringID(XPCJSRuntime::IDX_BASEURIOBJECT))
@@ -1420,11 +1416,6 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
         return true;
     }
 
-    bool status;
-    desc->obj = NULL; // default value
-    if (!this->enter(cx, wrapper, id, Wrapper::GET, &status))
-        return status;
-
     typename Traits::ResolvingIdImpl resolving(wrapper, id);
 
     // Redirect access straight to the wrapper if we should be transparent.
@@ -1450,11 +1441,6 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
     if (AccessCheck::wrapperSubsumes(wrapper) &&
         id == rt->GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT)) {
-        bool status;
-        desc->obj = NULL; // default value
-        if (!this->enter(cx, wrapper, id, Wrapper::GET, &status))
-            return status;
-
         desc->obj = wrapper;
         desc->attrs = JSPROP_ENUMERATE|JSPROP_SHARED;
         desc->getter = wrappedJSObject_getter;
@@ -1547,11 +1533,6 @@ XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wra
         desc->obj = NULL;
         return true;
     }
-
-    bool status;
-    desc->obj = NULL; // default value
-    if (!this->enter(cx, wrapper, id, Wrapper::GET, &status))
-        return status;
 
     typename Traits::ResolvingIdImpl resolving(wrapper, id);
 
