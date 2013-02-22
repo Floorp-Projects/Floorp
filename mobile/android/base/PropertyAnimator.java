@@ -26,6 +26,7 @@ public class PropertyAnimator implements Runnable {
         TRANSLATION_Y,
         SCROLL_X,
         SCROLL_Y,
+        WIDTH,
         HEIGHT
     }
 
@@ -121,6 +122,8 @@ public class PropertyAnimator implements Runnable {
                 element.from = element.proxy.getScrollY();
             else if (element.property == Property.SCROLL_X)
                 element.from = element.proxy.getScrollX();
+            else if (element.property == Property.WIDTH)
+                element.from = element.proxy.getWidth();
             else if (element.property == Property.HEIGHT)
                 element.from = element.proxy.getHeight();
 
@@ -195,6 +198,8 @@ public class PropertyAnimator implements Runnable {
             element.proxy.scrollTo(element.proxy.getScrollX(), (int) delta);
         else if (element.property == Property.SCROLL_X)
             element.proxy.scrollTo((int) delta, element.proxy.getScrollY());
+        else if (element.property == Property.WIDTH)
+            element.proxy.setWidth((int) delta);
         else if (element.property == Property.HEIGHT)
             element.proxy.setHeight((int) delta);
     }
