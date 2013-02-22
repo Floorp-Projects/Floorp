@@ -1128,7 +1128,7 @@ class FastInvokeGuard
       : fun_(cx)
       , script_(cx)
 #ifdef JS_ION
-      , ictx_(cx, cx->compartment, NULL)
+      , ictx_(cx, NULL)
       , useIon_(ion::IsEnabled(cx))
 #endif
     {
