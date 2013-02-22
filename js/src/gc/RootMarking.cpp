@@ -16,6 +16,7 @@
 #include "jsprf.h"
 #include "jswatchpoint.h"
 
+#include "builtin/MapObject.h"
 #include "frontend/Parser.h"
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"
