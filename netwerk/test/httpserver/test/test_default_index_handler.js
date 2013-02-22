@@ -264,7 +264,7 @@ test = new Test("http://localhost:4444/",
 tests.push(test);
 function start(ch)
 {
-  do_check_eq(ch.getResponseHeader("Content-Type"), "text/html;charset=utf-8");
+  do_check_eq(ch.getResponseHeader("Content-Type"), "text/html");
 }
 function stopRootDirectory(ch, cx, status, data)
 {
