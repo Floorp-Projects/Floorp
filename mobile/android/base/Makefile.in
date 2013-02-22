@@ -270,7 +270,6 @@ FENNEC_PP_XML_FILES = \
   res/layout/text_selection_handles.xml \
   res/layout-xlarge-land-v11/abouthome_content.xml \
   res/layout-xlarge-v11/awesomebar_search.xml \
-  res/layout-xlarge-v11/gecko_app.xml \
   res/layout-xlarge-v11/tabs_panel.xml \
   res/xml/preferences.xml \
   res/xml/searchable.xml \
