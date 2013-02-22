@@ -77,6 +77,22 @@ class JS_FRIEND_API(BaseProxyHandler) {
         return false;
     }
 
+    /* Policy enforcement traps.
+     *
+     * enter() allows the policy to specify whether the caller may perform |act|
+     * on the proxy's |id| property. In the case when |act| is CALL, |id| is
+     * generally JSID_VOID.
+     *
+     * The |act| parameter to enter() specifies the action being performed.
+     */
+    enum Action {
+        GET,
+        SET,
+        CALL
+    };
+    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Action act,
+                       bool *bp);
+
     /* ES5 Harmony fundamental proxy traps. */
     virtual bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
                                        PropertyDescriptor *desc, unsigned flags) = 0;
