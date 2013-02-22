@@ -51,9 +51,11 @@ class JS_FRIEND_API(Wrapper);
 class JS_FRIEND_API(BaseProxyHandler) {
     void *mFamily;
     bool mHasPrototype;
+    bool mHasPolicy;
   protected:
     // Subclasses may set this in their constructor.
     void setHasPrototype(bool aHasPrototype) { mHasPrototype = aHasPrototype; }
+    void setHasPolicy(bool aHasPolicy) { mHasPolicy = aHasPolicy; }
 
   public:
     explicit BaseProxyHandler(void *family);
@@ -61,6 +63,10 @@ class JS_FRIEND_API(BaseProxyHandler) {
 
     bool hasPrototype() {
         return mHasPrototype;
+    }
+
+    bool hasPolicy() {
+        return mHasPolicy;
     }
 
     inline void *family() {
