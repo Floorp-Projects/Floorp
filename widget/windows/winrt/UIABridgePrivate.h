@@ -43,19 +43,11 @@ public:
   {}
 
   // IUIABridge
-#if defined(x86_64)
-  IFACEMETHODIMP Init(IInspectable* view, IInspectable* window, __int64 inner);
-#else
-  IFACEMETHODIMP Init(IInspectable* view, IInspectable* window, __int32 inner);
-#endif
+  IFACEMETHODIMP Init(IInspectable* view, IInspectable* window, LONG_PTR inner);
   IFACEMETHODIMP Disconnect();
 
   // IUIAElement
-#if defined(x86_64)
-  IFACEMETHODIMP SetFocusInternal(__int64 aAccessible);
-#else
-  IFACEMETHODIMP SetFocusInternal(__int32 aAccessible);
-#endif
+  IFACEMETHODIMP SetFocusInternal(LONG_PTR aAccessible);
   IFACEMETHODIMP CheckFocus(int x, int y);
   IFACEMETHODIMP ClearFocus();
   IFACEMETHODIMP HasFocus(VARIANT_BOOL * hasFocus);
@@ -108,11 +100,7 @@ public:
   {}
 
   // IUIAElement
-#if defined(x86_64)
-  IFACEMETHODIMP SetFocusInternal(__int64 aAccessible);
-#else
-  IFACEMETHODIMP SetFocusInternal(__int32 aAccessible);
-#endif
+  IFACEMETHODIMP SetFocusInternal(LONG_PTR aAccessible);
   IFACEMETHODIMP CheckFocus(int x, int y);
   IFACEMETHODIMP ClearFocus();
   IFACEMETHODIMP HasFocus(VARIANT_BOOL * hasFocus);
