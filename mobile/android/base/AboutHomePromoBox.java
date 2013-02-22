@@ -7,7 +7,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
-import org.mozilla.gecko.util.GeckoAsyncTask;
+import org.mozilla.gecko.util.UiAsyncTask;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -191,7 +191,7 @@ public class AboutHomePromoBox extends TextView implements View.OnClickListener 
     }
 
     private void getAvailableTypes(final GetTypesCallback callback) {
-        (new GeckoAsyncTask<Void, Void, ArrayList<Type>>(GeckoApp.mAppContext, GeckoAppShell.getHandler()) {
+        (new UiAsyncTask<Void, Void, ArrayList<Type>>(getHandler(), GeckoAppShell.getHandler()) {
             @Override
             public ArrayList<Type> doInBackground(Void... params) {
                 // Run all of this on a background thread

@@ -54,12 +54,7 @@ function new_file(name)
 
 function run_test()
 {
-  // This is copied from the logic in Connection::initialize().
-  function cacheSize(pageSize) {
-    const DEFAULT_CACHE_SIZE_PAGES = 2000;
-    const MAX_CACHE_SIZE_BYTES = 4 * 1024 * 1024;
-    return Math.min(DEFAULT_CACHE_SIZE_PAGES, MAX_CACHE_SIZE_BYTES / pageSize);
-  }
+  const kExpectedCacheSize = -2048; // 2MiB
 
   let pageSizes = [
     1024,
@@ -69,11 +64,9 @@ function run_test()
 
   for (let i = 0; i < pageSizes.length; i++) {
     let pageSize = pageSizes[i];
-    let expectedCacheSize = cacheSize(pageSize);
     check_size(getDatabase,
-               new_file("shared" + pageSize), pageSize, expectedCacheSize);
+               new_file("shared" + pageSize), pageSize, kExpectedCacheSize);
     check_size(getService().openUnsharedDatabase,
-               new_file("unshared" + pageSize), pageSize, expectedCacheSize);
+               new_file("unshared" + pageSize), pageSize, kExpectedCacheSize);
   }
 }
-

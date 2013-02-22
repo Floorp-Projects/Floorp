@@ -6,7 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.util.GeckoAsyncTask;
+import org.mozilla.gecko.util.UiAsyncTask;
 import org.mozilla.gecko.util.GeckoJarReader;
 
 import org.apache.http.HttpEntity;
@@ -112,7 +112,7 @@ public class Favicons {
             return -1;
         }
 
-        LoadFaviconTask task = new LoadFaviconTask(GeckoApp.mAppContext, GeckoAppShell.getHandler(), pageUrl, faviconUrl, persist, listener);
+        LoadFaviconTask task = new LoadFaviconTask(GeckoAppShell.getMainHandler(), GeckoAppShell.getHandler(), pageUrl, faviconUrl, persist, listener);
 
         long taskId = task.getId();
         mLoadTasks.put(taskId, task);
@@ -199,17 +199,17 @@ public class Favicons {
         }
     }
 
-    private class LoadFaviconTask extends GeckoAsyncTask<Void, Void, Bitmap> {
+    private class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
         private long mId;
         private String mPageUrl;
         private String mFaviconUrl;
         private OnFaviconLoadedListener mListener;
         private boolean mPersist;
 
-        public LoadFaviconTask(Activity activity, Handler backgroundThreadHandler,
+        public LoadFaviconTask(Handler uiHandler, Handler backgroundThreadHandler,
                                String pageUrl, String faviconUrl, boolean persist,
                                OnFaviconLoadedListener listener) {
-            super(activity, backgroundThreadHandler);
+            super(uiHandler, backgroundThreadHandler);
 
             synchronized(this) {
                 mId = ++mNextFaviconLoadId;

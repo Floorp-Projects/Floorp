@@ -41,6 +41,10 @@
       testGroupAttrs("radio4", 2, 2);
 
       //////////////////////////////////////////////////////////////////////////
+      // Hidden HTML input@type="radio"
+      testGroupAttrs("radio5", 1, 1);
+
+      //////////////////////////////////////////////////////////////////////////
       // HTML ul/ol
       testGroupAttrs("li1", 1, 3);
       testGroupAttrs("li2", 2, 3);
@@ -319,5 +323,9 @@
     <li id="combo1_opt4" role="option">JoeSentMe</li>
   </ul>
 
+  <form>
+    <input type="radio" style="display: none;" name="group3">
+    <input type="radio" id="radio5" name="group3">
+  </form>
 </body>
 </html>

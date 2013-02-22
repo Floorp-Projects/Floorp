@@ -38,11 +38,19 @@ Function RegisterStartMenuTile
 FunctionEnd
 
 !macro PostUpdate
+
+  ; PostUpdate is called from both session 0 and from the user session
+  ; for service updates, make sure that we only register with the user session
+  ; Otherwise ApplicationID::Set can fail intermittently with a file in use error.
+  System::Call "kernel32::GetCurrentProcessId() i.r0"
+  System::Call "kernel32::ProcessIdToSessionId(i $0, *i ${NSIS_MAX_STRLEN} r9)"
+
   ; Determine if we're the protected UserChoice default or not. If so fix the
   ; start menu tile.  In case there are 2 Firefox installations, we only do
   ; this if the application being updated is the default.
   ReadRegStr $0 HKCU "Software\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice" "ProgId"
   ${If} $0 == "FirefoxURL"
+  ${AndIf} $9 != 0 ; We're not running in session 0
     ReadRegStr $0 HKCU "Software\Classes\FirefoxURL\shell\open\command" ""
     ${GetPathFromString} "$0" $0
     ${GetParent} "$0" $0
@@ -50,19 +58,8 @@ FunctionEnd
       ${GetLongPath} "$0" $0
     ${EndIf}
     ${If} "$0" == "$INSTDIR"
-
-      ; PostUpdate is called from both session 0 and from the user session
-      ; for service updates, make sure that we only register with the user session
-      ; Otherwise ApplicationID::Set can fail intermittently with a file in use error.
-      System::Call "kernel32::GetCurrentProcessId() i.r0"
-      System::Call "kernel32::ProcessIdToSessionId(i $0, *i ${NSIS_MAX_STRLEN} r9)"
-      
-      ${If} $9 != 0 ; We're not running in session 0
-        ; Win8 specific registration
-        Call RegisterStartMenuTile
-      ${EndIf}
-
-
+      ; Win8 specific registration
+      Call RegisterStartMenuTile
     ${EndIf}
   ${EndIf}
 

@@ -4,14 +4,14 @@
 
 "use strict";
 
-let xulApp = require("api-utils/xul-app");
+let xulApp = require("sdk/system/xul-app");
 if (xulApp.versionInRange(xulApp.platformVersion, "16.0a1", "*")) {
 new function tests() {
 
 const { indexedDB, IDBKeyRange, DOMException, IDBCursor, IDBTransaction,
         IDBOpenDBRequest, IDBVersionChangeEvent, IDBDatabase, IDBFactory,
         IDBIndex, IDBObjectStore, IDBRequest
-      } = require("indexed-db");
+      } = require("sdk/indexed-db");
 
 exports["test indexedDB is frozen"] = function(assert){
   let original = indexedDB.open;
