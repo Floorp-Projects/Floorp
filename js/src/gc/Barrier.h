@@ -374,14 +374,20 @@ class EncapsulatedValue : public ValueOperations<EncapsulatedValue>
      * implementations.
      */
     EncapsulatedValue() MOZ_DELETE;
-    EncapsulatedValue(const EncapsulatedValue &v) MOZ_DELETE;
-    EncapsulatedValue &operator=(const Value &v) MOZ_DELETE;
-    EncapsulatedValue &operator=(const EncapsulatedValue &v) MOZ_DELETE;
 
-    EncapsulatedValue(const Value &v) : value(v) {}
-    ~EncapsulatedValue() {}
 
   public:
+    EncapsulatedValue(const Value &v) : value(v) {
+        JS_ASSERT(!IsPoisonedValue(v));
+    }
+    EncapsulatedValue(const EncapsulatedValue &v) : value(v) {
+        JS_ASSERT(!IsPoisonedValue(v));
+    }
+    inline ~EncapsulatedValue();
+
+    inline EncapsulatedValue &operator=(const Value &v);
+    inline EncapsulatedValue &operator=(const EncapsulatedValue &v);
+
     bool operator==(const EncapsulatedValue &v) const { return value == v.value; }
     bool operator!=(const EncapsulatedValue &v) const { return value != v.value; }
 
