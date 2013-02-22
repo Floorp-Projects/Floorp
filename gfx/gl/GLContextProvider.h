@@ -10,6 +10,7 @@
 #include "gfxTypes.h"
 #include "gfxPoint.h"
 #include "nsAutoPtr.h"
+#include "SurfaceTypes.h"
 
 class nsIWidget;
 class gfxASurface;

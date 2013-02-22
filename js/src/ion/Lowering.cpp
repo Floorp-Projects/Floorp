@@ -1634,6 +1634,18 @@ LIRGenerator::visitMonitorTypes(MMonitorTypes *ins)
 }
 
 bool
+LIRGenerator::visitExcludeType(MExcludeType *ins)
+{
+    LExcludeType *filter = new LExcludeType(temp());
+    if (!useBox(filter, LExcludeType::Input, ins->input()))
+        return false;
+    if (!assignSnapshot(filter, ins->bailoutKind()))
+        return false;
+    filter->setMir(ins);
+    return add(filter);
+}
+
+bool
 LIRGenerator::visitArrayLength(MArrayLength *ins)
 {
     JS_ASSERT(ins->elements()->type() == MIRType_Elements);

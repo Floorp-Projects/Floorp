@@ -142,7 +142,7 @@ GetFunctionNameBytes(JSContext *cx, JSFunction *fun, JSAutoByteString *bytes)
 {
     JSAtom *atom = fun->atom();
     if (atom)
-        return bytes->encode(cx, atom);
+        return bytes->encodeLatin1(cx, atom);
     return js_anonymous_str;
 }
 
