@@ -2004,7 +2004,7 @@ function createHandlerFunc(handler)
  */
 function defaultIndexHandler(metadata, response)
 {
-  response.setHeader("Content-Type", "text/html", false);
+  response.setHeader("Content-Type", "text/html;charset=utf-8", false);
 
   var path = htmlEscape(decodeURI(metadata.path));
 
@@ -3214,7 +3214,7 @@ ServerHandler.prototype =
     {
       // none of the data in metadata is reliable, so hard-code everything here
       response.setStatusLine("1.1", 400, "Bad Request");
-      response.setHeader("Content-Type", "text/plain", false);
+      response.setHeader("Content-Type", "text/plain;charset=utf-8", false);
 
       var body = "Bad request\n";
       response.bodyOutputStream.write(body, body.length);
@@ -3222,7 +3222,7 @@ ServerHandler.prototype =
     403: function(metadata, response)
     {
       response.setStatusLine(metadata.httpVersion, 403, "Forbidden");
-      response.setHeader("Content-Type", "text/html", false);
+      response.setHeader("Content-Type", "text/html;charset=utf-8", false);
 
       var body = "<html>\
                     <head><title>403 Forbidden</title></head>\
@@ -3235,7 +3235,7 @@ ServerHandler.prototype =
     404: function(metadata, response)
     {
       response.setStatusLine(metadata.httpVersion, 404, "Not Found");
-      response.setHeader("Content-Type", "text/html", false);
+      response.setHeader("Content-Type", "text/html;charset=utf-8", false);
 
       var body = "<html>\
                     <head><title>404 Not Found</title></head>\
@@ -3255,7 +3255,7 @@ ServerHandler.prototype =
       response.setStatusLine(metadata.httpVersion,
                             416,
                             "Requested Range Not Satisfiable");
-      response.setHeader("Content-Type", "text/html", false);
+      response.setHeader("Content-Type", "text/html;charset=utf-8", false);
 
       var body = "<html>\
                    <head>\
@@ -3274,7 +3274,7 @@ ServerHandler.prototype =
       response.setStatusLine(metadata.httpVersion,
                              500,
                              "Internal Server Error");
-      response.setHeader("Content-Type", "text/html", false);
+      response.setHeader("Content-Type", "text/html;charset=utf-8", false);
 
       var body = "<html>\
                     <head><title>500 Internal Server Error</title></head>\
@@ -3289,7 +3289,7 @@ ServerHandler.prototype =
     501: function(metadata, response)
     {
       response.setStatusLine(metadata.httpVersion, 501, "Not Implemented");
-      response.setHeader("Content-Type", "text/html", false);
+      response.setHeader("Content-Type", "text/html;charset=utf-8", false);
 
       var body = "<html>\
                     <head><title>501 Not Implemented</title></head>\
@@ -3303,7 +3303,7 @@ ServerHandler.prototype =
     505: function(metadata, response)
     {
       response.setStatusLine("1.1", 505, "HTTP Version Not Supported");
-      response.setHeader("Content-Type", "text/html", false);
+      response.setHeader("Content-Type", "text/html;charset=utf-8", false);
 
       var body = "<html>\
                     <head><title>505 HTTP Version Not Supported</title></head>\
@@ -3325,7 +3325,7 @@ ServerHandler.prototype =
     "/": function(metadata, response)
     {
       response.setStatusLine(metadata.httpVersion, 200, "OK");
-      response.setHeader("Content-Type", "text/html", false);
+      response.setHeader("Content-Type", "text/html;charset=utf-8", false);
 
       var body = "<html>\
                     <head><title>httpd.js</title></head>\
@@ -3343,7 +3343,7 @@ ServerHandler.prototype =
     "/trace": function(metadata, response)
     {
       response.setStatusLine(metadata.httpVersion, 200, "OK");
-      response.setHeader("Content-Type", "text/plain", false);
+      response.setHeader("Content-Type", "text/plain;charset=utf-8", false);
 
       var body = "Request-URI: " +
                  metadata.scheme + "://" + metadata.host + ":" + metadata.port +
