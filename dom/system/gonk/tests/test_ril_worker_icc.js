@@ -1437,7 +1437,13 @@ add_test(function test_parse_pbr_tlvs() {
      length: 0x05,
      value: [{tag: ICC_USIM_EFEMAIL_TAG,
               length: 0x03,
-              value: [0x4F, 0x50, 0x0B]}]
+              value: [0x4F, 0x50, 0x0B]},
+             {tag: ICC_USIM_EFANR_TAG,
+              length: 0x03,
+              value: [0x4F, 0x11, 0x02]},
+             {tag: ICC_USIM_EFANR_TAG,
+              length: 0x03,
+              value: [0x4F, 0x12, 0x03]}]
     },
     {tag: ICC_USIM_TYPE3_TAG,
      length: 0x0A,
@@ -1455,6 +1461,8 @@ add_test(function test_parse_pbr_tlvs() {
   do_check_eq(pbr.iap.fileId, 0x4F25);
   do_check_eq(pbr.pbc.fileId, 0x4F09);
   do_check_eq(pbr.email.fileId, 0x4F50);
+  do_check_eq(pbr.anr0.fileId, 0x4f11);
+  do_check_eq(pbr.anr1.fileId, 0x4f12);
   do_check_eq(pbr.ccp1.fileId, 0x4F3D);
   do_check_eq(pbr.ext1.fileId, 0x4F4A);
 
@@ -1761,5 +1769,98 @@ add_test(function test_read_email() {
   doTestReadEmail(ICC_USIM_TYPE2_TAG, "email@mozilla.com");
 
   run_next_test();
+});
+
+/**
+ * Verify ICCRecordHelper.readANR
+ */
+add_test(function test_read_email() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+  let record = worker.ICCRecordHelper;
+  let buf    = worker.Buf;
+  let io     = worker.ICCIOHelper;
+
+  io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options)  {
+    let anr_1 = [
+      0x01, 0x05, 0x81, 0x10, 0x32,
+      0x54, 0xF6, 0xFF, 0xFF];
+
+    // Write data size
+    buf.writeUint32(anr_1.length * 2);
+
+    // Write anr
+    for (let i = 0; i < anr_1.length; i++) {
+      helper.writeHexOctet(anr_1[i]);
+    }
+
+    // Write string delimiter
+    buf.writeStringDelimiter(anr_1.length * 2);
+
+    if (options.callback) {
+      options.callback(options);
+    }
+  };
+
+  function doTestReadAnr(fileType, expectedResult) {
+    let fileId = 0x4f11;
+    let recordNumber = 1;
+
+    // fileId and recordNumber are dummy arguments.
+    record.readANR(fileId, fileType, recordNumber, function (anr) {
+      do_check_eq(anr, expectedResult);
+    });
+  };
+
+  doTestReadAnr(ICC_USIM_TYPE1_TAG, "0123456");
+
+  run_next_test();
+});
+
+/**
+ * Verify ICCContactHelper.readICCContacts
+ */
+add_test(function test_read_icc_contacts() {
+  let worker = newUint8Worker();
+  let record = worker.ICCRecordHelper;
+  let contactHelper = worker.ICCContactHelper;
+
+  // Override some functions to test.
+  contactHelper.getContactFieldRecordId = function (pbr, contact, field, onsuccess, onerror) {
+    onsuccess(1);
+  };
+
+  record.readPBR = function readPBR(onsuccess, onerror) {
+    onsuccess({adn:{}, email: {}, anr0: {}});
+  };
+
+  record.readADN = function readADN(fileId, onsuccess, onerror) {
+    onsuccess([{alphaId: "name", number: "111111"}])
+  };
+
+  record.readEmail = function readEmail(fileId, fileType, recordNumber, onsuccess, onerror) {
+    onsuccess("hello@mail.com");
+  };
+
+  record.readANR = function readANR(fileId, fileType, recordNumber, onsuccess, onerror) {
+    onsuccess("123456");
+  };
+
+  let successCb = function successCb(contacts) {
+    let contact = contacts[0];
+    do_check_eq(contact.alphaId, "name");
+    do_check_eq(contact.number, "111111");
+    do_check_eq(contact.email, "hello@mail.com");
+    do_check_eq(contact.anr[0], "123456");
+    run_next_test();
+  };
+
+  let errorCb = function errorCb(errorMsg) {
+    do_print(errorMsg);
+    do_check_true(false);
+    run_next_test();
+  };
+
+  contactHelper.readICCContacts(CARD_APPTYPE_USIM, "ADN", successCb, errorCb);
 });
 
