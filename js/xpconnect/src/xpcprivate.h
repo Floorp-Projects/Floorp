@@ -1760,6 +1760,7 @@ private:
 
     JSBool mExperimentalBindingsEnabled;
     bool mIsXBLScope;
+    bool mUseXBLScope;
 };
 
 /***************************************************************************/

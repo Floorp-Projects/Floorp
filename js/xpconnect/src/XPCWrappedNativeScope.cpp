@@ -128,6 +128,19 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
     // Attach ourselves to the compartment private.
     CompartmentPrivate *priv = EnsureCompartmentPrivate(aGlobal);
     priv->scope = this;
+
+    // Determine whether to use an XBL scope or not.
+    mUseXBLScope = XPCJSRuntime::Get()->XBLScopesEnabled();
+    if (mUseXBLScope) {
+      js::Class *clasp = js::GetObjectClass(mGlobalJSObject);
+      mUseXBLScope = !strcmp(clasp->name, "Window") ||
+                     !strcmp(clasp->name, "ChromeWindow") ||
+                     !strcmp(clasp->name, "ModalContentWindow");
+    }
+    if (mUseXBLScope) {
+      nsIPrincipal *principal = GetPrincipal();
+      mUseXBLScope = principal && !nsContentUtils::IsSystemPrincipal(principal);
+    }
 }
 
 // static
@@ -180,21 +193,8 @@ XPCWrappedNativeScope::EnsureXBLScope(JSContext *cx)
     if (mXBLScope)
         return mXBLScope;
 
-    // We should only be applying XBL bindings in DOM scopes.
-    MOZ_ASSERT(!strcmp(js::GetObjectClass(mGlobalJSObject)->name, "Window") ||
-               !strcmp(js::GetObjectClass(mGlobalJSObject)->name, "ChromeWindow") ||
-               !strcmp(js::GetObjectClass(mGlobalJSObject)->name, "ModalContentWindow"));
-
-    // Get the scope principal. If it's system, there's no reason to make
-    // a separate XBL scope.
-    nsIPrincipal *principal = GetPrincipal();
-    if (!principal)
-        return nullptr;
-    if (nsContentUtils::IsSystemPrincipal(principal))
-        return global;
-
-    // Check the pref. If XBL scopes are disabled, just return the global.
-    if (!XPCJSRuntime::Get()->XBLScopesEnabled())
+    // If this scope doesn't need an XBL scope, just return the global.
+    if (!mUseXBLScope)
         return global;
 
     // Set up the sandbox options. Note that we use the DOM global as the
@@ -212,6 +212,7 @@ XPCWrappedNativeScope::EnsureXBLScope(JSContext *cx)
     options.proto = global;
 
     // Use an nsExpandedPrincipal to create asymmetric security.
+    nsIPrincipal *principal = GetPrincipal();
     nsCOMPtr<nsIExpandedPrincipal> ep;
     MOZ_ASSERT(!(ep = do_QueryInterface(principal)));
     nsTArray< nsCOMPtr<nsIPrincipal> > principalAsArray(1);
