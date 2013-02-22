@@ -104,6 +104,14 @@ public:
   virtual MediaConduitErrorCode AttachTransport(mozilla::RefPtr<TransportInterface> aTransport);
 
   /**
+   * Function to select and change the encoding resolution based on incoming frame size
+   * and current available bandwidth.
+   * @param width, height: dimensions of the frame
+   */
+  virtual bool SelectSendResolution(unsigned short width,
+                                    unsigned short height);
+
+  /**
    * Function to deliver a capture video frame for encoding and transport
    * @param video_frame: pointer to captured video-frame.
    * @param video_frame_length: size of the frame
@@ -160,7 +168,9 @@ public:
                       mEngineReceiving(false),
                       mChannel(-1),
                       mCapId(-1),
-                      mCurSendCodecConfig(nullptr)
+                      mCurSendCodecConfig(nullptr),
+                      mSendingWidth(0),
+                      mSendingHeight(0)
   {
   }
 
@@ -218,6 +228,8 @@ private:
   int mCapId;   // Capturer for this conduit
   RecvCodecList    mRecvCodecList;
   VideoCodecConfig* mCurSendCodecConfig;
+  unsigned short mSendingWidth;
+  unsigned short mSendingHeight;
 
   mozilla::RefPtr<WebrtcAudioConduit> mSyncedTo;
 };
