@@ -3,9 +3,6 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=821850
 -->
 <head>
-  <title>Test for Bug 821850</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <bindings xmlns="http://www.mozilla.org/xbl">
     <binding id="testBinding">
       <implementation>
@@ -87,8 +84,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
   <script type="application/javascript">
   <![CDATA[
 
-  /** Test for XBL scope behavior. **/
-  SimpleTest.waitForExplicitFinish();
+  ok = parent.ok;
+  is = parent.is;
+  SimpleTest = parent.SimpleTest;
+  SpecialPowers = parent.SpecialPowers;
 
   // Test the Xray waiving behavior when accessing fields. We should be able to
   // see sequential JS-implemented properties, but should regain Xrays when we
@@ -112,7 +111,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
     checkThrows(function() window.functionExpando.prop);
 
     // Inspect the bound element.
-    var bound = $('bound');
+    var bound = document.getElementById('bound');
     is(bound.primitiveField, 2, "Can see primitive fields");
     is(typeof bound.objectField, "object", "objectField exists");
     checkThrows(function() bound.objectField.foo);
@@ -191,14 +190,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
   }
 
   function setup() {
-    SpecialPowers.pushPrefEnv({set: [['dom.xbl_scopes', true]] }, continueSetup);
-  }
-
-  function continueSetup() {
     // When the bindings are applied, the constructor will be invoked and the
     // test will continue.
-    $('bound').style.MozBinding = 'url(#testBinding)';
-    $('bound2').style.MozBinding = 'url(#testBinding)';
+    document.getElementById('bound').style.MozBinding = 'url(#testBinding)';
+    document.getElementById('bound2').style.MozBinding = 'url(#testBinding)';
   }
 
   ]]>

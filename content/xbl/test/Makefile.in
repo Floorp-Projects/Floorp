@@ -38,7 +38,8 @@ MOCHITEST_FILES =	\
 		file_bug591198_inner.html \
 		test_bug639338.xhtml \
 		test_bug790265.xhtml \
-		test_bug821850.xhtml \
+		test_bug821850.html \
+		file_bug821850.xhtml \
 		$(NULL)
 
 MOCHITEST_CHROME_FILES = \
