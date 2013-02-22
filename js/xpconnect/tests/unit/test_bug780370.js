@@ -16,5 +16,8 @@ function run_test()
   do_check_eq(Cu.evalInSandbox('typeof obj.foo', sb), 'undefined', "COW works as expected");
   do_check_true(Cu.evalInSandbox('obj.hasOwnProperty === Object.prototype.hasOwnProperty', sb),
                 "Remapping happens even when the property is explicitly exposed");
-  do_check_eq(Cu.evalInSandbox('Object.prototype.bar = 10; obj.bar', sb), 10);
+  // NB: We used to test for the following, but such behavior became very
+  // difficult to implement in a recent refactor. We're moving away from this
+  // API anyway, so we decided to explicitly drop support for this.
+  // do_check_eq(Cu.evalInSandbox('Object.prototype.bar = 10; obj.bar', sb), 10);
 }
