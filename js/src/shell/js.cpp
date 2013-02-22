@@ -301,118 +301,6 @@ GetLine(FILE *file, const char * prompt)
     return NULL;
 }
 
-static size_t
-GetDeflatedUTF8StringLength(JSContext *cx, const jschar *chars,
-                            size_t nchars)
-{
-    size_t nbytes;
-    const jschar *end;
-    unsigned c, c2;
-
-    nbytes = nchars;
-    for (end = chars + nchars; chars != end; chars++) {
-        c = *chars;
-        if (c < 0x80)
-            continue;
-        if (0xD800 <= c && c <= 0xDFFF) {
-            /* nbytes sets 1 length since this is surrogate pair. */
-            if (c >= 0xDC00 || (chars + 1) == end) {
-                nbytes += 2; /* Bad Surrogate */
-                continue;
-            }
-            c2 = chars[1];
-            if (c2 < 0xDC00 || c2 > 0xDFFF) {
-                nbytes += 2; /* Bad Surrogate */
-                continue;
-            }
-            c = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
-            nbytes--;
-            chars++;
-        }
-        c >>= 11;
-        nbytes++;
-        while (c) {
-            c >>= 5;
-            nbytes++;
-        }
-    }
-    return nbytes;
-}
-
-static bool
-PutUTF8ReplacementCharacter(char **dst, size_t *dstlenp) {
-    if (*dstlenp < 3)
-        return false;
-    *(*dst)++ = (char) 0xEF;
-    *(*dst)++ = (char) 0xBF;
-    *(*dst)++ = (char) 0xBD;
-    *dstlenp -= 3;
-    return true;
-}
-
-/*
- * Write up to |*dstlenp| bytes into |dst|.  Writes the number of bytes used
- * into |*dstlenp| on success.  Returns false on failure.
- */
-static bool
-DeflateStringToUTF8Buffer(JSContext *cx, const jschar *src, size_t srclen,
-                          char *dst, size_t *dstlenp)
-{
-    size_t dstlen = *dstlenp;
-    size_t origDstlen = dstlen;
-
-    while (srclen) {
-        uint32_t v;
-        jschar c = *src++;
-        srclen--;
-        if (c >= 0xDC00 && c <= 0xDFFF) {
-            if (!PutUTF8ReplacementCharacter(&dst, &dstlen))
-                goto bufferTooSmall;
-            continue;
-        } else if (c < 0xD800 || c > 0xDBFF) {
-            v = c;
-        } else {
-            if (srclen < 1) {
-                if (!PutUTF8ReplacementCharacter(&dst, &dstlen))
-                    goto bufferTooSmall;
-                continue;
-            }
-            jschar c2 = *src;
-            if ((c2 < 0xDC00) || (c2 > 0xDFFF)) {
-                if (!PutUTF8ReplacementCharacter(&dst, &dstlen))
-                    goto bufferTooSmall;
-                continue;
-            }
-            src++;
-            srclen--;
-            v = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
-        }
-        size_t utf8Len;
-        if (v < 0x0080) {
-            /* no encoding necessary - performance hack */
-            if (dstlen == 0)
-                goto bufferTooSmall;
-            *dst++ = (char) v;
-            utf8Len = 1;
-        } else {
-            uint8_t utf8buf[4];
-            utf8Len = js_OneUcs4ToUtf8Char(utf8buf, v);
-            if (utf8Len > dstlen)
-                goto bufferTooSmall;
-            for (size_t i = 0; i < utf8Len; i++)
-                *dst++ = (char) utf8buf[i];
-        }
-        dstlen -= utf8Len;
-    }
-    *dstlenp = (origDstlen - dstlen);
-    return true;
-
-bufferTooSmall:
-    *dstlenp = (origDstlen - dstlen);
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BUFFER_TOO_SMALL);
-    return false;
-}
-
 static char *
 JSStringToUTF8(JSContext *cx, JSString *str)
 {
@@ -420,22 +308,7 @@ JSStringToUTF8(JSContext *cx, JSString *str)
     if (!linear)
         return NULL;
 
-    const jschar *chars = linear->chars();
-    size_t length = linear->length();
-
-    size_t tgtlen = GetDeflatedUTF8StringLength(cx, chars, length);
-    char *utf8chars = cx->pod_malloc<char>(tgtlen + 1);
-    if (!utf8chars)
-        return NULL;
-
-    bool ok = DeflateStringToUTF8Buffer(cx, chars, length, utf8chars, &tgtlen);
-    if (!ok) {
-        JS_free(cx, utf8chars);
-        return NULL;
-    }
-
-    utf8chars[tgtlen] = 0;
-    return utf8chars;
+    return TwoByteCharsToNewUTF8CharsZ(cx, linear->range()).c_str();
 }
 
 /*
