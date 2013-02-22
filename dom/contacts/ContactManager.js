@@ -437,6 +437,13 @@ ContactManager.prototype = {
               prop.email = [{value: c.email}];
             }
 
+            // ANR - Additional Number
+            if (c.anr) {
+              for (let i = 0; i < c.anr.length; i++) {
+                prop.tel.push({value: c.anr[i]});
+              }
+            }
+
             contact.init(prop);
             return contact;
           });
