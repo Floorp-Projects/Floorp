@@ -294,9 +294,6 @@ XPCWrappedNativeScope::SetGlobal(JSContext *cx, JSObject* aGlobal)
     // nsXPConnect::InitClassesWithNewWrappedGlobal.
     mGlobalJSObject = aGlobal;
 
-    // Clear the no helper wrapper prototype object so that a new one
-    // gets created if needed.
-    mPrototypeNoHelper = nullptr;
 }
 
 XPCWrappedNativeScope::~XPCWrappedNativeScope()
@@ -729,6 +726,10 @@ WNProtoRemover(JSDHashTable *table, JSDHashEntryHdr *hdr,
 void
 XPCWrappedNativeScope::RemoveWrappedNativeProtos()
 {
+    // Clear the no helper wrapper prototype object so that a new one
+    // gets created if needed.
+    mPrototypeNoHelper = nullptr;
+
     XPCAutoLock al(XPCJSRuntime::Get()->GetMapLock());
 
     mWrappedNativeProtoMap->Enumerate(WNProtoRemover,
