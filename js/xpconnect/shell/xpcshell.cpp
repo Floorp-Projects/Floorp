@@ -1894,6 +1894,7 @@ main(int argc, char **argv, char **envp)
         rv = xpc->InitClassesWithNewWrappedGlobal(cx, backstagePass,
                                                   systemprincipal,
                                                   0,
+                                                  JS::SystemZone,
                                                   getter_AddRefs(holder));
         if (NS_FAILED(rv))
             return 1;

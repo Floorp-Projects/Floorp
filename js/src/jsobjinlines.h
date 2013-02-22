@@ -790,7 +790,6 @@ JSObject::setType(js::types::TypeObject *newType)
     JS_ASSERT_IF(getClass()->emulatesUndefined(),
                  newType->hasAnyFlags(js::types::OBJECT_FLAG_EMULATES_UNDEFINED));
     JS_ASSERT(!hasSingletonType());
-    JS_ASSERT(compartment() == newType->compartment());
     type_ = newType;
 }
 
@@ -940,7 +939,6 @@ JSObject::create(JSContext *cx, js::gc::AllocKind kind, js::gc::InitialHeap heap
     JS_ASSERT(type->clasp != &js::ArrayClass);
     JS_ASSERT(!!dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan()) == !!slots);
     JS_ASSERT(js::gc::GetGCKindSlots(kind, type->clasp) == shape->numFixedSlots());
-    JS_ASSERT(cx->compartment == type->compartment());
 
     JSObject *obj = js_NewGCObject<js::CanGC>(cx, kind, heap);
     if (!obj)
@@ -970,7 +968,6 @@ JSObject::createArray(JSContext *cx, js::gc::AllocKind kind, js::gc::InitialHeap
     JS_ASSERT(shape && type);
     JS_ASSERT(type->clasp == shape->getObjectClass());
     JS_ASSERT(type->clasp == &js::ArrayClass);
-    JS_ASSERT(cx->compartment == type->compartment());
 
     /*
      * Arrays use their fixed slots to store elements, and must have enough
@@ -1311,9 +1308,14 @@ JSObject::global() const
     JSObject *obj = const_cast<JSObject *>(this);
     while (JSObject *parent = obj->getParent())
         obj = parent;
-    JS_ASSERT(&obj->asGlobal() == compartment()->maybeGlobal());
 #endif
     return *compartment()->maybeGlobal();
+}
+
+inline JSCompartment *
+JSObject::compartment() const
+{
+    return lastProperty()->base()->compartment();
 }
 
 static inline bool
