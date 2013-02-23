@@ -13,7 +13,7 @@ interface nsIDocShell;
  * Describes an XPCOM component used to model an enforce CSPs.
  */
 
-[scriptable, uuid(230b126d-afc3-4588-9794-3e135594d626)]
+[scriptable, uuid(d1680bb4-1ac0-4772-9437-1188375e44f2)]
 interface nsIContentSecurityPolicy : nsISupports
 {
 
@@ -41,13 +41,6 @@ interface nsIContentSecurityPolicy : nsISupports
   readonly attribute boolean allowsInlineScript;
 
   /**
-   * Whether this policy allows in-page styles.
-   * This includes <style> tags with text content and style="" attributes in
-   * HTML elements.
-   */
-  readonly attribute boolean allowsInlineStyle;
-
-  /**
    * whether this policy allows eval and eval-like functions
    * such as setTimeout("code string", time).
    */
@@ -73,7 +66,6 @@ interface nsIContentSecurityPolicy : nsISupports
 
   const unsigned short VIOLATION_TYPE_INLINE_SCRIPT = 1;
   const unsigned short VIOLATION_TYPE_EVAL = 2;
-  const unsigned short VIOLATION_TYPE_INLINE_STYLE = 3;
 
   /**
    * Manually triggers violation report sending given a URI and reason.
