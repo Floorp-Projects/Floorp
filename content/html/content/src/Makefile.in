@@ -21,7 +21,6 @@ endif # !_MSC_VER
 EXPORTS		= \
 		HTMLPropertiesCollection.h \
 		nsGenericHTMLElement.h \
-		nsHTMLIFrameElement.h \
 		nsClientRect.h \
 		nsHTMLDNSPrefetch.h \
 		nsTimeRanges.h \
@@ -43,6 +42,7 @@ EXPORTS_mozilla/dom = \
 		HTMLFrameSetElement.h \
 		HTMLHeadingElement.h \
 		HTMLHRElement.h \
+		HTMLIFrameElement.h \
 		HTMLImageElement.h \
 		HTMLLabelElement.h \
 		HTMLLegendElement.h \
@@ -103,7 +103,7 @@ CPPSRCS		= \
 		HTMLFrameSetElement.cpp \
 		HTMLHRElement.cpp \
 		HTMLHeadingElement.cpp \
-		nsHTMLIFrameElement.cpp \
+		HTMLIFrameElement.cpp \
 		HTMLImageElement.cpp \
 		nsHTMLInputElement.cpp \
 		HTMLLIElement.cpp \
