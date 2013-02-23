@@ -87,8 +87,7 @@ public:
                        nsHTMLReflowMetrics* aMetrics,
                        bool& aPushedFrame);
 
-  nsresult AddBulletFrame(nsIFrame* aFrame,
-                          const nsHTMLReflowMetrics& aMetrics);
+  void AddBulletFrame(nsIFrame* aFrame, const nsHTMLReflowMetrics& aMetrics);
 
   void RemoveBulletFrame(nsIFrame* aFrame) {
     PushFrame(aFrame);
@@ -504,7 +503,10 @@ protected:
 #endif
   PLArenaPool mArena; // Per span and per frame data, 4 byte aligned
 
-  nsresult NewPerFrameData(PerFrameData** aResult);
+  /**
+   * Allocate a PerFrameData from the mArena pool. The allocation is infallible.
+   */
+  PerFrameData* NewPerFrameData();
 
   /**
    * Allocate a PerSpanData from the mArena pool. The allocation is infallible.
