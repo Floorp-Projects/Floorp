@@ -649,22 +649,33 @@ Provider.prototype = Object.freeze({
   /**
    * Obtain persisted provider state.
    *
-   * State is backend by storage.
+   * Provider state consists of key-value pairs of string names and values.
+   * Providers can stuff whatever they want into state. They are encouraged to
+   * store as little as possible for performance reasons.
+   *
+   * State is backed by storage and is robust.
+   *
+   * These functions do not enqueue on storage automatically, so they should
+   * be guarded by `enqueueStorageOperation` or some other mutex.
+   *
+   * @param key
+   *        (string) The property to retrieve.
+   *
+   * @return Promise<string|null> String value on success. null if no state
+   *         is available under this key.
    */
   getState: function (key) {
-    let name = this.name;
-    let storage = this.storage;
-    return storage.enqueueOperation(function get() {
-      return storage.getProviderState(name, key);
-    });
+    return this.storage.getProviderState(this.name, key);
   },
 
+  /**
+   * Set state for this provider.
+   *
+   * This is the complementary API for `getState` and obeys the same
+   * storage restrictions.
+   */
   setState: function (key, value) {
-    let name = this.name;
-    let storage = this.storage;
-    return storage.enqueueOperation(function set() {
-      return storage.setProviderState(name, key, value);
-    });
+    return this.storage.setProviderState(this.name, key, value);
   },
 
   _dateToDays: function (date) {
