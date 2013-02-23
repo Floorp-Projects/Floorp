@@ -194,6 +194,7 @@ load 400185-1.xul
 load 400445-1.xhtml
 load 400904-1.xhtml
 load 401589-1.xul
+needs-focus pref(accessibility.browsewithcaret,true) load 403048.html
 skip load 403175-1.html # times out occasionally, bug 473680
 load 403245-1.html
 load 403569-1.xhtml
