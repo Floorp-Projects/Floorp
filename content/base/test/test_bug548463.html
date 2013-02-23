@@ -64,10 +64,10 @@ var thrown = false;
 
 function changeOwnerDocument()
 {
-  elem1.setUserData("foo", null, null);
+  SpecialPowers.wrap(elem1).setUserData("foo", null, null);
   otherDoc.adoptNode(elem1);
 }
-elem1.setUserData("foo", "bar", changeOwnerDocument);
+SpecialPowers.wrap(elem1).setUserData("foo", "bar", changeOwnerDocument);
 try {
   document.adoptNode(elem1);
 }

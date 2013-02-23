@@ -102,9 +102,9 @@ interface Node : EventTarget {
   boolean isSupported(DOMString feature, DOMString version);
 
   boolean hasAttributes();
-  [Throws]
+  [Throws, Func="nsINode::ShouldExposeUserData"]
   any setUserData(DOMString key, any data, UserDataHandler? handler);
-  [Throws]
+  [Throws, Func="nsINode::ShouldExposeUserData"]
   any getUserData(DOMString key);
   [ChromeOnly]
   readonly attribute Principal nodePrincipal;
