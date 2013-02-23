@@ -63,7 +63,7 @@
   background-color: -moz-Dialog;
 }
 
-%ifdef WINSTRIPE_AERO
+%ifdef WINDOWS_AERO
 @media not all and (-moz-windows-compositor) {
 %endif
   #main-window[tabsintitlebar]:not([inFullscreen]) #toolbar-menubar[inactive] ~ #TabsToolbar:not(:-moz-lwtheme) {
@@ -84,7 +84,7 @@
     -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox");
     visibility: visible;
   }
-%ifdef WINSTRIPE_AERO
+%ifdef WINDOWS_AERO
 }
 %endif
 
@@ -128,7 +128,7 @@
   }
 }
 
-%ifndef WINSTRIPE_AERO
+%ifndef WINDOWS_AERO
 @media (-moz-windows-default-theme) {
   #main-window[sizemode="normal"] #appmenu-button {
     margin-bottom: 5px;
@@ -247,7 +247,7 @@
 
 .splitmenu-menuitem {
   -moz-margin-end: 1px;
-%ifdef WINSTRIPE_AERO
+%ifdef WINDOWS_AERO
   -moz-padding-end: 0.5em;
 %endif
 }
@@ -296,7 +296,7 @@
     box-shadow: -1px 0 2px rgb(204,214,234) inset;
   }
 
-%ifdef WINSTRIPE_AERO
+%ifdef WINDOWS_AERO
   #appmenuPrimaryPane menupopup {
     -moz-appearance: none;
     background-image: linear-gradient(to right, white 26px, ThreeDLightShadow 26px,
@@ -312,7 +312,7 @@
 
   #appmenuSecondaryPane menupopup {
     -moz-appearance: none;
-%ifdef WINSTRIPE_AERO
+%ifdef WINDOWS_AERO
     background-image: linear-gradient(to right, #f1f5fb 26px, ThreeDLightShadow 26px,
                                       ThreeDLightShadow 27px, ThreeDHighlight 27px,
                                       ThreeDHighlight 28px, #f1f5fb 28px);
@@ -328,7 +328,7 @@
 %endif
   }
 
-%ifdef WINSTRIPE_AERO
+%ifdef WINDOWS_AERO
   #appmenuPrimaryPane menupopup:-moz-locale-dir(rtl) {
     background-image: linear-gradient(to left, white 26px, ThreeDLightShadow 26px,
                                       ThreeDLightShadow 27px, ThreeDHighlight 27px,
@@ -345,7 +345,7 @@
     -moz-appearance: none;
     margin-top: 3px;
     margin-bottom: 3px;
-%ifdef WINSTRIPE_AERO
+%ifdef WINDOWS_AERO
     -moz-margin-start: 30px;
 %else
     -moz-margin-start: calc(1.45em + 4px);
@@ -460,7 +460,7 @@
 }
 
 .titlebar-placeholder[type="caption-buttons"] {
-%ifdef WINSTRIPE_AERO
+%ifdef WINDOWS_AERO
   margin-left: 22px; /* additional space for Aero Snap */
 %else
   margin-left: 10px;
@@ -782,7 +782,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   border-color: hsla(210,54%,20%,.3) hsla(210,54%,20%,.35) hsla(210,54%,20%,.4);
   box-shadow: 0 1px 1px hsla(210,54%,20%,.1) inset,
               0 0 1px hsla(210,54%,20%,.2) inset,
-              /* allows winstripe-keyhole-forward-clip-path to be used for non-hover as well as hover: */
+              /* allows windows-keyhole-forward-clip-path to be used for non-hover as well as hover: */
               0 1px 0 hsla(210,54%,20%,0),
               0 0 2px hsla(210,54%,20%,0);
   text-shadow: none;
@@ -861,7 +861,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 @conditionalForwardWithUrlbar@ > #forward-button > .toolbarbutton-icon {
   /*mask: url(keyhole-forward-mask.svg#mask); XXX: this regresses twinopen */
-  clip-path: url(chrome://browser/content/browser.xul#winstripe-keyhole-forward-clip-path);
+  clip-path: url(chrome://browser/content/browser.xul#windows-keyhole-forward-clip-path);
   -moz-margin-start: -6px !important;
   border-left-style: none;
   border-radius: 0;
@@ -1040,7 +1040,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   list-style-image: url(chrome://browser/skin/tabview/tabview.png);
 }
 
-%ifdef WINSTRIPE_AERO
+%ifdef WINDOWS_AERO
 :-moz-any(#TabsToolbar, #nav-bar[tabsontop=false], #toolbar-menubar) > #tabview-button:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
 :-moz-any(#TabsToolbar, #nav-bar[tabsontop=false], #toolbar-menubar) > toolbarpaletteitem > #tabview-button:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
 %endif
@@ -1191,7 +1191,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 
 @conditionalForwardWithUrlbar@[forwarddisabled] + #urlbar-container {
-  clip-path: url("chrome://browser/content/browser.xul#winstripe-urlbar-back-button-clip-path");
+  clip-path: url("chrome://browser/content/browser.xul#windows-urlbar-back-button-clip-path");
 }
 
 @conditionalForwardWithUrlbar@[forwarddisabled] + #urlbar-container > #urlbar {
@@ -1210,7 +1210,7 @@ toolbar[mode=full] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 @conditionalForwardWithUrlbar@ + #urlbar-container:-moz-locale-dir(rtl),
 @conditionalForwardWithUrlbar@ + #urlbar-container > #urlbar:-moz-locale-dir(rtl) {
-  /* let winstripe-urlbar-back-button-mask clip the urlbar's right side for RTL */
+  /* let windows-urlbar-back-button-mask clip the urlbar's right side for RTL */
   transform: scaleX(-1);
 }
 
@@ -1474,7 +1474,7 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
   color: -moz-nativehyperlinktext;
 }
 
-%ifndef WINSTRIPE_AERO
+%ifndef WINDOWS_AERO
 @media (-moz-windows-default-theme) {
   .ac-url-text:not([selected="true"]),
   .ac-action-text:not([selected="true"]) {
@@ -1489,7 +1489,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   padding: 0 3px;
 }
 
-%ifdef WINSTRIPE_AERO
+%ifdef WINDOWS_AERO
 @media not all and (-moz-windows-default-theme) {
 %endif
   richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-box > .ac-action-icon {
@@ -1501,7 +1501,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   .ac-action-text[selected="true"] {
     color: inherit !important;
   }
-%ifdef WINSTRIPE_AERO
+%ifdef WINDOWS_AERO
 }
 %endif
 
@@ -1781,7 +1781,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-image: linear-gradient(to top, @toolbarShadowColor@ 1px, rgba(0,0,0,.05) 1px, transparent 50%);
 }
 
-%ifndef WINSTRIPE_AERO
+%ifndef WINDOWS_AERO
 @media (-moz-windows-default-theme) {
   #main-window[sizemode=normal] #TabsToolbar {
     padding-left: 2px;
@@ -1813,7 +1813,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
                     linear-gradient(-moz-dialog, -moz-dialog);
 }
 
-%ifndef WINSTRIPE_AERO
+%ifndef WINDOWS_AERO
 @media (-moz-windows-theme: luna-blue) {
   .tabbrowser-tab,
   .tabs-newtab-button {
@@ -1944,7 +1944,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-origin: border-box;
 }
 
-%ifdef WINSTRIPE_AERO
+%ifdef WINDOWS_AERO
 .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
 .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
 %endif
@@ -1991,7 +1991,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-image-region: auto;
 }
 
-%ifdef WINSTRIPE_AERO
+%ifdef WINDOWS_AERO
 #TabsToolbar > #new-tab-button:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
 #TabsToolbar > toolbarpaletteitem > #new-tab-button:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
 %endif
@@ -2013,7 +2013,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   list-style-image: url("chrome://browser/skin/toolbarbutton-dropdown-arrow.png");
 }
 
-%ifdef WINSTRIPE_AERO
+%ifdef WINDOWS_AERO
 :-moz-any(#TabsToolbar, #nav-bar[tabsontop=false], #toolbar-menubar) > #alltabs-button:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
 :-moz-any(#TabsToolbar, #nav-bar[tabsontop=false], #toolbar-menubar) > toolbarpaletteitem > #alltabs-button:-moz-system-metric(windows-compositor):not(:-moz-lwtheme),
 %endif

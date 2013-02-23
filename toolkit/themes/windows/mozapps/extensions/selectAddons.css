@@ -167,13 +167,13 @@
 
 .progress-label,
 #footer-label {
-%ifdef WINSTRIPE_AERO
+%ifdef WINDOWS_AERO
   font-style: italic;
 %endif
   color: GrayText;
 }
 
-%ifdef WINSTRIPE_AERO
+%ifdef WINDOWS_AERO
 @media (-moz-windows-default-theme) {
   #footer {
     background-color: #f1f5fb;

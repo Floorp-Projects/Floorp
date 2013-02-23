@@ -8,7 +8,7 @@
 @import "chrome://global/skin/viewbuttons.css";
 
 /* Extensions will provide icons because the view buttons have icons
-   on the winstripe and gnomestripe themes. We don't want to display them */
+   on the windows and linux themes. We don't want to display them */
 .viewButtonIcon {
   display: none;
 }

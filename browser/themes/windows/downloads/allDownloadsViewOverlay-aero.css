@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%define WINSTRIPE_AERO
+%define WINDOWS_AERO
 %include allDownloadsViewOverlay.css
-%undef WINSTRIPE_AERO
+%undef WINDOWS_AERO
 
 @media (-moz-windows-default-theme) {
   /*
@@ -12,7 +12,7 @@
   transparent and is lighter than desired.
 
   Copied from the autocomplete richlistbox styling in
-  toolkit/themes/winstripe/global/autocomplete.css
+  toolkit/themes/windows/global/autocomplete.css
 
   This styling should be kept in sync with the style from the above file.
   */

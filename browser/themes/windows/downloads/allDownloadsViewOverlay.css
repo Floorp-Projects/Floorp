@@ -10,14 +10,14 @@
 
 #downloadsRichListBox > richlistitem.download {
   height: 6em;
-%ifndef WINSTRIPE_AERO
+%ifndef WINDOWS_AERO
   padding: 5px 8px;
 %endif
 }
 
 .downloadTypeIcon {
   -moz-margin-end: 8px;
-%ifdef WINSTRIPE_AERO
+%ifdef WINDOWS_AERO
   -moz-margin-start: 8px;
 %endif
   /* Prevent flickering when changing states. */
@@ -101,7 +101,7 @@ richlistitem.download:hover > .downloadButton.downloadRetry:active {
   -moz-image-region: rect(32px, 64px, 48px, 48px);
 }
 
-%ifndef WINSTRIPE_AERO
+%ifndef WINDOWS_AERO
 richlistitem.download[selected] > .downloadButton.downloadCancel {
   -moz-image-region: rect(0px, 80px, 16px, 64px);
 }

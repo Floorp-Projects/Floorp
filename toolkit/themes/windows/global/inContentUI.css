@@ -26,7 +26,7 @@ html|html {
   font: message-box;
 }
 
-%ifdef WINSTRIPE_AERO
+%ifdef WINDOWS_AERO
 @media (-moz-windows-default-theme) {
   *|*:root {
     color: #000;
@@ -80,7 +80,7 @@ html|html {
   border-radius: 5px;
 }
 
-%ifdef WINSTRIPE_AERO
+%ifdef WINDOWS_AERO
 @media (-moz-windows-compositor) {
   /* Buttons */
   *|button,
