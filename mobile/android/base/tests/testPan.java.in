@@ -47,5 +47,5 @@ public class testPan extends PixelTest {
         mAsserter.dumpLog("__start_report" + Integer.toString(frames) + "__end_report");
         long msecs = System.currentTimeMillis();
         mAsserter.dumpLog("__startTimestamp" + msecs + "__endTimestamp");
-    }	
+    }
 }
