@@ -20,7 +20,7 @@ public class testClearPrivateData extends PixelTest  {
 
     public void testClearPrivateData() {
         blockForGeckoReady();
-	clearHistory();
+        clearHistory();
     }
 
     private void clearHistory() {
