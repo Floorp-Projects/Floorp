@@ -114,10 +114,9 @@ protected:
 
   // Information neded to parse a declaration.  We need the mSheetURI
   // for error reporting, mBaseURI to resolve relative URIs,
-  // mPrincipal for subresource loads, mDocument for determining
-  // if there's a CSP that should block inline style, and mCSSLoader
-  // for determining whether we're in quirks mode.  mBaseURI needs to be a
-  // strong pointer because of xml:base possibly creating base URIs on the
+  // mPrincipal for subresource loads, and mCSSLoader for determining
+  // whether we're in quirks mode.  mBaseURI needs to be a strong
+  // pointer because of xml:base possibly creating base URIs on the
   // fly.  This is why we don't use CSSParsingEnvironment as a return
   // value, to avoid multiple-refcounting of mBaseURI.
   struct CSSParsingEnvironment {
@@ -125,7 +124,6 @@ protected:
     nsCOMPtr<nsIURI> mBaseURI;
     nsIPrincipal* mPrincipal;
     mozilla::css::Loader* mCSSLoader;
-    nsIDocument* mDocument;
   };
   
   // On failure, mPrincipal should be set to null in aCSSParseEnv.
