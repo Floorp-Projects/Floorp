@@ -1445,6 +1445,38 @@ class MApplyArgs
     }
 };
 
+class MGetDynamicName
+  : public MAryInstruction<2>,
+    public MixPolicy<ObjectPolicy<0>, StringPolicy<1> >
+{
+  protected:
+    MGetDynamicName(MDefinition *scopeChain, MDefinition *name)
+    {
+        setOperand(0, scopeChain);
+        setOperand(1, name);
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(GetDynamicName)
+
+    static MGetDynamicName *
+    New(MDefinition *scopeChain, MDefinition *name) {
+        return new MGetDynamicName(scopeChain, name);
+    }
+
+    MDefinition *getScopeChain() const {
+        return getOperand(0);
+    }
+    MDefinition *getName() const {
+        return getOperand(1);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
 class MCallDirectEval
   : public MAryInstruction<3>,
     public MixPolicy<ObjectPolicy<0>, MixPolicy<StringPolicy<1>, BoxPolicy<2> > >

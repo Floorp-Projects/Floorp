@@ -1012,6 +1012,43 @@ class LApplyArgsGeneric : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES +
     }
 };
 
+class LGetDynamicName : public LCallInstructionHelper<BOX_PIECES, 2, 3>
+{
+  public:
+    LIR_HEADER(GetDynamicName)
+
+    LGetDynamicName(const LAllocation &scopeChain, const LAllocation &name,
+                    const LDefinition &temp1, const LDefinition &temp2, const LDefinition &temp3)
+    {
+        setOperand(0, scopeChain);
+        setOperand(1, name);
+        setTemp(0, temp1);
+        setTemp(1, temp2);
+        setTemp(2, temp3);
+    }
+
+    MGetDynamicName *mir() const {
+        return mir_->toGetDynamicName();
+    }
+
+    const LAllocation *getScopeChain() {
+        return getOperand(0);
+    }
+    const LAllocation *getName() {
+        return getOperand(1);
+    }
+
+    const LDefinition *temp1() {
+        return getTemp(0);
+    }
+    const LDefinition *temp2() {
+        return getTemp(1);
+    }
+    const LDefinition *temp3() {
+        return getTemp(2);
+    }
+};
+
 class LCallDirectEval : public LCallInstructionHelper<BOX_PIECES, 2 + BOX_PIECES, 0>
 {
   public:

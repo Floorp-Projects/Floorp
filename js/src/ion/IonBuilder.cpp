@@ -4506,6 +4506,37 @@ IonBuilder::jsop_eval(uint32_t argc)
         current->pushSlot(info().thisSlot());
         MDefinition *thisValue = current->pop();
 
+        // Try to pattern match 'eval(v + "()")'. In this case v is likely a
+        // name on the scope chain and the eval is performing a call on that
+        // value. Use a dynamic scope chain lookup rather than a full eval.
+        if (string->isConcat() &&
+            string->getOperand(1)->isConstant() &&
+            string->getOperand(1)->toConstant()->value().isString())
+        {
+            JSString *str = string->getOperand(1)->toConstant()->value().toString();
+
+            JSBool match;
+            if (!JS_StringEqualsAscii(cx, str, "()", &match))
+                return false;
+            if (match) {
+                MDefinition *name = string->getOperand(0);
+                MInstruction *dynamicName = MGetDynamicName::New(scopeChain, name);
+                current->add(dynamicName);
+
+                MInstruction *thisv = MPassArg::New(thisValue);
+                current->add(thisv);
+
+                current->push(dynamicName);
+                current->push(thisv);
+
+                CallInfo evalCallInfo(cx, /* constructing = */ false);
+                if (!evalCallInfo.init(current, /* argc = */ 0))
+                    return false;
+
+                return makeCall(NullPtr(), evalCallInfo, NULL, false);
+            }
+        }
+
         MInstruction *ins = MCallDirectEval::New(scopeChain, string, thisValue);
         current->add(ins);
         current->push(ins);
