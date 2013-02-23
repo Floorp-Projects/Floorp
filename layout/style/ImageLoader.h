@@ -59,7 +59,7 @@ public:
 
   void SetAnimationMode(uint16_t aMode);
 
-  void ClearAll();
+  void ClearFrames();
 
   void LoadImage(nsIURI* aURI, nsIPrincipal* aPrincipal, nsIURI* aReferrer,
                  Image* aCSSValue);
