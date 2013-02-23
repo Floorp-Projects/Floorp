@@ -341,6 +341,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         const char *rendererMatchStrings[RendererOther] = {
                 "Adreno 200",
                 "Adreno 205",
+                "Adreno (TM) 320",
                 "PowerVR SGX 530",
                 "PowerVR SGX 540"
         };
@@ -613,6 +614,13 @@ GLContext::InitExtensions()
 #endif
 
     mAvailableExtensions.Load(extensions, sExtensionNames, firstRun && DebugMode());
+
+    if (WorkAroundDriverBugs() &&
+        Vendor() == VendorQualcomm) {
+
+        // Some Adreno drivers do not report GL_OES_EGL_sync, but they really do support it.
+        MarkExtensionSupported(OES_EGL_sync);
+    }
 
 #ifdef XP_MACOSX
     // The Mac Nvidia driver, for versions up to and including 10.8, don't seem

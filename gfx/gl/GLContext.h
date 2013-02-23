@@ -297,6 +297,7 @@ public:
     enum {
         RendererAdreno200,
         RendererAdreno205,
+        RendererAdreno320,
         RendererSGX530,
         RendererSGX540,
         RendererOther
@@ -1008,6 +1009,10 @@ public:
 
     void MarkExtensionUnsupported(GLExtensions aKnownExtension) {
         mAvailableExtensions[aKnownExtension] = 0;
+    }
+
+    void MarkExtensionSupported(GLExtensions aKnownExtension) {
+        mAvailableExtensions[aKnownExtension] = 1;
     }
 
     // Shared code for GL extensions and GLX extensions.
