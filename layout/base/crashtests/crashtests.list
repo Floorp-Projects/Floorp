@@ -246,6 +246,9 @@ load 444925-1.xul
 load 444967-1.html
 load 446328.html
 load 448488-1.html
+load 448543-1.html
+load 448543-2.html
+load 448543-3.html
 load 450319-1.xhtml
 asserts(3) load 453894-1.xhtml # Bug 575011
 load 454751-1.xul
