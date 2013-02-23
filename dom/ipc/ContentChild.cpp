@@ -565,6 +565,37 @@ PBrowserChild*
 ContentChild::AllocPBrowser(const IPCTabContext& aContext,
                             const uint32_t& aChromeFlags)
 {
+    // We'll happily accept any kind of IPCTabContext here; we don't need to
+    // check that it's of a certain type for security purposes, because we
+    // believe whatever the parent process tells us.
+
+    nsRefPtr<TabChild> child = TabChild::Create(TabContext(aContext), aChromeFlags);
+
+    // The ref here is released in DeallocPBrowser.
+    return child.forget().get();
+}
+
+bool
+ContentChild::RecvPBrowserConstructor(PBrowserChild* actor,
+                                      const IPCTabContext& context,
+                                      const uint32_t& chromeFlags)
+{
+    // This runs after AllocPBrowser() returns and the IPC machinery for this
+    // PBrowserChild has been set up.
+    //
+    // We have to NotifyObservers("tab-child-created") before we
+    // TemporarilyLockProcessPriority because the NotifyObservers call may cause
+    // us to initialize the ProcessPriorityManager, and
+    // TemporarilyLockProcessPriority only works after the
+    // ProcessPriorityManager has been initialized.
+
+    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+    if (os) {
+        nsITabChild* tc =
+            static_cast<nsITabChild*>(static_cast<TabChild*>(actor));
+        os->NotifyObservers(tc, "tab-child-created", nullptr);
+    }
+
     static bool hasRunOnce = false;
     if (!hasRunOnce) {
         hasRunOnce = true;
@@ -581,15 +612,9 @@ ContentChild::AllocPBrowser(const IPCTabContext& aContext,
         TemporarilyLockProcessPriority();
     }
 
-    // We'll happily accept any kind of IPCTabContext here; we don't need to
-    // check that it's of a certain type for security purposes, because we
-    // believe whatever the parent process tells us.
-
-    nsRefPtr<TabChild> child = TabChild::Create(TabContext(aContext), aChromeFlags);
-
-    // The ref here is released below.
-    return child.forget().get();
+    return true;
 }
+
 
 bool
 ContentChild::DeallocPBrowser(PBrowserChild* iframe)
