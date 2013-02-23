@@ -298,10 +298,7 @@ input:active,
 option:active,
 select:active,
 label:active,
-textarea:active {
+textarea:active,
+xul|menulist:active {
   background-color: @color_background_highlight_overlay@ !important;
-}
-
-xul|menulist {
-  -moz-binding: url("chrome://browser/content/bindings/menulist.xml#menulist");
 }
