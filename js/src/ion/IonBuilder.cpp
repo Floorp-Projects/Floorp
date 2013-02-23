@@ -2963,7 +2963,7 @@ IonBuilder::inlineScriptedCall(HandleFunction target, CallInfo &callInfo)
     AutoAccumulateExits aae(graph(), saveExits);
 
     TypeInferenceOracle oracle;
-    if (!oracle.init(cx, calleeScript))
+    if (!oracle.init(cx, calleeScript, /* inlinedCall = */ true))
         return false;
 
     IonBuilder inlineBuilder(cx, &temp(), &graph(), &oracle,
@@ -3104,7 +3104,7 @@ IonBuilder::jsop_call_inline(HandleFunction callee, CallInfo &callInfo, MBasicBl
     AutoAccumulateExits aae(graph(), saveExits);
 
     TypeInferenceOracle oracle;
-    if (!oracle.init(cx, calleeScript))
+    if (!oracle.init(cx, calleeScript, /* inlinedCall = */ true))
         return false;
 
     IonBuilder inlineBuilder(cx, &temp(), &graph(), &oracle,
