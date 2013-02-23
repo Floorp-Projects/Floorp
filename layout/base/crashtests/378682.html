@@ -1,0 +1,9 @@
+<html>
+<head>
+<title>Testcase bug - Crash [@ nsPresContext::GetContainerInternal] when removing window on focus and reloading</title>
+</head>
+<body>
+This page should not crash Mozilla
+<iframe src="data:text/html;charset=utf-8,%3Chtml%3E%3Chead%3E%3C/head%3E%0A%3Cbody%3E%0A%3Ciframe%3E%3C/iframe%3E%0A%3Cscript%3E%0Awindow.frames%5B0%5D.focus%28%29%3B%0AsetTimeout%28doe%2C%20200%29%3B%0Afunction%20doe%28%29%20%7B%0Awindow.frames%5B0%5D.location.reload%28%29%3B%0A%7D%0Afunction%20doe2%28%29%20%7B%0Awindow.addEventListener%28%27focus%27%2C%20function%28e%29%20%7Bwindow.frameElement.parentNode.removeChild%28window.frameElement%29%20%7D%2C%20true%29%3B%0A%7D%0AsetTimeout%28doe2%2C%2050%29%3B%0A%3C/script%3E%0A%3C/body%3E%0A%3C/html%3E"></iframe>
+</body>
+</html>
