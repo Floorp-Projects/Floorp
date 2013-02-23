@@ -179,8 +179,7 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
     mLineBox->ClearHasBullet();
   }
 
-  PerSpanData* psd;
-  NewPerSpanData(&psd);
+  PerSpanData* psd = NewPerSpanData();
   mCurrentSpan = mRootSpan = psd;
   psd->mReflowState = mBlockReflowState;
   psd->mLeftEdge = aX;
@@ -350,15 +349,15 @@ nsLineLayout::UpdateBand(const nsRect& aNewAvailSpace,
   mLastFloatWasLetterFrame = nsGkAtoms::letterFrame == aFloatFrame->GetType();
 }
 
-nsresult
-nsLineLayout::NewPerSpanData(PerSpanData** aResult)
+nsLineLayout::PerSpanData*
+nsLineLayout::NewPerSpanData()
 {
   PerSpanData* psd = mSpanFreeList;
-  if (nullptr == psd) {
+  if (!psd) {
     void *mem;
     PL_ARENA_ALLOCATE(mem, &mArena, sizeof(PerSpanData));
-    if (nullptr == mem) {
-      return NS_ERROR_OUT_OF_MEMORY;
+    if (!mem) {
+      NS_RUNTIMEABORT("OOM");
     }
     psd = reinterpret_cast<PerSpanData*>(mem);
   }
@@ -376,15 +375,13 @@ nsLineLayout::NewPerSpanData(PerSpanData** aResult)
 #ifdef DEBUG
   mSpansAllocated++;
 #endif
-  *aResult = psd;
-  return NS_OK;
+  return psd;
 }
 
-nsresult
+void
 nsLineLayout::BeginSpan(nsIFrame* aFrame,
                         const nsHTMLReflowState* aSpanReflowState,
-                        nscoord aLeftEdge,
-                        nscoord aRightEdge,
+                        nscoord aLeftEdge, nscoord aRightEdge,
                         nscoord* aBaseline)
 {
   NS_ASSERTION(aRightEdge != NS_UNCONSTRAINEDSIZE,
@@ -395,33 +392,28 @@ nsLineLayout::BeginSpan(nsIFrame* aFrame,
   printf(": BeginSpan leftEdge=%d rightEdge=%d\n", aLeftEdge, aRightEdge);
 #endif
 
-  PerSpanData* psd;
-  nsresult rv = NewPerSpanData(&psd);
-  if (NS_SUCCEEDED(rv)) {
-    // Link up span frame's pfd to point to its child span data
-    PerFrameData* pfd = mCurrentSpan->mLastFrame;
-    NS_ASSERTION(pfd->mFrame == aFrame, "huh?");
-    pfd->mSpan = psd;
+  PerSpanData* psd = NewPerSpanData();
+  // Link up span frame's pfd to point to its child span data
+  PerFrameData* pfd = mCurrentSpan->mLastFrame;
+  NS_ASSERTION(pfd->mFrame == aFrame, "huh?");
+  pfd->mSpan = psd;
 
-    // Init new span
-    psd->mFrame = pfd;
-    psd->mParent = mCurrentSpan;
-    psd->mReflowState = aSpanReflowState;
-    psd->mLeftEdge = aLeftEdge;
-    psd->mX = aLeftEdge;
-    psd->mRightEdge = aRightEdge;
-    psd->mBaseline = aBaseline;
+  // Init new span
+  psd->mFrame = pfd;
+  psd->mParent = mCurrentSpan;
+  psd->mReflowState = aSpanReflowState;
+  psd->mLeftEdge = aLeftEdge;
+  psd->mX = aLeftEdge;
+  psd->mRightEdge = aRightEdge;
+  psd->mBaseline = aBaseline;
 
-    psd->mNoWrap =
-      !aSpanReflowState->frame->StyleText()->WhiteSpaceCanWrap();
-    psd->mDirection = aSpanReflowState->mStyleVisibility->mDirection;
-    psd->mChangedFrameDirection = false;
+  psd->mNoWrap = !aSpanReflowState->frame->StyleText()->WhiteSpaceCanWrap();
+  psd->mDirection = aSpanReflowState->mStyleVisibility->mDirection;
+  psd->mChangedFrameDirection = false;
 
-    // Switch to new span
-    mCurrentSpan = psd;
-    mSpanDepth++;
-  }
-  return rv;
+  // Switch to new span
+  mCurrentSpan = psd;
+  mSpanDepth++;
 }
 
 nscoord

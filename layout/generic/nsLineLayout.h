@@ -68,11 +68,8 @@ public:
   void UpdateBand(const nsRect& aNewAvailableSpace,
                   nsIFrame* aFloatFrame);
 
-  nsresult BeginSpan(nsIFrame* aFrame,
-                     const nsHTMLReflowState* aSpanReflowState,
-                     nscoord aLeftEdge,
-                     nscoord aRightEdge,
-                     nscoord* aBaseline);
+  void BeginSpan(nsIFrame* aFrame, const nsHTMLReflowState* aSpanReflowState,
+                 nscoord aLeftEdge, nscoord aRightEdge, nscoord* aBaseline);
 
   // Returns the width of the span
   nscoord EndSpan(nsIFrame* aFrame);
@@ -509,7 +506,10 @@ protected:
 
   nsresult NewPerFrameData(PerFrameData** aResult);
 
-  nsresult NewPerSpanData(PerSpanData** aResult);
+  /**
+   * Allocate a PerSpanData from the mArena pool. The allocation is infallible.
+   */
+  PerSpanData* NewPerSpanData();
 
   void FreeSpan(PerSpanData* psd);
 
