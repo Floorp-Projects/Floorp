@@ -1,0 +1,17 @@
+<html class="reftest-print">
+<head>
+<title>Testcase bug - Crash [@ nsFrameList::InsertFrame] on print preview with positioned elements and page-break-before</title>
+</head>
+
+<body>
+<div style="position: relative; page-break-before: always;">
+  <div style="display: list-item;"></div>
+  <div style="position: absolute;">
+    <div style=" position: absolute;">
+      <div style="page-break-before: always; height: 100px;"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
