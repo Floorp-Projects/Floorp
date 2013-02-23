@@ -76,7 +76,10 @@ enum SwitchState {
 
 typedef Observer<SwitchEvent> SwitchObserver;
 
+// Note that we rely on the order of this enum's entries.  Higher priorities
+// should have larger int values.
 enum ProcessPriority {
+  PROCESS_PRIORITY_UNKNOWN = -1,
   PROCESS_PRIORITY_BACKGROUND,
   PROCESS_PRIORITY_BACKGROUND_HOMESCREEN,
   PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE,
@@ -261,7 +264,7 @@ struct ParamTraits<mozilla::hal::SwitchDevice>:
 template <>
 struct ParamTraits<mozilla::hal::ProcessPriority>:
   public EnumSerializer<mozilla::hal::ProcessPriority,
-                        mozilla::hal::PROCESS_PRIORITY_BACKGROUND,
+                        mozilla::hal::PROCESS_PRIORITY_UNKNOWN,
                         mozilla::hal::NUM_PROCESS_PRIORITY> {
 };
 
