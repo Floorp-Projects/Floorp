@@ -8,8 +8,6 @@
 <script type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 const Ci = Components.interfaces;
@@ -50,8 +48,6 @@ function startTest() {
 }
 
 function doNextTest(aWindow) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   info("Running test: " + currentTest);
   switch (currentTest) {
     // Initialy setup the quota to testing value of 1024B and
