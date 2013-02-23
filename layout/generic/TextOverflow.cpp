@@ -83,7 +83,8 @@ IsHorizontalOverflowVisible(nsIFrame* aFrame)
                   "expected a block frame");
 
   nsIFrame* f = aFrame;
-  while (f && f->StyleContext()->GetPseudo()) {
+  while (f && f->StyleContext()->GetPseudo() &&
+         f->GetType() != nsGkAtoms::scrollFrame) {
     f = f->GetParent();
   }
   return !f || f->StyleDisplay()->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE;
