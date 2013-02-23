@@ -860,6 +860,8 @@ ProcessPriorityToString(ProcessPriority aPriority)
     return "BACKGROUND_HOMESCREEN";
   case PROCESS_PRIORITY_BACKGROUND:
     return "BACKGROUND";
+  case PROCESS_PRIORITY_UNKNOWN:
+    return "UNKNOWN";
   default:
     MOZ_ASSERT(false);
     return "???";
