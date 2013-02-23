@@ -654,7 +654,7 @@ toolbar[mode="icons"] #forward-button {
 }
 
 #navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #forward-button {
-  clip-path: url(chrome://browser/content/browser.xul#pinstripe-keyhole-forward-clip-path);
+  clip-path: url(chrome://browser/content/browser.xul#osx-keyhole-forward-clip-path);
 }
 
 @conditionalForwardWithUrlbar@ > #forward-button:not(:-moz-lwtheme) {
@@ -1201,7 +1201,7 @@ toolbar[mode="icons"] #zoom-in-button {
 }
 
 @conditionalForwardWithUrlbar@[forwarddisabled] + #urlbar-container {
-  clip-path: url("chrome://browser/content/browser.xul#pinstripe-urlbar-back-button-clip-path");
+  clip-path: url("chrome://browser/content/browser.xul#osx-urlbar-back-button-clip-path");
 }
 
 @conditionalForwardWithUrlbar@[forwarddisabled] + #urlbar-container > #urlbar {
@@ -1220,7 +1220,7 @@ toolbar[mode="icons"] #zoom-in-button {
 
 @conditionalForwardWithUrlbar@ + #urlbar-container:-moz-locale-dir(rtl),
 @conditionalForwardWithUrlbar@ + #urlbar-container > #urlbar:-moz-locale-dir(rtl) {
-  /* let pinstripe-urlbar-back-button-clip-path clip the urlbar's right side for RTL */
+  /* let osx-urlbar-back-button-clip-path clip the urlbar's right side for RTL */
   transform: scaleX(-1);
 }
 
@@ -2268,22 +2268,22 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 @TABSONTOP_TAB_STACK@ > .tab-background > .tab-background-start:-moz-locale-dir(ltr),
 @TABSONTOP_TAB_STACK@ > .tab-background > .tab-background-end:-moz-locale-dir(rtl) {
-  clip-path: url(chrome://browser/content/browser.xul#pinstripe-tab-ontop-left-curve-clip-path);
+  clip-path: url(chrome://browser/content/browser.xul#osx-tab-ontop-left-curve-clip-path);
 }
 
 @TABSONTOP_TAB_STACK@ > .tab-background > .tab-background-end:-moz-locale-dir(ltr),
 @TABSONTOP_TAB_STACK@ > .tab-background > .tab-background-start:-moz-locale-dir(rtl) {
-  clip-path: url(chrome://browser/content/browser.xul#pinstripe-tab-ontop-right-curve-clip-path);
+  clip-path: url(chrome://browser/content/browser.xul#osx-tab-ontop-right-curve-clip-path);
 }
 
 @TABSONBOTTOM_TAB_STACK@ > .tab-background > .tab-background-start:-moz-locale-dir(ltr),
 @TABSONBOTTOM_TAB_STACK@ > .tab-background > .tab-background-end:-moz-locale-dir(rtl) {
-  clip-path: url(chrome://browser/content/browser.xul#pinstripe-tab-onbottom-left-curve-clip-path);
+  clip-path: url(chrome://browser/content/browser.xul#osx-tab-onbottom-left-curve-clip-path);
 }
 
 @TABSONBOTTOM_TAB_STACK@ > .tab-background > .tab-background-end:-moz-locale-dir(ltr),
 @TABSONBOTTOM_TAB_STACK@ > .tab-background > .tab-background-start:-moz-locale-dir(rtl) {
-  clip-path: url(chrome://browser/content/browser.xul#pinstripe-tab-onbottom-right-curve-clip-path);
+  clip-path: url(chrome://browser/content/browser.xul#osx-tab-onbottom-right-curve-clip-path);
 }
 
 .tab-background-start[selected="true"]:not(:-moz-lwtheme),

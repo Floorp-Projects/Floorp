@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%define WINSTRIPE_AERO
+%define WINDOWS_AERO
 %include browser.css
-%undef WINSTRIPE_AERO
+%undef WINDOWS_AERO
 
 %define customToolbarColor hsl(210,75%,92%)
 %define glassActiveBorderColor rgb(37, 44, 51)
