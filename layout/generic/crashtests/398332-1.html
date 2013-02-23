@@ -1,0 +1,19 @@
+<html><head>
+<title>Testcase bug - Crash [@ nsHTMLReflowState::GetNearestContainingBlock] with display: -moz-box, generated content, positioning and fieldset</title>
+<style>
+small::before { content: "m m";}
+strike::before { content: "m m";}
+</style>
+</head>
+<body>
+<div style="display: -moz-box;">
+  <strike style="overflow: -moz-hidden-unscrollable; position: absolute;"></strike>
+  <fieldset style="position: relative;">
+    <strike style="overflow: -moz-hidden-unscrollable; position: absolute;"><small style="position: relative;">
+      <span style="position: absolute;"></span>
+    </small>
+  </strike>
+</fieldset>
+</div>
+</body>
+</html>
