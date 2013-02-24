@@ -80,21 +80,12 @@
             ['use_ash==1', {
               'use_aura%': 1,
             }],
-
-            # A flag for BSD platforms
-            ['OS=="dragonfly" or OS=="freebsd" or OS=="netbsd" or \
-              OS=="openbsd"', {
-              'os_bsd%': 1,
-            }, {
-              'os_bsd%': 0,
-            }],
           ],
         },
         # Copy conditionally-set variables out one scope.
         'chromeos%': '<(chromeos)',
         'use_aura%': '<(use_aura)',
         'use_ash%': '<(use_ash)',
-        'os_bsd%': '<(os_bsd)',
         'use_openssl%': '<(use_openssl)',
         'use_ibus%': '<(use_ibus)',
         'enable_viewport%': '<(enable_viewport)',
@@ -128,7 +119,7 @@
           }],
 
           # Set toolkit_uses_gtk for the Chromium browser on Linux.
-          ['(OS=="linux" or OS=="solaris" or os_bsd==1) and use_aura==0', {
+          ['(OS=="linux" or OS=="freebsd" or OS=="openbsd" or OS=="solaris") and use_aura==0', {
             'toolkit_uses_gtk%': 1,
           }, {
             'toolkit_uses_gtk%': 0,
@@ -153,7 +144,6 @@
       'toolkit_uses_gtk%': '<(toolkit_uses_gtk)',
       'use_aura%': '<(use_aura)',
       'use_ash%': '<(use_ash)',
-      'os_bsd%': '<(os_bsd)',
       'use_openssl%': '<(use_openssl)',
       'use_ibus%': '<(use_ibus)',
       'enable_viewport%': '<(enable_viewport)',
@@ -416,8 +406,15 @@
           'os_posix%': 1,
         }],
 
+        # A flag for BSD platforms
+        ['OS=="freebsd" or OS=="openbsd"', {
+          'os_bsd%': 1,
+        }, {
+          'os_bsd%': 0,
+        }],
+
         # NSS usage.
-        ['(OS=="linux" or OS=="solaris" or os_bsd==1) and use_openssl==0', {
+        ['(OS=="linux" or OS=="freebsd" or OS=="openbsd" or OS=="solaris") and use_openssl==0', {
           'use_nss%': 1,
         }, {
           'use_nss%': 0,
