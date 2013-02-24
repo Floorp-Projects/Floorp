@@ -59,9 +59,6 @@ class CGThing():
     def define(self):
         """Produce code for a cpp file."""
         assert(False) # Override me!
-    def deps(self):
-        """Produce the deps for a pp file"""
-        assert(False) # Override me!
 
 class CGNativePropertyHooks(CGThing):
     """
@@ -312,13 +309,6 @@ class CGList(CGThing):
         return self.join(child.declare() for child in self.children if child is not None)
     def define(self):
         return self.join(child.define() for child in self.children if child is not None)
-    def deps(self):
-        deps = set()
-        for child in self.children:
-            if child is None:
-                continue
-            deps = deps.union(child.deps())
-        return deps
 
 class CGGeneric(CGThing):
     """
@@ -332,8 +322,6 @@ class CGGeneric(CGThing):
         return self.declareText
     def define(self):
         return self.defineText
-    def deps(self):
-        return set()
 
 # We'll want to insert the indent at the beginnings of lines, but we
 # don't want to indent empty lines.  So only indent lines that have a
@@ -398,9 +386,6 @@ class CGWrapper(CGThing):
             defn = stripTrailingWhitespace(
                 defn.replace("\n", "\n" + (" " * len(self.definePre))))
         return self.definePre + defn + self.definePost
-
-    def deps(self):
-        return self.child.deps()
 
 class CGIfWrapper(CGWrapper):
     def __init__(self, child, condition):
@@ -4868,9 +4853,6 @@ class CGEnum(CGThing):
 """ % (len(self.enum.values()) + 1,
        ",\n    ".join(['{"' + val + '", ' + str(len(val)) + '}' for val in self.enum.values()]))
 
-    def deps(self):
-        return self.enum.getDeps()
-
 def getUnionAccessorSignatureType(type, descriptorProvider):
     """
     Returns the types that are used in the getter and setter signatures for
@@ -5761,8 +5743,6 @@ class CGPrototypeTraitsClass(CGClass):
                          templateArgs=templateArgs,
                          templateSpecialization=templateSpecialization,
                          enums=enums, typedefs=typedefs, isStruct=True)
-    def deps(self):
-        return set()
 
 class CGPrototypeIDMapClass(CGClass):
     def __init__(self, descriptor, indent=''):
@@ -5774,8 +5754,6 @@ class CGPrototypeIDMapClass(CGClass):
                          templateArgs=templateArgs,
                          templateSpecialization=templateSpecialization,
                          enums=enums, isStruct=True)
-    def deps(self):
-        return set()
 
 class CGClassForwardDeclare(CGThing):
     def __init__(self, name, isStruct=False):
@@ -5788,8 +5766,6 @@ class CGClassForwardDeclare(CGThing):
     def define(self):
         # Header only
         return ''
-    def deps(self):
-        return set()
 
 class CGProxySpecialOperation(CGPerSignatureCall):
     """
@@ -6466,8 +6442,6 @@ class CGDescriptor(CGThing):
 
         assert not descriptor.concrete or descriptor.interface.hasInterfacePrototypeObject()
 
-        self._deps = descriptor.interface.getDeps()
-
         cgThings = []
         # These are set to true if at least one non-static
         # method/getter/setter exist on the interface.
@@ -6604,8 +6578,6 @@ class CGDescriptor(CGThing):
         return self.cgRoot.declare()
     def define(self):
         return self.cgRoot.define()
-    def deps(self):
-        return self._deps
 
 class CGNamespacedEnum(CGThing):
     def __init__(self, namespace, enumName, names, values, comment=""):
@@ -6809,9 +6781,6 @@ class CGDictionary(CGThing):
                 "ensureObject": CGIndenter(CGGeneric(ensureObject)).define(),
                 "defineMembers": "\n\n".join(memberDefines)
                 })
-
-    def deps(self):
-        return self.dictionary.getDeps()
 
     @staticmethod
     def makeDictionaryName(dictionary, workers):
@@ -7233,9 +7202,6 @@ class CGBindingRoot(CGThing):
         return stripTrailingWhitespace(self.root.declare())
     def define(self):
         return stripTrailingWhitespace(self.root.define())
-
-    def deps(self):
-        return self.root.deps()
 
 class CGNativeMember(ClassMethod):
     def __init__(self, descriptor, member, name, signature, extendedAttrs,
@@ -7812,7 +7778,6 @@ class CGCallback(CGClass):
     def __init__(self, idlObject, descriptorProvider, baseName, methods,
                  getters=[], setters=[]):
         self.baseName = baseName
-        self._deps = idlObject.getDeps()
         name = idlObject.identifier.name
         if descriptorProvider.workers:
             name += "Workers"
@@ -7901,9 +7866,6 @@ class CGCallback(CGClass):
                             bodyInHeader=True,
                             body=bodyWithoutThis),
                 method]
-
-    def deps(self):
-        return self._deps
 
 class CGCallbackFunction(CGCallback):
     def __init__(self, callback, descriptorProvider):
