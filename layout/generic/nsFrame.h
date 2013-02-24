@@ -327,6 +327,12 @@ public:
   NS_IMETHOD  DidReflow(nsPresContext*           aPresContext,
                         const nsHTMLReflowState*  aReflowState,
                         nsDidReflowStatus         aStatus);
+
+  /**
+   * NOTE: aStatus is assumed to be already-initialized. The reflow statuses of
+   * any reflowed absolute children will be merged into aStatus; aside from
+   * that, this method won't modify aStatus.
+   */
   void ReflowAbsoluteFrames(nsPresContext*           aPresContext,
                             nsHTMLReflowMetrics&     aDesiredSize,
                             const nsHTMLReflowState& aReflowState,
