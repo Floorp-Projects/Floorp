@@ -1397,23 +1397,14 @@ add_test(function test_path_id_for_spid_and_spn() {
   let ICCFileHelper = worker.ICCFileHelper;
 
   // Test SIM
-  RIL.iccStatus = {
-    gsmUmtsSubscriptionAppIndex: 0,
-    apps: [
-      {
-        app_type: CARD_APPTYPE_SIM
-      }, {
-        app_type: CARD_APPTYPE_USIM
-      }
-    ]
-  }
+  RIL.appType = CARD_APPTYPE_SIM;
   do_check_eq(ICCFileHelper.getEFPath(ICC_EF_SPDI),
               EF_PATH_MF_SIM + EF_PATH_DF_GSM);
   do_check_eq(ICCFileHelper.getEFPath(ICC_EF_SPN),
               EF_PATH_MF_SIM + EF_PATH_DF_GSM);
 
   // Test USIM
-  RIL.iccStatus.gsmUmtsSubscriptionAppIndex = 1;
+  RIL.appType = CARD_APPTYPE_USIM;
   do_check_eq(ICCFileHelper.getEFPath(ICC_EF_SPDI),
               EF_PATH_MF_SIM + EF_PATH_ADF_USIM);
   do_check_eq(ICCFileHelper.getEFPath(ICC_EF_SPDI),
