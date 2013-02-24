@@ -75,6 +75,7 @@ EXPORTS_$(binding_include_path) = \
   TypedArray.h \
   UnionConversions.h \
   UnionTypes.h \
+  $(exported_binding_headers) \
   $(NULL)
 
 LOCAL_INCLUDES += -I$(topsrcdir)/js/xpconnect/src \
@@ -96,33 +97,7 @@ LOCAL_INCLUDES += \
   $(NULL)
 endif
 
-# XXXkhuey this is a terrible hack to avoid blowing out the command line
-ifneq (,$(filter-out all chrome default export realchrome tools clean clobber clobber_all distclean realclean,$(MAKECMDGOALS)))
-$(shell echo "$(addsuffix .pp,$(binding_header_files))" > pp.list)
-$(shell echo "$(addsuffix .pp,$(binding_cpp_files))" >> pp.list)
-
-# The script mddepend.pl checks the dependencies and writes to stdout
-# one rule to force out-of-date objects. For example,
-#   foo.o boo.o: FORCE
-# The script has an advantage over including the *.pp files directly
-# because it handles the case when header files are removed from the build.
-# 'make' would complain that there is no way to build missing headers.
-ALL_PP_RESULTS = $(shell cat pp.list | $(PERL) $(BUILD_TOOLS)/mddepend.pl)
-$(eval $(ALL_PP_RESULTS))
-
-endif
-
-EXPORTS_GENERATED_FILES := $(exported_binding_headers)
-EXPORTS_GENERATED_DEST := $(DIST)/include/$(binding_include_path)
-EXPORTS_GENERATED_TARGET := webidl-export
-INSTALL_TARGETS += EXPORTS_GENERATED
-
 include $(topsrcdir)/config/rules.mk
-
-# We need to create a separate target so we can ensure that the pickle is
-# done before generating headers.
-export:: ParserResults.pkl
-	$(MAKE) webidl-export
 
 # If you change bindinggen_dependencies here, change it in
 # dom/bindings/test/Makefile.in too.
@@ -132,6 +107,7 @@ bindinggen_dependencies := \
   Configuration.py \
   Codegen.py \
   parser/WebIDL.py \
+  ParserResults.pkl \
   $(GLOBAL_DEPS) \
   $(NULL)
 
