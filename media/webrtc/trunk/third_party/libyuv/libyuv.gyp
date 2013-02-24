@@ -9,7 +9,6 @@
 {
   'variables': {
      'use_system_libjpeg%': 0,
-+     'yuv_disable_asm%': 0,
   },
   'targets': [
     {
@@ -50,13 +49,6 @@
           '.',
         ],
       },
-      'conditions': [
-        ['yuv_disable_asm==1', {
-          'defines': [
-            'YUV_DISABLE_ASM',
-          ],
-        }],
-      ],
       'conditions': [
         ['build_with_mozilla==1', {
           'include_dirs': [
