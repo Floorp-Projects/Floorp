@@ -327,19 +327,28 @@ void ARMAssembler::dataTransferN(bool isLoad, bool isSigned, int size, RegisterI
         offset = - offset;
         posOffset = false;
     }
-    if (offset <= 0xfff) {
+
+    // max_ldr is also a mask.
+    int max_ldr = 0xfff;
+    int ldr_bits = 12;
+    if (size == 16 || (size == 8 && isSigned)) {
+        max_ldr = 0xff;
+        ldr_bits = 8;
+    }
+
+    if (offset <= max_ldr) {
         // LDR rd, [rb, #+offset]
         mem_imm_off(isLoad, isSigned, size, posOffset, rt, base, offset);
-    } else if (offset <= 0xfffff) {
+    } else if (offset <= ((max_ldr << 8) | 0xff)) {
         // Add upper bits of offset to the base, and store the result into the temp register.
         if (posOffset) {
-            add_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 12) | getOp2RotLSL(12));
+            add_r(ARMRegisters::S0, base, OP2_IMM | (offset >> ldr_bits) | getOp2RotLSL(ldr_bits));
         } else {
-            sub_r(ARMRegisters::S0, base, OP2_IMM | (offset >> 12) | getOp2RotLSL(12));
+            sub_r(ARMRegisters::S0, base, OP2_IMM | (offset >> ldr_bits) | getOp2RotLSL(ldr_bits));
         }
-        // Load using the lower bits of the offset.
+        // Load using the lower bits of the offset, using max_ldr as a mask.
         mem_imm_off(isLoad, isSigned, size, posOffset, rt,
-                    ARMRegisters::S0, (offset & 0xfff));
+                    ARMRegisters::S0, (offset & max_ldr));
     } else {
         // For even bigger offsets, load the entire offset into a register, then do an
         // indexed load using the base register and the index register.
