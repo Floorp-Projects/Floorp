@@ -1757,6 +1757,7 @@ DocAccessible::UpdateTree(Accessible* aContainer, nsIContent* aChildNode,
     // XXX: since select change insertion point of option contained by optgroup
     // then we need to have special processing for them (bug 690417).
     if (!aIsInsert && aChildNode->IsHTML(nsGkAtoms::optgroup) &&
+        aContainer->GetContent() &&
         aContainer->GetContent()->IsHTML(nsGkAtoms::select)) {
       for (nsIContent* optContent = aChildNode->GetFirstChild(); optContent;
            optContent = optContent->GetNextSibling()) {
