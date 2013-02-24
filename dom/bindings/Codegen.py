@@ -6442,8 +6442,6 @@ class CGDescriptor(CGThing):
 
         assert not descriptor.concrete or descriptor.interface.hasInterfacePrototypeObject()
 
-        self._deps = descriptor.interface.getDeps()
-
         cgThings = []
         # These are set to true if at least one non-static
         # method/getter/setter exist on the interface.
