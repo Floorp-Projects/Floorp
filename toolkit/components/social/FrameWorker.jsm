@@ -72,7 +72,7 @@ this.getFrameWorkerHandle =
 function FrameWorker(url, name, origin) {
   this.url = url;
   this.name = name || url;
-  this.ports = {};
+  this.ports = new Map();
   this.pendingPorts = [];
   this.loaded = false;
   this.reloading = false;
@@ -103,11 +103,11 @@ FrameWorker.prototype = {
   reload: function FrameWorker_reloadWorker() {
     // push all the ports into pending ports, they will be re-entangled
     // during the call to createSandbox after the document is reloaded
-    for (let [portid, port] in Iterator(this.ports)) {
+    for (let [, port] of this.ports) {
       port._window = null;
       this.pendingPorts.push(port);
     }
-    this.ports = {};
+    this.ports.clear();
     // Mark the provider as unloaded now, so that any new ports created after
     // this point but before the unload has fired are properly queued up.
     this.loaded = false;
@@ -263,7 +263,7 @@ FrameWorker.prototype = {
     // window unloading as part of shutdown.
     workerWindow.addEventListener("unload", function unloadListener() {
       workerWindow.removeEventListener("unload", unloadListener);
-      for (let [portid, port] in Iterator(worker.ports)) {
+      for (let [, port] of worker.ports) {
         try {
           port.close();
         } catch (ex) {
@@ -273,7 +273,7 @@ FrameWorker.prototype = {
       // Closing the ports also removed it from this.ports via port-close,
       // but be safe incase one failed to close.  This must remain an array
       // incase we are being reloaded.
-      worker.ports = [];
+      worker.ports.clear();
       // The worker window may not have fired a load event yet, so pendingPorts
       // might still have items in it - close them too.
       worker.loaded = false;
@@ -376,20 +376,20 @@ function initClientMessageHandler(worker, workerWindow) {
         break;
       case "port-close":
         // the worker side of the port was closed, so close this side too.
-        port = worker.ports[portid];
+        port = worker.ports.get(portid);
         if (!port) {
           // port already closed (which will happen when we call port.close()
           // below - the worker side will send us this message but we've
           // already closed it.)
           return;
         }
-        delete worker.ports[portid];
+        worker.ports.delete(portid);
         port.close();
         break;
 
       case "port-message":
         // the client posted a message to this worker port.
-        port = worker.ports[portid];
+        port = worker.ports.get(portid);
         if (!port) {
           return;
         }
@@ -448,7 +448,7 @@ ClientPort.prototype = {
 
   _createWorkerAndEntangle: function fw_ClientPort_createWorkerAndEntangle(worker) {
     this._window = worker.frame.contentWindow;
-    worker.ports[this._portid] = this;
+    worker.ports.set(this._portid, this);
     this._postControlMessage("port-create");
     for (let message of this._pendingMessagesOutgoing) {
       this._dopost(message);
@@ -458,7 +458,7 @@ ClientPort.prototype = {
     // "entangled" with the worker, in which case we need to disentangle it
     if (this._closed) {
       this._window = null;
-      delete worker.ports[this._portid];
+      worker.ports.delete(this._portid);
     }
   },
 
