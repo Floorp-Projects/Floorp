@@ -79,9 +79,14 @@ public:
   // function will reflow any absolutely positioned child frames that need to
   // be reflowed, e.g., because the absolutely positioned child frame has
   // 'auto' for an offset, or a percentage based width or height.
+  //
   // aOverflowAreas, if non-null, is unioned with (in the local
   // coordinate space) the overflow areas of the absolutely positioned
   // children.
+  //
+  // aReflowStatus is assumed to be already-initialized, e.g. with the status
+  // of the delegating frame's main reflow. This function merges in the
+  // statuses of the absolutely positioned children's reflows.
   nsresult Reflow(nsContainerFrame*        aDelegatingFrame,
                   nsPresContext*           aPresContext,
                   const nsHTMLReflowState& aReflowState,
