@@ -44,7 +44,6 @@ bindinggen_dependencies := \
   ../Configuration.py \
   ../Codegen.py \
   ../parser/WebIDL.py \
-  ../ParserResults.pkl \
   ../Makefile \
   $(GLOBAL_DEPS) \
   $(NULL)
