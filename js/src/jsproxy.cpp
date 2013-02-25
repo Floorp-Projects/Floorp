@@ -61,6 +61,14 @@ BaseProxyHandler::~BaseProxyHandler()
 }
 
 bool
+BaseProxyHandler::enter(JSContext *cx, JSObject *wrapper, jsid id, Action act,
+                        bool *bp)
+{
+    *bp = true;
+    return true;
+}
+
+bool
 BaseProxyHandler::has(JSContext *cx, JSObject *proxy_, jsid id_, bool *bp)
 {
     RootedObject proxy(cx, proxy_);

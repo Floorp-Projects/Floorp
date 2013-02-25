@@ -32,11 +32,7 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
     bool mSafeToUnwrap;
 
   public:
-    enum Action {
-        GET,
-        SET,
-        CALL
-    };
+    using BaseProxyHandler::Action;
 
     enum Flags {
         CROSS_COMPARTMENT = 1 << 0,
@@ -64,17 +60,6 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
     unsigned flags() const {
         return mFlags;
     }
-
-    /* Policy enforcement traps.
-     *
-     * enter() allows the policy to specify whether the caller may perform |act|
-     * on the underlying object's |id| property. In the case when |act| is CALL,
-     * |id| is generally JSID_VOID.
-     *
-     * The |act| parameter to enter() specifies the action being performed.
-     */
-    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Action act,
-                       bool *bp);
 
     explicit Wrapper(unsigned flags, bool hasPrototype = false);
 
