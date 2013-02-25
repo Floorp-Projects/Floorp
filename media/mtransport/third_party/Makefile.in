@@ -43,11 +43,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PARALLEL_DIRS = \
-  nrappkit \
-  nICEr \
-  $(NULL)
-
 NO_SUBMAKEFILES_RULE = 1
 
 include $(topsrcdir)/config/rules.mk
