@@ -54,6 +54,7 @@
 
     <style name="Gecko.Light.AwesomeBar">
         <item name="android:actionBarStyle">@style/ActionBar.AwesomeBar</item>
+        <item name="android:windowBackground">@null</item>
     </style>
 
     <style name="Gecko.TitleBar.Preferences">
