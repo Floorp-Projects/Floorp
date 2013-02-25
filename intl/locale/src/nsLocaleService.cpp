@@ -128,7 +128,7 @@ nsLocaleService::nsLocaleService(void)
     NS_ENSURE_TRUE_VOID(resultLocale);
 
 #ifdef MOZ_WIDGET_QT
-    const char* lang = QLocale::system().name().toAscii();
+    const char* lang = QLocale::system().name().toUtf8();
 #else
     // Get system configuration
     const char* lang = getenv("LANG");
