@@ -7,6 +7,7 @@
 #define WinIMEHandler_h_
 
 #include "nscore.h"
+#include "nsEvent.h"
 #include <windows.h>
 
 class nsWindow;
@@ -46,6 +47,12 @@ public:
    * Otherwise, false.
    */
   static bool IsComposingOn(nsWindow* aWindow);
+
+  /**
+   * Notifies IME of the notification (a request or an event).
+   */
+  static nsresult NotifyIME(nsWindow* aWindow,
+                            NotificationToIME aNotification);
 
   /**
    * "Kakutei-Undo" of ATOK or WXG (both of them are Japanese IME) causes
