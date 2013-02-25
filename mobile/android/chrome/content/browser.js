@@ -3450,6 +3450,10 @@ Tab.prototype = {
             list.push("[" + rel + "]");
         }
 
+        // We only care about icon links
+        if (list.indexOf("[icon]") == -1)
+          return;
+
         // We want to get the largest icon size possible for our UI.
         let maxSize = 0;
 
