@@ -23,10 +23,12 @@ void nsQAppInstance::AddRef(int& aArgc, char** aArgv, bool aDefaultProcess) {
   if (qApp)
     return;
   if (!sQAppInstance) {
+#if (QT_VERSION < QT_VERSION_CHECK(5,0,0))
     const char *graphicsSystem = getenv("MOZ_QT_GRAPHICSSYSTEM");
     if (graphicsSystem) {
       QApplication::setGraphicsSystem(QString(graphicsSystem));
     }
+#endif
 #if (MOZ_PLATFORM_MAEMO == 6)
     // Should create simple windows style for non chrome process
     // otherwise meegotouch style initialize and crash happen
