@@ -123,20 +123,23 @@ abstract public class BrowserApp extends GeckoApp
                     invalidateOptionsMenu();
                 }
                 break;
+            case PAGE_SHOW:
+                handlePageShow(tab);
+                break;
             case LINK_ADDED:
                 handleLinkAdded(tab);
+                break;
+            case SECURITY_CHANGE:
+                handleSecurityChange(tab);
+                break;
+            case READER_ENABLED:
+                handleReaderEnabled(tab);
                 break;
         }
         super.onTabChanged(tab, msg, data);
     }
 
-    @Override
-    void handlePageShow(final int tabId) {
-        super.handlePageShow(tabId);
-        final Tab tab = Tabs.getInstance().getTab(tabId);
-        if (tab == null)
-            return;
-
+    void handlePageShow(final Tab tab) {
         mMainHandler.post(new Runnable() {
             public void run() {
                 loadFavicon(tab);
@@ -164,13 +167,7 @@ abstract public class BrowserApp extends GeckoApp
         updateAboutHomeTopSites();
     }
 
-    @Override
-    void handleSecurityChange(final int tabId, final JSONObject identityData) {
-        super.handleSecurityChange(tabId, identityData);
-        final Tab tab = Tabs.getInstance().getTab(tabId);
-        if (tab == null)
-            return;
-
+    void handleSecurityChange(final Tab tab) {
         mMainHandler.post(new Runnable() { 
             public void run() {
                 if (Tabs.getInstance().isSelectedTab(tab))
@@ -202,12 +199,7 @@ abstract public class BrowserApp extends GeckoApp
         });
     }
 
-    void handleReaderEnabled(final int tabId) {
-        super.handleReaderEnabled(tabId);
-        final Tab tab = Tabs.getInstance().getTab(tabId);
-        if (tab == null)
-            return;
-
+    void handleReaderEnabled(final Tab tab) {
         mMainHandler.post(new Runnable() {
             public void run() {
                 if (Tabs.getInstance().isSelectedTab(tab))
