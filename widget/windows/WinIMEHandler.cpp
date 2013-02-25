@@ -50,6 +50,26 @@ IMEHandler::Terminate()
 }
 
 // static
+void*
+IMEHandler::GetNativeData(uint32_t aDataType)
+{
+#ifdef NS_ENABLE_TSF
+  void* result = nsTextStore::GetNativeData(aDataType);
+  if (!result || !(*(static_cast<void**>(result)))) {
+    return nullptr;
+  }
+  // XXX During the TSF module test, sIsInTSFMode must be true.  After that,
+  //     the value should be restored but currently, there is no way for that.
+  //     When the TSF test is enabled again, we need to fix this.  Perhaps,
+  //     sending a message can fix this.
+  sIsInTSFMode = true;
+  return result;
+#else // #ifdef NS_ENABLE_TSF
+  return nullptr;
+#endif // #ifdef NS_ENABLE_TSF #else
+}
+
+// static
 bool
 IMEHandler::IsIMEEnabled(const InputContext& aInputContext)
 {

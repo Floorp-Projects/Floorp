@@ -1025,11 +1025,9 @@ MetroWidget::GetNativeData(uint32_t aDataType)
       }
       break;
    case NS_NATIVE_TSF_THREAD_MGR:
-     return nsTextStore::GetThreadMgr();
    case NS_NATIVE_TSF_CATEGORY_MGR:
-     return nsTextStore::GetCategoryMgr();
    case NS_NATIVE_TSF_DISPLAY_ATTR_MGR:
-     return nsTextStore::GetDisplayAttrMgr();
+     return nsTextStore::GetNativeData(aDataType);
   }
   return nullptr;
 }
