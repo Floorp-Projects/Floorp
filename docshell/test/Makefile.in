@@ -11,11 +11,6 @@ relativesrcdir  = @relativesrcdir@
 
 MODULE = test_docshell
 
-DIRS += chrome \
-	navigation \
-	browser \
-	$(NULL)
-
 include $(DEPTH)/config/autoconf.mk
 
 XPCSHELL_TESTS = unit
