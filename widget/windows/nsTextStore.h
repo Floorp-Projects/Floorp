@@ -133,7 +133,7 @@ public:
 
   static nsresult OnSelectionChange(void)
   {
-    if (!sTsfTextStore) return NS_OK;
+    NS_ENSURE_TRUE(sTsfTextStore, NS_ERROR_NOT_AVAILABLE);
     return sTsfTextStore->OnSelectionChangeInternal();
   }
 
