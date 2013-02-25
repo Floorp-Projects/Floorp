@@ -11,9 +11,6 @@ relativesrcdir	= @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= \
-	$(NULL)
-
 MOCHITEST_FILES	= \
 	builder.js \
 	controls.js \

@@ -1,4 +1,3 @@
-#
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -15,10 +14,6 @@ MODULE		= dom
 LIBRARY_NAME	= domencoding_s
 LIBXUL_LIBRARY	= 1
 FORCE_STATIC_LIB = 1
-
-DIRS = \
-  test \
-  $(NULL)
 
 EXPORTS_NAMESPACES = mozilla/dom
 EXPORTS_mozilla/dom = \

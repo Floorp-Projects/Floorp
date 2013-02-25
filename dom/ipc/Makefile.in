@@ -18,10 +18,6 @@ ifndef _MSC_VER
 FAIL_ON_WARNINGS := 1
 endif # !_MSC_VER
 
-ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-TEST_DIRS += tests
-endif
-
 EXPORTS = \
   nsICachedFileDescriptorListener.h \
   PCOMContentPermissionRequestChild.h \
