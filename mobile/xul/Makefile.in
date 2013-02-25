@@ -8,13 +8,6 @@ srcdir     = @srcdir@
 VPATH      = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-
-DIRS = ../locales chrome locales components modules themes/core app
-
-ifndef LIBXUL_SDK
-PARALLEL_DIRS += $(DEPTH)/xulrunner/tools/redit
-endif
-
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/testing/testsuite-targets.mk
 
