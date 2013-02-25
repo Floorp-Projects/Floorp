@@ -2817,9 +2817,7 @@ nsTextStore::OnFocusChange(bool aGotFocus,
           GetIMEEnabledName(aIMEEnabled), sTsfThreadMgr, sTsfTextStore));
 
   // no change notifications if TSF is disabled
-  if (!sTsfThreadMgr || !sTsfTextStore) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
+  NS_ENSURE_TRUE(sTsfThreadMgr && sTsfTextStore, NS_ERROR_NOT_AVAILABLE);
 
   if (aGotFocus) {
     bool bRet = sTsfTextStore->Create(aFocusedWidget, aIMEEnabled);
@@ -3179,3 +3177,57 @@ nsTextStore::Terminate(void)
     NS_RELEASE(sTsfThreadMgr);
   }
 }
+
+#ifdef DEBUG
+// static
+bool
+nsTextStore::CurrentKeyboardLayoutHasIME()
+{
+  // XXX MSDN documents that ITfInputProcessorProfiles is available only on
+  //     desktop apps.  However, there is no known way to obtain
+  //     ITfInputProcessorProfileMgr instance without ITfInputProcessorProfiles
+  //     instance.
+  nsRefPtr<ITfInputProcessorProfiles> profiles;
+  HRESULT hr = ::CoCreateInstance(CLSID_TF_InputProcessorProfiles, NULL,
+                                  CLSCTX_INPROC_SERVER,
+                                  IID_ITfInputProcessorProfiles,
+                                  getter_AddRefs(profiles));
+  if (FAILED(hr) || !profiles) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+      ("TSF: nsTextStore::CurrentKeyboardLayoutHasIME() FAILED to create "
+       "an input processor profiles instance"));
+    return false;
+  }
+  nsRefPtr<ITfInputProcessorProfileMgr> profileMgr;
+  hr = profiles->QueryInterface(IID_ITfInputProcessorProfileMgr,
+                                getter_AddRefs(profileMgr));
+  if (FAILED(hr) || !profileMgr) {
+    // On Windows Vista or later, ImmIsIME() API always returns true.
+    // If we failed to obtain the profile manager, we cannot know if current
+    // keyboard layout has IME.
+    if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
+      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+        ("TSF: nsTextStore::CurrentKeyboardLayoutHasIME() FAILED to query "
+         "ITfInputProcessorProfileMgr"));
+      return false;
+    }
+    // If the profiles instance doesn't have ITfInputProcessorProfileMgr
+    // interface, that means probably we're running on WinXP or WinServer2003
+    // (except WinServer2003 R2).  Then, we should use ImmIsIME().
+    return ::ImmIsIME(::GetKeyboardLayout(0));
+  }
+
+  TF_INPUTPROCESSORPROFILE profile;
+  hr = profileMgr->GetActiveProfile(GUID_TFCAT_TIP_KEYBOARD, &profile);
+  if (hr == S_FALSE) {
+    return false; // not found or not active
+  }
+  if (FAILED(hr)) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+      ("TSF: nsTextStore::CurrentKeyboardLayoutHasIME() FAILED to retreive "
+       "active profile"));
+    return false;
+  }
+  return (profile.dwProfileType == TF_PROFILETYPE_INPUTPROCESSOR);
+}
+#endif // #ifdef DEBUG

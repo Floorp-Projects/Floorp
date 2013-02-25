@@ -1,0 +1,12 @@
+<title>iframe for between tests</title>
+<!--
+  This page exists so that our accounting for assertions correctly
+  counts assertions that happen while leaving a page.  We load this page
+  after a test finishes, check the assertion counts, and then go on to
+  load the next.
+-->
+<script>
+window.addEventListener("load", function() {
+  (parent.TestRunner || parent.wrappedJSObject.TestRunner).testUnloaded();
+});
+</script>

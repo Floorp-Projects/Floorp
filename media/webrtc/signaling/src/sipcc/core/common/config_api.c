@@ -92,7 +92,7 @@ config_set_string (int id, char *buffer)
     }
 }
 
-#define MAX_CONFIG_VAL_PRINT_LEN 256
+#define MAX_CONFIG_VAL_PRINT_LEN 258
 /*
  *  Function: print_config_value()
  *

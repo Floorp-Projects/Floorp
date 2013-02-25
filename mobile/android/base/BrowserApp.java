@@ -123,17 +123,23 @@ abstract public class BrowserApp extends GeckoApp
                     invalidateOptionsMenu();
                 }
                 break;
+            case PAGE_SHOW:
+                handlePageShow(tab);
+                break;
+            case LINK_ADDED:
+                handleLinkAdded(tab);
+                break;
+            case SECURITY_CHANGE:
+                handleSecurityChange(tab);
+                break;
+            case READER_ENABLED:
+                handleReaderEnabled(tab);
+                break;
         }
         super.onTabChanged(tab, msg, data);
     }
 
-    @Override
-    void handlePageShow(final int tabId) {
-        super.handlePageShow(tabId);
-        final Tab tab = Tabs.getInstance().getTab(tabId);
-        if (tab == null)
-            return;
-
+    void handlePageShow(final Tab tab) {
         mMainHandler.post(new Runnable() {
             public void run() {
                 loadFavicon(tab);
@@ -141,16 +147,7 @@ abstract public class BrowserApp extends GeckoApp
         });
     }
 
-    @Override
-    void handleLinkAdded(final int tabId, String rel, final String href, int size) {
-        super.handleLinkAdded(tabId, rel, href, size);
-        if (rel.indexOf("[icon]") == -1)
-            return;
-
-        final Tab tab = Tabs.getInstance().getTab(tabId);
-        if (tab == null)
-            return;
-
+    void handleLinkAdded(final Tab tab) {
         // If tab is not loading and the favicon is updated, we
         // want to load the image straight away. If tab is still
         // loading, we only load the favicon once the page's content
@@ -170,13 +167,7 @@ abstract public class BrowserApp extends GeckoApp
         updateAboutHomeTopSites();
     }
 
-    @Override
-    void handleSecurityChange(final int tabId, final JSONObject identityData) {
-        super.handleSecurityChange(tabId, identityData);
-        final Tab tab = Tabs.getInstance().getTab(tabId);
-        if (tab == null)
-            return;
-
+    void handleSecurityChange(final Tab tab) {
         mMainHandler.post(new Runnable() { 
             public void run() {
                 if (Tabs.getInstance().isSelectedTab(tab))
@@ -185,12 +176,30 @@ abstract public class BrowserApp extends GeckoApp
         });
     }
 
-    void handleReaderEnabled(final int tabId) {
-        super.handleReaderEnabled(tabId);
-        final Tab tab = Tabs.getInstance().getTab(tabId);
-        if (tab == null)
+    void handleReaderAdded(boolean success, final String title, final String url) {
+        if (!success) {
+            showToast(R.string.reading_list_failed, Toast.LENGTH_SHORT);
             return;
+        }
 
+        GeckoAppShell.getHandler().post(new Runnable() {
+            public void run() {
+                BrowserDB.addReadingListItem(getContentResolver(), title, url);
+                showToast(R.string.reading_list_added, Toast.LENGTH_SHORT);
+            }
+        });
+    }
+
+    void handleReaderRemoved(final String url) {
+        GeckoAppShell.getHandler().post(new Runnable() {
+            public void run() {
+                BrowserDB.removeReadingListItemWithURL(getContentResolver(), url);
+                showToast(R.string.reading_list_removed, Toast.LENGTH_SHORT);
+            }
+        });
+    }
+
+    void handleReaderEnabled(final Tab tab) {
         mMainHandler.post(new Runnable() {
             public void run() {
                 if (Tabs.getInstance().isSelectedTab(tab))
@@ -536,6 +545,19 @@ abstract public class BrowserApp extends GeckoApp
                 Telemetry.HistogramAdd("PLACES_BOOKMARKS_COUNT", BrowserDB.getCount(getContentResolver(), "bookmarks"));
                 Telemetry.HistogramAdd("FENNEC_FAVICONS_COUNT", BrowserDB.getCount(getContentResolver(), "favicons"));
                 Telemetry.HistogramAdd("FENNEC_THUMBNAILS_COUNT", BrowserDB.getCount(getContentResolver(), "thumbnails"));
+            } else if (event.equals("Reader:Added")) {
+                final boolean success = message.getBoolean("success");
+                final String title = message.getString("title");
+                final String url = message.getString("url");
+                handleReaderAdded(success, title, url);
+            } else if (event.equals("Reader:Removed")) {
+                final String url = message.getString("url");
+                handleReaderRemoved(url);
+            } else if (event.equals("Reader:Share")) {
+                final String title = message.getString("title");
+                final String url = message.getString("url");
+                GeckoAppShell.openUriExternal(url, "text/plain", "", "",
+                                              Intent.ACTION_SEND, title);
             } else {
                 super.handleMessage(event, message);
             }

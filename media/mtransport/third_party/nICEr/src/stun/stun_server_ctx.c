@@ -153,7 +153,11 @@ static int nr_stun_server_get_password(void *arg, nr_stun_message *msg, Data **p
            ABORT(R_NOT_FOUND);
         }
 
-        r_log(NR_LOG_STUN,LOG_NOTICE,"STUN-SERVER(%s): Unable to find password for unknown user: %s",ctx->label,username_attribute->u.username);
+        /* Although this is an exceptional condition, we'll already have seen a
+         * NOTICE-level log message about the unknown user, so additional log
+         * messages at any level higher than DEBUG are unnecessary. */
+
+        r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-SERVER(%s): Unable to find password for unknown user: %s",ctx->label,username_attribute->u.username);
         ABORT(R_NOT_FOUND);
     }
 

@@ -37,7 +37,7 @@ interface nsIFrame;
  * Web IDL interfaces to mirror this interface when changing it.
  */
 
-[scriptable, builtinclass, uuid(497bfb9b-d996-4d1e-a647-8137b0cfc876)]
+[scriptable, builtinclass, uuid(e3968acd-b796-4ca3-aec0-e7f0880f2219)]
 interface nsIImageLoadingContent : imgINotificationObserver
 {
   /**
@@ -159,4 +159,12 @@ interface nsIImageLoadingContent : imgINotificationObserver
    * as PR_FALSE to revert ImageState() to its original behaviour.
    */
   void forceImageState(in boolean aForce, in unsigned long long aState);
+
+  /**
+   * A visible count is stored, if it is non-zero then this image is considered
+   * visible. These methods increment, decrement, or return the visible coount.
+   */
+  [noscript, notxpcom] void IncrementVisibleCount();
+  [noscript, notxpcom] void DecrementVisibleCount();
+  [noscript, notxpcom] uint32_t GetVisibleCount();
 };

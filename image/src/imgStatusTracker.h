@@ -145,6 +145,8 @@ public:
   void SendStopDecode(imgRequestProxy* aProxy, nsresult aStatus);
   void RecordDiscard();
   void SendDiscard(imgRequestProxy* aProxy);
+  void RecordUnlockedDraw();
+  void SendUnlockedDraw(imgRequestProxy* aProxy);
   void RecordImageIsAnimated();
   void SendImageIsAnimated(imgRequestProxy *aProxy);
 
