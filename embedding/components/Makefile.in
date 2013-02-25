@@ -9,18 +9,4 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-
-# You'd think we could skip building ui if XUL is disabled,
-# but we need to export interface headers from those directories.
-
-DIRS = windowwatcher appstartup/src find webbrowserpersist commandhandler
-
-ifdef MOZ_XUL
-ifdef NS_PRINTING
-DIRS += printingui/src
-endif
-endif
-
-DIRS += build
-
 include $(topsrcdir)/config/rules.mk
