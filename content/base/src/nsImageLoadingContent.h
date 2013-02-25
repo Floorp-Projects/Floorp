@@ -416,6 +416,8 @@ private:
   // registered with the refresh driver.
   bool mCurrentRequestRegistered;
   bool mPendingRequestRegistered;
+
+  uint32_t mVisibleCount;
 };
 
 #endif // nsImageLoadingContent_h__
