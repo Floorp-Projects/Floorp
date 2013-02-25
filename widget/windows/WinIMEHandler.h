@@ -11,6 +11,7 @@
 #include <windows.h>
 
 class nsWindow;
+struct nsIMEUpdatePreference;
 
 namespace mozilla {
 namespace widget {
@@ -60,6 +61,11 @@ public:
   static nsresult NotifyIMEOfTextChange(uint32_t aStart,
                                         uint32_t aOldEnd,
                                         uint32_t aNewEnd);
+
+  /**
+   * Returns update preferences.
+   */
+  static nsIMEUpdatePreference GetUpdatePreference();
 
   /**
    * "Kakutei-Undo" of ATOK or WXG (both of them are Japanese IME) causes
