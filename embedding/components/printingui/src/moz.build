@@ -1,0 +1,15 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
+
+if toolkit == 'os2':
+    DIRS += ['os2']
+elif toolkit == 'windows':
+    DIRS += ['win']
+elif toolkit == 'cocoa':
+    DIRS += ['mac']
+elif CONFIG['MOZ_PDF_PRINTING']:
+    DIRS += ['unixshared']
