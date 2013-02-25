@@ -361,6 +361,7 @@ BluetoothOppManager::SendFile(BlobParent* aActor)
 
   SendConnectRequest();
   mTransferMode = false;
+  StartFileTransfer();
 
   return true;
 }
@@ -797,24 +798,26 @@ BluetoothOppManager::ClientDataHandler(UnixSocketRawData* aMessage)
     packetLength = (((int)aMessage->mData[1]) << 8) | aMessage->mData[2];
   }
 
-  // Check response code
-  if (mLastCommand == ObexRequestCode::Put &&
-      opCode != ObexResponseCode::Continue) {
-    NS_WARNING("[OPP] Put(0x02) failed");
-    SendDisconnectRequest();
-    return;
-  } else if (mLastCommand == ObexRequestCode::Abort ||
-             mLastCommand == ObexRequestCode::Connect ||
-             mLastCommand == ObexRequestCode::Disconnect ||
-             mLastCommand == ObexRequestCode::PutFinal){
-    if (opCode != ObexResponseCode::Success) {
-      nsAutoCString str;
-      str += "[OPP] 0x";
-      str += mLastCommand;
-      str += " failed";
-      NS_WARNING(str.get());
-      return;
+  // Check response code and send out system message as finished if the reponse
+  // code is somehow incorrect.
+  uint8_t expectedOpCode = ObexResponseCode::Success;
+  if (mLastCommand == ObexRequestCode::Put) {
+    expectedOpCode = ObexResponseCode::Continue;
+  }
+
+  if (opCode != expectedOpCode) {
+    if (mLastCommand == ObexRequestCode::Put ||
+        mLastCommand == ObexRequestCode::Abort ||
+        mLastCommand == ObexRequestCode::PutFinal) {
+      SendDisconnectRequest();
     }
+    nsAutoCString str;
+    str += "[OPP] 0x";
+    str.AppendInt(mLastCommand, 16);
+    str += " failed";
+    NS_WARNING(str.get());
+    FileTransferComplete();
+    return;
   }
 
   if (mLastCommand == ObexRequestCode::PutFinal) {
@@ -849,7 +852,6 @@ BluetoothOppManager::ClientDataHandler(UnixSocketRawData* aMessage)
      */
     if (ExtractBlobHeaders()) {
       sInstance->SendPutHeaderRequest(sFileName, sFileLength);
-      StartFileTransfer();
     }
   } else if (mLastCommand == ObexRequestCode::Put) {
 
