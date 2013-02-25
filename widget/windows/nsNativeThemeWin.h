@@ -8,6 +8,7 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsNativeTheme.h"
+#include "gfxTypes.h"
 #include <windows.h>
 #include "mozilla/TimeStamp.h"
 
@@ -103,6 +104,11 @@ protected:
   RECT CalculateProgressOverlayRect(nsIFrame* aFrame, RECT* aWidgetRect,
                                     bool aIsVertical, bool aIsIndeterminate,
                                     bool aIsClassic);
+  void DrawThemedProgressMeter(nsIFrame* aFrame, int aWidgetType,
+                               HANDLE aTheme, HDC aHdc,
+                               int aPart, int aState,
+                               RECT* aWidgetRect, RECT* aClipRect,
+                               gfxFloat aAppUnits);
 
 private:
   TimeStamp mProgressDeterminateTimeStamp;
