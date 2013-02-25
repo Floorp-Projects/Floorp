@@ -712,6 +712,7 @@ protected:
   nsRevocableEventPtr<nsRunnableMethod<PresShell> > mUpdateImageVisibilityEvent;
 
   void ClearVisibleImagesList();
+  static void ClearImageVisibilityVisited(nsView* aView, bool aClear);
   static void MarkImagesInListVisible(const nsDisplayList& aList);
 
   // A list of images that are visible or almost visible.
@@ -805,6 +806,8 @@ protected:
 
   bool                      mAsyncResizeTimerIsActive : 1;
   bool                      mInResize : 1;
+
+  bool                      mImageVisibilityVisited : 1;
 
   static bool               sDisableNonTestMouseEvents;
 };
