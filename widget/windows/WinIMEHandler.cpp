@@ -140,6 +140,21 @@ IMEHandler::NotifyIME(nsWindow* aWindow,
   }
 }
 
+// static
+nsresult
+IMEHandler::NotifyIMEOfTextChange(uint32_t aStart,
+                                  uint32_t aOldEnd,
+                                  uint32_t aNewEnd)
+{
+#ifdef NS_ENABLE_TSF
+  if (sIsInTSFMode) {
+    return nsTextStore::OnTextChange(aStart, aOldEnd, aNewEnd);
+  }
+#endif //NS_ENABLE_TSF
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 #ifdef DEBUG
 // static
 bool
