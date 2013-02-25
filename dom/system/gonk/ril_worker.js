@@ -1778,7 +1778,7 @@ let RIL = {
    * @param cause
    *        SMS_* constant indicating the reason for unsuccessful handling.
    */
-  acknowledgeSMS: function acknowledgeSMS(success, cause) {
+  acknowledgeGsmSms: function acknowledgeGsmSms(success, cause) {
     let token = Buf.newParcel(REQUEST_SMS_ACKNOWLEDGE);
     Buf.writeUint32(2);
     Buf.writeUint32(success ? 1 : 0);
@@ -1796,7 +1796,26 @@ let RIL = {
     if (options.result == PDU_FCS_RESERVED) {
       return;
     }
-    this.acknowledgeSMS(options.result == PDU_FCS_OK, options.result);
+    if (this._isCdma) {
+      this.acknowledgeCdmaSms(options.result == PDU_FCS_OK, options.result);
+    } else {
+      this.acknowledgeGsmSms(options.result == PDU_FCS_OK, options.result);
+    }
+  },
+
+  /**
+   * Acknowledge the receipt and handling of a CDMA SMS.
+   *
+   * @param success
+   *        Boolean indicating whether the message was successfuly handled.
+   * @param cause
+   *        SMS_* constant indicating the reason for unsuccessful handling.
+   */
+  acknowledgeCdmaSms: function acknowledgeCdmaSms(success, cause) {
+    let token = Buf.newParcel(REQUEST_CDMA_SMS_ACKNOWLEDGE);
+    Buf.writeUint32(success ? 0 : 1);
+    Buf.writeUint32(cause);
+    Buf.sendParcel();
   },
 
   setCellBroadcastSearchList: function setCellBroadcastSearchList(options) {
@@ -4895,9 +4914,9 @@ RIL[REQUEST_WRITE_SMS_TO_SIM] = function REQUEST_WRITE_SMS_TO_SIM(length, option
     // the short message cannot be stored in the (U)SIM, and there is other
     // message storage available at the MS` ~ 3GPP TS 23.038 section 4. Here
     // we assume we always have indexed db as another storage.
-    this.acknowledgeSMS(false, PDU_FCS_PROTOCOL_ERROR);
+    this.acknowledgeGsmSms(false, PDU_FCS_PROTOCOL_ERROR);
   } else {
-    this.acknowledgeSMS(true, PDU_FCS_OK);
+    this.acknowledgeGsmSms(true, PDU_FCS_OK);
   }
 };
 RIL[REQUEST_DELETE_SMS_ON_SIM] = null;
@@ -4991,14 +5010,14 @@ RIL[REQUEST_REPORT_STK_SERVICE_IS_RUNNING] = null;
 RIL[REQUEST_ACKNOWLEDGE_INCOMING_GSM_SMS_WITH_PDU] = null;
 RIL[REQUEST_STK_SEND_ENVELOPE_WITH_STATUS] = function REQUEST_STK_SEND_ENVELOPE_WITH_STATUS(length, options) {
   if (options.rilRequestError) {
-    this.acknowledgeSMS(false, PDU_FCS_UNSPECIFIED);
+    this.acknowledgeGsmSms(false, PDU_FCS_UNSPECIFIED);
     return;
   }
 
   let sw1 = Buf.readUint32();
   let sw2 = Buf.readUint32();
   if ((sw1 == ICC_STATUS_SAT_BUSY) && (sw2 == 0x00)) {
-    this.acknowledgeSMS(false, PDU_FCS_USAT_BUSY);
+    this.acknowledgeGsmSms(false, PDU_FCS_USAT_BUSY);
     return;
   }
 
@@ -5008,7 +5027,7 @@ RIL[REQUEST_STK_SEND_ENVELOPE_WITH_STATUS] = function REQUEST_STK_SEND_ENVELOPE_
   let messageStringLength = Buf.readUint32(); // In semi-octets
   let responsePduLen = messageStringLength / 2; // In octets
   if (!responsePduLen) {
-    this.acknowledgeSMS(success, success ? PDU_FCS_OK
+    this.acknowledgeGsmSms(success, success ? PDU_FCS_OK
                                          : PDU_FCS_USIM_DATA_DOWNLOAD_ERROR);
     return;
   }
@@ -5130,11 +5149,11 @@ RIL[UNSOLICITED_RESPONSE_NEW_SMS] = function UNSOLICITED_RESPONSE_NEW_SMS(length
   }
 
   // Not reserved FCS values, send ACK now.
-  this.acknowledgeSMS(result == PDU_FCS_OK, result);
+  this.acknowledgeGsmSms(result == PDU_FCS_OK, result);
 };
 RIL[UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT] = function UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT(length) {
   let result = this._processSmsStatusReport(length);
-  this.acknowledgeSMS(result == PDU_FCS_OK, result);
+  this.acknowledgeGsmSms(result == PDU_FCS_OK, result);
 };
 RIL[UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM] = function UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM(length) {
   let info = Buf.readUint32List();
@@ -5235,7 +5254,20 @@ RIL[UNSOLICITED_CALL_RING] = function UNSOLICITED_CALL_RING() {
 RIL[UNSOLICITED_RESPONSE_SIM_STATUS_CHANGED] = function UNSOLICITED_RESPONSE_SIM_STATUS_CHANGED() {
   this.getICCStatus();
 };
-RIL[UNSOLICITED_RESPONSE_CDMA_NEW_SMS] = null;
+RIL[UNSOLICITED_RESPONSE_CDMA_NEW_SMS] = function UNSOLICITED_RESPONSE_CDMA_NEW_SMS(length) {
+  let [message, result] = CdmaPDUHelper.processReceivedSms(length);
+
+  if (message) {
+    result = this._processSmsMultipart(message);
+  }
+
+  if (result == PDU_FCS_RESERVED || result == MOZ_FCS_WAIT_FOR_EXPLICIT_ACK) {
+    return;
+  }
+
+  // Not reserved FCS values, send ACK now.
+  this.acknowledgeCdmaSms(result == PDU_FCS_OK, result);
+};
 RIL[UNSOLICITED_RESPONSE_NEW_BROADCAST_SMS] = function UNSOLICITED_RESPONSE_NEW_BROADCAST_SMS(length) {
   let message;
   try {
