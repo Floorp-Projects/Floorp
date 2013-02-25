@@ -109,6 +109,11 @@ public:
    * image will initiate a new series of progressive decode notifications.
    */
   virtual void OnDiscard() = 0;
+
+  /**
+   * Called when we are asked to Draw an image that is not locked.
+   */
+  virtual void OnUnlockedDraw() = 0;
 };
 
 // We must define a destructor because derived classes call our destructor from
