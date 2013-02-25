@@ -14,6 +14,7 @@ EXTRA_JS_MODULES = \
 		HUDService.jsm \
 		PropertyPanel.jsm \
 		NetworkPanel.jsm \
+		AutocompletePopup.jsm \
 		WebConsolePanel.jsm \
 		$(NULL)
 
