@@ -303,6 +303,17 @@ nsNativeTheme::IsFrameRTL(nsIFrame* aFrame)
   return aFrame && aFrame->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
 }
 
+bool
+nsNativeTheme::IsHTMLContent(nsIFrame *aFrame)
+{
+  if (!aFrame) {
+    return false;
+  }
+  nsIContent* content = aFrame->GetContent();
+  return content && content->IsHTML();
+}
+
+
 // scrollbar button:
 int32_t
 nsNativeTheme::GetScrollbarButtonType(nsIFrame* aFrame)
