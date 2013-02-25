@@ -51,6 +51,21 @@ IMEHandler::Terminate()
 
 // static
 bool
+IMEHandler::IsIMEEnabled(const InputContext& aInputContext)
+{
+  return IsIMEEnabled(aInputContext.mIMEState.mEnabled);
+}
+
+// static
+bool
+IMEHandler::IsIMEEnabled(IMEState::Enabled aIMEState)
+{
+  return (aIMEState == mozilla::widget::IMEState::ENABLED ||
+          aIMEState == mozilla::widget::IMEState::PLUGIN);
+}
+
+// static
+bool
 IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
                            WPARAM& aWParam, LPARAM& aLParam,
                            LRESULT* aRetValue, bool& aEatMessage)
@@ -199,8 +214,7 @@ IMEHandler::SetInputContext(nsWindow* aWindow, InputContext& aInputContext)
   // FYI: If there is no composition, this call will do nothing.
   NotifyIME(aWindow, REQUEST_TO_COMMIT_COMPOSITION);
 
-  bool enable = (aInputContext.mIMEState.mEnabled == IMEState::ENABLED ||
-                 aInputContext.mIMEState.mEnabled == IMEState::PLUGIN);
+  bool enable = IsIMEEnabled(aInputContext);
   bool adjustOpenState = (enable &&
     aInputContext.mIMEState.mOpen != IMEState::DONT_CHANGE_OPEN_STATE);
   bool open = (adjustOpenState &&
