@@ -49,6 +49,20 @@ GetFunctionProxyConstruct(UnrootedObject proxy)
     return proxy->getSlotRef(JSSLOT_PROXY_CONSTRUCT);
 }
 
+void
+js::AutoEnterPolicy::reportError(JSContext *cx, jsid id)
+{
+    if (JSID_IS_VOID(id)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_OBJECT_ACCESS_DENIED);
+    } else {
+        JSString *str = IdToString(cx, id);
+        const jschar *prop = str ? str->getCharsZ(cx) : NULL;
+        JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
+                               JSMSG_PROPERTY_ACCESS_DENIED, prop);
+    }
+}
+
 BaseProxyHandler::BaseProxyHandler(void *family)
   : mFamily(family),
     mHasPrototype(false),
