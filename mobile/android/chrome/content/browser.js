@@ -3510,7 +3510,7 @@ Tab.prototype = {
           aEvent.preventDefault();
 
           sendMessageToJava({
-            type: "DOMWindowClose",
+            type: "Tab:Close",
             tabID: this.id
           });
         }
