@@ -10,6 +10,8 @@
 #include "nsTextStore.h"
 #endif // #ifdef NS_ENABLE_TSF
 
+#include "nsWindow.h"
+
 namespace mozilla {
 namespace widget {
 
@@ -45,6 +47,27 @@ IMEHandler::Terminate()
 #endif // #ifdef NS_ENABLE_TSF
 
   nsIMM32Handler::Terminate();
+}
+
+// static
+bool
+IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
+                           WPARAM& aWParam, LPARAM& aLParam,
+                           LRESULT* aRetValue, bool& aEatMessage)
+{
+#ifdef NS_ENABLE_TSF
+  if (sIsInTSFMode) {
+    if (aMessage == WM_USER_TSF_TEXTCHANGE) {
+      nsTextStore::OnTextChangeMsg();
+      aEatMessage = true;
+      return true;
+    }
+    return false;
+  }
+#endif // #ifdef NS_ENABLE_TSF
+
+  return nsIMM32Handler::ProcessMessage(aWindow, aMessage, aWParam, aLParam,
+                                        aRetValue, aEatMessage);
 }
 
 // static
