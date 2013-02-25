@@ -1,0 +1,23 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+add_tier_dir('base', ['config', 'build', 'probes', 'mfbt', 'python'])
+
+if not CONFIG['LIBXUL_SDK']:
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
+        add_tier_dir('base', ['other-licenses/android'])
+
+    if CONFIG['MOZ_MEMORY']:
+        add_tier_dir('base', ['memory'])
+
+    if not CONFIG['MOZ_NATIVE_ZLIB']:
+        add_tier_dir('base', ['modules/zlib'])
+
+    add_tier_dir('base', ['mozglue', 'memory/mozalloc'])
+
+# Bring in the configuration for the configured application.
+if CONFIG['COMPILE_ENVIRONMENT']:
+    include('/' + CONFIG['MOZ_BUILD_APP'] + '/app.mozbuild')
+
