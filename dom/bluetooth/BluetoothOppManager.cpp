@@ -119,6 +119,31 @@ BluetoothOppManagerObserver::Observe(nsISupports* aSubject,
   return NS_ERROR_UNEXPECTED;
 }
 
+class SendSocketDataTask : public nsRunnable
+{
+public:
+  SendSocketDataTask(uint8_t* aStream, uint32_t aSize)
+    : mStream(aStream)
+    , mSize(aSize)
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+  }
+
+  NS_IMETHOD Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    sInstance->SendPutRequest(mStream, mSize);
+    sSentFileLength += mSize;
+
+    return NS_OK;
+  }
+
+private:
+  nsAutoArrayPtr<uint8_t> mStream;
+  uint32_t mSize;
+};
+
 class ReadFileTask : public nsRunnable
 {
 public:
@@ -135,13 +160,13 @@ public:
     MOZ_ASSERT(!NS_IsMainThread());
 
     uint32_t numRead;
-    nsAutoArrayPtr<char> buf;
-    buf = new char[mAvailablePacketSize];
+    char* buf = new char[mAvailablePacketSize];
 
     // function inputstream->Read() only works on non-main thread
-    nsresult rv = mInputStream->Read(buf.get(), mAvailablePacketSize, &numRead);
+    nsresult rv = mInputStream->Read(buf, mAvailablePacketSize, &numRead);
     if (NS_FAILED(rv)) {
       // Needs error handling here
+      NS_WARNING("Failed to read from input stream");
       return NS_ERROR_FAILURE;
     }
 
@@ -149,8 +174,13 @@ public:
       if (sSentFileLength + numRead >= sFileLength) {
         sWaitingToSendPutFinal = true;
       }
-      sInstance->SendPutRequest((uint8_t*)buf.get(), numRead);
-      sSentFileLength += numRead;
+
+      nsRefPtr<SendSocketDataTask> task =
+        new SendSocketDataTask((uint8_t*)buf, numRead);
+      if (NS_FAILED(NS_DispatchToMainThread(task))) {
+        NS_WARNING("Failed to dispatch to main thread!");
+        return NS_ERROR_FAILURE;
+      }
     }
 
     return NS_OK;
