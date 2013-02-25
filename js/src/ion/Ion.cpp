@@ -938,6 +938,14 @@ OptimizeMIR(MIRGenerator *mir)
 
         if (mir->shouldCancel("RA De-Beta"))
             return false;
+
+        if (!r.truncate())
+            return false;
+        IonSpewPass("Truncate Doubles");
+        AssertExtendedGraphCoherency(graph);
+
+        if (mir->shouldCancel("Truncate Doubles"))
+            return false;
     }
 
     if (!EliminateDeadCode(mir, graph))
