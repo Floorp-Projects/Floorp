@@ -46,6 +46,27 @@ SetSourceMap(JSContext *cx, TokenStream &tokenStream, ScriptSource *ss, Unrooted
     return true;
 }
 
+static bool
+CheckArgumentsWithinEval(JSContext *cx, Parser &parser, HandleFunction fun)
+{
+    if (fun->hasRest()) {
+        // It's an error to use |arguments| in a function that has a rest
+        // parameter.
+        parser.reportError(NULL, JSMSG_ARGUMENTS_AND_REST);
+        return false;
+    }
+
+    // Force construction of arguments objects for functions that use
+    // |arguments| within an eval.
+    RootedScript script(cx, fun->nonLazyScript());
+    if (script->argumentsHasVarBinding()) {
+        if (!JSScript::argumentsOptimizationFailed(cx, script))
+            return false;
+    }
+
+    return true;
+}
+
 UnrootedScript
 frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
                         HandleScript evalCaller,
@@ -199,23 +220,20 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
         return UnrootedScript(NULL);
 
     if (evalCaller && evalCaller->functionOrCallerFunction()) {
-        JSFunction *fun = evalCaller->functionOrCallerFunction();
+        // Watch for uses of 'arguments' within the evaluated script, both as
+        // free variables and as variables redeclared with 'var'.
+        RootedFunction fun(cx, evalCaller->functionOrCallerFunction());
         HandlePropertyName arguments = cx->names().arguments;
         for (AtomDefnRange r = pc.lexdeps->all(); !r.empty(); r.popFront()) {
             if (r.front().key() == arguments) {
-                if (fun->hasRest()) {
-                    // It's an error to use |arguments| in a function that has
-                    // a rest parameter.
-                    parser.reportError(NULL, JSMSG_ARGUMENTS_AND_REST);
+                if (!CheckArgumentsWithinEval(cx, parser, fun))
                     return UnrootedScript(NULL);
-                }
-                // Force construction of arguments objects for functions that
-                // use 'arguments' within an eval.
-                RootedScript script(cx, fun->nonLazyScript());
-                if (script->argumentsHasVarBinding()) {
-                    if (!JSScript::argumentsOptimizationFailed(cx, script))
-                        return UnrootedScript(NULL);
-                }
+            }
+        }
+        for (AtomDefnListMap::Range r = pc.decls().all(); !r.empty(); r.popFront()) {
+            if (r.front().key() == arguments) {
+                if (!CheckArgumentsWithinEval(cx, parser, fun))
+                    return UnrootedScript(NULL);
             }
         }
 

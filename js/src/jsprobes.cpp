@@ -165,7 +165,7 @@ FunctionName(JSContext *cx, UnrootedFunction fun, JSAutoByteString* bytes)
         return Probes::nullName;
     if (!fun->displayAtom())
         return Probes::anonymousName;
-    return bytes->encode(cx, fun->displayAtom()) ? bytes->ptr() : Probes::nullName;
+    return bytes->encodeLatin1(cx, fun->displayAtom()) ? bytes->ptr() : Probes::nullName;
 }
 
 /*

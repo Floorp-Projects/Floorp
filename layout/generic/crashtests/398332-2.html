@@ -1,0 +1,27 @@
+<html>
+<head>
+<script>
+function removestyles(i){
+document.getElementsByTagName('*')[5].removeAttribute('style');
+document.body.offsetHeight;
+document.getElementsByTagName('*')[6].removeAttribute('style');
+document.body.offsetHeight;
+document.getElementsByTagName('*')[7].removeAttribute('style');
+}
+
+setTimeout(removestyles,300);
+</script>
+
+</head>
+<body>
+<div style="position: relative; width: 500px;">
+  <span style="position: absolute; -moz-column-count: 2;">
+    <span style=" position: absolute;">
+      <span style=" display: inline-block; ">m</span>
+      <input>
+      <input style="position: fixed;">m
+    </span>
+  </span>
+</div>
+</body>
+</html>

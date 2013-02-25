@@ -72,8 +72,11 @@ SessionStartup.prototype = {
    */
   init: function sss_init() {
     // do not need to initialize anything in auto-started private browsing sessions
-    if (PrivateBrowsingUtils.permanentPrivateBrowsing)
+    if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
+      this._initialized = true;
+      gOnceInitializedDeferred.resolve();
       return;
+    }
 
     _SessionFile.read().then(
       this._onSessionFileRead.bind(this)

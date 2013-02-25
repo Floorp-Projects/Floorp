@@ -170,14 +170,35 @@ skip-if(B2G) == 726392-3.html 726392-3-ref.html
 != emoji-01.html emoji-01-notref.html
 != emoji-02.html emoji-02-notref.html
 
+# check that Graphite shaping (bug 631479) is working
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-01.html graphite-01-ref.html
+# Test 02 (using Pig Latin) is fuzzy on Win7 because glyph positioning is not guaranteed to match exactly
+# between a sequence of simple glyphs rendered individually, and the same sequence treated as a single cluster.
+fuzzy-if(winWidget,43,220) pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-02.html graphite-02-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) != graphite-03a.html graphite-03-notref.html
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) != graphite-03b.html graphite-03-notref.html
+pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) != graphite-01.html graphite-01-ref.html
+pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) != graphite-02.html graphite-02-ref.html
+# test 03a (lang setting in Padauk font) now works in opentype/harfbuzz as well, but not on Windows (using Uniscribe/DirectWrite)
+fails-if(winWidget) pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) != graphite-03a.html graphite-03-notref.html
+pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) == graphite-03b.html graphite-03-notref.html
+
+# tests for graphite rendering with valid and invalid lang tags
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-04-fa.html graphite-04-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) != graphite-04-sd.html graphite-04-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-04-snd.html graphite-04-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) != graphite-04-ur.html graphite-04-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-04-urd.html graphite-04-ref.html
+pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) != graphite-04-sd.html graphite-04-ur.html
+
 # tests to compare graphite to opentype (will trivially pass when graphite not enabled)
 HTTP(..) == graphite-05-ot-only.html graphite-05-ref.html
-skip-if(B2G) HTTP(..) != graphite-05-ot-only.html graphite-05-fail.html
+HTTP(..) != graphite-05-ot-only.html graphite-05-fail.html
 HTTP(..) == graphite-05-simple.html graphite-05-ref.html
 HTTP(..) == graphite-05-multipass.html graphite-05-ref.html
-skip-if(B2G) HTTP(..) == graphite-05-lang.html graphite-05-ref.html
-skip-if(B2G) HTTP(..) == graphite-05-badlang.html graphite-05-ref.html
-skip-if(B2G) HTTP(..) == graphite-05-feat.html graphite-05-ref.html
+HTTP(..) == graphite-05-lang.html graphite-05-ref.html
+HTTP(..) == graphite-05-badlang.html graphite-05-ref.html
+HTTP(..) == graphite-05-feat.html graphite-05-ref.html
 
 # comparing composed and decomposed characters that should render identically
 # under both OpenType and Graphite shaping

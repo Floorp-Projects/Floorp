@@ -146,6 +146,7 @@ load 374297-1.html
 load 374297-2.html
 load 376223-1.xhtml
 asserts(0-99) load 378325-1.html # bug 531589
+load 378682.html
 asserts(0-3) load 379105-1.xhtml # bug 570215, bug 479160
 load 379419-1.xhtml
 load 379768-1.html
@@ -178,6 +179,8 @@ asserts(0-1) load 394014-2.html # bug 429586
 load 394150-1.xhtml
 load 397011-1.xhtml
 load 398510-1.xhtml
+load 398733-1.html
+load 398733-2.html
 load 399132-1.xhtml
 load 399219-1.xhtml
 load 399365-1.html
@@ -191,6 +194,7 @@ load 400185-1.xul
 load 400445-1.xhtml
 load 400904-1.xhtml
 load 401589-1.xul
+needs-focus pref(accessibility.browsewithcaret,true) load 403048.html
 skip load 403175-1.html # times out occasionally, bug 473680
 load 403245-1.html
 load 403569-1.xhtml
@@ -220,6 +224,8 @@ load 420213-1.html
 load 420219-1.html
 load 420651-1.xhtml
 load 421203-1.xul
+asserts(0-1) load 421432.html # bug 844525
+load 422276.html
 load 423107-1.xhtml
 load 425981-1.html
 load 428138-1.html
@@ -234,11 +240,15 @@ load 432752-1.svg
 load 433450-1.html
 load 436982-1.html
 load 437142-1.html
+asserts(1) load 439343.html # bug 575011
 load 444863-1.html
 load 444925-1.xul
 load 444967-1.html
 load 446328.html
 load 448488-1.html
+load 448543-1.html
+load 448543-2.html
+load 448543-3.html
 load 450319-1.xhtml
 asserts(3) load 453894-1.xhtml # Bug 575011
 load 454751-1.xul
@@ -248,6 +258,7 @@ load 455063-3.html
 load 455171-4.html
 load 455623-1.html
 load 457362-1.xhtml
+load 457514.html
 asserts(0-1) load 460389-1.html # Bug 780985
 load 466763-1.html
 load 467881-1.html

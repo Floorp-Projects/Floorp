@@ -2381,85 +2381,6 @@ array_slice(JSContext *cx, unsigned argc, Value *vp)
     return JS_TRUE;
 }
 
-/* ES5 15.4.4.19. */
-static JSBool
-array_map(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    /* Step 1. */
-    RootedObject obj(cx, ToObject(cx, args.thisv()));
-    if (!obj)
-        return false;
-
-    /* Step 2-3. */
-    uint32_t len;
-    if (!GetLengthProperty(cx, obj, &len))
-        return false;
-
-    /* Step 4. */
-    if (args.length() == 0) {
-        js_ReportMissingArg(cx, args.calleev(), 0);
-        return false;
-    }
-    RootedObject callable(cx, ValueToCallable(cx, args[0], args.length() - 1));
-    if (!callable)
-        return false;
-
-    /* Step 5. */
-    RootedValue thisv(cx, args.length() >= 2 ? args[1] : UndefinedValue());
-
-    /* Step 6. */
-    RootedObject arr(cx, NewDenseAllocatedArray(cx, len));
-    if (!arr)
-        return false;
-    TypeObject *newtype = GetTypeCallerInitObject(cx, JSProto_Array);
-    if (!newtype)
-        return false;
-    arr->setType(newtype);
-
-    /* Step 7. */
-    uint32_t k = 0;
-
-    /* Step 8. */
-    RootedValue kValue(cx);
-    JS_ASSERT(!InParallelSection());
-    FastInvokeGuard fig(cx, ObjectValue(*callable));
-    InvokeArgsGuard &ag = fig.args();
-    while (k < len) {
-        if (!JS_CHECK_OPERATION_LIMIT(cx))
-            return false;
-
-        /* Step a, b, and c.i. */
-        JSBool kNotPresent;
-        if (!GetElement(cx, obj, k, &kNotPresent, &kValue))
-            return false;
-
-        /* Step c.ii-iii. */
-        if (!kNotPresent) {
-            if (!ag.pushed() && !cx->stack.pushInvokeArgs(cx, 3, &ag))
-                return false;
-            ag.setCallee(ObjectValue(*callable));
-            ag.setThis(thisv);
-            ag[0] = kValue;
-            ag[1] = NumberValue(k);
-            ag[2] = ObjectValue(*obj);
-            if (!fig.invoke(cx))
-                return false;
-            kValue = ag.rval();
-            if (!SetArrayElement(cx, arr, k, kValue))
-                return false;
-        }
-
-        /* Step d. */
-        k++;
-    }
-
-    /* Step 9. */
-    args.rval().setObject(*arr);
-    return true;
-}
-
 /* ES5 15.4.4.20. */
 static JSBool
 array_filter(JSContext *cx, unsigned argc, Value *vp)
@@ -2580,7 +2501,7 @@ static JSFunctionSpec array_methods[] = {
          {"lastIndexOf",        {NULL, NULL},       1,0, "ArrayLastIndexOf"},
          {"indexOf",            {NULL, NULL},       1,0, "ArrayIndexOf"},
          {"forEach",            {NULL, NULL},       1,0, "ArrayForEach"},
-    JS_FN("map",                array_map,          1,JSFUN_GENERIC_NATIVE),
+         {"map",                {NULL, NULL},       1,0, "ArrayMap"},
          {"reduce",             {NULL, NULL},       1,0, "ArrayReduce"},
          {"reduceRight",        {NULL, NULL},       1,0, "ArrayReduceRight"},
     JS_FN("filter",             array_filter,       1,JSFUN_GENERIC_NATIVE),
@@ -2596,6 +2517,7 @@ static JSFunctionSpec array_static_methods[] = {
          {"lastIndexOf",        {NULL, NULL},       2,0, "ArrayStaticLastIndexOf"},
          {"indexOf",            {NULL, NULL},       2,0, "ArrayStaticIndexOf"},
          {"forEach",            {NULL, NULL},       2,0, "ArrayStaticForEach"},
+         {"map",                {NULL, NULL},       2,0, "ArrayStaticMap"},
          {"every",              {NULL, NULL},       2,0, "ArrayStaticEvery"},
          {"some",               {NULL, NULL},       2,0, "ArrayStaticSome"},
          {"reduce",             {NULL, NULL},       2,0, "ArrayStaticReduce"},

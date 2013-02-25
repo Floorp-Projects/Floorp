@@ -595,7 +595,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
     }, parseInt(8000*stress_factor));
   }
 
-  function doTest(test_id)
+  function doTest()
+  {
+    // Allow all cookies, then run the actual test
+    SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 0]]}, doTestCallback);
+  }
+  
+  function doTestCallback()
   {
     oldPrefVal = SpecialPowers.getBoolPref("dom.server-events.enabled");
     SpecialPowers.setBoolPref("dom.server-events.enabled", true);

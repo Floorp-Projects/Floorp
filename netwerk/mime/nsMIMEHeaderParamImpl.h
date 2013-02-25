@@ -16,11 +16,9 @@ public:
   nsMIMEHeaderParamImpl() {}
   virtual ~nsMIMEHeaderParamImpl() {}
 private:
-  // Toggles support for RFC 2231 decoding, or RFC 5987 (5987 profiles 2231
-  // for use in HTTP, and, for instance, drops support for continuations)
   enum ParamDecoding {
-    RFC_2231_DECODING = 1,
-    RFC_5987_DECODING
+    MIME_FIELD_ENCODING = 1,
+    HTTP_FIELD_ENCODING
   }; 
 
   nsresult DoGetParameter(const nsACString& aHeaderVal, 

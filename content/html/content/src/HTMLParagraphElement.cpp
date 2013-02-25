@@ -12,7 +12,6 @@
 
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Paragraph)
-DOMCI_NODE_DATA(HTMLParagraphElement, mozilla::dom::HTMLParagraphElement)
 
 namespace mozilla {
 namespace dom {
@@ -30,7 +29,7 @@ NS_INTERFACE_TABLE_HEAD(HTMLParagraphElement)
                                    nsIDOMHTMLParagraphElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLParagraphElement,
                                                nsGenericHTMLElement)
-NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLParagraphElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLParagraphElement)
 

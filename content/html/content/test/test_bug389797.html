@@ -213,6 +213,7 @@ HTML_TAG("textarea", "TextArea", [], [ "nsIDOMNSEditableElement" ]);
 HTML_TAG("tfoot", "TableSection");
 HTML_TAG("th", "TableCell");
 HTML_TAG("thead", "TableSection");
+HTML_TAG("time", "Time");
 HTML_TAG("title", "Title");
 HTML_TAG("tr", "TableRow");
 HTML_TAG("tt", "");
@@ -253,28 +254,6 @@ for (var tag of allTags) {
        iface + " not in Components.interfaces");
     is(node instanceof SpecialPowers.Ci[iface], true,
        tagName(tag) + " does not QI to " + iface);
-  }
-
-  // Now see what classinfo reports
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var nodeClassInfo = SpecialPowers.wrap(node).QueryInterface(SpecialPowers.Ci.nsIClassInfo);
-  var count = {};
-  var classInfoInterfaces =
-    nodeClassInfo.getInterfaces(count).
-    map(function(id) { return SpecialPowers.Components.interfacesByID[id].toString(); });
-
-  // Make sure that we know about all the things classinfo claims
-  for (var classInfoInterface of classInfoInterfaces) {
-    isnot(interfaces[tag].indexOf(classInfoInterface), -1,
-          "Should know about " + tagName(tag) + " implementing " +
-          classInfoInterface);
-  }
-
-  // And make sure classinfo claims all the things we know about
-  for (iface of interfaces[tag]) {
-    isnot(classInfoInterfaces.indexOf(iface), -1,
-          "Classinfo for " + tagName(tag) + " should claim to implement " +
-          iface);
   }
 }
 </script>

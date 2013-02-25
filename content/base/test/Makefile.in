@@ -599,6 +599,7 @@ MOCHITEST_FILES_C= \
 		test_bug761120.html \
 		test_bug787778.html \
 		file_bug787778.sjs \
+		test_xbl_userdata.xhtml \
 		test_XHR_onuploadprogress.html \
 		test_XHR_anon.html \
 		file_XHR_anon.sjs \

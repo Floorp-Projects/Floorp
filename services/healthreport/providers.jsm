@@ -49,6 +49,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesDBUtils",
                                   "resource://gre/modules/PlacesDBUtils.jsm");
 
 
+const LAST_TEXT_FIELD = {type: Metrics.Storage.FIELD_LAST_TEXT};
+const DAILY_DISCRETE_NUMERIC_FIELD = {type: Metrics.Storage.FIELD_DAILY_DISCRETE_NUMERIC};
+const DAILY_LAST_NUMERIC_FIELD = {type: Metrics.Storage.FIELD_DAILY_LAST_NUMERIC};
+const DAILY_COUNTER_FIELD = {type: Metrics.Storage.FIELD_DAILY_COUNTER};
+
 /**
  * Represents basic application state.
  *
@@ -65,33 +70,22 @@ AppInfoMeasurement.prototype = Object.freeze({
   name: "appinfo",
   version: 1,
 
-  LAST_TEXT_FIELDS: [
-    "vendor",
-    "name",
-    "id",
-    "version",
-    "appBuildID",
-    "platformVersion",
-    "platformBuildID",
-    "os",
-    "xpcomabi",
-    "updateChannel",
-    "distributionID",
-    "distributionVersion",
-    "hotfixVersion",
-    "locale",
-  ],
-
-  configureStorage: function () {
-    let self = this;
-    return Task.spawn(function configureStorage() {
-      for (let field of self.LAST_TEXT_FIELDS) {
-        yield self.registerStorageField(field, self.storage.FIELD_LAST_TEXT);
-      }
-
-      yield self.registerStorageField("isDefaultBrowser",
-                                      self.storage.FIELD_DAILY_LAST_NUMERIC);
-    });
+  fields: {
+    vendor: LAST_TEXT_FIELD,
+    name: LAST_TEXT_FIELD,
+    id: LAST_TEXT_FIELD,
+    version: LAST_TEXT_FIELD,
+    appBuildID: LAST_TEXT_FIELD,
+    platformVersion: LAST_TEXT_FIELD,
+    platformBuildID: LAST_TEXT_FIELD,
+    os: LAST_TEXT_FIELD,
+    xpcomabi: LAST_TEXT_FIELD,
+    updateChannel: LAST_TEXT_FIELD,
+    distributionID: LAST_TEXT_FIELD,
+    distributionVersion: LAST_TEXT_FIELD,
+    hotfixVersion: LAST_TEXT_FIELD,
+    locale: LAST_TEXT_FIELD,
+    isDefaultBrowser: {type: Metrics.Storage.FIELD_DAILY_LAST_NUMERIC},
   },
 });
 
@@ -106,9 +100,8 @@ AppVersionMeasurement.prototype = Object.freeze({
   name: "versions",
   version: 1,
 
-  configureStorage: function () {
-    return this.registerStorageField("version",
-                                     this.storage.FIELD_DAILY_DISCRETE_TEXT);
+  fields: {
+    version: {type: Metrics.Storage.FIELD_DAILY_DISCRETE_TEXT},
   },
 });
 
@@ -277,17 +270,15 @@ SysInfoMeasurement.prototype = Object.freeze({
   name: "sysinfo",
   version: 1,
 
-  configureStorage: function () {
-    return Task.spawn(function configureStorage() {
-      yield this.registerStorageField("cpuCount", this.storage.FIELD_LAST_NUMERIC);
-      yield this.registerStorageField("memoryMB", this.storage.FIELD_LAST_NUMERIC);
-      yield this.registerStorageField("manufacturer", this.storage.FIELD_LAST_TEXT);
-      yield this.registerStorageField("device", this.storage.FIELD_LAST_TEXT);
-      yield this.registerStorageField("hardware", this.storage.FIELD_LAST_TEXT);
-      yield this.registerStorageField("name", this.storage.FIELD_LAST_TEXT);
-      yield this.registerStorageField("version", this.storage.FIELD_LAST_TEXT);
-      yield this.registerStorageField("architecture", this.storage.FIELD_LAST_TEXT);
-    }.bind(this));
+  fields: {
+    cpuCount: {type: Metrics.Storage.FIELD_LAST_NUMERIC},
+    memoryMB: {type: Metrics.Storage.FIELD_LAST_NUMERIC},
+    manufacturer: LAST_TEXT_FIELD,
+    device: LAST_TEXT_FIELD,
+    hardware: LAST_TEXT_FIELD,
+    name: LAST_TEXT_FIELD,
+    version: LAST_TEXT_FIELD,
+    architecture: LAST_TEXT_FIELD,
   },
 });
 
@@ -382,9 +373,8 @@ CurrentSessionMeasurement.prototype = Object.freeze({
   name: "current",
   version: 3,
 
-  configureStorage: function () {
-    return Promise.resolve();
-  },
+  // Storage is in preferences.
+  fields: {},
 
   /**
    * All data is stored in prefs, so we have a custom implementation.
@@ -431,27 +421,19 @@ PreviousSessionsMeasurement.prototype = Object.freeze({
   name: "previous",
   version: 3,
 
-  DAILY_DISCRETE_NUMERIC_FIELDS: [
+  fields: {
     // Milliseconds of sessions that were properly shut down.
-    "cleanActiveTicks",
-    "cleanTotalTime",
+    cleanActiveTicks: DAILY_DISCRETE_NUMERIC_FIELD,
+    cleanTotalTime: DAILY_DISCRETE_NUMERIC_FIELD,
 
     // Milliseconds of sessions that were not properly shut down.
-    "abortedActiveTicks",
-    "abortedTotalTime",
+    abortedActiveTicks: DAILY_DISCRETE_NUMERIC_FIELD,
+    abortedTotalTime: DAILY_DISCRETE_NUMERIC_FIELD,
 
     // Startup times in milliseconds.
-    "main",
-    "firstPaint",
-    "sessionRestored",
-  ],
-
-  configureStorage: function () {
-    return Task.spawn(function configureStorage() {
-      for (let field of this.DAILY_DISCRETE_NUMERIC_FIELDS) {
-        yield this.registerStorageField(field, this.storage.FIELD_DAILY_DISCRETE_NUMERIC);
-      }
-    }.bind(this));
+    main: DAILY_DISCRETE_NUMERIC_FIELD,
+    firstPaint: DAILY_DISCRETE_NUMERIC_FIELD,
+    sessionRestored: DAILY_DISCRETE_NUMERIC_FIELD,
   },
 });
 
@@ -502,7 +484,26 @@ SessionsProvider.prototype = Object.freeze({
 
     let daily = this.getMeasurement("previous", 3);
 
-    for each (let session in sessions) {
+    // Please note the coupling here between the session recorder and our state.
+    // If the pruned index or the current index of the session recorder is ever
+    // deleted or reset to 0, our stored state of a later index would mean that
+    // new sessions would never be captured by this provider until the session
+    // recorder index catches up to our last session ID. This should not happen
+    // under normal circumstances, so we don't worry too much about it. We
+    // should, however, consider this as part of implementing bug 841561.
+    let lastRecordedSession = yield this.getState("lastSession");
+    if (lastRecordedSession === null) {
+      lastRecordedSession = -1;
+    }
+    this._log.debug("The last recorded session was #" + lastRecordedSession);
+
+    for (let [index, session] in Iterator(sessions)) {
+      if (index < lastRecordedSession) {
+        this._log.warn("Already recorded session " + index + ". Did the last " +
+                       "session crash or have an issue saving the prefs file?");
+        continue;
+      }
+
       let type = session.clean ? "clean" : "aborted";
       let date = session.startDate;
       yield daily.addDailyDiscreteNumeric(type + "ActiveTicks", session.activeTicks, date);
@@ -511,8 +512,11 @@ SessionsProvider.prototype = Object.freeze({
       for (let field of ["main", "firstPaint", "sessionRestored"]) {
         yield daily.addDailyDiscreteNumeric(field, session[field], date);
       }
+
+      lastRecordedSession = index;
     }
 
+    yield this.setState("lastSession", "" + lastRecordedSession);
     recorder.pruneOldSessions(new Date());
   },
 });
@@ -540,8 +544,8 @@ ActiveAddonsMeasurement.prototype = Object.freeze({
   name: "active",
   version: 1,
 
-  configureStorage: function () {
-    return this.registerStorageField("addons", this.storage.FIELD_LAST_TEXT);
+  fields: {
+    addons: LAST_TEXT_FIELD,
   },
 
   _serializeJSONSingular: function (data) {
@@ -568,13 +572,11 @@ AddonCountsMeasurement.prototype = Object.freeze({
   name: "counts",
   version: 1,
 
-  configureStorage: function () {
-    return Task.spawn(function registerFields() {
-      yield this.registerStorageField("theme", this.storage.FIELD_DAILY_LAST_NUMERIC);
-      yield this.registerStorageField("lwtheme", this.storage.FIELD_DAILY_LAST_NUMERIC);
-      yield this.registerStorageField("plugin", this.storage.FIELD_DAILY_LAST_NUMERIC);
-      yield this.registerStorageField("extension", this.storage.FIELD_DAILY_LAST_NUMERIC);
-    }.bind(this));
+  fields: {
+    theme: DAILY_LAST_NUMERIC_FIELD,
+    lwtheme: DAILY_LAST_NUMERIC_FIELD,
+    plugin: DAILY_LAST_NUMERIC_FIELD,
+    extension: DAILY_LAST_NUMERIC_FIELD,
   },
 });
 
@@ -740,9 +742,9 @@ DailyCrashesMeasurement.prototype = Object.freeze({
   name: "crashes",
   version: 1,
 
-  configureStorage: function () {
-    this.registerStorageField("pending", this.storage.FIELD_DAILY_COUNTER);
-    this.registerStorageField("submitted", this.storage.FIELD_DAILY_COUNTER);
+  fields: {
+    pending: DAILY_COUNTER_FIELD,
+    submitted: DAILY_COUNTER_FIELD,
   },
 });
 
@@ -907,11 +909,9 @@ PlacesMeasurement.prototype = Object.freeze({
   name: "places",
   version: 1,
 
-  configureStorage: function () {
-    return Task.spawn(function registerFields() {
-      yield this.registerStorageField("pages", this.storage.FIELD_DAILY_LAST_NUMERIC);
-      yield this.registerStorageField("bookmarks", this.storage.FIELD_DAILY_LAST_NUMERIC);
-    }.bind(this));
+  fields: {
+    pages: DAILY_LAST_NUMERIC_FIELD,
+    bookmarks: DAILY_LAST_NUMERIC_FIELD,
   },
 });
 
@@ -969,6 +969,31 @@ SearchCountMeasurement.prototype = Object.freeze({
   name: "counts",
   version: 1,
 
+  // We only record searches for search engines that have partner agreements
+  // with Mozilla.
+  fields: {
+    "amazon.com.abouthome": DAILY_COUNTER_FIELD,
+    "amazon.com.contextmenu": DAILY_COUNTER_FIELD,
+    "amazon.com.searchbar": DAILY_COUNTER_FIELD,
+    "amazon.com.urlbar": DAILY_COUNTER_FIELD,
+    "bing.abouthome": DAILY_COUNTER_FIELD,
+    "bing.contextmenu": DAILY_COUNTER_FIELD,
+    "bing.searchbar": DAILY_COUNTER_FIELD,
+    "bing.urlbar": DAILY_COUNTER_FIELD,
+    "google.abouthome": DAILY_COUNTER_FIELD,
+    "google.contextmenu": DAILY_COUNTER_FIELD,
+    "google.searchbar": DAILY_COUNTER_FIELD,
+    "google.urlbar": DAILY_COUNTER_FIELD,
+    "yahoo.abouthome": DAILY_COUNTER_FIELD,
+    "yahoo.contextmenu": DAILY_COUNTER_FIELD,
+    "yahoo.searchbar": DAILY_COUNTER_FIELD,
+    "yahoo.urlbar": DAILY_COUNTER_FIELD,
+    "other.abouthome": DAILY_COUNTER_FIELD,
+    "other.contextmenu": DAILY_COUNTER_FIELD,
+    "other.searchbar": DAILY_COUNTER_FIELD,
+    "other.urlbar": DAILY_COUNTER_FIELD,
+  },
+
   // If an engine is removed from this list, it may not be reported any more.
   // Verify side-effects are sane before removing an entry.
   PARTNER_ENGINES: [
@@ -984,25 +1009,6 @@ SearchCountMeasurement.prototype = Object.freeze({
     "searchbar",
     "urlbar",
   ],
-
-  configureStorage: function () {
-    // We only record searches for search engines that have partner
-    // agreements with Mozilla.
-    let engines = this.PARTNER_ENGINES.concat("other");
-
-    let promise;
-
-    // While this creates a large number of fields, storage is sparse and there
-    // will be no overhead for fields that aren't used in a given day.
-    for (let engine of engines) {
-      for (let source of this.SOURCES) {
-        promise = this.registerStorageField(engine + "." + source,
-                                            this.storage.FIELD_DAILY_COUNTER);
-      }
-    }
-
-    return promise;
-  },
 });
 
 this.SearchesProvider = function () {

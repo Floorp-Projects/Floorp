@@ -10,17 +10,10 @@
 #include "nsIFrame.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Legend)
-DOMCI_NODE_DATA(HTMLLegendElement, mozilla::dom::HTMLLegendElement)
-
 
 namespace mozilla {
 namespace dom {
 
-
-HTMLLegendElement::HTMLLegendElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
-{
-}
 
 HTMLLegendElement::~HTMLLegendElement()
 {
@@ -36,7 +29,7 @@ NS_INTERFACE_TABLE_HEAD(HTMLLegendElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLLegendElement, nsIDOMHTMLLegendElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLLegendElement,
                                                nsGenericHTMLElement)
-NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLLegendElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 // nsIDOMHTMLLegendElement

@@ -55,7 +55,6 @@ MOCHITEST_FILES = \
     test_notifications_popup.html \
     privbrowsing_perwindowpb_iframe.html \
     test_privbrowsing_perwindowpb.html \
-    $(filter disabled-for-intermittent-failures--bug-835904, test_prompt.html) \
     test_prompt_async.html \
     test_xhr.html \
     test_xml_load.html \
@@ -84,6 +83,12 @@ MOCHITEST_FILES = \
     subtst_notifications_11_popup.html \
     subtst_prompt_async.html \
     $(NULL)
+
+ifneq ($(OS_TARGET),Linux)
+MOCHITEST_FILES += \
+    test_prompt.html \
+    $(NULL)
+endif
 
 # This test doesn't pass because we can't ensure a cross-platform
 # event that occurs between DOMContentLoaded and Pageload

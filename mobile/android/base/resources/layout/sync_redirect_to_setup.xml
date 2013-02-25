@@ -19,15 +19,20 @@
   </ScrollView>
 
   <LinearLayout
-    style="@style/SyncBottom" >
+    style="@style/SyncBottomContainer">
 
-    <Button
-      style="@style/SyncButton"
-      android:onClick="redirectToSetupHandler"
-      android:text="@string/sync_button_set_up_sync" />
-    <Button
-      style="@style/SyncButton"
-      android:onClick="cancelClickHandler"
-      android:text="@string/sync_button_cancel" />
+    <LinearLayout
+      style="@style/SyncBottom" >
+  
+      <Button
+        style="@style/SyncButton"
+        android:onClick="redirectToSetupHandler"
+        android:text="@string/sync_button_set_up_sync" />
+      <Button
+        style="@style/SyncButton"
+        android:onClick="cancelClickHandler"
+        android:text="@string/sync_button_cancel" />
+    </LinearLayout>
+
   </LinearLayout>
 </LinearLayout>

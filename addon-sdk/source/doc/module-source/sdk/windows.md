@@ -118,6 +118,11 @@ If the only option being used is `url`, then a bare string URL can be passed to
 String URL to be opened in the new window.
 This is a required property.
 
+@prop isPrivate {boolean}
+Boolean which will determine if a private window should be opened.
+Private browsing mode must be supported in order to do this.
+See the [private-browsing](modules/sdk/private-browsing.html) documentation for more information.
+
 @prop [onOpen] {function}
 A callback function that is called when the window has opened. This does not
 mean that the URL content has loaded, only that the window itself is fully

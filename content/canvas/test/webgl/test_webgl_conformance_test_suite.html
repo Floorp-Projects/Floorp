@@ -416,6 +416,8 @@ function start() {
         // Workaround for SeaMonkey tinderboxes which don't support WebGL.
         if (navigator.userAgent.match(/ SeaMonkey\//))
           todo(false, errmsg + " (This is expected on SeaMonkey (tinderboxes).)");
+        else if (SpecialPowers.getBoolPref("webgl.disabled"))
+          todo(false, errmsg + " (This is expected on when WebGL is disabled)");
         else
           ok(false, errmsg);
         reporter.finishedTestSuite();

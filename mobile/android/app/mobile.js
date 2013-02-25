@@ -674,3 +674,9 @@ pref("app.orientation.default", "");
 // On memory pressure, release dirty but unused pages held by jemalloc
 // back to the system.
 pref("memory.free_dirty_pages", true);
+
+#ifdef MOZ_PKG_SPECIAL
+// Disable webgl on ARMv6 because running the reftests takes
+// too long for some reason (bug 843738)
+pref("webgl.disabled", true);
+#endif

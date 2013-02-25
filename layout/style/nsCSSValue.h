@@ -125,7 +125,7 @@ struct ImageValue : public URLValue {
 
   // Inherit operator== from URLValue
 
-  nsRefPtrHashtable<nsISupportsHashKey, imgRequestProxy> mRequests; 
+  nsRefPtrHashtable<nsPtrHashKey<nsISupports>, imgRequestProxy> mRequests; 
 
   // Override AddRef and Release to not only log ourselves correctly, but
   // also so that we delete correctly without a virtual destructor

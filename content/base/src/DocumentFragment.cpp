@@ -38,8 +38,6 @@ NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
   return NS_OK;
 }
 
-DOMCI_NODE_DATA(DocumentFragment, mozilla::dom::DocumentFragment)
-
 namespace mozilla {
 namespace dom {
 
@@ -160,7 +158,6 @@ NS_INTERFACE_MAP_BEGIN(DocumentFragment)
   // below line, make sure nsNodeSH::PreCreate() still does the right
   // thing!
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DocumentFragment)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF_INHERITED(DocumentFragment, FragmentOrElement)

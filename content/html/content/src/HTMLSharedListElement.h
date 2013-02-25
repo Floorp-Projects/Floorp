@@ -56,11 +56,6 @@ public:
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
-  virtual nsXPCClassInfo* GetClassInfo()
-  {
-    return static_cast<nsXPCClassInfo*>(GetClassInfoInternal());
-  }
-  nsIClassInfo* GetClassInfoInternal();
 
   virtual nsIDOMNode* AsDOMNode()
   {

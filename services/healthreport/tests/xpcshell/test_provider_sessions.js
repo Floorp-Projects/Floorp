@@ -138,6 +138,9 @@ add_task(function test_collect() {
     do_check_eq(day.get(field).length, 6);
   }
 
+  let lastIndex = yield provider.getState("lastSession");
+  do_check_eq(lastIndex, "5"); // 0-indexed so this is really 6.
+
   // Fake an aborted sessions.
   let recorder2 = new SessionRecorder("testing.collect.sessions.");
   recorder2.onStartup();
@@ -147,14 +150,34 @@ add_task(function test_collect() {
 
   values = yield daily.getValues();
   day = values.days.getDay(now);
+  do_check_eq(day.size, 7);
   for (let field of ["abortedActiveTicks", "abortedTotalTime"]) {
     do_check_true(day.has(field));
     do_check_true(Array.isArray(day.get(field)));
     do_check_eq(day.get(field).length, 1);
   }
 
-  recorder.onShutdown();
+  lastIndex = yield provider.getState("lastSession");
+  do_check_eq(lastIndex, "6");
+
   recorder2.onShutdown();
+
+  // If we try to insert a lower-numbered session, it will be ignored.
+  let recorder3 = new SessionRecorder("testing.collect.sessions.");
+  recorder3._currentIndex = recorder2._currentIndex - 4;
+  recorder3._prunedIndex = recorder3._currentIndex;
+  recorder3.onStartup();
+  // Session is left over from recorder2.
+  do_check_eq(Object.keys(recorder.getPreviousSessions()).length, 1);
+  yield provider.collectConstantData();
+  lastIndex = yield provider.getState("lastSession");
+  do_check_eq(lastIndex, "6");
+  values = yield daily.getValues();
+  day = values.days.getDay(now);
+  do_check_eq(day.size, 7); // We should not get additional entry.
+  recorder3.onShutdown();
+
+  recorder.onShutdown();
 
   yield provider.shutdown();
   yield storage.close();

@@ -52,12 +52,8 @@ sync_engine_modules := \
   history.js \
   passwords.js \
   prefs.js \
+  tabs.js \
   $(NULL)
-
-# Preprocess engine files.
-SYNC_PP_ENGINE := modules/engines/tabs.js
-SYNC_PP_ENGINE_PATH = $(FINAL_TARGET)/modules/services-sync/engines
-PP_TARGETS += SYNC_PP_ENGINE
 
 sync_stage_modules := \
   cluster.js \

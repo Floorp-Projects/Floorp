@@ -228,6 +228,14 @@ class IDLScope(IDLObject):
            originalObject.identifier.name == newObject.identifier.name:
             return originalObject
             
+        # We do the merging of overloads here as opposed to in IDLInterface
+        # because we need to merge overloads of NamedConstructors and we need to
+        # detect conflicts in those across interfaces. See also the comment in
+        # IDLInterface.addExtendedAttributes for "NamedConstructor".
+        if originalObject.tag == IDLInterfaceMember.Tags.Method and \
+           newObject.tag == IDLInterfaceMember.Tags.Method:
+            return originalObject.addOverload(newObject)
+
         # Default to throwing, derived classes can override.
         conflictdesc = "\n\t%s at %s\n\t%s at %s" % \
           (originalObject, originalObject.location, newObject, newObject.location)
@@ -446,6 +454,7 @@ class IDLInterface(IDLObjectWithScope):
         self._callback = False
         self._finished = False
         self.members = []
+        self.namedConstructors = set()
         self.implementedInterfaces = set()
         self._consequential = False
         self._isPartial = True
@@ -478,14 +487,9 @@ class IDLInterface(IDLObjectWithScope):
         assert isinstance(originalObject, IDLInterfaceMember)
         assert isinstance(newObject, IDLInterfaceMember)
 
-        if originalObject.tag != IDLInterfaceMember.Tags.Method or \
-           newObject.tag != IDLInterfaceMember.Tags.Method:
-            # Call the base class method, which will throw
-            IDLScope.resolveIdentifierConflict(self, scope, identifier,
-                                               originalObject, newObject)
-            assert False # Not reached
+        retval = IDLScope.resolveIdentifierConflict(self, scope, identifier,
+                                                    originalObject, newObject)
 
-        retval = originalObject.addOverload(newObject)
         # Might be a ctor, which isn't in self.members
         if newObject in self.members:
             self.members.remove(newObject)
@@ -566,6 +570,9 @@ class IDLInterface(IDLObjectWithScope):
 
         ctor = self.ctor()
         if ctor is not None:
+            ctor.finish(scope)
+
+        for ctor in self.namedConstructors:
             ctor.finish(scope)
 
         # Make a copy of our member list, so things that implement us
@@ -777,20 +784,31 @@ class IDLInterface(IDLObjectWithScope):
                                       [self.location])
 
                 self._noInterfaceObject = True
-            elif identifier == "Constructor":
+            elif identifier == "Constructor" or identifier == "NamedConstructor":
                 if not self.hasInterfaceObject():
-                    raise WebIDLError("Constructor and NoInterfaceObject are incompatible",
+                    raise WebIDLError(str(identifier) + " and NoInterfaceObject are incompatible",
                                       [self.location])
+
+                if identifier == "NamedConstructor" and not attr.hasValue():
+                    raise WebIDLError("NamedConstructor must either take an identifier or take a named argument list",
+                                      [attr.location])
 
                 args = attr.args() if attr.hasArgs() else []
 
                 retType = IDLWrapperType(self.location, self)
                 
-                identifier = IDLUnresolvedIdentifier(self.location, "constructor",
-                                                     allowForbidden=True)
+                if identifier == "Constructor":
+                    name = "constructor"
+                    allowForbidden = True
+                else:
+                    name = attr.value()
+                    allowForbidden = False
 
-                method = IDLMethod(self.location, identifier, retType, args,
-                                   static=True)
+                methodIdentifier = IDLUnresolvedIdentifier(self.location, name,
+                                                           allowForbidden=allowForbidden)
+
+                method = IDLMethod(self.location, methodIdentifier, retType,
+                                   args, static=True)
                 # Constructors are always Creators and are always
                 # assumed to be able to throw (since there's no way to
                 # indicate otherwise) and never have any other
@@ -798,7 +816,31 @@ class IDLInterface(IDLObjectWithScope):
                 method.addExtendedAttributes(
                     [IDLExtendedAttribute(self.location, ("Creator",)),
                      IDLExtendedAttribute(self.location, ("Throws",))])
-                method.resolve(self)
+
+
+                if identifier == "Constructor":
+                    method.resolve(self)
+                else:
+                    # We need to detect conflicts for NamedConstructors across
+                    # interfaces. We first call resolve on the parentScope,
+                    # which will merge all NamedConstructors with the same
+                    # identifier accross interfaces as overloads.
+                    method.resolve(self.parentScope)
+
+                    # Then we look up the identifier on the parentScope. If the
+                    # result is the same as the method we're adding then it
+                    # hasn't been added as an overload and it's the first time
+                    # we've encountered a NamedConstructor with that identifier.
+                    # If the result is not the same as the method we're adding
+                    # then it has been added as an overload and we need to check
+                    # whether the result is actually one of our existing
+                    # NamedConstructors.
+                    newMethod = self.parentScope.lookupIdentifier(method.identifier)
+                    if newMethod == method:
+                        self.namedConstructors.add(method)
+                    elif not newMethod in self.namedConstructors:
+                        raise WebIDLError("NamedConstructor conflicts with a NamedConstructor of a different interface",
+                                          [method.location, newMethod.location])
 
             attrlist = attr.listValue()
             self._extendedAttrDict[identifier] = attrlist if len(attrlist) else True
@@ -2819,7 +2861,7 @@ class IDLExtendedAttribute(IDLObject):
         return len(self._tuple) == 1
 
     def hasValue(self):
-        return len(self._tuple) == 2 and isinstance(self._tuple[1], str)
+        return len(self._tuple) >= 2 and isinstance(self._tuple[1], str)
 
     def value(self):
         assert(self.hasValue())

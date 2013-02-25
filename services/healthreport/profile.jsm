@@ -191,9 +191,9 @@ ProfileMetadataMeasurement.prototype = {
   name: DEFAULT_PROFILE_MEASUREMENT_NAME,
   version: 1,
 
-  configureStorage: function () {
+  fields: {
     // Profile creation date. Number of days since Unix epoch.
-    return this.registerStorageField("profileCreation", this.storage.FIELD_LAST_NUMERIC);
+    profileCreation: {type: Metrics.Storage.FIELD_LAST_NUMERIC},
   },
 };
 
