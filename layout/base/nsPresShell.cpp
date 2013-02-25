@@ -5389,7 +5389,17 @@ PresShell::UpdateImageVisibility()
 static bool
 AssumeAllImagesVisible(nsPresContext* aPresContext, nsIDocument* aDocument)
 {
-  if (!aPresContext || !aDocument)
+  static bool sImageVisibilityEnabled = true;
+  static bool sImageVisibilityPrefCached = false;
+
+  if (!sImageVisibilityPrefCached) {
+    Preferences::AddBoolVarCache(&sImageVisibilityEnabled,
+                                 "layout.imagevisibility.enabled", true);
+    sImageVisibilityPrefCached = true;
+  }
+
+
+  if (!sImageVisibilityEnabled || !aPresContext || !aDocument)
     return true;
 
   // We assume all images are visible in print, print preview, chrome, xul, and
