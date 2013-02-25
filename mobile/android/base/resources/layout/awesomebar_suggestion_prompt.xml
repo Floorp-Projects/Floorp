@@ -3,13 +3,15 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="fill_parent"
-              android:layout_height="wrap_content"
-              android:minHeight="@dimen/awesomebar_row_height"
-              android:orientation="horizontal"
-              android:gravity="center_vertical"
-              android:padding="10dip">
+<view xmlns:android="http://schemas.android.com/apk/res/android"
+      class="org.mozilla.gecko.AwesomeBarTabs$BackgroundLayout"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:minHeight="@dimen/awesomebar_row_height"
+      android:gravity="center_vertical"
+      android:padding="10dip"
+      android:background="@drawable/address_bar_bg">
 
     <Gecko.TextView android:id="@+id/suggestions_prompt_title"
                     android:layout_height="wrap_content"
@@ -45,4 +47,4 @@
             android:clickable="true"
             android:text="@string/button_no" />
 
-</LinearLayout>
+</view>
