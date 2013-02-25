@@ -12,9 +12,6 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = browser
-
-
 MOCHITEST_CHROME_FILES   = \
                 test_428653.xul \
                 $(NULL)

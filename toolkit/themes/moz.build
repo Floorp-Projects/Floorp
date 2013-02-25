@@ -1,0 +1,28 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Theme Selection
+#
+# MacOS X                 osx (toolkit/themes/osx)
+# Windows                 windows (toolkit/themes/windows)
+# GNOME/Linux             windows (toolkit/themes/windows) + 
+#                         linux overrides (toolkit/themes/linux)
+# OS/2                    windows (toolkit/themes/windows) + 
+#                         os2 overrides (toolkit/themes/os2)
+# faststripe              windows + faststripe (no native theme components)
+
+toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
+
+if toolkit == 'cocoa':
+    DIRS += ['osx']
+else:
+    DIRS += ['windows']
+
+    if toolkit in ('gtk2', 'qt'):
+        DIRS += ['linux']
+    elif toolkit == 'os2':
+        DIRS += ['os2/global']
+    elif CONFIG['MOZ_THEME_FASTSTRIPE']:
+        DIRS += ['faststripe/global']

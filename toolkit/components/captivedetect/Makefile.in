@@ -20,6 +20,4 @@ EXTRA_COMPONENTS = \
   captivedetect.js \
   $(NULL)
 
-TEST_DIRS += test
-
 include $(topsrcdir)/config/rules.mk
