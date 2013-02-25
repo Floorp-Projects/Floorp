@@ -86,7 +86,8 @@ nsImageLoadingContent::nsImageLoadingContent()
     mNewRequestsWillNeedAnimationReset(false),
     mStateChangerDepth(0),
     mCurrentRequestRegistered(false),
-    mPendingRequestRegistered(false)
+    mPendingRequestRegistered(false),
+    mVisibleCount(0)
 {
   if (!nsContentUtils::GetImgLoaderForChannel(nullptr)) {
     mLoadingEnabled = false;
@@ -590,6 +591,34 @@ nsImageLoadingContent::UnblockOnload(imgIRequest* aRequest)
   }
 
   return NS_OK;
+}
+
+void
+nsImageLoadingContent::IncrementVisibleCount()
+{
+  mVisibleCount++;
+  if (mVisibleCount == 1) {
+    TrackImage(mCurrentRequest);
+    TrackImage(mPendingRequest);
+  }
+}
+
+void
+nsImageLoadingContent::DecrementVisibleCount()
+{
+  NS_ASSERTION(mVisibleCount > 0, "visible count should be positive here");
+  mVisibleCount--;
+
+  if (mVisibleCount == 0) {
+    UntrackImage(mCurrentRequest);
+    UntrackImage(mPendingRequest);
+  }
+}
+
+uint32_t
+nsImageLoadingContent::GetVisibleCount()
+{
+  return mVisibleCount;
 }
 
 /*
@@ -1198,7 +1227,8 @@ nsImageLoadingContent::TrackImage(imgIRequest* aImage, uint32_t aFlags /* = 0 */
              "Why haven't we heard of this request?");
 
   nsIDocument* doc = GetOurCurrentDoc();
-  if (doc && ((aFlags & SKIP_FRAME_CHECK) || GetOurPrimaryFrame())) {
+  if (doc && ((aFlags & SKIP_FRAME_CHECK) || GetOurPrimaryFrame()) &&
+      (mVisibleCount > 0)) {
     if (aImage == mCurrentRequest && !(mCurrentRequestFlags & REQUEST_IS_TRACKED)) {
       mCurrentRequestFlags |= REQUEST_IS_TRACKED;
       doc->AddImage(mCurrentRequest);
