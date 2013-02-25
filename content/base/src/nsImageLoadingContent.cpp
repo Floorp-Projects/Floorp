@@ -375,24 +375,14 @@ nsImageLoadingContent::FrameCreated(nsIFrame* aFrame)
 {
   NS_ASSERTION(aFrame, "aFrame is null");
 
+  // We pass the SKIP_FRAME_CHECK flag to TrackImage here because our primary
+  // frame pointer hasn't been setup yet when this is caled.
+  TrackImage(mCurrentRequest, SKIP_FRAME_CHECK);
+  TrackImage(mPendingRequest, SKIP_FRAME_CHECK);
+
   // We need to make sure that our image request is registered, if it should
   // be registered.
   nsPresContext* presContext = aFrame->PresContext();
-
-  if (mCurrentRequest && !(mCurrentRequestFlags & REQUEST_IS_TRACKED)) {
-    nsIDocument* doc = GetOurCurrentDoc();
-    if (doc) {
-      mCurrentRequestFlags |= REQUEST_IS_TRACKED;
-      doc->AddImage(mCurrentRequest);
-    }
-  }
-  if (mPendingRequest && !(mPendingRequestFlags & REQUEST_IS_TRACKED)) {
-    nsIDocument* doc = GetOurCurrentDoc();
-    if (doc) {
-      mPendingRequestFlags |= REQUEST_IS_TRACKED;
-      doc->AddImage(mPendingRequest);
-    }
-  }
 
   if (mCurrentRequest) {
     nsLayoutUtils::RegisterImageRequestIfAnimated(presContext, mCurrentRequest,
@@ -1171,16 +1161,8 @@ nsImageLoadingContent::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   nsCxPusher pusher;
   pusher.PushNull();
 
-  if (GetOurPrimaryFrame()) {
-    if (mCurrentRequest && !(mCurrentRequestFlags & REQUEST_IS_TRACKED)) {
-      mCurrentRequestFlags |= REQUEST_IS_TRACKED;
-      aDocument->AddImage(mCurrentRequest);
-    }
-    if (mPendingRequest && !(mPendingRequestFlags & REQUEST_IS_TRACKED)) {
-      mPendingRequestFlags |= REQUEST_IS_TRACKED;
-      aDocument->AddImage(mPendingRequest);
-    }
-  }
+  TrackImage(mCurrentRequest);
+  TrackImage(mPendingRequest);
 
   if (mCurrentRequestFlags & REQUEST_BLOCKS_ONLOAD)
     aDocument->BlockOnload();
@@ -1207,7 +1189,7 @@ nsImageLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent)
 }
 
 nsresult
-nsImageLoadingContent::TrackImage(imgIRequest* aImage)
+nsImageLoadingContent::TrackImage(imgIRequest* aImage, uint32_t aFlags /* = 0 */)
 {
   if (!aImage)
     return NS_OK;
@@ -1216,7 +1198,7 @@ nsImageLoadingContent::TrackImage(imgIRequest* aImage)
              "Why haven't we heard of this request?");
 
   nsIDocument* doc = GetOurCurrentDoc();
-  if (doc && GetOurPrimaryFrame()) {
+  if (doc && ((aFlags & SKIP_FRAME_CHECK) || GetOurPrimaryFrame())) {
     if (aImage == mCurrentRequest && !(mCurrentRequestFlags & REQUEST_IS_TRACKED)) {
       mCurrentRequestFlags |= REQUEST_IS_TRACKED;
       doc->AddImage(mCurrentRequest);
