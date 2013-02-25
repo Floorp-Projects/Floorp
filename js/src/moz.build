@@ -1,0 +1,22 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIRS += ['config']
+
+if CONFIG['DEHYDRA_PATH']:
+    DIRS += ['analysis-tests']
+
+if CONFIG['JS_NATIVE_EDITLINE']:
+    DIRS += ['editline']
+
+# editline needs to get built before the shell
+if not CONFIG['JS_DISABLE_SHELL']:
+    DIRS += ['shell']
+
+# FIXME: bug 530688 covers getting these working on Android
+if CONFIG['OS_ARCH'] != 'ANDROID':
+    TEST_DIRS += ['jsapi-tests']
+
+TEST_DIRS += ['tests', 'gdb']
