@@ -232,7 +232,7 @@ pref("gfx.filter.nearest.force-enabled", false);
 // whether to always search all font cmaps during system font fallback
 pref("gfx.font_rendering.fallback.always_use_cmaps", false);
 
-pref("gfx.font_rendering.graphite.enabled", false);
+pref("gfx.font_rendering.graphite.enabled", true);
 
 // Check intl/unicharutil/util/nsUnicodeProperties.h for definitions of script bits
 // in the ShapingType enumeration
