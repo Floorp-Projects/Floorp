@@ -1410,6 +1410,7 @@ bool
 XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
                                                  js::PropertyDescriptor *desc, unsigned flags)
 {
+    assertEnteredPolicy(cx, wrapper, id);
     JSObject *holder = Traits::singleton.ensureHolder(cx, wrapper);
     if (Traits::isResolving(cx, holder, id)) {
         desc->obj = NULL;
@@ -1528,6 +1529,7 @@ bool
 XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
                                                     PropertyDescriptor *desc, unsigned flags)
 {
+    assertEnteredPolicy(cx, wrapper, id);
     JSObject *holder = Traits::singleton.ensureHolder(cx, wrapper);
     if (Traits::isResolving(cx, holder, id)) {
         desc->obj = NULL;
@@ -1574,6 +1576,7 @@ bool
 XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
                                           js::PropertyDescriptor *desc)
 {
+    assertEnteredPolicy(cx, wrapper, id);
     // Redirect access straight to the wrapper if we should be transparent.
     if (XrayUtils::IsTransparent(cx, wrapper, id)) {
         JSObject *obj = Traits::getTargetObject(wrapper);
@@ -1626,6 +1629,7 @@ bool
 XrayWrapper<Base, Traits>::getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
                                                JS::AutoIdVector &props)
 {
+    assertEnteredPolicy(cx, wrapper, JSID_VOID);
     return enumerate(cx, wrapper, JSITER_OWNONLY | JSITER_HIDDEN, props);
 }
 
@@ -1633,6 +1637,7 @@ template <typename Base, typename Traits>
 bool
 XrayWrapper<Base, Traits>::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 {
+    assertEnteredPolicy(cx, wrapper, id);
     // Redirect access straight to the wrapper if we should be transparent.
     if (XrayUtils::IsTransparent(cx, wrapper, id)) {
         JSObject *obj = Traits::getTargetObject(wrapper);
@@ -1669,6 +1674,7 @@ bool
 XrayWrapper<Base, Traits>::enumerate(JSContext *cx, JSObject *wrapper, unsigned flags,
                                      JS::AutoIdVector &props)
 {
+    assertEnteredPolicy(cx, wrapper, JSID_VOID);
     // Redirect access straight to the wrapper if we should be transparent.
     if (XrayUtils::IsTransparent(cx, wrapper, JSID_VOID)) {
         JSObject *obj = Traits::getTargetObject(wrapper);
@@ -1762,6 +1768,7 @@ template <typename Base, typename Traits>
 bool
 XrayWrapper<Base, Traits>::call(JSContext *cx, JSObject *wrapper, unsigned argc, js::Value *vp)
 {
+    assertEnteredPolicy(cx, wrapper, JSID_VOID);
     return Traits::call(cx, wrapper, argc, vp);
 }
 
@@ -1770,6 +1777,7 @@ bool
 XrayWrapper<Base, Traits>::construct(JSContext *cx, JSObject *wrapper, unsigned argc,
                                      js::Value *argv, js::Value *rval)
 {
+    assertEnteredPolicy(cx, wrapper, JSID_VOID);
     return Traits::construct(cx, wrapper, argc, argv, rval);
 }
 

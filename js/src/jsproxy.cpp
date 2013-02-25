@@ -63,6 +63,38 @@ js::AutoEnterPolicy::reportError(JSContext *cx, jsid id)
     }
 }
 
+#ifdef DEBUG
+void
+js::AutoEnterPolicy::recordEnter(JSContext *cx, JSObject *proxy, jsid id)
+{
+    if (allowed()) {
+        context = cx;
+        enteredProxy.construct(cx, proxy);
+        enteredId.construct(cx, id);
+        prev = cx->runtime->enteredPolicy;
+        cx->runtime->enteredPolicy = this;
+    }
+}
+
+void
+js::AutoEnterPolicy::recordLeave()
+{
+    if (!enteredProxy.empty()) {
+        JS_ASSERT(context->runtime->enteredPolicy == this);
+        context->runtime->enteredPolicy = prev;
+    }
+}
+
+JS_FRIEND_API(void)
+js::assertEnteredPolicy(JSContext *cx, JSObject *proxy, jsid id)
+{
+    MOZ_ASSERT(proxy->isProxy());
+    MOZ_ASSERT(cx->runtime->enteredPolicy);
+    MOZ_ASSERT(cx->runtime->enteredPolicy->enteredProxy.ref().get() == proxy);
+    MOZ_ASSERT(cx->runtime->enteredPolicy->enteredId.ref().get() == id);
+}
+#endif
+
 BaseProxyHandler::BaseProxyHandler(void *family)
   : mFamily(family),
     mHasPrototype(false),
@@ -85,6 +117,7 @@ BaseProxyHandler::enter(JSContext *cx, JSObject *wrapper, jsid id, Action act,
 bool
 BaseProxyHandler::has(JSContext *cx, JSObject *proxy_, jsid id_, bool *bp)
 {
+    assertEnteredPolicy(cx, proxy_, id_);
     RootedObject proxy(cx, proxy_);
     RootedId id(cx, id_);
     AutoPropertyDescriptorRooter desc(cx);
@@ -97,6 +130,7 @@ BaseProxyHandler::has(JSContext *cx, JSObject *proxy_, jsid id_, bool *bp)
 bool
 BaseProxyHandler::hasOwn(JSContext *cx, JSObject *proxy_, jsid id_, bool *bp)
 {
+    assertEnteredPolicy(cx, proxy_, id_);
     RootedObject proxy(cx, proxy_);
     RootedId id(cx, id_);
     AutoPropertyDescriptorRooter desc(cx);
@@ -109,6 +143,7 @@ BaseProxyHandler::hasOwn(JSContext *cx, JSObject *proxy_, jsid id_, bool *bp)
 bool
 BaseProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver_, jsid id_, Value *vp)
 {
+    assertEnteredPolicy(cx, proxy, id_);
     RootedObject receiver(cx, receiver_);
     RootedId id(cx, id_);
 
@@ -150,6 +185,7 @@ BaseProxyHandler::getElementIfPresent(JSContext *cx, JSObject *proxy_, JSObject 
     RootedId id(cx);
     if (!IndexToId(cx, index, &id))
         return false;
+    assertEnteredPolicy(cx, proxy, id);
 
     if (!has(cx, proxy, id, present))
         return false;
@@ -166,6 +202,7 @@ bool
 BaseProxyHandler::set(JSContext *cx, JSObject *proxy_, JSObject *receiver_, jsid id_, bool strict,
                       Value *vp)
 {
+    assertEnteredPolicy(cx, proxy_, id_);
     RootedObject proxy(cx, proxy_), receiver(cx, receiver_);
     RootedId id(cx, id_);
 
@@ -242,6 +279,7 @@ BaseProxyHandler::set(JSContext *cx, JSObject *proxy_, JSObject *receiver_, jsid
 bool
 BaseProxyHandler::keys(JSContext *cx, JSObject *proxyArg, AutoIdVector &props)
 {
+    assertEnteredPolicy(cx, proxyArg, JSID_VOID);
     JS_ASSERT(props.length() == 0);
 
     RootedObject proxy(cx, proxyArg);
@@ -255,6 +293,7 @@ BaseProxyHandler::keys(JSContext *cx, JSObject *proxyArg, AutoIdVector &props)
     for (size_t j = 0, len = props.length(); j < len; j++) {
         JS_ASSERT(i <= j);
         jsid id = props[j];
+        AutoWaivePolicy policy(cx, proxy, id);
         if (!getOwnPropertyDescriptor(cx, proxy, id, &desc, 0))
             return false;
         if (desc.obj && (desc.attrs & JSPROP_ENUMERATE))
@@ -270,6 +309,7 @@ BaseProxyHandler::keys(JSContext *cx, JSObject *proxyArg, AutoIdVector &props)
 bool
 BaseProxyHandler::iterate(JSContext *cx, JSObject *proxy_, unsigned flags, Value *vp)
 {
+    assertEnteredPolicy(cx, proxy_, JSID_VOID);
     RootedObject proxy(cx, proxy_);
 
     AutoIdVector props(cx);
@@ -291,6 +331,7 @@ bool
 BaseProxyHandler::call(JSContext *cx, JSObject *proxy, unsigned argc,
                        Value *vp)
 {
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     AutoValueRooter rval(cx);
     RootedValue call(cx, GetCall(proxy));
     JSBool ok = Invoke(cx, vp[1], call, argc, JS_ARGV(cx, vp), rval.addr());
@@ -303,6 +344,7 @@ bool
 BaseProxyHandler::construct(JSContext *cx, JSObject *proxy_, unsigned argc,
                             Value *argv, Value *rval)
 {
+    assertEnteredPolicy(cx, proxy_, JSID_VOID);
     RootedObject proxy(cx, proxy_);
     RootedValue fval(cx, GetConstruct(proxy_));
     if (fval.isUndefined())
@@ -321,6 +363,7 @@ BaseProxyHandler::obj_toString(JSContext *cx, JSObject *proxy)
 JSString *
 BaseProxyHandler::fun_toString(JSContext *cx, JSObject *proxy, unsigned indent)
 {
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     Value fval = GetCall(proxy);
     if (IsFunctionProxy(proxy) &&
         (fval.isPrimitive() || !fval.toObject().isFunction())) {
@@ -366,6 +409,7 @@ BaseProxyHandler::nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl im
 bool
 BaseProxyHandler::hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, bool *bp)
 {
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     RootedValue val(cx, ObjectValue(*proxy.get()));
     js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
                         JSDVG_SEARCH_STACK, val, NullPtr());
@@ -402,6 +446,8 @@ bool
 DirectProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy,
                                           jsid id, PropertyDescriptor *desc, unsigned flags)
 {
+    assertEnteredPolicy(cx, proxy, id);
+    JS_ASSERT(!hasPrototype()); // Should never be called if there's a prototype.
     RootedObject target(cx, GetProxyTargetObject(proxy));
     return JS_GetPropertyDescriptorById(cx, target, id, 0, desc);
 }
@@ -426,6 +472,7 @@ bool
 DirectProxyHandler::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy,
                                              jsid id, PropertyDescriptor *desc, unsigned flags)
 {
+    assertEnteredPolicy(cx, proxy, id);
     RootedObject target(cx, GetProxyTargetObject(proxy));
     return GetOwnPropertyDescriptor(cx, target, id, 0, desc);
 }
@@ -434,6 +481,7 @@ bool
 DirectProxyHandler::defineProperty(JSContext *cx, JSObject *proxy, jsid id_,
                                    PropertyDescriptor *desc)
 {
+    assertEnteredPolicy(cx, proxy, id_);
     RootedObject obj(cx, GetProxyTargetObject(proxy));
     Rooted<jsid> id(cx, id_);
     Rooted<Value> v(cx, desc->value);
@@ -445,6 +493,7 @@ bool
 DirectProxyHandler::getOwnPropertyNames(JSContext *cx, JSObject *proxy,
                                         AutoIdVector &props)
 {
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     RootedObject target(cx, GetProxyTargetObject(proxy));
     return GetPropertyNames(cx, target, JSITER_OWNONLY | JSITER_HIDDEN, &props);
 }
@@ -453,6 +502,7 @@ bool
 DirectProxyHandler::delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
     RootedValue v(cx);
+    assertEnteredPolicy(cx, proxy, id);
     RootedObject target(cx, GetProxyTargetObject(proxy));
     if (!JS_DeletePropertyById2(cx, target, id, v.address()))
         return false;
@@ -467,6 +517,8 @@ bool
 DirectProxyHandler::enumerate(JSContext *cx, JSObject *proxy,
                               AutoIdVector &props)
 {
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
+    JS_ASSERT(!hasPrototype()); // Should never be called if there's a prototype.
     RootedObject target(cx, GetProxyTargetObject(proxy));
     return GetPropertyNames(cx, target, 0, &props);
 }
@@ -488,6 +540,7 @@ bool
 DirectProxyHandler::hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v,
                                 bool *bp)
 {
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     JSBool b;
     RootedObject target(cx, GetProxyTargetObject(proxy));
     if (!JS_HasInstance(cx, target, v, &b))
@@ -508,6 +561,7 @@ DirectProxyHandler::objectClassIs(JSObject *proxy, ESClassValue classValue,
 JSString *
 DirectProxyHandler::obj_toString(JSContext *cx, JSObject *proxy)
 {
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     return obj_toStringHelper(cx, GetProxyTargetObject(proxy));
 }
 
@@ -515,6 +569,7 @@ JSString *
 DirectProxyHandler::fun_toString(JSContext *cx, JSObject *proxy,
                                  unsigned indent)
 {
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     RootedObject target(cx, GetProxyTargetObject(proxy));
     return fun_toStringHelper(cx, target, indent);
 }
@@ -550,6 +605,8 @@ DirectProxyHandler::DirectProxyHandler(void *family)
 bool
 DirectProxyHandler::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
+    assertEnteredPolicy(cx, proxy, id);
+    JS_ASSERT(!hasPrototype()); // Should never be called if there's a prototype.
     JSBool found;
     RootedObject target(cx, GetProxyTargetObject(proxy));
     if (!JS_HasPropertyById(cx, target, id, &found))
@@ -561,6 +618,7 @@ DirectProxyHandler::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 bool
 DirectProxyHandler::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
+    assertEnteredPolicy(cx, proxy, id);
     RootedObject target(cx, GetProxyTargetObject(proxy));
     AutoPropertyDescriptorRooter desc(cx);
     if (!JS_GetPropertyDescriptorById(cx, target, id, 0, &desc))
@@ -573,6 +631,7 @@ bool
 DirectProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver_,
                         jsid id_, Value *vp)
 {
+    assertEnteredPolicy(cx, proxy, id_);
     RootedObject receiver(cx, receiver_);
     RootedId id(cx, id_);
     RootedValue value(cx);
@@ -588,6 +647,7 @@ bool
 DirectProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiverArg,
                         jsid id_, bool strict, Value *vp)
 {
+    assertEnteredPolicy(cx, proxy, id_);
     RootedId id(cx, id_);
     Rooted<JSObject*> receiver(cx, receiverArg);
     RootedValue value(cx, *vp);
@@ -602,6 +662,7 @@ DirectProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiverArg,
 bool
 DirectProxyHandler::keys(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     return GetPropertyNames(cx, GetProxyTargetObject(proxy), JSITER_OWNONLY, &props);
 }
 
@@ -609,6 +670,8 @@ bool
 DirectProxyHandler::iterate(JSContext *cx, JSObject *proxy, unsigned flags,
                             Value *vp)
 {
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
+    JS_ASSERT(!hasPrototype()); // Should never be called if there's a prototype.
     Rooted<JSObject*> target(cx, GetProxyTargetObject(proxy));
     RootedValue value(cx);
     if (!GetIterator(cx, target, flags, &value))
