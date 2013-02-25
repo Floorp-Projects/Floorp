@@ -45,6 +45,22 @@ public:
     return !!mIMC;
   }
 
+  void SetOpenState(bool aOpen) const
+  {
+    if (!mIMC) {
+      return;
+    }
+    ::ImmSetOpenStatus(mIMC, aOpen);
+  }
+
+  bool GetOpenState() const
+  {
+    if (!mIMC) {
+      return false;
+    }
+    return (::ImmGetOpenStatus(mIMC) != FALSE);
+  }
+
 protected:
   nsIMEContext()
   {
