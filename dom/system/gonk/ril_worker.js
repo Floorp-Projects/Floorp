@@ -3590,95 +3590,14 @@ let RIL = {
   },
 
   /**
-   * Helper for processing received SMS parcel data.
+   * Helper for processing multipart SMS.
    *
-   * @param length
-   *        Length of SMS string in the incoming parcel.
-   *
-   * @return Message parsed or null for invalid message.
-   */
-  _processReceivedSms: function _processReceivedSms(length) {
-    if (!length) {
-      if (DEBUG) debug("Received empty SMS!");
-      return null;
-    }
-
-    // An SMS is a string, but we won't read it as such, so let's read the
-    // string length and then defer to PDU parsing helper.
-    let messageStringLength = Buf.readUint32();
-    if (DEBUG) debug("Got new SMS, length " + messageStringLength);
-    let message = GsmPDUHelper.readMessage();
-    if (DEBUG) debug("Got new SMS: " + JSON.stringify(message));
-
-    // Read string delimiters. See Buf.readString().
-    Buf.readStringDelimiter(length);
-
-    return message;
-  },
-
-  /**
-   * Helper for processing SMS-DELIVER PDUs.
-   *
-   * @param length
-   *        Length of SMS string in the incoming parcel.
+   * @param message
+   *        Received sms message.
    *
    * @return A failure cause defined in 3GPP 23.040 clause 9.2.3.22.
    */
-  _processSmsDeliver: function _processSmsDeliver(length) {
-    let message = this._processReceivedSms(length);
-    if (!message) {
-      return PDU_FCS_UNSPECIFIED;
-    }
-
-    if (message.epid == PDU_PID_SHORT_MESSAGE_TYPE_0) {
-      // `A short message type 0 indicates that the ME must acknowledge receipt
-      // of the short message but shall discard its contents.` ~ 3GPP TS 23.040
-      // 9.2.3.9
-      return PDU_FCS_OK;
-    }
-
-    if (message.messageClass == GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_2]) {
-      switch (message.epid) {
-        case PDU_PID_ANSI_136_R_DATA:
-        case PDU_PID_USIM_DATA_DOWNLOAD:
-          if (ICCUtilsHelper.isICCServiceAvailable("DATA_DOWNLOAD_SMS_PP")) {
-            // `If the service "data download via SMS Point-to-Point" is
-            // allocated and activated in the (U)SIM Service Table, ... then the
-            // ME shall pass the message transparently to the UICC using the
-            // ENVELOPE (SMS-PP DOWNLOAD).` ~ 3GPP TS 31.111 7.1.1.1
-            this.dataDownloadViaSMSPP(message);
-
-            // `the ME shall not display the message, or alert the user of a
-            // short message waiting.` ~ 3GPP TS 31.111 7.1.1.1
-            return PDU_FCS_RESERVED;
-          }
-          // Fall through!
-
-          // If the service "data download via SMS-PP" is not available in the
-          // (U)SIM Service Table, ..., then the ME shall store the message in
-          // EFsms in accordance with TS 31.102` ~ 3GPP TS 31.111 7.1.1.1
-        default:
-          this.writeSmsToSIM(message);
-          break;
-      }
-    }
-
-    // TODO: Bug 739143: B2G SMS: Support SMS Storage Full event
-    if ((message.messageClass != GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_0]) && !true) {
-      // `When a mobile terminated message is class 0..., the MS shall display
-      // the message immediately and send a ACK to the SC ..., irrespective of
-      // whether there is memory available in the (U)SIM or ME.` ~ 3GPP 23.038
-      // clause 4.
-
-      if (message.messageClass == GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_2]) {
-        // `If all the short message storage at the MS is already in use, the
-        // MS shall return "memory capacity exceeded".` ~ 3GPP 23.038 clause 4.
-        return PDU_FCS_MEMORY_CAPACITY_EXCEEDED;
-      }
-
-      return PDU_FCS_UNSPECIFIED;
-    }
-
+  _processSmsMultipart: function _processSmsMultipart(message) {
     if (message.header && (message.header.segmentMaxSeq > 1)) {
       message = this._processReceivedSmsSegment(message);
     } else {
@@ -3718,7 +3637,7 @@ let RIL = {
    * @return A failure cause defined in 3GPP 23.040 clause 9.2.3.22.
    */
   _processSmsStatusReport: function _processSmsStatusReport(length) {
-    let message = this._processReceivedSms(length);
+    let [message, result] = GsmPDUHelper.processReceivedSms(length);
     if (!message) {
       if (DEBUG) debug("invalid SMS-STATUS-REPORT");
       return PDU_FCS_UNSPECIFIED;
@@ -3851,6 +3770,60 @@ let RIL = {
     options.segmentSeq = next + 1;
 
     this.sendSMS(options);
+  },
+
+  /**
+   * Helper for processing result of send SMS.
+   *
+   * @param length
+   *        Length of SMS string in the incoming parcel.
+   * @param options
+   *        Sms information.
+   */
+  _processSmsSendResult: function _processSmsSendResult(length, options) {
+    if (options.rilRequestError) {
+      if (DEBUG) debug("_processSmsSendResult: rilRequestError = " + options.rilRequestError);
+      switch (options.rilRequestError) {
+        case ERROR_SMS_SEND_FAIL_RETRY:
+          if (options.retryCount < SMS_RETRY_MAX) {
+            options.retryCount++;
+            // TODO: bug 736702 TP-MR, retry interval, retry timeout
+            this.sendSMS(options);
+            break;
+          }
+
+          // Fallback to default error handling if it meets max retry count.
+        default:
+          this.sendDOMMessage({
+            rilMessageType: "sms-send-failed",
+            envelopeId: options.envelopeId,
+            error: options.rilRequestError,
+          });
+          break;
+      }
+      return;
+    }
+
+    options.messageRef = Buf.readUint32();
+    options.ackPDU = Buf.readString();
+    options.errorCode = Buf.readUint32();
+
+    if ((options.segmentMaxSeq > 1)
+        && (options.segmentSeq < options.segmentMaxSeq)) {
+      // Not last segment
+      this._processSentSmsSegment(options);
+    } else {
+      // Last segment sent with success.
+      if (options.requestStatusReport) {
+        if (DEBUG) debug("waiting SMS-STATUS-REPORT for messageRef " + options.messageRef);
+        this._pendingSentSmsMap[options.messageRef] = options;
+      }
+
+      this.sendDOMMessage({
+        rilMessageType: "sms-sent",
+        envelopeId: options.envelopeId,
+      });
+    }
   },
 
   _processReceivedSmsCbPage: function _processReceivedSmsCbPage(original) {
@@ -4540,49 +4513,7 @@ RIL[REQUEST_OPERATOR] = function REQUEST_OPERATOR(length, options) {
 RIL[REQUEST_RADIO_POWER] = null;
 RIL[REQUEST_DTMF] = null;
 RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS(length, options) {
-  if (options.rilRequestError) {
-    if (DEBUG) debug("REQUEST_SEND_SMS: rilRequestError = " + options.rilRequestError);
-    switch (options.rilRequestError) {
-      case ERROR_SMS_SEND_FAIL_RETRY:
-        if (options.retryCount < SMS_RETRY_MAX) {
-          options.retryCount++;
-          // TODO: bug 736702 TP-MR, retry interval, retry timeout
-          this.sendSMS(options);
-          break;
-        }
-
-        // Fallback to default error handling if it meets max retry count.
-      default:
-        this.sendDOMMessage({
-          rilMessageType: "sms-send-failed",
-          envelopeId: options.envelopeId,
-          error: options.rilRequestError,
-        });
-        break;
-    }
-    return;
-  }
-
-  options.messageRef = Buf.readUint32();
-  options.ackPDU = Buf.readString();
-  options.errorCode = Buf.readUint32();
-
-  if ((options.segmentMaxSeq > 1)
-      && (options.segmentSeq < options.segmentMaxSeq)) {
-    // Not last segment
-    this._processSentSmsSegment(options);
-  } else {
-    // Last segment sent with success.
-    if (options.requestStatusReport) {
-      if (DEBUG) debug("waiting SMS-STATUS-REPORT for messageRef " + options.messageRef);
-      this._pendingSentSmsMap[options.messageRef] = options;
-    }
-
-    this.sendDOMMessage({
-      rilMessageType: "sms-sent",
-      envelopeId: options.envelopeId,
-    });
-  }
+  this._processSmsSendResult(length, options);
 };
 RIL[REQUEST_SEND_SMS_EXPECT_MORE] = null;
 
@@ -5188,10 +5119,16 @@ RIL[UNSOLICITED_RESPONSE_VOICE_NETWORK_STATE_CHANGED] = function UNSOLICITED_RES
   this.requestNetworkInfo();
 };
 RIL[UNSOLICITED_RESPONSE_NEW_SMS] = function UNSOLICITED_RESPONSE_NEW_SMS(length) {
-  let result = this._processSmsDeliver(length);
+  let [message, result] = GsmPDUHelper.processReceivedSms(length);
+
+  if (message) {
+    result = this._processSmsMultipart(message);
+  }
+
   if (result == PDU_FCS_RESERVED || result == MOZ_FCS_WAIT_FOR_EXPLICIT_ACK) {
     return;
   }
+
   // Not reserved FCS values, send ACK now.
   this.acknowledgeSMS(result == PDU_FCS_OK, result);
 };
@@ -6738,6 +6675,87 @@ let GsmPDUHelper = {
       default:
         return null;
     }
+  },
+
+  /**
+   * Helper for processing received SMS parcel data.
+   *
+   * @param length
+   *        Length of SMS string in the incoming parcel.
+   *
+   * @return Message parsed or null for invalid message.
+   */
+  processReceivedSms: function processReceivedSms(length) {
+    if (!length) {
+      if (DEBUG) debug("Received empty SMS!");
+      return [null, PDU_FCS_UNSPECIFIED];
+    }
+
+    // An SMS is a string, but we won't read it as such, so let's read the
+    // string length and then defer to PDU parsing helper.
+    let messageStringLength = Buf.readUint32();
+    if (DEBUG) debug("Got new SMS, length " + messageStringLength);
+    let message = this.readMessage();
+    if (DEBUG) debug("Got new SMS: " + JSON.stringify(message));
+
+    // Read string delimiters. See Buf.readString().
+    Buf.readStringDelimiter(length);
+
+    // Determine result
+    if (!message) {
+      return [null, PDU_FCS_UNSPECIFIED];
+    }
+
+    if (message.epid == PDU_PID_SHORT_MESSAGE_TYPE_0) {
+      // `A short message type 0 indicates that the ME must acknowledge receipt
+      // of the short message but shall discard its contents.` ~ 3GPP TS 23.040
+      // 9.2.3.9
+      return [null, PDU_FCS_OK];
+    }
+
+    if (message.messageClass == GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_2]) {
+      switch (message.epid) {
+        case PDU_PID_ANSI_136_R_DATA:
+        case PDU_PID_USIM_DATA_DOWNLOAD:
+          if (ICCUtilsHelper.isICCServiceAvailable("DATA_DOWNLOAD_SMS_PP")) {
+            // `If the service "data download via SMS Point-to-Point" is
+            // allocated and activated in the (U)SIM Service Table, ... then the
+            // ME shall pass the message transparently to the UICC using the
+            // ENVELOPE (SMS-PP DOWNLOAD).` ~ 3GPP TS 31.111 7.1.1.1
+            RIL.dataDownloadViaSMSPP(message);
+
+            // `the ME shall not display the message, or alert the user of a
+            // short message waiting.` ~ 3GPP TS 31.111 7.1.1.1
+            return [null, PDU_FCS_RESERVED];
+          }
+          // Fall through!
+
+          // If the service "data download via SMS-PP" is not available in the
+          // (U)SIM Service Table, ..., then the ME shall store the message in
+          // EFsms in accordance with TS 31.102` ~ 3GPP TS 31.111 7.1.1.1
+        default:
+          RIL.writeSmsToSIM(message);
+          break;
+      }
+    }
+
+    // TODO: Bug 739143: B2G SMS: Support SMS Storage Full event
+    if ((message.messageClass != GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_0]) && !true) {
+      // `When a mobile terminated message is class 0..., the MS shall display
+      // the message immediately and send a ACK to the SC ..., irrespective of
+      // whether there is memory available in the (U)SIM or ME.` ~ 3GPP 23.038
+      // clause 4.
+
+      if (message.messageClass == GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_2]) {
+        // `If all the short message storage at the MS is already in use, the
+        // MS shall return "memory capacity exceeded".` ~ 3GPP 23.038 clause 4.
+        return [null, PDU_FCS_MEMORY_CAPACITY_EXCEEDED];
+      }
+
+      return [null, PDU_FCS_UNSPECIFIED];
+    }
+
+    return [message, PDU_FCS_OK];
   },
 
   /**
