@@ -7474,15 +7474,13 @@ nsWindow::OnIMEFocusChange(bool aFocus)
                                               NOTIFY_IME_OF_BLUR);
 }
 
-#ifdef NS_ENABLE_TSF
 NS_IMETHODIMP
 nsWindow::OnIMETextChange(uint32_t aStart,
                           uint32_t aOldEnd,
                           uint32_t aNewEnd)
 {
-  return nsTextStore::OnTextChange(aStart, aOldEnd, aNewEnd);
+  return IMEHandler::NotifyIMEOfTextChange(aStart, aOldEnd, aNewEnd);
 }
-#endif // #ifdef NS_ENABLE_TSF
 
 NS_IMETHODIMP
 nsWindow::OnIMESelectionChange(void)

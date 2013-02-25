@@ -55,6 +55,13 @@ public:
                             NotificationToIME aNotification);
 
   /**
+   * Notifies IME of text change in the focused editable content.
+   */
+  static nsresult NotifyIMEOfTextChange(uint32_t aStart,
+                                        uint32_t aOldEnd,
+                                        uint32_t aNewEnd);
+
+  /**
    * "Kakutei-Undo" of ATOK or WXG (both of them are Japanese IME) causes
    * strange WM_KEYDOWN/WM_KEYUP/WM_CHAR message pattern.  So, when this
    * returns true, the caller needs to be careful for processing the messages.

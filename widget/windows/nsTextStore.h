@@ -119,13 +119,13 @@ public:
                                uint32_t aOldEnd,
                                uint32_t aNewEnd)
   {
-    if (!sTsfTextStore) return NS_OK;
+    NS_ENSURE_TRUE(sTsfTextStore, NS_ERROR_NOT_AVAILABLE);
     return sTsfTextStore->OnTextChangeInternal(aStart, aOldEnd, aNewEnd);
   }
 
   static void     OnTextChangeMsg(void)
   {
-    if (!sTsfTextStore) return;
+    NS_ENSURE_TRUE_VOID(sTsfTextStore);
     // Notify TSF text change
     // (see comments on WM_USER_TSF_TEXTCHANGE in nsTextStore.h)
     sTsfTextStore->OnTextChangeMsgInternal();
