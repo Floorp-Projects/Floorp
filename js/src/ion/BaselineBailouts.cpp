@@ -998,6 +998,7 @@ ion::BailoutIonToBaseline(JSContext *cx, IonActivation *activation, IonBailoutIt
         frameNo++;
     }
     IonSpew(IonSpew_BaselineBailouts, "  Done restoring frames");
+    BailoutKind bailoutKind = snapIter.bailoutKind();
 
     // Take the reconstructed baseline stack so it doesn't get freed when builder destructs.
     BaselineBailoutInfo *info = builder.takeBuffer();
@@ -1010,8 +1011,70 @@ ion::BailoutIonToBaseline(JSContext *cx, IonActivation *activation, IonBailoutIt
     if (overRecursed)
         return BAILOUT_RETURN_OVERRECURSED;
 
+    info->bailoutKind = bailoutKind;
     *bailoutInfo = info;
     return BAILOUT_RETURN_BASELINE;
+}
+
+static bool
+HandleBoundsCheckFailure(JSContext *cx, HandleScript outerScript, HandleScript innerScript)
+{
+    IonSpew(IonSpew_Bailouts, "Bounds check failure %s:%d, inlined into %s:%d",
+            innerScript->filename, innerScript->lineno,
+            outerScript->filename, outerScript->lineno);
+
+    JS_ASSERT(outerScript->hasIonScript());
+    JS_ASSERT(!outerScript->ion->invalidated());
+
+    // TODO: Currently this mimic's Ion's handling of this case.  Investigate setting
+    // the flag on innerScript as opposed to outerScript, and maybe invalidating both
+    // inner and outer scripts, instead of just the outer one.
+    if (!outerScript->failedBoundsCheck) {
+        outerScript->failedBoundsCheck = true;
+        IonSpew(IonSpew_BaselineBailouts, "Invalidating due to bounds check failure");
+        return Invalidate(cx, outerScript);
+    }
+    return true;
+}
+
+static bool
+HandleShapeGuardFailure(JSContext *cx, HandleScript outerScript, HandleScript innerScript)
+{
+    IonSpew(IonSpew_Bailouts, "Shape guard failure %s:%d, inlined into %s:%d",
+            innerScript->filename, innerScript->lineno,
+            outerScript->filename, outerScript->lineno);
+
+    JS_ASSERT(outerScript->hasIonScript());
+    JS_ASSERT(!outerScript->ion->invalidated());
+
+    // TODO: Currently this mimic's Ion's handling of this case.  Investigate setting
+    // the flag on innerScript as opposed to outerScript, and maybe invalidating both
+    // inner and outer scripts, instead of just the outer one.
+    outerScript->failedShapeGuard = true;
+    IonSpew(IonSpew_BaselineBailouts, "Invalidating due to shape guard failure");
+    return Invalidate(cx, outerScript);
+}
+
+static bool
+HandleCachedShapeGuardFailure(JSContext *cx, HandleScript outerScript, HandleScript innerScript)
+{
+    IonSpew(IonSpew_Bailouts, "Cached shape guard failure %s:%d, inlined into %s:%d",
+            innerScript->filename, innerScript->lineno,
+            outerScript->filename, outerScript->lineno);
+
+    JS_ASSERT(outerScript->hasIonScript());
+    JS_ASSERT(!outerScript->ion->invalidated());
+
+    outerScript->failedShapeGuard = true;
+
+    // Purge JM caches in the script and all inlined script, to avoid baking in
+    // the same shape guard next time.
+    for (size_t i = 0; i < outerScript->ion->scriptEntries(); i++)
+        mjit::PurgeCaches(outerScript->ion->getScript(i));
+
+    IonSpew(IonSpew_BaselineBailouts, "Invalidating due to cached shape guard failure");
+
+    return Invalidate(cx, outerScript);
 }
 
 uint32_t
@@ -1022,8 +1085,11 @@ ion::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
     JSContext *cx = GetIonContext()->cx;
     js::gc::AutoSuppressGC suppressGC(cx);
 
+    IonSpew(IonSpew_BaselineBailouts, "  Done restoring frames");
+
     uint32_t numFrames = bailoutInfo->numFrames;
     JS_ASSERT(numFrames > 0);
+    BailoutKind bailoutKind = bailoutInfo->bailoutKind;
 
     // Free the bailout buffer.
     js_free(bailoutInfo);
@@ -1031,6 +1097,8 @@ ion::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
 
     // Create arguments objects for bailed out frames, to maintain the invariant
     // that script->needsArgsObj() implies frame->hasArgsObj().
+    RootedScript innerScript(cx, NULL);
+    RootedScript outerScript(cx, NULL);
     IonFrameIterator iter(cx);
     uint32_t frameno = 0;
     while (frameno < numFrames) {
@@ -1057,10 +1125,59 @@ ion::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
                     frame->unaliasedLocal(var) = ObjectValue(*argsobj);
             }
 
+            if (frameno == 0)
+                innerScript = frame->script();
+
+            if (frameno == numFrames - 1)
+                outerScript = frame->script();
+
             frameno++;
         }
 
         ++iter;
+    }
+
+    JS_ASSERT(innerScript);
+    JS_ASSERT(outerScript);
+    IonSpew(IonSpew_BaselineBailouts,
+            "  Restored outerScript=(%s:%u,%u) innerScript=(%s:%u,%u) (bailoutKind=%u)",
+            outerScript->filename, outerScript->lineno, outerScript->getUseCount(),
+            innerScript->filename, innerScript->lineno, innerScript->getUseCount(),
+            (unsigned) bailoutKind);
+
+    switch (bailoutKind) {
+      case Bailout_Normal:
+        // Do nothing.
+        break;
+      case Bailout_ArgumentCheck:
+      case Bailout_TypeBarrier:
+      case Bailout_Monitor:
+        // Reflow types.  But in baseline, this will happen automatically because
+        // for any monitored op (or for argument checks), bailout will resume into
+        // the monitoring IC which will handle the type updates.
+        break;
+      case Bailout_RecompileCheck:
+        // Recompile check.  See ion::RecompileForInlining.
+        // In reality, this should never happen because inlining is always enabled
+        // at the top-level, because usesBeforeInlining() < usesBeforeCompile.
+        JS_NOT_REACHED("Unexpected recompile check!");
+        break;
+      case Bailout_BoundsCheck:
+        if (!HandleBoundsCheckFailure(cx, outerScript, innerScript))
+            return false;
+        break;
+      case Bailout_ShapeGuard:
+        if (!HandleShapeGuardFailure(cx, outerScript, innerScript))
+            return false;
+        break;
+      case Bailout_CachedShapeGuard:
+        JS_NOT_REACHED("JM cached shapes and BL should never coexist! "
+                       "Remove this when Ion starts caching shapes from Baseline!");
+        if (!HandleCachedShapeGuardFailure(cx, outerScript, innerScript))
+            return false;
+        break;
+      default:
+        JS_NOT_REACHED("Unknown bailout kind!");
     }
 
     return true;
