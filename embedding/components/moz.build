@@ -1,0 +1,19 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# You'd think we could skip building ui if XUL is disabled,
+# but we need to export interface headers from those directories.
+DIRS += [
+    'windowwatcher',
+    'appstartup/src',
+    'find',
+    'webbrowserpersist',
+    'commandhandler',
+]
+
+if CONFIG['MOZ_XUL'] and CONFIG['NS_PRINTING']:
+    DIRS += ['printingui/src']
+
+DIRS += ['build']
