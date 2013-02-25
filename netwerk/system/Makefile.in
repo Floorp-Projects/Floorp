@@ -12,24 +12,4 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= necko
 
-ifeq ($(OS_ARCH),WINNT)
-    DIRS += win32
-endif
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-    DIRS += mac
-endif
-
-ifdef MOZ_ENABLE_LIBCONIC
-    DIRS += maemo
-endif
-
-ifdef MOZ_ENABLE_QTNETWORK
-    DIRS += qt
-endif
-
-ifeq (android,$(MOZ_WIDGET_TOOLKIT))
-    DIRS += android
-endif
-
 include $(topsrcdir)/config/rules.mk
