@@ -778,7 +778,7 @@ stubs::TriggerIonCompile(VMFrame &f)
     AssertCanGC();
     RootedScript script(f.cx, f.script());
 
-    if (ion::js_IonOptions.parallelCompilation) {
+    if (ion::js_IonOptions.parallelCompilation && !f.cx->runtime->profilingScripts) {
         if (script->hasIonScript()) {
             /*
              * Normally TriggerIonCompile is not called if !script->ion, but the
