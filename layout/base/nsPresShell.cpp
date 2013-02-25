@@ -5415,6 +5415,27 @@ PresShell::ScheduleImageVisibilityUpdate()
   }
 }
 
+void
+PresShell::EnsureImageInVisibleList(nsIImageLoadingContent* aImage)
+{
+#ifdef DEBUG
+  // if it has a frame make sure its in this presshell
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aImage);
+  if (content) {
+    PresShell* shell = static_cast<PresShell*>(content->OwnerDoc()->GetShell());
+    MOZ_ASSERT(!shell || shell == this, "wrong shell");
+  }
+#endif
+
+  // This check could be slow.
+  if (mVisibleImages.Contains(aImage)) {
+    return;
+  }
+
+  mVisibleImages.AppendElement(aImage);
+  aImage->IncrementVisibleCount();
+}
+
 class nsAutoNotifyDidPaint
 {
 public:

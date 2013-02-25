@@ -165,6 +165,18 @@ public:
     }
   }
 
+  virtual void OnUnlockedDraw()
+  {
+    NS_ABORT_IF_FALSE(mTracker->GetImage(),
+                      "OnUnlockedDraw callback before we've created our image");
+    mTracker->RecordUnlockedDraw();
+
+    nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
+    while (iter.HasMore()) {
+      mTracker->SendUnlockedDraw(iter.GetNext());
+    }
+  }
+
   virtual void OnImageIsAnimated()
   {
     NS_ABORT_IF_FALSE(mTracker->GetImage(),
@@ -569,6 +581,13 @@ imgStatusTracker::RecordDiscard()
 }
 
 void
+imgStatusTracker::RecordUnlockedDraw()
+{
+  NS_ABORT_IF_FALSE(mImage,
+                    "RecordUnlockedDraw called before we have an Image");
+}
+
+void
 imgStatusTracker::SendImageIsAnimated(imgRequestProxy* aProxy)
 {
   if (!aProxy->NotificationsDeferred())
@@ -591,6 +610,13 @@ imgStatusTracker::SendDiscard(imgRequestProxy* aProxy)
 {
   if (!aProxy->NotificationsDeferred())
     aProxy->OnDiscard();
+}
+
+void
+imgStatusTracker::SendUnlockedDraw(imgRequestProxy* aProxy)
+{
+  if (!aProxy->NotificationsDeferred())
+    aProxy->OnUnlockedDraw();
 }
 
 void

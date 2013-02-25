@@ -339,6 +339,8 @@ public:
 
   virtual void RebuildImageVisibility(const nsDisplayList& aList);
 
+  virtual void EnsureImageInVisibleList(nsIImageLoadingContent* aImage);
+
 protected:
   virtual ~PresShell();
 

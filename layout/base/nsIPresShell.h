@@ -38,6 +38,7 @@
 #include "nsInterfaceHashtable.h"
 #include "nsEventStates.h"
 #include "nsPresArena.h"
+#include "nsIImageLoadingContent.h"
 
 class nsIContent;
 class nsIDocument;
@@ -120,10 +121,10 @@ typedef struct CapturingContentInfo {
   nsIContent* mContent;
 } CapturingContentInfo;
 
-// 15f6c268-e40f-42a9-a7eb-e5e10a5840a1
+// 835b3946-1a4f-4132-b3ce-2e2e8be377c8
 #define NS_IPRESSHELL_IID \
-{ 0x15f6c268, 0xe40f, 0x42a9, \
-  { 0xa7, 0xeb, 0xe5, 0xe1, 0x0a, 0x58, 0x40, 0xa1 } }
+{ 0x835b3946, 0x1a4f, 0x4132, \
+  { 0xb3, 0xce, 0x2e, 0x2e, 0x8b, 0xe3, 0x77, 0xc8 } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -1326,6 +1327,9 @@ public:
   // Clears the current list of visible images on this presshell and replaces it
   // with images that are in the display list aList.
   virtual void RebuildImageVisibility(const nsDisplayList& aList) = 0;
+
+  // Ensures the image is in the list of visible images.
+  virtual void EnsureImageInVisibleList(nsIImageLoadingContent* aImage) = 0;
 
   /**
    * Refresh observer management.
