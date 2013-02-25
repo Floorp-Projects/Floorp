@@ -1,0 +1,103 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+interfaces = [
+    'base',
+    'canvas',
+    'core',
+    'html',
+    'events',
+    'devicestorage',
+    'contacts',
+    'settings',
+    'stylesheets',
+    'sidebar',
+    'css',
+    'traversal',
+    'range',
+    'xbl',
+    'xpath',
+    'load-save',
+    'xul',
+    'storage',
+    'json',
+    'offline',
+    'geolocation',
+    'notification',
+    'permission',
+    'svg',
+    'smil',
+    'apps',
+]
+
+PARALLEL_DIRS += ['interfaces/' + i for i in interfaces]
+
+PARALLEL_DIRS += [
+    'apps',
+    'base',
+    'activities',
+    'bindings',
+    'battery',
+    'bluetooth',
+    'browser-element',
+    'contacts',
+    'phonenumberutils',
+    'alarm',
+    'devicestorage',
+    'encoding',
+    'file',
+    'media',
+    'messages',
+    'power',
+    'quota',
+    'settings',
+    'mobilemessage',
+    'sms',
+    'mms',
+    'src',
+    'time',
+    'locales',
+    'network',
+    'permission',
+    'plugins/base',
+    'plugins/ipc',
+    'indexedDB',
+    'system',
+    'ipc',
+    'identity',
+    'workers',
+    'camera',
+    'audiochannel',
+]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    PARALLEL_DIRS += ['plugins/ipc/hangui']
+
+if CONFIG['MOZ_B2G_RIL']:
+    PARALLEL_DIRS += [
+        'telephony',
+        'wifi',
+        'icc',
+        'cellbroadcast',
+        'voicemail',
+    ]
+
+if CONFIG['MOZ_B2G_FM']:
+    PARALLEL_DIRS += ['fm']
+
+if CONFIG['MOZ_PAY']:
+    PARALLEL_DIRS += ['payment']
+
+# bindings/test is here, because it needs to build after bindings/, and
+# we build subdirectories before ourselves.
+TEST_DIRS += [
+    'tests',
+    'imptests',
+    'bindings/test',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'cocoa', 'windows', 'android', 'qt', 'os2'):
+    TEST_DIRS += ['plugins/test']
+

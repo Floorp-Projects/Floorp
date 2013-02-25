@@ -11,8 +11,6 @@ relativesrcdir   = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PARALLEL_DIRS = interfaces
-
 EXTRA_COMPONENTS = \
   SystemMessageManager.js \
   SystemMessageInternal.js \

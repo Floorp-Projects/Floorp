@@ -11,10 +11,6 @@ relativesrcdir   = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = \
-  extensions \
-  $(NULL)
-
 MOCHITEST_FILES = \
   test_404.html \
   test_atob.html \

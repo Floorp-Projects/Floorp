@@ -48,12 +48,7 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/media/webrtc/trunk/webrtc \
   -I$(topsrcdir)/media/webrtc/signaling/src/common \
   $(NULL)
-DIRS += bridge
 endif
-
-TEST_DIRS += \
-  tests/mochitest \
-  $(NULL)
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
