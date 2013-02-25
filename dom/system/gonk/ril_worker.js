@@ -7321,6 +7321,126 @@ let GsmPDUHelper = {
   }
 };
 
+/**
+ * Provide buffer with bitwise read/write function so make encoding/decoding easier.
+ */
+let BitBufferHelper = {
+  readCache: 0,
+  readCacheSize: 0,
+  readBuffer: [],
+  readIndex: 0,
+  writeCache: 0,
+  writeCacheSize: 0,
+  writeBuffer: [],
+
+  // Max length is 32 because we use integer as read/write cache.
+  // All read/write functions are implemented based on bitwise operation.
+  readBits: function readBits(length) {
+    if (length <= 0 || length > 32) {
+      return null;
+    }
+
+    if (length > this.readCacheSize) {
+      let bytesToRead = Math.ceil((length - this.readCacheSize) / 8);
+      for(let i = 0; i < bytesToRead; i++) {
+        this.readCache = (this.readCache << 8) | (this.readBuffer[this.readIndex++] & 0xFF);
+        this.readCacheSize += 8;
+      }
+    }
+
+    let bitOffset = (this.readCacheSize - length),
+        resultMask = (1 << length) - 1,
+        result = 0;
+
+    result = (this.readCache >> bitOffset) & resultMask;
+    this.readCacheSize -= length;
+
+    return result;
+  },
+
+  writeBits: function writeBits(value, length) {
+    if (length <= 0 || length > 32) {
+      return;
+    }
+
+    let totalLength = length + this.writeCacheSize;
+
+    // 8-byte cache not full
+    if (totalLength < 8) {
+      let valueMask = (1 << length) - 1;
+      this.writeCache = (this.writeCache << length) | (value & valueMask);
+      this.writeCacheSize += length;
+      return;
+    }
+
+    // Deal with unaligned part
+    if (this.writeCacheSize) {
+      let mergeLength = 8 - this.writeCacheSize,
+          valueMask = (1 << mergeLength) - 1;
+
+      this.writeCache = (this.writeCache << mergeLength) | ((value >> (length - mergeLength)) & valueMask);
+      this.writeBuffer.push(this.writeCache & 0xFF);
+      length -= mergeLength;
+    }
+
+    // Aligned part, just copy
+    while (length >= 8) {
+      length -= 8;
+      this.writeBuffer.push((value >> length) & 0xFF);
+    }
+
+    // Rest part is saved into cache
+    this.writeCacheSize = length;
+    this.writeCache = value & ((1 << length) - 1);
+
+    return;
+  },
+
+  // Drop what still in read cache and goto next 8-byte alignment.
+  // There might be a better naming.
+  nextOctetAlign: function nextOctetAlign() {
+    this.readCache = 0;
+    this.readCacheSize = 0;
+  },
+
+  // Flush current write cache to Buf with padding 0s.
+  // There might be a better naming.
+  flushWithPadding: function flushWithPadding() {
+    if (this.writeCacheSize) {
+      this.writeBuffer.push(this.writeCache << (8 - this.writeCacheSize));
+    }
+    this.writeCache = 0;
+    this.writeCacheSize = 0;
+  },
+
+  startWrite: function startWrite(dataBuffer) {
+    this.writeBuffer = dataBuffer;
+    this.writeCache = 0;
+    this.writeCacheSize = 0;
+  },
+
+  startRead: function startRead(dataBuffer) {
+    this.readBuffer = dataBuffer;
+    this.readCache = 0;
+    this.readCacheSize = 0;
+    this.readIndex = 0;
+  },
+
+  getWriteBufferSize: function getWriteBufferSize() {
+    return this.writeBuffer.length;
+  },
+
+  overwriteWriteBuffer: function overwriteWriteBuffer(position, data) {
+    let writeLength = data.length;
+    if (writeLength + position >= this.writeBuffer.length) {
+      writeLength = this.writeBuffer.length - position;
+    }
+    for (let i = 0; i < writeLength; i++) {
+      this.writeBuffer[i + position] = data[i];
+    }
+  }
+};
+
 let StkCommandParamsFactory = {
   createParam: function createParam(cmdDetails, ctlvs) {
     let param;
