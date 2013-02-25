@@ -191,7 +191,7 @@ public class AboutHomePromoBox extends TextView implements View.OnClickListener 
     }
 
     private void getAvailableTypes(final GetTypesCallback callback) {
-        (new UiAsyncTask<Void, Void, ArrayList<Type>>(getHandler(), GeckoAppShell.getHandler()) {
+        (new UiAsyncTask<Void, Void, ArrayList<Type>>(GeckoAppShell.getHandler()) {
             @Override
             public ArrayList<Type> doInBackground(Void... params) {
                 // Run all of this on a background thread
