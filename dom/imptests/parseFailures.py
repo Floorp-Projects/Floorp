@@ -9,7 +9,7 @@ import json
 import os
 import sys
 
-import writeMakefile
+import writeBuildFiles
 
 def extractLines(fp):
     lines = []
@@ -52,19 +52,22 @@ def dumpFailures(lines):
         fp.close()
     return files
 
-def writeMakefiles(files):
+def writeFiles(files):
     pathmap = {}
     for path in files:
         dirp, leaf = path.rsplit('/', 1)
         pathmap.setdefault(dirp, []).append(leaf)
 
     for k, v in pathmap.items():
-        resultstr = writeMakefile.substMakefile('parseFailures.py', [], v)
-        result = resultstr.encode('utf-8')
+        with open(k + '/Makefile.in', 'wb') as fh:
+            result = writeBuildFiles.substMakefile('parseFailures.py', v)
+            result = result.encode('utf-8')
+            fh.write(result)
 
-        fp = open(k + '/Makefile.in', 'wb')
-        fp.write(result)
-        fp.close()
+        with open(k + '/moz.build', 'wb') as fh:
+            result = writeBuildFiles.substMozbuild('parseFailures.py', [])
+            result = result.encode('utf-8')
+            fh.write(result)
 
 def main(logPath):
     fp = open(logPath, 'rb')
@@ -72,9 +75,10 @@ def main(logPath):
     fp.close()
 
     files = dumpFailures(lines)
-    writeMakefiles(files)
+    writeFiles(files)
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print("Please pass the path to the logfile from which failures should be extracted.")
     main(sys.argv[1])
+
