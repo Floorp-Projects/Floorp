@@ -75,10 +75,6 @@ include $(topsrcdir)/config/config.mk
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 
-ifdef ENABLE_TESTS
-TOOL_DIRS		+= test
-endif # ENABLE_TESTS
-
 INCLUDES += 	\
 		-I$(srcdir)/../base/src \
 		-I$(srcdir)/../../layout/style \
