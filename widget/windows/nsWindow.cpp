@@ -5695,7 +5695,7 @@ LRESULT nsWindow::ProcessKeyUpMessage(const MSG &aMsg, bool *aEventDispatched)
     return FALSE;
   }
 
-  if (!nsIMM32Handler::IsComposingOn(this)) {
+  if (!IMEHandler::IsComposingOn(this)) {
     return OnKeyUp(aMsg, modKeyState, aEventDispatched);
   }
 
@@ -5734,7 +5734,7 @@ LRESULT nsWindow::ProcessKeyDownMessage(const MSG &aMsg,
     return FALSE;
 
   LRESULT result = 0;
-  if (!nsIMM32Handler::IsComposingOn(this)) {
+  if (!IMEHandler::IsComposingOn(this)) {
     result = OnKeyDown(aMsg, modKeyState, aEventDispatched, nullptr);
     // OnKeyDown cleaned up the redirected message information itself, so,
     // we should do nothing.
@@ -6879,7 +6879,7 @@ LRESULT nsWindow::OnChar(const MSG &aMsg,
     modKeyState.Unset(MODIFIER_ALT | MODIFIER_CONTROL);
   }
 
-  if (nsIMM32Handler::IsComposingOn(this)) {
+  if (IMEHandler::IsComposingOn(this)) {
     ResetInputState();
   }
 
@@ -7403,7 +7403,7 @@ nsWindow::SetInputContext(const InputContext& aContext,
 #ifdef NS_ENABLE_TSF
   nsTextStore::SetInputContext(aContext);
 #endif //NS_ENABLE_TSF
-  if (nsIMM32Handler::IsComposing()) {
+  if (IMEHandler::IsComposing()) {
     ResetInputState();
   }
   void* nativeIMEContext = mInputContext.mNativeIMEContext;
