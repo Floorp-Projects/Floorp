@@ -51,7 +51,8 @@ GetFunctionProxyConstruct(UnrootedObject proxy)
 
 BaseProxyHandler::BaseProxyHandler(void *family)
   : mFamily(family),
-    mHasPrototype(false)
+    mHasPrototype(false),
+    mHasPolicy(false)
 {
 }
 

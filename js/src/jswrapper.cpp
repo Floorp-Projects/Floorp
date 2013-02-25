@@ -838,6 +838,7 @@ SecurityWrapper<Base>::SecurityWrapper(unsigned flags)
   : Base(flags)
 {
     Base::setSafeToUnwrap(false);
+    BaseProxyHandler::setHasPolicy(true);
 }
 
 template <class Base>
