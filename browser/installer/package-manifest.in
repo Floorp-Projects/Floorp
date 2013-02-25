@@ -349,8 +349,6 @@
 @BINPATH@/browser/components/DownloadsUI.js
 @BINPATH@/browser/components/BrowserPlaces.manifest
 @BINPATH@/components/BrowserPageThumbs.manifest
-@BINPATH@/browser/components/nsPrivateBrowsingServiceObsolete.manifest
-@BINPATH@/browser/components/nsPrivateBrowsingServiceObsolete.js
 @BINPATH@/components/SiteSpecificUserAgent.js
 @BINPATH@/components/SiteSpecificUserAgent.manifest
 @BINPATH@/components/toolkitsearch.manifest
