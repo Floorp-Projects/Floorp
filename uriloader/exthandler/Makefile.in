@@ -9,11 +9,6 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = \
-       $(NULL)
-
-TEST_DIRS += tests
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 OSDIR		= os2
 else
