@@ -1734,6 +1734,9 @@ abstract public class GeckoApp
         registerEventListener("Content:StateChange");
         registerEventListener("Content:LoadError");
         registerEventListener("Content:PageShow");
+        registerEventListener("Reader:Added");
+        registerEventListener("Reader:Removed");
+        registerEventListener("Reader:Share");
         registerEventListener("Reader:FaviconRequest");
         registerEventListener("Reader:GoToReadingList");
         registerEventListener("onCameraCapture");
@@ -2132,6 +2135,9 @@ abstract public class GeckoApp
         unregisterEventListener("Content:StateChange");
         unregisterEventListener("Content:LoadError");
         unregisterEventListener("Content:PageShow");
+        unregisterEventListener("Reader:Added");
+        unregisterEventListener("Reader:Removed");
+        unregisterEventListener("Reader:Share");
         unregisterEventListener("Reader:FaviconRequest");
         unregisterEventListener("Reader:GoToReadingList");
         unregisterEventListener("onCameraCapture");
