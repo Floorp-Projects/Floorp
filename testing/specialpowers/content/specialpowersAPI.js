@@ -1206,6 +1206,10 @@ SpecialPowersAPI.prototype = {
     var debug = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
     return this.isDebugBuild = debug.isDebugBuild;
   },
+  assertionCount: function() {
+    var debugsvc = Cc['@mozilla.org/xpcom/debug;1'].getService(Ci.nsIDebug2);
+    return debugsvc.assertionCount;
+  },
 
   /**
    * Get the message manager associated with an <iframe mozbrowser>.
