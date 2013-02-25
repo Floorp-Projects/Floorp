@@ -160,43 +160,31 @@ IccManager::SendStkEventDownload(const JS::Value& aEvent)
 NS_IMETHODIMP
 IccManager::IccOpenChannel(const nsAString& aAid, nsIDOMDOMRequest** aRequest)
 {
-  *aRequest = nullptr;
-
   if (!mProvider) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = mProvider->IccOpenChannel(GetOwner(), aAid, aRequest);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
+  return mProvider->IccOpenChannel(GetOwner(), aAid, aRequest);
 }
 
 NS_IMETHODIMP
-IccManager::IccExchangeAPDU(PRInt32 aChannel, const jsval& aApdu, nsIDOMDOMRequest** aRequest)
+IccManager::IccExchangeAPDU(int32_t aChannel, const jsval& aApdu, nsIDOMDOMRequest** aRequest)
 {
-  *aRequest = nullptr;
-
   if (!mProvider) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = mProvider->IccExchangeAPDU(GetOwner(), aChannel, aApdu, aRequest);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
+  return mProvider->IccExchangeAPDU(GetOwner(), aChannel, aApdu, aRequest);
 }
 
 NS_IMETHODIMP
-IccManager::IccCloseChannel(PRInt32 aChannel, nsIDOMDOMRequest** aRequest)
+IccManager::IccCloseChannel(int32_t aChannel, nsIDOMDOMRequest** aRequest)
 {
-  *aRequest = nullptr;
-
   if (!mProvider) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = mProvider->IccCloseChannel(GetOwner(), aChannel, aRequest);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
+  return mProvider->IccCloseChannel(GetOwner(), aChannel, aRequest);
 }
 
 
