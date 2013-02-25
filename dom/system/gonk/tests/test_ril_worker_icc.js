@@ -554,8 +554,8 @@ add_test(function test_write_location_info_tlv() {
 
   // Test with 2-digit mnc, and gsmCellId obtained from UMTS network.
   let loc = {
-    mcc: 466,
-    mnc: 92,
+    mcc: "466",
+    mnc: "92",
     gsmLocationAreaCode : 10291,
     gsmCellId: 19072823
   };
@@ -582,8 +582,8 @@ add_test(function test_write_location_info_tlv() {
 
   // Test with 1-digit mnc, and gsmCellId obtained from GSM network.
   loc = {
-    mcc: 466,
-    mnc: 2,
+    mcc: "466",
+    mnc: "02",
     gsmLocationAreaCode : 10291,
     gsmCellId: 65534
   };
@@ -607,8 +607,8 @@ add_test(function test_write_location_info_tlv() {
 
   // Test with 3-digit mnc, and gsmCellId obtained from GSM network.
   loc = {
-    mcc: 466,
-    mnc: 222,
+    mcc: "466",
+    mnc: "222",
     gsmLocationAreaCode : 10291,
     gsmCellId: 65534
   };
@@ -1538,8 +1538,8 @@ add_test(function test_stk_event_download_location_status() {
     eventType: STK_EVENT_TYPE_LOCATION_STATUS,
     locationStatus: STK_SERVICE_STATE_NORMAL,
     locationInfo: {
-      mcc: 123,
-      mnc: 456,
+      mcc: "123",
+      mnc: "456",
       gsmLocationAreaCode: 0,
       gsmCellId: 0
     }
