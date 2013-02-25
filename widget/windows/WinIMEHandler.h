@@ -37,6 +37,17 @@ public:
                              LRESULT* aRetValue, bool& aEatMessage);
 
   /**
+   * When there is a composition, returns true.  Otherwise, false.
+   */
+  static bool IsComposing();
+
+  /**
+   * When there is a composition and it's in the window, returns true.
+   * Otherwise, false.
+   */
+  static bool IsComposingOn(nsWindow* aWindow);
+
+  /**
    * "Kakutei-Undo" of ATOK or WXG (both of them are Japanese IME) causes
    * strange WM_KEYDOWN/WM_KEYUP/WM_CHAR message pattern.  So, when this
    * returns true, the caller needs to be careful for processing the messages.
