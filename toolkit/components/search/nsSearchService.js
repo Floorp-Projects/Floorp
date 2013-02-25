@@ -2664,29 +2664,20 @@ SearchService.prototype = {
       cache.directories[cacheKey].engines.push(engine._serializeToJSON(true));
     }
 
-    let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
-                  createInstance(Ci.nsIFileOutputStream);
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                    createInstance(Ci.nsIScriptableUnicodeConverter);
-    let cacheFile = getDir(NS_APP_USER_PROFILE_50_DIR);
-    cacheFile.append("search.json");
-
     try {
       LOG("_buildCache: Writing to cache file.");
-      ostream.init(cacheFile, (MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE), PERMS_FILE, ostream.DEFER_OPEN);
-      converter.charset = "UTF-8";
-      let data = converter.convertToInputStream(JSON.stringify(cache));
+      let path = OS.Path.join(OS.Constants.Path.profileDir, "search.json");
+      let data = gEncoder.encode(JSON.stringify(cache));
+      let promise = OS.File.writeAtomic(path, data, { tmpPath: path + ".tmp"});
 
-      // Write to the cache file asynchronously
-      NetUtil.asyncCopy(data, ostream, function(rv) {
-        if (Components.isSuccessCode(rv)) {
-          Services.obs.notifyObservers(null,
-                                       SEARCH_SERVICE_TOPIC,
-                                       SEARCH_SERVICE_CACHE_WRITTEN);
-        } else {
-          LOG("_buildCache: failure during asyncCopy: " + rv);
+      promise.then(
+        function onSuccess() {
+          Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, SEARCH_SERVICE_CACHE_WRITTEN);
+        },
+        function onError(e) {
+          LOG("_buildCache: failure during writeAtomic: " + e);
         }
-      });
+      );
     } catch (ex) {
       LOG("_buildCache: Could not write to cache file: " + ex);
     }
