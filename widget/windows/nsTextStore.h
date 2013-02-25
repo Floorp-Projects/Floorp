@@ -163,6 +163,11 @@ public:
     return (void*) & sDisplayAttrMgr;
   }
 
+  static bool     IsInTSFMode()
+  {
+    return sTsfThreadMgr != nullptr;
+  }
+
 protected:
   nsTextStore();
   ~nsTextStore();
