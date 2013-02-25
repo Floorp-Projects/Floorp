@@ -5427,11 +5427,10 @@ PresShell::EnsureImageInVisibleList(nsIImageLoadingContent* aImage)
   }
 #endif
 
-  // This check could be slow.
-  if (mVisibleImages.Contains(aImage)) {
-    return;
-  }
-
+  // nsImageLoadingContent doesn't call this function if it has a positive
+  // visible count so the image shouldn't be in mVisibleImages. Either way it
+  // doesn't hurt to put it in multiple times.
+  MOZ_ASSERT(!mVisibleImages.Contains(aImage), "image already in the array");
   mVisibleImages.AppendElement(aImage);
   aImage->IncrementVisibleCount();
 }
