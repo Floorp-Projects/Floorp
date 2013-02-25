@@ -10,10 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = $(NULL)
-
-TEST_DIRS += test
-
 MODULE		= layout
 XPIDL_MODULE	= layout_forms
 LIBRARY_NAME	= gkforms_s
