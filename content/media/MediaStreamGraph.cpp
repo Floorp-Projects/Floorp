@@ -118,6 +118,9 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
       StreamTime t =
         GraphTimeToStreamTime(aStream, mStateComputedTime) +
         (aDesiredUpToTime - mStateComputedTime);
+      LOG(PR_LOG_DEBUG, ("Calling NotifyPull aStream=%p t=%f current end=%f", aStream,
+	                     MediaTimeToSeconds(t),
+						 MediaTimeToSeconds(aStream->mBuffer.GetEnd())));
       if (t > aStream->mBuffer.GetEnd()) {
         *aEnsureNextIteration = true;
         for (uint32_t j = 0; j < aStream->mListeners.Length(); ++j) {
@@ -1637,22 +1640,25 @@ SourceMediaStream::AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
   }
 }
 
-void
+bool
 SourceMediaStream::AppendToTrack(TrackID aID, MediaSegment* aSegment)
 {
   MutexAutoLock lock(mMutex);
   // ::EndAllTrackAndFinished() can end these before the sources notice
+  bool appended = false;
   if (!mFinished) {
     TrackData *track = FindDataForTrack(aID);
     if (track) {
       track->mData->AppendFrom(aSegment);
+	  appended = true;
     } else {
-      NS_ERROR("Append to non-existent track!");
-    }
+	  aSegment->Clear();
+	}
   }
   if (!mDestroyed) {
     GraphImpl()->EnsureNextIteration();
   }
+  return appended;
 }
 
 bool
@@ -1663,8 +1669,7 @@ SourceMediaStream::HaveEnoughBuffered(TrackID aID)
   if (track) {
     return track->mHaveEnough;
   }
-  NS_ERROR("No track in HaveEnoughBuffered!");
-  return true;
+  return false;
 }
 
 void
@@ -1674,7 +1679,7 @@ SourceMediaStream::DispatchWhenNotEnoughBuffered(TrackID aID,
   MutexAutoLock lock(mMutex);
   TrackData* data = FindDataForTrack(aID);
   if (!data) {
-    NS_ERROR("No track in DispatchWhenNotEnoughBuffered");
+    aSignalThread->Dispatch(aSignalRunnable, 0);
     return;
   }
 
@@ -1694,8 +1699,6 @@ SourceMediaStream::EndTrack(TrackID aID)
     TrackData *track = FindDataForTrack(aID);
     if (track) {
       track->mCommands |= TRACK_END;
-    } else {
-      NS_ERROR("End of non-existant track");
     }
   }
   if (!mDestroyed) {
