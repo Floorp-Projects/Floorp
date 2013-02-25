@@ -30,13 +30,12 @@ var testCertApp = {
 };
 
 SpecialPowers.addPermission("permissions", true, document);
-var comp = SpecialPowers.wrap(Components);
 SpecialPowers.pushPrefEnv({ "set": [["dom.mozPermissionSettings.enabled", true]] },
                           function() {
                             SpecialPowers.removePermission("permissions", document);
                           });
 
-comp.utils.import("resource://gre/modules/PermissionSettings.jsm");
+SpecialPowers.Cu.import("resource://gre/modules/PermissionSettings.jsm");
 var mozPermissions = window.navigator.mozPermissionSettings;
 
 function permissionTest() {
