@@ -55,6 +55,7 @@ class TreeMetadataEmitter(object):
             sub = ConfigFileSubstitution(sandbox)
             sub.input_path = os.path.join(sandbox['SRCDIR'], '%s.in' % path)
             sub.output_path = os.path.join(sandbox['OBJDIR'], path)
+            sub.relpath = path
             yield sub
 
     def _emit_directory_traversal_from_sandbox(self, sandbox):
