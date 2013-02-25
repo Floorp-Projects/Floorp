@@ -1,0 +1,28 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIRS += ['shared', 'xpwidgets']
+
+toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
+
+if toolkit in ('os2', 'cocoa', 'qt', 'android', 'gonk'):
+    DIRS += [toolkit]
+
+if toolkit == 'windows':
+    DIRS += ['windows']
+
+TEST_TOOL_DIRS += ['tests']
+
+# Don't build the DSO under the 'build' directory as windows does.
+#
+# The DSOs get built in the toolkit dir itself.  Do this so that
+# multiple implementations of widget can be built on the same
+# source tree.
+#
+if CONFIG['MOZ_ENABLE_GTK2']:
+    DIRS += ['gtk2']
+
+    if CONFIG['MOZ_X11']:
+        DIRS += ['gtkxtbin']
