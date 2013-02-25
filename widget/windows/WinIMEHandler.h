@@ -29,6 +29,11 @@ public:
   static void Terminate();
 
   /**
+   * Returns TSF related native data.
+   */
+  static void* GetNativeData(uint32_t aDataType);
+
+  /**
    * Returns true if the context or IME state is enabled.  Otherwise, false.
    */
   static bool IsIMEEnabled(const InputContext& aInputContext);
