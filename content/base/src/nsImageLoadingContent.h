@@ -326,9 +326,15 @@ protected:
    * Adds/Removes a given imgIRequest from our document's tracker.
    *
    * No-op if aImage is null.
+   *
+   * REQUEST_DISCARD passed to UntrackImage means we request the discard of the
+   * decoded data of the image.
    */
   nsresult TrackImage(imgIRequest* aImage);
-  nsresult UntrackImage(imgIRequest* aImage);
+  enum {
+    REQUEST_DISCARD = 0x1
+  };
+  nsresult UntrackImage(imgIRequest* aImage, uint32_t aFlags = 0);
 
   /* MEMBERS */
   nsRefPtr<imgRequestProxy> mCurrentRequest;
