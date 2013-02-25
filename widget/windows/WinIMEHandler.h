@@ -11,6 +11,9 @@
 #include "nsIWidget.h"
 #include <windows.h>
 
+#define NS_WM_IMEFIRST WM_IME_SETCONTEXT
+#define NS_WM_IMELAST  WM_IME_KEYUP
+
 class nsWindow;
 
 namespace mozilla {
@@ -32,6 +35,12 @@ public:
    * Returns TSF related native data.
    */
   static void* GetNativeData(uint32_t aDataType);
+
+  /**
+   * Returns true if our message loop can optimize the message order for
+   * a key message or an IME message.  Otherwise, false.
+   */
+  static bool CanOptimizeKeyAndIMEMessages();
 
   /**
    * Returns true if the context or IME state is enabled.  Otherwise, false.

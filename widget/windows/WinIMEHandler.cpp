@@ -71,6 +71,19 @@ IMEHandler::GetNativeData(uint32_t aDataType)
 
 // static
 bool
+IMEHandler::CanOptimizeKeyAndIMEMessages()
+{
+#ifdef NS_ENABLE_TSF
+  if (sIsInTSFMode) {
+    return nsTextStore::CanOptimizeKeyAndIMEMessages();
+  }
+#endif // #ifdef NS_ENABLE_TSF
+
+  return nsIMM32Handler::CanOptimizeKeyAndIMEMessages();
+}
+
+// static
+bool
 IMEHandler::IsIMEEnabled(const InputContext& aInputContext)
 {
   return IsIMEEnabled(aInputContext.mIMEState.mEnabled);
