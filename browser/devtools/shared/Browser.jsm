@@ -20,9 +20,73 @@ this.EXPORTED_SYMBOLS = [ "Node", "HTMLElement", "setTimeout", "clearTimeout" ];
 this.Node = Components.interfaces.nsIDOMNode;
 this.HTMLElement = Components.interfaces.nsIDOMHTMLElement;
 
-/*
- * Import and re-export the timeout functions from Timer.jsm.
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+/**
+ * The next value to be returned by setTimeout
  */
-let Timer = Components.utils.import("resource://gre/modules/Timer.jsm", {});
-this.setTimeout = Timer.setTimeout;
-this.clearTimeout = Timer.clearTimeout;
+let nextID = 1;
+
+/**
+ * The map of outstanding timeouts
+ */
+const timers = {};
+
+/**
+ * Object to be passed to Timer.initWithCallback()
+ */
+function TimerCallback(callback) {
+  this._callback = callback;
+  const interfaces = [ Components.interfaces.nsITimerCallback ];
+  this.QueryInterface = XPCOMUtils.generateQI(interfaces);
+}
+
+TimerCallback.prototype.notify = function(timer) {
+  try {
+    for (let timerID in timers) {
+      if (timers[timerID] === timer) {
+        delete timers[timerID];
+        break;
+      }
+    }
+    this._callback.apply(null, []);
+  }
+  catch (ex) {
+    dump(ex +  '\n');
+  }
+};
+
+/**
+ * Executes a code snippet or a function after specified delay.
+ * This is designed to have the same interface contract as the browser
+ * function.
+ * @param callback is the function you want to execute after the delay.
+ * @param delay is the number of milliseconds that the function call should
+ * be delayed by. Note that the actual delay may be longer, see Notes below.
+ * @return the ID of the timeout, which can be used later with
+ * window.clearTimeout.
+ */
+this.setTimeout = function setTimeout(callback, delay) {
+  const timer = Components.classes["@mozilla.org/timer;1"]
+                        .createInstance(Components.interfaces.nsITimer);
+
+  let timerID = nextID++;
+  timers[timerID] = timer;
+
+  timer.initWithCallback(new TimerCallback(callback), delay, timer.TYPE_ONE_SHOT);
+  return timerID;
+};
+
+/**
+ * Clears the delay set by window.setTimeout() and prevents the callback from
+ * being executed (if it hasn't been executed already)
+ * @param timerID the ID of the timeout you wish to clear, as returned by
+ * window.setTimeout().
+ */
+this.clearTimeout = function clearTimeout(timerID) {
+  let timer = timers[timerID];
+  if (timer) {
+    timer.cancel();
+    delete timers[timerID];
+  }
+};
