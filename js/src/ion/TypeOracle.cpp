@@ -39,7 +39,8 @@ bool
 TypeInferenceOracle::analyzeTypesForInlinableCallees(JSContext *cx, JSScript *script,
                                                      Vector<JSScript*> &seen)
 {
-    if (script->getUseCount() < js_IonOptions.usesBeforeInlining())
+    // Don't analyze scripts which will not be inlined (but always analyze the first script).
+    if (seen.length() > 0 && script->getUseCount() < js_IonOptions.usesBeforeInlining())
         return true;
 
     for (size_t i = 0; i < seen.length(); i++) {
