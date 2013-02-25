@@ -120,8 +120,8 @@ MobileICCInfo.prototype = {
   // nsIDOMMozMobileICCInfo
 
   iccid: null,
-  mcc: 0,
-  mnc: 0,
+  mcc: null,
+  mnc: null,
   spn: null,
   msisdn: null
 };
@@ -150,7 +150,7 @@ MobileConnectionInfo.prototype = {
   emergencyCallsOnly: false,
   roaming: false,
   network: null,
-  lastKnownMcc: 0,
+  lastKnownMcc: null,
   cell: null,
   type: null,
   signalStrength: null,
@@ -178,8 +178,8 @@ MobileNetworkInfo.prototype = {
 
   shortName: null,
   longName: null,
-  mcc: 0,
-  mnc: 0,
+  mcc: null,
+  mnc: null,
   state: null
 };
 
@@ -455,14 +455,12 @@ RILContentHelper.prototype = {
       throw new Error("Invalid network provided: " + network);
     }
 
-    let mnc = network.mnc;
-    if (!mnc) {
-      throw new Error("Invalid network MNC: " + mnc);
+    if (isNaN(parseInt(network.mnc, 10))) {
+      throw new Error("Invalid network MNC: " + network.mnc);
     }
 
-    let mcc = network.mcc;
-    if (!mcc) {
-      throw new Error("Invalid network MCC: " + mcc);
+    if (isNaN(parseInt(network.mcc, 10))) {
+      throw new Error("Invalid network MCC: " + network.mcc);
     }
 
     let request = Services.DOMRequest.createRequest(window);
@@ -481,8 +479,8 @@ RILContentHelper.prototype = {
 
     cpmm.sendAsyncMessage("RIL:SelectNetwork", {
       requestId: requestId,
-      mnc: mnc,
-      mcc: mcc
+      mnc: network.mnc,
+      mcc: network.mcc
     });
 
     return request;
