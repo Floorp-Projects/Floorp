@@ -11,11 +11,6 @@ VPATH      = @srcdir@
 DISTROEXT = $(call core_abspath,$(FINAL_TARGET))/distribution/extensions
 
 include $(DEPTH)/config/autoconf.mk
-
-DIRS = \
-  {972ce4c6-7e08-4474-a285-3208198ce6fd} \
-  $(NULL)
-
 include $(topsrcdir)/config/config.mk
 
 ifneq (,$(filter beta,$(MOZ_UPDATE_CHANNEL)))

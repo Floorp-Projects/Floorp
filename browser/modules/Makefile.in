@@ -11,8 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-TEST_DIRS += test
-
 EXTRA_JS_MODULES = \
 	AboutHomeUtils.jsm \
 	BrowserNewTabPreloader.jsm \
