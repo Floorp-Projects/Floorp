@@ -125,6 +125,9 @@ public:
 private:
 #ifdef NS_ENABLE_TSF
   static bool sIsInTSFMode;
+  static bool sPluginHasFocus;
+
+  static bool IsTSFAvailable() { return (sIsInTSFMode && !sPluginHasFocus); }
 #endif // #ifdef NS_ENABLE_TSF
 };
 
