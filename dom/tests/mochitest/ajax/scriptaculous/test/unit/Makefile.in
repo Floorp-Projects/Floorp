@@ -11,9 +11,6 @@ relativesrcdir	= @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= \
-	$(NULL)
-
 MOCHITEST_FILES	= \
 	_ajax_inplaceeditor_result.html \
 	_ajax_inplaceeditor_text.html \

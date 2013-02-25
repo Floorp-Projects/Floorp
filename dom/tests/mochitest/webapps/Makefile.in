@@ -10,10 +10,6 @@ relativesrcdir	= @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = \
-    apps \
-    $(NULL)
-
 MOCHITEST_CHROME_FILES = \
     bug_765063.xul \
     cross_origin.html \
