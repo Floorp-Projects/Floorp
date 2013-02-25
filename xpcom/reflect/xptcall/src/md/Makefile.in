@@ -10,15 +10,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifeq ($(OS_ARCH),OS2)
-DIRS = os2
-else
-ifeq ($(OS_ARCH),WINNT)
-DIRS = win32
-else
-DIRS = unix
-endif
-endif
-
 include $(topsrcdir)/config/rules.mk
 
