@@ -137,7 +137,7 @@ nsIMM32Handler::GetKeyboardCodePage()
 }
 
 /* static */ bool
-nsIMM32Handler::CanOptimizeKeyAndIMEMessages(MSG *aNextKeyOrIMEMessage)
+nsIMM32Handler::CanOptimizeKeyAndIMEMessages()
 {
   // If IME is opening right now, we shouldn't optimize the key and IME message
   // order because ATOK (Japanese IME of third party) has some problem with the

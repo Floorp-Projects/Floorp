@@ -145,6 +145,12 @@ public:
     ts->OnCompositionTimer();
   }
 
+  static bool CanOptimizeKeyAndIMEMessages()
+  {
+    // TODO: We need to implement this for ATOK.
+    return true;
+  }
+
   // Returns the address of the pointer so that the TSF automatic test can
   // replace the system object with a custom implementation for testing.
   static void* GetNativeData(uint32_t aDataType)
