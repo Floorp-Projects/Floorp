@@ -1471,6 +1471,70 @@ let RIL = {
   },
 
   /**
+   * Open Logical UICC channel (aid) for Secure Element access
+   */
+  iccOpenChannel: function iccOpenChannel(options) {
+    if (DEBUG) {
+      debug("iccOpenChannel: " + JSON.stringify(options));
+    }
+
+    let token = Buf.newParcel(REQUEST_SIM_OPEN_CHANNEL, options);
+    Buf.writeString(options.aid);
+    Buf.sendParcel();
+  },
+
+/**
+   * Exchange APDU data on an open Logical UICC channel
+   */
+  iccExchangeAPDU: function iccExchangeAPDU(options) {
+    if (DEBUG) debug("iccExchangeAPDU: " + JSON.stringify(options));
+
+    var cla = options.apdu.cla;
+    var command = options.apdu.command;
+    var channel = options.channel;
+    var path = options.apdu.path;
+    var data = options.apdu.data;
+    var data2 = options.apdu.data2;
+    if (path == null || path === undefined) {
+      var path = "";
+    }
+    if (data == null || data === undefined) {
+      var data = "";
+    }
+    if (data2 == null || data2 === undefined) {
+      var data2 = "";
+    }
+    var p1 = options.apdu.p1;
+    var p2 = options.apdu.p2;
+    var p3 = options.apdu.p3; // Extra
+
+    Buf.newParcel(REQUEST_SIM_ACCESS_CHANNEL, options);
+    Buf.writeUint32(cla);
+    Buf.writeUint32(command);
+    Buf.writeUint32(channel);
+    Buf.writeString(path); // path
+    Buf.writeUint32(p1);
+    Buf.writeUint32(p2);
+    Buf.writeUint32(p3);
+    Buf.writeString(data); // generic data field.
+    Buf.writeString(data2);
+
+    Buf.sendParcel();
+  },
+
+  /**
+   * Close Logical UICC channel
+   */
+  iccCloseChannel: function iccCloseChannel(options) {
+    if (DEBUG) debug("iccCloseChannel: " + JSON.stringify(options));
+
+    Buf.newParcel(REQUEST_SIM_CLOSE_CHANNEL, options);
+    Buf.writeUint32(1);
+    Buf.writeUint32(options.channel);
+    Buf.sendParcel();
+  },
+
+  /**
    * Tell the radio to choose a specific voice/data network
    */
   selectNetwork: function selectNetwork(options) {
@@ -4690,6 +4754,42 @@ RIL[REQUEST_SET_FACILITY_LOCK] = function REQUEST_SET_FACILITY_LOCK(length, opti
   this.sendDOMMessage(options);
 };
 RIL[REQUEST_CHANGE_BARRING_PASSWORD] = null;
+RIL[REQUEST_SIM_OPEN_CHANNEL] = function REQUEST_SIM_OPEN_CHANNEL(length, options) {
+  if (options.rilRequestError) {
+    options.error = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    this.sendDOMMessage(options);
+    return;
+  }
+
+  options.channel = Buf.readUint32();
+  if (DEBUG) debug("Setting channel number in options: " + options.channel);
+  this.sendDOMMessage(options);
+};
+RIL[REQUEST_SIM_CLOSE_CHANNEL] = function REQUEST_SIM_CLOSE_CHANNEL(length, options) {
+  if (options.rilRequestError) {
+    options.error = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    this.sendDOMMessage(options);
+    return;
+  }
+
+  // No return value
+  this.sendDOMMessage(options);
+};
+RIL[REQUEST_SIM_ACCESS_CHANNEL] = function REQUEST_SIM_ACCESS_CHANNEL(length, options) {
+  if (options.rilRequestError) {
+    options.error = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    this.sendDOMMessage(options);
+  }
+
+  options.sw1 = Buf.readUint32();
+  options.sw2 = Buf.readUint32();
+  options.simResponse = Buf.readString();
+  if (DEBUG) {
+    debug("Setting return values for RIL[REQUEST_SIM_ACCESS_CHANNEL]: ["
+          + options.sw1 + "," + options.sw2 + ", " + options.simResponse + "]");
+  }
+  this.sendDOMMessage(options);
+};
 RIL[REQUEST_QUERY_NETWORK_SELECTION_MODE] = function REQUEST_QUERY_NETWORK_SELECTION_MODE(length, options) {
   this._receivedNetworkInfo(NETWORK_INFO_NETWORK_SELECTION_MODE);
 
