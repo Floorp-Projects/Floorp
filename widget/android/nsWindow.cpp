@@ -1501,10 +1501,10 @@ nsWindow::InitKeyEvent(nsKeyEvent& event, AndroidGeckoEvent& key,
         event.pluginEvent = pluginEvent;
     }
 
-    event.InitBasicModifiers(gMenu || key.IsCtrlPressed(),
+    event.InitBasicModifiers(gMenu,
                              key.IsAltPressed(),
                              key.IsShiftPressed(),
-                             key.IsMetaPressed());
+                             false);
     event.location = key.DomKeyLocation();
     event.time = key.Time();
 
@@ -1598,8 +1598,6 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
     case AndroidKeyEvent::KEYCODE_SHIFT_RIGHT:
     case AndroidKeyEvent::KEYCODE_ALT_LEFT:
     case AndroidKeyEvent::KEYCODE_ALT_RIGHT:
-    case AndroidKeyEvent::KEYCODE_CTRL_LEFT:
-    case AndroidKeyEvent::KEYCODE_CTRL_RIGHT:
         firePress = false;
         break;
     case AndroidKeyEvent::KEYCODE_BACK:
