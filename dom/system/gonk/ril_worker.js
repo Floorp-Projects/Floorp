@@ -7441,6 +7441,890 @@ let BitBufferHelper = {
   }
 };
 
+/**
+ * Helper for CDMA PDU
+ *
+ * Currently, some function are shared with GsmPDUHelper, they should be
+ * moved from GsmPDUHelper to a common object shared among GsmPDUHelper and
+ * CdmaPDUHelper.
+ */
+let CdmaPDUHelper = {
+  //       1..........C
+  // Only "1234567890*#" is defined in C.S0005-D v2.0
+  dtmfChars: ".1234567890*#...",
+
+  /**
+   * Entry point for SMS encoding, the options object is made compatible
+   * with existing writeMessage() of GsmPDUHelper, but less key is used.
+   *
+   * Current used key in options:
+   * @param number
+   *        String containing the address (number) of the SMS receiver
+   * @param body
+   *        String containing the message to be sent, segmented part
+   * @param dcs
+   *        Data coding scheme. One of the PDU_DCS_MSG_CODING_*BITS_ALPHABET
+   *        constants.
+   * @param encodedBodyLength
+   *        Length of the user data when encoded with the given DCS. For UCS2,
+   *        in bytes; for 7-bit, in septets.
+   * @param requestStatusReport
+   *        Request status report.
+   * @param segmentRef
+   *        Reference number of concatenated SMS message
+   * @param segmentMaxSeq
+   *        Total number of concatenated SMS message
+   * @param segmentSeq
+   *        Sequence number of concatenated SMS message
+   */
+  writeMessage: function cdma_writeMessage(options) {
+    if (DEBUG) {
+      debug("cdma_writeMessage: " + JSON.stringify(options));
+    }
+
+    // Get encoding
+    options.encoding = this.gsmDcsToCdmaEncoding(options.dcs);
+
+    // Common Header
+    if (options.segmentMaxSeq > 1) {
+      this.writeInt(PDU_CDMA_MSG_TELESERIVCIE_ID_WEMT);
+    } else {
+      this.writeInt(PDU_CDMA_MSG_TELESERIVCIE_ID_SMS);
+    }
+
+    this.writeInt(0);
+    this.writeInt(PDU_CDMA_MSG_CATEGORY_UNSPEC);
+
+    // Just fill out address info in byte, rild will encap them for us
+    let addrInfo = this.encodeAddr(options.number);
+    this.writeByte(addrInfo.digitMode);
+    this.writeByte(addrInfo.numberMode);
+    this.writeByte(addrInfo.numberType);
+    this.writeByte(addrInfo.numberPlan);
+    this.writeByte(addrInfo.address.length);
+    for (let i = 0; i < addrInfo.address.length; i++) {
+      this.writeByte(addrInfo.address[i]);
+    }
+
+    // Subaddress, not supported
+    this.writeByte(0);  // Subaddress : Type
+    this.writeByte(0);  // Subaddress : Odd
+    this.writeByte(0);  // Subaddress : length
+
+    // User Data
+    let encodeResult = this.encodeUserData(options);
+    this.writeByte(encodeResult.length);
+    for (let i = 0; i < encodeResult.length; i++) {
+      this.writeByte(encodeResult[i]);
+    }
+
+    encodeResult = null;
+  },
+
+  /**
+   * Data writters
+   */
+  writeInt: function writeInt(value) {
+    Buf.writeUint32(value);
+  },
+
+  writeByte: function writeByte(value) {
+    Buf.writeUint32(value & 0xFF);
+  },
+
+  /**
+   * Transform GSM DCS to CDMA encoding.
+   */
+  gsmDcsToCdmaEncoding: function gsmDcsToCdmaEncoding(encoding) {
+    switch (encoding) {
+      case PDU_DCS_MSG_CODING_7BITS_ALPHABET:
+        return PDU_CDMA_MSG_CODING_7BITS_ASCII;
+      case PDU_DCS_MSG_CODING_8BITS_ALPHABET:
+        return PDU_CDMA_MSG_CODING_OCTET;
+      case PDU_DCS_MSG_CODING_16BITS_ALPHABET:
+        return PDU_CDMA_MSG_CODING_UNICODE;
+    }
+  },
+
+  /**
+   * Encode address into CDMA address format, as a byte array.
+   *
+   * @see 3GGP2 C.S0015-B 2.0, 3.4.3.3 Address Parameters
+   *
+   * @param address
+   *        String of address to be encoded
+   */
+  encodeAddr: function cdma_encodeAddr(address) {
+    let result = {};
+
+    result.numberType = PDU_CDMA_MSG_ADDR_NUMBER_TYPE_UNKNOWN;
+    result.numberPlan = PDU_CDMA_MSG_ADDR_NUMBER_TYPE_UNKNOWN;
+
+    if (address[0] === '+') {
+      address = address.substring(1);
+    }
+
+    // Try encode with DTMF first
+    result.digitMode = PDU_CDMA_MSG_ADDR_DIGIT_MODE_DTMF;
+    result.numberMode = PDU_CDMA_MSG_ADDR_NUMBER_MODE_ANSI;
+
+    result.address = [];
+    for (let i = 0; i < address.length; i++) {
+      let addrDigit = this.dtmfChars.indexOf(address.charAt(i));
+      if (addrDigit < 0) {
+        result.digitMode = PDU_CDMA_MSG_ADDR_DIGIT_MODE_ASCII;
+        result.numberMode = PDU_CDMA_MSG_ADDR_NUMBER_MODE_ASCII;
+        result.address = [];
+        break;
+      }
+      result.address.push(addrDigit)
+    }
+
+    // Address can't be encoded with DTMF, then use 7-bit ASCII
+    if (result.digitMode !== PDU_CDMA_MSG_ADDR_DIGIT_MODE_DTMF) {
+      if (address.indexOf("@") !== -1) {
+        result.numberType = PDU_CDMA_MSG_ADDR_NUMBER_TYPE_NATIONAL;
+      }
+
+      for (let i = 0; i < address.length; i++) {
+        result.address.push(address.charCodeAt(i) & 0x7F);
+      }
+    }
+
+    return result;
+  },
+
+  /**
+   * Encode SMS contents in options into CDMA userData field.
+   * Corresponding and required subparameters will be added automatically.
+   *
+   * @see 3GGP2 C.S0015-B 2.0, 3.4.3.7 Bearer Data
+   *                           4.5 Bearer Data Parameters
+   *
+   * Current used key in options:
+   * @param body
+   *        String containing the message to be sent, segmented part
+   * @param encoding
+   *        Encoding method of CDMA, can be transformed from GSM DCS by function
+   *        cdmaPduHelp.gsmDcsToCdmaEncoding()
+   * @param encodedBodyLength
+   *        Length of the user data when encoded with the given DCS. For UCS2,
+   *        in bytes; for 7-bit, in septets.
+   * @param requestStatusReport
+   *        Request status report.
+   * @param segmentRef
+   *        Reference number of concatenated SMS message
+   * @param segmentMaxSeq
+   *        Total number of concatenated SMS message
+   * @param segmentSeq
+   *        Sequence number of concatenated SMS message
+   */
+  encodeUserData: function cdma_encodeUserData(options) {
+    let userDataBuffer = [];
+    BitBufferHelper.startWrite(userDataBuffer);
+
+    // Message Identifier
+    this.encodeUserDataMsgId(options);
+
+    // User Data
+    this.encodeUserDataMsg(options);
+
+    return userDataBuffer;
+  },
+
+  /**
+   * User data subparameter encoder : Message Identifier
+   *
+   * @see 3GGP2 C.S0015-B 2.0, 4.5.1 Message Identifier
+   */
+  encodeUserDataMsgId: function cdma_encodeUserDataMsgId(options) {
+    BitBufferHelper.writeBits(PDU_CDMA_MSG_USERDATA_MSG_ID, 8);
+    BitBufferHelper.writeBits(3, 8);
+    BitBufferHelper.writeBits(PDU_CDMA_MSG_TYPE_SUBMIT, 4);
+    BitBufferHelper.writeBits(1, 16); // TODO: How to get message ID?
+    if (options.segmentMaxSeq > 1) {
+      BitBufferHelper.writeBits(1, 1);
+    } else {
+      BitBufferHelper.writeBits(0, 1);
+    }
+
+    BitBufferHelper.flushWithPadding();
+  },
+
+  /**
+   * User data subparameter encoder : User Data
+   *
+   * @see 3GGP2 C.S0015-B 2.0, 4.5.2 User Data
+   */
+  encodeUserDataMsg: function cdma_encodeUserDataMsg(options) {
+    BitBufferHelper.writeBits(PDU_CDMA_MSG_USERDATA_BODY, 8);
+    // Reserve space for length
+    BitBufferHelper.writeBits(0, 8);
+    let lengthPosition = BitBufferHelper.getWriteBufferSize();
+
+    BitBufferHelper.writeBits(options.encoding, 5);
+
+    // Add user data header for message segement
+    let msgBody = options.body,
+        msgBodySize = (options.encoding === PDU_CDMA_MSG_CODING_7BITS_ASCII ?
+                       options.encodedBodyLength :
+                       msgBody.length);
+    if (options.segmentMaxSeq > 1) {
+      if (options.encoding === PDU_CDMA_MSG_CODING_7BITS_ASCII) {
+          BitBufferHelper.writeBits(msgBodySize + 7, 8); // Required length for user data header, in septet(7-bit)
+
+          BitBufferHelper.writeBits(5, 8);  // total header length 5 bytes
+          BitBufferHelper.writeBits(PDU_IEI_CONCATENATED_SHORT_MESSAGES_8BIT, 8);  // header id 0
+          BitBufferHelper.writeBits(3, 8);  // length of element for id 0 is 3
+          BitBufferHelper.writeBits(options.segmentRef & 0xFF, 8);      // Segement reference
+          BitBufferHelper.writeBits(options.segmentMaxSeq & 0xFF, 8);   // Max segment
+          BitBufferHelper.writeBits(options.segmentSeq & 0xFF, 8);      // Current segment
+          BitBufferHelper.writeBits(0, 1);  // Padding to make header data septet(7-bit) aligned
+        } else {
+          if (options.encoding === PDU_CDMA_MSG_CODING_UNICODE) {
+            BitBufferHelper.writeBits(msgBodySize + 3, 8); // Required length for user data header, in 16-bit
+          } else {
+            BitBufferHelper.writeBits(msgBodySize + 6, 8); // Required length for user data header, in octet(8-bit)
+          }
+
+          BitBufferHelper.writeBits(5, 8);  // total header length 5 bytes
+          BitBufferHelper.writeBits(PDU_IEI_CONCATENATED_SHORT_MESSAGES_8BIT, 8);  // header id 0
+          BitBufferHelper.writeBits(3, 8);  // length of element for id 0 is 3
+          BitBufferHelper.writeBits(options.segmentRef & 0xFF, 8);      // Segement reference
+          BitBufferHelper.writeBits(options.segmentMaxSeq & 0xFF, 8);   // Max segment
+          BitBufferHelper.writeBits(options.segmentSeq & 0xFF, 8);      // Current segment
+        }
+    } else {
+      BitBufferHelper.writeBits(msgBodySize, 8);
+    }
+
+    // Encode message based on encoding method
+    const langTable = PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+    const langShiftTable = PDU_NL_SINGLE_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+    for (let i = 0; i < msgBody.length; i++) {
+      switch (options.encoding) {
+        case PDU_CDMA_MSG_CODING_OCTET: {
+          let msgDigit = msgBody.charCodeAt(i);
+          BitBufferHelper.writeBits(msgDigit, 8);
+          break;
+        }
+        case PDU_CDMA_MSG_CODING_7BITS_ASCII: {
+          let msgDigit = msgBody.charCodeAt(i),
+              msgDigitChar = msgBody.charAt(i);
+
+          if (msgDigit >= 32) {
+            BitBufferHelper.writeBits(msgDigit, 7);
+          } else {
+            msgDigit = langTable.indexOf(msgDigitChar);
+
+            if (msgDigit === PDU_NL_EXTENDED_ESCAPE) {
+              break;
+            }
+            if (msgDigit >= 0) {
+              BitBufferHelper.writeBits(msgDigit, 7);
+            } else {
+              msgDigit = langShiftTable.indexOf(msgDigitChar);
+              if (msgDigit == -1) {
+                throw new Error("'" + msgDigitChar + "' is not in 7 bit alphabet "
+                                + langIndex + ":" + langShiftIndex + "!");
+                break;
+              }
+
+              if (msgDigit === PDU_NL_RESERVED_CONTROL) {
+                break;
+              }
+
+              BitBufferHelper.writeBits(PDU_NL_EXTENDED_ESCAPE, 7);
+              BitBufferHelper.writeBits(msgDigit, 7);
+            }
+          }
+          break;
+        }
+        case PDU_CDMA_MSG_CODING_UNICODE: {
+          let msgDigit = msgBody.charCodeAt(i);
+          BitBufferHelper.writeBits(msgDigit, 16);
+          break;
+        }
+      }
+    }
+    BitBufferHelper.flushWithPadding();
+
+    // Fill length
+    let currentPosition = BitBufferHelper.getWriteBufferSize();
+    BitBufferHelper.overwriteWriteBuffer(lengthPosition - 1, [currentPosition - lengthPosition]);
+  },
+
+  /**
+   * Entry point for SMS decoding, the returned object is made compatible
+   * with existing readMessage() of GsmPDUHelper
+   */
+  readMessage: function cdma_readMessage() {
+    let message = {};
+
+    // Teleservice Identifier
+    message.teleservice = this.readInt();
+
+    // Message Type
+    let isServicePresent = this.readByte();
+    if (isServicePresent) {
+      message.messageType = PDU_CDMA_MSG_TYPE_BROADCAST;
+    } else {
+      if (message.teleservice) {
+        message.messageType = PDU_CDMA_MSG_TYPE_P2P;
+      } else {
+        message.messageType = PDU_CDMA_MSG_TYPE_ACK;
+      }
+    }
+
+    // Service Category
+    message.service = this.readInt();
+
+    // Originated Address
+    let addrInfo = {};
+    addrInfo.digitMode = (this.readInt() & 0x01);
+    addrInfo.numberMode = (this.readInt() & 0x01);
+    addrInfo.numberType = (this.readInt() & 0x01);
+    addrInfo.numberPlan = (this.readInt() & 0x01);
+    addrInfo.addrLength = this.readByte();
+    addrInfo.address = [];
+    for (let i = 0; i < addrInfo.addrLength; i++) {
+      addrInfo.address.push(this.readByte());
+    }
+    message.sender = this.decodeAddr(addrInfo);
+
+    // Originated Subaddress
+    addrInfo.Type = (this.readInt() & 0x07);
+    addrInfo.Odd = (this.readByte() & 0x01);
+    addrInfo.addrLength = this.readByte();
+    for (let i = 0; i < addrInfo.addrLength; i++) {
+      let addrDigit = this.readByte();
+      message.sender += String.fromCharCode(addrDigit);
+    }
+
+    // User Data
+    this.decodeUserData(message);
+
+    // Transform message to GSM msg
+    let msg = {
+      SMSC:           "",
+      mti:            0,
+      udhi:           0,
+      sender:         message.sender,
+      recipient:      null,
+      pid:            PDU_PID_DEFAULT,
+      epid:           PDU_PID_DEFAULT,
+      dcs:            0,
+      mwi:            null, //message[PDU_CDMA_MSG_USERDATA_BODY].header ? message[PDU_CDMA_MSG_USERDATA_BODY].header.mwi : null,
+      replace:        false,
+      header:         message[PDU_CDMA_MSG_USERDATA_BODY].header,
+      body:           message[PDU_CDMA_MSG_USERDATA_BODY].body,
+      data:           null,
+      timestamp:      message[PDU_CDMA_MSG_USERDATA_TIMESTAMP],
+      status:         null,
+      scts:           null,
+      dt:             null,
+      encoding:       message[PDU_CDMA_MSG_USERDATA_BODY].encoding,
+      messageClass:   GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_NORMAL]
+    };
+
+    return msg;
+  },
+
+
+  /**
+   * Helper for processing received SMS parcel data.
+   *
+   * @param length
+   *        Length of SMS string in the incoming parcel.
+   *
+   * @return Message parsed or null for invalid message.
+   */
+  processReceivedSms: function cdma_processReceivedSms(length) {
+    if (!length) {
+      if (DEBUG) debug("Received empty SMS!");
+      return [null, PDU_FCS_UNSPECIFIED];
+    }
+
+    let message = this.readMessage();
+    if (DEBUG) debug("Got new SMS: " + JSON.stringify(message));
+
+    // Determine result
+    if (!message) {
+      return [null, PDU_FCS_UNSPECIFIED];
+    }
+
+    return [message, PDU_FCS_OK];
+  },
+
+  /**
+   * Data readers
+   */
+  readInt: function readInt() {
+    return Buf.readUint32();
+  },
+
+  readByte: function readByte() {
+    return (Buf.readUint32() & 0xFF);
+  },
+
+  /**
+   * Decode CDMA address data into address string
+   *
+   * @see 3GGP2 C.S0015-B 2.0, 3.4.3.3 Address Parameters
+   *
+   * Required key in addrInfo
+   * @param addrLength
+   *        Length of address
+   * @param digitMode
+   *        Address encoding method
+   * @param address
+   *        Array of encoded address data
+   */
+  decodeAddr: function cdma_decodeAddr(addrInfo) {
+    let result = "";
+    for (let i = 0; i < addrInfo.addrLength; i++) {
+      if (addrInfo.digitMode === PDU_CDMA_MSG_ADDR_DIGIT_MODE_DTMF) {
+        result += this.dtmfChars.charAt(addrInfo.address[i]);
+      } else {
+        result += String.fromCharCode(addrInfo.address[i]);
+      }
+    }
+    return result;
+  },
+
+  /**
+   * Read userData in parcel buffer and decode into message object.
+   * Each subparameter will be stored in corresponding key.
+   *
+   * @see 3GGP2 C.S0015-B 2.0, 3.4.3.7 Bearer Data
+   *                           4.5 Bearer Data Parameters
+   */
+  decodeUserData: function cdma_decodeUserData(message) {
+    let userDataLength = this.readInt();
+
+    while (userDataLength > 0) {
+      let id = this.readByte(),
+          length = this.readByte(),
+          userDataBuffer = [];
+
+      for (let i = 0; i < length; i++) {
+          userDataBuffer.push(this.readByte());
+      }
+
+      BitBufferHelper.startRead(userDataBuffer);
+
+      switch (id) {
+        case PDU_CDMA_MSG_USERDATA_MSG_ID:
+          message[id] = this.decodeUserDataMsgId();
+          break;
+        case PDU_CDMA_MSG_USERDATA_BODY:
+          message[id] = this.decodeUserDataMsg(message[PDU_CDMA_MSG_USERDATA_MSG_ID].userHeader);
+          break;
+        case PDU_CDMA_MSG_USERDATA_TIMESTAMP:
+          message[id] = this.decodeUserDataTimestamp();
+          break;
+        case PDU_CDMA_REPLY_OPTION:
+          message[id] = this.decodeUserDataReplyAction();
+          break;
+        case PDU_CDMA_MSG_USERDATA_CALLBACK_NUMBER:
+          message[id] = this.decodeUserDataCallbackNumber();
+          break;
+      }
+
+      userDataLength -= (length + 2);
+      userDataBuffer = [];
+    }
+  },
+
+  /**
+   * User data subparameter decoder: Message Identifier
+   *
+   * @see 3GGP2 C.S0015-B 2.0, 4.5.1 Message Identifier
+   */
+  decodeUserDataMsgId: function cdma_decodeUserDataMsgId() {
+    let result = {};
+    result.msgType = BitBufferHelper.readBits(4);
+    result.msgId = BitBufferHelper.readBits(16);
+    result.userHeader = BitBufferHelper.readBits(1);
+
+    return result;
+  },
+
+  /**
+   * Decode user data header, we only care about segment information
+   * on CDMA.
+   *
+   * This function is mostly copied from gsmPduHelper.readUserDataHeader() but
+   * change the read function, because CDMA user header decoding is't byte-wise
+   * aligned.
+   */
+  decodeUserDataHeader: function cdma_decodeUserDataHeader(encoding) {
+    let header = {},
+        headerSize = BitBufferHelper.readBits(8),
+        userDataHeaderSize = headerSize + 1,
+        headerPaddingBits = 0;
+
+    // Calculate header size
+    if (encoding === PDU_DCS_MSG_CODING_7BITS_ALPHABET) {
+      // Length is in 7-bit
+      header.length = Math.ceil(userDataHeaderSize * 8 / 7);
+      // Calulate padding length
+      headerPaddingBits = (header.length * 7) - (userDataHeaderSize * 8);
+    } else if (encoding === PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
+      header.length = userDataHeaderSize;
+    } else {
+      header.length = userDataHeaderSize / 2;
+    }
+
+    while (headerSize) {
+      let identifier = BitBufferHelper.readBits(8),
+          length = BitBufferHelper.readBits(8);
+
+      headerSize -= (2 + length);
+
+      switch (identifier) {
+        case PDU_IEI_CONCATENATED_SHORT_MESSAGES_8BIT: {
+            let ref = BitBufferHelper.readBits(8),
+                max = BitBufferHelper.readBits(8),
+                seq = BitBufferHelper.readBits(8);
+            if (max && seq && (seq <= max)) {
+              header.segmentRef = ref;
+              header.segmentMaxSeq = max;
+              header.segmentSeq = seq;
+            }
+          break;
+        }
+        case PDU_IEI_APPLICATION_PORT_ADDRESSING_SCHEME_8BIT: {
+          let dstp = BitBufferHelper.readBits(8),
+              orip = BitBufferHelper.readBits(8);
+          if ((dstp < PDU_APA_RESERVED_8BIT_PORTS)
+              || (orip < PDU_APA_RESERVED_8BIT_PORTS)) {
+            // 3GPP TS 23.040 clause 9.2.3.24.3: "A receiving entity shall
+            // ignore any information element where the value of the
+            // Information-Element-Data is Reserved or not supported"
+            break;
+          }
+          header.destinationPort = dstp;
+          header.originatorPort = orip;
+          break;
+        }
+        case PDU_IEI_APPLICATION_PORT_ADDRESSING_SCHEME_16BIT: {
+          let dstp = (BitBufferHelper.readBits(8) << 8) | BitBufferHelper.readBits(8),
+              orip = (BitBufferHelper.readBits(8) << 8) | BitBufferHelper.readBits(8);
+          // 3GPP TS 23.040 clause 9.2.3.24.4: "A receiving entity shall
+          // ignore any information element where the value of the
+          // Information-Element-Data is Reserved or not supported"
+          if ((dstp < PDU_APA_VALID_16BIT_PORTS)
+              && (orip < PDU_APA_VALID_16BIT_PORTS)) {
+            header.destinationPort = dstp;
+            header.originatorPort = orip;
+          }
+          break;
+        }
+        case PDU_IEI_CONCATENATED_SHORT_MESSAGES_16BIT: {
+          let ref = (BitBufferHelper.readBits(8) << 8) | BitBufferHelper.readBits(8),
+              max = BitBufferHelper.readBits(8),
+              seq = BitBufferHelper.readBits(8);
+          if (max && seq && (seq <= max)) {
+            header.segmentRef = ref;
+            header.segmentMaxSeq = max;
+            header.segmentSeq = seq;
+          }
+          break;
+        }
+        case PDU_IEI_NATIONAL_LANGUAGE_SINGLE_SHIFT: {
+          let langShiftIndex = BitBufferHelper.readBits(8);
+          if (langShiftIndex < PDU_NL_SINGLE_SHIFT_TABLES.length) {
+            header.langShiftIndex = langShiftIndex;
+          }
+          break;
+        }
+        case PDU_IEI_NATIONAL_LANGUAGE_LOCKING_SHIFT: {
+          let langIndex = BitBufferHelper.readBits(8);
+          if (langIndex < PDU_NL_LOCKING_SHIFT_TABLES.length) {
+            header.langIndex = langIndex;
+          }
+          break;
+        }
+        case PDU_IEI_SPECIAL_SMS_MESSAGE_INDICATION: {
+          let msgInd = BitBufferHelper.readBits(8) & 0xFF,
+              msgCount = BitBufferHelper.readBits(8);
+          /*
+           * TS 23.040 V6.8.1 Sec 9.2.3.24.2
+           * bits 1 0   : basic message indication type
+           * bits 4 3 2 : extended message indication type
+           * bits 6 5   : Profile id
+           * bit  7     : storage type
+           */
+          let storeType = msgInd & PDU_MWI_STORE_TYPE_BIT;
+          header.mwi = {};
+          mwi = header.mwi;
+
+          if (storeType == PDU_MWI_STORE_TYPE_STORE) {
+            // Store message because TP_UDH indicates so, note this may override
+            // the setting in DCS, but that is expected
+            mwi.discard = false;
+          } else if (mwi.discard === undefined) {
+            // storeType == PDU_MWI_STORE_TYPE_DISCARD
+            // only override mwi.discard here if it hasn't already been set
+            mwi.discard = true;
+          }
+
+          mwi.msgCount = msgCount & 0xFF;
+          mwi.active = mwi.msgCount > 0;
+
+          if (DEBUG) debug("MWI in TP_UDH received: " + JSON.stringify(mwi));
+
+          break;
+        }
+        default: {
+          // Drop unsupported id
+          for (let i = 0; i < length; i++) {
+            BitBufferHelper.readBits(8);
+          }
+          break;
+        }
+      }
+    }
+
+    // Consume padding bits
+    if (headerPaddingBits) {
+      BitBufferHelper.readBits(headerPaddingBits);
+    }
+
+    return header;
+  },
+
+  /**
+   * User data subparameter decoder : User Data
+   *
+   * @see 3GGP2 C.S0015-B 2.0, 4.5.2 User Data
+   */
+  decodeUserDataMsg: function cdma_decodeUserDataMsg(hasUserHeader) {
+    let result = {},
+        encoding = BitBufferHelper.readBits(5);
+
+    if(encoding === PDU_CDMA_MSG_CODING_IS_91) {
+      let msgType = BitBufferHelper.readBits(8);
+    }
+
+    let msgBodySize = BitBufferHelper.readBits(8);
+    const langTable = PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+    const langShiftTable = PDU_NL_SINGLE_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+    // Determine encoding method
+    switch (encoding) {
+      case PDU_CDMA_MSG_CODING_7BITS_ASCII:
+      case PDU_CDMA_MSG_CODING_IA5:
+      case PDU_CDMA_MSG_CODING_7BITS_GSM:
+        result.encoding = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
+        break;
+      case PDU_CDMA_MSG_CODING_OCTET:
+      case PDU_CDMA_MSG_CODING_IS_91:
+      case PDU_CDMA_MSG_CODING_LATIN_HEBREW:
+      case PDU_CDMA_MSG_CODING_LATIN:
+        result.encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
+        break;
+      case PDU_CDMA_MSG_CODING_UNICODE:
+      case PDU_CDMA_MSG_CODING_SHIFT_JIS:
+      case PDU_CDMA_MSG_CODING_KOREAN:
+        result.encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
+        break;
+    }
+
+    // For segmented SMS, a user header is included before sms content
+    if (hasUserHeader) {
+      result.header = this.decodeUserDataHeader(result.encoding);
+      // header size is included in body size, they are decoded
+      msgBodySize -= result.header.length;
+    }
+
+    // Decode sms content
+    result.body = "";
+    let msgDigit;
+    switch (encoding) {
+      case PDU_CDMA_MSG_CODING_OCTET:         // TODO : Require Test
+        while(msgBodySize > 0) {
+          msgDigit = String.fromCharCode(BitBufferHelper.readBits(8));
+          result.body += msgDigit;
+          msgBodySize--;
+        }
+        break;
+      case PDU_CDMA_MSG_CODING_IS_91:         // TODO : Require Test
+        // Referenced from android code
+        switch (msgType) {
+          case PDU_CDMA_MSG_CODING_IS_91_TYPE_SMS:
+          case PDU_CDMA_MSG_CODING_IS_91_TYPE_SMS_FULL:
+          case PDU_CDMA_MSG_CODING_IS_91_TYPE_VOICEMAIL_STATUS:
+            while(msgBodySize > 0) {
+              msgDigit = String.fromCharCode(BitBufferHelper.readBits(6) + 0x20);
+              result.body += msgDigit;
+              msgBodySize--;
+            }
+            break;
+          case PDU_CDMA_MSG_CODING_IS_91_TYPE_CLI:
+            let addrInfo = {};
+            addrInfo.digitMode = PDU_CDMA_MSG_ADDR_DIGIT_MODE_DTMF;
+            addrInfo.numberMode = PDU_CDMA_MSG_ADDR_NUMBER_MODE_ANSI;
+            addrInfo.numberType = PDU_CDMA_MSG_ADDR_NUMBER_TYPE_UNKNOWN;
+            addrInfo.numberPlan = PDU_CDMA_MSG_ADDR_NUMBER_PLAN_UNKNOWN;
+            addrInfo.addrLength = msgBodySize;
+            addrInfo.address = [];
+            for (let i = 0; i < addrInfo.addrLength; i++) {
+              addrInfo.address.push(BitBufferHelper.readBits(4));
+            }
+            result.body = this.decodeAddr(addrInfo);
+            break;
+        }
+      case PDU_CDMA_MSG_CODING_7BITS_ASCII:
+      case PDU_CDMA_MSG_CODING_IA5:           // TODO : Require Test
+        while(msgBodySize > 0) {
+          msgDigit = BitBufferHelper.readBits(7);
+          if (msgDigit >= 32) {
+            msgDigit = String.fromCharCode(msgDigit);
+          } else {
+            if (msgDigit !== PDU_NL_EXTENDED_ESCAPE) {
+              msgDigit = langTable[msgDigit];
+            } else {
+              msgDigit = BitBufferHelper.readBits(7);
+              msgBodySize--;
+              msgDigit = langShiftTable[msgDigit];
+            }
+          }
+          result.body += msgDigit;
+          msgBodySize--;
+        }
+        break;
+      case PDU_CDMA_MSG_CODING_UNICODE:
+        while(msgBodySize > 0) {
+          msgDigit = String.fromCharCode(BitBufferHelper.readBits(16));
+          result.body += msgDigit;
+          msgBodySize--;
+        }
+        break;
+      case PDU_CDMA_MSG_CODING_7BITS_GSM:     // TODO : Require Test
+        while(msgBodySize > 0) {
+          msgDigit = BitBufferHelper.readBits(7);
+          if (msgDigit !== PDU_NL_EXTENDED_ESCAPE) {
+            msgDigit = langTable[msgDigit];
+          } else {
+            msgDigit = BitBufferHelper.readBits(7);
+            msgBodySize--;
+            msgDigit = langShiftTable[msgDigit];
+          }
+          result.body += msgDigit;
+          msgBodySize--;
+        }
+        break;
+      case PDU_CDMA_MSG_CODING_LATIN:         // TODO : Require Test
+        // Reference : http://en.wikipedia.org/wiki/ISO/IEC_8859-1
+        while(msgBodySize > 0) {
+          msgDigit = String.fromCharCode(BitBufferHelper.readBits(8));
+          result.body += msgDigit;
+          msgBodySize--;
+        }
+        break;
+      case PDU_CDMA_MSG_CODING_LATIN_HEBREW:  // TODO : Require Test
+        // Reference : http://en.wikipedia.org/wiki/ISO/IEC_8859-8
+        while(msgBodySize > 0) {
+          msgDigit = BitBufferHelper.readBits(8);
+          if (msgDigit === 0xDF) {
+            msgDigit = String.fromCharCode(0x2017);
+          } else if (msgDigit === 0xFD) {
+            msgDigit = String.fromCharCode(0x200E);
+          } else if (msgDigit === 0xFE) {
+            msgDigit = String.fromCharCode(0x200F);
+          } else if (msgDigit >= 0xE0 && msgDigit <= 0xFA) {
+            msgDigit = String.fromCharCode(0x4F0 + msgDigit);
+          } else {
+            msgDigit = String.fromCharCode(msgDigit);
+          }
+          result.body += msgDigit;
+          msgBodySize--;
+        }
+        break;
+      case PDU_CDMA_MSG_CODING_SHIFT_JIS:
+        // Reference : http://msdn.microsoft.com/en-US/goglobal/cc305152.aspx
+        //             http://demo.icu-project.org/icu-bin/convexp?conv=Shift_JIS
+      case PDU_CDMA_MSG_CODING_KOREAN:
+      case PDU_CDMA_MSG_CODING_GSM_DCS:
+      default:
+        break;
+    }
+
+    return result;
+  },
+
+  decodeBcd: function cdma_decodeBcd(value) {
+    return ((value >> 4) & 0xF) * 10 + (value & 0x0F);
+  },
+
+  /**
+   * User data subparameter decoder : Time Stamp
+   *
+   * @see 3GGP2 C.S0015-B 2.0, 4.5.4 Message Center Time Stamp
+   */
+  decodeUserDataTimestamp: function cdma_decodeUserDataTimestamp() {
+    let year = this.decodeBcd(BitBufferHelper.readBits(8)),
+        month = this.decodeBcd(BitBufferHelper.readBits(8)) - 1,
+        date = this.decodeBcd(BitBufferHelper.readBits(8)),
+        hour = this.decodeBcd(BitBufferHelper.readBits(8)),
+        min = this.decodeBcd(BitBufferHelper.readBits(8)),
+        sec = this.decodeBcd(BitBufferHelper.readBits(8));
+
+    if (year >= 96 && year <= 99) {
+      year += 1900;
+    } else {
+      year += 2000;
+    }
+
+    let result = (new Date(year, month, date, hour, min, sec, 0)).valueOf();
+
+    return result;
+  },
+
+  /**
+   * User data subparameter decoder : Reply Option
+   *
+   * @see 3GGP2 C.S0015-B 2.0, 4.5.11 Reply Option
+   */
+  decodeUserDataReplyAction: function cdma_decodeUserDataReplyAction() {
+    let replyAction = BitBufferHelper.readBits(4),
+        result = { userAck: (replyAction & 0x8) ? true : false,
+                   deliverAck: (replyAction & 0x4) ? true : false,
+                   readAck: (replyAction & 0x2) ? true : false,
+                   report: (replyAction & 0x1) ? true : false
+                 };
+
+    return result;
+  },
+
+  /**
+   * User data subparameter decoder : Call-Back Number
+   *
+   * @see 3GGP2 C.S0015-B 2.0, 4.5.15 Call-Back Number
+   */
+  decodeUserDataCallbackNumber: function cdma_decodeUserDataCallbackNumber() {
+    let digitMode = BitBufferHelper.readBits(1);
+    if (digitMode) {
+      let numberType = BitBufferHelper.readBits(3),
+          numberPlan = BitBufferHelper.readBits(4);
+    }
+    let numberFields = BitBufferHelper.readBits(8),
+        result = "";
+    for (let i = 0; i < numberFields; i++) {
+      if (digitMode === PDU_CDMA_MSG_ADDR_DIGIT_MODE_DTMF) {
+        let addrDigit = BitBufferHelper.readBits(4);
+        result += this.dtmfChars.charAt(addrDigit);
+      } else {
+        let addrDigit = BitBufferHelper.readBits(8);
+        result += String.fromCharCode(addrDigit);
+      }
+    }
+
+    return result;
+  }
+};
+
 let StkCommandParamsFactory = {
   createParam: function createParam(cmdDetails, ctlvs) {
     let param;
