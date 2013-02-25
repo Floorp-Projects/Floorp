@@ -52,12 +52,42 @@ function removeCacheFile()
 }
 
 /**
+ * Clean the profile of any cache file left from a previous run.
+ */
+function removeCache()
+{
+  let file = gProfD.clone();
+  file.append("search.json");
+  if (file.exists()) {
+    file.remove(false);
+  }
+
+}
+
+/**
  * Run some callback once metadata has been committed to disk.
  */
 function afterCommit(callback)
 {
   let obs = function(result, topic, verb) {
     if (verb == "write-metadata-to-disk-complete") {
+      Services.obs.removeObserver(obs, topic);
+      callback(result);
+    } else {
+      dump("TOPIC: " + topic+ "\n");
+    }
+  }
+  Services.obs.addObserver(obs, "browser-search-service", false);
+}
+
+/**
+ * Run some callback once cache has been built.
+ */
+function afterCache(callback)
+{
+  let obs = function(result, topic, verb) {
+    do_print("afterCache: " + verb);
+    if (verb == "write-cache-to-disk-complete") {
       Services.obs.removeObserver(obs, topic);
       callback(result);
     } else {
