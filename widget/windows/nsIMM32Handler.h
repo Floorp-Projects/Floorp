@@ -83,8 +83,6 @@ public:
     return IsComposing() && IsComposingWindow(aWindow);
   }
 
-  static bool IsDoingKakuteiUndo(HWND aWnd);
-
   static bool CanOptimizeKeyAndIMEMessages(MSG *aNextKeyOrIMEMessage);
 
 #ifdef DEBUG
