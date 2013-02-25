@@ -107,7 +107,7 @@ public:
 
   static void     SetInputContext(const InputContext& aContext)
   {
-    if (!sTsfTextStore) return;
+    NS_ENSURE_TRUE_VOID(sTsfTextStore);
     sTsfTextStore->SetInputScope(aContext.mHTMLInputType);
     sTsfTextStore->SetInputContextInternal(aContext.mIMEState.mEnabled);
   }
@@ -161,6 +161,11 @@ public:
   static void*    GetDisplayAttrMgr(void)
   {
     return (void*) & sDisplayAttrMgr;
+  }
+
+  static void*    GetTextStore()
+  {
+    return static_cast<void*>(sTsfTextStore);
   }
 
   static bool     IsInTSFMode()

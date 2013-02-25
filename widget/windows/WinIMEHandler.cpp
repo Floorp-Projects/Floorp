@@ -168,20 +168,6 @@ IMEHandler::GetUpdatePreference()
   return nsIMEUpdatePreference(false, false);
 }
 
-void
-IMEHandler::SetOpenState(nsWindow* aWindow, bool aOpen)
-{
-#ifdef NS_ENABLE_TSF
-  if (sIsInTSFMode) {
-    nsTextStore::SetIMEOpenState(aOpen);
-    return;
-  }
-#endif //NS_ENABLE_TSF
-
-  nsIMEContext IMEContext(aWindow->GetWindowHandle());
-  IMEContext.SetOpenState(aOpen);
-}
-
 // static
 bool
 IMEHandler::GetOpenState(nsWindow* aWindow)
@@ -200,8 +186,89 @@ IMEHandler::GetOpenState(nsWindow* aWindow)
 void
 IMEHandler::OnDestroyWindow(nsWindow* aWindow)
 {
+  // We need to do nothing here for TSF. Just restore the default context
+  // if it's been disassociated.
   nsIMEContext IMEContext(aWindow->GetWindowHandle());
   IMEContext.AssociateDefaultContext();
+}
+
+// static
+void
+IMEHandler::SetInputContext(nsWindow* aWindow, InputContext& aInputContext)
+{
+  // FYI: If there is no composition, this call will do nothing.
+  NotifyIME(aWindow, REQUEST_TO_COMMIT_COMPOSITION);
+
+  bool enable = (aInputContext.mIMEState.mEnabled == IMEState::ENABLED ||
+                 aInputContext.mIMEState.mEnabled == IMEState::PLUGIN);
+  bool adjustOpenState = (enable &&
+    aInputContext.mIMEState.mOpen != IMEState::DONT_CHANGE_OPEN_STATE);
+  bool open = (adjustOpenState &&
+    aInputContext.mIMEState.mOpen == IMEState::OPEN);
+
+  aInputContext.mNativeIMEContext = nullptr;
+
+#ifdef NS_ENABLE_TSF
+  if (sIsInTSFMode) {
+    aInputContext.mNativeIMEContext = nsTextStore::GetTextStore();
+    nsTextStore::SetInputContext(aInputContext);
+    // Currently, nsTextStore doesn't set focus to keyboard disabled document.
+    // Therefore, we still need to perform the following legacy code.
+  }
+#endif // #ifdef NS_ENABLE_TSF
+
+  nsIMEContext IMEContext(aWindow->GetWindowHandle());
+  if (enable) {
+    IMEContext.AssociateDefaultContext();
+    if (!aInputContext.mNativeIMEContext) {
+      aInputContext.mNativeIMEContext = static_cast<void*>(IMEContext.get());
+    }
+  } else if (!aWindow->Destroyed()) {
+    // Don't disassociate the context after the window is destroyed.
+    IMEContext.Disassociate();
+    if (!aInputContext.mNativeIMEContext) {
+      // The old InputContext must store the default IMC.
+      aInputContext.mNativeIMEContext =
+        aWindow->GetInputContext().mNativeIMEContext;
+    }
+  }
+
+  if (adjustOpenState) {
+#ifdef NS_ENABLE_TSF
+    if (sIsInTSFMode) {
+      nsTextStore::SetIMEOpenState(open);
+      return;
+    }
+#endif // #ifdef NS_ENABLE_TSF
+    IMEContext.SetOpenState(open);
+  }
+}
+
+// static
+void
+IMEHandler::InitInputContext(nsWindow* aWindow, InputContext& aInputContext)
+{
+  // For a11y, the default enabled state should be 'enabled'.
+  aInputContext.mIMEState.mEnabled = IMEState::ENABLED;
+
+#ifdef NS_ENABLE_TSF
+  if (sIsInTSFMode) {
+    nsTextStore::SetInputContext(aInputContext);
+    aInputContext.mNativeIMEContext = nsTextStore::GetTextStore();
+    MOZ_ASSERT(aInputContext.mNativeIMEContext);
+    return;
+  }
+#endif // #ifdef NS_ENABLE_TSF
+
+  // NOTE: mNativeIMEContext may be null if IMM module isn't installed.
+  nsIMEContext IMEContext(aWindow->GetWindowHandle());
+  aInputContext.mNativeIMEContext = static_cast<void*>(IMEContext.get());
+  MOZ_ASSERT(aInputContext.mNativeIMEContext || !CurrentKeyboardLayoutHasIME());
+  // If no IME context is available, we should set the widget's pointer since
+  // nullptr indicates there is only one context per process on the platform.
+  if (!aInputContext.mNativeIMEContext) {
+    aInputContext.mNativeIMEContext = static_cast<void*>(aWindow);
+  }
 }
 
 #ifdef DEBUG
