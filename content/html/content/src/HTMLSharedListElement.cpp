@@ -17,9 +17,6 @@
 #include "nsRuleData.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(SharedList)
-DOMCI_DATA(HTMLOListElement, mozilla::dom::HTMLSharedListElement)
-DOMCI_DATA(HTMLDListElement, mozilla::dom::HTMLSharedListElement)
-DOMCI_DATA(HTMLUListElement, mozilla::dom::HTMLSharedListElement)
 
 namespace mozilla {
 namespace dom {
@@ -30,21 +27,6 @@ HTMLSharedListElement::~HTMLSharedListElement()
 
 NS_IMPL_ADDREF_INHERITED(HTMLSharedListElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLSharedListElement, Element)
-
-nsIClassInfo* 
-HTMLSharedListElement::GetClassInfoInternal()
-{
-  if (mNodeInfo->Equals(nsGkAtoms::ol)) {
-    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLOListElement_id);
-  }
-  if (mNodeInfo->Equals(nsGkAtoms::dl)) {
-    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLDListElement_id);
-  }
-  if (mNodeInfo->Equals(nsGkAtoms::ul)) {
-    return NS_GetDOMClassInfoInstance(eDOMClassInfo_HTMLUListElement_id);
-  }
-  return nullptr;
-}
 
 // QueryInterface implementation for nsHTMLSharedListElement
 NS_INTERFACE_TABLE_HEAD(HTMLSharedListElement)
@@ -57,8 +39,6 @@ NS_INTERFACE_TABLE_HEAD(HTMLSharedListElement)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLOListElement, ol)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLDListElement, dl)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLUListElement, ul)
-
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_GETTER(GetClassInfoInternal)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 

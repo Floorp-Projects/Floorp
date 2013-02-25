@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=629801
+-->
+<head>
+  <title>Test for Bug 629801</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=629801">Mozilla Bug 629801</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+<div itemscope>
+ This tests itemValue on time elements, first with no datetime attribute, then with no text content,
+ then with both.
+ <time id="t1" itemprop="a">May 10th 2009</time>
+ <time id="t2" itemprop="b" datetime="2009-05-10"></time>
+ <time id="t3" itemprop="c" datetime="2009-05-10">May 10th 2009</time>
+</div>
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 629801 **/
+
+var t1 = document.getElementById("t1"),
+    t2 = document.getElementById("t2"),
+    t3 = document.getElementById("t3"),
+    t4 = document.createElement("time");
+
+// .dateTime IDL
+is(t1.dateTime, "", "dateTime is properly set to empty string if datetime attributeis absent");
+is(t2.dateTime, "2009-05-10", "dateTime is properly set to datetime attribute with datetime and no text content");
+is(t3.dateTime, "2009-05-10", "dateTime is properly set to datetime attribute with datetime and text content");
+
+// .itemValue getter for <time>'s microdata
+var times = document.getItems()[0];
+is(times.properties["a"][0].itemValue, "May 10th 2009", "itemValue getter with no datetime uses text content");
+is(times.properties["b"][0].itemValue, "2009-05-10", "itemValue getter with no text content uses datetime");
+is(times.properties["c"][0].itemValue, "2009-05-10", "itemValue getter with datetime and text content uses datetime");
+
+// .itemValue setter uses datetime vs. text content
+times.properties["a"][0].itemValue = "2009-05-10";
+is(times.properties["a"][0].dateTime, "2009-05-10", "setting itemValue updates datetime");
+
+// dateTime reflects datetime attribute
+reflectString({
+  element: t4,
+  attribute: "dateTime"
+});
+
+</script>
+</pre>
+</body>
+</html>

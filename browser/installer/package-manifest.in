@@ -747,6 +747,7 @@ bin/libfreebl_32int64_3.so
 
 #ifdef MOZ_METRO
 @BINPATH@/components/MetroUIUtils.js
+@BINPATH@/components/MetroUIUtils.manifest
 [metro]
 ; gre resources
 @BINPATH@/CommandExecuteHandler@BIN_SUFFIX@

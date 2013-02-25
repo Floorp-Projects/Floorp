@@ -509,7 +509,7 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
             JSString *str = JS_DecompileFunction(cx, obj->toFunction(), JS_DONT_PRETTY_PRINT);
             if (!str)
                 return false;
-            return bytes->encode(cx, str);
+            return bytes->encodeLatin1(cx, str);
         }
 
         if (obj->isRegExp()) {
@@ -517,7 +517,7 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
             if (!source)
                 return false;
             JS::Anchor<JSString *> anchor(source);
-            return bytes->encode(cx, source);
+            return bytes->encodeLatin1(cx, source);
         }
     }
 
@@ -1650,7 +1650,7 @@ DecompileArgumentFromStack(JSContext *cx, int formalIndex, char **res)
      * script but we popped a call frame during the last bump, assume that we
      * just came from a frameless native and bail conservatively.
      */
-    if (frameIter.done() || frameIter.poppedCallDuringSettle() || !frameIter.isScript())
+    if (frameIter.done() || !frameIter.isScript())
         return true;
 
     RootedScript script(cx, frameIter.script());

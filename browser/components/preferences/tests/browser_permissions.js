@@ -163,6 +163,9 @@ var tests = [
   },
 
   function test_all_sites_permission() {
+    // apply the old default of allowing all cookies
+    Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
+  
     // there should be no user-set pref for cookie behavior
     is(Services.prefs.getIntPref("network.cookie.cookieBehavior"), PERM_UNKNOWN,
        "network.cookie.cookieBehavior is expected default");

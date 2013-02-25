@@ -642,20 +642,19 @@ struct ParseNode {
                                            needs popping */
 #define PNX_FORINVAR    0x08            /* PNK_VAR is left kid of PNK_FORIN node
                                            which is left kid of PNK_FOR */
-#define PNX_ENDCOMMA    0x10            /* array literal has comma at end */
-#define PNX_GROUPINIT   0x20            /* var [a, b] = [c, d]; unit list */
-#define PNX_FUNCDEFS    0x40            /* contains top-level function statements */
-#define PNX_SETCALL     0x80            /* call expression in lvalue context */
-#define PNX_DESTRUCT   0x100            /* destructuring special cases:
+#define PNX_GROUPINIT   0x10            /* var [a, b] = [c, d]; unit list */
+#define PNX_FUNCDEFS    0x20            /* contains top-level function statements */
+#define PNX_SETCALL     0x40            /* call expression in lvalue context */
+#define PNX_DESTRUCT    0x80            /* destructuring special cases:
                                            1. shorthand syntax used, at present
                                               object destructuring ({x,y}) only;
                                            2. code evaluating destructuring
                                               arguments occurs before function
                                               body */
-#define PNX_SPECIALARRAYINIT 0x200      /* one or more of
+#define PNX_SPECIALARRAYINIT 0x100      /* one or more of
                                            1. array initialiser has holes
                                            2. array initializer has spread node */
-#define PNX_NONCONST   0x400            /* initialiser has non-constants */
+#define PNX_NONCONST   0x200            /* initialiser has non-constants */
 
     unsigned frameLevel() const {
         JS_ASSERT(pn_arity == PN_CODE || pn_arity == PN_NAME);

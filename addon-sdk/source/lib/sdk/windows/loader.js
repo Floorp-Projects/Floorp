@@ -41,7 +41,7 @@ const WindowLoader = Trait.compose({
   _load: function _load() {
     if (this.__window) return;
     this._window = openDialog({
-      private: this._private,
+      private: this._isPrivate,
       args: this._tabOptions.map(function(options) options.url).join("|")
     });
   },

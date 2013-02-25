@@ -328,7 +328,7 @@ nsCCUncollectableMarker::Observe(nsISupports* aSubject, const char* aTopic,
     Element::ClearContentUnbinder();
   }
 
-  // Increase generation to effectivly unmark all current objects
+  // Increase generation to effectively unmark all current objects
   if (!++sGeneration) {
     ++sGeneration;
   }

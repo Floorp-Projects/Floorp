@@ -57,6 +57,23 @@ public class AnimatorProxy {
         return proxy;
     }
 
+    public int getWidth() {
+        View view = mImpl.getView();
+        if (view != null)
+            return view.getWidth();
+
+        return 0;
+    }
+
+    public void setWidth(int width) {
+        View view = mImpl.getView();
+        if (view != null) {
+            ViewGroup.LayoutParams lp = view.getLayoutParams();
+            lp.width = width;
+            view.setLayoutParams(lp);
+        }
+    }
+
     public int getHeight() {
         View view = mImpl.getView();
         if (view != null)

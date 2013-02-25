@@ -9,7 +9,6 @@
 #include "nsGenericHTMLElement.h"
 #include "nsImageLoadingContent.h"
 #include "nsIDOMHTMLImageElement.h"
-#include "nsIJSNativeInitializer.h"
 #include "imgRequestProxy.h"
 
 namespace mozilla {
@@ -17,12 +16,15 @@ namespace dom {
 
 class HTMLImageElement MOZ_FINAL : public nsGenericHTMLElement,
                                    public nsImageLoadingContent,
-                                   public nsIDOMHTMLImageElement,
-                                   public nsIJSNativeInitializer
+                                   public nsIDOMHTMLImageElement
 {
 public:
   explicit HTMLImageElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~HTMLImageElement();
+
+  static already_AddRefed<HTMLImageElement>
+    Image(const GlobalObject& aGlobal, const Optional<uint32_t>& aWidth,
+          const Optional<uint32_t>& aHeight, ErrorResult& aError);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -43,10 +45,6 @@ public:
 
   // override from nsImageLoadingContent
   CORSMode GetCORSMode();
-
-  // nsIJSNativeInitializer
-  NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aContext,
-                        JSObject* aObj, uint32_t argc, jsval* argv);
 
   // nsIContent
   virtual bool ParseAttribute(int32_t aNamespaceID,
@@ -86,7 +84,6 @@ public:
   nsresult CopyInnerTo(Element* aDest);
 
   void MaybeLoadImage();
-  virtual nsXPCClassInfo* GetClassInfo();
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
   bool IsMap()

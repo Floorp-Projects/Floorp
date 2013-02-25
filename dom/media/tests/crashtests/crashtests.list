@@ -1,7 +1,7 @@
 default-preferences  pref(media.peerconnection.enabled,true) pref(media.navigator.permission.disabled,true)
 
 load 780790.html
-asserts(0-2) load 791270.html # bug 839647
+load 791270.html
 load 791278.html
 load 791330.html
 load 799419.html

@@ -680,12 +680,14 @@ TypeInferenceOracle::canInlineCall(HandleScript caller, jsbytecode *pc)
     // Ignore code->monitoredTypes, as we know the caller is foo
     if (op != JSOP_FUNAPPLY && code->monitoredTypes)
         return false;
-
-    // Gets removed in Bug 796114
-    if (caller->analysis()->typeBarriers(cx, pc))
-        return false;
-
     return true;
+}
+
+types::TypeBarrier*
+TypeInferenceOracle::callArgsBarrier(HandleScript caller, jsbytecode *pc)
+{
+    JS_ASSERT(types::IsInlinableCall(pc));
+    return caller->analysis()->typeBarriers(cx, pc);
 }
 
 bool

@@ -66,8 +66,6 @@ public:
 
   virtual void DoneAddingChildren(bool aHaveNotified);
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
 protected:

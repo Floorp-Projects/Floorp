@@ -5972,13 +5972,8 @@ JS_GetStringLength(JSString *str)
 JS_PUBLIC_API(const jschar *)
 JS_GetStringCharsZ(JSContext *cx, JSString *str)
 {
-    AssertHeapIsIdleOrStringIsFlat(cx, str);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, str);
-    JSFlatString *flat = str->ensureFlat(cx);
-    if (!flat)
-        return NULL;
-    return flat->chars();
+    size_t dummy;
+    return JS_GetStringCharsZAndLength(cx, str, &dummy);
 }
 
 JS_PUBLIC_API(const jschar *)
@@ -6146,6 +6141,20 @@ JS_EncodeString(JSContext *cx, JSRawString str)
         return NULL;
 
     return LossyTwoByteCharsToNewLatin1CharsZ(cx, linear->range()).c_str();
+}
+
+JS_PUBLIC_API(char *)
+JS_EncodeStringToUTF8(JSContext *cx, JSRawString str)
+{
+    AutoAssertNoGC nogc;
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+
+    JSLinearString *linear = str->ensureLinear(cx);
+    if (!linear)
+        return NULL;
+
+    return TwoByteCharsToNewUTF8CharsZ(cx, linear->range()).c_str();
 }
 
 JS_PUBLIC_API(size_t)

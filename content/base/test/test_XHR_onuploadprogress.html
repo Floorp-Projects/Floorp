@@ -28,8 +28,7 @@ function uploadprogress()
 
 var xhr = new XMLHttpRequest();
 xhr.upload.onprogress = uploadprogress;
-var event = document.createEvent("ProgressEvent");
-event.initProgressEvent("progress", false, false, false, false, 0);
+var event = new ProgressEvent("progress");
 xhr.upload.dispatchEvent(event);
 ok(called,
    "XMLHttpRequest.upload.onprogress sets upload progress event listener");

@@ -442,6 +442,8 @@ MediaEngineWebRTCVideoSource::Init()
   mDeviceName[0] = '\0'; // paranoia
   mUniqueId[0] = '\0';
 
+  (void) mFps; // fix compile warning for this being unused. (remove once used)
+
   LOG((__FUNCTION__));
   if (mVideoEngine == NULL) {
     return;

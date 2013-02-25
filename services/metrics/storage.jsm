@@ -1071,26 +1071,24 @@ MetricsStorageSqliteBackend.prototype = Object.freeze({
     }
 
     let self = this;
-    return this.enqueueOperation(function addFieldOperation() {
-      return Task.spawn(function createField() {
-        let params = {
-          measurement_id: measurementID,
-          field: field,
-          value_type: typeID,
-        };
+    return Task.spawn(function createField() {
+      let params = {
+        measurement_id: measurementID,
+        field: field,
+        value_type: typeID,
+      };
 
-        yield self._connection.executeCached(SQL.addField, params);
+      yield self._connection.executeCached(SQL.addField, params);
 
-        let rows = yield self._connection.executeCached(SQL.getFieldID, params);
+      let rows = yield self._connection.executeCached(SQL.getFieldID, params);
 
-        let fieldID = rows[0].getResultByIndex(0);
+      let fieldID = rows[0].getResultByIndex(0);
 
-        self._fieldsByID.set(fieldID, [measurementID, field, valueType]);
-        self._fieldsByInfo.set([measurementID, field].join(":"), fieldID);
-        self._fieldsByMeasurement.get(measurementID).add(fieldID);
+      self._fieldsByID.set(fieldID, [measurementID, field, valueType]);
+      self._fieldsByInfo.set([measurementID, field].join(":"), fieldID);
+      self._fieldsByMeasurement.get(measurementID).add(fieldID);
 
-        throw new Task.Result(fieldID);
-      });
+      throw new Task.Result(fieldID);
     });
   },
 
@@ -2058,4 +2056,9 @@ MetricsStorageSqliteBackend.prototype = Object.freeze({
     return deferred.promise;
   },
 });
+
+// Alias built-in field types to public API.
+for (let property of MetricsStorageSqliteBackend.prototype._BUILTIN_TYPES) {
+  this.MetricsStorageBackend[property] = MetricsStorageSqliteBackend.prototype[property];
+}
 

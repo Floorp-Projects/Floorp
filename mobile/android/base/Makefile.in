@@ -193,6 +193,7 @@ FENNEC_JAVA_FILES = \
   widget/IconTabWidget.java \
   widget/TabRow.java \
   widget/ThumbnailView.java \
+  widget/TwoWayView.java \
   GeckoNetworkManager.java \
   GeckoScreenOrientationListener.java \
   UpdateService.java \
@@ -263,14 +264,12 @@ FENNEC_PP_XML_FILES = \
   res/layout-land-v14/browser_toolbar_menu.xml \
   res/layout-large-v11/awesomebar_search.xml \
   res/layout-large-v11/browser_toolbar_menu.xml \
-  res/layout-xlarge-v11/browser_toolbar_menu.xml \
+  res/layout-large-land-v11/tabs_panel.xml \
   res/layout/gecko_app.xml \
   res/layout/tabs_panel.xml \
   res/layout/text_selection_handles.xml \
   res/layout-xlarge-land-v11/abouthome_content.xml \
   res/layout-xlarge-v11/awesomebar_search.xml \
-  res/layout-xlarge-v11/gecko_app.xml \
-  res/layout-xlarge-v11/tabs_panel.xml \
   res/xml/preferences.xml \
   res/xml/searchable.xml \
   res/menu/browser_app_menu.xml \
@@ -432,7 +431,8 @@ RES_LAYOUT = \
   res/layout/tabs_counter.xml \
   res/layout/tabs_panel_header.xml \
   res/layout/tabs_panel_indicator.xml \
-  res/layout/tabs_row.xml \
+  res/layout/tabs_item_cell.xml \
+  res/layout/tabs_item_row.xml \
   res/layout/list_item_header.xml \
   res/layout/select_dialog_list.xml \
   res/layout/select_dialog_multichoice.xml \
@@ -449,13 +449,15 @@ RES_LAYOUT_LARGE_V11 = \
   res/layout-large-v11/site_identity_popup.xml \
   $(NULL)
 
+RES_LAYOUT_LARGE_LAND_V11 = \
+  res/layout-large-land-v11/tabs_panel_header.xml \
+  res/layout-large-land-v11/tabs_panel_footer.xml \
+  $(NULL)
+
 RES_LAYOUT_XLARGE_V11 = \
   res/layout-xlarge-v11/font_size_preference.xml \
   res/layout-xlarge-v11/remote_tabs_child.xml \
   res/layout-xlarge-v11/remote_tabs_group.xml \
-  res/layout-xlarge-v11/tabs_panel_header.xml \
-  res/layout-xlarge-v11/tabs_panel_footer.xml \
-  res/layout-xlarge-v11/tabs_row.xml \
   $(NULL)
 
 RES_VALUES = \
@@ -465,15 +467,19 @@ RES_VALUES = \
   res/values/colors.xml \
   res/values/dimens.xml \
   res/values/integers.xml \
+  res/values/layout.xml \
   res/values/styles.xml \
   res/values/themes.xml \
   $(NULL)
 
 RES_VALUES_LAND = \
   res/values-land/integers.xml \
+  res/values-land/layout.xml \
+  res/values-land/styles.xml \
   $(NULL)
 
 RES_VALUES_V11 = \
+  $(SYNC_RES_VALUES_V11) \
   res/values-v11/colors.xml \
   res/values-v11/dimens.xml \
   res/values-v11/styles.xml \
@@ -483,7 +489,12 @@ RES_VALUES_V11 = \
 RES_VALUES_LARGE_V11 = \
   $(SYNC_RES_VALUES_LARGE_V11) \
   res/values-large-v11/dimens.xml \
+  res/values-large-v11/layout.xml \
   res/values-large-v11/styles.xml \
+  $(NULL)
+
+RES_VALUES_LARGE_LAND_V11 = \
+  res/values-large-land-v11/styles.xml \
   $(NULL)
 
 RES_VALUES_XLARGE_V11 = \
@@ -546,6 +557,7 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/ic_menu_forward.png \
   res/drawable-mdpi/ic_menu_new_private_tab.png \
   res/drawable-mdpi/ic_menu_new_private_tab_small.png \
+  res/drawable-mdpi/ic_menu_new_tab.png \
   res/drawable-mdpi/ic_menu_new_tab_small.png \
   res/drawable-mdpi/ic_menu_reload.png \
   res/drawable-mdpi/ic_status_logo.png \
@@ -888,22 +900,39 @@ RES_DRAWABLE_LAND_XHDPI_V14 = \
   res/drawable-land-xhdpi-v14/tabs_carat.png \
   $(NULL)
 
+RES_DRAWABLE_LARGE_LAND_V11 = \
+  res/drawable-large-land-v11/tabs_button.xml \
+  res/drawable-large-land-v11/tabs_level.xml \
+  $(NULL)
+
 RES_DRAWABLE_LARGE_MDPI_V11 = \
   res/drawable-large-mdpi-v11/ic_menu_reload.png \
   res/drawable-large-mdpi-v11/ic_menu_forward.png \
+  res/drawable-large-mdpi-v11/menu.png \
   res/drawable-large-mdpi-v11/tabs_carat.png \
+  res/drawable-large-mdpi-v11/tabs_carat_contracted.png \
+  res/drawable-large-mdpi-v11/tabs_carat_expanded.png \
+  res/drawable-large-mdpi-v11/tabs_menu.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_HDPI_V11 = \
   res/drawable-large-hdpi-v11/ic_menu_reload.png \
   res/drawable-large-hdpi-v11/ic_menu_forward.png \
+  res/drawable-large-hdpi-v11/menu.png \
   res/drawable-large-hdpi-v11/tabs_carat.png \
+  res/drawable-large-hdpi-v11/tabs_carat_contracted.png \
+  res/drawable-large-hdpi-v11/tabs_carat_expanded.png \
+  res/drawable-large-hdpi-v11/tabs_menu.png \
   $(NULL)
 
 RES_DRAWABLE_LARGE_XHDPI_V11 = \
   res/drawable-large-xhdpi-v11/ic_menu_reload.png \
   res/drawable-large-xhdpi-v11/ic_menu_forward.png \
+  res/drawable-large-xhdpi-v11/menu.png \
   res/drawable-large-xhdpi-v11/tabs_carat.png \
+  res/drawable-large-xhdpi-v11/tabs_carat_contracted.png \
+  res/drawable-large-xhdpi-v11/tabs_carat_expanded.png \
+  res/drawable-large-xhdpi-v11/tabs_menu.png \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_MDPI_V11 = \
@@ -912,12 +941,6 @@ RES_DRAWABLE_XLARGE_MDPI_V11 = \
   res/drawable-xlarge-mdpi-v11/awesomebar_tab_right.9.png \
   res/drawable-xlarge-mdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-xlarge-mdpi-v11/ic_menu_bookmark_remove.png \
-  res/drawable-xlarge-mdpi-v11/menu.png \
-  res/drawable-xlarge-mdpi-v11/tabs_button.xml \
-  res/drawable-xlarge-mdpi-v11/tabs_carat_contracted.png \
-  res/drawable-xlarge-mdpi-v11/tabs_carat_expanded.png \
-  res/drawable-xlarge-mdpi-v11/tabs_level.xml \
-  res/drawable-xlarge-mdpi-v11/tabs_menu.png \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_HDPI_V11 = \
@@ -926,10 +949,6 @@ RES_DRAWABLE_XLARGE_HDPI_V11 = \
   res/drawable-xlarge-hdpi-v11/awesomebar_tab_right.9.png \
   res/drawable-xlarge-hdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-xlarge-hdpi-v11/ic_menu_bookmark_remove.png \
-  res/drawable-xlarge-hdpi-v11/menu.png \
-  res/drawable-xlarge-hdpi-v11/tabs_carat_contracted.png \
-  res/drawable-xlarge-hdpi-v11/tabs_carat_expanded.png \
-  res/drawable-xlarge-hdpi-v11/tabs_menu.png \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_XHDPI_V11 = \
@@ -938,10 +957,6 @@ RES_DRAWABLE_XLARGE_XHDPI_V11 = \
   res/drawable-xlarge-xhdpi-v11/awesomebar_tab_right.9.png \
   res/drawable-xlarge-xhdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-xlarge-xhdpi-v11/ic_menu_bookmark_remove.png \
-  res/drawable-xlarge-xhdpi-v11/menu.png \
-  res/drawable-xlarge-xhdpi-v11/tabs_carat_contracted.png \
-  res/drawable-xlarge-xhdpi-v11/tabs_carat_expanded.png \
-  res/drawable-xlarge-xhdpi-v11/tabs_menu.png \
   $(NULL)
 
 RES_COLOR = \
@@ -1001,12 +1016,13 @@ MOZ_BRANDING_DRAWABLE_MDPI = $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRE
 MOZ_BRANDING_DRAWABLE_HDPI = $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources-hdpi.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources-hdpi.mn | tr '\n' ' ';  fi)
 MOZ_BRANDING_DRAWABLE_XHDPI = $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources-xhdpi.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources-xhdpi.mn | tr '\n' ' ';  fi)
 
-RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LARGE_V11) $(RES_LAYOUT_XLARGE_V11) $(RES_VALUES) $(RES_VALUES_LAND) $(RES_VALUES_V11) $(RES_VALUES_LARGE_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_DRAWABLE_LARGE_MDPI_V11) $(RES_DRAWABLE_LARGE_HDPI_V11) $(RES_DRAWABLE_LARGE_XHDPI_V11) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
+RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LARGE_LAND_V11) $(RES_LAYOUT_LARGE_V11) $(RES_LAYOUT_XLARGE_V11) $(RES_VALUES) $(RES_VALUES_LAND) $(RES_VALUES_V11) $(RES_VALUES_LARGE_V11) $(RES_VALUES_LARGE_LAND_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_DRAWABLE_LARGE_LAND_V11) $(RES_DRAWABLE_LARGE_MDPI_V11) $(RES_DRAWABLE_LARGE_HDPI_V11) $(RES_DRAWABLE_LARGE_XHDPI_V11) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
 
 RES_DIRS= \
   res/layout                    \
   res/layout-land-v14           \
   res/layout-large-v11          \
+  res/layout-large-land-v11     \
   res/layout-xlarge-v11         \
   res/layout-xlarge-land-v11    \
   res/values                    \

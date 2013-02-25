@@ -8,7 +8,6 @@
 #include "mozilla/dom/HTMLSourceElementBinding.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Source)
-DOMCI_NODE_DATA(HTMLSourceElement, mozilla::dom::HTMLSourceElement)
 
 namespace mozilla {
 namespace dom {
@@ -34,7 +33,7 @@ NS_INTERFACE_TABLE_HEAD(HTMLSourceElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLSourceElement, nsIDOMHTMLSourceElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLSourceElement,
                                                nsGenericHTMLElement)
-NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLSourceElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 NS_IMPL_ELEMENT_CLONE(HTMLSourceElement)

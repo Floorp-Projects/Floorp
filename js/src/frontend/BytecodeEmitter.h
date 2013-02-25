@@ -247,46 +247,55 @@ EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *body);
  * NB: the js_SrcNoteSpec array in BytecodeEmitter.cpp is indexed by this
  * enum, so its initializers need to match the order here.
  *
- * Note on adding new source notes: every pair of bytecodes (A, B) where A and
- * B have disjoint sets of source notes that could apply to each bytecode may
- * reuse the same note type value for two notes (snA, snB) that have the same
- * arity in JSSrcNoteSpec. This is why SRC_IF and SRC_BREAK have the same
- * value below.
- *
  * Don't forget to update XDR_BYTECODE_VERSION in vm/Xdr.h for all such
  * incompatible source note or other bytecode changes.
  */
 enum SrcNoteType {
     SRC_NULL        = 0,        /* terminates a note vector */
+
     SRC_IF          = 1,        /* JSOP_IFEQ bytecode is from an if-then */
-    SRC_BREAK       = 1,        /* JSOP_GOTO is a break */
     SRC_IF_ELSE     = 2,        /* JSOP_IFEQ bytecode is from an if-then-else */
-    SRC_FOR_IN      = 2,        /* JSOP_GOTO to for-in loop condition from
-                                   before loop (same arity as SRC_IF_ELSE) */
-    SRC_FOR         = 3,        /* JSOP_NOP or JSOP_POP in for(;;) loop head */
-    SRC_WHILE       = 4,        /* JSOP_GOTO to for or while loop condition
+    SRC_COND        = 3,        /* JSOP_IFEQ is from conditional ?: operator */
+
+    SRC_FOR         = 4,        /* JSOP_NOP or JSOP_POP in for(;;) loop head */
+
+    SRC_WHILE       = 5,        /* JSOP_GOTO to for or while loop condition
                                    from before loop, else JSOP_NOP at top of
                                    do-while loop */
-    SRC_CONTINUE    = 5,        /* JSOP_GOTO is a continue, not a break;
-                                   JSOP_ENDINIT needs extra comma at end of
-                                   array literal: [1,2,,];
-                                   JSOP_DUP continuing destructuring pattern;
-                                   JSOP_POP at end of for-in */
-    SRC_PCDELTA     = 7,        /* distance forward from comma-operator to
+    SRC_FOR_IN      = 6,        /* JSOP_GOTO to for-in loop condition from
+                                   before loop */
+    SRC_CONTINUE    = 7,        /* JSOP_GOTO is a continue */
+    SRC_BREAK       = 8,        /* JSOP_GOTO is a break */
+    SRC_BREAK2LABEL = 9,        /* JSOP_GOTO for 'break label' */
+    SRC_SWITCHBREAK = 10,       /* JSOP_GOTO is a break in a switch */
+
+    SRC_TABLESWITCH = 11,       /* JSOP_TABLESWITCH, offset points to end of
+                                   switch */
+    SRC_CONDSWITCH  = 12,       /* JSOP_CONDSWITCH, 1st offset points to end of
+                                   switch, 2nd points to first JSOP_CASE */
+
+    SRC_PCDELTA     = 13,       /* distance forward from comma-operator to
                                    next POP, or from CONDSWITCH to first CASE
                                    opcode, etc. -- always a forward delta */
-    SRC_ASSIGNOP    = 8,        /* += or another assign-op follows */
-    SRC_COND        = 9,        /* JSOP_IFEQ is from conditional ?: operator */
-    SRC_HIDDEN      = 11,       /* opcode shouldn't be decompiled */
-    SRC_BREAK2LABEL = 16,       /* JSOP_GOTO for 'break label' with atomid */
-    SRC_CONT2LABEL  = 17,       /* JSOP_GOTO for 'continue label' with atomid */
-    SRC_SWITCH      = 18,       /* JSOP_*SWITCH with offset to end of switch,
-                                   2nd off to first JSOP_CASE if condswitch */
-    SRC_SWITCHBREAK = 18,       /* JSOP_GOTO is a break in a switch */
-    SRC_CATCH       = 20,       /* catch block has guard */
-    SRC_COLSPAN     = 21,       /* number of columns this opcode spans */
-    SRC_NEWLINE     = 22,       /* bytecode follows a source newline */
-    SRC_SETLINE     = 23,       /* a file-absolute source line number note */
+
+    SRC_ASSIGNOP    = 14,       /* += or another assign-op follows */
+
+    SRC_HIDDEN      = 15,       /* opcode shouldn't be decompiled */
+
+    SRC_CATCH       = 16,       /* catch block has guard */
+
+    /* All notes below here are "gettable".  See SN_IS_GETTABLE below. */
+    SRC_LAST_GETTABLE = SRC_CATCH,
+
+    SRC_COLSPAN     = 17,       /* number of columns this opcode spans */
+    SRC_NEWLINE     = 18,       /* bytecode follows a source newline */
+    SRC_SETLINE     = 19,       /* a file-absolute source line number note */
+
+    SRC_UNUSED20    = 20,
+    SRC_UNUSED21    = 21,
+    SRC_UNUSED22    = 22,
+    SRC_UNUSED23    = 23,
+
     SRC_XDELTA      = 24        /* 24-31 are for extended delta notes */
 };
 
@@ -309,7 +318,7 @@ enum SrcNoteType {
                                                    ? SRC_XDELTA               \
                                                    : *(sn) >> SN_DELTA_BITS))
 #define SN_SET_TYPE(sn,type)    SN_MAKE_NOTE(sn, type, SN_DELTA(sn))
-#define SN_IS_GETTABLE(sn)      (SN_TYPE(sn) < SRC_COLSPAN)
+#define SN_IS_GETTABLE(sn)      (SN_TYPE(sn) <= SRC_LAST_GETTABLE)
 
 #define SN_DELTA(sn)            ((ptrdiff_t)(SN_IS_XDELTA(sn)                 \
                                              ? *(sn) & SN_XDELTA_MASK         \

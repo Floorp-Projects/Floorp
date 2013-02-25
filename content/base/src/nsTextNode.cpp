@@ -117,18 +117,8 @@ nsTextNode::~nsTextNode()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(nsTextNode, nsGenericDOMDataNode)
-NS_IMPL_RELEASE_INHERITED(nsTextNode, nsGenericDOMDataNode)
-
-DOMCI_NODE_DATA(Text, nsTextNode)
-
-// QueryInterface implementation for nsTextNode
-NS_INTERFACE_TABLE_HEAD(nsTextNode)
-  NS_NODE_INTERFACE_TABLE3(nsTextNode, nsIDOMNode, nsIDOMText,
-                           nsIDOMCharacterData)
-  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsTextNode)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Text)
-NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
+NS_IMPL_ISUPPORTS_INHERITED3(nsTextNode, nsGenericDOMDataNode, nsIDOMNode,
+                             nsIDOMText, nsIDOMCharacterData)
 
 JSObject*
 nsTextNode::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
@@ -183,17 +173,6 @@ void nsTextNode::UnbindFromTree(bool aDeep, bool aNullParent)
   ResetDirectionSetByTextNode(this);
 
   nsGenericDOMDataNode::UnbindFromTree(aDeep, aNullParent);
-}
-
-already_AddRefed<nsTextNode>
-nsTextNode::SplitText(uint32_t aOffset, ErrorResult& rv)
-{
-  nsCOMPtr<nsIContent> newChild;
-  rv = SplitData(aOffset, getter_AddRefs(newChild));
-  if (rv.Failed()) {
-    return nullptr;
-  }
-  return static_cast<nsTextNode*>(newChild.forget().get());
 }
 
 #ifdef DEBUG

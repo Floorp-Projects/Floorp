@@ -40,7 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=816298
   var clipboard = Cc["@mozilla.org/widget/clipboard;1"]
                     .getService(SpecialPowers.Ci.nsIClipboard);
 
-  var textarea = SpecialPowers.wrap(document).getElementById('input');
+  var textarea = SpecialPowers.wrap(document.getElementById('input'));
 
   function getLoadContext() {
     return SpecialPowers.wrap(window).QueryInterface(Ci.nsIInterfaceRequestor)
@@ -78,8 +78,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=816298
   function testPasteText(expected, test) {
     textarea.value="";
     textarea.focus();
-    textarea.QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement)
-            .editor.paste(1);
+    textarea.editor.paste(1);
     is(textarea.value, expected, test + ": textarea paste");
   }
   function testInnerHTML(id, expected) {

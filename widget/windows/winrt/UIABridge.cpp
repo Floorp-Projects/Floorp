@@ -76,13 +76,8 @@ UIATextElement_CreateInstance(IRawElementProviderFragmentRoot* aRoot)
 
 // IUIABridge
 
-#if defined(x86_64)
 HRESULT
-UIABridge::Init(IInspectable* view, IInspectable* window, __int64 inner)
-#else
-HRESULT
-UIABridge::Init(IInspectable* view, IInspectable* window, __int32 inner)
-#endif
+UIABridge::Init(IInspectable* view, IInspectable* window, LONG_PTR inner)
 {
   LogFunction();
   NS_ASSERTION(view, "invalid framework view pointer");
@@ -151,13 +146,8 @@ UIABridge::Disconnect()
 
 // IUIAElement
 
-#if defined(x86_64)
 HRESULT
-UIABridge::SetFocusInternal(__int64 aAccessible)
-#else
-HRESULT
-UIABridge::SetFocusInternal(__int32 aAccessible)
-#endif
+UIABridge::SetFocusInternal(LONG_PTR aAccessible)
 {
   LogFunction();
   mHasFocus = true;
@@ -414,13 +404,8 @@ UIABridge::get_HostRawElementProvider(IRawElementProviderSimple **ppRetVal)
 ///////////////////////////////////////////////////////////////////////////////
 // Element
 
-#if defined(x86_64)
 HRESULT
-UIATextElement::SetFocusInternal(__int64 aAccessible)
-#else
-HRESULT
-UIATextElement::SetFocusInternal(__int32 aAccessible)
-#endif
+UIATextElement::SetFocusInternal(LONG_PTR aAccessible)
 {
   LogFunction();
 #if defined(ACCESSIBILITY)

@@ -232,9 +232,7 @@ pref("gfx.filter.nearest.force-enabled", false);
 // whether to always search all font cmaps during system font fallback
 pref("gfx.font_rendering.fallback.always_use_cmaps", false);
 
-#ifdef MOZ_GRAPHITE
 pref("gfx.font_rendering.graphite.enabled", false);
-#endif
 
 // Check intl/unicharutil/util/nsUnicodeProperties.h for definitions of script bits
 // in the ShapingType enumeration
@@ -1290,7 +1288,13 @@ pref("network.proxy.socks_remote_dns",      false);
 pref("network.proxy.no_proxies_on",         "localhost, 127.0.0.1");
 pref("network.proxy.failover_timeout",      1800); // 30 minutes
 pref("network.online",                      true); //online/offline
-pref("network.cookie.cookieBehavior",       0); // 0-Accept, 1-dontAcceptForeign, 2-dontUse
+pref("network.cookie.cookieBehavior",       3); // 0-Accept, 1-dontAcceptForeign, 2-dontUse, 3-limitForeign
+#ifdef ANDROID
+pref("network.cookie.cookieBehavior",       0); // Keep the old default of accepting all cookies
+#endif
+#ifdef MOZ_WIDGET_GONK
+pref("network.cookie.cookieBehavior",       0); // Keep the old default of accepting all cookies
+#endif
 pref("network.cookie.thirdparty.sessionOnly", false);
 pref("network.cookie.lifetimePolicy",       0); // accept normally, 1-askBeforeAccepting, 2-acceptForSession,3-acceptForNDays
 pref("network.cookie.alwaysAcceptSessionCookies", false);
@@ -3861,13 +3865,13 @@ pref("image.mem.max_ms_before_yield", 5);
 pref("image.mem.max_decoded_image_kb", 51200);
 
 // WebGL prefs
+pref("gl.msaa-level", 2);
 pref("webgl.force-enabled", false);
 pref("webgl.disabled", false);
 pref("webgl.shader_validator", true);
 pref("webgl.prefer-native-gl", false);
 pref("webgl.min_capability_mode", false);
 pref("webgl.disable-extensions", false);
-pref("webgl.msaa-level", 2);
 pref("webgl.msaa-force", false);
 pref("webgl.prefer-16bpp", false);
 pref("webgl.default-no-alpha", false);

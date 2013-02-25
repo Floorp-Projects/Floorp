@@ -11,14 +11,15 @@ var DQUOTE = '"';
 
 // Test array:
 //  - element 0: "Content-Disposition" header to test
-//  under RFC 2231 (email):
+//  under MIME (email):
 //  - element 1: correct value returned for disposition-type (empty param name)
 //  - element 2: correct value for filename returned
-//  under RFC 5987 (HTTP):
-//  (note: 5987-mode not yet in use, see bug 601933)
+//  under HTTP:
+// (currently supports continuations; expected results without continuations
+// are commented out for now)
 //  - element 3: correct value returned for disposition-type (empty param name)
 //  - element 4: correct value for filename returned 
-//  
+//
 // 3 and 4 may be left out if they are identical
 
 var tests = [
@@ -57,22 +58,22 @@ var tests = [
   // continuations not part of RFC 5987 (bug 610054)
   ["attachment; filename*0=foo; filename*1=bar",
    "attachment", "foobar",
-   "attachment", Cr.NS_ERROR_INVALID_ARG],
+   /* "attachment", Cr.NS_ERROR_INVALID_ARG */],
 
   // Return first continuation (invalid; error recovery)
   ["attachment; filename*0=first; filename*0=wrong; filename=basic",
    "attachment", "first",
-   "attachment", "basic"],
+   /* "attachment", "basic" */],
 
   // Only use correctly ordered continuations  (invalid; error recovery)
   ["attachment; filename*0=first; filename*1=second; filename*0=wrong",
    "attachment", "firstsecond",
-   "attachment", Cr.NS_ERROR_INVALID_ARG],
+   /* "attachment", Cr.NS_ERROR_INVALID_ARG */],
 
   // prefer continuation to basic (unless RFC 5987)
   ["attachment; filename=basic; filename*0=foo; filename*1=bar",
    "attachment", "foobar",
-   "attachment", "basic"],
+   /* "attachment", "basic" */],
 
   // Prefer extended to basic and/or (broken or not) continuation
   // (invalid; error recovery)
@@ -88,19 +89,19 @@ var tests = [
   // (invalid; error recovery)
   ["attachment; filename*0=foo; filename*2=bar",
    "attachment", "foo",
-   "attachment", Cr.NS_ERROR_INVALID_ARG],
+   /* "attachment", Cr.NS_ERROR_INVALID_ARG */],
 
   // Don't allow leading 0's (*01) (invalid; error recovery)
   ["attachment; filename*0=foo; filename*01=bar",
    "attachment", "foo",
-   "attachment", Cr.NS_ERROR_INVALID_ARG],
+   /* "attachment", Cr.NS_ERROR_INVALID_ARG */],
 
   // continuations should prevail over non-extended (unless RFC 5987)
   ["attachment; filename=basic; filename*0*=UTF-8''multi;\r\n"
     + " filename*1=line;\r\n" 
     + " filename*2*=%20extended",
    "attachment", "multiline extended",
-   "attachment", "basic"],
+   /* "attachment", "basic" */],
 
   // Gaps should result in returning only value until gap hit
   // (invalid; error recovery)
@@ -108,7 +109,7 @@ var tests = [
     + " filename*1=line;\r\n" 
     + " filename*3*=%20extended",
    "attachment", "multiline",
-   "attachment", "basic"],
+   /* "attachment", "basic" */],
 
   // First series, only please, and don't slurp up higher elements (*2 in this
   // case) from later series into earlier one (invalid; error recovery)
@@ -118,7 +119,7 @@ var tests = [
     + " filename*1=bad;\r\n"
     + " filename*2=evil",
    "attachment", "multiline",
-   "attachment", "basic"],
+   /* "attachment", "basic" */],
 
   // RFC 2231 not clear on correct outcome: we prefer non-continued extended
   // (invalid; error recovery)
@@ -132,13 +133,13 @@ var tests = [
   ["attachment; filename*0=UTF-8''unescaped;\r\n"
     + " filename*1*=%20so%20includes%20UTF-8''%20in%20value", 
    "attachment", "UTF-8''unescaped so includes UTF-8'' in value",
-   "attachment", Cr.NS_ERROR_INVALID_ARG],
+   /* "attachment", Cr.NS_ERROR_INVALID_ARG */],
 
   // sneaky: if unescaped, make sure we leave UTF-8'' in value
   ["attachment; filename=basic; filename*0=UTF-8''unescaped;\r\n"
     + " filename*1*=%20so%20includes%20UTF-8''%20in%20value", 
    "attachment", "UTF-8''unescaped so includes UTF-8'' in value",
-   "attachment", "basic"],
+   /* "attachment", "basic" */],
 
   // Prefer basic over invalid continuation
   // (invalid; error recovery)
@@ -153,7 +154,7 @@ var tests = [
     + " filename*6=6; filename*7=7;filename*8=8;filename*9=9;filename*10=a;\r\n"
     + " filename*11=b; filename*12=c;filename*13=d;filename*14=e;filename*15=f\r\n",
    "attachment", "0123456789abcdef",
-   "attachment", "basic"],
+   /* "attachment", "basic" */],
 
   // support digits over 10 (detect gaps)
   ["attachment; filename=basic; filename*0*=UTF-8''0;\r\n"
@@ -161,7 +162,7 @@ var tests = [
     + " filename*6=6; filename*7=7;filename*8=8;filename*9=9;filename*10=a;\r\n"
     + " filename*11=b; filename*12=c;filename*14=e\r\n",
    "attachment", "0123456789abc",
-   "attachment", "basic"],
+   /* "attachment", "basic" */],
 
   // return nothing: invalid
   // (invalid; error recovery)
@@ -195,38 +196,38 @@ var tests = [
     + " filename*6=6; filename*7=7;filename*8=8;filename*9=9;filename*10=a;\r\n"
     + " filename*11=b; filename*12=c;filename*13=d;filename*15=f;filename*14=e;\r\n",
    "attachment", "0123456789abcdef",
-   "attachment", "basic"],
+   /* "attachment", "basic" */],
 
   // check non-digits in sequence numbers
   ["attachment; filename=basic; filename*0*=UTF-8''0;\r\n"
     + " filename*1a=1\r\n",
    "attachment", "0",
-   "attachment", "basic"],
+   /* "attachment", "basic" */],
 
   // check duplicate sequence numbers
   ["attachment; filename=basic; filename*0*=UTF-8''0;\r\n"
     + " filename*0=bad; filename*1=1;\r\n",
    "attachment", "0",
-   "attachment", "basic"],
+   /* "attachment", "basic" */],
 
   // check overflow
   ["attachment; filename=basic; filename*0*=UTF-8''0;\r\n"
     + " filename*11111111111111111111111111111111111111111111111111111111111=1",
    "attachment", "0",
-   "attachment", "basic"],
+   /* "attachment", "basic" */],
 
   // check underflow
   ["attachment; filename=basic; filename*0*=UTF-8''0;\r\n"
     + " filename*-1=1",
    "attachment", "0",
-   "attachment", "basic"],
+   /* "attachment", "basic" */],
 
   // check mixed token/quoted-string
   ["attachment; filename=basic; filename*0=\"0\";\r\n"
     + " filename*1=1;\r\n"
     + " filename*2*=%32",
    "attachment", "012",
-   "attachment", "basic"],
+   /* "attachment", "basic" */],
 
   // check empty sequence number
   ["attachment; filename=basic; filename**=UTF-8''0\r\n",
@@ -261,7 +262,20 @@ var tests = [
   // test empty param 
   ["attachment; filename=", 
    "attachment", ""],    
-  
+
+  // Bug 601933: RFC 2047 does not apply to parameters (at least in HTTP)
+  ["attachment; filename==?ISO-8859-1?Q?foo-=E4.html?=",
+   "attachment", "foo-\u00e4.html",
+   "attachment", "=?ISO-8859-1?Q?foo-=E4.html?="],
+
+  ["attachment; filename=\"=?ISO-8859-1?Q?foo-=E4.html?=\"",
+   "attachment", "foo-\u00e4.html",
+   "attachment", "=?ISO-8859-1?Q?foo-=E4.html?="],
+
+  // format sent by GMail as of 2012-07-23 (5987 overrides 2047)
+  ["attachment; filename=\"=?ISO-8859-1?Q?foo-=E4.html?=\"; filename*=UTF-8''5987",
+   "attachment", "5987"],
+
   // Bug 651185: double quotes around 2231/5987 encoded param
   // Change reverted to backwards compat issues with various web services,
   // such as OWA (Bug 703015), plus similar problems in Thunderbird. If this
@@ -389,12 +403,12 @@ var tests = [
 
   ['attachment; filename=basic; filename*0="foo"; filename*1="\\b\\a\\r.html"', 
    "attachment", "foobar.html",
-   "attachment", "basic"],
+   /* "attachment", "basic" */],
 
   // unmatched escape char
   ['attachment; filename=basic; filename*0="foo"; filename*1="\\b\\a\\', 
    "attachment", "fooba\\",
-   "attachment", "basic"],
+   /* "attachment", "basic" */],
 
   // Bug 732369: Content-Disposition parser does not require presence of ";" between params
   // optimally, this would not even return the disposition type "attachment"  
@@ -469,7 +483,7 @@ function do_tests(whichRFC)
       if (whichRFC == 0)
         result = mhp.getParameter(tests[i][0], "", "UTF-8", true, unused);
       else 
-        result = mhp.getParameter5987(tests[i][0], "", "UTF-8", true, unused);
+        result = mhp.getParameterHTTP(tests[i][0], "", "UTF-8", true, unused);
 
       do_check_eq(result, expectedDt);
     } 
@@ -493,7 +507,7 @@ function do_tests(whichRFC)
       if (whichRFC == 0)
         result = mhp.getParameter(tests[i][0], "filename", "UTF-8", true, unused);
       else 
-        result = mhp.getParameter5987(tests[i][0], "filename", "UTF-8", true, unused);
+        result = mhp.getParameterHTTP(tests[i][0], "filename", "UTF-8", true, unused);
 
       do_check_eq(result, expectedFn);
     } 

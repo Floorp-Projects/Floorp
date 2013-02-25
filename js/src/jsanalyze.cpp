@@ -1909,6 +1909,13 @@ ScriptAnalysis::needsArgsObj(JSContext *cx)
     JS_ASSERT(script_->argumentsHasVarBinding());
 
     /*
+     * Always construct arguments objects when in debug mode and for generator
+     * scripts (generators can be suspended when speculation fails).
+     */
+    if (cx->compartment->debugMode() || script_->isGenerator)
+        return true;
+
+    /*
      * If the script has dynamic name accesses which could reach 'arguments',
      * the parser will already have checked to ensure there are no explicit
      * uses of 'arguments' in the function. If there are such uses, the script
@@ -1923,10 +1930,9 @@ ScriptAnalysis::needsArgsObj(JSContext *cx)
 
     /*
      * Since let variables and are not tracked, we cannot soundly perform this
-     * analysis in their presence. Generators can be suspended when the
-     * speculation fails, so disallow it also.
+     * analysis in their presence.
      */
-    if (localsAliasStack() || cx->compartment->debugMode() || script_->isGenerator)
+    if (localsAliasStack())
         return true;
 
     /*

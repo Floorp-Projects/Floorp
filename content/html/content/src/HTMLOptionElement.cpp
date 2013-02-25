@@ -56,8 +56,6 @@ NS_NewHTMLOptionElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   return new mozilla::dom::HTMLOptionElement(nodeInfo.forget());
 }
 
-DOMCI_NODE_DATA(HTMLOptionElement, mozilla::dom::HTMLOptionElement)
-
 namespace mozilla {
 namespace dom {
 
@@ -86,12 +84,11 @@ NS_IMPL_RELEASE_INHERITED(HTMLOptionElement, Element)
 
 // QueryInterface implementation for HTMLOptionElement
 NS_INTERFACE_TABLE_HEAD(HTMLOptionElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE2(HTMLOptionElement,
-                                   nsIDOMHTMLOptionElement,
-                                   nsIJSNativeInitializer)
+  NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLOptionElement,
+                                   nsIDOMHTMLOptionElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLOptionElement,
                                                nsGenericHTMLElement)
-NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLOptionElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 NS_IMPL_ELEMENT_CLONE(HTMLOptionElement)
@@ -365,87 +362,78 @@ HTMLOptionElement::GetSelect()
   return nullptr;
 }
 
-NS_IMETHODIMP
-HTMLOptionElement::Initialize(nsISupports* aOwner,
-                              JSContext* aContext,
-                              JSObject *aObj,
-                              uint32_t argc,
-                              jsval *argv)
+already_AddRefed<HTMLOptionElement>
+HTMLOptionElement::Option(const GlobalObject& aGlobal,
+                          const Optional<nsAString>& aText,
+                          const Optional<nsAString>& aValue,
+                          const Optional<bool>& aDefaultSelected,
+                          const Optional<bool>& aSelected, ErrorResult& aError)
 {
-  nsresult result = NS_OK;
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aGlobal.Get());
+  nsIDocument* doc;
+  if (!win || !(doc = win->GetExtantDoc())) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
 
-  if (argc > 0) {
-    // The first (optional) parameter is the text of the option
-    JSString* jsstr = JS_ValueToString(aContext, argv[0]);
-    if (!jsstr) {
-      return NS_ERROR_FAILURE;
-    }
+  nsCOMPtr<nsINodeInfo> nodeInfo =
+    doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::option, nullptr,
+                                        kNameSpaceID_XHTML,
+                                        nsIDOMNode::ELEMENT_NODE);
+  if (!nodeInfo) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
 
+  nsRefPtr<HTMLOptionElement> option = new HTMLOptionElement(nodeInfo.forget());
+
+  if (aText.WasPassed()) {
     // Create a new text node and append it to the option
     nsCOMPtr<nsIContent> textContent;
-    result = NS_NewTextNode(getter_AddRefs(textContent),
-                            mNodeInfo->NodeInfoManager());
-    if (NS_FAILED(result)) {
-      return result;
+    aError = NS_NewTextNode(getter_AddRefs(textContent),
+                            option->NodeInfo()->NodeInfoManager());
+    if (aError.Failed()) {
+      return nullptr;
     }
 
-    size_t length;
-    const jschar *chars = JS_GetStringCharsAndLength(aContext, jsstr, &length);
-    if (!chars) {
-      return NS_ERROR_FAILURE;
+    textContent->SetText(aText.Value(), false);
+
+    aError = option->AppendChildTo(textContent, false);
+    if (aError.Failed()) {
+      return nullptr;
     }
 
-    textContent->SetText(chars, length, false);
-
-    result = AppendChildTo(textContent, false);
-    if (NS_FAILED(result)) {
-      return result;
-    }
-
-    if (argc > 1) {
-      // The second (optional) parameter is the value of the option
-      jsstr = JS_ValueToString(aContext, argv[1]);
-      if (!jsstr) {
-        return NS_ERROR_FAILURE;
+    if (aValue.WasPassed()) {
+      // Set the value attribute for this element. We're calling SetAttr
+      // directly because we want to pass aNotify == false.
+      aError = option->SetAttr(kNameSpaceID_None, nsGkAtoms::value,
+                               aValue.Value(), false);
+      if (aError.Failed()) {
+        return nullptr;
       }
 
-      size_t length;
-      const jschar *chars = JS_GetStringCharsAndLength(aContext, jsstr, &length);
-      if (!chars) {
-        return NS_ERROR_FAILURE;
-      }
-
-      // Set the value attribute for this element
-      nsAutoString value(chars, length);
-
-      result = SetAttr(kNameSpaceID_None, nsGkAtoms::value, value,
-                       false);
-      if (NS_FAILED(result)) {
-        return result;
-      }
-
-      if (argc > 2) {
-        // The third (optional) parameter is the defaultSelected value
-        JSBool defaultSelected;
-        JS_ValueToBoolean(aContext, argv[2], &defaultSelected);
-        if (defaultSelected) {
-          result = SetAttr(kNameSpaceID_None, nsGkAtoms::selected,
-                           EmptyString(), false);
-          NS_ENSURE_SUCCESS(result, result);
+      if (aDefaultSelected.WasPassed()) {
+        if (aDefaultSelected.Value()) {
+          // We're calling SetAttr directly because we want to pass
+          // aNotify == false.
+          aError = option->SetAttr(kNameSpaceID_None, nsGkAtoms::selected,
+                                   EmptyString(), false);
+          if (aError.Failed()) {
+            return nullptr;
+          }
         }
 
-        // XXX This is *untested* behavior.  Should work though.
-        if (argc > 3) {
-          JSBool selected;
-          JS_ValueToBoolean(aContext, argv[3], &selected);
-
-          return SetSelected(selected);
+        if (aSelected.WasPassed()) {
+          option->SetSelected(aSelected.Value(), aError);
+          if (aError.Failed()) {
+            return nullptr;
+          }
         }
       }
     }
   }
 
-  return result;
+  return option.forget();
 }
 
 nsresult

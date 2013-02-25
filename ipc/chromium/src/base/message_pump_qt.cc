@@ -65,7 +65,7 @@ MessagePumpQt::event(QEvent *e)
 }
 
 void
-MessagePumpQt::scheduleDelayedIfNeeded(const Time& delayed_work_time)
+MessagePumpQt::scheduleDelayedIfNeeded(const TimeTicks& delayed_work_time)
 {
   if (delayed_work_time.is_null()) {
     return;
@@ -75,7 +75,7 @@ MessagePumpQt::scheduleDelayedIfNeeded(const Time& delayed_work_time)
     mTimer->stop();
   }
 
-  TimeDelta later = delayed_work_time - Time::Now();
+  TimeDelta later = delayed_work_time - TimeTicks::Now();
   // later.InMilliseconds() returns an int64_t, QTimer only accepts int's for start(),
   // std::min only works on exact same types.
   int laterMsecs = later.InMilliseconds() > std::numeric_limits<int>::max() ?
@@ -183,7 +183,7 @@ void MessagePumpForUI::ScheduleWork() {
                               new QEvent((QEvent::Type) sPokeEvent));
 }
 
-void MessagePumpForUI::ScheduleDelayedWork(const Time& delayed_work_time) {
+void MessagePumpForUI::ScheduleDelayedWork(const TimeTicks& delayed_work_time) {
   // On GLib implementation, a work source is defined which explicitly checks the
   // time that has passed. Here, on Qt we can use a QTimer that enqueues our
   // event signal in an event queue.

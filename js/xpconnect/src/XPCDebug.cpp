@@ -107,7 +107,7 @@ xpc_DumpEvalInJSStackFrame(JSContext* cx, uint32_t frameno, const char* text)
     JSAutoByteString bytes;
     if (frame.evaluateInStackFrame(cx, text, strlen(text), "eval", 1, &rval) &&
         nullptr != (str = JS_ValueToString(cx, rval)) &&
-        bytes.encode(cx, str)) {
+        bytes.encodeLatin1(cx, str)) {
         DebugDump("%s\n", bytes.ptr());
     } else
         DebugDump("%s", "eval failed!\n");

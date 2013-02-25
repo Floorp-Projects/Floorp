@@ -4,11 +4,17 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
+const BRAND_SHORT_NAME = Cc["@mozilla.org/intl/stringbundle;1"]
+                         .getService(Ci.nsIStringBundleService)
+                         .createBundle("chrome://branding/locale/brand.properties")
+                         .GetStringFromName("brandShortName");
+
 this.EXPORTED_SYMBOLS = [ "CmdAddonFlags", "CmdCommands" ];
 
 Cu.import("resource:///modules/devtools/gcli.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/osfile.jsm")
 
 XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
                                   "resource:///modules/devtools/gDevTools.jsm");
@@ -768,59 +774,86 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
         return;
       }
 
-      let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-      dir.initWithPath(dirName);
-      if (!dir.exists() || !dir.isDirectory()) {
-        throw new Error('\'' + dirName + '\' is not a directory.');
-      }
-
-      let en = dir.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
-
-      while (true) {
-        let file = en.nextFile;
-        if (!file) {
-          break;
+      let promise = OS.File.stat(dirName);
+      promise = promise.then(
+        function onSuccess(stat) {
+          if (!stat.isDir) {
+            throw new Error('\'' + dirName + '\' is not a directory.');
+          } else {
+            return dirName;
+          }
+        },
+        function onFailure(reason) {
+          if (reason instanceof OS.File.Error && reason.becauseNoSuchFile) {
+            throw new Error('\'' + dirName + '\' does not exist.');
+          } else {
+            throw reason;
+          }
         }
-        if (file.leafName.match(/.*\.mozcmd$/) && file.isFile() && file.isReadable()) {
-          loadCommandFile(file, aSandboxPrincipal);
+      );
+
+      promise.then(
+        function onSuccess() {
+          let iterator = new OS.File.DirectoryIterator(dirName);
+          let iterPromise = iterator.forEach(
+            function onEntry(entry) {
+              if (entry.name.match(/.*\.mozcmd$/) && !entry.isDir) {
+                loadCommandFile(entry, aSandboxPrincipal);
+              }
+            }
+          );
+
+          iterPromise.then(
+            function onSuccess() {
+              iterator.close();
+            },
+            function onFailure(reason) {
+              iterator.close();
+              throw reason;
+            }
+          );
         }
-      }
-    },
+      );
+    }
   };
 
   /**
   * Load the commands from a single file
-  * @param nsIFile aFile The file containing the commands that we should read
+  * @param OS.File.DirectoryIterator.Entry aFileEntry The DirectoryIterator
+  * Entry of the file containing the commands that we should read
   * @param nsIPrincipal aSandboxPrincipal Scope object for the Sandbox in which
   * we eval the script from the .mozcmd file. This should be a chrome window.
   */
-  function loadCommandFile(aFile, aSandboxPrincipal) {
-    NetUtil.asyncFetch(aFile, function refresh_fetch(aStream, aStatus) {
-      if (!Components.isSuccessCode(aStatus)) {
-        console.error("NetUtil.asyncFetch(" + aFile.path + ",..) failed. Status=" + aStatus);
-        return;
+  function loadCommandFile(aFileEntry, aSandboxPrincipal) {
+    let promise = OS.File.read(aFileEntry.path);
+    promise = promise.then(
+      function onSuccess(array) {
+        let decoder = new TextDecoder();
+        let source = decoder.decode(array);
+
+        let sandbox = new Cu.Sandbox(aSandboxPrincipal, {
+          sandboxPrototype: aSandboxPrincipal,
+          wantXrays: false,
+          sandboxName: aFileEntry.path
+        });
+        let data = Cu.evalInSandbox(source, sandbox, "1.8", aFileEntry.name, 1);
+
+        if (!Array.isArray(data)) {
+          console.error("Command file '" + aFileEntry.name + "' does not have top level array.");
+          return;
+        }
+
+        data.forEach(function(commandSpec) {
+          gcli.addCommand(commandSpec);
+          commands.push(commandSpec.name);
+        });
+
+      },
+      function onError(reason) {
+        console.error("OS.File.read(" + aFileEntry.path + ") failed.");
+        throw reason;
       }
-
-      let source = NetUtil.readInputStreamToString(aStream, aStream.available());
-      aStream.close();
-
-      let sandbox = new Cu.Sandbox(aSandboxPrincipal, {
-        sandboxPrototype: aSandboxPrincipal,
-        wantXrays: false,
-        sandboxName: aFile.path
-      });
-      let data = Cu.evalInSandbox(source, sandbox, "1.8", aFile.leafName, 1);
-
-      if (!Array.isArray(data)) {
-        console.error("Command file '" + aFile.leafName + "' does not have top level array.");
-        return;
-      }
-
-      data.forEach(function(commandSpec) {
-        gcli.addCommand(commandSpec);
-        commands.push(commandSpec.name);
-      });
-    }.bind(this));
+    );
   }
 
   /**
@@ -1763,14 +1796,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
   * >> restart --nocache
   * - restarts immediately and starts Firefox without using cache
   */
+
   gcli.addCommand({
     name: "restart",
-    description: gcli.lookup("restartFirefoxDesc"),
+    description: gcli.lookupFormat("restartBrowserDesc", [BRAND_SHORT_NAME]),
     params: [
       {
         name: "nocache",
         type: "boolean",
-        description: gcli.lookup("restartFirefoxNocacheDesc")
+        description: gcli.lookup("restartBrowserNocacheDesc")
       }
     ],
     returnType: "string",
@@ -1779,7 +1813,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
                       .createInstance(Ci.nsISupportsPRBool);
       Services.obs.notifyObservers(canceled, "quit-application-requested", "restart");
       if (canceled.data) {
-        return gcli.lookup("restartFirefoxRequestCancelled");
+        return gcli.lookup("restartBrowserRequestCancelled");
       }
 
       // disable loading content from cache.
@@ -1791,7 +1825,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
       Cc['@mozilla.org/toolkit/app-startup;1']
         .getService(Ci.nsIAppStartup)
         .quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
-      return gcli.lookup("restartFirefoxRestarting");
+      return gcli.lookupFormat("restartBrowserRestarting", [BRAND_SHORT_NAME]);
     }
   });
 }(this));
@@ -1834,8 +1868,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
           {
             name: "chrome",
             type: "boolean",
-            description: gcli.lookup("screenshotChromeDesc"),
-            manual: gcli.lookup("screenshotChromeManual")
+            description: gcli.lookupFormat("screenshotChromeDesc", [BRAND_SHORT_NAME]),
+            manual: gcli.lookupFormat("screenshotChromeManual", [BRAND_SHORT_NAME])
           },
           {
             name: "delay",

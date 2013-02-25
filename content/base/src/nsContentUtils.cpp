@@ -5782,9 +5782,9 @@ nsresult
 nsContentTypeParser::GetParameter(const char* aParameterName, nsAString& aResult)
 {
   NS_ENSURE_TRUE(mService, NS_ERROR_FAILURE);
-  return mService->GetParameter(mString, aParameterName,
-                                EmptyCString(), false, nullptr,
-                                aResult);
+  return mService->GetParameterHTTP(mString, aParameterName,
+                                    EmptyCString(), false, nullptr,
+                                    aResult);
 }
 
 /* static */
