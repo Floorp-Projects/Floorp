@@ -114,10 +114,10 @@ exports.testActivate = function(options) {
     options: [ 'true' ]
   }, options);
 
-  type('asdf', {
+  type('wxqy', {
     important: false,
     options: [ ],
-    error: 'Can\'t use \'asdf\'.'
+    error: 'Can\'t use \'wxqy\'.'
   }, options);
 
   type('', { }, options);
