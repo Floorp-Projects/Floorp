@@ -14,10 +14,4 @@ MODULE = appcomps
 
 include $(topsrcdir)/config/config.mk
 
-DIRS += \
-    windowds \
-    directory \
-    build \
-    $(NULL)
-
 include $(topsrcdir)/config/rules.mk
