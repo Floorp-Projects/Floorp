@@ -1,0 +1,23 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
+
+# The Icon Channel stuff really shouldn't live in decoders/icon, but we'll
+# fix that another time.
+if toolkit == 'gtk2':
+    DIRS += ['icon/gtk', 'icon']
+elif toolkit == 'qt':
+    DIRS += ['icon/qt', 'icon']
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    DIRS += ['icon/win', 'icon']
+elif CONFIG['OS_ARCH'] == 'OS2':
+    DIRS += ['icon/os2', 'icon']
+
+if toolkit == 'cocoa':
+    DIRS += ['icon/mac', 'icon']
+elif toolkit == 'android':
+    DIRS += ['icon/android', 'icon']
