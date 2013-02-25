@@ -19,10 +19,6 @@ DEFINES += \
   -D_IMPL_NS_WIDGET \
   $(NULL)
 
-ifdef MOZ_X11
-PARALLEL_DIRS  = x11
-endif
-
 CPPSRCS		= \
 		WidgetUtils.cpp \
 		nsShmImage.cpp \
