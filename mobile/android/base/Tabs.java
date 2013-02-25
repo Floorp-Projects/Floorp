@@ -72,6 +72,9 @@ public class Tabs implements GeckoEventListener {
         registerEventListener("Reader:Added");
         registerEventListener("Reader:Removed");
         registerEventListener("Reader:Share");
+        registerEventListener("DOMTitleChanged");
+        registerEventListener("DOMLinkAdded");
+        registerEventListener("DOMWindowClose");
     }
 
     public void attachToActivity(GeckoApp activity) {
@@ -333,6 +336,20 @@ public class Tabs implements GeckoEventListener {
 
                 GeckoAppShell.openUriExternal(url, "text/plain", "", "",
                                               Intent.ACTION_SEND, title);
+            } else if (event.equals("DOMTitleChanged")) {
+                Tab tab = getTab(message.getInt("tabID"));
+                if (tab != null) {
+                    tab.updateTitle(message.getString("title"));
+                }
+            } else if (event.equals("DOMLinkAdded")) {
+                Tab tab = getTab(message.getInt("tabID"));
+                if (tab != null) {
+                    tab.updateFaviconURL(message.getString("href"), message.getInt("size"));
+                    notifyListeners(tab, TabEvents.LINK_ADDED);
+                }
+            } else if (event.equals("DOMWindowClose")) {
+                Tab tab = getTab(message.getInt("tabID"));
+                closeTab(tab);
             }
         } catch (Exception e) { 
             Log.w(LOGTAG, "handleMessage threw for " + event, e);
@@ -409,7 +426,8 @@ public class Tabs implements GeckoEventListener {
         ADDED,
         RESTORED,
         LOCATION_CHANGE,
-        MENU_UPDATED
+        MENU_UPDATED,
+        LINK_ADDED
     }
 
     public void notifyListeners(Tab tab, TabEvents msg) {
