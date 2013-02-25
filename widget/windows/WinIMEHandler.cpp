@@ -196,6 +196,14 @@ IMEHandler::GetOpenState(nsWindow* aWindow)
   return IMEContext.GetOpenState();
 }
 
+// static
+void
+IMEHandler::OnDestroyWindow(nsWindow* aWindow)
+{
+  nsIMEContext IMEContext(aWindow->GetWindowHandle());
+  IMEContext.AssociateDefaultContext();
+}
+
 #ifdef DEBUG
 // static
 bool

@@ -214,19 +214,19 @@ nsIMM32Handler::CommitComposition(nsWindow* aWindow, bool aForce)
     return;
   }
 
-  bool associated = aWindow->AssociateDefaultIMC(true);
+  nsIMEContext IMEContext(aWindow->GetWindowHandle());
+  bool associated = IMEContext.AssociateDefaultContext();
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: CommitComposition, associated=%s\n",
      associated ? "YES" : "NO"));
 
-  nsIMEContext IMEContext(aWindow->GetWindowHandle());
   if (IMEContext.IsValid()) {
     ::ImmNotifyIME(IMEContext.get(), NI_COMPOSITIONSTR, CPS_COMPLETE, 0);
     ::ImmNotifyIME(IMEContext.get(), NI_COMPOSITIONSTR, CPS_CANCEL, 0);
   }
 
   if (associated) {
-    aWindow->AssociateDefaultIMC(false);
+    IMEContext.Disassociate();
   }
 }
 
@@ -245,18 +245,18 @@ nsIMM32Handler::CancelComposition(nsWindow* aWindow, bool aForce)
     return;
   }
 
-  bool associated = aWindow->AssociateDefaultIMC(true);
+  nsIMEContext IMEContext(aWindow->GetWindowHandle());
+  bool associated = IMEContext.AssociateDefaultContext();
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: CancelComposition, associated=%s\n",
      associated ? "YES" : "NO"));
 
-  nsIMEContext IMEContext(aWindow->GetWindowHandle());
   if (IMEContext.IsValid()) {
     ::ImmNotifyIME(IMEContext.get(), NI_COMPOSITIONSTR, CPS_CANCEL, 0);
   }
 
   if (associated) {
-    aWindow->AssociateDefaultIMC(false);
+    IMEContext.Disassociate();
   }
 }
 
