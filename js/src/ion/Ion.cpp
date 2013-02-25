@@ -1495,7 +1495,7 @@ ion::CanEnter(JSContext *cx, JSScript *script, AbstractFramePtr fp, bool isConst
         RootedScript scriptRoot(cx, script);
         RootedObject callee(cx, &fp.callee());
         RootedObject obj(cx, CreateThisForFunction(cx, callee, fp.useNewType()));
-        if (!obj)
+        if (!obj || !ion::IsEnabled(cx)) // Note: OOM under CreateThis can disable TI.
             return Method_Skipped;
         fp.thisValue().setObject(*obj);
         script = scriptRoot;
