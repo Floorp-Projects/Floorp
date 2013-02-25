@@ -9,34 +9,6 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 relativesrcdir  = accessible
 
-DIRS	= \
-  actions \
-  attributes \
-  bounds \
-  editabletext \
-  elm \
-  events \
-  focus \
-  hittest \
-  hyperlink \
-  hypertext \
-  name \
-  pivot \
-  relations \
-  role \
-  scroll \
-  selectable \
-  states \
-  table \
-  text \
-  textattrs \
-  textcaret \
-  textselection \
-  tree \
-  treeupdate \
-  value \
-  $(null)
-
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_A11Y_FILES =\
