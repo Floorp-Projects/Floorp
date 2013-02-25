@@ -7417,13 +7417,7 @@ nsWindow::SetInputContext(const InputContext& aContext,
   if (enable &&
       mInputContext.mIMEState.mOpen != IMEState::DONT_CHANGE_OPEN_STATE) {
     bool open = (mInputContext.mIMEState.mOpen == IMEState::OPEN);
-#ifdef NS_ENABLE_TSF
-    nsTextStore::SetIMEOpenState(open);
-#endif //NS_ENABLE_TSF
-    nsIMEContext IMEContext(mWnd);
-    if (IMEContext.IsValid()) {
-      ::ImmSetOpenStatus(IMEContext.get(), open);
-    }
+    IMEHandler::SetOpenState(this, open);
   }
 }
 
@@ -7433,20 +7427,11 @@ nsWindow::GetInputContext()
   mInputContext.mIMEState.mOpen = IMEState::CLOSED;
   switch (mInputContext.mIMEState.mEnabled) {
     case IMEState::ENABLED:
-    case IMEState::PLUGIN: {
-      nsIMEContext IMEContext(mWnd);
-      if (IMEContext.IsValid()) {
-        mInputContext.mIMEState.mOpen =
-          ::ImmGetOpenStatus(IMEContext.get()) ? IMEState::OPEN :
-                                                 IMEState::CLOSED;
-      }
-#ifdef NS_ENABLE_TSF
-      if (mInputContext.mIMEState.mOpen == IMEState::CLOSED &&
-          nsTextStore::GetIMEOpenState()) {
+    case IMEState::PLUGIN:
+      if (IMEHandler::GetOpenState(this)) {
         mInputContext.mIMEState.mOpen = IMEState::OPEN;
       }
-#endif //NS_ENABLE_TSF
-    }
+      break;
   }
   return mInputContext;
 }
