@@ -15,4 +15,5 @@ subprocess.check_call(["hg", "clone", repo, dest])
 for f in files:
     subprocess.check_call(["cp", "%s/%s" % (dest, f), f])
     subprocess.check_call(["hg", "add", f])
-subprocess.check_call(["rm", "--recursive", "--force", dest])
+subprocess.check_call(["rm", "-rf", dest])
+
