@@ -60,4 +60,17 @@ interface nsIMobileConnectionProvider : nsISupports
                                            in unsigned short reason);
   nsIDOMDOMRequest setCallForwardingOption(in nsIDOMWindow          window,
                                            in nsIDOMMozMobileCFInfo CFInfo);
+
+  /**
+   * Secure Card Icc communication channel
+   */
+  nsIDOMDOMRequest iccOpenChannel(in nsIDOMWindow window,
+                                  in DOMString aid);
+
+  nsIDOMDOMRequest iccExchangeAPDU(in nsIDOMWindow window,
+                                   in long channel,
+                                   in jsval apdu);
+
+  nsIDOMDOMRequest iccCloseChannel(in nsIDOMWindow window,
+                                   in long channel);
 };

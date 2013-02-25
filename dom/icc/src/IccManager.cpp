@@ -157,6 +157,37 @@ IccManager::SendStkEventDownload(const JS::Value& aEvent)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+IccManager::IccOpenChannel(const nsAString& aAid, nsIDOMDOMRequest** aRequest)
+{
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->IccOpenChannel(GetOwner(), aAid, aRequest);
+}
+
+NS_IMETHODIMP
+IccManager::IccExchangeAPDU(int32_t aChannel, const jsval& aApdu, nsIDOMDOMRequest** aRequest)
+{
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->IccExchangeAPDU(GetOwner(), aChannel, aApdu, aRequest);
+}
+
+NS_IMETHODIMP
+IccManager::IccCloseChannel(int32_t aChannel, nsIDOMDOMRequest** aRequest)
+{
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->IccCloseChannel(GetOwner(), aChannel, aRequest);
+}
+
+
 NS_IMPL_EVENT_HANDLER(IccManager, stkcommand)
 NS_IMPL_EVENT_HANDLER(IccManager, stksessionend)
 

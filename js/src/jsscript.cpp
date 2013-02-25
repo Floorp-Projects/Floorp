@@ -1874,8 +1874,8 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
         return false;
 
     jsbytecode *code = ssd->data;
-    PodCopy<jsbytecode>(code, bce->prologBase(), prologLength);
-    PodCopy<jsbytecode>(code + prologLength, bce->base(), mainLength);
+    PodCopy<jsbytecode>(code, bce->prolog.code.begin(), prologLength);
+    PodCopy<jsbytecode>(code + prologLength, bce->code().begin(), mainLength);
     if (!FinishTakingSrcNotes(cx, bce, (jssrcnote *)(code + script->length)))
         return false;
     InitAtomMap(cx, bce->atomIndices.getMap(), ssd->atoms(script->length, nsrcnotes));
