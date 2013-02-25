@@ -726,8 +726,7 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, JSObject *wrapp
 {
     MOZ_ASSERT(js::GetObjectJSClass(holder) == &HolderClass);
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
-    if (!(flags & JSRESOLVE_ASSIGNING) &&
-        id == rt->GetStringID(XPCJSRuntime::IDX_MOZMATCHESSELECTOR) &&
+    if (id == rt->GetStringID(XPCJSRuntime::IDX_MOZMATCHESSELECTOR) &&
         Is<nsIDOMElement>(wrapper))
     {
         // XPC calling mechanism cannot handle call/bind properly in some cases
@@ -986,9 +985,8 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWra
           (id == rt->GetStringID(XPCJSRuntime::IDX_DOCUMENTURIOBJECT) &&
           Is<nsIDocument>(wrapper)))) {
         bool status;
-        Wrapper::Action action = (flags & JSRESOLVE_ASSIGNING) ? Wrapper::SET : Wrapper::GET;
         desc->obj = NULL; // default value
-        if (!jsWrapper.enter(cx, wrapper, id, action, &status))
+        if (!jsWrapper.enter(cx, wrapper, id, Wrapper::GET, &status))
             return status;
 
         desc->obj = wrapper;
@@ -1410,9 +1408,8 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
     }
 
     bool status;
-    Wrapper::Action action = (flags & JSRESOLVE_ASSIGNING) ? Wrapper::SET : Wrapper::GET;
     desc->obj = NULL; // default value
-    if (!this->enter(cx, wrapper, id, action, &status))
+    if (!this->enter(cx, wrapper, id, Wrapper::GET, &status))
         return status;
 
     typename Traits::ResolvingIdImpl resolving(wrapper, id);
@@ -1441,9 +1438,8 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
     if (AccessCheck::wrapperSubsumes(wrapper) &&
         id == rt->GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT)) {
         bool status;
-        Wrapper::Action action = (flags & JSRESOLVE_ASSIGNING) ? Wrapper::SET : Wrapper::GET;
         desc->obj = NULL; // default value
-        if (!this->enter(cx, wrapper, id, action, &status))
+        if (!this->enter(cx, wrapper, id, Wrapper::GET, &status))
             return status;
 
         desc->obj = wrapper;
@@ -1540,9 +1536,8 @@ XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wra
     }
 
     bool status;
-    Wrapper::Action action = (flags & JSRESOLVE_ASSIGNING) ? Wrapper::SET : Wrapper::GET;
     desc->obj = NULL; // default value
-    if (!this->enter(cx, wrapper, id, action, &status))
+    if (!this->enter(cx, wrapper, id, Wrapper::GET, &status))
         return status;
 
     typename Traits::ResolvingIdImpl resolving(wrapper, id);
@@ -1596,6 +1591,8 @@ XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, JSObject *wrapper, jsid
                                      desc->attrs);
     }
 
+    // NB: We still need JSRESOLVE_ASSIGNING here for the time being, because it
+    // tells things like nodelists whether they should create the property or not.
     PropertyDescriptor existing_desc;
     if (!getOwnPropertyDescriptor(cx, wrapper, id, &existing_desc, JSRESOLVE_ASSIGNING))
         return false;
