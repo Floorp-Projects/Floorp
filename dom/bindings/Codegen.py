@@ -1000,14 +1000,30 @@ class CGNamedConstructors(CGThing):
     def define(self):
         if len(self.descriptor.interface.namedConstructors) == 0:
             return ""
+
+        constructorID = "constructors::id::"
+        if self.descriptor.interface.hasInterfaceObject():
+            constructorID += self.descriptor.name
+        else:
+            constructorID += "_ID_Count"
+        nativePropertyHooks = """const NativePropertyHooks sNamedConstructorNativePropertyHooks = {
+    nullptr,
+    nullptr,
+    { nullptr, nullptr },
+    prototypes::id::%s,
+    %s,
+    nullptr
+};
+
+""" % (self.descriptor.name, constructorID)
         namedConstructors = CGList([], ",\n")
         for n in self.descriptor.interface.namedConstructors:
-            namedConstructors.append(CGGeneric("{ \"%s\", { %s, nullptr }, %i }" % (n.identifier.name, NamedConstructorName(n), methodLength(n))))
+            namedConstructors.append(CGGeneric("{ \"%s\", { %s, &sNamedConstructorNativePropertyHooks }, %i }" % (n.identifier.name, NamedConstructorName(n), methodLength(n))))
         namedConstructors.append(CGGeneric("{ nullptr, { nullptr, nullptr }, 0 }"))
         namedConstructors = CGWrapper(CGIndenter(namedConstructors),
                                       pre="static const NamedConstructor namedConstructors[] = {\n",
                                       post="\n};\n")
-        return namedConstructors.define()
+        return nativePropertyHooks + namedConstructors.define()
 
 class CGClassHasInstanceHook(CGAbstractStaticMethod):
     def __init__(self, descriptor):
