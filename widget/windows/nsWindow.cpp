@@ -7488,14 +7488,11 @@ nsWindow::OnIMESelectionChange(void)
   return IMEHandler::NotifyIME(this, NOTIFY_IME_OF_SELECTION_CHANGE);
 }
 
-#ifdef NS_ENABLE_TSF
 nsIMEUpdatePreference
 nsWindow::GetIMEUpdatePreference()
 {
-  return nsTextStore::GetIMEUpdatePreference();
+  return IMEHandler::GetUpdatePreference();
 }
-
-#endif //NS_ENABLE_TSF
 
 bool nsWindow::AssociateDefaultIMC(bool aAssociate)
 {
