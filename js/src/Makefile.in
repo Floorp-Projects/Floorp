@@ -11,28 +11,6 @@ srcdir		= @srcdir@
 run_for_side_effects := $(shell echo "MAKE: $(MAKE)")
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= config
-
-ifdef DEHYDRA_PATH
-DIRS += analysis-tests
-endif
-
-ifdef JS_NATIVE_EDITLINE
-DIRS += editline
-endif
-
-# editline needs to get built before the shell
-ifndef JS_DISABLE_SHELL
-DIRS += shell
-endif
-
-# FIXME: bug 530688 covers getting these working on Android
-ifneq ($(OS_ARCH),ANDROID)
-TEST_DIRS += jsapi-tests
-endif
-
-TEST_DIRS += tests gdb
-
 MODULE		    = js
 LIBRARY_NAME	    = mozjs
 STATIC_LIBRARY_NAME = js_static
