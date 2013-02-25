@@ -5315,11 +5315,29 @@ PresShell::MarkImagesInListVisible(const nsDisplayList& aList)
 void
 PresShell::RebuildImageVisibility(const nsDisplayList& aList)
 {
+  MOZ_ASSERT(!mImageVisibilityVisited, "already visited?");
+  mImageVisibilityVisited = true;
   nsTArray< nsCOMPtr<nsIImageLoadingContent > > beforeimagelist;
   beforeimagelist.SwapElements(mVisibleImages);
   MarkImagesInListVisible(aList);
   for (uint32_t i = 0; i < beforeimagelist.Length(); ++i) {
     beforeimagelist[i]->DecrementVisibleCount();
+  }
+}
+
+/* static */ void
+PresShell::ClearImageVisibilityVisited(nsView* aView, bool aClear)
+{
+  nsViewManager* vm = aView->GetViewManager();
+  if (aClear) {
+    PresShell* presShell = static_cast<PresShell*>(vm->GetPresShell());
+    if (!presShell->mImageVisibilityVisited) {
+      presShell->ClearVisibleImagesList();
+    }
+    presShell->mImageVisibilityVisited = false;
+  }
+  for (nsView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
+    ClearImageVisibilityVisited(v, v->GetViewManager() != vm);
   }
 }
 
@@ -5362,6 +5380,8 @@ PresShell::UpdateImageVisibility()
   builder.LeavePresShell(rootFrame, updateRect);
 
   RebuildImageVisibility(list);
+
+  ClearImageVisibilityVisited(rootFrame->GetView(), true);
 
   list.DeleteAll();
 }
@@ -5420,6 +5440,8 @@ PresShell::Paint(nsView*        aViewToPaint,
   SAMPLE_LABEL("Paint", "PresShell::Paint");
   NS_ASSERTION(!mIsDestroying, "painting a destroyed PresShell");
   NS_ASSERTION(aViewToPaint, "null view");
+
+  MOZ_ASSERT(!mImageVisibilityVisited, "should have been cleared");
 
   if (!mIsActive || mIsZombie) {
     return;
