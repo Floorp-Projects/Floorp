@@ -380,7 +380,11 @@ def run_app(harness_root_dir, manifest_rdf, harness_options,
             logfile=None, addons=None, args=None, extra_environment={},
             norun=None,
             used_files=None, enable_mobile=False,
-            mobile_app_name=None):
+            mobile_app_name=None,
+            env_root=None,
+            is_running_tests=False,
+            overload_modules=False,
+            bundle_sdk=True):
     if binary:
         binary = os.path.expanduser(binary)
 
@@ -391,6 +395,22 @@ def run_app(harness_root_dir, manifest_rdf, harness_options,
 
     cmdargs = []
     preferences = dict(DEFAULT_COMMON_PREFS)
+
+    # Overload global commonjs path with lib/ folders
+    file_scheme = "file://"
+    # win32 file scheme needs 3 slashes
+    if not env_root.startswith("/"):
+      file_scheme = file_scheme + "/"
+    addon_id = harness_options["jetpackID"]
+    pref_prefix = "extensions.modules." + addon_id + ".path"
+    if overload_modules:
+        preferences[pref_prefix] = file_scheme + \
+            os.path.join(env_root, "lib").replace("\\", "/") + "/"
+
+    # Overload tests/ mapping with test/ folder, only when running test
+    if is_running_tests:
+        preferences[pref_prefix + ".tests"] = file_scheme + \
+            os.path.join(env_root, "test").replace("\\", "/") + "/"
 
     # For now, only allow running on Mobile with --force-mobile argument
     if app_type in ["fennec", "fennec-on-device"] and not enable_mobile:
@@ -483,7 +503,8 @@ def run_app(harness_root_dir, manifest_rdf, harness_options,
               manifest=manifest_rdf,
               xpi_path=xpi_path,
               harness_options=harness_options,
-              limit_to=used_files)
+              limit_to=used_files,
+              bundle_sdk=bundle_sdk)
     addons.append(xpi_path)
 
     starttime = last_output_time = time.time()

@@ -10,6 +10,7 @@
 #include "nsGUIEvent.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/gfx/2D.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace layers {
@@ -184,6 +185,7 @@ protected:
   // reach one of the extremes of the page.
   int32_t mAcceleration;
   AsyncPanZoomController* mAsyncPanZoomController;
+  nsTArray<float> mVelocityQueue;
 };
 
 class AxisX : public Axis {

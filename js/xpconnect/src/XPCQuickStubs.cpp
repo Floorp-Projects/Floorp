@@ -436,7 +436,7 @@ ThrowCallFailed(JSContext *cx, nsresult rv,
     JSAutoByteString memberNameBytes;
     if (!memberName) {
         memberName = JSID_IS_STRING(memberId)
-                     ? memberNameBytes.encode(cx, JSID_TO_STRING(memberId))
+                     ? memberNameBytes.encodeLatin1(cx, JSID_TO_STRING(memberId))
                      : "unknown";
     }
     if (nsXPCException::NameAndFormatForNSResult(rv, &name, nullptr)
@@ -506,7 +506,7 @@ ThrowBadArg(JSContext *cx, nsresult rv, const char *ifaceName,
     JSAutoByteString memberNameBytes;
     if (!memberName) {
         memberName = JSID_IS_STRING(memberId)
-                     ? memberNameBytes.encode(cx, JSID_TO_STRING(memberId))
+                     ? memberNameBytes.encodeLatin1(cx, JSID_TO_STRING(memberId))
                      : "unknown";
     }
     sz = JS_smprintf("%s arg %u [%s.%s]",
@@ -881,7 +881,7 @@ xpc_qsJsvalToCharStr(JSContext *cx, jsval v, JSAutoByteString *bytes)
         if (!(str = JS_ValueToString(cx, v)))
             return false;
     }
-    return !!bytes->encode(cx, str);
+    return !!bytes->encodeLatin1(cx, str);
 }
 
 JSBool

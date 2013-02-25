@@ -66,20 +66,19 @@ typedef enum JSOp {
 #define JOF_ELEM          (3U<<5) /* obj[index] operation */
 #define JOF_MODEMASK      (7U<<5) /* mask for above addressing modes */
 #define JOF_SET           (1U<<8) /* set (i.e., assignment) operation */
-#define JOF_DEL           (1U<<9) /* delete operation */
+/* (1U<<9) is unused*/
 #define JOF_DEC          (1U<<10) /* decrement (--, not ++) opcode */
 #define JOF_INC          (2U<<10) /* increment (++, not --) opcode */
 #define JOF_INCDEC       (3U<<10) /* increment or decrement opcode */
 #define JOF_POST         (1U<<12) /* postorder increment or decrement */
-#define JOF_ASSIGNING     JOF_SET /* hint for Class.resolve, used for ops
-                                     that do simplex assignment */
+/* (1U<<13) is unused*/
 #define JOF_DETECTING    (1U<<14) /* object detection for warning-quelling */
-#define JOF_BACKPATCH    (1U<<15) /* backpatch placeholder during codegen */
+/* (1U<<15) is unused*/
 #define JOF_LEFTASSOC    (1U<<16) /* left-associative operator */
 /* (1U<<17) is unused */
 /* (1U<<18) is unused */
-#define JOF_PARENHEAD    (1U<<20) /* opcode consumes value of expression in
-                                     parenthesized statement head */
+/* (1U<<19) is unused*/
+/* (1U<<20) is unused*/
 #define JOF_INVOKE       (1U<<21) /* JSOP_CALL, JSOP_NEW, JSOP_EVAL */
 #define JOF_TMPSLOT      (1U<<22) /* interpreter uses extra temporary slot
                                      to root intermediate objects besides

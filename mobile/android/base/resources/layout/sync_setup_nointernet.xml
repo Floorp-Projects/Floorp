@@ -20,11 +20,16 @@
   </ScrollView>
 
   <LinearLayout
-    style="@style/SyncBottom" >
+    style="@style/SyncBottomContainer">
 
-    <Button
-      style="@style/SyncButton"
-      android:onClick="cancelClickHandler"
-      android:text="@string/sync_button_ok" />
+    <LinearLayout
+      style="@style/SyncBottom" >
+  
+      <Button
+        style="@style/SyncButton"
+        android:onClick="cancelClickHandler"
+        android:text="@string/sync_button_ok" />
+    </LinearLayout>
+
   </LinearLayout>
 </LinearLayout>

@@ -47,8 +47,10 @@ load 387033-1.xhtml
 load 387080-1.xul
 load 391974-1.html
 load 394120-1.xhtml
+skip-if(B2G) load 395609.xul # bug 844549
 load 397304-1.html
 load 398326-1.xhtml
+load 399013.xul
 load 400779-1.xhtml
 load 402912-1.xhtml
 load 408904-1.xul
@@ -61,6 +63,7 @@ load 432058-1.xul
 load 432068-1.xul
 load 432068-2.xul
 load 433296-1.xul
+load 433429.xul
 load 434458-1.xul
 load 460900-1.xul
 load 464149-1.xul

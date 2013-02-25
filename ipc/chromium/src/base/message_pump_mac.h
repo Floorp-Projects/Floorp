@@ -43,7 +43,7 @@ class NSAutoreleasePool;
 
 namespace base {
 
-class Time;
+class TimeTicks;
 
 class MessagePumpCFRunLoopBase : public MessagePump {
   // Needs access to CreateAutoreleasePool.
@@ -60,7 +60,7 @@ class MessagePumpCFRunLoopBase : public MessagePump {
   virtual void DoRun(Delegate* delegate) = 0;
 
   virtual void ScheduleWork();
-  virtual void ScheduleDelayedWork(const Time& delayed_work_time);
+  virtual void ScheduleDelayedWork(const TimeTicks& delayed_work_time);
 
  protected:
   // Accessors for private data members to be used by subclasses.

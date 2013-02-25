@@ -1706,7 +1706,7 @@ JSScript::Create(JSContext *cx, HandleObject enclosingScope, bool savedCallerFun
     PodZero(script.get());
     new (&script->bindings) Bindings;
 
-    script->enclosingScope_ = enclosingScope;
+    script->enclosingScopeOrOriginalFunction_ = enclosingScope;
     script->savedCallerFun = savedCallerFun;
 
     /* Establish invariant: principals implies originPrincipals. */
@@ -1999,13 +1999,13 @@ JSScript::enclosingScriptsCompiledSuccessfully() const
      * compiles. Thus, we can detect failed compilation by looking for
      * JSFunctions in the enclosingScope chain without scripts.
      */
-    RawObject enclosing = enclosingScope_;
+    RawObject enclosing = enclosingStaticScope();
     while (enclosing) {
         if (enclosing->isFunction()) {
             RawFunction fun = enclosing->toFunction();
             if (!fun->hasScript())
                 return false;
-            enclosing = fun->nonLazyScript()->enclosingScope_;
+            enclosing = fun->nonLazyScript()->enclosingStaticScope();
         } else {
             enclosing = enclosing->asStaticBlock().enclosingStaticScope();
         }
@@ -2428,6 +2428,10 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     dst->isGenerator = src->isGenerator;
     dst->isGeneratorExp = src->isGeneratorExp;
 
+    /* Copy over hints. */
+    dst->shouldCloneAtCallsite = src->shouldCloneAtCallsite;
+    dst->isCallsiteClone = src->isCallsiteClone;
+
     /*
      * initScriptCounts updates scriptCountsMap if necessary. The other script
      * maps in JSCompartment are populated lazily.
@@ -2752,8 +2756,8 @@ JSScript::markChildren(JSTracer *trc)
     if (function())
         MarkObject(trc, &function_, "function");
 
-    if (enclosingScope_)
-        MarkObject(trc, &enclosingScope_, "enclosing");
+    if (enclosingScopeOrOriginalFunction_)
+        MarkObject(trc, &enclosingScopeOrOriginalFunction_, "enclosing");
 
     if (IS_GC_MARKING_TRACER(trc)) {
         if (filename)

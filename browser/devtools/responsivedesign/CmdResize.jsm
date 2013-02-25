@@ -4,6 +4,11 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
+const BRAND_SHORT_NAME = Cc["@mozilla.org/intl/stringbundle;1"].
+                         getService(Ci.nsIStringBundleService).
+                         createBundle("chrome://branding/locale/brand.properties").
+                         GetStringFromName("brandShortName");
+
 this.EXPORTED_SYMBOLS = [ ];
 
 Cu.import("resource:///modules/devtools/gcli.jsm");
@@ -17,14 +22,14 @@ gcli.addCommand({
 gcli.addCommand({
   name: 'resize on',
   description: gcli.lookup('resizeModeOnDesc'),
-  manual: gcli.lookup('resizeModeManual'),
+  manual: gcli.lookupFormat('resizeModeManual', [BRAND_SHORT_NAME]),
   exec: gcli_cmd_resize
 });
 
 gcli.addCommand({
   name: 'resize off',
   description: gcli.lookup('resizeModeOffDesc'),
-  manual: gcli.lookup('resizeModeManual'),
+  manual: gcli.lookupFormat('resizeModeManual', [BRAND_SHORT_NAME]),
   exec: gcli_cmd_resize
 });
 
@@ -34,7 +39,7 @@ gcli.addCommand({
   buttonClass: "command-button",
   tooltipText: gcli.lookup("resizeModeToggleTooltip"),
   description: gcli.lookup('resizeModeToggleDesc'),
-  manual: gcli.lookup('resizeModeManual'),
+  manual: gcli.lookupFormat('resizeModeManual', [BRAND_SHORT_NAME]),
   state: {
     isChecked: function(aTarget) {
       let browserWindow = aTarget.tab.ownerDocument.defaultView;

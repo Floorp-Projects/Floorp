@@ -7,17 +7,17 @@
 #define mozilla_dom_CDATASection_h
 
 #include "nsIDOMCDATASection.h"
-#include "nsGenericDOMDataNode.h"
+#include "mozilla/dom/Text.h"
 
 namespace mozilla {
 namespace dom {
 
-class CDATASection : public nsGenericDOMDataNode,
+class CDATASection : public Text,
                      public nsIDOMCDATASection
 {
 public:
   CDATASection(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsGenericDOMDataNode(aNodeInfo)
+    : Text(aNodeInfo)
   {
     NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::CDATA_SECTION_NODE,
                       "Bad NodeType in aNodeInfo");
@@ -45,8 +45,6 @@ public:
 
   virtual nsGenericDOMDataNode* CloneDataNode(nsINodeInfo *aNodeInfo,
                                               bool aCloneText) const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 #ifdef DEBUG

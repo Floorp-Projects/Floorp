@@ -32,8 +32,8 @@ public class testFormHistory extends BaseTest {
         ContentResolver cr = context.getContentResolver();
         ContentValues[] cvs = new ContentValues[1];
         cvs[0] = new ContentValues();
-  
-	blockForGeckoReady();
+ 
+        blockForGeckoReady();
 
         Uri formHistoryUri;
         Uri insertUri;
@@ -99,7 +99,7 @@ public class testFormHistory extends BaseTest {
         numUpdated = cr.update(formHistoryUri, cvs[0], null, null);
         mAsserter.is(1, numUpdated, "Correct number updated");
         SqliteCompare(DB_NAME, "SELECT * FROM moz_formhistory", cvs);
-  
+ 
         numDeleted = cr.delete(formHistoryUri, null, null);
         mAsserter.is(1, numDeleted, "Correct number deleted");
         cvs = new ContentValues[0];
@@ -107,15 +107,15 @@ public class testFormHistory extends BaseTest {
     }
 
     public void tearDown() throws Exception {
-      // remove the entire signons.sqlite file
-      File profile = new File(mProfile);
-      File db = new File(profile, "formhistory.sqlite");
-      if (db.delete()) {
-          mAsserter.dumpLog("tearDown deleted "+db.toString());
-      } else {
-          mAsserter.dumpLog("tearDown did not delete "+db.toString());
-      }
+        // remove the entire signons.sqlite file
+        File profile = new File(mProfile);
+        File db = new File(profile, "formhistory.sqlite");
+        if (db.delete()) {
+            mAsserter.dumpLog("tearDown deleted "+db.toString());
+        } else {
+            mAsserter.dumpLog("tearDown did not delete "+db.toString());
+        }
 
-      super.tearDown();
+        super.tearDown();
     }
 }

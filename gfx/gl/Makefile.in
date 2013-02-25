@@ -2,42 +2,50 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= @DEPTH@
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = @DEPTH@
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= gl
-LIBRARY_NAME	= gl
-LIBXUL_LIBRARY	= 1
-EXPORT_LIBRARY	= 1
+MODULE           = gl
+LIBRARY_NAME     = gl
+LIBXUL_LIBRARY   = 1
+EXPORT_LIBRARY   = 1
 FAIL_ON_WARNINGS = 1
 
 EXPORTS	= \
-	GLDefs.h \
-	GLContext.h \
-	GLContextTypes.h \
-	GLContextSymbols.h \
-	GLContextProvider.h \
-	GLContextProviderImpl.h \
-	GLLibraryLoader.h \
-	ForceDiscreteGPUHelperCGL.h \
-	GLTextureImage.h \
-	$(NULL)
+  ForceDiscreteGPUHelperCGL.h \
+  GLContext.h \
+  GLContextProvider.h \
+  GLContextProviderImpl.h \
+  GLContextSymbols.h \
+  GLContextTypes.h \
+  GLDefs.h \
+  GLLibraryLoader.h \
+  GLLibraryEGL.h \
+  GLScreenBuffer.h \
+  GLTextureImage.h \
+  SharedSurface.h \
+  SharedSurfaceEGL.h \
+  SharedSurfaceGL.h \
+  SurfaceFactory.h \
+  SurfaceStream.h \
+  SurfaceTypes.h \
+  $(NULL)
 
 ifdef MOZ_X11
 EXPORTS += \
-	GLXLibrary.h \
-	$(NULL)
+  GLXLibrary.h \
+  $(NULL)
 endif
 
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 EXPORTS	+= \
-	WGLLibrary.h \
-	$(NULL)
+  WGLLibrary.h \
+  $(NULL)
 ifdef MOZ_WEBGL
 DEFINES += -DMOZ_WEBGL
 DEFINES += -DMOZ_D3DCOMPILER_DLL=$(MOZ_D3DCOMPILER_DLL)
@@ -45,11 +53,18 @@ endif
 endif
 
 CPPSRCS	= \
-	GLContext.cpp \
-	GLContextUtils.cpp \
-	GLLibraryLoader.cpp \
-	GLTextureImage.cpp \
-	$(NULL)
+  GLContext.cpp \
+  GLContextTypes.cpp \
+  GLContextUtils.cpp \
+  GLLibraryLoader.cpp \
+  GLScreenBuffer.cpp \
+  GLTextureImage.cpp \
+  SharedSurface.cpp \
+  SharedSurfaceEGL.cpp \
+  SharedSurfaceGL.cpp \
+  SurfaceFactory.cpp \
+  SurfaceStream.cpp \
+  $(NULL)
 
 GL_PROVIDER = Null
 
@@ -107,9 +122,15 @@ endif
 
 # Win32 is a special snowflake, for ANGLE
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+EXPORTS += \
+  SharedSurfaceANGLE.h \
+  $(NULL)
+
 CPPSRCS += \
-	GLContextProviderEGL.cpp \
-	GLLibraryEGL.cpp
+  GLContextProviderEGL.cpp \
+  GLLibraryEGL.cpp \
+  SharedSurfaceANGLE.cpp \
+  $(NULL)
 endif
 
 ifdef MOZ_ANDROID_OMTC
@@ -121,4 +142,4 @@ include $(topsrcdir)/config/rules.mk
 DEFINES := $(filter-out -DUNICODE,$(DEFINES))
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS) $(TK_CFLAGS)
-CFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS) $(TK_CFLAGS)
+CFLAGS   += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS) $(TK_CFLAGS)

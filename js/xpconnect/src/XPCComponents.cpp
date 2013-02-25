@@ -320,7 +320,7 @@ nsXPCComponents_Interfaces::NewResolve(nsIXPConnectWrappedNative *wrapper,
     JSAutoByteString name;
     if (mManager &&
         JSID_IS_STRING(id) &&
-        name.encode(cx, JSID_TO_STRING(id)) &&
+        name.encodeLatin1(cx, JSID_TO_STRING(id)) &&
         name.ptr()[0] != '{') { // we only allow interfaces by name here
         nsCOMPtr<nsIInterfaceInfo> info;
         mManager->GetInfoForName(name.ptr(), getter_AddRefs(info));
@@ -916,7 +916,7 @@ nsXPCComponents_Classes::NewResolve(nsIXPConnectWrappedNative *wrapper,
     JSAutoByteString name;
 
     if (JSID_IS_STRING(id) &&
-        name.encode(cx, JSID_TO_STRING(id)) &&
+        name.encodeLatin1(cx, JSID_TO_STRING(id)) &&
         name.ptr()[0] != '{') { // we only allow contractids here
         nsCOMPtr<nsIJSCID> nsid =
             dont_AddRef(static_cast<nsIJSCID*>(nsJSCID::NewID(name.ptr())));
@@ -1172,7 +1172,7 @@ nsXPCComponents_ClassesByID::NewResolve(nsIXPConnectWrappedNative *wrapper,
     JSAutoByteString name;
 
     if (JSID_IS_STRING(id) &&
-        name.encode(cx, JSID_TO_STRING(id)) &&
+        name.encodeLatin1(cx, JSID_TO_STRING(id)) &&
         name.ptr()[0] == '{' &&
         IsRegisteredCLSID(name.ptr())) { // we only allow canonical CLSIDs here
         nsCOMPtr<nsIJSCID> nsid =
@@ -1398,7 +1398,7 @@ nsXPCComponents_Results::NewResolve(nsIXPConnectWrappedNative *wrapper,
 {
     JSAutoByteString name;
 
-    if (JSID_IS_STRING(id) && name.encode(cx, JSID_TO_STRING(id))) {
+    if (JSID_IS_STRING(id) && name.encodeLatin1(cx, JSID_TO_STRING(id))) {
         const char* rv_name;
         void* iter = nullptr;
         nsresult rv;
@@ -1618,7 +1618,7 @@ nsXPCComponents_ID::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
     nsID id;
 
     if (!(jsstr = JS_ValueToString(cx, argv[0])) ||
-        !bytes.encode(cx, jsstr) ||
+        !bytes.encodeLatin1(cx, jsstr) ||
         !id.Parse(bytes.ptr())) {
         return ThrowAndFail(NS_ERROR_XPC_BAD_ID_STRING, cx, _retval);
     }
@@ -1872,7 +1872,7 @@ struct NS_STACK_CLASS ExceptionArgParser
         JSString *str = JS_ValueToString(cx, v);
         if (!str)
            return false;
-        eMsg = messageBytes.encode(cx, str);
+        eMsg = messageBytes.encodeLatin1(cx, str);
         return !!eMsg;
     }
 
@@ -2496,7 +2496,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
     if (argc >= 3) {
         // argv[2] is an initializer function or property name
         JSString* str = JS_ValueToString(cx, argv[2]);
-        if (!str || !(cInitializer = cInitializerBytes.encode(cx, str)))
+        if (!str || !(cInitializer = cInitializerBytes.encodeLatin1(cx, str)))
             return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
     }
 
@@ -3838,7 +3838,7 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
             return NS_ERROR_INVALID_ARG;
 
         JSAutoByteString filenameBytes;
-        if (!filenameBytes.encode(cx, filenameStr))
+        if (!filenameBytes.encodeLatin1(cx, filenameStr))
             return NS_ERROR_INVALID_ARG;
         filename = filenameBytes.ptr();
     } else {

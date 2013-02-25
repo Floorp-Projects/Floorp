@@ -25,16 +25,16 @@ include $$(topsrcdir)/config/rules.mk
 """
 
 def makefileString(entries):
-  if not len(entries):
-    return "  $(NULL)"
-  return "\n".join(["  %s \\" % (entry, ) for entry in entries]) + "\n  $(NULL)"
+    if not len(entries):
+        return "  $(NULL)"
+    return "\n".join(["  %s \\" % (entry, ) for entry in entries]) + "\n  $(NULL)"
 
 def assignList(variable, entries):
-  return "%s := \\\n%s" % (variable, makefileString(entries))
+    return "%s := \\\n%s" % (variable, makefileString(entries))
 
 def substMakefile(caller, subdirs, files):
-  return string.Template(makefileTemplate).substitute({
-    "caller": caller,
-    "dirs": assignList("DIRS", subdirs),
-    "files": assignList("MOCHITEST_FILES", files) if files else ""
-  })
+    return string.Template(makefileTemplate).substitute({
+      "caller": caller,
+      "dirs": assignList("DIRS", subdirs),
+      "files": assignList("MOCHITEST_FILES", files) if files else ""
+    })

@@ -35,8 +35,6 @@ public:
   virtual nsresult Clone(nsINodeInfo* aNodeInfo,
                          nsINode** aResult) const MOZ_OVERRIDE;
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
 protected:
@@ -61,7 +59,7 @@ NS_INTERFACE_TABLE_HEAD(HTMLElement)
   NS_HTML_CONTENT_INTERFACE_TABLE0(HTMLElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLElement,
                                                nsGenericHTMLElement)
-NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLElement)
 
@@ -101,5 +99,3 @@ NS_NewHTMLElement(already_AddRefed<nsINodeInfo> aNodeInfo,
 {
   return new mozilla::dom::HTMLElement(aNodeInfo);
 }
-
-DOMCI_NODE_DATA(HTMLElement, mozilla::dom::HTMLElement)

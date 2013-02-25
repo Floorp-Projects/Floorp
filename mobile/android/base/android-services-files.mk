@@ -306,6 +306,10 @@ SYNC_RES_VALUES := \
   res/values/sync_styles.xml \
   $(NULL)
 
+SYNC_RES_VALUES_V11 := \
+  res/values-v11/sync_styles.xml \
+  $(NULL)
+
 SYNC_RES_VALUES_LARGE_V11 := \
   res/values-large-v11/sync_styles.xml \
   $(NULL)

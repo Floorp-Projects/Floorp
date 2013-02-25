@@ -16,7 +16,6 @@
 #include "mozilla/dom/HTMLTableCellElementBinding.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(TableCell)
-DOMCI_NODE_DATA(HTMLTableCellElement, mozilla::dom::HTMLTableCellElement)
 
 namespace mozilla {
 namespace dom {
@@ -41,7 +40,7 @@ NS_INTERFACE_TABLE_HEAD(HTMLTableCellElement)
                                    nsIDOMHTMLTableCellElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLTableCellElement,
                                                nsGenericHTMLElement)
-NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLTableCellElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 NS_IMPL_ELEMENT_CLONE(HTMLTableCellElement)

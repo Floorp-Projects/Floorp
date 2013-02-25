@@ -114,7 +114,7 @@ void MessagePumpForUI::ScheduleWork() {
   mozilla::NotifyEvent();
 }
 
-void MessagePumpForUI::ScheduleDelayedWork(const Time& delayed_work_time) {
+void MessagePumpForUI::ScheduleDelayedWork(const TimeTicks& delayed_work_time) {
   // We need to wake up the loop in case the poll timeout needs to be
   // adjusted.  This will cause us to try to do work, but that's ok.
   delayed_work_time_ = delayed_work_time;

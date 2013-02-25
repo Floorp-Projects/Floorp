@@ -11,25 +11,25 @@ include $(DEPTH)/config/autoconf.mk
 
 # Theme Selection
 #
-# MacOS X                 Pinstripe (toolkit/themes/pinstripe)
-# Windows                 Winstripe (toolkit/themes/winstripe)
-# GNOME/Linux             Winstripe (toolkit/themes/winstripe) + 
-#                         GNOMEStripe overrides (toolkit/themes/gnomestripe)
-# OS/2                    Winstripe (toolkit/themes/winstripe) + 
-#                         PMStripe overrides (toolkit/themes/pmstripe)
-# faststripe              Winstripe + faststripe (no native theme components)
+# MacOS X                 osx (toolkit/themes/osx)
+# Windows                 windows (toolkit/themes/windows)
+# GNOME/Linux             windows (toolkit/themes/windows) + 
+#                         linux overrides (toolkit/themes/linux)
+# OS/2                    windows (toolkit/themes/windows) + 
+#                         os2 overrides (toolkit/themes/os2)
+# faststripe              windows + faststripe (no native theme components)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-DIRS	= pinstripe
+DIRS	= osx
 else
 
-DIRS	= winstripe
+DIRS	= windows
 
 ifneq (,$(filter gtk2 qt,$(MOZ_WIDGET_TOOLKIT)))
-DIRS    += gnomestripe
+DIRS += linux
 endif
 ifneq (,$(filter os2,$(MOZ_WIDGET_TOOLKIT)))
-DIRS += pmstripe/global
+DIRS += os2/global
 endif
 ifdef MOZ_THEME_FASTSTRIPE
 DIRS += faststripe/global

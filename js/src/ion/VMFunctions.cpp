@@ -18,6 +18,8 @@
 
 #include "builtin/ParallelArray.h"
 
+#include "frontend/TokenStream.h"
+
 #include "jsboolinlines.h"
 #include "jsinterpinlines.h"
 
@@ -62,7 +64,7 @@ InvokeFunction(JSContext *cx, HandleFunction fun0, uint32_t argc, Value *argv, V
             return false;
 
         // Clone function at call site if needed.
-        if (fun->isCloneAtCallsite()) {
+        if (fun->nonLazyScript()->shouldCloneAtCallsite) {
             RootedScript script(cx);
             jsbytecode *pc;
             types::TypeScript::GetPcScript(cx, script.address(), &pc);
@@ -513,6 +515,39 @@ CreateThis(JSContext *cx, HandleObject callee, MutableHandleValue rval)
     }
 
     return true;
+}
+
+void
+GetDynamicName(JSContext *cx, JSObject *scopeChain, JSString *str, Value *vp)
+{
+    // Lookup a string on the scope chain, returning either the value found or
+    // undefined through rval. This function is infallible, and cannot GC or
+    // invalidate.
+
+    JSAtom *atom;
+    if (str->isAtom()) {
+        atom = &str->asAtom();
+    } else {
+        atom = AtomizeString<NoGC>(cx, str);
+        if (!atom) {
+            vp->setUndefined();
+            return;
+        }
+    }
+
+    if (!frontend::IsIdentifier(atom) || frontend::FindKeyword(atom->chars(), atom->length())) {
+        vp->setUndefined();
+        return;
+    }
+
+    Shape *shape = NULL;
+    JSObject *scope = NULL, *pobj = NULL;
+    if (LookupNameNoGC(cx, atom->asPropertyName(), scopeChain, &scope, &pobj, &shape)) {
+        if (FetchNameNoGC(pobj, shape, MutableHandleValue::fromMarkedLocation(vp)))
+            return;
+    }
+
+    vp->setUndefined();
 }
 
 bool

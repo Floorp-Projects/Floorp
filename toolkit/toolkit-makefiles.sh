@@ -124,6 +124,7 @@ MAKEFILES_gfx="
   gfx/2d/Makefile
   gfx/angle/Makefile
   gfx/gl/Makefile
+  gfx/graphite2/src/Makefile
   gfx/harfbuzz/src/Makefile
   gfx/ipc/Makefile
   gfx/layers/Makefile
@@ -621,9 +622,9 @@ elif [ "$MOZ_WIDGET_TOOLKIT" = "cocoa" ]; then
     intl/locale/src/mac/Makefile
     netwerk/system/mac/Makefile
     toolkit/system/osxproxy/Makefile
-    toolkit/themes/pinstripe/Makefile
-    toolkit/themes/pinstripe/global/Makefile
-    toolkit/themes/pinstripe/mozapps/Makefile
+    toolkit/themes/osx/Makefile
+    toolkit/themes/osx/global/Makefile
+    toolkit/themes/osx/mozapps/Makefile
     toolkit/components/alerts/mac/Makefile
     toolkit/components/alerts/mac/growl/Makefile
     widget/cocoa/Makefile
@@ -663,7 +664,7 @@ elif [ "$MOZ_WIDGET_TOOLKIT" = "os2" ]; then
   add_makefiles "
     image/decoders/icon/os2/Makefile
     intl/locale/src/os2/Makefile
-    toolkit/themes/pmstripe/global/Makefile
+    toolkit/themes/os2/global/Makefile
     widget/os2/Makefile
     xpcom/reflect/xptcall/src/md/os2/Makefile
   "
@@ -671,9 +672,9 @@ fi
 
 if [ "$MOZ_WIDGET_TOOLKIT" != "cocoa" ]; then
   add_makefiles "
-    toolkit/themes/winstripe/Makefile
-    toolkit/themes/winstripe/global/Makefile
-    toolkit/themes/winstripe/mozapps/Makefile
+    toolkit/themes/windows/Makefile
+    toolkit/themes/windows/global/Makefile
+    toolkit/themes/windows/mozapps/Makefile
   "
   if [ "$MOZ_THEME_FASTSTRIPE" ]; then
     add_makefiles "
@@ -687,9 +688,9 @@ if [ "$MOZ_WIDGET_TOOLKIT" = "gtk2" -o "$MOZ_WIDGET_TOOLKIT" = "qt" ]; then
     content/xbl/builtin/unix/Makefile
     dom/system/unix/Makefile
     toolkit/system/unixproxy/Makefile
-    toolkit/themes/gnomestripe/Makefile
-    toolkit/themes/gnomestripe/global/Makefile
-    toolkit/themes/gnomestripe/mozapps/Makefile
+    toolkit/themes/linux/Makefile
+    toolkit/themes/linux/global/Makefile
+    toolkit/themes/linux/mozapps/Makefile
   "
 fi
 
@@ -1121,7 +1122,7 @@ if [ "$ENABLE_TESTS" ]; then
   fi
   if [ "$MOZ_WIDGET_TOOLKIT" = "cocoa" ]; then
     add_makefiles "
-      toolkit/themes/pinstripe/mochitests/Makefile
+      toolkit/themes/osx/mochitests/Makefile
     "
   else
     add_makefiles "
@@ -1336,27 +1337,21 @@ if [ "$MOZ_FEEDS" ]; then
   "
 fi
 
-if [ "$MOZ_GRAPHITE" ]; then
-  add_makefiles "
-    gfx/graphite2/src/Makefile
-  "
-fi
-
 if [ "$MOZ_HELP_VIEWER" ]; then
   add_makefiles "
     toolkit/components/help/Makefile
   "
   if [ "$MOZ_WIDGET_TOOLKIT" = "cocoa" ]; then
     add_makefiles "
-      toolkit/themes/pinstripe/help/Makefile
+      toolkit/themes/osx/help/Makefile
     "
   else
     add_makefiles "
-      toolkit/themes/winstripe/help/Makefile
+      toolkit/themes/windows/help/Makefile
     "
     if [ "$MOZ_WIDGET_TOOLKIT" = "gtk2" -o "$MOZ_WIDGET_TOOLKIT" = "qt" ]; then
       add_makefiles "
-        toolkit/themes/gnomestripe/help/Makefile
+        toolkit/themes/linux/help/Makefile
       "
     fi
   fi

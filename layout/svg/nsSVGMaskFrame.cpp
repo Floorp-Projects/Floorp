@@ -114,14 +114,14 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsRenderingContext *aContext,
   uint8_t *data   = image->Data();
   int32_t  stride = image->Stride();
 
-  nsIntRect rect(0, 0, surfaceSize.width, surfaceSize.height);
-  nsSVGUtils::UnPremultiplyImageDataAlpha(data, stride, rect);
-  if (StyleSVG()->mColorInterpolation ==
-      NS_STYLE_COLOR_INTERPOLATION_LINEARRGB) {
-    nsSVGUtils::ConvertImageDataToLinearRGB(data, stride, rect);
-  }
-
   if (StyleSVGReset()->mMaskType == NS_STYLE_MASK_TYPE_LUMINANCE) {
+    nsIntRect rect(0, 0, surfaceSize.width, surfaceSize.height);
+    nsSVGUtils::UnPremultiplyImageDataAlpha(data, stride, rect);
+    if (StyleSVG()->mColorInterpolation ==
+        NS_STYLE_COLOR_INTERPOLATION_LINEARRGB) {
+      nsSVGUtils::ConvertImageDataToLinearRGB(data, stride, rect);
+    }
+
     for (int32_t y = 0; y < surfaceSize.height; y++) {
       for (int32_t x = 0; x < surfaceSize.width; x++) {
         uint8_t *pixel = data + stride * y + 4 * x;

@@ -16,7 +16,6 @@ prefBranch.setIntPref("browser.startup.page", 0);
 prefBranch.setCharPref("browser.startup.homepage_override.mstone", "ignore");
 
 function startTest() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
                       .getInterface(Ci.nsIWebNavigation)
                       .QueryInterface(Ci.nsIDocShellTreeItem)

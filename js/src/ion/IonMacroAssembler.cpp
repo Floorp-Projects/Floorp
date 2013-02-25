@@ -18,60 +18,112 @@
 using namespace js;
 using namespace js::ion;
 
-template <typename T> void
-MacroAssembler::guardTypeSet(const T &address, const types::TypeSet *types,
-                             Register scratch, Label *mismatched)
+// Emulate a TypeSet logic from a Type object to avoid duplicating the guard
+// logic.
+class TypeWrapper {
+    types::Type t_;
+
+  public:
+    TypeWrapper(types::Type t) : t_(t) {}
+
+    inline bool unknown() const {
+        return t_.isUnknown();
+    }
+    inline bool hasType(types::Type t) const {
+        if (t == types::Type::Int32Type())
+            return t == t_ || t_ == types::Type::DoubleType();
+        return t == t_;
+    }
+    inline unsigned getObjectCount() const {
+        if (t_.isAnyObject() || t_.isUnknown() || !t_.isObject())
+            return 0;
+        return 1;
+    }
+    inline JSObject *getSingleObject(unsigned) const {
+        if (t_.isSingleObject())
+            return t_.singleObject();
+        return NULL;
+    }
+    inline types::TypeObject *getTypeObject(unsigned) const {
+        if (t_.isTypeObject())
+            return t_.typeObject();
+        return NULL;
+    }
+};
+
+template <typename Source, typename TypeSet> void
+MacroAssembler::guardTypeSet(const Source &address, const TypeSet *types,
+                             Register scratch, Label *matched, Label *miss)
 {
     JS_ASSERT(!types->unknown());
 
-    Label matched;
     Register tag = extractTag(address, scratch);
 
     if (types->hasType(types::Type::DoubleType())) {
         // The double type also implies Int32.
         JS_ASSERT(types->hasType(types::Type::Int32Type()));
-        branchTestNumber(Equal, tag, &matched);
+        branchTestNumber(Equal, tag, matched);
     } else if (types->hasType(types::Type::Int32Type())) {
-        branchTestInt32(Equal, tag, &matched);
+        branchTestInt32(Equal, tag, matched);
     }
 
     if (types->hasType(types::Type::UndefinedType()))
-        branchTestUndefined(Equal, tag, &matched);
+        branchTestUndefined(Equal, tag, matched);
     if (types->hasType(types::Type::BooleanType()))
-        branchTestBoolean(Equal, tag, &matched);
+        branchTestBoolean(Equal, tag, matched);
     if (types->hasType(types::Type::StringType()))
-        branchTestString(Equal, tag, &matched);
+        branchTestString(Equal, tag, matched);
     if (types->hasType(types::Type::NullType()))
-        branchTestNull(Equal, tag, &matched);
+        branchTestNull(Equal, tag, matched);
 
     if (types->hasType(types::Type::AnyObjectType())) {
-        branchTestObject(Equal, tag, &matched);
+        branchTestObject(Equal, tag, matched);
     } else if (types->getObjectCount()) {
-        branchTestObject(NotEqual, tag, mismatched);
+        branchTestObject(NotEqual, tag, miss);
         Register obj = extractObject(address, scratch);
 
         unsigned count = types->getObjectCount();
         for (unsigned i = 0; i < count; i++) {
             if (JSObject *object = types->getSingleObject(i))
-                branchPtr(Equal, obj, ImmGCPtr(object), &matched);
+                branchPtr(Equal, obj, ImmGCPtr(object), matched);
         }
 
         loadPtr(Address(obj, JSObject::offsetOfType()), scratch);
 
         for (unsigned i = 0; i < count; i++) {
             if (types::TypeObject *object = types->getTypeObject(i))
-                branchPtr(Equal, scratch, ImmGCPtr(object), &matched);
+                branchPtr(Equal, scratch, ImmGCPtr(object), matched);
         }
     }
-
-    jump(mismatched);
-    bind(&matched);
 }
 
+template <typename Source> void
+MacroAssembler::guardType(const Source &address, types::Type type,
+                          Register scratch, Label *matched, Label *miss)
+{
+    TypeWrapper wrapper(type);
+    guardTypeSet(address, &wrapper, scratch, matched, miss);
+}
+
+template void MacroAssembler::guardTypeSet(const Address &address, const types::StackTypeSet *types,
+                                           Register scratch, Label *matched, Label *miss);
+template void MacroAssembler::guardTypeSet(const ValueOperand &value, const types::StackTypeSet *types,
+                                           Register scratch, Label *matched, Label *miss);
+
 template void MacroAssembler::guardTypeSet(const Address &address, const types::TypeSet *types,
-                                           Register scratch, Label *mismatched);
+                                           Register scratch, Label *matched, Label *miss);
 template void MacroAssembler::guardTypeSet(const ValueOperand &value, const types::TypeSet *types,
-                                           Register scratch, Label *mismatched);
+                                           Register scratch, Label *matched, Label *miss);
+
+template void MacroAssembler::guardTypeSet(const Address &address, const TypeWrapper *types,
+                                           Register scratch, Label *matched, Label *miss);
+template void MacroAssembler::guardTypeSet(const ValueOperand &value, const TypeWrapper *types,
+                                           Register scratch, Label *matched, Label *miss);
+
+template void MacroAssembler::guardType(const Address &address, types::Type type,
+                                        Register scratch, Label *matched, Label *miss);
+template void MacroAssembler::guardType(const ValueOperand &value, types::Type type,
+                                        Register scratch, Label *matched, Label *miss);
 
 void
 MacroAssembler::PushRegsInMask(RegisterSet set)

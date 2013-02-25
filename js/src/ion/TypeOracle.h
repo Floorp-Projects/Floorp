@@ -163,6 +163,9 @@ class TypeOracle
     virtual bool canInlineCall(HandleScript caller, jsbytecode *pc) {
         return false;
     }
+    virtual types::TypeBarrier *callArgsBarrier(HandleScript caller, jsbytecode *pc) {
+        return NULL;
+    }
     virtual bool canEnterInlinedFunction(RawScript caller, jsbytecode *pc, RawFunction callee) {
         return false;
     }
@@ -278,6 +281,7 @@ class TypeInferenceOracle : public TypeOracle
     MIRType elementWrite(UnrootedScript script, jsbytecode *pc);
     bool canInlineCalls();
     bool canInlineCall(HandleScript caller, jsbytecode *pc);
+    types::TypeBarrier *callArgsBarrier(HandleScript caller, jsbytecode *pc);
     bool canEnterInlinedFunction(RawScript caller, jsbytecode *pc, RawFunction callee);
     types::StackTypeSet *aliasedVarBarrier(UnrootedScript script, jsbytecode *pc, types::StackTypeSet **barrier);
 

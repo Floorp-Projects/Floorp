@@ -7,7 +7,6 @@
 #include "mozilla/dom/HTMLElementBinding.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Unknown)
-DOMCI_NODE_DATA(HTMLUnknownElement, mozilla::dom::HTMLUnknownElement)
 
 namespace mozilla {
 namespace dom {
@@ -28,7 +27,7 @@ NS_INTERFACE_TABLE_HEAD(HTMLUnknownElement)
                                    nsIDOMHTMLUnknownElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLUnknownElement,
                                                nsGenericHTMLElement)
-NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLUnknownElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLUnknownElement)
 

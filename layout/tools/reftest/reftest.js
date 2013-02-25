@@ -1110,11 +1110,13 @@ function Focus()
 
     var fm = CC["@mozilla.org/focus-manager;1"].getService(CI.nsIFocusManager);
     fm.focusedWindow = gContainingWindow;
+#ifdef XP_MACOSX
     try {
         var dock = CC["@mozilla.org/widget/macdocksupport;1"].getService(CI.nsIMacDockSupport);
         dock.activateApplication(true);
     } catch(ex) {
     }
+#endif // XP_MACOSX
     return true;
 }
 

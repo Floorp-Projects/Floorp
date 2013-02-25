@@ -277,11 +277,8 @@ gfxFontEntry::TryGetSVGData()
 class gfxFontEntry::FontTableBlobData {
 public:
     // Adopts the content of aBuffer.
-    // Pass a non-null aHashEntry only if it should be cleared if/when this
-    // FontTableBlobData is deleted.
-    FontTableBlobData(FallibleTArray<uint8_t>& aBuffer,
-                      FontTableHashEntry *aHashEntry)
-        : mHashEntry(aHashEntry), mHashtable()
+    FontTableBlobData(FallibleTArray<uint8_t>& aBuffer)
+        : mHashtable(nullptr), mHashKey(0)
     {
         MOZ_COUNT_CTOR(FontTableBlobData);
         mTableData.SwapElements(aBuffer);
@@ -289,12 +286,8 @@ public:
 
     ~FontTableBlobData() {
         MOZ_COUNT_DTOR(FontTableBlobData);
-        if (mHashEntry) {
-            if (mHashtable) {
-                mHashtable->RemoveEntry(mHashEntry->GetKey());
-            } else {
-                mHashEntry->Clear();
-            }
+        if (mHashtable && mHashKey) {
+            mHashtable->RemoveEntry(mHashKey);
         }
     }
 
@@ -307,16 +300,19 @@ public:
 
     // Tell this FontTableBlobData to remove the HashEntry when this is
     // destroyed.
-    void ManageHashEntry(nsTHashtable<FontTableHashEntry> *aHashtable)
+    void ManageHashEntry(nsTHashtable<FontTableHashEntry> *aHashtable,
+                         uint32_t aHashKey)
     {
         mHashtable = aHashtable;
+        mHashKey = aHashKey;
     }
 
     // Disconnect from the HashEntry (because the blob has already been
     // removed from the hashtable).
     void ForgetHashEntry()
     {
-        mHashEntry = nullptr;
+        mHashtable = nullptr;
+        mHashKey = 0;
     }
 
     size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
@@ -329,25 +325,15 @@ public:
 private:
     // The font table data block, owned (via adoption)
     FallibleTArray<uint8_t> mTableData;
-    // The blob destroy function needs to know the hashtable entry,
-    FontTableHashEntry *mHashEntry;
-    // and the owning hashtable, so that it can remove the entry.
+
+    // The blob destroy function needs to know the owning hashtable
+    // and the hashtable key, so that it can remove the entry.
     nsTHashtable<FontTableHashEntry> *mHashtable;
+    uint32_t                          mHashKey;
 
     // not implemented
     FontTableBlobData(const FontTableBlobData&);
 };
-
-void
-gfxFontEntry::FontTableHashEntry::SaveTable(FallibleTArray<uint8_t>& aTable)
-{
-    Clear();
-    // adopts elements of aTable
-    FontTableBlobData *data = new FontTableBlobData(aTable, nullptr);
-    mBlob = hb_blob_create(data->GetTable(), data->GetTableLength(),
-                           HB_MEMORY_MODE_READONLY,
-                           data, DeleteFontTableBlobData);    
-}
 
 hb_blob_t *
 gfxFontEntry::FontTableHashEntry::
@@ -356,7 +342,7 @@ ShareTableAndGetBlob(FallibleTArray<uint8_t>& aTable,
 {
     Clear();
     // adopts elements of aTable
-    mSharedBlobData = new FontTableBlobData(aTable, this);
+    mSharedBlobData = new FontTableBlobData(aTable);
     mBlob = hb_blob_create(mSharedBlobData->GetTable(),
                            mSharedBlobData->GetTableLength(),
                            HB_MEMORY_MODE_READONLY,
@@ -370,7 +356,7 @@ ShareTableAndGetBlob(FallibleTArray<uint8_t>& aTable,
 
     // Tell the FontTableBlobData to remove this hash entry when destroyed.
     // The hashtable does not keep a strong reference.
-    mSharedBlobData->ManageHashEntry(aHashtable);
+    mSharedBlobData->ManageHashEntry(aHashtable, GetKey());
     return mBlob;
 }
 
@@ -445,7 +431,6 @@ gfxFontEntry::ShareFontTableAndGetBlob(uint32_t aTag,
     return entry->ShareTableAndGetBlob(*aBuffer, &mFontTableCache);
 }
 
-#ifdef MOZ_GRAPHITE
 void
 gfxFontEntry::CheckForGraphiteTables()
 {
@@ -453,7 +438,6 @@ gfxFontEntry::CheckForGraphiteTables()
     mHasGraphiteTables =
         NS_SUCCEEDED(GetFontTable(TRUETYPE_TAG('S','i','l','f'), buffer));
 }
-#endif
 
 /* static */ size_t
 gfxFontEntry::FontTableHashEntry::SizeOfEntryExcludingThis
@@ -2556,12 +2540,10 @@ gfxFont::ShapeText(gfxContext      *aContext,
 {
     bool ok = false;
 
-#ifdef MOZ_GRAPHITE
     if (mGraphiteShaper && gfxPlatform::GetPlatform()->UseGraphiteShaping()) {
         ok = mGraphiteShaper->ShapeText(aContext, aText, aOffset, aLength,
                                         aScript, aShapedText);
     }
-#endif
 
     if (!ok && mHarfBuzzShaper && !aPreferPlatformShaping) {
         if (gfxPlatform::GetPlatform()->UseHarfBuzzForScript(aScript)) {

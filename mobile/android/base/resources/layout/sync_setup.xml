@@ -82,12 +82,15 @@
   </ScrollView>
 
   <LinearLayout
-    style="@style/SyncBottom"
-    android:orientation="horizontal" >
+    style="@style/SyncBottomContainer">
 
-    <Button
-      style="@style/SyncButton"
-      android:onClick="cancelClickHandler"
-      android:text="@string/sync_button_cancel" />
+    <LinearLayout style="@style/SyncBottom"
+                  android:orientation="horizontal" >
+      <Button
+        style="@style/SyncButton"
+        android:onClick="cancelClickHandler"
+        android:text="@string/sync_button_cancel" />
+    </LinearLayout>
+
   </LinearLayout>
 </LinearLayout>

@@ -95,9 +95,11 @@ static const uint32_t kMaxBytesPerCookie  = 4096;
 static const uint32_t kMaxBytesPerPath    = 1024;
 
 // behavior pref constants
-static const uint32_t BEHAVIOR_ACCEPT        = 0;
-static const uint32_t BEHAVIOR_REJECTFOREIGN = 1;
-static const uint32_t BEHAVIOR_REJECT        = 2;
+static const uint32_t BEHAVIOR_ACCEPT        = 0; // allow all cookies
+static const uint32_t BEHAVIOR_REJECTFOREIGN = 1; // reject all third-party cookies
+static const uint32_t BEHAVIOR_REJECT        = 2; // reject all cookies
+static const uint32_t BEHAVIOR_LIMITFOREIGN  = 3; // reject third-party cookies unless the
+                                                  // eTLD already has at least one cookie
 
 // pref string constants
 static const char kPrefCookieBehavior[]     = "network.cookie.cookieBehavior";
@@ -1694,7 +1696,7 @@ nsCookieService::PrefChanged(nsIPrefBranch *aPrefBranch)
 {
   int32_t val;
   if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefCookieBehavior, &val)))
-    mCookieBehavior = (uint8_t) LIMIT(val, 0, 2, 0);
+    mCookieBehavior = (uint8_t) LIMIT(val, 0, 3, 0);
 
   if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefMaxNumberOfCookies, &val)))
     mMaxNumberOfCookies = (uint16_t) LIMIT(val, 1, 0xFFFF, kMaxNumberOfCookies);
@@ -3244,6 +3246,20 @@ nsCookieService::CheckPrefs(nsIURI          *aHostURI,
         }
         return STATUS_ACCEPTED;
 
+      case nsICookiePermission::ACCESS_LIMIT_THIRD_PARTY:
+        if (!aIsForeign)
+          return STATUS_ACCEPTED;
+        uint32_t priorCookieCount = 0;
+        nsAutoCString hostFromURI;
+        aHostURI->GetHost(hostFromURI);
+        CountCookiesFromHost(hostFromURI, &priorCookieCount);
+        if (priorCookieCount == 0) {
+          COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI,
+                            aCookieHeader, "third party cookies are blocked "
+                            "for this site");
+          return STATUS_REJECTED;
+        }
+        return STATUS_ACCEPTED;
       }
     }
   }
@@ -3262,6 +3278,19 @@ nsCookieService::CheckPrefs(nsIURI          *aHostURI,
     if (mCookieBehavior == BEHAVIOR_REJECTFOREIGN) {
       COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "context is third party");
       return STATUS_REJECTED;
+    }
+
+    if (mCookieBehavior == BEHAVIOR_LIMITFOREIGN) {
+      uint32_t priorCookieCount = 0;
+      nsAutoCString hostFromURI;
+      aHostURI->GetHost(hostFromURI);
+      CountCookiesFromHost(hostFromURI, &priorCookieCount);
+      if (priorCookieCount == 0) {
+        COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "context is third party");
+        return STATUS_REJECTED;
+      }
+      if (mThirdPartySession)
+        return STATUS_ACCEPT_SESSION;
     }
   }
 
