@@ -610,7 +610,7 @@ abstract public class GeckoApp
     }
 
     void handleFaviconRequest(final String url) {
-        (new UiAsyncTask<Void, Void, String>(mMainHandler, GeckoAppShell.getHandler()) {
+        (new UiAsyncTask<Void, Void, String>(GeckoAppShell.getHandler()) {
             @Override
             public String doInBackground(Void... params) {
                 return Favicons.getInstance().getFaviconUrlForPageUrl(url);
@@ -1111,7 +1111,7 @@ abstract public class GeckoApp
         notification.setLatestEventInfo(mAppContext, fileName, progText, emptyIntent );
         notification.flags |= Notification.FLAG_ONGOING_EVENT;
         notification.show();
-        new UiAsyncTask<Void, Void, Boolean>(mMainHandler, GeckoAppShell.getHandler()){
+        new UiAsyncTask<Void, Void, Boolean>(GeckoAppShell.getHandler()){
 
             @Override
             protected Boolean doInBackground(Void... params) {
