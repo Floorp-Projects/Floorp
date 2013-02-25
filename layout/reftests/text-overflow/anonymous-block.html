@@ -47,6 +47,15 @@ span {
 .t3 {width:25em;}
 .t4 {width:17.5em;}
 
+input { font-family:DejaVuSansMono; width:3em; }
+input::-moz-placeholder {
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+input.t5::-moz-placeholder {
+  text-overflow:"X";
+}
+
 </style>
 
 </head><body>
@@ -56,6 +65,11 @@ span {
 <div class="test t2"><x>Some overly long<i style="display:block;">anonymous<br>block</i>and uninformative sentence</x></div>
 <div class="test t3"><x>Some overly <span>long<i style="display:block;">anonymous<br>block</i>and</span> uninformative sentence</x></div>
 <div class="test t4"><x>Some overly <span>long<i style="display:block;">anonymous<br>block</i>and</span> uninformative sentence</x></div>
+
+<input placeholder="placeholder">
+<input dir="rtl" placeholder="placeholder">
+<input class="t5" placeholder="placeholder">
+<input class="t5" dir="rtl" placeholder="placeholder">
 
 </body>
 </html>

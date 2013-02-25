@@ -31,6 +31,7 @@ load 385423-1.html
 load 385423-2.html
 load 385719-1.html
 load 389326-1.html
+skip load 390476.html # bug 585185
 load 393746-1.xhtml
 load 393749-1.html
 load 393822-1.html

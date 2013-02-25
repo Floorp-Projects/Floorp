@@ -279,6 +279,7 @@ MOCHITEST_FILES = \
 		test_bug803677.html \
 		test_bug827126.html \
 		test_bug827426.html \
+		test_bug838582.html \
 		test_bug841466.html \
 		test_iframe_sandbox_inheritance.html \
 		file_iframe_sandbox_a_if1.html \
@@ -349,6 +350,7 @@ MOCHITEST_FILES = \
 		test_mod_attributes_reflection.html \
 		test_mozaudiochannel.html \
 		test_style_attributes_reflection.html \
+		test_bug629801.html \
 		$(NULL)
 
 

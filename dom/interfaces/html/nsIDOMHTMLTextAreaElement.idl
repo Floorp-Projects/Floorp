@@ -60,5 +60,7 @@ interface nsIDOMHTMLTextAreaElement : nsIDOMHTMLElement
 
 
   // Mozilla extensions
+  // Please make sure to update the HTMLTextAreaElement Web IDL interface to
+  // mirror the list of Mozilla extensions here when changing it.
   readonly attribute nsIControllers   controllers;
 };

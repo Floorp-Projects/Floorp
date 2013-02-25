@@ -60,7 +60,6 @@ public:
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
   virtual bool IsDisabledForEvents(uint32_t aMessage);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  virtual nsXPCClassInfo* GetClassInfo();
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
   const nsIContent* GetFirstLegend() const { return mFirstLegend; }

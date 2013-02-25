@@ -23,7 +23,6 @@
 #include "nsGlobalWindow.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Body)
-DOMCI_NODE_DATA(HTMLBodyElement, mozilla::dom::HTMLBodyElement)
 
 namespace mozilla {
 namespace dom {
@@ -208,7 +207,7 @@ NS_INTERFACE_TABLE_HEAD(HTMLBodyElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(HTMLBodyElement, nsIDOMHTMLBodyElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLBodyElement,
                                                nsGenericHTMLElement)
-NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLBodyElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLBodyElement)
 

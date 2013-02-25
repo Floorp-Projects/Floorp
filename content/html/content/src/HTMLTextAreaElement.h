@@ -16,6 +16,7 @@
 #include "nsStubMutationObserver.h"
 #include "nsIConstraintValidation.h"
 #include "nsHTMLFormElement.h"
+#include "nsGkAtoms.h"
 
 #include "nsTextEditorState.h"
 
@@ -146,8 +147,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLTextAreaElement,
                                            nsGenericHTMLFormElement)
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
   // nsIConstraintValidation
@@ -159,8 +158,122 @@ public:
   nsresult GetValidationMessage(nsAString& aValidationMessage,
                                 ValidityStateType aType);
 
+  // Web IDL binding methods
+  bool Autofocus()
+  {
+    return GetBoolAttr(nsGkAtoms::autofocus);
+  }
+  void SetAutofocus(bool aAutoFocus, ErrorResult& aError)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::autofocus, aAutoFocus, aError);
+  }
+  uint32_t Cols()
+  {
+    return GetIntAttr(nsGkAtoms::cols, DEFAULT_COLS);
+  }
+  void SetCols(uint32_t aCols, ErrorResult& aError)
+  {
+    if (aCols == 0) {
+      aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    } else {
+      SetHTMLUnsignedIntAttr(nsGkAtoms::cols, aCols, aError);
+    }
+  }
+  bool Disabled()
+  {
+    return GetBoolAttr(nsGkAtoms::disabled);
+  }
+  void SetDisabled(bool aDisabled, ErrorResult& aError)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::disabled, aDisabled, aError);
+  }
+  // nsGenericHTMLFormElement::GetForm is fine
+  using nsGenericHTMLFormElement::GetForm;
+  int32_t MaxLength()
+  {
+    return GetIntAttr(nsGkAtoms::maxlength, -1);
+  }
+  void SetMaxLength(int32_t aMaxLength, ErrorResult& aError)
+  {
+    if (aMaxLength < 0) {
+      aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    } else {
+      SetHTMLIntAttr(nsGkAtoms::maxlength, aMaxLength, aError);
+    }
+  }
+  // XPCOM GetName is fine
+  void SetName(const nsAString& aName, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::name, aName, aError);
+  }
+  // XPCOM GetPlaceholder is fine
+  void SetPlaceholder(const nsAString& aPlaceholder, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::placeholder, aPlaceholder, aError);
+  }
+  bool ReadOnly()
+  {
+    return GetBoolAttr(nsGkAtoms::readonly);
+  }
+  void SetReadOnly(bool aReadOnly, ErrorResult& aError)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::readonly, aReadOnly, aError);
+  }
+  bool Required()
+  {
+    return GetBoolAttr(nsGkAtoms::required);
+  }
+  void SetRequired(bool aRequired, ErrorResult& aError)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::required, aRequired, aError);
+  }
+  uint32_t Rows()
+  {
+    return GetIntAttr(nsGkAtoms::rows, DEFAULT_ROWS_TEXTAREA);
+  }
+  void SetRows(uint32_t aRows, ErrorResult& aError)
+  {
+    if (aRows == 0) {
+      aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    } else {
+      SetHTMLUnsignedIntAttr(nsGkAtoms::rows, aRows, aError);
+    }
+  }
+  // XPCOM GetWrap is fine
+  void SetWrap(const nsAString& aWrap, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::wrap, aWrap, aError);
+  }
+  // XPCOM GetType is fine
+  // XPCOM GetDefaultValue is fine
+  void SetDefaultValue(const nsAString& aDefaultValue, ErrorResult& aError);
+  // XPCOM GetValue/SetValue are fine
+  uint32_t GetTextLength();
+  // nsIConstraintValidation::WillValidate is fine.
+  // nsIConstraintValidation::Validity() is fine.
+  // nsIConstraintValidation::GetValidationMessage() is fine.
+  // nsIConstraintValidation::CheckValidity() is fine.
+  using nsIConstraintValidation::CheckValidity;
+  // nsIConstraintValidation::SetCustomValidity() is fine.
+  // XPCOM Select is fine
+  uint32_t GetSelectionStart(ErrorResult& aError);
+  void SetSelectionStart(uint32_t aSelectionStart, ErrorResult& aError);
+  uint32_t GetSelectionEnd(ErrorResult& aError);
+  void SetSelectionEnd(uint32_t aSelectionEnd, ErrorResult& aError);
+  void GetSelectionDirection(nsAString& aDirection, ErrorResult& aError);
+  void SetSelectionDirection(const nsAString& aDirection, ErrorResult& aError);
+  void SetSelectionRange(uint32_t aSelectionStart, uint32_t aSelectionEnd, const Optional<nsAString>& aDirecton, ErrorResult& aError);
+  nsIControllers* GetControllers(ErrorResult& aError);
+  nsIEditor* GetEditor()
+  {
+    return mState.GetEditor();
+  }
+
 protected:
   using nsGenericHTMLFormElement::IsSingleLineTextControl; // get rid of the compiler warning
+
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
+                             bool *aTriedToWrap) MOZ_OVERRIDE;
 
   nsCOMPtr<nsIControllers> mControllers;
   /** Whether or not the value has changed since its default value was given. */

@@ -21,6 +21,9 @@ function do_run_test() {
   // Set up a profile.
   let profile = do_get_profile();
 
+  // Allow all cookies.
+  Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
+
   // Start the cookieservice.
   Services.cookies;
 

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>test of counter UA overflow rules for HTML lists</title>
+  <!--
+    NOTE: This test cannot be contributed to the test suite because
+    it presumes a 4-byte unsigned integer, which is not required by
+    the spec.  It also can't be contributed because it's testing HTML
+    lists.
+
+    However, it tests the rules for what happens at the UA-specific
+    limit, which are required by the spec.
+   -->
+  <link rel="help" href="http://dev.w3.org/csswg/css-counter-styles-3/#counter-style-range"/>
+  <link rel="help" href="http://krijnhoetmer.nl/irc-logs/css/20130205#l-1590"/>
+  <style type="text/css">
+
+  ol { margin-left: 10em; padding-left: 0; }
+  li { margin-left: 0; padding-left: 0 }
+  li.hidden { visibility: hidden; height: 0 }
+  ol { margin-bottom: 0 }
+  ol + ol { margin-top: 0 }
+
+  </style>
+ </head>
+ <body>
+
+ <!--
+    Work around our inability to parse -2147483648 as an HTML integer attribute
+    (Bug 586761)
+   -->
+ <ol reversed start="-2147483645">
+   <li class="hidden">hidden
+   <li>Alpha
+ </ol>
+ <ol reversed start="-2147483646">
+   <li class="hidden">hidden
+   <li>Bravo
+ </ol>
+ <ol reversed start="-2147483647">
+   <li class="hidden">hidden
+   <li>Charlie
+ </ol>
+ <ol reversed start="-2147483647">
+   <li class="hidden">hidden
+   <li>Delta
+ </ol>
+
+ </body>
+</html>

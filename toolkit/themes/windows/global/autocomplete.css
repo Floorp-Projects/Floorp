@@ -1,0 +1,220 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* ===== autocomplete.css =================================================
+  == Styles used by the autocomplete widget.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
+
+/* ::::: autocomplete ::::: */
+
+/* .padded is used by autocomplete widgets that don't have an icon. Gross. -dwh */
+textbox:not(.padded) {
+  cursor: default;
+  padding: 0;
+}
+
+textbox[nomatch="true"][highlightnonmatches="true"] {
+  color: red;
+}
+
+.autocomplete-textbox-container {
+  -moz-box-align: center;
+}
+
+textbox:not(.padded) .textbox-input-box {
+  margin: 0 3px;
+}
+
+.textbox-input-box {
+  -moz-box-align: center;
+}
+
+/* ::::: autocomplete popups ::::: */
+
+panel[type="autocomplete"],
+panel[type="autocomplete-richlistbox"],
+.autocomplete-history-popup {
+  -moz-appearance: none;
+  border-width: 1px;
+  -moz-border-top-colors: ThreeDDarkShadow;
+  -moz-border-right-colors: ThreeDDarkShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow;
+  -moz-border-left-colors: ThreeDDarkShadow;
+  padding: 0;
+  background-color: -moz-Field;
+}
+
+.autocomplete-history-popup {
+  max-height: 180px;
+}
+
+/* ::::: tree ::::: */
+
+.autocomplete-tree {
+  -moz-appearance: none !important;
+  border: none !important;
+  background-color: transparent !important;
+}
+
+.autocomplete-treecol {
+  -moz-appearance: none !important;
+  margin: 0 !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+/* GTK calculates space for a sort arrow */
+.autocomplete-treecol > .treecol-sortdirection {
+  -moz-appearance: none !important;
+}
+
+.autocomplete-treebody::-moz-tree-cell-text {
+  -moz-padding-start: 8px;
+}
+
+treechildren.autocomplete-treebody::-moz-tree-row(selected) {
+ background-color: Highlight;
+}
+
+treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
+  color: HighlightText !important;
+}
+
+.autocomplete-treebody::-moz-tree-image(treecolAutoCompleteValue) {
+  max-width: 16px;
+  height: 16px;
+}
+
+/* ::::: richlistbox autocomplete ::::: */
+
+.autocomplete-richlistbox {
+  -moz-appearance: none;
+  margin: 0;
+}
+
+.autocomplete-richlistitem {
+  padding: 1px;
+}
+
+.autocomplete-richlistitem[selected="true"] {
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+%ifdef WINDOWS_AERO
+@media (-moz-windows-default-theme) {
+  /*
+  -moz-appearance: menuitem is almost right, but the hover effect is not
+  transparent and is lighter than desired.
+  */
+  .autocomplete-richlistitem[selected="true"] {
+    color: inherit;
+    background-color: transparent;
+    /* four gradients for the bevel highlights on each edge, one for blue background */
+    background-image:
+      -moz-linear-gradient(to bottom, rgba(255,255,255,0.9) 3px, rgba(255,255,255,0) 3px),
+      -moz-linear-gradient(to right, rgba(255,255,255,0.5) 3px, rgba(255,255,255,0) 3px),
+      -moz-linear-gradient(to left, rgba(255,255,255,0.5) 3px, rgba(255,255,255,0) 3px),
+      -moz-linear-gradient(to top, rgba(255,255,255,0.4) 3px, rgba(255,255,255,0) 3px),
+      -moz-linear-gradient(to bottom, rgba(163,196,247,0.3), rgba(122,180,246,0.3));
+    background-clip: content-box;
+    border-radius: 6px;
+    outline: 1px solid rgb(124,163,206);
+    -moz-outline-radius: 3px;
+    outline-offset: -2px;
+  }
+}
+%endif
+
+.ac-title-box {
+  margin-top: 4px;
+}
+
+.ac-url-box {
+  margin: 1px 0 4px;
+}
+
+.ac-site-icon {
+  width: 16px; 
+  height: 16px;
+  margin: 0 5px -2px;
+}
+
+.ac-type-icon {
+  width: 16px; 
+  height: 16px;
+  -moz-margin-start: 6px;
+  -moz-margin-end: 4px;
+  margin-bottom: -1px;
+}
+
+.ac-url-box > .ac-site-icon,
+.ac-url-box > .ac-type-icon {
+  /* Otherwise the spacer is big enough to stretch its container */
+  height: auto;
+}
+
+.ac-extra > .ac-result-type-tag {
+  margin: 0 4px;
+}
+
+.ac-extra > .ac-comment {
+  padding-right: 4px;
+}
+
+.ac-ellipsis-after {
+  margin: 0 !important;
+  padding: 0; 
+  min-width: 1em;
+}
+
+.ac-normal-text {
+  margin: 0 !important;
+  padding: 0;
+}
+
+.ac-normal-text > html|span {
+  margin: 0 !important;
+  padding: 0;
+}
+
+html|span.ac-emphasize-text {
+  box-shadow: inset 0 0 1px 1px rgba(208,208,208,0.5);
+  background-color: rgba(208,208,208,0.3);
+  border-radius: 2px;
+  text-shadow: 0 0 currentColor;
+}
+
+@media (-moz-windows-default-theme) {
+%ifdef WINDOWS_AERO
+  html|span.ac-emphasize-text {
+    box-shadow: inset 0 0 1px 1px rgba(0,0,0,0.1);
+    background-color: rgba(0,0,0,0.05);
+  }
+%else
+  .ac-url-text > html|span.ac-emphasize-text,
+  .ac-action-text > html|span.ac-emphasize-text {
+    box-shadow: inset 0 0 1px 1px rgba(202,214,201,0.3);
+    background-color: rgba(202,214,201,0.2);
+  }
+%endif
+}
+
+.ac-title, .ac-url {
+  overflow: hidden;
+}
+
+/* ::::: textboxes inside toolbarpaletteitems ::::: */
+
+toolbarpaletteitem > toolbaritem > textbox > hbox > hbox > html|*.textbox-input {
+  visibility: hidden;
+}
+
+toolbarpaletteitem > toolbaritem > * > textbox > hbox > hbox > html|*.textbox-input {
+  visibility: hidden;
+}
+

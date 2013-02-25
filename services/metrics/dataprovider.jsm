@@ -28,26 +28,33 @@ Cu.import("resource://services-common/utils.js");
 /**
  * Represents a collection of related pieces/fields of data.
  *
- * This is an abstract base type. Providers implement child types that
- * implement core functions such as `registerStorage`.
+ * This is an abstract base type.
  *
  * This type provides the primary interface for storing, retrieving, and
  * serializing data.
  *
- * Each derived type must define a `name` and `version` property. These must be
- * a string name and integer version, respectively. The `name` is used to
- * identify the measurement within a `Provider`. The version is to denote the
- * behavior of the `Measurement` and the composition of its fields over time.
- * When a new field is added or the behavior of an existing field changes
- * (perhaps the method for storing it has changed), the version should be
- * incremented.
- *
  * Each measurement consists of a set of named fields. Each field is primarily
  * identified by a string name, which must be unique within the measurement.
  *
- * For fields backed by the SQLite metrics storage backend, fields must have a
- * strongly defined type. Valid types include daily counters, daily discrete
- * text values, etc. See `MetricsStorageSqliteBackend.FIELD_*`.
+ * Each derived type must define the following properties:
+ *
+ *   name -- String name of this measurement. This is the primary way
+ *     measurements are distinguished within a provider.
+ *
+ *   version -- Integer version of this measurement. This is a secondary
+ *     identifier for a measurement within a provider. The version denotes
+ *     the behavior of this measurement and the composition of its fields over
+ *     time. When a new field is added or the behavior of an existing field
+ *     changes, the version should be incremented. The initial version of a
+ *     measurement is typically 1.
+ *
+ *   fields -- Object defining the fields this measurement holds. Keys in the
+ *     object are string field names. Values are objects describing how the
+ *     field works. The following properties are recognized:
+ *
+ *       type -- The string type of this field. This is typically one of the
+ *         FIELD_* constants from the Metrics.Storage type.
+ *
  *
  * FUTURE: provide hook points for measurements to supplement with custom
  * storage needs.
@@ -65,11 +72,25 @@ this.Measurement = function () {
     throw new Error("Measurement's version must be an integer: " + this.version);
   }
 
+  if (!this.fields) {
+    throw new Error("Measurement must define fields.");
+  }
+
+  for (let [name, info] in Iterator(this.fields)) {
+    if (!info) {
+      throw new Error("Field does not contain metadata: " + name);
+    }
+
+    if (!info.type) {
+      throw new Error("Field is missing required type property: " + name);
+    }
+  }
+
   this._log = Log4Moz.repository.getLogger("Services.Metrics.Measurement." + this.name);
 
   this.id = null;
   this.storage = null;
-  this._fieldsByName = new Map();
+  this._fields = {};
 
   this._serializers = {};
   this._serializers[this.SERIALIZE_JSON] = {
@@ -80,21 +101,6 @@ this.Measurement = function () {
 
 Measurement.prototype = Object.freeze({
   SERIALIZE_JSON: "json",
-
-  /**
-   * Configures the storage backend so that it can store this measurement.
-   *
-   * Implementations must return a promise which is resolved when storage has
-   * been configured.
-   *
-   * Most implementations will typically call into this.registerStorageField()
-   * to configure fields in storage.
-   *
-   * FUTURE: Provide method for upgrading from older measurement versions.
-   */
-  configureStorage: function () {
-    throw new Error("configureStorage() must be implemented.");
-  },
 
   /**
    * Obtain a serializer for this measurement.
@@ -144,7 +150,7 @@ Measurement.prototype = Object.freeze({
    * @return bool
    */
   hasField: function (name) {
-    return this._fieldsByName.has(name);
+    return name in this.fields;
   },
 
   /**
@@ -156,7 +162,7 @@ Measurement.prototype = Object.freeze({
    *        (string) Name of field.
    */
   fieldID: function (name) {
-    let entry = this._fieldsByName.get(name);
+    let entry = this._fields[name];
 
     if (!entry) {
       throw new Error("Unknown field: " + name);
@@ -166,7 +172,7 @@ Measurement.prototype = Object.freeze({
   },
 
   fieldType: function (name) {
-    let entry = this._fieldsByName.get(name);
+    let entry = this._fields[name];
 
     if (!entry) {
       throw new Error("Unknown field: " + name);
@@ -175,37 +181,15 @@ Measurement.prototype = Object.freeze({
     return entry[1];
   },
 
-  /**
-   * Register a named field with storage that's attached to this measurement.
-   *
-   * This is typically called during `configureStorage`. The `Measurement`
-   * implementation passes the field name and its type (one of the
-   * storage.FIELD_* constants). The storage backend then allocates space
-   * for this named field. A side-effect of calling this is that the field's
-   * storage ID is stored in this._fieldsByName and subsequent calls to the
-   * storage modifiers below will know how to reference this field in the
-   * storage backend.
-   *
-   * @param name
-   *        (string) The name of the field being registered.
-   * @param type
-   *        (string) A field type name. This is typically one of the
-   *        storage.FIELD_* constants. It could also be a custom type
-   *        (presumably registered by this measurement or provider).
-   */
-  registerStorageField: function (name, type) {
-    this._log.debug("Registering field: " + name + " " + type);
+  _configureStorage: function () {
+    return Task.spawn(function configureFields() {
+      for (let [name, info] in Iterator(this.fields)) {
+        this._log.debug("Registering field: " + name + " " + info.type);
 
-    let deferred = Promise.defer();
-
-    let self = this;
-    this.storage.registerField(this.id, name, type).then(
-      function onSuccess(id) {
-        self._fieldsByName.set(name, [id, type]);
-        deferred.resolve();
-      }, deferred.reject);
-
-    return deferred.promise;
+        let id = yield this.storage.registerField(this.id, name, info.type);
+        this._fields[name] = [id, info.type];
+      }
+    }.bind(this));
   },
 
   //---------------------------------------------------------------------------
@@ -352,7 +336,7 @@ Measurement.prototype = Object.freeze({
 
     for (let [field, data] of data) {
       // There could be legacy fields in storage we no longer care about.
-      if (!this._fieldsByName.has(field)) {
+      if (!(field in this._fields)) {
         continue;
       }
 
@@ -383,7 +367,7 @@ Measurement.prototype = Object.freeze({
     let result = {"_v": this.version};
 
     for (let [field, data] of data) {
-      if (!this._fieldsByName.has(field)) {
+      if (!(field in this._fields)) {
         continue;
       }
 
@@ -566,7 +550,7 @@ Provider.prototype = Object.freeze({
 
         measurement.id = id;
 
-        yield measurement.configureStorage();
+        yield measurement._configureStorage();
 
         self.measurements.set([measurement.name, measurement.version].join(":"),
                               measurement);
@@ -665,22 +649,33 @@ Provider.prototype = Object.freeze({
   /**
    * Obtain persisted provider state.
    *
-   * State is backend by storage.
+   * Provider state consists of key-value pairs of string names and values.
+   * Providers can stuff whatever they want into state. They are encouraged to
+   * store as little as possible for performance reasons.
+   *
+   * State is backed by storage and is robust.
+   *
+   * These functions do not enqueue on storage automatically, so they should
+   * be guarded by `enqueueStorageOperation` or some other mutex.
+   *
+   * @param key
+   *        (string) The property to retrieve.
+   *
+   * @return Promise<string|null> String value on success. null if no state
+   *         is available under this key.
    */
   getState: function (key) {
-    let name = this.name;
-    let storage = this.storage;
-    return storage.enqueueOperation(function get() {
-      return storage.getProviderState(name, key);
-    });
+    return this.storage.getProviderState(this.name, key);
   },
 
+  /**
+   * Set state for this provider.
+   *
+   * This is the complementary API for `getState` and obeys the same
+   * storage restrictions.
+   */
   setState: function (key, value) {
-    let name = this.name;
-    let storage = this.storage;
-    return storage.enqueueOperation(function set() {
-      return storage.setProviderState(name, key, value);
-    });
+    return this.storage.setProviderState(this.name, key, value);
   },
 
   _dateToDays: function (date) {

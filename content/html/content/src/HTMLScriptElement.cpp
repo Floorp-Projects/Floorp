@@ -26,8 +26,6 @@
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Script)
 
-DOMCI_NODE_DATA(HTMLScriptElement, mozilla::dom::HTMLScriptElement)
-
 namespace mozilla {
 namespace dom {
 
@@ -63,7 +61,6 @@ NS_INTERFACE_TABLE_HEAD(HTMLScriptElement)
                                    nsIMutationObserver)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLScriptElement,
                                                nsGenericHTMLElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLScriptElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 

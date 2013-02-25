@@ -65,20 +65,26 @@
   </ScrollView>
 
   <LinearLayout
-    style="@style/SyncBottom"
-    android:orientation="horizontal" >
+    style="@style/SyncBottomContainer">
 
-    <Button
-      style="@style/SyncButton"
-      android:onClick="cancelClickHandler"
-      android:text="@string/sync_button_cancel" />
+    <LinearLayout
+      style="@style/SyncBottom"
+      android:orientation="horizontal" >
+  
+      <Button
+        style="@style/SyncButton"
+        android:onClick="cancelClickHandler"
+        android:text="@string/sync_button_cancel" />
+  
+      <Button
+        android:id="@+id/pair_button_connect"
+        style="@style/SyncButton"
+        android:onClick="connectClickHandler"
+        android:clickable="false"
+        android:enabled="false"
+        android:text="@string/sync_button_connect" />
 
-    <Button
-      android:id="@+id/pair_button_connect"
-      style="@style/SyncButton"
-      android:onClick="connectClickHandler"
-      android:clickable="false"
-      android:enabled="false"
-      android:text="@string/sync_button_connect" />
+    </LinearLayout>
+
   </LinearLayout>
 </LinearLayout>

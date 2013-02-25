@@ -1140,6 +1140,10 @@ mjit::Compiler::generatePrologue()
         /* Store this early on so slow paths can access it. */
         masm.storePtr(ImmPtr(script_->function()),
                       Address(JSFrameReg, StackFrame::offsetOfExec()));
+        if (script_->isCallsiteClone) {
+            masm.storeValue(ObjectValue(*script_->function()),
+                            Address(JSFrameReg, StackFrame::offsetOfCallee(script_->function())));
+        }
 
         {
             /*
@@ -4651,7 +4655,7 @@ mjit::Compiler::inlineScriptedFunction(uint32_t argc, bool callingNew)
             JSScript *script_ = ssa.iterFrame(i).script;
 
             /* Don't inline if any of the callees should be cloned at callsite. */
-            if (script_->function()->isCloneAtCallsite())
+            if (script_->shouldCloneAtCallsite)
                 return Compile_InlineAbort;
 
             inlineCallees.append(script_);

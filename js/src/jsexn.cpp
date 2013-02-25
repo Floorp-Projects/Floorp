@@ -1086,7 +1086,7 @@ js_ReportUncaughtException(JSContext *cx)
         if (JS_GetProperty(cx, exnObject, filename_str, &roots[4])) {
             RawString tmp = ToString<CanGC>(cx, roots[4]);
             if (tmp)
-                filename.encode(cx, tmp);
+                filename.encodeLatin1(cx, tmp);
         }
 
         uint32_t lineno;
@@ -1118,7 +1118,7 @@ js_ReportUncaughtException(JSContext *cx)
     JSAutoByteString bytesStorage;
     const char *bytes = NULL;
     if (str)
-        bytes = bytesStorage.encode(cx, str);
+        bytes = bytesStorage.encodeLatin1(cx, str);
     if (!bytes)
         bytes = "unknown (can't convert to string)";
 

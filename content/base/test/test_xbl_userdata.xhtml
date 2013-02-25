@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for getUserData/setUserData support in XBL</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<style type="text/css">
+#t {
+-moz-binding: url(#xbl);
+}
+</style>
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+<binding id="xbl" inheritstyle="false">
+<implementation><constructor><![CDATA[
+  this.textContent = !!(this.getUserData && this.setUserData);
+]]></constructor></implementation>
+</binding>
+</bindings>
+
+</head>
+<body>
+<p id="display"></p>
+
+<pre id="test">
+<script class="testbody">
+<![CDATA[
+"use strict";
+
+var url = 'data:text/html;charset=utf-8,' +
+          encodeURIComponent('<div id=t style="-moz-binding:url(' + location + '#xbl)"></div>');
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  SpecialPowers.pushPrefEnv({set: [['dom.xbl_scopes', true]]}, test1);
+});
+
+function test1() {
+  var iframe = document.createElement('iframe');
+  iframe.src = url;
+  iframe.onload = function() {
+    var t = iframe.contentWindow.t;
+    is(!!(t.getUserData || t.setUserData), false,
+       "getUserData and setUserData should not be visible from the regular content");
+    is(t.textContent, "true",
+       "getUserData and setUserData should be visible from XBL");
+    document.body.removeChild(iframe);
+    SpecialPowers.pushPrefEnv({set: [['dom.xbl_scopes', false]]}, test2);
+  };
+  document.body.appendChild(iframe);
+}
+
+function test2() {
+  var iframe = document.createElement('iframe');
+  iframe.src = url;
+  iframe.onload = function() {
+    var t = iframe.contentWindow.t;
+    is(!!(t.getUserData && t.setUserData), true,
+       "getUserData and setUserData is visible if XBL scopes are disabled");
+    is(t.textContent, "true",
+       "getUserData and setUserData should be visible from XBL");
+    document.body.removeChild(iframe);
+    SimpleTest.finish();
+  };
+  document.body.appendChild(iframe);
+}
+
+]]>
+</script>
+</pre>
+</body>
+</html>

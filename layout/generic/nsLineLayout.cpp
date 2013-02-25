@@ -179,8 +179,7 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
     mLineBox->ClearHasBullet();
   }
 
-  PerSpanData* psd;
-  NewPerSpanData(&psd);
+  PerSpanData* psd = NewPerSpanData();
   mCurrentSpan = mRootSpan = psd;
   psd->mReflowState = mBlockReflowState;
   psd->mLeftEdge = aX;
@@ -350,15 +349,15 @@ nsLineLayout::UpdateBand(const nsRect& aNewAvailSpace,
   mLastFloatWasLetterFrame = nsGkAtoms::letterFrame == aFloatFrame->GetType();
 }
 
-nsresult
-nsLineLayout::NewPerSpanData(PerSpanData** aResult)
+nsLineLayout::PerSpanData*
+nsLineLayout::NewPerSpanData()
 {
   PerSpanData* psd = mSpanFreeList;
-  if (nullptr == psd) {
+  if (!psd) {
     void *mem;
     PL_ARENA_ALLOCATE(mem, &mArena, sizeof(PerSpanData));
-    if (nullptr == mem) {
-      return NS_ERROR_OUT_OF_MEMORY;
+    if (!mem) {
+      NS_RUNTIMEABORT("OOM");
     }
     psd = reinterpret_cast<PerSpanData*>(mem);
   }
@@ -376,15 +375,13 @@ nsLineLayout::NewPerSpanData(PerSpanData** aResult)
 #ifdef DEBUG
   mSpansAllocated++;
 #endif
-  *aResult = psd;
-  return NS_OK;
+  return psd;
 }
 
-nsresult
+void
 nsLineLayout::BeginSpan(nsIFrame* aFrame,
                         const nsHTMLReflowState* aSpanReflowState,
-                        nscoord aLeftEdge,
-                        nscoord aRightEdge,
+                        nscoord aLeftEdge, nscoord aRightEdge,
                         nscoord* aBaseline)
 {
   NS_ASSERTION(aRightEdge != NS_UNCONSTRAINEDSIZE,
@@ -395,33 +392,28 @@ nsLineLayout::BeginSpan(nsIFrame* aFrame,
   printf(": BeginSpan leftEdge=%d rightEdge=%d\n", aLeftEdge, aRightEdge);
 #endif
 
-  PerSpanData* psd;
-  nsresult rv = NewPerSpanData(&psd);
-  if (NS_SUCCEEDED(rv)) {
-    // Link up span frame's pfd to point to its child span data
-    PerFrameData* pfd = mCurrentSpan->mLastFrame;
-    NS_ASSERTION(pfd->mFrame == aFrame, "huh?");
-    pfd->mSpan = psd;
+  PerSpanData* psd = NewPerSpanData();
+  // Link up span frame's pfd to point to its child span data
+  PerFrameData* pfd = mCurrentSpan->mLastFrame;
+  NS_ASSERTION(pfd->mFrame == aFrame, "huh?");
+  pfd->mSpan = psd;
 
-    // Init new span
-    psd->mFrame = pfd;
-    psd->mParent = mCurrentSpan;
-    psd->mReflowState = aSpanReflowState;
-    psd->mLeftEdge = aLeftEdge;
-    psd->mX = aLeftEdge;
-    psd->mRightEdge = aRightEdge;
-    psd->mBaseline = aBaseline;
+  // Init new span
+  psd->mFrame = pfd;
+  psd->mParent = mCurrentSpan;
+  psd->mReflowState = aSpanReflowState;
+  psd->mLeftEdge = aLeftEdge;
+  psd->mX = aLeftEdge;
+  psd->mRightEdge = aRightEdge;
+  psd->mBaseline = aBaseline;
 
-    psd->mNoWrap =
-      !aSpanReflowState->frame->StyleText()->WhiteSpaceCanWrap();
-    psd->mDirection = aSpanReflowState->mStyleVisibility->mDirection;
-    psd->mChangedFrameDirection = false;
+  psd->mNoWrap = !aSpanReflowState->frame->StyleText()->WhiteSpaceCanWrap();
+  psd->mDirection = aSpanReflowState->mStyleVisibility->mDirection;
+  psd->mChangedFrameDirection = false;
 
-    // Switch to new span
-    mCurrentSpan = psd;
-    mSpanDepth++;
-  }
-  return rv;
+  // Switch to new span
+  mCurrentSpan = psd;
+  mSpanDepth++;
 }
 
 nscoord
@@ -580,15 +572,15 @@ nsLineLayout::IsZeroHeight()
   return true;
 }
 
-nsresult
-nsLineLayout::NewPerFrameData(PerFrameData** aResult)
+nsLineLayout::PerFrameData*
+nsLineLayout::NewPerFrameData()
 {
   PerFrameData* pfd = mFrameFreeList;
-  if (nullptr == pfd) {
+  if (!pfd) {
     void *mem;
     PL_ARENA_ALLOCATE(mem, &mArena, sizeof(PerFrameData));
-    if (nullptr == mem) {
-      return NS_ERROR_OUT_OF_MEMORY;
+    if (!mem) {
+      NS_RUNTIMEABORT("OOM");
     }
     pfd = reinterpret_cast<PerFrameData*>(mem);
   }
@@ -605,8 +597,7 @@ nsLineLayout::NewPerFrameData(PerFrameData** aResult)
   pfd->mVerticalAlign = 0xFF;
   mFramesAllocated++;
 #endif
-  *aResult = pfd;
-  return NS_OK;
+  return pfd;
 }
 
 bool
@@ -717,11 +708,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // Initialize OUT parameter
   aPushedFrame = false;
 
-  PerFrameData* pfd;
-  nsresult rv = NewPerFrameData(&pfd);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  PerFrameData* pfd = NewPerFrameData();
   PerSpanData* psd = mCurrentSpan;
   psd->AppendFrame(pfd);
 
@@ -838,8 +825,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                                  &savedOptionalBreakPriority);
 
   if (!isText) {
-    rv = aFrame->Reflow(mPresContext, metrics, reflowStateHolder.ref(),
-                        aReflowStatus);
+    nsresult rv = aFrame->Reflow(mPresContext, metrics, reflowStateHolder.ref(),
+                                 aReflowStatus);
     if (NS_FAILED(rv)) {
       NS_WARNING( "Reflow of frame failed in nsLineLayout" );
       return rv;
@@ -1062,7 +1049,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   printf(" status=%x\n", aReflowStatus);
 #endif
 
-  return rv;
+  return NS_OK;
 }
 
 void
@@ -1323,13 +1310,12 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
   }
 }
 
-nsresult
+void
 nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
                              const nsHTMLReflowMetrics& aMetrics)
 {
   NS_ASSERTION(mCurrentSpan == mRootSpan, "bad linelayout user");
   NS_ASSERTION(mGotLineBox, "must have line box");
-
 
   nsIFrame *blockFrame = mBlockReflowState->frame;
   NS_ASSERTION(blockFrame->IsFrameOfType(nsIFrame::eBlockFrame),
@@ -1339,25 +1325,21 @@ nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
     mLineBox->SetHasBullet();
   }
 
-  PerFrameData* pfd;
-  nsresult rv = NewPerFrameData(&pfd);
-  if (NS_SUCCEEDED(rv)) {
-    mRootSpan->AppendFrame(pfd);
-    pfd->mFrame = aFrame;
-    pfd->mMargin.SizeTo(0, 0, 0, 0);
-    pfd->mBorderPadding.SizeTo(0, 0, 0, 0);
-    pfd->mFlags = 0;  // all flags default to false
-    pfd->SetFlag(PFD_ISBULLET, true);
-    if (aMetrics.ascent == nsHTMLReflowMetrics::ASK_FOR_BASELINE)
-      pfd->mAscent = aFrame->GetBaseline();
-    else
-      pfd->mAscent = aMetrics.ascent;
+  PerFrameData* pfd = NewPerFrameData();
+  mRootSpan->AppendFrame(pfd);
+  pfd->mFrame = aFrame;
+  pfd->mMargin.SizeTo(0, 0, 0, 0);
+  pfd->mBorderPadding.SizeTo(0, 0, 0, 0);
+  pfd->mFlags = 0;  // all flags default to false
+  pfd->SetFlag(PFD_ISBULLET, true);
+  if (aMetrics.ascent == nsHTMLReflowMetrics::ASK_FOR_BASELINE)
+    pfd->mAscent = aFrame->GetBaseline();
+  else
+    pfd->mAscent = aMetrics.ascent;
 
-    // Note: y value will be updated during vertical alignment
-    pfd->mBounds = aFrame->GetRect();
-    pfd->mOverflowAreas = aMetrics.mOverflowAreas;
-  }
-  return rv;
+  // Note: y value will be updated during vertical alignment
+  pfd->mBounds = aFrame->GetRect();
+  pfd->mOverflowAreas = aMetrics.mOverflowAreas;
 }
 
 #ifdef DEBUG

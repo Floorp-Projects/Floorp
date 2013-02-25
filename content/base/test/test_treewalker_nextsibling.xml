@@ -12,8 +12,9 @@
 <pre id="test" xmlns="http://www.w3.org/1999/xhtml">
 <script class="testbody" type="text/javascript" xmlns="http://www.w3.org/1999/xhtml">
 <![CDATA[
+var passedNodes = new WeakMap();
 function setPass(aNode) {
-  aNode.setUserData("pass", true, null);
+  passedNodes.set(aNode, true);
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -45,7 +46,7 @@ structure of the original document.
   walker2 = document.createTreeWalker(document, nsIDOMNodeFilter.SHOW_TEXT, null);
   while (walker2.nextNode()) {
     var cNode = walker2.currentNode;
-    ok(cNode.getUserData("pass"), "Every text node should appear: " + walker2.currentNode.nodeValue);
+    ok(passedNodes.get(cNode), "Every text node should appear: " + walker2.currentNode.nodeValue);
     walker.currentNode = cNode;
     var parent = walker.parentNode();
     is(parent, document, "parent of text node should be document");

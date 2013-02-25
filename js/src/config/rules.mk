@@ -95,6 +95,20 @@ ifndef INCLUDED_TESTS_MOCHITEST_MK #{
   include $(topsrcdir)/config/makefiles/mochitest.mk
 endif #}
 
+ifdef MOZ_ENABLE_GTEST
+ifdef GTEST_CPPSRCS
+CPPSRCS += $(GTEST_CPPSRCS)
+endif
+
+ifdef GTEST_CSRCS
+CSRCS += $(GTEST_CSRCS)
+endif
+
+ifdef GTEST_CMMSRCS
+CMMSRCS += $(GTEST_CMMSRCS)
+endif
+endif
+
 ifdef CPP_UNIT_TESTS
 
 # Compile the tests to $(DIST)/bin.  Make lots of niceties available by default

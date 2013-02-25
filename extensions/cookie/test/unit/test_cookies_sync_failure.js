@@ -38,6 +38,9 @@ function do_run_test() {
   // Set up a profile.
   this.profile = do_get_profile();
 
+  // Allow all cookies.
+  Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
+
   // Get the cookie file and the backup file.
   this.cookieFile = profile.clone();
   cookieFile.append("cookies.sqlite");

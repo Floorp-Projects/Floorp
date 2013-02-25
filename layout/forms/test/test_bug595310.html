@@ -30,7 +30,7 @@ addLoadEvent(function() {
 
   var content = document.getElementById('content');
   var i = document.getElementById('i');
-  var t = document.getElementById('t');
+  var t = SpecialPowers.wrap(document.getElementById('t'));
   i.value = ""; i.placeholder = "foo";
   t.value = ""; t.placeholder = "foo";
 

@@ -134,7 +134,8 @@ static inline bool
 MaybeCloneAndPatchCallee(JSContext *cx, CallArgs args, HandleScript script, jsbytecode *pc)
 {
     if (cx->typeInferenceEnabled() && !args.calleev().isPrimitive() &&
-        args.callee().isFunction() && args.callee().toFunction()->isCloneAtCallsite())
+        args.callee().isFunction() && args.callee().toFunction()->hasScript() &&
+        args.callee().toFunction()->nonLazyScript()->shouldCloneAtCallsite)
     {
         RootedFunction fun(cx, args.callee().toFunction());
         fun = CloneFunctionAtCallsite(cx, fun, script, pc);
@@ -232,8 +233,8 @@ stubs::FixupArity(VMFrame &f, uint32_t nactual)
 
     /* Reserve enough space for a callee frame. */
     CallArgs args = CallArgsFromSp(nactual, f.regs.sp);
-    if (fun->isCallsiteClone()) {
-        JS_ASSERT(args.callee().toFunction() == fun->getExtendedSlot(0).toObject().toFunction());
+    if (script->isCallsiteClone) {
+        JS_ASSERT(args.callee().toFunction() == script->originalFunction());
         args.setCallee(ObjectValue(*fun));
     }
     StackFrame *fp = cx->stack.getFixupFrame(cx, DONT_REPORT_ERROR, args, fun,
