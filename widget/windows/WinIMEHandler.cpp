@@ -168,6 +168,34 @@ IMEHandler::GetUpdatePreference()
   return nsIMEUpdatePreference(false, false);
 }
 
+void
+IMEHandler::SetOpenState(nsWindow* aWindow, bool aOpen)
+{
+#ifdef NS_ENABLE_TSF
+  if (sIsInTSFMode) {
+    nsTextStore::SetIMEOpenState(aOpen);
+    return;
+  }
+#endif //NS_ENABLE_TSF
+
+  nsIMEContext IMEContext(aWindow->GetWindowHandle());
+  IMEContext.SetOpenState(aOpen);
+}
+
+// static
+bool
+IMEHandler::GetOpenState(nsWindow* aWindow)
+{
+#ifdef NS_ENABLE_TSF
+  if (sIsInTSFMode) {
+    return nsTextStore::GetIMEOpenState();
+  }
+#endif //NS_ENABLE_TSF
+
+  nsIMEContext IMEContext(aWindow->GetWindowHandle());
+  return IMEContext.GetOpenState();
+}
+
 #ifdef DEBUG
 // static
 bool

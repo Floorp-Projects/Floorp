@@ -68,6 +68,12 @@ public:
   static nsIMEUpdatePreference GetUpdatePreference();
 
   /**
+   * Sets and Gets IME open state.
+   */
+  static void SetOpenState(nsWindow* aWindow, bool aOpen);
+  static bool GetOpenState(nsWindow* aWindow);
+
+  /**
    * "Kakutei-Undo" of ATOK or WXG (both of them are Japanese IME) causes
    * strange WM_KEYDOWN/WM_KEYUP/WM_CHAR message pattern.  So, when this
    * returns true, the caller needs to be careful for processing the messages.
