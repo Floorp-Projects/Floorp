@@ -68,10 +68,6 @@ protected:
   CGRect SeparatorAdjustedRect(CGRect aRect, nsIFrame* aLeft,
                                nsIFrame* aCurrent, nsIFrame* aRight);
 
-  // Helpers for progressbar.
-  double GetProgressValue(nsIFrame* aFrame);
-  double GetProgressMaxValue(nsIFrame* aFrame);
-
   // HITheme drawing routines
   void DrawFrame(CGContextRef context, HIThemeFrameKind inKind,
                  const HIRect& inBoxRect, bool inReadOnly,
