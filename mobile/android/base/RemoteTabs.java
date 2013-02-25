@@ -56,7 +56,7 @@ public class RemoteTabs extends ExpandableListView
     @Override
     public void show() {
         setVisibility(View.VISIBLE);
-        TabsAccessor.getTabs(mContext, this, getHandler());
+        TabsAccessor.getTabs(mContext, this);
     }
 
     @Override
