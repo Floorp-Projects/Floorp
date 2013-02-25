@@ -609,22 +609,6 @@ abstract public class GeckoApp
         outState.putString(SAVED_STATE_PRIVATE_SESSION, mPrivateBrowsingSession);
     }
 
-    void handleSecurityChange(final int tabId, final JSONObject identityData) {
-        final Tab tab = Tabs.getInstance().getTab(tabId);
-        if (tab == null)
-            return;
-
-        tab.updateIdentityData(identityData);
-    }
-
-    void handleReaderEnabled(final int tabId) {
-        final Tab tab = Tabs.getInstance().getTab(tabId);
-        if (tab == null)
-            return;
-
-        tab.setReaderEnabled(true);
-    }
-
     void handleFaviconRequest(final String url) {
         (new UiAsyncTask<Void, Void, String>(mMainHandler, GeckoAppShell.getHandler()) {
             @Override
@@ -649,17 +633,6 @@ abstract public class GeckoApp
             }
         }).execute();
     }
-
-    void handleLoadError(final int tabId, final String uri, final String title) {
-        final Tab tab = Tabs.getInstance().getTab(tabId);
-        if (tab == null)
-            return;
-
-        // When a load error occurs, the URLBar can get corrupt so we reset it
-        Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.LOAD_ERROR);
-    }
-
-    void handlePageShow(final int tabId) { }
 
     void handleClearHistory() {
         BrowserDB.clearHistory(getContentResolver());
@@ -780,43 +753,11 @@ abstract public class GeckoApp
                 // generic log listener
                 final String msg = message.getString("msg");
                 Log.d(LOGTAG, "Log: " + msg);
-            } else if (event.equals("Content:SecurityChange")) {
-                final int tabId = message.getInt("tabID");
-                final JSONObject identity = message.getJSONObject("identity");
-                Log.i(LOGTAG, "Security Mode - " + identity.getString("mode"));
-                handleSecurityChange(tabId, identity);
-            } else if (event.equals("Content:ReaderEnabled")) {
-                final int tabId = message.getInt("tabID");
-                handleReaderEnabled(tabId);
             } else if (event.equals("Reader:FaviconRequest")) {
                 final String url = message.getString("url");
                 handleFaviconRequest(url);
             } else if (event.equals("Reader:GoToReadingList")) {
                 showReadingList();
-            } else if (event.equals("Content:StateChange")) {
-                final int tabId = message.getInt("tabID");
-                final String uri = message.getString("uri");
-                final boolean success = message.getBoolean("success");
-                int state = message.getInt("state");
-                Log.d(LOGTAG, "State - " + state);
-                if ((state & GeckoAppShell.WPL_STATE_IS_NETWORK) != 0) {
-                    if ((state & GeckoAppShell.WPL_STATE_START) != 0) {
-                        Log.d(LOGTAG, "Got a document start event.");
-                        final boolean showProgress = message.getBoolean("showProgress");
-                        handleDocumentStart(tabId, showProgress, uri);
-                    } else if ((state & GeckoAppShell.WPL_STATE_STOP) != 0) {
-                        Log.d(LOGTAG, "Got a document stop event.");
-                        handleDocumentStop(tabId, success);
-                    }
-                }
-            } else if (event.equals("Content:LoadError")) {
-                final int tabId = message.getInt("tabID");
-                final String uri = message.getString("uri");
-                final String title = message.getString("title");
-                handleLoadError(tabId, uri, title);
-            } else if (event.equals("Content:PageShow")) {
-                final int tabId = message.getInt("tabID");
-                handlePageShow(tabId);
             } else if (event.equals("Gecko:Ready")) {
                 mGeckoReadyStartupTimer.stop();
                 connectGeckoLayerClient();
@@ -1026,38 +967,6 @@ abstract public class GeckoApp
                 }
             }
         });
-    }
-
-    void handleDocumentStart(int tabId, final boolean showProgress, String uri) {
-        final Tab tab = Tabs.getInstance().getTab(tabId);
-        if (tab == null)
-            return;
-
-        tab.setState(shouldShowProgress(uri) ? Tab.STATE_SUCCESS : Tab.STATE_LOADING);
-        tab.updateIdentityData(null);
-        tab.setReaderEnabled(false);
-        Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.START, showProgress);
-    }
-
-    void handleDocumentStop(int tabId, boolean success) {
-        final Tab tab = Tabs.getInstance().getTab(tabId);
-        if (tab == null)
-            return;
-
-        tab.setState(success ? Tab.STATE_SUCCESS : Tab.STATE_ERROR);
-
-        Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.STOP);
-
-        final String oldURL = tab.getURL();
-        GeckoAppShell.getHandler().postDelayed(new Runnable() {
-            public void run() {
-                // tab.getURL() may return null
-                if (!TextUtils.equals(oldURL, tab.getURL()))
-                    return;
-
-                ThumbnailHelper.getInstance().getAndProcessThumbnailFor(tab);
-            }
-        }, 500);
     }
 
     public void showToast(final int resId, final int duration) {
@@ -1729,11 +1638,6 @@ abstract public class GeckoApp
         //register for events
         registerEventListener("DOMContentLoaded");
         registerEventListener("log");
-        registerEventListener("Content:SecurityChange");
-        registerEventListener("Content:ReaderEnabled");
-        registerEventListener("Content:StateChange");
-        registerEventListener("Content:LoadError");
-        registerEventListener("Content:PageShow");
         registerEventListener("Reader:Added");
         registerEventListener("Reader:Removed");
         registerEventListener("Reader:Share");
@@ -2130,11 +2034,6 @@ abstract public class GeckoApp
 
         unregisterEventListener("DOMContentLoaded");
         unregisterEventListener("log");
-        unregisterEventListener("Content:SecurityChange");
-        unregisterEventListener("Content:ReaderEnabled");
-        unregisterEventListener("Content:StateChange");
-        unregisterEventListener("Content:LoadError");
-        unregisterEventListener("Content:PageShow");
         unregisterEventListener("Reader:Added");
         unregisterEventListener("Reader:Removed");
         unregisterEventListener("Reader:Share");
@@ -2713,10 +2612,6 @@ abstract public class GeckoApp
             }
         }
         return false;
-    }
-
-    public static boolean shouldShowProgress(String url) {
-        return "about:home".equals(url) || ReaderModeUtils.isAboutReader(url);
     }
 
     public static void assertOnUiThread() {
