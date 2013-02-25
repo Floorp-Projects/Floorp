@@ -87,7 +87,7 @@ NS_IMETHODIMP nsDeviceContextSpecQt::GetSurfaceForPrinter(
     file.setAutoRemove(false);
 
     nsresult rv = NS_NewNativeLocalFile(
-            nsDependentCString(file.fileName().toAscii().constData()),
+            nsDependentCString(file.fileName().toUtf8().constData()),
             false,
             getter_AddRefs(mSpoolFile));
     if (NS_FAILED(rv)) {
