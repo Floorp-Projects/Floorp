@@ -256,13 +256,17 @@ JSONSpewer::spewMDef(MDefinition *def)
         integerValue(use.def()->id());
     endList();
 
+    bool isTruncated = false;
+    if (def->isAdd() || def->isSub() || def->isMod() || def->isMul() || def->isDiv())
+        isTruncated = static_cast<MBinaryArithInstruction*>(def)->isTruncated();
+
     if (def->range()) {
         Sprinter sp(GetIonContext()->cx);
         sp.init();
         def->range()->print(sp);
-        stringProperty("type", "%s : %s", sp.string(), StringFromMIRType(def->type()));
+        stringProperty("type", "%s : %s%s", sp.string(), StringFromMIRType(def->type()), (isTruncated ? " (t)" : ""));
     } else {
-        stringProperty("type", "%s", StringFromMIRType(def->type()));
+        stringProperty("type", "%s%s", StringFromMIRType(def->type()), (isTruncated ? " (t)" : ""));
     }
 
     if (def->isInstruction()) {
