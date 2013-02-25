@@ -24,10 +24,10 @@ function test()
   option.text="Fubar";
   sel.options.add(option);
   try {
-    Components.lookupMethod(sel.options, "add")(option);
+    SpecialPowers.Components.lookupMethod(sel.options, "add")(option);
     ok(true, "function call should not throw")
   } catch(e) {
-    do_throw("this call should just work without any exceptions");
+    ok(false, "this call should just work without any exceptions");
   }
   SimpleTest.finish();
 }

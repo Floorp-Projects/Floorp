@@ -24,10 +24,8 @@ let am = {
   authMgr: null,
 
   init: function() {
-    const {classes: Cc, interfaces: Ci} = SpecialPowers.wrap(Components);
-
-    this.authMgr = Cc["@mozilla.org/network/http-auth-manager;1"]
-                     .getService(Components.interfaces.nsIHttpAuthManager)
+    this.authMgr = SpecialPowers.Cc["@mozilla.org/network/http-auth-manager;1"]
+                                .getService(SpecialPowers.Ci.nsIHttpAuthManager)
   },
 
   addIdentity: function() {
