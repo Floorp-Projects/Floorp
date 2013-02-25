@@ -63,6 +63,7 @@ bool
 FilteringWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
                                                       js::PropertyDescriptor *desc, unsigned flags)
 {
+    assertEnteredPolicy(cx, wrapper, id);
     if (!Base::getPropertyDescriptor(cx, wrapper, id, desc, flags))
         return false;
     return FilterSetter<Policy>(cx, wrapper, id, desc);
@@ -74,6 +75,7 @@ FilteringWrapper<Base, Policy>::getOwnPropertyDescriptor(JSContext *cx, JSObject
                                                          js::PropertyDescriptor *desc,
                                                          unsigned flags)
 {
+    assertEnteredPolicy(cx, wrapper, id);
     if (!Base::getOwnPropertyDescriptor(cx, wrapper, id, desc, flags))
         return false;
     return FilterSetter<Policy>(cx, wrapper, id, desc);
@@ -83,6 +85,7 @@ template <typename Base, typename Policy>
 bool
 FilteringWrapper<Base, Policy>::getOwnPropertyNames(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 {
+    assertEnteredPolicy(cx, wrapper, JSID_VOID);
     return Base::getOwnPropertyNames(cx, wrapper, props) &&
            Filter<Policy>(cx, wrapper, props);
 }
@@ -91,6 +94,7 @@ template <typename Base, typename Policy>
 bool
 FilteringWrapper<Base, Policy>::enumerate(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 {
+    assertEnteredPolicy(cx, wrapper, JSID_VOID);
     return Base::enumerate(cx, wrapper, props) &&
            Filter<Policy>(cx, wrapper, props);
 }
@@ -99,6 +103,7 @@ template <typename Base, typename Policy>
 bool
 FilteringWrapper<Base, Policy>::keys(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 {
+    assertEnteredPolicy(cx, wrapper, JSID_VOID);
     return Base::keys(cx, wrapper, props) &&
            Filter<Policy>(cx, wrapper, props);
 }
@@ -107,6 +112,7 @@ template <typename Base, typename Policy>
 bool
 FilteringWrapper<Base, Policy>::iterate(JSContext *cx, JSObject *wrapper, unsigned flags, Value *vp)
 {
+    assertEnteredPolicy(cx, wrapper, JSID_VOID);
     // We refuse to trigger the iterator hook across chrome wrappers because
     // we don't know how to censor custom iterator objects. Instead we trigger
     // the default proxy iterate trap, which will ask enumerate() for the list
