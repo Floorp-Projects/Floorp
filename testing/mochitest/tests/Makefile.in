@@ -11,12 +11,6 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PARALLEL_DIRS = \
-	MochiKit-1.4.2 \
-	SimpleTest \
-	browser \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
