@@ -9,6 +9,7 @@
 #include "nsIAtom.h"
 #include "nsNativeTheme.h"
 #include <windows.h>
+#include "mozilla/TimeStamp.h"
 
 struct nsIntRect;
 struct nsIntSize;
@@ -16,6 +17,9 @@ struct nsIntSize;
 class nsNativeThemeWin : private nsNativeTheme,
                          public nsITheme {
 public:
+  typedef mozilla::TimeStamp TimeStamp;
+  typedef mozilla::TimeDuration TimeDuration;
+
   NS_DECL_ISUPPORTS_INHERITED
 
   // The nsITheme interface.
@@ -70,37 +74,37 @@ protected:
   nsresult GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
                                 int32_t& aPart, int32_t& aState);
   nsresult ClassicGetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
-                                   int32_t& aPart, int32_t& aState, bool& aFocused);
+                                       int32_t& aPart, int32_t& aState, bool& aFocused);
   nsresult ClassicDrawWidgetBackground(nsRenderingContext* aContext,
+                                       nsIFrame* aFrame,
+                                       uint8_t aWidgetType,
+                                       const nsRect& aRect,
+                                       const nsRect& aClipRect);
+  nsresult ClassicGetWidgetBorder(nsDeviceContext* aContext, 
                                   nsIFrame* aFrame,
                                   uint8_t aWidgetType,
-                                  const nsRect& aRect,
-                                  const nsRect& aClipRect);
-  nsresult ClassicGetWidgetBorder(nsDeviceContext* aContext, 
-                             nsIFrame* aFrame,
-                             uint8_t aWidgetType,
-                             nsIntMargin* aResult);
-
+                                  nsIntMargin* aResult);
   bool ClassicGetWidgetPadding(nsDeviceContext* aContext,
-                            nsIFrame* aFrame,
-                            uint8_t aWidgetType,
-                            nsIntMargin* aResult);
-
+                               nsIFrame* aFrame,
+                               uint8_t aWidgetType,
+                               nsIntMargin* aResult);
   nsresult ClassicGetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aFrame,
-                                  uint8_t aWidgetType,
-                                  nsIntSize* aResult,
-                                  bool* aIsOverridable);
-
+                                       uint8_t aWidgetType,
+                                       nsIntSize* aResult,
+                                       bool* aIsOverridable);
   bool ClassicThemeSupportsWidget(nsPresContext* aPresContext, 
-                             nsIFrame* aFrame,
-                             uint8_t aWidgetType);
-
+                                  nsIFrame* aFrame,
+                                  uint8_t aWidgetType);
   void DrawCheckedRect(HDC hdc, const RECT& rc, int32_t fore, int32_t back,
                        HBRUSH defaultBack);
-
   uint32_t GetWidgetNativeDrawingFlags(uint8_t aWidgetType);
-
   int32_t StandardGetState(nsIFrame* aFrame, uint8_t aWidgetType, bool wantFocused);
-
   bool IsMenuActive(nsIFrame* aFrame, uint8_t aWidgetType);
+  RECT CalculateProgressOverlayRect(nsIFrame* aFrame, RECT* aWidgetRect,
+                                    bool aIsVertical, bool aIsIndeterminate,
+                                    bool aIsClassic);
+
+private:
+  TimeStamp mProgressDeterminateTimeStamp;
+  TimeStamp mProgressIndeterminateTimeStamp;
 };
