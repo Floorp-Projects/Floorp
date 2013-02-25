@@ -157,6 +157,49 @@ IccManager::SendStkEventDownload(const JS::Value& aEvent)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+IccManager::IccOpenChannel(const nsAString& aAid, nsIDOMDOMRequest** aRequest)
+{
+  *aRequest = nullptr;
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = mProvider->IccOpenChannel(GetOwner(), aAid, aRequest);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IccManager::IccExchangeAPDU(PRInt32 aChannel, const jsval& aApdu, nsIDOMDOMRequest** aRequest)
+{
+  *aRequest = nullptr;
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = mProvider->IccExchangeAPDU(GetOwner(), aChannel, aApdu, aRequest);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IccManager::IccCloseChannel(PRInt32 aChannel, nsIDOMDOMRequest** aRequest)
+{
+  *aRequest = nullptr;
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = mProvider->IccCloseChannel(GetOwner(), aChannel, aRequest);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+
 NS_IMPL_EVENT_HANDLER(IccManager, stkcommand)
 NS_IMPL_EVENT_HANDLER(IccManager, stksessionend)
 
