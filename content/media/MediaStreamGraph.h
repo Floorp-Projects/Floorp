@@ -567,22 +567,27 @@ public:
   /**
    * Append media data to a track. Ownership of aSegment remains with the caller,
    * but aSegment is emptied.
+   * Returns false if the data was not appended because no such track exists
+   * or the stream was already finished.
    */
-  void AppendToTrack(TrackID aID, MediaSegment* aSegment);
+  bool AppendToTrack(TrackID aID, MediaSegment* aSegment);
   /**
    * Returns true if the buffer currently has enough data.
+   * Returns false if there isn't enough data or if no such track exists.
    */
   bool HaveEnoughBuffered(TrackID aID);
   /**
    * Ensures that aSignalRunnable will be dispatched to aSignalThread
    * when we don't have enough buffered data in the track (which could be
-   * immediately).
+   * immediately). Will dispatch the runnable immediately if the track
+   * does not exist.
    */
   void DispatchWhenNotEnoughBuffered(TrackID aID,
       nsIThread* aSignalThread, nsIRunnable* aSignalRunnable);
   /**
    * Indicate that a track has ended. Do not do any more API calls
    * affecting this track.
+   * Ignored if the track does not exist.
    */
   void EndTrack(TrackID aID);
   /**
@@ -653,7 +658,6 @@ protected:
         return &mUpdateTracks[i];
       }
     }
-    NS_ERROR("Bad track ID!");
     return nullptr;
   }
 
