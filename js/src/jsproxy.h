@@ -349,21 +349,65 @@ class JS_FRIEND_API(AutoEnterPolicy)
     typedef BaseProxyHandler::Action Action;
     AutoEnterPolicy(JSContext *cx, BaseProxyHandler *handler,
                     JSObject *wrapper, jsid id, Action act, bool mayThrow)
+#ifdef DEBUG
+        : context(NULL)
+#endif
     {
         allow = handler->hasPolicy() ? handler->enter(cx, wrapper, id, act, &rv)
                                      : true;
+        recordEnter(cx, wrapper, id);
         if (!allow && !rv && mayThrow)
             reportError(cx, id);
     }
 
+    virtual ~AutoEnterPolicy() { recordLeave(); }
     inline bool allowed() { return allow; }
     inline bool returnValue() { JS_ASSERT(!allowed()); return rv; }
 
   protected:
+    // no-op constructor for subclass
+    AutoEnterPolicy()
+#ifdef DEBUG
+        : context(NULL)
+#endif
+        {};
     void reportError(JSContext *cx, jsid id);
     bool allow;
     bool rv;
+
+#ifdef DEBUG
+    JSContext *context;
+    mozilla::Maybe<RootedObject> enteredProxy;
+    mozilla::Maybe<RootedId> enteredId;
+    // NB: We explicitly don't track the entered action here, because sometimes
+    // SET traps do an implicit GET during their implementation, leading to
+    // spurious assertions.
+    AutoEnterPolicy *prev;
+    void recordEnter(JSContext *cx, JSObject *proxy, jsid id);
+    void recordLeave();
+
+    friend JS_FRIEND_API(void) assertEnteredPolicy(JSContext *cx, JSObject *proxy, jsid id);
+#else
+    inline void recordEnter(JSContext *cx, JSObject *proxy, jsid id) {}
+    inline void recordLeave() {}
+#endif
+
 };
+
+#ifdef DEBUG
+class JS_FRIEND_API(AutoWaivePolicy) : public AutoEnterPolicy {
+public:
+    AutoWaivePolicy(JSContext *cx, JSObject *proxy, jsid id)
+    {
+        allow = true;
+        recordEnter(cx, proxy, id);
+    }
+};
+#else
+class JS_FRIEND_API(AutoWaivePolicy) {
+    public: AutoWaivePolicy(JSContext *cx, JSObject *proxy, jsid id) {};
+};
+#endif
 
 } /* namespace js */
 
