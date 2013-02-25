@@ -6610,7 +6610,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     }
 
     if (!anyCharMessagesRemoved && DOMKeyCode == NS_VK_BACK &&
-        nsIMM32Handler::IsDoingKakuteiUndo(mWnd)) {
+        IMEHandler::IsDoingKakuteiUndo(mWnd)) {
       NS_ASSERTION(!aFakeCharMessage,
                    "We shouldn't be touching the real msg queue");
       RemoveMessageAndDispatchPluginEvent(WM_CHAR, WM_CHAR);

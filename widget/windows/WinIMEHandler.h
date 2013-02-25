@@ -7,6 +7,7 @@
 #define WinIMEHandler_h_
 
 #include "nscore.h"
+#include <windows.h>
 
 namespace mozilla {
 namespace widget {
@@ -22,6 +23,13 @@ class IMEHandler MOZ_FINAL
 public:
   static void Initialize();
   static void Terminate();
+
+  /**
+   * "Kakutei-Undo" of ATOK or WXG (both of them are Japanese IME) causes
+   * strange WM_KEYDOWN/WM_KEYUP/WM_CHAR message pattern.  So, when this
+   * returns true, the caller needs to be careful for processing the messages.
+   */
+  static bool IsDoingKakuteiUndo(HWND aWnd);
 
 private:
 #ifdef NS_ENABLE_TSF
