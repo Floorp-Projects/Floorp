@@ -7200,8 +7200,7 @@ void nsWindow::OnDestroy()
     CaptureRollupEvents(nullptr, false);
   }
 
-  // Restore the IM context.
-  AssociateDefaultIMC(true);
+  IMEHandler::OnDestroyWindow(this);
 
   // Turn off mouse trails if enabled.
   MouseTrailer* mtrailer = nsToolkit::gMouseTrailer;
@@ -7403,12 +7402,15 @@ nsWindow::SetInputContext(const InputContext& aContext,
   bool enable = (mInputContext.mIMEState.mEnabled == IMEState::ENABLED ||
                  mInputContext.mIMEState.mEnabled == IMEState::PLUGIN);
 
-  AssociateDefaultIMC(enable);
-
+  nsIMEContext IMEContext(mWnd);
   if (enable) {
-    nsIMEContext IMEContext(mWnd);
+    IMEContext.AssociateDefaultContext();
     mInputContext.mNativeIMEContext = static_cast<void*>(IMEContext.get());
+  } else if (!mOnDestroyCalled) {
+    // Don't disassociate the context after the window is destroyed.
+    IMEContext.Disassociate();
   }
+
   // Restore the latest associated context when we cannot get actual context.
   if (!mInputContext.mNativeIMEContext) {
     mInputContext.mNativeIMEContext = nativeIMEContext;
@@ -7477,42 +7479,6 @@ nsIMEUpdatePreference
 nsWindow::GetIMEUpdatePreference()
 {
   return IMEHandler::GetUpdatePreference();
-}
-
-bool nsWindow::AssociateDefaultIMC(bool aAssociate)
-{
-  nsIMEContext IMEContext(mWnd);
-
-  if (aAssociate) {
-    BOOL ret = ::ImmAssociateContextEx(mWnd, NULL, IACE_DEFAULT);
-#ifdef DEBUG
-    // Note that if IME isn't available with current keyboard layout,
-    // IMM might not be installed on the system such as English Windows.
-    // On such system, IMM APIs always fail.
-    NS_ASSERTION(ret || !IMEHandler::CurrentKeyboardLayoutHasIME(),
-                 "ImmAssociateContextEx failed to restore default IMC");
-    if (ret) {
-      nsIMEContext newIMEContext(mWnd);
-      NS_ASSERTION(!IMEContext.get() || newIMEContext.get() == IMEContext.get(),
-                   "Unknown IMC had been associated");
-    }
-#endif
-    return ret && !IMEContext.get();
-  }
-
-  if (mOnDestroyCalled) {
-    // If OnDestroy() has been called, we shouldn't disassociate the default
-    // IMC at destroying the window.
-    return false;
-  }
-
-  if (!IMEContext.get()) {
-    return false; // already disassociated
-  }
-
-  BOOL ret = ::ImmAssociateContextEx(mWnd, NULL, 0);
-  NS_ASSERTION(ret, "ImmAssociateContextEx failed to disassociate the IMC");
-  return ret != FALSE;
 }
 
 #ifdef ACCESSIBILITY
