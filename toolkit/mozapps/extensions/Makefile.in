@@ -61,8 +61,6 @@ EXTRA_JS_MODULES = \
   SpellCheckDictionaryBootstrap.js \
   $(NULL)
 
-TEST_DIRS += test
-
 EXTRA_DSO_LDOPTS = \
   $(MOZ_JS_LIBS) \
   $(MOZ_UNICHARUTIL_LIBS) \

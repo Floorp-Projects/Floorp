@@ -9,33 +9,5 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# Theme Selection
-#
-# MacOS X                 osx (toolkit/themes/osx)
-# Windows                 windows (toolkit/themes/windows)
-# GNOME/Linux             windows (toolkit/themes/windows) + 
-#                         linux overrides (toolkit/themes/linux)
-# OS/2                    windows (toolkit/themes/windows) + 
-#                         os2 overrides (toolkit/themes/os2)
-# faststripe              windows + faststripe (no native theme components)
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-DIRS	= osx
-else
-
-DIRS	= windows
-
-ifneq (,$(filter gtk2 qt,$(MOZ_WIDGET_TOOLKIT)))
-DIRS += linux
-endif
-ifneq (,$(filter os2,$(MOZ_WIDGET_TOOLKIT)))
-DIRS += os2/global
-endif
-ifdef MOZ_THEME_FASTSTRIPE
-DIRS += faststripe/global
-endif
-
-endif
-
 include $(topsrcdir)/config/rules.mk
 
