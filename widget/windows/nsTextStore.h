@@ -147,20 +147,19 @@ public:
 
   // Returns the address of the pointer so that the TSF automatic test can
   // replace the system object with a custom implementation for testing.
-  static void*    GetThreadMgr(void)
+  static void* GetNativeData(uint32_t aDataType)
   {
-    Initialize(); // Apply any previous changes
-    return (void*) & sTsfThreadMgr;
-  }
-
-  static void*    GetCategoryMgr(void)
-  {
-    return (void*) & sCategoryMgr;
-  }
-
-  static void*    GetDisplayAttrMgr(void)
-  {
-    return (void*) & sDisplayAttrMgr;
+    switch (aDataType) {
+      case NS_NATIVE_TSF_THREAD_MGR:
+        Initialize(); // Apply any previous changes
+        return static_cast<void*>(&sTsfThreadMgr);
+      case NS_NATIVE_TSF_CATEGORY_MGR:
+        return static_cast<void*>(&sCategoryMgr);
+      case NS_NATIVE_TSF_DISPLAY_ATTR_MGR:
+        return static_cast<void*>(&sDisplayAttrMgr);
+      default:
+        return nullptr;
+    }
   }
 
   static void*    GetTextStore()
