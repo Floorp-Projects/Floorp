@@ -173,6 +173,11 @@ public:
     return static_cast<void*>(sTsfTextStore);
   }
 
+  static bool     ThinksHavingFocus()
+  {
+    return (sTsfTextStore && sTsfTextStore->mContext);
+  }
+
   static bool     IsInTSFMode()
   {
     return sTsfThreadMgr != nullptr;
