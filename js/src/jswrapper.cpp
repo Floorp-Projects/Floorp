@@ -70,13 +70,6 @@ Wrapper::wrappedObject(RawObject wrapper)
     return GetProxyTargetObject(wrapper);
 }
 
-bool
-Wrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Action act, bool *bp)
-{
-    *bp = true;
-    return true;
-}
-
 JS_FRIEND_API(JSObject *)
 js::UnwrapObject(JSObject *wrapped, bool stopAtOuter, unsigned *flagsp)
 {
