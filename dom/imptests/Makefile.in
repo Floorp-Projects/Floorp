@@ -20,9 +20,6 @@ DIRS = \
   failures/webapps/WebStorage/tests/submissions/Ms2ger \
   $(NULL)
 
-include $(srcdir)/editing.mk
-include $(srcdir)/html.mk
-include $(srcdir)/webapps.mk
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
