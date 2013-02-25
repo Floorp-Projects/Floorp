@@ -335,6 +335,10 @@ public:
     uint32_t   mContentToScrollToFlags;
   };
 
+  virtual void ScheduleImageVisibilityUpdate();
+
+  virtual void RebuildImageVisibility(const nsDisplayList& aList);
+
 protected:
   virtual ~PresShell();
 
@@ -702,6 +706,16 @@ protected:
   virtual void SysColorChanged() { mPresContext->SysColorChanged(); }
   virtual void ThemeChanged() { mPresContext->ThemeChanged(); }
   virtual void BackingScaleFactorChanged() { mPresContext->UIResolutionChanged(); }
+
+  void UpdateImageVisibility();
+
+  nsRevocableEventPtr<nsRunnableMethod<PresShell> > mUpdateImageVisibilityEvent;
+
+  void ClearVisibleImagesList();
+  static void MarkImagesInListVisible(const nsDisplayList& aList);
+
+  // A list of images that are visible or almost visible.
+  nsTArray< nsCOMPtr<nsIImageLoadingContent > > mVisibleImages;
 
 #ifdef DEBUG
   // The reflow root under which we're currently reflowing.  Null when
