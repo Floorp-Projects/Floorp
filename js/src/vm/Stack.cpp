@@ -307,7 +307,7 @@ StackFrame::initFunctionScopeObjects(JSContext *cx)
 }
 
 bool
-StackFrame::prologue(JSContext *cx)
+StackFrame::prologue(JSContext *cx, bool newType)
 {
     RootedScript script(cx, this->script());
 
@@ -339,7 +339,7 @@ StackFrame::prologue(JSContext *cx)
 
     if (isConstructing()) {
         RootedObject callee(cx, &this->callee());
-        JSObject *obj = CreateThisForFunction(cx, callee, useNewType());
+        JSObject *obj = CreateThisForFunction(cx, callee, newType);
         if (!obj)
             return false;
         functionThis() = ObjectValue(*obj);
