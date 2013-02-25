@@ -69,6 +69,11 @@ public class Tabs implements GeckoEventListener {
         registerEventListener("Tab:Close");
         registerEventListener("Tab:Select");
         registerEventListener("Content:LocationChange");
+        registerEventListener("Content:SecurityChange");
+        registerEventListener("Content:ReaderEnabled");
+        registerEventListener("Content:StateChange");
+        registerEventListener("Content:LoadError");
+        registerEventListener("Content:PageShow");
         registerEventListener("DOMTitleChanged");
         registerEventListener("DOMLinkAdded");
         registerEventListener("DOMWindowClose");
@@ -323,6 +328,28 @@ public class Tabs implements GeckoEventListener {
                 selectTab(tab.getId());
             } else if (event.equals("Content:LocationChange")) {
                 tab.handleLocationChange(message);
+            } else if (event.equals("Content:SecurityChange")) {
+                tab.updateIdentityData(message.getJSONObject("identity"));
+                notifyListeners(tab, TabEvents.SECURITY_CHANGE);
+            } else if (event.equals("Content:ReaderEnabled")) {
+                tab.setReaderEnabled(true);
+                notifyListeners(tab, TabEvents.READER_ENABLED);
+            } else if (event.equals("Content:StateChange")) {
+                int state = message.getInt("state");
+                if ((state & GeckoAppShell.WPL_STATE_IS_NETWORK) != 0) {
+                    if ((state & GeckoAppShell.WPL_STATE_START) != 0) {
+                        boolean showProgress = message.getBoolean("showProgress");
+                        tab.handleDocumentStart(showProgress, message.getString("uri"));
+                        notifyListeners(tab, Tabs.TabEvents.START, showProgress);
+                    } else if ((state & GeckoAppShell.WPL_STATE_STOP) != 0) {
+                        tab.handleDocumentStop(message.getBoolean("success"));
+                        notifyListeners(tab, Tabs.TabEvents.STOP);
+                    }
+                }
+            } else if (event.equals("Content:LoadError")) {
+                notifyListeners(tab, Tabs.TabEvents.LOAD_ERROR);
+            } else if (event.equals("Content:PageShow")) {
+                notifyListeners(tab, TabEvents.PAGE_SHOW);
             } else if (event.equals("DOMTitleChanged")) {
                 tab.updateTitle(message.getString("title"));
             } else if (event.equals("DOMLinkAdded")) {
@@ -384,7 +411,10 @@ public class Tabs implements GeckoEventListener {
         RESTORED,
         LOCATION_CHANGE,
         MENU_UPDATED,
-        LINK_ADDED
+        PAGE_SHOW,
+        LINK_ADDED,
+        SECURITY_CHANGE,
+        READER_ENABLED
     }
 
     public void notifyListeners(Tab tab, TabEvents msg) {

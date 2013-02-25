@@ -679,9 +679,7 @@ var BrowserApp = {
       if (tab) {
         let message = {
           type: "Content:LoadError",
-          tabID: tab.id,
-          uri: aBrowser.currentURI.spec,
-          title: aBrowser.contentTitle
+          tabID: tab.id
         };
         sendMessageToJava(message);
         dump("Handled load error: " + e)
@@ -2923,9 +2921,7 @@ Tab.prototype = {
       } catch(e) {
         let message = {
           type: "Content:LoadError",
-          tabID: this.id,
-          uri: this.browser.currentURI.spec,
-          title: this.browser.contentTitle
+          tabID: this.id
         };
         sendMessageToJava(message);
         dump("Handled load error: " + e);
