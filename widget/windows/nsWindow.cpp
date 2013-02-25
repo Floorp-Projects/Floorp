@@ -7467,17 +7467,14 @@ nsWindow::GetToggledKeyState(uint32_t aKeyCode, bool* aLEDState)
   return NS_OK;
 }
 
-#ifdef NS_ENABLE_TSF
 NS_IMETHODIMP
 nsWindow::OnIMEFocusChange(bool aFocus)
 {
-  nsresult rv = nsTextStore::OnFocusChange(aFocus, this,
-                                           mInputContext.mIMEState.mEnabled);
-  if (rv == NS_ERROR_NOT_AVAILABLE)
-    rv = NS_OK; // TSF is not enabled, maybe.
-  return rv;
+  return IMEHandler::NotifyIME(this, aFocus ? NOTIFY_IME_OF_FOCUS :
+                                              NOTIFY_IME_OF_BLUR);
 }
 
+#ifdef NS_ENABLE_TSF
 NS_IMETHODIMP
 nsWindow::OnIMETextChange(uint32_t aStart,
                           uint32_t aOldEnd,
@@ -7485,13 +7482,15 @@ nsWindow::OnIMETextChange(uint32_t aStart,
 {
   return nsTextStore::OnTextChange(aStart, aOldEnd, aNewEnd);
 }
+#endif // #ifdef NS_ENABLE_TSF
 
 NS_IMETHODIMP
 nsWindow::OnIMESelectionChange(void)
 {
-  return nsTextStore::OnSelectionChange();
+  return IMEHandler::NotifyIME(this, NOTIFY_IME_OF_SELECTION_CHANGE);
 }
 
+#ifdef NS_ENABLE_TSF
 nsIMEUpdatePreference
 nsWindow::GetIMEUpdatePreference()
 {

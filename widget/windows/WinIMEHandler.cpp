@@ -104,6 +104,14 @@ IMEHandler::NotifyIME(nsWindow* aWindow,
 #ifdef NS_ENABLE_TSF
   if (sIsInTSFMode) {
     switch (aNotification) {
+      case NOTIFY_IME_OF_SELECTION_CHANGE:
+        return nsTextStore::OnSelectionChange();
+      case NOTIFY_IME_OF_FOCUS:
+        return nsTextStore::OnFocusChange(true, aWindow,
+                 aWindow->GetInputContext().mIMEState.mEnabled);
+      case NOTIFY_IME_OF_BLUR:
+        return nsTextStore::OnFocusChange(false, aWindow,
+                 aWindow->GetInputContext().mIMEState.mEnabled);
       case REQUEST_TO_COMMIT_COMPOSITION:
         if (nsTextStore::IsComposingOn(aWindow)) {
           nsTextStore::CommitComposition(false);
