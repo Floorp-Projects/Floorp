@@ -155,8 +155,12 @@ class nsNativeTheme : public nsITimerCallback
   bool IsMenuListEditable(nsIFrame *aFrame);
 
   nsIPresShell *GetPresShell(nsIFrame* aFrame);
-  int32_t CheckIntAttr(nsIFrame* aFrame, nsIAtom* aAtom, int32_t defaultValue);
-  bool CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom);
+  static bool CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom);
+  static int32_t CheckIntAttr(nsIFrame* aFrame, nsIAtom* aAtom, int32_t defaultValue);
+
+  // Helpers for progressbar.
+  static double GetProgressValue(nsIFrame* aFrame);
+  static double GetProgressMaxValue(nsIFrame* aFrame);
 
   bool GetCheckedOrSelected(nsIFrame* aFrame, bool aCheckSelected);
   bool GetIndeterminate(nsIFrame* aFrame);
