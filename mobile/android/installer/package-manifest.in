@@ -278,8 +278,6 @@
 @BINPATH@/components/nsBrowserGlue.js
 @BINPATH@/components/nsSetDefaultBrowser.manifest
 @BINPATH@/components/nsSetDefaultBrowser.js
-@BINPATH@/components/nsPrivateBrowsingService.manifest
-@BINPATH@/components/nsPrivateBrowsingService.js
 @BINPATH@/components/toolkitsearch.manifest
 @BINPATH@/components/nsSearchService.js
 @BINPATH@/components/nsSearchSuggestions.js
