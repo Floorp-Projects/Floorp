@@ -2817,9 +2817,7 @@ nsTextStore::OnFocusChange(bool aGotFocus,
           GetIMEEnabledName(aIMEEnabled), sTsfThreadMgr, sTsfTextStore));
 
   // no change notifications if TSF is disabled
-  if (!sTsfThreadMgr || !sTsfTextStore) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
+  NS_ENSURE_TRUE(sTsfThreadMgr && sTsfTextStore, NS_ERROR_NOT_AVAILABLE);
 
   if (aGotFocus) {
     bool bRet = sTsfTextStore->Create(aFocusedWidget, aIMEEnabled);
