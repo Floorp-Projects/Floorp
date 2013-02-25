@@ -168,7 +168,6 @@
 #include "nsIContent.h"
 
 #include "mozilla/HangMonitor.h"
-#include "nsIMM32Handler.h"
 #include "WinIMEHandler.h"
 
 using namespace mozilla::widget;
@@ -6480,7 +6479,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
   static bool sRedirectedKeyDownEventPreventedDefault = false;
   bool noDefault;
   if (aFakeCharMessage || !IsRedirectedKeyDownMessage(aMsg)) {
-    nsIMEContext IMEContext(mWnd);
+    bool isIMEEnabled = IMEHandler::IsIMEEnabled(mInputContext);
     nsKeyEvent keydownEvent(true, NS_KEY_DOWN, this);
     keydownEvent.keyCode = DOMKeyCode;
     InitKeyEvent(keydownEvent, nativeKey, aModKeyState);
@@ -6498,9 +6497,8 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     // application, we shouldn't redirect the message to it because the keydown
     // message is processed by us, so, nobody shouldn't process it.
     HWND focusedWnd = ::GetFocus();
-    nsIMEContext newIMEContext(mWnd);
     if (!noDefault && !aFakeCharMessage && focusedWnd && !PluginHasFocus() &&
-        !IMEContext.get() && newIMEContext.get()) {
+        !isIMEEnabled && IMEHandler::IsIMEEnabled(mInputContext)) {
       RemoveNextCharMessage(focusedWnd);
 
       INPUT keyinput;
@@ -7390,13 +7388,10 @@ NS_IMETHODIMP_(InputContext)
 nsWindow::GetInputContext()
 {
   mInputContext.mIMEState.mOpen = IMEState::CLOSED;
-  switch (mInputContext.mIMEState.mEnabled) {
-    case IMEState::ENABLED:
-    case IMEState::PLUGIN:
-      if (IMEHandler::GetOpenState(this)) {
-        mInputContext.mIMEState.mOpen = IMEState::OPEN;
-      }
-      break;
+  if (IMEHandler::IsIMEEnabled(mInputContext) && IMEHandler::GetOpenState(this)) {
+    mInputContext.mIMEState.mOpen = IMEState::OPEN;
+  } else {
+    mInputContext.mIMEState.mOpen = IMEState::CLOSED;
   }
   return mInputContext;
 }

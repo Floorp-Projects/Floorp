@@ -8,15 +8,13 @@
 
 #include "nscore.h"
 #include "nsEvent.h"
+#include "nsIWidget.h"
 #include <windows.h>
 
 class nsWindow;
-struct nsIMEUpdatePreference;
 
 namespace mozilla {
 namespace widget {
-
-struct InputContext;
 
 /**
  * IMEHandler class is a mediator class.  On Windows, there are two IME API
@@ -29,6 +27,12 @@ class IMEHandler MOZ_FINAL
 public:
   static void Initialize();
   static void Terminate();
+
+  /**
+   * Returns true if the context or IME state is enabled.  Otherwise, false.
+   */
+  static bool IsIMEEnabled(const InputContext& aInputContext);
+  static bool IsIMEEnabled(IMEState::Enabled aIMEState);
 
   /**
    * When the message is not needed to handle anymore by the caller, this
