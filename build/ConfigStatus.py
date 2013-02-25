@@ -6,14 +6,23 @@
 # drop-in replacement for autoconf 2.13's config.status, with features
 # borrowed from autoconf > 2.5, and additional features.
 
+import logging
 import os
 import sys
 
 from optparse import OptionParser
 
+from mach.logging import LoggingManager
 from mozbuild.backend.configenvironment import ConfigEnvironment
+from mozbuild.backend.recursivemake import RecursiveMakeBackend
+from mozbuild.frontend.emitter import TreeMetadataEmitter
+from mozbuild.frontend.reader import BuildReader
 
 from Preprocessor import Preprocessor
+
+
+log_manager = LoggingManager()
+
 
 # Basic logging facility
 verbose = False
@@ -83,6 +92,12 @@ def config_status(topobjdir = '.', topsrcdir = '.',
     env = ConfigEnvironment(topsrcdir, topobjdir, defines=defines,
             non_global_defines=non_global_defines, substs=substs)
 
+    reader = BuildReader(env)
+    emitter = TreeMetadataEmitter(env)
+    backend = RecursiveMakeBackend(env)
+    # This won't actually do anything because of the magic of generators.
+    definitions = emitter.emit(reader.read_topsrcdir())
+
     if options.recheck:
         # Execute configure from the top object directory
         if not os.path.isabs(topsrcdir):
@@ -99,11 +114,21 @@ def config_status(topobjdir = '.', topsrcdir = '.',
             files = []
     # Default to display messages when giving --file or --headers on the
     # command line.
+    log_level = logging.INFO
+
     if options.files or options.headers or options.verbose:
         global verbose
         verbose = True
+        log_level = logging.DEBUG
+
+    log_manager.add_terminal_logging(level=log_level)
+    log_manager.enable_unstructured()
+
     if not options.files and not options.headers:
         print >>sys.stderr, "creating config files and headers..."
+
+        backend.consume(definitions)
+
         files = [os.path.join(topobjdir, f) for f in files]
         headers = [os.path.join(topobjdir, f) for f in headers]
 
