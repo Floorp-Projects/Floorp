@@ -28,7 +28,4 @@ ifdef TARGET_XPCOM_ABI
 XULAPP_DEFINES += -DEM_ABI=$(OS_TARGET)_$(TARGET_XPCOM_ABI)
 endif
 
-DIRS    = src
-#DIRS   += public
-
 include $(topsrcdir)/config/rules.mk
