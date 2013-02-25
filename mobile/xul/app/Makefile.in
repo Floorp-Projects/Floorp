@@ -9,8 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = profile/extensions
-
 PREF_JS_EXPORTS = $(srcdir)/mobile.js
 
 ifndef LIBXUL_SDK
