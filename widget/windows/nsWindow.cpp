@@ -593,7 +593,7 @@ nsWindow::Create(nsIWidget *aParent,
   nsIMEContext IMEContext(mWnd);
   mInputContext.mNativeIMEContext = static_cast<void*>(IMEContext.get());
   MOZ_ASSERT(mInputContext.mNativeIMEContext ||
-             !nsIMM32Handler::IsIMEAvailable());
+             !IMEHandler::CurrentKeyboardLayoutHasIME());
   // If no IME context is available, we should set this widget's pointer since
   // nullptr indicates there is only one context per process on the platform.
   if (!mInputContext.mNativeIMEContext) {
@@ -7528,7 +7528,7 @@ bool nsWindow::AssociateDefaultIMC(bool aAssociate)
     // Note that if IME isn't available with current keyboard layout,
     // IMM might not be installed on the system such as English Windows.
     // On such system, IMM APIs always fail.
-    NS_ASSERTION(ret || !nsIMM32Handler::IsIMEAvailable(),
+    NS_ASSERTION(ret || !IMEHandler::CurrentKeyboardLayoutHasIME(),
                  "ImmAssociateContextEx failed to restore default IMC");
     if (ret) {
       nsIMEContext newIMEContext(mWnd);

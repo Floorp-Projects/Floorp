@@ -168,6 +168,11 @@ public:
     return sTsfThreadMgr != nullptr;
   }
 
+#ifdef DEBUG
+  // Returns true when keyboard layout has IME (TIP).
+  static bool     CurrentKeyboardLayoutHasIME();
+#endif // #ifdef DEBUG
+
 protected:
   nsTextStore();
   ~nsTextStore();

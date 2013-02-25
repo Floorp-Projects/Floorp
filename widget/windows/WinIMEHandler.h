@@ -43,6 +43,13 @@ public:
    */
   static bool IsDoingKakuteiUndo(HWND aWnd);
 
+#ifdef DEBUG
+  /**
+   * Returns true when current keyboard layout has IME.  Otherwise, false.
+   */
+  static bool CurrentKeyboardLayoutHasIME();
+#endif // #ifdef DEBUG
+
 private:
 #ifdef NS_ENABLE_TSF
   static bool sIsInTSFMode;
