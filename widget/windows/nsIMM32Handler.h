@@ -16,9 +16,6 @@ class nsIWidget;
 class nsWindow;
 struct nsIntRect;
 
-#define NS_WM_IMEFIRST WM_IME_SETCONTEXT
-#define NS_WM_IMELAST  WM_IME_KEYUP
-
 class nsIMEContext
 {
 public:
@@ -125,7 +122,7 @@ public:
     return IsComposing() && IsComposingWindow(aWindow);
   }
 
-  static bool CanOptimizeKeyAndIMEMessages(MSG *aNextKeyOrIMEMessage);
+  static bool CanOptimizeKeyAndIMEMessages();
 
 #ifdef DEBUG
   /**

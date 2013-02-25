@@ -11,7 +11,7 @@
 #include "WinMouseScrollHandler.h"
 #include "nsWindowDefs.h"
 #include "nsString.h"
-#include "nsIMM32Handler.h"
+#include "WinIMEHandler.h"
 #include "mozilla/widget/AudioSession.h"
 #include "mozilla/HangMonitor.h"
 
@@ -66,7 +66,7 @@ static bool PeekUIMessage(MSG* aMsg)
     pMsg = &imeMsg;
   }
 
-  if (pMsg && !nsIMM32Handler::CanOptimizeKeyAndIMEMessages(pMsg)) {
+  if (pMsg && !mozilla::widget::IMEHandler::CanOptimizeKeyAndIMEMessages()) {
     return false;
   }
 
