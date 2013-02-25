@@ -117,9 +117,9 @@ js::IsCrossCompartmentWrapper(RawObject wrapper)
 
 #define CHECKED(op, act)                                                     \
     JS_BEGIN_MACRO                                                           \
-        bool status;                                                         \
-        if (!enter(cx, wrapper, id, act, &status))                           \
-            return status;                                                   \
+        AutoEnterPolicy policy(cx, this, wrapper, id, act, true);            \
+        if (!policy.allowed())                                               \
+            return policy.returnValue();                                     \
         return (op);                                                         \
     JS_END_MACRO
 
