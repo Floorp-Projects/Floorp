@@ -8152,7 +8152,11 @@ var MemoryObserver = {
 };
 
 var Distribution = {
+  // File used to store campaign data
   _file: null,
+
+  // Path to distribution directory for distribution customizations
+  _path: null,
 
   init: function dc_init() {
     Services.obs.addObserver(this, "Distribution:Set", false);
@@ -8160,7 +8164,7 @@ var Distribution = {
     Services.obs.addObserver(this, "Campaign:Set", false);
 
     // Look for file outside the APK:
-    // /data/data/org.mozilla.fennec/distribution.json
+    // /data/data/org.mozilla.xxx/distribution.json
     this._file = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
     this._file.append("distribution.json");
     this.readJSON(this._file, this.update);
@@ -8175,6 +8179,8 @@ var Distribution = {
   observe: function dc_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "Distribution:Set":
+        this._path = aData;
+
         // Reload the default prefs so we can observe "prefservice:after-app-defaults"
         Services.prefs.QueryInterface(Ci.nsIObserver).observe(null, "reload-default-prefs", null);
         break;
@@ -8215,10 +8221,16 @@ var Distribution = {
   },
 
   getPrefs: function dc_getPrefs() {
-    // Look for preferences file outside the APK:
-    // /data/data/org.mozilla.fennec/distribution/preferences.json
-    let file = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
-    file.append("distribution");
+    let file;
+    if (this._path) {
+      file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      file.initWithPath(this._path);
+    } else {
+      // If a path isn't specified, look in the data directory:
+      // /data/data/org.mozilla.xxx/distribution
+      file = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
+      file.append("distribution");
+    }
     file.append("preferences.json");
 
     this.readJSON(file, this.applyPrefs);
