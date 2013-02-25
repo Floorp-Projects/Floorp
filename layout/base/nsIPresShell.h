@@ -120,10 +120,10 @@ typedef struct CapturingContentInfo {
   nsIContent* mContent;
 } CapturingContentInfo;
 
-// da75e297-2c23-43c4-8d7f-96a668e96ba9
+// 15f6c268-e40f-42a9-a7eb-e5e10a5840a1
 #define NS_IPRESSHELL_IID \
-{ 0xda75e297, 0x2c23, 0x43c4, \
-  { 0x8d, 0x7f, 0x96, 0xa6, 0x68, 0xe9, 0x6b, 0xa9 } }
+{ 0x15f6c268, 0xe40f, 0x42a9, \
+  { 0xa7, 0xeb, 0xe5, 0xe1, 0x0a, 0x58, 0x40, 0xa1 } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -1319,6 +1319,13 @@ public:
   virtual void AddInvalidateHiddenPresShellObserver(nsRefreshDriver *aDriver) = 0;
 
   void InvalidatePresShellIfHidden();
+
+  // Schedule an update of the list of visible images.
+  virtual void ScheduleImageVisibilityUpdate() = 0;
+
+  // Clears the current list of visible images on this presshell and replaces it
+  // with images that are in the display list aList.
+  virtual void RebuildImageVisibility(const nsDisplayList& aList) = 0;
 
   /**
    * Refresh observer management.
