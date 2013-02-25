@@ -101,7 +101,7 @@ public:
 
   static void     CommitComposition(bool aDiscard)
   {
-    if (!sTsfTextStore) return;
+    NS_ENSURE_TRUE_VOID(sTsfTextStore);
     sTsfTextStore->CommitCompositionInternal(aDiscard);
   }
 

@@ -7384,16 +7384,7 @@ nsWindow::OnSysColorChanged()
 
 NS_IMETHODIMP nsWindow::ResetInputState()
 {
-#ifdef DEBUG_KBSTATE
-  PR_LOG(gWindowsLog, PR_LOG_ALWAYS, ("ResetInputState\n"));
-#endif
-
-#ifdef NS_ENABLE_TSF
-  nsTextStore::CommitComposition(false);
-#endif //NS_ENABLE_TSF
-
-  nsIMM32Handler::CommitComposition(this);
-  return NS_OK;
+  return IMEHandler::NotifyIME(this, REQUEST_TO_COMMIT_COMPOSITION);
 }
 
 NS_IMETHODIMP_(void)
@@ -7462,16 +7453,7 @@ nsWindow::GetInputContext()
 
 NS_IMETHODIMP nsWindow::CancelIMEComposition()
 {
-#ifdef DEBUG_KBSTATE
-  PR_LOG(gWindowsLog, PR_LOG_ALWAYS, ("CancelIMEComposition\n"));
-#endif 
-
-#ifdef NS_ENABLE_TSF
-  nsTextStore::CommitComposition(true);
-#endif //NS_ENABLE_TSF
-
-  nsIMM32Handler::CancelComposition(this);
-  return NS_OK;
+  return IMEHandler::NotifyIME(this, REQUEST_TO_CANCEL_COMPOSITION);
 }
 
 NS_IMETHODIMP

@@ -96,6 +96,42 @@ IMEHandler::IsComposingOn(nsWindow* aWindow)
   return nsIMM32Handler::IsComposingOn(aWindow);
 }
 
+// static
+nsresult
+IMEHandler::NotifyIME(nsWindow* aWindow,
+                      NotificationToIME aNotification)
+{
+#ifdef NS_ENABLE_TSF
+  if (sIsInTSFMode) {
+    switch (aNotification) {
+      case REQUEST_TO_COMMIT_COMPOSITION:
+        if (nsTextStore::IsComposingOn(aWindow)) {
+          nsTextStore::CommitComposition(false);
+        }
+        return NS_OK;
+      case REQUEST_TO_CANCEL_COMPOSITION:
+        if (nsTextStore::IsComposingOn(aWindow)) {
+          nsTextStore::CommitComposition(true);
+        }
+        return NS_OK;
+      default:
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+  }
+#endif //NS_ENABLE_TSF
+
+  switch (aNotification) {
+    case REQUEST_TO_COMMIT_COMPOSITION:
+      nsIMM32Handler::CommitComposition(aWindow);
+      return NS_OK;
+    case REQUEST_TO_CANCEL_COMPOSITION:
+      nsIMM32Handler::CancelComposition(aWindow);
+      return NS_OK;
+    default:
+      return NS_ERROR_NOT_IMPLEMENTED;
+  }
+}
+
 #ifdef DEBUG
 // static
 bool
