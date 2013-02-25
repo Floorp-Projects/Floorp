@@ -12,7 +12,6 @@ FAIL_ON_WARNINGS := 1
 include $(DEPTH)/config/autoconf.mk
 
 MODULE           := editor
-PARALLEL_DIRS    := public idl txtsvc libeditor txmgr composer
 
 include $(topsrcdir)/config/rules.mk
 
