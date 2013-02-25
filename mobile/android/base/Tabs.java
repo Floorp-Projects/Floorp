@@ -69,9 +69,6 @@ public class Tabs implements GeckoEventListener {
         registerEventListener("Tab:Select");
         registerEventListener("Content:LocationChange");
         registerEventListener("Session:RestoreEnd");
-        registerEventListener("Reader:Added");
-        registerEventListener("Reader:Removed");
-        registerEventListener("Reader:Share");
         registerEventListener("DOMTitleChanged");
         registerEventListener("DOMLinkAdded");
         registerEventListener("DOMWindowClose");
@@ -322,20 +319,6 @@ public class Tabs implements GeckoEventListener {
                 }
             } else if (event.equals("Session:RestoreEnd")) {
                 notifyListeners(null, TabEvents.RESTORED);
-            } else if (event.equals("Reader:Added")) {
-                final boolean success = message.getBoolean("success");
-                final String title = message.getString("title");
-                final String url = message.getString("url");
-                handleReaderAdded(success, title, url);
-            } else if (event.equals("Reader:Removed")) {
-                final String url = message.getString("url");
-                handleReaderRemoved(url);
-            } else if (event.equals("Reader:Share")) {
-                final String title = message.getString("title");
-                final String url = message.getString("url");
-
-                GeckoAppShell.openUriExternal(url, "text/plain", "", "",
-                                              Intent.ACTION_SEND, title);
             } else if (event.equals("DOMTitleChanged")) {
                 Tab tab = getTab(message.getInt("tabID"));
                 if (tab != null) {
@@ -354,29 +337,6 @@ public class Tabs implements GeckoEventListener {
         } catch (Exception e) { 
             Log.w(LOGTAG, "handleMessage threw for " + event, e);
         }
-    }
-
-    void handleReaderAdded(boolean success, final String title, final String url) {
-        if (!success) {
-            mActivity.showToast(R.string.reading_list_failed, Toast.LENGTH_SHORT);
-            return;
-        }
-
-        GeckoAppShell.getHandler().post(new Runnable() {
-            public void run() {
-                BrowserDB.addReadingListItem(getContentResolver(), title, url);
-                mActivity.showToast(R.string.reading_list_added, Toast.LENGTH_SHORT);
-            }
-        });
-    }
-
-    void handleReaderRemoved(final String url) {
-        GeckoAppShell.getHandler().post(new Runnable() {
-            public void run() {
-                BrowserDB.removeReadingListItemWithURL(getContentResolver(), url);
-                mActivity.showToast(R.string.reading_list_removed, Toast.LENGTH_SHORT);
-            }
-        });
     }
 
     public void refreshThumbnails() {
