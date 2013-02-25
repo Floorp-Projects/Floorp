@@ -76,7 +76,6 @@ public class Tabs implements GeckoEventListener {
         registerEventListener("Content:PageShow");
         registerEventListener("DOMTitleChanged");
         registerEventListener("DOMLinkAdded");
-        registerEventListener("DOMWindowClose");
     }
 
     public void attachToActivity(GeckoApp activity) {
@@ -355,8 +354,6 @@ public class Tabs implements GeckoEventListener {
             } else if (event.equals("DOMLinkAdded")) {
                 tab.updateFaviconURL(message.getString("href"), message.getInt("size"));
                 notifyListeners(tab, TabEvents.LINK_ADDED);
-            } else if (event.equals("DOMWindowClose")) {
-                closeTab(tab);
             }
         } catch (Exception e) { 
             Log.w(LOGTAG, "handleMessage threw for " + event, e);
