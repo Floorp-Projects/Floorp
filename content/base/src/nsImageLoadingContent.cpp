@@ -400,6 +400,11 @@ nsImageLoadingContent::FrameCreated(nsIFrame* aFrame)
 {
   NS_ASSERTION(aFrame, "aFrame is null");
 
+  if (aFrame->HasAnyStateBits(NS_FRAME_IN_POPUP)) {
+    // Assume all images in popups are visible.
+    IncrementVisibleCount();
+  }
+
   nsPresContext* presContext = aFrame->PresContext();
   if (mVisibleCount == 0) {
     presContext->PresShell()->EnsureImageInVisibleList(this);
@@ -443,6 +448,12 @@ nsImageLoadingContent::FrameDestroyed(nsIFrame* aFrame)
 
   UntrackImage(mCurrentRequest);
   UntrackImage(mPendingRequest);
+
+  if (aFrame->HasAnyStateBits(NS_FRAME_IN_POPUP)) {
+    // We assume all images in popups are visible, so this decrement balances
+    // out the increment in FrameCreated above.
+    DecrementVisibleCount();
+  }
 }
 
 int32_t
