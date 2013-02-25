@@ -24,4 +24,13 @@
                  android:contentDescription="@string/new_tab"
                  android:background="@drawable/action_bar_button"/>
 
+    <ImageButton android:id="@+id/menu"
+                 style="@style/AddressBar.ImageButton"
+                 android:layout_width="@dimen/browser_toolbar_height"
+                 android:layout_height="@dimen/browser_toolbar_height"
+                 android:padding="@dimen/browser_toolbar_button_padding"
+                 android:src="@drawable/menu"
+                 android:contentDescription="@string/menu"
+                 android:background="@drawable/action_bar_button"/>
+
 </merge>
