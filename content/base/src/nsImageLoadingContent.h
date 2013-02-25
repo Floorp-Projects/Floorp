@@ -183,6 +183,7 @@ protected:
   void UnbindFromTree(bool aDeep, bool aNullParent);
 
   nsresult OnStopRequest(imgIRequest* aRequest, nsresult aStatus);
+  void OnUnlockedDraw();
   nsresult OnImageIsAnimated(imgIRequest *aRequest);
 
 private:

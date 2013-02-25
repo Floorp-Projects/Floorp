@@ -122,6 +122,11 @@ nsImageLoadingContent::Notify(imgIRequest* aRequest,
     return OnImageIsAnimated(aRequest);
   }
 
+  if (aType == imgINotificationObserver::UNLOCKED_DRAW) {
+    OnUnlockedDraw();
+    return NS_OK;
+  }
+
   if (aType == imgINotificationObserver::LOAD_COMPLETE) {
     // We should definitely have a request here
     NS_ABORT_IF_FALSE(aRequest, "no request?");
@@ -227,6 +232,20 @@ nsImageLoadingContent::OnStopRequest(imgIRequest* aRequest,
   nsSVGEffects::InvalidateDirectRenderingObservers(thisNode->AsElement());
 
   return NS_OK;
+}
+
+void
+nsImageLoadingContent::OnUnlockedDraw()
+{
+  nsPresContext* presContext = GetFramePresContext();
+  if (!presContext)
+    return;
+
+  nsIPresShell* presShell = presContext->PresShell();
+  if (!presShell)
+    return;
+
+  presShell->EnsureImageInVisibleList(this);
 }
 
 nsresult
