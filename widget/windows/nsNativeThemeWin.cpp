@@ -44,7 +44,9 @@ extern PRLogModuleInfo* gWindowsLog;
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsNativeThemeWin, nsNativeTheme, nsITheme)
 
-nsNativeThemeWin::nsNativeThemeWin()
+nsNativeThemeWin::nsNativeThemeWin() :
+  mProgressDeterminateTimeStamp(TimeStamp::Now()),
+  mProgressIndeterminateTimeStamp(TimeStamp::Now())
 {
   // If there is a relevant change in forms.css for windows platform,
   // static widget style variables (e.g. sButtonBorderSize) should be 
@@ -372,10 +374,40 @@ OffsetBackgroundRect(RECT& rect, CaptionButton button) {
 }
 
 /*
+ * Notes on progress track and meter part constants:
+ * xp and up:
+ * PP_BAR(_VERT)            - base progress track
+ * PP_TRANSPARENTBAR(_VERT) - transparent progress track. this only works if
+ *                            the underlying surface supports alpha. otherwise
+ *                            theme lib's DrawThemeBackground falls back on
+ *                            opaque PP_BAR. we currently don't use this.
+ * PP_CHUNK(_VERT)          - xp progress meter. this does not draw an xp style
+ *                            progress w/chunks, it draws fill using the chunk
+ *                            graphic.
+ * vista and up:
+ * PP_FILL(_VERT)           - progress meter. these have four states/colors.
+ * PP_PULSEOVERLAY(_VERT)   - white reflection - an overlay, not sure what this
+ *                            is used for.
+ * PP_MOVEOVERLAY(_VERT)    - green pulse - the pulse effect overlay on
+ *                            determined progress bars. we also use this for
+ *                            indeterminate chunk.
+ *
+ * Notes on state constants:
+ * PBBS_NORMAL               - green progress
+ * PBBVS_PARTIAL/PBFVS_ERROR - red error progress
+ * PBFS_PAUSED               - yellow paused progress
+ *
+ * There is no common controls style indeterminate part on vista and up.
+ */
+
+/*
  * Progress bar related constants. These values are found by experimenting and
  * comparing against native widgets used by the system. They are very unlikely
  * exact but try to not be too wrong.
  */
+// The amount of time we animate progress meters parts across the frame.
+static const double kProgressDeterminateTimeSpan = 3.0;
+static const double kProgressIndeterminateTimeSpan = 5.0;
 // The width of the overlay used to animate the horizontal progress bar (Vista and later).
 static const int32_t kProgressHorizontalVistaOverlaySize = 120;
 // The width of the overlay used for the horizontal indeterminate progress bars on XP.
@@ -386,16 +418,130 @@ static const int32_t kProgressVerticalOverlaySize = 45;
 static const int32_t kProgressVerticalIndeterminateOverlaySize = 60;
 // The width of the overlay used to animate the indeterminate progress bar (Windows Classic).
 static const int32_t kProgressClassicOverlaySize = 40;
-// Speed (px per ms) of the animation for determined Vista and later progress bars.
-static const double kProgressDeterminedVistaSpeed = 0.225;
-// Speed (px per ms) of the animation for indeterminate progress bars.
-static const double kProgressIndeterminateSpeed = 0.175;
-// Speed (px per ms) of the animation for indeterminate progress bars (Windows Classic).
-static const double kProgressClassicIndeterminateSpeed = 0.0875;
-// Delay (in ms) between two indeterminate progress bar cycles.
-static const int32_t kProgressIndeterminateDelay = 500;
-// Delay (in ms) between two determinate progress bar animation on Vista/7.
-static const int32_t kProgressDeterminedVistaDelay = 1000;
+
+/*
+ * GetProgressOverlayStyle - returns the proper overlay part for themed
+ * progress bars based on os and orientation.
+ */
+static int32_t
+GetProgressOverlayStyle(bool aIsVertical)
+{ 
+  if (aIsVertical) {
+    if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
+      return PP_MOVEOVERLAYVERT;
+    }
+    return PP_CHUNKVERT;
+  } else {
+    if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
+      return PP_MOVEOVERLAY;
+    }
+    return PP_CHUNK;
+  }
+}
+
+/*
+ * GetProgressOverlaySize - returns the minimum width or height for themed
+ * progress bar overlays. This includes the width of indeterminate chunks
+ * and vista pulse overlays.
+ */
+static int32_t
+GetProgressOverlaySize(bool aIsVertical, bool aIsIndeterminate)
+{
+  if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
+    if (aIsVertical) {
+      return aIsIndeterminate ? kProgressVerticalIndeterminateOverlaySize
+                              : kProgressVerticalOverlaySize;
+    }
+    return kProgressHorizontalVistaOverlaySize;
+  }
+  return kProgressHorizontalXPOverlaySize;
+}
+
+/*
+ * IsProgressMeterFilled - Determines if a progress meter is at 100% fill based
+ * on a comparison of the current value and maximum.
+ */
+static bool
+IsProgressMeterFilled(nsIFrame* aFrame)
+{
+  NS_ENSURE_TRUE(aFrame, false);
+  nsIFrame* parentFrame = aFrame->GetParent();
+  NS_ENSURE_TRUE(parentFrame, false);
+  return nsNativeTheme::GetProgressValue(parentFrame) ==
+         nsNativeTheme::GetProgressMaxValue(parentFrame);
+}
+
+/*
+ * CalculateProgressOverlayRect - returns the padded overlay animation rect
+ * used in rendering progress bars. Resulting rects are used in rendering
+ * vista+ pulse overlays and indeterminate progress meters. Graphics should
+ * be rendered at the origin.
+ */
+RECT
+nsNativeThemeWin::CalculateProgressOverlayRect(nsIFrame* aFrame,
+                                               RECT* aWidgetRect,
+                                               bool aIsVertical,
+                                               bool aIsIndeterminate,
+                                               bool aIsClassic)
+{
+  NS_ASSERTION(aFrame, "bad frame pointer");
+  NS_ASSERTION(aWidgetRect, "bad rect pointer");
+
+  int32_t frameSize = aIsVertical ? aWidgetRect->bottom - aWidgetRect->top
+                                  : aWidgetRect->right - aWidgetRect->left;
+
+  // Recycle a set of progress pulse timers - these timers control the position
+  // of all progress overlays and indeterminate chunks that get rendered.
+  double span = aIsIndeterminate ? kProgressIndeterminateTimeSpan
+                                 : kProgressDeterminateTimeSpan;
+  TimeDuration period;
+  if (!aIsIndeterminate) {
+    if (TimeStamp::Now() > (mProgressDeterminateTimeStamp +
+                            TimeDuration::FromSeconds(span))) {
+      mProgressDeterminateTimeStamp = TimeStamp::Now();
+    }
+    period = TimeStamp::Now() - mProgressDeterminateTimeStamp;
+  } else {
+    if (TimeStamp::Now() > (mProgressIndeterminateTimeStamp +
+                            TimeDuration::FromSeconds(span))) {
+      mProgressIndeterminateTimeStamp = TimeStamp::Now();
+    }
+    period = TimeStamp::Now() - mProgressIndeterminateTimeStamp;
+  }
+
+  double percent = period / TimeDuration::FromSeconds(span);
+
+  if (!aIsVertical && IsFrameRTL(aFrame))
+    percent = 1 - percent;
+
+  RECT overlayRect = *aWidgetRect;
+  int32_t overlaySize;
+  if (!aIsClassic) {
+    overlaySize = GetProgressOverlaySize(aIsVertical, aIsIndeterminate);
+  } else {
+    overlaySize = kProgressClassicOverlaySize;
+  } 
+
+  // Calculate a bounds that is larger than the meters frame such that the
+  // overlay starts and ends completely off the edge of the frame:
+  // [overlay][frame][overlay]
+  // This also yields a nice delay on rotation. Use overlaySize as the minimum
+  // size for [overlay] based on the graphics dims. If [frame] is larger, use
+  // the frame size instead.
+  int trackWidth = frameSize > overlaySize ? frameSize : overlaySize;
+  if (!aIsVertical) {
+    int xPos = aWidgetRect->left - trackWidth;
+    xPos += (int)ceil(((double)(trackWidth*2) * percent));
+    overlayRect.left = xPos;
+    overlayRect.right = xPos + overlaySize;
+  } else {
+    int yPos = aWidgetRect->bottom + trackWidth;
+    yPos -= (int)ceil(((double)(trackWidth*2) * percent));
+    overlayRect.bottom = yPos;
+    overlayRect.top = yPos - overlaySize;
+  }
+  return overlayRect;
+}
 
 HANDLE
 nsNativeThemeWin::GetTheme(uint8_t aWidgetType)
