@@ -678,7 +678,12 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
     }
     case NS_THEME_PROGRESSBAR: {
       aPart = IsVerticalProgress(aFrame) ? PP_BARVERT : PP_BAR;
-      aState = TS_NORMAL;
+      aState = PBBS_NORMAL;
+      return NS_OK;
+    }
+    case NS_THEME_PROGRESSBAR_VERTICAL: {
+      aPart = PP_BARVERT;
+      aState = PBBS_NORMAL;
       return NS_OK;
     }
     case NS_THEME_PROGRESSBAR_CHUNK: {
@@ -697,11 +702,6 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
           PP_FILL : PP_CHUNK;
       }
 
-      aState = TS_NORMAL;
-      return NS_OK;
-    }
-    case NS_THEME_PROGRESSBAR_VERTICAL: {
-      aPart = PP_BARVERT;
       aState = TS_NORMAL;
       return NS_OK;
     }
@@ -1461,6 +1461,19 @@ RENDER_AGAIN:
   {
     DrawThemeBGRTLAware(theme, hdc, part, state,
                         &widgetRect, &clipRect, IsFrameRTL(aFrame));
+  }
+  else if (aWidgetType == NS_THEME_PROGRESSBAR ||
+           aWidgetType == NS_THEME_PROGRESSBAR_VERTICAL) {
+    // DrawThemeBackground renders each corner with a solid white pixel.
+    // Restore these pixels to the underlying color. Tracks are rendered
+    // using alpha recovery, so this makes the corners transparent.
+    COLORREF color;
+    color = GetPixel(hdc, widgetRect.left, widgetRect.top);
+    DrawThemeBackground(theme, hdc, part, state, &widgetRect, &clipRect);
+    SetPixel(hdc, widgetRect.left, widgetRect.top, color);
+    SetPixel(hdc, widgetRect.right-1, widgetRect.top, color);
+    SetPixel(hdc, widgetRect.right-1, widgetRect.bottom-1, color);
+    SetPixel(hdc, widgetRect.left, widgetRect.bottom-1, color);
   }
   // If part is negative, the element wishes us to not render a themed
   // background, instead opting to be drawn specially below.
@@ -2329,6 +2342,10 @@ nsNativeThemeWin::GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType)
   case NS_THEME_WIN_BORDERLESS_GLASS:
   case NS_THEME_SCALE_HORIZONTAL:
   case NS_THEME_SCALE_VERTICAL:
+  case NS_THEME_PROGRESSBAR:
+  case NS_THEME_PROGRESSBAR_VERTICAL:
+  case NS_THEME_PROGRESSBAR_CHUNK:
+  case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
     return eTransparent;
   }
 
