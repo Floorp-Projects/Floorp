@@ -28,31 +28,6 @@ EXTRA_PP_COMPONENTS = \
 
 EXTRA_JS_MODULES = distribution.js
 
-PARALLEL_DIRS = \
-  about \
-  certerror \
-  dirprovider \
-  downloads \
-  feeds \
-  places \
-  preferences \
-  privatebrowsing \
-  search \
-  sessionstore \
-  shell \
-  sidebar \
-  tabview \
-  migration \
-  $(NULL)
-
-ifdef MOZ_SAFE_BROWSING
-PARALLEL_DIRS += safebrowsing
-endif
-
-TEST_DIRS += test
-
-DIRS += build
-
 ifdef MOZILLA_OFFICIAL
 DEFINES += -DOFFICIAL_BUILD=1
 endif

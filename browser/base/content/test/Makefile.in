@@ -8,11 +8,6 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 relativesrcdir  = @relativesrcdir@
 
-DIRS += \
-		newtab \
-		social \
-		$(NULL)
-
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \

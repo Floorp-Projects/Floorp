@@ -10,8 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-TEST_DIRS += test
-
 EXTRA_JS_MODULES = \
 	source-editor.jsm \
 	source-editor-orion.jsm \

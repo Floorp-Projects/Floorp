@@ -11,8 +11,6 @@ CHROMEDIR = $(call core_abspath,$(FINAL_TARGET))/chrome
 
 include $(DEPTH)/config/autoconf.mk
 
-TEST_DIRS += pdfjs/test
-
 ifdef MOZ_METRO
 GENERATED_DIRS = $(DIST)/bin/metro/chrome
 endif
