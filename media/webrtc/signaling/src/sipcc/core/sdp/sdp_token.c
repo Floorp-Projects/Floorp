@@ -11,6 +11,7 @@
 #include "prot_configmgr.h"
 #include "ccapi.h"
 #include "CSFLog.h"
+#include "prprf.h"
 
 static const char *logTag = "sdp_token";
 
@@ -59,12 +60,39 @@ sdp_result_e sdp_build_version (sdp_t *sdp_p, u16 level, flex_string *fs)
     return (SDP_SUCCESS);
 }
 
+static sdp_result_e sdp_verify_unsigned(const char *ptr, PRUint64 max_value)
+{
+    PRUint64 numeric_value;
+    /* Checking for only numbers since PR_sscanf will ignore trailing
+       characters */
+    size_t end = strspn(ptr, "0123456789");
+
+    if (ptr[end] != '\0')
+        return SDP_INVALID_PARAMETER;
+
+    if (PR_sscanf(ptr, "%llu", &numeric_value) != 1)
+        return SDP_INVALID_PARAMETER;
+
+    if (numeric_value > max_value)
+        return SDP_INVALID_PARAMETER;
+
+    return SDP_SUCCESS;
+}
+
 sdp_result_e sdp_parse_owner (sdp_t *sdp_p, u16 level, const char *ptr)
 {
     int          i;
     char        *tmpptr;
     sdp_result_e result;
     char         tmp[SDP_MAX_STRING_LEN];
+    /* The spec says this:
+
+        The numeric value of the session id
+        and version in the o line MUST be representable with a 64 bit signed
+        integer.  The initial value of the version MUST be less than
+        (2**62)-1, to avoid rollovers.
+    */
+    PRUint64     max_value_sessid_version = ((((PRUint64) 1) << 62) - 2);
 
     if (sdp_p->owner_name[0] != '\0') {
         sdp_p->conf_p->num_invalid_token_order++;
@@ -91,8 +119,7 @@ sdp_result_e sdp_parse_owner (sdp_t *sdp_p, u16 level, const char *ptr)
         /* Make sure the sessid is numeric, even though we store it as
          * a string.
          */
-        (void)sdp_getnextnumtok(sdp_p->owner_sessid,
-                                (const char **)&tmpptr, " \t",&result);
+        result = sdp_verify_unsigned(sdp_p->owner_sessid, max_value_sessid_version);
     }
     if (result != SDP_SUCCESS) {
         sdp_parse_error(sdp_p->peerconnection,
@@ -108,8 +135,7 @@ sdp_result_e sdp_parse_owner (sdp_t *sdp_p, u16 level, const char *ptr)
         /* Make sure the version is numeric, even though we store it as
          * a string.
          */
-        (void)sdp_getnextnumtok(sdp_p->owner_version,
-                                (const char **)&tmpptr," \t",&result);
+        result = sdp_verify_unsigned(sdp_p->owner_version, max_value_sessid_version);
     }
     if (result != SDP_SUCCESS) {
         sdp_parse_error(sdp_p->peerconnection,
