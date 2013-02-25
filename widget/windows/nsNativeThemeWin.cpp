@@ -3542,75 +3542,27 @@ RENDER_AGAIN:
     case NS_THEME_PROGRESSBAR_CHUNK: {
       nsIFrame* stateFrame = aFrame->GetParent();
       nsEventStates eventStates = GetContentState(stateFrame, aWidgetType);
-      const bool indeterminate = IsIndeterminateProgress(stateFrame, eventStates);
 
-      if (!indeterminate) {
+      bool indeterminate = IsIndeterminateProgress(stateFrame, eventStates);
+      bool vertical = IsVerticalProgress(stateFrame) ||
+                      aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL;
+      int32_t overlayPart = GetProgressOverlayStyle(vertical);
+
+      nsIContent* content = aFrame->GetContent();
+      if (!indeterminate || !content) {
         ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_HIGHLIGHT+1));
         break;
       }
 
-      /**
-       * The indeterminate rendering is animated: the bar goes from one side to
-       * another.
-       */
+      RECT overlayRect =
+        CalculateProgressOverlayRect(aFrame, &widgetRect, vertical,
+                                     indeterminate, true);
+
+      ::FillRect(hdc, &overlayRect, (HBRUSH) (COLOR_HIGHLIGHT+1));
+
       if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 30)) {
         NS_WARNING("unable to animate progress widget!");
       }
-
-      const bool vertical = IsVerticalProgress(stateFrame);
-      const int32_t overlaySize = kProgressClassicOverlaySize;
-      const double pixelsPerMillisecond = kProgressClassicIndeterminateSpeed;
-      const int32_t frameSize = vertical ? widgetRect.bottom - widgetRect.top
-                                         : widgetRect.right - widgetRect.left;
-      const double interval = frameSize / pixelsPerMillisecond;
-      // We have to pass a double* to modf and we can't pass NULL.
-      double tempValue;
-      double ratio = modf(PR_IntervalToMilliseconds(PR_IntervalNow())/interval,
-                          &tempValue);
-      int32_t dx = 0;
-
-      // If the frame direction is RTL, we want to have the animation going RTL.
-      // ratio is in [0.0; 1.0[ range, inverting it reverse the animation.
-      if (!vertical && IsFrameRTL(aFrame)) {
-        ratio = 1.0 - ratio;
-        dx -= overlaySize;
-      }
-      dx += static_cast<int32_t>(frameSize * ratio);
-
-      RECT overlayRect = widgetRect;
-      if (vertical) {
-        overlayRect.bottom -= dx;
-        overlayRect.top = overlayRect.bottom - overlaySize;
-      } else {
-        overlayRect.left += dx;
-        overlayRect.right = overlayRect.left + overlaySize;
-      }
-
-      // Compute the leftover part.
-      RECT leftoverRect = widgetRect;
-      if (vertical) {
-        if (overlayRect.top < widgetRect.top) {
-          leftoverRect.bottom = widgetRect.bottom;
-          leftoverRect.top = leftoverRect.bottom + overlayRect.top - widgetRect.top;
-        }
-      } else if (IsFrameRTL(aFrame)) {
-        if (overlayRect.left < widgetRect.left) {
-          leftoverRect.right = widgetRect.right;
-          leftoverRect.left = leftoverRect.right + overlayRect.left - widgetRect.left;
-        }
-      } else if (overlayRect.right > widgetRect.right) {
-        leftoverRect.left = widgetRect.left;
-        leftoverRect.right = leftoverRect.left + overlayRect.right - widgetRect.right;
-      }
-
-      // Only show the leftover if the rect has been modified.
-      if (leftoverRect.top != widgetRect.top ||
-          leftoverRect.left != widgetRect.left ||
-          leftoverRect.right != widgetRect.right) {
-        ::FillRect(hdc, &leftoverRect, (HBRUSH) (COLOR_HIGHLIGHT+1));
-      }
-
-      ::FillRect(hdc, &overlayRect, (HBRUSH) (COLOR_HIGHLIGHT+1));
       break;
     }
 
