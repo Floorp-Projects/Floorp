@@ -237,6 +237,11 @@ nsImageLoadingContent::OnStopRequest(imgIRequest* aRequest,
 void
 nsImageLoadingContent::OnUnlockedDraw()
 {
+  if (mVisibleCount > 0) {
+    // We should already be marked as visible, there is nothing more we can do.
+    return;
+  }
+
   nsPresContext* presContext = GetFramePresContext();
   if (!presContext)
     return;
@@ -395,6 +400,11 @@ nsImageLoadingContent::FrameCreated(nsIFrame* aFrame)
 {
   NS_ASSERTION(aFrame, "aFrame is null");
 
+  nsPresContext* presContext = aFrame->PresContext();
+  if (mVisibleCount == 0) {
+    presContext->PresShell()->EnsureImageInVisibleList(this);
+  }
+
   // We pass the SKIP_FRAME_CHECK flag to TrackImage here because our primary
   // frame pointer hasn't been setup yet when this is caled.
   TrackImage(mCurrentRequest, SKIP_FRAME_CHECK);
@@ -402,8 +412,6 @@ nsImageLoadingContent::FrameCreated(nsIFrame* aFrame)
 
   // We need to make sure that our image request is registered, if it should
   // be registered.
-  nsPresContext* presContext = aFrame->PresContext();
-
   if (mCurrentRequest) {
     nsLayoutUtils::RegisterImageRequestIfAnimated(presContext, mCurrentRequest,
                                                   &mCurrentRequestRegistered);
