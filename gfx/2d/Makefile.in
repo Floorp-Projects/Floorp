@@ -6,7 +6,7 @@
 DEPTH		= @DEPTH@
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
-VPATH		= @srcdir@
+VPATH		=  $(srcdir) $(srcdir)/unittest
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -52,6 +52,13 @@ CPPSRCS	= \
         DrawTargetDual.cpp \
         ImageScaling.cpp \
         SourceSurfaceRawData.cpp \
+        $(NULL)
+
+GTEST_CPPSRCS = \
+        GTestMain.cpp \
+        TestBase.cpp \
+        TestPoint.cpp \
+        TestScaling.cpp \
         $(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))

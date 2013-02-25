@@ -34,7 +34,7 @@
   </style>
   <style name="SyncLinkItem" parent="@style/SyncTextItem">
     <item name="android:clickable">true</item>
-    <item name="android:textColor">#ACC4D5</item>
+    <item name="android:textColor">#0000EE</item>
   </style>
   <style name="SyncTextTitle" parent="@style/SyncTextItem">
     <item name="android:layout_gravity">center_vertical</item>
@@ -94,6 +94,15 @@
     <item name="android:gravity">center</item>
     <item name="android:background">@android:drawable/bottom_bar</item>
   </style>
+
+  <style name="SyncBottomContainer">
+    <item name="android:layout_width">match_parent</item>
+    <item name="android:layout_height">wrap_content</item>
+    <item name="android:divider">@android:drawable/divider_horizontal_bright</item>
+    <item name="android:showDividers">beginning</item>
+    <item name="android:orientation">vertical</item>
+  </style>
+
   <style name="SyncButton" parent="@android:style/Widget.Button">
     <item name="android:layout_width">fill_parent</item>
     <item name="android:layout_height">wrap_content</item>
@@ -108,7 +117,7 @@
     <item name="android:layout_marginBottom">5dp</item>
     <item name="android:gravity">center</item>
     <item name="android:background">@drawable/pin_background</item>
-    <item name="android:textColor">#FFFFFF</item>
+    <item name="android:textColor">#000</item>
     <item name="android:textSize">35sp</item>
     <item name="android:text">@string/sync_pin_default</item>
   </style>

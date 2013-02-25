@@ -13,7 +13,6 @@
 #include "nsHTMLFormElement.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Output)
-DOMCI_NODE_DATA(HTMLOutputElement, mozilla::dom::HTMLOutputElement)
 
 namespace mozilla {
 namespace dom {
@@ -61,7 +60,7 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLOutputElement)
                                    nsIConstraintValidation)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLOutputElement,
                                                nsGenericHTMLFormElement)
-NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLOutputElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLOutputElement)
 

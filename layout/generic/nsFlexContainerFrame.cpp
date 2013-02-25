@@ -2128,6 +2128,19 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   nscoord frameCrossSize;
 
   if (!shouldReflowChildren) {
+    // So far, it looks like none of our flex items need a reflow.
+    // HOWEVER: if we already gave any of them a measuring reflow, then we
+    // should consider it dirty -- it'll need a "real" reflow to undo the
+    // effects of our measuring reflow.
+    for (uint32_t i = 0; i < items.Length(); ++i) {
+      if (items[i].HadMeasuringReflow()) {
+        shouldReflowChildren = true;
+        break;
+      }
+    }
+  }
+
+  if (!shouldReflowChildren) {
     // Children don't need reflow --> assume our content-box size is the same
     // since our last reflow.
     frameCrossSize = mCachedContentBoxCrossSize +

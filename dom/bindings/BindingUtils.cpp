@@ -259,15 +259,49 @@ Constructor(JSContext* cx, unsigned argc, JS::Value* vp)
   const JS::Value& v =
     js::GetFunctionNativeReserved(callee,
                                   CONSTRUCTOR_NATIVE_HOLDER_RESERVED_SLOT);
-  JSNativeHolder* nativeHolder = static_cast<JSNativeHolder*>(v.toPrivate());
+  const JSNativeHolder* nativeHolder =
+    static_cast<const JSNativeHolder*>(v.toPrivate());
   return (nativeHolder->mNative)(cx, argc, vp);
+}
+
+static JSObject*
+CreateConstructor(JSContext* cx, JSObject* global, const char* name,
+                  const JSNativeHolder* nativeHolder, unsigned ctorNargs)
+{
+  JSFunction* fun = js::NewFunctionWithReserved(cx, Constructor, ctorNargs,
+                                                JSFUN_CONSTRUCTOR, global,
+                                                name);
+  if (!fun) {
+    return nullptr;
+  }
+
+  JSObject* constructor = JS_GetFunctionObject(fun);
+  js::SetFunctionNativeReserved(constructor,
+                                CONSTRUCTOR_NATIVE_HOLDER_RESERVED_SLOT,
+                                js::PrivateValue(const_cast<JSNativeHolder*>(nativeHolder)));
+  return constructor;
+}
+
+static bool
+DefineConstructor(JSContext* cx, JSObject* global, const char* name,
+                  JSObject* constructor)
+{
+  JSBool alreadyDefined;
+  if (!JS_AlreadyHasOwnProperty(cx, global, name, &alreadyDefined)) {
+    return false;
+  }
+
+  // This is Enumerable: False per spec.
+  return alreadyDefined ||
+         JS_DefineProperty(cx, global, name, OBJECT_TO_JSVAL(constructor),
+                           nullptr, nullptr, 0);
 }
 
 static JSObject*
 CreateInterfaceObject(JSContext* cx, JSObject* global,
                       JSClass* constructorClass,
-                      JSNativeHolder* constructorNative,
-                      unsigned ctorNargs,
+                      const JSNativeHolder* constructorNative,
+                      unsigned ctorNargs, const NamedConstructor* namedConstructors,
                       JSObject* proto,
                       const NativeProperties* properties,
                       const NativeProperties* chromeOnlyProperties,
@@ -288,16 +322,8 @@ CreateInterfaceObject(JSContext* cx, JSObject* global,
     constructor = JS_NewObject(cx, constructorClass, constructorProto, global);
   } else {
     MOZ_ASSERT(constructorNative);
-    JSFunction* fun = js::NewFunctionWithReserved(cx, Constructor, ctorNargs,
-                                                  JSFUN_CONSTRUCTOR, global,
-                                                  name);
-    if (!fun) {
-      return NULL;
-    }
-    constructor = JS_GetFunctionObject(fun);
-    js::SetFunctionNativeReserved(constructor,
-                                  CONSTRUCTOR_NATIVE_HOLDER_RESERVED_SLOT,
-                                  js::PrivateValue(constructorNative));
+    constructor = CreateConstructor(cx, global, name, constructorNative,
+                                    ctorNargs);
   }
   if (!constructor) {
     return NULL;
@@ -370,16 +396,30 @@ CreateInterfaceObject(JSContext* cx, JSObject* global,
     return NULL;
   }
 
-  JSBool alreadyDefined;
-  if (!JS_AlreadyHasOwnProperty(cx, global, name, &alreadyDefined)) {
-    return NULL;
+  if (!DefineConstructor(cx, global, name, constructor)) {
+    return nullptr;
   }
 
-  // This is Enumerable: False per spec.
-  if (!alreadyDefined &&
-      !JS_DefineProperty(cx, global, name, OBJECT_TO_JSVAL(constructor), NULL,
-                         NULL, 0)) {
-    return NULL;
+  if (namedConstructors) {
+    int namedConstructorSlot = DOM_INTERFACE_SLOTS_BASE;
+    while (namedConstructors->mName) {
+      JSObject* namedConstructor = CreateConstructor(cx, global,
+                                                     namedConstructors->mName,
+                                                     &namedConstructors->mHolder,
+                                                     namedConstructors->mNargs);
+      if (!namedConstructor ||
+          !JS_DefineProperty(cx, namedConstructor, "prototype",
+                             JS::ObjectValue(*proto), JS_PropertyStub,
+                             JS_StrictPropertyStub,
+                             JSPROP_PERMANENT | JSPROP_READONLY) ||
+          !DefineConstructor(cx, global, namedConstructors->mName,
+                             namedConstructor)) {
+        return nullptr;
+      }
+      js::SetReservedSlot(constructor, namedConstructorSlot++,
+                          JS::ObjectValue(*namedConstructor));
+      ++namedConstructors;
+    }
   }
 
   return constructor;
@@ -453,9 +493,9 @@ CreateInterfacePrototypeObject(JSContext* cx, JSObject* global,
 void
 CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject* protoProto,
                        JSClass* protoClass, JSObject** protoCache,
-                       JSClass* constructorClass, JSNativeHolder* constructor,
-                       unsigned ctorNargs, JSObject** constructorCache,
-                       const DOMClass* domClass,
+                       JSClass* constructorClass, const JSNativeHolder* constructor,
+                       unsigned ctorNargs, const NamedConstructor* namedConstructors,
+                       JSObject** constructorCache, const DOMClass* domClass,
                        const NativeProperties* properties,
                        const NativeProperties* chromeOnlyProperties,
                        const char* name)
@@ -505,8 +545,8 @@ CreateInterfaceObjects(JSContext* cx, JSObject* global, JSObject* protoProto,
   JSObject* interface;
   if (constructorClass || constructor) {
     interface = CreateInterfaceObject(cx, global, constructorClass, constructor,
-                                      ctorNargs, proto, properties,
-                                      chromeOnlyProperties, name);
+                                      ctorNargs, namedConstructors, proto,
+                                      properties, chromeOnlyProperties, name);
     if (!interface) {
       if (protoCache) {
         // If we fail we need to make sure to clear the value of protoCache we
@@ -673,7 +713,8 @@ GetNativePropertyHooks(JSContext *cx, JSObject *obj, DOMObjectType& type)
     const JS::Value& v =
       js::GetFunctionNativeReserved(obj,
                                     CONSTRUCTOR_NATIVE_HOLDER_RESERVED_SLOT);
-    JSNativeHolder* nativeHolder = static_cast<JSNativeHolder*>(v.toPrivate());
+    const JSNativeHolder* nativeHolder =
+      static_cast<const JSNativeHolder*>(v.toPrivate());
     return nativeHolder->mPropertyHooks;
   }
 

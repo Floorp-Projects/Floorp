@@ -316,7 +316,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
             nsresult rv = NS_OK;
 
             if (JSID_IS_STRING(id) &&
-                name.encode(ccx, JSID_TO_STRING(id)) &&
+                name.encodeLatin1(ccx, JSID_TO_STRING(id)) &&
                 (iface2 = XPCNativeInterface::GetNewOrUsed(ccx, name.ptr()), iface2) &&
                 nullptr != (to = wrapperToReflectInterfaceNames->
                            FindTearOff(ccx, iface2, true, &rv)) &&
@@ -1397,7 +1397,7 @@ XPC_WN_CallMethod(JSContext *cx, unsigned argc, jsval *vp)
         JSFunction* fun = funobj->getFunctionPrivate();
         JSString *funid = JS_GetFunctionDisplayId(fun);
         JSAutoByteString bytes;
-        const char *funname = !funid ? "" : bytes.encode(cx, funid) ? bytes.ptr() : "<error>";
+        const char *funname = !funid ? "" : bytes.encodeLatin1(cx, funid) ? bytes.ptr() : "<error>";
         SLIM_LOG_WILL_MORPH_FOR_PROP(cx, obj, funname);
     }
 #endif
@@ -1433,7 +1433,7 @@ XPC_WN_GetterSetter(JSContext *cx, unsigned argc, jsval *vp)
         JSAutoByteString bytes;
         if (JS_TypeOfValue(cx, JS_CALLEE(cx, vp)) == JSTYPE_FUNCTION) {
             JSString *funid = JS_GetFunctionDisplayId(funobj->getFunctionPrivate());
-            funname = !funid ? "" : bytes.encode(cx, funid) ? bytes.ptr() : "<error>";
+            funname = !funid ? "" : bytes.encodeLatin1(cx, funid) ? bytes.ptr() : "<error>";
         }
         SLIM_LOG_WILL_MORPH_FOR_PROP(cx, obj, funname);
     }

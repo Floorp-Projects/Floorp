@@ -325,7 +325,7 @@ class nsCookieService : public nsICookieService
     nsRefPtr<DBState>             mPrivateDBState;
 
     // cached prefs
-    uint8_t                       mCookieBehavior; // BEHAVIOR_{ACCEPT, REJECTFOREIGN, REJECT}
+    uint8_t                       mCookieBehavior; // BEHAVIOR_{ACCEPT, REJECTFOREIGN, REJECT, LIMITFOREIGN}
     bool                          mThirdPartySession;
     uint16_t                      mMaxNumberOfCookies;
     uint16_t                      mMaxCookiesPerHost;

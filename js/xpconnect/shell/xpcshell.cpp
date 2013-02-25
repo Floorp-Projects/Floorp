@@ -584,7 +584,7 @@ DumpHeap(JSContext *cx, unsigned argc, jsval *vp)
         if (!str)
             return false;
         *vp = STRING_TO_JSVAL(str);
-        if (!fileName.encode(cx, str))
+        if (!fileName.encodeLatin1(cx, str))
             return false;
     }
 
@@ -1089,7 +1089,7 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
                     str = JS_ValueToString(cx, result);
                     JS_SetErrorReporter(cx, older);
                     JSAutoByteString bytes;
-                    if (str && bytes.encode(cx, str))
+                    if (str && bytes.encodeLatin1(cx, str))
                         fprintf(gOutFile, "%s\n", bytes.ptr());
                     else
                         ok = false;

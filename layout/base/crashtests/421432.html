@@ -1,0 +1,14 @@
+<html>
+<head>
+<title>Crash [@ DocumentViewerImpl::LoadComplete] with focusing and removing iframe on reload</title>
+</head>
+<body>
+<iframe id="content" onload="window.frames[0].focus()" style="width:1000px;height: 300px;"></iframe>
+<script>
+function doe2() {
+document.getElementById('content').src = 'data:text/html;charset=utf-8,%3Cscript%3Ewindow.addEventListener%28%27focus%27%2C%20function%28e%29%20%7Bwindow.frameElement.parentNode.removeChild%28window.frameElement%29%3B%7D%2C%20true%29%3C/script%3E';
+}
+setInterval(doe2, 500);
+</script>
+</body>
+</html>

@@ -2,7 +2,7 @@
     "config_version": 1,
     "tooltool_manifest": "releng-unagi.tt",
     "mock_target": "mozilla-centos6-i386",
-    "mock_packages": ["ccache", "make", "bison", "flex", "gcc", "g++", "mpfr", "zlib-devel", "ncurses-devel", "zip", "autoconf213", "glibc-static", "perl-Digest-SHA", "wget", "alsa-lib", "atk", "cairo", "dbus-glib", "fontconfig", "freetype", "glib2", "gtk2", "libXRender", "libXt", "pango", "mozilla-python27-mercurial", "openssh-clients", "nss-devel"],
+    "mock_packages": ["ccache", "make", "bison", "flex", "gcc", "g++", "mpfr", "zlib-devel", "ncurses-devel", "zip", "autoconf213", "glibc-static", "perl-Digest-SHA", "wget", "alsa-lib", "atk", "cairo", "dbus-glib", "fontconfig", "freetype", "glib2", "gtk2", "libXRender", "libXt", "pango", "mozilla-python27-mercurial", "openssh-clients", "nss-devel", "java-1.6.0-openjdk-devel"],
     "mock_files": [["/home/cltbld/.ssh", "/home/mock_mozilla/.ssh"]],
     "build_targets": [],
     "upload_files": [

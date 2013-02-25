@@ -6,6 +6,8 @@
 const { Loader } = require('sdk/test/loader');
 const { browserWindows } = require('sdk/windows');
 const tabs = require('sdk/tabs');
+const { isPrivate } = require('sdk/private-browsing');
+const { isWindowPBSupported, isTabPBSupported } = require('sdk/private-browsing/utils');
 
 const URL = 'data:text/html;charset=utf-8,<html><head><title>#title#</title></head></html>';
 
@@ -289,8 +291,29 @@ exports.testTabContentTypeAndReload = function(test) {
       }
       else {
         test.assertEqual(tab.contentType, "text/xml");
-        tab.close(function() test.done());
+        tab.close(function() {
+          test.done();
+        });
       }
     }
   });
 };
+
+// test that it is possible to open a private tab
+exports.testTabOpenPrivate = function(test) {
+  test.waitUntilDone();
+
+  let url = 'about:blank';
+  tabs.open({
+    url: url,
+    isPrivate: true,
+    onReady: function(tab) {
+      test.assertEqual(tab.url, url, 'opened correct tab');
+      test.assertEqual(isPrivate(tab), false, 'private tabs arenot supported by default');
+
+      tab.close(function() {
+        test.done();
+      });
+    }
+  });
+}

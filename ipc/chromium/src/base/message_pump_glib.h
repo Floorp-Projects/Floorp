@@ -59,7 +59,7 @@ class MessagePumpForUI : public MessagePump {
   virtual void Run(Delegate* delegate) { RunWithDispatcher(delegate, NULL); }
   virtual void Quit();
   virtual void ScheduleWork();
-  virtual void ScheduleDelayedWork(const Time& delayed_work_time);
+  virtual void ScheduleDelayedWork(const TimeTicks& delayed_work_time);
 
   // Internal methods used for processing the pump callbacks.  They are
   // public for simplicity but should not be used directly.  HandlePrepare
@@ -116,7 +116,7 @@ class MessagePumpForUI : public MessagePump {
   GMainContext* context_;
 
   // This is the time when we need to do delayed work.
-  Time delayed_work_time_;
+  TimeTicks delayed_work_time_;
 
   // The work source.  It is shared by all calls to Run and destroyed when
   // the message pump is destroyed.

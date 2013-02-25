@@ -187,6 +187,9 @@ abstract public class GeckoApp
 
     private String mPrivateBrowsingSession;
 
+    private static Boolean sIsLargeTablet = null;
+    private static Boolean sIsSmallTablet = null;
+
     abstract public int getLayout();
     abstract public boolean hasTabsSideBar();
     abstract protected String getDefaultProfileName();
@@ -1446,10 +1449,27 @@ abstract public class GeckoApp
     }
 
     public boolean isTablet() {
-        int screenLayout = getResources().getConfiguration().screenLayout;
-        return (Build.VERSION.SDK_INT >= 11 &&
-                (((screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_LARGE) || 
-                 ((screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_XLARGE)));
+        return isLargeTablet() || isSmallTablet();
+    }
+
+    public boolean isLargeTablet() {
+        if (sIsLargeTablet == null) {
+            int screenLayout = getResources().getConfiguration().screenLayout;
+            sIsLargeTablet = (Build.VERSION.SDK_INT >= 11 &&
+                              ((screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_XLARGE));
+        }
+
+        return sIsLargeTablet;
+    }
+
+    public boolean isSmallTablet() {
+        if (sIsSmallTablet == null) {
+            int screenLayout = getResources().getConfiguration().screenLayout;
+            return (Build.VERSION.SDK_INT >= 11 &&
+                    ((screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_LARGE));
+        }
+
+        return sIsSmallTablet;
     }
 
     /** Called when the activity is first created. */

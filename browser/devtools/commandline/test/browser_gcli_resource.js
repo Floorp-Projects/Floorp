@@ -60,6 +60,11 @@ exports.shutdown = function(options) {
 };
 
 exports.testPredictions = function(options) {
+  if (options.isJsdom) {
+    assert.log('Skipping checks due to jsdom document.stylsheets support.');
+    return;
+  }
+
   var resource1 = types.getType('resource');
   var options1 = resource1.getLookup();
   // firefox doesn't support digging into scripts/stylesheets
@@ -67,7 +72,7 @@ exports.testPredictions = function(options) {
     assert.ok(options1.length > 1, 'have all resources');
   }
   else {
-    assert.log('Skipping checks due to jsdom/firefox document.stylsheets support.');
+    assert.log('Skipping checks due to firefox document.stylsheets support.');
   }
   options1.forEach(function(prediction) {
     checkPrediction(resource1, prediction);
@@ -80,7 +85,7 @@ exports.testPredictions = function(options) {
     assert.ok(options2.length > 1, 'have js resources');
   }
   else {
-    assert.log('Skipping checks due to jsdom/firefox document.stylsheets support.');
+    assert.log('Skipping checks due to firefox document.stylsheets support.');
   }
   options2.forEach(function(prediction) {
     checkPrediction(resource2, prediction);
@@ -93,7 +98,7 @@ exports.testPredictions = function(options) {
     assert.ok(options3.length >= 1, 'have css resources');
   }
   else {
-    assert.log('Skipping checks due to jsdom/firefox document.stylsheets support.');
+    assert.log('Skipping checks due to firefox document.stylsheets support.');
   }
   options3.forEach(function(prediction) {
     checkPrediction(resource3, prediction);

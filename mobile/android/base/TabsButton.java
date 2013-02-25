@@ -35,9 +35,7 @@ public class TabsButton extends ShapedButton {
         mCropped = a.getBoolean(R.styleable.TabsButton_cropped, false);
         a.recycle();
 
-        a = context.obtainStyledAttributes(attrs, R.styleable.TabsPanel);
-        mSideBar = a.getBoolean(R.styleable.TabsPanel_sidebar, false);
-        a.recycle();
+        mSideBar = false;
 
         // Paint to draw the background.
         mPaint = new Paint();
@@ -196,5 +194,13 @@ public class TabsButton extends ShapedButton {
     @Override
     public void onLightweightThemeReset() {
         setBackgroundResource(R.drawable.tabs_button);
+    }
+
+    public void setIsSideBar(boolean isSideBar) {
+        if (mSideBar == isSideBar)
+            return;
+
+        mSideBar = isSideBar;
+        requestLayout();
     }
 }

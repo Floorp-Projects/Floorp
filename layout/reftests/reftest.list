@@ -282,8 +282,8 @@ skip-if(B2G) include text-indent/reftest.list
 # text-shadow/
 skip-if(Android||B2G) include text-shadow/reftest.list
 
-# theme (pinstripe)
-skip-if(B2G) include ../../toolkit/themes/pinstripe/reftests/reftest.list
+# theme (osx)
+skip-if(B2G) include ../../toolkit/themes/osx/reftests/reftest.list
 
 # text-transform/
 skip-if(B2G) include text-transform/reftest.list

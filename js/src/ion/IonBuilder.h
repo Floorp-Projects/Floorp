@@ -216,13 +216,13 @@ class IonBuilder : public MIRGenerator
     ControlStatus processNextTableSwitchCase(CFGState &state);
     ControlStatus processCondSwitchCase(CFGState &state);
     ControlStatus processCondSwitchBody(CFGState &state);
-    ControlStatus processSwitchBreak(JSOp op, jssrcnote *sn);
+    ControlStatus processSwitchBreak(JSOp op);
     ControlStatus processSwitchEnd(DeferredEdge *breaks, jsbytecode *exitpc);
     ControlStatus processAndOrEnd(CFGState &state);
     ControlStatus processLabelEnd(CFGState &state);
     ControlStatus processReturn(JSOp op);
     ControlStatus processThrow();
-    ControlStatus processContinue(JSOp op, jssrcnote *sn);
+    ControlStatus processContinue(JSOp op);
     ControlStatus processBreak(JSOp op, jssrcnote *sn);
     ControlStatus maybeLoop(JSOp op, jssrcnote *sn);
     bool pushLoop(CFGState::State state, jsbytecode *stopAt, MBasicBlock *entry,
@@ -259,7 +259,7 @@ class IonBuilder : public MIRGenerator
     void assertValidLoopHeadOp(jsbytecode *pc);
 
     ControlStatus forLoop(JSOp op, jssrcnote *sn);
-    ControlStatus whileOrForInLoop(JSOp op, jssrcnote *sn);
+    ControlStatus whileOrForInLoop(jssrcnote *sn);
     ControlStatus doWhileLoop(JSOp op, jssrcnote *sn);
     ControlStatus tableSwitch(JSOp op, jssrcnote *sn);
     ControlStatus condSwitch(JSOp op, jssrcnote *sn);
@@ -277,7 +277,17 @@ class IonBuilder : public MIRGenerator
     void rewriteParameters();
     bool initScopeChain();
     bool pushConstant(const Value &v);
+
+    // Add a guard which ensure that the set of type which goes through this
+    // generated code correspond to the observed or infered (actual) type.
     bool pushTypeBarrier(MInstruction *ins, types::StackTypeSet *actual, types::StackTypeSet *observed);
+
+    // Add a guard which ensure that the set of type does not go through. Some
+    // instructions, such as function calls, can have an excluded set of types
+    // which would be added after invalidation if they are observed in the
+    // callee.
+    void addTypeBarrier(uint32_t i, CallInfo &callinfo, types::StackTypeSet *calleeObs);
+
     void monitorResult(MInstruction *ins, types::TypeSet *barrier, types::StackTypeSet *types);
 
     JSObject *getSingletonPrototype(JSFunction *target);
@@ -431,7 +441,7 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineUnsafeSetElement(CallInfo &callInfo);
     bool inlineUnsafeSetDenseArrayElement(CallInfo &callInfo, uint32_t base);
     bool inlineUnsafeSetTypedArrayElement(CallInfo &callInfo, uint32_t base, int arrayType);
-    InliningStatus inlineForceSequentialOrInParallelSection(CallInfo &callInfo);
+    InliningStatus inlineShouldForceSequentialOrInParallelSection(CallInfo &callInfo);
     InliningStatus inlineNewDenseArray(CallInfo &callInfo);
     InliningStatus inlineNewDenseArrayForSequentialExecution(CallInfo &callInfo);
     InliningStatus inlineNewDenseArrayForParallelExecution(CallInfo &callInfo);
@@ -455,7 +465,7 @@ class IonBuilder : public MIRGenerator
                           types::StackTypeSet *calleeTypes, bool cloneAtCallsite);
     bool makeCallBarrier(HandleFunction target,  CallInfo &callInfo,
                          types::StackTypeSet *calleeTypes, bool cloneAtCallsite);
-    bool makeCall(HandleFunction target, CallInfo &callInfo, 
+    bool makeCall(HandleFunction target, CallInfo &callInfo,
                   types::StackTypeSet *calleeTypes, bool cloneAtCallsite);
 
     MDefinition *patchInlinedReturn(CallInfo &callInfo, MBasicBlock *exit, MBasicBlock *bottom);
@@ -542,6 +552,10 @@ class CallInfo
     types::StackTypeSet *barrier_;
     types::StackTypeSet *types_;
 
+    types::TypeBarrier *argsBarriers_;
+    types::StackTypeSet *thisType_;
+    Vector<types::StackTypeSet *> argsType_;
+
     MDefinition *fun_;
     MDefinition *thisArg_;
     Vector<MDefinition *> args_;
@@ -552,6 +566,9 @@ class CallInfo
     CallInfo(JSContext *cx, bool constructing)
       : barrier_(NULL),
         types_(NULL),
+        argsBarriers_(NULL),
+        thisType_(NULL),
+        argsType_(cx),
         fun_(NULL),
         thisArg_(NULL),
         args_(cx),
@@ -562,6 +579,9 @@ class CallInfo
              types::StackTypeSet *types, types::StackTypeSet *barrier)
       : barrier_(barrier),
         types_(types),
+        argsBarriers_(NULL),
+        thisType_(NULL),
+        argsType_(cx),
         fun_(NULL),
         thisArg_(NULL),
         args_(cx),
@@ -570,6 +590,10 @@ class CallInfo
 
     bool init(CallInfo &callInfo) {
         JS_ASSERT(constructing_ == callInfo.constructing());
+
+        thisType_ = callInfo.thisType_;
+        if (thisType_ && !argsType_.append(callInfo.argsType_.begin(), callInfo.argsType_.end()))
+            return false;
 
         fun_ = callInfo.fun();
         thisArg_ = callInfo.thisArg();
@@ -589,10 +613,8 @@ class CallInfo
         // Get the arguments in the right order
         if (!args_.reserve(argc))
             return false;
-        for (int32_t i = argc; i > 0; i--) {
-            if (!args_.append(current->peek(-i)))
-                return false;
-        }
+        for (int32_t i = argc; i > 0; i--)
+            args_.infallibleAppend(current->peek(-i));
         current->popn(argc);
 
         // Get |this| and |fun|
@@ -600,6 +622,33 @@ class CallInfo
         setFun(current->pop());
 
         return true;
+    }
+
+    bool initCallType(TypeOracle *oracle, HandleScript script, jsbytecode *pc) {
+        argsBarriers_ = oracle->callArgsBarrier(script, pc);
+        thisType_ = oracle->getCallTarget(script, argc(), pc);
+        if (!argsType_.reserve(argc()))
+            return false;
+        for (uint32_t i = 1; i <= argc(); i++)
+            argsType_.infallibleAppend(oracle->getCallArg(script, argc(), i, pc));
+        return true;
+    }
+
+    bool initFunApplyArguments(TypeOracle *oracle, HandleScript script, jsbytecode *pc, uint32_t nargs) {
+        argsBarriers_ = oracle->callArgsBarrier(script, pc);
+        thisType_ = oracle->getCallArg(script, 2, 0, pc);
+        if (!argsType_.reserve(nargs))
+            return false;
+        for (uint32_t i = 0; i < nargs; i++)
+            argsType_.infallibleAppend(oracle->parameterTypeSet(script, i));
+        return true;
+    }
+
+    bool hasCallType() {
+        // argsBarriers can be NULL is the caller does not need to guard its
+        // arguments again some value type expected by callees. On the other
+        // hand we would always have a thisType if the type info is initialized.
+        return hasTypeInfo() && thisType_;
     }
 
     void popFormals(MBasicBlock *current) {
@@ -637,9 +686,23 @@ class CallInfo
         return &args_;
     }
 
+    Vector<types::StackTypeSet *> &argvType() {
+        return argsType_;
+    }
+
     MDefinition *getArg(uint32_t i) {
         JS_ASSERT(i < argc());
         return args_[i];
+    }
+
+    types::StackTypeSet *getArgType(uint32_t i) {
+        JS_ASSERT(i < argc() && argc() == argsType_.length());
+        return argsType_[i];
+    }
+
+    void setArg(uint32_t i, MDefinition *def) {
+        JS_ASSERT(i < argc());
+        args_[i] = def;
     }
 
     MDefinition *thisArg() {
@@ -647,8 +710,17 @@ class CallInfo
         return thisArg_;
     }
 
+    types::StackTypeSet *thisType() {
+        JS_ASSERT(thisType_);
+        return thisType_;
+    }
+
     void setThis(MDefinition *thisArg) {
         thisArg_ = thisArg;
+    }
+
+    void setThisType(types::StackTypeSet *thisType) {
+        thisType_ = thisType;
     }
 
     bool constructing() {
@@ -661,6 +733,10 @@ class CallInfo
 
     types::StackTypeSet *barrier() {
         return barrier_;
+    }
+
+    types::TypeBarrier *argsBarrier() {
+        return argsBarriers_;
     }
 
     void wrapArgs(MBasicBlock *current) {

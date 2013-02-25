@@ -23,6 +23,7 @@ using mozilla::null_t;
 using mozilla::WindowsHandle;
 using mozilla::gl::SharedTextureHandle;
 using mozilla::gl::GLContext::SharedTextureShareType;
+using mozilla::gfx::SurfaceStreamHandle;
 
 namespace mozilla {
 namespace layers {
@@ -60,12 +61,18 @@ struct SharedImageID {
   uint64_t id;
 };
 
+struct SurfaceStreamDescriptor {
+  SurfaceStreamHandle handle;
+  bool yflip;
+};
+
 union SurfaceDescriptor {
   Shmem;
   SurfaceDescriptorD3D10;
   SurfaceDescriptorGralloc;
   SurfaceDescriptorX11;
   SharedTextureDescriptor;
+  SurfaceStreamDescriptor;
 };
 
 struct YCbCrImage {

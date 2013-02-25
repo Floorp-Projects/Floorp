@@ -2325,16 +2325,18 @@ BEGIN_CASE(JSOP_FUNCALL)
     bool construct = (*regs.pc == JSOP_NEW);
 
     RootedFunction &fun = rootFunction0;
+    RootedScript &funScript = rootScript0;
     bool isFunction = IsFunctionObject(args.calleev(), fun.address());
 
     /*
      * Some builtins are marked as clone-at-callsite to increase precision of
      * TI and JITs.
      */
-    if (isFunction) {
-        if (fun->isInterpretedLazy() && !fun->getOrCreateScript(cx))
+    if (isFunction && fun->isInterpreted()) {
+        funScript = fun->getOrCreateScript(cx);
+        if (!funScript)
             goto error;
-        if (cx->typeInferenceEnabled() && fun->isCloneAtCallsite()) {
+        if (cx->typeInferenceEnabled() && funScript->shouldCloneAtCallsite) {
             fun = CloneFunctionAtCallsite(cx, fun, script, regs.pc);
             if (!fun)
                 goto error;
@@ -2363,7 +2365,6 @@ BEGIN_CASE(JSOP_FUNCALL)
 
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
-    RootedScript &funScript = rootScript0;
     funScript = fun->nonLazyScript();
     if (!cx->stack.pushInlineFrame(cx, regs, args, fun, funScript, initial))
         goto error;

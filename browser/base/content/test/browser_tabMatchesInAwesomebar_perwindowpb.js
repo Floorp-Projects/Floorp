@@ -222,14 +222,15 @@ function checkAutocompleteResults(aExpected, aCallback)
         let uri = gController.getValueAt(i).replace(/^moz-action:[^,]+,/i, "");
 
         info("Search for '" + uri + "' in open tabs.");
-        ok(uri in aExpected, "Registered open page found in autocomplete.");
+        let expected = uri in aExpected;
+        ok(expected, uri + " was found in autocomplete, was " + (expected ? "" : "not ") + "expected");
         // Remove the found entry from expected results.
         delete aExpected[uri];
       }
 
       // Make sure there is no reported open page that is not open.
       for (let entry in aExpected) {
-        ok(false, "'" + entry + "' not found in autocomplete.");
+        ok(false, "'" + entry + "' should be found in autocomplete");
       }
 
       executeSoon(aCallback);

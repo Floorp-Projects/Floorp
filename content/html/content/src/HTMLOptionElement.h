@@ -18,12 +18,17 @@ namespace mozilla {
 namespace dom {
 
 class HTMLOptionElement : public nsGenericHTMLElement,
-                          public nsIDOMHTMLOptionElement,
-                          public nsIJSNativeInitializer
+                          public nsIDOMHTMLOptionElement
 {
 public:
   HTMLOptionElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~HTMLOptionElement();
+
+  static already_AddRefed<HTMLOptionElement>
+    Option(const GlobalObject& aGlobal, const Optional<nsAString>& aText,
+           const Optional<nsAString>& aValue,
+           const Optional<bool>& aDefaultSelected,
+           const Optional<bool>& aSelected, ErrorResult& aError);
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLOptionElement, option)
 
@@ -47,10 +52,6 @@ public:
   bool Selected() const;
   bool DefaultSelected() const;
 
-  // nsIJSNativeInitializer
-  NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aContext,
-                        JSObject* aObj, uint32_t argc, jsval* argv);
-
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               int32_t aModType) const;
 
@@ -72,8 +73,6 @@ public:
   virtual nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const;
 
   nsresult CopyInnerTo(mozilla::dom::Element* aDest);
-
-  virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 

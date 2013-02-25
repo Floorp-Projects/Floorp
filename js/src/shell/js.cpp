@@ -223,7 +223,7 @@ class ToStringHelper
     bool threw() { return !mStr; }
     jsval getJSVal() { return STRING_TO_JSVAL(mStr); }
     const char *getBytes() {
-        if (mStr && (mBytes.ptr() || mBytes.encode(cx, mStr)))
+        if (mStr && (mBytes.ptr() || mBytes.encodeLatin1(cx, mStr)))
             return mBytes.ptr();
         return "(error converting value)";
     }
@@ -302,118 +302,6 @@ GetLine(FILE *file, const char * prompt)
     return NULL;
 }
 
-static size_t
-GetDeflatedUTF8StringLength(JSContext *cx, const jschar *chars,
-                            size_t nchars)
-{
-    size_t nbytes;
-    const jschar *end;
-    unsigned c, c2;
-
-    nbytes = nchars;
-    for (end = chars + nchars; chars != end; chars++) {
-        c = *chars;
-        if (c < 0x80)
-            continue;
-        if (0xD800 <= c && c <= 0xDFFF) {
-            /* nbytes sets 1 length since this is surrogate pair. */
-            if (c >= 0xDC00 || (chars + 1) == end) {
-                nbytes += 2; /* Bad Surrogate */
-                continue;
-            }
-            c2 = chars[1];
-            if (c2 < 0xDC00 || c2 > 0xDFFF) {
-                nbytes += 2; /* Bad Surrogate */
-                continue;
-            }
-            c = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
-            nbytes--;
-            chars++;
-        }
-        c >>= 11;
-        nbytes++;
-        while (c) {
-            c >>= 5;
-            nbytes++;
-        }
-    }
-    return nbytes;
-}
-
-static bool
-PutUTF8ReplacementCharacter(char **dst, size_t *dstlenp) {
-    if (*dstlenp < 3)
-        return false;
-    *(*dst)++ = (char) 0xEF;
-    *(*dst)++ = (char) 0xBF;
-    *(*dst)++ = (char) 0xBD;
-    *dstlenp -= 3;
-    return true;
-}
-
-/*
- * Write up to |*dstlenp| bytes into |dst|.  Writes the number of bytes used
- * into |*dstlenp| on success.  Returns false on failure.
- */
-static bool
-DeflateStringToUTF8Buffer(JSContext *cx, const jschar *src, size_t srclen,
-                          char *dst, size_t *dstlenp)
-{
-    size_t dstlen = *dstlenp;
-    size_t origDstlen = dstlen;
-
-    while (srclen) {
-        uint32_t v;
-        jschar c = *src++;
-        srclen--;
-        if (c >= 0xDC00 && c <= 0xDFFF) {
-            if (!PutUTF8ReplacementCharacter(&dst, &dstlen))
-                goto bufferTooSmall;
-            continue;
-        } else if (c < 0xD800 || c > 0xDBFF) {
-            v = c;
-        } else {
-            if (srclen < 1) {
-                if (!PutUTF8ReplacementCharacter(&dst, &dstlen))
-                    goto bufferTooSmall;
-                continue;
-            }
-            jschar c2 = *src;
-            if ((c2 < 0xDC00) || (c2 > 0xDFFF)) {
-                if (!PutUTF8ReplacementCharacter(&dst, &dstlen))
-                    goto bufferTooSmall;
-                continue;
-            }
-            src++;
-            srclen--;
-            v = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
-        }
-        size_t utf8Len;
-        if (v < 0x0080) {
-            /* no encoding necessary - performance hack */
-            if (dstlen == 0)
-                goto bufferTooSmall;
-            *dst++ = (char) v;
-            utf8Len = 1;
-        } else {
-            uint8_t utf8buf[4];
-            utf8Len = js_OneUcs4ToUtf8Char(utf8buf, v);
-            if (utf8Len > dstlen)
-                goto bufferTooSmall;
-            for (size_t i = 0; i < utf8Len; i++)
-                *dst++ = (char) utf8buf[i];
-        }
-        dstlen -= utf8Len;
-    }
-    *dstlenp = (origDstlen - dstlen);
-    return true;
-
-bufferTooSmall:
-    *dstlenp = (origDstlen - dstlen);
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BUFFER_TOO_SMALL);
-    return false;
-}
-
 static char *
 JSStringToUTF8(JSContext *cx, JSString *str)
 {
@@ -421,22 +309,7 @@ JSStringToUTF8(JSContext *cx, JSString *str)
     if (!linear)
         return NULL;
 
-    const jschar *chars = linear->chars();
-    size_t length = linear->length();
-
-    size_t tgtlen = GetDeflatedUTF8StringLength(cx, chars, length);
-    char *utf8chars = cx->pod_malloc<char>(tgtlen + 1);
-    if (!utf8chars)
-        return NULL;
-
-    bool ok = DeflateStringToUTF8Buffer(cx, chars, length, utf8chars, &tgtlen);
-    if (!ok) {
-        JS_free(cx, utf8chars);
-        return NULL;
-    }
-
-    utf8chars[tgtlen] = 0;
-    return utf8chars;
+    return TwoByteCharsToNewUTF8CharsZ(cx, linear->range()).c_str();
 }
 
 /*
@@ -946,7 +819,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
     bool noScriptRval = false;
     const char *fileName = "@evaluate";
     JSAutoByteString fileNameBytes;
-    jschar *sourceMapURL = NULL;
+    RootedString sourceMapURL(cx);
     unsigned lineNumber = 1;
     RootedObject global(cx, NULL);
     bool catchTermination = false;
@@ -994,7 +867,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             JSString *s = JS_ValueToString(cx, v);
             if (!s)
                 return false;
-            fileName = fileNameBytes.encode(cx, s);
+            fileName = fileNameBytes.encodeLatin1(cx, s);
             if (!fileName)
                 return false;
         }
@@ -1002,13 +875,9 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         if (!JS_GetProperty(cx, options, "sourceMapURL", v.address()))
             return false;
         if (!JSVAL_IS_VOID(v)) {
-            JSString *s = JS_ValueToString(cx, v);
-            if (!s)
+            sourceMapURL = JS_ValueToString(cx, v);
+            if (!sourceMapURL)
                 return false;
-            const jschar* smurl = s->getCharsZ(cx);
-            if (!smurl)
-                return false;
-            sourceMapURL = js_strdup(cx, smurl);
         }
 
         if (!JS_GetProperty(cx, options, "lineNumber", v.address()))
@@ -1076,7 +945,11 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             return false;
 
         if (sourceMapURL && !script->scriptSource()->hasSourceMap()) {
-            if (!script->scriptSource()->setSourceMap(cx, sourceMapURL, script->filename))
+            const jschar *smurl = JS_GetStringCharsZ(cx, sourceMapURL);
+            if (!smurl)
+                return false;
+            jschar *smurl_copy = js_strdup(cx, smurl);
+            if (!smurl_copy || !script->scriptSource()->setSourceMap(cx, smurl_copy, script->filename))
                 return false;
         }
         if (!JS_ExecuteScript(cx, global, script, vp)) {
@@ -1399,7 +1272,7 @@ ToSource(JSContext *cx, jsval *vp, JSAutoByteString *bytes)
     JSString *str = JS_ValueToSource(cx, *vp);
     if (str) {
         *vp = STRING_TO_JSVAL(str);
-        if (bytes->encode(cx, str))
+        if (bytes->encodeLatin1(cx, str))
             return bytes->ptr();
     }
     JS_ClearPendingException(cx);
@@ -1726,7 +1599,7 @@ static void
 SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
 {
     Sprint(sp, "\nSource notes:\n");
-    Sprint(sp, "%4s  %4s %5s %6s %-8s %s\n",
+    Sprint(sp, "%4s %4s %5s %6s %-8s %s\n",
            "ofs", "line", "pc", "delta", "desc", "args");
     Sprint(sp, "---- ---- ----- ------ -------- ------\n");
     unsigned offset = 0;
@@ -1741,52 +1614,66 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
         const char *name = js_SrcNoteSpec[type].name;
         Sprint(sp, "%3u: %4u %5u [%4u] %-8s", unsigned(sn - notes), lineno, offset, delta, name);
         switch (type) {
+          case SRC_NULL:
+          case SRC_IF:
+          case SRC_CONTINUE:
+          case SRC_BREAK:
+          case SRC_BREAK2LABEL:
+          case SRC_SWITCHBREAK:
+          case SRC_ASSIGNOP:
+          case SRC_HIDDEN:
+          case SRC_CATCH:
+          case SRC_XDELTA:
+            break;
+
           case SRC_COLSPAN:
             colspan = js_GetSrcNoteOffset(sn, 0);
             if (colspan >= SN_COLSPAN_DOMAIN / 2)
                 colspan -= SN_COLSPAN_DOMAIN;
             Sprint(sp, "%d", colspan);
             break;
+
           case SRC_SETLINE:
             lineno = js_GetSrcNoteOffset(sn, 0);
             Sprint(sp, " lineno %u", lineno);
             break;
+
           case SRC_NEWLINE:
             ++lineno;
             break;
+
           case SRC_FOR:
             Sprint(sp, " cond %u update %u tail %u",
                    unsigned(js_GetSrcNoteOffset(sn, 0)),
                    unsigned(js_GetSrcNoteOffset(sn, 1)),
                    unsigned(js_GetSrcNoteOffset(sn, 2)));
             break;
+
           case SRC_IF_ELSE:
-            Sprint(sp, " else %u elseif %u",
-                   unsigned(js_GetSrcNoteOffset(sn, 0)),
-                   unsigned(js_GetSrcNoteOffset(sn, 1)));
+            Sprint(sp, " else %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
             break;
+
+          case SRC_FOR_IN:
+            Sprint(sp, " closingjump %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
+            break;
+
           case SRC_COND:
           case SRC_WHILE:
           case SRC_PCDELTA:
             Sprint(sp, " offset %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
             break;
-          case SRC_BREAK2LABEL:
-          case SRC_CONT2LABEL: {
-            uint32_t index = js_GetSrcNoteOffset(sn, 0);
-            JSAtom *atom = script->getAtom(index);
-            Sprint(sp, " atom %u (", index);
-            size_t len = PutEscapedString(NULL, 0, atom, '\0');
-            if (char *buf = sp->reserve(len)) {
-                PutEscapedString(buf, len + 1, atom, 0);
-                buf[len] = 0;
-            }
-            Sprint(sp, ")");
+
+          case SRC_TABLESWITCH: {
+            JSOp op = JSOp(script->code[offset]);
+            JS_ASSERT(op == JSOP_TABLESWITCH);
+            Sprint(sp, " length %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
+            UpdateSwitchTableBounds(cx, script, offset,
+                                    &switchTableStart, &switchTableEnd);
             break;
           }
-          case SRC_SWITCH: {
+          case SRC_CONDSWITCH: {
             JSOp op = JSOp(script->code[offset]);
-            if (op == JSOP_GOTO)
-                break;
+            JS_ASSERT(op == JSOP_CONDSWITCH);
             Sprint(sp, " length %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
             unsigned caseOff = (unsigned) js_GetSrcNoteOffset(sn, 1);
             if (caseOff)
@@ -1795,16 +1682,10 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
                                     &switchTableStart, &switchTableEnd);
             break;
           }
-          case SRC_CATCH:
-            delta = (unsigned) js_GetSrcNoteOffset(sn, 0);
-            if (delta) {
-                if (script->main()[offset] == JSOP_LEAVEBLOCK)
-                    Sprint(sp, " stack depth %u", delta);
-                else
-                    Sprint(sp, " guard delta %u", delta);
-            }
+
+          default:
+            JS_ASSERT(0);
             break;
-          default:;
         }
         Sprint(sp, "\n");
     }
@@ -2160,7 +2041,7 @@ DumpHeap(JSContext *cx, unsigned argc, jsval *vp)
             if (!str)
                 return false;
             JS_ARGV(cx, vp)[0] = STRING_TO_JSVAL(str);
-            if (!fileNameBytes.encode(cx, str))
+            if (!fileNameBytes.encodeLatin1(cx, str))
                 return false;
             fileName = fileNameBytes.ptr();
         }

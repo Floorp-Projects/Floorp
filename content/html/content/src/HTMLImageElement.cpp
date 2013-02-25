@@ -66,8 +66,6 @@ NS_NewHTMLImageElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   return new mozilla::dom::HTMLImageElement(nodeInfo.forget());
 }
 
-DOMCI_NODE_DATA(HTMLImageElement, mozilla::dom::HTMLImageElement)
-
 namespace mozilla {
 namespace dom {
 
@@ -91,15 +89,14 @@ NS_IMPL_RELEASE_INHERITED(HTMLImageElement, Element)
 
 // QueryInterface implementation for HTMLImageElement
 NS_INTERFACE_TABLE_HEAD(HTMLImageElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE5(HTMLImageElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE4(HTMLImageElement,
                                    nsIDOMHTMLImageElement,
-                                   nsIJSNativeInitializer,
                                    nsIImageLoadingContent,
                                    imgIOnloadBlocker,
                                    imgINotificationObserver)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(HTMLImageElement,
                                                nsGenericHTMLElement)
-NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLImageElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 NS_IMPL_ELEMENT_CLONE(HTMLImageElement)
@@ -460,33 +457,45 @@ HTMLImageElement::IntrinsicState() const
     nsImageLoadingContent::ImageState();
 }
 
-NS_IMETHODIMP
-HTMLImageElement::Initialize(nsISupports* aOwner, JSContext* aContext,
-                             JSObject *aObj, uint32_t argc, jsval *argv)
+// static
+already_AddRefed<HTMLImageElement>
+HTMLImageElement::Image(const GlobalObject& aGlobal,
+                        const Optional<uint32_t>& aWidth,
+                        const Optional<uint32_t>& aHeight, ErrorResult& aError)
 {
-  if (argc <= 0) {
-    // Nothing to do here if we don't get any arguments.
-
-    return NS_OK;
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aGlobal.Get());
+  nsIDocument* doc;
+  if (!win || !(doc = win->GetExtantDoc())) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
 
-  // The first (optional) argument is the width of the image
-  uint32_t width;
-  JSBool ret = JS_ValueToECMAUint32(aContext, argv[0], &width);
-  NS_ENSURE_TRUE(ret, NS_ERROR_INVALID_ARG);
-
-  nsresult rv = SetIntAttr(nsGkAtoms::width, static_cast<int32_t>(width));
-
-  if (NS_SUCCEEDED(rv) && (argc > 1)) {
-    // The second (optional) argument is the height of the image
-    uint32_t height;
-    ret = JS_ValueToECMAUint32(aContext, argv[1], &height);
-    NS_ENSURE_TRUE(ret, NS_ERROR_INVALID_ARG);
-
-    rv = SetIntAttr(nsGkAtoms::height, static_cast<int32_t>(height));
+  nsCOMPtr<nsINodeInfo> nodeInfo =
+    doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::img, nullptr,
+                                        kNameSpaceID_XHTML,
+                                        nsIDOMNode::ELEMENT_NODE);
+  if (!nodeInfo) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
 
-  return rv;
+  nsRefPtr<HTMLImageElement> img = new HTMLImageElement(nodeInfo.forget());
+
+  if (aWidth.WasPassed()) {
+    img->SetHTMLUnsignedIntAttr(nsGkAtoms::width, aWidth.Value(), aError);
+    if (aError.Failed()) {
+      return nullptr;
+    }
+
+    if (aHeight.WasPassed()) {
+      img->SetHTMLUnsignedIntAttr(nsGkAtoms::height, aHeight.Value(), aError);
+      if (aError.Failed()) {
+        return nullptr;
+      }
+    }
+  }
+
+  return img.forget();
 }
 
 uint32_t

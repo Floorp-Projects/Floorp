@@ -72,6 +72,7 @@ mockCommands.setup = function() {
   canon.addCommand(mockCommands.tsb);
   canon.addCommand(mockCommands.tss);
   canon.addCommand(mockCommands.tsu);
+  canon.addCommand(mockCommands.tsf);
   canon.addCommand(mockCommands.tsn);
   canon.addCommand(mockCommands.tsnDif);
   canon.addCommand(mockCommands.tsnExt);
@@ -99,6 +100,7 @@ mockCommands.shutdown = function() {
   canon.removeCommand(mockCommands.tsb);
   canon.removeCommand(mockCommands.tss);
   canon.removeCommand(mockCommands.tsu);
+  canon.removeCommand(mockCommands.tsf);
   canon.removeCommand(mockCommands.tsn);
   canon.removeCommand(mockCommands.tsnDif);
   canon.removeCommand(mockCommands.tsnExt);
@@ -229,6 +231,12 @@ mockCommands.tsu = {
   name: 'tsu',
   params: [ { name: 'num', type: { name: 'number', max: 10, min: -5, step: 3 } } ],
   exec: createExec('tsu')
+};
+
+mockCommands.tsf = {
+  name: 'tsf',
+  params: [ { name: 'num', type: { name: 'number', allowFloat: true, max: 11.5, min: -6.5, step: 1.5 } } ],
+  exec: createExec('tsf')
 };
 
 mockCommands.tsn = {
