@@ -54,6 +54,8 @@
 #include "nsRefreshDriver.h"
 #include "nsContentList.h"
 #include <algorithm>
+#include <cstdlib> // for std::abs(int/long)
+#include <cmath> // for std::abs(float/double)
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1427,6 +1429,7 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
   , mRestorePos(-1, -1)
   , mLastPos(-1, -1)
   , mScrollPosForLayerPixelAlignment(-1, -1)
+  , mLastUpdateImagesPos(-1, -1)
   , mNeverHasVerticalScrollbar(false)
   , mNeverHasHorizontalScrollbar(false)
   , mHasVerticalScrollbar(false)
@@ -1880,6 +1883,35 @@ nsGfxScrollFrameInner::ScrollToImpl(nsPoint aPt, const nsRect& aRange)
     return;
   }
 
+  bool needImageVisibilityUpdate = (mLastUpdateImagesPos == nsPoint(-1,-1));
+
+  static bool sImageVisPrefsCached = false;
+  // The fraction of the scrollport we allow to scroll by before we schedule
+  // an update of image visibility.
+  static int32_t sHorzScrollFraction = 2;
+  static int32_t sVertScrollFraction = 2;
+  if (!sImageVisPrefsCached) {
+    Preferences::AddIntVarCache(&sHorzScrollFraction,
+      "layout.imagevisibility.amountscrollbeforeupdatehorizontal", 2);
+    Preferences::AddIntVarCache(&sVertScrollFraction,
+      "layout.imagevisibility.amountscrollbeforeupdatevertical", 2);
+    sImageVisPrefsCached = true;
+  }
+
+  nsPoint dist(std::abs(pt.x - mLastUpdateImagesPos.x),
+               std::abs(pt.y - mLastUpdateImagesPos.y));
+  nscoord horzAllowance = std::max(mScrollPort.width / std::max(sHorzScrollFraction, 1),
+                                   nsPresContext::AppUnitsPerCSSPixel());
+  nscoord vertAllowance = std::max(mScrollPort.height / std::max(sVertScrollFraction, 1),
+                                   nsPresContext::AppUnitsPerCSSPixel());
+  if (dist.x >= horzAllowance || dist.y >= vertAllowance) {
+    needImageVisibilityUpdate = true;
+  }
+
+  if (needImageVisibilityUpdate) {
+    presContext->PresShell()->ScheduleImageVisibilityUpdate();
+  }
+
   // notify the listeners.
   for (uint32_t i = 0; i < mListeners.Length(); i++) {
     mListeners[i]->ScrollPositionWillChange(pt.x, pt.y);
@@ -1995,6 +2027,10 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                         const nsRect&           aDirtyRect,
                                         const nsDisplayListSet& aLists)
 {
+  if (aBuilder->IsForImageVisibility()) {
+    mLastUpdateImagesPos = GetScrollPosition();
+  }
+
   mOuter->DisplayBorderBackgroundOutline(aBuilder, aLists);
 
   if (aBuilder->IsPaintingToWindow()) {
@@ -2059,6 +2095,33 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     !aBuilder->IsForEventDelivery();
   if (usingDisplayport) {
     dirtyRect = displayPort;
+  }
+
+  if (aBuilder->IsForImageVisibility()) {
+    static bool sImageVisPrefsCached = false;
+    // The number of scrollports wide/high to expand when looking for images.
+    static uint32_t sHorzExpandScrollPort = 0;
+    static uint32_t sVertExpandScrollPort = 1;
+    if (!sImageVisPrefsCached) {
+      Preferences::AddUintVarCache(&sHorzExpandScrollPort,
+        "layout.imagevisibility.numscrollportwidths", (uint32_t)0);
+      Preferences::AddUintVarCache(&sVertExpandScrollPort,
+        "layout.imagevisibility.numscrollportheights", 1);
+      sImageVisPrefsCached = true;
+    }
+
+    // We expand the dirty rect to catch images just outside of the scroll port.
+    // We could be smarter and not expand the dirty rect in a direction in which
+    // we are not able to scroll.
+    nsRect dirtyRectBefore = dirtyRect;
+
+    nsPoint vertShift = nsPoint(0, sVertExpandScrollPort * dirtyRectBefore.height);
+    dirtyRect = dirtyRect.Union(dirtyRectBefore - vertShift);
+    dirtyRect = dirtyRect.Union(dirtyRectBefore + vertShift);
+
+    nsPoint horzShift = nsPoint(sHorzExpandScrollPort * dirtyRectBefore.width, 0);
+    dirtyRect = dirtyRect.Union(dirtyRectBefore - horzShift);
+    dirtyRect = dirtyRect.Union(dirtyRectBefore + horzShift);
   }
 
   nsDisplayListCollection set;

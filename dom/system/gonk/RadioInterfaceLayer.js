@@ -96,6 +96,9 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:SendStkMenuSelection",
   "RIL:SendStkTimerExpiration",
   "RIL:SendStkEventDownload",
+  "RIL:IccOpenChannel",
+  "RIL:IccExchangeAPDU",
+  "RIL:IccCloseChannel",
   "RIL:RegisterMobileConnectionMsg",
   "RIL:SetCallForwardingOption",
   "RIL:GetCallForwardingOption"
@@ -493,6 +496,18 @@ RadioInterfaceLayer.prototype = {
       case "RIL:SendStkEventDownload":
         this.sendStkEventDownload(msg.json);
         break;
+      case "RIL:IccOpenChannel":
+        this.saveRequestTarget(msg);
+        this.iccOpenChannel(msg.json);
+        break;
+      case "RIL:IccCloseChannel":
+        this.saveRequestTarget(msg);
+        this.iccCloseChannel(msg.json);
+        break;
+      case "RIL:IccExchangeAPDU":
+        this.saveRequestTarget(msg);
+        this.iccExchangeAPDU(msg.json);
+        break;
       case "RIL:RegisterMobileConnectionMsg":
         this.registerMessageTarget("mobileconnection", msg.target);
         break;
@@ -550,6 +565,15 @@ RadioInterfaceLayer.prototype = {
         break;
       case "callError":
         this.handleCallError(message);
+        break;
+      case "iccOpenChannel":
+        this.handleIccOpenChannel(message);
+        break;
+      case "iccCloseChannel":
+        this.handleIccCloseChannel(message);
+        break;
+      case "iccExchangeAPDU":
+        this.handleIccExchangeAPDU(message);
         break;
       case "getAvailableNetworks":
         this.handleGetAvailableNetworks(message);
@@ -1365,6 +1389,30 @@ RadioInterfaceLayer.prototype = {
   },
 
   /**
+   * Open Logical UICC channel (aid) for Secure Element access
+   */
+  handleIccOpenChannel: function handleIccOpenChannel(message) {
+    debug("handleIccOpenChannel: " + JSON.stringify(message));
+    this._sendRequestResults("RIL:IccOpenChannel", message);
+  },
+
+  /**
+   * Close Logical UICC channel
+   */
+  handleIccCloseChannel: function handleIccCloseChannel(message) {
+    debug("handleIccCloseChannel: " + JSON.stringify(message));
+    this._sendRequestResults("RIL:IccCloseChannel", message);
+  },
+
+  /**
+   * Exchange APDU data on an open Logical UICC channel
+   */
+  handleIccExchangeAPDU: function handleIccExchangeAPDU(message) {
+    debug("handleIccExchangeAPDU: " + JSON.stringify(message));
+    this._sendRequestResults("RIL:IccExchangeAPDU", message);
+  },
+
+  /**
    * Handle available networks returned by the 'getAvailableNetworks' request.
    */
   handleGetAvailableNetworks: function handleGetAvailableNetworks(message) {
@@ -2095,6 +2143,24 @@ RadioInterfaceLayer.prototype = {
 
   sendStkEventDownload: function sendStkEventDownload(message) {
     message.rilMessageType = "sendStkEventDownload";
+    this.worker.postMessage(message);
+  },
+
+  iccOpenChannel: function iccOpenChannel(message) {
+    debug("ICC Open Channel");
+    message.rilMessageType = "iccOpenChannel";
+    this.worker.postMessage(message);
+  },
+
+  iccCloseChannel: function iccCloseChannel(message) {
+    debug("ICC Close Channel");
+    message.rilMessageType = "iccCloseChannel";
+    this.worker.postMessage(message);
+  },
+
+  iccExchangeAPDU: function iccExchangeAPDU(message) {
+    debug("ICC Exchange APDU");
+    message.rilMessageType = "iccExchangeAPDU";
     this.worker.postMessage(message);
   },
 

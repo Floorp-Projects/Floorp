@@ -232,7 +232,7 @@ pref("gfx.filter.nearest.force-enabled", false);
 // whether to always search all font cmaps during system font fallback
 pref("gfx.font_rendering.fallback.always_use_cmaps", false);
 
-pref("gfx.font_rendering.graphite.enabled", false);
+pref("gfx.font_rendering.graphite.enabled", true);
 
 // Check intl/unicharutil/util/nsUnicodeProperties.h for definitions of script bits
 // in the ShapingType enumeration
@@ -4109,6 +4109,12 @@ pref("dom.placeholder.show_on_focus", true);
 // UAProfile settings
 pref("wap.UAProf.url", "");
 pref("wap.UAProf.tagname", "x-wap-profile");
+
+//Retrieval mode for MMS
+//manual: Manual retrieval mode.
+//automatic: Automatic retrieval mode.
+//never: Never retrieval mode.
+pref("dom.mms.retrieval_mode", "manual");
 
 // If the user puts a finger down on an element and we think the user
 // might be executing a pan gesture, how long do we wait before

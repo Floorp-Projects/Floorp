@@ -299,6 +299,9 @@ public:
   nsCOMPtr<nsITimer> mScrollActivityTimer;
   nsPoint mScrollPosForLayerPixelAlignment;
 
+  // The scroll position where we last updated image visibility.
+  nsPoint mLastUpdateImagesPos;
+
   bool mNeverHasVerticalScrollbar:1;
   bool mNeverHasHorizontalScrollbar:1;
   bool mHasVerticalScrollbar:1;
