@@ -423,20 +423,8 @@ nsImageLoadingContent::FrameDestroyed(nsIFrame* aFrame)
                                           &mPendingRequestRegistered);
   }
 
-  if (mCurrentRequest && (mCurrentRequestFlags & REQUEST_IS_TRACKED)) {
-    nsIDocument* doc = GetOurCurrentDoc();
-    if (doc) {
-      mCurrentRequestFlags &= ~REQUEST_IS_TRACKED;
-      doc->RemoveImage(mCurrentRequest);
-    }
-  }
-  if (mPendingRequest && (mPendingRequestFlags & REQUEST_IS_TRACKED)) {
-    nsIDocument* doc = GetOurCurrentDoc();
-    if (doc) {
-      mPendingRequestFlags &= ~REQUEST_IS_TRACKED;
-      doc->RemoveImage(mPendingRequest);
-    }
-  }
+  UntrackImage(mCurrentRequest);
+  UntrackImage(mPendingRequest);
 }
 
 int32_t
@@ -1101,7 +1089,7 @@ nsImageLoadingContent::ClearCurrentRequest(nsresult aReason)
                                         &mCurrentRequestRegistered);
 
   // Clean up the request.
-  UntrackImage(mCurrentRequest);
+  UntrackImage(mCurrentRequest, REQUEST_DISCARD);
   mCurrentRequest->CancelAndForgetObserver(aReason);
   mCurrentRequest = nullptr;
   mCurrentRequestFlags = 0;
@@ -1124,7 +1112,7 @@ nsImageLoadingContent::ClearPendingRequest(nsresult aReason)
   nsLayoutUtils::DeregisterImageRequest(GetFramePresContext(), mPendingRequest,
                                         &mPendingRequestRegistered);
 
-  UntrackImage(mPendingRequest);
+  UntrackImage(mPendingRequest, REQUEST_DISCARD);
   mPendingRequest->CancelAndForgetObserver(aReason);
   mPendingRequest = nullptr;
   mPendingRequestFlags = 0;
@@ -1211,14 +1199,8 @@ nsImageLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent)
   nsCxPusher pusher;
   pusher.PushNull();
 
-  if (mCurrentRequest && (mCurrentRequestFlags & REQUEST_IS_TRACKED)) {
-    mCurrentRequestFlags &= ~REQUEST_IS_TRACKED;
-    doc->RemoveImage(mCurrentRequest);
-  }
-  if (mPendingRequest && (mPendingRequestFlags & REQUEST_IS_TRACKED)) {
-    mPendingRequestFlags &= ~REQUEST_IS_TRACKED;
-    doc->RemoveImage(mPendingRequest);
-  }
+  UntrackImage(mCurrentRequest);
+  UntrackImage(mPendingRequest);
 
   if (mCurrentRequestFlags & REQUEST_BLOCKS_ONLOAD)
     doc->UnblockOnload(false);
@@ -1248,7 +1230,7 @@ nsImageLoadingContent::TrackImage(imgIRequest* aImage)
 }
 
 nsresult
-nsImageLoadingContent::UntrackImage(imgIRequest* aImage)
+nsImageLoadingContent::UntrackImage(imgIRequest* aImage, uint32_t aFlags /* = 0 */)
 {
   if (!aImage)
     return NS_OK;
@@ -1263,11 +1245,13 @@ nsImageLoadingContent::UntrackImage(imgIRequest* aImage)
   if (doc) {
     if (aImage == mCurrentRequest && (mCurrentRequestFlags & REQUEST_IS_TRACKED)) {
       mCurrentRequestFlags &= ~REQUEST_IS_TRACKED;
-      doc->RemoveImage(mCurrentRequest, nsIDocument::REQUEST_DISCARD);
+      doc->RemoveImage(mCurrentRequest,
+                       (aFlags & REQUEST_DISCARD) ? nsIDocument::REQUEST_DISCARD : 0);
     }
     if (aImage == mPendingRequest && (mPendingRequestFlags & REQUEST_IS_TRACKED)) {
       mPendingRequestFlags &= ~REQUEST_IS_TRACKED;
-      doc->RemoveImage(mPendingRequest, nsIDocument::REQUEST_DISCARD);
+      doc->RemoveImage(mPendingRequest,
+                       (aFlags & REQUEST_DISCARD) ? nsIDocument::REQUEST_DISCARD : 0);
     }
   }
   return NS_OK;
