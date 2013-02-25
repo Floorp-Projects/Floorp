@@ -324,6 +324,52 @@ exports.testSingleNumber = function() {
   assert.is('tsu', requ.commandAssignment.value.name);
   assert.is('x', assign1.arg.text);
   assert.is(undefined, assign1.value);
+
+  update({ typed: 'tsu 1.5', cursor: { start: 7, end: 7 } });
+  assert.is(        'VVVVEEE', statuses);
+  assert.is(Status.ERROR, status);
+  assert.is('tsu', requ.commandAssignment.value.name);
+  assert.is('1.5', assign1.arg.text);
+  assert.is(undefined, assign1.value);
+};
+
+exports.testSingleFloat = function() {
+  update({ typed: 'tsf', cursor: { start: 3, end: 3 } });
+  assert.is(        'VVV', statuses);
+  assert.is(Status.ERROR, status);
+  assert.is('tsf', requ.commandAssignment.value.name);
+  assert.is('', assign1.arg.text);
+  assert.is(undefined, assign1.value);
+
+  update({ typed: 'tsf ', cursor: { start: 4, end: 4 } });
+  assert.is(        'VVVV', statuses);
+  assert.is(Status.ERROR, status);
+  assert.is('tsf', requ.commandAssignment.value.name);
+  assert.is('', assign1.arg.text);
+  assert.is(undefined, assign1.value);
+
+  update({ typed: 'tsf 1', cursor: { start: 5, end: 5 } });
+  assert.is(        'VVVVV', statuses);
+  assert.is(Status.VALID, status);
+  assert.is('tsf', requ.commandAssignment.value.name);
+  assert.is('1', assign1.arg.text);
+  assert.is(1, assign1.value);
+  assert.is('number', typeof assign1.value);
+
+  update({ typed: 'tsf x', cursor: { start: 5, end: 5 } });
+  assert.is(        'VVVVE', statuses);
+  assert.is(Status.ERROR, status);
+  assert.is('tsf', requ.commandAssignment.value.name);
+  assert.is('x', assign1.arg.text);
+  assert.is(undefined, assign1.value);
+
+  update({ typed: 'tsf 1.5', cursor: { start: 7, end: 7 } });
+  assert.is(        'VVVVVVV', statuses);
+  assert.is(Status.VALID, status);
+  assert.is('tsf', requ.commandAssignment.value.name);
+  assert.is('1.5', assign1.arg.text);
+  assert.is(1.5, assign1.value);
+  assert.is('number', typeof assign1.value);
 };
 
 exports.testElement = function(options) {
