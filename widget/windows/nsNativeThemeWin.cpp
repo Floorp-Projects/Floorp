@@ -543,6 +543,85 @@ nsNativeThemeWin::CalculateProgressOverlayRect(nsIFrame* aFrame,
   return overlayRect;
 }
 
+/*
+ * DrawProgressMeter - renders an appropriate progress meter based on progress
+ * meter style, orientation, and os. Note, this does not render the underlying
+ * progress track.
+ *
+ * @param aFrame       the widget frame
+ * @param aWidgetType  type of widget
+ * @param aTheme       progress theme handle
+ * @param aHdc         hdc returned by gfxWindowsNativeDrawing
+ * @param aPart        the PP_X progress part
+ * @param aState       the theme state
+ * @param aWidgetRect  bounding rect for the widget
+ * @param aClipRect    dirty rect that needs drawing.
+ * @param aAppUnits    app units per device pixel
+ */
+void
+nsNativeThemeWin::DrawThemedProgressMeter(nsIFrame* aFrame, int aWidgetType,
+                                          HANDLE aTheme, HDC aHdc,
+                                          int aPart, int aState,
+                                          RECT* aWidgetRect, RECT* aClipRect,
+                                          gfxFloat aAppUnits)
+{
+  if (!aFrame || !aTheme || !aHdc)
+    return;
+
+  NS_ASSERTION(aWidgetRect, "bad rect pointer");
+  NS_ASSERTION(aClipRect, "bad clip rect pointer");
+
+  RECT adjWidgetRect, adjClipRect;
+  adjWidgetRect = *aWidgetRect;
+  adjClipRect = *aClipRect;
+  if (WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION) {
+    // Adjust clipping out by one pixel. XP progress meters are inset,
+    // Vista+ are not.
+    InflateRect(&adjWidgetRect, 1, 1);
+    InflateRect(&adjClipRect, 1, 1);
+  }
+
+  nsIFrame* parentFrame = aFrame->GetParent();
+  if (!parentFrame) {
+    // We have no parent to work with, just bail.
+    NS_WARNING("No parent frame for progress rendering. Can't paint.");
+    return;
+  }
+
+  nsEventStates eventStates = GetContentState(parentFrame, aWidgetType);
+  bool vertical = IsVerticalProgress(parentFrame) ||
+                  aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL;
+  bool indeterminate = IsIndeterminateProgress(parentFrame, eventStates);
+  bool animate = indeterminate;
+
+  if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
+    // Vista and up progress meter is fill style, rendered here. We render
+    // the pulse overlay in the follow up section below.
+    DrawThemeBackground(aTheme, aHdc, aPart, aState,
+                        &adjWidgetRect, &adjClipRect);
+    if (!IsProgressMeterFilled(aFrame)) {
+      animate = true;
+    }
+  } else if (!indeterminate) {
+    DrawThemeBackground(aTheme, aHdc, aPart, aState,
+                        &adjWidgetRect, &adjClipRect);
+  }    
+
+  if (animate) {
+    // Indeterminate rendering
+    int32_t overlayPart = GetProgressOverlayStyle(vertical);
+    RECT overlayRect =
+      CalculateProgressOverlayRect(aFrame, &adjWidgetRect, vertical,
+                                   indeterminate, false);
+    DrawThemeBackground(aTheme, aHdc, overlayPart, aState, &overlayRect,
+                        &adjClipRect);
+
+    if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 60)) {
+      NS_WARNING("unable to animate progress widget!");
+    }
+  }
+}
+
 HANDLE
 nsNativeThemeWin::GetTheme(uint8_t aWidgetType)
 { 
@@ -822,25 +901,23 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
       aState = TS_NORMAL;
       return NS_OK;
     }
-    case NS_THEME_PROGRESSBAR: {
-      aPart = IsVerticalProgress(aFrame) ? PP_BARVERT : PP_BAR;
-      aState = PBBS_NORMAL;
-      return NS_OK;
-    }
+    case NS_THEME_PROGRESSBAR:
     case NS_THEME_PROGRESSBAR_VERTICAL: {
-      aPart = PP_BARVERT;
+      // Note IsVerticalProgress only tests for orient css attrribute,
+      // NS_THEME_PROGRESSBAR_VERTICAL is dedicated to -moz-appearance:
+      // progressbar-vertical.
+      bool vertical = IsVerticalProgress(aFrame) ||
+                      aWidgetType == NS_THEME_PROGRESSBAR_VERTICAL;
+      aPart = vertical ? PP_BARVERT : PP_BAR;
       aState = PBBS_NORMAL;
       return NS_OK;
     }
-    case NS_THEME_PROGRESSBAR_CHUNK: {
-      nsIFrame* stateFrame = aFrame->GetParent();
-      nsEventStates eventStates = GetContentState(stateFrame, aWidgetType);
-
-      if (IsIndeterminateProgress(stateFrame, eventStates)) {
-        // If the element is indeterminate, we are going to render it ourself so
-        // we have to return aPart = -1.
-        aPart = -1;
-      } else if (IsVerticalProgress(stateFrame)) {
+    case NS_THEME_PROGRESSBAR_CHUNK:
+    case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL: {
+      nsIFrame* parentFrame = aFrame->GetParent();
+      nsEventStates eventStates = GetContentState(parentFrame, aWidgetType);
+      if (aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL ||
+          IsVerticalProgress(parentFrame)) {
         aPart = WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION ?
           PP_FILLVERT : PP_CHUNKVERT;
       } else {
@@ -848,12 +925,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
           PP_FILL : PP_CHUNK;
       }
 
-      aState = TS_NORMAL;
-      return NS_OK;
-    }
-    case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL: {
-      aPart = PP_CHUNKVERT;
-      aState = TS_NORMAL;
+      aState = PBBVS_NORMAL;
       return NS_OK;
     }
     case NS_THEME_TOOLBAR_BUTTON: {
@@ -1621,6 +1693,11 @@ RENDER_AGAIN:
     SetPixel(hdc, widgetRect.right-1, widgetRect.bottom-1, color);
     SetPixel(hdc, widgetRect.left, widgetRect.bottom-1, color);
   }
+  else if (aWidgetType == NS_THEME_PROGRESSBAR_CHUNK ||
+           aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL) {
+    DrawThemedProgressMeter(aFrame, aWidgetType, theme, hdc, part, state,
+                            &widgetRect, &clipRect, p2a);
+  }
   // If part is negative, the element wishes us to not render a themed
   // background, instead opting to be drawn specially below.
   else if (part >= 0) {
@@ -1741,94 +1818,7 @@ RENDER_AGAIN:
 
     ctx->Restore();
     ctx->SetOperator(currentOp);
-  } else if (aWidgetType == NS_THEME_PROGRESSBAR_CHUNK) {
-    /**
-     * Here, we draw the animated part of the progress bar.
-     * A progress bar has always an animated part on Windows Vista and later.
-     * On Windows XP, a progress bar has an animated part when in an
-     * indeterminated state.
-     * When the progress bar is indeterminated, no background is painted so we
-     * only see the animated part.
-     * When the progress bar is determinated, the animated part is a glow draw
-     * on top of the background (PP_FILL).
-     */
-    nsIFrame* stateFrame = aFrame->GetParent();
-    nsEventStates eventStates = GetContentState(stateFrame, aWidgetType);
-    bool indeterminate = IsIndeterminateProgress(stateFrame, eventStates);
-    bool vertical = IsVerticalProgress(stateFrame);
-
-    if (indeterminate ||
-        WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
-      if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 30)) {
-        NS_WARNING("unable to animate progress widget!");
-      }
-
-      /**
-       * Unfortunately, vertical progress bar support on Windows seems weak and
-       * PP_MOVEOVERLAYRECT looks really different from PP_MOVEOVERLAY.
-       * Thus, we have to change the size and even don't use it for vertical
-       * indeterminate progress bars.
-       */
-      int32_t overlaySize;
-      if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
-        if (vertical) {
-          overlaySize = indeterminate ? kProgressVerticalIndeterminateOverlaySize
-                                      : kProgressVerticalOverlaySize;
-        } else {
-          overlaySize = kProgressHorizontalVistaOverlaySize;
-        }
-      } else {
-        overlaySize = kProgressHorizontalXPOverlaySize;
-      }
-
-      const double pixelsPerMillisecond = indeterminate
-                                            ? kProgressIndeterminateSpeed
-                                            : kProgressDeterminedVistaSpeed;
-      const int32_t delay = indeterminate ? kProgressIndeterminateDelay
-                                          : kProgressDeterminedVistaDelay;
-
-      const int32_t frameSize = vertical ? widgetRect.bottom - widgetRect.top
-                                         : widgetRect.right - widgetRect.left;
-      const int32_t animationSize = frameSize + overlaySize +
-                                     static_cast<int32_t>(pixelsPerMillisecond * delay);
-      const double interval = animationSize / pixelsPerMillisecond;
-      // We have to pass a double* to modf and we can't pass NULL.
-      double tempValue;
-      double ratio = modf(PR_IntervalToMilliseconds(PR_IntervalNow())/interval,
-                          &tempValue);
-      // If the frame direction is RTL, we want to have the animation going RTL.
-      // ratio is in [0.0; 1.0[ range, inverting it reverse the animation.
-      if (!vertical && IsFrameRTL(aFrame)) {
-        ratio = 1.0 - ratio;
-      }
-      int32_t dx = static_cast<int32_t>(animationSize * ratio) - overlaySize;
-
-      RECT overlayRect = widgetRect;
-      if (vertical) {
-        overlayRect.bottom -= dx;
-        overlayRect.top = overlayRect.bottom - overlaySize;
-      } else {
-        overlayRect.left += dx;
-        overlayRect.right = overlayRect.left + overlaySize;
-      }
-
-      int32_t overlayPart;
-      if (vertical) {
-        if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
-          overlayPart = indeterminate ? PP_MOVEOVERLAY : PP_MOVEOVERLAYVERT;
-        } else {
-          overlayPart = PP_CHUNKVERT;
-        }
-      } else {
-        overlayPart = WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION ?
-          PP_MOVEOVERLAY : PP_CHUNK;
-      }
-
-      DrawThemeBackground(theme, hdc, overlayPart, state, &overlayRect,
-                          &clipRect);
-    }
   }
-
 
   nativeDrawing.EndNativeDrawing();
 
