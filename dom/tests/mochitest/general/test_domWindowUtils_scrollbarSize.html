@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>nsIDOMWindowUtils::getScrollbarSize test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+
+<body id="body">
+  <script type="application/javascript;version=1.8">
+    function doTests() {
+      let iframe = document.getElementById("iframe");
+      let cwindow = iframe.contentWindow;
+      let utils = SpecialPowers.getDOMWindowUtils(cwindow);
+      let doc = cwindow.document;
+
+      function haveNonFloatingScrollbars() {
+        return doc.getElementById("float").offsetWidth > 200;
+      }
+
+      checkScrollbarSizeFlush(utils, function (w, h) w == 0 && h == 0,
+        "[overflow=hidden] corrrect scrollbar size after flushing");
+
+      // Some platforms (esp. mobile) may have floating scrollbars that don't
+      // affect layout. Thus getScrollbarSize() would always return zeros.
+      if (haveNonFloatingScrollbars()) {
+        let body = doc.querySelector("body");
+        body.style.overflowY = "scroll";
+
+        checkScrollbarSize(utils, function (w, h) w == 0 && h == 0,
+          "[overflowY=scroll] correct scrollbar size w/o flushing");
+
+        checkScrollbarSizeFlush(utils, function (w, h) w > 0 && h == 0,
+          "[overflowY=scroll] correct scrollbar size after flushing");
+
+        body.style.overflowX = "scroll";
+        checkScrollbarSize(utils, function (w, h) w > 0 && h == 0,
+          "[overflowXY=scroll] correct scrollbar size w/o flushing");
+
+        checkScrollbarSizeFlush(utils, function (w, h) w > 0 && h > 0,
+          "[overflowXY=scroll] correct scrollbar size after flushing");
+      }
+
+      SimpleTest.finish();
+    }
+
+    function checkScrollbarSize(utils, check, msg, flush = false) {
+      let width = {}, height = {};
+      utils.getScrollbarSize(flush, width, height);
+      ok(check(width.value, height.value), msg);
+    }
+
+    function checkScrollbarSizeFlush(utils, check, msg) {
+      checkScrollbarSize(utils, check, msg, true);
+    }
+
+    SimpleTest.waitForExplicitFinish();
+  </script>
+
+  <iframe src="http://mochi.test:8888/tests/dom/tests/mochitest/general/file_domWindowUtils_scrollbarSize.html"
+          id="iframe" onload="doTests();">
+  </iframe>
+
+</body>
+</html>
