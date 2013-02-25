@@ -11,12 +11,6 @@ MODULE    = metro
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = commandexecutehandler linktool
-
-ifdef ENABLE_TESTS
-DIRS += testing
-endif
-
 export::
 	$(NSINSTALL) $(srcdir)/resources.pri $(DIST)/bin
 	$(RM) $(DIST)/bin/VisualElementsManifest.xml

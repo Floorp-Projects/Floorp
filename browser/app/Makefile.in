@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS        = profile/extensions
 dist_dest   = $(DIST)/$(MOZ_MACBUNDLE_NAME)
 
 ifdef ENABLE_MARIONETTE

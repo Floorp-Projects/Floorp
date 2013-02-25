@@ -13,9 +13,6 @@ relativesrcdir = browser/metro/locales
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
-# process desktop related resources we reuse here:
-DIRS = import
-
 DEFINES += -DAB_CD=$(AB_CD)
 
 include $(topsrcdir)/config/rules.mk
