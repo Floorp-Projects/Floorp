@@ -4110,6 +4110,12 @@ pref("dom.placeholder.show_on_focus", true);
 pref("wap.UAProf.url", "");
 pref("wap.UAProf.tagname", "x-wap-profile");
 
+//Retrieval mode for MMS
+//manual: Manual retrieval mode.
+//automatic: Automatic retrieval mode.
+//never: Never retrieval mode.
+pref("dom.mms.retrieval_mode", "manual");
+
 // If the user puts a finger down on an element and we think the user
 // might be executing a pan gesture, how long do we wait before
 // tentatively deciding the gesture is actually a tap and activating
