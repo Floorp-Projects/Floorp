@@ -776,19 +776,6 @@ abstract public class GeckoApp
                 if (layerView != null && Tabs.getInstance().isSelectedTab(tab)) {
                     layerView.setBackgroundColor(tab.getBackgroundColor());
                 }
-            } else if (event.equals("DOMTitleChanged")) {
-                final int tabId = message.getInt("tabID");
-                final String title = message.getString("title");
-                handleTitleChanged(tabId, title);
-            } else if (event.equals("DOMLinkAdded")) {
-                final int tabId = message.getInt("tabID");
-                final String rel = message.getString("rel");
-                final String href = message.getString("href");
-                final int size = message.getInt("size");
-                handleLinkAdded(tabId, rel, href, size);
-            } else if (event.equals("DOMWindowClose")) {
-                final int tabId = message.getInt("tabID");
-                handleWindowClose(tabId);
             } else if (event.equals("log")) {
                 // generic log listener
                 final String msg = message.getString("msg");
@@ -1100,31 +1087,6 @@ abstract public class GeckoApp
             return;
 
         Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.LOADED);
-    }
-
-    void handleTitleChanged(int tabId, String title) {
-        final Tab tab = Tabs.getInstance().getTab(tabId);
-        if (tab == null)
-            return;
-
-        tab.updateTitle(title);
-    }
-
-    void handleLinkAdded(final int tabId, String rel, final String href, int size) {
-        if (rel.indexOf("[icon]") == -1)
-            return; 
-
-        final Tab tab = Tabs.getInstance().getTab(tabId);
-        if (tab == null)
-            return;
-
-        tab.updateFaviconURL(href, size);
-    }
-
-    void handleWindowClose(final int tabId) {
-        Tabs tabs = Tabs.getInstance();
-        Tab tab = tabs.getTab(tabId);
-        tabs.closeTab(tab);
     }
 
     private void addFullScreenPluginView(View view) {
@@ -1766,9 +1728,6 @@ abstract public class GeckoApp
 
         //register for events
         registerEventListener("DOMContentLoaded");
-        registerEventListener("DOMTitleChanged");
-        registerEventListener("DOMLinkAdded");
-        registerEventListener("DOMWindowClose");
         registerEventListener("log");
         registerEventListener("Content:SecurityChange");
         registerEventListener("Content:ReaderEnabled");
@@ -2167,9 +2126,6 @@ abstract public class GeckoApp
             GeckoAppShell.sendEventToGecko(GeckoEvent.createShutdownEvent());
 
         unregisterEventListener("DOMContentLoaded");
-        unregisterEventListener("DOMTitleChanged");
-        unregisterEventListener("DOMLinkAdded");
-        unregisterEventListener("DOMWindowClose");
         unregisterEventListener("log");
         unregisterEventListener("Content:SecurityChange");
         unregisterEventListener("Content:ReaderEnabled");

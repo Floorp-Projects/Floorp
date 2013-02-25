@@ -123,6 +123,9 @@ abstract public class BrowserApp extends GeckoApp
                     invalidateOptionsMenu();
                 }
                 break;
+            case LINK_ADDED:
+                handleLinkAdded(tab);
+                break;
         }
         super.onTabChanged(tab, msg, data);
     }
@@ -141,16 +144,7 @@ abstract public class BrowserApp extends GeckoApp
         });
     }
 
-    @Override
-    void handleLinkAdded(final int tabId, String rel, final String href, int size) {
-        super.handleLinkAdded(tabId, rel, href, size);
-        if (rel.indexOf("[icon]") == -1)
-            return;
-
-        final Tab tab = Tabs.getInstance().getTab(tabId);
-        if (tab == null)
-            return;
-
+    void handleLinkAdded(final Tab tab) {
         // If tab is not loading and the favicon is updated, we
         // want to load the image straight away. If tab is still
         // loading, we only load the favicon once the page's content
