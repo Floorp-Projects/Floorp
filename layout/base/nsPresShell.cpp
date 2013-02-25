@@ -182,6 +182,7 @@
 #include "nsTransitionManager.h"
 #include "LayerTreeInvalidation.h"
 #include "nsAsyncDOMEvent.h"
+#include "nsIImageLoadingContent.h"
 
 #define ANCHOR_SCROLL_FLAGS \
   (nsIPresShell::SCROLL_OVERFLOW_HIDDEN | nsIPresShell::SCROLL_NO_PARENT_FRAMES)
@@ -1000,6 +1001,10 @@ PresShell::Destroy()
   }
 
   mSynthMouseMoveEvent.Revoke();
+
+  mUpdateImageVisibilityEvent.Revoke();
+
+  ClearVisibleImagesList();
 
   if (mCaret) {
     mCaret->Terminate();
@@ -3613,8 +3618,10 @@ PresShell::UnsuppressAndInvalidate()
   if (win)
     win->SetReadyForFocus();
 
-  if (!mHaveShutDown)
+  if (!mHaveShutDown) {
     SynthesizeMouseMove(false);
+    ScheduleImageVisibilityUpdate();
+  }
 }
 
 void
@@ -5275,6 +5282,116 @@ PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll)
 
   if (!aFromScroll) {
     mSynthMouseMoveEvent.Forget();
+  }
+}
+
+/* static */ void
+PresShell::MarkImagesInListVisible(const nsDisplayList& aList)
+{
+  for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
+    nsDisplayList* sublist = item->GetChildren();
+    if (sublist) {
+      MarkImagesInListVisible(*sublist);
+      continue;
+    }
+    nsIFrame* f = item->GetUnderlyingFrame();
+    // We could check the type of the display item, only a handful can hold an
+    // image loading content.
+    if (f) {
+      // dont bother nscomptr here, it is wasteful
+      nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(f->GetContent()));
+      if (content) {
+        // use the presshell containing the image
+        PresShell* presShell = static_cast<PresShell*>(f->PresContext()->PresShell());
+        if (presShell) {
+          content->IncrementVisibleCount();
+          presShell->mVisibleImages.AppendElement(content);
+        }
+      }
+    }
+  }
+}
+
+void
+PresShell::RebuildImageVisibility(const nsDisplayList& aList)
+{
+  nsTArray< nsCOMPtr<nsIImageLoadingContent > > beforeimagelist;
+  beforeimagelist.SwapElements(mVisibleImages);
+  MarkImagesInListVisible(aList);
+  for (uint32_t i = 0; i < beforeimagelist.Length(); ++i) {
+    beforeimagelist[i]->DecrementVisibleCount();
+  }
+}
+
+void
+PresShell::ClearVisibleImagesList()
+{
+  for (uint32_t i = 0; i < mVisibleImages.Length(); ++i) {
+    mVisibleImages[i]->DecrementVisibleCount();
+  }
+  mVisibleImages.Clear();
+}
+
+void
+PresShell::UpdateImageVisibility()
+{
+  MOZ_ASSERT(!mPresContext || mPresContext->IsRootContentDocument(),
+    "updating image visibility on a non-root content document?");
+
+  mUpdateImageVisibilityEvent.Revoke();
+
+  if (mHaveShutDown || mIsDestroying) {
+    return;
+  }
+
+  // call update on that frame
+  nsIFrame* rootFrame = GetRootFrame();
+  if (!rootFrame) {
+    ClearVisibleImagesList();
+    return;
+  }
+
+  // We could walk the frame tree directly and skip creating a display list for
+  // better perf.
+  nsRect updateRect(nsPoint(0, 0), rootFrame->GetSize());
+  nsDisplayListBuilder builder(rootFrame, nsDisplayListBuilder::IMAGE_VISIBILITY, true);
+  builder.IgnorePaintSuppression();
+  builder.EnterPresShell(rootFrame, updateRect);
+  nsDisplayList list;
+  rootFrame->BuildDisplayListForStackingContext(&builder, updateRect, &list);
+  builder.LeavePresShell(rootFrame, updateRect);
+
+  RebuildImageVisibility(list);
+
+  list.DeleteAll();
+}
+
+void
+PresShell::ScheduleImageVisibilityUpdate()
+{
+  if (!mPresContext)
+    return;
+
+  if (!mPresContext->IsRootContentDocument()) {
+    nsPresContext* presContext = mPresContext->GetToplevelContentDocumentPresContext();
+    if (!presContext)
+      return;
+    MOZ_ASSERT(presContext->IsRootContentDocument(),
+      "Didn't get a root prescontext from GetToplevelContentDocumentPresContext?");
+    presContext->PresShell()->ScheduleImageVisibilityUpdate();
+    return;
+  }
+
+  if (mHaveShutDown || mIsDestroying)
+    return;
+
+  if (mUpdateImageVisibilityEvent.IsPending())
+    return;
+
+  nsRefPtr<nsRunnableMethod<PresShell> > ev = 
+    NS_NewRunnableMethod(this, &PresShell::UpdateImageVisibility);
+  if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
+    mUpdateImageVisibilityEvent = ev;
   }
 }
 
@@ -7281,6 +7398,8 @@ FreezeSubDocument(nsIDocument *aDocument, void *aData)
 void
 PresShell::Freeze()
 {
+  mUpdateImageVisibilityEvent.Revoke();
+
   MaybeReleaseCapturingContent();
 
   mDocument->EnumerateFreezableElements(FreezeElement, nullptr);
