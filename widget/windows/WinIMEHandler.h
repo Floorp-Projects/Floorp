@@ -16,6 +16,8 @@ struct nsIMEUpdatePreference;
 namespace mozilla {
 namespace widget {
 
+struct InputContext;
+
 /**
  * IMEHandler class is a mediator class.  On Windows, there are two IME API
  * sets: One is IMM which is legacy API set. The other is TSF which is modern
@@ -68,15 +70,25 @@ public:
   static nsIMEUpdatePreference GetUpdatePreference();
 
   /**
-   * Sets and Gets IME open state.
+   * Returns IME open state on the window.
    */
-  static void SetOpenState(nsWindow* aWindow, bool aOpen);
   static bool GetOpenState(nsWindow* aWindow);
 
   /**
    * Called when the window is destroying.
    */
   static void OnDestroyWindow(nsWindow* aWindow);
+
+  /**
+   * Called when nsIWidget::SetInputContext() is called before the window's
+   * InputContext is modified actually.
+   */
+  static void SetInputContext(nsWindow* aWindow, InputContext& aInputContext);
+
+  /**
+   * Called when the window is created.
+   */
+  static void InitInputContext(nsWindow* aWindow, InputContext& aInputContext);
 
   /**
    * "Kakutei-Undo" of ATOK or WXG (both of them are Japanese IME) causes
