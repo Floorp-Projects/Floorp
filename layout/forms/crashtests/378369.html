@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>Testcase bug - Crash [@ nsEventListenerManager::FixContextMenuEvent] when firing contextmenu event in display: none iframe</title>
+</head>
+<body>
+This page should not crash Mozilla
+<iframe style="display: none;"></iframe>
+
+<script>
+function docontextmenu(i){
+var doc = window.frames[0].document;
+  var ev = doc.createEvent ('MouseEvents'); 
+  ev.initMouseEvent('contextmenu', true,true, window, 3,5, 5, 400, 400, 0, 0, 0,0,0,null);
+  doc.dispatchEvent(ev);
+}
+setTimeout(docontextmenu,0);
+</script>
+</body>
+</html>

@@ -25,9 +25,6 @@ DIRS = \
 EXTRA_COMPONENTS = \
   SiteSpecificUserAgent.js \
   SiteSpecificUserAgent.manifest \
-  $(NULL)
-
-EXTRA_PP_COMPONENTS = \
   ConsoleAPI.js \
   ConsoleAPI.manifest \
   $(NULL)

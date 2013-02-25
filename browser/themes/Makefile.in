@@ -9,21 +9,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-#
-# Theme Selection
-#
-# Windows                 Winstripe
-# GNOME/Linux             Gnomestripe
-# MacOS X                 Pinstripe
-#
-
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-DIRS = pinstripe
+DIRS = osx
 else
-DIRS = winstripe
+DIRS = windows
 endif
 ifneq (,$(filter gtk2 qt,$(MOZ_WIDGET_TOOLKIT)))
-DIRS = gnomestripe
+DIRS = linux
 endif
 
 include $(topsrcdir)/config/rules.mk

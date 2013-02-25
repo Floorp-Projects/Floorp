@@ -12,9 +12,9 @@ class nsHtml5ByteReadable
 {
   public:
 
-    nsHtml5ByteReadable(const uint8_t* current, const uint8_t* end)
-     : current(current),
-       end(end)
+    nsHtml5ByteReadable(const uint8_t* aCurrent, const uint8_t* aEnd)
+     : current(aCurrent),
+       end(aEnd)
     {
     }
 

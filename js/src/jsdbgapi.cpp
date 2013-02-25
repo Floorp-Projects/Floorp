@@ -1102,7 +1102,7 @@ FormatValue(JSContext *cx, const Value &v, JSAutoByteString &bytes)
     JSString *str = ToString<CanGC>(cx, v);
     if (!str)
         return NULL;
-    const char *buf = bytes.encode(cx, str);
+    const char *buf = bytes.encodeLatin1(cx, str);
     if (!buf)
         return NULL;
     const char *found = strstr(buf, "function ");
@@ -1151,7 +1151,7 @@ FormatFrame(JSContext *cx, const ScriptFrameIter &iter, char *buf, int num,
     // print the frame number and function name
     if (funname) {
         JSAutoByteString funbytes;
-        buf = JS_sprintf_append(buf, "%d %s(", num, funbytes.encode(cx, funname));
+        buf = JS_sprintf_append(buf, "%d %s(", num, funbytes.encodeLatin1(cx, funname));
     } else if (fun) {
         buf = JS_sprintf_append(buf, "%d anonymous(", num);
     } else {
@@ -1249,7 +1249,7 @@ FormatFrame(JSContext *cx, const ScriptFrameIter &iter, char *buf, int num,
             JSAutoByteString thisValBytes;
             RootedString thisValStr(cx, ToString<CanGC>(cx, thisVal));
             if (thisValStr) {
-                if (const char *str = thisValBytes.encode(cx, thisValStr)) {
+                if (const char *str = thisValBytes.encodeLatin1(cx, thisValStr)) {
                     buf = JS_sprintf_append(buf, "    this = %s\n", str);
                     if (!buf)
                         return buf;

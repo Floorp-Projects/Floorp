@@ -294,6 +294,47 @@ public:
   }
 
 private:
+  const Event* GetPreviousEvent(double aTime) const
+  {
+    const Event* previous = nullptr;
+    const Event* next = nullptr;
+
+    bool bailOut = false;
+    for (unsigned i = 0; !bailOut && i < mEvents.Length(); ++i) {
+      switch (mEvents[i].mType) {
+      case Event::SetValue:
+      case Event::SetTarget:
+      case Event::LinearRamp:
+      case Event::ExponentialRamp:
+        if (aTime == mEvents[i].mTime) {
+          // Find the last event with the same time
+          do {
+            ++i;
+          } while (i < mEvents.Length() &&
+                   aTime == mEvents[i].mTime);
+          return &mEvents[i - 1];
+        }
+        previous = next;
+        next = &mEvents[i];
+        if (aTime < mEvents[i].mTime) {
+          bailOut = true;
+        }
+        break;
+      case Event::SetValueCurve:
+        // TODO: implement
+        break;
+      default:
+        MOZ_ASSERT(false, "unreached");
+      }
+    }
+    // Handle the case where the time is past all of the events
+    if (!bailOut) {
+      previous = next;
+    }
+
+    return previous;
+  }
+
   void InsertEvent(const Event& aEvent, ErrorResult& aRv)
   {
     if (!aEvent.IsValid()) {
@@ -318,6 +359,26 @@ private:
       for (unsigned i = 0; i < mEvents.Length(); ++i) {
         if (mEvents[i].mTime >= aEvent.mTime &&
             mEvents[i].mTime <= (aEvent.mTime + aEvent.mDuration)) {
+          aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+          return;
+        }
+      }
+    }
+
+    // Make sure that invalid values are not used for exponential curves
+    if (aEvent.mType == Event::ExponentialRamp) {
+      if (aEvent.mValue <= 0.f) {
+        aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+        return;
+      }
+      const Event* previousEvent = GetPreviousEvent(aEvent.mTime);
+      if (previousEvent) {
+        if (previousEvent->mValue <= 0.f) {
+          aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+          return;
+        }
+      } else {
+        if (mValue <= 0.f) {
           aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
           return;
         }

@@ -7,20 +7,16 @@
 #include "mozilla/dom/XMLStylesheetProcessingInstructionBinding.h"
 #include "nsNetUtil.h"
 
-DOMCI_NODE_DATA(XMLStylesheetProcessingInstruction,
-                mozilla::dom::XMLStylesheetProcessingInstruction)
-
 namespace mozilla {
 namespace dom {
 
 // nsISupports implementation
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(XMLStylesheetProcessingInstruction)
-  NS_NODE_INTERFACE_TABLE4(XMLStylesheetProcessingInstruction, nsIDOMNode,
-                           nsIDOMProcessingInstruction, nsIDOMLinkStyle,
-                           nsIStyleSheetLinkingElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XMLStylesheetProcessingInstruction)
-NS_INTERFACE_MAP_END_INHERITING(ProcessingInstruction)
+  NS_INTERFACE_TABLE_INHERITED4(XMLStylesheetProcessingInstruction, nsIDOMNode,
+                                nsIDOMProcessingInstruction, nsIDOMLinkStyle,
+                                nsIStyleSheetLinkingElement)
+NS_INTERFACE_TABLE_TAIL_INHERITING(ProcessingInstruction)
 
 NS_IMPL_ADDREF_INHERITED(XMLStylesheetProcessingInstruction,
                          ProcessingInstruction)

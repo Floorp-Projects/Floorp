@@ -6,7 +6,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="gen.next()">
+<body onload="initTest()">
 <p id="display">
 <iframe id=loader></iframe>
 </p>
@@ -20,13 +20,23 @@ const runPreflightTests = 1;
 const runCookieTests = 1;
 const runRedirectTests = 1;
 
-SimpleTest.waitForExplicitFinish();
+var gen;
 
-window.addEventListener("message", function(e) {
-  gen.send(e.data);
-}, false);
+function initTest() {
+  SimpleTest.waitForExplicitFinish();
+  // Allow all cookies, then do the actual test initialization
+  SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 0]]}, initTestCallback);
+}
 
-gen = runTest();
+function initTestCallback() {
+  window.addEventListener("message", function(e) {
+    gen.send(e.data);
+  }, false);
+
+  gen = runTest();
+  
+  gen.next()
+}
 
 function runTest() {
   var loader = document.getElementById('loader');

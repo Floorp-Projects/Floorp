@@ -108,15 +108,29 @@
             newitem.eventCallback = aEventCallback;
 
             if (aButtons) {
+              // The notification-button-default class is added to the button
+              // with isDefault set to true. If there is no such button, it is
+              // added to the first button (unless that button has isDefault
+              // set to false). There cannot be multiple default buttons.
+              var defaultElem;
+
               for (var b = 0; b < aButtons.length; b++) {
                 var button = aButtons[b];
                 var buttonElem = document.createElementNS(XULNS, "button");
                 buttonElem.setAttribute("label", button.label);
                 buttonElem.setAttribute("accesskey", button.accessKey);
+                buttonElem.classList.add("notification-button");
+
+                if (button.isDefault ||
+                    b == 0 && !("isDefault" in button))
+                  defaultElem = buttonElem;
 
                 newitem.appendChild(buttonElem);
                 buttonElem.buttonInfo = button;
               }
+
+              if (defaultElem)
+                defaultElem.classList.add("notification-button-default");
             }
 
             newitem.setAttribute("priority", aPriority);

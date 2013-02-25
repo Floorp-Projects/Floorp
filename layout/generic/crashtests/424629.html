@@ -1,0 +1,21 @@
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("o").appendChild(document.createTextNode('d'));
+  document.body.offsetHeight;
+  document.getElementById("b").firstChild.data = "\u202E";
+  document.getElementById("a").firstChild.data = "ZZZZZZZ";
+}
+
+</script>
+</head>
+
+<body onload="boom();" style="font-family: monospace; width: 8ch;">
+
+<div><span id="o"><span id="a">a</span><span id="b">b&#x202E;</span><span> c </span></span></div>
+
+</body>
+</html>

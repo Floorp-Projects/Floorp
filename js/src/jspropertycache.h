@@ -84,7 +84,7 @@ class PropertyCache
 {
   private:
     enum {
-        SIZE_LOG2 = 12,
+        SIZE_LOG2 = 8,
         SIZE = JS_BIT(SIZE_LOG2),
         MASK = JS_BITMASK(SIZE_LOG2)
     };

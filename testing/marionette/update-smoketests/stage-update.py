@@ -50,7 +50,7 @@ def stage_update(device, stage_dir):
     print 'Building flash zip for device %s, version %s, build %s...' % \
           (device, app_version, build_id)
 
-    subprocess.check_call([build_flash_fota,
+    subprocess.check_call([sys.executable, build_flash_fota,
         '--system-dir', os.path.join(target_out_dir, 'system'),
         '--system-fs-type', device_data.system_fs_type,
         '--system-location', device_data.system_location,

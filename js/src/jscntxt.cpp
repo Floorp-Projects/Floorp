@@ -272,9 +272,9 @@ RawFunction
 js::CloneFunctionAtCallsite(JSContext *cx, HandleFunction fun, HandleScript script, jsbytecode *pc)
 {
     JS_ASSERT(cx->typeInferenceEnabled());
-    JS_ASSERT(fun->isCloneAtCallsite());
-    JS_ASSERT(types::UseNewTypeForClone(fun));
+    JS_ASSERT(fun->nonLazyScript()->shouldCloneAtCallsite);
     JS_ASSERT(!fun->nonLazyScript()->enclosingStaticScope());
+    JS_ASSERT(types::UseNewTypeForClone(fun));
 
     typedef CallsiteCloneKey Key;
     typedef CallsiteCloneTable Table;
@@ -301,7 +301,8 @@ js::CloneFunctionAtCallsite(JSContext *cx, HandleFunction fun, HandleScript scri
         return NULL;
 
     // Store a link back to the original for function.caller.
-    clone->setExtendedSlot(0, ObjectValue(*fun));
+    clone->nonLazyScript()->isCallsiteClone = true;
+    clone->nonLazyScript()->setOriginalFunctionObject(fun);
 
     // Recalculate the hash if script or fun have been moved.
     if (key.script != script && key.original != fun) {

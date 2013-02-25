@@ -171,7 +171,7 @@ WebGLContext::BindFramebuffer(WebGLenum target, WebGLFramebuffer *wfb)
     MakeContextCurrent();
 
     if (!wfb) {
-        gl->fBindFramebuffer(target, gl->GetOffscreenFBO());
+        gl->fBindFramebuffer(target, 0);
     } else {
         WebGLuint framebuffername = wfb->GLName();
         gl->fBindFramebuffer(target, framebuffername);
@@ -575,32 +575,52 @@ WebGLContext::Clear(WebGLbitfield mask)
     if (mask != m)
         return ErrorInvalidValue("clear: invalid mask bits");
 
-    bool needClearCallHere = true;
-
     if (mBoundFramebuffer) {
         if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
             return ErrorInvalidFramebufferOperation("clear: incomplete framebuffer");
-    } else {
-        // no FBO is bound, so we are clearing the backbuffer here
-        EnsureBackbufferClearedAsNeeded();
-        bool valuesAreDefault = mColorClearValue[0] == 0.0f &&
-                                  mColorClearValue[1] == 0.0f &&
-                                  mColorClearValue[2] == 0.0f &&
-                                  mColorClearValue[3] == 0.0f &&
-                                  mDepthClearValue    == 1.0f &&
-                                  mStencilClearValue  == 0;
-        if (valuesAreDefault &&
-            mBackbufferClearingStatus == BackbufferClearingStatus::ClearedToDefaultValues)
-        {
-            needClearCallHere = false;
-        }
+
+        gl->fClear(mask);
+        return;
     }
 
-    if (needClearCallHere) {
-        gl->fClear(mask);
-        mBackbufferClearingStatus = BackbufferClearingStatus::HasBeenDrawnTo;
-        Invalidate();
+    // Ok, we're clearing the default framebuffer/screen.
+
+    bool needsClear = true;
+    if (mIsScreenCleared) {
+        bool isClearRedundant = true;
+        if (mask & LOCAL_GL_COLOR_BUFFER_BIT) {
+            if (mColorClearValue[0] != 0.0f ||
+                mColorClearValue[1] != 0.0f ||
+                mColorClearValue[2] != 0.0f ||
+                mColorClearValue[3] != 0.0f)
+            {
+                isClearRedundant = false;
+            }
+        }
+
+        if (mask & LOCAL_GL_DEPTH_BUFFER_BIT) {
+            if (mDepthClearValue != 1.0f) {
+                isClearRedundant = false;
+            }
+        }
+
+        if (mask & LOCAL_GL_DEPTH_BUFFER_BIT) {
+            if (mStencilClearValue != 0) {
+                isClearRedundant = false;
+            }
+        }
+
+        if (isClearRedundant)
+            needsClear = false;
     }
+
+    if (needsClear) {
+        gl->fClear(mask);
+        mIsScreenCleared = false;
+    }
+
+    Invalidate();
+    mShouldPresent = true;
 }
 
 void
@@ -815,7 +835,7 @@ WebGLContext::CopyTexImage2D(WebGLenum target,
                                     internalformat == LOCAL_GL_ALPHA ||
                                     internalformat == LOCAL_GL_LUMINANCE_ALPHA;
     bool fboFormatHasAlpha = mBoundFramebuffer ? mBoundFramebuffer->ColorAttachment().HasAlpha()
-                                                 : bool(gl->ActualFormat().alpha > 0);
+                                                 : bool(gl->GetPixelFormat().alpha > 0);
     if (texFormatRequiresAlpha && !fboFormatHasAlpha)
         return ErrorInvalidOperation("copyTexImage2D: texture format requires an alpha channel "
                                      "but the framebuffer doesn't have one");
@@ -925,7 +945,7 @@ WebGLContext::CopyTexSubImage2D(WebGLenum target,
                                   format == LOCAL_GL_ALPHA ||
                                   format == LOCAL_GL_LUMINANCE_ALPHA;
     bool fboFormatHasAlpha = mBoundFramebuffer ? mBoundFramebuffer->ColorAttachment().HasAlpha()
-                                                 : bool(gl->ActualFormat().alpha > 0);
+                                                 : bool(gl->GetPixelFormat().alpha > 0);
 
     if (texFormatRequiresAlpha && !fboFormatHasAlpha)
         return ErrorInvalidOperation("copyTexSubImage2D: texture format requires an alpha channel "
@@ -1440,8 +1460,6 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
     if (mBoundFramebuffer) {
         if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
             return ErrorInvalidFramebufferOperation("drawArrays: incomplete framebuffer");
-    } else {
-        EnsureBackbufferClearedAsNeeded();
     }
 
     BindFakeBlackTextures();
@@ -1454,8 +1472,11 @@ WebGLContext::DrawArrays(GLenum mode, WebGLint first, WebGLsizei count)
     UndoFakeVertexAttrib0();
     UnbindFakeBlackTextures();
 
-    mBackbufferClearingStatus = BackbufferClearingStatus::HasBeenDrawnTo;
-    Invalidate();
+    if (!mBoundFramebuffer) {
+        Invalidate();
+        mShouldPresent = true;
+        mIsScreenCleared = false;
+    }
 }
 
 void
@@ -1533,8 +1554,6 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type,
     if (mBoundFramebuffer) {
         if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
             return ErrorInvalidFramebufferOperation("drawElements: incomplete framebuffer");
-    } else {
-        EnsureBackbufferClearedAsNeeded();
     }
 
     BindFakeBlackTextures();
@@ -1547,8 +1566,11 @@ WebGLContext::DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type,
     UndoFakeVertexAttrib0();
     UnbindFakeBlackTextures();
 
-    mBackbufferClearingStatus = BackbufferClearingStatus::HasBeenDrawnTo;
-    Invalidate();
+    if (!mBoundFramebuffer) {
+        Invalidate();
+        mShouldPresent = true;
+        mIsScreenCleared = false;
+    }
 }
 
 void
@@ -3332,7 +3354,7 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width,
         if (mBoundFramebuffer) {
             needAlphaFixup = !mBoundFramebuffer->ColorAttachment().HasAlpha();
         } else {
-            needAlphaFixup = gl->ActualFormat().alpha == 0;
+            needAlphaFixup = gl->GetPixelFormat().alpha == 0;
         }
 
         if (needAlphaFixup) {

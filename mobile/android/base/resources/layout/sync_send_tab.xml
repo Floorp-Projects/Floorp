@@ -37,14 +37,18 @@
   </ListView>
 
   <LinearLayout
-    style="@style/SyncBottom" >
+    style="@style/SyncBottomContainer">
+    <LinearLayout
+      style="@style/SyncBottom" >
+  
+      <Button
+        style="@style/SyncButton"
+        android:id="@+id/send_button"
+        android:onClick="sendClickHandler"
+        android:clickable="false"
+        android:enabled="false"
+        android:text="@string/sync_button_send" />
+    </LinearLayout>
 
-    <Button
-      style="@style/SyncButton"
-      android:id="@+id/send_button"
-      android:onClick="sendClickHandler"
-      android:clickable="false"
-      android:enabled="false"
-      android:text="@string/sync_button_send" />
   </LinearLayout>
 </LinearLayout>

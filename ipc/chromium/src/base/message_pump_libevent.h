@@ -137,7 +137,7 @@ class MessagePumpLibevent : public MessagePump {
   virtual void Run(Delegate* delegate);
   virtual void Quit();
   virtual void ScheduleWork();
-  virtual void ScheduleDelayedWork(const Time& delayed_work_time);
+  virtual void ScheduleDelayedWork(const TimeTicks& delayed_work_time);
 
  private:
 
@@ -151,7 +151,7 @@ class MessagePumpLibevent : public MessagePump {
   bool in_run_;
 
   // The time at which we should call DoDelayedWork.
-  Time delayed_work_time_;
+  TimeTicks delayed_work_time_;
 
   // Libevent dispatcher.  Watches all sockets registered with it, and sends
   // readiness callbacks when a socket is ready for I/O.

@@ -1,3 +1,7 @@
+const Cu = Components.utils;
+
+Cu.import("resource://gre/modules/Services.jsm");
+
 function makeURI(str) {
     return Components.classes["@mozilla.org/network/io-service;1"]
                      .getService(Components.interfaces.nsIIOService)
@@ -5,6 +9,8 @@ function makeURI(str) {
 }
 
 function run_test() {
+    // Allow all cookies.
+    Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
     var serv =   Components.classes["@mozilla.org/cookieService;1"]
                            .getService(Components.interfaces.nsICookieService);
     var uri = makeURI("http://example.com/");

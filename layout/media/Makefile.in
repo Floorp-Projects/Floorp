@@ -20,6 +20,7 @@ endif
 SHARED_LIBRARY_LIBS = \
     $(MOZ_OTS_LIBS) \
     $(QCMS_LIBS) \
+    $(MOZ_GRAPHITE_LIBS) \
     $(MOZ_HARFBUZZ_LIBS) \
     $(NULL)
 
@@ -29,10 +30,6 @@ endif
 
 ifdef MOZ_TREE_PIXMAN
 SHARED_LIBRARY_LIBS += $(MOZ_PIXMAN_LIBS)
-endif
-
-ifdef MOZ_GRAPHITE
-SHARED_LIBRARY_LIBS += $(MOZ_GRAPHITE_LIBS)
 endif
 
 ifdef MOZ_VORBIS

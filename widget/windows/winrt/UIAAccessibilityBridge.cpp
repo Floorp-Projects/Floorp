@@ -71,11 +71,7 @@ AccessibilityBridge::Observe(nsISupports *aSubject, const char *aTopic, const PR
           Microsoft::WRL::ComPtr<IUIAElement> bridgePtr;
           mBridge.As(&bridgePtr);
           if (bridgePtr) {
-#if defined(x86_64)
-            bridgePtr->SetFocusInternal((__int64)item.get());
-#else
-            bridgePtr->SetFocusInternal((__int32)item.get());
-#endif
+            bridgePtr->SetFocusInternal(reinterpret_cast<LONG_PTR>(item.get()));
           }
         } else {
           Log(L"focus item can't have focus");

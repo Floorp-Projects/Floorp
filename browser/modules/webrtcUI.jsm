@@ -80,13 +80,18 @@ function handleRequest(aSubject, aTopic, aData) {
     function (error) {
       // bug 827146 -- In the future, the UI should catch NO_DEVICES_FOUND
       // and allow the user to plug in a device, instead of immediately failing.
-      let msg = Cc["@mozilla.org/supports-string;1"].
-                createInstance(Ci.nsISupportsString);
-      msg.data = error;
-      Services.obs.notifyObservers(msg, "getUserMedia:response:deny", callID);
-      Cu.reportError(error);
+      denyRequest(callID, error);
     }
   );
+}
+
+function denyRequest(aCallID, aError) {
+  let msg = null;
+  if (aError) {
+    msg = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+    msg.data = aError;
+  }
+  Services.obs.notifyObservers(msg, "getUserMedia:response:deny", aCallID);
 }
 
 function prompt(aBrowser, aCallID, aAudioRequested, aVideoRequested, aDevices) {
@@ -113,8 +118,10 @@ function prompt(aBrowser, aCallID, aAudioRequested, aVideoRequested, aDevices) {
     requestType = "Microphone";
   else if (videoDevices.length)
     requestType = "Camera";
-  else
+  else {
+    denyRequest(aCallID, "NO_DEVICES_FOUND");
     return;
+  }
 
   let host = aBrowser.contentDocument.documentURIObject.asciiHost;
   let chromeDoc = aBrowser.ownerDocument;
@@ -173,7 +180,7 @@ function prompt(aBrowser, aCallID, aAudioRequested, aVideoRequested, aDevices) {
       }
 
       if (allowedDevices.Count() == 0) {
-        Services.obs.notifyObservers(null, "getUserMedia:response:deny", aCallID);
+        denyRequest(aCallID);
         return;
       }
 
@@ -197,7 +204,7 @@ function prompt(aBrowser, aCallID, aAudioRequested, aVideoRequested, aDevices) {
     label: stringBundle.getString("getUserMedia.denyRequest.label"),
     accessKey: stringBundle.getString("getUserMedia.denyRequest.accesskey"),
     callback: function () {
-      Services.obs.notifyObservers(null, "getUserMedia:response:deny", aCallID);
+      denyRequest(aCallID);
     }
   }];
 

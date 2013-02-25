@@ -161,6 +161,28 @@ parser_groups = (
                                 default="firefox",
                                 cmds=['test', 'run', 'testex', 'testpkgs',
                                       'testall'])),
+        (("-o", "--overload-modules",), dict(dest="overload_modules",
+                                     help=("Overload JS modules integrated into"
+                                           " Firefox with the one from your SDK"
+                                           " repository"),
+                                     action="store_true",
+                                     default=False,
+                                     cmds=['run', 'test', 'testex', 'testpkgs',
+                                           'testall'])),
+        (("", "--strip-sdk",), dict(dest="bundle_sdk",
+                                    help=("Do not ship SDK modules in the xpi"),
+                                    action="store_false",
+                                    default=True,
+                                    cmds=['run', 'test', 'testex', 'testpkgs',
+                                          'testall', 'xpi'])),
+        (("", "--force-use-bundled-sdk",), dict(dest="force_use_bundled_sdk",
+                                    help=("When --strip-sdk isn't passed, "
+                                          "force using sdk modules shipped in "
+                                          "the xpi instead of firefox ones"),
+                                    action="store_true",
+                                    default=False,
+                                    cmds=['run', 'test', 'testex', 'testpkgs',
+                                          'testall', 'xpi'])),
         (("", "--no-run",), dict(dest="no_run",
                                      help=("Instead of launching the "
                                            "application, just show the command "
@@ -764,6 +786,14 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
 
     harness_options.update(build)
 
+    # When cfx is run from sdk root directory, we will strip sdk modules and
+    # override them with local modules.
+    # So that integration tools will continue to work and use local modules
+    if os.getcwd() == env_root:
+        options.bundle_sdk = True
+        options.force_use_bundled_sdk = False
+        options.overload_modules = True
+
     extra_environment = {}
     if command == "test":
         # This should be contained in the test runner package.
@@ -792,14 +822,32 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
         mydir = os.path.dirname(os.path.abspath(__file__))
         app_extension_dir = os.path.join(mydir, "../../app-extension")
 
-
     if target_cfg.get('preferences'):
         harness_options['preferences'] = target_cfg.get('preferences')
 
-    harness_options['manifest'] = manifest.get_harness_options_manifest()
-    harness_options['allTestModules'] = manifest.get_all_test_modules()
-    if len(harness_options['allTestModules']) == 0 and command == "test":
-        sys.exit(0)
+    harness_options['manifest'] = \
+        manifest.get_harness_options_manifest(options.bundle_sdk)
+
+    # Gives an hint to tell if sdk modules are bundled or not
+    harness_options['is-sdk-bundled'] = options.bundle_sdk
+
+    if options.force_use_bundled_sdk:
+        if not options.bundle_sdk:
+            print >>sys.stderr, ("--force-use-bundled-sdk and --strip-sdk "
+                                 "can't be used at the same time.")
+            sys.exit(1)
+        if options.overload_modules:
+            print >>sys.stderr, ("--force-use-bundled-sdk and --overload-modules "
+                                 "can't be used at the same time.")
+            sys.exit(1)
+        # Pass a flag in order to force using sdk modules shipped in the xpi
+        harness_options['force-use-bundled-sdk'] = True
+
+    # Pass the list of absolute path for all test modules
+    if command == "test":
+        harness_options['allTestModules'] = manifest.get_all_test_modules()
+        if len(harness_options['allTestModules']) == 0:
+            sys.exit(0)
 
     from cuddlefish.rdf import gen_manifest, RDFUpdate
 
@@ -825,7 +873,7 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
     # build_manifest earlier
     used_files = None
     if command == "xpi":
-      used_files = set(manifest.get_used_files())
+        used_files = set(manifest.get_used_files(options.bundle_sdk))
 
     if options.no_strip_xpi:
         used_files = None # disables the filter, includes all files
@@ -872,7 +920,11 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
                              norun=options.no_run,
                              used_files=used_files,
                              enable_mobile=options.enable_mobile,
-                             mobile_app_name=options.mobile_app_name)
+                             mobile_app_name=options.mobile_app_name,
+                             env_root=env_root,
+                             is_running_tests=(command == "test"),
+                             overload_modules=options.overload_modules,
+                             bundle_sdk=options.bundle_sdk)
         except ValueError, e:
             print ""
             print "A given cfx option has an inappropriate value:"

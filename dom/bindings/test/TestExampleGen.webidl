@@ -7,8 +7,10 @@
  Constructor(DOMString str),
  Constructor(unsigned long num, boolean? boolArg),
  Constructor(TestInterface? iface),
- Constructor(long arg1, IndirectlyImplementedInterface iface)
- // , Constructor(long arg1, long arg2, (TestInterface or OnlyForUseInConstructor) arg3)
+ Constructor(long arg1, IndirectlyImplementedInterface iface),
+ // Constructor(long arg1, long arg2, (TestInterface or OnlyForUseInConstructor) arg3),
+ NamedConstructor=Example,
+ NamedConstructor=Example(DOMString str)
  ]
 interface TestExampleInterface {
   // Integer types

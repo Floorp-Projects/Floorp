@@ -1005,7 +1005,7 @@ public class BrowserProvider extends ContentProvider {
         }
 
         // Returns the number of bookmarks inserted in the db
-        private int createDistributionBookmarks(SQLiteDatabase db) {
+        private int createDistributionBookmarks(final SQLiteDatabase db) {
             JSONArray bookmarks = Distribution.getBookmarks(mContext);
             if (bookmarks == null) {
                 return 0;
@@ -1015,20 +1015,32 @@ public class BrowserProvider extends ContentProvider {
             int pos = 0;
             for (int i = 0; i < bookmarks.length(); i++) {
                 try {
-                    JSONObject bookmark = bookmarks.getJSONObject(i);
+                    final JSONObject bookmark = bookmarks.getJSONObject(i);
 
                     String title = getLocalizedProperty(bookmark, "title", locale);
-                    String url = getLocalizedProperty(bookmark, "url", locale);
+                    final String url = getLocalizedProperty(bookmark, "url", locale);
+                    createBookmark(db, title, url, pos);
+                    pos++;
 
-                    // Look for an optional icon data URI
-                    Bitmap icon = null;
-                    if (bookmark.has("icon")) {
-                        String iconData = bookmark.getString("icon");
-                        icon = BitmapUtils.getBitmapFromDataURI(iconData);
+                    // return early if there is no icon for this bookmark
+                    if (!bookmark.has("icon")) {
+                        continue;
                     }
 
-                    createBookmark(db, title, url, pos, icon);
-                    pos++;
+                    // create icons in a separate thread to avoid blocking about:home on startup
+                    GeckoBackgroundThread.getHandler().post(new Runnable() {
+                        public void run() {
+                            try {
+                                String iconData = bookmark.getString("icon");
+                                Bitmap icon = BitmapUtils.getBitmapFromDataURI(iconData);
+                                if (icon != null) {
+                                    createFavicon(db, url, icon);
+                                }
+                            } catch (JSONException e) {
+                                Log.e(LOGTAG, "Error creating distribution bookmark icon", e);
+                            }
+                        }
+                    });
                 } catch (JSONException e) {
                     Log.e(LOGTAG, "Error creating distribution bookmark", e);
                 }
@@ -1037,13 +1049,13 @@ public class BrowserProvider extends ContentProvider {
         }
 
         // Inserts default bookmarks, starting at a specified position
-        private void createDefaultBookmarks(SQLiteDatabase db, int pos) {
+        private void createDefaultBookmarks(final SQLiteDatabase db, int pos) {
             Class<?> stringsClass = R.string.class;
             Field[] fields = stringsClass.getFields();
             Pattern p = Pattern.compile("^bookmarkdefaults_title_");
 
             for (int i = 0; i < fields.length; i++) {
-                String name = fields[i].getName();
+                final String name = fields[i].getName();
                 Matcher m = p.matcher(name);
                 if (!m.find()) {
                     continue;
@@ -1054,13 +1066,21 @@ public class BrowserProvider extends ContentProvider {
 
                     Field urlField = stringsClass.getField(name.replace("_title_", "_url_"));
                     int urlId = urlField.getInt(null);
-                    String url = mContext.getString(urlId);
+                    final String url = mContext.getString(urlId);
+                    createBookmark(db, title, url, pos);
 
-                    Bitmap icon = getDefaultFaviconFromPath(name);
-                    if (icon == null) {
-                        icon = getDefaultFaviconFromDrawable(name);
-                    }
-                    createBookmark(db, title, url, pos, icon);
+                    // create icons in a separate thread to avoid blocking about:home on startup
+                    GeckoBackgroundThread.getHandler().post(new Runnable() {
+                        public void run() {
+                            Bitmap icon = getDefaultFaviconFromPath(name);
+                            if (icon == null) {
+                                icon = getDefaultFaviconFromDrawable(name);
+                            }
+                            if (icon != null) {
+                                createFavicon(db, url, icon);
+                            }
+                        }
+                    });
                     pos++;
                 } catch (java.lang.IllegalAccessException ex) {
                     Log.e(LOGTAG, "Can't create bookmark " + name, ex);
@@ -1070,7 +1090,7 @@ public class BrowserProvider extends ContentProvider {
             }
         }
 
-        private void createBookmark(SQLiteDatabase db, String title, String url, int pos, Bitmap icon) {
+        private void createBookmark(SQLiteDatabase db, String title, String url, int pos) {
             ContentValues bookmarkValues = new ContentValues();
             bookmarkValues.put(Bookmarks.PARENT, guidToID(db, Bookmarks.MOBILE_FOLDER_GUID));
 
@@ -1083,12 +1103,9 @@ public class BrowserProvider extends ContentProvider {
             bookmarkValues.put(Bookmarks.GUID, Utils.generateGuid());
             bookmarkValues.put(Bookmarks.POSITION, pos);
             db.insertOrThrow(TABLE_BOOKMARKS, Bookmarks.TITLE, bookmarkValues);
+        }
 
-            // Return early if there's no icon to set
-            if (icon == null) {
-                return;
-            }
-
+        private void createFavicon(SQLiteDatabase db, String url, Bitmap icon) {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             icon.compress(Bitmap.CompressFormat.PNG, 100, stream);
 
@@ -1563,10 +1580,11 @@ public class BrowserProvider extends ContentProvider {
                         null, null, null, null);
 
                 while (c.moveToNext()) {
-                    String faviconUrl = c.getString(c.getColumnIndexOrThrow(Obsolete.Images.FAVICON_URL));
                     long faviconId = -1;
-
-                    if (faviconUrl != null) {
+                    int faviconUrlIndex = c.getColumnIndexOrThrow(Obsolete.Images.FAVICON_URL);
+                    String faviconUrl = null;
+                    if (!c.isNull(faviconUrlIndex)) {
+                        faviconUrl = c.getString(faviconUrlIndex);
                         Cursor c2 = null;
                         try {
                             c2 = db.query(TABLE_FAVICONS,
