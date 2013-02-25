@@ -129,6 +129,22 @@ bool
 FilteringWrapper<Base, Policy>::enter(JSContext *cx, JSObject *wrapper, jsid id,
                                       Wrapper::Action act, bool *bp)
 {
+    // This is a super ugly hacky to get around Xray Resolve wonkiness.
+    //
+    // Basically, XPCWN Xrays sometimes call into the Resolve hook of the
+    // scriptable helper, and pass the wrapper itself as the object upon which
+    // the resolve is happening. Then, special handling happens in
+    // XrayWrapper::defineProperty to detect the resolve and redefine the
+    // property on the holder. Really, we should just pass the holder itself to
+    // NewResolve, but there's too much code in nsDOMClassInfo that assumes this
+    // isn't the case (in particular, code expects to be able to look up
+    // properties on the object, which doesn't work for the holder). Given that
+    // these hooks are going away eventually with the new DOM bindings, let's
+    // just hack around this for now.
+    if (XrayUtils::IsXrayResolving(cx, wrapper, id)) {
+        *bp = true;
+        return true;
+    }
     if (!Policy::check(cx, wrapper, id, act)) {
         if (JS_IsExceptionPending(cx)) {
             *bp = false;
