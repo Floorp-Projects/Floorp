@@ -130,9 +130,6 @@ CPPSRCS += \
 
 ifdef MOZ_ANGLE_RENDERER
 
-# libEGL depends on (links against!) libGLESv2!
-DIRS = src/libGLESv2 src/libEGL
-
 libs::
 ifdef MOZ_D3DCOMPILER_CAB
 	expand "$(MOZ_D3DCOMPILER_CAB)" -F:$(MOZ_D3DCOMPILER_DLL) "$(DIST)/bin"

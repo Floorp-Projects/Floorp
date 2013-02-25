@@ -238,5 +238,3 @@ ifdef MOZ_TREE_FREETYPE
 DEFINES += -DHAVE_FT_LIBRARY_SETLCDFILTER -DFT_LCD_FILTER_H="$(topsrcdir)/modules/freetype2/include/freetype/ftlcdfil.h"
 endif
 
-cairo-features.h: $(srcdir)/cairo-features.h.in $(GLOBAL_DEPS)
-	$(PYTHON) $(DEPTH)/config.status -n --file=$@
