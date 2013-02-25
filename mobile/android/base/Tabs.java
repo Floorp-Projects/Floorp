@@ -59,6 +59,7 @@ public class Tabs implements GeckoEventListener {
     private ContentObserver mContentObserver;
 
     private Tabs() {
+        registerEventListener("Session:RestoreEnd");
         registerEventListener("SessionHistory:New");
         registerEventListener("SessionHistory:Back");
         registerEventListener("SessionHistory:Forward");
@@ -68,7 +69,6 @@ public class Tabs implements GeckoEventListener {
         registerEventListener("Tab:Close");
         registerEventListener("Tab:Select");
         registerEventListener("Content:LocationChange");
-        registerEventListener("Session:RestoreEnd");
         registerEventListener("DOMTitleChanged");
         registerEventListener("DOMLinkAdded");
         registerEventListener("DOMWindowClose");
@@ -275,25 +275,25 @@ public class Tabs implements GeckoEventListener {
 
     public void handleMessage(String event, JSONObject message) {
         try {
-            if (event.startsWith("SessionHistory:")) {
-                Tab tab = getTab(message.getInt("tabID"));
-                if (tab != null) {
-                    event = event.substring("SessionHistory:".length());
-                    tab.handleSessionHistoryMessage(event, message);
-                }
-            } else if (event.equals("Tab:Added")) {
+            if (event.equals("Session:RestoreEnd")) {
+                notifyListeners(null, TabEvents.RESTORED);
+                return;
+            }
+
+            // All other events handled below should contain a tabID property
+            int id = message.getInt("tabID");
+            Tab tab = getTab(id);
+
+            // "Tab:Added" is a special case because tab will be null if the tab was just added
+            if (event.equals("Tab:Added")) {
                 String url = message.isNull("uri") ? null : message.getString("uri");
-                int id = message.getInt("tabID");
-                Tab tab = null;
 
                 if (message.getBoolean("stub")) {
-                    if (mTabs.containsKey(id)) {
-                        tab = mTabs.get(id);
-                        tab.updateURL(url);
-                    } else {
+                    if (tab == null) {
                         // Tab was already closed; abort
                         return;
                     }
+                    tab.updateURL(url);
                 } else {
                     tab = addTab(id, url, message.getBoolean("external"),
                                           message.getInt("parentId"),
@@ -302,36 +302,33 @@ public class Tabs implements GeckoEventListener {
                 }
 
                 if (message.getBoolean("selected"))
-                    selectTab(tab.getId());
+                    selectTab(id);
                 if (message.getBoolean("delayLoad"))
                     tab.setState(Tab.STATE_DELAYED);
                 if (message.getBoolean("desktopMode"))
                     tab.setDesktopMode(true);
+                return;
+            }
+
+            // Tab was already closed; abort
+            if (tab == null)
+                return;
+
+            if (event.startsWith("SessionHistory:")) {
+                event = event.substring("SessionHistory:".length());
+                tab.handleSessionHistoryMessage(event, message);
             } else if (event.equals("Tab:Close")) {
-                Tab tab = getTab(message.getInt("tabID"));
                 closeTab(tab);
             } else if (event.equals("Tab:Select")) {
-                selectTab(message.getInt("tabID"));
+                selectTab(tab.getId());
             } else if (event.equals("Content:LocationChange")) {
-                Tab tab = getTab(message.getInt("tabID"));
-                if (tab != null) {
-                    tab.handleLocationChange(message);
-                }
-            } else if (event.equals("Session:RestoreEnd")) {
-                notifyListeners(null, TabEvents.RESTORED);
+                tab.handleLocationChange(message);
             } else if (event.equals("DOMTitleChanged")) {
-                Tab tab = getTab(message.getInt("tabID"));
-                if (tab != null) {
-                    tab.updateTitle(message.getString("title"));
-                }
+                tab.updateTitle(message.getString("title"));
             } else if (event.equals("DOMLinkAdded")) {
-                Tab tab = getTab(message.getInt("tabID"));
-                if (tab != null) {
-                    tab.updateFaviconURL(message.getString("href"), message.getInt("size"));
-                    notifyListeners(tab, TabEvents.LINK_ADDED);
-                }
+                tab.updateFaviconURL(message.getString("href"), message.getInt("size"));
+                notifyListeners(tab, TabEvents.LINK_ADDED);
             } else if (event.equals("DOMWindowClose")) {
-                Tab tab = getTab(message.getInt("tabID"));
                 closeTab(tab);
             }
         } catch (Exception e) { 
