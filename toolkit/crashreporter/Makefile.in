@@ -13,24 +13,8 @@ MODULE = crashreporter
 LIBXUL_LIBRARY = 1
 LIBRARY_NAME = exception_handler_s
 
-ifeq  ($(OS_ARCH),WINNT)
-DIRS += breakpad-windows-libxul
-ifdef MOZ_CRASHREPORTER_INJECTOR
-DIRS += breakpad-windows-standalone
-endif
-endif
-
 ifeq ($(OS_ARCH),Darwin)
 CMMSRCS = mac_utils.mm
-
-DIRS += \
-  google-breakpad/src/common \
-  google-breakpad/src/common/mac \
-  google-breakpad/src/client \
-  google-breakpad/src/client/mac/crash_generation \
-  google-breakpad/src/client/mac/handler \
-  google-breakpad/src/tools/mac/dump_syms \
-  $(NULL)
 endif
 
 ifeq ($(OS_ARCH),Linux)
@@ -41,42 +25,19 @@ DEFINES += \
   -DXP_LINUX \
   -DANDROID_PACKAGE_NAME=\"$(ANDROID_PACKAGE_NAME)\"
   $(NULL)
-DIRS += \
-  google-breakpad/src/common \
-  google-breakpad/src/common/linux \
-  google-breakpad/src/client \
-  google-breakpad/src/client/linux/crash_generation \
-  google-breakpad/src/client/linux/handler \
-  google-breakpad/src/client/linux/minidump_writer \
-  google-breakpad/src/tools/linux/dump_syms \
-  $(NULL)
 endif
 
 ifeq ($(OS_ARCH),SunOS)
 # there's no define for this normally
 DEFINES += -DXP_SOLARIS
-DIRS += \
-  google-breakpad/src/common \
-  google-breakpad/src/common/solaris \
-  google-breakpad/src/client \
-  google-breakpad/src/client/solaris/handler \
-  google-breakpad/src/tools/solaris/dump_syms \
-  $(NULL)
 endif
 
 ifeq ($(OS_TARGET),Android)
-DIRS += fileid
 # NDK5 workarounds
 DEFINES += -D_STLP_CONST_CONSTRUCTOR_BUG -D_STLP_NO_MEMBER_TEMPLATES
 TARGET_LOCAL_INCLUDES = \
   -I$(topsrcdir)/toolkit/crashreporter/google-breakpad/src/common/android/include/ \
   $(NULL)
-endif
-
-DIRS += client
-
-ifdef MOZ_CRASHREPORTER_INJECTOR
-DIRS += injector
 endif
 
 LOCAL_INCLUDES += -I$(srcdir)/google-breakpad/src
@@ -103,10 +64,6 @@ EXTRA_JS_MODULES = \
   CrashSubmit.jsm \
   KeyValueParser.jsm \
   $(NULL)
-
-ifdef ENABLE_TESTS
-TOOL_DIRS = test
-endif
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

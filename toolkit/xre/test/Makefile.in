@@ -12,10 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = test_xulapp
 
-ifeq ($(OS_ARCH),WINNT)
-DIRS += win
-endif
-
 MOCHITEST_FILES = \
   test_fpuhandler.html \
   $(NULL)

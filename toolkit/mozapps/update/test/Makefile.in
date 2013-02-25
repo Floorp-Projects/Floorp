@@ -30,10 +30,6 @@ DEFINES += -DMOZ_MAINTENANCE_SERVICE=$(MOZ_MAINTENANCE_SERVICE)
 endif
 
 ifneq (android,$(MOZ_WIDGET_TOOLKIT))
-DIRS = \
-  chrome \
-  $(NULL)
-
 CPPSRCS = \
   TestAUSReadStrings.cpp \
   TestAUSHelper.cpp \
