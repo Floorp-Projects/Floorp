@@ -1,15 +1,11 @@
-#
+# vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH		= @DEPTH@
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DIRS += ['public', 'idl', 'wrappers', 'loader', 'src']
+TOOL_DIRS += ['shell']
+TEST_TOOL_DIRS += ['tests']
 
-include $(DEPTH)/config/autoconf.mk
-
-MODULE		= xpconnect
-
-include $(topsrcdir)/config/rules.mk
+if CONFIG['MOZ_XPCTOOLS']:
+    TOOL_DIRS += ['tools']
