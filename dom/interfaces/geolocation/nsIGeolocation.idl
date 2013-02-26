@@ -6,11 +6,11 @@
 
 interface nsIDOMGeoPositionCallback;
 interface nsIDOMGeoPositionErrorCallback;
-[ptr] native GeoPositionOptions(mozilla::dom::GeoPositionOptions);
+[ptr] native GeoPositionOptions(mozilla::idl::GeoPositionOptions);
 
 %{C++
 namespace mozilla {
-namespace dom {
+namespace idl {
 class GeoPositionOptions;
 }
 }
