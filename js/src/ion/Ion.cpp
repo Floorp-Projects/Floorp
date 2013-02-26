@@ -7,6 +7,7 @@
 
 #include "BaselineJIT.h"
 #include "BaselineCompiler.h"
+#include "BaselineInspector.h"
 #include "Ion.h"
 #include "IonAnalysis.h"
 #include "IonBuilder.h"
@@ -1224,9 +1225,10 @@ IonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, 
         return AbortReason_Alloc;
 
     TypeInferenceOracle oracle;
-
     if (!oracle.init(cx, script, /* inlinedCall = */ false))
         return AbortReason_Disable;
+
+    BaselineInspector inspector(cx, script);
 
     AutoFlushCache afc("IonCompile");
 
@@ -1236,7 +1238,7 @@ IonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, 
 
     AutoTempAllocatorRooter root(cx, temp);
 
-    IonBuilder *builder = alloc->new_<IonBuilder>(cx, temp, graph, &oracle, info);
+    IonBuilder *builder = alloc->new_<IonBuilder>(cx, temp, graph, &oracle, &inspector, info);
     if (!builder)
         return AbortReason_Alloc;
 

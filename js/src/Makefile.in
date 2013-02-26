@@ -291,6 +291,7 @@ CPPSRCS +=	MIR.cpp \
 		BaselineFrame.cpp \
 		BaselineFrameInfo.cpp \
 		BaselineJIT.cpp \
+		BaselineInspector.cpp \
 		BaselineBailouts.cpp \
 		BacktrackingAllocator.cpp \
 		Bailouts.cpp \

@@ -14,6 +14,7 @@
 #include "Ion.h"
 #include "IonAnalysis.h"
 #include "IonSpewer.h"
+#include "BaselineInspector.h"
 #include "builtin/Eval.h"
 #include "frontend/BytecodeEmitter.h"
 
@@ -31,7 +32,8 @@ using namespace js::ion;
 using mozilla::DebugOnly;
 
 IonBuilder::IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
-                       TypeOracle *oracle, CompileInfo *info, size_t inliningDepth, uint32_t loopDepth)
+                       TypeOracle *oracle, BaselineInspector *inspector, CompileInfo *info,
+                       size_t inliningDepth, uint32_t loopDepth)
   : MIRGenerator(cx->compartment, temp, graph, info),
     backgroundCodegen_(NULL),
     recompileInfo(cx->compartment->types.compiledInfo),
@@ -41,6 +43,7 @@ IonBuilder::IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
     callerResumePoint_(NULL),
     callerBuilder_(NULL),
     oracle(oracle),
+    inspector(inspector),
     inliningDepth(inliningDepth),
     failedBoundsCheck_(info->script()->failedBoundsCheck),
     failedShapeGuard_(info->script()->failedShapeGuard),
@@ -2955,6 +2958,8 @@ IonBuilder::inlineScriptedCall(HandleFunction target, CallInfo &callInfo)
     if (!oracle.init(cx, calleeScript, /* inlinedCall = */ true))
         return false;
 
+    BaselineInspector inspector(cx, target->nonLazyScript());
+
     // Add exclude type barriers.
     if (callInfo.argsBarrier()) {
         addTypeBarrier(0, callInfo, oracle.thisTypeSet(calleeScript));
@@ -2974,7 +2979,7 @@ IonBuilder::inlineScriptedCall(HandleFunction target, CallInfo &callInfo)
     MIRGraphExits saveExits;
     AutoAccumulateExits aae(graph(), saveExits);
 
-    IonBuilder inlineBuilder(cx, &temp(), &graph(), &oracle,
+    IonBuilder inlineBuilder(cx, &temp(), &graph(), &oracle, &inspector,
                              info, inliningDepth + 1, loopDepth_);
 
     // Build the graph.
@@ -3168,6 +3173,8 @@ IonBuilder::jsop_call_inline(HandleFunction callee, CallInfo &callInfo, MBasicBl
     if (!oracle.init(cx, calleeScript, /* inlinedCall = */ true))
         return false;
 
+    BaselineInspector inspector(cx, calleeScript);
+
     // Add exclude type barriers.
     if (callInfo.argsBarrier()) {
         addTypeBarrier(0, callInfo, oracle.thisTypeSet(calleeScript));
@@ -3186,7 +3193,7 @@ IonBuilder::jsop_call_inline(HandleFunction callee, CallInfo &callInfo, MBasicBl
     MIRGraphExits saveExits;
     AutoAccumulateExits aae(graph(), saveExits);
 
-    IonBuilder inlineBuilder(cx, &temp(), &graph(), &oracle,
+    IonBuilder inlineBuilder(cx, &temp(), &graph(), &oracle, &inspector,
                              info, inliningDepth + 1, loopDepth_);
 
     // Create new |this| on the caller-side for inlined constructors.
@@ -6730,6 +6737,9 @@ IonBuilder::getPropTryMonomorphic(bool *emitted, HandleId id, types::StackTypeSe
         return true;
 
     RootedShape objShape(cx, mjit::GetPICSingleShape(cx, script(), pc, info().constructing()));
+    if (!objShape)
+        objShape = inspector->maybeMonomorphicShapeForPropertyOp(pc);
+
     if (!objShape || objShape->inDictionary()) {
         spew("GETPROP not monomorphic");
         return true;
@@ -6895,6 +6905,9 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
         ins = MCallSetProperty::New(obj, value, name, script()->strict);
     } else {
         RawShape objShape = mjit::GetPICSingleShape(cx, script(), pc, info().constructing());
+        if (!objShape)
+            objShape = inspector->maybeMonomorphicShapeForPropertyOp(pc);
+
         if (objShape && !objShape->inDictionary()) {
             // The JM IC was monomorphic, so we inline the property access as
             // long as the shape is not in dictionary mode. We cannot be sure
