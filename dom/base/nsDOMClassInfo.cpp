@@ -4574,15 +4574,10 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
   JSObject *dom_obj = JSVAL_TO_OBJECT(v);
   NS_ASSERTION(dom_obj, "nsDOMConstructor::HasInstance couldn't get object");
 
-  // This might not be the right object, if XPCNativeWrapping
-  // happened.  Get the wrapped native for this object, then get its
-  // JS object.
-  JSObject *wrapped_obj;
-  nsresult rv = nsContentUtils::XPConnect()->GetJSObjectOfWrapper(cx, dom_obj,
-                                                                  &wrapped_obj);
-  if (NS_SUCCEEDED(rv)) {
-    dom_obj = wrapped_obj;
-  }
+  // This might not be the right object, if there are wrappers. Unwrap if we can.
+  JSObject *wrapped_obj = js::UnwrapObjectChecked(dom_obj, /* stopAtOuter = */ false);
+  if (wrapped_obj)
+      dom_obj = wrapped_obj;
 
   JSClass *dom_class = JS_GetClass(dom_obj);
   if (!dom_class) {
@@ -4591,7 +4586,7 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
   }
 
   const nsGlobalNameStruct *name_struct;
-  rv = GetNameStruct(NS_ConvertASCIItoUTF16(dom_class->name), &name_struct);
+  nsresult rv = GetNameStruct(NS_ConvertASCIItoUTF16(dom_class->name), &name_struct);
   if (NS_FAILED(rv)) {
     return rv;
   }

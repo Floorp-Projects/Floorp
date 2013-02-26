@@ -289,7 +289,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(3e825850-3a5f-11e2-81c1-0800200c9a66)]
+[uuid(19e869b4-23cc-417d-b877-f3d46b8bc2d2)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -436,10 +436,6 @@ interface nsIXPConnect : nsISupports
     [noscript, notxpcom] nsISupports
     getNativeOfWrapper(in JSContextPtr aJSContext,
                        in JSObjectPtr  aJSObj);
-
-    JSObjectPtr
-    getJSObjectOfWrapper(in JSContextPtr aJSContext,
-                         in JSObjectPtr  aJSObj);
 
     void setSecurityManagerForJSContext(in JSContextPtr aJSContext,
                                         in nsIXPCSecurityManager aManager,
