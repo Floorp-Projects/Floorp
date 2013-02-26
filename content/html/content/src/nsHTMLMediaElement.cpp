@@ -3581,7 +3581,9 @@ NS_IMETHODIMP nsHTMLMediaElement::GetMozPreservesPitch(bool* aPreservesPitch)
 NS_IMETHODIMP nsHTMLMediaElement::SetMozPreservesPitch(bool aPreservesPitch)
 {
   mPreservesPitch = aPreservesPitch;
-  mDecoder->SetPreservesPitch(aPreservesPitch);
+  if (mDecoder) {
+    mDecoder->SetPreservesPitch(mPreservesPitch);
+  }
   return NS_OK;
 }
 
