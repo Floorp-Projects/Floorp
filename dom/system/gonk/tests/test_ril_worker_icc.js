@@ -1479,7 +1479,7 @@ add_test(function test_stk_event_download_location_status() {
 
   buf.sendParcel = function () {
     // Type
-    do_check_eq(this.readUint32(), REQUEST_STK_SEND_ENVELOPE_COMMAND)
+    do_check_eq(this.readUint32(), REQUEST_STK_SEND_ENVELOPE_COMMAND);
 
     // Token : we don't care
     this.readUint32();
@@ -1559,7 +1559,7 @@ add_test(function test_stk_terminal_response() {
 
   buf.sendParcel = function () {
     // Type
-    do_check_eq(this.readUint32(), REQUEST_STK_SEND_TERMINAL_RESPONSE)
+    do_check_eq(this.readUint32(), REQUEST_STK_SEND_TERMINAL_RESPONSE);
 
     // Token : we don't care
     this.readUint32();
@@ -1626,7 +1626,7 @@ add_test(function test_stk_event_download_language_selection() {
 
   buf.sendParcel = function () {
     // Type
-    do_check_eq(this.readUint32(), REQUEST_STK_SEND_ENVELOPE_COMMAND)
+    do_check_eq(this.readUint32(), REQUEST_STK_SEND_ENVELOPE_COMMAND);
 
     // Token : we don't care
     this.readUint32();
@@ -1684,7 +1684,7 @@ add_test(function test_stk_event_download_idle_screen_available() {
 
   buf.sendParcel = function () {
     // Type
-    do_check_eq(this.readUint32(), REQUEST_STK_SEND_ENVELOPE_COMMAND)
+    do_check_eq(this.readUint32(), REQUEST_STK_SEND_ENVELOPE_COMMAND);
 
     // Token : we don't care
     this.readUint32();
@@ -1818,6 +1818,144 @@ add_test(function test_read_email() {
 });
 
 /**
+ * Verify ICCRecordHelper.updateADNLike.
+ */
+add_test(function test_update_adn_like() {
+  let worker = newUint8Worker();
+  let ril = worker.RIL;
+  let record = worker.ICCRecordHelper;
+  let io = worker.ICCIOHelper;
+  let pdu = worker.GsmPDUHelper;
+  let buf = worker.Buf;
+
+  ril.appType = CARD_APPTYPE_SIM;
+  const recordSize = 0x20;
+  let fileId;
+
+  // Override.
+  io.updateLinearFixedEF = function (options) {
+    options.pathId = worker.ICCFileHelper.getEFPath(options.fileId);
+    options.command = ICC_COMMAND_UPDATE_RECORD;
+    options.p1 = options.recordNumber;
+    options.p2 = READ_RECORD_ABSOLUTE_MODE;
+    options.p3 = recordSize;
+    ril.iccIO(options);
+  };
+
+  buf.sendParcel = function () {
+    // Request Type.
+    do_check_eq(this.readUint32(), REQUEST_SIM_IO);
+
+    // Token : we don't care
+    this.readUint32();
+
+    // command.
+    do_check_eq(this.readUint32(), ICC_COMMAND_UPDATE_RECORD);
+
+    // fileId.
+    do_check_eq(this.readUint32(), fileId);
+
+    // pathId.
+    do_check_eq(this.readString(), EF_PATH_MF_SIM + EF_PATH_DF_TELECOM);
+
+    // p1.
+    do_check_eq(this.readUint32(), 1);
+
+    // p2.
+    do_check_eq(this.readUint32(), READ_RECORD_ABSOLUTE_MODE);
+
+    // p3.
+    do_check_eq(this.readUint32(), 0x20);
+
+    // data.
+    let contact = pdu.readAlphaIdDiallingNumber(0x20);
+    do_check_eq(contact.alphaId, "test");
+    do_check_eq(contact.number, "123456");
+
+    // pin2.
+    if (fileId == ICC_EF_ADN) {
+      do_check_eq(this.readString(), "");
+    } else {
+      do_check_eq(this.readString(), "1111");
+    }
+
+    // AID. Ignore because it's from modem.
+    this.readUint32();
+
+    if (fileId == ICC_EF_FDN) {
+      run_next_test();
+    }
+  };
+
+  fileId = ICC_EF_ADN;
+  record.updateADNLike(fileId,
+                       {recordId: 1, alphaId: "test", number: "123456"},
+                       "");
+
+  fileId = ICC_EF_FDN;
+  record.updateADNLike(fileId,
+                       {recordId: 1, alphaId: "test", number: "123456"},
+                       "1111");
+});
+
+/**
+ * Verify ICCRecordHelper.getFreeRecordId.
+ */
+add_test(function test_get_free_record_id() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+  let record = worker.ICCRecordHelper;
+  let buf    = worker.Buf;
+  let io     = worker.ICCIOHelper;
+
+  function writeRecord (record) {
+    // Write data size
+    buf.writeUint32(record.length * 2);
+
+    for (let i = 0; i < record.length; i++) {
+      helper.writeHexOctet(record[i]);
+    }
+
+    // Write string delimiter
+    buf.writeStringDelimiter(record.length * 2);
+  }
+
+  io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options)  {
+    // Some random data.
+    let record = [0x12, 0x34, 0x56, 0x78, 0x90];
+    options.p1 = 1;
+    options.totalRecords = 2;
+    writeRecord(record);
+    if (options.callback) {
+      options.callback(options);
+    }
+  };
+
+  io.loadNextRecord = function fakeLoadNextRecord(options) {
+    // Unused bytes.
+    let record = [0xff, 0xff, 0xff, 0xff, 0xff];
+    options.p1++;
+    writeRecord(record);
+    if (options.callback) {
+      options.callback(options);
+    }
+  };
+
+  let fileId = 0x0000; // Dummy.
+  record.getFreeRecordId(
+    fileId,
+    function (recordId) {
+      do_check_eq(recordId, 2);
+      run_next_test();
+    }.bind(this),
+    function (errorMsg) {
+      do_print(errorMsg);
+      do_check_true(false);
+      run_next_test();
+    }.bind(this));
+});
+
+/**
  * Verify ICCContactHelper.readICCContacts
  */
 add_test(function test_read_icc_contacts() {
@@ -1834,7 +1972,7 @@ add_test(function test_read_icc_contacts() {
     onsuccess({adn:{}, email: {}, anr0: {}});
   };
 
-  record.readADN = function readADN(fileId, onsuccess, onerror) {
+  record.readADNLike = function readADNLike(fileId, onsuccess, onerror) {
     onsuccess([{alphaId: "name", number: "111111"}])
   };
 
@@ -1862,5 +2000,31 @@ add_test(function test_read_icc_contacts() {
   };
 
   contactHelper.readICCContacts(CARD_APPTYPE_USIM, "ADN", successCb, errorCb);
+});
+
+/**
+ * Verify ICCContactHelper.updateICCContact
+ */
+add_test(function test_update_icc_contact() {
+  let worker = newUint8Worker();
+  let record = worker.ICCRecordHelper;
+  let contactHelper = worker.ICCContactHelper;
+  let contactType;
+
+  function do_test(aContact, aContactType, aFileId, aPin2) {
+    record.updateADNLike = function (fileId, contact, pin2, onsuccess, onerror) {
+      do_check_eq(fileId, aFileId);
+      do_check_eq(contact.alphaId, aContact.alphaId);
+      do_check_eq(contact.number, aContact.number);
+      do_check_eq(pin2, aPin2);
+    };
+    contactHelper.updateICCContact(CARD_APPTYPE_SIM, aContactType, aContact, aPin2);
+  };
+
+  let contact = {recordId: 1, alphaId: "test", number: "123456"};
+  do_test(contact, "ADN", ICC_EF_ADN);
+  do_test(contact, "FDN", ICC_EF_FDN, "1111");
+
+  run_next_test();
 });
 
