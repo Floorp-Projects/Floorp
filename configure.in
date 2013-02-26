@@ -4361,6 +4361,23 @@ else
   AC_MSG_RESULT([no])
 fi
 
+# Allow the application to provide a subconfigure script
+if test -f "${srcdir}/${MOZ_BUILD_APP}/configure.in" ; then
+  do_output_subdirs() {
+    if test -n "$_subconfigure_subdirs"; then
+      AC_MSG_ERROR([Cannot specify more than one sub-sub-configure])
+     fi
+    _subconfigure_subdir="$1"
+    _subconfigure_config_args="$ac_configure_args"
+  }
+  tmpscript=`mktemp -t subscript.XXXXXX` || exit 1
+  m4 "${srcdir}/build/autoconf/subconfigure.m4" \
+     "${srcdir}/build/autoconf/altoptions.m4" \
+     "${srcdir}/${MOZ_BUILD_APP}/configure.in" > $tmpscript
+  . $tmpscript
+  rm -f $tmpscript
+fi
+
 # Allow someone to change MOZ_APP_NAME and MOZ_APP_BASENAME in mozconfig
 MOZ_ARG_WITH_STRING(app-name,
 [--with-app-name=APPNAME sets MOZ_APP_NAME to APPNAME],
@@ -9205,6 +9222,14 @@ fi
 
 unset MAKEFILES
 unset CONFIG_FILES
+
+# Run all configure scripts specified by a subconfigure
+if test -n "$_subconfigure_subdir"; then
+  _save_ac_configure_args="$ac_configure_args"
+  ac_configure_args="$_subconfigure_config_args"
+  AC_OUTPUT_SUBDIRS("$_subconfigure_subdir")
+  ac_configure_args="$_save_ac_configure_args"
+fi
 
 # No need to run subconfigures when building with LIBXUL_SDK_DIR
 if test "$COMPILE_ENVIRONMENT" -a -z "$LIBXUL_SDK_DIR"; then
