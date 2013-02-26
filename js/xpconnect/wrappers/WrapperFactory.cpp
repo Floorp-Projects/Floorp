@@ -285,8 +285,7 @@ DEBUG_CheckUnwrapSafety(JSObject *obj, js::Wrapper *handler,
         MOZ_ASSERT(!handler->isSafeToUnwrap());
     } else if (AccessCheck::needsSystemOnlyWrapper(obj)) {
         // SOWs are opaque to everyone but Chrome and XBL scopes.
-        // FIXME: Re-enable in bug 834732.
-        // MOZ_ASSERT(handler->isSafeToUnwrap() == nsContentUtils::CanAccessNativeAnon());
+        MOZ_ASSERT(handler->isSafeToUnwrap() == nsContentUtils::CanAccessNativeAnon());
     } else {
         // Otherwise, it should depend on whether the target subsumes the origin.
         MOZ_ASSERT(handler->isSafeToUnwrap() == AccessCheck::subsumes(target, origin));
@@ -342,6 +341,9 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
                "wrapped object passed to rewrap");
     MOZ_ASSERT(JS_GetClass(obj) != &XrayUtils::HolderClass, "trying to wrap a holder");
     MOZ_ASSERT(!js::IsInnerObject(obj));
+    // We sometimes end up here after nsContentUtils has been shut down but before
+    // XPConnect has been shut down, so check the context stack the roundabout way.
+    MOZ_ASSERT(XPCJSRuntime::Get()->GetJSContextStack()->Peek() == cx);
 
     // Compute the information we need to select the right wrapper.
     JSCompartment *origin = js::GetObjectCompartment(obj);
