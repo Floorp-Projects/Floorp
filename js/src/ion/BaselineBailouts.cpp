@@ -608,8 +608,11 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
                  exprStackSlots == expectedDepth);
 #endif
 
-    IonSpew(IonSpew_BaselineBailouts, "      Resuming %s pc offset %d of %s:%d",
-                resumeAfter ? "after" : "at", (int) pcOff, script->filename, (int) script->lineno);
+    IonSpew(IonSpew_BaselineBailouts, "      Resuming %s pc offset %d (line %d) of %s:%d",
+                resumeAfter ? "after" : "at", (int) pcOff, PCToLineNumber(script, pc),
+                script->filename, (int) script->lineno);
+    IonSpew(IonSpew_BaselineBailouts, "      Bailout kind: %s",
+            BailoutKindString(iter.bailoutKind()));
 
     // If this was the last inline frame, then unpacking is almost done.
     if (!iter.moreFrames()) {
