@@ -7,6 +7,8 @@ pymake.pth:build/pymake
 optional:setup.py:python/psutil:build_ext:--inplace
 optional:psutil.pth:python/psutil
 which.pth:python/which
+ply.pth:other-licenses/ply/
+codegen.pth:python/codegen/
 mock.pth:python/mock-1.0.0
 mozilla.pth:build
 mozilla.pth:config

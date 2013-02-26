@@ -13,7 +13,12 @@
   <script type="application/javascript"
           src="../text.js"></script>
   <script type="application/javascript">
-    
+    if (navigator.platform.indexOf("Mac") == 0) {
+      SimpleTest.expectAssertions(0, 10);
+    } else {
+      SimpleTest.expectAssertions(10);
+    }
+
     function doTest()
     {
       // __B__r__a__v__e__ __S__i__r__ __ __R__o__b__i__n__ __ __ __r__a__n
