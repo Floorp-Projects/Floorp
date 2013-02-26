@@ -446,7 +446,7 @@ class JSObject : public js::ObjectImpl
      */
     static inline bool setSingletonType(JSContext *cx, js::HandleObject obj);
 
-    inline js::types::TypeObject *getType(JSContext *cx);
+    inline js::types::TypeObject* getType(JSContext *cx);
 
     const js::HeapPtr<js::types::TypeObject> &typeFromGC() const {
         /* Direct field access for use by GC. */
