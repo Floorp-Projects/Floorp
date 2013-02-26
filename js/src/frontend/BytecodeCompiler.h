@@ -20,6 +20,10 @@ CompileScript(JSContext *cx, HandleObject scopeChain, HandleScript evalCaller,
               SourceCompressionToken *extraSct = NULL);
 
 bool
+ParseScript(JSContext *cx, HandleObject scopeChain,
+            const CompileOptions &options, StableCharPtr chars, size_t length);
+
+bool
 CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions options,
                     const AutoNameVector &formals, const jschar *chars, size_t length);
 

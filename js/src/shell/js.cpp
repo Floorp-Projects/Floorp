@@ -3064,26 +3064,27 @@ Parse(JSContext *cx, unsigned argc, jsval *vp)
 {
     using namespace js::frontend;
 
-    if (argc < 1) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
-                             "compile", "0", "s");
+                             "parse", "0", "s");
         return false;
     }
-    jsval arg0 = JS_ARGV(cx, vp)[0];
-    if (!JSVAL_IS_STRING(arg0)) {
-        const char *typeName = JS_GetTypeName(cx, JS_TypeOfValue(cx, arg0));
+    if (!args[0].isString()) {
+        const char *typeName = JS_GetTypeName(cx, JS_TypeOfValue(cx, args[0]));
         JS_ReportError(cx, "expected string to parse, got %s", typeName);
         return false;
     }
 
-    JSString *scriptContents = JSVAL_TO_STRING(arg0);
+    JSString *scriptContents = args[0].toString();
     CompileOptions options(cx);
     options.setFileAndLine("<string>", 1)
            .setCompileAndGo(false);
-    Parser parser(cx, options,
-                  JS_GetStringCharsZ(cx, scriptContents),
-                  JS_GetStringLength(scriptContents),
-                  /* foldConstants = */ true);
+    Parser<FullParseHandler> parser(cx, options,
+                                    JS_GetStringCharsZ(cx, scriptContents),
+                                    JS_GetStringLength(scriptContents),
+                                    /* foldConstants = */ true);
     if (!parser.init())
         return false;
 
@@ -3094,7 +3095,52 @@ Parse(JSContext *cx, unsigned argc, jsval *vp)
     DumpParseTree(pn);
     fputc('\n', stderr);
 #endif
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    args.rval().setUndefined();
+    return true;
+}
+
+static JSBool
+SyntaxParse(JSContext *cx, unsigned argc, jsval *vp)
+{
+    using namespace js::frontend;
+
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() < 1) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
+                             "parse", "0", "s");
+        return false;
+    }
+    if (!args[0].isString()) {
+        const char *typeName = JS_GetTypeName(cx, JS_TypeOfValue(cx, args[0]));
+        JS_ReportError(cx, "expected string to parse, got %s", typeName);
+        return false;
+    }
+
+    JSString *scriptContents = args[0].toString();
+    CompileOptions options(cx);
+    options.setFileAndLine("<string>", 1)
+           .setCompileAndGo(false);
+
+    const jschar *chars = JS_GetStringCharsZ(cx, scriptContents);
+    size_t length = JS_GetStringLength(scriptContents);
+    Parser<frontend::SyntaxParseHandler> parser(cx, options, chars, length,
+                                                /* foldConstants = */ false);
+    if (!parser.init())
+        return false;
+
+    bool succeeded = parser.parse(NULL);
+    if (cx->isExceptionPending())
+        return false;
+
+    if (!succeeded && !parser.hadUnknownResult()) {
+        // If no exception is posted, either there was an OOM or a language
+        // feature unhandled by the syntax parser was encountered.
+        JS_ASSERT(cx->runtime->hadOutOfMemory);
+        return false;
+    }
+
+    args.rval().setBoolean(succeeded);
     return true;
 }
 
@@ -3702,6 +3748,10 @@ static JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("parse", Parse, 1, 0,
 "parse(code)",
 "  Parses a string, potentially throwing."),
+
+    JS_FN_HELP("syntaxParse", SyntaxParse, 1, 0,
+"syntaxParse(code)",
+"  Check the syntax of a string, returning success value"),
 
     JS_FN_HELP("timeout", Timeout, 1, 0,
 "timeout([seconds], [func])",
