@@ -4296,13 +4296,9 @@ ICSetProp_Native::Compiler::generateStubCode(MacroAssembler &masm)
 
 static bool
 TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, JSOp op,
-                  uint32_t argc, Value *vp, MutableHandleValue res, bool *attachedStub)
+                  uint32_t argc, Value *vp, bool constructing, bool useNewType)
 {
-    *attachedStub = false;
-
-    bool constructing = (op == JSOP_NEW);
-
-    if (op == JSOP_EVAL)
+    if (useNewType || op == JSOP_EVAL)
         return true;
 
     RootedValue callee(cx, vp[0]);
@@ -4337,7 +4333,6 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, JSO
             return false;
 
         stub->addNewStub(newStub);
-        *attachedStub = true;
         return true;
     }
 
@@ -4351,7 +4346,6 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, JSO
             return false;
 
         stub->addNewStub(newStub);
-        *attachedStub = true;
         return true;
     }
 
@@ -4359,8 +4353,12 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, JSO
 }
 
 static bool
-DoCallFallback(JSContext *cx, ICCall_Fallback *stub, uint32_t argc, Value *vp, MutableHandleValue res)
+DoCallFallback(JSContext *cx, ICCall_Fallback *stub, uint32_t argc, Value *vp,
+               MutableHandleValue res)
 {
+    // Ensure vp array is rooted - we may GC in here.
+    AutoArrayRooter vpRoot(cx, argc + 2, vp);
+
     RootedScript script(cx, GetTopIonJSScript(cx));
     jsbytecode *pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
@@ -4373,15 +4371,21 @@ DoCallFallback(JSContext *cx, ICCall_Fallback *stub, uint32_t argc, Value *vp, M
 
     Value *args = vp + 2;
 
+    // Handle funapply with JSOP_ARGUMENTS
     if (op == JSOP_FUNAPPLY && argc == 2 && args[1].isMagic(JS_OPTIMIZED_ARGUMENTS)) {
         BaselineFrame *frame = GetTopBaselineFrame(cx);
         GuardFunApplyArgumentsOptimization(cx, frame, callee, args, argc);
     }
 
-    bool attachedStub;
-    if (!TryAttachCallStub(cx, stub, script, op, argc, vp, res, &attachedStub))
+    // Compute construcing and useNewType flags.
+    bool constructing = (op == JSOP_NEW);
+    bool newType = false;
+    if (cx->typeInferenceEnabled())
+        newType = types::UseNewType(cx, script, pc);
+
+    // Try attaching a call stub.
+    if (!TryAttachCallStub(cx, stub, script, op, argc, vp, constructing, newType))
         return false;
-    // TODO: Add spew indicating failure to attach optimized stub for this call.
 
     if (op == JSOP_NEW) {
         if (!InvokeConstructor(cx, callee, argc, args, res.address()))
