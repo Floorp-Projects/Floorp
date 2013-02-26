@@ -3952,6 +3952,9 @@ DoGetPropFallback(JSContext *cx, ICGetProp_Fallback *stub, MutableHandleValue va
             return true;
     }
 
+    JS_ASSERT(!attached);
+    stub->noteUnoptimizableAccess();
+
     return true;
 }
 
@@ -4210,6 +4213,9 @@ DoSetPropFallback(JSContext *cx, ICSetProp_Fallback *stub, HandleValue lhs, Hand
         return false;
     if (attached)
         return true;
+
+    JS_ASSERT(!attached);
+    stub->noteUnoptimizableAccess();
 
     return true;
 }
