@@ -721,8 +721,9 @@ function handURIToExistingBrowser(uri, location, cmdLine)
   if (!shouldLoadURI(uri))
     return;
 
-  // Do not open external links in private windows
-  var navWin = RecentWindow.getMostRecentBrowserWindow({private: false});
+  // Do not open external links in private windows, unless we're in perma-private mode
+  var allowPrivate = PrivateBrowsingUtils.permanentPrivateBrowsing;
+  var navWin = RecentWindow.getMostRecentBrowserWindow({private: allowPrivate});
   if (!navWin) {
     // if we couldn't load it in an existing window, open a new one
     openWindow(null, gBrowserContentHandler.chromeURL, "_blank",
