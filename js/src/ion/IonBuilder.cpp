@@ -4488,15 +4488,14 @@ IonBuilder::jsop_eval(uint32_t argc)
             return abort("Direct eval in global code");
 
         types::StackTypeSet *thisTypes = oracle->thisTypeSet(script());
-        if (!thisTypes) {
-            // The 'this' value for the outer and eval scripts must be the
-            // same. This is not guaranteed if a primitive string/number/etc.
-            // is passed through to the eval invoke as the primitive may be
-            // boxed into different objects if accessed via 'this'.
-            JSValueType type = thisTypes->getKnownTypeTag();
-            if (type != JSVAL_TYPE_OBJECT && type != JSVAL_TYPE_NULL && type != JSVAL_TYPE_UNDEFINED)
-                return abort("Direct eval from script with maybe-primitive 'this'");
-        }
+
+        // The 'this' value for the outer and eval scripts must be the
+        // same. This is not guaranteed if a primitive string/number/etc.
+        // is passed through to the eval invoke as the primitive may be
+        // boxed into different objects if accessed via 'this'.
+        JSValueType type = thisTypes->getKnownTypeTag();
+        if (type != JSVAL_TYPE_OBJECT && type != JSVAL_TYPE_NULL && type != JSVAL_TYPE_UNDEFINED)
+            return abort("Direct eval from script with maybe-primitive 'this'");
 
         CallInfo callInfo(cx, /* constructing = */ false);
         if (!callInfo.init(current, argc))

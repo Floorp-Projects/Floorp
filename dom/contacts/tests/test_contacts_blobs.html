@@ -54,7 +54,7 @@ function getRandomView(size)
 
 function getBlob(type, view)
 {
-  return utils.getBlob([view], {type: type});
+  return SpecialPowers.unwrap(utils.getBlob([view], {type: type}));
 }
 
 function getRandomBlob(size)

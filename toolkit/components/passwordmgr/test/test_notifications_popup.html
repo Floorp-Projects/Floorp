@@ -163,8 +163,8 @@ function checkTest() {
     }
 }
 
-const Ci = Components.interfaces;
-const Cc = SpecialPowers.wrap(Components).classes;
+const Ci = SpecialPowers.Ci;
+const Cc = SpecialPowers.Cc;
 ok(Ci != null, "Access Ci");
 ok(Cc != null, "Access Cc");
 
@@ -174,7 +174,7 @@ ok(pwmgr != null, "Access pwmgr");
 
 pwmgr.removeAllLogins();
 
-var nsLoginInfo = new SpecialPowers.wrap(Components).
+var nsLoginInfo = new SpecialPowers.wrap(SpecialPowers.Components).
                       Constructor("@mozilla.org/login-manager/loginInfo;1",
                                   Ci.nsILoginInfo, "init");
 var login1 = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888", null,
