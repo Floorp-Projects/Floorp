@@ -618,7 +618,7 @@ EnsureTrackPropertyTypes(JSContext *cx, UnrootedObject obj, RawId id)
         obj->type()->getProperty(cx, id, true);
     }
 
-    JS_ASSERT(TrackPropertyTypes(cx, obj, id));
+    JS_ASSERT(obj->type()->unknownProperties() || TrackPropertyTypes(cx, obj, id));
 }
 
 /* Add a possible type for a property of obj. */
