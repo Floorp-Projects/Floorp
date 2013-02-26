@@ -3015,19 +3015,13 @@ nsCxPusher::Push(nsIDOMEventTarget *aCurrentTarget)
     return true;
   }
 
-  JSContext* cx = nullptr;
-
-  if (scx) {
-    cx = scx->GetNativeContext();
-    // Bad, no JSContext from script context!
-    NS_ENSURE_TRUE(cx, false);
-  }
+  JSContext* cx = scx ? scx->GetNativeContext() : nullptr;
 
   // If there's no native context in the script context it must be
   // in the process or being torn down. We don't want to notify the
   // script context about scripts having been evaluated in such a
   // case, calling with a null cx is fine in that case.
-  return Push(cx);
+  return Push(cx, ASSERT_SCRIPT_CONTEXT);
 }
 
 bool
@@ -3059,7 +3053,7 @@ nsCxPusher::RePush(nsIDOMEventTarget *aCurrentTarget)
 }
 
 bool
-nsCxPusher::Push(JSContext *cx, bool aRequiresScriptContext)
+nsCxPusher::Push(JSContext *cx, PushBehavior behavior)
 {
   if (mPushedSomething) {
     NS_ERROR("Whaaa! No double pushing with nsCxPusher::Push()!");
@@ -3075,7 +3069,8 @@ nsCxPusher::Push(JSContext *cx, bool aRequiresScriptContext)
   // XXXbz do we really need to?  If we don't get one of these in Pop(), is
   // that really a problem?  Or do we need to do this to effectively root |cx|?
   mScx = GetScriptContextFromJSContext(cx);
-  if (!mScx && aRequiresScriptContext) {
+  MOZ_ASSERT_IF(behavior == ASSERT_SCRIPT_CONTEXT, mScx);
+  if (!mScx && behavior == REQUIRE_SCRIPT_CONTEXT) {
     // Should probably return false. See bug 416916.
     return true;
   }
@@ -6838,7 +6833,9 @@ AutoJSContext::Init(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 
   if (!mCx) {
     mCx = nsContentUtils::GetSafeJSContext();
-    bool result = mPusher.Push(mCx);
+    // XXXbholley - This is totally wrong, but necessary to make this patch
+    // not change any behavior. We'll fix it in an upcoming patch.
+    bool result = mPusher.Push(mCx, nsCxPusher::REQUIRE_SCRIPT_CONTEXT);
     if (!result || !mCx) {
       MOZ_CRASH();
     }

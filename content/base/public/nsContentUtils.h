@@ -2195,6 +2195,7 @@ typedef nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
 class NS_STACK_CLASS nsCxPusher
 {
 public:
+  enum PushBehavior { ALWAYS_PUSH, REQUIRE_SCRIPT_CONTEXT, ASSERT_SCRIPT_CONTEXT };
   nsCxPusher();
   ~nsCxPusher(); // Calls Pop();
 
@@ -2205,7 +2206,7 @@ public:
   bool RePush(nsIDOMEventTarget *aCurrentTarget);
   // If a null JSContext is passed to Push(), that will cause no
   // push to happen and false to be returned.
-  bool Push(JSContext *cx, bool aRequiresScriptContext = true);
+  bool Push(JSContext *cx, PushBehavior behavior);
   // Explicitly push a null JSContext on the the stack
   bool PushNull();
 

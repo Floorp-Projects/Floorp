@@ -651,7 +651,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
           continue;
         }
         nsCxPusher pusher;
-        NS_ENSURE_STATE(pusher.Push(ctx, false));
+        NS_ENSURE_STATE(pusher.Push(ctx, nsCxPusher::ALWAYS_PUSH));
 
         JSAutoRequest ar(ctx);
         JSAutoCompartment ac(ctx, object);

@@ -91,7 +91,7 @@ CallbackObject::CallSetup::CallSetup(JSObject* const aCallback,
   mAr.construct(cx);
 
   // Make sure our JSContext is pushed on the stack.
-  if (!mCxPusher.Push(cx, false)) {
+  if (!mCxPusher.Push(cx, nsCxPusher::ALWAYS_PUSH)) {
     return;
   }
 

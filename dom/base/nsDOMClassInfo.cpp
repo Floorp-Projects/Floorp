@@ -4082,7 +4082,7 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
       }
 
       nsCxPusher pusher;
-      NS_ENSURE_STATE(pusher.Push(cx, false));
+      NS_ENSURE_STATE(pusher.Push(cx, nsCxPusher::ALWAYS_PUSH));
 
       JSAutoRequest ar(cx);
       JSAutoCompartment ac(cx, object);
@@ -7809,7 +7809,7 @@ nsHTMLPluginObjElementSH::SetupProtoChain(nsIXPConnectWrappedNative *wrapper,
                "Shouldn't have gotten in here");
 
   nsCxPusher cxPusher;
-  if (!cxPusher.Push(cx)) {
+  if (!cxPusher.Push(cx, nsCxPusher::REQUIRE_SCRIPT_CONTEXT)) {
     return NS_OK;
   }
 

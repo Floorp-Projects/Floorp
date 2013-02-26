@@ -214,15 +214,7 @@ IDBFactory::Create(ContentParent* aContentParent,
     do_CreateInstance("@mozilla.org/nullprincipal;1");
   NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
 
-  JSContext* cx = nsContentUtils::GetSafeJSContext();
-  NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
-
-  nsCxPusher pusher;
-  if (!pusher.Push(cx)) {
-    NS_WARNING("Failed to push safe JS context!");
-    return NS_ERROR_FAILURE;
-  }
-
+  SafeAutoJSContext cx;
   JSAutoRequest ar(cx);
 
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
