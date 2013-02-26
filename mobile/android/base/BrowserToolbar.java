@@ -1257,25 +1257,12 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         return true;
     }
 
-    public static class RightEdge extends GeckoFrameLayout
-                                  implements LightweightTheme.OnChangeListener { 
+    public static class RightEdge extends GeckoFrameLayout {
         private BrowserApp mActivity;
 
         public RightEdge(Context context, AttributeSet attrs) {
             super(context, attrs);
             mActivity = (BrowserApp) context;
-        }
-
-        @Override
-        public void onAttachedToWindow() {
-            super.onAttachedToWindow();
-            mActivity.getLightweightTheme().addListener(this);
-        }
-
-        @Override
-        public void onDetachedFromWindow() {
-            super.onDetachedFromWindow();
-            mActivity.getLightweightTheme().removeListener(this);
         }
 
         @Override
@@ -1306,12 +1293,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                                        };
             setBackgroundResource(R.drawable.address_bar_bg);
             setPadding(padding[0], padding[1], padding[2], padding[3]);
-        }
-
-        @Override
-        protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-            super.onLayout(changed, left, top, right, bottom);
-            onLightweightThemeChanged();
         }
     }
 }
