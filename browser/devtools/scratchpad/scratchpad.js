@@ -28,6 +28,7 @@ Cu.import("resource:///modules/devtools/scratchpad-manager.jsm");
 Cu.import("resource://gre/modules/jsdebugger.jsm");
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
 Cu.import("resource:///modules/devtools/Target.jsm");
+Cu.import("resource://gre/modules/osfile.jsm")
 
 const SCRATCHPAD_CONTEXT_CONTENT = 1;
 const SCRATCHPAD_CONTEXT_BROWSER = 2;
@@ -642,26 +643,22 @@ var Scratchpad = {
       return;
     }
 
-    let fs = Cc["@mozilla.org/network/file-output-stream;1"].
-             createInstance(Ci.nsIFileOutputStream);
-    let modeFlags = 0x02 | 0x08 | 0x20;
-    fs.init(aFile, modeFlags, 420 /* 0644 */, fs.DEFER_OPEN);
-
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                    createInstance(Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-    let input = converter.convertToInputStream(this.getText());
-
-    let self = this;
-    NetUtil.asyncCopy(input, fs, function(aStatus) {
-      if (!aSilentError && !Components.isSuccessCode(aStatus)) {
-        window.alert(self.strings.GetStringFromName("saveFile.failed"));
-      }
-
+    let encoder = new TextEncoder();
+    let buffer = encoder.encode(this.getText());
+    let promise = OS.File.writeAtomic(aFile.path, buffer,{tmpPath: aFile.path + ".tmp"});
+    promise.then(function success(value) {
       if (aCallback) {
-        aCallback.call(self, aStatus);
+        aCallback.call(this, Components.results.NS_OK);
       }
-    });
+    }.bind(this), function failure(reason) {
+      if (!aSilentError) {
+        window.alert(this.strings.GetStringFromName("saveFile.failed"));
+      }
+      if (aCallback) {
+        aCallback.call(this, Components.results.NS_ERROR_UNEXPECTED);
+      }
+    }.bind(this));
+
   },
 
   /**
