@@ -16,9 +16,6 @@ class nsIWidget;
 class nsWindow;
 struct nsIntRect;
 
-#define NS_WM_IMEFIRST WM_IME_SETCONTEXT
-#define NS_WM_IMELAST  WM_IME_KEYUP
-
 class nsIMEContext
 {
 public:
@@ -43,6 +40,48 @@ public:
   bool IsValid() const
   {
     return !!mIMC;
+  }
+
+  void SetOpenState(bool aOpen) const
+  {
+    if (!mIMC) {
+      return;
+    }
+    ::ImmSetOpenStatus(mIMC, aOpen);
+  }
+
+  bool GetOpenState() const
+  {
+    if (!mIMC) {
+      return false;
+    }
+    return (::ImmGetOpenStatus(mIMC) != FALSE);
+  }
+
+  bool AssociateDefaultContext()
+  {
+    // We assume that there is only default IMC, no new IMC has been created.
+    if (mIMC) {
+      return false;
+    }
+    if (!::ImmAssociateContextEx(mWnd, NULL, IACE_DEFAULT)) {
+      return false;
+    }
+    mIMC = ::ImmGetContext(mWnd);
+    return (mIMC != NULL);
+  }
+
+  bool Disassociate()
+  {
+    if (!mIMC) {
+      return false;
+    }
+    if (!::ImmAssociateContextEx(mWnd, NULL, 0)) {
+      return false;
+    }
+    ::ImmReleaseContext(mWnd, mIMC);
+    mIMC = NULL;
+    return true;
   }
 
 protected:
@@ -83,9 +122,7 @@ public:
     return IsComposing() && IsComposingWindow(aWindow);
   }
 
-  static bool IsDoingKakuteiUndo(HWND aWnd);
-
-  static bool CanOptimizeKeyAndIMEMessages(MSG *aNextKeyOrIMEMessage);
+  static bool CanOptimizeKeyAndIMEMessages();
 
 #ifdef DEBUG
   /**

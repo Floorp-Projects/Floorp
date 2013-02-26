@@ -363,8 +363,6 @@
 @BINPATH@/components/nsSetDefaultBrowser.manifest
 @BINPATH@/components/nsSetDefaultBrowser.js
 @BINPATH@/components/BrowserPlaces.manifest
-@BINPATH@/components/nsPrivateBrowsingService.manifest
-@BINPATH@/components/nsPrivateBrowsingService.js
 @BINPATH@/components/toolkitsearch.manifest
 @BINPATH@/components/nsTryToClose.manifest
 @BINPATH@/components/nsTryToClose.js

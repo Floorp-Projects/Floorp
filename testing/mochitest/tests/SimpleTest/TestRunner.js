@@ -72,9 +72,13 @@ function flattenArguments(lst/* ...*/) {
 var TestRunner = {};
 TestRunner.logEnabled = false;
 TestRunner._currentTest = 0;
+TestRunner._lastTestFinished = -1;
 TestRunner.currentTestURL = "";
 TestRunner.originalTestURL = "";
 TestRunner._urls = [];
+TestRunner._lastAssertionCount = 0;
+TestRunner._expectedMinAsserts = 0;
+TestRunner._expectedMaxAsserts = 0;
 
 TestRunner.timeout = 5 * 60 * 1000; // 5 minutes.
 TestRunner.maxTimeouts = 4; // halt testing after too many timeouts
@@ -145,6 +149,18 @@ TestRunner.requestLongerTimeout = function(factor) {
 **/
 TestRunner.repeat = 0;
 TestRunner._currentLoop = 0;
+
+TestRunner.expectAssertions = function(min, max) {
+    if (typeof(max) == "undefined") {
+        max = min;
+    }
+    if (typeof(min) != "number" || typeof(max) != "number" ||
+        min < 0 || max < min) {
+        throw "bad parameter to expectAssertions";
+    }
+    TestRunner._expectedMinAsserts = min;
+    TestRunner._expectedMaxAsserts = max;
+}
 
 /**
  * This function is called after generating the summary.
@@ -338,6 +354,8 @@ TestRunner.runNextTest = function() {
 
         TestRunner._currentTestStartTime = new Date().valueOf();
         TestRunner._timeoutFactor = 1;
+        TestRunner._expectedMinAsserts = 0;
+        TestRunner._expectedMaxAsserts = 0;
 
         TestRunner.log("TEST-START | " + url); // used by automation.py
 
@@ -401,6 +419,16 @@ TestRunner.expectChildProcessCrash = function() {
  * This stub is called by SimpleTest when a test is finished.
 **/
 TestRunner.testFinished = function(tests) {
+    // Prevent a test from calling finish() multiple times before we
+    // have a chance to unload it.
+    if (TestRunner._currentTest == TestRunner._lastTestFinished) {
+        TestRunner.error("TEST-UNEXPECTED-FAIL | " +
+                         TestRunner.currentTestURL +
+                         " | called finish() multiple times");
+        return;
+    }
+    TestRunner._lastTestFinished = TestRunner._currentTest;
+
     function cleanUpCrashDumpFiles() {
         if (!SpecialPowers.removeExpectedCrashDumpFiles(TestRunner._expectingProcessCrash)) {
             TestRunner.error("TEST-UNEXPECTED-FAIL | " +
@@ -440,18 +468,49 @@ TestRunner.testFinished = function(tests) {
                        " | finished in " + runtime + "ms");
 
         TestRunner.updateUI(tests);
-        TestRunner._currentTest++;
-        if (TestRunner.runSlower) {
-            setTimeout(TestRunner.runNextTest, 1000);
+
+        var interstitialURL;
+        if ($('testframe').contentWindow.location.protocol == "chrome:") {
+            interstitialURL = "tests/SimpleTest/iframe-between-tests.html";
         } else {
-            TestRunner.runNextTest();
+            interstitialURL = "/tests/SimpleTest/iframe-between-tests.html";
         }
+        TestRunner._makeIframe(interstitialURL, 0);
     }
 
     SpecialPowers.executeAfterFlushingMessageQueue(function() {
         cleanUpCrashDumpFiles();
         SpecialPowers.flushPrefEnv(runNextTest);
     });
+};
+
+TestRunner.testUnloaded = function() {
+    if (SpecialPowers.isDebugBuild) {
+        var newAssertionCount = SpecialPowers.assertionCount();
+        var numAsserts = newAssertionCount - TestRunner._lastAssertionCount;
+        TestRunner._lastAssertionCount = newAssertionCount;
+
+        var url = TestRunner._urls[TestRunner._currentTest];
+        var max = TestRunner._expectedMaxAsserts;
+        var min = TestRunner._expectedMinAsserts;
+        if (numAsserts > max) {
+            // WHEN ENABLING, change "log" to "error" and "DETCEPXENU"
+            // to "UNEXPECTED".
+            TestRunner.log("TEST-DETCEPXENU-FAIL | " + url + " | Assertion count " + numAsserts + " is greater than expected range " + min + "-" + max + " assertions.");
+        } else if (numAsserts < min) {
+            // WHEN ENABLING, change "log" to "error" and "DETCEPXENU"
+            // to "UNEXPECTED".
+            TestRunner.log("TEST-DETCEPXENU-PASS | " + url + " | Assertion count " + numAsserts + " is less than expected range " + min + "-" + max + " assertions.");
+        } else if (numAsserts > 0) {
+            TestRunner.log("TEST-KNOWN-FAIL | " + url + " | Assertion count " + numAsserts + " within expected range " + min + "-" + max + " assertions.");
+        }
+    }
+    TestRunner._currentTest++;
+    if (TestRunner.runSlower) {
+        setTimeout(TestRunner.runNextTest, 1000);
+    } else {
+        TestRunner.runNextTest();
+    }
 };
 
 /**

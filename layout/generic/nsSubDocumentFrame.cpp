@@ -465,10 +465,15 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     childItems.AppendToTop(item);
   }
 
-  if (mIsInline) {
-    WrapReplacedContentForBorderRadius(aBuilder, &childItems, aLists);
+  if (aBuilder->IsForImageVisibility()) {
+    // We don't add the childItems to the return list as we're dealing with them here.
+    presShell->RebuildImageVisibility(childItems);
   } else {
-    aLists.Content()->AppendToTop(&childItems);
+    if (mIsInline) {
+      WrapReplacedContentForBorderRadius(aBuilder, &childItems, aLists);
+    } else {
+      aLists.Content()->AppendToTop(&childItems);
+    }
   }
 
   // delete childItems in case of OOM

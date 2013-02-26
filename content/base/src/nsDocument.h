@@ -943,14 +943,17 @@ public:
   virtual Element* GetFullScreenElement();
   virtual void AsyncRequestFullScreen(Element* aElement);
   virtual void RestorePreviousFullScreenState();
+  virtual bool IsFullscreenLeaf();
   virtual bool IsFullScreenDoc();
   virtual void SetApprovedForFullscreen(bool aIsApproved);
   virtual nsresult RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement,
                                                 const nsAString& aNewOrigin);
 
   virtual nsresult RemoteFrameFullscreenReverted();
+  virtual nsIDocument* GetFullscreenRoot();
+  virtual void SetFullscreenRoot(nsIDocument* aRoot);
 
-  static void ExitFullScreen();
+  static void ExitFullscreen(nsIDocument* aDoc);
 
   // This is called asynchronously by nsIDocument::AsyncRequestFullScreen()
   // to move this document into full-screen mode if allowed. aWasCallerChrome
@@ -1163,17 +1166,6 @@ protected:
   // is a weak reference to avoid leaks due to circular references.
   nsWeakPtr mScopeObject;
 
-  // The document which requested (and was granted) full-screen. All ancestors
-  // of this document will also be full-screen.
-  static nsWeakPtr sFullScreenDoc;
-
-  // The root document of the doctree containing the document which requested
-  // full-screen. This root document will also be in full-screen state, as will
-  // all the descendents down to the document which requested full-screen. This
-  // reference allows us to reset full-screen state on all documents when a
-  // document is hidden/navigation occurs.
-  static nsWeakPtr sFullScreenRootDoc;
-
   // Weak reference to the document which owned the pending pointer lock
   // element, at the time it requested pointer lock.
   static nsWeakPtr sPendingPointerLockDoc;
@@ -1187,6 +1179,10 @@ protected:
   // full-screen element onto this stack, and when we cancel full-screen we
   // pop one off this stack, restoring the previous full-screen state
   nsTArray<nsWeakPtr> mFullScreenStack;
+
+  // The root of the doc tree in which this document is in. This is only
+  // non-null when this document is in fullscreen mode.
+  nsWeakPtr mFullscreenRoot;
 
   nsRefPtr<nsEventListenerManager> mListenerManager;
   nsCOMPtr<nsIDOMStyleSheetList> mDOMStyleSheets;
@@ -1256,6 +1252,11 @@ protected:
   // whose principal doesn't have a host (i.e. those which can't store
   // permissions in the permission manager) have been approved for fullscreen.
   bool mIsApprovedForFullscreen:1;
+
+  // Whether this document has a fullscreen approved observer. Only documents
+  // which request fullscreen and which don't have a pre-existing approval for
+  // fullscreen will have an observer.
+  bool mHasFullscreenApprovedObserver:1;
 
   uint8_t mXMLDeclarationBits;
 

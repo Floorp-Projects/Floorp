@@ -155,6 +155,11 @@ SettingsListener.observe('language.current', 'en-US', function(value) {
     });
   });
 
+  SettingsListener.observe('ril.mms.retrieval_mode', 'manual',
+    function(value) {
+      Services.prefs.setCharPref('dom.mms.retrieval_mode', value);
+  });
+
   SettingsListener.observe('ril.sms.strict7BitEncoding.enabled', false,
     function(value) {
       Services.prefs.setBoolPref('dom.sms.strict7BitEncoding', value);

@@ -17,6 +17,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=612267
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+if (navigator.platform.indexOf("Mac") == 0) {
+  SimpleTest.expectAssertions(0, 1);
+}
+
 Window.prototype.test = 'PASS';
 is(window.test, 'PASS', "setting Window.prototype affects window.__proto__");
 is(test, 'PASS', "setting Window.prototype affects the inner window lookup for sure");

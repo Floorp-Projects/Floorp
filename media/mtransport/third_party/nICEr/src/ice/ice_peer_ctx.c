@@ -312,7 +312,9 @@ static void nr_ice_peer_ctx_destroy_cb(NR_SOCKET s, int how, void *cb_arg)
       STAILQ_REMOVE(&pctx->peer_streams,str1,nr_ice_media_stream_,entry);
       nr_ice_media_stream_destroy(&str1);
     }
-    STAILQ_REMOVE(&pctx->ctx->peers, pctx, nr_ice_peer_ctx_, entry);
+    assert(pctx->ctx);
+    if (pctx->ctx)
+      STAILQ_REMOVE(&pctx->ctx->peers, pctx, nr_ice_peer_ctx_, entry);
 
     RFREE(pctx);
   }
