@@ -314,4 +314,8 @@ if (typeof Components != "undefined") {
   OSError.exists = function exists(operation) {
     return new OSError(operation, OS.Constants.libc.EEXIST);
   };
+
+  OSError.noSuchFile = function noSuchFile(operation) {
+    return new OSError(operation, OS.Constants.libc.ENOENT);
+  };
 })(this);
