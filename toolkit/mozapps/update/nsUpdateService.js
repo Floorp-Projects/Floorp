@@ -55,6 +55,8 @@ const PREF_APP_UPDATE_RETRY_TIMEOUT       = "app.update.socket.retryTimeout";
 const PREF_APP_DISTRIBUTION               = "distribution.id";
 const PREF_APP_DISTRIBUTION_VERSION       = "distribution.version";
 
+const PREF_APP_B2G_VERSION                = "b2g.version";
+
 const PREF_EM_HOTFIX_ID                   = "extensions.hotfix.id";
 
 const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
@@ -3025,6 +3027,7 @@ Checker.prototype = {
 
 #ifdef MOZ_WIDGET_GONK
     url = url.replace(/%PRODUCT_MODEL%/g, gProductModel);
+    url = url.replace(/%B2G_VERSION%/g, getPref("getCharPref", PREF_APP_B2G_VERSION, null));
 #endif
 
     if (force)
