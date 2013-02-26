@@ -19,9 +19,6 @@
 #include "nsDOMClassInfoID.h"
 #include "nsContentUtils.h"
 #include "nsCOMPtr.h"
-#include "mozilla/dom/NodeFilterBinding.h"
-
-using namespace mozilla::dom;
 
 /*
  * NodePointer implementation
@@ -140,7 +137,7 @@ void nsNodeIterator::NodePointer::MoveBackward(nsINode *aParent, nsINode *aNode)
 
 nsNodeIterator::nsNodeIterator(nsINode *aRoot,
                                uint32_t aWhatToShow,
-                               const NodeFilterHolder &aFilter) :
+                               nsIDOMNodeFilter *aFilter) :
     nsTraversal(aRoot, aWhatToShow, aFilter),
     mDetached(false),
     mPointer(mRoot, true)
@@ -206,7 +203,7 @@ NS_IMETHODIMP nsNodeIterator::GetFilter(nsIDOMNodeFilter **aFilter)
 {
     NS_ENSURE_ARG_POINTER(aFilter);
 
-    *aFilter = mFilter.ToXPCOMCallback().get();
+    NS_IF_ADDREF(*aFilter = mFilter);
 
     return NS_OK;
 }
