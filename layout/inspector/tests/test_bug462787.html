@@ -23,7 +23,7 @@ function do_test() {
   const INVALID_POINTER = 0x80004003;
 
   var utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
-                             .getService(Components.interfaces.inIDOMUtils);
+                             .getService(SpecialPowers.Ci.inIDOMUtils);
   try {
     utils.getCSSStyleRules(null); 
     ok(false, "expected an exception"); 

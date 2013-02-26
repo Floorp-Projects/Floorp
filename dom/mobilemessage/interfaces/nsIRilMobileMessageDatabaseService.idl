@@ -2,30 +2,42 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "domstubs.idl"
 #include "nsISupports.idl"
 #include "nsIMobileMessageDatabaseService.idl"
 
-interface nsIDOMMozSmsMessage;
-
-[scriptable, function, uuid(9cd80750-6a08-11e2-ac93-bf895e53f40e)]
+[scriptable, function, uuid(0bffae74-71db-11e2-962a-73cf64d6393e)]
 interface nsIRilMobileMessageDatabaseCallback : nsISupports
 {
-  void notify(in nsresult aRv, in nsIDOMMozSmsMessage aSms);
+  /**
+   * |aRecord| Object: the mobile-message database record
+   */
+  void notify(in nsresult aRv, in jsval aRecord);
 };
 
-[scriptable, uuid(89528354-6a08-11e2-8243-af4cf90404a9)]
+[scriptable, uuid(3592525a-71d6-11e2-82ca-f75ae6e08ee2)]
 interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
 {
-  long saveReceivedMessage(in DOMString aSender,
-                           in DOMString aBody,
-                           in DOMString aMessageClass,
-                           in unsigned long long aDate,
+  /**
+   * |aMessage| Object: should contain the following properties for internal use:
+   *   - |type| DOMString: "sms" or "mms"
+   *   - |sender| DOMString: the phone number of sender
+   *   - |timestamp| Number: the timestamp of received message
+   *   - |messageClass| DOMString: the message class of received message
+   */
+  long saveReceivedMessage(in jsval aMessage,
                 [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
-  long saveSendingMessage(in DOMString aReceiver,
-                          in DOMString aBody,
-                          in DOMString aDeliveryStatus,
-                          in unsigned long long aDate,
+
+  /**
+   * |aMessage| Object: should contain the following properties for internal use:
+   *   - |type| DOMString: "sms" or "mms"
+   *   - |receiver| DOMString: the phone number of receiver
+   *   - |timestamp| Number: the timestamp of sending message
+   *   - |deliveryStatus| DOMString: the delivery status of sending message
+   */
+  long saveSendingMessage(in jsval aMessage,
                [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
+
   void setMessageDelivery(in long aMessageId,
                           in DOMString aDelivery,
                           in DOMString aDeliveryStatus,
