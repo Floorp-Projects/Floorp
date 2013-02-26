@@ -3,6 +3,8 @@ asserts(0-2) load ownerdiscard.html # bug 804291, bug 807211
 load 83804-1.gif
 load 89341-1.gif
 
+load colormap-range.gif
+
 # the following tests were inspired by bug 525326
 # they have image sizes of 65535x65535 which is larger than we allow
 load invalid-size.gif
