@@ -185,7 +185,11 @@ MarionetteDriverActor.prototype = {
   switchToGlobalMessageManager: function MDA_switchToGlobalMM() {
     if (this.currentRemoteFrame !== null) {
       this.removeMessageManagerListeners(this.messageManager);
-      this.sendAsync("sleepSession");
+      try {
+        // this can fail if the frame is already gone
+        this.sendAsync("sleepSession");
+      }
+      catch(e) {}
     }
     this.messageManager = this.globalMessageManager;
     this.currentRemoteFrame = null;
@@ -1205,7 +1209,7 @@ MarionetteDriverActor.prototype = {
       }
     }
     else {
-      if ((aRequest.value == null) && (aRequest.element == null) &&
+      if ((!aRequest.value) && (!aRequest.element) &&
           (this.currentRemoteFrame !== null)) {
         // We're currently using a ChromeMessageSender for a remote frame, so this
         // request indicates we need to switch back to the top-level (parent) frame.

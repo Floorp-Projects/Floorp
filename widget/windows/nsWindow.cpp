@@ -153,10 +153,6 @@
 #include "nsIWinTaskbar.h"
 #define NS_TASKBAR_CONTRACTID "@mozilla.org/windows-taskbar;1"
 
-#if defined(NS_ENABLE_TSF)
-#include "nsTextStore.h"
-#endif // defined(NS_ENABLE_TSF)
-
 // Windowless plugin support
 #include "npapi.h"
 
@@ -168,7 +164,7 @@
 #include "nsIContent.h"
 
 #include "mozilla/HangMonitor.h"
-#include "nsIMM32Handler.h"
+#include "WinIMEHandler.h"
 
 using namespace mozilla::widget;
 using namespace mozilla::layers;
@@ -362,11 +358,7 @@ nsWindow::nsWindow() : nsWindowBase()
     // WinTaskbar.cpp for details.
     mozilla::widget::WinTaskbar::RegisterAppUserModelID();
     gKbdLayout.LoadLayout(::GetKeyboardLayout(0));
-    // Init IME handler
-    nsIMM32Handler::Initialize();
-#ifdef NS_ENABLE_TSF
-    nsTextStore::Initialize();
-#endif
+    IMEHandler::Initialize();
     if (SUCCEEDED(::OleInitialize(NULL))) {
       sIsOleInitialized = TRUE;
     }
@@ -406,17 +398,13 @@ nsWindow::~nsWindow()
 
   // Global shutdown
   if (sInstanceCount == 0) {
-#ifdef NS_ENABLE_TSF
-    nsTextStore::Terminate();
-#endif
+    IMEHandler::Terminate();
     NS_IF_RELEASE(sCursorImgContainer);
     if (sIsOleInitialized) {
       ::OleFlushClipboard();
       ::OleUninitialize();
       sIsOleInitialized = FALSE;
     }
-    // delete any of the IME structures that we allocated
-    nsIMM32Handler::Terminate();
   }
 
   NS_IF_RELEASE(mNativeDragTarget);
@@ -596,16 +584,7 @@ nsWindow::Create(nsIWidget *aParent,
 
   SubclassWindow(TRUE);
 
-  // NOTE: mNativeIMEContext may be null if IMM module isn't installed.
-  nsIMEContext IMEContext(mWnd);
-  mInputContext.mNativeIMEContext = static_cast<void*>(IMEContext.get());
-  MOZ_ASSERT(mInputContext.mNativeIMEContext ||
-             !nsIMM32Handler::IsIMEAvailable());
-  // If no IME context is available, we should set this widget's pointer since
-  // nullptr indicates there is only one context per process on the platform.
-  if (!mInputContext.mNativeIMEContext) {
-    mInputContext.mNativeIMEContext = this;
-  }
+  IMEHandler::InitInputContext(this, mInputContext);
 
   // If the internal variable set by the config.trim_on_minimize pref has not
   // been initialized, and if this is the hidden window (conveniently created
@@ -2867,14 +2846,10 @@ void* nsWindow::GetNativeData(uint32_t aDataType)
       return (void*)::GetDC(mWnd);
 #endif
 
-#ifdef NS_ENABLE_TSF
     case NS_NATIVE_TSF_THREAD_MGR:
-      return nsTextStore::GetThreadMgr();
     case NS_NATIVE_TSF_CATEGORY_MGR:
-      return nsTextStore::GetCategoryMgr();
     case NS_NATIVE_TSF_DISPLAY_ATTR_MGR:
-      return nsTextStore::GetDisplayAttrMgr();
-#endif //NS_ENABLE_TSF
+      return IMEHandler::GetNativeData(aDataType);
 
     default:
       break;
@@ -4509,8 +4484,8 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 #endif
 
   bool eatMessage;
-  if (nsIMM32Handler::ProcessMessage(this, msg, wParam, lParam, aRetValue,
-                                     eatMessage)) {
+  if (IMEHandler::ProcessMessage(this, msg, wParam, lParam, aRetValue,
+                                 eatMessage)) {
     return mWnd ? eatMessage : true;
   }
 
@@ -5432,11 +5407,6 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 
     default:
     {
-#ifdef NS_ENABLE_TSF
-      if (msg == WM_USER_TSF_TEXTCHANGE) {
-        nsTextStore::OnTextChangeMsg();
-      }
-#endif //NS_ENABLE_TSF
       if (msg == nsAppShell::GetTaskbarButtonCreatedMessage())
         SetHasTaskbarIconBeenCreated();
       if (msg == sOOPPPluginFocusEvent) {
@@ -5707,7 +5677,7 @@ LRESULT nsWindow::ProcessKeyUpMessage(const MSG &aMsg, bool *aEventDispatched)
     return FALSE;
   }
 
-  if (!nsIMM32Handler::IsComposingOn(this)) {
+  if (!IMEHandler::IsComposingOn(this)) {
     return OnKeyUp(aMsg, modKeyState, aEventDispatched);
   }
 
@@ -5746,7 +5716,7 @@ LRESULT nsWindow::ProcessKeyDownMessage(const MSG &aMsg,
     return FALSE;
 
   LRESULT result = 0;
-  if (!nsIMM32Handler::IsComposingOn(this)) {
+  if (!IMEHandler::IsComposingOn(this)) {
     result = OnKeyDown(aMsg, modKeyState, aEventDispatched, nullptr);
     // OnKeyDown cleaned up the redirected message information itself, so,
     // we should do nothing.
@@ -6501,7 +6471,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
   static bool sRedirectedKeyDownEventPreventedDefault = false;
   bool noDefault;
   if (aFakeCharMessage || !IsRedirectedKeyDownMessage(aMsg)) {
-    nsIMEContext IMEContext(mWnd);
+    bool isIMEEnabled = IMEHandler::IsIMEEnabled(mInputContext);
     nsKeyEvent keydownEvent(true, NS_KEY_DOWN, this);
     keydownEvent.keyCode = DOMKeyCode;
     InitKeyEvent(keydownEvent, nativeKey, aModKeyState);
@@ -6519,9 +6489,8 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     // application, we shouldn't redirect the message to it because the keydown
     // message is processed by us, so, nobody shouldn't process it.
     HWND focusedWnd = ::GetFocus();
-    nsIMEContext newIMEContext(mWnd);
     if (!noDefault && !aFakeCharMessage && focusedWnd && !PluginHasFocus() &&
-        !IMEContext.get() && newIMEContext.get()) {
+        !isIMEEnabled && IMEHandler::IsIMEEnabled(mInputContext)) {
       RemoveNextCharMessage(focusedWnd);
 
       INPUT keyinput;
@@ -6617,7 +6586,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     }
 
     if (!anyCharMessagesRemoved && DOMKeyCode == NS_VK_BACK &&
-        nsIMM32Handler::IsDoingKakuteiUndo(mWnd)) {
+        IMEHandler::IsDoingKakuteiUndo(mWnd)) {
       NS_ASSERTION(!aFakeCharMessage,
                    "We shouldn't be touching the real msg queue");
       RemoveMessageAndDispatchPluginEvent(WM_CHAR, WM_CHAR);
@@ -6891,7 +6860,7 @@ LRESULT nsWindow::OnChar(const MSG &aMsg,
     modKeyState.Unset(MODIFIER_ALT | MODIFIER_CONTROL);
   }
 
-  if (nsIMM32Handler::IsComposingOn(this)) {
+  if (IMEHandler::IsComposingOn(this)) {
     ResetInputState();
   }
 
@@ -7212,8 +7181,7 @@ void nsWindow::OnDestroy()
     CaptureRollupEvents(nullptr, false);
   }
 
-  // Restore the IM context.
-  AssociateDefaultIMC(true);
+  IMEHandler::OnDestroyWindow(this);
 
   // Turn off mouse trails if enabled.
   MouseTrailer* mtrailer = nsToolkit::gMouseTrailer;
@@ -7396,94 +7364,33 @@ nsWindow::OnSysColorChanged()
 
 NS_IMETHODIMP nsWindow::ResetInputState()
 {
-#ifdef DEBUG_KBSTATE
-  PR_LOG(gWindowsLog, PR_LOG_ALWAYS, ("ResetInputState\n"));
-#endif
-
-#ifdef NS_ENABLE_TSF
-  nsTextStore::CommitComposition(false);
-#endif //NS_ENABLE_TSF
-
-  nsIMM32Handler::CommitComposition(this);
-  return NS_OK;
+  return IMEHandler::NotifyIME(this, REQUEST_TO_COMMIT_COMPOSITION);
 }
 
 NS_IMETHODIMP_(void)
 nsWindow::SetInputContext(const InputContext& aContext,
                           const InputContextAction& aAction)
 {
-#ifdef NS_ENABLE_TSF
-  nsTextStore::SetInputContext(aContext);
-#endif //NS_ENABLE_TSF
-  if (nsIMM32Handler::IsComposing()) {
-    ResetInputState();
-  }
-  void* nativeIMEContext = mInputContext.mNativeIMEContext;
-  mInputContext = aContext;
-  mInputContext.mNativeIMEContext = nullptr;
-  bool enable = (mInputContext.mIMEState.mEnabled == IMEState::ENABLED ||
-                 mInputContext.mIMEState.mEnabled == IMEState::PLUGIN);
-
-  AssociateDefaultIMC(enable);
-
-  if (enable) {
-    nsIMEContext IMEContext(mWnd);
-    mInputContext.mNativeIMEContext = static_cast<void*>(IMEContext.get());
-  }
-  // Restore the latest associated context when we cannot get actual context.
-  if (!mInputContext.mNativeIMEContext) {
-    mInputContext.mNativeIMEContext = nativeIMEContext;
-  }
-
-  if (enable &&
-      mInputContext.mIMEState.mOpen != IMEState::DONT_CHANGE_OPEN_STATE) {
-    bool open = (mInputContext.mIMEState.mOpen == IMEState::OPEN);
-#ifdef NS_ENABLE_TSF
-    nsTextStore::SetIMEOpenState(open);
-#endif //NS_ENABLE_TSF
-    nsIMEContext IMEContext(mWnd);
-    if (IMEContext.IsValid()) {
-      ::ImmSetOpenStatus(IMEContext.get(), open);
-    }
-  }
+  InputContext newInputContext = aContext;
+  IMEHandler::SetInputContext(this, newInputContext);
+  mInputContext = newInputContext;
 }
 
 NS_IMETHODIMP_(InputContext)
 nsWindow::GetInputContext()
 {
   mInputContext.mIMEState.mOpen = IMEState::CLOSED;
-  switch (mInputContext.mIMEState.mEnabled) {
-    case IMEState::ENABLED:
-    case IMEState::PLUGIN: {
-      nsIMEContext IMEContext(mWnd);
-      if (IMEContext.IsValid()) {
-        mInputContext.mIMEState.mOpen =
-          ::ImmGetOpenStatus(IMEContext.get()) ? IMEState::OPEN :
-                                                 IMEState::CLOSED;
-      }
-#ifdef NS_ENABLE_TSF
-      if (mInputContext.mIMEState.mOpen == IMEState::CLOSED &&
-          nsTextStore::GetIMEOpenState()) {
-        mInputContext.mIMEState.mOpen = IMEState::OPEN;
-      }
-#endif //NS_ENABLE_TSF
-    }
+  if (IMEHandler::IsIMEEnabled(mInputContext) && IMEHandler::GetOpenState(this)) {
+    mInputContext.mIMEState.mOpen = IMEState::OPEN;
+  } else {
+    mInputContext.mIMEState.mOpen = IMEState::CLOSED;
   }
   return mInputContext;
 }
 
 NS_IMETHODIMP nsWindow::CancelIMEComposition()
 {
-#ifdef DEBUG_KBSTATE
-  PR_LOG(gWindowsLog, PR_LOG_ALWAYS, ("CancelIMEComposition\n"));
-#endif 
-
-#ifdef NS_ENABLE_TSF
-  nsTextStore::CommitComposition(true);
-#endif //NS_ENABLE_TSF
-
-  nsIMM32Handler::CancelComposition(this);
-  return NS_OK;
+  return IMEHandler::NotifyIME(this, REQUEST_TO_CANCEL_COMPOSITION);
 }
 
 NS_IMETHODIMP
@@ -7497,15 +7404,11 @@ nsWindow::GetToggledKeyState(uint32_t aKeyCode, bool* aLEDState)
   return NS_OK;
 }
 
-#ifdef NS_ENABLE_TSF
 NS_IMETHODIMP
 nsWindow::OnIMEFocusChange(bool aFocus)
 {
-  nsresult rv = nsTextStore::OnFocusChange(aFocus, this,
-                                           mInputContext.mIMEState.mEnabled);
-  if (rv == NS_ERROR_NOT_AVAILABLE)
-    rv = NS_OK; // TSF is not enabled, maybe.
-  return rv;
+  return IMEHandler::NotifyIME(this, aFocus ? NOTIFY_IME_OF_FOCUS :
+                                              NOTIFY_IME_OF_BLUR);
 }
 
 NS_IMETHODIMP
@@ -7513,57 +7416,19 @@ nsWindow::OnIMETextChange(uint32_t aStart,
                           uint32_t aOldEnd,
                           uint32_t aNewEnd)
 {
-  return nsTextStore::OnTextChange(aStart, aOldEnd, aNewEnd);
+  return IMEHandler::NotifyIMEOfTextChange(aStart, aOldEnd, aNewEnd);
 }
 
 NS_IMETHODIMP
 nsWindow::OnIMESelectionChange(void)
 {
-  return nsTextStore::OnSelectionChange();
+  return IMEHandler::NotifyIME(this, NOTIFY_IME_OF_SELECTION_CHANGE);
 }
 
 nsIMEUpdatePreference
 nsWindow::GetIMEUpdatePreference()
 {
-  return nsTextStore::GetIMEUpdatePreference();
-}
-
-#endif //NS_ENABLE_TSF
-
-bool nsWindow::AssociateDefaultIMC(bool aAssociate)
-{
-  nsIMEContext IMEContext(mWnd);
-
-  if (aAssociate) {
-    BOOL ret = ::ImmAssociateContextEx(mWnd, NULL, IACE_DEFAULT);
-#ifdef DEBUG
-    // Note that if IME isn't available with current keyboard layout,
-    // IMM might not be installed on the system such as English Windows.
-    // On such system, IMM APIs always fail.
-    NS_ASSERTION(ret || !nsIMM32Handler::IsIMEAvailable(),
-                 "ImmAssociateContextEx failed to restore default IMC");
-    if (ret) {
-      nsIMEContext newIMEContext(mWnd);
-      NS_ASSERTION(!IMEContext.get() || newIMEContext.get() == IMEContext.get(),
-                   "Unknown IMC had been associated");
-    }
-#endif
-    return ret && !IMEContext.get();
-  }
-
-  if (mOnDestroyCalled) {
-    // If OnDestroy() has been called, we shouldn't disassociate the default
-    // IMC at destroying the window.
-    return false;
-  }
-
-  if (!IMEContext.get()) {
-    return false; // already disassociated
-  }
-
-  BOOL ret = ::ImmAssociateContextEx(mWnd, NULL, 0);
-  NS_ASSERTION(ret, "ImmAssociateContextEx failed to disassociate the IMC");
-  return ret != FALSE;
+  return IMEHandler::GetUpdatePreference();
 }
 
 #ifdef ACCESSIBILITY

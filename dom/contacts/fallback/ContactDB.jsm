@@ -30,8 +30,6 @@ this.ContactDB = function ContactDB(aGlobal) {
 ContactDB.prototype = {
   __proto__: IndexedDBHelper.prototype,
 
-  cursorData: {},
-
   upgradeSchema: function upgradeSchema(aTransaction, aDb, aOldVersion, aNewVersion) {
     if (DEBUG) debug("upgrade schema from: " + aOldVersion + " to " + aNewVersion + " called!");
     let db = aDb;
@@ -472,115 +470,86 @@ ContactDB.prototype = {
     }, aSuccessCb, aErrorCb);
   },
 
-  getObjectById: function CDB_getObjectById(aStore, aObjectId, aCallback) {
-    if (DEBUG) debug("getObjectById: " + aStore + ":" + aObjectId);
-    this.newTxn("readonly", aStore, function (txn, store) {
-      let req = store.get(aObjectId);
-      req.onsuccess = function (event) {
-        aCallback(event.target.result);
-      };
-      req.onerror = function (event) {
-        aCallback(null);
-      };
-    });
-  },
-
-  getCacheForQuery: function CDB_getCacheForQuery(aQuery, aCursorId, aSuccessCb) {
-    if (DEBUG) debug("getCacheForQuery");
-    // Here we try to get the cached results for query `aQuery'. If they don't
-    // exist, it means the cache was invalidated and needs to be recreated, so
-    // we do that. Otherwise, we just return the existing cache.
-    this.getObjectById(SAVED_GETALL_STORE_NAME, aQuery, function (aCache) {
-      if (!aCache) {
-        if (DEBUG) debug("creating cache for query " + aQuery);
-        this.createCacheForQuery(aQuery, aCursorId, aSuccessCb);
-      } else {
-        if (DEBUG) debug("cache exists");
-        if (!this.cursorData[aCursorId]) {
-          this.cursorData[aCursorId] = aCache;
-        }
-        aSuccessCb(aCache);
-      }
-    }.bind(this));
-  },
-
-  setCacheForQuery: function CDB_setCacheForQuery(aQuery, aCache, aCallback) {
-    this.newTxn("readwrite", SAVED_GETALL_STORE_NAME, function (txn, store) {
-      let req = store.put(aCache, aQuery);
-      if (!aCallback) {
-        return;
-      }
-      req.onsuccess = function () {
-        aCallback(true);
-      };
-      req.onerror = function () {
-        aCallback(false);
-      };
-    });
-  },
-
-  createCacheForQuery: function CDB_createCacheForQuery(aQuery, aCursorId, aSuccessCb, aFailureCb) {
+  createCacheForQuery: function CDB_createCacheForQuery(aQuery, aSuccessCb, aFailureCb) {
     this.find(function (aContacts) {
       if (aContacts) {
         let contactsArray = [];
         for (let i in aContacts) {
-          contactsArray.push(aContacts[i].id);
+          contactsArray.push(aContacts[i]);
         }
 
-        this.setCacheForQuery(aQuery, contactsArray);
-        this.cursorData[aCursorId] = contactsArray;
-        aSuccessCb(contactsArray);
+        // save contact ids in cache
+        this.newTxn("readwrite", SAVED_GETALL_STORE_NAME, function(txn, store) {
+          store.put(contactsArray.map(function(el) el.id), aQuery);
+        });
+
+        // send full contacts
+        aSuccessCb(contactsArray, true);
       } else {
-        aSuccessCb(null);
+        aSuccessCb([], true);
       }
     }.bind(this),
     function (aErrorMsg) { aFailureCb(aErrorMsg); },
     JSON.parse(aQuery));
   },
 
-  getAll: function CDB_getAll(aSuccessCb, aFailureCb, aOptions, aCursorId) {
-    // Recreate the cache for this query if needed
+  getCacheForQuery: function CDB_getCacheForQuery(aQuery, aSuccessCb) {
+    if (DEBUG) debug("getCacheForQuery");
+    // Here we try to get the cached results for query `aQuery'. If they don't
+    // exist, it means the cache was invalidated and needs to be recreated, so
+    // we do that. Otherwise, we just return the existing cache.
+    this.newTxn("readonly", SAVED_GETALL_STORE_NAME, function(txn, store) {
+      let req = store.get(aQuery);
+      req.onsuccess = function(e) {
+        if (e.target.result) {
+          if (DEBUG) debug("cache exists");
+          debug("sending: " + JSON.stringify(e.target.result));
+          aSuccessCb(e.target.result, false);
+        } else {
+          if (DEBUG) debug("creating cache for query " + aQuery);
+          this.createCacheForQuery(aQuery, aSuccessCb);
+        }
+      }.bind(this);
+      req.onerror = function() {
+
+      };
+    }.bind(this));
+  },
+
+  getAll: function CDB_getAll(aSuccessCb, aFailureCb, aOptions) {
     let optionStr = JSON.stringify(aOptions);
-    this.getCacheForQuery(optionStr, aCursorId, function (aCachedResults) {
+    this.getCacheForQuery(optionStr, function(aCachedResults, aFullContacts) {
+      // aFullContacts is true if the cache didn't exist and had to be created.
+      // In that case, we receive the full contacts since we already have them
+      // in memory to create the cache anyway. This allows us to avoid accessing
+      // the main object store again.
       if (aCachedResults && aCachedResults.length > 0) {
         if (DEBUG) debug("query returned at least one contact");
-        this.getObjectById(STORE_NAME, aCachedResults[0], function (aContact) {
-          this.cursorData[aCursorId].shift();
-          aSuccessCb(aContact);
-        }.bind(this));
+        if (aFullContacts) {
+          if (DEBUG) debug("full contacts: " + aCachedResults.length);
+          for (let i = 0; i < aCachedResults.length; ++i) {
+            aSuccessCb(aCachedResults[i]);
+          }
+          aSuccessCb(null);
+        } else {
+          let count = 0;
+          this.newTxn("readonly", STORE_NAME, function(txn, store) {
+            for (let i = 0; i < aCachedResults.length; ++i) {
+              store.get(aCachedResults[i]).onsuccess = function(e) {
+                aSuccessCb(e.target.result);
+                count++;
+                if (count == aCachedResults.length) {
+                  aSuccessCb(null);
+                }
+              };
+            }
+          });
+        }
       } else { // no contacts
         if (DEBUG) debug("query returned no contacts");
         aSuccessCb(null);
       }
     }.bind(this));
-  },
-
-  getNext: function CDB_getNext(aSuccessCb, aFailureCb, aCursorId) {
-    if (DEBUG) debug("ContactDB:getNext: " + aCursorId);
-    let aCachedResults = this.cursorData[aCursorId];
-    if (DEBUG) debug("got transient cache");
-    if (aCachedResults.length > 0) {
-      this.getObjectById(STORE_NAME, aCachedResults[0], function(aContact) {
-        this.cursorData[aCursorId].shift();
-        if (aContact) {
-          aSuccessCb(aContact);
-        } else {
-          // If the contact ID in cache is invalid, it was removed recently and
-          // the cache hasn't been updated to reflect the change, so we skip it.
-          if (DEBUG) debug("invalid contact in cache: " + aCachedResults[0]);
-          return this.getNext(aSuccessCb, aFailureCb, aCursorId);
-        }
-      }.bind(this));
-    } else { // last contact
-      delete this.cursorData[aCursorId];
-      aSuccessCb(null);
-    }
-  },
-
-  releaseCursors: function CDB_releaseCursors(aCursors) {
-    for (let i of aCursors) {
-      delete this.cursorData[i];
-    }
   },
 
   /*

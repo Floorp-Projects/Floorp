@@ -183,6 +183,7 @@ protected:
   void UnbindFromTree(bool aDeep, bool aNullParent);
 
   nsresult OnStopRequest(imgIRequest* aRequest, nsresult aStatus);
+  void OnUnlockedDraw();
   nsresult OnImageIsAnimated(imgIRequest *aRequest);
 
 private:
@@ -326,9 +327,21 @@ protected:
    * Adds/Removes a given imgIRequest from our document's tracker.
    *
    * No-op if aImage is null.
+   *
+   * SKIP_FRAME_CHECK passed to TrackImage means we skip the check if we have a
+   * frame, there is only one valid use of this: when calling from FrameCreated.
+   *
+   * REQUEST_DISCARD passed to UntrackImage means we request the discard of the
+   * decoded data of the image.
    */
-  nsresult TrackImage(imgIRequest* aImage);
-  nsresult UntrackImage(imgIRequest* aImage);
+  enum {
+    SKIP_FRAME_CHECK = 0x1
+  };
+  nsresult TrackImage(imgIRequest* aImage, uint32_t aFlags = 0);
+  enum {
+    REQUEST_DISCARD = 0x1
+  };
+  nsresult UntrackImage(imgIRequest* aImage, uint32_t aFlags = 0);
 
   /* MEMBERS */
   nsRefPtr<imgRequestProxy> mCurrentRequest;
@@ -404,6 +417,8 @@ private:
   // registered with the refresh driver.
   bool mCurrentRequestRegistered;
   bool mPendingRequestRegistered;
+
+  uint32_t mVisibleCount;
 };
 
 #endif // nsImageLoadingContent_h__

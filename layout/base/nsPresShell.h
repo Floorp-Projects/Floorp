@@ -335,6 +335,12 @@ public:
     uint32_t   mContentToScrollToFlags;
   };
 
+  virtual void ScheduleImageVisibilityUpdate();
+
+  virtual void RebuildImageVisibility(const nsDisplayList& aList);
+
+  virtual void EnsureImageInVisibleList(nsIImageLoadingContent* aImage);
+
 protected:
   virtual ~PresShell();
 
@@ -703,6 +709,17 @@ protected:
   virtual void ThemeChanged() { mPresContext->ThemeChanged(); }
   virtual void BackingScaleFactorChanged() { mPresContext->UIResolutionChanged(); }
 
+  void UpdateImageVisibility();
+
+  nsRevocableEventPtr<nsRunnableMethod<PresShell> > mUpdateImageVisibilityEvent;
+
+  void ClearVisibleImagesList();
+  static void ClearImageVisibilityVisited(nsView* aView, bool aClear);
+  static void MarkImagesInListVisible(const nsDisplayList& aList);
+
+  // A list of images that are visible or almost visible.
+  nsTArray< nsCOMPtr<nsIImageLoadingContent > > mVisibleImages;
+
 #ifdef DEBUG
   // The reflow root under which we're currently reflowing.  Null when
   // not in reflow.
@@ -791,6 +808,8 @@ protected:
 
   bool                      mAsyncResizeTimerIsActive : 1;
   bool                      mInResize : 1;
+
+  bool                      mImageVisibilityVisited : 1;
 
   static bool               sDisableNonTestMouseEvents;
 };

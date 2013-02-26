@@ -21,6 +21,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=624329
   <![CDATA[
   /** Test for Bug 624329 **/
 
+if (navigator.platform.indexOf("Mac") == 0) {
+  SimpleTest.expectAssertions(0, 3);
+}
+
 SimpleTest.waitForExplicitFinish();
 
 var win;

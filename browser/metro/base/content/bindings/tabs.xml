@@ -106,7 +106,32 @@
       <handler event="dblclick" action="this._onDoubleClick();"/>
     </handlers>
 
-    <implementation>
+    <implementation implements="nsIDOMEventListener">
+      <constructor>
+        <![CDATA[
+          window.addEventListener("MozContextUIExpand", this, true);
+        ]]>
+      </constructor>
+
+      <destructor>
+        <![CDATA[
+          window.removeEventListener("MozContextUIExpand", this, true);
+        ]]>
+      </destructor>
+
+      <method name="handleEvent">
+        <parameter name="event"/>
+        <body>
+          <![CDATA[
+            switch (event.type) {
+              case "MozContextUIExpand":
+                this.strip.ensureElementIsVisible(this.selectedTab, false);
+                break;
+            }
+          ]]>
+        </body>
+      </method>
+
       <field name="strip">document.getAnonymousElementByAttribute(this, "anonid", "tabs-scrollbox");</field>
       <field name="_selectedTab">null</field>
 

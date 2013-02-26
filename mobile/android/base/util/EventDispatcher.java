@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class EventDispatcher {
-    private static final String LOGTAG = "EventDispatcher";
+    private static final String LOGTAG = "GeckoEventDispatcher";
 
     private final Map<String, CopyOnWriteArrayList<GeckoEventListener>> mEventListeners
                   = new HashMap<String, CopyOnWriteArrayList<GeckoEventListener>>();
@@ -56,8 +56,8 @@ public final class EventDispatcher {
         try {
             JSONObject json = new JSONObject(message);
             if (json.has("gecko")) {
-                Log.w(LOGTAG, "The 'gecko' property of the sendMessageToJava parameter is deprecated.");
                 json = json.getJSONObject("gecko");
+                Log.w(LOGTAG, "The 'gecko' property of the sendMessageToJava parameter is deprecated; message of type " + json.getString("type"));
             }
             String type = json.getString("type");
 

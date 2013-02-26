@@ -17,6 +17,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=403868
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+if (navigator.platform.indexOf("Mac") == 0) {
+  SimpleTest.expectAssertions(0, 1);
+}
+
 /** Test for Bug 403868 **/
 function createSpan(id, insertionPoint) {
   var s = document.createElement("span");

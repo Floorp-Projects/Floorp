@@ -6,8 +6,8 @@
     <iframe src=discardframe.htm></iframe>
   </div>
   <script>
-    const Ci = Components.interfaces;
-    const Cc = SpecialPowers.wrap(Components).classes;
+    const Ci = SpecialPowers.Ci;
+    const Cc = SpecialPowers.Cc;
 
     function ImageDecoderObserverStub()
     {
