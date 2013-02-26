@@ -45,6 +45,8 @@ extern PRLogModuleInfo* GetDataChannelLog();
 #undef GetBinaryType
 #endif
 
+using namespace mozilla;
+
 class nsDOMDataChannel : public nsDOMEventTargetHelper,
                          public nsIDOMDataChannel,
                          public mozilla::DataChannelListener
@@ -393,7 +395,7 @@ nsDOMDataChannel::DoOnMessageAvailable(const nsACString& aData,
   nsIScriptContext* sc = sgo->GetContext();
   NS_ENSURE_TRUE(sc, NS_ERROR_FAILURE);
 
-  JSContext* cx = sc->GetNativeContext();
+  AutoPushJSContext cx(sc->GetNativeContext());
   NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
 
   JSAutoRequest ar(cx);

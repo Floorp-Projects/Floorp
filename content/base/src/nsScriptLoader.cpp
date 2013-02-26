@@ -822,6 +822,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   if (!context) {
     return NS_ERROR_FAILURE;
   }
+  AutoPushJSContext cx(context->GetNativeContext());
 
   bool oldProcessingScriptTag = context->GetProcessingScriptTag();
   context->SetProcessingScriptTag(true);
@@ -837,7 +838,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
 
   JSVersion version = JSVersion(aRequest->mJSVersion);
   if (version != JSVERSION_UNKNOWN) {
-    JS::CompileOptions options(context->GetNativeContext());
+    JS::CompileOptions options(cx);
     options.setFileAndLine(url.get(), aRequest->mLineNo)
            .setVersion(JSVersion(aRequest->mJSVersion));
     if (aRequest->mOriginPrincipal) {
@@ -850,8 +851,6 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   // Put the old script back in case it wants to do anything else.
   mCurrentScript = oldCurrent;
 
-  JSContext *cx = nullptr; // Initialize this to keep GCC happy.
-  cx = context->GetNativeContext();
   JSAutoRequest ar(cx);
   context->SetProcessingScriptTag(oldProcessingScriptTag);
   return rv;

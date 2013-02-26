@@ -171,7 +171,7 @@ SmsManager::Send(const jsval& aNumber, const nsAString& aMessage, jsval* aReturn
   nsresult rv;
   nsIScriptContext* sc = GetContextForEventHandlers(&rv);
   NS_ENSURE_STATE(sc);
-  JSContext* cx = sc->GetNativeContext();
+  AutoPushJSContext cx(sc->GetNativeContext());
   NS_ASSERTION(cx, "Failed to get a context!");
 
   if (!aNumber.isString() &&
@@ -253,10 +253,10 @@ SmsManager::Delete(const jsval& aParam, nsIDOMMozSmsRequest** aRequest)
 
   nsresult rv;
   nsIScriptContext* sc = GetContextForEventHandlers(&rv);
+  AutoPushJSContext cx(sc->GetNativeContext());
   NS_ENSURE_STATE(sc);
   nsCOMPtr<nsIDOMMozSmsMessage> message =
-    do_QueryInterface(nsContentUtils::XPConnect()->GetNativeOfWrapper(
-          sc->GetNativeContext(), &aParam.toObject()));
+    do_QueryInterface(nsContentUtils::XPConnect()->GetNativeOfWrapper(cx, &aParam.toObject()));
   NS_ENSURE_TRUE(message, NS_ERROR_INVALID_ARG);
 
   int32_t id;

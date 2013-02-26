@@ -274,10 +274,10 @@ Telephony::GetActive(jsval* aActive)
   nsresult rv;
   nsIScriptContext* sc = GetContextForEventHandlers(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
+  AutoPushJSContext cx(sc ? sc->GetNativeContext() : nullptr);
   if (sc) {
     rv =
-      nsContentUtils::WrapNative(sc->GetNativeContext(),
-                                 sc->GetNativeGlobal(),
+      nsContentUtils::WrapNative(cx, sc->GetNativeGlobal(),
                                  mActiveCall->ToISupports(), aActive);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -292,8 +292,9 @@ Telephony::GetCalls(jsval* aCalls)
     nsresult rv;
     nsIScriptContext* sc = GetContextForEventHandlers(&rv);
     NS_ENSURE_SUCCESS(rv, rv);
+    AutoPushJSContext cx(sc ? sc->GetNativeContext() : nullptr);
     if (sc) {
-      rv = nsTArrayToJSArray(sc->GetNativeContext(), mCalls, &calls);
+      rv = nsTArrayToJSArray(cx, mCalls, &calls);
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (!mRooted) {
