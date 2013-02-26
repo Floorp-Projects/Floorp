@@ -525,6 +525,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // this instruction.
     CodeOffsetLabel toggledCall(IonCode *target, bool enabled);
 
+    static size_t ToggledCallSize() {
+        // Size of a movw, movt, nop/blx instruction.
+        return 12;
+    }
+
     CodeOffsetLabel pushWithPatch(ImmWord imm) {
         CodeOffsetLabel label = currentOffset();
         ma_movPatchable(Imm32(imm.value), ScratchRegister, Always, L_MOVWT);

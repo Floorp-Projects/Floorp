@@ -1440,6 +1440,30 @@ BEGIN_CASE(JSOP_LOOPENTRY)
             goto leave_on_safe_point;
         }
     }
+
+    if (ion::IsBaselineEnabled(cx)) {
+        ion::MethodStatus status = ion::CanEnterBaselineJIT(cx, script, regs.fp(), false);
+        if (status == ion::Method_Error)
+            goto error;
+        if (status == ion::Method_Compiled) {
+            ion::IonExecStatus maybeOsr = ion::EnterBaselineAtBranch(cx, regs.fp(), regs.pc);
+
+            // We can never bail out from the baseline jit.
+            JS_ASSERT(maybeOsr != ion::IonExec_Bailout);
+
+            // We failed to call into baseline at all, so treat as an error.
+            if (maybeOsr == ion::IonExec_Aborted)
+                goto error;
+
+            interpReturnOK = (maybeOsr == ion::IonExec_Ok);
+
+            if (entryFrame != regs.fp())
+                goto jit_return;
+
+            regs.fp()->setFinishedInInterpreter();
+            goto leave_on_safe_point;
+        }
+    }
 #endif /* JS_ION */
 
 END_CASE(JSOP_LOOPENTRY)

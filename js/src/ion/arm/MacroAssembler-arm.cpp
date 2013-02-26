@@ -3259,6 +3259,7 @@ MacroAssemblerARMCompat::toggledCall(IonCode *target, bool enabled)
         ma_blx(ScratchRegister);
     else
         ma_nop();
+    JS_ASSERT(size() - offset.offset() == ToggledCallSize());
     return offset;
 }
 

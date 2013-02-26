@@ -88,8 +88,14 @@ CheckFrame(StackFrame *fp)
     return true;
 }
 
+static bool
+IsJSDEnabled(JSContext *cx)
+{
+    return cx->compartment->debugMode() && cx->runtime->debugHooks.callHook;
+}
+
 static IonExecStatus
-EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode)
+EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode, bool osr)
 {
     JS_CHECK_RECURSION(cx, return IonExec_Aborted);
     JS_ASSERT(ion::IsBaselineEnabled(cx));
@@ -155,8 +161,13 @@ EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode)
         if (!fp->isNonEvalFunctionFrame())
             scopeChain = fp->scopeChain();
 
+        // For OSR, pass the number of locals + stack values.
+        uint32_t numStackValues = osr ? fp->script()->nfixed + cx->regs().stackDepth() : 0;
+        JS_ASSERT_IF(osr, !IsJSDEnabled(cx));
+
         // Single transition point from Interpreter to Baseline.
-        enter(jitcode, maxArgc, maxArgv, fp, calleeToken, scopeChain, result.address());
+        enter(jitcode, maxArgc, maxArgv, osr ? fp : NULL, calleeToken, scopeChain, numStackValues,
+              result.address());
     }
 
     JS_ASSERT(fp == cx->fp());
@@ -184,7 +195,24 @@ ion::EnterBaselineMethod(JSContext *cx, StackFrame *fp)
     IonCode *code = baseline->method();
     void *jitcode = code->raw();
 
-    return EnterBaseline(cx, fp, jitcode);
+    return EnterBaseline(cx, fp, jitcode, /* osr = */false);
+}
+
+IonExecStatus
+ion::EnterBaselineAtBranch(JSContext *cx, StackFrame *fp, jsbytecode *pc)
+{
+    JS_ASSERT(JSOp(*pc) == JSOP_LOOPENTRY);
+
+    RootedScript script(cx, fp->script());
+    BaselineScript *baseline = script->baseline;
+    uint8_t *jitcode = baseline->nativeCodeForPC(script, pc);
+
+    // Skip debug breakpoint/trap handler, the interpreter already handled it
+    // for the current op.
+    if (cx->compartment->debugMode())
+        jitcode += MacroAssembler::ToggledCallSize();
+
+    return EnterBaseline(cx, fp, jitcode, /* osr = */true);
 }
 
 static MethodStatus
@@ -223,11 +251,16 @@ BaselineCompile(JSContext *cx, HandleScript script, StackFrame *fp)
 MethodStatus
 ion::CanEnterBaselineJIT(JSContext *cx, JSScript *scriptArg, StackFrame *fp, bool newType)
 {
-    // Skip if baseline compilation is disabledf in options.
+    // Skip if baseline compilation is disabled in options.
     JS_ASSERT(ion::IsBaselineEnabled(cx));
 
     // Skip if the script has been disabled.
     if (scriptArg->baseline == BASELINE_DISABLED_SCRIPT)
+        return Method_Skipped;
+
+    // Eagerly compile scripts if JSD is enabled, so that we don't have to OSR
+    // and don't have to update the frame pointer stored in JSD's frames list.
+    if (scriptArg->incUseCount() <= js_IonOptions.baselineUsesBeforeCompile && !IsJSDEnabled(cx))
         return Method_Skipped;
 
     if (scriptArg->length > BaselineScript::MAX_JSSCRIPT_LENGTH)
