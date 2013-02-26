@@ -11,20 +11,14 @@ import android.graphics.Path;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 
-public abstract class ShapedButton extends GeckoImageButton
-                                   implements CanvasDelegate.DrawManager,
-                                              LightweightTheme.OnChangeListener { 
+public class ShapedButton extends GeckoImageButton
+                          implements CanvasDelegate.DrawManager {
     protected GeckoActivity mActivity;
     protected Path mPath;
     protected CurveTowards mSide;
     protected CanvasDelegate mCanvasDelegate;
 
     protected enum CurveTowards { NONE, LEFT, RIGHT };
-
-    @Override
-    abstract public void onLightweightThemeChanged();
-    @Override
-    abstract public void onLightweightThemeReset();
 
     public ShapedButton(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -42,18 +36,6 @@ public abstract class ShapedButton extends GeckoImageButton
             mSide = CurveTowards.RIGHT;
 
         setWillNotDraw(false);
-    }
-
-    @Override
-    public void onAttachedToWindow() {
-        super.onAttachedToWindow();
-        mActivity.getLightweightTheme().addListener(this);
-    }
-
-    @Override
-    public void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-        mActivity.getLightweightTheme().removeListener(this);
     }
 
     @Override
@@ -96,11 +78,4 @@ public abstract class ShapedButton extends GeckoImageButton
 
         setBackgroundDrawable(getContext().getResources().getDrawable(resId));
     }
-
-    @Override
-    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        super.onLayout(changed, left, top, right, bottom);
-        onLightweightThemeChanged();
-    }
-
 }

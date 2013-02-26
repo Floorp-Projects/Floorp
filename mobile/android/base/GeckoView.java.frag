@@ -5,10 +5,13 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.widget.@VIEWTYPE@;
 
-public class Gecko@VIEWTYPE@ extends @VIEWTYPE@ {
+public class Gecko@VIEWTYPE@ extends @VIEWTYPE@
+                             implements LightweightTheme.OnChangeListener { 
+    private GeckoActivity mActivity;
     private static final int[] STATE_PRIVATE_MODE = { R.attr.state_private };
     private static final int[] STATE_LIGHT = { R.attr.state_light };
     private static final int[] STATE_DARK = { R.attr.state_dark };
@@ -16,9 +19,31 @@ public class Gecko@VIEWTYPE@ extends @VIEWTYPE@ {
     private boolean mIsPrivate = false;
     private boolean mIsLight = false;
     private boolean mIsDark = false;
+    private boolean mAutoUpdateTheme = true;
 
     public Gecko@VIEWTYPE@(Context context, AttributeSet attrs) {
         super(context, attrs);
+        mActivity = (GeckoActivity) context;
+
+        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.LightweightTheme);
+        mAutoUpdateTheme = a.getBoolean(R.styleable.LightweightTheme_autoUpdateTheme, true);
+        a.recycle();
+    }
+
+    @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+
+        if (mAutoUpdateTheme)
+            mActivity.getLightweightTheme().addListener(this);
+    }
+
+    @Override
+    public void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+
+        if (mAutoUpdateTheme)
+            mActivity.getLightweightTheme().removeListener(this);
     }
 
     @Override
@@ -33,6 +58,24 @@ public class Gecko@VIEWTYPE@ extends @VIEWTYPE@ {
             mergeDrawableStates(drawableState, STATE_DARK);
 
         return drawableState;
+    }
+
+    @Override
+    public void onLightweightThemeChanged() {
+        if (mAutoUpdateTheme && mActivity.getLightweightTheme().isEnabled())
+            setTheme(mActivity.getLightweightTheme().isLightTheme());
+    }
+
+    @Override
+    public void onLightweightThemeReset() {
+        if (mAutoUpdateTheme)
+            resetTheme();
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        onLightweightThemeChanged();
     }
 
     public boolean isPrivateMode() {
@@ -68,5 +111,16 @@ public class Gecko@VIEWTYPE@ extends @VIEWTYPE@ {
             mIsDark = false;
             refreshDrawableState();
         }
-    } 
+    }
+
+    public void setAutoUpdateTheme(boolean autoUpdateTheme) {
+        if (mAutoUpdateTheme != autoUpdateTheme) {
+            mAutoUpdateTheme = autoUpdateTheme;
+
+            if (mAutoUpdateTheme)
+                mActivity.getLightweightTheme().addListener(this);
+            else
+                mActivity.getLightweightTheme().removeListener(this);
+        }
+    }
 }

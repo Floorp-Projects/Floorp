@@ -223,6 +223,7 @@ public class AwesomeBarTabs extends TabHost
         for (int i = 0; i < tabWidget.getTabCount(); i++) {
             GeckoTextView view = (GeckoTextView) tabWidget.getChildTabViewAt(i);
             if (isPrivate) {
+                view.resetTheme();
                 view.setPrivateMode((i == selIndex) ? false : true);
             } else {
                 if (i == selIndex)
@@ -342,25 +343,12 @@ public class AwesomeBarTabs extends TabHost
         }
     }
 
-    public static class BackgroundLayout extends GeckoLinearLayout
-                                         implements LightweightTheme.OnChangeListener { 
+    public static class BackgroundLayout extends GeckoLinearLayout {
         private GeckoActivity mActivity;
 
         public BackgroundLayout(Context context, AttributeSet attrs) {
             super(context, attrs);
             mActivity = (GeckoActivity) context;
-        }
-
-        @Override
-        public void onAttachedToWindow() {
-            super.onAttachedToWindow();
-            mActivity.getLightweightTheme().addListener(this);
-        }
-
-        @Override
-        public void onDetachedFromWindow() {
-            super.onDetachedFromWindow();
-            mActivity.getLightweightTheme().removeListener(this);
         }
 
         @Override
@@ -372,7 +360,7 @@ public class AwesomeBarTabs extends TabHost
             drawable.setAlpha(255, 0);
 
             StateListDrawable stateList = new StateListDrawable();
-            stateList.addState(new int[] { R.attr.state_private }, new ColorDrawable(mActivity.getResources().getColor(R.color.background_normal)));
+            stateList.addState(new int[] { R.attr.state_private }, new ColorDrawable(mActivity.getResources().getColor(R.color.background_private)));
             stateList.addState(new int[] {}, drawable);
 
             int[] padding =  new int[] { getPaddingLeft(),
@@ -393,12 +381,6 @@ public class AwesomeBarTabs extends TabHost
                                        };
             setBackgroundResource(R.drawable.address_bar_bg);
             setPadding(padding[0], padding[1], padding[2], padding[3]);
-        }
-
-        @Override
-        protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-            super.onLayout(changed, left, top, right, bottom);
-            onLightweightThemeChanged();
         }
     }
 }
