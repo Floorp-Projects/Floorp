@@ -61,9 +61,12 @@
       <method name="onTitlebarClick">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          if (aEvent.button == 0) // left-click: toggle minimized.
+          if (aEvent.button == 0) { // left-click: toggle minimized.
             this.toggle();
-          else if (aEvent.button == 1) // middle-click: close chat
+            // if we restored it, we want to focus it.
+            if (!this.minimized)
+              this.parentNode.focus();
+          } else if (aEvent.button == 1) // middle-click: close chat
             this.close();
         ]]></body>
       </method>
@@ -145,8 +148,25 @@
         <body><![CDATA[
           if (!this.selectedChat)
             return;
-          let commandDispatcher = gBrowser.ownerDocument.commandDispatcher;
-          commandDispatcher.advanceFocusIntoSubtree(this.selectedChat);
+          Services.focus.focusedWindow = this.selectedChat.iframe.contentWindow;
+        ]]></body>
+      </method>
+
+      <method name="_isChatFocused">
+        <parameter name="aChatbox"/>
+        <body><![CDATA[
+          // If there are no XBL bindings for the chat it can't be focused.
+          if (!aChatbox.iframe)
+            return false;
+          let fw = Services.focus.focusedWindow;
+          if (!fw)
+            return false;
+          // We want to see if the focused window is in the subtree below our iframe...
+          let containingBrowser = fw.QueryInterface(Ci.nsIInterfaceRequestor)
+                                    .getInterface(Ci.nsIWebNavigation)
+                                    .QueryInterface(Ci.nsIDocShell)
+                                    .chromeEventHandler;
+          return containingBrowser == aChatbox.iframe;
         ]]></body>
       </method>
 
@@ -168,7 +188,6 @@
             this._selectedChat = val;
             if (val) {
               this._selectedChat.setAttribute("selected", "true");
-              this.focus();
             }
           }
           if (val) {
@@ -231,9 +250,12 @@
           // It's possible in the future we will track most-recently-selected
           // chats or similar to find the "best" candidate - for now though
           // the choice is somewhat arbitrary.
+          let moveFocus = this.selectedChat && this._isChatFocused(this.selectedChat);
           for (let other of this.children) {
             if (other != this.selectedChat && !other.minimized && !other.collapsed) {
               this.selectedChat = other;
+              if (moveFocus)
+                this.focus();
               return;
             }
           }
