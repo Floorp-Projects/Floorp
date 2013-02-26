@@ -18,6 +18,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=548828
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+if (navigator.platform.indexOf("Mac") == 0) {
+  SimpleTest.expectAssertions(0, 5);
+}
+
 /** Test for Bug 548828 **/
   var head = document.getElementsByTagName("head")[0];
   is(document.head, head, "document.head and document.getElementsByTagName(\"head\")[0] should match");

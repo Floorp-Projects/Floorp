@@ -9,6 +9,10 @@
       iframe { width: 90%; height: 200px; }
     </style>
 <script>
+if (navigator.platform.indexOf("Mac") == 0) {
+  SimpleTest.expectAssertions(0, 2);
+}
+
 function testTop() {
   window0 = window.open("iframe.html#http://test1.example.org:80/tests/docshell/test/navigation/navigate.html#top,location", "_blank", "width=10,height=10");
 

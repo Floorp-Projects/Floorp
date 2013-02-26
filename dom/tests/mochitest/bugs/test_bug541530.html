@@ -16,6 +16,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=541530
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+if (navigator.platform.indexOf("Mac") == 0) {
+  SimpleTest.expectAssertions(0, 3);
+} else if (navigator.platform.indexOf("Linux") == 0) {
+  SimpleTest.expectAssertions(0, 5);
+}
+
 var orig = window;
 window = {};
 

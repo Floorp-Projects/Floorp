@@ -10,6 +10,9 @@
   <!-- test code goes here -->
 <script type="application/javascript">
 <![CDATA[
+if (navigator.platform.indexOf("Linux") == 0) {
+  SimpleTest.expectAssertions(0, 1);
+}
 SimpleTest.waitForExplicitFinish();
 window.open("printpreview_helper.xul", "printpreview", "chrome,width=100,height=100");
 ]]></script>

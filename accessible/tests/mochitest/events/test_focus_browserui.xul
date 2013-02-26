@@ -24,6 +24,9 @@
 
   <script type="application/javascript">
   <![CDATA[
+    if (navigator.platform.indexOf("Linux") == 0) {
+      SimpleTest.expectAssertions(1);
+    }
     ////////////////////////////////////////////////////////////////////////////
     // Helpers
 

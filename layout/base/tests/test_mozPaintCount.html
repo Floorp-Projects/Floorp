@@ -16,6 +16,10 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+if (navigator.platform.indexOf("Linux") == 0) {
+  SimpleTest.expectAssertions(0, 2);
+}
+
 SimpleTest.waitForExplicitFinish();
 
 var startPaintCount = window.mozPaintCount;

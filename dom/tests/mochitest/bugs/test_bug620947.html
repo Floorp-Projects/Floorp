@@ -17,6 +17,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=620947
 <pre id="test">
 <script type="application/javascript">
 
+if (navigator.platform.indexOf("Mac") == 0) {
+  SimpleTest.expectAssertions(0, 1);
+}
+
 /** Test for Bug 620947 **/
 is(-1 in document.all, false, "shouldn't be there");
 is(document.all[-1], undefined, "shouldn't be able to get it");

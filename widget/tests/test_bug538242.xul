@@ -24,6 +24,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=538242
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
+if (navigator.platform.indexOf("Win") == 0) {
+  SimpleTest.expectAssertions(0, 1);
+}
+
 SimpleTest.waitForExplicitFinish();
 
 SimpleTest.waitForFocus(function () {

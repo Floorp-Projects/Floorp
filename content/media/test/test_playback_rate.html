@@ -10,6 +10,10 @@
 <pre id="test">
 <script class="testbody" type='application/javascript;version=1.8'>
 
+if (navigator.platform.indexOf("Win") == 0) {
+  SimpleTest.expectAssertions(0, 1);
+}
+
 let manager = new MediaTestManager;
 
 function rangeCheck(lhs, rhs, threshold) {

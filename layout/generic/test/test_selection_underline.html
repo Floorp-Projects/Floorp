@@ -8,6 +8,12 @@
 
 <script type="text/javascript">
 
+if (navigator.platform.indexOf("Win") == 0) {
+  SimpleTest.expectAssertions(0, 3);
+} else if (navigator.platform.indexOf("Linux") == 0) {
+  SimpleTest.expectAssertions(0, 1);
+}
+
 // Canvas related code stolen from layout/base/tests/bidi_numeral_test.js which
 // stole from http://developer.mozilla.org/en/docs/Code_snippets:Canvas
 

@@ -19,6 +19,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=342448
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+if (navigator.platform.indexOf("Mac") == 0) {
+  SimpleTest.expectAssertions(0, 1);
+}
+
 /** Test for Bug 342448 **/
 SimpleTest.waitForExplicitFinish();
 try {
