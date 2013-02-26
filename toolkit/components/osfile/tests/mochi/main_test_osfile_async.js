@@ -124,6 +124,16 @@ let reference_compare_files = function reference_compare_files(a, b, test) {
   is(a_contents, b_contents, "Contents of files " + a + " and " + b + " match");
 };
 
+let reference_dir_contents = function reference_dir_contents(path) {
+  let result = [];
+  let entries = new FileUtils.File(path).directoryEntries;
+  while (entries.hasMoreElements()) {
+    let entry = entries.getNext().QueryInterface(Components.interfaces.nsILocalFile);
+    result.push(entry.path);
+  }
+  return result;
+};
+
 let test = maketest("Main", function main(test) {
   return Task.spawn(function() {
     SimpleTest.waitForExplicitFinish();
@@ -531,7 +541,7 @@ let test_copy = maketest("copy", function copy(test) {
 });
 
 /**
- * Test OS.File.prototype.{removeEmptyDir, makeDir}
+ * Test OS.File.{removeEmptyDir, makeDir}
  */
 let test_mkdir = maketest("mkdir", function mkdir(test) {
   return Task.spawn(function() {
@@ -612,6 +622,17 @@ let test_iter = maketest("iter", function iter(test) {
     test.info("Obtained all files through nextBatch");
     test.isnot(allFiles1.length, 0, "There is at least one file");
     test.isnot(allFiles1[0].path, null, "Files have a path");
+
+    // Ensure that we have the same entries with |reference_dir_contents|
+    let referenceEntries = new Set();
+    for (let entry of reference_dir_contents(currentDir)) {
+      referenceEntries.add(entry);
+    }
+    test.is(referenceEntries.size, allFiles1.length, "All the entries in the directory have been listed");
+    for (let entry of allFiles1) {
+      test.ok(referenceEntries.has(entry.path), "File " + entry.path + " effectively exists");
+    }
+
     yield iterator.close();
     test.info("Closed iterator");
 
@@ -669,9 +690,34 @@ let test_iter = maketest("iter", function iter(test) {
     try {
       let files = yield iterator.nextBatch();
       is(files.length, allFiles1.length + 1, "The directory iterator has noticed the new file");
+      let exists = yield iterator.exists();
+      test.ok(exists, "After nextBatch, iterator detects that the directory exists");
     } finally {
       yield iterator.close();
     }
+
+    // Ensuring that opening a non-existing directory fails consistently
+    // once iteration starts.
+    try {
+      iterator = null;
+      iterator = new OS.File.DirectoryIterator("/I do not exist");
+      let exists = yield iterator.exists();
+      test.ok(!exists, "Before any iteration, iterator detects that the directory doesn't exist");
+      let exn = null;
+      try {
+        yield iterator.next();
+      } catch (ex if ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
+        exn = ex;
+        let exists = yield iterator.exists();
+        test.ok(!exists, "After one iteration, iterator detects that the directory doesn't exist");
+      }
+      test.ok(exn, "Iterating through a directory that does not exist has failed with becauseNoSuchFile");
+    } finally {
+      if (iterator) {
+        iterator.close();
+      }
+    }
+    test.ok(!!iterator, "The directory iterator for a non-existing directory was correctly created");
   });
 });
 
