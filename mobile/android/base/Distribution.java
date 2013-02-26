@@ -86,9 +86,6 @@ public final class Distribution {
                     }
                 }
 
-                Log.i("BOOM", "distributionSet: " + distributionSet);
-                Log.i("BOOM", "distPath: " + distPath);
-
                 if (distributionSet) {
                     GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Distribution:Set", distPath));
                     settings.edit().putInt(keyName, STATE_SET).commit();
