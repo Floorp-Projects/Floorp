@@ -19,6 +19,8 @@ class HTMLFrameElement : public nsGenericHTMLFrameElement,
                          public nsIDOMHTMLFrameElement
 {
 public:
+  using nsGenericHTMLFrameElement::SwapFrameLoaders;
+
   HTMLFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                    FromParser aFromParser = NOT_FROM_PARSER);
   virtual ~HTMLFrameElement();
