@@ -184,7 +184,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/HTMLBodyElement.h"
-#include "mozilla/dom/NodeFilterBinding.h"
 #include "mozilla/dom/UndoManager.h"
 #include "nsFrame.h"
 #include "nsDOMCaretPosition.h"
@@ -5355,28 +5354,14 @@ nsDocument::CreateNodeIterator(nsIDOMNode *aRoot,
   NS_ENSURE_TRUE(root, NS_ERROR_UNEXPECTED);
 
   ErrorResult rv;
-  NodeFilterHolder holder(aFilter);
-  *_retval = nsIDocument::CreateNodeIterator(*root, aWhatToShow, holder,
+  *_retval = nsIDocument::CreateNodeIterator(*root, aWhatToShow, aFilter,
                                              rv).get();
   return rv.ErrorCode();
 }
 
 already_AddRefed<nsIDOMNodeIterator>
 nsIDocument::CreateNodeIterator(nsINode& aRoot, uint32_t aWhatToShow,
-                                NodeFilter* aFilter,
-                                mozilla::ErrorResult& rv) const
-{
-  NodeFilterHolder holder(aFilter);
-  // We don't really know how to handle WebIDL callbacks yet, in
-  // nsTraversal, so just go ahead and convert to an XPCOM callback.
-  nsCOMPtr<nsIDOMNodeFilter> filter = holder.ToXPCOMCallback();
-  NodeFilterHolder holder2(filter);
-  return CreateNodeIterator(aRoot, aWhatToShow, holder2, rv);
-}
-
-already_AddRefed<nsIDOMNodeIterator>
-nsIDocument::CreateNodeIterator(nsINode& aRoot, uint32_t aWhatToShow,
-                                const NodeFilterHolder& aFilter,
+                                nsIDOMNodeFilter* aFilter,
                                 mozilla::ErrorResult& rv) const
 {
   nsINode* root = &aRoot;
@@ -5408,28 +5393,14 @@ nsDocument::CreateTreeWalker(nsIDOMNode *aRoot,
   NS_ENSURE_TRUE(root, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
 
   ErrorResult rv;
-  NodeFilterHolder holder(aFilter);
-  *_retval = nsIDocument::CreateTreeWalker(*root, aWhatToShow, holder,
+  *_retval = nsIDocument::CreateTreeWalker(*root, aWhatToShow, aFilter,
                                            rv).get();
   return rv.ErrorCode();
 }
 
 already_AddRefed<nsIDOMTreeWalker>
 nsIDocument::CreateTreeWalker(nsINode& aRoot, uint32_t aWhatToShow,
-                              NodeFilter* aFilter,
-                              mozilla::ErrorResult& rv) const
-{
-  NodeFilterHolder holder(aFilter);
-  // We don't really know how to handle WebIDL callbacks yet, in
-  // nsTraversal, so just go ahead and convert to an XPCOM callback.
-  nsCOMPtr<nsIDOMNodeFilter> filter = holder.ToXPCOMCallback();
-  NodeFilterHolder holder2(filter);
-  return CreateTreeWalker(aRoot, aWhatToShow, holder2, rv);
-}
-
-already_AddRefed<nsIDOMTreeWalker>
-nsIDocument::CreateTreeWalker(nsINode& aRoot, uint32_t aWhatToShow,
-                              const NodeFilterHolder& aFilter,
+                              nsIDOMNodeFilter* aFilter,
                               mozilla::ErrorResult& rv) const
 {
   nsINode* root = &aRoot;

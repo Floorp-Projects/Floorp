@@ -30,7 +30,7 @@ public:
 
     nsNodeIterator(nsINode *aRoot,
                    uint32_t aWhatToShow,
-                   const mozilla::dom::NodeFilterHolder &aFilter);
+                   nsIDOMNodeFilter *aFilter);
     virtual ~nsNodeIterator();
 
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
