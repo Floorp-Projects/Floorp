@@ -251,6 +251,9 @@ class GeckoInputConnection
     @Override
     public boolean performContextMenuAction(int id) {
         Editable editable = getEditable();
+        if (editable == null) {
+            return false;
+        }
         int selStart = Selection.getSelectionStart(editable);
         int selEnd = Selection.getSelectionEnd(editable);
 
@@ -296,6 +299,9 @@ class GeckoInputConnection
             mUpdateRequest = req;
 
         Editable editable = getEditable();
+        if (editable == null) {
+            return null;
+        }
         int selStart = Selection.getSelectionStart(editable);
         int selEnd = Selection.getSelectionEnd(editable);
 
@@ -406,12 +412,11 @@ class GeckoInputConnection
     private void notifyTextChange() {
 
         final InputMethodManager imm = getInputMethodManager();
-        if (imm == null) {
-            return;
-        }
         final View v = getView();
         final Editable editable = getEditable();
-
+        if (imm == null || v == null || editable == null) {
+            return;
+        }
         mUpdateExtract.flags = 0;
         // Update the entire Editable range
         mUpdateExtract.partialStartOffset = -1;
@@ -440,11 +445,11 @@ class GeckoInputConnection
     private void notifySelectionChange(int start, int end) {
 
         final InputMethodManager imm = getInputMethodManager();
-        if (imm == null) {
-            return;
-        }
         final View v = getView();
         final Editable editable = getEditable();
+        if (imm == null || v == null || editable == null) {
+            return;
+        }
         imm.updateSelection(v, start, end, getComposingSpanStart(editable),
                             getComposingSpanEnd(editable));
     }
