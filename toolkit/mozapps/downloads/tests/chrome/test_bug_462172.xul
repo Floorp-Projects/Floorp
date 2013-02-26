@@ -32,6 +32,10 @@ close window
   <script type="application/javascript">
   <![CDATA[
 
+if (navigator.platform.indexOf("Linux") == 0) {
+  SimpleTest.expectAssertions(1);
+}
+
   /** Test for Bug 462172 **/
 var missingFileElid;
 var realFileElid;

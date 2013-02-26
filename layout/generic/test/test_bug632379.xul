@@ -166,6 +166,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=632379
 
 <script class="testbody" type="application/javascript"><![CDATA[
 
+if (navigator.platform.indexOf("Linux") == 0) {
+  SimpleTest.expectAssertions(0, 2);
+}
+
 /** Test for Bug 632379 **/
 // Tests whether scrolling a menu affects the position at which popups appear
 var pos = new Array(2);

@@ -26,6 +26,10 @@
 <script type="application/javascript">
 <![CDATA[
 
+if (navigator.platform.indexOf("Win") == 0) {
+  SimpleTest.expectAssertions(0, 1);
+}
+
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(test);
 

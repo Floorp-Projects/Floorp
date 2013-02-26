@@ -22,6 +22,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=42976
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+if (navigator.platform.indexOf("Win") != 0) {
+  SimpleTest.expectAssertions(0, 1);
+}
+
 SimpleTest.waitForExplicitFinish();
 
 function runTest() {

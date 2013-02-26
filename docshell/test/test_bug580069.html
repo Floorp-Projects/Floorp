@@ -15,6 +15,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=580069
 <iframe id='iframe' src='file_bug580069_1.html'></iframe>
 
 <script type="application/javascript">
+
+SimpleTest.expectAssertions(1);
+
 SimpleTest.waitForExplicitFinish();
 
 var iframe = document.getElementById('iframe');

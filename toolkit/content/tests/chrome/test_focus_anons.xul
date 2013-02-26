@@ -24,6 +24,12 @@
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
+if (navigator.platform.indexOf("Win") == 0) {
+  SimpleTest.expectAssertions(0, 4);
+} else if (navigator.platform.indexOf("Mac") == 0) {
+  SimpleTest.expectAssertions(0, 2);
+}
+
 SimpleTest.waitForExplicitFinish();
 
 var gBlurs = 0, gFocuses = 0;

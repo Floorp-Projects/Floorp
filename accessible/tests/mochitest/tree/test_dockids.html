@@ -16,6 +16,10 @@
           src="../states.js"></script>
 
   <script type="application/javascript">
+  if (navigator.platform.indexOf("Win") == 0) {
+    SimpleTest.expectAssertions(0, 1);
+  }
+
   function doTest()
   {
     var tree =

@@ -23,6 +23,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=796890
 </div>
 <pre id="test">
 <script type="application/javascript">
+
+if (navigator.platform.indexOf("Win") == 0) {
+  SimpleTest.expectAssertions(0, 9);
+} else {
+  SimpleTest.expectAssertions(0, 1);
+}
+
   var audioLocal;
   var audioPCLocal;
   var audioPCRemote;

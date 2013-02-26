@@ -49,6 +49,8 @@
 
 <script>
 <![CDATA[
+SimpleTest.expectAssertions(4);
+
 SimpleTest.waitForExplicitFinish();
 
 var testid ="listbox element";
