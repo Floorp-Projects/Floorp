@@ -255,6 +255,8 @@ MOCHITEST_FILES = \
 		file_fullscreen-esc-exit-inner.html \
 		file_fullscreen-rollback.html \
 		file_fullscreen-svg-element.html \
+		file_fullscreen-multiple.html \
+		file_fullscreen-multiple-inner.html \
 		test_li_attributes_reflection.html \
 		test_link_attributes_reflection.html \
 		test_ol_attributes_reflection.html \

@@ -6630,16 +6630,17 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
             (root = nsContentUtils::GetRootDocument(doc)) &&
             root->IsFullScreenDoc()) {
           // Prevent default action on ESC key press when exiting
-          // DOM full-screen mode. This prevents the browser ESC key
+          // DOM fullscreen mode. This prevents the browser ESC key
           // handler from stopping all loads in the document, which
           // would cause <video> loads to stop.
           aEvent->mFlags.mDefaultPrevented = true;
           aEvent->mFlags.mOnlyChromeDispatch = true;
 
           if (aEvent->message == NS_KEY_UP) {
-             // ESC key released while in DOM full-screen mode.
-             // Exit full-screen mode.
-            nsIDocument::ExitFullScreen(true);
+            // ESC key released while in DOM fullscreen mode.
+            // Fully exit all browser windows and documents from
+            // fullscreen mode.
+            nsIDocument::ExitFullscreen(nullptr, /* async */ true);
           }
         }
         // Else not full-screen mode or key code is unrestricted, fall
