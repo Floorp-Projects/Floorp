@@ -1,0 +1,16 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(7ad4b7f1-5a88-41aa-9b40-713009bc57b3)]
+interface nsIPrivateBrowsingService : nsISupports
+{
+  // This space is intentionally left blank!
+
+  // This is a remnant from the old dying global private browsing service.
+  // You should fix your code to not rely on this interface, as it will
+  // be removed completely soon.
+};
+

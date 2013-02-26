@@ -62,6 +62,7 @@ XPIDLSRCS	= \
 		nsIPermission.idl \
 		nsIPermissionManager.idl \
 		nsIPrivateBrowsingChannel.idl \
+		nsIPrivateBrowsingServiceObsolete.idl \
 		nsIProgressEventSink.idl \
 		nsIPrompt.idl \
 		nsIProtocolProxyService.idl \
