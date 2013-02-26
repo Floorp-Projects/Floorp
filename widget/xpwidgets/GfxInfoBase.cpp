@@ -33,6 +33,7 @@
 
 using namespace mozilla::widget;
 using namespace mozilla;
+using mozilla::MutexAutoLock;
 
 nsTArray<GfxDriverInfo>* GfxInfoBase::mDriverInfo;
 bool GfxInfoBase::mDriverInfoObserverInitialized;
@@ -86,7 +87,7 @@ void InitGfxDriverInfoShutdownObserver()
 using namespace mozilla::widget;
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS3(GfxInfoBase, nsIGfxInfo, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_THREADSAFE_ISUPPORTS3(GfxInfoBase, nsIGfxInfo, nsIObserver, nsISupportsWeakReference)
 
 #define BLACKLIST_PREF_BRANCH "gfx.blacklist."
 #define SUGGESTED_VERSION_PREF BLACKLIST_PREF_BRANCH "suggested-driver-version"
@@ -531,6 +532,7 @@ GfxInfoBase::Observe(nsISupports* aSubject, const char* aTopic,
 
 GfxInfoBase::GfxInfoBase()
     : mFailureCount(0)
+    , mMutex("GfxInfoBase")
 {
 }
 
@@ -838,14 +840,15 @@ GfxInfoBase::EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo)
 NS_IMETHODIMP_(void)
 GfxInfoBase::LogFailure(const nsACString &failure)
 {
+  MutexAutoLock lock(mMutex);
   /* We only keep the first 9 failures */
   if (mFailureCount < ArrayLength(mFailures)) {
     mFailures[mFailureCount++] = failure;
 
     /* record it in the crash notes too */
-#if defined(MOZ_CRASHREPORTER)
-    CrashReporter::AppendAppNotesToCrashReport(failure);
-#endif
+    #if defined(MOZ_CRASHREPORTER)
+      CrashReporter::AppendAppNotesToCrashReport(failure);
+    #endif
   }
 
 }

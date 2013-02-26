@@ -267,24 +267,6 @@ AccessCheck::isScriptAccessOnly(JSContext *cx, JSObject *wrapper)
     return false;
 }
 
-void
-AccessCheck::deny(JSContext *cx, jsid id)
-{
-    if (id == JSID_VOID) {
-        JS_ReportError(cx, "Permission denied to access object");
-    } else {
-        jsval idval;
-        if (!JS_IdToValue(cx, id, &idval))
-            return;
-        JSString *str = JS_ValueToString(cx, idval);
-        if (!str)
-            return;
-        const jschar *chars = JS_GetStringCharsZ(cx, str);
-        if (chars)
-            JS_ReportError(cx, "Permission denied to access property '%hs'", chars);
-    }
-}
-
 enum Access { READ = (1<<0), WRITE = (1<<1), NO_ACCESS = 0 };
 
 static bool

@@ -28,7 +28,7 @@ SimpleTest.waitForExplicitFinish();
 function clearAuthCache()
 {
   var authMgr = SpecialPowers.Cc['@mozilla.org/network/http-auth-manager;1']
-                             .getService(Components.interfaces.nsIHttpAuthManager);
+                             .getService(SpecialPowers.Ci.nsIHttpAuthManager);
   authMgr.clearAll();
 }
 

@@ -94,6 +94,15 @@ if test "$CLANG_CXX"; then
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-unknown-warning-option -Wno-return-type-c-linkage -Wno-mismatched-tags"
 fi
 
+if test -z "$GNU_CC"; then
+    case "$target" in
+    *-mingw*)
+        ## Warning 4099 (equivalent of mismatched-tags) is disabled (bug 780474)
+        ## for the same reasons as above.
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -wd4099"
+    esac
+fi
+
 if test "$GNU_CC"; then
     CFLAGS="$CFLAGS -ffunction-sections -fdata-sections"
     CXXFLAGS="$CXXFLAGS -ffunction-sections -fdata-sections -fno-exceptions"

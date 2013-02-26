@@ -10,7 +10,7 @@ var archiveReaderEnabled = false;
 // and content mochitests (where the |Components| object is accessible only as
 // SpecialPowers.Components). Expose Components if necessary here to make things
 // work everywhere.
-if (typeof Components === 'undefined')
+if (typeof Components === 'undefined' && typeof SpecialPowers === 'object')
   Components = SpecialPowers.Components;
 
 function executeSoon(aFun)

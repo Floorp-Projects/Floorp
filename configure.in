@@ -2157,8 +2157,9 @@ ia64*-hpux*)
         # that behavior) that it's better to turn it off.
         # MSVC warning C4819 warns some UTF-8 characters (e.g. copyright sign)
         # on non-Western system locales even if it is in a comment.
+        # khuey says we can safely ignore MSVC warning C4251
         CFLAGS="$CFLAGS -wd4819"
-        CXXFLAGS="$CXXFLAGS -wd4345 -wd4351 -wd4482 -wd4800 -wd4819"
+        CXXFLAGS="$CXXFLAGS -wd4251 -wd4345 -wd4351 -wd4482 -wd4800 -wd4819"
         # make 'foo == bar;' error out
         CFLAGS="$CFLAGS -we4553"
         CXXFLAGS="$CXXFLAGS -we4553"
@@ -8971,7 +8972,7 @@ echo $MAKEFILES > unallmakefiles
 
 AC_OUTPUT($MAKEFILES)
 
-# target_arch is from {ia32|x64|arm}
+# target_arch is from {ia32|x64|arm|ppc}
 case "$CPU_ARCH" in
 x86_64 | ia64)
     WEBRTC_TARGET_ARCH=x64
@@ -8985,6 +8986,9 @@ x86)
     WEBRTC_TARGET_ARCH=ia32
     ;;
 
+ppc*)
+    WEBRTC_TARGET_ARCH=ppc
+    ;;
 *)
 # unsupported arch for webrtc
     WEBRTC_TARGET_ARCH=unknown

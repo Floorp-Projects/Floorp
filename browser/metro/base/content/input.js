@@ -219,7 +219,7 @@ var TouchModule = {
     this._targetScrollInterface = targetScrollInterface;
 
     if (!this._targetScrollbox) {
-      return false;
+      return;
     }
 
     // XXX shouldn't dragger always be valid here?
