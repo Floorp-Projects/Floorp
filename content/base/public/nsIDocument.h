@@ -102,8 +102,8 @@ template<typename> class Sequence;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x4e6f7d97, 0x091e, 0x4eda, \
-  { 0xb7, 0xd6, 0xfe, 0xb0, 0xb8, 0x01, 0x2a, 0x93 } }
+{ 0x45ce048f, 0x5970, 0x411e, \
+  { 0xaa, 0x99, 0x12, 0xed, 0x3a, 0x55, 0xc9, 0xc3 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -886,7 +886,7 @@ public:
    * so that all its fullscreen element stacks are empty; we must continue the
    * rollback in this parent process' doc tree branch which is fullscreen.
    * Note that only one branch of the document tree can have its documents in
-   * fullscreen state at one time. We're in inconsistent state if the a 
+   * fullscreen state at one time. We're in inconsistent state if a
    * fullscreen document has a parent and that parent isn't fullscreen. We
    * preserve this property across process boundaries.
    */
@@ -905,6 +905,25 @@ public:
   virtual bool IsFullScreenDoc() = 0;
 
   /**
+   * Returns true if this document is a fullscreen leaf document, i.e. it
+   * is in fullscreen mode and has no fullscreen children.
+   */
+  virtual bool IsFullscreenLeaf() = 0;
+
+  /**
+   * Returns the document which is at the root of this document's branch
+   * in the in-process document tree. Returns nullptr if the document isn't
+   * fullscreen.
+   */
+  virtual nsIDocument* GetFullscreenRoot() = 0;
+
+  /**
+   * Sets the fullscreen root to aRoot. This stores a weak reference to aRoot
+   * in this document.
+   */
+  virtual void SetFullscreenRoot(nsIDocument* aRoot) = 0;
+
+  /**
    * Sets whether this document is approved for fullscreen mode.
    * Documents aren't approved for fullscreen until chrome has sent a
    * "fullscreen-approved" notification with a subject which is a pointer
@@ -913,12 +932,14 @@ public:
   virtual void SetApprovedForFullscreen(bool aIsApproved) = 0;
 
   /**
-   * Exits all documents from DOM full-screen mode, and moves the top-level
-   * browser window out of full-screen mode. If aRunAsync is true, this runs
-   * asynchronously.
+   * Exits documents out of DOM fullscreen mode. If aDocument is non null,
+   * only its ancestors and descendants exit fullscreen, i.e. if there are
+   * multiple windows/doctrees in fullscreen mode, only the one containing
+   * aDocument exits fullscreen mode. If aDocument is null, all windows
+   * and documents exit fullscreen. If aRunAsync is true, fullscreen is
+   * executed asynchronously.
    */
-  static void ExitFullScreen(bool aRunAsync);
-
+  static void ExitFullscreen(nsIDocument* aDocument, bool aRunAsync);
 
   virtual void RequestPointerLock(Element* aElement) = 0;
 
