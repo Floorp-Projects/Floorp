@@ -16,6 +16,9 @@
 #include "nsINode.h"
 #include "nsDOMClassInfoID.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/NodeFilterBinding.h"
+
+using namespace mozilla::dom;
 
 /*
  * Factories, constructors and destructors
@@ -23,7 +26,7 @@
 
 nsTreeWalker::nsTreeWalker(nsINode *aRoot,
                            uint32_t aWhatToShow,
-                           nsIDOMNodeFilter *aFilter) :
+                           const NodeFilterHolder &aFilter) :
     nsTraversal(aRoot, aWhatToShow, aFilter),
     mCurrentNode(aRoot)
 {
@@ -82,7 +85,7 @@ NS_IMETHODIMP nsTreeWalker::GetFilter(nsIDOMNodeFilter * *aFilter)
 {
     NS_ENSURE_ARG_POINTER(aFilter);
 
-    NS_IF_ADDREF(*aFilter = mFilter);
+    *aFilter = mFilter.ToXPCOMCallback().get();
 
     return NS_OK;
 }

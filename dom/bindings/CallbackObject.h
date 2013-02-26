@@ -181,7 +181,7 @@ template<class WebIDLCallbackT, class XPCOMCallbackT>
 class CallbackObjectHolder;
 
 template<class T, class U>
-inline void ImplCycleCollectionUnlink(CallbackObjectHolder<T, U>& aField);
+void ImplCycleCollectionUnlink(CallbackObjectHolder<T, U>& aField);
 
 class CallbackObjectHolderBase
 {
@@ -343,7 +343,7 @@ public:
 private:
   static const uintptr_t XPCOMCallbackFlag = 1u;
 
-  friend inline void
+  friend void
   ImplCycleCollectionUnlink<WebIDLCallbackT,
                             XPCOMCallbackT>(CallbackObjectHolder& aField);
 
@@ -369,7 +369,7 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
 }
 
 template<class T, class U>
-inline void
+void
 ImplCycleCollectionUnlink(CallbackObjectHolder<T, U>& aField)
 {
   aField.UnlinkSelf();
