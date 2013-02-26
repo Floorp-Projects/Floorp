@@ -44,15 +44,8 @@ NS_INTERFACE_MAP_END
 
 bool
 TCPSocketParent::Init(const nsString& aHost, const uint16_t& aPort, const bool& aUseSSL,
-                      const nsString& aBinaryType, PBrowserParent* aBrowser)
+                      const nsString& aBinaryType)
 {
-  // We don't have browser actors in xpcshell, and hence can't run automated
-  // tests without this loophole.
-  if (aBrowser && !AssertAppProcessPermission(aBrowser, "tcp-socket")) {
-    FireInteralError(this, __LINE__);
-    return true;
-  }
-
   nsresult rv;
   mIntermediary = do_CreateInstance("@mozilla.org/tcp-socket-intermediary;1", &rv);
   if (NS_FAILED(rv)) {
