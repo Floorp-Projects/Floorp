@@ -12,6 +12,8 @@
 
   <script class="testbody" type="text/javascript">
 
+  SimpleTest.expectAssertions(3);
+
   // Clear the default onload assigned to test start because we must
   // wait for replaced image to load and only after that test the security state
   var onLoadFunction = window.onload;

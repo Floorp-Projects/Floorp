@@ -26,6 +26,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=762993
 
 "use strict";
 
+SimpleTest.expectAssertions(2);
+
 SimpleTest.waitForExplicitFinish();
 
 const Cc = Components.classes;

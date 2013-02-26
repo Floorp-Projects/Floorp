@@ -88,6 +88,7 @@ SVGFEImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
 
   if (imageLoader) {
     imageLoader->FrameDestroyed(this);
+    imageLoader->DecrementVisibleCount();
   }
 
   SVGFEImageFrameBase::DestroyFrom(aDestructRoot);
@@ -108,6 +109,8 @@ SVGFEImageFrame::Init(nsIContent* aContent,
 
   if (imageLoader) {
     imageLoader->FrameCreated(this);
+    // We assume that feImage's are always visible.
+    imageLoader->IncrementVisibleCount();
   }
 
   return NS_OK;

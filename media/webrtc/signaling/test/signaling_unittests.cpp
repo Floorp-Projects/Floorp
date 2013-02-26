@@ -746,20 +746,26 @@ void CreateAnswer(sipcc::MediaConstraints& constraints, std::string offer,
     offer_ = pObserver->lastString;
   }
 
-  void SetRemote(TestObserver::Action action, std::string remote) {
+  void SetRemote(TestObserver::Action action, std::string remote,
+                 bool ignoreError = false) {
     pObserver->state = TestObserver::stateNoResponse;
     ASSERT_EQ(pc->SetRemoteDescription(action, remote.c_str()), NS_OK);
     ASSERT_TRUE_WAIT(pObserver->state != TestObserver::stateNoResponse,
                      kDefaultTimeout);
-    ASSERT_TRUE(pObserver->state == TestObserver::stateSuccess);
+    if (!ignoreError) {
+      ASSERT_TRUE(pObserver->state == TestObserver::stateSuccess);
+    }
   }
 
-  void SetLocal(TestObserver::Action action, std::string local) {
+  void SetLocal(TestObserver::Action action, std::string local,
+                bool ignoreError = false) {
     pObserver->state = TestObserver::stateNoResponse;
     ASSERT_EQ(pc->SetLocalDescription(action, local.c_str()), NS_OK);
     ASSERT_TRUE_WAIT(pObserver->state != TestObserver::stateNoResponse,
                      kDefaultTimeout);
-    ASSERT_TRUE(pObserver->state == TestObserver::stateSuccess);
+    if (!ignoreError) {
+      ASSERT_TRUE(pObserver->state == TestObserver::stateSuccess);
+    }
   }
 
   void DoTrickleIce(ParsedSDP &sdp) {
@@ -1932,6 +1938,60 @@ TEST_F(SignalingAgentTest, CreateUntilFailThenWait) {
   }
   std::cerr << "Failed after creating " << i << " PCs " << std::endl;
   PR_Sleep(10000);  // Wait to see if we crash
+}
+
+/*
+ * Test for Bug 843595
+ */
+TEST_F(SignalingTest, missingUfrag)
+{
+  sipcc::MediaConstraints constraints;
+  std::string offer =
+    "v=0\r\n"
+    "o=Mozilla-SIPUA 2208 0 IN IP4 0.0.0.0\r\n"
+    "s=SIP Call\r\n"
+    "t=0 0\r\n"
+    "a=ice-pwd:4450d5a4a5f097855c16fa079893be18\r\n"
+    "a=fingerprint:sha-256 23:9A:2E:43:94:42:CF:46:68:FC:62:F9:F4:48:61:DB:"
+      "2F:8C:C9:FF:6B:25:54:9D:41:09:EF:83:A8:19:FC:B6\r\n"
+    "m=audio 56187 RTP/SAVPF 109 0 8 101\r\n"
+    "c=IN IP4 77.9.79.167\r\n"
+    "a=rtpmap:109 opus/48000/2\r\n"
+    "a=ptime:20\r\n"
+    "a=rtpmap:0 PCMU/8000\r\n"
+    "a=rtpmap:8 PCMA/8000\r\n"
+    "a=rtpmap:101 telephone-event/8000\r\n"
+    "a=fmtp:101 0-15\r\n"
+    "a=sendrecv\r\n"
+    "a=candidate:0 1 UDP 2113601791 192.168.178.20 56187 typ host\r\n"
+    "a=candidate:1 1 UDP 1694236671 77.9.79.167 56187 typ srflx raddr "
+      "192.168.178.20 rport 56187\r\n"
+    "a=candidate:0 2 UDP 2113601790 192.168.178.20 52955 typ host\r\n"
+    "a=candidate:1 2 UDP 1694236670 77.9.79.167 52955 typ srflx raddr "
+      "192.168.178.20 rport 52955\r\n"
+    "m=video 49929 RTP/SAVPF 120\r\n"
+    "c=IN IP4 77.9.79.167\r\n"
+    "a=rtpmap:120 VP8/90000\r\n"
+    "a=recvonly\r\n"
+    "a=candidate:0 1 UDP 2113601791 192.168.178.20 49929 typ host\r\n"
+    "a=candidate:1 1 UDP 1694236671 77.9.79.167 49929 typ srflx raddr "
+      "192.168.178.20 rport 49929\r\n"
+    "a=candidate:0 2 UDP 2113601790 192.168.178.20 50769 typ host\r\n"
+    "a=candidate:1 2 UDP 1694236670 77.9.79.167 50769 typ srflx raddr "
+      "192.168.178.20 rport 50769\r\n"
+    "m=application 54054 SCTP/DTLS 5000 \r\n"
+    "c=IN IP4 77.9.79.167\r\n"
+    "a=fmtp:HuRUu]Dtcl\\zM,7(OmEU%O$gU]x/z\tD protocol=webrtc-datachannel;"
+      "streams=16\r\n"
+    "a=sendrecv\r\n";
+
+  a1_.SetLocal(TestObserver::OFFER, offer, true);
+  a2_.SetRemote(TestObserver::OFFER, offer, true);
+  a2_.CreateAnswer(constraints, offer, OFFER_AV | ANSWER_AV);
+  a2_.SetLocal(TestObserver::ANSWER, a2_.answer(), true);
+  a1_.SetRemote(TestObserver::ANSWER, a2_.answer(), true);
+  // We don't check anything in particular for success here -- simply not
+  // crashing by now is enough to declare success.
 }
 
 } // End namespace test.

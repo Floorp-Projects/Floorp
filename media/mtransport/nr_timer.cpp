@@ -53,9 +53,11 @@
 
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIEventTarget.h"
 #include "nsITimer.h"
 #include "nsNetCID.h"
+#include "runnable_utils.h"
 
 extern "C" {
 #include "nr_api.h"
@@ -105,12 +107,25 @@ NS_IMETHODIMP nrappkitTimerCallback::Notify(nsITimer *timer) {
 
 using namespace mozilla;
 
+// These timers must only be used from the STS thread.
+// This function is a helper that enforces that.
+static void CheckSTSThread() {
+  nsresult rv;
+
+  nsCOMPtr<nsIEventTarget> sts_thread;
+
+  sts_thread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
+
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  ASSERT_ON_THREAD(sts_thread);
+}
+
 int NR_async_timer_set(int timeout, NR_async_cb cb, void *arg, char *func,
                        int l, void **handle) {
   nsresult rv;
+  CheckSTSThread();
 
   nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-
   if (NS_FAILED(rv)) {
     return(R_FAILED);
   }
@@ -134,10 +149,14 @@ int NR_async_timer_set(int timeout, NR_async_cb cb, void *arg, char *func,
 }
 
 int NR_async_schedule(NR_async_cb cb, void *arg, char *func, int l) {
+  // No need to check the thread because we check it next in the
+  // timer set.
   return NR_async_timer_set(0, cb, arg, func, l, nullptr);
 }
 
 int NR_async_timer_cancel(void *handle) {
+  CheckSTSThread();
+
   if (!handle)
     return 0;
 

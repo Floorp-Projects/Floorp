@@ -13,41 +13,16 @@ var ContextMenuHandler = {
     // Events we catch from content during the bubbling phase
     addEventListener("contextmenu", this, false);
     addEventListener("pagehide", this, false);
-    addEventListener("select", this, false);
 
     // Messages we receive from browser
+    // Command sent over from browser that only we can handle.
     addMessageListener("Browser:ContextCommand", this, false);
+    // InvokeContextAtPoint is sent to us from browser's selection
+    // overlay when it traps a contextmenu event. In response we
+    // should invoke context menu logic at the point specified.
+    addMessageListener("Browser:InvokeContextAtPoint", this, false);
 
     this.popupNode = null;
-  },
-
-  _getLinkURL: function ch_getLinkURL(aLink) {
-    let href = aLink.href;
-    if (href)
-      return href;
-
-    href = aLink.getAttributeNS(kXLinkNamespace, "href");
-    if (!href || !href.match(/\S/)) {
-      // Without this we try to save as the current doc,
-      // for example, HTML case also throws if empty
-      throw "Empty href";
-    }
-
-    return Util.makeURLAbsolute(aLink.baseURI, href);
-  },
-
-  _getURI: function ch_getURI(aURL) {
-    try {
-      return Util.makeURI(aURL);
-    } catch (ex) { }
-
-    return null;
-  },
-
-  _getProtocol: function ch_getProtocol(aURI) {
-    if (aURI)
-      return aURI.scheme;
-    return null;
   },
 
   handleEvent: function ch_handleEvent(aEvent) {
@@ -58,12 +33,25 @@ var ContextMenuHandler = {
       case "pagehide":
         this.reset();
         break;
-      case "select":
-        break;
     }
   },
 
   receiveMessage: function ch_receiveMessage(aMessage) {
+    switch (aMessage.name) {
+      case "Browser:ContextCommand":
+        this._onContextCommand(aMessage);
+      break;
+      case "Browser:InvokeContextAtPoint":
+        this._onContextAtPoint(aMessage);
+      break;
+    }
+  },
+
+  /*
+   * Handler for commands send over from browser's ContextCommands.js
+   * in response to certain context menu actions only we can handle.
+   */
+  _onContextCommand: function _onContextCommand(aMessage) {
     let node = this.popupNode;
     let command = aMessage.json.command;
 
@@ -97,6 +85,17 @@ var ContextMenuHandler = {
     }
   },
 
+  /*
+   * Handler for selection overlay context menu events.
+   */
+  _onContextAtPoint: function _onContextCommand(aMessage) {
+    // we need to find popupNode as if the context menu were
+    // invoked on underlying content.
+    let elem = elementFromPoint(aMessage.json.xPos, aMessage.json.yPos);
+    this._processPopupNode(elem, aMessage.json.xPos, aMessage.json.yPos,
+                           Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH);
+  },
+
   /******************************************************
    * Event handlers
    */
@@ -106,7 +105,7 @@ var ContextMenuHandler = {
     this._target = null;
   },
 
-  // content contextmenu
+  // content contextmenu handler
   _onContentContextMenu: function _onContentContextMenu(aEvent) {
     if (aEvent.defaultPrevented)
       return;
@@ -115,6 +114,80 @@ var ContextMenuHandler = {
     aEvent.stopPropagation();
     aEvent.preventDefault();
 
+    this._processPopupNode(aEvent.originalTarget, aEvent.clientX,
+                           aEvent.clientY, aEvent.mozInputSource);
+  },
+
+  /******************************************************
+   * ContextCommand handlers
+   */
+
+  _onSelectAll: function _onSelectAll() {
+    if (this._isTextInput(this._target)) {
+      // select all text in the input control
+      this._target.select();
+    } else {
+      // select the entire document
+      content.getSelection().selectAllChildren(content.document);
+    }
+    this.reset();
+  },
+
+  _onPaste: function _onPaste() {
+    // paste text if this is an input control
+    if (this._isTextInput(this._target)) {
+      let edit = this._target.QueryInterface(Ci.nsIDOMNSEditableElement);
+      if (edit) {
+        edit.editor.paste(Ci.nsIClipboard.kGlobalClipboard);
+      } else {
+        Util.dumpLn("error: target element does not support nsIDOMNSEditableElement");
+      }
+    }
+    this.reset();
+  },
+
+  _onCopyImage: function _onCopyImage() {
+    Util.copyImageToClipboard(this._target);
+  },
+
+  /******************************************************
+   * Utility routines
+   */
+
+   /*
+    * _translateToTopLevelWindow - Given a potential coordinate set within
+    * a subframe, translate up to the parent window which is what front
+    * end code expect.
+    */
+  _translateToTopLevelWindow: function _translateToTopLevelWindow(aPopupNode) {
+    let offsetX = 0;
+    let offsetY = 0;
+    let element = aPopupNode;
+    while (element &&
+           element.ownerDocument &&
+           element.ownerDocument.defaultView != content) {
+      element = element.ownerDocument.defaultView.frameElement;
+      let rect = element.getBoundingClientRect();
+      offsetX += rect.left;
+      offsetY += rect.top;
+    }
+    return { offsetX: offsetX, offsetY: offsetY };
+  },
+
+  /*
+   * _processPopupNode - Generate and send a Content:ContextMenu message
+   * to browser detailing the underlying content types at this.popupNode.
+   * Note the event we receive targets the sub frame (if there is one) of
+   * the page.
+   */
+  _processPopupNode: function _processPopupNode(aPopupNode, aX, aY, aInputSrc) {
+    if (!aPopupNode)
+      return;
+    let { offsetX: offsetX, offsetY: offsetY } =
+      this._translateToTopLevelWindow(aPopupNode);
+    let popupNode = this.popupNode = aPopupNode;
+    let imageUrl = "";
+
     let state = {
       types: [],
       label: "",
@@ -122,12 +195,7 @@ var ContextMenuHandler = {
       linkTitle: "",
       linkProtocol: null,
       mediaURL: "",
-      x: aEvent.x,
-      y: aEvent.y
     };
-
-    let popupNode = this.popupNode = aEvent.originalTarget;
-    let imageUrl = "";
 
     // Do checks for nodes that never have children.
     if (popupNode.nodeType == Ci.nsIDOMNode.ELEMENT_NODE) {
@@ -248,9 +316,9 @@ var ContextMenuHandler = {
     }
 
     // populate position and event source
-    state.xPos = aEvent.clientX;
-    state.yPos = aEvent.clientY;
-    state.source = aEvent.mozInputSource;
+    state.xPos = offsetX + aX;
+    state.yPos = offsetY + aY;
+    state.source = aInputSrc;
 
     for (let i = 0; i < this._types.length; i++)
       if (this._types[i].handler(state, popupNode))
@@ -258,39 +326,6 @@ var ContextMenuHandler = {
 
     sendAsyncMessage("Content:ContextMenu", state);
   },
-
-  _onSelectAll: function _onSelectAll() {
-    if (this._isTextInput(this._target)) {
-      // select all text in the input control
-      this._target.select();
-    } else {
-      // select the entire document
-      content.getSelection().selectAllChildren(content.document);
-    }
-    this.reset();
-  },
-
-  _onPaste: function _onPaste() {
-    // paste text if this is an input control
-    if (this._isTextInput(this._target)) {
-      let edit = this._target.QueryInterface(Ci.nsIDOMNSEditableElement);
-      if (edit) {
-        edit.editor.paste(Ci.nsIClipboard.kGlobalClipboard);
-      } else {
-        Util.dumpLn("error: target element does not support nsIDOMNSEditableElement");
-      }
-    }
-    this.reset();
-  },
-
-  _onCopyImage: function _onCopyImage() {
-    Util.copyImageToClipboard(this._target);
-  },
-
-  /*
-   * Utility routines used in testing for various
-   * HTML element types.
-   */
 
   _isTextInput: function _isTextInput(element) {
     return ((element instanceof Ci.nsIDOMHTMLInputElement &&
@@ -313,6 +348,35 @@ var ContextMenuHandler = {
             element instanceof Ci.nsIDOMHTMLHeadingElement ||
             element instanceof Ci.nsIDOMHTMLTableCellElement ||
             element instanceof Ci.nsIDOMHTMLBodyElement);
+  },
+
+  _getLinkURL: function ch_getLinkURL(aLink) {
+    let href = aLink.href;
+    if (href)
+      return href;
+
+    href = aLink.getAttributeNS(kXLinkNamespace, "href");
+    if (!href || !href.match(/\S/)) {
+      // Without this we try to save as the current doc,
+      // for example, HTML case also throws if empty
+      throw "Empty href";
+    }
+
+    return Util.makeURLAbsolute(aLink.baseURI, href);
+  },
+
+  _getURI: function ch_getURI(aURL) {
+    try {
+      return Util.makeURI(aURL);
+    } catch (ex) { }
+
+    return null;
+  },
+
+  _getProtocol: function ch_getProtocol(aURI) {
+    if (aURI)
+      return aURI.scheme;
+    return null;
   },
 
   /**

@@ -22,6 +22,7 @@ mochikit.jar:
   content/tests/SimpleTest/SimpleTest.js (tests/SimpleTest/SimpleTest.js)
   content/tests/SimpleTest/test.css (tests/SimpleTest/test.css)
   content/tests/SimpleTest/TestRunner.js (tests/SimpleTest/TestRunner.js)
+  content/tests/SimpleTest/iframe-between-tests.html (tests/SimpleTest/iframe-between-tests.html)
   content/tests/SimpleTest/WindowSnapshot.js (tests/SimpleTest/WindowSnapshot.js)
   content/tests/SimpleTest/MockObjects.js (tests/SimpleTest/MockObjects.js)
   content/tests/SimpleTest/NativeKeyCodes.js (tests/SimpleTest/NativeKeyCodes.js)

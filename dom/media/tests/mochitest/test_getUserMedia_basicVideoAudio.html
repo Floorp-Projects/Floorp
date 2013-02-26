@@ -20,6 +20,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=781534
 <pre id="test">
 <script type="application/javascript">
 
+if (navigator.platform.indexOf("Win") == 0) {
+  SimpleTest.expectAssertions(0, 1);
+}
+
   /**
    * Run a test to verify that we can complete a start and stop media playback
    * cycle for a video and audio LocalMediaStream on a video HTMLMediaElement.

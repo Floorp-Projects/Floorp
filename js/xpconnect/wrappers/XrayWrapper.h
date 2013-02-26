@@ -38,6 +38,9 @@ IsTransparent(JSContext *cx, JSObject *wrapper, jsid id);
 JSObject *
 GetNativePropertiesObject(JSContext *cx, JSObject *wrapper);
 
+bool
+IsXrayResolving(JSContext *cx, JSObject *wrapper, jsid id);
+
 }
 
 class XrayTraits;

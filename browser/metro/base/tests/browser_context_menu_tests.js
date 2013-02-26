@@ -26,7 +26,6 @@ function emptyClipboard() {
                                        .emptyClipboard(Ci.nsIClipboard.kGlobalClipboard);
 }
 
-// Image context menu tests
 gTests.push({
   desc: "text context menu",
   run: function test() {
@@ -394,6 +393,119 @@ gTests.push({
     ok(imagetab.browser.currentURI.spec == "chrome://mochitests/content/metro/res/image01.png", "tab location");
 
     Browser.closeTab(imagetab);
+  }
+});
+
+gTests.push({
+  desc: "tests for subframe positioning",
+  run: function test() {
+    info(chromeRoot + "browser_context_menu_tests_03.html");
+    yield addTab(chromeRoot + "browser_context_menu_tests_03.html");
+
+    let win = Browser.selectedTab.browser.contentWindow;
+
+    // Sometimes the context ui is visible, sometimes it isn't.
+    try {
+      yield waitForCondition(function () {
+        return ContextUI.isVisible;  
+      }, 500, 50);
+    } catch (ex) {}
+
+    ContextUI.dismiss();
+
+    let frame1 = win.document.getElementById("frame1");
+    let link1 = frame1.contentDocument.getElementById("link1");
+
+    let promise = waitForEvent(document, "popupshown");
+    sendContextMenuClickToElement(frame1.contentDocument.defaultView, link1, 85, 10);
+    yield promise;
+    ok(promise && !(promise instanceof Error), "promise error");
+
+    // should be visible
+    ok(ContextMenuUI._menuPopup._visible, "is visible");
+
+    ok(ContextMenuUI._panel.left > 375 && ContextMenuUI._panel.left < 390, "position");
+    ok(ContextMenuUI._panel.top > 235 && ContextMenuUI._panel.top < 245, "position");
+
+    promise = waitForEvent(document, "popuphidden");
+    ContextMenuUI.hide();
+    yield promise;
+    ok(promise && !(promise instanceof Error), "promise error");
+
+    frame1.contentDocument.defaultView.scrollBy(0, 200);
+
+    promise = waitForEvent(document, "popupshown");
+    sendContextMenuClickToElement(frame1.contentDocument.defaultView, link1, 85, 10);
+    yield promise;
+    ok(promise && !(promise instanceof Error), "promise error");
+
+    // should be visible
+    ok(ContextMenuUI._menuPopup._visible, "is visible");
+
+    ok(ContextMenuUI._panel.left > 375 && ContextMenuUI._panel.left < 390, "position");
+    ok(ContextMenuUI._panel.top > 35 && ContextMenuUI._panel.top < 45, "position");
+
+    promise = waitForEvent(document, "popuphidden");
+    ContextMenuUI.hide();
+    yield promise;
+    ok(promise && !(promise instanceof Error), "promise error");
+
+    let rlink1 = win.document.getElementById("rlink1");
+
+    promise = waitForEvent(document, "popupshown");
+    sendContextMenuClickToElement(win, rlink1, 40, 10);
+    yield promise;
+    ok(promise && !(promise instanceof Error), "promise error");
+
+    // should be visible
+    ok(ContextMenuUI._menuPopup._visible, "is visible");
+
+    ok(ContextMenuUI._panel.left > 730 && ContextMenuUI._panel.left < 745, "position");
+    ok(ContextMenuUI._panel.top > 600 && ContextMenuUI._panel.top < 610, "position");
+
+    promise = waitForEvent(document, "popuphidden");
+    ContextMenuUI.hide();
+    yield promise;
+    ok(promise && !(promise instanceof Error), "promise error");
+
+    win.scrollBy(0, 200);
+
+    promise = waitForEvent(document, "popupshown");
+    sendContextMenuClickToElement(win, rlink1, 40, 10);
+    yield promise;
+    ok(promise && !(promise instanceof Error), "promise error");
+
+    // should be visible
+    ok(ContextMenuUI._menuPopup._visible, "is visible");
+
+    ok(ContextMenuUI._panel.left > 730 && ContextMenuUI._panel.left < 745, "position");
+    ok(ContextMenuUI._panel.top > 400 && ContextMenuUI._panel.top < 410, "position");
+
+    promise = waitForEvent(document, "popuphidden");
+    ContextMenuUI.hide();
+    yield promise;
+    ok(promise && !(promise instanceof Error), "promise error");
+
+    let link2 = frame1.contentDocument.getElementById("link2");
+
+    promise = waitForEvent(document, "popupshown");
+    sendContextMenuClickToElement(frame1.contentDocument.defaultView, link2, 85, 10);
+    yield promise;
+    ok(promise && !(promise instanceof Error), "promise error");
+
+    // should be visible
+    ok(ContextMenuUI._menuPopup._visible, "is visible");
+
+    info(ContextMenuUI._panel.left);
+    info(ContextMenuUI._panel.top);
+
+    ok(ContextMenuUI._panel.left > 380 && ContextMenuUI._panel.left < 390, "position");
+    ok(ContextMenuUI._panel.top > 170 && ContextMenuUI._panel.top < 185, "position");
+
+    promise = waitForEvent(document, "popuphidden");
+    ContextMenuUI.hide();
+    yield promise;
+    ok(promise && !(promise instanceof Error), "promise error");
   }
 });
 

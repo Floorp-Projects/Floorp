@@ -940,7 +940,9 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
             return js_InternalThrow(f);
         fp->initVarsToUndefined();
         fp->scopeChain();
-        if (!fp->prologue(cx, types::UseNewTypeAtEntry(cx, fp)))
+        if (types::UseNewTypeAtEntry(cx, fp))
+            fp->setUseNewType();
+        if (!fp->prologue(cx))
             return js_InternalThrow(f);
 
         /*
