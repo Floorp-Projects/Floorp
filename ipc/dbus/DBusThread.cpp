@@ -69,8 +69,6 @@
 // Functions for converting between unix events in the poll struct,
 // and their dbus definitions
 
-// TODO Add Wakeup to this list once we've moved to ics
-
 enum {
   DBUS_EVENT_LOOP_EXIT = 1,
   DBUS_EVENT_LOOP_ADD = 2,
@@ -367,6 +365,8 @@ DBusThread::EventLoop()
 #endif
             dbus_connection_set_watch_functions(mConnection,
                                                 NULL, NULL, NULL, NULL, NULL);
+            dbus_connection_set_wakeup_main_function(mConnection, NULL, NULL,
+                                                     NULL);
             return;
           case DBUS_EVENT_LOOP_ADD:
             HandleWatchAdd(this);
