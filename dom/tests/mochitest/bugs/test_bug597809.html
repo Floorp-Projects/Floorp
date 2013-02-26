@@ -14,6 +14,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=597809
 <pre id="test">
 <script type="application/javascript">
 
+if (navigator.platform.indexOf("Win") != 0) {
+  SimpleTest.expectAssertions(0, 4);
+}
+
 /** Test for Bug 597809 **/
 
 SimpleTest.waitForExplicitFinish();

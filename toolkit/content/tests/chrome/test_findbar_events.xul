@@ -30,6 +30,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=793275
   <script class="testbody" type="application/javascript">
     <![CDATA[
 
+      if (navigator.platform.indexOf("Mac") == 0) {
+        SimpleTest.expectAssertions(0, 4);
+      }
+
       /** Test for Bug 793275 **/
       SimpleTest.waitForExplicitFinish();
       window.open("findbar_events_window.xul", "793275test",

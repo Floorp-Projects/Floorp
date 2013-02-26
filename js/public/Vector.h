@@ -479,10 +479,19 @@ class Vector : private AllocPolicy
     void replaceRawBuffer(T *p, size_t length);
 
     /*
-     * Places |val| at position |p|, shifting existing elements
-     * from |p| onward one position higher.
+     * Places |val| at position |p|, shifting existing elements from |p|
+     * onward one position higher.  On success, |p| should not be reused
+     * because it will be a dangling pointer if reallocation of the vector
+     * storage occurred;  the return value should be used instead.  On failure,
+     * NULL is returned.
+     *
+     * Example usage:
+     *
+     *   if (!(p = vec.insert(p, val)))
+     *       <handle failure>
+     *   <keep working with p>
      */
-    bool insert(T *p, const T &val);
+    T *insert(T *p, const T &val);
 
     /*
      * Removes the element |t|, which must fall in the bounds [begin, end),
@@ -863,24 +872,25 @@ Vector<T,N,AP>::internalAppendN(const T &t, size_t needed)
 }
 
 template <class T, size_t N, class AP>
-inline bool
+inline T *
 Vector<T,N,AP>::insert(T *p, const T &val)
 {
     JS_ASSERT(begin() <= p && p <= end());
     size_t pos = p - begin();
     JS_ASSERT(pos <= mLength);
     size_t oldLength = mLength;
-    if (pos == oldLength)
-        return append(val);
-    {
+    if (pos == oldLength) {
+        if (!append(val))
+            return NULL;
+    } else {
         T oldBack = back();
         if (!append(oldBack)) /* Dup the last element. */
-            return false;
+            return NULL;
+        for (size_t i = oldLength; i > pos; --i)
+            (*this)[i] = (*this)[i - 1];
+        (*this)[pos] = val;
     }
-    for (size_t i = oldLength; i > pos; --i)
-        (*this)[i] = (*this)[i - 1];
-    (*this)[pos] = val;
-    return true;
+    return begin() + pos;
 }
 
 template<typename T, size_t N, class AP>

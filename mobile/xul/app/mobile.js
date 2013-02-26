@@ -657,3 +657,5 @@ pref("media.realtime_decoder.enabled", true);
 
 // Mobile manages state by autodetection
 pref("network.manage-offline-status", true);
+
+pref("layout.imagevisibility.enabled", false);

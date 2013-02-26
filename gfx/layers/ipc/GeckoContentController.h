@@ -10,6 +10,8 @@
 #include "FrameMetrics.h"
 #include "nsISupportsImpl.h"
 
+class Task;
+
 namespace mozilla {
 namespace layers {
 
@@ -51,6 +53,12 @@ public:
    */
   virtual void SendAsyncScrollDOMEvent(const gfx::Rect &aContentRect,
                                        const gfx::Size &aScrollableSize) = 0;
+
+  /**
+   * Schedules a runnable to run on the controller/UI thread at some time
+   * in the future.
+   */
+  virtual void PostDelayedTask(Task* aTask, int aDelayMs) = 0;
 
   GeckoContentController() {}
   virtual ~GeckoContentController() {}

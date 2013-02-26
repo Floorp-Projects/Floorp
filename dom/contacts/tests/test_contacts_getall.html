@@ -266,7 +266,7 @@ let steps = [
   add20Contacts,
 
   function() {
-    ok(true, "Test cache invalidation between getAll and getNext");
+    ok(true, "Test cache consistency when deleting contact during getAll");
     req = mozContacts.find({});
     req.onsuccess = function(e) {
       let lastContact = e.target.result[e.target.result.length-1];
@@ -290,8 +290,7 @@ let steps = [
             count++;
             req.continue();
           } else {
-            is(count, 19, "19 contacts returned");
-            ok(true, "last contact");
+            is(count, 20, "last contact - 20 contacts returned");
             next();
           }
         }
@@ -303,7 +302,7 @@ let steps = [
   add20Contacts,
 
   function() {
-    ok(true, "Delete the currect contact while iterating");
+    ok(true, "Delete the current contact while iterating");
     req = mozContacts.getAll({});
     let count = 0;
     let previousId = null;

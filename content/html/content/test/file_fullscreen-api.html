@@ -78,7 +78,7 @@ function exit1(event) {
   is(event.target, document, "10. Event target should be full-screen document #2");
   is(document.mozFullScreenElement, null, "11. Full-screen element should be null.");
   iframe = document.createElement("iframe");
-  iframe.allowfullscreen = true;
+  iframe.allowFullscreen = true;
   addFullscreenChangeContinuation("enter", enter2);
   document.body.appendChild(iframe);
   iframe.src = iframeContents;

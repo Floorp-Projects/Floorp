@@ -474,6 +474,7 @@ nsMetroFilePicker::AppendFilter(const nsAString& aTitle,
     boolean replaced;
     map->Insert(key.Get(), saveTypes.Get(), &replaced);
   }
+  break;
 
   default:
     return NS_ERROR_FAILURE;

@@ -635,6 +635,8 @@ pref("memory.free_dirty_pages", true);
 pref("wap.UAProf.url", "");
 pref("wap.UAProf.tagname", "x-wap-profile");
 
+pref("layout.imagevisibility.enabled", false);
+
 // Enable native identity (persona/browserid)
 pref("dom.identity.enabled", true);
 
@@ -655,3 +657,5 @@ pref("memory_info_dumper.watch_fifo.directory", "/data/local");
 pref("dom.disable_input_file", true);
 
 pref("general.useragent.enable_overrides", true);
+
+pref("b2g.version", @MOZ_B2G_VERSION@);

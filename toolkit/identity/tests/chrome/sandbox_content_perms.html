@@ -19,6 +19,10 @@
       }
 
       function CcDenied() {
+        // Once Components goes away in content, the question of whether or not
+        // Components.classes throws is not well-formed.
+        if (typeof Components === 'undefined')
+          return true;
         try {
           Components.classes;
           return false;

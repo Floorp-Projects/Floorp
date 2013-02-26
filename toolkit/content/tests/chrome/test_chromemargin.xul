@@ -17,6 +17,10 @@
 
 // Tests parsing of the chrome margin attrib on a window.
 
+if (navigator.platform.indexOf("Win") == 0) {
+  SimpleTest.expectAssertions(0, 1);
+}
+
 SimpleTest.waitForExplicitFinish();
 function runTest()
 {

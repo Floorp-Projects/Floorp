@@ -36,7 +36,6 @@ class LICM
 class Loop
 {
     MIRGenerator *mir;
-    MIRGraph &graph;
 
   public:
     // Loop code may return three values:
@@ -48,7 +47,7 @@ class Loop
 
   public:
     // A loop is constructed on a backedge found in the control flow graph.
-    Loop(MIRGenerator *mir, MBasicBlock *header, MBasicBlock *footer, MIRGraph &graph);
+    Loop(MIRGenerator *mir, MBasicBlock *header, MBasicBlock *footer);
 
     // Initializes the loop, finds all blocks and instructions contained in the loop.
     LoopReturn init();

@@ -901,6 +901,11 @@ public:
   // volume.  Readable/Writeable from the main thread.
   double mInitialVolume;
 
+  // PlaybackRate and pitch preservation status we should start at.
+  // Readable/Writeable from the main thread.
+  double mInitialPlaybackRate;
+  bool mInitialPreservesPitch;
+
   // Position to seek to when the seek notification is received by the
   // decode thread. Written by the main thread and read via the
   // decode thread. Synchronised using mReentrantMonitor. If the

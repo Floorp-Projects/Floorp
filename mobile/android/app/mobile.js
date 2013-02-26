@@ -675,6 +675,8 @@ pref("app.orientation.default", "");
 // back to the system.
 pref("memory.free_dirty_pages", true);
 
+pref("layout.imagevisibility.enabled", false);
+
 #ifdef MOZ_PKG_SPECIAL
 // Disable webgl on ARMv6 because running the reftests takes
 // too long for some reason (bug 843738)

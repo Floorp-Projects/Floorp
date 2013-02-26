@@ -33,7 +33,7 @@
                 const interfaces = [Ci.nsIObserver, Ci.nsISupports];
 
                 if (!interfaces.some( function(v) { return iid.equals(v) } ))
-                        throw SpecialPowers.Components.results.NS_ERROR_NO_INTERFACE;
+                        throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
                 return this;
             },
 
@@ -125,7 +125,7 @@
 	const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
 
         if (!interfaces.some( function(v) { return iid.equals(v) } ))
-          throw Components.results.NS_ERROR_NO_INTERFACE;
+          throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
 	  return this;
 	},
 
@@ -137,12 +137,10 @@
 
 	function startup() {
             //need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
-            var ios = SpecialPowers.wrap(Components)
-                                   .classes["@mozilla.org/network/io-service;1"]
-                                   .getService(Components.interfaces.nsIIOService);
+            var ios = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
+                                   .getService(SpecialPowers.Ci.nsIIOService);
 
-            var pps = SpecialPowers.wrap(Components)
-                                   .classes["@mozilla.org/network/protocol-proxy-service;1"]
+            var pps = SpecialPowers.Cc["@mozilla.org/network/protocol-proxy-service;1"]
                                    .getService();
 
             var uri = ios.newURI("http://example.com", null, null);

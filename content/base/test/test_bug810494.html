@@ -19,7 +19,7 @@ function test(tag, type) {
   "use strict";
   info("testing " + tag + " tag with type " + type);
 
-  const OBJLC = Components.interfaces.nsIObjectLoadingContent;
+  const OBJLC = SpecialPowers.Ci.nsIObjectLoadingContent;
   let obj = document.createElement(tag);
   obj.type = type;
   document.body.appendChild(obj);

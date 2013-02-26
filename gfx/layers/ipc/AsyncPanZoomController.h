@@ -151,6 +151,12 @@ public:
    */
   void UpdateZoomConstraints(bool aAllowZoom, float aMinScale, float aMaxScale);
 
+  /**
+   * Schedules a runnable to run on the controller/UI thread at some time
+   * in the future.
+   */
+  void PostDelayedTask(Task* aTask, int aDelayMs);
+
   // --------------------------------------------------------------------------
   // These methods must only be called on the compositor thread.
   //

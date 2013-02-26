@@ -122,7 +122,7 @@ BluetoothScoManager::Init()
   mSocketStatus = GetConnectionStatus();
 
   sScoObserver = new BluetoothScoManagerObserver();
-  if (sScoObserver->Init()) {
+  if (!sScoObserver->Init()) {
     NS_WARNING("Cannot set up SCO observers!");
   }
   return true;
