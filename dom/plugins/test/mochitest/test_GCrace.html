@@ -20,6 +20,12 @@
         return;
       }
       else {
+        if (navigator.platform.indexOf("Win") == 0) {
+          SimpleTest.expectAssertions(0, 66);
+        } else {
+          SimpleTest.expectAssertions(0, 1);
+        }
+
         setTimeout(checkGCRace, 1000);
       }
     }

@@ -11,6 +11,10 @@
 </div>
 <pre id="test">
 <script type="application/javascript">
+if (navigator.platform.indexOf("Linux") != 0) {
+  SimpleTest.expectAssertions(0, 3);
+}
+
 SimpleTest.waitForExplicitFinish();
 
 var image = document.getElementById("image");

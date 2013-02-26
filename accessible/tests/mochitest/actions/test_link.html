@@ -17,6 +17,14 @@
           src="../actions.js"></script>
 
   <script type="application/javascript">
+    if (navigator.platform.indexOf("Win") == 0) {
+      SimpleTest.expectAssertions(13);
+    } else if (navigator.platform.indexOf("Linux") == 0) {
+      SimpleTest.expectAssertions(18);
+    } else if (navigator.platform.indexOf("Mac") == 0) {
+      SimpleTest.expectAssertions(0, 14);
+    }
+
     function getAnchorTargetDocumentAcc()
     {
       var thisTabDocAcc = getTabDocAccessible();

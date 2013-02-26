@@ -12,6 +12,9 @@
 
   <script type="application/javascript">
   <![CDATA[
+    if (navigator.platform.indexOf("Mac") == 0) {
+      SimpleTest.expectAssertions(4);
+    }
     SimpleTest.waitForExplicitFinish();
 
     const kPref = Components.classes["@mozilla.org/preferences-service;1"]

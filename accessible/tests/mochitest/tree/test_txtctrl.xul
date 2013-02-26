@@ -18,6 +18,11 @@
 
   <script type="application/javascript">
   <![CDATA[
+    if (navigator.platform.indexOf("Mac") == 0) {
+      SimpleTest.expectAssertions(0, 1);
+    } else {
+      SimpleTest.expectAssertions(1);
+    }
     ////////////////////////////////////////////////////////////////////////////
     // Test
 

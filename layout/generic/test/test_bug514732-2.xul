@@ -30,6 +30,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=514732
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
+if (navigator.platform.indexOf("Linux") == 0) {
+  SimpleTest.expectAssertions(0, 3);
+}
+
 /** Test for Bug 514732 **/
 
 SimpleTest.waitForExplicitFinish();

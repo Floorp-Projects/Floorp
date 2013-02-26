@@ -24,6 +24,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=492925
 <pre id="test">
 <script type="application/javascript">
 
+if (navigator.platform.indexOf("Win") != 0) {
+  SimpleTest.expectAssertions(0, 2);
+}
+
 /** Test for Bug 492925 **/
 
 var sheet = document.styleSheets[1];

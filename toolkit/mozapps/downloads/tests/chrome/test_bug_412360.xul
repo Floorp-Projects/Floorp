@@ -22,6 +22,10 @@
   <script type="application/javascript">
   <![CDATA[
 
+if (navigator.platform.indexOf("Linux") == 0) {
+  SimpleTest.expectAssertions(1);
+}
+
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 let didFail = false;

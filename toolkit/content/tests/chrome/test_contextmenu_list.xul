@@ -73,6 +73,12 @@
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
+if (navigator.platform.indexOf("Linux") == 0) {
+  SimpleTest.expectAssertions(0, 5);
+} else {
+  SimpleTest.expectAssertions(0, 7);
+}
+
 SimpleTest.waitForExplicitFinish();
 
 var gTestId = -1;

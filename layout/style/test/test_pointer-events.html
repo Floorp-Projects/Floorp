@@ -50,6 +50,12 @@
 <pre id="test">
 <script type="application/javascript;version=1.8">
 
+if (navigator.platform.indexOf("Win") == 0) {
+  SimpleTest.expectAssertions(0, 1);
+} else {
+  SimpleTest.expectAssertions(1);
+}
+
 SimpleTest.waitForExplicitFinish();
 
 function catches_pointer_events(element_id)

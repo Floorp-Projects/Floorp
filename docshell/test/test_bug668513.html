@@ -8,6 +8,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=668513
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 <script>
+if (navigator.platform.indexOf("Linux") == 0) {
+  SimpleTest.expectAssertions(0, 1);
+}
+
   function onload_test()
   {
     var win = frames[0];

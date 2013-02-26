@@ -18,6 +18,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=638596
 <pre id="test">
 <script type="application/javascript">
 
+if (navigator.platform.indexOf("Linux") == 0) {
+  SimpleTest.expectAssertions(1);
+}
+
 /** Test for Bug 638596 **/
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
