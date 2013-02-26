@@ -29,7 +29,7 @@ public:
 
     nsTreeWalker(nsINode *aRoot,
                  uint32_t aWhatToShow,
-                 nsIDOMNodeFilter *aFilter);
+                 const mozilla::dom::NodeFilterHolder &aFilter);
     virtual ~nsTreeWalker();
 
     NS_DECL_CYCLE_COLLECTION_CLASS(nsTreeWalker)
