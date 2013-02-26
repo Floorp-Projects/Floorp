@@ -3499,9 +3499,6 @@ Downloader.prototype = {
     try {
       updateArchive = FileUtils.getDir(KEY_UPDATE_ARCHIVE_DIR, [], true);
     } catch (e) {
-      if (e == Cr.NS_ERROR_FILE_TOO_BIG) {
-        this._update.errorCode = FILE_ERROR_TOO_BIG;
-      }
       return null;
     }
 #else
