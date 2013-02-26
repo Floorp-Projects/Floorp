@@ -25,7 +25,6 @@ const PREF_DOWNLOAD_WATCHDOG_TIMEOUT     = "b2g.update.download-watchdog-timeout
 const PREF_DOWNLOAD_WATCHDOG_MAX_RETRIES = "b2g.update.download-watchdog-max-retries";
 
 const NETWORK_ERROR_OFFLINE = 111;
-const FILE_ERROR_TOO_BIG    = 112;
 const HTTP_ERROR_OFFSET     = 1000;
 
 const STATE_DOWNLOADING = 'downloading';
@@ -314,7 +313,8 @@ UpdatePrompt.prototype = {
     }
 
     log("Error downloading update " + aUpdate.name + ": " + aUpdate.errorCode);
-    if (aUpdate.errorCode == FILE_ERROR_TOO_BIG) {
+    let errorCode = aUpdate.errorCode >>> 0;
+    if (errorCode == Cr.NS_ERROR_FILE_TOO_BIG) {
       aUpdate.statusText = "file-too-big";
     }
     this.showUpdateError(aUpdate);
