@@ -10,37 +10,62 @@ interface nsIAccessible;
 
 /**
  * This interface gives access to an accessible's set of relations.
- * Be carefull, do not change constants until ATK has a structure to map gecko
- * constants into ATK constants.
  */
-[scriptable, uuid(f42a1589-70ab-4704-877f-4a9162bbe188)]
+[scriptable, uuid(9f85fc0d-2969-48e6-b822-68140f7e5770)]
 interface nsIAccessibleRelation : nsISupports
 {
-
-  const unsigned long RELATION_NUL = 0x00;
-
   /**
-   * Some attribute of this object is affected by a target object.
+   * This object is labelled by a target object.
    */
-  const unsigned long RELATION_CONTROLLED_BY = 0x01;
-
-  // First relation
-  const unsigned long RELATION_FIRST = RELATION_CONTROLLED_BY;
-
-  /**
-   * This object is interactive and controls some attribute of a target object.
-   */
-  const unsigned long RELATION_CONTROLLER_FOR = 0x02;
+  const unsigned long RELATION_LABELLED_BY = 0x00;
 
   /**
    * This object is label for a target object.
    */
-  const unsigned long RELATION_LABEL_FOR = 0x03;
+  const unsigned long RELATION_LABEL_FOR = 0x01;
 
   /**
-   * This object is labelled by a target object.
+   * This object is described by the target object.
    */
-  const unsigned long RELATION_LABELLED_BY = 0x04;
+  const unsigned long RELATION_DESCRIBED_BY = 0x02;
+
+  /**
+   * This object is describes the target object.
+   */
+  const unsigned long RELATION_DESCRIPTION_FOR = 0x3;
+
+  /**
+   * This object is a child of a target object.
+   */
+  const unsigned long RELATION_NODE_CHILD_OF = 0x4;
+
+  /**
+   * This object is a parent of a target object. A dual relation to
+   * RELATION_NODE_CHILD_OF
+   */
+  const unsigned long RELATION_NODE_PARENT_OF = 0x5;
+
+  /**
+   * Some attribute of this object is affected by a target object.
+   */
+  const unsigned long RELATION_CONTROLLED_BY = 0x06;
+
+  /**
+   * This object is interactive and controls some attribute of a target object.
+   */
+  const unsigned long RELATION_CONTROLLER_FOR = 0x07;
+
+  /**
+   * Content flows from this object to a target object, i.e. has content that
+   * flows logically to another object in a sequential way, e.g. text flow.
+   */
+  const unsigned long RELATION_FLOWS_TO = 0x08;
+
+  /**
+   * Content flows to this object from a target object, i.e. has content that
+   * flows logically from another object in a sequential way, e.g. text flow.
+   */
+  const unsigned long RELATION_FLOWS_FROM = 0x09;
 
   /**
    * This object is a member of a group of one or more objects. When there is
@@ -48,71 +73,41 @@ interface nsIAccessibleRelation : nsISupports
    * target, e.g. a grouping object.  It is also possible that each member has
    * multiple additional targets, e.g. one for every other member in the group.
    */
-  const unsigned long RELATION_MEMBER_OF = 0x05;
-
-  /**
-   * This object is a child of a target object.
-   */
-  const unsigned long RELATION_NODE_CHILD_OF = 0x06;
-
-  /**
-   * Content flows from this object to a target object, i.e. has content that
-   * flows logically to another object in a sequential way, e.g. text flow.
-   */
-  const unsigned long RELATION_FLOWS_TO = 0x07;
-
-  /**
-   * Content flows to this object from a target object, i.e. has content that
-   * flows logically from another object in a sequential way, e.g. text flow.
-   */
-  const unsigned long RELATION_FLOWS_FROM = 0x08;
+  const unsigned long RELATION_MEMBER_OF = 0x0a;
 
   /**
    * This object is a sub window of a target object.
    */
-  const unsigned long RELATION_SUBWINDOW_OF = 0x09;
+  const unsigned long RELATION_SUBWINDOW_OF = 0x0b;
 
   /**
    * This object embeds a target object. This relation can be used on the
    * OBJID_CLIENT accessible for a top level window to show where the content
    * areas are.
    */
-  const unsigned long RELATION_EMBEDS = 0x0a;
+  const unsigned long RELATION_EMBEDS = 0x0c;
 
   /**
    * This object is embedded by a target object.
    */
-  const unsigned long RELATION_EMBEDDED_BY = 0x0b;
+  const unsigned long RELATION_EMBEDDED_BY = 0x0d;
 
   /**
    * This object is a transient component related to the target object. When
    * this object is activated the target object doesn't lose focus.
    */
-  const unsigned long RELATION_POPUP_FOR = 0x0c;
+  const unsigned long RELATION_POPUP_FOR = 0x0e;
 
   /**
    * This object is a parent window of the target object.
    */
-  const unsigned long RELATION_PARENT_WINDOW_OF = 0x0d;
-
-  /**
-   * This object is described by the target object.
-   */
-  const unsigned long RELATION_DESCRIBED_BY = 0x0e;
-
-  /**
-   * This object is describes the target object.
-   */
-  const unsigned long RELATION_DESCRIPTION_FOR = 0x0f;
-
-  // Last relation that is standard to desktop accessibility APIs
-  const unsigned long RELATION_LAST = RELATION_DESCRIPTION_FOR;
+  const unsigned long RELATION_PARENT_WINDOW_OF = 0x0f;
 
   /**
    * Part of a form/dialog with a related default button. It is used for
-   * MSAA only, no for IA2 nor ATK.
+   * MSAA/XPCOM, it isn't for IA2 or ATK.
    */
-  const unsigned long RELATION_DEFAULT_BUTTON = 0x4000;
+  const unsigned long RELATION_DEFAULT_BUTTON = 0x10;
 
   /**
    * Returns the type of the relation.

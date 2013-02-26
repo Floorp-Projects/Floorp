@@ -138,6 +138,55 @@ AccGroupInfo::AccGroupInfo(Accessible* aItem, role aRole) :
     mParent = parentPrevSibling;
 }
 
+Accessible*
+AccGroupInfo::FirstItemOf(Accessible* aContainer)
+{
+  // ARIA trees can be arranged by ARIA groups, otherwise aria-level works.
+  a11y::role containerRole = aContainer->Role();
+  Accessible* item = aContainer->NextSibling();
+  if (item) {
+    if (containerRole == roles::OUTLINEITEM && item->Role() == roles::GROUPING)
+      item = item->FirstChild();
+
+    AccGroupInfo* itemGroupInfo = item->GetGroupInfo();
+    if (itemGroupInfo && itemGroupInfo->ConceptualParent() == aContainer)
+      return item;
+  }
+
+  // Otherwise it can be a direct child.
+  item = aContainer->FirstChild();
+  if (item && IsConceptualParent(BaseRole(item->Role()), containerRole))
+    return item;
+
+  return nullptr;
+}
+
+Accessible*
+AccGroupInfo::NextItemTo(Accessible* aItem)
+{
+  AccGroupInfo* groupInfo = aItem->GetGroupInfo();
+  if (!groupInfo)
+    return nullptr;
+
+  // If the item in middle of the group then search next item in siblings.
+  if (groupInfo->PosInSet() >= groupInfo->SetSize())
+    return nullptr;
+
+  Accessible* parent = aItem->Parent();
+  uint32_t childCount = parent->ChildCount();
+  for (int32_t idx = aItem->IndexInParent() + 1; idx < childCount; idx++) {
+    Accessible* nextItem = parent->GetChildAt(idx);
+    AccGroupInfo* nextGroupInfo = nextItem->GetGroupInfo();
+    if (nextGroupInfo &&
+        nextGroupInfo->ConceptualParent() == groupInfo->ConceptualParent()) {
+      return nextItem;
+    }
+  }
+
+  NS_NOTREACHED("Item in the midle of the group but there's no next item!");
+  return nullptr;
+}
+
 bool
 AccGroupInfo::IsConceptualParent(role aRole, role aParentRole)
 {

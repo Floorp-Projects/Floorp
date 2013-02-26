@@ -266,6 +266,53 @@ private:
   nsRefPtr<Accessible> mAcc;
 };
 
+
+/**
+ * Used to iterate items of the given item container.
+ */
+class ItemIterator : public AccIterable
+{
+public:
+  ItemIterator(Accessible* aItemContainer) :
+    mContainer(aItemContainer), mAnchor(nullptr) { }
+  virtual ~ItemIterator() { }
+
+  virtual Accessible* Next();
+
+private:
+  ItemIterator() MOZ_DELETE;
+  ItemIterator(const ItemIterator&) MOZ_DELETE;
+  ItemIterator& operator = (const ItemIterator&) MOZ_DELETE;
+
+  Accessible* mContainer;
+  Accessible* mAnchor;
+};
+
+
+/**
+ * Used to iterate through XUL tree items of the same level.
+ */
+class XULTreeItemIterator : public AccIterable
+{
+public:
+  XULTreeItemIterator(XULTreeAccessible* aXULTree, nsITreeView* aTreeView,
+                      int32_t aRowIdx);
+  virtual ~XULTreeItemIterator() { }
+
+  virtual Accessible* Next();
+
+private:
+  XULTreeItemIterator() MOZ_DELETE;
+  XULTreeItemIterator(const XULTreeItemIterator&) MOZ_DELETE;
+  XULTreeItemIterator& operator = (const XULTreeItemIterator&) MOZ_DELETE;
+
+  XULTreeAccessible* mXULTree;
+  nsITreeView* mTreeView;
+  int32_t mRowCount;
+  int32_t mContainerLevel;
+  int32_t mCurrRowIdx;
+};
+
 } // namespace a11y
 } // namespace mozilla
 
