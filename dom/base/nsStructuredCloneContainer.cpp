@@ -55,7 +55,7 @@ nsStructuredCloneContainer::InitFromVariant(nsIVariant *aData, JSContext *aCx)
   JS_WrapValue(aCx, &jsData);
 
   nsCxPusher cxPusher;
-  cxPusher.Push(aCx);
+  cxPusher.Push(aCx, nsCxPusher::REQUIRE_SCRIPT_CONTEXT);
 
   uint64_t* jsBytes = nullptr;
   bool success = JS_WriteStructuredClone(aCx, jsData, &jsBytes, &mSize,
