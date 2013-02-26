@@ -327,8 +327,14 @@ protected:
   // zero-length array is inserted into our array. But then n should
   // always be 0.
   void IncrementLength(uint32_t n) {
-    MOZ_ASSERT(mHdr != EmptyHdr() || n == 0, "bad data pointer");
-    mHdr->mLength += n;
+    if (mHdr == EmptyHdr()) {
+      if (MOZ_UNLIKELY(n != 0)) {
+        // Writing a non-zero length to the empty header would be extremely bad.
+        MOZ_CRASH();
+      }
+    } else {
+      mHdr->mLength += n;
+    }
   }
 
   // This method inserts blank slots into the array.
