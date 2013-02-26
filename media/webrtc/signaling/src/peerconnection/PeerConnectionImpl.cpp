@@ -239,7 +239,9 @@ PeerConnectionImpl::PeerConnectionImpl()
   , mWindow(NULL)
   , mIdentity(NULL)
   , mSTSThread(NULL)
-  , mMedia(new PeerConnectionMedia(this)) {
+  , mMedia(new PeerConnectionMedia(this))
+  , mNumAudioStreams(0)
+  , mNumVideoStreams(0) {
 #ifdef MOZILLA_INTERNAL_API
   MOZ_ASSERT(NS_IsMainThread());
 #endif
@@ -959,21 +961,48 @@ NS_IMETHODIMP
 PeerConnectionImpl::AddStream(nsIDOMMediaStream* aMediaStream) {
   PC_AUTO_ENTER_API_CALL(true);
 
+  if (!aMediaStream) {
+    CSFLogError(logTag, "%s: Attempt to add null stream",__FUNCTION__);
+    return NS_ERROR_FAILURE;
+  }
+
+  DOMMediaStream* stream = static_cast<DOMMediaStream*>(aMediaStream);
+  uint32_t hints = stream->GetHintContents();
+
+  // XXX Remove this check once addStream has an error callback
+  // available and/or we have plumbing to handle multiple
+  // local audio streams.
+  if ((hints & DOMMediaStream::HINT_CONTENTS_AUDIO) &&
+      mNumAudioStreams > 0) {
+    CSFLogError(logTag, "%s: Only one local audio stream is supported for now",
+                __FUNCTION__);
+    return NS_ERROR_FAILURE;
+  }
+
+  // XXX Remove this check once addStream has an error callback
+  // available and/or we have plumbing to handle multiple
+  // local video streams.
+  if ((hints & DOMMediaStream::HINT_CONTENTS_VIDEO) &&
+      mNumVideoStreams > 0) {
+    CSFLogError(logTag, "%s: Only one local video stream is supported for now",
+                __FUNCTION__);
+    return NS_ERROR_FAILURE;
+  }
+
   uint32_t stream_id;
   nsresult res = mMedia->AddStream(aMediaStream, &stream_id);
   if (NS_FAILED(res))
     return res;
 
-  DOMMediaStream* stream = static_cast<DOMMediaStream*>(aMediaStream);
-  uint32_t hints = stream->GetHintContents();
-
   // TODO(ekr@rtfm.com): these integers should be the track IDs
   if (hints & DOMMediaStream::HINT_CONTENTS_AUDIO) {
     mCall->addStream(stream_id, 0, AUDIO);
+    mNumAudioStreams++;
   }
 
   if (hints & DOMMediaStream::HINT_CONTENTS_VIDEO) {
     mCall->addStream(stream_id, 1, VIDEO);
+    mNumVideoStreams++;
   }
 
   return NS_OK;
@@ -994,10 +1023,14 @@ PeerConnectionImpl::RemoveStream(nsIDOMMediaStream* aMediaStream) {
 
   if (hints & DOMMediaStream::HINT_CONTENTS_AUDIO) {
     mCall->removeStream(stream_id, 0, AUDIO);
+    MOZ_ASSERT(mNumAudioStreams > 0);
+    mNumAudioStreams--;
   }
 
   if (hints & DOMMediaStream::HINT_CONTENTS_VIDEO) {
     mCall->removeStream(stream_id, 1, VIDEO);
+    MOZ_ASSERT(mNumVideoStreams > 0);
+    mNumVideoStreams--;
   }
 
   return NS_OK;
