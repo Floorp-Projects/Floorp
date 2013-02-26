@@ -1023,7 +1023,7 @@ TypeCheckNextBytecode(JSContext *cx, HandleScript script, unsigned n, const Fram
 }
 
 JS_NEVER_INLINE InterpretStatus
-js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
+js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode, bool useNewType)
 {
     JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 
