@@ -3031,9 +3031,7 @@ IonBuilder::addTypeBarrier(uint32_t i, CallInfo &callinfo, types::StackTypeSet *
     }
 
     while (excluded) {
-        if (excluded->target == calleeObs) {
-            JS_ASSERT(callerObs->hasType(excluded->type));
-
+        if (excluded->target == calleeObs && callerObs->hasType(excluded->type)) {
             if (excluded->type == types::Type::DoubleType() &&
                 calleeObs->hasType(types::Type::Int32Type())) {
                 // The double type also implies int32, so this implies that
