@@ -86,6 +86,12 @@ BaselineFrame::strictEvalPrologue(JSContext *cx)
 bool
 BaselineFrame::heavyweightFunPrologue(JSContext *cx)
 {
+    return initFunctionScopeObjects(cx);
+}
+
+bool
+BaselineFrame::initFunctionScopeObjects(JSContext *cx)
+{
     JS_ASSERT(isNonEvalFunctionFrame());
     JS_ASSERT(fun()->isHeavyweight());
 
