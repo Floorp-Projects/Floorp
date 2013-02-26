@@ -75,6 +75,10 @@ protected:
   bool GetMutedInternal(AudioChannelType aType, uint64_t aChildID,
                         bool aElementHidden, bool aElementWasHidden);
 
+  /* Update the internal type value following the visibility changes */
+  void UpdateChannelType(AudioChannelType aType, uint64_t aChildID,
+                         bool aElementHidden, bool aElementWasHidden);
+
   AudioChannelService();
   virtual ~AudioChannelService();
 
