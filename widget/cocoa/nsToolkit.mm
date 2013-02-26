@@ -203,6 +203,9 @@ nsToolkit::RegisterForAllProcessMouseEvents()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  if (getenv("MOZ_DEBUG"))
+    return;
+
   // Don't do this for apps that (like Camino) use native context menus.
 #ifdef MOZ_USE_NATIVE_POPUP_WINDOWS
   return;
