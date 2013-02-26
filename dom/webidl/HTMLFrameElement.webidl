@@ -32,3 +32,5 @@ interface HTMLFrameElement : HTMLElement {
   [TreatNullAs=EmptyString, SetterThrows] attribute DOMString marginHeight;
   [TreatNullAs=EmptyString, SetterThrows] attribute DOMString marginWidth;
 };
+
+HTMLFrameElement implements MozFrameLoaderOwner;
