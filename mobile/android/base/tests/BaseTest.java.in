@@ -665,5 +665,30 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
                 }
             }
         }
+
+        public void bookmark() {
+            if (devType.equals("tablet")) {
+                if (!osVersion.equals("4.x")){
+                    Element bookmarkBtn = mDriver.findElement(getActivity(), "bookmark");
+                    bookmarkBtn.click();
+                }
+                else {
+                    mActions.sendSpecialKey(Actions.SpecialKey.MENU);
+                    mSolo.waitForText("^New Tab$");
+                    mSolo.clickOnText("^Bookmark$");
+                }
+            }
+            else {
+                mActions.sendSpecialKey(Actions.SpecialKey.MENU);
+                mSolo.waitForText("^New Tab$");
+                if (!osVersion.equals("2.x")) {
+                    Element bookmarkBtn = mDriver.findElement(getActivity(), "bookmark");
+                    bookmarkBtn.click();
+                }
+                else {
+                    mSolo.clickOnText("^Bookmark$");
+                }
+            }
+        }
     }
 }

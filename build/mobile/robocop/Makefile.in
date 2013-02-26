@@ -36,6 +36,7 @@ _JAVA_TESTS = $(patsubst $(TESTPATH)/%.in,%,$(wildcard $(TESTPATH)/*.java.in))
 
 _TEST_FILES = \
   $(wildcard $(TESTPATH)/*.html) \
+  $(wildcard $(TESTPATH)/*.jpg) \
   $(wildcard $(TESTPATH)/*.sjs) \
   $(NULL)
 
