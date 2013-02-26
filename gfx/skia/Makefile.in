@@ -198,8 +198,6 @@ EXPORTS_skia = \
 	include/views/SkTextBox.h \
 	$(NULL)
 
-DEFINES += -DUSE_SKIA
-
 GPU_CPPSRCS = \
 	GrAAConvexPathRenderer.cpp \
 	GrAAHairLinePathRenderer.cpp \
@@ -458,7 +456,6 @@ CPPSRCS += \
 	SkThread_pthread.cpp \
 	$(NULL)
 
-DEFINES += -DSK_BUILD_FOR_ANDROID_NDK
 OS_CXXFLAGS += $(CAIRO_FT_CFLAGS)
 else
 CPPSRCS += \

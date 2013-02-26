@@ -88,9 +88,6 @@ CPPSRCS	+= \
         convolver.cpp \
         image_operations.cpp \
         $(NULL)
-
-DEFINES += -DUSE_SKIA
-
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
@@ -107,10 +104,6 @@ CPPSRCS	+= \
         ScaledFontFreetype.cpp \
         $(NULL)
 DEFINES += -DMOZ_ENABLE_FREETYPE
-endif
-
-ifeq (android,$(MOZ_WIDGET_TOOLKIT))
-DEFINES += -DSK_BUILD_FOR_ANDROID_NDK
 endif
 
 DEFINES += -DSK_A32_SHIFT=24 -DSK_R32_SHIFT=16 -DSK_G32_SHIFT=8 -DSK_B32_SHIFT=0

@@ -8275,6 +8275,10 @@ dnl ========================================================
 if test "$MOZ_ENABLE_SKIA"; then
   MOZ_SKIA_LIBS='$(DEPTH)/gfx/skia/$(LIB_PREFIX)skia.$(LIB_SUFFIX)'
   AC_DEFINE(MOZ_ENABLE_SKIA)
+  AC_DEFINE(USE_SKIA)
+  if test "${MOZ_WIDGET_TOOLKIT}" = "android" -o x"$MOZ_WIDGET_TOOLKIT" = x"gonk"; then
+    AC_DEFINE(SK_BUILD_FOR_ANDROID_NDK)
+  fi
 else
   MOZ_SKIA_LIBS=
 fi
