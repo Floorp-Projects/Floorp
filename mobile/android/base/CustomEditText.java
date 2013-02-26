@@ -11,9 +11,9 @@ import android.view.KeyEvent;
 import android.view.View;
 
 public class CustomEditText extends GeckoEditText {
-    OnKeyPreImeListener mOnKeyPreImeListener;
-    OnSelectionChangedListener mOnSelectionChangedListener;
-    OnWindowFocusChangeListener mOnWindowFocusChangeListener;
+    private OnKeyPreImeListener mOnKeyPreImeListener;
+    private OnSelectionChangedListener mOnSelectionChangedListener;
+    private OnWindowFocusChangeListener mOnWindowFocusChangeListener;
 
     public CustomEditText(Context context, AttributeSet attrs) {
         super(context, attrs);
