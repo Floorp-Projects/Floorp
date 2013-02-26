@@ -3983,19 +3983,8 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
       JSObject *obj = GetWrapperPreserveColor();
       if (obj) {
         JSObject *newScope = aScriptGlobalObject->GetGlobalJSObject();
-        nsIScriptContext *scx = aScriptGlobalObject->GetContext();
-        JSContext *cx = scx ? scx->GetNativeContext() : nullptr;
-        if (!cx) {
-          nsContentUtils::ThreadJSContextStack()->Peek(&cx);
-          if (!cx) {
-            cx = nsContentUtils::ThreadJSContextStack()->GetSafeJSContext();
-            NS_ASSERTION(cx, "Uhoh, no context, this is bad!");
-          }
-        }
-        if (cx) {
-          NS_ASSERTION(JS_GetGlobalForObject(cx, obj) == newScope,
-                       "Wrong scope, this is really bad!");
-        }
+        NS_ASSERTION(js::GetGlobalForObjectCrossCompartment(obj) == newScope,
+                     "Wrong scope, this is really bad!");
       }
     }
 #endif
@@ -6829,7 +6818,7 @@ nsDocument::IsScriptEnabled()
   nsIScriptContext *scriptContext = globalObject->GetContext();
   NS_ENSURE_TRUE(scriptContext, false);
 
-  JSContext* cx = scriptContext->GetNativeContext();
+  AutoPushJSContext cx(scriptContext->GetNativeContext());
   NS_ENSURE_TRUE(cx, false);
 
   bool enabled;
@@ -8547,7 +8536,7 @@ nsDocument::GetStateObject(nsIVariant** aState)
 
   nsCOMPtr<nsIVariant> stateObj;
   if (!mStateObjectCached && mStateObjectContainer) {
-    JSContext *cx = nsContentUtils::GetContextFromDocument(this);
+    AutoPushJSContext cx(nsContentUtils::GetContextFromDocument(this));
     mStateObjectContainer->
       DeserializeToVariant(cx, getter_AddRefs(mStateObjectCached));
   }

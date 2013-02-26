@@ -86,7 +86,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
   JSObject * targetScriptObject;
   holder->GetJSObject(&targetScriptObject);
 
-  JSContext *cx = context->GetNativeContext();
+  AutoPushJSContext cx(context->GetNativeContext());
   JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, targetClassObject);
   AutoVersionChecker avc(cx);
@@ -172,7 +172,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
 
   // Because our prototype implementation has a class, we need to build up a corresponding
   // class for the concrete implementation in the bound document.
-  JSContext* jscontext = aContext->GetNativeContext();
+  AutoPushJSContext jscontext(aContext->GetNativeContext());
   JSObject* global = sgo->GetGlobalJSObject();
   nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
   jsval v;
@@ -211,7 +211,7 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
   nsIScriptContext *context = globalObject->GetContext();
   NS_ENSURE_TRUE(context, NS_ERROR_OUT_OF_MEMORY);
 
-  JSContext *cx = context->GetNativeContext();
+  AutoPushJSContext cx(context->GetNativeContext());
   JSObject *global = globalObject->GetGlobalJSObject();
   
 
@@ -348,7 +348,7 @@ nsXBLProtoImpl::Read(nsIScriptContext* aContext,
                      nsIScriptGlobalObject* aGlobal)
 {
   // Set up a class object first so that deserialization is possible
-  JSContext *cx = aContext->GetNativeContext();
+  AutoPushJSContext cx(aContext->GetNativeContext());
   JSObject *global = aGlobal->GetGlobalJSObject();
 
   JSObject* classObject;

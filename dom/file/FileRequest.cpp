@@ -73,7 +73,7 @@ FileRequest::NotifyHelperCompleted(FileHelper* aFileHelper)
   nsIScriptContext* sc = GetContextForEventHandlers(&rv);
   NS_ENSURE_STATE(sc);
 
-  JSContext* cx = sc->GetNativeContext();
+  AutoPushJSContext cx(sc->GetNativeContext());
   NS_ASSERTION(cx, "Failed to get a context!");
 
   JSObject* global = sc->GetNativeGlobal();
