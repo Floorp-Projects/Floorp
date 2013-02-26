@@ -1472,8 +1472,7 @@ ion::CanEnterAtBranch(JSContext *cx, JSScript *script, AbstractFramePtr fp,
 }
 
 MethodStatus
-ion::CanEnter(JSContext *cx, JSScript *script, AbstractFramePtr fp,
-              bool isConstructing, bool newType)
+ion::CanEnter(JSContext *cx, JSScript *script, AbstractFramePtr fp, bool isConstructing)
 {
     JS_ASSERT(ion::IsEnabled(cx));
 
@@ -1495,8 +1494,8 @@ ion::CanEnter(JSContext *cx, JSScript *script, AbstractFramePtr fp,
     if (isConstructing && fp.thisValue().isPrimitive()) {
         RootedScript scriptRoot(cx, script);
         RootedObject callee(cx, &fp.callee());
-        RootedObject obj(cx, CreateThisForFunction(cx, callee, newType));
-        if (!obj)
+        RootedObject obj(cx, CreateThisForFunction(cx, callee, fp.useNewType()));
+        if (!obj || !ion::IsEnabled(cx)) // Note: OOM under CreateThis can disable TI.
             return Method_Skipped;
         fp.thisValue().setObject(*obj);
         script = scriptRoot;
