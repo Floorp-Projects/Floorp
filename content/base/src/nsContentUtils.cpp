@@ -6833,9 +6833,7 @@ AutoJSContext::Init(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 
   if (!mCx) {
     mCx = nsContentUtils::GetSafeJSContext();
-    // XXXbholley - This is totally wrong, but necessary to make this patch
-    // not change any behavior. We'll fix it in an upcoming patch.
-    bool result = mPusher.Push(mCx, nsCxPusher::REQUIRE_SCRIPT_CONTEXT);
+    bool result = mPusher.Push(mCx, nsCxPusher::ALWAYS_PUSH);
     if (!result || !mCx) {
       MOZ_CRASH();
     }
