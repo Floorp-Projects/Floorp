@@ -18,6 +18,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=641821
 <pre id="test">
 <script type="application/javascript">
 
+if (navigator.platform.indexOf("Win") != 0) {
+  // for non-Windows
+  SimpleTest.expectAssertions(1);
+}
+
 /** Test for Bug 641821 **/
 
 var div = document.createElement("div");

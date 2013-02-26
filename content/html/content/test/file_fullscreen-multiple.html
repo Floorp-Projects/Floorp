@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=724554
+
+Test that multiple windows can be fullscreen at the same time.
+
+Open one window, focus it and enter fullscreen, then open another, focus
+it and enter fullscreen, and check that both are still fullscreen.
+
+-->
+<head>
+  <title>Test for Bug 724554</title>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="file_fullscreen-utils.js"></script>
+</head>
+<body>
+
+<script type="application/javascript">
+
+/** Test for Bug 545812 **/
+
+function ok(condition, msg) {
+  opener.ok(condition, "[multiple] " + msg);
+}
+
+function is(a, b, msg) {
+  opener.is(a, b, "[multiple] " + msg);
+}
+
+var window1, window2;
+
+function openWindow(id) {
+  var w = window.open("file_fullscreen-multiple-inner.html", "", "width=500,height=500");
+  w.addEventListener("load", function onload() {
+    w.focus();
+    SimpleTest.waitForFocus(function(){w.begin(id)}, w);
+  });
+  return w;
+}
+
+function begin() {
+  window1 = openWindow("one");
+}
+
+function enteredFullscreen(id) {
+  if (id == "one") {
+    window2 = openWindow("two");
+  } else if (id == "two") {
+    ok(window1.document.mozFullScreenElement &&
+       window2.document.mozFullScreenElement,
+       "Both windows should be fullscreen concurrently");
+    window1.close();
+    window2.close();
+    opener.nextTest();
+  }
+}
+
+</script>
+</pre>
+<div id="full-screen-element"></div>
+</body>
+</html>

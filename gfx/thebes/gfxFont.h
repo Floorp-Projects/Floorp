@@ -1471,9 +1471,15 @@ public:
 
     bool IsSyntheticBold() { return mApplySyntheticBold; }
 
-    // Amount by which synthetic bold "fattens" the glyphs: 1/16 of the em-size
+    // Amount by which synthetic bold "fattens" the glyphs:
+    // For size S up to a threshold size T, we use (0.25 + 3S / 4T),
+    // so that the result ranges from 0.25 to 1.0; thereafter,
+    // simply use (S / T).
     gfxFloat GetSyntheticBoldOffset() {
-        return GetAdjustedSize() * (1.0 / 16.0);
+        gfxFloat size = GetAdjustedSize();
+        const gfxFloat threshold = 48.0;
+        return size < threshold ? (0.25 + 0.75 * size / threshold) :
+                                  (size / threshold);
     }
 
     gfxFontEntry *GetFontEntry() { return mFontEntry.get(); }

@@ -18,6 +18,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=585819
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+if (navigator.platform.indexOf("Linux") == 0) {
+  SimpleTest.expectAssertions(0, 4);
+}
+
 /** Test for Bug 585819 **/
 
 var range = document.createRange();

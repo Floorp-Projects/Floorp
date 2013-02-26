@@ -38,7 +38,8 @@ class Transaction
 {
 public:
   Transaction()
-    : mSwapRequired(false)
+    : mTargetRotation(ROTATION_0)
+    , mSwapRequired(false)
     , mOpen(false)
     , mRotationChanged(false)
   {}
@@ -49,7 +50,11 @@ public:
     mOpen = true;
     mTargetBounds = aTargetBounds;
     if (aRotation != mTargetRotation) {
-        mRotationChanged = true;
+      // the first time this is called, mRotationChanged will be false if
+      // aRotation is 0, but we should be OK because for the first transaction
+      // we should only compose if it is non-empty. See the caller(s) of
+      // RotationChanged.
+      mRotationChanged = true;
     }
     mTargetRotation = aRotation;
     mClientBounds = aClientBounds;

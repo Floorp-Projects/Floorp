@@ -11,6 +11,12 @@
 <script>
 <![CDATA[
 
+if (navigator.platform.indexOf("Win") == 0) {
+  SimpleTest.expectAssertions(6);
+} else {
+  SimpleTest.expectAssertions(6, 8);
+}
+
 SimpleTest.waitForExplicitFinish();
 
 var captureRetargetMode = false;

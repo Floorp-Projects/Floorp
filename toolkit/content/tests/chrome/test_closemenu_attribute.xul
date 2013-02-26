@@ -28,6 +28,12 @@
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
+if (navigator.platform.indexOf("Mac") == 0) {
+  SimpleTest.expectAssertions(0, 3);
+} else if (navigator.platform.indexOf("Linux") == 0) {
+  SimpleTest.expectAssertions(0, 5);
+}
+
 SimpleTest.waitForExplicitFinish();
 
 var gExpectedId = "p3";
