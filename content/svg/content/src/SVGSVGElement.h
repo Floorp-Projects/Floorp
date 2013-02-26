@@ -154,19 +154,19 @@ public:
    * Note also that this method does not pay attention to whether the width or
    * height values of the viewBox rect are positive!
    */
-  bool HasViewBox() const;
+  bool HasViewBoxRect() const;
 
   /**
    * Returns true if we should synthesize a viewBox for ourselves (that is, if
    * we're the root element in an image document, and we're not currently being
    * painted for an <svg:image> element).
    *
-   * Only call this method if HasViewBox() returns false.
+   * Only call this method if HasViewBoxRect() returns false.
    */
   bool ShouldSynthesizeViewBox() const;
 
   bool HasViewBoxOrSyntheticViewBox() const {
-    return HasViewBox() || ShouldSynthesizeViewBox();
+    return HasViewBoxRect() || ShouldSynthesizeViewBox();
   }
 
   gfxMatrix GetViewBoxTransform() const;
