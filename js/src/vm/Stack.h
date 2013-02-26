@@ -281,6 +281,7 @@ class AbstractFramePtr
 
     inline UnrootedObject scopeChain() const;
     inline CallObject &callObj() const;
+    inline bool initFunctionScopeObjects(JSContext *cx);
     inline JSCompartment *compartment() const;
 
     inline StaticBlockObject *maybeBlockChain() const;

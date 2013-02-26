@@ -205,7 +205,7 @@ class IonBailoutIterator : public IonFrameIterator
     void dump() const;
 };
 
-bool EnsureHasScopeObjects(JSContext *cx, StackFrame *fp);
+bool EnsureHasScopeObjects(JSContext *cx, AbstractFramePtr fp);
 
 struct BaselineBailoutInfo;
 

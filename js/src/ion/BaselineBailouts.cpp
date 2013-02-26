@@ -1095,6 +1095,13 @@ ion::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
     js_free(bailoutInfo);
     bailoutInfo = NULL;
 
+    // Ensure the frame has a call object if it needs one. If the scope chain
+    // is NULL, we will enter baseline code at the prologue so no need to do
+    // anything in that case.
+    BaselineFrame *topFrame = GetTopBaselineFrame(cx);
+    if (topFrame->scopeChain() && !EnsureHasScopeObjects(cx, topFrame))
+        return false;
+
     // Create arguments objects for bailed out frames, to maintain the invariant
     // that script->needsArgsObj() implies frame->hasArgsObj().
     RootedScript innerScript(cx, NULL);
