@@ -1253,6 +1253,11 @@ protected:
   // permissions in the permission manager) have been approved for fullscreen.
   bool mIsApprovedForFullscreen:1;
 
+  // Whether this document has a fullscreen approved observer. Only documents
+  // which request fullscreen and which don't have a pre-existing approval for
+  // fullscreen will have an observer.
+  bool mHasFullscreenApprovedObserver:1;
+
   uint8_t mXMLDeclarationBits;
 
   nsInterfaceHashtable<nsPtrHashKey<nsIContent>, nsPIBoxObject> *mBoxObjectTable;
