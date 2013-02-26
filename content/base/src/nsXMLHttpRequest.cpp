@@ -3371,6 +3371,8 @@ nsXMLHttpRequest::SetMultipart(bool aMultipart, nsresult& aRv)
     return;
   }
 
+  LogMessage("MultipartXHRWarning", GetOwner());
+
   if (aMultipart) {
     mState |= XML_HTTP_REQUEST_MULTIPART;
   } else {

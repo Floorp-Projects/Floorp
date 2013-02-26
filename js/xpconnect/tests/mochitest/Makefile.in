@@ -43,7 +43,6 @@ MOCHITEST_FILES =	chrome_wrappers_helper.html \
 		bug504877_helper.html \
 		test_bug505915.html \
 		file_bug505915.html \
-		test_bug553407.html \
 		test_bug560351.html \
 		bug571849_helper.html \
 		test_bug585745.html \

@@ -912,7 +912,7 @@ MediaManager::GetUserMedia(bool aPrivileged, nsPIDOMWindow* aWindow,
       uint32_t permission;
       nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
       pm->TestPermission(doc->NodePrincipal(), &permission);
-      if ((permission == nsIPopupWindowManager::DENY_POPUP)) {
+      if (permission == nsIPopupWindowManager::DENY_POPUP) {
         nsCOMPtr<nsIDOMDocument> domDoc = aWindow->GetExtantDocument();
         nsGlobalWindow::FirePopupBlockedEvent(
           domDoc, aWindow, nullptr, EmptyString(), EmptyString()

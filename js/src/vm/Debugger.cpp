@@ -3186,6 +3186,59 @@ DebuggerScript_getAllOffsets(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static JSBool
+DebuggerScript_getAllColumnOffsets(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "getAllColumnOffsets", args, obj, script);
+
+    /*
+     * First pass: determine which offsets in this script are jump targets and
+     * which positions jump to them.
+     */
+    FlowGraphSummary flowData(cx);
+    if (!flowData.populate(cx, script))
+        return false;
+
+    /* Second pass: build the result array. */
+    RootedObject result(cx, NewDenseEmptyArray(cx));
+    if (!result)
+        return false;
+    for (BytecodeRangeWithPosition r(cx, script); !r.empty(); r.popFront()) {
+        size_t lineno = r.frontLineNumber();
+        size_t column = r.frontColumnNumber();
+        size_t offset = r.frontOffset();
+
+        /* Make a note, if the current instruction is an entry point for the current position. */
+        if (!flowData[offset].hasNoEdges() &&
+            (flowData[offset].lineno() != lineno ||
+             flowData[offset].column() != column)) {
+            RootedObject entry(cx, NewBuiltinClassInstance(cx, &ObjectClass));
+            if (!entry)
+                return false;
+
+            RootedId id(cx, NameToId(cx->names().lineNumber));
+            RootedValue value(cx, NumberValue(lineno));
+            if (!JSObject::defineGeneric(cx, entry, id, value))
+                return false;
+
+            value = NumberValue(column);
+            if (!JSObject::defineProperty(cx, entry, cx->names().columnNumber, value))
+                return false;
+
+            id = NameToId(cx->names().offset);
+            value = NumberValue(offset);
+            if (!JSObject::defineGeneric(cx, entry, id, value))
+                return false;
+
+            if (!js_NewbornArrayPush(cx, result, ObjectValue(*entry)))
+                return false;
+        }
+    }
+
+    args.rval().setObject(*result);
+    return true;
+}
+
+static JSBool
 DebuggerScript_getLineOffsets(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "getLineOffsets", args, obj, script);
@@ -3356,6 +3409,7 @@ static JSPropertySpec DebuggerScript_properties[] = {
 static JSFunctionSpec DebuggerScript_methods[] = {
     JS_FN("getChildScripts", DebuggerScript_getChildScripts, 0, 0),
     JS_FN("getAllOffsets", DebuggerScript_getAllOffsets, 0, 0),
+    JS_FN("getAllColumnOffsets", DebuggerScript_getAllColumnOffsets, 0, 0),
     JS_FN("getLineOffsets", DebuggerScript_getLineOffsets, 1, 0),
     JS_FN("getOffsetLine", DebuggerScript_getOffsetLine, 0, 0),
     JS_FN("setBreakpoint", DebuggerScript_setBreakpoint, 2, 0),

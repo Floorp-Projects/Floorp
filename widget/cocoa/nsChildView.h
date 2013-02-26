@@ -485,6 +485,7 @@ public:
   
   virtual bool      DispatchWindowEvent(nsGUIEvent& event);
 
+  void WillPaintWindow();
   bool PaintWindow(nsIntRegion aRegion, bool aIsAlternate);
 
 #ifdef ACCESSIBILITY
@@ -557,6 +558,8 @@ protected:
     nsCOMPtr<nsIWidget> widget = do_CreateInstance(kCPopUpCID);
     return widget.forget();
   }
+
+  nsIWidget* GetWidgetForListenerEvents();
 
 protected:
 
