@@ -17,6 +17,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=327891
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+if (navigator.platform.indexOf("Mac") == 0) {
+  SimpleTest.expectAssertions(0, 1);
+}
+
 var pass = false;
 
 try {

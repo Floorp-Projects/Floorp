@@ -10,6 +10,11 @@
 </iframe>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+
+if (navigator.platform.indexOf("Win") == 0) {
+  SimpleTest.expectAssertions(0, 4);
+}
+
 SimpleTest.waitForExplicitFinish();
 var loc;
 

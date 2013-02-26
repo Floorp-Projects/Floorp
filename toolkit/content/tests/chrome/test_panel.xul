@@ -12,6 +12,10 @@
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
 <script>
+if (navigator.platform.indexOf("Mac") == 0) {
+  SimpleTest.expectAssertions(0, 2);
+}
+
 SimpleTest.waitForExplicitFinish();
 function runTest()
 {

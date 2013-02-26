@@ -21,6 +21,10 @@
   <script type="application/javascript">
   <![CDATA[
 
+if (navigator.platform.indexOf("Linux") == 0) {
+  SimpleTest.expectAssertions(1);
+}
+
 function test()
 {
   var dmui = getDMUI();
