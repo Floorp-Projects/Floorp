@@ -437,6 +437,19 @@ XULTreeAccessible::ChildCount() const
   return childCount;
 }
 
+Relation
+XULTreeAccessible::RelationByType(uint32_t aType)
+{
+  if (aType == nsIAccessibleRelation::RELATION_NODE_PARENT_OF) {
+    if (mTreeView)
+      return Relation(new XULTreeItemIterator(this, mTreeView, -1));
+
+    return Relation();
+  }
+
+  return Accessible::RelationByType(aType);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeAccessible: Widgets
 
@@ -798,18 +811,34 @@ XULTreeItemAccessibleBase::RelationByType(uint32_t aType)
   if (!mTreeView)
     return Relation();
 
-  if (aType != nsIAccessibleRelation::RELATION_NODE_CHILD_OF)
-    return Relation();
+  switch (aType) {
+    case nsIAccessibleRelation::RELATION_NODE_CHILD_OF: {
+      int32_t parentIndex = -1;
+      if (!NS_SUCCEEDED(mTreeView->GetParentIndex(mRow, &parentIndex)))
+        return Relation();
 
-  int32_t parentIndex = -1;
-  if (!NS_SUCCEEDED(mTreeView->GetParentIndex(mRow, &parentIndex)))
-    return Relation();
+      if (parentIndex == -1)
+        return Relation(mParent);
 
-  if (parentIndex == -1)
-    return Relation(mParent);
+      XULTreeAccessible* treeAcc = mParent->AsXULTree();
+      return Relation(treeAcc->GetTreeItemAccessible(parentIndex));
+    }
 
-  XULTreeAccessible* treeAcc = mParent->AsXULTree();
-  return Relation(treeAcc->GetTreeItemAccessible(parentIndex));
+    case nsIAccessibleRelation::RELATION_NODE_PARENT_OF: {
+      bool isTrue = false;
+      if (NS_FAILED(mTreeView->IsContainerEmpty(mRow, &isTrue)) || isTrue)
+        return Relation();
+
+      if (NS_FAILED(mTreeView->IsContainerOpen(mRow, &isTrue)) || !isTrue)
+        return Relation();
+
+      XULTreeAccessible* tree = mParent->AsXULTree();
+      return Relation(new XULTreeItemIterator(tree, mTreeView, mRow));
+    }
+
+    default:
+      return Relation();
+  }
 }
 
 uint8_t

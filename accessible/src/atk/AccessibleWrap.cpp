@@ -853,21 +853,29 @@ refRelationSetCB(AtkObject *aAtkObj)
   if (!accWrap)
     return relation_set;
 
-  uint32_t relationTypes[] = {
-    nsIAccessibleRelation::RELATION_LABELLED_BY,
-    nsIAccessibleRelation::RELATION_LABEL_FOR,
-    nsIAccessibleRelation::RELATION_NODE_CHILD_OF,
+  // Keep in sync with AtkRelationType enum.
+  static const uint32_t relationTypes[] = {
     nsIAccessibleRelation::RELATION_CONTROLLED_BY,
     nsIAccessibleRelation::RELATION_CONTROLLER_FOR,
-    nsIAccessibleRelation::RELATION_EMBEDS,
+    nsIAccessibleRelation::RELATION_LABEL_FOR,
+    nsIAccessibleRelation::RELATION_LABELLED_BY,
+    nsIAccessibleRelation::RELATION_MEMBER_OF,
+    nsIAccessibleRelation::RELATION_NODE_CHILD_OF,
     nsIAccessibleRelation::RELATION_FLOWS_TO,
     nsIAccessibleRelation::RELATION_FLOWS_FROM,
+    nsIAccessibleRelation::RELATION_SUBWINDOW_OF,
+    nsIAccessibleRelation::RELATION_EMBEDS,
+    nsIAccessibleRelation::RELATION_EMBEDDED_BY,
+    nsIAccessibleRelation::RELATION_POPUP_FOR,
+    nsIAccessibleRelation::RELATION_PARENT_WINDOW_OF,
     nsIAccessibleRelation::RELATION_DESCRIBED_BY,
     nsIAccessibleRelation::RELATION_DESCRIPTION_FOR,
+    nsIAccessibleRelation::RELATION_NODE_PARENT_OF
   };
 
   for (uint32_t i = 0; i < ArrayLength(relationTypes); i++) {
-    AtkRelationType atkType = static_cast<AtkRelationType>(relationTypes[i]);
+    // Shift to 1 to skip ATK_RELATION_NULL.
+    AtkRelationType atkType = static_cast<AtkRelationType>(i + 1);
     AtkRelation* atkRelation =
       atk_relation_set_get_relation_by_type(relation_set, atkType);
     if (atkRelation)
