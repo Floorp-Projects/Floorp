@@ -12,8 +12,6 @@
 #define nsTraversal_h___
 
 #include "nsCOMPtr.h"
-#include "nsIDocument.h"
-#include "mozilla/dom/CallbackObject.h"
 
 class nsINode;
 class nsIDOMNodeFilter;
@@ -23,13 +21,13 @@ class nsTraversal
 public:
     nsTraversal(nsINode *aRoot,
                 uint32_t aWhatToShow,
-                const mozilla::dom::NodeFilterHolder &aFilter);
+                nsIDOMNodeFilter *aFilter);
     virtual ~nsTraversal();
 
 protected:
     nsCOMPtr<nsINode> mRoot;
     uint32_t mWhatToShow;
-    mozilla::dom::NodeFilterHolder mFilter;
+    nsCOMPtr<nsIDOMNodeFilter> mFilter;
     bool mInAcceptNode;
 
     /*
