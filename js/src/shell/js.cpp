@@ -648,7 +648,7 @@ Version(JSContext *cx, unsigned argc, jsval *vp)
     jsval *argv = JS_ARGV(cx, vp);
     if (argc == 0 || JSVAL_IS_VOID(argv[0])) {
         /* Get version. */
-        *vp = INT_TO_JSVAL(JS_GetVersion(cx));
+        JS_SET_RVAL(cx, vp, INT_TO_JSVAL(JS_GetVersion(cx)));
     } else {
         /* Set version. */
         int32_t v = -1;
@@ -663,7 +663,7 @@ Version(JSContext *cx, unsigned argc, jsval *vp)
             JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "version");
             return false;
         }
-        *vp = INT_TO_JSVAL(JS_SetVersion(cx, JSVersion(v)));
+        JS_SET_RVAL(cx, vp, INT_TO_JSVAL(JS_SetVersion(cx, JSVersion(v))));
     }
     return true;
 }
@@ -722,7 +722,7 @@ Options(JSContext *cx, unsigned argc, jsval *vp)
     free(names);
     if (!str)
         return false;
-    *vp = STRING_TO_JSVAL(str);
+    JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(str));
     return true;
 }
 
@@ -953,7 +953,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         }
         if (!JS_ExecuteScript(cx, global, script, vp)) {
             if (catchTermination && !JS_IsExceptionPending(cx)) {
-                *vp = StringValue(JS_NewStringCopyZ(cx, "terminated"));
+                JS_SET_RVAL(cx, vp, StringValue(JS_NewStringCopyZ(cx, "terminated")));
                 return true;
             }
             return false;
@@ -1152,7 +1152,7 @@ ReadLine(JSContext *cx, unsigned argc, jsval *vp)
 
     /* Treat the empty string specially. */
     if (buflength == 0) {
-        *vp = feof(from) ? NullValue() : JS_GetEmptyStringValue(cx);
+        JS_SET_RVAL(cx, vp, feof(from) ? NullValue() : JS_GetEmptyStringValue(cx));
         JS_free(cx, buf);
         return true;
     }
@@ -1175,7 +1175,7 @@ ReadLine(JSContext *cx, unsigned argc, jsval *vp)
     if (!str)
         return false;
 
-    *vp = STRING_TO_JSVAL(str);
+    JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(str));
     return true;
 }
 
@@ -1540,7 +1540,7 @@ LineToPC(JSContext *cx, unsigned argc, jsval *vp)
     pc = JS_LineNumberToPC(cx, script, lineno);
     if (!pc)
         return false;
-    *vp = INT_TO_JSVAL(pc - script->code);
+    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(pc - script->code));
     return true;
 }
 
@@ -1556,7 +1556,7 @@ PCToLine(JSContext *cx, unsigned argc, jsval *vp)
     lineno = JS_PCToLineNumber(cx, script, script->code + i);
     if (!lineno)
         return false;
-    *vp = INT_TO_JSVAL(lineno);
+    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(lineno));
     return true;
 }
 
@@ -2145,7 +2145,7 @@ BuildDate(JSContext *cx, unsigned argc, jsval *vp)
     sprintf(version, " for version %d\n", JS_VERSION);
 #endif
     fprintf(gOutFile, "built on %s at %s%s", __DATE__, __TIME__, version);
-    *vp = UndefinedValue();
+    JS_SET_RVAL(cx, vp, UndefinedValue());
     return true;
 }
 
@@ -2217,7 +2217,7 @@ Clone(JSContext *cx, unsigned argc, jsval *vp)
     JSObject *clone = JS_CloneFunctionObject(cx, funobj, parent);
     if (!clone)
         return false;
-    *vp = OBJECT_TO_JSVAL(clone);
+    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(clone));
     return true;
 }
 
@@ -2233,14 +2233,14 @@ GetPDA(JSContext *cx, unsigned argc, jsval *vp)
     if (!JS_ValueToObject(cx, argc == 0 ? UndefinedValue() : vp[2], vobj.address()))
         return false;
     if (!vobj) {
-        *vp = UndefinedValue();
+        JS_SET_RVAL(cx, vp, UndefinedValue());
         return true;
     }
 
     RootedObject aobj(cx, JS_NewArrayObject(cx, 0, NULL));
     if (!aobj)
         return false;
-    *vp = OBJECT_TO_JSVAL(aobj);
+    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(aobj));
 
     ok = !!JS_GetPropertyDescArray(cx, vobj, &pda);
     if (!ok)
@@ -2280,7 +2280,7 @@ GetSLX(JSContext *cx, unsigned argc, jsval *vp)
     script = ValueToScript(cx, argc == 0 ? UndefinedValue() : vp[2]);
     if (!script)
         return false;
-    *vp = INT_TO_JSVAL(js_GetScriptLineExtent(script));
+    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(js_GetScriptLineExtent(script)));
     return true;
 }
 
@@ -2291,7 +2291,7 @@ ToInt32(JSContext *cx, unsigned argc, jsval *vp)
 
     if (!JS_ValueToInt32(cx, argc == 0 ? UndefinedValue() : vp[2], &i))
         return false;
-    *vp = JS_NumberValue(i);
+    JS_SET_RVAL(cx, vp, JS_NumberValue(i));
     return true;
 }
 
@@ -2515,7 +2515,7 @@ ShapeOf(JSContext *cx, unsigned argc, JS::Value *vp)
         return false;
     }
     JSObject *obj = &v.toObject();
-    *vp = JS_NumberValue((double) ((uintptr_t)obj->lastProperty() >> 3));
+    JS_SET_RVAL(cx, vp, JS_NumberValue((double) ((uintptr_t)obj->lastProperty() >> 3)));
     return true;
 }
 
@@ -2914,7 +2914,7 @@ static JSBool
 Timeout(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (argc == 0) {
-        *vp = JS_NumberValue(gTimeoutInterval);
+        JS_SET_RVAL(cx, vp, JS_NumberValue(gTimeoutInterval));
         return true;
     }
 
@@ -2936,7 +2936,7 @@ Timeout(JSContext *cx, unsigned argc, jsval *vp)
         gTimeoutFunc = value;
     }
 
-    *vp = UndefinedValue();
+    JS_SET_RVAL(cx, vp, UndefinedValue());
     return SetTimeoutValue(cx, t);
 }
 
@@ -2948,7 +2948,7 @@ Elapsed(JSContext *cx, unsigned argc, jsval *vp)
         JSShellContextData *data = GetContextData(cx);
         if (data)
             d = PRMJ_Now() - data->startTime;
-        *vp = JS_NumberValue(d);
+        JS_SET_RVAL(cx, vp, JS_NumberValue(d));
         return true;
     }
     JS_ReportError(cx, "Wrong number of arguments");
@@ -2970,12 +2970,12 @@ Parent(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     Rooted<JSObject*> parent(cx, JS_GetParent(&v.toObject()));
-    *vp = OBJECT_TO_JSVAL(parent);
+    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(parent));
 
     /* Outerize if necessary.  Embrace the ugliness! */
     if (parent) {
         if (JSObjectOp op = parent->getClass()->ext.outerObject)
-            *vp = OBJECT_TO_JSVAL(op(cx, parent));
+            JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(op(cx, parent)));
     }
 
     return true;
@@ -3207,14 +3207,14 @@ Snarf(JSContext *cx, unsigned argc, jsval *vp)
             JSObject *obj;
             if (!(obj = FileAsTypedArray(cx, pathname)))
                 return false;
-            *vp = OBJECT_TO_JSVAL(obj);
+            JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(obj));
             return true;
         }
     }
 
     if (!(str = FileAsString(cx, pathname)))
         return false;
-    *vp = STRING_TO_JSVAL(str);
+    JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(str));
     return true;
 }
 
@@ -3238,7 +3238,7 @@ System(JSContext *cx, unsigned argc, jsval *vp)
 
     int result = system(command.ptr());
 
-    *vp = Int32Value(result);
+    JS_SET_RVAL(cx, vp, Int32Value(result));
     return true;
 }
 
@@ -4178,9 +4178,9 @@ its_get_customNative(JSContext *cx, unsigned argc, jsval *vp)
 
     if (JS_GetClass(obj) == &its_class) {
         jsval *val = (jsval *) JS_GetPrivate(obj);
-        *vp = val ? *val : UndefinedValue();
+        JS_SET_RVAL(cx, vp, val ? *val : UndefinedValue());
     } else {
-        *vp = UndefinedValue();
+        JS_SET_RVAL(cx, vp, UndefinedValue());
     }
 
     return true;
@@ -4531,7 +4531,7 @@ dom_get_x(JSContext* cx, JSHandleObject obj, void *self, JS::Value *vp)
 {
     JS_ASSERT(JS_GetClass(obj) == GetDomClass());
     JS_ASSERT(self == (void *)0x1234);
-    *vp = JS_NumberValue(double(3.14));
+    JS_SET_RVAL(cx, vp, JS_NumberValue(double(3.14)));
     return true;
 }
 
@@ -4628,7 +4628,7 @@ dom_genericGetter(JSContext *cx, unsigned argc, JS::Value *vp)
         return false;
 
     if (JS_GetClass(obj) != &dom_class) {
-        *vp = UndefinedValue();
+        JS_SET_RVAL(cx, vp, UndefinedValue());
         return true;
     }
 
@@ -4650,7 +4650,7 @@ dom_genericSetter(JSContext* cx, unsigned argc, JS::Value* vp)
     JS_ASSERT(argc == 1);
 
     if (JS_GetClass(obj) != &dom_class) {
-        *vp = UndefinedValue();
+        JS_SET_RVAL(cx, vp, UndefinedValue());
         return true;
     }
 
@@ -4662,7 +4662,7 @@ dom_genericSetter(JSContext* cx, unsigned argc, JS::Value* vp)
     JSJitPropertyOp setter = info->op;
     if (!setter(cx, obj, val.toPrivate(), argv))
         return false;
-    *vp = UndefinedValue();
+    JS_SET_RVAL(cx, vp, UndefinedValue());
     return true;
 }
 
@@ -4674,7 +4674,7 @@ dom_genericMethod(JSContext* cx, unsigned argc, JS::Value *vp)
         return false;
 
     if (JS_GetClass(obj) != &dom_class) {
-        *vp = UndefinedValue();
+        JS_SET_RVAL(cx, vp, UndefinedValue());
         return true;
     }
 
