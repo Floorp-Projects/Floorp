@@ -26,19 +26,17 @@ WMFDecoder::GetSupportedCodecs(const nsACString& aType,
       NS_FAILED(LoadDLLs()))
     return false;
 
-  // MP3 is specified to have no codecs in its "type" param:
-  // http://wiki.whatwg.org/wiki/Video_type_parameters#MPEG
-  // So specify an empty codecs list, so that if script specifies 
-  // a "type" param with codecs, it will be reported as not supported
-  // as per the spec.
+  // Assume that if LoadDLLs() didn't fail, we can playback the types that
+  // we know should be supported on Windows 7+ using WMF.
   static char const *const mp3AudioCodecs[] = {
+    "mp3",
     nullptr
   };
-  if (aType.EqualsASCII("audio/mpeg")) {
+  if (aType.EqualsASCII("audio/mpeg") ||
+      aType.EqualsASCII("audio/mp3")) {
     if (aCodecList) {
       *aCodecList = mp3AudioCodecs;
     }
-    // Assume that if LoadDLLs() didn't fail, we can decode MP3.
     return true;
   }
 
@@ -47,7 +45,8 @@ WMFDecoder::GetSupportedCodecs(const nsACString& aType,
     "mp4a.40.2",    // AAC-LC
     nullptr
   };
-  if (aType.EqualsASCII("audio/mp4")) {
+  if (aType.EqualsASCII("audio/mp4") ||
+      aType.EqualsASCII("audio/x-m4a")) {
     if (aCodecList) {
       *aCodecList = aacAudioCodecs;
     }
