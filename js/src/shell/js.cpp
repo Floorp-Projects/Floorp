@@ -4109,34 +4109,26 @@ its_convert(JSContext *cx, HandleObject obj, JSType type, MutableHandleValue vp)
 static void
 its_finalize(JSFreeOp *fop, JSObject *obj)
 {
-    jsval *rootedVal;
     if (its_noisy)
         fprintf(gOutFile, "finalizing it\n");
-    rootedVal = (jsval *) JS_GetPrivate(obj);
-    if (rootedVal) {
-        JS_RemoveValueRootRT(fop->runtime(), rootedVal);
-        JS_SetPrivate(obj, NULL);
-        delete rootedVal;
-    }
 }
 
 static JSClass its_class = {
-    "It", JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE | JSCLASS_HAS_PRIVATE,
+    "It", JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE | JSCLASS_HAS_RESERVED_SLOTS(1),
     its_addProperty,  its_delProperty,  its_getProperty,  its_setProperty,
     (JSEnumerateOp)its_enumerate, (JSResolveOp)its_resolve,
-    its_convert,      its_finalize
+    its_convert,      its_finalize,
 };
 
 static JSBool
 its_getter(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
-    if (JS_GetClass(obj) == &its_class) {
-        jsval *val = (jsval *) JS_GetPrivate(obj);
-        vp.set(val ? *val : UndefinedValue());
-    } else {
+    if (JS_GetClass(obj) != &its_class) {
         vp.set(UndefinedValue());
+        return true;
     }
 
+    vp.set(JS_GetReservedSlot(obj, 0));
     return true;
 }
 
@@ -4146,26 +4138,9 @@ its_setter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableH
     if (JS_GetClass(obj) != &its_class)
         return true;
 
-    jsval *val = (jsval *) JS_GetPrivate(obj);
-    if (val) {
-        *val = vp;
-        return true;
-    }
+    JS_SetReservedSlot(obj, 0, vp);
 
-    val = new jsval;
-    if (!val) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-    }
-
-    if (!JS_AddValueRoot(cx, val)) {
-        delete val;
-        return false;
-    }
-
-    JS_SetPrivate(obj, (void*)val);
-
-    *val = vp;
+    vp.set(UndefinedValue());
     return true;
 }
 
@@ -4176,13 +4151,12 @@ its_get_customNative(JSContext *cx, unsigned argc, jsval *vp)
     if (!obj)
         return false;
 
-    if (JS_GetClass(obj) == &its_class) {
-        jsval *val = (jsval *) JS_GetPrivate(obj);
-        JS_SET_RVAL(cx, vp, val ? *val : UndefinedValue());
-    } else {
+    if (JS_GetClass(obj) != &its_class) {
         JS_SET_RVAL(cx, vp, UndefinedValue());
+        return true;
     }
 
+    JS_SET_RVAL(cx, vp, JS_GetReservedSlot(obj, 0));
     return true;
 }
 
@@ -4196,28 +4170,8 @@ its_set_customNative(JSContext *cx, unsigned argc, jsval *vp)
     if (JS_GetClass(obj) != &its_class)
         return true;
 
-    jsval *argv = JS_ARGV(cx, vp);
-
-    jsval *val = (jsval *) JS_GetPrivate(obj);
-    if (val) {
-        *val = *argv;
-        return true;
-    }
-
-    val = new jsval;
-    if (!val) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-    }
-
-    if (!JS_AddValueRoot(cx, val)) {
-        delete val;
-        return false;
-    }
-
-    JS_SetPrivate(obj, (void *)val);
-
-    *val = *argv;
+    JS_SetReservedSlot(obj, 0, argc >= 1 ? JS_ARGV(cx, vp)[0] : UndefinedValue());
+    JS_SET_RVAL(cx, vp, UndefinedValue());
     return true;
 }
 
