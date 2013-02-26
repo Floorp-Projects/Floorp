@@ -2077,9 +2077,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   bool thisChrome = IsChromeWindow();
 
   nsCxPusher cxPusher;
-  if (!cxPusher.Push(cx)) {
-    return NS_ERROR_FAILURE;
-  }
+  cxPusher.Push(cx);
 
   XPCAutoRequest ar(cx);
 
