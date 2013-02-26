@@ -5440,6 +5440,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     JS::Value exn = JSVAL_VOID;
 
     {
+      nsCxPusher pusher;
       Maybe<JSAutoCompartment> ac;
 
       JSContext* my_cx;
@@ -5449,6 +5450,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         my_cx = my_context->GetNativeContext();
 
         if (my_cx != cx) {
+          pusher.Push(my_cx);
           ac.construct(my_cx, obj);
         }
       }
