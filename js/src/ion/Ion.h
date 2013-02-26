@@ -87,6 +87,12 @@ struct IonOptions
     bool parallelCompilation;
 
     // How many invocations or loop iterations are needed before functions
+    // are compiled with the baseline compiler.
+    //
+    // Default: 10
+    uint32_t baselineUsesBeforeCompile;
+
+    // How many invocations or loop iterations are needed before functions
     // are compiled.
     //
     // Default: 1,000
@@ -174,6 +180,7 @@ struct IonOptions
     void setEagerCompilation() {
         eagerCompilation = true;
         usesBeforeCompile = usesBeforeCompileNoJaeger = 0;
+        baselineUsesBeforeCompile = 0;
 
         parallelCompilation = false;
     }
@@ -190,6 +197,7 @@ struct IonOptions
         rangeAnalysis(true),
         uce(true),
         parallelCompilation(false),
+        baselineUsesBeforeCompile(10),
         usesBeforeCompile(1000),
         usesBeforeCompileNoJaeger(40),
         usesBeforeInliningFactor(.125),

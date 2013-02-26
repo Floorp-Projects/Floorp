@@ -46,6 +46,9 @@ class IonCommonFrameLayout
     uint8_t *returnAddress() const {
         return returnAddress_;
     }
+    void setReturnAddress(uint8_t *addr) {
+        returnAddress_ = addr;
+    }
 };
 
 // this is the layout of the frame that is used when we enter Ion code from EABI code

@@ -722,5 +722,11 @@ LeaveBlock(JSContext *cx, BaselineFrame *frame)
     return true;
 }
 
+bool
+InitBaselineFrameForOsr(BaselineFrame *frame, StackFrame *interpFrame, uint32_t numStackValues)
+{
+    return frame->initForOsr(interpFrame, numStackValues);
+}
+
 } // namespace ion
 } // namespace js

@@ -3247,6 +3247,37 @@ Debugger::observesScript(JSScript *script) const
     return observesGlobal(&script->global());
 }
 
+/* static */ bool
+Debugger::handleBaselineOsr(JSContext *cx, StackFrame *from, ion::BaselineFrame *to)
+{
+    ScriptFrameIter iter(cx);
+    JS_ASSERT(iter.abstractFramePtr() == to);
+
+    for (FrameRange r(from); !r.empty(); r.popFront()) {
+        RootedObject frameobj(cx, r.frontFrame());
+        Debugger *dbg = r.frontDebugger();
+        JS_ASSERT(dbg == Debugger::fromChildJSObject(frameobj));
+
+        // Update frame object's StackIter::data pointer.
+        DebuggerFrame_freeStackIterData(cx->runtime->defaultFreeOp(), frameobj);
+        StackIter::Data *data = iter.copyData();
+        if (!data)
+            return false;
+        frameobj->setPrivate(data);
+
+        // Add the frame object with |to| as key.
+        if (!dbg->frames.putNew(to, frameobj)) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+
+        // Remove the old entry.
+        r.removeFrontFrame();
+    }
+
+    return true;
+}
+
 static JSBool
 DebuggerScript_setBreakpoint(JSContext *cx, unsigned argc, Value *vp)
 {

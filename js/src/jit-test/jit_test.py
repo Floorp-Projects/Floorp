@@ -147,17 +147,21 @@ def main(argv):
     if options.tbpl:
         # Running all bits would take forever. Instead, we test a few interesting combinations.
         flags = [
-                      ['--no-jm'],
-                      ['--ion-eager'],
+                      ['--no-baseline', '--no-jm'],
+                      ['--ion-eager'], # implies --baseline-eager
+                      ['--no-baseline'],
+                      ['--no-baseline', '--ion-eager'],
+                      ['--baseline-eager'],
+                      ['--baseline-eager', '--no-ti'],
                       # Below, equivalents the old shell flags: ,m,am,amd,n,mn,amn,amdn,mdn
-                      ['--no-ion', '--no-jm', '--no-ti'],
-                      ['--no-ion', '--no-ti'],
-                      ['--no-ion', '--no-ti', '-a', '-d'],
-                      ['--no-ion', '--no-jm'],
-                      ['--no-ion'],
-                      ['--no-ion', '-a'],
-                      ['--no-ion', '-a', '-d'],
-                      ['--no-ion', '-d']
+                      ['--no-baseline', '--no-ion', '--no-jm', '--no-ti'],
+                      ['--no-baseline', '--no-ion', '--no-ti'],
+                      ['--no-baseline', '--no-ion', '--no-ti', '-a', '-d'],
+                      ['--no-baseline', '--no-ion', '--no-jm'],
+                      ['--no-baseline', '--no-ion'],
+                      ['--no-baseline', '--no-ion', '-a'],
+                      ['--no-baseline', '--no-ion', '-a', '-d'],
+                      ['--no-baseline', '--no-ion', '-d']
                     ]
         for test in test_list:
             for variant in flags:

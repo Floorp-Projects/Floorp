@@ -502,6 +502,9 @@ bool OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, JS
 bool EnterBlock(JSContext *cx, BaselineFrame *frame, Handle<StaticBlockObject *> block);
 bool LeaveBlock(JSContext *cx, BaselineFrame *frame);
 
+bool InitBaselineFrameForOsr(BaselineFrame *frame, StackFrame *interpFrame,
+                             uint32_t numStackValues);
+
 } // namespace ion
 } // namespace js
 

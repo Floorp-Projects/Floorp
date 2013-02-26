@@ -61,6 +61,7 @@ struct EnterJITStack
     // frame == r3
     CalleeToken token;
     JSObject *scopeChain;
+    size_t numStackValues;
     Value *vp;
 };
 
@@ -82,7 +83,6 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
 
     const Address slot_token(sp, offsetof(EnterJITStack, token));
     const Address slot_vp(sp, offsetof(EnterJITStack, vp));
-    const Address slot_scopeChain(sp, offsetof(EnterJITStack, scopeChain));
 
     JS_ASSERT(OsrFrameReg == reg_frame);
 
@@ -114,9 +114,9 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     // Load calleeToken into r9.
     masm.loadPtr(slot_token, r9);
 
-    // Load eval scope chain.
+    // Save stack pointer.
     if (type == EnterJitBaseline)
-        masm.loadPtr(slot_scopeChain, r11);
+        masm.movePtr(sp, r11);
 
     // Load the number of actual arguments into r10.
     masm.loadPtr(slot_vp, r10);
@@ -171,14 +171,103 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     masm.transferReg(r10); // [sp',12]  = actual arguments
     masm.finishDataTransfer();
 
+    Label returnLabel;
     if (type == EnterJitBaseline) {
+        // Handle OSR.
+        GeneralRegisterSet regs(GeneralRegisterSet::All());
+        regs.take(JSReturnOperand);
+        regs.takeUnchecked(OsrFrameReg);
+        regs.take(r11);
+        regs.take(ReturnReg);
+
+        const Address slot_numStackValues(r11, offsetof(EnterJITStack, numStackValues));
+
+        Label notOsr;
+        masm.branchTestPtr(Assembler::Zero, OsrFrameReg, OsrFrameReg, &notOsr);
+
+        Register scratch = regs.takeAny();
+
+        Register numStackValues = regs.takeAny();
+        masm.load32(slot_numStackValues, numStackValues);
+
+        // Write return address. On ARM, CodeLabel is only used for tableswitch,
+        // so we can't use it here to get the return address. Instead, we use
+        // pc + a fixed offset to a jump to returnLabel. The pc register holds
+        // pc + 8, so we add the size of 2 instructions to skip the instructions
+        // emitted by storePtr and jump(&skipJump).
+        {
+            AutoForbidPools afp(&masm);
+            Label skipJump;
+            masm.mov(pc, scratch);
+            masm.addPtr(Imm32(2 * sizeof(uint32_t)), scratch);
+            masm.storePtr(scratch, Address(sp, 0));
+            masm.jump(&skipJump);
+            masm.jump(&returnLabel);
+            masm.bind(&skipJump);
+        }
+
+        // Push previous frame pointer.
+        masm.push(r11);
+
+        // Reserve frame.
+        Register framePtr = r11;
+        masm.subPtr(Imm32(BaselineFrame::Size()), sp);
+        masm.mov(sp, framePtr);
+
+        // Reserve space for locals and stack values.
+        masm.ma_lsl(Imm32(3), numStackValues, scratch);
+        masm.ma_sub(sp, scratch, sp);
+
+        // Enter exit frame.
+        masm.addPtr(Imm32(BaselineFrame::Size() + BaselineFrame::FramePointerOffset), scratch);
+        masm.makeFrameDescriptor(scratch, IonFrame_BaselineJS);
+        masm.push(scratch);
+        masm.push(Imm32(0)); // Fake return address.
+        masm.enterFakeExitFrame();
+
+        masm.push(framePtr); // BaselineFrame
+        masm.push(r0); // jitcode
+
+        masm.setupUnalignedABICall(3, scratch);
+        masm.passABIArg(r11); // BaselineFrame
+        masm.passABIArg(OsrFrameReg); // StackFrame
+        masm.passABIArg(numStackValues);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ion::InitBaselineFrameForOsr));
+
+        Register jitcode = regs.takeAny();
+        masm.pop(jitcode);
+        masm.pop(framePtr);
+
+        JS_ASSERT(jitcode != ReturnReg);
+
+        Label error;
+        masm.addPtr(Imm32(IonExitFrameLayout::SizeWithFooter()), sp);
+        masm.addPtr(Imm32(BaselineFrame::Size()), framePtr);
+        masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &error);
+
+        masm.jump(jitcode);
+
+        // OOM: load error value, discard return address and previous frame
+        // pointer and return.
+        masm.bind(&error);
+        masm.mov(framePtr, sp);
+        masm.addPtr(Imm32(2 * sizeof(uintptr_t)), sp);
+        masm.moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
+        masm.jump(&returnLabel);
+
+        masm.bind(&notOsr);
         // Load the scope chain in R1.
         JS_ASSERT(R1.scratchReg() != r0);
-        masm.ma_mov(r11, R1.scratchReg());
+        masm.loadPtr(Address(r11, offsetof(EnterJITStack, scopeChain)), R1.scratchReg());
     }
 
     // Call the function.
     masm.ma_callIonNoPush(r0);
+
+    if (type == EnterJitBaseline) {
+        // Baseline OSR will return here.
+        masm.bind(&returnLabel);
+    }
 
     // The top of the stack now points to the address of the field following
     // the return address because the return address is popped for the
