@@ -45,7 +45,6 @@ import android.content.pm.Signature;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
@@ -215,6 +214,19 @@ abstract public class GeckoApp
                 invalidateOptionsMenu();
                 if (mFormAssistPopup != null)
                     mFormAssistPopup.hide();
+                break;
+
+            case LOADED:
+                // Sync up the layer view and the tab if the tab is
+                // currently displayed.
+                LayerView layerView = mLayerView;
+                if (layerView != null && Tabs.getInstance().isSelectedTab(tab))
+                    layerView.setBackgroundColor(tab.getBackgroundColor());
+                break;
+
+            case DESKTOP_MODE_CHANGE:
+                if (Tabs.getInstance().isSelectedTab(tab))
+                    invalidateOptionsMenu();
                 break;
         }
     }
@@ -731,24 +743,6 @@ abstract public class GeckoApp
                 final String msg = message.getString("message");
                 final String duration = message.getString("duration");
                 handleShowToast(msg, duration);
-            } else if (event.equals("DOMContentLoaded")) {
-                final int tabId = message.getInt("tabID");
-                final String backgroundColor = message.getString("bgColor");
-                handleContentLoaded(tabId);
-                Tab tab = Tabs.getInstance().getTab(tabId);
-                if (backgroundColor != null) {
-                    tab.setBackgroundColor(backgroundColor);
-                } else {
-                    // Default to white if no color is given
-                    tab.setBackgroundColor(Color.WHITE);
-                }
-
-                // Sync up the layer view and the tab if the tab is
-                // currently displayed.
-                LayerView layerView = mLayerView;
-                if (layerView != null && Tabs.getInstance().isSelectedTab(tab)) {
-                    layerView.setBackgroundColor(tab.getBackgroundColor());
-                }
             } else if (event.equals("log")) {
                 // generic log listener
                 final String msg = message.getString("msg");
@@ -837,20 +831,6 @@ abstract public class GeckoApp
             } else if (event.equals("WebApps:Uninstall")) {
                 String origin = message.getString("origin");
                 GeckoAppShell.uninstallWebApp(origin);
-            } else if (event.equals("DesktopMode:Changed")) {
-                int tabId = message.getInt("tabId");
-                boolean desktopMode = message.getBoolean("desktopMode");
-                final Tab tab = Tabs.getInstance().getTab(tabId);
-                if (tab == null)
-                    return;
-
-                tab.setDesktopMode(desktopMode);
-                mMainHandler.post(new Runnable() {
-                    public void run() {
-                        if (tab == Tabs.getInstance().getSelectedTab())
-                            invalidateOptionsMenu();
-                    }
-                });
             } else if (event.equals("Share:Text")) {
                 String text = message.getString("text");
                 GeckoAppShell.openUriExternal(text, "text/plain", "", "", Intent.ACTION_SEND, "");
@@ -988,14 +968,6 @@ abstract public class GeckoApp
                 toast.show();
             }
         });
-    }
-
-    void handleContentLoaded(int tabId) {
-        final Tab tab = Tabs.getInstance().getTab(tabId);
-        if (tab == null)
-            return;
-
-        Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.LOADED);
     }
 
     private void addFullScreenPluginView(View view) {
@@ -1636,7 +1608,6 @@ abstract public class GeckoApp
         }
 
         //register for events
-        registerEventListener("DOMContentLoaded");
         registerEventListener("log");
         registerEventListener("Reader:Added");
         registerEventListener("Reader:Removed");
@@ -1664,7 +1635,6 @@ abstract public class GeckoApp
         registerEventListener("WebApps:Open");
         registerEventListener("WebApps:Install");
         registerEventListener("WebApps:Uninstall");
-        registerEventListener("DesktopMode:Changed");
         registerEventListener("Share:Text");
         registerEventListener("Share:Image");
         registerEventListener("Wallpaper:Set");
@@ -2032,7 +2002,6 @@ abstract public class GeckoApp
         if (isFinishing())
             GeckoAppShell.sendEventToGecko(GeckoEvent.createShutdownEvent());
 
-        unregisterEventListener("DOMContentLoaded");
         unregisterEventListener("log");
         unregisterEventListener("Reader:Added");
         unregisterEventListener("Reader:Removed");
@@ -2060,7 +2029,6 @@ abstract public class GeckoApp
         unregisterEventListener("WebApps:Open");
         unregisterEventListener("WebApps:Install");
         unregisterEventListener("WebApps:Uninstall");
-        unregisterEventListener("DesktopMode:Changed");
         unregisterEventListener("Share:Text");
         unregisterEventListener("Share:Image");
         unregisterEventListener("Wallpaper:Set");

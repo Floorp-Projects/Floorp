@@ -17,6 +17,7 @@ import android.accounts.OnAccountsUpdateListener;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.database.ContentObserver;
+import android.graphics.Color;
 import android.net.Uri;
 import android.util.Log;
 import android.widget.Toast;
@@ -74,8 +75,10 @@ public class Tabs implements GeckoEventListener {
         registerEventListener("Content:StateChange");
         registerEventListener("Content:LoadError");
         registerEventListener("Content:PageShow");
+        registerEventListener("DOMContentLoaded");
         registerEventListener("DOMTitleChanged");
         registerEventListener("DOMLinkAdded");
+        registerEventListener("DesktopMode:Changed");
     }
 
     public void attachToActivity(GeckoApp activity) {
@@ -349,11 +352,23 @@ public class Tabs implements GeckoEventListener {
                 notifyListeners(tab, Tabs.TabEvents.LOAD_ERROR);
             } else if (event.equals("Content:PageShow")) {
                 notifyListeners(tab, TabEvents.PAGE_SHOW);
+            } else if (event.equals("DOMContentLoaded")) {
+                String backgroundColor = message.getString("bgColor");
+                if (backgroundColor != null) {
+                    tab.setBackgroundColor(backgroundColor);
+                } else {
+                    // Default to white if no color is given
+                    tab.setBackgroundColor(Color.WHITE);
+                }
+                notifyListeners(tab, Tabs.TabEvents.LOADED);
             } else if (event.equals("DOMTitleChanged")) {
                 tab.updateTitle(message.getString("title"));
             } else if (event.equals("DOMLinkAdded")) {
                 tab.updateFaviconURL(message.getString("href"), message.getInt("size"));
                 notifyListeners(tab, TabEvents.LINK_ADDED);
+            } else if (event.equals("DesktopMode:Changed")) {
+                tab.setDesktopMode(message.getBoolean("desktopMode"));
+                notifyListeners(tab, TabEvents.DESKTOP_MODE_CHANGE);
             }
         } catch (Exception e) { 
             Log.w(LOGTAG, "handleMessage threw for " + event, e);
@@ -411,7 +426,8 @@ public class Tabs implements GeckoEventListener {
         PAGE_SHOW,
         LINK_ADDED,
         SECURITY_CHANGE,
-        READER_ENABLED
+        READER_ENABLED,
+        DESKTOP_MODE_CHANGE
     }
 
     public void notifyListeners(Tab tab, TabEvents msg) {
