@@ -555,33 +555,6 @@ appbar toolbarbutton[disabled="true"] {
   -moz-image-region: rect(80px, 200px, 120px, 160px);
 }
 
-/* About flyout pane */
-
-#about-flyoutpanel {
-  width: 350px;
-  background-image:url('chrome://browser/skin/images/about-footer.png');
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  background-position: right bottom;
-}
-
-#about-flyoutpanel label.text-link {
-  text-decoration: none;
-  color: #1167bd;
-}
-
-#about-product-label {
- font-weight: bold;
-}
-
-#about-version-label {
- margin-top: 11pt;
-}
-
-#about-policy-label {
- margin-top: 24pt;
-}
-
 /* Application-Specific */
 #download-button {
   -moz-image-region: rect(0px, 40px, 40px, 0px) !important;
@@ -648,87 +621,41 @@ appbar toolbarbutton[disabled="true"] {
   -moz-image-region: rect(80px, 360px, 120px, 320px) !important;
 }
 
-/* Start UI (Autocomplete + New Tab Page) ----------------------------------- */
+/* Flyouts ---------------------------------------------------------------- */
 
-#start-container {
-  display: none;
+/* don't add a margin to the very top settings entry in flyouts */
+flyoutpanel > settings:first-child {
+  margin-top: 0px;
 }
 
-#start-container[startpage],
-#start-container[filtering] {
-  display: -moz-box;
+/* About flyout pane */
+
+#about-flyoutpanel {
+  width: 350px;
+  background-image:url('chrome://browser/skin/images/about-footer.png');
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: right bottom;
 }
 
-#start-scrollbox {
-  overflow: hidden;
+#about-flyoutpanel label.text-link {
+  text-decoration: none;
+  color: #1167bd;
 }
 
-/* if autocomplete is set, hide both start pages,
- *  else hide the autocomplete screen */
-#start-container[filtering] > .start-page,
-#start-container:not([filtering]) > #start-autocomplete {
-  visibility: collapse;
+#about-product-label {
+ font-weight: bold;
 }
 
-/* if snapped, hide the fullscreen awesome screen, if viewstate is anything
- *  other than snapped, hide the snapped awesome screen */
-#start[viewstate="snapped"],
-#snapped-start:not([viewstate="snapped"]) {
-  visibility: collapse;
+#about-version-label {
+ margin-top: 11pt;
 }
 
-/* Browser Content Ares ----------------------------------------------------- */
-
-/* Hide the browser while the start UI is visible */
-#content-viewport[startpage],
-#content-viewport[filtering] {
-  visibility: collapse;
+#about-policy-label {
+ margin-top: 24pt;
 }
 
-#browsers {
-  background: white;
-}
-
-/* Panel UI ---------------------------------------------------------------- */
-
-#panel-container {
-  padding: 60px 40px;
-}
-
-#panel-close-button {
-  background: transparent;
-  border: 0 none;
-  -moz-appearance: none;
-  margin: 0;
-  -moz-margin-end: 40px;
-  list-style-image: url(chrome://browser/skin/images/back.png);
-  -moz-image-region: rect(0 48px 48px 0);
-  padding: 0;
-  min-height: 48px;
-  max-height: 48px;
-  -moz-box-pack: center;
-}
-
-#panel-close-button[disabled="true"] {
-  -moz-image-region: rect(0 96px 48px 48px);
-}
-
-#panel-view-switcher {
-  border: 0 none !important;
-  color: #000 !important;
-  background: transparent;
-  padding: 0;
-  font-size: @metro_font_xlarge@;
-  font-weight: 100;
-  margin: 0;
-}
-
-#panel-items {
-  padding-top: 20px;
-  -moz-padding-start: 88px;
-}
-
-/* Preferences Section - Panel UI ------------------------------------------ */
+/* Preferences flyout */
 
 #prefs-flyoutpanel {
   width: 400px;
@@ -777,6 +704,10 @@ setting[type="directory"] > .preferences-alignment {
   -moz-box-align: center;
 }
 
+#prefs-homepage-options, #prefs-homepage-popup {
+  min-width: 200px;
+}
+
 .options-box {
   -moz-margin-start: 28px;  /* sized based on the 32px addon image */
 }
@@ -792,6 +723,86 @@ setting[type="directory"] > .preferences-alignment {
 
 .preferences-description:empty {
   display: none;
+}
+
+/* Start UI (Autocomplete + New Tab Page) ----------------------------------- */
+
+#start-container {
+  display: none;
+}
+
+#start-container[startpage],
+#start-container[filtering] {
+  display: -moz-box;
+}
+
+#start-scrollbox {
+  overflow: hidden;
+}
+
+/* if autocomplete is set, hide both start pages,
+ *  else hide the autocomplete screen */
+#start-container[filtering] > .start-page,
+#start-container:not([filtering]) > #start-autocomplete {
+  visibility: collapse;
+}
+
+/* if snapped, hide the fullscreen awesome screen, if viewstate is anything
+ *  other than snapped, hide the snapped awesome screen */
+#start[viewstate="snapped"],
+#snapped-start:not([viewstate="snapped"]) {
+  visibility: collapse;
+}
+
+/* Browser Content Areas ----------------------------------------------------- */
+
+/* Hide the browser while the start UI is visible */
+#content-viewport[startpage],
+#content-viewport[filtering] {
+  visibility: collapse;
+}
+
+#browsers {
+  background: white;
+}
+
+/* Panel UI ---------------------------------------------------------------- */
+
+#panel-container {
+  padding: 60px 40px;
+}
+
+#panel-close-button {
+  background: transparent;
+  border: 0 none;
+  -moz-appearance: none;
+  margin: 0;
+  -moz-margin-end: 40px;
+  list-style-image: url(chrome://browser/skin/images/back.png);
+  -moz-image-region: rect(0 48px 48px 0);
+  padding: 0;
+  min-height: 48px;
+  max-height: 48px;
+  -moz-box-pack: center;
+}
+
+#panel-close-button[disabled="true"] {
+  -moz-image-region: rect(0 96px 48px 48px);
+}
+
+#panel-view-switcher {
+  border: 0 none !important;
+  color: #000 !important;
+  background: transparent;
+  padding: 0;
+  font-size: @metro_font_xlarge@;
+  font-weight: 100;
+  margin: 0;
+}
+
+#panel-items {
+  padding-top: 20px;
+  -moz-padding-start: 88px;
 }
 
 /* Console Section - Panel UI ---------------------------------------------- */
