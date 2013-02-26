@@ -7773,17 +7773,10 @@ public:
 
   NS_IMETHOD Run()
   {
-    JSContext* cx = nullptr;
-    if (mContext) {
-      cx = mContext->GetNativeContext();
-    } else {
-      nsCOMPtr<nsIThreadJSContextStack> stack =
-        do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-      NS_ENSURE_TRUE(stack, NS_OK);
-
-      cx = stack->GetSafeJSContext();
-      NS_ENSURE_TRUE(cx, NS_OK);
-    }
+    nsCxPusher pusher;
+    JSContext* cx = mContext ? mContext->GetNativeContext()
+                             : nsContentUtils::GetSafeJSContext();
+    pusher.Push(cx, nsCxPusher::ALWAYS_PUSH);
 
     JSObject* obj = nullptr;
     mWrapper->GetJSObject(&obj);
@@ -7807,11 +7800,7 @@ nsHTMLPluginObjElementSH::SetupProtoChain(nsIXPConnectWrappedNative *wrapper,
 {
   NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
                "Shouldn't have gotten in here");
-
-  nsCxPusher cxPusher;
-  if (!cxPusher.Push(cx, nsCxPusher::REQUIRE_SCRIPT_CONTEXT)) {
-    return NS_OK;
-  }
+  MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
 
   JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, obj);
