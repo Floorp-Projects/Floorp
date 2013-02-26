@@ -47,6 +47,11 @@
       var treeitem6 = treeitem5.nextSibling;
       testRelation(treeitem6, RELATION_NODE_CHILD_OF, [tree]);
 
+      testRelation(tree, RELATION_NODE_PARENT_OF,
+                   [treeitem1, treeitem2, treeitem5, treeitem6]);
+      testRelation(treeitem2, RELATION_NODE_PARENT_OF,
+                   [treeitem3, treeitem4]);
+
       // treeitems and treecells shouldn't pick up relations from tree
       testRelation(treeitem1, RELATION_LABELLED_BY, null);
       testRelation(treeitem1.firstChild, RELATION_LABELLED_BY, null);
@@ -64,12 +69,17 @@
       <a target="_blank"
          href="https://bugzilla.mozilla.org/show_bug.cgi?id=503727"
          title="Reorganize implementation of XUL tree accessibility">
-        Mozilla Bug 503727
+        Bug 503727
+      </a>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=527461"
+         title="Implement RELATION_NODE_PARENT_OF">
+        Bug 527461
       </a>
       <a target="_blank"
          href="https://bugzilla.mozilla.org/show_bug.cgi?id=691248"
          title="XUL tree items shouldn't pick up relations from XUL tree">
-        Mozilla Bug 691248
+        Bug 691248
       </a>
       <p id="display"></p>
       <div id="content" style="display: none">

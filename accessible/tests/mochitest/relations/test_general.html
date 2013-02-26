@@ -71,7 +71,8 @@
       testRelation("treeitem3", RELATION_NODE_CHILD_OF, "tree");
       testRelation("treeitem4", RELATION_NODE_CHILD_OF, "tree");
       testRelation("treeitem5", RELATION_NODE_CHILD_OF, "treeitem4");
-      testRelation("treeitem6", RELATION_NODE_CHILD_OF, "treeitem5");
+      testRelation("treeitem6", RELATION_NODE_CHILD_OF, "tree");
+      testRelation("treeitem7", RELATION_NODE_CHILD_OF, "treeitem6");
 
       // 'node child of' relation for row role of treegrid
       testRelation("treegridrow1", RELATION_NODE_CHILD_OF, "treegrid");
@@ -85,6 +86,19 @@
       var iframeDoc = iframeElmObj.value.contentDocument;
       var iframeDocAcc = getAccessible(iframeDoc);
       testRelation(iframeDocAcc, RELATION_NODE_CHILD_OF, iframeAcc);
+
+      // 'node parent of' relation on ARIA tree and treegrid.
+      testRelation("tree", RELATION_NODE_PARENT_OF,
+                    ["treeitem1", "treeitem2", // aria-owns
+                     "treeitem3", "treeitem4", "treeitem6"]); // children
+      testRelation("treeitem4", RELATION_NODE_PARENT_OF,
+                   "treeitem5"); // aria-level
+      testRelation("treeitem6", RELATION_NODE_PARENT_OF,
+                   "treeitem7"); // // group role
+
+      testRelation("treegridrow2", RELATION_NODE_PARENT_OF, "treegridrow3");
+      testRelation("treegrid", RELATION_NODE_PARENT_OF,
+                   ["treegridrow1", "treegridrow2"]);
 
       // aria-controls
       getAccessible("tab");
@@ -141,22 +155,27 @@
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=475298"
      title="mochitests for accessible relations">
-    Mozilla Bug 475298
+    Bug 475298
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=527461"
+     title="Implement RELATION_NODE_PARENT_OF">
+    Bug 527461
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=558036"
      title="make HTML <output> accessible">
-    Mozilla Bug 558036
+    Bug 558036
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=682790"
      title="Ignore implicit label association when it's associated explicitly">
-    Mozilla Bug 682790
+    Bug 682790
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=687393"
      title="HTML select options gets relation from containing label">
-    Mozilla Bug 687393
+    Bug 687393
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -227,8 +246,9 @@
     <div role="treeitem" id="treeitem3">Blue</div>
     <div role="treeitem" id="treeitem4" aria-level="1">Green</div>
     <div role="treeitem" id="treeitem5" aria-level="2">Light green</div>
+    <div role="treeitem" id="treeitem6" aria-level="1">Green2</div>
     <div role="group">
-      <div role="treeitem" id="treeitem6">Super light green</div>
+      <div role="treeitem" id="treeitem7">Super light green</div>
     </div>
   </div>
 

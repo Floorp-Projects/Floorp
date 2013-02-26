@@ -9,6 +9,7 @@
 #define _NS_ACCESSIBLE_RELATION_WRAP_H
 
 #include "Accessible.h"
+#include "nsIAccessibleRelation.h"
 
 #include "nsTArray.h"
 
@@ -58,6 +59,28 @@ private:
   uint32_t mType;
   nsTArray<nsRefPtr<Accessible> > mTargets;
   ULONG mReferences;
+};
+
+
+/**
+ * Relations exposed to IAccessible2.
+ */
+static const uint32_t sRelationTypesForIA2[] = {
+  nsIAccessibleRelation::RELATION_LABELLED_BY,
+  nsIAccessibleRelation::RELATION_LABEL_FOR,
+  nsIAccessibleRelation::RELATION_DESCRIBED_BY,
+  nsIAccessibleRelation::RELATION_DESCRIPTION_FOR,
+  nsIAccessibleRelation::RELATION_NODE_CHILD_OF,
+  nsIAccessibleRelation::RELATION_CONTROLLED_BY,
+  nsIAccessibleRelation::RELATION_CONTROLLER_FOR,
+  nsIAccessibleRelation::RELATION_FLOWS_TO,
+  nsIAccessibleRelation::RELATION_FLOWS_FROM,
+  nsIAccessibleRelation::RELATION_MEMBER_OF,
+  nsIAccessibleRelation::RELATION_SUBWINDOW_OF,
+  nsIAccessibleRelation::RELATION_EMBEDS,
+  nsIAccessibleRelation::RELATION_EMBEDDED_BY,
+  nsIAccessibleRelation::RELATION_POPUP_FOR,
+  nsIAccessibleRelation::RELATION_PARENT_WINDOW_OF
 };
 
 } // namespace a11y
