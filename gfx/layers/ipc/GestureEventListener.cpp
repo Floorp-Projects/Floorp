@@ -88,8 +88,7 @@ nsEventStatus GestureEventListener::HandleInputEvent(const InputData& aEvent)
         mLongTapTimeoutTask =
           NewRunnableMethod(this, &GestureEventListener::TimeoutLongTap);
 
-        MessageLoop::current()->PostDelayedTask(
-          FROM_HERE,
+        mAsyncPanZoomController->PostDelayedTask(
           mLongTapTimeoutTask,
           Preferences::GetInt("ui.click_hold_context_menus.delay", 500));
       }
@@ -169,8 +168,7 @@ nsEventStatus GestureEventListener::HandleInputEvent(const InputData& aEvent)
         mDoubleTapTimeoutTask =
           NewRunnableMethod(this, &GestureEventListener::TimeoutDoubleTap);
 
-        MessageLoop::current()->PostDelayedTask(
-          FROM_HERE,
+        mAsyncPanZoomController->PostDelayedTask(
           mDoubleTapTimeoutTask,
           MAX_TAP_TIME);
       }

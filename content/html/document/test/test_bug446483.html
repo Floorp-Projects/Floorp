@@ -17,6 +17,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=446483
 <pre id="test">
 <script type="application/javascript">
 
+if (navigator.platform.indexOf("Win") != 0) {
+  // not Windows
+  SimpleTest.expectAssertions(0, 1);
+}
+
 /** Test for Bug 446483 **/
 
 function gc() {

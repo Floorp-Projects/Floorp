@@ -433,6 +433,7 @@ JSCompartment::wrap(JSContext *cx, JSObject **objp, JSObject *existingArg)
 bool
 JSCompartment::wrapId(JSContext *cx, jsid *idp)
 {
+    MOZ_ASSERT(*idp != JSID_VOID, "JSID_VOID is an out-of-band sentinel value");
     if (JSID_IS_INT(*idp))
         return true;
     RootedValue value(cx, IdToValue(*idp));

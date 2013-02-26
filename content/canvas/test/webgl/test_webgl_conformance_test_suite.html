@@ -45,8 +45,8 @@ var OPTIONS = {
 SimpleTest.waitForExplicitFinish();
 
 function detectDriverType() {
-  const Cc = SpecialPowers.wrap(Components).classes;
-  const Ci = SpecialPowers.wrap(Components).interfaces;
+  const Cc = SpecialPowers.Cc;
+  const Ci = SpecialPowers.Ci;
   var doc = Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser).parseFromString("<html/>", "text/html");
 
   var canvas = doc.createElement("canvas");
@@ -105,15 +105,15 @@ function start() {
   if (kIsWindows) {
     // code borrowed from browser/modules/test/browser_taskbar_preview.js
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var version = Components.classes["@mozilla.org/system-info;1"]
-                            .getService(Components.interfaces.nsIPropertyBag2)
+    var version = SpecialPowers.Cc["@mozilla.org/system-info;1"]
+                            .getService(SpecialPowers.Ci.nsIPropertyBag2)
                             .getProperty("version");
     kIsWindowsVistaOrHigher = (parseFloat(version) >= 6.0);
   }
 
   function getEnv(env) {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var envsvc = Components.classes["@mozilla.org/process/environment;1"].getService(Components.interfaces.nsIEnvironment);
+    var envsvc = SpecialPowers.Cc["@mozilla.org/process/environment;1"].getService(SpecialPowers.Ci.nsIEnvironment);
     var val = envsvc.get(env);
     if (val == "")
       return null;

@@ -97,9 +97,11 @@ ComputeThis(JSContext *cx, AbstractFramePtr frame)
          * |this| slot. If we lazily wrap a primitive |this| in an eval function frame, the
          * eval's frame will get the wrapper, but the function's frame will not. To prevent
          * this, we always wrap a function's |this| before pushing an eval frame, and should
-         * thus never see an unwrapped primitive in a non-strict eval function frame.
+         * thus never see an unwrapped primitive in a non-strict eval function frame. Null
+         * and undefined |this| values will unwrap to the same object in the function and
+         * eval frames, so are not required to be wrapped.
          */
-        JS_ASSERT(!frame.isEvalFrame());
+        JS_ASSERT_IF(frame.isEvalFrame(), thisv.isUndefined() || thisv.isNull());
     }
     bool modified;
     if (!BoxNonStrictThis(cx, &thisv, &modified))

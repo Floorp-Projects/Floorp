@@ -1580,6 +1580,9 @@ const MMS_PDU_TYPES = (function () {
                                          "to",
                                          "date",
                                          "x-mms-status"]);
+  add(MMS_PDU_TYPE_ACKNOWLEDGE_IND, false, ["x-mms-message-type",
+                                            "x-mms-transaction-id",
+                                            "x-mms-mms-version"]);
 
   return pdus;
 })();

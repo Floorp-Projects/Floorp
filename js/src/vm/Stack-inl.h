@@ -784,6 +784,13 @@ AbstractFramePtr::hasCallObj() const
 #endif
 }
 inline bool
+AbstractFramePtr::useNewType() const
+{
+    if (isStackFrame())
+        return asStackFrame()->useNewType();
+    return false;
+}
+inline bool
 AbstractFramePtr::isGeneratorFrame() const
 {
     if (isStackFrame())

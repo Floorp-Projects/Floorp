@@ -15,4 +15,4 @@
 #
 # Note: The description below will be part of the error message shown to users.
 #
-Bug 829832 - BackgroundFileSaver xpcshell failures without clobber
+Bug 845063 needs clobber

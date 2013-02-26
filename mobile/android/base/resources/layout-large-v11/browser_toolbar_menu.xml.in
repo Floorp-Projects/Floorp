@@ -70,7 +70,8 @@
                                   android:clickable="true"
                                   android:focusable="true">
 
-                <Gecko.ImageView style="@style/AddressBar.Button"
+                <Gecko.ImageView android:id="@+id/awesome_bar_entry"
+                                 style="@style/AddressBar.Button"
                                  android:layout_marginLeft="20dp"
                                  android:layout_marginRight="0dp"
                                  android:layout_marginTop="7dp"

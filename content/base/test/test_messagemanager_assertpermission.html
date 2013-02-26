@@ -15,18 +15,16 @@
 <pre id="test">
 <script class="testbody" type="application/javascript;version=1.8">
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = SpecialPowers.wrap(Components);
-
 const APP_URL = "http://example.org";
 const APP_MANIFEST = "http://example.org/manifest.webapp";
 const CHILD_PROCESS_SHUTDOWN_MESSAGE = "child-process-shutdown";
 
-let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
-             .getService(Ci.nsIMessageBroadcaster);
-let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
-             .getService(Ci.nsISyncMessageSender);
-let gAppsService = Cc["@mozilla.org/AppsService;1"]
-                     .getService(Ci.nsIAppsService);
+let ppmm = SpecialPowers.Cc["@mozilla.org/parentprocessmessagemanager;1"]
+                        .getService(SpecialPowers.Ci.nsIMessageBroadcaster);
+let cpmm = SpecialPowers.Cc["@mozilla.org/childprocessmessagemanager;1"]
+                        .getService(SpecialPowers.Ci.nsISyncMessageSender);
+let gAppsService = SpecialPowers.Cc["@mozilla.org/AppsService;1"]
+                     .getService(SpecialPowers.Ci.nsIAppsService);
 
 function setUp() {
   SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
