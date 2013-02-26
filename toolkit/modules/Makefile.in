@@ -15,7 +15,6 @@ EXTRA_JS_MODULES := \
   NewTabUtils.jsm \
   Sqlite.jsm \
   TelemetryTimestamps.jsm \
-  Timer.jsm \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
