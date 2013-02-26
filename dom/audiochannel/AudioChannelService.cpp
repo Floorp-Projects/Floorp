@@ -16,8 +16,6 @@
 
 #include "mozilla/dom/ContentParent.h"
 
-#include "base/basictypes.h"
-
 #include "nsThreadUtils.h"
 
 #ifdef MOZ_WIDGET_GONK
@@ -130,6 +128,7 @@ AudioChannelService::UnregisterType(AudioChannelType aType,
   // The array may contain multiple occurrence of this appId but
   // this should remove only the first one.
   AudioChannelInternalType type = GetInternalType(aType, aElementHidden);
+  MOZ_ASSERT(!mChannelCounters[type].IsEmpty());
   mChannelCounters[type].RemoveElement(aChildID);
 
   // In order to avoid race conditions, it's safer to notify any existing
@@ -145,6 +144,22 @@ AudioChannelService::UnregisterType(AudioChannelType aType,
     }
     SendAudioChannelChangedNotification();
     Notify();
+  }
+}
+
+void
+AudioChannelService::UpdateChannelType(AudioChannelType aType,
+                                       uint64_t aChildID,
+                                       bool aElementHidden,
+                                       bool aElementWasHidden)
+{
+  // Calculate the new and old internal type and update the hashtable if needed.
+  AudioChannelInternalType newType = GetInternalType(aType, aElementHidden);
+  AudioChannelInternalType oldType = GetInternalType(aType, aElementWasHidden);
+
+  if (newType != oldType) {
+    mChannelCounters[newType].AppendElement(aChildID);
+    mChannelCounters[oldType].RemoveElement(aChildID);
   }
 }
 
@@ -172,14 +187,11 @@ bool
 AudioChannelService::GetMutedInternal(AudioChannelType aType, uint64_t aChildID,
                                       bool aElementHidden, bool aElementWasHidden)
 {
+  UpdateChannelType(aType, aChildID, aElementHidden, aElementWasHidden);
+
   // Calculating the new and old type and update the hashtable if needed.
   AudioChannelInternalType newType = GetInternalType(aType, aElementHidden);
   AudioChannelInternalType oldType = GetInternalType(aType, aElementWasHidden);
-
-  if (newType != oldType) {
-    mChannelCounters[newType].AppendElement(aChildID);
-    mChannelCounters[oldType].RemoveElement(aChildID);
-  }
 
   // If the audio content channel is visible, let's remember this ChildID.
   if (newType == AUDIO_CHANNEL_INT_CONTENT &&

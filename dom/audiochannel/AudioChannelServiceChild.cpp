@@ -13,11 +13,13 @@
 #include "mozilla/unused.h"
 #include "mozilla/Util.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
 #include "nsIObserverService.h"
 #include "nsThreadUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::hal;
 
 StaticRefPtr<AudioChannelServiceChild> gAudioChannelServiceChild;
 
@@ -67,6 +69,8 @@ AudioChannelServiceChild::GetMuted(AudioChannelAgent* aAgent, bool aElementHidde
   ContentChild *cc = ContentChild::GetSingleton();
   bool muted = true;
   bool oldElementHidden = data->mElementHidden;
+
+  UpdateChannelType(data->mType, CONTENT_PROCESS_ID_MAIN, aElementHidden, oldElementHidden);
 
   // Update visibility.
   data->mElementHidden = aElementHidden;
