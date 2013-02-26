@@ -943,7 +943,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
             JSContext *cx = context->GetNativeContext();
  
             nsCxPusher pusher;
-            pusher.Push(cx, nsCxPusher::ASSERT_SCRIPT_CONTEXT);
+            pusher.Push(cx);
 
             JSObject* scriptObject = mBoundElement->GetWrapper();
             if (scriptObject) {
