@@ -18,7 +18,10 @@
 namespace js {
 namespace frontend {
 
+template <typename ParseHandler>
 struct ParseContext;
+
+class FullParseHandler;
 
 /*
  * Indicates a location in the stack that an upvar value can be retrieved from
@@ -570,7 +573,7 @@ struct ParseNode {
         pn_next = pn_link = NULL;
     }
 
-    static ParseNode *create(ParseNodeKind kind, ParseNodeArity arity, Parser *parser);
+    static ParseNode *create(ParseNodeKind kind, ParseNodeArity arity, FullParseHandler *handler);
 
   public:
     /*
@@ -578,7 +581,7 @@ struct ParseNode {
      * kind and op, and op must be left-associative.
      */
     static ParseNode *
-    append(ParseNodeKind tt, JSOp op, ParseNode *left, ParseNode *right, Parser *parser);
+    append(ParseNodeKind tt, JSOp op, ParseNode *left, ParseNode *right, FullParseHandler *handler);
 
     /*
      * Either append right to left, if left meets the conditions necessary to
@@ -587,7 +590,7 @@ struct ParseNode {
      */
     static ParseNode *
     newBinaryOrAppend(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right,
-                      Parser *parser);
+                      FullParseHandler *handler, bool foldConstants);
 
     inline PropertyName *name() const;
     inline JSAtom *atom() const;
@@ -688,34 +691,15 @@ struct ParseNode {
      * themselves be directives (string literals that include escape sequences
      * or escaped newlines, say). This member function returns true for such
      * nodes; we use it to determine the extent of the prologue.
-     * isEscapeFreeStringLiteral, below, checks whether the node itself could be
-     * a directive.
      */
-    bool isStringExprStatement() const {
+    JSAtom *isStringExprStatement() const {
         if (getKind() == PNK_SEMI) {
             JS_ASSERT(pn_arity == PN_UNARY);
             ParseNode *kid = pn_kid;
-            return kid && kid->getKind() == PNK_STRING && !kid->pn_parens;
+            if (kid && kid->getKind() == PNK_STRING && !kid->pn_parens)
+                return kid->pn_atom;
         }
-        return false;
-    }
-
-    /*
-     * Return true if this node, known to be an unparenthesized string literal,
-     * could be the string of a directive in a Directive Prologue. Directive
-     * strings never contain escape sequences or line continuations.
-     */
-    bool isEscapeFreeStringLiteral() const {
-        JS_ASSERT(isKind(PNK_STRING) && !pn_parens);
-
-        /*
-         * If the string's length in the source code is its length as a value,
-         * accounting for the quotes, then it must not contain any escape
-         * sequences or line continuations.
-         */
-        JSString *str = pn_atom;
-        return (pn_pos.begin.lineno == pn_pos.end.lineno &&
-                pn_pos.begin.index + str->length() + 2 == pn_pos.end.index);
+        return NULL;
     }
 
     inline bool test(unsigned flag) const;
@@ -767,11 +751,11 @@ struct ParseNode {
         return (ParseNode *)(uintptr_t(pn_tail) - offsetof(ParseNode, pn_next));
     }
 
-    void initNumber(const Token &tok) {
+    void initNumber(double value, DecimalPoint decimalPoint) {
         JS_ASSERT(pn_arity == PN_NULLARY);
         JS_ASSERT(getKind() == PNK_NUMBER);
-        pn_u.number.value = tok.number();
-        pn_u.number.decimalPoint = tok.decimalPoint();
+        pn_u.number.value = value;
+        pn_u.number.decimalPoint = decimalPoint;
     }
 
     void makeEmpty() {
@@ -833,8 +817,8 @@ struct ParseNode {
 };
 
 struct NullaryNode : public ParseNode {
-    static inline NullaryNode *create(ParseNodeKind kind, Parser *parser) {
-        return (NullaryNode *) ParseNode::create(kind, PN_NULLARY, parser);
+    static inline NullaryNode *create(ParseNodeKind kind, FullParseHandler *handler) {
+        return (NullaryNode *) ParseNode::create(kind, PN_NULLARY, handler);
     }
 
     static bool test(const ParseNode &node) {
@@ -853,8 +837,8 @@ struct UnaryNode : public ParseNode {
         pn_kid = kid;
     }
 
-    static inline UnaryNode *create(ParseNodeKind kind, Parser *parser) {
-        return (UnaryNode *) ParseNode::create(kind, PN_UNARY, parser);
+    static inline UnaryNode *create(ParseNodeKind kind, FullParseHandler *handler) {
+        return (UnaryNode *) ParseNode::create(kind, PN_UNARY, handler);
     }
 
     static bool test(const ParseNode &node) {
@@ -881,8 +865,8 @@ struct BinaryNode : public ParseNode {
         pn_right = right;
     }
 
-    static inline BinaryNode *create(ParseNodeKind kind, Parser *parser) {
-        return (BinaryNode *) ParseNode::create(kind, PN_BINARY, parser);
+    static inline BinaryNode *create(ParseNodeKind kind, FullParseHandler *handler) {
+        return (BinaryNode *) ParseNode::create(kind, PN_BINARY, handler);
     }
 
     static bool test(const ParseNode &node) {
@@ -905,8 +889,8 @@ struct TernaryNode : public ParseNode {
         pn_kid3 = kid3;
     }
 
-    static inline TernaryNode *create(ParseNodeKind kind, Parser *parser) {
-        return (TernaryNode *) ParseNode::create(kind, PN_TERNARY, parser);
+    static inline TernaryNode *create(ParseNodeKind kind, FullParseHandler *handler) {
+        return (TernaryNode *) ParseNode::create(kind, PN_TERNARY, handler);
     }
 
     static bool test(const ParseNode &node) {
@@ -927,8 +911,8 @@ struct ListNode : public ParseNode
         initList(kid);
     }
 
-    static inline ListNode *create(ParseNodeKind kind, Parser *parser) {
-        return (ListNode *) ParseNode::create(kind, PN_LIST, parser);
+    static inline ListNode *create(ParseNodeKind kind, FullParseHandler *handler) {
+        return (ListNode *) ParseNode::create(kind, PN_LIST, handler);
     }
 
     static bool test(const ParseNode &node) {
@@ -941,8 +925,8 @@ struct ListNode : public ParseNode
 };
 
 struct CodeNode : public ParseNode {
-    static inline CodeNode *create(ParseNodeKind kind, Parser *parser) {
-        return (CodeNode *) ParseNode::create(kind, PN_CODE, parser);
+    static inline CodeNode *create(ParseNodeKind kind, FullParseHandler *handler) {
+        return (CodeNode *) ParseNode::create(kind, PN_CODE, handler);
     }
 
     static bool test(const ParseNode &node) {
@@ -955,9 +939,10 @@ struct CodeNode : public ParseNode {
 };
 
 struct NameNode : public ParseNode {
-    static NameNode *create(ParseNodeKind kind, JSAtom *atom, Parser *parser, ParseContext *pc);
+    static NameNode *create(ParseNodeKind kind, JSAtom *atom,
+                            FullParseHandler *handler, ParseContext<FullParseHandler> *pc);
 
-    inline void initCommon(ParseContext *pc);
+    inline void initCommon(ParseContext<FullParseHandler> *pc);
 
     static bool test(const ParseNode &node) {
         return node.isArity(PN_NAME);
@@ -969,8 +954,8 @@ struct NameNode : public ParseNode {
 };
 
 struct LexicalScopeNode : public ParseNode {
-    static inline LexicalScopeNode *create(ParseNodeKind kind, Parser *parser) {
-        return (LexicalScopeNode *) ParseNode::create(kind, PN_NAME, parser);
+    static inline LexicalScopeNode *create(ParseNodeKind kind, FullParseHandler *handler) {
+        return (LexicalScopeNode *) ParseNode::create(kind, PN_NAME, handler);
     }
 };
 
@@ -1121,9 +1106,6 @@ class PropertyByValue : public ParseNode {
         pn_u.binary.right = propExpr;
     }
 };
-
-ParseNode *
-CloneLeftHandSide(ParseNode *opn, Parser *parser);
 
 #ifdef DEBUG
 void DumpParseTree(ParseNode *pn, int indent = 0);
@@ -1301,6 +1283,24 @@ ParseNode::resolve()
     return (Definition *)lexdef();
 }
 
+inline bool
+ParseNode::isConstant()
+{
+    switch (pn_type) {
+      case PNK_NUMBER:
+      case PNK_STRING:
+      case PNK_NULL:
+      case PNK_FALSE:
+      case PNK_TRUE:
+        return true;
+      case PNK_ARRAY:
+      case PNK_OBJECT:
+        return isOp(JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST);
+      default:
+        return false;
+    }
+}
+
 inline void
 LinkUseToDef(ParseNode *pn, Definition *dn)
 {
@@ -1334,6 +1334,15 @@ class ObjectBox {
     ObjectBox(JSFunction *function, ObjectBox *traceLink);
     ObjectBox(Module *module, ObjectBox *traceLink);
 };
+
+enum ParseReportKind {
+    ParseError,
+    ParseWarning,
+    ParseStrictWarning,
+    ParseStrictError
+};
+
+enum FunctionSyntaxKind { Expression, Statement };
 
 } /* namespace frontend */
 } /* namespace js */
