@@ -157,8 +157,6 @@ var tests = {
     is(toggleDesktopNotificationsMenuitems.length, 2, "Toggle notifications menuitems exist");
     let toggleSocialMenuitems = document.getElementsByClassName("social-toggle-menuitem");
     is(toggleSocialMenuitems.length, 2, "Toggle Social menuitems exist");
-    let removeSocialMenuitems = document.getElementsByClassName("social-remove-menuitem");
-    is(removeSocialMenuitems.length, 2, "Remove Social menuitems exist");
     next();
   },
   testToggleNotifications: function(next) {

@@ -114,7 +114,7 @@
     <command id="Social:ToggleNotifications" oncommand="Social.toggleNotifications();"/>
     <command id="Social:FocusChat" oncommand="SocialChatBar.focus();" hidden="true" disabled="true"/>
     <command id="Social:Toggle" oncommand="Social.toggle();" hidden="true"/>
-    <command id="Social:Remove" oncommand="SocialUI.disableWithConfirmation();"/>
+    <command id="Social:Addons" oncommand="BrowserOpenAddonsMgr('addons://list/service');"/>
   </commandset>
 
   <commandset id="placesCommands">

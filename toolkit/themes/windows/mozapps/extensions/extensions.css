@@ -259,6 +259,9 @@
 #category-extension > .category-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/category-extensions.png");
 }
+#category-service > .category-icon {
+  list-style-image: url("chrome://mozapps/skin/extensions/category-extensions.png");
+}
 #category-theme > .category-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/category-themes.png");
 }
