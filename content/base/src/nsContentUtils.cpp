@@ -6412,8 +6412,8 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
   NS_ASSERTION(aDocument, "aDocument should be a valid pointer (not null)");
   NS_ENSURE_TRUE(aDocument->GetScriptGlobalObject(), true);
 
-  JSContext* cx = aDocument->GetScriptGlobalObject()->
-                                  GetContext()->GetNativeContext();
+  AutoPushJSContext cx(aDocument->GetScriptGlobalObject()->
+                       GetContext()->GetNativeContext());
   NS_ENSURE_TRUE(cx, true);
 
   JSAutoRequest ar(cx);
