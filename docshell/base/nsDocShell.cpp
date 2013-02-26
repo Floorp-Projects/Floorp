@@ -10202,7 +10202,7 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
         nsCxPusher pusher;
         if (!cx) {
             cx = nsContentUtils::GetContextFromDocument(document);
-            pusher.Push(cx, nsCxPusher::ASSERT_SCRIPT_CONTEXT);
+            pusher.Push(cx);
         }
         rv = scContainer->InitFromVariant(aData, cx);
 

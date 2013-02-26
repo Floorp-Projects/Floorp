@@ -42,7 +42,7 @@ namespace {
                                                JSOPTION_DONT_REPORT_UNCAUGHT)))
         {
             MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-            mStack.Push(cx, nsCxPusher::ALWAYS_PUSH);
+            mStack.Push(cx);
         }
 
         ~AutoContextPusher() {

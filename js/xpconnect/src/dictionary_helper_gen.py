@@ -406,7 +406,7 @@ def write_cpp(iface, fd):
              "  }\n\n"
              "  JSObject* obj = &aVal->toObject();\n"
              "  nsCxPusher pusher;\n"
-             "  NS_ENSURE_STATE(pusher.Push(aCx, nsCxPusher::ALWAYS_PUSH));\n"
+             "  NS_ENSURE_STATE(pusher.Push(aCx));\n"
              "  JSAutoRequest ar(aCx);\n"
              "  JSAutoCompartment ac(aCx, obj);\n")
 
