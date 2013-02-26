@@ -160,7 +160,7 @@ public:
     MOZ_ASSERT(!NS_IsMainThread());
 
     uint32_t numRead;
-    char* buf = new char[mAvailablePacketSize];
+    nsAutoArrayPtr<char> buf(new char[mAvailablePacketSize]);
 
     // function inputstream->Read() only works on non-main thread
     nsresult rv = mInputStream->Read(buf, mAvailablePacketSize, &numRead);
@@ -176,7 +176,7 @@ public:
       }
 
       nsRefPtr<SendSocketDataTask> task =
-        new SendSocketDataTask((uint8_t*)buf, numRead);
+        new SendSocketDataTask((uint8_t*)buf.forget(), numRead);
       if (NS_FAILED(NS_DispatchToMainThread(task))) {
         NS_WARNING("Failed to dispatch to main thread!");
         return NS_ERROR_FAILURE;

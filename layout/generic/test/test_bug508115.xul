@@ -20,6 +20,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=508115
 </div>
 </body>
 <script class="testbody" type="application/javascript"><![CDATA[
+if (navigator.platform.indexOf("Win") == 0) {
+  SimpleTest.expectAssertions(0, 3);
+}
+
 function doTest() {
   document.getElementById("panel").style.display = '';
   document.getElementById("deck").selectedIndex = 1;
