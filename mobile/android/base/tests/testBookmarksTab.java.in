@@ -54,7 +54,7 @@ public class testBookmarksTab extends BaseTest {
         mSolo.waitForText("Desktop Bookmarks");
         mAsserter.isnot(list, null, "checking that bookmarks list exists");
 
-        int count = list.getChildCount();
+        int count = list.getAdapter().getCount();
         mAsserter.is(count, 5, "bookmarks list has 5 children (defaults + a folder)");
  
         for (int i = count - 1; i >= 0; i--) {
@@ -66,8 +66,8 @@ public class testBookmarksTab extends BaseTest {
         mSolo.clickOnView(child);
         mSolo.waitForText("Bookmarks Toolbar");
 
-        mAsserter.is(list.getChildCount(), 4, "desktop folder has correct number of children");
-        count = list.getChildCount();
+        count = list.getAdapter().getCount();
+        mAsserter.is(count, 4, "desktop folder has correct number of children");
         for (int i = count - 1; i >= 0; i--) {
             child = list.getChildAt(i);
             compareRow(child, 1, i == 0 ? 0 : 1);
@@ -77,8 +77,8 @@ public class testBookmarksTab extends BaseTest {
         mSolo.clickOnView(child);
         mSolo.waitForText("BOOKMARK_TITLE");
 
-        mAsserter.is(list.getChildCount(), 2, "toolbar folder has correct number of children");
-        count = list.getChildCount();
+        count = list.getAdapter().getCount();
+        mAsserter.is(count, 2, "toolbar folder has correct number of children");
         for (int i = count - 1; i >= 0; i--) {
             child = list.getChildAt(i);
             compareRow(child, i == 0 ? 1:2, i == 0 ? 0:1);
