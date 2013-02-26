@@ -20,6 +20,10 @@ XCODE_APP_STORE = 'macappstore://itunes.apple.com/app/id497799835?mt=12'
 XCODE_LEGACY = 'https://developer.apple.com/downloads/download.action?path=Developer_Tools/xcode_3.2.6_and_ios_sdk_4.3__final/xcode_3.2.6_and_ios_sdk_4.3.dmg'
 HOMEBREW_AUTOCONF213 = 'https://raw.github.com/Homebrew/homebrew-versions/master/autoconf213.rb'
 
+MACPORTS_URL = {'8': 'https://distfiles.macports.org/MacPorts/MacPorts-2.1.3-10.8-MountainLion.pkg',
+                '7': 'https://distfiles.macports.org/MacPorts/MacPorts-2.1.3-10.7-Lion.pkg',
+                '6': 'https://distfiles.macports.org/MacPorts/MacPorts-2.1.3-10.6-SnowLeopard.pkg',}
+
 RE_CLANG_VERSION = re.compile('Apple (?:clang|LLVM) version (\d+\.\d+)')
 
 APPLE_CLANG_MINIMUM_VERSION = StrictVersion('4.0')
@@ -56,23 +60,55 @@ An old version of the Xcode command line tools is installed. You will need to
 install a newer version in order to compile Firefox.
 '''
 
-HOMEBREW_INSTALL = '''
-We will install the Homebrew package manager to install required packages.
+PACKAGE_MANAGER_INSTALL = '''
+We will install the %s package manager to install required packages.
 
-You will be prompted to install Homebrew with its default settings. If you
-would prefer to do this manually, hit CTRL+c, install Homebrew yourself, ensure
-"brew" is in your $PATH, and relaunch bootstrap.
+You will be prompted to install %s with its default settings. If you
+would prefer to do this manually, hit CTRL+c, install %s yourself, ensure
+"%s" is in your $PATH, and relaunch bootstrap.
 '''
 
-HOMEBREW_PACKAGES = '''
-We are now installing all required packages via Homebrew. You will see a lot of
+PACKAGE_MANAGER_PACKAGES = '''
+We are now installing all required packages via %s. You will see a lot of
 output as packages are built.
 '''
 
-HOMEBREW_OLD_CLANG = '''
+PACKAGE_MANAGER_OLD_CLANG = '''
 We require a newer compiler than what is provided by your version of Xcode.
 
-We will install a modern version of Clang through Homebrew.
+We will install a modern version of Clang through %s.
+'''
+
+PACKAGE_MANAGER_CHOICE = '''
+Please choose a package manager you'd like:
+1. Homebrew
+2. MacPorts
+Your choice:
+'''
+
+NO_PACKAGE_MANAGER_WARNING = '''
+It seems you don't have any supported package manager installed.
+'''
+
+PACKAGE_MANAGER_EXISTS = '''
+Looks like you have %s installed. We will install all required packages via %s.
+'''
+
+MULTI_PACKAGE_MANAGER_EXISTS = '''
+It looks like you have multiple package managers installed.
+'''
+
+# May add support for other package manager on os x.
+PACKAGE_MANAGER = {'Homebrew': 'brew',
+                   'MacPorts': 'port'}
+
+PACKAGE_MANAGER_CHOICES = ['Homebrew', 'MacPorts']
+
+MACPORTS_POSTINSTALL_RESTART_REQUIRED = '''
+MacPorts was installed successfully. However, you'll need to start a new shell
+to pick up the environment changes so MacPorts can be found by your tools.
+
+Please start a new shell or terminal window and run this bootstrapper again.
 '''
 
 
@@ -85,10 +121,13 @@ class OSXBootstrapper(BaseBootstrapper):
         if self.os_version < StrictVersion('10.6'):
             raise Exception('OS X 10.6 or above is required.')
 
+        self.minor_version = version.split('.')[1]
+
     def install_system_packages(self):
         self.ensure_xcode()
-        self.ensure_homebrew()
-        self.ensure_homebrew_packages()
+
+        choice = self.ensure_package_manager()
+        getattr(self, 'ensure_%s_packages' % choice)()
 
     def ensure_xcode(self):
         if self.os_version < StrictVersion('10.7'):
@@ -138,18 +177,6 @@ class OSXBootstrapper(BaseBootstrapper):
                 print(INSTALL_XCODE_COMMAND_LINE_TOOLS_STEPS)
                 sys.exit(1)
 
-    def ensure_homebrew(self):
-        if self.which('brew') is not None:
-            return
-
-        print(HOMEBREW_INSTALL)
-        bootstrap = urllib2.urlopen(url=HOMEBREW_BOOTSTRAP, timeout=20).read()
-        with tempfile.NamedTemporaryFile() as tf:
-            tf.write(bootstrap)
-            tf.flush()
-
-            subprocess.check_call(['ruby', tf.name])
-
     def ensure_homebrew_packages(self):
         brew = self.which('brew')
         assert brew is not None
@@ -184,3 +211,77 @@ class OSXBootstrapper(BaseBootstrapper):
 
             subprocess.check_call([brew, '-v', 'install', 'llvm',
                 '--with-clang', '--all-targets'])
+
+    def ensure_macports_packages(self):
+        port = self.which('port')
+        assert port is not None
+
+        installed = set(self.check_output([port, 'installed']).split())
+
+        packages = ['python27',
+                    'mercurial',
+                    'yasm',
+                    'libidl',
+                    'autoconf213']
+
+        missing = [package for package in packages if package not in installed]
+        if missing:
+            self.run_as_root([port, '-v', 'install'] + missing)
+
+        if self.os_version < StrictVersion('10.7') and 'llvm' not in installed:
+            print(MACPORTS_OLD_CLANG)
+            self.run_as_root([port, '-v', 'install', 'llvm'])
+
+    def ensure_package_manager(self):
+        '''
+        Search package mgr in sys.path, if none is found, prompt the user to install one.
+        If only one is found, use that one. If both are found, prompt the user to choose
+        one.
+        '''
+        installed = []
+        for name, cmd in PACKAGE_MANAGER.iteritems():
+            if self.which(cmd) is not None:
+                installed.append(name)
+
+        if not installed:
+            print(NO_PACKAGE_MANAGER_WARNING)
+            choice = self.prompt_int(prompt=PACKAGE_MANAGER_CHOICE, low=1, high=2)
+            getattr(self, 'install_%s' % PACKAGE_MANAGER_CHOICES[choice - 1].lower())()
+            return PACKAGE_MANAGER_CHOICES[choice - 1].lower()
+        elif len(installed) == 1:
+            print(PACKAGE_MANAGER_EXISTS % (installed[0], installed[0]))
+            return installed[0].lower()
+        else:
+            print(MULTI_PACKAGE_MANAGER_EXISTS)
+            choice = self.prompt_int(prompt=PACKAGE_MANAGER_CHOICE, low=1, high=2)
+            return PACKAGE_MANAGER_CHOICES[choice - 1].lower()
+
+    def install_homebrew(self):
+        print(PACKAGE_MANAGER_INSTALL % ('Homebrew', 'Homebrew', 'Homebrew', 'brew'))
+        bootstrap = urllib2.urlopen(url=HOMEBREW_BOOTSTRAP, timeout=20).read()
+        with tempfile.NamedTemporaryFile() as tf:
+            tf.write(bootstrap)
+            tf.flush()
+
+            subprocess.check_call(['ruby', tf.name])
+
+    def install_macports(self):
+        url = MACPORTS_URL.get(self.minor_version, None)
+        if not url:
+            raise Exception('We do not have a MacPorts install URL for your '
+                'OS X version. You will need to install MacPorts manually.')
+
+        print(PACKAGE_MANAGER_INSTALL % ('MacPorts', 'MacPorts', 'MacPorts', 'port'))
+        pkg = urllib2.urlopen(url=url, timeout=300).read()
+        with tempfile.NamedTemporaryFile(suffix='.pkg') as tf:
+            tf.write(pkg)
+            tf.flush()
+
+            self.run_as_root(['installer', '-pkg', tf.name, '-target', '/'])
+
+        # MacPorts installs itself into a location likely not on the PATH. If
+        # we can't find it, prompt to restart.
+        if self.which('port') is None:
+            print(MACPORTS_POSTINSTALL_RESTART_REQUIRED)
+            sys.exit(1)
+

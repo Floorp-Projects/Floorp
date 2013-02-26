@@ -78,7 +78,7 @@ addLoadEvent(function() {
   is(d.testAncestor, "ancestor",
      "test1" + ": Empty field should not override ancestor binding");
 
-  var win = XPCNativeWrapper.unwrap(window);
+  var win = window;
   win.counter = 0;
   d.testEvalOnce;
   d.testEvalOnce;

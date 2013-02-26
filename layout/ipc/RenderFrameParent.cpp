@@ -569,6 +569,11 @@ public:
     }
   }
 
+  virtual void PostDelayedTask(Task* aTask, int aDelayMs) MOZ_OVERRIDE
+  {
+    MessageLoop::current()->PostDelayedTask(FROM_HERE, aTask, aDelayMs);
+  }
+
 private:
   void DoRequestContentRepaint(const FrameMetrics& aFrameMetrics)
   {

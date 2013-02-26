@@ -567,7 +567,7 @@ var BrowserApp = {
 
     let tab = this.selectedTab;
     if (!tab)
-      return true;
+      return false;
     return tab.contentDocumentIsDisplayed;
   },
 
