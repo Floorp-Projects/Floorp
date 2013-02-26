@@ -664,6 +664,18 @@ AbstractFramePtr::callObj() const
 #endif
 }
 
+inline bool
+AbstractFramePtr::initFunctionScopeObjects(JSContext *cx)
+{
+    if (isStackFrame())
+        return asStackFrame()->initFunctionScopeObjects(cx);
+#ifdef JS_ION
+    return asBaselineFrame()->initFunctionScopeObjects(cx);
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
+}
+
 inline JSCompartment *
 AbstractFramePtr::compartment() const
 {

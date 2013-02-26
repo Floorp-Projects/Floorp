@@ -255,6 +255,7 @@ class BaselineFrame
 
     bool strictEvalPrologue(JSContext *cx);
     bool heavyweightFunPrologue(JSContext *cx);
+    bool initFunctionScopeObjects(JSContext *cx);
 
     void initArgsObj(ArgumentsObject &argsobj) {
         JS_ASSERT(script()->needsArgsObj());
