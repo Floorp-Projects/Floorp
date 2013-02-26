@@ -137,12 +137,6 @@ abstract public class BrowserApp extends GeckoApp
                     loadFavicon(tab);
                 }
                 break;
-            case SECURITY_CHANGE:
-                handleSecurityChange(tab);
-                break;
-            case READER_ENABLED:
-                handleReaderEnabled(tab);
-                break;
         }
         super.onTabChanged(tab, msg, data);
     }
@@ -151,15 +145,6 @@ abstract public class BrowserApp extends GeckoApp
     void handleClearHistory() {
         super.handleClearHistory();
         updateAboutHomeTopSites();
-    }
-
-    void handleSecurityChange(final Tab tab) {
-        mMainHandler.post(new Runnable() { 
-            public void run() {
-                if (Tabs.getInstance().isSelectedTab(tab))
-                    mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
-            }
-        });
     }
 
     void handleReaderAdded(boolean success, final String title, final String url) {
@@ -181,15 +166,6 @@ abstract public class BrowserApp extends GeckoApp
             public void run() {
                 BrowserDB.removeReadingListItemWithURL(getContentResolver(), url);
                 showToast(R.string.reading_list_removed, Toast.LENGTH_SHORT);
-            }
-        });
-    }
-
-    void handleReaderEnabled(final Tab tab) {
-        mMainHandler.post(new Runnable() {
-            public void run() {
-                if (Tabs.getInstance().isSelectedTab(tab))
-                    mBrowserToolbar.setReaderMode(tab.getReaderEnabled());
             }
         });
     }
@@ -692,9 +668,6 @@ abstract public class BrowserApp extends GeckoApp
 
                 tab.updateFavicon(favicon);
                 tab.setFaviconLoadId(Favicons.NOT_LOADING);
-
-                if (Tabs.getInstance().isSelectedTab(tab))
-                    mBrowserToolbar.setFavicon(tab.getFavicon());
 
                 Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.FAVICON);
             }

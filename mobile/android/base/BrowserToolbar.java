@@ -421,6 +421,21 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                     updateForwardButton(tab.canDoForward());
                 }
                 break;
+            case FAVICON:
+                if (Tabs.getInstance().isSelectedTab(tab)) {
+                    setFavicon(tab.getFavicon());
+                }
+                break;
+            case SECURITY_CHANGE:
+                if (Tabs.getInstance().isSelectedTab(tab)) {
+                    setSecurityMode(tab.getSecurityMode());
+                }
+                break;
+            case READER_ENABLED:
+                if (Tabs.getInstance().isSelectedTab(tab)) {
+                    setReaderMode(tab.getReaderEnabled());
+                }
+                break;
         }
     }
 
@@ -980,7 +995,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mAwesomeBar.setContentDescription(title != null ? title : mTitle.getHint());
     }
 
-    public void setFavicon(Bitmap image) {
+    private void setFavicon(Bitmap image) {
         if (Tabs.getInstance().getSelectedTab().getState() == Tab.STATE_LOADING)
             return;
 
@@ -992,7 +1007,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         }
     }
     
-    public void setSecurityMode(String mode) {
+    private void setSecurityMode(String mode) {
         mShowSiteSecurity = true;
 
         if (mode.equals(SiteIdentityPopup.IDENTIFIED)) {
@@ -1007,7 +1022,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         setPageActionVisibility(mStop.getVisibility() == View.VISIBLE);
     }
 
-    public void setReaderMode(boolean showReader) {
+    private void setReaderMode(boolean showReader) {
         mShowReader = showReader;
         setPageActionVisibility(mStop.getVisibility() == View.VISIBLE);
     }
