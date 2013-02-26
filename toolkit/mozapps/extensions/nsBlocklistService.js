@@ -891,7 +891,7 @@ Blocklist.prototype = {
     var addonList = [];
 
     var self = this;
-    const types = ["extension", "theme", "locale", "dictionary"]
+    const types = ["extension", "theme", "locale", "dictionary", "service"]
     AddonManager.getAddonsByTypes(types, function blocklistUpdated_getAddonsByTypes(addons) {
 
       for (let addon of addons) {
