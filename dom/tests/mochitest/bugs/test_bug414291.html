@@ -12,6 +12,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=414291
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=414291">Mozilla Bug 414291</a>
 <script class="testbody" type="text/javascript">
 
+if (navigator.platform.indexOf("Linux") == 0) {
+  SimpleTest.expectAssertions(0, 2);
+}
+
 /** Test for Bug 414291 **/
 
 var result1 = 0;

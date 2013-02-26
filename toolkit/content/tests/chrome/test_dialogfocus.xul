@@ -23,6 +23,12 @@
 <script>
 <![CDATA[
 
+if (navigator.platform.indexOf("Mac") == 0) {
+  SimpleTest.expectAssertions(0, 4);
+} else {
+  SimpleTest.expectAssertions(0, 5);
+}
+
 SimpleTest.waitForExplicitFinish();
 
 var expected = [ "one", "_extra2", "tab", "one", "tabbutton2", "tabbutton", "two", "textbox-yes", "one" ];

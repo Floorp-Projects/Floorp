@@ -45,6 +45,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=378518
   <!-- test code goes here -->
   <script type="application/javascript"> <![CDATA[
 
+    SimpleTest.expectAssertions(1);
+
     var myBoxClicked = false;
     var myCheckBoxClicked = false;
     var myExtendedBoxClicked = false;
