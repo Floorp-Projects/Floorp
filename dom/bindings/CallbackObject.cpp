@@ -12,7 +12,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsJSUtils.h"
 #include "nsIScriptSecurityManager.h"
-#include "xpcprivate.h"
 
 namespace mozilla {
 namespace dom {
@@ -180,40 +179,6 @@ CallbackObject::CallSetup::~CallSetup()
   if (mCtx) {
     mCtx->ScriptEvaluated(true);
   }
-}
-
-already_AddRefed<nsISupports>
-CallbackObjectHolderBase::ToXPCOMCallback(CallbackObject* aCallback,
-                                          const nsIID& aIID)
-{
-  if (!aCallback) {
-    return nullptr;
-  }
-
-  JSObject* callback = aCallback->Callback();
-
-  SafeAutoJSContext cx;
-  JSAutoCompartment ac(cx, callback);
-  XPCCallContext ccx(NATIVE_CALLER, cx);
-  if (!ccx.IsValid()) {
-    return nullptr;
-  }
-
-  nsRefPtr<nsXPCWrappedJS> wrappedJS;
-  nsresult rv =
-    nsXPCWrappedJS::GetNewOrUsed(ccx, callback, aIID,
-                                 nullptr, getter_AddRefs(wrappedJS));
-  if (NS_FAILED(rv) || !wrappedJS) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsISupports> retval;
-  rv = wrappedJS->QueryInterface(aIID, getter_AddRefs(retval));
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  return retval.forget();
 }
 
 } // namespace dom
