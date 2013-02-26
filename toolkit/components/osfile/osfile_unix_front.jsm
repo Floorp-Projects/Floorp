@@ -607,9 +607,19 @@
       */
      File.DirectoryIterator = function DirectoryIterator(path, options) {
        exports.OS.Shared.AbstractFile.AbstractIterator.call(this);
-       let dir = throw_on_null("DirectoryIterator", UnixFile.opendir(path));
-       this._dir = dir;
        this._path = path;
+       this._dir = UnixFile.opendir(this._path);
+       if (this._dir == null) {
+         let error = ctypes.errno;
+         if (error != OS.Constants.libc.ENOENT) {
+           throw new File.Error("DirectoryIterator", error);
+         }
+         this._exists = false;
+         this._closed = true;
+       } else {
+         this._exists = true;
+         this._closed = false;
+       }
      };
      File.DirectoryIterator.prototype = Object.create(exports.OS.Shared.AbstractFile.AbstractIterator.prototype);
 
@@ -624,7 +634,10 @@
       * encountered.
       */
      File.DirectoryIterator.prototype.next = function next() {
-       if (!this._dir) {
+       if (!this._exists) {
+         throw File.Error.noSuchFile("DirectoryIterator.prototype.next");
+       }
+       if (this._closed) {
          throw StopIteration;
        }
        for (let entry = UnixFile.readdir(this._dir);
@@ -648,9 +661,19 @@
       * You should call this once you have finished iterating on a directory.
       */
      File.DirectoryIterator.prototype.close = function close() {
-       if (!this._dir) return;
+       if (this._closed) return;
+       this._closed = true;
        UnixFile.closedir(this._dir);
        this._dir = null;
+     };
+
+    /**
+     * Determine whether the directory exists.
+     *
+     * @return {boolean}
+     */
+     File.DirectoryIterator.prototype.exists = function exists() {
+       return this._exists;
      };
 
      /**
