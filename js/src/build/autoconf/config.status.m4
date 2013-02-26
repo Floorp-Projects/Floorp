@@ -113,6 +113,12 @@ sed 's/$/,/' >> $CONFIG_STATUS <<EOF
 undivert(MOZ_DIVERSION_SUBST)dnl
 EOF
 
+dnl Add in the output from the subconfigure script
+for ac_subst_arg in $_subconfigure_ac_subst_args; do
+  variable='$'$ac_subst_arg
+  echo "    (''' $ac_subst_arg ''', r''' `eval echo $variable` ''')," >> $CONFIG_STATUS
+done
+
 cat >> $CONFIG_STATUS <<\EOF
 ] ]
 
