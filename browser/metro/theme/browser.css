@@ -13,7 +13,7 @@
 /* Sliding Toolbar/Tab Tray ------------------------------------------------- */
 
 #tray {
-  transition: transform 0.2s ease-out;
+  transition: transform @metro_animation_duration@ @metro_animation_easing@;
   transform: translateY(-@tray_slide_height@);
   width: 100%;
 }
@@ -513,7 +513,7 @@ appbar {
   height: @toolbar_height@;
   bottom: 0;
   transform: translateY(@toolbar_height@);
-  transition: transform 0.2s ease-out;
+  transition: transform @metro_animation_duration@ @metro_animation_easing@;
   width: 100%;
 }
 
