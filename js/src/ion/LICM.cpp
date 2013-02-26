@@ -36,7 +36,7 @@ LICM::analyze()
             continue;
 
         // Attempt to optimize loop.
-        Loop loop(mir, header->backedge(), header, graph);
+        Loop loop(mir, header->backedge(), header);
 
         Loop::LoopReturn lr = loop.init();
         if (lr == Loop::LoopReturn_Error)
@@ -55,9 +55,8 @@ LICM::analyze()
     return true;
 }
 
-Loop::Loop(MIRGenerator *mir, MBasicBlock *footer, MBasicBlock *header, MIRGraph &graph)
+Loop::Loop(MIRGenerator *mir, MBasicBlock *footer, MBasicBlock *header)
   : mir(mir),
-    graph(graph),
     footer_(footer),
     header_(header)
 {

@@ -12,6 +12,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=504862
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=504862">Mozilla Bug 504862</a>
 <script class="testbody" type="text/javascript">
 
+if (navigator.platform.indexOf("Win") != 0) {
+  SimpleTest.expectAssertions(0, 5);
+}
+
 /** Test for Bug 504862 **/
 SimpleTest.waitForExplicitFinish();
 function onMsgRcv(event)
