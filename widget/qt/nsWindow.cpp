@@ -2170,7 +2170,7 @@ nsWindow::OnDragDropEvent(QGraphicsSceneDragDropEvent *aDropEvent)
 {
     if (aDropEvent->proposedAction() == Qt::CopyAction)
     {
-        printf("text version of the data: %s\n", aDropEvent->mimeData()->text().toAscii().data());
+        printf("text version of the data: %s\n", aDropEvent->mimeData()->text().toUtf8().data());
         aDropEvent->acceptProposedAction();
     }
 
@@ -3249,7 +3249,11 @@ nsWindow::GetInputContext()
     mInputContext.mIMEState.mOpen = IMEState::OPEN_STATE_NOT_SUPPORTED;
     // Our qt widget looks like using only one context per process.
     // However, it's better to set the context's pointer.
+#if (QT_VERSION <= QT_VERSION_CHECK(5, 0, 0))
     mInputContext.mNativeIMEContext = qApp->inputContext();
+#else
+    mInputContext.mNativeIMEContext = nullptr;
+#endif
     return mInputContext;
 }
 

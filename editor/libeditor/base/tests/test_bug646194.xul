@@ -23,6 +23,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=646194
   <script class="testbody" type="application/javascript">
   <![CDATA[
 
+SimpleTest.expectAssertions(1);
+
 function runTest() {
   function doCommand(aCmd) {
     var controller = top.document.commandDispatcher

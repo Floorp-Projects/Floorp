@@ -2359,6 +2359,9 @@ nsresult nsHTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
   aDecoder->SetAudioChannelType(mAudioChannelType);
   aDecoder->SetAudioCaptured(mAudioCaptured);
   aDecoder->SetVolume(mMuted ? 0.0 : mVolume);
+  aDecoder->SetPreservesPitch(mPreservesPitch);
+  aDecoder->SetPlaybackRate(mPlaybackRate);
+
   for (uint32_t i = 0; i < mOutputStreams.Length(); ++i) {
     OutputMediaStream* ms = &mOutputStreams[i];
     aDecoder->AddOutputStream(ms->mStream->GetStream()->AsProcessedStream(),
@@ -3581,7 +3584,9 @@ NS_IMETHODIMP nsHTMLMediaElement::GetMozPreservesPitch(bool* aPreservesPitch)
 NS_IMETHODIMP nsHTMLMediaElement::SetMozPreservesPitch(bool aPreservesPitch)
 {
   mPreservesPitch = aPreservesPitch;
-  mDecoder->SetPreservesPitch(aPreservesPitch);
+  if (mDecoder) {
+    mDecoder->SetPreservesPitch(mPreservesPitch);
+  }
   return NS_OK;
 }
 

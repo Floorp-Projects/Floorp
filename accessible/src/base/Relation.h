@@ -19,12 +19,11 @@ namespace a11y {
  */
 struct RelationCopyHelper
 {
-  RelationCopyHelper(mozilla::a11y::AccIterable* aFirstIter,
-                     mozilla::a11y::AccIterable* aLastIter) :
+  RelationCopyHelper(AccIterable* aFirstIter, AccIterable* aLastIter) :
     mFirstIter(aFirstIter), mLastIter(aLastIter) { }
 
-  mozilla::a11y::AccIterable* mFirstIter;
-  mozilla::a11y::AccIterable* mLastIter;
+  AccIterable* mFirstIter;
+  AccIterable* mLastIter;
 };
 
 /**
@@ -39,7 +38,7 @@ public:
   Relation(const RelationCopyHelper aRelation) :
     mFirstIter(aRelation.mFirstIter), mLastIter(aRelation.mLastIter) { }
 
-  Relation(mozilla::a11y::AccIterable* aIter) :
+  Relation(AccIterable* aIter) :
     mFirstIter(aIter), mLastIter(aIter) { }
 
   Relation(Accessible* aAcc) :
@@ -69,7 +68,7 @@ public:
     return RelationCopyHelper(mFirstIter.forget(), mLastIter);
   }
 
-  inline void AppendIter(mozilla::a11y::AccIterable* aIter)
+  inline void AppendIter(AccIterable* aIter)
   {
     if (mLastIter)
       mLastIter->mNextIter = aIter;
@@ -85,7 +84,7 @@ public:
   inline void AppendTarget(Accessible* aAcc)
   {
     if (aAcc)
-      AppendIter(new mozilla::a11y::SingleAccIterator(aAcc));
+      AppendIter(new SingleAccIterator(aAcc));
   }
 
   /**
@@ -118,8 +117,8 @@ public:
 private:
   Relation& operator = (const Relation&);
 
-  nsAutoPtr<mozilla::a11y::AccIterable> mFirstIter;
-  mozilla::a11y::AccIterable* mLastIter;
+  nsAutoPtr<AccIterable> mFirstIter;
+  AccIterable* mLastIter;
 };
 
 } // namespace a11y
