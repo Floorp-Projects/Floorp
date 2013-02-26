@@ -19,15 +19,8 @@ endif
 
 export::
 	$(NSINSTALL) $(srcdir)/resources.pri $(DIST)/bin
-	$(RM) $(DIST)/bin/VisualElementsManifest.xml
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py -Fsubstitution $(DEFINES) $(ACDEFINES) -DMOZ_APP_DISPLAYNAME=${MOZ_APP_DISPLAYNAME} \
-	  $(srcdir)/VisualElementsManifest.xml.in > $(DIST)/bin/VisualElementsManifest.xml
 
 install::
 	$(NSINSTALL) $(srcdir)/resources.pri $(DIST)/bin
-
-# bug 744566
-#	$(RM) $(DIST)/bin/resources.pri
-# 	$(MAKEPRI) new -v -pr $(srcdir)/tileresources -cf $(srcdir)/priconfig.xml -mn $(srcdir)/AppManifest.xml -of $(DIST)/bin/resources.pri -o
 
 include $(topsrcdir)/config/rules.mk

@@ -67,6 +67,10 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+if (navigator.platform.indexOf("Mac") == 0) {
+  SimpleTest.expectAssertions(0, 2);
+}
+
 var ANCHOR = 0;
 var FOCUS = 1;
 

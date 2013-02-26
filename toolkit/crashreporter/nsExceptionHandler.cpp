@@ -762,7 +762,16 @@ static bool ShouldReport()
   // this environment variable prevents us from launching
   // the crash reporter client
   const char *envvar = PR_GetEnv("MOZ_CRASHREPORTER_NO_REPORT");
-  return !(envvar && *envvar);
+  if (envvar && *envvar) {
+    return false;
+  }
+
+  envvar = PR_GetEnv("MOZ_CRASHREPORTER_FULLDUMP");
+  if (envvar && *envvar) {
+    return false;
+  }
+
+  return true;
 }
 
 namespace {
@@ -931,6 +940,11 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
         minidump_type = MiniDumpWithFullMemoryInfo;
       }
     }
+  }
+
+  const char* e = PR_GetEnv("MOZ_CRASHREPORTER_FULLDUMP");
+  if (e && *e) {
+    minidump_type = MiniDumpWithFullMemory;
   }
 #endif // XP_WIN32
 

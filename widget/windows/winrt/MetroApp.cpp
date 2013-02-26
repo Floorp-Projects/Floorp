@@ -20,12 +20,6 @@ using namespace ABI::Windows::Foundation;
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
 
-// XXX move
-#pragma comment(lib, "dwrite.lib")
-#pragma comment(lib, "d2d1.lib")
-#pragma comment(lib, "d3d11.lib")
-#pragma comment(lib, "runtimeobject.lib")
-
 // Metro specific XRE methods we call from here on an
 // appropriate thread.
 extern nsresult XRE_metroStartup();

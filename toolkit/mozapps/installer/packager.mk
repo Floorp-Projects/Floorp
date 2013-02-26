@@ -583,7 +583,8 @@ ifneq (android,$(MOZ_WIDGET_TOOLKIT))
 OPTIMIZEJARS = 1
 endif
 
-export NO_PKG_FILES USE_ELF_HACK ELF_HACK_FLAGS _BINPATH
+export NO_PKG_FILES USE_ELF_HACK ELF_HACK_FLAGS
+
 stage-package: $(MOZ_PKG_MANIFEST)
 	@rm -rf $(DIST)/$(PKG_PATH)$(PKG_BASENAME).tar $(DIST)/$(PKG_PATH)$(PKG_BASENAME).dmg $@ $(EXCLUDE_LIST)
 	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/packager.py $(DEFINES) \
@@ -594,9 +595,9 @@ stage-package: $(MOZ_PKG_MANIFEST)
 		$(if $(JARLOG_DIR),$(addprefix --jarlog ,$(wildcard $(JARLOG_FILE_AB_CD)))) \
 		$(if $(OPTIMIZEJARS),--optimizejars) \
 		$(addprefix --unify ,$(UNIFY_DIST)) \
-		$(MOZ_PKG_MANIFEST) $(DIST) $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR) \
+		$(MOZ_PKG_MANIFEST) $(DIST) $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(if $(MOZ_PKG_MANIFEST),,$(_BINPATH)) \
 		$(if $(filter omni,$(MOZ_PACKAGER_FORMAT)),$(if $(NON_OMNIJAR_FILES),--non-resource $(NON_OMNIJAR_FILES)))
-	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/find-dupes.py $(DIST)/$(MOZ_PKG_DIR)
+	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/find-dupes.py $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)
 ifndef LIBXUL_SDK
 ifdef MOZ_PACKAGE_JSSHELL
 # Package JavaScript Shell

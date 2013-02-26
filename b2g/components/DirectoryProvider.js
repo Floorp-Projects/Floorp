@@ -48,6 +48,7 @@ DirectoryProvider.prototype = {
   classID: Components.ID("{9181eb7c-6f87-11e1-90b1-4f59d80dd2e5}"),
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDirectoryServiceProvider]),
+  _xpcom_factory: XPCOMUtils.generateSingletonFactory(DirectoryProvider),
 
   getFile: function dp_getFile(prop, persistent) {
 #ifdef MOZ_WIDGET_GONK
@@ -105,6 +106,7 @@ DirectoryProvider.prototype = {
     if (!Services.volumeService) {
       return this.createUpdatesDir(LOCAL_DIR, subdir);
     }
+
     let activeUpdate = Services.um.activeUpdate;
     if (gUseSDCard) {
       if (this.volumeHasFreeSpace(gExtStorage, requiredSpace)) {
@@ -158,7 +160,8 @@ DirectoryProvider.prototype = {
     // error and let upstream code handle it more gracefully.
     log("Error: No volume found with " + requiredSpace + " bytes for downloading"+
         " update " + activeUpdate.name);
-    throw Cr.NS_ERROR_FILE_TOO_BIG;
+    activeUpdate.errorCode = Cr.NS_ERROR_FILE_TOO_BIG;
+    return null;
   },
 
   createUpdatesDir: function dp_createUpdatesDir(root, subdir) {

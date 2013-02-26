@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=478438
         return;
       test.calledAlready = true;
 
-      var iwin = (new XPCNativeWrapper(document)).getElementById("f").contentWindow;
+      var iwin = document.getElementById("f").contentWindow;
 
       function testOne(fn, onAllow, infinitive) {
         try { fn(); onAllow("able " + infinitive, "") }

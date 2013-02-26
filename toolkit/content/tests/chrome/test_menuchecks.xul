@@ -36,6 +36,10 @@
   <script class="testbody" type="application/javascript">
   <![CDATA[
 
+  if (navigator.platform.indexOf("Mac") == 0) {
+    SimpleTest.expectAssertions(0, 2);
+  }
+
   SimpleTest.waitForExplicitFinish();
   var gTestIndex = 0;
 

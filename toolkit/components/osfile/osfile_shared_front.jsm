@@ -308,17 +308,15 @@ AbstractFile.read = function read(path, bytes) {
 };
 
 /**
- * Write a file, atomically.
+ * Write a file in one operation.
  *
- * By opposition to a regular |write|, this operation ensures that,
- * until the contents are fully written, the destination file is
- * not modified.
- *
- * By default, files are flushed for additional safety, i.e. to lower
- * the risks of losing data in case the device is suddenly removed or
- * in case of sudden shutdown. This additional safety is important
- * for user-critical data (e.g. preferences, application data, etc.)
- * but comes at a performance cost. For non-critical data (e.g. cache,
+ * By default, this operation ensures that, until the contents are
+ * fully written, the destination file is not modified. By default,
+ * files are flushed for additional safety, i.e. to lower the risks of
+ * losing data in case the device is suddenly removed or in case of
+ * sudden shutdown. This additional safety is important for
+ * user-critical data (e.g. preferences, application data, etc.) but
+ * comes at a performance cost. For non-critical data (e.g. cache,
  * thumbnails, etc.), you may wish to deactivate flushing by passing
  * option |flush: false|.
  *
@@ -347,23 +345,34 @@ AbstractFile.writeAtomic =
      function writeAtomic(path, buffer, options) {
   options = options || noOptions;
 
-  let tmpPath = options.tmpPath;
-  if (!tmpPath) {
-    throw new TypeError("Expected option tmpPath");
-  }
-
   let noOverwrite = options.noOverwrite;
   if (noOverwrite && OS.File.exists(path)) {
     throw OS.File.Error.exists("writeAtomic");
   }
 
+  if ("flush" in options && !options.flush) {
+    // Just write, without any renaming trick
+    let dest;
+    try {
+      dest = OS.File.open(path, {write: true, truncate: true});
+      return dest.write(buffer, options);
+    } finally {
+      dest.close();
+    }
+  }
+
+
+  let tmpPath = options.tmpPath;
+  if (!tmpPath) {
+    throw new TypeError("Expected option tmpPath");
+  }
+
+
   let tmpFile = OS.File.open(tmpPath, {write: true, truncate: true});
   let bytesWritten;
   try {
     bytesWritten = tmpFile.write(buffer, options);
-    if ("flush" in options && options.flush) {
-      tmpFile.flush();
-    }
+    tmpFile.flush();
   } catch (x) {
     OS.File.remove(tmpPath);
     throw x;
