@@ -338,4 +338,8 @@ if (typeof Components != "undefined") {
   OSError.exists = function exists(operation) {
     return new OSError(operation, exports.OS.Constants.Win.ERROR_FILE_EXISTS);
   };
+
+  OSError.noSuchFile = function noSuchFile(operation) {
+    return new OSError(operation, exports.OS.Constants.Win.ERROR_FILE_NOT_FOUND);
+  };
 })(this);

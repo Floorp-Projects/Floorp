@@ -458,13 +458,6 @@
      };
 
      /**
-      * A global value used to receive data during a
-      * |FindFirstFile|/|FindNextFile|.
-      */
-     let gFindData = new OS.Shared.Type.FindData.implementation();
-     let gFindDataPtr = gFindData.address();
-
-     /**
       * A global value used to receive data during time conversions.
       */
      let gSystemTime = new OS.Shared.Type.SystemTime.implementation();
@@ -510,64 +503,83 @@
        } else {
          this._pattern = path + "\\*";
        }
-       this._handle = null;
        this._path = path;
-       this._started = false;
-       this._closed = false;
+
+       // Pre-open the first item.
+       this._first = true;
+       this._findData = new OS.Shared.Type.FindData.implementation();
+       this._findDataPtr = this._findData.address();
+       this._handle = WinFile.FindFirstFile(this._pattern, this._findDataPtr);
+       if (this._handle == Const.INVALID_HANDLE_VALUE) {
+         let error = ctypes.winLastError;
+         this._findData = null;
+         this._findDataPtr = null;
+         if (error == Const.ERROR_FILE_NOT_FOUND) {
+           // Directory is empty, let's behave as if it were closed
+           LOG("Directory is empty");
+           this._closed = true;
+           this._exists = true;
+         } else if (error == Const.ERROR_PATH_NOT_FOUND) {
+           // Directory does not exist, let's throw if we attempt to walk it
+           LOG("Directory does not exist");
+           this._closed = true;
+           this._exists = false;
+         } else {
+           throw new File.Error("DirectoryIterator", error);
+         }
+       } else {
+         this._closed = false;
+         this._exists = true;
+       }
      };
+
      File.DirectoryIterator.prototype = Object.create(exports.OS.Shared.AbstractFile.AbstractIterator.prototype);
 
-       /**
-        * Fetch the next entry in the directory.
-        *
-        * @return null If we have reached the end of the directory.
-        */
+
+     /**
+      * Fetch the next entry in the directory.
+      *
+      * @return null If we have reached the end of the directory.
+      */
      File.DirectoryIterator.prototype._next = function _next() {
-        // Bailout if the iterator is closed. Note that this may
-        // happen even before it is fully initialized.
-        if (this._closed) {
-          return null;
-        }
+       // Bailout if the directory does not exist
+       if (!this._exists) {
+         throw File.Error.noSuchFile("DirectoryIterator.prototype.next");
+       }
+       // Bailout if the iterator is closed.
+       if (this._closed) {
+         return null;
+       }
+       // If this is the first entry, we have obtained it already
+       // during construction.
+       if (this._first) {
+         this._first = false;
+         return this._findData;
+       }
 
-         // Iterator is not fully initialized yet. Finish
-         // initialization.
-         if (!this._started) {
-            this._started = true;
-            this._handle = WinFile.FindFirstFile(this._pattern, gFindDataPtr);
-            if (this._handle == null) {
-              let error = ctypes.winLastError;
-              if (error == Const.ERROR_FILE_NOT_FOUND) {
-                this.close();
-                return null;
-              } else {
-                throw new File.Error("iter (FindFirstFile)", error);
-              }
-            }
-            return gFindData;
-         }
-
-         if (WinFile.FindNextFile(this._handle, gFindDataPtr)) {
-           return gFindData;
+       if (WinFile.FindNextFile(this._handle, this._findDataPtr)) {
+         return this._findData;
+       } else {
+         let error = ctypes.winLastError;
+         this.close();
+         if (error == Const.ERROR_NO_MORE_FILES) {
+            return null;
          } else {
-           let error = ctypes.winLastError;
-           this.close();
-           if (error == Const.ERROR_NO_MORE_FILES) {
-              return null;
-           } else {
-              throw new File.Error("iter (FindNextFile)", error);
-           }
+            throw new File.Error("iter (FindNextFile)", error);
          }
-       },
-       /**
-        * Return the next entry in the directory, if any such entry is
-        * available.
-        *
-        * Skip special directories "." and "..".
-        *
-        * @return {File.Entry} The next entry in the directory.
-        * @throws {StopIteration} Once all files in the directory have been
-        * encountered.
-        */
+       }
+     },
+
+     /**
+      * Return the next entry in the directory, if any such entry is
+      * available.
+      *
+      * Skip special directories "." and "..".
+      *
+      * @return {File.Entry} The next entry in the directory.
+      * @throws {StopIteration} Once all files in the directory have been
+      * encountered.
+      */
      File.DirectoryIterator.prototype.next = function next() {
          // FIXME: If we start supporting "\\?\"-prefixed paths, do not forget
          // that "." and ".." are absolutely normal file names if _path starts
@@ -594,6 +606,15 @@
            WinFile.FindClose(this._handle));
          this._handle = null;
        }
+     };
+
+    /**
+     * Determine whether the directory exists.
+     *
+     * @return {boolean}
+     */
+     File.DirectoryIterator.prototype.exists = function exists() {
+       return this._exists;
      };
 
      File.DirectoryIterator.Entry = function Entry(win_entry, parent) {
