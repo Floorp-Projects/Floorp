@@ -3597,8 +3597,7 @@ nsDocShell::GetChildAt(int32_t aIndex, nsIDocShellTreeItem ** aChild)
 #ifdef DEBUG
     if (aIndex < 0) {
       NS_WARNING("Negative index passed to GetChildAt");
-    }
-    else if (aIndex >= mChildList.Length()) {
+    } else if (static_cast<uint32_t>(aIndex) >= mChildList.Length()) {
       NS_WARNING("Too large an index passed to GetChildAt");
     }
 #endif
