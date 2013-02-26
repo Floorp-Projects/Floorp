@@ -4082,7 +4082,7 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
       }
 
       nsCxPusher pusher;
-      NS_ENSURE_STATE(pusher.Push(cx, nsCxPusher::ALWAYS_PUSH));
+      NS_ENSURE_STATE(pusher.Push(cx));
 
       JSAutoRequest ar(cx);
       JSAutoCompartment ac(cx, object);
@@ -7776,7 +7776,7 @@ public:
     nsCxPusher pusher;
     JSContext* cx = mContext ? mContext->GetNativeContext()
                              : nsContentUtils::GetSafeJSContext();
-    pusher.Push(cx, nsCxPusher::ALWAYS_PUSH);
+    pusher.Push(cx);
 
     JSObject* obj = nullptr;
     mWrapper->GetJSObject(&obj);

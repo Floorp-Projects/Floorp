@@ -3021,7 +3021,7 @@ nsCxPusher::Push(nsIDOMEventTarget *aCurrentTarget)
   // in the process or being torn down. We don't want to notify the
   // script context about scripts having been evaluated in such a
   // case, calling with a null cx is fine in that case.
-  return Push(cx, ASSERT_SCRIPT_CONTEXT);
+  return Push(cx);
 }
 
 bool
@@ -3053,7 +3053,7 @@ nsCxPusher::RePush(nsIDOMEventTarget *aCurrentTarget)
 }
 
 bool
-nsCxPusher::Push(JSContext *cx, PushBehavior behavior)
+nsCxPusher::Push(JSContext *cx)
 {
   if (mPushedSomething) {
     NS_ERROR("Whaaa! No double pushing with nsCxPusher::Push()!");
@@ -3069,11 +3069,6 @@ nsCxPusher::Push(JSContext *cx, PushBehavior behavior)
   // XXXbz do we really need to?  If we don't get one of these in Pop(), is
   // that really a problem?  Or do we need to do this to effectively root |cx|?
   mScx = GetScriptContextFromJSContext(cx);
-  MOZ_ASSERT_IF(behavior == ASSERT_SCRIPT_CONTEXT, mScx);
-  if (!mScx && behavior == REQUIRE_SCRIPT_CONTEXT) {
-    // Should probably return false. See bug 416916.
-    return true;
-  }
 
   return DoPush(cx);
 }
@@ -6833,7 +6828,7 @@ AutoJSContext::Init(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 
   if (!mCx) {
     mCx = nsContentUtils::GetSafeJSContext();
-    bool result = mPusher.Push(mCx, nsCxPusher::ALWAYS_PUSH);
+    bool result = mPusher.Push(mCx);
     if (!result || !mCx) {
       MOZ_CRASH();
     }
