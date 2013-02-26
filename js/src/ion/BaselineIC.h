@@ -3015,6 +3015,14 @@ class ICGetProp_Fallback : public ICMonitoredFallbackStub
         return space->allocate<ICGetProp_Fallback>(code);
     }
 
+    static const size_t UNOPTIMIZABLE_ACCESS_BIT = 0;
+    void noteUnoptimizableAccess() {
+        extra_ |= (1u << UNOPTIMIZABLE_ACCESS_BIT);
+    }
+    bool hadUnoptimizableAccess() const {
+        return extra_ & (1u << UNOPTIMIZABLE_ACCESS_BIT);
+    }
+
     class Compiler : public ICStubCompiler {
       protected:
         bool generateStubCode(MacroAssembler &masm);
@@ -3341,6 +3349,14 @@ class ICSetProp_Fallback : public ICFallbackStub
 
     static inline ICSetProp_Fallback *New(ICStubSpace *space, IonCode *code) {
         return space->allocate<ICSetProp_Fallback>(code);
+    }
+
+    static const size_t UNOPTIMIZABLE_ACCESS_BIT = 0;
+    void noteUnoptimizableAccess() {
+        extra_ |= (1u << UNOPTIMIZABLE_ACCESS_BIT);
+    }
+    bool hadUnoptimizableAccess() const {
+        return extra_ & (1u << UNOPTIMIZABLE_ACCESS_BIT);
     }
 
     class Compiler : public ICStubCompiler {

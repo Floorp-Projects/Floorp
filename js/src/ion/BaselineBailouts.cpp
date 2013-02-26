@@ -1067,10 +1067,9 @@ HandleCachedShapeGuardFailure(JSContext *cx, HandleScript outerScript, HandleScr
 
     outerScript->failedShapeGuard = true;
 
-    // Purge JM caches in the script and all inlined script, to avoid baking in
-    // the same shape guard next time.
-    for (size_t i = 0; i < outerScript->ion->scriptEntries(); i++)
-        mjit::PurgeCaches(outerScript->ion->getScript(i));
+    // No need to purge baseline ICs.  Baseline will do one of two things: add a new
+    // optimized stub (preventing monomorphic IC caching), or set a flag indicating that
+    // an unoptimizable access was made, also preventing mono IC caching.
 
     IonSpew(IonSpew_BaselineBailouts, "Invalidating due to cached shape guard failure");
 
@@ -1178,8 +1177,6 @@ ion::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
             return false;
         break;
       case Bailout_CachedShapeGuard:
-        JS_NOT_REACHED("JM cached shapes and BL should never coexist! "
-                       "Remove this when Ion starts caching shapes from Baseline!");
         if (!HandleCachedShapeGuardFailure(cx, outerScript, innerScript))
             return false;
         break;
