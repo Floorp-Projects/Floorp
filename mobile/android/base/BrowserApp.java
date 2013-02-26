@@ -107,6 +107,8 @@ abstract public class BrowserApp extends GeckoApp
                     final TabsPanel.Panel panel = tab.isPrivate()
                                                 ? TabsPanel.Panel.PRIVATE_TABS
                                                 : TabsPanel.Panel.NORMAL_TABS;
+                    // Delay calling showTabs so that it does not modify the mTabsChangedListeners
+                    // array while we are still iterating through the array.
                     mMainHandler.post(new Runnable() {
                         public void run() {
                             if (areTabsShown() && mTabsPanel.getCurrentPanel() != panel)
@@ -124,10 +126,16 @@ abstract public class BrowserApp extends GeckoApp
                 }
                 break;
             case PAGE_SHOW:
-                handlePageShow(tab);
+                loadFavicon(tab);
                 break;
             case LINK_ADDED:
-                handleLinkAdded(tab);
+                // If tab is not loading and the favicon is updated, we
+                // want to load the image straight away. If tab is still
+                // loading, we only load the favicon once the page's content
+                // is fully loaded.
+                if (tab.getState() != Tab.STATE_LOADING) {
+                    loadFavicon(tab);
+                }
                 break;
             case SECURITY_CHANGE:
                 handleSecurityChange(tab);
@@ -137,28 +145,6 @@ abstract public class BrowserApp extends GeckoApp
                 break;
         }
         super.onTabChanged(tab, msg, data);
-    }
-
-    void handlePageShow(final Tab tab) {
-        mMainHandler.post(new Runnable() {
-            public void run() {
-                loadFavicon(tab);
-            }
-        });
-    }
-
-    void handleLinkAdded(final Tab tab) {
-        // If tab is not loading and the favicon is updated, we
-        // want to load the image straight away. If tab is still
-        // loading, we only load the favicon once the page's content
-        // is fully loaded (see handleContentLoaded()).
-        if (tab.getState() != Tab.STATE_LOADING) {
-            mMainHandler.post(new Runnable() {
-                public void run() {
-                    loadFavicon(tab);
-                }
-            });
-        }
     }
 
     @Override
