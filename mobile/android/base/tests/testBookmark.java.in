@@ -84,10 +84,11 @@ public class testBookmark extends PixelTest  {
         mAsserter.ok(bookmarksList != null, "checking that bookmarks list exists", "bookmarks list exists");
 
         // No folders should be visible if no desktop bookmarks exist
-        mAsserter.is(bookmarksList.getAdapter().getCount(), 4,
+        int count = bookmarksList.getAdapter().getCount();
+        mAsserter.is(count, 4,
             "bookmarks list has 4 children (the default bookmarks)");
 
-        for (int i = 0; i < bookmarksList.getChildCount(); i++) {
+        for (int i = 0; i < count; i++) {
             Cursor c = (Cursor)bookmarksList.getItemAtPosition(i);
             String url = c.getString(c.getColumnIndexOrThrow("url"));
             mAsserter.ok(Arrays.binarySearch(defaultBookmarks, url) > -1,
