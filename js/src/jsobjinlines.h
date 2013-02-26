@@ -758,7 +758,7 @@ JSObject::setSingletonType(JSContext *cx, js::HandleObject obj)
     return true;
 }
 
-inline js::types::TypeObject *
+inline js::types::TypeObject*
 JSObject::getType(JSContext *cx)
 {
     JS_ASSERT(cx->compartment == compartment());
@@ -766,7 +766,7 @@ JSObject::getType(JSContext *cx)
         js::RootedObject self(cx, this);
         return makeLazyType(cx, self);
     }
-    return type_;
+    return static_cast<js::types::TypeObject*>(type_);
 }
 
 /* static */ inline bool
