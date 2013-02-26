@@ -21,6 +21,11 @@
                 url = url + "?id="+data.id;
               }
               navigator.mozSocial.openChatWindow(url, function(chatwin) {
+                // Note that the following .focus() call should *not* arrange
+                // to steal focus - see browser_social_chatwindowfocus.js
+                if (data && data.stealFocus && chatwin) {
+                  chatwin.focus();
+                }
                 port.postMessage({topic: "chatbox-opened",
                                   result: chatwin ? "ok" : "failed"});
               });
@@ -37,5 +42,6 @@
   </head>
   <body onload="pingWorker();">
     <p>This is a test social sidebar.</p>
+    <button id="chat-opener" onclick="navigator.mozSocial.openChatWindow('./social_chat.html');"/>
   </body>
 </html>
