@@ -34,6 +34,7 @@
 #include "jstypedarrayinlines.h"
 #include "vm/RegExpObject-inl.h"
 
+#include "ion/BaselineJIT.h"
 #include "ion/Ion.h"
 
 #if JS_TRACE_LOGGING
@@ -986,7 +987,7 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
 {
     bool compiledOnce = false;
   checkOutput:
-    if (!cx->methodJitEnabled)
+    if (!cx->methodJitEnabled || ion::IsBaselineEnabled(cx))
         return Compile_Abort;
 
     /*

@@ -405,7 +405,7 @@ class ParallelIonInvoke
 
     bool invoke() {
         Value result;
-        enter_(jitcode_, argc_ + 1, argv_ + 1, NULL, calleeToken_, /* scopeChain = */ NULL, &result);
+        enter_(jitcode_, argc_ + 1, argv_ + 1, NULL, calleeToken_, NULL, 0, &result);
         return !result.isMagic();
     }
 };

@@ -1080,6 +1080,10 @@ class StackFrame
         return flags_ & HAS_CALL_OBJ;
     }
 
+    bool hasCallObjUnchecked() const {
+        return flags_ & HAS_CALL_OBJ;
+    }
+
     bool hasArgsObj() const {
         JS_ASSERT(script()->needsArgsObj());
         return flags_ & HAS_ARGS_OBJ;

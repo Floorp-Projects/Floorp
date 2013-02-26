@@ -7,6 +7,11 @@
 
 #include "BaselineFrame.h"
 #include "BaselineFrame-inl.h"
+#include "BaselineJIT.h"
+#include "Ion.h"
+#include "IonFrames-inl.h"
+
+#include "vm/Debugger.h"
 #include "vm/ScopeObject.h"
 
 using namespace js;
@@ -89,5 +94,65 @@ BaselineFrame::heavyweightFunPrologue(JSContext *cx)
 
     pushOnScopeChain(*callobj);
     flags_ |= HAS_CALL_OBJ;
+    return true;
+}
+
+bool
+BaselineFrame::initForOsr(StackFrame *fp, uint32_t numStackValues)
+{
+    PodZero(this);
+
+    scopeChain_ = fp->scopeChain();
+
+    if (fp->hasCallObjUnchecked())
+        flags_ |= BaselineFrame::HAS_CALL_OBJ;
+
+    if (fp->hasBlockChain()) {
+        flags_ |= BaselineFrame::HAS_BLOCKCHAIN;
+        blockChain_ = &fp->blockChain();
+    }
+
+    if (fp->isEvalFrame()) {
+        flags_ |= BaselineFrame::EVAL;
+        evalScript_ = fp->script();
+    }
+
+    if (fp->script()->needsArgsObj() && fp->hasArgsObj()) {
+        flags_ |= BaselineFrame::HAS_ARGS_OBJ;
+        argsObj_ = &fp->argsObj();
+    }
+
+    if (fp->hasHookData()) {
+        flags_ |= BaselineFrame::HAS_HOOK_DATA;
+        hookData_ = fp->hookData();
+    }
+
+    frameSize_ = BaselineFrame::FramePointerOffset +
+        BaselineFrame::Size() +
+        numStackValues * sizeof(Value);
+
+    JS_ASSERT(numValueSlots() == numStackValues);
+
+    for (uint32_t i = 0; i < numStackValues; i++)
+        *valueSlot(i) = fp->slots()[i];
+
+    JSContext *cx = GetIonContext()->cx;
+    if (cx->compartment->debugMode()) {
+        // In debug mode, update any Debugger.Frame objects for the StackFrame to
+        // point to the BaselineFrame.
+
+        // The caller pushed a fake return address. ScriptFrameIter, used by the
+        // debugger, wants a valid return address, but it's okay to just pick one.
+        // In debug mode there's always at least 1 ICEntry (since there are always
+        // debug prologue/epilogue calls).
+        IonFrameIterator iter(cx->mainThread().ionTop);
+        JS_ASSERT(iter.returnAddress() == NULL);
+        BaselineScript *baseline = fp->script()->baseline;
+        iter.current()->setReturnAddress(baseline->returnAddressForIC(baseline->icEntry(0)));
+
+        if (!Debugger::handleBaselineOsr(cx, fp, this))
+            return false;
+    }
+
     return true;
 }

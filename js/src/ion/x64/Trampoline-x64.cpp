@@ -39,11 +39,13 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
 #if defined(_WIN64)
     const Operand token  = Operand(rbp, 16 + ShadowStackSpace);
     const Operand scopeChain = Operand(rbp, 24 + ShadowStackSpace);
-    const Operand result = Operand(rbp, 32 + ShadowStackSpace);
+    const Operand numStackValuesAddr = Operand(rbp, 32 + ShadowStackSpace);
+    const Operand result = Operand(rbp, 40 + ShadowStackSpace);
 #else
     const Register token = IntArgReg4;
     const Register scopeChain = IntArgReg5;
-    const Operand result = Operand(rbp, 16 + ShadowStackSpace);
+    const Operand numStackValuesAddr = Operand(rbp, 16 + ShadowStackSpace);
+    const Operand result = Operand(rbp, 24 + ShadowStackSpace);
 #endif
 
     // Save old stack frame pointer, set new stack frame pointer.
@@ -137,13 +139,91 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     masm.makeFrameDescriptor(r14, IonFrame_Entry);
     masm.push(r14);
 
+    CodeLabel returnLabel;
     if (type == EnterJitBaseline) {
-        JS_ASSERT(R1.scratchReg() != reg_code);
+        // Handle OSR.
+        GeneralRegisterSet regs(GeneralRegisterSet::All());
+        regs.take(JSReturnOperand);
+        regs.takeUnchecked(OsrFrameReg);
+        regs.take(rbp);
+        regs.take(reg_code);
+
+        Register scratch = regs.takeAny();
+
+        Label notOsr;
+        masm.branchTestPtr(Assembler::Zero, OsrFrameReg, OsrFrameReg, &notOsr);
+
+        Register numStackValues = regs.takeAny();
+        masm.movq(numStackValuesAddr, numStackValues);
+
+        // Push return address, previous frame pointer.
+        masm.mov(returnLabel.dest(), scratch);
+        masm.push(scratch);
+        masm.push(rbp);
+
+        // Reserve frame.
+        Register framePtr = rbp;
+        masm.subPtr(Imm32(BaselineFrame::Size()), rsp);
+        masm.mov(rsp, framePtr);
+
+        // Reserve space for locals and stack values.
+        Register valuesSize = regs.takeAny();
+        masm.mov(numStackValues, valuesSize);
+        masm.shll(Imm32(3), valuesSize);
+        masm.subPtr(valuesSize, rsp);
+
+        // Enter exit frame.
+        masm.addPtr(Imm32(BaselineFrame::Size() + BaselineFrame::FramePointerOffset), valuesSize);
+        masm.makeFrameDescriptor(valuesSize, IonFrame_BaselineJS);
+        masm.push(valuesSize);
+        masm.push(Imm32(0)); // Fake return address.
+        masm.enterFakeExitFrame();
+
+        regs.add(valuesSize);
+
+        masm.push(framePtr);
+        masm.push(reg_code);
+
+        masm.setupUnalignedABICall(3, scratch);
+        masm.passABIArg(framePtr); // BaselineFrame
+        masm.passABIArg(OsrFrameReg); // StackFrame
+        masm.passABIArg(numStackValues);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ion::InitBaselineFrameForOsr));
+
+        masm.pop(reg_code);
+        masm.pop(framePtr);
+
+        JS_ASSERT(reg_code != ReturnReg);
+
+        Label error;
+        masm.addPtr(Imm32(IonExitFrameLayout::SizeWithFooter()), rsp);
+        masm.addPtr(Imm32(BaselineFrame::Size()), framePtr);
+        masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &error);
+
+        masm.jump(reg_code);
+
+        // OOM: load error value, discard return address and previous frame
+        // pointer and return.
+        masm.bind(&error);
+        masm.mov(framePtr, rsp);
+        masm.addPtr(Imm32(2 * sizeof(uintptr_t)), rsp);
+        masm.moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
+        masm.mov(returnLabel.dest(), scratch);
+        masm.jump(scratch);
+
+        masm.bind(&notOsr);
         masm.movq(scopeChain, R1.scratchReg());
     }
 
     // Call function.
     masm.call(reg_code);
+
+    if (type == EnterJitBaseline) {
+        // Baseline OSR will return here.
+        masm.bind(returnLabel.src());
+        if (!masm.addCodeLabel(returnLabel))
+            return NULL;
+    }
 
     // Pop arguments and padding from stack.
     masm.pop(r14);              // Pop and decode descriptor.

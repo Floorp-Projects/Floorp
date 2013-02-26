@@ -274,6 +274,9 @@ CanEnterBaselineJIT(JSContext *cx, JSScript *scriptArg, StackFrame *fp, bool new
 IonExecStatus
 EnterBaselineMethod(JSContext *cx, StackFrame *fp);
 
+IonExecStatus
+EnterBaselineAtBranch(JSContext *cx, StackFrame *fp, jsbytecode *pc);
+
 void
 FinishDiscardBaselineScript(FreeOp *fop, UnrootedScript script);
 
