@@ -9606,11 +9606,15 @@ LogFullScreenDenied(bool aLogFailure, const char* aMessage, nsIDocument* aDoc)
 nsresult
 nsDocument::AddFullscreenApprovedObserver()
 {
+  NS_ASSERTION(!mHasFullscreenApprovedObserver, "Don't add observer twice.");
+
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   NS_ENSURE_TRUE(os, NS_ERROR_FAILURE);
 
   nsresult res = os->AddObserver(this, "fullscreen-approved", true);
   NS_ENSURE_SUCCESS(res, res);
+
+  mHasFullscreenApprovedObserver = true;
 
   return NS_OK;
 }
@@ -9618,11 +9622,16 @@ nsDocument::AddFullscreenApprovedObserver()
 nsresult
 nsDocument::RemoveFullscreenApprovedObserver()
 {
+  if (!mHasFullscreenApprovedObserver) {
+    return NS_OK;
+  }
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   NS_ENSURE_TRUE(os, NS_ERROR_FAILURE);
 
   nsresult res = os->RemoveObserver(this, "fullscreen-approved");
   NS_ENSURE_SUCCESS(res, res);
+
+  mHasFullscreenApprovedObserver = false;
 
   return NS_OK;
 }
