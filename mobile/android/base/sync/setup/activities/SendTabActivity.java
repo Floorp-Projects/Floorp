@@ -286,8 +286,12 @@ public class SendTabActivity extends Activity {
       return new ArrayList<ClientRecord>(0);
     }
 
-    final ArrayList<ClientRecord> out = new ArrayList<ClientRecord>(all.size());
     final String ourGUID = getAccountGUID();
+    if (ourGUID == null) {
+      return all.values();
+    }
+
+    final ArrayList<ClientRecord> out = new ArrayList<ClientRecord>(all.size());
     for (Entry<String, ClientRecord> entry : all.entrySet()) {
       if (ourGUID.equals(entry.getKey())) {
         continue;
