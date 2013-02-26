@@ -162,7 +162,7 @@ WMFByteStream::Init()
                                 contentTypeUTF16.get());
     NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
-    LOG("WMFByteStream has Content-Type=%s", mResource->GetContentType());
+    LOG("WMFByteStream has Content-Type=%s", mResource->GetContentType().get());
   }
   return NS_OK;
 }
