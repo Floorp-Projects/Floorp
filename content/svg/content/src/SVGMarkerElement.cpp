@@ -321,7 +321,7 @@ SVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
 nsSVGViewBoxRect
 SVGMarkerElement::GetViewBoxRect()
 {
-  if (mViewBox.IsExplicitlySet()) {
+  if (mViewBox.HasRect()) {
     return mViewBox.GetAnimValue();
   }
   return nsSVGViewBoxRect(
