@@ -107,7 +107,7 @@ public class testHistoryTab extends PixelTest {
 
         mAsserter.isnot(listview,  null, "checking that history list exists");
 
-        final int count = listview.getChildCount();
+        final int count = listview.getAdapter().getCount();
         mAsserter.is(count, 3, "history list has 3 children");
 
         String loadUrl = "";
