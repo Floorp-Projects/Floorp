@@ -430,7 +430,7 @@ parent:
                        nsCString aContentDisposition, bool aForceSave,
                        int64_t aContentLength, OptionalURIParams aReferrer);
 
-    AddGeolocationListener(Principal principal);
+    AddGeolocationListener(Principal principal, bool highAccuracy);
     RemoveGeolocationListener();
     SetGeolocationHigherAccuracy(bool enable);
 
