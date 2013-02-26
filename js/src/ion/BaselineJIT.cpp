@@ -258,11 +258,6 @@ ion::CanEnterBaselineJIT(JSContext *cx, JSScript *scriptArg, StackFrame *fp, boo
     if (scriptArg->baseline == BASELINE_DISABLED_SCRIPT)
         return Method_Skipped;
 
-    // Eagerly compile scripts if JSD is enabled, so that we don't have to OSR
-    // and don't have to update the frame pointer stored in JSD's frames list.
-    if (scriptArg->incUseCount() <= js_IonOptions.baselineUsesBeforeCompile && !IsJSDEnabled(cx))
-        return Method_Skipped;
-
     if (scriptArg->length > BaselineScript::MAX_JSSCRIPT_LENGTH)
         return Method_CantCompile;
 
@@ -285,6 +280,11 @@ ion::CanEnterBaselineJIT(JSContext *cx, JSScript *scriptArg, StackFrame *fp, boo
 
     if (script->hasBaselineScript())
         return Method_Compiled;
+
+    // Eagerly compile scripts if JSD is enabled, so that we don't have to OSR
+    // and don't have to update the frame pointer stored in JSD's frames list.
+    if (scriptArg->incUseCount() <= js_IonOptions.baselineUsesBeforeCompile && !IsJSDEnabled(cx))
+        return Method_Skipped;
 
     return BaselineCompile(cx, script, fp);
 }

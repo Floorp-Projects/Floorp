@@ -7,6 +7,7 @@
 
 #include "BaselineFrame.h"
 #include "BaselineFrame-inl.h"
+#include "BaselineIC.h"
 #include "BaselineJIT.h"
 #include "Ion.h"
 #include "IonFrames-inl.h"
