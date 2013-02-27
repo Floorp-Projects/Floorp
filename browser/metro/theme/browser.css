@@ -699,7 +699,6 @@ settings {
 }
 
 #prefs-flyoutpanel > setting .preferences-title,
-#sync-flyoutpanel > setting .preferences-title {
   font-weight: bold
 }
 

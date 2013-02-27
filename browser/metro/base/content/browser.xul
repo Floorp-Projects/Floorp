@@ -429,22 +429,19 @@
     </flyoutpanel>
 
     <flyoutpanel id="sync-flyoutpanel" headertext="&syncHeader.title;">
-      <settings id="prefs-sync" label="&sync.title;">
-        <setting id="sync-connect" title="&sync.notconnected;" type="control">
-          <button label="&sync.connect;" oncommand="WeaveGlue.tryConnect();" />
-        </setting>
-        <setting id="sync-connected" class="setting-group" title="&sync.connected;" type="control" collapsed="true">
-          <button id="sync-pairdevice" label="&sync.pair.title;" oncommand="SyncPairDevice.open();" />
-          <button id="sync-details" label="&sync.details;" type="checkbox" autocheck="false" checked="false" oncommand="WeaveGlue.showDetails();" />
-        </setting>
-        <setting id="sync-sync" class="setting-subgroup" type="control" collapsed="true">
-          <button id="sync-syncButton" label="&sync.syncNow;" oncommand="WeaveGlue.sync();"/>
-        </setting>
-        <setting id="sync-device" class="setting-subgroup" type="string" title="&sync.deviceName;" onchange="WeaveGlue.changeName(this);" collapsed="true"/>
-        <setting id="sync-disconnect" class="setting-subgroup" type="control" collapsed="true">
-          <button label="&sync.disconnect;" oncommand="WeaveGlue.disconnect();" />
-        </setting>
-      </settings>
+      <setting id="sync-connect" title="&sync.notconnected;" type="control">
+        <button label="&sync.connect;" oncommand="WeaveGlue.tryConnect();" />
+      </setting>
+      <setting id="sync-connected" class="setting-group" title="&sync.connected;" type="control" collapsed="true">
+        <button id="sync-pairdevice" label="&sync.pair.title;" oncommand="SyncPairDevice.open();" />
+      </setting>
+      <setting id="sync-sync" class="setting-subgroup" type="control" collapsed="true">
+        <button id="sync-syncButton" label="&sync.syncNow;" oncommand="WeaveGlue.sync();"/>
+      </setting>
+      <setting id="sync-device" class="setting-subgroup" type="string" title="&sync.deviceName;" onchange="WeaveGlue.changeName(this);" collapsed="true"/>
+      <setting id="sync-disconnect" class="setting-subgroup" type="control" collapsed="true">
+        <button label="&sync.disconnect;" oncommand="WeaveGlue.disconnect();" />
+      </setting>
     </flyoutpanel>
 
     <flyoutpanel id="prefs-flyoutpanel" headertext="&optionsHeader.title;">
