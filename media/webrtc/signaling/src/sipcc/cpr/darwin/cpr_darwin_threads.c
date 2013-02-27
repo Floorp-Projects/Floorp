@@ -81,9 +81,7 @@ cprCreateThread (const char *name,
         }
 
         /* Assign name to CPR if one was passed in */
-        if (name != NULL) {
-            threadPtr->name = name;
-        }
+        threadPtr->name = name;
 
         /*
          * TODO - It would be nice for CPR to keep a linked
