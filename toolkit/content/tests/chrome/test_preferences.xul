@@ -12,7 +12,7 @@
 
   <script type="application/javascript">
   <![CDATA[
-    if (navigator.platform.indexOf("Mac") == 0) {
+    if (navigator.platform.startsWith("Mac")) {
       SimpleTest.expectAssertions(4);
     }
     SimpleTest.waitForExplicitFinish();

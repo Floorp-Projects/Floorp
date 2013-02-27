@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=391777
 <p id="display"></p>
 <script class="testbody" type="text/javascript">
 
-if (navigator.platform.indexOf("Win") != 0) {
+if (!navigator.platform.startsWith("Win")) {
   // not Windows
   SimpleTest.expectAssertions(1);
 }

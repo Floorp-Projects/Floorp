@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=414291
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=414291">Mozilla Bug 414291</a>
 <script class="testbody" type="text/javascript">
 
-if (navigator.platform.indexOf("Win") != 0) {
+if (!navigator.platform.startsWith("Win")) {
   SimpleTest.expectAssertions(1);
 }
 

@@ -21,9 +21,9 @@
 var gTestPhase = -1;
 var gCp = null;
 
-if (navigator.platform.indexOf("Mac") == 0) {
+if (navigator.platform.startsWith("Mac")) {
   SimpleTest.expectAssertions(0, 4);
-} else if (navigator.platform.indexOf("Linux") == 0) {
+} else if (navigator.platform.startsWith("Linux")) {
   SimpleTest.expectAssertions(0, 5);
 }
 

@@ -12,7 +12,7 @@
 <div id="log"></div>
 <script>
 
-if (navigator.platform.indexOf("Win") == 0) {
+if (navigator.platform.startsWith("Win")) {
   SimpleTest.expectAssertions(0, 2);
 } else {
   SimpleTest.expectAssertions(2);

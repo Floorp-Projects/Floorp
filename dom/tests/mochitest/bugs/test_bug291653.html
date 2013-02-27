@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=291653
 <pre id="test">
 <script type="application/javascript">
 
-if (navigator.platform.indexOf("Win") != 0) {
+if (!navigator.platform.startsWith("Win")) {
   SimpleTest.expectAssertions(1);
 }
 
