@@ -184,11 +184,6 @@ public:
   void ForceDiscard() { Discard(/* force = */ true); }
 
   /* Callbacks for decoders */
-  nsresult SetFrameDisposalMethod(uint32_t aFrameNum,
-                                  int32_t aDisposalMethod);
-  nsresult SetFrameTimeout(uint32_t aFrameNum, int32_t aTimeout);
-  nsresult SetFrameBlendMethod(uint32_t aFrameNum, int32_t aBlendMethod);
-  nsresult SetFrameHasNoAlpha(uint32_t aFrameNum);
   nsresult SetFrameAsNonPremult(uint32_t aFrameNum, bool aIsNonPremult);
 
   /**
@@ -212,7 +207,8 @@ public:
                        uint8_t** imageData,
                        uint32_t* imageLength,
                        uint32_t** paletteData,
-                       uint32_t* paletteLength);
+                       uint32_t* paletteLength,
+                       imgFrame** aFrame);
 
   /**
    * A shorthand for EnsureFrame, above, with aPaletteDepth = 0 and paletteData
@@ -222,7 +218,8 @@ public:
                        int32_t aWidth, int32_t aHeight,
                        gfxASurface::gfxImageFormat aFormat,
                        uint8_t** imageData,
-                       uint32_t* imageLength);
+                       uint32_t* imageLength,
+                       imgFrame** aFrame);
 
   void FrameUpdated(uint32_t aFrameNum, nsIntRect& aUpdatedRect);
 
@@ -664,11 +661,13 @@ private:
 
   nsresult InternalAddFrameHelper(uint32_t framenum, imgFrame *frame,
                                   uint8_t **imageData, uint32_t *imageLength,
-                                  uint32_t **paletteData, uint32_t *paletteLength);
+                                  uint32_t **paletteData, uint32_t *paletteLength,
+                                  imgFrame** aRetFrame);
   nsresult InternalAddFrame(uint32_t framenum, int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
                             gfxASurface::gfxImageFormat aFormat, uint8_t aPaletteDepth,
                             uint8_t **imageData, uint32_t *imageLength,
-                            uint32_t **paletteData, uint32_t *paletteLength);
+                            uint32_t **paletteData, uint32_t *paletteLength,
+                            imgFrame** aRetFrame);
 
   nsresult DoImageDataComplete();
 

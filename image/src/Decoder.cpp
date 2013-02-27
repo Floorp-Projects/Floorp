@@ -15,6 +15,7 @@ namespace image {
 
 Decoder::Decoder(RasterImage &aImage)
   : mImage(aImage)
+  , mCurrentFrame(nullptr)
   , mImageData(nullptr)
   , mColormap(nullptr)
   , mDecodeFlags(0)
@@ -60,7 +61,8 @@ Decoder::Init()
 // parent decoder
 void
 Decoder::InitSharedDecoder(uint8_t* imageData, uint32_t imageDataLength,
-                           uint32_t* colormap, uint32_t colormapSize)
+                           uint32_t* colormap, uint32_t colormapSize,
+                           imgFrame* currentFrame)
 {
   // No re-initializing
   NS_ABORT_IF_FALSE(!mInitialized, "Can't re-initialize a decoder!");
@@ -70,6 +72,7 @@ Decoder::InitSharedDecoder(uint8_t* imageData, uint32_t imageDataLength,
   mImageDataLength = imageDataLength;
   mColormap = colormap;
   mColormapSize = colormapSize;
+  mCurrentFrame = currentFrame;
 
   // Implementation-specific initialization
   InitInternal();
@@ -200,12 +203,12 @@ Decoder::AllocateFrame()
                             mNewFrameData.mHeight, mNewFrameData.mFormat,
                             mNewFrameData.mPaletteDepth,
                             &mImageData, &mImageDataLength,
-                            &mColormap, &mColormapSize);
+                            &mColormap, &mColormapSize, &mCurrentFrame);
   } else {
     rv = mImage.EnsureFrame(mNewFrameData.mFrameNum, mNewFrameData.mOffsetX,
                             mNewFrameData.mOffsetY, mNewFrameData.mWidth,
                             mNewFrameData.mHeight, mNewFrameData.mFormat,
-                            &mImageData, &mImageDataLength);
+                            &mImageData, &mImageDataLength, &mCurrentFrame);
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -313,20 +316,23 @@ Decoder::PostFrameStop(RasterImage::FrameAlpha aFrameAlpha /* = RasterImage::kFr
 {
   // We should be mid-frame
   NS_ABORT_IF_FALSE(mInFrame, "Stopping frame when we didn't start one!");
+  NS_ABORT_IF_FALSE(mCurrentFrame, "Stopping frame when we don't have one!");
 
   // Update our state
   mInFrame = false;
 
   if (aFrameAlpha == RasterImage::kFrameOpaque) {
-    mImage.SetFrameHasNoAlpha(mFrameCount - 1);
+    mCurrentFrame->SetHasNoAlpha();
   }
 
-  mImage.SetFrameDisposalMethod(mFrameCount - 1, aDisposalMethod);
-  mImage.SetFrameTimeout(mFrameCount - 1, aTimeout);
-  mImage.SetFrameBlendMethod(mFrameCount - 1, aBlendMethod);
+  mCurrentFrame->SetFrameDisposalMethod(aDisposalMethod);
+  mCurrentFrame->SetTimeout(aTimeout);
+  mCurrentFrame->SetBlendMethod(aBlendMethod);
 
   // Flush any invalidations before we finish the frame
   FlushInvalidations();
+
+  mCurrentFrame = nullptr;
 
   // Fire notifications
   if (mObserver) {
@@ -343,9 +349,11 @@ Decoder::PostInvalidation(nsIntRect& aRect)
 {
   // We should be mid-frame
   NS_ABORT_IF_FALSE(mInFrame, "Can't invalidate when not mid-frame!");
+  NS_ABORT_IF_FALSE(mCurrentFrame, "Can't invalidate when not mid-frame!");
 
   // Account for the new region
   mInvalidRect.UnionRect(mInvalidRect, aRect);
+  mCurrentFrame->ImageUpdated(aRect);
 }
 
 void
