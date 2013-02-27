@@ -498,16 +498,6 @@ protected:
                                      const FramePropertyDescriptor* aProperty);
 
   /**
-   * Remove aFrame from the PresContext-stored nsFrameList named aPropID
-   * for this frame, deleting the list if it is now empty.
-   * Return true if the aFrame was successfully removed,
-   * Return false otherwise.
-   */
-  bool RemovePropTableFrame(nsPresContext*                 aPresContext,
-                              nsIFrame*                      aFrame,
-                              const FramePropertyDescriptor* aProperty);
-
-  /**
    * Set the PresContext-stored nsFrameList named aPropID for this frame
    * to the given aFrameList, which must not be null.
    */
