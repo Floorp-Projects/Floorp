@@ -2561,7 +2561,7 @@ Proxy::iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleV
     vp.setUndefined(); // default result if we refuse to perform this action
     if (!handler->hasPrototype()) {
         AutoEnterPolicy policy(cx, handler, proxy, JSID_VOID,
-                               BaseProxyHandler::GET, /* mayThrow = */ false);
+                               BaseProxyHandler::GET, true);
         // If the policy denies access but wants us to return true, we need
         // to hand a valid (empty) iterator object to the caller.
         if (!policy.allowed()) {
