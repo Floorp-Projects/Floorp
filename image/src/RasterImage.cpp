@@ -1253,7 +1253,8 @@ RasterImage::DeleteImgFrame(uint32_t framenum)
 nsresult
 RasterImage::InternalAddFrameHelper(uint32_t framenum, imgFrame *aFrame,
                                     uint8_t **imageData, uint32_t *imageLength,
-                                    uint32_t **paletteData, uint32_t *paletteLength)
+                                    uint32_t **paletteData, uint32_t *paletteLength,
+                                    imgFrame** aRetFrame)
 {
   NS_ABORT_IF_FALSE(framenum <= mFrames.Length(), "Invalid frame index!");
   if (framenum > mFrames.Length())
@@ -1270,11 +1271,13 @@ RasterImage::InternalAddFrameHelper(uint32_t framenum, imgFrame *aFrame,
 
   frame->GetImageData(imageData, imageLength);
 
+  *aRetFrame = frame;
+
   mFrames.InsertElementAt(framenum, frame.forget());
 
   return NS_OK;
 }
-                                  
+
 nsresult
 RasterImage::InternalAddFrame(uint32_t framenum,
                               int32_t aX, int32_t aY,
@@ -1284,7 +1287,8 @@ RasterImage::InternalAddFrame(uint32_t framenum,
                               uint8_t **imageData,
                               uint32_t *imageLength,
                               uint32_t **paletteData,
-                              uint32_t *paletteLength)
+                              uint32_t *paletteLength,
+                              imgFrame** aRetFrame)
 {
   // We assume that we're in the middle of decoding because we unlock the
   // previous frame when we create a new frame, and only when decoding do we
@@ -1309,7 +1313,7 @@ RasterImage::InternalAddFrame(uint32_t framenum,
 
   if (mFrames.Length() == 0) {
     return InternalAddFrameHelper(framenum, frame.forget(), imageData, imageLength, 
-                                  paletteData, paletteLength);
+                                  paletteData, paletteLength, aRetFrame);
   }
 
   if (mFrames.Length() == 1) {
@@ -1333,7 +1337,7 @@ RasterImage::InternalAddFrame(uint32_t framenum,
                                          frameRect);
   
   rv = InternalAddFrameHelper(framenum, frame.forget(), imageData, imageLength,
-                              paletteData, paletteLength);
+                              paletteData, paletteLength, aRetFrame);
   
   // We may be able to start animating, if we now have enough frames
   EvaluateAnimation();
@@ -1400,13 +1404,15 @@ RasterImage::EnsureFrame(uint32_t aFrameNum, int32_t aX, int32_t aY,
                          gfxASurface::gfxImageFormat aFormat,
                          uint8_t aPaletteDepth,
                          uint8_t **imageData, uint32_t *imageLength,
-                         uint32_t **paletteData, uint32_t *paletteLength)
+                         uint32_t **paletteData, uint32_t *paletteLength,
+                         imgFrame** aRetFrame)
 {
   if (mError)
     return NS_ERROR_FAILURE;
 
   NS_ENSURE_ARG_POINTER(imageData);
   NS_ENSURE_ARG_POINTER(imageLength);
+  NS_ENSURE_ARG_POINTER(aRetFrame);
   NS_ABORT_IF_FALSE(aFrameNum <= mFrames.Length(), "Invalid frame index!");
 
   if (aPaletteDepth > 0) {
@@ -1421,13 +1427,13 @@ RasterImage::EnsureFrame(uint32_t aFrameNum, int32_t aX, int32_t aY,
   if (aFrameNum == mFrames.Length())
     return InternalAddFrame(aFrameNum, aX, aY, aWidth, aHeight, aFormat, 
                             aPaletteDepth, imageData, imageLength,
-                            paletteData, paletteLength);
+                            paletteData, paletteLength, aRetFrame);
 
   imgFrame *frame = GetImgFrame(aFrameNum);
   if (!frame)
     return InternalAddFrame(aFrameNum, aX, aY, aWidth, aHeight, aFormat, 
                             aPaletteDepth, imageData, imageLength,
-                            paletteData, paletteLength);
+                            paletteData, paletteLength, aRetFrame);
 
   // See if we can re-use the frame that already exists.
   nsIntRect rect = frame->GetRect();
@@ -1438,6 +1444,8 @@ RasterImage::EnsureFrame(uint32_t aFrameNum, int32_t aX, int32_t aY,
     if (paletteData) {
       frame->GetPaletteData(paletteData, paletteLength);
     }
+
+    *aRetFrame = frame;
 
     // We can re-use the frame if it has image data.
     if (*imageData && paletteData && *paletteData) {
@@ -1460,19 +1468,22 @@ RasterImage::EnsureFrame(uint32_t aFrameNum, int32_t aX, int32_t aY,
   nsresult rv = newFrame->Init(aX, aY, aWidth, aHeight, aFormat, aPaletteDepth);
   NS_ENSURE_SUCCESS(rv, rv);
   return InternalAddFrameHelper(aFrameNum, newFrame.forget(), imageData,
-                                imageLength, paletteData, paletteLength);
+                                imageLength, paletteData, paletteLength,
+                                aRetFrame);
 }
 
 nsresult
 RasterImage::EnsureFrame(uint32_t aFramenum, int32_t aX, int32_t aY,
                          int32_t aWidth, int32_t aHeight,
                          gfxASurface::gfxImageFormat aFormat,
-                         uint8_t** imageData, uint32_t* imageLength)
+                         uint8_t** imageData, uint32_t* imageLength,
+                         imgFrame** aFrame)
 {
   return EnsureFrame(aFramenum, aX, aY, aWidth, aHeight, aFormat,
                      /* aPaletteDepth = */ 0, imageData, imageLength,
                      /* aPaletteData = */ nullptr,
-                     /* aPaletteLength = */ nullptr);
+                     /* aPaletteLength = */ nullptr,
+                     aFrame);
 }
 
 void
@@ -1489,84 +1500,6 @@ RasterImage::FrameUpdated(uint32_t aFrameNum, nsIntRect &aUpdatedRect)
       !IsInUpdateImageContainer()) {
     mImageContainer = nullptr;
   }
-}
-
-nsresult
-RasterImage::SetFrameDisposalMethod(uint32_t aFrameNum,
-                                    int32_t aDisposalMethod)
-{
-  if (mError)
-    return NS_ERROR_FAILURE;
-
-  NS_ABORT_IF_FALSE(aFrameNum < mFrames.Length(), "Invalid frame index!");
-  if (aFrameNum >= mFrames.Length())
-    return NS_ERROR_INVALID_ARG;
-
-  imgFrame *frame = GetImgFrameNoDecode(aFrameNum);
-  NS_ABORT_IF_FALSE(frame,
-                    "Calling SetFrameDisposalMethod on frame that doesn't exist!");
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-
-  frame->SetFrameDisposalMethod(aDisposalMethod);
-
-  return NS_OK;
-}
-
-nsresult
-RasterImage::SetFrameTimeout(uint32_t aFrameNum, int32_t aTimeout)
-{
-  if (mError)
-    return NS_ERROR_FAILURE;
-
-  NS_ABORT_IF_FALSE(aFrameNum < mFrames.Length(), "Invalid frame index!");
-  if (aFrameNum >= mFrames.Length())
-    return NS_ERROR_INVALID_ARG;
-
-  imgFrame *frame = GetImgFrameNoDecode(aFrameNum);
-  NS_ABORT_IF_FALSE(frame, "Calling SetFrameTimeout on frame that doesn't exist!");
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-
-  frame->SetTimeout(aTimeout);
-
-  return NS_OK;
-}
-
-nsresult
-RasterImage::SetFrameBlendMethod(uint32_t aFrameNum, int32_t aBlendMethod)
-{
-  if (mError)
-    return NS_ERROR_FAILURE;
-
-  NS_ABORT_IF_FALSE(aFrameNum < mFrames.Length(), "Invalid frame index!");
-  if (aFrameNum >= mFrames.Length())
-    return NS_ERROR_INVALID_ARG;
-
-  imgFrame *frame = GetImgFrameNoDecode(aFrameNum);
-  NS_ABORT_IF_FALSE(frame, "Calling SetFrameBlendMethod on frame that doesn't exist!");
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-
-  frame->SetBlendMethod(aBlendMethod);
-
-  return NS_OK;
-}
-
-nsresult
-RasterImage::SetFrameHasNoAlpha(uint32_t aFrameNum)
-{
-  if (mError)
-    return NS_ERROR_FAILURE;
-
-  NS_ABORT_IF_FALSE(aFrameNum < mFrames.Length(), "Invalid frame index!");
-  if (aFrameNum >= mFrames.Length())
-    return NS_ERROR_INVALID_ARG;
-
-  imgFrame *frame = GetImgFrameNoDecode(aFrameNum);
-  NS_ABORT_IF_FALSE(frame, "Calling SetFrameHasNoAlpha on frame that doesn't exist!");
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-
-  frame->SetHasNoAlpha();
-
-  return NS_OK;
 }
 
 nsresult
@@ -3462,19 +3395,6 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
         }
       }
     }
-  }
-
-  // If it has any frames, tell the image what happened to the most recent
-  // one. This will be better when frames are published to decoders instead of
-  // decoders requesting them.
-  if (image->GetNumFrames()) {
-    nsIntRect rect;
-    if (request) {
-      rect = request->mStatusTracker->GetInvalidRect();
-    } else {
-      rect = image->CurrentStatusTracker().GetInvalidRect();
-    }
-    image->FrameUpdated(image->GetNumFrames() - 1, rect);
   }
 
   // Then, tell the observers what happened in the decoder.
