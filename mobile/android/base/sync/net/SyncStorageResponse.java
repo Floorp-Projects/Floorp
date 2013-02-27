@@ -7,7 +7,7 @@ package org.mozilla.gecko.sync.net;
 import java.io.IOException;
 import java.util.HashMap;
 
-import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.background.common.log.Logger;
 
 import ch.boye.httpclientandroidlib.HttpResponse;
 

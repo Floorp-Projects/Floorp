@@ -7,7 +7,7 @@ package org.mozilla.gecko.sync.repositories.android;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
 import org.mozilla.gecko.sync.repositories.InvalidRequestException;
 import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
