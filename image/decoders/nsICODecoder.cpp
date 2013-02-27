@@ -218,8 +218,12 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
     return;
   }
 
-  if (!aCount) // aCount=0 means EOF
+  if (!aCount) {
+    if (mContainedDecoder) {
+      WriteToContainedDecoder(aBuffer, aCount);
+    }
     return;
+  }
 
   while (aCount && (mPos < ICONCOUNTOFFSET)) { // Skip to the # of icons.
     if (mPos == 2) { // if the third byte is 1: This is an icon, 2: a cursor
@@ -583,6 +587,26 @@ nsICODecoder::ProcessDirEntry(IconDirEntry& aTarget)
   memcpy(&aTarget.mImageOffset, mDirEntryArray + 12, 
          sizeof(aTarget.mImageOffset));
   aTarget.mImageOffset = LITTLE_TO_NATIVE32(aTarget.mImageOffset);
+}
+
+bool
+nsICODecoder::NeedsNewFrame() const
+{
+  if (mContainedDecoder) {
+    return mContainedDecoder->NeedsNewFrame();
+  }
+
+  return Decoder::NeedsNewFrame();
+}
+
+nsresult
+nsICODecoder::AllocateFrame()
+{
+  if (mContainedDecoder) {
+    return mContainedDecoder->AllocateFrame();
+  }
+
+  return Decoder::AllocateFrame();
 }
 
 } // namespace image

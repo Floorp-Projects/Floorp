@@ -92,6 +92,11 @@ public:
     mSizeDecode = aSizeDecode;
   }
 
+  void SetSynchronous(bool aSynchronous)
+  {
+    mSynchronous = aSynchronous;
+  }
+
   void SetObserver(imgDecoderObserver* aObserver)
   {
     MOZ_ASSERT(aObserver);
@@ -151,6 +156,12 @@ public:
                     gfxASurface::gfxImageFormat format,
                     uint8_t palette_depth = 0);
 
+  virtual bool NeedsNewFrame() const { return mNeedsNewFrame; }
+
+  // Try to allocate a frame as described in mNewFrameData and return the
+  // status code from that attempt. Clears mNewFrameData.
+  virtual nsresult AllocateFrame();
+
 protected:
 
   /*
@@ -200,10 +211,6 @@ protected:
   // Data errors are the fault of the source data, decoder errors are our fault
   void PostDataError();
   void PostDecoderError(nsresult aFailCode);
-
-  // Try to allocate a frame as described in mNewFrameData and return the
-  // status code from that attempt. Clears mNewFrameData.
-  nsresult AllocateFrame();
 
   /*
    * Member variables.
@@ -260,6 +267,7 @@ private:
   bool mSizeDecode;
   bool mInFrame;
   bool mIsAnimated;
+  bool mSynchronous;
 };
 
 } // namespace image
