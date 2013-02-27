@@ -96,7 +96,7 @@ IDBRequest::NotifyHelperCompleted(HelperBase* aHelper)
   }
 
   // Otherwise we need to get the result from the helper.
-  JSContext* cx = GetJSContext();
+  AutoPushJSContext cx(GetJSContext());
   if (!cx) {
     NS_WARNING("Failed to get safe JSContext!");
     rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;

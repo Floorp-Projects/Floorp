@@ -3301,6 +3301,19 @@ fsmdef_ev_setremotedesc(sm_event_t *event) {
         return (SM_RC_END);
     }
 
+    // XXX We don't currently support renegotiation. If the remote SDP
+    // has already been set, return an error to the application. This is
+    // temporary until Bug 840728 is implemented.
+    if (dcb->sdp && dcb->sdp->dest_sdp) {
+        FSM_DEBUG_SM(DEB_F_PREFIX"Renegotiation not currently supported.\n",
+                     DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
+        ui_set_remote_description(evSetRemoteDescError, line, call_id,
+            dcb->caller_id.call_instance_id, strlib_empty(),
+            PC_SETREMOTEDESCERROR);
+        return (SM_RC_END);
+    }
+
+
     if (dcb == NULL) {
         FSM_DEBUG_SM(DEB_F_PREFIX"dcb is NULL.\n", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
         return SM_RC_CLEANUP;

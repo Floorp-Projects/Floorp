@@ -2453,6 +2453,11 @@ public:
         m_formatter.jumpTablePointer(ptr);
     }
 
+    void doubleConstant(double d)
+    {
+        m_formatter.doubleConstant(d);
+    }
+
     // Linking & patching:
     //
     // 'link' and 'patch' methods are for use on unprotected code - such as the code
@@ -3010,6 +3015,17 @@ private:
 #else
             m_buffer.putIntUnchecked(ptr);
 #endif
+        }
+
+        void doubleConstant(double d)
+        {
+            m_buffer.ensureSpace(sizeof(double));
+            union {
+                uint64_t u64;
+                double d;
+            } u;
+            u.d = d;
+            m_buffer.putInt64Unchecked(u.u64);
         }
 
         // Administrative methods:

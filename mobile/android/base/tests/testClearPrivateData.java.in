@@ -30,7 +30,7 @@ public class testClearPrivateData extends PixelTest  {
 
         // Checking that the history list in not empty
         ListView hList = getHistoryList();
-        mAsserter.ok(hList.getChildCount() > 0,"checking history exists","history exists");
+        mAsserter.ok(hList.getAdapter().getCount() > 0,"checking history exists","history exists");
 
         // Quit the awesomescreen
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
@@ -47,6 +47,6 @@ public class testClearPrivateData extends PixelTest  {
 
         // Checking that history list is empty
         hList = getHistoryList();
-        mAsserter.ok(hList.getChildCount() == 0,"checking history is cleared ","history is cleared");
+        mAsserter.ok(hList.getAdapter().getCount() == 0,"checking history is cleared ","history is cleared");
     }
 }

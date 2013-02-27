@@ -1341,8 +1341,7 @@ IsScriptEnabled(nsIDocument *aDoc, nsIDocShell *aContainer)
 
   nsIScriptContext *scriptContext = globalObject->GetContext();
   NS_ENSURE_TRUE(scriptContext, true);
-
-  JSContext* cx = scriptContext->GetNativeContext();
+  JSContext *cx = scriptContext->GetNativeContext();
   NS_ENSURE_TRUE(cx, true);
 
   bool enabled = true;

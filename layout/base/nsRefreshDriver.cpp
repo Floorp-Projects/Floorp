@@ -562,10 +562,8 @@ nsRefreshDriver::AdvanceTimeAndRefresh(int64_t aMilliseconds)
   mMostRecentRefresh += TimeDuration::FromMilliseconds((double) aMilliseconds);
 
   nsCxPusher pusher;
-  if (pusher.PushNull()) {
-    DoTick();
-    pusher.Pop();
-  }
+  pusher.PushNull();
+  DoTick();
 }
 
 void

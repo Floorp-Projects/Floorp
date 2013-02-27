@@ -1260,8 +1260,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   }
 
   nsCxPusher pusher;
-  if (!pusher.Push(mContext))
-    return NS_ERROR_FAILURE;
+  pusher.Push(mContext);
 
   xpc_UnmarkGrayObject(&aScopeObject);
   nsAutoMicroTask mt;
@@ -1400,36 +1399,35 @@ nsJSContext::ExecuteScript(JSScript* aScriptObject,
 
   // Push our JSContext on our thread's context stack, in case native code
   // called from JS calls back into JS via XPConnect.
-  nsresult rv;
-  nsCOMPtr<nsIJSContextStack> stack =
-           do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
-  if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext))) {
-    return NS_ERROR_FAILURE;
-  }
+  nsCxPusher pusher;
+  pusher.Push(mContext);
 
   nsJSContext::TerminationFuncHolder holder(this);
   XPCAutoRequest ar(mContext);
-  JSAutoCompartment ac(mContext, aScopeObject);
-  ++mExecuteDepth;
 
-  // The result of evaluation, used only if there were no errors. This need
-  // not be a GC root currently, provided we run the GC only from the
-  // operation callback or from ScriptEvaluated.
-  jsval val;
-  if (!JS_ExecuteScript(mContext, aScopeObject, aScriptObject, &val)) {
-    ReportPendingException();
+  // Scope the JSAutoCompartment so that it gets destroyed before we pop the
+  // cx and potentially call JS_RestoreFrameChain.
+  {
+    JSAutoCompartment ac(mContext, aScopeObject);
+    ++mExecuteDepth;
+
+    // The result of evaluation, used only if there were no errors. This need
+    // not be a GC root currently, provided we run the GC only from the
+    // operation callback or from ScriptEvaluated.
+    jsval val;
+    if (!JS_ExecuteScript(mContext, aScopeObject, aScriptObject, &val)) {
+      ReportPendingException();
+    }
+    --mExecuteDepth;
   }
-  --mExecuteDepth;
 
   // Pop here, after JS_ValueToString and any other possible evaluation.
-  if (NS_FAILED(stack->Pop(nullptr))) {
-    rv = NS_ERROR_FAILURE;
-  }
+  pusher.Pop();
 
   // ScriptEvaluated needs to come after we pop the stack
   ScriptEvaluated(true);
 
-  return rv;
+  return NS_OK;
 }
 
 
@@ -1501,7 +1499,10 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
   xpc_UnmarkGrayObject(aScope);
   xpc_UnmarkGrayObject(aHandler);
 
+  nsCxPusher pusher;
+  pusher.Push(mContext);
   XPCAutoRequest ar(mContext);
+
   JSObject* target = nullptr;
   nsresult rv = JSObjectFromInterface(aTarget, aScope, &target);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1513,10 +1514,6 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
   // hassle with principals: they're already compiled into the JS function.
   // xxxmarkh - this comment is no longer true - principals are not used at
   // all now, and never were in some cases.
-
-  nsCxPusher pusher;
-  if (!pusher.Push(mContext, true))
-    return NS_ERROR_FAILURE;
 
   // check if the event handler can be run on the object in question
   rv = sSecurityManager->CheckFunctionAccess(mContext, aHandler, target);
@@ -1750,6 +1747,8 @@ nsJSContext::SetProperty(JSObject* aTarget, const char* aPropName, nsISupports* 
   uint32_t  argc;
   jsval    *argv = nullptr;
 
+  nsCxPusher pusher;
+  pusher.Push(mContext);
   XPCAutoRequest ar(mContext);
 
   Maybe<nsRootedJSValueArray> tempStorage;

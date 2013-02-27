@@ -342,6 +342,7 @@ public class testMigration extends ContentProviderTest {
         super.setUp("@ANDROID_PACKAGE_NAME@.db.BrowserProvider", "AUTHORITY");
     }
 
+    @Override
     public void tearDown() throws Exception {
       // remove the database file
       File profile = new File(mProfile);

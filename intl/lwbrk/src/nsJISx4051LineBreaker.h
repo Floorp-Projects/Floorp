@@ -2,8 +2,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsJISx4501LineBreaker_h__
-#define nsJISx4501LineBreaker_h__
+#ifndef nsJISx4051LineBreaker_h__
+#define nsJISx4051LineBreaker_h__
 
 
 #include "nsILineBreaker.h"
@@ -32,4 +32,4 @@ private:
                    int8_t aDirection);
 };
 
-#endif  /* nsJISx4501LineBreaker_h__ */
+#endif  /* nsJISx4051LineBreaker_h__ */

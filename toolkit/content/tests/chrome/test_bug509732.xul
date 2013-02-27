@@ -17,7 +17,7 @@
   <!-- test code goes here -->
 <script type="application/javascript">
 <![CDATA[
-if (navigator.platform.indexOf("Mac") == 0) {
+if (navigator.platform.startsWith("Mac")) {
   SimpleTest.expectAssertions(0, 5);
 }
 

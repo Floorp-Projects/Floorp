@@ -207,6 +207,7 @@ class SmsIOThread extends Thread {
     return mHandler.post(r);
   }
 
+  @Override
   public void run() {
     Looper.prepare();
 
@@ -351,6 +352,7 @@ public class GeckoSmsManager
     SmsIOThread.getInstance().start();
   }
 
+  @Override
   public void start() {
     IntentFilter smsFilter = new IntentFilter();
     smsFilter.addAction(GeckoSmsManager.ACTION_SMS_RECEIVED);
@@ -484,6 +486,7 @@ public class GeckoSmsManager
     }
   }
 
+  @Override
   public void send(String aNumber, String aMessage, int aRequestId) {
     int envelopeId = Postman.kUnknownEnvelopeId;
 
@@ -599,6 +602,7 @@ public class GeckoSmsManager
     }
   }
 
+  @Override
   public void getMessage(int aMessageId, int aRequestId) {
     class GetMessageRunnable implements Runnable {
       private int mMessageId;
@@ -683,6 +687,7 @@ public class GeckoSmsManager
     }
   }
 
+  @Override
   public void deleteMessage(int aMessageId, int aRequestId) {
     class DeleteMessageRunnable implements Runnable {
       private int mMessageId;
@@ -722,6 +727,7 @@ public class GeckoSmsManager
     }
   }
 
+  @Override
   public void createMessageList(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, int aDeliveryState, boolean aReverse, int aRequestId) {
     class CreateMessageListRunnable implements Runnable {
       private long     mStartDate;
@@ -844,6 +850,7 @@ public class GeckoSmsManager
     }
   }
 
+  @Override
   public void getNextMessageInList(int aListId, int aRequestId) {
     class GetNextMessageInListRunnable implements Runnable {
       private int mListId;
@@ -903,14 +910,17 @@ public class GeckoSmsManager
     }
   }
 
+  @Override
   public void clearMessageList(int aListId) {
     MessagesListManager.getInstance().remove(aListId);
   }
 
+  @Override
   public void stop() {
     GeckoApp.mAppContext.unregisterReceiver(this);
   }
 
+  @Override
   public void shutdown() {
     SmsIOThread.getInstance().interrupt();
     MessagesListManager.getInstance().clear();

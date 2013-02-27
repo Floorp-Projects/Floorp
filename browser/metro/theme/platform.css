@@ -186,6 +186,7 @@ toolbarbutton[open="true"] {
 checkbox.toggleswitch {
   margin: @metro_spacing_small@;
   min-height: @metro_spacing_normal@;
+  font-weight: bold;
 }
 
 checkbox.toggleswitch hbox {

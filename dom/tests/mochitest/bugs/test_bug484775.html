@@ -18,12 +18,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=484775
 <pre id="test">
 <script type="application/javascript">
 
-if (navigator.platform.indexOf("Linux") == 0) {
-  SimpleTest.expectAssertions(0, 3);
-} else if (navigator.platform.indexOf("Mac") == 0) {
-  SimpleTest.expectAssertions(0, 2);
-}
-
 /** Test for Bug 484775 **/
 
 var expectedTarget = null;
