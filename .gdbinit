@@ -172,6 +172,20 @@ document ptarray
         ptarray a 1 2 - Prints elements in range [idx1..idx2] from tarray
 end
 
+# define a "pregion" command to print a region in the same format as ToString()
+def pregion
+  set $r = $arg0.mImpl.mRectListHead.next
+  printf "["
+  while ($r != &$arg0.mImpl.mRectListHead)
+    if ($r !=  $arg0.mImpl.mRectListHead.next)
+        printf "; "
+    end
+    printf "%d,%d,%d,%d", $r->x, $r->y, $r->x + $r->width, $r->y + $r->height
+    set $r = $r->next
+  end
+  printf "]\n"
+end
+
 def js
   call DumpJSStack()
 end
