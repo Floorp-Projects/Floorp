@@ -285,15 +285,6 @@ let WeaveGlue = {
     document.getElementById("syncsetup-button-connect").disabled = disabled;
   },
 
-  showDetails: function showDetails() {
-    // Show the connect UI detail settings
-    let show = this._elements.sync.collapsed;
-    this._elements.details.checked = show;
-    this._elements.sync.collapsed = !show;
-    this._elements.device.collapsed = !show;
-    this._elements.disconnect.collapsed = !show;
-  },
-
   tryConnect: function login() {
     // If Sync is not configured, simply show the setup dialog
     if (this._loginError || Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED) {
@@ -409,7 +400,7 @@ let WeaveGlue = {
       elements[id] = document.getElementById("syncsetup-" + id);
     });
 
-    let settingids = ["device", "connect", "connected", "disconnect", "sync", "details", "pairdevice"];
+    let settingids = ["device", "connect", "connected", "disconnect", "sync", "pairdevice"];
     settingids.forEach(function(id) {
       elements[id] = document.getElementById("sync-" + id);
     });
@@ -436,7 +427,6 @@ let WeaveGlue = {
     // Make some aliases
     let connect = this._elements.connect;
     let connected = this._elements.connected;
-    let details = this._elements.details;
     let device = this._elements.device;
     let disconnect = this._elements.disconnect;
     let sync = this._elements.sync;
@@ -465,11 +455,11 @@ let WeaveGlue = {
     if (!isConfigured) {
       connect.setAttribute("title", this._bundle.GetStringFromName("notconnected.label"));
       connect.firstChild.disabled = false;
-      details.checked = false;
-      sync.collapsed = true;
-      device.collapsed = true;
-      disconnect.collapsed = true;
     }
+
+    sync.collapsed = !isConfigured;
+    device.collapsed = !isConfigured;
+    disconnect.collapsed = !isConfigured;
 
     // Check the lock on a timeout because it's set just after notifying
     setTimeout(function(self) {
