@@ -16,6 +16,7 @@
     'enable_protobuf': 0,
     'include_pulse_audio': 0,
     'include_tests': 0,
+    'enable_android_opensl': 1,
 # use_system_lib* still seems to be in use in trunk/build
     'use_system_libjpeg': 0,
     'use_system_libvpx': 0,
