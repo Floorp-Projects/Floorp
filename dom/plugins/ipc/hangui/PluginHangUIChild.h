@@ -67,6 +67,9 @@ private:
   bool
   SetMainThread();
 
+  void
+  ResizeButtons();
+
   INT_PTR
   HangUIDlgProc(HWND aDlgHandle, UINT aMsgCode, WPARAM aWParam, LPARAM aLParam);
 
