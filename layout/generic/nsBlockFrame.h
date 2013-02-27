@@ -696,9 +696,6 @@ protected:
   nsIFrame* PullFrameFrom(nsBlockReflowState&  aState,
                           nsLineBox*           aLine,
                           nsBlockFrame*        aFromContainer,
-                          bool                 aFromOverflowLine,
-                          nsFrameList&         aFromFrameList,
-                          nsLineList&          aFromLineList,
                           nsLineList::iterator aFromLine);
 
   /**
