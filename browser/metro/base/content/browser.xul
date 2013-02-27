@@ -681,7 +681,8 @@
     </hbox>
 
     <!-- Selection overlay - this should be below any content that can have selectable text -->
-    <box class="selection-overlay-hidden" id="selection-overlay"/>
+    <!-- onclick addresses dom bug 835175, str in bug 832957 -->
+    <box onclick="false" class="selection-overlay-hidden" id="selection-overlay"/>
   </stack>
 
   <svg:svg height="0">
