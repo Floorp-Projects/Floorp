@@ -13,6 +13,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Geometry.jsm");
 
+var global = this;
+
 const ContentPanning = {
   // Are we listening to touch or mouse events?
   watchedEventsType: '',
@@ -42,8 +44,16 @@ const ContentPanning = {
       events = ['mousedown', 'mouseup', 'mousemove'];
       this.watchedEventsType = 'mouse';
     }
+
+    let els = Cc["@mozilla.org/eventlistenerservice;1"]
+                .getService(Ci.nsIEventListenerService);
+
     events.forEach(function(type) {
-      addEventListener(type, this, false);
+      // Using the system group for mouse/touch events to avoid
+      // missing events if .stopPropagation() has been called.
+      els.addSystemEventListener(global, type,
+                                 this.handleEvent.bind(this),
+                                 /* useCapture = */ false);
     }.bind(this));
 
     addMessageListener("Viewport:Change", this._recvViewportChange.bind(this));
