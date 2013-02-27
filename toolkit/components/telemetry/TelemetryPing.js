@@ -524,7 +524,7 @@ TelemetryPing.prototype = {
     }
   },
 
-  getCurrentSessionPayload: function getCurrentSessionPayload(reason) {
+  getSessionPayload: function getSessionPayload(reason) {
     // use a deterministic url for testing.
     let payloadObj = {
       ver: PAYLOAD_VERSION,
@@ -558,16 +558,16 @@ TelemetryPing.prototype = {
     return payloadObj;
   },
 
-  getCurrentSessionPayloadAndSlug: function getCurrentSessionPayloadAndSlug(reason) {
+  getSessionPayloadAndSlug: function getSessionPayloadAndSlug(reason) {
     let isTestPing = (reason == "test-ping");
-    let payloadObj = this.getCurrentSessionPayload(reason);
+    let payloadObj = this.getSessionPayload(reason);
     let slug = this._uuid;
     return { slug: slug, reason: reason, payload: JSON.stringify(payloadObj) };
   },
 
   getPayloads: function getPayloads(reason) {
     function payloadIter() {
-      yield this.getCurrentSessionPayloadAndSlug(reason);
+      yield this.getSessionPayloadAndSlug(reason);
 
       while (this._pendingPings.length > 0) {
         let data = this._pendingPings.pop();
@@ -953,7 +953,7 @@ TelemetryPing.prototype = {
   },
 
   savePendingPings: function savePendingPings() {
-    let sessionPing = this.getCurrentSessionPayloadAndSlug("saved-session");
+    let sessionPing = this.getSessionPayloadAndSlug("saved-session");
     this.savePing(sessionPing, true);
     this._pendingPings.forEach(function sppcb(e, i, a) {
                                  this.savePing(e, false);
@@ -962,7 +962,7 @@ TelemetryPing.prototype = {
   },
 
   saveHistograms: function saveHistograms(file, sync) {
-    this.savePingToFile(this.getCurrentSessionPayloadAndSlug("saved-session"),
+    this.savePingToFile(this.getSessionPayloadAndSlug("saved-session"),
                         file, sync, true);
   },
 
@@ -991,7 +991,7 @@ TelemetryPing.prototype = {
       this._slowSQLStartup = Telemetry.slowSQL;
     }
     this.gatherMemory();
-    return this.getCurrentSessionPayload("gather-payload");
+    return this.getSessionPayload("gather-payload");
   },
 
   gatherStartup: function gatherStartup() {
