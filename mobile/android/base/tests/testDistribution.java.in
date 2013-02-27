@@ -30,10 +30,13 @@ import org.json.JSONObject;
 public class testDistribution extends ContentProviderTest {
     private static final String MOCK_PACKAGE = "mock-package.zip";
 
-    // Test distribution values stored in preferences.json
+    // Test distribution and preferences values stored in preferences.json
     private static final String TEST_DIST_ID = "test-partner";
     private static final String TEST_DIST_ABOUT = "Test Partner";
     private static final int TEST_DIST_VERSION = 1;
+    private static final boolean TEST_PREF_BOOLEAN = true;
+    private static final String TEST_PREF_STRING = "test";
+    private static final int TEST_PREF_INT = 5;
 
     private Activity mActivity;
 
@@ -67,6 +70,9 @@ public class testDistribution extends ContentProviderTest {
             getPrefData.put("distribution.id");
             getPrefData.put("distribution.about");
             getPrefData.put("distribution.version");
+            getPrefData.put("distribution.test.boolean");
+            getPrefData.put("distribution.test.string");
+            getPrefData.put("distribution.test.int");
 
             JSONObject message = new JSONObject();
             message.put("requestId", "testDistribution");
@@ -97,6 +103,12 @@ public class testDistribution extends ContentProviderTest {
                     mAsserter.is(pref.getString("value"), TEST_DIST_ABOUT, "check distribution.about");
                 } else if (name.equals("distribution.version")) {
                     mAsserter.is(pref.getInt("value"), TEST_DIST_VERSION, "check distribution.version");
+                } else if (name.equals("distribution.test.boolean")) {
+                    mAsserter.is(pref.getBoolean("value"), TEST_PREF_BOOLEAN, "check boolean preference");
+                } else if (name.equals("distribution.test.string")) {
+                    mAsserter.is(pref.getString("value"), TEST_PREF_STRING, "check string preference");
+                } else if (name.equals("distribution.test.int")) {
+                    mAsserter.is(pref.getInt("value"), TEST_PREF_INT, "check int preference");
                 }
             }
 
@@ -129,11 +141,13 @@ public class testDistribution extends ContentProviderTest {
         settings.edit().remove(keyName).commit();
     }
 
+    @Override
     public void setUp() throws Exception {
         // TODO: Set up the content provider after setting the distribution.
         super.setUp("@ANDROID_PACKAGE_NAME@.db.BrowserProvider", "AUTHORITY");
     }
 
+    @Override
     public void tearDown() throws Exception {
         File dataDir = new File(mActivity.getApplicationInfo().dataDir);
 

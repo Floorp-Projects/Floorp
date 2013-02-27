@@ -293,7 +293,7 @@ nsTArray_base<Alloc>::IsAutoArrayRestorer::~IsAutoArrayRestorer() {
     mArray.mHdr = mArray.GetAutoArrayBufferUnsafe(mElemAlign);
     mArray.mHdr->mLength = 0;
   }
-  else {
+  else if (mArray.mHdr != mArray.EmptyHdr()) {
     mArray.mHdr->mIsAutoArray = mIsAuto;
   }
 }

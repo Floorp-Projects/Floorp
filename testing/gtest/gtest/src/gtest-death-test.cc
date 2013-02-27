@@ -890,7 +890,7 @@ inline char** GetEnviron() {
 #  else
 // Some POSIX platforms expect you to declare environ. extern "C" makes
 // it reside in the global namespace.
-extern "C" char** environ;
+extern "C" __attribute__ ((visibility ("default"))) char** environ;
 inline char** GetEnviron() { return environ; }
 #  endif  // GTEST_OS_MAC
 

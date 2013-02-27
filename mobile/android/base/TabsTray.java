@@ -145,6 +145,7 @@ public class TabsTray extends TwoWayView
             mIsPrivate = isPrivate;
 
             mOnCloseClickListener = new Button.OnClickListener() {
+                @Override
                 public void onClick(View v) {
                     TabRow tab = (TabRow) v.getTag();
                     final int pos = (isVertical() ? tab.info.getWidth() : tab.info.getHeight());
@@ -153,6 +154,7 @@ public class TabsTray extends TwoWayView
             };
         }
 
+        @Override
         public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
             switch (msg) {
                 case ADDED:
@@ -211,14 +213,17 @@ public class TabsTray extends TwoWayView
             notifyDataSetChanged(); // Be sure to call this whenever mTabs changes.
         }
 
+        @Override
         public int getCount() {
             return (mTabs == null ? 0 : mTabs.size());
         }
 
+        @Override
         public Tab getItem(int position) {
             return mTabs.get(position);
         }
 
+        @Override
         public long getItemId(int position) {
             return position;
         }
@@ -256,6 +261,7 @@ public class TabsTray extends TwoWayView
             row.close.setTag(row);
         }
 
+        @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             TabRow row;
 
@@ -292,7 +298,9 @@ public class TabsTray extends TwoWayView
         mPendingClosedTabs.add(view);
 
         animator.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+            @Override
             public void onPropertyAnimationStart() { }
+            @Override
             public void onPropertyAnimationEnd() {
                 mCloseAnimationCount--;
                 if (mCloseAnimationCount > 0)
@@ -326,7 +334,9 @@ public class TabsTray extends TwoWayView
         final int originalSize = (isVertical ? view.getHeight() : view.getWidth());
 
         animator.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+            @Override
             public void onPropertyAnimationStart() { }
+            @Override
             public void onPropertyAnimationEnd() {
                 // Reset view presentation as it will be recycled in the
                 // list view by the adapter.
@@ -361,7 +371,9 @@ public class TabsTray extends TwoWayView
 
 
         animator.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+            @Override
             public void onPropertyAnimationStart() { }
+            @Override
             public void onPropertyAnimationEnd() {
                 TabRow tab = (TabRow) view.getTag();
                 tab.close.setVisibility(View.VISIBLE);

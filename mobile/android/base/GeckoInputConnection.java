@@ -251,6 +251,9 @@ class GeckoInputConnection
     @Override
     public boolean performContextMenuAction(int id) {
         Editable editable = getEditable();
+        if (editable == null) {
+            return false;
+        }
         int selStart = Selection.getSelectionStart(editable);
         int selEnd = Selection.getSelectionEnd(editable);
 
@@ -296,6 +299,9 @@ class GeckoInputConnection
             mUpdateRequest = req;
 
         Editable editable = getEditable();
+        if (editable == null) {
+            return null;
+        }
         int selStart = Selection.getSelectionStart(editable);
         int selEnd = Selection.getSelectionEnd(editable);
 
@@ -389,6 +395,7 @@ class GeckoInputConnection
         // Do not reset mIMEState here; see comments in notifyIMEEnabled
     }
 
+    @Override
     public void onTextChange(String text, int start, int oldEnd, int newEnd) {
 
         if (mUpdateRequest == null) {
@@ -406,12 +413,11 @@ class GeckoInputConnection
     private void notifyTextChange() {
 
         final InputMethodManager imm = getInputMethodManager();
-        if (imm == null) {
-            return;
-        }
         final View v = getView();
         final Editable editable = getEditable();
-
+        if (imm == null || v == null || editable == null) {
+            return;
+        }
         mUpdateExtract.flags = 0;
         // Update the entire Editable range
         mUpdateExtract.partialStartOffset = -1;
@@ -427,6 +433,7 @@ class GeckoInputConnection
                                 mUpdateExtract);
     }
 
+    @Override
     public void onSelectionChange(int start, int end) {
 
         if (mBatchEditCount > 0) {
@@ -440,11 +447,11 @@ class GeckoInputConnection
     private void notifySelectionChange(int start, int end) {
 
         final InputMethodManager imm = getInputMethodManager();
-        if (imm == null) {
-            return;
-        }
         final View v = getView();
         final Editable editable = getEditable();
+        if (imm == null || v == null || editable == null) {
+            return;
+        }
         imm.updateSelection(v, start, end, getComposingSpanStart(editable),
                             getComposingSpanEnd(editable));
     }
@@ -518,6 +525,7 @@ class GeckoInputConnection
         return mEditableClient.getInputConnectionHandler();
     }
 
+    @Override
     public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
         if (mIMEState == IME_STATE_DISABLED) {
             return null;
@@ -648,10 +656,12 @@ class GeckoInputConnection
         return false; // seems to always return false
     }
 
+    @Override
     public boolean onKeyPreIme(int keyCode, KeyEvent event) {
         return false;
     }
 
+    @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         return processKeyDown(keyCode, event);
     }
@@ -701,6 +711,7 @@ class GeckoInputConnection
         return true;
     }
 
+    @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         return processKeyUp(keyCode, event);
     }
@@ -742,6 +753,7 @@ class GeckoInputConnection
         return true;
     }
 
+    @Override
     public boolean onKeyMultiple(int keyCode, int repeatCount, KeyEvent event) {
         while ((repeatCount--) != 0) {
             if (!processKeyDown(keyCode, event) ||
@@ -752,6 +764,7 @@ class GeckoInputConnection
         return true;
     }
 
+    @Override
     public boolean onKeyLongPress(int keyCode, KeyEvent event) {
         View v = getView();
         switch (keyCode) {
@@ -766,11 +779,13 @@ class GeckoInputConnection
         return false;
     }
 
+    @Override
     public boolean isIMEEnabled() {
         // make sure this picks up PASSWORD and PLUGIN states as well
         return mIMEState != IME_STATE_DISABLED;
     }
 
+    @Override
     public void notifyIME(final int type, final int state) {
         switch (type) {
 
@@ -798,6 +813,7 @@ class GeckoInputConnection
         }
     }
 
+    @Override
     public void notifyIMEEnabled(final int state, final String typeHint,
                                  final String modeHint, final String actionHint) {
         // For some input type we will use a widget to display the ui, for those we must not
@@ -838,6 +854,7 @@ class GeckoInputConnection
         }
         restartInput();
         GeckoApp.mAppContext.mMainHandler.postDelayed(new Runnable() {
+            @Override
             public void run() {
                 if (mIMEState == IME_STATE_DISABLED) {
                     hideSoftInput();
@@ -875,6 +892,7 @@ final class DebugGeckoInputConnection
         return (GeckoEditableListener)dgic.mProxy;
     }
 
+    @Override
     public Object invoke(Object proxy, Method method, Object[] args)
             throws Throwable {
 

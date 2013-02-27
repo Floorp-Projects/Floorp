@@ -356,6 +356,12 @@ if (this.Components) {
              this.close();
              OpenedDirectoryIterators.remove(dir);
            }, true);// ignore error to support double-closing |DirectoryIterator|
+       },
+       DirectoryIterator_prototype_exists: function exists(dir) {
+         return withDir(dir,
+           function do_exists() {
+             return this.exists();
+           });
        }
      };
   } catch(ex) {

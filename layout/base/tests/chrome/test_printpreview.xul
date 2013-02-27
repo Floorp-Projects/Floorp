@@ -10,7 +10,7 @@
   <!-- test code goes here -->
 <script type="application/javascript">
 <![CDATA[
-if (navigator.platform.indexOf("Linux") == 0) {
+if (navigator.platform.startsWith("Linux")) {
   SimpleTest.expectAssertions(0, 1);
 }
 SimpleTest.waitForExplicitFinish();

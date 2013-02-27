@@ -18,6 +18,7 @@
 using mozilla::dom::DOMRequest;
 using mozilla::dom::DOMRequestService;
 using mozilla::dom::DOMCursor;
+using mozilla::AutoPushJSContext;
 
 DOMRequest::DOMRequest(nsIDOMWindow* aWindow)
   : mResult(JSVAL_VOID)
@@ -240,9 +241,10 @@ public:
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     nsresult rv;
     nsIScriptContext* sc = mReq->GetContextForEventHandlers(&rv);
-    MOZ_ASSERT(NS_SUCCEEDED(rv) && sc->GetNativeContext());
-    JSAutoRequest ar(sc->GetNativeContext());
-    JS_AddValueRoot(sc->GetNativeContext(), &mResult);
+    AutoPushJSContext cx(sc->GetNativeContext());
+    MOZ_ASSERT(NS_SUCCEEDED(rv) && cx);
+    JSAutoRequest ar(cx);
+    JS_AddValueRoot(cx, &mResult);
   }
 
   NS_IMETHODIMP
@@ -257,12 +259,13 @@ public:
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     nsresult rv;
     nsIScriptContext* sc = mReq->GetContextForEventHandlers(&rv);
-    MOZ_ASSERT(NS_SUCCEEDED(rv) && sc->GetNativeContext());
+    AutoPushJSContext cx(sc->GetNativeContext());
+    MOZ_ASSERT(NS_SUCCEEDED(rv) && cx);
 
     // We need to build a new request, otherwise we assert since there won't be
     // a request available yet.
-    JSAutoRequest ar(sc->GetNativeContext());
-    JS_RemoveValueRoot(sc->GetNativeContext(), &mResult);
+    JSAutoRequest ar(cx);
+    JS_RemoveValueRoot(cx, &mResult);
   }
 private:
   nsRefPtr<DOMRequest> mReq;

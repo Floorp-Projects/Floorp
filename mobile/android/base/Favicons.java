@@ -85,6 +85,7 @@ public class Favicons {
 
         // We want to always run the listener on UI thread
         GeckoAppShell.getMainHandler().post(new Runnable() {
+            @Override
             public void run() {
                 if (listener != null)
                     listener.onFaviconLoaded(pageUrl, image);
@@ -112,7 +113,7 @@ public class Favicons {
             return -1;
         }
 
-        LoadFaviconTask task = new LoadFaviconTask(GeckoAppShell.getMainHandler(), GeckoAppShell.getHandler(), pageUrl, faviconUrl, persist, listener);
+        LoadFaviconTask task = new LoadFaviconTask(GeckoAppShell.getHandler(), pageUrl, faviconUrl, persist, listener);
 
         long taskId = task.getId();
         mLoadTasks.put(taskId, task);
@@ -206,10 +207,10 @@ public class Favicons {
         private OnFaviconLoadedListener mListener;
         private boolean mPersist;
 
-        public LoadFaviconTask(Handler uiHandler, Handler backgroundThreadHandler,
+        public LoadFaviconTask(Handler backgroundThreadHandler,
                                String pageUrl, String faviconUrl, boolean persist,
                                OnFaviconLoadedListener listener) {
-            super(uiHandler, backgroundThreadHandler);
+            super(backgroundThreadHandler);
 
             synchronized(this) {
                 mId = ++mNextFaviconLoadId;

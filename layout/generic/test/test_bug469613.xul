@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=469613
 
 <script class="testbody" type="application/javascript;version=1.7"><![CDATA[
 
-if (navigator.platform.indexOf("Win") == 0) {
+if (navigator.platform.startsWith("Win")) {
   SimpleTest.expectAssertions(0, 3);
 }
 

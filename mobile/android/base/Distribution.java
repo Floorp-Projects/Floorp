@@ -30,7 +30,6 @@ import java.util.zip.ZipFile;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 public final class Distribution {
     private static final String LOGTAG = "GeckoDistribution";
@@ -47,6 +46,7 @@ public final class Distribution {
     public static void init(final Context context, final String packagePath) {
         // Read/write preferences and files on the background thread.
         GeckoBackgroundThread.getHandler().post(new Runnable() {
+            @Override
             public void run() {
                 // Bail if we've already initialized the distribution.
                 SharedPreferences settings = context.getSharedPreferences(GeckoApp.PREFS_NAME, Activity.MODE_PRIVATE);
@@ -85,9 +85,6 @@ public final class Distribution {
                         settings.edit().putString(pathKeyName, distPath).commit();
                     }
                 }
-
-                Log.i("BOOM", "distributionSet: " + distributionSet);
-                Log.i("BOOM", "distPath: " + distPath);
 
                 if (distributionSet) {
                     GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Distribution:Set", distPath));

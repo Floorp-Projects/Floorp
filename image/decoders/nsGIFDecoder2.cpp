@@ -762,39 +762,30 @@ nsGIFDecoder2::WriteInternal(const char *aBuffer, uint32_t aCount)
       break;
 
     case gif_extension:
-      // Comment taken directly from WebKit's GIFImageReader.cpp.
-      //
-      // The GIF spec mandates lengths for three of the extensions below.
-      // However, it's possible for GIFs in the wild to deviate. For example,
-      // some GIFs that embed ICC color profiles using gif_application_extension
-      // violate the spec and treat this extension block like a sort of
-      // "extension + data" block, giving a size greater than 11 and filling the
-      // remaining bytes with data (then following with more data blocks as
-      // needed), instead of placing a true data block just after the 11 byte
-      // extension block.
-      //
-      // Accordingly, if the specified length is larger than the required value,
-      // we use it. If it's smaller, then we enforce the spec value, because the
-      // parsers for these extensions expect to have the specified number of
-      // bytes available, and if we don't ensure that, they could read off the
-      // end of the heap buffer. (In this case, it's likely the GIF is corrupt
-      // and we'll soon fail to decode anyway.)
       mGIFStruct.bytes_to_consume = q[1];
       if (mGIFStruct.bytes_to_consume) {
         switch (*q) {
         case GIF_GRAPHIC_CONTROL_LABEL:
+          // The GIF spec mandates that the GIFControlExtension header block length is 4 bytes,
+          // and the parser for this block reads 4 bytes, so we must enforce that the buffer
+          // contains at least this many bytes. If the GIF specifies a different length, we
+          // allow that, so long as it's larger; the additional data will simply be ignored.
           mGIFStruct.state = gif_control_extension;
           mGIFStruct.bytes_to_consume = std::max(mGIFStruct.bytes_to_consume, 4u);
           break;
 
+        // The GIF spec also specifies the lengths of the following two extensions' headers
+        // (as 12 and 11 bytes, respectively). Because we ignore the plain text extension entirely
+        // and sanity-check the actual length of the application extension header before reading it,
+        // we allow GIFs to deviate from these values in either direction. This is important for
+        // real-world compatibility, as GIFs in the wild exist with application extension headers
+        // that are both shorter and longer than 11 bytes.
         case GIF_APPLICATION_EXTENSION_LABEL:
           mGIFStruct.state = gif_application_extension;
-          mGIFStruct.bytes_to_consume = std::max(mGIFStruct.bytes_to_consume, 11u);
           break;
 
         case GIF_PLAIN_TEXT_LABEL:
           mGIFStruct.state = gif_skip_block;
-          mGIFStruct.bytes_to_consume = std::max(mGIFStruct.bytes_to_consume, 12u);
           break;
 
         case GIF_COMMENT_LABEL:
@@ -845,8 +836,9 @@ nsGIFDecoder2::WriteInternal(const char *aBuffer, uint32_t aCount)
 
     case gif_application_extension:
       /* Check for netscape application extension */
-      if (!strncmp((char*)q, "NETSCAPE2.0", 11) ||
-        !strncmp((char*)q, "ANIMEXTS1.0", 11))
+      if (mGIFStruct.bytes_to_consume == 11 &&
+          (!strncmp((char*)q, "NETSCAPE2.0", 11) ||
+           !strncmp((char*)q, "ANIMEXTS1.0", 11)))
         GETN(1, gif_netscape_extension_block);
       else
         GETN(1, gif_consume_block);

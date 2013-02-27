@@ -2187,6 +2187,11 @@ nsHTMLMediaElement::CanPlayType(const nsAString& aType, nsAString& aResult)
     aResult.AssignLiteral("maybe");
     break;
   }
+
+  LOG(PR_LOG_DEBUG, ("%p CanPlayType(%s) = \"%s\"", this,
+                     NS_ConvertUTF16toUTF8(aType).get(),
+                     NS_ConvertUTF16toUTF8(aResult).get()));
+
   return NS_OK;
 }
 

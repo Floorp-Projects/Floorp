@@ -31,6 +31,7 @@ public class testBookmarklets extends PixelTest {
         enterUrl(js);
         mActions.sendSpecialKey(Actions.SpecialKey.ENTER);
         alerted = waitForTest(new BooleanTest() {
+            @Override
             public boolean test() {
                 return mSolo.searchButton("OK", true) || mSolo.searchText("12.34", true);
             }
@@ -48,7 +49,7 @@ public class testBookmarklets extends PixelTest {
         if (bookmarks == null) {
             mAsserter.is(true, true, "Did not find the bookmarks section in the awesomebar");
         } else if (mSolo.waitForText(title)) {
-            for (int i = 0; i < bookmarks.getChildCount(); i++) {
+            for (int i = 0; i < bookmarks.getAdapter().getCount(); i++) {
                 Cursor c = (Cursor)bookmarks.getItemAtPosition(i);
                 String turl = c.getString(c.getColumnIndexOrThrow("url"));
                 if (turl.equals(js)) {
@@ -65,6 +66,7 @@ public class testBookmarklets extends PixelTest {
         }
 
         alerted = waitForTest(new BooleanTest() {
+            @Override
             public boolean test() {
                 return mSolo.searchButton("OK", true) && mSolo.searchText("12.34", true);
             }

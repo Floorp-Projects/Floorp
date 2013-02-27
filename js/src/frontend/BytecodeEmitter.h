@@ -93,7 +93,8 @@ struct BytecodeEmitter
     };
     EmitSection prolog, main, *current;
 
-    Parser          *const parser;  /* the parser */
+    /* the parser */
+    Parser<FullParseHandler> *const parser;
 
     HandleScript    evalCaller;     /* scripted caller info for eval and dbgapi */
 
@@ -143,7 +144,7 @@ struct BytecodeEmitter
      * tempLifoAlloc and save the pointer beyond the next BytecodeEmitter
      * destruction.
      */
-    BytecodeEmitter(BytecodeEmitter *parent, Parser *parser, SharedContext *sc,
+    BytecodeEmitter(BytecodeEmitter *parent, Parser<FullParseHandler> *parser, SharedContext *sc,
                     HandleScript script, HandleScript evalCaller, bool hasGlobalScope,
                     unsigned lineno, bool selfHostingMode = false);
     bool init();

@@ -80,6 +80,7 @@ public final class INIParser extends INISection {
     }
 
     // parse the default file
+    @Override
     protected void parse() throws IOException {
         super.parse();
         parse(mFile);

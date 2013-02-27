@@ -240,6 +240,7 @@ class ActivityHandlerHelper {
             mItems = aItems;
         }
 
+        @Override
         public void run() {
             GeckoApp.mAppContext.getPromptService().show(mTitle, "", mItems, false);
         }
