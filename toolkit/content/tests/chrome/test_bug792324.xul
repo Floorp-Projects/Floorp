@@ -39,7 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=792324
 <script class="testbody" type="application/javascript;version=1.7"><![CDATA[
 
 if (navigator.platform.startsWith("Mac")) {
-  SimpleTest.expectAssertions(0, 3);
+  SimpleTest.expectAssertions(0, 6);
 }
 
 /** Test for Bug 792324 **/

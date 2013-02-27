@@ -21,7 +21,11 @@
 <pre id="test">
 <script type="application/javascript">
 
-SimpleTest.expectAssertions(1); // bug 845552
+if (navigator.platform.startsWith("Win")) {
+  SimpleTest.expectAssertions(0, 1); // bug 845552
+} else {
+  SimpleTest.expectAssertions(1); // bug 845552
+}
 
 /** Tests for Bug 545812 **/
 
