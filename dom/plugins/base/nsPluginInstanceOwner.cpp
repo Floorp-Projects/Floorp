@@ -2066,7 +2066,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
   int16_t response = kNPEventNotHandled;
   void* window = FixUpPluginWindow(ePluginPaintEnable);
   if (window || (eventModel == NPEventModelCocoa)) {
-    mInstance->HandleEvent(event, &response, NS_PLUGIN_CALL_SAFE_TO_REENTER_GECKO);
+    mInstance->HandleEvent(event, &response);
   }
 
   if (eventModel == NPEventModelCocoa && response == kNPEventStartIME) {
@@ -2182,7 +2182,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 
   if (pPluginEvent) {
     int16_t response = kNPEventNotHandled;
-    mInstance->HandleEvent(pPluginEvent, &response, NS_PLUGIN_CALL_SAFE_TO_REENTER_GECKO);
+    mInstance->HandleEvent(pPluginEvent, &response);
     if (response == kNPEventHandled)
       rv = nsEventStatus_eConsumeNoDefault;
   }
@@ -2440,7 +2440,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
   event.send_event = False;
 
   int16_t response = kNPEventNotHandled;
-  mInstance->HandleEvent(&pluginEvent, &response, NS_PLUGIN_CALL_SAFE_TO_REENTER_GECKO);
+  mInstance->HandleEvent(&pluginEvent, &response);
   if (response == kNPEventHandled)
     rv = nsEventStatus_eConsumeNoDefault;
 #endif
@@ -2492,7 +2492,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
               event.data.mouse.action = kDown_ANPMouseAction;
               event.data.mouse.x = pluginPoint.x;
               event.data.mouse.y = pluginPoint.y;
-              mInstance->HandleEvent(&event, nullptr, NS_PLUGIN_CALL_SAFE_TO_REENTER_GECKO);
+              mInstance->HandleEvent(&event, nullptr);
             }
             break;
           case NS_MOUSE_BUTTON_UP:
@@ -2503,7 +2503,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
               event.data.mouse.action = kUp_ANPMouseAction;
               event.data.mouse.x = pluginPoint.x;
               event.data.mouse.y = pluginPoint.y;
-              mInstance->HandleEvent(&event, nullptr, NS_PLUGIN_CALL_SAFE_TO_REENTER_GECKO);
+              mInstance->HandleEvent(&event, nullptr);
             }
             break;
           }
@@ -2519,7 +2519,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
        if (pluginEvent) {
          MOZ_ASSERT(pluginEvent->inSize == sizeof(ANPEvent));
          MOZ_ASSERT(pluginEvent->eventType == kKey_ANPEventType);
-         mInstance->HandleEvent(pluginEvent, nullptr, NS_PLUGIN_CALL_SAFE_TO_REENTER_GECKO);
+         mInstance->HandleEvent(pluginEvent, nullptr);
        }
      }
      break;
