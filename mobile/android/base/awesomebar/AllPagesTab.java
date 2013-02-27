@@ -128,6 +128,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             list.setTag(TAG);
             ((Activity)mContext).registerForContextMenu(list);
             list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                      handleItemClick(parent, view, position, id);
                 }
@@ -176,6 +177,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
      */
     private void primeSuggestions() {
         GeckoAppShell.getHandler().post(new Runnable() {
+            @Override
             public void run() {
                 mSuggestClient.query(mSearchTerm);
             }
@@ -210,6 +212,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             mCursorAdapter = new AwesomeBarCursorAdapter(mContext);
 
             mCursorAdapter.setFilterQueryProvider(new FilterQueryProvider() {
+                @Override
                 public Cursor runQuery(CharSequence constraint) {
                     long start = SystemClock.uptimeMillis();
 
@@ -245,6 +248,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             mCursor = cursor;
         }
 
+        @Override
         public void onClick() {
             AwesomeBarTabs.OnUrlOpenListener listener = getUrlListener();
             if (listener == null)
@@ -255,6 +259,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             listener.onUrlOpen(url, title);
         }
 
+        @Override
         public ContextMenuSubject getSubject() {
             // Use the history id in order to allow removing history entries
             int id = mCursor.getInt(mCursor.getColumnIndexOrThrow(Combined.HISTORY_ID));
@@ -289,12 +294,14 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
             mSearchEngine = searchEngine;
         }
 
+        @Override
         public void onClick() {
             AwesomeBarTabs.OnUrlOpenListener listener = getUrlListener();
             if (listener != null)
                 listener.onSearch(mSearchEngine, mSearchTerm);
         }
 
+        @Override
         public ContextMenuSubject getSubject() {
             // Do not show context menu for search engine items
             return null;
@@ -458,6 +465,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         private void bindSearchEngineView(final SearchEngine engine, final SearchEntryViewHolder viewHolder) {
             // when a suggestion is clicked, do a search
             OnClickListener clickListener = new OnClickListener() {
+                @Override
                 public void onClick(View v) {
                     AwesomeBarTabs.OnUrlOpenListener listener = getUrlListener();
                     if (listener != null) {
@@ -478,6 +486,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
             // when a suggestion is long-clicked, copy the suggestion into the URL EditText
             OnLongClickListener longClickListener = new OnLongClickListener() {
+                @Override
                 public boolean onLongClick(View v) {
                     AwesomeBarTabs.OnUrlOpenListener listener = getUrlListener();
                     if (listener != null) {
@@ -625,6 +634,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         final View yesButton = mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_yes);
         final View noButton = mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_no);
         OnClickListener listener = new OnClickListener() {
+            @Override
             public void onClick(View v) {
                 // Prevent the buttons from being clicked multiple times (bug 816902)
                 yesButton.setOnClickListener(null);
@@ -667,19 +677,23 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         anim2.setStartOffset(anim1.getDuration());
         final LinearLayout view = (LinearLayout)getView();
         anim2.setAnimationListener(new Animation.AnimationListener() {
+            @Override
             public void onAnimationStart(Animation a) {
                 // Increase the height of the view so a gap isn't shown during animation
                 view.getLayoutParams().height = view.getHeight() +
                         mSuggestionsOptInPrompt.getHeight();
                 view.requestLayout();
             }
+            @Override
             public void onAnimationRepeat(Animation a) {}
+            @Override
             public void onAnimationEnd(Animation a) {
                 // Removing the view immediately results in a NPE in
                 // dispatchDraw(), possibly because this callback executes
                 // before drawing is finished. Posting this as a Runnable fixes
                 // the issue.
                 view.post(new Runnable() {
+                    @Override
                     public void run() {
                         view.removeView(mSuggestionsOptInPrompt);
                         getListView().clearAnimation();
@@ -703,9 +717,11 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         getListView().startAnimation(anim2);
     }
 
+    @Override
     public void handleMessage(String event, final JSONObject message) {
         if (event.equals("SearchEngines:Data")) {
             GeckoAppShell.getMainHandler().post(new Runnable() {
+                @Override
                 public void run() {
                     setSearchEngines(message);
                 }

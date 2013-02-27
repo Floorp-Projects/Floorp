@@ -102,6 +102,7 @@ public class testBookmarksTab extends BaseTest {
         View child;
         mFirstChild = null;
         boolean success = waitForTest(new BooleanTest() {
+            @Override
             public boolean test() {
                 mFirstChild = list.getChildAt(1);
                 if (mFirstChild == null) {

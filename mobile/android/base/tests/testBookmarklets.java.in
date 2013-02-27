@@ -31,6 +31,7 @@ public class testBookmarklets extends PixelTest {
         enterUrl(js);
         mActions.sendSpecialKey(Actions.SpecialKey.ENTER);
         alerted = waitForTest(new BooleanTest() {
+            @Override
             public boolean test() {
                 return mSolo.searchButton("OK", true) || mSolo.searchText("12.34", true);
             }
@@ -65,6 +66,7 @@ public class testBookmarklets extends PixelTest {
         }
 
         alerted = waitForTest(new BooleanTest() {
+            @Override
             public boolean test() {
                 return mSolo.searchButton("OK", true) && mSolo.searchText("12.34", true);
             }

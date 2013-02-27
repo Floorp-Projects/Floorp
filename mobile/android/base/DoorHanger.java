@@ -106,6 +106,7 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
         mChoicesLayout.addView(mButton, mLayoutParams);
     }
 
+    @Override
     public void onClick(View v) {
         JSONObject response = new JSONObject();
         try {

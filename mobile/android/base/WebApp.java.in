@@ -236,10 +236,13 @@ public class WebApp extends GeckoApp {
                 if (mSplashscreen.getVisibility() == View.VISIBLE) {
                     Animation fadeout = AnimationUtils.loadAnimation(this, android.R.anim.fade_out);
                     fadeout.setAnimationListener(new Animation.AnimationListener() {
+                        @Override
                         public void onAnimationEnd(Animation animation) {
                           mSplashscreen.setVisibility(View.GONE);
                         }
+                        @Override
                         public void onAnimationRepeat(Animation animation) { }
+                        @Override
                         public void onAnimationStart(Animation animation) { }
                     });
                     mSplashscreen.startAnimation(fadeout);

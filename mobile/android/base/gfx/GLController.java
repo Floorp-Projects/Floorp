@@ -91,6 +91,7 @@ public class GLController {
         // updating the state in the view/controller/client should be
         // done on the main UI thread, not the GL renderer thread
         mView.post(new Runnable() {
+            @Override
             public void run() {
                 mView.setViewportSize(mWidth, mHeight);
             }

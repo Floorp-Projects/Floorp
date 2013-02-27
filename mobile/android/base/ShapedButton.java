@@ -21,7 +21,9 @@ public abstract class ShapedButton extends GeckoImageButton
 
     protected enum CurveTowards { NONE, LEFT, RIGHT };
 
+    @Override
     abstract public void onLightweightThemeChanged();
+    @Override
     abstract public void onLightweightThemeReset();
 
     public ShapedButton(Context context, AttributeSet attrs) {

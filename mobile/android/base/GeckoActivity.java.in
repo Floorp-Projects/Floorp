@@ -78,6 +78,7 @@ public class GeckoActivity extends Activity implements GeckoActivityStatus {
         }
     }
 
+    @Override
     public boolean isGeckoActivityOpened() {
         return mGeckoActivityOpened;
     }
