@@ -77,9 +77,9 @@ class Preprocessor:
   
   def warnUnused(self, file):
     if self.actionLevel == 0:
-      sys.stderr.write('%s: WARNING: no preprocessor directives found\n' % file)
+      sys.stderr.write('{0}: WARNING: no preprocessor directives found\n'.format(file))
     elif self.actionLevel == 1:
-      sys.stderr.write('%s: WARNING: no useful preprocessor directives found\n' % file)
+      sys.stderr.write('{0}: WARNING: no useful preprocessor directives found\n'.format(file))
     pass
 
   def setLineEndings(self, aLE):
@@ -96,7 +96,9 @@ class Preprocessor:
     """
     self.marker = aMarker
     if aMarker:
-      self.instruction = re.compile('%s(?P<cmd>[a-z]+)(?:\s(?P<args>.*))?$'%aMarker, re.U)
+      self.instruction = re.compile('{0}(?P<cmd>[a-z]+)(?:\s(?P<args>.*))?$'
+                                    .format(aMarker), 
+                                    re.U)
       self.comment = re.compile(aMarker, re.U)
     else:
       class NoMatch(object):
@@ -129,9 +131,9 @@ class Preprocessor:
       self.writtenLines += 1
       ln = self.context['LINE']
       if self.writtenLines != ln:
-        self.out.write('//@line %(line)d "%(file)s"%(le)s'%{'line': ln,
-                                                            'file': self.context['FILE'],
-                                                            'le': self.LE})
+        self.out.write('//@line {line} "{file}"{le}'.format(line=ln,
+                                                            file=self.context['FILE'],
+                                                            le=self.LE))
         self.writtenLines = ln
     filteredLine = self.applyFilters(aLine)
     if filteredLine != aLine:
