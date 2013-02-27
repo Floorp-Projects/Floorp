@@ -57,6 +57,7 @@
     "dom/imptests/webapps/DOMCore/tests/approved/test_Range-deleteContents.html":" Resulting DOM for range 0 [paras[0].firstChild, 0, paras[0].firstChild, 0]",
     "dom/imptests/webapps/DOMCore/tests/approved/test_Range-extractContents.html":" Resulting DOM for range 0 [paras[0].firstChild, 0, paras[0].firstChild, 0]",
     "dom/imptests/webapps/DOMCore/tests/approved/test_Range-insertNode.html":" Test timed out.",
+    "dom/imptests/webapps/DOMCore/tests/approved/test_Range-mutations.html":" Test timed out.",
     "dom/imptests/webapps/DOMCore/tests/approved/test_Range-surroundContents.html":" Test timed out.",
     "dom/indexedDB/": "",
 
