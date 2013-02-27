@@ -10,7 +10,7 @@
 #include "nsISupports.idl"
 #include "nsIGlobalHistory2.idl"
 
-[scriptable, uuid(d176f8e8-383f-4109-812d-cce015e2d804)]
+[scriptable, uuid(837ea2db-c4c7-4f4c-8982-6c8c73e8f5d3)]
 interface nsIBrowserHistory : nsIGlobalHistory2
 {
     /**
@@ -93,21 +93,4 @@ interface nsIBrowserHistory : nsIGlobalHistory2
      *       nsINavHistoryObserver implementers.
      */
     void removeAllPages();
-
-    /**
-     * Designates the url as having been explicitly typed in by the user.
-     *
-     * @param aURI
-     *        URI of the page to be marked.
-     */
-    void markPageAsTyped(in nsIURI aURI);
-
-    /**
-     * Designates the url as coming from a link explicitly followed by
-     * the user (for example by clicking on it).
-     *
-     * @param aURI
-     *        URI of the page to be marked.
-     */
-    void markPageAsFollowedLink(in nsIURI aURI);
 };
