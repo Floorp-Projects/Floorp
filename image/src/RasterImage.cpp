@@ -3216,7 +3216,6 @@ RasterImage::DecodeSomeData(uint32_t aMaxBytes)
   if (mBytesDecoded == mSourceData.Length())
     return NS_OK;
 
-
   // write the proper amount of data
   uint32_t bytesToDecode = std::min(aMaxBytes,
                                   mSourceData.Length() - mBytesDecoded);
@@ -3360,6 +3359,10 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
   if (image->mDecoder) {
     if (request && request->mChunkCount && !image->mDecoder->IsSizeDecode()) {
       Telemetry::Accumulate(Telemetry::IMAGE_DECODE_CHUNKS, request->mChunkCount);
+    }
+
+    if (!image->mHasSize && image->mDecoder->HasSize()) {
+      image->mDecoder->SetSizeOnImage();
     }
 
     // If the decode finished, or we're specifically being told to shut down,
