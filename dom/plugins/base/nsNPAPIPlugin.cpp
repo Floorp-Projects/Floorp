@@ -186,9 +186,9 @@ enum eNPPStreamTypeInternal {
 
 static NS_DEFINE_IID(kMemoryCID, NS_MEMORY_CID);
 
-PRIntervalTime NS_NotifyBeginPluginCall(NSPluginCallReentry aReentryState)
+PRIntervalTime NS_NotifyBeginPluginCall()
 {
-  nsNPAPIPluginInstance::BeginPluginCall(aReentryState);
+  nsNPAPIPluginInstance::BeginPluginCall();
   return PR_IntervalNow();
 }
 
@@ -196,9 +196,9 @@ PRIntervalTime NS_NotifyBeginPluginCall(NSPluginCallReentry aReentryState)
 // registered to listen to the "experimental-notify-plugin-call" subject.
 // Each "experimental-notify-plugin-call" notification carries with it the run
 // time value in milliseconds that the call took to execute.
-void NS_NotifyPluginCall(PRIntervalTime startTime, NSPluginCallReentry aReentryState)
+void NS_NotifyPluginCall(PRIntervalTime startTime) 
 {
-  nsNPAPIPluginInstance::EndPluginCall(aReentryState);
+  nsNPAPIPluginInstance::EndPluginCall();
 
   PRIntervalTime endTime = PR_IntervalNow() - startTime;
   nsCOMPtr<nsIObserverService> notifyUIService =
@@ -789,8 +789,7 @@ nsPluginThreadRunnable::Run()
   if (mFunc) {
     PluginDestructionGuard guard(mInstance);
 
-    NS_TRY_SAFE_CALL_VOID(mFunc(mUserData), nullptr,
-                          NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
+    NS_TRY_SAFE_CALL_VOID(mFunc(mUserData), nullptr);
   }
 
   return NS_OK;

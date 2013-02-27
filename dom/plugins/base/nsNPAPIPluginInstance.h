@@ -50,18 +50,6 @@ const NPDrawingModel kDefaultDrawingModel = NPDrawingModelCoreGraphics;
 const NPDrawingModel kDefaultDrawingModel = static_cast<NPDrawingModel>(0);
 #endif
 
-/**
- * Used to indicate whether it's OK to reenter Gecko and repaint, flush frames,
- * run scripts, etc, during this plugin call.
- * When NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO is set, we try to avoid dangerous
- * Gecko activities when the plugin spins a nested event loop, on a best-effort
- * basis.
- */
-enum NSPluginCallReentry {
-  NS_PLUGIN_CALL_SAFE_TO_REENTER_GECKO,
-  NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO
-};
-
 class nsNPAPITimer
 {
 public:
@@ -285,19 +273,12 @@ public:
   // Returns the contents scale factor of the screen the plugin is drawn on.
   double GetContentsScaleFactor();
 
-  static bool InPluginCallUnsafeForReentry() { return gInUnsafePluginCalls > 0; }
-  static void BeginPluginCall(NSPluginCallReentry aReentryState)
+  static bool InPluginCall() { return gInPluginCalls > 0; }
+  static void BeginPluginCall() { ++gInPluginCalls; }
+  static void EndPluginCall()
   {
-    if (aReentryState == NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO) {
-      ++gInUnsafePluginCalls;
-    }
-  }
-  static void EndPluginCall(NSPluginCallReentry aReentryState)
-  {
-    if (aReentryState == NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO) {
-      NS_ASSERTION(gInUnsafePluginCalls > 0, "Must be in plugin call");
-      --gInUnsafePluginCalls;
-    }
+    NS_ASSERTION(InPluginCall(), "Must be in plugin call");
+    --gInPluginCalls;
   }
 
 protected:
@@ -395,7 +376,7 @@ private:
   // is this instance Java and affected by bug 750480?
   bool mHaveJavaC2PJSObjectQuirk;
 
-  static uint32_t gInUnsafePluginCalls;
+  static uint32_t gInPluginCalls;
 };
 
 #endif // nsNPAPIPluginInstance_h_
