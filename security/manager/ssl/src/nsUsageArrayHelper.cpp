@@ -32,66 +32,6 @@ nsUsageArrayHelper::nsUsageArrayHelper(CERTCertificate *aCert)
   nssComponent = do_GetService(kNSSComponentCID, &m_rv);
 }
 
-// XXX: old, non-libpkix version of check that will be removed after the switch
-// to libpkix is final.
-void
-nsUsageArrayHelper::check(const char *suffix,
-                        SECCertificateUsage aCertUsage,
-                        uint32_t &aCounter,
-                        PRUnichar **outUsages)
-{
-  if (!aCertUsage) return;
-  nsAutoCString typestr;
-  switch (aCertUsage) {
-  case certificateUsageSSLClient:
-    typestr = "VerifySSLClient";
-    break;
-  case certificateUsageSSLServer:
-    typestr = "VerifySSLServer";
-    break;
-  case certificateUsageSSLServerWithStepUp:
-    typestr = "VerifySSLStepUp";
-    break;
-  case certificateUsageEmailSigner:
-    typestr = "VerifyEmailSigner";
-    break;
-  case certificateUsageEmailRecipient:
-    typestr = "VerifyEmailRecip";
-    break;
-  case certificateUsageObjectSigner:
-    typestr = "VerifyObjSign";
-    break;
-  case certificateUsageProtectedObjectSigner:
-    typestr = "VerifyProtectObjSign";
-    break;
-  case certificateUsageUserCertImport:
-    typestr = "VerifyUserImport";
-    break;
-  case certificateUsageSSLCA:
-    typestr = "VerifySSLCA";
-    break;
-  case certificateUsageVerifyCA:
-    typestr = "VerifyCAVerifier";
-    break;
-  case certificateUsageStatusResponder:
-    typestr = "VerifyStatusResponder";
-    break;
-  case certificateUsageAnyCA:
-    typestr = "VerifyAnyCA";
-    break;
-  default:
-    break;
-  }
-  if (!typestr.IsEmpty()) {
-    typestr.Append(suffix);
-    nsAutoString verifyDesc;
-    m_rv = nssComponent->GetPIPNSSBundleString(typestr.get(), verifyDesc);
-    if (NS_SUCCEEDED(m_rv)) {
-      outUsages[aCounter++] = ToNewUnicode(verifyDesc);
-    }
-  }
-}
-
 namespace {
 
 // Some validation errors are non-fatal in that, we should keep checking the
@@ -259,66 +199,20 @@ nsUsageArrayHelper::GetUsagesArray(const char *suffix,
   if (outArraySize < max_returned_out_array_size)
     return NS_ERROR_FAILURE;
 
+  // Bug 860076, this disabling ocsp for all NSS is incorrect.
+  if (!nsNSSComponent::globalConstFlagUsePKIXVerification && localOnly) {
+    nsresult rv;
+    nssComponent = do_GetService(kNSSComponentCID, &rv);
+    if (NS_FAILED(rv))
+      return rv;
+    
+    if (nssComponent) {
+      nssComponent->SkipOcsp();
+    }
+  }
+
   uint32_t &count = *_count;
   count = 0;
-
-// TODO: This block will be removed as soon as the switch to libpkix is
-// complete.
-if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
-  if (localOnly) {
-    nssComponent->SkipOcsp();
-  }
-
-  SECCertificateUsage usages = 0;
-  int err = 0;
-  
-  // CERT_VerifyCertificateNow returns SECFailure unless the certificate is
-  // valid for all the given usages. Hoewver, we are only looking for the list
-  // of usages for which the cert *is* valid.
-  (void)
-  CERT_VerifyCertificateNow(defaultcertdb, mCert, true,
-			    certificateUsageSSLClient |
-			    certificateUsageSSLServer |
-			    certificateUsageSSLServerWithStepUp |
-			    certificateUsageEmailSigner |
-			    certificateUsageEmailRecipient |
-			    certificateUsageObjectSigner |
-			    certificateUsageSSLCA |
-			    certificateUsageStatusResponder,
-			    nullptr, &usages);
-  err = PR_GetError();
-
-  if (localOnly) {
-     nssComponent->SkipOcspOff();
-  }
-
-  // The following list of checks must be < max_returned_out_array_size
-  
-  check(suffix, usages & certificateUsageSSLClient, count, outUsages);
-  check(suffix, usages & certificateUsageSSLServer, count, outUsages);
-  check(suffix, usages & certificateUsageEmailSigner, count, outUsages);
-  check(suffix, usages & certificateUsageEmailRecipient, count, outUsages);
-  check(suffix, usages & certificateUsageObjectSigner, count, outUsages);
-#if 0
-  check(suffix, usages & certificateUsageProtectedObjectSigner, count, outUsages);
-  check(suffix, usages & certificateUsageUserCertImport, count, outUsages);
-#endif
-  check(suffix, usages & certificateUsageSSLCA, count, outUsages);
-#if 0
-  check(suffix, usages & certificateUsageVerifyCA, count, outUsages);
-#endif
-  check(suffix, usages & certificateUsageStatusResponder, count, outUsages);
-#if 0
-  check(suffix, usages & certificateUsageAnyCA, count, outUsages);
-#endif
-
-  if (count == 0) {
-    verifyFailed(_verified, err);
-  } else {
-    *_verified = nsNSSCertificate::VERIFIED_OK;
-  }
-  return NS_OK;
-}
 
   RefPtr<CertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
@@ -358,6 +252,11 @@ if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
   result = check(result, suffix, certVerifier,
                  certificateUsageAnyCA, now, flags, count, outUsages);
 #endif
+
+  // Bug 860076, this disabling ocsp for all NSS is incorrect
+  if (!nsNSSComponent::globalConstFlagUsePKIXVerification && localOnly) {
+     nssComponent->SkipOcspOff();
+  }
 
   if (isFatalError(result) || count == 0) {
     MOZ_ASSERT(result != nsIX509Cert::VERIFIED_OK);
