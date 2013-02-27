@@ -1642,7 +1642,13 @@ GetElementIC::attachTypedArrayElement(JSContext *cx, IonScript *ion, JSObject *o
     MacroAssembler masm;
 
     // The array type is the object within the table of typed array classes.
-    int arrayType = obj->getClass() - &TypedArray::classes[0];
+    int arrayType = TypedArray::type(obj);
+
+    // The output register is not yet specialized as a float register, the only
+    // way to accept float typed arrays for now is to return a Value type.
+    bool floatOutput = arrayType == TypedArray::TYPE_FLOAT32 ||
+                       arrayType == TypedArray::TYPE_FLOAT64;
+    JS_ASSERT_IF(!output().hasValue(), !floatOutput);
 
     Register tmpReg = output().scratchReg().gpr();
     JS_ASSERT(tmpReg != InvalidReg);
@@ -1747,9 +1753,14 @@ GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
                 return false;
             attachedStub = true;
         } else if (obj->isTypedArray() && idval.isInt32()) {
-            if (!cache.attachTypedArrayElement(cx, ion, obj, idval))
-                return false;
-            attachedStub = true;
+            int arrayType = TypedArray::type(obj);
+            bool floatOutput = arrayType == TypedArray::TYPE_FLOAT32 ||
+                               arrayType == TypedArray::TYPE_FLOAT64;
+            if (!floatOutput || cache.output().hasValue()) {
+                if (!cache.attachTypedArrayElement(cx, ion, obj, idval))
+                    return false;
+                attachedStub = true;
+            }
         }
     }
 

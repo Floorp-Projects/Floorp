@@ -67,6 +67,8 @@ MOCHITEST_FILES =   imgutils.js \
 		test_error_events.html \
 		error-early.png \
 		test_drawDiscardedImage.html \
+		short_header.gif \
+		test_short_gif_header.html \
                 $(NULL)
 
 # Tests disabled due to intermittent orange

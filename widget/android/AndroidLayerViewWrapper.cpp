@@ -15,9 +15,14 @@ using namespace mozilla;
 static jfieldID jEGLSurfacePointerField = 0;
 
 void AndroidEGLObject::Init(JNIEnv* aJEnv) {
+    AutoLocalJNIFrame jniFrame(aJEnv);
+
     jclass jClass;
     jClass = reinterpret_cast<jclass>
         (aJEnv->NewGlobalRef(aJEnv->FindClass("com/google/android/gles_jni/EGLSurfaceImpl")));
+    if (!jClass)
+        return;
+
     jEGLSurfacePointerField = aJEnv->GetFieldID(jClass, "mEGLSurface", "I");
 }
 
@@ -58,6 +63,10 @@ EGLSurface
 AndroidGLController::ProvideEGLSurface()
 {
     ASSERT_THREAD();
+
+    if (!jEGLSurfacePointerField)
+        return NULL;
+
     AutoLocalJNIFrame jniFrame(mJEnv);
     jobject jObj = mJEnv->CallObjectMethod(mJObj, jProvideEGLSurfaceMethod);
     if (jniFrame.CheckForException() || !jObj)

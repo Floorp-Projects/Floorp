@@ -419,27 +419,42 @@
       </deck>
     </vbox>
 
-    <flyoutpanel id="about-flyoutpanel" headertext="&aboutHeader.label;">
-        <label id="about-product-label" value="&aboutHeaderProduct.label;"/>
-        <label value="&aboutHeaderCompany.label;"/>
+    <flyoutpanel id="about-flyoutpanel" headertext="&aboutHeader.title;">
+        <label id="about-product-label" value="&aboutHeader.product.label;"/>
+        <label value="&aboutHeader.company.label;"/>
 #expand <label id="about-version-label">__MOZ_APP_VERSION__</label>
         <label id="about-policy-label"
                onclick="if (event.button == 0) { Browser.onAboutPolicyClick(); }"
-               class="text-link" value="&aboutHeaderPolicy.label;"/>
+               class="text-link" value="&aboutHeader.policy.label;"/>
     </flyoutpanel>
 
-    <flyoutpanel id="prefs-flyoutpanel" headertext="&optionsHeader.label;">
-      <settings id="prefs-startup" label="&startup.title;">
-        <setting id="prefs-homepage" title="&homepage.title;" type="menulist" pref="browser.startup.sessionRestore" class="setting-expanded">
+    <flyoutpanel id="prefs-flyoutpanel" headertext="&optionsHeader.title;">
+      <settings id="prefs-startup" label="&optionsHeader.startup.title;"> <!-- note, this element has a custom margin-top -->
+        <setting id="prefs-homepage" title="&optionsHeader.homepage.title;" type="menulist" pref="browser.startup.sessionRestore" class="setting-expanded">
           <menulist id="prefs-homepage-options">
-            <menupopup position="after_end">
-              <menuitem id="prefs-homepage-default" label="&homepage.startPage;" value="false"/>
-              <menuitem id="prefs-homepage-session" label="&homepage.sessionRestore;" value="true"/>
+            <menupopup id="prefs-homepage-popup" position="after_end">
+              <menuitem id="prefs-homepage-default" label="&optionsHeader.homepage.startPage.button;" value="false"/>
+              <menuitem id="prefs-homepage-session" label="&optionsHeader.homepage.sessionRestore.button;" value="true"/>
             </menupopup>
           </menulist>
         </setting>
       </settings>
-      <setting pref="browser.tabs.tabsOnly" title="&toggleTabsOnly.label;" type="bool"/>
+      <setting pref="browser.tabs.tabsOnly" title="&optionsHeader.tabs.title;" type="bool"/>
+      <settings id="prefs-charencoding" label="&optionsHeader.char.title;">
+        <setting pref="browser.menu.showCharacterEncoding" title="&optionsHeader.char.options.label;" type="bool"/>
+      </settings>
+      <settings id="prefs-privdata" label="&optionsHeader.privacy.clearPrivateData.title;">
+        <setting title="&optionsHeader.privacy.clearPrivateData.label;" type="control">
+          <button id="prefs-clear-data" label="&optionsHeader.privacy.clearPrivateData.button;" command="cmd_sanitize"/>
+        </setting>
+      </settings>
+      <setting pref="signon.rememberSignons" title="&optionsHeader.privacy.passwords.label;" type="bool"/>
+      <settings id="prefs-donottrack" label="&optionsHeader.privacy.doNotTrack.title;">
+        <setting pref="privacy.donottrackheader.enabled" title="&optionsHeader.privacy.doNotTrack.label;" type="bool"/>
+      </settings>
+
+      <setting id="prefs-master-password" title="&optionsHeader.privacy.masterPassword.label;" type="bool" oncommand="MasterPasswordUI.show(this.value);"/>
+
       <settings id="prefs-sync" label="&sync.title;">
         <setting id="sync-connect" title="&sync.notconnected;" type="control">
           <button label="&sync.connect;" oncommand="WeaveGlue.tryConnect();" />
@@ -454,14 +469,6 @@
         <setting id="sync-device" class="setting-subgroup" type="string" title="&sync.deviceName;" onchange="WeaveGlue.changeName(this);" collapsed="true"/>
         <setting id="sync-disconnect" class="setting-subgroup" type="control" collapsed="true">
           <button label="&sync.disconnect;" oncommand="WeaveGlue.disconnect();" />
-        </setting>
-      </settings>
-      <settings id="prefs-privacy" label="&privacy.title;">
-        <setting pref="signon.rememberSignons" title="&rememberPasswords.title;" type="bool"/>
-        <setting pref="privacy.donottrackheader.enabled" title="&doNotTrack.title;" type="bool"/>
-        <setting id="prefs-master-password" title="&masterPassword.title;" type="bool" oncommand="MasterPasswordUI.show(this.value);"/>
-        <setting title="&clearPrivateData2.title;" type="control">
-          <button id="prefs-clear-data" label="&clearPrivateData.button;" command="cmd_sanitize"/>
         </setting>
       </settings>
     </flyoutpanel>

@@ -37,10 +37,7 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
                      MDefinition *rhs);
     bool lowerForFPU(LMathD *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs);
 
-    bool lowerConstantDouble(double d, MInstruction *ins);
-
   public:
-    bool visitConstant(MConstant *ins);
     bool visitBox(MBox *box);
     bool visitUnbox(MUnbox *unbox);
     bool visitReturn(MReturn *ret);

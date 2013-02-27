@@ -50,6 +50,9 @@ var std_String_startsWith = String.prototype.startsWith;
 var std_String_substring = String.prototype.substring;
 var std_String_toLowerCase = String.prototype.toLowerCase;
 var std_String_toUpperCase = String.prototype.toUpperCase;
+var std_WeakMap_get = WeakMap.prototype.get;
+var std_WeakMap_has = WeakMap.prototype.has;
+var std_WeakMap_set = WeakMap.prototype.set;
 
 
 /********** List specification type **********/

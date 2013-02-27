@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=758258
 
 var Ci = Components.interfaces;
 
-if (navigator.platform.indexOf("Linux") == 0) {
+if (navigator.platform.startsWith("Linux")) {
   SimpleTest.expectAssertions(2);
 }
 

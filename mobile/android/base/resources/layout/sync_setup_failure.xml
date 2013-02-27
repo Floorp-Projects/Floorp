@@ -27,20 +27,21 @@
     </ScrollView>
 
   <LinearLayout
-    style="@style/SyncBottomContainer">
+    style="@style/SyncBottomContainer" >
+
     <LinearLayout
       style="@style/SyncBottom" >
-  
+
       <Button
         style="@style/SyncButton"
         android:onClick="tryAgainClickHandler"
         android:text="@string/sync_button_tryagain" />
-  
+
       <Button
         style="@style/SyncButton"
         android:onClick="manualClickHandler"
         android:text="@string/sync_button_manual" />
-  
+
        <Button
         style="@style/SyncButton"
         android:onClick="cancelClickHandler"

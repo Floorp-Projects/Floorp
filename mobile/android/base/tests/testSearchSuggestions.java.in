@@ -55,6 +55,7 @@ public class testSearchSuggestions extends BaseTest {
 
             final String query = TEST_QUERY.substring(0, i+1);
             boolean success = waitForTest(new BooleanTest() {
+                @Override
                 public boolean test() {
                     // get the first suggestion row
                     ViewGroup suggestionGroup = (ViewGroup) awesomeBarActivity.findViewById(suggestionLayoutId);
@@ -117,6 +118,7 @@ public class testSearchSuggestions extends BaseTest {
             final Object allPagesTab = getAllPagesTabMethod.invoke(awesomeBarTabs);
             suggestClientField.setAccessible(true);
             waitForTest(new BooleanTest() {
+                @Override
                 public boolean test() {
                     // wait for mSuggestClient to be set before we replace it
                     try {

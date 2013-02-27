@@ -48,11 +48,24 @@
         </getter>
       </property>
       
-      <method name="hide">
+      <method name="_onAfterSlideOut">
         <body>
           <![CDATA[
             this.removeAttribute("visible");
+            this.removeEventListener("transitionend", this._onAfterSlideOut);
             DialogUI.popPopup(this);
+          ]]>
+        </body>
+      </method>
+
+      <method name="hide">
+        <body>
+          <![CDATA[
+            if (!this.isVisible)
+              return;
+
+            this.addEventListener("transitionend", this._onAfterSlideOut);
+            this.classList.remove("flyoutpanel-slide-in");
           ]]>
         </body>
       </method>
@@ -60,7 +73,11 @@
       <method name="show">
         <body>
           <![CDATA[
+            if (this.isVisible)
+              return;
+
             this.setAttribute("visible", "true");
+            this.classList.add("flyoutpanel-slide-in");
             DialogUI.pushPopup(this, this);
           ]]>
         </body>

@@ -101,6 +101,7 @@ public class testThumbnails extends BaseTest {
             mColor = color;
         }
 
+        @Override
         public boolean test() {
             return getTopSiteThumbnailColor(mTitle) == mColor;
         }

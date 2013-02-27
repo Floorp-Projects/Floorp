@@ -156,12 +156,12 @@ def main(argv):
                       # Below, equivalents the old shell flags: ,m,am,amd,n,mn,amn,amdn,mdn
                       ['--no-baseline', '--no-ion', '--no-jm', '--no-ti'],
                       ['--no-baseline', '--no-ion', '--no-ti'],
-                      ['--no-baseline', '--no-ion', '--no-ti', '-a', '-d'],
+                      ['--no-baseline', '--no-ion', '--no-ti', '--always-mjit', '--debugjit'],
                       ['--no-baseline', '--no-ion', '--no-jm'],
                       ['--no-baseline', '--no-ion'],
-                      ['--no-baseline', '--no-ion', '-a'],
-                      ['--no-baseline', '--no-ion', '-a', '-d'],
-                      ['--no-baseline', '--no-ion', '-d']
+                      ['--no-baseline', '--no-ion', '--always-mjit'],
+                      ['--no-baseline', '--no-ion', '--always-mjit', '--debugjit'],
+                      ['--no-baseline', '--no-ion', '--debugjit']
                     ]
         for test in test_list:
             for variant in flags:

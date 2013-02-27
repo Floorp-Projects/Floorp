@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=396024
   <!-- test code goes here -->
 <script type="application/javascript">
 <![CDATA[
-if (navigator.platform.indexOf("Linux") == 0) {
+if (navigator.platform.startsWith("Linux")) {
   SimpleTest.expectAssertions(0, 1);
 }
 SimpleTest.waitForExplicitFinish();

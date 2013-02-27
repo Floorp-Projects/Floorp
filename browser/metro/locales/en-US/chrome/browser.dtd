@@ -7,7 +7,6 @@
 
 <!ENTITY back.label            "Back">
 <!ENTITY forward.label         "Forward">
-<!ENTITY toggleTabsOnly.label  "Always show tabs">
 <!ENTITY showTabs.label        "Show Tabs">
 <!ENTITY newtab.label          "New Tab">
 <!ENTITY closetab.label        "Close Tab">
