@@ -5,14 +5,19 @@
 #include "nsISupports.idl"
 
 interface nsISupportsArray;
+interface nsIDOMWindow;
 
 %{C++
 #define NS_MEDIAMANAGERSERVICE_CID {0xabc622ea, 0x9655, 0x4123, {0x80, 0xd9, 0x22, 0x62, 0x1b, 0xdd, 0x54, 0x65}}
 #define MEDIAMANAGERSERVICE_CONTRACTID "@mozilla.org/mediaManagerService;1"
 %}
 
-[scriptable, builtinclass, uuid(afe82ff1-2caa-4304-85da-0158a5dee56b)]
+[scriptable, builtinclass, uuid(2efff6ab-0e3e-4cc4-8f9b-4aaca59a1140)]
 interface nsIMediaManagerService : nsISupports
 {
+  /* return a array of inner windows that have active captures */
   readonly attribute nsISupportsArray activeMediaCaptureWindows;
+
+  /* Get the capture state for the given window and all descendant windows (iframes, etc) */
+  void mediaCaptureWindowState(in nsIDOMWindow aWindow, out boolean aVideo, out boolean aAudio);
 };
