@@ -2572,9 +2572,9 @@ nsBlockFrame::PullFrameFrom(nsLineBox*           aLine,
     ReparentFrame(frame, aFromContainer, this);
     mFrames.AppendFrame(nullptr, frame);
 
-    // The frame might have (or contain) floats that need to be
-    // brought over too.
-    ReparentFloats(frame, aFromContainer, true);
+    // The frame might have (or contain) floats that need to be brought
+    // over too. (pass 'false' since there are no siblings to check)
+    ReparentFloats(frame, aFromContainer, false);
   } else {
     MOZ_ASSERT(aLine == aFromLine.prev());
   }
