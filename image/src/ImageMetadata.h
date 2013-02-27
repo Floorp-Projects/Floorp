@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/StandardInteger.h"
+#include "mozilla/Util.h"
+#include "nsSize.h"
 
 namespace mozilla {
 namespace image {
@@ -40,6 +42,16 @@ public:
     mIsNonPremultiplied = nonPremult;
   }
 
+  void SetSize(int32_t width, int32_t height)
+  {
+    mSize.construct(nsIntSize(width, height));
+  }
+
+  bool HasSize() const { return !mSize.empty(); }
+
+  int32_t GetWidth() const { return mSize.ref().width; }
+  int32_t GetHeight() const { return mSize.ref().height; }
+
 private:
   // The hotspot found on cursors, or -1 if none was found.
   int32_t mHotspotX;
@@ -47,6 +59,8 @@ private:
 
   // The loop count for animated images, or -1 for infinite loop.
   int32_t mLoopCount;
+
+  Maybe<nsIntSize> mSize;
 
   bool mIsNonPremultiplied;
 };

@@ -131,6 +131,9 @@ public:
   void SetDecodeFlags(uint32_t aFlags) { mDecodeFlags = aFlags; }
   uint32_t GetDecodeFlags() { return mDecodeFlags; }
 
+  bool HasSize() const { return mImageMetadata.HasSize(); }
+  void SetSizeOnImage();
+
   // Use HistogramCount as an invalid Histogram ID
   virtual Telemetry::ID SpeedHistogram() { return Telemetry::HistogramCount; }
 
