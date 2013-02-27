@@ -164,8 +164,8 @@
 
     let rect = frame.getBoundingClientRect();
 
-    let targetPoint = { xPos: rect.left + (charDims.width / 2),
-                        yPos: rect.top + (charDims.height / 2) };
+    let targetPoint = { xPos: charDims.width / 2,
+                        yPos: charDims.height / 2 };
     setSingle(dwuFrame, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_WORDNOSPACE);
     checkSelection(frame.contentWindow.document, "SELECT_WORDNOSPACE", "ttestselection2");
     setSingle(dwuFrame, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_WORD);
