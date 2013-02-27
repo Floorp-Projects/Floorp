@@ -868,10 +868,15 @@ public:
   virtual Element* GetFullScreenElement() = 0;
 
   /**
-   * Asynchronously requests that the document make aElement the full-screen
-   * element, and move into full-screen mode. The current full-screen element
-   * (if any) is pushed onto the full-screen element stack, and it can be
-   * returned to full-screen status by calling RestorePreviousFullScreenState().
+   * Asynchronously requests that the document make aElement the fullscreen
+   * element, and move into fullscreen mode. The current fullscreen element
+   * (if any) is pushed onto the fullscreen element stack, and it can be
+   * returned to fullscreen status by calling RestorePreviousFullScreenState().
+   *
+   * Note that requesting fullscreen in a document also makes the element which
+   * contains this document in this document's parent document fullscreen. i.e.
+   * the <iframe> or <browser> that contains this document is also mode
+   * fullscreen. This happens recursively in all ancestor documents.
    */
   virtual void AsyncRequestFullScreen(Element* aElement) = 0;
 
@@ -936,12 +941,25 @@ public:
   virtual void SetApprovedForFullscreen(bool aIsApproved) = 0;
 
   /**
-   * Exits documents out of DOM fullscreen mode. If aDocument is non null,
-   * only its ancestors and descendants exit fullscreen, i.e. if there are
-   * multiple windows/doctrees in fullscreen mode, only the one containing
-   * aDocument exits fullscreen mode. If aDocument is null, all windows
-   * and documents exit fullscreen. If aRunAsync is true, fullscreen is
-   * executed asynchronously.
+   * Exits documents out of DOM fullscreen mode.
+   *
+   * If aDocument is null, all fullscreen documents in all browser windows
+   * exit fullscreen.
+   *
+   * If aDocument is non null, all documents from aDocument's fullscreen root
+   * to the fullscreen leaf exit fullscreen. 
+   *
+   * Note that the fullscreen leaf is the bottom-most document which is
+   * fullscreen, it may have non-fullscreen child documents. The fullscreen
+   * root is usually the chrome document, but if fullscreen is content-only,
+   * (see the comment in nsContentUtils.h on IsFullscreenApiContentOnly())
+   * the fullscreen root will be a direct child of the chrome document, and
+   * there may be other branches of the same doctree that are fullscreen.
+   *
+   * If aRunAsync is true, fullscreen is executed asynchronously.
+   *
+   * Note if aDocument is not fullscreen this function has no effect, even if
+   * aDocument has fullscreen ancestors.
    */
   static void ExitFullscreen(nsIDocument* aDocument, bool aRunAsync);
 

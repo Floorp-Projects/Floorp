@@ -1152,21 +1152,22 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, int32_t aFlags,
     isElementInActiveWindow = (mActiveWindow && newRootWindow == mActiveWindow);
   }
 
-  // Exit full-screen if we're focusing a windowed plugin on a non-MacOSX
+  // Exit fullscreen if we're focusing a windowed plugin on a non-MacOSX
   // system. We don't control event dispatch to windowed plugins on non-MacOSX,
-  // so we can't display the "Press ESC to leave full-screen mode" warning on
-  // key input if a windowed plugin is focused, so just exit full-screen
+  // so we can't display the "Press ESC to leave fullscreen mode" warning on
+  // key input if a windowed plugin is focused, so just exit fullscreen
   // to guard against phishing.
 #ifndef XP_MACOSX
+  nsIDocument* fullscreenAncestor;
   if (contentToFocus &&
-      nsContentUtils::GetRootDocument(contentToFocus->OwnerDoc())->IsFullScreenDoc() &&
+      (fullscreenAncestor = nsContentUtils::GetFullscreenAncestor(contentToFocus->OwnerDoc())) &&
       nsContentUtils::HasPluginWithUncontrolledEventDispatch(contentToFocus)) {
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                     "DOM",
                                     contentToFocus->OwnerDoc(),
                                     nsContentUtils::eDOM_PROPERTIES,
                                     "FocusedWindowedPluginWhileFullScreen");
-    nsIDocument::ExitFullscreen(contentToFocus->OwnerDoc(), /* async */ true);
+    nsIDocument::ExitFullscreen(fullscreenAncestor, /* async */ true);
   }
 #endif
 

@@ -1811,6 +1811,32 @@ public:
   static bool IsRequestFullScreenAllowed();
 
   /**
+   * Returns true if the DOM fullscreen API is restricted to content only.
+   * This mirrors the pref "full-screen-api.content-only". If this is true,
+   * fullscreen requests in chrome are denied, and fullscreen requests in
+   * content stop percolating upwards before they reach chrome documents.
+   * That is, when an element in content requests fullscreen, only its
+   * containing frames that are in content are also made fullscreen, not
+   * the containing frame in the chrome document.
+   *
+   * Note if the fullscreen API is running in content only mode then multiple
+   * branches of a doctree can be fullscreen at the same time, but no fullscreen
+   * document will have a common ancestor with another fullscreen document
+   * that is also fullscreen (since the only common ancestor they can have
+   * is the chrome document, and that can't be fullscreen). i.e. multiple
+   * child documents of the chrome document can be fullscreen, but the chrome
+   * document won't be fullscreen.
+   *
+   * Making the fullscreen API content only is useful on platforms where we
+   * still want chrome to be visible or accessible while content is
+   * fullscreen, like on Windows 8 in Metro mode.
+   *
+   * Note that if the fullscreen API is content only, chrome can still go
+   * fullscreen by setting the "fullScreen" attribute on its XUL window.
+   */
+  static bool IsFullscreenApiContentOnly();
+
+  /**
    * Returns true if the idle observers API is enabled.
    */
   static bool IsIdleObserverAPIEnabled() { return sIsIdleObserverAPIEnabled; }
@@ -1832,10 +1858,12 @@ public:
   static bool HasPluginWithUncontrolledEventDispatch(nsIContent* aContent);
 
   /**
-   * Returns the root document in a document hierarchy. Normally this will
-   * be the chrome document.
+   * Returns the document that is the closest ancestor to aDoc that is
+   * fullscreen. If aDoc is fullscreen this returns aDoc. If aDoc is not
+   * fullscreen and none of aDoc's ancestors are fullscreen this returns
+   * nullptr.
    */
-  static nsIDocument* GetRootDocument(nsIDocument* aDoc);
+  static nsIDocument* GetFullscreenAncestor(nsIDocument* aDoc);
 
   /**
    * Returns the time limit on handling user input before
@@ -2161,6 +2189,7 @@ private:
   static bool sAllowXULXBL_for_file;
   static bool sIsFullScreenApiEnabled;
   static bool sTrustedFullScreenOnly;
+  static bool sFullscreenApiIsContentOnly;
   static uint32_t sHandlingInputTimeout;
   static bool sIsIdleObserverAPIEnabled;
 
