@@ -503,7 +503,7 @@ protected:
     * Remove a float from our float list and also the float cache
     * for the line its placeholder is on.
     */
-  line_iterator RemoveFloat(nsIFrame* aFloat);
+  void RemoveFloat(nsIFrame* aFloat);
 
   void CollectFloats(nsIFrame* aFrame, nsFrameList& aList,
                      bool aFromOverflow, bool aCollectFromSiblings);
