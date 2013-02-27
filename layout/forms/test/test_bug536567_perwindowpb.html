@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=536567
 <pre id="test">
 <script type="application/javascript">
 
-if (navigator.platform.indexOf("Mac") != 0) {
+if (!navigator.platform.startsWith("Mac")) {
   SimpleTest.expectAssertions(0, 4);
 }
 

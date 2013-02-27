@@ -11,7 +11,7 @@
 <script>
 <![CDATA[
 
-if (navigator.platform.indexOf("Win") == 0) {
+if (navigator.platform.startsWith("Win")) {
   SimpleTest.expectAssertions(6);
 } else {
   SimpleTest.expectAssertions(6, 8);

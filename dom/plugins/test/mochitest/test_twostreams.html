@@ -10,7 +10,7 @@
   <p id="display"></p>
 
   <script type="text/javascript">
-  if (navigator.platform.indexOf("Win") == 0) {
+  if (navigator.platform.startsWith("Win")) {
     SimpleTest.expectAssertions(1, 2);
   } else {
     SimpleTest.expectAssertions(1);

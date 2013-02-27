@@ -38,7 +38,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=792324
 
 <script class="testbody" type="application/javascript;version=1.7"><![CDATA[
 
-if (navigator.platform.indexOf("Mac") == 0) {
+if (navigator.platform.startsWith("Mac")) {
   SimpleTest.expectAssertions(0, 3);
 }
 
