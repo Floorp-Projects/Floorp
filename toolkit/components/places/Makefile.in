@@ -32,7 +32,6 @@ XPIDLSRCS += \
   nsIAnnotationService.idl \
   nsIBrowserHistory.idl \
   nsIFaviconService.idl \
-  nsILivemarkService.idl \
   nsINavBookmarksService.idl \
   nsITaggingService.idl  \
   nsPIPlacesDatabase.idl \
