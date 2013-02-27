@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=393269
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-if (navigator.platform.indexOf("Win") == 0) {
+if (navigator.platform.startsWith("Win")) {
   SimpleTest.expectAssertions(1, 2);
 } else {
   SimpleTest.expectAssertions(2);
