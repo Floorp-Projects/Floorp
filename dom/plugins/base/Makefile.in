@@ -73,9 +73,7 @@ else
 # android_npapi.h extends the NPNVariable and NPPVariable enums
 # using #defines, which results in Wswitch warnings in gcc-4.6.
 # Therefore, enable FAIL_ON_WARNINGS only on non-Android platforms.
-ifndef _MSC_VER
 FAIL_ON_WARNINGS := 1
-endif # !_MSC_VER
 endif
 
 ifeq ($(OS_ARCH),WINNT)

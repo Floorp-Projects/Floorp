@@ -2659,8 +2659,6 @@ PluginInstanceChild::NPN_SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect 
 #ifdef XP_WIN
         case NPDrawingModelAsyncWindowsDXGISurface:
             {
-                AsyncBitmapData *bitmapData;
-              
                 CrossProcessMutexAutoLock autoLock(*mRemoteImageDataMutex);
                 data->mType = RemoteImageData::DXGI_TEXTURE_HANDLE;
                 data->mSize = gfxIntSize(surface->size.width, surface->size.height);
