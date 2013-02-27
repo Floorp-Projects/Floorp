@@ -15,13 +15,10 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.OnAccountsUpdateListener;
 import android.content.ContentResolver;
-import android.content.Intent;
 import android.database.ContentObserver;
 import android.graphics.Color;
 import android.net.Uri;
 import android.util.Log;
-import android.widget.Toast;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;

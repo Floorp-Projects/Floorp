@@ -31,7 +31,6 @@ import android.view.WindowManager;
 import android.widget.CalendarView;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.FrameLayout.LayoutParams;
 import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 
