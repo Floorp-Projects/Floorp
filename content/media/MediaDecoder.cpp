@@ -344,6 +344,7 @@ MediaDecoder::MediaDecoder() :
   mFrameBufferLength(0),
   mPinnedForSeek(false),
   mShuttingDown(false),
+  mPausedForPlaybackRateNull(false),
   mAudioChannelType(AUDIO_CHANNEL_NORMAL)
 {
   MOZ_COUNT_CTOR(MediaDecoder);
