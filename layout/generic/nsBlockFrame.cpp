@@ -1792,11 +1792,10 @@ static bool LineHasClear(nsLineBox* aLine) {
  * removed from the list. They end up appended to our mFloats list.
  */
 void
-nsBlockFrame::ReparentFloats(nsIFrame* aFirstFrame,
-                             nsBlockFrame* aOldParent, bool aFromOverflow,
+nsBlockFrame::ReparentFloats(nsIFrame* aFirstFrame, nsBlockFrame* aOldParent,
                              bool aReparentSiblings) {
   nsFrameList list;
-  aOldParent->CollectFloats(aFirstFrame, list, aFromOverflow, aReparentSiblings);
+  aOldParent->CollectFloats(aFirstFrame, list, aReparentSiblings);
   if (list.NotEmpty()) {
     for (nsIFrame* f = list.FirstChild(); f; f = f->GetNextSibling()) {
       ReparentFrame(f, aOldParent, this);
@@ -2247,7 +2246,6 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       nsBlockFrame* nextInFlow = aState.mNextInFlow;
       nsLineBox* pulledLine;
       nsFrameList pulledFrames;
-      bool isOverflowLine = false;
       if (!nextInFlow->mLines.empty()) {
         RemoveFirstLine(nextInFlow->mLines, nextInFlow->mFrames,
                         &pulledLine, &pulledFrames);
@@ -2265,7 +2263,6 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
         if (last) {
           nextInFlow->DestroyOverflowLines();
         }
-        isOverflowLine = true;
       }
 
       if (pulledFrames.IsEmpty()) {
@@ -2295,7 +2292,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       aState.mPrevChild = mFrames.LastChild();
 
       // Reparent floats whose placeholders are in the line.
-      ReparentFloats(pulledLine->mFirstChild, nextInFlow, isOverflowLine, true);
+      ReparentFloats(pulledLine->mFirstChild, nextInFlow, true);
 
       DumpLine(aState, pulledLine, deltaY, 0);
 #ifdef DEBUG
@@ -2595,7 +2592,7 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState&  aState,
 
     // The frame might have (or contain) floats that need to be
     // brought over too.
-    ReparentFloats(frame, aFromContainer, aFromOverflowLine, true);
+    ReparentFloats(frame, aFromContainer, true);
   }
   // when aFromContainer is 'this', then aLine->LastChild()'s next sibling
   // is already set correctly.
@@ -4317,7 +4314,7 @@ nsBlockFrame::PushLines(nsBlockReflowState&  aState,
   if (overBegin != end_lines()) {
     // Remove floats in the lines from mFloats
     nsFrameList floats;
-    CollectFloats(overBegin->mFirstChild, floats, false, true);
+    CollectFloats(overBegin->mFirstChild, floats, true);
 
     if (floats.NotEmpty()) {
       // Push the floats onto the front of the overflow out-of-flows list
@@ -6899,7 +6896,7 @@ nsBlockFrame::ReflowBullet(nsIFrame* aBulletFrame,
 // are ignored (they are not added to aList).
 void
 nsBlockFrame::CollectFloats(nsIFrame* aFrame, nsFrameList& aList,
-                            bool aFromOverflow, bool aCollectSiblings)
+                            bool aCollectSiblings)
 {
   while (aFrame) {
     // Don't descend into float containing blocks.
@@ -6908,19 +6905,28 @@ nsBlockFrame::CollectFloats(nsIFrame* aFrame, nsFrameList& aList,
         aFrame->GetType() == nsGkAtoms::placeholderFrame ?
           nsLayoutUtils::GetFloatFromPlaceholder(aFrame) : nullptr;
       if (outOfFlowFrame && outOfFlowFrame->GetParent() == this) {
-        bool removed = false;
-        if (outOfFlowFrame->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT) {
+        // Floats live in mFloats, or in the PushedFloat or OverflowOutOfFlows
+        // frame list properties.
+#ifdef DEBUG
+        if (!mFloats.ContainsFrame(outOfFlowFrame)) {
           nsFrameList* list = GetPushedFloats();
-          removed = list && list->RemoveFrameIfPresent(outOfFlowFrame);
-        }
-        if (!removed) {
-          if (aFromOverflow) {
-            nsAutoOOFFrameList oofs(this);
-            oofs.mList.RemoveFrame(outOfFlowFrame);
-          } else {
-            mFloats.RemoveFrame(outOfFlowFrame);
+          if (!list || !list->ContainsFrame(outOfFlowFrame)) {
+            list = GetOverflowOutOfFlows();
+            MOZ_ASSERT(list && list->ContainsFrame(outOfFlowFrame),
+                       "the float is not our child");
           }
         }
+#endif
+        bool removed = mFloats.StartRemoveFrame(outOfFlowFrame);
+        if (!removed) {
+          nsFrameList* list = GetPushedFloats();
+          removed = list && list->ContinueRemoveFrame(outOfFlowFrame);
+          if (!removed) {
+            nsAutoOOFFrameList oofs(this);
+            removed = oofs.mList.ContinueRemoveFrame(outOfFlowFrame);
+          }
+        }
+        MOZ_ASSERT(removed, "misplaced float child");
         aList.AppendFrame(nullptr, outOfFlowFrame);
         // FIXME: By not pulling floats whose parent is one of our
         // later siblings, are we risking the pushed floats getting
@@ -6928,13 +6934,8 @@ nsBlockFrame::CollectFloats(nsIFrame* aFrame, nsFrameList& aList,
         // XXXmats nsInlineFrame's lazy reparenting depends on NOT doing that.
       }
 
-      CollectFloats(aFrame->GetFirstPrincipalChild(), 
-                    aList, aFromOverflow, true);
-      // Note: Even though we're calling CollectFloats on aFrame's overflow
-      // list, we'll pass down aFromOverflow unchanged because we're still
-      // traversing the regular-children subtree of the 'this' frame.
-      CollectFloats(aFrame->GetFirstChild(kOverflowList), 
-                    aList, aFromOverflow, true);
+      CollectFloats(aFrame->GetFirstPrincipalChild(), aList, true);
+      CollectFloats(aFrame->GetFirstChild(kOverflowList), aList, true);
     }
     if (!aCollectSiblings)
       break;

@@ -457,8 +457,7 @@ public:
   };
   nsresult DoRemoveFrame(nsIFrame* aDeletedFrame, uint32_t aFlags);
 
-  void ReparentFloats(nsIFrame* aFirstFrame,
-                      nsBlockFrame* aOldParent, bool aFromOverflow,
+  void ReparentFloats(nsIFrame* aFirstFrame, nsBlockFrame* aOldParent,
                       bool aReparentSiblings);
 
   virtual bool UpdateOverflow();
@@ -506,7 +505,7 @@ protected:
   void RemoveFloat(nsIFrame* aFloat);
 
   void CollectFloats(nsIFrame* aFrame, nsFrameList& aList,
-                     bool aFromOverflow, bool aCollectFromSiblings);
+                     bool aCollectFromSiblings);
   // Remove a float, abs, rel positioned frame from the appropriate block's list
   static void DoRemoveOutOfFlowFrame(nsIFrame* aFrame);
 
