@@ -536,16 +536,22 @@ TelemetryPing.prototype = {
     }
   },
 
-  getSessionPayload: function getSessionPayload(reason) {
-    // use a deterministic url for testing.
+  /**
+   * Get the current session's payload using the provided
+   * simpleMeasurements and info, which are typically obtained by a call
+   * to |this.getSimpleMeasurements| and |this.getMetadata|,
+   * respectively.
+   */
+  assemblePayloadWithMeasurements: function assemblePayloadWithMeasurements(simpleMeasurements, info) {
     let payloadObj = {
       ver: PAYLOAD_VERSION,
-      simpleMeasurements: this.getSimpleMeasurements(reason == "saved-session"),
+      simpleMeasurements: simpleMeasurements,
       histograms: this.getHistograms(Telemetry.histogramSnapshots),
       slowSQL: Telemetry.slowSQL,
       chromeHangs: Telemetry.chromeHangs,
       lateWrites: Telemetry.lateWrites,
-      addonHistograms: this.getAddonHistograms()
+      addonHistograms: this.getAddonHistograms(),
+      info: info
     };
 
     if (Object.keys(this._slowSQLStartup.mainThread).length
@@ -553,16 +559,22 @@ TelemetryPing.prototype = {
       payloadObj.slowSQLStartup = this._slowSQLStartup;
     }
     
-    payloadObj.info = this.getMetadata(reason);
-
     return payloadObj;
   },
 
-  getSessionPayloadAndSlug: function getSessionPayloadAndSlug(reason) {
-    let isTestPing = (reason == "test-ping");
-    let payloadObj = this.getSessionPayload(reason);
+  getSessionPayload: function getSessionPayload(reason) {
+    let measurements = this.getSimpleMeasurements(reason == "saved-session");
+    let info = this.getMetadata(reason);
+    return this.assemblePayloadWithMeasurements(measurements, info);
+  },
+
+  assemblePing: function assemblePing(payloadObj, reason) {
     let slug = this._uuid;
     return { slug: slug, reason: reason, payload: JSON.stringify(payloadObj) };
+  },
+
+  getSessionPayloadAndSlug: function getSessionPayloadAndSlug(reason) {
+    return this.assemblePing(this.getSessionPayload(reason), reason);
   },
 
   getPayloads: function getPayloads(reason) {
