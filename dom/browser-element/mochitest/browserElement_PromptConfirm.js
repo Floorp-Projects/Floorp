@@ -15,7 +15,7 @@ function runTest() {
   browserElementTestHelpers.addPermission();
 
   var iframe = document.createElement('iframe');
-  iframe.mozbrowser = true;
+  SpecialPowers.wrap(iframe).mozbrowser = true;
   document.body.appendChild(iframe);
 
   var prompts = [

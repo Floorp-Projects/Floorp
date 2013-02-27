@@ -41,7 +41,7 @@ js_template = textwrap.dedent("""\
       browserElementTestHelpers.addPermission();
 
       var iframe = document.createElement('iframe');
-      iframe.mozbrowser = true;
+      SpecialPowers.wrap(iframe).mozbrowser = true;
 
       // FILL IN TEST
 

@@ -62,7 +62,7 @@ function runTest() {
   browserElementTestHelpers.addPermission();
 
   iframe = document.createElement('iframe');
-  iframe.mozbrowser = true;
+  SpecialPowers.wrap(iframe).mozbrowser = true;
 
   runTestQueue([testFirstLoad, testReload, testChangeLocation]);
 }
