@@ -213,6 +213,12 @@ ICStub::trace(JSTracer *trc)
       case ICStub::GetName_Scope4:
         static_cast<ICGetName_Scope<4>*>(this)->traceScopes(trc);
         break;
+      case ICStub::GetName_Scope5:
+        static_cast<ICGetName_Scope<5>*>(this)->traceScopes(trc);
+        break;
+      case ICStub::GetName_Scope6:
+        static_cast<ICGetName_Scope<6>*>(this)->traceScopes(trc);
+        break;
       case ICStub::GetIntrinsic_Constant: {
         ICGetIntrinsic_Constant *constantStub = toGetIntrinsic_Constant();
         gc::MarkValue(trc, &constantStub->value(), "baseline-getintrinsic-constant-value");
@@ -3508,6 +3514,16 @@ TryAttachScopeNameStub(JSContext *cx, HandleScript script, ICGetName_Fallback *s
       }
       case 5: {
         ICGetName_Scope<4>::Compiler compiler(cx, monitorStub, &shapes, isFixedSlot, offset);
+        newStub = compiler.getStub(compiler.getStubSpace(script));
+        break;
+      }
+      case 6: {
+        ICGetName_Scope<5>::Compiler compiler(cx, monitorStub, &shapes, isFixedSlot, offset);
+        newStub = compiler.getStub(compiler.getStubSpace(script));
+        break;
+      }
+      case 7: {
+        ICGetName_Scope<6>::Compiler compiler(cx, monitorStub, &shapes, isFixedSlot, offset);
         newStub = compiler.getStub(compiler.getStubSpace(script));
         break;
       }
