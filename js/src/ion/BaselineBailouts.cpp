@@ -591,11 +591,22 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
     size_t endOfBaselineJSFrameStack = builder.framePushed();
 
     // Get the PC
-    uint32_t pcOff = iter.pcOffset();
-    jsbytecode *pc = script->code + pcOff;
+    jsbytecode *pc = script->code + iter.pcOffset();
+    bool resumeAfter = iter.resumeAfter();
+
+    // If we are resuming at a LOOPENTRY op, resume at the next op to avoid
+    // a bailout -> enter Ion -> bailout loop with --ion-eager. See also
+    // ThunkToInterpreter.
+    if (!resumeAfter) {
+        while (JSOp(*pc) == JSOP_GOTO)
+            pc += GET_JUMP_OFFSET(pc);
+        if (JSOp(*pc) == JSOP_LOOPENTRY)
+            pc = GetNextPc(pc);
+    }
+
+    uint32_t pcOff = pc - script->code;
     JSOp op = JSOp(*pc);
     bool isCall = js_CodeSpec[op].format & JOF_INVOKE;
-    bool resumeAfter = iter.resumeAfter();
     BaselineScript *baselineScript = script->baselineScript();
 
     // For fun.apply({}, arguments) the reconstructStackDepth will be atleast 4,
