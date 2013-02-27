@@ -30,7 +30,6 @@ import java.util.zip.ZipFile;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 public final class Distribution {
     private static final String LOGTAG = "GeckoDistribution";

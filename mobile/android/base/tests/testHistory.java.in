@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import android.widget.TabHost;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
 import android.util.Log;
 
 public class testHistory extends PixelTest {

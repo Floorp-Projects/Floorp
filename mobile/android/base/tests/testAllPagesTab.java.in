@@ -9,7 +9,6 @@ import android.widget.LinearLayout;
 import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.ImageView;
-import android.widget.TabHost;
 import android.widget.TabWidget;
 import android.text.TextUtils;
 
