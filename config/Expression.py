@@ -218,7 +218,8 @@ class Expression:
       self.offset = expression.offset
       self.content = expression.content[:3]
     def __str__(self):
-      return 'Unexpected content at offset %i, "%s"'%(self.offset, self.content)
+      return 'Unexpected content at offset {0}, "{1}"'.format(self.offset, 
+                                                              self.content)
 
 class Context(dict):
   """

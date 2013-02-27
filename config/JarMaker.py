@@ -7,7 +7,6 @@ processing jar.mn files.
 
 See the documentation for jar.mn on MDC for further details on the format.
 '''
-
 import sys
 import os
 import os.path
@@ -152,11 +151,12 @@ class JarMaker(object):
                                   '..', 'chrome.manifest')
 
     if self.useJarfileManifest:
-      self.updateManifest(jarPath + '.manifest', chromebasepath % '',
+      self.updateManifest(jarPath + '.manifest', chromebasepath.format(''),
                           register)
-      addEntriesToListFile(chromeManifest, ['manifest chrome/%s.manifest' % (os.path.basename(jarPath),)])
+      addEntriesToListFile(chromeManifest, ['manifest chrome/{0}.manifest'
+                                            .format(os.path.basename(jarPath))])
     if self.useChromeManifest:
-      self.updateManifest(chromeManifest, chromebasepath % 'chrome/',
+      self.updateManifest(chromeManifest, chromebasepath.format('chrome/'),
                           register)
 
     # If requested, add a root chrome manifest entry (assumed to be in the parent directory
@@ -258,9 +258,9 @@ class JarMaker(object):
     '''
 
     # chromebasepath is used for chrome registration manifests
-    # %s is getting replaced with chrome/ for chrome.manifest, and with
+    # {0} is getting replaced with chrome/ for chrome.manifest, and with
     # an empty string for jarfile.manifest
-    chromebasepath = '%s' + os.path.basename(jarfile)
+    chromebasepath = '{0}' + os.path.basename(jarfile)
     if self.outputFormat == 'jar':
       chromebasepath = 'jar:' + chromebasepath + '.jar!'
     chromebasepath += '/'
@@ -272,7 +272,7 @@ class JarMaker(object):
       jarfilepath = jarfile + '.jar'
       try:
         os.makedirs(os.path.dirname(jarfilepath))
-      except OSError, error:
+      except OSError as error:
         if error.errno != errno.EEXIST:
           raise
       jf = ZipFile(jarfilepath, 'a', lock = True)
@@ -345,7 +345,8 @@ class JarMaker(object):
       if realsrc is None:
         if jf is not None:
           jf.close()
-        raise RuntimeError('File "%s" not found in %s' % (src, ', '.join(src_base)))
+        raise RuntimeError('File "{0}" not found in {1}'
+                           .format(src, ', '.join(src_base)))
       if m.group('optPreprocess'):
         outf = outHelper.getOutput(out)
         inf = open(realsrc)
@@ -401,7 +402,7 @@ class JarMaker(object):
       # remove previous link or file
       try:
         os.remove(out)
-      except OSError, e:
+      except OSError as e:
         if e.errno != errno.ENOENT:
           raise
       return open(out, 'wb')
@@ -411,7 +412,7 @@ class JarMaker(object):
       if not os.path.isdir(outdir):
         try:
           os.makedirs(outdir)
-        except OSError, error:
+        except OSError as error:
           if error.errno != errno.EEXIST:
             raise
       return out
@@ -425,7 +426,7 @@ class JarMaker(object):
       # remove previous link or file
       try:
         os.remove(out)
-      except OSError, e:
+      except OSError as e:
         if e.errno != errno.ENOENT:
           raise
       if sys.platform != "win32":
