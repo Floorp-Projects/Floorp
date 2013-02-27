@@ -2514,8 +2514,7 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
 {
   // First check our remaining lines.
   if (end_lines() != aLine.next()) {
-    return PullFrameFrom(aState, aLine, this, false, mFrames, mLines,
-                         aLine.next());
+    return PullFrameFrom(aState, aLine, this, aLine.next());
   }
 
   NS_ASSERTION(!GetOverflowLines(),
@@ -2524,20 +2523,13 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
   // Try each next-in-flow.
   nsBlockFrame* nextInFlow = aState.mNextInFlow;
   while (nextInFlow) {
-    // first normal lines, then overflow lines
+    if (nextInFlow->mLines.empty()) {
+      nextInFlow->DrainSelfOverflowList();
+    }
     if (!nextInFlow->mLines.empty()) {
-      return PullFrameFrom(aState, aLine, nextInFlow, false,
-                           nextInFlow->mFrames, nextInFlow->mLines,
+      return PullFrameFrom(aState, aLine, nextInFlow,
                            nextInFlow->mLines.begin());
     }
-
-    FrameLines* overflowLines = nextInFlow->GetOverflowLines();
-    if (overflowLines) {
-      return PullFrameFrom(aState, aLine, nextInFlow, true,
-                           overflowLines->mFrames, overflowLines->mLines,
-                           overflowLines->mLines.begin());
-    }
-
     nextInFlow = static_cast<nsBlockFrame*>(nextInFlow->GetNextInFlow());
     aState.mNextInFlow = nextInFlow;
   }
@@ -2549,9 +2541,6 @@ nsIFrame*
 nsBlockFrame::PullFrameFrom(nsBlockReflowState&  aState,
                             nsLineBox*           aLine,
                             nsBlockFrame*        aFromContainer,
-                            bool                 aFromOverflowLine,
-                            nsFrameList&         aFromFrameList,
-                            nsLineList&          aFromLineList,
                             nsLineList::iterator aFromLine)
 {
   nsLineBox* fromLine = aFromLine;
@@ -2577,18 +2566,12 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState&  aState,
       "mPrevChild should be the LastChild of the line we are adding to");
     // The frame is being pulled from a next-in-flow; therefore we
     // need to add it to our sibling list.
-    if (MOZ_LIKELY(!aFromOverflowLine)) {
-      NS_ASSERTION(&aFromFrameList == &aFromContainer->mFrames,
-                   "must be normal flow if not overflow line");
-      NS_ASSERTION(aFromLine == aFromContainer->mLines.begin(),
-                   "should only pull from first line");
-    }
-    aFromFrameList.RemoveFrame(frame);
+    MOZ_ASSERT(aFromLine == aFromContainer->mLines.begin(),
+               "should only pull from first line");
+    aFromContainer->mFrames.RemoveFrame(frame);
 
     // When pushing and pulling frames we need to check for whether any
-    // views need to be reparented
-    NS_ASSERTION(frame->GetParent() == aFromContainer, "unexpected parent frame");
-
+    // views need to be reparented.
     ReparentFrame(frame, aFromContainer, this);
     mFrames.InsertFrame(nullptr, aState.mPrevChild, frame);
 
@@ -2608,17 +2591,12 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState&  aState,
   } else {
     // Free up the fromLine now that it's empty.
     // Its bounds might need to be redrawn, though.
-    if (aFromLine.next() != aFromLineList.end()) {
+    if (aFromLine.next() != aFromContainer->mLines.end()) {
       aFromLine.next()->MarkPreviousMarginDirty();
     }
-    aFromLineList.erase(aFromLine);
+    aFromContainer->mLines.erase(aFromLine);
     // aFromLine is now invalid
     aFromContainer->FreeLineBox(fromLine);
-
-    // Destroy the property if we pulled the last frame.
-    if (aFromOverflowLine && aFromFrameList.IsEmpty()) {
-      aFromContainer->DestroyOverflowLines();
-    }
   }
 
 #ifdef DEBUG
