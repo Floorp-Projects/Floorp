@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.mozilla.gecko.background.common.log.Logger;
+
 /**
  * Fetches the timestamp information in <code>info/collections</code> on the
  * Sync server. Provides access to those timestamps, along with logic to check

@@ -4,7 +4,7 @@
 
 package org.mozilla.gecko.sync.net;
 
-import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.background.common.log.Logger;
 
 /**
  * Every <code>REAP_INTERVAL</code> milliseconds, wake up

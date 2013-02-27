@@ -7,6 +7,7 @@ package org.mozilla.gecko.sync;
 import java.io.IOException;
 
 import org.json.simple.parser.ParseException;
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.SyncConfiguration.ConfigurationBranch;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
 
