@@ -29,5 +29,5 @@ load 256-height.ico
 HTTP load delayedframe.sjs
 
 load 681190.html
-load 694165-1.xhtml
+skip-if(Android&&smallScreen) load 694165-1.xhtml # nexus-s Android 2.3.6
 load 732319-1.html
