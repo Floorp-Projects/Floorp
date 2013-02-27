@@ -81,9 +81,17 @@ NSSDialogs.prototype = {
   },
 
   getPKCS12FilePassword: function(aCtx, aPassword) {
-    // this dialog is never shown in Fennec; in Desktop it is shown while backing up a personal
-    // certificate to a file via Preferences->Advanced->Encryption->View Certificates->Your Certificates
-    throw "Unimplemented";
+    let response = this.showPrompt(this.getString("pkcs12.getpassword.title"),
+                                   this.getString("pkcs12.getpassword.message"),
+                                   [ this.getString("nssdialogs.ok.label"),
+                                     this.getString("nssdialogs.cancel.label")
+                                   ],
+                                   [ { type: "password", id: "pw" } ]);
+    if (response.button != 0) {
+      return false;
+    }
+    aPassword.value = response.pw;
+    return true;
   },
 
   certInfoSection: function(aHeading, aDataPairs, aTrailingNewline = true) {
