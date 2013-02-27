@@ -119,9 +119,9 @@ var tests = [
     expected: "ting-expected.wav",
     numberOfChannels: 2,
     duration: 0.6936,
-    length: 30592,
-    fuzzTolerance: 6,
-    fuzzToleranceMobile: 3174
+    length: 33297,
+    fuzzTolerance: 12,
+    fuzzToleranceMobile: 15826
   },
   // An ogg file which needs to be resampled
   {
@@ -130,9 +130,9 @@ var tests = [
     expected: "small-shot-expected.wav",
     numberOfChannels: 2,
     duration: 0.2760,
-    length: 12175,
-    fuzzTolerance: 64,
-    fuzzToleranceMobile: 13670
+    length: 13252,
+    fuzzTolerance: 72,
+    fuzzToleranceMobile: 14836
   },
   // A wave file
   //{ url: "24bit-44khz.wav", valid: true, expected: "24bit-44khz-expected.wav" },
@@ -147,9 +147,9 @@ var tests = [
     expected: "audio-expected.wav",
     numberOfChannels: 2,
     duration: 1.0811,
-    length: 47680,
-    fuzzTolerance: 106,
-    fuzzToleranceMobile: 3482
+    length: 51896,
+    fuzzTolerance: 132,
+    fuzzToleranceMobile: 56580
   },
   // Make sure decoding a wave file results in the same buffer
   {
@@ -158,7 +158,7 @@ var tests = [
     expected: "audio-expected.wav",
     numberOfChannels: 2,
     duration: 1.0811,
-    length: 47680,
+    length: 51896,
     fuzzTolerance: 0,
     fuzzToleranceMobile: 0
   }
@@ -254,7 +254,7 @@ expectTypeError(function() {
   cx.decodeAudioData(new Uint8Array(100), callbackShouldNeverRun, callbackShouldNeverRun);
 });
 
-if (cx.sampleRate == 44100) {
+if (cx.sampleRate == 48000) {
   // Now, let's get real!
   runNextTest();
 } else {
