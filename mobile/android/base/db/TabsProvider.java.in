@@ -294,6 +294,7 @@ public class TabsProvider extends ContentProvider {
         debug("Creating TabsProvider");
 
         GeckoBackgroundThread.post(new Runnable() {
+            @Override
             public void run() {
                 // Kick this off early. It is synchronized so that other callers will wait
                 try {

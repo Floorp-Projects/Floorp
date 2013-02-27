@@ -92,7 +92,6 @@ MOCHITEST_FILES = \
   workersDisabled_worker.js \
   test_xhr_implicit_cancel.html \
   xhr_implicit_cancel_worker.js \
-  test_xhr_timeout.html \
   test_xhr_parameters.html \
   test_xhr_parameters.js \
   test_xhr_system.html \
@@ -111,6 +110,9 @@ MOCHITEST_FILES = \
   test_url.html \
   url_worker.js \
   $(NULL)
+
+# Disabled for frequent failures (bug 841505, bug 842344, etc)
+#  test_xhr_timeout.html \
 
 _SUBDIRMOCHITEST_FILES = \
   relativeLoad_sub_worker.js \

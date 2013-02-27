@@ -33,7 +33,6 @@ public class AwesomeBarTabs extends TabHost
     private View.OnTouchListener mListTouchListener;
     private boolean mSearching = false;
     private String mTarget;
-    private Background mBackground;
     private ViewPager mViewPager;
     private AwesomePagerAdapter mPagerAdapter;
     
@@ -131,14 +130,13 @@ public class AwesomeBarTabs extends TabHost
         setup();
 
         mListTouchListener = new View.OnTouchListener() {
+            @Override
             public boolean onTouch(View view, MotionEvent event) {
                 if (event.getActionMasked() == MotionEvent.ACTION_DOWN)
                     hideSoftInput(view);
                 return false;
             }
         };
-
-        mBackground = (Background) findViewById(R.id.awesomebar_background);
 
         mTabs = new AwesomeBarTab[] {
             new AllPagesTab(mContext),
@@ -267,6 +265,7 @@ public class AwesomeBarTabs extends TabHost
         // this MUST be done after tw.addView to overwrite the listener added by tabWidget
         // which delegates to TabHost (which we don't have)
         indicatorView.setOnClickListener(new View.OnClickListener() {
+            @Override
             public void onClick(View v) {
                 mViewPager.setCurrentItem(contentId, true);
             }
@@ -339,15 +338,15 @@ public class AwesomeBarTabs extends TabHost
         if (mTarget.equals(AwesomeBar.Target.CURRENT_TAB.name())) {
             Tab tab = Tabs.getInstance().getSelectedTab();
             if (tab != null && tab.isPrivate())
-                mBackground.setPrivateMode(true);
+                ((BackgroundLayout) findViewById(R.id.tab_widget_container)).setPrivateMode(true);
         }
     }
 
-    public static class Background extends GeckoLinearLayout
-                                   implements LightweightTheme.OnChangeListener { 
+    public static class BackgroundLayout extends GeckoLinearLayout
+                                         implements LightweightTheme.OnChangeListener { 
         private GeckoActivity mActivity;
 
-        public Background(Context context, AttributeSet attrs) {
+        public BackgroundLayout(Context context, AttributeSet attrs) {
             super(context, attrs);
             mActivity = (GeckoActivity) context;
         }

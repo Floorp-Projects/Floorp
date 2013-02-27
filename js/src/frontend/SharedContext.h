@@ -189,7 +189,8 @@ class ModuleBox : public ObjectBox, public SharedContext {
 public:
     Bindings bindings;
 
-    ModuleBox(JSContext *cx, ObjectBox *traceListHead, Module *module, ParseContext *pc);
+    ModuleBox(JSContext *cx, ObjectBox *traceListHead, Module *module,
+              ParseContext<FullParseHandler> *pc);
     ObjectBox *toObjectBox() { return this; }
     Module *module() const { return &object->asModule(); }
 };
@@ -206,7 +207,8 @@ class FunctionBox : public ObjectBox, public SharedContext
 
     FunctionContextFlags funCxFlags;
 
-    FunctionBox(JSContext *cx, ObjectBox* traceListHead, JSFunction *fun, ParseContext *pc,
+    template <typename ParseHandler>
+    FunctionBox(JSContext *cx, ObjectBox* traceListHead, JSFunction *fun, ParseContext<ParseHandler> *pc,
                 bool strict);
 
     ObjectBox *toObjectBox() { return this; }

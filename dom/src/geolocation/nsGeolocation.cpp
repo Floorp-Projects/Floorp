@@ -459,10 +459,8 @@ nsGeolocationRequest::Allow()
     if (mOptions->maximumAge >= 0) {
       maximumAge = mOptions->maximumAge;
     }
-    if (mOptions->enableHighAccuracy) {
-      gs->SetHigherAccuracy(true);
-    }
   }
+  gs->SetHigherAccuracy(mOptions && mOptions->enableHighAccuracy);
 
   if (lastPosition && maximumAge > 0 &&
       ( PRTime(PR_Now() / PR_USEC_PER_MSEC) - maximumAge <=
@@ -588,13 +586,6 @@ nsGeolocationRequest::Update(nsIDOMGeoPosition* aPosition, bool aIsBetter)
 void
 nsGeolocationRequest::Shutdown()
 {
-  if (mOptions && mOptions->enableHighAccuracy) {
-    nsRefPtr<nsGeolocationService> gs = nsGeolocationService::GetGeolocationService();
-    if (gs) {
-      gs->SetHigherAccuracy(false);
-    }
-  }
-
   if (mTimeoutTimer) {
     mTimeoutTimer->Cancel();
     mTimeoutTimer = nullptr;
@@ -602,6 +593,15 @@ nsGeolocationRequest::Shutdown()
   mCleared = true;
   mCallback = nullptr;
   mErrorCallback = nullptr;
+
+  // This should happen last, to ensure that this request isn't taken into consideration
+  // when deciding whether existing requests still require high accuracy.
+  if (mOptions && mOptions->enableHighAccuracy) {
+    nsRefPtr<nsGeolocationService> gs = nsGeolocationService::GetGeolocationService();
+    if (gs) {
+      gs->SetHigherAccuracy(false);
+    }
+  }
 }
 
 bool nsGeolocationRequest::Recv__delete__(const bool& allow)
@@ -979,7 +979,8 @@ nsGeolocationService::StartDevice(nsIPrincipal *aPrincipal, bool aRequestPrivate
 
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     ContentChild* cpc = ContentChild::GetSingleton();
-    cpc->SendAddGeolocationListener(IPC::Principal(aPrincipal));
+    cpc->SendAddGeolocationListener(IPC::Principal(aPrincipal),
+                                    HighAccuracyRequested());
     return NS_OK;
   }
 
@@ -1014,28 +1015,41 @@ nsGeolocationService::SetDisconnectTimer()
                          nsITimer::TYPE_ONE_SHOT);
 }
 
+bool
+nsGeolocationService::HighAccuracyRequested()
+{
+  for (uint32_t i = 0; i < mGeolocators.Length(); i++) {
+    if (mGeolocators[i]->HighAccuracyRequested()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void
 nsGeolocationService::SetHigherAccuracy(bool aEnable)
 {
+  bool highRequired = aEnable || HighAccuracyRequested();
+
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     ContentChild* cpc = ContentChild::GetSingleton();
-    cpc->SendSetGeolocationHigherAccuracy(aEnable);
+    cpc->SendSetGeolocationHigherAccuracy(highRequired);
     return;
   }
 
-  if (!mHigherAccuracy && aEnable) {
+  if (!mHigherAccuracy && highRequired) {
     for (int32_t i = 0; i < mProviders.Count(); i++) {
       mProviders[i]->SetHighAccuracy(true);
     }
   }
 
-  if (mHigherAccuracy && !aEnable) {
+  if (mHigherAccuracy && !highRequired) {
     for (int32_t i = 0; i < mProviders.Count(); i++) {
       mProviders[i]->SetHighAccuracy(false);
     }
   }
 
-  mHigherAccuracy = aEnable;
+  mHigherAccuracy = highRequired;
 }
 
 void
@@ -1106,6 +1120,7 @@ DOMCI_DATA(GeoGeolocation, nsGeolocation)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGeolocation)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMGeoGeolocation)
   NS_INTERFACE_MAP_ENTRY(nsIDOMGeoGeolocation)
+  NS_INTERFACE_MAP_ENTRY(nsIGeolocation)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(GeoGeolocation)
 NS_INTERFACE_MAP_END
 
@@ -1210,6 +1225,26 @@ nsGeolocation::HasActiveCallbacks()
   return mPendingCallbacks.Length() != 0;
 }
 
+bool
+nsGeolocation::HighAccuracyRequested()
+{
+  for (uint32_t i = 0; i < mWatchingCallbacks.Length(); i++) {
+    if (mWatchingCallbacks[i]->IsActive() &&
+        mWatchingCallbacks[i]->WantsHighAccuracy()) {
+      return true;
+    }
+  }
+
+  for (uint32_t i = 0; i < mPendingCallbacks.Length(); i++) {
+    if (mPendingCallbacks[i]->IsActive() &&
+        mPendingCallbacks[i]->WantsHighAccuracy()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void
 nsGeolocation::RemoveRequest(nsGeolocationRequest* aRequest)
 {
@@ -1256,7 +1291,7 @@ nsGeolocation::GetCurrentPosition(nsIDOMGeoPositionCallback *callback,
   return GetCurrentPosition(callback, errorCallback, options.forget());
 }
 
-nsresult
+NS_IMETHODIMP
 nsGeolocation::GetCurrentPosition(nsIDOMGeoPositionCallback *callback,
                                   nsIDOMGeoPositionErrorCallback *errorCallback,
                                   mozilla::idl::GeoPositionOptions *options)
@@ -1329,7 +1364,7 @@ nsGeolocation::WatchPosition(nsIDOMGeoPositionCallback *callback,
   return WatchPosition(callback, errorCallback, options.forget(), _retval);
 }
 
-nsresult
+NS_IMETHODIMP
 nsGeolocation::WatchPosition(nsIDOMGeoPositionCallback *callback,
                              nsIDOMGeoPositionErrorCallback *errorCallback,
                              mozilla::idl::GeoPositionOptions *options,

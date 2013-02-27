@@ -15,7 +15,7 @@
 </div>
 <pre id="test">
 <script type="application/javascript">
-if (navigator.platform.indexOf("Linux") == 0) {
+if (navigator.platform.startsWith("Linux")) {
   SimpleTest.expectAssertions(0, 2);
 }
 SimpleTest.waitForExplicitFinish();

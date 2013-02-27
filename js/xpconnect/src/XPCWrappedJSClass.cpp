@@ -492,6 +492,7 @@ nsXPCWrappedJSClass::IsWrappedJS(nsISupports* aPtr)
            result == WrappedJSIdentity::GetSingleton();
 }
 
+// NB: This returns null unless there's nothing on the JSContext stack.
 static JSContext *
 GetContextFromObject(JSObject *obj)
 {

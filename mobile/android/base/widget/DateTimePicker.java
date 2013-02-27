@@ -31,7 +31,6 @@ import android.view.WindowManager;
 import android.widget.CalendarView;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.FrameLayout.LayoutParams;
 import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 
@@ -95,6 +94,7 @@ public class DateTimePicker extends FrameLayout {
     public static enum PickersState { DATE, MONTH, WEEK, TIME, DATETIME };
 
     public class OnValueChangeListener implements NumberPicker.OnValueChangeListener {
+        @Override
         public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
             updateInputState();
             mTempDate.setTimeInMillis(mCurrentDate.getTimeInMillis());
@@ -202,6 +202,7 @@ public class DateTimePicker extends FrameLayout {
 
         final Object[] mArgs = new Object[1];
 
+        @Override
         public String format(int value) {
             mArgs[0] = value;
             mBuilder.delete(0, mBuilder.length());
@@ -275,6 +276,7 @@ public class DateTimePicker extends FrameLayout {
             mCalendar.setMinDate(mMinDate.getTimeInMillis());
 
             mCalendar.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
+                @Override
                 public void onSelectedDayChange(
                     CalendarView view, int year, int month, int monthDay) {
                     mTempDate.set(year, month, monthDay);

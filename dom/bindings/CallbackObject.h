@@ -81,6 +81,19 @@ public:
     return mCallback;
   }
 
+  /*
+   * This getter does not change the color of the JSObject meaning that the
+   * object returned is not guaranteed to be kept alive past the next CC.
+   *
+   * This should only be called if you are certain that the return value won't
+   * be passed into a JS API function and that it won't be stored without being
+   * rooted (or otherwise signaling the stored value to the CC).
+   */
+  JSObject* CallbackPreserveColor() const
+  {
+    return mCallback;
+  }
+
   enum ExceptionHandling {
     eReportExceptions,
     eRethrowExceptions
@@ -163,6 +176,204 @@ protected:
     uint32_t mSavedJSContextOptions;
   };
 };
+
+template<class WebIDLCallbackT, class XPCOMCallbackT>
+class CallbackObjectHolder;
+
+template<class T, class U>
+void ImplCycleCollectionUnlink(CallbackObjectHolder<T, U>& aField);
+
+class CallbackObjectHolderBase
+{
+protected:
+  // Returns null on all failures
+  already_AddRefed<nsISupports> ToXPCOMCallback(CallbackObject* aCallback,
+                                                const nsIID& aIID);
+};
+
+template<class WebIDLCallbackT, class XPCOMCallbackT>
+class CallbackObjectHolder : CallbackObjectHolderBase
+{
+  /**
+   * A class which stores either a WebIDLCallbackT* or an XPCOMCallbackT*.  Both
+   * types must inherit from nsISupports.  The pointer that's stored can be
+   * null.
+   *
+   * When storing a WebIDLCallbackT*, mPtrBits is set to the pointer value.
+   * When storing an XPCOMCallbackT*, mPtrBits is the pointer value with low bit
+   * set.
+   */
+public:
+  explicit CallbackObjectHolder(WebIDLCallbackT* aCallback)
+    : mPtrBits(reinterpret_cast<uintptr_t>(aCallback))
+  {
+    NS_IF_ADDREF(aCallback);
+  }
+
+  explicit CallbackObjectHolder(XPCOMCallbackT* aCallback)
+    : mPtrBits(reinterpret_cast<uintptr_t>(aCallback) | XPCOMCallbackFlag)
+  {
+    NS_IF_ADDREF(aCallback);
+  }
+
+  explicit CallbackObjectHolder(const CallbackObjectHolder& aOther)
+    : mPtrBits(aOther.mPtrBits)
+  {
+    NS_IF_ADDREF(GetISupports());
+  }
+
+  CallbackObjectHolder()
+    : mPtrBits(0)
+  {}
+
+  ~CallbackObjectHolder()
+  {
+    UnlinkSelf();
+  }
+
+  nsISupports* GetISupports() const
+  {
+    return reinterpret_cast<nsISupports*>(mPtrBits & ~XPCOMCallbackFlag);
+  }
+
+  // Even if HasWebIDLCallback returns true, GetWebIDLCallback() might still
+  // return null.
+  bool HasWebIDLCallback() const
+  {
+    return !(mPtrBits & XPCOMCallbackFlag);
+  }
+
+  WebIDLCallbackT* GetWebIDLCallback() const
+  {
+    MOZ_ASSERT(HasWebIDLCallback());
+    return reinterpret_cast<WebIDLCallbackT*>(mPtrBits);
+  }
+
+  XPCOMCallbackT* GetXPCOMCallback() const
+  {
+    MOZ_ASSERT(!HasWebIDLCallback());
+    return reinterpret_cast<XPCOMCallbackT*>(mPtrBits & ~XPCOMCallbackFlag);
+  }
+
+  bool operator==(WebIDLCallbackT* aOtherCallback) const
+  {
+    if (!aOtherCallback) {
+      // If other is null, then we must be null to be equal.
+      return !GetISupports();
+    }
+
+    if (!HasWebIDLCallback() || !GetWebIDLCallback()) {
+      // If other is non-null, then we can't be equal if we have a
+      // non-WebIDL callback or a null callback.
+      return false;
+    }
+
+    JSObject* thisObj =
+      js::UnwrapObject(GetWebIDLCallback()->CallbackPreserveColor());
+    JSObject* otherObj =
+      js::UnwrapObject(aOtherCallback->CallbackPreserveColor());
+    return thisObj == otherObj;
+  }
+
+  bool operator==(XPCOMCallbackT* aOtherCallback) const
+  {
+    return (!aOtherCallback && !GetISupports()) ||
+      (!HasWebIDLCallback() && GetXPCOMCallback() == aOtherCallback);
+  }
+
+  bool operator==(const CallbackObjectHolder& aOtherCallback) const
+  {
+    if (aOtherCallback.HasWebIDLCallback()) {
+      return *this == aOtherCallback.GetWebIDLCallback();
+    }
+
+    return *this == aOtherCallback.GetXPCOMCallback();
+  }
+
+  // Try to return an XPCOMCallbackT version of this object.
+  already_AddRefed<XPCOMCallbackT> ToXPCOMCallback()
+  {
+    if (!HasWebIDLCallback()) {
+      nsRefPtr<XPCOMCallbackT> callback = GetXPCOMCallback();
+      return callback.forget();
+    }
+
+    nsCOMPtr<nsISupports> supp =
+      CallbackObjectHolderBase::ToXPCOMCallback(GetWebIDLCallback(),
+                                                NS_GET_TEMPLATE_IID(XPCOMCallbackT));
+    // ToXPCOMCallback already did the right QI for us.
+    return static_cast<XPCOMCallbackT*>(supp.forget().get());
+  }
+
+  // Try to return a WebIDLCallbackT version of this object.
+  already_AddRefed<WebIDLCallbackT> ToWebIDLCallback()
+  {
+    if (HasWebIDLCallback()) {
+      nsRefPtr<WebIDLCallbackT> callback = GetWebIDLCallback();
+      return callback.forget();
+    }
+
+    XPCOMCallbackT* callback = GetXPCOMCallback();
+    if (!callback) {
+      return nullptr;
+    }
+
+    nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS = do_QueryInterface(callback);
+    if (!wrappedJS) {
+      return nullptr;
+    }
+
+    JSObject* obj;
+    if (NS_FAILED(wrappedJS->GetJSObject(&obj)) || !obj) {
+      return nullptr;
+    }
+
+    SafeAutoJSContext cx;
+    JSAutoCompartment ac(cx, obj);
+
+    bool inited;
+    nsRefPtr<WebIDLCallbackT> newCallback =
+      new WebIDLCallbackT(cx, nullptr, obj, &inited);
+    if (!inited) {
+      return nullptr;
+    }
+    return newCallback.forget();
+  }
+
+private:
+  static const uintptr_t XPCOMCallbackFlag = 1u;
+
+  friend void
+  ImplCycleCollectionUnlink<WebIDLCallbackT,
+                            XPCOMCallbackT>(CallbackObjectHolder& aField);
+
+  void UnlinkSelf()
+  {
+    // NS_IF_RELEASE because we might have been unlinked before
+    nsISupports* ptr = GetISupports();
+    NS_IF_RELEASE(ptr);
+    mPtrBits = 0;
+  }
+
+  uintptr_t mPtrBits;
+};
+
+template<class T, class U>
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            CallbackObjectHolder<T, U>& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  CycleCollectionNoteChild(aCallback, aField.GetISupports(), aName, aFlags);
+}
+
+template<class T, class U>
+void
+ImplCycleCollectionUnlink(CallbackObjectHolder<T, U>& aField)
+{
+  aField.UnlinkSelf();
+}
 
 } // namespace dom
 } // namespace mozilla
