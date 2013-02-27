@@ -698,7 +698,7 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
                 loc2 = slotInfo.nextSlotLocation();
                 IonSpew(IonSpew_BaselineBailouts, "      Popping next stack value into %d.",
                             (int) loc2);
-                JS_ASSERT(loc1 != loc2);
+                JS_ASSERT_IF(loc1 != PCMappingSlotInfo::SlotIgnore, loc1 != loc2);
                 builder.popValueInto(loc2);
             }
 
