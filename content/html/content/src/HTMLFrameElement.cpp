@@ -116,6 +116,33 @@ HTMLFrameElement::GetAttributeMappingFunction() const
   return &MapAttributesIntoRule;
 }
 
+already_AddRefed<nsIDocument>
+HTMLFrameElement::GetContentDocument(ErrorResult& aRv)
+{
+  nsCOMPtr<nsIDOMDocument> doc;
+  nsresult rv = nsGenericHTMLFrameElement::GetContentDocument(getter_AddRefs(doc));
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDocument> ret = do_QueryInterface(doc);
+  return ret.forget();
+}
+
+already_AddRefed<nsIDOMWindow>
+HTMLFrameElement::GetContentWindow(ErrorResult& aRv)
+{
+  nsCOMPtr<nsIDOMWindow> win;
+  nsresult rv = nsGenericHTMLFrameElement::GetContentWindow(getter_AddRefs(win));
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
+
+  return win.forget();
+}
+
 JSObject*
 HTMLFrameElement::WrapNode(JSContext* aCx, JSObject* aScope,
                            bool* aTriedToWrap)

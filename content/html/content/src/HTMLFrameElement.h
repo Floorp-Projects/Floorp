@@ -102,8 +102,9 @@ public:
     SetAttrHelper(nsGkAtoms::src, aSrc);
   }
 
-  using nsGenericHTMLFrameElement::GetContentDocument;
-  using nsGenericHTMLFrameElement::GetContentWindow;
+  already_AddRefed<nsIDocument> GetContentDocument(ErrorResult& aRv);
+
+  already_AddRefed<nsIDOMWindow> GetContentWindow(ErrorResult& aRv);
 
 protected:
   virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope,
