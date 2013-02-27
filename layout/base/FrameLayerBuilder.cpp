@@ -923,7 +923,6 @@ FrameLayerBuilder::RemoveFrameFromLayerManager(nsIFrame* aFrame,
         nsIntRegion rgn = old.ScaleToOutsidePixels(thebesData->mXScale, thebesData->mYScale, thebesData->mAppUnitsPerDevPixel);
         rgn.MoveBy(-GetTranslationForThebesLayer(t));
         thebesData->mRegionToInvalidate.Or(thebesData->mRegionToInvalidate, rgn);
-        thebesData->mRegionToInvalidate.SimplifyOutward(8);
       }
     }
 
