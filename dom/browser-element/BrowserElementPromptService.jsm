@@ -457,6 +457,7 @@ AuthPromptWrapper.prototype = {
 };
 
 function BrowserElementPromptFactory(toWrap) {
+  // this._wrapped may be null.
   this._wrapped = toWrap;
 }
 
@@ -464,17 +465,8 @@ BrowserElementPromptFactory.prototype = {
   classID: Components.ID("{24f3d0cf-e417-4b85-9017-c9ecf8bb1299}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptFactory]),
 
-  _mayUseNativePrompt: function() {
-    try {
-      return Services.prefs.getBoolPref("browser.prompt.allowNative");
-    } catch (e) {
-      // This properity is default to true.
-      return true;
-    }
-  },
-
   _getNativePromptIfAllowed: function(win, iid, err) {
-    if (this._mayUseNativePrompt())
+    if (this._wrapped)
       return this._wrapped.getPrompt(win, iid);
     else {
       // Not allowed, throw an exception.
@@ -517,7 +509,7 @@ BrowserElementPromptFactory.prototype = {
       // it doesn't mean that we should fallback. It is possible that we can
       // get the BrowserElementParent from nsIChannel that passed to
       // functions of nsIAuthPrompt2.
-      if (this._mayUseNativePrompt()) {
+      if (this._wrapped) {
         return new AuthPromptWrapper(
             this._wrapped.getPrompt(win, iid),
             new BrowserElementAuthPrompt().QueryInterface(iid))
@@ -547,6 +539,15 @@ this.BrowserElementPromptService = {
 
   _initialized: false,
 
+  _mayUseNativePrompt: function() {
+    try {
+      return Services.prefs.getBoolPref("browser.prompt.allowNative");
+    } catch (e) {
+      // This properity defaults to true.
+      return true;
+    }
+  },
+
   _init: function() {
     if (this._initialized) {
       return;
@@ -565,21 +566,27 @@ this.BrowserElementPromptService = {
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     os.addObserver(this, "outer-window-destroyed", /* ownsWeak = */ true);
 
-    // Wrap the existing @mozilla.org/prompter;1 implementation.
-    var contractID = "@mozilla.org/prompter;1";
-    var oldCID = Cm.contractIDToCID(contractID);
+    var oldPromptFactory = null;
     var newCID = BrowserElementPromptFactory.prototype.classID;
-    var oldFactory = Cm.getClassObject(Cc[contractID], Ci.nsIFactory);
+    if (this._mayUseNativePrompt()) {
+      // Wrap the existing @mozilla.org/prompter;1 implementation.  (Don't even
+      // try to get the prompter;1 if we may not use the native prompter.  We
+      // won't need it, and merely getting it is causing bug 844530.)
+      var contractID = "@mozilla.org/prompter;1";
+      var oldCID = Cm.contractIDToCID(contractID);
+      var oldFactory = Cm.getClassObject(Cc[contractID], Ci.nsIFactory);
 
-    if (oldCID == newCID) {
-      debug("WARNING: Wrapped prompt factory is already installed!");
-      return;
+      if (oldCID == newCID) {
+        debug("WARNING: Wrapped prompt factory is already installed!");
+        return;
+      }
+
+      Cm.unregisterFactory(oldCID, oldFactory);
+
+      oldPromptFactory = oldFactory.createInstance(null, Ci.nsIPromptFactory);
     }
 
-    Cm.unregisterFactory(oldCID, oldFactory);
-
-    var oldInstance = oldFactory.createInstance(null, Ci.nsIPromptFactory);
-    var newInstance = new BrowserElementPromptFactory(oldInstance);
+    var newInstance = new BrowserElementPromptFactory(oldPromptFactory);
 
     var newFactory = {
       createInstance: function(outer, iid) {
