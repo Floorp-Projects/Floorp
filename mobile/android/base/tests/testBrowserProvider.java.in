@@ -377,6 +377,7 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     abstract class Test implements Runnable {
+        @Override
         public void run() {
             try {
                 test();

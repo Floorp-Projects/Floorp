@@ -299,6 +299,7 @@ final class TouchEventHandler implements Tabs.OnTabsChangedListener {
 
     private class ListenerTimeoutProcessor implements Runnable {
         /* This MUST be run on the UI thread */
+        @Override
         public void run() {
             if (mProcessingBalance < 0) {
                 // gecko already responded with default-prevented notification, and so
@@ -313,6 +314,7 @@ final class TouchEventHandler implements Tabs.OnTabsChangedListener {
 
     // Tabs.OnTabsChangedListener implementation
 
+    @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
         if ((Tabs.getInstance().isSelectedTab(tab) && msg == Tabs.TabEvents.STOP) || msg == Tabs.TabEvents.SELECTED) {
             mWaitForTouchListeners = tab.getHasTouchListeners();

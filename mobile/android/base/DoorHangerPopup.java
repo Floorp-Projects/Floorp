@@ -63,6 +63,7 @@ public class DoorHangerPopup extends PopupWindow
         mAnchor = aAnchor;
     }
 
+    @Override
     public void handleMessage(String event, JSONObject geckoObject) {
         try {
             if (event.equals("Doorhanger:Add")) {
@@ -73,6 +74,7 @@ public class DoorHangerPopup extends PopupWindow
                 final JSONObject options = geckoObject.getJSONObject("options");
 
                 mActivity.runOnUiThread(new Runnable() {
+                    @Override
                     public void run() {
                         addDoorHanger(tabId, value, message, buttons, options);
                     }
@@ -82,6 +84,7 @@ public class DoorHangerPopup extends PopupWindow
                 final String value = geckoObject.getString("value");
 
                 mActivity.runOnUiThread(new Runnable() {
+                    @Override
                     public void run() {
                         DoorHanger doorHanger = getDoorHanger(tabId, value);
                         if (doorHanger == null)
@@ -98,6 +101,7 @@ public class DoorHangerPopup extends PopupWindow
     }
 
     // This callback is automatically executed on the UI thread.
+    @Override
     public void onTabChanged(final Tab tab, final Tabs.TabEvents msg, final Object data) {
         switch(msg) {
             case CLOSED:

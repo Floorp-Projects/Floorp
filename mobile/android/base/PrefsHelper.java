@@ -150,18 +150,22 @@ public final class PrefsHelper {
     }
 
     public static abstract class PrefHandlerBase implements PrefHandler {
+        @Override
         public void prefValue(String pref, boolean value) {
             Log.w(LOGTAG, "Unhandled boolean value for pref [" + pref + "]");
         }
 
+        @Override
         public void prefValue(String pref, int value) {
             Log.w(LOGTAG, "Unhandled int value for pref [" + pref + "]");
         }
 
+        @Override
         public void prefValue(String pref, String value) {
             Log.w(LOGTAG, "Unhandled String value for pref [" + pref + "]");
         }
 
+        @Override
         public void finish() {
         }
     }

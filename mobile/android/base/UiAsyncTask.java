@@ -43,10 +43,12 @@ public abstract class UiAsyncTask<Params, Progress, Result> {
             mParams = params;
         }
 
+        @Override
         public void run() {
             final Result result = doInBackground(mParams);
 
             getUiHandler().post(new Runnable() {
+                @Override
                 public void run() {
                     if (mCancelled)
                         onCancelled();
@@ -59,6 +61,7 @@ public abstract class UiAsyncTask<Params, Progress, Result> {
 
     public final void execute(final Params... params) {
         getUiHandler().post(new Runnable() {
+            @Override
             public void run() {
                 onPreExecute();
                 mBackgroundThreadHandler.post(new BackgroundTaskRunnable(params));

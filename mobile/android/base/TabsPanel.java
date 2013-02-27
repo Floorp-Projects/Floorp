@@ -100,6 +100,7 @@ public class TabsPanel extends LinearLayout
 
         mAddTab = (ImageButton) findViewById(R.id.add_tab);
         mAddTab.setOnClickListener(new Button.OnClickListener() {
+            @Override
             public void onClick(View v) {
                 TabsPanel.this.addTab();
             }

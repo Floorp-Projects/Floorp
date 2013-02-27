@@ -166,6 +166,7 @@ public class testHistoryTab extends PixelTest {
         // wait for the history list to be populated
         mFirstChild = null;
         boolean success = waitForTest(new BooleanTest() {
+            @Override
             public boolean test() {
                 mFirstChild = listview.getChildAt(1);
                 if (mFirstChild == null) {
@@ -223,6 +224,7 @@ public class testHistoryTab extends PixelTest {
         Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
         mFirstChild = null;
         boolean success = waitForTest(new BooleanTest() {
+            @Override
             public boolean test() {
                 mFirstChild = listview.getChildAt(1);
                 if (mFirstChild == null) {

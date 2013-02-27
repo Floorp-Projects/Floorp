@@ -73,6 +73,7 @@ public class HistoryTab extends AwesomeBarTab {
 
             ExpandableListView list = (ExpandableListView)mView;
             list.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
+                @Override
                 public boolean onChildClick(ExpandableListView parent, View view,
                                              int groupPosition, int childPosition, long id) {
                     return handleItemClick(groupPosition, childPosition);
@@ -83,7 +84,8 @@ public class HistoryTab extends AwesomeBarTab {
             // history expandable list view to mimic simpler sections. We should
             // Remove this if we decide to allow expanding/collapsing groups.
             list.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
-                 public boolean onGroupClick(ExpandableListView parent, View v, int groupPosition, long id) {
+                @Override
+                public boolean onGroupClick(ExpandableListView parent, View v, int groupPosition, long id) {
                     return true;
                 }
             });
@@ -367,6 +369,7 @@ public class HistoryTab extends AwesomeBarTab {
 
             // Hack: force this to the main thread, even though it should already be on it
             GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+                @Override
                 public void run() {
                     historyList.setAdapter(mCursorAdapter);
                     expandAllGroups(historyList);

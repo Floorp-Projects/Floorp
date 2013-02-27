@@ -113,6 +113,7 @@ public class testBookmark extends PixelTest  {
 
     private boolean waitForBookmarked(final boolean isBookmarked) {
         waitForTest(new BooleanTest() {
+            @Override
             public boolean test() {
                 try {
                    return isBookmarked == (Boolean)mIsBookmarked.invoke(null, getActivity().getContentResolver(), BOOKMARK_URL);
