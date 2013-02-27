@@ -6895,8 +6895,8 @@ nsBlockFrame::ReflowBullet(nsIFrame* aBulletFrame,
 // that are float containing blocks.  Floats that or not children of 'this'
 // are ignored (they are not added to aList).
 void
-nsBlockFrame::CollectFloats(nsIFrame* aFrame, nsFrameList& aList,
-                            bool aCollectSiblings)
+nsBlockFrame::DoCollectFloats(nsIFrame* aFrame, nsFrameList& aList,
+                              bool aCollectSiblings)
 {
   while (aFrame) {
     // Don't descend into float containing blocks.
@@ -6934,8 +6934,8 @@ nsBlockFrame::CollectFloats(nsIFrame* aFrame, nsFrameList& aList,
         // XXXmats nsInlineFrame's lazy reparenting depends on NOT doing that.
       }
 
-      CollectFloats(aFrame->GetFirstPrincipalChild(), aList, true);
-      CollectFloats(aFrame->GetFirstChild(kOverflowList), aList, true);
+      DoCollectFloats(aFrame->GetFirstPrincipalChild(), aList, true);
+      DoCollectFloats(aFrame->GetFirstChild(kOverflowList), aList, true);
     }
     if (!aCollectSiblings)
       break;
