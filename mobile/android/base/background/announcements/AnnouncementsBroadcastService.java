@@ -8,11 +8,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import org.mozilla.gecko.background.BackgroundConstants;
+import org.mozilla.gecko.background.BackgroundService;
 import org.mozilla.gecko.sync.GlobalConstants;
 import org.mozilla.gecko.sync.Logger;
 
 import android.app.AlarmManager;
-import android.app.IntentService;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -24,7 +24,7 @@ import android.content.SharedPreferences.Editor;
  * browser, registering or unregistering the main
  * {@link AnnouncementsStartReceiver} with the {@link AlarmManager}.
  */
-public class AnnouncementsBroadcastService extends IntentService {
+public class AnnouncementsBroadcastService extends BackgroundService {
   private static final String WORKER_THREAD_NAME = "AnnouncementsBroadcastServiceWorker";
   private static final String LOG_TAG = "AnnounceBrSvc";
 
@@ -34,24 +34,16 @@ public class AnnouncementsBroadcastService extends IntentService {
 
   private void toggleAlarm(final Context context, boolean enabled) {
     Logger.info(LOG_TAG, (enabled ? "R" : "Unr") + "egistering announcements broadcast receiver...");
-    final AlarmManager alarm = getAlarmManager(context);
 
-    final Intent service = new Intent(context, AnnouncementsStartReceiver.class);
-    final PendingIntent pending = PendingIntent.getBroadcast(context, 0, service, PendingIntent.FLAG_CANCEL_CURRENT);
+    final PendingIntent pending = createPendingIntent(context, AnnouncementsStartReceiver.class);
 
     if (!enabled) {
-      alarm.cancel(pending);
+      cancelAlarm(pending);
       return;
     }
 
-    final long firstEvent = System.currentTimeMillis();
     final long pollInterval = getPollInterval(context);
-    Logger.info(LOG_TAG, "Setting inexact repeating alarm for interval " + pollInterval);
-    alarm.setInexactRepeating(AlarmManager.RTC, firstEvent, pollInterval, pending);
-  }
-
-  private static AlarmManager getAlarmManager(Context context) {
-    return (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+    scheduleAlarm(pollInterval, pending);
   }
 
   /**
