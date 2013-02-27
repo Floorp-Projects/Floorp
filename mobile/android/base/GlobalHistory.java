@@ -7,7 +7,6 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
 
-import android.content.ContentResolver;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Handler;

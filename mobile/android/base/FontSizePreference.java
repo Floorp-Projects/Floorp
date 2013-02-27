@@ -10,7 +10,6 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.preference.DialogPreference;
-import android.preference.Preference.OnPreferenceChangeListener;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
