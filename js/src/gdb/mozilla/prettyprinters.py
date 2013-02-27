@@ -220,7 +220,9 @@ def implemented_types(t):
 
 template_regexp = re.compile("([\w_:]+)<")
 
-# Make a lookup function for objfile.
+# Construct and return a pretty-printer lookup function for objfile, or
+# return None if the objfile doesn't contain SpiderMonkey code
+# (specifically, definitions for SpiderMonkey types).
 def lookup_for_objfile(objfile):
     # Create a type cache for this objfile.
     try:
@@ -229,6 +231,7 @@ def lookup_for_objfile(objfile):
         if gdb.parameter("verbose"):
             gdb.write("objfile '%s' has no SpiderMonkey code; not registering pretty-printers\n"
                       % (objfile.filename,))
+        return None
 
     # Return a pretty-printer for |value|, if we have one. This is the lookup
     # function object we place in each gdb.Objfile's pretty-printers list, so it
