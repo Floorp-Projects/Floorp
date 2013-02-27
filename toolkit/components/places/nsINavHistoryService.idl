@@ -1157,7 +1157,7 @@ interface nsINavHistoryQueryOptions : nsISupports
   nsINavHistoryQueryOptions clone();
 };
 
-[scriptable, uuid(562e698d-04f0-4df1-bd5d-1f1e5b84d7ef)]
+[scriptable, uuid(03316279-5ee2-4f67-861e-621578e7bc82)]
 interface nsINavHistoryService : nsISupports
 {
   /**
@@ -1265,6 +1265,23 @@ interface nsINavHistoryService : nsISupports
    * as following a bookmark.
    */
   void markPageAsFollowedBookmark(in nsIURI aURI);
+
+  /**
+   * Designates the url as having been explicitly typed in by the user.
+   *
+   * @param aURI
+   *        URI of the page to be marked.
+   */
+  void markPageAsTyped(in nsIURI aURI);
+
+  /**
+   * Designates the url as coming from a link explicitly followed by
+   * the user (for example by clicking on it).
+   *
+   * @param aURI
+   *        URI of the page to be marked.
+   */
+  void markPageAsFollowedLink(in nsIURI aURI);
 
   /**
    * Gets the stored character-set for an URI.
