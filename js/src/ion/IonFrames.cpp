@@ -489,14 +489,16 @@ ion::HandleException(ResumeFromException *rfe)
             }
         }
 
-        IonJSFrameLayout *current = iter.isBaselineJS() ? iter.jsFrame() : NULL;
+        IonJSFrameLayout *current = iter.isScripted() ? iter.jsFrame() : NULL;
 
         ++iter;
 
         if (current) {
-            // If we moved past a baseline frame, unwind the frame by updating
-            // ionTop. This is necessary so that debugger exception unwind and
-            // leave frame hooks don't see this frame when they use StackIter.
+            // Unwind the frame by updating ionTop. This is necessary so that
+            // (1) debugger exception unwind and leave frame hooks don't see this
+            // frame when they use StackIter, and (2) StackIter does not crash
+            // when accessing an IonScript that's destroyed by the
+            // ionScript->decref call.
             EnsureExitFrame(current);
             cx->mainThread().ionTop = (uint8_t *)current;
         }
