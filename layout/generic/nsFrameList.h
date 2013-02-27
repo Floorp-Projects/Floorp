@@ -138,14 +138,6 @@ public:
   void RemoveFrame(nsIFrame* aFrame);
 
   /**
-   * Take aFrame out of the frame list, if present. This also disconnects
-   * aFrame from the sibling list. aFrame must be non-null but is not
-   * required to be on the list.
-   * @return true if aFrame was removed
-   */
-  bool RemoveFrameIfPresent(nsIFrame* aFrame);
-
-  /**
    * Take the frames after aAfterFrame out of the frame list.  If
    * aAfterFrame is null, removes the entire list.
    * @param aAfterFrame a frame in this list, or null
@@ -194,13 +186,6 @@ public:
    * The frame must be non-null and present on this list.
    */
   void DestroyFrame(nsIFrame* aFrame);
-
-  /**
-   * If aFrame is present on this list then take it out of the list and
-   * then destroy it. The frame must be non-null.
-   * @return true if the frame was found
-   */
-  bool DestroyFrameIfPresent(nsIFrame* aFrame);
 
   /**
    * Insert aFrame right after aPrevSibling, or prepend it to this
