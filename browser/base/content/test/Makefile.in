@@ -313,6 +313,7 @@ _BROWSER_FILES = \
                  feed_tab.html \
                  browser_pluginCrashCommentAndURL.js \
                  pluginCrashCommentAndURL.html \
+                 browser_private_no_prompt.js \
                  $(NULL)
 
 # Disable test on Windows due to frequent failures (bug 841341)
