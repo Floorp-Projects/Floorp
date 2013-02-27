@@ -231,7 +231,7 @@ nsSliderFrame::AttributeChanged(int32_t aNameSpaceID,
                                              aModType);
   // if the current position changes
   if (aAttribute == nsGkAtoms::curpos) {
-     rv = CurrentPositionChanged(PresContext());
+     rv = CurrentPositionChanged();
      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to change position");
      if (NS_FAILED(rv))
         return rv;
@@ -650,7 +650,7 @@ nsSliderFrame::PageUpDown(nscoord change)
 
 // called when the current position changed and we need to update the thumb's location
 nsresult
-nsSliderFrame::CurrentPositionChanged(nsPresContext* aPresContext)
+nsSliderFrame::CurrentPositionChanged()
 {
   nsIFrame* scrollbarBox = GetScrollbar();
   nsCOMPtr<nsIContent> scrollbar;
@@ -799,8 +799,7 @@ nsSliderFrame::SetCurrentPositionInternal(nsIContent* aScrollbar, int32_t aNewPo
       UpdateAttribute(scrollbar, aNewPos, false, aIsSmooth);
       nsIFrame* frame = content->GetPrimaryFrame();
       if (frame && frame->GetType() == nsGkAtoms::sliderFrame) {
-        static_cast<nsSliderFrame*>(frame)->
-          CurrentPositionChanged(frame->PresContext());
+        static_cast<nsSliderFrame*>(frame)->CurrentPositionChanged();
       }
       mUserChanged = false;
       return;
