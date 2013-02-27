@@ -1128,7 +1128,9 @@ android-tgts = \
 
 android-preqs = \
   Makefile.in \
-  $(call mkdir_deps,mozglue,db,sync/repositories/android,background/announcements,background/common) \
+  $(call mkdir_deps,$(sort $(dir $(MOZGLUE_PP_JAVA_FILES)))) \
+  $(call mkdir_deps,$(sort $(dir $(FENNEC_PP_JAVA_FILES)))) \
+  $(call mkdir_deps,$(sort $(dir $(SYNC_PP_JAVA_FILES)))) \
   $(SERVICES_MANIFEST_FRAGMENTS) \
   WebAppManifestFragment.xml.in \
   WebAppsFragments.java \
