@@ -47,11 +47,11 @@ var SelectionHandler = {
   _targetIsEditable: false,
   _contentWindow: null,
   _contentOffset: { x:0, y:0 },
-  _frameOffset: { x:0, y:0 },
   _domWinUtils: null,
   _selectionMoveActive: false,
   _lastMarker: "",
   _debugOptions: { dumpRanges: false, displayRanges: false },
+  _snap: true,
 
   init: function init() {
     addMessageListener("Browser:SelectionStart", this);
@@ -85,6 +85,16 @@ var SelectionHandler = {
     return (this._contentWindow != null);
   },
 
+  /*
+   * snap - enable or disable word snap for the active marker when a
+   * SelectionMoveEnd event is received. Typically you would disable
+   * snap when zoom is < 1.0 for precision selection.
+   */
+
+  get snap() {
+    return this._snap;
+  },
+
   /*************************************************
    * Browser event handlers
    */
@@ -103,11 +113,10 @@ var SelectionHandler = {
     let selection = this._contentWindow.getSelection();
     selection.removeAllRanges();
 
-    Util.dumpLn(this._targetElement);
-
     // Set our initial selection, aX and aY should be in client coordinates.
-    if (!this._domWinUtils.selectAtPoint(aX, aY, Ci.nsIDOMWindowUtils
-                                                   .SELECT_WORDNOSPACE)) {
+    let framePoint = this._clientPointToFramePoint({ xPos: aX, yPos: aY });
+    if (!this._domWinUtils.selectAtPoint(framePoint.xPos, framePoint.yPos,
+                                         Ci.nsIDOMWindowUtils.SELECT_WORDNOSPACE)) {
       this._onFail("failed to set selection at point");
       return;
     }
@@ -169,8 +178,7 @@ var SelectionHandler = {
     } else {
       pos = aMsg.end;
     }
-
-    this._handleSelectionPoint(aMsg.change, pos);
+    this._handleSelectionPoint(aMsg.change, pos, false);
   },
 
   /*
@@ -195,7 +203,7 @@ var SelectionHandler = {
       pos = aMsg.end;
     }
 
-    this._handleSelectionPoint(aMsg.change, pos);
+    this._handleSelectionPoint(aMsg.change, pos, true);
     this._selectionMoveActive = false;
     
     // _handleSelectionPoint may set a scroll timer, so this must
@@ -215,15 +223,16 @@ var SelectionHandler = {
    */
   _onSelectionCopy: function _onSelectionCopy(aMsg) {
     let tap = {
-      xPos: aMsg.xPos, // + this._contentOffset.x,
-      yPos: aMsg.yPos, // + this._contentOffset.y,
+      xPos: aMsg.xPos,
+      yPos: aMsg.yPos,
     };
 
     let tapInSelection = (tap.xPos > this._cache.rect.left &&
                           tap.xPos < this._cache.rect.right) &&
                          (tap.yPos > this._cache.rect.top &&
                           tap.yPos < this._cache.rect.bottom);
-    // Util.dumpLn(tap.xPos, tap.yPos, "|", this._cache.rect.left,
+    // Util.dumpLn(tapInSelection,
+    //             tap.xPos, tap.yPos, "|", this._cache.rect.left,
     //             this._cache.rect.right, this._cache.rect.top,
     //             this._cache.rect.bottom);
     let success = false;
@@ -329,7 +338,7 @@ var SelectionHandler = {
     let selection = this._getSelection();
 
     // If the range didn't have any text, let's bail
-    if (!selection.toString().trim().length) {
+    if (!selection || !selection.toString().trim().length) {
       this._onFail("no text was present in the current selection");
       return;
     }
@@ -354,7 +363,6 @@ var SelectionHandler = {
     let { element: element,
           contentWindow: contentWindow,
           offset: offset,
-          frameOffset: frameOffset,
           utils: utils } =
       this.getCurrentWindowAndOffset(aX, aY);
     if (!contentWindow) {
@@ -363,7 +371,6 @@ var SelectionHandler = {
     this._targetElement = element;
     this._contentWindow = contentWindow;
     this._contentOffset = offset;
-    this._frameOffset = frameOffset;
     this._domWinUtils = utils;
     this._targetIsEditable = false;
     if (this._isTextInput(this._targetElement)) {
@@ -387,12 +394,7 @@ var SelectionHandler = {
    * SelectionHelperUI.
    */
   _updateUIMarkerRects: function _updateUIMarkerRects(aSelection) {
-    // Extract the information we'll send over to the ui - cache holds content
-    // coordinate oriented start and end position data. Note the coordinates
-    // of the range passed in are relative the sub frame the range sits in.
-    // SelectionHelperUI calls transformBrowserToClient to get client coords.
-    this._cache = this._extractContentRectFromRange(aSelection.getRangeAt(0),
-                                                    this._contentOffset);
+    this._cache = this._extractClientRectFromRange(aSelection.getRangeAt(0));
     if (this. _debugOptions.dumpRanges)  {
        Util.dumpLn("start:", "(" + this._cache.start.xPos + "," +
                    this._cache.start.yPos + ")");
@@ -410,7 +412,7 @@ var SelectionHandler = {
   _restrictSelectionRectToEditBounds: function _restrictSelectionRectToEditBounds() {
     if (!this._targetIsEditable)
       return;
-    let bounds = this._getTargetContentRect();
+    let bounds = this._getTargetClientRect();
     if (this._cache.start.xPos < bounds.left)
       this._cache.start.xPos = bounds.left;
     if (this._cache.end.xPos < bounds.left)
@@ -431,9 +433,9 @@ var SelectionHandler = {
   },
 
   /*
-   * _handleSelectionPoint(aMarker, aPoint) 
+   * _handleSelectionPoint(aMarker, aPoint, aEndOfSelection) 
    *
-   * After a monocle moves to a new point in the document, determintes
+   * After a monocle moves to a new point in the document, determines
    * what the target is and acts on its selection accordingly. If the
    * monocle is within the bounds of the target, adds or subtracts selection
    * at the monocle coordinates appropriately and then merges selection ranges
@@ -441,15 +443,20 @@ var SelectionHandler = {
    * of the target and the underlying target is editable, uses the selection
    * controller to advance selection and visibility within the control.
    */
-  _handleSelectionPoint: function _handleSelectionPoint(aMarker, aClientPoint) {
+  _handleSelectionPoint: function _handleSelectionPoint(aMarker, aClientPoint,
+                                                        aEndOfSelection) {
     let selection = this._getSelection();
 
     let clientPoint = { xPos: aClientPoint.xPos, yPos: aClientPoint.yPos };
 
-    if (selection.rangeCount == 0 || selection.rangeCount > 1) {
-      Util.dumpLn("warning, unexpected selection state.");
-      this._setContinuousSelection();
+    if (selection.rangeCount == 0) {
+      this._onFail("selection.rangeCount == 0");
       return;
+    }
+
+    // We expect continuous selection ranges.
+    if (selection.rangeCount > 1) {
+      this._setContinuousSelection();
     }
 
     // Adjust our y position up such that we are sending coordinates on
@@ -489,10 +496,7 @@ var SelectionHandler = {
         this._setContinuousSelection();
 
         // Update the other monocle's position if we've dragged off to one side
-        if (result.start)
-          this._updateSelectionUI(true, false);
-        if (result.end)
-          this._updateSelectionUI(false, true);
+        this._updateSelectionUI(result.start, result.end);
 
         return;
       }
@@ -504,7 +508,7 @@ var SelectionHandler = {
     this.clearTimers();
 
     // Adjusts the selection based on monocle movement
-    this._adjustSelection(aMarker, clientPoint);
+    this._adjustSelection(aMarker, clientPoint, aEndOfSelection);
 
     // Update the other monocle's position. We do this because the dragging
     // monocle may reset the static monocle to a new position if the dragging
@@ -527,8 +531,12 @@ var SelectionHandler = {
    * @param the marker currently being manipulated
    * @param aClientPoint the point designating the new start or end
    * position for the selection.
+   * @param aEndOfSelection indicates if this is the end of a selection
+   * move, in which case we may want to snap to the end of a word or
+   * sentence.
    */
-  _adjustSelection: function _adjustSelection(aMarker, aClientPoint) {
+  _adjustSelection: function _adjustSelection(aMarker, aClientPoint,
+                                              aEndOfSelection) {
     // Make a copy of the existing range, we may need to reset it.
     this._backupRangeList();
 
@@ -538,15 +546,20 @@ var SelectionHandler = {
     // Tests to see if the user is trying to shrink the selection, and if so
     // collapses it down to the appropriate side such that our calls below
     // will reset the selection to the proper range.
-    this._shrinkSelectionFromPoint(aMarker, framePoint);
+    let shrunk = this._shrinkSelectionFromPoint(aMarker, framePoint);
 
     let selectResult = false;
     try {
+      // If we're at the end of a selection (touchend) snap to the word.
+      let type = ((aEndOfSelection && this._snap) ?
+        Ci.nsIDOMWindowUtils.SELECT_WORD :
+        Ci.nsIDOMWindowUtils.SELECT_CHARACTER);
+
       // Select a character at the point.
       selectResult = 
-        this._domWinUtils.selectAtPoint(aClientPoint.xPos,
-                                        aClientPoint.yPos,
-                                        Ci.nsIDOMWindowUtils.SELECT_CHARACTER);
+        this._domWinUtils.selectAtPoint(framePoint.xPos,
+                                        framePoint.yPos,
+                                        type);
     } catch (ex) {
     }
 
@@ -760,7 +773,7 @@ var SelectionHandler = {
   /*
    * _setContinuousSelection()
    *
-   * Smoothes a selection with multiple ranges into a single
+   * Smooths a selection with multiple ranges into a single
    * continuous range.
    */
   _setContinuousSelection: function _setContinuousSelection() {
@@ -798,8 +811,8 @@ var SelectionHandler = {
               newEndOffset = range.endOffset;
               break;
             case 0: // startRange is equal
-              newEndNode = startNode.endContainer;
-              newEndOffset = startNode.endOffset;
+              newEndNode = range.endContainer;
+              newEndOffset = range.endOffset;
               break;
             case 1: // startRange is after
               newEndNode = startRange.endContainer;
@@ -832,44 +845,51 @@ var SelectionHandler = {
    * character of selection at the collapse point.
    *
    * @param aMarker the marker that is being relocated. ("start" or "end")
-   * @param aFramePoint position of the marker. Should be relative to the
-   * inner frame so that it matches selection range coordinates.
+   * @param aFramePoint position of the marker.
    */
   _shrinkSelectionFromPoint: function _shrinkSelectionFromPoint(aMarker, aFramePoint) {
+    let result = false;
     try {
       let selection = this._getSelection();
-      let rects = selection.getRangeAt(0).getClientRects();
-      for (let idx = 0; idx < rects.length; idx++) {
-        if (Util.pointWithinDOMRect(aFramePoint.xPos, aFramePoint.yPos, rects[idx])) {
-          if (aMarker == "start") {
-            selection.collapseToEnd();
-          } else {
-            selection.collapseToStart();
+      for (let range = 0; range < selection.rangeCount; range++) {
+        // relative to frame
+        let rects = selection.getRangeAt(range).getClientRects();
+        for (let idx = 0; idx < rects.length; idx++) {
+          // Util.dumpLn("[" + idx + "]", aFramePoint.xPos, aFramePoint.yPos, rects[idx].left,
+          // rects[idx].top, rects[idx].right, rects[idx].bottom);
+          if (Util.pointWithinDOMRect(aFramePoint.xPos, aFramePoint.yPos, rects[idx])) {
+            result = true;
+            if (aMarker == "start") {
+              selection.collapseToEnd();
+            } else {
+              selection.collapseToStart();
+            }
+            // collapseToStart and collapseToEnd leave an empty range in the
+            // selection at the collapse point. Therefore we need to add some
+            // selection such that the selection added by selectAtPoint and
+            // the current empty range will get merged properly when we smooth
+            // the selection ranges out.
+            let selCtrl = this._getSelectController();
+            // Expand the collapsed range such that it occupies a little space.
+            if (aMarker == "start") {
+              // State: focus = anchor (collapseToEnd does this)
+              selCtrl.characterMove(false, true);
+              // State: focus = (anchor - 1)
+              selection.collapseToStart();
+              // State: focus = anchor and both are -1 from the original offset
+              selCtrl.characterMove(true, true);
+              // State: focus = anchor + 1, both have been moved back one char
+            } else {
+              selCtrl.characterMove(true, true);
+            }
+            break;
           }
-          // collapseToStart and collapseToEnd leave an empty range in the
-          // selection at the collapse point. Therefore we need to add some
-          // selection such that the selection added by selectAtPoint and
-          // the current empty range will get merged properly when we smooth
-          // the selection rnages out.
-          let selCtrl = this._getSelectController();
-          // Expand the collapsed range such that it occupies a little space.
-          if (aMarker == "start") {
-            // State: focus = anchor (collapseToEnd does this)
-            selCtrl.characterMove(false, true);
-            // State: focus = (anchor - 1)
-            selection.collapseToStart();
-            // State: focus = anchor and both are -1 from the original offset
-            selCtrl.characterMove(true, true);
-            // State: focus = anchor + 1, both have been moved back one char
-          } else {
-            selCtrl.characterMove(true, true);
-          }
-          break;
         }
       }
     } catch (ex) {
       Util.dumpLn("error shrinking selection:", ex.message);
     }
+    return result;
   },
 
   /*
@@ -954,7 +974,7 @@ var SelectionHandler = {
    * coordinates in a range extracted from any sub frames. If aRange
    * is in the root frame offset should be zero. 
    */
-  _extractContentRectFromRange: function _extractContentRectFromRange(aRange, aOffset) {
+  _extractClientRectFromRange: function _extractClientRectFromRange(aRange) {
     let cache = {
       start: {}, end: {},
       rect: { left: 0, top: 0, right: 0, bottom: 0 }
@@ -967,40 +987,29 @@ var SelectionHandler = {
     for (let idx = 0; idx < rects.length; idx++) {
       if (this. _debugOptions.dumpRanges) Util.dumpDOMRect(idx, rects[idx]);
       if (!startSet && !Util.isEmptyDOMRect(rects[idx])) {
-        cache.start.xPos = rects[idx].left + aOffset.x;
-        cache.start.yPos = rects[idx].bottom + aOffset.y;
+        cache.start.xPos = rects[idx].left + this._contentOffset.x;
+        cache.start.yPos = rects[idx].bottom + this._contentOffset.y;
         startSet = true;
         if (this. _debugOptions.dumpRanges) Util.dumpLn("start set");
       }
       if (!Util.isEmptyDOMRect(rects[idx])) {
-        cache.end.xPos = rects[idx].right + aOffset.x;
-        cache.end.yPos = rects[idx].bottom + aOffset.y;
+        cache.end.xPos = rects[idx].right + this._contentOffset.x;
+        cache.end.yPos = rects[idx].bottom + this._contentOffset.y;
         if (this. _debugOptions.dumpRanges) Util.dumpLn("end set");
       }
     }
 
     let r = aRange.getBoundingClientRect();
-    cache.rect.left = r.left + aOffset.x;
-    cache.rect.top = r.top + aOffset.y;
-    cache.rect.right = r.right + aOffset.x;
-    cache.rect.bottom = r.bottom + aOffset.y;
+    cache.rect.left = r.left + this._contentOffset.x;
+    cache.rect.top = r.top + this._contentOffset.y;
+    cache.rect.right = r.right + this._contentOffset.x;
+    cache.rect.bottom = r.bottom + this._contentOffset.y;
 
     if (!rects.length) {
       Util.dumpLn("no rects in selection range. unexpected.");
     }
 
     return cache;
-  },
-
-  _getTargetContentRect: function _getTargetContentRect() {
-    let client = this._targetElement.getBoundingClientRect();
-    let rect = {};
-    rect.left = client.left + this._contentOffset.x;
-    rect.top = client.top + this._contentOffset.y;
-    rect.right = client.right + this._contentOffset.x;
-    rect.bottom = client.bottom + this._contentOffset.y;
-
-    return rect;
   },
 
   _getTargetClientRect: function _getTargetClientRect() {
@@ -1012,8 +1021,8 @@ var SelectionHandler = {
     */
   _clientPointToFramePoint: function _clientPointToFramePoint(aClientPoint) {
     let point = {
-      xPos: aClientPoint.xPos - this._frameOffset.x,
-      yPos: aClientPoint.yPos - this._frameOffset.y
+      xPos: aClientPoint.xPos - this._contentOffset.x,
+      yPos: aClientPoint.yPos - this._contentOffset.y
     };
     return point;
   },
@@ -1025,40 +1034,32 @@ var SelectionHandler = {
    * sub frame coords + offset = root frame position
    */
   getCurrentWindowAndOffset: function(x, y) {
-    // elementFromPoint: If the element at the given point belongs to another
-    // document (such as an iframe's subdocument), the element in the calling
-    // document's DOM (e.g. the iframe) is returned.
+    // If the element at the given point belongs to another document (such
+    // as an iframe's subdocument), the element in the calling document's
+    // DOM (e.g. the iframe) is returned.
     let utils = Util.getWindowUtils(content);
     let element = utils.elementFromPoint(x, y, true, false);
-
     let offset = { x:0, y:0 };
-    let frameOffset = { x:0, y:0 };
-    let scrollOffset = ContentScroll.getScrollOffset(content);
-    offset.x += scrollOffset.x;
-    offset.y += scrollOffset.y;
 
     while (element && (element instanceof HTMLIFrameElement ||
                        element instanceof HTMLFrameElement)) {
-      //Util.dumpLn("found child frame:", element.contentDocument.location);
-
-      // Get the content scroll offset in the child frame
-      scrollOffset = ContentScroll.getScrollOffset(element.contentDocument.defaultView);
       // get the child frame position in client coordinates
       let rect = element.getBoundingClientRect();
 
-      // subtract frame offset from our elementFromPoint coordinates
-      x -= rect.left;
-      // subtract frame and scroll offset and from elementFromPoint coordinates
+      // calculate offsets for digging down into sub frames
+      // using elementFromPoint:
+
+      // Get the content scroll offset in the child frame
+      scrollOffset = ContentScroll.getScrollOffset(element.contentDocument.defaultView);
+      // subtract frame and scroll offset from our elementFromPoint coordinates
+      x -= rect.left + scrollOffset.x;
       y -= rect.top + scrollOffset.y;
+
+      // calculate offsets we'll use to translate to client coords:
 
       // add frame client offset to our total offset result
       offset.x += rect.left;
-      // add the frame's y offset + scroll offset to our total offset result
-      offset.y += rect.top + scrollOffset.y;
-
-      // Track the offset to the origin of the sub-frame as well
-      frameOffset.x += rect.left;
-      frameOffset.y += rect.top
+      offset.y += rect.top;
 
       // get the frame's nsIDOMWindowUtils
       utils = element.contentDocument
@@ -1077,7 +1078,6 @@ var SelectionHandler = {
       element: element,
       contentWindow: element.ownerDocument.defaultView,
       offset: offset,
-      frameOffset: frameOffset,
       utils: utils
     };
   },
@@ -1098,7 +1098,9 @@ var SelectionHandler = {
 
   _getSelectedText: function _getSelectedText() {
     let selection = this._getSelection();
-    return selection.toString();
+    if (selection)
+      return selection.toString();
+    return "";
   },
 
   _getSelection: function _getSelection() {
@@ -1106,8 +1108,9 @@ var SelectionHandler = {
       return this._targetElement
                  .QueryInterface(Ci.nsIDOMNSEditableElement)
                  .editor.selection;
-    else
+    else if (this._contentWindow)
       return this._contentWindow.getSelection();
+    return null;
   },
 
   _getSelectController: function _getSelectController() {
