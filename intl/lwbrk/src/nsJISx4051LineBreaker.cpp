@@ -5,9 +5,9 @@
 
 
 
-#include "nsJISx4501LineBreaker.h"
+#include "nsJISx4051LineBreaker.h"
 
-#include "jisx4501class.h"
+#include "jisx4051class.h"
 #include "nsComplexBreaker.h"
 #include "nsTArray.h"
 #include "nsUnicharUtils.h"
