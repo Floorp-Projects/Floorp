@@ -825,8 +825,45 @@ nsNSSCertificate::GetChain(nsIArray **_rvChain)
   nsresult rv;
   /* Get the cert chain from NSS */
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting chain for \"%s\"\n", mCert->nickname));
+
   ScopedCERTCertList nssChain;
-  nssChain = CERT_GetCertChainFromCert(mCert, PR_Now(), certUsageSSLClient);
+  SECStatus srv;
+  nssChain = nullptr;
+  RefPtr<CertVerifier> certVerifier(GetDefaultCertVerifier());
+  NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
+  CERTCertList *pkixNssChain = nullptr;
+
+  // We want to test all usages, but we start with server because most of the
+  // time Firefox users care about server certs.
+  srv = certVerifier->VerifyCert(mCert,
+                                 certificateUsageSSLServer, PR_Now(),
+                                 nullptr, /*XXX fixme*/
+                                 CertVerifier::FLAG_LOCAL_ONLY,
+                                 &pkixNssChain);
+  for (int usage = certificateUsageSSLClient;
+       usage < certificateUsageAnyCA && !pkixNssChain;
+       usage = usage << 1) {
+    if (usage == certificateUsageSSLServer) {
+      continue;
+    }
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("pipnss: PKIX attempting chain(%d) for '%s'\n",usage, mCert->nickname));
+    srv = certVerifier->VerifyCert(mCert,
+                                   certificateUsageSSLClient, PR_Now(),
+                                   nullptr, /*XXX fixme*/
+                                   CertVerifier::FLAG_LOCAL_ONLY,
+                                   &pkixNssChain);
+  }
+
+  if (!pkixNssChain) {
+    // There is not verified path for the chain, howeever we still want to 
+    // present to the user as much of a possible chain as possible, in the case
+    // where there was a problem with the cert or the issuers.
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("pipnss: getchain :CertVerify failed to get chain for '%s'\n", mCert->nickname));
+    nssChain = CERT_GetCertChainFromCert(mCert, PR_Now(), certUsageSSLClient);
+  } else {
+    nssChain = pkixNssChain;
+  }
+
   if (!nssChain)
     return NS_ERROR_FAILURE;
   /* enumerate the chain for scripting purposes */
