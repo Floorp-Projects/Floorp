@@ -139,45 +139,6 @@ CodeGeneratorX86::visitUnbox(LUnbox *unbox)
     return true;
 }
 
-void
-CodeGeneratorX86::linkAbsoluteLabels()
-{
-    ExecutionMode executionMode = gen->info().executionMode();
-    UnrootedScript script = gen->info().script();
-    IonScript *ionScript = GetIonScript(script, executionMode);
-    IonCode *method = ionScript->method();
-
-    for (size_t i = 0; i < deferredDoubles_.length(); i++) {
-        DeferredDouble *d = deferredDoubles_[i];
-        const Value &v = ionScript->getConstant(d->index());
-        MacroAssembler::Bind(method, d->label(), &v);
-    }
-}
-
-bool
-CodeGeneratorX86::visitDouble(LDouble *ins)
-{
-    const LDefinition *out = ins->getDef(0);
-    const LConstantIndex *cindex = ins->getOperand(0)->toConstantIndex();
-    const Value &v = graph.getConstant(cindex->index());
-
-    union DoublePun {
-        uint64_t u;
-        double d;
-    } dpun;
-    dpun.d = v.toDouble();
-
-    if (masm.maybeInlineDouble(dpun.u, ToFloatRegister(out)))
-        return true;
-
-    DeferredDouble *d = new DeferredDouble(cindex->index());
-    if (!deferredDoubles_.append(d))
-        return false;
-
-    masm.movsd(d->label(), ToFloatRegister(out));
-    return true;
-}
-
 bool
 CodeGeneratorX86::visitLoadSlotV(LLoadSlotV *load)
 {

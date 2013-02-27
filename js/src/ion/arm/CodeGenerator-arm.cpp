@@ -1155,26 +1155,6 @@ CodeGeneratorARM::visitUnbox(LUnbox *unbox)
     return true;
 }
 
-void
-CodeGeneratorARM::linkAbsoluteLabels()
-{
-    // arm doesn't have deferred doubles, so this whole thing should be a NOP (right?)
-    // deferred doubles are an x86 mechanism for loading doubles into registers by storing
-    // them after the function body, then referring to them by their absolute address.
-    // On arm, everything should just go in a pool.
-# if 0
-    JS_NOT_REACHED("Absolute Labels NYI");
-    UnrootedScript script = gen->info().script();
-    IonCode *method = script->ion->method();
-
-    for (size_t i = 0; i < deferredDoubles_.length(); i++) {
-        DeferredDouble *d = deferredDoubles_[i];
-        const Value &v = script->ion->getConstant(d->index());
-        MacroAssembler::Bind(method, d->label(), &v);
-    }
-#endif
-}
-
 bool
 CodeGeneratorARM::visitDouble(LDouble *ins)
 {
