@@ -385,6 +385,9 @@ parent:
 
     sync PCrashReporter(NativeThreadId tid, uint32_t processType);
 
+    sync GetRandomValues(uint32_t length)
+        returns (uint8_t[] randomValues);
+
     PHal();
 
     PIndexedDB();
