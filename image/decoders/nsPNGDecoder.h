@@ -89,6 +89,9 @@ public:
   // whether CMS or premultiplied alpha are forced off
   uint32_t mCMSMode;
   bool mDisablePremultipliedAlpha;
+
+  // The number of frames we've finished.
+  uint32_t mNumFrames;
   
   /*
    * libpng callbacks

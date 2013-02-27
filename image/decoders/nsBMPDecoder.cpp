@@ -133,7 +133,7 @@ nsBMPDecoder::FinishInternal()
     NS_ABORT_IF_FALSE(GetFrameCount() <= 1, "Multiple BMP frames?");
 
     // Send notifications if appropriate
-    if (!IsSizeDecode() && (GetFrameCount() == 1)) {
+    if (!IsSizeDecode() && HasSize()) {
 
         // Invalidate
         nsIntRect r(0, 0, mBIH.width, GetHeight());
@@ -225,10 +225,10 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
         aBuffer += toCopy;
     }
 
-    // GetNumFrames is called to ensure that if at this point mPos == mLOH but
+    // HasSize is called to ensure that if at this point mPos == mLOH but
     // we have no data left to process, the next time WriteInternal is called
     // we won't enter this condition again.
-    if (mPos == mLOH && GetFrameCount() == 0) {
+    if (mPos == mLOH && !HasSize()) {
         ProcessInfoHeader();
         PR_LOG(GetBMPLog(), PR_LOG_DEBUG, ("BMP is %lix%lix%lu. compression=%lu\n",
                mBIH.width, mBIH.height, mBIH.bpp, mBIH.compression));

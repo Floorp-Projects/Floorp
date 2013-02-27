@@ -391,6 +391,7 @@ private:
       : mImage(aImage)
       , mBytesToDecode(0)
       , mChunkCount(0)
+      , mAllocatedNewFrame(false)
       , mIsASAP(false)
     {
       mStatusTracker = aImage->mStatusTracker->CloneForRecording();
@@ -410,6 +411,10 @@ private:
 
     /* The number of chunks it took to decode this image. */
     int32_t mChunkCount;
+
+    /* True if a new frame has been allocated, but DecodeSomeData hasn't yet
+     * been called to flush data to it */
+    bool mAllocatedNewFrame;
 
     /* True if we need to handle this decode as soon as possible. */
     bool mIsASAP;
@@ -543,6 +548,28 @@ private:
 
     nsRefPtr<RasterImage> mImage;
     nsRefPtr<DecodeRequest> mRequest;
+  };
+
+  class FrameNeededWorker : public nsRunnable
+  {
+  public:
+    /**
+     * Called by the DecodeWorker with an image when it's been told by the
+     * decoder that it needs a new frame to be allocated on the main thread.
+     *
+     * Dispatches an event to do so, which will further dispatch a
+     * DecodeRequest event to continue decoding.
+     */
+    static void GetNewFrame(RasterImage* image);
+
+    NS_IMETHOD Run();
+
+  private: /* methods */
+    FrameNeededWorker(RasterImage* image);
+
+  private: /* members */
+
+    nsRefPtr<RasterImage> mImage;
   };
 
   nsresult FinishedSomeDecoding(eShutdownIntent intent = eShutdownIntent_Done,
@@ -769,7 +796,7 @@ private: // data
   // Decoding
   nsresult WantDecodedFrames();
   nsresult SyncDecode();
-  nsresult InitDecoder(bool aDoSizeDecode);
+  nsresult InitDecoder(bool aDoSizeDecode, bool aIsSynchronous = false);
   nsresult WriteToDecoder(const char *aBuffer, uint32_t aCount);
   nsresult DecodeSomeData(uint32_t aMaxBytes);
   bool     IsDecodeFinished();

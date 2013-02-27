@@ -120,7 +120,8 @@ nsPNGDecoder::nsPNGDecoder(RasterImage &aImage)
    mInProfile(nullptr), mTransform(nullptr),
    mHeaderBuf(nullptr), mHeaderBytesRead(0),
    mChannels(0), mFrameIsHidden(false),
-   mCMSMode(0), mDisablePremultipliedAlpha(false)
+   mCMSMode(0), mDisablePremultipliedAlpha(false),
+   mNumFrames(0)
 {
 }
 
@@ -148,7 +149,7 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
                                int32_t width, int32_t height,
                                gfxASurface::gfxImageFormat format)
 {
-  NeedNewFrame(GetFrameCount(), x_offset, y_offset, width, height, format);
+  NeedNewFrame(mNumFrames, x_offset, y_offset, width, height, format);
 
   mFrameRect.x = x_offset;
   mFrameRect.y = y_offset;
@@ -169,6 +170,8 @@ void nsPNGDecoder::EndImageFrame()
 {
   if (mFrameIsHidden)
     return;
+
+  mNumFrames++;
 
   RasterImage::FrameAlpha alpha;
   if (mFrameHasNoAlpha)
@@ -789,8 +792,7 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
     if (!rowHasNoAlpha)
       decoder->mFrameHasNoAlpha = false;
 
-    uint32_t numFrames = decoder->GetFrameCount();
-    if (numFrames <= 1) {
+    if (decoder->mNumFrames <= 1) {
       // Only do incremental image display for the first frame
       // XXXbholley - this check should be handled in the superclass
       nsIntRect r(0, row_num, width, 1);

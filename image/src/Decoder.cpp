@@ -28,6 +28,7 @@ Decoder::Decoder(RasterImage &aImage)
   , mSizeDecode(false)
   , mInFrame(false)
   , mIsAnimated(false)
+  , mSynchronous(false)
 {
 }
 
@@ -73,6 +74,10 @@ Decoder::InitSharedDecoder(uint8_t* imageData, uint32_t imageDataLength,
   mColormap = colormap;
   mColormapSize = colormapSize;
   mCurrentFrame = currentFrame;
+  // We have all the frame data, so we've started the frame.
+  if (!IsSizeDecode()) {
+    PostFrameStart();
+  }
 
   // Implementation-specific initialization
   InitInternal();
@@ -92,31 +97,17 @@ Decoder::Write(const char* aBuffer, uint32_t aCount)
   if (HasDataError())
     return;
 
-  nsresult rv = NS_OK;
-
-  // Preallocate a frame if we've been asked to.
-  if (mNeedsNewFrame) {
-    rv = AllocateFrame();
-    if (NS_FAILED(rv)) {
-      PostDataError();
-      return;
-    }
-  }
-
   // Pass the data along to the implementation
   WriteInternal(aBuffer, aCount);
 
-  // If the decoder told us that it needs a new frame to proceed, let's create
-  // one and call it again.
-  while (mNeedsNewFrame && !HasDataError()) {
+  // If we're a synchronous decoder and we need a new frame to proceed, let's
+  // create one and call it again.
+  while (mSynchronous && NeedsNewFrame() && !HasDataError()) {
     nsresult rv = AllocateFrame();
 
     if (NS_SUCCEEDED(rv)) {
       // Tell the decoder to use the data it saved when it asked for a new frame.
       WriteInternal(nullptr, 0);
-    } else {
-      PostDataError();
-      break;
     }
   }
 }
@@ -129,7 +120,7 @@ Decoder::Finish(RasterImage::eShutdownIntent aShutdownIntent)
     FinishInternal();
 
   // If the implementation left us mid-frame, finish that up.
-  if (mInFrame && !HasDecoderError())
+  if (mInFrame && !HasError())
     PostFrameStop();
 
   // If PostDecodeDone() has not been called, we need to sent teardown
@@ -195,6 +186,7 @@ nsresult
 Decoder::AllocateFrame()
 {
   MOZ_ASSERT(mNeedsNewFrame);
+  MOZ_ASSERT(NS_IsMainThread());
 
   nsresult rv;
   if (mNewFrameData.mPaletteDepth) {
@@ -211,8 +203,10 @@ Decoder::AllocateFrame()
                             &mImageData, &mImageDataLength, &mCurrentFrame);
   }
 
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv) && mNewFrameData.mFrameNum == mFrameCount) {
     PostFrameStart();
+  } else if (NS_FAILED(rv)) {
+    PostDataError();
   }
 
   // Mark ourselves as not needing another frame before talking to anyone else
@@ -403,7 +397,7 @@ Decoder::NeedNewFrame(uint32_t framenum, uint32_t x_offset, uint32_t y_offset,
   MOZ_ASSERT(!mNeedsNewFrame);
 
   // We don't want images going back in time or skipping frames.
-  MOZ_ASSERT(framenum == mFrameCount || framenum == (mFrameCount + 1));
+  MOZ_ASSERT(framenum == mFrameCount || framenum == (mFrameCount - 1));
 
   mNewFrameData = NewFrameData(framenum, x_offset, y_offset, width, height, format, palette_depth);
   mNeedsNewFrame = true;
