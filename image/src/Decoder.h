@@ -35,7 +35,8 @@ public:
    * Notifications Sent: TODO
    */
   void InitSharedDecoder(uint8_t* imageData, uint32_t imageDataLength,
-                         uint32_t* colormap, uint32_t colormapSize);
+                         uint32_t* colormap, uint32_t colormapSize,
+                         imgFrame* currentFrame);
 
   /**
    * Writes data to the decoder.
@@ -206,6 +207,7 @@ protected:
    *
    */
   RasterImage &mImage;
+  imgFrame* mCurrentFrame;
   RefPtr<imgDecoderObserver> mObserver;
   ImageMetadata mImageMetadata;
 
