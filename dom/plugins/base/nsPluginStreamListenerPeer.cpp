@@ -514,7 +514,7 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
 
   // it's possible for the server to not send a Content-Length.
   // we should still work in this case.
-  if (NS_FAILED(rv) || length == -1) {
+  if (NS_FAILED(rv) || length < 0 || length > UINT32_MAX) {
     // check out if this is file channel
     nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(channel);
     if (fileChannel) {
@@ -525,7 +525,7 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
     mLength = 0;
   }
   else {
-    mLength = length;
+    mLength = uint32_t(length);
   }
 
   nsAutoCString aContentType; // XXX but we already got the type above!
