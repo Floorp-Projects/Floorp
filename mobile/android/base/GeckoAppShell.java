@@ -178,6 +178,7 @@ public class GeckoAppShell
 
     public static void registerGlobalExceptionHandler() {
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
             public void uncaughtException(Thread thread, Throwable e) {
                 Log.e(LOGTAG, ">>> REPORTING UNCAUGHT EXCEPTION FROM THREAD "
                               + thread.getId() + " (\"" + thread.getName() + "\")", e);
@@ -250,10 +251,12 @@ public class GeckoAppShell
             mScanner.connect();
         }
 
+        @Override
         public void onMediaScannerConnected() {
             mScanner.scanFile(mFile, mMimeType);
         }
 
+        @Override
         public void onScanCompleted(String path, Uri uri) {
             if(path.equals(mFile)) {
                 mScanner.disconnect();
@@ -298,6 +301,7 @@ public class GeckoAppShell
         combinedArgs += " -width " + metrics.widthPixels + " -height " + metrics.heightPixels;
 
         GeckoApp.mAppContext.runOnUiThread(new Runnable() {
+                @Override
                 public void run() {
                     geckoLoaded();
                 }
@@ -417,6 +421,7 @@ public class GeckoAppShell
 
     public static void enableLocation(final boolean enable) {
         getMainHandler().post(new Runnable() { 
+                @Override
                 public void run() {
                     LocationManager lm = (LocationManager)
                         GeckoApp.mAppContext.getSystemService(Context.LOCATION_SERVICE);
@@ -626,6 +631,7 @@ public class GeckoAppShell
                                       final Bitmap aIcon, final String aType)
     {
         getHandler().post(new Runnable() {
+            @Override
             public void run() {
                 // the intent to be launched by the shortcut
                 Intent shortcutIntent;
@@ -662,6 +668,7 @@ public class GeckoAppShell
 
     public static void removeShortcut(final String aTitle, final String aURI, final String aUniqueURI, final String aType) {
         getHandler().post(new Runnable() {
+            @Override
             public void run() {
                 // the intent to be launched by the shortcut
                 Intent shortcutIntent;
@@ -696,6 +703,7 @@ public class GeckoAppShell
         //   1. nuke the running app process.
         //   2. nuke the profile that was assigned to that webapp
         getHandler().post(new Runnable() {
+            @Override
             public void run() {
                 int index = WebAppAllocator.getInstance(GeckoApp.mAppContext).releaseIndexForApp(uniqueURI);
 
@@ -1132,6 +1140,7 @@ public class GeckoAppShell
     // gecko thread, which is most likely this thread
     static String getClipboardText() {
         getHandler().post(new Runnable() { 
+            @Override
             @SuppressWarnings("deprecation")
             public void run() {
                 Context context = GeckoApp.mAppContext;
@@ -1165,6 +1174,7 @@ public class GeckoAppShell
 
     static void setClipboardText(final String text) {
         getHandler().post(new Runnable() { 
+            @Override
             @SuppressWarnings("deprecation")
             public void run() {
                 Context context = GeckoApp.mAppContext;
@@ -1367,6 +1377,7 @@ public class GeckoAppShell
 
     public static void setKeepScreenOn(final boolean on) {
         GeckoApp.mAppContext.runOnUiThread(new Runnable() {
+            @Override
             public void run() {
                 // TODO
             }
@@ -1375,6 +1386,7 @@ public class GeckoAppShell
 
     public static void notifyDefaultPrevented(final boolean defaultPrevented) {
         getMainHandler().post(new Runnable() {
+            @Override
             public void run() {
                 LayerView view = GeckoApp.mAppContext.getLayerView();
                 PanZoomController controller = (view == null ? null : view.getPanZoomController());
@@ -1471,6 +1483,7 @@ public class GeckoAppShell
 
     public static void killAnyZombies() {
         GeckoProcessesVisitor visitor = new GeckoProcessesVisitor() {
+            @Override
             public boolean callback(int pid) {
                 if (pid != android.os.Process.myPid())
                     android.os.Process.killProcess(pid);
@@ -1485,6 +1498,7 @@ public class GeckoAppShell
 
         class GeckoPidCallback implements GeckoProcessesVisitor {
             public boolean otherPidExist = false;
+            @Override
             public boolean callback(int pid) {
                 if (pid != android.os.Process.myPid()) {
                     otherPidExist = true;
@@ -1797,6 +1811,7 @@ public class GeckoAppShell
             sCameraBuffer = new byte[(bufferSize * 12) / 8];
             sCamera.addCallbackBuffer(sCameraBuffer);
             sCamera.setPreviewCallbackWithBuffer(new android.hardware.Camera.PreviewCallback() {
+                @Override
                 public void onPreviewFrame(byte[] data, android.hardware.Camera camera) {
                     cameraCallbackBridge(data);
                     if (sCamera != null)
@@ -1888,6 +1903,7 @@ public class GeckoAppShell
 
     static void markUriVisited(final String uri) {    // invoked from native JNI code
         getHandler().post(new Runnable() { 
+            @Override
             public void run() {
                 GlobalHistory.getInstance().add(uri);
             }
@@ -1896,6 +1912,7 @@ public class GeckoAppShell
 
     static void setUriTitle(final String uri, final String title) {    // invoked from native JNI code
         getHandler().post(new Runnable() {
+            @Override
             public void run() {
                 GlobalHistory.getInstance().update(uri, title);
             }
@@ -2138,6 +2155,7 @@ public class GeckoAppShell
             mId = id;
         }
 
+        @Override
         public void onActivityResult(int resultCode, Intent data) {
             GeckoAppShell.notifyFilePickerResult(handleActivityResult(resultCode, data), mId);
         }
@@ -2165,6 +2183,7 @@ public class GeckoAppShell
 
     public static void registerSurfaceTextureFrameListener(Object surfaceTexture, final int id) {
         ((SurfaceTexture)surfaceTexture).setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
+            @Override
             public void onFrameAvailable(SurfaceTexture surfaceTexture) {
                 GeckoAppShell.onSurfaceTextureFrameAvailable(surfaceTexture, id);
             }

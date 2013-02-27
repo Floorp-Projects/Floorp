@@ -85,6 +85,7 @@ public class Favicons {
 
         // We want to always run the listener on UI thread
         GeckoAppShell.getMainHandler().post(new Runnable() {
+            @Override
             public void run() {
                 if (listener != null)
                     listener.onFaviconLoaded(pageUrl, image);

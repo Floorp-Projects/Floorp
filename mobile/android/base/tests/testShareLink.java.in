@@ -164,6 +164,7 @@ public class testShareLink extends BaseTest {
 
         list = null;
         boolean success = waitForTest(new BooleanTest() {
+            @Override
             public boolean test() {
                for (ListView view : views) {
                    list = view;

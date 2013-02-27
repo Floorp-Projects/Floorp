@@ -385,6 +385,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
             return !mStarted;
         }
 
+        @Override
         public void run() {
             long timeDelta = mRunAt - SystemClock.elapsedRealtime();
             if (timeDelta > 0) {
@@ -630,6 +631,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
             // composited.
             if (mView.getPaintState() == LayerView.PAINT_BEFORE_FIRST) {
                 mView.post(new Runnable() {
+                    @Override
                     public void run() {
                         mView.getChildAt(0).setBackgroundColor(Color.TRANSPARENT);
                     }
