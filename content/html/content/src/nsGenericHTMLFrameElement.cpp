@@ -51,71 +51,69 @@ nsresult
 nsGenericHTMLFrameElement::GetContentDocument(nsIDOMDocument** aContentDocument)
 {
   NS_PRECONDITION(aContentDocument, "Null out param");
-  nsIDocument* document = GetContentDocument();
-  nsIDOMDocument* domDocument =
-    static_cast<nsIDOMDocument*>(document->AsDOMNode());
-  NS_ADDREF(*aContentDocument = domDocument);
-  return NS_OK;
-}
+  *aContentDocument = nullptr;
 
-nsIDocument*
-nsGenericHTMLFrameElement::GetContentDocument()
-{
-  nsCOMPtr<nsPIDOMWindow> win = GetContentWindow();
-  return win ? win->GetDoc() : nullptr;
+  nsCOMPtr<nsIDOMWindow> win;
+  GetContentWindow(getter_AddRefs(win));
+
+  if (!win) {
+    return NS_OK;
+  }
+
+  return win->GetDocument(aContentDocument);
 }
 
 nsresult
 nsGenericHTMLFrameElement::GetContentWindow(nsIDOMWindow** aContentWindow)
 {
   NS_PRECONDITION(aContentWindow, "Null out param");
-  nsCOMPtr<nsPIDOMWindow> window = GetContentWindow();
-  window.forget(aContentWindow);
-  return NS_OK;
-}
+  *aContentWindow = nullptr;
 
-already_AddRefed<nsPIDOMWindow>
-nsGenericHTMLFrameElement::GetContentWindow()
-{
-  EnsureFrameLoader();
+  nsresult rv = EnsureFrameLoader();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (!mFrameLoader) {
-    return nullptr;
+    return NS_OK;
   }
 
   bool depthTooGreat = false;
   mFrameLoader->GetDepthTooGreat(&depthTooGreat);
   if (depthTooGreat) {
     // Claim to have no contentWindow
-    return nullptr;
+    return NS_OK;
   }
 
   nsCOMPtr<nsIDocShell> doc_shell;
   mFrameLoader->GetDocShell(getter_AddRefs(doc_shell));
 
-  nsCOMPtr<nsPIDOMWindow> win = do_GetInterface(doc_shell);
+  nsCOMPtr<nsPIDOMWindow> win(do_GetInterface(doc_shell));
 
   if (!win) {
-    return nullptr;
+    return NS_OK;
   }
 
   NS_ASSERTION(win->IsOuterWindow(),
                "Uh, this window should always be an outer window!");
 
-  return win.forget();
+  return CallQueryInterface(win, aContentWindow);
 }
 
-void
+nsresult
 nsGenericHTMLFrameElement::EnsureFrameLoader()
 {
   if (!GetParent() || !IsInDoc() || mFrameLoader || mFrameLoaderCreationDisallowed) {
     // If frame loader is there, we just keep it around, cached
-    return;
+    return NS_OK;
   }
 
-  // Strangely enough, this method doesn't actually ensure that the
-  // frameloader exists.  It's more of a best-effort kind of thing.
   mFrameLoader = nsFrameLoader::Create(this, mNetworkCreated);
+  if (!mFrameLoader) {
+    // Strangely enough, this method doesn't actually ensure that the
+    // frameloader exists.  It's more of a best-effort kind of thing.
+    return NS_OK;
+  }
+
+  return NS_OK;
 }
 
 nsresult
@@ -152,13 +150,14 @@ nsGenericHTMLFrameElement::SwapFrameLoaders(nsIFrameLoaderOwner* aOtherOwner)
 nsresult
 nsGenericHTMLFrameElement::LoadSrc()
 {
-  EnsureFrameLoader();
+  nsresult rv = EnsureFrameLoader();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (!mFrameLoader) {
     return NS_OK;
   }
 
-  nsresult rv = mFrameLoader->LoadFrame();
+  rv = mFrameLoader->LoadFrame();
 #ifdef DEBUG
   if (NS_FAILED(rv)) {
     NS_WARNING("failed to load URL");
