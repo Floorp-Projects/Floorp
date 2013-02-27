@@ -217,6 +217,7 @@ public class LayerView extends FrameLayout {
         return mBackgroundColor;
     }
 
+    @Override
     public void setBackgroundColor(int newColor) {
         mBackgroundColor = newColor;
         requestRender();
@@ -451,6 +452,7 @@ public class LayerView extends FrameLayout {
             mParent = aParent;
         }
 
+        @Override
         protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
             if (changed) {
                 mParent.surfaceChanged(right - left, bottom - top);

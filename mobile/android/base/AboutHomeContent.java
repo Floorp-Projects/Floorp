@@ -146,6 +146,7 @@ public class AboutHomeContent extends ScrollView
         // remote tabs component on *every* tab change
         // The observer will run on the background thread (see constructor argument)
         mTabsContentObserver = new ContentObserver(GeckoAppShell.getHandler()) {
+            @Override
             public void onChange(boolean selfChange) {
                 update(EnumSet.of(AboutHomeContent.UpdateFlags.REMOTE_TABS));
             }

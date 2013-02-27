@@ -113,6 +113,7 @@ public class Tabs implements GeckoEventListener {
     private void lazyRegisterBookmarkObserver() {
         if (mContentObserver == null) {
             mContentObserver = new ContentObserver(null) {
+                @Override
                 public void onChange(boolean selfChange) {
                     for (Tab tab : mTabs.values()) {
                         tab.updateBookmark();

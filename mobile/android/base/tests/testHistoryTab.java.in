@@ -240,6 +240,7 @@ public class testHistoryTab extends PixelTest {
         }
     }
 
+    @Override
     public void tearDown() throws Exception {
         ContentResolver resolver = getActivity().getContentResolver();
         Uri uri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/history");

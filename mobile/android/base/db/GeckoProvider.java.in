@@ -81,6 +81,7 @@ public abstract class GeckoProvider extends ContentProvider {
         mDatabasePerProfile = null;
     }
 
+    @Override
     public void finalize() {
         shutdown();
     }

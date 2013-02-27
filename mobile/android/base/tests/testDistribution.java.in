@@ -141,11 +141,13 @@ public class testDistribution extends ContentProviderTest {
         settings.edit().remove(keyName).commit();
     }
 
+    @Override
     public void setUp() throws Exception {
         // TODO: Set up the content provider after setting the distribution.
         super.setUp("@ANDROID_PACKAGE_NAME@.db.BrowserProvider", "AUTHORITY");
     }
 
+    @Override
     public void tearDown() throws Exception {
         File dataDir = new File(mActivity.getApplicationInfo().dataDir);
 

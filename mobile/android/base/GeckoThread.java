@@ -90,6 +90,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         return (args != null ? args : "") + profile;
     }
 
+    @Override
     public void run() {
         // Here we start the GfxInfo thread, which will query OpenGL
         // system information for Gecko. This must be done early enough that the data will be
