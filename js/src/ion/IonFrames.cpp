@@ -718,6 +718,14 @@ IonActivationIterator::ionStackRange(uintptr_t *&min, uintptr_t *&end)
 static void
 MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
 {
+    // Ignore fake exit frames created by EnsureExitFrame.
+    if (frame.prevType() == IonFrame_Unwound_Rectifier ||
+        frame.prevType() == IonFrame_Unwound_OptimizedJS ||
+        frame.prevType() == IonFrame_Unwound_BaselineStub)
+    {
+        return;
+    }
+
     IonExitFooterFrame *footer = frame.exitFrame()->footer();
 
     // Mark the code of the code handling the exit path.  This is needed because
