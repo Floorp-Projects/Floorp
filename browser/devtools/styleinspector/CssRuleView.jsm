@@ -1872,6 +1872,9 @@ TextPropertyEditor.prototype = {
       this.prop.setValue(val.value, val.priority);
       this.committed.value = this.prop.value;
       this.committed.priority = this.prop.priority;
+      if (this.prop.overridden) {
+        this.element.classList.add("ruleview-overridden");
+      }
     } else {
       this.prop.setValue(this.committed.value, this.committed.priority);
     }

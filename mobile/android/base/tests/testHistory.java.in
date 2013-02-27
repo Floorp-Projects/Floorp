@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import android.widget.TabHost;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
 import android.util.Log;
 
 public class testHistory extends PixelTest {
@@ -40,6 +39,7 @@ public class testHistory extends PixelTest {
         // wait for the history list to be populated
         mFirstChild = null;
         boolean success = waitForTest(new BooleanTest() {
+            @Override
             public boolean test() {
                 mFirstChild = hList.getChildAt(1);
                 if (mFirstChild == null) {

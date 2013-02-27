@@ -136,7 +136,7 @@ public:
 
   bool IsTransportSeekable() MOZ_OVERRIDE { return true; }
 
-  virtual const nsACString& GetContentType() const MOZ_OVERRIDE
+  virtual const nsCString& GetContentType() const MOZ_OVERRIDE
   {
     return mContentType;
   }

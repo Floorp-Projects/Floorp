@@ -11,6 +11,7 @@ import android.content.Intent;
 class AwesomebarResultHandler implements ActivityResultHandler {
     private static final String LOGTAG = "GeckoAwesomebarResultHandler";
 
+    @Override
     public void onActivityResult(int resultCode, Intent data) {
         if (data != null) {
             String url = data.getStringExtra(AwesomeBar.URL_KEY);

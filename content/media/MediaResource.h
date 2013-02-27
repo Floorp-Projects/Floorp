@@ -371,7 +371,7 @@ public:
   // Returns the content type of the resource. This is copied from the
   // nsIChannel when the MediaResource is created. Safe to call from
   // any thread.
-  virtual const nsACString& GetContentType() const = 0;
+  virtual const nsCString& GetContentType() const = 0;
 };
 
 class BaseMediaResource : public MediaResource {
@@ -398,7 +398,7 @@ protected:
     MOZ_COUNT_DTOR(BaseMediaResource);
   }
 
-  virtual const nsACString& GetContentType() const MOZ_OVERRIDE
+  virtual const nsCString& GetContentType() const MOZ_OVERRIDE
   {
     return mContentType;
   }

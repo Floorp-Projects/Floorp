@@ -309,6 +309,7 @@ public class SQLiteBridge {
         return mInTransaction;
     }
 
+    @Override
     public void finalize() {
         if (isOpen()) {
             Log.e(LOGTAG, "Bridge finalized without closing the database");

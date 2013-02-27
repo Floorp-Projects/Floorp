@@ -327,6 +327,7 @@ public class testBrowserProvider extends ContentProviderTest {
                                null);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp("@ANDROID_PACKAGE_NAME@.db.BrowserProvider", "AUTHORITY");
         loadContractInfo();
@@ -376,6 +377,7 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     abstract class Test implements Runnable {
+        @Override
         public void run() {
             try {
                 test();
@@ -546,6 +548,7 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(allFound, true, "Found all bulkInsert entries");
         }
 
+        @Override
         public void test() throws Exception {
             testApplyBatch();
             // Clean up
@@ -559,6 +562,7 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     class TestSpecialFolders extends Test {
+        @Override
         public void test() throws Exception {
             Cursor c = mProvider.query(mBookmarksUri,
                                        new String[] { mBookmarksIdCol,
@@ -615,6 +619,7 @@ public class testBrowserProvider extends ContentProviderTest {
             return id;
         }
 
+        @Override
         public void test() throws Exception {
             ContentValues b = createOneBookmark();
             long id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
@@ -675,6 +680,7 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     class TestInsertBookmarksFavicons extends Test {
+        @Override
         public void test() throws Exception {
             ContentValues b = createOneBookmark();
 
@@ -712,6 +718,7 @@ public class testBrowserProvider extends ContentProviderTest {
             return id;
         }
 
+        @Override
         public void test() throws Exception {
             long id = insertOneBookmark();
 
@@ -771,6 +778,7 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     class TestDeleteBookmarksFavicons extends Test {
+        @Override
         public void test() throws Exception {
             ContentValues b = createOneBookmark();
 
@@ -806,6 +814,7 @@ public class testBrowserProvider extends ContentProviderTest {
             return updated;
         }
 
+        @Override
         public void test() throws Exception {
             ContentValues b = createOneBookmark();
             long id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
@@ -879,6 +888,7 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     class TestUpdateBookmarksFavicons extends Test {
+        @Override
         public void test() throws Exception {
             ContentValues b = createOneBookmark();
 
@@ -942,6 +952,7 @@ public class testBrowserProvider extends ContentProviderTest {
         }
 
         public static final int NUMBER_OF_CHILDREN = 1001;
+        @Override
         public void test() throws Exception {
             // Create the containing folder.
             ContentValues folder = createBookmark("FolderFolder", "", mMobileFolderId,
@@ -1008,6 +1019,7 @@ public class testBrowserProvider extends ContentProviderTest {
             return id;
         }
 
+        @Override
         public void test() throws Exception {
             ContentValues h = createOneHistoryEntry();
             long id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
@@ -1037,6 +1049,7 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     class TestInsertHistoryFavicons extends Test {
+        @Override
         public void test() throws Exception {
             ContentValues h = createOneHistoryEntry();
 
@@ -1074,6 +1087,7 @@ public class testBrowserProvider extends ContentProviderTest {
             return id;
         }
 
+        @Override
         public void test() throws Exception {
             long id = insertOneHistoryEntry();
 
@@ -1108,6 +1122,7 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     class TestDeleteHistoryFavicons extends Test {
+        @Override
         public void test() throws Exception {
             ContentValues h = createOneHistoryEntry();
 
@@ -1143,6 +1158,7 @@ public class testBrowserProvider extends ContentProviderTest {
             return updated;
         }
 
+        @Override
         public void test() throws Exception {
             ContentValues h = createOneHistoryEntry();
             long id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
@@ -1207,6 +1223,7 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     class TestUpdateHistoryFavicons extends Test {
+        @Override
         public void test() throws Exception {
             ContentValues h = createOneHistoryEntry();
 
@@ -1255,6 +1272,7 @@ public class testBrowserProvider extends ContentProviderTest {
             return id;
         }
 
+        @Override
         public void test() throws Exception {
             Uri updateHistoryUriWithProfile = mHistoryUri.buildUpon().
                 appendQueryParameter("insert_if_needed", "true").
@@ -1353,6 +1371,7 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     class TestInsertHistoryThumbnails extends Test {
+        @Override
         public void test() throws Exception {
             ContentValues h = createOneHistoryEntry();
 
@@ -1373,6 +1392,7 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     class TestUpdateHistoryThumbnails extends Test {
+        @Override
         public void test() throws Exception {
             ContentValues h = createOneHistoryEntry();
 
@@ -1404,6 +1424,7 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     class TestDeleteHistoryThumbnails extends Test {
+        @Override
         public void test() throws Exception {
             ContentValues h = createOneHistoryEntry();
 
@@ -1424,6 +1445,7 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     class TestCombinedView extends Test {
+        @Override
         public void test() throws Exception {
             final String TITLE_1 = "Test Page 1";
             final String TITLE_2 = "Test Page 2";
@@ -1530,6 +1552,7 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     class TestCombinedViewDisplay extends Test {
+        @Override
         public void test() throws Exception {
             final String TITLE_1 = "Test Page 1";
             final String TITLE_2 = "Test Page 2";
@@ -1589,6 +1612,7 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     class TestCombinedViewWithDeletedBookmark extends Test {
+        @Override
         public void test() throws Exception {
             final String TITLE = "Test Page 1";
             final String URL = "http://example.com";
@@ -1627,6 +1651,7 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     class TestCombinedViewWithDeletedReadingListItem extends Test {
+        @Override
         public void test() throws Exception {
             final String TITLE = "Test Page 1";
             final String URL = "http://example.com";
@@ -1713,6 +1738,7 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(c.getCount(), count, count + " thumbnails entries found");
         }
 
+        @Override
         public void test() throws Exception {
             final int count = 3000;
             final int thumbCount = 15;
@@ -1812,6 +1838,7 @@ public class testBrowserProvider extends ContentProviderTest {
                          uri.toString() + " starts with expected prefix " + expectedUri);
         }
 
+        @Override
         public void test() throws Exception {
             // Insert
             final ContentValues h = createOneHistoryEntry();

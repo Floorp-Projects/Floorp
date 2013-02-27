@@ -237,6 +237,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         // this change.
 
         post(new Runnable() {
+            @Override
             public void run() {
                 mPanZoomController.pageRectUpdated();
                 mView.requestRender();
@@ -266,6 +267,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     private void abortPanZoomAnimation() {
         if (mPanZoomController != null) {
             post(new Runnable() {
+                @Override
                 public void run() {
                     mPanZoomController.abortAnimation();
                 }
@@ -309,6 +311,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
             final ImmutableViewportMetrics newMetrics = metrics;
             post(new Runnable() {
+                @Override
                 public void run() {
                     mGeckoViewport = newMetrics;
                 }
@@ -456,6 +459,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             // mViewportMetrics. Usually this information is updated via handleViewportMessage
             // while we remain on the same document.
             post(new Runnable() {
+                @Override
                 public void run() {
                     mGeckoViewport = newMetrics;
                 }
@@ -579,6 +583,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     }
 
     /** Implementation of LayerView.Listener */
+    @Override
     public void renderRequested() {
         try {
             GeckoAppShell.scheduleComposite();
@@ -590,6 +595,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     }
 
     /** Implementation of LayerView.Listener */
+    @Override
     public void compositionPauseRequested() {
         // We need to coordinate with Gecko when pausing composition, to ensure
         // that Gecko never executes a draw event while the compositor is paused.
@@ -605,6 +611,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     }
 
     /** Implementation of LayerView.Listener */
+    @Override
     public void compositionResumeRequested(int width, int height) {
         // Asking Gecko to resume the compositor takes too long (see
         // https://bugzilla.mozilla.org/show_bug.cgi?id=735230#c23), so we
@@ -617,6 +624,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     }
 
     /** Implementation of LayerView.Listener */
+    @Override
     public void sizeChanged(int width, int height) {
         // We need to make sure a draw happens synchronously at this point,
         // but resizing the surface before the SurfaceView has resized will
@@ -625,6 +633,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     }
 
     /** Implementation of LayerView.Listener */
+    @Override
     public void surfaceChanged(int width, int height) {
         setViewportSize(width, height);
 
@@ -635,26 +644,31 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     }
 
     /** Implementation of LayerView.Listener */
+    @Override
     public void compositorCreated() {
         mCompositorCreated = true;
     }
 
     /** Implementation of PanZoomTarget */
+    @Override
     public ImmutableViewportMetrics getViewportMetrics() {
         return mViewportMetrics;
     }
 
     /** Implementation of PanZoomTarget */
+    @Override
     public ZoomConstraints getZoomConstraints() {
         return mZoomConstraints;
     }
 
     /** Implementation of PanZoomTarget */
+    @Override
     public boolean isFullScreen() {
         return mView.isFullScreen();
     }
 
     /** Implementation of PanZoomTarget */
+    @Override
     public void setAnimationTarget(ImmutableViewportMetrics metrics) {
         if (mGeckoIsReady) {
             // We know what the final viewport of the animation is going to be, so
@@ -669,6 +683,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     /** Implementation of PanZoomTarget
      * You must hold the monitor while calling this.
      */
+    @Override
     public void setViewportMetrics(ImmutableViewportMetrics metrics) {
         setViewportMetrics(metrics, true);
     }
@@ -684,6 +699,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
     private void setShadowVisibility() {
         GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+            @Override
             public void run() {
                 if (BrowserApp.mBrowserToolbar == null) {
                     return;
@@ -695,6 +711,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     }
 
     /** Implementation of PanZoomTarget */
+    @Override
     public void forceRedraw() {
         mForceRedraw = true;
         if (mGeckoIsReady) {
@@ -703,11 +720,13 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     }
 
     /** Implementation of PanZoomTarget */
+    @Override
     public boolean post(Runnable action) {
         return mView.post(action);
     }
 
     /** Implementation of PanZoomTarget */
+    @Override
     public Object getLock() {
         return this;
     }
@@ -719,6 +738,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
      * events being sent to Gecko are processed in FIFO order, this calculation should always be
      * correct.
      */
+    @Override
     public PointF convertViewPointToLayerPoint(PointF viewPoint) {
         if (!mGeckoIsReady) {
             return null;

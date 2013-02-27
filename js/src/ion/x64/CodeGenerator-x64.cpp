@@ -41,14 +41,6 @@ CodeGeneratorX64::ToTempValue(LInstruction *ins, size_t pos)
     return ValueOperand(ToRegister(ins->getTemp(pos)));
 }
 
-bool
-CodeGeneratorX64::visitDouble(LDouble *ins)
-{
-    const LDefinition *out = ins->output();
-    masm.loadConstantDouble(ins->getDouble(), ToFloatRegister(out));
-    return true;
-}
-
 FrameSizeClass
 FrameSizeClass::FromDepth(uint32_t frameDepth)
 {

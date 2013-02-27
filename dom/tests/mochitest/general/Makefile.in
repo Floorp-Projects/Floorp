@@ -29,8 +29,8 @@ MOCHITEST_FILES = \
 		test_consoleAPI.html \
 		test_domWindowUtils.html \
 		test_domWindowUtils_scrollXY.html \
-		test_domWindowUtils_scrollbarWidth.html \
-		file_domWindowUtils_scrollbarWidth.html \
+		test_domWindowUtils_scrollbarSize.html \
+		file_domWindowUtils_scrollbarSize.html \
 		test_offsets.html \
 		test_offsets.js \
 		test_windowProperties.html \

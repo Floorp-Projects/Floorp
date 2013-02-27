@@ -8,12 +8,14 @@
 #include "nsContentUtils.h"
 #include "jsdbgapi.h"
 
+using namespace mozilla;
+
 nsresult
 XBL_SerializeFunction(nsIScriptContext* aContext,
                       nsIObjectOutputStream* aStream,
                       JSObject* aFunctionObject)
 {
-  JSContext* cx = aContext->GetNativeContext();
+  AutoPushJSContext cx(aContext->GetNativeContext());
   return nsContentUtils::XPConnect()->WriteFunction(aStream, cx, aFunctionObject);
 }
 
@@ -22,7 +24,7 @@ XBL_DeserializeFunction(nsIScriptContext* aContext,
                         nsIObjectInputStream* aStream,
                         JSObject** aFunctionObjectp)
 {
-  JSContext* cx = aContext->GetNativeContext();
+  AutoPushJSContext cx(aContext->GetNativeContext());
   nsresult rv = nsContentUtils::XPConnect()->ReadFunction(aStream, cx, aFunctionObjectp);
   NS_ENSURE_SUCCESS(rv, rv);
 

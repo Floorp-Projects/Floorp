@@ -73,7 +73,7 @@
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
-if (navigator.platform.indexOf("Linux") == 0) {
+if (navigator.platform.startsWith("Linux")) {
   SimpleTest.expectAssertions(0, 5);
 } else {
   SimpleTest.expectAssertions(0, 7);
