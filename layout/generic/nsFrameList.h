@@ -160,6 +160,36 @@ public:
   nsIFrame* RemoveFirstChild();
 
   /**
+   * The following two functions are intended to be used in concert for
+   * removing a frame from its frame list when the set of possible frame
+   * lists is known in advance, but the exact frame list is unknown.
+   * aFrame must be non-null.
+   * Example use:
+   *   bool removed = frameList1.StartRemoveFrame(aFrame) ||
+   *                  frameList2.ContinueRemoveFrame(aFrame) ||
+   *                  frameList3.ContinueRemoveFrame(aFrame);
+   *   MOZ_ASSERT(removed);
+   *
+   * @note One of the frame lists MUST contain aFrame, if it's on some other
+   *       frame list then the example above will likely lead to crashes.
+   * This function is O(1).
+   * @return true iff aFrame was removed from /some/ list, not necessarily
+   *         this one.  If it was removed from a different list then it is
+   *         guaranteed that that list is still non-empty.
+   * (this method is implemented in nsIFrame.h to be able to inline)
+   */
+  inline bool StartRemoveFrame(nsIFrame* aFrame);
+
+  /**
+   * Precondition: StartRemoveFrame MUST be called before this.
+   * This function is O(1).
+   * @see StartRemoveFrame
+   * @return true iff aFrame was removed from this list
+   * (this method is implemented in nsIFrame.h to be able to inline)
+   */
+  inline bool ContinueRemoveFrame(nsIFrame* aFrame);
+
+  /**
    * Take aFrame out of the frame list and then destroy it.
    * The frame must be non-null and present on this list.
    */
@@ -452,6 +482,14 @@ private:
   static const nsFrameList* sEmptyList;
 
 protected:
+  /**
+   * Disconnect aFrame from its siblings.  This must only be called if aFrame
+   * is NOT the first or last sibling, because otherwise its nsFrameList will
+   * have a stale mFirst/LastChild pointer.  This precondition is asserted.
+   * This function is O(1).
+   */
+  static void UnhookFrameFromSiblings(nsIFrame* aFrame);
+
   nsIFrame* mFirstChild;
   nsIFrame* mLastChild;
 };
