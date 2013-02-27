@@ -243,6 +243,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             mUrlbar = urlbar;
             mUrl = url;
         }
+        @Override
         public boolean test() {
             String urlbarText = mUrlbar.getText();
             if (urlbarText.equals(mUrl)) {
@@ -377,6 +378,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             mAwesomebar = awesomebar;
             mTitle = title;
         }
+        @Override
         public boolean test() {
             String pageTitle = mAwesomebar.getText();
             if (pageTitle.equals(mTitle)) {
@@ -523,6 +525,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
 
         // wait for addTab to appear (this is usually immediate)
         boolean success = waitForTest(new BooleanTest() {
+            @Override
             public boolean test() {
                 View addTabView = getActivity().findViewById(addTabId);
                 if (addTabView == null) {

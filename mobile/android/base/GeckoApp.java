@@ -45,7 +45,6 @@ import android.content.pm.Signature;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
@@ -198,6 +197,7 @@ abstract public class GeckoApp
 
     void focusChrome() { }
 
+    @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
         // When a tab is closed, it is always unselected first.
         // When a tab is unselected, another tab is always selected first.
@@ -215,6 +215,19 @@ abstract public class GeckoApp
                 invalidateOptionsMenu();
                 if (mFormAssistPopup != null)
                     mFormAssistPopup.hide();
+                break;
+
+            case LOADED:
+                // Sync up the layer view and the tab if the tab is
+                // currently displayed.
+                LayerView layerView = mLayerView;
+                if (layerView != null && Tabs.getInstance().isSelectedTab(tab))
+                    layerView.setBackgroundColor(tab.getBackgroundColor());
+                break;
+
+            case DESKTOP_MODE_CHANGE:
+                if (Tabs.getInstance().isSelectedTab(tab))
+                    invalidateOptionsMenu();
                 break;
         }
     }
@@ -596,6 +609,7 @@ abstract public class GeckoApp
                                       Intent.ACTION_SEND, tab.getDisplayTitle());
     }
 
+    @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
@@ -610,7 +624,7 @@ abstract public class GeckoApp
     }
 
     void handleFaviconRequest(final String url) {
-        (new UiAsyncTask<Void, Void, String>(mMainHandler, GeckoAppShell.getHandler()) {
+        (new UiAsyncTask<Void, Void, String>(GeckoAppShell.getHandler()) {
             @Override
             public String doInBackground(Void... params) {
                 return Favicons.getInstance().getFaviconUrlForPageUrl(url);
@@ -725,30 +739,13 @@ abstract public class GeckoApp
         return hasMenu;
     }
 
+    @Override
     public void handleMessage(String event, JSONObject message) {
         try {
             if (event.equals("Toast:Show")) {
                 final String msg = message.getString("message");
                 final String duration = message.getString("duration");
                 handleShowToast(msg, duration);
-            } else if (event.equals("DOMContentLoaded")) {
-                final int tabId = message.getInt("tabID");
-                final String backgroundColor = message.getString("bgColor");
-                handleContentLoaded(tabId);
-                Tab tab = Tabs.getInstance().getTab(tabId);
-                if (backgroundColor != null) {
-                    tab.setBackgroundColor(backgroundColor);
-                } else {
-                    // Default to white if no color is given
-                    tab.setBackgroundColor(Color.WHITE);
-                }
-
-                // Sync up the layer view and the tab if the tab is
-                // currently displayed.
-                LayerView layerView = mLayerView;
-                if (layerView != null && Tabs.getInstance().isSelectedTab(tab)) {
-                    layerView.setBackgroundColor(tab.getBackgroundColor());
-                }
             } else if (event.equals("log")) {
                 // generic log listener
                 final String msg = message.getString("msg");
@@ -800,9 +797,11 @@ abstract public class GeckoApp
                 final String url = message.getString("url");
                 final String title = message.getString("title");
                 mMainHandler.post(new Runnable() {
+                    @Override
                     public void run() {
                         Toast.makeText(GeckoApp.mAppContext, R.string.bookmark_added, Toast.LENGTH_SHORT).show();
                         GeckoAppShell.getHandler().post(new Runnable() {
+                            @Override
                             public void run() {
                                 BrowserDB.addBookmark(GeckoApp.mAppContext.getContentResolver(), title, url);
                             }
@@ -837,20 +836,6 @@ abstract public class GeckoApp
             } else if (event.equals("WebApps:Uninstall")) {
                 String origin = message.getString("origin");
                 GeckoAppShell.uninstallWebApp(origin);
-            } else if (event.equals("DesktopMode:Changed")) {
-                int tabId = message.getInt("tabId");
-                boolean desktopMode = message.getBoolean("desktopMode");
-                final Tab tab = Tabs.getInstance().getTab(tabId);
-                if (tab == null)
-                    return;
-
-                tab.setDesktopMode(desktopMode);
-                mMainHandler.post(new Runnable() {
-                    public void run() {
-                        if (tab == Tabs.getInstance().getSelectedTab())
-                            invalidateOptionsMenu();
-                    }
-                });
             } else if (event.equals("Share:Text")) {
                 String text = message.getString("text");
                 GeckoAppShell.openUriExternal(text, "text/plain", "", "", Intent.ACTION_SEND, "");
@@ -878,6 +863,7 @@ abstract public class GeckoApp
         }
     }
 
+    @Override
     public String getResponse() {
         String res = mCurrentResponse;
         mCurrentResponse = "";
@@ -927,10 +913,12 @@ abstract public class GeckoApp
                 new String[] { "setting", "value" },
                 new int[] { R.id.setting, R.id.value }
                 ), -1, new DialogInterface.OnClickListener() {
+                    @Override
                     public void onClick(DialogInterface dialog, int id) { }
                 });
 
             builder.setPositiveButton(R.string.site_settings_clear, new DialogInterface.OnClickListener() {
+                @Override
                 public void onClick(DialogInterface dialog, int id) {
                     ListView listView = ((AlertDialog) dialog).getListView();
                     SparseBooleanArray checkedItemPositions = listView.getCheckedItemPositions();
@@ -948,12 +936,14 @@ abstract public class GeckoApp
         }
 
         builder.setNegativeButton(R.string.site_settings_cancel, new DialogInterface.OnClickListener(){
+            @Override
             public void onClick(DialogInterface dialog, int id) {
                 dialog.cancel();
             }
         });
 
         mMainHandler.post(new Runnable() {
+            @Override
             public void run() {
                 Dialog dialog = builder.create();
                 dialog.show();
@@ -971,6 +961,7 @@ abstract public class GeckoApp
 
     public void showToast(final int resId, final int duration) {
         mMainHandler.post(new Runnable() {
+            @Override
             public void run() {
                 Toast.makeText(mAppContext, resId, duration).show();
             }
@@ -979,6 +970,7 @@ abstract public class GeckoApp
 
     void handleShowToast(final String message, final String duration) {
         mMainHandler.post(new Runnable() {
+            @Override
             public void run() {
                 Toast toast;
                 if (duration.equals("long"))
@@ -988,14 +980,6 @@ abstract public class GeckoApp
                 toast.show();
             }
         });
-    }
-
-    void handleContentLoaded(int tabId) {
-        final Tab tab = Tabs.getInstance().getTab(tabId);
-        if (tab == null)
-            return;
-
-        Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.LOADED);
     }
 
     private void addFullScreenPluginView(View view) {
@@ -1028,6 +1012,7 @@ abstract public class GeckoApp
 
     void addPluginView(final View view, final Rect rect, final boolean isFullScreen) {
         mMainHandler.post(new Runnable() { 
+            @Override
             public void run() {
                 Tabs tabs = Tabs.getInstance();
                 Tab tab = tabs.getSelectedTab();
@@ -1067,6 +1052,7 @@ abstract public class GeckoApp
         // We need do do this on the next iteration in order to avoid
         // a deadlock, see comment below in FullScreenHolder
         mMainHandler.post(new Runnable() {
+            @Override
             public void run() {
                 mLayerView.show();
             }
@@ -1083,6 +1069,7 @@ abstract public class GeckoApp
 
     void removePluginView(final View view, final boolean isFullScreen) {
         mMainHandler.post(new Runnable() { 
+            @Override
             public void run() {
                 Tabs tabs = Tabs.getInstance();
                 Tab tab = tabs.getSelectedTab();
@@ -1111,7 +1098,7 @@ abstract public class GeckoApp
         notification.setLatestEventInfo(mAppContext, fileName, progText, emptyIntent );
         notification.flags |= Notification.FLAG_ONGOING_EVENT;
         notification.show();
-        new UiAsyncTask<Void, Void, Boolean>(mMainHandler, GeckoAppShell.getHandler()){
+        new UiAsyncTask<Void, Void, Boolean>(GeckoAppShell.getHandler()){
 
             @Override
             protected Boolean doInBackground(Void... params) {
@@ -1306,6 +1293,7 @@ abstract public class GeckoApp
 
     public void setFullScreen(final boolean fullscreen) {
         mMainHandler.post(new Runnable() { 
+            @Override
             public void run() {
                 // Hide/show the system notification bar
                 Window window = getWindow();
@@ -1431,6 +1419,7 @@ abstract public class GeckoApp
         }
 
         GeckoBackgroundThread.getHandler().post(new Runnable() {
+            @Override
             public void run() {
                 SharedPreferences prefs =
                     GeckoApp.mAppContext.getSharedPreferences(PREFS_NAME, 0);
@@ -1628,6 +1617,7 @@ abstract public class GeckoApp
         } else if (ACTION_DEBUG.equals(action) &&
             GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching, GeckoThread.LaunchState.WaitForDebugger)) {
             mMainHandler.postDelayed(new Runnable() {
+                @Override
                 public void run() {
                     GeckoThread.setLaunchState(GeckoThread.LaunchState.Launching);
                     sGeckoThread.start();
@@ -1636,7 +1626,6 @@ abstract public class GeckoApp
         }
 
         //register for events
-        registerEventListener("DOMContentLoaded");
         registerEventListener("log");
         registerEventListener("Reader:Added");
         registerEventListener("Reader:Removed");
@@ -1664,7 +1653,6 @@ abstract public class GeckoApp
         registerEventListener("WebApps:Open");
         registerEventListener("WebApps:Install");
         registerEventListener("WebApps:Uninstall");
-        registerEventListener("DesktopMode:Changed");
         registerEventListener("Share:Text");
         registerEventListener("Share:Image");
         registerEventListener("Wallpaper:Set");
@@ -1696,6 +1684,7 @@ abstract public class GeckoApp
         mJavaUiStartupTimer.stop();
 
         GeckoAppShell.getHandler().postDelayed(new Runnable() {
+            @Override
             public void run() {
                 // Sync settings need Gecko to be loaded, so
                 // no hurry in starting this.
@@ -1939,6 +1928,7 @@ abstract public class GeckoApp
         GeckoAccessibility.updateAccessibilitySettings();
 
         GeckoBackgroundThread.getHandler().post(new Runnable() {
+            @Override
             public void run() {
                 SharedPreferences prefs =
                     GeckoApp.mAppContext.getSharedPreferences(GeckoApp.PREFS_NAME, 0);
@@ -1984,6 +1974,7 @@ abstract public class GeckoApp
         // here as the whole point is to save to disk while the activity is not
         // interacting with the user.
         GeckoBackgroundThread.getHandler().post(new Runnable() {
+            @Override
             public void run() {
                 SharedPreferences prefs =
                     GeckoApp.mAppContext.getSharedPreferences(GeckoApp.PREFS_NAME, 0);
@@ -2005,6 +1996,7 @@ abstract public class GeckoApp
     public void onRestart()
     {
         GeckoBackgroundThread.getHandler().post(new Runnable() {
+            @Override
             public void run() {
                 SharedPreferences prefs =
                     GeckoApp.mAppContext.getSharedPreferences(GeckoApp.PREFS_NAME, 0);
@@ -2032,7 +2024,6 @@ abstract public class GeckoApp
         if (isFinishing())
             GeckoAppShell.sendEventToGecko(GeckoEvent.createShutdownEvent());
 
-        unregisterEventListener("DOMContentLoaded");
         unregisterEventListener("log");
         unregisterEventListener("Reader:Added");
         unregisterEventListener("Reader:Removed");
@@ -2060,7 +2051,6 @@ abstract public class GeckoApp
         unregisterEventListener("WebApps:Open");
         unregisterEventListener("WebApps:Install");
         unregisterEventListener("WebApps:Uninstall");
-        unregisterEventListener("DesktopMode:Changed");
         unregisterEventListener("Share:Text");
         unregisterEventListener("Share:Image");
         unregisterEventListener("Wallpaper:Set");
@@ -2148,6 +2138,7 @@ abstract public class GeckoApp
         return Boolean.TRUE;
     } 
 
+    @Override
     abstract public String getPackageName();
     abstract public String getContentProcessName();
 
@@ -2199,6 +2190,7 @@ abstract public class GeckoApp
             final GeckoApp app = GeckoApp.mAppContext;
 
             GeckoAppShell.getHandler().post(new Runnable() {
+                @Override
                 public void run() {
                     ProfileMigrator profileMigrator = new ProfileMigrator(app);
 
@@ -2216,8 +2208,10 @@ abstract public class GeckoApp
                         final SetupScreen[] setupScreenHolder = new SetupScreen[1];
 
                         final Runnable startCallback = new Runnable() {
+                            @Override
                             public void run() {
                                 GeckoApp.mAppContext.runOnUiThread(new Runnable() {
+                                    @Override
                                     public void run() {
                                         setupScreenHolder[0] = new SetupScreen(app);
                                         setupScreenHolder[0].show();
@@ -2227,8 +2221,10 @@ abstract public class GeckoApp
                         };
 
                         final Runnable stopCallback = new Runnable() {
+                            @Override
                             public void run() {
                                 GeckoApp.mAppContext.runOnUiThread(new Runnable() {
+                                    @Override
                                     public void run() {
                                         SetupScreen screen = setupScreenHolder[0];
                                         // screen will never be null if this code runs, but
@@ -2384,27 +2380,33 @@ abstract public class GeckoApp
     public AbsoluteLayout getPluginContainer() { return mPluginContainer; }
 
     // Accelerometer.
+    @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
     }
 
+    @Override
     public void onSensorChanged(SensorEvent event) {
         GeckoAppShell.sendEventToGecko(GeckoEvent.createSensorEvent(event));
     }
 
     // Geolocation.
+    @Override
     public void onLocationChanged(Location location) {
         // No logging here: user-identifying information.
         GeckoAppShell.sendEventToGecko(GeckoEvent.createLocationEvent(location));
     }
 
+    @Override
     public void onProviderDisabled(String provider)
     {
     }
 
+    @Override
     public void onProviderEnabled(String provider)
     {
     }
 
+    @Override
     public void onStatusChanged(String provider, int status, Bundle extras)
     {
     }
@@ -2520,6 +2522,7 @@ abstract public class GeckoApp
             super.addView(view, index);
 
             mMainHandler.post(new Runnable() { 
+                @Override
                 public void run() {
                     mLayerView.hide();
                 }

@@ -184,6 +184,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
 
                 if (mAutofocus) {
                     input.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                        @Override
                         public void onFocusChange(View v, boolean hasFocus) {
                             if (hasFocus) {
                                 ((InputMethodManager) GeckoApp.mAppContext.getSystemService(Context.INPUT_METHOD_SERVICE)).showSoftInput(v, 0);
@@ -264,9 +265,11 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
     }
 
     // GeckoEventListener implementation
+    @Override
     public void handleMessage(String event, final JSONObject message) {
         // The dialog must be created on the UI thread.
         GeckoAppShell.getMainHandler().post(new Runnable() {
+            @Override
             public void run() {
                 processMessage(message);
             }
@@ -274,6 +277,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
     }
 
     // GeckoEventResponder implementation
+    @Override
     public String getResponse() {
         // we only handle one kind of message in handleMessage, and this is the
         // response we provide for that message
@@ -384,6 +388,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         mDialog.show();
     }
 
+    @Override
     public void onClick(DialogInterface aDialog, int aWhich) {
         GeckoApp.assertOnUiThread();
         JSONObject ret = new JSONObject();
@@ -425,11 +430,13 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         finishDialog(ret.toString());
     }
 
+    @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         GeckoApp.assertOnUiThread();
         mSelected[position] = !mSelected[position];
     }
 
+    @Override
     public void onCancel(DialogInterface aDialog) {
         GeckoApp.assertOnUiThread();
         JSONObject ret = new JSONObject();

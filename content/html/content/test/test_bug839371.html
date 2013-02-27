@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=839371
+-->
+<head>
+  <title>Test for Bug 839371</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=839371">Mozilla Bug 839371</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+<div itemscope>
+  <data id="d1" itemprop="product-id" value="9678AOU879">The Instigator 2000</data>
+</div>
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 839371 **/
+
+var d1 = document.getElementById("d1"),
+    d2 = document.createElement("data");
+
+// .value IDL
+is(d1.value, "9678AOU879", "value property reflects content attribute");
+d1.value = "123";
+is(d1.value, "123", "value property can be set via setter");
+
+// .itemValue getter for <data>'s microdata
+var data = document.getItems()[0];
+is(data.properties["product-id"][0].itemValue, "123", "itemValue getter reflects value attribute");
+
+// .itemValue setter uses value
+data.properties["product-id"][0].itemValue = "456";
+is(data.properties["product-id"][0].value, "456", "setting itemValue updates value");
+is(data.properties["product-id"][0].itemValue, "456", "setting itemValue updates itemValue");
+
+// .value reflects value attribute
+reflectString({
+  element: d2,
+  attribute: "value"
+});
+
+</script>
+</pre>
+</body>
+</html>

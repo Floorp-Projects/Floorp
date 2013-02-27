@@ -106,6 +106,7 @@ public class testFormHistory extends BaseTest {
         SqliteCompare(DB_NAME, "SELECT * FROM moz_formhistory", cvs);
     }
 
+    @Override
     public void tearDown() throws Exception {
         // remove the entire signons.sqlite file
         File profile = new File(mProfile);

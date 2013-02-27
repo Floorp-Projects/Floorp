@@ -71,6 +71,7 @@ public class WebAppAllocator {
                 // found unused index i
                 final int foundIndex = i;
                 GeckoBackgroundThread.getHandler().post(new Runnable() {
+                    @Override
                     public void run() {
                         int color = 0;
                         try {
@@ -118,6 +119,7 @@ public class WebAppAllocator {
 
     public synchronized void releaseIndex(final int index) {
         GeckoBackgroundThread.getHandler().post(new Runnable() {
+            @Override
             public void run() {
                 mPrefs.edit()
                     .remove(appKey(index))

@@ -306,6 +306,13 @@ private:
 
   nsRefPtr<PeerConnectionMedia> mMedia;
 
+  // Temporary: used to prevent multiple audio streams or multiple video streams
+  // in a single PC. This is tied up in the IETF discussion around proper
+  // representation of multiple streams in SDP, and strongly related to
+  // Bug 840728.
+  int mNumAudioStreams;
+  int mNumVideoStreams;
+
 public:
   //these are temporary until the DataChannel Listen/Connect API is removed
   unsigned short listenPort;

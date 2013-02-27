@@ -56,6 +56,7 @@ public class GfxInfoThread extends Thread {
         return data;
     }
 
+    @Override
     public void run() {
         // initialize EGL
         EGL10 egl = (EGL10) EGLContext.getEGL();

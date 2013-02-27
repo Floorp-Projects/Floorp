@@ -10,7 +10,7 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-if (navigator.platform.indexOf("Win") == 0) {
+if (navigator.platform.startsWith("Win")) {
   SimpleTest.expectAssertions(0, 1);
 }
 

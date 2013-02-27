@@ -199,6 +199,7 @@ let FormAssistant = {
   selectionEnd: 0,
   scrollIntoViewTimeout: null,
   _focusedElement: null,
+  _documentEncoder: null,
 
   get focusedElement() {
     if (this._focusedElement && Cu.isDeadWrapper(this._focusedElement))
@@ -223,18 +224,27 @@ let FormAssistant = {
       }
     }
 
+    this._documentEncoder = null;
+
     if (element) {
       element.addEventListener('mousedown', this);
       element.addEventListener('mouseup', this);
+      if (isContentEditable(element)) {
+        this._documentEncoder = getDocumentEncoder(element);
+      }
     }
 
     this.focusedElement = element;
   },
 
+  get documentEncoder() {
+    return this._documentEncoder;
+  },
+
   handleEvent: function fa_handleEvent(evt) {
-    let focusedElement = this.focusedElement;
     let target = evt.target;
 
+    let range = null;
     switch (evt.type) {
       case "focus":
         if (!target) {
@@ -264,8 +274,9 @@ let FormAssistant = {
       case 'mousedown':
         // We only listen for this event on the currently focused element.
         // When the mouse goes down, note the cursor/selection position
-        this.selectionStart = this.focusedElement.selectionStart;
-        this.selectionEnd = this.focusedElement.selectionEnd;
+        range = getSelectionRange(this.focusedElement);
+        this.selectionStart = range[0];
+        this.selectionEnd = range[1];
         break;
 
       case 'mouseup':
@@ -273,8 +284,9 @@ let FormAssistant = {
         // When the mouse goes up, see if the cursor has moved (or the
         // selection changed) since the mouse went down. If it has, we
         // need to tell the keyboard about it
-        if (this.focusedElement.selectionStart !== this.selectionStart ||
-            this.focusedElement.selectionEnd !== this.selectionEnd) {
+        range = getSelectionRange(this.focusedElement);
+        if (range[0] !== this.selectionStart ||
+            range[1] !== this.selectionEnd) {
           this.sendKeyboardState(this.focusedElement);
         }
         break;
@@ -359,11 +371,11 @@ let FormAssistant = {
     if (target instanceof HTMLOptionElement)
       target = target.parentNode;
 
+    this.setFocusedElement(target);
+
     let kbOpened = this.sendKeyboardState(target);
     if (this.isTextInputElement(target))
       this.isKeyboardOpened = kbOpened;
-
-    this.setFocusedElement(target);
   },
 
   hideKeyboard: function fa_hideKeyboard() {
@@ -430,7 +442,6 @@ let FormAssistant = {
 
 FormAssistant.init();
 
-
 function isContentEditable(element) {
   if (element.isContentEditable || element.designMode == "on")
     return true;
@@ -448,12 +459,12 @@ function isContentEditable(element) {
 
 function getJSON(element) {
   let type = element.type || "";
-  let value = element.value || ""
+  let value = element.value || "";
 
-  // Treat contenteditble element as a special text field
+  // Treat contenteditble element as a special text area field
   if (isContentEditable(element)) {
-    type = "text";
-    value = element.textContent;
+    type = "textarea";
+    value = getContentEditableText(element);
   }
 
   // Until the input type=date/datetime/range have been implemented
@@ -484,13 +495,15 @@ function getJSON(element) {
     inputmode = '';
   }
 
+  let range = getSelectionRange(element);
+
   return {
     "type": type.toLowerCase(),
     "choices": getListForElement(element),
     "value": value,
     "inputmode": inputmode,
-    "selectionStart": element.selectionStart,
-    "selectionEnd": element.selectionEnd
+    "selectionStart": range[0],
+    "selectionEnd": range[1]
   };
 }
 
@@ -546,3 +559,51 @@ function getListForElement(element) {
   return result;
 };
 
+// Create a plain text document encode from the focused element.
+function getDocumentEncoder(element) {
+  let encoder = Cc["@mozilla.org/layout/documentEncoder;1?type=text/plain"]
+                .createInstance(Ci.nsIDocumentEncoder);
+  let flags = Ci.nsIDocumentEncoder.SkipInvisibleContent |
+              Ci.nsIDocumentEncoder.OutputRaw |
+              Ci.nsIDocumentEncoder.OutputLFLineBreak |
+              Ci.nsIDocumentEncoder.OutputDropInvisibleBreak;
+  encoder.init(element.ownerDocument, "text/plain", flags);
+  return encoder;
+}
+
+// Get the visible content text of a content editable element
+function getContentEditableText(element) {
+  let doc = element.ownerDocument;
+  let range = doc.createRange();
+  range.selectNodeContents(element);
+  let encoder = FormAssistant.documentEncoder;
+  encoder.setRange(range);
+  return encoder.encodeToString();
+}
+
+function getSelectionRange(element) {
+  let start = 0;
+  let end = 0;
+  if (element instanceof HTMLInputElement ||
+      element instanceof HTMLTextAreaElement) {
+    // Get the selection range of <input> and <textarea> elements
+    start = element.selectionStart;
+    end = element.selectionEnd;
+  } else {
+    // Get the selection range of contenteditable elements
+    let win = element.ownerDocument.defaultView;
+    let sel = win.getSelection();
+
+    let range = win.document.createRange();
+    range.setStart(element, 0);
+    range.setEnd(sel.anchorNode, sel.anchorOffset);
+    let encoder = FormAssistant.documentEncoder;
+
+    encoder.setRange(range);
+    start = encoder.encodeToString().length;
+
+    encoder.setRange(sel.getRangeAt(0));
+    end = start + encoder.encodeToString().length;
+  }
+  return [start, end];
+}

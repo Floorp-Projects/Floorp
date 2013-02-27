@@ -9,7 +9,6 @@ import android.widget.LinearLayout;
 import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.ImageView;
-import android.widget.TabHost;
 import android.widget.TabWidget;
 import android.text.TextUtils;
 
@@ -70,9 +69,9 @@ public class testAllPagesTab extends BaseTest {
         // mAsserter.is(host.getCurrentTab(), 0, "All pages tab is selected in tab strip");
 
         mAsserter.isnot(list, null, "checking that all pages list exists");
-        mAsserter.is(list.getChildCount(), 5, "all pages list has 5 children (the default bookmarks)");
+        final int count = list.getAdapter().getCount();
+        mAsserter.is(count, 5, "all pages list has 5 children (the default bookmarks)");
 
-        final int count = list.getChildCount();
         String loadUrl = "";
         for (int i = count - 1; i >= 0; i--) {
             View child = list.getChildAt(i);
@@ -138,6 +137,7 @@ public class testAllPagesTab extends BaseTest {
         verifyUrl(url);
     }
 
+    @Override
     public void tearDown() throws Exception {
         ContentResolver resolver = getActivity().getContentResolver();
         Uri uri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/history");

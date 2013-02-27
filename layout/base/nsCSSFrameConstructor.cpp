@@ -10090,6 +10090,8 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
     if (anonymousItems[i].mStyleContext) {
       styleContext = anonymousItems[i].mStyleContext.forget();
     } else {
+      TreeMatchContext::AutoFlexItemStyleFixupSkipper
+        flexItemStyleFixupSkipper(aState.mTreeMatchContext);
       styleContext = ResolveStyleContext(aFrame, content, &aState);
     }
 

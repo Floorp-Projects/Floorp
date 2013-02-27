@@ -28,9 +28,9 @@
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
-if (navigator.platform.indexOf("Mac") == 0) {
+if (navigator.platform.startsWith("Mac")) {
   SimpleTest.expectAssertions(0, 3);
-} else if (navigator.platform.indexOf("Linux") == 0) {
+} else if (navigator.platform.startsWith("Linux")) {
   SimpleTest.expectAssertions(0, 5);
 }
 

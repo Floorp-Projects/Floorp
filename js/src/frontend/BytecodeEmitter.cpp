@@ -86,7 +86,8 @@ struct frontend::StmtInfoBCE : public StmtInfoBase
     }
 };
 
-BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent, Parser *parser, SharedContext *sc,
+BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent,
+                                 Parser<FullParseHandler> *parser, SharedContext *sc,
                                  HandleScript script, HandleScript evalCaller, bool hasGlobalScope,
                                  unsigned lineno, bool selfHostingMode)
   : sc(sc),
@@ -1665,7 +1666,7 @@ BytecodeEmitter::reportError(ParseNode *pn, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-    bool result = tokenStream()->reportCompileErrorNumberVA(pn, JSREPORT_ERROR, errorNumber, args);
+    bool result = tokenStream()->reportCompileErrorNumberVA(pn->pn_pos, JSREPORT_ERROR, errorNumber, args);
     va_end(args);
     return result;
 }
@@ -1675,7 +1676,7 @@ BytecodeEmitter::reportStrictWarning(ParseNode *pn, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-    bool result = tokenStream()->reportStrictWarningErrorNumberVA(pn, errorNumber, args);
+    bool result = tokenStream()->reportStrictWarningErrorNumberVA(pn->pn_pos, errorNumber, args);
     va_end(args);
     return result;
 }
@@ -1685,7 +1686,7 @@ BytecodeEmitter::reportStrictModeError(ParseNode *pn, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-    bool result = tokenStream()->reportStrictModeErrorNumberVA(pn, sc->strict, errorNumber, args);
+    bool result = tokenStream()->reportStrictModeErrorNumberVA(pn->pn_pos, sc->strict, errorNumber, args);
     va_end(args);
     return result;
 }
@@ -1943,8 +1944,8 @@ EmitNameIncDec(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
     return true;
 }
 
-static bool
-EmitElemOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
+bool
+frontend::EmitElemOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 {
     ParseNode *left, *right;
 
@@ -1958,14 +1959,14 @@ EmitElemOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
          */
         left = pn->maybeExpr();
         if (!left) {
-            left = NullaryNode::create(PNK_STRING, bce->parser);
+            left = NullaryNode::create(PNK_STRING, &bce->parser->handler);
             if (!left)
                 return false;
             left->setOp(JSOP_BINDNAME);
             left->pn_pos = pn->pn_pos;
             left->pn_atom = pn->pn_atom;
         }
-        right = NullaryNode::create(PNK_STRING, bce->parser);
+        right = NullaryNode::create(PNK_STRING, &bce->parser->handler);
         if (!right)
             return false;
         right->setOp(JSOP_STRING);
@@ -2178,6 +2179,12 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     uint32_t caseCount = pn2->pn_count;
     uint32_t tableLength = 0;
     ScopedJSFreePtr<ParseNode*> table(NULL);
+
+    if (caseCount > JS_BIT(16)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_TOO_MANY_CASES);
+        return false;
+    }
 
     if (caseCount == 0 ||
         (caseCount == 1 &&
@@ -4803,6 +4810,13 @@ EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * will box into the global object).
      */
     uint32_t argc = pn->pn_count - 1;
+
+    if (argc >= ARGC_LIMIT) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             callop ? JSMSG_TOO_MANY_FUN_ARGS : JSMSG_TOO_MANY_CON_ARGS);
+        return false;
+    }
+
     bool emitArgs = true;
     ParseNode *pn2 = pn->pn_head;
     switch (pn2->getKind()) {
