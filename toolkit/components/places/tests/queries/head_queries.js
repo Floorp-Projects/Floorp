@@ -119,7 +119,7 @@ function task_populateDB(aArray)
           var qdata = new queryData(data);
 
           if (qdata.markPageAsTyped) {
-            PlacesUtils.bhistory.markPageAsTyped(uri(qdata.uri));
+            PlacesUtils.history.markPageAsTyped(uri(qdata.uri));
           }
 
           if (qdata.isPageAnnotation) {
