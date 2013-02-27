@@ -351,6 +351,17 @@ nsFrameList::ApplySetParent(nsIFrame* aParent) const
   }
 }
 
+/* static */ void
+nsFrameList::UnhookFrameFromSiblings(nsIFrame* aFrame)
+{
+  MOZ_ASSERT(aFrame->GetPrevSibling() && aFrame->GetNextSibling());
+  nsIFrame* const nextSibling = aFrame->GetNextSibling();
+  nsIFrame* const prevSibling = aFrame->GetPrevSibling();
+  aFrame->SetNextSibling(nullptr);
+  prevSibling->SetNextSibling(nextSibling);
+  MOZ_ASSERT(!aFrame->GetPrevSibling() && !aFrame->GetNextSibling());
+}
+
 #ifdef DEBUG
 void
 nsFrameList::List(FILE* out) const

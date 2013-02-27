@@ -5629,13 +5629,18 @@ nsBlockFrame::StealFrame(nsPresContext* aPresContext,
 
   if ((aChild->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
       aChild->IsFloating()) {
-    bool removed = mFloats.RemoveFrameIfPresent(aChild);
+    MOZ_ASSERT(mFloats.ContainsFrame(aChild) ||
+               (GetPushedFloats() && GetPushedFloats()->ContainsFrame(aChild)),
+               "aChild is not our child");
+    bool removed = mFloats.StartRemoveFrame(aChild);
     if (!removed) {
       nsFrameList* list = GetPushedFloats();
       if (list) {
-        removed = list->RemoveFrameIfPresent(aChild);
+        removed = list->ContinueRemoveFrame(aChild);
+        // XXXmats delete the property if the list is now empty?
       }
     }
+    MOZ_ASSERT(removed, "StealFrame failed to remove the float");
     return removed ? NS_OK : NS_ERROR_UNEXPECTED;
   }
 
@@ -5716,6 +5721,7 @@ nsBlockFrame::StealFrame(nsPresContext* aPresContext,
       prevSibling = nullptr;
     }
   }
+  MOZ_ASSERT(false, "StealFrame failed to remove the frame");
   return NS_ERROR_UNEXPECTED;
 }
 

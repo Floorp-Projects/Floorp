@@ -3247,6 +3247,44 @@ private:
   nsIFrame*     mFrame;
 };
 
+inline bool
+nsFrameList::ContinueRemoveFrame(nsIFrame* aFrame)
+{
+  MOZ_ASSERT(!aFrame->GetPrevSibling() || !aFrame->GetNextSibling(),
+             "Forgot to call StartRemoveFrame?");
+  if (aFrame == mLastChild) {
+    MOZ_ASSERT(!aFrame->GetNextSibling(), "broken frame list");
+    nsIFrame* prevSibling = aFrame->GetPrevSibling();
+    if (!prevSibling) {
+      MOZ_ASSERT(aFrame == mFirstChild, "broken frame list");
+      mFirstChild = mLastChild = nullptr;
+      return true;
+    }
+    MOZ_ASSERT(prevSibling->GetNextSibling() == aFrame, "Broken frame linkage");
+    prevSibling->SetNextSibling(nullptr);
+    mLastChild = prevSibling;
+    return true;
+  }
+  if (aFrame == mFirstChild) {
+    MOZ_ASSERT(!aFrame->GetPrevSibling(), "broken frame list");
+    mFirstChild = aFrame->GetNextSibling();
+    aFrame->SetNextSibling(nullptr);
+    MOZ_ASSERT(mFirstChild, "broken frame list");
+    return true;
+  }
+  return false;
+}
+
+inline bool
+nsFrameList::StartRemoveFrame(nsIFrame* aFrame)
+{
+  if (aFrame->GetPrevSibling() && aFrame->GetNextSibling()) {
+    UnhookFrameFromSiblings(aFrame);
+    return true;
+  }
+  return ContinueRemoveFrame(aFrame);
+}
+
 inline void
 nsFrameList::Enumerator::Next()
 {
