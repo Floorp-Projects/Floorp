@@ -2315,9 +2315,16 @@ this.DOMApplicationRegistry = {
                   throw "INVALID_MANIFEST";
                 }
 
-                // Call ensureSameAppName before compareManifests, as `manifest`,
-                // has been normalized to avoid app rename.
-                AppsUtils.ensureSameAppName(aManifest._manifest, manifest, app);
+                // For app updates we don't forbid apps to rename themselves but
+                // we still retain the old name of the app. In the future we
+                // will use UI to allow updates to rename an app after we check
+                // with the user that the rename is ok.
+                if (aIsUpdate) {
+                  // Call ensureSameAppName before compareManifests as `manifest`
+                  // has been normalized to avoid app rename.
+                  AppsUtils.ensureSameAppName(aManifest._manifest, manifest,
+                                              app);
+                }
 
                 if (!AppsUtils.compareManifests(manifest,
                                                 aManifest._manifest)) {
