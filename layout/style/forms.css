@@ -362,7 +362,6 @@ select:disabled:disabled /* Need the pseudo-class twice to have the specificity
                             be at least the same as select[size][multiple] above */
 {
   -moz-user-input: disabled;
-  -moz-user-focus: ignore;
   color: GrayText;
   background-color: ThreeDFace;
   cursor: inherit;
