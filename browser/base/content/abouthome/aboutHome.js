@@ -134,6 +134,7 @@ function ensureSnippetsMapThen(aCallback)
     // Populate the cache from the persistent storage.
     let cache = new Map();
     for (let key of [ "snippets-last-update",
+                      "snippets-cached-version",
                       "snippets" ]) {
       cache.set(key, localStorage[key]);
     }
@@ -229,6 +230,14 @@ function loadSnippets()
   if (!gSnippetsMap)
     throw new Error("Snippets map has not properly been initialized");
 
+  // Check cached snippets version.
+  let cachedVersion = gSnippetsMap.get("snippets-cached-version") || 0;
+  let currentVersion = document.documentElement.getAttribute("snippetsVersion");
+  if (cachedVersion < currentVersion) {
+    // The cached snippets are old and unsupported, restart from scratch.
+    gSnippetsMap.clear();
+  }
+
   // Check last snippets update.
   let lastUpdate = gSnippetsMap.get("snippets-last-update");
   let updateURL = document.documentElement.getAttribute("snippetsURL");
@@ -253,6 +262,7 @@ function loadSnippets()
     {
       if (xhr.status == 200) {
         gSnippetsMap.set("snippets", xhr.responseText);
+        gSnippetsMap.set("snippets-cached-version", currentVersion);
       }
       showSnippets();
     };
