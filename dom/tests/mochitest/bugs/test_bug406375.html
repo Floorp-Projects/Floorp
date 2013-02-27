@@ -18,7 +18,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=406375
 <script type="application/javascript">
 
 if (navigator.platform.indexOf("Mac") == 0) {
-  SimpleTest.expectAssertions(2, 3);
+  SimpleTest.expectAssertions(3);
+} else if (navigator.platform.indexOf("Linux") == 0) {
+  SimpleTest.expectAssertions(1);
 }
 
 /** Test for Bug 406375 **/

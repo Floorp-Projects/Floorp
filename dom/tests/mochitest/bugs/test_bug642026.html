@@ -38,10 +38,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=642026
 <pre id="test">
 <script type="application/javascript">
 
-if (navigator.platform.indexOf("Linux") == 0) {
-  SimpleTest.expectAssertions(0, 1);
-}
-
 /** Test for Bug 642026 **/
 
 var expResult = ["NaN", "Infinity", "undefined", "eval", "parseInt", "parseFloat", "isNaN", "isFinite", "decodeURI", "decodeURIComponent", "encodeURI", "encodeURIComponent", "Object", "Function", "Array", "String", "Boolean", "Number", "Date", "Date", "RegExp", "Error", "EvalError", "RangeError", "ReferenceError", "SyntaxError", "TypeError", "URIError", "Math", "JSON"];

@@ -10,9 +10,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=437361
   
   <script class="testbody" type="text/javascript">
 
-if (navigator.platform.indexOf("Win") != 0) {
-  SimpleTest.expectAssertions(0, 3);
-}
+  if (navigator.platform.indexOf("Win") != 0) {
+    SimpleTest.expectAssertions(1);
+  }
 
   /** Test for Bug 437361 **/
 
