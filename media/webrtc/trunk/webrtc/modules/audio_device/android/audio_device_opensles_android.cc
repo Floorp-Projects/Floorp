@@ -64,6 +64,7 @@ AudioDeviceAndroidOpenSLES::AudioDeviceAndroidOpenSLES(const WebRtc_Word32 id)
       playout_delay_(0),
       recording_delay_(0),
       agc_enabled_(false),
+      rec_thread_(NULL),
       rec_timer_(*EventWrapper::Create()),
       mic_sampling_rate_(N_REC_SAMPLES_PER_SEC * 1000),
       speaker_sampling_rate_(N_PLAY_SAMPLES_PER_SEC * 1000),
@@ -1396,7 +1397,7 @@ void AudioDeviceAndroidOpenSLES::RecorderSimpleBufferQueueCallbackHandler(
 void AudioDeviceAndroidOpenSLES::CheckErr(SLresult res) {
   if (res != SL_RESULT_SUCCESS) {
     WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
-                        "  AudioDeviceAndroidOpenSLES::CheckErr(%d)", res);
+                        "  AudioDeviceAndroidOpenSLES::CheckErr(%lu)", res);
     exit(-1);
   }
 }

@@ -202,9 +202,9 @@
             'defines': ['WEBRTC_ARCH_ARM_V7',],
             'conditions': [
               ['arm_neon==1', {
-                'defines': ['WEBRTC_ARCH_ARM_NEON',],
-              }, {
-                'defines': ['WEBRTC_DETECT_ARM_NEON',],
+                'defines': ['WEBRTC_ARCH_ARM_NEON',
+                            'WEBRTC_BUILD_NEON_LIBS',
+                            'WEBRTC_DETECT_ARM_NEON'],
               }],
             ],
           }],
