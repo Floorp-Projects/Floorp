@@ -426,7 +426,7 @@ fails-if(Android) == 315920-29a.html 315920-29-ref.html
 random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 328829-2.xhtml 328829-2-ref.xhtml
 == 329359-1.html 329359-1-ref.html
-== 331809-1.html 331809-1-ref.html # bug 580499 is blacked out
+skip-if(B2G) == 331809-1.html 331809-1-ref.html # bug 580499 is blacked out, bug 839735
 == 332360.html 332360-ref.html
 == 332360-ltr.html 332360-ltr-ref.html
 == 332360-width.html 332360-ref.html
@@ -1291,9 +1291,9 @@ skip-if(B2G) == 476063-4.xhtml 476063-4-ref.xhtml
 == 478614-7.html 478614-7-ref.html
 random-if(d2d) == 478377-1.xul 478377-1-ref.xul
 skip-if(B2G) == 478811-1.html 478811-1-ref.html
-== 478811-2.html 478811-2-ref.html
-== 478811-3.html 478811-3-ref.html
-== 478811-4.html 478811-4-ref.html
+skip-if(B2G) == 478811-2.html 478811-2-ref.html # bug 839735
+skip-if(B2G) == 478811-3.html 478811-3-ref.html # bug 839735
+skip-if(B2G) == 478811-4.html 478811-4-ref.html # bug 839735
 == 478956-1a.html 478956-1-ref.html
 == 478956-1b.html 478956-1-ref.html
 == 480017-1.html 480017-1-ref.html
@@ -1341,7 +1341,7 @@ random-if(winWidget) == 482659-1a.html 482659-1-ref.html
 == 488649-1.html 488649-1-ref.html
 == 488685-1.html 488685-1-ref.html
 == 488692-1.html 488692-1-ref.html
-== 489868-1.svg 489868-1-ref.svg 
+== 489868-1.svg 489868-1-ref.svg
 == 490176-1.html 490176-1-ref.html
 == 490177-1.svg 490177-1-ref.svg
 == 490182-1a.html 490182-1-ref.html
@@ -1444,7 +1444,7 @@ random-if(d2d) == 523468-1.html 523468-1-ref.html
 == 528038-1f.html 528038-1-ref.html
 == 528038-2.html 528038-2-ref.html
 == 528096-1.html 528096-1-ref.html
-== 530686-1.html 530686-1-ref.html
+skip-if(B2G) == 530686-1.html 530686-1-ref.html # bug 839735
 == 531098-1.html 531098-1-ref.html
 == 531200-1.html 531200-1-ref.html
 == 531371-1.html 531371-1-ref.html
@@ -1650,7 +1650,7 @@ skip-if(B2G) random-if(d2d) == 635373-3.html 635373-3-ref.html
 HTTP(..) == 635639-1.html 635639-1-ref.html
 HTTP(..) == 635639-2.html 635639-2-ref.html
 random == 637597-1.html 637597-1-ref.html # bug 637597 was never really fixed!
-== 637852-1.html 637852-1-ref.html
+skip-if(B2G) == 637852-1.html 637852-1-ref.html # bug 839735
 == 637852-2.html 637852-2-ref.html
 == 637852-3.html 637852-3-ref.html
 skip-if(B2G) == 641770-1.html 641770-1-ref.html
