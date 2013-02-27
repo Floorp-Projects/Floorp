@@ -684,6 +684,7 @@ class JavaPanZoomController
             mBounceEndMetrics = endMetrics;
         }
 
+        @Override
         protected void animateFrame() {
             /*
              * The pan/zoom controller might have signaled to us that it wants to abort the
@@ -728,6 +729,7 @@ class JavaPanZoomController
 
     // The callback that performs the fling animation.
     private class FlingRunnable extends AnimationRunnable {
+        @Override
         protected void animateFrame() {
             /*
              * The pan/zoom controller might have signaled to us that it wants to abort the

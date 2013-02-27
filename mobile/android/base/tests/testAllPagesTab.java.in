@@ -138,6 +138,7 @@ public class testAllPagesTab extends BaseTest {
         verifyUrl(url);
     }
 
+    @Override
     public void tearDown() throws Exception {
         ContentResolver resolver = getActivity().getContentResolver();
         Uri uri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/history");

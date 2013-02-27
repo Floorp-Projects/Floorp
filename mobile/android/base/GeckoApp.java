@@ -608,6 +608,7 @@ abstract public class GeckoApp
                                       Intent.ACTION_SEND, tab.getDisplayTitle());
     }
 
+    @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
@@ -2116,6 +2117,7 @@ abstract public class GeckoApp
         return Boolean.TRUE;
     } 
 
+    @Override
     abstract public String getPackageName();
     abstract public String getContentProcessName();
 

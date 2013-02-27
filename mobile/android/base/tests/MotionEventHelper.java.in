@@ -57,6 +57,7 @@ class MotionEventHelper {
 
     public Thread dragAsync(final float startX, final float startY, final float endX, final float endY, final long durationMillis) {
         Thread t = new Thread() {
+            @Override
             public void run() {
                 int numEvents = (int)(durationMillis * DRAG_EVENTS_PER_SECOND / 1000);
                 float eventDx = (endX - startX) / numEvents;
@@ -106,6 +107,7 @@ class MotionEventHelper {
             throw new IllegalArgumentException( "Fling parameters require too small a time period" );
         }
         Thread t = new Thread() {
+            @Override
             public void run() {
                 long downTime = down(startX, startY);
                 downTime = move(downTime, downTime + time, startX + dx, startY + dy);

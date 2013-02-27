@@ -54,14 +54,17 @@ public class HistoryTab extends AwesomeBarTab {
         mContentObserver = null;
     }
 
+    @Override
     public int getTitleStringId() {
         return R.string.awesomebar_history_title;
     }
 
+    @Override
     public String getTag() {
         return TAG;
     }
 
+    @Override
     public ListView getView() {
         if (mView == null) {
             mView = LayoutInflater.from(mContext).inflate(R.layout.awesomebar_expandable_list, null);
@@ -95,11 +98,13 @@ public class HistoryTab extends AwesomeBarTab {
         return (ListView)mView;
     }
 
+    @Override
     public void destroy() {
         if (mContentObserver != null)
             BrowserDB.unregisterContentObserver(getContentResolver(), mContentObserver);
     }
 
+    @Override
     public boolean onBackPressed() {
         // If the soft keyboard is visible in the bookmarks or history tab, the user
         // must have explictly brought it up, so we should try hiding it instead of
@@ -199,6 +204,7 @@ public class HistoryTab extends AwesomeBarTab {
         private static final long MS_PER_DAY = 86400000;
         private static final long MS_PER_WEEK = MS_PER_DAY * 7;
 
+        @Override
         protected Pair<GroupList,List<ChildrenList>> doInBackground(Void... arg0) {
             Cursor cursor = BrowserDB.getRecentHistory(getContentResolver(), MAX_RESULTS);
 
@@ -334,6 +340,7 @@ public class HistoryTab extends AwesomeBarTab {
             return HistorySection.OLDER;
         }
 
+        @Override
         protected void onPostExecute(Pair<GroupList,List<ChildrenList>> result) {
             mCursorAdapter = new HistoryListAdapter(
                 mContext,
@@ -347,6 +354,7 @@ public class HistoryTab extends AwesomeBarTab {
             if (mContentObserver == null) {
                 // Register an observer to update the history tab contents if they change.
                 mContentObserver = new ContentObserver(GeckoAppShell.getHandler()) {
+                    @Override
                     public void onChange(boolean selfChange) {
                         mQueryTask = new HistoryQueryTask();
                         mQueryTask.execute();
@@ -386,6 +394,7 @@ public class HistoryTab extends AwesomeBarTab {
         return true;
     }
 
+    @Override
     public ContextMenuSubject getSubject(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
         ContextMenuSubject subject = null;
 
