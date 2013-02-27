@@ -4,11 +4,9 @@
 
 
 <!ENTITY syncHeader.title           "Sync">
-<!ENTITY sync.title                 "Sync">
 <!ENTITY sync.notconnected          "Not connected">
 <!ENTITY sync.connect               "Connect">
 <!ENTITY sync.connected             "Connected">
-<!ENTITY sync.details               "Details">
 <!ENTITY sync.deviceName            "This device">
 <!ENTITY sync.disconnect            "Disconnect">
 <!ENTITY sync.syncNow               "Sync Now">
