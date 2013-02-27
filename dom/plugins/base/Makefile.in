@@ -41,6 +41,7 @@ EXPORTS = \
   nsPluginsCID.h \
   nsNPAPIPluginInstance.h \
   nsPluginsDir.h \
+  nsPluginSafety.h \
   nsPluginTags.h \
   nsPluginDirServiceProvider.h \
   nsPluginHost.h \
