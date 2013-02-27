@@ -33,9 +33,9 @@ public class testShareLink extends BaseTest {
         blockForGeckoReady();
 
         loadUrl(url);
-        mSolo.waitForText("Big Link"); // Waiting for page title to ensure the page is loaded
+        waitForText("Big Link"); // Waiting for page title to ensure the page is loaded
         selectMenuItem("Share");
-        mSolo.waitForText("Share Via");
+        waitForText("Share Via");
 
         // Get list of current avaliable share activities and verify them
         shareOptions = getShareOptions();
@@ -66,7 +66,7 @@ public class testShareLink extends BaseTest {
         // Make sure the keyboard is closed since a back here would just close the Awesomebar
         mSolo.clickOnText("Bookmarks");
         mSolo.clickOnText("Sites");
-        mSolo.waitForText("Big Link");
+        waitForText("Big Link");
 
         View allpages = tslist.getChildAt(1);
         if (allpages != null) {
@@ -94,9 +94,9 @@ public class testShareLink extends BaseTest {
     }
 
     public void verifySharePopup(ArrayList<String> shareOptions, String openedFrom) {
-        mSolo.waitForText("Share");
+        waitForText("Share");
         mSolo.clickOnText("Share");
-        mSolo.waitForText("Share Via");
+        waitForText("Share Via");
         ArrayList<String> displayedOptions = getSharePopupOption();
         for (String option:shareOptions) {
              // Verify if the option is present in the list of displayed share options
