@@ -820,7 +820,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   NS_PRECONDITION(!nsContentUtils::GetCurrentJSContext(),
                   "Shouldn't have a JSContext on the stack");
 
-  if (nsNPAPIPluginInstance::InPluginCallUnsafeForReentry()) {
+  if (nsNPAPIPluginInstance::InPluginCall()) {
     NS_ERROR("Refresh driver should not run during plugin call!");
     // Try to survive this by just ignoring the refresh tick.
     return;
