@@ -86,7 +86,7 @@ public class testSystemPages extends PixelTest {
                 // Make sure the about: page was loaded without opening a new tab and verify the page Url
                 waitForPaint(paintExpecter); // waiting for the page to load
                 selectMenuItem(item);
-                mSolo.waitForText("About");
+                waitForText("About");
 
                 paintExpecter = mActions.expectPaint(); // Set up listener to catch the page load
                 mSolo.clickOnText("About");

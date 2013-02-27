@@ -79,7 +79,7 @@ public class testBookmark extends PixelTest  {
         ListView bookmarksList = getBookmarksList();
 
         // Wait for bookmark to appear in list
-        mSolo.waitForText(ABOUT_HOME_URL);
+        waitForText(ABOUT_HOME_URL);
 
         mAsserter.ok(bookmarksList != null, "checking that bookmarks list exists", "bookmarks list exists");
 
@@ -96,7 +96,7 @@ public class testBookmark extends PixelTest  {
         }
 
         insertOneBookmark();
-        mSolo.waitForText(BOOKMARK_TITLE);
+        waitForText(BOOKMARK_TITLE);
 
         mAsserter.is(bookmarksList.getAdapter().getCount(), 5,
             "bookmarks list has 5 children (the default bookmarks and the new one)");
@@ -160,7 +160,7 @@ public class testBookmark extends PixelTest  {
     private void toggleBookmark() {
         getInstrumentation().waitForIdleSync();
         mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-        mSolo.waitForText("Bookmark");
+        waitForText("Bookmark");
         mSolo.clickOnText("Bookmark");
     }
 

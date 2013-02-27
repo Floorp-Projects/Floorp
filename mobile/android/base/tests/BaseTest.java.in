@@ -263,6 +263,10 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             }
             mSolo.sleep(100);
         }
+        // log out wait failure for diagnostic purposes only;
+        // a failed wait may be normal and does not necessarily
+        // warrant a test assertion/failure
+        mAsserter.dumpLog("waitForTest timeout after "+timeout+" ms");
         return false;
     }
 
@@ -340,17 +344,27 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         return assets.open(filename);
     }
 
+    public boolean waitForText(String text) {
+        boolean rc = mSolo.waitForText(text);
+        if (!rc) {
+            // log out failed wait for diagnostic purposes only;
+            // waitForText failures are sometimes expected/normal
+            mAsserter.dumpLog("waitForText timeout on "+text);
+        }
+        return rc;
+    }
+
     public final void selectMenuItem(String menuItemName) {
         // build the item name ready to be used
         String itemName = "^" + menuItemName + "$";
         mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-        if (mSolo.waitForText(itemName)) {
+        if (waitForText(itemName)) {
             mSolo.clickOnText(itemName);
         } else {
             if (mSolo.searchText("(^More$|^Tools$)")) {
                 mSolo.clickOnText("(^More$|^Tools$)");
             }
-            mSolo.waitForText(itemName);
+            waitForText(itemName);
             mSolo.clickOnText(itemName);
         }
     }
@@ -398,7 +412,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
      */
     protected ListView getAllPagesList(String waitText) {
         Activity awesomeBarActivity = clickOnAwesomeBar();
-        mSolo.waitForText(waitText);
+        waitForText(waitText);
 
         ArrayList<ListView> views = mSolo.getCurrentListViews();
         for (ListView view : views) {
@@ -433,7 +447,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     protected ListView getHistoryList() {
         Activity awesomeBarActivity = clickOnAwesomeBar();
         mSolo.clickOnText("History");
-        mSolo.waitForText("Today|Yesterday");
+        waitForText("Today|Yesterday");
         ArrayList<ListView> views = mSolo.getCurrentListViews();
         for (ListView view : views) {
             if (view.getTag().equals("history")) {
@@ -523,7 +537,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mAsserter.ok(success, "waiting for add tab view", "add tab view available");
         mAsserter.ok(addTab.click(), "checking that add_tab clicked", "add_tab element clicked");
         // must pause before sending keys, until awesome bar is displayed; waiting for known text is simple
-        mSolo.waitForText("History");
+        waitForText("History");
         // cannot use loadUrl(): getText fails because we are using a different urlbar
         mActions.sendKeys(url);
         hitEnterAndWait();
@@ -606,7 +620,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
                 fwdBtn.click();
             } else {
                 mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-                mSolo.waitForText("^New Tab$");
+                waitForText("^New Tab$");
                 if (!osVersion.equals("2.x")) {
                     Element fwdBtn = mDriver.findElement(getActivity(), "forward");
                     fwdBtn.click();
@@ -622,7 +636,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
                 reloadBtn.click();
             } else {
                 mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-                mSolo.waitForText("^New Tab$");
+                waitForText("^New Tab$");
                 if (!osVersion.equals("2.x")) {
                     Element reloadBtn = mDriver.findElement(getActivity(), "reload");
                     reloadBtn.click();

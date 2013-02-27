@@ -29,7 +29,7 @@ public class testDoorHanger extends BaseTest {
 
         // Test geolocation notification
         loadUrl(GEO_URL);
-        mSolo.waitForText("wants your location");
+        waitForText("wants your location");
         mAsserter.is(mSolo.searchText("wants your location"), true, "Geolocation doorhanger has been displayed");
 
         // Test "Share" button hides the notification
@@ -39,7 +39,7 @@ public class testDoorHanger extends BaseTest {
 
         // Re-trigger geolocation notification
         loadUrl(GEO_URL);
-        mSolo.waitForText("wants your location");
+        waitForText("wants your location");
 
         // Test "Don't share" button hides the notification
         mSolo.clickOnCheckBox(0);
@@ -48,7 +48,7 @@ public class testDoorHanger extends BaseTest {
 
         // Re-trigger geolocation notification
         loadUrl(GEO_URL);
-        mSolo.waitForText("wants your location");
+        waitForText("wants your location");
 
         // Add a new tab
         addTab(BLANK_URL);
@@ -58,7 +58,7 @@ public class testDoorHanger extends BaseTest {
 
         // Load offline storage page
         loadUrl(OFFLINE_STORAGE_URL);
-        mSolo.waitForText("wants to store data on your device for offline use");
+        waitForText("wants to store data on your device for offline use");
 
         // Test doorhanger dismissed when tapping "Not Now"
         mSolo.clickOnText("Not Now");
@@ -66,7 +66,7 @@ public class testDoorHanger extends BaseTest {
 
         // Load offline storage page
         loadUrl(OFFLINE_STORAGE_URL);
-        mSolo.waitForText("wants to store data on your device for offline use");
+        waitForText("wants to store data on your device for offline use");
 
         // Test doorhanger dismissed when tapping "Allow" and is not displayed again
         mSolo.clickOnText("Allow");
@@ -76,7 +76,7 @@ public class testDoorHanger extends BaseTest {
 
         // Load login page
         loadUrl(LOGIN_URL);
-        mSolo.waitForText("to remeber password for");
+        waitForText("to remeber password for");
 
         // Test doorhanger is dismissed when tapping "Not Now"
         mSolo.clickOnText("Not Now");
@@ -84,7 +84,7 @@ public class testDoorHanger extends BaseTest {
 
         // Load login page
         loadUrl(LOGIN_URL);
-        mSolo.waitForText("prevented this site from opening");
+        waitForText("prevented this site from opening");
 
         // Test doorhanger is dismissed when tapping "Never show" and is no longer triggered
         mSolo.clickOnText("Remember");
