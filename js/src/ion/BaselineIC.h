@@ -339,6 +339,8 @@ class ICEntry
     _(GetName_Scope2)           \
     _(GetName_Scope3)           \
     _(GetName_Scope4)           \
+    _(GetName_Scope5)           \
+    _(GetName_Scope6)           \
                                 \
     _(BindName_Fallback)        \
                                 \
@@ -2827,7 +2829,7 @@ class ICGetName_Scope : public ICMonitoredStub
 {
     friend class ICStubSpace;
 
-    static const size_t MAX_HOPS = 4;
+    static const size_t MAX_HOPS = 6;
 
     HeapPtrShape shapes_[NumHops + 1];
     uint32_t offset_;
