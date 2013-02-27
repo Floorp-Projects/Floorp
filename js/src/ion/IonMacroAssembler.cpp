@@ -921,6 +921,8 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
 void
 MacroAssembler::loadBaselineOrIonCode(Register script, Register scratch, Label *failure)
 {
+    bool baselineEnabled = ion::IsBaselineEnabled(GetIonContext()->cx);
+
     Label noIonScript, done;
     Address scriptIon(script, offsetof(JSScript, ion));
     branchPtr(Assembler::BelowOrEqual, scriptIon, ImmWord(ION_COMPILING_SCRIPT),
@@ -930,8 +932,10 @@ MacroAssembler::loadBaselineOrIonCode(Register script, Register scratch, Label *
         loadPtr(scriptIon, scratch);
 
         // Check bailoutExpected flag
-        Address bailoutExpected(scratch, IonScript::offsetOfBailoutExpected());
-        branch32(Assembler::NotEqual, bailoutExpected, Imm32(0), &noIonScript);
+        if (baselineEnabled || failure) {
+            Address bailoutExpected(scratch, IonScript::offsetOfBailoutExpected());
+            branch32(Assembler::NotEqual, bailoutExpected, Imm32(0), &noIonScript);
+        }
 
         loadPtr(Address(scratch, IonScript::offsetOfMethod()), script);
         jump(&done);
@@ -940,10 +944,19 @@ MacroAssembler::loadBaselineOrIonCode(Register script, Register scratch, Label *
     {
         // The script does not have an IonScript. If |failure| is NULL,
         // assume the script has a baseline script.
-        loadPtr(Address(script, offsetof(JSScript, baseline)), script);
-        if (failure)
-            branchPtr(Assembler::BelowOrEqual, script, ImmWord(BASELINE_DISABLED_SCRIPT), failure);
-        loadPtr(Address(script, BaselineScript::offsetOfMethod()), script);
+        if (baselineEnabled) {
+            loadPtr(Address(script, offsetof(JSScript, baseline)), script);
+            if (failure)
+                branchPtr(Assembler::BelowOrEqual, script, ImmWord(BASELINE_DISABLED_SCRIPT), failure);
+            loadPtr(Address(script, BaselineScript::offsetOfMethod()), script);
+        } else if (failure) {
+            jump(failure);
+        } else {
+#ifdef DEBUG
+            breakpoint();
+            breakpoint();
+#endif
+        }
     }
 
     bind(&done);
