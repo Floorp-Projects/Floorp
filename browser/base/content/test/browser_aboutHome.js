@@ -6,6 +6,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/commonjs/sdk/core/promise.js");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AboutHomeUtils",
+  "resource:///modules/AboutHomeUtils.jsm");
 
 registerCleanupFunction(function() {
   // Ensure we don't pollute prefs for next tests.
@@ -42,7 +44,7 @@ let gTests = [
     let snippetsElt = doc.getElementById("snippets");
     ok(snippetsElt, "Found snippets element")
     is(snippetsElt.getElementsByTagName("span").length, 1,
-       "A default snippet is visible.");
+       "A default snippet is present.");
   }
 },
 
@@ -60,7 +62,7 @@ let gTests = [
     let snippetsElt = doc.getElementById("snippets");
     ok(snippetsElt, "Found snippets element");
     is(snippetsElt.getElementsByTagName("span").length, 1,
-       "A default snippet is visible.");
+       "A default snippet is present.");
 
     aSnippetsMap.delete("snippets");
   }
@@ -160,6 +162,43 @@ let gTests = [
   }
 },
 
+{
+  desc: "Check snippets map is cleared if cached version is old",
+  setup: function (aSnippetsMap)
+  {
+    aSnippetsMap.set("snippets", "test");
+    aSnippetsMap.set("snippets-cached-version", 0);
+  },
+  run: function (aSnippetsMap)
+  {
+    ok(!aSnippetsMap.has("snippets"), "snippets have been properly cleared");
+    ok(!aSnippetsMap.has("snippets-cached-version"),
+       "cached-version has been properly cleared");
+  }
+},
+
+{
+  desc: "Check cached snippets are shown if cached version is current",
+  setup: function (aSnippetsMap)
+  {
+    aSnippetsMap.set("snippets", "test");
+  },
+  run: function (aSnippetsMap)
+  {
+    let doc = gBrowser.selectedTab.linkedBrowser.contentDocument;
+
+    let snippetsElt = doc.getElementById("snippets");
+    ok(snippetsElt, "Found snippets element");
+    is(snippetsElt.innerHTML, "test", "Cached snippet is present.");
+
+    is(aSnippetsMap.get("snippets"), "test", "snippets still cached");
+    is(aSnippetsMap.get("snippets-cached-version"),
+       AboutHomeUtils.snippetsVersion,
+       "cached-version is correct");
+    ok(aSnippetsMap.has("snippets-last-update"), "last-update still exists");
+  }
+},
+
 ];
 
 function test()
@@ -228,6 +267,7 @@ function promiseSetupSnippetsMap(aTab, aSetupFn)
   cw.ensureSnippetsMapThen(function (aSnippetsMap) {
     // Don't try to update.
     aSnippetsMap.set("snippets-last-update", Date.now());
+    aSnippetsMap.set("snippets-cached-version", AboutHomeUtils.snippetsVersion);
     // Clear snippets.
     aSnippetsMap.delete("snippets");
     aSetupFn(aSnippetsMap);
