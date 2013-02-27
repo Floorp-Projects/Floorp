@@ -149,6 +149,7 @@ class MultiChoicePreference extends DialogPreference {
         }
 
         builder.setMultiChoiceItems(mEntries, mValues, new DialogInterface.OnMultiChoiceClickListener() {
+            @Override
             public void onClick(DialogInterface dialog, int which, boolean val) {
                 // mValues is automatically updated when checkboxes are clicked
 
@@ -184,6 +185,7 @@ class MultiChoicePreference extends DialogPreference {
         }
 
         GeckoAppShell.getHandler().post(new Runnable() {
+            @Override
             public void run() {
                 for (int i = 0; i < mEntryKeys.length; i++) {
                     String key = mEntryKeys[i].toString();
@@ -232,6 +234,7 @@ class MultiChoicePreference extends DialogPreference {
 
         mValues = new boolean[entryCount];
         GeckoAppShell.getHandler().post(new Runnable() {
+            @Override
             public void run() {
                 for (int i = 0; i < entryCount; i++) {
                     String key = mEntryKeys[i].toString();

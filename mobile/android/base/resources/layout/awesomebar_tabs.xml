@@ -8,16 +8,15 @@
                                   android:layout_width="fill_parent"
                                   android:layout_height="fill_parent">
 
-    <view class="org.mozilla.gecko.AwesomeBarTabs.Background"
-          android:id="@+id/awesomebar_background"
-          android:orientation="vertical"
-          android:layout_width="fill_parent"
-          android:layout_height="fill_parent"
-          android:background="@drawable/address_bar_bg">
+    <LinearLayout android:orientation="vertical"
+                  android:layout_width="fill_parent"
+                  android:layout_height="fill_parent">
 
-        <LinearLayout android:id="@+id/tab_widget_container"
-                      android:layout_width="fill_parent"
-                      android:layout_height="wrap_content">
+        <view class="org.mozilla.gecko.AwesomeBarTabs$BackgroundLayout"
+              android:id="@+id/tab_widget_container"
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              android:background="@drawable/address_bar_bg">
 
             <View android:id="@+id/tab_widget_left"
                   style="@style/AwesomeBarTabIndicatorCurve.Left"/>
@@ -28,7 +27,7 @@
             <View android:id="@+id/tab_widget_right"
                   style="@style/AwesomeBarTabIndicatorCurve.Right"/>
 
-        </LinearLayout>
+        </view>
 
         <FrameLayout android:id="@android:id/tabcontent"
                      android:visibility="gone"
@@ -40,6 +39,6 @@
                         android:layout_width="fill_parent"
                         android:layout_height="fill_parent"/>
 
-    </view>
+    </LinearLayout>
 
 </org.mozilla.gecko.AwesomeBarTabs>

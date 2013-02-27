@@ -15,21 +15,26 @@ import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 
 public class App extends BrowserApp {
+    @Override
     public int getLayout() { return R.layout.gecko_app; }
 
+    @Override
     public String getPackageName() {
         return "@ANDROID_PACKAGE_NAME@";
     }
 
+    @Override
     public String getContentProcessName() {
         return "@MOZ_CHILD_PROCESS_NAME@";
     }
 
+    @Override
     protected String getDefaultProfileName() {
         String profile = GeckoProfile.findDefaultProfile(this);
         return (profile != null ? profile : "default");
     }
 
+    @Override
     public String getDefaultUAString() {
         String deviceType = "Mobile";
         if (GeckoAppShell.isTablet())
@@ -37,6 +42,7 @@ public class App extends BrowserApp {
         return "Mozilla/5.0 (Android; " + deviceType + "; rv:@MOZ_APP_VERSION@) Gecko/@MOZ_APP_VERSION@ Firefox/@MOZ_APP_VERSION@";
     }
 
+    @Override
     public String getUAStringForHost(String host) {
         // With our standard UA String, we get a 200 response code and 
         // client-side redirect from t.co. This bot-like UA gives us a 

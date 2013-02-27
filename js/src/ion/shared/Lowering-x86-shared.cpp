@@ -125,3 +125,23 @@ LIRGeneratorX86Shared::lowerUrshD(MUrsh *mir)
     LUrshD *lir = new LUrshD(lhsUse, rhsAlloc, tempCopy(lhs, 0));
     return define(lir, mir);
 }
+
+bool
+LIRGeneratorX86Shared::lowerConstantDouble(double d, MInstruction *mir)
+{
+    return define(new LDouble(d), mir);
+}
+
+bool
+LIRGeneratorX86Shared::visitConstant(MConstant *ins)
+{
+    if (ins->type() == MIRType_Double)
+        return lowerConstantDouble(ins->value().toDouble(), ins);
+
+    // Emit non-double constants at their uses.
+    if (ins->canEmitAtUses())
+        return emitAtUses(ins);
+
+    return LIRGeneratorShared::visitConstant(ins);
+}
+

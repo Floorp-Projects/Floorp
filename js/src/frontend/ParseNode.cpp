@@ -254,14 +254,15 @@ ParseNodeAllocator::allocNode()
 /* used only by static create methods of subclasses */
 
 ParseNode *
-ParseNode::create(ParseNodeKind kind, ParseNodeArity arity, Parser *parser)
+ParseNode::create(ParseNodeKind kind, ParseNodeArity arity, FullParseHandler *handler)
 {
-    const Token &tok = parser->tokenStream.currentToken();
-    return parser->new_<ParseNode>(kind, JSOP_NOP, arity, tok.pos);
+    const Token &tok = handler->currentToken();
+    return handler->new_<ParseNode>(kind, JSOP_NOP, arity, tok.pos);
 }
 
 ParseNode *
-ParseNode::append(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right, Parser *parser)
+ParseNode::append(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right,
+                  FullParseHandler *handler)
 {
     if (!left || !right)
         return NULL;
@@ -273,7 +274,7 @@ ParseNode::append(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right
         list = &left->as<ListNode>();
     } else {
         ParseNode *pn1 = left->pn_left, *pn2 = left->pn_right;
-        list = parser->new_<ListNode>(kind, op, pn1);
+        list = handler->new_<ListNode>(kind, op, pn1);
         if (!list)
             return NULL;
         list->append(pn2);
@@ -303,7 +304,7 @@ ParseNode::append(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right
 
 ParseNode *
 ParseNode::newBinaryOrAppend(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right,
-                             Parser *parser)
+                             FullParseHandler *handler, bool foldConstants)
 {
     if (!left || !right)
         return NULL;
@@ -313,7 +314,7 @@ ParseNode::newBinaryOrAppend(ParseNodeKind kind, JSOp op, ParseNode *left, Parse
      * a list to reduce js::FoldConstants and js::frontend::EmitTree recursion.
      */
     if (left->isKind(kind) && left->isOp(op) && (js_CodeSpec[op].format & JOF_LEFTASSOC))
-        return append(kind, op, left, right, parser);
+        return append(kind, op, left, right, handler);
 
     /*
      * Fold constant addition immediately, to conserve node space and, what's
@@ -325,24 +326,24 @@ ParseNode::newBinaryOrAppend(ParseNodeKind kind, JSOp op, ParseNode *left, Parse
     if (kind == PNK_ADD &&
         left->isKind(PNK_NUMBER) &&
         right->isKind(PNK_NUMBER) &&
-        parser->foldConstants)
+        foldConstants)
     {
         left->pn_dval += right->pn_dval;
         left->pn_pos.end = right->pn_pos.end;
-        parser->freeTree(right);
+        handler->freeTree(right);
         return left;
     }
 
-    return parser->new_<BinaryNode>(kind, op, left, right);
+    return handler->new_<BinaryNode>(kind, op, left, right);
 }
 
-// Nb: unlike most functions that are passed a Parser, this one gets a
-// SharedContext passed in separately, because in this case |pc| may not equal
-// |parser->pc|.
+// Note: the parse context passed into this may not equal the associated
+// parser's current context.
 NameNode *
-NameNode::create(ParseNodeKind kind, JSAtom *atom, Parser *parser, ParseContext *pc)
+NameNode::create(ParseNodeKind kind, JSAtom *atom, FullParseHandler *handler,
+                 ParseContext<FullParseHandler> *pc)
 {
-    ParseNode *pn = ParseNode::create(kind, PN_NAME, parser);
+    ParseNode *pn = ParseNode::create(kind, PN_NAME, handler);
     if (pn) {
         pn->pn_atom = atom;
         ((NameNode *)pn)->initCommon(pc);
@@ -361,20 +362,22 @@ Definition::kindString(Kind kind)
     return table[kind];
 }
 
+namespace js {
+namespace frontend {
+
 #if JS_HAS_DESTRUCTURING
 
 /*
  * This function assumes the cloned tree is for use in the same statement and
  * binding context as the original tree.
  */
-static ParseNode *
-CloneParseTree(ParseNode *opn, Parser *parser)
+template <>
+ParseNode *
+Parser<FullParseHandler>::cloneParseTree(ParseNode *opn)
 {
-    ParseContext *pc = parser->pc;
+    JS_CHECK_RECURSION(context, return NULL);
 
-    JS_CHECK_RECURSION(pc->sc->context, return NULL);
-
-    ParseNode *pn = parser->new_<ParseNode>(opn->getKind(), opn->getOp(), opn->getArity(),
+    ParseNode *pn = handler.new_<ParseNode>(opn->getKind(), opn->getOp(), opn->getArity(),
                                             opn->pn_pos);
     if (!pn)
         return NULL;
@@ -391,8 +394,8 @@ CloneParseTree(ParseNode *opn, Parser *parser)
             return NULL;
         } else {
             NULLCHECK(pn->pn_funbox =
-                      parser->newFunctionBox(opn->pn_funbox->function(), pc, opn->pn_funbox->strict));
-            NULLCHECK(pn->pn_body = CloneParseTree(opn->pn_body, parser));
+                      newFunctionBox(opn->pn_funbox->function(), pc, opn->pn_funbox->strict));
+            NULLCHECK(pn->pn_body = cloneParseTree(opn->pn_body));
             pn->pn_cookie = opn->pn_cookie;
             pn->pn_dflags = opn->pn_dflags;
             pn->pn_blockid = opn->pn_blockid;
@@ -403,29 +406,29 @@ CloneParseTree(ParseNode *opn, Parser *parser)
         pn->makeEmpty();
         for (ParseNode *opn2 = opn->pn_head; opn2; opn2 = opn2->pn_next) {
             ParseNode *pn2;
-            NULLCHECK(pn2 = CloneParseTree(opn2, parser));
+            NULLCHECK(pn2 = cloneParseTree(opn2));
             pn->append(pn2);
         }
         pn->pn_xflags = opn->pn_xflags;
         break;
 
       case PN_TERNARY:
-        NULLCHECK(pn->pn_kid1 = CloneParseTree(opn->pn_kid1, parser));
-        NULLCHECK(pn->pn_kid2 = CloneParseTree(opn->pn_kid2, parser));
-        NULLCHECK(pn->pn_kid3 = CloneParseTree(opn->pn_kid3, parser));
+        NULLCHECK(pn->pn_kid1 = cloneParseTree(opn->pn_kid1));
+        NULLCHECK(pn->pn_kid2 = cloneParseTree(opn->pn_kid2));
+        NULLCHECK(pn->pn_kid3 = cloneParseTree(opn->pn_kid3));
         break;
 
       case PN_BINARY:
-        NULLCHECK(pn->pn_left = CloneParseTree(opn->pn_left, parser));
+        NULLCHECK(pn->pn_left = cloneParseTree(opn->pn_left));
         if (opn->pn_right != opn->pn_left)
-            NULLCHECK(pn->pn_right = CloneParseTree(opn->pn_right, parser));
+            NULLCHECK(pn->pn_right = cloneParseTree(opn->pn_right));
         else
             pn->pn_right = pn->pn_left;
         pn->pn_iflags = opn->pn_iflags;
         break;
 
       case PN_UNARY:
-        NULLCHECK(pn->pn_kid = CloneParseTree(opn->pn_kid, parser));
+        NULLCHECK(pn->pn_kid = cloneParseTree(opn->pn_kid));
         pn->pn_hidden = opn->pn_hidden;
         break;
 
@@ -442,7 +445,7 @@ CloneParseTree(ParseNode *opn, Parser *parser)
             pn->pn_link = dn->dn_uses;
             dn->dn_uses = pn;
         } else if (opn->pn_expr) {
-            NULLCHECK(pn->pn_expr = CloneParseTree(opn->pn_expr, parser));
+            NULLCHECK(pn->pn_expr = cloneParseTree(opn->pn_expr));
 
             /*
              * If the old name is a definition, the new one has pn_defn set.
@@ -476,10 +479,11 @@ CloneParseTree(ParseNode *opn, Parser *parser)
  * The cloned tree is for use only in the same statement and binding context as
  * the original tree.
  */
+template <>
 ParseNode *
-frontend::CloneLeftHandSide(ParseNode *opn, Parser *parser)
+Parser<FullParseHandler>::cloneLeftHandSide(ParseNode *opn)
 {
-    ParseNode *pn = parser->new_<ParseNode>(opn->getKind(), opn->getOp(), opn->getArity(),
+    ParseNode *pn = handler.new_<ParseNode>(opn->getKind(), opn->getOp(), opn->getArity(),
                                             opn->pn_pos);
     if (!pn)
         return NULL;
@@ -497,19 +501,19 @@ frontend::CloneLeftHandSide(ParseNode *opn, Parser *parser)
                 JS_ASSERT(opn2->isArity(PN_BINARY));
                 JS_ASSERT(opn2->isKind(PNK_COLON));
 
-                ParseNode *tag = CloneParseTree(opn2->pn_left, parser);
+                ParseNode *tag = cloneParseTree(opn2->pn_left);
                 if (!tag)
                     return NULL;
-                ParseNode *target = CloneLeftHandSide(opn2->pn_right, parser);
+                ParseNode *target = cloneLeftHandSide(opn2->pn_right);
                 if (!target)
                     return NULL;
 
-                pn2 = parser->new_<BinaryNode>(PNK_COLON, JSOP_INITPROP, opn2->pn_pos, tag, target);
+                pn2 = handler.new_<BinaryNode>(PNK_COLON, JSOP_INITPROP, opn2->pn_pos, tag, target);
             } else if (opn2->isArity(PN_NULLARY)) {
                 JS_ASSERT(opn2->isKind(PNK_COMMA));
-                pn2 = CloneParseTree(opn2, parser);
+                pn2 = cloneParseTree(opn2);
             } else {
-                pn2 = CloneLeftHandSide(opn2, parser);
+                pn2 = cloneLeftHandSide(opn2);
             }
 
             if (!pn2)
@@ -545,6 +549,9 @@ frontend::CloneLeftHandSide(ParseNode *opn, Parser *parser)
     }
     return pn;
 }
+
+} /* namespace frontend */
+} /* namespace js */
 
 #ifdef DEBUG
 

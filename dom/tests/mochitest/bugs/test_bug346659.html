@@ -17,10 +17,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=346659
 <pre id="test">
 <script type="application/javascript">
 
-if (navigator.platform.indexOf("Win") != 0) {
-  SimpleTest.expectAssertions(0, 1);
-}
-
 /** Test for Bug 346659 **/
 // do the tests in two batches, because otherwise the popup blocker kills off
 // our test because it opens too many windows.

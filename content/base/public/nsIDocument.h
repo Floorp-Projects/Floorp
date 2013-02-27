@@ -95,9 +95,13 @@ class Element;
 class GlobalObject;
 class HTMLBodyElement;
 class Link;
+class NodeFilter;
 class ProcessingInstruction;
 class UndoManager;
 template<typename> class Sequence;
+
+template<typename, typename> class CallbackObjectHolder;
+typedef CallbackObjectHolder<NodeFilter, nsIDOMNodeFilter> NodeFilterHolder;
 } // namespace dom
 } // namespace mozilla
 
@@ -1919,10 +1923,19 @@ public:
   already_AddRefed<nsRange> CreateRange(mozilla::ErrorResult& rv);
   already_AddRefed<nsIDOMNodeIterator>
     CreateNodeIterator(nsINode& aRoot, uint32_t aWhatToShow,
-                       nsIDOMNodeFilter* aFilter, mozilla::ErrorResult& rv) const;
+                       mozilla::dom::NodeFilter* aFilter,
+                       mozilla::ErrorResult& rv) const;
+  already_AddRefed<nsIDOMNodeIterator>
+    CreateNodeIterator(nsINode& aRoot, uint32_t aWhatToShow,
+                       const mozilla::dom::NodeFilterHolder& aFilter,
+                       mozilla::ErrorResult& rv) const;
   already_AddRefed<nsIDOMTreeWalker>
     CreateTreeWalker(nsINode& aRoot, uint32_t aWhatToShow,
-                     nsIDOMNodeFilter* aFilter, mozilla::ErrorResult& rv) const;
+                     mozilla::dom::NodeFilter* aFilter, mozilla::ErrorResult& rv) const;
+  already_AddRefed<nsIDOMTreeWalker>
+    CreateTreeWalker(nsINode& aRoot, uint32_t aWhatToShow,
+                     const mozilla::dom::NodeFilterHolder& aFilter,
+                     mozilla::ErrorResult& rv) const;
 
   // Deprecated WebIDL bits
   already_AddRefed<mozilla::dom::CDATASection>

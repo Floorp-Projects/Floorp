@@ -339,7 +339,8 @@ private:
                                           const nsString& aFilePath,
                                           const nsCString& aReason);
 
-    virtual bool RecvAddGeolocationListener(const IPC::Principal& aPrincipal);
+    virtual bool RecvAddGeolocationListener(const IPC::Principal& aPrincipal,
+                                            const bool& aHighAccuracy);
     virtual bool RecvRemoveGeolocationListener();
     virtual bool RecvSetGeolocationHigherAccuracy(const bool& aEnable);
 

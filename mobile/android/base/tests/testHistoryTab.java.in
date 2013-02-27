@@ -107,7 +107,7 @@ public class testHistoryTab extends PixelTest {
 
         mAsserter.isnot(listview,  null, "checking that history list exists");
 
-        final int count = listview.getChildCount();
+        final int count = listview.getAdapter().getCount();
         mAsserter.is(count, 3, "history list has 3 children");
 
         String loadUrl = "";
@@ -166,6 +166,7 @@ public class testHistoryTab extends PixelTest {
         // wait for the history list to be populated
         mFirstChild = null;
         boolean success = waitForTest(new BooleanTest() {
+            @Override
             public boolean test() {
                 mFirstChild = listview.getChildAt(1);
                 if (mFirstChild == null) {
@@ -223,6 +224,7 @@ public class testHistoryTab extends PixelTest {
         Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
         mFirstChild = null;
         boolean success = waitForTest(new BooleanTest() {
+            @Override
             public boolean test() {
                 mFirstChild = listview.getChildAt(1);
                 if (mFirstChild == null) {
@@ -240,6 +242,7 @@ public class testHistoryTab extends PixelTest {
         }
     }
 
+    @Override
     public void tearDown() throws Exception {
         ContentResolver resolver = getActivity().getContentResolver();
         Uri uri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/history");

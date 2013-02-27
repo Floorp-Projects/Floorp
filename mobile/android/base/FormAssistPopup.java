@@ -82,6 +82,7 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
         unregisterEventListener("FormAssist:Hide");
     }
 
+    @Override
     public void handleMessage(String event, JSONObject message) {
         try {
             if (event.equals("FormAssist:AutoComplete")) {
@@ -101,6 +102,7 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
         final JSONArray rect = message.getJSONArray("rect");
         final double zoom = message.getDouble("zoom");
         GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+            @Override
             public void run() {
                 showAutoCompleteSuggestions(suggestions, rect, zoom);
             }
@@ -112,6 +114,7 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
         final JSONArray rect = message.getJSONArray("rect");
         final double zoom = message.getDouble("zoom");
         GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+            @Override
             public void run() {
                 showValidationMessage(validationMessage, rect, zoom);
             }
@@ -120,6 +123,7 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
     
     private void handleHideMessage(JSONObject message) {
         GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+            @Override
             public void run() {
                 hide();
             }
@@ -132,6 +136,7 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
             mAutoCompleteList = (ListView) inflater.inflate(R.layout.autocomplete_list, null);
 
             mAutoCompleteList.setOnItemClickListener(new OnItemClickListener() {
+                @Override
                 public void onItemClick(AdapterView<?> parentView, View view, int position, long id) {
                     // Use the value stored with the autocomplete view, not the label text,
                     // since they can be different.

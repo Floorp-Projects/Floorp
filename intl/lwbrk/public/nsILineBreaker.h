@@ -33,7 +33,7 @@ public:
   virtual int32_t Prev( const PRUnichar* aText, uint32_t aLen, 
                         uint32_t aPos) = 0;
 
-  // Call this on a word with whitespace at either end. We will apply JISx4501
+  // Call this on a word with whitespace at either end. We will apply JISx4051
   // rules to find breaks inside the word. aBreakBefore is set to the break-
   // before status of each character; aBreakBefore[0] will always be false
   // because we never return a break before the first character.

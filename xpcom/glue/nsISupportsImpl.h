@@ -145,12 +145,6 @@ public:
       MOZ_ASSERT(e->mObject == owner, "wrong entry");
       MOZ_ASSERT(int32_t(e->mRefCnt) > 0, "purple ISupports with bad refcnt");
       refcount = ++(e->mRefCnt);
-#ifdef DEBUG_CC
-      if (!e->mNotPurple) {
-        nsCycleCollector_logPurpleRemoval(
-          NS_CCAR_TAGGED_TO_PURPLE_ENTRY(mTagged)->mObject);
-      }
-#endif
       e->mNotPurple = true;
     } else {
       refcount = NS_CCAR_TAGGED_TO_REFCNT(mTagged);
@@ -184,19 +178,9 @@ public:
       MOZ_ASSERT(int32_t(e->mRefCnt) > 0, "purple ISupports with bad refcnt");
       refcount = --(e->mRefCnt);
       if (MOZ_UNLIKELY(refcount == 0)) {
-#ifdef DEBUG_CC
-        nsCycleCollector_logPurpleRemoval(
-          NS_CCAR_TAGGED_TO_PURPLE_ENTRY(mTagged)->mObject);
-#endif
         e->mObject = nullptr;
         mTagged = NS_CCAR_REFCNT_TO_TAGGED(0);
       } else {
-#ifdef DEBUG_CC
-        if (e->mNotPurple) {
-          nsCycleCollector_logPurpleAddition(
-            NS_CCAR_TAGGED_TO_PURPLE_ENTRY(mTagged)->mObject, p);
-        }
-#endif
         e->mNotPurple = false;
       }
     } else {
@@ -227,10 +211,6 @@ public:
   MOZ_ALWAYS_INLINE void RemovePurple()
   {
     MOZ_ASSERT(IsPurple(), "must be purple");
-#ifdef DEBUG_CC
-    nsCycleCollector_logPurpleRemoval(
-      NS_CCAR_TAGGED_TO_PURPLE_ENTRY(mTagged)->mObject);
-#endif
     // The entry will be added to the free list later. 
     NS_CCAR_TAGGED_TO_PURPLE_ENTRY(mTagged)->mObject = nullptr;
     ReleasePurpleBufferEntry();
