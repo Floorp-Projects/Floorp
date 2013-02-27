@@ -19,6 +19,10 @@
   
   <!-- test code goes here -->
   <script type="text/javascript"><![CDATA[
+    if (navigator.platform.startsWith("Mac")) {
+      SimpleTest.expectAssertions(0, 5);
+    }
+
     var toolbar = $("tb1");
 
     ok(toolbar, "got the toolbar, triggering the xbl constructor");
