@@ -39,6 +39,8 @@ public:
 
   virtual void WriteInternal(const char* aBuffer, uint32_t aCount);
   virtual void FinishInternal();
+  virtual bool NeedsNewFrame() const;
+  virtual nsresult AllocateFrame();
 
 private:
   // Writes to the contained decoder and sets the appropriate errors
