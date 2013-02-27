@@ -207,6 +207,7 @@ class SmsIOThread extends Thread {
     return mHandler.post(r);
   }
 
+  @Override
   public void run() {
     Looper.prepare();
 

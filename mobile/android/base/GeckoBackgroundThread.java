@@ -21,6 +21,7 @@ public final class GeckoBackgroundThread extends Thread {
         super();
     }
 
+    @Override
     public void run() {
         setName(LOOPER_NAME);
         Looper.prepare();

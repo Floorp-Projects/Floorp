@@ -83,6 +83,7 @@ public class PluginLayer extends TileLayer {
         });
     }
 
+    @Override
     public void destroy() {
         mDestroyed = true;
 

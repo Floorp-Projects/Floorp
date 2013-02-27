@@ -96,14 +96,17 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         mHandler = new AllPagesHandler();
     }
 
+    @Override
     public boolean onBackPressed() {
         return false;
     }
 
+    @Override
     public int getTitleStringId() {
         return R.string.awesomebar_all_pages_title;
     }
 
+    @Override
     public String getTag() {
         return TAG;
     }
@@ -115,6 +118,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         return mListView;
     }
 
+    @Override
     public View getView() {
         if (mView == null) {
             mView = (LinearLayout) (LayoutInflater.from(mContext).inflate(R.layout.awesomebar_allpages_list, null));
@@ -137,6 +141,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         return mView;
     }
 
+    @Override
     public void destroy() {
         AwesomeBarCursorAdapter adapter = getCursorAdapter();
         unregisterEventListener("SearchEngines:Data");
@@ -185,10 +190,12 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
 
         if (mSuggestClient != null && mSuggestionsEnabled) {
             mSuggestTask = new AsyncTask<String, Void, ArrayList<String>>() {
+                @Override
                 protected ArrayList<String> doInBackground(String... query) {
                     return mSuggestClient.query(query[0]);
                 }
 
+                @Override
                 protected void onPostExecute(ArrayList<String> suggestions) {
                     setSuggestions(suggestions);
                 }
@@ -734,6 +741,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         }
     }
 
+    @Override
     public ContextMenuSubject getSubject(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
         ContextMenuSubject subject = null;
 

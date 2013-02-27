@@ -150,14 +150,17 @@ public class WebApp extends GeckoApp {
         }
     }
 
+    @Override
     public String getPackageName() {
         return "@ANDROID_PACKAGE_NAME@";
     }
 
+    @Override
     public String getContentProcessName() {
         return "@MOZ_CHILD_PROCESS_NAME@";
     }
 
+    @Override
     public String getDefaultUAString() {
         String deviceType = "Mobile";
         if (GeckoAppShell.isTablet())
@@ -165,6 +168,7 @@ public class WebApp extends GeckoApp {
         return "Mozilla/5.0 (Android; " + deviceType + "; rv:@MOZ_APP_VERSION@) Gecko/@MOZ_APP_VERSION@ Firefox/@MOZ_APP_VERSION@";
     }
 
+    @Override
     public String getUAStringForHost(String host) {
         // With our standard UA String, we get a 200 response code and 
         // client-side redirect from t.co. This bot-like UA gives us a 
@@ -254,6 +258,7 @@ public class WebApp extends GeckoApp {
         super.onTabChanged(tab, msg, data);
     }
 
+    @Override
     protected void connectGeckoLayerClient() {
         super.connectGeckoLayerClient();
         getLayerView().setOverScrollMode(View.OVER_SCROLL_NEVER);

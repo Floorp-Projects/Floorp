@@ -311,6 +311,7 @@ public class GeckoPreferences
         public void onTextChanged(CharSequence s, int start, int before, int count) { }
     }
 
+    @Override
     protected Dialog onCreateDialog(int id) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LinearLayout linearLayout = new LinearLayout(this);

@@ -90,6 +90,7 @@ public class FormHistoryProvider extends GeckoProvider {
         }
     }
 
+    @Override
     public String getTable(Uri uri) {
         String table = null;
         final int match = URI_MATCHER.match(uri);
@@ -116,6 +117,7 @@ public class FormHistoryProvider extends GeckoProvider {
         return null;
     }
 
+    @Override
     public void setupDefaults(Uri uri, ContentValues values) {
         int match = URI_MATCHER.match(uri);
         long now = System.currentTimeMillis();
@@ -143,6 +145,7 @@ public class FormHistoryProvider extends GeckoProvider {
         }
     }
 
+    @Override
     public void initGecko() {
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FormHistory:Init", null));
     }

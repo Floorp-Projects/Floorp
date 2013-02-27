@@ -528,22 +528,27 @@ abstract public class BrowserApp extends GeckoApp
         }
     }
 
+    @Override
     public void addTab() {
         showAwesomebar(AwesomeBar.Target.NEW_TAB);
     }
 
+    @Override
     public void addPrivateTab() {
         Tabs.getInstance().loadUrl("about:privatebrowsing", Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_PRIVATE);
     }
 
+    @Override
     public void showNormalTabs() {
         showTabs(TabsPanel.Panel.NORMAL_TABS);
     }
 
+    @Override
     public void showPrivateTabs() {
         showTabs(TabsPanel.Panel.PRIVATE_TABS);
     }
 
+    @Override
     public void showRemoteTabs() {
         showTabs(TabsPanel.Panel.REMOTE_TABS);
     }
@@ -555,10 +560,12 @@ abstract public class BrowserApp extends GeckoApp
         mTabsPanel.show(panel);
     }
 
+    @Override
     public void hideTabs() {
         mTabsPanel.hide();
     }
 
+    @Override
     public boolean autoHideTabs() {
         if (!hasTabsSideBar() && areTabsShown()) {
             hideTabs();
@@ -567,6 +574,7 @@ abstract public class BrowserApp extends GeckoApp
         return false;
     }
 
+    @Override
     public boolean areTabsShown() {
         return mTabsPanel.isShown();
     }
