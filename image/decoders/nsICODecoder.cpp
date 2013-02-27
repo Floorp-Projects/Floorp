@@ -213,6 +213,11 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
 {
   NS_ABORT_IF_FALSE(!HasError(), "Shouldn't call WriteInternal after error!");
 
+  if (IsSizeDecode() && HasSize()) {
+    // More data came in since we found the size. We have nothing to do here.
+    return;
+  }
+
   if (!aCount) // aCount=0 means EOF
     return;
 
@@ -329,6 +334,12 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
     if (!WriteToContainedDecoder(aBuffer, aCount)) {
       return;
     }
+
+    if (mContainedDecoder->HasSize()) {
+      PostSize(mContainedDecoder->GetImageMetadata().GetWidth(),
+               mContainedDecoder->GetImageMetadata().GetHeight());
+    }
+
     mPos += aCount;
     aBuffer += aCount;
     aCount = 0;
@@ -422,6 +433,9 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
     if (!WriteToContainedDecoder(mBIHraw, sizeof(mBIHraw))) {
       return;
     }
+
+    PostSize(mContainedDecoder->GetImageMetadata().GetWidth(),
+             mContainedDecoder->GetImageMetadata().GetHeight());
 
     // We have the size. If we're doing a size decode, we got what
     // we came for.
