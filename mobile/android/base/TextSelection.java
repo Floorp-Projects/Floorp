@@ -5,7 +5,6 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.Layer;
-import org.mozilla.gecko.gfx.Layer.RenderContext;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.FloatUtils;
@@ -69,8 +68,10 @@ class TextSelection extends Layer implements GeckoEventListener {
         }
     }
 
+    @Override
     public void handleMessage(final String event, final JSONObject message) {
         mActivity.runOnUiThread(new Runnable() {
+            @Override
             public void run() {
                 try {
                     if (event.equals("TextSelection:ShowHandles")) {
@@ -133,6 +134,7 @@ class TextSelection extends Layer implements GeckoEventListener {
         mViewZoom = context.zoomFactor;
 
         mActivity.runOnUiThread(new Runnable() {
+            @Override
             public void run() {
                 mStartHandle.repositionWithViewport(context.viewport.left, context.viewport.top, context.zoomFactor);
                 mMiddleHandle.repositionWithViewport(context.viewport.left, context.viewport.top, context.zoomFactor);

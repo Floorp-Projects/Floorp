@@ -322,12 +322,13 @@ function openLinkIn(url, where, params) {
     break;
   }
 
-  // If this window is active, focus the target window. Otherwise, focus the
-  // content but don't raise the window, since the URI we just loaded may have
-  // resulted in a new frontmost window (e.g. "javascript:window.open('');").
+  // If this window is active, or the user created a new tab, focus the target
+  // window. Otherwise, focus the content but don't raise the window, since the
+  // URI we just loaded may have resulted in a new frontmost window
+  // (e.g. "javascript:window.open('');").
   var fm = Components.classes["@mozilla.org/focus-manager;1"].
              getService(Components.interfaces.nsIFocusManager);
-  if (window == fm.activeWindow)
+  if (window == fm.activeWindow || isBlankPageURL(url))
     w.focus();
   w.gBrowser.selectedBrowser.focus();
 

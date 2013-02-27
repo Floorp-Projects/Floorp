@@ -58,24 +58,23 @@
   </ScrollView>
 
   <LinearLayout
-    style="@style/SyncBottomContainer">
+    style="@style/SyncBottomContainer" >
 
     <LinearLayout
       style="@style/SyncBottom" >
-  
       <Button
-	android:id="@+id/accountCancelButton"
-	style="@style/SyncButton"
-	android:onClick="cancelClickHandler"
-	android:text="@string/sync_button_cancel" />
-  
+        android:id="@+id/accountCancelButton"
+        style="@style/SyncButton"
+        android:onClick="cancelClickHandler"
+        android:text="@string/sync_button_cancel" />
+
       <Button
-	style="@style/SyncButton"
-	android:id="@+id/accountConnectButton"
-	android:onClick="connectClickHandler"
-	android:clickable="false"
-	android:enabled="false"
-	android:text="@string/sync_button_connect" />
+        style="@style/SyncButton"
+        android:id="@+id/accountConnectButton"
+        android:onClick="connectClickHandler"
+        android:clickable="false"
+        android:enabled="false"
+        android:text="@string/sync_button_connect" />
     </LinearLayout>
 
   </LinearLayout>

@@ -28,8 +28,6 @@
     ////////////////////////////////////////////////////////////////////////////
     // Test
 
-    // gA11yEventDumpID = "debug";
-
     /**
      * Event queue invoker object to test accessible states for XUL tree
      * accessible.
@@ -79,6 +77,8 @@
         "tree processor for " + prettyName(aTreeID);
       }
     }
+
+    gA11yEventDumpToConsole = true; // debug stuff
 
     var gQueue = null;
 

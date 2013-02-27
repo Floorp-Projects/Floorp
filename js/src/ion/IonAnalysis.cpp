@@ -374,7 +374,6 @@ class TypeAnalyzer
     bool respecialize(MPhi *phi, MIRType type);
     bool propagateSpecialization(MPhi *phi);
     bool specializePhis();
-    bool specializeTruncatedInstructions();
     void replaceRedundantPhi(MPhi *phi);
     void adjustPhiInputs(MPhi *phi);
     bool adjustInputs(MDefinition *def);
@@ -607,8 +606,6 @@ bool
 TypeAnalyzer::analyze()
 {
     if (!specializePhis())
-        return false;
-    if (!specializeTruncatedInstructions())
         return false;
     if (!insertConversions())
         return false;
@@ -1461,36 +1458,4 @@ LinearSum::print(Sprinter &sp) const
         sp.printf("+%d", constant_);
     else if (constant_ < 0)
         sp.printf("%d", constant_);
-}
-
-bool
-TypeAnalyzer::specializeTruncatedInstructions()
-{
-    // This specialization is a two step process: First we loop over the
-    // instruction stream forwards, marking all of the instructions that
-    // are computed purely from integers.  The theory is that we can observe
-    // values that don't fit into a 32 bit integer that can still be treated as
-    // integers.
-    for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
-        if (mir->shouldCancel("recoverBigInts (forwards loop)"))
-            return false;
-
-        for (MDefinitionIterator iter(*block); iter; iter++) {
-            iter->recalculateBigInt();
-        }
-    }
-
-    // Now, if these adds of doubles-that-are-really-big-ints get truncated
-    // on all reads, then we know that we don't care that any of these operations
-    // produces a value that is not an integer.  To achieve this, loop over the instruction
-    // stream backwards, marking every instruction where all reads are operations that truncate
-    // If we have a double operation that is marked both "bigInt" and "truncated", then we can
-    // safely convert it into an integer instruction
-    for (PostorderIterator block(graph.poBegin()); block != graph.poEnd(); block++) {
-        if (mir->shouldCancel("Propagate Truncates (backwards loop)"))
-            return false;
-        for (MInstructionReverseIterator riter(block->rbegin()); riter != block->rend(); riter++)
-            riter->analyzeTruncateBackward();
-    }
-    return true;
 }

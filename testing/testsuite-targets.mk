@@ -8,9 +8,11 @@
 ifdef TEST_PATH
 TEST_PATH_ARG := --test-path="$(TEST_PATH)"
 PEPTEST_PATH_ARG := --test-path="$(TEST_PATH)"
+IPCPLUGINS_PATH_ARG := --test-path="$(TEST_PATH)"
 else
 TEST_PATH_ARG :=
 PEPTEST_PATH_ARG := --test-path=_tests/peptest/tests/firefox/firefox_all.ini
+IPCPLUGINS_PATH_ARG := --test-path=dom/plugins/test
 endif
 
 # include automation-build.mk to get the path to the binary
@@ -139,13 +141,13 @@ mochitest-a11y:
 mochitest-ipcplugins:
 ifeq (Darwin,$(OS_ARCH))
 ifeq (i386,$(TARGET_CPU))
-	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled.i386.test.plugin=false --test-path=dom/plugins/test
+	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled.i386.test.plugin=false $(IPCPLUGINS_PATH_ARG)
 endif
 ifeq (x86_64,$(TARGET_CPU))
-	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled.x86_64.test.plugin=false --test-path=dom/plugins/test
+	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled.x86_64.test.plugin=false $(IPCPLUGINS_PATH_ARG)
 endif
 ifeq (powerpc,$(TARGET_CPU))
-	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled.ppc.test.plugin=false --test-path=dom/plugins/test
+	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled.ppc.test.plugin=false $(IPCPLUGINS_PATH_ARG)
 endif
 else
 	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled=false --test-path=dom/plugins/test

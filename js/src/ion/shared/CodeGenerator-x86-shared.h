@@ -77,6 +77,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
 
   public:
     // Instruction visitors.
+    virtual bool visitDouble(LDouble *ins);
     virtual bool visitMinMaxD(LMinMaxD *ins);
     virtual bool visitAbsD(LAbsD *ins);
     virtual bool visitSqrtD(LSqrtD *ins);

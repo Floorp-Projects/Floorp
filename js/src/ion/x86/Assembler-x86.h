@@ -247,10 +247,6 @@ class Assembler : public AssemblerX86Shared
 
     static void TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
 
-    // The buffer is about to be linked, make sure any constant pools or excess
-    // bookkeeping has been flushed to the instruction stream.
-    void finish() { }
-
     // Copy the assembly code to the given buffer, and perform any pending
     // relocations relying on the target address.
     void executableCopy(uint8_t *buffer);
@@ -427,13 +423,6 @@ class Assembler : public AssemblerX86Shared
 
     void movsd(const double *dp, const FloatRegister &dest) {
         masm.movsd_mr((const void *)dp, dest.code());
-    }
-    void movsd(AbsoluteLabel *label, const FloatRegister &dest) {
-        JS_ASSERT(!label->bound());
-        // Thread the patch list through the unpatched address word in the
-        // instruction stream.
-        masm.movsd_mr(reinterpret_cast<void *>(label->prev()), dest.code());
-        label->setPrev(masm.size());
     }
 };
 

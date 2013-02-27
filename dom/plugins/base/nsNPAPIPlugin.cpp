@@ -1221,7 +1221,7 @@ _getwindowobject(NPP npp)
     NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_getwindowobject called from the wrong thread\n"));
     return nullptr;
   }
-  JSContext *cx = GetJSContextFromNPP(npp);
+  AutoPushJSContext cx(GetJSContextFromNPP(npp));
   NS_ENSURE_TRUE(cx, nullptr);
 
   // Using ::JS_GetGlobalObject(cx) is ok here since the window we
@@ -1248,7 +1248,7 @@ _getpluginelement(NPP npp)
   if (!element)
     return nullptr;
 
-  JSContext *cx = GetJSContextFromNPP(npp);
+  AutoPushJSContext cx(GetJSContextFromNPP(npp));
   NS_ENSURE_TRUE(cx, nullptr);
 
   nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
@@ -1519,7 +1519,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
   nsIDocument *doc = GetDocumentFromNPP(npp);
   NS_ENSURE_TRUE(doc, false);
 
-  JSContext *cx = GetJSContextFromDoc(doc);
+  AutoPushJSContext cx(GetJSContextFromDoc(doc));
   NS_ENSURE_TRUE(cx, false);
 
   nsCOMPtr<nsIScriptContext> scx = GetScriptContextFromJSContext(cx);

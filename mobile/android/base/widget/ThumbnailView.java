@@ -10,7 +10,6 @@ import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.graphics.Matrix;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.widget.ImageView;
 
 /* Special version of ImageView for thumbnails. Scales a thumbnail so that it maintains its aspect

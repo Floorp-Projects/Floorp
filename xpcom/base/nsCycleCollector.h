@@ -6,8 +6,6 @@
 #ifndef nsCycleCollector_h__
 #define nsCycleCollector_h__
 
-//#define DEBUG_CC
-
 class nsISupports;
 class nsICycleCollectorListener;
 class nsCycleCollectionParticipant;
@@ -36,12 +34,6 @@ typedef void (*CC_ForgetSkippableCallback)(void);
 void nsCycleCollector_setForgetSkippableCallback(CC_ForgetSkippableCallback aCB);
 
 void nsCycleCollector_forgetSkippable(bool aRemoveChildlessNodes = false);
-
-#ifdef DEBUG_CC
-void nsCycleCollector_logPurpleAddition(void* aObject,
-                                        nsCycleCollectionParticipant* cp);
-void nsCycleCollector_logPurpleRemoval(void* aObject);
-#endif
 
 void nsCycleCollector_collect(bool aMergeCompartments,
                               nsCycleCollectorResults *aResults,
