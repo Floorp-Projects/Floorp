@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko.background.announcements;
 
-import org.mozilla.gecko.sync.GlobalConstants;
+import org.mozilla.gecko.background.common.GlobalConstants;
 
 import android.app.AlarmManager;
 

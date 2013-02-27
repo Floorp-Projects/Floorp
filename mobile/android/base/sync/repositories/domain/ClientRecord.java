@@ -5,8 +5,8 @@
 package org.mozilla.gecko.sync.repositories.domain;
 
 import org.json.simple.JSONArray;
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
-import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.NonArrayJSONException;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.android.RepoUtils;

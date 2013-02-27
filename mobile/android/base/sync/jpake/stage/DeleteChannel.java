@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 
-import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.jpake.JPakeClient;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.BaseResourceDelegate;

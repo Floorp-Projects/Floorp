@@ -14,7 +14,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.mozilla.apache.commons.codec.binary.Base64;
-import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.Utils;
 
 import ch.boye.httpclientandroidlib.Header;

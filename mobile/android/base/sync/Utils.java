@@ -27,6 +27,7 @@ import java.util.TreeMap;
 import org.json.simple.JSONArray;
 import org.mozilla.apache.commons.codec.binary.Base32;
 import org.mozilla.apache.commons.codec.binary.Base64;
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.setup.Constants;
 
 import android.content.Context;

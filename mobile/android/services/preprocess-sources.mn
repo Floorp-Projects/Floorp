@@ -1,3 +1,3 @@
-sync/GlobalConstants.java
+background/common/GlobalConstants.java
 sync/SyncConstants.java
 background/announcements/AnnouncementsConstants.java
