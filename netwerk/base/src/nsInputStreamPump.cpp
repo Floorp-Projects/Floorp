@@ -526,6 +526,8 @@ nsInputStreamPump::OnStateTransfer()
             rv = mAsyncStream->Available(&avail);
             if (NS_SUCCEEDED(rv))
                 return STATE_TRANSFER;
+            if (rv != NS_BASE_STREAM_CLOSED)
+                mStatus = rv;
         }
     }
     return STATE_STOP;

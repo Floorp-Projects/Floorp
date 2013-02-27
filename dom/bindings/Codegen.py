@@ -2624,7 +2624,6 @@ for (uint32_t i = 0; i < length; ++i) {
             type.unroll().inner.identifier.name)
 
         if (descriptor.interface.isCallback() and
-            descriptor.interface.identifier.name != "NodeFilter" and
             descriptor.interface.identifier.name != "EventListener"):
             if descriptor.workers:
                 if type.nullable():
@@ -3470,8 +3469,7 @@ if (!returnArray) {
 
     if (type.isGeckoInterface() and
         (not type.isCallbackInterface() or
-         type.unroll().inner.identifier.name == "EventListener" or
-         type.unroll().inner.identifier.name == "NodeFilter")):
+         type.unroll().inner.identifier.name == "EventListener")):
         descriptor = descriptorProvider.getDescriptor(type.unroll().inner.identifier.name)
         if type.nullable():
             wrappingCode = ("if (!%s) {\n" % (result) +
@@ -7464,7 +7462,6 @@ class CGNativeMember(ClassMethod):
 
         if (type.isGeckoInterface() and
             (not type.isCallbackInterface() or
-             type.unroll().inner.identifier.name == "NodeFilter" or
              type.unroll().inner.identifier.name == "EventListener")):
             iface = type.unroll().inner
             argIsPointer = type.nullable() or iface.isExternal()

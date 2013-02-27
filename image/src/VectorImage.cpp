@@ -134,8 +134,10 @@ public:
   void Cancel()
   {
     NS_ABORT_IF_FALSE(mDocument, "Duplicate call to Cancel");
-    mDocument->RemoveObserver(this);
-    mDocument = nullptr;
+    if (mDocument) {
+      mDocument->RemoveObserver(this);
+      mDocument = nullptr;
+    }
   }
 
 private:
@@ -199,10 +201,12 @@ public:
   void Cancel()
   {
     NS_ABORT_IF_FALSE(mDocument, "Duplicate call to Cancel");
-    mDocument->RemoveEventListener(NS_LITERAL_STRING("MozSVGAsImageDocumentLoad"), this, true);
-    mDocument->RemoveEventListener(NS_LITERAL_STRING("SVGAbort"), this, true);
-    mDocument->RemoveEventListener(NS_LITERAL_STRING("SVGError"), this, true);
-    mDocument = nullptr;
+    if (mDocument) {
+      mDocument->RemoveEventListener(NS_LITERAL_STRING("MozSVGAsImageDocumentLoad"), this, true);
+      mDocument->RemoveEventListener(NS_LITERAL_STRING("SVGAbort"), this, true);
+      mDocument->RemoveEventListener(NS_LITERAL_STRING("SVGError"), this, true);
+      mDocument = nullptr;
+    }
   }
 
 private:

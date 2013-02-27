@@ -328,6 +328,7 @@ public class BrowserProvider extends ContentProvider {
     }
 
     private class BookmarkMigrator3to4 implements BookmarkMigrator {
+        @Override
         public void updateForNewTable(ContentValues bookmark) {
             Integer isFolder = bookmark.getAsInteger("folder");
             if (isFolder == null || isFolder != 1) {
@@ -1029,6 +1030,7 @@ public class BrowserProvider extends ContentProvider {
 
                     // create icons in a separate thread to avoid blocking about:home on startup
                     GeckoBackgroundThread.getHandler().post(new Runnable() {
+                        @Override
                         public void run() {
                             try {
                                 String iconData = bookmark.getString("icon");
@@ -1071,6 +1073,7 @@ public class BrowserProvider extends ContentProvider {
 
                     // create icons in a separate thread to avoid blocking about:home on startup
                     GeckoBackgroundThread.getHandler().post(new Runnable() {
+                        @Override
                         public void run() {
                             Bitmap icon = getDefaultFaviconFromPath(name);
                             if (icon == null) {

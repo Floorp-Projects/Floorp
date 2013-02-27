@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  d.setAttribute('dir', "auto");
+  c.setAttribute('dir', "auto");
+  d.removeAttribute('dir');
+  c.removeAttribute('dir');
+  b.setAttribute('dir', "auto");
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+
+<div id="a" dir="auto"><div id="b"><div id="c"><div id="d"></div></div></div></div>
+
+</body>
+</html>

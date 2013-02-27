@@ -124,6 +124,12 @@ MOCHITEST_BROWSER_FILES += \
         $(NULL)
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+MOCHITEST_BROWSER_FILES += \
+		browser_webconsole_bug_623749_ctrl_a_select_all_winnt.js \
+		$(NULL)
+endif
+
 MOCHITEST_BROWSER_FILES += \
 	test-console.html \
 	test-network.html \

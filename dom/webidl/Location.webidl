@@ -16,13 +16,5 @@
   void assign(DOMString url);
   void replace(DOMString url);
   void reload();
-
-  // URL decomposition IDL attributes 
-           attribute DOMString protocol;
-           attribute DOMString host;
-           attribute DOMString hostname;
-           attribute DOMString port;
-           attribute DOMString pathname;
-           attribute DOMString search;
-           attribute DOMString hash;
 };
+Location implements URLUtils;

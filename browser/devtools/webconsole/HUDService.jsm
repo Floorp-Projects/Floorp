@@ -160,6 +160,12 @@ function WebConsole(aTarget, aIframe)
   this.chromeWindow = this.chromeDocument.defaultView;
   this.hudId = "hud_" + Date.now();
   this.target = aTarget;
+
+  this.browserWindow = this.chromeWindow.top;
+  let element = this.browserWindow.document.documentElement;
+  if (element.getAttribute("windowtype") != "navigator:browser") {
+    this.browserWindow = HUDService.currentContext();
+  }
 }
 
 WebConsole.prototype = {
@@ -169,21 +175,6 @@ WebConsole.prototype = {
   target: null,
   iframe: null,
   _destroyer: null,
-
-  _browserWindow: null,
-
-  get browserWindow()
-  {
-    if (!this._browserWindow) {
-      let window = this.chromeWindow.top;
-      let element = window.document.documentElement;
-      if (element.getAttribute("windowtype") != "navigator:browser") {
-        window = HUDService.currentContext();
-      }
-      this._browserWindow = window;
-    }
-    return this._browserWindow;
-  },
 
   /**
    * Getter for HUDService.lastFinishedRequestCallback.
