@@ -30,7 +30,7 @@ function runTest() {
   browserElementTestHelpers.addPermission();
 
   var iframe = document.createElement('iframe');
-  iframe.mozbrowser = true;
+  SpecialPowers.wrap(iframe).mozbrowser = true;
 
   // Our child will create two iframes, so make sure this iframe is big enough
   // to show both of them without scrolling, so taking a screenshot gets both

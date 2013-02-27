@@ -29,7 +29,7 @@ function runTest() {
   var remote = !browserElementTestHelpers.getOOPByDefaultPref();
 
   var iframe = document.createElement('iframe');
-  iframe.mozbrowser = true;
+  SpecialPowers.wrap(iframe).mozbrowser = true;
   iframe.setAttribute('remote', remote);
 
   // The page we load does window.open, then checks some things and reports

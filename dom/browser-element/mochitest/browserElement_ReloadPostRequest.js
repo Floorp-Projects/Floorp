@@ -76,7 +76,7 @@ function runTest() {
   browserElementTestHelpers.addPermission();
 
   iframe = document.createElement('iframe');
-  iframe.mozbrowser = true;
+  SpecialPowers.wrap(iframe).mozbrowser = true;
 
   isPostRequestSubmitted = false;
   iframe.src = 'file_post_request.html';
