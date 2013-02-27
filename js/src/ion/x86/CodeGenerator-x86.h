@@ -16,26 +16,7 @@ namespace ion {
 
 class CodeGeneratorX86 : public CodeGeneratorX86Shared
 {
-    class DeferredDouble : public TempObject
-    {
-        AbsoluteLabel label_;
-        uint32_t index_;
-
-      public:
-        DeferredDouble(uint32_t index) : index_(index)
-        { }
-
-        AbsoluteLabel *label() {
-            return &label_;
-        }
-        uint32_t index() const {
-            return index_;
-        }
-    };
-
   private:
-    js::Vector<DeferredDouble *, 0, SystemAllocPolicy> deferredDoubles_;
-
     CodeGeneratorX86 *thisFromCtor() {
         return this;
     }
@@ -48,9 +29,6 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
                            const Register &elements, const LAllocation *index);
 
-  protected:
-    void linkAbsoluteLabels();
-
   public:
     CodeGeneratorX86(MIRGenerator *gen, LIRGraph *graph);
 
@@ -60,7 +38,6 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitUnbox(LUnbox *unbox);
     bool visitValue(LValue *value);
     bool visitOsrValue(LOsrValue *value);
-    bool visitDouble(LDouble *ins);
     bool visitLoadSlotV(LLoadSlotV *load);
     bool visitLoadSlotT(LLoadSlotT *load);
     bool visitStoreSlotT(LStoreSlotT *store);
