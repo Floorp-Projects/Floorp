@@ -771,17 +771,6 @@ MmsService.prototype = {
   confSendDeliveryReport: CONFIG_SEND_REPORT_DEFAULT_YES,
 
   /**
-   * @param status
-   *        The MMS error type.
-   *
-   * @return true if it's a type of transient error; false otherwise.
-   */
-  isTransientError: function isTransientError(status) {
-    return (status >= MMS.MMS_PDU_ERROR_TRANSIENT_FAILURE &&
-            status < MMS.MMS_PDU_ERROR_PERMANENT_FAILURE);
-  },
-
-  /**
    * Calculate Whether or not should we enable X-Mms-Report-Allowed.
    *
    * @param config
@@ -837,10 +826,7 @@ MmsService.prototype = {
     if (RETRIEVAL_MODE_AUTOMATIC === retrievalMode) {
       this.retrieveMessage(url, (function responseNotify(mmsStatus, retrievedMsg) {
         debug("retrievedMsg = " + JSON.stringify(retrievedMsg));
-        if (this.isTransientError(mmsStatus)) {
-          // TODO: remove this check after bug 810097 is landed.
-          return;
-        }
+        // TODO: Bug 845643 - B2G MMS: Save retrieved MM into database.
 
         let transactionId = notification.headers["x-mms-transaction-id"];
 
