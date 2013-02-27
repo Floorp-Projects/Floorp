@@ -27,7 +27,7 @@ const BrowserTouchHandler = {
                         target: aMessage.target };
     // Touch input selection handling
     if (!InputSourceHelper.isPrecise) {
-      if (SelectionHelperUI.isActive()) {
+      if (SelectionHelperUI.isActive) {
         // Selection handler is active.
         if (aMessage.json.types.indexOf("selected-text") != -1) {
           // long tap on existing selection. The incoming message has the
