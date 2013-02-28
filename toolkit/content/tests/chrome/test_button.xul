@@ -28,11 +28,7 @@
 <script type="application/javascript">
 <![CDATA[
 
-if (navigator.platform.startsWith("Mac")) {
-  SimpleTest.expectAssertions(0, 7);
-} else {
-  SimpleTest.expectAssertions(0, 5);
-}
+SimpleTest.expectAssertions(0, 7);
 
 SimpleTest.waitForExplicitFinish();
 
