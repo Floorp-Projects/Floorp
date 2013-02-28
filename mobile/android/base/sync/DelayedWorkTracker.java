@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.sync;
 
+import org.mozilla.gecko.background.common.log.Logger;
+
 /**
  * A little class to allow us to maintain a count of extant
  * things (in our case, callbacks that need to fire), and

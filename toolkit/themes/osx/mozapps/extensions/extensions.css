@@ -247,6 +247,9 @@
 #category-extension > .category-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/category-extensions.png");
 }
+#category-service > .category-icon {
+  list-style-image: url("chrome://mozapps/skin/extensions/category-extensions.png");
+}
 #category-theme > .category-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/category-themes.png");
 }
@@ -1147,4 +1150,3 @@ button.button-link:not([disabled="true"]):active:hover {
   box-shadow: inset 0 0 4px rgb(45,54,71), 0 1px rgba(255,255,255,0.25);
   background-image: -moz-linear-gradient(rgba(45,54,71,0.6), rgba(45,54,71,0));
 }
-

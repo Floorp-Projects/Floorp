@@ -7,10 +7,9 @@ package org.mozilla.gecko.background.announcements;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import org.mozilla.gecko.background.BackgroundConstants;
 import org.mozilla.gecko.background.BackgroundService;
-import org.mozilla.gecko.sync.GlobalConstants;
-import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.background.common.GlobalConstants;
+import org.mozilla.gecko.background.common.log.Logger;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -55,7 +54,7 @@ public class AnnouncementsBroadcastService extends BackgroundService {
    */
   public static void recordLastLaunch(final Context context) {
     final long now = System.currentTimeMillis();
-    final SharedPreferences preferences = context.getSharedPreferences(AnnouncementsConstants.PREFS_BRANCH, BackgroundConstants.SHARED_PREFERENCES_MODE);
+    final SharedPreferences preferences = context.getSharedPreferences(AnnouncementsConstants.PREFS_BRANCH, GlobalConstants.SHARED_PREFERENCES_MODE);
 
     // One of several things might be true, according to our logs:
     //
@@ -97,12 +96,12 @@ public class AnnouncementsBroadcastService extends BackgroundService {
   }
 
   public static long getPollInterval(final Context context) {
-    SharedPreferences preferences = context.getSharedPreferences(AnnouncementsConstants.PREFS_BRANCH, BackgroundConstants.SHARED_PREFERENCES_MODE);
+    SharedPreferences preferences = context.getSharedPreferences(AnnouncementsConstants.PREFS_BRANCH, GlobalConstants.SHARED_PREFERENCES_MODE);
     return preferences.getLong(AnnouncementsConstants.PREF_ANNOUNCE_FETCH_INTERVAL_MSEC, AnnouncementsConstants.DEFAULT_ANNOUNCE_FETCH_INTERVAL_MSEC);
   }
 
   public static void setPollInterval(final Context context, long interval) {
-    SharedPreferences preferences = context.getSharedPreferences(AnnouncementsConstants.PREFS_BRANCH, BackgroundConstants.SHARED_PREFERENCES_MODE);
+    SharedPreferences preferences = context.getSharedPreferences(AnnouncementsConstants.PREFS_BRANCH, GlobalConstants.SHARED_PREFERENCES_MODE);
     preferences.edit().putLong(AnnouncementsConstants.PREF_ANNOUNCE_FETCH_INTERVAL_MSEC, interval).commit();
   }
 
@@ -142,22 +141,22 @@ public class AnnouncementsBroadcastService extends BackgroundService {
   protected void handleSystemLifetimeIntent() {
     // Ask the browser to tell us the current state of the preference.
     try {
-      Class<?> geckoPreferences = Class.forName(BackgroundConstants.GECKO_PREFERENCES_CLASS);
-      Method broadcastSnippetsPref = geckoPreferences.getMethod(BackgroundConstants.GECKO_BROADCAST_METHOD, Context.class);
+      Class<?> geckoPreferences = Class.forName(GlobalConstants.GECKO_PREFERENCES_CLASS);
+      Method broadcastSnippetsPref = geckoPreferences.getMethod(GlobalConstants.GECKO_BROADCAST_METHOD, Context.class);
       broadcastSnippetsPref.invoke(null, this);
       return;
     } catch (ClassNotFoundException e) {
-      Logger.error(LOG_TAG, "Class " + BackgroundConstants.GECKO_PREFERENCES_CLASS + " not found!");
+      Logger.error(LOG_TAG, "Class " + GlobalConstants.GECKO_PREFERENCES_CLASS + " not found!");
       return;
     } catch (NoSuchMethodException e) {
-      Logger.error(LOG_TAG, "Method " + BackgroundConstants.GECKO_PREFERENCES_CLASS + "/" + BackgroundConstants.GECKO_BROADCAST_METHOD + " not found!");
+      Logger.error(LOG_TAG, "Method " + GlobalConstants.GECKO_PREFERENCES_CLASS + "/" + GlobalConstants.GECKO_BROADCAST_METHOD + " not found!");
       return;
     } catch (IllegalArgumentException e) {
-      Logger.error(LOG_TAG, "Got exception invoking " + BackgroundConstants.GECKO_BROADCAST_METHOD + ".");
+      Logger.error(LOG_TAG, "Got exception invoking " + GlobalConstants.GECKO_BROADCAST_METHOD + ".");
     } catch (IllegalAccessException e) {
-      Logger.error(LOG_TAG, "Got exception invoking " + BackgroundConstants.GECKO_BROADCAST_METHOD + ".");
+      Logger.error(LOG_TAG, "Got exception invoking " + GlobalConstants.GECKO_BROADCAST_METHOD + ".");
     } catch (InvocationTargetException e) {
-      Logger.error(LOG_TAG, "Got exception invoking " + BackgroundConstants.GECKO_BROADCAST_METHOD + ".");
+      Logger.error(LOG_TAG, "Got exception invoking " + GlobalConstants.GECKO_BROADCAST_METHOD + ".");
     }
   }
 
@@ -183,7 +182,7 @@ public class AnnouncementsBroadcastService extends BackgroundService {
     if (!enabled) {
       Logger.info(LOG_TAG, "!enabled: clearing last fetch.");
       final SharedPreferences sharedPreferences = this.getSharedPreferences(AnnouncementsConstants.PREFS_BRANCH,
-                                                                            BackgroundConstants.SHARED_PREFERENCES_MODE);
+                                                                            GlobalConstants.SHARED_PREFERENCES_MODE);
       final Editor editor = sharedPreferences.edit();
       editor.remove(AnnouncementsConstants.PREF_LAST_FETCH_LOCAL_TIME);
       editor.remove(AnnouncementsConstants.PREF_EARLIEST_NEXT_ANNOUNCE_FETCH);

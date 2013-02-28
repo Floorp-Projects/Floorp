@@ -88,6 +88,8 @@ function AbstractHealthReporter(branch, policy, sessionRecorder) {
   this._shutdownComplete = false;
   this._shutdownCompleteCallback = null;
 
+  this._errors = [];
+
   this._pullOnlyProviders = {};
   this._pullOnlyProvidersRegistered = false;
   this._lastDailyDate = null;
@@ -128,8 +130,7 @@ AbstractHealthReporter.prototype = Object.freeze({
     delete this._initHistogram;
     delete this._dbOpenHistogram;
 
-    this._log.error("Error during initialization: " +
-                    CommonUtils.exceptionStr(error));
+    this._recordError("Error during initialization", error);
     this._initializeHadError = true;
     this._initiateShutdown();
     this._initializedDeferred.reject(error);
@@ -175,6 +176,7 @@ AbstractHealthReporter.prototype = Object.freeze({
 
     this._log.info("Initializing collector.");
     this._collector = new Metrics.Collector(this._storage);
+    this._collector.onProviderError = this._errors.push.bind(this._errors);
     this._collectorInProgress = true;
 
     let catString = this._prefs.get("service.providerCategories") || "";
@@ -236,17 +238,21 @@ AbstractHealthReporter.prototype = Object.freeze({
     this._initialized = false;
     this._shutdownRequested = true;
 
-    if (this._collectorInProgress) {
-      this._log.warn("Collector is in progress of initializing. Waiting to finish.");
-      return;
-    }
+    if (this._initializeHadError) {
+      this._log.warn("Initialization had error. Shutting down immediately.");
+    } else {
+      if (this._collectorInProgress) {
+        this._log.warn("Collector is in progress of initializing. Waiting to finish.");
+        return;
+      }
 
-    // If storage is in the process of initializing, we need to wait for it
-    // to finish before continuing. The initialization process will call us
-    // again once storage has initialized.
-    if (this._storageInProgress) {
-      this._log.warn("Storage is in progress of initializing. Waiting to finish.");
-      return;
+      // If storage is in the process of initializing, we need to wait for it
+      // to finish before continuing. The initialization process will call us
+      // again once storage has initialized.
+      if (this._storageInProgress) {
+        this._log.warn("Storage is in progress of initializing. Waiting to finish.");
+        return;
+      }
     }
 
     this._log.warn("Initiating main shutdown procedure.");
@@ -484,8 +490,8 @@ AbstractHealthReporter.prototype = Object.freeze({
           promises.push(promise);
         }
       } catch (ex) {
-        this._log.warn("Error registering provider from category manager: " +
-                       entry + "; " + CommonUtils.exceptionStr(ex));
+        this._recordError("Error registering provider from category manager : " +
+                          entry + ": ", ex);
         continue;
       }
     }
@@ -525,8 +531,7 @@ AbstractHealthReporter.prototype = Object.freeze({
           let provider = this.initProviderFromType(providerType);
           yield this.registerProvider(provider);
         } catch (ex) {
-          this._log.warn("Error registering pull-only provider: " +
-                         CommonUtils.exceptionStr(ex));
+          this._recordError("Error registering pull-only provider", ex);
         }
       }
     }.bind(this)).then(onFinished, onFinished);
@@ -555,13 +560,42 @@ AbstractHealthReporter.prototype = Object.freeze({
         try {
           yield provider.shutdown();
         } catch (ex) {
-          this._log.warn("Error when shutting down provider: " +
-                         CommonUtils.exceptionStr(ex));
+          this._recordError("Error when shutting down provider: " +
+                            provider.name, ex);
         } finally {
           this._collector.unregisterProvider(provider.name);
         }
       }
     }.bind(this)).then(onFinished, onFinished);
+  },
+
+  /**
+   * Record an exception for reporting in the payload.
+   *
+   * A side effect is the exception is logged.
+   *
+   * Note that callers need to be extra sensitive about ensuring personal
+   * or otherwise private details do not leak into this. All of the user data
+   * on the stack in FHR code should be limited to data we were collecting with
+   * the intent to submit. So, it is covered under the user's consent to use
+   * the feature.
+   *
+   * @param message
+   *        (string) Human readable message describing error.
+   * @param ex
+   *        (Error) The error that should be captured.
+   */
+  _recordError: function (message, ex) {
+    let recordMessage = message;
+    let logMessage = message;
+
+    if (ex) {
+      recordMessage += ": " + ex.message;
+      logMessage += ": " + CommonUtils.exceptionStr(ex);
+    }
+
+    this._log.warn(logMessage);
+    this._errors.push(recordMessage);
   },
 
   /**
@@ -628,8 +662,8 @@ AbstractHealthReporter.prototype = Object.freeze({
         payload = yield this.getJSONPayload(asObject);
       } catch (ex) {
         error = ex;
-        this._log.warn("Error collecting and/or retrieving JSON payload: " +
-                       CommonUtils.exceptionStr(ex));
+        this._collectException("Error collecting and/or retrieving JSON payload",
+                               ex);
       } finally {
         yield this.ensurePullOnlyProvidersUnregistered();
 
@@ -689,11 +723,6 @@ AbstractHealthReporter.prototype = Object.freeze({
 
     let outputDataDays = o.data.days;
 
-    // We need to be careful that data in errors does not leak potentially
-    // private information.
-    // FUTURE ask Privacy if we can put exception stacks in here.
-    let errors = [];
-
     // Guard here in case we don't track this (e.g., on Android).
     let lastPingDate = this.lastPingDate;
     if (lastPingDate && lastPingDate.getTime() > 0) {
@@ -716,9 +745,8 @@ AbstractHealthReporter.prototype = Object.freeze({
           // is aware of the measurement version.
           serializer = measurement.serializer(measurement.SERIALIZE_JSON);
         } catch (ex) {
-          this._log.warn("Error obtaining serializer for measurement: " + name +
-                         ": " + CommonUtils.exceptionStr(ex));
-          errors.push("Could not obtain serializer: " + name);
+          this._recordError("Error obtaining serializer for measurement: " +
+                            name, ex);
           continue;
         }
 
@@ -726,9 +754,8 @@ AbstractHealthReporter.prototype = Object.freeze({
         try {
           data = yield measurement.getValues();
         } catch (ex) {
-          this._log.warn("Error obtaining data for measurement: " +
-                         name + ": " + CommonUtils.exceptionStr(ex));
-          errors.push("Could not obtain data: " + name);
+          this._recordError("Error obtaining data for measurement: " + name,
+                            ex);
           continue;
         }
 
@@ -736,8 +763,8 @@ AbstractHealthReporter.prototype = Object.freeze({
           try {
             o.data.last[name] = serializer.singular(data.singular);
           } catch (ex) {
-            this._log.warn("Error serializing data: " + CommonUtils.exceptionStr(ex));
-            errors.push("Error serializing singular: " + name);
+            this._recordError("Error serializing singular data: " + name,
+                              ex);
             continue;
           }
         }
@@ -762,18 +789,15 @@ AbstractHealthReporter.prototype = Object.freeze({
 
             outputDataDays[dateFormatted][name] = serialized;
           } catch (ex) {
-            this._log.warn("Error populating data for day: " +
-                           CommonUtils.exceptionStr(ex));
-            errors.push("Could not serialize day: " + name +
-                        " ( " + dateFormatted + ")");
+            this._recordError("Error populating data for day: " + name, ex);
             continue;
           }
         }
       }
     }
 
-    if (errors.length) {
-      o.errors = errors;
+    if (this._errors.length) {
+      o.errors = this._errors.slice(0, 20);
     }
 
     this._storage.compact();

@@ -4,7 +4,7 @@
 
 package org.mozilla.gecko.background;
 
-import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.background.common.log.Logger;
 
 import android.app.AlarmManager;
 import android.app.IntentService;

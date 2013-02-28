@@ -25,7 +25,6 @@ let testServices = [
      "removeVisitsByTimeframe"]],
   ["browser/nav-bookmarks-service;1","nsINavBookmarksService",
     ["createFolder"]],
-  ["browser/livemark-service;2","nsILivemarkService", []],
   ["browser/livemark-service;2","mozIAsyncLivemarks", ["reloadLivemarks"]],
   ["browser/annotation-service;1","nsIAnnotationService", []],
   ["browser/favicon-service;1","nsIFaviconService", []],

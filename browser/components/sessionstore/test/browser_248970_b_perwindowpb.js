@@ -3,14 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function test() {
-  TestRunner.run();
-}
-
-function runTests() {
   /** Test (B) for Bug 248970 **/
-
-  // Let runTests() be a generator function.
-  yield executeSoon(next);
+  waitForExplicitFinish();
 
   let windowsToClose = [];
   let file = Services.dirsvc.get("TmpD", Ci.nsIFile);
@@ -163,7 +157,7 @@ function runTests() {
               aWin.gBrowser.removeTab(tab_C);
               aWin.gBrowser.removeTab(tab_B);
 
-              next();
+              finish();
             });
           });
         });

@@ -10,8 +10,8 @@ import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.SyncConstants;
-import org.mozilla.gecko.sync.Logger;
 
 import ch.boye.httpclientandroidlib.HttpEntity;
 import ch.boye.httpclientandroidlib.HttpResponse;

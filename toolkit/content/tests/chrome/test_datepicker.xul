@@ -37,9 +37,7 @@
 <script>
 <![CDATA[
 
-if (navigator.platform.startsWith("Mac")) {
-  SimpleTest.expectAssertions(0, 5);
-}
+SimpleTest.expectAssertions(0, 5);
 
 var mouseScrolled = false;
 

@@ -64,9 +64,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=317422
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
 
-if (navigator.platform.startsWith("Mac")) {
-  SimpleTest.expectAssertions(0, 2);
-}
+SimpleTest.expectAssertions(0, 2);
 
 /** Test for Bug 317422 **/
 SimpleTest.waitForExplicitFinish();

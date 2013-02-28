@@ -17,6 +17,10 @@
           src="../states.js"></script>
 
   <script type="application/javascript">
+    if (navigator.platform.startsWith("Win")) {
+      SimpleTest.expectAssertions(0, 2);
+    }
+
     function doTest()
     {
       frameDoc = document.getElementById("frame_doc").contentDocument;
