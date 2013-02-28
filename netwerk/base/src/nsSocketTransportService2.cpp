@@ -693,15 +693,21 @@ nsSocketTransportService::Reset(bool aGuardLocals)
     bool isGuarded;
     for (i = mActiveCount - 1; i >= 0; --i) {
         isGuarded = false;
-        if (aGuardLocals)
+        if (aGuardLocals) {
             mActiveList[i].mHandler->IsLocal(&isGuarded);
+            if (!isGuarded)
+                mActiveList[i].mHandler->KeepWhenOffline(&isGuarded);
+        }
         if (!isGuarded)
             DetachSocket(mActiveList, &mActiveList[i]);
     }
     for (i = mIdleCount - 1; i >= 0; --i) {
         isGuarded = false;
-        if (aGuardLocals)
+        if (aGuardLocals) {
             mIdleList[i].mHandler->IsLocal(&isGuarded);
+            if (!isGuarded)
+                mIdleList[i].mHandler->KeepWhenOffline(&isGuarded);
+        }
         if (!isGuarded)
             DetachSocket(mIdleList, &mIdleList[i]);
     }
