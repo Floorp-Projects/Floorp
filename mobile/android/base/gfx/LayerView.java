@@ -228,10 +228,6 @@ public class LayerView extends FrameLayout {
         mLayerClient.setZoomConstraints(constraints);
     }
 
-    public void setViewportSize(int width, int height) {
-        mLayerClient.setViewportSize(width, height);
-    }
-
     public void setInputConnectionHandler(InputConnectionHandler inputConnectionHandler) {
         mInputConnectionHandler = inputConnectionHandler;
         mLayerClient.forceRedraw();
