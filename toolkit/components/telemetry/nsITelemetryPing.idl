@@ -7,7 +7,7 @@
 
 interface nsIFile;
 
-[scriptable, uuid(077ee790-3a9d-11e2-81c1-0800200c9a66)]
+[scriptable, uuid(37fb32f5-d5ed-45e3-8feb-fa085935e732)]
 interface nsITelemetryPing : nsIObserver {
   /**
    * Return the current telemetry payload.
@@ -31,6 +31,11 @@ interface nsITelemetryPing : nsIObserver {
    * Notify observers when loads and saves finish. Used only for testing.
    */
   void enableLoadSaveNotifications();
+
+  /**
+   * Cache the profile directory for later use.
+   */
+  void cacheProfileDirectory();
 
   /**
    * Inform the ping which AddOns are installed.
