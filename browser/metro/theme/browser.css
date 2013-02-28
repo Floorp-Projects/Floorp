@@ -628,6 +628,12 @@ flyoutpanel > settings:first-child {
   margin-top: 0px;
 }
 
+/* Sync flyout pane */
+
+#sync-flyoutpanel {
+  width: 400px;
+}
+
 /* About flyout pane */
 
 #about-flyoutpanel {
@@ -687,10 +693,12 @@ settings {
 }
 
 /* <setting> elements that are not in a <settings> group get special treatment */
-#prefs-flyoutpanel > setting {
+#prefs-flyoutpanel > setting,
+#sync-flyoutpanel > setting {
   margin-top: 16px;
 }
-#prefs-flyoutpanel > setting .preferences-title {
+
+#prefs-flyoutpanel > setting .preferences-title,
   font-weight: bold
 }
 

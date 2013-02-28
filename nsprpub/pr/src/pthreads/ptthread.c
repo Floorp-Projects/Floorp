@@ -28,6 +28,14 @@
 #undef _POSIX_THREAD_PRIORITY_SCHEDULING
 #endif
 
+#ifdef _PR_NICE_PRIORITY_SCHEDULING
+#undef _POSIX_THREAD_PRIORITY_SCHEDULING
+#include <sys/resource.h>
+#ifndef HAVE_GETTID
+#define gettid() (syscall(SYS_gettid))
+#endif
+#endif
+
 /*
  * Record whether or not we have the privilege to set the scheduling
  * policy and priority of threads.  0 means that privilege is available.
@@ -54,7 +62,9 @@ static void _pt_thread_death(void *arg);
 static void _pt_thread_death_internal(void *arg, PRBool callDestructors);
 static void init_pthread_gc_support(void);
 
-#if defined(_PR_DCETHREADS) || defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
+#if defined(_PR_DCETHREADS) || \
+    defined(_POSIX_THREAD_PRIORITY_SCHEDULING) || \
+    defined(_PR_NICE_PRIORITY_SCHEDULING)
 static PRIntn pt_PriorityMap(PRThreadPriority pri)
 {
 #ifdef NTO
@@ -64,6 +74,13 @@ static PRIntn pt_PriorityMap(PRThreadPriority pri)
      *     Jerry.Kirk@Nexwarecorp.com
      */
     return 10;
+#elif defined(_PR_NICE_PRIORITY_SCHEDULING)
+    /* This maps high priorities to low nice values:
+     * PR_PRIORITY_LOW     1
+     * PR_PRIORITY_NORMAL  0
+     * PR_PRIORITY_HIGH   -1
+     * PR_PRIORITY_URGENT -2 */
+    return 1 - pri;
 #else
     return pt_book.minPrio +
 	    pri * (pt_book.maxPrio - pt_book.minPrio) / PR_PRIORITY_LAST;
@@ -98,6 +115,9 @@ static void *_pt_root(void *arg)
     PRIntn rv;
     PRThread *thred = (PRThread*)arg;
     PRBool detached = (thred->state & PT_THREAD_DETACHED) ? PR_TRUE : PR_FALSE;
+#ifdef _PR_NICE_PRIORITY_SCHEDULING
+    pid_t tid;
+#endif
 
     /*
      * Both the parent thread and this new thread set thred->id.
@@ -109,6 +129,21 @@ static void *_pt_root(void *arg)
      * write should be safe.
      */
     thred->id = pthread_self();
+
+#ifdef _PR_NICE_PRIORITY_SCHEDULING
+    /*
+     * We need to know the kernel thread ID of each thread in order to
+     * set its priority hence we do it here instead of at creation time.
+     */
+    tid = gettid();
+
+    rv = setpriority(PRIO_PROCESS, tid, pt_PriorityMap(thred->priority));
+
+    PR_Lock(pt_book.ml);
+    thred->tid = tid;
+    PR_NotifyAllCondVar(pt_book.cv);
+    PR_Unlock(pt_book.ml);
+#endif
 
     /*
     ** DCE Threads can't detach during creation, so do it late.
@@ -224,6 +259,9 @@ static PRThread* pt_AttachThread(void)
 
         thred->priority = PR_PRIORITY_NORMAL;
         thred->id = pthread_self();
+#ifdef _PR_NICE_PRIORITY_SCHEDULING
+        thred->tid = gettid();
+#endif
         rv = pthread_setspecific(pt_book.key, thred);
         PR_ASSERT(0 == rv);
 
@@ -644,6 +682,21 @@ PR_IMPLEMENT(void) PR_SetThreadPriority(PRThread *thred, PRThreadPriority newPri
 		if (rv != 0)
 			rv = -1;
     }
+#elif defined(_PR_NICE_PRIORITY_SCHEDULING)
+    PR_Lock(pt_book.ml);
+    while (thred->tid == 0)
+        PR_WaitCondVar(pt_book.cv, PR_INTERVAL_NO_TIMEOUT);
+    PR_Unlock(pt_book.ml);
+
+    rv = setpriority(PRIO_PROCESS, thred->tid, pt_PriorityMap(newPri));
+
+    if (rv == -1 && errno == EPERM)
+    {
+        /* We don't set pt_schedpriv to EPERM because adjusting the nice
+         * value might be permitted for certain ranges but not others */
+        PR_LOG(_pr_thread_lm, PR_LOG_MIN,
+            ("PR_SetThreadPriority: no thread scheduling privilege"));
+    }
 #endif
 
     thred->priority = newPri;
@@ -862,6 +915,9 @@ void _PR_InitThreads(
     thred->startFunc = NULL;
     thred->priority = priority;
     thred->id = pthread_self();
+#ifdef _PR_NICE_PRIORITY_SCHEDULING
+    thred->tid = gettid();
+#endif
 
     thred->state = (PT_THREAD_DETACHED | PT_THREAD_PRIMORD);
     if (PR_SYSTEM_THREAD == type)

@@ -4,9 +4,6 @@
     "layout": ""
   },
 "excludetests": {
-    "dom/tests/mochitest/crypto/test_getRandomValues.html": "bug 440046, re-enable when bug 673432 lands",
-    "dom/tests/mochitest/crypto/test_no_legacy.html": "bug 440046, re-enable when bug 673432 lands",
-    "dom/tests/mochitest/crypto/test_legacy.html": "bug 440046, re-enable when bug 673432 lands",
     "dom/tests/mochitest/dom-level0/test_innerWidthHeight_script.html": "bug 807137",
     "dom/alarm/test/test_alarm_permitted_app.html":" navigator.mozAlarms should be an nsIDOMMozAlarmsManager object",
     "dom/battery/test/test_battery_basics.html":" Default chargingTime should be 0 - got Infinity, expected 0",
@@ -57,6 +54,7 @@
     "dom/imptests/webapps/DOMCore/tests/approved/test_Range-deleteContents.html":" Resulting DOM for range 0 [paras[0].firstChild, 0, paras[0].firstChild, 0]",
     "dom/imptests/webapps/DOMCore/tests/approved/test_Range-extractContents.html":" Resulting DOM for range 0 [paras[0].firstChild, 0, paras[0].firstChild, 0]",
     "dom/imptests/webapps/DOMCore/tests/approved/test_Range-insertNode.html":" Test timed out.",
+    "dom/imptests/webapps/DOMCore/tests/approved/test_Range-mutations.html":" Test timed out.",
     "dom/imptests/webapps/DOMCore/tests/approved/test_Range-surroundContents.html":" Test timed out.",
     "dom/indexedDB/": "",
 

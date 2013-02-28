@@ -17,6 +17,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=490705
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
+
+if (navigator.platform.startsWith("Win")) {
+  SimpleTest.expectAssertions(0, 2); // bug 845676
+}
+
 var testFile = "bug495794.ogg";
 var testFileDuration = 0.30;
 var testFileChannelCount = 6;

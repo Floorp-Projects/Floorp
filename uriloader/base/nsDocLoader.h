@@ -16,7 +16,7 @@
 #include "nsWeakReference.h"
 #include "nsILoadGroup.h"
 #include "nsCOMArray.h"
-#include "nsTArrayForwardDeclare.h"
+#include "nsTObserverArray.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsIChannel.h"
@@ -109,11 +109,7 @@ protected:
     virtual void DestroyChildren();
 
     nsIDocumentLoader* ChildAt(int32_t i) {
-        return mChildList[i];
-    }
-
-    nsIDocumentLoader* SafeChildAt(int32_t i) {
-        return mChildList.SafeElementAt(i);
+        return mChildList.SafeElementAt(i, nullptr);
     }
 
     void FireOnProgressChange(nsDocLoader* aLoadInitiator,
@@ -257,7 +253,7 @@ protected:
 
     nsCOMPtr<nsILoadGroup>        mLoadGroup;
     // We hold weak refs to all our kids
-    nsTArray<nsDocLoader*>                   mChildList;
+    nsTObserverArray<nsDocLoader*> mChildList;
 
     // The following member variables are related to the new nsIWebProgress 
     // feedback interfaces that travis cooked up.

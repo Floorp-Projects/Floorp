@@ -5,9 +5,15 @@
 #include "nsIDOMClassInfo.h"
 #include "DOMError.h"
 #include "nsString.h"
-#include "nsIRandomGenerator.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "nsIServiceManager.h"
+#include "nsCOMPtr.h"
+#include "nsIRandomGenerator.h"
+
+#include "mozilla/dom/ContentChild.h"
+
+using mozilla::dom::ContentChild;
 
 using namespace js::ArrayBufferView;
 
@@ -36,6 +42,8 @@ Crypto::~Crypto()
 NS_IMETHODIMP
 Crypto::GetRandomValues(const jsval& aData, JSContext *cx, jsval* _retval)
 {
+  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Called on the wrong thread");
+
   // Make sure this is a JavaScript object
   if (!aData.isObject()) {
     return NS_ERROR_DOM_NOT_OBJECT_ERR;
@@ -72,27 +80,31 @@ Crypto::GetRandomValues(const jsval& aData, JSContext *cx, jsval* _retval)
     return NS_ERROR_DOM_QUOTA_EXCEEDED_ERR;
   }
 
-  nsCOMPtr<nsIRandomGenerator> randomGenerator;
-  nsresult rv;
-  randomGenerator =
-    do_GetService("@mozilla.org/security/random-generator;1", &rv);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("unable to continue without random number generator");
-    return rv;
-  }
-
   void *dataptr = JS_GetArrayBufferViewData(view);
   NS_ENSURE_TRUE(dataptr, NS_ERROR_FAILURE);
-
   unsigned char* data =
     static_cast<unsigned char*>(dataptr);
 
-  uint8_t *buf;
-  rv = randomGenerator->GenerateRandomBytes(dataLen, &buf);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    InfallibleTArray<uint8_t> randomValues;
+    // Tell the parent process to generate random values via PContent
+    ContentChild* cc = ContentChild::GetSingleton();
+    if (!cc->SendGetRandomValues(dataLen, &randomValues)) {
+      return NS_ERROR_FAILURE;
+    }
+    NS_ASSERTION(dataLen == randomValues.Length(),
+                 "Invalid length returned from parent process!");
+    memcpy(data, randomValues.Elements(), dataLen);
+  } else {
+    uint8_t *buf = GetRandomValues(dataLen);
 
-  memcpy(data, buf, dataLen);
-  NS_Free(buf);
+    if (!buf) {
+      return NS_ERROR_FAILURE;
+    }
+
+    memcpy(data, buf, dataLen);
+    NS_Free(buf);
+  }
 
   *_retval = OBJECT_TO_JSVAL(view);
 
@@ -167,6 +179,23 @@ Crypto::DisableRightClick()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 #endif
+
+uint8_t*
+Crypto::GetRandomValues(uint32_t aLength)
+{
+  nsCOMPtr<nsIRandomGenerator> randomGenerator;
+  nsresult rv;
+  randomGenerator =
+    do_GetService("@mozilla.org/security/random-generator;1");
+  NS_ENSURE_TRUE(randomGenerator, nullptr);
+
+  uint8_t* buf;
+  rv = randomGenerator->GenerateRandomBytes(aLength, &buf);
+
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  return buf;
+}
 
 } // namespace dom
 } // namespace mozilla

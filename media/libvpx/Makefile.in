@@ -285,11 +285,11 @@ DEFINES += -D__linux__
 
 # For cpu-features.h
 LOCAL_INCLUDES += -I$(ANDROID_NDK)/sources/android/cpufeatures
+ifndef MOZ_WEBRTC
 # For cpu-features.c
 VPATH += $(ANDROID_NDK)/sources/android/cpufeatures
-
 CSRCS += cpu-features.c
-
+endif
 endif
 
 CSRCS += \
