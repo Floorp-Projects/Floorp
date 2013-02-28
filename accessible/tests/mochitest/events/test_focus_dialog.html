@@ -21,7 +21,7 @@
           src="../states.js"></script>
 
   <script type="application/javascript">
-    if (navigator.platform.startsWith("Win")) {
+    if (!navigator.platform.startsWith("Linux")) {
       SimpleTest.expectAssertions(0, 1);
     }
 
