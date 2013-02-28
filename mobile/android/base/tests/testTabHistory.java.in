@@ -38,22 +38,22 @@ public class testTabHistory extends PixelTest {
 
         // Go to the 2nd page
         nav.back();
-        mSolo.waitForText("Browser Blank Page 02");
+        waitForText("Browser Blank Page 02");
         verifyPageTitle("Browser Blank Page 02");
 
         // Go to the first page
         nav.back();
-        mSolo.waitForText("Browser Blank Page 01");
+        waitForText("Browser Blank Page 01");
         verifyPageTitle("Browser Blank Page 01");
 
         // Go forward to the second page
         nav.forward();
-        mSolo.waitForText("Browser Blank Page 02");
+        waitForText("Browser Blank Page 02");
         verifyPageTitle("Browser Blank Page 02");
 
         // Reload page
         nav.reload();
-        mSolo.waitForText("Browser Blank Page 02");
+        waitForText("Browser Blank Page 02");
         verifyPageTitle("Browser Blank Page 02");
     }
 }

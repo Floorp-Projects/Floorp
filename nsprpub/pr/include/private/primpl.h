@@ -50,6 +50,10 @@ typedef struct PRSegment PRSegment;
 #include <sys/sem.h>
 #endif
 
+#ifdef HAVE_SYSCALL
+#include <sys/syscall.h>
+#endif
+
 /*************************************************************************
 *****  A Word about Model Dependent Function Naming Convention ***********
 *************************************************************************/
@@ -185,6 +189,17 @@ typedef struct PTDebug
 #endif /* defined(DEBUG) */
 
 NSPR_API(void) PT_FPrintStats(PRFileDesc *fd, const char *msg);
+
+/*
+ * On Linux and its derivatives POSIX priority scheduling works only for
+ * real-time threads. On those platforms we set thread's nice values
+ * instead which requires us to track kernel thread IDs for each POSIX
+ * thread we create.
+ */
+#if defined(LINUX) && defined(HAVE_SETPRIORITY) && \
+    ((defined(HAVE_SYSCALL) && defined(SYS_gettid)) || defined(HAVE_GETTID))
+#define _PR_NICE_PRIORITY_SCHEDULING
+#endif
 
 #else /* defined(_PR_PTHREADS) */
 
@@ -1540,6 +1555,9 @@ struct PRThread {
 
 #if defined(_PR_PTHREADS)
     pthread_t id;                   /* pthread identifier for the thread */
+#ifdef _PR_NICE_PRIORITY_SCHEDULING
+    pid_t tid;                      /* Linux-specific kernel thread ID */
+#endif
     PRBool okToDelete;              /* ok to delete the PRThread struct? */
     PRCondVar *waiting;             /* where the thread is waiting | NULL */
     void *sp;                       /* recorded sp for garbage collection */

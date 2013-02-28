@@ -34,7 +34,7 @@ function loadBrowser(isApp, callback) {
   if (isApp) {
     iframe.setAttribute("mozapp", APP_MANIFEST);
   }
-  iframe.mozbrowser = true;
+  SpecialPowers.wrap(iframe).mozbrowser = true;
   iframe.src = APP_URL;
   document.getElementById("content").appendChild(iframe);
 

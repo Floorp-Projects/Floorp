@@ -3,7 +3,7 @@
 <script>
 
 var iframe = document.createElement('iframe');
-iframe.mozbrowser = true;
+iframe.setAttribute("mozbrowser", "true");
 
 iframe.addEventListener('mozbrowsershowmodalprompt', function(e) {
   if (e.detail.message == 'child:ready') {

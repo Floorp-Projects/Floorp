@@ -21,6 +21,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=548523
 <pre id="test">
 <script type="application/javascript">
 
+if (navigator.platform.startsWith("Win")) {
+  SimpleTest.expectAssertions(0, 8); // bug 845676
+}
+
 /** Test for Bug 548523 **/
 
 var manager = new MediaTestManager;

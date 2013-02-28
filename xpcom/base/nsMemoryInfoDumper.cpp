@@ -739,8 +739,18 @@ MakeFilename(const char *aPrefix, const nsAString &aIdentifier,
 static nsresult
 OpenTempFile(const nsACString &aFilename, nsIFile* *aFile)
 {
-  nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, aFile);
-  NS_ENSURE_SUCCESS(rv, rv);
+#ifdef ANDROID
+  // For Android, first try the downloads directory which is world-readable
+  // rather than the temp directory which is not.
+  if (char *env = PR_GetEnv("DOWNLOADS_DIRECTORY")) {
+    NS_NewNativeLocalFile(nsCString(env), /* followLinks = */ true, aFile);
+  }
+#endif
+  nsresult rv;
+  if (!*aFile) {
+    rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, aFile);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   nsCOMPtr<nsIFile> file(*aFile);
 
@@ -749,19 +759,6 @@ OpenTempFile(const nsACString &aFilename, nsIFile* *aFile)
 
   rv = file->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0644);
   NS_ENSURE_SUCCESS(rv, rv);
-#ifdef ANDROID
-  {
-    // On android the default system umask is 0077 which makes these files
-    // unreadable to the shell user. In order to pull the dumps off a non-rooted
-    // device we need to chmod them to something world-readable.
-    // XXX why not logFile->SetPermissions(0644);
-    nsAutoCString path;
-    rv = file->GetNativePath(path);
-    if (NS_SUCCEEDED(rv)) {
-      chmod(path.get(), 0644);
-    }
-  }
-#endif
   return NS_OK;
 }
 

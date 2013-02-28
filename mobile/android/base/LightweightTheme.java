@@ -90,7 +90,6 @@ public class LightweightTheme implements GeckoEventListener {
                     final Bitmap bitmap = BitmapFactory.decodeStream(stream);
                     stream.close();
                     mHandler.post(new Runnable() {
-                        @Override
                         public void run() {
                             setLightweightTheme(bitmap);
                         }
@@ -100,7 +99,6 @@ public class LightweightTheme implements GeckoEventListener {
                 }
             } else if (event.equals("LightweightTheme:Disable")) {
                 mHandler.post(new Runnable() {
-                    @Override
                     public void run() {
                         resetLightweightTheme();
                     }

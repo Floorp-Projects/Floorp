@@ -1899,19 +1899,6 @@ nsTextEditorState::SetValue(const nsAString& aValue, bool aUserInput,
           selPriv->EndBatchChanges();
       }
     }
-
-    // This second check _shouldn't_ be necessary, but let's be safe.
-    if (!weakFrame.IsAlive()) {
-      return;
-    }
-    nsIScrollableFrame* scrollableFrame = do_QueryFrame(mBoundFrame->GetFirstPrincipalChild());
-    if (scrollableFrame)
-    {
-      // Scroll the upper left corner of the text control's
-      // content area back into view.
-      scrollableFrame->ScrollTo(nsPoint(0, 0), nsIScrollableFrame::INSTANT);
-    }
-
   } else {
     if (!mValue) {
       mValue = new nsCString;

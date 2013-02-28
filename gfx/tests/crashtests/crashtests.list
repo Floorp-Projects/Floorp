@@ -23,7 +23,7 @@ load 377461-1.xhtml
 load 383473-1.html
 load 383872-1.svg
 load 385289-1.xhtml
-load 385228-1.svg
+skip-if(Android&&smallScreen) load 385228-1.svg # bug 523255 / bug 385228, nexus-s Android 2.3.6
 skip load 385228-2.svg  # bug 523255 / bug 385228
 load 385417-1.html
 load 385417-2.html

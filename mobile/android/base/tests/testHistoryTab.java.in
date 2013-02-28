@@ -60,7 +60,7 @@ public class testHistoryTab extends PixelTest {
         loadAndPaint(url);
 
         mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-        mSolo.waitForText("Settings");
+        waitForText("Settings");
 
         // On ICS+ phones, there is no button labeled "Bookmarks"
         // instead we have to just dig through every button on the screen
@@ -102,7 +102,7 @@ public class testHistoryTab extends PixelTest {
 
         // Around midnight we will switch from Today -> Yesterday, account for both
         if (!mSolo.waitForText("Today")) {
-            mSolo.waitForText("Yesterday");
+            waitForText("Yesterday");
         }
 
         mAsserter.isnot(listview,  null, "checking that history list exists");
@@ -161,7 +161,7 @@ public class testHistoryTab extends PixelTest {
 
     private void testContextMenu(String url) {
         listview = getHistoryList();
-        mSolo.waitForText(url);
+        waitForText(url);
 
         // wait for the history list to be populated
         mFirstChild = null;
@@ -215,7 +215,7 @@ public class testHistoryTab extends PixelTest {
     private void testClick(String url) {
         listview = getHistoryList();
 
-        mSolo.waitForText(url);
+        waitForText(url);
 
         View child = listview.getChildAt(0);
         mSolo.clickOnView(child);

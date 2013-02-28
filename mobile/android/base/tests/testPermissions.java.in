@@ -23,7 +23,7 @@ public class testPermissions extends PixelTest {
     private void geolocationTest() {
         // Test geolocation notification
         loadAndPaint(getAbsoluteUrl("/robocop/robocop_geolocation.html"));
-        mSolo.waitForText("wants your location");
+        waitForText("wants your location");
 
         // Uncheck the "Don't ask again for this site" checkbox
         ArrayList<CheckBox> checkBoxes = mSolo.getCurrentCheckBoxes();
@@ -44,7 +44,7 @@ public class testPermissions extends PixelTest {
 
         // Re-trigger geolocation notification
         reloadAndPaint();
-        mSolo.waitForText("wants your location");
+        waitForText("wants your location");
 
         // Make sure the checkbox is checked this time
         mAsserter.ok(mSolo.isCheckBoxChecked(0), "checkbox checked", "checkbox is checked");

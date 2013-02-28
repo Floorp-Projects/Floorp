@@ -973,6 +973,14 @@ BooleanHistogram::BooleanHistogram(const std::string& name)
     : LinearHistogram(name, 1, 2, 3) {
 }
 
+void
+BooleanHistogram::Accumulate(Sample value, Count count, size_t index)
+{
+  // Callers will have computed index based on the non-booleanified value.
+  // So we need to adjust the index manually.
+  LinearHistogram::Accumulate(!!value, count, value ? 1 : 0);
+}
+
 //------------------------------------------------------------------------------
 // FlagHistogram:
 //------------------------------------------------------------------------------

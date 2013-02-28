@@ -87,12 +87,10 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         String rootPath = FennecInstrumentationTestRunner.getArguments().getString("deviceroot");
         String configFile = FennecNativeDriver.getFile(rootPath + "/robotium.config");
         HashMap config = FennecNativeDriver.convertTextToTable(configFile);
-
         // Create the intent to be used with all the important arguments.
         Intent i = new Intent(Intent.ACTION_MAIN);
         mProfile = (String)config.get("profile");
         i.putExtra("args", "-no-remote -profile " + mProfile);
-
         String envString = (String)config.get("envvars");
         if (envString != "") {
             String[] envStrings = envString.split(",");
@@ -100,15 +98,12 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
                 i.putExtra("env" + iter, envStrings[iter]);
             }
         }
-
         // Start the activity
         setActivityIntent(i);
         mActivity = getActivity();
-
         mLogFile = (String)config.get("logfile");
         mBaseUrl = ((String)config.get("host")).replaceAll("(/$)", "");
         mRawBaseUrl = ((String)config.get("rawhost")).replaceAll("(/$)", "");
-
         // Initialize the asserter
         if (getTestType() == TEST_TALOS) {
             mAsserter = new FennecTalosAssert();
@@ -117,7 +112,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         }
         mAsserter.setLogFile(mLogFile);
         mAsserter.setTestName(this.getClass().getName());
-
         // Set up Robotium.solo and Driver objects
         mSolo = new Solo(getInstrumentation(), mActivity);
         mDriver = new FennecNativeDriver(mActivity, mSolo, rootPath);
@@ -264,11 +258,15 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     protected final boolean waitForTest(BooleanTest t, int timeout) {
         long end = SystemClock.uptimeMillis() + timeout;
         while (SystemClock.uptimeMillis() < end) {
-            if (t.test())
+            if (t.test()) {
                 return true;
-
+            }
             mSolo.sleep(100);
         }
+        // log out wait failure for diagnostic purposes only;
+        // a failed wait may be normal and does not necessarily
+        // warrant a test assertion/failure
+        mAsserter.dumpLog("waitForTest timeout after "+timeout+" ms");
         return false;
     }
 
@@ -292,11 +290,13 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
                 mAsserter.info("Comparing", "Column values for: " + column);
                 Object value = cv.get(column);
                 if (value == null) {
-                    if (!c.isNull(i))
+                    if (!c.isNull(i)) {
                         return false;
+                    }
                 } else {
-                    if (c.isNull(i) || !value.toString().equals(c.getString(i)))
+                    if (c.isNull(i) || !value.toString().equals(c.getString(i))) {
                         return false;
+                    }
                 }
             }
         }
@@ -322,15 +322,17 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     public boolean CursorMatches(Cursor c, ContentValues cv) {
         for (int i = 0; i < c.getColumnCount(); i++) {
             String column = c.getColumnName(i);
-             if (cv.containsKey(column)) {
+            if (cv.containsKey(column)) {
                 mAsserter.info("Comparing", "Column values for: " + column);
                 Object value = cv.get(column);
                 if (value == null) {
-                    if (!c.isNull(i))
+                    if (!c.isNull(i)) {
                         return false;
+                    }
                 } else {
-                    if (c.isNull(i) || !value.toString().equals(c.getString(i)))
+                    if (c.isNull(i) || !value.toString().equals(c.getString(i))) {
                         return false;
+                    }
                 }
             }
         }
@@ -342,25 +344,33 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         return assets.open(filename);
     }
 
-    public final void selectMenuItem(String menuItemName) {
+    public boolean waitForText(String text) {
+        boolean rc = mSolo.waitForText(text);
+        if (!rc) {
+            // log out failed wait for diagnostic purposes only;
+            // waitForText failures are sometimes expected/normal
+            mAsserter.dumpLog("waitForText timeout on "+text);
+        }
+        return rc;
+    }
 
-        //build the item name ready to be used
+    public final void selectMenuItem(String menuItemName) {
+        // build the item name ready to be used
         String itemName = "^" + menuItemName + "$";
         mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-	if (mSolo.waitForText(itemName)) {
+        if (waitForText(itemName)) {
             mSolo.clickOnText(itemName);
-	}
-	else {
-	    if (mSolo.searchText("(^More$|^Tools$)")) {
+        } else {
+            if (mSolo.searchText("(^More$|^Tools$)")) {
                 mSolo.clickOnText("(^More$|^Tools$)");
-	      }
-            mSolo.waitForText(itemName);
+            }
+            waitForText(itemName);
             mSolo.clickOnText(itemName);
         }
     }
 
     public final void verifyPageTitle(String title) {
-	Element awesomebar = mDriver.findElement(getActivity(), "awesome_bar_title");
+        Element awesomebar = mDriver.findElement(getActivity(), "awesome_bar_title");
         String pageTitle = null;
         if (awesomebar != null) {
             // Wait for the title to make sure it has been displayed in case the view
@@ -402,7 +412,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
      */
     protected ListView getAllPagesList(String waitText) {
         Activity awesomeBarActivity = clickOnAwesomeBar();
-        mSolo.waitForText(waitText);
+        waitForText(waitText);
 
         ArrayList<ListView> views = mSolo.getCurrentListViews();
         for (ListView view : views) {
@@ -437,8 +447,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     protected ListView getHistoryList() {
         Activity awesomeBarActivity = clickOnAwesomeBar();
         mSolo.clickOnText("History");
-        mSolo.waitForText("Today|Yesterday");
-
+        waitForText("Today|Yesterday");
         ArrayList<ListView> views = mSolo.getCurrentListViews();
         for (ListView view : views) {
             if (view.getTag().equals("history")) {
@@ -454,43 +463,38 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         bookmarksUri = bookmarksUri.buildUpon().appendQueryParameter("profile", "default").build();
         long folderId = -1;
         Cursor c = null;
-
         // NOTE: this is hardcoded to toolbar/mobile and triggered from bookmarklet because the existing
         //       testcases were written this way
         String location = "toolbar";
         if (bookmarklet) {
             location = "mobile";
         }
-
         try {
             c = resolver.query(bookmarksUri,
                                new String[] { "_id" },
                                "guid = ?",
                                new String[] { location },
                                null);
-
-            if (c.moveToFirst())
+            if (c.moveToFirst()) {
                 folderId = c.getLong(c.getColumnIndexOrThrow("_id"));
+            }
         } finally {
             if (c != null) {
                 c.close();
             }
         }
-
         ContentValues values = new ContentValues();
         values.put("title", title);
         values.put("url", url);
         values.put("parent", folderId);
         long now = System.currentTimeMillis();
         values.put("modified", now);
-
         if (!bookmarklet) {
             values.put("type", 1);
             values.put("guid", url);
             values.put("position", 10);
             values.put("created", now);
         }
-
         int updated = resolver.update(bookmarksUri,
                                       values,
                                       "url = ?",
@@ -500,12 +504,10 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             mAsserter.ok(true, "Inserted at: ", uri.toString());
             return ContentUris.parseId(uri);
         }
-
         return ContentUris.parseId(bookmarksUri);
     }
 
     public void deleteBookmark(String title) {
-
         ContentResolver resolver = getActivity().getContentResolver();
         Uri uri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/bookmarks");
         uri = uri.buildUpon().appendQueryParameter("profile", "default")
@@ -516,13 +518,11 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     public void addTab(String url) {
         Element tabs = null;
         Element addTab = null;
-
         Activity activity = getActivity();
         tabs = mDriver.findElement(activity, "tabs");
         addTab = mDriver.findElement(activity, "add_tab");
         final int addTabId = addTab.getId();
         mAsserter.ok(tabs.click(), "checking that tabs clicked", "tabs element clicked");
-
         // wait for addTab to appear (this is usually immediate)
         boolean success = waitForTest(new BooleanTest() {
             @Override
@@ -535,12 +535,9 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             }
         }, MAX_WAIT_MS);
         mAsserter.ok(success, "waiting for add tab view", "add tab view available");
-
         mAsserter.ok(addTab.click(), "checking that add_tab clicked", "add_tab element clicked");
-
         // must pause before sending keys, until awesome bar is displayed; waiting for known text is simple
-        mSolo.waitForText("History");
-
+        waitForText("History");
         // cannot use loadUrl(): getText fails because we are using a different urlbar
         mActions.sendKeys(url);
         hitEnterAndWait();
@@ -570,13 +567,11 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
                     version = "3.x";
                 }
             }
-
             // Determine with and height
             DisplayMetrics dm = new DisplayMetrics();
             getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
             height = dm.heightPixels;
             width = dm.widthPixels;
-
             // Determine device type
             type = "phone";
             try {
@@ -625,7 +620,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
                 fwdBtn.click();
             } else {
                 mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-                mSolo.waitForText("^New Tab$");
+                waitForText("^New Tab$");
                 if (!osVersion.equals("2.x")) {
                     Element fwdBtn = mDriver.findElement(getActivity(), "forward");
                     fwdBtn.click();
@@ -641,7 +636,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
                 reloadBtn.click();
             } else {
                 mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-                mSolo.waitForText("^New Tab$");
+                waitForText("^New Tab$");
                 if (!osVersion.equals("2.x")) {
                     Element reloadBtn = mDriver.findElement(getActivity(), "reload");
                     reloadBtn.click();
