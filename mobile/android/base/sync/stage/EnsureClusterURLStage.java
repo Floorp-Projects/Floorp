@@ -12,7 +12,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 
-import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.NodeAuthenticationException;
 import org.mozilla.gecko.sync.NullClusterURLException;
 import org.mozilla.gecko.sync.ThreadPool;

@@ -5,7 +5,7 @@
 package org.mozilla.gecko.sync.setup.activities;
 
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.sync.GlobalConstants;
+import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.sync.setup.Constants;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 

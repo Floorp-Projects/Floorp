@@ -10,7 +10,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.setup.SyncAccounts;

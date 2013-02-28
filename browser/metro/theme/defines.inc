@@ -118,3 +118,7 @@
 %define shadow_width_xlarge 7px
 %define shadow_width_large 4px
 %define shadow_width_small 1px
+
+% easing function and duration for animations match winJS showPanel method
+%define metro_animation_duration 550ms
+%define metro_animation_easing cubic-bezier(0.1, 0.9, 0.2, 1)

@@ -8,8 +8,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.db.BrowserContract;
-import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 

@@ -12,8 +12,10 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 
 <script>
-if (!navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 3);
+if (navigator.platform.startsWith("Win")) {
+  SimpleTest.expectAssertions(0, 2);
+} else {
+  SimpleTest.expectAssertions(0, 4);
 }
 
 SimpleTest.waitForExplicitFinish();

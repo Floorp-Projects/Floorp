@@ -195,181 +195,6 @@ LivemarkService.prototype = {
   },
 
   //////////////////////////////////////////////////////////////////////////////
-  //// Deprecated nsILivemarkService methods
-
-  _reportDeprecatedMethod: function DEPRECATED_LS__reportDeprecatedMethod()
-  {
-    let oldFuncName = arguments.callee.caller.name.slice(14);
-    Cu.reportError(oldFuncName + " is deprecated and will be removed in a " +
-                   "future release.  Check the nsILivemarkService interface.");
-  },
-
-  _ensureSynchronousCache: function DEPRECATED_LS__ensureSynchronousCache()
-  {
-    if (!this._pendingStmt) {
-      return;
-    }
-    this._pendingStmt.cancel();
-    this._pendingStmt = null;
-
-    let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                                .DBConnection;
-    let stmt = db.createStatement(this._populateCacheSQL);
-    stmt.params.folder_type = Ci.nsINavBookmarksService.TYPE_FOLDER;
-    stmt.params.feedURI_anno = PlacesUtils.LMANNO_FEEDURI;
-    stmt.params.siteURI_anno = PlacesUtils.LMANNO_SITEURI;
-
-    while (stmt.executeStep()) {
-      let id = stmt.row.id;
-      let siteURL = stmt.row.siteURI;
-      let guid = stmt.row.guid;
-      this._livemarks[id] =
-        new Livemark({ id: id,
-                       guid: guid,
-                       title: stmt.row.title,
-                       parentId: stmt.row.parent,
-                       index: stmt.row.position,
-                       lastModified: stmt.row.lastModified,
-                       feedURI: NetUtil.newURI(stmt.row.feedURI),
-                       siteURI: siteURL ? NetUtil.newURI(siteURL) : null,
-        });
-      this._guids[guid] = id;
-    }
-    stmt.finalize();
-  },
-
-  start: function DEPRECATED_LS_start()
-  {
-    this._reportDeprecatedMethod();
-  },
-
-  stopUpdateLivemarks: function DEPRECATED_LS_stopUpdateLivemarks()
-  {
-    this._reportDeprecatedMethod();
-  },
-
-  createLivemark: function DEPRECATED_LS_createLivemark(aParentId, aTitle, aSiteURI,
-                                                        aFeedURI, aIndex)
-  {
-    this._reportDeprecatedMethod();
-    this._ensureSynchronousCache();
-
-    if (!aParentId || aParentId < 1 ||
-        aIndex < -1 ||
-        !aFeedURI || !(aFeedURI instanceof Ci.nsIURI) ||
-        (aSiteURI && !(aSiteURI instanceof Ci.nsIURI)) ||
-         aParentId in this._livemarks) {
-      throw Cr.NS_ERROR_INVALID_ARG;
-    }
-
-    let livemark = new Livemark({ title:    aTitle
-                                , parentId: aParentId
-                                , index:    aIndex
-                                , feedURI:  aFeedURI
-                                , siteURI:  aSiteURI
-                                });
-    if (this._itemAdded && this._itemAdded.id == livemark.id) {
-      livemark.guid = this._itemAdded.guid;
-      livemark.index = this._itemAdded.index;
-      livemark.lastModified = this._itemAdded.lastModified;
-    }
-
-    this._livemarks[livemark.id] = livemark;
-    this._guids[livemark.guid] = livemark.id;
-    return livemark.id;
-  },
-
-  createLivemarkFolderOnly: function DEPRECATED_LS_(aParentId, aTitle, aSiteURI,
-                                                    aFeedURI, aIndex)
-  {
-    return this.createLivemark(aParentId, aTitle, aSiteURI, aFeedURI, aIndex);
-  },
-
-  isLivemark: function DEPRECATED_LS_isLivemark(aId)
-  {
-    this._reportDeprecatedMethod();
-    if (!aId || aId < 1) {
-      throw Cr.NS_ERROR_INVALID_ARG;
-    }
-    this._ensureSynchronousCache();
-
-    return aId in this._livemarks;
-  },
-
-  getLivemarkIdForFeedURI:
-  function DEPRECATED_LS_getLivemarkIdForFeedURI(aFeedURI)
-  {
-    this._reportDeprecatedMethod();
-    if (!(aFeedURI instanceof Ci.nsIURI)) {
-      throw Cr.NS_ERROR_INVALID_ARG;
-    }
-    this._ensureSynchronousCache();
-
-    for each (livemark in this._livemarks) {
-      if (livemark.feedURI.equals(aFeedURI)) {
-        return livemark.id;
-      }
-    }
-    return -1;
-  },
-
-  getSiteURI: function DEPRECATED_LS_getSiteURI(aId)
-  {
-    this._reportDeprecatedMethod();
-    this._ensureSynchronousCache();
-
-    if (!(aId in this._livemarks)) {
-      throw Cr.NS_ERROR_INVALID_ARG;
-    }
-    return this._livemarks[aId].siteURI;
-  },
-
-  setSiteURI: function DEPRECATED_LS_writeSiteURI(aId, aSiteURI)
-  {
-    this._reportDeprecatedMethod();
-    if (!aSiteURI || !(aSiteURI instanceof Ci.nsIURI)) {
-      throw Cr.NS_ERROR_INVALID_ARG;
-    }
-  },
-
-  getFeedURI: function DEPRECATED_LS_getFeedURI(aId)
-  {
-    this._reportDeprecatedMethod();
-    this._ensureSynchronousCache();
-
-    if (!(aId in this._livemarks)) {
-      throw Cr.NS_ERROR_INVALID_ARG;      
-    }
-    return this._livemarks[aId].feedURI;
-  },
-
-  setFeedURI: function DEPRECATED_LS_writeFeedURI(aId, aFeedURI)
-  {
-    this._reportDeprecatedMethod();
-    if (!aFeedURI || !(aFeedURI instanceof Ci.nsIURI)) {
-      throw Cr.NS_ERROR_INVALID_ARG;
-    }
-  },
-
-  reloadLivemarkFolder: function DEPRECATED_LS_reloadLivemarkFolder(aId)
-  {
-    this._reportDeprecatedMethod();
-    this._ensureSynchronousCache();
-
-    if (!(aId in this._livemarks)) {
-      throw Cr.NS_ERROR_INVALID_ARG;
-    }
-    this._livemarks[aId].reload();
-  },
-
-  reloadAllLivemarks: function DEPRECATED_LS_reloadAllLivemarks()
-  {
-    this._reportDeprecatedMethod();
-
-    this._reloadLivemarks(true);
-  },
-
-  //////////////////////////////////////////////////////////////////////////////
   //// mozIAsyncLivemarks
 
   addLivemark: function LS_addLivemark(aLivemarkInfo,
@@ -416,11 +241,9 @@ LivemarkService.prototype = {
       }
 
       // Updating the cache even if it has not yet been populated doesn't
-      // matter since it will just be overwritten.  But it must be done now,
-      // otherwise checking for the livemark using any deprecated synchronous
-      // API from an onItemAnnotation notification would give a wrong result.
+      // matter since it will just be overwritten.
       this._livemarks[livemark.id] = livemark;
-      this._guids[aLivemarkInfo.guid] = livemark.id;    
+      this._guids[aLivemarkInfo.guid] = livemark.id;
     }
     catch (ex) {
       result = ex.result;
@@ -608,7 +431,6 @@ LivemarkService.prototype = {
   onPageChanged:      function () {},
   onTitleChanged:     function () {},
   onDeleteVisits:     function () {},
-
   onClearHistory:     function () {},
 
   onDeleteURI: function PS_onDeleteURI(aURI) {
@@ -631,8 +453,7 @@ LivemarkService.prototype = {
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(LivemarkService),
 
   QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsILivemarkService
-  , Ci.mozIAsyncLivemarks
+    Ci.mozIAsyncLivemarks
   , Ci.nsINavBookmarkObserver
   , Ci.nsINavHistoryObserver
   , Ci.nsIObserver
@@ -795,50 +616,13 @@ Livemark.prototype = {
     this._guid = aGUID;
     return aGUID;
   },
-  get guid()
-  {
-    if (!/^[a-zA-Z0-9\-_]{12}$/.test(this._guid)) {
-      // The old synchronous interface is not guid-aware, so this may still have
-      // to be populated manually.
-      let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                                  .DBConnection;
-      let stmt = db.createStatement("SELECT guid FROM moz_bookmarks " +
-                                    "WHERE id = :item_id");
-      stmt.params.item_id = this.id;
-      try {
-        if (stmt.executeStep()) {
-          this._guid = stmt.row.guid;
-        }
-      } finally {
-        stmt.finalize();
-      }
-    }
-    return this._guid;
-  },
+  get guid() this._guid,
 
   set lastModified(aLastModified) {
     this._lastModified = aLastModified;
     return aLastModified;
   },
-  get lastModified()
-  {
-    if (!this._lastModified) {
-      // The old synchronous interface ignores the last modified time.
-      let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                                  .DBConnection;
-      let stmt = db.createStatement("SELECT lastModified FROM moz_bookmarks " +
-                                    "WHERE id = :item_id");
-      stmt.params.item_id = this.id;
-      try {
-        if (stmt.executeStep()) {
-          this._lastModified = stmt.row.lastModified;
-        }
-      } finally {
-        stmt.finalize();
-      }
-    }
-    return this._lastModified;
-  },
+  get lastModified() this._lastModified,
 
   /**
    * Tries to updates the livemark if needed.

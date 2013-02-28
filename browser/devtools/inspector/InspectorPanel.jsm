@@ -247,7 +247,7 @@ InspectorPanel.prototype = {
       }
 
       if (!self.selection.node) {
-        self.selection.setNode(newWindow.document.documentElement, "navigateaway");
+        self.selection.setNode(newWindow.document.documentElement);
       }
       self._initMarkup();
     }

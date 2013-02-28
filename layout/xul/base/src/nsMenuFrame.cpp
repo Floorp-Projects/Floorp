@@ -1281,7 +1281,9 @@ nsMenuFrame::RemoveFrame(ChildListID     aListID,
                          nsIFrame*       aOldFrame)
 {
   nsFrameList* popupList = GetPopupList();
-  if (popupList && popupList->DestroyFrameIfPresent(aOldFrame)) {
+  if (popupList && popupList->FirstChild() == aOldFrame) {
+    popupList->RemoveFirstChild();
+    aOldFrame->Destroy();
     DestroyPopupList();
     PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eTreeChange,

@@ -4,7 +4,7 @@
 
 package org.mozilla.gecko.sync.synchronizer;
 
-import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.SynchronizerConfiguration;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;

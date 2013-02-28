@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
