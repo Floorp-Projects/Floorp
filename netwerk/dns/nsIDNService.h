@@ -69,6 +69,7 @@ private:
   };
   restrictionProfile mRestrictionProfile;
   nsCOMPtr<nsIPrefBranch> mIDNWhitelistPrefBranch;
+  bool mIDNUseWhitelist;
 };
 
 #endif  // nsIDNService_h__
