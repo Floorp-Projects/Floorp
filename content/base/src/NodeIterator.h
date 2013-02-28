@@ -8,8 +8,8 @@
  * Implementation of DOM Traversal's nsIDOMNodeIterator
  */
 
-#ifndef nsNodeIterator_h___
-#define nsNodeIterator_h___
+#ifndef mozilla_dom_NodeIterator_h
+#define mozilla_dom_NodeIterator_h
 
 #include "nsIDOMNodeIterator.h"
 #include "nsTraversal.h"
@@ -20,22 +20,25 @@ class nsINode;
 class nsIDOMNode;
 class nsIDOMNodeFilter;
 
-class nsNodeIterator : public nsIDOMNodeIterator,
-                       public nsTraversal,
-                       public nsStubMutationObserver
+namespace mozilla {
+namespace dom {
+
+class NodeIterator : public nsIDOMNodeIterator,
+                     public nsTraversal,
+                     public nsStubMutationObserver
 {
 public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_NSIDOMNODEITERATOR
 
-    nsNodeIterator(nsINode *aRoot,
-                   uint32_t aWhatToShow,
-                   const mozilla::dom::NodeFilterHolder &aFilter);
-    virtual ~nsNodeIterator();
+    NodeIterator(nsINode *aRoot,
+                 uint32_t aWhatToShow,
+                 const NodeFilterHolder &aFilter);
+    virtual ~NodeIterator();
 
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
-    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsNodeIterator, nsIDOMNodeIterator)
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(NodeIterator, nsIDOMNodeIterator)
 
 private:
     struct NodePointer {
@@ -66,4 +69,7 @@ private:
     NodePointer mWorkingPointer;
 };
 
-#endif
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_NodeIterator_h

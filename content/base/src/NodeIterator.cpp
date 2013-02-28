@@ -8,7 +8,7 @@
  * Implementation of DOM Traversal's nsIDOMNodeIterator
  */
 
-#include "nsNodeIterator.h"
+#include "mozilla/dom/NodeIterator.h"
 
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeFilter.h"
@@ -21,19 +21,21 @@
 #include "nsCOMPtr.h"
 #include "mozilla/dom/NodeFilterBinding.h"
 
-using namespace mozilla::dom;
+DOMCI_DATA(NodeIterator, mozilla::dom::NodeIterator)
+
+namespace mozilla {
+namespace dom {
 
 /*
  * NodePointer implementation
  */
-nsNodeIterator::NodePointer::NodePointer(nsINode *aNode,
-                                         bool aBeforeNode) :
+NodeIterator::NodePointer::NodePointer(nsINode *aNode, bool aBeforeNode) :
     mNode(aNode),
     mBeforeNode(aBeforeNode)
 {
 }
 
-bool nsNodeIterator::NodePointer::MoveToNext(nsINode *aRoot)
+bool NodeIterator::NodePointer::MoveToNext(nsINode *aRoot)
 {
     if (!mNode)
       return false;
@@ -52,7 +54,7 @@ bool nsNodeIterator::NodePointer::MoveToNext(nsINode *aRoot)
     return MoveForward(aRoot, mNode);
 }
 
-bool nsNodeIterator::NodePointer::MoveToPrevious(nsINode *aRoot)
+bool NodeIterator::NodePointer::MoveToPrevious(nsINode *aRoot)
 {
     if (!mNode)
       return false;
@@ -70,10 +72,10 @@ bool nsNodeIterator::NodePointer::MoveToPrevious(nsINode *aRoot)
     return true;
 }
 
-void nsNodeIterator::NodePointer::AdjustAfterRemoval(nsINode *aRoot,
-                                                     nsINode *aContainer,
-                                                     nsIContent *aChild,
-                                                     nsIContent *aPreviousSibling)
+void NodeIterator::NodePointer::AdjustAfterRemoval(nsINode *aRoot,
+                                                   nsINode *aContainer,
+                                                   nsIContent *aChild,
+                                                   nsIContent *aPreviousSibling)
 {
     // If mNode is null or the root there is nothing to do.
     if (!mNode || mNode == aRoot)
@@ -105,7 +107,7 @@ void nsNodeIterator::NodePointer::AdjustAfterRemoval(nsINode *aRoot,
     MoveBackward(aContainer, aPreviousSibling);
 }
 
-bool nsNodeIterator::NodePointer::MoveForward(nsINode *aRoot, nsINode *aNode)
+bool NodeIterator::NodePointer::MoveForward(nsINode *aRoot, nsINode *aNode)
 {
     while (1) {
         if (aNode == aRoot)
@@ -122,7 +124,7 @@ bool nsNodeIterator::NodePointer::MoveForward(nsINode *aRoot, nsINode *aNode)
     return false;
 }
 
-void nsNodeIterator::NodePointer::MoveBackward(nsINode *aParent, nsINode *aNode)
+void NodeIterator::NodePointer::MoveBackward(nsINode *aParent, nsINode *aNode)
 {
     if (aNode) {
         do {
@@ -138,9 +140,9 @@ void nsNodeIterator::NodePointer::MoveBackward(nsINode *aParent, nsINode *aNode)
  * Factories, constructors and destructors
  */
 
-nsNodeIterator::nsNodeIterator(nsINode *aRoot,
-                               uint32_t aWhatToShow,
-                               const NodeFilterHolder &aFilter) :
+NodeIterator::NodeIterator(nsINode *aRoot,
+                           uint32_t aWhatToShow,
+                           const NodeFilterHolder &aFilter) :
     nsTraversal(aRoot, aWhatToShow, aFilter),
     mDetached(false),
     mPointer(mRoot, true)
@@ -148,7 +150,7 @@ nsNodeIterator::nsNodeIterator(nsINode *aRoot,
     aRoot->AddMutationObserver(this);
 }
 
-nsNodeIterator::~nsNodeIterator()
+NodeIterator::~NodeIterator()
 {
     /* destructor code */
     if (!mDetached && mRoot)
@@ -159,32 +161,30 @@ nsNodeIterator::~nsNodeIterator()
  * nsISupports and cycle collection stuff
  */
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsNodeIterator)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(NodeIterator)
     if (!tmp->mDetached && tmp->mRoot)
         tmp->mRoot->RemoveMutationObserver(tmp);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRoot)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFilter)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsNodeIterator)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(NodeIterator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRoot)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFilter)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-DOMCI_DATA(NodeIterator, nsNodeIterator)
-
-// QueryInterface implementation for nsNodeIterator
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNodeIterator)
+// QueryInterface implementation for NodeIterator
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(NodeIterator)
     NS_INTERFACE_MAP_ENTRY(nsIDOMNodeIterator)
     NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMNodeIterator)
     NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(NodeIterator)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsNodeIterator)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsNodeIterator)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(NodeIterator)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(NodeIterator)
 
 /* readonly attribute nsIDOMNode root; */
-NS_IMETHODIMP nsNodeIterator::GetRoot(nsIDOMNode * *aRoot)
+NS_IMETHODIMP NodeIterator::GetRoot(nsIDOMNode * *aRoot)
 {
     if (mRoot)
         return CallQueryInterface(mRoot, aRoot);
@@ -195,14 +195,14 @@ NS_IMETHODIMP nsNodeIterator::GetRoot(nsIDOMNode * *aRoot)
 }
 
 /* readonly attribute unsigned long whatToShow; */
-NS_IMETHODIMP nsNodeIterator::GetWhatToShow(uint32_t *aWhatToShow)
+NS_IMETHODIMP NodeIterator::GetWhatToShow(uint32_t *aWhatToShow)
 {
     *aWhatToShow = mWhatToShow;
     return NS_OK;
 }
 
 /* readonly attribute nsIDOMNodeFilter filter; */
-NS_IMETHODIMP nsNodeIterator::GetFilter(nsIDOMNodeFilter **aFilter)
+NS_IMETHODIMP NodeIterator::GetFilter(nsIDOMNodeFilter **aFilter)
 {
     NS_ENSURE_ARG_POINTER(aFilter);
 
@@ -212,20 +212,20 @@ NS_IMETHODIMP nsNodeIterator::GetFilter(nsIDOMNodeFilter **aFilter)
 }
 
 /* nsIDOMNode nextNode ()  raises (DOMException); */
-NS_IMETHODIMP nsNodeIterator::NextNode(nsIDOMNode **_retval)
+NS_IMETHODIMP NodeIterator::NextNode(nsIDOMNode **_retval)
 {
     return NextOrPrevNode(&NodePointer::MoveToNext, _retval);
 }
 
 /* nsIDOMNode previousNode ()  raises (DOMException); */
-NS_IMETHODIMP nsNodeIterator::PreviousNode(nsIDOMNode **_retval)
+NS_IMETHODIMP NodeIterator::PreviousNode(nsIDOMNode **_retval)
 {
     return NextOrPrevNode(&NodePointer::MoveToPrevious, _retval);
 }
 
 nsresult
-nsNodeIterator::NextOrPrevNode(NodePointer::MoveToMethodType aMove,
-                               nsIDOMNode **_retval)
+NodeIterator::NextOrPrevNode(NodePointer::MoveToMethodType aMove,
+                             nsIDOMNode **_retval)
 {
     nsresult rv;
     int16_t filtered;
@@ -261,7 +261,7 @@ nsNodeIterator::NextOrPrevNode(NodePointer::MoveToMethodType aMove,
 }
 
 /* void detach (); */
-NS_IMETHODIMP nsNodeIterator::Detach(void)
+NS_IMETHODIMP NodeIterator::Detach(void)
 {
     if (!mDetached) {
         mRoot->RemoveMutationObserver(this);
@@ -275,7 +275,7 @@ NS_IMETHODIMP nsNodeIterator::Detach(void)
 }
 
 /* readonly attribute nsIDOMNode referenceNode; */
-NS_IMETHODIMP nsNodeIterator::GetReferenceNode(nsIDOMNode * *aRefNode)
+NS_IMETHODIMP NodeIterator::GetReferenceNode(nsIDOMNode * *aRefNode)
 {
     if (mPointer.mNode)
         return CallQueryInterface(mPointer.mNode, aRefNode);
@@ -285,7 +285,7 @@ NS_IMETHODIMP nsNodeIterator::GetReferenceNode(nsIDOMNode * *aRefNode)
 }
 
 /* readonly attribute boolean pointerBeforeReferenceNode; */
-NS_IMETHODIMP nsNodeIterator::GetPointerBeforeReferenceNode(bool *aBeforeNode)
+NS_IMETHODIMP NodeIterator::GetPointerBeforeReferenceNode(bool *aBeforeNode)
 {
     *aBeforeNode = mPointer.mBeforeNode;
     return NS_OK;
@@ -295,14 +295,17 @@ NS_IMETHODIMP nsNodeIterator::GetPointerBeforeReferenceNode(bool *aBeforeNode)
  * nsIMutationObserver interface
  */
 
-void nsNodeIterator::ContentRemoved(nsIDocument *aDocument,
-                                    nsIContent *aContainer,
-                                    nsIContent *aChild,
-                                    int32_t aIndexInContainer,
-                                    nsIContent *aPreviousSibling)
+void NodeIterator::ContentRemoved(nsIDocument *aDocument,
+                                  nsIContent *aContainer,
+                                  nsIContent *aChild,
+                                  int32_t aIndexInContainer,
+                                  nsIContent *aPreviousSibling)
 {
     nsINode *container = NODE_FROM(aContainer, aDocument);
 
     mPointer.AdjustAfterRemoval(mRoot, container, aChild, aPreviousSibling);
     mWorkingPointer.AdjustAfterRemoval(mRoot, container, aChild, aPreviousSibling);
 }
+
+} // namespace dom
+} // namespace mozilla
