@@ -31,6 +31,7 @@ static const uint32_t kMaxDNSNodeLen = 63;
 #define NS_NET_PREF_IDNBLACKLIST    "network.IDN.blacklist_chars"
 #define NS_NET_PREF_SHOWPUNYCODE    "network.IDN_show_punycode"
 #define NS_NET_PREF_IDNWHITELIST    "network.IDN.whitelist."
+#define NS_NET_PREF_IDNUSEWHITELIST "network.IDN.use_whitelist"
 #define NS_NET_PREF_IDNRESTRICTION  "network.IDN.restriction_profile"
 
 inline bool isOnlySafeChars(const nsAFlatString& in,
@@ -63,6 +64,7 @@ nsresult nsIDNService::Init()
     prefInternal->AddObserver(NS_NET_PREF_IDNBLACKLIST, this, true);
     prefInternal->AddObserver(NS_NET_PREF_SHOWPUNYCODE, this, true);
     prefInternal->AddObserver(NS_NET_PREF_IDNRESTRICTION, this, true);
+    prefInternal->AddObserver(NS_NET_PREF_IDNUSEWHITELIST, this, true);
     prefsChanged(prefInternal, nullptr);
   }
 
@@ -108,6 +110,12 @@ void nsIDNService::prefsChanged(nsIPrefBranch *prefBranch, const PRUnichar *pref
     bool val;
     if (NS_SUCCEEDED(prefBranch->GetBoolPref(NS_NET_PREF_SHOWPUNYCODE, &val)))
       mShowPunycode = val;
+  }
+  if (!pref || NS_LITERAL_STRING(NS_NET_PREF_IDNUSEWHITELIST).Equals(pref)) {
+    bool val;
+    if (NS_SUCCEEDED(prefBranch->GetBoolPref(NS_NET_PREF_IDNUSEWHITELIST,
+                                             &val)))
+      mIDNUseWhitelist = val;
   }
   if (!pref || NS_LITERAL_STRING(NS_NET_PREF_IDNRESTRICTION).Equals(pref)) {
     nsXPIDLCString profile;
@@ -705,7 +713,7 @@ nsresult nsIDNService::decodeACE(const nsACString& in, nsACString& out,
 
 bool nsIDNService::isInWhitelist(const nsACString &host)
 {
-  if (mIDNWhitelistPrefBranch) {
+  if (mIDNUseWhitelist && mIDNWhitelistPrefBranch) {
     nsAutoCString tld(host);
     // make sure the host is ACE for lookup and check that there are no
     // unassigned codepoints
