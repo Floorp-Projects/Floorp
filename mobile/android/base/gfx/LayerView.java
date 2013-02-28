@@ -91,7 +91,7 @@ public class LayerView extends FrameLayout {
     public LayerView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        mGLController = new GLController(this);
+        mGLController = GLController.getInstance(this);
         mPaintState = PAINT_START;
         mBackgroundColor = Color.WHITE;
     }

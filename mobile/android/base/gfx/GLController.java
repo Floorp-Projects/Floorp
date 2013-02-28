@@ -14,9 +14,21 @@ import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.egl.EGLSurface;
 
+/**
+ * This class is a singleton that tracks EGL and compositor things over
+ * the lifetime of Fennec running.
+ * We only ever create one C++ compositor over Fennec's lifetime, but
+ * most of the Java-side objects (e.g. LayerView, GeckoLayerClient,
+ * LayerRenderer) can all get destroyed and re-created if the GeckoApp
+ * activity is destroyed. This GLController is never destroyed, so that
+ * the mCompositorCreated field and other state variables are always
+ * accurate.
+ */
 public class GLController {
     private static final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
     private static final String LOGTAG = "GeckoGLController";
+
+    private static GLController sInstance;
 
     private LayerView mView;
     private boolean mSurfaceValid;
@@ -41,19 +53,15 @@ public class GLController {
         EGL10.EGL_NONE
     };
 
-    GLController(LayerView view) {
-        mView = view;
-        mSurfaceValid = false;
+    private GLController() {
     }
 
-    /* This function is invoked by JNI */
-    void resumeCompositorIfValid() {
-        synchronized (this) {
-            if (!mSurfaceValid) {
-                return;
-            }
+    static GLController getInstance(LayerView view) {
+        if (sInstance == null) {
+            sInstance = new GLController();
         }
-        resumeCompositor(mWidth, mHeight);
+        sInstance.mView = view;
+        return sInstance;
     }
 
     /* Wait until we are allowed to use EGL functions on the Surface backing
