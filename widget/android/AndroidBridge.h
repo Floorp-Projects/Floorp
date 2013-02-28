@@ -17,7 +17,6 @@
 #include "nsIObserver.h"
 #include "nsThreadUtils.h"
 
-#include "AndroidLayerViewWrapper.h"
 #include "AndroidJavaWrappers.h"
 
 #include "nsIMutableArray.h"
@@ -88,6 +87,8 @@ typedef struct AndroidSystemColors {
     nscolor panelColorForeground;
     nscolor panelColorBackground;
 } AndroidSystemColors;
+
+typedef void* EGLSurface;
 
 class nsFilePickerCallback : nsISupports {
 public:
@@ -497,7 +498,9 @@ protected:
     jfieldID jSurfacePointerField;
 
     jclass jLayerView;
-    jmethodID jRegisterCompositorMethod;
+    jmethodID jProvideEGLSurfaceMethod;
+    jfieldID jEGLSurfacePointerField;
+    jobject mGLControllerObj;
 
     // some convinient types to have around
     jclass jStringClass;
