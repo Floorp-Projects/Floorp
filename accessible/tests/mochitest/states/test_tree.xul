@@ -92,12 +92,8 @@
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
-    if (!MAC) {
-      SimpleTest.waitForExplicitFinish();
-      addA11yLoadEvent(doTest);
-    } else {
-      todo(false, "Re-enable on Mac after fixing bug 845095 - intermittent orange");
-    }
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
   ]]>
   </script>
 
