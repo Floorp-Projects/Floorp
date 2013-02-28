@@ -93,8 +93,8 @@ AppProtocolHandler.prototype = {
   * containing an unknown appId.
   */
 function DummyChannel() {
-  this.originalURI = Services.io.newURI("app://unknown/nothing.html", null, null),
-  this.URI = Services.io.newURI("app://unknown/nothing.html", null, null),
+  this.originalURI = Services.io.newURI("app://unknown/nothing.html", null, null);
+  this.URI = Services.io.newURI("app://unknown/nothing.html", null, null);
 }
 
 DummyChannel.prototype = {
