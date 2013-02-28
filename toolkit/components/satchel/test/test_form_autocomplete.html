@@ -117,13 +117,11 @@ Form History test: form field autocomplete
 
 /** Test for Form History autocomplete **/
 
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
 var input = $_(1, "field1");
-const shiftModifier = Components.interfaces.nsIDOMEvent.SHIFT_MASK;
+const shiftModifier = Event.SHIFT_MASK;
 
 // Get the form history service
-var fh = Components.classes["@mozilla.org/satchel/form-history;1"].
+var fh = SpecialPowers.Cc["@mozilla.org/satchel/form-history;1"].
          getService(Components.interfaces.nsIFormHistory2);
 ok(fh != null, "got form history service");
 
@@ -194,8 +192,6 @@ function checkForm(expectedValue) {
  * timeout.
  */
 function runTest(testNum) {
-  // Seems we need to enable this again, or sendKeyEvent() complaints.
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   ok(true, "Starting test #" + testNum);
 
   switch(testNum) {
@@ -375,9 +371,7 @@ function runTest(testNum) {
 
         // On OS X, shift-backspace and shift-delete work, just delete does not.
         // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
-        var osString = Components.classes["@mozilla.org/xre/app-info;1"].
-                       getService(Components.interfaces.nsIXULRuntime).OS;
-        if (osString == "Darwin")
+        if (SpecialPowers.OS == "Darwin")
           doKey("back_space", shiftModifier);
         else
           doKey("delete", shiftModifier);
