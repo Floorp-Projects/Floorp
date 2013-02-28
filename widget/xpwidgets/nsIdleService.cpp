@@ -274,20 +274,22 @@ nsIdleServiceDaily::DailyCallback(nsITimer* aTimer, void* aClosure)
   PRTime now = PR_Now();
   if (self->mExpectedTriggerTime && now < self->mExpectedTriggerTime) {
     // Timer returned early, reschedule to the appropriate time.
-    PRTime newTime = self->mExpectedTriggerTime - now;
+    PRTime delayTime = self->mExpectedTriggerTime - now;
 
     // Add 10 ms to ensure we don't undershoot, and never get a "0" timer.
-    newTime += 10 * PR_USEC_PER_MSEC;
+    delayTime += 10 * PR_USEC_PER_MSEC;
 
+    PR_LOG(sLog, PR_LOG_DEBUG, ("nsIdleServiceDaily: DailyCallback resetting timer to %lld msec",
+                        delayTime / PR_USEC_PER_MSEC));
 #ifdef MOZ_WIDGET_ANDROID
     __android_log_print(ANDROID_LOG_INFO, "IdleService",
                         "DailyCallback resetting timer to %lld msec",
-                        (newTime - now) / PR_USEC_PER_MSEC);
+                        delayTime / PR_USEC_PER_MSEC);
 #endif
 
     (void)self->mTimer->InitWithFuncCallback(DailyCallback,
                                              self,
-                                             (newTime - now) / PR_USEC_PER_MSEC,
+                                             delayTime / PR_USEC_PER_MSEC,
                                              nsITimer::TYPE_ONE_SHOT);
     return;
   }
