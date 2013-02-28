@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+  <title>Border radius issue demo</title>
+  <style type="text/css">
+    .testClass {
+    width: 100px;
+    height: 100px;
+    margin: 20px;
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAIAAAADnC86AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAadEVYdFNvZnR3YXJlAFBhaW50Lk5FVCB2My41LjEwMPRyoQAAADdJREFUWEftzTERACAMADH8VAH+hRUXz5K77Dl39gtxRpwRZ8QZcUacEWfEGXFGnBFnxBlxZPYBKVqrOft7R9EAAAAASUVORK5CYII=);
+    border-radius: 50px;
+    /* Adding compatibility attributes for cross-browser comparison
+       Issue repros fine with just transform set. */
+    -moz-transform: translate(0,0);
+    -ms-transform: translate(0,0);
+    -webkit-transform: translate(0,0)
+    transform: translate(0,0);
+}
+
+  </style>
+</head>
+<body>
+	<div class="testClass"></div>
+</body></html>
