@@ -3151,14 +3151,6 @@ RasterImage::Draw(gfxContext *aContext,
 }
 
 //******************************************************************************
-/* [notxpcom] nsIFrame GetRootLayoutFrame() */
-nsIFrame*
-RasterImage::GetRootLayoutFrame()
-{
-  return nullptr;
-}
-
-//******************************************************************************
 /* void lockImage() */
 NS_IMETHODIMP
 RasterImage::LockImage()

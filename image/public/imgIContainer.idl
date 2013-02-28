@@ -58,7 +58,7 @@ native nsSize(nsSize);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(6f0113b2-c429-41a8-b433-35f6c36c5651)]
+[scriptable, builtinclass, uuid(585f4087-5148-478a-862c-5e90cc61413d)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -232,16 +232,6 @@ interface imgIContainer : nsISupports
                        [const] in nsIntSize aViewportSize,
                        [const] in SVGImageContext aSVGContext,
                        in uint32_t aFlags);
-
-  /**
-   * If this image is TYPE_VECTOR, i.e. is really an embedded SVG document,
-   * this method returns a pointer to the root nsIFrame of that document. If
-   * not (or if the root nsIFrame isn't available for some reason), this method
-   * returns nullptr.
-   *
-   * "notxpcom" for convenience, since we have no need for nsresult return-val.
-   */
-  [notxpcom] nsIFrame GetRootLayoutFrame();
 
   /*
    * Ensures that an image is decoding. Calling this function guarantees that
