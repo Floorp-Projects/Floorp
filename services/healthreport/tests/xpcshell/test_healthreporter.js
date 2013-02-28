@@ -154,6 +154,21 @@ add_task(function test_shutdown_collector_in_progress() {
   do_check_eq(reporter.storageCloseCount, 1);
 });
 
+// Simulates an error during collector initialization and verifies we shut down.
+add_task(function test_shutdown_when_collector_errors() {
+  let reporter = yield getJustReporter("shutdown_when_collector_errors", SERVER_URI, true);
+
+  reporter.onInitializeCollectorFinished = function () {
+    print("Throwing fake error.");
+    throw new Error("Fake error during collector initialization.");
+  };
+
+  // This will hang if shutdown logic is busted.
+  reporter._waitForShutdown();
+  do_check_eq(reporter.collectorShutdownCount, 1);
+  do_check_eq(reporter.storageCloseCount, 1);
+});
+
 add_task(function test_register_providers_from_category_manager() {
   const category = "healthreporter-js-modules";
 
