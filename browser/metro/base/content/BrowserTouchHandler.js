@@ -26,26 +26,10 @@ const BrowserTouchHandler = {
                         json: aMessage.json,
                         target: aMessage.target };
     // Touch input selection handling
-    if (!InputSourceHelper.isPrecise) {
-      if (SelectionHelperUI.isActive) {
-        // Selection handler is active.
-        if (aMessage.json.types.indexOf("selected-text") != -1) {
-          // long tap on existing selection. The incoming message has the
-          // string data, so reset the selection handler and invoke the
-          // context menu.
-          SelectionHelperUI.closeEditSession();
-        } else {
-          // Weird, context menu request with no selected text and
-          // SelectionHelperUI is active? Might be a bug, warn. Fall
-          // through anyway, the context menu handler will look in the
-          // incoming message for content types it knows how to handle.
-          Util.dumpLn("long tap on empty selection with SelectionHelperUI active?"); 
-          SelectionHelperUI.closeEditSession();
-        }
-      } else if (SelectionHelperUI.canHandle(aMessage)) {
-        SelectionHelperUI.openEditSession(aMessage);
-        return;
-      }
+    if (!InputSourceHelper.isPrecise && !SelectionHelperUI.isActive &&
+        SelectionHelperUI.canHandle(aMessage)) {
+      SelectionHelperUI.openEditSession(aMessage);
+      return;
     }
 
     // Check to see if we have context menu item(s) that apply to what
