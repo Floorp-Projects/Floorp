@@ -28,4 +28,4 @@ interface NodeIterator {
   Node? previousNode();
 
   void detach();
-;}
+};
