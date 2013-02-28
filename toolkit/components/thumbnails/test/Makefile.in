@@ -19,8 +19,10 @@ _BROWSER_FILES = \
 	browser_thumbnails_storage.js \
 	browser_thumbnails_storage_migrate3.js \
 	browser_thumbnails_bug726727.js \
+	browser_thumbnails_bug727765.js \
 	head.js \
 	background_red.html \
+	background_red_scroll.html \
 	background_red_redirect.sjs \
 	privacy_cache_control.sjs \
 	$(NULL)

@@ -715,7 +715,6 @@ let TabItems = {
   _lastUpdateTime: Date.now(),
   _eventListeners: [],
   _pauseUpdateForTest: false,
-  tempCanvas: null,
   _reconnectingPaused: false,
   tabItemPadding: {},
   _mozAfterPaintHandler: null,
@@ -744,11 +743,6 @@ let TabItems = {
       .attr('moz-opaque', '');
     $canvas.appendTo(iQ("body"));
     $canvas.hide();
-    this.tempCanvas = $canvas[0];
-    // 150 pixels is an empirical size, below which FF's drawWindow()
-    // algorithm breaks down
-    this.tempCanvas.width = 150;
-    this.tempCanvas.height = 112;
 
     let mm = gWindow.messageManager;
     this._mozAfterPaintHandler = this.onMozAfterPaint.bind(this);
@@ -1386,92 +1380,10 @@ TabCanvas.prototype = Utils.extend(new Subscribable(), {
       return;
     }
 
-    let ctx = this.canvas.getContext("2d");
-    let tempCanvas = TabItems.tempCanvas;
-    let bgColor = '#fff';
-
-    if (w < tempCanvas.width) {
-      // Small draw case where nearest-neighbor algorithm breaks down in Windows
-      // First draw to a larger canvas (150px wide), and then draw that image
-      // to the destination canvas.
-      let tempCtx = tempCanvas.getContext("2d");
-      this._drawWindow(tempCtx, tempCanvas.width, tempCanvas.height, bgColor);
-
-      // Now copy to tabitem canvas.
-      try {
-        this._fillCanvasBackground(ctx, w, h, bgColor);
-        ctx.drawImage(tempCanvas, 0, 0, w, h);
-      } catch (e) {
-        Utils.error('paint', e);
-      }
-    } else {
-      // General case where nearest neighbor algorithm looks good
-      // Draw directly to the destination canvas
-      this._drawWindow(ctx, w, h, bgColor);
-    }
+    let win = this.tab.linkedBrowser.contentWindow;
+    gPageThumbnails.captureToCanvas(win, this.canvas);
 
     this._sendToSubscribers("painted");
-  },
-
-  // ----------
-  // Function: _fillCanvasBackground
-  // Draws a rectangle of <width>x<height> with color <bgColor> to the given
-  // canvas context.
-  _fillCanvasBackground: function TabCanvas__fillCanvasBackground(ctx, width, height, bgColor) {
-    ctx.fillStyle = bgColor;
-    ctx.fillRect(0, 0, width, height);
-  },
-
-  // ----------
-  // Function: _drawWindow
-  // Draws contents of the tabs' browser window to the given canvas context.
-  _drawWindow: function TabCanvas__drawWindow(ctx, width, height, bgColor) {
-    this._fillCanvasBackground(ctx, width, height, bgColor);
-
-    let rect = this._calculateClippingRect(width, height);
-    let scaler = width / rect.width;
-
-    ctx.save();
-    ctx.scale(scaler, scaler);
-
-    try {
-      let win = this.tab.linkedBrowser.contentWindow;
-      ctx.drawWindow(win, rect.left, rect.top, rect.width, rect.height,
-                     bgColor, ctx.DRAWWINDOW_DO_NOT_FLUSH);
-    } catch (e) {
-      Utils.error('paint', e);
-    }
-
-    ctx.restore();
-  },
-
-  // ----------
-  // Function: _calculateClippingRect
-  // Calculate the clipping rect that will be projected to the tab's
-  // thumbnail canvas.
-  _calculateClippingRect: function TabCanvas__calculateClippingRect(origWidth, origHeight) {
-    let win = this.tab.linkedBrowser.contentWindow;
-
-    // TODO BUG 631593: retrieve actual scrollbar width
-    // 25px is supposed to be width of the vertical scrollbar
-    let maxWidth = Math.max(1, win.innerWidth - 25);
-    let maxHeight = win.innerHeight;
-
-    let height = Math.min(maxHeight, Math.floor(origHeight * maxWidth / origWidth));
-    let width = Math.floor(origWidth * height / origHeight);
-
-    // very short pages in combination with a very wide browser window force us
-    // to extend the clipping rect and add some empty space around the thumb
-    let factor = 0.7;
-    if (width < maxWidth * factor) {
-      width = maxWidth * factor;
-      height = Math.floor(origHeight * width / origWidth);
-    }
-
-    let left = win.scrollX + Math.max(0, Math.round((maxWidth - width) / 2));
-    let top = win.scrollY;
-
-    return new Rect(left, top, width, height);
   },
 
   // ----------
