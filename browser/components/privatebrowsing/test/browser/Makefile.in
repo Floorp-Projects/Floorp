@@ -12,6 +12,4 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= test_privatebrowsing
 
-DIRS += perwindow
-
 include $(topsrcdir)/config/rules.mk

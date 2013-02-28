@@ -11,6 +11,5 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= find
-DIRS = public src
 
 include $(topsrcdir)/config/rules.mk

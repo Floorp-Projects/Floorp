@@ -78,6 +78,13 @@ class ToolLauncher(object):
                 env[p] = extra_linker_path
         for e in extra_env:
             env[e] = extra_env[e]
+
+        # Work around a bug in Python 2.7.2 and lower where unicode types in
+        # environment variables aren't handled by subprocess.
+        for k, v in env.items():
+            if isinstance(v, unicode):
+                env[k] = v.encode('utf-8')
+
         print >>errors.out, 'Executing', ' '.join(cmd)
         errors.out.flush()
         return subprocess.call(cmd, env=env)

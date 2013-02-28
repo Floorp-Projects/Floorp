@@ -14,8 +14,6 @@ include $(DEPTH)/config/autoconf.mk
 # by frozen (dependent) linkage components. Internal-linkage code should use
 # unicharutil_s which is built in the internal/ subdirectory.
 
-DIRS = internal
-
 include $(srcdir)/objs.mk
 
 MODULE=unicharutil

@@ -11,11 +11,6 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS += \
-  chrome \
-  websocket_hybi \
-  $(NULL)
-
 MODULE = content
 
 CPP_UNIT_TESTS = \

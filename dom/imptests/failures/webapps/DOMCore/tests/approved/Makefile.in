@@ -9,9 +9,6 @@ relativesrcdir := @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS := \
-  $(NULL)
-
 MOCHITEST_FILES := \
   test_Node-properties.html.json \
   test_Range-cloneContents.html.json \

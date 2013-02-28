@@ -9,13 +9,6 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = \
-  trunk \
-  trunk/testing \
-  signaling \
-  signalingtest \
-  $(NULL)
-
 # These Makefiles don't have corresponding Makefile.ins
 NO_SUBMAKEFILES_RULE = 1
 include $(topsrcdir)/config/rules.mk

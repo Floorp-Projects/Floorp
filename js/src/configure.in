@@ -4336,30 +4336,7 @@ AC_SUBST(ac_configure_args)
 dnl Spit out some output
 dnl ========================================================
 
-MAKEFILES="
-  js-confdefs.h
-  Makefile
-  shell/Makefile
-  config/Makefile
-  config/autoconf.mk
-"
-
-if test "$JS_NATIVE_EDITLINE"; then
-  MAKEFILES="$MAKEFILES
-    editline/Makefile
-  "
-fi
-
-if test "$ENABLE_TESTS"; then
-  MAKEFILES="$MAKEFILES
-    jsapi-tests/Makefile
-    tests/Makefile
-  "
-fi
-
-echo $MAKEFILES > unallmakefiles
-
-AC_OUTPUT($MAKEFILES)
+AC_OUTPUT([js-confdefs.h Makefile config/autoconf.mk])
 
 # Produce the js-config script at configure time; see the comments for
 # 'js-config' in Makefile.in.

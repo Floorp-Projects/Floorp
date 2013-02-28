@@ -8,6 +8,5 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 MODULE		= pipboot
-DIRS		= public src
 
 include $(topsrcdir)/config/rules.mk

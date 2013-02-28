@@ -12,10 +12,6 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PARALLEL_DIRS = \
-	SimpleTest \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \

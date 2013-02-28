@@ -15,10 +15,6 @@ VPATH     := @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PARALLEL_DIRS := \
-  mpd \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DIMPL_NS_NET

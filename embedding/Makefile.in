@@ -13,17 +13,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE       = embed
 
-DIRS = base components browser
-
-TEST_DIRS += test
 ifdef ENABLE_TESTS
 XPCSHELL_TESTS = tests/unit
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),android)
-ifneq (,$(filter mobile/xul b2g,$(MOZ_BUILD_APP)))
-DIRS += android
-endif
 endif
 
 include $(topsrcdir)/config/rules.mk

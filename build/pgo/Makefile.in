@@ -11,11 +11,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = \
-  blueprint \
-  js-input \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 # We install to _profile/pgo

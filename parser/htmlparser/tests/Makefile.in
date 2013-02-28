@@ -9,9 +9,4 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-
-DIRS = \
-	mochitest \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk

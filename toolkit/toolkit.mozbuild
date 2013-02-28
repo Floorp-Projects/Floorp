@@ -1,0 +1,251 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if CONFIG['LIBXUL_SDK']:
+    error('toolkit.mozbuild is not compatible with --enable-libxul-sdk=')
+
+if not CONFIG['MOZ_NATIVE_NSPR']:
+    add_tier_dir('nspr', 'nsprpub', static=True)
+    add_tier_dir('nspr', 'config/nspr')
+
+if not CONFIG['MOZ_NATIVE_SQLITE']:
+    add_tier_dir('nss', 'db/sqlite3/src')
+
+if CONFIG['MOZ_PSM'] and not CONFIG['MOZ_NATIVE_NSS']:
+    add_tier_dir('nss', 'security/build')
+
+include('/config/js/js.mozbuild')
+
+if CONFIG['NS_TRACE_MALLOC']:
+    add_tier_dir('platform', 'tools/trace-malloc/lib')
+
+if CONFIG['MOZ_DMD']:
+    add_tier_dir('platform', 'memory/replace/dmd')
+
+if CONFIG['MOZ_TREE_FREETYPE']:
+    add_tier_dir('platform', 'modules/freetype2', static=True)
+
+add_tier_dir('platform', 'xpcom')
+
+add_tier_dir('platform', [
+    'modules/libpref',
+    'intl',
+    'netwerk',
+])
+
+if CONFIG['MOZ_AUTH_EXTENSION']:
+    add_tier_dir('platform', 'extensions/auth')
+
+# External/3rd party libraries.
+
+if not CONFIG['MOZ_NATIVE_JPEG']:
+    add_tier_dir('platform', 'media/libjpeg')
+
+if CONFIG['MOZ_UPDATER']:
+    if not CONFIG['MOZ_NATIVE_BZ2']:
+        add_tier_dir('platform', 'modules/libbz2')
+
+    add_tier_dir('platform', 'other-licenses/bsdiff')
+
+add_tier_dir('platform', 'gfx/qcms')
+
+# Gecko/Core components.
+
+add_tier_dir('platform', ['ipc', 'js/ipc'])
+
+add_tier_dir('platform', ['hal', 'js/xpconnect', 'intl/chardet'])
+
+if CONFIG['MOZ_ENABLE_GTK2'] and CONFIG['MOZ_X11']:
+    add_tier_dir('platform', 'widget/gtkxtbin')
+
+add_tier_dir('platform', ['modules/libjar', 'storage'])
+
+if CONFIG['MOZ_PERMISSIONS']:
+    add_tier_dir('platform', ['extensions/cookie', 'extensions/permissions'])
+
+add_tier_dir('platform', 'rdf')
+
+if CONFIG['MOZ_JSDEBUGGER']:
+    add_tier_dir('platform', 'js/jsd')
+
+if CONFIG['MOZ_VORBIS']:
+    add_tier_dir('platform', 'media/libvorbis')
+
+if CONFIG['MOZ_TREMOR']:
+    add_tier_dir('platform', 'media/libtremor')
+
+if CONFIG['MOZ_OPUS']:
+    add_tier_dir('platform', 'media/libopus')
+
+if CONFIG['MOZ_WEBM']:
+    add_tier_dir('platform', 'media/libnestegg')
+
+if CONFIG['MOZ_VP8'] and not CONFIG['MOZ_NATIVE_LIBVPX']:
+    add_tier_dir('platform', 'media/libvpx')
+
+if CONFIG['MOZ_OGG']:
+    add_tier_dir('platform', ['media/libogg', 'media/libtheora'])
+
+if CONFIG['MOZ_SYDNEYAUDIO']:
+    add_tier_dir('platform', 'media/libsydneyaudio')
+
+if CONFIG['MOZ_WEBRTC']:
+    add_tier_dir('platform', [
+        'media/webrtc',
+        'media/mtransport/third_party',
+        'media/mtransport/build',
+        'media/mtransport/standalone',
+    ])
+
+if CONFIG['MOZ_SPEEX_RESAMPLER']:
+    add_tier_dir('platform', 'media/libspeex_resampler')
+
+if CONFIG['MOZ_SOUNDTOUCH']:
+    add_tier_dir('platform', 'media/libsoundtouch')
+
+if CONFIG['MOZ_CUBEB']:
+    add_tier_dir('platform', 'media/libcubeb')
+
+if CONFIG['MOZ_OMX_PLUGIN']:
+    add_tier_dir('platform', [
+        'media/omx-plugin/lib/ics/libutils',
+        'media/omx-plugin/lib/ics/libstagefright',
+        'media/omx-plugin/lib/gb/libutils',
+        'media/omx-plugin/lib/gb/libstagefright',
+        'media/omx-plugin/lib/gb/libstagefright_color_conversion',
+        'media/omx-plugin/lib/gb235/libstagefright',
+        'media/omx-plugin/lib/froyo/libstagefright',
+        'media/omx-plugin',
+        'media/omx-plugin/gb',
+        'media/omx-plugin/gb235',
+        'media/omx-plugin/froyo',
+        'media/omx-plugin/lib/hc/libstagefright',
+        'media/omx-plugin/hc',
+        'media/omx-plugin/sony',
+    ])
+
+if not CONFIG['MOZ_NATIVE_PNG']:
+    add_tier_dir('platform', 'media/libpng')
+
+if CONFIG['ENABLE_TESTS']:
+    add_tier_dir('platform', 'testing/specialpowers')
+
+if CONFIG['MOZ_ENABLE_GTEST']:
+    add_tier_dir('platform', 'testing/gtest')
+
+add_tier_dir('platform', [
+    'uriloader',
+    'caps',
+    'parser',
+    'gfx',
+    'image',
+    'dom',
+    'view',
+    'widget',
+    'content',
+    'editor',
+    'layout',
+    'docshell',
+    'embedding',
+    'xpfe/appshell'
+])
+
+# This needs to be built after the gfx/ directory
+# to ensure all dependencies for skia (e.g. mozalloc, xpcom)
+# have been built
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    add_tier_dir('platform', 'other-licenses/skia-npapi')
+
+if CONFIG['MOZ_UNIVERSALCHARDET']:
+    add_tier_dir('platform', 'extensions/universalchardet')
+
+if CONFIG['ACCESSIBILITY']:
+    add_tier_dir('platform', 'accessible')
+
+# toolkit
+
+add_tier_dir('platform', 'profile')
+
+# This must precede xpfe.
+if CONFIG['MOZ_JPROF']:
+    add_tier_dir('platform', 'tools/jprof')
+
+add_tier_dir('platform', 'tools/profiler')
+
+add_tier_dir('platform', 'xpfe/components')
+
+if CONFIG['MOZ_ENABLE_XREMOTE']:
+    add_tier_dir('platform', 'widget/xremoteclient')
+
+if CONFIG['MOZ_SPELLCHECK']:
+    add_tier_dir('platform', 'extensions/spellcheck')
+
+if CONFIG['MOZ_PSM']:
+    add_tier_dir('platform', 'security/manager')
+else:
+    add_tier_dir('platform', [
+        'security/manager/boot/public',
+        'security/manager/ssl/public',
+    ])
+
+if CONFIG['MOZ_UPDATER']:
+    add_tier_dir('platform', 'modules/libmar')
+
+add_tier_dir('platform', 'toolkit')
+
+if CONFIG['MOZ_PREF_EXTENSIONS']:
+    add_tier_dir('platform', 'extensions/pref')
+
+add_tier_dir('platform', 'services')
+add_tier_dir('platform', 'startupcache')
+add_tier_dir('platform', 'js/ductwork/debugger')
+add_tier_dir('platform', 'other-licenses/snappy')
+
+if CONFIG['MOZ_GIO_COMPONENT']:
+    add_tier_dir('platform', 'extensions/gio')
+
+# Applications can cheat and ask for code to be
+# built before libxul so it can be linked into libxul.
+add_tier_dir('platform', app_libxul_dirs)
+
+add_tier_dir('platform', 'toolkit/library')
+add_tier_dir('platform', 'xpcom/stub')
+
+if CONFIG['MOZ_REPLACE_MALLOC']:
+    add_tier_dir('platform', 'memory/replace')
+
+if CONFIG['NS_TRACE_MALLOC']:
+    add_tier_dir('platform', 'tools/trace-malloc')
+
+if CONFIG['MOZ_ENABLE_GNOME_COMPONENT']:
+    add_tier_dir('platform', 'toolkit/system/gnome')
+
+# if libconic is present, it will do its own network monitoring
+if not CONFIG['MOZ_ENABLE_LIBCONIC'] and CONFIG['MOZ_ENABLE_DBUS']:
+    add_tier_dir('platform', 'toolkit/system/dbus')
+
+add_tier_dir('platform', 'addon-sdk')
+
+if CONFIG['MOZ_MAPINFO']:
+    add_tier_dir('platform', 'tools/codesighs')
+
+if CONFIG['ENABLE_MARIONETTE']:
+    add_tier_dir('platform', 'testing/marionette')
+
+if CONFIG['ENABLE_TESTS']:
+    add_tier_dir('platform', [
+        'testing/mochitest',
+        'testing/xpcshell',
+        'testing/tools/screenshot',
+        'testing/peptest',
+        'testing/mozbase',
+        'testing/modules',
+    ])
+
+    if CONFIG['MOZ_WEBRTC']:
+        add_tier_dir('platform', [
+            'media/webrtc/signaling/test',
+            'media/mtransport/test',
+        ])
