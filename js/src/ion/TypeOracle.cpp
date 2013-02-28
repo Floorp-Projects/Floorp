@@ -298,6 +298,9 @@ TypeInferenceOracle::elementReadIsDenseNative(RawScript script, jsbytecode *pc)
     if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
         return false;
 
+    if (obj->hasType(types::Type::StringType()))
+        return false;
+
     Class *clasp = obj->getKnownClass();
     return clasp && clasp->isNative();
 }
@@ -311,6 +314,9 @@ TypeInferenceOracle::elementReadIsTypedArray(RawScript script, jsbytecode *pc, i
 
     JSValueType idType = id->getKnownTypeTag();
     if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
+        return false;
+
+    if (obj->hasType(types::Type::StringType()))
         return false;
 
     *arrayType = obj->getTypedArrayType();
