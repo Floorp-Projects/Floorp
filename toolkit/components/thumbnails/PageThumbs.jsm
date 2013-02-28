@@ -145,6 +145,7 @@ this.PageThumbs = {
     let ctx = aCanvas.getContext("2d");
 
     // Scale the canvas accordingly.
+    ctx.save();
     ctx.scale(scale, scale);
 
     try {
@@ -154,6 +155,8 @@ this.PageThumbs = {
     } catch (e) {
       // We couldn't draw to the canvas for some reason.
     }
+
+    ctx.restore();
 
     let telemetry = Services.telemetry;
     telemetry.getHistogramById("FX_THUMBNAILS_CAPTURE_TIME_MS")
@@ -238,8 +241,15 @@ this.PageThumbs = {
    * @return An array containing width, height and scale.
    */
   _determineCropSize: function PageThumbs_determineCropSize(aWindow, aCanvas) {
-    let sw = aWindow.innerWidth;
-    let sh = aWindow.innerHeight;
+    let utils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDOMWindowUtils);
+    let sbWidth = {}, sbHeight = {};
+    utils.getScrollbarSize(false, sbWidth, sbHeight);
+
+    // Even in RTL mode, scrollbars are always on the right.
+    // So there's no need to determine a left offset.
+    let sw = aWindow.innerWidth - sbWidth.value;
+    let sh = aWindow.innerHeight - sbHeight.value;
 
     let {width: thumbnailWidth, height: thumbnailHeight} = aCanvas;
     let scale = Math.min(Math.max(thumbnailWidth / sw, thumbnailHeight / sh), 1);
