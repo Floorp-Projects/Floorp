@@ -10,8 +10,8 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 const DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
-const NEW_SCRIPT_IGNORED_URLS = ["debugger eval code", "self-hosted"];
-const NEW_SCRIPT_DISPLAY_DELAY = 200; // ms
+const NEW_SOURCE_IGNORED_URLS = ["debugger eval code", "self-hosted"];
+const NEW_SOURCE_DISPLAY_DELAY = 200; // ms
 const FETCH_SOURCE_RESPONSE_DELAY = 50; // ms
 const FRAME_STEP_CLEAR_DELAY = 100; // ms
 const CALL_STACK_PAGE_SIZE = 25; // frames
@@ -1064,15 +1064,11 @@ StackFrames.prototype = {
 /**
  * Keeps the source script list up-to-date, using the thread client's
  * source script cache.
- *
- * FIXME: Currently, "sources" are actually "scripts", this should change in
- * Bug 795368 - Add "sources" and "newSource" packets to the RDP, and use them
- * instead of "scripts" and "newScript".
  */
 function SourceScripts() {
-  this._onNewScript = this._onNewScript.bind(this);
+  this._onNewSource = this._onNewSource.bind(this);
   this._onNewGlobal = this._onNewGlobal.bind(this);
-  this._onScriptsAdded = this._onScriptsAdded.bind(this);
+  this._onSourcesAdded = this._onSourcesAdded.bind(this);
 }
 
 SourceScripts.prototype = {
@@ -1084,8 +1080,8 @@ SourceScripts.prototype = {
    */
   connect: function SS_connect() {
     dumpn("SourceScripts is connecting...");
-    this.debuggerClient.addListener("newScript", this._onNewScript);
     this.debuggerClient.addListener("newGlobal", this._onNewGlobal);
+    this.activeThread.addListener("newSource", this._onNewSource);
     this._handleTabNavigation();
   },
 
@@ -1097,9 +1093,9 @@ SourceScripts.prototype = {
       return;
     }
     dumpn("SourceScripts is disconnecting...");
-    window.clearTimeout(this._newScriptTimeout);
-    this.debuggerClient.removeListener("newScript", this._onNewScript);
+    window.clearTimeout(this._newSourceTimeout);
     this.debuggerClient.removeListener("newGlobal", this._onNewGlobal);
+    this.activeThread.removeListener("newSource", this._onNewSource);
   },
 
   /**
@@ -1110,26 +1106,25 @@ SourceScripts.prototype = {
       return;
     }
     dumpn("Handling tab navigation in the SourceScripts");
-    window.clearTimeout(this._newScriptTimeout);
+    window.clearTimeout(this._newSourceTimeout);
 
     // Retrieve the list of script sources known to the server from before
     // the client was ready to handle "newScript" notifications.
-    this.activeThread.getScripts(this._onScriptsAdded);
+    this.activeThread.getSources(this._onSourcesAdded);
   },
 
   /**
    * Handler for the debugger client's unsolicited newScript notification.
    */
-  _onNewScript: function SS__onNewScript(aNotification, aPacket) {
+  _onNewSource: function SS__onNewSource(aNotification, aPacket) {
     // Ignore bogus scripts, e.g. generated from 'clientEvaluate' packets.
-    if (NEW_SCRIPT_IGNORED_URLS.indexOf(aPacket.url) != -1) {
+    if (NEW_SOURCE_IGNORED_URLS.indexOf(aPacket.url) != -1) {
       return;
     }
 
     // Add the source in the debugger view sources container.
     this._addSource({
-      url: aPacket.url,
-      startLine: aPacket.startLine,
+      url: aPacket.source.url,
       source: aPacket.source
     }, {
       forced: true
@@ -1144,14 +1139,14 @@ SourceScripts.prototype = {
     }
     // ..or the first entry if there's none selected yet after a while
     else {
-      window.clearTimeout(this._newScriptTimeout);
-      this._newScriptTimeout = window.setTimeout(function() {
+      window.clearTimeout(this._newSourceTimeout);
+      this._newSourceTimeout = window.setTimeout(function() {
         // If after a certain delay the preferred source still wasn't received,
         // just give up on waiting and display the first entry.
         if (!container.selectedValue) {
           container.selectedIndex = 0;
         }
-      }, NEW_SCRIPT_DISPLAY_DELAY);
+      }, NEW_SOURCE_DISPLAY_DELAY);
     }
 
     // If there are any stored breakpoints for this source, display them again,
@@ -1172,16 +1167,24 @@ SourceScripts.prototype = {
   },
 
   /**
-   * Callback for the debugger's active thread getScripts() method.
+   * Callback for the debugger's active thread getSources() method.
    */
-  _onScriptsAdded: function SS__onScriptsAdded(aResponse) {
+  _onSourcesAdded: function SS__onSourcesAdded(aResponse) {
+    if (aResponse.error) {
+      Cu.reportError(new Error("Error getting sources: " + aResponse.error));
+      return;
+    }
+
     // Add all the sources in the debugger view sources container.
-    for (let script of aResponse.scripts) {
+    for (let source of aResponse.sources) {
       // Ignore bogus scripts, e.g. generated from 'clientEvaluate' packets.
-      if (NEW_SCRIPT_IGNORED_URLS.indexOf(script.url) != -1) {
+      if (NEW_SOURCE_IGNORED_URLS.indexOf(source.url) != -1) {
         continue;
       }
-      this._addSource(script);
+      this._addSource({
+        url: source.url,
+        source: source
+      });
     }
 
     let container = DebuggerView.Sources;
@@ -1205,13 +1208,13 @@ SourceScripts.prototype = {
     DebuggerController.Breakpoints.updatePaneBreakpoints();
 
     // Signal that scripts have been added.
-    window.dispatchEvent("Debugger:AfterScriptsAdded");
+    window.dispatchEvent("Debugger:AfterSourcesAdded");
   },
 
   /**
    * Add the specified source to the debugger view sources list.
    *
-   * @param object aScript
+   * @param object aSource
    *        The source object coming from the active thread.
    * @param object aOptions [optional]
    *        Additional options for adding the source. Supported options:
@@ -1241,7 +1244,7 @@ SourceScripts.prototype = {
   getText: function SS_getText(aSource, aCallback, aOnTimeout) {
     // If already loaded, return the source text immediately.
     if (aSource.loaded) {
-      aCallback(aSource.url, aSource.text);
+      aCallback(aSource.source.url, aSource.text);
       return;
     }
 
@@ -1256,13 +1259,13 @@ SourceScripts.prototype = {
       window.clearTimeout(fetchTimeout);
 
       if (aResponse.error) {
-        Cu.reportError("Error loading " + aSource.url + "\n" + aResponse.error);
-        aCallback(aSource.url, "");
+        Cu.reportError("Error loading " + aSource.source.url + "\n" + aResponse.error);
+        aCallback(aSource.source.url, "");
         return;
       }
       aSource.loaded = true;
       aSource.text = aResponse.source;
-      aCallback(aSource.url, aResponse.source);
+      aCallback(aSource.source.url, aResponse.source);
     });
   }
 };
