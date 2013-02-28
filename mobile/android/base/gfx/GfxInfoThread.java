@@ -31,6 +31,7 @@ public class GfxInfoThread extends Thread {
         try {
             mDataQueue.put("ERROR\n" + msg + "\n");
         } catch (InterruptedException e) {
+            Log.w(LOGTAG, "Thread interrupted", e);
             Thread.currentThread().interrupt();
         }
     }
@@ -44,12 +45,13 @@ public class GfxInfoThread extends Thread {
         if (data != null)
             return data;
 
-        error("We need the GfxInfo data, but it is not yet available. " +
-              "We have to wait for it, so expect abnormally long startup times. " +
-              "Please report a Mozilla bug.");
+        Log.w(LOGTAG, "We need the GfxInfo data, but it is not yet available. " +
+                      "We have to wait for it, so expect abnormally long startup times. " +
+                      "Please report a Mozilla bug.");
         try {
             data = mDataQueue.take();
         } catch (InterruptedException e) {
+            Log.w(LOGTAG, "Thread interrupted", e);
             Thread.currentThread().interrupt();
         }
         Log.i(LOGTAG, "GfxInfo data is finally available.");
@@ -184,6 +186,7 @@ public class GfxInfoThread extends Thread {
         try {
             mDataQueue.put(data);
         } catch (InterruptedException e) {
+            Log.w(LOGTAG, "Thread interrupted", e);
             Thread.currentThread().interrupt();
         }
     }
