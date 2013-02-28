@@ -554,6 +554,7 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/PromptService.js
 @BINPATH@/components/SessionStore.js
 @BINPATH@/components/Sidebar.js
+@BINPATH@/components/SiteSpecificUserAgent.js
 #ifdef MOZ_SAFE_BROWSING
 @BINPATH@/components/SafeBrowsing.jsm
 #endif
