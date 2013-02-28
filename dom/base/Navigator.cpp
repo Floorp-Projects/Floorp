@@ -306,7 +306,7 @@ Navigator::GetUserAgent(nsAString& aUserAgent)
     do_GetService("@mozilla.org/dom/site-specific-user-agent;1");
   NS_ENSURE_TRUE(siteSpecificUA, NS_OK);
 
-  return siteSpecificUA->GetUserAgentForURI(codebaseURI, aUserAgent);
+  return siteSpecificUA->GetUserAgentForURIAndWindow(codebaseURI, win, aUserAgent);
 }
 
 NS_IMETHODIMP
