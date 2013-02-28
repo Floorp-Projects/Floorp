@@ -23,7 +23,7 @@
 <![CDATA[
 
 if (navigator.platform.startsWith("Mac")) {
-  SimpleTest.expectAssertions(0, 1);
+  SimpleTest.expectAssertions(0, 5);
 }
 
 SimpleTest.waitForExplicitFinish();

@@ -34,11 +34,11 @@ public class testClearPrivateData extends PixelTest  {
 
         // Quit the awesomescreen
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
-        mSolo.waitForText("Browser Blank Page 01");
+        waitForText("Browser Blank Page 01");
 
         // Clearing private data
         selectMenuItem("Settings");
-        if (mSolo.waitForText("^Clear private data$")) {
+        if (waitForText("^Clear private data$")) {
             mSolo.clickOnText("^Clear private data$");
         }
         mAsserter.ok(mSolo.searchButton("Clear data"),"checking clear button","clear button exists");

@@ -643,10 +643,7 @@ JSHistogram_Add(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     Histogram *h = static_cast<Histogram*>(JS_GetPrivate(obj));
-    if (h->histogram_type() == Histogram::BOOLEAN_HISTOGRAM)
-      h->Add(!!value);
-    else
-      h->Add(value);
+    h->Add(value);
   }
   return JS_TRUE;
 }

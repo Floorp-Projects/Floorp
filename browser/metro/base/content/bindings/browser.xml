@@ -497,6 +497,7 @@
       </field>
 
       <!-- Change client coordinates in device pixels to page-relative ones in CSS px. -->
+      <!-- (Does not take into account sub frame scroll) -->
       <method name="transformClientToBrowser">
         <parameter name="clientX"/>
         <parameter name="clientY"/>

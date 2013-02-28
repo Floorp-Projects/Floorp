@@ -89,7 +89,7 @@
 
     function runTests() {
       let iframe = document.createElement("iframe");
-      iframe.mozbrowser = true;
+      SpecialPowers.wrap(iframe).mozbrowser = true;
       iframe.id = "iframe";
       iframe.style.width = "100%";
       iframe.style.height = "1000px";

@@ -13,6 +13,7 @@
 #include "nsISupportsArray.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsIDocShell.h"
 
 // For PR_snprintf
 #include "prprf.h"
@@ -1296,6 +1297,81 @@ MediaManager::GetActiveMediaCaptureWindows(nsISupportsArray **aArray)
   mActiveWindows.EnumerateRead(WindowsHashToArrayFunc, array);
 
   *aArray = array;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MediaManager::MediaCaptureWindowState(nsIDOMWindow* aWindow, bool* aVideo,
+                                      bool* aAudio)
+{
+  *aVideo = false;
+  *aAudio = false;
+
+  nsresult rv = MediaCaptureWindowStateInternal(aWindow, aVideo, aAudio);
+#ifdef DEBUG
+  nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(aWindow);
+  LOG(("%s: window %lld capturing %s %s", __FUNCTION__, piWin ? piWin->WindowID() : -1,
+       *aVideo ? "video" : "", *aAudio ? "audio" : ""));
+#endif
+  return rv;
+}
+
+nsresult
+MediaManager::MediaCaptureWindowStateInternal(nsIDOMWindow* aWindow, bool* aVideo,
+                                              bool* aAudio)
+{
+  // We need to return the union of all streams in all innerwindows that
+  // correspond to that outerwindow.
+
+  // Iterate the docshell tree to find all the child windows, find
+  // all the listeners for each one, get the booleans, and merge the
+  // results.
+  nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(aWindow);
+  if (piWin) {
+    if (piWin->GetCurrentInnerWindow() || piWin->IsInnerWindow()) {
+      uint64_t windowID;
+      if (piWin->GetCurrentInnerWindow()) {
+        windowID = piWin->GetCurrentInnerWindow()->WindowID();
+      } else {
+        windowID = piWin->WindowID();
+      }
+      StreamListeners* listeners = GetActiveWindows()->Get(windowID);
+      if (listeners) {
+        uint32_t length = listeners->Length();
+        for (uint32_t i = 0; i < length; ++i) {
+          nsRefPtr<GetUserMediaCallbackMediaStreamListener> listener =
+            listeners->ElementAt(i);
+          if (listener->CapturingVideo()) {
+            *aVideo = true;
+          }
+          if (listener->CapturingAudio()) {
+            *aAudio = true;
+          }
+          if (*aAudio && *aVideo) {
+            return NS_OK; // no need to continue iterating
+          }
+        }
+      }
+    }
+
+    // iterate any children of *this* window (iframes, etc)
+    nsCOMPtr<nsIDocShellTreeNode> node =
+      do_QueryInterface(piWin->GetDocShell());
+    if (node) {
+      int32_t i, count;
+      node->GetChildCount(&count);
+      for (i = 0; i < count; ++i) {
+        nsCOMPtr<nsIDocShellTreeItem> item;
+        node->GetChildAt(i, getter_AddRefs(item));
+        nsCOMPtr<nsPIDOMWindow> win = do_GetInterface(item);
+
+        MediaCaptureWindowStateInternal(win, aVideo, aAudio);
+        if (*aAudio && *aVideo) {
+          return NS_OK; // no need to continue iterating
+        }
+      }
+    }
+  }
   return NS_OK;
 }
 

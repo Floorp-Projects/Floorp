@@ -18,7 +18,6 @@ Autocomplete Frecency Tests
 try {
   var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
                 getService(Ci.nsINavHistoryService);
-  var bhist = histsvc.QueryInterface(Ci.nsIBrowserHistory);
   var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
               getService(Ci.nsINavBookmarksService);
   var prefs = Cc["@mozilla.org/preferences-service;1"].
@@ -96,7 +95,7 @@ function task_initializeBucket(bucket) {
             transition: visitType,
             visitDate: now
           });
-          bhist.markPageAsTyped(calculatedURI);
+          histsvc.markPageAsTyped(calculatedURI);
         }
       }
     }

@@ -9,7 +9,7 @@
       iframe { width: 90%; height: 200px; }
     </style>
 <script>
-if (navigator.platform.startsWith("Mac")) {
+if (!navigator.platform.startsWith("Win")) {
   SimpleTest.expectAssertions(0, 1);
 }
 

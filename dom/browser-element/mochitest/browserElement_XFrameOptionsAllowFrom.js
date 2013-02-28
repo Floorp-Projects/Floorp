@@ -30,7 +30,7 @@ function runTest() {
   var count = 0;
 
   var iframe = document.createElement('iframe');
-  iframe.mozbrowser = true;
+  SpecialPowers.wrap(iframe).mozbrowser = true;
   iframe.height = '1000px';
 
   // The innermost page we load will fire an alert when it successfully loads.

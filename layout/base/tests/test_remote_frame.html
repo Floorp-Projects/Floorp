@@ -43,7 +43,7 @@
     }
     function addRemoteFrame() {
       let iframe = document.createElement("iframe");
-      iframe.mozbrowser = true;
+      SpecialPowers.wrap(iframe).mozbrowser = true;
       iframe.src = "data:text/html,<html style='background:blue;'>";
 
       document.body.appendChild(iframe);

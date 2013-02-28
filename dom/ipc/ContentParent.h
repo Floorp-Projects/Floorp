@@ -250,6 +250,9 @@ private:
                                                const NativeThreadId& tid,
                                                const uint32_t& processType);
 
+    virtual bool RecvGetRandomValues(const uint32_t& length,
+                                     InfallibleTArray<uint8_t>* randomValues);
+
     virtual PHalParent* AllocPHal() MOZ_OVERRIDE;
     virtual bool DeallocPHal(PHalParent*) MOZ_OVERRIDE;
 

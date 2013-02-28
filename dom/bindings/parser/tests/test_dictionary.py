@@ -296,3 +296,132 @@ def WebIDLTest(parser, harness):
     """)
     results = parser.finish()
     harness.ok(True, "Union arg containing a dictionary should actually parse")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            dictionary Foo {
+              Foo foo;
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Member type must not be its Dictionary.")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            dictionary Foo3 : Foo {
+              short d;
+            };
+
+            dictionary Foo2 : Foo3 {
+              boolean c;
+            };
+
+            dictionary Foo1 : Foo2 {
+              long a;
+            };
+
+            dictionary Foo {
+              Foo1 b;
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Member type must not be a Dictionary that "
+                      "inherits from its Dictionary.")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            dictionary Foo {
+              (Foo or DOMString)[]? b;
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Member type must not be a Nullable type "
+                      "whose inner type includes its Dictionary.")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            dictionary Foo {
+              (DOMString or Foo) b;
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Member type must not be a Union type, one of "
+                      "whose member types includes its Dictionary.")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            dictionary Foo {
+              sequence<sequence<sequence<Foo>>> c;
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Member type must not be a Sequence type "
+                      "whose element type includes its Dictionary.")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            dictionary Foo {
+              (DOMString or Foo)[] d;
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Member type must not be an Array type "
+                      "whose element type includes its Dictionary.")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            dictionary Foo {
+              Foo1 b;
+            };
+
+            dictionary Foo3 {
+              Foo d;
+            };
+
+            dictionary Foo2 : Foo3 {
+              short c;
+            };
+
+            dictionary Foo1 : Foo2 {
+              long a;
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Member type must not be a Dictionary, one of whose "
+                      "members or inherited members has a type that includes "
+                      "its Dictionary.")

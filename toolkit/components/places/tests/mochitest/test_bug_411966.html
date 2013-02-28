@@ -23,7 +23,7 @@
       netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
       addVisits(typedURI, function() {
-        bhist.markPageAsTyped(typedURI);
+        histsvc.markPageAsTyped(typedURI);
 
         var clickedLinkChannel = ios.newChannelFromURI(clickedLinkURI);
         clickedLinkChannel.QueryInterface(Ci.nsIHttpChannel).referrer = typedURI;

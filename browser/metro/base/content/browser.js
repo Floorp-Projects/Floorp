@@ -967,7 +967,7 @@ var Browser = {
 
       case "Browser:TapOnSelection":
         if (!InputSourceHelper.isPrecise) {
-          if (SelectionHelperUI.isActive()) {
+          if (SelectionHelperUI.isActive) {
             SelectionHelperUI.shutdown();
           }
           if (SelectionHelperUI.canHandle(aMessage)) {

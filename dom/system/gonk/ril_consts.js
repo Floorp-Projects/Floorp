@@ -2433,5 +2433,69 @@ this.MMI_SC_BA_ALL = "330";
 this.MMI_SC_BA_MO = "333";
 this.MMI_SC_BA_MT = "353";
 
+/**
+ * CDMA PDU constants
+ */
+
+// SMS Message Type, as defined in 3GPP2 C.S0015-A v2.0, Table 3.4-1
+this.PDU_CDMA_MSG_TYPE_P2P = 0x00;        // Point-to-Point
+this.PDU_CDMA_MSG_TYPE_BROADCAST = 0x01;  // Broadcast
+this.PDU_CDMA_MSG_TYPE_ACK = 0x02;        // Acknowledge
+
+// SMS Teleservice Identitifier, as defined in 3GPP2 N.S0005, Table 175
+this.PDU_CDMA_MSG_TELESERIVCIE_ID_SMS = 0x1002;   // SMS
+this.PDU_CDMA_MSG_TELESERIVCIE_ID_WEMT = 0x1005;  // Wireless Enhanced Messaging Teleservice
+                                                  // required for fragmented SMS
+
+// SMS Service Category, as defined in 3GPP2 C.R1001-D, Table 9.3.1-1
+this.PDU_CDMA_MSG_CATEGORY_UNSPEC = 0x00; // Unknown/Unspecified
+
+// Address Information, Digit Mode, as defined in 3GPP2 C.S0015-A v2.0, sec 3.4.3.3
+this.PDU_CDMA_MSG_ADDR_DIGIT_MODE_DTMF = 0x00;      // Digit Mode : DTMF
+this.PDU_CDMA_MSG_ADDR_DIGIT_MODE_ASCII = 0x01;     // Digit Mode : 8-bit ASCII with MSB = 0
+
+// Address Information, Number Mode, as defined in 3GPP2 C.S0015-A v2.0, sec 3.4.3.3
+this.PDU_CDMA_MSG_ADDR_NUMBER_MODE_ANSI = 0x00;     // Number Mode : ANSI T1.607-2000(R2004)
+this.PDU_CDMA_MSG_ADDR_NUMBER_MODE_ASCII = 0x01;    // Number Mode : Data network address format
+
+// Address Information, Number Type, as defined in 3GPP2 C.S0015-A v2.0, Table 3.4.3.3-1
+this.PDU_CDMA_MSG_ADDR_NUMBER_TYPE_UNKNOWN = 0x00;        // Number Type : Unknown
+this.PDU_CDMA_MSG_ADDR_NUMBER_TYPE_INTERNATIONAL = 0x01;  // Number Type : Internaltional number(+XXXXX)
+this.PDU_CDMA_MSG_ADDR_NUMBER_TYPE_NATIONAL = 0x02;       // Number Type : National number
+
+// Address Information, Number Plan, as defined in 3GPP2 C.S0005-D v2.0, Table 2.7.1.3.2.4-3
+this.PDU_CDMA_MSG_ADDR_NUMBER_PLAN_UNKNOWN = 0x00;  // Number Plan : Unknown
+this.PDU_CDMA_MSG_ADDR_NUMBER_PLAN_ISDN = 0x01;     // Number Plan : ISDN/Telephony numbering plan
+
+// SMS Encoding, as defined in 3GPP2 C.R1001-D, Table 9.1-1
+this.PDU_CDMA_MSG_CODING_OCTET = 0x00;        // octet(8-bit), Not tested
+this.PDU_CDMA_MSG_CODING_IS_91 = 0x01;        // IS-91 Extended Protocol Message(variable), Not tested
+this.PDU_CDMA_MSG_CODING_7BITS_ASCII = 0x02;  // 7-bit ASCII(7-bit)
+this.PDU_CDMA_MSG_CODING_IA5 = 0x03;          // IA5(7-bit), Not tested
+this.PDU_CDMA_MSG_CODING_UNICODE = 0x04;      // Unicode(16-bit)
+this.PDU_CDMA_MSG_CODING_SHIFT_JIS = 0x05;    // Shift-6 JIS(8/16-bit variable), Not supported
+this.PDU_CDMA_MSG_CODING_KOREAN = 0x06;       // Korean(8/16-bit variable), Not supported
+this.PDU_CDMA_MSG_CODING_LATIN_HEBREW = 0x07; // Latin/ Hebrew(8-bit), ISO/IEC 8859-8, Not supported
+this.PDU_CDMA_MSG_CODING_LATIN = 0x08;        // Latin(8-bit), ISO/IEC 8859-1, Not tested
+this.PDU_CDMA_MSG_CODING_7BITS_GSM = 0x09;    // GSM 7-bit default alphabet(7-bit), Not tested
+this.PDU_CDMA_MSG_CODING_GSM_DCS = 0x0A;      // GSM Data-Coding-Scheme, Not supported
+
+// SMS Message Type, as defined in 3GPP2 C.S0015-A v2.0, Table 4.5.1-1
+this.PDU_CDMA_MSG_TYPE_DELIVER = 0x01;        // Receive
+this.PDU_CDMA_MSG_TYPE_SUBMIT = 0x02;         // Send
+
+// SMS User Data Subparameters, as defined in 3GPP2 C.S0015-A v2.0, Table 4.5-1
+this.PDU_CDMA_MSG_USERDATA_MSG_ID = 0x00;           // Message Identifier
+this.PDU_CDMA_MSG_USERDATA_BODY = 0x01;             // User Data Body
+this.PDU_CDMA_MSG_USERDATA_TIMESTAMP = 0x03;        // Message Center Time Stamp
+this.PDU_CDMA_REPLY_OPTION = 0x0A;                  // Reply Option
+this.PDU_CDMA_MSG_USERDATA_CALLBACK_NUMBER = 0x0E;  // Callback Number
+
+// IS-91 Message Type, as defined in TIA/EIA/IS-91-A, Table 9
+this.PDU_CDMA_MSG_CODING_IS_91_TYPE_VOICEMAIL_STATUS = 0x82;
+this.PDU_CDMA_MSG_CODING_IS_91_TYPE_SMS_FULL = 0x83;
+this.PDU_CDMA_MSG_CODING_IS_91_TYPE_CLI = 0x84;
+this.PDU_CDMA_MSG_CODING_IS_91_TYPE_SMS = 0x85;
+
 // Allow this file to be imported via Components.utils.import().
 this.EXPORTED_SYMBOLS = Object.keys(this);

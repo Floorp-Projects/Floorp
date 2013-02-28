@@ -134,7 +134,7 @@ private:
   void SetCurrentPosition(nsIContent* aScrollbar, int32_t aNewPos, bool aIsSmooth);
   void SetCurrentPositionInternal(nsIContent* aScrollbar, int32_t pos,
                                   bool aIsSmooth);
-  nsresult CurrentPositionChanged(nsPresContext* aPresContext);
+  void CurrentPositionChanged();
 
   void DragThumb(bool aGrabMouseEvents);
   void AddListener();

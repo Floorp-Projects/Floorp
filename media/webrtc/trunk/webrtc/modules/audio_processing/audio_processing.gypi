@@ -177,11 +177,14 @@
               'audio_processing_offsets',
             ],
             # TODO(kma): port this block from Android into other build systems.
-            'sources': [
+	    #
+	    # We disable the ASM source, because our gyp->Makefile translator
+	    # does not support the build steps to get the asm offsets.
+            'sources!': [
               'aecm/aecm_core_neon.S',
               'ns/nsx_core_neon.S',
             ],
-            'sources!': [
+            'sources': [
               'aecm/aecm_core_neon.c',
               'ns/nsx_core_neon.c',
             ],
