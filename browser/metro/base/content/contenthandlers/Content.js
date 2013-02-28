@@ -498,7 +498,7 @@ let Content = {
         // This is the "Why is this site blocked" button.  For malware,
         // we can fetch a site-specific report, for phishing, we redirect
         // to the generic page describing phishing protection.
-        let action = isMalware ? "report-malware" : "report-phising";
+        let action = isMalware ? "report-malware" : "report-phishing";
         sendAsyncMessage("Browser:BlockedSite",
                          { url: errorDoc.location.href, action: action });
       } else if (ot == errorDoc.getElementById("ignoreWarningButton")) {

@@ -7,7 +7,7 @@ package org.mozilla.gecko.sync.setup.auth;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.setup.activities.AccountActivity;

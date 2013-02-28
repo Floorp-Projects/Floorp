@@ -243,9 +243,7 @@ nsInlineFrame::ReparentFloatsForInlineChild(nsIFrame* aOurLineContainer,
   }
 
   nsIFrame* ancestor = aFrame;
-  nsIFrame* ancestorBlockChild;
   do {
-    ancestorBlockChild = ancestor;
     ancestor = ancestor->GetParent();
     if (!ancestor)
       return;
@@ -259,11 +257,8 @@ nsInlineFrame::ReparentFloatsForInlineChild(nsIFrame* aOurLineContainer,
   nsBlockFrame* frameBlock = nsLayoutUtils::GetAsBlock(ancestor);
   NS_ASSERTION(frameBlock, "ancestor not a block");
 
-  const nsFrameList& blockChildren(ancestor->PrincipalChildList());
-  bool isOverflow = !blockChildren.ContainsFrame(ancestorBlockChild);
-
   while (true) {
-    ourBlock->ReparentFloats(aFrame, frameBlock, isOverflow, false);
+    ourBlock->ReparentFloats(aFrame, frameBlock, false);
 
     if (!aReparentSiblings)
       return;

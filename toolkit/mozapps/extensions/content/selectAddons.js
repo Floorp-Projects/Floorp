@@ -74,7 +74,7 @@ var gChecking = {
       }
 
       aAddons = aAddons.filter(function gChecking_filterAddons(aAddon) {
-        if (aAddon.type == "plugin")
+        if (aAddon.type == "plugin" || aAddon.type == "service")
           return false;
 
         if (aAddon.type == "theme") {

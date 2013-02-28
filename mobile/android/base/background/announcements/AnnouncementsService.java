@@ -10,9 +10,9 @@ import java.net.URI;
 import java.util.List;
 import java.util.Locale;
 
-import org.mozilla.gecko.background.BackgroundConstants;
 import org.mozilla.gecko.background.BackgroundService;
-import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.background.common.GlobalConstants;
+import org.mozilla.gecko.background.common.log.Logger;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -142,7 +142,7 @@ public class AnnouncementsService extends BackgroundService implements Announcem
   }
 
   private SharedPreferences getSharedPreferences() {
-    return this.getSharedPreferences(AnnouncementsConstants.PREFS_BRANCH, BackgroundConstants.SHARED_PREFERENCES_MODE);
+    return this.getSharedPreferences(AnnouncementsConstants.PREFS_BRANCH, GlobalConstants.SHARED_PREFERENCES_MODE);
   }
 
   @Override

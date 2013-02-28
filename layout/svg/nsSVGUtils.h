@@ -231,6 +231,30 @@ public:
                                             const nsIntRect &rect);
 
   /*
+   * Converts image data from sRGB to luminance
+   */
+  static void ComputesRGBLuminanceMask(uint8_t *aData,
+                                       int32_t aStride,
+                                       const nsIntRect &aRect,
+                                       float aOpacity);
+
+  /*
+   * Converts image data from sRGB to luminance assuming
+   * Linear RGB Interpolation
+   */
+  static void ComputeLinearRGBLuminanceMask(uint8_t *aData,
+                                            int32_t aStride,
+                                            const nsIntRect &aRect,
+                                            float aOpacity);
+  /*
+   * Converts image data to luminance using the value of alpha as luminance
+   */
+  static void ComputeAlphaMask(uint8_t *aData,
+                               int32_t aStride,
+                               const nsIntRect &aRect,
+                               float aOpacity);
+
+  /*
    * Converts a nsStyleCoord into a userspace value.  Handles units
    * Factor (straight userspace), Coord (dimensioned), and Percent (of
    * the current SVG viewport)

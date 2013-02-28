@@ -7,8 +7,8 @@ package org.mozilla.gecko.sync.jpake.stage;
 import java.io.UnsupportedEncodingException;
 
 import org.mozilla.apache.commons.codec.binary.Base64;
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
-import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.CryptoInfo;

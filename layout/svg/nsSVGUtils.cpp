@@ -304,6 +304,92 @@ nsSVGUtils::ConvertImageDataFromLinearRGB(uint8_t *data,
   }
 }
 
+void
+nsSVGUtils::ComputesRGBLuminanceMask(uint8_t *aData,
+                                     int32_t aStride,
+                                     const nsIntRect &aRect,
+                                     float aOpacity)
+{
+  for (int32_t y = aRect.y; y < aRect.YMost(); y++) {
+    for (int32_t x = aRect.x; x < aRect.XMost(); x++) {
+      uint8_t *pixel = aData + aStride * y + 4 * x;
+      uint8_t a = pixel[GFX_ARGB32_OFFSET_A];
+
+      uint8_t luminance;
+      if (a) {
+        /* sRGB -> intensity (unpremultiply cancels out the
+         * (a/255.0) multiplication with aOpacity */
+        luminance =
+          static_cast<uint8_t>
+                     ((pixel[GFX_ARGB32_OFFSET_R] * 0.2125 +
+                          pixel[GFX_ARGB32_OFFSET_G] * 0.7154 +
+                          pixel[GFX_ARGB32_OFFSET_B] * 0.0721) *
+                          aOpacity);
+      } else {
+        luminance = 0;
+      }
+
+      memset(pixel, luminance, 4);
+    }
+  }
+}
+
+void
+nsSVGUtils::ComputeLinearRGBLuminanceMask(uint8_t *aData,
+                                          int32_t aStride,
+                                          const nsIntRect &aRect,
+                                          float aOpacity)
+{
+  for (int32_t y = aRect.y; y < aRect.YMost(); y++) {
+    for (int32_t x = aRect.x; x < aRect.XMost(); x++) {
+      uint8_t *pixel = aData + aStride * y + 4 * x;
+      uint8_t a = pixel[GFX_ARGB32_OFFSET_A];
+
+      uint8_t luminance;
+      // unpremultiply
+      if (a) {
+        if (a != 255) {
+          pixel[GFX_ARGB32_OFFSET_B] =
+            (255 * pixel[GFX_ARGB32_OFFSET_B]) / a;
+          pixel[GFX_ARGB32_OFFSET_G] =
+            (255 * pixel[GFX_ARGB32_OFFSET_G]) / a;
+          pixel[GFX_ARGB32_OFFSET_R] =
+            (255 * pixel[GFX_ARGB32_OFFSET_R]) / a;
+        }
+
+        /* sRGB -> linearRGB -> intensity */
+        luminance =
+          static_cast<uint8_t>
+                     ((gsRGBToLinearRGBMap[pixel[GFX_ARGB32_OFFSET_R]] *
+                          0.2125 +
+                          gsRGBToLinearRGBMap[pixel[GFX_ARGB32_OFFSET_G]] *
+                          0.7154 +
+                          gsRGBToLinearRGBMap[pixel[GFX_ARGB32_OFFSET_B]] *
+                          0.0721) * (a / 255.0) * aOpacity);
+      } else {
+        luminance = 0;
+      }
+
+      memset(pixel, luminance, 4);
+    }
+  }
+}
+
+void
+nsSVGUtils::ComputeAlphaMask(uint8_t *aData,
+                             int32_t aStride,
+                             const nsIntRect &aRect,
+                             float aOpacity)
+{
+  for (int32_t y = aRect.y; y < aRect.YMost(); y++) {
+    for (int32_t x = aRect.x; x < aRect.XMost(); x++) {
+      uint8_t *pixel = aData + aStride * y + 4 * x;
+      uint8_t luminance = pixel[GFX_ARGB32_OFFSET_A] * aOpacity;
+      memset(pixel, luminance, 4);
+    }
+  }
+}
+
 float
 nsSVGUtils::CoordToFloat(nsPresContext *aPresContext,
                          nsSVGElement *aContent,

@@ -7,8 +7,8 @@ package org.mozilla.gecko.background.announcements;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
-import org.mozilla.gecko.sync.Logger;
 
 /**
  * Represents a retrieved product announcement.

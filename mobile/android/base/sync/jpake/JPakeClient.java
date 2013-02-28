@@ -11,8 +11,8 @@ import java.util.Queue;
 
 import org.json.simple.JSONObject;
 import org.mozilla.apache.commons.codec.binary.Base64;
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
-import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.CryptoException;

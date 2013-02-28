@@ -101,20 +101,6 @@ nsFrameList::RemoveFrame(nsIFrame* aFrame)
   }
 }
 
-bool
-nsFrameList::RemoveFrameIfPresent(nsIFrame* aFrame)
-{
-  NS_PRECONDITION(aFrame, "null ptr");
-
-  for (Enumerator e(*this); !e.AtEnd(); e.Next()) {
-    if (e.get() == aFrame) {
-      RemoveFrame(aFrame);
-      return true;
-    }
-  }
-  return false;
-}
-
 nsFrameList
 nsFrameList::RemoveFramesAfter(nsIFrame* aAfterFrame)
 {
@@ -154,18 +140,6 @@ nsFrameList::DestroyFrame(nsIFrame* aFrame)
   NS_PRECONDITION(aFrame, "null ptr");
   RemoveFrame(aFrame);
   aFrame->Destroy();
-}
-
-bool
-nsFrameList::DestroyFrameIfPresent(nsIFrame* aFrame)
-{
-  NS_PRECONDITION(aFrame, "null ptr");
-
-  if (RemoveFrameIfPresent(aFrame)) {
-    aFrame->Destroy();
-    return true;
-  }
-  return false;
 }
 
 nsFrameList::Slice
@@ -349,6 +323,17 @@ nsFrameList::ApplySetParent(nsIFrame* aParent) const
   for (nsIFrame* f = FirstChild(); f; f = f->GetNextSibling()) {
     f->SetParent(aParent);
   }
+}
+
+/* static */ void
+nsFrameList::UnhookFrameFromSiblings(nsIFrame* aFrame)
+{
+  MOZ_ASSERT(aFrame->GetPrevSibling() && aFrame->GetNextSibling());
+  nsIFrame* const nextSibling = aFrame->GetNextSibling();
+  nsIFrame* const prevSibling = aFrame->GetPrevSibling();
+  aFrame->SetNextSibling(nullptr);
+  prevSibling->SetNextSibling(nextSibling);
+  MOZ_ASSERT(!aFrame->GetPrevSibling() && !aFrame->GetNextSibling());
 }
 
 #ifdef DEBUG

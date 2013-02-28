@@ -444,49 +444,6 @@ this.PlacesUtils = {
   },
 
   /**
-   * Determines if a container item id is a livemark.
-   * @param aItemId
-   *        The id of the potential livemark.
-   * @returns true if the item is a livemark.
-   * @deprecated see the new API in mozIAsyncLivemarks.
-   */
-  itemIsLivemark: function PU_itemIsLivemark(aItemId) {
-    Cu.reportError("Synchronous livemarks methods and PlacesUtils livemarks " +
-                   "utils (itemIsLivemark, nodeIsLivemarkContainer, " +
-                   "nodeIsLivemarkItem) are deprecated and will be removed " +
-                   "in a future release.");
-    // If the Livemark service hasn't yet been initialized then
-    // use the annotations service directly to avoid instanciating
-    // it on startup. (bug 398300)
-    if (Object.getOwnPropertyDescriptor(this, "livemarks").value === undefined)
-      return this.annotations.itemHasAnnotation(aItemId, this.LMANNO_FEEDURI);
-    // If the livemark service has already been instanciated, use it.
-    return this.livemarks.isLivemark(aItemId);
-  },
-
-  /**
-   * Determines whether a result node is a livemark container.
-   * @param aNode
-   *        A result Node
-   * @returns true if the node is a livemark container item
-   * @deprecated see the new API in mozIAsyncLivemarks.
-   */
-  nodeIsLivemarkContainer: function PU_nodeIsLivemarkContainer(aNode) {
-    return this.nodeIsFolder(aNode) && this.itemIsLivemark(aNode.itemId);
-  },
-
- /**
-  * Determines whether a result node is a livemark item
-  * @param aNode
-  *        A result node
-  * @returns true if the node is a livemark container item
-   * @deprecated see the new API in mozIAsyncLivemarks.
-  */
-  nodeIsLivemarkItem: function PU_nodeIsLivemarkItem(aNode) {
-    return aNode.parent && this.nodeIsLivemarkContainer(aNode.parent);
-  },
-
-  /**
    * Determines whether or not a node is a readonly folder.
    * @param   aNode
    *          The node to test.
@@ -2191,8 +2148,7 @@ XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "tagging",
 
 XPCOMUtils.defineLazyGetter(PlacesUtils, "livemarks", function() {
   return Cc["@mozilla.org/browser/livemark-service;2"].
-         getService(Ci.nsILivemarkService).
-         QueryInterface(Ci.mozIAsyncLivemarks);
+         getService(Ci.mozIAsyncLivemarks);
 });
 
 XPCOMUtils.defineLazyGetter(PlacesUtils, "transactionManager", function() {

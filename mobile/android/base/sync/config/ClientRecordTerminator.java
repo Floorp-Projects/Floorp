@@ -6,8 +6,8 @@ package org.mozilla.gecko.sync.config;
 
 import java.net.URI;
 
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.GlobalSession;
-import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.SyncStorageRecordRequest;
 import org.mozilla.gecko.sync.net.SyncStorageRequestDelegate;

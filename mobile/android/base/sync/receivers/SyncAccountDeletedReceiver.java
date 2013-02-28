@@ -4,7 +4,7 @@
 
 package org.mozilla.gecko.sync.receivers;
 
-import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.background.common.log.Logger;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

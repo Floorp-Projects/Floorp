@@ -5,7 +5,7 @@
 package org.mozilla.gecko.sync.setup.activities;
 
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.background.common.log.Logger;
 
 import android.app.Activity;
 import android.net.Uri;
