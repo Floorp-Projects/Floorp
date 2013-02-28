@@ -59,9 +59,10 @@ class BackendMakeFile(object):
     of date during recursion.
     """
 
-    def __init__(self, srcdir, objdir):
+    def __init__(self, srcdir, objdir, environment):
         self.srcdir = srcdir
         self.objdir = objdir
+        self.environment = environment
         self.path = os.path.join(objdir, 'backend.mk')
 
         # Filenames that influenced the content of this file.
@@ -130,7 +131,7 @@ class RecursiveMakeBackend(BuildBackend):
         """Write out build files necessary to build with recursive make."""
 
         backend_file = self._backend_files.get(obj.srcdir,
-            BackendMakeFile(obj.srcdir, obj.objdir))
+            BackendMakeFile(obj.srcdir, obj.objdir, self.get_environment(obj)))
 
         # Define the paths that will trigger a backend rebuild. We always
         # add autoconf.mk because that is proxy for CONFIG. We can't use
@@ -144,7 +145,7 @@ class RecursiveMakeBackend(BuildBackend):
         elif isinstance(obj, ConfigFileSubstitution):
             backend_file.write('SUBSTITUTE_FILES += %s\n' % obj.relpath)
 
-            self.environment.create_config_file(obj.output_path)
+            backend_file.environment.create_config_file(obj.output_path)
 
         self._backend_files[obj.srcdir] = backend_file
 
@@ -163,7 +164,7 @@ class RecursiveMakeBackend(BuildBackend):
             out_path = os.path.join(bf.objdir, 'Makefile')
             self.log(logging.DEBUG, 'create_makefile', {'path': out_path},
                 'Generating makefile: {path}')
-            self.environment.create_config_file(out_path)
+            bf.environment.create_config_file(out_path)
 
             bf.write('SUBSTITUTE_FILES += Makefile\n')
             bf.close()

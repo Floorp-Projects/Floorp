@@ -4296,6 +4296,12 @@ case "${target}" in
 
 esac
 
+MOZ_ARG_WITH_STRING(external-source-dir,
+[  --with-external-source-dir=dir
+                          External directory containing additional build files.],
+[ EXTERNAL_SOURCE_DIR=$withval])
+AC_SUBST(EXTERNAL_SOURCE_DIR)
+
 MOZ_ARG_ENABLE_STRING(application,
 [  --enable-application=APP
                           Options include:

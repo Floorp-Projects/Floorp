@@ -209,6 +209,7 @@ if CONFIG['MOZ_GIO_COMPONENT']:
 # Applications can cheat and ask for code to be
 # built before libxul so it can be linked into libxul.
 add_tier_dir('platform', app_libxul_dirs)
+add_tier_dir('platform', app_libxul_static_dirs, static=True)
 
 add_tier_dir('platform', 'toolkit/library')
 add_tier_dir('platform', 'xpcom/stub')
