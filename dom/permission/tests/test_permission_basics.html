@@ -21,12 +21,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={770731}
 
 "use strict";
 
-if (navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 34);
-} else {
-  SimpleTest.expectAssertions(0, 1);
-}
-
 var testPrivApp = {
   'manifestURL' : 'https://aprivileged.com/manifest.webapp'
 };
