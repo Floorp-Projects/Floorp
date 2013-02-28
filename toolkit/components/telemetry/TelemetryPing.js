@@ -175,6 +175,7 @@ TelemetryPing.prototype = {
   _pingsLoaded: 0,
   // The number of those requests that have actually completed.
   _pingLoadsCompleted: 0,
+  _savedProfileDirectory: null,
 
   /**
    * Gets a series of simple measurements (counters). At the moment, this
@@ -940,8 +941,7 @@ TelemetryPing.prototype = {
   },
 
   ensurePingDirectory: function ensurePingDirectory() {
-    let profileDirectory = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
-    let directory = profileDirectory.clone();
+    let directory = this._savedProfileDirectory.clone();
     directory.append("saved-telemetry-pings");
     try {
       directory.create(Ci.nsIFile.DIRECTORY_TYPE, RWX_OWNER);
@@ -1040,6 +1040,10 @@ TelemetryPing.prototype = {
     this.sendIdlePing(true, server);
   },
 
+  cacheProfileDirectory: function cacheProfileDirectory() {
+    this._savedProfileDirectory = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+  },
+
   /**
    * This observer drives telemetry.
    */
@@ -1047,6 +1051,7 @@ TelemetryPing.prototype = {
     switch (aTopic) {
     case "profile-after-change":
       this.setup();
+      this.cacheProfileDirectory();
       break;
     case "profile-before-change":
       this.uninstall();
