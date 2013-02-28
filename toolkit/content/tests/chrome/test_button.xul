@@ -28,8 +28,8 @@
 <script type="application/javascript">
 <![CDATA[
 
-if (navigator.platform.startsWith("Linux")) {
-  SimpleTest.expectAssertions(0, 2);
+if (navigator.platform.startsWith("Mac")) {
+  SimpleTest.expectAssertions(0, 7);
 } else {
   SimpleTest.expectAssertions(0, 5);
 }
