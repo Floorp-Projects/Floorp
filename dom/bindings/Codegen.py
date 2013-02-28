@@ -5179,24 +5179,16 @@ ${doConversionsToJS}
         (templateVars, type) = arg
         assert not type.nullable() # flatMemberTypes never has nullable types
         val = "mValue.m%(name)s.Value()" % templateVars
-        if type.isString():
-            # XPConnect string-to-JS conversion wants to mutate the string.  So
-            # let's give it a string it can mutate
-            # XXXbz if we try to do a sequence of strings, this will kinda fail.
-            prepend = "nsString mutableStr(%s);\n" % val
-            val = "mutableStr"
-        else:
-            prepend = ""
-            if type.isObject():
-                # We'll have a NonNull<JSObject> while the wrapping code
-                # wants a JSObject*
-                val = "%s.get()" % val
-            elif type.isSpiderMonkeyInterface():
-                # We have a NonNull<TypedArray> object while the wrapping code
-                # wants a JSObject*.  Cheat with .get() so we don't have to
-                # figure out the right reference type to cast to.
-                val = "%s.get()->Obj()" % val
-        wrapCode = prepend + wrapForType(
+        if type.isObject():
+            # We'll have a NonNull<JSObject> while the wrapping code
+            # wants a JSObject*
+            val = "%s.get()" % val
+        elif type.isSpiderMonkeyInterface():
+            # We have a NonNull<TypedArray> object while the wrapping code
+            # wants a JSObject*.  Cheat with .get() so we don't have to
+            # figure out the right reference type to cast to.
+            val = "%s.get()->Obj()" % val
+        wrapCode = wrapForType(
             type, self.descriptorProvider,
             {
                 "jsvalRef": "*vp",
