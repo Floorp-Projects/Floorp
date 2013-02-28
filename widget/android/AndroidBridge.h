@@ -256,7 +256,7 @@ public:
 
     // Switch Java to composite with the Gecko Compositor thread
     void RegisterCompositor(JNIEnv* env = NULL);
-    EGLSurface ProvideEGLSurface(bool waitUntilValid);
+    EGLSurface ProvideEGLSurface();
 
     bool GetStaticStringField(const char *classID, const char *field, nsAString &result, JNIEnv* env = nullptr);
 

@@ -22,10 +22,8 @@ public:
 
     void Acquire(JNIEnv* aJEnv, jobject aJObj);
     EGLSurface ProvideEGLSurface();
-    void WaitForValidSurface();
 
 private:
-    static jmethodID jWaitForValidSurfaceMethod;
     static jmethodID jProvideEGLSurfaceMethod;
 
     // the JNIEnv for the compositor thread
