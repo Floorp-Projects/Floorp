@@ -7,8 +7,10 @@
 #include "nsTraversal.h"
 
 #include "nsIDOMNode.h"
+#include "nsIDOMNodeFilter.h"
 #include "nsError.h"
 #include "nsINode.h"
+#include "mozilla/dom/NodeFilterBinding.h"
 #include "mozilla/AutoRestore.h"
 
 #include "nsGkAtoms.h"
@@ -36,42 +38,37 @@ nsTraversal::~nsTraversal()
  * Tests if and how a node should be filtered. Uses mWhatToShow and
  * mFilter to test the node.
  * @param aNode     Node to test
- * @param aResult   Whether we succeeded
- * @returns         Filtervalue. See nsIDOMNodeFilter.idl
+ * @param _filtered Returned filtervalue. See nsIDOMNodeFilter.idl
+ * @returns         Errorcode
  */
-int16_t
-nsTraversal::TestNode(nsINode* aNode, mozilla::ErrorResult& aResult)
+nsresult nsTraversal::TestNode(nsINode* aNode, int16_t* _filtered)
 {
-    if (mInAcceptNode) {
-        aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-        return 0;
-    }
+    NS_ENSURE_TRUE(!mInAcceptNode, NS_ERROR_DOM_INVALID_STATE_ERR);
+
+    *_filtered = nsIDOMNodeFilter::FILTER_SKIP;
 
     uint16_t nodeType = aNode->NodeType();
 
     if (nodeType <= 12 && !((1 << (nodeType-1)) & mWhatToShow)) {
-        return nsIDOMNodeFilter::FILTER_SKIP;
+        return NS_OK;
     }
 
     if (!mFilter.GetISupports()) {
         // No filter, just accept
-        return nsIDOMNodeFilter::FILTER_ACCEPT;
+        *_filtered = nsIDOMNodeFilter::FILTER_ACCEPT;
+        return NS_OK;
     }
 
     if (mFilter.HasWebIDLCallback()) {
         AutoRestore<bool> inAcceptNode(mInAcceptNode);
         mInAcceptNode = true;
-        return mFilter.GetWebIDLCallback()->
-            AcceptNode(*aNode, aResult, CallbackObject::eRethrowExceptions);
+        ErrorResult res;
+        *_filtered = mFilter.GetWebIDLCallback()->AcceptNode(*aNode, res);
+        return res.ErrorCode();
     }
 
     nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aNode);
     AutoRestore<bool> inAcceptNode(mInAcceptNode);
     mInAcceptNode = true;
-    int16_t filtered;
-    nsresult rv = mFilter.GetXPCOMCallback()->AcceptNode(domNode, &filtered);
-    if (NS_FAILED(rv)) {
-        aResult.Throw(rv);
-    }
-    return filtered;
+    return mFilter.GetXPCOMCallback()->AcceptNode(domNode, _filtered);
 }

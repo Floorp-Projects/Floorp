@@ -51,9 +51,7 @@ EXPORTS_mozilla/dom = \
   DOMImplementation.h \
   EventSource.h \
   Link.h \
-  NodeIterator.h \
   Text.h \
-  TreeWalker.h \
   $(NULL)
 
 CPPSRCS		= \
@@ -109,7 +107,7 @@ CPPSRCS		= \
 		nsNoDataProtocolContentPolicy.cpp \
 		nsNodeInfo.cpp \
 		nsNodeInfoManager.cpp \
-		NodeIterator.cpp \
+		nsNodeIterator.cpp \
 		nsNodeUtils.cpp \
 		nsObjectLoadingContent.cpp \
 		nsPlainTextSerializer.cpp \
@@ -128,7 +126,7 @@ CPPSRCS		= \
 		nsTextNode.cpp \
 		nsTraversal.cpp \
 		nsTreeSanitizer.cpp \
-		TreeWalker.cpp \
+		nsTreeWalker.cpp \
                 nsViewportInfo.cpp \
 		WebSocket.cpp \
 		nsXHTMLContentSerializer.cpp \

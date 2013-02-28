@@ -474,7 +474,6 @@ Toolbox.prototype = {
       iframe.className = "toolbox-panel-iframe";
       iframe.id = "toolbox-panel-iframe-" + id;
       iframe.setAttribute("flex", 1);
-      iframe.setAttribute("forceOwnRefreshDriver", "");
 
       let vbox = this.doc.getElementById("toolbox-panel-" + id);
       vbox.appendChild(iframe);
