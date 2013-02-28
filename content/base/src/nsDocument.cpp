@@ -56,9 +56,9 @@
 #include "nsRange.h"
 #include "nsIDOMText.h"
 #include "nsIDOMComment.h"
-#include "DocumentType.h"
+#include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/NodeIterator.h"
-#include "nsTreeWalker.h"
+#include "mozilla/dom/TreeWalker.h"
 
 #include "nsIServiceManager.h"
 
@@ -5417,7 +5417,7 @@ nsDocument::CreateTreeWalker(nsIDOMNode *aRoot,
 already_AddRefed<nsIDOMTreeWalker>
 nsIDocument::CreateTreeWalker(nsINode& aRoot, uint32_t aWhatToShow,
                               NodeFilter* aFilter,
-                              mozilla::ErrorResult& rv) const
+                              ErrorResult& rv) const
 {
   NodeFilterHolder holder(aFilter);
   // We don't really know how to handle WebIDL callbacks yet, in
@@ -5430,7 +5430,7 @@ nsIDocument::CreateTreeWalker(nsINode& aRoot, uint32_t aWhatToShow,
 already_AddRefed<nsIDOMTreeWalker>
 nsIDocument::CreateTreeWalker(nsINode& aRoot, uint32_t aWhatToShow,
                               const NodeFilterHolder& aFilter,
-                              mozilla::ErrorResult& rv) const
+                              ErrorResult& rv) const
 {
   nsINode* root = &aRoot;
   nsresult res = nsContentUtils::CheckSameOrigin(this, root);
@@ -5439,7 +5439,7 @@ nsIDocument::CreateTreeWalker(nsINode& aRoot, uint32_t aWhatToShow,
     return nullptr;
   }
 
-  nsRefPtr<nsTreeWalker> walker = new nsTreeWalker(root, aWhatToShow, aFilter);
+  nsRefPtr<TreeWalker> walker = new TreeWalker(root, aWhatToShow, aFilter);
   return walker.forget();
 }
 

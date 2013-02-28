@@ -8,7 +8,7 @@
  * Implementation of DOM Traversal's nsIDOMTreeWalker
  */
 
-#include "nsTreeWalker.h"
+#include "mozilla/dom/TreeWalker.h"
 
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeFilter.h"
@@ -18,21 +18,24 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/NodeFilterBinding.h"
 
-using namespace mozilla::dom;
+DOMCI_DATA(TreeWalker, mozilla::dom::TreeWalker)
+
+namespace mozilla {
+namespace dom {
 
 /*
  * Factories, constructors and destructors
  */
 
-nsTreeWalker::nsTreeWalker(nsINode *aRoot,
-                           uint32_t aWhatToShow,
-                           const NodeFilterHolder &aFilter) :
+TreeWalker::TreeWalker(nsINode *aRoot,
+                       uint32_t aWhatToShow,
+                       const NodeFilterHolder &aFilter) :
     nsTraversal(aRoot, aWhatToShow, aFilter),
     mCurrentNode(aRoot)
 {
 }
 
-nsTreeWalker::~nsTreeWalker()
+TreeWalker::~TreeWalker()
 {
     /* destructor code */
 }
@@ -41,19 +44,20 @@ nsTreeWalker::~nsTreeWalker()
  * nsISupports and cycle collection stuff
  */
 
-NS_IMPL_CYCLE_COLLECTION_3(nsTreeWalker, mFilter, mCurrentNode, mRoot)
+NS_IMPL_CYCLE_COLLECTION_3(TreeWalker, mFilter, mCurrentNode, mRoot)
 
-DOMCI_DATA(TreeWalker, nsTreeWalker)
-
-// QueryInterface implementation for nsTreeWalker
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTreeWalker)
+// QueryInterface implementation for TreeWalker
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TreeWalker)
     NS_INTERFACE_MAP_ENTRY(nsIDOMTreeWalker)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMTreeWalker)
     NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(TreeWalker)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTreeWalker)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTreeWalker)
+// Have to pass in dom::TreeWalker because a11y has an a11y::TreeWalker that
+// passes TreeWalker so refcount logging would get confused on the name
+// collision.
+NS_IMPL_CYCLE_COLLECTING_ADDREF(dom::TreeWalker)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(dom::TreeWalker)
 
 
 
@@ -62,7 +66,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTreeWalker)
  */
 
 /* readonly attribute nsIDOMNode root; */
-NS_IMETHODIMP nsTreeWalker::GetRoot(nsIDOMNode * *aRoot)
+NS_IMETHODIMP TreeWalker::GetRoot(nsIDOMNode * *aRoot)
 {
     if (mRoot) {
         return CallQueryInterface(mRoot, aRoot);
@@ -74,14 +78,14 @@ NS_IMETHODIMP nsTreeWalker::GetRoot(nsIDOMNode * *aRoot)
 }
 
 /* readonly attribute unsigned long whatToShow; */
-NS_IMETHODIMP nsTreeWalker::GetWhatToShow(uint32_t *aWhatToShow)
+NS_IMETHODIMP TreeWalker::GetWhatToShow(uint32_t *aWhatToShow)
 {
     *aWhatToShow = mWhatToShow;
     return NS_OK;
 }
 
 /* readonly attribute nsIDOMNodeFilter filter; */
-NS_IMETHODIMP nsTreeWalker::GetFilter(nsIDOMNodeFilter * *aFilter)
+NS_IMETHODIMP TreeWalker::GetFilter(nsIDOMNodeFilter * *aFilter)
 {
     NS_ENSURE_ARG_POINTER(aFilter);
 
@@ -91,7 +95,7 @@ NS_IMETHODIMP nsTreeWalker::GetFilter(nsIDOMNodeFilter * *aFilter)
 }
 
 /* attribute nsIDOMNode currentNode; */
-NS_IMETHODIMP nsTreeWalker::GetCurrentNode(nsIDOMNode * *aCurrentNode)
+NS_IMETHODIMP TreeWalker::GetCurrentNode(nsIDOMNode * *aCurrentNode)
 {
     if (mCurrentNode) {
         return CallQueryInterface(mCurrentNode, aCurrentNode);
@@ -101,7 +105,7 @@ NS_IMETHODIMP nsTreeWalker::GetCurrentNode(nsIDOMNode * *aCurrentNode)
 
     return NS_OK;
 }
-NS_IMETHODIMP nsTreeWalker::SetCurrentNode(nsIDOMNode * aCurrentNode)
+NS_IMETHODIMP TreeWalker::SetCurrentNode(nsIDOMNode * aCurrentNode)
 {
     NS_ENSURE_TRUE(aCurrentNode, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     NS_ENSURE_TRUE(mRoot, NS_ERROR_UNEXPECTED);
@@ -121,7 +125,7 @@ NS_IMETHODIMP nsTreeWalker::SetCurrentNode(nsIDOMNode * aCurrentNode)
  */
 
 /* nsIDOMNode parentNode (); */
-NS_IMETHODIMP nsTreeWalker::ParentNode(nsIDOMNode **_retval)
+NS_IMETHODIMP TreeWalker::ParentNode(nsIDOMNode **_retval)
 {
     *_retval = nullptr;
 
@@ -147,31 +151,31 @@ NS_IMETHODIMP nsTreeWalker::ParentNode(nsIDOMNode **_retval)
 }
 
 /* nsIDOMNode firstChild (); */
-NS_IMETHODIMP nsTreeWalker::FirstChild(nsIDOMNode **_retval)
+NS_IMETHODIMP TreeWalker::FirstChild(nsIDOMNode **_retval)
 {
     return FirstChildInternal(false, _retval);
 }
 
 /* nsIDOMNode lastChild (); */
-NS_IMETHODIMP nsTreeWalker::LastChild(nsIDOMNode **_retval)
+NS_IMETHODIMP TreeWalker::LastChild(nsIDOMNode **_retval)
 {
     return FirstChildInternal(true, _retval);
 }
 
 /* nsIDOMNode previousSibling (); */
-NS_IMETHODIMP nsTreeWalker::PreviousSibling(nsIDOMNode **_retval)
+NS_IMETHODIMP TreeWalker::PreviousSibling(nsIDOMNode **_retval)
 {
     return NextSiblingInternal(true, _retval);
 }
 
 /* nsIDOMNode nextSibling (); */
-NS_IMETHODIMP nsTreeWalker::NextSibling(nsIDOMNode **_retval)
+NS_IMETHODIMP TreeWalker::NextSibling(nsIDOMNode **_retval)
 {
     return NextSiblingInternal(false, _retval);
 }
 
 /* nsIDOMNode previousNode (); */
-NS_IMETHODIMP nsTreeWalker::PreviousNode(nsIDOMNode **_retval)
+NS_IMETHODIMP TreeWalker::PreviousNode(nsIDOMNode **_retval)
 {
     nsresult rv;
     int16_t filtered;
@@ -221,7 +225,7 @@ NS_IMETHODIMP nsTreeWalker::PreviousNode(nsIDOMNode **_retval)
 }
 
 /* nsIDOMNode nextNode (); */
-NS_IMETHODIMP nsTreeWalker::NextNode(nsIDOMNode **_retval)
+NS_IMETHODIMP TreeWalker::NextNode(nsIDOMNode **_retval)
 {
     nsresult rv;
     int16_t filtered = nsIDOMNodeFilter::FILTER_ACCEPT; // pre-init for inner loop
@@ -280,7 +284,7 @@ NS_IMETHODIMP nsTreeWalker::NextNode(nsIDOMNode **_retval)
 }
 
 /*
- * nsTreeWalker helper functions
+ * TreeWalker helper functions
  */
 
 /*
@@ -290,7 +294,7 @@ NS_IMETHODIMP nsTreeWalker::NextNode(nsIDOMNode **_retval)
  * @param _retval   Returned node. Null if no child is found
  * @returns         Errorcode
  */
-nsresult nsTreeWalker::FirstChildInternal(bool aReversed, nsIDOMNode **_retval)
+nsresult TreeWalker::FirstChildInternal(bool aReversed, nsIDOMNode **_retval)
 {
     nsresult rv;
     int16_t filtered;
@@ -352,7 +356,7 @@ nsresult nsTreeWalker::FirstChildInternal(bool aReversed, nsIDOMNode **_retval)
  * @param _retval   Returned node. Null if no child is found
  * @returns         Errorcode
  */
-nsresult nsTreeWalker::NextSiblingInternal(bool aReversed, nsIDOMNode **_retval)
+nsresult TreeWalker::NextSiblingInternal(bool aReversed, nsIDOMNode **_retval)
 {
     nsresult rv;
     int16_t filtered;
@@ -401,3 +405,6 @@ nsresult nsTreeWalker::NextSiblingInternal(bool aReversed, nsIDOMNode **_retval)
             return NS_OK;
     }
 }
+
+} // namespace dom
+} // namespace mozilla
