@@ -175,14 +175,9 @@ void AbortOnBadWrite(int fd, const void *wbuf, size_t count) {
     if (IsIPCWrite(fd, buf))
         return;
 
-    {
-        DebugFDAutoLock lockedScope;
-
-        // Debugging FDs are OK
-        std::vector<int> &Vec = getDebugFDs();
-        if (std::find(Vec.begin(), Vec.end(), fd) != Vec.end())
-            return;
-    }
+    // Debugging FDs are OK
+    if (IsDebugFD(fd))
+        return;
 
     // For writev we pass NULL in wbuf. We should only get here from
     // dbm, and it uses write, so assert that we have wbuf.
