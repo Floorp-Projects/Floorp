@@ -12,7 +12,11 @@
 <pre id="test">
 <script type="application/javascript">
 
-SimpleTest.expectAssertions(11);
+if (navigator.platform.startsWith("Win")) {
+  SimpleTest.expectAssertions(11, 38);
+} else {
+  SimpleTest.expectAssertions(11);
+}
 
 /** Test for Network API **/
 
