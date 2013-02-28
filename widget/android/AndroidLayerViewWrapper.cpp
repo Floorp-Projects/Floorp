@@ -26,7 +26,6 @@ void AndroidEGLObject::Init(JNIEnv* aJEnv) {
     jEGLSurfacePointerField = aJEnv->GetFieldID(jClass, "mEGLSurface", "I");
 }
 
-jmethodID AndroidGLController::jWaitForValidSurfaceMethod = 0;
 jmethodID AndroidGLController::jProvideEGLSurfaceMethod = 0;
 
 void
@@ -36,7 +35,6 @@ AndroidGLController::Init(JNIEnv* aJEnv)
 
     jProvideEGLSurfaceMethod = aJEnv->GetMethodID(jClass, "provideEGLSurface",
                                                   "()Ljavax/microedition/khronos/egl/EGLSurface;");
-    jWaitForValidSurfaceMethod = aJEnv->GetMethodID(jClass, "waitForValidSurface", "()V");
 }
 
 void
@@ -61,12 +59,4 @@ AndroidGLController::ProvideEGLSurface()
         return NULL;
 
     return reinterpret_cast<EGLSurface>(mJEnv->GetIntField(jObj, jEGLSurfacePointerField));
-}
-
-void
-AndroidGLController::WaitForValidSurface()
-{
-    ASSERT_THREAD();
-    AutoLocalJNIFrame jniFrame(mJEnv, 0);
-    mJEnv->CallVoidMethod(mJObj, jWaitForValidSurfaceMethod);
 }
