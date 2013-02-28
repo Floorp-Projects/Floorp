@@ -532,13 +532,26 @@ public:                                                                        \
     return NS_PARTICIPANT_AS(nsXPCOMCycleCollectionParticipant, &p);           \
   }
 
+/**
+ * We use this macro to force that classes that inherit from a ccable class and
+ * declare their own participant declare themselves as inherited cc classes.
+ * To avoid possibly unnecessary vtables we only do this checking in debug
+ * builds.
+ */
+#ifdef DEBUG
+#define NOT_INHERITED_CANT_OVERRIDE virtual void BaseCycleCollectable() MOZ_FINAL {}
+#else
+#define NOT_INHERITED_CANT_OVERRIDE
+#endif
+
 #define NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(_class, _base)                \
 class NS_CYCLE_COLLECTION_INNERCLASS                                           \
  : public nsXPCOMCycleCollectionParticipant                                    \
 {                                                                              \
   NS_DECL_CYCLE_COLLECTION_CLASS_BODY(_class, _base)                           \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                       \
-};
+};                                                                             \
+  NOT_INHERITED_CANT_OVERRIDE
 
 #define NS_DECL_CYCLE_COLLECTION_CLASS(_class)                                 \
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(_class, _class)
@@ -554,7 +567,8 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                            
   static NS_METHOD_(bool) CanSkipInCCImpl(void *p);                              \
   static NS_METHOD_(bool) CanSkipThisImpl(void *p);                              \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                       \
-};
+};                                                                             \
+NOT_INHERITED_CANT_OVERRIDE
 
 #define NS_DECL_CYCLE_COLLECTION_SKIPPABLE_CLASS(_class)                       \
         NS_DECL_CYCLE_COLLECTION_SKIPPABLE_CLASS_AMBIGUOUS(_class, _class)
@@ -566,7 +580,8 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                           \
   NS_DECL_CYCLE_COLLECTION_CLASS_BODY(_class, _base)                           \
   static NS_METHOD_(void) TraceImpl(void *p, TraceCallback cb, void *closure); \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                       \
-};
+};                                                                             \
+NOT_INHERITED_CANT_OVERRIDE
 
 #define NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(_class, _base)   \
 class NS_CYCLE_COLLECTION_INNERCLASS                                                      \
@@ -579,7 +594,8 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                            
   static NS_METHOD_(bool) CanSkipInCCImpl(void *p);                                       \
   static NS_METHOD_(bool) CanSkipThisImpl(void *p);                                       \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                        \
-};
+};                                                                             \
+NOT_INHERITED_CANT_OVERRIDE
 
 #define NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(_class)  \
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(_class, _class)
