@@ -22,8 +22,6 @@
       else {
         if (navigator.platform.startsWith("Win")) {
           SimpleTest.expectAssertions(0, 350);
-        } else {
-          SimpleTest.expectAssertions(0, 1);
         }
 
         setTimeout(checkGCRace, 1000);
