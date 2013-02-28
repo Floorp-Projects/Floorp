@@ -5,6 +5,9 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
+
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLContext;
@@ -18,6 +21,10 @@ public class GLController {
     private LayerView mView;
     private boolean mSurfaceValid;
     private int mWidth, mHeight;
+
+    /* This is written by the compositor thread (while the UI thread
+     * is blocked on it) and read by the UI thread. */
+    private volatile boolean mCompositorCreated;
 
     private EGL10 mEGL;
     private EGLDisplay mEGLDisplay;
@@ -46,7 +53,7 @@ public class GLController {
                 return;
             }
         }
-        mView.getListener().compositionResumeRequested(mWidth, mHeight);
+        resumeCompositor(mWidth, mHeight);
     }
 
     /* Wait until we are allowed to use EGL functions on the Surface backing
@@ -65,6 +72,18 @@ public class GLController {
     synchronized void surfaceDestroyed() {
         mSurfaceValid = false;
         notifyAll();
+
+        // We need to coordinate with Gecko when pausing composition, to ensure
+        // that Gecko never executes a draw event while the compositor is paused.
+        // This is sent synchronously to make sure that we don't attempt to use
+        // any outstanding Surfaces after we call this (such as from a
+        // surfaceDestroyed notification), and to make sure that any in-flight
+        // Gecko draw events have been processed.  When this returns, composition is
+        // definitely paused -- it'll synchronize with the Gecko event loop, which
+        // in turn will synchronize with the compositor thread.
+        if (mCompositorCreated) {
+            GeckoAppShell.sendEventToGeckoSync(GeckoEvent.createCompositorPauseEvent());
+        }
     }
 
     synchronized void surfaceChanged(int newWidth, int newHeight) {
@@ -72,6 +91,10 @@ public class GLController {
         mHeight = newHeight;
         mSurfaceValid = true;
         notifyAll();
+    }
+
+    void compositorCreated() {
+        mCompositorCreated = true;
     }
 
     public boolean hasValidSurface() {
@@ -147,6 +170,19 @@ public class GLController {
         return "Error " + mEGL.eglGetError();
     }
 
+    void resumeCompositor(int width, int height) {
+        // Asking Gecko to resume the compositor takes too long (see
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=735230#c23), so we
+        // resume the compositor directly. We still need to inform Gecko about
+        // the compositor resuming, so that Gecko knows that it can now draw.
+        // It is important to not notify Gecko until after the compositor has
+        // been resumed, otherwise Gecko may send updates that get dropped.
+        if (mCompositorCreated) {
+            GeckoAppShell.scheduleResumeComposition(width, height);
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createCompositorResumeEvent());
+        }
+    }
+
     public static class GLControllerException extends RuntimeException {
         public static final long serialVersionUID = 1L;
 
@@ -155,4 +191,3 @@ public class GLController {
         }
     }
 }
-
