@@ -13,6 +13,7 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME   = nkdatachan_s
 LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
+NO_PROFILE_GUIDED_OPTIMIZE = 1 # Don't PGO
 
 EXPORTS_NAMESPACES = mozilla/net
 
