@@ -32,9 +32,16 @@ using namespace mozilla;
 
 namespace mozilla {
 
+PRLock *DebugFDAutoLock::Lock;
+void DebugFDAutoLock::Clear() {
+  MOZ_ASSERT(Lock != nullptr);
+  Lock = nullptr;
+}
+
 static char *sProfileDirectory = NULL;
 
 std::vector<int>& getDebugFDs() {
+  PR_ASSERT_CURRENT_THREAD_OWNS_LOCK(DebugFDAutoLock::getDebugFDsLock());
   // We have to use new as some write happen during static destructors
   // so an static std::vector might be destroyed while we still need it.
   static std::vector<int> *DebugFDs = new std::vector<int>();
@@ -43,6 +50,9 @@ std::vector<int>& getDebugFDs() {
 
 void InitWritePoisoning()
 {
+  // Call to make sure it is initialized.
+  DebugFDAutoLock::getDebugFDsLock();
+
   nsCOMPtr<nsIFile> mozFile;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mozFile));
   if (mozFile) {
@@ -52,13 +62,6 @@ void InitWritePoisoning()
       sProfileDirectory = PL_strdup(nativePath.get());
     }
   }
-}
-
-void BaseCleanup() {
-  PL_strfree(sProfileDirectory);
-  sProfileDirectory = nullptr;
-  delete &getDebugFDs();
-  PR_DestroyLock(DebugFDAutoLock::getDebugFDsLock());
 }
 
 // This a wrapper over a file descriptor that provides a Printf method and
@@ -219,10 +222,21 @@ enum PoisonState {
 PoisonState sPoisoningState = POISON_UNINITIALIZED;
 
 void DisableWritePoisoning() {
-  if (sPoisoningState == POISON_ON) {
-    sPoisoningState = POISON_OFF;
-    BaseCleanup();
+  if (sPoisoningState != POISON_ON)
+    return;
+
+  sPoisoningState = POISON_OFF;
+  PL_strfree(sProfileDirectory);
+  sProfileDirectory = nullptr;
+
+  PRLock *Lock;
+  {
+    DebugFDAutoLock lockedScope;
+    delete &getDebugFDs();
+    Lock = DebugFDAutoLock::getDebugFDsLock();
+    DebugFDAutoLock::Clear();
   }
+  PR_DestroyLock(Lock);
 }
 void EnableWritePoisoning() {
   sPoisoningState = POISON_ON;
