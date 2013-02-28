@@ -23,6 +23,8 @@
       SimpleTest.expectAssertions(0, 5);
     } else if (navigator.platform.startsWith("Linux")) {
       SimpleTest.expectAssertions(0, 3);
+    } else if (navigator.platform.startsWith("Win")) {
+      SimpleTest.expectAssertions(0, 1);
     }
 
     var toolbar = $("tb1");
