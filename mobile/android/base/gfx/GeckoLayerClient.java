@@ -126,6 +126,17 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         sendResizeEventIfNecessary(true);
 
         DisplayPortCalculator.initPrefs();
+
+        // Gecko being ready is one of the two conditions (along with having an available
+        // surface) that cause us to create the compositor. So here, now that we know gecko
+        // is ready, call createCompositor() to see if we can actually do the creation.
+        // This needs to run on the UI thread so that the surface validity can't change on
+        // us while we're in the middle of creating the compositor.
+        mView.post(new Runnable() {
+            public void run() {
+                mView.getGLController().createCompositor();
+            }
+        });
     }
 
     public void destroy() {
@@ -604,11 +615,6 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     @Override
     public void surfaceChanged(int width, int height) {
         setViewportSize(width, height);
-
-        // We need to make this call even when the compositor isn't currently
-        // paused (e.g. during an orientation change), to make the compositor
-        // aware of the changed surface.
-        mView.getGLController().resumeCompositor(width, height);
     }
 
     /** Implementation of PanZoomTarget */
