@@ -86,6 +86,8 @@ function Format(dial, currentRegion, nationalNumber, region, nationalFormat, int
 IsViable(null, false);
 IsViable("", false);
 IsViable("1", false);
+IsViable("*2", true); // Real number used in Venezuela
+IsViable("*8", true); // Real number used in Venezuela
 IsViable("12", true); // MIN_LENGTH_PHONE_NUMBER
 IsViable("123", true); // MIN_LENGTH_PHONE_NUMBER
 IsViable("1a2", false);
