@@ -498,10 +498,10 @@ VectorImage::GetHeight(int32_t* aHeight)
 NS_IMETHODIMP
 VectorImage::GetIntrinsicSize(nsSize* aSize)
 {
-  nsIFrame* rootFrame = GetRootLayoutFrame();
-  if (!rootFrame)
+  if (mError || !mIsFullyLoaded)
     return NS_ERROR_FAILURE;
 
+  nsIFrame* rootFrame = mSVGDocumentWrapper->GetRootLayoutFrame();
   *aSize = nsSize(-1, -1);
   nsIFrame::IntrinsicSize rfSize = rootFrame->GetIntrinsicSize();
   if (rfSize.width.GetUnit() == eStyleUnit_Coord)
@@ -517,10 +517,10 @@ VectorImage::GetIntrinsicSize(nsSize* aSize)
 NS_IMETHODIMP
 VectorImage::GetIntrinsicRatio(nsSize* aRatio)
 {
-  nsIFrame* rootFrame = GetRootLayoutFrame();
-  if (!rootFrame)
+  if (mError || !mIsFullyLoaded)
     return NS_ERROR_FAILURE;
 
+  nsIFrame* rootFrame = mSVGDocumentWrapper->GetRootLayoutFrame();
   *aRatio = rootFrame->GetIntrinsicRatio();
   return NS_OK;
 }
@@ -771,17 +771,6 @@ VectorImage::Draw(gfxContext* aContext,
 
   mIsDrawing = false;
   return NS_OK;
-}
-
-//******************************************************************************
-/* [notxpcom] nsIFrame GetRootLayoutFrame() */
-nsIFrame*
-VectorImage::GetRootLayoutFrame()
-{
-  if (mError)
-    return nullptr;
-
-  return mSVGDocumentWrapper->GetRootLayoutFrame();
 }
 
 //******************************************************************************
