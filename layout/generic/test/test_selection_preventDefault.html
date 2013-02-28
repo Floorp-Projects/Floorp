@@ -32,6 +32,10 @@ dddddd dddddd dddddd
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+if (navigator.platform.startsWith("Win")) {
+  SimpleTest.expectAssertions(0, 2);
+}
+
 var fixedDiv1 = document.getElementById("fixedDiv1");
 var input = document.getElementById("input");
 

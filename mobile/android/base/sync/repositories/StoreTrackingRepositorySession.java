@@ -7,7 +7,7 @@ package org.mozilla.gecko.sync.repositories;
 import java.util.Collection;
 import java.util.Iterator;
 
-import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;

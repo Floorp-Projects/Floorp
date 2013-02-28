@@ -19,11 +19,13 @@
     <implementation implements="nsIDOMEventListener">
       <constructor>
         <![CDATA[
+          this._selectionOverlay.addEventListener('contextmenu', this);
         ]]>
       </constructor>
 
       <destructor>
         <![CDATA[
+          this._selectionOverlay.removeEventListener('contextmenu', this);
         ]]>
       </destructor>
 
@@ -83,6 +85,31 @@
         <body>
           <![CDATA[
           this.enabled = false;
+          ]]>
+        </body>
+      </method>
+
+      <method name="_onContextMenu">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            // forward this over. frame script will treat this like
+            // a bubbling contextmenu event.
+            Browser.selectedTab.browser.messageManager.sendAsyncMessage("Browser:InvokeContextAtPoint", {
+             xPos: aEvent.clientX, yPos: aEvent.clientY });
+          ]]>
+        </body>
+      </method>
+
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            switch (aEvent.type) {
+              case 'contextmenu':
+                this._onContextMenu(aEvent);
+                break;
+            }
           ]]>
         </body>
       </method>

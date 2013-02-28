@@ -10,6 +10,10 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+if (navigator.platform.startsWith("Win")) {
+  SimpleTest.expectAssertions(0, 84); // bug 845676
+}
+
 var manager = new MediaTestManager;
 
 function startTest(test, token) {

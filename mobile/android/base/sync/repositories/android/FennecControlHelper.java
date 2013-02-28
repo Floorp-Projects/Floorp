@@ -4,8 +4,8 @@
 
 package org.mozilla.gecko.sync.repositories.android;
 
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.db.BrowserContract.Control;
-import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.repositories.NoContentProviderException;
 
 import android.content.ContentProviderClient;

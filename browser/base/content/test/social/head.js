@@ -187,7 +187,6 @@ function checkSocialUI(win) {
     is(win.SocialToolbar.button.style.listStyleImage, 'url("' + provider.iconURL + '")', "toolbar button has provider icon");
 
   // and for good measure, check all the social commands.
-  // Social:Remove - never disabled directly but parent nodes are
   isbool(!doc.getElementById("Social:Toggle").hidden, enabled, "Social:Toggle visible?");
   isbool(!doc.getElementById("Social:ToggleNotifications").hidden, enabled, "Social:ToggleNotifications visible?");
   isbool(!doc.getElementById("Social:FocusChat").hidden, enabled && Social.haveLoggedInUser(), "Social:FocusChat visible?");
@@ -196,4 +195,49 @@ function checkSocialUI(win) {
 
   // broadcasters.
   isbool(!doc.getElementById("socialActiveBroadcaster").hidden, enabled, "socialActiveBroadcaster hidden?");
+}
+
+// blocklist testing
+function updateBlocklist(aCallback) {
+  var blocklistNotifier = Cc["@mozilla.org/extensions/blocklist;1"]
+                          .getService(Ci.nsITimerCallback);
+  var observer = function() {
+    Services.obs.removeObserver(observer, "blocklist-updated");
+    if (aCallback)
+      executeSoon(aCallback);
+  };
+  Services.obs.addObserver(observer, "blocklist-updated", false);
+  blocklistNotifier.notify(null);
+}
+
+var _originalTestBlocklistURL = null;
+function setAndUpdateBlocklist(aURL, aCallback) {
+  if (!_originalTestBlocklistURL)
+    _originalTestBlocklistURL = Services.prefs.getCharPref("extensions.blocklist.url");
+  Services.prefs.setCharPref("extensions.blocklist.url", aURL);
+  updateBlocklist(aCallback);
+}
+
+function resetBlocklist() {
+  Services.prefs.setCharPref("extensions.blocklist.url", _originalTestBlocklistURL);
+}
+
+function addWindowListener(aURL, aCallback) {
+  Services.wm.addListener({
+    onOpenWindow: function(aXULWindow) {
+      info("window opened, waiting for focus");
+      Services.wm.removeListener(this);
+
+      var domwindow = aXULWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIDOMWindow);
+      waitForFocus(function() {
+        is(domwindow.document.location.href, aURL, "window opened and focused");
+        executeSoon(function() {
+          aCallback(domwindow);
+        });
+      }, domwindow);
+    },
+    onCloseWindow: function(aXULWindow) { },
+    onWindowTitleChange: function(aXULWindow, aNewTitle) { }
+  });
 }

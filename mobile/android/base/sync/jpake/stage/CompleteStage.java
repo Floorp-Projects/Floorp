@@ -4,7 +4,7 @@
 
 package org.mozilla.gecko.sync.jpake.stage;
 
-import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.jpake.JPakeClient;
 
 public class CompleteStage extends JPakeStage {

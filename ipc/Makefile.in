@@ -20,10 +20,15 @@ DIRS += dbus
 endif #}
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-DIRS += netd unixsocket
+DIRS += netd
+NEED_UNIXSOCKET := true
 endif
 
 ifeq ($(OS_ARCH),Linux)
+NEED_UNIXSOCKET := true
+endif
+
+ifeq ($(NEED_UNIXSOCKET),true)
 DIRS += unixsocket
 endif
 

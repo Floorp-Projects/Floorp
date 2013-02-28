@@ -551,17 +551,17 @@ pref("dom.ipc.processPriorityManager.temporaryPriorityLockMS", 5000);
 // Kernel parameters for how processes are killed on low-memory.
 pref("gonk.systemMemoryPressureRecoveryPollMS", 5000);
 pref("hal.processPriorityManager.gonk.masterOomScoreAdjust", 0);
-pref("hal.processPriorityManager.gonk.masterKillUnderMB", 1);
+pref("hal.processPriorityManager.gonk.masterKillUnderMB", 4);
 pref("hal.processPriorityManager.gonk.foregroundHighOomScoreAdjust", 67);
-pref("hal.processPriorityManager.gonk.foregroundHighKillUnderMB", 3);
+pref("hal.processPriorityManager.gonk.foregroundHighKillUnderMB", 5);
 pref("hal.processPriorityManager.gonk.foregroundOomScoreAdjust", 134);
-pref("hal.processPriorityManager.gonk.foregroundKillUnderMB", 4);
+pref("hal.processPriorityManager.gonk.foregroundKillUnderMB", 6);
 pref("hal.processPriorityManager.gonk.backgroundPerceivableOomScoreAdjust", 200);
-pref("hal.processPriorityManager.gonk.backgroundPerceivableKillUnderMB", 5);
+pref("hal.processPriorityManager.gonk.backgroundPerceivableKillUnderMB", 7);
 pref("hal.processPriorityManager.gonk.backgroundHomescreenOomScoreAdjust", 267);
-pref("hal.processPriorityManager.gonk.backgroundHomescreenKillUnderMB", 5);
+pref("hal.processPriorityManager.gonk.backgroundHomescreenKillUnderMB", 8);
 pref("hal.processPriorityManager.gonk.backgroundOomScoreAdjust", 400);
-pref("hal.processPriorityManager.gonk.backgroundKillUnderMB", 8);
+pref("hal.processPriorityManager.gonk.backgroundKillUnderMB", 20);
 pref("hal.processPriorityManager.gonk.notifyLowMemUnderMB", 10);
 
 // Niceness values (i.e., CPU priorities) for B2G processes.

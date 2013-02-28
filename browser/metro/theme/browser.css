@@ -13,7 +13,7 @@
 /* Sliding Toolbar/Tab Tray ------------------------------------------------- */
 
 #tray {
-  transition: transform 0.2s ease-out;
+  transition: transform @metro_animation_duration@ @metro_animation_easing@;
   transform: translateY(-@tray_slide_height@);
   width: 100%;
 }
@@ -513,7 +513,7 @@ appbar {
   height: @toolbar_height@;
   bottom: 0;
   transform: translateY(@toolbar_height@);
-  transition: transform 0.2s ease-out;
+  transition: transform @metro_animation_duration@ @metro_animation_easing@;
   width: 100%;
 }
 
@@ -628,6 +628,12 @@ flyoutpanel > settings:first-child {
   margin-top: 0px;
 }
 
+/* Sync flyout pane */
+
+#sync-flyoutpanel {
+  width: 400px;
+}
+
 /* About flyout pane */
 
 #about-flyoutpanel {
@@ -687,10 +693,12 @@ settings {
 }
 
 /* <setting> elements that are not in a <settings> group get special treatment */
-#prefs-flyoutpanel > setting {
+#prefs-flyoutpanel > setting,
+#sync-flyoutpanel > setting {
   margin-top: 16px;
 }
-#prefs-flyoutpanel > setting .preferences-title {
+
+#prefs-flyoutpanel > setting .preferences-title,
   font-weight: bold
 }
 

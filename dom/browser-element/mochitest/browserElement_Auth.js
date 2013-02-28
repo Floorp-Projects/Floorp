@@ -17,7 +17,7 @@ function runTest() {
   browserElementTestHelpers.addPermission();
 
   iframe = document.createElement('iframe');
-  iframe.mozbrowser = true;
+  SpecialPowers.wrap(iframe).mozbrowser = true;
   document.body.appendChild(iframe);
 
   // Wait for the initial load to finish, then navigate the page, then start test

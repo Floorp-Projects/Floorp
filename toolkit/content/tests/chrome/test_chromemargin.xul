@@ -17,8 +17,8 @@
 
 // Tests parsing of the chrome margin attrib on a window.
 
-if (navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 1);
+if (!navigator.platform.startsWith("Mac")) {
+  SimpleTest.expectAssertions(0, 5);
 }
 
 SimpleTest.waitForExplicitFinish();

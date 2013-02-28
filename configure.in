@@ -9029,9 +9029,9 @@ if test "${OS_TARGET}" = "WINNT"; then
 elif test "${OS_TARGET}" = "Android"; then
    EXTRA_GYP_DEFINES="-D gtest_target_type=executable -D android_toolchain=${android_toolchain} -G os=android "
    if test -n "$ARM_ARCH" && test "$ARM_ARCH" -lt 7; then
-      EXTRA_GYP_DEFINES+=" -D armv7=0 "
+      EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D armv7=0 "
    else
-      EXTRA_GYP_DEFINES+=" -D armv7=1 "
+      EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D armv7=1 "
    fi
 fi
 

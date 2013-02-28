@@ -18,11 +18,7 @@
 
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
-if (navigator.platform.startsWith("Linux")) {
-  SimpleTest.expectAssertions(0, 3);
-} else {
-  SimpleTest.expectAssertions(0, 2);
-}
+SimpleTest.expectAssertions(0, 5);
 
 SimpleTest.waitForExplicitFinish();
 

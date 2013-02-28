@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=829606
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 829606</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.7">
+
+  /** Test for Bug 829606 **/
+  /*
+   * This test checks that setting .value on an text field (input or textarea)
+   * doesn't scroll the field to its beginning.
+   */
+
+  SimpleTest.waitForExplicitFinish();
+
+  var gTestRunner = null;
+
+  function test(aElementName)
+  {
+    var element = document.getElementsByTagName(aElementName)[0];
+    element.focus();
+
+    var baseSnapshot = snapshotWindow(window);
+
+    // This is a sanity check.
+    var s2 = snapshotWindow(window);
+    var results = compareSnapshots(baseSnapshot, snapshotWindow(window), true);
+    ok(results[0], "sanity check: screenshots should be the same");
+
+    element.selectionStart = element.selectionEnd = element.value.length;
+
+    setTimeout(function() {
+      synthesizeKey('f', {});
+
+      var selectionAtTheEndSnapshot = snapshotWindow(window);
+      results = compareSnapshots(baseSnapshot, selectionAtTheEndSnapshot, false);
+      ok(results[0], "after appending a character, string should have changed");
+
+      element.value = element.value;
+      var tmpSnapshot = snapshotWindow(window);
+
+      results = compareSnapshots(baseSnapshot, tmpSnapshot, false);
+      ok(results[0], "re-settig the value should change nothing");
+
+      results = compareSnapshots(selectionAtTheEndSnapshot, tmpSnapshot, true);
+      ok(results[0], "re-settig the value should change nothing");
+
+      element.selectionStart = element.selectionEnd = 0;
+      element.blur();
+
+      gTestRunner.next();
+    }, 0);
+  }
+
+  // This test checks that when a textarea has a long list of values and the
+  // textarea's value is then changed, the values are shown correctly.
+  function testCorrectUpdateOnScroll()
+  {
+    var textarea = document.createElement('textarea');
+    textarea.rows = 5;
+    textarea.cols = 10;
+    textarea.value = 'a\nb\nc\nd';
+    document.getElementById('content').appendChild(textarea);
+
+    var baseSnapshot = snapshotWindow(window);
+
+    textarea.value = '1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n';
+    textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
+
+    var fullSnapshot = snapshotWindow(window);
+    var results = compareSnapshots(baseSnapshot, fullSnapshot, false);
+    ok(results[0], "sanity check: screenshots should not be the same");
+
+    textarea.value = 'a\nb\nc\nd';
+
+    var tmpSnapshot = snapshotWindow(window);
+    results = compareSnapshots(baseSnapshot, tmpSnapshot, true);
+    ok(results[0], "textarea view should look like the beginning");
+
+    setTimeout(function() {
+      gTestRunner.next();
+    }, 0);
+  }
+
+  function runTest()
+  {
+    test('input');
+    yield;
+    test('textarea');
+    yield;
+    testCorrectUpdateOnScroll();
+    yield;
+    SimpleTest.finish();
+    yield;
+  }
+
+  gTestRunner = runTest();
+
+  SimpleTest.waitForFocus(function() {
+    gTestRunner.next();
+  });;
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=829606">Mozilla Bug 829606</a>
+<p id="display"></p>
+<div id="content">
+  <textarea rows='1' cols='5'>this is a \n long text</textarea>
+  <input size='5' value="this is a very long text">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

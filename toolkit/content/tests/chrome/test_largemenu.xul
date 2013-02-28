@@ -13,7 +13,7 @@
 
 <script>
 if (!navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 3);
+  SimpleTest.expectAssertions(0, 4);
 }
 
 SimpleTest.waitForExplicitFinish();

@@ -22,7 +22,7 @@ function runTest() {
   var mm;
   var numEvents = 0;
   var iframe1 = document.createElement('iframe');
-  iframe1.mozbrowser = true;
+  SpecialPowers.wrap(iframe1).mozbrowser = true;
   iframe1.src = 'data:text/html,1';
 
   document.body.appendChild(iframe1);

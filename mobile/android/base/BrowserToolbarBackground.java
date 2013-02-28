@@ -15,8 +15,7 @@ import android.graphics.drawable.StateListDrawable;
 import android.util.AttributeSet;
 
 public class BrowserToolbarBackground extends GeckoLinearLayout
-                                      implements CanvasDelegate.DrawManager,
-                                                 LightweightTheme.OnChangeListener { 
+                                      implements CanvasDelegate.DrawManager {
     private GeckoActivity mActivity;
     private Path mPath;
     private CurveTowards mSide;
@@ -42,18 +41,6 @@ public class BrowserToolbarBackground extends GeckoLinearLayout
         mPath = new Path();
         mCanvasDelegate = new CanvasDelegate(this, Mode.DST_OUT);
         mActivity = (GeckoActivity) context;
-    }
-
-    @Override
-    public void onAttachedToWindow() {
-        super.onAttachedToWindow();
-        mActivity.getLightweightTheme().addListener(this);
-    }
-
-    @Override
-    public void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-        mActivity.getLightweightTheme().removeListener(this);
     }
 
     @Override
@@ -121,12 +108,6 @@ public class BrowserToolbarBackground extends GeckoLinearLayout
                                    };
         setBackgroundResource(R.drawable.address_bar_bg);
         setPadding(padding[0], padding[1], padding[2], padding[3]);
-    }
-
-    @Override
-    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        super.onLayout(changed, left, top, right, bottom);
-        onLightweightThemeChanged();
     }
 
     public CurveTowards getCurveTowards() {

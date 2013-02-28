@@ -336,7 +336,8 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        mBrowserToolbar.fromAwesomeBarSearch();
+        String url = resultCode == Activity.RESULT_OK ? data.getStringExtra(AwesomeBar.URL_KEY) : null;
+        mBrowserToolbar.fromAwesomeBarSearch(url);
     }
 
     public View getActionBarLayout() {

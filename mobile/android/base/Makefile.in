@@ -258,6 +258,7 @@ FENNEC_PP_XML_FILES = \
   res/layout/abouthome_content.xml \
   res/layout/awesomebar_search.xml \
   res/layout/awesomebar_suggestion_row.xml \
+  res/layout/awesomebar_tab_indicator.xml \
   res/layout/browser_toolbar.xml \
   res/layout/browser_toolbar_menu.xml \
   res/layout-land-v14/browser_toolbar.xml \
@@ -403,7 +404,6 @@ RES_LAYOUT = \
   res/layout/awesomebar_row.xml \
   res/layout/awesomebar_suggestion_item.xml \
   res/layout/awesomebar_suggestion_prompt.xml \
-  res/layout/awesomebar_tab_indicator.xml \
   res/layout/awesomebar_tabs.xml \
   res/layout/bookmark_edit.xml \
   res/layout/datetime_picker.xml \
@@ -1128,7 +1128,9 @@ android-tgts = \
 
 android-preqs = \
   Makefile.in \
-  $(call mkdir_deps,mozglue,db,sync/repositories/android,background/announcements) \
+  $(call mkdir_deps,$(sort $(dir $(MOZGLUE_PP_JAVA_FILES)))) \
+  $(call mkdir_deps,$(sort $(dir $(FENNEC_PP_JAVA_FILES)))) \
+  $(call mkdir_deps,$(sort $(dir $(SYNC_PP_JAVA_FILES)))) \
   $(SERVICES_MANIFEST_FRAGMENTS) \
   WebAppManifestFragment.xml.in \
   WebAppsFragments.java \

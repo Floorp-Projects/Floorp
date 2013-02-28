@@ -24,11 +24,7 @@
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
-if (navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 4);
-} else if (navigator.platform.startsWith("Mac")) {
-  SimpleTest.expectAssertions(0, 2);
-}
+SimpleTest.expectAssertions(0, 5);
 
 SimpleTest.waitForExplicitFinish();
 

@@ -43,7 +43,7 @@ public class testSettingsMenuItems extends PixelTest {
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
         verifyUrl("about:home");
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
-        mSolo.waitForText("Enter Search"); // Waiting for page title to appear to be sure that is fully loaded before opening the menu
+        waitForText("Enter Search"); // Waiting for page title to appear to be sure that is fully loaded before opening the menu
 
         selectMenuItem("Settings");
         checkMenuSections(menuItems);
@@ -81,7 +81,7 @@ public class testSettingsMenuItems extends PixelTest {
                     }
                 }
             }
-            mSolo.waitForText("^Cancel$");
+            waitForText("^Cancel$");
             mSolo.clickOnText("^Cancel$");
             j = 0;
         }
