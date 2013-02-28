@@ -11,16 +11,27 @@
  */
 
 interface TreeWalker {
+  [Constant]
   readonly attribute Node root;
+  [Constant]
   readonly attribute unsigned long whatToShow;
+  [Constant]
   readonly attribute NodeFilter? filter;
+  [Pure, SetterThrows]
            attribute Node currentNode;
 
+  [Throws]
   Node? parentNode();
+  [Throws]
   Node? firstChild();
+  [Throws]
   Node? lastChild();
+  [Throws]
   Node? previousSibling();
+  [Throws]
   Node? nextSibling();
+  [Throws]
   Node? previousNode();
+  [Throws]
   Node? nextNode();
 };

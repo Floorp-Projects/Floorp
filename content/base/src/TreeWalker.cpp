@@ -11,12 +11,10 @@
 #include "mozilla/dom/TreeWalker.h"
 
 #include "nsIDOMNode.h"
-#include "nsIDOMNodeFilter.h"
 #include "nsError.h"
 #include "nsINode.h"
 #include "nsDOMClassInfoID.h"
 #include "nsContentUtils.h"
-#include "mozilla/dom/NodeFilterBinding.h"
 
 DOMCI_DATA(TreeWalker, mozilla::dom::TreeWalker)
 
@@ -65,19 +63,14 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(TreeWalker)
 /* readonly attribute nsIDOMNode root; */
 NS_IMETHODIMP TreeWalker::GetRoot(nsIDOMNode * *aRoot)
 {
-    if (mRoot) {
-        return CallQueryInterface(mRoot, aRoot);
-    }
-
-    *aRoot = nullptr;
-
+    NS_ADDREF(*aRoot = Root()->AsDOMNode());
     return NS_OK;
 }
 
 /* readonly attribute unsigned long whatToShow; */
 NS_IMETHODIMP TreeWalker::GetWhatToShow(uint32_t *aWhatToShow)
 {
-    *aWhatToShow = mWhatToShow;
+    *aWhatToShow = WhatToShow();
     return NS_OK;
 }
 
@@ -110,11 +103,20 @@ NS_IMETHODIMP TreeWalker::SetCurrentNode(nsIDOMNode * aCurrentNode)
     nsCOMPtr<nsINode> node = do_QueryInterface(aCurrentNode);
     NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
 
-    nsresult rv = nsContentUtils::CheckSameOrigin(mRoot, node);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ErrorResult rv;
+    SetCurrentNode(*node, rv);
+    return rv.ErrorCode();
+}
 
-    mCurrentNode.swap(node);
-    return NS_OK;
+void
+TreeWalker::SetCurrentNode(nsINode& aNode, ErrorResult& aResult)
+{
+    aResult = nsContentUtils::CheckSameOrigin(mRoot, &aNode);
+    if (aResult.Failed()) {
+        return;
+    }
+
+    mCurrentNode = &aNode;
 }
 
 /*
@@ -124,110 +126,149 @@ NS_IMETHODIMP TreeWalker::SetCurrentNode(nsIDOMNode * aCurrentNode)
 /* nsIDOMNode parentNode (); */
 NS_IMETHODIMP TreeWalker::ParentNode(nsIDOMNode **_retval)
 {
-    *_retval = nullptr;
+    return ImplNodeGetter(&TreeWalker::ParentNode, _retval);
+}
 
-    nsresult rv;
-
+already_AddRefed<nsINode>
+TreeWalker::ParentNode(ErrorResult& aResult)
+{
     nsCOMPtr<nsINode> node = mCurrentNode;
 
     while (node && node != mRoot) {
         node = node->GetParentNode();
 
         if (node) {
-            int16_t filtered;
-            rv = TestNode(node, &filtered);
-            NS_ENSURE_SUCCESS(rv, rv);
+            int16_t filtered = TestNode(node, aResult);
+            if (aResult.Failed()) {
+                return nullptr;
+            }
             if (filtered == nsIDOMNodeFilter::FILTER_ACCEPT) {
                 mCurrentNode = node;
-                return CallQueryInterface(node, _retval);
+                return node.forget();
             }
         }
     }
 
-    return NS_OK;
+    return nullptr;
 }
 
 /* nsIDOMNode firstChild (); */
 NS_IMETHODIMP TreeWalker::FirstChild(nsIDOMNode **_retval)
 {
-    return FirstChildInternal(false, _retval);
+    return ImplNodeGetter(&TreeWalker::FirstChild, _retval);
+}
+
+already_AddRefed<nsINode>
+TreeWalker::FirstChild(ErrorResult& aResult)
+{
+    return FirstChildInternal(false, aResult);
 }
 
 /* nsIDOMNode lastChild (); */
 NS_IMETHODIMP TreeWalker::LastChild(nsIDOMNode **_retval)
 {
-    return FirstChildInternal(true, _retval);
+    return ImplNodeGetter(&TreeWalker::LastChild, _retval);
+}
+
+already_AddRefed<nsINode>
+TreeWalker::LastChild(ErrorResult& aResult)
+{
+    return FirstChildInternal(true, aResult);
 }
 
 /* nsIDOMNode previousSibling (); */
 NS_IMETHODIMP TreeWalker::PreviousSibling(nsIDOMNode **_retval)
 {
-    return NextSiblingInternal(true, _retval);
+    return ImplNodeGetter(&TreeWalker::PreviousSibling, _retval);
+}
+
+already_AddRefed<nsINode>
+TreeWalker::PreviousSibling(ErrorResult& aResult)
+{
+    return NextSiblingInternal(true, aResult);
 }
 
 /* nsIDOMNode nextSibling (); */
 NS_IMETHODIMP TreeWalker::NextSibling(nsIDOMNode **_retval)
 {
-    return NextSiblingInternal(false, _retval);
+    return ImplNodeGetter(&TreeWalker::NextSibling, _retval);
+}
+
+already_AddRefed<nsINode>
+TreeWalker::NextSibling(ErrorResult& aResult)
+{
+    return NextSiblingInternal(false, aResult);
 }
 
 /* nsIDOMNode previousNode (); */
 NS_IMETHODIMP TreeWalker::PreviousNode(nsIDOMNode **_retval)
 {
-    nsresult rv;
-    int16_t filtered;
+    return ImplNodeGetter(&TreeWalker::PreviousNode, _retval);
+}
 
-    *_retval = nullptr;
-
+already_AddRefed<nsINode>
+TreeWalker::PreviousNode(ErrorResult& aResult)
+{
     nsCOMPtr<nsINode> node = mCurrentNode;
 
     while (node != mRoot) {
         while (nsINode *previousSibling = node->GetPreviousSibling()) {
             node = previousSibling;
 
-            rv = TestNode(node, &filtered);
-            NS_ENSURE_SUCCESS(rv, rv);
+            int16_t filtered = TestNode(node, aResult);
+            if (aResult.Failed()) {
+                return nullptr;
+            }
 
             nsINode *lastChild;
             while (filtered != nsIDOMNodeFilter::FILTER_REJECT &&
                    (lastChild = node->GetLastChild())) {
                 node = lastChild;
-                rv = TestNode(node, &filtered);
-                NS_ENSURE_SUCCESS(rv, rv);
+                filtered = TestNode(node, aResult);
+                if (aResult.Failed()) {
+                    return nullptr;
+                }
             }
 
             if (filtered == nsIDOMNodeFilter::FILTER_ACCEPT) {
                 mCurrentNode = node;
-                return CallQueryInterface(node, _retval);
+                return node.forget();
             }
         }
 
-        if (node == mRoot)
+        if (node == mRoot) {
             break;
+        }
 
         node = node->GetParentNode();
-        if (!node)
+        if (!node) {
             break;
+        }
 
-        rv = TestNode(node, &filtered);
-        NS_ENSURE_SUCCESS(rv, rv);
+        int16_t filtered = TestNode(node, aResult);
+        if (aResult.Failed()) {
+            return nullptr;
+        }
 
         if (filtered == nsIDOMNodeFilter::FILTER_ACCEPT) {
             mCurrentNode = node;
-            return CallQueryInterface(node, _retval);
+            return node.forget();
         }
     }
 
-    return NS_OK;
+    return nullptr;
 }
 
 /* nsIDOMNode nextNode (); */
 NS_IMETHODIMP TreeWalker::NextNode(nsIDOMNode **_retval)
 {
-    nsresult rv;
-    int16_t filtered = nsIDOMNodeFilter::FILTER_ACCEPT; // pre-init for inner loop
+    return ImplNodeGetter(&TreeWalker::NextNode, _retval);
+}
 
-    *_retval = nullptr;
+already_AddRefed<nsINode>
+TreeWalker::NextNode(ErrorResult& aResult)
+{
+    int16_t filtered = nsIDOMNodeFilter::FILTER_ACCEPT; // pre-init for inner loop
 
     nsCOMPtr<nsINode> node = mCurrentNode;
 
@@ -238,13 +279,15 @@ NS_IMETHODIMP TreeWalker::NextNode(nsIDOMNode **_retval)
                (firstChild = node->GetFirstChild())) {
             node = firstChild;
 
-            rv = TestNode(node, &filtered);
-            NS_ENSURE_SUCCESS(rv, rv);
+            filtered = TestNode(node, aResult);
+            if (aResult.Failed()) {
+                return nullptr;
+            }
 
             if (filtered ==  nsIDOMNodeFilter::FILTER_ACCEPT) {
                 // Node found
                 mCurrentNode = node;
-                return CallQueryInterface(node, _retval);
+                return node.forget();
             }
         }
 
@@ -267,17 +310,19 @@ NS_IMETHODIMP TreeWalker::NextNode(nsIDOMNode **_retval)
         node = sibling;
 
         // Found a sibling. Either ours or ancestor's
-        rv = TestNode(node, &filtered);
-        NS_ENSURE_SUCCESS(rv, rv);
+        filtered = TestNode(node, aResult);
+        if (aResult.Failed()) {
+            return nullptr;
+        }
 
         if (filtered ==  nsIDOMNodeFilter::FILTER_ACCEPT) {
             // Node found
             mCurrentNode = node;
-            return CallQueryInterface(node, _retval);
+            return node.forget();
         }
     }
 
-    return NS_OK;
+    return nullptr;
 }
 
 /*
@@ -288,28 +333,26 @@ NS_IMETHODIMP TreeWalker::NextNode(nsIDOMNode **_retval)
  * Implements FirstChild and LastChild which only vary in which direction
  * they search.
  * @param aReversed Controls whether we search forwards or backwards
- * @param _retval   Returned node. Null if no child is found
- * @returns         Errorcode
+ * @param aResult   Whether we threw or not.
+ * @returns         The desired node. Null if no child is found
  */
-nsresult TreeWalker::FirstChildInternal(bool aReversed, nsIDOMNode **_retval)
+already_AddRefed<nsINode>
+TreeWalker::FirstChildInternal(bool aReversed, ErrorResult& aResult)
 {
-    nsresult rv;
-    int16_t filtered;
-
-    *_retval = nullptr;
-
     nsCOMPtr<nsINode> node = aReversed ? mCurrentNode->GetLastChild()
                                        : mCurrentNode->GetFirstChild();
 
     while (node) {
-        rv = TestNode(node, &filtered);
-        NS_ENSURE_SUCCESS(rv, rv);
+        int16_t filtered = TestNode(node, aResult);
+        if (aResult.Failed()) {
+            return nullptr;
+        }
 
         switch (filtered) {
             case nsIDOMNodeFilter::FILTER_ACCEPT:
                 // Node found
                 mCurrentNode = node;
-                return CallQueryInterface(node, _retval);
+                return node.forget();
             case nsIDOMNodeFilter::FILTER_SKIP: {
                     nsINode *child = aReversed ? node->GetLastChild()
                                                : node->GetFirstChild();
@@ -335,7 +378,7 @@ nsresult TreeWalker::FirstChildInternal(bool aReversed, nsIDOMNode **_retval)
             nsINode *parent = node->GetParentNode();
 
             if (!parent || parent == mRoot || parent == mCurrentNode) {
-                return NS_OK;
+                return nullptr;
             }
 
             node = parent;
@@ -343,27 +386,24 @@ nsresult TreeWalker::FirstChildInternal(bool aReversed, nsIDOMNode **_retval)
         } while (node);
     }
 
-    return NS_OK;
+    return nullptr;
 }
 
 /*
  * Implements NextSibling and PreviousSibling which only vary in which
  * direction they search.
  * @param aReversed Controls whether we search forwards or backwards
- * @param _retval   Returned node. Null if no child is found
- * @returns         Errorcode
+ * @param aResult   Whether we threw or not.
+ * @returns         The desired node. Null if no child is found
  */
-nsresult TreeWalker::NextSiblingInternal(bool aReversed, nsIDOMNode **_retval)
+already_AddRefed<nsINode>
+TreeWalker::NextSiblingInternal(bool aReversed, ErrorResult& aResult)
 {
-    nsresult rv;
-    int16_t filtered;
-
-    *_retval = nullptr;
-
     nsCOMPtr<nsINode> node = mCurrentNode;
 
-    if (node == mRoot)
-        return NS_OK;
+    if (node == mRoot) {
+        return nullptr;
+    }
 
     while (1) {
         nsINode* sibling = aReversed ? node->GetPreviousSibling()
@@ -372,13 +412,15 @@ nsresult TreeWalker::NextSiblingInternal(bool aReversed, nsIDOMNode **_retval)
         while (sibling) {
             node = sibling;
 
-            rv = TestNode(node, &filtered);
-            NS_ENSURE_SUCCESS(rv, rv);
+            int16_t filtered = TestNode(node, aResult);
+            if (aResult.Failed()) {
+                return nullptr;
+            }
 
             if (filtered == nsIDOMNodeFilter::FILTER_ACCEPT) {
                 // Node found
-                mCurrentNode.swap(node);
-                return CallQueryInterface(mCurrentNode, _retval);
+                mCurrentNode = node;
+                return node.forget();
             }
 
             // If rejected or no children, try a sibling
@@ -392,14 +434,18 @@ nsresult TreeWalker::NextSiblingInternal(bool aReversed, nsIDOMNode **_retval)
 
         node = node->GetParentNode();
 
-        if (!node || node == mRoot)
-            return NS_OK;
+        if (!node || node == mRoot) {
+            return nullptr;
+        }
 
         // Is parent transparent in filtered view?
-        rv = TestNode(node, &filtered);
-        NS_ENSURE_SUCCESS(rv, rv);
-        if (filtered == nsIDOMNodeFilter::FILTER_ACCEPT)
-            return NS_OK;
+        int16_t filtered = TestNode(node, aResult);
+        if (aResult.Failed()) {
+            return nullptr;
+        }
+        if (filtered == nsIDOMNodeFilter::FILTER_ACCEPT) {
+            return nullptr;
+        }
     }
 }
 
