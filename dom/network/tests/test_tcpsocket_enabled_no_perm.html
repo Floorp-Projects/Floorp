@@ -12,6 +12,10 @@
 <pre id="test">
 <script type="application/javascript">
 
+if (navigator.platform.startsWith("Win")) {
+  SimpleTest.expectAssertions(0, 15);
+}
+
 /** Test to ensure TCPSocket permission being turned on enables 
   navigator.mozTCPSocket, but mozTCPSocket.open does not work
   in content.
