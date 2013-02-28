@@ -19,7 +19,6 @@
 
 class nsINode;
 class nsIDOMNode;
-class nsIDOMNodeFilter;
 
 namespace mozilla {
 namespace dom {
@@ -37,6 +36,34 @@ public:
 
     NS_DECL_CYCLE_COLLECTION_CLASS(TreeWalker)
 
+    // WebIDL API
+    nsINode* Root() const
+    {
+        return mRoot;
+    }
+    uint32_t WhatToShow() const
+    {
+        return mWhatToShow;
+    }
+    already_AddRefed<NodeFilter> GetFilter()
+    {
+        return mFilter.ToWebIDLCallback();
+    }
+    nsINode* CurrentNode() const
+    {
+        return mCurrentNode;
+    }
+    void SetCurrentNode(nsINode& aNode, ErrorResult& aResult);
+    // All our traversal methods return strong refs because filtering can
+    // remove nodes from the tree.
+    already_AddRefed<nsINode> ParentNode(ErrorResult& aResult);
+    already_AddRefed<nsINode> FirstChild(ErrorResult& aResult);
+    already_AddRefed<nsINode> LastChild(ErrorResult& aResult);
+    already_AddRefed<nsINode> PreviousSibling(ErrorResult& aResult);
+    already_AddRefed<nsINode> NextSibling(ErrorResult& aResult);
+    already_AddRefed<nsINode> PreviousNode(ErrorResult& aResult);
+    already_AddRefed<nsINode> NextNode(ErrorResult& aResult);
+
 private:
     nsCOMPtr<nsINode> mCurrentNode;
 
@@ -44,19 +71,34 @@ private:
      * Implements FirstChild and LastChild which only vary in which direction
      * they search.
      * @param aReversed Controls whether we search forwards or backwards
-     * @param _retval   Returned node. Null if no child is found
-     * @returns         Errorcode
+     * @param aResult   Whether we threw or not.
+     * @returns         The desired node. Null if no child is found
      */
-    nsresult FirstChildInternal(bool aReversed, nsIDOMNode **_retval);
+    already_AddRefed<nsINode> FirstChildInternal(bool aReversed,
+                                                 ErrorResult& aResult);
 
     /*
      * Implements NextSibling and PreviousSibling which only vary in which
      * direction they search.
      * @param aReversed Controls whether we search forwards or backwards
-     * @param _retval   Returned node. Null if no child is found
-     * @returns         Errorcode
+     * @param aResult   Whether we threw or not.
+     * @returns         The desired node. Null if no child is found
      */
-    nsresult NextSiblingInternal(bool aReversed, nsIDOMNode **_retval);
+    already_AddRefed<nsINode> NextSiblingInternal(bool aReversed,
+                                                  ErrorResult& aResult);
+
+    // Implementation for our various XPCOM getters
+    typedef already_AddRefed<nsINode> (TreeWalker::*NodeGetter)(ErrorResult&);
+    inline nsresult ImplNodeGetter(NodeGetter aGetter, nsIDOMNode** aRetval)
+    {
+        mozilla::ErrorResult rv;
+        nsCOMPtr<nsINode> node = (this->*aGetter)(rv);
+        if (rv.Failed()) {
+            return rv.ErrorCode();
+        }
+        *aRetval = node ? node.forget().get()->AsDOMNode() : nullptr;
+        return NS_OK;
+    }
 };
 
 } // namespace dom

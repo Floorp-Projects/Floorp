@@ -11,7 +11,6 @@
 #include "mozilla/dom/NodeIterator.h"
 
 #include "nsIDOMNode.h"
-#include "nsIDOMNodeFilter.h"
 #include "nsError.h"
 
 #include "nsIContent.h"
@@ -19,7 +18,6 @@
 #include "nsDOMClassInfoID.h"
 #include "nsContentUtils.h"
 #include "nsCOMPtr.h"
-#include "mozilla/dom/NodeFilterBinding.h"
 
 DOMCI_DATA(NodeIterator, mozilla::dom::NodeIterator)
 
@@ -186,18 +184,14 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(NodeIterator)
 /* readonly attribute nsIDOMNode root; */
 NS_IMETHODIMP NodeIterator::GetRoot(nsIDOMNode * *aRoot)
 {
-    if (mRoot)
-        return CallQueryInterface(mRoot, aRoot);
-
-    *aRoot = nullptr;
-
+    NS_ADDREF(*aRoot = Root()->AsDOMNode());
     return NS_OK;
 }
 
 /* readonly attribute unsigned long whatToShow; */
 NS_IMETHODIMP NodeIterator::GetWhatToShow(uint32_t *aWhatToShow)
 {
-    *aWhatToShow = mWhatToShow;
+    *aWhatToShow = WhatToShow();
     return NS_OK;
 }
 
@@ -214,26 +208,23 @@ NS_IMETHODIMP NodeIterator::GetFilter(nsIDOMNodeFilter **aFilter)
 /* nsIDOMNode nextNode ()  raises (DOMException); */
 NS_IMETHODIMP NodeIterator::NextNode(nsIDOMNode **_retval)
 {
-    return NextOrPrevNode(&NodePointer::MoveToNext, _retval);
+    return ImplNodeGetter(&NodeIterator::NextNode, _retval);
 }
 
 /* nsIDOMNode previousNode ()  raises (DOMException); */
 NS_IMETHODIMP NodeIterator::PreviousNode(nsIDOMNode **_retval)
 {
-    return NextOrPrevNode(&NodePointer::MoveToPrevious, _retval);
+    return ImplNodeGetter(&NodeIterator::PreviousNode, _retval);
 }
 
-nsresult
+already_AddRefed<nsINode>
 NodeIterator::NextOrPrevNode(NodePointer::MoveToMethodType aMove,
-                             nsIDOMNode **_retval)
+                             ErrorResult& aResult)
 {
-    nsresult rv;
-    int16_t filtered;
-
-    *_retval = nullptr;
-
-    if (mDetached || mInAcceptNode)
-        return NS_ERROR_DOM_INVALID_STATE_ERR;
+    if (mDetached || mInAcceptNode) {
+        aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+        return nullptr;
+    }
 
     mWorkingPointer = mPointer;
 
@@ -245,19 +236,23 @@ NodeIterator::NextOrPrevNode(NodePointer::MoveToMethodType aMove,
 
     while ((mWorkingPointer.*aMove)(mRoot)) {
         nsCOMPtr<nsINode> testNode = mWorkingPointer.mNode;
-        rv = TestNode(testNode, &filtered);
-        NS_ENSURE_SUCCESS(rv, rv);
+        int16_t filtered = TestNode(testNode, aResult);
+        if (aResult.Failed()) {
+            return nullptr;
+        }
 
-        if (mDetached)
-            return NS_ERROR_DOM_INVALID_STATE_ERR;
+        if (mDetached) {
+            aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+            return nullptr;
+        }
 
         if (filtered == nsIDOMNodeFilter::FILTER_ACCEPT) {
             mPointer = mWorkingPointer;
-            return CallQueryInterface(testNode, _retval);
+            return testNode.forget();
         }
     }
 
-    return NS_OK;
+    return nullptr;
 }
 
 /* void detach (); */
@@ -277,17 +272,15 @@ NS_IMETHODIMP NodeIterator::Detach(void)
 /* readonly attribute nsIDOMNode referenceNode; */
 NS_IMETHODIMP NodeIterator::GetReferenceNode(nsIDOMNode * *aRefNode)
 {
-    if (mPointer.mNode)
-        return CallQueryInterface(mPointer.mNode, aRefNode);
-
-    *aRefNode = nullptr;
+    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(GetReferenceNode()));
+    node.forget(aRefNode);
     return NS_OK;
 }
 
 /* readonly attribute boolean pointerBeforeReferenceNode; */
 NS_IMETHODIMP NodeIterator::GetPointerBeforeReferenceNode(bool *aBeforeNode)
 {
-    *aBeforeNode = mPointer.mBeforeNode;
+    *aBeforeNode = PointerBeforeReferenceNode();
     return NS_OK;
 }
 
