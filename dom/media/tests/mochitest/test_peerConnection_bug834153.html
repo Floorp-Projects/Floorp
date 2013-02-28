@@ -17,6 +17,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=834153
 <p id="display"></p>
 <pre id="test">
 <script class="testbody" type="application/javascript">
+if (navigator.platform.startsWith("Win")) {
+  SimpleTest.expectAssertions(0, 369);
+}
+
 function croak(msg) {
   ok(0,msg);
   SimpleTest.finish();
