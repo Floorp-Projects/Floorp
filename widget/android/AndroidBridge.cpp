@@ -1099,7 +1099,6 @@ AndroidBridge::SetLayerClient(JNIEnv* env, jobject jobj)
     mLayerClient = client;
 
     if (resetting) {
-        RegisterCompositor(env, true);
         // since we are re-linking the new java objects to Gecko, we need to get
         // the viewport from the compositor (since the Java copy was thrown away)
         // and we do that by setting the first-paint flag.
@@ -1123,7 +1122,7 @@ AndroidBridge::ShowInputMethodPicker()
 static AndroidGLController sController;
 
 void
-AndroidBridge::RegisterCompositor(JNIEnv *env, bool resetting)
+AndroidBridge::RegisterCompositor(JNIEnv *env)
 {
     ALOG_BRIDGE("AndroidBridge::RegisterCompositor");
     if (!env)
@@ -1139,11 +1138,7 @@ AndroidBridge::RegisterCompositor(JNIEnv *env, bool resetting)
     if (jniFrame.CheckForException())
         return;
 
-    if (resetting) {
-        sController.Reacquire(env, glController);
-    } else {
-        sController.Acquire(env, glController);
-    }
+    sController.Acquire(env, glController);
 }
 
 EGLSurface
