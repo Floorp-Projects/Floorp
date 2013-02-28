@@ -619,6 +619,18 @@ bool TabParent::SendRealTouchEvent(nsTouchEvent& event)
   }
 
   MaybeForwardEventToRenderFrame(event, &e);
+
+  // Adjust the widget coordinates to be relative to our frame.
+  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+
+  if (!frameLoader) {
+    // No frame anymore?
+    sEventCapturer = nullptr;
+    return false;
+  }
+
+  nsEventStateManager::MapEventCoordinatesForChildProcess(frameLoader, &event);
+
   return (e.message == NS_TOUCH_MOVE) ?
     PBrowserParent::SendRealTouchMoveEvent(e) :
     PBrowserParent::SendRealTouchEvent(e);
@@ -654,17 +666,6 @@ TabParent::TryCapture(const nsGUIEvent& aEvent)
     }
     return false;
   }
-
-  // Adjust the widget coordinates to be relative to our frame.
-  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-
-  if (!frameLoader) {
-    // No frame anymore?
-    sEventCapturer = nullptr;
-    return false;
-  }
-
-  nsEventStateManager::MapEventCoordinatesForChildProcess(frameLoader, &event);
 
   SendRealTouchEvent(event);
   return true;
