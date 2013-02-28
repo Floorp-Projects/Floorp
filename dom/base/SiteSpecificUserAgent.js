@@ -16,7 +16,7 @@ const DEFAULT_UA = Cc["@mozilla.org/network/protocol;1?name=http"]
 function SiteSpecificUserAgent() {}
 
 SiteSpecificUserAgent.prototype = {
-  getUserAgentForURI: function ssua_getUserAgentForURI(aURI) {
+  getUserAgentForURIAndWindow: function ssua_getUserAgentForURIAndWindow(aURI, aWindow) {
     return UserAgentOverrides.getOverrideForURI(aURI) || DEFAULT_UA;
   },
 
