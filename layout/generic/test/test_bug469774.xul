@@ -27,9 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=469774
 
 <script class="testbody" type="application/javascript;version=1.7"><![CDATA[
 
-if (navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 3);
-}
+SimpleTest.expectAssertions(0, 3);
 
 /** Test for Bug 469774 **/
 
