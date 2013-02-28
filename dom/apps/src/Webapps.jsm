@@ -1916,9 +1916,9 @@ this.DOMApplicationRegistry = {
 
     if (!aFromSync)
       this._saveApps((function() {
+        this.broadcastMessage("Webapps:AddApp", { id: id, app: appObject });
         this.broadcastMessage("Webapps:Install:Return:OK", aData);
         Services.obs.notifyObservers(this, "webapps-sync-install", appNote);
-        this.broadcastMessage("Webapps:AddApp", { id: id, app: appObject });
       }).bind(this));
 
     if (!aData.isPackage) {
