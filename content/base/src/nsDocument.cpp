@@ -57,7 +57,7 @@
 #include "nsIDOMText.h"
 #include "nsIDOMComment.h"
 #include "DocumentType.h"
-#include "nsNodeIterator.h"
+#include "mozilla/dom/NodeIterator.h"
 #include "nsTreeWalker.h"
 
 #include "nsIServiceManager.h"
@@ -5386,8 +5386,8 @@ nsIDocument::CreateNodeIterator(nsINode& aRoot, uint32_t aWhatToShow,
     return nullptr;
   }
 
-  nsRefPtr<nsNodeIterator> iterator = new nsNodeIterator(root, aWhatToShow,
-                                                         aFilter);
+  nsRefPtr<NodeIterator> iterator = new NodeIterator(root, aWhatToShow,
+                                                     aFilter);
   return iterator.forget();
 }
 
