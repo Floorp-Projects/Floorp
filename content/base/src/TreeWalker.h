@@ -23,7 +23,7 @@ class nsIDOMNode;
 namespace mozilla {
 namespace dom {
 
-class TreeWalker : public nsIDOMTreeWalker, public nsTraversal
+class TreeWalker MOZ_FINAL : public nsIDOMTreeWalker, public nsTraversal
 {
 public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -63,6 +63,8 @@ public:
     already_AddRefed<nsINode> NextSibling(ErrorResult& aResult);
     already_AddRefed<nsINode> PreviousNode(ErrorResult& aResult);
     already_AddRefed<nsINode> NextNode(ErrorResult& aResult);
+
+    JSObject* WrapObject(JSContext *cx, JSObject *scope);
 
 private:
     nsCOMPtr<nsINode> mCurrentNode;

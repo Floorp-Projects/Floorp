@@ -22,9 +22,9 @@ class nsIDOMNode;
 namespace mozilla {
 namespace dom {
 
-class NodeIterator : public nsIDOMNodeIterator,
-                     public nsTraversal,
-                     public nsStubMutationObserver
+class NodeIterator MOZ_FINAL : public nsIDOMNodeIterator,
+                               public nsTraversal,
+                               public nsStubMutationObserver
 {
 public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -69,6 +69,8 @@ public:
         return NextOrPrevNode(&NodePointer::MoveToPrevious, aResult);
     }
     // The XPCOM Detach() is fine for our purposes
+
+    JSObject* WrapObject(JSContext *cx, JSObject *scope);
 
 private:
     struct NodePointer {
