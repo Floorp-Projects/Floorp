@@ -39,6 +39,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=570192
       SimpleTest.expectAssertions(0, 2);
     } else if (navigator.platform.startsWith("Linux")) {
       SimpleTest.expectAssertions(0, 5);
+    } else if (navigator.platform.startsWith("Win")) {
+      SimpleTest.expectAssertions(0, 1);
     }
 
     addLoadEvent(function() {
