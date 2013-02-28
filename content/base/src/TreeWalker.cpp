@@ -15,6 +15,7 @@
 #include "nsINode.h"
 #include "nsDOMClassInfoID.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/TreeWalkerBinding.h"
 
 DOMCI_DATA(TreeWalker, mozilla::dom::TreeWalker)
 
@@ -450,6 +451,12 @@ TreeWalker::NextSiblingInternal(bool aReversed, ErrorResult& aResult)
             return nullptr;
         }
     }
+}
+
+JSObject*
+TreeWalker::WrapObject(JSContext *cx, JSObject *scope)
+{
+    return TreeWalkerBinding::Wrap(cx, scope, this);
 }
 
 } // namespace dom
