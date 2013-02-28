@@ -28,5 +28,5 @@
          modifiers="accel"/>
   </keyset>
 
-  <iframe id="toolbox-iframe" flex="1" forceOwnRefreshDriver=""></iframe>
+  <iframe id="toolbox-iframe" flex="1"></iframe>
 </window>
