@@ -19,6 +19,9 @@ import java.util.List;
  * view that is being overlapped.
  */
 public class TailTouchDelegate extends TouchDelegate {
+    // Actual delegate that got the ACTION_DOWN event.
+    private TouchDelegate mDelegate;
+
     // List of delegates.
     private List<TouchDelegate> mDelegates;
 
@@ -50,16 +53,22 @@ public class TailTouchDelegate extends TouchDelegate {
             case MotionEvent.ACTION_DOWN:
                 // Android bug 36445: Touch Delegation not reset on ACTION_DOWN.
                 for (TouchDelegate delegate : mDelegates) {
-                    if (delegate.onTouchEvent(event))
+                    if (delegate.onTouchEvent(event)) {
+                        mDelegate = delegate;
                         return true;
+                    }
 
                     MotionEvent cancelEvent = MotionEvent.obtain(event);
                     cancelEvent.setAction(MotionEvent.ACTION_CANCEL);
                     delegate.onTouchEvent(cancelEvent);
+                    mDelegate = null;
                 }
                 return false;
             default:
-                return super.onTouchEvent(event);
+                if (mDelegate != null)
+                    return mDelegate.onTouchEvent(event);
+                else
+                    return false;
         }
     }
 }
