@@ -75,7 +75,7 @@ public class testWebContentContextMenu extends PixelTest {
         try { Thread.sleep(2000); } catch(Exception e) {}
 
         mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-        mSolo.waitForText("Bookmark");
+        waitForText("Bookmark");
 
         // TODO: This doesn't work for some reason. We got a 'Bookmark added' and
         // will check for 'Bookmark removed'

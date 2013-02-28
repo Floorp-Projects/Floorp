@@ -8,9 +8,9 @@ import java.io.IOException;
 
 import org.json.simple.JSONArray;
 import org.json.simple.parser.ParseException;
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
-import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.NonArrayJSONException;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;

@@ -114,6 +114,8 @@ using namespace mozilla::system;
 #include "BluetoothService.h"
 #endif
 
+#include "Crypto.h"
+
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 static const char* sClipboardTextFlavors[] = { kUnicodeMime };
 
@@ -2163,6 +2165,22 @@ ContentParent::RecvShowFilePicker(const int16_t& mode,
         file->GetPath(filePath);
         files->AppendElement(filePath);
     }
+
+    return true;
+}
+
+bool
+ContentParent::RecvGetRandomValues(const uint32_t& length,
+                                   InfallibleTArray<uint8_t>* randomValues)
+{
+    uint8_t* buf = Crypto::GetRandomValues(length);
+
+    randomValues->SetCapacity(length);
+    randomValues->SetLength(length);
+
+    memcpy(randomValues->Elements(), buf, length);
+
+    NS_Free(buf);
 
     return true;
 }

@@ -7,8 +7,8 @@ package org.mozilla.gecko.sync.config;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
-import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.setup.Constants;
 import org.mozilla.gecko.sync.setup.SyncAccounts;

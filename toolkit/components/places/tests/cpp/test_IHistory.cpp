@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "places_test_harness.h"
-#include "nsIBrowserHistory.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "mozilla/Attributes.h"
@@ -512,12 +511,11 @@ void
 test_visituri_transition_typed()
 {
   nsCOMPtr<nsINavHistoryService> navHistory = do_get_NavHistory();
-  nsCOMPtr<nsIBrowserHistory> browserHistory = do_QueryInterface(navHistory);
   nsCOMPtr<IHistory> history = do_get_IHistory();
   nsCOMPtr<nsIURI> lastURI = new_test_uri();
   nsCOMPtr<nsIURI> visitedURI = new_test_uri();
 
-  browserHistory->MarkPageAsTyped(visitedURI);
+  navHistory->MarkPageAsTyped(visitedURI);
   history->VisitURI(visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
   nsRefPtr<VisitURIObserver> finisher = new VisitURIObserver();
   finisher->WaitForNotification();
@@ -535,8 +533,6 @@ test_visituri_transition_typed()
 void
 test_visituri_transition_embed()
 {
-  nsCOMPtr<nsINavHistoryService> navHistory = do_get_NavHistory();
-  nsCOMPtr<nsIBrowserHistory> browserHistory = do_QueryInterface(navHistory);
   nsCOMPtr<IHistory> history = do_get_IHistory();
   nsCOMPtr<nsIURI> lastURI = new_test_uri();
   nsCOMPtr<nsIURI> visitedURI = new_test_uri();

@@ -18,8 +18,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=665540
 <pre id="test">
 <script type="application/javascript">
 
-if (navigator.platform.startsWith("Linux")) {
-  SimpleTest.expectAssertions(0, 1);
+if (!navigator.platform.startsWith("Mac")) {
+  SimpleTest.expectAssertions(0, 3);
 }
 
 /** Test for Bug 665540 **/

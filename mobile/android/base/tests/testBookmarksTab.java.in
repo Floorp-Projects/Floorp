@@ -51,7 +51,7 @@ public class testBookmarksTab extends BaseTest {
         View child;
         ListView list = getBookmarksList();
 
-        mSolo.waitForText("Desktop Bookmarks");
+        waitForText("Desktop Bookmarks");
         mAsserter.isnot(list, null, "checking that bookmarks list exists");
 
         int count = list.getAdapter().getCount();
@@ -64,7 +64,7 @@ public class testBookmarksTab extends BaseTest {
 
         child = list.getChildAt(0);
         mSolo.clickOnView(child);
-        mSolo.waitForText("Bookmarks Toolbar");
+        waitForText("Bookmarks Toolbar");
 
         count = list.getAdapter().getCount();
         mAsserter.is(count, 4, "desktop folder has correct number of children");
@@ -75,7 +75,7 @@ public class testBookmarksTab extends BaseTest {
 
         child = list.getChildAt(1);
         mSolo.clickOnView(child);
-        mSolo.waitForText("BOOKMARK_TITLE");
+        waitForText("BOOKMARK_TITLE");
 
         count = list.getAdapter().getCount();
         mAsserter.is(count, 2, "toolbar folder has correct number of children");
@@ -96,7 +96,7 @@ public class testBookmarksTab extends BaseTest {
 
     private void testContextMenu(String url) {
         list = getBookmarksList();
-        mSolo.waitForText(url);
+        waitForText(url);
 
         // wait for the bookmarks list to be populated
         View child;
@@ -165,19 +165,19 @@ public class testBookmarksTab extends BaseTest {
         mAsserter.is(checkBookmarkEdit(1,"Bookmark Keyword"), true, "Bookmark Keyword was changed");
 
         // Remove Bookmark from Context Menu
-        mSolo.waitForText("Bookmarks");
+        waitForText("Bookmarks");
         child = list.getChildAt(1);
         mSolo.clickLongOnView(child);
-        mSolo.waitForText("Open in New Tab");
+        waitForText("Open in New Tab");
         mSolo.clickOnText("Remove");
 
         // Wait for the toaster notification
-        mSolo.waitForText("Bookmark Removed");
+        waitForText("Bookmark Removed");
 
         // Verify Bookmark is removed
         child = list.getChildAt(1);
         mSolo.clickLongOnView(child);
-        mSolo.waitForText("Open in New Tab");
+        waitForText("Open in New Tab");
         mAsserter.is(mSolo.searchText("Bookmark Name"), false, "Removed bookmark has been deleted");
         mActions.sendSpecialKey(Actions.SpecialKey.BACK); // Exit the Context Menu
 
@@ -191,11 +191,11 @@ public class testBookmarksTab extends BaseTest {
         View child;
         mSolo.clickOnText("Bookmarks");
         child = list.getChildAt(bookmarkIndex);
-        mSolo.waitForText("Desktop Bookmarks");
+        waitForText("Desktop Bookmarks");
         mSolo.clickLongOnView(child);
-        mSolo.waitForText("Open in New Tab");
+        waitForText("Open in New Tab");
         mSolo.clickOnText("Edit");
-        mSolo.waitForText("Edit Bookmark");
+        waitForText("Edit Bookmark");
 
         // Clear the Field
         mSolo.clearEditText(fieldIndex);
@@ -204,7 +204,7 @@ public class testBookmarksTab extends BaseTest {
         mSolo.clickOnEditText(fieldIndex);
         mActions.sendKeys(addedText);
         mSolo.clickOnText("OK");
-        mSolo.waitForText("Bookmark Updated");
+        waitForText("Bookmark Updated");
         mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
     }
 
@@ -214,11 +214,11 @@ public class testBookmarksTab extends BaseTest {
         View child;
         mSolo.clickOnText("Bookmarks");
         child = list.getChildAt(bookmarkIndex);
-        mSolo.waitForText("Desktop Bookmarks");
+        waitForText("Desktop Bookmarks");
         mSolo.clickLongOnView(child);
-        mSolo.waitForText("Open in New Tab");
+        waitForText("Open in New Tab");
         mSolo.clickOnText("Edit");
-        mSolo.waitForText("Edit Bookmark");
+        waitForText("Edit Bookmark");
 
         // If the OS is not Gingerbread the vkb will be opened so we need to close it in order to press the "Cancel" button
         if (!(mDevice.version.equals("2.x"))) {
@@ -228,12 +228,12 @@ public class testBookmarksTab extends BaseTest {
         // Check if the new text was added
         if (mSolo.searchText(addedText)) {
            mSolo.clickOnText("Cancel");
-           mSolo.waitForText("Desktop Bookmarks");
+           waitForText("Desktop Bookmarks");
            mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
            return true;
         } else {
            mSolo.clickOnText("Cancel");
-           mSolo.waitForText("Desktop Bookmarks");
+           waitForText("Desktop Bookmarks");
            mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
            return false;
         }

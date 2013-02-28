@@ -236,6 +236,16 @@ InspectedHealthReporter.prototype = {
     return HealthReporter.prototype._onStorageCreated.call(this, storage);
   },
 
+  _initializeCollector: function () {
+    for (let result of HealthReporter.prototype._initializeCollector.call(this)) {
+      yield result;
+    }
+
+    if (this.onInitializeCollectorFinished) {
+      this.onInitializeCollectorFinished();
+    }
+  },
+
   _onCollectorInitialized: function () {
     if (this.onCollectorInitialized) {
       this.onCollectorInitialized();

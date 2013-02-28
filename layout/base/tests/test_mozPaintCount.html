@@ -16,7 +16,7 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-if (navigator.platform.startsWith("Linux")) {
+if (!navigator.platform.startsWith("Win")) {
   SimpleTest.expectAssertions(0, 2);
 }
 

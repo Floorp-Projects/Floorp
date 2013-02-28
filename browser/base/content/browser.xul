@@ -715,7 +715,8 @@
             <menuseparator class="social-statusarea-separator"/>
             <menuseparator class="social-provider-menu" hidden="true"/>
             <menuitem class="social-toggle-menuitem" command="Social:Toggle"/>
-            <menuitem class="social-remove-menuitem" command="Social:Remove"/>
+            <menuitem class="social-addons-menuitem" command="Social:Addons"
+                      label="&social.addons.label;"/>
           </menupopup>
         </toolbarbutton>
       </toolbaritem>

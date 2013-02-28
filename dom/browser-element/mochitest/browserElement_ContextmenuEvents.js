@@ -34,7 +34,7 @@ function runTest() {
   browserElementTestHelpers.addPermission();
 
   var iframe1 = document.createElement('iframe');
-  iframe1.mozbrowser = true;
+  SpecialPowers.wrap(iframe1).mozbrowser = true;
   document.body.appendChild(iframe1);
   iframe1.src = 'data:text/html,<html>' +
     '<body>' +

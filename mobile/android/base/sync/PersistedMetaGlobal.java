@@ -4,8 +4,8 @@
 
 package org.mozilla.gecko.sync;
 
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.CryptoRecord;
-import org.mozilla.gecko.sync.Logger;
 
 import android.content.SharedPreferences;
 

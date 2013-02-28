@@ -14,7 +14,7 @@ function runTest() {
   const innerPage = 'http://example.com/tests/dom/browser-element/mochitest/file_browserElement_CookiesNotThirdParty.html';
 
   var iframe = document.createElement('iframe');
-  iframe.mozbrowser = true;
+  SpecialPowers.wrap(iframe).mozbrowser = true;
 
   iframe.addEventListener('mozbrowsershowmodalprompt', function(e) {
     if (e.detail.message == 'next') {

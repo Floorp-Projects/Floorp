@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+%filter substitution
+%include defines.inc
+
 flyoutpanel {
   height: 100%;
   border-width: 2px;
@@ -10,8 +13,7 @@ flyoutpanel {
   -moz-border-start-style: solid;
   visibility: collapse;
   position: fixed;
-  /* bezier function and duration taken from winJS showPanel method */
-  transition: transform 550ms cubic-bezier(0.1, 0.9, 0.2, 1);
+  transition: transform @metro_animation_duration@ @metro_animation_easing@;
   transform: translateX(100%);
   font-size: 11pt;
   right: 0;

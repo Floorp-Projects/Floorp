@@ -1512,7 +1512,9 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
   else if (bufferPtr == bufferEnd) {
     const char *end;
     int nLeftOver;
-    enum XML_Error result;
+/* BEGIN MOZILLA CHANGE (|result| has type XML_Status, not XML_Error) */
+    enum XML_Status result;
+/* END MOZILLA CHANGE */
     parseEndByteIndex += len;
     positionPtr = s;
     ps_finalBuffer = (XML_Bool)isFinal;

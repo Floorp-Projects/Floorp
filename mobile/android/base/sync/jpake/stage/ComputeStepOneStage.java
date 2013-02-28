@@ -7,8 +7,8 @@ package org.mozilla.gecko.sync.jpake.stage;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
-import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.jpake.BigIntegerHelper;
 import org.mozilla.gecko.sync.jpake.JPakeClient;
 import org.mozilla.gecko.sync.jpake.JPakeCrypto;

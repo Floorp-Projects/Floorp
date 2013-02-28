@@ -29,7 +29,6 @@ add_task(function test_register_provider() {
   do_check_eq(collector._providers.size, 1);
   yield collector.registerProvider(dummy);
   do_check_eq(collector._providers.size, 1);
-  do_check_eq(collector.providerErrors.size, 1);
   do_check_eq(collector.getProvider(dummy.name), dummy);
 
   let failed = false;
@@ -52,7 +51,9 @@ add_task(function test_register_provider() {
 
 add_task(function test_collect_constant_data() {
   let storage = yield Metrics.Storage("collect_constant_data");
+  let errorCount = 0;
   let collector = new Metrics.Collector(storage);
+  collector.onProviderError = function () { errorCount++; }
   let provider = new DummyProvider();
   yield collector.registerProvider(provider);
 
@@ -62,23 +63,24 @@ add_task(function test_collect_constant_data() {
   do_check_eq(provider.collectConstantCount, 1);
 
   do_check_true(collector._providers.get("DummyProvider").constantsCollected);
-  do_check_eq(collector.providerErrors.get("DummyProvider").length, 0);
 
   yield storage.close();
+  do_check_eq(errorCount, 0);
 });
 
 add_task(function test_collect_constant_throws() {
   let storage = yield Metrics.Storage("collect_constant_throws");
   let collector = new Metrics.Collector(storage);
+  let errors = [];
+  collector.onProviderError = function (error) { errors.push(error); };
+
   let provider = new DummyProvider();
   provider.throwDuringCollectConstantData = "Fake error during collect";
   yield collector.registerProvider(provider);
 
   yield collector.collectConstantData();
-  do_check_true(collector.providerErrors.has(provider.name));
-  let errors = collector.providerErrors.get(provider.name);
   do_check_eq(errors.length, 1);
-  do_check_eq(errors[0].message, provider.throwDuringCollectConstantData);
+  do_check_true(errors[0].contains(provider.throwDuringCollectConstantData));
 
   yield storage.close();
 });
@@ -86,15 +88,17 @@ add_task(function test_collect_constant_throws() {
 add_task(function test_collect_constant_populate_throws() {
   let storage = yield Metrics.Storage("collect_constant_populate_throws");
   let collector = new Metrics.Collector(storage);
+  let errors = [];
+  collector.onProviderError = function (error) { errors.push(error); };
+
   let provider = new DummyProvider();
   provider.throwDuringConstantPopulate = "Fake error during constant populate";
   yield collector.registerProvider(provider);
 
   yield collector.collectConstantData();
 
-  let errors = collector.providerErrors.get(provider.name);
   do_check_eq(errors.length, 1);
-  do_check_eq(errors[0].message, provider.throwDuringConstantPopulate);
+  do_check_true(errors[0].contains(provider.throwDuringConstantPopulate));
   do_check_false(collector._providers.get(provider.name).constantsCollected);
 
   yield storage.close();

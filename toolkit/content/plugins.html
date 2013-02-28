@@ -75,18 +75,6 @@
     enabledplugins.appendChild(document.createTextNode(pluginsbundle.GetStringFromName(label)));
     fragment.appendChild(enabledplugins);
 
-    // "Find more information about browser plugins at " ...
-    var findmore = document.createElement("div");
-    findmore.setAttribute("id", "findmore");
-    findmore.appendChild(document.createTextNode(pluginsbundle.GetStringFromName("findmore_label") + " "));
-    fragment.appendChild(findmore);
-
-    // ... "mozilla.org"
-    var moreplugins = document.createElement("a");
-    moreplugins.setAttribute("href", regionbundle.GetStringFromName("more_plugins_url"));
-    moreplugins.appendChild(document.createTextNode(regionbundle.GetStringFromName("more_plugins_label")));
-    findmore.appendChild(moreplugins);
-
     // "Find updates for installed plugins at " ...
     var findpluginupdates = document.createElement("div");
     findpluginupdates.setAttribute("id", "findpluginupdates");
@@ -98,18 +86,6 @@
     pluginupdates.setAttribute("href", regionbundle.GetStringFromName("pluginupdates_url"));
     pluginupdates.appendChild(document.createTextNode(regionbundle.GetStringFromName("pluginupdates_label")));
     findpluginupdates.appendChild(pluginupdates);
-
-    // "Help for installing plugins is available from " ...
-    var installhelp = document.createElement("div");
-    installhelp.setAttribute("id", "installhelp");
-    installhelp.appendChild(document.createTextNode(pluginsbundle.GetStringFromName("installhelp_label") + " "));
-    fragment.appendChild(installhelp);
-
-    // ... "plugindoc.mozdev.org"
-    var plugindoc = document.createElement("a");
-    plugindoc.setAttribute("href", regionbundle.GetStringFromName("plugindoc_url"));
-    plugindoc.appendChild(document.createTextNode(regionbundle.GetStringFromName("plugindoc_label")));
-    installhelp.appendChild(plugindoc);
 
     fragment.appendChild(document.createElement("hr"));
 

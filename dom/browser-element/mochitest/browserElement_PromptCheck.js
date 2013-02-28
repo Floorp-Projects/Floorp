@@ -26,7 +26,7 @@ catch(e) {}
 SpecialPowers.setIntPref(dialogTimeLimitPrefName, 10);
 
 var iframe = document.createElement('iframe');
-iframe.mozbrowser = true;
+SpecialPowers.wrap(iframe).mozbrowser = true;
 document.body.appendChild(iframe);
 
 var numPrompts = 0;

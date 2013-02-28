@@ -425,6 +425,7 @@ TestRunner.testFinished = function(tests) {
         TestRunner.error("TEST-UNEXPECTED-FAIL | " +
                          TestRunner.currentTestURL +
                          " | called finish() multiple times");
+        TestRunner.updateUI([{ result: false }]);
         return;
     }
     TestRunner._lastTestFinished = TestRunner._currentTest;
@@ -494,13 +495,11 @@ TestRunner.testUnloaded = function() {
         var max = TestRunner._expectedMaxAsserts;
         var min = TestRunner._expectedMinAsserts;
         if (numAsserts > max) {
-            // WHEN ENABLING, change "log" to "error" and "DETCEPXENU"
-            // to "UNEXPECTED".
-            TestRunner.log("TEST-DETCEPXENU-FAIL | " + url + " | Assertion count " + numAsserts + " is greater than expected range " + min + "-" + max + " assertions.");
+            TestRunner.error("TEST-UNEXPECTED-FAIL | " + url + " | Assertion count " + numAsserts + " is greater than expected range " + min + "-" + max + " assertions.");
+            TestRunner.updateUI([{ result: false }]);
         } else if (numAsserts < min) {
-            // WHEN ENABLING, change "log" to "error" and "DETCEPXENU"
-            // to "UNEXPECTED".
-            TestRunner.log("TEST-DETCEPXENU-PASS | " + url + " | Assertion count " + numAsserts + " is less than expected range " + min + "-" + max + " assertions.");
+            TestRunner.error("TEST-UNEXPECTED-PASS | " + url + " | Assertion count " + numAsserts + " is less than expected range " + min + "-" + max + " assertions.");
+            TestRunner.updateUI([{ result: false }]);
         } else if (numAsserts > 0) {
             TestRunner.log("TEST-KNOWN-FAIL | " + url + " | Assertion count " + numAsserts + " within expected range " + min + "-" + max + " assertions.");
         }

@@ -6,7 +6,7 @@ package org.mozilla.gecko.sync.stage;
 
 import java.net.URISyntaxException;
 
-import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.MetaGlobalException;
 import org.mozilla.gecko.sync.repositories.ConstrainedServer11Repository;
 import org.mozilla.gecko.sync.repositories.RecordFactory;

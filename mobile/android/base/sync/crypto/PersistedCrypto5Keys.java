@@ -4,9 +4,9 @@
 
 package org.mozilla.gecko.sync.crypto;
 
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.CollectionKeys;
 import org.mozilla.gecko.sync.CryptoRecord;
-import org.mozilla.gecko.sync.Logger;
 
 import android.content.SharedPreferences;
 

@@ -51,7 +51,7 @@ const WebRtc_UWord32 PLAY_MAX_TEMP_BUF_SIZE_PER_10ms =
 const WebRtc_UWord16 N_PLAY_QUEUE_BUFFERS = 8;
 // Number of buffers in recording queue
 // TODO(xian): Reduce the numbers of buffers to improve the latency.
-const WebRtc_UWord16 N_REC_QUEUE_BUFFERS = 8;
+const WebRtc_UWord16 N_REC_QUEUE_BUFFERS = 16;
 // Some values returned from getMinBufferSize
 // (Nexus S playout  72ms, recording 64ms)
 // (Galaxy,         167ms,           44ms)

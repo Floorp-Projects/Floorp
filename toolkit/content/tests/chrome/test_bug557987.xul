@@ -22,8 +22,8 @@
 <script type="application/javascript">
 <![CDATA[
 
-if (navigator.platform.startsWith("Mac")) {
-  SimpleTest.expectAssertions(0, 1);
+if (!navigator.platform.startsWith("Linux")) {
+  SimpleTest.expectAssertions(0, 5);
 }
 
 SimpleTest.waitForExplicitFinish();

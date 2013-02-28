@@ -32,7 +32,6 @@ this.Collector = function (storage) {
 
   this._providerInitQueue = [];
   this._providerInitializing = false;
-  this.providerErrors = new Map();
 }
 
 Collector.prototype = Object.freeze({
@@ -124,12 +123,9 @@ Collector.prototype = Object.freeze({
           constantsCollected: false,
         });
 
-        this.providerErrors.set(provider.name, []);
-
         deferred.resolve(result);
       } catch (ex) {
-        this._log.warn("Provider failed to initialize: " + provider.name +
-                       ": " + CommonUtils.exceptionStr(ex));
+        this._recordProviderError(provider.name, "Failed to initialize", ex);
         deferred.reject(ex);
       } finally {
         this._providerInitializing = false;
@@ -184,15 +180,14 @@ Collector.prototype = Object.freeze({
       try {
         collectPromise = provider[fnProperty].call(provider);
       } catch (ex) {
-        this._log.warn("Exception when calling " + provider.name + "." +
-                       fnProperty + ": " + CommonUtils.exceptionStr(ex));
-        this.providerErrors.get(provider.name).push(ex);
+        this._recordProviderError(provider.name, "Exception when calling " +
+                                  "collect function: " + fnProperty, ex);
         continue;
       }
 
       if (!collectPromise) {
-        this._log.warn("Provider does not return a promise from " +
-                       fnProperty + "(): " + provider.name);
+        this._recordProviderError(provider.name, "Does not return a promise " +
+                                  "from " + fnProperty + "()");
         continue;
       }
 
@@ -231,19 +226,32 @@ Collector.prototype = Object.freeze({
           yield promise;
           this._log.debug("Provider collected successfully: " + name);
         } catch (ex) {
-          this._log.warn("Provider failed to collect: " + name + ": " +
-                         CommonUtils.exceptionStr(ex));
-          try {
-            this.providerErrors.get(name).push(ex);
-          } catch (ex2) {
-            this._log.error("Error updating provider errors. This should " +
-                            "never happen: " + CommonUtils.exceptionStr(ex2));
-          }
+          this._recordProviderError(name, "Failed to collect", ex);
         }
       }
 
       throw new Task.Result(this);
     }.bind(this));
+  },
+
+  /**
+   * Record an error that occurred operating on a provider.
+   */
+  _recordProviderError: function (name, msg, ex) {
+    let msg = "Provider error: " + name + ": " + msg;
+    if (ex) {
+      msg += ": " + ex.message;
+    }
+    this._log.warn(msg);
+
+    if (this.onProviderError) {
+      try {
+        this.onProviderError(msg);
+      } catch (callError) {
+        this._log.warn("Exception when calling onProviderError callback: " +
+                       CommonUtils.exceptionStr(callError));
+      }
+    }
   },
 });
 

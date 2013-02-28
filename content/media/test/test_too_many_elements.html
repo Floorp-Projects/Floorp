@@ -20,6 +20,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=713381
 <pre id="test">
 <script type="application/javascript">
 
+if (navigator.platform.startsWith("Win")) {
+  SimpleTest.expectAssertions(0, 2); // bug 845676
+}
+
 /** Test for Bug 713381 **/
 
 const num = 500;
