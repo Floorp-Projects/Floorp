@@ -9,9 +9,6 @@ relativesrcdir := @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS := \
-  $(NULL)
-
 MOCHITEST_FILES := \
   test_Document-open.html.json \
   test_addRange.html.json \

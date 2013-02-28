@@ -11,11 +11,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(topsrcdir)/config/config.mk
 
-DIRS = \
-    browser \
-    auth2 \
-    $(NULL)
-
 # Module name for xpcshell tests.
 MODULE = test_passwordmgr
 XPCSHELL_TESTS = unit

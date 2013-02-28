@@ -9,16 +9,5 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-
-# We need to build document even if XUL is disabled, for the nsIController[s]
-# interfaces and implementations.
-# Likewise for content, because of nsXULAtoms.
-
-PARALLEL_DIRS	= document content
-
-ifdef MOZ_XUL
-PARALLEL_DIRS	+= templates
-endif
-
 include $(topsrcdir)/config/rules.mk
 

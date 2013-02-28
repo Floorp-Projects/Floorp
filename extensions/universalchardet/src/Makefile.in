@@ -11,6 +11,5 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= universalchardet
-DIRS		= base xpcom
 
 include $(topsrcdir)/config/rules.mk

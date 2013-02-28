@@ -11,19 +11,6 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = \
-  MochiKit \
-  static \
-  dynamic \
-  tests \
-  chrome \
-  ssltunnel \
-  $(NULL)
-
-ifeq ($(MOZ_BUILD_APP),mobile/android)
-DIRS += roboextender
-endif
-
 NO_JS_MANIFEST = 1
 MOZ_CHROME_FILE_FORMAT = jar
 DIST_FILES = install.rdf

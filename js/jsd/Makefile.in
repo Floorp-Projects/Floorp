@@ -16,7 +16,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= jsdebug
 LIBRARY_NAME	= jsd
-DIRS	= idl
 CPPSRCS	 = \
 		jsd_xpc.cpp \
 		jshash.cpp
@@ -49,10 +48,6 @@ CPPSRCS		+= \
 		  jsd_text.cpp \
 		  jsd_val.cpp \
 		  $(NULL)
-
-ifdef ENABLE_TESTS
-TOOL_DIRS		+= test
-endif
 
 include $(topsrcdir)/config/rules.mk
 

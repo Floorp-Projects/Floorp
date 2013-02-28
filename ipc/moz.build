@@ -1,0 +1,24 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIRS += [
+    'chromium',
+    'glue',
+    'ipdl',
+    'testshell',
+]
+
+if CONFIG['MOZ_B2G_RIL']:
+    DIRS += ['ril']
+
+if CONFIG['MOZ_B2G_BT']:
+    DIRS += ['dbus']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    DIRS += ['netd', 'unixsocket']
+elif CONFIG['OS_ARCH'] == 'Linux':
+    DIRS += ['unixsocket']
+
+TOOL_DIRS += ['app']

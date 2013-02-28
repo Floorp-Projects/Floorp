@@ -13,14 +13,6 @@ include $(srcdir)/objs.mk
 
 EXTRA_DEPS += $(srcdir)/objs.mk
 
-DIRS            = standalone nomozalloc
-
-# On win we build two glue libs - glue linked to crt dlls here and in staticruntime we build
-# a statically linked glue lib.
-ifeq ($(OS_ARCH),WINNT)
-DIRS += staticruntime
-endif
-
 MODULE		= xpcom
 LIBRARY_NAME	= xpcomglue_s
 DIST_INSTALL	= 1

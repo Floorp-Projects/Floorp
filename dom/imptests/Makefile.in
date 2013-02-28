@@ -8,21 +8,6 @@ srcdir = @srcdir@
 VPATH = @srcdir@
 relativesrcdir = dom/imported-tests
 
-DIRS = \
-  failures/editing/conformancetest \
-  failures/editing/selecttest \
-  failures/html/html/semantics/scripting-1/the-script-element \
-  failures/html/old-tests/submission/Opera/microdata \
-  failures/webapps/DOMCore/tests/approved \
-  failures/webapps/DOMCore/tests/submissions/Ms2ger \
-  failures/webapps/DOMCore/tests/submissions/Opera \
-  failures/webapps/WebStorage/tests/submissions/Infraware \
-  failures/webapps/WebStorage/tests/submissions/Ms2ger \
-  $(NULL)
-
-include $(srcdir)/editing.mk
-include $(srcdir)/html.mk
-include $(srcdir)/webapps.mk
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 

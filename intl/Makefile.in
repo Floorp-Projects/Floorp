@@ -9,19 +9,4 @@ srcdir    = @srcdir@
 VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-
-PARALLEL_DIRS = \
-  hyphenation \
-  locale \
-  locales \
-  lwbrk \
-  strres \
-  unicharutil \
-  $(NULL)
-
-DIRS = \
-  uconv \
-  build \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk

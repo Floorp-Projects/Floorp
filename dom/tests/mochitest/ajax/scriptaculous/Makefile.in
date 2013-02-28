@@ -11,12 +11,6 @@ relativesrcdir	= @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= \
-	lib \
-	src \
-	test/unit \
-	$(NULL)
-
 MOCHITEST_FILES	= \
 	manifest.json \
 	test_Scriptaculous.html \

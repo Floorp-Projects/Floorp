@@ -9,23 +9,4 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-
-ifdef MOZ_PDF_PRINTING
-PLATFORM_DIR += unixshared
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-PLATFORM_DIR = os2
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-PLATFORM_DIR = win
-endif
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-PLATFORM_DIR = mac
-endif
-
-DIRS = $(PLATFORM_DIR)
-
 include $(topsrcdir)/config/rules.mk

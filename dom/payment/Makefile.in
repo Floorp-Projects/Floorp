@@ -9,8 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PARALLEL_DIRS = interfaces
-
 EXTRA_COMPONENTS = \
   Payment.js \
   PaymentFlowInfo.js \
@@ -21,8 +19,6 @@ EXTRA_COMPONENTS = \
 EXTRA_JS_MODULES += \
   Payment.jsm \
   $(NULL)
-
-TEST_DIRS += tests
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk

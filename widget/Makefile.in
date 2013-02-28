@@ -14,35 +14,6 @@ GRE_MODULE	= 1
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = shared xpwidgets
-
-ifneq (,$(filter os2 cocoa qt android gonk,$(MOZ_WIDGET_TOOLKIT)))
-DIRS += $(MOZ_WIDGET_TOOLKIT)
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-DIRS += windows
-endif
-
-ifdef ENABLE_TESTS
-TOOL_DIRS += tests
-endif
-
-#
-# Don't build the DSO under the 'build' directory as windows does.
-#
-# The DSOs get built in the toolkit dir itself.  Do this so that 
-# multiple implementations of widget can be built on the same
-# source tree.
-#
-ifdef MOZ_ENABLE_GTK2
-DIRS += gtk2
-ifdef MOZ_X11
-DIRS += gtkxtbin
-endif
-endif
-
-
 EXPORTS_NAMESPACES = IPC mozilla
 
 EXPORTS_IPC = \

@@ -10,6 +10,5 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= ogg
-DIRS		= ogg
 
 include $(topsrcdir)/config/rules.mk

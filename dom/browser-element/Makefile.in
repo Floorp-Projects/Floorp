@@ -18,8 +18,6 @@ FAIL_ON_WARNINGS := 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
-TEST_DIRS += mochitest
-
 XPIDLSRCS = \
   nsIOpenWindowEventDetail.idl \
   nsIAsyncScrollEventDetail.idl \
