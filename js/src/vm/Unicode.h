@@ -120,8 +120,9 @@ extern const CharacterInfo js_charinfo[];
 inline const CharacterInfo&
 CharInfo(jschar code)
 {
-    size_t index = index1[code >> 6];
-    index = index2[(index << 6) + (code & 0x3f)];
+    const size_t shift = 5;
+    size_t index = index1[code >> shift];
+    index = index2[(index << shift) + (code & ((1 << shift) - 1))];
 
     return js_charinfo[index];
 }
