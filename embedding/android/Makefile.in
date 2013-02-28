@@ -10,8 +10,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/ipc/app/defs.mk
 
-DIRS = locales
-
 JAVAFILES = \
   GeckoApp.java \
   GeckoAppShell.java \

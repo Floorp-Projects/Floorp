@@ -9,12 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef ENABLE_MARIONETTE
-    DIRS += components \
-            atoms \
-            $(NULL)
-endif
-
 ifdef ENABLE_TESTS
     DEFINES += -DENABLE_TESTS
 endif

@@ -17,8 +17,6 @@ XPCSHELL_TESTS = \
   unit \
   $(NULL)
 
-DIRS += chrome
-
 include $(topsrcdir)/config/rules.mk
 
 libs:: 

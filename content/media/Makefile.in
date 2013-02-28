@@ -77,48 +77,6 @@ CPPSRCS += \
   $(NULL)
 endif
 
-PARALLEL_DIRS += webaudio
-
-ifdef MOZ_RAW
-PARALLEL_DIRS += raw
-endif
-
-ifdef MOZ_OGG
-PARALLEL_DIRS += ogg
-endif
-
-ifdef MOZ_WAVE
-PARALLEL_DIRS += wave
-endif
-
-ifdef MOZ_WEBM
-PARALLEL_DIRS += webm
-endif
-
-ifdef MOZ_GSTREAMER
-PARALLEL_DIRS += gstreamer
-endif
-
-ifdef MOZ_DASH
-PARALLEL_DIRS += dash
-endif
-
-ifdef MOZ_MEDIA_PLUGINS
-PARALLEL_DIRS += plugins
-endif
-
-ifdef MOZ_WMF
-PARALLEL_DIRS += wmf
-endif
-
-PARALLEL_DIRS += webrtc
-
-ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-PARALLEL_DIRS += omx
-endif
-
-TEST_DIRS += test
-
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/config.mk

@@ -35,28 +35,5 @@ DEFINES		+= -DMOZ_PNG_WRITE \
 	-DMOZ_PNG_READ \
 	$(NULL)
 
-
-# The Icon Channel stuff really shouldn't live in decoders/icon, but we'll
-# fix that another time.
-ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-DIRS = icon/gtk icon
-endif
-ifneq (,$(filter qt,$(MOZ_WIDGET_TOOLKIT)))
-DIRS = icon/qt icon
-endif
-ifeq ($(OS_ARCH),WINNT)
-DIRS = icon/win icon
-endif
-ifeq ($(OS_ARCH),OS2)
-DIRS = icon/os2 icon
-endif
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-DIRS = icon/mac icon
-endif
-ifeq (android,$(MOZ_WIDGET_TOOLKIT))
-DIRS = icon/android icon
-endif
-
-
 include $(topsrcdir)/config/rules.mk
 

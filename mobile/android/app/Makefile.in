@@ -9,7 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS      = profile/extensions
 dist_dest = $(DIST)/$(APP_NAME).app
 
 PREF_JS_EXPORTS = $(srcdir)/mobile.js

@@ -10,12 +10,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS += \
-  ia2 \
-  sdn \
-  uia \
-  $(null)
-
 include $(topsrcdir)/config/rules.mk
 
 ifneq ($(A11Y_LOG),0)

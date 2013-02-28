@@ -11,11 +11,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= lwbrk
-DIRS		= idl public src
-
-ifdef ENABLE_TESTS
-TOOL_DIRS	+= tests
-endif
 
 include $(topsrcdir)/config/rules.mk
 

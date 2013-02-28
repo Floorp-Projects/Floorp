@@ -12,47 +12,4 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 
-PARALLEL_DIRS = \
-		style \
-		base \
-		generic \
-		forms \
-		tables \
-		svg \
-		xul/base/public \
-		xul/base/src \
-		ipc \
-		mathml \
-		$(NULL)
-
-ifdef NS_PRINTING
-PARALLEL_DIRS += printing
-endif
-
-ifdef MOZ_XUL
-PARALLEL_DIRS += xul/tree xul/grid
-endif
-
-PARALLEL_DIRS += inspector/public inspector/src
-ifdef ENABLE_TESTS
-PARALLEL_DIRS += inspector/tests inspector/tests/chrome
-endif
-
-DIRS           += build
-DIRS           += media
-
-ifdef ENABLE_TESTS
-PARALLEL_DIRS += \
-  mathml/tests \
-  xul/test \
-  xul/base/test \
-  $(NULL)
-
-TOOL_DIRS      += tools/reftest reftests/fonts reftests/fonts/mplus
-
-ifdef MOZ_DEBUG
-DIRS            += tools/layout-debug
-endif
-endif
-
 include $(topsrcdir)/config/rules.mk

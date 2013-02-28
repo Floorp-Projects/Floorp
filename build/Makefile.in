@@ -14,29 +14,6 @@ include $(topsrcdir)/config/makefiles/makeutils.mk
 
 MODULE = build
 
-ifeq (,$(filter WINNT OS2,$(OS_ARCH)))
-DIRS		= unix
-endif
-
-ifeq (WINNT,$(OS_ARCH))
-DIRS = win32
-endif
-
-ifdef STLPORT_SOURCES
-DIRS += stlport
-endif
-
-DIRS += pgo
-
-ifeq (android,$(MOZ_WIDGET_TOOLKIT))
-TEST_DIRS += mobile/sutagent/android \
-          mobile/sutagent/android/watcher \
-          mobile/sutagent/android/ffxcp \
-          mobile/sutagent/android/fencp \
-          mobile/robocop \
-          $(NULL)
-endif
-
 ifdef MOZ_APP_BASENAME
 DIST_FILES = $(srcdir)/application.ini
 

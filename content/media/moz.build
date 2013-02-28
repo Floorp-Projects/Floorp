@@ -1,0 +1,38 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+PARALLEL_DIRS += ['webaudio']
+
+if CONFIG['MOZ_RAW']:
+    PARALLEL_DIRS += ['raw']
+
+if CONFIG['MOZ_OGG']:
+    PARALLEL_DIRS += ['ogg']
+
+if CONFIG['MOZ_WAVE']:
+    PARALLEL_DIRS += ['wave']
+
+if CONFIG['MOZ_WEBM']:
+    PARALLEL_DIRS += ['webm']
+
+if CONFIG['MOZ_GSTREAMER']:
+    PARALLEL_DIRS += ['gstreamer']
+
+if CONFIG['MOZ_DASH']:
+    PARALLEL_DIRS += ['dash']
+
+if CONFIG['MOZ_MEDIA_PLUGINS']:
+    PARALLEL_DIRS += ['plugins']
+
+if CONFIG['MOZ_WMF']:
+    PARALLEL_DIRS += ['wmf']
+
+PARALLEL_DIRS += ['webrtc']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    PARALLEL_DIRS += ['omx']
+
+TEST_DIRS += ['test']
+

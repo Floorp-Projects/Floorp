@@ -9,8 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-TEST_DIRS += tests
-
 MODULES := policy.jsm sessions.jsm
 MODULES_PATH = $(FINAL_TARGET)/modules/services/datareporting
 PP_TARGETS += MODULES

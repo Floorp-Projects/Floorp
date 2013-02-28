@@ -56,12 +56,6 @@ EXPORTS := \
   MediaBufferDecoder.h \
   $(NULL)
 
-PARALLEL_DIRS := test
-
-ifdef ENABLE_TESTS
-TOOL_DIRS += compiledtest
-endif
-
 FORCE_STATIC_LIB := 1
 
 include $(topsrcdir)/config/rules.mk

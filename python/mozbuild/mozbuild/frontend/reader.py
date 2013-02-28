@@ -102,8 +102,17 @@ class MozbuildSandbox(Sandbox):
             d['SRCDIR'] = os.path.join(config.topsrcdir, reldir).replace(os.sep, '/').rstrip('/')
             d['OBJDIR'] = os.path.join(topobjdir, reldir).replace(os.sep, '/').rstrip('/')
 
-            d['CONFIG'] = ReadOnlyDefaultDict(config.substs,
-                global_default=None)
+            # config.status does not yet use unicode. However, mozbuild expects
+            # unicode everywhere. So, decode binary into unicode as necessary.
+            # Bug 844509 tracks a better way to do this.
+            substs = {}
+            for k, v in config.substs.items():
+                if not isinstance(v, text_type):
+                    v = v.decode('utf-8', 'strict')
+
+                substs[k] = v
+
+            d['CONFIG'] = ReadOnlyDefaultDict(substs, global_default=None)
 
             # Register functions.
             for name, func in FUNCTIONS.items():

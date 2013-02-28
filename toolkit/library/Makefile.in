@@ -17,12 +17,6 @@ LIBRARY_NAME = xul
 FORCE_SHARED_LIB = 1
 MOZILLA_INTERNAL_API = 1
 
-ifdef MOZ_METRO
-ifeq ($(OS_ARCH),WINNT)
-DIRS += winvccorlib
-endif
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 # This is going to be a framework named "XUL", not an ordinary library named
 # "libxul.dylib"
