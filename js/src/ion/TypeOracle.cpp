@@ -310,7 +310,7 @@ TypeInferenceOracle::elementReadIsTypedArray(RawScript script, jsbytecode *pc, i
 {
     // Check whether the object is a typed array and index is int32 or double.
     StackTypeSet *obj = script->analysis()->poppedTypes(pc, 1);
-    StackTypeSet *id = DropUnrooted(script)->analysis()->poppedTypes(pc, 0);
+    StackTypeSet *id = script->analysis()->poppedTypes(pc, 0);
 
     JSValueType idType = id->getKnownTypeTag();
     if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)

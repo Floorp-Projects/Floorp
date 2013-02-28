@@ -502,7 +502,7 @@ class IonBuilder : public MIRGenerator
 
     void clearForBackEnd();
 
-    UnrootedScript script() const { return script_.get(); }
+    JSScript *script() const { return script_.get(); }
 
     CodeGenerator *backgroundCodegen() const { return backgroundCodegen_; }
     void setBackgroundCodegen(CodeGenerator *codegen) { backgroundCodegen_ = codegen; }
