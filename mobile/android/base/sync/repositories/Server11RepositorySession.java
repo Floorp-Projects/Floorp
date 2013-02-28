@@ -16,11 +16,11 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.json.simple.JSONArray;
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.DelayedWorkTracker;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.HTTPFailureException;
-import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.Server11PreviousPostFailedException;
 import org.mozilla.gecko.sync.Server11RecordPostFailedException;
 import org.mozilla.gecko.sync.UnexpectedJSONException;

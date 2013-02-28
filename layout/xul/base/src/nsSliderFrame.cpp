@@ -231,10 +231,7 @@ nsSliderFrame::AttributeChanged(int32_t aNameSpaceID,
                                              aModType);
   // if the current position changes
   if (aAttribute == nsGkAtoms::curpos) {
-     rv = CurrentPositionChanged(PresContext());
-     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to change position");
-     if (NS_FAILED(rv))
-        return rv;
+     CurrentPositionChanged();
   } else if (aAttribute == nsGkAtoms::minpos ||
              aAttribute == nsGkAtoms::maxpos) {
       // bounds check it.
@@ -649,8 +646,8 @@ nsSliderFrame::PageUpDown(nscoord change)
 }
 
 // called when the current position changed and we need to update the thumb's location
-nsresult
-nsSliderFrame::CurrentPositionChanged(nsPresContext* aPresContext)
+void
+nsSliderFrame::CurrentPositionChanged()
 {
   nsIFrame* scrollbarBox = GetScrollbar();
   nsCOMPtr<nsIContent> scrollbar;
@@ -661,7 +658,7 @@ nsSliderFrame::CurrentPositionChanged(nsPresContext* aPresContext)
 
   // do nothing if the position did not change
   if (mCurPos == curPos)
-      return NS_OK;
+    return;
 
   // get our current min and max position from our content node
   int32_t minPos = GetMinPosition(scrollbar);
@@ -673,7 +670,7 @@ nsSliderFrame::CurrentPositionChanged(nsPresContext* aPresContext)
   // get the thumb's rect
   nsIFrame* thumbFrame = mFrames.FirstChild();
   if (!thumbFrame)
-    return NS_OK; // The thumb may stream in asynchronously via XBL.
+    return; // The thumb may stream in asynchronously via XBL.
 
   nsRect thumbRect = thumbFrame->GetRect();
 
@@ -709,8 +706,6 @@ nsSliderFrame::CurrentPositionChanged(nsPresContext* aPresContext)
         new nsValueChangedRunnable(sliderListener, nsGkAtoms::curpos, mCurPos, mUserChanged));
     }
   }
-
-  return NS_OK;
 }
 
 static void UpdateAttribute(nsIContent* aScrollbar, nscoord aNewPos, bool aNotify, bool aIsSmooth) {
@@ -799,8 +794,7 @@ nsSliderFrame::SetCurrentPositionInternal(nsIContent* aScrollbar, int32_t aNewPo
       UpdateAttribute(scrollbar, aNewPos, false, aIsSmooth);
       nsIFrame* frame = content->GetPrimaryFrame();
       if (frame && frame->GetType() == nsGkAtoms::sliderFrame) {
-        static_cast<nsSliderFrame*>(frame)->
-          CurrentPositionChanged(frame->PresContext());
+        static_cast<nsSliderFrame*>(frame)->CurrentPositionChanged();
       }
       mUserChanged = false;
       return;

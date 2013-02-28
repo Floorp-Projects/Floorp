@@ -34,4 +34,19 @@
     '-mfpu=neon',
     '-flax-vector-conversions',
   ],
+  'asflags!': [
+    '-mfpu=vfpv3-d16',
+  ],
+  'asflags_mozilla!': [
+    '-mfpu=vfpv3-d16',
+  ],
+  'asflags': [
+    '-mfpu=neon',
+    '-flax-vector-conversions',
+  ],
+  'asflags_mozilla': [
+    '-mfpu=neon',
+    '-flax-vector-conversions',
+  ],
+
 }

@@ -107,7 +107,8 @@
                                 android:textColorHint="@color/awesome_bar_title_hint"
                                 android:gravity="center_vertical|left"
                                 android:hint="@string/awesomebar_default_text"
-                                android:layout_gravity="center_vertical"/>
+                                android:layout_gravity="center_vertical"
+                                gecko:autoUpdateTheme="false"/>
 
                 <ImageButton android:id="@+id/reader"
                              style="@style/AddressBar.ImageButton.Icon"

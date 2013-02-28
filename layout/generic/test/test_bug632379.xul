@@ -166,7 +166,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=632379
 
 <script class="testbody" type="application/javascript"><![CDATA[
 
-if (navigator.platform.startsWith("Linux")) {
+if (navigator.platform.startsWith("Win")) {
+  SimpleTest.expectAssertions(0, 3);
+} else if (navigator.platform.startsWith("Linux")) {
   SimpleTest.expectAssertions(0, 2);
 }
 

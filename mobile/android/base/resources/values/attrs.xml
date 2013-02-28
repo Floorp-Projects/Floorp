@@ -71,6 +71,7 @@
     <declare-styleable name="LightweightTheme">
         <attr name="state_light" format="boolean"/>
         <attr name="state_dark" format="boolean"/>
+        <attr name="autoUpdateTheme" format="boolean"/>
     </declare-styleable>
 
     <declare-styleable name="TwoWayView">

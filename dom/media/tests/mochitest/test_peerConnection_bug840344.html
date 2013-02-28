@@ -21,6 +21,10 @@ Bug 840344</a>
 
 <script class="testbody" type="application/javascript">
 
+  if (navigator.platform.startsWith("Linux")) {
+    SimpleTest.expectAssertions(0, 1);
+  }
+
   runTest(function () {
     var answerCount = 0;
     var setLocalCount = 0;

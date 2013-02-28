@@ -1215,30 +1215,63 @@ nsContainerFrame::DisplayOverflowContainers(nsDisplayListBuilder*   aBuilder,
   }
 }
 
+static bool
+TryRemoveFrame(nsIFrame* aFrame, FramePropertyTable* aPropTable,
+               const FramePropertyDescriptor* aProp, nsIFrame* aChildToRemove,
+               bool (nsFrameList::*aRemoveMethod)(nsIFrame* aFrame))
+{
+  nsFrameList* list = static_cast<nsFrameList*>(aPropTable->Get(aFrame, aProp));
+  if (list && (list->*aRemoveMethod)(aChildToRemove)) {
+    // aChildToRemove *may* have been removed from this list.
+    if (list->IsEmpty()) {
+      aPropTable->Remove(aFrame, aProp);
+      delete list;
+    }
+    return true;
+  }
+  return false;
+}
+
 nsresult
 nsContainerFrame::StealFrame(nsPresContext* aPresContext,
                              nsIFrame*      aChild,
                              bool           aForceNormal)
 {
-  bool removed = true;
-  if ((aChild->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)
-      && !aForceNormal) {
-    // Try removing from the overflow container list
-    if (!RemovePropTableFrame(aPresContext, aChild,
-                              OverflowContainersProperty())) {
-      // It must be in the excess overflow container list
-      removed = RemovePropTableFrame(aPresContext, aChild,
-                                     ExcessOverflowContainersProperty());
+#ifdef DEBUG
+  if (!mFrames.ContainsFrame(aChild)) {
+    FramePropertyTable* propTable = aPresContext->PropertyTable();
+    nsFrameList* list = static_cast<nsFrameList*>(
+                          propTable->Get(this, OverflowContainersProperty()));
+    if (!list || !list->ContainsFrame(aChild)) {
+      list = static_cast<nsFrameList*>(
+               propTable->Get(this, ExcessOverflowContainersProperty()));
+      MOZ_ASSERT(list && list->ContainsFrame(aChild), "aChild is not our child "
+                 "or on a frame list not supported by StealFrame");
     }
   }
-  else {
-    if (!mFrames.RemoveFrameIfPresent(aChild)) {
-      removed = false;
-      // We didn't find the child in the parent's principal child list.
+#endif
+
+  bool removed;
+  if ((aChild->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)
+      && !aForceNormal) {
+    FramePropertyTable* propTable = aPresContext->PropertyTable();
+    // Try removing from the overflow container list.
+    removed = ::TryRemoveFrame(this, propTable, OverflowContainersProperty(),
+                               aChild, &nsFrameList::StartRemoveFrame);
+    if (!removed) {
+      // It must be in the excess overflow container list.
+      removed = ::TryRemoveFrame(this, propTable,
+                                 ExcessOverflowContainersProperty(),
+                                 aChild, &nsFrameList::ContinueRemoveFrame);
+    }
+  } else {
+    removed = mFrames.StartRemoveFrame(aChild);
+    if (!removed) {
+      // We didn't find the child in our principal child list.
       // Maybe it's on the overflow list?
       nsFrameList* frameList = GetOverflowFrames();
       if (frameList) {
-        removed = frameList->RemoveFrameIfPresent(aChild);
+        removed = frameList->ContinueRemoveFrame(aChild);
         if (frameList->IsEmpty()) {
           DestroyOverflowList(aPresContext, nullptr);
         }
@@ -1415,33 +1448,6 @@ nsContainerFrame::RemovePropTableFrames(nsPresContext*                 aPresCont
 {
   FramePropertyTable* propTable = aPresContext->PropertyTable();
   return static_cast<nsFrameList*>(propTable->Remove(this, aProperty));
-}
-
-bool
-nsContainerFrame::RemovePropTableFrame(nsPresContext*                 aPresContext,
-                                       nsIFrame*                      aFrame,
-                                       const FramePropertyDescriptor* aProperty)
-{
-  nsFrameList* frameList = RemovePropTableFrames(aPresContext, aProperty);
-  if (!frameList) {
-    // No such list
-    return false;
-  }
-  if (!frameList->RemoveFrameIfPresent(aFrame)) {
-    // Found list, but it doesn't have the frame. Put list back.
-    SetPropTableFrames(aPresContext, frameList, aProperty);
-    return false;
-  }
-
-  if (frameList->IsEmpty()) {
-    // Removed frame and now list is empty. Delete it.
-    delete frameList;
-  }
-  else {
-    // Removed frame, but list not empty. Put it back.
-    SetPropTableFrames(aPresContext, frameList, aProperty);
-  }
-  return true;
 }
 
 nsresult

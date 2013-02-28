@@ -1,0 +1,278 @@
+diff --git a/nsprpub/configure.in b/nsprpub/configure.in
+--- a/nsprpub/configure.in
++++ b/nsprpub/configure.in
+@@ -2583,17 +2583,17 @@ dnl AC_HEADER_TIME
+ dnl AC_STRUCT_TM
+ 
+ dnl ========================================================
+ dnl Checks for library functions.
+ dnl ========================================================
+ AC_PROG_GCC_TRADITIONAL
+ _SAVE_LIBS="$LIBS"
+ LIBS="$LIBS $OS_LIBS"
+-AC_CHECK_FUNCS(lchown strerror dladdr)
++AC_CHECK_FUNCS(dladdr gettid lchown setpriority strerror syscall)
+ LIBS="$_SAVE_LIBS"
+ 
+ dnl AC_FUNC_MEMCMP
+ dnl AC_FUNC_MMAP
+ dnl AC_FUNC_SETVBUF_REVERSED
+ dnl AC_FUNC_STRCOLL
+ dnl AC_FUNC_STRFTIME
+ dnl AC_FUNC_UTIME_NULL
+diff --git a/nsprpub/pr/include/private/primpl.h b/nsprpub/pr/include/private/primpl.h
+--- a/nsprpub/pr/include/private/primpl.h
++++ b/nsprpub/pr/include/private/primpl.h
+@@ -45,16 +45,20 @@ typedef struct PRSegment PRSegment;
+ #include "obsolete/probslet.h"
+ 
+ #ifdef _PR_HAVE_POSIX_SEMAPHORES
+ #include <semaphore.h>
+ #elif defined(_PR_HAVE_SYSV_SEMAPHORES)
+ #include <sys/sem.h>
+ #endif
+ 
++#ifdef HAVE_SYSCALL
++#include <sys/syscall.h>
++#endif
++
+ /*************************************************************************
+ *****  A Word about Model Dependent Function Naming Convention ***********
+ *************************************************************************/
+ 
+ /*
+ NSPR 2.0 must implement its function across a range of platforms 
+ including: MAC, Windows/16, Windows/95, Windows/NT, and several
+ variants of Unix. Each implementation shares common code as well 
+@@ -181,16 +185,27 @@ typedef struct PTDebug
+     PRUintn cvars_created, cvars_destroyed;
+     PRUintn cvars_notified, delayed_cv_deletes;
+ } PTDebug;
+ 
+ #endif /* defined(DEBUG) */
+ 
+ NSPR_API(void) PT_FPrintStats(PRFileDesc *fd, const char *msg);
+ 
++/*
++ * On Linux and its derivatives POSIX priority scheduling works only for
++ * real-time threads. On those platforms we set thread's nice values
++ * instead which requires us to track kernel thread IDs for each POSIX
++ * thread we create.
++ */
++#if defined(LINUX) && defined(HAVE_SETPRIORITY) && \
++    ((defined(HAVE_SYSCALL) && defined(SYS_gettid)) || defined(HAVE_GETTID))
++#define _PR_NICE_PRIORITY_SCHEDULING
++#endif
++
+ #else /* defined(_PR_PTHREADS) */
+ 
+ NSPR_API(void) PT_FPrintStats(PRFileDesc *fd, const char *msg);
+ 
+ /*
+ ** This section is contains those parts needed to implement NSPR on
+ ** platforms in general. One would assume that the pthreads implementation
+ ** included lots of the same types, at least conceptually.
+@@ -1535,16 +1550,19 @@ struct PRThread {
+     PRInt32 osErrorCode;            /* mapping of errorCode | zero */
+     PRIntn  errorStringLength;      /* textLength from last call to PR_SetErrorText() */
+     PRInt32 errorStringSize;        /* malloc()'d size of buffer | zero */
+     char *errorString;              /* current error string | NULL */
+     char *name;                     /* thread's name */
+ 
+ #if defined(_PR_PTHREADS)
+     pthread_t id;                   /* pthread identifier for the thread */
++#ifdef _PR_NICE_PRIORITY_SCHEDULING
++    pid_t tid;                      /* Linux-specific kernel thread ID */
++#endif
+     PRBool okToDelete;              /* ok to delete the PRThread struct? */
+     PRCondVar *waiting;             /* where the thread is waiting | NULL */
+     void *sp;                       /* recorded sp for garbage collection */
+     PRThread *next, *prev;          /* simple linked list of all threads */
+     PRUint32 suspend;               /* used to store suspend and resume flags */
+ #ifdef PT_NO_SIGTIMEDWAIT
+     pthread_mutex_t suspendResumeMutex;
+     pthread_cond_t suspendResumeCV;
+diff --git a/nsprpub/pr/src/pthreads/ptthread.c b/nsprpub/pr/src/pthreads/ptthread.c
+--- a/nsprpub/pr/src/pthreads/ptthread.c
++++ b/nsprpub/pr/src/pthreads/ptthread.c
+@@ -23,16 +23,24 @@
+ 
+ #ifdef SYMBIAN
+ /* In Open C sched_get_priority_min/max do not work properly, so we undefine
+  * _POSIX_THREAD_PRIORITY_SCHEDULING here.
+  */
+ #undef _POSIX_THREAD_PRIORITY_SCHEDULING
+ #endif
+ 
++#ifdef _PR_NICE_PRIORITY_SCHEDULING
++#undef _POSIX_THREAD_PRIORITY_SCHEDULING
++#include <sys/resource.h>
++#ifndef HAVE_GETTID
++#define gettid() (syscall(SYS_gettid))
++#endif
++#endif
++
+ /*
+  * Record whether or not we have the privilege to set the scheduling
+  * policy and priority of threads.  0 means that privilege is available.
+  * EPERM means that privilege is not available.
+  */
+ 
+ static PRIntn pt_schedpriv = 0;
+ extern PRLock *_pr_sleeplock;
+@@ -49,26 +57,35 @@ static struct _PT_Bookeeping
+     PRInt32 minPrio, maxPrio;   /* range of scheduling priorities */
+ #endif
+ } pt_book = {0};
+ 
+ static void _pt_thread_death(void *arg);
+ static void _pt_thread_death_internal(void *arg, PRBool callDestructors);
+ static void init_pthread_gc_support(void);
+ 
+-#if defined(_PR_DCETHREADS) || defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
++#if defined(_PR_DCETHREADS) || \
++    defined(_POSIX_THREAD_PRIORITY_SCHEDULING) || \
++    defined(_PR_NICE_PRIORITY_SCHEDULING)
+ static PRIntn pt_PriorityMap(PRThreadPriority pri)
+ {
+ #ifdef NTO
+     /* This priority algorithm causes lots of problems on Neutrino
+      * for now I have just hard coded everything to run at priority 10
+      * until I can come up with a new algorithm.
+      *     Jerry.Kirk@Nexwarecorp.com
+      */
+     return 10;
++#elif defined(_PR_NICE_PRIORITY_SCHEDULING)
++    /* This maps high priorities to low nice values:
++     * PR_PRIORITY_LOW     1
++     * PR_PRIORITY_NORMAL  0
++     * PR_PRIORITY_HIGH   -1
++     * PR_PRIORITY_URGENT -2 */
++    return 1 - pri;
+ #else
+     return pt_book.minPrio +
+ 	    pri * (pt_book.maxPrio - pt_book.minPrio) / PR_PRIORITY_LAST;
+ #endif
+ }
+ #endif
+ 
+ /*
+@@ -93,28 +110,46 @@ static void _PR_InitializeStack(PRThread
+     }
+ }
+ 
+ static void *_pt_root(void *arg)
+ {
+     PRIntn rv;
+     PRThread *thred = (PRThread*)arg;
+     PRBool detached = (thred->state & PT_THREAD_DETACHED) ? PR_TRUE : PR_FALSE;
++#ifdef _PR_NICE_PRIORITY_SCHEDULING
++    pid_t tid;
++#endif
+ 
+     /*
+      * Both the parent thread and this new thread set thred->id.
+      * The new thread must ensure that thred->id is set before
+      * it executes its startFunc.  The parent thread must ensure
+      * that thred->id is set before PR_CreateThread() returns.
+      * Both threads set thred->id without holding a lock.  Since
+      * they are writing the same value, this unprotected double
+      * write should be safe.
+      */
+     thred->id = pthread_self();
+ 
++#ifdef _PR_NICE_PRIORITY_SCHEDULING
++    /*
++     * We need to know the kernel thread ID of each thread in order to
++     * set its priority hence we do it here instead of at creation time.
++     */
++    tid = gettid();
++
++    rv = setpriority(PRIO_PROCESS, tid, pt_PriorityMap(thred->priority));
++
++    PR_Lock(pt_book.ml);
++    thred->tid = tid;
++    PR_NotifyAllCondVar(pt_book.cv);
++    PR_Unlock(pt_book.ml);
++#endif
++
+     /*
+     ** DCE Threads can't detach during creation, so do it late.
+     ** I would like to do it only here, but that doesn't seem
+     ** to work.
+     */
+ #if defined(_PR_DCETHREADS)
+     if (detached)
+     {
+@@ -219,16 +254,19 @@ static PRThread* pt_AttachThread(void)
+     /* PR_NEWZAP must not call PR_GetCurrentThread() */
+     thred = PR_NEWZAP(PRThread);
+     if (NULL != thred)
+     {
+         int rv;
+ 
+         thred->priority = PR_PRIORITY_NORMAL;
+         thred->id = pthread_self();
++#ifdef _PR_NICE_PRIORITY_SCHEDULING
++        thred->tid = gettid();
++#endif
+         rv = pthread_setspecific(pt_book.key, thred);
+         PR_ASSERT(0 == rv);
+ 
+         thred->state = PT_THREAD_GLOBAL | PT_THREAD_FOREIGN;
+         PR_Lock(pt_book.ml);
+ 
+         /* then put it into the list */
+         thred->prev = pt_book.last;
+@@ -639,16 +677,31 @@ PR_IMPLEMENT(void) PR_SetThreadPriority(
+ 				pt_schedpriv = EPERM;
+ 				PR_LOG(_pr_thread_lm, PR_LOG_MIN,
+ 					("PR_SetThreadPriority: no thread scheduling privilege"));
+ 			}
+ 		}
+ 		if (rv != 0)
+ 			rv = -1;
+     }
++#elif defined(_PR_NICE_PRIORITY_SCHEDULING)
++    PR_Lock(pt_book.ml);
++    while (thred->tid == 0)
++        PR_WaitCondVar(pt_book.cv, PR_INTERVAL_NO_TIMEOUT);
++    PR_Unlock(pt_book.ml);
++
++    rv = setpriority(PRIO_PROCESS, thred->tid, pt_PriorityMap(newPri));
++
++    if (rv == -1 && errno == EPERM)
++    {
++        /* We don't set pt_schedpriv to EPERM because adjusting the nice
++         * value might be permitted for certain ranges but not others */
++        PR_LOG(_pr_thread_lm, PR_LOG_MIN,
++            ("PR_SetThreadPriority: no thread scheduling privilege"));
++    }
+ #endif
+ 
+     thred->priority = newPri;
+ }  /* PR_SetThreadPriority */
+ 
+ PR_IMPLEMENT(PRStatus) PR_Interrupt(PRThread *thred)
+ {
+     /*
+@@ -857,16 +910,19 @@ void _PR_InitThreads(
+     pt_book.cv = PR_NewCondVar(pt_book.ml);
+     PR_ASSERT(NULL != pt_book.cv);
+     thred = PR_NEWZAP(PRThread);
+     PR_ASSERT(NULL != thred);
+     thred->arg = NULL;
+     thred->startFunc = NULL;
+     thred->priority = priority;
+     thred->id = pthread_self();
++#ifdef _PR_NICE_PRIORITY_SCHEDULING
++    thred->tid = gettid();
++#endif
+ 
+     thred->state = (PT_THREAD_DETACHED | PT_THREAD_PRIMORD);
+     if (PR_SYSTEM_THREAD == type)
+     {
+         thred->state |= PT_THREAD_SYSTEM;
+         pt_book.system += 1;
+ 	    pt_book.this_many = 0;
+     }

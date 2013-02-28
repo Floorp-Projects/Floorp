@@ -9,6 +9,10 @@
       iframe { width: 90%; height: 50px; }
     </style>
 <script>
+if (navigator.platform.startsWith("Linux")) {
+  SimpleTest.expectAssertions(0, 1);
+}
+
 window.onload = function () {
   navigateByLocation(window0);
   navigateByOpen("window1");

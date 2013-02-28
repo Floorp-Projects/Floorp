@@ -13,6 +13,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=413310
 <p id="display">
 <script class="testbody" type="text/javascript">
 
+if (navigator.platform.startsWith("Mac")) {
+  SimpleTest.expectAssertions(0, 2);
+} else {
+  SimpleTest.expectAssertions(0, 1);
+}
+
 /** Test for Bug 413310 **/
 
 // NOTE: If we ever make subframes do bfcache stuff, this test will need to be
