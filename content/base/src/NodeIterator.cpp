@@ -18,6 +18,7 @@
 #include "nsDOMClassInfoID.h"
 #include "nsContentUtils.h"
 #include "nsCOMPtr.h"
+#include "mozilla/dom/NodeIteratorBinding.h"
 
 DOMCI_DATA(NodeIterator, mozilla::dom::NodeIterator)
 
@@ -298,6 +299,12 @@ void NodeIterator::ContentRemoved(nsIDocument *aDocument,
 
     mPointer.AdjustAfterRemoval(mRoot, container, aChild, aPreviousSibling);
     mWorkingPointer.AdjustAfterRemoval(mRoot, container, aChild, aPreviousSibling);
+}
+
+JSObject*
+NodeIterator::WrapObject(JSContext *cx, JSObject *scope)
+{
+    return NodeIteratorBinding::Wrap(cx, scope, this);
 }
 
 } // namespace dom
