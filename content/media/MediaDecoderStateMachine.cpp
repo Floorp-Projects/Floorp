@@ -1560,7 +1560,7 @@ void MediaDecoderStateMachine::Seek(double aTime)
   NS_ASSERTION(mEndTime != -1, "Should know end time by now");
   mSeekTime = std::min(mSeekTime, mEndTime);
   mSeekTime = std::max(mStartTime, mSeekTime);
-  mBasePosition = mSeekTime;
+  mBasePosition = mSeekTime - mStartTime;
   LOG(PR_LOG_DEBUG, ("%p Changed state to SEEKING (to %f)", mDecoder.get(), aTime));
   mState = DECODER_STATE_SEEKING;
   if (mDecoder->GetDecodedStream()) {
@@ -2766,11 +2766,11 @@ void MediaDecoderStateMachine::SetPlaybackRate(double aPlaybackRate)
   if (!HasAudio()) {
     // mBasePosition is a position in the video stream, not an absolute time.
     if (mState == DECODER_STATE_SEEKING) {
-      mBasePosition = mSeekTime;
+      mBasePosition = mSeekTime - mStartTime;
     } else {
       mBasePosition = GetVideoStreamPosition();
     }
-    mPlayDuration = mBasePosition - mStartTime;
+    mPlayDuration = mBasePosition;
     mResetPlayStartTime = true;
     mPlayStartTime = TimeStamp::Now();
   }
