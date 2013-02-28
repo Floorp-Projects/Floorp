@@ -5,6 +5,7 @@
 #include "sdp_os_defs.h"
 #include "sdp.h"
 #include "sdp_private.h"
+#include "fsm.h"
 #include "CSFLog.h"
 
 static const char* logTag = "sdp_attr_access";
@@ -6659,6 +6660,7 @@ sdp_result_e sdp_attr_get_fmtp_streams (void *sdp_ptr, u16 level,
                       "not found.", sdp_p->debug_str, level, inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
+        *val = WEBRTC_DATACHANNEL_STREAMS_DEFAULT;
         return (SDP_INVALID_PARAMETER);
     } else {
         *val = attr_p->attr.fmtp.streams;
