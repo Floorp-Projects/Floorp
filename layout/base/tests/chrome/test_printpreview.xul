@@ -13,7 +13,7 @@
 if (navigator.platform.startsWith("Linux")) {
   SimpleTest.expectAssertions(1); // bug 671976
 } else if (navigator.platform.startsWith("Win")) {
-  // reliable 2 on Win7, but not on XP
+  // reliable 1 on Win7, but not on XP
   SimpleTest.expectAssertions(0, 1); // bug 671976
 }
 
