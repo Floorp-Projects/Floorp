@@ -572,6 +572,8 @@
         <richlistbox id="context-commands" bindingType="contextmenu" flex="1">
           <!-- priority="low" items are hidden by default when a context is being displayed
                for two or more media types. (e.g. a linked image) -->
+          <!-- content types preceeded by '!' act as exclusion rules, the menu item will not 
+               be displayed if the content type is present. -->
           <!-- Note the order of richlistitem here is important as it is reflected in the
                menu itself. -->
           <!-- ux spec: https://bug782810.bugzilla.mozilla.org/attachment.cgi?id=714804 -->
@@ -585,8 +587,8 @@
           <richlistitem id="context-paste" type="paste" onclick="ContextCommands.paste();">
             <label value="&contextTextPaste.label;"/>
           </richlistitem>
-          <!-- Search Bing for "..." -->
-          <richlistitem id="context-search" type="copy,selected-text" onclick="ContextCommands.searchText(this);">
+          <!-- Search Bing for "(text..)", displayed on selected content text only -->
+          <richlistitem id="context-search" type="selected-text,!input-text" onclick="ContextCommands.searchText(this);">
             <label id="context-search-label" value=""/>
           </richlistitem>
           <!-- only display if there is text on the clipboard and the target is the urlbar -->
