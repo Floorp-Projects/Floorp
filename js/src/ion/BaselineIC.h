@@ -274,14 +274,14 @@ class ICEntry
     _(UseCount_Fallback)        \
                                 \
     _(TypeMonitor_Fallback)     \
-    _(TypeMonitor_Primitive)    \
     _(TypeMonitor_SingleObject) \
     _(TypeMonitor_TypeObject)   \
+    _(TypeMonitor_PrimitiveSet) \
                                 \
     _(TypeUpdate_Fallback)      \
-    _(TypeUpdate_Primitive)     \
     _(TypeUpdate_SingleObject)  \
     _(TypeUpdate_TypeObject)    \
+    _(TypeUpdate_PrimitiveSet)  \
                                 \
     _(This_Fallback)            \
                                 \
@@ -784,6 +784,18 @@ class ICUpdatedStub : public ICStub
         return firstUpdateStub_;
     }
 
+    bool hasTypeUpdateStub(ICStub::Kind kind) {
+        ICStub *stub = firstUpdateStub_;
+        do {
+            if (stub->kind() == kind)
+                return true;
+
+            stub = stub->next();
+        } while (stub);
+
+        return false;
+    }
+
     inline uint32_t numOptimizedStubs() const {
         return numOptimizedStubs_;
     }
@@ -961,6 +973,84 @@ class ICUseCount_Fallback : public ICFallbackStub
     };
 };
 
+// TypeCheckPrimitiveSetStub
+//   Base class for IC stubs (TypeUpdate or TypeMonitor) that check that a given
+//   value's type falls within a set of primitive types.
+
+class TypeCheckPrimitiveSetStub : public ICStub
+{
+    friend class ICStubSpace;
+  protected:
+    inline static uint16_t TypeToFlag(JSValueType type) {
+        return 1u << static_cast<unsigned>(type);
+    }
+
+    inline static uint16_t ValidFlags() {
+        return ((TypeToFlag(JSVAL_TYPE_OBJECT) << 1) - 1) & ~TypeToFlag(JSVAL_TYPE_MAGIC);
+    }
+
+    TypeCheckPrimitiveSetStub(Kind kind, IonCode *stubCode, uint16_t flags)
+        : ICStub(kind, stubCode)
+    {
+        JS_ASSERT(kind == TypeMonitor_PrimitiveSet || kind == TypeUpdate_PrimitiveSet);
+        JS_ASSERT(flags && !(flags & ~ValidFlags()));
+        extra_ = flags;
+    }
+
+    TypeCheckPrimitiveSetStub *updateTypesAndCode(uint16_t flags, IonCode *code) {
+        JS_ASSERT(flags && !(flags & ~ValidFlags()));
+        if (!code)
+            return NULL;
+        extra_ = flags;
+        stubCode_ = code->raw();
+        return this;
+    }
+
+  public:
+    uint16_t typeFlags() const {
+        return extra_;
+    }
+
+    bool containsType(JSValueType type) const {
+        JS_ASSERT(type <= JSVAL_TYPE_OBJECT);
+        JS_ASSERT(type != JSVAL_TYPE_MAGIC);
+        return extra_ & TypeToFlag(type);
+    }
+
+    ICTypeMonitor_PrimitiveSet *toMonitorStub() {
+        return toTypeMonitor_PrimitiveSet();
+    }
+
+    ICTypeUpdate_PrimitiveSet *toUpdateStub() {
+        return toTypeUpdate_PrimitiveSet();
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        TypeCheckPrimitiveSetStub *existingStub_;
+        uint16_t flags_;
+
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(flags_) << 16);
+        }
+
+      public:
+        Compiler(JSContext *cx, Kind kind, TypeCheckPrimitiveSetStub *existingStub,
+                 JSValueType type)
+          : ICStubCompiler(cx, kind),
+            existingStub_(existingStub),
+            flags_((existingStub ? existingStub->typeFlags() : 0) | TypeToFlag(type))
+        {
+            JS_ASSERT_IF(existingStub_, flags_ != existingStub_->typeFlags());
+        }
+
+        TypeCheckPrimitiveSetStub *updateStub() {
+            JS_ASSERT(existingStub_);
+            return existingStub_->updateTypesAndCode(flags_, getStubCode());
+        }
+    };
+};
+
 // TypeMonitor
 
 // The TypeMonitor fallback stub is not always a regular fallback stub. When
@@ -1043,6 +1133,18 @@ class ICTypeMonitor_Fallback : public ICStub
         return space->allocate<ICTypeMonitor_Fallback>(code, mainFbStub, argumentIndex);
     }
 
+    bool hasStub(ICStub::Kind kind) {
+        ICStub *stub = firstMonitorStub_;
+        do {
+            if (stub->kind() == kind)
+                return true;
+
+            stub = stub->next();
+        } while (stub);
+
+        return false;
+    }
+
     inline ICFallbackStub *mainFallbackStub() const {
         JS_ASSERT(hasFallbackStub_);
         return mainFallbackStub_;
@@ -1123,46 +1225,39 @@ class ICTypeMonitor_Fallback : public ICStub
     };
 };
 
-class ICTypeMonitor_Primitive : public ICStub
+class ICTypeMonitor_PrimitiveSet : public TypeCheckPrimitiveSetStub
 {
     friend class ICStubSpace;
 
-    ICTypeMonitor_Primitive(IonCode *stubCode, JSValueType type)
-        : ICStub(TypeMonitor_Primitive, stubCode)
-    {
-        extra_ = static_cast<uint16_t>(type);
-    }
+    ICTypeMonitor_PrimitiveSet(IonCode *stubCode, uint16_t flags)
+        : TypeCheckPrimitiveSetStub(TypeMonitor_PrimitiveSet, stubCode, flags)
+    {}
 
   public:
-    static inline ICTypeMonitor_Primitive *New(ICStubSpace *space, IonCode *code,
-                                               JSValueType type)
+    static inline ICTypeMonitor_PrimitiveSet *New(ICStubSpace *space, IonCode *code,
+                                                  uint16_t flags)
     {
         if (!code)
             return NULL;
-        return space->allocate<ICTypeMonitor_Primitive>(code, type);
+        return space->allocate<ICTypeMonitor_PrimitiveSet>(code, flags);
     }
 
-    JSValueType type() const {
-        return static_cast<JSValueType>(extra_);
-    }
-
-    class Compiler : public ICStubCompiler {
+    class Compiler : public TypeCheckPrimitiveSetStub::Compiler {
       protected:
-        JSValueType type_;
         bool generateStubCode(MacroAssembler &masm);
 
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(kind) | (static_cast<int32_t>(type_) << 16);
+      public:
+        Compiler(JSContext *cx, ICTypeMonitor_PrimitiveSet *existingStub, JSValueType type)
+          : TypeCheckPrimitiveSetStub::Compiler(cx, TypeMonitor_PrimitiveSet, existingStub, type)
+        {}
+
+        ICTypeMonitor_PrimitiveSet *updateStub() {
+            return this->TypeCheckPrimitiveSetStub::Compiler::updateStub()->toMonitorStub();
         }
 
-      public:
-        Compiler(JSContext *cx, JSValueType type)
-          : ICStubCompiler(cx, TypeMonitor_Primitive),
-            type_(type)
-        { }
-
-        ICTypeMonitor_Primitive *getStub(ICStubSpace *space) {
-            return ICTypeMonitor_Primitive::New(space, getStubCode(), type_);
+        ICTypeMonitor_PrimitiveSet *getStub(ICStubSpace *space) {
+            JS_ASSERT(!existingStub_);
+            return ICTypeMonitor_PrimitiveSet::New(space, getStubCode(), flags_);
         }
     };
 };
@@ -1294,47 +1389,39 @@ class ICTypeUpdate_Fallback : public ICStub
     };
 };
 
-// Type update stub to handle a primitive type.
-class ICTypeUpdate_Primitive : public ICStub
+class ICTypeUpdate_PrimitiveSet : public TypeCheckPrimitiveSetStub
 {
     friend class ICStubSpace;
 
-    ICTypeUpdate_Primitive(IonCode *stubCode, JSValueType type)
-        : ICStub(TypeUpdate_Primitive, stubCode)
-    {
-        extra_ = static_cast<uint16_t>(type);
-    }
+    ICTypeUpdate_PrimitiveSet(IonCode *stubCode, uint16_t flags)
+        : TypeCheckPrimitiveSetStub(TypeUpdate_PrimitiveSet, stubCode, flags)
+    {}
 
   public:
-    static inline ICTypeUpdate_Primitive *New(ICStubSpace *space,  IonCode *code,
-                                              JSValueType type)
+    static inline ICTypeUpdate_PrimitiveSet *New(ICStubSpace *space, IonCode *code,
+                                                 uint16_t flags)
     {
         if (!code)
             return NULL;
-        return space->allocate<ICTypeUpdate_Primitive>(code, type);
+        return space->allocate<ICTypeUpdate_PrimitiveSet>(code, flags);
     }
 
-    JSValueType type() const {
-        return static_cast<JSValueType>(extra_);
-    }
-
-    class Compiler : public ICStubCompiler {
+    class Compiler : public TypeCheckPrimitiveSetStub::Compiler {
       protected:
-        JSValueType type_;
         bool generateStubCode(MacroAssembler &masm);
 
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(kind) | (static_cast<int32_t>(type_) << 16);
+      public:
+        Compiler(JSContext *cx, ICTypeUpdate_PrimitiveSet *existingStub, JSValueType type)
+          : TypeCheckPrimitiveSetStub::Compiler(cx, TypeUpdate_PrimitiveSet, existingStub, type)
+        {}
+
+        ICTypeUpdate_PrimitiveSet *updateStub() {
+            return this->TypeCheckPrimitiveSetStub::Compiler::updateStub()->toUpdateStub();
         }
 
-      public:
-        Compiler(JSContext *cx, JSValueType type)
-          : ICStubCompiler(cx, TypeUpdate_Primitive),
-            type_(type)
-        { }
-
-        ICTypeUpdate_Primitive *getStub(ICStubSpace *space) {
-            return ICTypeUpdate_Primitive::New(space, getStubCode(), type_);
+        ICTypeUpdate_PrimitiveSet *getStub(ICStubSpace *space) {
+            JS_ASSERT(!existingStub_);
+            return ICTypeUpdate_PrimitiveSet::New(space, getStubCode(), flags_);
         }
     };
 };
