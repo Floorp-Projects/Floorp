@@ -130,6 +130,7 @@ nsProfileDirServiceProvider::Shutdown()
 
   NS_NAMED_LITERAL_STRING(context, "shutdown-persist");
   observerService->NotifyObservers(nullptr, "profile-before-change", context.get());
+  observerService->NotifyObservers(nullptr, "profile-before-change2", context.get());
   return NS_OK;
 }
 

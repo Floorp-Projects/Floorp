@@ -108,6 +108,7 @@ PowerManagerService::SyncProfile()
     obsServ->NotifyObservers(nullptr, "profile-change-net-teardown", context.get());
     obsServ->NotifyObservers(nullptr, "profile-change-teardown", context.get());
     obsServ->NotifyObservers(nullptr, "profile-before-change", context.get());
+    obsServ->NotifyObservers(nullptr, "profile-before-change2", context.get());
   }
 }
 
