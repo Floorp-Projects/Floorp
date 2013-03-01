@@ -24,7 +24,7 @@ _MOZBUILD_EXTERNAL_VARIABLES := \
 
 ifndef EXTERNALLY_MANAGED_MAKE_FILE
 $(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES),$(if $($(var)),\
-    $(error Variable $(var) is defined in Makefile. It should only be defined in moz.build files.),\
+    $(error Variable $(var) is defined in Makefile. It should only be defined in moz.build files),\
     ))
 
 # Import the automatically generated backend file. If this file doesn't exist,
