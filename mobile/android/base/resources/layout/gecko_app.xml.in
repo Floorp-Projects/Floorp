@@ -17,18 +17,13 @@
    <view class="org.mozilla.gecko.GeckoApp$MainLayout"
          android:id="@+id/main_layout"
          style="@style/Screen.Transparent">
-
+ 
         <!-- BrowserToolbar will be added dynamically -->
-
-        <FrameLayout android:id="@+id/toolbar_spacer"
-                     android:layout_width="fill_parent"
-                     android:layout_height="wrap_content"/>
 
         <RelativeLayout android:id="@+id/gecko_layout"
                         android:layout_width="fill_parent"
                         android:layout_height="fill_parent"
-                        android:layout_weight="1"
-                        android:layout_below="@+id/toolbar_spacer">
+                        android:layout_weight="1">
 
             <include layout="@layout/shared_ui_components"/>
 
