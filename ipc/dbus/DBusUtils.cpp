@@ -19,6 +19,7 @@
 #include "DBusUtils.h"
 #include "DBusThread.h"
 #include "nsThreadUtils.h"
+#include "mozilla/Monitor.h"
 #include "nsAutoPtr.h"
 #include <cstdio>
 #include <cstring>
@@ -69,6 +70,164 @@ protected:
   DBusConnection*   mConnection;
   DBusMessageRefPtr mMessage;
 };
+
+class DBusConnectionSendSyncRunnable : public DBusConnectionSendRunnableBase
+{
+public:
+  bool WaitForCompletion()
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    MonitorAutoLock autoLock(mCompletedMonitor);
+    while (!mCompleted) {
+      mCompletedMonitor.Wait();
+    }
+    return mSuccess;
+  }
+
+protected:
+  DBusConnectionSendSyncRunnable(DBusConnection* aConnection,
+                                 DBusMessage* aMessage)
+  : DBusConnectionSendRunnableBase(aConnection, aMessage),
+    mCompletedMonitor("DBusConnectionSendSyncRunnable.mCompleted"),
+    mCompleted(false),
+    mSuccess(false)
+  { }
+
+  virtual ~DBusConnectionSendSyncRunnable()
+  { }
+
+  // Call this function at the end of Run() to notify waiting
+  // threads.
+  void Completed(bool aSuccess)
+  {
+    MonitorAutoLock autoLock(mCompletedMonitor);
+    MOZ_ASSERT(!mCompleted);
+    mSuccess = aSuccess;
+    mCompleted = true;
+    mCompletedMonitor.Notify();
+  }
+
+private:
+  Monitor mCompletedMonitor;
+  bool    mCompleted;
+  bool    mSuccess;
+};
+
+//
+// Sends a message and returns the message's serial number to the
+// disaptching thread. Only run it in DBus thread.
+//
+class DBusConnectionSendRunnable : public DBusConnectionSendSyncRunnable
+{
+public:
+  DBusConnectionSendRunnable(DBusConnection* aConnection,
+                             DBusMessage* aMessage,
+                             dbus_uint32_t* aSerial)
+  : DBusConnectionSendSyncRunnable(aConnection, aMessage),
+    mSerial(aSerial)
+  { }
+
+  NS_IMETHOD Run()
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    dbus_bool_t success = dbus_connection_send(mConnection, mMessage, mSerial);
+    Completed(success == TRUE);
+
+    NS_ENSURE_TRUE(success == TRUE, NS_ERROR_FAILURE);
+
+    return NS_OK;
+  }
+
+protected:
+  ~DBusConnectionSendRunnable()
+  { }
+
+private:
+  dbus_uint32_t* mSerial;
+};
+
+dbus_bool_t
+dbus_func_send(DBusConnection* aConnection, dbus_uint32_t* aSerial,
+               DBusMessage* aMessage)
+{
+  nsRefPtr<DBusConnectionSendRunnable> t(
+    new DBusConnectionSendRunnable(aConnection, aMessage, aSerial));
+  MOZ_ASSERT(t);
+
+  nsresult rv = DispatchToDBusThread(t);
+
+  if (NS_FAILED(rv)) {
+    if (aMessage) {
+      dbus_message_unref(aMessage);
+    }
+    return FALSE;
+  }
+
+  if (aSerial && !t->WaitForCompletion()) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static dbus_bool_t
+dbus_func_args_send_valist(DBusConnection* aConnection,
+                           dbus_uint32_t* aSerial,
+                           const char* aPath,
+                           const char* aInterface,
+                           const char* aFunction,
+                           int aFirstArgType,
+                           va_list aArgs)
+{
+  // Compose the command...
+  DBusMessage* message = dbus_message_new_method_call(BLUEZ_DBUS_BASE_IFC,
+                                                      aPath,
+                                                      aInterface,
+                                                      aFunction);
+  if (!message) {
+    LOG("Could not allocate D-Bus message object!");
+    goto done;
+  }
+
+  // ... and append arguments.
+  if (!dbus_message_append_args_valist(message, aFirstArgType, aArgs)) {
+    LOG("Could not append argument to method call!");
+    goto done;
+  }
+
+  return dbus_func_send(aConnection, aSerial, message);
+
+done:
+  if (message) {
+    dbus_message_unref(message);
+  }
+  return FALSE;
+}
+
+dbus_bool_t
+dbus_func_args_send(DBusConnection* aConnection,
+                    dbus_uint32_t* aSerial,
+                    const char* aPath,
+                    const char* aInterface,
+                    const char* aFunction,
+                    int aFirstArgType, ...)
+{
+  va_list args;
+  va_start(args, aFirstArgType);
+
+  dbus_bool_t success = dbus_func_args_send_valist(aConnection,
+                                                   aSerial,
+                                                   aPath,
+                                                   aInterface,
+                                                   aFunction,
+                                                   aFirstArgType,
+                                                   args);
+  va_end(args);
+
+  return success;
+}
 
 //
 // Sends a message and executes a callback function for the reply. Only
