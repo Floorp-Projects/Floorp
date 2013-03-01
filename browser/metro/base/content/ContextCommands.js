@@ -128,7 +128,8 @@ var ContextCommands = {
   // Link specific
 
   openLinkInNewTab: function cc_openLinkInNewTab() {
-    BrowserUI.newTab(ContextMenuUI.popupState.linkURL, Browser.selectedTab);
+    Browser.addTab(ContextMenuUI.popupState.linkURL, false, Browser.selectedTab);
+    ContextUI.peekTabs();
   },
 
   copyLink: function cc_copyLink() {
