@@ -1585,7 +1585,7 @@ BrowserGlue.prototype = {
    */
   _onDisplaySyncURI: function _onDisplaySyncURI(data) {
     try {
-      let tabbrowser = this.getMostRecentBrowserWindow().gBrowser;
+      let tabbrowser = RecentWindow.getMostRecentBrowserWindow({private: false}).gBrowser;
 
       // The payload is wrapped weirdly because of how Sync does notifications.
       tabbrowser.addTab(data.wrappedJSObject.object.uri);
