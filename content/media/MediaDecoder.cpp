@@ -1262,10 +1262,10 @@ void MediaDecoder::SetMediaSeekable(bool aMediaSeekable) {
 
 void MediaDecoder::SetTransportSeekable(bool aTransportSeekable)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  MOZ_ASSERT(NS_IsMainThread() || OnDecodeThread());
   mTransportSeekable = aTransportSeekable;
   if (mDecoderStateMachine) {
-    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
     mDecoderStateMachine->SetTransportSeekable(aTransportSeekable);
   }
 }
