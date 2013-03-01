@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=482976
 var is = window.opener.wrappedJSObject.is;
 var ok = window.opener.wrappedJSObject.ok;
 var todo = window.opener.wrappedJSObject.todo;
-var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
+var parentFinish = window.opener.wrappedJSObject.parentFinish;
 var gWbp;
 function printpreview() {
   gWbp = window.frames[1].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
@@ -49,7 +49,7 @@ function exitprintpreview() {
 }
 
 function finish() {
-  SimpleTest.finish();
+  parentFinish();
   window.close();
 }
 
