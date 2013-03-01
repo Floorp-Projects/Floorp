@@ -71,6 +71,7 @@ TypeFallbackICSpew(JSContext *cx, ICTypeMonitor_Fallback *stub, const char *fmt,
                 fmtbuf);
     }
 }
+
 #else
 #define FallbackICSpew(...)
 #define TypeFallbackICSpew(...)
@@ -821,16 +822,29 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, HandleScript scrip
         JSValueType type = val.isDouble() ? JSVAL_TYPE_DOUBLE : val.extractNonDoubleType();
 
         // Check for existing TypeMonitor stub.
+        ICTypeMonitor_PrimitiveSet *existingStub = NULL;
         for (ICStub *chk = firstMonitorStub(); chk != this; chk = chk->next()) {
-            if (chk->isTypeMonitor_Primitive() && chk->toTypeMonitor_Primitive()->type() == type)
-                return true;
+            if (chk->isTypeMonitor_PrimitiveSet()) {
+                existingStub = chk->toTypeMonitor_PrimitiveSet();
+                if (existingStub->containsType(type))
+                    return true;
+            }
         }
 
-        ICTypeMonitor_Primitive::Compiler compiler(cx, type);
-        ICStub *stub = compiler.getStub(compiler.getStubSpace(script));
+        ICTypeMonitor_PrimitiveSet::Compiler compiler(cx, existingStub, type);
+        ICStub *stub = existingStub ? compiler.updateStub()
+                                    : compiler.getStub(compiler.getStubSpace(script));
         if (!stub)
             return false;
-        addOptimizedMonitorStub(stub);
+
+        IonSpew(IonSpew_BaselineIC, "  %s TypeMonitor stub %p for primitive type %d",
+                existingStub ? "Modified existing" : "Created new", stub, type);
+
+        if (!existingStub) {
+            JS_ASSERT(!hasStub(TypeMonitor_PrimitiveSet));
+            addOptimizedMonitorStub(stub);
+        }
+
     } else if (val.toObject().hasSingletonType()) {
         RootedObject obj(cx, &val.toObject());
 
@@ -847,7 +861,12 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, HandleScript scrip
         ICStub *stub = compiler.getStub(compiler.getStubSpace(script));
         if (!stub)
             return false;
+
+        IonSpew(IonSpew_BaselineIC, "  Added TypeMonitor stub %p for singleton %p",
+                stub, obj.get());
+
         addOptimizedMonitorStub(stub);
+
     } else {
         RootedTypeObject type(cx, val.toObject().type());
 
@@ -864,6 +883,10 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, HandleScript scrip
         ICStub *stub = compiler.getStub(compiler.getStubSpace(script));
         if (!stub)
             return false;
+
+        IonSpew(IonSpew_BaselineIC, "  Added TypeMonitor stub %p for TypeObject %p",
+                stub, type.get());
+
         addOptimizedMonitorStub(stub);
     }
 
@@ -945,37 +968,42 @@ ICTypeMonitor_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 }
 
 bool
-ICTypeMonitor_Primitive::Compiler::generateStubCode(MacroAssembler &masm)
+ICTypeMonitor_PrimitiveSet::Compiler::generateStubCode(MacroAssembler &masm)
 {
-    Label failure;
-    switch (type_) {
-      case JSVAL_TYPE_INT32:
-        masm.branchTestInt32(Assembler::NotEqual, R0, &failure);
-        break;
-      case JSVAL_TYPE_DOUBLE:
-        // TI double type implies int32.
-        masm.branchTestNumber(Assembler::NotEqual, R0, &failure);
-        break;
-      case JSVAL_TYPE_BOOLEAN:
-        masm.branchTestBoolean(Assembler::NotEqual, R0, &failure);
-        break;
-      case JSVAL_TYPE_STRING:
-        masm.branchTestString(Assembler::NotEqual, R0, &failure);
-        break;
-      case JSVAL_TYPE_NULL:
-        masm.branchTestNull(Assembler::NotEqual, R0, &failure);
-        break;
-      case JSVAL_TYPE_UNDEFINED:
-        masm.branchTestUndefined(Assembler::NotEqual, R0, &failure);
-        break;
-      default:
-        JS_NOT_REACHED("Unexpected type");
-    }
+    Label success;
+    if ((flags_ & TypeToFlag(JSVAL_TYPE_INT32)) && !(flags_ & TypeToFlag(JSVAL_TYPE_DOUBLE)))
+        masm.branchTestInt32(Assembler::Equal, R0, &success);
 
-    EmitReturnFromIC(masm);
+    if (flags_ & TypeToFlag(JSVAL_TYPE_DOUBLE))
+        masm.branchTestNumber(Assembler::Equal, R0, &success);
 
-    masm.bind(&failure);
+    if (flags_ & TypeToFlag(JSVAL_TYPE_UNDEFINED))
+        masm.branchTestUndefined(Assembler::Equal, R0, &success);
+
+    if (flags_ & TypeToFlag(JSVAL_TYPE_BOOLEAN))
+        masm.branchTestBoolean(Assembler::Equal, R0, &success);
+
+    if (flags_ & TypeToFlag(JSVAL_TYPE_STRING))
+        masm.branchTestString(Assembler::Equal, R0, &success);
+
+    // Currently, we will never generate primitive stub checks for object.  However,
+    // when we do get to the point where we want to collapse our monitor chains of
+    // objects and singletons down (when they get too long) to a generic "any object"
+    // in coordination with the typeset doing the same thing, this will need to
+    // be re-enabled.
+    /*
+    if (flags_ & TypeToFlag(JSVAL_TYPE_OBJECT))
+        masm.branchTestObject(Assembler::Equal, R0, &success);
+    */
+    JS_ASSERT(!(flags_ & TypeToFlag(JSVAL_TYPE_OBJECT)));
+
+    if (flags_ & TypeToFlag(JSVAL_TYPE_NULL))
+        masm.branchTestNull(Assembler::Equal, R0, &success);
+
     EmitStubGuardFailure(masm);
+
+    masm.bind(&success);
+    EmitReturnFromIC(masm);
     return true;
 }
 
@@ -1033,16 +1061,28 @@ ICUpdatedStub::addUpdateStubForValue(JSContext *cx, HandleScript script, HandleO
         JSValueType type = val.isDouble() ? JSVAL_TYPE_DOUBLE : val.extractNonDoubleType();
 
         // Check for existing TypeUpdate stub.
+        ICTypeUpdate_PrimitiveSet *existingStub = NULL;
         for (ICStub *chk = firstUpdateStub_; chk->next() != NULL; chk = chk->next()) {
-            if (chk->isTypeUpdate_Primitive() && chk->toTypeUpdate_Primitive()->type() == type)
-                return true;
+            if (chk->isTypeUpdate_PrimitiveSet()) {
+                existingStub = chk->toTypeUpdate_PrimitiveSet();
+                if (existingStub->containsType(type))
+                    return true;
+            }
         }
 
-        ICTypeUpdate_Primitive::Compiler compiler(cx, type);
-        ICStub *stub = compiler.getStub(compiler.getStubSpace(script));
+        ICTypeUpdate_PrimitiveSet::Compiler compiler(cx, existingStub, type);
+        ICStub *stub = existingStub ? compiler.updateStub()
+                                    : compiler.getStub(compiler.getStubSpace(script));
         if (!stub)
             return false;
-        addOptimizedUpdateStub(stub);
+        if (!existingStub) {
+            JS_ASSERT(!hasTypeUpdateStub(TypeUpdate_PrimitiveSet));
+            addOptimizedUpdateStub(stub);
+        }
+
+        IonSpew(IonSpew_BaselineIC, "  %s TypeUpdate stub %p for primitive type %d",
+                existingStub ? "Modified existing" : "Created new", stub, type);
+
     } else if (val.toObject().hasSingletonType()) {
         RootedObject obj(cx, &val.toObject());
 
@@ -1059,7 +1099,11 @@ ICUpdatedStub::addUpdateStubForValue(JSContext *cx, HandleScript script, HandleO
         ICStub *stub = compiler.getStub(compiler.getStubSpace(script));
         if (!stub)
             return false;
+
+        IonSpew(IonSpew_BaselineIC, "  Added TypeUpdate stub %p for singleton %p", stub, obj.get());
+
         addOptimizedUpdateStub(stub);
+
     } else {
         RootedTypeObject type(cx, val.toObject().type());
 
@@ -1076,6 +1120,10 @@ ICUpdatedStub::addUpdateStubForValue(JSContext *cx, HandleScript script, HandleO
         ICStub *stub = compiler.getStub(compiler.getStubSpace(script));
         if (!stub)
             return false;
+
+        IonSpew(IonSpew_BaselineIC, "  Added TypeUpdate stub %p for TypeObject %p",
+                stub, type.get());
+
         addOptimizedUpdateStub(stub);
     }
 
@@ -1132,39 +1180,45 @@ ICTypeUpdate_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 }
 
 bool
-ICTypeUpdate_Primitive::Compiler::generateStubCode(MacroAssembler &masm)
+ICTypeUpdate_PrimitiveSet::Compiler::generateStubCode(MacroAssembler &masm)
 {
-    Label failure;
-    switch (type_) {
-      case JSVAL_TYPE_INT32:
-        masm.branchTestInt32(Assembler::NotEqual, R0, &failure);
-        break;
-      case JSVAL_TYPE_DOUBLE:
-        // TI double type implies int32.
-        masm.branchTestNumber(Assembler::NotEqual, R0, &failure);
-        break;
-      case JSVAL_TYPE_BOOLEAN:
-        masm.branchTestBoolean(Assembler::NotEqual, R0, &failure);
-        break;
-      case JSVAL_TYPE_STRING:
-        masm.branchTestString(Assembler::NotEqual, R0, &failure);
-        break;
-      case JSVAL_TYPE_NULL:
-        masm.branchTestNull(Assembler::NotEqual, R0, &failure);
-        break;
-      case JSVAL_TYPE_UNDEFINED:
-        masm.branchTestUndefined(Assembler::NotEqual, R0, &failure);
-        break;
-      default:
-        JS_NOT_REACHED("Unexpected type");
-    }
+    Label success;
+    if ((flags_ & TypeToFlag(JSVAL_TYPE_INT32)) && !(flags_ & TypeToFlag(JSVAL_TYPE_DOUBLE)))
+        masm.branchTestInt32(Assembler::Equal, R0, &success);
+
+    if (flags_ & TypeToFlag(JSVAL_TYPE_DOUBLE))
+        masm.branchTestNumber(Assembler::Equal, R0, &success);
+
+    if (flags_ & TypeToFlag(JSVAL_TYPE_UNDEFINED))
+        masm.branchTestUndefined(Assembler::Equal, R0, &success);
+
+    if (flags_ & TypeToFlag(JSVAL_TYPE_BOOLEAN))
+        masm.branchTestBoolean(Assembler::Equal, R0, &success);
+
+    if (flags_ & TypeToFlag(JSVAL_TYPE_STRING))
+        masm.branchTestString(Assembler::Equal, R0, &success);
+
+    // Currently, we will never generate primitive stub checks for object.  However,
+    // when we do get to the point where we want to collapse our monitor chains of
+    // objects and singletons down (when they get too long) to a generic "any object"
+    // in coordination with the typeset doing the same thing, this will need to
+    // be re-enabled.
+    /*
+    if (flags_ & TypeToFlag(JSVAL_TYPE_OBJECT))
+        masm.branchTestObject(Assembler::Equal, R0, &success);
+    */
+    JS_ASSERT(!(flags_ & TypeToFlag(JSVAL_TYPE_OBJECT)));
+
+    if (flags_ & TypeToFlag(JSVAL_TYPE_NULL))
+        masm.branchTestNull(Assembler::Equal, R0, &success);
+
+    EmitStubGuardFailure(masm);
 
     // Type matches, load true into R1.scratchReg() and return.
+    masm.bind(&success);
     masm.mov(Imm32(1), R1.scratchReg());
     EmitReturnFromIC(masm);
 
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
     return true;
 }
 
