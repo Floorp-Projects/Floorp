@@ -2709,7 +2709,6 @@ MacroAssemblerARMCompat::pushValue(ValueOperand val) {
 void
 MacroAssemblerARMCompat::pushValue(const Address &addr)
 {
-    JS_ASSERT(addr.base != StackPointer);
     Operand srcOp = Operand(addr);
     Operand payload = ToPayload(srcOp);
     Operand type = ToType(srcOp);
