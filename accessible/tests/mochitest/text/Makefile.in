@@ -15,6 +15,7 @@ MOCHITEST_A11Y_FILES = \
 		doc.html \
 		test_doc.html \
 		test_hypertext.html \
+		test_label.xul \
 		test_passwords.html \
 		test_selection.html \
 		test_singleline.html \

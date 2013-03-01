@@ -21,20 +21,13 @@
 
     function doTest()
     {
-      var accTree = {
-        role: ROLE_GROUPING,
-        children: [
-          {
-            role: ROLE_LABEL,
-            children: [ ]
-          },
-          {
-            role: ROLE_CHECKBUTTON,
-            children: [ ]
-          }
-        ]
-      };
-
+      var accTree =
+        { GROUPING: [
+          { LABEL: [
+            { TEXT_LEAF: [ ] }
+          ] },
+          { CHECKBUTTON: [ ] }
+        ] };
       testAccessibleTree("groupbox", accTree);
 
       SimpleTest.finish()
