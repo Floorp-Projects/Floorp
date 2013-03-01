@@ -515,11 +515,10 @@ nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest)
   }
 
   if (mIsPreflight) {
-    // Preflights only succeed if the response has a 200 status
-    uint32_t status;
-    rv = http->GetResponseStatus(&status);
+    bool succeedded;
+    rv = http->GetRequestSucceeded(&succeedded);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (status != 200) {
+    if (!succeedded) {
       return NS_ERROR_DOM_BAD_URI;
     }
 
