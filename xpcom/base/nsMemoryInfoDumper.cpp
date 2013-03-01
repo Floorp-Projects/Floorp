@@ -736,17 +736,14 @@ MakeFilename(const char *aPrefix, const nsAString &aIdentifier,
                             getpid(), aSuffix);
 }
 
-/* static */ nsresult
-nsMemoryInfoDumper::OpenTempFile(const nsACString &aFilename, nsIFile* *aFile)
+static nsresult
+OpenTempFile(const nsACString &aFilename, nsIFile* *aFile)
 {
 #ifdef ANDROID
   // For Android, first try the downloads directory which is world-readable
   // rather than the temp directory which is not.
-  if (!*aFile) {
-    char *env = PR_GetEnv("DOWNLOADS_DIRECTORY");
-    if (env) {
-      NS_NewNativeLocalFile(nsCString(env), /* followLinks = */ true, aFile);
-    }
+  if (char *env = PR_GetEnv("DOWNLOADS_DIRECTORY")) {
+    NS_NewNativeLocalFile(nsCString(env), /* followLinks = */ true, aFile);
   }
 #endif
   nsresult rv;
