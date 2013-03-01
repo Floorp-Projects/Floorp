@@ -1387,3 +1387,127 @@ function CurrencyDigits(currency) {
         return currencyDigits[currency];
     return 2;
 }
+
+
+/**
+ * Returns the subset of the given locale list for which this locale list has a
+ * matching (possibly fallback) locale. Locales appear in the same order in the
+ * returned list as in the input list.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 11.2.2.
+ */
+function Intl_NumberFormat_supportedLocalesOf(locales /*, options*/) {
+    var options = arguments.length > 1 ? arguments[1] : undefined;
+
+    var availableLocales = numberFormatInternalProperties.availableLocales;
+    var requestedLocales = CanonicalizeLocaleList(locales);
+    return SupportedLocales(availableLocales, requestedLocales, options);
+}
+
+
+/**
+ * NumberFormat internal properties.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.1 and 11.2.3.
+ */
+var numberFormatInternalProperties = {
+    localeData: numberFormatLocaleData,
+    availableLocales: runtimeAvailableLocales, // stub
+    relevantExtensionKeys: ["nu"]
+};
+
+
+function numberFormatLocaleData(locale) {
+    // the following data may or may not match any actual locale support
+    return {
+        nu: ["latn"]
+    };
+}
+
+
+/**
+ * Function to be bound and returned by Intl.NumberFormat.prototype.format.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 11.3.2.
+ */
+function numberFormatFormatToBind(value) {
+    // Steps 1.a.i implemented by ECMAScript declaration binding instantiation,
+    // ES5.1 10.5, step 4.d.ii.
+
+    // Step 1.a.ii-iii.
+    var x = ToNumber(value);
+    return FormatNumber(this, x);
+}
+
+
+/**
+ * Returns a function bound to this NumberFormat that returns a String value
+ * representing the result of calling ToNumber(value) according to the
+ * effective locale and the formatting options of this NumberFormat.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 11.3.2.
+ */
+function Intl_NumberFormat_format_get() {
+    // Check "this NumberFormat object" per introduction of section 11.3.
+    var internals = checkIntlAPIObject(this, "NumberFormat", "format");
+
+    // Step 1.
+    if (internals.boundFormat === undefined) {
+        // Step 1.a.
+        var F = numberFormatFormatToBind;
+
+        // Step 1.b-d.
+        var bf = callFunction(std_Function_bind, F, this);
+        internals.boundFormat = bf;
+    }
+    // Step 2.
+    return internals.boundFormat;
+}
+
+
+/**
+ * Returns a String value representing the result of calling ToNumber(value)
+ * according to the effective locale and the formatting options of this
+ * NumberFormat.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 11.3.2.
+ */
+function FormatNumber(numberFormat, x) {
+    assert(typeof x === "number", "FormatNumber");
+
+    // ??? stub
+    return x.toLocaleString();
+}
+
+
+/**
+ * Returns the resolved options for a NumberFormat object.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 11.3.3 and 11.4.
+ */
+function Intl_NumberFormat_resolvedOptions() {
+    // Check "this NumberFormat object" per introduction of section 11.3.
+    var internals = checkIntlAPIObject(this, "NumberFormat", "resolvedOptions");
+
+    var result = {
+        locale: internals.locale,
+        numberingSystem: internals.numberingSystem,
+        style: internals.style,
+        minimumIntegerDigits: internals.minimumIntegerDigits,
+        minimumFractionDigits: internals.minimumFractionDigits,
+        maximumFractionDigits: internals.maximumFractionDigits,
+        useGrouping: internals.useGrouping
+    };
+    var optionalProperties = [
+        "currency",
+        "currencyDisplay",
+        "minimumSignificantDigits",
+        "maximumSignificantDigits"
+    ];
+    for (var i = 0; i < optionalProperties.length; i++) {
+        var p = optionalProperties[i];
+        if (callFunction(std_Object_hasOwnProperty, internals, p))
+            defineProperty(result, p, internals[p]);
+    }
+    return result;
+}
