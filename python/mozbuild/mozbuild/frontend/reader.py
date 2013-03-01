@@ -118,11 +118,14 @@ class MozbuildSandbox(Sandbox):
         self.config = config
 
         topobjdir = os.path.abspath(config.topobjdir)
-
         topsrcdir = config.topsrcdir
-        if not path.startswith(topsrcdir):
+        norm_topsrcdir = os.path.normpath(topsrcdir)
+
+        if not path.startswith(norm_topsrcdir):
             external_dirs = config.substs.get('EXTERNAL_SOURCE_DIR', '').split()
             for external in external_dirs:
+                external = os.path.normpath(external)
+
                 if not os.path.isabs(external):
                     external = os.path.join(config.topsrcdir, external)
 
