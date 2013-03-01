@@ -189,6 +189,15 @@ public:
     }
   }
 
+  // Returns the index of the rep decoder used to load a subsegment, after a
+  // seek. Called on the decode thread, and will block if the subsegment
+  // previous to the one specified has not yet been loaded. This ensures that
+  // |DASHDecoder| has had a chance to determine which decoder should load the
+  // next subsegment, in the case where |DASHRepReader|::|DecodeToTarget| has
+  // read all the data for the current subsegment from the cache, and needs to
+  // know which reader (including itself) to use next.
+  int32_t GetRepIdxForVideoSubsegmentLoadAfterSeek(int32_t aSubsegmentIndex);
+
   int32_t GetSwitchCountAtVideoSubsegment(int32_t aSubsegmentIdx)
   {
     ReentrantMonitorConditionallyEnter mon(!OnDecodeThread(),

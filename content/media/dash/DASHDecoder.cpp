@@ -678,10 +678,9 @@ DASHDecoder::NotifyDownloadEnded(DASHRepDecoder* aRepDecoder,
       return;
     }
 
+    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
     nsRefPtr<DASHRepDecoder> decoder = aRepDecoder;
     {
-      ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-
       if (!IsDecoderAllowedToDownloadSubsegment(aRepDecoder,
                                                 aSubsegmentIdx)) {
         NS_WARNING("Decoder downloaded subsegment but it is not allowed!");
@@ -742,6 +741,9 @@ DASHDecoder::NotifyDownloadEnded(DASHRepDecoder* aRepDecoder,
             mVideoSubsegmentIdx, mVideoSubsegmentIdx);
         mVideoSubsegmentLoads[mVideoSubsegmentIdx] = mVideoRepDecoderIdx;
       }
+      LOG("Notifying switch decided for video subsegment [%d]",
+          mVideoSubsegmentIdx);
+      mon.NotifyAll();
     }
 
     // Load the next range of data bytes. If the range is already cached,
@@ -1357,6 +1359,30 @@ DASHDecoder::StartProgressUpdates()
   for (uint32_t i = 0; i < mAudioRepDecoders.Length(); i++) {
     mAudioRepDecoders[i]->StartProgressUpdates();
   }
+}
+
+int32_t
+DASHDecoder::GetRepIdxForVideoSubsegmentLoadAfterSeek(int32_t aSubsegmentIndex)
+{
+  NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  // Should not be requesting decoder index for the first subsegment, nor any
+  // after the final subsegment.
+  if (aSubsegmentIndex < 1 ||
+      aSubsegmentIndex >= VideoRepDecoder()->GetNumDataByteRanges()) {
+    return -1;
+  }
+  // Wait if we are still loading the subsegment previous to the one that was
+  // queried. Note: |mVideoSubsegmentIdx| should have been updated to reflect
+  // loads of the seeked subsegment before |DASHRepReader|::|Seek| was called,
+  // i.e. before this function was called.
+  while (mVideoSubsegmentIdx == aSubsegmentIndex-1) {
+    LOG("Waiting for switching decision for video subsegment [%d].",
+        aSubsegmentIndex);
+    mon.Wait();
+  }
+
+  return mVideoSubsegmentLoads[aSubsegmentIndex];
 }
 
 } // namespace mozilla

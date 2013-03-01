@@ -334,6 +334,10 @@ private:
   // thread only.
   int64_t mCurrentOffset;
 
+  // Index of next cluster to be read. Used to determine the starting offset of
+  // the next cluster. Accessed on the decode thread only.
+  uint32_t mNextCluster;
+
   // Set in |NextPacket| if we read a packet from the next reader. If true in
   // |PushVideoPacket|, we will push the packet onto the next reader's
   // video packet queue (not video data queue!). Accessed on decode thread
