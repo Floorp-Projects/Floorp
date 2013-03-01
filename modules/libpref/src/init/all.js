@@ -3870,6 +3870,14 @@ pref("image.mem.max_ms_before_yield", 5);
 // might keep around more than this, but we'll try to get down to this value).
 pref("image.mem.max_decoded_image_kb", 51200);
 
+// Whether we decode images on multiple background threads rather than the
+// foreground thread.
+pref("image.multithreaded_decoding.enabled", true);
+
+// How many threads we'll use for multithreaded decoding. If < 0, will be
+// automatically determined based on the system's number of cores.
+pref("image.multithreaded_decoding.limit", -1);
+
 // WebGL prefs
 pref("gl.msaa-level", 2);
 pref("webgl.force-enabled", false);
