@@ -2799,6 +2799,10 @@ function Tab(aURL, aParams) {
   this.showProgress = true;
   this._zoom = 1.0;
   this._drawZoom = 1.0;
+  this._fixedMarginLeft = 0;
+  this._fixedMarginTop = 0;
+  this._fixedMarginRight = 0;
+  this._fixedMarginBottom = 0;
   this.userScrollPos = { x: 0, y: 0 };
   this.viewportExcludesHorizontalMargins = true;
   this.viewportExcludesVerticalMargins = true;
@@ -3335,6 +3339,19 @@ Tab.prototype = {
     if (aViewport.displayPort)
       this.setDisplayPort(aViewport.displayPort);
 
+    // Store fixed margins for later retrieval in getViewport.
+    this._fixedMarginLeft = aViewport.fixedMarginLeft;
+    this._fixedMarginTop = aViewport.fixedMarginTop;
+    this._fixedMarginRight = aViewport.fixedMarginRight;
+    this._fixedMarginBottom = aViewport.fixedMarginBottom;
+
+    let dwi = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    dwi.setContentDocumentFixedPositionMargins(
+      aViewport.fixedMarginTop / aViewport.zoom,
+      aViewport.fixedMarginRight / aViewport.zoom,
+      aViewport.fixedMarginBottom / aViewport.zoom,
+      aViewport.fixedMarginLeft / aViewport.zoom);
+
     Services.obs.notifyObservers(null, "after-viewport-change", "");
   },
 
@@ -3375,6 +3392,10 @@ Tab.prototype = {
       cssPageTop: 0,
       cssPageRight: screenW / this._zoom,
       cssPageBottom: screenH / this._zoom,
+      fixedMarginLeft: this._fixedMarginLeft,
+      fixedMarginTop: this._fixedMarginTop,
+      fixedMarginRight: this._fixedMarginRight,
+      fixedMarginBottom: this._fixedMarginBottom,
       zoom: this._zoom,
     };
 
