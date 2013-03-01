@@ -181,7 +181,8 @@ protected:
   virtual void SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect);
   virtual void SetPageRect(const gfx::Rect& aCssPageRect);
   virtual void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
-                                nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
+                                nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY,
+                                gfx::Margin& aFixedLayerMargins);
   void SetEGLSurfaceSize(int width, int height);
   // If SetPanZoomControllerForLayerTree is not set, Compositor will use
   // derived class AsyncPanZoomController transformations.
@@ -261,7 +262,8 @@ private:
    */
   void TransformFixedLayers(Layer* aLayer,
                             const gfxPoint& aTranslation,
-                            const gfxSize& aScaleDiff);
+                            const gfxSize& aScaleDiff,
+                            const gfx::Margin& aFixedLayerMargins);
 
   virtual PGrallocBufferParent* AllocPGrallocBuffer(
     const gfxIntSize&, const uint32_t&, const uint32_t&,
