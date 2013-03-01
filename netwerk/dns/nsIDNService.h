@@ -39,18 +39,22 @@ public:
 private:
   void normalizeFullStops(nsAString& s);
   nsresult stringPrepAndACE(const nsAString& in, nsACString& out,
-                            bool allowUnassigned);
+                            bool allowUnassigned, bool convertAllLabels);
   nsresult encodeToACE(const nsAString& in, nsACString& out);
   nsresult stringPrep(const nsAString& in, nsAString& out,
                       bool allowUnassigned);
   nsresult decodeACE(const nsACString& in, nsACString& out,
-                     bool allowUnassigned);
-  nsresult UTF8toACE(const nsACString& in, nsACString& out,
-                     bool allowUnassigned);
-  nsresult ACEtoUTF8(const nsACString& in, nsACString& out,
-                     bool allowUnassigned);
+                     bool allowUnassigned, bool convertAllLabels);
+  nsresult SelectiveUTF8toACE(const nsACString& input, nsACString& ace);
+  nsresult SelectiveACEtoUTF8(const nsACString& input, nsACString& _retval);
+  nsresult UTF8toACE(const nsACString& input, nsACString& ace,
+                     bool allowUnassigned, bool convertAllLabels);
+  nsresult ACEtoUTF8(const nsACString& input, nsACString& _retval,
+                     bool allowUnassigned, bool convertAllLabels);
   bool isInWhitelist(const nsACString &host);
   void prefsChanged(nsIPrefBranch *prefBranch, const PRUnichar *pref);
+  bool isLabelSafe(const nsAString &label);
+  bool illegalScriptCombo(int32_t script, int32_t& savedScript);
 
   bool mMultilingualTestBed;  // if true generates extra node for multilingual testbed 
   idn_nameprep_t mNamePrepHandle;
@@ -58,6 +62,12 @@ private:
   char mACEPrefix[kACEPrefixLen+1];
   nsXPIDLString mIDNBlacklist;
   bool mShowPunycode;
+  enum restrictionProfile {
+    eASCIIOnlyProfile,
+    eHighlyRestrictiveProfile,
+    eModeratelyRestrictiveProfile
+  };
+  restrictionProfile mRestrictionProfile;
   nsCOMPtr<nsIPrefBranch> mIDNWhitelistPrefBranch;
 };
 
