@@ -266,22 +266,6 @@ ICStub::trace(JSTracer *trc)
         MarkTypeObject(trc, &propStub->type(), "baseline-setpropnative-stub-type");
         break;
       }
-      case ICStub::SetProp_NativeAdd: {
-        ICSetProp_NativeAdd *propStub = toSetProp_NativeAdd();
-        MarkTypeObject(trc, &propStub->type(), "baseline-setpropnativeadd-stub-type");
-        MarkShape(trc, &propStub->oldShape(), "baseline-setpropnativeadd-stub-oldshape");
-        MarkShape(trc, &propStub->newShape(), "baseline-setpropnativeadd-stub-newshape");
-        JS_STATIC_ASSERT(ICSetProp_NativeAdd::MAX_PROTO_CHAIN_DEPTH == 4);
-        switch (propStub->protoChainDepth()) {
-          case 0: propStub->toImpl<0>()->traceProtoShapes(trc); break;
-          case 1: propStub->toImpl<1>()->traceProtoShapes(trc); break;
-          case 2: propStub->toImpl<2>()->traceProtoShapes(trc); break;
-          case 3: propStub->toImpl<3>()->traceProtoShapes(trc); break;
-          case 4: propStub->toImpl<4>()->traceProtoShapes(trc); break;
-          default: JS_NOT_REACHED("Invalid proto stub.");
-        }
-        break;
-      }
       case ICStub::SetProp_CallScripted: {
         ICSetProp_CallScripted *callStub = toSetProp_CallScripted();
         MarkShape(trc, &callStub->shape(), "baseline-setpropcallscripted-stub-shape");
@@ -1193,8 +1177,7 @@ DoTypeUpdateFallback(JSContext *cx, ICUpdatedStub *stub, HandleValue objval, Han
         types::AddTypePropertyId(cx, obj, id, value);
         break;
       }
-      case ICStub::SetProp_Native:
-      case ICStub::SetProp_NativeAdd: {
+      case ICStub::SetProp_Native: {
         JS_ASSERT(obj->isNative());
         jsbytecode *pc = stub->getChainFallback()->icEntry()->pc(script);
         id = NameToId(script->getName(pc));
@@ -2531,13 +2514,9 @@ IsCacheableGetPropCallScripted(JSObject *obj, JSObject *holder, Shape *shape)
 }
 
 static bool
-IsCacheableSetPropWriteSlot(JSObject *obj, Shape *oldShape, JSObject *holder, Shape *shape)
+IsCacheableSetPropWriteSlot(JSObject *obj, JSObject *holder, Shape *shape)
 {
     if (!shape)
-        return false;
-
-    // Object shape must not have changed during the property set.
-    if (obj->lastProperty() != oldShape)
         return false;
 
     // Currently we only optimize direct writes.
@@ -2547,63 +2526,6 @@ IsCacheableSetPropWriteSlot(JSObject *obj, Shape *oldShape, JSObject *holder, Sh
     if (!shape->hasSlot() || !shape->hasDefaultSetter() || !shape->writable())
         return false;
 
-    return true;
-}
-
-static bool
-IsCacheableSetPropAddSlot(JSContext *cx, HandleObject obj, HandleShape oldShape, uint32_t oldSlots,
-                          HandleId id, HandleObject holder, HandleShape shape,
-                          size_t *protoChainDepth)
-{
-    if (!shape)
-        return false;
-
-    // Property must be set directly on object, and be last added property of object.
-    if (obj != holder || shape != obj->lastProperty())
-        return false;
-
-    // Object must be extensible, oldShape must be immediate parent of curShape.
-    if (!obj->isExtensible() || obj->lastProperty()->previous() != oldShape)
-        return false;
-
-    // Basic shape checks.
-    if (shape->inDictionary() || !shape->hasSlot() || !shape->hasDefaultSetter() ||
-        !shape->writable())
-    {
-        return false;
-    }
-
-    // If object has a non-default resolve hook, don't inline
-    if (obj->getClass()->resolve != JS_ResolveStub)
-        return false;
-
-    size_t chainDepth = 0;
-    // walk up the object prototype chain and ensure that all prototypes
-    // are native, and that all prototypes have setter defined on the property
-    for (JSObject *proto = obj->getProto(); proto; proto = proto->getProto()) {
-        chainDepth++;
-        // if prototype is non-native, don't optimize
-        if (!proto->isNative())
-            return false;
-
-        // if prototype defines this property in a non-plain way, don't optimize
-        Shape *protoShape = proto->nativeLookup(cx, id);
-        if (protoShape && !protoShape->hasDefaultSetter())
-            return false;
-
-        // Otherise, if there's no such property, watch out for a resolve hook that would need
-        // to be invoked and thus prevent inlining of property addition.
-        if (proto->getClass()->resolve != JS_ResolveStub)
-             return false;
-    }
-
-    // Only add a IC entry if the dynamic slots didn't change when the shapes
-    // changed.  Need to ensure that a shape change for a subsequent object
-    // won't involve reallocating the slot array.
-    if (obj->numDynamicSlots() != oldSlots)
-        return false;
-
-    *protoChainDepth = chainDepth;
     return true;
 }
 
@@ -4490,8 +4412,8 @@ ICGetProp_CallScripted::Compiler::generateStubCode(MacroAssembler &masm)
 // Attach an optimized stub for a SETPROP/SETGNAME/SETNAME op.
 static bool
 TryAttachSetPropStub(JSContext *cx, HandleScript script, ICSetProp_Fallback *stub,
-                     HandleObject obj, HandleShape oldShape, uint32_t oldSlots,
-                     HandlePropertyName name, HandleId id, HandleValue rhs, bool *attached)
+                     HandleObject obj, HandlePropertyName name, HandleId id,
+                     HandleValue rhs, bool *attached)
 {
     JS_ASSERT(!*attached);
 
@@ -4503,32 +4425,14 @@ TryAttachSetPropStub(JSContext *cx, HandleScript script, ICSetProp_Fallback *stu
     if (!JSObject::lookupProperty(cx, obj, name, &holder, &shape))
         return false;
 
-    size_t chainDepth;
-    if (IsCacheableSetPropAddSlot(cx, obj, oldShape, oldSlots, id, holder, shape, &chainDepth)) {
-        bool isFixedSlot;
-        uint32_t offset;
-        GetFixedOrDynamicSlotOffset(obj, shape->slot(), &isFixedSlot, &offset);
-
-        IonSpew(IonSpew_BaselineIC, "  Generating SetProp(NativeObject.ADD) stub");
-        ICSetPropNativeAddCompiler compiler(cx, obj, oldShape, chainDepth, isFixedSlot, offset);
-        ICUpdatedStub *newStub = compiler.getStub(compiler.getStubSpace(script));
-        if (!newStub)
-            return false;
-        if (!newStub->addUpdateStubForValue(cx, script, obj, id, rhs))
-            return false;
-
-        stub->addNewStub(newStub);
-        *attached = true;
-        return true;
-    }
-
-    if (IsCacheableSetPropWriteSlot(obj, oldShape, holder, shape)) {
+    if (IsCacheableSetPropWriteSlot(obj, holder, shape)) {
         bool isFixedSlot;
         uint32_t offset;
         GetFixedOrDynamicSlotOffset(obj, shape->slot(), &isFixedSlot, &offset);
 
         IonSpew(IonSpew_BaselineIC, "  Generating SetProp(NativeObject.PROP) stub");
-        ICSetProp_Native::Compiler compiler(cx, obj, isFixedSlot, offset);
+        RootedTypeObject type(cx, obj->getType(cx));
+        ICSetProp_Native::Compiler compiler(cx, type, obj->lastProperty(), isFixedSlot, offset);
         ICUpdatedStub *newStub = compiler.getStub(compiler.getStubSpace(script));
         if (!newStub)
             return false;
@@ -4579,8 +4483,6 @@ DoSetPropFallback(JSContext *cx, ICSetProp_Fallback *stub, HandleValue lhs, Hand
     RootedObject obj(cx, ToObjectFromStack(cx, lhs));
     if (!obj)
         return false;
-    RootedShape oldShape(cx, obj->lastProperty());
-    uint32_t oldSlots = obj->numDynamicSlots();
 
     if (op == JSOP_INITPROP && name != cx->names().proto) {
         JS_ASSERT(obj->isObject());
@@ -4606,7 +4508,7 @@ DoSetPropFallback(JSContext *cx, ICSetProp_Fallback *stub, HandleValue lhs, Hand
     }
 
     bool attached = false;
-    if (!TryAttachSetPropStub(cx, script, stub, obj, oldShape, oldSlots, name, id, rhs, &attached))
+    if (!TryAttachSetPropStub(cx, script, stub, obj, name, id, rhs, &attached))
         return false;
     if (attached)
         return true;
@@ -4688,86 +4590,6 @@ ICSetProp_Native::Compiler::generateStubCode(MacroAssembler &masm)
     EmitReturnFromIC(masm);
 
     // Failure case - jump to next stub
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
-}
-
-bool
-ICSetPropNativeAddCompiler::generateStubCode(MacroAssembler &masm)
-{
-    Label failure;
-    Label failureUnstow;
-
-    // Guard input is an object.
-    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
-
-    GeneralRegisterSet regs(availableGeneralRegs(2));
-    Register scratch = regs.takeAny();
-
-    // Unbox and guard against old shape.
-    Register objReg = masm.extractObject(R0, ExtractTemp0);
-    masm.loadPtr(Address(BaselineStubReg, ICSetProp_NativeAdd::offsetOfOldShape()), scratch);
-    masm.branchTestObjShape(Assembler::NotEqual, objReg, scratch, &failure);
-
-    // Guard that the type object matches.
-    masm.loadPtr(Address(BaselineStubReg, ICSetProp_NativeAdd::offsetOfType()), scratch);
-    masm.branchPtr(Assembler::NotEqual, Address(objReg, JSObject::offsetOfType()), scratch,
-                   &failure);
-
-    // Stow both R0 and R1 (object and value).
-    EmitStowICValues(masm, 2);
-
-    regs = availableGeneralRegs(1);
-    scratch = regs.takeAny();
-    Register protoReg = regs.takeAny();
-    // Check the proto chain.
-    for (size_t i = 0; i < protoChainDepth_; i++) {
-        masm.loadObjProto(i == 0 ? objReg : protoReg, protoReg);
-        masm.branchTestPtr(Assembler::Zero, protoReg, protoReg, &failureUnstow);
-
-        masm.loadPtr(Address(BaselineStubReg, ICSetProp_NativeAddImpl<0>::offsetOfProtoShape(i)),
-                     scratch);
-        masm.branchTestObjShape(Assembler::NotEqual, protoReg, scratch, &failureUnstow);
-    }
-
-    // Shape and type checks succeeded, ok to proceed.
-
-    // Load RHS into R0 for TypeUpdate check.
-    // Stack is currently: [..., ObjValue, RHSValue, MaybeReturnAddr? ]
-    masm.loadValue(Address(BaselineStackReg, ICStackValueOffset), R0);
-
-    // Call the type-update stub.
-    if (!callTypeUpdateIC(masm, sizeof(Value)))
-        return false;
-
-    // Unstow R0 and R1 (object and key)
-    EmitUnstowICValues(masm, 2);
-    regs = availableGeneralRegs(2);
-    scratch = regs.takeAny();
-
-    // Changing object shape.  Write the object's new shape.
-    Address shapeAddr(objReg, JSObject::offsetOfShape());
-    EmitPreBarrier(masm, shapeAddr, MIRType_Shape);
-    masm.loadPtr(Address(BaselineStubReg, ICSetProp_NativeAdd::offsetOfNewShape()), scratch);
-    masm.storePtr(scratch, shapeAddr);
-
-    if (!isFixedSlot_)
-        masm.loadPtr(Address(objReg, JSObject::offsetOfSlots()), objReg);
-
-    // Perform the store.  No write barrier required since this is a new
-    // initialization.
-    masm.load32(Address(BaselineStubReg, ICSetProp_NativeAdd::offsetOfOffset()), scratch);
-    masm.storeValue(R1, BaseIndex(objReg, scratch, TimesOne));
-
-    // The RHS has to be in R0.
-    masm.moveValue(R1, R0);
-    EmitReturnFromIC(masm);
-
-    // Failure case - jump to next stub
-    masm.bind(&failureUnstow);
-    EmitUnstowICValues(masm, 2);
-
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
     return true;

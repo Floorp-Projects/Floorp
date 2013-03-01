@@ -265,9 +265,8 @@ EmitCallTypeUpdateIC(MacroAssembler &masm, IonCode *code, uint32_t objectOffset)
     masm.bind(&success);
 }
 
-template <typename AddrType>
 inline void
-EmitPreBarrier(MacroAssembler &masm, const AddrType &addr, MIRType type)
+EmitPreBarrier(MacroAssembler &masm, const BaseIndex &addr, MIRType type)
 {
     // on ARM, lr is clobbered by patchableCallPreBarrier.  Save it first.
     masm.push(lr);

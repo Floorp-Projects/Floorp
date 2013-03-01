@@ -435,10 +435,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     template <typename T>
     void patchableCallPreBarrier(const T &address, MIRType type) {
-        JS_ASSERT(type == MIRType_Value ||
-                  type == MIRType_String ||
-                  type == MIRType_Object ||
-                  type == MIRType_Shape);
+        JS_ASSERT(type == MIRType_Value || type == MIRType_String || type == MIRType_Object);
 
         Label done;
 
