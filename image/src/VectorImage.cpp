@@ -55,6 +55,12 @@ public:
 #endif
   }
 
+  void ResumeListening()
+  {
+    // GetReferencedElement adds us back to our target's observer list.
+    GetReferencedElement();
+  }
+
   virtual ~SVGRootRenderingObserver()
   {
     StopListening();
@@ -82,12 +88,9 @@ protected:
       mVectorImage->InvalidateObserver();
     }
 
-    // Our caller might've removed us from rendering-observer list.
-    // Add ourselves back!
-    if (!mInObserverList) {
-      nsSVGEffects::AddRenderingObserver(elem, this);
-      mInObserverList = true;
-    }
+    // We may have been removed from the observer list by our caller. Rather
+    // than add ourselves back here, we wait until Draw gets called, ensuring
+    // that we coalesce invalidations between Draw calls.
   }
 
   // Private data
@@ -495,10 +498,10 @@ VectorImage::GetHeight(int32_t* aHeight)
 NS_IMETHODIMP
 VectorImage::GetIntrinsicSize(nsSize* aSize)
 {
-  nsIFrame* rootFrame = GetRootLayoutFrame();
-  if (!rootFrame)
+  if (mError || !mIsFullyLoaded)
     return NS_ERROR_FAILURE;
 
+  nsIFrame* rootFrame = mSVGDocumentWrapper->GetRootLayoutFrame();
   *aSize = nsSize(-1, -1);
   nsIFrame::IntrinsicSize rfSize = rootFrame->GetIntrinsicSize();
   if (rfSize.width.GetUnit() == eStyleUnit_Coord)
@@ -514,10 +517,10 @@ VectorImage::GetIntrinsicSize(nsSize* aSize)
 NS_IMETHODIMP
 VectorImage::GetIntrinsicRatio(nsSize* aRatio)
 {
-  nsIFrame* rootFrame = GetRootLayoutFrame();
-  if (!rootFrame)
+  if (mError || !mIsFullyLoaded)
     return NS_ERROR_FAILURE;
 
+  nsIFrame* rootFrame = mSVGDocumentWrapper->GetRootLayoutFrame();
   *aRatio = rootFrame->GetIntrinsicRatio();
   return NS_OK;
 }
@@ -643,7 +646,7 @@ VectorImage::CopyFrame(uint32_t aWhichFrame,
                      gfxRect(gfxPoint(0,0), gfxIntSize(imageIntSize.width,
                                                        imageIntSize.height)),
                      nsIntRect(nsIntPoint(0,0), imageIntSize),
-                     imageIntSize, aFlags);
+                     imageIntSize, nullptr, aFlags);
   if (NS_SUCCEEDED(rv)) {
     *_retval = surface.forget().get();
   }
@@ -699,7 +702,6 @@ VectorImage::ExtractFrame(uint32_t aWhichFrame,
   return NS_OK;
 }
 
-
 //******************************************************************************
 /* [noscript] void draw(in gfxContext aContext,
  *                      in gfxGraphicsFilter aFilter,
@@ -707,6 +709,7 @@ VectorImage::ExtractFrame(uint32_t aWhichFrame,
  *                      [const] in gfxRect aFill,
  *                      [const] in nsIntRect aSubimage,
  *                      [const] in nsIntSize aViewportSize,
+ *                      [const] in SVGImageContext aSVGContext,
  *                      in uint32_t aFlags); */
 NS_IMETHODIMP
 VectorImage::Draw(gfxContext* aContext,
@@ -715,6 +718,7 @@ VectorImage::Draw(gfxContext* aContext,
                   const gfxRect& aFill,
                   const nsIntRect& aSubimage,
                   const nsIntSize& aViewportSize,
+                  const SVGImageContext* aSVGContext,
                   uint32_t aFlags)
 {
   NS_ENSURE_ARG_POINTER(aContext);
@@ -727,6 +731,8 @@ VectorImage::Draw(gfxContext* aContext,
   }
   mIsDrawing = true;
 
+  AutoSVGRenderingState autoSVGState(aSVGContext,
+                                     mSVGDocumentWrapper->GetRootSVGElem());
   mSVGDocumentWrapper->UpdateViewportBounds(aViewportSize);
   mSVGDocumentWrapper->FlushImageTransformInvalidation();
 
@@ -758,19 +764,15 @@ VectorImage::Draw(gfxContext* aContext,
                              subimage, sourceRect, imageRect, aFill,
                              gfxASurface::ImageFormatARGB32, aFilter);
 
+  MOZ_ASSERT(mRenderingObserver || mHaveRestrictedRegion, 
+      "Should have a rendering observer by now unless ExtractFrame created us");
+  if (mRenderingObserver) {
+    // Allow ourselves to fire FrameChanged and OnStopFrame again.
+    mRenderingObserver->ResumeListening();
+  }
+
   mIsDrawing = false;
   return NS_OK;
-}
-
-//******************************************************************************
-/* [notxpcom] nsIFrame GetRootLayoutFrame() */
-nsIFrame*
-VectorImage::GetRootLayoutFrame()
-{
-  if (mError)
-    return nullptr;
-
-  return mSVGDocumentWrapper->GetRootLayoutFrame();
 }
 
 //******************************************************************************

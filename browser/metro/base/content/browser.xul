@@ -419,7 +419,11 @@
       </deck>
     </vbox>
 
-    <flyoutpanel id="about-flyoutpanel" headertext="&aboutHeader.title;">
+  <!-- Selection overlay - this should be below any content that can have selectable text -->
+  <!-- onclick addresses dom bug 835175, str in bug 832957 -->
+  <box onclick="false" class="selection-overlay-hidden" id="selection-overlay"/>
+
+  <flyoutpanel id="about-flyoutpanel" headertext="&aboutHeader.title;">
         <label id="about-product-label" value="&aboutHeader.product.label;"/>
         <label value="&aboutHeader.company.label;"/>
 #expand <label id="about-version-label">__MOZ_APP_VERSION__</label>
@@ -679,10 +683,6 @@
         <description id="alerts-text" flex="1"/>
       </vbox>
     </hbox>
-
-    <!-- Selection overlay - this should be below any content that can have selectable text -->
-    <!-- onclick addresses dom bug 835175, str in bug 832957 -->
-    <box onclick="false" class="selection-overlay-hidden" id="selection-overlay"/>
   </stack>
 
   <svg:svg height="0">

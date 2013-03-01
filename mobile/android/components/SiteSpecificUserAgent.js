@@ -8,6 +8,7 @@ const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/UserAgentOverrides.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const DEFAULT_UA = Cc["@mozilla.org/network/protocol;1?name=http"]
                      .getService(Ci.nsIHttpProtocolHandler)
@@ -17,10 +18,14 @@ function SiteSpecificUserAgent() {}
 
 SiteSpecificUserAgent.prototype = {
   getUserAgentForURIAndWindow: function ssua_getUserAgentForURIAndWindow(aURI, aWindow) {
-    return UserAgentOverrides.getOverrideForURI(aURI) || DEFAULT_UA;
+    let win = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator).getMostRecentWindow("navigator:browser");
+    if (win && win.UserAgent) {
+      return win.UserAgent.getUserAgentForWindow(aWindow, DEFAULT_UA);
+    }
+    return DEFAULT_UA;
   },
 
-  classID: Components.ID("{506c680f-3d1c-4954-b351-2c80afbc37d3}"),
+  classID: Components.ID("{d5234c9d-0ee2-4b3c-9da3-18be9e5cf7e6}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISiteSpecificUserAgent])
 };
 

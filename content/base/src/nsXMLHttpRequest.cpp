@@ -387,7 +387,6 @@ nsXMLHttpRequest::nsXMLHttpRequest()
     mRequestObserver(nullptr), mState(XML_HTTP_REQUEST_UNSENT),
     mUploadTransferred(0), mUploadTotal(0), mUploadComplete(true),
     mProgressSinceLastProgressEvent(false),
-    mUploadProgress(0), mUploadProgressMax(0),
     mRequestSentTime(0), mTimeoutMilliseconds(0),
     mErrorLoad(false), mWaitingForOnStopRequest(false),
     mProgressTimerIsActive(false), mProgressEventWasDelayed(false),
@@ -1544,10 +1543,8 @@ nsXMLHttpRequest::CreateReadystatechangeEvent(nsIDOMEvent** aDOMEvent)
 void
 nsXMLHttpRequest::DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
                                         const nsAString& aType,
-                                        bool aUseLSEventWrapper,
                                         bool aLengthComputable,
-                                        uint64_t aLoaded, uint64_t aTotal,
-                                        uint64_t aPosition, uint64_t aTotalSize)
+                                        uint64_t aLoaded, uint64_t aTotal)
 {
   NS_ASSERTION(aTarget, "null target");
   NS_ASSERTION(!aType.IsEmpty(), "missing event type");
@@ -1558,9 +1555,9 @@ nsXMLHttpRequest::DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
   }
 
   bool dispatchLoadend = aType.EqualsLiteral(LOAD_STR) ||
-                           aType.EqualsLiteral(ERROR_STR) ||
-                           aType.EqualsLiteral(TIMEOUT_STR) ||
-                           aType.EqualsLiteral(ABORT_STR);
+                         aType.EqualsLiteral(ERROR_STR) ||
+                         aType.EqualsLiteral(TIMEOUT_STR) ||
+                         aType.EqualsLiteral(ABORT_STR);
 
   nsCOMPtr<nsIDOMEvent> event;
   nsresult rv = NS_NewDOMProgressEvent(getter_AddRefs(event),
@@ -1579,17 +1576,11 @@ nsXMLHttpRequest::DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
 
   event->SetTrusted(true);
 
-  if (aUseLSEventWrapper) {
-    nsCOMPtr<nsIDOMProgressEvent> xhrprogressEvent =
-      new nsXMLHttpProgressEvent(progress, aPosition, aTotalSize, GetOwner());
-    event = xhrprogressEvent;
-  }
   aTarget->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
-  
+
   if (dispatchLoadend) {
     DispatchProgressEvent(aTarget, NS_LITERAL_STRING(LOADEND_STR),
-                          aUseLSEventWrapper, aLengthComputable,
-                          aLoaded, aTotal, aPosition, aTotalSize);
+                          aLengthComputable, aLoaded, aTotal);
   }
 }
                                           
@@ -2809,8 +2800,6 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
   mErrorLoad = false;
   mLoadLengthComputable = false;
   mLoadTotal = 0;
-  mUploadProgress = 0;
-  mUploadProgressMax = 0;
   if ((aVariant || !aBody.IsNull()) && httpChannel &&
       !method.EqualsLiteral("GET")) {
 
@@ -3647,13 +3636,11 @@ nsXMLHttpRequest::MaybeDispatchProgressEvents(bool aFinalProgress)
   if ((XML_HTTP_REQUEST_OPENED | XML_HTTP_REQUEST_SENT) & mState) {
     if (aFinalProgress) {
       mUploadTotal = mUploadTransferred;
-      mUploadProgressMax = mUploadProgress;
     }
     if (mUpload && !mUploadComplete) {
       DispatchProgressEvent(mUpload, NS_LITERAL_STRING(PROGRESS_STR),
-                            true, mUploadLengthComputable, mUploadTransferred,
-                            mUploadTotal, mUploadProgress,
-                            mUploadProgressMax);
+                            mUploadLengthComputable, mUploadTransferred,
+                            mUploadTotal);
     }
   } else {
     if (aFinalProgress) {
@@ -3661,8 +3648,8 @@ nsXMLHttpRequest::MaybeDispatchProgressEvents(bool aFinalProgress)
     }
     mInLoadProgressEvent = true;
     DispatchProgressEvent(this, NS_LITERAL_STRING(PROGRESS_STR),
-                          true, mLoadLengthComputable, mLoadTransferred,
-                          mLoadTotal, mLoadTransferred, mLoadTotal);
+                          mLoadLengthComputable, mLoadTransferred,
+                          mLoadTotal);
     mInLoadProgressEvent = false;
     if (mResponseType == XML_HTTP_RESPONSE_TYPE_CHUNKED_TEXT ||
         mResponseType == XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER) {
@@ -3701,8 +3688,6 @@ nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, uint64
     }
     mUploadLengthComputable = lengthComputable;
     mUploadTransferred = loaded;
-    mUploadProgress = aProgress;
-    mUploadProgressMax = aProgressMax;
     mProgressSinceLastProgressEvent = true;
 
     MaybeDispatchProgressEvents(false);
@@ -4006,81 +3991,6 @@ nsHeaderVisitor::VisitHeader(const nsACString &header, const nsACString &value)
     mHeaders.Append(value);
     mHeaders.Append("\r\n");
   }
-  return NS_OK;
-}
-
-// DOM event class to handle progress notifications
-nsXMLHttpProgressEvent::nsXMLHttpProgressEvent(nsIDOMProgressEvent* aInner,
-                                               uint64_t aCurrentProgress,
-                                               uint64_t aMaxProgress,
-                                               nsPIDOMWindow* aWindow)
-  : mWindow(aWindow)
-{
-  mInner = aInner;
-  mCurProgress = aCurrentProgress;
-  mMaxProgress = aMaxProgress;
-}
-
-nsXMLHttpProgressEvent::~nsXMLHttpProgressEvent()
-{}
-
-DOMCI_DATA(XMLHttpProgressEvent, nsXMLHttpProgressEvent)
-
-// QueryInterface implementation for nsXMLHttpProgressEvent
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXMLHttpProgressEvent)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMProgressEvent)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEvent, nsIDOMProgressEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMProgressEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMLSProgressEvent)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XMLHttpProgressEvent)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXMLHttpProgressEvent)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXMLHttpProgressEvent)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXMLHttpProgressEvent)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mInner);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow);
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXMLHttpProgressEvent)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInner)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow);
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMETHODIMP nsXMLHttpProgressEvent::GetInput(nsIDOMLSInput * *aInput)
-{
-  *aInput = nullptr;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-void
-nsXMLHttpProgressEvent::WarnAboutLSProgressEvent(nsIDocument::DeprecatedOperations aOperation)
-{
-  if (!mWindow) {
-    return;
-  }
-  nsCOMPtr<nsIDocument> document =
-    do_QueryInterface(mWindow->GetExtantDocument());
-  if (!document) {
-    return;
-  }
-  document->WarnOnceAbout(aOperation);
-}
-
-NS_IMETHODIMP nsXMLHttpProgressEvent::GetPosition(uint32_t *aPosition)
-{
-  WarnAboutLSProgressEvent(nsIDocument::ePosition);
-  // XXX can we change the iface?
-  *aPosition = uint32_t(mCurProgress);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsXMLHttpProgressEvent::GetTotalSize(uint32_t *aTotalSize)
-{
-  WarnAboutLSProgressEvent(nsIDocument::eTotalSize);
-  // XXX can we change the iface?
-  *aTotalSize = uint32_t(mMaxProgress);
   return NS_OK;
 }
 

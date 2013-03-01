@@ -253,7 +253,10 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
             return NULL;
 
         functionProto->initScript(script);
-        functionProto->getType(cx)->interpretedFunction = functionProto;
+        types::TypeObject* protoType = functionProto->getType(cx);
+        if (!protoType)
+            return NULL;
+        protoType->interpretedFunction = functionProto;
         script->setFunction(functionProto);
 
         /*

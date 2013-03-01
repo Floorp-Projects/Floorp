@@ -28,6 +28,7 @@ class nsIFrame;
 
 namespace mozilla {
 class TimeStamp;
+class SVGImageContext;
 }
 
 %}
@@ -46,6 +47,7 @@ native nsSize(nsSize);
 [ptr] native ImageContainer(mozilla::layers::ImageContainer);
 [ptr] native LayerManager(mozilla::layers::LayerManager);
 [ref] native TimeStamp(mozilla::TimeStamp);
+[ptr] native SVGImageContext(mozilla::SVGImageContext);
 
 
 /**
@@ -56,7 +58,7 @@ native nsSize(nsSize);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(a9a6835f-ca7e-4c80-8892-962c959fcd27)]
+[scriptable, builtinclass, uuid(585f4087-5148-478a-862c-5e90cc61413d)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -217,6 +219,9 @@ interface imgIContainer : nsISupports
    *          might be restricted by aSubimage -- but we still need the full
    *          image's viewport-size in order for SVG images with the "viewBox"
    *          attribute to position their content correctly.)
+   * @param aSVGContext If non-null, SVG-related rendering context such as
+   *                    overridden attributes on the image document's root <svg>
+   *                    node. Ignored for raster images.
    * @param aFlags Flags of the FLAG_* variety
    */
   [noscript] void draw(in gfxContext aContext,
@@ -225,17 +230,8 @@ interface imgIContainer : nsISupports
                        [const] in gfxRect aFill,
                        [const] in nsIntRect aSubimage,
                        [const] in nsIntSize aViewportSize,
+                       [const] in SVGImageContext aSVGContext,
                        in uint32_t aFlags);
-
-  /**
-   * If this image is TYPE_VECTOR, i.e. is really an embedded SVG document,
-   * this method returns a pointer to the root nsIFrame of that document. If
-   * not (or if the root nsIFrame isn't available for some reason), this method
-   * returns nullptr.
-   *
-   * "notxpcom" for convenience, since we have no need for nsresult return-val.
-   */
-  [notxpcom] nsIFrame GetRootLayoutFrame();
 
   /*
    * Ensures that an image is decoding. Calling this function guarantees that
