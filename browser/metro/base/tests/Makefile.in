@@ -9,7 +9,6 @@ VPATH     = @srcdir@
 relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
 BROWSER_TESTS = \
   head.js \
@@ -34,8 +33,21 @@ BROWSER_TEST_RESOURCES = \
   res/image01.png \
   $(NULL)
 
+XPCSHELL_TESTS = unit
+
+# For now we're copying the actual Util code.
+# We should make this into a jsm module. See bug 848137
+XPCSHELL_RESOURCES = \
+  $(DEPTH)/browser/metro/base/content/Util.js \
+  $(NULL)
+
 libs:: $(BROWSER_TESTS)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/metro/
 
 libs:: $(BROWSER_TEST_RESOURCES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/metro/res
+
+libs:: $(XPCSHELL_RESOURCES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit/
+
+include $(topsrcdir)/config/rules.mk
