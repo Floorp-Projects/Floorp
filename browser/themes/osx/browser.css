@@ -40,13 +40,16 @@
   background-color: #eeeeee;
 }
 
-#titlebar-buttonbox-container,
-#main-window:not([drawintitlebar=true]) > #titlebar {
+#titlebar-buttonbox-container {
   display: none;
 }
 
 #titlebar {
   height: 22px;
+}
+
+#main-window:not(:-moz-lwtheme):not([privatebrowsingmode=temporary]) > #titlebar {
+  -moz-appearance: -moz-window-titlebar;
 }
 
 #main-window[chromehidden~="toolbar"][chromehidden~="location"][chromehidden~="directories"] {
