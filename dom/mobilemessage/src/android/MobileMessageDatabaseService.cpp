@@ -7,8 +7,6 @@
 #include "MobileMessageDatabaseService.h"
 #include "AndroidBridge.h"
 
-using namespace mozilla::dom::sms;
-
 namespace mozilla {
 namespace dom {
 namespace mobilemessage {
