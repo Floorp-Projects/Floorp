@@ -121,10 +121,10 @@ typedef struct CapturingContentInfo {
   nsIContent* mContent;
 } CapturingContentInfo;
 
-// 835b3946-1a4f-4132-b3ce-2e2e8be377c8
+// bf539e0a-c314-4ea7-ba7c-ebd34e8a4065
 #define NS_IPRESSHELL_IID \
-{ 0x835b3946, 0x1a4f, 0x4132, \
-  { 0xb3, 0xce, 0x2e, 0x2e, 0x8b, 0xe3, 0x77, 0xc8 } }
+{ 0xbf539e0a, 0xc314, 0x4ea7, \
+  { 0xba, 0x7c, 0xeb, 0xd3, 0x4e, 0x8a, 0x40, 0x65 } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -497,6 +497,11 @@ public:
   virtual NS_HIDDEN_(void) FrameNeedsReflow(nsIFrame *aFrame,
                                             IntrinsicDirty aIntrinsicDirty,
                                             nsFrameState aBitToAdd) = 0;
+
+  /**
+   * Calls FrameNeedsReflow on all fixed position children of the root frame.
+   */
+  virtual void ReflowFixedPositionChildren(IntrinsicDirty aIntrinsicDirty);
 
   /**
    * Tell the presshell that the given frame's reflow was interrupted.  This
@@ -1381,6 +1386,11 @@ public:
     return mScrollPositionClampingScrollPortSize;
   }
 
+  void SetContentDocumentFixedPositionMargins(const nsMargin& aMargins);
+  const nsMargin& GetContentDocumentFixedPositionMargins() {
+    return mContentDocumentFixedPositionMargins;
+  }
+
   virtual void WindowSizeMoveDone() = 0;
   virtual void SysColorChanged() = 0;
   virtual void ThemeChanged() = 0;
@@ -1427,6 +1437,12 @@ protected:
   uint64_t                  mPaintCount;
 
   nsSize                    mScrollPositionClampingScrollPortSize;
+
+  // This margin is intended to be used when laying out fixed position children
+  // on this PresShell's viewport frame. See the documentation of
+  // nsIDOMWindowUtils.setContentDocumentFixedPositionMargins for details of
+  // their use.
+  nsMargin                  mContentDocumentFixedPositionMargins;
 
   // A list of weak frames. This is a pointer to the last item in the list.
   nsWeakFrame*              mWeakFrames;
