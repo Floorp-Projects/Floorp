@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -220,10 +221,9 @@ nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
   }
 
   nsRefPtr<nsNodeInfo> newNodeInfo =
-    nsNodeInfo::Create(aName, aPrefix, aNamespaceID, aNodeType, aExtraName,
-                       this);
+    new nsNodeInfo(aName, aPrefix, aNamespaceID, aNodeType, aExtraName, this);
   NS_ENSURE_TRUE(newNodeInfo, nullptr);
-  
+
   PLHashEntry *he;
   he = PL_HashTableAdd(mNodeInfoHash, &newNodeInfo->mInner, newNodeInfo);
   NS_ENSURE_TRUE(he, nullptr);
@@ -266,13 +266,11 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
     return NS_OK;
   }
 
-  
   nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aName);
   NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
   nsRefPtr<nsNodeInfo> newNodeInfo =
-      nsNodeInfo::Create(nameAtom, aPrefix, aNamespaceID, aNodeType, nullptr,
-                         this);
+    new nsNodeInfo(nameAtom, aPrefix, aNamespaceID, aNodeType, nullptr, this);
   NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   PLHashEntry *he;
