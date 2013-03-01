@@ -41,7 +41,7 @@ interface nsIDOMClientRect;
 interface nsIURI;
 interface nsIDOMEventTarget;
 
-[scriptable, uuid(69b7d908-c8e4-4416-94cf-4fdbe7a80441)]
+[scriptable, uuid(9ab64e24-7f8d-11e2-9a5f-a24379957a39)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1287,19 +1287,6 @@ interface nsIDOMWindowUtils : nsISupports {
    * The caller of this method must have chrome privileges.
    */
   void setScrollPositionClampingScrollPortSize(in float aWidth, in float aHeight);
-
-  /**
-   * Set margins for the layout of fixed position elements in the content
-   * document. These are used on mobile, where the viewable area can be
-   * temporarily obscured by the browser chrome. In this situation, we're ok
-   * with scrollable page content being obscured, but fixed position content
-   * cannot be revealed without removing the obscuring chrome, so we use these
-   * margins so that it can remain visible.
-   *
-   * The caller of this method must have chrome privileges.
-   */
-  void setContentDocumentFixedPositionMargins(in float aTop, in float aRight,
-                                              in float aBottom, in float aLeft);
 
   /**
    * Prevent this window (and any child windows) from displaying any further

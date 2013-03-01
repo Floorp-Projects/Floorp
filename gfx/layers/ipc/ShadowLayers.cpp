@@ -344,7 +344,6 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
                          *mutant->GetClipRect() : nsIntRect());
     common.isFixedPosition() = mutant->GetIsFixedPosition();
     common.fixedPositionAnchor() = mutant->GetFixedPositionAnchor();
-    common.fixedPositionMargin() = mutant->GetFixedPositionMargins();
     if (Layer* maskLayer = mutant->GetMaskLayer()) {
       common.maskLayerChild() = Shadow(maskLayer->AsShadowableLayer());
     } else {
