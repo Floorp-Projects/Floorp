@@ -19,7 +19,6 @@ interfaces = [
     'range',
     'xbl',
     'xpath',
-    'load-save',
     'xul',
     'storage',
     'json',

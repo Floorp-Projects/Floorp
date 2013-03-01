@@ -22,8 +22,8 @@ var fm = Components.classes["@mozilla.org/focus-manager;1"].
 const kChildDocumentRootIndex = 13;
 const kBeforeTabboxIndex = 34;
 const kTabbableSteps = 38;
-const kFocusSteps = 18;
-const kNoFocusSteps = 15;
+const kFocusSteps = 26;
+const kNoFocusSteps = 7;
 const kOverflowElementIndex = 27;
 
 var gTestStarted = false;
@@ -530,8 +530,8 @@ function startTest()
                          { ctrlKey : true } : { altKey : true };
 
   // test accesskeys
-  var keys = ["t26", "t19", "t22", "t29", "t15", "t17", "n14",
-              "t4", "o1", "o9", "n6"];
+  var keys = ["t26", "t19", "t22", "t29", "t15", "t17", "n6",
+              "t4", "o1", "o9", "n4"];
   for (var k = 0; k < keys.length; k++) {
     var key = String.fromCharCode(65 + k);
 
@@ -556,19 +556,19 @@ function startTest()
   expectFocusShift(function () synthesizeMouse(getById("ad"), 2, 2, { }, gChildWindow),
                    null, getById("t29"), true, "mouse on html label with content inside");
   expectFocusShift(function () synthesizeMouse(getById("ag"), 2, 2, { }, gChildWindow),
-                   null, getById("n14"), true, "mouse on html label with for attribute");
+                   null, getById("n6"), true, "mouse on html label with for attribute");
   gLastFocusMethod = 0;
   expectFocusShift(function () synthesizeMouse(getById("aj"), 2, 2, { }),
                    null, getById("o9"), true, "mouse on xul label with content inside");
   expectFocusShift(function () synthesizeMouse(getById("ak"), 2, 2, { }),
-                   null, getById("n6"), true, "mouse on xul label with control attribute");
+                   null, getById("n4"), true, "mouse on xul label with control attribute");
 
   // test accesskeys that shouldn't work
   k = "o".charCodeAt(0);
   while (k++ < "v".charCodeAt(0)) {
     var key = String.fromCharCode(k);
     expectFocusShift(function () synthesizeKey(key, accessKeyDetails),
-                     window, getById("n6"), false, "non accesskey " + key);
+                     window, getById("n4"), false, "non accesskey " + key);
   }
   gLastFocusMethod = -1;
 
@@ -1614,7 +1614,7 @@ SimpleTest.waitForFocus(startTest);
  The elements with ids starting with t are focusable and in the taborder.
  The elements with ids starting with o are:
    odd numbered ids - focusable but not part of the tab order
-   even numbered ids - not focusable with -moz-user-focus: ignore
+   even numbered ids - not focusable with -moz-user-focus: ignore or disabled
  The elements with ids starting with n are:
    odd numbered ids - not focusable with -moz-user-focus: none
    even numbered ids - focusable but not part of the tab order
@@ -1647,10 +1647,10 @@ SimpleTest.waitForFocus(startTest);
   <button style="display: none;" tabindex="2"/> <button style="visibility: collapse;" tabindex="2"/>
 </hbox>
 <hbox>
-  <button id="n5" accesskey="s" label="no tabindex" disabled="true"/>
-  <button id="n7" label="tabindex = -1" tabindex="-1" disabled="true"/>
-  <button id="n9" label="tabindex = 0" tabindex="0" disabled="true"/>
-  <button id="n11" label="tabindex = 2" tabindex="2" disabled="true"/>
+  <button id="o20" accesskey="s" label="no tabindex" disabled="true"/>
+  <button id="o22" label="tabindex = -1" tabindex="-1" disabled="true"/>
+  <button id="o24" label="tabindex = 0" tabindex="0" disabled="true"/>
+  <button id="o26" label="tabindex = 2" tabindex="2" disabled="true"/>
 </hbox>
 </vbox>
 <vbox>
@@ -1694,10 +1694,10 @@ SimpleTest.waitForFocus(startTest);
 <button id="t38"/>
 <!-- The 't' element tests end here so it doesn't matter that these elements are tabbable -->
 <label id="aj" value="j" accesskey="j" control="o9"/>
-<label id="ak" accesskey="k" control="n6">k</label>
+<label id="ak" accesskey="k" control="n4">k</label>
 <checkbox id="o5"/><checkbox id="o7"/><hbox><checkbox id="o9"/></hbox>
-<checkbox id="o13"/><checkbox id="o15"/><checkbox id="o17"/>
-<checkbox id="n2"/><checkbox id="n4"/><checkbox id="n6"/><checkbox id="n8"/><checkbox id="n10"/><checkbox id="n12"/>
+<checkbox id="o13"/><checkbox id="o15"/><checkbox id="o17"/><checkbox id="o19"/><checkbox id="o21"/><checkbox id="o23"/><checkbox id="o25"/>
+<checkbox id="n2"/><checkbox id="n4"/>
 <listbox id="last" width="20" rows="1"/>
 
 <iframe id="ifa" width="40" height="60" style="-moz-user-focus: ignore;" type="content"

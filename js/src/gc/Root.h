@@ -670,7 +670,7 @@ class Rooted : public RootedBase<T>
 
     ~Rooted() {
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
-        JS_ASSERT(*stack == this);
+        JS_ASSERT(*stack == reinterpret_cast<Rooted<void*>*>(this));
         *stack = prev;
 #endif
     }
@@ -704,19 +704,19 @@ class Rooted : public RootedBase<T>
     void commonInit(Rooted<void*> **thingGCRooters) {
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
         ThingRootKind kind = RootMethods<T>::kind();
-        this->stack = reinterpret_cast<Rooted<T>**>(&thingGCRooters[kind]);
+        this->stack = &thingGCRooters[kind];
         this->prev = *stack;
-        *stack = this;
+        *stack = reinterpret_cast<Rooted<void*>*>(this);
 
         JS_ASSERT(!RootMethods<T>::poisoned(ptr));
 #endif
     }
 
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
-    Rooted<T> **stack, *prev;
+    Rooted<void*> **stack, *prev;
 #endif
 
-#if defined(JSGC_ROOT_ANALYSIS)
+#if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
     /* Has the rooting analysis ever scanned this Rooted's stack location? */
     friend void JS::CheckStackRoots(JSContext*);
     bool scanned;

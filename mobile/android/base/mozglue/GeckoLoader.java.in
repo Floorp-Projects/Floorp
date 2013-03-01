@@ -96,10 +96,24 @@ public final class GeckoLoader {
         }
     }
 
-    @SuppressWarnings("deprecation") // Context.MODE_WORLD_* is deprecated in android-17
+    private static void delTree(File file) {
+        if (file.isDirectory()) {
+            File children[] = file.listFiles();
+            for (File child : children) {
+                delTree(child);
+            }
+        }
+        file.delete();
+    }
+
     private static File getTmpDir(Context context) {
-        return context.getDir("tmp", Context.MODE_WORLD_READABLE |
-                              Context.MODE_WORLD_WRITEABLE );
+        File tmpDir = context.getDir("tmpdir", Context.MODE_PRIVATE);
+        // check if the old tmp dir is there
+        File oldDir = new File(tmpDir.getParentFile(), "app_tmp");
+        if (oldDir.exists()) {
+            delTree(oldDir);
+        }
+        return tmpDir;
     }
 
     public static void setupGeckoEnvironment(Context context, String[] pluginDirs, String profilePath) {

@@ -9,7 +9,7 @@
       iframe { width: 90%; height: 50px; }
     </style>
 <script>
-if (navigator.platform.startsWith("Linux")) {
+if (!navigator.platform.startsWith("Win")) {
   SimpleTest.expectAssertions(0, 1);
 }
 
