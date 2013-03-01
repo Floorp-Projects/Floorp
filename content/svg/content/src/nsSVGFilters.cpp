@@ -1780,7 +1780,9 @@ nsSVGFEComponentTransferElement::Filter(nsSVGFilterInstance *instance,
     CallQueryInterface(childContent,
             (SVGComponentTransferFunctionElement**)getter_AddRefs(child));
     if (child) {
-      child->GenerateLookupTable(tables[child->GetChannel()]);
+      if (!child->GenerateLookupTable(tables[child->GetChannel()])) {
+        return NS_ERROR_FAILURE;
+      }
     }
   }
 
@@ -1976,7 +1978,7 @@ NS_IMETHODIMP SVGComponentTransferFunctionElement::GetOffset(nsIDOMSVGAnimatedNu
   return NS_OK;
 }
 
-void
+bool
 SVGComponentTransferFunctionElement::GenerateLookupTable(uint8_t *aTable)
 {
   uint16_t type = mEnumAttributes[TYPE].GetAnimValue();
@@ -1994,8 +1996,8 @@ SVGComponentTransferFunctionElement::GenerateLookupTable(uint8_t *aTable)
   switch (type) {
   case nsIDOMSVGComponentTransferFunctionElement::SVG_FECOMPONENTTRANSFER_TYPE_TABLE:
   {
-    if (tableValues.Length() <= 1)
-      break;
+    if (tableValues.Length() < 2)
+      return false;
 
     for (i = 0; i < 256; i++) {
       uint32_t k = (i * (tvLength - 1)) / 255;
@@ -2012,8 +2014,8 @@ SVGComponentTransferFunctionElement::GenerateLookupTable(uint8_t *aTable)
 
   case nsIDOMSVGComponentTransferFunctionElement::SVG_FECOMPONENTTRANSFER_TYPE_DISCRETE:
   {
-    if (tableValues.Length() <= 1)
-      break;
+    if (tableValues.Length() < 1)
+      return false;
 
     for (i = 0; i < 256; i++) {
       uint32_t k = (i * tvLength) / 255;
@@ -2053,6 +2055,7 @@ SVGComponentTransferFunctionElement::GenerateLookupTable(uint8_t *aTable)
   default:
     break;
   }
+  return true;
 }
 
 //----------------------------------------------------------------------
