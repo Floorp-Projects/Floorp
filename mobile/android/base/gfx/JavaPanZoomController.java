@@ -829,15 +829,21 @@ class JavaPanZoomController
 
         // Ensure minZoomFactor keeps the page at least as big as the viewport.
         if (pageRect.width() > 0) {
-            float scaleFactor = viewport.width() / pageRect.width();
+            float pageWidth = pageRect.width() +
+              viewportMetrics.fixedLayerMarginLeft +
+              viewportMetrics.fixedLayerMarginRight;
+            float scaleFactor = viewport.width() / pageWidth;
             minZoomFactor = Math.max(minZoomFactor, zoomFactor * scaleFactor);
-            if (viewport.width() > pageRect.width())
+            if (viewport.width() > pageWidth)
                 focusX = 0.0f;
         }
         if (pageRect.height() > 0) {
-            float scaleFactor = viewport.height() / pageRect.height();
+            float pageHeight = pageRect.height() +
+              viewportMetrics.fixedLayerMarginTop +
+              viewportMetrics.fixedLayerMarginBottom;
+            float scaleFactor = viewport.height() / pageHeight;
             minZoomFactor = Math.max(minZoomFactor, zoomFactor * scaleFactor);
-            if (viewport.height() > pageRect.height())
+            if (viewport.height() > pageHeight)
                 focusY = 0.0f;
         }
 
