@@ -43,6 +43,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.TimerTask;
 
+import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
+
 public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                                        Tabs.OnTabsChangedListener,
                                        GeckoMenu.ActionItemBarPresenter,
@@ -480,6 +482,23 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         }
     }
 
+    private boolean canToolbarHide() {
+        // Forbid the toolbar from hiding if hiding the toolbar would cause
+        // the page to go into overscroll.
+        ImmutableViewportMetrics metrics = GeckoApp.mAppContext.getLayerView().
+            getLayerClient().getViewportMetrics();
+        return (metrics.getPageHeight() >= metrics.getHeight());
+    }
+
+    private void startVisibilityAnimation() {
+        // Only start the animation if we're showing the toolbar, or it's ok
+        // to hide it.
+        if (mVisibility == ToolbarVisibility.VISIBLE ||
+            canToolbarHide()) {
+            mVisibilityAnimator.start();
+        }
+    }
+
     public void animateVisibility(boolean show, long delay) {
         // Do nothing if there's a delayed animation pending that does the
         // same thing and this request also has a delay.
@@ -498,13 +517,13 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         if (delay > 0) {
             mDelayedVisibilityTask = new TimerTask() {
                 public void run() {
-                    mVisibilityAnimator.start();
+                    startVisibilityAnimation();
                     mDelayedVisibilityTask = null;
                 }
             };
             mLayout.postDelayed(mDelayedVisibilityTask, delay);
         } else {
-            mVisibilityAnimator.start();
+            startVisibilityAnimation();
         }
     }
 
