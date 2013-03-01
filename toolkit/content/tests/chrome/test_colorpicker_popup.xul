@@ -21,7 +21,7 @@
 var gTestPhase = -1;
 var gCp = null;
 
-SimpleTest.expectAssertions(0, 7);
+SimpleTest.expectAssertions(0, 2);
 
 SimpleTest.waitForExplicitFinish();
 
