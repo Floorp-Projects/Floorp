@@ -1262,6 +1262,10 @@ IonFrameIterator::isConstructing() const
         jsbytecode *pc;
         parent.baselineScriptAndPc(NULL, &pc);
 
+        //Inlined Getters and Setters are never constructing.
+        if (IsGetterPC(pc) || IsSetterPC(pc))
+            return false;
+
         JS_ASSERT(js_CodeSpec[*pc].format & JOF_INVOKE);
 
         return JSOp(*pc) == JSOP_NEW;
