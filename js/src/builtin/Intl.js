@@ -1212,3 +1212,178 @@ function Intl_Collator_resolvedOptions() {
     }
     return result;
 }
+
+
+/********** Intl.NumberFormat **********/
+
+
+/**
+ * Initializes an object as a NumberFormat.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 11.1.1.
+ */
+function InitializeNumberFormat(numberFormat, locales, options) {
+    assert(IsObject(numberFormat), "InitializeNumberFormat");
+
+    // Step 1.
+    if (isInitializedIntlObject(numberFormat))
+        ThrowError(JSMSG_INTL_OBJECT_REINITED);
+
+    // Step 2.
+    var internals = initializeIntlObject(numberFormat);
+
+    // Step 3.
+    var requestedLocales = CanonicalizeLocaleList(locales);
+
+    // Steps 4-5.
+    if (options === undefined)
+        options = {};
+    else
+        options = ToObject(options);
+
+    // Compute options that impact interpretation of locale.
+    // Step 6.
+    var opt = new Record();
+
+    // Steps 7-8.
+    var matcher = GetOption(options, "localeMatcher", "string", ["lookup", "best fit"], "best fit");
+    opt.localeMatcher = matcher;
+
+    // Compute effective locale.
+    // Step 9.
+    var NumberFormat = numberFormatInternalProperties;
+
+    // Step 10.
+    var localeData = NumberFormat.localeData;
+
+    // Step 11.
+    var r = ResolveLocale(NumberFormat.availableLocales,
+                          requestedLocales, opt,
+                          NumberFormat.relevantExtensionKeys,
+                          localeData);
+
+    // Steps 12-14.
+    internals.locale = r.locale;
+    internals.numberingSystem = r.nu;
+    var dataLocale = r.dataLocale;
+
+    // Compute formatting options.
+    // Steps 15-16.
+    var s = GetOption(options, "style", "string", ["decimal", "percent", "currency"], "decimal");
+    internals.style = s;
+
+    // Steps 17-20.
+    var c = GetOption(options, "currency", "string", undefined, undefined);
+    if (c !== undefined && !IsWellFormedCurrencyCode(c))
+        ThrowError(JSMSG_INVALID_CURRENCY_CODE, c);
+    var cDigits;
+    if (s === "currency") {
+        if (c === undefined)
+            ThrowError(JSMSG_UNDEFINED_CURRENCY);
+
+        // Steps 20.a-c.
+        c = toASCIIUpperCase(c);
+        internals.currency = c;
+        cDigits = CurrencyDigits(c);
+    }
+
+    // Steps 21-22.
+    var cd = GetOption(options, "currencyDisplay", "string", ["code", "symbol", "name"], "symbol");
+    if (s === "currency")
+        internals.currencyDisplay = cd;
+
+    // Steps 23-24.
+    var mnid = GetNumberOption(options, "minimumIntegerDigits", 1, 21, 1);
+    internals.minimumIntegerDigits = mnid;
+
+    // Steps 25-27.
+    var mnfdDefault = (s === "currency") ? cDigits : 0;
+    var mnfd = GetNumberOption(options, "minimumFractionDigits", 0, 20, mnfdDefault);
+    internals.minimumFractionDigits = mnfd;
+
+    // Steps 28-30.
+    var mxfdDefault;
+    if (s === "currency")
+        mxfdDefault = std_Math_max(mnfd, cDigits);
+    else if (s === "percent")
+        mxfdDefault = std_Math_max(mnfd, 0);
+    else
+        mxfdDefault = std_Math_max(mnfd, 3);
+    var mxfd = GetNumberOption(options, "maximumFractionDigits", mnfd, 20, mxfdDefault);
+    internals.maximumFractionDigits = mxfd;
+
+    // Steps 31-32.
+    var mnsd = options.minimumSignificantDigits;
+    var mxsd = options.maximumSignificantDigits;
+
+    // Step 33.
+    if (mnsd !== undefined || mxsd !== undefined) {
+        mnsd = GetNumberOption(options, "minimumSignificantDigits", 1, 21, 1);
+        mxsd = GetNumberOption(options, "maximumSignificantDigits", mnsd, 21, 21);
+        internals.minimumSignificantDigits = mnsd;
+        internals.maximumSignificantDigits = mxsd;
+    }
+
+    // Steps 34-35.
+    var g = GetOption(options, "useGrouping", "boolean", undefined, true);
+    internals.useGrouping = g;
+
+    // ??? Steps 36-41 to be provided by concrete implementation.
+
+    // Step 42.
+    internals.boundFormat = undefined;
+
+    // Step 43.
+    internals.initializedNumberFormat = true;
+}
+
+
+/**
+ * Mapping from currency codes to the number of decimal digits used for them.
+ * Default is 2 digits.
+ *
+ * Spec: ISO 4217 Currency and Funds Code List.
+ * http://www.currency-iso.org/en/home/tables/table-a1.html
+ */
+var currencyDigits = {
+    BHD: 3,
+    BIF: 0,
+    BYR: 0,
+    CLF: 0,
+    CLP: 0,
+    DJF: 0,
+    IQD: 3,
+    GNF: 0,
+    ISK: 0,
+    JOD: 3,
+    JPY: 0,
+    KMF: 0,
+    KRW: 0,
+    KWD: 3,
+    LYD: 3,
+    OMR: 3,
+    PYG: 0,
+    RWF: 0,
+    TND: 3,
+    UYI: 0,
+    VND: 0,
+    VUV: 0,
+    XAF: 0,
+    XOF: 0,
+    XPF: 0
+};
+
+
+/**
+ * Returns the number of decimal digits to be used for the given currency.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 11.1.1.
+ */
+function CurrencyDigits(currency) {
+    assert(typeof currency === "string", "CurrencyDigits");
+    assert(callFunction(std_RegExp_test, /^[A-Z]{3}$/, currency), "CurrencyDigits");
+
+    if (callFunction(std_Object_hasOwnProperty, currencyDigits, currency))
+        return currencyDigits[currency];
+    return 2;
+}
