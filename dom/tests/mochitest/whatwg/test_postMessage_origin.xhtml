@@ -14,16 +14,27 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=417075
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 
+<iframe src="http://mochi.test:8888/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
+        id="sameDomain"></iframe>
+<iframe src="http://example.com/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
+        id="otherDomain"></iframe>
+<iframe src="http://example.org:8000/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
+        id="otherDomainPort"></iframe>
+<iframe src="ftp://mochi.test:27534/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
+        id="localNoExist"></iframe>
+
+<iframe src="http://sub1.παράδειγμα.δοκιμή/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
+        id="idnKidWhitelist"></iframe>
+
+<iframe src="http://sub1.exämple.test/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
+        id="idnKidNoWhitelist"></iframe>
+
+
 <pre id="test">
 <script class="testbody" type="application/javascript"><![CDATA[
 /** Test for Bug 417075 **/
 
 SimpleTest.waitForExplicitFinish();
-
-// After bug 722299, set network.IDN.restriction_profile to "ASCII" in
-// order not to change the behaviour of non-whitelisted TLDs
-var oldProfile = SpecialPowers.getCharPref("network.IDN.restriction_profile", "moderate");
-SpecialPowers.setCharPref("network.IDN.restriction_profile", "ASCII");
 
 function errorCheck(i, called, error, actual)
 {
@@ -522,7 +533,6 @@ function run()
   {
     allTests(function()
     {
-      SpecialPowers.setCharPref("network.IDN.restriction_profile", oldProfile);
       SimpleTest.finish();
     });
   });
@@ -531,21 +541,5 @@ function run()
 window.addEventListener("load", run, false);
 ]]></script>
 </pre>
-<iframe src="http://mochi.test:8888/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
-        id="sameDomain"></iframe>
-<iframe src="http://example.com/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
-        id="otherDomain"></iframe>
-<iframe src="http://example.org:8000/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
-        id="otherDomainPort"></iframe>
-<iframe src="ftp://mochi.test:27534/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
-        id="localNoExist"></iframe>
-
-<iframe src="http://sub1.παράδειγμα.δοκιμή/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
-        id="idnKidWhitelist"></iframe>
-
-<iframe src="http://sub1.exämple.test/tests/dom/tests/mochitest/whatwg/postMessage_origin_helper.xhtml"
-        id="idnKidNoWhitelist"></iframe>
-
-
 </body>
 </html>
