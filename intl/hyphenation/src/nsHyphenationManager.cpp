@@ -48,18 +48,48 @@
 #include "nsUnicharUtils.h"
 #include "mozilla/Preferences.h"
 #include "nsZipArchive.h"
+#include "mozilla/Services.h"
+#include "nsIObserverService.h"
+#include "nsCRT.h"
 
 using namespace mozilla;
 
-#define INTL_HYPHENATIONALIAS_PREFIX "intl.hyphenation-alias."
+static const char kIntlHyphenationAliasPrefix[] = "intl.hyphenation-alias.";
+static const char kMemoryPressureNotification[] = "memory-pressure";
 
 nsHyphenationManager *nsHyphenationManager::sInstance = nullptr;
+
+NS_IMPL_ISUPPORTS1(nsHyphenationManager::MemoryPressureObserver,
+                   nsIObserver)
+
+NS_IMETHODIMP
+nsHyphenationManager::MemoryPressureObserver::Observe(nsISupports *aSubject,
+                                                      const char *aTopic,
+                                                      const PRUnichar *aData)
+{
+  if (!nsCRT::strcmp(aTopic, kMemoryPressureNotification)) {
+    // We don't call Instance() here, as we don't want to create a hyphenation
+    // manager if there isn't already one in existence.
+    // (This observer class is local to the hyphenation manager, so it can use
+    // the protected members directly.)
+    if (nsHyphenationManager::sInstance) {
+      nsHyphenationManager::sInstance->mHyphenators.Clear();
+    }
+  }
+  return NS_OK;
+}
 
 nsHyphenationManager*
 nsHyphenationManager::Instance()
 {
   if (sInstance == nullptr) {
     sInstance = new nsHyphenationManager();
+
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+        obs->AddObserver(new MemoryPressureObserver,
+                         kMemoryPressureNotification, false);
+    }
   }
   return sInstance;
 }
@@ -296,14 +326,14 @@ nsHyphenationManager::LoadAliases()
   }
   uint32_t prefCount;
   char **prefNames;
-  nsresult rv = prefRootBranch->GetChildList(INTL_HYPHENATIONALIAS_PREFIX,
+  nsresult rv = prefRootBranch->GetChildList(kIntlHyphenationAliasPrefix,
                                              &prefCount, &prefNames);
   if (NS_SUCCEEDED(rv) && prefCount > 0) {
     for (uint32_t i = 0; i < prefCount; ++i) {
       nsAdoptingCString value = Preferences::GetCString(prefNames[i]);
       if (value) {
         nsAutoCString alias(prefNames[i]);
-        alias.Cut(0, strlen(INTL_HYPHENATIONALIAS_PREFIX));
+        alias.Cut(0, sizeof(kIntlHyphenationAliasPrefix) - 1);
         ToLowerCase(alias);
         ToLowerCase(value);
         nsCOMPtr<nsIAtom> aliasAtom = do_GetAtom(alias);
