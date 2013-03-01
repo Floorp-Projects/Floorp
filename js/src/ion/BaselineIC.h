@@ -423,6 +423,7 @@ class ICStub
     };
 
     void markCode(JSTracer *trc, const char *name);
+    void updateCode(IonCode *stubCode);
     void trace(JSTracer *trc);
 
   protected:
@@ -1007,7 +1008,7 @@ class TypeCheckPrimitiveSetStub : public ICStub
         if (!code)
             return NULL;
         extra_ = flags;
-        stubCode_ = code->raw();
+        updateCode(code);
         return this;
     }
 
