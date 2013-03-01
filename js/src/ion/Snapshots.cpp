@@ -134,15 +134,6 @@ SnapshotReader::readFrameHeader()
     JS_ASSERT(moreFrames());
     JS_ASSERT(slotsRead_ == slotCount_);
 
-#ifdef DEBUG
-    union {
-        RawScript script;
-        uint8_t bytes[sizeof(RawScript)];
-    } u;
-    for (size_t i = 0; i < sizeof(RawScript); i++)
-        u.bytes[i] = reader_.readByte();
-#endif
-
     pcOffset_ = reader_.readUnsigned();
     slotCount_ = reader_.readUnsigned();
     IonSpew(IonSpew_Snapshots, "Read pc offset %u, nslots %u", pcOffset_, slotCount_);
@@ -318,16 +309,6 @@ SnapshotWriter::startFrame(JSFunction *fun, UnrootedScript script, jsbytecode *p
 
     IonSpew(IonSpew_Snapshots, "Starting frame; formals %u, fixed %u, exprs %u",
             formalArgs, script->nfixed, exprStack);
-
-#ifdef DEBUG
-    union {
-        RawScript script;
-        uint8_t bytes[sizeof(RawScript)];
-    } u;
-    u.script = script;
-    for (size_t i = 0; i < sizeof(RawScript); i++)
-        writer_.writeByte(u.bytes[i]);
-#endif
 
     JS_ASSERT(script->code <= pc && pc <= script->code + script->length);
 
