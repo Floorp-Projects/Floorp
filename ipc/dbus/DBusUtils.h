@@ -84,6 +84,12 @@ dbus_bool_t dbus_func_args_async(DBusConnection* conn,
                                  int first_arg_type,
                                  ...);
 
+dbus_bool_t dbus_func_send_and_block(DBusConnection* aConnection,
+                                     int aTimeout,
+                                     DBusMessage** aReply,
+                                     DBusError* aError,
+                                     DBusMessage* aMessage);
+
 DBusMessage*  dbus_func_args(DBusConnection* conn,
                              const char* path,
                              const char* ifc,
