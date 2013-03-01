@@ -30,17 +30,18 @@
 
 #include "mozilla/unused.h"
 
-#include "mozilla/dom/sms/SmsMessage.h"
-#include "mozilla/dom/sms/Constants.h"
-#include "mozilla/dom/sms/Types.h"
-#include "mozilla/dom/sms/PSms.h"
-#include "mozilla/dom/sms/SmsParent.h"
+#include "mozilla/dom/SmsMessage.h"
+#include "mozilla/dom/mobilemessage/Constants.h"
+#include "mozilla/dom/mobilemessage/Types.h"
+#include "mozilla/dom/mobilemessage/PSms.h"
+#include "mozilla/dom/mobilemessage/SmsParent.h"
 #include "nsIMobileMessageDatabaseService.h"
 #include "nsPluginInstanceOwner.h"
 #include "nsSurfaceTexture.h"
 
 using namespace mozilla;
-using namespace mozilla::dom::sms;
+using namespace mozilla::dom;
+using namespace mozilla::dom::mobilemessage;
 
 /* Forward declare all the JNI methods as extern "C" */
 

@@ -1,0 +1,126 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+include "mozilla/dom/mobilemessage/Types.h";
+
+include protocol PSms;
+include SmsTypes;
+
+namespace mozilla {
+namespace dom {
+namespace mobilemessage {
+
+protocol PSmsRequest
+{
+  manager PSms;
+
+child:
+  /**
+   * Sent when the asynchronous request has completed.
+   */
+  __delete__(MessageReply response);
+};
+
+struct ReplyMessageSend
+{
+  SmsMessageData messageData;
+};
+
+struct ReplyMessageSendFail
+{
+  int32_t error;
+};
+
+struct ReplyGetMessage
+{
+  SmsMessageData messageData;
+};
+
+struct ReplyGetMessageFail
+{
+  int32_t error;
+};
+
+struct ReplyMessageDelete
+{
+  bool deleted;
+};
+
+struct ReplyMessageDeleteFail
+{
+  int32_t error;
+};
+
+struct ReplyCreateMessageList
+{
+  int32_t listId;
+  SmsMessageData messageData;
+};
+
+struct ReplyCreateMessageListFail
+{
+  int32_t error;
+};
+
+struct ReplyGetNextMessage
+{
+  SmsMessageData messageData;
+};
+
+struct ReplyMarkeMessageRead
+{
+  bool read;
+};
+
+struct ReplyMarkeMessageReadFail
+{
+  int32_t error;
+};
+
+struct ReplyNoMessageInList
+{
+};
+
+struct ThreadListItem
+{
+  nsString senderOrReceiver;
+  uint64_t timestamp;
+  nsString body;
+  uint64_t unreadCount;
+};
+
+struct ReplyThreadList
+{
+  ThreadListItem[] items;
+};
+
+struct ReplyThreadListFail
+{
+  int32_t error;
+};
+
+union MessageReply
+{
+  ReplyMessageSend;
+  ReplyMessageSendFail;
+  ReplyGetMessage;
+  ReplyGetMessageFail;
+  ReplyMessageDelete;
+  ReplyMessageDeleteFail;
+  ReplyNoMessageInList;
+  ReplyCreateMessageList;
+  ReplyCreateMessageListFail;
+  ReplyGetNextMessage;
+  ReplyMarkeMessageRead;
+  ReplyMarkeMessageReadFail;
+  ReplyThreadList;
+  ReplyThreadListFail;
+};
+
+} // namespace mobilemessage
+} // namespace dom
+} // namespace mozilla

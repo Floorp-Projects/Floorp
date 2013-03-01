@@ -298,7 +298,7 @@ public class GeckoSmsManager
 
   /*
    * Make sure that the following error codes are in sync with the ones
-   * defined in dom/sms/interfaces/nsISmsRequestManager.idl. They are owned
+   * defined in dom/mobilemessage/interfaces/nsISmsRequestManager.idl. They are owned
    * owned by the interface.
    */
   public final static int kNoError       = 0;
@@ -317,7 +317,7 @@ public class GeckoSmsManager
 
   /*
    * Keep the following state codes in syng with |DeliveryState| in:
-   * dom/sms/src/Types.h
+   * dom/mobilemessage/src/Types.h
    */
   private final static int kDeliveryStateSent     = 0;
   private final static int kDeliveryStateReceived = 1;
@@ -326,7 +326,7 @@ public class GeckoSmsManager
 
   /*
    * Keep the following status codes in sync with |DeliveryStatus| in:
-   * dom/sms/src/Types.h
+   * dom/mobilemessage/src/Types.h
    */
   private final static int kDeliveryStatusNotApplicable = 0;
   private final static int kDeliveryStatusSuccess       = 1;
@@ -344,7 +344,7 @@ public class GeckoSmsManager
 
   /*
    * Keep the following values in sync with |MessageClass| in:
-   * dom/sms/src/Types.h
+   * dom/mobilemessage/src/Types.h
    */
   private final static int kMessageClassNormal  = 0;
   private final static int kMessageClassClass0  = 1;
