@@ -720,14 +720,12 @@ meter {
 input[type="range"] {
   -moz-appearance: none;
   display: inline-block !important;
+  cursor: default;
   width: 12em;
   height: 1.3em;
-  margin: 0 0.7em;
-  /* Override some rules that apply on all input types: */
-  cursor: default;
   background: none;
   border: none;
-  -moz-binding: none; /* we don't want any of platformHTMLBindings.xml#inputFields */
+  margin: 0 0.7em;
 }
 
 /**
