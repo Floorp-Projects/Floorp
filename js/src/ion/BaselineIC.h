@@ -358,7 +358,6 @@ class ICEntry
                                 \
     _(SetProp_Fallback)         \
     _(SetProp_Native)           \
-    _(SetProp_NativeAdd)        \
     _(SetProp_CallScripted)     \
                                 \
     _(TableSwitch)              \
@@ -3719,7 +3718,8 @@ class ICSetProp_Native : public ICUpdatedStub
     }
 
     class Compiler : public ICStubCompiler {
-        HandleObject obj_;
+        HandleTypeObject type_;
+        RootedShape shape_;
         bool isFixedSlot_;
         uint32_t offset_;
 
@@ -3731,181 +3731,22 @@ class ICSetProp_Native : public ICUpdatedStub
         bool generateStubCode(MacroAssembler &masm);
 
       public:
-        Compiler(JSContext *cx, HandleObject obj, bool isFixedSlot, uint32_t offset)
+        Compiler(JSContext *cx, HandleTypeObject type, Shape *shape,
+                 bool isFixedSlot, uint32_t offset)
           : ICStubCompiler(cx, ICStub::SetProp_Native),
-            obj_(obj),
+            type_(type),
+            shape_(cx, shape),
             isFixedSlot_(isFixedSlot),
             offset_(offset)
         {}
 
         ICUpdatedStub *getStub(ICStubSpace *space) {
-            RootedTypeObject type(cx, obj_->getType(cx));
-            RootedShape shape(cx, obj_->lastProperty());
-            ICUpdatedStub *stub = ICSetProp_Native::New(space, getStubCode(), type, shape, offset_);
+            ICUpdatedStub *stub = ICSetProp_Native::New(space, getStubCode(), type_, shape_, offset_);
             if (!stub || !stub->initUpdatingChain(cx, space))
                 return NULL;
             return stub;
         }
     };
-};
-
-
-template <size_t ProtoChainDepth> class ICSetProp_NativeAddImpl;
-
-class ICSetProp_NativeAdd : public ICUpdatedStub
-{
-  public:
-    static const size_t MAX_PROTO_CHAIN_DEPTH = 4;
-
-  protected: // Protected to silence Clang warning.
-    HeapPtrTypeObject type_;
-    HeapPtrShape oldShape_;
-    HeapPtrShape newShape_;
-    uint32_t offset_;
-
-    ICSetProp_NativeAdd(IonCode *stubCode, HandleTypeObject type, HandleShape oldShape,
-                        size_t protoChainDepth, HandleShape newShape, uint32_t offset)
-      : ICUpdatedStub(SetProp_NativeAdd, stubCode),
-        type_(type),
-        oldShape_(oldShape),
-        newShape_(newShape),
-        offset_(offset)
-    {
-        JS_ASSERT(protoChainDepth <= MAX_PROTO_CHAIN_DEPTH);
-        extra_ = protoChainDepth;
-    }
-
-  public:
-    size_t protoChainDepth() const {
-        return extra_;
-    }
-    HeapPtrTypeObject &type() {
-        return type_;
-    }
-    HeapPtrShape &oldShape() {
-        return oldShape_;
-    }
-    HeapPtrShape &newShape() {
-        return newShape_;
-    }
-
-    template <size_t ProtoChainDepth>
-    ICSetProp_NativeAddImpl<ProtoChainDepth> *toImpl() {
-        JS_ASSERT(ProtoChainDepth == protoChainDepth());
-        return static_cast<ICSetProp_NativeAddImpl<ProtoChainDepth> *>(this);
-    }
-
-    static size_t offsetOfType() {
-        return offsetof(ICSetProp_NativeAdd, type_);
-    }
-    static size_t offsetOfOldShape() {
-        return offsetof(ICSetProp_NativeAdd, oldShape_);
-    }
-    static size_t offsetOfNewShape() {
-        return offsetof(ICSetProp_NativeAdd, newShape_);
-    }
-    static size_t offsetOfOffset() {
-        return offsetof(ICSetProp_NativeAdd, offset_);
-    }
-};
-
-template <size_t ProtoChainDepth>
-class ICSetProp_NativeAddImpl : public ICSetProp_NativeAdd
-{
-    friend class ICStubSpace;
-
-    HeapPtrShape protoShapes_[ProtoChainDepth];
-
-    ICSetProp_NativeAddImpl(IonCode *stubCode, HandleTypeObject type, HandleShape oldShape,
-                            const AutoShapeVector *protoShapes,
-                            HandleShape newShape, uint32_t offset)
-      : ICSetProp_NativeAdd(stubCode, type, oldShape, ProtoChainDepth, newShape, offset)
-    {
-        JS_ASSERT(protoShapes->length() == ProtoChainDepth);
-        for (size_t i = 0; i < ProtoChainDepth; i++)
-            protoShapes_[i].init((*protoShapes)[i]);
-    }
-  public:
-    static inline ICSetProp_NativeAddImpl *New(
-            ICStubSpace *space, IonCode *code, HandleTypeObject type, HandleShape oldShape,
-            const AutoShapeVector *protoShapes, HandleShape newShape, uint32_t offset)
-    {
-        if (!code)
-            return NULL;
-        return space->allocate<ICSetProp_NativeAddImpl<ProtoChainDepth> >(
-                            code, type, oldShape, protoShapes, newShape, offset);
-    }
-
-    void traceProtoShapes(JSTracer *trc) {
-        for (size_t i = 0; i < ProtoChainDepth; i++)
-            MarkShape(trc, &protoShapes_[i], "baseline-setpropnativeadd-stub-protoshape");
-    }
-
-    static size_t offsetOfProtoShape(size_t idx) {
-        return offsetof(ICSetProp_NativeAddImpl, protoShapes_) + (idx * sizeof(HeapPtrShape));
-    }
-};
-
-class ICSetPropNativeAddCompiler : public ICStubCompiler {
-    RootedObject obj_;
-    RootedShape oldShape_;
-    size_t protoChainDepth_;
-    bool isFixedSlot_;
-    uint32_t offset_;
-
-  protected:
-    virtual int32_t getKey() const {
-        return static_cast<int32_t>(kind) | (static_cast<int32_t>(isFixedSlot_) << 16) |
-               (static_cast<int32_t>(protoChainDepth_) << 20);
-    }
-
-    bool generateStubCode(MacroAssembler &masm);
-
-  public:
-    ICSetPropNativeAddCompiler(JSContext *cx, HandleObject obj, HandleShape oldShape,
-                               size_t protoChainDepth, bool isFixedSlot, uint32_t offset)
-      : ICStubCompiler(cx, ICStub::SetProp_NativeAdd),
-        obj_(cx, obj),
-        oldShape_(cx, oldShape),
-        protoChainDepth_(protoChainDepth),
-        isFixedSlot_(isFixedSlot),
-        offset_(offset)
-    {
-        JS_ASSERT(protoChainDepth_ <= ICSetProp_NativeAdd::MAX_PROTO_CHAIN_DEPTH);
-    }
-
-    template <size_t ProtoChainDepth>
-    ICUpdatedStub *getStubSpecific(ICStubSpace *space, const AutoShapeVector *protoShapes)
-    {
-        RootedTypeObject type(cx, obj_->getType(cx));
-        RootedShape newShape(cx, obj_->lastProperty());
-
-        return ICSetProp_NativeAddImpl<ProtoChainDepth>::New(
-                    space, getStubCode(), type, oldShape_, protoShapes, newShape, offset_);
-    }
-
-    ICUpdatedStub *getStub(ICStubSpace *space) {
-        AutoShapeVector protoShapes(cx);
-        RootedObject curProto(cx, obj_->getProto());
-        for (size_t i = 0; i < protoChainDepth_; i++) {
-            JS_ASSERT(curProto);
-            protoShapes.append(curProto->lastProperty());
-            curProto = curProto->getProto();
-        }
-        JS_STATIC_ASSERT(ICSetProp_NativeAdd::MAX_PROTO_CHAIN_DEPTH == 4);
-        ICUpdatedStub *stub = NULL;
-        switch(protoChainDepth_) {
-          case 0: stub = getStubSpecific<0>(space, &protoShapes); break;
-          case 1: stub = getStubSpecific<1>(space, &protoShapes); break;
-          case 2: stub = getStubSpecific<2>(space, &protoShapes); break;
-          case 3: stub = getStubSpecific<3>(space, &protoShapes); break;
-          case 4: stub = getStubSpecific<4>(space, &protoShapes); break;
-          default: JS_NOT_REACHED("ProtoChainDepth too high.");
-        }
-        if (!stub || !stub->initUpdatingChain(cx, space))
-            return NULL;
-        return stub;
-    }
 };
 
 // Stub for calling a scripted setter on a native object.
