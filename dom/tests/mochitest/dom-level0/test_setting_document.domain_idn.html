@@ -38,9 +38,20 @@ that in the future this test tests what it was intended to test (and, until
 bug 414090 is fixed, that it doesn't break when the Greek TLD is
 un-whitelisted).
 
-After bug 722299, this test sets network.IDN.restriction_profile to
-"ASCII" in order not to change the behaviour of non-whitelisted TLDs
 -->
+
+<div>
+<h2>Whitelisted</h2>
+<iframe name="idnKidWhitelist" src="http://sub1.παράδειγμα.δοκιμή/tests/dom/tests/mochitest/dom-level0/idn_child.html?idn-whitelist"></iframe>
+<iframe name="punycodeKidWhitelist" src="http://sub1.παράδειγμα.δοκιμή/tests/dom/tests/mochitest/dom-level0/idn_child.html?punycode-whitelist"></iframe>
+</div>
+
+<div>
+<h2>Not whitelisted</h2>
+<iframe name="idnKidNoWhitelist" src="http://sub1.exämple.test/tests/dom/tests/mochitest/dom-level0/idn_child.html?idn-nowhitelist"></iframe>
+<iframe name="punycodeKidNoWhitelist" src="http://sub1.exämple.test/tests/dom/tests/mochitest/dom-level0/idn_child.html?punycode-nowhitelist"></iframe>
+</div>
+
 <pre id="test">
 <script class="testbody" type="application/javascript">
 
@@ -50,8 +61,6 @@ var gotIDNNoWhitelist = false;
 var gotPunycodeNoWhitelist = false;
 var gotIDNWhitelist = false;
 var gotPunycodeWhitelist = false;
-var oldProfile = SpecialPowers.getCharPref("network.IDN.restriction_profile", "moderate");
-SpecialPowers.setCharPref("network.IDN.restriction_profile", "ASCII");
 
 var whitelistRegex =
   new RegExp("^http://sub1\\.παράδειγμα\\.δοκιμή/tests/dom/tests/" +
@@ -179,7 +188,6 @@ function run()
                   ok(gotPunycodeNoWhitelist,
                      "punycode no-whitelist message not received");
 
-                  SpecialPowers.setCharPref("network.IDN.restriction_profile", oldProfile);
                   SimpleTest.finish();
                 }, 0);
               }, 0);
@@ -195,18 +203,5 @@ window.addEventListener("message", receiveMessage, false);
 window.addEventListener("load", run, false);
 </script>
 </pre>
-
-<div>
-<h2>Whitelisted</h2>
-<iframe name="idnKidWhitelist" src="http://sub1.παράδειγμα.δοκιμή/tests/dom/tests/mochitest/dom-level0/idn_child.html?idn-whitelist"></iframe>
-<iframe name="punycodeKidWhitelist" src="http://sub1.παράδειγμα.δοκιμή/tests/dom/tests/mochitest/dom-level0/idn_child.html?punycode-whitelist"></iframe>
-</div>
-
-<div>
-<h2>Not whitelisted</h2>
-<iframe name="idnKidNoWhitelist" src="http://sub1.exämple.test/tests/dom/tests/mochitest/dom-level0/idn_child.html?idn-nowhitelist"></iframe>
-<iframe name="punycodeKidNoWhitelist" src="http://sub1.exämple.test/tests/dom/tests/mochitest/dom-level0/idn_child.html?punycode-nowhitelist"></iframe>
-</div>
-
 </body>
 </html>

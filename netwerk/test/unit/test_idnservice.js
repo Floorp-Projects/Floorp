@@ -28,11 +28,6 @@ function run_test() {
                       .getService(Components.interfaces.nsIPrefBranch);
   pbi.setBoolPref("network.IDN.whitelist.es", true);
 
-  // After bug 722299, set network.IDN.restriction_profile to "ASCII" in
-  // order not to change the behaviour of non-whitelisted TLDs
-  var oldProfile = pbi.getCharPref("network.IDN.restriction_profile", "moderate");
-  pbi.setCharPref("network.IDN.restriction_profile", "ASCII");
-
   // check convertToDisplayIDN against the whitelist
   var isASCII = {};
   do_check_eq(idnService.convertToDisplayIDN("b\u00FCcher.es", isASCII), "b\u00FCcher.es");
@@ -50,7 +45,4 @@ function run_test() {
   do_check_eq(isASCII.value, false);
   do_check_eq(idnService.convertToDisplayIDN("test.xn--k-dha", isASCII), "test.\u00FCk");
   do_check_eq(isASCII.value, false);
-
-  // reset pref to default
-  pbi.setCharPref("network.IDN.restriction_profile", oldProfile);
 }
