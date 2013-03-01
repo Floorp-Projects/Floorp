@@ -12,12 +12,6 @@
 <pre id="test">
 <script type="application/javascript">
 
-if (navigator.platform.startsWith("Linux")) {
-  SimpleTest.expectAssertions(0, 1);
-} else if (navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 11);
-}
-
 /** Test to ensure TCPSocket permission being turned on enables 
   navigator.mozTCPSocket, and mozTCPSocket.open works when
   the tcp-socket permission has been granted.

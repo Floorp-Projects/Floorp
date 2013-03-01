@@ -38,6 +38,7 @@ EXTRA_COMPONENTS = \
         LoginManagerPrompter.js \
         BlocklistPrompt.js \
         NSSDialogService.js \
+        SiteSpecificUserAgent.js \
         $(NULL)
 
 include $(topsrcdir)/config/rules.mk

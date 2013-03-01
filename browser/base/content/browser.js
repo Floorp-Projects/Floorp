@@ -202,6 +202,10 @@ XPCOMUtils.defineLazyGetter(this, "PageMenu", function() {
 * one listener that calls all real handlers.
 */
 function pageShowEventHandlers(event) {
+  // Filter out events that are not about the document load we are interested in
+  if (event.target != content.document)
+    return;
+
   charsetLoadListener();
   XULBrowserWindow.asyncUpdateUI();
 
@@ -1338,6 +1342,15 @@ var gBrowserInit = {
 
     var isLoadingBlank = isBlankPageURL(uriToLoad);
 
+    gBrowser.addEventListener("pageshow", function(event) {
+      // The XULWindow::mPrimaryContentShell isn't up-to-date when pageshow
+      // is fired by a swapFrameLoaders() call (i.e. when we swap the docShells
+      // of two tabs). Get around this by using setTimeout - everything should
+      // be in the right state on the next tick.
+      if (content)
+        setTimeout(pageShowEventHandlers, 0, event);
+    }, true);
+
     if (uriToLoad && uriToLoad != "about:blank") {
       if (uriToLoad instanceof Ci.nsISupportsArray) {
         let count = uriToLoad.Count();
@@ -1395,12 +1408,6 @@ var gBrowserInit = {
     SocialUI.init();
     AddonManager.addAddonListener(AddonsMgrListener);
     WebrtcIndicator.init();
-
-    gBrowser.addEventListener("pageshow", function(event) {
-      // Filter out events that are not about the document load we are interested in
-      if (content && event.target == content.document)
-        setTimeout(pageShowEventHandlers, 0, event);
-    }, true);
 
     // Ensure login manager is up and running.
     Services.logins;

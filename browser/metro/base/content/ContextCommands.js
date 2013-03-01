@@ -33,6 +33,7 @@ var ContextCommands = {
         this.clipboard.copyString(ContextMenuUI.popupState.string,
                                   this.docRef);
         this.showToast(Strings.browser.GetStringFromName("selectionHelper.textCopied"));
+        SelectionHelperUI.closeEditSessionAndClear();
       }
     } else {
       // chrome
@@ -52,6 +53,7 @@ var ContextCommands = {
       let y = ContextMenuUI.popupState.y;
       let json = {x: x, y: y, command: "paste" };
       target.messageManager.sendAsyncMessage("Browser:ContextCommand", json);
+      SelectionHelperUI.closeEditSessionAndClear();
     } else {
       // chrome
       target.editor.paste(Ci.nsIClipboard.kGlobalClipboard);

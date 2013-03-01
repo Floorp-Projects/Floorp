@@ -38,12 +38,14 @@ function nsURLFormatterService() {
     try {
       ABI = this.appInfo.XPCOMABI;
 
-      // Mac universal build should report a different ABI than either macppc
-      // or mactel.
-      let macutils = Cc["@mozilla.org/xpcom/mac-utils;1"].
-                      getService(Ci.nsIMacUtils);
-      if (macutils && macutils.isUniversalBinary) {
-        ABI = "Universal-gcc3";
+      if ("@mozilla.org/xpcom/mac-utils;1" in Cc) {
+        // Mac universal build should report a different ABI than either macppc
+        // or mactel.
+        let macutils = Cc["@mozilla.org/xpcom/mac-utils;1"]
+                         .getService(Ci.nsIMacUtils);
+        if (macutils && macutils.isUniversalBinary) {
+          ABI = "Universal-gcc3";
+        }
       }
     } catch (e) {}
 

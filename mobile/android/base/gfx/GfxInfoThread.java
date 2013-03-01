@@ -17,43 +17,66 @@ import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.egl.EGLSurface;
 
 public class GfxInfoThread extends Thread {
-
     private static final String LOGTAG = "GfxInfoThread";
 
-    private SynchronousQueue<String> mDataQueue;
+    private static GfxInfoThread sInstance;
+    private String mData;
 
-    public GfxInfoThread() {
-        mDataQueue = new SynchronousQueue<String>();
+    private GfxInfoThread() {
     }
 
-    private void error(String msg) {
-        Log.e(LOGTAG, msg);
-        try {
-            mDataQueue.put("ERROR\n" + msg + "\n");
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+    public static void startThread() {
+        if (sInstance == null) {
+            sInstance = new GfxInfoThread();
+            sInstance.start();
         }
+    }
+
+    public static boolean hasData() {
+        // This should never be called before startThread() or after getData()
+        // so we know sInstance will be non-null here
+        synchronized (sInstance) {
+            return sInstance.mData != null;
+        }
+    }
+
+    public static String getData() {
+        // This should be called exactly once after startThread(), so we
+        // know sInstance will be non-null here
+        String data = sInstance.getDataImpl();
+        sInstance = null;
+        return data;
+    }
+
+    private synchronized void error(String msg) {
+        Log.e(LOGTAG, msg);
+        mData = "ERROR\n" + msg + "\n";
+        notifyAll();
     }
 
     private void eglError(EGL10 egl, String msg) {
         error(msg + " (EGL error " + Integer.toHexString(egl.eglGetError()) + ")");
     }
 
-    public String getData() {
-        String data = mDataQueue.poll();
-        if (data != null)
-            return data;
+    private synchronized String getDataImpl() {
+        if (mData != null) {
+            return mData;
+        }
 
-        error("We need the GfxInfo data, but it is not yet available. " +
-              "We have to wait for it, so expect abnormally long startup times. " +
-              "Please report a Mozilla bug.");
+        Log.w(LOGTAG, "We need the GfxInfo data, but it is not yet available. " +
+                      "We have to wait for it, so expect abnormally long startup times. " +
+                      "Please report a Mozilla bug.");
+
         try {
-            data = mDataQueue.take();
+            while (mData == null) {
+                wait();
+            }
         } catch (InterruptedException e) {
+            Log.w(LOGTAG, "Thread interrupted", e);
             Thread.currentThread().interrupt();
         }
         Log.i(LOGTAG, "GfxInfo data is finally available.");
-        return data;
+        return mData;
     }
 
     @Override
@@ -181,10 +204,9 @@ public class GfxInfoThread extends Thread {
 
         // finally send the data. Notice that we've already freed the EGL resources, so that they don't
         // remain there until the data is read.
-        try {
-            mDataQueue.put(data);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+        synchronized (this) {
+            mData = data;
+            notifyAll();
         }
     }
 }

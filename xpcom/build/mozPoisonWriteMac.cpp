@@ -135,30 +135,6 @@ FuncData *Functions[] = { &aio_write_data,
 
 const int NumFunctions = ArrayLength(Functions);
 
-struct AutoLockTraits {
-    typedef PRLock *type;
-    const static type empty() {
-      return NULL;
-    }
-    const static void release(type aL) {
-        PR_Unlock(aL);
-    }
-};
-
-class MyAutoLock : public Scoped<AutoLockTraits> {
-public:
-    static PRLock *getDebugFDsLock() {
-        // We have to use something lower level than a mutex. If we don't, we
-        // can get recursive in here when called from logging a call to free.
-        static PRLock *Lock = PR_NewLock();
-        return Lock;
-    }
-
-    MyAutoLock() : Scoped<AutoLockTraits>(getDebugFDsLock()) {
-        PR_Lock(get());
-    }
-};
-
 // We want to detect "actual" writes, not IPC. Some IPC mechanisms are
 // implemented with file descriptors, so filter them out.
 bool IsIPCWrite(int fd, const struct stat &buf) {
@@ -199,14 +175,9 @@ void AbortOnBadWrite(int fd, const void *wbuf, size_t count) {
     if (IsIPCWrite(fd, buf))
         return;
 
-    {
-        MyAutoLock lockedScope;
-
-        // Debugging FDs are OK
-        std::vector<int> &Vec = getDebugFDs();
-        if (std::find(Vec.begin(), Vec.end(), fd) != Vec.end())
-            return;
-    }
+    // Debugging FDs are OK
+    if (IsDebugFD(fd))
+        return;
 
     // For writev we pass NULL in wbuf. We should only get here from
     // dbm, and it uses write, so assert that we have wbuf.
