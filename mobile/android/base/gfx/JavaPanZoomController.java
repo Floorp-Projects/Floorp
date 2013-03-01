@@ -857,7 +857,7 @@ class JavaPanZoomController
         }
 
         /* Now we pan to the right origin. */
-        viewportMetrics = viewportMetrics.clamp();
+        viewportMetrics = viewportMetrics.clampWithMargins();
 
         return viewportMetrics;
     }
@@ -869,9 +869,15 @@ class JavaPanZoomController
         @Override
         protected float getViewportLength() { return getMetrics().getWidth(); }
         @Override
-        protected float getPageStart() { return getMetrics().pageRectLeft; }
+        protected float getPageStart() {
+            ImmutableViewportMetrics metrics = getMetrics();
+            return metrics.pageRectLeft - metrics.fixedLayerMarginLeft;
+        }
         @Override
-        protected float getPageLength() { return getMetrics().getPageWidth(); }
+        protected float getPageLength() {
+            ImmutableViewportMetrics metrics = getMetrics();
+            return metrics.getPageWidth() + metrics.fixedLayerMarginLeft + metrics.fixedLayerMarginRight;
+        }
     }
 
     private class AxisY extends Axis {
@@ -881,9 +887,15 @@ class JavaPanZoomController
         @Override
         protected float getViewportLength() { return getMetrics().getHeight(); }
         @Override
-        protected float getPageStart() { return getMetrics().pageRectTop; }
+        protected float getPageStart() {
+            ImmutableViewportMetrics metrics = getMetrics();
+            return metrics.pageRectTop - metrics.fixedLayerMarginTop;
+        }
         @Override
-        protected float getPageLength() { return getMetrics().getPageHeight(); }
+        protected float getPageLength() {
+            ImmutableViewportMetrics metrics = getMetrics();
+            return metrics.getPageHeight() + metrics.fixedLayerMarginTop + metrics.fixedLayerMarginBottom;
+        }
     }
 
     /*
