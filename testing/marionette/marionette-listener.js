@@ -725,20 +725,24 @@ function elementInViewport(el) {
  * This function throws the visibility of the element error
  */
 function checkVisible(el, command_id) {
-    //check if the element is visible
-    let visible = utils.isElementDisplayed(el);
-    if (!visible) {
-      return false;
-    }
+  //check if the element is visible
+  let visible = utils.isElementDisplayed(el);
+  if (!visible) {
+    return false;
+  }
+  if (!elementInViewport(el)) {
     //check if scroll function exist. If so, call it.
     if (el.scrollIntoView) {
       el.scrollIntoView(true);
+      if (!elementInViewport(el)) {
+        return false;
+      }
     }
-    var scroll = elementInViewport(el);
-    if (!scroll){
+    else {
       return false;
     }
-    return true;
+  }
+  return true;
 }
 
 /**
