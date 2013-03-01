@@ -1511,3 +1511,156 @@ function Intl_NumberFormat_resolvedOptions() {
     }
     return result;
 }
+
+
+/********** Intl.DateTimeFormat **********/
+
+
+/**
+ * Components of date and time formats and their values.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 12.1.1.
+ */
+var dateTimeComponentValues = {
+    weekday: ["narrow", "short", "long"],
+    era: ["narrow", "short", "long"],
+    year: ["2-digit", "numeric"],
+    month: ["2-digit", "numeric", "narrow", "short", "long"],
+    day: ["2-digit", "numeric"],
+    hour: ["2-digit", "numeric"],
+    minute: ["2-digit", "numeric"],
+    second: ["2-digit", "numeric"],
+    timeZoneName: ["short", "long"]
+};
+
+
+var dateTimeComponents = std_Object_getOwnPropertyNames(dateTimeComponentValues);
+
+
+/**
+ * Initializes an object as a DateTimeFormat.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 12.1.1.
+ */
+function InitializeDateTimeFormat(dateTimeFormat, locales, options) {
+    assert(IsObject(dateTimeFormat), "InitializeDateTimeFormat");
+
+    // Step 1.
+    if (isInitializedIntlObject(dateTimeFormat))
+        ThrowError(JSMSG_INTL_OBJECT_REINITED);
+
+    // Step 2.
+    var internals = initializeIntlObject(dateTimeFormat);
+
+    // Step 3.
+    var requestedLocales = CanonicalizeLocaleList(locales);
+
+    // Step 4.
+    options = ToDateTimeOptions(options, "any", "date");
+
+    // Compute options that impact interpretation of locale.
+    // Step 5.
+    var opt = new Record();
+
+    // Steps 6-7.
+    var matcher = GetOption(options, "localeMatcher", "string", ["lookup", "best fit"], "best fit");
+    opt.localeMatcher = matcher;
+
+    // Compute effective locale.
+    // Step 8.
+    var DateTimeFormat = dateTimeFormatInternalProperties;
+
+    // Step 9.
+    var localeData = DateTimeFormat.localeData;
+
+    // Step 10.
+    var r = ResolveLocale(DateTimeFormat.availableLocales,
+                          requestedLocales, opt,
+                          DateTimeFormat.relevantExtensionKeys,
+                          localeData);
+
+    // Steps 11-13.
+    internals.locale = r.locale;
+    internals.calendar = r.ca;
+    internals.numberingSystem = r.nu;
+
+    // Compute formatting options.
+    // Step 14.
+    var dataLocale = r.dataLocale;
+
+    // Steps 15-17.
+    var tz = options.timeZone;
+    if (tz !== undefined) {
+        tz = toASCIIUpperCase(ToString(tz));
+        if (tz !== "UTC")
+            ThrowError(JSMSG_INVALID_TIME_ZONE, tz);
+    }
+    internals.timeZone = tz;
+
+    // Step 18.
+    opt = new Record();
+
+    // Step 19.
+    var i, prop;
+    for (i = 0; i < dateTimeComponents.length; i++) {
+        prop = dateTimeComponents[i];
+        var value = GetOption(options, prop, "string", dateTimeComponentValues[prop], undefined);
+        opt[prop] = value;
+    }
+
+    // Step 20.
+    var dataLocaleData = localeData(dataLocale);
+
+    // Step 21.
+    var formats = dataLocaleData.formats;
+
+    // Steps 22-24.
+    matcher = GetOption(options, "formatMatcher", "string", ["basic", "best fit"], "best fit");
+    var bestFormat = (matcher === "basic")
+                     ? BasicFormatMatcher(opt, formats)
+                     : BestFitFormatMatcher(opt, formats);
+
+    // Step 25.
+    for (i = 0; i < dateTimeComponents.length; i++) {
+        prop = dateTimeComponents[i];
+        if (callFunction(std_Object_hasOwnProperty, bestFormat, prop)) {
+            var p = bestFormat[prop];
+            internals[prop] = p;
+        }
+    }
+
+    // Step 26.
+    var hr12  = GetOption(options, "hour12", "boolean", undefined, undefined);
+
+    // Step 27.
+    var pattern;
+    if (callFunction(std_Object_hasOwnProperty, internals, "hour")) {
+        // Steps 27.a-b.
+        if (hr12 === undefined)
+            hr12 = dataLocaleData.hour12;
+        assert(typeof hr12 === "boolean");
+        internals.hour12 = hr12;
+
+        if (hr12) {
+            // Step 27.c.
+            var hourNo0 = dataLocaleData.hourNo0;
+            internals.hourNo0 = hourNo0;
+            pattern = bestFormat.pattern12;
+        } else {
+            // Step 27.d.
+            pattern = bestFormat.pattern;
+        }
+    } else {
+        // Step 28.
+        pattern = bestFormat.pattern;
+    }
+
+    // Step 29.
+    internals.pattern = pattern;
+
+    // Step 30.
+    internals.boundFormat = undefined;
+
+    // Step 31.
+    internals.initializedDateTimeFormat = true;
+}
