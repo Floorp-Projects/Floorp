@@ -123,7 +123,6 @@
 #include "nsIMemoryReporter.h"
 #include "nsIFile.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsMemoryInfoDumper.h"
 #include "xpcpublic.h"
 #include "nsXPCOMPrivate.h"
 #include "sampler.h"
@@ -1405,15 +1404,32 @@ private:
             mFilenameIdentifier.IsEmpty() ? "" : ".",
             NS_ConvertUTF16toUTF8(mFilenameIdentifier).get());
 
-        // Get the log directory either from $MOZ_CC_LOG_DIRECTORY or from
-        // the fallback directories in OpenTempFile.
+        // Get the log directory either from $MOZ_CC_LOG_DIRECTORY or from our
+        // platform's temp directory. For Android, first try the downloads
+        // directory which is world-readable rather than the temp directory
+        // which is not.
         nsCOMPtr<nsIFile> logFile;
-        if (char* env = PR_GetEnv("MOZ_CC_LOG_DIRECTORY")) {
+        char* env;
+        if (env = PR_GetEnv("MOZ_CC_LOG_DIRECTORY")) {
             NS_NewNativeLocalFile(nsCString(env), /* followLinks = */ true,
                                   getter_AddRefs(logFile));
         }
-        nsresult rv = nsMemoryInfoDumper::OpenTempFile(filename,
-                                                       getter_AddRefs(logFile));
+#ifdef ANDROID
+        if (!logFile && (env = PR_GetEnv("DOWNLOADS_DIRECTORY"))) {
+            NS_NewNativeLocalFile(nsCString(env), /* followLinks = */ true,
+                                  getter_AddRefs(logFile));
+        }
+#endif
+        if (!logFile) {
+            // Ask NSPR to point us to the temp directory.
+            NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(logFile));
+        }
+        NS_ENSURE_TRUE(logFile, nullptr);
+
+        nsresult rv = logFile->AppendNative(filename);
+        NS_ENSURE_SUCCESS(rv, nullptr);
+
+        rv = logFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0644);
         NS_ENSURE_SUCCESS(rv, nullptr);
 
         return logFile.forget();
