@@ -46,6 +46,7 @@ class Relation;
 class TableAccessible;
 class TableCellAccessible;
 class TextLeafAccessible;
+class XULLabelAccessible;
 class XULTreeAccessible;
 
 /**
@@ -523,6 +524,9 @@ public:
   bool IsTextLeaf() const { return mType == eTextLeafType; }
   TextLeafAccessible* AsTextLeaf();
 
+  bool IsXULLabel() const { return mType == eXULLabelType; }
+  XULLabelAccessible* AsXULLabel();
+
   bool IsXULTabpanels() const { return mType == eXULTabpanelsType; }
 
   bool IsXULTree() const { return mType == eXULTreeType; }
@@ -892,7 +896,7 @@ protected:
 
   static const uint8_t kChildrenFlagsBits = 2;
   static const uint8_t kStateFlagsBits = 5;
-  static const uint8_t kTypeBits = 5;
+  static const uint8_t kTypeBits = 6;
   static const uint8_t kGenericTypesBits = 12;
 
   /**
