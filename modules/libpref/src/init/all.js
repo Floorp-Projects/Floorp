@@ -109,7 +109,7 @@ pref("browser.display.normal_lineheight_calc_control", 2);
 pref("browser.display.show_image_placeholders", true); // true = show image placeholders while image is loaded and when image is broken
 // min font device pixel size at which to turn on high quality
 pref("browser.display.auto_quality_min_font_size", 20);
-pref("browser.anchor_color",                "#0000EE");
+pref("browser.anchor_color",                "#0B6CDA");
 pref("browser.active_color",                "#EE0000");
 pref("browser.visited_color",               "#551A8B");
 pref("browser.underline_anchors",           true);
