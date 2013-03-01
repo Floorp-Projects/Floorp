@@ -64,7 +64,10 @@ _SERV_FILES = 	\
 		$(NULL)	
 
 ifeq ($(MOZ_BUILD_APP),mobile/android)
-_SERV_FILES += $(topsrcdir)/mobile/android/base/tests/robocop.ini
+_SERV_FILES += \
+  $(topsrcdir)/mobile/android/base/tests/robocop.ini \
+  $(topsrcdir)/mobile/android/base/tests/robocop_autophone.ini \
+  $(NULL)
 endif
 
 _PYWEBSOCKET_FILES = \
