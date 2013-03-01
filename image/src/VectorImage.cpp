@@ -21,6 +21,7 @@
 #include "nsSVGEffects.h" // for nsSVGRenderingObserver
 #include "gfxDrawable.h"
 #include "gfxUtils.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include <algorithm>
 
@@ -729,6 +730,7 @@ VectorImage::Draw(gfxContext* aContext,
     NS_WARNING("Refusing to make re-entrant call to VectorImage::Draw");
     return NS_ERROR_FAILURE;
   }
+  AutoRestore<bool> autoRestoreIsDrawing(mIsDrawing);
   mIsDrawing = true;
 
   AutoSVGRenderingState autoSVGState(aSVGContext,
@@ -771,7 +773,6 @@ VectorImage::Draw(gfxContext* aContext,
     mRenderingObserver->ResumeListening();
   }
 
-  mIsDrawing = false;
   return NS_OK;
 }
 
