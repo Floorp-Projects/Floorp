@@ -20,37 +20,6 @@
     </content>
 
     <implementation implements="nsIDOMEventListener">
-      <constructor><![CDATA[
-        let Social = Components.utils.import("resource:///modules/Social.jsm", {}).Social;
-        Social.setErrorListener(this.iframe, function(iframe) {
-          iframe.webNavigation.loadURI("about:socialerror?mode=compactInfo", null, null, null, null);
-        });
-        let iframeWindow = this.iframe.contentWindow;
-        this.addEventListener("DOMContentLoaded", function DOMContentLoaded() {
-          this.removeEventListener("DOMContentLoaded", DOMContentLoaded);
-          this.isActive = !this.minimized;
-          // process this._callbacks, then set to null so the chatbox creator
-          // knows to make new callbacks immediately.
-          for (let callback of this._callbacks) {
-            if (callback)
-              callback(iframeWindow);
-          }
-          this._callbacks = null;
-
-          // content can send a socialChatActivity event to have the UI update.
-          let chatActivity = function() {
-            this.setAttribute("activity", true);
-            this.parentNode.updateTitlebar(this);
-          }.bind(this);
-          iframeWindow.addEventListener("socialChatActivity", chatActivity);
-          iframeWindow.addEventListener("unload", function unload() {
-            iframeWindow.removeEventListener("unload", unload);
-            iframeWindow.removeEventListener("socialChatActivity", chatActivity);
-          });
-        });
-        this.setAttribute("src", this.src);
-      ]]></constructor>
-
       <field name="iframe" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "iframe");
       </field>
@@ -92,12 +61,9 @@
       <method name="onTitlebarClick">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          if (aEvent.button == 0) { // left-click: toggle minimized.
+          if (aEvent.button == 0) // left-click: toggle minimized.
             this.toggle();
-            // if we restored it, we want to focus it.
-            if (!this.minimized)
-              this.parentNode.focus();
-          } else if (aEvent.button == 1) // middle-click: close chat
+          else if (aEvent.button == 1) // middle-click: close chat
             this.close();
         ]]></body>
       </method>
@@ -179,25 +145,8 @@
         <body><![CDATA[
           if (!this.selectedChat)
             return;
-          Services.focus.focusedWindow = this.selectedChat.iframe.contentWindow;
-        ]]></body>
-      </method>
-
-      <method name="_isChatFocused">
-        <parameter name="aChatbox"/>
-        <body><![CDATA[
-          // If there are no XBL bindings for the chat it can't be focused.
-          if (!aChatbox.iframe)
-            return false;
-          let fw = Services.focus.focusedWindow;
-          if (!fw)
-            return false;
-          // We want to see if the focused window is in the subtree below our iframe...
-          let containingBrowser = fw.QueryInterface(Ci.nsIInterfaceRequestor)
-                                    .getInterface(Ci.nsIWebNavigation)
-                                    .QueryInterface(Ci.nsIDocShell)
-                                    .chromeEventHandler;
-          return containingBrowser == aChatbox.iframe;
+          let commandDispatcher = gBrowser.ownerDocument.commandDispatcher;
+          commandDispatcher.advanceFocusIntoSubtree(this.selectedChat);
         ]]></body>
       </method>
 
@@ -219,6 +168,7 @@
             this._selectedChat = val;
             if (val) {
               this._selectedChat.setAttribute("selected", "true");
+              this.focus();
             }
           }
           if (val) {
@@ -281,12 +231,9 @@
           // It's possible in the future we will track most-recently-selected
           // chats or similar to find the "best" candidate - for now though
           // the choice is somewhat arbitrary.
-          let moveFocus = this.selectedChat && this._isChatFocused(this.selectedChat);
           for (let other of this.children) {
             if (other != this.selectedChat && !other.minimized && !other.collapsed) {
               this.selectedChat = other;
-              if (moveFocus)
-                this.focus();
               return;
             }
           }
@@ -434,6 +381,51 @@
         ]]></body>
       </method>
 
+      <method name="initChatBox">
+        <!-- ideally this would be a method on the chatbox itself, but the
+             vagaries of XBL bindings means that in some edge cases the
+             chatbox methods don't exist yet when we need them to...
+        -->
+        <parameter name="aChatBox"/>
+        <parameter name="aProvider"/>
+        <parameter name="aURL"/>
+        <parameter name="aCallback"/>
+        <body><![CDATA[
+          // callbacks to be called when onload fires - more might be added
+          // if the same chat is requested before onload has fired.  Set back
+          // to null in DOMContentLoaded, so null means DOMContentLoaded has
+          // already fired and new callbacks can be made immediately.
+          aChatBox._callbacks = [aCallback];
+          var tmp = {};
+          Components.utils.import("resource:///modules/Social.jsm", tmp);
+          tmp.Social.setErrorListener(aChatBox.iframe, function(iframe) {
+            iframe.webNavigation.loadURI("about:socialerror?mode=compactInfo", null, null, null, null);
+          });
+          let iframeWindow = aChatBox.iframe.contentWindow;
+          aChatBox.addEventListener("DOMContentLoaded", function DOMContentLoaded() {
+            aChatBox.removeEventListener("DOMContentLoaded", DOMContentLoaded);
+            aChatBox.isActive = !aChatBox.minimized;
+            for (let callback of aChatBox._callbacks) {
+              if (callback)
+                callback(iframeWindow);
+            }
+            aChatBox._callbacks = null;
+            function chatActivity() {
+              aChatBox.setAttribute("activity", true);
+              aChatBox.parentNode.updateTitlebar(aChatBox);
+            };
+
+            iframeWindow.addEventListener("socialChatActivity", chatActivity);
+            iframeWindow.addEventListener("unload", function unload() {
+              iframeWindow.removeEventListener("unload", unload);
+              iframeWindow.removeEventListener("socialChatActivity", chatActivity);
+            });
+          });
+
+          aChatBox.setAttribute("origin", aProvider.origin);
+          aChatBox.setAttribute("src", aURL);
+        ]]></body>
+      </method>
       <method name="openChat">
         <parameter name="aProvider"/>
         <parameter name="aURL"/>
@@ -459,16 +451,11 @@
             this.chatboxForURL.delete(aURL);
           }
           cb = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "chatbox");
-          // _callbacks is a javascript property instead of a <field> as it
-          // must exist before the (possibly delayed) bindings are created.
-          cb._callbacks = [aCallback];
-          // src also a javascript property; the src attribute is set in the ctor.
-          cb.src = aURL;
           if (aMode == "minimized")
             cb.setAttribute("minimized", "true");
-          cb.setAttribute("origin", aProvider.origin);
           this.insertBefore(cb, this.firstChild);
           this.selectedChat = cb;
+          this.initChatBox(cb, aProvider, aURL, aCallback);
           this.chatboxForURL.set(aURL, Cu.getWeakReference(cb));
           this.resize();
         ]]></body>
