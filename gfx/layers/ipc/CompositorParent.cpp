@@ -652,17 +652,23 @@ CompositorParent::TransformFixedLayers(Layer* aLayer,
     gfxPoint translation(aTranslation - (anchor - anchor / aScaleDiff));
 
     // Offset this translation by the fixed layer margins, depending on what
-    // side of the viewport the layer is anchored to.
+    // side of the viewport the layer is anchored to, reconciling the
+    // difference between the current fixed layer margins and the Gecko-side
+    // fixed layer margins.
+    // aFixedLayerMargins are the margins we expect to be at at the current
+    // time, obtained via SyncViewportInfo, and fixedMargins are the margins
+    // that were used during layout.
+    const gfx::Margin& fixedMargins = aLayer->GetFixedPositionMargins();
     if (anchor.x > 0) {
-      translation.x -= aFixedLayerMargins.right;
+      translation.x -= aFixedLayerMargins.right - fixedMargins.right;
     } else {
-      translation.x += aFixedLayerMargins.left;
+      translation.x += aFixedLayerMargins.left - fixedMargins.left;
     }
 
     if (anchor.y > 0) {
-      translation.y -= aFixedLayerMargins.bottom;
+      translation.y -= aFixedLayerMargins.bottom - fixedMargins.bottom;
     } else {
-      translation.y += aFixedLayerMargins.top;
+      translation.y += aFixedLayerMargins.top - fixedMargins.top;
     }
 
     // The transform already takes the resolution scale into account.  Since we
