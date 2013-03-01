@@ -39,6 +39,7 @@
 #include "mozilla/ipc/DBusUtils.h"
 #include "mozilla/ipc/RawDBusConnection.h"
 #include "mozilla/Util.h"
+#include "mozilla/NullPtr.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #if defined(MOZ_WIDGET_GONK)
 #include "cutils/properties.h"
@@ -466,7 +467,7 @@ AgentEventFilter(DBusConnection *conn, DBusMessage *msg, void *data)
     if (!reply) {
       errorStr.AssignLiteral("Memory can't be allocated for the message.");
     } else {
-      dbus_connection_send(conn, reply, NULL);
+      dbus_func_send(conn, nullptr, reply);
       dbus_message_unref(reply);
       v = parameters;
     }
@@ -618,7 +619,7 @@ AgentEventFilter(DBusConnection *conn, DBusMessage *msg, void *data)
     if (!reply) {
       errorStr.AssignLiteral("Memory can't be allocated for the message.");
     } else {
-      dbus_connection_send(conn, reply, NULL);
+      dbus_func_send(conn, nullptr, reply);
       dbus_message_unref(reply);
 
       // Do not send an notification to upper layer, too annoying.
@@ -2358,7 +2359,7 @@ BluetoothDBusService::SetPinCodeInternal(const nsAString& aDeviceAddress,
     errorStr.AssignLiteral("Couldn't append arguments to dbus message.");
     result = false;
   } else {
-    result = dbus_connection_send(mConnection, reply, NULL);
+    result = dbus_func_send(mConnection, nullptr, reply);
   }
 
   dbus_message_unref(msg);
@@ -2404,7 +2405,7 @@ BluetoothDBusService::SetPasskeyInternal(const nsAString& aDeviceAddress,
     errorStr.AssignLiteral("Couldn't append arguments to dbus message.");
     result = false;
   } else {
-    result = dbus_connection_send(mConnection, reply, NULL);
+    result = dbus_func_send(mConnection, nullptr, reply);
   }
 
   dbus_message_unref(msg);
@@ -2448,7 +2449,7 @@ BluetoothDBusService::SetPairingConfirmationInternal(
     return false;
   }
 
-  bool result = dbus_connection_send(mConnection, reply, NULL);
+  bool result = dbus_func_send(mConnection, nullptr, reply);
   if (!result) {
     errorStr.AssignLiteral("Can't send message!");
   }
@@ -2494,7 +2495,7 @@ BluetoothDBusService::SetAuthorizationInternal(
     return false;
   }
 
-  bool result = dbus_connection_send(mConnection, reply, NULL);
+  bool result = dbus_func_send(mConnection, nullptr, reply);
   if (!result) {
     errorStr.AssignLiteral("Can't send message!");
   }
