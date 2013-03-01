@@ -76,7 +76,7 @@ public:
   void FlushInvalidations();
 
   // We're not COM-y, so we don't get refcounts by default
-  NS_INLINE_DECL_REFCOUNTING(Decoder)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Decoder)
 
   /*
    * State.
@@ -95,6 +95,11 @@ public:
   void SetSynchronous(bool aSynchronous)
   {
     mSynchronous = aSynchronous;
+  }
+
+  bool IsSynchronous() const
+  {
+    return mSynchronous;
   }
 
   void SetObserver(imgDecoderObserver* aObserver)
