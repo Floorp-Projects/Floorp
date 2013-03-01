@@ -111,7 +111,8 @@ abstract public class GeckoApp
                 extends GeckoActivity 
                 implements GeckoEventListener, SensorEventListener, LocationListener,
                            Tabs.OnTabsChangedListener, GeckoEventResponder,
-                           GeckoMenu.Callback, GeckoMenu.MenuPresenter
+                           GeckoMenu.Callback, GeckoMenu.MenuPresenter,
+                           OnInterceptTouchListener
 {
     private static final String LOGTAG = "GeckoApp";
 
@@ -149,7 +150,7 @@ abstract public class GeckoApp
     static public final int RESTORE_CRASH = 2;
 
     StartupMode mStartupMode = null;
-    protected LinearLayout mMainLayout;
+    protected RelativeLayout mMainLayout;
     protected RelativeLayout mGeckoLayout;
     public View getView() { return mGeckoLayout; }
     public SurfaceView cameraView;
@@ -185,6 +186,8 @@ abstract public class GeckoApp
     private Telemetry.Timer mGeckoReadyStartupTimer;
 
     private String mPrivateBrowsingSession;
+
+    private PointF mInitialTouchPoint = null;
 
     private static Boolean sIsLargeTablet = null;
     private static Boolean sIsSmallTablet = null;
@@ -1395,7 +1398,7 @@ abstract public class GeckoApp
 
         // setup gecko layout
         mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
-        mMainLayout = (LinearLayout) findViewById(R.id.main_layout);
+        mMainLayout = (RelativeLayout) findViewById(R.id.main_layout);
 
         // setup tabs panel
         mTabsPanel = (TabsPanel) findViewById(R.id.tabs_panel);
@@ -2432,42 +2435,41 @@ abstract public class GeckoApp
     protected void connectGeckoLayerClient() {
         mLayerView.getLayerClient().notifyGeckoReady();
 
-        mLayerView.setTouchIntercepter(new OnInterceptTouchListener() {
-            private PointF initialPoint = null;
-
-            @Override
-            public boolean onInterceptTouchEvent(View view, MotionEvent event) {
-                return false;
-            }
-
-            @Override
-            public boolean onTouch(View view, MotionEvent event) {
-                if (event == null)
-                    return true;
-
-                int action = event.getAction();
-                PointF point = new PointF(event.getX(), event.getY());
-                if ((action & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_DOWN) {
-                    initialPoint = point;
-                }
-
-                if (initialPoint != null && (action & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_MOVE) {
-                    if (PointUtils.subtract(point, initialPoint).length() < PanZoomController.PAN_THRESHOLD) {
-                        // Don't send the touchmove event if if the users finger hasn't move far
-                        // Necessary for Google Maps to work correctlly. See bug 771099.
-                        return true;
-                    } else {
-                        initialPoint = null;
-                    }
-                }
-
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createMotionEvent(event));
-                return true;
-            }
-        });
+        mLayerView.setTouchIntercepter(this);
     }
 
-    public static class MainLayout extends LinearLayout {
+    @Override
+    public boolean onInterceptTouchEvent(View view, MotionEvent event) {
+        return false;
+    }
+
+    @Override
+    public boolean onTouch(View view, MotionEvent event) {
+        if (event == null)
+            return true;
+
+        int action = event.getActionMasked();
+        PointF point = new PointF(event.getX(), event.getY());
+        if (action == MotionEvent.ACTION_DOWN) {
+            mInitialTouchPoint = point;
+        }
+
+        if (mInitialTouchPoint != null && action == MotionEvent.ACTION_MOVE) {
+            if (PointUtils.subtract(point, mInitialTouchPoint).length() <
+                PanZoomController.PAN_THRESHOLD) {
+                // Don't send the touchmove event if if the users finger hasn't moved far.
+                // Necessary for Google Maps to work correctly. See bug 771099.
+                return true;
+            } else {
+                mInitialTouchPoint = null;
+            }
+        }
+
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createMotionEvent(event));
+        return true;
+    }
+
+    public static class MainLayout extends RelativeLayout {
         private OnInterceptTouchListener mOnInterceptTouchListener;
 
         public MainLayout(Context context, AttributeSet attrs) {
