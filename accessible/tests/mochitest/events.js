@@ -1548,16 +1548,21 @@ function textChangeChecker(aID, aStart, aEnd, aTextOrFunc, aIsInserted, aFromUse
 {
   this.target = getNode(aID);
   this.type = aIsInserted ? EVENT_TEXT_INSERTED : EVENT_TEXT_REMOVED;
+  this.startOffset = aStart;
+  this.endOffset = aEnd;
+  this.textOrFunc = aTextOrFunc;
 
   this.check = function textChangeChecker_check(aEvent)
   {
     aEvent.QueryInterface(nsIAccessibleTextChangeEvent);
 
-    var modifiedText = (typeof aTextOrFunc == "function") ?
-      aTextOrFunc() : aTextOrFunc;
-    var modifiedTextLen = (aEnd == -1) ? modifiedText.length : aEnd - aStart;
+    var modifiedText = (typeof this.textOrFunc == "function") ?
+      this.textOrFunc() : this.textOrFunc;
+    var modifiedTextLen =
+      (this.endOffset == -1) ? modifiedText.length : aEnd - aStart;
 
-    is(aEvent.start, aStart, "Wrong start offset for " + prettyName(aID));
+    is(aEvent.start, this.startOffset,
+       "Wrong start offset for " + prettyName(aID));
     is(aEvent.length, modifiedTextLen, "Wrong length for " + prettyName(aID));
     var changeInfo = (aIsInserted ? "inserted" : "removed");
     is(aEvent.isInserted(), aIsInserted,
