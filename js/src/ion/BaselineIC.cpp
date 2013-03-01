@@ -551,8 +551,11 @@ EnsureCanEnterIon(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *frame
     if (stat != Method_Compiled) {
         // TODO: If stat == Method_CantCompile, insert stub that just skips the useCount
         // entirely, instead of resetting it.
-        if (stat == Method_CantCompile)
+        if (stat == Method_CantCompile ||
+            (script->hasIonScript() && script->ion->bailoutExpected()))
+        {
             script->resetUseCount();
+        }
         return true;
     }
 
