@@ -179,8 +179,16 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public boolean onInterceptTouchEvent(View view, MotionEvent event) {
         int action = event.getActionMasked();
-
         int pointerCount = event.getPointerCount();
+
+        // Whenever there are no pointers left on the screen, tell the page
+        // to clamp the viewport on fixed layer margin changes. This lets the
+        // toolbar scrolling off the top of the page make the page scroll up
+        // if it'd cause the page to go into overscroll, but only when there
+        // are no pointers held down.
+        mLayerView.getLayerClient().setClampOnFixedLayerMarginsChange(
+            pointerCount == 0 || action == MotionEvent.ACTION_CANCEL ||
+            action == MotionEvent.ACTION_UP);
 
         View toolbarView = mBrowserToolbar.getLayout();
         if (action == MotionEvent.ACTION_DOWN ||
