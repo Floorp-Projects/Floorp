@@ -25,6 +25,11 @@
 
 var manager = new MediaTestManager;
 
+// https://bugzilla.mozilla.org/show_bug.cgi?id=634747
+if (navigator.platform.startsWith("Win")) {
+  SimpleTest.expectAssertions(0, 5);
+}
+
 const NUM_SEEK_TESTS = 13;
 
 function createTestArray() {
