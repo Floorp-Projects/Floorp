@@ -67,6 +67,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
     private final int mIconTextPadding;
     private final int mIconSize;
     private final int mInputPaddingSize;
+    private final int mMinRowSize;
 
     PromptService() {
         sInflater = LayoutInflater.from(GeckoApp.mAppContext);
@@ -78,6 +79,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         mIconTextPadding = (int) (res.getDimension(R.dimen.prompt_service_icon_text_padding));
         mIconSize = (int) (res.getDimension(R.dimen.prompt_service_icon_size));
         mInputPaddingSize = (int) (res.getDimension(R.dimen.prompt_service_inputs_padding));
+        mMinRowSize = (int) (res.getDimension(R.dimen.prompt_service_min_list_item_height));
 
         GeckoAppShell.getEventDispatcher().registerEventListener("Prompt:Show", this);
     }
@@ -692,6 +694,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                 }
 
                 convertView = sInflater.inflate(resourceId, null);
+                convertView.setMinimumHeight(mMinRowSize);
 
                 TextView tv = (TextView) convertView.findViewById(android.R.id.text1);
                 viewHolder = new ViewHolder(tv, tv.getPaddingLeft(), tv.getPaddingRight(),
