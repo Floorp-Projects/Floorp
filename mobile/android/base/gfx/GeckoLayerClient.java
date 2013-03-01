@@ -17,7 +17,6 @@ import org.mozilla.gecko.util.FloatUtils;
 
 import android.content.Context;
 import android.graphics.PointF;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.SystemClock;
 import android.util.DisplayMetrics;
@@ -91,8 +90,6 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     private final PanZoomController mPanZoomController;
     private LayerView mView;
 
-    private boolean mClampOnMarginChange;
-
     public GeckoLayerClient(Context context, LayerView view, EventDispatcher eventDispatcher) {
         // we can fill these in with dummy values because they are always written
         // to before being read
@@ -107,7 +104,6 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mProgressiveUpdateDisplayPort = new DisplayPortMetrics();
         mLastProgressiveUpdateWasLowPrecision = false;
         mProgressiveUpdateWasInDanger = false;
-        mClampOnMarginChange = true;
 
         mForceRedraw = true;
         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
@@ -261,20 +257,6 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         ImmutableViewportMetrics metrics = getViewportMetrics();
         ImmutableViewportMetrics clampedMetrics = metrics.clamp();
 
-        // See if we need to alter the fixed margins - Fixed margins would
-        // otherwise be set even when the document is in overscroll and they're
-        // unnecessary.
-        if ((metrics.fixedLayerMarginLeft > 0 && metrics.viewportRectLeft < metrics.pageRectLeft) ||
-            (metrics.fixedLayerMarginTop > 0 && metrics.viewportRectTop < metrics.pageRectTop) ||
-            (metrics.fixedLayerMarginRight > 0 && metrics.viewportRectRight > metrics.pageRectRight) ||
-            (metrics.fixedLayerMarginBottom > 0 && metrics.viewportRectBottom > metrics.pageRectBottom)) {
-            clampedMetrics = clampedMetrics.setFixedLayerMargins(
-              Math.max(0, metrics.fixedLayerMarginLeft + Math.min(0, metrics.viewportRectLeft - metrics.pageRectLeft)),
-              Math.max(0, metrics.fixedLayerMarginTop + Math.min(0, metrics.viewportRectTop - metrics.pageRectTop)),
-              Math.max(0, metrics.fixedLayerMarginRight + Math.min(0, (metrics.pageRectRight - metrics.viewportRectRight))),
-              Math.max(0, metrics.fixedLayerMarginBottom + Math.min(0, (metrics.pageRectBottom - metrics.viewportRectBottom))));
-        }
-
         if (displayPort == null) {
             displayPort = DisplayPortCalculator.calculate(metrics, mPanZoomController.getVelocityVector());
         }
@@ -321,8 +303,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             default:
             case UPDATE:
                 // Keep the old viewport size
-                metrics = messageMetrics.setViewportSize(oldMetrics.getWidth(), oldMetrics.getHeight())
-                                        .setFixedLayerMarginsFrom(oldMetrics);
+                metrics = messageMetrics.setViewportSize(oldMetrics.getWidth(), oldMetrics.getHeight());
                 if (!oldMetrics.fuzzyEquals(metrics)) {
                     abortPanZoomAnimation();
                 }
@@ -363,36 +344,6 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             // get to java, and again once java figures out the display port).
             return DisplayPortCalculator.calculate(metrics, null);
         }
-    }
-
-    /**
-     * Sets margins on fixed-position layers, to be used when compositing.
-     * Must be called on the UI thread!
-     */
-    public void setFixedLayerMargins(float left, float top, float right, float bottom) {
-        ImmutableViewportMetrics oldMetrics = getViewportMetrics();
-        if (oldMetrics.fixedLayerMarginLeft == left &&
-            oldMetrics.fixedLayerMarginTop == top &&
-            oldMetrics.fixedLayerMarginRight == right &&
-            oldMetrics.fixedLayerMarginBottom == bottom) {
-            // Do nothing if the margins haven't changed.
-            return;
-        }
-
-        ImmutableViewportMetrics newMetrics = oldMetrics.setFixedLayerMargins(left, top, right, bottom);
-
-        if (mClampOnMarginChange) {
-            newMetrics = newMetrics.clampWithMargins();
-        }
-
-        mForceRedraw = true;
-        setViewportMetrics(newMetrics, true);
-
-        mView.requestRender();
-    }
-
-    public void setClampOnFixedLayerMarginsChange(boolean aClamp) {
-        mClampOnMarginChange = aClamp;
     }
 
     // This is called on the Gecko thread to determine if we're still interested
@@ -506,15 +457,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             float pageLeft, float pageTop, float pageRight, float pageBottom,
             float cssPageLeft, float cssPageTop, float cssPageRight, float cssPageBottom) {
         synchronized (this) {
-            ImmutableViewportMetrics currentMetrics = getViewportMetrics();
-
-            // If we're meant to be scrolled to the top, take into account any
-            // margin set on the pan zoom controller.
-            if (offsetY == 0) {
-                offsetY = -currentMetrics.fixedLayerMarginTop;
-            }
-
-            final ImmutableViewportMetrics newMetrics = currentMetrics
+            final ImmutableViewportMetrics newMetrics = getViewportMetrics()
                 .setViewportOrigin(offsetX, offsetY)
                 .setZoomFactor(zoom)
                 .setPageRect(new RectF(pageLeft, pageTop, pageRight, pageBottom),
@@ -593,20 +536,6 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mCurrentViewTransform.x = mFrameMetrics.viewportRectLeft;
         mCurrentViewTransform.y = mFrameMetrics.viewportRectTop;
         mCurrentViewTransform.scale = mFrameMetrics.zoomFactor;
-
-        // Adjust the fixed layer margins so that overscroll subtracts from them.
-        mCurrentViewTransform.fixedLayerMarginLeft =
-            Math.max(0, mFrameMetrics.fixedLayerMarginLeft +
-                     Math.min(0, mFrameMetrics.viewportRectLeft - mFrameMetrics.pageRectLeft));
-        mCurrentViewTransform.fixedLayerMarginTop =
-            Math.max(0, mFrameMetrics.fixedLayerMarginTop +
-                     Math.min(0, mFrameMetrics.viewportRectTop - mFrameMetrics.pageRectTop));
-        mCurrentViewTransform.fixedLayerMarginRight =
-            Math.max(0, mFrameMetrics.fixedLayerMarginRight +
-                     Math.min(0, (mFrameMetrics.pageRectRight - mFrameMetrics.viewportRectRight)));
-        mCurrentViewTransform.fixedLayerMarginBottom =
-            Math.max(0, mFrameMetrics.fixedLayerMarginBottom +
-                     Math.min(0, (mFrameMetrics.pageRectBottom - mFrameMetrics.viewportRectBottom)));
 
         mRootLayer.setPositionAndResolution(x, y, x + width, y + height, resolution);
 
@@ -744,7 +673,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
                     return;
                 }
                 ImmutableViewportMetrics m = mViewportMetrics;
-                BrowserApp.mBrowserToolbar.setShadowVisibility(m.viewportRectTop >= m.pageRectTop - m.fixedLayerMarginTop);
+                BrowserApp.mBrowserToolbar.setShadowVisibility(m.viewportRectTop >= m.pageRectTop);
             }
         });
     }
