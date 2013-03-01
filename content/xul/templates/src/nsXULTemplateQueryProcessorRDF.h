@@ -18,7 +18,6 @@
 #include "nsICollation.h"
 #include "nsCollationCID.h"
 
-#include "nsFixedSizeAllocator.h"
 #include "nsResourceSet.h"
 #include "nsRuleNetwork.h"
 #include "nsRDFQuery.h"
