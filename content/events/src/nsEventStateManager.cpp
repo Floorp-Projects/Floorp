@@ -3131,8 +3131,38 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         if (mCurrentTarget) {
           mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(newFocus));
           const nsStyleUserInterface* ui = mCurrentTarget->StyleUserInterface();
-          suppressBlur = (ui->mUserFocus == NS_STYLE_USER_FOCUS_IGNORE);
           activeContent = mCurrentTarget->GetContent();
+
+          // In some cases, we do not want to even blur the current focused
+          // element. Those cases are:
+          // 1. -moz-user-focus CSS property is set to 'ignore';
+          // 2. Element with NS_EVENT_STATE_DISABLED
+          //    (aka :disabled pseudo-class for HTML element);
+          // 3. XUL control element has the disabled property set to 'true'.
+          //
+          // We can't use nsIFrame::IsFocusable() because we want to blur when
+          // we click on a visibility: none element.
+          // We can't use nsIContent::IsFocusable() because we want to blur when
+          // we click on a non-focusable element like a <div>.
+          // We have to use |aEvent->target| to not make sure we do not check an
+          // anonymous node of the targeted element.
+          suppressBlur = (ui->mUserFocus == NS_STYLE_USER_FOCUS_IGNORE);
+
+          if (!suppressBlur) {
+            nsCOMPtr<Element> element = do_QueryInterface(aEvent->target);
+            suppressBlur = element &&
+                           element->State().HasState(NS_EVENT_STATE_DISABLED);
+          }
+
+          if (!suppressBlur) {
+            nsCOMPtr<nsIDOMXULControlElement> xulControl =
+              do_QueryInterface(aEvent->target);
+            if (xulControl) {
+              bool disabled;
+              xulControl->GetDisabled(&disabled);
+              suppressBlur = disabled;
+            }
+          }
         }
 
         nsIFrame* currFrame = mCurrentTarget;
