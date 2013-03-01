@@ -837,6 +837,28 @@ struct ParamTraits<mozilla::gfx::Rect>
 };
 
 template<>
+struct ParamTraits<mozilla::gfx::Margin>
+{
+  typedef mozilla::gfx::Margin paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.left);
+    WriteParam(msg, param.top);
+    WriteParam(msg, param.right);
+    WriteParam(msg, param.bottom);
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    return (ReadParam(msg, iter, &result->left) &&
+            ReadParam(msg, iter, &result->top) &&
+            ReadParam(msg, iter, &result->right) &&
+            ReadParam(msg, iter, &result->bottom));
+  }
+};
+
+template<>
 struct ParamTraits<nsRect>
 {
   typedef nsRect paramType;
