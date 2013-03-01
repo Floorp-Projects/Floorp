@@ -354,9 +354,11 @@ class ICEntry
     _(GetProp_StringLength)     \
     _(GetProp_Native)           \
     _(GetProp_NativePrototype)  \
+    _(GetProp_CallScripted)     \
                                 \
     _(SetProp_Fallback)         \
     _(SetProp_Native)           \
+    _(SetProp_CallScripted)     \
                                 \
     _(TableSwitch)              \
                                 \
@@ -590,6 +592,8 @@ class ICStub
           case Call_Native:
           case Call_Fallback:
           case UseCount_Fallback:
+          case GetProp_CallScripted:
+          case SetProp_CallScripted:
             return true;
           default:
             return false;
@@ -3535,6 +3539,96 @@ class ICGetPropNativeCompiler : public ICStubCompiler
     }
 };
 
+// Stub for calling a scripted getter on a native object.
+class ICGetProp_CallScripted : public ICMonitoredStub
+{
+    friend class ICStubSpace;
+
+    // Object shape (lastProperty).
+    HeapPtrShape shape_;
+
+    // Holder and shape.
+    HeapPtrObject holder_;
+    HeapPtrShape holderShape_;
+
+    // Function to call.
+    HeapPtrFunction getter_;
+
+    ICGetProp_CallScripted(IonCode *stubCode, ICStub *firstMonitorStub,
+                           HandleShape shape, HandleObject holder, HandleShape holderShape,
+                           HandleFunction getter)
+      : ICMonitoredStub(GetProp_CallScripted, stubCode, firstMonitorStub),
+        shape_(shape),
+        holder_(holder),
+        holderShape_(holderShape),
+        getter_(getter)
+    {}
+
+  public:
+    static inline ICGetProp_CallScripted *New(
+                ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub,
+                HandleShape shape, HandleObject holder, HandleShape holderShape,
+                HandleFunction getter)
+    {
+        if (!code)
+            return NULL;
+        return space->allocate<ICGetProp_CallScripted>(code, firstMonitorStub,
+                                                           shape, holder, holderShape, getter);
+    }
+
+    HeapPtrShape &shape() {
+        return shape_;
+    }
+    HeapPtrObject &holder() {
+        return holder_;
+    }
+    HeapPtrShape &holderShape() {
+        return holderShape_;
+    }
+    HeapPtrFunction &getter() {
+        return getter_;
+    }
+    static size_t offsetOfShape() {
+        return offsetof(ICGetProp_CallScripted, shape_);
+    }
+    static size_t offsetOfHolder() {
+        return offsetof(ICGetProp_CallScripted, holder_);
+    }
+    static size_t offsetOfHolderShape() {
+        return offsetof(ICGetProp_CallScripted, holderShape_);
+    }
+    static size_t offsetOfGetter() {
+        return offsetof(ICGetProp_CallScripted, getter_);
+    }
+
+
+    class Compiler : public ICStubCompiler {
+        ICStub *firstMonitorStub_;
+        RootedObject obj_;
+        RootedObject holder_;
+        RootedFunction getter_;
+
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleObject obj,
+                 HandleObject holder, HandleFunction getter)
+          : ICStubCompiler(cx, ICStub::GetProp_CallScripted),
+            firstMonitorStub_(firstMonitorStub),
+            obj_(cx, obj),
+            holder_(cx, holder),
+            getter_(cx, getter)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            RootedShape shape(cx, obj_->lastProperty());
+            RootedShape holderShape(cx, holder_->lastProperty());
+            return ICGetProp_CallScripted::New(space, getStubCode(), firstMonitorStub_,
+                                               shape, holder_, holderShape, getter_); 
+        }
+    };
+};
+
 // SetProp
 //     JSOP_SETPROP
 //     JSOP_SETNAME
@@ -3650,6 +3744,90 @@ class ICSetProp_Native : public ICUpdatedStub
             if (!stub || !stub->initUpdatingChain(cx, space))
                 return NULL;
             return stub;
+        }
+    };
+};
+
+// Stub for calling a scripted setter on a native object.
+class ICSetProp_CallScripted : public ICStub
+{
+    friend class ICStubSpace;
+
+    // Object shape (lastProperty).
+    HeapPtrShape shape_;
+
+    // Holder and shape.
+    HeapPtrObject holder_;
+    HeapPtrShape holderShape_;
+
+    // Function to call.
+    HeapPtrFunction setter_;
+
+    ICSetProp_CallScripted(IonCode *stubCode, HandleShape shape, HandleObject holder,
+                           HandleShape holderShape, HandleFunction setter)
+      : ICStub(SetProp_CallScripted, stubCode),
+        shape_(shape),
+        holder_(holder),
+        holderShape_(holderShape),
+        setter_(setter)
+    {}
+
+  public:
+    static inline ICSetProp_CallScripted *New(ICStubSpace *space, IonCode *code,
+                                              HandleShape shape, HandleObject holder,
+                                              HandleShape holderShape, HandleFunction setter)
+    {
+        if (!code)
+            return NULL;
+        return space->allocate<ICSetProp_CallScripted>(code, shape, holder, holderShape, setter);
+    }
+
+    HeapPtrShape &shape() {
+        return shape_;
+    }
+    HeapPtrObject &holder() {
+        return holder_;
+    }
+    HeapPtrShape &holderShape() {
+        return holderShape_;
+    }
+    HeapPtrFunction &setter() {
+        return setter_;
+    }
+    static size_t offsetOfShape() {
+        return offsetof(ICSetProp_CallScripted, shape_);
+    }
+    static size_t offsetOfHolder() {
+        return offsetof(ICSetProp_CallScripted, holder_);
+    }
+    static size_t offsetOfHolderShape() {
+        return offsetof(ICSetProp_CallScripted, holderShape_);
+    }
+    static size_t offsetOfSetter() {
+        return offsetof(ICSetProp_CallScripted, setter_);
+    }
+
+
+    class Compiler : public ICStubCompiler {
+        RootedObject obj_;
+        RootedObject holder_;
+        RootedFunction setter_;
+
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, HandleObject obj, HandleObject holder, HandleFunction setter)
+          : ICStubCompiler(cx, ICStub::SetProp_CallScripted),
+            obj_(cx, obj),
+            holder_(cx, holder),
+            setter_(cx, setter)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            RootedShape shape(cx, obj_->lastProperty());
+            RootedShape holderShape(cx, holder_->lastProperty());
+            return ICSetProp_CallScripted::New(space, getStubCode(), shape, holder_,
+                                               holderShape, setter_); 
         }
     };
 };
