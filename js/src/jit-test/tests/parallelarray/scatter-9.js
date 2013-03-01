@@ -7,3 +7,5 @@ function testScatter() {
   var p2 = new ParallelArray([2,1,4,3,5]);
   assertEqParallelArray(r, p2);
 }
+
+testScatter();
