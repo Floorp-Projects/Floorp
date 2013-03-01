@@ -125,6 +125,10 @@ public:
                                 uint32_t aToReaderIdx,
                                 uint32_t aSubsegmentIdx);
 
+  // Returns a pointer to the reader which should be used for the specified
+  // subsegment. Called on the decode thread only.
+  DASHRepReader* GetReaderForSubsegment(uint32_t aSubsegmentIdx);
+
 private:
   // Switches video subreaders if a stream-switch flag has been set, and the
   // current reader has read up to the switching subsegment (start offset).
