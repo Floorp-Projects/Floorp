@@ -76,6 +76,8 @@ static uint32_t gMaxMSBeforeYield = 0;
 static bool gHQDownscaling = false;
 // This is interpreted as a floating-point value / 1000
 static uint32_t gHQDownscalingMinFactor = 1000;
+static bool gMultithreadedDecoding = true;
+static int32_t gDecodingThreadLimit = -1;
 
 // The maximum number of times any one RasterImage was decoded.  This is only
 // used for statistics.
@@ -92,6 +94,10 @@ InitPrefCaches()
                                "image.high_quality_downscaling.enabled", false);
   Preferences::AddUintVarCache(&gHQDownscalingMinFactor,
                                "image.high_quality_downscaling.min_factor", 1000);
+  Preferences::AddBoolVarCache(&gMultithreadedDecoding,
+                               "image.multithreaded_decoding.enabled", true);
+  Preferences::AddIntVarCache(&gDecodingThreadLimit,
+                              "image.multithreaded_decoding.limit", -1);
 }
 
 /* We define our own error checking macros here for 2 reasons:
@@ -3553,14 +3559,20 @@ RasterImage::DecodePool::Singleton()
 
 RasterImage::DecodePool::DecodePool()
 {
-  mThreadPool = do_CreateInstance(NS_THREADPOOL_CONTRACTID);
-  if (mThreadPool) {
-    mThreadPool->SetName(NS_LITERAL_CSTRING("ImageDecoder"));
-    mThreadPool->SetThreadLimit(std::max(PR_GetNumberOfProcessors() - 1, 1));
+  if (gMultithreadedDecoding) {
+    mThreadPool = do_CreateInstance(NS_THREADPOOL_CONTRACTID);
+    if (mThreadPool) {
+      mThreadPool->SetName(NS_LITERAL_CSTRING("ImageDecoder"));
+      if (gDecodingThreadLimit <= 0) {
+        mThreadPool->SetThreadLimit(std::max(PR_GetNumberOfProcessors() - 1, 1));
+      } else {
+        mThreadPool->SetThreadLimit(static_cast<uint32_t>(gDecodingThreadLimit));
+      }
 
-    nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
-    if (obsSvc) {
-      obsSvc->AddObserver(this, "xpcom-shutdown-threads", false);
+      nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
+      if (obsSvc) {
+        obsSvc->AddObserver(this, "xpcom-shutdown-threads", false);
+      }
     }
   }
 }
@@ -3607,7 +3619,7 @@ RasterImage::DecodePool::RequestDecode(RasterImage* aImg)
 
     aImg->mDecodeRequest->mRequestStatus = DecodeRequest::REQUEST_PENDING;
     nsRefPtr<DecodeJob> job = new DecodeJob(aImg->mDecodeRequest, aImg);
-    if (!mThreadPool) {
+    if (!gMultithreadedDecoding || !mThreadPool) {
       NS_DispatchToMainThread(job);
     } else {
       mThreadPool->Dispatch(job, nsIEventTarget::DISPATCH_NORMAL);
