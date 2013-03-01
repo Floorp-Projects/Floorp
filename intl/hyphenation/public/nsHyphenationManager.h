@@ -41,6 +41,7 @@
 #include "nsInterfaceHashtable.h"
 #include "nsRefPtrHashtable.h"
 #include "nsHashKeys.h"
+#include "nsIObserver.h"
 #include "mozilla/Omnijar.h"
 
 class nsHyphenator;
@@ -62,6 +63,13 @@ private:
   ~nsHyphenationManager();
 
 protected:
+  class MemoryPressureObserver MOZ_FINAL : public nsIObserver
+  {
+  public:
+      NS_DECL_ISUPPORTS
+      NS_DECL_NSIOBSERVER
+  };
+
   void LoadPatternList();
   void LoadPatternListFromOmnijar(mozilla::Omnijar::Type aType);
   void LoadPatternListFromDir(nsIFile *aDir);
