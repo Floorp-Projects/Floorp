@@ -775,7 +775,7 @@ function runTest(testNum) {
         checkMenuEntries([]); // type=range does not have a drop down menu
         doKey("down");
         doKey("return");
-        checkForm("32"); // default (midway between minimum (0) and maximum (64))
+        checkForm("30"); // default (midway between minimum (0) and maximum (64)) - step
 
         // Go to test 500.
         fh.addEntry("field1", "value1");

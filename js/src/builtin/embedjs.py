@@ -13,11 +13,16 @@ import re, sys, os, js2c, fileinput
 
 def replaceErrorMsgs(source_files, messages_file, output_file):
     messages = buildMessagesTable(messages_file)
+    # For cases where one key is a prefix of another, we need to check
+    # for the longer one first. Using a reverse-sorted key list ensures that.
+    message_keys = messages.keys()
+    message_keys.sort(reverse=True)
     with open(output_file, 'w') as output:
         if len(source_files) == 0:
             return
         for line in fileinput.input(source_files):
-            output.write(replaceMessages(line if line[-1] == '\n' else line + '\n', messages))
+            line = line if line[-1] == '\n' else line + '\n'
+            output.write(replaceMessages(line, messages, message_keys))
 
 def buildMessagesTable(messages_file):
     table = {}
@@ -28,11 +33,11 @@ def buildMessagesTable(messages_file):
             table[match.group(1)] = match.group(2)
     return table
 
-def replaceMessages(line, messages):
+def replaceMessages(line, messages, message_keys):
     if not 'JSMSG_' in line:
         return line
-    for message_str, message_num in messages.iteritems():
-        line = line.replace(message_str, message_num)
+    for key in message_keys:
+        line = line.replace(key, messages[key])
     return line
 
 def main():

@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_DOMSVGTESTS_H__
-#define MOZILLA_DOMSVGTESTS_H__
+#ifndef mozilla_dom_SVGTests_h
+#define mozilla_dom_SVGTests_h
 
 #include "nsStringFwd.h"
 #include "SVGStringList.h"
@@ -17,20 +17,21 @@ class nsString;
 
 namespace mozilla {
 class DOMSVGStringList;
-}
 
 #define MOZILLA_DOMSVGTESTS_IID \
    { 0x92370da8, 0xda28, 0x4895, \
      {0x9b, 0x1b, 0xe0, 0x06, 0x0d, 0xb7, 0x3f, 0xc3 } }
 
-class DOMSVGTests : public nsISupports
+namespace dom {
+
+class SVGTests : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOMSVGTESTS_IID)
   NS_DECL_ISUPPORTS
 
-  DOMSVGTests();
-  virtual ~DOMSVGTests() {}
+  SVGTests();
+  virtual ~SVGTests() {}
 
   friend class mozilla::DOMSVGStringList;
   typedef mozilla::SVGStringList SVGStringList;
@@ -101,6 +102,9 @@ private:
   static nsIAtom** sStringListNames[3];
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(DOMSVGTests, MOZILLA_DOMSVGTESTS_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(SVGTests, MOZILLA_DOMSVGTESTS_IID)
 
-#endif // MOZILLA_DOMSVGTESTS_H__
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_SVGTests_h

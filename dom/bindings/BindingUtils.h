@@ -1558,6 +1558,20 @@ public:
     }
 };
 
+// Class for simple sequence arguments, only used internally by codegen.
+template<typename T>
+class AutoSequence : public AutoFallibleTArray<T, 16>
+{
+public:
+  AutoSequence() : AutoFallibleTArray<T, 16>()
+  {}
+
+  // Allow converting to const sequences as needed
+  operator const Sequence<T>&() const {
+    return *reinterpret_cast<const Sequence<T>*>(this);
+  }
+};
+
 inline bool
 IdEquals(jsid id, const char* string)
 {
