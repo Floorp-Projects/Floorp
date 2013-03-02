@@ -28,6 +28,13 @@ def build_dict(env=os.environ):
     if missing:
         raise Exception("Missing required environment variables: %s" %
                         ', '.join(missing))
+
+    if 'MOZCONFIG' in env:
+      d["mozconfig"] = env["MOZCONFIG"]
+
+    if 'TOPSRCDIR' in env:
+      d["topsrcdir"] = env["TOPSRCDIR"]
+
     # os
     o = env["OS_TARGET"]
     known_os = {"Linux": "linux",

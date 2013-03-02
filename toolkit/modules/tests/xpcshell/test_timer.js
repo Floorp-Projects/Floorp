@@ -15,10 +15,12 @@ function run_test(browser, tab, document) {
   do_check_eq(typeof timeout1, "number", "setTimeout returns a number");
   do_check_true(timeout1 > 0, "setTimeout returns a positive number");
 
-  let timeout2 = imported.setTimeout(function() {
+  let timeout2 = imported.setTimeout(function(param1, param2) {
     do_check_true(true, "Should be called");
+    do_check_eq(param1, 5, "first parameter is correct");
+    do_check_eq(param2, "test", "second parameter is correct");
     do_test_finished();
-  }, 100);
+  }, 100, 5, "test");
 
   do_check_eq(typeof timeout2, "number", "setTimeout returns a number");
   do_check_true(timeout2 > 0, "setTimeout returns a positive number");

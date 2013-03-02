@@ -8,7 +8,7 @@ toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
 if toolkit == 'gtk2':
     DIRS += ['atk']
 elif toolkit == 'windows':
-    DIRS += ['msaa', 'windows']
+    DIRS += ['windows']
 elif toolkit == 'cocoa':
     DIRS += ['mac']
 else:

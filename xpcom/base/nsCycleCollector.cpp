@@ -2544,11 +2544,6 @@ nsCycleCollector::BeginCollection(bool aMergeCompartments,
                 }
             }
         }
-
-        if (mJSRuntime) {
-            mJSRuntime->FinishTraverse();
-            timeLog.Checkpoint("mJSRuntime->FinishTraverse()");
-        }
     } else {
         mScanInProgress = false;
     }

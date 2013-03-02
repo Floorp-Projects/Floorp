@@ -2260,7 +2260,10 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   }
 
   nsAutoCString contentType;
-  if (NS_SUCCEEDED(aChannel->GetContentType(contentType))) {
+  nsCOMPtr<nsIPropertyBag2> bag = do_QueryInterface(aChannel);
+  if ((bag && NS_SUCCEEDED(bag->GetPropertyAsACString(
+                NS_LITERAL_STRING("contentType"), contentType))) ||
+      NS_SUCCEEDED(aChannel->GetContentType(contentType))) {
     // XXX this is only necessary for viewsource:
     nsACString::const_iterator start, end, semicolon;
     contentType.BeginReading(start);

@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DOMSVGStringList.h"
-#include "DOMSVGTests.h"
+#include "mozilla/dom/SVGTests.h"
 #include "nsError.h"
 #include "nsCOMPtr.h"
 #include "nsSVGAttrTearoffTable.h"
@@ -185,7 +185,7 @@ SVGStringList &
 DOMSVGStringList::InternalList()
 {
   if (mIsConditionalProcessingAttribute) {
-    nsCOMPtr<DOMSVGTests> tests = do_QueryInterface(mElement);
+    nsCOMPtr<dom::SVGTests> tests = do_QueryInterface(mElement);
     return tests->mStringListAttributes[mAttrEnum];
   }
   return mElement->GetStringListInfo().mStringLists[mAttrEnum];
