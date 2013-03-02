@@ -1,3 +1,5 @@
+// |jit-test| error:TypeError
+
 // Binary: cache/js-dbg-64-c676b554c7bb-linux
 // Flags:
 //
