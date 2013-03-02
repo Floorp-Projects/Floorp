@@ -237,7 +237,7 @@ public:
     return mState == DECODER_STATE_SEEKING;
   }
 
-  nsresult GetBuffered(nsTimeRanges* aBuffered);
+  nsresult GetBuffered(TimeRanges* aBuffered);
 
   void SetPlaybackRate(double aPlaybackRate);
   void SetPreservesPitch(bool aPreservesPitch);
