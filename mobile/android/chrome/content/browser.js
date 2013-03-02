@@ -3081,8 +3081,8 @@ Tab.prototype = {
         this._drawZoom = resolution;
         cwu.setResolution(resolution, resolution);
       }
-    } else if (resolution != zoom) {
-      dump("Warning: setDisplayPort resolution did not match zoom for background tab!");
+    } else if (Math.abs(resolution - zoom) >= 1e-6) {
+      dump("Warning: setDisplayPort resolution did not match zoom for background tab! (" + resolution + " != " + zoom + ")");
     }
 
     // Finally, we set the display port, taking care to convert everything into the CSS-pixel
