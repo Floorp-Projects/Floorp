@@ -212,6 +212,7 @@ webidl_files = \
   Text.webidl \
   TextDecoder.webidl \
   TextEncoder.webidl \
+  TimeRanges.webidl \
   TreeWalker.webidl \
   URL.webidl \
   ValidityState.webidl \

@@ -5,6 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/TimeRanges.h"
+#include "mozilla/dom/TimeRangesBinding.h"
+#include "nsHTMLMediaElement.h"
+#include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
 #include "nsError.h"
 
@@ -35,26 +38,46 @@ TimeRanges::~TimeRanges()
 NS_IMETHODIMP
 TimeRanges::GetLength(uint32_t* aLength)
 {
-  *aLength = mRanges.Length();
+  *aLength = Length();
   return NS_OK;
+}
+
+double
+TimeRanges::Start(uint32_t aIndex, ErrorResult& aRv)
+{
+  if (aIndex >= mRanges.Length()) {
+    aRv = NS_ERROR_DOM_INDEX_SIZE_ERR;
+    return 0;
+  }
+
+  return mRanges[aIndex].mStart;
 }
 
 NS_IMETHODIMP
 TimeRanges::Start(uint32_t aIndex, double* aTime)
 {
-  if (aIndex >= mRanges.Length())
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  *aTime = mRanges[aIndex].mStart;
-  return NS_OK;
+  ErrorResult rv;
+  *aTime = Start(aIndex, rv);
+  return rv.ErrorCode();
+}
+
+double
+TimeRanges::End(uint32_t aIndex, ErrorResult& aRv)
+{
+  if (aIndex >= mRanges.Length()) {
+    aRv = NS_ERROR_DOM_INDEX_SIZE_ERR;
+    return 0;
+  }
+
+  return mRanges[aIndex].mEnd;
 }
 
 NS_IMETHODIMP
 TimeRanges::End(uint32_t aIndex, double* aTime)
 {
-  if (aIndex >= mRanges.Length())
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  *aTime = mRanges[aIndex].mEnd;
-  return NS_OK;
+  ErrorResult rv;
+  *aTime = End(aIndex, rv);
+  return rv.ErrorCode();
 }
 
 void
@@ -104,6 +127,12 @@ TimeRanges::Normalize()
 
     mRanges = normalized;
   }
+}
+
+JSObject*
+TimeRanges::WrapObject(JSContext* aCx, JSObject* aScope)
+{
+  return TimeRangesBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace dom
