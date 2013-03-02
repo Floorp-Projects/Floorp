@@ -544,7 +544,88 @@ nsNativeThemeWin::CalculateProgressOverlayRect(nsIFrame* aFrame,
 }
 
 /*
- * DrawProgressMeter - renders an appropriate progress meter based on progress
+ * DrawChunkProgressMeter - renders an xp style chunked progress meter. Called
+ * by DrawProgressMeter.
+ *
+ * @param aTheme       progress theme handle
+ * @param aHdc         hdc returned by gfxWindowsNativeDrawing
+ * @param aPart        the PP_X progress part
+ * @param aState       the theme state
+ * @param aFrame       the elements frame
+ * @param aWidgetRect  bounding rect for the widget
+ * @param aClipRect    dirty rect that needs drawing.
+ * @param aAppUnits    app units per device pixel
+ * @param aIsIndeterm  is an indeterminate progress?
+ * @param aIsVertical  render a vertical progress?
+ * @param aIsRtl       direction is rtl
+ */
+static void
+DrawChunkProgressMeter(HTHEME aTheme, HDC aHdc, int aPart,
+                       int aState, nsIFrame* aFrame, RECT* aWidgetRect,
+                       RECT* aClipRect, gfxFloat aAppUnits, bool aIsIndeterm,
+                       bool aIsVertical, bool aIsRtl)
+{
+  NS_ASSERTION(aTheme, "Bad theme.");
+  NS_ASSERTION(aHdc, "Bad hdc.");
+  NS_ASSERTION(aWidgetRect, "Bad rect.");
+  NS_ASSERTION(aClipRect, "Bad clip rect.");
+  NS_ASSERTION(aFrame, "Bad frame.");
+
+  // For horizontal meters, the theme lib paints the right graphic but doesn't
+  // paint the chunks, so we do that manually. For vertical meters, the theme
+  // library draws everything correctly.
+  if (aIsVertical) {
+    DrawThemeBackground(aTheme, aHdc, aPart, aState, aWidgetRect, aClipRect);
+    return;
+  }
+
+  // query for the proper chunk metrics
+  int chunkSize, spaceSize;
+  if (FAILED(GetThemeMetric(aTheme, aHdc, aPart, aState,
+                            TMT_PROGRESSCHUNKSIZE, &chunkSize)) ||
+      FAILED(GetThemeMetric(aTheme, aHdc, aPart, aState,
+                            TMT_PROGRESSSPACESIZE, &spaceSize))) {
+    DrawThemeBackground(aTheme, aHdc, aPart, aState, aWidgetRect, aClipRect);
+    return;
+  }
+
+  // render chunks
+  if (!aIsRtl || aIsIndeterm) {
+    for (int chunk = aWidgetRect->left; chunk <= aWidgetRect->right;
+         chunk += (chunkSize+spaceSize)) {
+      if (!aIsIndeterm && ((chunk + chunkSize) > aWidgetRect->right)) {
+        // aWidgetRect->right represents the end of the meter. Partial blocks
+        // don't get rendered with one exception, so exit here if we don't have
+        // a full chunk to draw.
+        // The above is true *except* when the meter is at 100% fill, in which
+        // case Windows renders any remaining partial block. Query the parent
+        // frame to find out if we're at 100%.
+        if (!IsProgressMeterFilled(aFrame)) {
+          break;
+        }
+      }
+      RECT bounds =
+        { chunk, aWidgetRect->top, chunk + chunkSize, aWidgetRect->bottom };
+      DrawThemeBackground(aTheme, aHdc, aPart, aState, &bounds, aClipRect);
+    }
+  } else {
+    // rtl needs to grow in the opposite direction to look right.
+    for (int chunk = aWidgetRect->right; chunk >= aWidgetRect->left;
+         chunk -= (chunkSize+spaceSize)) {
+      if ((chunk - chunkSize) < aWidgetRect->left) {
+        if (!IsProgressMeterFilled(aFrame)) {
+          break;
+        }
+      }
+      RECT bounds =
+        { chunk - chunkSize, aWidgetRect->top, chunk, aWidgetRect->bottom };
+      DrawThemeBackground(aTheme, aHdc, aPart, aState, &bounds, aClipRect);
+    }
+  }
+}
+
+/*
+ * DrawProgressMeter - render an appropriate progress meter based on progress
  * meter style, orientation, and os. Note, this does not render the underlying
  * progress track.
  *
@@ -603,8 +684,10 @@ nsNativeThemeWin::DrawThemedProgressMeter(nsIFrame* aFrame, int aWidgetType,
       animate = true;
     }
   } else if (!indeterminate) {
-    DrawThemeBackground(aTheme, aHdc, aPart, aState,
-                        &adjWidgetRect, &adjClipRect);
+    // XP progress meters are 'chunk' style.
+    DrawChunkProgressMeter(aTheme, aHdc, aPart, aState, aFrame,
+                           &adjWidgetRect, &adjClipRect, aAppUnits,
+                           indeterminate, vertical, IsFrameRTL(aFrame));
   }    
 
   if (animate) {
@@ -613,8 +696,14 @@ nsNativeThemeWin::DrawThemedProgressMeter(nsIFrame* aFrame, int aWidgetType,
     RECT overlayRect =
       CalculateProgressOverlayRect(aFrame, &adjWidgetRect, vertical,
                                    indeterminate, false);
-    DrawThemeBackground(aTheme, aHdc, overlayPart, aState, &overlayRect,
-                        &adjClipRect);
+    if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
+      DrawThemeBackground(aTheme, aHdc, overlayPart, aState, &overlayRect,
+                          &adjClipRect);
+    } else {
+      DrawChunkProgressMeter(aTheme, aHdc, overlayPart, aState, aFrame,
+                             &overlayRect, &adjClipRect, aAppUnits,
+                             indeterminate, vertical, IsFrameRTL(aFrame));
+    }
 
     if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 60)) {
       NS_WARNING("unable to animate progress widget!");
