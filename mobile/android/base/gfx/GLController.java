@@ -123,9 +123,7 @@ public class GLController {
                 // If we haven't yet created the compositor, and the GfxInfoThread
                 // isn't done it's data gathering activities, then postpone creating
                 // the compositor a little bit more. Don't block though, since this is
-                // the UI thread we're running on. This conditional also ensures that
-                // we don't call GfxInfoThread.hasData() once we have created the
-                // compositor, as that is not allowed (see GfxInfoThread).
+                // the UI thread we're running on.
                 if (!mCompositorCreated && !GfxInfoThread.hasData()) {
                     mView.postDelayed(this, 1);
                     return;
