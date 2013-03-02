@@ -496,7 +496,7 @@ def process_test_results(results, num_tests, options):
                 if ok:
                     print_tinderbox("TEST-PASS", res.test);
                 else:
-                    lines = [ _ for _ in out.split('\n') + err.split('\n')
+                    lines = [ _ for _ in res.out.split('\n') + res.err.split('\n')
                               if _ != '' ]
                     if len(lines) >= 1:
                         msg = lines[-1]
