@@ -1,0 +1,129 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/uz_Latn.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/uz_Latn.xml
+ */
+uz_Latn{
+    %%Parent{"root"}
+    AuxExemplarCharacters{"[c w]"}
+    ExemplarCharacters{
+        "[a {aʼ} b {ch} d e {eʼ} f g {gʻ} h i {iʼ} j k l m n o {oʻ} p q r s {sh} t u "
+        "{uʼ} v x y z]"
+    }
+    ExemplarCharactersIndex{"[A B {CH} D E F G {Gʻ} H I J K L M N O {Oʻ} P Q R S {SH} T U V X Y Z]"}
+    LocaleScript{
+        "Latn",
+    }
+    Version{"2.0.74.98"}
+    calendar{
+        gregorian{
+            dayNames{
+                format{
+                    abbreviated{
+                        "Yaksh",
+                        "Dush",
+                        "Sesh",
+                        "Chor",
+                        "Pay",
+                        "Cum",
+                        "Shan",
+                    }
+                    wide{
+                        "yakshanba",
+                        "dushanba",
+                        "seshanba",
+                        "chorshanba",
+                        "payshanba",
+                        "cuma",
+                        "shanba",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "Y",
+                        "D",
+                        "S",
+                        "C",
+                        "P",
+                        "C",
+                        "S",
+                    }
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Yanv",
+                        "Fev",
+                        "Mar",
+                        "Apr",
+                        "May",
+                        "Iyun",
+                        "Iyul",
+                        "Avg",
+                        "Sen",
+                        "Okt",
+                        "Noya",
+                        "Dek",
+                    }
+                    wide{
+                        "Yanvar",
+                        "Fevral",
+                        "Mart",
+                        "Aprel",
+                        "May",
+                        "Iyun",
+                        "Iyul",
+                        "Avgust",
+                        "Sentyabr",
+                        "Oktyabr",
+                        "Noyabr",
+                        "Dekabr",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "Y",
+                        "F",
+                        "M",
+                        "A",
+                        "M",
+                        "I",
+                        "I",
+                        "A",
+                        "S",
+                        "O",
+                        "N",
+                        "D",
+                    }
+                }
+            }
+        }
+        islamic{
+            monthNames{
+                format{
+                    wide{
+                        "Muharram",
+                        "Safar",
+                        "Robiʼ ul-avval",
+                        "Robiʼ ul-oxir",
+                        "Jumad ul-avval",
+                        "Jumad ul-oxir",
+                        "Rajab",
+                        "Shaʼbon",
+                        "Ramazon",
+                        "Shavvol",
+                        "Zul-qaʼda",
+                        "Zul-hijja",
+                    }
+                }
+            }
+        }
+    }
+}

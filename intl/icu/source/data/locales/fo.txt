@@ -1,0 +1,127 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/fo.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/fo.xml
+ */
+fo{
+    AuxExemplarCharacters{"[c q w z]"}
+    ExemplarCharacters{"[a á b d ð e f g h i í j k l m n o ó p r s t u ú v x y ý æ ø]"}
+    ExemplarCharactersIndex{"[A Á B C D Ð E F G H I Í J K L M N O Ó P Q R S T U Ú V W X Y Ý Z Æ Ø]"}
+    LocaleScript{
+        "Latn",
+    }
+    NumberElements{
+        latn{
+            patterns{
+                currencyFormat{"¤#,##0.00;¤-#,##0.00"}
+                percentFormat{"#,##0 %"}
+            }
+            symbols{
+                decimal{","}
+                group{"."}
+            }
+        }
+    }
+    Version{"2.0.78.17"}
+    calendar{
+        gregorian{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE dd MMMM y",
+                "d. MMM y",
+                "dd-MM-yyyy",
+                "dd-MM-yy",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "sun",
+                        "mán",
+                        "týs",
+                        "mik",
+                        "hós",
+                        "frí",
+                        "ley",
+                    }
+                    wide{
+                        "sunnudagur",
+                        "mánadagur",
+                        "týsdagur",
+                        "mikudagur",
+                        "hósdagur",
+                        "fríggjadagur",
+                        "leygardagur",
+                    }
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "jan",
+                        "feb",
+                        "mar",
+                        "apr",
+                        "mai",
+                        "jun",
+                        "jul",
+                        "aug",
+                        "sep",
+                        "okt",
+                        "nov",
+                        "des",
+                    }
+                    wide{
+                        "januar",
+                        "februar",
+                        "mars",
+                        "apríl",
+                        "mai",
+                        "juni",
+                        "juli",
+                        "august",
+                        "september",
+                        "oktober",
+                        "november",
+                        "desember",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "K1",
+                        "K2",
+                        "K3",
+                        "K4",
+                    }
+                    wide{
+                        "1. kvartal",
+                        "2. kvartal",
+                        "3. kvartal",
+                        "4. kvartal",
+                    }
+                }
+            }
+        }
+    }
+    listPattern{
+        standard{
+            2{"{0} og {1}"}
+            end{"{0} og {1}"}
+        }
+    }
+}

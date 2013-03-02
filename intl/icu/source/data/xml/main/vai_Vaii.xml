@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ Copyright (c) 2011 International Business Machines Corporation and others. All rights reserved.
+-->
+<!DOCTYPE ldml SYSTEM "http://www.unicode.org/repos/cldr/trunk/common/dtd/ldml.dtd"
+[
+   <!ENTITY % icu SYSTEM "http://www.unicode.org/repos/cldr/trunk/common/dtd/ldmlICU.dtd">
+   %icu;
+]
+>
+<ldml>
+	<identity>
+		<version number="$Revision: 30037 $"/>
+		<generation date="$Date: 2011-05-05 11:12:27 -0700 (Thu, 05 May 2011) $"/>
+		<language type="vai"/> 
+		<script type="Vaii"/>
+	</identity>
+	<characters>
+		<special xmlns:icu="http://www.icu-project.org/">
+			<icu:scripts>
+				<icu:script type="1">Vaii</icu:script>
+			</icu:scripts>
+		</special>
+	</characters>
+</ldml>

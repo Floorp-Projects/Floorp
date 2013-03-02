@@ -1,0 +1,145 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/vai.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/vai.xml
+ */
+vai{
+    ExemplarCharacters{
+        "[꘠-꘩ ꔀ-ꔌ ꘓ ꔍ-ꔞ ꘔ ꔟ-ꔳ ꘕ ꔴ-ꕇ ꘖ ꕈ-ꕒ ꘗ ꕓ-ꕘ ꘐ ꘘ ꕙ ꕚ ꘙ ꕛ-ꕠ ꘚ ꕡ-ꕪ ꘑ ꕫ-ꕮ ꘪ ꕯ-ꖅ ꘛ ꖆ ꖇ"
+        " ꘒ ꖈ-ꖴ ꘜ ꖵ-ꗋ ꘝ ꗌ-ꗑ ꘫ ꘞ ꗒ-ꗘ ꘟ ꗙ-ꘌ]"
+    }
+    LocaleScript{
+        "Vaii",
+    }
+    NumberElements{
+        default{"latn"}
+        latn{
+            patterns{
+                currencyFormat{"¤#,##0.00;(¤#,##0.00)"}
+                decimalFormat{"#,##0.###"}
+            }
+            symbols{
+                decimal{"."}
+                group{","}
+            }
+        }
+        native{"vaii"}
+    }
+    Version{"2.0.78.30"}
+    calendar{
+        gregorian{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, d MMMM y",
+                "d MMMM y",
+                "d MMM y",
+                "dd/MM/yyyy",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, M/d"}
+                MMM{"LLL"}
+                MMMEd{"E, MMM d"}
+                MMMMEd{"E, MMMM d"}
+                MMMMd{"MMMM d"}
+                MMMd{"MMM d"}
+                Md{"M/d"}
+                d{"d"}
+                hm{"h:mm a"}
+                ms{"mm:ss"}
+                y{"yyyy"}
+                yM{"M/yyyy"}
+                yMEd{"E, M/d/yyyy"}
+                yMMM{"MMM yyyy"}
+                yMMMEd{"E, MMM d, yyyy"}
+                yMMMM{"MMMM yyyy"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
+            }
+            dayNames{
+                format{
+                    wide{
+                        "ꕞꕌꔵ",
+                        "ꗳꗡꘉ",
+                        "ꕚꕞꕚ",
+                        "ꕉꕞꕒ",
+                        "ꕉꔤꕆꕢ",
+                        "ꕉꔤꕀꕮ",
+                        "ꔻꔬꔳ",
+                    }
+                }
+            }
+            fields{
+                day{
+                    dn{"ꔎꔒ"}
+                    relative{
+                        "-1"{"ꖴꖸ"}
+                        "0"{"ꗦꗷ"}
+                        "1"{"ꔻꕯ"}
+                    }
+                }
+                hour{
+                    dn{"ꕌꕎ"}
+                }
+                minute{
+                    dn{"ꕆꕇ"}
+                }
+                month{
+                    dn{"ꕪꖃ"}
+                }
+                second{
+                    dn{"ꕧꕃꕧꕪ"}
+                }
+                week{
+                    dn{"ꔨꔤꕃ"}
+                }
+                weekday{
+                    dn{"ꔨꕃꕮ ꔎꔒ"}
+                }
+                year{
+                    dn{"ꕢꘋ"}
+                }
+            }
+            monthNames{
+                format{
+                    wide{
+                        "ꖨꕪꖃ ꔞꕮ",
+                        "ꕒꕡꖝꖕ",
+                        "ꕾꖺ",
+                        "ꖢꖕ",
+                        "ꖑꕱ",
+                        "6",
+                        "7",
+                        "ꗛꔕ",
+                        "ꕢꕌ",
+                        "ꕭꖃ",
+                        "ꔞꘋꕔꕿ ꕸꖃꗏ",
+                        "ꖨꕪꕱ ꗏꕮ",
+                    }
+                }
+            }
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"’"}
+        alternateQuotationStart{"‘"}
+        quotationEnd{"”"}
+        quotationStart{"“"}
+    }
+}

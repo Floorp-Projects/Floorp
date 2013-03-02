@@ -1,0 +1,615 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/km.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/km.xml
+ */
+km{
+    AuxExemplarCharacters{"[\u17B4\u17B5\u200B ឝ ឞ]"}
+    ExemplarCharacters{
+        "[\u17CC \u17CE \u17CF \u17D1 \u17D0 ៈ \u17CB \u17C9 \u17CA \u17CD ក ខ គ ឃ ង "
+        "ច ឆ ជ ឈ ញ ដ ឋ ឌ ឍ ណ ត ថ ទ ធ ន ប ផ ព ភ ម យ រ ឫ ឬ ល ឭ ឮ វ ស ហ ឡ អ ឲ ឪ {អា} ឥ ឦ"
+        " ឧ {ឧក} ឩ ឯ ឰ ឱ ឳ ា \u17B7 \u17B8 \u17B9 \u17BA \u17BB \u17BC \u17BD ើ ឿ ៀ េ"
+        " ែ ៃ ោ ៅ \u17C6 ះ \u17D2]"
+    }
+    ExemplarCharactersPunctuation{"[\- , ៖ ! ? . ។ ៕ ‘ ’ \" “ ” ( ) \[ \] \{ \} ៙ ៚]"}
+    LocaleScript{
+        "Khmr",
+    }
+    NumberElements{
+        default{"latn"}
+        latn{
+            patterns{
+                currencyFormat{"¤#,##0.00;(¤#,##0.00)"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            patternsLong{
+                decimalFormat{
+                    1000{
+                        other{"0ពាន់"}
+                    }
+                    10000{
+                        other{"0ម៉ឺន"}
+                    }
+                    100000{
+                        other{"0សែន"}
+                    }
+                    1000000{
+                        other{"0លាន"}
+                    }
+                    10000000{
+                        other{"00លាន"}
+                    }
+                    100000000{
+                        other{"000លាន"}
+                    }
+                    1000000000{
+                        other{"0ពាន់លាន"}
+                    }
+                    10000000000{
+                        other{"00ពាន់លាន"}
+                    }
+                    100000000000{
+                        other{"000ពាន់លាន"}
+                    }
+                    1000000000000{
+                        other{"0លានលាន"}
+                    }
+                    10000000000000{
+                        other{"00លានលាន"}
+                    }
+                    100000000000000{
+                        other{"000លានលាន"}
+                    }
+                }
+            }
+            patternsShort{
+                decimalFormat{
+                    1000{
+                        other{"0ព"}
+                    }
+                    10000{
+                        other{"0ម"}
+                    }
+                    100000{
+                        other{"0ស"}
+                    }
+                    1000000{
+                        other{"0ល"}
+                    }
+                    10000000{
+                        other{"00ល"}
+                    }
+                    100000000{
+                        other{"000ល"}
+                    }
+                    1000000000{
+                        other{"0ព'.'ល"}
+                    }
+                    10000000000{
+                        other{"00ព'.'ល"}
+                    }
+                    100000000000{
+                        other{"000ព'.'ល"}
+                    }
+                    1000000000000{
+                        other{"0ល'.'ល"}
+                    }
+                    10000000000000{
+                        other{"00ល'.'ល"}
+                    }
+                    100000000000000{
+                        other{"000ល'.'ល"}
+                    }
+                }
+            }
+            symbols{
+                decimal{","}
+                exponential{"E"}
+                group{"."}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+            }
+        }
+        native{"khmr"}
+    }
+    Version{"2.0.78.39"}
+    calendar{
+        gregorian{
+            AmPmMarkers{
+                "ព្រឹក",
+                "ល្ងាច",
+            }
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, d MMMM y",
+                "d MMMM, y",
+                "d MMM y",
+                "d/M/yyyy",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                Ed{"d E"}
+                H{"HH"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, M-d"}
+                MMM{"LLL"}
+                MMMEd{"E d MMM"}
+                MMMd{"d MMM"}
+                Md{"M-d"}
+                d{"d"}
+                h{"h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"mm:ss"}
+                y{"y"}
+                yM{"M-y"}
+                yMEd{"E, d-M-y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, d MMM y"}
+                yMMMd{"d MMM y"}
+                yMd{"d-M-y"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "អាទិត្យ",
+                        "ចន្ទ",
+                        "អង្គារ",
+                        "ពុធ",
+                        "ព្រហស្បតិ៍",
+                        "សុក្រ",
+                        "សៅរ៍",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                    }
+                    short{
+                        "អាទិត្យ",
+                        "ចន្ទ",
+                        "អង្គារ",
+                        "ពុធ",
+                        "ព្រហស្បតិ៍",
+                        "សុក្រ",
+                        "សៅរ៍",
+                    }
+                    wide{
+                        "អាទិត្យ",
+                        "ចន្ទ",
+                        "អង្គារ",
+                        "ពុធ",
+                        "ព្រហស្បតិ៍",
+                        "សុក្រ",
+                        "សៅរ៍",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "អាទិត្យ",
+                        "ចន្ទ",
+                        "អង្គារ",
+                        "ពុធ",
+                        "ព្រហស្បតិ៍",
+                        "សុក្រ",
+                        "សៅរ៍",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                    }
+                    short{
+                        "អាទិត្យ",
+                        "ចន្ទ",
+                        "អង្គារ",
+                        "ពុធ",
+                        "ព្រហស្បតិ៍",
+                        "សុក្រ",
+                        "សៅរ៍",
+                    }
+                    wide{
+                        "អាទិត្យ",
+                        "ចន្ទ",
+                        "អង្គារ",
+                        "ពុធ",
+                        "ព្រហស្បតិ៍",
+                        "សុក្រ",
+                        "សៅរ៍",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "មុន គ.ស.",
+                    "គ.ស.",
+                }
+                wide{
+                    "មុន​គ្រិស្តសករាជ",
+                    "គ្រិស្តសករាជ",
+                }
+            }
+            fields{
+                day{
+                    dn{"ថ្ងៃ"}
+                    relative{
+                        "-1"{"ម្សិលមិញ"}
+                        "-2"{"ម្សិល​ម៉្ងៃ"}
+                        "0"{"ថ្ងៃ​នេះ"}
+                        "1"{"ថ្ងៃ​ស្អែក"}
+                        "2"{"​ខាន​ស្អែក"}
+                    }
+                }
+                dayperiod{
+                    dn{"ព្រឹក/ល្ងាច"}
+                }
+                era{
+                    dn{"សករាជ"}
+                }
+                hour{
+                    dn{"ម៉ោង"}
+                }
+                minute{
+                    dn{"នាទី"}
+                }
+                month{
+                    dn{"ខែ"}
+                }
+                second{
+                    dn{"វិនាទី"}
+                }
+                week{
+                    dn{"សប្ដាហ៍"}
+                }
+                weekday{
+                    dn{"ថ្ងៃ​នៃ​សប្ដាហ៍"}
+                }
+                year{
+                    dn{"ឆ្នាំ"}
+                }
+            }
+            intervalFormats{
+                H{
+                    H{"H-H"}
+                }
+                Hm{
+                    H{"H:mm-H:mm"}
+                    m{"H:mm-H:mm"}
+                }
+                Hmv{
+                    H{"H:mm-H:mm v"}
+                    m{"H:mm-H:mm v"}
+                }
+                Hv{
+                    H{"H-H v"}
+                }
+                M{
+                    M{"M-M"}
+                }
+                MEd{
+                    M{"E, d/M - E, d/M"}
+                    d{"E, d/M– E, d/M"}
+                }
+                MMM{
+                    M{"MMM-MMM"}
+                }
+                MMMEd{
+                    M{"E, d MMM - E, d MMM"}
+                    d{"E, d MMM - E, d MMM"}
+                }
+                MMMd{
+                    M{"d MMM - d MMM"}
+                    d{"d-d MMM"}
+                }
+                Md{
+                    M{"d/M - d/M"}
+                    d{"d/M– d/M"}
+                }
+                d{
+                    d{"d-d"}
+                }
+                fallback{"{0} - {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h-h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm-h:mm a"}
+                    m{"h:mm-h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm-h:mm a v"}
+                    m{"h:mm-h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h-h a v"}
+                }
+                y{
+                    y{"y-y"}
+                }
+                yM{
+                    M{"M/yyyy - M/yyyy"}
+                    y{"M/yyyy - M/yyyy"}
+                }
+                yMEd{
+                    M{"E, d/M/yyyy - E, d/M/yyyy"}
+                    d{"E, d/M/yyyy - E, d/M/yyyy"}
+                    y{"E, d/M/yyyy - E, d/M/yyyy"}
+                }
+                yMMM{
+                    M{"MM – MM-yyyy"}
+                    y{"MM-yyyy – MM-yyyy"}
+                }
+                yMMMEd{
+                    M{"E, dd MMM y - E, dd MMM y"}
+                    d{"E, dd MMM y - E, dd MMM y"}
+                    y{"E, dd-MM-yyyy – E, dd MMM y"}
+                }
+                yMMMM{
+                    M{"MM – MM yyyy"}
+                    y{"MM-yyyy – MM-yyyy"}
+                }
+                yMMMd{
+                    M{"d MMM y – d MMM"}
+                    d{"d-d MMM y"}
+                    y{"d MMM y - d MMM y"}
+                }
+                yMd{
+                    M{"d/M/yyyy - d/M/yyyy"}
+                    d{"d/M/yyyy - d/M/yyyy"}
+                    y{"d/M/yyyy - d/M/yyyy"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "មករា",
+                        "កុម្ភៈ",
+                        "មីនា",
+                        "មេសា",
+                        "ឧសភា",
+                        "មិថុនា",
+                        "កក្កដា",
+                        "សីហា",
+                        "កញ្ញា",
+                        "តុលា",
+                        "វិច្ឆិកា",
+                        "ធ្នូ",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "មករា",
+                        "កុម្ភៈ",
+                        "មីនា",
+                        "មេសា",
+                        "ឧសភា",
+                        "មិថុនា",
+                        "កក្កដា",
+                        "សីហា",
+                        "កញ្ញា",
+                        "តុលា",
+                        "វិច្ឆិកា",
+                        "ធ្នូ",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "មករា",
+                        "កុម្ភៈ",
+                        "មីនា",
+                        "មេសា",
+                        "ឧសភា",
+                        "មិថុនា",
+                        "កក្កដា",
+                        "សីហា",
+                        "កញ្ញា",
+                        "តុលា",
+                        "វិច្ឆិកា",
+                        "ធ្នូ",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "មករា",
+                        "កុម្ភៈ",
+                        "មីនា",
+                        "មេសា",
+                        "ឧសភា",
+                        "មិថុនា",
+                        "កក្កដា",
+                        "សីហា",
+                        "កញ្ញា",
+                        "តុលា",
+                        "វិច្ឆិកា",
+                        "ធ្នូ",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "ត្រីមាស ១",
+                        "ត្រីមាស ២",
+                        "ត្រីមាស ៣",
+                        "ត្រីមាស ៤",
+                    }
+                    narrow{
+                        "១",
+                        "២",
+                        "៣",
+                        "៤",
+                    }
+                    wide{
+                        "ត្រីមាស ទី ១",
+                        "ត្រីមាស ទី ២",
+                        "ត្រីមាស ទី ៣",
+                        "ត្រីមាស ទី ៤",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "ត្រីមាស ១",
+                        "ត្រីមាស ២",
+                        "ត្រីមាស ៣",
+                        "ត្រីមាស ៤",
+                    }
+                    narrow{
+                        "១",
+                        "២",
+                        "៣",
+                        "៤",
+                    }
+                    wide{
+                        "ត្រីមាសទី ១",
+                        "ត្រីមាសទី ២",
+                        "ត្រីមាសទី ៣",
+                        "ត្រីមាសទី ៤",
+                    }
+                }
+            }
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"’"}
+        alternateQuotationStart{"‘"}
+        quotationEnd{"”"}
+        quotationStart{"“"}
+    }
+    listPattern{
+        standard{
+            2{"{0} និង {1}"}
+            end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+    }
+    measurementSystemNames{
+        UK{"ចក្រភព​អង់គ្លេស"}
+        metric{"ម៉ែត្រ"}
+    }
+    units{
+        day{
+            other{"{0} ថ្ងៃ"}
+        }
+        day-future{
+            other{"ក្នុង​រយៈ​ពេល {0} ថ្ងៃ"}
+        }
+        day-past{
+            other{"{0} ថ្ងៃ​មុន"}
+        }
+        hour{
+            other{"{0} ម៉ោង"}
+        }
+        hour-future{
+            other{"ក្នុង​រយៈ​ពេល {0} ម៉ោង"}
+        }
+        hour-past{
+            other{"{0} ម៉ោង​មុន"}
+        }
+        minute{
+            other{"{0} នាទី"}
+        }
+        minute-future{
+            other{"ក្នុង​រយៈពេល {0} នាទី"}
+        }
+        minute-past{
+            other{"{0} នាទី​មុន"}
+        }
+        month{
+            other{"{0} ខែ"}
+        }
+        month-future{
+            other{"ក្នុង​រយៈ​ពេល {0} ខែ"}
+        }
+        month-past{
+            other{"{0} នាទី​មុន"}
+        }
+        second{
+            other{"{0} វិនាទី"}
+        }
+        second-future{
+            other{"ក្នុង​រយៈពេល {0} វិនាទី"}
+        }
+        second-past{
+            other{"{0} វិនាទី​មុន"}
+        }
+        week{
+            other{"{0} សប្ដាហ៍"}
+        }
+        week-future{
+            other{"ក្នុង​រយៈ​ពេល {0} សប្ដាហ៍"}
+        }
+        week-past{
+            other{"{0} សប្ដាហ៍​មុន"}
+        }
+        year{
+            other{"{0} ឆ្នាំ"}
+        }
+        year-future{
+            other{"ក្នុង​រយៈ​ពេល {0} ឆ្នាំ"}
+        }
+        year-past{
+            other{"{0} ឆ្នាំ​មុន"}
+        }
+    }
+}

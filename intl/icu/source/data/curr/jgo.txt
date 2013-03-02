@@ -1,0 +1,36 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/jgo.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/jgo.xml
+ */
+jgo{
+    Currencies{
+        CAD{
+            "CA$",
+            "Ndɔ́la-Kanandâ",
+        }
+        EUR{
+            "€",
+            "Ʉ́lɔ",
+        }
+        USD{
+            "US$",
+            "Ndɔ́la-Amɛlîk",
+        }
+        XAF{
+            "FCFA",
+            "Fɛlâŋ",
+        }
+        XXX{
+            "XXX",
+            "ntɛ-ŋkɑ́p yi pɛ́ kɑ́ kɛ́ jínɛ",
+        }
+    }
+    Version{"2.0.77.53"}
+}
