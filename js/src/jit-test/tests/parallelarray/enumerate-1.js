@@ -4,5 +4,4 @@ function testEnumerate() {
     assertEq(i >= 0 && i < p.length, true);
 }
 
-// FIXME(bug 844882) self-hosted object not array-like, exposes internal properties
-// testEnumerate();
+testEnumerate();
