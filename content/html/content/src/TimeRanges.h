@@ -10,6 +10,9 @@
 #include "nsIDOMTimeRanges.h"
 #include "nsISupports.h"
 #include "nsTArray.h"
+#include "nsWrapperCache.h"
+#include "mozilla/ErrorResult.h"
+#include "nsAutoPtr.h"
 
 namespace mozilla {
 namespace dom {
@@ -32,6 +35,17 @@ public:
 
   // See http://www.whatwg.org/html/#normalized-timeranges-object
   void Normalize();
+
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope);
+
+  uint32_t Length() const
+  {
+    return mRanges.Length();
+  }
+
+  virtual double Start(uint32_t aIndex, ErrorResult& aRv);
+
+  virtual double End(uint32_t aIndex, ErrorResult& aRv);
 
 private:
 
