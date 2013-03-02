@@ -23,6 +23,7 @@ import android.os.Build;
 import android.util.FloatMath;
 import android.util.Log;
 import android.view.GestureDetector;
+import android.view.KeyEvent;
 import android.view.InputDevice;
 import android.view.MotionEvent;
 import android.view.View;
@@ -217,6 +218,26 @@ class JavaPanZoomController
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
         }
+    }
+
+    /** This function MUST be called on the UI thread */
+    @Override
+    public boolean onKeyEvent(KeyEvent event) {
+        if (Build.VERSION.SDK_INT <= 11) {
+            return false;
+        }
+
+        if ((event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD
+            && event.getAction() == KeyEvent.ACTION_DOWN) {
+
+            switch (event.getKeyCode()) {
+            case KeyEvent.KEYCODE_ZOOM_IN:
+                return animatedScale(0.2f);
+            case KeyEvent.KEYCODE_ZOOM_OUT:
+                return animatedScale(-0.2f);
+            }
+        }
+        return false;
     }
 
     /** This function MUST be called on the UI thread */
@@ -991,6 +1012,22 @@ class JavaPanZoomController
         GeckoEvent event = GeckoEvent.createNativeGestureEvent(GeckoEvent.ACTION_MAGNIFY, mLastZoomFocus, getMetrics().zoomFactor);
         GeckoAppShell.sendEventToGecko(event);
 
+        return true;
+    }
+
+    private boolean animatedScale(float zoomDelta) {
+        if (mState != PanZoomState.NOTHING && mState != PanZoomState.BOUNCE) {
+            return false;
+        }
+        synchronized (mTarget.getLock()) {
+            ImmutableViewportMetrics metrics = getMetrics();
+            float oldZoom = metrics.zoomFactor;
+            float newZoom = oldZoom + zoomDelta;
+            float adjustedZoom = getAdjustedZoomFactor(newZoom / oldZoom);
+            PointF center = new PointF(metrics.getWidth() / 2.0f, metrics.getHeight() / 2.0f);
+            metrics = metrics.scaleTo(adjustedZoom, center);
+            bounce(getValidViewportMetrics(metrics), PanZoomState.BOUNCE);
+        }
         return true;
     }
 
