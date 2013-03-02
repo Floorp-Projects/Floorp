@@ -12,7 +12,6 @@
 #include "jsinfer.h"
 #include "jsprf.h"
 
-#include "builtin/ParallelArray.h"
 #include "gc/Root.h"
 #include "vm/GlobalObject.h"
 #ifdef JS_ION
@@ -521,9 +520,6 @@ GetClassForProtoKey(JSProtoKey key)
 
       case JSProto_DataView:
         return &DataViewClass;
-
-      case JSProto_ParallelArray:
-        return &ParallelArrayObject::class_;
 
       default:
         JS_NOT_REACHED("Bad proto key");
