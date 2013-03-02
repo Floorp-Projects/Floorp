@@ -33,10 +33,19 @@ public class GfxInfoThread extends Thread {
     }
 
     public static boolean hasData() {
-        // This should never be called before startThread() or after getData()
-        // so we know sInstance will be non-null here
-        synchronized (sInstance) {
-            return sInstance.mData != null;
+        // This should never be called before startThread(), so if
+        // sInstance is null here, then we know the thread was created,
+        // ran to completion, and getData() was called. Therefore hasData()
+        // should return true. If sInstance is not null, then we need to
+        // check if the mData field on it is null or not and return accordingly.
+        // Note that we keep a local copy of sInstance to avoid race conditions
+        // as getData() may be called concurrently.
+        GfxInfoThread instance = sInstance;
+        if (instance == null) {
+            return true;
+        }
+        synchronized (instance) {
+            return instance.mData != null;
         }
     }
 
