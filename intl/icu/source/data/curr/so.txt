@@ -1,0 +1,44 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/so.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/so.xml
+ */
+so{
+    Currencies{
+        DJF{
+            "DJF",
+            "Faran Jabbuuti",
+        }
+        ETB{
+            "ETB",
+            "Birta Itoobbiya",
+        }
+        EUR{
+            "€",
+            "Yuuroo",
+        }
+        SAR{
+            "SAR",
+            "Riyaalka Sacuudiga",
+        }
+        SOS{
+            "SOS",
+            "Shilin soomaali",
+        }
+        TZS{
+            "TZS",
+            "Shilin Tansaani",
+        }
+        USD{
+            "US$",
+            "Doollar maraykan",
+        }
+    }
+    Version{"2.0.78.32"}
+}

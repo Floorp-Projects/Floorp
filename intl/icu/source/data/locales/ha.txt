@@ -1,0 +1,229 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/ha.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/ha.xml
+ */
+ha{
+    AuxExemplarCharacters{"[á à â é è ê í ì î ó ò ô p q {r\u0303} ú ù û v x ƴ]"}
+    ExemplarCharacters{"[a b ɓ c d ɗ e f g h i j k ƙ l m n o r s {sh} t {ts} u w y {ʼy} z ʼ]"}
+    ExemplarCharactersIndex{"[A B Ɓ C D Ɗ E F G H I J K Ƙ L M N O P Q R S T U V W X Y {ʼY} Z]"}
+    LocaleScript{
+        "Latn",
+    }
+    NumberElements{
+        latn{
+            patterns{
+                currencyFormat{"¤ #,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{"."}
+                group{","}
+            }
+        }
+    }
+    Version{"2.0.77.46"}
+    calendar{
+        gregorian{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM, y",
+                "d MMMM, y",
+                "d MMM, y",
+                "d/M/yy",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, M/d"}
+                MMM{"LLL"}
+                MMMEd{"E, MMM d"}
+                MMMMEd{"E, MMMM d"}
+                MMMMd{"MMMM d"}
+                MMMd{"MMM d"}
+                Md{"M/d"}
+                d{"d"}
+                hm{"h:mm a"}
+                ms{"mm:ss"}
+                y{"y"}
+                yM{"M/y"}
+                yMEd{"E, M/d/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, MMM d, y"}
+                yMMMM{"MMMM y"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "Lh",
+                        "Li",
+                        "Ta",
+                        "Lr",
+                        "Al",
+                        "Ju",
+                        "As",
+                    }
+                    wide{
+                        "Lahadi",
+                        "Litinin",
+                        "Talata",
+                        "Laraba",
+                        "Alhamis",
+                        "Jumma'a",
+                        "Asabar",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "L",
+                        "L",
+                        "T",
+                        "L",
+                        "A",
+                        "J",
+                        "A",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "KHAI",
+                    "BHAI",
+                }
+                wide{
+                    "Kafin haihuwar annab",
+                    "Bayan haihuwar annab",
+                }
+            }
+            fields{
+                day{
+                    dn{"Kwana"}
+                    relative{
+                        "-1"{"Jiya"}
+                        "0"{"Yau"}
+                        "1"{"Gobe"}
+                    }
+                }
+                dayperiod{
+                    dn{"Yini"}
+                }
+                era{
+                    dn{"Zamani"}
+                }
+                hour{
+                    dn{"Awa"}
+                }
+                minute{
+                    dn{"Minti"}
+                }
+                month{
+                    dn{"Wata"}
+                }
+                second{
+                    dn{"Daƙiƙa"}
+                }
+                week{
+                    dn{"Mako"}
+                }
+                weekday{
+                    dn{"Rana"}
+                }
+                year{
+                    dn{"Shekara"}
+                }
+                zone{
+                    dn{"Agogo"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Jan",
+                        "Fab",
+                        "Mar",
+                        "Afi",
+                        "May",
+                        "Yun",
+                        "Yul",
+                        "Agu",
+                        "Sat",
+                        "Okt",
+                        "Nuw",
+                        "Dis",
+                    }
+                    wide{
+                        "Janairu",
+                        "Faburairu",
+                        "Maris",
+                        "Afirilu",
+                        "Mayu",
+                        "Yuni",
+                        "Yuli",
+                        "Agusta",
+                        "Satumba",
+                        "Oktoba",
+                        "Nuwamba",
+                        "Disamba",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "J",
+                        "F",
+                        "M",
+                        "A",
+                        "M",
+                        "Y",
+                        "Y",
+                        "A",
+                        "S",
+                        "O",
+                        "N",
+                        "D",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "K1",
+                        "K2",
+                        "K3",
+                        "K4",
+                    }
+                    wide{
+                        "Kwata na ɗaya",
+                        "Kwata na biyu",
+                        "Kwata na uku",
+                        "Kwata na huɗu",
+                    }
+                }
+            }
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"’"}
+        alternateQuotationStart{"‘"}
+        quotationEnd{"”"}
+        quotationStart{"“"}
+    }
+}

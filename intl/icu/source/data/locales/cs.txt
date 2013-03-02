@@ -1,0 +1,926 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/cs.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/cs.xml
+ */
+cs{
+    AuxExemplarCharacters{
+        "[á à ă â å ä ã ā æ ç é è ĕ ê ë ē í ì ĭ î ï ī ľ ł ñ ó ò ŏ ô ö ø ō œ ŕ ú ù ŭ û"
+        " ü ū ÿ]"
+    }
+    ExemplarCharacters{
+        "[a á b c č d ď e é ě f g h {ch} i í j k l m n ň o ó p q r ř s š t ť u ú ů v "
+        "w x y ý z ž]"
+    }
+    ExemplarCharactersIndex{"[A B C Č D E F G H {CH} I J K L M N O P Q R Ř S Š T U V W X Y Z Ž]"}
+    ExemplarCharactersPunctuation{"[\- ‐ – , ; \: ! ? . … ‘ ‚ “ „ ( ) \[ \] § @ * / \&]"}
+    LocaleScript{
+        "Latn",
+    }
+    NumberElements{
+        latn{
+            patterns{
+                currencyFormat{"#,##0.00 ¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0 %"}
+                scientificFormat{"#E0"}
+            }
+            patternsLong{
+                decimalFormat{
+                    1000{
+                        few{"0"}
+                        one{"0"}
+                        other{"0"}
+                    }
+                    10000{
+                        few{"00 tisíc"}
+                        one{"00 tisíc"}
+                        other{"00 tisíc"}
+                    }
+                    100000{
+                        few{"000 tisíc"}
+                        one{"000 tisíc"}
+                        other{"000 tisíc"}
+                    }
+                    1000000{
+                        few{"0 miliony"}
+                        one{"0 milion"}
+                        other{"0 milionů"}
+                    }
+                    10000000{
+                        few{"00 milionů"}
+                        one{"00 milionů"}
+                        other{"00 milionů"}
+                    }
+                    100000000{
+                        few{"000 milionů"}
+                        one{"000 milionů"}
+                        other{"000 milionů"}
+                    }
+                    1000000000{
+                        few{"0 miliardy"}
+                        one{"0 miliarda"}
+                        other{"0 miliard"}
+                    }
+                    10000000000{
+                        few{"00 miliard"}
+                        one{"00 miliard"}
+                        other{"00 miliard"}
+                    }
+                    100000000000{
+                        few{"000 miliard"}
+                        one{"000 miliard"}
+                        other{"000 miliard"}
+                    }
+                    1000000000000{
+                        few{"0 biliony"}
+                        one{"0 bilion"}
+                        other{"0 bilionů"}
+                    }
+                    10000000000000{
+                        few{"00 bilionů"}
+                        one{"00 bilionů"}
+                        other{"00 bilionů"}
+                    }
+                    100000000000000{
+                        few{"000 bilionů"}
+                        one{"000 bilionů"}
+                        other{"000 bilionů"}
+                    }
+                }
+            }
+            patternsShort{
+                decimalFormat{
+                    1000{
+                        few{"0 tis'.'"}
+                        one{"0 tis'.'"}
+                        other{"0 tis'.'"}
+                    }
+                    10000{
+                        few{"00 tis'.'"}
+                        one{"00 tis'.'"}
+                        other{"00 tis'.'"}
+                    }
+                    100000{
+                        few{"000 tis'.'"}
+                        one{"000 tis'.'"}
+                        other{"000 tis'.'"}
+                    }
+                    1000000{
+                        few{"0 mil'.'"}
+                        one{"0 mil'.'"}
+                        other{"0 mil'.'"}
+                    }
+                    10000000{
+                        few{"00 mil'.'"}
+                        one{"00 mil'.'"}
+                        other{"00 mil'.'"}
+                    }
+                    100000000{
+                        few{"000 mil'.'"}
+                        one{"000 mil'.'"}
+                        other{"000 mil'.'"}
+                    }
+                    1000000000{
+                        few{"0 mld'.'"}
+                        one{"0 mld'.'"}
+                        other{"0 mld'.'"}
+                    }
+                    10000000000{
+                        few{"00 mld'.'"}
+                        one{"00 mld'.'"}
+                        other{"00 mld'.'"}
+                    }
+                    100000000000{
+                        few{"000 mld'.'"}
+                        one{"000 mld'.'"}
+                        other{"000 mld'.'"}
+                    }
+                    1000000000000{
+                        few{"0 bil'.'"}
+                        one{"0 bil'.'"}
+                        other{"0 bil'.'"}
+                    }
+                    10000000000000{
+                        few{"00 bil'.'"}
+                        one{"00 bil'.'"}
+                        other{"00 bil'.'"}
+                    }
+                    100000000000000{
+                        few{"000 bil'.'"}
+                        one{"000 bil'.'"}
+                        other{"000 bil'.'"}
+                    }
+                }
+            }
+            symbols{
+                decimal{","}
+                exponential{"E"}
+                group{" "}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+            }
+        }
+    }
+    Version{"2.0.78.38"}
+    calendar{
+        buddhist{
+            DateTimePatterns{
+                "H:mm:ss zzzz",
+                "H:mm:ss z",
+                "H:mm:ss",
+                "H:mm",
+                "EEEE, d. MMMM y G",
+                "d. MMMM y G",
+                "d. M. y G",
+                "dd.MM.yy GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"E, d."}
+                MEd{"E, d. M."}
+                MMMEd{"E, d. M."}
+                MMMd{"d. M."}
+                Md{"d. M."}
+                d{"d."}
+                y{"y G"}
+                yM{"LLLL y GGGGG"}
+                yMEd{"E, d. M. y GGGGG"}
+                yMMM{"LLLL y G"}
+                yMMMEd{"E, d. M. y G"}
+                yQQQ{"QQQ, y GGGGG"}
+                yQQQQ{"QQQQ, y G"}
+            }
+        }
+        chinese{
+            DateTimePatterns{
+                "H:mm:ss zzzz",
+                "H:mm:ss z",
+                "H:mm:ss",
+                "H:mm",
+                "EEEE, d. M. y",
+                "d. M. y",
+                "d. M. y",
+                "d. M. y",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+        }
+        gregorian{
+            AmPmMarkers{
+                "AM",
+                "PM",
+            }
+            DateTimePatterns{
+                "H:mm:ss zzzz",
+                "H:mm:ss z",
+                "H:mm:ss",
+                "H:mm",
+                "EEEE, d. MMMM y",
+                "d. MMMM y",
+                "d. M. yyyy",
+                "dd.MM.yy",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"E, d."}
+                H{"H"}
+                Hm{"H:mm"}
+                Hms{"H:mm:ss"}
+                M{"L"}
+                MEd{"E, d. M."}
+                MMM{"LLL"}
+                MMMEd{"E, d. M."}
+                MMMd{"d. M."}
+                Md{"d. M."}
+                d{"d."}
+                h{"h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"mm:ss"}
+                y{"y"}
+                yM{"M/y"}
+                yMEd{"E, d. M. y"}
+                yMMM{"LLLL y"}
+                yMMMEd{"E, d. M. y"}
+                yMMMd{"d. M. y"}
+                yMd{"d. M. y"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
+                yyyy{"y"}
+                yyyyM{"M/yyyy"}
+                yyyyMMMM{"LLLL y"}
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "ne",
+                        "po",
+                        "út",
+                        "st",
+                        "čt",
+                        "pá",
+                        "so",
+                    }
+                    narrow{
+                        "N",
+                        "P",
+                        "Ú",
+                        "S",
+                        "Č",
+                        "P",
+                        "S",
+                    }
+                    short{
+                        "ne",
+                        "po",
+                        "út",
+                        "st",
+                        "čt",
+                        "pá",
+                        "so",
+                    }
+                    wide{
+                        "neděle",
+                        "pondělí",
+                        "úterý",
+                        "středa",
+                        "čtvrtek",
+                        "pátek",
+                        "sobota",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "ne",
+                        "po",
+                        "út",
+                        "st",
+                        "čt",
+                        "pá",
+                        "so",
+                    }
+                    narrow{
+                        "N",
+                        "P",
+                        "Ú",
+                        "S",
+                        "Č",
+                        "P",
+                        "S",
+                    }
+                    short{
+                        "Ne",
+                        "Po",
+                        "Út",
+                        "St",
+                        "Čt",
+                        "Pá",
+                        "So",
+                    }
+                    wide{
+                        "neděle",
+                        "pondělí",
+                        "úterý",
+                        "středa",
+                        "čtvrtek",
+                        "pátek",
+                        "sobota",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "př. n. l.",
+                    "n. l.",
+                }
+                narrow{
+                    "př.n.l.",
+                    "n. l.",
+                }
+                wide{
+                    "př. n. l.",
+                    "n. l.",
+                }
+            }
+            fields{
+                day{
+                    dn{"Den"}
+                    relative{
+                        "-1"{"Včera"}
+                        "-2"{"Předevčírem"}
+                        "0"{"Dnes"}
+                        "1"{"Zítra"}
+                        "2"{"Pozítří"}
+                    }
+                }
+                dayperiod{
+                    dn{"AM/PM"}
+                }
+                era{
+                    dn{"Letopočet"}
+                }
+                hour{
+                    dn{"Hodina"}
+                }
+                minute{
+                    dn{"Minuta"}
+                }
+                month{
+                    dn{"Měsíc"}
+                    relative{
+                        "-1"{"Minulý měsíc"}
+                        "0"{"Tento měsíc"}
+                        "1"{"Příští měsíc"}
+                    }
+                }
+                second{
+                    dn{"Sekunda"}
+                }
+                week{
+                    dn{"Týden"}
+                    relative{
+                        "-1"{"Minulý týden"}
+                        "0"{"Tento týden"}
+                        "1"{"Příští týden"}
+                    }
+                }
+                weekday{
+                    dn{"Den v týdnu"}
+                }
+                year{
+                    dn{"Rok"}
+                    relative{
+                        "-1"{"Minulý rok"}
+                        "0"{"Tento rok"}
+                        "1"{"Příští rok"}
+                    }
+                }
+                zone{
+                    dn{"Časové pásmo"}
+                }
+            }
+            intervalFormats{
+                H{
+                    H{"H–H"}
+                }
+                Hm{
+                    H{"H:mm–H:mm"}
+                    m{"H:mm–H:mm"}
+                }
+                Hmv{
+                    H{"H:mm–H:mm v"}
+                    m{"H:mm–H:mm v"}
+                }
+                Hv{
+                    H{"H–H v"}
+                }
+                M{
+                    M{"M–M"}
+                }
+                MEd{
+                    M{"E, d. M. – E, d. M."}
+                    d{"E, d. M. – E, d. M."}
+                }
+                MMM{
+                    M{"MMM–MMM"}
+                }
+                MMMEd{
+                    M{"E, d. M. – E, d. M."}
+                    d{"E, d. M. – E, d. M."}
+                }
+                MMMd{
+                    M{"d. M. – d. M."}
+                    d{"d.–d. M."}
+                }
+                Md{
+                    M{"d. M. – d. M."}
+                    d{"d. M. – d. M."}
+                }
+                d{
+                    d{"d.–d."}
+                }
+                fallback{"{0} – {1}"}
+                h{
+                    a{"H – H"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
+                }
+                hmv{
+                    a{"H:mm – H:mm v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
+                }
+                hv{
+                    a{"H – H v"}
+                    h{"h–h a v"}
+                }
+                y{
+                    y{"y–y"}
+                }
+                yM{
+                    M{"M/yy – M/yy"}
+                    y{"M/yy – M/yy"}
+                }
+                yMEd{
+                    M{"E, dd.MM.yy – E, dd.MM.yy"}
+                    d{"E, dd.MM.yy – E, dd.MM.yy"}
+                    y{"E, dd.MM.yy – E, dd.MM.yy"}
+                }
+                yMMM{
+                    M{"MMM–MMM y"}
+                    y{"MMM y – MMM y"}
+                }
+                yMMMEd{
+                    M{"E, d. M. – E, d. M. y"}
+                    d{"E, d. M. – E, d. M. y"}
+                    y{"E, d. M. y – E, d. M. y"}
+                }
+                yMMMM{
+                    M{"LLLL – LLLL y"}
+                    y{"LLLL y – LLLL y"}
+                }
+                yMMMd{
+                    M{"d. M. – d. M. y"}
+                    d{"d.–d. M. y"}
+                    y{"d. M. y – d. M. y"}
+                }
+                yMd{
+                    M{"dd.MM.yy – dd.MM.yy"}
+                    d{"dd.MM.yy – dd.MM.yy"}
+                    y{"dd.MM.yy – dd.MM.yy"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "led",
+                        "úno",
+                        "bře",
+                        "dub",
+                        "kvě",
+                        "čvn",
+                        "čvc",
+                        "srp",
+                        "zář",
+                        "říj",
+                        "lis",
+                        "pro",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "ledna",
+                        "února",
+                        "března",
+                        "dubna",
+                        "května",
+                        "června",
+                        "července",
+                        "srpna",
+                        "září",
+                        "října",
+                        "listopadu",
+                        "prosince",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "led",
+                        "úno",
+                        "bře",
+                        "dub",
+                        "kvě",
+                        "čvn",
+                        "čvc",
+                        "srp",
+                        "zář",
+                        "říj",
+                        "lis",
+                        "pro",
+                    }
+                    narrow{
+                        "l",
+                        "ú",
+                        "b",
+                        "d",
+                        "k",
+                        "č",
+                        "č",
+                        "s",
+                        "z",
+                        "ř",
+                        "l",
+                        "p",
+                    }
+                    wide{
+                        "leden",
+                        "únor",
+                        "březen",
+                        "duben",
+                        "květen",
+                        "červen",
+                        "červenec",
+                        "srpen",
+                        "září",
+                        "říjen",
+                        "listopad",
+                        "prosinec",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "Q1",
+                        "Q2",
+                        "Q3",
+                        "Q4",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
+                    wide{
+                        "1. čtvrtletí",
+                        "2. čtvrtletí",
+                        "3. čtvrtletí",
+                        "4. čtvrtletí",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Q1",
+                        "Q2",
+                        "Q3",
+                        "Q4",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
+                    wide{
+                        "1. čtvrtletí",
+                        "2. čtvrtletí",
+                        "3. čtvrtletí",
+                        "4. čtvrtletí",
+                    }
+                }
+            }
+        }
+        islamic{
+            DateTimePatterns{
+                "H:mm:ss zzzz",
+                "H:mm:ss z",
+                "H:mm:ss",
+                "H:mm",
+                "EEEE, d. MMMM y G",
+                "d. MMMM y",
+                "d. MMM. y G",
+                "dd.MM.yy. G",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"E, d."}
+                MEd{"E, d. M."}
+                MMMEd{"E, d. MMM."}
+                MMMd{"d. MMM."}
+                Md{"d. M."}
+                d{"d."}
+                yM{"MM/y"}
+                yMEd{"E, d. M. y"}
+                yMMM{"LLL y"}
+                yMMMEd{"E, d. MMM y"}
+            }
+        }
+        japanese{
+            DateTimePatterns{
+                "H:mm:ss zzzz",
+                "H:mm:ss z",
+                "H:mm:ss",
+                "H:mm",
+                "EEEE d. MMMM y G",
+                "d. MMMM y G",
+                "d. M. y G",
+                "dd.MM.yy GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"E, d."}
+                MEd{"E, d. M."}
+                MMMEd{"E, d. M."}
+                MMMd{"d. M."}
+                Md{"d. M."}
+                d{"d."}
+                y{"y G"}
+            }
+        }
+        roc{
+            DateTimePatterns{
+                "H:mm:ss zzzz",
+                "H:mm:ss z",
+                "H:mm:ss",
+                "H:mm",
+                "EEEE, d. MMMM y G",
+                "d. MMMM y G",
+                "d. M. y G",
+                "dd.MM.yy GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"E, d."}
+                MEd{"E, d. M."}
+                MMMEd{"E, d. M."}
+                MMMd{"d. M."}
+                Md{"d. M."}
+                d{"d."}
+                y{"y G"}
+            }
+            eras{
+                abbreviated{
+                    "Před R. O. C.",
+                    "R.O.C.",
+                }
+            }
+        }
+    }
+    contextTransforms{
+        day-format-except-narrow:intvector{
+            1,
+            0,
+        }
+        day-standalone-except-narrow:intvector{
+            1,
+            0,
+        }
+        languages:intvector{
+            1,
+            1,
+        }
+        month-format-except-narrow:intvector{
+            1,
+            0,
+        }
+        month-standalone-except-narrow:intvector{
+            1,
+            0,
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"‘"}
+        alternateQuotationStart{"‚"}
+        quotationEnd{"“"}
+        quotationStart{"„"}
+    }
+    listPattern{
+        standard{
+            2{"{0} a {1}"}
+            end{"{0} a {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+    }
+    measurementSystemNames{
+        UK{"Velká Británie"}
+        US{"USA"}
+        metric{"metrický"}
+    }
+    units{
+        day{
+            few{"{0} dny"}
+            one{"{0} den"}
+            other{"{0} dní"}
+        }
+        day-future{
+            few{"za {0} dny"}
+            one{"za {0} den"}
+            other{"za {0} dní"}
+        }
+        day-past{
+            few{"před {0} dny"}
+            one{"před {0} dnem"}
+            other{"před {0} dny"}
+        }
+        hour{
+            few{"{0} hodiny"}
+            one{"{0} hodina"}
+            other{"{0} hodin"}
+        }
+        hour-future{
+            few{"za {0} hodiny"}
+            one{"za {0} hodinu"}
+            other{"za {0} hodin"}
+        }
+        hour-past{
+            few{"před {0} hodinami"}
+            one{"před {0} hodinou"}
+            other{"před {0} hodinami"}
+        }
+        minute{
+            few{"{0} minuty"}
+            one{"{0} minuta"}
+            other{"{0} minut"}
+        }
+        minute-future{
+            few{"za {0} minuty"}
+            one{"za {0} minutu"}
+            other{"za {0} minut"}
+        }
+        minute-past{
+            few{"před {0} minutami"}
+            one{"před {0} minutou"}
+            other{"před {0} minutami"}
+        }
+        month{
+            few{"{0} měsíce"}
+            one{"{0} měsíc"}
+            other{"{0} měsíců"}
+        }
+        month-future{
+            few{"za {0} měsíce"}
+            one{"za {0} měsíc"}
+            other{"za {0} měsíců"}
+        }
+        month-past{
+            few{"před {0} měsíci"}
+            one{"před {0} měsícem"}
+            other{"před {0} měsíci"}
+        }
+        second{
+            few{"{0} sekundy"}
+            one{"{0} sekunda"}
+            other{"{0} sekund"}
+        }
+        second-future{
+            few{"za {0} sekundy"}
+            one{"za {0} sekundu"}
+            other{"za {0} sekund"}
+        }
+        second-past{
+            few{"před {0} sekundami"}
+            one{"před {0} sekundou"}
+            other{"před {0} sekundami"}
+        }
+        week{
+            few{"{0} týdny"}
+            one{"{0} týden"}
+            other{"{0} týdnů"}
+        }
+        week-future{
+            few{"za {0} týdny"}
+            one{"za {0} týden"}
+            other{"za {0} týdnů"}
+        }
+        week-past{
+            few{"před {0} týdny"}
+            one{"před {0} týdnem"}
+            other{"před {0} týdny"}
+        }
+        year{
+            few{"{0} roky"}
+            one{"{0} rok"}
+            other{"{0} let"}
+        }
+        year-future{
+            few{"za {0} roky"}
+            one{"za {0} rok"}
+            other{"za {0} let"}
+        }
+        year-past{
+            few{"před {0} lety"}
+            one{"před {0} rokem"}
+            other{"před {0} lety"}
+        }
+    }
+    unitsShort{
+        day{
+            few{"{0} dny"}
+            one{"{0} den"}
+            other{"{0} dní"}
+        }
+        hour{
+            few{"{0} hod."}
+            one{"{0} hod."}
+            other{"{0} hod."}
+        }
+        minute{
+            few{"{0} min."}
+            one{"{0} min."}
+            other{"{0} min."}
+        }
+        month{
+            few{"{0} měs."}
+            one{"{0} měs."}
+            other{"{0} měs."}
+        }
+        second{
+            few{"{0} sek."}
+            one{"{0} sek."}
+            other{"{0} sek."}
+        }
+        week{
+            few{"{0} týd."}
+            one{"{0} týd."}
+            other{"{0} týd."}
+        }
+        year{
+            few{"{0} roky"}
+            one{"{0} rok"}
+            other{"{0} let"}
+        }
+    }
+}

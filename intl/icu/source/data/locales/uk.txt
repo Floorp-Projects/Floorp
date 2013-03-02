@@ -1,0 +1,881 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/uk.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/uk.xml
+ */
+uk{
+    AuxExemplarCharacters{"[ё ъ ы э]"}
+    ExemplarCharacters{"[ʼ а б в г ґ д е є ж з и і ї й к л м н о п р с т у ф х ц ч ш щ ь ю я]"}
+    ExemplarCharactersIndex{"[А Б В Г Ґ Д Е Є Ж З И І Ї Й К Л М Н О П Р С Т У Ф Х Ц Ч Ш Щ Ю Я]"}
+    LocaleScript{
+        "Cyrl",
+    }
+    NumberElements{
+        latn{
+            patterns{
+                currencyFormat{"#,##0.00 ¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            patternsLong{
+                decimalFormat{
+                    1000{
+                        few{"0 тисячі"}
+                        many{"0 тисяч"}
+                        one{"0 тисяча"}
+                        other{"0 тисячі"}
+                    }
+                    10000{
+                        few{"00 тисячі"}
+                        many{"00 тисяч"}
+                        one{"00 тисяча"}
+                        other{"00 тисячі"}
+                    }
+                    100000{
+                        few{"000 тисячі"}
+                        many{"000 тисяч"}
+                        one{"000 тисяча"}
+                        other{"000 тисячі"}
+                    }
+                    1000000{
+                        few{"0 мільйони"}
+                        many{"0 мільйонів"}
+                        one{"0 мільйон"}
+                        other{"0 мільйона"}
+                    }
+                    10000000{
+                        few{"00 мільйони"}
+                        many{"00 мільйонів"}
+                        one{"00 мільйон"}
+                        other{"00 мільйона"}
+                    }
+                    100000000{
+                        few{"000 мільйони"}
+                        many{"000 мільйонів"}
+                        one{"000 мільйон"}
+                        other{"000 мільйона"}
+                    }
+                    1000000000{
+                        few{"0 мільярди"}
+                        many{"0 мільярдів"}
+                        one{"0 мільярд"}
+                        other{"0 мільярда"}
+                    }
+                    10000000000{
+                        few{"00 мільярди"}
+                        many{"00 мільярдів"}
+                        one{"00 мільярд"}
+                        other{"00 мільярда"}
+                    }
+                    100000000000{
+                        few{"000 мільярди"}
+                        many{"000 мільярдів"}
+                        one{"000 мільярд"}
+                        other{"000 мільярда"}
+                    }
+                    1000000000000{
+                        few{"0 трильйони"}
+                        many{"0 трильйонів"}
+                        one{"0 трильйон"}
+                        other{"0 трильйона"}
+                    }
+                    10000000000000{
+                        few{"00 трильйони"}
+                        many{"00 трильйонів"}
+                        one{"00 трильйон"}
+                        other{"00 трильйона"}
+                    }
+                    100000000000000{
+                        few{"000 трильйони"}
+                        many{"000 трильйонів"}
+                        one{"000 трильйон"}
+                        other{"000 трильйона"}
+                    }
+                }
+            }
+            patternsShort{
+                decimalFormat{
+                    1000{
+                        few{"0 тис"}
+                        many{"0 тис"}
+                        one{"0 тис"}
+                        other{"0 тис"}
+                    }
+                    10000{
+                        few{"00 тис"}
+                        many{"00 тис"}
+                        one{"00 тис"}
+                        other{"00 тис"}
+                    }
+                    100000{
+                        few{"000 тис"}
+                        many{"000 тис"}
+                        one{"000 тис"}
+                        other{"000 тис"}
+                    }
+                    1000000{
+                        few{"0 млн"}
+                        many{"0 млн"}
+                        one{"0 млн"}
+                        other{"0 млн"}
+                    }
+                    10000000{
+                        few{"00 млн"}
+                        many{"00 млн"}
+                        one{"00 млн"}
+                        other{"00 млн"}
+                    }
+                    100000000{
+                        few{"000 млн"}
+                        many{"000 млн"}
+                        one{"000 млн"}
+                        other{"000 млн"}
+                    }
+                    1000000000{
+                        few{"0 млрд"}
+                        many{"0 млрд"}
+                        one{"0 млрд"}
+                        other{"0 млрд"}
+                    }
+                    10000000000{
+                        few{"00 млрд"}
+                        many{"00 млрд"}
+                        one{"00 млрд"}
+                        other{"00 млрд"}
+                    }
+                    100000000000{
+                        few{"000 млрд"}
+                        many{"000 млрд"}
+                        one{"000 млрд"}
+                        other{"000 млрд"}
+                    }
+                    1000000000000{
+                        few{"0 трлн"}
+                        many{"0 трлн"}
+                        one{"0 трлн"}
+                        other{"0 трлн"}
+                    }
+                    10000000000000{
+                        few{"00 трлн"}
+                        many{"00 трлн"}
+                        one{"00 трлн"}
+                        other{"00 трлн"}
+                    }
+                    100000000000000{
+                        few{"000 трлн"}
+                        many{"000 трлн"}
+                        one{"000 трлн"}
+                        other{"000 трлн"}
+                    }
+                }
+            }
+            symbols{
+                decimal{","}
+                exponential{"Е"}
+                group{" "}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"Не число"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+            }
+        }
+    }
+    Version{"2.0.78.38"}
+    calendar{
+        coptic{
+            monthNames{
+                format{
+                    wide{
+                        "Тот",
+                        "Бабе",
+                        "Хатур",
+                        "Кіхак",
+                        "Тобе",
+                        "Амшир",
+                        "Барамхат",
+                        "Бармуда",
+                        "Башнас",
+                        "Бауна",
+                        "Абіб",
+                        "Мисра",
+                        "Насі",
+                    }
+                }
+            }
+        }
+        gregorian{
+            AmPmMarkers{
+                "дп",
+                "пп",
+            }
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM y 'р'.",
+                "d MMMM y 'р'.",
+                "d MMM y",
+                "dd.MM.yy",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"E, d"}
+                H{"HH"}
+                HHmm{"HH:mm"}
+                HHmmss{"HH:mm:ss"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, dd.MM"}
+                MMM{"LLL"}
+                MMMEd{"E, d MMM"}
+                MMMMEd{"E, d MMMM"}
+                MMMMd{"d MMMM"}
+                MMMd{"d MMM"}
+                MMdd{"dd.MM"}
+                Md{"dd.MM"}
+                d{"d"}
+                h{"h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                mmss{"mm:ss"}
+                ms{"mm:ss"}
+                y{"y"}
+                yM{"MM.yyyy"}
+                yMEd{"E, dd.MM.yyyy"}
+                yMMM{"LLL y"}
+                yMMMEd{"E, d MMM y"}
+                yMMMM{"LLLL y"}
+                yMMMd{"d MMM y"}
+                yMd{"dd.MM.yy"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y 'р'."}
+                yyMM{"MM.yy"}
+                yyMMM{"LLL yy"}
+                yyyyMMMM{"LLLL y"}
+                yyyyQQQQ{"QQQQ y 'р'."}
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "Нд",
+                        "Пн",
+                        "Вт",
+                        "Ср",
+                        "Чт",
+                        "Пт",
+                        "Сб",
+                    }
+                    short{
+                        "Нд",
+                        "Пн",
+                        "Вт",
+                        "Ср",
+                        "Чт",
+                        "Пт",
+                        "Сб",
+                    }
+                    wide{
+                        "Неділя",
+                        "Понеділок",
+                        "Вівторок",
+                        "Середа",
+                        "Четвер",
+                        "Пʼятниця",
+                        "Субота",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "Н",
+                        "П",
+                        "В",
+                        "С",
+                        "Ч",
+                        "П",
+                        "С",
+                    }
+                    short{
+                        "Нд",
+                        "Пн",
+                        "Вт",
+                        "Ср",
+                        "Чт",
+                        "Пт",
+                        "Сб",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "до н.е.",
+                    "н.е.",
+                }
+                wide{
+                    "до нашої ери",
+                    "нашої ери",
+                }
+            }
+            fields{
+                day{
+                    dn{"День"}
+                    relative{
+                        "-1"{"Вчора"}
+                        "-2"{"Позавчора"}
+                        "0"{"Сьогодні"}
+                        "1"{"Завтра"}
+                        "2"{"Післязавтра"}
+                    }
+                }
+                dayperiod{
+                    dn{"Частина доби"}
+                }
+                era{
+                    dn{"Ера"}
+                }
+                hour{
+                    dn{"Година"}
+                }
+                minute{
+                    dn{"Хвилина"}
+                }
+                month{
+                    dn{"Місяць"}
+                    relative{
+                        "-1"{"Минулого місяця"}
+                        "0"{"Цього місяця"}
+                        "1"{"Наступного місяця"}
+                    }
+                }
+                second{
+                    dn{"Секунда"}
+                }
+                week{
+                    dn{"Тиждень"}
+                    relative{
+                        "-1"{"Минулого тижня"}
+                        "0"{"Цього тижня"}
+                        "1"{"Наступного тижня"}
+                    }
+                }
+                weekday{
+                    dn{"День тижня"}
+                }
+                year{
+                    dn{"Рік"}
+                    relative{
+                        "-1"{"Минулого року"}
+                        "0"{"Цього року"}
+                        "1"{"Наступного року"}
+                    }
+                }
+                zone{
+                    dn{"Зона"}
+                }
+            }
+            intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
+                }
+                Hv{
+                    H{"HH–HH v"}
+                }
+                M{
+                    M{"M–M"}
+                }
+                MEd{
+                    M{"E, dd.MM – E, dd.MM"}
+                    d{"E, dd.MM – E, dd.MM"}
+                }
+                MMM{
+                    M{"LLL–LLL"}
+                }
+                MMMEd{
+                    M{"E, d MMM – E, d MMM"}
+                    d{"E, d – E, d MMM"}
+                }
+                MMMd{
+                    M{"d MMM – d MMM"}
+                    d{"d–d MMM"}
+                }
+                Md{
+                    M{"dd.MM – dd.MM"}
+                    d{"dd.MM – dd.MM"}
+                }
+                d{
+                    d{"d–d"}
+                }
+                fallback{"{0} – {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
+                }
+                y{
+                    y{"y–y"}
+                }
+                yM{
+                    M{"MM.yy – MM.yy"}
+                    y{"MM.yy – MM.yy"}
+                }
+                yMEd{
+                    M{"E, dd.MM.yy – E, dd.MM.yy"}
+                    d{"E, dd.MM.yy – E, dd.MM.yy"}
+                    y{"E, dd.MM.yy – E, dd.MM.yy"}
+                }
+                yMMM{
+                    M{"LLL–LLL y"}
+                    y{"LLL y – LLL y"}
+                }
+                yMMMEd{
+                    M{"E, d MMM – E, d MMM y"}
+                    d{"E, d – E, d MMM y"}
+                    y{"E, d MMM y – E, d MMM y"}
+                }
+                yMMMM{
+                    M{"LLLL – LLLL y"}
+                    y{"LLLL y – LLLL y"}
+                }
+                yMMMd{
+                    M{"d MMM – d MMM y"}
+                    d{"d–d MMM y"}
+                    y{"d MMM y – d MMM y"}
+                }
+                yMd{
+                    M{"dd.MM.yy – dd.MM.yy"}
+                    d{"dd.MM.yy – dd.MM.yy"}
+                    y{"dd.MM.yy – dd.MM.yy"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "січ.",
+                        "лют.",
+                        "бер.",
+                        "квіт.",
+                        "трав.",
+                        "черв.",
+                        "лип.",
+                        "серп.",
+                        "вер.",
+                        "жовт.",
+                        "лист.",
+                        "груд.",
+                    }
+                    wide{
+                        "січня",
+                        "лютого",
+                        "березня",
+                        "квітня",
+                        "травня",
+                        "червня",
+                        "липня",
+                        "серпня",
+                        "вересня",
+                        "жовтня",
+                        "листопада",
+                        "грудня",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Січ",
+                        "Лют",
+                        "Бер",
+                        "Кві",
+                        "Тра",
+                        "Чер",
+                        "Лип",
+                        "Сер",
+                        "Вер",
+                        "Жов",
+                        "Лис",
+                        "Гру",
+                    }
+                    narrow{
+                        "С",
+                        "Л",
+                        "Б",
+                        "К",
+                        "Т",
+                        "Ч",
+                        "Л",
+                        "С",
+                        "В",
+                        "Ж",
+                        "Л",
+                        "Г",
+                    }
+                    wide{
+                        "Січень",
+                        "Лютий",
+                        "Березень",
+                        "Квітень",
+                        "Травень",
+                        "Червень",
+                        "Липень",
+                        "Серпень",
+                        "Вересень",
+                        "Жовтень",
+                        "Листопад",
+                        "Грудень",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "I кв.",
+                        "II кв.",
+                        "III кв.",
+                        "IV кв.",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
+                    wide{
+                        "I квартал",
+                        "II квартал",
+                        "III квартал",
+                        "IV квартал",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "1-й кв.",
+                        "2-й кв.",
+                        "3-й кв.",
+                        "4-й кв.",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
+                    wide{
+                        "1-й квартал",
+                        "2-й квартал",
+                        "3-й квартал",
+                        "4-й квартал",
+                    }
+                }
+            }
+        }
+        hebrew{
+            monthNames{
+                format{
+                    wide{
+                        "Тішри",
+                        "Марчешван",
+                        "Числьов",
+                        "Тебет",
+                        "Шеват",
+                        "Адар I",
+                        "Адар",
+                        "Нісан",
+                        "Іар",
+                        "Сиван",
+                        "Таммуз",
+                        "Аб",
+                        "Елул",
+                        "Адар II",
+                    }
+                }
+            }
+        }
+        islamic{
+            monthNames{
+                format{
+                    wide{
+                        "Мухаррам",
+                        "Сафар",
+                        "Рабі I",
+                        "Рабі II",
+                        "Джумада I",
+                        "Джумада II",
+                        "Раджаб",
+                        "Шаабан",
+                        "Рамадан",
+                        "Даввал",
+                        "Зу-ль-каада",
+                        "Зу-ль-хіджа",
+                    }
+                }
+            }
+        }
+        persian{
+            monthNames{
+                format{
+                    wide{
+                        "Фарвардін",
+                        "Ордібехешт",
+                        "Хордад",
+                        "Тір",
+                        "Мордад",
+                        "Шахрівер",
+                        "Мехр",
+                        "Абан",
+                        "Азер",
+                        "Дей",
+                        "Бахман",
+                        "Есфанд",
+                    }
+                }
+            }
+        }
+    }
+    contextTransforms{
+        day-format-except-narrow:intvector{
+            1,
+            1,
+        }
+        day-standalone-except-narrow:intvector{
+            1,
+            1,
+        }
+        languages:intvector{
+            1,
+            1,
+        }
+        month-format-except-narrow:intvector{
+            1,
+            1,
+        }
+        month-standalone-except-narrow:intvector{
+            1,
+            1,
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"“"}
+        alternateQuotationStart{"„"}
+        quotationEnd{"»"}
+        quotationStart{"«"}
+    }
+    listPattern{
+        standard{
+            2{"{0} та {1}"}
+            end{"{0} та {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+    }
+    measurementSystemNames{
+        UK{"Британська"}
+        US{"США"}
+        metric{"Метрична"}
+    }
+    units{
+        day{
+            few{"{0} дні"}
+            many{"{0} днів"}
+            one{"{0} день"}
+            other{"{0} дня"}
+        }
+        day-future{
+            few{"Через {0} дні"}
+            many{"Через {0} днів"}
+            one{"Через {0} день"}
+            other{"Через {0} дня"}
+        }
+        day-past{
+            few{"{0} дні тому"}
+            many{"{0} днів тому"}
+            one{"{0} день тому"}
+            other{"{0} дня тому"}
+        }
+        hour{
+            few{"{0} години"}
+            many{"{0} годин"}
+            one{"{0} година"}
+            other{"{0} години"}
+        }
+        hour-future{
+            few{"Через {0} години"}
+            many{"Через {0} годин"}
+            one{"Через {0} годину"}
+            other{"Через {0} години"}
+        }
+        hour-past{
+            few{"{0} години тому"}
+            many{"{0} годин тому"}
+            one{"{0} годину тому"}
+            other{"{0} години тому"}
+        }
+        minute{
+            few{"{0} хвилини"}
+            many{"{0} хвилин"}
+            one{"{0} хвилина"}
+            other{"{0} хвилини"}
+        }
+        minute-future{
+            few{"Через {0} хвилини"}
+            many{"Через {0} хвилин"}
+            one{"Через {0} хвилину"}
+            other{"Через {0} хвилини"}
+        }
+        minute-past{
+            few{"{0} хвилини тому"}
+            many{"{0} хвилин тому"}
+            one{"{0} хвилину тому"}
+            other{"{0} хвилини тому"}
+        }
+        month{
+            few{"{0} місяці"}
+            many{"{0} місяців"}
+            one{"{0} місяць"}
+            other{"{0} місяця"}
+        }
+        month-future{
+            few{"Через {0} місяці"}
+            many{"Через {0} місяців"}
+            one{"Через {0} місяць"}
+            other{"Через {0} місяця"}
+        }
+        month-past{
+            few{"{0} місяці тому"}
+            many{"{0} місяців тому"}
+            one{"{0} місяць тому"}
+            other{"{0} місяця тому"}
+        }
+        second{
+            few{"{0} секунди"}
+            many{"{0} секунд"}
+            one{"{0} секунда"}
+            other{"{0} секунди"}
+        }
+        second-future{
+            few{"Через {0} секунди"}
+            many{"Через {0} секунд"}
+            one{"Через {0} секунду"}
+            other{"Через {0} секунди"}
+        }
+        second-past{
+            few{"{0} секунди тому"}
+            many{"{0} секунд тому"}
+            one{"{0} секунду тому"}
+            other{"{0} секунди тому"}
+        }
+        week{
+            few{"{0} тижні"}
+            many{"{0} тижнів"}
+            one{"{0} тиждень"}
+            other{"{0} тижня"}
+        }
+        week-future{
+            few{"Через {0} тижні"}
+            many{"Через {0} тижнів"}
+            one{"Через {0} тиждень"}
+            other{"Через {0} тижня"}
+        }
+        week-past{
+            few{"{0} тижні тому"}
+            many{"{0} тижнів тому"}
+            one{"{0} тиждень тому"}
+            other{"{0} тижня тому"}
+        }
+        year{
+            few{"{0} роки"}
+            many{"{0} років"}
+            one{"{0} рік"}
+            other{"{0} року"}
+        }
+        year-future{
+            few{"Через {0} роки"}
+            many{"Через {0} років"}
+            one{"Через {0} рік"}
+            other{"Через {0} року"}
+        }
+        year-past{
+            few{"{0} роки тому"}
+            many{"{0} років тому"}
+            one{"{0} рік тому"}
+            other{"{0} року тому"}
+        }
+    }
+    unitsShort{
+        day{
+            few{"{0} дні"}
+            many{"{0} днів"}
+            one{"{0} день"}
+            other{"{0} дня"}
+        }
+        hour{
+            few{"{0} год."}
+            many{"{0} год."}
+            one{"{0} год."}
+            other{"{0} год."}
+        }
+        minute{
+            few{"{0} хв."}
+            many{"{0} хв."}
+            one{"{0} хв."}
+            other{"{0} хв."}
+        }
+        month{
+            few{"{0} міс."}
+            many{"{0} міс."}
+            one{"{0} міс."}
+            other{"{0} міс."}
+        }
+        second{
+            few{"{0} сек."}
+            many{"{0} сек."}
+            one{"{0} сек."}
+            other{"{0} сек."}
+        }
+        week{
+            few{"{0} тиж."}
+            many{"{0} тиж."}
+            one{"{0} тиж."}
+            other{"{0} тиж."}
+        }
+        year{
+            few{"{0} р."}
+            many{"{0} р."}
+            one{"{0} р."}
+            other{"{0} р."}
+        }
+    }
+}

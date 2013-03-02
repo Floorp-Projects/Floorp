@@ -1,0 +1,49 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/en_BE.xml
+// *
+// ***************************************************************************
+en_BE{
+    %%Parent{"en_GB"}
+    NumberElements{
+        latn{
+            patterns{
+                currencyFormat{"#,##0.00 ¤"}
+            }
+            symbols{
+                decimal{","}
+                group{"."}
+            }
+        }
+    }
+    Version{"2.0.78.47"}
+    calendar{
+        gregorian{
+            DateTimePatterns{
+                "HH 'h' mm 'min' ss 's' zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE d MMMM y",
+                "d MMM y",
+                "dd MMM y",
+                "dd/MM/yy",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                MEd{"E d/M"}
+                Md{"d/M"}
+                yMEd{"E, d/M/y"}
+                yMMMEd{"E d MMM y"}
+                yMd{"d/M/y"}
+            }
+        }
+    }
+}

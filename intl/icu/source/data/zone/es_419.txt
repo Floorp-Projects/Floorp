@@ -1,0 +1,42 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/es_419.xml
+// *
+// ***************************************************************************
+es_419{
+    Version{"2.0.78.47"}
+    zoneStrings{
+        "America:Coral_Harbour"{
+            ec{"Atikokan"}
+        }
+        "America:Indiana:Winamac"{
+            ec{"Winamac, Indiana"}
+        }
+        "America:Kentucky:Monticello"{
+            ec{"Monticello, Kentucky"}
+        }
+        "meta:America_Central"{
+            sd{"CDT"}
+            sg{"CT"}
+            ss{"CST"}
+        }
+        "meta:America_Eastern"{
+            sd{"EDT"}
+            sg{"ET"}
+            ss{"EST"}
+        }
+        "meta:America_Mountain"{
+            sd{"MDT"}
+            sg{"MT"}
+            ss{"MST"}
+        }
+        "meta:America_Pacific"{
+            sd{"PDT"}
+            sg{"PT"}
+            ss{"PST"}
+        }
+    }
+}

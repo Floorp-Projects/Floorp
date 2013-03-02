@@ -1,0 +1,363 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/be.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/be.xml
+ */
+be{
+    AuxExemplarCharacters{"[]"}
+    ExemplarCharacters{"[а б в г д {дж} {дз} е ё ж з і й к л м н о п р с т у ў ф х ц ч ш ы ь э ю я]"}
+    ExemplarCharactersIndex{"[А Б В Г Д Е Ж З І Й К Л М Н О П Р С Т У Ф Х Ц Ч Ш Ы Э Ю Я]"}
+    LocaleScript{
+        "Cyrl",
+    }
+    NumberElements{
+        latn{
+            patterns{
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            symbols{
+                decimal{","}
+                group{" "}
+            }
+        }
+    }
+    Version{"2.0.78.38"}
+    calendar{
+        buddhist{
+            DateTimePatterns{
+                "HH.mm.ss zzzz",
+                "HH.mm.ss z",
+                "HH.mm.ss",
+                "HH.mm",
+                "EEEE, d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "d.M.yy",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"E, d"}
+                Gy{"G y"}
+                Hm{"HH.mm"}
+                Hms{"HH.mm.ss"}
+                M{"L"}
+                MEd{"E, d.M"}
+                MMM{"LLL"}
+                MMMEd{"E, d MMM"}
+                MMMd{"d MMM"}
+                Md{"d.M"}
+                d{"d"}
+                hm{"h.mm a"}
+                hms{"h.mm.ss a"}
+                y{"G y"}
+                yM{"M.yy"}
+                yMEd{"E, d.M.yy"}
+                yMMM{"MMM y G"}
+                yMMMEd{"E, d MMM y G"}
+                yMMMd{"d MMM y G"}
+                yMd{"d.M.yy"}
+            }
+        }
+        gregorian{
+            AmPmMarkers{
+                "да палудня",
+                "пасля палудня",
+            }
+            DateTimePatterns{
+                "HH.mm.ss zzzz",
+                "HH.mm.ss z",
+                "HH.mm.ss",
+                "HH.mm",
+                "EEEE, d MMMM y",
+                "d MMMM y",
+                "d.M.yyyy",
+                "d.M.yy",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Hm{"HH.mm"}
+                Hms{"HH.mm.ss"}
+                M{"L"}
+                MEd{"E, d MMM"}
+                MMM{"LLL"}
+                MMMEd{"E, d MMM"}
+                MMMMEd{"MMMM d, EEEE"}
+                MMMMd{"MMMM d"}
+                MMMd{"d MMM"}
+                d{"d"}
+                hm{"h.mm a"}
+                hms{"h.mm.ss a"}
+                ms{"mm.ss"}
+                y{"y"}
+                yM{"MM/yyyy"}
+                yMEd{"E, dd/MM/yyyy"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, d MMM y"}
+                yMMMM{"MMMM y"}
+                yMMMd{"d MMM y"}
+                yMd{"d.M.yy"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
+                yyyyM{"MM/yyyy"}
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "нд",
+                        "пн",
+                        "аў",
+                        "ср",
+                        "чц",
+                        "пт",
+                        "сб",
+                    }
+                    wide{
+                        "нядзеля",
+                        "панядзелак",
+                        "аўторак",
+                        "серада",
+                        "чацвер",
+                        "пятніца",
+                        "субота",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "н",
+                        "п",
+                        "а",
+                        "с",
+                        "ч",
+                        "п",
+                        "с",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "да н.э.",
+                    "н.э.",
+                }
+            }
+            fields{
+                day{
+                    dn{"дзень"}
+                    relative{
+                        "-1"{"учора"}
+                        "-2"{"пазаўчора"}
+                        "0"{"сёння"}
+                        "1"{"заўтра"}
+                        "2"{"паслязаўтра"}
+                    }
+                }
+                dayperiod{
+                    dn{"ДП/ПП"}
+                }
+                era{
+                    dn{"эра"}
+                }
+                hour{
+                    dn{"гадзіна"}
+                }
+                minute{
+                    dn{"хвіліна"}
+                }
+                month{
+                    dn{"месяц"}
+                }
+                second{
+                    dn{"секунда"}
+                }
+                week{
+                    dn{"тыдзень"}
+                }
+                weekday{
+                    dn{"дзень тыдня"}
+                }
+                year{
+                    dn{"год"}
+                }
+                zone{
+                    dn{"Zone"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "сту",
+                        "лют",
+                        "сак",
+                        "кра",
+                        "май",
+                        "чэр",
+                        "ліп",
+                        "жні",
+                        "вер",
+                        "кас",
+                        "ліс",
+                        "сне",
+                    }
+                    narrow{
+                        "с",
+                        "л",
+                        "с",
+                        "к",
+                        "т",
+                        "ч",
+                        "л",
+                        "ж",
+                        "в",
+                        "к",
+                        "л",
+                        "с",
+                    }
+                    wide{
+                        "студзень",
+                        "люты",
+                        "сакавік",
+                        "красавік",
+                        "май",
+                        "чэрвень",
+                        "ліпень",
+                        "жнівень",
+                        "верасень",
+                        "кастрычнік",
+                        "лістапад",
+                        "снежань",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "сту",
+                        "лют",
+                        "сак",
+                        "кра",
+                        "тра",
+                        "чэр",
+                        "ліп",
+                        "жні",
+                        "вер",
+                        "кас",
+                        "ліс",
+                        "сне",
+                    }
+                    narrow{
+                        "с",
+                        "л",
+                        "с",
+                        "к",
+                        "м",
+                        "ч",
+                        "л",
+                        "ж",
+                        "в",
+                        "к",
+                        "л",
+                        "с",
+                    }
+                    wide{
+                        "студзень",
+                        "люты",
+                        "сакавік",
+                        "красавік",
+                        "травень",
+                        "чэрвень",
+                        "ліпень",
+                        "жнівень",
+                        "верасень",
+                        "кастрычнік",
+                        "лістапад",
+                        "снежань",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "1-шы кв.",
+                        "2-гі кв.",
+                        "3-ці кв.",
+                        "4-ты кв.",
+                    }
+                    wide{
+                        "1-шы квартал",
+                        "2-гі квартал",
+                        "3-ці квартал",
+                        "4-ты квартал",
+                    }
+                }
+            }
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"›"}
+        alternateQuotationStart{"‹"}
+        quotationEnd{"»"}
+        quotationStart{"«"}
+    }
+    measurementSystemNames{
+        US{"ЗША"}
+        metric{"метрычная"}
+    }
+    units{
+        day{
+            few{"{0} дні"}
+            many{"{0} дзён"}
+            one{"{0} дзень"}
+            other{"{0} дня"}
+        }
+        hour{
+            few{"{0} гадзіны"}
+            many{"{0} гадзін"}
+            one{"{0} гадзіна"}
+            other{"{0} гадзіны"}
+        }
+        minute{
+            few{"{0} хвіліны"}
+            many{"{0} хвілін"}
+            one{"{0} хвіліна"}
+            other{"{0} хвіліны"}
+        }
+        month{
+            few{"{0} месяца"}
+            many{"{0} месяцаў"}
+            one{"{0} месяц"}
+            other{"{0} месяца"}
+        }
+        second{
+            few{"{0} сэкунды"}
+            many{"{0} сэкунд"}
+            one{"{0} сэкунда"}
+            other{"{0} сэкунды"}
+        }
+        week{
+            few{"{0} тыдні"}
+            many{"{0} тыдняў"}
+            one{"{0} тыдзень"}
+            other{"{0} тыдня"}
+        }
+        year{
+            few{"{0} гады"}
+            many{"{0} гадоў"}
+            one{"{0} год"}
+            other{"{0} году"}
+        }
+    }
+}
