@@ -780,6 +780,10 @@ var BrowserUI = {
     }
   },
 
+  savePage: function() {
+    Browser.savePage();
+  },
+
   receiveMessage: function receiveMessage(aMessage) {
     let browser = aMessage.target;
     let json = aMessage.json;
@@ -835,6 +839,7 @@ var BrowserUI = {
       case "cmd_volumeLeft":
       case "cmd_volumeRight":
       case "cmd_openFile":
+      case "cmd_savePage":
         isSupported = true;
         break;
       default:
@@ -960,6 +965,9 @@ var BrowserUI = {
         break;
       case "cmd_openFile":
         this.openFile();
+        break;
+      case "cmd_savePage":
+        this.savePage();
         break;
     }
   }

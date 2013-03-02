@@ -68,6 +68,7 @@
     <command id="cmd_openLocation" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_home" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_openFile" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_savePage" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- tabs -->
     <command id="cmd_newTab" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -135,6 +136,7 @@
     <key id="key_focusURL2" key="&urlbar.accesskey;" modifiers="alt" command="cmd_openLocation"/>
     <key id="key_home" keycode="VK_HOME" modifiers="accel" command="cmd_home"/>
     <key id="key_open" key="o" modifiers="accel" command="cmd_openFile"/>
+    <key id="key_save" key="s" modifiers="accel" command="cmd_savePage"/>
 
     <!-- misc -->
     <key id="key_zoomin" key="+" modifiers="accel" command="cmd_zoomin"/>
