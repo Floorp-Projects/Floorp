@@ -1664,3 +1664,165 @@ function InitializeDateTimeFormat(dateTimeFormat, locales, options) {
     // Step 31.
     internals.initializedDateTimeFormat = true;
 }
+
+
+/**
+ * Returns a new options object that includes the provided options (if any)
+ * and fills in default components if required components are not defined.
+ * Required can be "date", "time", or "any".
+ * Defaults can be "date", "time", or "all".
+ *
+ * Spec: ECMAScript Internationalization API Specification, 12.1.1.
+ */
+function ToDateTimeOptions(options, required, defaults) {
+    assert(typeof required === "string", "ToDateTimeOptions");
+    assert(typeof defaults === "string", "ToDateTimeOptions");
+
+    // Steps 1-3.
+    if (options === undefined)
+        options = null;
+    else
+        options = ToObject(options);
+    options = std_Object_create(options);
+
+    // Step 4.
+    var needDefaults = true;
+
+    // Step 5.
+    if ((required === "date" || required === "any") &&
+        (options.weekday !== undefined || options.year !== undefined ||
+         options.month !== undefined || options.day !== undefined))
+    {
+        needDefaults = false;
+    }
+
+    // Step 6.
+    if ((required === "time" || required === "any") &&
+        (options.hour !== undefined || options.minute !== undefined ||
+         options.second !== undefined))
+    {
+        needDefaults = false;
+    }
+
+    // Step 7.
+    if (needDefaults && (defaults === "date" || defaults === "all")) {
+        // The specification says to call [[DefineOwnProperty]] with false for
+        // the Throw parameter, while Object.defineProperty uses true. For the
+        // calls here, the difference doesn't matter because we're adding
+        // properties to a new object.
+        defineProperty(options, "year", "numeric");
+        defineProperty(options, "month", "numeric");
+        defineProperty(options, "day", "numeric");
+    }
+
+    // Step 8.
+    if (needDefaults && (defaults === "time" || defaults === "all")) {
+        // See comment for step 7.
+        defineProperty(options, "hour", "numeric");
+        defineProperty(options, "minute", "numeric");
+        defineProperty(options, "second", "numeric");
+    }
+
+    // Step 9.
+    return options;
+}
+
+
+/**
+ * Compares the date and time components requested by options with the available
+ * date and time formats in formats, and selects the best match according
+ * to a specified basic matching algorithm.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 12.1.1.
+ */
+function BasicFormatMatcher(options, formats) {
+    // Steps 1-6.
+    var removalPenalty = 120,
+        additionPenalty = 20,
+        longLessPenalty = 8,
+        longMorePenalty = 6,
+        shortLessPenalty = 6,
+        shortMorePenalty = 3;
+
+    // Table 3.
+    var properties = ["weekday", "era", "year", "month", "day",
+        "hour", "minute", "second", "timeZoneName"];
+
+    // Step 11.c.vi.1.
+    var values = ["2-digit", "numeric", "narrow", "short", "long"];
+
+    // Steps 7-8.
+    var bestScore = -Infinity;
+    var bestFormat;
+
+    // Steps 9-11.
+    var i = 0;
+    var len = formats.length;
+    while (i < len) {
+        // Steps 11.a-b.
+        var format = formats[i];
+        var score = 0;
+
+        // Step 11.c.
+        var formatProp;
+        for (var j = 0; j < properties.length; j++) {
+            var property = properties[j];
+
+            // Step 11.c.i.
+            var optionsProp = options[property];
+            // Step missing from spec.
+            // https://bugs.ecmascript.org/show_bug.cgi?id=1254
+            formatProp = undefined;
+
+            // Steps 11.c.ii-iii.
+            if (callFunction(std_Object_hasOwnProperty, format, property))
+                formatProp = format[property];
+
+            if (optionsProp === undefined && formatProp !== undefined) {
+                // Step 11.c.iv.
+                score -= additionPenalty;
+            } else if (optionsProp !== undefined && formatProp === undefined) {
+                // Step 11.c.v.
+                score -= removalPenalty;
+            } else {
+                // Step 11.c.vi.
+                var optionsPropIndex = callFunction(std_Array_indexOf, values, optionsProp);
+                var formatPropIndex = callFunction(std_Array_indexOf, values, formatProp);
+                var delta = std_Math_max(std_Math_min(formatPropIndex - optionsPropIndex, 2), -2);
+                if (delta === 2)
+                    score -= longMorePenalty;
+                else if (delta === 1)
+                    score -= shortMorePenalty;
+                else if (delta === -1)
+                    score -= shortLessPenalty;
+                else if (delta === -2)
+                    score -= longLessPenalty;
+            }
+        }
+
+        // Step 11.d.
+        if (score > bestScore) {
+            bestScore = score;
+            bestFormat = format;
+        }
+
+        // Step 11.e.
+        i++;
+    }
+
+    // Step 12.
+    return bestFormat;
+}
+
+
+/**
+ * Compares the date and time components requested by options with the available
+ * date and time formats in formats, and selects the best match according
+ * to an unspecified best-fit matching algorithm.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 12.1.1.
+ */
+function BestFitFormatMatcher(options, formats) {
+    // this implementation doesn't have anything better
+    return BasicFormatMatcher(options, formats);
+}
