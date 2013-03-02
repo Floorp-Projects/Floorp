@@ -256,6 +256,8 @@ public class LayerView extends FrameLayout {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (mPanZoomController != null && mPanZoomController.onKeyEvent(event))
+            return true;
         if (mInputConnectionHandler != null)
             return mInputConnectionHandler.onKeyDown(keyCode, event);
         return false;

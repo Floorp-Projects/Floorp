@@ -9,6 +9,7 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.util.EventDispatcher;
 
 import android.graphics.PointF;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -27,6 +28,7 @@ public interface PanZoomController {
 
     public boolean onTouchEvent(MotionEvent event);
     public boolean onMotionEvent(MotionEvent event);
+    public boolean onKeyEvent(KeyEvent event);
     public void notifyDefaultActionPrevented(boolean prevented);
 
     public boolean getRedrawHint();
