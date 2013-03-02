@@ -2396,9 +2396,6 @@ var SelectionHandler = {
   },
 
   positionHandles: function sh_positionHandles() {
-    // Translate coordinates to account for selections in sub-frames. We can't cache
-    // this because the top-level page may have scrolled since selection started.
-    let offset = this._getViewOffset();
     let scrollX = {}, scrollY = {};
     this._view.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).getScrollXY(false, scrollX, scrollY);
 
@@ -2418,26 +2415,33 @@ var SelectionHandler = {
 
     let positions = null;
     if (this._activeType == this.TYPE_CURSOR) {
+      // The left and top properties returned are relative to the client area
+      // of the window, so we don't need to account for a sub-frame offset.
       let cursor = this._cwu.sendQueryContentEvent(this._cwu.QUERY_CARET_RECT, this._target.selectionEnd, 0, 0, 0);
       let x = cursor.left;
       let y = cursor.top + cursor.height;
-      positions = [ { handle: this.HANDLE_TYPE_MIDDLE,
-                     left: x + offset.x + scrollX.value,
-                     top: y + offset.y + scrollY.value,
-                     hidden: checkHidden(x, y) } ];
+      positions = [{ handle: this.HANDLE_TYPE_MIDDLE,
+                     left: x + scrollX.value,
+                     top: y + scrollY.value,
+                     hidden: checkHidden(x, y) }];
     } else {
       let sx = this.cache.start.x;
       let sy = this.cache.start.y;
       let ex = this.cache.end.x;
       let ey = this.cache.end.y;
-      positions = [ { handle: this.HANDLE_TYPE_START,
+
+      // Translate coordinates to account for selections in sub-frames. We can't cache
+      // this because the top-level page may have scrolled since selection started.
+      let offset = this._getViewOffset();
+
+      positions = [{ handle: this.HANDLE_TYPE_START,
                      left: sx + offset.x + scrollX.value,
                      top: sy + offset.y + scrollY.value,
                      hidden: checkHidden(sx, sy) },
                    { handle: this.HANDLE_TYPE_END,
                      left: ex + offset.x + scrollX.value,
                      top: ey + offset.y + scrollY.value,
-                     hidden: checkHidden(ex, ey) } ];
+                     hidden: checkHidden(ex, ey) }];
     }
 
     sendMessageToJava({
