@@ -1,0 +1,202 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/mt.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/mt.xml
+ */
+mt{
+    AuxExemplarCharacters{"[c y]"}
+    ExemplarCharacters{"[a à b ċ d e è f ġ g {għ} h ħ i ì j k l m n o ò p q r s t u ù v w x ż z]"}
+    ExemplarCharactersIndex{"[A B Ċ C D E F Ġ G {GĦ} H Ħ I {IE} J K L M N O P Q R S T U V W X Y Ż Z]"}
+    ExemplarCharactersPunctuation{"[\- , ; \: ! ? . ' ‘ ’ \" “ ” ( ) \[ \] \{ \}]"}
+    LocaleScript{
+        "Latn",
+    }
+    NumberElements{
+        latn{
+            patterns{
+                currencyFormat{"¤#,##0.00"}
+            }
+            symbols{
+                decimal{"."}
+                group{","}
+            }
+        }
+    }
+    Version{"2.0.78.38"}
+    calendar{
+        gregorian{
+            AmPmMarkers{
+                "QN",
+                "WN",
+            }
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d 'ta'’ MMMM y",
+                "d 'ta'’ MMMM y",
+                "dd MMM y",
+                "dd/MM/yyyy",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "Ħad",
+                        "Tne",
+                        "Tli",
+                        "Erb",
+                        "Ħam",
+                        "Ġim",
+                        "Sib",
+                    }
+                    wide{
+                        "Il-Ħadd",
+                        "It-Tnejn",
+                        "It-Tlieta",
+                        "L-Erbgħa",
+                        "Il-Ħamis",
+                        "Il-Ġimgħa",
+                        "Is-Sibt",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "Ħ",
+                        "T",
+                        "T",
+                        "E",
+                        "Ħ",
+                        "Ġ",
+                        "S",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "QK",
+                    "WK",
+                }
+                wide{
+                    "Qabel Kristu",
+                    "Wara Kristu",
+                }
+            }
+            fields{
+                day{
+                    dn{"Jum"}
+                    relative{
+                        "-1"{"Lbieraħ"}
+                        "0"{"Illum"}
+                        "1"{"Għada"}
+                    }
+                }
+                era{
+                    dn{"Epoka"}
+                }
+                hour{
+                    dn{"Siegħa"}
+                }
+                minute{
+                    dn{"Minuta"}
+                }
+                month{
+                    dn{"Xahar"}
+                }
+                second{
+                    dn{"Sekonda"}
+                }
+                week{
+                    dn{"Ġimgħa"}
+                }
+                weekday{
+                    dn{"Jum tal-Ġimgħa"}
+                }
+                year{
+                    dn{"Sena"}
+                }
+                zone{
+                    dn{"Żona"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Jan",
+                        "Fra",
+                        "Mar",
+                        "Apr",
+                        "Mej",
+                        "Ġun",
+                        "Lul",
+                        "Aww",
+                        "Set",
+                        "Ott",
+                        "Nov",
+                        "Diċ",
+                    }
+                    wide{
+                        "Jannar",
+                        "Frar",
+                        "Marzu",
+                        "April",
+                        "Mejju",
+                        "Ġunju",
+                        "Lulju",
+                        "Awwissu",
+                        "Settembru",
+                        "Ottubru",
+                        "Novembru",
+                        "Diċembru",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "J",
+                        "F",
+                        "M",
+                        "A",
+                        "M",
+                        "Ġ",
+                        "L",
+                        "A",
+                        "S",
+                        "O",
+                        "N",
+                        "D",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "K1",
+                        "K2",
+                        "K3",
+                        "K4",
+                    }
+                    wide{
+                        "K1",
+                        "K2",
+                        "K3",
+                        "K4",
+                    }
+                }
+            }
+        }
+    }
+    measurementSystemNames{
+        metric{"Metriku"}
+    }
+}

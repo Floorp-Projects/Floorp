@@ -1,0 +1,340 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/kk.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/kk.xml
+ */
+kk{
+    AuxExemplarCharacters{"[]"}
+    ExemplarCharacters{
+        "[а ә б в г ғ д е ё ж з и й к қ л м н ң о ө п р с т у ұ ү ф х һ ц ч ш щ ъ ы і"
+        " ь э ю я]"
+    }
+    ExemplarCharactersIndex{
+        "[А Ә Б В Г Ғ Д Е Ё Ж З И Й К Қ Л М Н Ң О Ө П Р С Т У Ұ Ү Ф Х Һ Ц Ч Ш Щ Ъ Ы І"
+        " Ь Э Ю Я]"
+    }
+    LocaleScript{
+        "Cyrl",
+    }
+    NumberElements{
+        latn{
+            patterns{
+                currencyFormat{"#,##0.00 ¤"}
+            }
+            patternsShort{
+                decimalFormat{
+                    1000{
+                        one{"0 мың"}
+                        other{"0 мың"}
+                    }
+                    10000{
+                        one{"00 мың"}
+                        other{"00 мың"}
+                    }
+                    100000{
+                        one{"000 мың"}
+                        other{"000 мың"}
+                    }
+                    1000000{
+                        one{"0 млн"}
+                        other{"0 млн"}
+                    }
+                    10000000{
+                        one{"00 млн"}
+                        other{"00 млн"}
+                    }
+                    100000000{
+                        one{"000 млн"}
+                        other{"000 млн"}
+                    }
+                    1000000000{
+                        one{"0 млрд"}
+                        other{"0 млрд"}
+                    }
+                    10000000000{
+                        one{"00 млрд"}
+                        other{"00 млрд"}
+                    }
+                    100000000000{
+                        one{"000 млрд"}
+                        other{"000 млрд"}
+                    }
+                    1000000000000{
+                        one{"0 трлн"}
+                        other{"0 трлн"}
+                    }
+                    10000000000000{
+                        one{"00 трлн"}
+                        other{"00 трлн"}
+                    }
+                    100000000000000{
+                        one{"000 трлн"}
+                        other{"000 трлн"}
+                    }
+                }
+            }
+            symbols{
+                decimal{","}
+                group{" "}
+            }
+        }
+    }
+    Version{"2.0.78.17"}
+    calendar{
+        gregorian{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM y 'ж'.",
+                "d MMMM y 'ж'.",
+                "dd.MM.yyyy",
+                "dd.MM.yy",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "жс.",
+                        "дс.",
+                        "сс.",
+                        "ср.",
+                        "бс.",
+                        "жм.",
+                        "сһ.",
+                    }
+                    wide{
+                        "жексені",
+                        "дуйсенбі",
+                        "сейсенбі",
+                        "сәренбі",
+                        "бейсенбі",
+                        "жұма",
+                        "сенбі",
+                    }
+                }
+            }
+            intervalFormats{
+                H{
+                    H{"HH-HH"}
+                }
+                Hm{
+                    H{"HH:mm-HH:mm"}
+                    m{"HH:mm-HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm-HH:mm v"}
+                    m{"HH:mm-HH:mm v"}
+                }
+                Hv{
+                    H{"HH-HH v"}
+                }
+                M{
+                    M{"M-M"}
+                }
+                MEd{
+                    M{"E, dd.MM - E, dd.MM"}
+                    d{"E, dd.MM - E, dd.MM"}
+                }
+                MMM{
+                    M{"MMM-MMM"}
+                }
+                MMMEd{
+                    M{"E, d MMM - E, d MMM"}
+                    d{"E, d - E, d MMM"}
+                }
+                MMMd{
+                    M{"d MMM - d MMM"}
+                    d{"d-d MMM"}
+                }
+                Md{
+                    M{"dd.MM - dd.MM"}
+                    d{"dd.MM - dd.MM"}
+                }
+                d{
+                    d{"d-d"}
+                }
+                fallback{"{0} - {1}"}
+                h{
+                    h{"h-h a"}
+                }
+                hm{
+                    h{"h:mm-h:mm a"}
+                    m{"h:mm-h:mm a"}
+                }
+                hmv{
+                    h{"h:mm-h:mm a v"}
+                    m{"h:mm-h:mm a v"}
+                }
+                hv{
+                    h{"h-h a v"}
+                }
+                y{
+                    y{"y-y"}
+                }
+                yM{
+                    M{"MM.yy - MM.yy"}
+                    y{"MM.yy - MM.yy"}
+                }
+                yMEd{
+                    M{"E, dd.MM.yy - E, dd.MM.yy"}
+                    d{"E, dd.MM.yy - E, dd.MM.yy"}
+                    y{"E, dd.MM.yy - E, dd.MM.yy"}
+                }
+                yMMM{
+                    M{"MMM-MMM y 'ж'."}
+                    y{"MMM y 'ж'. - MMM y 'ж'."}
+                }
+                yMMMEd{
+                    M{"E, d MMM - E, d MMM y 'ж'."}
+                    d{"E, d - E, d MMM y 'ж'."}
+                    y{"E, d MMM y 'ж'. - E, d MMM y 'ж'."}
+                }
+                yMMMd{
+                    M{"d MMM - d MMM y 'ж'."}
+                    d{"d-d MMM y 'ж'."}
+                    y{"d MMM y 'ж'. - d MMM y 'ж'."}
+                }
+                yMd{
+                    M{"dd.MM.yy - dd.MM.yy"}
+                    d{"dd.MM.yy - dd.MM.yy"}
+                    y{"dd.MM.yy - dd.MM.yy"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "қаң.",
+                        "ақп.",
+                        "нау.",
+                        "сәу.",
+                        "мам.",
+                        "мау.",
+                        "шіл.",
+                        "там.",
+                        "қыр.",
+                        "қаз.",
+                        "қар.",
+                        "желт.",
+                    }
+                    wide{
+                        "қаңтар",
+                        "ақпан",
+                        "наурыз",
+                        "сәуір",
+                        "мамыр",
+                        "маусым",
+                        "шілде",
+                        "тамыз",
+                        "қыркүйек",
+                        "қазан",
+                        "қараша",
+                        "желтоқсан",
+                    }
+                }
+            }
+        }
+    }
+    measurementSystemNames{
+        UK{"ҰБ"}
+        US{"АҚШ"}
+        metric{"метрикалық жүйе"}
+    }
+    units{
+        day{
+            one{"{0} тәулік"}
+            other{"{0} тәулік"}
+        }
+        day-future{
+            one{"{0} күннен кейін"}
+            other{"{0} күннен кейін"}
+        }
+        day-past{
+            one{"{0} күн бұрын"}
+            other{"{0} күн бұрын"}
+        }
+        hour{
+            one{"{0} сағат"}
+            other{"{0} сағат"}
+        }
+        hour-future{
+            one{"{0} сағаттан кейін"}
+            other{"{0} сағаттан кейін"}
+        }
+        hour-past{
+            one{"{0} сағат бұрын"}
+            other{"{0} сағат бұрын"}
+        }
+        minute{
+            one{"{0} минут"}
+            other{"{0} минут"}
+        }
+        minute-future{
+            one{"{0} минуттан кейін"}
+            other{"{0} минуттан кейін"}
+        }
+        minute-past{
+            one{"{0} минут бұрын"}
+            other{"{0} минут бұрын"}
+        }
+        month{
+            one{"{0} ай"}
+            other{"{0} ай"}
+        }
+        month-future{
+            one{"{0} айдан кейін"}
+            other{"{0} айдан кейін"}
+        }
+        month-past{
+            one{"{0} ай бұрын"}
+            other{"{0} ай бұрын"}
+        }
+        second{
+            one{"{0} секунд"}
+            other{"{0} секунд"}
+        }
+        second-future{
+            one{"{0} секундтан кейін"}
+            other{"{0} секундтан кейін"}
+        }
+        second-past{
+            one{"{0} секунд бұрын"}
+            other{"{0} секунд бұрын"}
+        }
+        week{
+            one{"{0} апта"}
+            other{"{0} апта"}
+        }
+        week-future{
+            one{"{0} аптадан кейін"}
+            other{"{0} аптадан кейін"}
+        }
+        week-past{
+            one{"{0} апта бұрын"}
+            other{"{0} апта бұрын"}
+        }
+        year{
+            one{"{0} жыл"}
+            other{"{0} жыл"}
+        }
+        year-future{
+            one{"{0} жылдан кейін"}
+            other{"{0} жылдан кейін"}
+        }
+        year-past{
+            one{"{0} жыл бұрын"}
+            other{"{0} жыл бұрын"}
+        }
+    }
+}

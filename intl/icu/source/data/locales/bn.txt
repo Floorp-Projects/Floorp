@@ -1,0 +1,712 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/bn.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/bn.xml
+ */
+bn{
+    AuxExemplarCharacters{"[\u200C\u200D ৲ ৳ ৴ ৵ ৶ ৷ ৸ ৹ ৰ ৱ]"}
+    ExemplarCharacters{
+        "[\u09BC ৺ অ আ ই ঈ উ ঊ ঋ ৠ ঌ ৡ এ ঐ ও ঔ ং ঃ \u0981 ক {ক\u09CDষ} খ গ ঘ ঙ চ ছ জ "
+        "ঝ ঞ ট ঠ ড {ড\u09BC} ঢ {ঢ\u09BC} ণ ত ৎ থ দ ধ ন প ফ ব ভ ম য {য\u09BC} র ল শ ষ "
+        "স হ ঽ া ি ী \u09C1 \u09C2 \u09C3 \u09C4 \u09E2 \u09E3 ে ৈ ো ৌ \u09CD ৗ]"
+    }
+    ExemplarCharactersIndex{
+        "[অ আ ই ঈ উ ঊ ঋ এ ঐ ও ঔ ক {ক\u09CDষ} খ গ ঘ ঙ চ ছ জ ঝ ঞ ট ঠ ড ঢ ণ ত থ দ ধ ন প "
+        "ফ ব ভ ম য র ল শ ষ স হ]"
+    }
+    LocaleScript{
+        "Beng",
+    }
+    NumberElements{
+        beng{
+            symbols{
+                nan{"সংখ্যা না"}
+            }
+        }
+        default{"beng"}
+        latn{
+            patterns{
+                currencyFormat{"#,##,##0.00¤;(#,##,##0.00¤)"}
+                decimalFormat{"#,##,##0.###"}
+                percentFormat{"#,##,##0%"}
+                scientificFormat{"#E0"}
+            }
+            patternsLong{
+                decimalFormat{
+                    1000{
+                        one{"0 হাজার"}
+                        other{"0 হাজার"}
+                    }
+                    10000{
+                        one{"00 হাজার"}
+                        other{"00 হাজার"}
+                    }
+                    100000{
+                        one{"000 হাজার"}
+                        other{"000 হাজার"}
+                    }
+                    1000000{
+                        one{"0 মিলিয়ন"}
+                        other{"0 মিলিয়ন"}
+                    }
+                    10000000{
+                        one{"00 মিলিয়ন"}
+                        other{"00 মিলিয়ন"}
+                    }
+                    100000000{
+                        one{"000 মিলিয়ন"}
+                        other{"000 মিলিয়ন"}
+                    }
+                    1000000000{
+                        one{"0 বিলিয়ন"}
+                        other{"0 বিলিয়ন"}
+                    }
+                    10000000000{
+                        one{"00 বিলিয়ন"}
+                        other{"00 বিলিয়ন"}
+                    }
+                    100000000000{
+                        one{"000 বিলিয়ন"}
+                        other{"000 বিলিয়ন"}
+                    }
+                    1000000000000{
+                        one{"0 ট্রিলিয়ন"}
+                        other{"0 ট্রিলিয়ন"}
+                    }
+                    10000000000000{
+                        one{"00 ট্রিলিয়ন"}
+                        other{"00 ট্রিলিয়ন"}
+                    }
+                    100000000000000{
+                        one{"000 ট্রিলিয়ন"}
+                        other{"000 ট্রিলিয়ন"}
+                    }
+                }
+            }
+            patternsShort{
+                decimalFormat{
+                    1000{
+                        one{"0K"}
+                        other{"0K"}
+                    }
+                    10000{
+                        one{"00K"}
+                        other{"00K"}
+                    }
+                    100000{
+                        one{"000K"}
+                        other{"000K"}
+                    }
+                    1000000{
+                        one{"0M"}
+                        other{"0M"}
+                    }
+                    10000000{
+                        one{"00M"}
+                        other{"00M"}
+                    }
+                    100000000{
+                        one{"000M"}
+                        other{"000M"}
+                    }
+                    1000000000{
+                        one{"0B"}
+                        other{"0B"}
+                    }
+                    10000000000{
+                        one{"00B"}
+                        other{"00B"}
+                    }
+                    100000000000{
+                        one{"000B"}
+                        other{"000B"}
+                    }
+                    1000000000000{
+                        one{"0T"}
+                        other{"0T"}
+                    }
+                    10000000000000{
+                        one{"00T"}
+                        other{"00T"}
+                    }
+                    100000000000000{
+                        one{"000T"}
+                        other{"000T"}
+                    }
+                }
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+            }
+        }
+        native{"beng"}
+    }
+    Version{"2.0.78.39"}
+    calendar{
+        gregorian{
+            AmPmMarkers{
+                "পূর্বাহ্ণ",
+                "অপরাহ্ণ",
+            }
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, d MMMM, y",
+                "d MMMM, y",
+                "d MMM, y",
+                "d/M/yy",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"d E"}
+                H{"HH"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, d-M"}
+                MMM{"LLL"}
+                MMMEd{"E d MMM"}
+                MMMMEd{"E d MMMM"}
+                MMMMd{"d MMMM"}
+                MMMd{"d MMM"}
+                MMdd{"dd-MM"}
+                Md{"d/M"}
+                d{"d"}
+                h{"h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"mm:ss"}
+                y{"y"}
+                yM{"M/yyyy"}
+                yMEd{"E, d/M/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, d MMM, y"}
+                yMMMM{"MMMM y"}
+                yMMMd{"d MMM, y"}
+                yMd{"d/M/y"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
+                yyQQQ{"QQQ yy"}
+                yyyyMM{"MM-yyyy"}
+                yyyyMMMM{"MMMM y"}
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "রবি",
+                        "সোম",
+                        "মঙ্গল",
+                        "বুধ",
+                        "বৃহস্পতি",
+                        "শুক্র",
+                        "শনি",
+                    }
+                    short{
+                        "রঃ",
+                        "সোঃ",
+                        "মঃ",
+                        "বুঃ",
+                        "বৃঃ",
+                        "শুঃ",
+                        "শোঃ",
+                    }
+                    wide{
+                        "রবিবার",
+                        "সোমবার",
+                        "মঙ্গলবার",
+                        "বুধবার",
+                        "বৃহষ্পতিবার",
+                        "শুক্রবার",
+                        "শনিবার",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "র",
+                        "সো",
+                        "ম",
+                        "বু",
+                        "বৃ",
+                        "শু",
+                        "শ",
+                    }
+                    short{
+                        "রঃ",
+                        "সোঃ",
+                        "মঃ",
+                        "বুঃ",
+                        "বৃঃ",
+                        "শুঃ",
+                        "শোঃ",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "খৃষ্টপূর্ব",
+                    "খৃষ্টাব্দ",
+                }
+            }
+            fields{
+                day{
+                    dn{"দিন"}
+                    relative{
+                        "-1"{"গতকাল"}
+                        "-2"{"গত পরশু"}
+                        "0"{"আজ"}
+                        "1"{"আগামীকাল"}
+                        "2"{"আগামী পরশু"}
+                    }
+                }
+                dayperiod{
+                    dn{"পূর্বাহ্ণ/অপরাহ্ণ"}
+                }
+                era{
+                    dn{"যুগ"}
+                }
+                hour{
+                    dn{"ঘন্টা"}
+                }
+                minute{
+                    dn{"মিনিট"}
+                }
+                month{
+                    dn{"মাস"}
+                    relative{
+                        "-1"{"গত মাস"}
+                        "0"{"এই মাস"}
+                        "1"{"পরের মাস"}
+                    }
+                }
+                second{
+                    dn{"সেকেন্ড"}
+                }
+                week{
+                    dn{"সপ্তাহ"}
+                    relative{
+                        "-1"{"গত সপ্তাহ"}
+                        "0"{"এই সপ্তাহ"}
+                        "1"{"পরবর্তী সপ্তাহ"}
+                    }
+                }
+                weekday{
+                    dn{"সপ্তাহের দিন"}
+                }
+                year{
+                    dn{"বছর"}
+                    relative{
+                        "-1"{"আগের বছর"}
+                        "0"{"এই বছর"}
+                        "1"{"পরের বছর"}
+                    }
+                }
+                zone{
+                    dn{"এলাকা"}
+                }
+            }
+            intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
+                }
+                Hv{
+                    H{"HH–HH v"}
+                }
+                M{
+                    M{"M-M"}
+                }
+                MEd{
+                    M{"E, d/M – E, d/M"}
+                    d{"E, d/M – E, d/M"}
+                }
+                MMM{
+                    M{"LLL-LLL"}
+                }
+                MMMEd{
+                    M{"E, d MMM – E, d MMM"}
+                    d{"E, d MMM – E, d MMM"}
+                }
+                MMMd{
+                    M{"d MMM – d MMM"}
+                    d{"d–d MMM"}
+                }
+                Md{
+                    M{"d/M - d/M"}
+                    d{"d/M - d/M"}
+                }
+                d{
+                    d{"d-d"}
+                }
+                fallback{"{0} – {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
+                }
+                y{
+                    y{"y-y"}
+                }
+                yM{
+                    M{"M/yy – M/yy"}
+                    y{"M/yy – M/yy"}
+                }
+                yMEd{
+                    M{"E, d/M/yy – E, d/M/yy"}
+                    d{"E, d/M/yy – E, d/M/yy"}
+                    y{"E, d/M/yy – E, d/M/yy"}
+                }
+                yMMM{
+                    M{"MMM–MMM y"}
+                    y{"MMM y – MMM y"}
+                }
+                yMMMEd{
+                    M{"E, d MMM – E, d MMM, y"}
+                    d{"E, d MMM – E, d MMM, y"}
+                    y{"E, d MMM, y – E, d MMM, y"}
+                }
+                yMMMM{
+                    M{"MM – MM -yyyy"}
+                    y{"MM-yyyy – MM-yyyy"}
+                }
+                yMMMd{
+                    M{"d MMM – d MMM, y"}
+                    d{"d–d MMM, y"}
+                    y{"d MMM, y – d MMM, y"}
+                }
+                yMd{
+                    M{"d/M/yy – d/M/yy"}
+                    d{"d/M/yy – d/M/yy"}
+                    y{"d/M/yy – d/M/yy"}
+                }
+            }
+            monthNames{
+                format{
+                    wide{
+                        "জানুয়ারী",
+                        "ফেব্রুয়ারী",
+                        "মার্চ",
+                        "এপ্রিল",
+                        "মে",
+                        "জুন",
+                        "জুলাই",
+                        "আগস্ট",
+                        "সেপ্টেম্বর",
+                        "অক্টোবর",
+                        "নভেম্বর",
+                        "ডিসেম্বর",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "জা",
+                        "ফে",
+                        "মা",
+                        "এ",
+                        "মে",
+                        "জুন",
+                        "জু",
+                        "আ",
+                        "সে",
+                        "অ",
+                        "ন",
+                        "ডি",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "চতুর্থাংশ ১",
+                        "চতুর্থাংশ ২",
+                        "চতুর্থাংশ ৩",
+                        "চতুর্থাংশ ৪",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
+                    wide{
+                        "প্রথম চতুর্থাংশ",
+                        "দ্বিতীয় চতুর্থাংশ",
+                        "তৃতীয় চতুর্থাংশ",
+                        "চতুর্থ চতুর্থাংশ",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Q1",
+                        "Q2",
+                        "Q3",
+                        "Q4",
+                    }
+                    narrow{
+                        "১",
+                        "২",
+                        "৩",
+                        "৪",
+                    }
+                }
+            }
+        }
+        indian{
+            eras{
+                abbreviated{
+                    "সাল",
+                }
+            }
+            monthNames{
+                format{
+                    wide{
+                        "চৈত্র",
+                        "বৈশাখ",
+                        "জৈষ্ঠ্য",
+                        "আষাঢ়",
+                        "শ্রাবণ",
+                        "ভাদ্র",
+                        "আশ্বিন",
+                        "কার্তিক",
+                        "অগ্রহায়ণ",
+                        "পৌষ",
+                        "মাঘ",
+                        "ফাল্গুন",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "১",
+                        "২",
+                        "৩",
+                        "৪",
+                        "৫",
+                        "৬",
+                        "৭",
+                        "৮",
+                        "৯",
+                        "১০",
+                        "১১",
+                        "১২",
+                    }
+                }
+            }
+        }
+        islamic{
+            eras{
+                abbreviated{
+                    "যুগ",
+                }
+            }
+            monthNames{
+                format{
+                    wide{
+                        "মহররম",
+                        "সফর",
+                        "রবিউল আউয়াল",
+                        "রবিউস সানি",
+                        "জমাদিউল আউয়াল",
+                        "জমাদিউস সানি",
+                        "রজব",
+                        "শা'বান",
+                        "রমজান",
+                        "শাওয়াল",
+                        "জ্বিলকদ",
+                        "জ্বিলহজ্জ",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "১",
+                        "২",
+                        "৩",
+                        "৪",
+                        "৫",
+                        "৬",
+                        "৭",
+                        "৮",
+                        "৯",
+                        "১০",
+                        "১১",
+                        "১২",
+                    }
+                }
+            }
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"’"}
+        alternateQuotationStart{"‘"}
+        quotationEnd{"”"}
+        quotationStart{"“"}
+    }
+    listPattern{
+        standard{
+            2{"{0} এবং {1}"}
+            end{"{0}, এবং {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+    }
+    measurementSystemNames{
+        UK{"ইউকে"}
+        US{"মার্কিন"}
+        metric{"মেট্রিক"}
+    }
+    units{
+        day{
+            one{"{0} দিন"}
+            other{"{0} দিন"}
+        }
+        day-future{
+            one{"{0} দিনের মধ্যে"}
+            other{"{0} দিনের মধ্যে"}
+        }
+        day-past{
+            one{"{0} দিন পূর্বে"}
+            other{"{0} দিন পূর্বে"}
+        }
+        hour{
+            one{"{0} ঘন্টা"}
+            other{"{0} ঘন্টা"}
+        }
+        hour-future{
+            one{"{0} ঘন্টায়"}
+            other{"{0} ঘন্টায়"}
+        }
+        hour-past{
+            one{"{0} ঘন্টা আগে"}
+            other{"{0} ঘন্টা আগে"}
+        }
+        minute{
+            one{"{0} মিনিট"}
+            other{"{0} মিনিট"}
+        }
+        minute-future{
+            one{"{0} মিনিটে"}
+            other{"{0} মিনিটে"}
+        }
+        minute-past{
+            one{"{0} মিনিট পূর্বে"}
+            other{"{0} মিনিট পূর্বে"}
+        }
+        month{
+            one{"{0} মাস"}
+            other{"{0} মাস"}
+        }
+        month-future{
+            one{"{0} মাসে"}
+            other{"{0} মাসে"}
+        }
+        month-past{
+            one{"{0} মাস পূর্বে"}
+            other{"{0} মাস পূর্বে"}
+        }
+        second{
+            one{"{0} সেকেন্ড"}
+            other{"{0} সেকেন্ড"}
+        }
+        second-future{
+            one{"{0} সেকেন্ডে"}
+            other{"{0} সেকেন্ডে"}
+        }
+        second-past{
+            one{"{0} সেকেন্ড পূর্বে"}
+            other{"{0} সেকেন্ড পূর্বে"}
+        }
+        week{
+            one{"{0} সপ্তাহ"}
+            other{"{0} সপ্তাহ"}
+        }
+        week-future{
+            one{"{0} সপ্তাহে"}
+            other{"{0} সপ্তাহে"}
+        }
+        week-past{
+            one{"{0} সপ্তাহ পূর্বে"}
+            other{"{0} সপ্তাহ পূর্বে"}
+        }
+        year{
+            one{"{0} বছর"}
+            other{"{0} বছর"}
+        }
+        year-future{
+            one{"{0} বছরে"}
+            other{"{0} বছরে"}
+        }
+        year-past{
+            one{"{0} বছর পূর্বে"}
+            other{"{0} বছর পূর্বে"}
+        }
+    }
+    unitsShort{
+        day{
+            one{"{0} দিন"}
+            other{"{0} দিন"}
+        }
+        hour{
+            one{"{0} ঘন্টা"}
+            other{"{0} ঘন্টা"}
+        }
+        minute{
+            one{"{0} মিনিট"}
+            other{"{0} মিনিট"}
+        }
+        month{
+            one{"{0} মাস"}
+            other{"{0} মাস"}
+        }
+        second{
+            one{"{0} সেকেন্ড"}
+            other{"{0} সেকেন্ড"}
+        }
+        week{
+            one{"{0} সপ্তাহ"}
+            other{"{0} সপ্তাহ"}
+        }
+        year{
+            one{"{0} বছর"}
+            other{"{0} বছর"}
+        }
+    }
+}

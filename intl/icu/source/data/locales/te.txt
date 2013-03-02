@@ -1,0 +1,683 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/te.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/te.xml
+ */
+te{
+    AuxExemplarCharacters{"[\u200C\u200D ౦ ౧ ౨ ౩ ౪ ౫ ౬ ౭ ౮ ౯]"}
+    ExemplarCharacters{
+        "[అ ఆ ఇ ఈ ఉ ఊ ఋ ౠ ఌ ౡ ఎ ఏ ఐ ఒ ఓ ఔ ఁ ం ః క ఖ గ ఘ ఙ చ ఛ జ ఝ ఞ ట ఠ డ ఢ ణ త థ ద ధ"
+        " న ప ఫ బ భ మ య ర ఱ ల వ శ ష స హ ళ \u0C3E \u0C3F \u0C40 ు ూ ృ ౄ \u0C46 \u0C47 "
+        "\u0C48 \u0C4A \u0C4B \u0C4C \u0C4D \u0C55 \u0C56]"
+    }
+    ExemplarCharactersIndex{
+        "[అ ఆ ఇ ఈ ఉ ఊ ఋ ౠ ఎ ఏ ఐ ఒ ఓ ఔ క ఖ గ ఘ ఙ చ ఛ జ ఝ ఞ ట ఠ డ ఢ ణ త థ ద ధ న ప ఫ బ భ"
+        " మ య ర ఱ ల వ శ ష స హ ళ]"
+    }
+    LocaleScript{
+        "Telu",
+    }
+    NumberElements{
+        default{"latn"}
+        latn{
+            patterns{
+                currencyFormat{"¤#,##0.00;(¤#,##0.00)"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            patternsLong{
+                decimalFormat{
+                    1000{
+                        one{"0 వేయి"}
+                        other{"0 వేలు"}
+                    }
+                    10000{
+                        one{"00 వేలు"}
+                        other{"00 వేలు"}
+                    }
+                    100000{
+                        one{"000 వేలు"}
+                        other{"000 వేలు"}
+                    }
+                    1000000{
+                        one{"0 మిలియన్"}
+                        other{"0 మిలియన్"}
+                    }
+                    10000000{
+                        one{"00 మిలియన్"}
+                        other{"00 మిలియన్"}
+                    }
+                    100000000{
+                        one{"000 మిలియన్"}
+                        other{"000 మిలియన్"}
+                    }
+                    1000000000{
+                        one{"0 బిలియన్"}
+                        other{"0 బిలియన్"}
+                    }
+                    10000000000{
+                        one{"00 బిలియన్"}
+                        other{"00 బిలియన్"}
+                    }
+                    100000000000{
+                        one{"000 బిలియన్"}
+                        other{"000 బిలియన్"}
+                    }
+                    1000000000000{
+                        one{"0 ట్రిలియన్"}
+                        other{"0 ట్రిలియన్"}
+                    }
+                    10000000000000{
+                        one{"00 ట్రిలియన్"}
+                        other{"00 ట్రిలియన్"}
+                    }
+                    100000000000000{
+                        one{"000 ట్రిలియన్"}
+                        other{"000 ట్రిలియన్"}
+                    }
+                }
+            }
+            patternsShort{
+                decimalFormat{
+                    1000{
+                        one{"0K"}
+                        other{"0K"}
+                    }
+                    10000{
+                        one{"00K"}
+                        other{"00K"}
+                    }
+                    100000{
+                        one{"000K"}
+                        other{"000K"}
+                    }
+                    1000000{
+                        one{"0M"}
+                        other{"0M"}
+                    }
+                    10000000{
+                        one{"00M"}
+                        other{"00M"}
+                    }
+                    100000000{
+                        one{"000M"}
+                        other{"000M"}
+                    }
+                    1000000000{
+                        one{"0B"}
+                        other{"0B"}
+                    }
+                    10000000000{
+                        one{"00B"}
+                        other{"00B"}
+                    }
+                    100000000000{
+                        one{"000B"}
+                        other{"000B"}
+                    }
+                    1000000000000{
+                        one{"0T"}
+                        other{"0T"}
+                    }
+                    10000000000000{
+                        one{"00T"}
+                        other{"00T"}
+                    }
+                    100000000000000{
+                        one{"000T"}
+                        other{"000T"}
+                    }
+                }
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+            }
+        }
+        native{"telu"}
+    }
+    Version{"2.0.78.39"}
+    calendar{
+        gregorian{
+            AmPmMarkers{
+                "AM",
+                "PM",
+            }
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE d MMMM y",
+                "d MMMM y",
+                "d MMM y",
+                "dd-MM-yy",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"E d"}
+                H{"HH"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, d/M"}
+                MMM{"LLL"}
+                MMMEd{"E, d MMM"}
+                MMMMd{"d MMMM"}
+                MMMd{"d MMM"}
+                MMdd{"dd-MM"}
+                Md{"d/M"}
+                d{"d"}
+                h{"h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"mm:ss"}
+                y{"y"}
+                yM{"M/y"}
+                yMEd{"E, d/M/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, d, MMM y"}
+                yMMMd{"d, MMM y"}
+                yMd{"d/M/y"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
+                yyyyMM{"MM-yyyy"}
+                yyyyMMMM{"MMMM y"}
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "ఆది",
+                        "సోమ",
+                        "మంగళ",
+                        "బుధ",
+                        "గురు",
+                        "శుక్ర",
+                        "శని",
+                    }
+                    narrow{
+                        "ఆ",
+                        "సో",
+                        "మ",
+                        "బు",
+                        "గు",
+                        "శు",
+                        "శ",
+                    }
+                    short{
+                        "ఆది",
+                        "సోమ",
+                        "మం",
+                        "బుధ",
+                        "గురు",
+                        "శుక్ర",
+                        "శని",
+                    }
+                    wide{
+                        "ఆదివారం",
+                        "సోమవారం",
+                        "మంగళవారం",
+                        "బుధవారం",
+                        "గురువారం",
+                        "శుక్రవారం",
+                        "శనివారం",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "ఆది",
+                        "సోమ",
+                        "మంగళ",
+                        "బుధ",
+                        "గురు",
+                        "శుక్ర",
+                        "శని",
+                    }
+                    narrow{
+                        "ఆ",
+                        "సో",
+                        "మ",
+                        "బు",
+                        "గు",
+                        "శు",
+                        "శ",
+                    }
+                    short{
+                        "ఆది",
+                        "సోమ",
+                        "మం",
+                        "బుధ",
+                        "గురు",
+                        "శుక్ర",
+                        "శని",
+                    }
+                    wide{
+                        "ఆదివారం",
+                        "సోమవారం",
+                        "మంగళవారం",
+                        "బుధవారం",
+                        "గురువారం",
+                        "శుక్రవారం",
+                        "శనివారం",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "క్రీపూ",
+                    "క్రీశ",
+                }
+                narrow{
+                    "ఈసాపూర్వ.",
+                    "సన్.",
+                }
+                wide{
+                    "ఈసాపూర్వ.",
+                    "సన్.",
+                }
+            }
+            fields{
+                day{
+                    dn{"దినం"}
+                    relative{
+                        "-1"{"నిన్న"}
+                        "-2"{"మొన్న"}
+                        "0"{"ఈ రోజు"}
+                        "1"{"రేపు"}
+                        "2"{"ఎల్లుండి"}
+                    }
+                }
+                dayperiod{
+                    dn{"AM/PM"}
+                }
+                era{
+                    dn{"యుగం, శకము"}
+                }
+                hour{
+                    dn{"గంట"}
+                }
+                minute{
+                    dn{"నిమిషము"}
+                }
+                month{
+                    dn{"నెల"}
+                    relative{
+                        "-1"{"గత నెల"}
+                        "0"{"ఈ నెల"}
+                        "1"{"తర్వాతి నెల"}
+                    }
+                }
+                second{
+                    dn{"క్షణం"}
+                }
+                week{
+                    dn{"వారము"}
+                    relative{
+                        "-1"{"గత వారం"}
+                        "0"{"ఈ వారం"}
+                        "1"{"తదుపరి వారం"}
+                    }
+                }
+                weekday{
+                    dn{"వారంలో రోజు"}
+                }
+                year{
+                    dn{"సంవత్సరం"}
+                    relative{
+                        "-1"{"మునుపటి సంవత్సరం"}
+                        "0"{"ఈ సంవత్సరం"}
+                        "1"{"తర్వాతి సంవత్సరం"}
+                    }
+                }
+                zone{
+                    dn{"మండలం"}
+                }
+            }
+            intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
+                }
+                Hv{
+                    H{"HH–HH v"}
+                }
+                M{
+                    M{"M–M"}
+                }
+                MMM{
+                    M{"MMM–MMM"}
+                }
+                d{
+                    d{"d–d"}
+                }
+                fallback{"{0} – {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
+                }
+                y{
+                    y{"y–y"}
+                }
+                yM{
+                    M{"M/yy – M/yy"}
+                    y{"M/yy – M/yy"}
+                }
+                yMMM{
+                    M{"MMM–MMM y"}
+                    y{"MMM y – MMM y"}
+                }
+                yMMMM{
+                    M{"MMMM–MMMM y"}
+                    y{"MMMM y – MMMM y"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "జన",
+                        "ఫిబ్ర",
+                        "మార్చి",
+                        "ఏప్రి",
+                        "మే",
+                        "జూన్",
+                        "జూలై",
+                        "ఆగస్టు",
+                        "సెప్టెంబర్",
+                        "అక్టోబర్",
+                        "నవంబర్",
+                        "డిసెంబర్",
+                    }
+                    narrow{
+                        "జ",
+                        "ఫి",
+                        "మా",
+                        "ఏ",
+                        "మే",
+                        "జూ",
+                        "జు",
+                        "ఆ",
+                        "సె",
+                        "అ",
+                        "న",
+                        "డి",
+                    }
+                    wide{
+                        "జనవరి",
+                        "ఫిబ్రవరి",
+                        "మార్చి",
+                        "ఎప్రిల్",
+                        "మే",
+                        "జూన్",
+                        "జూలై",
+                        "ఆగస్టు",
+                        "సెప్టెంబర్",
+                        "అక్టోబర్",
+                        "నవంబర్",
+                        "డిసెంబర్",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "జన",
+                        "ఫిబ్ర",
+                        "మార్చి",
+                        "ఏప్రి",
+                        "మే",
+                        "జూన్",
+                        "జూలై",
+                        "ఆగస్టు",
+                        "సెప్టెం",
+                        "అక్టో",
+                        "నవం",
+                        "డిసెం",
+                    }
+                    narrow{
+                        "జ",
+                        "ఫి",
+                        "మా",
+                        "ఏ",
+                        "మే",
+                        "జు",
+                        "జు",
+                        "ఆ",
+                        "సె",
+                        "అ",
+                        "న",
+                        "డి",
+                    }
+                    wide{
+                        "జనవరి",
+                        "ఫిబ్రవరి",
+                        "మార్చి",
+                        "ఎప్రిల్",
+                        "మే",
+                        "జూన్",
+                        "జూలై",
+                        "ఆగస్టు",
+                        "సెప్టెంబర్",
+                        "అక్టోబర్",
+                        "నవంబర్",
+                        "డిసెంబర్",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "త్రై1",
+                        "త్రై2",
+                        "త్రై3",
+                        "త్రై4",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
+                    wide{
+                        "1వ త్రైమాసం",
+                        "2వ త్రైమాసం",
+                        "3వ త్రైమాసం",
+                        "4వ త్రైమాసం",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "త్రై1",
+                        "త్రై2",
+                        "త్రై3",
+                        "త్రై4",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
+                    wide{
+                        "మొదటి త్రైమాసికం",
+                        "రెండవ త్రైమాసికం",
+                        "మూడవ త్రైమాసికం",
+                        "నాల్గవ త్రైమాసికం",
+                    }
+                }
+            }
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"’"}
+        alternateQuotationStart{"‘"}
+        quotationEnd{"”"}
+        quotationStart{"“"}
+    }
+    listPattern{
+        standard{
+            2{"{0} మరియు {1}"}
+            end{"{0} మరియు {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+    }
+    measurementSystemNames{
+        UK{"యుకె"}
+        US{"యుఎస్"}
+        metric{"దశాంశం"}
+    }
+    units{
+        day{
+            one{"{0} రోజు"}
+            other{"{0} days"}
+        }
+        day-future{
+            one{"{0} రోజులో"}
+            other{"{0} రోజుల్లో"}
+        }
+        day-past{
+            one{"{0} రోజు క్రితం"}
+            other{"{0} రోజుల క్రితం"}
+        }
+        hour{
+            one{"{0} గంట"}
+            other{"{0} గంటలు"}
+        }
+        hour-future{
+            one{"{0} గంటలో"}
+            other{"{0} గంటల్లో"}
+        }
+        hour-past{
+            one{"{0} గంట క్రితం"}
+            other{"{0} గంటల క్రితం"}
+        }
+        minute{
+            one{"{0} నిమిషం"}
+            other{"{0} నిమిషాలు"}
+        }
+        minute-future{
+            one{"{0} నిమిషంలో"}
+            other{"{0} నిమిషాల్లో"}
+        }
+        minute-past{
+            one{"{0} నిమిషం క్రితం"}
+            other{"{0} నిమిషాల క్రితం"}
+        }
+        month{
+            one{"{0} నెల"}
+            other{"{0} నెలలు"}
+        }
+        month-future{
+            one{"{0} నెలలో"}
+            other{"{0} నెలల్లో"}
+        }
+        month-past{
+            one{"{0} నెల క్రితం"}
+            other{"{0} నెలల క్రితం"}
+        }
+        second{
+            one{"{0} సెకను"}
+            other{"{0} సెకన్లు"}
+        }
+        second-future{
+            one{"{0} సెకన్‌లో"}
+            other{"{0} సెకన్లలో"}
+        }
+        second-past{
+            one{"{0} సెకను క్రితం"}
+            other{"{0} సెకన్ల క్రితం"}
+        }
+        week{
+            one{"{0} వారం"}
+            other{"{0} weeks"}
+        }
+        week-future{
+            one{"{0} వారంలో"}
+            other{"{0} వారాల్లో"}
+        }
+        week-past{
+            one{"{0} వారం క్రితం"}
+            other{"{0} వారాల క్రితం"}
+        }
+        year{
+            one{"{0} సంవత్సరం"}
+            other{"{0} సంవత్సరాలు"}
+        }
+        year-future{
+            one{"{0} సంవత్సరంలో"}
+            other{"{0} సంవత్సరాల్లో"}
+        }
+        year-past{
+            one{"{0} సంవత్సరం క్రితం"}
+            other{"{0} సంవత్సరాల క్రితం"}
+        }
+    }
+    unitsShort{
+        day{
+            one{"{0} రోజు"}
+            other{"{0} days"}
+        }
+        hour{
+            one{"{0} గంట"}
+            other{"{0} గంటలు"}
+        }
+        minute{
+            one{"{0} నిమిషం"}
+            other{"{0} నిమిషాలు"}
+        }
+        month{
+            one{"{0} నెల"}
+            other{"{0} నెలలు"}
+        }
+        second{
+            one{"{0} సెకను"}
+            other{"{0} సెకన్లు"}
+        }
+        week{
+            one{"{0} వా"}
+            other{"{0} వారాలు"}
+        }
+        year{
+            one{"{0} సంవత్సరం"}
+            other{"{0} సంవత్సరాలు"}
+        }
+    }
+}

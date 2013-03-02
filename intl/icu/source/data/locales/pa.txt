@@ -1,0 +1,220 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/pa.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/pa.xml
+ */
+pa{
+    AuxExemplarCharacters{"[\u200C\u200D ਃ \u0A02 \u0A01 {ਲ\u0A3C}]"}
+    ExemplarCharacters{
+        "[\u0A71 \u0A70 \u0A3C ੦ ੧ ੨ ੩ ੪ ੫ ੬ ੭ ੮ ੯ ੴ ੳ ਉ ਊ ਓ ਅ ਆ ਐ ਔ ੲ ਇ ਈ ਏ ਸ {ਸ"
+        "\u0A3C} ਹ ਕ ਖ {ਖ\u0A3C} ਗ {ਗ\u0A3C} ਘ ਙ ਚ ਛ ਜ {ਜ\u0A3C} ਝ ਞ ਟ ਠ ਡ ਢ ਣ ਤ ਥ ਦ "
+        "ਧ ਨ ਪ ਫ {ਫ\u0A3C} ਬ ਭ ਮ ਯ ਰ ਲ ਵ ੜ \u0A4D ਾ ਿ ੀ \u0A41 \u0A42 \u0A47 \u0A48 "
+        "\u0A4B \u0A4C]"
+    }
+    LocaleScript{
+        "Guru",
+    }
+    NumberElements{
+        default{"latn"}
+        latn{
+            patterns{
+                currencyFormat{"¤ #,##,##0.00"}
+                decimalFormat{"#,##,##0.###"}
+                percentFormat{"#,##,##0%"}
+            }
+        }
+        native{"guru"}
+    }
+    Version{"2.0.77.46"}
+    calendar{
+        gregorian{
+            AmPmMarkers{
+                "ਪੂਰਵ ਦੁਪਹਿਰ",
+                "ਬਾਅਦ ਦੁਪਹਿਰ",
+            }
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, dd MMMM y",
+                "d MMMM y",
+                "d MMM y",
+                "dd/MM/yyyy",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                HHmmss{"HH:mm:ss"}
+                Md{"d/M"}
+                mmss{"mm:ss"}
+                yyMMM{"MMM yy"}
+                yyQQQ{"QQQ yy"}
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "ਐਤ.",
+                        "ਸੋਮ.",
+                        "ਮੰਗਲ.",
+                        "ਬੁਧ.",
+                        "ਵੀਰ.",
+                        "ਸ਼ੁਕਰ.",
+                        "ਸ਼ਨੀ.",
+                    }
+                    wide{
+                        "ਐਤਵਾਰ",
+                        "ਸੋਮਵਾਰ",
+                        "ਮੰਗਲਵਾਰ",
+                        "ਬੁਧਵਾਰ",
+                        "ਵੀਰਵਾਰ",
+                        "ਸ਼ੁੱਕਰਵਾਰ",
+                        "ਸ਼ਨੀਚਰਵਾਰ",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "ਐ",
+                        "ਸੋ",
+                        "ਮੰ",
+                        "ਬੁੱ",
+                        "ਵੀ",
+                        "ਸ਼ੁੱ",
+                        "ਸ਼",
+                    }
+                    wide{
+                        "ਐਤਵਾਰ",
+                        "ਸੋਮਵਾਰ",
+                        "ਮੰਗਲਵਾਰ",
+                        "ਬੁਧਵਾਰ",
+                        "ਵੀਰਵਾਰ",
+                        "ਸ਼ੁੱਕਰਵਾਰ",
+                        "ਸ਼ਨੀਚਰਵਾਰ",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "ਈ. ਪੂ.",
+                    "ਸਾਲ",
+                }
+            }
+            fields{
+                day{
+                    dn{"ਦਿਨ"}
+                    relative{
+                        "-1"{"ਲੰਘਿਆਂ ਕੱਲ"}
+                        "0"{"ਅੱਜ"}
+                        "1"{"ਭਲਕੇ"}
+                    }
+                }
+                era{
+                    dn{"ਯੁੱਗ"}
+                }
+                hour{
+                    dn{"ਘੰਟਾ"}
+                }
+                minute{
+                    dn{"ਮਿੰਟ"}
+                }
+                month{
+                    dn{"ਮਹੀਨਾ"}
+                }
+                second{
+                    dn{"ਸਕਿੰਡ"}
+                }
+                week{
+                    dn{"ਹਫ਼ਤਾ"}
+                }
+                weekday{
+                    dn{"ਹਫ਼ਤੇ ਦਾ ਦਿਨ"}
+                }
+                year{
+                    dn{"ਸਾਲ"}
+                }
+                zone{
+                    dn{"ਖੇਤਰ"}
+                }
+            }
+            monthNames{
+                format{
+                    wide{
+                        "ਜਨਵਰੀ",
+                        "ਫ਼ਰਵਰੀ",
+                        "ਮਾਰਚ",
+                        "ਅਪ੍ਰੈਲ",
+                        "ਮਈ",
+                        "ਜੂਨ",
+                        "ਜੁਲਾਈ",
+                        "ਅਗਸਤ",
+                        "ਸਤੰਬਰ",
+                        "ਅਕਤੂਬਰ",
+                        "ਨਵੰਬਰ",
+                        "ਦਸੰਬਰ",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "ਜ",
+                        "ਫ",
+                        "ਮਾ",
+                        "ਅ",
+                        "ਮ",
+                        "ਜੂ",
+                        "ਜੁ",
+                        "ਅ",
+                        "ਸ",
+                        "ਅ",
+                        "ਨ",
+                        "ਦ",
+                    }
+                    wide{
+                        "ਜਨਵਰੀ",
+                        "ਫ਼ਰਵਰੀ",
+                        "ਮਾਰਚ",
+                        "ਅਪ੍ਰੈਲ",
+                        "ਮਈ",
+                        "ਜੂਨ",
+                        "ਜੁਲਾਈ",
+                        "ਅਗਸਤ",
+                        "ਸਤੰਬਰ",
+                        "ਅਕਤੂਬਰ",
+                        "ਨਵੰਬਰ",
+                        "ਦਸੰਬਰ",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    wide{
+                        "ਇਕ ਚੌਥਾਈ",
+                        "ਅੱਧਾ",
+                        "ਪੌਣਾ",
+                        "ਪੂਰਾ",
+                    }
+                }
+                stand-alone{
+                    wide{
+                        "ਇਕ ਚੌਥਾਈ",
+                        "ਅੱਧਾ",
+                        "ਪੌਣਾ",
+                        "ਪੂਰਾ",
+                    }
+                }
+            }
+        }
+    }
+    measurementSystemNames{
+        US{"ਯੂ. ਐੱਸ."}
+        metric{"ਮੀਟਰਿਕ"}
+    }
+}
