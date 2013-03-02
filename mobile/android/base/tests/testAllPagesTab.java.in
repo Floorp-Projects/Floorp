@@ -56,7 +56,7 @@ public class testAllPagesTab extends BaseTest {
     }
 
     private void testList(String url) {
-        final ListView list = getAllPagesList(bookmarks[0]);
+        final ListView list = getAllPagesList(bookmarks[0], 5);
 
         // some basic checks for the tab strip
         TabWidget tabwidget = (TabWidget)mSolo.getView(TabWidget.class, 0);
@@ -68,9 +68,8 @@ public class testAllPagesTab extends BaseTest {
         // This test fails, only when we're running tests
         // mAsserter.is(host.getCurrentTab(), 0, "All pages tab is selected in tab strip");
 
-        mAsserter.isnot(list, null, "checking that all pages list exists");
+        mAsserter.isnot(list, null, "checking that all pages list exists and has 5 children (the default bookmarks)");
         final int count = list.getAdapter().getCount();
-        mAsserter.is(count, 5, "all pages list has 5 children (the default bookmarks)");
 
         String loadUrl = "";
         for (int i = count - 1; i >= 0; i--) {
