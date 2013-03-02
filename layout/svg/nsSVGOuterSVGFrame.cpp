@@ -7,7 +7,6 @@
 #include "nsSVGOuterSVGFrame.h"
 
 // Keep others in (case-insensitive) order:
-#include "DOMSVGTests.h"
 #include "gfxMatrix.h"
 #include "nsDisplayList.h"
 #include "nsIDocument.h"
