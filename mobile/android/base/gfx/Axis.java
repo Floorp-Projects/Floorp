@@ -135,7 +135,7 @@ abstract class Axis {
     private boolean mDisableSnap;           /* Whether overscroll snapping is disabled. */
     private float mDisplacement;
 
-    private FlingStates mFlingState;        /* The fling state we're in on this axis. */
+    private FlingStates mFlingState = FlingStates.STOPPED; /* The fling state we're in on this axis. */
 
     protected abstract float getOrigin();
     protected abstract float getViewportLength();
@@ -339,7 +339,7 @@ abstract class Axis {
         if (mFlingState == FlingStates.PANNING)
             mDisplacement += (mLastTouchPos - mTouchPos) * getEdgeResistance(false);
         else
-            mDisplacement += mVelocity;
+            mDisplacement += mVelocity * getEdgeResistance(false);
 
         // if overscroll is disabled and we're trying to overscroll, reset the displacement
         // to remove any excess. Using getExcess alone isn't enough here since it relies on
@@ -360,5 +360,13 @@ abstract class Axis {
         float d = mDisplacement;
         mDisplacement = 0.0f;
         return d;
+    }
+
+    void setAutoscrollVelocity(float velocity) {
+        if (mFlingState != FlingStates.STOPPED) {
+            Log.e(LOGTAG, "Setting autoscroll velocity while in a fling is not allowed!");
+            return;
+        }
+        mVelocity = velocity;
     }
 }
