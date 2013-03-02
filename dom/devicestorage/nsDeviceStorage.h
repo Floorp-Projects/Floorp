@@ -9,12 +9,12 @@ class nsPIDOMWindow;
 #include "PCOMContentPermissionRequestChild.h"
 
 #include "DOMRequest.h"
+#include "DOMCursor.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIClassInfo.h"
 #include "nsIContentPermissionPrompt.h"
-#include "nsIDOMDeviceStorageCursor.h"
 #include "nsIDOMWindow.h"
 #include "nsIURI.h"
 #include "nsInterfaceHashtable.h"
@@ -88,8 +88,7 @@ private:
 };
 
 class nsDOMDeviceStorageCursor MOZ_FINAL
-  : public nsIDOMDeviceStorageCursor
-  , public mozilla::dom::DOMRequest
+  : public mozilla::dom::DOMCursor
   , public nsIContentPermissionRequest
   , public PCOMContentPermissionRequestChild
   , public mozilla::dom::devicestorage::DeviceStorageRequestChildCallback
@@ -97,7 +96,10 @@ class nsDOMDeviceStorageCursor MOZ_FINAL
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSICONTENTPERMISSIONREQUEST
-  NS_DECL_NSIDOMDEVICESTORAGECURSOR
+
+  // nsIDOMDOMCursor interface.
+  // We use DOMCursor::GetDone.
+  NS_IMETHOD Continue() MOZ_OVERRIDE;
 
   nsDOMDeviceStorageCursor(nsIDOMWindow* aWindow,
                            nsIPrincipal* aPrincipal,
