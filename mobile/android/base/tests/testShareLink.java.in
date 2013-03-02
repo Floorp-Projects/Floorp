@@ -35,7 +35,7 @@ public class testShareLink extends BaseTest {
         loadUrl(url);
         waitForText("Big Link"); // Waiting for page title to ensure the page is loaded
         selectMenuItem("Share");
-        waitForText("Share Via");
+        waitForText("Share via");
 
         // Get list of current avaliable share activities and verify them
         shareOptions = getShareOptions();
@@ -94,7 +94,7 @@ public class testShareLink extends BaseTest {
     public void verifySharePopup(ArrayList<String> shareOptions, String openedFrom) {
         waitForText("Share");
         mSolo.clickOnText("Share");
-        waitForText("Share Via");
+        waitForText("Share via");
         ArrayList<String> displayedOptions = getSharePopupOption();
         for (String option:shareOptions) {
              // Verify if the option is present in the list of displayed share options

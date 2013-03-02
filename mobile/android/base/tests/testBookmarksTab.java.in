@@ -165,7 +165,7 @@ public class testBookmarksTab extends BaseTest {
         mSolo.clickOnText("Remove");
 
         // Wait for the toaster notification
-        waitForText("Bookmark Removed");
+        waitForText("Bookmark removed");
 
         // Verify Bookmark is removed
         child = list.getChildAt(1);
@@ -197,7 +197,7 @@ public class testBookmarksTab extends BaseTest {
         mSolo.clickOnEditText(fieldIndex);
         mActions.sendKeys(addedText);
         mSolo.clickOnText("OK");
-        waitForText("Bookmark Updated");
+        waitForText("Bookmark updated");
         mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
     }
 

@@ -76,11 +76,11 @@ public class testDoorHanger extends BaseTest {
 
         // Load login page
         loadUrl(LOGIN_URL);
-        waitForText("to remeber password for");
+        waitForText("to remember password for");
 
         // Test doorhanger is dismissed when tapping "Not Now"
         mSolo.clickOnText("Not Now");
-        mAsserter.is(mSolo.searchText("to remeber password for"), false, "Doorhanger notification is hidden");
+        mAsserter.is(mSolo.searchText("to remember password for"), false, "Doorhanger notification is hidden");
 
         // Load login page
         loadUrl(LOGIN_URL);
@@ -88,10 +88,10 @@ public class testDoorHanger extends BaseTest {
 
         // Test doorhanger is dismissed when tapping "Never show" and is no longer triggered
         mSolo.clickOnText("Remember");
-        mAsserter.is(mSolo.searchText("to remeber password for"), false, "Doorhanger notification is hidden");
+        mAsserter.is(mSolo.searchText("to remember password for"), false, "Doorhanger notification is hidden");
 
         // Reload the page and check that there is no doorhanger displayed
         loadUrl(LOGIN_URL);
-        mAsserter.is(mSolo.searchText("to remeber password for"), false, "Doorhanger notification is hidden");
+        mAsserter.is(mSolo.searchText("to remember password for"), false, "Doorhanger notification is hidden");
     }
 }
