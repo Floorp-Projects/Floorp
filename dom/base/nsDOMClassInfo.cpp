@@ -266,7 +266,6 @@
 
 // Device Storage
 #include "nsIDOMDeviceStorage.h"
-#include "nsIDOMDeviceStorageCursor.h"
 
 // Drag and drop
 #include "nsIDOMDataTransfer.h"
@@ -2486,8 +2485,8 @@ nsDOMClassInfo::Init()
      DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(DeviceStorageCursor, nsIDOMDeviceStorageCursor)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDeviceStorageCursor)
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(DeviceStorageCursor, nsIDOMDOMCursor)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMCursor)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END

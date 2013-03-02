@@ -39,7 +39,6 @@ DOMCursor::DOMCursor(nsIDOMWindow* aWindow, nsICursorContinueCallback* aCallback
   , mCallback(aCallback)
   , mFinished(false)
 {
-  MOZ_ASSERT(aCallback);
 }
 
 void
@@ -51,7 +50,6 @@ DOMCursor::Reset()
   if (mRooted) {
     UnrootResultVal();
   }
-  mResult = JSVAL_VOID;
   mDone = false;
 }
 
@@ -73,6 +71,8 @@ DOMCursor::GetDone(bool *aDone)
 NS_IMETHODIMP
 DOMCursor::Continue()
 {
+  MOZ_ASSERT(mCallback, "If you're creating your own cursor class with no callback, you should override Continue()");
+
   // We need to have a result here because we must be in a 'success' state.
   if (mResult == JSVAL_VOID) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;

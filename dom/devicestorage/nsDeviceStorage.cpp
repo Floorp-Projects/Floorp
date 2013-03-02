@@ -742,7 +742,7 @@ nsDOMDeviceStorage::SetRootDirectoryForType(const nsAString& aType)
     dirService->Get(NS_WIN_MUSIC_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
 #endif
   }
-  
+
   // Apps directory
   else if (aType.EqualsLiteral(DEVICESTORAGE_APPS)) {
 #ifdef MOZ_WIDGET_GONK
@@ -1025,9 +1025,12 @@ ContinueCursorEvent::Run()
   nsDOMDeviceStorageCursor* cursor = static_cast<nsDOMDeviceStorageCursor*>(mRequest.get());
   jsval val = nsIFileToJsval(cursor->GetOwner(), file);
 
-  cursor->mOkToCallContinue = true;
-
-  mRequest->FireSuccess(val);
+  if (file) {
+    cursor->mOkToCallContinue = true;
+    cursor->FireSuccess(val);
+  } else {
+    cursor->FireDone();
+  }
   mRequest = nullptr;
   return NS_OK;
 }
@@ -1072,21 +1075,19 @@ private:
 DOMCI_DATA(DeviceStorageCursor, nsDOMDeviceStorageCursor)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMDeviceStorageCursor)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDeviceStorageCursor)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMDOMCursor)
   NS_INTERFACE_MAP_ENTRY(nsIContentPermissionRequest)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDOMRequest)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMDeviceStorageCursor)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DeviceStorageCursor)
-NS_INTERFACE_MAP_END_INHERITING(DOMRequest)
+NS_INTERFACE_MAP_END_INHERITING(DOMCursor)
 
-NS_IMPL_ADDREF_INHERITED(nsDOMDeviceStorageCursor, DOMRequest)
-NS_IMPL_RELEASE_INHERITED(nsDOMDeviceStorageCursor, DOMRequest)
+NS_IMPL_ADDREF_INHERITED(nsDOMDeviceStorageCursor, DOMCursor)
+NS_IMPL_RELEASE_INHERITED(nsDOMDeviceStorageCursor, DOMCursor)
 
 nsDOMDeviceStorageCursor::nsDOMDeviceStorageCursor(nsIDOMWindow* aWindow,
                                                    nsIPrincipal* aPrincipal,
                                                    DeviceStorageFile* aFile,
                                                    PRTime aSince)
-  : DOMRequest(aWindow)
+  : DOMCursor(aWindow, nullptr)
   , mOkToCallContinue(false)
   , mSince(aSince)
   , mFile(aFile)
@@ -1223,7 +1224,7 @@ nsDOMDeviceStorageCursor::IPDLRelease()
 void
 nsDOMDeviceStorageCursor::RequestComplete()
 {
-  NS_ASSERTION(!mOkToCallContinue, "mOkToCallContinue must be false");  
+  NS_ASSERTION(!mOkToCallContinue, "mOkToCallContinue must be false");
   mOkToCallContinue = true;
 }
 
@@ -2144,7 +2145,7 @@ nsDOMDeviceStorage::Enumerate(const JS::Value & aName,
                              const JS::Value & aOptions,
                              JSContext* aCx,
                              uint8_t aArgc,
-                             nsIDOMDeviceStorageCursor** aRetval)
+                             nsIDOMDOMCursor** aRetval)
 {
   return EnumerateInternal(aName, aOptions, aCx, aArgc, false, aRetval);
 }
@@ -2154,7 +2155,7 @@ nsDOMDeviceStorage::EnumerateEditable(const JS::Value & aName,
                                      const JS::Value & aOptions,
                                      JSContext* aCx,
                                      uint8_t aArgc,
-                                     nsIDOMDeviceStorageCursor** aRetval)
+                                     nsIDOMDOMCursor** aRetval)
 {
   return EnumerateInternal(aName, aOptions, aCx, aArgc, true, aRetval);
 }
@@ -2183,7 +2184,7 @@ nsDOMDeviceStorage::EnumerateInternal(const JS::Value & aName,
                                      JSContext* aCx,
                                      uint8_t aArgc,
                                      bool aEditable,
-                                     nsIDOMDeviceStorageCursor** aRetval)
+                                     nsIDOMDOMCursor** aRetval)
 {
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
   if (!win)
