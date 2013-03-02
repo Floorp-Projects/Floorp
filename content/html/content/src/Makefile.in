@@ -23,7 +23,6 @@ EXPORTS		= \
 		nsGenericHTMLElement.h \
 		nsClientRect.h \
 		nsHTMLDNSPrefetch.h \
-		nsTimeRanges.h \
 		$(NULL)
 
 EXPORTS_NAMESPACES = mozilla/dom
@@ -76,6 +75,7 @@ EXPORTS_mozilla/dom = \
 		HTMLTimeElement.h \
 		HTMLTitleElement.h \
 		HTMLUnknownElement.h \
+		TimeRanges.h \
 		UndoManager.h \
 		ValidityState.h \
 		$(NULL)
@@ -161,7 +161,7 @@ CPPSRCS		+= \
 		MediaError.cpp \
 		nsMediaFragmentURIParser.cpp \
 		HTMLSourceElement.cpp \
-		nsTimeRanges.cpp \
+		TimeRanges.cpp \
 		nsHTMLVideoElement.cpp \
 		$(NULL)
 endif

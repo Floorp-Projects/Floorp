@@ -4,40 +4,43 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsTimeRanges.h"
+#include "mozilla/dom/TimeRanges.h"
 #include "nsDOMClassInfoID.h"
 #include "nsError.h"
 
-NS_IMPL_ADDREF(nsTimeRanges)
-NS_IMPL_RELEASE(nsTimeRanges)
+DOMCI_DATA(TimeRanges, mozilla::dom::TimeRanges)
 
-DOMCI_DATA(TimeRanges, nsTimeRanges)
+namespace mozilla {
+namespace dom {
 
-NS_INTERFACE_MAP_BEGIN(nsTimeRanges)
+NS_IMPL_ADDREF(TimeRanges)
+NS_IMPL_RELEASE(TimeRanges)
+
+NS_INTERFACE_MAP_BEGIN(TimeRanges)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIDOMTimeRanges)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(TimeRanges)
 NS_INTERFACE_MAP_END
 
-nsTimeRanges::nsTimeRanges()
+TimeRanges::TimeRanges()
 {
-  MOZ_COUNT_CTOR(nsTimeRanges);
+  MOZ_COUNT_CTOR(TimeRanges);
 }
 
-nsTimeRanges::~nsTimeRanges()
+TimeRanges::~TimeRanges()
 {
-  MOZ_COUNT_DTOR(nsTimeRanges);
+  MOZ_COUNT_DTOR(TimeRanges);
 }
 
 NS_IMETHODIMP
-nsTimeRanges::GetLength(uint32_t* aLength)
+TimeRanges::GetLength(uint32_t* aLength)
 {
   *aLength = mRanges.Length();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTimeRanges::Start(uint32_t aIndex, double* aTime)
+TimeRanges::Start(uint32_t aIndex, double* aTime)
 {
   if (aIndex >= mRanges.Length())
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
@@ -46,7 +49,7 @@ nsTimeRanges::Start(uint32_t aIndex, double* aTime)
 }
 
 NS_IMETHODIMP
-nsTimeRanges::End(uint32_t aIndex, double* aTime)
+TimeRanges::End(uint32_t aIndex, double* aTime)
 {
   if (aIndex >= mRanges.Length())
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
@@ -55,7 +58,7 @@ nsTimeRanges::End(uint32_t aIndex, double* aTime)
 }
 
 void
-nsTimeRanges::Add(double aStart, double aEnd)
+TimeRanges::Add(double aStart, double aEnd)
 {
   if (aStart > aEnd) {
     NS_WARNING("Can't add a range if the end is older that the start.");
@@ -65,7 +68,7 @@ nsTimeRanges::Add(double aStart, double aEnd)
 }
 
 double
-nsTimeRanges::GetFinalEndTime()
+TimeRanges::GetFinalEndTime()
 {
   if (mRanges.IsEmpty()) {
     return -1.0;
@@ -75,7 +78,7 @@ nsTimeRanges::GetFinalEndTime()
 }
 
 void
-nsTimeRanges::Normalize()
+TimeRanges::Normalize()
 {
   if (mRanges.Length() >= 2) {
     nsAutoTArray<TimeRange,4> normalized;
@@ -102,3 +105,6 @@ nsTimeRanges::Normalize()
     mRanges = normalized;
   }
 }
+
+} // namespace dom
+} // namespace mozilla

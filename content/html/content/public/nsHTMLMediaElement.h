@@ -21,7 +21,7 @@
 #include "mozilla/CORSMode.h"
 #include "DOMMediaStream.h"
 #include "mozilla/Mutex.h"
-#include "nsTimeRanges.h"
+#include "mozilla/dom/TimeRanges.h"
 #include "nsIDOMWakeLock.h"
 #include "AudioChannelCommon.h"
 #include "DecoderTraits.h"
@@ -777,7 +777,7 @@ protected:
   nsAutoPtr<AudioStream> mAudioStream;
 
   // Range of time played.
-  nsTimeRanges mPlayed;
+  mozilla::dom::TimeRanges mPlayed;
 
   // Stores the time at the start of the current 'played' range.
   double mCurrentPlayRangeStart;
