@@ -5178,18 +5178,6 @@ var FormAssistant = {
     return suggestions;
   },
 
-  // Gets the element position data necessary for the Java UI to position
-  // the form assist popup.
-  _getElementPositionData: function _getElementPositionData(aElement) {
-    let rect = ElementTouchHelper.getBoundingContentRect(aElement);
-    let viewport = BrowserApp.selectedTab.getViewport();
-    
-    return { rect: [rect.x - (viewport.x / viewport.zoom),
-                    rect.y - (viewport.y / viewport.zoom),
-                    rect.w, rect.h],
-             zoom: viewport.zoom }
-  },
-
   // Retrieves autocomplete suggestions for an element from the form autocomplete service
   // and sends the suggestions to the Java UI, along with element position data.
   // Returns true if there are suggestions to show, false otherwise.
@@ -5214,12 +5202,10 @@ var FormAssistant = {
     if (!suggestions.length)
       return false;
 
-    let positionData = this._getElementPositionData(aElement);
     sendMessageToJava({
       type:  "FormAssist:AutoComplete",
       suggestions: suggestions,
-      rect: positionData.rect,
-      zoom: positionData.zoom
+      rect: ElementTouchHelper.getBoundingContentRect(aElement)
     });
 
     // Keep track of input element so we can fill it in if the user
@@ -5249,12 +5235,10 @@ var FormAssistant = {
     if (!this._isValidateable(aElement))
       return false;
 
-    let positionData = this._getElementPositionData(aElement);
     sendMessageToJava({
       type: "FormAssist:ValidationMessage",
       validationMessage: aElement.validationMessage,
-      rect: positionData.rect,
-      zoom: positionData.zoom
+      rect: ElementTouchHelper.getBoundingContentRect(aElement)
     });
 
     return true;
