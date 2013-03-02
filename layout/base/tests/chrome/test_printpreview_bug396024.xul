@@ -25,15 +25,17 @@ if (navigator.platform.startsWith("Linux")) {
 
 function parentFinish() {
   // This is called while the helper window is still open.  Call
-  // doFinish after it closes.
-  setTimeout(doFinish, 0);
+  // doGC after it closes.
+  setTimeout(doGC, 0);
 }
-function doFinish() {
+function doGC() {
   // Garbage collecting the windows created in this test can cause
   // assertions, so GC now to blame those assertions to this test.
   // ("Destroying a currently-showing document", bug 671976)
   SpecialPowers.gc();
-
+  setTimeout(doFinish, 0);
+}
+function doFinish() {
   SimpleTest.finish();
 }
 SimpleTest.waitForExplicitFinish();
