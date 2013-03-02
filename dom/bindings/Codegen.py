@@ -5434,7 +5434,7 @@ class ClassConstructor(ClassItem):
         if self.bodyInHeader:
             return ''
 
-        args = ', '.join([str(a) for a in self.args])
+        args = ', '.join([a.define() for a in self.args])
 
         body = '  ' + self.getBody()
         body = '\n' + stripTrailingWhitespace(body.replace('\n', '\n  '))
