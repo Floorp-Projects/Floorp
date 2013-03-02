@@ -41,4 +41,30 @@
         </layer-list>
     </item>
 
+    <item android:maxLevel="3">
+        <layer-list>
+            <item android:top="@dimen/awesomebar_tab_transparency_height">
+                <shape android:shape="rectangle">
+                    <solid android:color="#EEF1F5"/>
+                </shape>
+            </item>
+
+            <item android:bottom="2dip"
+                  android:drawable="@drawable/awesomebar_sep_right"/>
+        </layer-list>
+    </item>
+
+    <item android:maxLevel="4">
+        <layer-list>
+            <item android:top="@dimen/awesomebar_tab_transparency_height">
+                <shape android:shape="rectangle">
+                    <solid android:color="#EEF1F5"/>
+                </shape>
+            </item>
+
+            <item android:bottom="2dip"
+                  android:drawable="@drawable/awesomebar_sep_left"/>
+        </layer-list>
+    </item>
+
 </level-list>

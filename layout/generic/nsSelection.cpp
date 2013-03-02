@@ -415,11 +415,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFrameSelection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAncestorLimiter)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameSelection)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameSelection)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameSelection)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsFrameSelection, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsFrameSelection, Release)
 
 
 nsresult
@@ -4115,14 +4112,6 @@ Selection::GetCachedFrameOffset(nsIFrame* aFrame, int32_t inOffset,
   }
 
   return rv;
-}
-
-NS_IMETHODIMP
-Selection::GetFrameSelection(nsFrameSelection** aFrameSelection) {
-  NS_ENSURE_ARG_POINTER(aFrameSelection);
-  *aFrameSelection = mFrameSelection;
-  NS_IF_ADDREF(*aFrameSelection);
-  return NS_OK;
 }
 
 NS_IMETHODIMP

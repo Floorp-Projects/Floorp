@@ -5253,6 +5253,7 @@ CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, HandleFunction fu
     if (!state.baseobj) {
         if (type->newScript)
             type->clearNewScript(cx);
+        cx->compartment->types.setPendingNukeTypes(cx);
         return;
     }
 
