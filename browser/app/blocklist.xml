@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1361213668000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1362088263000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -139,6 +139,10 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i310" id="{5ebdca98-43b3-45bb-87e0-716029fb42ab}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i168" id="flashX@adobe.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
@@ -193,10 +197,6 @@
                   </emItem>
       <emItem  blockID="i77" id="{fa277cfc-1d75-4949-a1f9-4ac8e41b2dfd}">
                         <versionRange  minVersion="0" maxVersion="*">
-                    </versionRange>
-                  </emItem>
-      <emItem  blockID="i284" id="playbryte@playbryte.com">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i59" id="ghostviewer@youtube2.com">
@@ -300,6 +300,10 @@
                           </targetApplication>
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i308" id="9518042e-7ad6-4dac-b377-056e28d00c8f@f1cc0a13-4df1-4d66-938f-088db8838882.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i13" id="{E8E88AB0-7182-11DF-904E-6045E0D72085}">
                         </emItem>
       <emItem  blockID="i83" id="flash@adobee.com">
@@ -376,6 +380,10 @@
                           </targetApplication>
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i304" id="{f0e59437-6148-4a98-b0a6-60d557ef57f4}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i86" id="{45147e67-4020-47e2-8f7a-55464fb535aa}">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -415,6 +423,10 @@
                     </versionRange>
                   </emItem>
       <emItem  blockID="i70" id="psid-vhvxQHMZBOzUZA@jetpack">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i306" id="{ADFA33FD-16F5-4355-8504-DF4D664CFE10}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
@@ -712,6 +724,55 @@
                   <match name="filename" exp="(NPSWF32\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="0" maxVersion="10.2.9999" severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="18.0a1" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p290">
+                  <match name="filename" exp="(NPSWF32\.dll)|(Flash\ Player\.plugin)" />                                    <versionRange  minVersion="10.3.183.19" maxVersion="10.3.183.42" severity="0" vulnerabilitystatus="1">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="20.0a1" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p292">
+                  <match name="filename" exp="JavaAppletPlugin\.plugin" />                                    <versionRange  minVersion="Java 7 Update 12" maxVersion="Java 7 Update 15" severity="0" vulnerabilitystatus="2">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="17.0" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p294">
+      <match name="name" exp="Java\(TM\) Platform SE 7 U1[2-5](\s[^\d\._U]|$)" />            <match name="filename" exp="npjp2\.dll" />                                    <versionRange  severity="0" vulnerabilitystatus="2">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="17.0" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p296">
+      <match name="name" exp="Java\(TM\) Plug-in 1\.7\.0_1[2-5]([^\d\._]|$)" />            <match name="filename" exp="libnpjp2\.so" />                                    <versionRange  severity="0" vulnerabilitystatus="2">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="17.0" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p298">
+                  <match name="filename" exp="JavaAppletPlugin\.plugin" />                                    <versionRange  minVersion="Java 6 Update 39" maxVersion="Java 6 Update 41" severity="0" vulnerabilitystatus="2">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="17.0" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p300">
+      <match name="name" exp="Java\(TM\) Platform SE 6 U(39|40|41)(\s[^\d\._U]|$)" />            <match name="filename" exp="npjp2\.dll" />                                    <versionRange  severity="0" vulnerabilitystatus="2">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="17.0" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p302">
+      <match name="name" exp="Java\(TM\) Plug-in 1\.6\.0_(39|40|41)([^\d\._]|$)" />            <match name="filename" exp="libnpjp2\.so" />                                    <versionRange  severity="0" vulnerabilitystatus="2">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="17.0" maxVersion="*" />
                           </targetApplication>
                   </versionRange>
                   </pluginItem>
