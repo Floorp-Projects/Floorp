@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DOMSVGTests.h"
+#include "mozilla/dom/SVGTests.h"
 #include "DOMSVGStringList.h"
 #include "nsSVGFeatures.h"
 #include "mozilla/dom/SVGSwitchElement.h"
@@ -11,24 +11,25 @@
 #include "nsStyleUtil.h"
 #include "mozilla/Preferences.h"
 
-using namespace mozilla;
+namespace mozilla {
+namespace dom {
 
-NS_IMPL_ISUPPORTS0(DOMSVGTests)
+NS_IMPL_ISUPPORTS0(SVGTests)
 
-nsIAtom** DOMSVGTests::sStringListNames[3] =
+nsIAtom** SVGTests::sStringListNames[3] =
 {
   &nsGkAtoms::requiredFeatures,
   &nsGkAtoms::requiredExtensions,
   &nsGkAtoms::systemLanguage,
 };
 
-DOMSVGTests::DOMSVGTests()
+SVGTests::SVGTests()
 {
   mStringListAttributes[LANGUAGE].SetIsCommaSeparated(true);
 }
 
 already_AddRefed<nsIDOMSVGStringList>
-DOMSVGTests::RequiredFeatures()
+SVGTests::RequiredFeatures()
 {
   nsCOMPtr<nsSVGElement> element = do_QueryInterface(this);
   return DOMSVGStringList::GetDOMWrapper(
@@ -36,7 +37,7 @@ DOMSVGTests::RequiredFeatures()
 }
 
 already_AddRefed<nsIDOMSVGStringList>
-DOMSVGTests::RequiredExtensions()
+SVGTests::RequiredExtensions()
 {
   nsCOMPtr<nsSVGElement> element = do_QueryInterface(this);
   return DOMSVGStringList::GetDOMWrapper(
@@ -44,7 +45,7 @@ DOMSVGTests::RequiredExtensions()
 }
 
 already_AddRefed<nsIDOMSVGStringList>
-DOMSVGTests::SystemLanguage()
+SVGTests::SystemLanguage()
 {
   nsCOMPtr<nsSVGElement> element = do_QueryInterface(this);
   return DOMSVGStringList::GetDOMWrapper(
@@ -52,13 +53,13 @@ DOMSVGTests::SystemLanguage()
 }
 
 bool
-DOMSVGTests::HasExtension(const nsAString& aExtension)
+SVGTests::HasExtension(const nsAString& aExtension)
 {
   return nsSVGFeatures::HasExtension(aExtension);
 }
 
 bool
-DOMSVGTests::IsConditionalProcessingAttribute(const nsIAtom* aAttribute) const
+SVGTests::IsConditionalProcessingAttribute(const nsIAtom* aAttribute) const
 {
   for (uint32_t i = 0; i < ArrayLength(sStringListNames); i++) {
     if (aAttribute == *sStringListNames[i]) {
@@ -69,7 +70,7 @@ DOMSVGTests::IsConditionalProcessingAttribute(const nsIAtom* aAttribute) const
 }
 
 int32_t
-DOMSVGTests::GetBestLanguagePreferenceRank(const nsSubstring& aAcceptLangs) const
+SVGTests::GetBestLanguagePreferenceRank(const nsSubstring& aAcceptLangs) const
 {
   const nsDefaultStringComparator defaultComparator;
 
@@ -100,10 +101,10 @@ DOMSVGTests::GetBestLanguagePreferenceRank(const nsSubstring& aAcceptLangs) cons
   return lowestRank;
 }
 
-const nsString * const DOMSVGTests::kIgnoreSystemLanguage = (nsString *) 0x01;
+const nsString * const SVGTests::kIgnoreSystemLanguage = (nsString *) 0x01;
 
 bool
-DOMSVGTests::PassesConditionalProcessingTests(const nsString *aAcceptLangs) const
+SVGTests::PassesConditionalProcessingTests(const nsString *aAcceptLangs) const
 {
   // Required Features
   if (mStringListAttributes[FEATURES].IsExplicitlySet()) {
@@ -111,7 +112,7 @@ DOMSVGTests::PassesConditionalProcessingTests(const nsString *aAcceptLangs) cons
       return false;
     }
     nsCOMPtr<nsIContent> content(
-      do_QueryInterface(const_cast<DOMSVGTests*>(this)));
+      do_QueryInterface(const_cast<SVGTests*>(this)));
 
     for (uint32_t i = 0; i < mStringListAttributes[FEATURES].Length(); i++) {
       if (!nsSVGFeatures::HasFeature(content, mStringListAttributes[FEATURES][i])) {
@@ -182,9 +183,9 @@ DOMSVGTests::PassesConditionalProcessingTests(const nsString *aAcceptLangs) cons
 }
 
 bool
-DOMSVGTests::ParseConditionalProcessingAttribute(nsIAtom* aAttribute,
-                                                 const nsAString& aValue,
-                                                 nsAttrValue& aResult)
+SVGTests::ParseConditionalProcessingAttribute(nsIAtom* aAttribute,
+                                              const nsAString& aValue,
+                                              nsAttrValue& aResult)
 {
   for (uint32_t i = 0; i < ArrayLength(sStringListNames); i++) {
     if (aAttribute == *sStringListNames[i]) {
@@ -200,7 +201,7 @@ DOMSVGTests::ParseConditionalProcessingAttribute(nsIAtom* aAttribute,
 }
 
 void
-DOMSVGTests::UnsetAttr(const nsIAtom* aAttribute)
+SVGTests::UnsetAttr(const nsIAtom* aAttribute)
 {
   for (uint32_t i = 0; i < ArrayLength(sStringListNames); i++) {
     if (aAttribute == *sStringListNames[i]) {
@@ -212,13 +213,13 @@ DOMSVGTests::UnsetAttr(const nsIAtom* aAttribute)
 }
 
 nsIAtom*
-DOMSVGTests::GetAttrName(uint8_t aAttrEnum) const
+SVGTests::GetAttrName(uint8_t aAttrEnum) const
 {
   return *sStringListNames[aAttrEnum];
 }
 
 void
-DOMSVGTests::GetAttrValue(uint8_t aAttrEnum, nsAttrValue& aValue) const
+SVGTests::GetAttrValue(uint8_t aAttrEnum, nsAttrValue& aValue) const
 {
   MOZ_ASSERT(aAttrEnum < ArrayLength(sStringListNames),
              "aAttrEnum out of range");
@@ -226,7 +227,7 @@ DOMSVGTests::GetAttrValue(uint8_t aAttrEnum, nsAttrValue& aValue) const
 }
 
 void
-DOMSVGTests::MaybeInvalidate()
+SVGTests::MaybeInvalidate()
 {
   nsCOMPtr<nsSVGElement> element = do_QueryInterface(this);
 
@@ -237,3 +238,6 @@ DOMSVGTests::MaybeInvalidate()
     static_cast<dom::SVGSwitchElement*>(parent)->MaybeInvalidate();
   }
 }
+
+} // namespace dom
+} // namespace mozilla
