@@ -728,6 +728,7 @@ UnixSocketImpl::OnFileCanReadWithoutBlocking(int aFd)
     mWriteWatcher.StopWatchingFileDescriptor();
 
     mFd.reset(client_fd);
+    mIOLoop = nullptr;
 
     nsRefPtr<OnSocketEventTask> t =
       new OnSocketEventTask(this, OnSocketEventTask::CONNECT_SUCCESS);
