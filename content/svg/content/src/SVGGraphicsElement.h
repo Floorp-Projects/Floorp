@@ -6,8 +6,8 @@
 #ifndef mozilla_dom_SVGGraphicsElement_h
 #define mozilla_dom_SVGGraphicsElement_h
 
+#include "mozilla/dom/SVGTests.h"
 #include "mozilla/dom/SVGTransformableElement.h"
-#include "DOMSVGTests.h"
 
 namespace mozilla {
 namespace dom {
@@ -15,7 +15,7 @@ namespace dom {
 typedef SVGTransformableElement SVGGraphicsElementBase;
 
 class SVGGraphicsElement : public SVGGraphicsElementBase,
-                           public DOMSVGTests
+                           public SVGTests
 {
 protected:
   SVGGraphicsElement(already_AddRefed<nsINodeInfo> aNodeInfo);
