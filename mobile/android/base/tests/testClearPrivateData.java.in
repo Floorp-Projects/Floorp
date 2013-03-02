@@ -28,8 +28,8 @@ public class testClearPrivateData extends PixelTest  {
         String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
         loadAndPaint(url);
 
-        // Checking that the history list in not empty
-        ListView hList = getHistoryList();
+        // Checking that the history list is not empty
+        ListView hList = getHistoryList("Today|Yesterday");
         mAsserter.ok(hList.getAdapter().getCount() > 0,"checking history exists","history exists");
 
         // Quit the awesomescreen
@@ -46,7 +46,7 @@ public class testClearPrivateData extends PixelTest  {
         mAsserter.is(mSolo.waitForText("Private data cleared"),true,"private data cleared successfully");
 
         // Checking that history list is empty
-        hList = getHistoryList();
-        mAsserter.ok(hList.getAdapter().getCount() == 0,"checking history is cleared ","history is cleared");
+        hList = getHistoryList("History", 0);
+        mAsserter.ok(hList != null,"checking history is cleared ","history is cleared");
     }
 }
