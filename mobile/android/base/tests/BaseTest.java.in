@@ -37,6 +37,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     private static final String TARGET_PACKAGE_ID = "org.mozilla.gecko";
     private static final String LAUNCH_ACTIVITY_FULL_CLASSNAME="@ANDROID_PACKAGE_NAME@.App";
     private static final int VERIFY_URL_TIMEOUT = 2000;
+    private static final int MAX_LIST_ATTEMPTS = 3;
     public static final int MAX_WAIT_MS = 3000;
 
     private static Class<Activity> mLauncherActivityClass;
@@ -406,55 +407,74 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mAsserter.is(tabCountInt, expectedTabCount, "The correct number of tabs are opened");
     }
 
-    /**
-     * Click on the awesome bar, and return the ListView for the 
-     * All Pages ("Top Sites") tab.
-     */
-    protected ListView getAllPagesList(String waitText) {
-        Activity awesomeBarActivity = clickOnAwesomeBar();
-        waitForText(waitText);
-
-        ArrayList<ListView> views = mSolo.getCurrentListViews();
-        for (ListView view : views) {
-            if (view.getTag() == "allPages") {
-                return view;
+    private ListView getAwesomeList(String waitText, int expectedChildCount,
+         String clickText, String tagName, String callerName) {
+        ArrayList<ListView> views;
+        ListView tabView = null;
+        int childCount = 0;
+        for (int i = 0; i < MAX_LIST_ATTEMPTS; i++) {
+            tabView = null;
+            childCount = 0;
+            Activity awesomeBarActivity = clickOnAwesomeBar();
+            mSolo.clickOnText(clickText);
+            if (waitForText(waitText)) {
+                views = mSolo.getCurrentListViews();
+                for (ListView view : views) {
+                    if (view.getTag().equals(tagName)) {
+                        tabView = view;
+                        childCount = view.getAdapter().getCount();
+                        if (expectedChildCount < 0 || expectedChildCount == childCount) {
+                            return view;
+                        }
+                    }
+                }
             }
         }
+        if (tabView == null) {
+            mAsserter.dumpLog(callerName+" did not find ListView");
+        } else if (expectedChildCount >= 0) {
+            mAsserter.dumpLog(callerName+" found ListView with "+childCount+" children");
+        }
         return null;
+    }
+
+    /**
+     * Click on the awesome bar, click on the Top Sites tab, and return 
+     * the ListView for the All Pages ("Top Sites") tab.
+     */
+    protected ListView getAllPagesList(String waitText, int expectedChildCount) {
+        return getAwesomeList(waitText, expectedChildCount, 
+            "Top Sites", "allPages", "getAllPagesList");
+    }
+
+    protected ListView getAllPagesList(String waitText) {
+        return getAllPagesList(waitText, -1);
     }
 
     /** 
      * Click on the awesome bar, click on the Bookmarks tab, and return
      * the ListView for the Bookmarks tab.
      */
-    protected ListView getBookmarksList() {
-        Activity awesomeBarActivity = clickOnAwesomeBar();
-        mSolo.clickOnText("Bookmarks");
+    protected ListView getBookmarksList(String waitText, int expectedChildCount) {
+        return getAwesomeList(waitText, expectedChildCount, 
+            "Bookmarks", "bookmarks", "getBookmarksList");
+    }
 
-        ArrayList<ListView> views = mSolo.getCurrentListViews();
-        for (ListView view : views) {
-            if (view.getTag().equals("bookmarks")) {
-                return view;
-            }
-        }
-        return null;
+    protected ListView getBookmarksList(String waitText) {
+        return getBookmarksList(waitText, -1);
     }
 
     /**
      * Click on the awesome bar, click on the History tab, and return
      * the ListView for the History tab.
      */
-    protected ListView getHistoryList() {
-        Activity awesomeBarActivity = clickOnAwesomeBar();
-        mSolo.clickOnText("History");
-        waitForText("Today|Yesterday");
-        ArrayList<ListView> views = mSolo.getCurrentListViews();
-        for (ListView view : views) {
-            if (view.getTag().equals("history")) {
-                return view;
-            }
-        }
-        return null;
+    protected ListView getHistoryList(String waitText, int expectedChildCount) {
+        return getAwesomeList(waitText, expectedChildCount, 
+            "History", "history", "getHistoryList");
+    }
+
+    protected ListView getHistoryList(String waitText) {
+        return getHistoryList(waitText, -1);
     }
 
     public long addOrUpdateBookmark(String title, String url, boolean bookmarklet) {
