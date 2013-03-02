@@ -105,6 +105,10 @@ struct IsSupportedPass2<char>
 { static const bool value = true; };
 
 template<>
+struct IsSupportedPass2<signed char>
+{ static const bool value = true; };
+
+template<>
 struct IsSupportedPass2<unsigned char>
 { static const bool value = true; };
 
