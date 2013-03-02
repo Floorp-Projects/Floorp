@@ -10,7 +10,7 @@
 #include "base/basictypes.h"
 #include "nsIDOMHTMLMediaElement.h"
 #include "nsIDOMHTMLSourceElement.h"
-#include "nsTimeRanges.h"
+#include "TimeRanges.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsPresContext.h"
@@ -1352,7 +1352,7 @@ NS_IMETHODIMP nsHTMLMediaElement::GetDuration(double *aDuration)
 /* readonly attribute nsIDOMHTMLTimeRanges seekable; */
 NS_IMETHODIMP nsHTMLMediaElement::GetSeekable(nsIDOMTimeRanges** aSeekable)
 {
-  nsRefPtr<nsTimeRanges> ranges = new nsTimeRanges();
+  nsRefPtr<TimeRanges> ranges = new TimeRanges();
   if (mDecoder && mReadyState > nsIDOMHTMLMediaElement::HAVE_NOTHING) {
     mDecoder->GetSeekable(ranges);
   }
@@ -1372,7 +1372,7 @@ NS_IMETHODIMP nsHTMLMediaElement::GetPaused(bool *aPaused)
 /* readonly attribute nsIDOMHTMLTimeRanges played; */
 NS_IMETHODIMP nsHTMLMediaElement::GetPlayed(nsIDOMTimeRanges** aPlayed)
 {
-  nsTimeRanges* ranges = new nsTimeRanges();
+  TimeRanges* ranges = new TimeRanges();
   NS_ADDREF(*aPlayed = ranges);
 
   uint32_t timeRangeCount = 0;
@@ -3408,7 +3408,7 @@ nsHTMLMediaElement::CopyInnerTo(Element* aDest)
 
 nsresult nsHTMLMediaElement::GetBuffered(nsIDOMTimeRanges** aBuffered)
 {
-  nsRefPtr<nsTimeRanges> ranges = new nsTimeRanges();
+  nsRefPtr<TimeRanges> ranges = new TimeRanges();
   if (mReadyState > nsIDOMHTMLMediaElement::HAVE_NOTHING && mDecoder) {
     // If GetBuffered fails we ignore the error result and just return the
     // time ranges we found up till the error.

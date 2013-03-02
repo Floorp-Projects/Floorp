@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "MediaPluginReader.h"
 #include "mozilla/TimeStamp.h"
-#include "nsTimeRanges.h"
+#include "mozilla/dom/TimeRanges.h"
 #include "MediaResource.h"
 #include "VideoUtils.h"
 #include "MediaPluginDecoder.h"
@@ -331,7 +331,7 @@ nsresult MediaPluginReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aE
   return DecodeToTarget(aTarget);
 }
 
-nsresult MediaPluginReader::GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime)
+nsresult MediaPluginReader::GetBuffered(mozilla::dom::TimeRanges* aBuffered, int64_t aStartTime)
 {
   if (!mPlugin)
     return NS_OK;

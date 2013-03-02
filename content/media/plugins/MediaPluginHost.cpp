@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
-#include "nsTimeRanges.h"
+#include "mozilla/dom/TimeRanges.h"
 #include "MediaResource.h"
 #include "nsHTMLMediaElement.h"
 #include "MediaPluginHost.h"

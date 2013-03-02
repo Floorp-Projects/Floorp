@@ -10,7 +10,7 @@
 #include "MediaResource.h"
 #include "GStreamerReader.h"
 #include "VideoUtils.h"
-#include "nsTimeRanges.h"
+#include "mozilla/dom/TimeRanges.h"
 #include "mozilla/Preferences.h"
 
 namespace mozilla {
@@ -512,8 +512,8 @@ nsresult GStreamerReader::Seek(int64_t aTarget,
   return DecodeToTarget(aTarget);
 }
 
-nsresult GStreamerReader::GetBuffered(nsTimeRanges* aBuffered,
-                                        int64_t aStartTime)
+nsresult GStreamerReader::GetBuffered(TimeRanges* aBuffered,
+                                      int64_t aStartTime)
 {
   if (!mInfo.mHasVideo && !mInfo.mHasAudio) {
     return NS_OK;
