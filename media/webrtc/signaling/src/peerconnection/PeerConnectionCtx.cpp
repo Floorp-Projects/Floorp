@@ -27,6 +27,12 @@
 
 static const char* logTag = "PeerConnectionCtx";
 
+extern "C" {
+extern PRCondVar *ccAppReadyToStartCond;
+extern PRLock *ccAppReadyToStartLock;
+extern char ccAppReadyToStart;
+}
+
 namespace mozilla {
 class PeerConnectionCtxShutdown : public nsIObserver
 {
@@ -181,6 +187,16 @@ nsresult PeerConnectionCtx::Initialize() {
   //codecMask |= VCM_CODEC_RESOURCE_I420;
   mCCM->setVideoCodecs(codecMask);
 
+  ccAppReadyToStartLock = PR_NewLock();
+  if (!ccAppReadyToStartLock) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ccAppReadyToStartCond = PR_NewCondVar(ccAppReadyToStartLock);
+  if (!ccAppReadyToStartCond) {
+    return NS_ERROR_FAILURE;
+  }
+
   if (!mCCM->startSDPMode())
     return NS_ERROR_FAILURE;
 
@@ -188,6 +204,14 @@ nsresult PeerConnectionCtx::Initialize() {
   mCCM->addCCObserver(this);
   NS_ENSURE_TRUE(mDevice.get(), NS_ERROR_FAILURE);
   ChangeSipccState(PeerConnectionImpl::kStarting);
+
+  // Now that everything is set up, we let the CCApp thread
+  // know that it's okay to start processing messages.
+  PR_Lock(ccAppReadyToStartLock);
+  ccAppReadyToStart = 1;
+  PR_NotifyAllCondVar(ccAppReadyToStartCond);
+  PR_Unlock(ccAppReadyToStartLock);
+
   return NS_OK;
 }
 
