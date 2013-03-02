@@ -6,12 +6,12 @@
 #include "nsGlueLinking.h"
 #include "nsXPCOMGlue.h"
 #include "nscore.h"
+#include "mozilla/FileUtils.h"
 
 #if defined(LINUX) && !defined(ANDROID)
-#define _GNU_SOURCE 
+#define _GNU_SOURCE
 #include <fcntl.h>
 #include <unistd.h>
-#include <elf.h>
 #include <limits.h>
 #endif
 
@@ -125,68 +125,12 @@ AppendDependentLib(void *libHandle)
     sTop = d;
 }
 
-#if defined(LINUX) && !defined(ANDROID)
-static const unsigned int bufsize = 4096;
-
-#ifdef HAVE_64BIT_OS
-typedef Elf64_Ehdr Elf_Ehdr;
-typedef Elf64_Phdr Elf_Phdr;
-static const unsigned char ELFCLASS = ELFCLASS64;
-typedef Elf64_Off Elf_Off;
-#else
-typedef Elf32_Ehdr Elf_Ehdr;
-typedef Elf32_Phdr Elf_Phdr;
-static const unsigned char ELFCLASS = ELFCLASS32;
-typedef Elf32_Off Elf_Off;
-#endif
-
-static void
-preload(const char *file)
-{
-    union {
-        char buf[bufsize];
-        Elf_Ehdr ehdr;
-    } elf;
-    int fd = open(file, O_RDONLY);
-    if (fd < 0)
-        return;
-    // Read ELF header (ehdr) and program header table (phdr).
-    // We check that the ELF magic is found, that the ELF class matches
-    // our own, and that the program header table as defined in the ELF
-    // headers fits in the buffer we read.
-    if ((read(fd, elf.buf, bufsize) <= 0) ||
-        (memcmp(elf.buf, ELFMAG, 4)) ||
-        (elf.ehdr.e_ident[EI_CLASS] != ELFCLASS) ||
-        (elf.ehdr.e_phoff + elf.ehdr.e_phentsize * elf.ehdr.e_phnum >= bufsize)) {
-        close(fd);
-        return;
-    }
-    // The program header table contains segment definitions. One such
-    // segment type is PT_LOAD, which describes how the dynamic loader
-    // is going to map the file in memory. We use that information to
-    // find the biggest offset from the library that will be mapped in
-    // memory.
-    Elf_Phdr *phdr = (Elf_Phdr *)&elf.buf[elf.ehdr.e_phoff];
-    Elf_Off end = 0;
-    for (int phnum = elf.ehdr.e_phnum; phnum; phdr++, phnum--)
-        if ((phdr->p_type == PT_LOAD) &&
-            (end < phdr->p_offset + phdr->p_filesz))
-            end = phdr->p_offset + phdr->p_filesz;
-    // Let the kernel read ahead what the dynamic loader is going to
-    // map in memory soon after.
-    if (end > 0) {
-        readahead(fd, 0, end);
-    }
-    close(fd);
-}
-#endif
-
 static void
 ReadDependentCB(const char *aDependentLib, bool do_preload)
 {
 #if defined(LINUX) && !defined(ANDROID)
     if (do_preload)
-        preload(aDependentLib);
+        mozilla::ReadAheadLib(aDependentLib);
 #endif
     void *libHandle = dlopen(aDependentLib, RTLD_GLOBAL | RTLD_LAZY);
     if (!libHandle)
