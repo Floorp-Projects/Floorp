@@ -663,7 +663,6 @@ nsSVGPatternFrame::ConstructCTM(const nsSVGViewBox& aViewBox,
   }
 
   gfxMatrix tm = SVGContentUtils::GetViewBoxTransform(
-    static_cast<SVGPatternElement*>(mContent),
     viewportWidth, viewportHeight,
     viewBoxRect.x, viewBoxRect.y,
     viewBoxRect.width, viewBoxRect.height,

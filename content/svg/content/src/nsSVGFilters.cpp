@@ -5648,8 +5648,7 @@ nsSVGFEImageElement::Filter(nsSVGFilterInstance *instance,
     const gfxRect& filterSubregion = aTarget->mFilterPrimitiveSubregion;
 
     gfxMatrix viewBoxTM =
-      SVGContentUtils::GetViewBoxTransform(this,
-                                           filterSubregion.Width(), filterSubregion.Height(),
+      SVGContentUtils::GetViewBoxTransform(filterSubregion.Width(), filterSubregion.Height(),
                                            0,0, nativeWidth, nativeHeight,
                                            mPreserveAspectRatio);
 
