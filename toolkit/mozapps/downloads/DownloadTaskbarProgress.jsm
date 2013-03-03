@@ -14,13 +14,21 @@ this.EXPORTED_SYMBOLS = [
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-const kTaskbarID = "@mozilla.org/windows-taskbar;1";
+const kTaskbarIDWin = "@mozilla.org/windows-taskbar;1";
+const kTaskbarIDMac = "@mozilla.org/widget/macdocksupport;1";
 
 ////////////////////////////////////////////////////////////////////////////////
 //// DownloadTaskbarProgress Object
 
 this.DownloadTaskbarProgress =
 {
+  init: function DTP_init()
+  {
+    if (DownloadTaskbarProgressUpdater) {
+      DownloadTaskbarProgressUpdater._init();
+    }
+  },
+
   /**
    * Called when a browser window appears. This has an effect only when we
    * don't already have an active window.
@@ -31,6 +39,7 @@ this.DownloadTaskbarProgress =
    */
   onBrowserWindowLoad: function DTP_onBrowserWindowLoad(aWindow)
   {
+    this.init();
     if (!DownloadTaskbarProgressUpdater) {
       return;
     }
@@ -83,6 +92,9 @@ this.DownloadTaskbarProgress =
 
 var DownloadTaskbarProgressUpdater =
 {
+  /// Whether the taskbar is initialized.
+  _initialized: false,
+
   /// Reference to the taskbar.
   _taskbar: null,
 
@@ -94,18 +106,27 @@ var DownloadTaskbarProgressUpdater =
    */
   _init: function DTPU_init()
   {
-    if (!(kTaskbarID in Cc)) {
-      // This means that the component isn't available
+    if (this._initialized) {
+      return; // Already initialized
+    }
+    this._initialized = true;
+
+    if (kTaskbarIDWin in Cc) {
+      this._taskbar = Cc[kTaskbarIDWin].getService(Ci.nsIWinTaskbar);
+      if (!this._taskbar.available) {
+        // The Windows version is probably too old
+        DownloadTaskbarProgressUpdater = null;
+        return;
+      }
+    } else if (kTaskbarIDMac in Cc) {
+      this._activeTaskbarProgress = Cc[kTaskbarIDMac].
+                                      getService(Ci.nsITaskbarProgress);
+    } else {
       DownloadTaskbarProgressUpdater = null;
       return;
     }
 
-    this._taskbar = Cc[kTaskbarID].getService(Ci.nsIWinTaskbar);
-    if (!this._taskbar.available) {
-      // The Windows version is probably too old
-      DownloadTaskbarProgressUpdater = null;
-      return;
-    }
+    this._taskbarState = Ci.nsITaskbarProgress.STATE_NO_PROGRESS;
 
     this._dm = Cc["@mozilla.org/download-manager;1"].
                getService(Ci.nsIDownloadManager);
@@ -126,6 +147,8 @@ var DownloadTaskbarProgressUpdater =
   _uninit: function DTPU_uninit() {
     this._dm.removeListener(this);
     this._os.removeObserver(this, "quit-application-granted");
+    this._activeTaskbarProgress = null;
+    this._initialized = false;
   },
 
   /**
@@ -150,6 +173,7 @@ var DownloadTaskbarProgressUpdater =
    */
   _setActiveWindow: function DTPU_setActiveWindow(aWindow, aIsDownloadWindow)
   {
+#ifdef XP_WIN
     // Clear out the taskbar for the old active window. (If there was no active
     // window, this is a no-op.)
     this._clearTaskbar();
@@ -175,12 +199,26 @@ var DownloadTaskbarProgressUpdater =
     else {
       this._activeTaskbarProgress = null;
     }
+#endif
   },
 
   /// Current state displayed on the active window's taskbar item
-  _taskbarState: Ci.nsITaskbarProgress.STATE_NO_PROGRESS,
+  _taskbarState: null,
   _totalSize: 0,
   _totalTransferred: 0,
+
+  // If the active window is not the download manager window, set the state
+  // only if it is normal or indeterminate.
+  _shouldSetState: function DTPU_shouldSetState()
+  {
+#ifdef XP_WIN
+    return this._activeWindowIsDownloadWindow ||
+           (this._taskbarState == Ci.nsITaskbarProgress.STATE_NORMAL ||
+            this._taskbarState == Ci.nsITaskbarProgress.STATE_INDETERMINATE);
+#else
+    return true;
+#endif
+  },
 
   /**
    * Update the active window's taskbar indicator with the current state. There
@@ -198,11 +236,7 @@ var DownloadTaskbarProgressUpdater =
       return;
     }
 
-    // If the active window is not the download manager window, set the state
-    // only if it is normal or indeterminate.
-    if (this._activeWindowIsDownloadWindow ||
-        (this._taskbarState == Ci.nsITaskbarProgress.STATE_NORMAL ||
-         this._taskbarState == Ci.nsITaskbarProgress.STATE_INDETERMINATE)) {
+    if (this._shouldSetState()) {
       this._activeTaskbarProgress.setProgressState(this._taskbarState,
                                                    this._totalTransferred,
                                                    this._totalSize);
@@ -361,8 +395,3 @@ var DownloadTaskbarProgressUpdater =
     }
   }
 };
-
-////////////////////////////////////////////////////////////////////////////////
-//// Initialization
-
-DownloadTaskbarProgressUpdater._init();
