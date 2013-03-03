@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=690659
+-->
+<head>
+  <title>Test for Bug 690659</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=690659">Mozilla Bug 690659</a>
+<script type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "form_submit_server.sjs");
+    xhr.onload = function () {
+        var response = xhr.response;
+
+        for (var entry of response) {
+            is(entry.body, 'hey');
+            is(entry.headers['Content-Type'], 'text/plain');
+        }
+
+        is(response[0].headers['Content-Disposition'],
+            'form-data; name="empty"; filename="blob"');
+
+        is(response[1].headers['Content-Disposition'],
+            'form-data; name="explicit"; filename="explicit-file-name"');
+
+        is(response[2].headers['Content-Disposition'],
+            'form-data; name="explicit-empty"; filename=""');
+
+        is(response[3].headers['Content-Disposition'],
+            'form-data; name="file-name"; filename="testname"');
+
+        is(response[4].headers['Content-Disposition'],
+            'form-data; name="empty-file-name"; filename="blob"');
+
+        is(response[5].headers['Content-Disposition'],
+            'form-data; name="file-name-overwrite"; filename="overwrite"');
+
+        SimpleTest.finish();
+    }
+
+    var file, blob = new Blob(['hey'], {type: 'text/plain'});
+
+    var fd = new FormData();
+    fd.append("empty", blob);
+    fd.append("explicit", blob, "explicit-file-name");
+    fd.append("explicit-empty", blob, "");
+    file = SpecialPowers.unwrap(SpecialPowers.wrap(window).File(blob, {name: 'testname'}));
+    fd.append("file-name", file);
+    file = SpecialPowers.unwrap(SpecialPowers.wrap(window).File(blob, {name: ''}));
+    fd.append("empty-file-name", file);
+    file = SpecialPowers.unwrap(SpecialPowers.wrap(window).File(blob, {name: 'testname'}));
+    fd.append("file-name-overwrite", file, "overwrite");
+    xhr.responseType = 'json';
+    xhr.send(fd);
+}
+
+runTest()
+</script>
+</body>
+</html>

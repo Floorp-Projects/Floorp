@@ -342,6 +342,7 @@ MOCHITEST_FILES = \
 		test_style_attributes_reflection.html \
 		test_bug629801.html \
 		test_bug839371.html \
+		test_formData.html \
 		$(NULL)
 
 
