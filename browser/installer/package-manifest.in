@@ -204,14 +204,12 @@
 @BINPATH@/components/dom_permissionsettings.xpt
 @BINPATH@/components/dom_sidebar.xpt
 @BINPATH@/components/dom_mobilemessage.xpt
-@BINPATH@/components/dom_sms.xpt
 @BINPATH@/components/dom_storage.xpt
 @BINPATH@/components/dom_stylesheets.xpt
 @BINPATH@/components/dom_traversal.xpt
 @BINPATH@/components/dom_xbl.xpt
 @BINPATH@/components/dom_xpath.xpt
 @BINPATH@/components/dom_xul.xpt
-@BINPATH@/components/dom_loadsave.xpt
 @BINPATH@/components/downloads.xpt
 @BINPATH@/components/editor.xpt
 @BINPATH@/components/embed_base.xpt

@@ -20,6 +20,12 @@ except ImportError:
     HAVE_MULTIPROCESSING = False
 
 from progressbar import ProgressBar, NullProgressBar
+from results import TestOutput
+
+TESTS_LIB_DIR = os.path.dirname(os.path.abspath(__file__))
+JS_DIR = os.path.dirname(os.path.dirname(TESTS_LIB_DIR))
+TEST_DIR = os.path.join(JS_DIR, 'jit-test', 'tests')
+LIB_DIR = os.path.join(JS_DIR, 'jit-test', 'lib') + os.path.sep
 
 # Backported from Python 3.1 posixpath.py
 def _relpath(path, start=None):
@@ -45,6 +51,22 @@ def _relpath(path, start=None):
 os.path.relpath = _relpath
 
 class Test:
+
+    VALGRIND_CMD = []
+    paths = (d for d in os.environ['PATH'].split(os.pathsep))
+    valgrinds = (os.path.join(d, 'valgrind') for d in paths)
+    if any(os.path.exists(p) for p in valgrinds):
+        VALGRIND_CMD = [
+            'valgrind', '-q', '--smc-check=all-non-file',
+            '--error-exitcode=1', '--gen-suppressions=all',
+            '--show-possibly-lost=no', '--leak-check=full',
+        ]
+        if os.uname()[0] == 'Darwin':
+            VALGRIND_CMD.append('--dsymutil=yes')
+
+    del paths
+    del valgrinds
+
     def __init__(self, path):
         self.path = path       # path to test file
 
@@ -123,9 +145,22 @@ class Test:
 
         return test
 
-def find_tests(dir, substring = None):
+    def command(self, prefix):
+        scriptdir_var = os.path.dirname(self.path);
+        if not scriptdir_var.endswith('/'):
+            scriptdir_var += '/'
+        expr = ("const platform=%r; const libdir=%r; const scriptdir=%r"
+                % (sys.platform, LIB_DIR, scriptdir_var))
+        # We may have specified '-a' or '-d' twice: once via --jitflags, once
+        # via the "|jit-test|" line.  Remove dups because they are toggles.
+        cmd = prefix + list(set(self.jitflags)) + ['-e', expr, '-f', self.path]
+        if self.valgrind:
+            cmd = self.VALGRIND_CMD + cmd
+        return cmd
+
+def find_tests(substring=None):
     ans = []
-    for dirpath, dirnames, filenames in os.walk(dir):
+    for dirpath, dirnames, filenames in os.walk(TEST_DIR):
         dirnames.sort()
         filenames.sort()
         if dirpath == '.':
@@ -136,23 +171,9 @@ def find_tests(dir, substring = None):
             if filename in ('shell.js', 'browser.js', 'jsref.js'):
                 continue
             test = os.path.join(dirpath, filename)
-            if substring is None or substring in os.path.relpath(test, dir):
+            if substring is None or substring in os.path.relpath(test, TEST_DIR):
                 ans.append(test)
     return ans
-
-def get_test_cmd(js, path, jitflags, lib_dir, shell_args):
-    libdir_var = lib_dir
-    if not libdir_var.endswith('/'):
-        libdir_var += '/'
-    scriptdir_var = os.path.dirname(path);
-    if not scriptdir_var.endswith('/'):
-        scriptdir_var += '/'
-    expr = ("const platform=%r; const libdir=%r; const scriptdir=%r"
-            % (sys.platform, libdir_var, scriptdir_var))
-    # We may have specified '-a' or '-d' twice: once via --jitflags, once
-    # via the "|jit-test|" line.  Remove dups because they are toggles.
-    return ([js] + list(set(jitflags)) + shell_args +
-            [ '-e', expr, '-f', os.path.join(lib_dir, 'prolog.js'), '-f', path ])
 
 def tmppath(token):
     fd, path = tempfile.mkstemp(prefix=token)
@@ -239,23 +260,8 @@ def run_cmd_avoid_stdio(cmdline, env, timeout):
     _, __, code = run_timeout_cmd(cmdline, { 'env': env }, timeout)
     return read_and_unlink(stdoutPath), read_and_unlink(stderrPath), code
 
-def run_test(test, lib_dir, shell_args, options):
-    cmd = get_test_cmd(options.js_shell, test.path, test.jitflags, lib_dir, shell_args)
-
-    if (test.valgrind and
-        any([os.path.exists(os.path.join(d, 'valgrind'))
-             for d in os.environ['PATH'].split(os.pathsep)])):
-        valgrind_prefix = [ 'valgrind',
-                            '-q',
-                            '--smc-check=all-non-file',
-                            '--error-exitcode=1',
-                            '--gen-suppressions=all',
-                            '--show-possibly-lost=no',
-                            '--leak-check=full']
-        if os.uname()[0] == 'Darwin':
-            valgrind_prefix += ['--dsymutil=yes']
-        cmd = valgrind_prefix + cmd
-
+def run_test(test, prefix, options):
+    cmd = test.command(prefix)
     if options.show_cmd:
         print(subprocess.list2cmdline(cmd))
 
@@ -269,15 +275,7 @@ def run_test(test, lib_dir, shell_args, options):
         env['TZ'] = 'PST8PDT'
 
     out, err, code, timed_out = run(cmd, env, options.timeout)
-
-    if options.show_output:
-        sys.stdout.write(out)
-        sys.stdout.write(err)
-        sys.stdout.write('Exit code: %s\n' % code)
-    if test.valgrind:
-        sys.stdout.write(err)
-    return (check_output(out, err, code, test),
-            out, err, code, timed_out)
+    return TestOutput(test, cmd, out, err, code, None, timed_out)
 
 def check_output(out, err, rc, test):
     if test.expect_error:
@@ -309,14 +307,14 @@ def print_tinderbox(label, test, message=None):
         result += ": " + message
     print(result)
 
-def wrap_parallel_run_test(test, lib_dir, shell_args, resultQueue, options):
+def wrap_parallel_run_test(test, prefix, resultQueue, options):
     # Ignore SIGINT in the child
     signal.signal(signal.SIGINT, signal.SIG_IGN)
-    result = run_test(test, lib_dir, shell_args, options) + (test,)
+    result = run_test(test, prefix, options)
     resultQueue.put(result)
     return result
 
-def run_tests_parallel(tests, test_dir, lib_dir, shell_args, options):
+def run_tests_parallel(tests, prefix, options):
     # This queue will contain the results of the various tests run.
     # We could make this queue a global variable instead of using
     # a manager to share, but this will not work on Windows.
@@ -334,7 +332,7 @@ def run_tests_parallel(tests, test_dir, lib_dir, shell_args, options):
     result_process_return_queue = queue_manager.Queue()
     result_process = Process(target=process_test_results_parallel,
                              args=(async_test_result_queue, result_process_return_queue,
-                                   notify_queue, len(tests), options, lib_dir, shell_args))
+                                   notify_queue, len(tests), options))
     result_process.start()
 
     # Ensure that a SIGTERM is handled the same way as SIGINT
@@ -364,7 +362,7 @@ def run_tests_parallel(tests, test_dir, lib_dir, shell_args, options):
         while notify_queue.get():
             if (testcnt < len(tests)):
                 # Start one new worker
-                worker_process = Process(target=wrap_parallel_run_test, args=(tests[testcnt], lib_dir, shell_args, async_test_result_queue, options))
+                worker_process = Process(target=wrap_parallel_run_test, args=(tests[testcnt], prefix, async_test_result_queue, options))
                 worker_processes.append(worker_process)
                 worker_process.start()
                 testcnt += 1
@@ -413,26 +411,26 @@ def get_parallel_results(async_test_result_queue, notify_queue):
 
         yield async_test_result
 
-def process_test_results_parallel(async_test_result_queue, return_queue, notify_queue, num_tests, options, lib_dir, shell_args):
+def process_test_results_parallel(async_test_result_queue, return_queue, notify_queue, num_tests, options):
     gen = get_parallel_results(async_test_result_queue, notify_queue)
-    ok = process_test_results(gen, num_tests, options, lib_dir, shell_args)
+    ok = process_test_results(gen, num_tests, options)
     return_queue.put(ok)
 
-def print_test_summary(failures, complete, doing, options, lib_dir, shell_args):
+def print_test_summary(failures, complete, doing, options):
     if failures:
         if options.write_failures:
             try:
                 out = open(options.write_failures, 'w')
                 # Don't write duplicate entries when we are doing multiple failures per job.
                 written = set()
-                for test, fout, ferr, fcode, _ in failures:
-                    if test.path not in written:
-                        out.write(os.path.relpath(test.path, test_dir) + '\n')
+                for res in failures:
+                    if res.test.path not in written:
+                        out.write(os.path.relpath(res.test.path, TEST_DIR) + '\n')
                         if options.write_failure_output:
-                            out.write(fout)
-                            out.write(ferr)
-                            out.write('Exit code: ' + str(fcode) + "\n")
-                        written.add(test.path)
+                            out.write(res.out)
+                            out.write(res.err)
+                            out.write('Exit code: ' + str(res.rc) + "\n")
+                        written.add(res.test.path)
                 out.close()
             except IOError:
                 sys.stderr.write("Exception thrown trying to write failure file '%s'\n"%
@@ -440,28 +438,28 @@ def print_test_summary(failures, complete, doing, options, lib_dir, shell_args):
                 traceback.print_exc()
                 sys.stderr.write('---\n')
 
-        def show_test(test):
+        def show_test(res):
             if options.show_failed:
-                print('    ' + subprocess.list2cmdline(get_test_cmd(options.js_shell, test.path, test.jitflags, lib_dir, shell_args)))
+                print('    ' + subprocess.list2cmdline(res.cmd))
             else:
-                print('    ' + ' '.join(test.jitflags + [test.path]))
+                print('    ' + ' '.join(res.test.jitflags + [res.test.path]))
 
         print('FAILURES:')
-        for test, _, __, ___, timed_out in failures:
-            if not timed_out:
-                show_test(test)
+        for res in failures:
+            if not res.timed_out:
+                show_test(res)
 
         print('TIMEOUTS:')
-        for test, _, __, ___, timed_out in failures:
-            if timed_out:
-                show_test(test)
+        for res in failures:
+            if res.timed_out:
+                show_test(res)
 
         return False
     else:
         print('PASSED ALL' + ('' if complete else ' (partial run -- interrupted by user %s)' % doing))
         return True
 
-def process_test_results(results, num_tests, options, lib_dir, shell_args):
+def process_test_results(results, num_tests, options):
     pb = NullProgressBar()
     if not options.hide_progress and not options.show_cmd and ProgressBar.conservative_isatty():
         fmt = [
@@ -477,26 +475,34 @@ def process_test_results(results, num_tests, options, lib_dir, shell_args):
     complete = False
     doing = 'before starting'
     try:
-        for i, (ok, out, err, code, timed_out, test) in enumerate(results):
-            doing = 'after %s'%test.path
+        for i, res in enumerate(results):
 
+            if options.show_output:
+                sys.stdout.write(res.out)
+                sys.stdout.write(res.err)
+                sys.stdout.write('Exit code: %s\n' % res.rc)
+            if res.test.valgrind:
+                sys.stdout.write(res.err)
+
+            ok = check_output(res.out, res.err, res.rc, res.test)
+            doing = 'after %s' % res.test.path
             if not ok:
-                failures.append([ test, out, err, code, timed_out ])
-                pb.message("FAIL - %s" % test.path)
-            if timed_out:
+                failures.append(res)
+                pb.message("FAIL - %s" % res.test.path)
+            if res.timed_out:
                 timeouts += 1
 
             if options.tinderbox:
                 if ok:
-                    print_tinderbox("TEST-PASS", test);
+                    print_tinderbox("TEST-PASS", res.test);
                 else:
-                    lines = [ _ for _ in out.split('\n') + err.split('\n')
+                    lines = [ _ for _ in res.out.split('\n') + res.err.split('\n')
                               if _ != '' ]
                     if len(lines) >= 1:
                         msg = lines[-1]
                     else:
                         msg = ''
-                    print_tinderbox("TEST-UNEXPECTED-FAIL", test, msg);
+                    print_tinderbox("TEST-UNEXPECTED-FAIL", res.test, msg);
 
             n = i + 1
             pb.update(n, {
@@ -510,17 +516,15 @@ def process_test_results(results, num_tests, options, lib_dir, shell_args):
         print_tinderbox("TEST-UNEXPECTED-FAIL", None, "Test execution interrupted by user");
 
     pb.finish(True)
-    return print_test_summary(failures, complete, doing, options, lib_dir, shell_args)
+    return print_test_summary(failures, complete, doing, options)
 
-
-def get_serial_results(tests, lib_dir, shell_args, options):
+def get_serial_results(tests, prefix, options):
     for test in tests:
-        result = run_test(test, lib_dir, shell_args, options)
-        yield result + (test,)
+        yield run_test(test, prefix, options)
 
-def run_tests(tests, test_dir, lib_dir, shell_args, options):
-    gen = get_serial_results(tests, lib_dir, shell_args, options)
-    ok = process_test_results(gen, len(tests), options, lib_dir, shell_args)
+def run_tests(tests, prefix, options):
+    gen = get_serial_results(tests, prefix, options)
+    ok = process_test_results(gen, len(tests), options)
     return ok
 
 def parse_jitflags(options):

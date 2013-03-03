@@ -44,7 +44,7 @@ public:
           int32_t aNameSpaceID, nsIAtom* aAttribute) const;
 
   virtual int32_t GetChannel() = 0;
-  void GenerateLookupTable(uint8_t* aTable);
+  bool GenerateLookupTable(uint8_t* aTable);
 
   // WebIDL
   virtual JSObject*

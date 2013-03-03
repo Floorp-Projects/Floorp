@@ -362,7 +362,6 @@ select:disabled:disabled /* Need the pseudo-class twice to have the specificity
                             be at least the same as select[size][multiple] above */
 {
   -moz-user-input: disabled;
-  -moz-user-focus: ignore;
   color: GrayText;
   background-color: ThreeDFace;
   cursor: inherit;
@@ -721,12 +720,14 @@ meter {
 input[type="range"] {
   -moz-appearance: none;
   display: inline-block !important;
-  cursor: default;
   width: 12em;
   height: 1.3em;
+  margin: 0 0.7em;
+  /* Override some rules that apply on all input types: */
+  cursor: default;
   background: none;
   border: none;
-  margin: 0 0.7em;
+  -moz-binding: none; /* we don't want any of platformHTMLBindings.xml#inputFields */
 }
 
 /**

@@ -328,11 +328,11 @@ function openLinkIn(url, where, params) {
   // (e.g. "javascript:window.open('');").
   var fm = Components.classes["@mozilla.org/focus-manager;1"].
              getService(Components.interfaces.nsIFocusManager);
-  if (window == fm.activeWindow || isBlankPageURL(url))
+  if (window == fm.activeWindow || w.isBlankPageURL(url))
     w.focus();
   w.gBrowser.selectedBrowser.focus();
 
-  if (!loadInBackground && isBlankPageURL(url))
+  if (!loadInBackground && w.isBlankPageURL(url))
     w.focusAndSelectUrlBar();
 }
 

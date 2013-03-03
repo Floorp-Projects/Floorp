@@ -1600,7 +1600,11 @@ MediaStream::RemoveListener(MediaStreamListener* aListener)
     }
     nsRefPtr<MediaStreamListener> mListener;
   };
-  GraphImpl()->AppendMessage(new Message(this, aListener));
+  // If the stream is destroyed the Listeners have or will be
+  // removed.
+  if (!IsDestroyed()) {
+    GraphImpl()->AppendMessage(new Message(this, aListener));
+  }
 }
 
 void

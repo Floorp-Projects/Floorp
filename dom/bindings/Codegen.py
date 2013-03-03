@@ -1047,8 +1047,7 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
     return true;
   }
 
-  JSObject* instance = js::UnwrapObject(&vp.toObject());
-
+  JSObject* instance = &vp.toObject();
   bool ok = InterfaceHasInstance(cx, obj, instance, bp);
   if (!ok || *bp) {
     return ok;
@@ -1056,7 +1055,8 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
 
   // FIXME Limit this to chrome by checking xpc::AccessCheck::isChrome(obj).
   nsISupports* native =
-    nsContentUtils::XPConnect()->GetNativeOfWrapper(cx, instance);
+    nsContentUtils::XPConnect()->GetNativeOfWrapper(cx,
+                                                    js::UnwrapObject(instance));
   nsCOMPtr<nsIDOM%s> qiResult = do_QueryInterface(native);
   *bp = !!qiResult;
   return true;""" % self.descriptor.interface.identifier.name
@@ -2098,27 +2098,6 @@ ${codeOnFailure}
 }
 ${target} = tmp.forget();""").substitute(self.substitution)
 
-def dictionaryHasSequenceMember(dictionary):
-    return (any(typeIsSequenceOrHasSequenceMember(m.type) for m in
-                dictionary.members) or
-            (dictionary.parent and
-             dictionaryHasSequenceMember(dictionary.parent)))
-
-def typeIsSequenceOrHasSequenceMember(type):
-    if type.nullable():
-        type = type.inner
-    if type.isSequence():
-        return True
-    if  type.isArray():
-        elementType = type.inner
-        return typeIsSequenceOrHasSequenceMember(elementType)
-    if type.isDictionary():
-        return dictionaryHasSequenceMember(type.inner)
-    if type.isUnion():
-        return any(typeIsSequenceOrHasSequenceMember(m.type) for m in
-                   type.flatMemberTypes)
-    return False
-
 # If this function is modified, modify CGNativeMember.getArg and
 # CGNativeMember.getRetvalInfo accordingly.  The latter cares about the decltype
 # and holdertype we end up using.
@@ -2154,9 +2133,7 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
 
     if isMember is True, we're being converted from a property of some
     JS object, not from an actual method argument, so we can't rely on
-    our jsval being rooted or outliving us in any way.  Any caller
-    passing true needs to ensure that it is handled correctly in
-    typeIsSequenceOrHasSequenceMember.
+    our jsval being rooted or outliving us in any way.
 
     If isOptional is true, then we are doing conversion of an optional
     argument with no default value.
@@ -2326,21 +2303,25 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
         else:
             elementType = type.inner
 
-        # We have to be careful with reallocation behavior for arrays.  In
-        # particular, if we have a sequence of elements which are themselves
-        # sequences (so nsAutoTArrays) or have sequences as members, we have a
-        # problem.  In that case, resizing the outermost nsAutoTarray to the
-        # right size will memmove its elements, but nsAutoTArrays are not
-        # memmovable and hence will end up with pointers to bogus memory, which
-        # is bad.  To deal with this, we disallow sequences, arrays,
-        # dictionaries, and unions which contain sequences as sequence item
-        # types.  If WebIDL ever adds another container type, we'd have to
-        # disallow it as well.
-        if typeIsSequenceOrHasSequenceMember(elementType):
-            raise TypeError("Can't handle a sequence containing another "
-                            "sequence as an element or member of an element.  "
-                            "See the big comment explaining why.\n%s" %
-                            str(type.location))
+        # We want to use auto arrays if we can, but we have to be careful with
+        # reallocation behavior for arrays.  In particular, if we use auto
+        # arrays for sequences and have a sequence of elements which are
+        # themselves sequences or have sequences as members, we have a problem.
+        # In that case, resizing the outermost nsAutoTarray to the right size
+        # will memmove its elements, but nsAutoTArrays are not memmovable and
+        # hence will end up with pointers to bogus memory, which is bad.  To
+        # deal with this, we typically map WebIDL sequences to our Sequence
+        # type, which is in fact memmovable.  The one exception is when we're
+        # passing in a sequence directly as an argument without any sort of
+        # optional or nullable complexity going on.  In that situation, we can
+        # use an AutoSequence instead.  We have to keep using Sequence in the
+        # nullable and optional cases because we don't want to leak the
+        # AutoSequence type to consumers, which would be unavoidable with
+        # Nullable<AutoSequence> or Optional<AutoSequence>.
+        if isMember or isOptional or nullable:
+            sequenceClass = "Sequence"
+        else:
+            sequenceClass = "AutoSequence"
 
         (elementTemplate, elementDeclType,
          elementHolderType, dealWithOptional) = getJSToNativeConversionTemplate(
@@ -2351,15 +2332,18 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
         if elementHolderType is not None:
             raise TypeError("Shouldn't need holders for sequences")
 
-        typeName = CGWrapper(elementDeclType, pre="Sequence< ", post=" >")
+        typeName = CGWrapper(elementDeclType,
+                             pre=("%s< " % sequenceClass), post=" >")
+        sequenceType = typeName.define()
         if nullable:
             typeName = CGWrapper(typeName, pre="Nullable< ", post=" >")
             arrayRef = "${declName}.Value()"
         else:
             arrayRef = "${declName}"
-        # If we're optional, the const will come from the Optional
+        # If we're optional or a member, the const will come from the Optional
+        # or whatever we're a member of.
         mutableTypeName = typeName
-        if not isOptional:
+        if not isOptional and not isMember:
             typeName = CGWrapper(typeName, pre="const ")
 
         # NOTE: Keep this in sync with variadic conversions as needed
@@ -2372,7 +2356,7 @@ uint32_t length;
 if (!JS_GetArrayLength(cx, seq, &length)) {
 %s
 }
-Sequence< %s > &arr = const_cast< Sequence< %s >& >(%s);
+%s &arr = const_cast< %s& >(%s);
 if (!arr.SetCapacity(length)) {
   JS_ReportOutOfMemory(cx);
 %s
@@ -2385,8 +2369,8 @@ for (uint32_t i = 0; i < length; ++i) {
   %s& slot = *arr.AppendElement();
 """ % (CGIndenter(CGGeneric(notSequence)).define(),
        exceptionCodeIndented.define(),
-       elementDeclType.define(),
-       elementDeclType.define(),
+       sequenceType,
+       sequenceType,
        arrayRef,
        exceptionCodeIndented.define(),
        CGIndenter(exceptionCodeIndented).define(),
@@ -3327,7 +3311,7 @@ class CGArgumentConverter(CGThing):
             raise TypeError("Shouldn't need holders for variadics")
 
         replacer = dict(self.argcAndIndex, **self.replacementVariables)
-        replacer["seqType"] = CGWrapper(elementDeclType, pre="Sequence< ", post=" >").define()
+        replacer["seqType"] = CGWrapper(elementDeclType, pre="AutoSequence< ", post=" >").define()
         replacer["elemType"] = elementDeclType.define()
 
         # NOTE: Keep this in sync with sequence conversions as needed
@@ -5179,24 +5163,16 @@ ${doConversionsToJS}
         (templateVars, type) = arg
         assert not type.nullable() # flatMemberTypes never has nullable types
         val = "mValue.m%(name)s.Value()" % templateVars
-        if type.isString():
-            # XPConnect string-to-JS conversion wants to mutate the string.  So
-            # let's give it a string it can mutate
-            # XXXbz if we try to do a sequence of strings, this will kinda fail.
-            prepend = "nsString mutableStr(%s);\n" % val
-            val = "mutableStr"
-        else:
-            prepend = ""
-            if type.isObject():
-                # We'll have a NonNull<JSObject> while the wrapping code
-                # wants a JSObject*
-                val = "%s.get()" % val
-            elif type.isSpiderMonkeyInterface():
-                # We have a NonNull<TypedArray> object while the wrapping code
-                # wants a JSObject*.  Cheat with .get() so we don't have to
-                # figure out the right reference type to cast to.
-                val = "%s.get()->Obj()" % val
-        wrapCode = prepend + wrapForType(
+        if type.isObject():
+            # We'll have a NonNull<JSObject> while the wrapping code
+            # wants a JSObject*
+            val = "%s.get()" % val
+        elif type.isSpiderMonkeyInterface():
+            # We have a NonNull<TypedArray> object while the wrapping code
+            # wants a JSObject*.  Cheat with .get() so we don't have to
+            # figure out the right reference type to cast to.
+            val = "%s.get()->Obj()" % val
+        wrapCode = wrapForType(
             type, self.descriptorProvider,
             {
                 "jsvalRef": "*vp",
@@ -5458,7 +5434,7 @@ class ClassConstructor(ClassItem):
         if self.bodyInHeader:
             return ''
 
-        args = ', '.join([str(a) for a in self.args])
+        args = ', '.join([a.define() for a in self.args])
 
         body = '  ' + self.getBody()
         body = '\n' + stripTrailingWhitespace(body.replace('\n', '\n  '))

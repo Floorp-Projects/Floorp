@@ -15,22 +15,16 @@
 #include "nsString.h"
 #include "nsPresContext.h"
 #include "nsIWidget.h"
-#include "nsIStyleRule.h"
 #include "nsCRTGlue.h"
 #include "nsCSSProps.h"
 
 #include "nsCOMPtr.h"
-#include "nsIFrame.h"
-#include "nsHTMLReflowState.h"
-#include "prenv.h"
 
-#include "nsSVGUtils.h"
 #include "nsBidiUtils.h"
 #include "nsLayoutUtils.h"
 
 #include "imgIRequest.h"
 #include "imgIContainer.h"
-#include "prlog.h"
 
 #include "mozilla/Likely.h"
 #include <algorithm>

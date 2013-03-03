@@ -9,6 +9,7 @@
 #include "WMFUtils.h"
 #include "WMFByteStream.h"
 #include "WMFSourceReaderCallback.h"
+#include "mozilla/dom/TimeRanges.h"
 
 #ifndef MOZ_SAMPLE_TYPE_FLOAT32
 #error We expect 32bit float audio samples on desktop for the Windows Media Foundation media backend.
@@ -764,7 +765,7 @@ WMFReader::Seek(int64_t aTargetUs,
 }
 
 nsresult
-WMFReader::GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime)
+WMFReader::GetBuffered(mozilla::dom::TimeRanges* aBuffered, int64_t aStartTime)
 {
   MediaResource* stream = mDecoder->GetResource();
   int64_t durationUs = 0;

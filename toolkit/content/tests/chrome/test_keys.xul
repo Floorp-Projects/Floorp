@@ -10,7 +10,6 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 
 <script>
-SimpleTest.expectAssertions(0, 3);
 SimpleTest.waitForExplicitFinish();
 function runTest()
 {

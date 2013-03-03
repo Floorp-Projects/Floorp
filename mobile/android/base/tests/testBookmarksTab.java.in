@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.io.File;
 
 /**
- * Tests the Bookamrks Tab
+ * Tests the Bookmarks Tab
  * - opening the bookmarks tab
  * - items look correct
  * - clicking on an item
@@ -26,7 +26,6 @@ import java.io.File;
  * - editing the name, url and keyword of a bookmark from the context menu
  * - removing a bookmark
  */
-
 public class testBookmarksTab extends BaseTest {
     private View mFirstChild;
     private ListView list;
@@ -49,14 +48,10 @@ public class testBookmarksTab extends BaseTest {
 
     private void testList(String url) {
         View child;
-        ListView list = getBookmarksList();
-
-        waitForText("Desktop Bookmarks");
-        mAsserter.isnot(list, null, "checking that bookmarks list exists");
+        ListView list = getBookmarksList("about:firefox", 5);
+        mAsserter.isnot(list, null, "checking that bookmarks list exists and has 5 children (defaults + a folder)");
 
         int count = list.getAdapter().getCount();
-        mAsserter.is(count, 5, "bookmarks list has 5 children (defaults + a folder)");
- 
         for (int i = count - 1; i >= 0; i--) {
             child = list.getChildAt(i);
             compareRow(child, i == 0 ? 1 : 2, 1);
@@ -95,9 +90,7 @@ public class testBookmarksTab extends BaseTest {
     }
 
     private void testContextMenu(String url) {
-        list = getBookmarksList();
-        waitForText(url);
-
+        list = getBookmarksList(url);
         // wait for the bookmarks list to be populated
         View child;
         mFirstChild = null;
@@ -150,7 +143,7 @@ public class testBookmarksTab extends BaseTest {
             mAsserter.ok(false, "waiting for bookmark item", "bookmark item available");
         }
 
-        list = getBookmarksList();
+        list = getBookmarksList(url);
 
         // Test edit bookmark name
         editBookmark(1,0," Bookmark Name ");
@@ -172,7 +165,7 @@ public class testBookmarksTab extends BaseTest {
         mSolo.clickOnText("Remove");
 
         // Wait for the toaster notification
-        waitForText("Bookmark Removed");
+        waitForText("Bookmark removed");
 
         // Verify Bookmark is removed
         child = list.getChildAt(1);
@@ -191,7 +184,7 @@ public class testBookmarksTab extends BaseTest {
         View child;
         mSolo.clickOnText("Bookmarks");
         child = list.getChildAt(bookmarkIndex);
-        waitForText("Desktop Bookmarks");
+        waitForText("about:firefox");
         mSolo.clickLongOnView(child);
         waitForText("Open in New Tab");
         mSolo.clickOnText("Edit");
@@ -204,7 +197,7 @@ public class testBookmarksTab extends BaseTest {
         mSolo.clickOnEditText(fieldIndex);
         mActions.sendKeys(addedText);
         mSolo.clickOnText("OK");
-        waitForText("Bookmark Updated");
+        waitForText("Bookmark updated");
         mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
     }
 
@@ -214,7 +207,7 @@ public class testBookmarksTab extends BaseTest {
         View child;
         mSolo.clickOnText("Bookmarks");
         child = list.getChildAt(bookmarkIndex);
-        waitForText("Desktop Bookmarks");
+        waitForText("about:firefox");
         mSolo.clickLongOnView(child);
         waitForText("Open in New Tab");
         mSolo.clickOnText("Edit");
@@ -228,12 +221,12 @@ public class testBookmarksTab extends BaseTest {
         // Check if the new text was added
         if (mSolo.searchText(addedText)) {
            mSolo.clickOnText("Cancel");
-           waitForText("Desktop Bookmarks");
+           waitForText("about:firefox");
            mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
            return true;
         } else {
            mSolo.clickOnText("Cancel");
-           waitForText("Desktop Bookmarks");
+           waitForText("about:firefox");
            mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
            return false;
         }

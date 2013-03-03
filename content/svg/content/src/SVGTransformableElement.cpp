@@ -190,7 +190,7 @@ SVGTransformableElement::GetCTM()
     currentDoc->FlushPendingNotifications(Flush_Layout);
   }
   gfxMatrix m = SVGContentUtils::GetCTM(this, false);
-  nsCOMPtr<SVGMatrix> mat = m.IsSingular() ? nullptr : new SVGMatrix(m);
+  nsRefPtr<SVGMatrix> mat = m.IsSingular() ? nullptr : new SVGMatrix(m);
   return mat.forget();
 }
 
@@ -203,7 +203,7 @@ SVGTransformableElement::GetScreenCTM()
     currentDoc->FlushPendingNotifications(Flush_Layout);
   }
   gfxMatrix m = SVGContentUtils::GetCTM(this, true);
-  nsCOMPtr<SVGMatrix> mat = m.IsSingular() ? nullptr : new SVGMatrix(m);
+  nsRefPtr<SVGMatrix> mat = m.IsSingular() ? nullptr : new SVGMatrix(m);
   return mat.forget();
 }
 
@@ -212,16 +212,16 @@ SVGTransformableElement::GetTransformToElement(SVGGraphicsElement& aElement,
                                                ErrorResult& rv)
 {
   // the easiest way to do this (if likely to increase rounding error):
-  nsCOMPtr<SVGMatrix> ourScreenCTM = GetScreenCTM();
-  nsCOMPtr<SVGMatrix> targetScreenCTM = aElement.GetScreenCTM();
+  nsRefPtr<SVGMatrix> ourScreenCTM = GetScreenCTM();
+  nsRefPtr<SVGMatrix> targetScreenCTM = aElement.GetScreenCTM();
   if (!ourScreenCTM || !targetScreenCTM) {
     rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
-  nsCOMPtr<SVGMatrix> tmp = targetScreenCTM->Inverse(rv);
+  nsRefPtr<SVGMatrix> tmp = targetScreenCTM->Inverse(rv);
   if (rv.Failed()) return nullptr;
 
-  nsCOMPtr<SVGMatrix> mat = tmp->Multiply(*ourScreenCTM);
+  nsRefPtr<SVGMatrix> mat = tmp->Multiply(*ourScreenCTM);
   return mat.forget();
 }
 

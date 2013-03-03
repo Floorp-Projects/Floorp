@@ -4221,6 +4221,7 @@ MOZ_OMX_PLUGIN=
 MOZ_VP8=
 MOZ_VP8_ERROR_CONCEALMENT=
 MOZ_VP8_ENCODER=
+MOZ_WEBVTT=1
 VPX_AS=
 VPX_ASFLAGS=
 VPX_AS_DASH_C_FLAG=
@@ -5698,6 +5699,10 @@ fi
 
 if test -n "$MOZ_OPUS"; then
     AC_DEFINE(MOZ_OPUS)
+fi
+
+if test -n "$MOZ_WEBVTT"; then
+    AC_DEFINE(MOZ_WEBVTT)
 fi
 
 dnl ========================================================
@@ -8827,6 +8832,7 @@ AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)
 AC_SUBST(MOZ_OPUS)
 AC_SUBST(MOZ_WEBM)
+AC_SUBST(MOZ_WEBVTT)
 AC_SUBST(MOZ_DASH)
 AC_SUBST(MOZ_WMF)
 AC_SUBST(MOZ_MEDIA_PLUGINS)
@@ -9118,6 +9124,7 @@ MOZ_WIDGET_TOOLKIT=${MOZ_WIDGET_TOOLKIT} \
 UNIVERSAL_BINARY=${UNIVERSAL_BINARY} \
 MOZ_CRASHREPORTER=${MOZ_CRASHREPORTER} \
 MOZ_APP_NAME=${MOZ_APP_NAME} \
+TOPSRCDIR=${_topsrcdir} \
   $PYTHON ${_topsrcdir}/config/writemozinfo.py ./mozinfo.json.tmp
 if cmp -s ./mozinfo.json.tmp ./mozinfo.json; then
   rm ./mozinfo.json.tmp

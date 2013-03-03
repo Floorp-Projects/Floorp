@@ -337,7 +337,7 @@ nsImageBoxFrame::PaintImage(nsRenderingContext& aRenderingContext,
     bool hasSubRect = !mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0);
     nsLayoutUtils::DrawSingleImage(&aRenderingContext, imgCon,
         nsLayoutUtils::GetGraphicsFilterForFrame(this),
-        rect, dirty, aFlags, hasSubRect ? &mSubRect : nullptr);
+        rect, dirty, nullptr, aFlags, hasSubRect ? &mSubRect : nullptr);
   }
 }
 

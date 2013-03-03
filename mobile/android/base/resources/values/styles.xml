@@ -284,4 +284,10 @@
         <item name="android:textColor">@color/abouthome_section_subtitle</item>
     </style>
 
+    <style name="GeckoDialogTitle">
+        <item name="android:textAppearance">@android:style/TextAppearance.DialogWindowTitle</item>
+    </style>
+
+    <style name="GeckoDialogTitle.SubTitle" />
+
 </resources>

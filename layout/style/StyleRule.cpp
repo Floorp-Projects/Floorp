@@ -13,25 +13,15 @@
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/css/Declaration.h"
 #include "nsCSSStyleSheet.h"
-#include "mozilla/css/Loader.h"
-#include "nsIURL.h"
 #include "nsIDocument.h"
 #include "nsIAtom.h"
-#include "nsCRT.h"
 #include "nsString.h"
-#include "nsStyleConsts.h"
 #include "nsStyleUtil.h"
-#include "nsIDOMCSSStyleSheet.h"
 #include "nsICSSStyleRuleDOMWrapper.h"
-#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsINameSpaceManager.h"
 #include "nsXMLNameSpaceMap.h"
-#include "nsRuleNode.h"
-#include "nsUnicharUtils.h"
 #include "nsCSSPseudoElements.h"
-#include "nsIPrincipal.h"
-#include "nsComponentManagerUtils.h"
 #include "nsCSSPseudoClasses.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsTArray.h"
@@ -40,7 +30,8 @@
 #include "nsError.h"
 #include "mozAutoDocUpdate.h"
 
-#include "prlog.h"
+class nsIDOMCSSStyleDeclaration;
+class nsIDOMCSSStyleSheet;
 
 namespace css = mozilla::css;
 

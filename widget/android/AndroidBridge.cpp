@@ -22,7 +22,7 @@
 #include "mozilla/Preferences.h"
 #include "nsThreadUtils.h"
 #include "nsIThreadManager.h"
-#include "mozilla/dom/sms/PSms.h"
+#include "mozilla/dom/mobilemessage/PSms.h"
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
 #include "nsPresContext.h"
@@ -94,6 +94,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
 
     mJNIEnv = nullptr;
     mThread = nullptr;
+    mGLControllerObj = nullptr;
     mOpenedGraphicsLibraries = false;
     mHasNativeBitmapAccess = false;
     mHasNativeWindowAccess = false;
@@ -215,8 +216,16 @@ AndroidBridge::Init(JNIEnv *jEnv,
 
     jLayerView = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("org/mozilla/gecko/gfx/LayerView"));
 
-    AndroidGLController::Init(jEnv);
-    AndroidEGLObject::Init(jEnv);
+    jclass glControllerClass = jEnv->FindClass("org/mozilla/gecko/gfx/GLController");
+    jProvideEGLSurfaceMethod = jEnv->GetMethodID(glControllerClass, "provideEGLSurface",
+                                                  "()Ljavax/microedition/khronos/egl/EGLSurface;");
+
+    jclass eglClass = jEnv->FindClass("com/google/android/gles_jni/EGLSurfaceImpl");
+    if (eglClass) {
+        jEGLSurfacePointerField = jEnv->GetFieldID(eglClass, "mEGLSurface", "I");
+    } else {
+        jEGLSurfacePointerField = 0;
+    }
 
     InitAndroidJavaWrappers(jEnv);
 
@@ -1099,7 +1108,6 @@ AndroidBridge::SetLayerClient(JNIEnv* env, jobject jobj)
     mLayerClient = client;
 
     if (resetting) {
-        RegisterCompositor(env, true);
         // since we are re-linking the new java objects to Gecko, we need to get
         // the viewport from the compositor (since the Java copy was thrown away)
         // and we do that by setting the first-paint flag.
@@ -1120,16 +1128,21 @@ AndroidBridge::ShowInputMethodPicker()
     env->CallStaticVoidMethod(mGeckoAppShellClass, jShowInputMethodPicker);
 }
 
-static AndroidGLController sController;
-
 void
-AndroidBridge::RegisterCompositor(JNIEnv *env, bool resetting)
+AndroidBridge::RegisterCompositor(JNIEnv *env)
 {
     ALOG_BRIDGE("AndroidBridge::RegisterCompositor");
-    if (!env)
-        env = GetJNIForThread();    // called on the compositor thread
-    if (!env)
+    if (mGLControllerObj) {
+        // we already have this set up, no need to do it again
         return;
+    }
+
+    if (!env) {
+        env = GetJNIForThread();    // called on the compositor thread
+    }
+    if (!env) {
+        return;
+    }
 
     AutoLocalJNIFrame jniFrame(env);
 
@@ -1139,20 +1152,24 @@ AndroidBridge::RegisterCompositor(JNIEnv *env, bool resetting)
     if (jniFrame.CheckForException())
         return;
 
-    if (resetting) {
-        sController.Reacquire(env, glController);
-    } else {
-        sController.Acquire(env, glController);
-    }
+    mGLControllerObj = env->NewGlobalRef(glController);
 }
 
 EGLSurface
-AndroidBridge::ProvideEGLSurface(bool waitUntilValid)
+AndroidBridge::ProvideEGLSurface()
 {
-    if (waitUntilValid) {
-        sController.WaitForValidSurface();
+    if (!jEGLSurfacePointerField) {
+        return NULL;
     }
-    return sController.ProvideEGLSurface();
+    MOZ_ASSERT(mGLControllerObj, "AndroidBridge::ProvideEGLSurface called with a null GL controller ref");
+
+    JNIEnv* env = GetJNIForThread(); // called on the compositor thread
+    AutoLocalJNIFrame jniFrame(env);
+    jobject eglSurface = env->CallObjectMethod(mGLControllerObj, jProvideEGLSurfaceMethod);
+    if (jniFrame.CheckForException() || !eglSurface)
+        return NULL;
+
+    return reinterpret_cast<EGLSurface>(env->GetIntField(eglSurface, jEGLSurfacePointerField));
 }
 
 bool
@@ -1618,7 +1635,7 @@ AndroidBridge::SetURITitle(const nsAString& aURI, const nsAString& aTitle)
 
 nsresult
 AndroidBridge::GetSegmentInfoForText(const nsAString& aText,
-                                     dom::sms::SmsSegmentInfoData* aData)
+                                     dom::mobilemessage::SmsSegmentInfoData* aData)
 {
     ALOG_BRIDGE("AndroidBridge::GetSegmentInfoForText");
 
@@ -1707,7 +1724,7 @@ AndroidBridge::DeleteMessage(int32_t aMessageId, nsISmsRequest* aRequest)
 }
 
 void
-AndroidBridge::CreateMessageList(const dom::sms::SmsFilterData& aFilter, bool aReverse,
+AndroidBridge::CreateMessageList(const dom::mobilemessage::SmsFilterData& aFilter, bool aReverse,
                                  nsISmsRequest* aRequest)
 {
     ALOG_BRIDGE("AndroidBridge::CreateMessageList");

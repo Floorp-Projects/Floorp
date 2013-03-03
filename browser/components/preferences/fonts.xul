@@ -244,10 +244,11 @@
 
     <!-- Character Encoding -->
     <groupbox>
-      <caption label="&languages.customize.Charset.grouplabel;"/>
+      <caption label="&languages.customize.Fallback.grouplabel;"/>
+      <description>&languages.customize.Fallback.desc;</description>
       <hbox align="center">
-        <label value="&languages.customize.DefaultCharset.label;"
-               accesskey="&languages.customize.DefaultCharset.accesskey;"
+        <label value="&languages.customize.Fallback.label;"
+               accesskey="&languages.customize.Fallback.accesskey;"
                control="DefaultCharsetList"/>
         <menulist id="DefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
                   preference="intl.charset.default" 

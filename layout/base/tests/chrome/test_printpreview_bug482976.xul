@@ -16,8 +16,28 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=482976
   <!-- test code goes here -->
 <script type="application/javascript">
 <![CDATA[
-SimpleTest.expectAssertions(0, 1);
+if (navigator.platform.startsWith("Linux")) {
+  SimpleTest.expectAssertions(1); // bug 671976
+} else if (navigator.platform.startsWith("Win")) {
+  SimpleTest.expectAssertions(0, 2); // bug 671976
+}
+
 SimpleTest.waitForExplicitFinish();
+function parentFinish() {
+  // This is called while the helper window is still open.  Call
+  // doGC after it closes.
+  setTimeout(doGC, 0);
+}
+function doGC() {
+  // Garbage collecting the windows created in this test can cause
+  // assertions, so GC now to blame those assertions to this test.
+  // ("Destroying a currently-showing document", bug 671976)
+  SpecialPowers.gc();
+  setTimeout(doFinish, 0);
+}
+function doFinish() {
+  SimpleTest.finish();
+}
 window.open("printpreview_bug482976_helper.xul", "bug482976", "chrome,width=100,height=100");
 ]]></script>
 </window>

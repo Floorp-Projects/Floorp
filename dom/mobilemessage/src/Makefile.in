@@ -29,18 +29,45 @@ endif # !_MSC_VER
 
 include $(topsrcdir)/dom/dom-config.mk
 
-EXPORTS_NAMESPACES = mozilla/dom/mobilemessage
+EXPORTS_NAMESPACES = \
+  mozilla/dom \
+  mozilla/dom/mobilemessage \
+  $(NULL)
+
+EXPORTS_mozilla/dom = \
+  SmsManager.h \
+  SmsMessage.h \
+  SmsRequest.h \
+  SmsSegmentInfo.h \
+  SmsFilter.h \
+  $(NULL)
 
 EXPORTS_mozilla/dom/mobilemessage = \
+  SmsChild.h \
+  SmsParent.h \
+  SmsServicesFactory.h \
+  Constants.h \
+  Types.h \
   $(NULL)
 
 CPPSRCS = \
+  SmsManager.cpp \
+  SmsService.cpp \
+  SmsIPCService.cpp \
+  SmsServicesFactory.cpp \
+  SmsParent.cpp \
+  SmsMessage.cpp \
+  Constants.cpp \
+  SmsChild.cpp \
+  SmsRequest.cpp \
+  SmsFilter.cpp \
+  SmsSegmentInfo.cpp \
+  SmsCursor.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/content/events/src \
   -I$(topsrcdir)/dom/base \
-  -I$(topsrcdir)/dom/sms/src \
   $(NULL)
 
 # Add VPATH to LOCAL_INCLUDES so we are going to include the correct backend

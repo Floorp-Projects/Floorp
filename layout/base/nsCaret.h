@@ -209,7 +209,7 @@ protected:
     }
     void          ToggleDrawnStatus() { mDrawn = !mDrawn; }
 
-    already_AddRefed<nsFrameSelection> GetFrameSelection();
+    nsFrameSelection* GetFrameSelection();
 
     // Returns true if we should not draw the caret because of XUL menu popups.
     // The caret should be hidden if:

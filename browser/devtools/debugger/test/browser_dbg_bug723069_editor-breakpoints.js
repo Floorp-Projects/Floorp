@@ -24,39 +24,56 @@ function test()
 
   let scriptShown = false;
   let framesAdded = false;
-  let resumed = false;
   let testStarted = false;
 
-  debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
-    gTab = aTab;
-    gDebuggee = aDebuggee;
-    gPane = aPane;
-    gDebugger = gPane.panelWin;
-    resumed = true;
+  gTab = addTab(TAB_URL, function onAddTab() {
+    info("tab added");
+    gDebuggee = gTab.linkedBrowser.contentWindow.wrappedJSObject;
+
+    let target = TargetFactory.forTab(gTab);
+
+    gDevTools.showToolbox(target, "jsdebugger").then(function(toolbox) {
+      info("jsdebugger panel opened");
+      gPane = toolbox.getCurrentPanel();
+      gDebugger = gPane.panelWin;
+      gDebugger.addEventListener("Debugger:AfterScriptsAdded",
+                                 onAfterScriptsAdded);
+    });
+  });
+
+  function onAfterScriptsAdded()
+  {
+    info("scripts added");
+    gDebugger.removeEventListener("Debugger:AfterScriptsAdded",
+                                  onAfterScriptsAdded, true);
 
     gDebugger.addEventListener("Debugger:SourceShown", onSourceShown);
 
-    gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
-      framesAdded = true;
-      executeSoon(startTest);
-    });
+    gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded",
+      function onFramesAdded() {
+        info("frames added");
+        framesAdded = true;
+        executeSoon(startTest);
+      });
 
     executeSoon(function() {
       gDebuggee.firstCall();
     });
-  });
+  }
 
   function onSourceShown(aEvent)
   {
     scriptShown = aEvent.detail.url.indexOf("-02.js") != -1;
+    info("script shown " + aEvent.detail.url);
     executeSoon(startTest);
   }
 
   function startTest()
   {
-    if (scriptShown && framesAdded && resumed && !testStarted) {
+    if (scriptShown && framesAdded && !testStarted) {
       gDebugger.removeEventListener("Debugger:SourceShown", onSourceShown);
       testStarted = true;
+      info("test started");
       Services.tm.currentThread.dispatch({ run: performTest }, 0);
     }
   }

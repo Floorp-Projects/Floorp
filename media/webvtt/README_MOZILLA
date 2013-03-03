@@ -1,0 +1,7 @@
+These files are from the WebVTT library, and are extracted from rev
+cd5e95654f1fd6712fcf1941f8936870a484f65e of the git repository at
+https://github.com/mozilla/webvtt.
+
+The following CPPFLAGS are used in order to build and link in Mozilla
+-DWEBVTT_NO_CONFIG_H=1 -- Prevent inclusion of generated headers
+-DWEBVTT_STATIC=1      -- Compile as a static library

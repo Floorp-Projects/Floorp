@@ -7,7 +7,7 @@
 #include "AbstractMediaDecoder.h"
 #include "MediaResource.h"
 #include "WaveReader.h"
-#include "nsTimeRanges.h"
+#include "mozilla/dom/TimeRanges.h"
 #include "MediaDecoderStateMachine.h"
 #include "VideoUtils.h"
 
@@ -274,7 +274,7 @@ static double RoundToUsecs(double aSeconds) {
   return floor(aSeconds * USECS_PER_S) / USECS_PER_S;
 }
 
-nsresult WaveReader::GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime)
+nsresult WaveReader::GetBuffered(TimeRanges* aBuffered, int64_t aStartTime)
 {
   if (!mInfo.mHasAudio) {
     return NS_OK;

@@ -9,8 +9,12 @@
 # configuration, such as the target OS and CPU.
 #
 # The output file is intended to be used as input to the mozinfo package.
-from __future__ import with_statement
-import os, re, sys
+from __future__ import print_function
+import os
+import re
+import sys
+import json
+
 
 def build_dict(env=os.environ):
     """
@@ -24,6 +28,13 @@ def build_dict(env=os.environ):
     if missing:
         raise Exception("Missing required environment variables: %s" %
                         ', '.join(missing))
+
+    if 'MOZCONFIG' in env:
+      d["mozconfig"] = env["MOZCONFIG"]
+
+    if 'TOPSRCDIR' in env:
+      d["topsrcdir"] = env["TOPSRCDIR"]
+
     # os
     o = env["OS_TARGET"]
     known_os = {"Linux": "linux",
@@ -71,32 +82,6 @@ def build_dict(env=os.environ):
     d["crashreporter"] = 'MOZ_CRASHREPORTER' in env and env['MOZ_CRASHREPORTER'] == '1'
     return d
 
-#TODO: replace this with the json module when Python >= 2.6 is a requirement.
-class JsonValue:
-    """
-    A class to serialize Python values into JSON-compatible representations.
-    """
-    def __init__(self, v):
-        if v is not None and not (isinstance(v,str) or isinstance(v,bool) or isinstance(v,int)):
-            raise Exception("Unhandled data type: %s" % type(v))
-        self.v = v
-    def __repr__(self):
-        if self.v is None:
-            return "null"
-        if isinstance(self.v,bool):
-            return str(self.v).lower()
-        return repr(self.v)
-
-def jsonify(d):
-    """
-    Return a JSON string of the dict |d|. Only handles a subset of Python
-    value types: bool, str, int, None.
-    """
-    jd = {}
-    for k, v in d.iteritems():
-        jd[k] = JsonValue(v)
-    return repr(jd)
-
 def write_json(file, env=os.environ):
     """
     Write JSON data about the configuration specified in |env|
@@ -104,16 +89,17 @@ def write_json(file, env=os.environ):
     See build_dict for information about what  environment variables are used,
     and what keys are produced.
     """
-    s = jsonify(build_dict(env))
+    build_conf = build_dict(env)
     if isinstance(file, basestring):
         with open(file, "w") as f:
-            f.write(s)
+            json.dump(build_conf, f)
     else:
-        file.write(s)
+        json.dump(build_conf, file)
+
 
 if __name__ == '__main__':
     try:
         write_json(sys.argv[1] if len(sys.argv) > 1 else sys.stdout)
-    except Exception, e:
-        print >>sys.stderr, str(e)
+    except Exception as e:
+        print(str(e), file=sys.stderr)
         sys.exit(1)

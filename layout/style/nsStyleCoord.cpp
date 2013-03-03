@@ -6,11 +6,6 @@
 /* representation of length values in computed style data */
 
 #include "nsStyleCoord.h"
-#include "nsString.h"
-#include "nsCRT.h"
-#include "prlog.h"
-#include "nsMathUtils.h"
-#include "nsStyleContext.h"
 #include "mozilla/HashFunctions.h"
 
 nsStyleCoord::nsStyleCoord(nsStyleUnit aUnit)
