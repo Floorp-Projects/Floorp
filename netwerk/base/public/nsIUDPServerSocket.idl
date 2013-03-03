@@ -1,0 +1,163 @@
+/* vim:set ts=4 sw=4 et cindent: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsINetAddr.idl"
+
+interface nsIUDPServerSocketListener;
+interface nsIUDPMessage;
+interface nsISocketTransport;
+interface nsIOutputStream;
+
+%{ C++
+#include "mozilla/net/DNS.h"
+%}
+native NetAddr(mozilla::net::NetAddr);
+[ptr] native NetAddrPtr(mozilla::net::NetAddr);
+
+/**
+ * nsIUDPServerSocket
+ *
+ * An interface to a server socket that can accept incoming connections.
+ */
+[scriptable, uuid(c2a38bd0-024b-4ae8-bcb2-20d766b54389)]
+interface nsIUDPServerSocket : nsISupports
+{
+    /**
+     * init
+     *
+     * This method initializes a server socket.
+     *
+     * @param aPort
+     *        The port of the server socket.  Pass -1 to indicate no preference,
+     *        and a port will be selected automatically.
+     * @param aLoopbackOnly
+     *        If true, the server socket will only respond to connections on the
+     *        local loopback interface.  Otherwise, it will accept connections
+     *        from any interface.  To specify a particular network interface,
+     *        use initWithAddress.
+     */
+    void init(in long aPort, in boolean aLoopbackOnly);
+
+    /**
+     * initWithAddress
+     *
+     * This method initializes a server socket, and binds it to a particular
+     * local address (and hence a particular local network interface).
+     *
+     * @param aAddr
+     *        The address to which this server socket should be bound.
+     */
+    [noscript] void initWithAddress([const] in NetAddrPtr aAddr);
+
+    /**
+     * close
+     *
+     * This method closes a server socket.  This does not affect already
+     * connected client sockets (i.e., the nsISocketTransport instances
+     * created from this server socket).  This will cause the onStopListening
+     * event to asynchronously fire with a status of NS_BINDING_ABORTED.
+     */
+    void close();
+
+    /**
+     * asyncListen
+     *
+     * This method puts the server socket in the listening state.  It will
+     * asynchronously listen for and accept client connections.  The listener
+     * will be notified once for each client connection that is accepted.  The
+     * listener's onSocketAccepted method will be called on the same thread
+     * that called asyncListen (the calling thread must have a nsIEventTarget).
+     *
+     * The listener will be passed a reference to an already connected socket
+     * transport (nsISocketTransport).  See below for more details.
+     *
+     * @param aListener
+     *        The listener to be notified when client connections are accepted.
+     */
+    void asyncListen(in nsIUDPServerSocketListener aListener);
+
+    /**
+     * Returns the port of this server socket.
+     */
+    readonly attribute long port;
+
+    /**
+     * Returns the address to which this server socket is bound.  Since a
+     * server socket may be bound to multiple network devices, this address
+     * may not necessarily be specific to a single network device.  In the
+     * case of an IP socket, the IP address field would be zerod out to
+     * indicate a server socket bound to all network devices.  Therefore,
+     * this method cannot be used to determine the IP address of the local
+     * system.  See nsIDNSService::myHostName if this is what you need.
+     */
+    [noscript] NetAddr getAddress();
+};
+
+/**
+ * nsIUDPServerSocketListener
+ *
+ * This interface is notified whenever a server socket accepts a new connection.
+ * The transport is in the connected state, and read/write streams can be opened
+ * using the normal nsITransport API.  The address of the client can be found by
+ * calling the nsISocketTransport::GetAddress method or by inspecting
+ * nsISocketTransport::GetHost, which returns a string representation of the
+ * client's IP address (NOTE: this may be an IPv4 or IPv6 string literal).
+ */
+[scriptable, uuid(0500a336-29b2-4df1-9103-911f8ee0a569)]
+interface nsIUDPServerSocketListener : nsISupports
+{
+    /**
+     * onPacketReceived
+     *
+     * This method is called when a client sends an UDP packet.
+     *
+     * @param aServ
+     *        The server socket.
+     * @param aMessage
+     *        The message.
+     */
+    void onPacketReceived(in nsIUDPServerSocket aServ,
+                          in nsIUDPMessage aMessage);
+
+    /**
+     * onStopListening
+     *
+     * This method is called when the listening socket stops for some reason.
+     * The server socket is effectively dead after this notification.
+     *
+     * @param aServ
+     *        The server socket.
+     * @param aStatus
+     *        The reason why the server socket stopped listening.  If the
+     *        server socket was manually closed, then this value will be
+     *        NS_BINDING_ABORTED.
+     */
+    void onStopListening(in nsIUDPServerSocket aServ, in nsresult aStatus);
+};
+
+/**
+ * nsIUDPMessage
+ *
+ * This interface is used to encapsulate an incomming UDP message
+ */
+[scriptable, uuid(1587698a-60b6-4a8d-9df9-708cd793e24b)]
+interface nsIUDPMessage : nsISupports
+{
+    /**
+     * Address of the source of the message
+     */
+    readonly attribute nsINetAddr fromAddr;
+
+    /**
+     * Data of the message
+     */
+    readonly attribute ACString data;
+
+    /**
+     * Stream to send a response
+     */
+    readonly attribute nsIOutputStream outputStream;
+};
