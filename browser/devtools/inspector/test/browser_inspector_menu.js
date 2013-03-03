@@ -7,37 +7,64 @@ function test() {
   waitForExplicitFinish();
 
   let doc;
-  let node1;
-  let div;
   let inspector;
-
-  function createDocument() {
-    div = doc.createElement("div");
-    let h1 = doc.createElement("h1");
-    let p1 = doc.createElement("p");
-    let p2 = doc.createElement("p");
-    doc.title = "Inspector Tree Menu Test";
-    h1.textContent = "Inspector Tree Menu Test";
-    p1.textContent = "This is some example text";
-    div.appendChild(h1);
-    div.appendChild(p1);
-    doc.body.appendChild(div);
-    node1 = p1;
-    openInspector(runTests);
-  }
 
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function onload() {
     gBrowser.selectedBrowser.removeEventListener("load", onload, true);
     doc = content.document;
-    waitForFocus(createDocument, content);
+    waitForFocus(setupTest, content);
   }, true);
 
-  content.location = content.location = "data:text/html,basic tests for inspector";;
+  content.location = "http://mochi.test:8888/browser/browser/devtools/" +
+                     "inspector/test/browser_inspector_menu.html";
+
+  function setupTest() {
+    openInspector(runTests);
+  }
 
   function runTests(aInspector) {
     inspector = aInspector;
-    inspector.selection.setNode(node1);
+    checkDocTypeMenuItems();
+  }
+
+  function checkDocTypeMenuItems() {
+    info("Checking context menu entries for doctype node");
+    inspector.selection.setNode(doc.doctype);
+    let docTypeNode = getMarkupTagNodeContaining("<!DOCTYPE html>");
+
+    // Right-click doctype tag
+    contextMenuClick(docTypeNode);
+
+    checkDisabled("node-menu-copyinner");
+    checkDisabled("node-menu-copyouter");
+    checkDisabled("node-menu-copyuniqueselector");
+    checkDisabled("node-menu-delete");
+
+    for (let name of ["hover", "active", "focus"]) {
+      checkDisabled("node-menu-pseudo-" + name);
+    }
+
+    checkElementMenuItems();
+  }
+
+  function checkElementMenuItems() {
+    info("Checking context menu entries for p tag");
+    inspector.selection.setNode(doc.querySelector("p"));
+    let tag = getMarkupTagNodeContaining("p");
+
+    // Right-click p tag
+    contextMenuClick(tag);
+
+    checkEnabled("node-menu-copyinner");
+    checkEnabled("node-menu-copyouter");
+    checkEnabled("node-menu-copyuniqueselector");
+    checkEnabled("node-menu-delete");
+
+    for (let name of ["hover", "active", "focus"]) {
+      checkEnabled("node-menu-pseudo-" + name);
+    }
+
     testCopyInnerMenu();
   }
 
@@ -101,5 +128,37 @@ function test() {
     ok(doc.documentElement, "Document element still alive.");
     gBrowser.removeCurrentTab();
     finish();
+  }
+
+  function getMarkupTagNodeContaining(text) {
+    let tags = inspector._markupFrame.contentDocument.querySelectorAll("span");
+    for (let tag of tags) {
+      if (tag.textContent == text) {
+        return tag;
+      }
+    }
+  }
+
+  function checkEnabled(elementId) {
+    let elt = inspector.panelDoc.getElementById(elementId);
+    ok(!elt.hasAttribute("disabled"),
+      '"' + elt.label + '" context menu option is not disabled');
+  }
+
+  function checkDisabled(elementId) {
+    let elt = inspector.panelDoc.getElementById(elementId);
+    ok(elt.hasAttribute("disabled"),
+      '"' + elt.label + '" context menu option is disabled');
+  }
+
+  function contextMenuClick(element) {
+    let evt = element.ownerDocument.createEvent('MouseEvents');
+    let button = 2;  // right click
+
+    evt.initMouseEvent('contextmenu', true, true,
+         element.ownerDocument.defaultView, 1, 0, 0, 0, 0, false,
+         false, false, false, button, null);
+
+    element.dispatchEvent(evt);
   }
 }
