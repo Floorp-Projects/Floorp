@@ -83,7 +83,8 @@ nsFormData::Append(const nsAString& aName, nsIVariant* aValue)
 
     nsCOMPtr<nsIDOMBlob> domBlob = do_QueryInterface(supports);
     if (domBlob) {
-      Append(aName, domBlob, Optional<nsAString>());
+      Optional<nsAString> temp;
+      Append(aName, domBlob, temp);
       return NS_OK;
     }
   }
