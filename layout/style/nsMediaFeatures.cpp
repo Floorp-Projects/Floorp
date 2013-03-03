@@ -11,6 +11,7 @@
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsCSSValue.h"
+#include "mozilla/LookAndFeel.h"
 #include "nsCSSRuleProcessor.h"
 
 using namespace mozilla;
