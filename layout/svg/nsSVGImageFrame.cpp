@@ -225,8 +225,7 @@ nsSVGImageFrame::GetRasterImageTransform(int32_t aNativeWidth,
   element->GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
 
   gfxMatrix viewBoxTM =
-    SVGContentUtils::GetViewBoxTransform(element,
-                                         width, height,
+    SVGContentUtils::GetViewBoxTransform(width, height,
                                          0, 0, aNativeWidth, aNativeHeight,
                                          element->mPreserveAspectRatio);
 

@@ -667,8 +667,7 @@ SVGSVGElement::GetViewBoxTransform() const
     return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
   }
 
-  return SVGContentUtils::GetViewBoxTransform(this,
-                                              viewportWidth, viewportHeight,
+  return SVGContentUtils::GetViewBoxTransform(viewportWidth, viewportHeight,
                                               viewBox.x, viewBox.y,
                                               viewBox.width, viewBox.height,
                                               GetPreserveAspectRatioWithOverride());
