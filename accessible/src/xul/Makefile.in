@@ -53,7 +53,7 @@ LOCAL_INCLUDES += \
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 LOCAL_INCLUDES += \
-  -I$(srcdir)/../msaa \
+  -I$(srcdir)/../windows/msaa \
   -I$(srcdir)/../windows/ia2 \
   $(NULL)
 else

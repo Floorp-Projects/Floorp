@@ -314,15 +314,15 @@ private:
   const nsAString* mStr;
 };
 
-// Class for representing sequences in arguments.  We use an auto array that can
-// hold 16 elements, to avoid having to allocate in common cases.  This needs to
-// be fallible because web content controls the length of the array, and can
-// easily try to create very large lengths.
+// Class for representing sequences in arguments.  We use a non-auto array
+// because that allows us to use sequences of sequences and the like.  This
+// needs to be fallible because web content controls the length of the array,
+// and can easily try to create very large lengths.
 template<typename T>
-class Sequence : public AutoFallibleTArray<T, 16>
+class Sequence : public FallibleTArray<T>
 {
 public:
-  Sequence() : AutoFallibleTArray<T, 16>()
+  Sequence() : FallibleTArray<T>()
   {}
 };
 

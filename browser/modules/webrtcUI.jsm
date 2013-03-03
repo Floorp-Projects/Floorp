@@ -21,13 +21,13 @@ XPCOMUtils.defineLazyServiceGetter(this, "MediaManagerService",
 this.webrtcUI = {
   init: function () {
     Services.obs.addObserver(handleRequest, "getUserMedia:request", false);
-    Services.obs.addObserver(updateGlobalIndicator, "recording-device-events", false);
+    Services.obs.addObserver(updateIndicators, "recording-device-events", false);
     Services.obs.addObserver(removeBrowserSpecificIndicator, "recording-window-ended", false);
   },
 
   uninit: function () {
     Services.obs.removeObserver(handleRequest, "getUserMedia:request");
-    Services.obs.removeObserver(updateGlobalIndicator, "recording-device-events");
+    Services.obs.removeObserver(updateIndicators, "recording-device-events");
     Services.obs.removeObserver(removeBrowserSpecificIndicator, "recording-window-ended");
   },
 
@@ -185,18 +185,6 @@ function prompt(aBrowser, aCallID, aAudioRequested, aVideoRequested, aDevices) {
       }
 
       Services.obs.notifyObservers(allowedDevices, "getUserMedia:response:allow", aCallID);
-
-      // Show browser-specific indicator for the active camera/mic access.
-      let message = stringBundle.getFormattedString("getUserMedia.sharing" + requestType + ".message",
-                                                    [ host ]);
-      let mainAction = null;
-      let secondaryActions = null;
-      let options = {
-        dismissed: true
-      };
-      chromeWin.PopupNotifications.show(aBrowser, "webRTC-sharingDevices", message,
-                                        "webRTC-sharingDevices-notification-icon", mainAction,
-                                        secondaryActions, options);
     }
   };
 
@@ -215,13 +203,49 @@ function prompt(aBrowser, aCallID, aAudioRequested, aVideoRequested, aDevices) {
                                     secondaryActions, options);
 }
 
-function updateGlobalIndicator() {
+function updateIndicators() {
   webrtcUI.showGlobalIndicator =
     MediaManagerService.activeMediaCaptureWindows.Count() > 0;
 
   let e = Services.wm.getEnumerator("navigator:browser");
   while (e.hasMoreElements())
     e.getNext().WebrtcIndicator.updateButton();
+
+  for (let {tab: tab} of webrtcUI.activeStreams)
+    showBrowserSpecificIndicator(tab.linkedBrowser);
+}
+
+function showBrowserSpecificIndicator(aBrowser) {
+  let hasVideo = {};
+  let hasAudio = {};
+  MediaManagerService.mediaCaptureWindowState(aBrowser.contentWindow,
+                                              hasVideo, hasAudio);
+  let captureState;
+  if (hasVideo.value && hasAudio.value) {
+    captureState = "CameraAndMicrophone";
+  } else if (hasVideo.value) {
+    captureState = "Camera";
+  } else if (hasAudio.value) {
+    captureState = "Microphone";
+  } else {
+    Cu.reportError("showBrowserSpecificIndicator: got neither video nor audio access");
+    return;
+  }
+
+  let chromeWin = aBrowser.ownerDocument.defaultView;
+  let stringBundle = chromeWin.gNavigatorBundle;
+  let host = aBrowser.contentDocument.documentURIObject.asciiHost;
+
+  let message = stringBundle.getFormattedString("getUserMedia.sharing" + captureState + ".message",
+                                                [ host ]);
+  let mainAction = null;
+  let secondaryActions = null;
+  let options = {
+    dismissed: true
+  };
+  chromeWin.PopupNotifications.show(aBrowser, "webRTC-sharingDevices", message,
+                                    "webRTC-sharingDevices-notification-icon", mainAction,
+                                    secondaryActions, options);
 }
 
 function removeBrowserSpecificIndicator(aSubject, aTopic, aData) {

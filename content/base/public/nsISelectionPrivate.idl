@@ -14,7 +14,6 @@ interface nsIContent;
 interface nsINode;
 
 %{C++
-class nsFrameSelection;
 struct nsTextRangeStyle;
 struct nsPoint;
 struct ScrollAxis;
@@ -22,7 +21,6 @@ struct ScrollAxis;
 #include "nsIFrame.h"
 %}
 
-[ptr] native nsFrameSelection(nsFrameSelection);
 [ptr] native nsIFrame(nsIFrame);
 [ptr] native RangeArray(nsTArray<nsRange*>);
 [ref] native constTextRangeStyleRef(const nsTextRangeStyle);
@@ -30,7 +28,7 @@ struct ScrollAxis;
 native nsDirection(nsDirection);
 native ScrollAxis(nsIPresShell::ScrollAxis);
 
-[scriptable, builtinclass, uuid(a6d2cedd-afbc-4d25-bffb-e725b9881e30)]
+[scriptable, builtinclass, uuid(3ede44eb-2df8-41de-ab79-6f3dbd10090b)]
 interface nsISelectionPrivate : nsISelection
  {
     const short ENDOFPRECEDINGLINE=0;
@@ -82,11 +80,6 @@ interface nsISelectionPrivate : nsISelection
      * Returns cached value for nsTextFrame::GetPointFromOffset.
      */
     [noscript] void getCachedFrameOffset(in nsIFrame aFrame, in int32_t inOffset, in nsPointRef aPoint);
-
-    /* getFrameSelection
-     * Returnes a reference to the frame selection associated with this selection 
-     */
-    [noscript] nsFrameSelection getFrameSelection();
 
     [noscript] void setAncestorLimiter(in nsIContent aContent);
 

@@ -161,6 +161,10 @@ var ContextMenuUI = {
         continue;
 
       for (let i = 0; i < types.length; i++) {
+        // If one of the item's types has '!' before it, treat it as an exclusion rule. 
+        if (types[i].charAt(0) == '!' && contentTypes.indexOf(types[i].substring(1)) != -1) {
+          break;
+        }
         if (contentTypes.indexOf(types[i]) != -1) {
           // If this is the special search text item, we need to set its label dynamically.
           if (searchTextItem && !ContextCommands.searchTextSetup(command, this._popupState.string)) {

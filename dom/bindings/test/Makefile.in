@@ -55,6 +55,7 @@ MOCHITEST_FILES := \
   test_interfaceToString.html \
   test_lookupGetter.html \
   test_InstanceOf.html \
+  file_InstanceOf.html \
   test_traceProtos.html \
   test_forOf.html \
   forOf_iframe.html \

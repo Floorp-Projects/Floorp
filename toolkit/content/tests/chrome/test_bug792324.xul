@@ -38,7 +38,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=792324
 
 <script class="testbody" type="application/javascript;version=1.7"><![CDATA[
 
-SimpleTest.expectAssertions(0, 7);
+SimpleTest.expectAssertions(0, 2); // bug 846096
 
 /** Test for Bug 792324 **/
 let after_click;

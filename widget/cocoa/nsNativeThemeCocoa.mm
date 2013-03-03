@@ -23,7 +23,6 @@
 #include "nsCocoaWindow.h"
 #include "nsNativeThemeColors.h"
 #include "nsIScrollableFrame.h"
-#include "nsIDOMHTMLProgressElement.h"
 #include "nsIDOMHTMLMeterElement.h"
 #include "mozilla/dom/Element.h"
 
@@ -2993,40 +2992,4 @@ nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType)
   default:
     return eUnknownTransparency;
   }
-}
-
-double
-nsNativeThemeCocoa::GetProgressValue(nsIFrame* aFrame)
-{
-  // When we are using the HTML progress element,
-  // we can get the value from the IDL property.
-  if (aFrame) {
-    nsCOMPtr<nsIDOMHTMLProgressElement> progress =
-      do_QueryInterface(aFrame->GetContent());
-    if (progress) {
-      double value;
-      progress->GetValue(&value);
-      return value;
-    }
-  }
-
-  return (double)CheckIntAttr(aFrame, nsGkAtoms::value, 0);
-}
-
-double
-nsNativeThemeCocoa::GetProgressMaxValue(nsIFrame* aFrame)
-{
-  // When we are using the HTML progress element,
-  // we can get the max from the IDL property.
-  if (aFrame) {
-    nsCOMPtr<nsIDOMHTMLProgressElement> progress =
-      do_QueryInterface(aFrame->GetContent());
-    if (progress) {
-      double max;
-      progress->GetMax(&max);
-      return max;
-    }
-  }
-
-  return (double)std::max(CheckIntAttr(aFrame, nsGkAtoms::max, 100), 1);
 }

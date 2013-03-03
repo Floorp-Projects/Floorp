@@ -1,0 +1,177 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Tests: accessible XUL label/description events">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    const kRecreated = 0;
+    const kTextRemoved = 1;
+    const kTextChanged = 2;
+
+    const kNoValue = 0;
+
+    /**
+     * Set/remove @value attribute.
+     */
+    function setValue(aID, aValue, aResult, aOldValue)
+    {
+      this.labelNode = getNode(aID);
+
+      this.eventSeq = [];
+
+      switch (aResult) {
+        case kRecreated:
+          this.eventSeq.push(new invokerChecker(EVENT_HIDE, this.labelNode));
+          this.eventSeq.push(new invokerChecker(EVENT_SHOW, this.labelNode));
+          break;
+        case kTextRemoved:
+          this.eventSeq.push(
+            new textChangeChecker(this.labelNode, 0, aOldValue.length,
+                                  aOldValue, false));
+          break;
+        case kTextChanged:
+          this.eventSeq.push(
+            new textChangeChecker(this.labelNode, 0, aOldValue.length,
+                                  aOldValue, false));
+           this.eventSeq.push(
+             new textChangeChecker(this.labelNode, 0, aValue.length,
+                                   aValue, true));
+          break;
+      }
+
+      this.invoke = function setValue_invoke()
+      {
+        if (aValue === kNoValue)
+          this.labelNode.removeAttribute("value");
+        else
+          this.labelNode.setAttribute("value", aValue);
+      }
+
+      this.finalCheck = function setValue_finalCheck()
+      {
+        var tree =
+          { LABEL: [
+            { TEXT_LEAF: [ ] }
+          ] };
+        testAccessibleTree(aID, tree);
+      }
+
+      this.getID = function setValue_getID()
+      {
+        return "set @value='" + aValue + "' for label " + prettyName(aID);
+      }
+    }
+
+    /**
+     * Change @crop attribute.
+     */
+    function setCrop(aID, aCropValue, aRemovedText, aInsertedText)
+    {
+      this.labelNode = getNode(aID);
+      this.width = this.labelNode.boxObject.width;
+      this.charWidth = this.width / this.labelNode.value.length;
+
+      this.eventSeq = [
+        new textChangeChecker(this.labelNode, 0, -1, aRemovedText, false),
+        new textChangeChecker(this.labelNode, 0, -1, aInsertedText, true)
+      ];
+
+      this.invoke = function setCrop_invoke()
+      {
+        if (!this.labelNode.hasAttribute("crop"))
+          this.labelNode.width = Math.floor(this.width - 2 * this.charWidth);
+
+        this.labelNode.setAttribute("crop", aCropValue);
+      }
+
+      this.getID = function setCrop_finalCheck()
+      {
+        return "set crop " + aCropValue;
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+    function doTest()
+    {
+      gQueue = new eventQueue();
+
+      gQueue.push(new setValue("label", "shiroka strana", kRecreated));
+      gQueue.push(new setValue("label", "?<>!+_", kTextChanged, "shiroka strana"));
+      gQueue.push(new setValue("label", "", kTextRemoved, "?<>!+_"));
+      gQueue.push(new setValue("label", kNoValue, kRecreated));
+
+      gQueue.push(new setValue("descr", "hello world", kRecreated));
+      gQueue.push(new setValue("descr", "si_ya", kTextChanged, "hello world"));
+      gQueue.push(new setValue("descr", "", kTextRemoved, "si_ya"));
+      gQueue.push(new setValue("descr", kNoValue, kRecreated));
+
+      if (MAC) {
+        // "valuetocro" -> "…etocro"
+        gQueue.push(new setCrop("croplabel", "left", "valu", "…"));
+        // "…etocro", "val…cro"
+        gQueue.push(new setCrop("croplabel", "center", "…eto", "val…"));
+      } else {
+        // "valuetocro" -> "…uetocro"
+        gQueue.push(new setCrop("croplabel", "left", "val", "…"));
+        // "…uetocro" -> "valu…cro"
+        gQueue.push(new setCrop("croplabel", "center", "…ueto", "valu…"));
+      }
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=396166"
+         title="xul:label@value accessible should implement nsIAccessibleText">
+        Bug 396166
+      </a>
+      <br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <label id="label">hello</label>
+      <description id="descr">hello</description>
+
+      <hbox>
+      <label id="croplabel" value="valuetocro"
+             style="font-family: monospace;"/>
+      </hbox>
+    </vbox>
+  </hbox>
+
+</window>
+

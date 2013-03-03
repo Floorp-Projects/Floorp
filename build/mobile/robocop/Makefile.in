@@ -41,6 +41,7 @@ _TEST_FILES = \
 
 _ROBOCOP_TOOLS = \
   $(TESTPATH)/robocop.ini \
+  $(TESTPATH)/robocop_autophone.ini \
   parse_ids.py \
   $(NULL)
 
@@ -80,6 +81,7 @@ $(_JAVA_TESTS): % : $(TESTPATH)/%.in
 
 $(_ROBOCOP_TOOLS):
 	cp $(TESTPATH)/robocop.ini robocop.ini
+	cp $(TESTPATH)/robocop_autophone.ini robocop_autophone.ini
 
 libs:: $(_TEST_FILES)
 	$(NSINSTALL) -D $(DEPTH)/_tests/testing/mochitest/tests/robocop
@@ -100,6 +102,7 @@ robocop.ap_: AndroidManifest.xml $(TESTPATH)/assets/*
 
 robocop.apk: robocop.ap_ classes.dex
 	cp $(TESTPATH)/robocop.ini robocop.ini
+	cp $(TESTPATH)/robocop_autophone.ini robocop_autophone.ini
 	cp $(srcdir)/parse_ids.py parse_ids.py
 
 export::

@@ -22,7 +22,7 @@
 #include "mozilla/Preferences.h"
 #include "nsThreadUtils.h"
 #include "nsIThreadManager.h"
-#include "mozilla/dom/sms/PSms.h"
+#include "mozilla/dom/mobilemessage/PSms.h"
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
 #include "nsPresContext.h"
@@ -1635,7 +1635,7 @@ AndroidBridge::SetURITitle(const nsAString& aURI, const nsAString& aTitle)
 
 nsresult
 AndroidBridge::GetSegmentInfoForText(const nsAString& aText,
-                                     dom::sms::SmsSegmentInfoData* aData)
+                                     dom::mobilemessage::SmsSegmentInfoData* aData)
 {
     ALOG_BRIDGE("AndroidBridge::GetSegmentInfoForText");
 
@@ -1724,7 +1724,7 @@ AndroidBridge::DeleteMessage(int32_t aMessageId, nsISmsRequest* aRequest)
 }
 
 void
-AndroidBridge::CreateMessageList(const dom::sms::SmsFilterData& aFilter, bool aReverse,
+AndroidBridge::CreateMessageList(const dom::mobilemessage::SmsFilterData& aFilter, bool aReverse,
                                  nsISmsRequest* aRequest)
 {
     ALOG_BRIDGE("AndroidBridge::CreateMessageList");

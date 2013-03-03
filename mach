@@ -6,61 +6,46 @@
 from __future__ import print_function, unicode_literals
 
 import os
-import platform
 import sys
 
-# Ensure we are running Python 2.7+. We put this check here so we generate a
-# user-friendly error message rather than a cryptic stack trace on module
-# import.
-if sys.version_info[0] != 2 or sys.version_info[1] < 7:
-    print('Python 2.7 or above (but not Python 3) is required to run mach.')
-    print('You are running Python', platform.python_version())
-    sys.exit(1)
+def ancestors(path):
+    while path:
+        yield path
+        (path, child) = os.path.split(path)
+        if child == "":
+            break
 
-# TODO Bug 794506 Integrate with the in-tree virtualenv configuration.
-SEARCH_PATHS = [
-    'python/mach',
-    'python/mozboot',
-    'python/mozbuild',
-    'build',
-    'build/pymake',
-    'python/blessings',
-    'python/psutil',
-    'python/which',
-    'other-licenses/ply',
-    'xpcom/idl-parser',
-    'testing',
-    'testing/xpcshell',
-    'testing/mozbase/mozprocess',
-    'testing/mozbase/mozfile',
-    'testing/mozbase/mozinfo',
-]
+def load_mach(topsrcdir):
+    sys.path[0:0] = [os.path.join(topsrcdir, "build")]
+    import mach_bootstrap
+    return mach_bootstrap.bootstrap(topsrcdir)
 
-# Individual files providing mach commands.
-MACH_MODULES = [
-    'addon-sdk/mach_commands.py',
-    'layout/tools/reftest/mach_commands.py',
-    'python/mozboot/mozboot/mach_commands.py',
-    'python/mozbuild/mozbuild/config.py',
-    'python/mozbuild/mozbuild/mach_commands.py',
-    'python/mozbuild/mozbuild/frontend/mach_commands.py',
-    'testing/mochitest/mach_commands.py',
-    'testing/xpcshell/mach_commands.py',
-]
+# Check whether the current directory is within a mach src or obj dir.
+for dir_path in ancestors(os.getcwd()):
+    # If we find a "mozinfo.json" file, we are in the objdir.
+    mozinfo_path = os.path.join(dir_path, "mozinfo.json")
+    if os.path.isfile(mozinfo_path):
+        import json
+        info = json.load(open(mozinfo_path))
+        if "mozconfig" in info and "MOZCONFIG" not in os.environ:
+            # If the MOZCONFIG environment variable is not already set, set it
+            # to the value from mozinfo.json.  This will tell the build system
+            # to look for a config file at the path in $MOZCONFIG rather than
+            # its default locations.
+            #
+            # Note: subprocess requires native strings in os.environ Python
+            # 2.7.2 and earlier on Windows.
+            os.environ[b"MOZCONFIG"] = str(info["mozconfig"])
 
-our_dir = os.path.dirname(os.path.abspath(__file__))
+        if "topsrcdir" in info:
+            # Continue searching for mach_bootstrap in the source directory.
+            dir_path = info["topsrcdir"]
 
-try:
-    import mach.main
-except ImportError:
-    sys.path[0:0] = [os.path.join(our_dir, path) for path in SEARCH_PATHS]
+    # If we find the mach bootstrap module, we are in the srcdir.
+    mach_path = os.path.join(dir_path, "build/mach_bootstrap.py")
+    if os.path.isfile(mach_path):
+        mach = load_mach(dir_path)
+        sys.exit(mach.run(sys.argv[1:]))
 
-    import mach.main
-
-# All of the code is in a module because EVERYTHING IS A LIBRARY.
-mach = mach.main.Mach(our_dir)
-
-for path in MACH_MODULES:
-    mach.load_commands_from_file(os.path.join(our_dir, path))
-
-sys.exit(mach.run(sys.argv[1:]))
+print("Could not run mach: No mach source directory found")
+sys.exit(1)

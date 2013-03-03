@@ -24,8 +24,6 @@
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
-SimpleTest.expectAssertions(0, 5);
-
 SimpleTest.waitForExplicitFinish();
 
 var gBlurs = 0, gFocuses = 0;

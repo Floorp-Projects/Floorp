@@ -12,7 +12,7 @@ var is = window.opener.wrappedJSObject.is;
 var isnot = window.opener.wrappedJSObject.isnot;
 var ok = window.opener.wrappedJSObject.ok;
 var todo = window.opener.wrappedJSObject.todo;
-var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
+var parentFinish = window.opener.wrappedJSObject.parentFinish;
 var gWbp;
 var ctx1;
 var ctx2;
@@ -66,7 +66,7 @@ function exitprintpreview() {
 }
 
 function finish() {
-  SimpleTest.finish();
+  parentFinish();
   window.close();
 }
 

@@ -23,10 +23,6 @@
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
-if (!navigator.platform.startsWith("Linux")) {
-  SimpleTest.expectAssertions(0, 2);
-}
-
 SimpleTest.waitForExplicitFinish();
 
 var gShowPopup = false;

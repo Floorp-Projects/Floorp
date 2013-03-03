@@ -17,9 +17,6 @@
   <!-- test code goes here -->
 <script type="application/javascript">
 <![CDATA[
-
-SimpleTest.expectAssertions(0, 7);
-
 var gNotificationBox;
 
 // Tests that a notification that is added in an hidden box didn't throw the animation

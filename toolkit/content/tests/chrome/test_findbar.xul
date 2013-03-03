@@ -28,8 +28,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=288254
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
-SimpleTest.expectAssertions(0, 5);
-
 /** Test for Bug 288254 **/
 SimpleTest.waitForExplicitFinish();
 window.open("findbar_window.xul", "findbartest", 
