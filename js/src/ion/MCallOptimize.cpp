@@ -57,10 +57,18 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
         return inlineMathFunction(callInfo, MMathFunction::Sin);
     if (native == js::math_cos)
         return inlineMathFunction(callInfo, MMathFunction::Cos);
+    if (native == js::math_exp)
+        return inlineMathFunction(callInfo, MMathFunction::Exp);
     if (native == js::math_tan)
         return inlineMathFunction(callInfo, MMathFunction::Tan);
     if (native == js::math_log)
         return inlineMathFunction(callInfo, MMathFunction::Log);
+    if (native == js::math_atan)
+        return inlineMathFunction(callInfo, MMathFunction::ATan);
+    if (native == js::math_asin)
+        return inlineMathFunction(callInfo, MMathFunction::ASin);
+    if (native == js::math_acos)
+        return inlineMathFunction(callInfo, MMathFunction::ACos);
 
     // String natives.
     if (native == js_String)

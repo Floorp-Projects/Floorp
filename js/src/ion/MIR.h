@@ -2757,7 +2757,11 @@ class MMathFunction
         Log,
         Sin,
         Cos,
-        Tan
+        Exp,
+        Tan,
+        ACos,
+        ASin,
+        ATan
     };
 
   private:
