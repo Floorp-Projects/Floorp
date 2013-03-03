@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest
 
 import os, sys, os.path, time, inspect
@@ -109,29 +110,29 @@ def is_symlink_to(dest, src):
 class _TreeDiff(dircmp):
     """Helper to report rich results on difference between two directories.
     """
-    def _fillDiff(self, dc, rv, basepath="%s"):
-        rv['right_only'] += map(lambda l: basepath % l, dc.right_only)
-        rv['left_only'] += map(lambda l: basepath % l, dc.left_only)
-        rv['diff_files'] += map(lambda l: basepath % l, dc.diff_files)
-        rv['funny'] += map(lambda l: basepath % l, dc.common_funny)
-        rv['funny'] += map(lambda l: basepath % l, dc.funny_files)
+    def _fillDiff(self, dc, rv, basepath="{0}"):
+        rv['right_only'] += map(lambda l: basepath.format(l), dc.right_only)
+        rv['left_only'] += map(lambda l: basepath.format(l), dc.left_only)
+        rv['diff_files'] += map(lambda l: basepath.format(l), dc.diff_files)
+        rv['funny'] += map(lambda l: basepath.format(l), dc.common_funny)
+        rv['funny'] += map(lambda l: basepath.format(l), dc.funny_files)
         for subdir, _dc in dc.subdirs.iteritems():
-            self._fillDiff(_dc, rv, basepath % (subdir + "/%s"))
+            self._fillDiff(_dc, rv, basepath.format(subdir + "/{0}"))
     def allResults(self, left, right):
         rv = {'right_only':[], 'left_only':[],
               'diff_files':[], 'funny': []}
         self._fillDiff(self, rv)
         chunks = []
         if rv['right_only']:
-            chunks.append('%s only in %s' % (', '.join(rv['right_only']),
-                                            right))
+            chunks.append('{0} only in {1}'.format(', '.join(rv['right_only']),
+                                                   right))
         if rv['left_only']:
-            chunks.append('%s only in %s' % (', '.join(rv['left_only']),
-                                            left))
+            chunks.append('{0} only in {1}'.format(', '.join(rv['left_only']),
+                                                   left))
         if rv['diff_files']:
-            chunks.append('%s differ' % ', '.join(rv['diff_files']))
+            chunks.append('{0} differ'.format(', '.join(rv['diff_files'])))
         if rv['funny']:
-            chunks.append("%s don't compare" % ', '.join(rv['funny']))
+            chunks.append("{0} don't compare".format(', '.join(rv['funny'])))
         return '; '.join(chunks)
 
 class TestJarMaker(unittest.TestCase):
@@ -152,7 +153,7 @@ class TestJarMaker(unittest.TestCase):
 
     def tearDown(self):
         if self.debug:
-            print self.tmpdir
+            print(self.tmpdir)
         elif sys.platform != "win32":
             # can't clean up on windows
             rmtree(self.tmpdir)
@@ -238,7 +239,7 @@ class TestJarMaker(unittest.TestCase):
         srcbar = os.path.join(self.srcdir, 'bar')
         destfoo = os.path.join(self.builddir, 'chrome', 'test', 'dir', 'foo')
         self.assertTrue(is_symlink_to(destfoo, srcbar),
-                        "%s is not a symlink to %s" % (destfoo, srcbar))
+                        "{0} is not a symlink to {1}".format(destfoo, srcbar))
 
 
 class Test_relativesrcdir(unittest.TestCase):

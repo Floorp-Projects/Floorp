@@ -6,7 +6,7 @@
 #ifndef mozilla_dom_SVGAnimationElement_h
 #define mozilla_dom_SVGAnimationElement_h
 
-#include "DOMSVGTests.h"
+#include "mozilla/dom/SVGTests.h"
 #include "nsISMILAnimationElement.h"
 #include "nsReferencedElement.h"
 #include "nsSMILTimedElement.h"
@@ -18,7 +18,7 @@ namespace mozilla {
 namespace dom {
 
 class SVGAnimationElement : public SVGAnimationElementBase,
-                            public DOMSVGTests,
+                            public SVGTests,
                             public nsISMILAnimationElement
 {
 protected:

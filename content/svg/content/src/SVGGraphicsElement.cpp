@@ -15,7 +15,7 @@ NS_IMPL_ADDREF_INHERITED(SVGGraphicsElement, SVGGraphicsElementBase)
 NS_IMPL_RELEASE_INHERITED(SVGGraphicsElement, SVGGraphicsElementBase)
 
 NS_INTERFACE_MAP_BEGIN(SVGGraphicsElement)
-  NS_INTERFACE_MAP_ENTRY(DOMSVGTests)
+  NS_INTERFACE_MAP_ENTRY(mozilla::dom::SVGTests)
 NS_INTERFACE_MAP_END_INHERITING(SVGGraphicsElementBase)
 
 //----------------------------------------------------------------------

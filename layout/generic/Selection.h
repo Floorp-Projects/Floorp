@@ -53,6 +53,7 @@ public:
   // utility methods for scrolling the selection into view
   nsPresContext* GetPresContext() const;
   nsIPresShell* GetPresShell() const;
+  nsFrameSelection* GetFrameSelection() const { return mFrameSelection; }
   // Returns a rect containing the selection region, and frame that that
   // position is relative to. For SELECTION_ANCHOR_REGION or
   // SELECTION_FOCUS_REGION the rect is a zero-width rectangle. For

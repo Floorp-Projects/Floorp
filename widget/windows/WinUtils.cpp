@@ -42,8 +42,12 @@ namespace widget {
   const char FaviconHelper::kJumpListCacheDir[] = "jumpListCache";
   const char FaviconHelper::kShortcutCacheDir[] = "shortcutCache";
 
-// SHCreateItemFromParsingName is only available on vista and up.
-WinUtils::SHCreateItemFromParsingNamePtr WinUtils::sCreateItemFromParsingName = nullptr;
+// apis available on vista and up.
+WinUtils::SHCreateItemFromParsingNamePtr WinUtils::sCreateItemFromParsingName = NULL;
+WinUtils::SHGetKnownFolderPathPtr WinUtils::sGetKnownFolderPath = NULL;
+
+static const PRUnichar kSehllLibraryName[] =  L"shell32.dll";
+static HMODULE sShellDll = NULL;
 
 /* static */ 
 WinUtils::WinVersion
@@ -364,35 +368,53 @@ WinUtils::InitMSG(UINT aMessage, WPARAM wParam, LPARAM lParam)
 }
 
 /* static */
-bool
-WinUtils::VistaCreateItemFromParsingNameInit()
-{
-  // Load and store Vista+ SHCreateItemFromParsingName
-  if (sCreateItemFromParsingName) {
-    return true;
-  }
-  static HMODULE sShellDll = nullptr;
-  if (sShellDll) {
-    return false;
-  }
-  static const PRUnichar kSehllLibraryName[] =  L"shell32.dll";
-  sShellDll = ::LoadLibraryW(kSehllLibraryName);
-  if (!sShellDll) {
-    return false;
-  }
-  sCreateItemFromParsingName = (SHCreateItemFromParsingNamePtr)
-    GetProcAddress(sShellDll, "SHCreateItemFromParsingName");
-  return sCreateItemFromParsingName != nullptr;
-}
-
-/* static */
 HRESULT
 WinUtils::SHCreateItemFromParsingName(PCWSTR pszPath, IBindCtx *pbc,
                                       REFIID riid, void **ppv)
 {
-  if (!VistaCreateItemFromParsingNameInit())
+  if (sCreateItemFromParsingName) {
+    return sCreateItemFromParsingName(pszPath, pbc, riid, ppv);
+  }
+
+  if (!sShellDll) {
+    sShellDll = ::LoadLibraryW(kSehllLibraryName);
+    if (!sShellDll) {
+      return false;
+    }
+  }
+
+  sCreateItemFromParsingName = (SHCreateItemFromParsingNamePtr)
+    GetProcAddress(sShellDll, "SHCreateItemFromParsingName");
+  if (!sCreateItemFromParsingName)
     return E_FAIL;
+
   return sCreateItemFromParsingName(pszPath, pbc, riid, ppv);
+}
+
+/* static */
+HRESULT 
+WinUtils::SHGetKnownFolderPath(REFKNOWNFOLDERID rfid,
+                               DWORD dwFlags,
+                               HANDLE hToken,
+                               PWSTR *ppszPath)
+{
+  if (sGetKnownFolderPath) {
+    return sGetKnownFolderPath(rfid, dwFlags, hToken, ppszPath);
+  }
+
+  if (!sShellDll) {
+    sShellDll = ::LoadLibraryW(kSehllLibraryName);
+    if (!sShellDll) {
+      return false;
+    }
+  }
+
+  sGetKnownFolderPath = (SHGetKnownFolderPathPtr)
+    GetProcAddress(sShellDll, "SHGetKnownFolderPath");
+  if (!sGetKnownFolderPath)
+    return E_FAIL;
+
+  return sGetKnownFolderPath(rfid, dwFlags, hToken, ppszPath);
 }
 
 #ifdef MOZ_PLACES

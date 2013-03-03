@@ -21,10 +21,10 @@ function receiveMessage(evt)
   if (/test$/.test(domain))
   {
     // XXX should really be IDN (bug 414090)
-    //if (domain !== "sub1.exämple.test")
+    //if (domain !== "sub1.exaмple.test")
     //  message += " wrong-initial-domain(" + domain + ")";
     // for now expect the punycode value
-    if (domain !== "sub1.xn--exmple-cua.test")
+    if (domain !== "sub1.xn--exaple-kqf.test")
       message += " wrong-initial-domain(" + domain + ")";
   }
   else
@@ -44,11 +44,11 @@ function receiveMessage(evt)
       break;
 
     case "?idn-nowhitelist":
-      message += idnTest("exämple.test");
+      message += idnTest("exaмple.test");
       break;
 
     case "?punycode-nowhitelist":
-      message  += punycodeTest("xn--exmple-cua.test");
+      message  += punycodeTest("xn--exaple-kqf.test");
       break;
 
     default:

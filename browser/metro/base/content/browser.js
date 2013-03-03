@@ -476,6 +476,10 @@ var Browser = {
     tab.browser.messageManager.sendAsyncMessage("Browser:CanUnload", {});
   },
 
+  savePage: function() {
+    ContentAreaUtils.saveDocument(this.selectedBrowser.contentWindow.document);
+  },
+
   _doCloseTab: function _doCloseTab(aTab) {
     let nextTab = this._getNextTab(aTab);
     if (!nextTab)
