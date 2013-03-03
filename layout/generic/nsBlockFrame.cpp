@@ -5507,13 +5507,10 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, uint32_t aFlags)
                visOverflow.width, visOverflow.height);
 #endif
       } else {
-        // XXX update searchingOverflowList directly, remove only when empty
-        FrameLines* overflowLines = RemoveOverflowLines();
         line = overflowLines->mLines.erase(line);
-        if (!overflowLines->mLines.empty()) {
-          SetOverflowLines(overflowLines);
-        } else {
-          delete overflowLines;
+        if (overflowLines->mLines.empty()) {
+          DestroyOverflowLines();
+          overflowLines = nullptr;
           // We just invalidated our iterators.  Since we were in
           // the overflow lines list, which is now empty, set them
           // so we're at the end of the regular line list.
@@ -5653,14 +5650,11 @@ nsBlockFrame::StealFrame(nsPresContext* aPresContext,
           // Remove the line box
           nsLineBox* lineBox = line;
           if (searchingOverflowList) {
-            // Erase line, but avoid making the overflow line list empty
-            // XXX update overflowLines directly, remove only when empty
-            RemoveOverflowLines();
+            // Erase the line, destroy the property if it was the last one.
             line = overflowLines->mLines.erase(line);
-            if (!overflowLines->mLines.empty()) {
-              SetOverflowLines(overflowLines);
-            } else {
-              delete overflowLines;
+            if (overflowLines->mLines.empty()) {
+              DestroyOverflowLines();
+              overflowLines = nullptr;
               // We just invalidated our iterators.  Since we were in
               // the overflow lines list, which is now empty, set them
               // so we're at the end of the regular line list.
