@@ -21,10 +21,11 @@ class BaselineInspector
   private:
     JSContext *cx;
     RootedScript script;
+    ICEntry *prevLookedUpEntry;
 
   public:
     BaselineInspector(JSContext *cx, RawScript rawScript)
-      : cx(cx), script(cx, rawScript)
+      : cx(cx), script(cx, rawScript), prevLookedUpEntry(NULL)
     {
         JS_ASSERT(script);
     }
@@ -48,7 +49,9 @@ class BaselineInspector
     ICEntry &icEntryFromPC(jsbytecode *pc) {
         JS_ASSERT(hasBaselineScript());
         JS_ASSERT(isValidPC(pc));
-        return baselineScript()->icEntryFromPCOffset(pc - script->code);
+        ICEntry &ent = baselineScript()->icEntryFromPCOffset(pc - script->code, prevLookedUpEntry);
+        prevLookedUpEntry = &ent;
+        return ent;
     }
 
   public:
