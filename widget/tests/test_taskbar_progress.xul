@@ -16,33 +16,21 @@
     let Ci = Components.interfaces;
     let Cu = Components.utils;
     Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-    let taskbar = Cc["@mozilla.org/windows-taskbar;1"].getService(Ci.nsIWinTaskbar);
-
-    function IsWin7OrHigher() {
-      try {
-        var sysInfo = Cc["@mozilla.org/system-info;1"].
-                      getService(Ci.nsIPropertyBag2);
-        var ver = parseFloat(sysInfo.getProperty("version"));
-        if (ver >= 6.1)
-          return true;
-      } catch (ex) { }
-      return false;
-    }
-
-    SimpleTest.waitForExplicitFinish();
-
-    function loaded()
-    {
+    
+    let TP = Ci.nsITaskbarProgress;
+    
+    function winProgress() {
+      let taskbar = Cc["@mozilla.org/windows-taskbar;1"];
+      if (!taskbar)
+        return null;
+      taskbar = taskbar.getService(Ci.nsIWinTaskbar);
       if (!taskbar.available)
-        SimpleTest.finish();
-
+        return null;
+      
       // HACK from mconnor:
       var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
       let win = wm.getMostRecentWindow("navigator:browser");
       let docShell = win.gBrowser.docShell;
-
-      let TP = Ci.nsITaskbarProgress;
 
       let progress = taskbar.getTaskbarProgress(docShell);
       isnot(progress, null, "Progress is not null");
@@ -53,7 +41,25 @@
       } catch (e) {
         ok(true, "Cannot get progress for null docshell");
       }
+      
+      return progress;
+    }
+    
+    function macProgress() {
+      let progress = Cc["@mozilla.org/widget/macdocksupport;1"];
+      if (!progress)
+        return null;
+      return progress.getService(TP);
+    }
 
+    SimpleTest.waitForExplicitFinish();
+
+    function loaded()
+    {
+      let progress = winProgress() || macProgress();
+      if (!TP)
+        SimpleTest.finish();
+      
       function shouldThrow(s,c,m) {
         try {
           progress.setProgressState(s,c,m);

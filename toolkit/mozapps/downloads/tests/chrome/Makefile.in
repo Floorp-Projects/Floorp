@@ -48,9 +48,13 @@ MOCHITEST_CHROME_FILES += \
   $(NULL)
 endif
 
-ifeq ($(OS_ARCH),WINNT)
+ifneq (,$(filter WINNT, $(OS_ARCH))$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
 MOCHITEST_CHROME_FILES += \
   test_taskbarprogress_downloadstates.xul \
+  $(NULL)
+endif
+ifeq ($(OS_ARCH),WINNT)
+MOCHITEST_CHROME_FILES += \
   $(filter disabled-for-very-frequent-orange--bug-630567, test_taskbarprogress_service.xul) \
   $(NULL)
 endif
