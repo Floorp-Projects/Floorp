@@ -36,7 +36,7 @@ public:
                         int64_t aStartTime,
                         int64_t aEndTime,
                         int64_t aCurrentTime);
-  virtual nsresult GetBuffered(TimeRanges* aBuffered, int64_t aStartTime);
+  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime);
 
   virtual bool HasAudio() {
     return mInfo.mHasAudio;
