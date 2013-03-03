@@ -51,7 +51,7 @@ function testLocationChange()
       ok(true, "tabNavigated event was fired.");
       info("Still attached to the tab.");
 
-      gDebugger.addEventListener("Debugger:AfterScriptsAdded", function _onEvent(aEvent) {
+      gDebugger.addEventListener("Debugger:AfterSourcesAdded", function _onEvent(aEvent) {
         gDebugger.removeEventListener(aEvent.type, _onEvent);
 
         executeSoon(function() {
@@ -77,7 +77,7 @@ function testBack()
     ok(true, "tabNavigated event was fired after going back.");
     info("Still attached to the tab.");
 
-    gDebugger.addEventListener("Debugger:AfterScriptsAdded", function _onEvent(aEvent) {
+    gDebugger.addEventListener("Debugger:AfterSourcesAdded", function _onEvent(aEvent) {
       gDebugger.removeEventListener(aEvent.type, _onEvent);
 
       executeSoon(function() {
@@ -104,7 +104,7 @@ function testForward()
     ok(true, "tabNavigated event was fired after going forward.");
     info("Still attached to the tab.");
 
-    gDebugger.addEventListener("Debugger:AfterScriptsAdded", function _onEvent(aEvent) {
+    gDebugger.addEventListener("Debugger:AfterSourcesAdded", function _onEvent(aEvent) {
       gDebugger.removeEventListener(aEvent.type, _onEvent);
 
       executeSoon(function() {

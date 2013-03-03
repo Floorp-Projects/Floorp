@@ -23,7 +23,10 @@ function test()
     gDebugger = gPane.panelWin;
     gDebuggee = aDebuggee;
 
-    addBreakpoint();
+    gDebugger.addEventListener("Debugger:SourceShown", function _onSourceShown() {
+      gDebugger.removeEventListener("Debugger:SourceShown", _onSourceShown);
+      addBreakpoint();
+    });
   });
 }
 
@@ -32,7 +35,8 @@ function addBreakpoint()
   gDebugger.DebuggerController.Breakpoints.addBreakpoint({
     url: gDebugger.DebuggerView.Sources.selectedValue,
     line: 16
-  }, function() {
+  }, function(aBreakpointClient, aResponseError) {
+    ok(!aResponseError, "There shouldn't be an error.");
     // Wait for the resume...
     gDebugger.gClient.addOneTimeListener("resumed", function() {
       gDebugger.DebuggerController.StackFrames.autoScopeExpand = true;
