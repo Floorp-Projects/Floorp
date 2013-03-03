@@ -8,7 +8,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "mozilla/css/Loader.h"
 #include "nsIFile.h"
-#include "nsLayoutCID.h"
 #include "nsIMemoryReporter.h"
 #include "nsNetUtil.h"
 #include "nsIObserverService.h"

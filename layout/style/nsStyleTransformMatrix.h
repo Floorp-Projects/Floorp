@@ -13,11 +13,11 @@
 #include "nsCSSValue.h"
 #include "gfxMatrix.h"
 #include "gfx3DMatrix.h"
-#include "nsRect.h"
 
 struct nsCSSValueList;
 class nsStyleContext;
 class nsPresContext;
+struct nsRect;
 
 /**
  * A helper to generate gfxMatrixes from css transform functions.
