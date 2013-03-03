@@ -11,6 +11,7 @@
 #include "nsWrapperCache.h"
 #include "nsTArray.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/BindingDeclarations.h"
 
 class nsHTMLFormElement;
 class nsIDOMFile;
@@ -20,7 +21,6 @@ class ErrorResult;
 
 namespace dom {
 class GlobalObject;
-template<class> class Optional;
 } // namespace dom
 } // namespace mozilla
 
@@ -54,7 +54,8 @@ public:
               const mozilla::dom::Optional<nsHTMLFormElement*>& aFormElement,
               mozilla::ErrorResult& aRv);
   void Append(const nsAString& aName, const nsAString& aValue);
-  void Append(const nsAString& aName, nsIDOMBlob* aBlob);
+  void Append(const nsAString& aName, nsIDOMBlob* aBlob,
+              const mozilla::dom::Optional<nsAString>& aFilename);
 
   // nsFormSubmission
   virtual nsresult GetEncodedSubmission(nsIURI* aURI,
@@ -62,13 +63,21 @@ public:
   virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue)
   {
-    Append(aName, aValue);
+    FormDataTuple* data = mFormData.AppendElement();
+    data->name = aName;
+    data->stringValue = aValue;
+    data->valueIsFile = false;
     return NS_OK;
   }
   virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   nsIDOMBlob* aBlob)
+                                   nsIDOMBlob* aBlob,
+                                   const nsString& aFilename)
   {
-    Append(aName, aBlob);
+    FormDataTuple* data = mFormData.AppendElement();
+    data->name = aName;
+    data->fileValue = aBlob;
+    data->filename = aFilename;
+    data->valueIsFile = true;
     return NS_OK;
   }
 
@@ -80,6 +89,7 @@ private:
     nsString name;
     nsString stringValue;
     nsCOMPtr<nsIDOMBlob> fileValue;
+    nsString filename;
     bool valueIsFile;
   };
 
