@@ -22,7 +22,6 @@
 #include "netCore.h"
 #include "plstr.h"
 #include "prnetdb.h"
-#include "prerror.h"
 #include "prerr.h"
 #include "NetworkActivityMonitor.h"
 
@@ -138,7 +137,7 @@ GetXPCOMFromNSSError(PRErrorCode code)
                                                -1 * code);
 }
 
-static nsresult
+nsresult
 ErrorAccordingToNSPR(PRErrorCode errorCode)
 {
     nsresult rv = NS_ERROR_FAILURE;
