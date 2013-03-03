@@ -36,16 +36,16 @@ function test()
       info("jsdebugger panel opened");
       gPane = toolbox.getCurrentPanel();
       gDebugger = gPane.panelWin;
-      gDebugger.addEventListener("Debugger:AfterScriptsAdded",
-                                 onAfterScriptsAdded);
+      gDebugger.addEventListener("Debugger:AfterSourcesAdded",
+                                 onAfterSourcesAdded);
     });
   });
 
-  function onAfterScriptsAdded()
+  function onAfterSourcesAdded()
   {
     info("scripts added");
-    gDebugger.removeEventListener("Debugger:AfterScriptsAdded",
-                                  onAfterScriptsAdded, true);
+    gDebugger.removeEventListener("Debugger:AfterSourcesAdded",
+                                  onAfterSourcesAdded);
 
     gDebugger.addEventListener("Debugger:SourceShown", onSourceShown);
 
@@ -271,8 +271,11 @@ function test()
       gEditor.addEventListener(SourceEditor.EVENTS.BREAKPOINT_CHANGE,
                                onEditorBreakpointRemoveSecond);
 
-      let testWin = gEditor.editorElement.ownerDocument.defaultView;
-      EventUtils.synthesizeMouse(gEditor.editorElement, 10, 70, {}, testWin);
+      let iframe = gEditor.editorElement;
+      let testWin = iframe.ownerDocument.defaultView;
+      // flush the layout for the iframe
+      info("rect " + iframe.contentDocument.documentElement.getBoundingClientRect());
+      EventUtils.synthesizeMouse(iframe, 10, 70, {}, testWin);
     });
 
   }
