@@ -1139,6 +1139,10 @@ nsXREDirProvider::GetUserDataDirectoryHome(nsIFile** aFile, bool aLocal)
   if (!homeDir || !*homeDir)
     return NS_ERROR_FAILURE;
 
+#ifdef ANDROID /* We want (ProfD == ProfLD) on Android. */
+  aLocal = false;
+#endif
+
   if (aLocal) {
     // If $XDG_CACHE_HOME is defined use it, otherwise use $HOME/.cache.
     const char* cacheHome = getenv("XDG_CACHE_HOME");

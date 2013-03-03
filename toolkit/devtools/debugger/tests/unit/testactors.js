@@ -31,13 +31,21 @@ function createRootActor()
         this._globalActors.push(actor);
       }
 
-      return { from: "root",
-               applicationType: "xpcshell-tests",
-               testConnectionPrefix: this.conn.prefix };
+      return {
+        from: "root",
+        applicationType: "xpcshell-tests",
+        testConnectionPrefix: this.conn.prefix,
+        traits: {
+          sourcesAndNewSource: true
+        }
+      };
     },
 
     listGlobals: function(aRequest) {
-      return { from: "root", contexts: [ g.json() for each (g in this._globalActors) ]};
+      return {
+        from: "root",
+        contexts: [ g.json() for each (g in this._globalActors) ]
+      };
     },
   };
 

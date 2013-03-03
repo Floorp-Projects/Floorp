@@ -257,27 +257,33 @@ function test()
       return [
         gDebugger.DebuggerView.Breakpoints.getBreakpoint(url, line),
         gDebugger.DebuggerController.Breakpoints.getBreakpoint(url, line),
-        url, line, false
+        url,
+        line,
+        false
       ];
     }
 
-    waitForBreakpoints(13, function() {
-      testBreakpoint.apply(this, _get(gScripts.selectedValue, 14));
-      testBreakpoint.apply(this, _get(gScripts.selectedValue, 15));
-      testBreakpoint.apply(this, _get(gScripts.selectedValue, 16));
-      testBreakpoint.apply(this, _get(gScripts.selectedValue, 17));
-      testBreakpoint.apply(this, _get(gScripts.selectedValue, 18));
-      testBreakpoint.apply(this, _get(gScripts.selectedValue, 19));
-      testBreakpoint.apply(this, _get(gScripts.selectedValue, 21));
-      testBreakpoint.apply(this, _get(gScripts.selectedValue, 22));
-      testBreakpoint.apply(this, _get(gScripts.selectedValue, 23));
+    gDebugger.addEventListener("Debugger:SourceShown", function _onSourceShown() {
+      gDebugger.removeEventListener("Debugger:SourceShown", _onSourceShown);
 
-      is(gBreakpointsPane.selectedItem, null,
-        "There should be no selected item in the breakpoints pane.");
-      is(gBreakpointsPane.selectedClient, null,
-        "There should be no selected client in the breakpoints pane.");
+      waitForBreakpoints(13, function() {
+        testBreakpoint.apply(this, _get(gScripts.selectedValue, 14));
+        testBreakpoint.apply(this, _get(gScripts.selectedValue, 15));
+        testBreakpoint.apply(this, _get(gScripts.selectedValue, 16));
+        testBreakpoint.apply(this, _get(gScripts.selectedValue, 17));
+        testBreakpoint.apply(this, _get(gScripts.selectedValue, 18));
+        testBreakpoint.apply(this, _get(gScripts.selectedValue, 19));
+        testBreakpoint.apply(this, _get(gScripts.selectedValue, 21));
+        testBreakpoint.apply(this, _get(gScripts.selectedValue, 22));
+        testBreakpoint.apply(this, _get(gScripts.selectedValue, 23));
 
-      closeDebuggerAndFinish();
+        is(gBreakpointsPane.selectedItem, null,
+          "There should be no selected item in the breakpoints pane.");
+        is(gBreakpointsPane.selectedClient, null,
+          "There should be no selected client in the breakpoints pane.");
+
+        closeDebuggerAndFinish();
+      });
     });
 
     finalCheck();
@@ -292,10 +298,8 @@ function test()
   }
 
   function resume(expected, callback) {
-    gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
-      Services.tm.currentThread.dispatch({ run: function() {
-        waitForBreakpoint(expected, callback);
-      }}, 0);
+    gDebugger.DebuggerController.activeThread.addOneTimeListener("resumed", function() {
+      waitForBreakpoint(expected, callback);
     });
 
     EventUtils.sendMouseEvent({ type: "mousedown" },

@@ -22,6 +22,7 @@ _BROWSER_FILES = \
 		browser_inspector_breadcrumbs.js \
 		browser_inspector_invalidate.js \
 		browser_inspector_menu.js \
+		browser_inspector_menu.html \
 		browser_inspector_pseudoClass_menu.js \
 		browser_inspector_destroyselection.html \
 		browser_inspector_destroyselection.js \
