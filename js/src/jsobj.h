@@ -296,13 +296,16 @@ class JSObject : public js::ObjectImpl
     /* As above, but does not change the slot span. */
     inline void setLastPropertyInfallible(js::RawShape shape);
 
-    /* Make a non-array object with the specified initial state. */
+    /*
+     * Make a non-array object with the specified initial state. This method
+     * takes ownership of any extantSlots it is passed.
+     */
     static inline JSObject *create(JSContext *cx,
                                    js::gc::AllocKind kind,
                                    js::gc::InitialHeap heap,
                                    js::HandleShape shape,
                                    js::HandleTypeObject type,
-                                   js::HeapSlot *slots);
+                                   js::HeapSlot *extantSlots = NULL);
 
     /* Make an array object with the specified initial state. */
     static inline JSObject *createArray(JSContext *cx,
