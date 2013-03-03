@@ -8,15 +8,12 @@
 #include "nsDOMCSSAttrDeclaration.h"
 
 #include "mozilla/css/Declaration.h"
-#include "mozilla/css/Loader.h"
 #include "mozilla/css/StyleRule.h"
 #include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
 #include "nsIDOMMutationEvent.h"
-#include "nsIPrincipal.h"
 #include "nsIURI.h"
 #include "nsNodeUtils.h"
-#include "nsContentUtils.h"
 #include "xpcpublic.h"
 #include "nsWrapperCacheInlines.h"
 

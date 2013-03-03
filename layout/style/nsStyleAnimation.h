@@ -16,9 +16,7 @@
 #include "nsColor.h"
 #include "nsCSSValue.h"
 
-class nsPresContext;
 class nsStyleContext;
-struct nsCSSRect;
 class gfx3DMatrix;
 
 namespace mozilla {

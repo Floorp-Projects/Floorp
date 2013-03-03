@@ -12,12 +12,10 @@
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "nsCSSKeywords.h"
 #include "CSSValue.h"
-#include "nsAutoPtr.h"
+#include "nsCOMPtr.h"
 #include "nsCoord.h"
-#include "nsWrapperCache.h"
 
 class nsIURI;
-class nsComputedDOMStyle;
 class nsDOMCSSRect;
 class nsDOMCSSRGBColor;
 
