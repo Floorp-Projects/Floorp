@@ -391,15 +391,19 @@ BaselineScript::pcMappingReader(size_t indexEntry)
 ICEntry &
 BaselineScript::icEntryFromReturnOffset(CodeOffsetLabel returnOffset)
 {
-    // FIXME: Change this to something better than linear search (binary probe)?
-    for (size_t i = 0; i < numICEntries(); i++) {
-        ICEntry &entry = icEntry(i);
-        if (entry.returnOffset().offset() == returnOffset.offset())
-            return entry;
+    size_t bottom = 0;
+    size_t top = numICEntries();
+    size_t mid = (bottom + top) / 2;
+    while (mid < top) {
+        ICEntry &midEntry = icEntry(mid);
+        if (midEntry.returnOffset().offset() < returnOffset.offset())
+            bottom = mid + 1;
+        else // if (midEntry.returnOffset().offset() >= returnOffset.offset())
+            top = mid;
+        mid = (bottom + top) / 2;
     }
-
-    JS_NOT_REACHED("No cache");
-    return icEntry(0);
+    JS_ASSERT(icEntry(mid).returnOffset().offset() == returnOffset.offset());
+    return icEntry(mid);
 }
 
 uint8_t *
@@ -411,19 +415,58 @@ BaselineScript::returnAddressForIC(const ICEntry &ent)
 ICEntry &
 BaselineScript::icEntryFromPCOffset(uint32_t pcOffset)
 {
-    // FIXME: Change this to something better than linear search (binary probe)?
-    for (size_t i = 0; i < numICEntries(); i++) {
-        ICEntry &entry = icEntry(i);
+    // Multiple IC entries can have the same PC offset, but this method only looks for
+    // those which have isForOp() set.
+    size_t bottom = 0;
+    size_t top = numICEntries();
+    size_t mid = (bottom + top) / 2;
+    while (mid < top) {
+        ICEntry &midEntry = icEntry(mid);
+        if (midEntry.pcOffset() < pcOffset)
+            bottom = mid + 1;
+        else if (midEntry.pcOffset() > pcOffset)
+            top = mid;
+        else
+            break;
+        mid = (bottom + top) / 2;
+    }
+    // Found an IC entry with a matching PC offset.  Search backward, and then
+    // forward from this IC entry, looking for one with the same PC offset which
+    // has isForOp() set.
+    for (size_t i = mid; i < numICEntries() && icEntry(i).pcOffset() == pcOffset; i--) {
+        if (icEntry(i).isForOp())
+            return icEntry(i);
+    }
+    for (size_t i = mid+1; i < numICEntries() && icEntry(i).pcOffset() == pcOffset; i++) {
+        if (icEntry(i).isForOp())
+            return icEntry(i);
+    }
+    JS_NOT_REACHED("Invalid PC offset for IC entry.");
+    return icEntry(mid);
+}
 
-        if (!entry.isForOp())
-            continue;
-
-        if (entry.pcOffset() == pcOffset)
-            return entry;
+ICEntry &
+BaselineScript::icEntryFromPCOffset(uint32_t pcOffset, ICEntry *prevLookedUpEntry)
+{
+    // Do a linear forward search from the last queried PC offset, or fallback to a
+    // binary search if the last offset is too far away.
+    if (prevLookedUpEntry && pcOffset >= prevLookedUpEntry->pcOffset() &&
+        (pcOffset - prevLookedUpEntry->pcOffset()) <= 10)
+    {
+        uint32_t diff = pcOffset - prevLookedUpEntry->pcOffset();
+        ICEntry *firstEntry = &icEntry(0);
+        ICEntry *lastEntry = &icEntry(numICEntries() - 1);
+        ICEntry *curEntry = prevLookedUpEntry;
+        while (curEntry >= firstEntry && curEntry <= lastEntry) {
+            if (curEntry->pcOffset() == pcOffset && curEntry->isForOp())
+                break;
+            curEntry++;
+        }
+        JS_ASSERT(curEntry->pcOffset() == pcOffset && curEntry->isForOp());
+        return *curEntry;
     }
 
-    JS_NOT_REACHED("No cache");
-    return icEntry(0);
+    return icEntryFromPCOffset(pcOffset);
 }
 
 ICEntry &

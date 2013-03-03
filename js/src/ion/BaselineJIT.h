@@ -231,6 +231,7 @@ struct BaselineScript
     ICEntry &icEntry(size_t index);
     ICEntry &icEntryFromReturnOffset(CodeOffsetLabel returnOffset);
     ICEntry &icEntryFromPCOffset(uint32_t pcOffset);
+    ICEntry &icEntryFromPCOffset(uint32_t pcOffset, ICEntry *prevLookedUpEntry);
     ICEntry &icEntryFromReturnAddress(uint8_t *returnAddr);
     uint8_t *returnAddressForIC(const ICEntry &ent);
 
