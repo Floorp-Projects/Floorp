@@ -47,8 +47,8 @@ public:
     uint64_t aWindowID)
     : mMediaThread(aThread)
     , mWindowID(aWindowID)
-    , mFinished(false)
     , mStopped(false)
+    , mFinished(false)
     , mLock("mozilla::GUMCMSL")
     , mRemoved(false) {}
 
