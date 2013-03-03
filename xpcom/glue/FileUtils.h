@@ -16,21 +16,9 @@
 #include "prio.h"
 
 #include "mozilla/Scoped.h"
-#include "nsIFile.h"
 #include <errno.h>
-#include <limits.h>
 
 namespace mozilla {
-
-#if defined(XP_WIN)
-typedef void* filedesc_t;
-typedef const wchar_t* pathstr_t;
-#else
-typedef int filedesc_t;
-typedef const char* pathstr_t;
-#endif
-
-#if !defined(XPCOM_GLUE)
 
 /**
  * AutoFDClose is a RAII wrapper for PRFileDesc.
@@ -78,62 +66,6 @@ typedef Scoped<ScopedCloseFDTraits> ScopedClose;
  * @return true on success.
  */
 NS_COM_GLUE bool fallocate(PRFileDesc *aFD, int64_t aLength);
-
-/**
- * Use readahead to preload shared libraries into the file cache before loading.
- *
- * @param aFile nsIFile representing path to shared library
- */
-NS_COM_GLUE void ReadAheadLib(nsIFile* aFile);
-
-/**
- * Use readahead to preload a file into the file cache before reading.
- *
- * @param aFile nsIFile representing path to shared library
- * @param aOffset Offset into the file to begin preloading
- * @param aCount Number of bytes to preload (SIZE_MAX implies file size)
- * @param aOutFd Pointer to file descriptor. If specified, ReadAheadFile will
- *        return its internal, opened file descriptor instead of closing it.
- */
-NS_COM_GLUE void ReadAheadFile(nsIFile* aFile, const size_t aOffset = 0,
-                               const size_t aCount = SIZE_MAX,
-                               filedesc_t* aOutFd = nullptr);
-
-#endif // !defined(XPCOM_GLUE)
-
-/**
- * Use readahead to preload shared libraries into the file cache before loading.
- *
- * @param aFilePath path to shared library
- */
-NS_COM_GLUE void ReadAheadLib(pathstr_t aFilePath);
-
-/**
- * Use readahead to preload a file into the file cache before loading.
- *
- * @param aFilePath path to shared library
- * @param aOffset Offset into the file to begin preloading
- * @param aCount Number of bytes to preload (SIZE_MAX implies file size)
- * @param aOutFd Pointer to file descriptor. If specified, ReadAheadFile will
- *        return its internal, opened file descriptor instead of closing it.
- */
-NS_COM_GLUE void ReadAheadFile(pathstr_t aFilePath, const size_t aOffset = 0,
-                               const size_t aCount = SIZE_MAX,
-                               filedesc_t* aOutFd = nullptr);
-
-/**
- * Use readahead to preload a file into the file cache before reading.
- * When this function exits, the file pointer is guaranteed to be in the same
- * position it was in before this function was called.
- *
- * @param aFd file descriptor opened for read access
- * (on Windows, file must be opened with FILE_FLAG_SEQUENTIAL_SCAN)
- * @param aOffset Offset into the file to begin preloading
- * @param aCount Number of bytes to preload (SIZE_MAX implies file size)
- */
-NS_COM_GLUE void ReadAhead(filedesc_t aFd, const size_t aOffset = 0,
-                           const size_t aCount = SIZE_MAX);
-
 
 } // namespace mozilla
 #endif
