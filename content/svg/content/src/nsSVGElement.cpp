@@ -9,6 +9,7 @@
 #include "nsSVGElement.h"
 
 #include "mozilla/dom/SVGSVGElement.h"
+#include "mozilla/dom/SVGTests.h"
 #include "nsIDocument.h"
 #include "nsRange.h"
 #include "nsIDOMAttr.h"
@@ -48,7 +49,6 @@
 #include "SVGAnimatedPathSegList.h"
 #include "SVGAnimatedTransformList.h"
 #include "SVGContentUtils.h"
-#include "DOMSVGTests.h"
 #include "nsSVGRect.h"
 #include "nsIFrame.h"
 #include "prdtoa.h"
@@ -545,7 +545,7 @@ nsSVGElement::ParseAttribute(int32_t aNamespaceID,
 
     if (!foundMatch) {
       // Check for conditional processing attributes
-      nsCOMPtr<DOMSVGTests> tests(do_QueryInterface(this));
+      nsCOMPtr<SVGTests> tests(do_QueryInterface(this));
       if (tests && tests->ParseConditionalProcessingAttribute(
                             aAttribute, aValue, aResult)) {
         foundMatch = true;
@@ -829,7 +829,7 @@ nsSVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsIAtom* aName,
     }
 
     // Check for conditional processing attributes
-    nsCOMPtr<DOMSVGTests> tests(do_QueryInterface(this));
+    nsCOMPtr<SVGTests> tests(do_QueryInterface(this));
     if (tests && tests->IsConditionalProcessingAttribute(aName)) {
       MaybeSerializeAttrBeforeRemoval(aName, aNotify);
       tests->UnsetAttr(aName);
@@ -880,10 +880,10 @@ nsSVGElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
   nsChangeHint retval =
     nsSVGElementBase::GetAttributeChangeHint(aAttribute, aModType);
 
-  nsCOMPtr<DOMSVGTests> tests(do_QueryInterface(const_cast<nsSVGElement*>(this)));
+  nsCOMPtr<SVGTests> tests(do_QueryInterface(const_cast<nsSVGElement*>(this)));
   if (tests && tests->IsConditionalProcessingAttribute(aAttribute)) {
     // It would be nice to only reconstruct the frame if the value returned by
-    // DOMSVGTests::PassesConditionalProcessingTests has changed, but we don't
+    // SVGTests::PassesConditionalProcessingTests has changed, but we don't
     // know that
     NS_UpdateHint(retval, nsChangeHint_ReconstructFrame);
   }
@@ -2447,7 +2447,7 @@ nsSVGElement::WillChangeStringList(bool aIsConditionalProcessingAttribute,
 {
   nsIAtom* name;
   if (aIsConditionalProcessingAttribute) {
-    nsCOMPtr<DOMSVGTests> tests(do_QueryInterface(this));
+    nsCOMPtr<SVGTests> tests(do_QueryInterface(this));
     name = tests->GetAttrName(aAttrEnum);
   } else {
     name = *GetStringListInfo().mStringListInfo[aAttrEnum].mName;
@@ -2462,7 +2462,7 @@ nsSVGElement::DidChangeStringList(bool aIsConditionalProcessingAttribute,
 {
   nsIAtom* name;
   nsAttrValue newValue;
-  nsCOMPtr<DOMSVGTests> tests;
+  nsCOMPtr<SVGTests> tests;
 
   if (aIsConditionalProcessingAttribute) {
     tests = do_QueryInterface(this);

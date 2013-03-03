@@ -121,6 +121,7 @@ webidl_files = \
   MutationObserver.webidl \
   Node.webidl \
   NodeFilter.webidl \
+  NodeIterator.webidl \
   NodeList.webidl \
   PaintRequest.webidl \
   PaintRequestList.webidl \
@@ -211,6 +212,8 @@ webidl_files = \
   Text.webidl \
   TextDecoder.webidl \
   TextEncoder.webidl \
+  TimeRanges.webidl \
+  TreeWalker.webidl \
   URL.webidl \
   ValidityState.webidl \
   WebSocket.webidl \

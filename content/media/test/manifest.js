@@ -226,7 +226,7 @@ function fileUriToSrc(path, mustExist) {
   return f.path;
 }
 
-// Returns true if two nsTimeRanges are equal, false otherwise
+// Returns true if two TimeRanges are equal, false otherwise
 function range_equals(r1, r2) {
   if (r1.length != r2.length) {
     return false;

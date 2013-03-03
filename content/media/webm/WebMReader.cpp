@@ -10,7 +10,7 @@
 #include "WebMReader.h"
 #include "WebMBufferedParser.h"
 #include "VideoUtils.h"
-#include "nsTimeRanges.h"
+#include "mozilla/dom/TimeRanges.h"
 #include "VorbisUtils.h"
 
 #define VPX_DONT_DEFINE_STDINT_TYPES
@@ -953,7 +953,7 @@ bool WebMReader::IsDataCachedAtEndOfSubsegments()
 }
 #endif
 
-nsresult WebMReader::GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime)
+nsresult WebMReader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
 {
   MediaResource* resource = mDecoder->GetResource();
 

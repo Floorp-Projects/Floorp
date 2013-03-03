@@ -105,6 +105,12 @@ public:
   void UpdateImageMap(nsImageFrame* aImageFrame);
 
   /**
+   * Update the label accessible tree when rendered @value is changed.
+   */
+  void UpdateLabelValue(nsIPresShell* aPresShell, nsIContent* aLabelElm,
+                        const nsString& aNewValue);
+
+  /**
    * Notify accessibility that anchor jump has been accomplished to the given
    * target. Used by layout.
    */

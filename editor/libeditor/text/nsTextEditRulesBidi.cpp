@@ -12,13 +12,15 @@
 #include "nsIDOMNode.h"
 #include "nsIEditor.h"
 #include "nsIPresShell.h"
-#include "nsISelection.h"
+#include "mozilla/Selection.h"
 #include "nsISelectionPrivate.h"
 #include "nsISupportsImpl.h"
 #include "nsPlaintextEditor.h"
 #include "nsPresContext.h"
 #include "nsTextEditRules.h"
 #include "nscore.h"
+
+using namespace mozilla;
 
 // Test for distance between caret and text that will be deleted
 nsresult
@@ -45,12 +47,8 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsISelection         *aSelection,
 
   uint8_t levelBefore;
   uint8_t levelAfter;
-
-  nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(aSelection));
-  NS_ENSURE_TRUE(privateSelection, NS_ERROR_NULL_POINTER);
-  
-  nsRefPtr<nsFrameSelection> frameSelection;
-  privateSelection->GetFrameSelection(getter_AddRefs(frameSelection));
+  nsRefPtr<nsFrameSelection> frameSelection =
+    static_cast<Selection*>(aSelection)->GetFrameSelection();
   NS_ENSURE_TRUE(frameSelection, NS_ERROR_NULL_POINTER);
   
   nsPrevNextBidiLevels levels = frameSelection->

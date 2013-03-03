@@ -1,11 +1,11 @@
-/* -*- Mode: js2; js2-basic-offset: 4; indent-tabs-mode: nil; -*- */
+/* -*- Mode: js2; tab-width: 8; indent-tabs-mode: nil; js2-basic-offset: 2 -*-*/
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // This file is used for both about:memory and about:compartments.
-//
-//
+
 // about:memory will by default show information about the browser's current
 // memory usage, but you can direct it to load information from a file by
 // providing a file= query string.  For example,
@@ -48,17 +48,20 @@ let gUnnamedProcessStr = "Main Process";
 // Because about:memory and about:compartments are non-standard URLs,
 // location.search is undefined, so we have to use location.href here.
 // The toLowerCase() calls ensure that addresses like "ABOUT:MEMORY" work.
-let gVerbose;
+let gVerbose = false;
+let gIsDiff = false;
 {
   let split = document.location.href.split('?');
   document.title = split[0].toLowerCase();
 
-  gVerbose = false;
-  if (split.length == 2) {
+  if (split.length === 2) {
     let searchSplit = split[1].split('&');
     for (let i = 0; i < searchSplit.length; i++) {
-      if (searchSplit[i].toLowerCase() == 'verbose') {
+      if (searchSplit[i].toLowerCase() === 'verbose') {
         gVerbose = true;
+      }
+      if (searchSplit[i].toLowerCase() === 'diff') {
+        gIsDiff = true;
       }
     }
   }
@@ -886,19 +889,27 @@ TreeNode.prototype = {
 // Sort TreeNodes first by size, then by name.  This is particularly important
 // for the about:memory tests, which need a predictable ordering of reporters
 // which have the same amount.
-TreeNode.compareAmounts = function(a, b) {
-  if (a._amount > b._amount) {
+TreeNode.compareAmounts = function(aA, aB) {
+  let a, b;
+  if (gIsDiff) {
+    a = Math.abs(aA._amount);
+    b = Math.abs(aB._amount);
+  } else {
+    a = aA._amount;
+    b = aB._amount;
+  }
+  if (a > b) {
     return -1;
   }
-  if (a._amount < b._amount) {
+  if (a < b) {
     return 1;
   }
-  return TreeNode.compareUnsafeNames(a, b);
+  return TreeNode.compareUnsafeNames(aA, aB);
 };
 
-TreeNode.compareUnsafeNames = function(a, b) {
-  return a._unsafeName < b._unsafeName ? -1 :
-         a._unsafeName > b._unsafeName ?  1 :
+TreeNode.compareUnsafeNames = function(aA, aB) {
+  return aA._unsafeName < aB._unsafeName ? -1 :
+         aA._unsafeName > aB._unsafeName ?  1 :
          0;
 };
 
@@ -1516,11 +1527,12 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText)
     let treelineText = aTreelineText1 + aTreelineText2a;
     appendElementWithText(aP, "span", "treeline", treelineText);
 
-    // Detect and record invalid values.
+    // Detect and record invalid values.  But not if gIsDiff is true, because
+    // we expect negative values in that case.
     assertInput(aRoot._units === aT._units,
                 "units within a tree are inconsistent");
     let tIsInvalid = false;
-    if (!(0 <= aT._amount && aT._amount <= aRoot._amount)) {
+    if (!gIsDiff && !(0 <= aT._amount && aT._amount <= aRoot._amount)) {
       tIsInvalid = true;
       let unsafePath = aUnsafeNames.join("/");
       gUnsafePathsWithInvalidValuesForThisProcess.push(unsafePath);

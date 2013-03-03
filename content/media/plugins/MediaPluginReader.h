@@ -22,6 +22,10 @@ class AbstractMediaDecoder;
 namespace layers {
 class ImageContainer;
 }
+
+namespace dom {
+class TimeRanges;
+}
  
 class MediaPluginReader : public MediaDecoderReader
 {
@@ -59,7 +63,7 @@ public:
   virtual nsresult ReadMetadata(VideoInfo* aInfo,
                                 MetadataTags** aTags);
   virtual nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime);
-  virtual nsresult GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime);
+  virtual nsresult GetBuffered(mozilla::dom::TimeRanges* aBuffered, int64_t aStartTime);
   class ImageBufferCallback : public MPAPI::BufferCallback {
     typedef mozilla::layers::Image Image;
   public:

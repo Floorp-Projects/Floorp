@@ -95,9 +95,9 @@
      "STATE_OUTDATED",
      "STATE_VULNERABLE_UPDATE_AVAILABLE",
      "STATE_VULNERABLE_NO_UPDATE"].forEach(function(label) {
-      stateNames[Ci.nsIBlocklistService[label]] = label;  
+      stateNames[Ci.nsIBlocklistService[label]] = label;
     });
-    
+
     for (var i = 0; i < aPlugins.length; i++) {
       var plugin = aPlugins[i];
       if (plugin) {
@@ -118,6 +118,15 @@
         fileDd.appendChild(file);
         fileDd.appendChild(document.createTextNode(plugin.pluginLibraries));
         dl.appendChild(fileDd);
+
+        // "Path: /usr/lib/mozilla/plugins/libtotem-cone-plugin.so"
+        var pathDd = document.createElement("dd");
+        var path = document.createElement("span");
+        path.setAttribute("class", "label");
+        path.appendChild(document.createTextNode(pluginsbundle.GetStringFromName("path_label") + " "));
+        pathDd.appendChild(path);
+        pathDd.appendChild(document.createTextNode(plugin.pluginFullpath));
+        dl.appendChild(pathDd);
 
         // "Version: "
         var versionDd = document.createElement("dd");

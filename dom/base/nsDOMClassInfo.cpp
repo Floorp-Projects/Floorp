@@ -6,7 +6,7 @@
 
 #include "mozilla/Util.h"
 // On top because they include basictypes.h:
-#include "SmsFilter.h"
+#include "mozilla/dom/SmsFilter.h"
 
 #ifdef XP_WIN
 #undef GetClassName
@@ -157,7 +157,6 @@
 #include "nsIXSLTProcessor.h"
 #include "nsIXSLTProcessorPrivate.h"
 
-#include "nsIDOMLSProgressEvent.h"
 #include "nsXMLHttpRequest.h"
 #include "nsIDOMSettingsManager.h"
 #include "nsIDOMContactManager.h"
@@ -202,7 +201,6 @@
 #include "nsIDOMTimeRanges.h"
 #include "nsIDOMHTMLVideoElement.h"
 #include "nsIDOMHTMLAudioElement.h"
-#include "nsIDOMProgressEvent.h"
 #include "nsIDOMCSSCharsetRule.h"
 #include "nsIDOMCSSImportRule.h"
 #include "nsIDOMCSSMediaRule.h"
@@ -929,9 +927,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(StorageItem, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(XMLHttpProgressEvent, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
   NS_DEFINE_CLASSINFO_DATA(ClientRect, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
@@ -1250,7 +1245,7 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(_event_interface)
 #include "GeneratedEvents.h"
 #undef MOZ_GENERATED_EVENT_LIST
-  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MozSmsFilter, sms::SmsFilter::NewSmsFilter)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MozSmsFilter, SmsFilter::NewSmsFilter)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(FileReader, FileReaderCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(ArchiveReader, ArchiveReaderCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(XSLTProcessor, XSLTProcessorCtor)
@@ -2496,12 +2491,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(StorageItem, nsIDOMStorageItem)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageItem)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMToString)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(XMLHttpProgressEvent, nsIDOMEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMLSProgressEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMProgressEvent)
-    DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(XULCommandEvent, nsIDOMXULCommandEvent)

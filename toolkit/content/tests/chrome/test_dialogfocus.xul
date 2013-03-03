@@ -23,8 +23,6 @@
 <script>
 <![CDATA[
 
-SimpleTest.expectAssertions(0, 5);
-
 SimpleTest.waitForExplicitFinish();
 
 var expected = [ "one", "_extra2", "tab", "one", "tabbutton2", "tabbutton", "two", "textbox-yes", "one" ];

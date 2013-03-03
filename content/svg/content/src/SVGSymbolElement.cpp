@@ -22,7 +22,7 @@ SVGSymbolElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
 
 NS_IMPL_ISUPPORTS_INHERITED4(SVGSymbolElement, SVGSymbolElementBase,
                              nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement, DOMSVGTests)
+                             nsIDOMSVGElement, mozilla::dom::SVGTests)
 
 //----------------------------------------------------------------------
 // Implementation

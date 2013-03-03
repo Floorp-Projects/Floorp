@@ -6,11 +6,13 @@
 #ifndef mozilla_a11y_XULElementAccessibles_h__
 #define mozilla_a11y_XULElementAccessibles_h__
 
-#include "BaseAccessibles.h"
 #include "HyperTextAccessibleWrap.h"
+#include "TextLeafAccessibleWrap.h"
 
 namespace mozilla {
 namespace a11y {
+
+class XULLabelTextLeafAccessible;
 
 /**
  * Used for XUL description and label elements.
@@ -21,14 +23,47 @@ public:
   XULLabelAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
+  virtual void Shutdown();
   virtual a11y::role NativeRole();
   virtual uint64_t NativeState();
   virtual Relation RelationByType(uint32_t aRelationType);
 
+  void UpdateLabelValue(const nsString& aValue);
+
 protected:
   // Accessible
   virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
+  virtual void CacheChildren() MOZ_OVERRIDE;
+
+private:
+  nsRefPtr<XULLabelTextLeafAccessible> mValueTextLeaf;
 };
+
+inline XULLabelAccessible*
+Accessible::AsXULLabel()
+{
+  return IsXULLabel() ? static_cast<XULLabelAccessible*>(this) : nullptr;
+}
+
+
+/**
+ * Used to implement text interface on XUL label accessible in case when text
+ * is provided by @value attribute (no underlying text frame).
+ */
+class XULLabelTextLeafAccessible MOZ_FINAL : public TextLeafAccessibleWrap
+{
+public:
+  XULLabelTextLeafAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+    TextLeafAccessibleWrap(aContent, aDoc)
+  { mStateFlags |= eSharedNode; }
+
+  virtual ~XULLabelTextLeafAccessible() { }
+
+  // Accessible
+  virtual a11y::role NativeRole() MOZ_OVERRIDE;
+  virtual uint64_t NativeState() MOZ_OVERRIDE;
+};
+
 
 /**
  * Used for XUL tooltip element.

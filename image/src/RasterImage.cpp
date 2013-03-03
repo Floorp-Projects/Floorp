@@ -3063,6 +3063,7 @@ RasterImage::DrawWithPreDownscaleIfNeeded(imgFrame *aFrame,
  *                      [const] in gfxRect aFill,
  *                      [const] in nsIntRect aSubimage,
  *                      [const] in nsIntSize aViewportSize,
+ *                      [const] in SVGImageContext aSVGContext,
  *                      in uint32_t aFlags); */
 NS_IMETHODIMP
 RasterImage::Draw(gfxContext *aContext,
@@ -3071,6 +3072,7 @@ RasterImage::Draw(gfxContext *aContext,
                   const gfxRect &aFill,
                   const nsIntRect &aSubimage,
                   const nsIntSize& /*aViewportSize - ignored*/,
+                  const SVGImageContext* /*aSVGContext - ignored*/,
                   uint32_t aFlags)
 {
   if (mError)
@@ -3146,14 +3148,6 @@ RasterImage::Draw(gfxContext *aContext,
   }
 
   return NS_OK;
-}
-
-//******************************************************************************
-/* [notxpcom] nsIFrame GetRootLayoutFrame() */
-nsIFrame*
-RasterImage::GetRootLayoutFrame()
-{
-  return nullptr;
 }
 
 //******************************************************************************

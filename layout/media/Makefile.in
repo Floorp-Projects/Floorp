@@ -121,6 +121,12 @@ ifdef MOZ_ENABLE_SKIA
 SHARED_LIBRARY_LIBS += $(MOZ_SKIA_LIBS)
 endif
 
+ifdef MOZ_WEBVTT
+SHARED_LIBRARY_LIBS += \
+  $(DEPTH)/media/webvtt/$(LIB_PREFIX)webvtt.$(LIB_SUFFIX) \
+  $(NULL)
+endif
+
 ifdef MOZ_WEBRTC
 ifndef MOZ_WEBRTC_IN_LIBXUL
 DEFINES += -DMOZ_WEBRTC_GKMEDIA=1
@@ -158,7 +164,7 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 ifeq (WINNT,$(OS_TARGET))
-symbols.def: symbols.def.in
+symbols.def: symbols.def.in $(GLOBAL_DEPS)
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(ACDEFINES) $< > $@
 
 OS_LIBS += $(call EXPAND_LIBNAME, msimg32)

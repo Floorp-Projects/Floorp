@@ -8,7 +8,7 @@
 #ifndef nsMediaFeatures_h_
 #define nsMediaFeatures_h_
 
-#include "nscore.h"
+#include "nsError.h"
 
 class nsIAtom;
 class nsPresContext;

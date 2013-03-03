@@ -32,6 +32,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=451286
   <script class="testbody" type="application/javascript">
     <![CDATA[
 
+      // We trigger assertions that happen during the GC of our parent
+      // window.
+      SimpleTest.expectAssertions(2, 5); // bug 683159
+
+      // To be called by the window we open.
+      function parentFinish() {
+        // This is called with JS code from the window we open on the
+        // stack.  We need to GC everything in that window, so do that
+        // from a timeout and then call SimpleTest.finish().
+        setTimeout(doFinish, 0);
+      }
+
+      function doFinish() {
+        // Garbage collect objects created in this test can cause
+        // assertions, so GC now to blame those assertions to this test.
+        SpecialPowers.gc();
+        SimpleTest.finish();
+      }
+
       /** Test for Bug 451286 **/
       SimpleTest.waitForExplicitFinish();
       window.open("bug451286_window.xul", "451286test", 

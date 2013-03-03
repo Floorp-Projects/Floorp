@@ -8,7 +8,6 @@
 
 #include "nsCSSStyleSheet.h"
 
-#include "nsCRT.h"
 #include "nsIAtom.h"
 #include "nsCSSRuleProcessor.h"
 #include "mozilla/dom/Element.h"
@@ -35,7 +34,6 @@
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "mozAutoDocUpdate.h"
-#include "mozilla/css/Declaration.h"
 #include "nsRuleNode.h"
 #include "nsMediaFeatures.h"
 #include "nsDOMClassInfoID.h"
