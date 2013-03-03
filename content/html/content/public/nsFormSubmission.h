@@ -48,9 +48,11 @@ public:
    *
    * @param aName the name of the parameter
    * @param aBlob the file to submit
+   * @param aFilename the filename to be used (not void)
    */
   virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   nsIDOMBlob* aBlob) = 0;
+                                   nsIDOMBlob* aBlob,
+                                   const nsString& aFilename) = 0;
   
   /**
    * Reports whether the instance supports AddIsindex().
@@ -159,7 +161,8 @@ public:
   virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue);
   virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   nsIDOMBlob* aBlob);
+                                   nsIDOMBlob* aBlob,
+                                   const nsString& aFilename);
   virtual nsresult GetEncodedSubmission(nsIURI* aURI,
                                         nsIInputStream** aPostDataStream);
 
