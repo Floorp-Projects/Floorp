@@ -30,10 +30,10 @@ include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES += \
   -I$(srcdir) \
+  -I$(srcdir)/../msaa \
   -I$(srcdir)/../../base \
   -I$(srcdir)/../../generic \
   -I$(srcdir)/../../html \
-  -I$(srcdir)/../../msaa \
   -I$(srcdir)/../../xpcom \
   -I$(srcdir)/../../xul \
   $(NULL)

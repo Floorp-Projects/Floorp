@@ -35,14 +35,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=570192
   <script type="application/javascript">
     <![CDATA[
 
-    if (navigator.platform.startsWith("Mac")) {
-      SimpleTest.expectAssertions(0, 3);
-    } else if (navigator.platform.startsWith("Linux")) {
-      SimpleTest.expectAssertions(0, 5);
-    } else if (navigator.platform.startsWith("Win")) {
-      SimpleTest.expectAssertions(0, 1);
-    }
-
     addLoadEvent(function() {
       try {
         var content = document.getElementById("content");

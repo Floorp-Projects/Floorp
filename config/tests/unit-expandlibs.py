@@ -1,4 +1,3 @@
-from __future__ import with_statement
 import subprocess
 import unittest
 import sys
@@ -72,21 +71,23 @@ class TestLibDescriptor(unittest.TestCase):
         '''Test LibDescriptor's serialization'''
         desc = LibDescriptor()
         desc[LibDescriptor.KEYS[0]] = ['a', 'b']
-        self.assertEqual(str(desc), "%s = a b" % LibDescriptor.KEYS[0])
+        self.assertEqual(str(desc), "{0} = a b".format(LibDescriptor.KEYS[0]))
         desc['unsupported-key'] = ['a']
-        self.assertEqual(str(desc), "%s = a b" % LibDescriptor.KEYS[0])
+        self.assertEqual(str(desc), "{0} = a b".format(LibDescriptor.KEYS[0]))
         desc[LibDescriptor.KEYS[1]] = ['c', 'd', 'e']
-        self.assertEqual(str(desc), "%s = a b\n%s = c d e" % (LibDescriptor.KEYS[0], LibDescriptor.KEYS[1]))
+        self.assertEqual(str(desc),
+                         "{0} = a b\n{1} = c d e"
+                         .format(LibDescriptor.KEYS[0], LibDescriptor.KEYS[1]))
         desc[LibDescriptor.KEYS[0]] = []
-        self.assertEqual(str(desc), "%s = c d e" % (LibDescriptor.KEYS[1]))
+        self.assertEqual(str(desc), "{0} = c d e".format(LibDescriptor.KEYS[1]))
 
     def test_read(self):
         '''Test LibDescriptor's initialization'''
         desc_list = ["# Comment",
-                     "%s = a b" % LibDescriptor.KEYS[1],
+                     "{0} = a b".format(LibDescriptor.KEYS[1]),
                      "", # Empty line
                      "foo = bar", # Should be discarded
-                     "%s = c d e" % LibDescriptor.KEYS[0]]
+                     "{0} = c d e".format(LibDescriptor.KEYS[0])]
         desc = LibDescriptor(desc_list)
         self.assertEqual(desc[LibDescriptor.KEYS[1]], ['a', 'b'])
         self.assertEqual(desc[LibDescriptor.KEYS[0]], ['c', 'd', 'e'])
@@ -229,7 +230,7 @@ class TestExpandArgsMore(TestExpandInit):
             if config.EXPAND_LIBS_LIST_STYLE == "linkerscript":
                 self.assertNotEqual(args[3][0], '@')
                 filename = args[3]
-                content = ['INPUT("%s")' % relativize(f) for f in objs]
+                content = ['INPUT("{0}")'.format(relativize(f)) for f in objs]
                 with open(filename, 'r') as f:
                     self.assertEqual([l.strip() for l in f.readlines() if len(l.strip())], content)
             elif config.EXPAND_LIBS_LIST_STYLE == "list":
@@ -256,7 +257,7 @@ class TestExpandArgsMore(TestExpandInit):
             self.assertRelEqual([os.path.splitext(arg)[1] for arg in args[len(ar_extract):]], [config.LIB_SUFFIX])
             # Simulate AR_EXTRACT extracting one object file for the library
             lib = os.path.splitext(os.path.basename(args[len(ar_extract)]))[0]
-            extracted[lib] = os.path.join(kargs['cwd'], "%s" % Obj(lib))
+            extracted[lib] = os.path.join(kargs['cwd'], "{0}".format(Obj(lib)))
             self.touch([extracted[lib]])
         subprocess.call = call
 

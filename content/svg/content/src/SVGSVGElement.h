@@ -11,6 +11,7 @@
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
 #include "SVGGraphicsElement.h"
+#include "SVGImageContext.h"
 #include "nsSVGViewBox.h"
 #include "SVGPreserveAspectRatio.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
@@ -30,6 +31,7 @@ namespace mozilla {
 class DOMSVGAnimatedPreserveAspectRatio;
 class DOMSVGTransform;
 class SVGFragmentIdentifier;
+class AutoSVGRenderingState;
 
 namespace dom {
 class SVGAngle;
@@ -83,8 +85,8 @@ class SVGSVGElement MOZ_FINAL : public SVGSVGElementBase,
 {
   friend class ::nsSVGOuterSVGFrame;
   friend class ::nsSVGInnerSVGFrame;
-  friend class ::nsSVGImageFrame;
   friend class mozilla::SVGFragmentIdentifier;
+  friend class mozilla::AutoSVGRenderingState;
 
   SVGSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                 FromParser aFromParser);
@@ -267,7 +269,7 @@ private:
   SVGViewElement* GetCurrentViewElement() const;
 
   // Methods for <image> elements to override my "PreserveAspectRatio" value.
-  // These are private so that only our friends (nsSVGImageFrame in
+  // These are private so that only our friends (AutoSVGRenderingState in
   // particular) have access.
   void SetImageOverridePreserveAspectRatio(const SVGPreserveAspectRatio& aPAR);
   void ClearImageOverridePreserveAspectRatio();
@@ -389,6 +391,42 @@ private:
 };
 
 } // namespace dom
+
+// Helper class to automatically manage temporary changes to an SVG document's
+// state for rendering purposes.
+class NS_STACK_CLASS AutoSVGRenderingState
+{
+public:
+  AutoSVGRenderingState(const SVGImageContext* aSVGContext,
+                        dom::SVGSVGElement* aRootElem
+                        MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : mHaveOverrides(!!aSVGContext)
+    , mRootElem(aRootElem)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    MOZ_ASSERT(mRootElem, "No SVG node to manage?");
+    if (mHaveOverrides) {
+      // Override preserveAspectRatio in our helper document.
+      // XXXdholbert We should technically be overriding the helper doc's clip
+      // and overflow properties here, too. See bug 272288 comment 36.
+      mRootElem->SetImageOverridePreserveAspectRatio(
+          aSVGContext->GetPreserveAspectRatio());
+    }
+  }
+
+  ~AutoSVGRenderingState()
+  {
+    if (mHaveOverrides) {
+      mRootElem->ClearImageOverridePreserveAspectRatio();
+    }
+  }
+
+private:
+  const bool mHaveOverrides;
+  const nsRefPtr<dom::SVGSVGElement> mRootElem;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 } // namespace mozilla
 
 #endif // SVGSVGElement_h

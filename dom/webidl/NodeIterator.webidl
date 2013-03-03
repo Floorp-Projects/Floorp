@@ -11,14 +11,21 @@
  */
 
 interface NodeIterator {
+  [Constant]
   readonly attribute Node root;
+  [Pure]
   readonly attribute Node? referenceNode;
+  [Pure]
   readonly attribute boolean pointerBeforeReferenceNode;
+  [Constant]
   readonly attribute unsigned long whatToShow;
+  [Constant]
   readonly attribute NodeFilter? filter;
 
+  [Throws]
   Node? nextNode();
+  [Throws]
   Node? previousNode();
 
   void detach();
-;}
+};

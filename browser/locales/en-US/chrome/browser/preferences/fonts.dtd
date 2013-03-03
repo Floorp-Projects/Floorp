@@ -68,6 +68,7 @@
 <!ENTITY  allowPagesToUse.label                   "Allow pages to choose their own fonts, instead of my selections above">
 <!ENTITY  allowPagesToUse.accesskey               "A">
 
-<!ENTITY languages.customize.Charset.grouplabel         "Character Encoding">
-<!ENTITY languages.customize.DefaultCharset.label       "Default Character Encoding:">
-<!ENTITY languages.customize.DefaultCharset.accesskey   "C">
+<!ENTITY languages.customize.Fallback.grouplabel  "Character Encoding for Legacy Content">
+<!ENTITY languages.customize.Fallback.label       "Fallback Character Encoding:">
+<!ENTITY languages.customize.Fallback.accesskey   "C">
+<!ENTITY languages.customize.Fallback.desc        "This character encoding is used for legacy content that fails to declare its encoding.">

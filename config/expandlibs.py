@@ -26,7 +26,6 @@ ${LIB_PREFIX}${ROOT}.${LIB_SUFFIX} following these rules:
   descriptor contains. And for each of these LIBS, also apply the same
   rules.
 '''
-from __future__ import with_statement
 import sys, os, errno
 import expandlibs_config as conf
 
@@ -36,7 +35,7 @@ def ensureParentDir(file):
     if dir and not os.path.exists(dir):
         try:
             os.makedirs(dir)
-        except OSError, error:
+        except OSError as error:
             if error.errno != errno.EEXIST:
                 raise
 
@@ -90,7 +89,8 @@ class LibDescriptor(dict):
 
     def __str__(self):
         '''Serializes the lib descriptor'''
-        return '\n'.join('%s = %s' % (k, ' '.join(self[k])) for k in self.KEYS if len(self[k]))
+        return '\n'.join('{0} = {1}'.format(k, ' '.join(self[k]))
+                         for k in self.KEYS if len(self[k]))
 
 class ExpandArgs(list):
     def __init__(self, args):
@@ -135,4 +135,4 @@ class ExpandLibsDeps(ExpandArgs):
         return objs
 
 if __name__ == '__main__':
-    print " ".join(ExpandArgs(sys.argv[1:]))
+    print(" ".join(ExpandArgs(sys.argv[1:])))

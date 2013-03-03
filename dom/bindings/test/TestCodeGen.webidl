@@ -18,6 +18,8 @@ callback interface TestCallbackInterface {
   attribute DOMString bar;
   void doSomething();
   long doSomethingElse(DOMString arg, TestInterface otherArg);
+  void doSequenceLongArg(sequence<long> arg);
+  void doSequenceStringArg(sequence<DOMString> arg);
 };
 
 callback interface TestSingleOperationCallbackInterface {
@@ -313,6 +315,8 @@ interface TestInterface {
 
   sequence<any> receiveAnySequence();
   sequence<any>? receiveNullableAnySequence();
+
+  void passSequenceOfSequences(sequence<sequence<long>> arg);
 
   // Typed array types
   void passArrayBuffer(ArrayBuffer arg);

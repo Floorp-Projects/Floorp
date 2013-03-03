@@ -19,19 +19,10 @@ function test() {
 }
 
 function runTest(browser, tab, document) {
-  let timeout = imported.setTimeout(shouldNotBeCalled, 100);
-  imported.clearTimeout(timeout);
-
   var p = document.getElementById("id");
 
   ok(p instanceof imported.Node, "Node correctly defined");
   ok(p instanceof imported.HTMLElement, "HTMLElement correctly defined");
 
-  let timeout = imported.setTimeout(function() {
-    finish();
-  }, 100);
-}
-
-function shouldNotBeCalled() {
-  ok(false, "Timeout cleared");
+  finish();
 }

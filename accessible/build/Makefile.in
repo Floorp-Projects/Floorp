@@ -28,14 +28,18 @@ SHARED_LIBRARY_LIBS = \
   ../src/generic/$(LIB_PREFIX)accessibility_generic_s.$(LIB_SUFFIX) \
   ../src/html/$(LIB_PREFIX)accessibility_html_s.$(LIB_SUFFIX) \
   ../src/xpcom/$(LIB_PREFIX)accessibility_xpcom_s.$(LIB_SUFFIX) \
-  ../src/$(LIB_PREFIX)accessibility_toolkit_s.$(LIB_SUFFIX) \
   $(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 SHARED_LIBRARY_LIBS += \
+  ../src/windows/msaa/$(LIB_PREFIX)accessibility_toolkit_msaa_s.$(LIB_SUFFIX) \
   ../src/windows/ia2/$(LIB_PREFIX)accessibility_toolkit_ia2_s.$(LIB_SUFFIX) \
   ../src/windows/sdn/$(LIB_PREFIX)accessibility_toolkit_sdn_s.$(LIB_SUFFIX) \
   ../src/windows/uia/$(LIB_PREFIX)accessibility_toolkit_uia_s.$(LIB_SUFFIX) \
+  $(NULL)
+else
+SHARED_LIBRARY_LIBS += \
+  ../src/$(LIB_PREFIX)accessibility_toolkit_s.$(LIB_SUFFIX) \
   $(NULL)
 endif
 

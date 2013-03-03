@@ -655,19 +655,21 @@ SessionStore.prototype = {
       return entry;
 
     if (aEntry.childCount > 0) {
-      entry.children = [];
+      let children = [];
       for (let i = 0; i < aEntry.childCount; i++) {
         let child = aEntry.GetChildAt(i);
-        if (child)
-          entry.children.push(this._serializeHistoryEntry(child));
-        else // to maintain the correct frame order, insert a dummy entry
-          entry.children.push({ url: "about:blank" });
 
-        // don't try to restore framesets containing wyciwyg URLs (cf. bug 424689 and bug 450595)
-        if (/^wyciwyg:\/\//.test(entry.children[i].url)) {
-          delete entry.children;
-          break;
+        if (child) {
+          // don't try to restore framesets containing wyciwyg URLs (cf. bug 424689 and bug 450595)
+          if (child.URI.schemeIs("wyciwyg")) {
+            children = [];
+            break;
+          }
+          children.push(this._serializeHistoryEntry(child));
         }
+
+        if (children.length)
+          entry.children = children;
       }
     }
 

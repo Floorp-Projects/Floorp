@@ -30,12 +30,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=793275
   <script class="testbody" type="application/javascript">
     <![CDATA[
 
-      if (navigator.platform.startsWith("Mac")) {
-        SimpleTest.expectAssertions(0, 4);
-      } else {
-        SimpleTest.expectAssertions(0, 2);
-      }
-
       /** Test for Bug 793275 **/
       SimpleTest.waitForExplicitFinish();
       window.open("findbar_events_window.xul", "793275test",

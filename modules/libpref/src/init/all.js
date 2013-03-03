@@ -1050,12 +1050,22 @@ pref("network.enableIDN", true);
 // generate them from punycode.
 pref("network.IDN_show_punycode", false);
 
-// TLDs with "network.IDN.whitelist.tld" explicitly set to true are treated as 
+// If "network.IDN.use_whitelist" is set to true, TLDs with
+// "network.IDN.whitelist.tld" explicitly set to true are treated as
 // IDN-safe. Otherwise, they're treated as unsafe and punycode will be used
-// for displaying them in the UI (e.g. URL bar). Note that these preferences
-// are referred to ONLY when "network.IDN_show_punycode" is false. In other
-// words, all IDNs will be shown in punycode if "network.IDN_show_punycode"
-// is true.
+// for displaying them in the UI (e.g. URL bar), unless they conform to one of
+// the profiles specified in
+// http://www.unicode.org/reports/tr36/proposed.html#Security_Levels_and_Alerts
+// If "network.IDN.restriction_profile" is "high", the Highly Restrictive
+// profile is used.
+// If "network.IDN.restriction_profile" is "moderate", the Moderately
+// Restrictive profile is used.
+// In all other cases, the ASCII-Only profile is used.
+// Note that these preferences are referred to ONLY when
+// "network.IDN_show_punycode" is false. In other words, all IDNs will be shown
+// in punycode if "network.IDN_show_punycode" is true.
+pref("network.IDN.restriction_profile", "moderate");
+pref("network.IDN.use_whitelist", true);
 
 // ccTLDs
 pref("network.IDN.whitelist.ac", true);

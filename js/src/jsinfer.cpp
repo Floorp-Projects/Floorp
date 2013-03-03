@@ -1814,14 +1814,15 @@ StackTypeSet::hasObjectFlags(JSContext *cx, TypeObjectFlags flags)
     if (baseObjectCount() == 0)
         return true;
 
+    RootedObject obj(cx);
     unsigned count = getObjectCount();
     for (unsigned i = 0; i < count; i++) {
         TypeObject *object = getTypeObject(i);
         if (!object) {
-            RootedObject obj(cx, getSingleObject(i));
-            if (!obj)
+            if (!(obj = getSingleObject(i)))
                 continue;
-            object = obj->getType(cx);
+            if (!(object = obj->getType(cx)))
+                return true;
         }
         if (object->hasAnyFlags(flags))
             return true;
@@ -2643,6 +2644,8 @@ PrototypeHasIndexedProperty(JSContext *cx, JSObject *obj)
 {
     do {
         TypeObject *type = obj->getType(cx);
+        if (!type)
+            return true;
         if (ClassCanHaveExtraProperties(type->clasp))
             return true;
         if (type->unknownProperties())
@@ -3445,18 +3448,19 @@ TypeObject::getFromPrototypes(JSContext *cx, jsid id, TypeSet *types, bool force
         return;
     }
 
-    if (proto->getType(cx)->unknownProperties()) {
+    types::TypeObject *protoType = proto->getType(cx);
+    if (!protoType || protoType->unknownProperties()) {
         types->addType(cx, Type::UnknownType());
         return;
     }
 
-    HeapTypeSet *protoTypes = proto->getType(cx)->getProperty(cx, id, false);
+    HeapTypeSet *protoTypes = protoType->getProperty(cx, id, false);
     if (!protoTypes)
         return;
 
     protoTypes->addSubset(cx, types);
 
-    proto->getType(cx)->getFromPrototypes(cx, id, protoTypes);
+    protoType->getFromPrototypes(cx, id, protoTypes);
 }
 
 static inline void
@@ -4137,6 +4141,8 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
             seen->addType(cx, Type::DoubleType());
 
         TypeObject *global = script->global().getType(cx);
+        if (!global)
+            return false;
 
         /* Handle as a property access. */
         if (state.hasPropertyReadTypes)
@@ -4164,6 +4170,8 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
       case JSOP_SETGNAME: {
         jsid id = GetAtomId(cx, script, pc, 0);
         TypeObject *global = script->global().getType(cx);
+        if (!global)
+            return false;
         PropertyAccess<PROPERTY_WRITE>(cx, script, pc, global, poppedTypes(pc, 0), id);
         poppedTypes(pc, 0)->addSubset(cx, &pushed[0]);
         break;
@@ -4832,7 +4840,7 @@ AddClearDefiniteGetterSetterForPrototypeChain(JSContext *cx, TypeObject *type, j
     RootedObject parent(cx, type->proto);
     while (parent) {
         TypeObject *parentObject = parent->getType(cx);
-        if (parentObject->unknownProperties())
+        if (!parentObject || parentObject->unknownProperties())
             return false;
         HeapTypeSet *parentTypes = parentObject->getProperty(cx, id, false);
         if (!parentTypes || parentTypes->ownProperty(true))
@@ -5245,6 +5253,7 @@ CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, HandleFunction fu
     if (!state.baseobj) {
         if (type->newScript)
             type->clearNewScript(cx);
+        cx->compartment->types.setPendingNukeTypes(cx);
         return;
     }
 
@@ -5962,9 +5971,13 @@ JSObject::splicePrototype(JSContext *cx, Class *clasp, Handle<TaggedProto> proto
      * in which case inference will be disabled for the compartment.
      */
     Rooted<TypeObject*> type(cx, self->getType(cx));
+    if (!type)
+        return false;
     Rooted<TypeObject*> protoType(cx, NULL);
     if (proto.isObject()) {
         protoType = proto.toObject()->getType(cx);
+        if (!protoType)
+            return false;
     }
 
     if (!cx->typeInferenceEnabled()) {
