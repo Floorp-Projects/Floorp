@@ -13,8 +13,6 @@
 #include "nsCOMPtr.h"
 #include "mozilla/dom/CSS2PropertiesBinding.h"
 
-class nsCSSParser;
-class nsIURI;
 class nsIPrincipal;
 class nsIDocument;
 

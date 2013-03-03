@@ -14,7 +14,6 @@
 
 #include "nsString.h"
 #include "nsIAtom.h"
-#include "nsIURL.h"
 
 #include "nsCSSProps.h"
 #include "nsCSSStyleSheet.h"
@@ -25,10 +24,8 @@
 #include "nsICSSRuleList.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
-#include "nsRuleNode.h"
 
 #include "nsContentUtils.h"
-#include "nsStyleConsts.h"
 #include "nsError.h"
 #include "nsStyleUtil.h"
 #include "mozilla/css/Declaration.h"

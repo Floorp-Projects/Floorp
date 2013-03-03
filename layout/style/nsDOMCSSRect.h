@@ -9,7 +9,7 @@
 #define nsDOMCSSRect_h_
 
 #include "mozilla/Attributes.h"
-#include "nsISupports.h"
+#include "nsISupportsImpl.h"
 #include "nsIDOMRect.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"

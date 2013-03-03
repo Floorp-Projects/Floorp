@@ -11,15 +11,12 @@
 
 #include "nsCOMPtr.h"
 #include "nsIStreamLoader.h"
-#include "nsIURI.h"
 #include "nsIChannel.h"
-#include "nsITimer.h"
 #include "gfxUserFontSet.h"
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
 #include "nsCSSRules.h"
 
-class nsIRequest;
 class nsISupports;
 class nsPresContext;
 class nsIPrincipal;

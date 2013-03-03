@@ -6,18 +6,12 @@
 /* base class for DOM objects for element.style and cssStyleRule.style */
 
 #include "nsDOMCSSDeclaration.h"
-#include "nsIDOMCSSRule.h"
 #include "nsCSSParser.h"
-#include "mozilla/css/Loader.h"
 #include "nsCSSStyleSheet.h"
-#include "nsIStyleRule.h"
 #include "mozilla/css/Rule.h"
 #include "mozilla/css/Declaration.h"
 #include "nsCSSProps.h"
 #include "nsCOMPtr.h"
-#include "nsIURL.h"
-#include "nsReadableUtils.h"
-#include "nsIPrincipal.h"
 #include "mozAutoDocUpdate.h"
 
 using namespace mozilla;

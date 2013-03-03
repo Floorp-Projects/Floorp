@@ -26,17 +26,13 @@
 #include "nsCOMArray.h"
 #include "nsTArray.h"
 #include "nsIAtom.h"
-#include "nsIURI.h"
 #include "nsCSSValue.h"
-#include "nsStyleTransformMatrix.h"
-#include "nsAlgorithm.h"
 #include "imgRequestProxy.h"
-#include "gfxRect.h"
 #include <algorithm>
 
 class nsIFrame;
+class nsIURI;
 class imgIContainer;
-struct nsCSSValueList;
 
 // Includes nsStyleStructID.
 #include "nsStyleStructFwd.h"
