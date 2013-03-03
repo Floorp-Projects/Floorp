@@ -16,19 +16,6 @@ from ..frontend.data import (
 from ..util import FileAvoidWrite
 
 
-STUB_MAKEFILE = '''
-# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.
-
-DEPTH          := {depth}
-topsrcdir      := {topsrc}
-srcdir         := {src}
-VPATH          := {src}
-relativesrcdir := {relsrc}
-
-include {topsrc}/config/rules.mk
-'''.lstrip()
-
-
 class BackendMakeFile(object):
     """Represents a generated backend.mk file.
 
@@ -86,16 +73,8 @@ class BackendMakeFile(object):
         self.fh.write('\n')
         self.fh.write('MOZBUILD_DERIVED := 1\n')
 
-        # SUBSTITUTE_FILES handles Makefile.in -> Makefile conversion. This
-        # also doubles to handle the case where there is no Makefile.in.
+        # SUBSTITUTE_FILES handles Makefile.in -> Makefile conversion.
         self.fh.write('NO_MAKEFILE_RULE := 1\n')
-
-        # We can't blindly have a SUBMAKEFILES rule because some of the
-        # Makefile may not have a corresponding Makefile.in. For the case
-        # where a new directory is added, the mozbuild file referencing that
-        # new directory will need updated. This will cause a full backend
-        # scan and build, installing the new Makefile.
-        self.fh.write('NO_SUBMAKEFILES_RULE := 1\n')
 
 
     def write(self, buf):
@@ -178,29 +157,16 @@ class RecursiveMakeBackend(BuildBackend):
                 os.makedirs(bf.objdir)
 
             makefile_in = os.path.join(srcdir, 'Makefile.in')
-            makefile = os.path.join(bf.objdir, 'Makefile')
 
-            # If Makefile.in exists, use it as a template. Otherwise, create a
-            # stub.
-            if os.path.exists(makefile_in):
-                self.log(logging.DEBUG, 'substitute_makefile',
-                    {'path': makefile}, 'Substituting makefile: {path}')
-                bf.environment.create_config_file(makefile)
-                bf.write('SUBSTITUTE_FILES += Makefile\n')
-            else:
-                self.log(logging.DEBUG, 'stub_makefile',
-                    {'path': makefile}, 'Creating stub Makefile: {path}')
+            if not os.path.exists(makefile_in):
+                raise Exception('Could not find Makefile.in: %s' % makefile_in)
 
-                params = {
-                    'topsrc': bf.environment.get_top_srcdir(makefile),
-                    'src': bf.environment.get_file_srcdir(makefile),
-                    'depth': bf.environment.get_depth(makefile),
-                    'relsrc': bf.environment.get_relative_srcdir(makefile),
-                }
+            out_path = os.path.join(bf.objdir, 'Makefile')
+            self.log(logging.DEBUG, 'create_makefile', {'path': out_path},
+                'Generating makefile: {path}')
+            bf.environment.create_config_file(out_path)
 
-                with FileAvoidWrite(makefile) as fh:
-                    fh.write(STUB_MAKEFILE.format(**params))
-
+            bf.write('SUBSTITUTE_FILES += Makefile\n')
             bf.close()
 
     def _process_directory_traversal(self, obj, backend_file):
