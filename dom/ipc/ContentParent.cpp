@@ -125,7 +125,7 @@ using namespace mozilla::dom::bluetooth;
 using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::indexedDB;
 using namespace mozilla::dom::power;
-using namespace mozilla::dom::sms;
+using namespace mozilla::dom::mobilemessage;
 using namespace mozilla::hal;
 using namespace mozilla::idl;
 using namespace mozilla::ipc;

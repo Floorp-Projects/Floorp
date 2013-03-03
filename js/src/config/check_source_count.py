@@ -9,7 +9,7 @@
 #   not, an error message is printed, quoting ERROR_LOCATION, which should
 #   probably be the filename and line number of the erroneous call to
 #   check_source_count.py.
-
+from __future__ import print_function
 import sys
 import os
 import re
@@ -32,17 +32,26 @@ for f in files:
         details[f] = num
 
 if count == expected_count:
-    print "TEST-PASS | check_source_count.py %s | %d" % (search_string, expected_count)
+    print("TEST-PASS | check_source_count.py {0} | {1}"
+          .format(search_string, expected_count))
 
 else:
-    print "TEST-UNEXPECTED-FAIL | check_source_count.py %s | " % (search_string),
+    print("TEST-UNEXPECTED-FAIL | check_source_count.py {0} | "
+          .format(search_string),
+          end='')
     if count < expected_count:
-        print "There are fewer occurrences of /%s/ than expected. This may mean that you have removed some, but forgotten to account for it %s." % (search_string, error_location)
+        print("There are fewer occurrences of /{0}/ than expected. "
+              "This may mean that you have removed some, but forgotten to "
+              "account for it {1}.".format(search_string, error_location))
     else:
-        print "There are more occurrences of /%s/ than expected. We're trying to prevent an increase in the number of %s's, using %s if possible. If it in unavoidable, you should update the expected count %s." % (search_string, search_string, replacement, error_location)
+        print("There are more occurrences of /{0}/ than expected. We're trying "
+              "to prevent an increase in the number of {1}'s, using {2} if "
+              "possible. If it is unavoidable, you should update the expected "
+              "count {3}.".format(search_string, search_string, replacement, 
+                                 error_location))
 
-    print "Expected: %d; found: %d" % (expected_count, count)
+    print("Expected: {0}; found: {1}".format(expected_count, count))
     for k in sorted(details):
-        print "Found %d occurences in %s" % (details[k],k)
+        print("Found {0} occurences in {1}".format(details[k],k))
     sys.exit(-1)
 

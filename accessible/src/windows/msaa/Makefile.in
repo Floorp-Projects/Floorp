@@ -1,0 +1,80 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH = @DEPTH@
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE = accessibility
+LIBRARY_NAME = accessibility_toolkit_msaa_s
+EXPORT_LIBRARY = 1
+LIBXUL_LIBRARY = 1
+
+
+CPPSRCS = \
+  AccessibleWrap.cpp \
+  ApplicationAccessibleWrap.cpp \
+  ARIAGridAccessibleWrap.cpp \
+  DocAccessibleWrap.cpp \
+  HTMLTableAccessibleWrap.cpp \
+  HTMLWin32ObjectAccessible.cpp \
+  HyperTextAccessibleWrap.cpp \
+  ImageAccessibleWrap.cpp \
+  nsAccessNodeWrap.cpp \
+  nsWinUtils.cpp \
+  Compatibility.cpp \
+  EnumVariant.cpp \
+  Platform.cpp \
+  ServiceProvider.cpp \
+  RootAccessibleWrap.cpp \
+  TextLeafAccessibleWrap.cpp \
+  $(NULL)
+
+ifdef MOZ_XUL
+CPPSRCS += \
+  XULListboxAccessibleWrap.cpp \
+  XULMenuAccessibleWrap.cpp \
+  XULTreeGridAccessibleWrap.cpp \
+  $(NULL)
+endif
+
+EXPORTS = \
+  nsAccessNodeWrap.h \
+  $(NULL)
+
+EXPORTS_NAMESPACES = mozilla/a11y \
+
+EXPORTS_mozilla/a11y = \
+  AccessibleWrap.h \
+  Compatibility.h \
+  HyperTextAccessibleWrap.h \
+  $(null)
+
+# we don't want the shared lib, but we want to force the creation of a static lib.
+FORCE_STATIC_LIB = 1
+
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
+include $(topsrcdir)/config/rules.mk
+
+LOCAL_INCLUDES += \
+  -I$(srcdir) \
+  -I$(srcdir)/../../base \
+  -I$(srcdir)/../../generic \
+  -I$(srcdir)/../../html \
+  -I$(srcdir)/../../xpcom \
+  -I$(srcdir)/../../xul \
+  -I$(srcdir)/../ia2 \
+  -I$(srcdir)/../sdn \
+  -I$(srcdir)/../uia \
+  -I$(srcdir)/../../../../content/base/src \
+  -I$(srcdir)/../../../../content/events/src \
+  $(NULL)
+
+ifneq ($(A11Y_LOG),0)
+  DEFINES += -DA11Y_LOG
+endif

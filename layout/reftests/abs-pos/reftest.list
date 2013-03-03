@@ -13,8 +13,6 @@ fuzzy-if(gtk2Widget,1,8) == select-1.html select-1-ref.html
 fuzzy-if(gtk2Widget,1,8) == select-1-dynamic.html select-1-ref.html
 == select-2.html select-2-ref.html
 fuzzy-if(gtk2Widget,1,19) fuzzy-if(Android||B2G,17,726) == select-3.html select-3-ref.html
-
-# Fails due to bug 724978. Should be re-enabled once this is fixed.
-fails == multi-column-1.html multi-column-1-ref.html
+== multi-column-1.html multi-column-1-ref.html
 == button-1.html button-1-ref.html
 == button-2.html button-2-ref.html

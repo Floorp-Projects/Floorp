@@ -119,7 +119,7 @@
 
 #include "nsMathMLParts.h"
 #include "nsIDOMSVGFilters.h"
-#include "DOMSVGTests.h"
+#include "mozilla/dom/SVGTests.h"
 #include "nsSVGEffects.h"
 #include "nsSVGTextFrame2.h"
 #include "nsSVGTextPathFrame.h"
@@ -4905,8 +4905,8 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
       FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructOuterSVG);
     return &sOuterSVGData;
   }
-  
-  nsCOMPtr<DOMSVGTests> tests(do_QueryInterface(aElement));
+
+  nsCOMPtr<SVGTests> tests(do_QueryInterface(aElement));
   if (tests && !tests->PassesConditionalProcessingTests()) {
     // Elements with failing conditional processing attributes never get
     // rendered.  Note that this is not where we select which frame in a

@@ -46,6 +46,7 @@ MOCHITEST_A11Y_FILES =\
 		test_focus_tabbox.xul \
 		test_focus_tree.xul \
 		test_fromUserInput.html \
+		test_label.xul \
 		test_menu.xul \
 		test_mutation.html \
 		test_mutation.xhtml \

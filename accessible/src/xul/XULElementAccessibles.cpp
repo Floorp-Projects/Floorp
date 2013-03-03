@@ -7,18 +7,25 @@
 
 #include "Accessible-inl.h"
 #include "BaseAccessibles.h"
+#include "DocAccessible-inl.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "nsTextEquivUtils.h"
 #include "Relation.h"
 #include "Role.h"
 #include "States.h"
+#include "TextUpdater.h"
+
+#ifdef A11Y_LOG
+#include "Logging.h"
+#endif
 
 #include "nsIAccessibleRelation.h"
 #include "nsIDOMXULDescriptionElement.h"
 #include "nsINameSpaceManager.h"
-#include "nsString.h"
 #include "nsNetUtil.h"
+#include "nsString.h"
+#include "nsTextBoxFrame.h"
 
 using namespace mozilla::a11y;
 
@@ -30,6 +37,31 @@ XULLabelAccessible::
   XULLabelAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   HyperTextAccessibleWrap(aContent, aDoc)
 {
+  mType = eXULLabelType;
+
+  // If @value attribute is given then it's rendered instead text content. In
+  // this case we need to create a text leaf accessible to make @value attribute
+  // accessible.
+  // XXX: text interface doesn't let you get the text by words.
+  nsTextBoxFrame* textBoxFrame = do_QueryFrame(mContent->GetPrimaryFrame());
+  if (textBoxFrame) {
+    mValueTextLeaf = new XULLabelTextLeafAccessible(mContent, mDoc);
+    if (mDoc->BindToDocument(mValueTextLeaf, nullptr)) {
+      nsAutoString text;
+      textBoxFrame->GetCroppedTitle(text);
+      mValueTextLeaf->SetText(text);
+      return;
+    }
+
+    mValueTextLeaf = nullptr;
+  }
+}
+
+void
+XULLabelAccessible::Shutdown()
+{
+  mValueTextLeaf = nullptr;
+  HyperTextAccessibleWrap::Shutdown();
 }
 
 ENameValueFlag
@@ -37,7 +69,9 @@ XULLabelAccessible::NativeName(nsString& aName)
 {
   // if the value attr doesn't exist, the screen reader must get the accessible text
   // from the accessible text interface or from the children
-  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aName);
+  if (mValueTextLeaf)
+    return mValueTextLeaf->Name(aName);
+
   return eNameOK;
 }
 
@@ -70,6 +104,53 @@ XULLabelAccessible::RelationByType(uint32_t aType)
   }
 
   return rel;
+}
+
+void
+XULLabelAccessible::UpdateLabelValue(const nsString& aValue)
+{
+#ifdef A11Y_LOG
+  if (logging::IsEnabled(logging::eText)) {
+    logging::MsgBegin("TEXT", "text may be changed (xul:label @value update)");
+    logging::Node("container", mContent);
+    logging::MsgEntry("old text '%s'",
+                      NS_ConvertUTF16toUTF8(mValueTextLeaf->Text()).get());
+    logging::MsgEntry("new text: '%s'",
+                      NS_ConvertUTF16toUTF8(aValue).get());
+    logging::MsgEnd();
+  }
+#endif
+
+  TextUpdater::Run(mDoc, mValueTextLeaf, aValue);
+}
+
+void
+XULLabelAccessible::CacheChildren()
+{
+  if (mValueTextLeaf) {
+    AppendChild(mValueTextLeaf);
+    return;
+  }
+
+  // Cache children from subtree.
+  AccessibleWrap::CacheChildren();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// XULLabelTextLeafAccessible
+////////////////////////////////////////////////////////////////////////////////
+
+role
+XULLabelTextLeafAccessible::NativeRole()
+{
+  return roles::TEXT_LEAF;
+}
+
+uint64_t
+XULLabelTextLeafAccessible::NativeState()
+{
+  return TextLeafAccessibleWrap::NativeState() | states::READONLY;
 }
 
 

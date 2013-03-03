@@ -758,6 +758,32 @@ var BrowserUI = {
     }
   },
 
+  openFile: function() {
+    try {
+      const nsIFilePicker = Ci.nsIFilePicker;
+      let fp = Cc["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+      let self = this;
+      let fpCallback = function fpCallback_done(aResult) {
+        if (aResult == nsIFilePicker.returnOK) {
+          self.goToURI(fp.fileURL.spec);
+        }
+      };
+
+      let windowTitle = Strings.browser.GetStringFromName("browserForOpenLocation");
+      fp.init(window, windowTitle, nsIFilePicker.modeOpen);
+      fp.appendFilters(nsIFilePicker.filterAll | nsIFilePicker.filterText |
+                       nsIFilePicker.filterImages | nsIFilePicker.filterXML |
+                       nsIFilePicker.filterHTML);
+      fp.open(fpCallback);
+    } catch (ex) {
+      dump ('BrowserUI openFile exception: ' + ex + '\n');
+    }
+  },
+
+  savePage: function() {
+    Browser.savePage();
+  },
+
   receiveMessage: function receiveMessage(aMessage) {
     let browser = aMessage.target;
     let json = aMessage.json;
@@ -812,6 +838,8 @@ var BrowserUI = {
       case "cmd_zoomout":
       case "cmd_volumeLeft":
       case "cmd_volumeRight":
+      case "cmd_openFile":
+      case "cmd_savePage":
         isSupported = true;
         break;
       default:
@@ -934,6 +962,12 @@ var BrowserUI = {
       case "cmd_volumeRight":
         // Zoom out (portrait) or in (landscape)
         Browser.zoom(Util.isPortrait() ? 1 : -1);
+        break;
+      case "cmd_openFile":
+        this.openFile();
+        break;
+      case "cmd_savePage":
+        this.savePage();
         break;
     }
   }

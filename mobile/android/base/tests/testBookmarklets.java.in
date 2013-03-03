@@ -43,12 +43,12 @@ public class testBookmarklets extends PixelTest {
         addOrUpdateBookmark(title, js, true);
 
         // verify that bookmarklets clicked in awesomescreen work
-        ListView bookmarks = getBookmarksList();
+        ListView bookmarks = getBookmarksList(title);
 
         Boolean found = false;
         if (bookmarks == null) {
             mAsserter.is(true, true, "Did not find the bookmarks section in the awesomebar");
-        } else if (mSolo.waitForText(title)) {
+        } else {
             for (int i = 0; i < bookmarks.getAdapter().getCount(); i++) {
                 Cursor c = (Cursor)bookmarks.getItemAtPosition(i);
                 String turl = c.getString(c.getColumnIndexOrThrow("url"));
@@ -58,8 +58,6 @@ public class testBookmarklets extends PixelTest {
                     mSolo.clickOnView(bookmarks.getChildAt(i));
                 }
             }
-        } else {
-            mAsserter.is(true, true, "Did not find the title '" + title + "' of the bookmark in the list");
         }
         if (!found) {
             mAsserter.is(found, true, "Found the bookmark: " + js + " and clicked on it");

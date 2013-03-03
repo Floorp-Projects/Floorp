@@ -1212,3 +1212,776 @@ function Intl_Collator_resolvedOptions() {
     }
     return result;
 }
+
+
+/********** Intl.NumberFormat **********/
+
+
+/**
+ * Initializes an object as a NumberFormat.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 11.1.1.
+ */
+function InitializeNumberFormat(numberFormat, locales, options) {
+    assert(IsObject(numberFormat), "InitializeNumberFormat");
+
+    // Step 1.
+    if (isInitializedIntlObject(numberFormat))
+        ThrowError(JSMSG_INTL_OBJECT_REINITED);
+
+    // Step 2.
+    var internals = initializeIntlObject(numberFormat);
+
+    // Step 3.
+    var requestedLocales = CanonicalizeLocaleList(locales);
+
+    // Steps 4-5.
+    if (options === undefined)
+        options = {};
+    else
+        options = ToObject(options);
+
+    // Compute options that impact interpretation of locale.
+    // Step 6.
+    var opt = new Record();
+
+    // Steps 7-8.
+    var matcher = GetOption(options, "localeMatcher", "string", ["lookup", "best fit"], "best fit");
+    opt.localeMatcher = matcher;
+
+    // Compute effective locale.
+    // Step 9.
+    var NumberFormat = numberFormatInternalProperties;
+
+    // Step 10.
+    var localeData = NumberFormat.localeData;
+
+    // Step 11.
+    var r = ResolveLocale(NumberFormat.availableLocales,
+                          requestedLocales, opt,
+                          NumberFormat.relevantExtensionKeys,
+                          localeData);
+
+    // Steps 12-14.
+    internals.locale = r.locale;
+    internals.numberingSystem = r.nu;
+    var dataLocale = r.dataLocale;
+
+    // Compute formatting options.
+    // Steps 15-16.
+    var s = GetOption(options, "style", "string", ["decimal", "percent", "currency"], "decimal");
+    internals.style = s;
+
+    // Steps 17-20.
+    var c = GetOption(options, "currency", "string", undefined, undefined);
+    if (c !== undefined && !IsWellFormedCurrencyCode(c))
+        ThrowError(JSMSG_INVALID_CURRENCY_CODE, c);
+    var cDigits;
+    if (s === "currency") {
+        if (c === undefined)
+            ThrowError(JSMSG_UNDEFINED_CURRENCY);
+
+        // Steps 20.a-c.
+        c = toASCIIUpperCase(c);
+        internals.currency = c;
+        cDigits = CurrencyDigits(c);
+    }
+
+    // Steps 21-22.
+    var cd = GetOption(options, "currencyDisplay", "string", ["code", "symbol", "name"], "symbol");
+    if (s === "currency")
+        internals.currencyDisplay = cd;
+
+    // Steps 23-24.
+    var mnid = GetNumberOption(options, "minimumIntegerDigits", 1, 21, 1);
+    internals.minimumIntegerDigits = mnid;
+
+    // Steps 25-27.
+    var mnfdDefault = (s === "currency") ? cDigits : 0;
+    var mnfd = GetNumberOption(options, "minimumFractionDigits", 0, 20, mnfdDefault);
+    internals.minimumFractionDigits = mnfd;
+
+    // Steps 28-30.
+    var mxfdDefault;
+    if (s === "currency")
+        mxfdDefault = std_Math_max(mnfd, cDigits);
+    else if (s === "percent")
+        mxfdDefault = std_Math_max(mnfd, 0);
+    else
+        mxfdDefault = std_Math_max(mnfd, 3);
+    var mxfd = GetNumberOption(options, "maximumFractionDigits", mnfd, 20, mxfdDefault);
+    internals.maximumFractionDigits = mxfd;
+
+    // Steps 31-32.
+    var mnsd = options.minimumSignificantDigits;
+    var mxsd = options.maximumSignificantDigits;
+
+    // Step 33.
+    if (mnsd !== undefined || mxsd !== undefined) {
+        mnsd = GetNumberOption(options, "minimumSignificantDigits", 1, 21, 1);
+        mxsd = GetNumberOption(options, "maximumSignificantDigits", mnsd, 21, 21);
+        internals.minimumSignificantDigits = mnsd;
+        internals.maximumSignificantDigits = mxsd;
+    }
+
+    // Steps 34-35.
+    var g = GetOption(options, "useGrouping", "boolean", undefined, true);
+    internals.useGrouping = g;
+
+    // ??? Steps 36-41 to be provided by concrete implementation.
+
+    // Step 42.
+    internals.boundFormat = undefined;
+
+    // Step 43.
+    internals.initializedNumberFormat = true;
+}
+
+
+/**
+ * Mapping from currency codes to the number of decimal digits used for them.
+ * Default is 2 digits.
+ *
+ * Spec: ISO 4217 Currency and Funds Code List.
+ * http://www.currency-iso.org/en/home/tables/table-a1.html
+ */
+var currencyDigits = {
+    BHD: 3,
+    BIF: 0,
+    BYR: 0,
+    CLF: 0,
+    CLP: 0,
+    DJF: 0,
+    IQD: 3,
+    GNF: 0,
+    ISK: 0,
+    JOD: 3,
+    JPY: 0,
+    KMF: 0,
+    KRW: 0,
+    KWD: 3,
+    LYD: 3,
+    OMR: 3,
+    PYG: 0,
+    RWF: 0,
+    TND: 3,
+    UYI: 0,
+    VND: 0,
+    VUV: 0,
+    XAF: 0,
+    XOF: 0,
+    XPF: 0
+};
+
+
+/**
+ * Returns the number of decimal digits to be used for the given currency.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 11.1.1.
+ */
+function CurrencyDigits(currency) {
+    assert(typeof currency === "string", "CurrencyDigits");
+    assert(callFunction(std_RegExp_test, /^[A-Z]{3}$/, currency), "CurrencyDigits");
+
+    if (callFunction(std_Object_hasOwnProperty, currencyDigits, currency))
+        return currencyDigits[currency];
+    return 2;
+}
+
+
+/**
+ * Returns the subset of the given locale list for which this locale list has a
+ * matching (possibly fallback) locale. Locales appear in the same order in the
+ * returned list as in the input list.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 11.2.2.
+ */
+function Intl_NumberFormat_supportedLocalesOf(locales /*, options*/) {
+    var options = arguments.length > 1 ? arguments[1] : undefined;
+
+    var availableLocales = numberFormatInternalProperties.availableLocales;
+    var requestedLocales = CanonicalizeLocaleList(locales);
+    return SupportedLocales(availableLocales, requestedLocales, options);
+}
+
+
+/**
+ * NumberFormat internal properties.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.1 and 11.2.3.
+ */
+var numberFormatInternalProperties = {
+    localeData: numberFormatLocaleData,
+    availableLocales: runtimeAvailableLocales, // stub
+    relevantExtensionKeys: ["nu"]
+};
+
+
+function numberFormatLocaleData(locale) {
+    // the following data may or may not match any actual locale support
+    return {
+        nu: ["latn"]
+    };
+}
+
+
+/**
+ * Function to be bound and returned by Intl.NumberFormat.prototype.format.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 11.3.2.
+ */
+function numberFormatFormatToBind(value) {
+    // Steps 1.a.i implemented by ECMAScript declaration binding instantiation,
+    // ES5.1 10.5, step 4.d.ii.
+
+    // Step 1.a.ii-iii.
+    var x = ToNumber(value);
+    return FormatNumber(this, x);
+}
+
+
+/**
+ * Returns a function bound to this NumberFormat that returns a String value
+ * representing the result of calling ToNumber(value) according to the
+ * effective locale and the formatting options of this NumberFormat.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 11.3.2.
+ */
+function Intl_NumberFormat_format_get() {
+    // Check "this NumberFormat object" per introduction of section 11.3.
+    var internals = checkIntlAPIObject(this, "NumberFormat", "format");
+
+    // Step 1.
+    if (internals.boundFormat === undefined) {
+        // Step 1.a.
+        var F = numberFormatFormatToBind;
+
+        // Step 1.b-d.
+        var bf = callFunction(std_Function_bind, F, this);
+        internals.boundFormat = bf;
+    }
+    // Step 2.
+    return internals.boundFormat;
+}
+
+
+/**
+ * Returns a String value representing the result of calling ToNumber(value)
+ * according to the effective locale and the formatting options of this
+ * NumberFormat.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 11.3.2.
+ */
+function FormatNumber(numberFormat, x) {
+    assert(typeof x === "number", "FormatNumber");
+
+    // ??? stub
+    return x.toLocaleString();
+}
+
+
+/**
+ * Returns the resolved options for a NumberFormat object.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 11.3.3 and 11.4.
+ */
+function Intl_NumberFormat_resolvedOptions() {
+    // Check "this NumberFormat object" per introduction of section 11.3.
+    var internals = checkIntlAPIObject(this, "NumberFormat", "resolvedOptions");
+
+    var result = {
+        locale: internals.locale,
+        numberingSystem: internals.numberingSystem,
+        style: internals.style,
+        minimumIntegerDigits: internals.minimumIntegerDigits,
+        minimumFractionDigits: internals.minimumFractionDigits,
+        maximumFractionDigits: internals.maximumFractionDigits,
+        useGrouping: internals.useGrouping
+    };
+    var optionalProperties = [
+        "currency",
+        "currencyDisplay",
+        "minimumSignificantDigits",
+        "maximumSignificantDigits"
+    ];
+    for (var i = 0; i < optionalProperties.length; i++) {
+        var p = optionalProperties[i];
+        if (callFunction(std_Object_hasOwnProperty, internals, p))
+            defineProperty(result, p, internals[p]);
+    }
+    return result;
+}
+
+
+/********** Intl.DateTimeFormat **********/
+
+
+/**
+ * Components of date and time formats and their values.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 12.1.1.
+ */
+var dateTimeComponentValues = {
+    weekday: ["narrow", "short", "long"],
+    era: ["narrow", "short", "long"],
+    year: ["2-digit", "numeric"],
+    month: ["2-digit", "numeric", "narrow", "short", "long"],
+    day: ["2-digit", "numeric"],
+    hour: ["2-digit", "numeric"],
+    minute: ["2-digit", "numeric"],
+    second: ["2-digit", "numeric"],
+    timeZoneName: ["short", "long"]
+};
+
+
+var dateTimeComponents = std_Object_getOwnPropertyNames(dateTimeComponentValues);
+
+
+/**
+ * Initializes an object as a DateTimeFormat.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 12.1.1.
+ */
+function InitializeDateTimeFormat(dateTimeFormat, locales, options) {
+    assert(IsObject(dateTimeFormat), "InitializeDateTimeFormat");
+
+    // Step 1.
+    if (isInitializedIntlObject(dateTimeFormat))
+        ThrowError(JSMSG_INTL_OBJECT_REINITED);
+
+    // Step 2.
+    var internals = initializeIntlObject(dateTimeFormat);
+
+    // Step 3.
+    var requestedLocales = CanonicalizeLocaleList(locales);
+
+    // Step 4.
+    options = ToDateTimeOptions(options, "any", "date");
+
+    // Compute options that impact interpretation of locale.
+    // Step 5.
+    var opt = new Record();
+
+    // Steps 6-7.
+    var matcher = GetOption(options, "localeMatcher", "string", ["lookup", "best fit"], "best fit");
+    opt.localeMatcher = matcher;
+
+    // Compute effective locale.
+    // Step 8.
+    var DateTimeFormat = dateTimeFormatInternalProperties;
+
+    // Step 9.
+    var localeData = DateTimeFormat.localeData;
+
+    // Step 10.
+    var r = ResolveLocale(DateTimeFormat.availableLocales,
+                          requestedLocales, opt,
+                          DateTimeFormat.relevantExtensionKeys,
+                          localeData);
+
+    // Steps 11-13.
+    internals.locale = r.locale;
+    internals.calendar = r.ca;
+    internals.numberingSystem = r.nu;
+
+    // Compute formatting options.
+    // Step 14.
+    var dataLocale = r.dataLocale;
+
+    // Steps 15-17.
+    var tz = options.timeZone;
+    if (tz !== undefined) {
+        tz = toASCIIUpperCase(ToString(tz));
+        if (tz !== "UTC")
+            ThrowError(JSMSG_INVALID_TIME_ZONE, tz);
+    }
+    internals.timeZone = tz;
+
+    // Step 18.
+    opt = new Record();
+
+    // Step 19.
+    var i, prop;
+    for (i = 0; i < dateTimeComponents.length; i++) {
+        prop = dateTimeComponents[i];
+        var value = GetOption(options, prop, "string", dateTimeComponentValues[prop], undefined);
+        opt[prop] = value;
+    }
+
+    // Step 20.
+    var dataLocaleData = localeData(dataLocale);
+
+    // Step 21.
+    var formats = dataLocaleData.formats;
+
+    // Steps 22-24.
+    matcher = GetOption(options, "formatMatcher", "string", ["basic", "best fit"], "best fit");
+    var bestFormat = (matcher === "basic")
+                     ? BasicFormatMatcher(opt, formats)
+                     : BestFitFormatMatcher(opt, formats);
+
+    // Step 25.
+    for (i = 0; i < dateTimeComponents.length; i++) {
+        prop = dateTimeComponents[i];
+        if (callFunction(std_Object_hasOwnProperty, bestFormat, prop)) {
+            var p = bestFormat[prop];
+            internals[prop] = p;
+        }
+    }
+
+    // Step 26.
+    var hr12  = GetOption(options, "hour12", "boolean", undefined, undefined);
+
+    // Step 27.
+    var pattern;
+    if (callFunction(std_Object_hasOwnProperty, internals, "hour")) {
+        // Steps 27.a-b.
+        if (hr12 === undefined)
+            hr12 = dataLocaleData.hour12;
+        assert(typeof hr12 === "boolean");
+        internals.hour12 = hr12;
+
+        if (hr12) {
+            // Step 27.c.
+            var hourNo0 = dataLocaleData.hourNo0;
+            internals.hourNo0 = hourNo0;
+            pattern = bestFormat.pattern12;
+        } else {
+            // Step 27.d.
+            pattern = bestFormat.pattern;
+        }
+    } else {
+        // Step 28.
+        pattern = bestFormat.pattern;
+    }
+
+    // Step 29.
+    internals.pattern = pattern;
+
+    // Step 30.
+    internals.boundFormat = undefined;
+
+    // Step 31.
+    internals.initializedDateTimeFormat = true;
+}
+
+
+/**
+ * Returns a new options object that includes the provided options (if any)
+ * and fills in default components if required components are not defined.
+ * Required can be "date", "time", or "any".
+ * Defaults can be "date", "time", or "all".
+ *
+ * Spec: ECMAScript Internationalization API Specification, 12.1.1.
+ */
+function ToDateTimeOptions(options, required, defaults) {
+    assert(typeof required === "string", "ToDateTimeOptions");
+    assert(typeof defaults === "string", "ToDateTimeOptions");
+
+    // Steps 1-3.
+    if (options === undefined)
+        options = null;
+    else
+        options = ToObject(options);
+    options = std_Object_create(options);
+
+    // Step 4.
+    var needDefaults = true;
+
+    // Step 5.
+    if ((required === "date" || required === "any") &&
+        (options.weekday !== undefined || options.year !== undefined ||
+         options.month !== undefined || options.day !== undefined))
+    {
+        needDefaults = false;
+    }
+
+    // Step 6.
+    if ((required === "time" || required === "any") &&
+        (options.hour !== undefined || options.minute !== undefined ||
+         options.second !== undefined))
+    {
+        needDefaults = false;
+    }
+
+    // Step 7.
+    if (needDefaults && (defaults === "date" || defaults === "all")) {
+        // The specification says to call [[DefineOwnProperty]] with false for
+        // the Throw parameter, while Object.defineProperty uses true. For the
+        // calls here, the difference doesn't matter because we're adding
+        // properties to a new object.
+        defineProperty(options, "year", "numeric");
+        defineProperty(options, "month", "numeric");
+        defineProperty(options, "day", "numeric");
+    }
+
+    // Step 8.
+    if (needDefaults && (defaults === "time" || defaults === "all")) {
+        // See comment for step 7.
+        defineProperty(options, "hour", "numeric");
+        defineProperty(options, "minute", "numeric");
+        defineProperty(options, "second", "numeric");
+    }
+
+    // Step 9.
+    return options;
+}
+
+
+/**
+ * Compares the date and time components requested by options with the available
+ * date and time formats in formats, and selects the best match according
+ * to a specified basic matching algorithm.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 12.1.1.
+ */
+function BasicFormatMatcher(options, formats) {
+    // Steps 1-6.
+    var removalPenalty = 120,
+        additionPenalty = 20,
+        longLessPenalty = 8,
+        longMorePenalty = 6,
+        shortLessPenalty = 6,
+        shortMorePenalty = 3;
+
+    // Table 3.
+    var properties = ["weekday", "era", "year", "month", "day",
+        "hour", "minute", "second", "timeZoneName"];
+
+    // Step 11.c.vi.1.
+    var values = ["2-digit", "numeric", "narrow", "short", "long"];
+
+    // Steps 7-8.
+    var bestScore = -Infinity;
+    var bestFormat;
+
+    // Steps 9-11.
+    var i = 0;
+    var len = formats.length;
+    while (i < len) {
+        // Steps 11.a-b.
+        var format = formats[i];
+        var score = 0;
+
+        // Step 11.c.
+        var formatProp;
+        for (var j = 0; j < properties.length; j++) {
+            var property = properties[j];
+
+            // Step 11.c.i.
+            var optionsProp = options[property];
+            // Step missing from spec.
+            // https://bugs.ecmascript.org/show_bug.cgi?id=1254
+            formatProp = undefined;
+
+            // Steps 11.c.ii-iii.
+            if (callFunction(std_Object_hasOwnProperty, format, property))
+                formatProp = format[property];
+
+            if (optionsProp === undefined && formatProp !== undefined) {
+                // Step 11.c.iv.
+                score -= additionPenalty;
+            } else if (optionsProp !== undefined && formatProp === undefined) {
+                // Step 11.c.v.
+                score -= removalPenalty;
+            } else {
+                // Step 11.c.vi.
+                var optionsPropIndex = callFunction(std_Array_indexOf, values, optionsProp);
+                var formatPropIndex = callFunction(std_Array_indexOf, values, formatProp);
+                var delta = std_Math_max(std_Math_min(formatPropIndex - optionsPropIndex, 2), -2);
+                if (delta === 2)
+                    score -= longMorePenalty;
+                else if (delta === 1)
+                    score -= shortMorePenalty;
+                else if (delta === -1)
+                    score -= shortLessPenalty;
+                else if (delta === -2)
+                    score -= longLessPenalty;
+            }
+        }
+
+        // Step 11.d.
+        if (score > bestScore) {
+            bestScore = score;
+            bestFormat = format;
+        }
+
+        // Step 11.e.
+        i++;
+    }
+
+    // Step 12.
+    return bestFormat;
+}
+
+
+/**
+ * Compares the date and time components requested by options with the available
+ * date and time formats in formats, and selects the best match according
+ * to an unspecified best-fit matching algorithm.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 12.1.1.
+ */
+function BestFitFormatMatcher(options, formats) {
+    // this implementation doesn't have anything better
+    return BasicFormatMatcher(options, formats);
+}
+
+
+/**
+ * Returns the subset of the given locale list for which this locale list has a
+ * matching (possibly fallback) locale. Locales appear in the same order in the
+ * returned list as in the input list.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 12.2.2.
+ */
+function Intl_DateTimeFormat_supportedLocalesOf(locales /*, options*/) {
+    var options = arguments.length > 1 ? arguments[1] : undefined;
+
+    var availableLocales = dateTimeFormatInternalProperties.availableLocales;
+    var requestedLocales = CanonicalizeLocaleList(locales);
+    return SupportedLocales(availableLocales, requestedLocales, options);
+}
+
+
+/**
+ * DateTimeFormat internal properties.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.1 and 12.2.3.
+ */
+var dateTimeFormatInternalProperties = {
+    localeData: dateTimeFormatLocaleData,
+    availableLocales: runtimeAvailableLocales, // stub
+    relevantExtensionKeys: ["ca", "nu"]
+};
+
+
+function dateTimeFormatLocaleData(locale) {
+    // the following data may or may not match any actual locale support
+    var localeData = {
+        ca: ["gregory"],
+        nu: ["latn"],
+        hour12: false,
+        hourNo0: false
+    };
+
+    var formatDate = {
+        weekday: "short",
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+    };
+    var formatTime = {
+        hour: "numeric",
+        minute: "numeric",
+        second: "numeric"
+    };
+    var formatFull = {
+        weekday: "short",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        second: "numeric"
+    };
+    localeData.formats = [formatDate, formatTime, formatFull];
+
+    return localeData;
+}
+
+
+/**
+ * Function to be bound and returned by Intl.DateTimeFormat.prototype.format.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 12.3.2.
+ */
+function dateTimeFormatFormatToBind() {
+    // Steps 1.a.i-ii
+    var date = arguments.length > 0 ? arguments[0] : undefined;
+    var x = (date === undefined) ? std_Date_now() : ToNumber(date);
+
+    // Step 1.a.iii.
+    return FormatDateTime(this, x);
+}
+
+
+/**
+ * Returns a function bound to this DateTimeFormat that returns a String value
+ * representing the result of calling ToNumber(date) according to the
+ * effective locale and the formatting options of this DateTimeFormat.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 12.3.2.
+ */
+function Intl_DateTimeFormat_format_get() {
+    // Check "this DateTimeFormat object" per introduction of section 12.3.
+    var internals = checkIntlAPIObject(this, "DateTimeFormat", "format");
+
+    // Step 1.
+    if (internals.boundFormat === undefined) {
+        // Step 1.a.
+        var F = dateTimeFormatFormatToBind;
+
+        // Step 1.b-d.
+        var bf = callFunction(std_Function_bind, F, this);
+        internals.boundFormat = bf;
+    }
+
+    // Step 2.
+    return internals.boundFormat;
+}
+
+
+/**
+ * Returns a String value representing the result of calling ToNumber(date)
+ * according to the effective locale and the formatting options of this
+ * DateTimeFormat.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 12.3.2.
+ */
+function FormatDateTime(dateTimeFormat, x) {
+    // ??? stub
+    if (!std_isFinite(x))
+        ThrowError(JSMSG_DATE_NOT_FINITE);
+    var X = new Std_Date(x);
+    var internals = getInternals(dateTimeFormat);
+    var wantDate = callFunction(std_Object_hasOwnProperty, internals, "weekday") ||
+        callFunction(std_Object_hasOwnProperty, internals, "year") ||
+        callFunction(std_Object_hasOwnProperty, internals, "month") ||
+        callFunction(std_Object_hasOwnProperty, internals, "day");
+    var wantTime = callFunction(std_Object_hasOwnProperty, internals, "hour") ||
+        callFunction(std_Object_hasOwnProperty, internals, "minute") ||
+        callFunction(std_Object_hasOwnProperty, internals, "second");
+    if (wantDate) {
+        if (wantTime)
+            return X.toLocaleString();
+        return X.toLocaleDateString();
+    }
+    return X.toLocaleTimeString();
+}
+
+
+/**
+ * Returns the resolved options for a DateTimeFormat object.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 12.3.3 and 12.4.
+ */
+function Intl_DateTimeFormat_resolvedOptions() {
+    // Check "this DateTimeFormat object" per introduction of section 12.3.
+    var internals = checkIntlAPIObject(this, "DateTimeFormat", "resolvedOptions");
+
+    var result = {
+        locale: internals.locale,
+        calendar: internals.calendar,
+        numberingSystem: internals.numberingSystem,
+        timeZone: internals.timeZone
+    };
+    for (var i = 0; i < dateTimeComponents.length; i++) {
+        var p = dateTimeComponents[i];
+        if (callFunction(std_Object_hasOwnProperty, internals, p))
+            defineProperty(result, p, internals[p]);
+    }
+    if (callFunction(std_Object_hasOwnProperty, internals, "hour12"))
+        defineProperty(result, "hour12", internals.hour12);
+    return result;
+}
