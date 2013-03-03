@@ -11,9 +11,11 @@
 #include <gst/video/video.h>
 #include "MediaDecoderReader.h"
 
-class TimeRanges;
-
 namespace mozilla {
+
+namespace dom {
+class TimeRanges;
+}
 
 class AbstractMediaDecoder;
 
