@@ -2904,8 +2904,20 @@ CodeGenerator::visitMathFunctionD(LMathFunctionD *ins)
       case MMathFunction::Cos:
         funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_cos_impl);
         break;
+      case MMathFunction::Exp:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_exp_impl);
+        break;
       case MMathFunction::Tan:
         funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_tan_impl);
+        break;
+      case MMathFunction::ATan:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_atan_impl);
+        break;
+      case MMathFunction::ASin:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_asin_impl);
+        break;
+      case MMathFunction::ACos:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_acos_impl);
         break;
       default:
         JS_NOT_REACHED("Unknown math function");
