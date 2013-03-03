@@ -1865,7 +1865,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             for (int i = 0; i < childCount; i++) {
                 final View child = getChildAt(i);
                 final int childEnd = (mIsVertical ? child.getBottom() : child.getRight());
-                Log.d(LOGTAG, "      - childEnd: " + childEnd + " >= " + childrenStart);
+
                 if (childEnd >= childrenStart) {
                     break;
                 }
