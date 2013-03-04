@@ -176,10 +176,12 @@ NetworkStatsDB.prototype = {
       this._saveStats(txn, store, data);
       return;
     }
-    if (diff == 0) {
+    if (diff == 0 || diff < 0) {
       // New element received before samplerate period.
       // It means that device has been restarted (or clock / timezone change).
       // Update element.
+
+      // If diff < 0, clock or timezone changed back. Place data in the last sample.
 
       lastSample.rxBytes += rxDiff;
       lastSample.txBytes += txDiff;
@@ -189,13 +191,6 @@ NetworkStatsDB.prototype = {
         debug("Update: " + JSON.stringify(lastSample));
       }
       let req = lastSampleCursor.update(lastSample);
-    }
-    if (diff < 0) {
-      // Clock or timezone changed back.
-      if (DEBUG) {
-        debug("This stat record is older than last one");
-      }
-      this._insertSample(txn, store, newSample, lastSample.timestamp);
     }
   },
 
@@ -212,25 +207,6 @@ NetworkStatsDB.prototype = {
     } else {
       store.put(networkStats);
     }
-  },
-
-  _insertSample: function _insertSample(txn, store, sample, endTimestamp) {
-    let lowFilter = [sample.connectionType, sample.timestamp];
-    let upFilter = [sample.connectionType, endTimestamp];
-    let range = this.dbGlobal.IDBKeyRange.bound(lowFilter, upFilter, false, false);
-
-    let request = store.openCursor(range).onsuccess = function(event) {
-      var cursor = event.target.result;
-      if (cursor) {
-        sample.rxBytes += cursor.value.rxBytes;
-        sample.txBytes += cursor.value.txBytes;
-        cursor.delete();
-        cursor.continue();
-        return;
-      }
-
-      this._saveStats(txn, store, sample);
-    }.bind(this);
   },
 
   _removeOldStats: function _removeOldStats(txn, store, connType, date) {
