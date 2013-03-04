@@ -5,6 +5,7 @@
 
 #include "nsGlueLinking.h"
 #include "nsXPCOMGlue.h"
+#include "mozilla/FileUtils.h"
 
 #include "nsStringAPI.h"
 #include <windows.h>
@@ -37,33 +38,13 @@ AppendDependentLib(HINSTANCE libHandle)
 }
 
 static void
-preload(LPCWSTR dll)
-{
-    HANDLE fd = CreateFileW(dll, GENERIC_READ, FILE_SHARE_READ,
-                            NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
-    char buf[64 * 1024];
-
-    if (fd == INVALID_HANDLE_VALUE)
-        return;
-  
-    DWORD dwBytesRead;
-    // Do dummy reads to trigger kernel-side readhead via FILE_FLAG_SEQUENTIAL_SCAN.
-    // Abort when underfilling because during testing the buffers are read fully
-    // A buffer that's not keeping up would imply that readahead isn't working right
-    while (ReadFile(fd, buf, sizeof(buf), &dwBytesRead, NULL) && dwBytesRead == sizeof(buf))
-        /* Nothing */;
-  
-    CloseHandle(fd);
-}
-
-static void
 ReadDependentCB(const char *aDependentLib, bool do_preload)
 {
     wchar_t wideDependentLib[MAX_PATH];
     MultiByteToWideChar(CP_UTF8, 0, aDependentLib, -1, wideDependentLib, MAX_PATH);
 
     if (do_preload)
-        preload(wideDependentLib);
+        mozilla::ReadAheadLib(wideDependentLib);
 
     HINSTANCE h =
         LoadLibraryExW(wideDependentLib, NULL, MOZ_LOADLIBRARY_FLAGS);
