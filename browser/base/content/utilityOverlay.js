@@ -295,6 +295,10 @@ function openLinkIn(url, where, params) {
     }
   }
 
+  // Raise the target window before loading the URI, since loading it may
+  // result in a new frontmost window (e.g. "javascript:window.open('');").
+  w.focus();
+
   switch (where) {
   case "current":
     let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
@@ -322,14 +326,6 @@ function openLinkIn(url, where, params) {
     break;
   }
 
-  // If this window is active, or the user created a new tab, focus the target
-  // window. Otherwise, focus the content but don't raise the window, since the
-  // URI we just loaded may have resulted in a new frontmost window
-  // (e.g. "javascript:window.open('');").
-  var fm = Components.classes["@mozilla.org/focus-manager;1"].
-             getService(Components.interfaces.nsIFocusManager);
-  if (window == fm.activeWindow || w.isBlankPageURL(url))
-    w.focus();
   w.gBrowser.selectedBrowser.focus();
 
   if (!loadInBackground && w.isBlankPageURL(url))
