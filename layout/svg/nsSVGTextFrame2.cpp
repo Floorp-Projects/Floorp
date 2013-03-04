@@ -3596,6 +3596,8 @@ nsSVGTextFrame2::ConvertTextElementCharIndexToAddressableIndex(
 uint32_t
 nsSVGTextFrame2::GetNumberOfChars(nsIContent* aContent)
 {
+  UpdateGlyphPositioning(false);
+
   uint32_t n = 0;
   CharIterator it(this, CharIterator::eAddressable, aContent);
   if (it.AdvanceToSubtree()) {
