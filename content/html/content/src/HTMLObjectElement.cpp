@@ -332,19 +332,20 @@ HTMLObjectElement::GetContentDocument(nsIDOMDocument **aContentDocument)
 {
   NS_ENSURE_ARG_POINTER(aContentDocument);
 
-  *aContentDocument = nullptr;
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(GetContentDocument());
+  domDoc.forget(aContentDocument);
+  return NS_OK;
+}
 
-  if (!IsInDoc()) {
-    return NS_OK;
+nsIDOMWindow*
+HTMLObjectElement::GetContentWindow()
+{
+  nsIDocument* doc = GetContentDocument();
+  if (doc) {
+    return doc->GetWindow();
   }
 
-  // XXXbz should this use GetCurrentDoc()?  sXBL/XBL2 issue!
-  nsIDocument *sub_doc = OwnerDoc()->GetSubDocumentFor(this);
-  if (!sub_doc) {
-    return NS_OK;
-  }
-
-  return CallQueryInterface(sub_doc, aContentDocument);
+  return nullptr;
 }
 
 NS_IMETHODIMP
