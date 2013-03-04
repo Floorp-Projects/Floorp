@@ -1427,7 +1427,11 @@ DocAccessible::CacheChildren()
 {
   // Search for accessible children starting from the document element since
   // some web pages tend to insert elements under it rather than document body.
-  TreeWalker walker(this, mDocumentNode->GetRootElement());
+  dom::Element* rootElm = mDocumentNode->GetRootElement();
+  if (!rootElm)
+    return;
+
+  TreeWalker walker(this, rootElm);
 
   Accessible* child = nullptr;
   while ((child = walker.NextChild()) && AppendChild(child));
