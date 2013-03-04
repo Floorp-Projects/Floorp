@@ -663,20 +663,6 @@ GetJSContextFromNPP(NPP npp)
   return GetJSContextFromDoc(doc);
 }
 
-static nsresult
-GetPrivacyFromNPP(NPP npp, bool* aPrivate)
-{
-  nsCOMPtr<nsIDocument> doc = GetDocumentFromNPP(npp);
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-  nsCOMPtr<nsPIDOMWindow> domwindow = doc->GetWindow();
-  NS_ENSURE_TRUE(domwindow, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDocShell> docShell = domwindow->GetDocShell();
-  nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
-  *aPrivate = loadContext && loadContext->UsePrivateBrowsing();
-  return NS_OK;
-}
-
 static already_AddRefed<nsIChannel>
 GetChannelFromNPP(NPP npp)
 {
@@ -2075,7 +2061,11 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
   case NPNVprivateModeBool: {
     bool privacy;
-    nsresult rv = GetPrivacyFromNPP(npp, &privacy);
+    nsNPAPIPluginInstance *inst = static_cast<nsNPAPIPluginInstance*>(npp->ndata);
+    if (!inst)
+      return NPERR_GENERIC_ERROR;
+
+    nsresult rv = inst->IsPrivateBrowsing(&privacy);
     if (NS_FAILED(rv))
       return NPERR_GENERIC_ERROR;
     *(NPBool*)result = (NPBool)privacy;
@@ -2778,8 +2768,13 @@ _getauthenticationinfo(NPP instance, const char *protocol, const char *host,
   if (!authManager)
     return NPERR_GENERIC_ERROR;
 
+  nsNPAPIPluginInstance *inst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
+  if (!inst)
+    return NPERR_GENERIC_ERROR;
+
   bool authPrivate = false;
-  GetPrivacyFromNPP(instance, &authPrivate);
+  if (NS_FAILED(inst->IsPrivateBrowsing(&authPrivate)))
+    return NPERR_GENERIC_ERROR;
 
   nsIDocument *doc = GetDocumentFromNPP(instance);
   NS_ENSURE_TRUE(doc, NPERR_GENERIC_ERROR);
