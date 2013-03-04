@@ -25,6 +25,7 @@
 #include "nsPluginInstanceOwner.h"
 
 #include "nsIDocument.h"
+#include "nsIDocShell.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsDirectoryServiceDefs.h"
@@ -1413,6 +1414,25 @@ nsNPAPIPluginInstance::PrivateModeStateChanged(bool enabled)
   NS_TRY_SAFE_CALL_RETURN(error, (*pluginFunctions->setvalue)(&mNPP, NPNVprivateModeBool, &value), this,
                           NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
   return (error == NPERR_NO_ERROR) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+nsresult
+nsNPAPIPluginInstance::IsPrivateBrowsing(bool* aEnabled)
+{
+  if (!mOwner)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDocument> doc;
+  mOwner->GetDocument(getter_AddRefs(doc));
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsPIDOMWindow> domwindow = doc->GetWindow();
+  NS_ENSURE_TRUE(domwindow, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocShell> docShell = domwindow->GetDocShell();
+  nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
+  *aEnabled = (loadContext && loadContext->UsePrivateBrowsing());
+  return NS_OK;
 }
 
 static void

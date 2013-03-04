@@ -257,6 +257,8 @@ public:
 
   nsresult PrivateModeStateChanged(bool aEnabled);
 
+  nsresult IsPrivateBrowsing(bool *aEnabled);
+
   nsresult GetDOMElement(nsIDOMElement* *result);
 
   nsNPAPITimer* TimerWithID(uint32_t id, uint32_t* index);
