@@ -6,12 +6,10 @@
 #ifndef GFX_FRAMEMETRICS_H
 #define GFX_FRAMEMETRICS_H
 
-#include "mozilla/gfx/ZoomScale.h"
-#include "mozilla/gfx/Rect.h"
-#include "mozilla/gfx/Point.h"
-#include "mozilla/gfx/Types.h"
-#include "nsRect.h"
+#include "gfxPoint.h"
 #include "gfxTypes.h"
+#include "nsRect.h"
+#include "mozilla/gfx/Rect.h"
 
 namespace mozilla {
 namespace layers {
@@ -82,14 +80,18 @@ public:
     return mScrollId != NULL_SCROLL_ID;
   }
 
-  gfx::ZoomScale LayersPixelsPerCSSPixel() const
+  gfxSize LayersPixelsPerCSSPixel() const
   {
     return mResolution * mDevPixelsPerCSSPixel;
   }
 
-  gfx::Point GetScrollOffsetInLayerPixels() const
+  gfxPoint GetScrollOffsetInLayerPixels() const
   {
-    return mScrollOffset * LayersPixelsPerCSSPixel();
+    return gfxPoint(
+      static_cast<gfx::Float>(
+        mScrollOffset.x * LayersPixelsPerCSSPixel().width),
+      static_cast<gfx::Float>(
+        mScrollOffset.y * LayersPixelsPerCSSPixel().height));
   }
 
   // ---------------------------------------------------------------------------
@@ -112,7 +114,7 @@ public:
   //
   // This is only valid on the root layer. Nested iframes do not need this
   // metric as they do not have a displayport set. See bug 775452.
-  gfx::IntRect mCompositionBounds;
+  nsIntRect mCompositionBounds;
 
   // |mScrollableRect|, stored in device pixels. DECPRECATED, DO NOT USE.
   //
@@ -123,7 +125,7 @@ public:
   //
   // FIXME/bug 785929: Is this really necessary? Can it not be calculated from
   // |mScrollableRect| whenever it's needed?
-  gfx::IntRect mContentRect;
+  nsIntRect mContentRect;
 
   // ---------------------------------------------------------------------------
   // The following metrics are all in CSS pixels. They are not in any uniform
@@ -214,7 +216,7 @@ public:
   // post-multiplied into the parent's transform. Since this only happens when
   // we walk the layer tree, the resulting transform isn't stored here. Thus the
   // resolution of parent layers is opaque to this metric.
-  gfx::ZoomScale mResolution;
+  gfxSize mResolution;
 
   // The resolution-independent "user zoom".  For example, if a page
   // configures the viewport to a zoom value of 2x, then this member
@@ -229,7 +231,7 @@ public:
   //
   // When this is not true, we're probably asynchronously sampling a
   // zoom animation for content.
-  gfx::ZoomScale mZoom;
+  gfxSize mZoom;
 
   // The conversion factor between CSS pixels and device pixels for this frame.
   // This can vary based on a variety of things, such as reflowing-zoom. The

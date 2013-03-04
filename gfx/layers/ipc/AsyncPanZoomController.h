@@ -111,7 +111,7 @@ public:
    * { x = 0, y = 0, width = surface.width, height = surface.height }, however
    * there is no hard requirement for this.
    */
-  void UpdateCompositionBounds(const gfx::IntRect& aCompositionBounds);
+  void UpdateCompositionBounds(const nsIntRect& aCompositionBounds);
 
   /**
    * We are scrolling a subframe, so disable our machinery until we hit
@@ -232,7 +232,7 @@ public:
    * Return the scale factor needed to fit the viewport in |aMetrics|
    * into its composition bounds.
    */
-  static gfx::ZoomScale CalculateIntrinsicScale(const FrameMetrics& aMetrics);
+  static gfxSize CalculateIntrinsicScale(const FrameMetrics& aMetrics);
 
   /**
    * Return the resolution that content should be rendered at given
@@ -240,7 +240,7 @@ public:
    * factor, etc.  (The mResolution member of aFrameMetrics is
    * ignored.)
    */
-  static gfx::ZoomScale CalculateResolution(const FrameMetrics& aMetrics);
+  static gfxSize CalculateResolution(const FrameMetrics& aMetrics);
 
   static gfx::Rect CalculateCompositedRectInCssPixels(const FrameMetrics& aMetrics);
 
@@ -347,7 +347,7 @@ protected:
    *
    * XXX: Fix focus point calculations.
    */
-  void ScaleWithFocus(float aScale, const gfx::IntPoint& aFocus);
+  void ScaleWithFocus(float aScale, const nsIntPoint& aFocus);
 
   /**
    * Schedules a composite on the compositor thread. Wrapper for
@@ -551,7 +551,7 @@ private:
 
   // Stores the previous focus point if there is a pinch gesture happening. Used
   // to allow panning by moving multiple fingers (thus moving the focus point).
-  gfx::IntPoint mLastZoomFocus;
+  nsIntPoint mLastZoomFocus;
 
   // Stores the state of panning and zooming this frame. This is protected by
   // |mMonitor|; that is, it should be held whenever this is updated.
