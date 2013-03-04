@@ -103,6 +103,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitCall(MCall *call);
     bool visitApplyArgs(MApplyArgs *apply);
     bool visitGetDynamicName(MGetDynamicName *ins);
+    bool visitFilterArguments(MFilterArguments *ins);
     bool visitCallDirectEval(MCallDirectEval *ins);
     bool visitTest(MTest *test);
     bool visitPolyInlineDispatch(MPolyInlineDispatch *ins);
