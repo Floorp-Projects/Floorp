@@ -89,6 +89,7 @@ def generate_class_template(args, ret = False, member = True):
     else:
         print "  runnable_args_%s_%d_ret("%(nm, args) + gen_args_type(args, member) + ", R *r) :"
         print "    " + gen_init(args, True, member) + "  {}"
+        print "  virtual bool returns_value() const { return true; }"
     print
     print "  NS_IMETHOD Run() {"
     if ret:
