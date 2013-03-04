@@ -42,6 +42,23 @@ DisplayItemClip::DisplayItemClip(const DisplayItemClip& aOther, nsDisplayItem* a
 }
 
 void
+DisplayItemClip::IntersectWith(const DisplayItemClip& aOther)
+{
+  if (!aOther.mHaveClipRect) {
+    return;
+  }
+  if (!mHaveClipRect) {
+    *this = aOther;
+    return;
+  }
+  if (!mClipRect.IntersectRect(mClipRect, aOther.mClipRect)) {
+    mRoundedClipRects.Clear();
+    return;
+  }
+  mRoundedClipRects.AppendElements(aOther.mRoundedClipRects);
+}
+
+void
 DisplayItemClip::ApplyTo(gfxContext* aContext,
                          nsPresContext* aPresContext,
                          uint32_t aBegin, uint32_t aEnd)
