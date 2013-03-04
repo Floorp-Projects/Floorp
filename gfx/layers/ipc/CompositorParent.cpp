@@ -38,6 +38,7 @@
 #include "gfxPlatform.h"
 #include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/AutoRestore.h"
+#include "gfx2DGlue.h"
 
 using namespace base;
 using namespace mozilla;
@@ -474,7 +475,7 @@ CompositorParent::ScheduleComposition()
 }
 
 void
-CompositorParent::SetTransformation(float aScale, nsIntPoint aScrollOffset)
+CompositorParent::SetTransformation(float aScale, gfx::IntPoint aScrollOffset)
 {
   mXScale = aScale;
   mYScale = aScale;
@@ -871,8 +872,8 @@ CompositorParent::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFrame,
 
     TransformFixedLayers(
       aLayer,
-      -treeTransform.mTranslation / treeTransform.mScale,
-      treeTransform.mScale);
+      gfx::ThebesPoint(-treeTransform.mTranslation / treeTransform.mScale),
+      gfxSize(treeTransform.mScale.width, treeTransform.mScale.height));
 
     appliedTransform = true;
   }
@@ -906,8 +907,8 @@ CompositorParent::TransformScrollableLayer(Layer* aLayer, const gfx3DMatrix& aRo
   // as a FrameMetrics helper because it's a deprecated conversion.
   float devPixelRatioX = 1 / rootScaleX, devPixelRatioY = 1 / rootScaleY;
 
-  gfxPoint scrollOffsetLayersPixels(metrics.GetScrollOffsetInLayerPixels());
-  nsIntPoint scrollOffsetDevPixels(
+  gfx::Point scrollOffsetLayersPixels(metrics.GetScrollOffsetInLayerPixels());
+  gfx::IntPoint scrollOffsetDevPixels(
     NS_lround(scrollOffsetLayersPixels.x * devPixelRatioX),
     NS_lround(scrollOffsetLayersPixels.y * devPixelRatioY));
 
@@ -928,7 +929,7 @@ CompositorParent::TransformScrollableLayer(Layer* aLayer, const gfx3DMatrix& aRo
   // Calculate the absolute display port to send to Java
   gfx::Rect displayPortLayersPixels(metrics.mCriticalDisplayPort.IsEmpty() ?
                                     metrics.mDisplayPort : metrics.mCriticalDisplayPort);
-  nsIntRect displayPortDevPixels(
+  gfx::IntRect displayPortDevPixels(
     NS_lround(displayPortLayersPixels.x * devPixelRatioX),
     NS_lround(displayPortLayersPixels.y * devPixelRatioY),
     NS_lround(displayPortLayersPixels.width * devPixelRatioX),
@@ -950,16 +951,16 @@ CompositorParent::TransformScrollableLayer(Layer* aLayer, const gfx3DMatrix& aRo
   float tempScaleDiffX = rootScaleX * mXScale;
   float tempScaleDiffY = rootScaleY * mYScale;
 
-  nsIntPoint metricsScrollOffset(0, 0);
+  gfx::IntPoint metricsScrollOffset(0, 0);
   if (metrics.IsScrollable()) {
     metricsScrollOffset = scrollOffsetDevPixels;
   }
 
-  nsIntPoint scrollCompensation(
+  gfx::IntPoint scrollCompensation(
     (mScrollOffset.x / tempScaleDiffX - metricsScrollOffset.x) * mXScale,
     (mScrollOffset.y / tempScaleDiffY - metricsScrollOffset.y) * mYScale);
-  treeTransform = gfx3DMatrix(ViewTransform(-scrollCompensation,
-                                            gfxSize(mXScale, mYScale)));
+  treeTransform = gfx3DMatrix(ViewTransform(gfx::Point(-scrollCompensation),
+                                            gfx::ZoomScale(mXScale, mYScale)));
 
   // If the contents can fit entirely within the widget area on a particular
   // dimenson, we need to translate and scale so that the fixed layers remain
@@ -1040,8 +1041,10 @@ CompositorParent::TransformShadowTree(TimeStamp aCurrentFrame)
 }
 
 void
-CompositorParent::SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom,
-                                        const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect)
+CompositorParent::SetFirstPaintViewport(const gfx::IntPoint& aOffset,
+                                        float aZoom,
+                                        const gfx::IntRect& aPageRect,
+                                        const gfx::Rect& aCssPageRect)
 {
 #ifdef MOZ_WIDGET_ANDROID
   AndroidBridge::Bridge()->SetFirstPaintViewport(aOffset, aZoom, aPageRect, aCssPageRect);
@@ -1057,9 +1060,11 @@ CompositorParent::SetPageRect(const gfx::Rect& aCssPageRect)
 }
 
 void
-CompositorParent::SyncViewportInfo(const nsIntRect& aDisplayPort,
-                                   float aDisplayResolution, bool aLayersUpdated,
-                                   nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY)
+CompositorParent::SyncViewportInfo(const gfx::IntRect& aDisplayPort,
+                                   float aDisplayResolution,
+                                   bool aLayersUpdated,
+                                   gfx::IntPoint& aScrollOffset,
+                                   float& aScaleX, float& aScaleY)
 {
 #ifdef MOZ_WIDGET_ANDROID
   AndroidBridge::Bridge()->SyncViewportInfo(aDisplayPort, aDisplayResolution, aLayersUpdated,
