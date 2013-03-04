@@ -3472,13 +3472,19 @@ DoInFallback(JSContext *cx, ICIn_Fallback *stub, HandleValue key, HandleValue ob
 
 typedef bool (*DoInFallbackFn)(JSContext *, ICIn_Fallback *, HandleValue, HandleValue,
                                MutableHandleValue);
-static const VMFunction DoInFallbackInfo = FunctionInfo<DoInFallbackFn>(DoInFallback);
+static const VMFunction DoInFallbackInfo =
+    FunctionInfo<DoInFallbackFn>(DoInFallback, PopValues(2));
 
 bool
 ICIn_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 {
     EmitRestoreTailCallReg(masm);
 
+    // Sync for the decompiler.
+    masm.pushValue(R0);
+    masm.pushValue(R1);
+
+    // Push arguments.
     masm.pushValue(R1);
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
