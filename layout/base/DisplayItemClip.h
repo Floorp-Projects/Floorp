@@ -58,6 +58,8 @@ public:
   // Construct as the intersection of aOther and aClipItem.
   DisplayItemClip(const DisplayItemClip& aOther, nsDisplayItem* aClipItem);
 
+  void IntersectWith(const DisplayItemClip& aOther);
+
   // Apply this |DisplayItemClip| to the given gfxContext.  Any saving of state
   // or clearing of other clips must be done by the caller.
   // See aBegin/aEnd note on ApplyRoundedRectsTo.
@@ -129,8 +131,8 @@ public:
     return !(*this == aOther);
   }
 
-  bool HasClip() { return mHaveClipRect; }
-  const nsRect& GetClipRect()
+  bool HasClip() const { return mHaveClipRect; }
+  const nsRect& GetClipRect() const
   {
     NS_ASSERTION(HasClip(), "No clip rect!");
     return mClipRect;
