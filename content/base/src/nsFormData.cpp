@@ -8,7 +8,6 @@
 #include "nsIDOMFile.h"
 #include "nsHTMLFormElement.h"
 #include "mozilla/dom/FormDataBinding.h"
-#include "mozilla/dom/BindingUtils.h"
 #include "nsContentUtils.h"
 
 using namespace mozilla;
@@ -47,19 +46,20 @@ nsFormData::GetEncodedSubmission(nsIURI* aURI,
 void
 nsFormData::Append(const nsAString& aName, const nsAString& aValue)
 {
-  FormDataTuple* data = mFormData.AppendElement();
-  data->name = aName;
-  data->stringValue = aValue;
-  data->valueIsFile = false;
+  AddNameValuePair(aName, aValue);
 }
 
 void
-nsFormData::Append(const nsAString& aName, nsIDOMBlob* aBlob)
+nsFormData::Append(const nsAString& aName, nsIDOMBlob* aBlob,
+                   const Optional<nsAString>& aFilename)
 {
-  FormDataTuple* data = mFormData.AppendElement();
-  data->name = aName;
-  data->fileValue = aBlob;
-  data->valueIsFile = true;
+  nsString filename;
+  if (aFilename.WasPassed()) {
+    filename = aFilename.Value();
+  } else {
+    filename.SetIsVoid(true);
+  }
+  AddNameFilePair(aName, aBlob, filename);
 }
 
 // -------------------------------------------------------------------------
@@ -83,7 +83,8 @@ nsFormData::Append(const nsAString& aName, nsIVariant* aValue)
 
     nsCOMPtr<nsIDOMBlob> domBlob = do_QueryInterface(supports);
     if (domBlob) {
-      Append(aName, domBlob);
+      Optional<nsAString> temp;
+      Append(aName, domBlob, temp);
       return NS_OK;
     }
   }
@@ -127,10 +128,11 @@ nsFormData::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
                         nsACString& aContentType, nsACString& aCharset)
 {
   nsFSMultipartFormData fs(NS_LITERAL_CSTRING("UTF-8"), nullptr);
-  
+
   for (uint32_t i = 0; i < mFormData.Length(); ++i) {
     if (mFormData[i].valueIsFile) {
-      fs.AddNameFilePair(mFormData[i].name, mFormData[i].fileValue);
+      fs.AddNameFilePair(mFormData[i].name, mFormData[i].fileValue,
+                         mFormData[i].filename);
     }
     else {
       fs.AddNameValuePair(mFormData[i].name, mFormData[i].stringValue);

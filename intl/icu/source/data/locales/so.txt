@@ -1,0 +1,212 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/so.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/so.xml
+ */
+so{
+    ExemplarCharacters{"[a b c d e f g h i j k l m n o p q r s t u v w x y z]"}
+    LocaleScript{
+        "Latn",
+    }
+    NumberElements{
+        latn{
+            patterns{
+                currencyFormat{"¤#,##0.00"}
+            }
+            symbols{
+                decimal{"."}
+                group{","}
+            }
+        }
+    }
+    Version{"2.0.78.32"}
+    calendar{
+        gregorian{
+            AmPmMarkers{
+                "sn.",
+                "gn.",
+            }
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, MMMM dd, y",
+                "dd MMMM y",
+                "dd-MMM-y",
+                "dd/MM/yy",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, M/d"}
+                MMM{"LLL"}
+                MMMEd{"E, MMM d"}
+                MMMMEd{"E, MMMM d"}
+                MMMMd{"MMMM d"}
+                MMMd{"MMM d"}
+                Md{"M/d"}
+                d{"d"}
+                hm{"h:mm a"}
+                ms{"mm:ss"}
+                y{"y"}
+                yM{"M/y"}
+                yMEd{"E, M/d/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, MMM d, y"}
+                yMMMM{"MMMM y"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "Axd",
+                        "Isn",
+                        "Tal",
+                        "Arb",
+                        "Kha",
+                        "Jim",
+                        "Sab",
+                    }
+                    wide{
+                        "Axad",
+                        "Isniin",
+                        "Talaado",
+                        "Arbaco",
+                        "Khamiis",
+                        "Jimco",
+                        "Sabti",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "A",
+                        "I",
+                        "T",
+                        "A",
+                        "K",
+                        "J",
+                        "S",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "CK",
+                    "CD",
+                }
+                wide{
+                    "Ciise ka hor (CS)",
+                    "Ciise ka dib (CS)",
+                }
+            }
+            fields{
+                day{
+                    dn{"Maalin"}
+                    relative{
+                        "-1"{"Shalay"}
+                        "0"{"Maanta"}
+                        "1"{"Berri"}
+                    }
+                }
+                dayperiod{
+                    dn{"sn./gn."}
+                }
+                era{
+                    dn{"Qarni"}
+                }
+                hour{
+                    dn{"Saacad"}
+                }
+                minute{
+                    dn{"Daqiiqad"}
+                }
+                month{
+                    dn{"Bil"}
+                }
+                second{
+                    dn{"Il biriqsi"}
+                }
+                week{
+                    dn{"Toddobaad"}
+                }
+                weekday{
+                    dn{"Maalinta toddobaadka"}
+                }
+                year{
+                    dn{"Sanad"}
+                }
+                zone{
+                    dn{"Xadka waqtiga"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Kob",
+                        "Lab",
+                        "Sad",
+                        "Afr",
+                        "Sha",
+                        "Lix",
+                        "Tod",
+                        "Sid",
+                        "Sag",
+                        "Tob",
+                        "KIT",
+                        "LIT",
+                    }
+                    wide{
+                        "Bisha Koobaad",
+                        "Bisha Labaad",
+                        "Bisha Saddexaad",
+                        "Bisha Afraad",
+                        "Bisha Shanaad",
+                        "Bisha Lixaad",
+                        "Bisha Todobaad",
+                        "Bisha Sideedaad",
+                        "Bisha Sagaalaad",
+                        "Bisha Tobnaad",
+                        "Bisha Kow iyo Tobnaad",
+                        "Bisha Laba iyo Tobnaad",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "R1",
+                        "R2",
+                        "R3",
+                        "R4",
+                    }
+                    wide{
+                        "Rubaca 1aad",
+                        "Rubaca 2aad",
+                        "Rubaca 3aad",
+                        "Rubaca 4aad",
+                    }
+                }
+            }
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"’"}
+        alternateQuotationStart{"‘"}
+        quotationEnd{"”"}
+        quotationStart{"“"}
+    }
+}

@@ -1,0 +1,15 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/fil_PH.xml
+// *
+// ***************************************************************************
+fil_PH{
+    PaperSize:intvector{
+        279,
+        216,
+    }
+    Version{"2.0.41.23"}
+}

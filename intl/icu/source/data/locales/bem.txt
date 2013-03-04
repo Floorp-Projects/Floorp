@@ -1,0 +1,184 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/bem.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/bem.xml
+ */
+bem{
+    AuxExemplarCharacters{"[d h q r v x z]"}
+    ExemplarCharacters{"[a b c e f g i j k l m n o p s {sh} t u w y]"}
+    ExemplarCharactersIndex{"[A B C E F G I J K L M N O P S {SH} T U W Y]"}
+    LocaleScript{
+        "Latn",
+    }
+    NumberElements{
+        latn{
+            patterns{
+                currencyFormat{"¤#,##0.00;(¤#,##0.00)"}
+            }
+        }
+    }
+    Version{"2.0.77.46"}
+    calendar{
+        gregorian{
+            AmPmMarkers{
+                "uluchelo",
+                "akasuba",
+            }
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, d MMMM y",
+                "d MMMM y",
+                "d MMM y",
+                "dd/MM/yyyy",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, M/d"}
+                MMM{"LLL"}
+                MMMEd{"E, MMM d"}
+                MMMMEd{"E, MMMM d"}
+                MMMMd{"MMMM d"}
+                MMMd{"MMM d"}
+                Md{"M/d"}
+                d{"d"}
+                hm{"h:mm a"}
+                ms{"mm:ss"}
+                y{"y"}
+                yM{"M/y"}
+                yMEd{"E, M/d/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, MMM d, y"}
+                yMMMM{"MMMM y"}
+                yMMMd{"d MMM y"}
+                yMd{"d/M/y"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
+            }
+            dayNames{
+                format{
+                    wide{
+                        "Pa Mulungu",
+                        "Palichimo",
+                        "Palichibuli",
+                        "Palichitatu",
+                        "Palichine",
+                        "Palichisano",
+                        "Pachibelushi",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "BC",
+                    "AD",
+                }
+                wide{
+                    "Before Yesu",
+                    "After Yesu",
+                }
+            }
+            fields{
+                day{
+                    dn{"Ubushiku"}
+                    relative{
+                        "0"{"Lelo"}
+                    }
+                }
+                dayperiod{
+                    dn{"Akasuba"}
+                }
+                era{
+                    dn{"Inkulo"}
+                }
+                hour{
+                    dn{"Insa"}
+                }
+                minute{
+                    dn{"Mineti"}
+                }
+                month{
+                    dn{"Umweshi"}
+                }
+                second{
+                    dn{"Sekondi"}
+                }
+                week{
+                    dn{"Umulungu"}
+                }
+                year{
+                    dn{"Umwaka"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Jan",
+                        "Feb",
+                        "Mac",
+                        "Epr",
+                        "Mei",
+                        "Jun",
+                        "Jul",
+                        "Oga",
+                        "Sep",
+                        "Okt",
+                        "Nov",
+                        "Dis",
+                    }
+                    wide{
+                        "Januari",
+                        "Februari",
+                        "Machi",
+                        "Epreo",
+                        "Mei",
+                        "Juni",
+                        "Julai",
+                        "Ogasti",
+                        "Septemba",
+                        "Oktoba",
+                        "Novemba",
+                        "Disemba",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "J",
+                        "F",
+                        "M",
+                        "E",
+                        "M",
+                        "J",
+                        "J",
+                        "O",
+                        "S",
+                        "O",
+                        "N",
+                        "D",
+                    }
+                }
+            }
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"’"}
+        alternateQuotationStart{"‘"}
+        quotationEnd{"”"}
+        quotationStart{"“"}
+    }
+}

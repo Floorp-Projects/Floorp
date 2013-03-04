@@ -44,6 +44,7 @@
     _(CallNative)                   \
     _(ApplyArgsGeneric)             \
     _(GetDynamicName)               \
+    _(FilterArguments)              \
     _(CallDirectEval)               \
     _(StackArgT)                    \
     _(StackArgV)                    \

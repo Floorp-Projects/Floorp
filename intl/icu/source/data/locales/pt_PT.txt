@@ -1,0 +1,397 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/pt_PT.xml
+// *
+// ***************************************************************************
+pt_PT{
+    NumberElements{
+        latn{
+            patterns{
+                currencyFormat{"#,##0.00 ¤"}
+            }
+            patternsLong{
+                decimalFormat{
+                    1000{
+                        one{"0 mil"}
+                        other{"0 mil"}
+                    }
+                    10000{
+                        one{"00 mil"}
+                        other{"00 mil"}
+                    }
+                    100000{
+                        one{"000 mil"}
+                        other{"000 mil"}
+                    }
+                    1000000{
+                        one{"0 milhão"}
+                        other{"0 milhões"}
+                    }
+                    10000000{
+                        one{"00 milhões"}
+                        other{"00 milhões"}
+                    }
+                    100000000{
+                        one{"000 milhões"}
+                        other{"000 milhões"}
+                    }
+                    1000000000{
+                        one{"0 mil milhões"}
+                        other{"0 mil milhões"}
+                    }
+                    10000000000{
+                        one{"00 mil milhões"}
+                        other{"00 mil milhões"}
+                    }
+                    100000000000{
+                        one{"000 mil milhões"}
+                        other{"000 mil milhões"}
+                    }
+                    1000000000000{
+                        one{"0 biliões"}
+                        other{"0 biliões"}
+                    }
+                    10000000000000{
+                        one{"00 biliões"}
+                        other{"00 biliões"}
+                    }
+                    100000000000000{
+                        one{"000 biliões"}
+                        other{"000 biliões"}
+                    }
+                }
+            }
+            patternsShort{
+                decimalFormat{
+                    1000{
+                        one{"0 mil"}
+                        other{"0 mil"}
+                    }
+                    10000{
+                        one{"00 mil"}
+                        other{"00 mil"}
+                    }
+                    100000{
+                        one{"000 mil"}
+                        other{"000 mil"}
+                    }
+                    1000000{
+                        one{"0 M"}
+                        other{"0 M"}
+                    }
+                    10000000{
+                        one{"00 M"}
+                        other{"00 M"}
+                    }
+                    100000000{
+                        one{"000 M"}
+                        other{"000 M"}
+                    }
+                    1000000000{
+                        one{"0 MM"}
+                        other{"0 MM"}
+                    }
+                    10000000000{
+                        one{"00 MM"}
+                        other{"00 MM"}
+                    }
+                    100000000000{
+                        one{"000 MM"}
+                        other{"000 MM"}
+                    }
+                    1000000000000{
+                        one{"0 Bi"}
+                        other{"0 Bi"}
+                    }
+                    10000000000000{
+                        one{"00 Bi"}
+                        other{"00 Bi"}
+                    }
+                    100000000000000{
+                        one{"000 Bi"}
+                        other{"000 Bi"}
+                    }
+                }
+            }
+            symbols{
+                decimal{","}
+                group{" "}
+            }
+        }
+    }
+    Version{"2.0.78.47"}
+    calendar{
+        buddhist{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d 'de' MMMM 'de' y G",
+                "d 'de' MMMM 'de' y G",
+                "dd/MM/yyyy G",
+                "d/M/y G",
+                "{1}, {0}",
+                "{1} às {0}",
+                "{1} às {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                yQQQ{"QQQQ 'de' y G"}
+                yQQQQ{"QQQQ 'de' y G"}
+            }
+        }
+        gregorian{
+            AmPmMarkers{
+                "AM",
+                "PM",
+            }
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d 'de' MMMM 'de' y",
+                "d 'de' MMMM 'de' y",
+                "dd/MM/yyyy",
+                "dd/MM/yy",
+                "{1}, {0}",
+                "{1} às {0}",
+                "{1} às {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                MMMEd{"E, d/MM"}
+                MMMMEd{"E, d 'de' MMMM"}
+                MMMMd{"d 'de' MMMM"}
+                MMMd{"d/MM"}
+                yMMM{"MM/y"}
+                yMMMEd{"E, d/MM/y"}
+                yMMMM{"MMMM 'de' y"}
+                yMMMMEd{"E, d 'de' MMMM 'de' y"}
+                yMMMMd{"d 'de' MMMM 'de' y"}
+                yMMMd{"d/MM/y"}
+                yQQQ{"QQQQ 'de' y"}
+                yQQQQ{"QQQQ 'de' y"}
+                yyMMM{"MM/yy"}
+                yyMMMEd{"E, d/MM/yy"}
+                yyMMMd{"d/MM/yy"}
+            }
+            dayNames{
+                format{
+                    short{
+                        "Do",
+                        "Sg",
+                        "Te",
+                        "Qu",
+                        "Qi",
+                        "Sx",
+                        "Sb",
+                    }
+                    wide{
+                        "Domingo",
+                        "Segunda-feira",
+                        "Terça-feira",
+                        "Quarta-feira",
+                        "Quinta-feira",
+                        "Sexta-feira",
+                        "Sábado",
+                    }
+                }
+                stand-alone{
+                    wide{
+                        "Domingo",
+                        "Segunda-feira",
+                        "Terça-feira",
+                        "Quarta-feira",
+                        "Quinta-feira",
+                        "Sexta-feira",
+                        "Sábado",
+                    }
+                }
+            }
+            fields{
+                zone{
+                    dn{"Fuso horário"}
+                }
+            }
+            intervalFormats{
+                MMM{
+                    M{"MMM-MMM"}
+                }
+                h{
+                    a{"h a - h a"}
+                    h{"h-h a"}
+                }
+                hm{
+                    h{"h:mm - h:mm a"}
+                }
+                y{
+                    y{"y-y"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Jan",
+                        "Fev",
+                        "Mar",
+                        "Abr",
+                        "Mai",
+                        "Jun",
+                        "Jul",
+                        "Ago",
+                        "Set",
+                        "Out",
+                        "Nov",
+                        "Dez",
+                    }
+                    wide{
+                        "Janeiro",
+                        "Fevereiro",
+                        "Março",
+                        "Abril",
+                        "Maio",
+                        "Junho",
+                        "Julho",
+                        "Agosto",
+                        "Setembro",
+                        "Outubro",
+                        "Novembro",
+                        "Dezembro",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Jan",
+                        "Fev",
+                        "Mar",
+                        "Abr",
+                        "Mai",
+                        "Jun",
+                        "Jul",
+                        "Ago",
+                        "Set",
+                        "Out",
+                        "Nov",
+                        "Dez",
+                    }
+                    wide{
+                        "Janeiro",
+                        "Fevereiro",
+                        "Março",
+                        "Abril",
+                        "Maio",
+                        "Junho",
+                        "Julho",
+                        "Agosto",
+                        "Setembro",
+                        "Outubro",
+                        "Novembro",
+                        "Dezembro",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    wide{
+                        "1.º trimestre",
+                        "2.º trimestre",
+                        "3.º trimestre",
+                        "4.º trimestre",
+                    }
+                }
+            }
+        }
+        islamic{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d 'de' MMMM 'de' y G",
+                "d 'de' MMMM 'de' y G",
+                "dd/MM/yyyy G",
+                "d/M/y G",
+                "{1}, {0}",
+                "{1} às {0}",
+                "{1} às {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                yQQQ{"QQQQ 'de' y G"}
+                yQQQQ{"QQQQ 'de' y G"}
+            }
+        }
+        japanese{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d 'de' MMMM 'de' y G",
+                "d 'de' MMMM 'de' y G",
+                "dd/MM/yyyy G",
+                "d/M/y G",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                yQQQ{"QQQQ 'de' y G"}
+                yQQQQ{"QQQQ 'de' y G"}
+            }
+        }
+        roc{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d 'de' MMMM 'de' y G",
+                "d 'de' MMMM 'de' y G",
+                "dd/MM/yyyy G",
+                "d/M/y G",
+                "{1}, {0}",
+                "{1} às {0}",
+                "{1} às {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                yQQQ{"QQQQ 'de' y G"}
+                yQQQQ{"QQQQ 'de' y G"}
+            }
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"”"}
+        alternateQuotationStart{"“"}
+        quotationEnd{"»"}
+        quotationStart{"«"}
+    }
+    measurementSystemNames{
+        US{"Estados Unidos"}
+        metric{"Métrico"}
+    }
+    units{
+        second{
+            one{"{0} segundo"}
+            other{"{0} segundos"}
+        }
+    }
+    unitsShort{
+        second{
+            one{"{0} s"}
+            other{"{0} s"}
+        }
+    }
+}

@@ -63,7 +63,7 @@ struct NativeFont {
 struct DrawOptions {
   DrawOptions(Float aAlpha = 1.0f,
               CompositionOp aCompositionOp = OP_OVER,
-              AntialiasMode aAntialiasMode = AA_GRAY,
+              AntialiasMode aAntialiasMode = AA_DEFAULT,
               Snapping aSnapping = SNAP_NONE)
     : mAlpha(aAlpha)
     , mCompositionOp(aCompositionOp)

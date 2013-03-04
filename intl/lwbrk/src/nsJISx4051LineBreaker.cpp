@@ -413,6 +413,8 @@ GetClass(PRUnichar u)
    // Handle 3 range table first
    if (0x0000 == h) {
      c = GETCLASSFROMTABLE(gLBClass00, l);
+   } else if (0x1700 == h) {
+     c = GETCLASSFROMTABLE(gLBClass17, l);
    } else if (NS_NeedsPlatformNativeHandling(u)) {
      c = CLASS_COMPLEX;
    } else if (0x0E00 == h) {

@@ -36,7 +36,6 @@ using namespace mozilla::net;
 static const char kPrefDnsCacheEntries[]    = "network.dnsCacheEntries";
 static const char kPrefDnsCacheExpiration[] = "network.dnsCacheExpiration";
 static const char kPrefDnsCacheGrace[]      = "network.dnsCacheExpirationGracePeriod";
-static const char kPrefEnableIDN[]          = "network.enableIDN";
 static const char kPrefIPv4OnlyDomains[]    = "network.dns.ipv4OnlyDomains";
 static const char kPrefDisableIPv6[]        = "network.dns.disableIPv6";
 static const char kPrefDisablePrefetch[]    = "network.dns.disablePrefetch";
@@ -379,7 +378,6 @@ nsDNSService::Init()
     uint32_t maxCacheEntries  = 400;
     uint32_t maxCacheLifetime = 2; // minutes
     uint32_t lifetimeGracePeriod = 1;
-    bool     enableIDN        = true;
     bool     disableIPv6      = false;
     bool     disablePrefetch  = false;
     int      proxyType        = nsIProtocolProxyService::PROXYCONFIG_DIRECT;
@@ -399,7 +397,6 @@ nsDNSService::Init()
             lifetimeGracePeriod = val / 60; // convert from seconds to minutes
 
         // ASSUMPTION: pref branch does not modify out params on failure
-        prefs->GetBoolPref(kPrefEnableIDN, &enableIDN);
         prefs->GetBoolPref(kPrefDisableIPv6, &disableIPv6);
         prefs->GetCharPref(kPrefIPv4OnlyDomains, getter_Copies(ipv4OnlyDomains));
         prefs->GetCharPref(kPrefDnsLocalDomains, getter_Copies(localDomains));
@@ -419,7 +416,6 @@ nsDNSService::Init()
             prefs->AddObserver(kPrefDnsCacheEntries, this, false);
             prefs->AddObserver(kPrefDnsCacheExpiration, this, false);
             prefs->AddObserver(kPrefDnsCacheGrace, this, false);
-            prefs->AddObserver(kPrefEnableIDN, this, false);
             prefs->AddObserver(kPrefIPv4OnlyDomains, this, false);
             prefs->AddObserver(kPrefDnsLocalDomains, this, false);
             prefs->AddObserver(kPrefDisableIPv6, this, false);
@@ -431,18 +427,14 @@ nsDNSService::Init()
         }
     }
 
-    // we have to null out mIDN since we might be getting re-initialized
-    // as a result of a pref change.
-    nsCOMPtr<nsIIDNService> idn;
-    if (enableIDN)
-        idn = do_GetService(NS_IDNSERVICE_CONTRACTID);
-
     nsDNSPrefetch::Initialize(this);
 
     // Don't initialize the resolver if we're in offline mode.
     // Later on, the IO service will reinitialize us when going online.
     if (gIOService->IsOffline() && !gIOService->IsComingOnline())
         return NS_OK;
+
+    nsCOMPtr<nsIIDNService> idn = do_GetService(NS_IDNSERVICE_CONTRACTID);
 
     nsRefPtr<nsHostResolver> res;
     nsresult rv = nsHostResolver::Create(maxCacheEntries,

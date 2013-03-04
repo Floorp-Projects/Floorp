@@ -1,0 +1,227 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/az.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/az.xml
+ */
+az{
+    AuxExemplarCharacters{"[w]"}
+    ExemplarCharacters{"[a b c ç d e ə f g ğ h x ı i {i\u0307} j k q l m n o ö p r s ş t u ü v y z]"}
+    ExemplarCharactersIndex{"[A B C Ç D E Ə F G Ğ H X I İ J K Q L M N O Ö P R S Ş T U Ü V W Y Z]"}
+    LocaleScript{
+        "Latn",
+    }
+    NumberElements{
+        latn{
+            patterns{
+                currencyFormat{"¤ #,##0.00"}
+            }
+            symbols{
+                decimal{","}
+                exponential{"E"}
+                group{"."}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+            }
+        }
+    }
+    Version{"2.0.74.65"}
+    calendar{
+        gregorian{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d, MMMM, y",
+                "d MMMM , y",
+                "d MMM, y",
+                "yyyy-MM-dd",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                MMM{"LLL"}
+                MMMEd{"E, d, MMM"}
+                MMMd{"d MMM"}
+                yMMM{"MMM, y"}
+                yMMMEd{"E, d, MMM, y"}
+                yMMMd{"d MMM, y"}
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "B.",
+                        "B.E.",
+                        "Ç.A.",
+                        "Ç.",
+                        "C.A.",
+                        "C",
+                        "Ş.",
+                    }
+                    wide{
+                        "bazar",
+                        "bazar ertəsi",
+                        "çərşənbə axşamı",
+                        "çərşənbə",
+                        "cümə axşamı",
+                        "cümə",
+                        "şənbə",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "7",
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "e.ə.",
+                    "b.e.",
+                }
+                wide{
+                    "eramızdan əvvəl",
+                    "bizim eramızın",
+                }
+            }
+            fields{
+                day{
+                    dn{"bu gün"}
+                    relative{
+                        "-1"{"dünən"}
+                        "0"{"bu gün"}
+                        "1"{"sabah"}
+                    }
+                }
+                era{
+                    dn{"era"}
+                }
+                hour{
+                    dn{"saat"}
+                }
+                minute{
+                    dn{"dəqiqə"}
+                }
+                month{
+                    dn{"ay"}
+                }
+                second{
+                    dn{"saniyə"}
+                }
+                week{
+                    dn{"həftə"}
+                }
+                weekday{
+                    dn{"həftə günü"}
+                }
+                year{
+                    dn{"il"}
+                }
+                zone{
+                    dn{"zona"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "yan",
+                        "fev",
+                        "mar",
+                        "apr",
+                        "may",
+                        "iyn",
+                        "iyl",
+                        "avq",
+                        "sen",
+                        "okt",
+                        "noy",
+                        "dek",
+                    }
+                    wide{
+                        "Yanvar",
+                        "Fevral",
+                        "Mart",
+                        "Aprel",
+                        "May",
+                        "İyun",
+                        "İyul",
+                        "Avqust",
+                        "Sentyabr",
+                        "Oktyabr",
+                        "Noyabr",
+                        "Dekabr",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "1-ci kv.",
+                        "2-ci kv.",
+                        "3-cü kv.",
+                        "4-cü kv.",
+                    }
+                    wide{
+                        "1-ci kvartal",
+                        "2-ci kvartal",
+                        "3-cü kvartal",
+                        "4-cü kvartal",
+                    }
+                }
+            }
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"›"}
+        alternateQuotationStart{"‹"}
+        quotationEnd{"»"}
+        quotationStart{"«"}
+    }
+    measurementSystemNames{
+        US{"ABŞ"}
+        metric{"metr"}
+    }
+    units{
+        day{
+            other{"{0} gün"}
+        }
+        hour{
+            other{"{0} saat"}
+        }
+        minute{
+            other{"{0} dəqiqə"}
+        }
+        month{
+            other{"{0} ay"}
+        }
+        second{
+            other{"{0} saniyə"}
+        }
+        week{
+            other{"{0} həftə"}
+        }
+        year{
+            other{"{0} il"}
+        }
+    }
+}
