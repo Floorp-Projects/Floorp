@@ -440,5 +440,32 @@ DecoderTraits::CreateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
   return decoder.forget();
 }
 
+/* static */
+bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
+{
+  return
+#ifdef MOZ_OGG
+    IsOggType(aType) ||
+#endif
+#ifdef MOZ_WIDGET_GONK
+    IsOmxSupportedType(aType) ||
+#endif
+#ifdef MOZ_WEBM
+    IsWebMType(aType) ||
+#endif
+#ifdef MOZ_DASH
+    IsDASHMPDType(aType) ||
+#endif
+#ifdef MOZ_GSTREAMER
+    IsGStreamerSupportedType(aType) ||
+#endif
+#ifdef MOZ_MEDIA_PLUGINS
+    (mozilla::MediaDecoder::IsMediaPluginsEnabled() && IsMediaPluginsType(aType)) ||
+#endif
+#ifdef MOZ_WMF
+    IsWMFSupportedType(aType) ||
+#endif
+    false;
 }
 
+}
