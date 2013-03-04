@@ -101,18 +101,7 @@ uint detectCPUextensions(void)
  
     uint res = 0;
  
-#if defined(__GNUC__)
-    // GCC version of cpuid. Requires GCC 4.3.0 or later for __cpuid intrinsic support.
-    uint eax, ebx, ecx, edx;  // unsigned int is the standard type. uint is defined by the compiler and not guaranteed to be portable.
-
-    // Check if no cpuid support.
-    if (!__get_cpuid (1, &eax, &ebx, &ecx, &edx)) return 0; // always disable extensions.
-
-    if (edx & bit_MMX)  res = res | SUPPORT_MMX;
-    if (edx & bit_SSE)  res = res | SUPPORT_SSE;
-    if (edx & bit_SSE2) res = res | SUPPORT_SSE2;
-
-#else
+#if !defined(__GNUC__)
     // Window / VS version of cpuid. Notice that Visual Studio 2005 or later required 
     // for __cpuid intrinsic support.
     int reg[4] = {-1};
@@ -125,7 +114,19 @@ uint detectCPUextensions(void)
     if ((unsigned int)reg[3] & bit_MMX)  res = res | SUPPORT_MMX;
     if ((unsigned int)reg[3] & bit_SSE)  res = res | SUPPORT_SSE;
     if ((unsigned int)reg[3] & bit_SSE2) res = res | SUPPORT_SSE2;
+#elif defined(HAVE_CPUID_H)
+    // GCC version of cpuid. Requires GCC 4.3.0 or later for __cpuid intrinsic support.
+    uint eax, ebx, ecx, edx;  // unsigned int is the standard type. uint is defined by the compiler and not guaranteed to be portable.
 
+    // Check if no cpuid support.
+    if (!__get_cpuid (1, &eax, &ebx, &ecx, &edx)) return 0; // always disable extensions.
+
+    if (edx & bit_MMX)  res = res | SUPPORT_MMX;
+    if (edx & bit_SSE)  res = res | SUPPORT_SSE;
+    if (edx & bit_SSE2) res = res | SUPPORT_SSE2;
+#else
+    // Compatible with GCC but no cpuid.h.
+    return 0;
 #endif
 
     return res & ~_dwDisabledISA;
