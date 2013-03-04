@@ -1,0 +1,152 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/ar_MA.xml
+// *
+// ***************************************************************************
+ar_MA{
+    NumberElements{
+        default{"latn"}
+        latn{
+            symbols{
+                decimal{","}
+                group{"."}
+            }
+        }
+    }
+    Version{"2.0.77.46"}
+    calendar{
+        gregorian{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE، d MMMM، y",
+                "d MMMM، y",
+                "yyyy/MM/dd",
+                "yyyy/M/d",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                MMdd{"MM/dd"}
+                Md{"M/d"}
+                yM{"yyyy/M"}
+                yyyyMM{"yyyy/MM"}
+            }
+            intervalFormats{
+                MMMd{
+                    d{"d‏-d MMM"}
+                }
+                d{
+                    d{"d‏-d"}
+                }
+                y{
+                    y{"y‏-y"}
+                }
+                yMMMM{
+                    M{"MM ‏- MM ‏–yyyy"}
+                }
+                yMMMd{
+                    d{"d‏–d MMM، y"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "يناير",
+                        "فبراير",
+                        "مارس",
+                        "ﺄبﺮيﻟ",
+                        "ماي",
+                        "يونيو",
+                        "يوليو",
+                        "غشت",
+                        "سبتمبر",
+                        "أكتوبر",
+                        "نونبر",
+                        "ديسمبر",
+                    }
+                    narrow{
+                        "ي",
+                        "ف",
+                        "م",
+                        "ﺃ",
+                        "م",
+                        "ﻥ",
+                        "ﻝ",
+                        "غ",
+                        "ش",
+                        "ﻙ",
+                        "ﺏ",
+                        "ﺩ",
+                    }
+                    wide{
+                        "يناير",
+                        "فبراير",
+                        "مارس",
+                        "إبريل",
+                        "ماي",
+                        "يونيو",
+                        "يوليو",
+                        "غشت",
+                        "سبتمبر",
+                        "أكتوبر",
+                        "نونبر",
+                        "ديسمبر",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "يناير",
+                        "فبراير",
+                        "مارس",
+                        "أبريل",
+                        "ماي",
+                        "يونيو",
+                        "يوليو",
+                        "غشت",
+                        "سبتمبر",
+                        "أكتوبر",
+                        "نونبر",
+                        "ديسمبر",
+                    }
+                    narrow{
+                        "ي",
+                        "ف",
+                        "م",
+                        "إ",
+                        "م",
+                        "ﻥ",
+                        "ﻝ",
+                        "غ",
+                        "ش",
+                        "ﻙ",
+                        "ﺏ",
+                        "ﺩ",
+                    }
+                    wide{
+                        "يناير",
+                        "فبراير",
+                        "مارس",
+                        "ﺄبﺮيﻟ",
+                        "ماي",
+                        "يونيو",
+                        "يوليو",
+                        "غشت",
+                        "سبتمبر",
+                        "أكتوبر",
+                        "نونبر",
+                        "ديسمبر",
+                    }
+                }
+            }
+        }
+    }
+}

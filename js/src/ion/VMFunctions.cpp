@@ -536,5 +536,20 @@ GetDynamicName(JSContext *cx, JSObject *scopeChain, JSString *str, Value *vp)
     vp->setUndefined();
 }
 
+JSBool
+FilterArguments(JSContext *cx, JSString *str)
+{
+    // getChars() is fallible, but cannot GC: it can only allocate a character
+    // for the flattened string. If this call fails then the calling Ion code
+    // will bailout, resume in the interpreter and likely fail again when
+    // trying to flatten the string and unwind the stack.
+    const jschar *chars = str->getChars(cx);
+    if (!chars)
+        return false;
+
+    static jschar arguments[] = {'a', 'r', 'g', 'u', 'm', 'e', 'n', 't', 's'};
+    return !StringHasPattern(chars, str->length(), arguments, mozilla::ArrayLength(arguments));
+}
+
 } // namespace ion
 } // namespace js

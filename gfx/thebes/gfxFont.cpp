@@ -2449,13 +2449,19 @@ gfxFont::GetShapedWord(gfxContext *aContext,
     }
     gfxShapedWord *sw = entry->mShapedWord;
 
+    bool isContent = !mStyle.systemFont;
+
     if (sw) {
         sw->ResetAge();
-        Telemetry::Accumulate(Telemetry::WORD_CACHE_HITS, aLength);
+        Telemetry::Accumulate((isContent ? Telemetry::WORD_CACHE_HITS_CONTENT :
+                                   Telemetry::WORD_CACHE_HITS_CHROME),
+                              aLength);
         return sw;
     }
 
-    Telemetry::Accumulate(Telemetry::WORD_CACHE_MISSES, aLength);
+    Telemetry::Accumulate((isContent ? Telemetry::WORD_CACHE_MISSES_CONTENT :
+                               Telemetry::WORD_CACHE_MISSES_CHROME),
+                          aLength);
     sw = entry->mShapedWord = gfxShapedWord::Create(aText, aLength,
                                                     aRunScript,
                                                     aAppUnitsPerDevUnit,

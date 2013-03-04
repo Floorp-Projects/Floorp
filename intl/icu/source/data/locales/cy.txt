@@ -1,0 +1,348 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/cy.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/cy.xml
+ */
+cy{
+    AuxExemplarCharacters{"[j k q v x z]"}
+    ExemplarCharacters{
+        "[a á à â ä b c {ch} d {dd} e é è ê ë f {ff} g {ng} h i í ì î ï l {ll} m n o "
+        "ó ò ô ö p {ph} r {rh} s t {th} u ú ù û ü w ẃ ẁ ŵ ẅ y ý ỳ ŷ ÿ]"
+    }
+    ExemplarCharactersIndex{"[A B C {CH} D E F {FF} G H I J L {LL} M N O P {PH} R {RH} S T {TH} U W Y]"}
+    LocaleScript{
+        "Latn",
+    }
+    Version{"2.0.78.38"}
+    calendar{
+        gregorian{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM y",
+                "d MMMM y",
+                "d MMM y",
+                "dd/MM/yyyy",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                MEd{"E, d/M"}
+                MMMEd{"E, d MMM"}
+                MMMd{"d MMM"}
+                Md{"d/M"}
+                yM{"M/y"}
+                yMEd{"E, d/M/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, d MMM y"}
+                yMMMd{"d MMM y"}
+                yMd{"d/M/y"}
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "Sul",
+                        "Llun",
+                        "Maw",
+                        "Mer",
+                        "Iau",
+                        "Gwen",
+                        "Sad",
+                    }
+                    narrow{
+                        "S",
+                        "L",
+                        "M",
+                        "M",
+                        "I",
+                        "G",
+                        "S",
+                    }
+                    wide{
+                        "Dydd Sul",
+                        "Dydd Llun",
+                        "Dydd Mawrth",
+                        "Dydd Mercher",
+                        "Dydd Iau",
+                        "Dydd Gwener",
+                        "Dydd Sadwrn",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Sul",
+                        "Llun",
+                        "Maw",
+                        "Mer",
+                        "Iau",
+                        "Gwe",
+                        "Sad",
+                    }
+                    narrow{
+                        "S",
+                        "L",
+                        "M",
+                        "M",
+                        "I",
+                        "G",
+                        "S",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "CC",
+                    "OC",
+                }
+                narrow{
+                    "C",
+                    "O",
+                }
+                wide{
+                    "Cyn Crist",
+                    "Oed Crist",
+                }
+            }
+            fields{
+                day{
+                    dn{"Dydd"}
+                }
+                dayperiod{
+                    dn{"AM/PM"}
+                }
+                era{
+                    dn{"Oes"}
+                }
+                hour{
+                    dn{"Awr"}
+                }
+                minute{
+                    dn{"Munud"}
+                }
+                month{
+                    dn{"Mis"}
+                }
+                second{
+                    dn{"Eiliad"}
+                }
+                week{
+                    dn{"Wythnos"}
+                }
+                weekday{
+                    dn{"Dydd o'r Wythnos"}
+                }
+                year{
+                    dn{"Blwyddyn"}
+                }
+                zone{
+                    dn{"Cylchfa"}
+                }
+            }
+            intervalFormats{
+                M{
+                    M{"M-M"}
+                }
+                MEd{
+                    M{"E, d/M – E, d/M"}
+                    d{"E, d/M – E, d/M"}
+                }
+                MMM{
+                    M{"MMM-MMM"}
+                }
+                MMMEd{
+                    M{"E, d MMM – E, d MMM"}
+                    d{"E, d MMM – E, d MMM"}
+                }
+                MMMM{
+                    M{"LLLL-LLLL"}
+                }
+                MMMd{
+                    M{"d MMM – d MMM"}
+                    d{"d–d MMM"}
+                }
+                Md{
+                    M{"d/M – d/M"}
+                    d{"d/M – d/M"}
+                }
+                d{
+                    d{"d-d"}
+                }
+                fallback{"{0} – {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
+                }
+                y{
+                    y{"y-y"}
+                }
+                yM{
+                    M{"M/yy – M/yy"}
+                    y{"M/yy – M/yy"}
+                }
+                yMEd{
+                    M{"E, d/M/yy - E, d/M/yy"}
+                    d{"E, d/M/yy - E, d/M/yy"}
+                    y{"E, d/M/yy - E, d/M/yy"}
+                }
+                yMMM{
+                    M{"MMM - MMM, y"}
+                    y{"MMM y - MMM y"}
+                }
+                yMMMEd{
+                    M{"E, d MMM - E, d MMM, y"}
+                    d{"E, d MMM - E, d MMM, y"}
+                    y{"E, d MMM, y - E, d MMM, y"}
+                }
+                yMMMM{
+                    M{"MMMM–MMMM y"}
+                    y{"MMMM y – MMMM y"}
+                }
+                yMMMd{
+                    M{"d MMM - d MMM, y"}
+                    d{"d-d MMM, y"}
+                    y{"d MMM, y - d MMM, y"}
+                }
+                yMd{
+                    M{"d/M/yy - d/M/yy"}
+                    d{"d/M/yy - d/M/yy"}
+                    y{"d/M/yy - d/M/yy"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Ion",
+                        "Chwef",
+                        "Mawrth",
+                        "Ebrill",
+                        "Mai",
+                        "Meh",
+                        "Gorff",
+                        "Awst",
+                        "Medi",
+                        "Hyd",
+                        "Tach",
+                        "Rhag",
+                    }
+                    narrow{
+                        "I",
+                        "C",
+                        "M",
+                        "E",
+                        "M",
+                        "M",
+                        "G",
+                        "A",
+                        "M",
+                        "H",
+                        "T",
+                        "R",
+                    }
+                    wide{
+                        "Ionawr",
+                        "Chwefror",
+                        "Mawrth",
+                        "Ebrill",
+                        "Mai",
+                        "Mehefin",
+                        "Gorffennaf",
+                        "Awst",
+                        "Medi",
+                        "Hydref",
+                        "Tachwedd",
+                        "Rhagfyr",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Ion",
+                        "Chwe",
+                        "Maw",
+                        "Ebr",
+                        "Mai",
+                        "Meh",
+                        "Gor",
+                        "Awst",
+                        "Medi",
+                        "Hyd",
+                        "Tach",
+                        "Rhag",
+                    }
+                    narrow{
+                        "I",
+                        "C",
+                        "M",
+                        "E",
+                        "M",
+                        "M",
+                        "G",
+                        "A",
+                        "M",
+                        "H",
+                        "T",
+                        "R",
+                    }
+                    wide{
+                        "Ionawr",
+                        "Chwefror",
+                        "Mawrth",
+                        "Ebrill",
+                        "Mai",
+                        "Mehefin",
+                        "Gorffennaf",
+                        "Awst",
+                        "Medi",
+                        "Hydref",
+                        "Tachwedd",
+                        "Rhagfyr",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "Ch1",
+                        "Ch2",
+                        "Ch3",
+                        "Ch4",
+                    }
+                    wide{
+                        "Chwarter 1af",
+                        "2il chwarter",
+                        "3ydd chwarter",
+                        "4ydd chwarter",
+                    }
+                }
+            }
+        }
+    }
+    measurementSystemNames{
+        US{"UD"}
+        metric{"Metrig"}
+    }
+}

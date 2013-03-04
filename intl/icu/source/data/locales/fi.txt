@@ -1,0 +1,1012 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/fi.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/fi.xml
+ */
+fi{
+    AuxExemplarCharacters{"[á à â ã č ç đ é è ê ë ǧ ǥ ȟ í î ï ǩ ń ñ ŋ ô õ œ ř ß ŧ ú ù û ÿ ü ʒ ǯ æ ø]"}
+    ExemplarCharacters{"[a b c d e f g h i j k l m n o p q r s š t u v w x y z ž å ä ö]"}
+    ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z Å Ä Ö]"}
+    LocaleScript{
+        "Latn",
+    }
+    NumberElements{
+        latn{
+            patterns{
+                currencyFormat{"#,##0.00 ¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0 %"}
+                scientificFormat{"#E0"}
+            }
+            patternsLong{
+                decimalFormat{
+                    1000{
+                        one{"0 tuhat"}
+                        other{"0 tuhatta"}
+                    }
+                    10000{
+                        one{"00 tuhatta"}
+                        other{"00 tuhatta"}
+                    }
+                    100000{
+                        one{"000 tuhatta"}
+                        other{"000 tuhatta"}
+                    }
+                    1000000{
+                        one{"0 miljoona"}
+                        other{"0 miljoonaa"}
+                    }
+                    10000000{
+                        one{"00 miljoonaa"}
+                        other{"00 miljoonaa"}
+                    }
+                    100000000{
+                        one{"000 miljoonaa"}
+                        other{"000 miljoonaa"}
+                    }
+                    1000000000{
+                        one{"0 miljardi"}
+                        other{"0 miljardia"}
+                    }
+                    10000000000{
+                        one{"00 miljardia"}
+                        other{"00 miljardia"}
+                    }
+                    100000000000{
+                        one{"000 miljardia"}
+                        other{"000 miljardia"}
+                    }
+                    1000000000000{
+                        one{"0 biljoona"}
+                        other{"0 biljoonaa"}
+                    }
+                    10000000000000{
+                        one{"00 biljoonaa"}
+                        other{"00 biljoonaa"}
+                    }
+                    100000000000000{
+                        one{"000 biljoonaa"}
+                        other{"000 biljoonaa"}
+                    }
+                }
+            }
+            patternsShort{
+                decimalFormat{
+                    1000{
+                        one{"0 t'.'"}
+                        other{"0 t'.'"}
+                    }
+                    10000{
+                        one{"00 t'.'"}
+                        other{"00 t'.'"}
+                    }
+                    100000{
+                        one{"000 t'.'"}
+                        other{"000 t'.'"}
+                    }
+                    1000000{
+                        one{"0 milj'.'"}
+                        other{"0 milj'.'"}
+                    }
+                    10000000{
+                        one{"00 milj'.'"}
+                        other{"00 milj'.'"}
+                    }
+                    100000000{
+                        one{"000 milj'.'"}
+                        other{"000 milj'.'"}
+                    }
+                    1000000000{
+                        one{"0 mrd'.'"}
+                        other{"0 mrd'.'"}
+                    }
+                    10000000000{
+                        one{"00 mrd'.'"}
+                        other{"00 mrd'.'"}
+                    }
+                    100000000000{
+                        one{"000 mrd'.'"}
+                        other{"000 mrd'.'"}
+                    }
+                    1000000000000{
+                        one{"0 bilj'.'"}
+                        other{"0 bilj'.'"}
+                    }
+                    10000000000000{
+                        one{"00 bilj'.'"}
+                        other{"00 bilj'.'"}
+                    }
+                    100000000000000{
+                        one{"000 bilj'.'"}
+                        other{"000 bilj'.'"}
+                    }
+                }
+            }
+            symbols{
+                decimal{","}
+                exponential{"E"}
+                group{" "}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"epäluku"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+            }
+        }
+    }
+    Version{"2.0.78.39"}
+    calendar{
+        buddhist{
+            DateTimePatterns{
+                "H.mm.ss zzzz",
+                "H.mm.ss z",
+                "H.mm.ss",
+                "H.mm",
+                "cccc d. MMMM y G",
+                "d. MMMM y G",
+                "d.M.y G",
+                "d.M.y G",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"ccc d."}
+                Gy{"y G"}
+                H{"H"}
+                Hm{"H.mm"}
+                Hms{"H.mm.ss"}
+                M{"L"}
+                MEd{"E d.M."}
+                MMM{"LLL"}
+                MMMEd{"E d. MMM"}
+                MMMd{"d. MMM"}
+                Md{"d.M."}
+                d{"d"}
+                hm{"h.mm a"}
+                hms{"h.mm.ss a"}
+                ms{"mm.ss"}
+                y{"y G"}
+                yM{"L.y G"}
+                yMEd{"E d.M.y G"}
+                yMMM{"LLLL y G"}
+                yMMMEd{"E d. MMM y G"}
+                yMMMMccccd{"cccc, d. MMMM y G"}
+                yMMMd{"d. MMM y G"}
+                yMd{"d.M.y G"}
+                yQQQ{"QQQ y G"}
+                yQQQQ{"QQQQ y G"}
+                yyMM{"M.y G"}
+                yyMMM{"LLLL y G"}
+                yyQQQ{"QQQ y G"}
+                yyyyM{"M.y G"}
+                yyyyMEd{"E d.M.y G"}
+                yyyyMMMM{"LLLL y G"}
+                yyyyQQQQ{"QQQQ y G"}
+            }
+        }
+        chinese{
+            DateTimePatterns{
+                "H.mm.ss zzzz",
+                "H.mm.ss z",
+                "H.mm.ss",
+                "H.mm",
+                "cccc d.M.y",
+                "d.M.y",
+                "d.M.y",
+                "d.M.y",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                H{"H"}
+                Hm{"H.mm"}
+                Hms{"H.mm.ss"}
+                MEd{"E d.M."}
+                MMMEd{"E d.M."}
+                MMMd{"d.M."}
+                Md{"d.M."}
+                hm{"h.mm a"}
+                hms{"h.mm.ss a"}
+                ms{"mm.ss"}
+                yMEd{"E d.M.y"}
+                yMd{"d.M.y"}
+            }
+        }
+        gregorian{
+            AmPmMarkers{
+                "ap.",
+                "ip.",
+            }
+            DateTimePatterns{
+                "H.mm.ss zzzz",
+                "H.mm.ss z",
+                "H.mm.ss",
+                "H.mm",
+                "cccc d. MMMM y",
+                "d. MMMM y",
+                "d.M.yyyy",
+                "d.M.yyyy",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"E d."}
+                H{"H"}
+                Hm{"H.mm"}
+                Hms{"H.mm.ss"}
+                M{"L"}
+                MEd{"E d.M."}
+                MMM{"LLL"}
+                MMMEd{"ccc d. MMM"}
+                MMMd{"d. MMM"}
+                Md{"d.M."}
+                d{"d"}
+                h{"h a"}
+                hm{"h.mm a"}
+                hms{"h.mm.ss a"}
+                ms{"mm.ss"}
+                y{"y"}
+                yM{"L.yyyy"}
+                yMEd{"E d.M.yyyy"}
+                yMMM{"LLL y"}
+                yMMMEd{"E d. MMM y"}
+                yMMMMccccd{"cccc d. MMMM y"}
+                yMMMd{"d. MMM y"}
+                yMd{"d.M.yyyy"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
+                yyMM{"M.yy"}
+                yyMMM{"LLLL yy"}
+                yyyyM{"M.yyyy"}
+                yyyyMEd{"E d.M.yyyy"}
+                yyyyMMMM{"LLLL y"}
+                yyyyQQQQ{"QQQQ y"}
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "su",
+                        "ma",
+                        "ti",
+                        "ke",
+                        "to",
+                        "pe",
+                        "la",
+                    }
+                    narrow{
+                        "S",
+                        "M",
+                        "T",
+                        "K",
+                        "T",
+                        "P",
+                        "L",
+                    }
+                    short{
+                        "su",
+                        "ma",
+                        "ti",
+                        "ke",
+                        "to",
+                        "pe",
+                        "la",
+                    }
+                    wide{
+                        "sunnuntaina",
+                        "maanantaina",
+                        "tiistaina",
+                        "keskiviikkona",
+                        "torstaina",
+                        "perjantaina",
+                        "lauantaina",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "su",
+                        "ma",
+                        "ti",
+                        "ke",
+                        "to",
+                        "pe",
+                        "la",
+                    }
+                    narrow{
+                        "S",
+                        "M",
+                        "T",
+                        "K",
+                        "T",
+                        "P",
+                        "L",
+                    }
+                    short{
+                        "su",
+                        "ma",
+                        "ti",
+                        "ke",
+                        "to",
+                        "pe",
+                        "la",
+                    }
+                    wide{
+                        "sunnuntai",
+                        "maanantai",
+                        "tiistai",
+                        "keskiviikko",
+                        "torstai",
+                        "perjantai",
+                        "lauantai",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "eKr.",
+                    "jKr.",
+                }
+                narrow{
+                    "eK",
+                    "jK",
+                }
+                wide{
+                    "ennen Kristuksen syntymää",
+                    "jälkeen Kristuksen syntymän",
+                }
+            }
+            fields{
+                day{
+                    dn{"päivä"}
+                    relative{
+                        "-1"{"eilen"}
+                        "-2"{"toissapäivänä"}
+                        "0"{"tänään"}
+                        "1"{"huomenna"}
+                        "2"{"ylihuomenna"}
+                    }
+                }
+                dayperiod{
+                    dn{"vuorokaudenaika"}
+                }
+                era{
+                    dn{"aikakausi"}
+                }
+                hour{
+                    dn{"tunti"}
+                }
+                minute{
+                    dn{"minuutti"}
+                }
+                month{
+                    dn{"kuukausi"}
+                    relative{
+                        "-1"{"viime kuussa"}
+                        "0"{"tässä kuussa"}
+                        "1"{"ensi kuussa"}
+                    }
+                }
+                second{
+                    dn{"sekunti"}
+                }
+                week{
+                    dn{"viikko"}
+                    relative{
+                        "-1"{"viime viikolla"}
+                        "0"{"tällä viikolla"}
+                        "1"{"ensi viikolla"}
+                    }
+                }
+                weekday{
+                    dn{"viikonpäivä"}
+                }
+                year{
+                    dn{"vuosi"}
+                    relative{
+                        "-1"{"viime vuonna"}
+                        "0"{"tänä vuonna"}
+                        "1"{"ensi vuonna"}
+                    }
+                }
+                zone{
+                    dn{"aikavyöhyke"}
+                }
+            }
+            intervalFormats{
+                H{
+                    H{"H–H"}
+                }
+                Hm{
+                    H{"H.mm–H.mm"}
+                    m{"H.mm–H.mm"}
+                }
+                Hmv{
+                    H{"H.mm–H.mm v"}
+                    m{"H.mm–H.mm v"}
+                }
+                Hv{
+                    H{"H–H v"}
+                }
+                M{
+                    M{"L.–L."}
+                }
+                MEd{
+                    M{"E d.M. – E d.M."}
+                    d{"E d. – E d.M."}
+                }
+                MMM{
+                    M{"LLL–LLLL"}
+                }
+                MMMEd{
+                    M{"E d. MMMM – E d. MMMM"}
+                    d{"E d. – E d. MMMM"}
+                }
+                MMMM{
+                    M{"LLL–LLLL"}
+                }
+                MMMd{
+                    M{"d. MMMM – d. MMMM"}
+                    d{"d.–d. MMMM"}
+                }
+                Md{
+                    M{"d.M.–d.M."}
+                    d{"d.–d.M."}
+                }
+                d{
+                    d{"d.–d."}
+                }
+                fallback{"{0}–{1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h.mm a – h.mm a"}
+                    h{"h.mm–h.mm a"}
+                    m{"h.mm–h.mm a"}
+                }
+                hmv{
+                    a{"h.mm a – h.mm a v"}
+                    h{"h.mm–h.mm a v"}
+                    m{"h.mm–h.mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
+                }
+                y{
+                    y{"y–y"}
+                }
+                yM{
+                    M{"LLL–LLLL y"}
+                    y{"LLLL y – LLLL y"}
+                }
+                yMEd{
+                    M{"E d.M.yyyy – E d.M.yyyy"}
+                    d{"E d.M.yyyy – E d.M.yyyy"}
+                    y{"E d.M.yyyy – E d.M.yyyy"}
+                }
+                yMMM{
+                    M{"LLL–LLLL y"}
+                    y{"LLLL y – LLLL y"}
+                }
+                yMMMEd{
+                    M{"E d. MMMM – E d. MMMM y"}
+                    d{"E d. – E d. MMMM y"}
+                    y{"E d. MMMM y – E d. MMMM y"}
+                }
+                yMMMM{
+                    M{"LLL–LLLL y"}
+                    y{"LLLL y – LLLL y"}
+                }
+                yMMMd{
+                    M{"d. MMMM – d. MMMM y"}
+                    d{"d.–d. MMMM y"}
+                    y{"d. MMMM y – d. MMMM y"}
+                }
+                yMd{
+                    M{"d.M.–d.M.yyyy"}
+                    d{"d.–d.M.yyyy"}
+                    y{"d.M.yyyy–d.M.yyyy"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "tammikuuta",
+                        "helmikuuta",
+                        "maaliskuuta",
+                        "huhtikuuta",
+                        "toukokuuta",
+                        "kesäkuuta",
+                        "heinäkuuta",
+                        "elokuuta",
+                        "syyskuuta",
+                        "lokakuuta",
+                        "marraskuuta",
+                        "joulukuuta",
+                    }
+                    narrow{
+                        "T",
+                        "H",
+                        "M",
+                        "H",
+                        "T",
+                        "K",
+                        "H",
+                        "E",
+                        "S",
+                        "L",
+                        "M",
+                        "J",
+                    }
+                    wide{
+                        "tammikuuta",
+                        "helmikuuta",
+                        "maaliskuuta",
+                        "huhtikuuta",
+                        "toukokuuta",
+                        "kesäkuuta",
+                        "heinäkuuta",
+                        "elokuuta",
+                        "syyskuuta",
+                        "lokakuuta",
+                        "marraskuuta",
+                        "joulukuuta",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "tammi",
+                        "helmi",
+                        "maalis",
+                        "huhti",
+                        "touko",
+                        "kesä",
+                        "heinä",
+                        "elo",
+                        "syys",
+                        "loka",
+                        "marras",
+                        "joulu",
+                    }
+                    narrow{
+                        "T",
+                        "H",
+                        "M",
+                        "H",
+                        "T",
+                        "K",
+                        "H",
+                        "E",
+                        "S",
+                        "L",
+                        "M",
+                        "J",
+                    }
+                    wide{
+                        "tammikuu",
+                        "helmikuu",
+                        "maaliskuu",
+                        "huhtikuu",
+                        "toukokuu",
+                        "kesäkuu",
+                        "heinäkuu",
+                        "elokuu",
+                        "syyskuu",
+                        "lokakuu",
+                        "marraskuu",
+                        "joulukuu",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "1. nelj.",
+                        "2. nelj.",
+                        "3. nelj.",
+                        "4. nelj.",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
+                    wide{
+                        "1. neljännes",
+                        "2. neljännes",
+                        "3. neljännes",
+                        "4. neljännes",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "1. nelj.",
+                        "2. nelj.",
+                        "3. nelj.",
+                        "4. nelj.",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
+                    wide{
+                        "1. neljännes",
+                        "2. neljännes",
+                        "3. neljännes",
+                        "4. neljännes",
+                    }
+                }
+            }
+        }
+        hebrew{
+            monthNames{
+                format{
+                    wide{
+                        "tišríkuuta",
+                        "hešvánkuuta",
+                        "kislévkuuta",
+                        "tevétkuuta",
+                        "ševátkuuta",
+                        "adárkuuta I",
+                        "adárkuuta",
+                        "nisánkuuta",
+                        "ijjárkuuta",
+                        "sivánkuuta",
+                        "tammúzkuuta",
+                        "abkuuta",
+                        "elúlkuuta",
+                        "adárkuuta II",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "tišrí",
+                        "hešván",
+                        "kislév",
+                        "tevét",
+                        "ševát",
+                        "adár I",
+                        "adár",
+                        "nisán",
+                        "ijjár",
+                        "siván",
+                        "tammúz",
+                        "ab",
+                        "elúl",
+                        "adár II",
+                    }
+                    narrow{
+                        "T",
+                        "H",
+                        "K",
+                        "T",
+                        "S",
+                        "A",
+                        "A",
+                        "N",
+                        "I",
+                        "S",
+                        "T",
+                        "A",
+                        "E",
+                        "A",
+                    }
+                    wide{
+                        "tišríkuu",
+                        "hešvánkuu",
+                        "kislévkuu",
+                        "tevétkuu",
+                        "ševátkuu",
+                        "adárkuu I",
+                        "adárkuu",
+                        "nisánkuu",
+                        "ijjárkuu",
+                        "sivánkuu",
+                        "tammúzkuu",
+                        "abkuu",
+                        "elúlkuu",
+                        "adárkuu II",
+                    }
+                }
+            }
+        }
+        islamic{
+            DateTimePatterns{
+                "H.mm.ss zzzz",
+                "H.mm.ss z",
+                "H.mm.ss",
+                "H.mm",
+                "cccc d. MMMM y G",
+                "d. MMMM y G",
+                "d.M.y G",
+                "d.M.y G",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"ccc d."}
+                Gy{"y G"}
+                H{"H"}
+                Hm{"H.mm"}
+                Hms{"H.mm.ss"}
+                M{"L"}
+                MEd{"E d.M."}
+                MMM{"LLL"}
+                MMMEd{"E d. MMM"}
+                MMMd{"d. MMM"}
+                Md{"d.M."}
+                d{"d"}
+                hm{"h.mm a"}
+                hms{"h.mm.ss a"}
+                ms{"mm.ss"}
+                y{"y G"}
+                yyyy{"y G"}
+                yyyyM{"M.y G"}
+                yyyyMEd{"E d.M.y G"}
+                yyyyMM{"M.y G"}
+                yyyyMMM{"LLLL y G"}
+                yyyyMMMEd{"E d. MMM y G"}
+                yyyyMMMM{"LLLL y G"}
+                yyyyMMMMccccd{"cccc, d. MMMM y G"}
+                yyyyMMMd{"d. MMM y G"}
+                yyyyMd{"d.M.y G"}
+                yyyyQQQ{"QQQ y G"}
+                yyyyQQQQ{"QQQQ y G"}
+            }
+            monthNames{
+                format{
+                    wide{
+                        "muharram",
+                        "safar",
+                        "rabi’ al-awwal",
+                        "rabi’ al-akhir",
+                        "džumada-l-ula",
+                        "džumada-l-akhira",
+                        "radžab",
+                        "ša’ban",
+                        "ramadan",
+                        "šawwal",
+                        "dhu-l-qa’da",
+                        "dhu-l-hiddža",
+                    }
+                }
+            }
+        }
+        japanese{
+            DateTimePatterns{
+                "H.mm.ss zzzz",
+                "H.mm.ss z",
+                "H.mm.ss",
+                "H.mm",
+                "cccc d. MMMM y G",
+                "d. MMMM y G",
+                "d.M.y G",
+                "d.M.y G",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"ccc d."}
+                Gy{"y G"}
+                Hm{"H.mm"}
+                Hms{"H.mm.ss"}
+                MEd{"E d.M."}
+                MMMEd{"E d. MMM"}
+                MMMMd{"d. MMMM"}
+                MMMd{"d. MMM"}
+                Md{"d.M"}
+                hm{"h.mm a"}
+                hms{"h.mm.ss a"}
+                ms{"mm.ss"}
+                y{"y G"}
+                yyyy{"y G"}
+                yyyyM{"M.y G"}
+                yyyyMEd{"E d.M.y G"}
+                yyyyMMM{"LLLL yy G"}
+                yyyyMMMEd{"E d. MMM yy G"}
+                yyyyMMMd{"d. MMM yy G"}
+                yyyyMd{"d.M.y G"}
+            }
+        }
+        roc{
+            DateTimePatterns{
+                "H.mm.ss zzzz",
+                "H.mm.ss z",
+                "H.mm.ss",
+                "H.mm",
+                "cccc d. MMMM y G",
+                "d. MMMM y G",
+                "d.M.y G",
+                "d.M.y G",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"ccc d."}
+                Gy{"y G"}
+                Hm{"H.mm"}
+                Hms{"H.mm.ss"}
+                MEd{"E d.M."}
+                MMMEd{"E d. MMM"}
+                MMMd{"d. MMM"}
+                Md{"d.M."}
+                hm{"h.mm a"}
+                hms{"h.mm.ss a"}
+                ms{"mm.ss"}
+                y{"y G"}
+                yyyy{"y G"}
+                yyyyM{"M.y G"}
+                yyyyMEd{"E d.M.y G"}
+                yyyyMMM{"LLLL y G"}
+                yyyyMMMEd{"E d. MMM y G"}
+                yyyyMMMd{"d. MMM y G"}
+                yyyyMd{"d.M.y G"}
+            }
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"’"}
+        alternateQuotationStart{"’"}
+        quotationEnd{"”"}
+        quotationStart{"”"}
+    }
+    listPattern{
+        standard{
+            2{"{0} ja {1}"}
+            end{"{0} ja {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+    }
+    measurementSystemNames{
+        UK{"brittiläinen"}
+        US{"amerikkalainen"}
+        metric{"metrinen"}
+    }
+    units{
+        day{
+            one{"{0} päivä"}
+            other{"{0} päivää"}
+        }
+        day-future{
+            one{"{0} päivän päästä"}
+            other{"{0} päivän päästä"}
+        }
+        day-past{
+            one{"{0} päivä sitten"}
+            other{"{0} päivää sitten"}
+        }
+        hour{
+            one{"{0} tunti"}
+            other{"{0} tuntia"}
+        }
+        hour-future{
+            one{"{0} tunnin päästä"}
+            other{"{0} tunnin päästä"}
+        }
+        hour-past{
+            one{"{0} tunti sitten"}
+            other{"{0} tuntia sitten"}
+        }
+        minute{
+            one{"{0} minuutti"}
+            other{"{0} minuuttia"}
+        }
+        minute-future{
+            one{"{0} minuutin päästä"}
+            other{"{0} minuutin päästä"}
+        }
+        minute-past{
+            one{"{0} minuutti sitten"}
+            other{"{0} minuuttia sitten"}
+        }
+        month{
+            one{"{0} kuukausi"}
+            other{"{0} kuukautta"}
+        }
+        month-future{
+            one{"{0} kuukauden päästä"}
+            other{"{0} kuukauden päästä"}
+        }
+        month-past{
+            one{"{0} kuukausi sitten"}
+            other{"{0} kuukautta sitten"}
+        }
+        second{
+            one{"{0} sekunti"}
+            other{"{0} sekuntia"}
+        }
+        second-future{
+            one{"{0} sekunnin päästä"}
+            other{"{0} sekunnin päästä"}
+        }
+        second-past{
+            one{"{0} sekunti sitten"}
+            other{"{0} sekuntia sitten"}
+        }
+        week{
+            one{"{0} viikko"}
+            other{"{0} viikkoa"}
+        }
+        week-future{
+            one{"{0} viikon päästä"}
+            other{"{0} viikon päästä"}
+        }
+        week-past{
+            one{"{0} viikko sitten"}
+            other{"{0} viikkoa sitten"}
+        }
+        year{
+            one{"{0} vuosi"}
+            other{"{0} vuotta"}
+        }
+        year-future{
+            one{"{0} vuoden päästä"}
+            other{"{0} vuoden päästä"}
+        }
+        year-past{
+            one{"{0} vuosi sitten"}
+            other{"{0} vuotta sitten"}
+        }
+    }
+    unitsShort{
+        day{
+            one{"{0} pv"}
+            other{"{0} pv"}
+        }
+        hour{
+            one{"{0} t"}
+            other{"{0} t"}
+        }
+        minute{
+            one{"{0} min"}
+            other{"{0} min"}
+        }
+        month{
+            one{"{0} kk"}
+            other{"{0} kk"}
+        }
+        second{
+            one{"{0} s"}
+            other{"{0} s"}
+        }
+        week{
+            one{"{0} vk"}
+            other{"{0} vk"}
+        }
+        year{
+            one{"{0} v"}
+            other{"{0} v"}
+        }
+    }
+}

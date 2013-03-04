@@ -746,7 +746,11 @@ PluginModuleChild::UnregisterActorForNPObject(NPObject* aObject)
     NS_ASSERTION(mObjectMap.IsInitialized(), "Not initialized!");
     NS_ASSERTION(aObject, "Null pointer!");
 
-    mObjectMap.GetEntry(aObject)->actor = NULL;
+    NPObjectData* d = mObjectMap.GetEntry(aObject);
+    NS_ASSERTION(d, "NPObject not in object table");
+    if (d) {
+        d->actor = NULL;
+    }
 }
 
 PluginScriptableObjectChild*

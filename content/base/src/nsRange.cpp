@@ -663,8 +663,19 @@ nsRange::ParentChainChanged(nsIContent *aContent)
   NS_ASSERTION(mRoot == aContent, "Wrong ParentChainChanged notification?");
   nsINode* newRoot = IsValidBoundary(mStartParent);
   NS_ASSERTION(newRoot, "No valid boundary or root found!");
-  NS_ASSERTION(newRoot == IsValidBoundary(mEndParent),
-               "Start parent and end parent give different root!");
+  if (newRoot != IsValidBoundary(mEndParent)) {
+    // Sometimes ordering involved in cycle collection can lead to our
+    // start parent and/or end parent being disconnected from our root
+    // without our getting a ContentRemoved notification.
+    // See bug 846096 for more details.
+    NS_ASSERTION(mEndParent->IsInNativeAnonymousSubtree(),
+                 "This special case should happen only with "
+                 "native-anonymous content");
+    // When that happens, bail out and set pointers to null; since we're
+    // in cycle collection and unreachable it shouldn't matter.
+    Reset();
+    return;
+  }
   // This is safe without holding a strong ref to self as long as the change
   // of mRoot is the last thing in DoSetRange.
   DoSetRange(mStartParent, mStartOffset, mEndParent, mEndOffset, newRoot);

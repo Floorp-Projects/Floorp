@@ -1,0 +1,19 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/sv_FI.xml
+// *
+// ***************************************************************************
+sv_FI{
+    Version{"2.0.75.99"}
+    zoneStrings{
+        "America:Tegucigalpa"{
+            ec{"Tegucigalpa"}
+        }
+        "Etc:Unknown"{
+            ec{"(okänd tidszon)"}
+        }
+    }
+}

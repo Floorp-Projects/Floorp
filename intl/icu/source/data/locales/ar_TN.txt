@@ -1,0 +1,156 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/ar_TN.xml
+// *
+// ***************************************************************************
+ar_TN{
+    NumberElements{
+        default{"latn"}
+        latn{
+            patterns{
+                currencyFormat{"¤#0.00"}
+                decimalFormat{"#0.###;#0.###-"}
+            }
+            symbols{
+                decimal{","}
+                group{"."}
+            }
+        }
+    }
+    Version{"2.0.77.46"}
+    calendar{
+        gregorian{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE، d MMMM، y",
+                "d MMMM، y",
+                "yyyy/MM/dd",
+                "yyyy/M/d",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                MMdd{"MM/dd"}
+                Md{"M/d"}
+                yM{"yyyy/M"}
+                yyyyMM{"yyyy/MM"}
+            }
+            intervalFormats{
+                M{
+                    M{"M‏-M"}
+                }
+                MMMd{
+                    d{"d‏-d MMM"}
+                }
+                d{
+                    d{"d‏-d"}
+                }
+                y{
+                    y{"y‏-y"}
+                }
+                yMMMd{
+                    d{"d‏-d MMM، y"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "جانفي",
+                        "فيفري",
+                        "مارس",
+                        "أفريل",
+                        "ماي",
+                        "جوان",
+                        "جويلية",
+                        "أوت",
+                        "سبتمبر",
+                        "أكتوبر",
+                        "نوفمبر",
+                        "ديسمبر",
+                    }
+                    narrow{
+                        "ج",
+                        "ف",
+                        "م",
+                        "أ",
+                        "م",
+                        "ج",
+                        "ج",
+                        "أ",
+                        "س",
+                        "أ",
+                        "ن",
+                        "د",
+                    }
+                    wide{
+                        "جانفي",
+                        "فيفري",
+                        "مارس",
+                        "أفريل",
+                        "ماي",
+                        "جوان",
+                        "جويلية",
+                        "أوت",
+                        "سبتمبر",
+                        "أكتوبر",
+                        "نوفمبر",
+                        "ديسمبر",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "جانفي",
+                        "فيفري",
+                        "مارس",
+                        "أفريل",
+                        "ماي",
+                        "جوان",
+                        "جويلية",
+                        "أوت",
+                        "سبتمبر",
+                        "أكتوبر",
+                        "نوفمبر",
+                        "ديسمبر",
+                    }
+                    narrow{
+                        "ج",
+                        "ف",
+                        "م",
+                        "أ",
+                        "م",
+                        "ج",
+                        "ج",
+                        "أ",
+                        "س",
+                        "أ",
+                        "ن",
+                        "د",
+                    }
+                    wide{
+                        "جانفي",
+                        "فيفري",
+                        "مارس",
+                        "أفريل",
+                        "ماي",
+                        "جوان",
+                        "جويلية",
+                        "أوت",
+                        "سبتمبر",
+                        "أكتوبر",
+                        "نوفمبر",
+                        "ديسمبر",
+                    }
+                }
+            }
+        }
+    }
+}

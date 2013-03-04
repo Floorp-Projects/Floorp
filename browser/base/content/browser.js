@@ -1486,14 +1486,9 @@ var gBrowserInit = {
     // downloads will start right away, and getting the service again won't hurt.
     setTimeout(function() {
       Services.downloads;
-
-#ifdef XP_WIN
-      if (Win7Features) {
-        let DownloadTaskbarProgress =
-          Cu.import("resource://gre/modules/DownloadTaskbarProgress.jsm", {}).DownloadTaskbarProgress;
-        DownloadTaskbarProgress.onBrowserWindowLoad(window);
-      }
-#endif
+      let DownloadTaskbarProgress =
+        Cu.import("resource://gre/modules/DownloadTaskbarProgress.jsm", {}).DownloadTaskbarProgress;
+      DownloadTaskbarProgress.onBrowserWindowLoad(window);
     }, 10000);
 
     // The object handling the downloads indicator is also initialized here in the
