@@ -80,6 +80,8 @@ class TestAgent {
     audio_flow_->PushLayer(audio_dtls_);
   }
 
+  virtual void CreatePipelines_s() = 0;
+
   void Start() {
     nsresult ret;
 
@@ -97,11 +99,9 @@ class TestAgent {
     audio_flow_ = NULL;
     video_flow_ = NULL;
     if (audio_pipeline_)
-      audio_pipeline_->Shutdown();
+      audio_pipeline_->ShutdownTransport_s();
     if (video_pipeline_)
-      video_pipeline_->Shutdown();
-    audio_pipeline_ = NULL;
-    video_pipeline_ = NULL;
+      video_pipeline_->ShutdownTransport_s();
   }
 
   void Stop() {
@@ -110,6 +110,13 @@ class TestAgent {
     test_utils->sts_target()->Dispatch(
         WrapRunnable(this, &TestAgent::StopInt),
         NS_DISPATCH_SYNC);
+
+    if (audio_pipeline_)
+      audio_pipeline_->ShutdownMedia_m();
+    if (video_pipeline_)
+      video_pipeline_->ShutdownMedia_m();
+    audio_pipeline_ = NULL;
+    video_pipeline_ = NULL;
 
     PR_Sleep(1000); // Deal with race condition
   }
@@ -133,7 +140,7 @@ class TestAgent {
 
 class TestAgentSend : public TestAgent {
  public:
-  TestAgentSend() {
+  virtual void CreatePipelines_s() {
     audio_ = new Fake_DOMMediaStream(new Fake_AudioStreamSource());
 
     mozilla::MediaConduitErrorCode err =
@@ -161,7 +168,7 @@ class TestAgentSend : public TestAgent {
 
 class TestAgentReceive : public TestAgent {
  public:
-  TestAgentReceive() {
+  virtual void CreatePipelines_s() {
     mozilla::SourceMediaStream *audio = new Fake_SourceMediaStream();
     audio->SetPullEnabled(true);
 
@@ -210,6 +217,13 @@ class MediaPipelineTest : public ::testing::Test {
       NS_DISPATCH_SYNC);
     test_utils->sts_target()->Dispatch(
       WrapRunnable(&p2_, &TestAgent::ConnectSocket, fds_[1], false),
+      NS_DISPATCH_SYNC);
+
+    test_utils->sts_target()->Dispatch(
+      WrapRunnable(&p1_, &TestAgent::CreatePipelines_s),
+      NS_DISPATCH_SYNC);
+    test_utils->sts_target()->Dispatch(
+      WrapRunnable(&p2_, &TestAgent::CreatePipelines_s),
       NS_DISPATCH_SYNC);
   }
 

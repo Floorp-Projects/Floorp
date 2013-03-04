@@ -7,10 +7,15 @@
 // Original author: ekr@rtfm.com
 #include <deque>
 
+#include <prlog.h>
+
+#include "logging.h"
 #include "transportflow.h"
 #include "transportlayer.h"
 
 namespace mozilla {
+
+MOZ_MTLOG_MODULE("mtransport")
 
 TransportFlow::~TransportFlow() {
   for (std::deque<TransportLayer *>::iterator it = layers_.begin();
@@ -20,9 +25,19 @@ TransportFlow::~TransportFlow() {
 }
 
 nsresult TransportFlow::PushLayer(TransportLayer *layer) {
+  // Don't allow pushes once we are in error state.
+  if (state_ == TransportLayer::TS_ERROR) {
+    MOZ_MTLOG(PR_LOG_ERROR, id_ + ": Can't call PushLayer in error state for flow ");
+    return NS_ERROR_FAILURE;
+  }
+
   nsresult rv = layer->Init();
-  if (!NS_SUCCEEDED(rv))
+  if (!NS_SUCCEEDED(rv)) {
+    // Set ourselves to have failed.
+    MOZ_MTLOG(PR_LOG_ERROR, id_ << ": Layer initialization failed; invalidating");
+    StateChangeInt(TransportLayer::TS_ERROR);
     return rv;
+  }
 
   TransportLayer *old_layer = layers_.empty() ? nullptr : layers_.front();
 
@@ -31,31 +46,78 @@ nsresult TransportFlow::PushLayer(TransportLayer *layer) {
     old_layer->SignalStateChange.disconnect(this);
     old_layer->SignalPacketReceived.disconnect(this);
   }
-  layer->SignalStateChange.connect(this, &TransportFlow::StateChange);
-  layer->SignalPacketReceived.connect(this, &TransportFlow::PacketReceived);
-
   layers_.push_front(layer);
   layer->Inserted(this, old_layer);
+
+  layer->SignalStateChange.connect(this, &TransportFlow::StateChange);
+  layer->SignalPacketReceived.connect(this, &TransportFlow::PacketReceived);
+  StateChangeInt(layer->state());
+
   return NS_OK;
 }
 
-nsresult TransportFlow::PushLayers(std::queue<TransportLayer *> layers) {
-  nsresult rv;
-
-  while (!layers.empty()) {
-    rv = PushLayer(layers.front());
-    layers.pop();
-
-    if (NS_FAILED(rv)) {
-      // Destroy any layers we could not push.
-      while (!layers.empty()) {
-        delete layers.front();
-        layers.pop();
-      }
-
-      return rv;
-    }
+// This is all-or-nothing.
+nsresult TransportFlow::PushLayers(nsAutoPtr<std::queue<TransportLayer *> > layers) {
+  MOZ_ASSERT(!layers->empty());
+  if (layers->empty()) {
+    MOZ_MTLOG(PR_LOG_ERROR, id_ << ": Can't call PushLayers with empty layers");
+    return NS_ERROR_INVALID_ARG;
   }
+
+  // Don't allow pushes once we are in error state.
+  if (state_ == TransportLayer::TS_ERROR) {
+    MOZ_MTLOG(PR_LOG_ERROR, id_ << ": Can't call PushLayers in error state for flow ");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = NS_OK;
+
+  // Disconnect all the old signals.
+  disconnect_all();
+
+  TransportLayer *layer;
+
+  while (!layers->empty()) {
+    TransportLayer *old_layer = layers_.empty() ? nullptr : layers_.front();
+    layer = layers->front();
+
+    rv = layer->Init();
+    if (NS_FAILED(rv)) {
+      MOZ_MTLOG(PR_LOG_ERROR, id_ << ": Layer initialization failed; invalidating flow ");
+      break;
+    }
+
+    // Push the layer onto the queue.
+    layers_.push_front(layer);
+    layers->pop();
+    layer->Inserted(this, old_layer);
+  }
+
+  if (NS_FAILED(rv)) {
+    // Destroy any layers we could not push.
+    while (!layers->empty()) {
+      delete layers->front();
+      layers->pop();
+    }
+
+    // Now destroy the rest of the flow, because it's no longer
+    // in an acceptable state.
+    while (!layers_.empty()) {
+      delete layers_.front();
+      layers_.pop_front();
+    }
+
+    // Set ourselves to have failed.
+    StateChangeInt(TransportLayer::TS_ERROR);
+
+    // Return failure.
+    return rv;
+  }
+
+  // Finally, attach ourselves to the top layer.
+  layer->SignalStateChange.connect(this, &TransportFlow::StateChange);
+  layer->SignalPacketReceived.connect(this, &TransportFlow::PacketReceived);
+  StateChangeInt(layer->state());  // Signals if the state changes.
 
   return NS_OK;
 }
@@ -75,17 +137,29 @@ TransportLayer *TransportFlow::GetLayer(const std::string& id) const {
 }
 
 TransportLayer::State TransportFlow::state() {
-  return top() ? top()->state() : TransportLayer::TS_NONE;
+  return state_;
 }
 
 TransportResult TransportFlow::SendPacket(const unsigned char *data,
                                           size_t len) {
+  if (state_ != TransportLayer::TS_OPEN) {
+    return TE_ERROR;
+  }
   return top() ? top()->SendPacket(data, len) : TE_ERROR;
+}
+
+void TransportFlow::StateChangeInt(TransportLayer::State state) {
+  if (state == state_) {
+    return;
+  }
+
+  state_ = state;
+  SignalStateChange(this, state_);
 }
 
 void TransportFlow::StateChange(TransportLayer *layer,
                                 TransportLayer::State state) {
-  SignalStateChange(this, state);
+  StateChangeInt(state);
 }
 
 void TransportFlow::PacketReceived(TransportLayer* layer,
@@ -93,10 +167,5 @@ void TransportFlow::PacketReceived(TransportLayer* layer,
                                    size_t len) {
   SignalPacketReceived(this, data, len);
 }
-
-
-
-
-
 
 }  // close namespace
