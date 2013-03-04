@@ -1,0 +1,83 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/fr_CA.xml
+// *
+// ***************************************************************************
+fr_CA{
+    Currencies{
+        AFN{
+            "AFN",
+            "afghani afghan",
+        }
+        BAM{
+            "BAM",
+            "mark convertible bosniaque",
+        }
+        BDT{
+            "BDT",
+            "taka bangladeshi",
+        }
+        CAD{
+            "$",
+            "dollar canadien",
+        }
+        CNY{
+            "CN¥",
+            "yuan renminbi chinois",
+        }
+        DJF{
+            "DJF",
+            "franc djiboutien",
+        }
+        IDR{
+            "IDR",
+            "roupie indonésienne",
+        }
+        MMK{
+            "MMK",
+            "kyat myanmarais",
+        }
+        MNT{
+            "MNT",
+            "tugrik mongol",
+        }
+        MVR{
+            "MVR",
+            "rufiyaa maldivien",
+        }
+        MYR{
+            "MYR",
+            "ringgit malais",
+        }
+        PGK{
+            "PGK",
+            "kina papouan-néo-guinéen",
+        }
+        TOP{
+            "TOP",
+            "pa’anga tongan",
+        }
+        VUV{
+            "VUV",
+            "vatu vanuatuan",
+        }
+        WST{
+            "WST",
+            "tala samoan",
+        }
+        XOF{
+            "F CFA",
+            "franc CFA (BCEAO)",
+        }
+    }
+    CurrencyPlurals{
+        GYD{
+            one{"dollar guyanien"}
+            other{"dollars guyaniens"}
+        }
+    }
+    Version{"2.0.78.47"}
+}

@@ -1453,6 +1453,36 @@ class MGetDynamicName
     }
 };
 
+// Bailout if the input string contains 'arguments'
+class MFilterArguments
+  : public MAryInstruction<1>,
+    public StringPolicy<0>
+{
+  protected:
+    MFilterArguments(MDefinition *string)
+    {
+        setOperand(0, string);
+        setGuard();
+        setResultType(MIRType_None);
+    }
+
+  public:
+    INSTRUCTION_HEADER(FilterArguments)
+
+    static MFilterArguments *
+    New(MDefinition *string) {
+        return new MFilterArguments(string);
+    }
+
+    MDefinition *getString() const {
+        return getOperand(0);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
 class MCallDirectEval
   : public MAryInstruction<3>,
     public MixPolicy<ObjectPolicy<0>, MixPolicy<StringPolicy<1>, BoxPolicy<2> > >
@@ -2757,7 +2787,11 @@ class MMathFunction
         Log,
         Sin,
         Cos,
-        Tan
+        Exp,
+        Tan,
+        ACos,
+        ASin,
+        ATan
     };
 
   private:

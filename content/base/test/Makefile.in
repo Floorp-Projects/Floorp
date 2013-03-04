@@ -38,8 +38,6 @@ MOCHITEST_FILES_A = \
 		test_bug166235.html \
 		test_bug199959.html \
 		test_bug218236.html \
-		file_bug218236_multipart.txt \
-		file_bug218236_multipart.txt^headers^ \
 		test_bug218277.html \
 		test_bug238409.html \
 		test_bug254337.html \
@@ -108,8 +106,6 @@ MOCHITEST_FILES_A = \
 		file_bug326337_inner.html \
 		file_bug326337_outer.html \
 		file_bug326337.xml \
-		file_bug326337_multipart.txt \
-		file_bug326337_multipart.txt^headers^ \
 		test_bug333198.html \
 		test_bug402150.html \
 		test_bug402150.html^headers^ \
@@ -207,9 +203,6 @@ MOCHITEST_FILES_A = \
 		test_bug28293.html \
 		test_bug28293.xhtml \
 		file_bug28293.sjs \
-		test_bug445225.html \
-		file_bug445225_multipart.txt \
-		file_bug445225_multipart.txt^headers^ \
 		test_title.html \
 		test_bug453521.html \
 		test_bug454325.html \

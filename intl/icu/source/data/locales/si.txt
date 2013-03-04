@@ -1,0 +1,526 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/si.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/si.xml
+ */
+si{
+    AuxExemplarCharacters{"[\u200B\u200C\u200D ඎ ඏ ඐ ඦ ෳ]"}
+    ExemplarCharacters{
+        "[අ ආ ඇ ඈ ඉ ඊ උ ඌ ඍ එ ඒ ඓ ඔ ඕ ඖ ං ඃ ක ඛ ග ඝ ඞ ඟ ච ඡ ජ ඣ ඥ ඤ ට ඨ ඩ ඪ ණ ඬ ත ථ ද"
+        " ධ න ඳ ප ඵ බ භ ම ඹ ය ර ල ව ශ ෂ ස හ ළ ෆ ා ැ ෑ \u0DD2 \u0DD3 \u0DD4 \u0DD6 ෘ ෲ"
+        " ෟ ෙ ේ ෛ ො ෝ ෞ \u0DCA]"
+    }
+    ExemplarCharactersIndex{
+        "[අ ආ ඇ ඈ ඉ ඊ උ ඌ ඍ එ ඒ ඓ ඔ ඕ ඖ ක ඛ ග ඝ ඞ ඟ ච ඡ ජ ඣ ඥ ඤ ට ඨ ඩ ඪ ණ ඬ ත ථ ද ධ න"
+        " ඳ ප ඵ බ භ ම ඹ ය ර ල ව ශ ෂ ස හ ළ ෆ]"
+    }
+    LocaleScript{
+        "Sinh",
+    }
+    NumberElements{
+        latn{
+            patterns{
+                currencyFormat{"¤ #,##,##0.00"}
+                decimalFormat{"#,##,##0.###"}
+                percentFormat{"#,##,##0%"}
+            }
+        }
+    }
+    Version{"2.0.78.39"}
+    calendar{
+        gregorian{
+            AmPmMarkers{
+                "පෙ.ව.",
+                "ප.ව.",
+            }
+            DateTimePatterns{
+                "a HH:mm:ss zzzz",
+                "a h:mm:ss z",
+                "a h.mm.ss",
+                "a h.mm",
+                "y MMMM d, EEEE",
+                "y MMMM d",
+                "y MMM d",
+                "yyyy/MM/dd",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"d E"}
+                H{"HH"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"M-d, E"}
+                MMM{"LLL"}
+                MMMEd{"MMM d E"}
+                MMMd{"MMM d"}
+                Md{"M-d"}
+                d{"d"}
+                h{"a h"}
+                hm{"a h.mm"}
+                hms{"a h.mm.ss"}
+                ms{"mm.ss"}
+                y{"y"}
+                yM{"y-M"}
+                yMEd{"y-M-d, E"}
+                yMMM{"y MMM"}
+                yMMMEd{"y MMM d, E"}
+                yMMMd{"y MMM d"}
+                yMd{"y-M-d"}
+                yQQQ{"y QQQ"}
+                yQQQQ{"y QQQQ"}
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "ඉරි",
+                        "සඳු",
+                        "අඟ",
+                        "බදා",
+                        "බ්‍රහ",
+                        "සිකු",
+                        "සෙන",
+                    }
+                    narrow{
+                        "ඉ",
+                        "ස",
+                        "අ",
+                        "බ",
+                        "බ්‍ර",
+                        "සි",
+                        "සෙ",
+                    }
+                    short{
+                        "ඉ",
+                        "ස",
+                        "අ",
+                        "බ",
+                        "බ්‍ර",
+                        "සි",
+                        "සෙ",
+                    }
+                    wide{
+                        "ඉරිදා",
+                        "සඳුදා",
+                        "අඟහරුවාදා",
+                        "බදාදා",
+                        "බ්‍රහස්පතින්දා",
+                        "සිකුරාදා",
+                        "සෙනසුරාදා",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "ඉරි",
+                        "සඳු",
+                        "අඟ",
+                        "බදා",
+                        "බ්‍රහ",
+                        "සිකු",
+                        "සෙන",
+                    }
+                    narrow{
+                        "ඉ",
+                        "ස",
+                        "අ",
+                        "බ",
+                        "බ්‍ර",
+                        "සි",
+                        "සෙ",
+                    }
+                    short{
+                        "ඉරි",
+                        "සඳු",
+                        "අඟ",
+                        "බදා",
+                        "බ්‍රහ",
+                        "සිකු",
+                        "සෙන",
+                    }
+                    wide{
+                        "ඉරිදා",
+                        "සඳුදා",
+                        "අඟහරුවාදා",
+                        "බදාදා",
+                        "බ්‍රහස්පතින්දා",
+                        "සිකුරාදා",
+                        "සෙනසුරාදා",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "ක්‍රි.පූ.",
+                    "ක්‍රි.ව.",
+                }
+                wide{
+                    "ක්‍රිස්තු පූර්‍ව",
+                    "ක්‍රිස්තු වර්‍ෂ",
+                }
+            }
+            fields{
+                day{
+                    dn{"දිනය"}
+                    relative{
+                        "-1"{"ඊයෙ"}
+                        "-2"{"පෙරේදා"}
+                        "0"{"අද"}
+                        "1"{"හෙට"}
+                        "2"{"අනිද්දා"}
+                    }
+                }
+                dayperiod{
+                    dn{"දිවා කාලය"}
+                }
+                era{
+                    dn{"යුගය"}
+                }
+                hour{
+                    dn{"පැය"}
+                }
+                minute{
+                    dn{"මිනිස්තුව"}
+                }
+                month{
+                    dn{"මාසය"}
+                }
+                second{
+                    dn{"තප්පරය"}
+                }
+                week{
+                    dn{"සතිය"}
+                }
+                weekday{
+                    dn{"සතියේ දිනය"}
+                }
+                year{
+                    dn{"වර්ෂ"}
+                }
+                zone{
+                    dn{"වේලා කලාපය"}
+                }
+            }
+            intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HHmm-HHmm v"}
+                }
+                Hv{
+                    H{"HH–HH v"}
+                }
+                M{
+                    M{"M–M"}
+                }
+                MEd{
+                    M{"E, M-d – E, M-d"}
+                    d{"E, M-d – E, M-d"}
+                }
+                MMM{
+                    M{"LLL–LLL"}
+                }
+                MMMEd{
+                    M{"MMM-dd, E – MMM-dd, E"}
+                    d{"MMM-d, E – MMM-d, E"}
+                }
+                MMMd{
+                    M{"MMM d - MMM d"}
+                    d{"MMM d-d"}
+                }
+                Md{
+                    M{"M-d - M-d"}
+                    d{"M-d - M-d"}
+                }
+                d{
+                    d{"d–d"}
+                }
+                fallback{"{0} – {1}"}
+                h{
+                    a{"a h - a h"}
+                    h{"a h-h"}
+                }
+                hm{
+                    a{"a h:mm - a h:mm"}
+                    h{"a h.mm - h.mm"}
+                    m{"a h.mm - h.mm"}
+                }
+                hmv{
+                    a{"a h.mm - a hhh.mm v"}
+                    h{"a h.mm - h.mm v"}
+                    m{"a h:mm - h.mm v"}
+                }
+                hv{
+                    a{"a h - a h v"}
+                    h{"a h - h vv"}
+                }
+                y{
+                    y{"y–y"}
+                }
+                yM{
+                    M{"M-yy - M-yy"}
+                    y{"M-yy - M-yy"}
+                }
+                yMEd{
+                    M{"E, M-d-yy - E, M-d-yy"}
+                    d{"E, yyyy-MM-dd – E, yyyy-MM-dd"}
+                    y{"M-d-yy, E - M-d-yy, E"}
+                }
+                yMMM{
+                    M{"y MMM–MMM"}
+                    y{"y MMM - y MMM"}
+                }
+                yMMMEd{
+                    M{"y MMM d, E - y MMM d, E"}
+                    d{"y MMM d, E - y MMM d, E"}
+                    y{"y MMM d, E - y MMM d, E"}
+                }
+                yMMMM{
+                    M{"y MMMM - MMMM"}
+                    y{"y MMMM - y MMMM"}
+                }
+                yMMMd{
+                    M{"y MMM d - MMM d"}
+                    d{"y MMM d - d"}
+                    y{"y MMM d - y MMM d"}
+                }
+                yMd{
+                    M{"M-d-yy - M-d-yy"}
+                    d{"M-d-yy - M-d-yy"}
+                    y{"M-d-yy - M-d-yy"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "ජන",
+                        "පෙබ",
+                        "මාර්තු",
+                        "අප්‍රේල්",
+                        "මැයි",
+                        "ජූනි",
+                        "ජූලි",
+                        "අගෝ",
+                        "සැප්",
+                        "ඔක්",
+                        "නොවැ",
+                        "දෙසැ",
+                    }
+                    narrow{
+                        "ජ",
+                        "පෙ",
+                        "මා",
+                        "අ",
+                        "මැ",
+                        "ජූ",
+                        "ජූ",
+                        "අ",
+                        "සැ",
+                        "ඔ",
+                        "නෙ",
+                        "දෙ",
+                    }
+                    wide{
+                        "ජනවාරි",
+                        "පෙබරවාරි",
+                        "මාර්තු",
+                        "අප්‍රේල්",
+                        "මැයි",
+                        "ජූනි",
+                        "ජූලි",
+                        "අගෝස්තු",
+                        "සැප්තැම්බර්",
+                        "ඔක්තෝබර්",
+                        "නොවැම්බර්",
+                        "දෙසැම්බර්",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "ජන",
+                        "පෙබ",
+                        "මාර්",
+                        "අප්‍රේල්",
+                        "මැයි",
+                        "ජූනි",
+                        "ජූලි",
+                        "අගෝ",
+                        "සැප්",
+                        "ඔක්",
+                        "නොවැ",
+                        "දෙසැ",
+                    }
+                    narrow{
+                        "ජ",
+                        "පෙ",
+                        "මා",
+                        "අ",
+                        "මැ",
+                        "ජූ",
+                        "ජූ",
+                        "අ",
+                        "සැ",
+                        "ඔ",
+                        "නෙ",
+                        "දෙ",
+                    }
+                    wide{
+                        "ජනවාරි",
+                        "පෙබරවාරි",
+                        "මාර්තු",
+                        "අප්‍රේල්",
+                        "මැයි",
+                        "ජූනි",
+                        "ජූලි",
+                        "අගෝස්තු",
+                        "සැප්තැම්බර්",
+                        "ඔක්තෝබර්",
+                        "නොවැම්බර්",
+                        "දෙසැම්බර්",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "කාර්:1",
+                        "කාර්:2",
+                        "කාර්:3",
+                        "කාර්:4",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
+                    wide{
+                        "1 වන කාර්තුව",
+                        "2 වන කාර්තුව",
+                        "3 වන කාර්තුව",
+                        "4 වන කාර්තුව",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "කාර්:1",
+                        "කාර්:2",
+                        "කාර්:3",
+                        "කාර්:4",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
+                    wide{
+                        "1 වන කාර්තුව",
+                        "2 වන කාර්තුව",
+                        "3 වන කාර්තුව",
+                        "4 වන කාර්තුව",
+                    }
+                }
+            }
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"’"}
+        alternateQuotationStart{"‘"}
+        quotationEnd{"”"}
+        quotationStart{"“"}
+    }
+    listPattern{
+        standard{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+    }
+    measurementSystemNames{
+        UK{"එංගලන්තය"}
+        US{"ඇමරිකාව"}
+        metric{"මෙට්රික්"}
+    }
+    units{
+        day{
+            other{"දින {0}ක්"}
+        }
+        day-future{
+            other{"දින {0}න්"}
+        }
+        day-past{
+            other{"දින {0} ට පෙර"}
+        }
+        hour{
+            other{"පැය {0}ක්"}
+        }
+        hour-future{
+            other{"පැය {0}ක් තුළ"}
+        }
+        hour-past{
+            other{"පැය {0}ට පෙර"}
+        }
+        minute{
+            other{"විනාඩි {0}ක්"}
+        }
+        minute-future{
+            other{"විනාඩි {0}ක් තුළ"}
+        }
+        minute-past{
+            other{"විනාඩි {0}ට පෙර"}
+        }
+        month{
+            other{"මාස {0}ක්"}
+        }
+        month-future{
+            other{"මාස {0}ක් තුළ"}
+        }
+        month-past{
+            other{"මාස {0}කට පෙර"}
+        }
+        second{
+            other{"විනාඩි {0}ක්"}
+        }
+        second-future{
+            other{"විනාඩි {0}ක් තුළ"}
+        }
+        second-past{
+            other{"විනාඩි {0}කට පෙර"}
+        }
+        week{
+            other{"සති {0}ක්"}
+        }
+        week-future{
+            other{"සති {0}ක් තුළ"}
+        }
+        week-past{
+            other{"සති {0}කට පෙර"}
+        }
+        year{
+            other{"වසර {0}ක්"}
+        }
+        year-future{
+            other{"වසර {0}ක් තුළ"}
+        }
+        year-past{
+            other{"වසර {0}ට පෙර"}
+        }
+    }
+}

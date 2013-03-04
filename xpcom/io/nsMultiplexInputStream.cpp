@@ -89,6 +89,7 @@ nsMultiplexInputStream::GetCount(uint32_t *aCount)
     return NS_OK;
 }
 
+#ifdef DEBUG
 static bool
 SeekableStreamAtBeginning(nsIInputStream *aStream)
 {
@@ -99,6 +100,7 @@ SeekableStreamAtBeginning(nsIInputStream *aStream)
     }
     return true;
 }
+#endif
 
 /* void appendStream (in nsIInputStream stream); */
 NS_IMETHODIMP

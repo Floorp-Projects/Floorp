@@ -1049,6 +1049,33 @@ class LGetDynamicName : public LCallInstructionHelper<BOX_PIECES, 2, 3>
     }
 };
 
+class LFilterArguments : public LCallInstructionHelper<0, 1, 2>
+{
+  public:
+    LIR_HEADER(FilterArguments)
+
+    LFilterArguments(const LAllocation &string, const LDefinition &temp1, const LDefinition &temp2)
+    {
+        setOperand(0, string);
+        setTemp(0, temp1);
+        setTemp(1, temp2);
+    }
+
+    MFilterArguments *mir() const {
+        return mir_->toFilterArguments();
+    }
+
+    const LAllocation *getString() {
+        return getOperand(0);
+    }
+    const LDefinition *temp1() {
+        return getTemp(0);
+    }
+    const LDefinition *temp2() {
+        return getTemp(1);
+    }
+};
+
 class LCallDirectEval : public LCallInstructionHelper<BOX_PIECES, 2 + BOX_PIECES, 0>
 {
   public:

@@ -1208,11 +1208,11 @@ JSContext::JSContext(JSRuntime *rt)
     JS_ASSERT(static_cast<ContextFriendFields*>(this) ==
               ContextFriendFields::get(this));
 
-#ifdef JSGC_ROOT_ANALYSIS
+#if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
     PodArrayZero(thingGCRooters);
-#if defined(JS_GC_ZEAL) && defined(DEBUG) && !defined(JS_THREADSAFE)
-    skipGCRooters = NULL;
 #endif
+#if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
+    skipGCRooters = NULL;
 #endif
 }
 
