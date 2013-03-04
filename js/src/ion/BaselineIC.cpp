@@ -2255,6 +2255,21 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
         }
     }
 
+    if (((lhs.isBoolean() && (rhs.isBoolean() || rhs.isInt32())) ||
+         (rhs.isBoolean() && (lhs.isBoolean() || lhs.isInt32()))) &&
+        (op == JSOP_ADD || op == JSOP_SUB || op == JSOP_BITOR || op == JSOP_BITAND ||
+         op == JSOP_BITXOR))
+    {
+        IonSpew(IonSpew_BaselineIC, "  Generating %s(%s, %s) stub", js_CodeName[op],
+                lhs.isBoolean() ? "Boolean" : "Int32", rhs.isBoolean() ? "Boolean" : "Int32");
+        ICBinaryArith_BooleanWithInt32::Compiler compiler(cx, op, lhs.isBoolean(), rhs.isBoolean());
+        ICStub *arithStub = compiler.getStub(compiler.getStubSpace(script));
+        if (!arithStub)
+            return false;
+        stub->addNewStub(arithStub);
+        return true;
+    }
+
     // Handle only int32 or double.
     if (!lhs.isNumber() || !rhs.isNumber())
         return true;
@@ -2495,6 +2510,84 @@ ICBinaryArith_Double::Compiler::generateStubCode(MacroAssembler &masm)
 
     masm.boxDouble(FloatReg0, R0);
     EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+bool
+ICBinaryArith_BooleanWithInt32::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    if (lhsIsBool_)
+        masm.branchTestBoolean(Assembler::NotEqual, R0, &failure);
+    else
+        masm.branchTestInt32(Assembler::NotEqual, R0, &failure);
+
+    if (rhsIsBool_)
+        masm.branchTestBoolean(Assembler::NotEqual, R1, &failure);
+    else
+        masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
+
+    Register lhsReg = lhsIsBool_ ? masm.extractBoolean(R0, ExtractTemp0)
+                                 : masm.extractInt32(R0, ExtractTemp0);
+    Register rhsReg = rhsIsBool_ ? masm.extractBoolean(R1, ExtractTemp1)
+                                 : masm.extractInt32(R1, ExtractTemp1);
+
+    JS_ASSERT(op_ == JSOP_ADD || op_ == JSOP_SUB ||
+              op_ == JSOP_BITOR || op_ == JSOP_BITXOR || op_ == JSOP_BITAND);
+
+    switch(op_) {
+      case JSOP_ADD: {
+        Label fixOverflow;
+
+        masm.add32(rhsReg, lhsReg);
+        masm.j(Assembler::Overflow, &fixOverflow);
+        masm.tagValue(JSVAL_TYPE_INT32, lhsReg, R0);
+        EmitReturnFromIC(masm);
+
+        masm.bind(&fixOverflow);
+        masm.sub32(rhsReg, lhsReg);
+        masm.jump(&failure);
+        break;
+      }
+      case JSOP_SUB: {
+        Label fixOverflow;
+
+        masm.sub32(rhsReg, lhsReg);
+        masm.j(Assembler::Overflow, &fixOverflow);
+        masm.tagValue(JSVAL_TYPE_INT32, lhsReg, R0);
+        EmitReturnFromIC(masm);
+
+        masm.bind(&fixOverflow);
+        masm.add32(rhsReg, lhsReg);
+        masm.jump(&failure);
+        break;
+      }
+      case JSOP_BITOR: {
+        masm.orPtr(rhsReg, lhsReg);
+        masm.tagValue(JSVAL_TYPE_INT32, lhsReg, R0);
+        EmitReturnFromIC(masm);
+        break;
+      }
+      case JSOP_BITXOR: {
+        masm.xorPtr(rhsReg, lhsReg);
+        masm.tagValue(JSVAL_TYPE_INT32, lhsReg, R0);
+        EmitReturnFromIC(masm);
+        break;
+      }
+      case JSOP_BITAND: {
+        masm.andPtr(rhsReg, lhsReg);
+        masm.tagValue(JSVAL_TYPE_INT32, lhsReg, R0);
+        EmitReturnFromIC(masm);
+        break;
+      }
+      default:
+       JS_NOT_REACHED("Unhandled op for BinaryArith_BooleanWithInt32.");
+       return false;
+    }
 
     // Failure case - jump to next stub
     masm.bind(&failure);

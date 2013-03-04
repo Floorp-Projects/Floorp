@@ -522,6 +522,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void xorPtr(Imm32 imm, Register dest) {
         xorq(imm, dest);
     }
+    void xorPtr(Register src, Register dest) {
+        xorq(src, dest);
+    }
     void orPtr(Imm32 imm, Register dest) {
         orq(imm, dest);
     }
@@ -530,6 +533,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void andPtr(Imm32 imm, Register dest) {
         andq(imm, dest);
+    }
+    void andPtr(Register src, Register dest) {
+        andq(src, dest);
     }
 
     void splitTag(Register src, Register dest) {
