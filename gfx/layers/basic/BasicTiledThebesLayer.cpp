@@ -7,6 +7,7 @@
 #include "gfxImageSurface.h"
 #include "sampler.h"
 #include "gfxPlatform.h"
+#include "gfx2DGlue.h"
 #include <cstdlib> // for std::abs(int/long)
 #include <cmath> // for std::abs(float/double)
 
@@ -261,7 +262,7 @@ BasicTiledThebesLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
 static nsIntRect
 RoundedTransformViewportBounds(const gfx::Rect& aViewport,
                                const gfx::Point& aScrollOffset,
-                               const gfxSize& aResolution,
+                               const gfx::ZoomScale& aResolution,
                                float aScaleX,
                                float aScaleY,
                                const gfx3DMatrix& aTransform)
@@ -287,7 +288,7 @@ BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(BasicTiledLayerBuffer& aTi
                                                       const gfx3DMatrix& aTransform,
                                                       const nsIntRect& aCompositionBounds,
                                                       const gfx::Point& aScrollOffset,
-                                                      const gfxSize& aResolution,
+                                                      const gfx::ZoomScale& aResolution,
                                                       bool aIsRepeated)
 {
   aRegionToPaint = aInvalidRegion;
@@ -416,7 +417,7 @@ BasicTiledThebesLayer::ProgressiveUpdate(BasicTiledLayerBuffer& aTiledBuffer,
                                          const gfx3DMatrix& aTransform,
                                          const nsIntRect& aCompositionBounds,
                                          const gfx::Point& aScrollOffset,
-                                         const gfxSize& aResolution,
+                                         const gfx::ZoomScale& aResolution,
                                          LayerManager::DrawThebesLayerCallback aCallback,
                                          void* aCallbackData)
 {
@@ -486,12 +487,11 @@ BasicTiledThebesLayer::BeginPaint()
 
   // Compute the critical display port in layer space.
   mPaintData.mLayerCriticalDisplayPort.SetEmpty();
-  const gfx::Rect& criticalDisplayPort = GetParent()->GetFrameMetrics().mCriticalDisplayPort;
+  const gfxRect criticalDisplayPort(gfx::ThebesRect(
+    GetParent()->GetFrameMetrics().mCriticalDisplayPort));
   if (!criticalDisplayPort.IsEmpty()) {
     gfxRect transformedCriticalDisplayPort =
-      mPaintData.mTransformScreenToLayer.TransformBounds(
-        gfxRect(criticalDisplayPort.x, criticalDisplayPort.y,
-                criticalDisplayPort.width, criticalDisplayPort.height));
+      mPaintData.mTransformScreenToLayer.TransformBounds(criticalDisplayPort);
     transformedCriticalDisplayPort.RoundOut();
     mPaintData.mLayerCriticalDisplayPort = nsIntRect(transformedCriticalDisplayPort.x,
                                              transformedCriticalDisplayPort.y,
@@ -500,7 +500,7 @@ BasicTiledThebesLayer::BeginPaint()
   }
 
   // Calculate the frame resolution.
-  mPaintData.mResolution.SizeTo(1, 1);
+  mPaintData.mResolution = gfx::ZoomScale();
   for (ContainerLayer* parent = GetParent(); parent; parent = parent->GetParent()) {
     const FrameMetrics& metrics = parent->GetFrameMetrics();
     mPaintData.mResolution.width *= metrics.mResolution.width;

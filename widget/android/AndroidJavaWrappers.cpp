@@ -711,7 +711,10 @@ AndroidProgressiveUpdateData::Init(jobject jobj)
 }
 
 void
-AndroidGeckoLayerClient::SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect)
+AndroidGeckoLayerClient::SetFirstPaintViewport(const gfx::IntPoint& aOffset,
+                                               float aZoom,
+                                               const gfx::IntRect& aPageRect,
+                                               const gfx::Rect& aCssPageRect)
 {
     NS_ASSERTION(!isNull(), "SetFirstPaintViewport called on null layer client!");
     JNIEnv *env = GetJNIForThread();    // this is called on the compositor thread
@@ -738,8 +741,11 @@ AndroidGeckoLayerClient::SetPageRect(const gfx::Rect& aCssPageRect)
 }
 
 void
-AndroidGeckoLayerClient::SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
-                                          nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY)
+AndroidGeckoLayerClient::SyncViewportInfo(const gfx::IntRect& aDisplayPort,
+                                          float aDisplayResolution,
+                                          bool aLayersUpdated,
+                                          gfx::IntPoint& aScrollOffset,
+                                          float& aScaleX, float& aScaleY)
 {
     NS_ASSERTION(!isNull(), "SyncViewportInfo called on null layer client!");
     JNIEnv *env = GetJNIForThread();    // this is called on the compositor thread
@@ -760,7 +766,7 @@ AndroidGeckoLayerClient::SyncViewportInfo(const nsIntRect& aDisplayPort, float a
     AndroidViewTransform viewTransform;
     viewTransform.Init(viewTransformJObj);
 
-    aScrollOffset = nsIntPoint(viewTransform.GetX(env), viewTransform.GetY(env));
+    aScrollOffset = gfx::IntPoint(viewTransform.GetX(env), viewTransform.GetY(env));
     aScaleX = aScaleY = viewTransform.GetScale(env);
 }
 

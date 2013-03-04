@@ -50,6 +50,7 @@
 #include "ImageLayers.h"
 #include "ImageContainer.h"
 #include "nsCanvasFrame.h"
+#include "gfx2DGlue.h"
 
 #include "mozilla/StandardInteger.h"
 #include <algorithm>
@@ -650,8 +651,8 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
                          nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.y),
                          nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.width),
                          nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.height));
-    metrics.mContentRect = contentBounds.ScaleToNearestPixels(
-      aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
+    metrics.mContentRect = mozilla::gfx::ToIntRect(contentBounds.ScaleToNearestPixels(
+      aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel));
     nsPoint scrollPosition = scrollableFrame->GetScrollPosition();
     metrics.mScrollOffset = mozilla::gfx::Point(
       NSAppUnitsToDoublePixels(scrollPosition.x, auPerCSSPixel),
@@ -664,8 +665,8 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
                          nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.y),
                          nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.width),
                          nsPresContext::AppUnitsToFloatCSSPixels(contentBounds.height));
-    metrics.mContentRect = contentBounds.ScaleToNearestPixels(
-      aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel);
+    metrics.mContentRect = mozilla::gfx::ToIntRect(contentBounds.ScaleToNearestPixels(
+      aContainerParameters.mXScale, aContainerParameters.mYScale, auPerDevPixel));
   }
 
   metrics.mScrollId = aScrollId;
@@ -674,14 +675,16 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   if (TabChild *tc = GetTabChildFrom(presShell)) {
     metrics.mZoom = tc->GetZoom();
   }
-  metrics.mResolution = gfxSize(presShell->GetXResolution(), presShell->GetYResolution());
+  metrics.mResolution = mozilla::gfx::ZoomScale(presShell->GetXResolution(), presShell->GetYResolution());
 
   metrics.mDevPixelsPerCSSPixel = auPerCSSPixel / auPerDevPixel;
 
   metrics.mMayHaveTouchListeners = aMayHaveTouchListeners;
 
   if (nsIWidget* widget = aForFrame->GetNearestWidget()) {
-    widget->GetBounds(metrics.mCompositionBounds);
+    nsIntRect bounds;
+    widget->GetBounds(bounds);
+    metrics.mCompositionBounds = mozilla::gfx::ToIntRect(bounds);
   }
 
   aRoot->SetFrameMetrics(metrics);

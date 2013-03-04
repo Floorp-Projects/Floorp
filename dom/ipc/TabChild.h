@@ -201,7 +201,9 @@ public:
                                          const FileDescriptor& aFileDescriptor)
                                          MOZ_OVERRIDE;
     virtual bool RecvShow(const nsIntSize& size);
-    virtual bool RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size, const ScreenOrientation& orientation);
+    virtual bool RecvUpdateDimensions(const nsRect& rect,
+                                      const nsIntSize& size,
+                                      const ScreenOrientation& orientation);
     virtual bool RecvUpdateFrame(const mozilla::layers::FrameMetrics& aFrameMetrics);
     virtual bool RecvHandleDoubleTap(const nsIntPoint& aPoint);
     virtual bool RecvHandleSingleTap(const nsIntPoint& aPoint);
@@ -293,7 +295,7 @@ public:
     /** Return the DPI of the widget this TabChild draws to. */
     void GetDPI(float* aDPI);
 
-    gfxSize GetZoom() { return mLastMetrics.mZoom; }
+    const gfx::ZoomScale& GetZoom() { return mLastMetrics.mZoom; }
 
     ScreenOrientation GetOrientation() { return mOrientation; }
 
@@ -435,8 +437,8 @@ private:
     RenderFrameChild* mRemoteFrame;
     nsRefPtr<TabChildGlobal> mTabChildGlobal;
     uint32_t mChromeFlags;
-    nsIntRect mOuterRect;
-    nsIntSize mInnerSize;
+    gfx::IntRect mOuterRect;
+    gfx::IntSize mInnerSize;
     // When we're tracking a possible tap gesture, this is the "down"
     // point of the touchstart.
     nsIntPoint mGestureDownPoint;

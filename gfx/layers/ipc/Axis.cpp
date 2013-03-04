@@ -324,10 +324,7 @@ bool Axis::ScaleWillOverscrollBothSides(float aScale) {
   gfx::Rect cssContentRect = metrics.mScrollableRect;
 
   float currentScale = metrics.mZoom.width;
-  nsIntRect compositionBounds = metrics.mCompositionBounds;
-  gfx::Rect scaledCompositionBounds =
-    gfx::Rect(compositionBounds.x, compositionBounds.y,
-              compositionBounds.width, compositionBounds.height);
+  gfx::Rect scaledCompositionBounds(metrics.mCompositionBounds);
   scaledCompositionBounds.ScaleInverseRoundIn(currentScale * aScale);
 
   return GetRectLength(cssContentRect) < GetRectLength(scaledCompositionBounds);

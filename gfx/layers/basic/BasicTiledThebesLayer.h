@@ -73,7 +73,7 @@ struct BasicTiledLayerPaintData {
   gfx::Point mScrollOffset;
   gfx3DMatrix mTransformScreenToLayer;
   nsIntRect mLayerCriticalDisplayPort;
-  gfxSize mResolution;
+  gfx::ZoomScale mResolution;
   nsIntRect mCompositionBounds;
   uint16_t mLowPrecisionPaintCount;
   bool mPaintFinished : 1;
@@ -121,8 +121,8 @@ public:
     }
   }
 
-  const gfxSize& GetFrameResolution() { return mFrameResolution; }
-  void SetFrameResolution(const gfxSize& aResolution) { mFrameResolution = aResolution; }
+  const gfx::ZoomScale& GetFrameResolution() { return mFrameResolution; }
+  void SetFrameResolution(const gfx::ZoomScale& aResolution) { mFrameResolution = aResolution; }
 
   bool HasFormatChanged(BasicTiledThebesLayer* aThebesLayer) const;
 protected:
@@ -147,7 +147,7 @@ private:
   BasicTiledThebesLayer* mThebesLayer;
   LayerManager::DrawThebesLayerCallback mCallback;
   void* mCallbackData;
-  gfxSize mFrameResolution;
+  gfx::ZoomScale mFrameResolution;
   bool mLastPaintOpaque;
 
   // The buffer we use when UseSinglePaintBuffer() above is true.
@@ -247,7 +247,7 @@ private:
                                       const gfx3DMatrix& aTransform,
                                       const nsIntRect& aCompositionBounds,
                                       const gfx::Point& aScrollOffset,
-                                      const gfxSize& aResolution,
+                                      const gfx::ZoomScale& aResolution,
                                       bool aIsRepeated);
 
   /**
@@ -261,7 +261,7 @@ private:
                          const gfx3DMatrix& aTransform,
                          const nsIntRect& aCompositionBounds,
                          const gfx::Point& aScrollOffset,
-                         const gfxSize& aResolution,
+                         const gfx::ZoomScale& aResolution,
                          LayerManager::DrawThebesLayerCallback aCallback,
                          void* aCallbackData);
 
