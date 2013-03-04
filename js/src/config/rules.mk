@@ -1712,9 +1712,9 @@ $(foreach category,$(INSTALL_TARGETS),\
 # $(call preprocess_file_template, source_file, output_file,
 #                                  makefile_target, extra_flags)
 define preprocess_file_template
-$(2): $(1) $$(call mkdir_deps,$(dir $(2))) $$(GLOBAL_DEPS)
+$(2): $(1) $$(GLOBAL_DEPS)
 	$$(RM) "$$@"
-	$$(PYTHON) $$(topsrcdir)/config/Preprocessor.py $(4) $$(DEFINES) $$(ACDEFINES) $$(XULPPFLAGS) "$$<" > "$$@"
+	$$(PYTHON) $$(topsrcdir)/config/Preprocessor.py $(4) $$(DEFINES) $$(ACDEFINES) $$(XULPPFLAGS) "$$<" -o "$$@"
 $(3):: $(2)
 endef
 
