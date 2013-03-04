@@ -90,13 +90,6 @@ private:
 
 class nsTimerEvent : public nsRunnable {
 public:
-  nsTimerEvent() {
-    MOZ_ASSERT(gThread->IsOnTimerThread(),
-               "nsTimer must always be allocated on the timer thread");
-
-    PR_ATOMIC_INCREMENT(&sAllocatorUsers);
-  }
-
   NS_IMETHOD Run();
 
   nsTimerEvent(nsTimerImpl *timer, int32_t generation)
@@ -111,14 +104,12 @@ public:
 
   static void Init();
   static void Shutdown();
-  static void DeleteAllocatorIfNeeded();
 
   static void* operator new(size_t size) CPP_THROW_NEW {
     return sAllocator->Alloc(size);
   }
   void operator delete(void* p) {
     sAllocator->Free(p, sizeof(nsTimerEvent));
-    DeleteAllocatorIfNeeded();
   }
 
 private:
@@ -128,23 +119,15 @@ private:
       NS_WARNING("leaking reference to nsTimerImpl");
 #endif
     MOZ_COUNT_DTOR(nsTimerEvent);
-
-    MOZ_ASSERT(!sCanDeleteAllocator || sAllocatorUsers > 0,
-               "This will result in us attempting to deallocate the nsTimerEvent allocator twice");
-    PR_ATOMIC_DECREMENT(&sAllocatorUsers);
   }
 
   nsTimerImpl *mTimer;
   int32_t      mGeneration;
 
   static TimerEventAllocator* sAllocator;
-  static int32_t sAllocatorUsers;
-  static bool sCanDeleteAllocator;
 };
 
 TimerEventAllocator* nsTimerEvent::sAllocator = nullptr;
-int32_t nsTimerEvent::sAllocatorUsers = 0;
-bool nsTimerEvent::sCanDeleteAllocator = false;
 
 NS_IMPL_THREADSAFE_QUERY_INTERFACE1(nsTimerImpl, nsITimer)
 NS_IMPL_THREADSAFE_ADDREF(nsTimerImpl)
@@ -558,16 +541,8 @@ void nsTimerEvent::Init()
 
 void nsTimerEvent::Shutdown()
 {
-  sCanDeleteAllocator = true;
-  DeleteAllocatorIfNeeded();
-}
-
-void nsTimerEvent::DeleteAllocatorIfNeeded()
-{
-  if (sCanDeleteAllocator && sAllocatorUsers == 0) {
-    delete sAllocator;
-    sAllocator = nullptr;
-  }
+  delete sAllocator;
+  sAllocator = nullptr;
 }
 
 NS_IMETHODIMP nsTimerEvent::Run()
