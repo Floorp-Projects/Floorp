@@ -7,6 +7,7 @@
 #define MASKLAYERIMAGECACHE_H_
 
 #include "FrameLayerBuilder.h"
+#include "DisplayItemClip.h"
 #include "nsPresContext.h"
 
 namespace mozilla {
@@ -37,13 +38,13 @@ public:
 
   /**
    * Representation of a rounded rectangle in device pixel coordinates, in
-   * contrast to FrameLayerBuilder::Clip::RoundedRect, which uses app units.
+   * contrast to DisplayItemClip::RoundedRect, which uses app units.
    * In particular, our internal representation uses a gfxRect, rather than
    * an nsRect, so this class is easier to use with transforms.
    */
   struct PixelRoundedRect
   {
-    PixelRoundedRect(const FrameLayerBuilder::Clip::RoundedRect& aRRect,
+    PixelRoundedRect(const DisplayItemClip::RoundedRect& aRRect,
                      nsPresContext* aPresContext)
       : mRect(aPresContext->AppUnitsToGfxUnits(aRRect.mRect.x),
               aPresContext->AppUnitsToGfxUnits(aRRect.mRect.y),

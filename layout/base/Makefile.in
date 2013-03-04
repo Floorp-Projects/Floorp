@@ -58,10 +58,10 @@ EXPORTS_mozilla = \
   $(NULL)
 
 CPPSRCS		= \
+		DisplayItemClip.cpp \
 		FrameLayerBuilder.cpp \
-		MaskLayerImageCache.cpp \
 		FramePropertyTable.cpp \
-		RestyleTracker.cpp \
+		MaskLayerImageCache.cpp \
 		nsCSSColorUtils.cpp \
 		nsCSSFrameConstructor.cpp \
 		nsCSSRendering.cpp \
@@ -87,6 +87,7 @@ CPPSRCS		= \
 		nsStyleSheetService.cpp \
 		PaintTracker.cpp \
  		PositionedEventTargeting.cpp \
+		RestyleTracker.cpp \
 		StackArena.cpp \
 		$(NULL)
 
