@@ -15,6 +15,7 @@
 
 #include <stdio.h>
 
+using namespace mozilla;
 using namespace mozilla::layers;
 
 #ifdef DEBUG
@@ -147,20 +148,11 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
 #endif
     bool snap;
     nsRect rect = i->GetBounds(aBuilder, &snap);
-    switch (i->GetType()) {
-      case nsDisplayItem::TYPE_CLIP:
-      case nsDisplayItem::TYPE_CLIP_ROUNDED_RECT: {
-        nsDisplayClip* c = static_cast<nsDisplayClip*>(i);
-        rect = c->GetClipRect();
-        break;
-      }
-      default:
-        break;
-    }
     nscolor color;
     nsRect vis = i->GetVisibleRect();
     nsRect component = i->GetComponentAlphaBounds(aBuilder);
     nsDisplayList* list = i->GetChildren();
+    const DisplayItemClip& clip = i->GetClip();
     nsRegion opaque;
 #ifdef DEBUG
     if (!list || list->DidComputeVisibility()) {
@@ -173,15 +165,16 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
       string.AppendInt((uint64_t)i);
       fprintf(aOutput, "<a href=\"javascript:ViewImage('%s')\">", string.BeginReading());
     }
-    fprintf(aOutput, "%s %p(%s) (%d,%d,%d,%d)(%d,%d,%d,%d)(%d,%d,%d,%d)%s",
+    fprintf(aOutput, "%s %p(%s) bounds(%d,%d,%d,%d) visible(%d,%d,%d,%d) componentAlpha(%d,%d,%d,%d) clip(%s) %s",
             i->Name(), (void*)f, NS_ConvertUTF16toUTF8(fName).get(),
             rect.x, rect.y, rect.width, rect.height,
             vis.x, vis.y, vis.width, vis.height,
             component.x, component.y, component.width, component.height,
+            clip.ToString().get(),
             i->IsUniform(aBuilder, &color) ? " uniform" : "");
     nsRegionRectIterator iter(opaque);
     for (const nsRect* r = iter.Next(); r; r = iter.Next()) {
-      fprintf(aOutput, "(opaque %d,%d,%d,%d)", r->x, r->y, r->width, r->height);
+      fprintf(aOutput, " (opaque %d,%d,%d,%d)", r->x, r->y, r->width, r->height);
     }
     i->WriteDebugInfo(aOutput);
     if (aDumpHtml && i->Painted()) {

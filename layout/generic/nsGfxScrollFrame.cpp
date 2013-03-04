@@ -2127,7 +2127,38 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   nsDisplayListCollection set;
-  mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, set);
+  {
+    DisplayListClipState::AutoSaveRestore saveClipState(aBuilder->ClipState());
+    DisplayItemClip clipOnStack;
+
+    if (usingDisplayport) {
+      nsRect clip = displayPort + aBuilder->ToReferenceFrame(mOuter);
+      if (mIsRoot) {
+        aBuilder->ClipState().ClipContentDescendants(clip, clipOnStack);
+      } else {
+        aBuilder->ClipState().ClipContainingBlockDescendants(clip, nullptr, clipOnStack);
+      }
+    } else {
+      nsRect clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
+      // Our override of GetBorderRadii ensures we never have a radius at
+      // the corners where we have a scrollbar.
+      if (mIsRoot) {
+#ifdef DEBUG
+        nscoord radii[8];
+#endif
+        NS_ASSERTION(!mOuter->GetPaddingBoxBorderRadii(radii),
+                     "Roots with radii not supported");
+        aBuilder->ClipState().ClipContentDescendants(clip, clipOnStack);
+      } else {
+        nscoord radii[8];
+        bool haveRadii = mOuter->GetPaddingBoxBorderRadii(radii);
+        aBuilder->ClipState().ClipContainingBlockDescendants(clip,
+            haveRadii ? radii : nullptr, clipOnStack);
+      }
+    }
+
+    mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, aLists);
+  }
 
   // Since making new layers is expensive, only use nsDisplayScrollLayer
   // if the area is scrollable and we're the content process.
@@ -2146,27 +2177,6 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         (scrollRange.width > 0 || scrollRange.height > 0) &&
         (!mIsRoot || !mOuter->PresContext()->IsRootContentDocument()));
   }
-
-  nsRect clip;
-  nscoord radii[8];
-
-  if (usingDisplayport) {
-    clip = displayPort + aBuilder->ToReferenceFrame(mOuter);
-    memset(radii, 0, sizeof(nscoord) * ArrayLength(radii));
-  } else {
-    clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
-    // Our override of GetBorderRadii ensures we never have a radius at
-    // the corners where we have a scrollbar.
-    mOuter->GetPaddingBoxBorderRadii(radii);
-  }
-
-  // mScrolledFrame may have given us a background, e.g., the scrolled canvas
-  // frame below the viewport. If so, we want it to be clipped. We also want
-  // to end up on our BorderBackground list.
-  // If we are the viewport scrollframe, then clip all our descendants (to ensure
-  // that fixed-pos elements get clipped by us).
-  mOuter->OverflowClip(aBuilder, set, aLists, clip, radii,
-                       true, mIsRoot);
 
   if (ShouldBuildLayer()) {
     // ScrollLayerWrapper must always be created because it initializes the

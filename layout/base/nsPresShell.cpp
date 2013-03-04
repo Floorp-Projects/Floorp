@@ -4500,10 +4500,9 @@ PresShell::ClipListToRange(nsDisplayListBuilder *aBuilder,
   // determined. To do this, remove an item from the bottom of the list, check
   // whether it should be part of the range, and if so, append it to the top
   // of the temporary list tmpList. If the item is a text frame at the end of
-  // the selection range, wrap it in an nsDisplayClip to clip the display to
-  // the portion of the text frame that is part of the selection. Then, append
-  // the wrapper to the top of the list. Otherwise, just delete the item and
-  // don't append it.
+  // the selection range, clip it to the portion of the text frame that is
+  // part of the selection. Then, append the wrapper to the top of the list.
+  // Otherwise, just delete the item and don't append it.
   nsRect surfaceRect;
   nsDisplayList tmpList;
 
@@ -4542,11 +4541,11 @@ PresShell::ClipListToRange(nsDisplayListBuilder *aBuilder,
             textRect.width = std::max(startPoint.x, endPoint.x) - x;
             surfaceRect.UnionRect(surfaceRect, textRect);
 
-            // wrap the item in an nsDisplayClip so that it can be clipped to
-            // the selection. If the allocation fails, fall through and delete
-            // the item below.
-            itemToInsert = new (aBuilder)
-                nsDisplayClip(aBuilder, frame, i, textRect);
+            DisplayItemClip newClip;
+            newClip.SetTo(textRect);
+            newClip.IntersectWith(i->GetClip());
+            i->SetClip(aBuilder, newClip);
+            itemToInsert = i;
           }
         }
         // Don't try to descend into subdocuments.

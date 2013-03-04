@@ -1365,16 +1365,11 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!IsVisibleForPainting(aBuilder))
     return;
 
-  // REVIEW: We don't need any special logic here for deciding which layer
-  // to put the background in ... it goes in aLists.BorderBackground() and
-  // then if we have a block parent, it will put our background in the right
-  // place.
   DisplayBorderBackgroundOutline(aBuilder, aLists);
-  // REVIEW: Checking mRect.IsEmpty() makes no sense to me, so I removed it.
-  // It can't have been protecting us against bad situations with zero-size
-  // images since adding a border would make the rect non-empty.
 
-  nsDisplayList replacedContent;
+  DisplayListClipState::AutoClipContainingBlockDescendantsToContentBox
+    clip(aBuilder, this, DisplayListClipState::ASSUME_DRAWING_RESTRICTED_TO_CONTENT_RECT);
+
   if (mComputedSize.width != 0 && mComputedSize.height != 0) {
     nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
     NS_ASSERTION(imageLoader, "Not an image loading content?");
@@ -1407,11 +1402,11 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     if (!imageOK || !haveSize) {
       // No image yet, or image load failed. Draw the alt-text and an icon
       // indicating the status
-      replacedContent.AppendNewToTop(new (aBuilder)
+      aLists.Content()->AppendNewToTop(new (aBuilder)
         nsDisplayAltFeedback(aBuilder, this));
     }
     else {
-      replacedContent.AppendNewToTop(new (aBuilder)
+      aLists.Content()->AppendNewToTop(new (aBuilder)
         nsDisplayImage(aBuilder, this, imgCon));
 
       // If we were previously displaying an icon, we're not anymore
@@ -1420,7 +1415,6 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         mDisplayingIcon = false;
       }
 
-        
 #ifdef DEBUG
       if (GetShowFrameBorders() && GetImageMap()) {
         aLists.Outlines()->AppendNewToTop(new (aBuilder)
@@ -1432,11 +1426,9 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   if (ShouldDisplaySelection()) {
-    DisplaySelectionOverlay(aBuilder, &replacedContent,
+    DisplaySelectionOverlay(aBuilder, aLists.Content(),
                             nsISelectionDisplay::DISPLAY_IMAGES);
   }
-
-  WrapReplacedContentForBorderRadius(aBuilder, &replacedContent, aLists);
 }
 
 bool
