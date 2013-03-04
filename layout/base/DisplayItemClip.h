@@ -23,7 +23,8 @@ namespace mozilla {
  * It can represent everything CSS clipping can do to an element (except for
  * SVG clip-path), including no clipping at all.
  */
-struct DisplayItemClip {
+class DisplayItemClip {
+public:
   struct RoundedRect {
     nsRect mRect;
     // Indices into mRadii are the NS_CORNER_* constants in nsStyleConsts.h
@@ -50,9 +51,6 @@ struct DisplayItemClip {
       return !(*this == aOther);
     }
   };
-  nsRect mClipRect;
-  nsTArray<RoundedRect> mRoundedClipRects;
-  bool mHaveClipRect;
 
   // Constructs a DisplayItemClip that does no clipping at all.
   DisplayItemClip() : mHaveClipRect(false) {}
@@ -85,11 +83,26 @@ struct DisplayItemClip {
   // not succeed.
   nsRect ApproximateIntersect(const nsRect& aRect) const;
 
+  /*
+   * Computes a region which contains the clipped area of this DisplayItemClip,
+   * or if aOldClip is non-null, the union of the clipped area of this
+   * DisplayItemClip with the clipped area of aOldClip translated by aShift.
+   * The result is stored in aCombined. If the result would be infinite
+   * (because one or both of the clips does no clipping), returns false.
+   */
+  bool ComputeRegionInClips(DisplayItemClip* aOldClip,
+                            const nsPoint& aShift,
+                            nsRegion* aCombined) const;
+
   // Returns false if aRect is definitely not clipped by a rounded corner in
   // this clip. Returns true if aRect is clipped by a rounded corner in this
   // clip or it can not be quickly determined that it is not clipped by a
   // rounded corner in this clip.
   bool IsRectClippedByRoundedCorner(const nsRect& aRect) const;
+
+  // Returns false if aRect is definitely not clipped by anything in this clip.
+  // Fast but not necessarily accurate.
+  bool IsRectAffectedByClip(const nsRect& aRect) const;
 
   // Intersection of all rects in this clip ignoring any rounded corners.
   nsRect NonRoundedIntersection() const;
@@ -115,6 +128,29 @@ struct DisplayItemClip {
   bool operator!=(const DisplayItemClip& aOther) const {
     return !(*this == aOther);
   }
+
+  bool HasClip() { return mHaveClipRect; }
+  const nsRect& GetClipRect()
+  {
+    NS_ASSERTION(HasClip(), "No clip rect!");
+    return mClipRect;
+  }
+
+  /**
+   * Find the largest N such that the first N rounded rects in 'this' are
+   * equal to the first N rounded rects in aOther, and N <= aMax.
+   */
+  uint32_t GetCommonRoundedRectCount(const DisplayItemClip& aOther,
+                                     uint32_t aMax) const;
+  uint32_t GetRoundedRectCount() const { return mRoundedClipRects.Length(); }
+  void AppendRoundedRects(nsTArray<RoundedRect>* aArray, uint32_t aCount) const;
+
+private:
+  nsRect mClipRect;
+  nsTArray<RoundedRect> mRoundedClipRects;
+  // If mHaveClipRect is false then this object represents no clipping at all
+  // and mRoundedClipRects must be empty.
+  bool mHaveClipRect;
 };
 
 }

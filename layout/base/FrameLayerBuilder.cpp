@@ -108,8 +108,7 @@ FrameLayerBuilder::DisplayItemData::UpdateContents(Layer* aLayer, LayerState aSt
   mLayerState = aState;
   mContainerLayerGeneration = aContainerLayerGeneration;
   mGeometry = nullptr;
-  mClip.mHaveClipRect = false;
-  mClip.mRoundedClipRects.Clear();
+  mClip = DisplayItemClip();
   mUsed = true;
 
   if (!aItem) {
@@ -1523,21 +1522,10 @@ ContainerState::ThebesLayerData::UpdateCommonClipCount(
     const DisplayItemClip& aCurrentClip)
 {
   if (mCommonClipCount >= 0) {
-    int32_t end = std::min<int32_t>(aCurrentClip.mRoundedClipRects.Length(),
-                                  mCommonClipCount);
-    int32_t clipCount = 0;
-    for (; clipCount < end; ++clipCount) {
-      if (mItemClip.mRoundedClipRects[clipCount] !=
-          aCurrentClip.mRoundedClipRects[clipCount]) {
-        break;
-      }
-    }
-    mCommonClipCount = clipCount;
-    NS_ASSERTION(mItemClip.mRoundedClipRects.Length() >= uint32_t(mCommonClipCount),
-                 "Inconsistent common clip count.");
+    mCommonClipCount = mItemClip.GetCommonRoundedRectCount(aCurrentClip, mCommonClipCount);
   } else {
     // first item in the layer
-    mCommonClipCount = aCurrentClip.mRoundedClipRects.Length();
+    mCommonClipCount = aCurrentClip.GetRoundedRectCount();
   }
 }
 
@@ -1572,8 +1560,8 @@ ContainerState::PopThebesLayerData()
       data->mImage->ConfigureLayer(imageLayer, mParameters.mOffset);
       imageLayer->SetPostScale(mParameters.mXScale,
                                mParameters.mYScale);
-      if (data->mItemClip.mHaveClipRect) {
-        nsIntRect clip = ScaleToNearestPixels(data->mItemClip.mClipRect);
+      if (data->mItemClip.HasClip()) {
+        nsIntRect clip = ScaleToNearestPixels(data->mItemClip.GetClipRect());
         clip.MoveBy(mParameters.mOffset);
         imageLayer->SetClipRect(&clip);
       } else {
@@ -1794,7 +1782,7 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
         isUniform = false;
       }
     }
-    if (isUniform && aClip.mRoundedClipRects.IsEmpty()) {
+    if (isUniform && aClip.GetRoundedRectCount() == 0) {
       if (mVisibleRegion.IsEmpty()) {
         // This color is all we have
         mSolidColor = uniformColor;
@@ -2091,8 +2079,8 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
     nsRect itemContent = item->GetBounds(mBuilder, &snap);
     nsIntRect itemDrawRect = ScaleToOutsidePixels(itemContent, snap);
     nsIntRect clipRect;
-    if (aClip.mHaveClipRect) {
-      itemContent.IntersectRect(itemContent, aClip.mClipRect);
+    if (aClip.HasClip()) {
+      itemContent.IntersectRect(itemContent, aClip.GetClipRect());
       clipRect = ScaleToNearestPixels(aClip.NonRoundedIntersection());
       itemDrawRect.IntersectRect(itemDrawRect, clipRect);
       clipRect.MoveBy(mParameters.mOffset);
@@ -2188,11 +2176,11 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       NS_ASSERTION(ownLayer->Manager() == mManager, "Wrong manager");
       NS_ASSERTION(!ownLayer->HasUserData(&gLayerManagerUserData),
                    "We shouldn't have a FrameLayerBuilder-managed layer here!");
-      NS_ASSERTION(aClip.mHaveClipRect ||
-                     aClip.mRoundedClipRects.IsEmpty(),
+      NS_ASSERTION(aClip.HasClip() ||
+                   aClip.GetRoundedRectCount() == 0,
                    "If we have rounded rects, we must have a clip rect");
       // It has its own layer. Update that layer's clip and visible rects.
-      if (aClip.mHaveClipRect) {
+      if (aClip.HasClip()) {
         ownLayer->SetClipRect(&clipRect);
       } else {
         ownLayer->SetClipRect(nullptr);
@@ -2258,37 +2246,6 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       data->UpdateCommonClipCount(aClip);
     }
   }
-}
-
-/**
- * Combine two clips and returns true if clipping
- * needs to be applied.
- *
- * @param aClip Current clip
- * @param aOldClip Optional clip from previous paint.
- * @param aShift Offet to apply to aOldClip
- * @param aCombined Outparam - Computed clip region
- * @return True if the clip should be applied, false
- *         otherwise.
- */
-static bool ComputeCombinedClip(const DisplayItemClip& aClip,
-                                DisplayItemClip* aOldClip,
-                                const nsPoint& aShift,
-                                nsRegion& aCombined)
-{
-  if (!aClip.mHaveClipRect ||
-      (aOldClip && !aOldClip->mHaveClipRect)) {
-    return false;
-  }
-
-  if (aOldClip) {
-    aCombined = aOldClip->NonRoundedIntersection();
-    aCombined.MoveBy(aShift);
-    aCombined.Or(aCombined, aClip.NonRoundedIntersection());
-  } else {
-    aCombined = aClip.NonRoundedIntersection();
-  }
-  return true;
 }
 
 void
@@ -2385,7 +2342,7 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
 
     // Restrict invalidation to the clipped region
     nsRegion clip;
-    if (ComputeCombinedClip(aClip, oldClip, shift, clip)) {
+    if (aClip.ComputeRegionInClips(oldClip, shift, &clip)) {
       combined.And(combined, clip);
     }
 #ifdef DEBUG_INVALIDATIONS
@@ -2429,9 +2386,9 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
     nsRegion clip;
     DisplayItemClip* oldClip = nullptr;
     GetOldLayerFor(aItem, nullptr, &oldClip);
-    hasClip = ComputeCombinedClip(aClip, oldClip, 
-                                  aTopLeft - thebesData->mLastActiveScrolledRootOrigin,
-                                  clip);
+    hasClip = aClip.ComputeRegionInClips(oldClip,
+                                         aTopLeft - thebesData->mLastActiveScrolledRootOrigin,
+                                         &clip);
 
     if (hasClip) {
       intClip = clip.GetBounds().ScaleToOutsidePixels(thebesData->mXScale, 
@@ -3283,13 +3240,11 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
     NS_ASSERTION(AppUnitsPerDevPixel(cdi->mItem) == appUnitsPerDevPixel,
                  "a thebes layer should contain items only at the same zoom");
 
-    NS_ABORT_IF_FALSE(cdi->mClip.mHaveClipRect ||
-                      cdi->mClip.mRoundedClipRects.IsEmpty(),
+    NS_ABORT_IF_FALSE(cdi->mClip.HasClip() ||
+                      cdi->mClip.GetRoundedRectCount() == 0,
                       "If we have rounded rects, we must have a clip rect");
 
-    if (!cdi->mClip.mHaveClipRect ||
-        (cdi->mClip.mRoundedClipRects.IsEmpty() &&
-         cdi->mClip.mClipRect.Contains(visible.GetBounds()))) {
+    if (!cdi->mClip.IsRectAffectedByClip(visible.GetBounds())) {
       cdi->mItem->RecomputeVisibility(builder, &visible);
       continue;
     }
@@ -3297,12 +3252,12 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
     // Do a little dance to account for the fact that we're clipping
     // to cdi->mClipRect
     nsRegion clipped;
-    clipped.And(visible, cdi->mClip.mClipRect);
+    clipped.And(visible, cdi->mClip.NonRoundedIntersection());
     nsRegion finalClipped = clipped;
     cdi->mItem->RecomputeVisibility(builder, &finalClipped);
     // If we have rounded clip rects, don't subtract from the visible
     // region since we aren't displaying everything inside the rect.
-    if (cdi->mClip.mRoundedClipRects.IsEmpty()) {
+    if (cdi->mClip.GetRoundedRectCount() == 0) {
       nsRegion removed;
       removed.Sub(clipped, finalClipped);
       nsRegion newVisible;
@@ -3321,7 +3276,7 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   rc->Init(presContext->DeviceContext(), aContext);
 
   DisplayItemClip currentClip;
-  bool setClipRect = false;
+  bool currentClipIsSetInContext = false;
 
   for (i = 0; i < items.Length(); ++i) {
     ClippedDisplayItem* cdi = &items[i];
@@ -3331,13 +3286,13 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
 
     // If the new desired clip state is different from the current state,
     // update the clip.
-    if (setClipRect != cdi->mClip.mHaveClipRect ||
-        (cdi->mClip.mHaveClipRect && cdi->mClip != currentClip)) {
-      if (setClipRect) {
+    if (currentClipIsSetInContext != cdi->mClip.HasClip() ||
+        (cdi->mClip.HasClip() && cdi->mClip != currentClip)) {
+      if (currentClipIsSetInContext) {
         aContext->Restore();
       }
-      setClipRect = cdi->mClip.mHaveClipRect;
-      if (setClipRect) {
+      currentClipIsSetInContext = cdi->mClip.HasClip();
+      if (currentClipIsSetInContext) {
         currentClip = cdi->mClip;
         aContext->Save();
         NS_ASSERTION(commonClipCount < 100,
@@ -3375,7 +3330,7 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
     items.SwapElements(entry->mItems);
   }
 
-  if (setClipRect) {
+  if (currentClipIsSetInContext) {
     aContext->Restore();
   }
 
@@ -3450,7 +3405,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const DisplayItemClip& aClip,
 
   // don't build an unnecessary mask
   nsIntRect layerBounds = aLayer->GetVisibleRegion().GetBounds();
-  if (aClip.mRoundedClipRects.IsEmpty() ||
+  if (aClip.GetRoundedRectCount() == 0 ||
       aRoundedRectClipCount == 0 ||
       layerBounds.IsEmpty()) {
     SetClipCount(thebesData, 0);
@@ -3462,10 +3417,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const DisplayItemClip& aClip,
   MaskLayerUserData* userData = GetMaskLayerUserData(maskLayer);
 
   MaskLayerUserData newData;
-  newData.mRoundedClipRects.AppendElements(aClip.mRoundedClipRects);
-  if (aRoundedRectClipCount < newData.mRoundedClipRects.Length()) {
-    newData.mRoundedClipRects.TruncateLength(aRoundedRectClipCount);
-  }
+  aClip.AppendRoundedRects(&newData.mRoundedClipRects, aRoundedRectClipCount);
   newData.mScaleX = mParameters.mXScale;
   newData.mScaleY = mParameters.mYScale;
   newData.mOffset = mParameters.mOffset;
