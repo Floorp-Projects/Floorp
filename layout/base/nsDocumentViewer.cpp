@@ -39,6 +39,7 @@
 #include "nsContentUtils.h"
 #include "nsLayoutStylesheetCache.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/EncodingUtils.h"
 
 #include "nsIDeviceContextSpec.h"
 #include "nsViewManager.h"
@@ -155,6 +156,7 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 #include "jsfriendapi.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 #ifdef DEBUG
 
@@ -2970,10 +2972,14 @@ nsDocumentViewer::GetDefaultCharacterSet(nsACString& aDefaultCharacterSet)
     const nsAdoptingCString& defCharset =
       Preferences::GetLocalizedCString("intl.charset.default");
 
-    if (!defCharset.IsEmpty()) {
-      mDefaultCharacterSet = defCharset;
+    // Don't let the user break things by setting intl.charset.default to
+    // not a rough ASCII superset
+    nsAutoCString canonical;
+    if (EncodingUtils::FindEncodingForLabel(defCharset, canonical) &&
+        EncodingUtils::IsAsciiCompatible(canonical)) {
+      mDefaultCharacterSet = canonical;
     } else {
-      mDefaultCharacterSet.AssignLiteral("ISO-8859-1");
+      mDefaultCharacterSet.AssignLiteral("windows-1252");
     }
   }
   aDefaultCharacterSet = mDefaultCharacterSet;
