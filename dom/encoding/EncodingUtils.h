@@ -70,6 +70,15 @@ public:
     aString.Trim(" \t\n\f\r");
   }
 
+  /**
+   * Check is the encoding is ASCII-compatible in the sense that Basic Latin
+   * encodes to ASCII bytes. (The reverse may not be true!)
+   *
+   * @param aPreferredName a preferred encoding label
+   * @return whether the encoding is ASCII-compatible
+   */
+  static bool IsAsciiCompatible(const nsACString& aPreferredName);
+
 private:
   EncodingUtils() MOZ_DELETE;
 };
