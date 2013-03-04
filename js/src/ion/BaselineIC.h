@@ -312,6 +312,7 @@ class ICEntry
     _(BinaryArith_Double)       \
     _(BinaryArith_StringConcat) \
     _(BinaryArith_StringObjectConcat) \
+    _(BinaryArith_BooleanWithInt32) \
                                 \
     _(UnaryArith_Fallback)      \
     _(UnaryArith_Int32)         \
@@ -2315,6 +2316,67 @@ class ICBinaryArith_Double : public ICStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICBinaryArith_Double::New(space, getStubCode());
+        }
+    };
+};
+
+class ICBinaryArith_BooleanWithInt32 : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICBinaryArith_BooleanWithInt32(IonCode *stubCode, bool lhsIsBool, bool rhsIsBool)
+      : ICStub(BinaryArith_BooleanWithInt32, stubCode)
+    {
+        JS_ASSERT(lhsIsBool || rhsIsBool);
+        extra_ = 0;
+        if (lhsIsBool)
+            extra_ |= 1;
+        if (rhsIsBool)
+            extra_ |= 2;
+    }
+
+  public:
+    static inline ICBinaryArith_BooleanWithInt32 *New(ICStubSpace *space, IonCode *code,
+                                                      bool lhsIsBool, bool rhsIsBool) {
+        if (!code)
+            return NULL;
+        return space->allocate<ICBinaryArith_BooleanWithInt32>(code, lhsIsBool, rhsIsBool);
+    }
+
+    bool lhsIsBoolean() const {
+        return extra_ & 1;
+    }
+
+    bool rhsIsBoolean() const {
+        return extra_ & 2;
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        JSOp op_;
+        bool lhsIsBool_;
+        bool rhsIsBool_;
+        bool generateStubCode(MacroAssembler &masm);
+
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(op_) << 16) |
+                   (static_cast<int32_t>(lhsIsBool_) << 24) |
+                   (static_cast<int32_t>(rhsIsBool_) << 25);
+        }
+
+      public:
+        Compiler(JSContext *cx, JSOp op, bool lhsIsBool, bool rhsIsBool)
+          : ICStubCompiler(cx, ICStub::BinaryArith_BooleanWithInt32),
+            op_(op), lhsIsBool_(lhsIsBool), rhsIsBool_(rhsIsBool)
+        {
+            JS_ASSERT(op_ == JSOP_ADD || op_ == JSOP_SUB || op_ == JSOP_BITOR ||
+                      op_ == JSOP_BITAND || op_ == JSOP_BITXOR);
+            JS_ASSERT(lhsIsBool_ || rhsIsBool_);
+        }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICBinaryArith_BooleanWithInt32::New(space, getStubCode(),
+                                                       lhsIsBool_, rhsIsBool_);
         }
     };
 };

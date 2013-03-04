@@ -105,6 +105,9 @@ class MacroAssemblerX86Shared : public Assembler
     void cmp32(const Operand &lhs, const Register &rhs) {
         cmpl(lhs, rhs);
     }
+    void add32(Register src, Register dest) {
+        addl(src, dest);
+    }
     void add32(Imm32 imm, Register dest) {
         addl(imm, dest);
     }
