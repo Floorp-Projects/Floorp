@@ -380,12 +380,6 @@ protected:
   already_AddRefed<DOMMediaStream> CaptureStreamInternal(bool aFinishWhenEnded);
 
   /**
-   * Create a decoder for the given aMIMEType. Returns null if we
-   * were unable to create the decoder.
-   */
-  already_AddRefed<MediaDecoder> CreateDecoder(const nsACString& aMIMEType);
-
-  /**
    * Initialize a decoder as a clone of an existing decoder in another
    * element.
    * mLoadingSrc must already be set.
