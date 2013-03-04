@@ -1544,6 +1544,12 @@ MacroAssemblerARMCompat::freeStack(Register amount)
 }
 
 void
+MacroAssemblerARMCompat::add32(Register src, Register dest)
+{
+    ma_add(src, dest, SetCond);
+}
+
+void
 MacroAssemblerARMCompat::add32(Imm32 imm, Register dest)
 {
     ma_add(imm, dest, SetCond);
@@ -1617,6 +1623,12 @@ MacroAssemblerARMCompat::xorPtr(Imm32 imm, Register dest)
 }
 
 void
+MacroAssemblerARMCompat::xorPtr(Register src, Register dest)
+{
+    ma_eor(src, dest);
+}
+
+void
 MacroAssemblerARMCompat::orPtr(Imm32 imm, Register dest)
 {
     ma_orr(imm, dest);
@@ -1632,6 +1644,12 @@ void
 MacroAssemblerARMCompat::andPtr(Imm32 imm, Register dest)
 {
     ma_and(imm, dest);
+}
+
+void
+MacroAssemblerARMCompat::andPtr(Register src, Register dest)
+{
+    ma_and(src, dest);
 }
 
 void
