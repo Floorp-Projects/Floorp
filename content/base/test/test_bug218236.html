@@ -26,21 +26,17 @@ SimpleTest.waitForExplicitFinish();
 var url_200 = window.location.href;
 var url_404 = url_200.replace(/[^/]+$/, "this_file_is_not_going_to_be_there.dummy");
 var url_connection_error = url_200.replace(/^(\w+:\/\/[^/]+?)(:\d+)?\//, "$1:9546/");
-var url_multipart = "file_bug218236_multipart.txt";
 
 // List of tests: name of the test, URL to be requested, expected sequence
 // of events and optionally a function to be called from readystatechange handler.
 // Numbers in the list of events are values of XMLHttpRequest.readyState
 // when readystatechange event is triggered.
 var tests = [
-  ["200 OK",                            url_200,                [1, 2, 3, 4, "load"], 0, null],
-  ["404 Not Found",                     url_404,                [1, 2, 3, 4, "load"], 0, null],
-  ["connection error",                  url_connection_error,   [1, 2, 4, "error"],   0, null],
-  ["abort() call on readyState = 1",    url_200,                [1, 4],               0, null, doAbort1],
-  ["abort() call on readyState = 2",    url_200,                [1, 2, 4],            0, doAbort2],
-  ["multipart document",                url_multipart,          [1, 2, 3, 4, "load",
-                                                                 1, 2, 3, 4, "load",
-                                                                 1, 2, 3, 4, "load"], 1, null],
+  ["200 OK",                            url_200,                [1, 2, 3, 4, "load"], null],
+  ["404 Not Found",                     url_404,                [1, 2, 3, 4, "load"], null],
+  ["connection error",                  url_connection_error,   [1, 2, 4, "error"],   null],
+  ["abort() call on readyState = 1",    url_200,                [1, 4],               null, doAbort1],
+  ["abort() call on readyState = 2",    url_200,                [1, 2, 4],            doAbort2],
 ];
 
 var testName = null;
@@ -76,12 +72,11 @@ function runNextTest() {
     currentState = 0;
     currentSequence = [];
     expectedSequence = test[2];
-    currentCallback = test[4];
-    postSendCallback = test[5];
+    currentCallback = test[3];
+    postSendCallback = test[4];
 
     // Prepare request object
     request = new XMLHttpRequest();
-    request.multipart = test[3];
     request.onreadystatechange = onReadyStateChange;
     request.open("GET", test[1]);
     request.onload = onLoad;

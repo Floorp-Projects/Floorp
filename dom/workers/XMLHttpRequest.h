@@ -54,7 +54,6 @@ private:
   uint32_t mTimeout;
 
   bool mJSObjectRooted;
-  bool mMultipart;
   bool mBackgroundRequest;
   bool mWithCredentials;
   bool mCanceled;
@@ -147,15 +146,6 @@ public:
 
   void
   SetWithCredentials(bool aWithCredentials, ErrorResult& aRv);
-
-  bool
-  Multipart() const
-  {
-    return mMultipart;
-  }
-
-  void
-  SetMultipart(bool aMultipart, ErrorResult& aRv);
 
   bool
   MozBackgroundRequest() const
