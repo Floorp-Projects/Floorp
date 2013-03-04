@@ -67,7 +67,8 @@ NS_IsSpace(PRUnichar u)
 static inline bool
 NS_NeedsPlatformNativeHandling(PRUnichar aChar)
 {
-  return (0x0e01 <= aChar && aChar <= 0x0fff); // Thai, Lao, Tibetan
+  return (0x0e01 <= aChar && aChar <= 0x0fff) || // Thai, Lao, Tibetan
+         (0x1780 <= aChar && aChar <= 0x17ff);   // Khmer
 }
 
 #endif  /* nsILineBreaker_h__ */
