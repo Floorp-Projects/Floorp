@@ -1133,16 +1133,12 @@ ion::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
                 if (!argsobj)
                     return false;
 
-                RootedScript script(cx, frame->script());
-                InternalBindingsHandle bindings(script, &script->bindings);
-                const unsigned var = Bindings::argumentsVarIndex(cx, bindings);
-
                 // The arguments is a local binding and needsArgsObj does not
                 // check if it is clobbered. Ensure that the local binding
                 // restored during bailout before storing the arguments object
                 // to the slot.
-                if (frame->unaliasedLocal(var).isMagic(JS_OPTIMIZED_ARGUMENTS))
-                    frame->unaliasedLocal(var) = ObjectValue(*argsobj);
+                RootedScript script(cx, frame->script());
+                SetFrameArgumentsObject(cx, frame, script, argsobj);
             }
 
             if (frameno == 0)
