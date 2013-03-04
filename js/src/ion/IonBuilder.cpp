@@ -2895,9 +2895,7 @@ class AutoAccumulateExits
     MIRGraphExits *prev_;
 
   public:
-    AutoAccumulateExits(MIRGraph &graph, MIRGraphExits &exits)
-      : graph_(graph)
-    {
+    AutoAccumulateExits(MIRGraph &graph, MIRGraphExits &exits) : graph_(graph) {
         prev_ = graph_.exitAccumulator();
         graph_.setExitAccumulator(&exits);
     }
@@ -2912,14 +2910,16 @@ IonBuilder::inlineScriptedCall(HandleFunction target, CallInfo &callInfo)
     AssertCanGC();
     JS_ASSERT(target->isInterpreted());
     JS_ASSERT(callInfo.hasCallType());
-    JS_ASSERT(types::IsInlinableCall(pc));
 
-    // Remove any MPassArgs.
+    // Remove the MPassArg if still present.
     if (callInfo.isWrapped())
         callInfo.unwrapArgs();
 
-    // Ensure sufficient space in the slots: needed for inlining from FUNAPPLY.
-    uint32_t depth = current->stackDepth() + callInfo.numFormals();
+    // Create resumepoint if not provided. This resume point collects outer variables only.
+    // It is used to recover the stack state before the current bytecode.
+
+    // Make sure there is enough place in the slots
+    uint32_t depth = current->stackDepth() + callInfo.argc() + 2;
     if (depth > current->nslots()) {
         if (!current->increaseSlots(depth - current->nslots()))
             return false;
@@ -2933,15 +2933,15 @@ IonBuilder::inlineScriptedCall(HandleFunction target, CallInfo &callInfo)
         callInfo.setThis(thisDefn);
     }
 
-    // Capture formals in the outer resume point.
+    // Push formals to capture in the resumepoint
     callInfo.pushFormals(current);
 
-    MResumePoint *outerResumePoint =
+    MResumePoint *resumePoint =
         MResumePoint::New(current, pc, callerResumePoint_, MResumePoint::Outer);
-    if (!outerResumePoint)
+    if (!resumePoint)
         return false;
 
-    // Pop formals again, except leave |fun| on stack for duration of call.
+    // Pop formals again, except leave |fun| on stack for duration of call
     callInfo.popFormals(current);
     current->push(callInfo.fun());
 
@@ -2958,7 +2958,7 @@ IonBuilder::inlineScriptedCall(HandleFunction target, CallInfo &callInfo)
             addTypeBarrier(i, callInfo, oracle.parameterTypeSet(calleeScript, i - 1));
     }
 
-    // Start inlining.
+    // Start inlining
     LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
     CompileInfo *info = alloc->new_<CompileInfo>(calleeScript.get(), target,
                                                  (jsbytecode *)NULL, callInfo.constructing(),
@@ -2969,9 +2969,11 @@ IonBuilder::inlineScriptedCall(HandleFunction target, CallInfo &callInfo)
     MIRGraphExits saveExits;
     AutoAccumulateExits aae(graph(), saveExits);
 
+    IonBuilder inlineBuilder(cx, &temp(), &graph(), &oracle,
+                             info, inliningDepth + 1, loopDepth_);
+
     // Build the graph.
-    IonBuilder inlineBuilder(cx, &temp(), &graph(), &oracle, info, inliningDepth + 1, loopDepth_);
-    if (!inlineBuilder.buildInline(this, outerResumePoint, callInfo)) {
+    if (!inlineBuilder.buildInline(this, resumePoint, callInfo)) {
         JS_ASSERT(calleeScript->hasAnalysis());
 
         // Inlining the callee failed. Disable inlining the function
@@ -2982,33 +2984,35 @@ IonBuilder::inlineScriptedCall(HandleFunction target, CallInfo &callInfo)
         return false;
     }
 
-    // Create return block.
+    // Create bottom block
+    JS_ASSERT(types::IsInlinableCall(pc));
     jsbytecode *postCall = GetNextPc(pc);
-    MBasicBlock *returnBlock = newBlock(NULL, postCall);
-    if (!returnBlock)
+    MBasicBlock *bottom = newBlock(NULL, postCall);
+    if (!bottom)
         return false;
-    returnBlock->setCallerResumePoint(callerResumePoint_);
+    bottom->setCallerResumePoint(callerResumePoint_);
 
     // When profiling add Inline_Exit instruction to indicate end of inlined function.
     if (instrumentedProfiling())
-        returnBlock->add(MFunctionBoundary::New(NULL, MFunctionBoundary::Inline_Exit));
+        bottom->add(MFunctionBoundary::New(NULL, MFunctionBoundary::Inline_Exit));
 
     // Inherit the slots from current and pop |fun|.
-    returnBlock->inheritSlots(current);
-    returnBlock->pop();
+    bottom->inheritSlots(current);
+    bottom->pop();
 
-    // Accumulate return values.
+    // Push return value
     MIRGraphExits &exits = *inlineBuilder.graph().exitAccumulator();
-    MDefinition *retvalDefn = patchInlinedReturns(callInfo, exits, returnBlock);
+    MDefinition *retvalDefn = patchInlinedReturns(callInfo, exits, bottom);
     if (!retvalDefn)
         return false;
-    returnBlock->push(retvalDefn);
+    bottom->push(retvalDefn);
 
     // Initialize entry slots now that the stack has been fixed up.
-    if (!returnBlock->initEntrySlots())
+    if (!bottom->initEntrySlots())
         return false;
 
-    current = returnBlock;
+    current = bottom;
+
     return true;
 }
 
@@ -3123,6 +3127,92 @@ IonBuilder::patchInlinedReturns(CallInfo &callInfo, MIRGraphExits &exits, MBasic
 
     bottom->addPhi(phi);
     return phi;
+}
+
+bool
+IonBuilder::jsop_call_inline(HandleFunction callee, CallInfo &callInfo, MBasicBlock *bottom,
+                             Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns)
+{
+    AssertCanGC();
+    JS_ASSERT(callInfo.hasCallType());
+
+    // Push formals to capture them in the inline resume point.
+    int calleePos = -((int) callInfo.argc() + 2);
+    current->peek(calleePos)->setFoldedUnchecked();
+    current->rewriteAtDepth(calleePos, callInfo.fun());
+
+    // This resume point collects outer variables only.  It is used to recover
+    // the stack state before the current bytecode.
+    MResumePoint *inlineResumePoint =
+        MResumePoint::New(current, pc, callerResumePoint_, MResumePoint::Outer);
+    if (!inlineResumePoint)
+        return false;
+
+    // Pop formals again (|this| and arguments).
+    // Note that we leave the |fun| on the stack
+    callInfo.popFormals(current);
+    current->push(callInfo.fun());
+
+    // Inlining JSOP_FUNCALL uses inlineScriptedCall
+    JS_ASSERT(callInfo.argc() == GET_ARGC(inlineResumePoint->pc()));
+
+    RootedScript calleeScript(cx, callee->nonLazyScript());
+    TypeInferenceOracle oracle;
+    if (!oracle.init(cx, calleeScript))
+        return false;
+
+    // Add exclude type barriers.
+    if (callInfo.argsBarrier()) {
+        addTypeBarrier(0, callInfo, oracle.thisTypeSet(calleeScript));
+        int32_t max = (callInfo.argc() < callee->nargs) ? callInfo.argc() : callee->nargs;
+        for (int32_t i = 1; i <= max; i++)
+            addTypeBarrier(i, callInfo, oracle.parameterTypeSet(calleeScript, i - 1));
+    }
+
+    LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
+    CompileInfo *info = alloc->new_<CompileInfo>(calleeScript.get(), callee,
+                                                 (jsbytecode *)NULL, callInfo.constructing(),
+                                                 this->info().executionMode());
+    if (!info)
+        return false;
+
+    MIRGraphExits saveExits;
+    AutoAccumulateExits aae(graph(), saveExits);
+
+    IonBuilder inlineBuilder(cx, &temp(), &graph(), &oracle,
+                             info, inliningDepth + 1, loopDepth_);
+
+    // Create new |this| on the caller-side for inlined constructors.
+    if (callInfo.constructing()) {
+        MDefinition *thisDefn = createThis(callee, callInfo.fun());
+        if (!thisDefn)
+            return false;
+        callInfo.setThis(thisDefn);
+    }
+
+    // Build the graph.
+    if (!inlineBuilder.buildInline(this, inlineResumePoint, callInfo)) {
+        JS_ASSERT(calleeScript->hasAnalysis());
+
+        // Inlining the callee failed. Disable inlining the function
+        if (inlineBuilder.abortReason_ == AbortReason_Disable)
+            calleeScript->analysis()->setIonUninlineable();
+
+        abortReason_ = AbortReason_Inlining;
+        return false;
+    }
+
+    // Replace all MReturns with MGotos, and accumulate them.
+    MIRGraphExits &exits = *inlineBuilder.graph().exitAccumulator();
+    for (MBasicBlock **it = exits.begin(), **end = exits.end(); it != end; ++it) {
+        MDefinition *rdef = patchInlinedReturn(callInfo, *it, bottom);
+        if (!rdef)
+            return false;
+        if (!retvalDefns.append(rdef))
+            return false;
+    }
+    JS_ASSERT(!retvalDefns.empty());
+    return true;
 }
 
 bool
@@ -3532,33 +3622,23 @@ IonBuilder::inlineScriptedCalls(AutoObjectVector &targets, AutoObjectVector &ori
 
         // Set the constant function.
         MConstant *constFun = disp->getFunctionConstant(i);
-        callInfo.fun()->setFoldedUnchecked();
         callInfo.setFun(constFun);
 
         // Set the right block active.
-        MBasicBlock *inlineBlock = disp->getSuccessor(i);
-        graph().moveBlockToEnd(inlineBlock);
-
-        // Remove formals before inlining.
-        callInfo.popFormals(inlineBlock);
+        MBasicBlock *block = disp->getSuccessor(i);
+        graph().moveBlockToEnd(block);
+        current = block;
 
         // Inline call.
-        current = inlineBlock;
-        if (!inlineScriptedCall(target, callInfo))
+        if (!jsop_call_inline(target, callInfo, inlineBottom, retvalDefns))
             return false;
-
-        // Accumulate the return definition.
-        MBasicBlock *returnBlock = current;
-        MDefinition *retvalDefn = returnBlock->peek(-1);
-        if (!retvalDefns.append(retvalDefn))
-            return false;
-
-        // Connect the return block to the bottom.
-        returnBlock->end(MGoto::New(inlineBottom));
-        if (!inlineBottom->addPredecessorWithoutPhis(returnBlock))
-            return NULL;
-
     }
+
+    // Regardless of whether inlineBottom != bottom, demarcate these exits
+    // with an Inline_Exit instruction signifying that the inlined functions
+    // on this level have all ceased running.
+    if (instrumentedProfiling())
+        inlineBottom->add(MFunctionBoundary::New(NULL, MFunctionBoundary::Inline_Exit));
 
     // In the case where we had to create a new block, all of the returns of
     // the inline functions need to be merged together with a phi node. This
