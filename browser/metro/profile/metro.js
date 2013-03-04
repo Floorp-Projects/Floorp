@@ -21,6 +21,9 @@ pref("metro.debug.selection.displayRanges", false);
 pref("metro.debug.selection.dumpRanges", false);
 pref("metro.debug.selection.dumpEvents", false);
 
+// Enable off main thread compositing
+pref("layers.offmainthreadcomposition.enabled", false);
+
 // Form helper options: 0 = disabled, 1 = enabled, 2 = dynamic depending on screen size
 pref("formhelper.mode", 0);
 // Auto zoom to form elements when they take focus 

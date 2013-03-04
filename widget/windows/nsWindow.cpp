@@ -3211,7 +3211,7 @@ GetLayerManagerPrefs(LayerManagerPrefs* aManagerPrefs)
 }
 
 bool
-nsWindow::UseOffMainThreadCompositing()
+nsWindow::ShouldUseOffMainThreadCompositing()
 {
   // OMTC doesn't work on Windows right now.
   return false;
@@ -3318,7 +3318,7 @@ nsWindow::GetLayerManager(PLayersChild* aShadowManager,
     // Fall back to software if we couldn't use any hardware backends.
     if (!mLayerManager) {
       // Try to use an async compositor first, if possible
-      if (UseOffMainThreadCompositing()) {
+      if (ShouldUseOffMainThreadCompositing()) {
         // e10s uses the parameter to pass in the shadow manager from the TabChild
         // so we don't expect to see it there since this doesn't support e10s.
         NS_ASSERTION(aShadowManager == nullptr, "Async Compositor not supported with e10s");
