@@ -241,6 +241,51 @@ FT2FontEntry::CreateFontEntry(const FontListEntry& aFLE)
     return fe;
 }
 
+// Helpers to extract font entry properties from an FT_Face
+static bool
+FTFaceIsItalic(FT_Face aFace)
+{
+    return !!(aFace->style_flags & FT_STYLE_FLAG_ITALIC);
+}
+
+static uint16_t
+FTFaceGetWeight(FT_Face aFace)
+{
+    TT_OS2 *os2 = static_cast<TT_OS2*>(FT_Get_Sfnt_Table(aFace, ft_sfnt_os2));
+    uint16_t os2weight = 0;
+    if (os2 && os2->version != 0xffff) {
+        // Technically, only 100 to 900 are valid, but some fonts
+        // have this set wrong -- e.g. "Microsoft Logo Bold Italic" has
+        // it set to 6 instead of 600.  We try to be nice and handle that
+        // as well.
+        if (os2->usWeightClass >= 100 && os2->usWeightClass <= 900) {
+            os2weight = os2->usWeightClass;
+        } else if (os2->usWeightClass >= 1 && os2->usWeightClass <= 9) {
+            os2weight = os2->usWeightClass * 100;
+        }
+    }
+
+    uint16_t result;
+    if (os2weight != 0) {
+        result = os2weight;
+    } else if (aFace->style_flags & FT_STYLE_FLAG_BOLD) {
+        result = 700;
+    } else {
+        result = 400;
+    }
+
+    NS_ASSERTION(result >= 100 && result <= 900, "Invalid weight in font!");
+
+    return result;
+}
+
+// Used to create the font entry for installed faces on the device,
+// when iterating over the fonts directories.
+// We use the FT_Face to retrieve the details needed for the font entry,
+// but unless we have been passed font data (i.e. for a user font),
+// we do *not* save a reference to it, nor create a cairo face,
+// as we don't want to keep a freetype face for every installed font
+// permanently in memory.
 /* static */
 FT2FontEntry*
 FT2FontEntry::CreateFontEntry(FT_Face aFace,
@@ -251,39 +296,21 @@ FT2FontEntry::CreateFontEntry(FT_Face aFace,
     static cairo_user_data_key_t key;
 
     FT2FontEntry *fe = new FT2FontEntry(aName);
-    fe->mItalic = aFace->style_flags & FT_STYLE_FLAG_ITALIC;
-    fe->mFTFace = aFace;
-    int flags = gfxPlatform::GetPlatform()->FontHintingEnabled() ?
-                FT_LOAD_DEFAULT :
-                (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
-    fe->mFontFace = cairo_ft_font_face_create_for_ft_face(aFace, flags);
+    fe->mItalic = FTFaceIsItalic(aFace);
+    fe->mWeight = FTFaceGetWeight(aFace);
     fe->mFilename = aFilename;
     fe->mFTFontIndex = aIndex;
-    FTUserFontData *userFontData = new FTUserFontData(aFace, aFontData);
-    cairo_font_face_set_user_data(fe->mFontFace, &key,
-                                  userFontData, FTFontDestroyFunc);
 
-    TT_OS2 *os2 = static_cast<TT_OS2*>(FT_Get_Sfnt_Table(aFace, ft_sfnt_os2));
-    uint16_t os2weight = 0;
-    if (os2 && os2->version != 0xffff) {
-        // Technically, only 100 to 900 are valid, but some fonts
-        // have this set wrong -- e.g. "Microsoft Logo Bold Italic" has
-        // it set to 6 instead of 600.  We try to be nice and handle that
-        // as well.
-        if (os2->usWeightClass >= 100 && os2->usWeightClass <= 900)
-            os2weight = os2->usWeightClass;
-        else if (os2->usWeightClass >= 1 && os2->usWeightClass <= 9)
-            os2weight = os2->usWeightClass * 100;
+    if (aFontData) {
+        fe->mFTFace = aFace;
+        int flags = gfxPlatform::GetPlatform()->FontHintingEnabled() ?
+                    FT_LOAD_DEFAULT :
+                    (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
+        fe->mFontFace = cairo_ft_font_face_create_for_ft_face(aFace, flags);
+        FTUserFontData *userFontData = new FTUserFontData(aFace, aFontData);
+        cairo_font_face_set_user_data(fe->mFontFace, &key,
+                                      userFontData, FTFontDestroyFunc);
     }
-
-    if (os2weight != 0)
-        fe->mWeight = os2weight;
-    else if (aFace->style_flags & FT_STYLE_FLAG_BOLD)
-        fe->mWeight = 700;
-    else
-        fe->mWeight = 400;
-
-    NS_ASSERTION(fe->mWeight >= 100 && fe->mWeight <= 900, "Invalid final weight in font!");
 
     return fe;
 }
@@ -800,8 +827,12 @@ gfxFT2FontList::AppendFacesFromFontFile(nsCString& aFileName,
                 FT_Done_Face(face);
                 continue;
             }
+
+            // build the font entry name and create an FT2FontEntry,
+            // but do -not- keep a reference to the FT_Face
             FT2FontEntry* fe =
                 CreateNamedFontEntry(face, aFileName.get(), i);
+
             if (fe) {
                 NS_ConvertUTF8toUTF16 name(face->family_name);
                 BuildKeyNameFromFontName(name);       
@@ -830,6 +861,7 @@ gfxFT2FontList::AppendFacesFromFontFile(nsCString& aFileName,
                 }
 #endif
             }
+            FT_Done_Face(face);
         }
         FT_Done_Face(dummy);
         if (aCache && 0 == statRetval && !faceList.IsEmpty()) {
