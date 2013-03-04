@@ -193,6 +193,8 @@ globalgen_dependencies := \
   Configuration.py \
   Codegen.py \
   parser/WebIDL.py \
+  ../webidl/WebIDL.mk \
+  $(all_webidl_files) \
   $(CACHE_DIR)/.done \
   $(GLOBAL_DEPS) \
   $(NULL)
@@ -201,8 +203,7 @@ $(CACHE_DIR)/.done:
 	$(MKDIR) -p $(CACHE_DIR)
 	@$(TOUCH) $@
 
-ParserResults.pkl: $(globalgen_dependencies) \
-                   $(all_webidl_files)
+ParserResults.pkl: $(globalgen_dependencies)
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
     $(PLY_INCLUDE) -I$(srcdir)/parser \
     $(srcdir)/GlobalGen.py $(srcdir)/Bindings.conf . \
