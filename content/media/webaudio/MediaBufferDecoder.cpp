@@ -22,6 +22,34 @@
 #include "nsIScriptError.h"
 #include "nsMimeTypes.h"
 
+#ifdef MOZ_GSTREAMER
+#include "GStreamerReader.h"
+#endif
+#ifdef MOZ_RAW
+#include "RawReader.h"
+#endif
+#ifdef MOZ_OGG
+#include "OggReader.h"
+#endif
+#ifdef MOZ_WAVE
+#include "WaveReader.h"
+#endif
+#ifdef MOZ_WIDGET_GONK
+#include "MediaOmxReader.h"
+#endif
+#ifdef MOZ_MEDIA_PLUGINS
+#include "MediaDecoder.h"
+#include "MediaPluginDecoder.h"
+#include "MediaPluginReader.h"
+#include "MediaPluginHost.h"
+#endif
+#ifdef MOZ_WEBM
+#include "WebMReader.h"
+#endif
+#ifdef MOZ_WMF
+#include "WMFReader.h"
+#endif
+
 namespace mozilla {
 
 using namespace dom;
@@ -399,7 +427,51 @@ MediaDecodeTask::CreateReader()
   // If you change this list to add support for new decoders, please consider
   // updating nsHTMLMediaElement::CreateDecoder as well.
 
-  mDecoderReader = DecoderTraits::CreateReader(mContentType, mBufferDecoder);
+#ifdef MOZ_GSTREAMER
+  if (DecoderTraits::IsGStreamerSupportedType(mContentType)) {
+    mDecoderReader = new GStreamerReader(mBufferDecoder);
+  } else
+#endif
+#ifdef MOZ_RAW
+  if (DecoderTraits::IsRawType(mContentType)) {
+    mDecoderReader = new RawReader(mBufferDecoder);
+  } else
+#endif
+#ifdef MOZ_OGG
+  if (DecoderTraits::IsOggType(mContentType)) {
+    mDecoderReader = new OggReader(mBufferDecoder);
+  } else
+#endif
+#ifdef MOZ_WAVE
+  if (DecoderTraits::IsWaveType(mContentType)) {
+    mDecoderReader = new WaveReader(mBufferDecoder);
+  } else
+#endif
+#ifdef MOZ_WIDGET_GONK
+  if (DecoderTraits::IsOmxSupportedType(mContentType)) {
+    mDecoderReader = new MediaOmxReader(mBufferDecoder);
+  } else
+#endif
+#ifdef MOZ_MEDIA_PLUGINS
+  if (MediaDecoder::IsMediaPluginsEnabled() &&
+      GetMediaPluginHost()->FindDecoder(mContentType, nullptr)) {
+    mDecoderReader = new MediaPluginReader(mBufferDecoder, mContentType);
+  } else
+#endif
+#ifdef MOZ_WEBM
+  if (DecoderTraits::IsWebMType(mContentType)) {
+    mDecoderReader = new WebMReader(mBufferDecoder);
+  } else
+#endif
+#ifdef MOZ_WMF
+  if (DecoderTraits::IsWMFSupportedType(mContentType)) {
+    mDecoderReader = new WMFReader(mBufferDecoder);
+  } else
+#endif
+#ifdef MOZ_DASH
+  // The DASH decoder is not supported.
+#endif
+  if (false) {} // dummy if to take care of the dangling else
 
   if (!mDecoderReader) {
     return false;
