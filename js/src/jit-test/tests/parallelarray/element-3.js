@@ -7,5 +7,4 @@ function testElement() {
   assertEq(desc.value, 9);
 }
 
-// FIXME(bug 844882) self-hosted object not array-like, exposes internal properties
-// testElement();
+testElement();
