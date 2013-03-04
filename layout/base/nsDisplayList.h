@@ -112,6 +112,7 @@ class nsDisplayListBuilder {
 public:
   typedef mozilla::FramePropertyDescriptor FramePropertyDescriptor;
   typedef mozilla::FrameLayerBuilder FrameLayerBuilder;
+  typedef mozilla::DisplayItemClip DisplayItemClip;
   typedef mozilla::DisplayListClipState DisplayListClipState;
   typedef nsIWidget::ThemeGeometry ThemeGeometry;
 
@@ -490,7 +491,6 @@ public:
   public:
     AutoBuildingDisplayList(nsDisplayListBuilder* aBuilder, bool aIsRoot)
       : mBuilder(aBuilder),
-        mPrevClipState(aBuilder->mClipState),
         mPrevCachedOffsetFrame(aBuilder->mCachedOffsetFrame),
         mPrevCachedReferenceFrame(aBuilder->mCachedReferenceFrame),
         mPrevCachedOffset(aBuilder->mCachedOffset),
@@ -501,7 +501,6 @@ public:
                             nsIFrame* aForChild, bool aIsRoot,
                             bool aIsInFixedPosition)
       : mBuilder(aBuilder),
-        mPrevClipState(aBuilder->mClipState),
         mPrevCachedOffsetFrame(aBuilder->mCachedOffsetFrame),
         mPrevCachedReferenceFrame(aBuilder->mCachedReferenceFrame),
         mPrevCachedOffset(aBuilder->mCachedOffset),
@@ -522,7 +521,6 @@ public:
       }
     }
     ~AutoBuildingDisplayList() {
-      mBuilder->mClipState = mPrevClipState;
       mBuilder->mCachedOffsetFrame = mPrevCachedOffsetFrame;
       mBuilder->mCachedReferenceFrame = mPrevCachedReferenceFrame;
       mBuilder->mCachedOffset = mPrevCachedOffset;
@@ -531,7 +529,6 @@ public:
     }
   private:
     nsDisplayListBuilder* mBuilder;
-    DisplayListClipState  mPrevClipState;
     const nsIFrame*       mPrevCachedOffsetFrame;
     const nsIFrame*       mPrevCachedReferenceFrame;
     nsPoint               mPrevCachedOffset;
@@ -706,6 +703,7 @@ protected:
 class nsDisplayItem : public nsDisplayItemLink {
 public:
   typedef mozilla::FrameLayerBuilder::ContainerParameters ContainerParameters;
+  typedef mozilla::DisplayItemClip DisplayItemClip;
   typedef mozilla::layers::FrameMetrics::ViewID ViewID;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
@@ -715,21 +713,19 @@ public:
   // need to count constructors and destructors.
   nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
     : mFrame(aFrame)
+    , mClip(aBuilder->ClipState().GetCurrentCombinedClip(aBuilder))
 #ifdef MOZ_DUMP_PAINTING
     , mPainted(false)
 #endif
   {
-    if (aFrame) {
-      mReferenceFrame = aBuilder->FindReferenceFrameFor(aFrame);
-      mToReferenceFrame = aBuilder->ToReferenceFrame(aFrame);
-    } else {
-      mReferenceFrame = nullptr;
-    }
+    mReferenceFrame = aBuilder->FindReferenceFrameFor(aFrame);
+    mToReferenceFrame = aBuilder->ToReferenceFrame(aFrame);
   }
   nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                 const nsIFrame* aReferenceFrame,
                 const nsPoint& aToReferenceFrame)
     : mFrame(aFrame)
+    , mClip(aBuilder->ClipState().GetCurrentCombinedClip(aBuilder))
     , mReferenceFrame(aReferenceFrame)
     , mToReferenceFrame(aToReferenceFrame)
 #ifdef MOZ_DUMP_PAINTING
@@ -737,7 +733,25 @@ public:
 #endif
   {
   }
-  virtual ~nsDisplayItem() {}
+  /**
+   * This constructor is only used in rare cases when we need to construct
+   * temporary items.
+   */
+  nsDisplayItem(nsIFrame* aFrame)
+    : mFrame(aFrame)
+    , mClip(nullptr)
+    , mReferenceFrame(nullptr)
+#ifdef MOZ_DUMP_PAINTING
+    , mPainted(false)
+#endif
+  {
+  }
+  virtual ~nsDisplayItem()
+  {
+    if (mClip) {
+      mClip->MaybeDestroy();
+    }
+  }
   
   void* operator new(size_t aSize,
                      nsDisplayListBuilder* aBuilder) CPP_THROW_NEW {
@@ -774,19 +788,15 @@ public:
    */
   virtual Type GetType() = 0;
   /**
-   * If this returns a non-zero value, then pairing this with the
-   * GetUnderlyingFrame() pointer gives a key that uniquely identifies
-   * this display item in the display item tree.
-   * This will only return a zero value for items which wrap display lists
-   * and do not create a CSS stacking context, therefore requiring
-   * display items to be individually wrapped --- currently nsDisplayClip
-   * and nsDisplayClipRoundedRect only.
+   * Pairing this with the GetUnderlyingFrame() pointer gives a key that
+   * uniquely identifies this display item in the display item tree.
+   * XXX check ScrollLayerWrapper/nsOptionEventGrabberWrapper/nsXULEventRedirectorWrapper
    */
   virtual uint32_t GetPerFrameKey() { return uint32_t(GetType()); }
   /**
    * This is called after we've constructed a display list for event handling.
    * When this is called, we've already ensured that aRect intersects the
-   * item's bounds.
+   * item's bounds and that clipping has been taking into account.
    *
    * @param aRect the point or rect being tested, relative to the reference
    * frame. If the width and height are both 1 app unit, it indicates we're
@@ -800,9 +810,8 @@ public:
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) {}
   /**
    * @return the frame that this display item is based on. This is used to sort
-   * items by z-index and content order and for some other uses. For some items
-   * that wrap item lists, this could return nullptr because there is no single
-   * underlying frame; for leaf items it will never return nullptr.
+   * items by z-index and content order and for some other uses. Never
+   * returns null.
    */
   inline nsIFrame* GetUnderlyingFrame() const { return mFrame; }
   /**
@@ -812,6 +821,7 @@ public:
    * It might be set to false and snap anyway, so code computing the set of
    * pixels affected by this display item needs to round outwards to pixel
    * boundaries when *aSnap is set to false.
+   * This does not take the item's clipping into account.
    * @return a rectangle relative to aBuilder->ReferenceFrame() that
    * contains the area drawn by this display item
    */
@@ -820,6 +830,12 @@ public:
     *aSnap = false;
     return nsRect(ToReferenceFrame(), GetUnderlyingFrame()->GetSize());
   }
+  /**
+   * Returns the result of GetBounds intersected with the item's clip.
+   * The intersection is approximate since rounded corners are not taking into
+   * account.
+   */
+  nsRect GetClippedBounds(nsDisplayListBuilder* aBuilder);
   nsRect GetBorderRect() {
     return nsRect(ToReferenceFrame(), GetUnderlyingFrame()->GetSize());
   }
@@ -926,6 +942,7 @@ public:
    * color. This is useful for determining when one piece
    * of content completely obscures another so that we can do occlusion
    * culling.
+   * This does not take clipping into account.
    */
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    bool* aSnap)
@@ -1095,6 +1112,7 @@ public:
    * return the list.
    */
   virtual nsDisplayList* GetSameCoordinateSystemChildren() { return nullptr; }
+  virtual void UpdateBounds(nsDisplayListBuilder* aBuilder) {}
 
   /**
    * If this has a child list, return it, even if the children are in
@@ -1169,14 +1187,32 @@ public:
   
   virtual bool SupportsOptimizingToImage() { return false; }
 
+  const DisplayItemClip& GetClip()
+  {
+    return mClip ? *mClip : DisplayItemClip::NoClip();
+  }
+  void SetClip(nsDisplayListBuilder* aBuilder, const DisplayItemClip& aClip)
+  {
+    if (mClip) {
+      mClip->MaybeDestroy();
+    }
+    if (!aClip.HasClip()) {
+      mClip = nullptr;
+      return;
+    }
+    void* mem = aBuilder->Allocate(sizeof(DisplayItemClip));
+    DisplayItemClip* clip = new (mem) DisplayItemClip();
+    *clip = aClip;
+    mClip = clip;
+  }
+
 protected:
   friend class nsDisplayList;
 
-  nsDisplayItem() {
-    mAbove = nullptr;
-  }
+  nsDisplayItem() { mAbove = nullptr; }
 
   nsIFrame* mFrame;
+  const DisplayItemClip* mClip;
   // Result of FindReferenceFrameFor(mFrame), if mFrame is non-null
   const nsIFrame* mReferenceFrame;
   // Result of ToReferenceFrame(mFrame), if mFrame is non-null
@@ -1385,7 +1421,6 @@ public:
    * @return true if any item in the list is visible.
    */
   bool ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
-                                   nsDisplayItem* aForItem,
                                    nsRegion* aVisibleRegion,
                                    const nsRect& aListVisibleBounds,
                                    const nsRect& aAllowVisibleRegionExpansion);
@@ -1481,9 +1516,6 @@ private:
   
   // Utility function used to massage the list during ComputeVisibility.
   void FlattenTo(nsTArray<nsDisplayItem*>* aElements);
-  // Utility function used to massage the list during sorting, to rewrite
-  // any wrapper items with null GetUnderlyingFrame
-  void ExplodeAnonymousChildLists(nsDisplayListBuilder* aBuilder);
   
   nsDisplayItemLink  mSentinel;
   nsDisplayItemLink* mTop;
@@ -2223,7 +2255,7 @@ public:
   /**
    * Call this if the wrapped list is changed.
    */
-  void UpdateBounds(nsDisplayListBuilder* aBuilder)
+  virtual void UpdateBounds(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE
   {
     mBounds = mList.GetBounds(aBuilder);
   }
@@ -2569,87 +2601,6 @@ public:
                           nsDisplayItem* aItem) MOZ_OVERRIDE;
 
   virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
-};
-
-/**
- * nsDisplayClip can clip a list of items, but we take a single item
- * initially and then later merge other items into it when we merge
- * adjacent matching nsDisplayClips
- */
-class nsDisplayClip : public nsDisplayWrapList {
-public:
-  /**
-   * @param aFrame the frame that should be considered the underlying
-   * frame for this content, e.g. the frame whose z-index we have.  This
-   * is *not* the frame that is inducing the clipping.
-   */
-  nsDisplayClip(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                nsDisplayItem* aItem, const nsRect& aRect);
-  nsDisplayClip(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                nsDisplayList* aList, const nsRect& aRect);
-#ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayClip();
-#endif
-  
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) MOZ_OVERRIDE;
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) MOZ_OVERRIDE;
-  virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                   nsRegion* aVisibleRegion,
-                                   const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE;
-  virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) MOZ_OVERRIDE;
-  NS_DISPLAY_DECL_NAME("Clip", TYPE_CLIP)
-  virtual uint32_t GetPerFrameKey() { return 0; }
-  
-  const nsRect& GetClipRect() { return mClip; }
-  void SetClipRect(const nsRect& aRect) { mClip = aRect; }
-
-  virtual nsDisplayWrapList* WrapWithClone(nsDisplayListBuilder* aBuilder,
-                                           nsDisplayItem* aItem) MOZ_OVERRIDE;
-
-protected:
-  nsRect    mClip;
-};
-
-/**
- * A display item to clip a list of items to the border-radius of a
- * frame.
- */
-class nsDisplayClipRoundedRect : public nsDisplayClip {
-public:
-  /**
-   * @param aFrame the frame that should be considered the underlying
-   * frame for this content, e.g. the frame whose z-index we have.  This
-   * is *not* the frame that is inducing the clipping.
-   */
-  nsDisplayClipRoundedRect(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                           nsDisplayItem* aItem,
-                           const nsRect& aRect, nscoord aRadii[8]);
-  nsDisplayClipRoundedRect(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                           nsDisplayList* aList,
-                           const nsRect& aRect, nscoord aRadii[8]);
-#ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayClipRoundedRect();
-#endif
-
-  virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                   bool* aSnap) MOZ_OVERRIDE;
-  virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
-                       HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) MOZ_OVERRIDE;
-  virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                   nsRegion* aVisibleRegion,
-                                   const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE;
-  virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) MOZ_OVERRIDE;
-  NS_DISPLAY_DECL_NAME("ClipRoundedRect", TYPE_CLIP_ROUNDED_RECT)
-
-  virtual nsDisplayWrapList* WrapWithClone(nsDisplayListBuilder* aBuilder,
-                                           nsDisplayItem* aItem);
-
-  void GetRadii(nscoord aRadii[8]) {
-    memcpy(aRadii, mRadii, sizeof(mRadii));
-  }
-
-private:
-  nscoord mRadii[8];
 };
 
 /**
@@ -3001,7 +2952,7 @@ public:
     : nsDisplayItem(aBuilder, aFrame), mLeftEdge(0), mRightEdge(0) {}
 
   nsCharClipDisplayItem(nsIFrame* aFrame)
-    : nsDisplayItem(nullptr, aFrame, nullptr, nsPoint()) {}
+    : nsDisplayItem(aFrame) {}
 
   struct ClipEdges {
     ClipEdges(const nsDisplayItem& aItem,
