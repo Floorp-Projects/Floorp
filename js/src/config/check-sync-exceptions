@@ -9,6 +9,7 @@ nsinstall
 nsinstall.exe
 host_nsinstall.o
 host_pathsub.o
+moz.build
 
 # This is a copy of nspr's config/make-system-wrappers.pl.
 make-system-wrappers.pl

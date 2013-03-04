@@ -67,7 +67,6 @@ CPPSRCS		= \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
-DIRS += android
 LOCAL_INCLUDES += -I$(topsrcdir)/dom/plugins/base/android
 else
 # android_npapi.h extends the NPNVariable and NPPVariable enums

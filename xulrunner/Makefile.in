@@ -10,19 +10,4 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PARALLEL_DIRS = \
-  app \
-  setup \
-  stub \
-  examples \
-  $(NULL)
-
-ifdef MAKENSISU
-DIRS += installer/windows
-endif
-
-ifeq ($(OS_ARCH),WINNT)
-PARALLEL_DIRS += tools/redit
-endif
-
 include $(topsrcdir)/config/rules.mk

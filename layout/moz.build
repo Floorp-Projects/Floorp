@@ -1,0 +1,46 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+PARALLEL_DIRS += [
+    'style',
+    'base',
+    'generic',
+    'forms',
+    'tables',
+    'svg',
+    'xul/base/public',
+    'xul/base/src',
+    'ipc',
+    'mathml',
+    'inspector/public',
+    'inspector/src',
+]
+
+if CONFIG['NS_PRINTING']:
+    PARALLEL_DIRS += ['printing']
+
+if CONFIG['MOZ_XUL']:
+    PARALLEL_DIRS += ['xul/tree', 'xul/grid']
+
+if CONFIG['ENABLE_TESTS']:
+    PARALLEL_DIRS += [
+        'inspector/tests',
+        'inspector/tests/chrome',
+        'mathml/tests',
+        'xul/test',
+        'xul/base/test',
+    ]
+
+TEST_TOOL_DIRS += [
+    'tools/reftest',
+    'reftests/fonts',
+    'reftests/fonts/mplus',
+]
+
+DIRS += ['build', 'media']
+
+if CONFIG['MOZ_DEBUG']:
+    TEST_DIRS += ['tools/layout-debug']
+

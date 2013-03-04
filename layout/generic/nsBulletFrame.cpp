@@ -279,7 +279,7 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
                     mRect.height - (mPadding.top + mPadding.bottom));
         nsLayoutUtils::DrawSingleImage(&aRenderingContext,
              imageCon, nsLayoutUtils::GetGraphicsFilterForFrame(this),
-             dest + aPt, aDirtyRect, imgIContainer::FLAG_NONE);
+             dest + aPt, aDirtyRect, nullptr, imgIContainer::FLAG_NONE);
         return;
       }
     }

@@ -10,12 +10,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = $(NULL)
-
-ifdef ENABLE_TESTS
-TOOL_DIRS += test
-endif
-
 MODULE = startupcache
 MODULE_NAME = StartupCacheModule
 LIBRARY_NAME = startupcache

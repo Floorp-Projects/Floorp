@@ -9,7 +9,6 @@ VPATH            = @srcdir@
 relativesrcdir   = @relativesrcdir@
 
 MODULE           = test_osfile
-DIRS = mochi
 
 XPCSHELL_TESTS = xpcshell
 

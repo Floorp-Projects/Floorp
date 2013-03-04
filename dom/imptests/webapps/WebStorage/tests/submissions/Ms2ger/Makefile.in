@@ -9,9 +9,6 @@ relativesrcdir := @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS := \
-  $(NULL)
-
 MOCHITEST_FILES := \
   test_event_constructor_js.html \
   test_missing_arguments.html \

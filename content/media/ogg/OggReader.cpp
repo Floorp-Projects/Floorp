@@ -19,7 +19,7 @@ extern "C" {
 #include "opus/opus_multistream.h"
 }
 #endif
-#include "nsTimeRanges.h"
+#include "mozilla/dom/TimeRanges.h"
 #include "mozilla/TimeStamp.h"
 #include "VorbisUtils.h"
 #include "MediaMetadataManager.h"
@@ -1750,7 +1750,7 @@ nsresult OggReader::SeekBisection(int64_t aTarget,
   return NS_OK;
 }
 
-nsresult OggReader::GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime)
+nsresult OggReader::GetBuffered(TimeRanges* aBuffered, int64_t aStartTime)
 {
   {
     mozilla::ReentrantMonitorAutoEnter mon(mMonitor);

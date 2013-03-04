@@ -25,6 +25,39 @@ def shell_escape(s):
     return RE_SHELL_ESCAPE.sub(r'\\\1', str(s)).replace('$', '$$')
 
 
+class BuildConfig(object):
+    """Represents the output of configure."""
+
+    def __init__(self):
+        self.topsrcdir = None
+        self.topobjdir = None
+        self.defines = {}
+        self.non_global_defines = []
+        self.substs = {}
+        self.files = []
+
+    @staticmethod
+    def from_config_status(path):
+        """Create an instance from a config.status file."""
+
+        with open(path, 'rt') as fh:
+            source = fh.read()
+            code = compile(source, path, 'exec', dont_inherit=1)
+            g = {
+                '__builtins__': __builtins__,
+                '__file__': path,
+            }
+            l = {}
+            exec(code, g, l)
+
+            config = BuildConfig()
+
+            for name in l['__all__']:
+                setattr(config, name, l[name])
+
+            return config
+
+
 class ConfigEnvironment(object):
     """Perform actions associated with a configured but bare objdir.
 
@@ -79,6 +112,13 @@ class ConfigEnvironment(object):
             self.substs[name]) for name in self.substs]))
         self.substs['ALLDEFINES'] = '\n'.join(sorted(['#define %s %s' % (name,
             self.defines[name]) for name in global_defines]))
+
+    @staticmethod
+    def from_config_status(path):
+        config = BuildConfig.from_config_status(path)
+
+        return ConfigEnvironment(config.topsrcdir, config.topobjdir,
+            config.defines, config.non_global_defines, config.substs)
 
     def get_relative_srcdir(self, file):
         '''Returns the relative source directory for the given file, always

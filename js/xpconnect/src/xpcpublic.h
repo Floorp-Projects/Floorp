@@ -291,6 +291,20 @@ inline bool StringToJsval(JSContext *cx, nsAString &str, JS::Value *rval)
     return NonVoidStringToJsval(cx, str, rval);
 }
 
+inline bool
+NonVoidStringToJsval(JSContext* cx, const nsAString& str, JS::Value *rval)
+{
+    nsString mutableCopy(str);
+    return NonVoidStringToJsval(cx, mutableCopy, rval);
+}
+
+inline bool
+StringToJsval(JSContext* cx, const nsAString& str, JS::Value *rval)
+{
+    nsString mutableCopy(str);
+    return StringToJsval(cx, mutableCopy, rval);
+}
+
 /**
  * As above, but for mozilla::dom::DOMString.
  */

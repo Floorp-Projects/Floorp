@@ -10,11 +10,6 @@ VPATH = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
-DIRS = \
-	content \
-	locales \
-	$(NULL)
-
 PREF_JS_EXPORTS = $(srcdir)/pref/firefox-branding.js
 
 # On Windows only do this step for browser, skip for metro.

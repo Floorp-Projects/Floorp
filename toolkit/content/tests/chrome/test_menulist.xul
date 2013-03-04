@@ -79,10 +79,6 @@
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
-if (!navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 2);
-}
-
 SimpleTest.waitForExplicitFinish();
 
 function testtag_menulists()

@@ -10,8 +10,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/ipc/app/defs.mk
 
-DIRS = locales
-
 DIST_FILES = package-name.txt
 
 include $(topsrcdir)/mobile/android/base/android-services-files.mk
@@ -507,6 +505,10 @@ RES_VALUES_LAND_V14 = \
   res/values-land-v14/dimens.xml \
   $(NULL)
 
+RES_VALUES_V14 = \
+  res/values-v14/styles.xml \
+  $(NULL)
+
 RES_XML = \
         res/xml/gecko_appwidget_info.xml \
 	$(SYNC_RES_XML) \
@@ -544,6 +546,8 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/awesomebar_tab_center.9.png \
   res/drawable-mdpi/awesomebar_tab_left.9.png \
   res/drawable-mdpi/awesomebar_tab_right.9.png \
+  res/drawable-mdpi/awesomebar_sep_left.9.png \
+  res/drawable-mdpi/awesomebar_sep_right.9.png \
   res/drawable-mdpi/desktop_notification.png \
   res/drawable-mdpi/ic_addons_empty.png \
   res/drawable-mdpi/ic_awesomebar_go.png \
@@ -612,6 +616,7 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/tabs_synced.png \
   res/drawable-mdpi/urlbar_stop.png \
   res/drawable-mdpi/reader.png \
+  res/drawable-mdpi/reader_active.png \
   res/drawable-mdpi/reading_list.png \
   res/drawable-mdpi/validation_arrow.png \
   res/drawable-mdpi/validation_arrow_inverted.png \
@@ -656,6 +661,8 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/awesomebar_tab_center.9.png \
   res/drawable-hdpi/awesomebar_tab_left.9.png \
   res/drawable-hdpi/awesomebar_tab_right.9.png \
+  res/drawable-hdpi/awesomebar_sep_left.9.png \
+  res/drawable-hdpi/awesomebar_sep_right.9.png \
   res/drawable-hdpi/ic_addons_empty.png \
   res/drawable-hdpi/ic_awesomebar_go.png \
   res/drawable-hdpi/ic_awesomebar_reader.png \
@@ -711,6 +718,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/tabs_synced.png \
   res/drawable-hdpi/urlbar_stop.png \
   res/drawable-hdpi/reader.png \
+  res/drawable-hdpi/reader_active.png \
   res/drawable-hdpi/reading_list.png \
   res/drawable-hdpi/validation_arrow.png \
   res/drawable-hdpi/validation_arrow_inverted.png \
@@ -747,6 +755,8 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/awesomebar_tab_center.9.png \
   res/drawable-xhdpi/awesomebar_tab_left.9.png \
   res/drawable-xhdpi/awesomebar_tab_right.9.png \
+  res/drawable-xhdpi/awesomebar_sep_left.9.png \
+  res/drawable-xhdpi/awesomebar_sep_right.9.png \
   res/drawable-xhdpi/ic_addons_empty.png \
   res/drawable-xhdpi/ic_awesomebar_go.png \
   res/drawable-xhdpi/ic_awesomebar_reader.png \
@@ -779,6 +789,7 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/find_prev.png \
   res/drawable-xhdpi/urlbar_stop.png \
   res/drawable-xhdpi/reader.png \
+  res/drawable-xhdpi/reader_active.png \
   res/drawable-xhdpi/reading_list.png \
   res/drawable-xhdpi/larry_blue.png \
   res/drawable-xhdpi/larry_green.png \
@@ -930,6 +941,8 @@ RES_DRAWABLE_XLARGE_MDPI_V11 = \
   res/drawable-xlarge-mdpi-v11/awesomebar_tab_center.9.png \
   res/drawable-xlarge-mdpi-v11/awesomebar_tab_left.9.png \
   res/drawable-xlarge-mdpi-v11/awesomebar_tab_right.9.png \
+  res/drawable-xlarge-mdpi-v11/awesomebar_sep_left.9.png \
+  res/drawable-xlarge-mdpi-v11/awesomebar_sep_right.9.png \
   res/drawable-xlarge-mdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-xlarge-mdpi-v11/ic_menu_bookmark_remove.png \
   $(NULL)
@@ -938,6 +951,8 @@ RES_DRAWABLE_XLARGE_HDPI_V11 = \
   res/drawable-xlarge-hdpi-v11/awesomebar_tab_center.9.png \
   res/drawable-xlarge-hdpi-v11/awesomebar_tab_left.9.png \
   res/drawable-xlarge-hdpi-v11/awesomebar_tab_right.9.png \
+  res/drawable-xlarge-hdpi-v11/awesomebar_sep_left.9.png \
+  res/drawable-xlarge-hdpi-v11/awesomebar_sep_right.9.png \
   res/drawable-xlarge-hdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-xlarge-hdpi-v11/ic_menu_bookmark_remove.png \
   $(NULL)
@@ -946,6 +961,8 @@ RES_DRAWABLE_XLARGE_XHDPI_V11 = \
   res/drawable-xlarge-xhdpi-v11/awesomebar_tab_center.9.png \
   res/drawable-xlarge-xhdpi-v11/awesomebar_tab_left.9.png \
   res/drawable-xlarge-xhdpi-v11/awesomebar_tab_right.9.png \
+  res/drawable-xlarge-xhdpi-v11/awesomebar_sep_left.9.png \
+  res/drawable-xlarge-xhdpi-v11/awesomebar_sep_right.9.png \
   res/drawable-xlarge-xhdpi-v11/ic_menu_bookmark_add.png \
   res/drawable-xlarge-xhdpi-v11/ic_menu_bookmark_remove.png \
   $(NULL)
@@ -1005,7 +1022,7 @@ MOZ_BRANDING_DRAWABLE_MDPI = $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRE
 MOZ_BRANDING_DRAWABLE_HDPI = $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources-hdpi.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources-hdpi.mn | tr '\n' ' ';  fi)
 MOZ_BRANDING_DRAWABLE_XHDPI = $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources-xhdpi.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources-xhdpi.mn | tr '\n' ' ';  fi)
 
-RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LARGE_LAND_V11) $(RES_LAYOUT_LARGE_V11) $(RES_LAYOUT_XLARGE_V11) $(RES_VALUES) $(RES_VALUES_LAND) $(RES_VALUES_V11) $(RES_VALUES_LARGE_V11) $(RES_VALUES_LARGE_LAND_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_DRAWABLE_LARGE_LAND_V11) $(RES_DRAWABLE_LARGE_MDPI_V11) $(RES_DRAWABLE_LARGE_HDPI_V11) $(RES_DRAWABLE_LARGE_XHDPI_V11) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
+RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LARGE_LAND_V11) $(RES_LAYOUT_LARGE_V11) $(RES_LAYOUT_XLARGE_V11) $(RES_VALUES) $(RES_VALUES_LAND) $(RES_VALUES_V11) $(RES_VALUES_LARGE_V11) $(RES_VALUES_LARGE_LAND_V11) $(RES_VALUES_XLARGE_V11) $(RES_VALUES_LAND_V14) $(RES_VALUES_V14) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_MDPI) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_XHDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_DRAWABLE_LARGE_LAND_V11) $(RES_DRAWABLE_LARGE_MDPI_V11) $(RES_DRAWABLE_LARGE_HDPI_V11) $(RES_DRAWABLE_LARGE_XHDPI_V11) $(RES_DRAWABLE_XLARGE_MDPI_V11) $(RES_DRAWABLE_XLARGE_HDPI_V11) $(RES_DRAWABLE_XLARGE_XHDPI_V11) $(RES_COLOR) $(RES_MENU)
 
 RES_DIRS= \
   res/layout                    \

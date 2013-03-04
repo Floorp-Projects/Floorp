@@ -98,11 +98,15 @@ this.PhoneNumber = (function (dataBase) {
   const VALID_ALPHA_PATTERN = new RegExp("[" + VALID_ALPHA + "]", "g");
   const LEADING_PLUS_CHARS_PATTERN = new RegExp("^[" + PLUS_CHARS + "]+", "g");
 
+  // Bug 845539 - viable phone number in Venezuela.
+  const VENEZUELA_SHORT_NUMBER = "\\*[" + VALID_DIGITS + "]";
+
   // We append optionally the extension pattern to the end here, as a valid
   // phone number may have an extension prefix appended, followed by 1 or more
   // digits.
   const VALID_PHONE_NUMBER_PATTERN =
     new RegExp("^" + MIN_LENGTH_PHONE_NUMBER + "$|"
+               + "^" + VENEZUELA_SHORT_NUMBER + "$|"
                + "^" + VALID_PHONE_NUMBER + "(?:" + EXTN_PATTERNS_FOR_PARSING + ")?$", "i");
 
   // Format of the string encoded meta data. If the name contains "^" or "$"

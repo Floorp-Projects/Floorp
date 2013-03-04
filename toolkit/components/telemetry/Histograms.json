@@ -2418,6 +2418,15 @@
     "kind": "boolean",
     "description": "Deleted or to-be-reused innerwindow which has had mutation event listeners."
   },
+  "CHARSET_OVERRIDE_SITUATION": {
+    "kind": "enumerated",
+    "n_values": 7,
+    "description": "Labeling status of top-level page when overriding charset (unlabeled file URL without detection, unlabeled non-file URL without detection, unlabeled file URL with detection, unlabeled non-file URL with detection, labeled, already overridden, bug)"
+  },
+  "CHARSET_OVERRIDE_USED": {
+    "kind": "flag",
+    "description": "Whether the character encoding menu was used to override an encoding in this session."
+  },
   "XUL_FOREGROUND_REFLOW_MS": {
     "kind": "exponential",
     "high": "3000",

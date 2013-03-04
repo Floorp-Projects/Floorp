@@ -9,12 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= xbl-marquee
-
-ifdef ENABLE_TESTS
-TOOL_DIRS	= test
-endif
-
 MODULE		= layout
 LIBRARY_NAME	= gkstyle_s
 LIBXUL_LIBRARY	= 1

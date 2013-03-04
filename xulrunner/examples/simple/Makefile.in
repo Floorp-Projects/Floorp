@@ -13,8 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= simple
 XPI_NAME	= simple
 
-DIRS		= components
-
 PREF_JS_EXPORTS	= $(srcdir)/simple-prefs.js
 DIST_FILES	= application.ini
 

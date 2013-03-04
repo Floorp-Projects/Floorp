@@ -1127,7 +1127,11 @@ TiltVisualizer.Presenter.prototype = {
 
     TiltUtils.destroyObject(this._renderer);
 
-    this.contentWindow.removeEventListener("resize", this._onResize, false);
+    // Closing the tab would result in contentWindow being a dead object,
+    // so operations like removing event listeners won't work anymore.
+    if (this.contentWindow == this.chromeWindow.content) {
+      this.contentWindow.removeEventListener("resize", this._onResize, false);
+    }
   }
 };
 
@@ -1232,7 +1236,11 @@ TiltVisualizer.Controller.prototype = {
     canvas.removeEventListener("keypress", this._onKeyPress, true);
     canvas.removeEventListener("blur", this._onBlur, false);
 
-    presenter.contentWindow.removeEventListener("resize", this._onResize, false);
+    // Closing the tab would result in contentWindow being a dead object,
+    // so operations like removing event listeners won't work anymore.
+    if (presenter.contentWindow == presenter.chromeWindow.content) {
+      presenter.contentWindow.removeEventListener("resize", this._onResize, false);
+    }
   },
 
   /**

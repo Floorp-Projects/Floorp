@@ -22,6 +22,7 @@ _BROWSER_FILES = \
 		browser_inspector_breadcrumbs.js \
 		browser_inspector_invalidate.js \
 		browser_inspector_menu.js \
+		browser_inspector_menu.html \
 		browser_inspector_pseudoClass_menu.js \
 		browser_inspector_destroyselection.html \
 		browser_inspector_destroyselection.js \
@@ -39,7 +40,6 @@ _BROWSER_FILES = \
 		browser_inspector_bug_650804_search.js \
 		browser_inspector_bug_650804_search.html \
 		browser_inspector_bug_840156_destroy_after_navigation.js \
-		browser_inspector_bug_835722_infobar_reappears.js \
 		head.js \
 		helpers.js \
 		$(NULL)

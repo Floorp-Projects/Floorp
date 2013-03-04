@@ -165,7 +165,6 @@ libs-preqs =\
 libs-%: $(libs-preqs)
 	$(display-deps)
 	@$(MAKE) -C $(DEPTH)/toolkit/locales libs-$*
-	@$(MAKE) -C $(DEPTH)/services/sync/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -C $(DEPTH)/intl/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -B $(bookmarks) AB_CD=$*
 	@$(MAKE) -B searchplugins AB_CD=$* XPI_NAME=locale-$*
@@ -176,7 +175,6 @@ libs-%: $(libs-preqs)
 chrome-%:
 	$(display-deps)
 	@$(MAKE) -C $(DEPTH)/toolkit/locales chrome-$*
-	@$(MAKE) -C $(DEPTH)/services/sync/locales chrome AB_CD=$*
 	@$(MAKE) -B $(bookmarks) AB_CD=$*
 	@$(MAKE) -B searchplugins AB_CD=$*
 	@$(MAKE) chrome AB_CD=$*

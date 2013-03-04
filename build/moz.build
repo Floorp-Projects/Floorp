@@ -1,0 +1,24 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if CONFIG['OS_ARCH'] not in ('WINNT', 'OS2'):
+    DIRS += ['unix']
+elif CONFIG['OS_ARCH'] == 'WINNT':
+    DIRS += ['win32']
+
+if CONFIG['STLPORT_SOURCES']:
+    DIRS += ['stlport']
+
+DIRS += ['pgo']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    TEST_DIRS += [
+        'mobile/sutagent/android',
+        'mobile/sutagent/android/watcher',
+        'mobile/sutagent/android/ffxcp',
+        'mobile/sutagent/android/fencp',
+        'mobile/robocop',
+    ]
+

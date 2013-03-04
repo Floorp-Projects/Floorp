@@ -11,17 +11,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(srcdir)/objs.mk
 
-DIRS   =
-
-ifdef MOZ_ZIPWRITER
-DIRS  += zipwriter
-endif
-
-ifdef ENABLE_TESTS
-TOOL_DIRS += test
-endif
-
-
 MODULE		= jar
 LIBRARY_NAME	= jar$(VERSION_NUMBER)
 EXPORT_LIBRARY = 1

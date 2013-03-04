@@ -26,7 +26,6 @@
 #include "nsCOMArray.h"
 #include "nsJSUtils.h"
 #include "nsTArray.h"
-#include "nsIDOMLSProgressEvent.h"
 #include "nsITimer.h"
 #include "nsIDOMProgressEvent.h"
 #include "nsDOMEventTargetHelper.h"
@@ -450,29 +449,10 @@ public:
   // This creates a trusted readystatechange event, which is not cancelable and
   // doesn't bubble.
   static nsresult CreateReadystatechangeEvent(nsIDOMEvent** aDOMEvent);
-  // For backwards compatibility aPosition should contain the headers for upload
-  // and aTotalSize is UINT64_MAX when unknown. Both those values are
-  // used by nsXMLHttpProgressEvent. Normal progress event should not use
-  // headers in aLoaded and aTotal is 0 when unknown.
-  void DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
-                             const nsAString& aType,
-                             // Whether to use nsXMLHttpProgressEvent,
-                             // which implements LS Progress Event.
-                             bool aUseLSEventWrapper,
-                             bool aLengthComputable,
-                             // For Progress Events
-                             uint64_t aLoaded, uint64_t aTotal,
-                             // For LS Progress Events
-                             uint64_t aPosition, uint64_t aTotalSize);
   void DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
                              const nsAString& aType,
                              bool aLengthComputable,
-                             uint64_t aLoaded, uint64_t aTotal)
-  {
-    DispatchProgressEvent(aTarget, aType, false,
-                          aLengthComputable, aLoaded, aTotal,
-                          aLoaded, aLengthComputable ? aTotal : UINT64_MAX);
-  }
+                             uint64_t aLoaded, uint64_t aTotal);
 
   // Dispatch the "progress" event on the XHR or XHR.upload object if we've
   // received data since the last "progress" event. Also dispatches
@@ -641,8 +621,6 @@ protected:
   bool mUploadLengthComputable;
   bool mUploadComplete;
   bool mProgressSinceLastProgressEvent;
-  uint64_t mUploadProgress; // For legacy
-  uint64_t mUploadProgressMax; // For legacy
 
   // Timeout support
   PRTime mRequestSentTime;
@@ -735,33 +713,6 @@ class nsXMLHttpRequestXPCOMifier MOZ_FINAL : public nsIStreamListener,
 
 private:
   nsRefPtr<nsXMLHttpRequest> mXHR;
-};
-
-// helper class to expose a progress DOM Event
-
-class nsXMLHttpProgressEvent : public nsIDOMProgressEvent,
-                               public nsIDOMLSProgressEvent
-{
-public:
-  nsXMLHttpProgressEvent(nsIDOMProgressEvent* aInner,
-                         uint64_t aCurrentProgress,
-                         uint64_t aMaxProgress,
-                         nsPIDOMWindow* aWindow);
-  virtual ~nsXMLHttpProgressEvent();
-
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXMLHttpProgressEvent, nsIDOMProgressEvent)
-  NS_FORWARD_NSIDOMEVENT(mInner->)
-  NS_FORWARD_NSIDOMPROGRESSEVENT(mInner->)
-  NS_DECL_NSIDOMLSPROGRESSEVENT
-
-protected:
-  void WarnAboutLSProgressEvent(nsIDocument::DeprecatedOperations);
-
-  nsCOMPtr<nsIDOMProgressEvent> mInner;
-  nsCOMPtr<nsPIDOMWindow> mWindow;
-  uint64_t mCurProgress;
-  uint64_t mMaxProgress;
 };
 
 class nsXHRParseEndListener : public nsIDOMEventListener

@@ -14,9 +14,21 @@
 
 static mozalloc_oom_abort_handler gAbortHandler;
 
+#define OOM_MSG_LEADER "out of memory: 0x"
+#define OOM_MSG_DIGITS "0000000000000000" // large enough for 2^64
+#define OOM_MSG_TRAILER " bytes requested"
+#define OOM_MSG_FIRST_DIGIT_OFFSET sizeof(OOM_MSG_LEADER) - 1
+#define OOM_MSG_LAST_DIGIT_OFFSET sizeof(OOM_MSG_LEADER) + \
+                                  sizeof(OOM_MSG_DIGITS) - 3
+
+static const char *hex = "0123456789ABCDEF";
+
 void
 mozalloc_handle_oom(size_t size)
 {
+    char oomMsg[] = OOM_MSG_LEADER OOM_MSG_DIGITS OOM_MSG_TRAILER;
+    int i;
+
     // NB: this is handle_oom() stage 1, which simply aborts on OOM.
     // we might proceed to a stage 2 in which an attempt is made to
     // reclaim memory
@@ -24,7 +36,14 @@ mozalloc_handle_oom(size_t size)
     if (gAbortHandler)
         gAbortHandler(size);
 
-    mozalloc_abort("out of memory");
+    // Insert size into the diagnostic message using only primitive operations
+    for (i = OOM_MSG_LAST_DIGIT_OFFSET;
+         size && i >= OOM_MSG_FIRST_DIGIT_OFFSET; i--) {
+      oomMsg[i] = hex[size % 16];
+      size /= 16;
+    }
+
+    mozalloc_abort(oomMsg);
 }
 
 void

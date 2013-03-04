@@ -12,7 +12,4 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= test_privatebrowsing
 
-DIRS +=	browser \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk

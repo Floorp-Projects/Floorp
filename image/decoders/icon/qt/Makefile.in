@@ -21,8 +21,6 @@ LOCAL_INCLUDES += $(MOZ_QT_CFLAGS)
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 
-DIRS = public
-
 EXTRA_COMPONENTS = gtkqticonsconverter.manifest
 EXTRA_PP_COMPONENTS = gtkqticonsconverter.js
 

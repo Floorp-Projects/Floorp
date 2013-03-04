@@ -128,7 +128,7 @@ AudioChannelService::UnregisterType(AudioChannelType aType,
   // The array may contain multiple occurrence of this appId but
   // this should remove only the first one.
   AudioChannelInternalType type = GetInternalType(aType, aElementHidden);
-  MOZ_ASSERT(!mChannelCounters[type].IsEmpty());
+  MOZ_ASSERT(mChannelCounters[type].Contains(aChildID));
   mChannelCounters[type].RemoveElement(aChildID);
 
   // In order to avoid race conditions, it's safer to notify any existing
@@ -138,8 +138,8 @@ AudioChannelService::UnregisterType(AudioChannelType aType,
     // If in the background, we kept ChildID for allowing it to play next song.
     if (aType == AUDIO_CHANNEL_CONTENT &&
         mActiveContentChildIDs.Contains(aChildID) &&
-        (!aElementHidden &&
-         !mChannelCounters[AUDIO_CHANNEL_INT_CONTENT].Contains(aChildID))) {
+        !aElementHidden &&
+        !mChannelCounters[AUDIO_CHANNEL_INT_CONTENT].Contains(aChildID)) {
       mActiveContentChildIDs.RemoveElement(aChildID);
     }
     SendAudioChannelChangedNotification();
@@ -159,6 +159,7 @@ AudioChannelService::UpdateChannelType(AudioChannelType aType,
 
   if (newType != oldType) {
     mChannelCounters[newType].AppendElement(aChildID);
+    MOZ_ASSERT(mChannelCounters[oldType].Contains(aChildID));
     mChannelCounters[oldType].RemoveElement(aChildID);
   }
 }
@@ -218,6 +219,7 @@ AudioChannelService::GetMutedInternal(AudioChannelType aType, uint64_t aChildID,
     if (mChannelCounters[AUDIO_CHANNEL_INT_CONTENT].IsEmpty()) {
       mActiveContentChildIDsFrozen = true;
     } else if (!mChannelCounters[AUDIO_CHANNEL_INT_CONTENT].Contains(aChildID)) {
+      MOZ_ASSERT(mActiveContentChildIDs.Contains(aChildID));
       mActiveContentChildIDs.RemoveElement(aChildID);
     }
   }

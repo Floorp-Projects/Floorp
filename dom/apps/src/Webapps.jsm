@@ -1092,72 +1092,79 @@ this.DOMApplicationRegistry = {
       return;
     }
 
-    // Clean up the deprecated manifest cache if needed.
-    if (id in this._manifestCache) {
-      delete this._manifestCache[id];
-    }
+    // We need to get the old manifest to unregister web activities.
+    this.getManifestFor(app.origin, (function(aOldManifest) {
+      debug("Old manifest: " + JSON.stringify(aOldManifest));
+      // Move the application.zip and manifest.webapp files out of TmpD
+      let tmpDir = FileUtils.getDir("TmpD", ["webapps", id], true, true);
+      let manFile = tmpDir.clone();
+      manFile.append("manifest.webapp");
+      let appFile = tmpDir.clone();
+      appFile.append("application.zip");
 
-    // Move the application.zip and manifest.webapp files out of TmpD
-    let tmpDir = FileUtils.getDir("TmpD", ["webapps", id], true, true);
-    let manFile = tmpDir.clone();
-    manFile.append("manifest.webapp");
-    let appFile = tmpDir.clone();
-    appFile.append("application.zip");
+      let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
+      appFile.moveTo(dir, "application.zip");
+      manFile.moveTo(dir, "manifest.webapp");
 
-    let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
-    appFile.moveTo(dir, "application.zip");
-    manFile.moveTo(dir, "manifest.webapp");
+      // Move the staged update manifest to a non staged one.
+      let staged = dir.clone();
+      staged.append("staged-update.webapp");
 
-    // Move the staged update manifest to a non staged one.
-    let staged = dir.clone();
-    staged.append("staged-update.webapp");
-
-    // If we are applying after a restarted download, we have no
-    // staged update manifest.
-    if (staged.exists()) {
-      staged.moveTo(dir, "update.webapp");
-    }
-
-    try {
-      tmpDir.remove(true);
-    } catch(e) { }
-
-    // Flush the zip reader cache to make sure we use the new application.zip
-    // when re-launching the application.
-    let zipFile = dir.clone();
-    zipFile.append("application.zip");
-    Services.obs.notifyObservers(zipFile, "flush-cache-entry", null);
-
-    // Get the manifest, and set properties.
-    this.getManifestFor(app.origin, (function(aData) {
-      app.downloading = false;
-      app.downloadAvailable = false;
-      app.downloadSize = 0;
-      app.installState = "installed";
-      app.readyToApplyDownload = false;
-
-      // Update the staged properties.
-      if (app.staged) {
-        for (let prop in app.staged) {
-          app[prop] = app.staged[prop];
-        }
-        delete app.staged;
+      // If we are applying after a restarted download, we have no
+      // staged update manifest.
+      if (staged.exists()) {
+        staged.moveTo(dir, "update.webapp");
       }
 
-      delete app.retryingDownload;
+      try {
+        tmpDir.remove(true);
+      } catch(e) { }
 
-      DOMApplicationRegistry._saveApps(function() {
-        DOMApplicationRegistry.broadcastMessage("Webapps:PackageEvent",
-                                                { type: "applied",
-                                                  manifestURL: app.manifestURL,
-                                                  app: app,
-                                                  manifest: aData });
-        // Update the permissions for this app.
-        PermissionsInstaller.installPermissions({ manifest: aData,
-                                                  origin: app.origin,
-                                                  manifestURL: app.manifestURL },
-                                                true);
-      });
+      // Clean up the deprecated manifest cache if needed.
+      if (id in this._manifestCache) {
+        delete this._manifestCache[id];
+      }
+
+      // Flush the zip reader cache to make sure we use the new application.zip
+      // when re-launching the application.
+      let zipFile = dir.clone();
+      zipFile.append("application.zip");
+      Services.obs.notifyObservers(zipFile, "flush-cache-entry", null);
+
+      // Get the manifest, and set properties.
+      this.getManifestFor(app.origin, (function(aData) {
+        debug("New manifest: " + JSON.stringify(aData));
+        app.downloading = false;
+        app.downloadAvailable = false;
+        app.downloadSize = 0;
+        app.installState = "installed";
+        app.readyToApplyDownload = false;
+
+        // Update the staged properties.
+        if (app.staged) {
+          for (let prop in app.staged) {
+            app[prop] = app.staged[prop];
+          }
+          delete app.staged;
+        }
+
+        delete app.retryingDownload;
+
+        this._saveApps((function() {
+          // Update the handlers and permissions for this app.
+          this.updateAppHandlers(aOldManifest, aData, app);
+          PermissionsInstaller.installPermissions(
+            { manifest: aData,
+              origin: app.origin,
+              manifestURL: app.manifestURL },
+            true);
+          this.broadcastMessage("Webapps:PackageEvent",
+                                { type: "applied",
+                                  manifestURL: app.manifestURL,
+                                  app: app,
+                                  manifest: aData });
+        }).bind(this));
+      }).bind(this));
     }).bind(this));
   },
 
@@ -1278,6 +1285,23 @@ this.DOMApplicationRegistry = {
     return [toHexString(hash.charCodeAt(i)) for (i in hash)].join("");
   },
 
+  // Updates the activities and system message handlers.
+  // aOldManifest can be null if we don't have any handler to unregister.
+  updateAppHandlers: function(aOldManifest, aNewManifest, aApp) {
+    debug("updateAppHandlers: old=" + aOldManifest + " new=" + aNewManifest);
+    this.notifyAppsRegistryStart();
+#ifdef MOZ_SYS_MSG
+    if (aOldManifest) {
+      this._unregisterActivities(aOldManifest, aApp);
+    }
+    this._registerSystemMessages(aNewManifest, aApp);
+    this._registerActivities(aNewManifest, aApp, true);
+#else
+    // Nothing else to do but notifying we're ready.
+    this.notifyAppsRegistryReady();
+#endif
+  },
+
   checkForUpdate: function(aData, aMm) {
     debug("checkForUpdate for " + aData.manifestURL);
 
@@ -1341,16 +1365,8 @@ this.DOMApplicationRegistry = {
 
       let manifest;
       if (aNewManifest) {
-        // Update the web apps' registration.
-        this.notifyAppsRegistryStart();
-#ifdef MOZ_SYS_MSG
-        this._unregisterActivities(aOldManifest, app);
-        this._registerSystemMessages(aNewManifest, app);
-        this._registerActivities(aNewManifest, app, true);
-#else
-        // Nothing else to do but notifying we're ready.
-        this.notifyAppsRegistryReady();
-#endif
+        this.updateAppHandlers(aOldManifest, aNewManifest, app);
+
         // Store the new manifest.
         let dir = FileUtils.getDir(DIRECTORY_NAME, ["webapps", id], true, true);
         let manFile = dir.clone();
@@ -1900,27 +1916,20 @@ this.DOMApplicationRegistry = {
 
     if (!aFromSync)
       this._saveApps((function() {
+        this.broadcastMessage("Webapps:AddApp", { id: id, app: appObject });
         this.broadcastMessage("Webapps:Install:Return:OK", aData);
         Services.obs.notifyObservers(this, "webapps-sync-install", appNote);
-        this.broadcastMessage("Webapps:AddApp", { id: id, app: appObject });
       }).bind(this));
 
     if (!aData.isPackage) {
-      this.notifyAppsRegistryStart();
-#ifdef MOZ_SYS_MSG
-      this._registerSystemMessages(app.manifest, app);
-      this._registerActivities(app.manifest, app, true);
-#else
-      // Nothing else to do but notifying we're ready.
-      this.notifyAppsRegistryReady();
-#endif
+      this.updateAppHandlers(null, app.manifest, app);
     }
 
     if (manifest.package_path) {
       // origin for install apps is meaningless here, since it's app:// and this
       // can't be used to resolve package paths.
       manifest = new ManifestHelper(jsonManifest, app.manifestURL);
-      this.downloadPackage(manifest, appObject, false, function(aId, aManifest) {
+      this.downloadPackage(manifest, appObject, false, (function(aId, aManifest) {
         // Success! Move the zip out of TmpD.
         let app = DOMApplicationRegistry.webapps[id];
         let zipFile = FileUtils.getFile("TmpD", ["webapps", aId, "application.zip"], true);
@@ -1934,27 +1943,27 @@ this.DOMApplicationRegistry = {
         // Save the manifest
         let manFile = dir.clone();
         manFile.append("manifest.webapp");
-        DOMApplicationRegistry._writeFile(manFile,
-                                          JSON.stringify(aManifest),
-                                          function() { });
+        this._writeFile(manFile, JSON.stringify(aManifest), function() { });
         // Set state and fire events.
         app.installState = "installed";
         app.downloading = false;
         app.downloadAvailable = false;
-        DOMApplicationRegistry._saveApps(function() {
+        this._saveApps((function() {
+          this.updateAppHandlers(null, aManifest, appObject);
+
           // Update the permissions for this app.
           PermissionsInstaller.installPermissions({ manifest: aManifest,
                                                     origin: appObject.origin,
                                                     manifestURL: appObject.manifestURL },
                                                   true);
           debug("About to fire Webapps:PackageEvent 'installed'");
-          DOMApplicationRegistry.broadcastMessage("Webapps:PackageEvent",
-                                                  { type: "installed",
-                                                    manifestURL: appObject.manifestURL,
-                                                    app: app,
-                                                    manifest: aManifest });
-        });
-      });
+          this.broadcastMessage("Webapps:PackageEvent",
+                                { type: "installed",
+                                  manifestURL: appObject.manifestURL,
+                                  app: app,
+                                  manifest: aManifest });
+        }).bind(this));
+      }).bind(this));
     }
   },
 

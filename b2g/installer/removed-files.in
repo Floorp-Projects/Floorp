@@ -10,3 +10,4 @@ run-mozilla.sh
 #endif
 defaults/preferences/services-sync.js
 defaults/preferences/healthreport-prefs.js
+components/dom_sms.xpt

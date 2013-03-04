@@ -96,7 +96,9 @@ class GlobalObject;
 class HTMLBodyElement;
 class Link;
 class NodeFilter;
+class NodeIterator;
 class ProcessingInstruction;
+class TreeWalker;
 class UndoManager;
 template<typename> class Sequence;
 
@@ -1939,18 +1941,18 @@ public:
   already_AddRefed<nsIDOMEvent> CreateEvent(const nsAString& aEventType,
                                             mozilla::ErrorResult& rv) const;
   already_AddRefed<nsRange> CreateRange(mozilla::ErrorResult& rv);
-  already_AddRefed<nsIDOMNodeIterator>
+  already_AddRefed<mozilla::dom::NodeIterator>
     CreateNodeIterator(nsINode& aRoot, uint32_t aWhatToShow,
                        mozilla::dom::NodeFilter* aFilter,
                        mozilla::ErrorResult& rv) const;
-  already_AddRefed<nsIDOMNodeIterator>
+  already_AddRefed<mozilla::dom::NodeIterator>
     CreateNodeIterator(nsINode& aRoot, uint32_t aWhatToShow,
                        const mozilla::dom::NodeFilterHolder& aFilter,
                        mozilla::ErrorResult& rv) const;
-  already_AddRefed<nsIDOMTreeWalker>
+  already_AddRefed<mozilla::dom::TreeWalker>
     CreateTreeWalker(nsINode& aRoot, uint32_t aWhatToShow,
                      mozilla::dom::NodeFilter* aFilter, mozilla::ErrorResult& rv) const;
-  already_AddRefed<nsIDOMTreeWalker>
+  already_AddRefed<mozilla::dom::TreeWalker>
     CreateTreeWalker(nsINode& aRoot, uint32_t aWhatToShow,
                      const mozilla::dom::NodeFilterHolder& aFilter,
                      mozilla::ErrorResult& rv) const;

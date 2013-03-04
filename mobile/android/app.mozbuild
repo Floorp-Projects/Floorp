@@ -1,0 +1,19 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if not CONFIG['LIBXUL_SDK']:
+    app_libxul_dirs = ['mobile/android/components/build']
+    app_libxul_static_dirs = []
+
+    include('/toolkit/toolkit.mozbuild')
+
+elif CONFIG['ENABLE_TESTS']:
+    add_tier_dir('testharness', 'testing/mochitest')
+
+if CONFIG['MOZ_EXTENSIONS']:
+    add_tier_dir('app', 'extensions')
+
+add_tier_dir('app', CONFIG['MOZ_BRANDING_DIRECTORY'])
+add_tier_dir('app', 'mobile/android')

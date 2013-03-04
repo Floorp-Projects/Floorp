@@ -1,0 +1,21 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+PARALLEL_DIRS += [
+    'common',
+    'crypto',
+]
+
+if CONFIG['MOZ_SERVICES_HEALTHREPORT']:
+    PARALLEL_DIRS += ['healthreport']
+
+if CONFIG['MOZ_DATA_REPORTING']:
+    PARALLEL_DIRS += ['datareporting']
+
+if CONFIG['MOZ_SERVICES_METRICS']:
+    PARALLEL_DIRS += ['metrics']
+
+if CONFIG['MOZ_SERVICES_SYNC']:
+    PARALLEL_DIRS += ['sync']

@@ -8,13 +8,4 @@ srcdir = @srcdir@
 VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-
-# we ignore MOZ_IPDL_TESTS for the IPDL-compiler-only tests, since they're
-# quick and painless
-DIRS += ipdl
-
-ifdef MOZ_IPDL_TESTS
-DIRS += cxx
-endif
-
 include $(topsrcdir)/config/rules.mk

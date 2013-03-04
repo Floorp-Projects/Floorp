@@ -1,0 +1,234 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+ <head>
+  <title>Multi-column Layout: AbsPos Pagination (Interlaced Dynamic Height)</title>
+  <link rel="author" title="Elika J. Etemad" href="http://fantasai.inkedblade.net/contact"/>
+  <link rel="help" href="http://www.w3.org/TR/CSS21/visudet.html#the-height-property"/>
+  <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#length-units"/>
+  <style type="text/css">
+    html {
+      background: white;
+    }
+
+    .container {
+      background: red;
+      height: 24pt;
+      position: relative;
+      -moz-column-count: 2;
+      -moz-column-gap: 0;
+    }
+    .overflow {
+      width: 10pt;
+      border-bottom: lime 8px solid;
+      top: 0;
+    }
+    .following {
+      position: relative;
+      background: white;
+      width: 100pt;
+    }
+    #colset {
+      padding-top: 1px;
+      width: 300pt;
+      height: 2in;
+      -moz-column-count: 3;
+      -moz-column-gap: 0;
+      border: silver 2pt;
+      border-style: none solid;
+    }
+    #redline {
+      width: 303pt;
+      border-top: 8px solid red;
+      margin-top: -1in;
+      position: relative;
+      z-index: -1;
+    }
+
+    .ocontainer {
+      height: 0;
+      position: relative;
+      -moz-column-count: 2;
+      -moz-column-gap: 0;
+    }
+    .o1 { /* 3rd col */
+      height: 10in;
+    }
+    .a1 { /* 1st col */
+      position: absolute;
+      height: 2in;
+      width: 33pt;
+    }
+    .a2 { /* 2nd col */
+      position: absolute;
+      height: 6in;
+      width: 25pt;
+      margin-left: 25pt;
+    }
+    .a3 { /* 3rd col */
+      position: absolute;
+      height: 10in;
+      margin-left: 10pt;
+    }
+    .a4 { /* 2nd col */
+      width: 25pt;
+      height: 6in;
+    }
+
+    .b1 { /* 3rd col */
+      position: absolute;
+      height: 672pt;
+      margin-left: 20pt;
+    }
+    .b2 { /* 2nd col */
+      position: absolute;
+      height: 384pt;
+      width: 25pt;
+      margin-left: 50pt;
+    }
+    .b3 { /* 3rd col */
+      position: absolute;
+      height: 672pt;
+      margin-left: 30pt;
+    }
+    .b4 { /* 1st col, but no border */
+      position: absolute;
+      height: 96pt;
+      border-bottom: none;
+    }
+    .b4 .child1 { /* 1st col */
+      position: absolute;
+      height: 200%;
+      width: 33pt;
+      margin-left: 33pt;
+    }
+    .b4 .child2 { /* 3rd col */
+      height: 672pt;
+      margin-left: 40pt;
+
+    }
+    .b5 { /* 1st col */
+      position: absolute;
+      height: 96pt;
+      width: 34pt;
+      margin-left: 66pt;
+    }
+    .b6 { /* 3rd col */
+      height: 672pt;
+      margin-left: 50pt;
+    }
+
+    .c1 { /* 3rd col */
+      position: absolute;
+      height: 6in;
+      margin-left: 60pt;
+    }
+    .c2 { /* 2nd col */
+      position: absolute;
+      height: 2in;
+      width: 25pt;
+      margin-left: 75pt;
+    }
+    .c3 { /* 3rd col */
+      position: absolute;
+      height: 6in;
+      margin-left: 70pt;
+    }
+    .c4 { /* 3rd col */
+      height: 6in;
+      width: 20pt;
+      margin-left: 80pt;
+    }
+
+    .f1 {
+      margin-top: -48pt;
+      height: 96pt;
+      margin-bottom: 96pt;
+    }
+    .f2 {
+      margin-top: -24pt;
+      height: 48pt;
+    }
+
+    .centerline {
+      margin: 0 auto;
+      top: 0;
+      left: 0;
+      right: 0;
+      position: absolute;
+      width: 8px;
+      height: 6in;
+      background: aqua;
+    }
+
+    #dynamo {
+      background: transparent;
+      border-bottom: 8px solid orange;
+      z-index: 10;
+      height: 384pt;
+    }
+
+  </style>
+ </head>
+ <body onload="document.getElementById('dynamo').style.height = '96pt';
+               document.getElementById('dynamo').offsetHeight;
+               document.getElementById('dynamo').style.height = '672pt';
+               document.getElementById('dynamo').offsetHeight;
+               document.getElementById('dynamo').style.height = '96pt';
+               document.getElementById('dynamo').offsetHeight;
+               document.getElementById('dynamo').style.height = '384pt';
+               document.getElementById('dynamo').offsetHeight;
+               document.getElementById('dynamo').style.height = '3000pt';
+               document.getElementById('dynamo').offsetHeight;
+               document.getElementById('dynamo').style.height = '96pt';
+               document.getElementById('dynamo').offsetHeight;
+               document.getElementById('dynamo').style.height = '384pt';
+               document.getElementById('dynamo').offsetHeight;
+               document.getElementById('dynamo').style.height = '672pt';
+               document.getElementById('dynamo').offsetHeight;
+               document.getElementById('dynamo').style.height = '384pt';
+               document.getElementById('dynamo').offsetHeight;
+               document.getElementById('dynamo').style.height = '96pt';
+               document.getElementById('dynamo').offsetHeight;
+               document.getElementById('dynamo').style.height = '384pt';
+               document.documentElement.className = ''
+              ">
+  <div id="colset">
+    <div>
+      <div class="ocontainer">
+        <div class="centerline"></div>
+        <div class="overflow o1"></div>
+      </div>
+      <div class="container">
+        <div class="overflow a1"></div>
+        <div class="overflow a2"></div>
+        <div class="overflow a3"></div>
+        <div class="overflow a4"></div>
+      </div>
+      <div class="ocontainer">
+        <div id="dynamo" class="centerline"></div>
+      </div>
+      <div class="container">
+        <div class="overflow b1"></div>
+        <div class="overflow b2"></div>
+        <div class="overflow b3"></div>
+        <div class="overflow b4">
+          <div class="overflow child1"></div>
+          <div class="overflow child2"></div>
+        </div>
+        <div class="overflow b5"></div>
+        <div class="overflow b6"></div>
+      </div>
+    </div>
+    <p class="following f1">
+    </p>
+    <div class="container">
+      <div class="overflow c1"></div>
+      <div class="overflow c2"></div>
+      <div class="overflow c3"></div>
+      <div class="overflow c4"></div>
+    </div>
+    <div class="following f2"></div>
+  </div>
+  <div id="redline"></div>
+ </body>
+</html>

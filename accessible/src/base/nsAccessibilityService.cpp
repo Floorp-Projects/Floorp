@@ -403,6 +403,24 @@ nsAccessibilityService::UpdateImageMap(nsImageFrame* aImageFrame)
 }
 
 void
+nsAccessibilityService::UpdateLabelValue(nsIPresShell* aPresShell,
+                                         nsIContent* aLabelElm,
+                                         const nsString& aNewValue)
+{
+  DocAccessible* document = GetDocAccessible(aPresShell);
+  if (document) {
+    Accessible* accessible = document->GetAccessible(aLabelElm);
+    if (accessible) {
+      XULLabelAccessible* xulLabel = accessible->AsXULLabel();
+      NS_ASSERTION(xulLabel,
+                   "UpdateLabelValue was called for wrong accessible!");
+      if (xulLabel)
+        xulLabel->UpdateLabelValue(aNewValue);
+    }
+  }
+}
+
+void
 nsAccessibilityService::PresShellActivated(nsIPresShell* aPresShell)
 {
   DocAccessible* document = aPresShell->GetDocAccessible();

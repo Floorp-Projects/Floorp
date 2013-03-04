@@ -40,10 +40,6 @@ EXTRA_JS_MODULES = \
 	SignInToWebsite.jsm \
 	$(NULL)
 
-TEST_DIRS = \
-	test \
-	$(NULL)
-
 ifdef MOZ_UPDATER
 EXTRA_PP_COMPONENTS += UpdatePrompt.js
 endif

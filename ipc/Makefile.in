@@ -9,29 +9,4 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS += chromium glue ipdl testshell
-
-ifdef MOZ_B2G_RIL #{
-DIRS += ril
-endif #}
-
-ifdef MOZ_B2G_BT #{
-DIRS += dbus
-endif #}
-
-ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-DIRS += netd
-NEED_UNIXSOCKET := true
-endif
-
-ifeq ($(OS_ARCH),Linux)
-NEED_UNIXSOCKET := true
-endif
-
-ifeq ($(NEED_UNIXSOCKET),true)
-DIRS += unixsocket
-endif
-
-TOOL_DIRS = app
-
 include $(topsrcdir)/config/rules.mk
