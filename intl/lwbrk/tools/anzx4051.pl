@@ -341,6 +341,7 @@ printarray("20", "7");
 printarray("21", "7");
 printarray("30", "5");
 printarray("0E", "8");
+printarray("17", "7");
 
 #print %rangecount;
 
