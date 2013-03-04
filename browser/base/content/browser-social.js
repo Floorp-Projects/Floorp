@@ -584,7 +584,11 @@ let SocialShareButton = {
     if (profile && profile.displayName) {
       profileRow.hidden = false;
       let portrait = document.getElementById("socialUserPortrait");
-      portrait.setAttribute("src", profile.portrait || "chrome://global/skin/icons/information-32.png");
+      if (profile.portrait) {
+        portrait.setAttribute("src", profile.portrait);
+      } else {
+        portrait.removeAttribute("src");
+      }
       let displayName = document.getElementById("socialUserDisplayName");
       displayName.setAttribute("label", profile.displayName);
     } else {
@@ -802,7 +806,7 @@ var SocialToolbar = {
     if (!Social.provider)
       return;
     let profile = Social.provider.profile || {};
-    let userPortrait = profile.portrait || "chrome://global/skin/icons/information-32.png";
+    let userPortrait = profile.portrait;
 
     let userDetailsBroadcaster = document.getElementById("socialBroadcaster_userDetails");
     let loggedInStatusValue = profile.userName ||
@@ -810,8 +814,13 @@ var SocialToolbar = {
 
     // "image" and "label" are used by Mac's native menus that do not render the menuitem's children
     // elements. "src" and "value" are used by the image/label children on the other platforms.
-    userDetailsBroadcaster.setAttribute("src", userPortrait);
-    userDetailsBroadcaster.setAttribute("image", userPortrait);
+    if (userPortrait) {
+      userDetailsBroadcaster.setAttribute("src", userPortrait);
+      userDetailsBroadcaster.setAttribute("image", userPortrait);
+    } else {
+      userDetailsBroadcaster.removeAttribute("src");
+      userDetailsBroadcaster.removeAttribute("image");
+    }
 
     userDetailsBroadcaster.setAttribute("value", loggedInStatusValue);
     userDetailsBroadcaster.setAttribute("label", loggedInStatusValue);
