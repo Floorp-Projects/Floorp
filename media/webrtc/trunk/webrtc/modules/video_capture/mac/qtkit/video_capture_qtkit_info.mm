@@ -14,6 +14,20 @@
 
 #include "video_capture.h"
 
+class nsAutoreleasePool {
+public:
+    nsAutoreleasePool()
+    {
+        mLocalPool = [[NSAutoreleasePool alloc] init];
+    }
+    ~nsAutoreleasePool()
+    {
+        [mLocalPool release];
+    }
+private:
+    NSAutoreleasePool *mLocalPool;
+};
+
 namespace webrtc
 {
 namespace videocapturemodule
@@ -22,13 +36,14 @@ namespace videocapturemodule
 VideoCaptureMacQTKitInfo::VideoCaptureMacQTKitInfo(const WebRtc_Word32 id) :
     DeviceInfoImpl(id)
 {
+    nsAutoreleasePool localPool;
     _captureInfo = [[VideoCaptureMacQTKitInfoObjC alloc] init];
 }
 
 VideoCaptureMacQTKitInfo::~VideoCaptureMacQTKitInfo()
 {
+    nsAutoreleasePool localPool;
     [_captureInfo release];
-
 }
 
 WebRtc_Word32 VideoCaptureMacQTKitInfo::Init()
@@ -40,6 +55,7 @@ WebRtc_Word32 VideoCaptureMacQTKitInfo::Init()
 WebRtc_UWord32 VideoCaptureMacQTKitInfo::NumberOfDevices()
 {
 
+    nsAutoreleasePool localPool;
     WebRtc_UWord32 captureDeviceCount =
         [[_captureInfo getCaptureDeviceCount]intValue];
     return captureDeviceCount;
@@ -52,6 +68,7 @@ WebRtc_Word32 VideoCaptureMacQTKitInfo::GetDeviceName(
     WebRtc_UWord32 deviceUniqueIdUTF8Length, char* productUniqueIdUTF8,
     WebRtc_UWord32 productUniqueIdUTF8Length)
 {
+    nsAutoreleasePool localPool;
     int errNum = [[_captureInfo getDeviceNamesFromIndex:deviceNumber
                    DefaultName:deviceNameUTF8 WithLength:deviceNameLength
                    AndUniqueID:deviceUniqueIdUTF8
@@ -105,6 +122,7 @@ WebRtc_Word32 VideoCaptureMacQTKitInfo::DisplayCaptureSettingsDialogBox(
     WebRtc_UWord32 positionX, WebRtc_UWord32 positionY)
 {
 
+    nsAutoreleasePool localPool;
     return [[_captureInfo
              displayCaptureSettingsDialogBoxWithDevice:deviceUniqueIdUTF8
              AndTitle:dialogTitleUTF8

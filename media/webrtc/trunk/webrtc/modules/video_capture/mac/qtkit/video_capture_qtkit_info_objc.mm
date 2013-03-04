@@ -139,7 +139,6 @@ using namespace webrtc;
         return [NSNumber numberWithInt:0];
     }
 
-    _poolInfo = [[NSAutoreleasePool alloc]init];
     _captureDeviceCountInfo = 0;
     [self getCaptureDevices];
 
