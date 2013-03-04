@@ -33,6 +33,7 @@ EXPORTS_mozilla/gfx	= \
         Types.h \
         Tools.h \
         UserData.h \
+        ZoomScale.h \
 	$(NULL)
 
 CPPSRCS	= \

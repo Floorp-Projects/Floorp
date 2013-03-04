@@ -25,7 +25,7 @@ struct Margin :
 
 struct IntRect :
     public BaseRect<int32_t, IntRect, IntPoint, IntSize, Margin> {
-    typedef BaseRect<int32_t, IntRect, IntPoint, mozilla::gfx::IntSize, Margin> Super;
+    typedef BaseRect<int32_t, IntRect, IntPoint, IntSize, Margin> Super;
 
     IntRect() : Super() {}
     IntRect(IntPoint aPos, mozilla::gfx::IntSize aSize) :
@@ -49,15 +49,15 @@ struct Rect :
     Rect(Float _x, Float _y, Float _width, Float _height) :
         Super(_x, _y, _width, _height) {}
     explicit Rect(const IntRect& rect) :
-        Super(float(rect.x), float(rect.y),
-              float(rect.width), float(rect.height)) {}
+        Super(Float(rect.x), Float(rect.y),
+              Float(rect.width), Float(rect.height)) {}
 
     GFX2D_API void NudgeToIntegers();
 
     bool ToIntRect(IntRect *aOut)
     {
       *aOut = IntRect(int32_t(X()), int32_t(Y()),
-                    int32_t(Width()), int32_t(Height()));
+                      int32_t(Width()), int32_t(Height()));
       return Rect(Float(aOut->x), Float(aOut->y), 
                   Float(aOut->width), Float(aOut->height)).IsEqualEdges(*this);
     }
