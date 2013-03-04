@@ -20,6 +20,7 @@ TRACE_HOOK_NAME = '_trace'
 CONSTRUCT_HOOK_NAME = '_constructor'
 LEGACYCALLER_HOOK_NAME = '_legacycaller'
 HASINSTANCE_HOOK_NAME = '_hasInstance'
+NEWRESOLVE_HOOK_NAME = '_newResolve'
 
 def replaceFileIfChanged(filename, newContents):
     """
@@ -162,16 +163,22 @@ class CGDOMJSClass(CGThing):
     def define(self):
         traceHook = TRACE_HOOK_NAME if self.descriptor.customTrace else 'nullptr'
         callHook = LEGACYCALLER_HOOK_NAME if self.descriptor.operations["LegacyCaller"] else 'nullptr'
+        classFlags = "JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(3)"
+        if self.descriptor.interface.getExtendedAttribute("NeedNewResolve"):
+            newResolveHook = "(JSResolveOp)" + NEWRESOLVE_HOOK_NAME
+            classFlags += " | JSCLASS_NEW_RESOLVE"
+        else:
+            newResolveHook = "JS_ResolveStub"
         return """
 DOMJSClass Class = {
   { "%s",
-    JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(3),
+    %s,
     %s, /* addProperty */
     JS_PropertyStub,       /* delProperty */
     JS_PropertyStub,       /* getProperty */
     JS_StrictPropertyStub, /* setProperty */
     JS_EnumerateStub,
-    JS_ResolveStub,
+    %s,
     JS_ConvertStub,
     %s, /* finalize */
     NULL,                  /* checkAccess */
@@ -184,8 +191,9 @@ DOMJSClass Class = {
 %s
 };
 """ % (self.descriptor.interface.identifier.name,
+       classFlags,
        ADDPROPERTY_HOOK_NAME if self.descriptor.concrete and not self.descriptor.workers and self.descriptor.wrapperCache else 'JS_PropertyStub',
-       FINALIZE_HOOK_NAME, callHook, traceHook,
+       newResolveHook, FINALIZE_HOOK_NAME, callHook, traceHook,
        CGIndenter(CGGeneric(DOMClass(self.descriptor))).define())
 
 def PrototypeIDAndDepth(descriptor):
@@ -4480,6 +4488,28 @@ class CGLegacyCallHook(CGAbstractBindingMethod):
         return CGMethodCall(nativeName, False, self.descriptor,
                             self._legacycaller)
 
+class CGNewResolveHook(CGAbstractBindingMethod):
+    """
+    NewResolve hook for our object
+    """
+    def __init__(self, descriptor):
+        self._needNewResolve = descriptor.interface.getExtendedAttribute("NeedNewResolve")
+        args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj_'),
+                Argument('JSHandleId', 'id'), Argument('unsigned', 'flags'),
+                Argument('JSMutableHandleObject', 'objp')]
+        # Our "self" is actually the callee in this case, not the thisval.
+        CGAbstractBindingMethod.__init__(
+            self, descriptor, NEWRESOLVE_HOOK_NAME,
+            args, getThisObj="obj_")
+
+    def define(self):
+        if not self._needNewResolve:
+            return ""
+        return CGAbstractBindingMethod.define(self)
+
+    def generate_code(self):
+        return CGIndenter(CGGeneric("return self->DoNewResolve(cx, obj, id, flags, objp);"))
+
 class CppKeywords():
     """
     A class for checking if method names declared in webidl
@@ -6584,6 +6614,7 @@ class CGDescriptor(CGThing):
             cgThings.append(CGNamedConstructors(descriptor))
 
         cgThings.append(CGLegacyCallHook(descriptor))
+        cgThings.append(CGNewResolveHook(descriptor))
 
         if descriptor.interface.hasInterfacePrototypeObject():
             cgThings.append(CGPrototypeJSClass(descriptor, properties))
