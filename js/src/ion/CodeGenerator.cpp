@@ -2209,6 +2209,50 @@ CodeGenerator::generateBody()
     return true;
 }
 
+// Out-of-line object allocation for LNewParallelArray.
+class OutOfLineNewParallelArray : public OutOfLineCodeBase<CodeGenerator>
+{
+    LNewParallelArray *lir_;
+
+  public:
+    OutOfLineNewParallelArray(LNewParallelArray *lir)
+      : lir_(lir)
+    { }
+
+    bool accept(CodeGenerator *codegen) {
+        return codegen->visitOutOfLineNewParallelArray(this);
+    }
+
+    LNewParallelArray *lir() const {
+        return lir_;
+    }
+};
+
+typedef JSObject *(*NewInitParallelArrayFn)(JSContext *, HandleObject);
+static const VMFunction NewInitParallelArrayInfo =
+    FunctionInfo<NewInitParallelArrayFn>(NewInitParallelArray);
+
+bool
+CodeGenerator::visitNewParallelArrayVMCall(LNewParallelArray *lir)
+{
+    JS_ASSERT(gen->info().executionMode() == SequentialExecution);
+
+    Register objReg = ToRegister(lir->output());
+
+    JS_ASSERT(!lir->isCall());
+    saveLive(lir);
+
+    pushArg(ImmGCPtr(lir->mir()->templateObject()));
+    if (!callVM(NewInitParallelArrayInfo, lir))
+        return false;
+
+    if (ReturnReg != objReg)
+        masm.movePtr(ReturnReg, objReg);
+
+    restoreLive(lir);
+    return true;
+}
+
 // Out-of-line object allocation for LNewArray.
 class OutOfLineNewArray : public OutOfLineCodeBase<CodeGenerator>
 {
@@ -2279,6 +2323,32 @@ CodeGenerator::visitNewSlots(LNewSlots *lir)
     if (!bailoutIf(Assembler::Zero, lir->snapshot()))
         return false;
 
+    return true;
+}
+
+bool
+CodeGenerator::visitNewParallelArray(LNewParallelArray *lir)
+{
+    Register objReg = ToRegister(lir->output());
+    JSObject *templateObject = lir->mir()->templateObject();
+
+    OutOfLineNewParallelArray *ool = new OutOfLineNewParallelArray(lir);
+    if (!addOutOfLineCode(ool))
+        return false;
+
+    masm.newGCThing(objReg, templateObject, ool->entry());
+    masm.initGCThing(objReg, templateObject);
+
+    masm.bind(ool->rejoin());
+    return true;
+}
+
+bool
+CodeGenerator::visitOutOfLineNewParallelArray(OutOfLineNewParallelArray *ool)
+{
+    if (!visitNewParallelArrayVMCall(ool->lir()))
+        return false;
+    masm.jump(ool->rejoin());
     return true;
 }
 
