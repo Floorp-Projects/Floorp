@@ -76,12 +76,12 @@ void DebugFDAutoLock::Clear() {
 
 static char *sProfileDirectory = NULL;
 
-std::vector<int>& getDebugFDs() {
+std::vector<int>* getDebugFDs() {
   PR_ASSERT_CURRENT_THREAD_OWNS_LOCK(DebugFDAutoLock::getDebugFDsLock());
   // We have to use new as some write happen during static destructors
   // so an static std::vector might be destroyed while we still need it.
   static std::vector<int> *DebugFDs = new std::vector<int>();
-  return *DebugFDs;
+  return DebugFDs;
 }
 
 // This a wrapper over a file descriptor that provides a Printf method and
@@ -147,8 +147,9 @@ namespace mozilla {
 
 void InitWritePoisoning()
 {
-  // Call to make sure it is initialized.
-  DebugFDAutoLock::getDebugFDsLock();
+  // Stdout and Stderr are OK.
+  MozillaRegisterDebugFD(1);
+  MozillaRegisterDebugFD(2);
 
   nsCOMPtr<nsIFile> mozFile;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mozFile));
@@ -272,7 +273,7 @@ void DisableWritePoisoning() {
   PRLock *Lock;
   {
     DebugFDAutoLock lockedScope;
-    delete &getDebugFDs();
+    delete getDebugFDs();
     Lock = DebugFDAutoLock::getDebugFDsLock();
     DebugFDAutoLock::Clear();
   }
@@ -290,7 +291,7 @@ bool PoisonWriteEnabled()
 bool IsDebugFD(int fd) {
   DebugFDAutoLock lockedScope;
 
-  std::vector<int> &Vec = getDebugFDs();
+  std::vector<int> &Vec = *getDebugFDs();
   return std::find(Vec.begin(), Vec.end(), fd) != Vec.end();
 }
 
@@ -301,7 +302,7 @@ extern "C" {
     if (sPoisoningState == POISON_OFF)
       return;
     DebugFDAutoLock lockedScope;
-    std::vector<int> &Vec = getDebugFDs();
+    std::vector<int> &Vec = *getDebugFDs();
     MOZ_ASSERT(std::find(Vec.begin(), Vec.end(), fd) == Vec.end());
     Vec.push_back(fd);
   }
@@ -317,7 +318,7 @@ extern "C" {
     if (sPoisoningState == POISON_OFF)
       return;
     DebugFDAutoLock lockedScope;
-    std::vector<int> &Vec = getDebugFDs();
+    std::vector<int> &Vec = *getDebugFDs();
     std::vector<int>::iterator i = std::find(Vec.begin(), Vec.end(), fd);
     MOZ_ASSERT(i != Vec.end());
     Vec.erase(i);
