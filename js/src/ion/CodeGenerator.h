@@ -95,6 +95,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void emitPopArguments(LApplyArgsGeneric *apply, Register extraStackSize);
     bool visitApplyArgsGeneric(LApplyArgsGeneric *apply);
     bool visitGetDynamicName(LGetDynamicName *lir);
+    bool visitFilterArguments(LFilterArguments *lir);
     bool visitCallDirectEval(LCallDirectEval *lir);
     bool visitDoubleToInt32(LDoubleToInt32 *lir);
     bool visitNewSlots(LNewSlots *lir);
