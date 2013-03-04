@@ -17,6 +17,35 @@
 #include "WMFDecoder.h"
 #endif
 
+#ifdef MOZ_OGG
+#include "OggDecoder.h"
+#endif
+#ifdef MOZ_WAVE
+#include "WaveDecoder.h"
+#endif
+#ifdef MOZ_WEBM
+#include "WebMDecoder.h"
+#endif
+#ifdef MOZ_RAW
+#include "RawDecoder.h"
+#endif
+#ifdef MOZ_GSTREAMER
+#include "GStreamerDecoder.h"
+#endif
+#ifdef MOZ_MEDIA_PLUGINS
+#include "MediaPluginHost.h"
+#include "MediaPluginDecoder.h"
+#endif
+#ifdef MOZ_WIDGET_GONK
+#include "MediaOmxDecoder.h"
+#endif
+#ifdef MOZ_DASH
+#include "DASHDecoder.h"
+#endif
+#ifdef MOZ_WMF
+#include "WMFDecoder.h"
+#endif
+
 namespace mozilla
 {
 
@@ -351,6 +380,64 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
     return CANPLAY_NO;
   }
   return CANPLAY_YES;
+}
+
+/* static */
+already_AddRefed<MediaDecoder>
+DecoderTraits::CreateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
+{
+  nsRefPtr<MediaDecoder> decoder;
+
+#ifdef MOZ_GSTREAMER
+  if (IsGStreamerSupportedType(aType)) {
+    decoder = new GStreamerDecoder();
+  }
+#endif
+#ifdef MOZ_RAW
+  if (IsRawType(aType)) {
+    decoder = new RawDecoder();
+  }
+#endif
+#ifdef MOZ_OGG
+  if (IsOggType(aType)) {
+    decoder = new OggDecoder();
+  }
+#endif
+#ifdef MOZ_WAVE
+  if (IsWaveType(aType)) {
+    decoder = new WaveDecoder();
+  }
+#endif
+#ifdef MOZ_WIDGET_GONK
+  if (IsOmxSupportedType(aType)) {
+    decoder = new MediaOmxDecoder();
+  }
+#endif
+#ifdef MOZ_MEDIA_PLUGINS
+  if (IsMediaPluginsEnabled() && GetMediaPluginHost()->FindDecoder(aType, NULL)) {
+    decoder = new MediaPluginDecoder(aType);
+  }
+#endif
+#ifdef MOZ_WEBM
+  if (IsWebMType(aType)) {
+    decoder = new WebMDecoder();
+  }
+#endif
+#ifdef MOZ_DASH
+  if (IsDASHMPDType(aType)) {
+    decoder = new DASHDecoder();
+  }
+#endif
+#ifdef MOZ_WMF
+  if (IsWMFSupportedType(aType)) {
+    decoder = new WMFDecoder();
+  }
+#endif
+
+  NS_ENSURE_TRUE(decoder != nullptr, nullptr);
+  NS_ENSURE_TRUE(decoder->Init(aOwner), nullptr);
+
+  return decoder.forget();
 }
 
 }

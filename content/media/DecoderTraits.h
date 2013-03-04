@@ -7,10 +7,14 @@
 #ifndef DecoderTraits_h_
 #define DecoderTraits_h_
 
+#include "nsCOMPtr.h"
 #include "nsAString.h"
 
 namespace mozilla
 {
+
+class MediaDecoder;
+class MediaDecoderOwner;
 
 enum CanPlayStatus {
   CANPLAY_NO,
@@ -74,6 +78,11 @@ public:
 #ifdef MOZ_WMF
   static bool IsWMFSupportedType(const nsACString& aType);
 #endif
+
+  // Create a decoder for the given aType. Returns null if we
+  // were unable to create the decoder.
+  static already_AddRefed<MediaDecoder> CreateDecoder(const nsACString& aType,
+                                                      MediaDecoderOwner* aOwner);
 };
 
 }
