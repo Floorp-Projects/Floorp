@@ -1010,11 +1010,15 @@ void MediaDecoderStateMachine::AudioLoop()
     nsAutoPtr<AudioStream> audioStream(AudioStream::AllocateStream());
     audioStream->Init(channels, rate, audioChannelType);
     audioStream->SetVolume(volume);
-    audioStream->SetPreservesPitch(preservesPitch);
+    if (audioStream->SetPreservesPitch(preservesPitch) != NS_OK) {
+      NS_WARNING("Setting the pitch preservation failed at AudioLoop start.");
+    }
     if (playbackRate != 1.0) {
       NS_ASSERTION(playbackRate != 0,
                    "Don't set the playbackRate to 0 on an AudioStream.");
-      audioStream->SetPlaybackRate(playbackRate);
+      if (audioStream->SetPlaybackRate(playbackRate) != NS_OK) {
+        NS_WARNING("Setting the playback rate failed at AudioLoop start.");
+      }
     }
 
     {
@@ -1076,10 +1080,14 @@ void MediaDecoderStateMachine::AudioLoop()
     if (setPlaybackRate) {
       NS_ASSERTION(playbackRate != 0,
                    "Don't set the playbackRate to 0 in the AudioStreams");
-      mAudioStream->SetPlaybackRate(playbackRate);
+      if (mAudioStream->SetPlaybackRate(playbackRate) != NS_OK) {
+        NS_WARNING("Setting the playback rate failed in AudioLoop.");
+      }
     }
     if (setPreservesPitch) {
-      mAudioStream->SetPreservesPitch(preservesPitch);
+      if (mAudioStream->SetPreservesPitch(preservesPitch) != NS_OK) {
+        NS_WARNING("Setting the pitch preservation failed in AudioLoop.");
+      }
     }
     if (minWriteFrames == -1) {
       minWriteFrames = mAudioStream->GetMinWriteSize();
@@ -2757,6 +2765,12 @@ void MediaDecoderStateMachine::SetPlaybackRate(double aPlaybackRate)
   NS_ASSERTION(aPlaybackRate != 0,
       "PlaybackRate == 0 should be handled before this function.");
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+
+  // We don't currently support more than two channels when changing playback
+  // rate.
+  if (mAudioStream && mAudioStream->GetChannels() > 2) {
+    return;
+  }
 
   if (mPlaybackRate == aPlaybackRate) {
     return;
