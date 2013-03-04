@@ -36,8 +36,8 @@ class LayerManager;
 
 // Represents (affine) transforms that are calculated from a content view.
 struct ViewTransform {
-  ViewTransform(gfx::Point aTranslation = gfx::Point(),
-                gfx::ZoomScale aScale = gfx::ZoomScale())
+  ViewTransform(gfxPoint aTranslation = gfxPoint(),
+                gfxSize aScale = gfxSize(1, 1))
     : mTranslation(aTranslation)
     , mScale(aScale)
   {}
@@ -49,8 +49,8 @@ struct ViewTransform {
       gfx3DMatrix::Translation(mTranslation.x, mTranslation.y, 0);
   }
 
-  gfx::Point mTranslation;
-  gfx::ZoomScale mScale;
+  gfxPoint mTranslation;
+  gfxSize mScale;
 };
 
 class CompositorParent : public PCompositorParent,
@@ -87,7 +87,7 @@ public:
 
   LayerManager* GetLayerManager() { return mLayerManager; }
 
-  void SetTransformation(float aScale, gfx::IntPoint aScrollOffset);
+  void SetTransformation(float aScale, nsIntPoint aScrollOffset);
   void AsyncRender();
 
   // Can be called from any thread
@@ -178,15 +178,10 @@ protected:
   virtual void ScheduleTask(CancelableTask*, int);
   virtual void Composite();
   virtual void ComposeToTarget(gfxContext* aTarget);
-  virtual void SetFirstPaintViewport(const gfx::IntPoint& aOffset,
-                                     float aZoom,
-                                     const gfx::IntRect& aPageRect,
-                                     const gfx::Rect& aCssPageRect);
+  virtual void SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect);
   virtual void SetPageRect(const gfx::Rect& aCssPageRect);
-  virtual void SyncViewportInfo(const gfx::IntRect& aDisplayPort,
-                                float aDisplayResolution, bool aLayersUpdated,
-                                gfx::IntPoint& aScrollOffset,
-                                float& aScaleX, float& aScaleY);
+  virtual void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
+                                nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
   void SetEGLSurfaceSize(int width, int height);
   // If SetPanZoomControllerForLayerTree is not set, Compositor will use
   // derived class AsyncPanZoomController transformations.
@@ -287,8 +282,8 @@ private:
   bool mPaused;
   float mXScale;
   float mYScale;
-  gfx::IntPoint mScrollOffset;
-  gfx::IntRect mContentRect;
+  nsIntPoint mScrollOffset;
+  nsIntRect mContentRect;
 
   // When this flag is set, the next composition will be the first for a
   // particular document (i.e. the document displayed on the screen will change).
