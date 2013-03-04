@@ -53,7 +53,6 @@ MOCHITEST_FILES = \
 		test_input_typing_sanitization.html \
 		test_input_sanitization.html \
 		test_valueasdate_attribute.html \
-		test_input_file_b2g_disabled.html \
 		test_input_textarea_set_value_no_scroll.html \
 		test_submit_invalid_file.html \
 		submit_invalid_file.sjs \
