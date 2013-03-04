@@ -9,7 +9,6 @@
 #include "Types.h"
 #include "Point.h"
 #include "Rect.h"
-#include "ZoomScale.h"
 #include "Matrix.h"
 #include "UserData.h"
 // This RefPtr class isn't ideal for usage in Azure, as it doesn't allow T**
