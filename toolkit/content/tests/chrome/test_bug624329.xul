@@ -21,8 +21,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=624329
   <![CDATA[
   /** Test for Bug 624329 **/
 
-SimpleTest.expectAssertions(0, 2); // bug 846096
-
 SimpleTest.waitForExplicitFinish();
 
 var win;
