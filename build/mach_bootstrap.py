@@ -31,6 +31,7 @@ SEARCH_PATHS = [
 MACH_MODULES = [
     'addon-sdk/mach_commands.py',
     'layout/tools/reftest/mach_commands.py',
+    'python/mach/mach/commands/commandinfo.py',
     'python/mozboot/mozboot/mach_commands.py',
     'python/mozbuild/mozbuild/config.py',
     'python/mozbuild/mozbuild/mach_commands.py',
