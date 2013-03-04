@@ -54,6 +54,7 @@ EXPORTS_mozilla/dom = \
 		HTMLMetaElement.h \
 		HTMLMeterElement.h \
 		HTMLModElement.h \
+		HTMLObjectElement.h \
 		HTMLOptionElement.h \
 		HTMLOptGroupElement.h \
 		HTMLOutputElement.h \
