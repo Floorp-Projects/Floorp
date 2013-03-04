@@ -365,6 +365,12 @@ class MacroAssembler : public MacroAssemblerSpecific
         framePushed_ += sizeof(Value);
     }
 
+    void PushValue(const Address &addr) {
+        JS_ASSERT(addr.base != StackPointer);
+        pushValue(addr);
+        framePushed_ += sizeof(Value);
+    }
+
     void adjustStack(int amount) {
         if (amount > 0)
             freeStack(amount);
