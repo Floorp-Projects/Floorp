@@ -76,6 +76,9 @@
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
+using namespace mozilla;
+using namespace mozilla::dom;
+
 #ifdef PR_LOGGING
 static PRLogModuleInfo*
 GetObjectLog()
@@ -960,7 +963,7 @@ nsObjectLoadingContent::GetActualType(nsACString& aType)
 NS_IMETHODIMP
 nsObjectLoadingContent::GetDisplayedType(uint32_t* aType)
 {
-  *aType = mType;
+  *aType = DisplayedType();
   return NS_OK;
 }
 
@@ -2393,7 +2396,7 @@ nsObjectLoadingContent::AsyncStartPluginInstance()
 NS_IMETHODIMP
 nsObjectLoadingContent::GetSrcURI(nsIURI** aURI)
 {
-  NS_IF_ADDREF(*aURI = mURI);
+  NS_IF_ADDREF(*aURI = GetSrcURI());
   return NS_OK;
 }
 
@@ -2630,7 +2633,7 @@ nsObjectLoadingContent::PlayPlugin()
 NS_IMETHODIMP
 nsObjectLoadingContent::GetActivated(bool *aActivated)
 {
-  *aActivated = mActivated;
+  *aActivated = Activated();
   return NS_OK;
 }
 
@@ -2758,6 +2761,86 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason)
   }
 
   return allowPerm;
+}
+
+nsIDocument*
+nsObjectLoadingContent::GetContentDocument()
+{
+  nsCOMPtr<nsIContent> thisContent =
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+
+  if (!thisContent->IsInDoc()) {
+    return nullptr;
+  }
+
+  // XXXbz should this use GetCurrentDoc()?  sXBL/XBL2 issue!
+  nsIDocument *sub_doc = thisContent->OwnerDoc()->GetSubDocumentFor(thisContent);
+  if (!sub_doc) {
+    return nullptr;
+  }
+
+  return sub_doc;
+}
+
+JS::Value
+nsObjectLoadingContent::LegacyCall(JSContext* aCx,
+                                   JS::Value aThisVal,
+                                   const Sequence<JS::Value>& aArguments,
+                                   ErrorResult& aRv)
+{
+  nsCOMPtr<nsIContent> thisContent =
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  JSObject* obj = thisContent->GetWrapper();
+  MOZ_ASSERT(obj, "How did we get called?");
+
+  // Make sure we're not dealing with an Xray.  Our DoCall code can't handle
+  // random cross-compartment wrappers, so we're going to have to wrap
+  // everything up into our compartment, but that means we need to check that
+  // this is not an Xray situation by hand.
+  if (!JS_WrapObject(aCx, &obj)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return JS::UndefinedValue();
+  }
+
+  if (nsDOMClassInfo::ObjectIsNativeWrapper(aCx, obj)) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return JS::UndefinedValue();
+  }
+
+  obj = thisContent->GetWrapper();
+  // Now wrap things up into the compartment of "obj"
+  JSAutoCompartment ac(aCx, obj);
+  nsTArray<JS::Value> args(aArguments);
+  for (JS::Value *arg = args.Elements(), *arg_end = arg + args.Length();
+       arg != arg_end;
+       ++arg) {
+    if (!JS_WrapValue(aCx, arg)) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return JS::UndefinedValue();
+    }
+  }
+
+  if (!JS_WrapValue(aCx, &aThisVal)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return JS::UndefinedValue();
+  }
+
+  JS::Value retval;
+  bool otherRetval;
+  nsresult rv =
+    nsHTMLPluginObjElementSH::DoCall(nullptr, aCx, obj, args.Length(),
+                                     args.Elements(), &retval, aThisVal,
+                                     &otherRetval);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return JS::UndefinedValue();
+  }
+
+  if (!otherRetval) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return JS::UndefinedValue();
+  }
+  return retval;
 }
 
 void

@@ -53,7 +53,10 @@ partial interface HTMLImageElement {
            attribute DOMString longDesc;
 
   [TreatNullAs=EmptyString,SetterThrows] attribute DOMString border;
+};
 
+[NoInterfaceObject]
+interface MozImageLoadingContent {
   // Mirrored chrome-only nsIImageLoadingContent methods.  Please make sure
   // to update this list if nsIImageLoadingContent changes.
   [ChromeOnly]
@@ -84,3 +87,5 @@ partial interface HTMLImageElement {
   [ChromeOnly]
   void forceImageState(boolean aForce, unsigned long long aState);
 };
+
+HTMLImageElement implements MozImageLoadingContent;

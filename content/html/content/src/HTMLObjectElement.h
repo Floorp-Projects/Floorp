@@ -23,8 +23,6 @@ class HTMLObjectElement MOZ_FINAL : public nsGenericHTMLFormElement
                                   , public nsIDOMGetSVGDocument
 {
 public:
-  using nsIConstraintValidation::GetValidationMessage;
-
   HTMLObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                     FromParser aFromParser = NOT_FROM_PARSER);
   virtual ~HTMLObjectElement();
@@ -101,6 +99,137 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // Web IDL binding methods
+  // XPCOM GetData is ok; note that it's a URI attribute with a weird base URI
+  void SetData(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::data, aValue, aRv);
+  }
+  void GetType(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::type, aValue);
+  }
+  void SetType(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::type, aValue, aRv);
+  }
+  void GetName(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::name, aValue);
+  }
+  void SetName(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::name, aValue, aRv);
+  }
+  void GetUseMap(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::usemap, aValue);
+  }
+  void SetUseMap(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::usemap, aValue, aRv);
+  }
+  using nsGenericHTMLFormElement::GetForm;
+  void GetWidth(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::width, aValue);
+  }
+  void SetWidth(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::width, aValue, aRv);
+  }
+  void GetHeight(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::height, aValue);
+  }
+  void SetHeight(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::height, aValue, aRv);
+  }
+  using nsObjectLoadingContent::GetContentDocument;
+  nsIDOMWindow* GetContentWindow();
+  using nsIConstraintValidation::CheckValidity;
+  using nsIConstraintValidation::GetValidationMessage;
+  void GetAlign(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::align, aValue);
+  }
+  void SetAlign(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::align, aValue, aRv);
+  }
+  void GetArchive(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::archive, aValue);
+  }
+  void SetArchive(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::archive, aValue, aRv);
+  }
+  // XPCOM GetCode is ok; note that it's a URI attribute with a weird base URI
+  void SetCode(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::code, aValue, aRv);
+  }
+  bool Declare()
+  {
+    return GetBoolAttr(nsGkAtoms::declare);
+  }
+  void SetDeclare(bool aValue, ErrorResult& aRv)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::declare, aValue, aRv);
+  }
+  uint32_t Hspace()
+  {
+    return GetHTMLUnsignedIntAttr(nsGkAtoms::hspace, 0);
+  }
+  void SetHspace(uint32_t aValue, ErrorResult& aRv)
+  {
+    SetHTMLUnsignedIntAttr(nsGkAtoms::hspace, aValue, aRv);
+  }
+  void GetStandby(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::standby, aValue);
+  }
+  void SetStandby(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::standby, aValue, aRv);
+  }
+  uint32_t Vspace()
+  {
+    return GetHTMLUnsignedIntAttr(nsGkAtoms::vspace, 0);
+  }
+  void SetVspace(uint32_t aValue, ErrorResult& aRv)
+  {
+    SetHTMLUnsignedIntAttr(nsGkAtoms::vspace, aValue, aRv);
+  }
+  // XPCOM GetCodebase is ok; note that it's a URI attribute
+  void SetCodeBase(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::codebase, aValue, aRv);
+  }
+  void GetCodeType(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::codetype, aValue);
+  }
+  void SetCodeType(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::codetype, aValue, aRv);
+  }
+  void GetBorder(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::border, aValue);
+  }
+  void SetBorder(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::border, aValue, aRv);
+  }
+  nsIDocument* GetSVGDocument()
+  {
+    return GetContentDocument();
+  }
+
 private:
   /**
    * Calls LoadObject with the correct arguments to start the plugin load.
