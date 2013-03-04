@@ -22,7 +22,7 @@ const gPrefBranch = Services.prefs;
 const gClipboardHelper = Components.classes[nsClipboardHelper_CONTRACTID].getService(nsIClipboardHelper);
 const gAtomService = Components.classes[nsAtomService_CONTRACTID].getService(nsIAtomService);
 
-var gLockAtoms = [gAtomService.getAtom("default"), gAtomService.getAtom("user"), gAtomService.getAtom("locked")];
+var gLockProps = ["default", "user", "locked"];
 // we get these from a string bundle
 var gLockStrs = [];
 var gTypeStrs = [];
@@ -57,12 +57,14 @@ var view = {
         return value;
     }
   },
-  getRowProperties : function(index, prop) {},
-  getCellProperties : function(index, col, prop) {
+  getRowProperties : function(index) { return ""; },
+  getCellProperties : function(index, col) {
     if (index in gPrefView)
-      prop.AppendElement(gLockAtoms[gPrefView[index].lockCol]);
+      return gLockProps[gPrefView[index].lockCol];
+
+    return "";
   },
-  getColumnProperties : function(col, prop) {},
+  getColumnProperties : function(col) { return ""; },
   treebox : null,
   selection : null,
   isContainer : function(index) { return false; },

@@ -22,8 +22,6 @@ var rejectsTree;
 
 var showingPasswords = false;
 
-var kLTRAtom;
-
 function Startup() {
   // xpconnect to password manager interfaces
   passwordmanager = Components.classes["@mozilla.org/login-manager;1"]
@@ -35,10 +33,6 @@ function Startup() {
 
   signonsTree = document.getElementById("signonsTree");
   rejectsTree = document.getElementById("rejectsTree");
-
-  kLTRAtom = Components.classes["@mozilla.org/atom-service;1"]
-                       .getService(Components.interfaces.nsIAtomService)
-                       .getAtom("ltr");
 }
 
 function Shutdown() {

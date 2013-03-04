@@ -7,6 +7,7 @@
 
 #include "nsIAutoCompleteController.h"
 
+#include "nsCOMPtr.h"
 #include "nsIAutoCompleteInput.h"
 #include "nsIAutoCompletePopup.h"
 #include "nsIAutoCompleteResult.h"
