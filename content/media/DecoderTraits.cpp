@@ -7,43 +7,48 @@
 #include "DecoderTraits.h"
 #include "MediaDecoder.h"
 #include "nsCharSeparatedTokenizer.h"
+
 #ifdef MOZ_MEDIA_PLUGINS
 #include "MediaPluginHost.h"
-#endif
-#ifdef MOZ_GSTREAMER
-#include "mozilla/Preferences.h"
-#endif
-#ifdef MOZ_WMF
-#include "WMFDecoder.h"
 #endif
 
 #ifdef MOZ_OGG
 #include "OggDecoder.h"
+#include "OggReader.h"
 #endif
 #ifdef MOZ_WAVE
 #include "WaveDecoder.h"
+#include "WaveReader.h"
 #endif
 #ifdef MOZ_WEBM
 #include "WebMDecoder.h"
+#include "WebMReader.h"
 #endif
 #ifdef MOZ_RAW
 #include "RawDecoder.h"
+#include "RawReader.h"
 #endif
 #ifdef MOZ_GSTREAMER
+#include "mozilla/Preferences.h"
 #include "GStreamerDecoder.h"
+#include "GStreamerReader.h"
 #endif
 #ifdef MOZ_MEDIA_PLUGINS
 #include "MediaPluginHost.h"
 #include "MediaPluginDecoder.h"
+#include "MediaPluginReader.h"
+#include "MediaPluginHost.h"
 #endif
 #ifdef MOZ_WIDGET_GONK
 #include "MediaOmxDecoder.h"
+#include "MediaOmxReader.h"
 #endif
 #ifdef MOZ_DASH
 #include "DASHDecoder.h"
 #endif
 #ifdef MOZ_WMF
 #include "WMFDecoder.h"
+#include "WMFReader.h"
 #endif
 
 namespace mozilla
@@ -438,6 +443,60 @@ DecoderTraits::CreateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
   NS_ENSURE_TRUE(decoder->Init(aOwner), nullptr);
 
   return decoder.forget();
+}
+
+/* static */
+MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, AbstractMediaDecoder* aDecoder)
+{
+  MediaDecoderReader* decoderReader = nullptr;
+
+#ifdef MOZ_GSTREAMER
+  if (IsGStreamerSupportedType(aType)) {
+    decoderReader = new GStreamerReader(aDecoder);
+  } else
+#endif
+#ifdef MOZ_RAW
+  if (IsRawType(aType)) {
+    decoderReader = new RawReader(aDecoder);
+  } else
+#endif
+#ifdef MOZ_OGG
+  if (IsOggType(aType)) {
+    decoderReader = new OggReader(aDecoder);
+  } else
+#endif
+#ifdef MOZ_WAVE
+  if (IsWaveType(aType)) {
+    decoderReader = new WaveReader(aDecoder);
+  } else
+#endif
+#ifdef MOZ_WIDGET_GONK
+  if (IsOmxSupportedType(aType)) {
+    decoderReader = new MediaOmxReader(aDecoder);
+  } else
+#endif
+#ifdef MOZ_MEDIA_PLUGINS
+  if (MediaDecoder::IsMediaPluginsEnabled() &&
+      GetMediaPluginHost()->FindDecoder(aType, nullptr)) {
+    decoderReader = new MediaPluginReader(aDecoder, aType);
+  } else
+#endif
+#ifdef MOZ_WEBM
+  if (IsWebMType(aType)) {
+    decoderReader = new WebMReader(aDecoder);
+  } else
+#endif
+#ifdef MOZ_WMF
+  if (IsWMFSupportedType(aType)) {
+    decoderReader = new WMFReader(aDecoder);
+  } else
+#endif
+#ifdef MOZ_DASH
+  // The DASH decoder is not supported.
+#endif
+  if (false) {} // dummy if to take care of the dangling else
+
+  return decoderReader;
 }
 
 /* static */
