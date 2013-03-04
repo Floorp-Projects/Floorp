@@ -101,17 +101,16 @@ nsTreeView.prototype =
     var data = this.getDataForIndex(aRow);
     return data.value;
   },
-  getRowProperties: function getRowProperties(aIndex, aProperties) {},
-  getCellProperties: function getCellProperties(aIndex, aCol, aProperties)
+  getRowProperties: function getRowProperties(aIndex) { return ""; },
+  getCellProperties: function getCellProperties(aIndex, aCol)
   {
     if (!aCol.cycler)
-      return;
+      return "";
 
     var data = this.getDataForIndex(aIndex);
-    var atom = this.mCyclerStates[data.cyclerState];
-    aProperties.AppendElement(atom);
+    return this.mCyclerStates[data.cyclerState];
   },
-  getColumnProperties: function getColumnProperties(aCol, aProperties) {},
+  getColumnProperties: function getColumnProperties(aCol) { return ""; },
   getParentIndex: function getParentIndex(aRowIndex)
   {
     var info = this.getInfoByIndex(aRowIndex);
@@ -261,9 +260,9 @@ nsTreeView.prototype =
   },
 
   mCyclerStates: [
-    createAtom("cyclerState1"),
-    createAtom("cyclerState2"),
-    createAtom("cyclerState3")
+    "cyclerState1",
+    "cyclerState2",
+    "cyclerState3"
   ]
 };
 
