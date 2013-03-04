@@ -556,6 +556,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void test32(Register lhs, Register rhs) {
         ma_tst(lhs, rhs);
     }
+    void test32(const Address &address, Imm32 imm) {
+        ma_ldr(Operand(address.base, address.offset), ScratchRegister);
+        test32(ScratchRegister, imm);
+    }
     void testPtr(Register lhs, Register rhs) {
         test32(lhs, rhs);
     }
