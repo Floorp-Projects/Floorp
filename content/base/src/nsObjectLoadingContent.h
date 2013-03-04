@@ -137,6 +137,35 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      */
     bool SrcStreamLoading() { return mSrcStreamLoading; }
 
+    /**
+     * When a plug-in is instantiated, it can create a scriptable
+     * object that the page wants to interact with.  We expose this
+     * object by placing it on the prototype chain of our element,
+     * between the element itself and its most-derived DOM prototype.
+     *
+     * GetCanonicalPrototype returns this most-derived DOM prototype.
+     *
+     * SetupProtoChain handles actually inserting the plug-in
+     * scriptable object into the proto chain if needed.
+     *
+     * DoNewResolve is a hook that allows us to find out when the web
+     * page is looking up a property name on our object and make sure
+     * that our plug-in, if any, is instantiated.
+     */
+
+    /**
+     * Get the canonical prototype for this content for the given global.  Only
+     * returns non-null for objects that are on WebIDL bindings.
+     */
+    virtual JSObject* GetCanonicalPrototype(JSContext* aCx, JSObject* aGlobal);
+
+    // Helper for WebIDL node wrapping
+    void SetupProtoChain(JSContext* aCx, JSObject* aObject);
+
+    // Helper for WebIDL newResolve
+    bool DoNewResolve(JSContext* aCx, JSHandleObject aObject, JSHandleId aId,
+                      unsigned aFlags, JSMutableHandleObject aObjp);
+
   protected:
     /**
      * Begins loading the object when called
