@@ -21,8 +21,6 @@
 var gTestPhase = -1;
 var gCp = null;
 
-SimpleTest.expectAssertions(0, 2); // bug 846096
-
 SimpleTest.waitForExplicitFinish();
 
 function preventDefault(event) {
