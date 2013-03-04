@@ -1831,6 +1831,17 @@ DoToBoolFallback(JSContext *cx, ICToBool_Fallback *stub, HandleValue arg, Mutabl
         return true;
     }
 
+    if (arg.isDouble()) {
+        IonSpew(IonSpew_BaselineIC, "  Generating ToBool(Double) stub.");
+        ICToBool_Double::Compiler compiler(cx);
+        ICStub *doubleStub = compiler.getStub(compiler.getStubSpace(script));
+        if (!doubleStub)
+            return false;
+
+        stub->addNewStub(doubleStub);
+        return true;
+    }
+
     if (arg.isString()) {
         IonSpew(IonSpew_BaselineIC, "  Generating ToBool(String) stub");
         ICToBool_String::Compiler compiler(cx);
@@ -1849,6 +1860,17 @@ DoToBoolFallback(JSContext *cx, ICToBool_Fallback *stub, HandleValue arg, Mutabl
             return false;
 
         stub->addNewStub(nilStub);
+        return true;
+    }
+
+    if (arg.isObject()) {
+        IonSpew(IonSpew_BaselineIC, "  Generating ToBool(Object) stub.");
+        ICToBool_Object::Compiler compiler(cx);
+        ICStub *objStub = compiler.getStub(compiler.getStubSpace(script));
+        if (!objStub)
+            return false;
+
+        stub->addNewStub(objStub);
         return true;
     }
 
@@ -1941,6 +1963,69 @@ ICToBool_NullUndefined::Compiler::generateStubCode(MacroAssembler &masm)
 
     masm.bind(&ifFalse);
     masm.moveValue(BooleanValue(false), R0);
+    EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+//
+// ToBool_Double
+//
+
+bool
+ICToBool_Double::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure, ifTrue;
+    masm.branchTestDouble(Assembler::NotEqual, R0, &failure);
+    masm.unboxDouble(R0, FloatReg0);
+    Assembler::Condition cond = masm.testDoubleTruthy(true, FloatReg0);
+    masm.j(cond, &ifTrue);
+
+    masm.moveValue(BooleanValue(false), R0);
+    EmitReturnFromIC(masm);
+
+    masm.bind(&ifTrue);
+    masm.moveValue(BooleanValue(true), R0);
+    EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+//
+// ToBool_Object
+//
+
+bool
+ICToBool_Object::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure, ifFalse, slowPath;
+    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
+
+    Register objReg = masm.extractObject(R0, ExtractTemp0);
+    Register scratch = R1.scratchReg();
+    Assembler::Condition cond = masm.branchTestObjectTruthy(false, objReg, scratch, &slowPath);
+    masm.j(cond, &ifFalse);
+
+    // If object doesn't emulate undefined, it evaulates to true.
+    masm.moveValue(BooleanValue(true), R0);
+    EmitReturnFromIC(masm);
+
+    masm.bind(&ifFalse);
+    masm.moveValue(BooleanValue(false), R0);
+    EmitReturnFromIC(masm);
+
+    masm.bind(&slowPath);
+    masm.setupUnalignedABICall(1, scratch);
+    masm.passABIArg(objReg);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ObjectEmulatesUndefined));
+    masm.xor32(Imm32(1), ReturnReg);
+    masm.tagValue(JSVAL_TYPE_BOOLEAN, ReturnReg, R0);
     EmitReturnFromIC(masm);
 
     // Failure case - jump to next stub

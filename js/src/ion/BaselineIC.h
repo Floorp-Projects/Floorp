@@ -301,6 +301,8 @@ class ICEntry
     _(ToBool_Int32)             \
     _(ToBool_String)            \
     _(ToBool_NullUndefined)     \
+    _(ToBool_Double)            \
+    _(ToBool_Object)            \
                                 \
     _(ToNumber_Fallback)        \
                                 \
@@ -1996,6 +1998,64 @@ class ICToBool_NullUndefined : public ICStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICToBool_NullUndefined::New(space, getStubCode());
+        }
+    };
+};
+
+class ICToBool_Double : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICToBool_Double(IonCode *stubCode)
+      : ICStub(ICStub::ToBool_Double, stubCode) {}
+
+  public:
+    static inline ICToBool_Double *New(ICStubSpace *space, IonCode *code) {
+        if (!code)
+            return NULL;
+        return space->allocate<ICToBool_Double>(code);
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::ToBool_Double) {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICToBool_Double::New(space, getStubCode());
+        }
+    };
+};
+
+class ICToBool_Object : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICToBool_Object(IonCode *stubCode)
+      : ICStub(ICStub::ToBool_Object, stubCode) {}
+
+  public:
+    static inline ICToBool_Object *New(ICStubSpace *space, IonCode *code) {
+        if (!code)
+            return NULL;
+        return space->allocate<ICToBool_Object>(code);
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::ToBool_Object) {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICToBool_Object::New(space, getStubCode());
         }
     };
 };
