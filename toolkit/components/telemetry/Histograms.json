@@ -1600,6 +1600,10 @@
     "extended_statistics_ok": true,
     "description": "Time spent shutting down plugins (ms)"
   },
+  "PLUGIN_CALLED_DIRECTLY": {
+    "kind": "flag",
+    "description": "A plugin object was successfully invoked as a function"
+  },
   "MOZ_SQLITE_OPEN_MS": {
     "kind": "exponential",
     "high": "3000",
