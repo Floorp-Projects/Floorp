@@ -33,8 +33,8 @@ interface nsIFrame;
  * this issue.  (It could be that the image status on imgIRequest is
  * sufficient, when combined with the imageBlockingStatus information.)
  *
- * Please make sure to update the HTMLImageElement and SVGImageElement
- * Web IDL interfaces to mirror this interface when changing it.
+ * Please make sure to update the MozImageLoadingContent WebIDL
+ * interface to mirror this interface when changing it.
  */
 
 [scriptable, builtinclass, uuid(e3968acd-b796-4ca3-aec0-e7f0880f2219)]
