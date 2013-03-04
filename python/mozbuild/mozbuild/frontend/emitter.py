@@ -9,6 +9,7 @@ import os
 from .data import (
     DirectoryTraversal,
     ConfigFileSubstitution,
+    ReaderSummary,
 )
 
 from .reader import MozbuildSandbox
@@ -31,12 +32,22 @@ class TreeMetadataEmitter(object):
         The return value from BuildReader.read_topsrcdir() (a generator) is
         typically fed into this function.
         """
+        file_count = 0
+        execution_time = 0.0
+
         for out in output:
             if isinstance(out, MozbuildSandbox):
                 for o in self.emit_from_sandbox(out):
                     yield o
+
+                # Update the stats.
+                file_count += len(out.all_paths)
+                execution_time += out.execution_time
+
             else:
                 raise Exception('Unhandled output type: %s' % out)
+
+        yield ReaderSummary(file_count, execution_time)
 
     def emit_from_sandbox(self, sandbox):
         """Convert a MozbuildSandbox to tree metadata objects.

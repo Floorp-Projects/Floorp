@@ -24,6 +24,14 @@ class TreeMetadata(object):
     """Base class for all data being captured."""
 
 
+class ReaderSummary(TreeMetadata):
+    """A summary of what the reader did."""
+
+    def __init__(self, total_file_count, total_execution_time):
+        self.total_file_count = total_file_count
+        self.total_execution_time = total_execution_time
+
+
 class SandboxDerived(TreeMetadata):
     """Build object derived from a single MozbuildSandbox instance.
 
