@@ -10690,22 +10690,37 @@ let ICCRecordHelper = {
   },
 
   /**
-   * Get free ICC ADN record id.
+   * Get free record id.
    *
-   * @param fileId      EF id of the ADN.
+   * @param fileId      EF id.
    * @param onsuccess   Callback to be called when success.
    * @param onerror     Callback to be called when error.
    */
-  getADNFreeRecordId: function getADNFreeRecordId(fileId, onsuccess, onerror) {
+  getFreeRecordId: function getFreeRecordId(fileId, onsuccess, onerror) {
     function callback(options) {
-      let contact = GsmPDUHelper.readAlphaIdDiallingNumber(options.recordSize);
-      if (!contact) {
+      let strLen = Buf.readUint32();
+      let octetLen = strLen / 2;
+      let readLen = 0;
+
+      while (readLen < octetLen) {
+        let octet = GsmPDUHelper.readHexOctet();
+        readLen++;
+        if (octet != 0xff) {
+          break;
+        }
+      }
+
+      if (readLen == octetLen) {
         // Find free record.
         if (onsuccess) {
           onsuccess(options.p1);
         }
         return;
+      } else {
+        Buf.seekIncoming((octetLen - readLen) * PDU_HEX_OCTET_SIZE);
       }
+
+      Buf.readStringDelimiter(strLen);
 
       if (options.p1 < options.totalRecords) {
         ICCIOHelper.loadNextRecord(options);
@@ -11135,7 +11150,7 @@ let ICCContactHelper = {
    * Helper function to find free contact record.
    *
    * @param appType       CARD_APPTYPE_SIM or CARD_APPTYPE_USIM.
-   * @param contactType   "ADN".
+   * @param contactType   "ADN" or "FDN".
    * @param onsuccess     Callback to be called when success.
    * @param onerror       Callback to be called when error.
    */
@@ -11144,18 +11159,21 @@ let ICCContactHelper = {
       case "ADN":
         switch (appType) {
           case CARD_APPTYPE_SIM:
-            ICCRecordHelper.getADNFreeRecordId(ICC_EF_ADN, onsuccess, onerror);
+            ICCRecordHelper.getFreeRecordId(ICC_EF_ADN, onsuccess, onerror);
             break;
           case CARD_APPTYPE_USIM:
             let gotPbrCb = function gotPbrCb(pbr) {
               if (pbr.adn) {
-                ICCRecordHelper.getADNFreeRecordId(pbr.adn.fileId, onsuccess, onerror);
+                ICCRecordHelper.getFreeRecordId(pbr.adn.fileId, onsuccess, onerror);
               }
             }.bind(this);
 
             ICCRecordHelper.readPBR(gotPbrCb, onerror);
             break;
         }
+        break;
+      case "FDN":
+        ICCRecordHelper.getFreeRecordId(ICC_EF_FDN, onsuccess, onerror);
         break;
       default:
         if (onerror) {
