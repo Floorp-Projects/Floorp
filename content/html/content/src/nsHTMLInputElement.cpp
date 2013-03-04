@@ -3664,11 +3664,6 @@ nsHTMLInputElement::ParseAttribute(int32_t aNamespaceID,
           newType = kInputDefaultType->value;
           aResult.SetTo(newType, &aValue);
         }
-        if (newType == NS_FORM_INPUT_FILE &&
-            Preferences::GetBool("dom.disable_input_file", false)) {
-          newType = kInputDefaultType->value;
-          aResult.SetTo(newType, &aValue);
-        }
       } else {
         newType = kInputDefaultType->value;
       }
