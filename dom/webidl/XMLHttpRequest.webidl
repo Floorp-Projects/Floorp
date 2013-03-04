@@ -130,8 +130,6 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   readonly attribute Document? responseXML;
 
   // Mozilla-specific stuff
-  [SetterThrows=Workers]
-  attribute boolean multipart;
 
   [SetterThrows=Workers]
   attribute boolean mozBackgroundRequest;

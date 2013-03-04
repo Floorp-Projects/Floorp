@@ -2473,10 +2473,6 @@
     "kind": "boolean",
     "description": "Type of XMLHttpRequest, async or sync"
   },
-  "MULTIPART_XHR_RESPONSE": {
-    "kind": "boolean",
-    "description": "XMLHttpRequest response was of type multipart/x-mixed-replace."
-  },
   "DOM_TIMERS_FIRED_PER_NATIVE_TIMEOUT": {
     "kind": "exponential",
     "high": "3000",

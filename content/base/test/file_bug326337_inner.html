@@ -11,36 +11,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=326337
 
 document.domain = "example.com";
 
-runTest1();
+runTest();
 
 var xhr;
 
-function runTest1() {
+function runTest() {
   xhr = new XMLHttpRequest();
   xhr.open("GET", "file_bug326337.xml", true);
   xhr.onreadystatechange = function() {
     if (xhr.readyState == 4) {
       check(xhr.responseXML.documentElement.getAttribute("root"));
-      runTest2();
-    }
-  }
-  xhr.send(null);
-}
-
-function runTest2() {
-  var secondDoc = false;
-  xhr = new XMLHttpRequest();
-  xhr.multipart = true;
-  xhr.open("GET", "file_bug326337_multipart.txt", true);
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState == 4) {
-      check(xhr.responseXML.documentElement.getAttribute("root"));
-      if (secondDoc) {
-        SpecialPowers.wrap(parent).location.hash = "#done";
-      }
-      else {
-        secondDoc = true;
-      }
+      SpecialPowers.wrap(parent).location.hash = "#done";
     }
   }
   xhr.send(null);
