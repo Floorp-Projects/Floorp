@@ -30,11 +30,6 @@ inline Rect ToRect(const gfxRect &aRect)
               Float(aRect.width), Float(aRect.height));
 }
 
-inline IntRect ToIntRect(const nsIntRect &aRect)
-{
-  return IntRect(aRect.x, aRect.y, aRect.width, aRect.height);
-}
-
 inline Color ToColor(const gfxRGBA &aRGBA)
 {
   return Color(Float(aRGBA.r), Float(aRGBA.g),
@@ -52,19 +47,9 @@ inline Point ToPoint(const gfxPoint &aPoint)
   return Point(Float(aPoint.x), Float(aPoint.y));
 }
 
-inline IntPoint ToIntPoint(const nsIntPoint &aPoint)
-{
-  return IntPoint(aPoint.x, aPoint.y);
-}
-
 inline Size ToSize(const gfxSize &aSize)
 {
   return Size(Float(aSize.width), Float(aSize.height));
-}
-
-inline IntSize ToIntSize(const nsIntSize &aSize)
-{
-  return IntSize(aSize.width, aSize.height);
 }
 
 inline Filter ToFilter(gfxPattern::GraphicsFilter aFilter)
@@ -127,11 +112,6 @@ inline gfxIntSize ThebesIntSize(const IntSize &aSize)
 }
 
 inline gfxRect ThebesRect(const Rect &aRect)
-{
-  return gfxRect(aRect.x, aRect.y, aRect.width, aRect.height);
-}
-
-inline gfxRect ThebesRect(const IntRect &aRect)
 {
   return gfxRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
