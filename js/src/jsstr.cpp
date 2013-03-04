@@ -1038,6 +1038,13 @@ StringMatch(const jschar *text, uint32_t textlen,
 
 static const size_t sRopeMatchThresholdRatioLog2 = 5;
 
+bool
+js::StringHasPattern(const jschar *text, uint32_t textlen,
+                     const jschar *pat, uint32_t patlen)
+{
+    return StringMatch(text, textlen, pat, patlen) != -1;
+}
+
 /*
  * RopeMatch takes the text to search and the pattern to search for in the text.
  * RopeMatch returns false on OOM and otherwise returns the match index through
