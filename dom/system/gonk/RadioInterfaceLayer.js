@@ -253,7 +253,7 @@ function RadioInterfaceLayer() {
   };
 
   try {
-    this.rilContext.voice.lastKnownMcc = Services.prefs.getIntPref("ril.lastKnownMcc");
+    this.rilContext.voice.lastKnownMcc = Services.prefs.getCharPref("ril.lastKnownMcc");
   } catch (e) {}
 
   this.voicemailInfo = {
@@ -1066,7 +1066,7 @@ RadioInterfaceLayer.prototype = {
         // !voice.network is in case voice.network is still null.
         if (!voice.network || voice.network.mcc != message.mcc) {
           try {
-            Services.prefs.setIntPref("ril.lastKnownMcc", message.mcc);
+            Services.prefs.setCharPref("ril.lastKnownMcc", message.mcc);
           } catch (e) {}
         }
       }
