@@ -234,7 +234,7 @@ public:
 
   nsWindowType            GetWindowType() { return mWindowType; }
 
-  virtual bool            UseOffMainThreadCompositing();
+  virtual bool            ShouldUseOffMainThreadCompositing();
 
   static nsIRollupListener* GetActiveRollupListener();
 

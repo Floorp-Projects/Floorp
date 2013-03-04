@@ -21,6 +21,7 @@
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/Accessible.h"
 #endif
+#include "mozilla/layers/CompositorParent.h"
 
 #include "mozwrlbase.h"
 
@@ -112,6 +113,10 @@ public:
   float         GetDPI();
   virtual bool  IsVisible() const;
   virtual bool  IsEnabled() const;
+  // ShouldUseOffMainThreadCompositing is defined in base widget
+  virtual bool  ShouldUseOffMainThreadCompositing();
+  bool          ShouldUseMainThreadD3D10Manager();
+  bool          ShouldUseBasicManager();
   virtual LayerManager* GetLayerManager(PLayersChild* aShadowManager = nullptr,
                                         LayersBackend aBackendHint = mozilla::layers::LAYERS_NONE,
                                         LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
@@ -197,4 +202,5 @@ protected:
   HWND mWnd;
   WNDPROC mMetroWndProc;
   nsIWidget::InputContext mInputContext;
+  bool mTempBasicLayerInUse;
 };

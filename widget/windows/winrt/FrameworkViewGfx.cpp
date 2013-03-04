@@ -67,7 +67,6 @@ FrameworkView::Render(const nsIntRegion& aInvalidRegion)
 
   AutoRestore<bool> painting(mPainting);
   mPainting = true;
-  UpdateForWindowSizeChange();
   gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
   mWidget->Paint(aInvalidRegion);
   return true;

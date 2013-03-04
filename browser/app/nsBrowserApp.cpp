@@ -28,6 +28,10 @@
 #include "nsIFile.h"
 #include "nsStringGlue.h"
 
+// Easy access to a five second startup delay used to get
+// a debugger attached in the metro environment. 
+// #define DEBUG_delay_start_metro
+
 #ifdef XP_WIN
 // we want a wmain entry point
 #include "nsWindowsWMain.cpp"
@@ -467,6 +471,9 @@ InitXPCOMGlue(const char *argv0, nsIFile **xreDirectory)
 
 int main(int argc, char* argv[])
 {
+#ifdef DEBUG_delay_start_metro
+  Sleep(5000);
+#endif
   PRTime start = _PR_Now();
 
 #ifdef XP_MACOSX
