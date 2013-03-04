@@ -144,7 +144,14 @@ class MacroAssemblerX86Shared : public Assembler
         j(cond, label);
     }
     void branchTestBool(Condition cond, const Register &lhs, const Register &rhs, Label *label) {
-        testb(lhs, rhs);
+        if (GeneralRegisterSet(Registers::SingleByteRegs).has(lhs) &&
+            GeneralRegisterSet(Registers::SingleByteRegs).has(rhs))
+        {
+            testb(lhs, rhs);
+        } else {
+            testl(lhs, rhs);
+        }
+
         j(cond, label);
     }
 
