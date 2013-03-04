@@ -803,6 +803,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         unboxInt32(value, scratch);
         return scratch;
     }
+    Register extractBoolean(const ValueOperand &value, Register scratch) {
+        JS_ASSERT(scratch != ScratchReg);
+        unboxBoolean(value, scratch);
+        return scratch;
+    }
     Register extractTag(const Address &address, Register scratch) {
         JS_ASSERT(scratch != ScratchReg);
         loadPtr(address, scratch);

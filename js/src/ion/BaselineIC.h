@@ -296,6 +296,7 @@ class ICEntry
     _(Compare_Boolean)          \
     _(Compare_Object)           \
     _(Compare_ObjectWithUndefined) \
+    _(Compare_Int32WithBoolean) \
                                 \
     _(ToBool_Fallback)          \
     _(ToBool_Int32)             \
@@ -1877,6 +1878,54 @@ class ICCompare_ObjectWithUndefined : public ICStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICCompare_NumberWithUndefined::New(space, getStubCode());
+        }
+    };
+};
+
+class ICCompare_Int32WithBoolean : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICCompare_Int32WithBoolean(IonCode *stubCode, bool lhsIsInt32)
+      : ICStub(ICStub::Compare_Int32WithBoolean, stubCode)
+    {
+        extra_ = lhsIsInt32;
+    }
+
+  public:
+    static inline ICCompare_Int32WithBoolean *New(ICStubSpace *space, IonCode *code,
+                                                  bool lhsIsInt32)
+    {
+        if (!code)
+            return NULL;
+        return space->allocate<ICCompare_Int32WithBoolean>(code, lhsIsInt32);
+    }
+
+    bool lhsIsInt32() const {
+        return extra_;
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICStubCompiler {
+      protected:
+        JSOp op_;
+        bool lhsIsInt32_;
+        bool generateStubCode(MacroAssembler &masm);
+
+        virtual int32_t getKey() const {
+            return (static_cast<int32_t>(kind) | (static_cast<int32_t>(op_) << 16) |
+                    (static_cast<int32_t>(lhsIsInt32_) << 24));
+        }
+
+      public:
+        Compiler(JSContext *cx, JSOp op, bool lhsIsInt32)
+          : ICStubCompiler(cx, ICStub::Compare_Int32WithBoolean),
+            op_(op),
+            lhsIsInt32_(lhsIsInt32)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICCompare_Int32WithBoolean::New(space, getStubCode(), lhsIsInt32_);
         }
     };
 };

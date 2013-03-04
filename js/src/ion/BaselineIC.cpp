@@ -1509,6 +1509,9 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
     if ((lhs.isNumber() && rhs.isUndefined()) ||
         (lhs.isUndefined() && rhs.isNumber()))
     {
+        IonSpew(IonSpew_BaselineIC, "  Generating %s(%s, %s) stub", js_CodeName[op],
+                    rhs.isUndefined() ? "Number" : "Undefined",
+                    rhs.isUndefined() ? "Undefined" : "Number");
         ICCompare_NumberWithUndefined::Compiler compiler(cx, op, lhs.isUndefined());
         ICStub *doubleStub = compiler.getStub(compiler.getStubSpace(script));
         if (!stub)
@@ -1519,12 +1522,26 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
     }
 
     if (lhs.isBoolean() && rhs.isBoolean()) {
+        IonSpew(IonSpew_BaselineIC, "  Generating %s(Boolean, Boolean) stub", js_CodeName[op]);
         ICCompare_Boolean::Compiler compiler(cx, op);
         ICStub *booleanStub = compiler.getStub(compiler.getStubSpace(script));
         if (!booleanStub)
             return false;
 
         stub->addNewStub(booleanStub);
+        return true;
+    }
+
+    if ((lhs.isBoolean() && rhs.isInt32()) || (lhs.isInt32() && rhs.isBoolean())) {
+        IonSpew(IonSpew_BaselineIC, "  Generating %s(%s, %s) stub", js_CodeName[op],
+                    rhs.isInt32() ? "Boolean" : "Int32",
+                    rhs.isInt32() ? "Int32" : "Boolean");
+        ICCompare_Int32WithBoolean::Compiler compiler(cx, op, lhs.isInt32());
+        ICStub *optStub = compiler.getStub(compiler.getStubSpace(script));
+        if (!optStub)
+            return false;
+
+        stub->addNewStub(optStub);
         return true;
     }
 
@@ -1542,6 +1559,7 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
 
         if (lhs.isObject() && rhs.isObject()) {
             JS_ASSERT(!stub->hasStub(ICStub::Compare_Object));
+            IonSpew(IonSpew_BaselineIC, "  Generating %s(Object, Object) stub", js_CodeName[op]);
             ICCompare_Object::Compiler compiler(cx, op);
             ICStub *objectStub = compiler.getStub(compiler.getStubSpace(script));
             if (!objectStub)
@@ -1555,6 +1573,8 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
             (rhs.isObject() || rhs.isNull() || rhs.isUndefined()) &&
             !stub->hasStub(ICStub::Compare_ObjectWithUndefined))
         {
+            IonSpew(IonSpew_BaselineIC, "  Generating %s(Obj/Null/Undef, Obj/Null/Undef) stub",
+                    js_CodeName[op]);
             bool lhsIsUndefined = lhs.isNull() || lhs.isUndefined();
             bool compareWithNull = lhs.isNull() || rhs.isNull();
             ICCompare_ObjectWithUndefined::Compiler compiler(cx, op,
@@ -1790,6 +1810,51 @@ ICCompare_ObjectWithUndefined::Compiler::generateStubCode(MacroAssembler &masm)
 
     masm.moveValue(BooleanValue(op == JSOP_STRICTEQ || op == JSOP_EQ), R0);
     EmitReturnFromIC(masm);
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+//
+// Compare_Int32WithBoolean
+//
+
+bool
+ICCompare_Int32WithBoolean::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    ValueOperand int32Val;
+    ValueOperand boolVal;
+    if (lhsIsInt32_) {
+        int32Val = R0;
+        boolVal = R1;
+    } else {
+        boolVal = R0;
+        int32Val = R1;
+    }
+    masm.branchTestBoolean(Assembler::NotEqual, boolVal, &failure);
+    masm.branchTestInt32(Assembler::NotEqual, int32Val, &failure);
+
+    if (op_ == JSOP_STRICTEQ || op_ == JSOP_STRICTNE) {
+        // Ints and booleans are never strictly equal, always strictly not equal.
+        masm.moveValue(BooleanValue(op_ == JSOP_STRICTNE), R0);
+        EmitReturnFromIC(masm);
+    } else {
+        Register boolReg = masm.extractBoolean(boolVal, ExtractTemp0);
+        Register int32Reg = masm.extractInt32(int32Val, ExtractTemp1);
+
+        // Compare payload regs of R0 and R1.
+        Assembler::Condition cond = JSOpToCondition(op_);
+        masm.cmp32(lhsIsInt32_ ? int32Reg : boolReg,
+                   lhsIsInt32_ ? boolReg : int32Reg);
+        masm.emitSet(cond, R0.scratchReg());
+
+        // Box the result and return
+        masm.tagValue(JSVAL_TYPE_BOOLEAN, R0.scratchReg(), R0);
+        EmitReturnFromIC(masm);
+    }
 
     // Failure case - jump to next stub
     masm.bind(&failure);
