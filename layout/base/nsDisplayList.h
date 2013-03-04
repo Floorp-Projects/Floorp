@@ -112,6 +112,7 @@ class nsDisplayListBuilder {
 public:
   typedef mozilla::FramePropertyDescriptor FramePropertyDescriptor;
   typedef mozilla::FrameLayerBuilder FrameLayerBuilder;
+  typedef mozilla::DisplayListClipState DisplayListClipState;
   typedef nsIWidget::ThemeGeometry ThemeGeometry;
 
   /**
@@ -561,7 +562,21 @@ public:
   nsDisplayTableItem* GetCurrentTableItem() { return mCurrentTableItem; }
   void SetCurrentTableItem(nsDisplayTableItem* aTableItem) { mCurrentTableItem = aTableItem; }
 
-  NS_DECLARE_FRAME_PROPERTY(OutOfFlowDirtyRectProperty, nsIFrame::DestroyRect)
+  struct OutOfFlowDisplayData {
+    OutOfFlowDisplayData(const DisplayItemClip* aContainingBlockClip,
+                         const nsRect &aDirtyRect)
+      : mContainingBlockClip(aContainingBlockClip)
+      , mDirtyRect(aDirtyRect)
+    {}
+    const DisplayItemClip* mContainingBlockClip;
+    nsRect mDirtyRect;
+  };
+  static void DestroyOutOfFlowDisplayData(void* aPropertyValue)
+  {
+    delete static_cast<OutOfFlowDisplayData*>(aPropertyValue);
+  }
+
+  NS_DECLARE_FRAME_PROPERTY(OutOfFlowDisplayDataProperty, DestroyOutOfFlowDisplayData)
   NS_DECLARE_FRAME_PROPERTY(Preserve3DDirtyRectProperty, nsIFrame::DestroyRect)
 
   nsPresContext* CurrentPresContext() {
