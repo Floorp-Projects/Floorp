@@ -448,7 +448,7 @@ public:
   // must be the presentation time of the first frame in the media, e.g.
   // the media time corresponding to playback time/position 0. This function
   // should only be called on the main thread.
-  virtual nsresult GetBuffered(nsTimeRanges* aBuffered,
+  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered,
                                int64_t aStartTime) = 0;
 
   class VideoQueueMemoryFunctor : public nsDequeFunctor {

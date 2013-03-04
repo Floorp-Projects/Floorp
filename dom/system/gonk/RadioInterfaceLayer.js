@@ -57,10 +57,10 @@ const kTimeNitzAutomaticUpdateEnabled    = "time.nitz.automatic-update.enabled";
 const kTimeNitzAvailable                 = "time.nitz.available";
 const kCellBroadcastSearchList           = "ril.cellbroadcast.searchlist";
 
-const DOM_SMS_DELIVERY_RECEIVED          = "received";
-const DOM_SMS_DELIVERY_SENDING           = "sending";
-const DOM_SMS_DELIVERY_SENT              = "sent";
-const DOM_SMS_DELIVERY_ERROR             = "error";
+const DOM_MOBILE_MESSAGE_DELIVERY_RECEIVED = "received";
+const DOM_MOBILE_MESSAGE_DELIVERY_SENDING  = "sending";
+const DOM_MOBILE_MESSAGE_DELIVERY_SENT     = "sent";
+const DOM_MOBILE_MESSAGE_DELIVERY_ERROR    = "error";
 
 const CALL_WAKELOCK_TIMEOUT              = 5000;
 
@@ -1551,7 +1551,7 @@ RadioInterfaceLayer.prototype = {
 
       gSystemMessenger.broadcastMessage("sms-received", {
         id: message.id,
-        delivery: DOM_SMS_DELIVERY_RECEIVED,
+        delivery: DOM_MOBILE_MESSAGE_DELIVERY_RECEIVED,
         deliveryStatus: RIL.GECKO_SMS_DELIVERY_STATUS_SUCCESS,
         sender: message.sender,
         receiver: message.receiver,
@@ -1569,7 +1569,7 @@ RadioInterfaceLayer.prototype = {
                                                                      notifyReceived);
     } else {
       message.id = -1;
-      message.delivery = DOM_SMS_DELIVERY_RECEIVED;
+      message.delivery = DOM_MOBILE_MESSAGE_DELIVERY_RECEIVED;
       message.deliveryStatus = RIL.GECKO_SMS_DELIVERY_STATUS_SUCCESS;
       message.read = false;
 
@@ -1604,14 +1604,14 @@ RadioInterfaceLayer.prototype = {
     }
 
     gMobileMessageDatabaseService.setMessageDelivery(options.sms.id,
-                                                     DOM_SMS_DELIVERY_SENT,
+                                                     DOM_MOBILE_MESSAGE_DELIVERY_SENT,
                                                      options.sms.deliveryStatus,
                                                      function notifyResult(rv, record) {
       let sms = this.createSmsMessageFromRecord(record);
       //TODO bug 832140 handle !Components.isSuccessCode(rv)
       gSystemMessenger.broadcastMessage("sms-sent",
                                         {id: options.sms.id,
-                                         delivery: DOM_SMS_DELIVERY_SENT,
+                                         delivery: DOM_MOBILE_MESSAGE_DELIVERY_SENT,
                                          deliveryStatus: options.sms.deliveryStatus,
                                          sender: message.sender || null,
                                          receiver: options.sms.receiver,
@@ -1672,7 +1672,7 @@ RadioInterfaceLayer.prototype = {
     }
 
     gMobileMessageDatabaseService.setMessageDelivery(options.sms.id,
-                                                     DOM_SMS_DELIVERY_ERROR,
+                                                     DOM_MOBILE_MESSAGE_DELIVERY_ERROR,
                                                      RIL.GECKO_SMS_DELIVERY_STATUS_ERROR,
                                                      function notifyResult(rv, record) {
       let sms = this.createSmsMessageFromRecord(record);

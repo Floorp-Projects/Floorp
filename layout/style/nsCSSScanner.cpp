@@ -6,8 +6,6 @@
 
 /* tokenization of CSS style sheets */
 
-#include <math.h> // must be first due to symbol conflicts
-
 #include "nsCSSScanner.h"
 #include "nsStyleUtil.h"
 #include "mozilla/css/ErrorReporter.h"

@@ -10,7 +10,6 @@
 #include "nsCSSPseudoElements.h"
 #include "nsAtomListUtils.h"
 #include "nsStaticAtom.h"
-#include "nsMemory.h"
 #include "nsCSSAnonBoxes.h"
 
 using namespace mozilla;

@@ -90,8 +90,6 @@ static char *log_level_reg_strings[]={
 
 #define MAX_ERROR_STRING_SIZE   512
 
-static char log_fmt_buf[MAX_ERROR_STRING_SIZE];
-
 #define R_LOG_INITTED1   1
 #define R_LOG_INITTED2   2
 
@@ -333,6 +331,7 @@ int r_dump(int facility,int level,char *name,char *data,int len)
 
 int r_vlog(int facility,int level,const char *format,va_list ap)
   {
+    char log_fmt_buf[MAX_ERROR_STRING_SIZE];
     char *level_str="unknown";
     char *facility_str="unknown";
     char *fmt_str=(char *)format;
@@ -405,6 +404,7 @@ int r_log_e(int facility,int level,const char *format,...)
 
 int r_vlog_e(int facility,int level,const char *format,va_list ap)
   {
+    char log_fmt_buf[MAX_ERROR_STRING_SIZE];
     if(r_logging(facility,level)) {
       int formatlen = strlen(format);
 
@@ -439,6 +439,7 @@ int r_log_nr(int facility,int level,int r,const char *format,...)
 
 int r_vlog_nr(int facility,int level,int r,const char *format,va_list ap)
   {
+    char log_fmt_buf[MAX_ERROR_STRING_SIZE];
     if(r_logging(facility,level)) {
       int formatlen = strlen(format);
 

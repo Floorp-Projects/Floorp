@@ -71,6 +71,7 @@ fails == filter-marked-line-01.svg pass.svg # bug 477704
 == filter-patterned-rect-02.svg pass.svg
 
 == feComponentTransfer-03.svg pass.svg
+== feComponentTransfer-04.svg pass.svg
 == feComposite-arguments-01.svg pass.svg
 skip-if(B2G) == feComposite-paint-01.svg feComposite-paint-01-ref.svg
 == feConvolveMatrix-bias-01.svg feConvolveMatrix-bias-01-ref.svg

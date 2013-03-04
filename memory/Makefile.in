@@ -9,18 +9,4 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS += mozjemalloc
-
-ifneq (,$(MOZ_JEMALLOC3)$(MOZ_REPLACE_MALLOC))
-ifndef MOZ_NATIVE_JEMALLOC
-DIRS += jemalloc
-endif
-endif
-
-DIRS += build
-
-ifeq ($(MOZ_REPLACE_MALLOC_LINKAGE),dummy library)
-DIRS += replace/dummy
-endif
-
 include $(topsrcdir)/config/rules.mk

@@ -6,7 +6,7 @@
 #ifndef mozilla_dom_SVGSymbolElement_h
 #define mozilla_dom_SVGSymbolElement_h
 
-#include "DOMSVGTests.h"
+#include "mozilla/dom/SVGTests.h"
 #include "nsSVGElement.h"
 #include "nsSVGViewBox.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
@@ -22,7 +22,7 @@ typedef nsSVGElement SVGSymbolElementBase;
 
 class SVGSymbolElement MOZ_FINAL : public SVGSymbolElementBase,
                                    public nsIDOMSVGElement,
-                                   public DOMSVGTests
+                                   public SVGTests
 {
 protected:
   friend nsresult (::NS_NewSVGSymbolElement(nsIContent **aResult,

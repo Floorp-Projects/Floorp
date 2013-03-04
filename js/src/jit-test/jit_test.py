@@ -18,11 +18,6 @@ import jittests
 
 def main(argv):
 
-    script_path = os.path.abspath(__file__)
-    script_dir = os.path.dirname(script_path)
-    test_dir = os.path.join(script_dir, 'tests')
-    lib_dir = os.path.join(script_dir, 'lib')
-
     # If no multiprocessing is available, fallback to serial test execution
     max_jobs_default = 1
     if jittests.HAVE_MULTIPROCESSING:
@@ -84,7 +79,7 @@ def main(argv):
     if len(args) < 1:
         op.error('missing JS_SHELL argument')
     # We need to make sure we are using backslashes on Windows.
-    options.js_shell, test_args = os.path.abspath(args[0]), args[1:]
+    test_args = args[1:]
 
     if jittests.stdio_might_be_broken():
         # Prefer erring on the side of caution and not using stdio if
@@ -106,14 +101,14 @@ def main(argv):
     if test_args:
         read_all = False
         for arg in test_args:
-            test_list += jittests.find_tests(test_dir, arg)
+            test_list += jittests.find_tests(arg)
 
     if options.read_tests:
         read_all = False
         try:
             f = open(options.read_tests)
             for line in f:
-                test_list.append(os.path.join(test_dir, line.strip('\n')))
+                test_list.append(os.path.join(TEST_DIR, line.strip('\n')))
             f.close()
         except IOError:
             if options.retest:
@@ -125,12 +120,12 @@ def main(argv):
                 sys.stderr.write('---\n')
 
     if read_all:
-        test_list = jittests.find_tests(test_dir)
+        test_list = jittests.find_tests()
 
     if options.exclude:
         exclude_list = []
         for exclude in options.exclude:
-            exclude_list += jittests.find_tests(test_dir, exclude)
+            exclude_list += jittests.find_tests(exclude)
         test_list = [ test for test in test_list if test not in set(exclude_list) ]
 
     if not test_list:
@@ -183,8 +178,8 @@ def main(argv):
                 new_test.jitflags.extend(jitflags)
                 job_list.append(new_test)
 
-    shell_args = shlex.split(options.shell_args)
-
+    prefix = [os.path.abspath(args[0])] + shlex.split(options.shell_args)
+    prefix += ['-f', os.path.join(jittests.LIB_DIR, 'prolog.js')]
     if options.debug:
         if len(job_list) > 1:
             print 'Multiple tests match command line arguments, debugger can only run one'
@@ -193,21 +188,21 @@ def main(argv):
             sys.exit(1)
 
         tc = job_list[0]
-        cmd = [ 'gdb', '--args' ] + jittests.get_test_cmd(options.js_shell, tc.path, tc.jitflags, lib_dir, shell_args)
+        cmd = ['gdb', '--args'] + tc.command(prefix)
         subprocess.call(cmd)
         sys.exit()
 
     try:
         ok = None
         if options.max_jobs > 1 and jittests.HAVE_MULTIPROCESSING:
-            ok = jittests.run_tests_parallel(job_list, test_dir, lib_dir, shell_args, options)
+            ok = jittests.run_tests_parallel(job_list, prefix, options)
         else:
-            ok = jittests.run_tests(job_list, test_dir, lib_dir, shell_args, options)
+            ok = jittests.run_tests(job_list, prefix, options)
         if not ok:
             sys.exit(2)
     except OSError:
-        if not os.path.exists(options.js_shell):
-            print >> sys.stderr, "JS shell argument: file does not exist: '%s'" % options.js_shell
+        if not os.path.exists(prefix[0]):
+            print >> sys.stderr, "JS shell argument: file does not exist: '%s'" % prefix[0]
             sys.exit(1)
         else:
             raise

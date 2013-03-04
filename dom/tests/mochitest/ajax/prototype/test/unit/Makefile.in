@@ -11,11 +11,6 @@ relativesrcdir	= @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = 	\
-	fixtures \
-	tmp \
-	$(NULL)
-
 MOCHITEST_FILES	= \
 	ajax_test.js \
 	array_test.js \

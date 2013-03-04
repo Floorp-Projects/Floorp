@@ -19,13 +19,12 @@ namespace ion {
 class BaselineInspector
 {
   private:
-    JSContext *cx;
     RootedScript script;
     ICEntry *prevLookedUpEntry;
 
   public:
     BaselineInspector(JSContext *cx, RawScript rawScript)
-      : cx(cx), script(cx, rawScript), prevLookedUpEntry(NULL)
+      : script(cx, rawScript), prevLookedUpEntry(NULL)
     {
         JS_ASSERT(script);
     }

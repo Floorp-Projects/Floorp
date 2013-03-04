@@ -8,10 +8,4 @@ srcdir = @srcdir@
 VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-
-DIRS = \
-	content \
-	locales \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk

@@ -13,6 +13,8 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
+STANDALONE_MAKEFILE := 1
+
 XPI_NAME = test_jar_mn
 
 DEFINES += \

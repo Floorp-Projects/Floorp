@@ -1,0 +1,34 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+PARALLEL_DIRS += [
+    'base',
+    'cookie',
+    'dns',
+    'socket',
+    'mime',
+    'streamconv',
+    'cache',
+    'protocol',
+    'system',
+    'ipc',
+]
+
+if CONFIG['MOZ_SRTP']:
+    PARALLEL_DIRS += ['srtp/src']
+
+if CONFIG['MOZ_SCTP']:
+    PARALLEL_DIRS += ['sctp/src', 'sctp/datachannel']
+
+if CONFIG['NECKO_WIFI']:
+    PARALLEL_DIRS += ['wifi']
+
+PARALLEL_DIRS += ['locales']
+
+if CONFIG['MOZ_DASH']:
+    PARALLEL_DIRS += ['dash']
+
+DIRS += ['build']
+TEST_TOOL_DIRS += ['test']

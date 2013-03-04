@@ -58,7 +58,7 @@
     "dom/imptests/webapps/DOMCore/tests/approved/test_Range-surroundContents.html":" Test timed out.",
     "dom/indexedDB/": "",
 
-    "dom/sms": "",
+    "dom/mobilemessage": "",
 
     "dom/media/tests/mochitest/test_getUserMedia_exceptions.html":" Exception for wrong object type as third parameter",
     "dom/network/tests/test_networkstats_basics.html":" uncaught exception - uncaught exception: 2147500033 at :0",

@@ -11,12 +11,6 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = \
-		dir_bug534293 \
-		html5lib_tree_construction \
-		$(NULL)
-
-
 MOCHITEST_FILES =	parser_datreader.js \
 		parser_web_testrunner.js \
 		html5_tree_construction_exceptions.js \

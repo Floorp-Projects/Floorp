@@ -9,6 +9,8 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+STANDALONE_MAKEFILE := 1
+
 # overwrite mobile-l10n.js with a matchOS=true one for multi-locale builds
 ifeq ($(AB_CD),multi)
 PREF_JS_EXPORTS = $(srcdir)/mobile-l10n.js

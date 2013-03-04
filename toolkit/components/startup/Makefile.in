@@ -10,8 +10,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public
-
 MODULE = toolkitcomps
 LIBRARY_NAME = appstartup_s
 FORCE_STATIC_LIB = 1
@@ -40,7 +38,5 @@ endif
 endif
 
 XPCSHELL_TESTS = tests/unit
-
-TEST_DIRS += tests/browser
 
 include $(topsrcdir)/config/rules.mk

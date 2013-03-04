@@ -12,7 +12,6 @@
 #include "mozilla/Util.h"
 
 #include "nsStyleSet.h"
-#include "nsNetUtil.h"
 #include "nsCSSStyleSheet.h"
 #include "nsIDocumentInlines.h"
 #include "nsRuleWalker.h"

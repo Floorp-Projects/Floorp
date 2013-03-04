@@ -117,6 +117,8 @@ http://sub1.xn--lt-uia.example.org:8000   privileged
 http://sub2.xn--lt-uia.example.org:80     privileged
 http://xn--exmple-cua.test:80             privileged
 http://sub1.xn--exmple-cua.test:80        privileged
+http://xn--exaple-kqf.test:80             privileged
+http://sub1.xn--exaple-kqf.test:80        privileged
 
 https://xn--hxajbheg2az3al.xn--jxalpdlp:443        privileged
 https://sub1.xn--hxajbheg2az3al.xn--jxalpdlp:443   privileged

@@ -23,10 +23,6 @@
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
 
-if (navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 2);
-}
-
 SimpleTest.waitForExplicitFinish();
 
 function startTest() {

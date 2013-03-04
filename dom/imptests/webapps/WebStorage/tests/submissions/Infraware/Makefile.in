@@ -9,10 +9,6 @@ relativesrcdir := @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS := \
-  iframe \
-  $(NULL)
-
 MOCHITEST_FILES := \
   test_event_constructor.html \
   test_event_local_key.html \

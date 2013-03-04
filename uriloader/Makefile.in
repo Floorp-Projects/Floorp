@@ -16,10 +16,4 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PARALLEL_DIRS = \
-  base \
-  exthandler \
-  prefetch \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk

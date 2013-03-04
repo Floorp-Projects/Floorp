@@ -79,10 +79,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
  * so it is not possible to set a lazy getter for Geometry.jsm.
  */
 Cu.import("resource://gre/modules/Geometry.jsm");
-
 /*
  * Browser scripts
  */
+let ScriptContexts = {};
 [
   ["WebProgress", "chrome://browser/content/WebProgress.js"],
   ["FindHelperUI", "chrome://browser/content/helperui/FindHelperUI.js"],
@@ -134,12 +134,16 @@ Cu.import("resource://gre/modules/Geometry.jsm");
 ].forEach(function (aScript) {
   let [name, script] = aScript;
   XPCOMUtils.defineLazyGetter(window, name, function() {
-    let sandbox = {};
-    Services.scriptloader.loadSubScript(script, sandbox);
+    let sandbox;
+    if (script in ScriptContexts) {
+      sandbox = ScriptContexts[script];
+    } else {
+      sandbox = ScriptContexts[script] = {};
+      Services.scriptloader.loadSubScript(script, sandbox);
+    }
     return sandbox[name];
   });
 });
-
 #ifdef MOZ_SERVICES_SYNC
 XPCOMUtils.defineLazyGetter(this, "Weave", function() {
   Components.utils.import("resource://services-sync/main.js");

@@ -236,7 +236,7 @@ function waitForImageLoad(aWindow, aImageId) {
  */
 function waitForObserver(aObsEvent, aTimeoutMs) {
   try {
-  
+
   let deferred = Promise.defer();
   let timeoutMs = aTimeoutMs || kDefaultWait;
   let timerID = 0;
@@ -276,7 +276,7 @@ function waitForObserver(aObsEvent, aTimeoutMs) {
 
   Services.obs.addObserver(observeWatcher, aObsEvent, true);
   return deferred.promise;
-  
+
   } catch (ex) {
     info(ex.message);
   }
@@ -412,10 +412,15 @@ function runTests() {
   Task.spawn(function() {
     while((gCurrentTest = gTests.shift())){
       info(gCurrentTest.desc);
-      yield Task.spawn(gCurrentTest.run);
+      if ('function' == typeof gCurrentTest.setUp) {
+        yield Task.spawn(gCurrentTest.setUp.bind(gCurrentTest));
+      }
+      yield Task.spawn(gCurrentTest.run.bind(gCurrentTest));
+      if ('function' == typeof gCurrentTest.tearDown) {
+        yield Task.spawn(gCurrentTest.tearDown.bind(gCurrentTest));
+      }
       info("END "+gCurrentTest.desc);
     }
-    info("done with gTests while loop, calling finish");
     finish();
   });
 }

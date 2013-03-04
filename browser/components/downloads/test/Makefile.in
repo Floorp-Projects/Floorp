@@ -12,6 +12,4 @@ include $(DEPTH)/config/autoconf.mk
 
 XPCSHELL_TESTS = unit
 
-DIRS = browser
-
 include $(topsrcdir)/config/rules.mk

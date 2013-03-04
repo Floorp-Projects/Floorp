@@ -10,6 +10,37 @@ ifndef topsrcdir
 $(error topsrcdir was not set))
 endif
 
+# Integrate with mozbuild-generated make files. We first verify that no
+# variables provided by the automatically generated .mk files are
+# present. If they are, this is a violation of the separation of
+# responsibility between Makefile.in and mozbuild files.
+_MOZBUILD_EXTERNAL_VARIABLES := \
+  DIRS \
+  PARALLEL_DIRS \
+  TEST_DIRS \
+  TIERS \
+  TOOL_DIRS \
+  $(NULL)
+
+ifndef EXTERNALLY_MANAGED_MAKE_FILE
+$(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES),$(if $($(var)),\
+    $(error Variable $(var) is defined in Makefile. It should only be defined in moz.build files),\
+    ))
+
+# Import the automatically generated backend file. If this file doesn't exist,
+# the backend hasn't been properly configured. We want this to be a fatal
+# error, hence not using "-include".
+ifndef STANDALONE_MAKEFILE
+GLOBAL_DEPS += backend.mk
+include backend.mk
+endif
+endif
+
+ifdef TIERS
+DIRS += $(foreach tier,$(TIERS),$(tier_$(tier)_dirs))
+STATIC_DIRS += $(foreach tier,$(TIERS),$(tier_$(tier)_staticdirs))
+endif
+
 ifndef MOZILLA_DIR
 MOZILLA_DIR = $(topsrcdir)
 endif
@@ -1147,8 +1178,28 @@ $(JAVA_LIBRARY): $(addprefix $(_JAVA_DIR)/,$(JAVA_SRCS:.java=.class)) $(GLOBAL_D
 GARBAGE_DIRS += $(_JAVA_DIR)
 
 ###############################################################################
-# Update Makefiles
+# Update Files Managed by Build Backend
 ###############################################################################
+
+ifdef MOZBUILD_DERIVED
+
+# If this Makefile is derived from moz.build files, substitution for all .in
+# files is handled by SUBSTITUTE_FILES. This includes Makefile.in.
+ifneq ($(SUBSTITUTE_FILES),,)
+$(SUBSTITUTE_FILES): % : $(srcdir)/%.in $(DEPTH)/config/autoconf.mk
+	@$(PYTHON) $(DEPTH)/config.status -n --file=$@
+	@$(TOUCH) $@
+endif
+
+# Detect when the backend.mk needs rebuilt. This will cause a full scan and
+# rebuild. While relatively expensive, it should only occur once per recursion.
+ifneq ($(BACKEND_INPUT_FILES),,)
+backend.mk: $(BACKEND_INPUT_FILES)
+	@$(PYTHON) $(DEPTH)/config.status -n
+	@$(TOUCH) $@
+endif
+
+endif # MOZBUILD_DERIVED
 
 ifndef NO_MAKEFILE_RULE
 Makefile: Makefile.in

@@ -11,8 +11,4 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = speex_resampler
 
-DIRS = \
-    src \
-    $(NULL)
-
 include $(topsrcdir)/config/rules.mk

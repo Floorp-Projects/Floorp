@@ -51,6 +51,12 @@ function original_app_path(test_name) {
 
 add_test(function () {
   certdb.openSignedJARFileAsync(
+    original_app_path("test-privileged-app-test-1.0"),
+    check_open_result("test-privileged-app-test-1.0", Cr.NS_OK));
+});
+
+add_test(function () {
+  certdb.openSignedJARFileAsync(
     original_app_path("privileged-app-test-1.0"),
     check_open_result("privileged-app-test-1.0", Cr.NS_OK));
 });

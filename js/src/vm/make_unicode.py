@@ -49,8 +49,6 @@ FLAG_SPACE = 1 << 0
 FLAG_LETTER = 1 << 1
 FLAG_IDENTIFIER_PART = 1 << 2
 FLAG_NO_DELTA = 1 << 3
-FLAG_ENCLOSING_MARK = 1 << 4
-FLAG_COMBINING_SPACING_MARK = 1 << 5
 
 MAX = 0xffff
 
@@ -115,10 +113,6 @@ def generate_unicode_stuff(unicode_data, data_file, test_mapping, test_space):
             flags |= FLAG_LETTER
         if category in ['Mn', 'Mc', 'Nd', 'Pc'] or code == ZWNJ or code == ZWJ: # $ 7.6 (IdentifierPart)
             flags |= FLAG_IDENTIFIER_PART
-        if category == 'Me':
-            flags |= FLAG_ENCLOSING_MARK
-        if category == 'Mc':
-            flags |= FLAG_COMBINING_SPACING_MARK
 
         if uppercase:
             upper = int(uppercase, 16)
@@ -194,7 +188,7 @@ if (typeof reportCompare === "function")
     index1, index2, shift = splitbins(index)
 
     # Don't forget to update CharInfo in Unicode.cpp if you need to change this
-    assert shift == 6
+    assert shift == 5
 
     # verify correctness
     for char in index:
@@ -212,17 +206,17 @@ if (typeof reportCompare === "function")
  * First let's have a look at a jschar, 16-bits:
  *              [................]
  * Step 1:
- *  Extracting the upper 10 bits from the jschar.
- *   upper = char >> 6 ([**********......])
+ *  Extracting the upper 11 bits from the jschar.
+ *   upper = char >>  5 ([***********.....])
  * Step 2:
  *  Using these bits to get an reduced index from index1.
  *   index = index1[upper]
  * Step 3:
- *  Combining the index and the bottom 6 bits of the orginial jschar.
- *   real_index = index2[(index << 6) + (jschar & 0x3f)] ([..********++++++])
+ *  Combining the index and the bottom 5 bits of the original jschar.
+ *   real_index = index2[(index << 5) + (char & ((1 << 5) - 1))] ([...********+++++])
  *
- * The advantage here is that the bigest number in index1 doesn't need 10 bits,
- * but 8 and we save some memory.
+ * The advantage here is that the biggest number in index1 doesn't need 10 bits,
+ * but 7 and we save some memory.
  *
  * Step 4:
  *  Get the character informations by looking up real_index in js_charinfo.

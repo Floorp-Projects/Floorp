@@ -10,10 +10,4 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-
-PARALLEL_DIRS = \
-	MochiKit \
-	tests \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk

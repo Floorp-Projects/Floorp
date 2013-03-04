@@ -19,6 +19,4 @@ interface nsIConsoleMessage : nsISupports
 %{ C++
 #define NS_CONSOLEMESSAGE_CID \
 { 0x56c9d666, 0x1dd2, 0x11b2, { 0xb4, 0x3c, 0xa8, 0x4b, 0xf3, 0xb3, 0xec, 0xbb }}
-
-#define NS_CONSOLEMESSAGE_CONTRACTID "@mozilla.org/consolemessage;1"
 %}

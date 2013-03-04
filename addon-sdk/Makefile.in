@@ -9,8 +9,6 @@ VPATH     = @srcdir@
 
 include $(topsrcdir)/config/config.mk
 
-TEST_DIRS += test
-
 libs::
 	$(PYTHON) $(srcdir)/copy_source.py $(topsrcdir) $(srcdir)/source/lib $(FINAL_TARGET)/modules/commonjs >copy_source.mk
 	$(MAKE) -f copy_source.mk libs

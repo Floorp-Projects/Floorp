@@ -1,0 +1,38 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIRS += [
+    'idl-parser',
+    'typelib',
+    'string',
+    'glue',
+    'base',
+    'ds',
+    'io',
+    'components',
+    'threads',
+    'reflect',
+    'system',
+    '../chrome',
+    'build',
+]
+
+if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['MOZ_DEBUG']:
+    DIRS += ['windbgdlg']
+
+TEST_TOOL_DIRS += [
+    'tests',
+    'sample',
+    'typelib/xpt/tests',
+]
+
+#  Can't build internal xptcall tests that use symbols which are not exported.
+#TEST_TOOL_DIRS += [
+#    'reflect/xptinfo/tests',
+#    'reflect/xptcall/tests,
+#]
+
+if CONFIG['DEHYDRA_PATH']:
+    DIRS += ['analysis']

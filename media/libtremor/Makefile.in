@@ -11,9 +11,4 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE  = tremor
 
-DIRS  = \
-  include/tremor \
-  lib \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
