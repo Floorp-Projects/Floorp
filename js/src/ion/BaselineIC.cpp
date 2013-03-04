@@ -2435,6 +2435,27 @@ static void GetFixedOrDynamicSlotOffset(HandleObject obj, uint32_t slot,
                        : obj->dynamicSlotIndex(slot) * sizeof(Value);
 }
 
+// Look up a property's shape on an object, being careful never to do any effectful
+// operations.  This procedure not yielding a shape should not be taken as a lack of
+// existence of the property on the object.
+static bool
+EffectlesslyLookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
+                           MutableHandleObject holder, MutableHandleShape shape)
+{
+    if (obj->hasIdempotentProtoChain()) {
+        if (!JSObject::lookupProperty(cx, obj, name, holder, shape))
+            return false;
+    } else if (obj->isNative()) {
+        shape.set(obj->nativeLookup(cx, NameToId(name)));
+        if (shape)
+            holder.set(obj);
+    } else {
+        shape.set(NULL);
+        holder.set(NULL);
+    }
+    return true;
+}
+
 static bool
 IsCacheableProtoChain(JSObject *obj, JSObject *holder)
 {
@@ -2503,7 +2524,7 @@ static bool TryAttachNativeGetElemStub(JSContext *cx, HandleScript script,
 
     RootedShape shape(cx);
     RootedObject holder(cx);
-    if (!JSObject::lookupProperty(cx, obj, propName, &holder, &shape))
+    if (!EffectlesslyLookupProperty(cx, obj, propName, &holder, &shape))
         return false;
 
     if (!IsCacheableGetPropReadSlot(obj, holder, shape))
@@ -3905,7 +3926,7 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, ICGetProp_Fallbac
 
     RootedShape shape(cx);
     RootedObject holder(cx);
-    if (!JSObject::lookupProperty(cx, obj, name, &holder, &shape))
+    if (!EffectlesslyLookupProperty(cx, obj, name, &holder, &shape))
         return false;
 
     if (!IsCacheableGetPropReadSlot(obj, holder, shape))
