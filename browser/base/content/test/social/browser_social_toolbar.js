@@ -23,7 +23,7 @@ var tests = {
     // check dom values
     let portrait = document.getElementsByClassName("social-statusarea-user-portrait")[0].getAttribute("src");
     // this is the default image for the profile area when not logged in.
-    is(portrait, "chrome://global/skin/icons/information-32.png", "portrait is empty");
+    ok(!portrait, "portrait is empty");
     let userDetailsBroadcaster = document.getElementById("socialBroadcaster_userDetails");
     let notLoggedInStatusValue = userDetailsBroadcaster.getAttribute("notLoggedInLabel");
     let userButton = document.getElementsByClassName("social-statusarea-loggedInStatus")[0];
