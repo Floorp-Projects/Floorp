@@ -358,7 +358,7 @@ BaselineScript::Trace(JSTracer *trc, BaselineScript *script)
 void
 BaselineScript::Destroy(FreeOp *fop, BaselineScript *script)
 {
-    fop->free_(script);
+    fop->delete_(script);
 }
 
 ICEntry &
