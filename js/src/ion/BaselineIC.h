@@ -313,6 +313,7 @@ class ICEntry
     _(BinaryArith_StringConcat) \
     _(BinaryArith_StringObjectConcat) \
     _(BinaryArith_BooleanWithInt32) \
+    _(BinaryArith_DoubleWithInt32) \
                                 \
     _(UnaryArith_Fallback)      \
     _(UnaryArith_Int32)         \
@@ -2377,6 +2378,50 @@ class ICBinaryArith_BooleanWithInt32 : public ICStub
         ICStub *getStub(ICStubSpace *space) {
             return ICBinaryArith_BooleanWithInt32::New(space, getStubCode(),
                                                        lhsIsBool_, rhsIsBool_);
+        }
+    };
+};
+
+class ICBinaryArith_DoubleWithInt32 : public ICStub
+{
+    friend class ICStubSpace;
+
+    ICBinaryArith_DoubleWithInt32(IonCode *stubCode, bool lhsIsDouble)
+      : ICStub(BinaryArith_DoubleWithInt32, stubCode)
+    {
+        extra_ = lhsIsDouble;
+    }
+
+  public:
+    static inline ICBinaryArith_DoubleWithInt32 *New(ICStubSpace *space, IonCode *code,
+                                                     bool lhsIsDouble) {
+        if (!code)
+            return NULL;
+        return space->allocate<ICBinaryArith_DoubleWithInt32>(code, lhsIsDouble);
+    }
+
+    bool lhsIsDouble() const {
+        return extra_;
+    }
+
+    class Compiler : public ICMultiStubCompiler {
+      protected:
+        bool lhsIsDouble_;
+        bool generateStubCode(MacroAssembler &masm);
+
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(op) << 16) |
+                   (static_cast<int32_t>(lhsIsDouble_) << 24);
+        }
+
+      public:
+        Compiler(JSContext *cx, JSOp op, bool lhsIsDouble)
+          : ICMultiStubCompiler(cx, ICStub::BinaryArith_DoubleWithInt32, op),
+            lhsIsDouble_(lhsIsDouble)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICBinaryArith_DoubleWithInt32::New(space, getStubCode(), lhsIsDouble_);
         }
     };
 };
