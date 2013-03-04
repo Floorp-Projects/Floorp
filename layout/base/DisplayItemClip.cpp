@@ -207,6 +207,23 @@ DisplayItemClip::NonRoundedIntersection() const
   return result;
 }
 
+bool
+DisplayItemClip::IsRectAffectedByClip(const nsRect& aRect) const
+{
+  if (mHaveClipRect && !mClipRect.Contains(aRect)) {
+    return true;
+  }
+  for (uint32_t i = 0, iEnd = mRoundedClipRects.Length();
+       i < iEnd; ++i) {
+    const RoundedRect &rr = mRoundedClipRects[i];
+    nsRegion rgn = nsLayoutUtils::RoundedRectIntersectRect(rr.mRect, rr.mRadii, aRect);
+    if (!rgn.Contains(aRect)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 nsRect
 DisplayItemClip::ApplyNonRoundedIntersection(const nsRect& aRect) const
 {
@@ -267,6 +284,50 @@ DisplayItemClip::AddOffsetAndComputeDifference(const nsPoint& aOffset,
       aDifference->Or(*aDifference, aOther.mRoundedClipRects[i].mRect.Intersect(aOtherBounds));
     }
   }
+}
+
+uint32_t
+DisplayItemClip::GetCommonRoundedRectCount(const DisplayItemClip& aOther,
+                                           uint32_t aMax) const
+{
+  uint32_t end = std::min(std::min(mRoundedClipRects.Length(), aMax),
+                          aOther.mRoundedClipRects.Length());
+  uint32_t clipCount = 0;
+  for (; clipCount < end; ++clipCount) {
+    if (mRoundedClipRects[clipCount] !=
+        aOther.mRoundedClipRects[clipCount]) {
+      return clipCount;
+    }
+  }
+  return clipCount;
+}
+
+void
+DisplayItemClip::AppendRoundedRects(nsTArray<RoundedRect>* aArray, uint32_t aCount) const
+{
+  uint32_t count = std::min(mRoundedClipRects.Length(), aCount);
+  for (uint32_t i = 0; i < count; ++i) {
+    *aArray->AppendElement() = mRoundedClipRects[i];
+  }
+}
+
+bool
+DisplayItemClip::ComputeRegionInClips(DisplayItemClip* aOldClip,
+                                      const nsPoint& aShift,
+                                      nsRegion* aCombined) const
+{
+  if (!mHaveClipRect || (aOldClip && !aOldClip->mHaveClipRect)) {
+    return false;
+  }
+
+  if (aOldClip) {
+    *aCombined = aOldClip->NonRoundedIntersection();
+    aCombined->MoveBy(aShift);
+    aCombined->Or(*aCombined, NonRoundedIntersection());
+  } else {
+    *aCombined = NonRoundedIntersection();
+  }
+  return true;
 }
 
 }
