@@ -17,9 +17,10 @@
 #include "builtin/Eval.h"
 #include "frontend/BytecodeEmitter.h"
 
+#include "CompileInfo-inl.h"
+#include "ExecutionModeInlines.h"
 #include "jsscriptinlines.h"
 #include "jstypedarrayinlines.h"
-#include "ExecutionModeInlines.h"
 
 #ifdef JS_THREADSAFE
 # include "prthread.h"

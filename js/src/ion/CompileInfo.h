@@ -76,27 +76,13 @@ class CompileInfo
 
     // Script accessors based on PC.
 
-    JSAtom *getAtom(jsbytecode *pc) const {
-        return script_->getAtom(GET_UINT32_INDEX(pc));
-    }
-    PropertyName *getName(jsbytecode *pc) const {
-        return script_->getName(GET_UINT32_INDEX(pc));
-    }
-    RegExpObject *getRegExp(jsbytecode *pc) const {
-        return script_->getRegExp(GET_UINT32_INDEX(pc));
-    }
-    JSObject *getObject(jsbytecode *pc) const {
-        return script_->getObject(GET_UINT32_INDEX(pc));
-    }
-    JSFunction *getFunction(jsbytecode *pc) const {
-        return script_->getFunction(GET_UINT32_INDEX(pc));
-    }
-    const Value &getConst(jsbytecode *pc) const {
-        return script_->getConst(GET_UINT32_INDEX(pc));
-    }
-    jssrcnote *getNote(JSContext *cx, jsbytecode *pc) const {
-        return js_GetSrcNote(cx, script(), pc);
-    }
+    inline JSAtom *getAtom(jsbytecode *pc) const;
+    inline PropertyName *getName(jsbytecode *pc) const;
+    inline RegExpObject *getRegExp(jsbytecode *pc) const;
+    inline JSObject *getObject(jsbytecode *pc) const;
+    inline JSFunction *getFunction(jsbytecode *pc) const;
+    inline const Value &getConst(jsbytecode *pc) const;
+    inline jssrcnote *getNote(JSContext *cx, jsbytecode *pc) const;
 
     // Total number of slots: args, locals, and stack.
     unsigned nslots() const {
