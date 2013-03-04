@@ -9,5 +9,4 @@ function testShape() {
   assertEqArray(p.shape, [4]);
 }
 
-// FIXME(bug 844988) immutability not enforced
-// testShape();
+testShape();
