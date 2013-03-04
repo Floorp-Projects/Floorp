@@ -2294,12 +2294,8 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
             stub->addNewStub(doubleStub);
             return true;
           }
-          case JSOP_URSH:
-            // Fall-through to int32 case.
-            break;
           default:
-            // TODO: attach double stub for bitwise ops.
-            return true;
+            break;
         }
     }
 
@@ -2312,6 +2308,28 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
         if (!int32Stub)
             return false;
         stub->addNewStub(int32Stub);
+        return true;
+    }
+
+    // Handle Double <BITOP> Int32 or Int32 <BITOP> Double case.
+    if ((lhs.isDouble() && rhs.isInt32()) || (lhs.isInt32() && rhs.isDouble()) && ret.isInt32()) {
+        switch(op) {
+          case JSOP_BITOR:
+          case JSOP_BITXOR:
+          case JSOP_BITAND: {
+            IonSpew(IonSpew_BaselineIC, "  Generating %s(%s, %s) stub", js_CodeName[op],
+                        lhs.isDouble() ? "Double" : "Int32",
+                        lhs.isDouble() ? "Int32" : "Double");
+            ICBinaryArith_DoubleWithInt32::Compiler compiler(cx, op, lhs.isDouble());
+            ICStub *optStub = compiler.getStub(compiler.getStubSpace(script));
+            if (!optStub)
+                return false;
+            stub->addNewStub(optStub);
+            return true;
+          }
+          default:
+            break;
+        }
     }
 
     return true;
@@ -2588,6 +2606,71 @@ ICBinaryArith_BooleanWithInt32::Compiler::generateStubCode(MacroAssembler &masm)
        JS_NOT_REACHED("Unhandled op for BinaryArith_BooleanWithInt32.");
        return false;
     }
+
+    // Failure case - jump to next stub
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+bool
+ICBinaryArith_DoubleWithInt32::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    JS_ASSERT(op == JSOP_BITOR || op == JSOP_BITAND || op == JSOP_BITXOR);
+
+    Label failure;
+    Register intReg;
+    Register scratchReg;
+    if (lhsIsDouble_) {
+        masm.branchTestDouble(Assembler::NotEqual, R0, &failure);
+        masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
+        intReg = masm.extractInt32(R1, ExtractTemp0);
+        masm.unboxDouble(R0, FloatReg0);
+        scratchReg = R0.scratchReg();
+    } else {
+        masm.branchTestInt32(Assembler::NotEqual, R0, &failure);
+        masm.branchTestDouble(Assembler::NotEqual, R1, &failure);
+        intReg = masm.extractInt32(R0, ExtractTemp0);
+        masm.unboxDouble(R1, FloatReg0);
+        scratchReg = R1.scratchReg();
+    }
+
+    // Truncate the double to an int32.
+    {
+        Label doneTruncate;
+        Label truncateABICall;
+        masm.branchTruncateDouble(FloatReg0, scratchReg, &truncateABICall);
+        masm.jump(&doneTruncate);
+
+        masm.bind(&truncateABICall);
+        masm.push(intReg);
+        masm.setupUnalignedABICall(1, scratchReg);
+        masm.passABIArg(FloatReg0);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::ToInt32));
+        masm.storeCallResult(scratchReg);
+        masm.pop(intReg);
+
+        masm.bind(&doneTruncate);
+    }
+
+    Register intReg2 = scratchReg;
+    // All handled ops commute, so no need to worry about ordering.
+    switch(op) {
+      case JSOP_BITOR:
+        masm.orPtr(intReg, intReg2);
+        break;
+      case JSOP_BITXOR:
+        masm.xorPtr(intReg, intReg2);
+        break;
+      case JSOP_BITAND:
+        masm.andPtr(intReg, intReg2);
+        break;
+      default:
+       JS_NOT_REACHED("Unhandled op for BinaryArith_DoubleWithInt32.");
+       return false;
+    }
+    masm.tagValue(JSVAL_TYPE_INT32, intReg2, R0);
+    EmitReturnFromIC(masm);
 
     // Failure case - jump to next stub
     masm.bind(&failure);
