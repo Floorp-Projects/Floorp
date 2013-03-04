@@ -1179,7 +1179,7 @@ $(FENNEC_PP_JAVA_VIEW_FILES): GeckoView.java.frag
 	cat $< | sed s,@VIEWTYPE@,$(patsubst Gecko%.java,%,$@),g >> $@ ; \
 
 res/drawable-mdpi/icon.png: $(MOZ_APP_ICON)
-	$(NSINSTALL) -D res/drawable
+	$(NSINSTALL) -D res/drawable-mdpi
 	cp $(ICON_PATH) $@
 
 res/drawable-hdpi/icon.png: $(MOZ_APP_ICON)
