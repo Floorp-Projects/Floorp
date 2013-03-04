@@ -1673,6 +1673,7 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
 #socialUserPortrait {
   width: 48px;
   height: 48px;
+  list-style-image:url("chrome://global/skin/icons/information-32.png");
 }
 
 #socialUserDisplayName,
@@ -3615,6 +3616,10 @@ toolbar[mode="icons"] > *|* > .social-notification-container > .toolbarbutton-1[
 /* === end of social toolbar button === */
 
 /* === social toolbar provider menu  === */
+
+.social-statusarea-user {
+  list-style-image:url("chrome://global/skin/icons/information-32.png");
+}
 
 .social-statusarea-user-portrait {
   width: 32px;
