@@ -12,6 +12,7 @@ import os
 import os.path
 import re
 from optparse import OptionParser
+import errno
 
 # hack around win32 mangling our line endings
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/65443
@@ -151,6 +152,15 @@ class Preprocessor:
     p = self.getCommandLineParser()
     (options, args) = p.parse_args(args=args)
     includes = options.I
+    if options.output:
+      dir = os.path.dirname(options.output)
+      if dir and not os.path.exists(dir):
+        try:
+          os.makedirs(dir)
+        except OSError as error:
+          if error.errno != errno.EEXIST:
+            raise
+      self.out = open(options.output, 'w')
     if defaultToStdin and len(args) == 0:
       args = [sys.stdin]
     includes.extend(args)
@@ -195,6 +205,9 @@ class Preprocessor:
                  metavar="VAR", help='Undefine a variable')
     p.add_option('-F', action='callback', callback=handleF, type="string",
                  metavar="FILTER", help='Enable the specified filter')
+    p.add_option('-o', '--output', type="string", default=None,
+                 metavar="FILENAME", help='Output to the specified file '+
+                 'instead of stdout')
     p.add_option('--line-endings', action='callback', callback=handleLE,
                  type="string", metavar="[cr|lr|crlf]",
                  help='Use the specified line endings [Default: OS dependent]')
