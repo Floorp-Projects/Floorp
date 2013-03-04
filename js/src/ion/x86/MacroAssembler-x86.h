@@ -685,6 +685,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     Register extractInt32(const ValueOperand &value, Register scratch) {
         return value.payloadReg();
     }
+    Register extractBoolean(const ValueOperand &value, Register scratch) {
+        return value.payloadReg();
+    }
     Register extractTag(const Address &address, Register scratch) {
         movl(tagOf(address), scratch);
         return scratch;
