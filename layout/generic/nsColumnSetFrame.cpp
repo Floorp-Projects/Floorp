@@ -749,27 +749,34 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
 
 
       if ((contentBottom > aReflowState.mComputedMaxHeight ||
-           contentBottom > aReflowState.ComputedHeight()) &&
-           aConfig.mBalanceColCount < INT32_MAX) {
+          contentBottom > aReflowState.ComputedHeight()) &&
+          aConfig.mBalanceColCount < INT32_MAX) {
         // We overflowed vertically, but have not exceeded the number
         // of columns. If we're balancing, then we should try reverting
         // to auto instead.
         aColData.mShouldRevertToAuto = true;
-        break;
       }
 
       if (columnCount >= aConfig.mBalanceColCount) {
-        // No more columns allowed here. Stop.
-        aStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
-        kidNextInFlow->AddStateBits(NS_FRAME_IS_DIRTY);
-        // Move any of our leftover columns to our overflow list. Our
-        // next-in-flow will eventually pick them up.
-        const nsFrameList& continuationColumns = mFrames.RemoveFramesAfter(child);
-        if (continuationColumns.NotEmpty()) {
-          SetOverflowFrames(PresContext(), continuationColumns);
+        if (contentBottom >= aReflowState.availableHeight) {
+          // No more columns allowed here. Stop.
+          aStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+          kidNextInFlow->AddStateBits(NS_FRAME_IS_DIRTY);
+          // Move any of our leftover columns to our overflow list. Our
+          // next-in-flow will eventually pick them up.
+          const nsFrameList& continuationColumns = mFrames.RemoveFramesAfter(child);
+          if (continuationColumns.NotEmpty()) {
+            SetOverflowFrames(PresContext(), continuationColumns);
+          }
+          child = nullptr;
+          break;
+        } else if (contentBottom > aReflowState.mComputedMaxHeight ||
+                   contentBottom > aReflowState.ComputedHeight()) {
+          aColData.mShouldRevertToAuto = true;
+        } else {
+          // The number of columns required is too high.
+          allFit = false;
         }
-        child = nullptr;
-        break;
       }
     }
 
