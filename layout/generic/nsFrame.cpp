@@ -8111,8 +8111,7 @@ nsIFrame::AddInPopupStateBitToDescendants(nsIFrame* aFrame)
 nsIFrame::RemoveInPopupStateBitFromDescendants(nsIFrame* aFrame)
 {
   if (!aFrame->HasAnyStateBits(NS_FRAME_IN_POPUP) ||
-      aFrame->GetType() == nsGkAtoms::listControlFrame ||
-      aFrame->GetType() == nsGkAtoms::menuPopupFrame) {
+      nsLayoutUtils::IsPopup(aFrame)) {
     return;
   }
 
