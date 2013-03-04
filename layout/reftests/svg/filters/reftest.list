@@ -89,6 +89,8 @@ skip-if(B2G) fuzzy-if(cocoaWidget&&layersGPUAccelerated,4,93) == feDistantLight-
 == feMorphology-radius-zero-02.svg pass.svg
 
 == feTile-large-01.svg pass.svg
+== feTile-large-02.svg feTile-large-02-ref.svg
+== feTile-outside-01.svg feTile-outside-01-ref.svg
 
 == feDiffuseLighting-1.svg feDiffuseLighting-1-ref.svg
 
