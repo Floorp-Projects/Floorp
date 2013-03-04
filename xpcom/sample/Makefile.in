@@ -10,9 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# This makefile builds the "program" subdirectory.
-DIRS = program
-
 # MODULE specifies where header files from this Makefile are installed,
 # i.e. dist/include/xpcomsample
 MODULE		= xpcomsample

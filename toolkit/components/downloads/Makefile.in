@@ -43,8 +43,6 @@ EXTRA_COMPONENTS = \
   $(NULL)
 endif
 
-TEST_DIRS += test
-
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += $(TK_CFLAGS)

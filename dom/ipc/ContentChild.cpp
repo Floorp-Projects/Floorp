@@ -88,7 +88,7 @@
 #endif
 
 #include "mozilla/dom/indexedDB/PIndexedDBChild.h"
-#include "mozilla/dom/sms/SmsChild.h"
+#include "mozilla/dom/mobilemessage/SmsChild.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestChild.h"
 #include "mozilla/dom/bluetooth/PBluetoothChild.h"
 #include "mozilla/ipc/InputStreamUtils.h"
@@ -111,7 +111,7 @@ using namespace mozilla::docshell;
 using namespace mozilla::dom::bluetooth;
 using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::ipc;
-using namespace mozilla::dom::sms;
+using namespace mozilla::dom::mobilemessage;
 using namespace mozilla::dom::indexedDB;
 using namespace mozilla::hal_sandbox;
 using namespace mozilla::ipc;

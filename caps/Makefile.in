@@ -11,9 +11,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= caps
-DIRS		= idl include src
-
-TEST_DIRS += tests/mochitest
 
 include $(topsrcdir)/config/rules.mk
 

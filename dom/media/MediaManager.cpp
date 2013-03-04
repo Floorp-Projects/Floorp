@@ -1304,6 +1304,7 @@ NS_IMETHODIMP
 MediaManager::MediaCaptureWindowState(nsIDOMWindow* aWindow, bool* aVideo,
                                       bool* aAudio)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   *aVideo = false;
   *aAudio = false;
 

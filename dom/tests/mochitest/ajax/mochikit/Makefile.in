@@ -11,11 +11,6 @@ relativesrcdir	= @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= \
-	MochiKit \
-	tests \
-	$(NULL)
-
 MOCHITEST_FILES	= \
 	test_Mochikit.html \
 	manifest.json \

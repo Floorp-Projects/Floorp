@@ -14,11 +14,7 @@
 #include "nsFontFaceLoader.h"
 
 #include "nsError.h"
-#include "nsIFile.h"
-#include "nsIStreamListener.h"
 #include "nsNetUtil.h"
-#include "nsIChannelEventSink.h"
-#include "nsIInterfaceRequestor.h"
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
 
@@ -27,13 +23,10 @@
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 
-#include "nsDirectoryServiceUtils.h"
-#include "nsDirectoryServiceDefs.h"
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
 #include "nsCrossSiteListenerProxy.h"
 #include "nsIContentSecurityPolicy.h"
-#include "nsIChannelPolicy.h"
 #include "nsChannelPolicy.h"
 
 #include "nsIConsoleService.h"

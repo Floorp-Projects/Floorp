@@ -4221,6 +4221,7 @@ MOZ_OMX_PLUGIN=
 MOZ_VP8=
 MOZ_VP8_ERROR_CONCEALMENT=
 MOZ_VP8_ENCODER=
+MOZ_WEBVTT=1
 VPX_AS=
 VPX_ASFLAGS=
 VPX_AS_DASH_C_FLAG=
@@ -4295,6 +4296,12 @@ case "${target}" in
         ;;
 
 esac
+
+MOZ_ARG_WITH_STRING(external-source-dir,
+[  --with-external-source-dir=dir
+                          External directory containing additional build files.],
+[ EXTERNAL_SOURCE_DIR=$withval])
+AC_SUBST(EXTERNAL_SOURCE_DIR)
 
 MOZ_ARG_ENABLE_STRING(application,
 [  --enable-application=APP
@@ -5692,6 +5699,10 @@ fi
 
 if test -n "$MOZ_OPUS"; then
     AC_DEFINE(MOZ_OPUS)
+fi
+
+if test -n "$MOZ_WEBVTT"; then
+    AC_DEFINE(MOZ_WEBVTT)
 fi
 
 dnl ========================================================
@@ -8821,6 +8832,7 @@ AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)
 AC_SUBST(MOZ_OPUS)
 AC_SUBST(MOZ_WEBM)
+AC_SUBST(MOZ_WEBVTT)
 AC_SUBST(MOZ_DASH)
 AC_SUBST(MOZ_WMF)
 AC_SUBST(MOZ_MEDIA_PLUGINS)
@@ -8961,11 +8973,14 @@ HAVE_SYS_VFS_H
 HAVE_SYS_MOUNT_H
 "
 
+# FUTURE? Consider moving all these to moz.build files.
 AC_CONFIG_HEADER(
 netwerk/necko-config.h
 xpcom/xpcom-config.h
 xpcom/xpcom-private.h
 )
+
+AC_OUTPUT([mozilla-config.h])
 
 # Hack around an Apple bug that affects the egrep that comes with OS X 10.7.
 # "env ARCHPREFERENCE=i386,x86_64 arch egrep" first tries to use the 32-bit
@@ -8982,15 +8997,6 @@ case "$host" in
     FIXED_EGREP="egrep"
     ;;
 esac
-
-dnl Load the list of Makefiles to generate.
-dnl   To add new Makefiles, edit allmakefiles.sh.
-dnl   allmakefiles.sh sets the variable, MAKEFILES.
-. ${srcdir}/allmakefiles.sh
-
-echo $MAKEFILES > unallmakefiles
-
-AC_OUTPUT($MAKEFILES)
 
 # target_arch is from {ia32|x64|arm|ppc}
 case "$CPU_ARCH" in
@@ -9118,6 +9124,7 @@ MOZ_WIDGET_TOOLKIT=${MOZ_WIDGET_TOOLKIT} \
 UNIVERSAL_BINARY=${UNIVERSAL_BINARY} \
 MOZ_CRASHREPORTER=${MOZ_CRASHREPORTER} \
 MOZ_APP_NAME=${MOZ_APP_NAME} \
+TOPSRCDIR=${_topsrcdir} \
   $PYTHON ${_topsrcdir}/config/writemozinfo.py ./mozinfo.json.tmp
 if cmp -s ./mozinfo.json.tmp ./mozinfo.json; then
   rm ./mozinfo.json.tmp
@@ -9186,6 +9193,11 @@ if test -z "$MOZ_NATIVE_JEMALLOC" -a "$MOZ_MEMORY" && test -n "$MOZ_JEMALLOC3" -
   fi
   _save_cache_file="$cache_file"
   cache_file=$_objdir/memory/jemalloc/src/config.cache
+
+  if ! test -e memory/jemalloc; then
+    mkdir -p memory/jemalloc
+  fi
+
   AC_OUTPUT_SUBDIRS(memory/jemalloc/src)
   cache_file="$_save_cache_file"
   ac_configure_args="$_SUBDIR_CONFIG_ARGS"
@@ -9200,6 +9212,11 @@ if test "$MOZ_TREE_FREETYPE"; then
    export LDFLAGS="$LDFLAGS $MOZ_DEBUG_LDFLAGS"
    export CONFIG_FILES="unix-cc.mk:unix-cc.in unix-def.mk:unix-def.in freetype-config freetype2.pc:freetype2.in"
    ac_configure_args="$ac_configure_args --host=$target --disable-shared --with-pic=yes"
+
+   if ! test -e modules; then
+     mkdir modules
+   fi
+
    AC_OUTPUT_SUBDIRS(modules/freetype2)
 fi
 
@@ -9332,6 +9349,11 @@ export STLPORT_CPPFLAGS
 export STLPORT_LDFLAGS
 export STLPORT_LIBS
 export JS_STANDALONE=no
+
+if ! test -e js; then
+    mkdir js
+fi
+
 AC_OUTPUT_SUBDIRS(js/src)
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 

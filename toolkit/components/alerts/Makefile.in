@@ -1,4 +1,3 @@
-#
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -23,14 +22,7 @@ LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/components/build/
 
 ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
 XPIDLSRCS += nsINotificationsList.idl
-# mac/growl needs to be first for linking to work!
-TOOL_DIRS += \
-  mac/growl \
-  mac \
-  $(NULL)
 endif
-
-TEST_DIRS += test
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

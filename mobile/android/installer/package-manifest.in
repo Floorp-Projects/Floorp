@@ -132,7 +132,6 @@
 @BINPATH@/components/dom_settings.xpt
 @BINPATH@/components/dom_sidebar.xpt
 @BINPATH@/components/dom_mobilemessage.xpt
-@BINPATH@/components/dom_sms.xpt
 @BINPATH@/components/dom_storage.xpt
 @BINPATH@/components/dom_stylesheets.xpt
 @BINPATH@/components/dom_system.xpt
@@ -142,7 +141,6 @@
 @BINPATH@/components/dom_xbl.xpt
 @BINPATH@/components/dom_xpath.xpt
 @BINPATH@/components/dom_xul.xpt
-@BINPATH@/components/dom_loadsave.xpt
 @BINPATH@/components/downloads.xpt
 @BINPATH@/components/editor.xpt
 @BINPATH@/components/embed_base.xpt
@@ -555,6 +553,7 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/PromptService.js
 @BINPATH@/components/SessionStore.js
 @BINPATH@/components/Sidebar.js
+@BINPATH@/components/SiteSpecificUserAgent.js
 #ifdef MOZ_SAFE_BROWSING
 @BINPATH@/components/SafeBrowsing.jsm
 #endif

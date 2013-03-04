@@ -8,10 +8,4 @@ srcdir           = @srcdir@
 VPATH            = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-
-DIRS = \
-  bootstrap \
-  traditional \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk

@@ -453,7 +453,6 @@ BaselineScript::icEntryFromPCOffset(uint32_t pcOffset, ICEntry *prevLookedUpEntr
     if (prevLookedUpEntry && pcOffset >= prevLookedUpEntry->pcOffset() &&
         (pcOffset - prevLookedUpEntry->pcOffset()) <= 10)
     {
-        uint32_t diff = pcOffset - prevLookedUpEntry->pcOffset();
         ICEntry *firstEntry = &icEntry(0);
         ICEntry *lastEntry = &icEntry(numICEntries() - 1);
         ICEntry *curEntry = prevLookedUpEntry;

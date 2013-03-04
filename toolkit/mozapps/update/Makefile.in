@@ -19,10 +19,6 @@ EXTRA_COMPONENTS = \
   $(NULL)
 
 ifdef MOZ_UPDATER
-ifneq (android,$(MOZ_WIDGET_TOOLKIT))
-DIRS += common
-DIRS += updater
-endif
 
 XPIDLSRCS += nsIUpdateService.idl
 
@@ -35,26 +31,6 @@ EXTRA_COMPONENTS += \
   nsUpdateServiceStub.js \
   $(NULL)
 
-else
-
-# If only the maintenance service is installed and not
-# the updater, then the maintenance service may still be
-# used for other things.  We need to build update/common
-# which the maintenance service uses.
-ifdef MOZ_MAINTENANCE_SERVICE
-ifneq (android,$(MOZ_WIDGET_TOOLKIT))
-DIRS += common
-endif
-endif
-endif
-
-TEST_DIRS += test_timermanager
-# Update tests require the updater binary
-ifdef MOZ_UPDATER
-TEST_DIRS += test
-ifdef MOZ_MAINTENANCE_SERVICE
-TEST_DIRS += test_svc
-endif
 endif
 
 include $(topsrcdir)/config/rules.mk

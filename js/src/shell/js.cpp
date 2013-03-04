@@ -22,7 +22,6 @@
 #include "jstypes.h"
 #include "jsutil.h"
 #include "jsprf.h"
-#include "jswrapper.h"
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
@@ -41,6 +40,7 @@
 #include "jstypedarray.h"
 #include "jstypedarrayinlines.h"
 #include "jsworkers.h"
+#include "jswrapper.h"
 #include "jsperf.h"
 
 #include "builtin/TestingFunctions.h"
@@ -210,15 +210,14 @@ class ToStringHelper
 {
   public:
     ToStringHelper(JSContext *aCx, jsval v, bool aThrow = false)
-      : cx(aCx)
+      : cx(aCx), mStr(cx, JS_ValueToString(cx, v))
     {
-        mStr = JS_ValueToString(cx, v);
         if (!aThrow && !mStr)
             ReportException(cx);
-        JS_AddNamedStringRoot(cx, &mStr, "Value ToString helper");
+        JS_AddNamedStringRoot(cx, mStr.address(), "Value ToString helper");
     }
     ~ToStringHelper() {
-        JS_RemoveStringRoot(cx, &mStr);
+        JS_RemoveStringRoot(cx, mStr.address());
     }
     bool threw() { return !mStr; }
     jsval getJSVal() { return STRING_TO_JSVAL(mStr); }
@@ -229,7 +228,7 @@ class ToStringHelper
     }
   private:
     JSContext *cx;
-    JSString *mStr;
+    RootedString mStr;  // Objects of this class are always stack-allocated.
     JSAutoByteString mBytes;
 };
 
@@ -358,8 +357,8 @@ ShellOperationCallback(JSContext *cx)
 
     bool result;
     if (!gTimeoutFunc.isNull()) {
-        jsval returnedValue;
-        if (!JS_CallFunctionValue(cx, NULL, gTimeoutFunc, 0, NULL, &returnedValue))
+        RootedValue returnedValue(cx);
+        if (!JS_CallFunctionValue(cx, NULL, gTimeoutFunc, 0, NULL, returnedValue.address()))
             return false;
         if (returnedValue.isBoolean())
             result = returnedValue.toBoolean();
@@ -1741,8 +1740,8 @@ TryNotes(JSContext *cx, HandleScript script, Sprinter *sp)
 }
 
 static bool
-DisassembleScript(JSContext *cx, HandleScript script, JSFunction *fun, bool lines, bool recursive,
-                  Sprinter *sp)
+DisassembleScript(JSContext *cx, HandleScript script, HandleFunction fun, bool lines,
+                  bool recursive, Sprinter *sp)
 {
     if (fun) {
         Sprint(sp, "flags:");
@@ -1911,7 +1910,7 @@ DisassFile(JSContext *cx, unsigned argc, jsval *vp)
     Sprinter sprinter(cx);
     if (!sprinter.init())
         return false;
-    bool ok = DisassembleScript(cx, script, NULL, p.lines, p.recursive, &sprinter);
+    bool ok = DisassembleScript(cx, script, NullPtr(), p.lines, p.recursive, &sprinter);
     if (ok)
         fprintf(stdout, "%s\n", sprinter.string());
     if (!ok)

@@ -15,8 +15,8 @@
 #include "nsIDocument.h"
 #include "nsIFactory.h"
 #include "nsIScriptError.h"
-#include "nsIServiceManager.h"
 #include "nsIStringBundle.h"
+#include "nsServiceManagerUtils.h"
 #include "nsStyleUtil.h"
 #include "nsThreadUtils.h"
 

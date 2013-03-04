@@ -11,12 +11,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = \
-  common \
-  data \
-  $(NULL)
-
-
 MOCHITEST_BROWSER_FILES = \
   browser_keyevents_during_autoscrolling.js \
   browser_bug295977_autoscroll_overflow.js \

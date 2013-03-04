@@ -9,12 +9,6 @@ relativesrcdir := @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS := \
-  css \
-  conformancetest \
-  selecttest \
-  $(NULL)
-
 MOCHITEST_FILES := \
   implementation.js \
   tests.js \

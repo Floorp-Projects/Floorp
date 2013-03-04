@@ -11,8 +11,6 @@ relativesrcdir	= @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = files
-
 MOCHITEST_FILES_A	= \
 		DOMTestCase.js \
 		exclusions.js \

@@ -8,18 +8,12 @@
  */
 
 #include "nsHTMLCSSStyleSheet.h"
-#include "nsCRT.h"
-#include "nsIAtom.h"
-#include "nsIURL.h"
-#include "nsCSSPseudoElements.h"
-#include "nsIStyleRule.h"
 #include "mozilla/css/StyleRule.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsPresContext.h"
 #include "nsIDocument.h"
 #include "nsCOMPtr.h"
 #include "nsRuleWalker.h"
-#include "nsRuleData.h"
 #include "nsRuleProcessorData.h"
 #include "mozilla/dom/Element.h"
 #include "nsAttrValue.h"

@@ -621,7 +621,7 @@ ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, Abst
 
     RootedShape shape(cx, block->lastProperty());
 
-    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, gc::DefaultHeap, shape, type, slots));
+    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, gc::TenuredHeap, shape, type, slots));
     if (!obj)
         return NULL;
 
@@ -680,7 +680,7 @@ StaticBlockObject::create(JSContext *cx)
     if (!emptyBlockShape)
         return NULL;
 
-    JSObject *obj = JSObject::create(cx, FINALIZE_KIND, gc::DefaultHeap, emptyBlockShape, type, NULL);
+    JSObject *obj = JSObject::create(cx, FINALIZE_KIND, gc::TenuredHeap, emptyBlockShape, type, NULL);
     if (!obj)
         return NULL;
 

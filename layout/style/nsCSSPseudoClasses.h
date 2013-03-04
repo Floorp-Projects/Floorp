@@ -8,7 +8,9 @@
 #ifndef nsCSSPseudoClasses_h___
 #define nsCSSPseudoClasses_h___
 
-#include "nsIAtom.h"
+#include "nsString.h"
+
+class nsIAtom;
 
 class nsCSSPseudoClasses {
 public:

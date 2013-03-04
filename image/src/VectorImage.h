@@ -106,12 +106,12 @@ private:
                                           // that we're restricted to using.
                                           // Otherwise, this is ignored.
 
-  bool           mIsInitialized:1;        // Have we been initalized?
-  bool           mIsFullyLoaded:1;        // Has the SVG document finished loading?
-  bool           mIsDrawing:1;            // Are we currently drawing?
-  bool           mHaveAnimations:1;       // Is our SVG content SMIL-animated?
+  bool           mIsInitialized;          // Have we been initalized?
+  bool           mIsFullyLoaded;          // Has the SVG document finished loading?
+  bool           mIsDrawing;              // Are we currently drawing?
+  bool           mHaveAnimations;         // Is our SVG content SMIL-animated?
                                           // (Only set after mIsFullyLoaded.)
-  bool           mHaveRestrictedRegion:1; // Are we a restricted-region clone
+  bool           mHaveRestrictedRegion;   // Are we a restricted-region clone
                                           // created via ExtractFrame?
 
   friend class ImageFactory;

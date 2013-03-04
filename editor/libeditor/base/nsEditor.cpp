@@ -629,14 +629,7 @@ nsEditor::GetSelection()
   nsresult res = GetSelection(getter_AddRefs(sel));
   NS_ENSURE_SUCCESS(res, nullptr);
 
-  nsCOMPtr<nsISelectionPrivate> selPrivate = do_QueryInterface(sel);
-  NS_ENSURE_TRUE(selPrivate, nullptr);
-
-  nsRefPtr<nsFrameSelection> frameSel;
-  res = selPrivate->GetFrameSelection(getter_AddRefs(frameSel));
-  NS_ENSURE_SUCCESS(res, nullptr);
-
-  return frameSel->GetSelection(nsISelectionController::SELECTION_NORMAL);
+  return static_cast<Selection*>(sel.get());
 }
 
 NS_IMETHODIMP

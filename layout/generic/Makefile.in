@@ -9,8 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-TEST_DIRS += test
-
 MODULE		= layout
 LIBRARY_NAME	= gkgeneric_s
 LIBXUL_LIBRARY	= 1

@@ -1131,9 +1131,9 @@ void AudioClock::UpdateWritePosition(uint32_t aCount)
 
 uint64_t AudioClock::GetPosition()
 {
-  NS_ASSERTION(mInRate != 0 && mOutRate != 0, "AudioClock not initialized.");
   int64_t position = mAudioStream->GetPositionInFramesInternal();
   int64_t diffOffset;
+  NS_ASSERTION(position < 0 || (mInRate != 0 && mOutRate != 0), "AudioClock not initialized.");
   if (position >= 0) {
     if (position < mPlaybackRateChangeOffset) {
       // See if we are still playing frames pushed with the old playback rate in

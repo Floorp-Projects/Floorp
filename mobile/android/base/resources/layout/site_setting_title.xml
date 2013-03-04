@@ -10,8 +10,7 @@
               android:gravity="center_vertical">
 
     <TextView android:id="@+id/title"
-              android:textAppearance="?android:attr/textAppearanceLarge"
-              android:textColor="@color/dialogtitle_textcolor"
+              style="@style/GeckoDialogTitle"
               android:layout_width="fill_parent" 
               android:layout_height="wrap_content"
               android:paddingTop="6dip"
@@ -20,13 +19,11 @@
               android:paddingRight="10dip"/>
 
     <TextView android:id="@+id/host"
-              android:textAppearance="?android:attr/textAppearanceMedium"
-              android:textColor="@color/dialogtitle_textcolor"
-              android:layout_width="fill_parent" 
+              style="@style/GeckoDialogTitle.SubTitle"
+              android:layout_width="fill_parent"
               android:layout_height="wrap_content"
               android:paddingTop="2dip"
               android:paddingBottom="6dip"
-              android:paddingLeft="10dip"
-              android:paddingRight="10dip"/>
+              android:textSize="14sp"/>
 
 </LinearLayout>

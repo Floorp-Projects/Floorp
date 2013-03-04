@@ -11,9 +11,6 @@ relativesrcdir   = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = \
-  $(NULL)
-
 MOCHITEST_CHROME_FILES = \
   test_phonenumber.xul \
   test_phonenumberutils.xul \

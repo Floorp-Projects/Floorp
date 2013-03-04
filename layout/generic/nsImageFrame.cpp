@@ -1162,7 +1162,7 @@ nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
                   inner.y, size, size);
       nsLayoutUtils::DrawSingleImage(&aRenderingContext, imgCon,
         nsLayoutUtils::GetGraphicsFilterForFrame(this), dest, aDirtyRect,
-        imgIContainer::FLAG_NONE);
+        nullptr, imgIContainer::FLAG_NONE);
       iconUsed = true;
     }
 
@@ -1345,7 +1345,7 @@ nsImageFrame::PaintImage(nsRenderingContext& aRenderingContext, nsPoint aPt,
 
   nsLayoutUtils::DrawSingleImage(&aRenderingContext, aImage,
     nsLayoutUtils::GetGraphicsFilterForFrame(this), dest, aDirtyRect,
-    aFlags);
+    nullptr, aFlags);
 
   nsImageMap* map = GetImageMap();
   if (nullptr != map) {

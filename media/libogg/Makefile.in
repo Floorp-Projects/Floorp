@@ -11,9 +11,4 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= ogg
 
-DIRS		= \
-		include \
-		src \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk

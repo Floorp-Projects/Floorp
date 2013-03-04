@@ -345,8 +345,8 @@ var SelectionHelperUI = {
     messageManager.addMessageListener("Content:SelectionDebugRect", this);
 
     // selection related events
-    window.addEventListener("click", this, true);
-    window.addEventListener("dblclick", this, true);
+    window.addEventListener("click", this, false);
+    window.addEventListener("dblclick", this, false);
 
     // Picking up scroll attempts
     window.addEventListener("touchstart", this, true);
@@ -374,8 +374,8 @@ var SelectionHelperUI = {
     messageManager.removeMessageListener("Content:SelectionFail", this);
     messageManager.removeMessageListener("Content:SelectionDebugRect", this);
 
-    window.removeEventListener("click", this, true);
-    window.removeEventListener("dblclick", this, true);
+    window.removeEventListener("click", this, false);
+    window.removeEventListener("dblclick", this, false);
 
     window.removeEventListener("touchstart", this, true);
     window.removeEventListener("touchend", this, true);

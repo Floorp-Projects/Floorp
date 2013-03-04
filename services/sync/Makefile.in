@@ -66,9 +66,6 @@ sync_testing_modules := \
   utils.js \
   $(NULL)
 
-DIRS += locales
-TEST_DIRS += tests
-
 EXTRA_COMPONENTS := \
   SyncComponents.manifest \
   Weave.js \

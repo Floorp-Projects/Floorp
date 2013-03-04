@@ -65,9 +65,7 @@ namespace battery {
 class BatteryManager;
 } // namespace battery
 
-namespace sms {
 class SmsManager;
-} // namespace sms
 
 namespace network {
 class Connection;
@@ -197,7 +195,7 @@ private:
   nsRefPtr<nsDesktopNotificationCenter> mNotification;
   nsRefPtr<battery::BatteryManager> mBatteryManager;
   nsRefPtr<power::PowerManager> mPowerManager;
-  nsRefPtr<sms::SmsManager> mSmsManager;
+  nsRefPtr<SmsManager> mSmsManager;
 #ifdef MOZ_B2G_RIL
   nsCOMPtr<nsIDOMTelephony> mTelephony;
   nsCOMPtr<nsIDOMMozVoicemail> mVoicemail;

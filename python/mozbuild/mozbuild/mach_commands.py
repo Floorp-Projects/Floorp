@@ -275,3 +275,56 @@ class Package(MachCommandBase):
     @Command('package', help='Package the built product for distribution as an APK, DMG, etc.')
     def package(self):
         return self._run_make(directory=".", target='package', ensure_exit_code=False)
+
+
+@CommandProvider
+class Makefiles(MachCommandBase):
+    @Command('empty-makefiles', help='Find empty Makefile.in in the tree.')
+    def empty(self):
+        import pymake.parser
+        import pymake.parserdata
+
+        IGNORE_VARIABLES = {
+            'DEPTH': ('@DEPTH@',),
+            'topsrcdir': ('@top_srcdir@',),
+            'srcdir': ('@srcdir@',),
+            'relativesrcdir': ('@relativesrcdir@',),
+            'VPATH': ('@srcdir@',),
+        }
+
+        IGNORE_INCLUDES = [
+            'include $(DEPTH)/config/autoconf.mk',
+            'include $(topsrcdir)/config/config.mk',
+            'include $(topsrcdir)/config/rules.mk',
+        ]
+
+        def is_statement_relevant(s):
+            if isinstance(s, pymake.parserdata.SetVariable):
+                exp = s.vnameexp
+                if not exp.is_static_string:
+                    return True
+
+                if exp.s not in IGNORE_VARIABLES:
+                    return True
+
+                return s.value not in IGNORE_VARIABLES[exp.s]
+
+            if isinstance(s, pymake.parserdata.Include):
+                if s.to_source() in IGNORE_INCLUDES:
+                    return False
+
+            return True
+
+        for path in self._makefile_ins():
+            statements = [s for s in pymake.parser.parsefile(path)
+                if is_statement_relevant(s)]
+
+            if not statements:
+                print(os.path.relpath(path, self.topsrcdir))
+
+    def _makefile_ins(self):
+        for root, dirs, files in os.walk(self.topsrcdir):
+            for f in files:
+                if f == 'Makefile.in':
+                    yield os.path.join(root, f)
+

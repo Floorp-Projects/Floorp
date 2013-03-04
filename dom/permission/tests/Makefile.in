@@ -11,9 +11,6 @@ relativesrcdir   = dom/permission/tests
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = \
-  $(NULL)
-
 MODULE          = test_permission
 XPCSHELL_TESTS  = unit
 

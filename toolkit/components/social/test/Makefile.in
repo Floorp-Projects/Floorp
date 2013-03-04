@@ -10,10 +10,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# mochitest tests
-DIRS += browser \
-	$(NULL)
-
 XPCSHELL_TESTS = \
   xpcshell \
   $(NULL)

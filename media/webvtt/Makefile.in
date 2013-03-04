@@ -1,0 +1,40 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH           = @DEPTH@
+topsrcdir       = @top_srcdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE            = webvtt
+LIBRARY_NAME      = webvtt
+
+EXPORTS_NAMESPACES = webvtt
+
+DEFINES += \
+  -DWEBVTT_NO_CONFIG_H=1 \
+  -DWEBVTT_STATIC=1 \
+  $(NULL)
+
+EXPORTS_webvtt = \
+  include/webvtt/cue.h \
+  include/webvtt/error.h \
+  include/webvtt/parser.h \
+  include/webvtt/string.h \
+  include/webvtt/util.h \
+  $(NULL)
+
+CSRCS = \
+  alloc.c \
+  cue.c \
+  cuetext.c \
+  error.c \
+  lexer.c \
+  parser.c \
+  string.c \
+  $(NULL)
+
+include $(topsrcdir)/config/rules.mk

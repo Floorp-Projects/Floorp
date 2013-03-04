@@ -9,9 +9,9 @@
 #define _nsStyleContext_h_
 
 #include "nsRuleNode.h"
-#include "nsIAtom.h"
 #include "nsCSSPseudoElements.h"
 
+class nsIAtom;
 class nsPresContext;
 
 /**

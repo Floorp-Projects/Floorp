@@ -10,7 +10,6 @@
 #include "nsCSSValue.h"
 #include "nsStyleContext.h"
 #include "nsIFrame.h"
-#include "nsAnimationManager.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/LookAndFeel.h"
 #include "Layers.h"

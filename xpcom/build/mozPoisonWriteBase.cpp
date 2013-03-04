@@ -30,35 +30,58 @@
 #endif
 using namespace mozilla;
 
-namespace mozilla {
+namespace {
+struct DebugFDAutoLockTraits {
+  typedef PRLock *type;
+  const static type empty() {
+    return nullptr;
+  }
+  const static void release(type aL) {
+    PR_Unlock(aL);
+  }
+};
+
+class DebugFDAutoLock : public Scoped<DebugFDAutoLockTraits> {
+  static PRLock *Lock;
+public:
+  static void Clear();
+  static PRLock *getDebugFDsLock() {
+    // On windows this static is not thread safe, but we know that the first
+    // call is from
+    // * An early registration of a debug FD or
+    // * The call to InitWritePoisoning.
+    // Since the early debug FDs are logs created early in the main thread
+    // and no writes are trapped before InitWritePoisoning, we are safe.
+    static bool Initialized = false;
+    if (!Initialized) {
+      Lock = PR_NewLock();
+      Initialized = true;
+    }
+
+    // We have to use something lower level than a mutex. If we don't, we
+    // can get recursive in here when called from logging a call to free.
+    return Lock;
+  }
+
+  DebugFDAutoLock() : Scoped<DebugFDAutoLockTraits>(getDebugFDsLock()) {
+    PR_Lock(get());
+  }
+};
+
+PRLock *DebugFDAutoLock::Lock;
+void DebugFDAutoLock::Clear() {
+  MOZ_ASSERT(Lock != nullptr);
+  Lock = nullptr;
+}
 
 static char *sProfileDirectory = NULL;
 
 std::vector<int>& getDebugFDs() {
+  PR_ASSERT_CURRENT_THREAD_OWNS_LOCK(DebugFDAutoLock::getDebugFDsLock());
   // We have to use new as some write happen during static destructors
   // so an static std::vector might be destroyed while we still need it.
   static std::vector<int> *DebugFDs = new std::vector<int>();
   return *DebugFDs;
-}
-
-void InitWritePoisoning()
-{
-  nsCOMPtr<nsIFile> mozFile;
-  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mozFile));
-  if (mozFile) {
-    nsAutoCString nativePath;
-    nsresult rv = mozFile->GetNativePath(nativePath);
-    if (NS_SUCCEEDED(rv)) {
-      sProfileDirectory = PL_strdup(nativePath.get());
-    }
-  }
-}
-
-void BaseCleanup() {
-  PL_strfree(sProfileDirectory);
-  sProfileDirectory = nullptr;
-  delete &getDebugFDs();
-  PR_DestroyLock(DebugFDAutoLock::getDebugFDsLock());
 }
 
 // This a wrapper over a file descriptor that provides a Printf method and
@@ -102,6 +125,40 @@ static void RecordStackWalker(void *aPC, void *aSP, void *aClosure)
     std::vector<uintptr_t> *stack =
         static_cast<std::vector<uintptr_t>*>(aClosure);
     stack->push_back(reinterpret_cast<uintptr_t>(aPC));
+}
+
+
+enum PoisonState {
+  POISON_UNINITIALIZED = 0,
+  POISON_ON,
+  POISON_OFF
+};
+
+// POISON_OFF has two consequences
+// * It prevents PoisonWrite from patching the write functions.
+// * If the patching has already been done, it prevents AbortOnBadWrite from
+//   asserting. Note that not all writes use AbortOnBadWrite at this point
+//   (aio_write for example), so disabling writes after patching doesn't
+//   completely undo it.
+PoisonState sPoisoningState = POISON_UNINITIALIZED;
+}
+
+namespace mozilla {
+
+void InitWritePoisoning()
+{
+  // Call to make sure it is initialized.
+  DebugFDAutoLock::getDebugFDsLock();
+
+  nsCOMPtr<nsIFile> mozFile;
+  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mozFile));
+  if (mozFile) {
+    nsAutoCString nativePath;
+    nsresult rv = mozFile->GetNativePath(nativePath);
+    if (NS_SUCCEEDED(rv)) {
+      sProfileDirectory = PL_strdup(nativePath.get());
+    }
+  }
 }
 
 bool ValidWriteAssert(bool ok)
@@ -204,25 +261,22 @@ bool ValidWriteAssert(bool ok)
     return false;
 }
 
-enum PoisonState {
-  POISON_UNINITIALIZED = 0,
-  POISON_ON,
-  POISON_OFF
-};
-
-// POISON_OFF has two consequences
-// * It prevents PoisonWrite from patching the write functions.
-// * If the patching has already been done, it prevents AbortOnBadWrite from
-//   asserting. Note that not all writes use AbortOnBadWrite at this point
-//   (aio_write for example), so disabling writes after patching doesn't
-//   completely undo it.
-PoisonState sPoisoningState = POISON_UNINITIALIZED;
-
 void DisableWritePoisoning() {
-  if (sPoisoningState == POISON_ON) {
-    sPoisoningState = POISON_OFF;
-    BaseCleanup();
+  if (sPoisoningState != POISON_ON)
+    return;
+
+  sPoisoningState = POISON_OFF;
+  PL_strfree(sProfileDirectory);
+  sProfileDirectory = nullptr;
+
+  PRLock *Lock;
+  {
+    DebugFDAutoLock lockedScope;
+    delete &getDebugFDs();
+    Lock = DebugFDAutoLock::getDebugFDsLock();
+    DebugFDAutoLock::Clear();
   }
+  PR_DestroyLock(Lock);
 }
 void EnableWritePoisoning() {
   sPoisoningState = POISON_ON;
@@ -231,6 +285,13 @@ void EnableWritePoisoning() {
 bool PoisonWriteEnabled()
 {
   return sPoisoningState == POISON_ON;
+}
+
+bool IsDebugFD(int fd) {
+  DebugFDAutoLock lockedScope;
+
+  std::vector<int> &Vec = getDebugFDs();
+  return std::find(Vec.begin(), Vec.end(), fd) != Vec.end();
 }
 
 } // mozilla

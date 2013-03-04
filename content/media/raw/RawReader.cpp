@@ -276,7 +276,7 @@ nsresult RawReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, in
   return NS_OK;
 }
 
-nsresult RawReader::GetBuffered(nsTimeRanges* aBuffered, int64_t aStartTime)
+nsresult RawReader::GetBuffered(TimeRanges* aBuffered, int64_t aStartTime)
 {
   return NS_OK;
 }

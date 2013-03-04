@@ -15,22 +15,6 @@ LIBRARY_NAME    = domsystem_s
 LIBXUL_LIBRARY  = 1
 FAIL_ON_WARNINGS := 1
 
-ifneq (,$(filter qt gtk2,$(MOZ_WIDGET_TOOLKIT)))
-DIRS = unix
-endif
-
-ifneq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
-DIRS = windows
-endif
-
-ifneq (,$(filter android,$(MOZ_WIDGET_TOOLKIT)))
-DIRS = android
-endif
-
-ifdef MOZ_B2G_RIL
-DIRS += gonk
-endif
-
 DEFINES += -DDLL_PREFIX=\"$(DLL_PREFIX)\" -DDLL_SUFFIX=\"$(DLL_SUFFIX)\"
 
 XPIDLSRCS = \
@@ -82,10 +66,6 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/content/events/src \
   -I$(topsrcdir)/js/xpconnect/loader \
   $(NULL)
-
-ifdef ENABLE_TESTS
-DIRS += tests
-endif
 
 include $(topsrcdir)/config/config.mk
 

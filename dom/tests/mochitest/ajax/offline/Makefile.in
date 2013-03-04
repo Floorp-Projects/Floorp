@@ -11,8 +11,6 @@ relativesrcdir	= @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = namespace1 namespace2
-
 MOCHITEST_FILES	= \
 	offlineTests.js \
 	test_badManifestMagic.html \

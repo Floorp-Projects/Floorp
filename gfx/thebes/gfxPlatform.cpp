@@ -1333,13 +1333,6 @@ gfxPlatform::GetCMSMode()
     return gCMSMode;
 }
 
-/* Chris Murphy (CM consultant) suggests this as a default in the event that we
-cannot reproduce relative + Black Point Compensation.  BPC brings an
-unacceptable performance overhead, so we go with perceptual. */
-#define INTENT_DEFAULT QCMS_INTENT_PERCEPTUAL
-#define INTENT_MIN 0
-#define INTENT_MAX 3
-
 int
 gfxPlatform::GetRenderingIntent()
 {
@@ -1349,7 +1342,7 @@ gfxPlatform::GetRenderingIntent()
         int32_t pIntent;
         if (NS_SUCCEEDED(Preferences::GetInt("gfx.color_management.rendering_intent", &pIntent))) {
             /* If the pref is within range, use it as an override. */
-            if ((pIntent >= INTENT_MIN) && (pIntent <= INTENT_MAX)) {
+            if ((pIntent >= QCMS_INTENT_MIN) && (pIntent <= QCMS_INTENT_MAX)) {
                 gCMSIntent = pIntent;
             }
             /* If the pref is out of range, use embedded profile. */
@@ -1359,7 +1352,7 @@ gfxPlatform::GetRenderingIntent()
         }
         /* If we didn't get a valid intent from prefs, use the default. */
         else {
-            gCMSIntent = INTENT_DEFAULT;
+            gCMSIntent = QCMS_INTENT_DEFAULT;
         }
     }
     return gCMSIntent;

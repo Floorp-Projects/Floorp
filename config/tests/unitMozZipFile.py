@@ -65,7 +65,7 @@ def prod(*iterables):
 
 def getid(descs):
   'Convert a list of ints to a string.'
-  return reduce(lambda x,y: x+'%d%d'%tuple(y), descs,'')
+  return reduce(lambda x,y: x+'{0}{1}'.format(*tuple(y)), descs,'')
 
 
 def getContent(length):
@@ -186,7 +186,7 @@ allfiles = reduce(lambda l,r:l+r,
                   [list(prod(*files[:(i+1)])) for i in xrange(len(leafs))])
 
 for first in allfiles:
-  testbasename = 'test%s_' % getid(first)
+  testbasename = 'test{0}_'.format(getid(first))
   test = [None, '_write' + getid(first), None]
   for second in atomics:
     test[0] = testbasename + getid([second])

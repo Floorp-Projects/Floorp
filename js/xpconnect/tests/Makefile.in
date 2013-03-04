@@ -11,8 +11,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = idl mochitest chrome browser components/native components/js
-
 XPCSHELL_TESTS = unit
 
 LIBS = \
