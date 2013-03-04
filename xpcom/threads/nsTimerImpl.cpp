@@ -143,7 +143,7 @@ private:
 };
 
 TimerEventAllocator* nsTimerEvent::sAllocator = nullptr;
-uint32_t nsTimerEvent::sAllocatorUsers = 0;
+int32_t nsTimerEvent::sAllocatorUsers = 0;
 bool nsTimerEvent::sCanDeleteAllocator = false;
 
 NS_IMPL_THREADSAFE_QUERY_INTERFACE1(nsTimerImpl, nsITimer)
