@@ -670,7 +670,10 @@ class IDLInterface(IDLObjectWithScope):
                 self.members.append(unforgeableAttr)
 
         # Ensure that there's at most one of each {named,indexed}
-        # {getter,setter,creator,deleter} and at most one stringifier.
+        # {getter,setter,creator,deleter}, at most one stringifier,
+        # and at most one legacycaller.  Note that this last is not
+        # quite per spec, but in practice no one overloads
+        # legacycallers.
         specialMembersSeen = {}
         for member in self.members:
             if not member.isMethod():
@@ -686,10 +689,12 @@ class IDLInterface(IDLObjectWithScope):
                 memberType = "deleters"
             elif member.isStringifier():
                 memberType = "stringifiers"
+            elif member.isLegacycaller():
+                memberType = "legacycallers"
             else:
                 continue
 
-            if memberType != "stringifiers":
+            if memberType != "stringifiers" and memberType != "legacycallers":
                 if member.isNamed():
                     memberType = "named " + memberType
                 else:
