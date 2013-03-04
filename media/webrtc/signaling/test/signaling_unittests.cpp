@@ -556,39 +556,23 @@ class SignalingAgent {
     cout << "Init Complete" << endl;
   }
 
-  bool InitAllowFail_m(nsCOMPtr<nsIThread> thread)
-  {
-    pc = sipcc::PeerConnectionImpl::CreatePeerConnection();
-    if (!pc)
-      return false;
-
-    pObserver = new TestObserver(pc);
-    if (!pObserver)
-      return false;
-
-    sipcc::IceConfiguration cfg;
-    cfg.addServer("23.21.150.121", 3478);
-    if (NS_FAILED(pc->Initialize(pObserver, nullptr, cfg, thread)))
-      return false;
-
-    return true;
-  }
-
   bool InitAllowFail(nsCOMPtr<nsIThread> thread)
   {
-    bool rv;
-
     thread->Dispatch(
-        WrapRunnableRet(this, &SignalingAgent::InitAllowFail_m, thread, &rv),
+        WrapRunnable(this, &SignalingAgent::Init_m, thread),
         NS_DISPATCH_SYNC);
-    if (!rv)
-      return false;
 
     EXPECT_TRUE_WAIT(sipcc_state() == sipcc::PeerConnectionImpl::kStarted,
                      kDefaultTimeout);
-    EXPECT_TRUE_WAIT(ice_state() == sipcc::PeerConnectionImpl::kIceWaiting, 5000);
-    cout << "Init Complete" << endl;
+    EXPECT_TRUE_WAIT(ice_state() == sipcc::PeerConnectionImpl::kIceWaiting ||
+                     ice_state() == sipcc::PeerConnectionImpl::kIceFailed, 5000);
 
+    if (ice_state() == sipcc::PeerConnectionImpl::kIceFailed) {
+      cout << "Init Failed" << endl;
+      return false;
+    }
+
+    cout << "Init Complete" << endl;
     return true;
   }
 
