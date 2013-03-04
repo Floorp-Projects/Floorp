@@ -86,6 +86,52 @@ BuildKeyNameFromFontName(nsAString &aName)
     ToLowerCase(aName);
 }
 
+// Helper to access the FT_Face for a given FT2FontEntry,
+// creating a temporary face if the entry does not have one yet.
+// This allows us to read font names, tables, etc if necessary
+// without permanently instantiating a freetype face and consuming
+// memory long-term.
+class AutoFTFace {
+public:
+    AutoFTFace(FT2FontEntry* aFontEntry)
+        : mFace(nullptr), mOwnsFace(false)
+    {
+        if (aFontEntry->mFTFace) {
+            mFace = aFontEntry->mFTFace;
+        } else {
+            NS_ASSERTION(!aFontEntry->mFilename.IsEmpty(),
+                         "can't use AutoFTFace for fonts without a filename");
+            FT_Library ft = gfxToolkitPlatform::GetPlatform()->GetFTLibrary();
+            if (FT_Err_Ok != FT_New_Face(ft, aFontEntry->mFilename.get(),
+                                         aFontEntry->mFTFontIndex, &mFace)) {
+                NS_WARNING("failed to create freetype face");
+            }
+            if (FT_Err_Ok != FT_Select_Charmap(mFace, FT_ENCODING_UNICODE)) {
+                NS_WARNING("failed to select Unicode charmap");
+            }
+            mOwnsFace = true;
+        }
+    }
+
+    ~AutoFTFace() {
+        if (mFace && mOwnsFace) {
+            FT_Done_Face(mFace);
+        }
+    }
+
+    operator FT_Face() { return mFace; }
+
+    FT_Face forget() {
+        NS_ASSERTION(mOwnsFace, "can't forget() when we didn't own the face");
+        mOwnsFace = false;
+        return mFace;
+    }
+
+private:
+    FT_Face mFace;
+    bool    mOwnsFace;
+};
+
 /*
  * FT2FontEntry
  * gfxFontEntry subclass corresponding to a specific face that can be
@@ -344,16 +390,11 @@ FT2FontEntry::CairoFontFace()
     static cairo_user_data_key_t key;
 
     if (!mFontFace) {
-        FT_Face face;
-        if (FT_Err_Ok != FT_New_Face(gfxToolkitPlatform::GetPlatform()->GetFTLibrary(),
-                                     mFilename.get(), mFTFontIndex, &face)) {
-            NS_WARNING("failed to create freetype face");
+        AutoFTFace face(this);
+        if (!face) {
             return nullptr;
         }
-        if (FT_Err_Ok != FT_Select_Charmap(face, FT_ENCODING_UNICODE)) {
-            NS_WARNING("failed to select Unicode charmap, text may be garbled");
-        }
-        mFTFace = face;
+        mFTFace = face.forget();
         int flags = gfxPlatform::GetPlatform()->FontHintingEnabled() ?
                     FT_LOAD_DEFAULT :
                     (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
@@ -400,13 +441,14 @@ nsresult
 FT2FontEntry::GetFontTable(uint32_t aTableTag,
                            FallibleTArray<uint8_t>& aBuffer)
 {
-    // Ensure existence of mFTFace
-    CairoFontFace();
-    NS_ENSURE_TRUE(mFTFace, NS_ERROR_FAILURE);
+    AutoFTFace face(this);
+    if (!face) {
+        return NS_ERROR_FAILURE;
+    }
 
     FT_Error status;
     FT_ULong len = 0;
-    status = FT_Load_Sfnt_Table(mFTFace, aTableTag, 0, nullptr, &len);
+    status = FT_Load_Sfnt_Table(face, aTableTag, 0, nullptr, &len);
     if (status != FT_Err_Ok || len == 0) {
         return NS_ERROR_FAILURE;
     }
@@ -415,7 +457,7 @@ FT2FontEntry::GetFontTable(uint32_t aTableTag,
         return NS_ERROR_OUT_OF_MEMORY;
     }
     uint8_t *buf = aBuffer.Elements();
-    status = FT_Load_Sfnt_Table(mFTFace, aTableTag, 0, buf, &len);
+    status = FT_Load_Sfnt_Table(face, aTableTag, 0, buf, &len);
     NS_ENSURE_TRUE(status == FT_Err_Ok, NS_ERROR_FAILURE);
 
     return NS_OK;
@@ -778,10 +820,13 @@ FT2FontEntry::CheckForBrokenFont(gfxFontFamily *aFamily)
     // Droid Sans Arabic from certain phones, as identified by the
     // font checksum in the 'head' table
     else if (aFamily->Name().EqualsLiteral("droid sans arabic")) {
-        const TT_Header *head = static_cast<const TT_Header*>
-            (FT_Get_Sfnt_Table(mFTFace, ft_sfnt_head));
-        if (head && head->CheckSum_Adjust == 0xe445242) {
-            mIgnoreGSUB = true;
+        AutoFTFace face(this);
+        if (face) {
+            const TT_Header *head = static_cast<const TT_Header*>
+                (FT_Get_Sfnt_Table(face, ft_sfnt_head));
+            if (head && head->CheckSum_Adjust == 0xe445242) {
+                mIgnoreGSUB = true;
+            }
         }
     }
 }
