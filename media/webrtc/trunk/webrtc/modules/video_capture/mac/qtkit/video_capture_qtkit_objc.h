@@ -58,9 +58,6 @@
     NSNumber*                            _val;
     NSDictionary*                        _videoSettings;
     NSString*                            _captureQuality;
-    
-    // other
-    NSAutoreleasePool*                    _pool;
 
 }
 /**************************************************************************
