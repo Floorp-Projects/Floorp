@@ -591,6 +591,8 @@ public:
   void SetContainsPluginItem() { mContainsPluginItem = true; }
   bool ContainsPluginItem() { return mContainsPluginItem; }
 
+  DisplayListClipState& ClipState() { return mClipState; }
+
 private:
   void MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame,
                                     const nsRect& aDirtyRect);
@@ -615,6 +617,7 @@ private:
   nsAutoTArray<nsIFrame*,100>    mFramesMarkedForDisplay;
   nsAutoTArray<ThemeGeometry,2>  mThemeGeometries;
   nsDisplayTableItem*            mCurrentTableItem;
+  DisplayListClipState           mClipState;
   const nsRegion*                mFinalTransparentRegion;
   // When mCachedOffsetFrame is non-null, mCachedOffset is the offset from
   // mCachedOffsetFrame to mReferenceFrame.
