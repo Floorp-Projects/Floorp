@@ -93,6 +93,9 @@ class MacroAssemblerX86Shared : public Assembler
     void test32(const Register &lhs, const Register &rhs) {
         testl(lhs, rhs);
     }
+    void test32(const Address &addr, Imm32 imm) {
+        testl(Operand(addr), imm);
+    }
     void cmp32(Register a, Register b) {
         cmpl(a, b);
     }
