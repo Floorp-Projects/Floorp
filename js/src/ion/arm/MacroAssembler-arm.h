@@ -644,6 +644,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Register extractInt32(const ValueOperand &value, Register scratch) {
         return value.payloadReg();
     }
+    Register extractBoolean(const ValueOperand &value, Register scratch) {
+        return value.payloadReg();
+    }
     Register extractTag(const Address &address, Register scratch);
     Register extractTag(const BaseIndex &address, Register scratch);
     Register extractTag(const ValueOperand &value, Register scratch) {
