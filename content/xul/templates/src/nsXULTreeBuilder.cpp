@@ -450,9 +450,8 @@ nsXULTreeBuilder::SetSelection(nsITreeSelection* aSelection)
 }
 
 NS_IMETHODIMP
-nsXULTreeBuilder::GetRowProperties(int32_t aIndex, nsISupportsArray* aProperties)
+nsXULTreeBuilder::GetRowProperties(int32_t aIndex, nsAString& aProps)
 {
-    NS_ENSURE_ARG_POINTER(aProperties);
     NS_PRECONDITION(aIndex >= 0 && aIndex < mRows.Count(), "bad row");
     if (aIndex < 0 || aIndex >= mRows.Count())
         return NS_ERROR_INVALID_ARG;
@@ -464,10 +463,7 @@ nsXULTreeBuilder::GetRowProperties(int32_t aIndex, nsISupportsArray* aProperties
         row->GetAttr(kNameSpaceID_None, nsGkAtoms::properties, raw);
 
         if (!raw.IsEmpty()) {
-            nsAutoString cooked;
-            SubstituteText(mRows[aIndex]->mMatch->mResult, raw, cooked);
-
-            nsTreeUtils::TokenizeProperties(cooked, aProperties);
+            SubstituteText(mRows[aIndex]->mMatch->mResult, raw, aProps);
         }
     }
 
@@ -475,10 +471,10 @@ nsXULTreeBuilder::GetRowProperties(int32_t aIndex, nsISupportsArray* aProperties
 }
 
 NS_IMETHODIMP
-nsXULTreeBuilder::GetCellProperties(int32_t aRow, nsITreeColumn* aCol, nsISupportsArray* aProperties)
+nsXULTreeBuilder::GetCellProperties(int32_t aRow, nsITreeColumn* aCol,
+                                    nsAString& aProps)
 {
     NS_ENSURE_ARG_POINTER(aCol);
-    NS_ENSURE_ARG_POINTER(aProperties);
     NS_PRECONDITION(aRow >= 0 && aRow < mRows.Count(), "bad row");
     if (aRow < 0 || aRow >= mRows.Count())
         return NS_ERROR_INVALID_ARG;
@@ -490,10 +486,7 @@ nsXULTreeBuilder::GetCellProperties(int32_t aRow, nsITreeColumn* aCol, nsISuppor
         cell->GetAttr(kNameSpaceID_None, nsGkAtoms::properties, raw);
 
         if (!raw.IsEmpty()) {
-            nsAutoString cooked;
-            SubstituteText(mRows[aRow]->mMatch->mResult, raw, cooked);
-
-            nsTreeUtils::TokenizeProperties(cooked, aProperties);
+            SubstituteText(mRows[aRow]->mMatch->mResult, raw, aProps);
         }
     }
 
@@ -501,11 +494,9 @@ nsXULTreeBuilder::GetCellProperties(int32_t aRow, nsITreeColumn* aCol, nsISuppor
 }
 
 NS_IMETHODIMP
-nsXULTreeBuilder::GetColumnProperties(nsITreeColumn* aCol,
-                                      nsISupportsArray* aProperties)
+nsXULTreeBuilder::GetColumnProperties(nsITreeColumn* aCol, nsAString& aProps)
 {
     NS_ENSURE_ARG_POINTER(aCol);
-    NS_ENSURE_ARG_POINTER(aProperties);
     // XXX sortactive fu
     return NS_OK;
 }

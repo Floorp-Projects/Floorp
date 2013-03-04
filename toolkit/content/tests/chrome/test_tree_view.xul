@@ -41,16 +41,15 @@ var view =
   hasNextSibling: function(row, column) { return row != this.rowCount - 1; },
   getImageSrc: function(row, column) { return ""; },
   cycleHeader: function(column) { },
-  getRowProperties: function(row, props) { },
-  getCellProperties: function(row, column, props) { },
-  getColumnProperties: function(column, props)
+  getRowProperties: function(row) { return ""; },
+  getCellProperties: function(row, column) { return ""; },
+  getColumnProperties: function(column)
   {
     if (!column.index) {
-      var atomService = Components.classes["@mozilla.org/atom-service;1"].
-                          getService(Components.interfaces.nsIAtomService);
-      props.AppendElement(atomService.getAtom("one"));
-      props.AppendElement(atomService.getAtom("two"));
+      return "one two";
     }
+
+    return "";
   }
 }
 

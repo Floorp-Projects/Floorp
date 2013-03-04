@@ -15,7 +15,7 @@
 #include "nsIDOMDocument.h"
 #include "nsTArray.h"
 #include "nsCOMArray.h"
-#include "nsStaticAtom.h"
+#include "nsCOMPtr.h"
 
 class inDOMViewNode;
 
@@ -38,16 +38,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
-  static void InitAtoms();
-
 protected:
-
-#define DOMVIEW_ATOM(name_, value_) static nsIAtom* name_;
-#include "inDOMViewAtomList.h"
-#undef DOMVIEW_ATOM
-
-  static const nsStaticAtom Atoms_info[]; 
-
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsCOMPtr<nsITreeSelection> mSelection;
   nsCOMPtr<inIDOMUtils> mDOMUtils;
