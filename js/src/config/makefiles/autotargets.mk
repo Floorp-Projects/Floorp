@@ -48,8 +48,17 @@ slash_strip = \
 # Extract directory path from a dependency file.
 mkdir_stem =$(foreach val,$(getargv),$(subst /.mkdir.done,$(NULL),$(val)))
 
+# Function can be called by other functions to expand un-expanded make vars.
+# := functionality in call(able) function form
+expand = $(eval func-expand-$(1) := $($(1)))$(func-expand-$(1))
+
 ## Generate timestamp file for threadsafe directory creation
-mkdir_deps =$(foreach dir,$(getargv),$(call slash_strip,$(dir)/.mkdir.done))
+mkdir_deps = \
+  $(strip \
+  $(foreach var,$(getargv),\
+  $(foreach dir,$(call expand,var),\
+  $(call slash_strip,$(call expand,dir)/.mkdir.done) \
+  )))
 
 #######################
 ##---]  TARGETS  [---##
@@ -73,21 +82,23 @@ INCLUDED_AUTOTARGETS_MK = 1
 endif #}
 
 
-## Accumulate deps and cleanup
-ifneq (,$(GENERATED_DIRS))
-  GENERATED_DIRS := $(strip $(sort $(GENERATED_DIRS)))
-  tmpauto :=$(call mkdir_deps,GENERATED_DIRS)
-  GENERATED_DIRS_DEPS +=$(tmpauto)
-  GARBAGE_DIRS        +=$(GENERATED_DIRS)
-endif
+###########################################################################
+## GENERATED_DIR(_\S+)? directory deps
+## GENERATED_DIRS_{export,lib,tools} = foo   # target specific deps
+###########################################################################
+GENERATED_DIRS += $(foreach tgt,$(MAKECMDGOALS),$(value GENERATED_DIRS_$(tgt)))
+GENERATED_DIRS := $(call expand,GENERATED_DIRS)
+GENERATED_DIRS := $(strip $(sort $(GENERATED_DIRS)))
+GARBAGE_DIRS   += $(GENERATED_DIRS)
+
+# directory deps are timestamp based to only create when needed
+AUTO_DEPS += $(if $(value GENERATED_DIRS),$(call mkdir_deps,GENERATED_DIRS))
 
 #################################################################
 # One ring/dep to rule them all:
 #   config/rules.mk::all target is available by default
 #   Add $(AUTO_DEPS) as an explicit target dependency when needed.
 #################################################################
-
-AUTO_DEPS +=$(GENERATED_DIRS_DEPS)
 AUTO_DEPS := $(strip $(sort $(AUTO_DEPS)))
 
 # Complain loudly if deps have not loaded so getargv != $(NULL)
