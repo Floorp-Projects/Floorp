@@ -500,11 +500,10 @@ protected:
    * These are only stored during the paint process, so that the
    * DrawThebesLayer callback can figure out which items to draw for the
    * ThebesLayer.
-   * mItem always has an underlying frame.
    */
   struct ClippedDisplayItem {
-    ClippedDisplayItem(nsDisplayItem* aItem, const DisplayItemClip& aClip, uint32_t aGeneration)
-      : mItem(aItem), mClip(aClip), mContainerLayerGeneration(aGeneration)
+    ClippedDisplayItem(nsDisplayItem* aItem, uint32_t aGeneration)
+      : mItem(aItem), mContainerLayerGeneration(aGeneration)
     {
     }
 
@@ -519,7 +518,6 @@ protected:
      */
     nsRefPtr<LayerManager> mInactiveLayerManager;
 
-    DisplayItemClip mClip;
     uint32_t mContainerLayerGeneration;
   };
 
