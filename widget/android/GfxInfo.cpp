@@ -396,7 +396,12 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
       }
       else if (CompareVersions(mOSVersion.get(), "4.1.0") < 0)
       {
+        // Whitelist:
+        //   All Samsung ICS devices
+        //   All Galaxy nexus ICS devices
+        //   Sony Xperia Ion (LT28) ICS devices
         bool isWhitelisted =
+          cModel.Equals("LT28h", nsCaseInsensitiveCStringComparator()) ||
           cManufacturer.Equals("samsung", nsCaseInsensitiveCStringComparator()) ||
           cModel.Equals("galaxy nexus", nsCaseInsensitiveCStringComparator()); // some Galaxy Nexus have manufacturer=amazon
 
