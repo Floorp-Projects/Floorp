@@ -376,7 +376,7 @@ BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(BasicTiledLayerBuffer& aTi
     if (!aRegionToPaint.IsEmpty()) {
       break;
     }
-    if (DeprecatedAbs(scrollDiffY) >= DeprecatedAbs(scrollDiffX)) {
+    if (Abs(scrollDiffY) >= Abs(scrollDiffX)) {
       tileBounds.x += incX;
     } else {
       tileBounds.y += incY;
