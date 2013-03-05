@@ -9,6 +9,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+STANDALONE_MAKEFILE := 1
+
 NO_PKG_FILES = \
 	xulrunner-config \
 	regchrome* \
