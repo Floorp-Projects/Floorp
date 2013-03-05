@@ -2440,7 +2440,8 @@ ion::PurgeCaches(UnrootedScript script, JSCompartment *c) {
 }
 
 size_t
-ion::MemoryUsed(UnrootedScript script, JSMallocSizeOfFun mallocSizeOf) {
+ion::SizeOfIonData(UnrootedScript script, JSMallocSizeOfFun mallocSizeOf)
+{
     size_t result = 0;
 
     if (script->hasIonScript())
