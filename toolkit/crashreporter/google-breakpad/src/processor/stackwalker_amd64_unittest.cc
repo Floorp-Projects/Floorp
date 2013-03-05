@@ -109,9 +109,9 @@ class StackwalkerAMD64Fixture {
 
   // Fill RAW_CONTEXT with pseudo-random data, for round-trip checking.
   void BrandContext(MDRawContextAMD64 *raw_context) {
-    u_int8_t x = 173;
+    uint8_t x = 173;
     for (size_t i = 0; i < sizeof(*raw_context); i++)
-      reinterpret_cast<u_int8_t *>(raw_context)[i] = (x += 17);
+      reinterpret_cast<uint8_t *>(raw_context)[i] = (x += 17);
   }
 
   SystemInfo system_info;
@@ -199,8 +199,8 @@ TEST_F(GetCallerFrame, ScanWithoutSymbols) {
   // Force scanning through three frames to ensure that the
   // stack pointer is set properly in scan-recovered frames.
   stack_section.start() = 0x8000000080000000ULL;
-  u_int64_t return_address1 = 0x50000000b0000100ULL;
-  u_int64_t return_address2 = 0x50000000b0000900ULL;
+  uint64_t return_address1 = 0x50000000b0000100ULL;
+  uint64_t return_address2 = 0x50000000b0000900ULL;
   Label frame1_sp, frame2_sp, frame1_rbp;
   stack_section
     // frame 0
@@ -270,7 +270,7 @@ TEST_F(GetCallerFrame, ScanWithFunctionSymbols) {
   // it is only considered a valid return address if it
   // lies within a function's bounds.
   stack_section.start() = 0x8000000080000000ULL;
-  u_int64_t return_address = 0x50000000b0000110ULL;
+  uint64_t return_address = 0x50000000b0000110ULL;
   Label frame1_sp, frame1_rbp;
 
   stack_section
@@ -333,7 +333,7 @@ TEST_F(GetCallerFrame, CallerPushedRBP) {
   // %rbp directly below the return address, assume that it is indeed the
   // next frame's %rbp.
   stack_section.start() = 0x8000000080000000ULL;
-  u_int64_t return_address = 0x50000000b0000110ULL;
+  uint64_t return_address = 0x50000000b0000110ULL;
   Label frame0_rbp, frame1_sp, frame1_rbp;
 
   stack_section

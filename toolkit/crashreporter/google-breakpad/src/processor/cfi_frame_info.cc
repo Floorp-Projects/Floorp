@@ -44,6 +44,10 @@
 
 namespace google_breakpad {
 
+#ifdef _WIN32
+#define strtok_r strtok_s
+#endif
+
 template<typename V>
 bool CFIFrameInfo::FindCallerRegs(const RegisterValueMap<V> &registers,
                                   const MemoryRegion &memory,
@@ -89,14 +93,14 @@ bool CFIFrameInfo::FindCallerRegs(const RegisterValueMap<V> &registers,
 }
 
 // Explicit instantiations for 32-bit and 64-bit architectures.
-template bool CFIFrameInfo::FindCallerRegs<u_int32_t>(
-    const RegisterValueMap<u_int32_t> &registers,
+template bool CFIFrameInfo::FindCallerRegs<uint32_t>(
+    const RegisterValueMap<uint32_t> &registers,
     const MemoryRegion &memory,
-    RegisterValueMap<u_int32_t> *caller_registers) const;
-template bool CFIFrameInfo::FindCallerRegs<u_int64_t>(
-    const RegisterValueMap<u_int64_t> &registers,
+    RegisterValueMap<uint32_t> *caller_registers) const;
+template bool CFIFrameInfo::FindCallerRegs<uint64_t>(
+    const RegisterValueMap<uint64_t> &registers,
     const MemoryRegion &memory,
-    RegisterValueMap<u_int64_t> *caller_registers) const;
+    RegisterValueMap<uint64_t> *caller_registers) const;
 
 string CFIFrameInfo::Serialize() const {
   std::ostringstream stream;
@@ -128,7 +132,7 @@ string CFIFrameInfo::Serialize() const {
        name != rr_names.end();
        ++name) {
     const UniqueString* nm = *name;
-    Module::Expr rule = register_rules_.at(nm);
+    Module::Expr rule = register_rules_.find(nm)->second;
     if (static_cast<std::streamoff>(stream.tellp()) != 0)
       stream << " ";
     stream << FromUniqueString(nm) << ": " << rule;

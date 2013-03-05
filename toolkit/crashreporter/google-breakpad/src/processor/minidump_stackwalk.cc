@@ -84,7 +84,7 @@ static const char kOutputSeparator = '|';
 // of registers is completely printed, regardless of the number of calls
 // to PrintRegister.
 static const int kMaxWidth = 80;  // optimize for an 80-column terminal
-static int PrintRegister(const char *name, u_int32_t value, int start_col) {
+static int PrintRegister(const char *name, uint32_t value, int start_col) {
   char buffer[64];
   snprintf(buffer, sizeof(buffer), " %5s = 0x%08x", name, value);
 
@@ -98,7 +98,7 @@ static int PrintRegister(const char *name, u_int32_t value, int start_col) {
 }
 
 // PrintRegister64 does the same thing, but for 64-bit registers.
-static int PrintRegister64(const char *name, u_int64_t value, int start_col) {
+static int PrintRegister64(const char *name, uint64_t value, int start_col) {
   char buffer[64];
   snprintf(buffer, sizeof(buffer), " %5s = 0x%016" PRIx64 , name, value);
 
@@ -144,7 +144,7 @@ static void PrintStack(const CallStack *stack, const string &cpu) {
     const StackFrame *frame = stack->frames()->at(frame_index);
     printf("%2d  ", frame_index);
 
-    u_int64_t instruction_address = frame->ReturnAddress();
+    uint64_t instruction_address = frame->ReturnAddress();
 
     if (frame->module) {
       printf("%s", PathnameStripper::File(frame->module->code_file()).c_str());
@@ -288,7 +288,7 @@ static void PrintStackMachineReadable(int thread_num, const CallStack *stack) {
     printf("%d%c%d%c", thread_num, kOutputSeparator, frame_index,
            kOutputSeparator);
 
-    u_int64_t instruction_address = frame->ReturnAddress();
+    uint64_t instruction_address = frame->ReturnAddress();
 
     if (frame->module) {
       assert(!frame->module->code_file().empty());
@@ -340,7 +340,7 @@ static void PrintModules(const CodeModules *modules) {
   printf("\n");
   printf("Loaded modules:\n");
 
-  u_int64_t main_address = 0;
+  uint64_t main_address = 0;
   const CodeModule *main_module = modules->GetMainModule();
   if (main_module) {
     main_address = main_module->base_address();
@@ -351,7 +351,7 @@ static void PrintModules(const CodeModules *modules) {
        module_sequence < module_count;
        ++module_sequence) {
     const CodeModule *module = modules->GetModuleAtSequence(module_sequence);
-    u_int64_t base_address = module->base_address();
+    uint64_t base_address = module->base_address();
     printf("0x%08" PRIx64 " - 0x%08" PRIx64 "  %s  %s%s\n",
            base_address, base_address + module->size() - 1,
            PathnameStripper::File(module->code_file()).c_str(),
@@ -370,7 +370,7 @@ static void PrintModulesMachineReadable(const CodeModules *modules) {
   if (!modules)
     return;
 
-  u_int64_t main_address = 0;
+  uint64_t main_address = 0;
   const CodeModule *main_module = modules->GetMainModule();
   if (main_module) {
     main_address = main_module->base_address();
@@ -381,7 +381,7 @@ static void PrintModulesMachineReadable(const CodeModules *modules) {
        module_sequence < module_count;
        ++module_sequence) {
     const CodeModule *module = modules->GetModuleAtSequence(module_sequence);
-    u_int64_t base_address = module->base_address();
+    uint64_t base_address = module->base_address();
     printf("Module%c%s%c%s%c%s%c%s%c0x%08" PRIx64 "%c0x%08" PRIx64 "%c%d\n",
            kOutputSeparator,
            StripSeparator(PathnameStripper::File(module->code_file())).c_str(),

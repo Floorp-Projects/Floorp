@@ -333,7 +333,7 @@ void CPUFillFromThreadInfo(MDRawContextARM* out,
   out->cpsr = 0;
 #if !defined(__ANDROID__)
   out->float_save.fpscr = info.fpregs.fpsr |
-    (static_cast<u_int64_t>(info.fpregs.fpcr) << 32);
+    (static_cast<uint64_t>(info.fpregs.fpcr) << 32);
   // TODO: sort this out, actually collect floating point registers
   my_memset(&out->float_save.regs, 0, sizeof(out->float_save.regs));
   my_memset(&out->float_save.extra, 0, sizeof(out->float_save.extra));
@@ -535,8 +535,8 @@ class MinidumpWriter {
   void PopSeccompStackFrame(RawContextCPU* cpu, const MDRawThread& thread,
                             uint8_t* stack_copy) {
 #if defined(__x86_64)
-    u_int64_t bp = cpu->rbp;
-    u_int64_t top = thread.stack.start_of_memory_range;
+    uint64_t bp = cpu->rbp;
+    uint64_t top = thread.stack.start_of_memory_range;
     for (int i = 4; i--; ) {
       if (bp < top ||
           bp + sizeof(bp) > thread.stack.start_of_memory_range +
@@ -546,7 +546,7 @@ class MinidumpWriter {
       }
       uint64_t old_top = top;
       top = bp;
-      u_int8_t* bp_addr = stack_copy + bp - thread.stack.start_of_memory_range;
+      uint8_t* bp_addr = stack_copy + bp - thread.stack.start_of_memory_range;
       my_memcpy(&bp, bp_addr, sizeof(bp));
       if (bp == 0xDEADBEEFDEADBEEFull) {
         struct {
@@ -598,8 +598,8 @@ class MinidumpWriter {
       }
     }
 #elif defined(__i386)
-    u_int32_t bp = cpu->ebp;
-    u_int32_t top = thread.stack.start_of_memory_range;
+    uint32_t bp = cpu->ebp;
+    uint32_t top = thread.stack.start_of_memory_range;
     for (int i = 4; i--; ) {
       if (bp < top ||
           bp + sizeof(bp) > thread.stack.start_of_memory_range +
@@ -609,7 +609,7 @@ class MinidumpWriter {
       }
       uint32_t old_top = top;
       top = bp;
-      u_int8_t* bp_addr = stack_copy + bp - thread.stack.start_of_memory_range;
+      uint8_t* bp_addr = stack_copy + bp - thread.stack.start_of_memory_range;
       my_memcpy(&bp, bp_addr, sizeof(bp));
       if (bp == 0xDEADBEEFu) {
         struct {
@@ -721,7 +721,7 @@ class MinidumpWriter {
 
         // Copy 256 bytes around crashing instruction pointer to minidump.
         const size_t kIPMemorySize = 256;
-        u_int64_t ip = GetInstructionPointer();
+        uint64_t ip = GetInstructionPointer();
         // Bound it to the upper and lower bounds of the memory map
         // it's contained within. If it's not in mapped memory,
         // don't bother trying to write it.
@@ -921,7 +921,7 @@ class MinidumpWriter {
                      bool member,
                      unsigned int mapping_id,
                      MDRawModule& mod,
-                     const u_int8_t* identifier) {
+                     const uint8_t* identifier) {
     my_memset(&mod, 0, MD_MODULE_SIZE);
 
     mod.base_of_image = mapping.start_addr;
