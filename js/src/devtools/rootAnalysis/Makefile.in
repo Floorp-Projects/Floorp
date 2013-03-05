@@ -40,4 +40,36 @@ ANALYSIS_SCRIPT_DIR ?= $(srcdir)
 # Number of simultanous analyzeRoots.js scripts to run.
 JOBS ?= 6
 
-all: ; true
+all : rootingHazards.txt allFunctions.txt
+
+CALL_JS := time env PATH=$$PATH:$(SIXGILL)/bin XDB=$(SIXGILL)/bin/xdb.so $(JS) 
+
+src_body.xdb src_comp.xdb: run_complete
+	@echo Started compilation at $$(date)
+	$(ANALYSIS_SCRIPT_DIR)/run_complete --foreground --build-root=$(TARGET_JSOBJDIR) --work-dir=work -b $(SIXGILL)/bin $(shell pwd)
+	@echo Finished compilation at $$(date)
+
+callgraph.txt: src_body.xdb src_comp.xdb computeCallgraph.js
+	@echo Started computation of $@ at $$(date)
+	$(CALL_JS) $(ANALYSIS_SCRIPT_DIR)/computeCallgraph.js > $@
+	@echo Finished computation of $@ at $$(date)
+
+gcFunctions.txt: callgraph.txt computeGCFunctions.js annotations.js
+	@echo Started computation of $@ at $$(date)
+	$(CALL_JS) $(ANALYSIS_SCRIPT_DIR)/computeGCFunctions.js ./callgraph.txt > $@
+	@echo Finished computation of $@ at $$(date)
+
+gcTypes.txt: src_comp.xdb computeGCTypes.js annotations.js
+	@echo Started computation of $@ at $$(date)
+	$(CALL_JS) $(ANALYSIS_SCRIPT_DIR)/computeGCTypes.js > $@
+	@echo Finished computation of $@ at $$(date)
+
+allFunctions.txt: src_body.xdb
+	@echo Started computation of $@ at $$(date)
+	time $(SIXGILL)/bin/xdbkeys $^ > $@
+	@echo Finished computation of $@ at $$(date)
+
+rootingHazards.txt: gcFunctions.txt gcTypes.txt analyzeRoots.js annotations.js gen-hazards.sh
+	@echo Started computation of $@ at $$(date)
+	time env JS=$(JS) ANALYZE="$(ANALYSIS_SCRIPT_DIR)/analyzeRoots.js" SIXGILL="$(SIXGILL)" "$(ANALYSIS_SCRIPT_DIR)/gen-hazards.sh" $(JOBS) > $@
+	@echo Finished computation of $@ at $$(date)
