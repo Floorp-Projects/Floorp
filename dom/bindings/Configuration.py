@@ -328,11 +328,6 @@ class Descriptor(DescriptorProvider):
                     iface = iface.parent
         self.operations = operations
 
-        if self.interface.isExternal() and 'prefable' in desc:
-            raise TypeError("%s is external but has a prefable setting" %
-                            self.interface.identifier.name)
-        self.prefable = desc.get('prefable', False)
-
         if self.workers:
             if desc.get('nativeOwnership', 'worker') != 'worker':
                 raise TypeError("Worker descriptor for %s should have 'worker' "
@@ -351,10 +346,6 @@ class Descriptor(DescriptorProvider):
                              (self.workers or
                               (self.nativeOwnership != 'owned' and
                                desc.get('wrapperCache', True))))
-
-        if not self.wrapperCache and self.prefable:
-            raise TypeError("Descriptor for %s is prefable but not wrappercached" %
-                            self.interface.identifier.name)
 
         def make_name(name):
             return name + "_workers" if self.workers else name
