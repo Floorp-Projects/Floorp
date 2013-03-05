@@ -2850,6 +2850,15 @@ WebGLContext::GetVertexAttrib(JSContext* cx, WebGLuint index, WebGLenum pname,
             return JS::Int32Value(mAttribBuffers[index].stride);
 
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_SIZE:
+        {
+            if (!ValidateAttribIndex(index, "enableVertexAttribArray"))
+                return JS::NullValue();
+
+            if (!mAttribBuffers[index].enabled)
+                return JS::Int32Value(4);
+
+            // Don't break; fall through.
+        }
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_TYPE:
         {
             GLint i = 0;
