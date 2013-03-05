@@ -42,11 +42,12 @@
     ////////////////////////////////////////////////////////////////////////////
     // Test
 
-    //gA11yEventDumpToConsole = true; // debug stuff
+    gA11yEventDumpToConsole = true; // debug stuff
 
     var gQueue = null;
     function doTest()
     {
+      enableLogging("tree");
       gQueue = new eventQueue();
 
       gQueue.push(new takeFocusInvoker("aria-link"));
@@ -57,6 +58,7 @@
       gQueue.push(new takeFocusInvoker(document));
       gQueue.push(new takeFocusInvoker("lb_item2"));
 
+      gQueue.onFinish = function() { disableLogging(); }
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
