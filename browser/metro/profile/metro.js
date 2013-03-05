@@ -403,7 +403,6 @@ pref("breakpad.reportURL", "https://crash-stats.mozilla.com/report/index/");
 pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/mobile/%VERSION%/releasenotes/");
 pref("app.sync.tutorialURL", "https://support.mozilla.org/kb/sync-firefox-between-desktop-and-mobile");
 pref("app.support.baseURL", "http://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/");
-pref("app.feedbackURL", "http://input.mozilla.com/feedback/");
 pref("app.privacyURL", "http://www.mozilla.com/legal/privacy/");
 pref("app.creditsURL", "http://www.mozilla.org/credits/");
 pref("app.channelURL", "http://www.mozilla.org/%LOCALE%/firefox/channel/");
