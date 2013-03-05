@@ -1723,6 +1723,50 @@ add_test(function test_stk_event_download_idle_screen_available() {
 });
 
 /**
+ * Verify ICCIOHelper.loadLinearFixedEF with recordSize.
+ */
+add_test(function test_load_linear_fixed_ef() {
+  let worker = newUint8Worker();
+  let ril = worker.RIL;
+  let io = worker.ICCIOHelper;
+
+  io.getResponse = function fakeGetResponse(options) {
+    // When recordSize is provided, loadLinearFixedEF should call iccIO directly.
+    do_check_true(false);
+    run_next_test();
+  };
+
+  ril.iccIO = function fakeIccIO(options) {
+    do_check_true(true);
+    run_next_test();
+  };
+
+  io.loadLinearFixedEF({recordSize: 0x20});
+});
+
+/**
+ * Verify ICCIOHelper.loadLinearFixedEF without recordSize.
+ */
+add_test(function test_load_linear_fixed_ef() {
+  let worker = newUint8Worker();
+  let ril = worker.RIL;
+  let io = worker.ICCIOHelper;
+
+  io.getResponse = function fakeGetResponse(options) {
+    do_check_true(true);
+    run_next_test();
+  };
+
+  ril.iccIO = function fakeIccIO(options) {
+    // When recordSize is not provided, loadLinearFixedEF should call getResponse.
+    do_check_true(false);
+    run_next_test();
+  };
+
+  io.loadLinearFixedEF({});
+});
+
+/**
  * Verify ICCRecordHelper.readEmail
  */
 add_test(function test_read_email() {
@@ -1731,6 +1775,7 @@ add_test(function test_read_email() {
   let record = worker.ICCRecordHelper;
   let buf    = worker.Buf;
   let io     = worker.ICCIOHelper;
+  let recordSize;
 
   io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options)  {
     let email_1 = [
@@ -1750,6 +1795,8 @@ add_test(function test_read_email() {
     // Write string delimiter
     buf.writeStringDelimiter(email_1.length * 2);
 
+    recordSize = email_1.length;
+    options.recordSize = recordSize;
     if (options.callback) {
       options.callback(options);
     }
@@ -1767,6 +1814,7 @@ add_test(function test_read_email() {
 
   doTestReadEmail(ICC_USIM_TYPE1_TAG, "email@mozilla.com$#");
   doTestReadEmail(ICC_USIM_TYPE2_TAG, "email@mozilla.com");
+  do_check_eq(record._emailRecordSize, recordSize);
 
   run_next_test();
 });
@@ -1780,6 +1828,7 @@ add_test(function test_read_email() {
   let record = worker.ICCRecordHelper;
   let buf    = worker.Buf;
   let io     = worker.ICCIOHelper;
+  let recordSize;
 
   io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options)  {
     let anr_1 = [
@@ -1797,6 +1846,8 @@ add_test(function test_read_email() {
     // Write string delimiter
     buf.writeStringDelimiter(anr_1.length * 2);
 
+    recordSize = anr_1.length;
+    options.recordSize = recordSize;
     if (options.callback) {
       options.callback(options);
     }
@@ -1813,6 +1864,7 @@ add_test(function test_read_email() {
   };
 
   doTestReadAnr(ICC_USIM_TYPE1_TAG, "0123456");
+  do_check_eq(record._anrRecordSize, recordSize);
 
   run_next_test();
 });
