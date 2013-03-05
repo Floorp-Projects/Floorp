@@ -56,7 +56,7 @@
 namespace google_breakpad {
 
 const int Stackwalker::kRASearchWords = 30;
-u_int32_t Stackwalker::max_frames_ = 1024;
+uint32_t Stackwalker::max_frames_ = 1024;
 
 Stackwalker::Stackwalker(const SystemInfo* system_info,
                          MemoryRegion* memory,
@@ -125,7 +125,7 @@ Stackwalker* Stackwalker::StackwalkerForCPU(
 
   Stackwalker* cpu_stackwalker = NULL;
 
-  u_int32_t cpu = context->GetContextCPU();
+  uint32_t cpu = context->GetContextCPU();
   switch (cpu) {
     case MD_CONTEXT_X86:
       cpu_stackwalker = new StackwalkerX86(system_info,
@@ -168,7 +168,7 @@ Stackwalker* Stackwalker::StackwalkerForCPU(
   return cpu_stackwalker;
 }
 
-bool Stackwalker::InstructionAddressSeemsValid(u_int64_t address) {
+bool Stackwalker::InstructionAddressSeemsValid(uint64_t address) {
   StackFrame frame;
   frame.instruction = address;
   StackFrameSymbolizer::SymbolizerResult symbolizer_result =

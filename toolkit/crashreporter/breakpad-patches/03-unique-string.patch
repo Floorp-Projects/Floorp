@@ -2,14 +2,19 @@
 # User Ted Mielczarek <ted.mielczarek@gmail.com>
 # Date 1360255134 18000
 # Node ID 229852c0b835929a56f207996034cf072307b343
-# Parent  dc6d795f6d0b9357f39ac2a291be4e1c533d3c09
+# Parent c53ab35ef4dce39824c2d8103f75faccb4c380e9
 Rework PostfixEvaluator to use a UniqueString type
 R=ted
 
 diff --git a/Makefile.am b/Makefile.am
 --- a/Makefile.am
 +++ b/Makefile.am
-@@ -139,6 +139,7 @@
+@@ -134,16 +134,17 @@
+ 	src/google_breakpad/processor/source_line_resolver_interface.h \
+ 	src/google_breakpad/processor/stack_frame.h \
+ 	src/google_breakpad/processor/stack_frame_cpu.h \
+ 	src/google_breakpad/processor/stack_frame_symbolizer.h \
+ 	src/google_breakpad/processor/stackwalker.h \
  	src/google_breakpad/processor/symbol_supplier.h \
  	src/google_breakpad/processor/system_info.h \
  	src/common/module.cc \
@@ -17,7 +22,17 @@ diff --git a/Makefile.am b/Makefile.am
  	src/processor/address_map-inl.h \
  	src/processor/address_map.h \
  	src/processor/basic_code_module.h \
-@@ -431,6 +432,7 @@
+ 	src/processor/basic_code_modules.cc \
+ 	src/processor/basic_code_modules.h \
+ 	src/processor/basic_source_line_resolver_types.h \
+ 	src/processor/basic_source_line_resolver.cc \
+ 	src/processor/binarystream.h \
+@@ -426,16 +427,17 @@
+ src_tools_linux_dump_syms_dump_syms_SOURCES = \
+ 	src/common/dwarf_cfi_to_module.cc \
+ 	src/common/dwarf_cu_to_module.cc \
+ 	src/common/dwarf_line_to_module.cc \
+ 	src/common/language.cc \
  	src/common/module.cc \
  	src/common/stabs_reader.cc \
  	src/common/stabs_to_module.cc \
@@ -25,7 +40,17 @@ diff --git a/Makefile.am b/Makefile.am
  	src/common/dwarf/bytereader.cc \
  	src/common/dwarf/dwarf2diehandler.cc \
  	src/common/dwarf/dwarf2reader.cc \
-@@ -474,6 +476,7 @@
+ 	src/common/linux/dump_symbols.cc \
+ 	src/common/linux/elf_symbols_to_module.cc \
+ 	src/common/linux/elfutils.cc \
+ 	src/common/linux/file_id.cc \
+ 	src/common/linux/linux_libc_support.cc \
+@@ -469,16 +471,17 @@
+ 	src/common/memory_range_unittest.cc \
+ 	src/common/module.cc \
+ 	src/common/module_unittest.cc \
+ 	src/common/stabs_reader.cc \
+ 	src/common/stabs_reader_unittest.cc \
  	src/common/stabs_to_module.cc \
  	src/common/stabs_to_module_unittest.cc \
  	src/common/test_assembler.cc \
@@ -33,7 +58,17 @@ diff --git a/Makefile.am b/Makefile.am
  	src/common/dwarf/bytereader.cc \
  	src/common/dwarf/bytereader_unittest.cc \
  	src/common/dwarf/cfi_assembler.cc \
-@@ -562,6 +565,7 @@
+ 	src/common/dwarf/dwarf2diehandler.cc \
+ 	src/common/dwarf/dwarf2diehandler_unittest.cc \
+ 	src/common/dwarf/dwarf2reader.cc \
+ 	src/common/dwarf/dwarf2reader_cfi_unittest.cc \
+ 	src/common/dwarf/dwarf2reader_die_unittest.cc \
+@@ -557,31 +560,33 @@
+ src_processor_basic_source_line_resolver_unittest_CPPFLAGS = \
+ 	-I$(top_srcdir)/src \
+ 	-I$(top_srcdir)/src/testing/include \
+ 	-I$(top_srcdir)/src/testing/gtest/include \
+ 	-I$(top_srcdir)/src/testing/gtest \
  	-I$(top_srcdir)/src/testing
  src_processor_basic_source_line_resolver_unittest_LDADD = \
  	src/common/module.o \
@@ -41,7 +76,15 @@ diff --git a/Makefile.am b/Makefile.am
  	src/processor/basic_source_line_resolver.o \
  	src/processor/cfi_frame_info.o \
  	src/processor/pathname_stripper.o \
-@@ -577,6 +581,7 @@
+ 	src/processor/logging.o \
+ 	src/processor/source_line_resolver_base.o \
+ 	src/processor/tokenize.o \
+ 	$(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
+ 
+ src_processor_cfi_frame_info_unittest_SOURCES = \
+ 	src/processor/cfi_frame_info_unittest.cc \
+ 	src/testing/gtest/src/gtest-all.cc \
+ 	src/testing/gtest/src/gtest_main.cc \
  	src/testing/src/gmock-all.cc
  src_processor_cfi_frame_info_unittest_LDADD = \
  	src/common/module.o \
@@ -49,7 +92,17 @@ diff --git a/Makefile.am b/Makefile.am
  	src/processor/cfi_frame_info.o \
  	src/processor/logging.o \
  	src/processor/pathname_stripper.o \
-@@ -607,6 +612,7 @@
+ 	$(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
+ src_processor_cfi_frame_info_unittest_CPPFLAGS = \
+ 	-I$(top_srcdir)/src \
+ 	-I$(top_srcdir)/src/testing/include \
+ 	-I$(top_srcdir)/src/testing/gtest/include \
+@@ -602,16 +607,17 @@
+ src_processor_exploitability_unittest_CPPFLAGS = \
+ 	-I$(top_srcdir)/src \
+ 	-I$(top_srcdir)/src/testing/include \
+ 	-I$(top_srcdir)/src/testing/gtest/include \
+ 	-I$(top_srcdir)/src/testing/gtest \
  	-I$(top_srcdir)/src/testing
  src_processor_exploitability_unittest_LDADD = \
  	src/common/module.o \
@@ -57,7 +110,17 @@ diff --git a/Makefile.am b/Makefile.am
  	src/processor/minidump_processor.o \
  	src/processor/process_state.o \
  	src/processor/disassembler_x86.o \
-@@ -659,6 +665,7 @@
+ 	src/processor/exploitability.o \
+ 	src/processor/exploitability_win.o \
+ 	src/processor/basic_code_modules.o \
+ 	src/processor/basic_source_line_resolver.o \
+ 	src/processor/call_stack.o \
+@@ -654,16 +660,17 @@
+ src_processor_fast_source_line_resolver_unittest_CPPFLAGS = \
+ 	-I$(top_srcdir)/src \
+ 	-I$(top_srcdir)/src/testing/include \
+ 	-I$(top_srcdir)/src/testing/gtest/include \
+ 	-I$(top_srcdir)/src/testing/gtest \
  	-I$(top_srcdir)/src/testing
  src_processor_fast_source_line_resolver_unittest_LDADD = \
  	src/common/module.o \
@@ -65,7 +128,17 @@ diff --git a/Makefile.am b/Makefile.am
  	src/processor/fast_source_line_resolver.o \
  	src/processor/basic_source_line_resolver.o \
  	src/processor/cfi_frame_info.o \
-@@ -697,6 +704,7 @@
+ 	src/processor/module_comparer.o \
+ 	src/processor/module_serializer.o \
+ 	src/processor/pathname_stripper.o \
+ 	src/processor/logging.o \
+ 	src/processor/source_line_resolver_base.o \
+@@ -692,16 +699,17 @@
+ src_processor_minidump_processor_unittest_CPPFLAGS = \
+ 	-I$(top_srcdir)/src \
+ 	-I$(top_srcdir)/src/testing/include \
+ 	-I$(top_srcdir)/src/testing/gtest/include \
+ 	-I$(top_srcdir)/src/testing/gtest \
  	-I$(top_srcdir)/src/testing
  src_processor_minidump_processor_unittest_LDADD = \
  	src/common/module.o \
@@ -73,7 +146,17 @@ diff --git a/Makefile.am b/Makefile.am
  	src/processor/basic_code_modules.o \
  	src/processor/basic_source_line_resolver.o \
  	src/processor/call_stack.o \
-@@ -811,6 +819,7 @@
+ 	src/processor/cfi_frame_info.o \
+ 	src/processor/disassembler_x86.o \
+ 	src/processor/exploitability.o \
+ 	src/processor/exploitability_win.o \
+ 	src/processor/logging.o \
+@@ -806,16 +814,17 @@
+ src_processor_pathname_stripper_unittest_LDADD = \
+ 	src/processor/pathname_stripper.o \
+ 	$(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
+ 
+ src_processor_postfix_evaluator_unittest_SOURCES = \
  	src/processor/postfix_evaluator_unittest.cc
  src_processor_postfix_evaluator_unittest_LDADD = \
  	src/common/module.o \
@@ -81,7 +164,17 @@ diff --git a/Makefile.am b/Makefile.am
  	src/processor/logging.o \
  	src/processor/pathname_stripper.o \
  	$(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
-@@ -941,6 +950,7 @@
+ 
+ src_processor_range_map_unittest_SOURCES = \
+ 	src/processor/range_map_unittest.cc
+ src_processor_range_map_unittest_LDADD = \
+ 	src/processor/logging.o \
+@@ -936,16 +945,17 @@
+ 	src/processor/logging.o \
+ 	src/processor/minidump.o \
+ 	src/processor/pathname_stripper.o
+ 
+ src_processor_minidump_stackwalk_SOURCES = \
  	src/processor/minidump_stackwalk.cc
  src_processor_minidump_stackwalk_LDADD = \
  	src/common/module.o \
@@ -89,10 +182,20 @@ diff --git a/Makefile.am b/Makefile.am
  	src/processor/basic_code_modules.o \
  	src/processor/basic_source_line_resolver.o \
  	src/processor/binarystream.o \
+ 	src/processor/call_stack.o \
+ 	src/processor/cfi_frame_info.o \
+ 	src/processor/disassembler_x86.o \
+ 	src/processor/exploitability.o \
+ 	src/processor/exploitability_win.o \
 diff --git a/Makefile.in b/Makefile.in
 --- a/Makefile.in
 +++ b/Makefile.in
-@@ -272,8 +272,9 @@
+@@ -267,18 +267,19 @@
+ 	src/google_breakpad/processor/source_line_resolver_base.h \
+ 	src/google_breakpad/processor/source_line_resolver_interface.h \
+ 	src/google_breakpad/processor/stack_frame.h \
+ 	src/google_breakpad/processor/stack_frame_cpu.h \
+ 	src/google_breakpad/processor/stack_frame_symbolizer.h \
  	src/google_breakpad/processor/stackwalker.h \
  	src/google_breakpad/processor/symbol_supplier.h \
  	src/google_breakpad/processor/system_info.h \
@@ -104,7 +207,17 @@ diff --git a/Makefile.in b/Makefile.in
  	src/processor/basic_code_modules.cc \
  	src/processor/basic_code_modules.h \
  	src/processor/basic_source_line_resolver_types.h \
-@@ -335,6 +336,7 @@
+ 	src/processor/basic_source_line_resolver.cc \
+ 	src/processor/binarystream.h src/processor/binarystream.cc \
+ 	src/processor/call_stack.cc src/processor/cfi_frame_info.cc \
+ 	src/processor/cfi_frame_info.h \
+ 	src/processor/contained_range_map-inl.h \
+@@ -330,16 +331,17 @@
+ 	src/processor/static_map_iterator-inl.h \
+ 	src/processor/static_map_iterator.h \
+ 	src/processor/static_map-inl.h src/processor/static_map.h \
+ 	src/processor/static_range_map-inl.h \
+ 	src/processor/static_range_map.h src/processor/tokenize.cc \
  	src/processor/tokenize.h
  @DISABLE_PROCESSOR_FALSE@am_src_libbreakpad_a_OBJECTS =  \
  @DISABLE_PROCESSOR_FALSE@	src/common/module.$(OBJEXT) \
@@ -112,7 +225,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_code_modules.$(OBJEXT) \
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.$(OBJEXT) \
  @DISABLE_PROCESSOR_FALSE@	src/processor/binarystream.$(OBJEXT) \
-@@ -523,7 +525,8 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/call_stack.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/disassembler_x86.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability_win.$(OBJEXT) \
+@@ -518,17 +520,18 @@
+ 	src/common/dwarf_cu_to_module_unittest.cc \
+ 	src/common/dwarf_line_to_module.cc \
+ 	src/common/dwarf_line_to_module_unittest.cc \
+ 	src/common/language.cc src/common/memory_range_unittest.cc \
+ 	src/common/module.cc src/common/module_unittest.cc \
  	src/common/stabs_reader.cc src/common/stabs_reader_unittest.cc \
  	src/common/stabs_to_module.cc \
  	src/common/stabs_to_module_unittest.cc \
@@ -122,7 +245,17 @@ diff --git a/Makefile.in b/Makefile.in
  	src/common/dwarf/bytereader_unittest.cc \
  	src/common/dwarf/cfi_assembler.cc \
  	src/common/dwarf/dwarf2diehandler.cc \
-@@ -567,6 +570,7 @@
+ 	src/common/dwarf/dwarf2diehandler_unittest.cc \
+ 	src/common/dwarf/dwarf2reader.cc \
+ 	src/common/dwarf/dwarf2reader_cfi_unittest.cc \
+ 	src/common/dwarf/dwarf2reader_die_unittest.cc \
+ 	src/common/linux/dump_symbols.cc \
+@@ -562,16 +565,17 @@
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/src_common_dumper_unittest-memory_range_unittest.$(OBJEXT) \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/src_common_dumper_unittest-module.$(OBJEXT) \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/src_common_dumper_unittest-module_unittest.$(OBJEXT) \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/src_common_dumper_unittest-stabs_reader.$(OBJEXT) \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/src_common_dumper_unittest-stabs_reader_unittest.$(OBJEXT) \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/src_common_dumper_unittest-stabs_to_module.$(OBJEXT) \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/src_common_dumper_unittest-stabs_to_module_unittest.$(OBJEXT) \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/src_common_dumper_unittest-test_assembler.$(OBJEXT) \
@@ -130,7 +263,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/src_common_dumper_unittest-bytereader.$(OBJEXT) \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/src_common_dumper_unittest-bytereader_unittest.$(OBJEXT) \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/src_common_dumper_unittest-cfi_assembler.$(OBJEXT) \
-@@ -635,6 +639,7 @@
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/src_common_dumper_unittest-dwarf2diehandler.$(OBJEXT) \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/src_common_dumper_unittest-dwarf2diehandler_unittest.$(OBJEXT) \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/src_common_dumper_unittest-dwarf2reader.$(OBJEXT) \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/src_common_dumper_unittest-dwarf2reader_cfi_unittest.$(OBJEXT) \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/src_common_dumper_unittest-dwarf2reader_die_unittest.$(OBJEXT) \
+@@ -630,16 +634,17 @@
+ 	src/testing/gtest/src/gtest-all.cc \
+ 	src/testing/src/gmock-all.cc
+ @DISABLE_PROCESSOR_FALSE@am_src_processor_basic_source_line_resolver_unittest_OBJECTS = src/processor/src_processor_basic_source_line_resolver_unittest-basic_source_line_resolver_unittest.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/src_processor_basic_source_line_resolver_unittest-gtest-all.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/src/src_processor_basic_source_line_resolver_unittest-gmock-all.$(OBJEXT)
  src_processor_basic_source_line_resolver_unittest_OBJECTS = $(am_src_processor_basic_source_line_resolver_unittest_OBJECTS)
  @DISABLE_PROCESSOR_FALSE@src_processor_basic_source_line_resolver_unittest_DEPENDENCIES =  \
  @DISABLE_PROCESSOR_FALSE@	src/common/module.o \
@@ -138,7 +281,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o \
-@@ -669,6 +674,7 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/source_line_resolver_base.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/tokenize.o \
+ @DISABLE_PROCESSOR_FALSE@	$(am__DEPENDENCIES_1) \
+ @DISABLE_PROCESSOR_FALSE@	$(am__DEPENDENCIES_1)
+@@ -664,16 +669,17 @@
+ @DISABLE_PROCESSOR_FALSE@am_src_processor_cfi_frame_info_unittest_OBJECTS = src/processor/src_processor_cfi_frame_info_unittest-cfi_frame_info_unittest.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/src_processor_cfi_frame_info_unittest-gtest-all.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/src_processor_cfi_frame_info_unittest-gtest_main.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/src/src_processor_cfi_frame_info_unittest-gmock-all.$(OBJEXT)
+ src_processor_cfi_frame_info_unittest_OBJECTS =  \
  	$(am_src_processor_cfi_frame_info_unittest_OBJECTS)
  @DISABLE_PROCESSOR_FALSE@src_processor_cfi_frame_info_unittest_DEPENDENCIES =  \
  @DISABLE_PROCESSOR_FALSE@	src/common/module.o \
@@ -146,7 +299,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o \
-@@ -711,6 +717,7 @@
+ @DISABLE_PROCESSOR_FALSE@	$(am__DEPENDENCIES_1) \
+ @DISABLE_PROCESSOR_FALSE@	$(am__DEPENDENCIES_1)
+ am__src_processor_contained_range_map_unittest_SOURCES_DIST =  \
+ 	src/processor/contained_range_map_unittest.cc
+ @DISABLE_PROCESSOR_FALSE@am_src_processor_contained_range_map_unittest_OBJECTS = src/processor/contained_range_map_unittest.$(OBJEXT)
+@@ -706,16 +712,17 @@
+ @DISABLE_PROCESSOR_FALSE@am_src_processor_exploitability_unittest_OBJECTS = src/processor/src_processor_exploitability_unittest-exploitability_unittest.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/src_processor_exploitability_unittest-gtest-all.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/src_processor_exploitability_unittest-gtest_main.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/src/src_processor_exploitability_unittest-gmock-all.$(OBJEXT)
+ src_processor_exploitability_unittest_OBJECTS =  \
  	$(am_src_processor_exploitability_unittest_OBJECTS)
  @DISABLE_PROCESSOR_FALSE@src_processor_exploitability_unittest_DEPENDENCIES =  \
  @DISABLE_PROCESSOR_FALSE@	src/common/module.o \
@@ -154,7 +317,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/minidump_processor.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/process_state.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/disassembler_x86.o \
-@@ -745,6 +752,7 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability_win.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/basic_code_modules.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/call_stack.o \
+@@ -740,16 +747,17 @@
+ 	src/testing/gtest/src/gtest-all.cc \
+ 	src/testing/src/gmock-all.cc
+ @DISABLE_PROCESSOR_FALSE@am_src_processor_fast_source_line_resolver_unittest_OBJECTS = src/processor/src_processor_fast_source_line_resolver_unittest-fast_source_line_resolver_unittest.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/src_processor_fast_source_line_resolver_unittest-gtest-all.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/src/src_processor_fast_source_line_resolver_unittest-gmock-all.$(OBJEXT)
  src_processor_fast_source_line_resolver_unittest_OBJECTS = $(am_src_processor_fast_source_line_resolver_unittest_OBJECTS)
  @DISABLE_PROCESSOR_FALSE@src_processor_fast_source_line_resolver_unittest_DEPENDENCIES =  \
  @DISABLE_PROCESSOR_FALSE@	src/common/module.o \
@@ -162,7 +335,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/fast_source_line_resolver.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info.o \
-@@ -791,6 +799,7 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/module_comparer.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/module_serializer.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/source_line_resolver_base.o \
+@@ -786,16 +794,17 @@
+ 	src/testing/src/gmock-all.cc
+ @DISABLE_PROCESSOR_FALSE@am_src_processor_minidump_processor_unittest_OBJECTS = src/processor/src_processor_minidump_processor_unittest-minidump_processor_unittest.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/src_processor_minidump_processor_unittest-gtest-all.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/src/src_processor_minidump_processor_unittest-gmock-all.$(OBJEXT)
+ src_processor_minidump_processor_unittest_OBJECTS =  \
  	$(am_src_processor_minidump_processor_unittest_OBJECTS)
  @DISABLE_PROCESSOR_FALSE@src_processor_minidump_processor_unittest_DEPENDENCIES =  \
  @DISABLE_PROCESSOR_FALSE@	src/common/module.o \
@@ -170,7 +353,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_code_modules.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/call_stack.o \
-@@ -822,6 +831,7 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/disassembler_x86.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability_win.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
+@@ -817,16 +826,17 @@
+ @DISABLE_PROCESSOR_FALSE@	$(am__DEPENDENCIES_1)
+ am__src_processor_minidump_stackwalk_SOURCES_DIST =  \
+ 	src/processor/minidump_stackwalk.cc
+ @DISABLE_PROCESSOR_FALSE@am_src_processor_minidump_stackwalk_OBJECTS = src/processor/minidump_stackwalk.$(OBJEXT)
+ src_processor_minidump_stackwalk_OBJECTS =  \
  	$(am_src_processor_minidump_stackwalk_OBJECTS)
  @DISABLE_PROCESSOR_FALSE@src_processor_minidump_stackwalk_DEPENDENCIES =  \
  @DISABLE_PROCESSOR_FALSE@	src/common/module.o \
@@ -178,7 +371,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_code_modules.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/binarystream.o \
-@@ -884,6 +894,7 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/call_stack.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/disassembler_x86.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability_win.o \
+@@ -879,16 +889,17 @@
+ @DISABLE_PROCESSOR_FALSE@	$(am__DEPENDENCIES_1)
+ am__src_processor_postfix_evaluator_unittest_SOURCES_DIST =  \
+ 	src/processor/postfix_evaluator_unittest.cc
+ @DISABLE_PROCESSOR_FALSE@am_src_processor_postfix_evaluator_unittest_OBJECTS = src/processor/postfix_evaluator_unittest.$(OBJEXT)
+ src_processor_postfix_evaluator_unittest_OBJECTS =  \
  	$(am_src_processor_postfix_evaluator_unittest_OBJECTS)
  @DISABLE_PROCESSOR_FALSE@src_processor_postfix_evaluator_unittest_DEPENDENCIES =  \
  @DISABLE_PROCESSOR_FALSE@	src/common/module.o \
@@ -186,7 +389,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o \
  @DISABLE_PROCESSOR_FALSE@	$(am__DEPENDENCIES_1) \
-@@ -1063,7 +1074,8 @@
+ @DISABLE_PROCESSOR_FALSE@	$(am__DEPENDENCIES_1)
+ am__src_processor_range_map_unittest_SOURCES_DIST =  \
+ 	src/processor/range_map_unittest.cc
+ @DISABLE_PROCESSOR_FALSE@am_src_processor_range_map_unittest_OBJECTS = src/processor/range_map_unittest.$(OBJEXT)
+ src_processor_range_map_unittest_OBJECTS =  \
+@@ -1058,33 +1069,35 @@
+ src_tools_linux_core2md_core2md_OBJECTS =  \
+ 	$(am_src_tools_linux_core2md_core2md_OBJECTS)
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@src_tools_linux_core2md_core2md_DEPENDENCIES = src/client/linux/libbreakpad_client.a
+ am__src_tools_linux_dump_syms_dump_syms_SOURCES_DIST =  \
+ 	src/common/dwarf_cfi_to_module.cc \
  	src/common/dwarf_cu_to_module.cc \
  	src/common/dwarf_line_to_module.cc src/common/language.cc \
  	src/common/module.cc src/common/stabs_reader.cc \
@@ -196,7 +409,16 @@ diff --git a/Makefile.in b/Makefile.in
  	src/common/dwarf/dwarf2diehandler.cc \
  	src/common/dwarf/dwarf2reader.cc \
  	src/common/linux/dump_symbols.cc \
-@@ -1080,6 +1092,7 @@
+ 	src/common/linux/elf_symbols_to_module.cc \
+ 	src/common/linux/elfutils.cc src/common/linux/file_id.cc \
+ 	src/common/linux/linux_libc_support.cc \
+ 	src/common/linux/memory_mapped_file.cc \
+ 	src/common/linux/safe_readlink.cc \
+ 	src/tools/linux/dump_syms/dump_syms.cc
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@am_src_tools_linux_dump_syms_dump_syms_OBJECTS = src/common/dwarf_cfi_to_module.$(OBJEXT) \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf_cu_to_module.$(OBJEXT) \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf_line_to_module.$(OBJEXT) \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/language.$(OBJEXT) \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/module.$(OBJEXT) \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/stabs_reader.$(OBJEXT) \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/stabs_to_module.$(OBJEXT) \
@@ -204,7 +426,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/bytereader.$(OBJEXT) \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/dwarf2diehandler.$(OBJEXT) \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/dwarf2reader.$(OBJEXT) \
-@@ -1410,6 +1423,7 @@
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/linux/dump_symbols.$(OBJEXT) \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/linux/elf_symbols_to_module.$(OBJEXT) \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/linux/elfutils.$(OBJEXT) \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/linux/file_id.$(OBJEXT) \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/linux/linux_libc_support.$(OBJEXT) \
+@@ -1405,16 +1418,17 @@
+ @DISABLE_PROCESSOR_FALSE@	src/google_breakpad/processor/source_line_resolver_interface.h \
+ @DISABLE_PROCESSOR_FALSE@	src/google_breakpad/processor/stack_frame.h \
+ @DISABLE_PROCESSOR_FALSE@	src/google_breakpad/processor/stack_frame_cpu.h \
+ @DISABLE_PROCESSOR_FALSE@	src/google_breakpad/processor/stack_frame_symbolizer.h \
+ @DISABLE_PROCESSOR_FALSE@	src/google_breakpad/processor/stackwalker.h \
  @DISABLE_PROCESSOR_FALSE@	src/google_breakpad/processor/symbol_supplier.h \
  @DISABLE_PROCESSOR_FALSE@	src/google_breakpad/processor/system_info.h \
  @DISABLE_PROCESSOR_FALSE@	src/common/module.cc \
@@ -212,7 +444,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/address_map-inl.h \
  @DISABLE_PROCESSOR_FALSE@	src/processor/address_map.h \
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_code_module.h \
-@@ -1608,6 +1622,7 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/basic_code_modules.cc \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/basic_code_modules.h \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver_types.h \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.cc \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/binarystream.h \
+@@ -1603,16 +1617,17 @@
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@src_tools_linux_dump_syms_dump_syms_SOURCES = \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf_cfi_to_module.cc \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf_cu_to_module.cc \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf_line_to_module.cc \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/language.cc \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/module.cc \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/stabs_reader.cc \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/stabs_to_module.cc \
@@ -220,7 +462,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/bytereader.cc \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/dwarf2diehandler.cc \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/dwarf2reader.cc \
-@@ -1651,6 +1666,7 @@
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/linux/dump_symbols.cc \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/linux/elf_symbols_to_module.cc \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/linux/elfutils.cc \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/linux/file_id.cc \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/linux/linux_libc_support.cc \
+@@ -1646,16 +1661,17 @@
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/memory_range_unittest.cc \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/module.cc \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/module_unittest.cc \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/stabs_reader.cc \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/stabs_reader_unittest.cc \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/stabs_to_module.cc \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/stabs_to_module_unittest.cc \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/test_assembler.cc \
@@ -228,7 +480,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/bytereader.cc \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/bytereader_unittest.cc \
  @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/cfi_assembler.cc \
-@@ -1743,6 +1759,7 @@
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/dwarf2diehandler.cc \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/dwarf2diehandler_unittest.cc \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/dwarf2reader.cc \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/dwarf2reader_cfi_unittest.cc \
+ @DISABLE_TOOLS_FALSE@@LINUX_HOST_TRUE@	src/common/dwarf/dwarf2reader_die_unittest.cc \
+@@ -1738,32 +1754,34 @@
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/include \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/gtest/include \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/gtest \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing
  
  @DISABLE_PROCESSOR_FALSE@src_processor_basic_source_line_resolver_unittest_LDADD = \
  @DISABLE_PROCESSOR_FALSE@	src/common/module.o \
@@ -236,7 +498,16 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o \
-@@ -1759,6 +1776,7 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/source_line_resolver_base.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/tokenize.o \
+ @DISABLE_PROCESSOR_FALSE@	$(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
+ 
+ @DISABLE_PROCESSOR_FALSE@src_processor_cfi_frame_info_unittest_SOURCES = \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info_unittest.cc \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/gtest-all.cc \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/gtest_main.cc \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/src/gmock-all.cc
  
  @DISABLE_PROCESSOR_FALSE@src_processor_cfi_frame_info_unittest_LDADD = \
  @DISABLE_PROCESSOR_FALSE@	src/common/module.o \
@@ -244,7 +515,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o \
-@@ -1793,6 +1811,7 @@
+ @DISABLE_PROCESSOR_FALSE@	$(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
+ 
+ @DISABLE_PROCESSOR_FALSE@src_processor_cfi_frame_info_unittest_CPPFLAGS = \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/include \
+@@ -1788,16 +1806,17 @@
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/include \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/gtest/include \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/gtest \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing
  
  @DISABLE_PROCESSOR_FALSE@src_processor_exploitability_unittest_LDADD = \
  @DISABLE_PROCESSOR_FALSE@	src/common/module.o \
@@ -252,7 +533,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/minidump_processor.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/process_state.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/disassembler_x86.o \
-@@ -1849,6 +1868,7 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability_win.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/basic_code_modules.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/call_stack.o \
+@@ -1844,16 +1863,17 @@
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/include \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/gtest/include \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/gtest \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing
  
  @DISABLE_PROCESSOR_FALSE@src_processor_fast_source_line_resolver_unittest_LDADD = \
  @DISABLE_PROCESSOR_FALSE@	src/common/module.o \
@@ -260,7 +551,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/fast_source_line_resolver.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info.o \
-@@ -1891,6 +1911,7 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/module_comparer.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/module_serializer.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/source_line_resolver_base.o \
+@@ -1886,16 +1906,17 @@
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/include \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/gtest/include \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/gtest \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing
  
  @DISABLE_PROCESSOR_FALSE@src_processor_minidump_processor_unittest_LDADD = \
  @DISABLE_PROCESSOR_FALSE@	src/common/module.o \
@@ -268,7 +569,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_code_modules.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/call_stack.o \
-@@ -2017,6 +2038,7 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/disassembler_x86.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability_win.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
+@@ -2012,16 +2033,17 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o \
+ @DISABLE_PROCESSOR_FALSE@	$(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
+ 
+ @DISABLE_PROCESSOR_FALSE@src_processor_postfix_evaluator_unittest_SOURCES = \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/postfix_evaluator_unittest.cc
  
  @DISABLE_PROCESSOR_FALSE@src_processor_postfix_evaluator_unittest_LDADD = \
  @DISABLE_PROCESSOR_FALSE@	src/common/module.o \
@@ -276,7 +587,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o \
  @DISABLE_PROCESSOR_FALSE@	$(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
-@@ -2156,6 +2178,7 @@
+ 
+ @DISABLE_PROCESSOR_FALSE@src_processor_range_map_unittest_SOURCES = \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/range_map_unittest.cc
+ 
+ @DISABLE_PROCESSOR_FALSE@src_processor_range_map_unittest_LDADD = \
+@@ -2151,16 +2173,17 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/minidump.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o
+ 
+ @DISABLE_PROCESSOR_FALSE@src_processor_minidump_stackwalk_SOURCES = \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/minidump_stackwalk.cc
  
  @DISABLE_PROCESSOR_FALSE@src_processor_minidump_stackwalk_LDADD = \
  @DISABLE_PROCESSOR_FALSE@	src/common/module.o \
@@ -284,7 +605,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_code_modules.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/binarystream.o \
-@@ -2513,6 +2536,8 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/call_stack.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/disassembler_x86.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability_win.o \
+@@ -2508,16 +2531,18 @@
+ 	@$(MKDIR_P) src/client/linux
+ 	@: > src/client/linux/$(am__dirstamp)
+ src/client/linux/libbreakpad_client.a: $(src_client_linux_libbreakpad_client_a_OBJECTS) $(src_client_linux_libbreakpad_client_a_DEPENDENCIES) $(EXTRA_src_client_linux_libbreakpad_client_a_DEPENDENCIES) src/client/linux/$(am__dirstamp)
+ 	-rm -f src/client/linux/libbreakpad_client.a
+ 	$(src_client_linux_libbreakpad_client_a_AR) src/client/linux/libbreakpad_client.a $(src_client_linux_libbreakpad_client_a_OBJECTS) $(src_client_linux_libbreakpad_client_a_LIBADD)
  	$(RANLIB) src/client/linux/libbreakpad_client.a
  src/common/module.$(OBJEXT): src/common/$(am__dirstamp) \
  	src/common/$(DEPDIR)/$(am__dirstamp)
@@ -293,7 +624,17 @@ diff --git a/Makefile.in b/Makefile.in
  src/processor/$(am__dirstamp):
  	@$(MKDIR_P) src/processor
  	@: > src/processor/$(am__dirstamp)
-@@ -2840,6 +2865,9 @@
+ src/processor/$(DEPDIR)/$(am__dirstamp):
+ 	@$(MKDIR_P) src/processor/$(DEPDIR)
+ 	@: > src/processor/$(DEPDIR)/$(am__dirstamp)
+ src/processor/basic_code_modules.$(OBJEXT):  \
+ 	src/processor/$(am__dirstamp) \
+@@ -2835,16 +2860,19 @@
+ 	src/common/$(am__dirstamp) \
+ 	src/common/$(DEPDIR)/$(am__dirstamp)
+ src/common/src_common_dumper_unittest-stabs_to_module_unittest.$(OBJEXT):  \
+ 	src/common/$(am__dirstamp) \
+ 	src/common/$(DEPDIR)/$(am__dirstamp)
  src/common/src_common_dumper_unittest-test_assembler.$(OBJEXT):  \
  	src/common/$(am__dirstamp) \
  	src/common/$(DEPDIR)/$(am__dirstamp)
@@ -303,7 +644,17 @@ diff --git a/Makefile.in b/Makefile.in
  src/common/dwarf/$(am__dirstamp):
  	@$(MKDIR_P) src/common/dwarf
  	@: > src/common/dwarf/$(am__dirstamp)
-@@ -3445,6 +3473,7 @@
+ src/common/dwarf/$(DEPDIR)/$(am__dirstamp):
+ 	@$(MKDIR_P) src/common/dwarf/$(DEPDIR)
+ 	@: > src/common/dwarf/$(DEPDIR)/$(am__dirstamp)
+ src/common/dwarf/src_common_dumper_unittest-bytereader.$(OBJEXT):  \
+ 	src/common/dwarf/$(am__dirstamp) \
+@@ -3440,28 +3468,30 @@
+ 	-rm -f src/common/src_common_dumper_unittest-memory_range_unittest.$(OBJEXT)
+ 	-rm -f src/common/src_common_dumper_unittest-module.$(OBJEXT)
+ 	-rm -f src/common/src_common_dumper_unittest-module_unittest.$(OBJEXT)
+ 	-rm -f src/common/src_common_dumper_unittest-stabs_reader.$(OBJEXT)
+ 	-rm -f src/common/src_common_dumper_unittest-stabs_reader_unittest.$(OBJEXT)
  	-rm -f src/common/src_common_dumper_unittest-stabs_to_module.$(OBJEXT)
  	-rm -f src/common/src_common_dumper_unittest-stabs_to_module_unittest.$(OBJEXT)
  	-rm -f src/common/src_common_dumper_unittest-test_assembler.$(OBJEXT)
@@ -311,7 +662,12 @@ diff --git a/Makefile.in b/Makefile.in
  	-rm -f src/common/src_common_test_assembler_unittest-test_assembler.$(OBJEXT)
  	-rm -f src/common/src_common_test_assembler_unittest-test_assembler_unittest.$(OBJEXT)
  	-rm -f src/common/src_processor_minidump_unittest-test_assembler.$(OBJEXT)
-@@ -3457,6 +3486,7 @@
+ 	-rm -f src/common/src_processor_stackwalker_amd64_unittest-test_assembler.$(OBJEXT)
+ 	-rm -f src/common/src_processor_stackwalker_arm_unittest-test_assembler.$(OBJEXT)
+ 	-rm -f src/common/src_processor_stackwalker_x86_unittest-test_assembler.$(OBJEXT)
+ 	-rm -f src/common/src_processor_synth_minidump_unittest-test_assembler.$(OBJEXT)
+ 	-rm -f src/common/stabs_reader.$(OBJEXT)
+ 	-rm -f src/common/stabs_to_module.$(OBJEXT)
  	-rm -f src/common/string_conversion.$(OBJEXT)
  	-rm -f src/common/tests/src_client_linux_linux_client_unittest_shlib-file_utils.$(OBJEXT)
  	-rm -f src/common/tests/src_common_dumper_unittest-file_utils.$(OBJEXT)
@@ -319,7 +675,17 @@ diff --git a/Makefile.in b/Makefile.in
  	-rm -f src/processor/address_map_unittest.$(OBJEXT)
  	-rm -f src/processor/basic_code_modules.$(OBJEXT)
  	-rm -f src/processor/basic_source_line_resolver.$(OBJEXT)
-@@ -3635,6 +3665,7 @@
+ 	-rm -f src/processor/binarystream.$(OBJEXT)
+ 	-rm -f src/processor/call_stack.$(OBJEXT)
+ 	-rm -f src/processor/cfi_frame_info.$(OBJEXT)
+ 	-rm -f src/processor/contained_range_map_unittest.$(OBJEXT)
+ 	-rm -f src/processor/disassembler_x86.$(OBJEXT)
+@@ -3630,26 +3660,28 @@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/src_common_dumper_unittest-memory_range_unittest.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/src_common_dumper_unittest-module.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/src_common_dumper_unittest-module_unittest.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/src_common_dumper_unittest-stabs_reader.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/src_common_dumper_unittest-stabs_reader_unittest.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/src_common_dumper_unittest-stabs_to_module.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/src_common_dumper_unittest-stabs_to_module_unittest.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/src_common_dumper_unittest-test_assembler.Po@am__quote@
@@ -327,7 +693,10 @@ diff --git a/Makefile.in b/Makefile.in
  @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/src_common_test_assembler_unittest-test_assembler.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/src_common_test_assembler_unittest-test_assembler_unittest.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/src_processor_minidump_unittest-test_assembler.Po@am__quote@
-@@ -3645,6 +3676,7 @@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/src_processor_stackwalker_amd64_unittest-test_assembler.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/src_processor_stackwalker_arm_unittest-test_assembler.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/src_processor_stackwalker_x86_unittest-test_assembler.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/src_processor_synth_minidump_unittest-test_assembler.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/stabs_reader.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/stabs_to_module.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/string_conversion.Po@am__quote@
@@ -335,7 +704,17 @@ diff --git a/Makefile.in b/Makefile.in
  @AMDEP_TRUE@@am__include@ @am__quote@src/common/android/$(DEPDIR)/breakpad_getcontext.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@src/common/android/$(DEPDIR)/src_client_linux_linux_client_unittest_shlib-breakpad_getcontext.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@src/common/android/$(DEPDIR)/src_client_linux_linux_client_unittest_shlib-breakpad_getcontext_unittest.Po@am__quote@
-@@ -4417,6 +4449,20 @@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/common/dwarf/$(DEPDIR)/bytereader.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/common/dwarf/$(DEPDIR)/dwarf2diehandler.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/common/dwarf/$(DEPDIR)/dwarf2reader.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/common/dwarf/$(DEPDIR)/src_common_dumper_unittest-bytereader.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/common/dwarf/$(DEPDIR)/src_common_dumper_unittest-bytereader_unittest.Po@am__quote@
+@@ -4412,16 +4444,30 @@
+ 
+ src/common/src_common_dumper_unittest-test_assembler.obj: src/common/test_assembler.cc
+ @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(src_common_dumper_unittest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT src/common/src_common_dumper_unittest-test_assembler.obj -MD -MP -MF src/common/$(DEPDIR)/src_common_dumper_unittest-test_assembler.Tpo -c -o src/common/src_common_dumper_unittest-test_assembler.obj `if test -f 'src/common/test_assembler.cc'; then $(CYGPATH_W) 'src/common/test_assembler.cc'; else $(CYGPATH_W) '$(srcdir)/src/common/test_assembler.cc'; fi`
+ @am__fastdepCXX_TRUE@	$(am__mv) src/common/$(DEPDIR)/src_common_dumper_unittest-test_assembler.Tpo src/common/$(DEPDIR)/src_common_dumper_unittest-test_assembler.Po
+ @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/common/test_assembler.cc' object='src/common/src_common_dumper_unittest-test_assembler.obj' libtool=no @AMDEPBACKSLASH@
  @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
  @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(src_common_dumper_unittest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o src/common/src_common_dumper_unittest-test_assembler.obj `if test -f 'src/common/test_assembler.cc'; then $(CYGPATH_W) 'src/common/test_assembler.cc'; else $(CYGPATH_W) '$(srcdir)/src/common/test_assembler.cc'; fi`
  
@@ -356,10 +735,20 @@ diff --git a/Makefile.in b/Makefile.in
  src/common/dwarf/src_common_dumper_unittest-bytereader.o: src/common/dwarf/bytereader.cc
  @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(src_common_dumper_unittest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT src/common/dwarf/src_common_dumper_unittest-bytereader.o -MD -MP -MF src/common/dwarf/$(DEPDIR)/src_common_dumper_unittest-bytereader.Tpo -c -o src/common/dwarf/src_common_dumper_unittest-bytereader.o `test -f 'src/common/dwarf/bytereader.cc' || echo '$(srcdir)/'`src/common/dwarf/bytereader.cc
  @am__fastdepCXX_TRUE@	$(am__mv) src/common/dwarf/$(DEPDIR)/src_common_dumper_unittest-bytereader.Tpo src/common/dwarf/$(DEPDIR)/src_common_dumper_unittest-bytereader.Po
+ @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/common/dwarf/bytereader.cc' object='src/common/dwarf/src_common_dumper_unittest-bytereader.o' libtool=no @AMDEPBACKSLASH@
+ @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(src_common_dumper_unittest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o src/common/dwarf/src_common_dumper_unittest-bytereader.o `test -f 'src/common/dwarf/bytereader.cc' || echo '$(srcdir)/'`src/common/dwarf/bytereader.cc
+ 
+ src/common/dwarf/src_common_dumper_unittest-bytereader.obj: src/common/dwarf/bytereader.cc
 diff --git a/src/common/dwarf_cfi_to_module.cc b/src/common/dwarf_cfi_to_module.cc
 --- a/src/common/dwarf_cfi_to_module.cc
 +++ b/src/common/dwarf_cfi_to_module.cc
-@@ -42,14 +42,18 @@
+@@ -37,40 +37,44 @@
+ #include <sstream>
+ 
+ #include "common/dwarf_cfi_to_module.h"
+ 
+ namespace google_breakpad {
  
  using std::ostringstream;
  
@@ -382,7 +771,15 @@ diff --git a/src/common/dwarf_cfi_to_module.cc b/src/common/dwarf_cfi_to_module.
    static const char *const names[] = {
      "$eax", "$ecx", "$edx", "$ebx", "$esp", "$ebp", "$esi", "$edi",
      "$eip", "$eflags", "$unused1",
-@@ -65,7 +69,7 @@
+     "$st0", "$st1", "$st2", "$st3", "$st4", "$st5", "$st6", "$st7",
+     "$unused2", "$unused3",
+     "$xmm0", "$xmm1", "$xmm2", "$xmm3", "$xmm4", "$xmm5", "$xmm6", "$xmm7",
+     "$mm0", "$mm1", "$mm2", "$mm3", "$mm4", "$mm5", "$mm6", "$mm7",
+     "$fcw", "$fsw", "$mxcsr",
+     "$es", "$cs", "$ss", "$ds", "$fs", "$gs", "$unused4", "$unused5",
+     "$tr", "$ldtr"
+   };
+ 
    return MakeVector(names, sizeof(names) / sizeof(names[0]));
  }
  
@@ -391,7 +788,17 @@ diff --git a/src/common/dwarf_cfi_to_module.cc b/src/common/dwarf_cfi_to_module.
    static const char *const names[] = {
      "$rax", "$rdx", "$rcx", "$rbx", "$rsi", "$rdi", "$rbp", "$rsp",
      "$r8",  "$r9",  "$r10", "$r11", "$r12", "$r13", "$r14", "$r15",
-@@ -85,7 +89,7 @@
+     "$rip",
+     "$xmm0","$xmm1","$xmm2", "$xmm3", "$xmm4", "$xmm5", "$xmm6", "$xmm7",
+     "$xmm8","$xmm9","$xmm10","$xmm11","$xmm12","$xmm13","$xmm14","$xmm15",
+     "$st0", "$st1", "$st2", "$st3", "$st4", "$st5", "$st6", "$st7",
+     "$mm0", "$mm1", "$mm2", "$mm3", "$mm4", "$mm5", "$mm6", "$mm7",
+@@ -80,17 +84,17 @@
+     "$tr", "$ldtr",
+     "$mxcsr", "$fcw", "$fsw"
+   };
+ 
+   return MakeVector(names, sizeof(names) / sizeof(names[0]));
  }
  
  // Per ARM IHI 0040A, section 3.1
@@ -400,7 +807,17 @@ diff --git a/src/common/dwarf_cfi_to_module.cc b/src/common/dwarf_cfi_to_module.
    static const char *const names[] = {
      "r0",  "r1",  "r2",  "r3",  "r4",  "r5",  "r6",  "r7",
      "r8",  "r9",  "r10", "r11", "r12", "sp",  "lr",  "pc",
-@@ -127,30 +131,30 @@
+     "f0",  "f1",  "f2",  "f3",  "f4",  "f5",  "f6",  "f7",
+     "fps", "cpsr", "",   "",    "",    "",    "",    "",
+     "",    "",    "",    "",    "",    "",    "",    "",
+     "",    "",    "",    "",    "",    "",    "",    "",
+     "",    "",    "",    "",    "",    "",    "",    "",
+@@ -122,40 +126,40 @@
+   return_address_ = return_address;
+ 
+   // Breakpad STACK CFI records must provide a .ra rule, but DWARF CFI
+   // may not establish any rule for .ra if the return address column
+   // is an ordinary register, and that register holds the return
    // address on entry to the function. So establish an initial .ra
    // rule citing the return address register.
    if (return_address_ < register_names_.size())
@@ -437,7 +854,17 @@ diff --git a/src/common/dwarf_cfi_to_module.cc b/src/common/dwarf_cfi_to_module.
  }
  
  void DwarfCFIToModule::Record(Module::Address address, int reg,
-@@ -233,23 +237,25 @@
+                               const Module::Expr &rule) {
+   assert(entry_);
+ 
+   // Is this one of this entry's initial rules?
+   if (address == entry_->address)
+@@ -228,28 +232,30 @@
+ 
+ void DwarfCFIToModule::Reporter::UnnamedRegister(size_t offset, int reg) {
+   fprintf(stderr, "%s, section '%s': "
+           "the call frame entry at offset 0x%zx refers to register %d,"
+           " whose name we don't know\n",
            file_.c_str(), section_.c_str(), offset, reg);
  }
  
@@ -472,7 +899,12 @@ diff --git a/src/common/dwarf_cfi_to_module.cc b/src/common/dwarf_cfi_to_module.
 diff --git a/src/common/dwarf_cfi_to_module.h b/src/common/dwarf_cfi_to_module.h
 --- a/src/common/dwarf_cfi_to_module.h
 +++ b/src/common/dwarf_cfi_to_module.h
-@@ -49,6 +49,7 @@
+@@ -44,16 +44,17 @@
+ 
+ #include <set>
+ #include <string>
+ #include <vector>
+ 
  #include "common/module.h"
  #include "common/dwarf/dwarf2reader.h"
  #include "common/using_std_string.h"
@@ -480,7 +912,17 @@ diff --git a/src/common/dwarf_cfi_to_module.h b/src/common/dwarf_cfi_to_module.h
  
  namespace google_breakpad {
  
-@@ -83,13 +84,15 @@
+ using dwarf2reader::CallFrameInfo;
+ using google_breakpad::Module;
+ using std::set;
+ using std::vector;
+ 
+@@ -78,61 +79,65 @@
+     // The DWARF CFI entry at OFFSET cites register REG, but REG is not
+     // covered by the vector of register names passed to the
+     // DwarfCFIToModule constructor, nor does it match the return
+     // address column number for this entry.
+     virtual void UnnamedRegister(size_t offset, int reg);
  
      // The DWARF CFI entry at OFFSET says that REG is undefined, but the
      // Breakpad symbol file format cannot express this.
@@ -498,7 +940,11 @@ diff --git a/src/common/dwarf_cfi_to_module.h b/src/common/dwarf_cfi_to_module.h
  
    protected:
      string file_, section_;
-@@ -101,18 +104,19 @@
+   };
+ 
+   // Register name tables. If TABLE is a vector returned by one of these
+   // functions, then TABLE[R] is the name of the register numbered R in
+   // DWARF call frame information.
    class RegisterNames {
     public:
      // Intel's "x86" or IA-32.
@@ -522,7 +968,11 @@ diff --git a/src/common/dwarf_cfi_to_module.h b/src/common/dwarf_cfi_to_module.h
    };
  
    // Create a handler for the dwarf2reader::CallFrameInfo parser that
-@@ -124,10 +128,11 @@
+   // records the stack unwinding information it receives in MODULE.
+   //
+   // Use REGISTER_NAMES[I] as the name of register number I; *this
+   // keeps a reference to the vector, so the vector should remain
+   // alive for as long as the DwarfCFIToModule does.
    //
    // Use REPORTER for reporting problems encountered in the conversion
    // process.
@@ -536,7 +986,17 @@ diff --git a/src/common/dwarf_cfi_to_module.h b/src/common/dwarf_cfi_to_module.h
    }
    virtual ~DwarfCFIToModule() { delete entry_; }
  
-@@ -149,7 +154,7 @@
+   virtual bool Entry(size_t offset, uint64 address, uint64 length,
+                      uint8 version, const string &augmentation,
+                      unsigned return_address);
+   virtual bool UndefinedRule(uint64 address, int reg);
+   virtual bool SameValueRule(uint64 address, int reg);
+@@ -144,53 +149,36 @@
+   virtual bool ExpressionRule(uint64 address, int reg,
+                               const string &expression);
+   virtual bool ValExpressionRule(uint64 address, int reg,
+                                  const string &expression);
+   virtual bool End();
  
   private:
    // Return the name to use for register REG.
@@ -545,7 +1005,8 @@ diff --git a/src/common/dwarf_cfi_to_module.h b/src/common/dwarf_cfi_to_module.h
  
    // Record RULE for register REG at ADDRESS.
    void Record(Module::Address address, int reg, const Module::Expr &rule);
-@@ -158,7 +163,7 @@
+ 
+   // The module to which we should add entries.
    Module *module_;
  
    // Map from register numbers to register names.
@@ -554,7 +1015,13 @@ diff --git a/src/common/dwarf_cfi_to_module.h b/src/common/dwarf_cfi_to_module.h
  
    // The reporter to use to report problems.
    Reporter *reporter_;
-@@ -172,23 +177,6 @@
+ 
+   // The current entry we're constructing.
+   Module::StackFrameEntry *entry_;
+ 
+   // The section offset of the current frame description entry, for
+   // use in error messages.
+   size_t entry_offset_;
  
    // The return address column for that entry.
    unsigned return_address_;
@@ -578,10 +1045,17 @@ diff --git a/src/common/dwarf_cfi_to_module.h b/src/common/dwarf_cfi_to_module.h
  };
  
  } // namespace google_breakpad
+ 
+ #endif // COMMON_LINUX_DWARF_CFI_TO_MODULE_H
 diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_to_module_unittest.cc
 --- a/src/common/dwarf_cfi_to_module_unittest.cc
 +++ b/src/common/dwarf_cfi_to_module_unittest.cc
-@@ -42,6 +42,11 @@
+@@ -37,52 +37,59 @@
+ #include "breakpad_googletest_includes.h"
+ #include "common/dwarf_cfi_to_module.h"
+ #include "common/using_std_string.h"
+ 
+ using std::vector;
  
  using google_breakpad::Module;
  using google_breakpad::DwarfCFIToModule;
@@ -593,7 +1067,8 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
  using testing::ContainerEq;
  using testing::Test;
  using testing::_;
-@@ -50,8 +55,10 @@
+ 
+ struct MockCFIReporter: public DwarfCFIToModule::Reporter {
    MockCFIReporter(const string &file, const string &section)
        : Reporter(file, section) { }
    MOCK_METHOD2(UnnamedRegister, void(size_t offset, int reg));
@@ -606,7 +1081,7 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
  };
  
  struct DwarfCFIToModuleFixture {
-@@ -59,17 +66,17 @@
+   DwarfCFIToModuleFixture()
        : module("module name", "module os", "module arch", "module id"),
          reporter("reporter file", "reporter section"),
          handler(&module, register_names, &reporter) {
@@ -635,7 +1110,7 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
  
      EXPECT_CALL(reporter, UnnamedRegister(_, _)).Times(0);
      EXPECT_CALL(reporter, UndefinedNotSupported(_, _)).Times(0);
-@@ -77,7 +84,7 @@
+     EXPECT_CALL(reporter, ExpressionsNotSupported(_, _)).Times(0);
    }
  
    Module module;
@@ -644,7 +1119,17 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
    MockCFIReporter reporter;
    DwarfCFIToModule handler;
    vector<Module::StackFrameEntry *> entries;
-@@ -132,7 +139,7 @@
+ };
+ 
+ class Entry: public DwarfCFIToModuleFixture, public Test { };
+ 
+ TEST_F(Entry, Accept) {
+@@ -127,183 +134,190 @@
+   }
+   uint64 entry_address, entry_size;
+   unsigned return_reg;
+ };
+ 
  class Rule: public RuleFixture, public Test { };
  
  TEST_F(Rule, UndefinedRule) {
@@ -653,7 +1138,10 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
    StartEntry();
    ASSERT_TRUE(handler.UndefinedRule(entry_address, 7));
    ASSERT_TRUE(handler.End());
-@@ -143,7 +150,8 @@
+   CheckEntry();
+   EXPECT_EQ(0U, entries[0]->initial_rules.size());
+   EXPECT_EQ(0U, entries[0]->rule_changes.size());
+ }
  
  TEST_F(Rule, RegisterWithEmptyName) {
    EXPECT_CALL(reporter, UnnamedRegister(_, 10));
@@ -663,7 +1151,14 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
    StartEntry();
    ASSERT_TRUE(handler.UndefinedRule(entry_address, 10));
    ASSERT_TRUE(handler.End());
-@@ -158,7 +166,8 @@
+   CheckEntry();
+   EXPECT_EQ(0U, entries[0]->initial_rules.size());
+   EXPECT_EQ(0U, entries[0]->rule_changes.size());
+ }
+ 
+ TEST_F(Rule, SameValueRule) {
+   StartEntry();
+   ASSERT_TRUE(handler.SameValueRule(entry_address, 6));
    ASSERT_TRUE(handler.End());
    CheckEntry();
    Module::RuleMap expected_initial;
@@ -673,7 +1168,13 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
    EXPECT_THAT(entries[0]->initial_rules, ContainerEq(expected_initial));
    EXPECT_EQ(0U, entries[0]->rule_changes.size());
  }
-@@ -172,8 +181,8 @@
+ 
+ TEST_F(Rule, OffsetRule) {
+   StartEntry();
+   ASSERT_TRUE(handler.OffsetRule(entry_address + 1, return_reg,
+                                  DwarfCFIToModule::kCFARegister,
+                                  16927065));
+   ASSERT_TRUE(handler.End());
    CheckEntry();
    EXPECT_EQ(0U, entries[0]->initial_rules.size());
    Module::RuleChangeMap expected_changes;
@@ -684,7 +1185,11 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
    EXPECT_THAT(entries[0]->rule_changes, ContainerEq(expected_changes));
  }
  
-@@ -185,8 +194,8 @@
+ TEST_F(Rule, OffsetRuleNegative) {
+   StartEntry();
+   ASSERT_TRUE(handler.OffsetRule(entry_address + 1,
+                                  DwarfCFIToModule::kCFARegister, 4, -34530721));
+   ASSERT_TRUE(handler.End());
    CheckEntry();
    EXPECT_EQ(0U, entries[0]->initial_rules.size());
    Module::RuleChangeMap expected_changes;
@@ -695,7 +1200,14 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
    EXPECT_THAT(entries[0]->rule_changes, ContainerEq(expected_changes));
  }
  
-@@ -201,8 +210,8 @@
+ TEST_F(Rule, ValOffsetRule) {
+   // Use an unnamed register number, to exercise that branch of RegisterName.
+   EXPECT_CALL(reporter, UnnamedRegister(_, 11));
+   StartEntry();
+   ASSERT_TRUE(handler.ValOffsetRule(entry_address + 0x5ab7,
+                                     DwarfCFIToModule::kCFARegister,
+                                     11, 61812979));
+   ASSERT_TRUE(handler.End());
    CheckEntry();
    EXPECT_EQ(0U, entries[0]->initial_rules.size());
    Module::RuleChangeMap expected_changes;
@@ -706,7 +1218,9 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
    EXPECT_THAT(entries[0]->rule_changes, ContainerEq(expected_changes));
  }
  
-@@ -212,13 +221,14 @@
+ TEST_F(Rule, RegisterRule) {
+   StartEntry();
+   ASSERT_TRUE(handler.RegisterRule(entry_address, return_reg, 3));
    ASSERT_TRUE(handler.End());
    CheckEntry();
    Module::RuleMap expected_initial;
@@ -723,7 +1237,10 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
    StartEntry();
    ASSERT_TRUE(handler.ExpressionRule(entry_address + 0xf326, 2,
                                       "it takes two to tango"));
-@@ -229,7 +239,7 @@
+   ASSERT_TRUE(handler.End());
+   CheckEntry();
+   EXPECT_EQ(0U, entries[0]->initial_rules.size());
+   EXPECT_EQ(0U, entries[0]->rule_changes.size());
  }
  
  TEST_F(Rule, ValExpressionRule) {
@@ -732,7 +1249,16 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
    StartEntry();
    ASSERT_TRUE(handler.ValExpressionRule(entry_address + 0x6367, 0,
                                          "bit off more than he could chew"));
-@@ -246,8 +256,10 @@
+   ASSERT_TRUE(handler.End());
+   CheckEntry();
+   EXPECT_EQ(0U, entries[0]->initial_rules.size());
+   EXPECT_EQ(0U, entries[0]->rule_changes.size());
+ }
+ 
+ TEST_F(Rule, DefaultReturnAddressRule) {
+   return_reg = 2;
+   StartEntry();
+   ASSERT_TRUE(handler.RegisterRule(entry_address, 0, 1));
    ASSERT_TRUE(handler.End());
    CheckEntry();
    Module::RuleMap expected_initial;
@@ -745,7 +1271,11 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
    EXPECT_THAT(entries[0]->initial_rules, ContainerEq(expected_initial));
    EXPECT_EQ(0U, entries[0]->rule_changes.size());
  }
-@@ -259,7 +271,8 @@
+ 
+ TEST_F(Rule, DefaultReturnAddressRuleOverride) {
+   return_reg = 2;
+   StartEntry();
+   ASSERT_TRUE(handler.RegisterRule(entry_address, return_reg, 1));
    ASSERT_TRUE(handler.End());
    CheckEntry();
    Module::RuleMap expected_initial;
@@ -755,7 +1285,11 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
    EXPECT_THAT(entries[0]->initial_rules, ContainerEq(expected_initial));
    EXPECT_EQ(0U, entries[0]->rule_changes.size());
  }
-@@ -271,39 +284,40 @@
+ 
+ TEST_F(Rule, DefaultReturnAddressRuleLater) {
+   return_reg = 2;
+   StartEntry();
+   ASSERT_TRUE(handler.RegisterRule(entry_address + 1, return_reg, 1));
    ASSERT_TRUE(handler.End());
    CheckEntry();
    Module::RuleMap expected_initial;
@@ -819,7 +1353,12 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
 diff --git a/src/common/linux/dump_symbols.cc b/src/common/linux/dump_symbols.cc
 --- a/src/common/linux/dump_symbols.cc
 +++ b/src/common/linux/dump_symbols.cc
-@@ -81,6 +81,7 @@
+@@ -76,16 +76,17 @@
+ using google_breakpad::ElfClass;
+ using google_breakpad::ElfClass32;
+ using google_breakpad::ElfClass64;
+ using google_breakpad::FindElfSectionByName;
+ using google_breakpad::GetOffset;
  using google_breakpad::IsValidElf;
  using google_breakpad::Module;
  using google_breakpad::StabsToModule;
@@ -827,7 +1366,17 @@ diff --git a/src/common/linux/dump_symbols.cc b/src/common/linux/dump_symbols.cc
  using google_breakpad::scoped_ptr;
  
  //
-@@ -268,7 +269,7 @@
+ // FDWrapper
+ //
+ // Wrapper class to make sure opened file is closed.
+ //
+ class FDWrapper {
+@@ -264,17 +265,17 @@
+ 
+ // Fill REGISTER_NAMES with the register names appropriate to the
+ // machine architecture given in HEADER, indexed by the register
+ // numbers used in DWARF call frame information. Return true on
+ // success, or false if HEADER's machine architecture is not
  // supported.
  template<typename ElfClass>
  bool DwarfCFIRegisterNames(const typename ElfClass::Ehdr* elf_header,
@@ -836,7 +1385,17 @@ diff --git a/src/common/linux/dump_symbols.cc b/src/common/linux/dump_symbols.cc
    switch (elf_header->e_machine) {
      case EM_386:
        *register_names = DwarfCFIToModule::RegisterNames::I386();
-@@ -296,7 +297,7 @@
+       return true;
+     case EM_ARM:
+       *register_names = DwarfCFIToModule::RegisterNames::ARM();
+       return true;
+     case EM_X86_64:
+@@ -292,17 +293,17 @@
+                   const typename ElfClass::Shdr* section,
+                   const bool eh_frame,
+                   const typename ElfClass::Shdr* got_section,
+                   const typename ElfClass::Shdr* text_section,
+                   const bool big_endian,
                    Module* module) {
    // Find the appropriate set of register names for this file's
    // architecture.
@@ -845,10 +1404,20 @@ diff --git a/src/common/linux/dump_symbols.cc b/src/common/linux/dump_symbols.cc
    if (!DwarfCFIRegisterNames<ElfClass>(elf_header, &register_names)) {
      fprintf(stderr, "%s: unrecognized ELF machine architecture '%d';"
              " cannot convert DWARF call frame information\n",
+             dwarf_filename.c_str(), elf_header->e_machine);
+     return false;
+   }
+ 
+   const dwarf2reader::Endianness endianness = big_endian ?
 diff --git a/src/common/mac/dump_syms.mm b/src/common/mac/dump_syms.mm
 --- a/src/common/mac/dump_syms.mm
 +++ b/src/common/mac/dump_syms.mm
-@@ -310,7 +310,7 @@
+@@ -305,17 +305,17 @@
+ }
+ 
+ bool DumpSymbols::ReadCFI(google_breakpad::Module *module,
+                           const mach_o::Reader &macho_reader,
+                           const mach_o::Section &section,
                            bool eh_frame) const {
    // Find the appropriate set of register names for this file's
    // architecture.
@@ -857,10 +1426,20 @@ diff --git a/src/common/mac/dump_syms.mm b/src/common/mac/dump_syms.mm
    switch (macho_reader.cpu_type()) {
      case CPU_TYPE_X86:
        register_names = DwarfCFIToModule::RegisterNames::I386();
+       break;
+     case CPU_TYPE_X86_64:
+       register_names = DwarfCFIToModule::RegisterNames::X86_64();
+       break;
+     case CPU_TYPE_ARM:
 diff --git a/src/common/module.cc b/src/common/module.cc
 --- a/src/common/module.cc
 +++ b/src/common/module.cc
-@@ -38,6 +38,7 @@
+@@ -33,16 +33,17 @@
+ 
+ #include "common/module.h"
+ 
+ #include <assert.h>
+ #include <errno.h>
  #include <stdio.h>
  #include <string.h>
  
@@ -868,7 +1447,17 @@ diff --git a/src/common/module.cc b/src/common/module.cc
  #include <iostream>
  #include <utility>
  
-@@ -275,11 +276,25 @@
+ namespace google_breakpad {
+ 
+ using std::dec;
+ using std::endl;
+ using std::hex;
+@@ -270,21 +271,35 @@
+     case Module::kExprInvalid:
+     default:
+       break;
+   }
+   return stream;
  }
  
  bool Module::WriteRuleMap(const RuleMap &rule_map, std::ostream &stream) {
@@ -897,10 +1486,20 @@ diff --git a/src/common/module.cc b/src/common/module.cc
    }
    return stream.good();
  }
+ 
+ bool Module::Write(std::ostream &stream, SymbolData symbol_data) {
+   stream << "MODULE " << os_ << " " << architecture_ << " "
+          << id_ << " " << name_ << endl;
+   if (!stream.good())
 diff --git a/src/common/module.h b/src/common/module.h
 --- a/src/common/module.h
 +++ b/src/common/module.h
-@@ -46,6 +46,7 @@
+@@ -41,16 +41,17 @@
+ #include <iostream>
+ #include <map>
+ #include <set>
+ #include <string>
+ #include <vector>
  
  #include "common/symbol_data.h"
  #include "common/using_std_string.h"
@@ -908,7 +1507,17 @@ diff --git a/src/common/module.h b/src/common/module.h
  #include "google_breakpad/common/breakpad_types.h"
  
  namespace google_breakpad {
-@@ -136,8 +137,8 @@
+ 
+ using std::set;
+ using std::vector;
+ using std::map;
+ 
+@@ -131,69 +132,69 @@
+   enum ExprHow {
+     kExprInvalid = 1,
+     kExprPostfix,
+     kExprSimple,
+     kExprSimpleMem
    };
    struct Expr {
      // Construct a simple-form expression
@@ -919,7 +1528,14 @@ diff --git a/src/common/module.h b/src/common/module.h
          Expr();
        } else {
          postfix_ = "";
-@@ -152,7 +153,7 @@
+         ident_ = ident;
+         offset_ = offset;
+         how_ = deref ? kExprSimpleMem : kExprSimple;
+       }
+     }
+     // Construct an expression from a postfix string
+     Expr(string postfix) {
+       if (postfix.empty()) {
          Expr();
        } else {
          postfix_ = postfix;
@@ -928,7 +1544,7 @@ diff --git a/src/common/module.h b/src/common/module.h
          offset_ = 0;
          how_ = kExprPostfix;
        }
-@@ -160,7 +161,7 @@
+     }
      // Construct an invalid expression
      Expr() {
        postfix_ = "";
@@ -937,7 +1553,12 @@ diff --git a/src/common/module.h b/src/common/module.h
        offset_ = 0;
        how_ = kExprInvalid;
      }
-@@ -173,7 +174,7 @@
+     bool invalid() const { return how_ == kExprInvalid; }
+     bool operator==(const Expr& other) const {
+       return how_ == other.how_ &&
+           ident_ == other.ident_ &&
+           offset_ == other.offset_ &&
+           postfix_ == other.postfix_;
      }
  
      // The identifier that gives the starting value for simple expressions.
@@ -946,7 +1567,14 @@ diff --git a/src/common/module.h b/src/common/module.h
      // The offset to add for simple expressions.
      long    offset_;
      // The Postfix expression string to evaluate for non-simple expressions.
-@@ -188,7 +189,7 @@
+     string  postfix_;
+     // The operation expressed by this expression.
+     ExprHow how_;
+ 
+     friend std::ostream& operator<<(std::ostream& stream, const Expr& expr);
+   };
+ 
+   // A map from register names to expressions that recover
    // their values. This can represent a complete set of rules to
    // follow at some address, or a set of changes to be applied to an
    // extant set of rules.
@@ -955,10 +1583,20 @@ diff --git a/src/common/module.h b/src/common/module.h
  
    // A map from addresses to RuleMaps, representing changes that take
    // effect at given addresses.
+   typedef map<Address, RuleMap> RuleChangeMap;
+ 
+   // A range of 'STACK CFI' stack walking information. An instance of
+   // this structure corresponds to a 'STACK CFI INIT' record and the
+   // subsequent 'STACK CFI' records that fall within its range.
 diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
 --- a/src/common/module_unittest.cc
 +++ b/src/common/module_unittest.cc
-@@ -45,6 +45,8 @@
+@@ -40,16 +40,18 @@
+ #include <sstream>
+ #include <string>
+ 
+ #include "breakpad_googletest_includes.h"
+ #include "common/module.h"
  #include "common/using_std_string.h"
  
  using google_breakpad::Module;
@@ -967,7 +1605,17 @@ diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
  using std::stringstream;
  using std::vector;
  using testing::ContainerEq;
-@@ -130,11 +132,13 @@
+ 
+ static Module::Function *generate_duplicate_function(const string &name) {
+   const Module::Address DUP_ADDRESS = 0xd35402aac7a7ad5cLL;
+   const Module::Address DUP_SIZE = 0x200b26e605f99071LL;
+   const Module::Address DUP_PARAMETER_SIZE = 0xf14ac4fed48c4a99LL;
+@@ -125,21 +127,23 @@
+   function->lines.push_back(line1);
+ 
+   m.AddFunction(function);
+ 
+   // Some stack information.
    Module::StackFrameEntry *entry = new Module::StackFrameEntry();
    entry->address = 0x30f9e5c83323973dULL;
    entry->size = 0x49fc9ca7c7c13dc2ULL;
@@ -986,7 +1634,17 @@ diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
    m.AddStackFrameEntry(entry);
  
    // Set the load address.  Doing this after adding all the data to
-@@ -234,11 +238,13 @@
+   // the module must work fine.
+   m.SetLoadAddress(0x2ab698b0b6407073LL);
+ 
+   m.Write(s, ALL_SYMBOL_DATA);
+   string contents = s.str();
+@@ -229,21 +233,23 @@
+   function->lines.push_back(line1);
+ 
+   m.AddFunction(function);
+ 
+   // Some stack information.
    Module::StackFrameEntry *entry = new Module::StackFrameEntry();
    entry->address = 0x30f9e5c83323973dULL;
    entry->size = 0x49fc9ca7c7c13dc2ULL;
@@ -1005,7 +1663,17 @@ diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
    m.AddStackFrameEntry(entry);
  
    // Set the load address.  Doing this after adding all the data to
-@@ -310,23 +316,26 @@
+   // the module must work fine.
+   m.SetLoadAddress(0x2ab698b0b6407073LL);
+ 
+   m.Write(s, NO_CFI);
+   string contents = s.str();
+@@ -305,33 +311,36 @@
+   entry1->address = 0xddb5f41285aa7757ULL;
+   entry1->size = 0x1486493370dc5073ULL;
+   m.AddStackFrameEntry(entry1);
+ 
+   // Second STACK CFI entry, with initial rules but no deltas.
    Module::StackFrameEntry *entry2 = new Module::StackFrameEntry();
    entry2->address = 0x8064f3af5e067e38ULL;
    entry2->size = 0x0de2a5ee55509407ULL;
@@ -1040,7 +1708,17 @@ diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
      Module::Expr("I think I know");
    m.AddStackFrameEntry(entry3);
  
-@@ -357,23 +366,29 @@
+   // Check that Write writes STACK CFI records properly.
+   m.Write(s, ALL_SYMBOL_DATA);
+   string contents = s.str();
+   EXPECT_STREQ("MODULE os-name architecture id-string name with spaces\n"
+                "STACK CFI INIT 5e8d0db0a7075c6c 1c7edb12a7aea229"
+@@ -352,33 +361,39 @@
+   // Check that GetStackFrameEntries works.
+   vector<Module::StackFrameEntry *> entries;
+   m.GetStackFrameEntries(&entries);
+   ASSERT_EQ(3U, entries.size());
+   // Check first entry.
    EXPECT_EQ(0x5e8d0db0a7075c6cULL, entries[0]->address);
    EXPECT_EQ(0x1c7edb12a7aea229ULL, entries[0]->size);
    Module::RuleMap entry1_initial;
@@ -1079,7 +1757,17 @@ diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
    EXPECT_THAT(entries[1]->initial_rules, ContainerEq(entry2_initial));
    ASSERT_EQ(0U, entries[1]->rule_changes.size());
    // Check third entry.
-@@ -590,23 +605,26 @@
+   EXPECT_EQ(0xddb5f41285aa7757ULL, entries[2]->address);
+   EXPECT_EQ(0x1486493370dc5073ULL, entries[2]->size);
+   ASSERT_EQ(0U, entries[2]->initial_rules.size());
+   ASSERT_EQ(0U, entries[2]->rule_changes.size());
+ }
+@@ -585,33 +600,36 @@
+   entry1->address = 0x2000;
+   entry1->size = 0x900;
+   m.AddStackFrameEntry(entry1);
+ 
+   // Second STACK CFI entry, with initial rules but no deltas.
    Module::StackFrameEntry *entry2 = new Module::StackFrameEntry();
    entry2->address = 0x3000;
    entry2->size = 0x900;
@@ -1113,6 +1801,11 @@ diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
 +  entry3->rule_changes[0x36682fad3763ffffULL][ustr__ZDcfa()] =
      Module::Expr("I think I know");
    m.AddStackFrameEntry(entry3);
+ 
+   Module::StackFrameEntry* s = m.FindStackFrameEntryByAddress(0x1000);
+   EXPECT_EQ(entry3, s);
+   s = m.FindStackFrameEntryByAddress(0x18FF);
+   EXPECT_EQ(entry3, s);
  
 diff --git a/src/common/unique_string.cc b/src/common/unique_string.cc
 new file mode 100644
@@ -1476,7 +2169,12 @@ new file mode 100644
 diff --git a/src/processor/basic_source_line_resolver_unittest.cc b/src/processor/basic_source_line_resolver_unittest.cc
 --- a/src/processor/basic_source_line_resolver_unittest.cc
 +++ b/src/processor/basic_source_line_resolver_unittest.cc
-@@ -48,11 +48,20 @@
+@@ -43,21 +43,30 @@
+ #include "processor/windows_frame_info.h"
+ #include "processor/cfi_frame_info.h"
+ 
+ namespace {
+ 
  using google_breakpad::BasicSourceLineResolver;
  using google_breakpad::CFIFrameInfo;
  using google_breakpad::CodeModule;
@@ -1497,10 +2195,20 @@ diff --git a/src/processor/basic_source_line_resolver_unittest.cc b/src/processo
  
  class TestCodeModule : public CodeModule {
   public:
-@@ -112,10 +121,10 @@
-     const CFIFrameInfo::RegisterValueMap<u_int32_t> &expected,
-     const CFIFrameInfo::RegisterValueMap<u_int32_t> &actual) {
-   CFIFrameInfo::RegisterValueMap<u_int32_t>::const_iterator a;
+   TestCodeModule(string code_file) : code_file_(code_file) {}
+   virtual ~TestCodeModule() {}
+ 
+   virtual uint64_t base_address() const { return 0; }
+   virtual uint64_t size() const { return 0xb000; }
+@@ -107,34 +116,34 @@
+ // association. (That is, ACTUAL's associations should be a subset of
+ // EXPECTED's.) Also verify that ACTUAL has associations for ".ra" and
+ // ".cfa".
+ static bool VerifyRegisters(
+     const char *file, int line,
+     const CFIFrameInfo::RegisterValueMap<uint32_t> &expected,
+     const CFIFrameInfo::RegisterValueMap<uint32_t> &actual) {
+   CFIFrameInfo::RegisterValueMap<uint32_t>::const_iterator a;
 -  a = actual.find(".cfa");
 +  a = actual.find(ustr__ZDcfa());
    if (a == actual.end())
@@ -1510,7 +2218,7 @@ diff --git a/src/processor/basic_source_line_resolver_unittest.cc b/src/processo
    if (a == actual.end())
      return false;
    for (a = actual.begin(); a != actual.end(); a++) {
-@@ -123,13 +132,13 @@
+     CFIFrameInfo::RegisterValueMap<uint32_t>::const_iterator e =
        expected.find(a->first);
      if (e == expected.end()) {
        fprintf(stderr, "%s:%d: unexpected register '%s' recovered, value 0x%x\n",
@@ -1526,7 +2234,17 @@ diff --git a/src/processor/basic_source_line_resolver_unittest.cc b/src/processo
        return false;
      }
      // Don't complain if this doesn't recover all registers. Although
-@@ -259,21 +268,21 @@
+     // the DWARF spec says that unmentioned registers are undefined,
+     // GCC uses omission to mean that they are unchanged.
+   }
+   return true;
+ }
+@@ -254,81 +263,81 @@
+ 
+   CFIFrameInfo::RegisterValueMap<uint32_t> current_registers;
+   CFIFrameInfo::RegisterValueMap<uint32_t> caller_registers;
+   CFIFrameInfo::RegisterValueMap<uint32_t> expected_caller_registers;
+   MockMemoryRegion memory;
  
    // Regardless of which instruction evaluation takes place at, it
    // should produce the same values for the caller's registers.
@@ -1559,7 +2277,9 @@ diff --git a/src/processor/basic_source_line_resolver_unittest.cc b/src/processo
    cfi_frame_info.reset(resolver.FindCFIFrameInfo(&frame));
    ASSERT_TRUE(cfi_frame_info.get());
    ASSERT_TRUE(cfi_frame_info.get()
-@@ -283,7 +292,7 @@
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   ASSERT_TRUE(VerifyRegisters(__FILE__, __LINE__,
                                expected_caller_registers, caller_registers));
  
    frame.instruction = 0x3d41;
@@ -1568,7 +2288,9 @@ diff --git a/src/processor/basic_source_line_resolver_unittest.cc b/src/processo
    cfi_frame_info.reset(resolver.FindCFIFrameInfo(&frame));
    ASSERT_TRUE(cfi_frame_info.get());
    ASSERT_TRUE(cfi_frame_info.get()
-@@ -293,7 +302,7 @@
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   ASSERT_TRUE(VerifyRegisters(__FILE__, __LINE__,
                                expected_caller_registers, caller_registers));
  
    frame.instruction = 0x3d43;
@@ -1577,7 +2299,9 @@ diff --git a/src/processor/basic_source_line_resolver_unittest.cc b/src/processo
    cfi_frame_info.reset(resolver.FindCFIFrameInfo(&frame));
    ASSERT_TRUE(cfi_frame_info.get());
    ASSERT_TRUE(cfi_frame_info.get()
-@@ -303,7 +312,7 @@
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   VerifyRegisters(__FILE__, __LINE__,
                    expected_caller_registers, caller_registers);
  
    frame.instruction = 0x3d54;
@@ -1586,7 +2310,9 @@ diff --git a/src/processor/basic_source_line_resolver_unittest.cc b/src/processo
    cfi_frame_info.reset(resolver.FindCFIFrameInfo(&frame));
    ASSERT_TRUE(cfi_frame_info.get());
    ASSERT_TRUE(cfi_frame_info.get()
-@@ -313,7 +322,7 @@
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   VerifyRegisters(__FILE__, __LINE__,
                    expected_caller_registers, caller_registers);
  
    frame.instruction = 0x3d5a;
@@ -1595,7 +2321,9 @@ diff --git a/src/processor/basic_source_line_resolver_unittest.cc b/src/processo
    cfi_frame_info.reset(resolver.FindCFIFrameInfo(&frame));
    ASSERT_TRUE(cfi_frame_info.get());
    ASSERT_TRUE(cfi_frame_info.get()
-@@ -323,7 +332,7 @@
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   VerifyRegisters(__FILE__, __LINE__,
                    expected_caller_registers, caller_registers);
  
    frame.instruction = 0x3d84;
@@ -1604,10 +2332,20 @@ diff --git a/src/processor/basic_source_line_resolver_unittest.cc b/src/processo
    cfi_frame_info.reset(resolver.FindCFIFrameInfo(&frame));
    ASSERT_TRUE(cfi_frame_info.get());
    ASSERT_TRUE(cfi_frame_info.get()
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   VerifyRegisters(__FILE__, __LINE__,
+                   expected_caller_registers, caller_registers);
+ 
 diff --git a/src/processor/cfi_frame_info.cc b/src/processor/cfi_frame_info.cc
 --- a/src/processor/cfi_frame_info.cc
 +++ b/src/processor/cfi_frame_info.cc
-@@ -36,6 +36,7 @@
+@@ -31,16 +31,17 @@
+ 
+ // cfi_frame_info.cc: Implementation of CFIFrameInfo class.
+ // See cfi_frame_info.h for details.
+ 
+ #include "processor/cfi_frame_info.h"
  
  #include <string.h>
  
@@ -1615,7 +2353,17 @@ diff --git a/src/processor/cfi_frame_info.cc b/src/processor/cfi_frame_info.cc
  #include <sstream>
  
  #include "common/scoped_ptr.h"
-@@ -66,7 +67,7 @@
+ #include "processor/postfix_evaluator-inl.h"
+ 
+ namespace google_breakpad {
+ 
+ template<typename V>
+@@ -61,33 +62,33 @@
+   V cfa;
+   working = registers;
+   if (!evaluator.EvaluateForValue(cfa_rule_, &cfa))
+     return false;
+ 
    // Then, compute the return address.
    V ra;
    working = registers;
@@ -1624,7 +2372,8 @@ diff --git a/src/processor/cfi_frame_info.cc b/src/processor/cfi_frame_info.cc
    if (!evaluator.EvaluateForValue(ra_rule_, &ra))
      return false;
  
-@@ -75,14 +76,14 @@
+   // Now, compute values for all the registers register_rules_ mentions.
+   for (RuleMap::const_iterator it = register_rules_.begin();
         it != register_rules_.end(); it++) {
      V value;
      working = registers;
@@ -1642,7 +2391,17 @@ diff --git a/src/processor/cfi_frame_info.cc b/src/processor/cfi_frame_info.cc
  
    return true;
  }
-@@ -108,12 +109,29 @@
+ 
+ // Explicit instantiations for 32-bit and 64-bit architectures.
+ template bool CFIFrameInfo::FindCallerRegs<uint32_t>(
+     const RegisterValueMap<uint32_t> &registers,
+     const MemoryRegion &memory,
+@@ -103,81 +104,98 @@
+   if (!cfa_rule_.invalid()) {
+     stream << ".cfa: " << cfa_rule_;
+   }
+   if (!ra_rule_.invalid()) {
+     if (static_cast<std::streamoff>(stream.tellp()) != 0)
        stream << " ";
      stream << ".ra: " << ra_rule_;
    }
@@ -1665,7 +2424,7 @@ diff --git a/src/processor/cfi_frame_info.cc b/src/processor/cfi_frame_info.cc
 +       name != rr_names.end();
 +       ++name) {
 +    const UniqueString* nm = *name;
-+    Module::Expr rule = register_rules_.at(nm);
++    Module::Expr rule = register_rules_.find(nm)->second;
      if (static_cast<std::streamoff>(stream.tellp()) != 0)
        stream << " ";
 -    stream << iter->first << ": " << iter->second;
@@ -1673,7 +2432,11 @@ diff --git a/src/processor/cfi_frame_info.cc b/src/processor/cfi_frame_info.cc
    }
  
    return stream.str();
-@@ -125,7 +143,7 @@
+ }
+ 
+ bool CFIRuleParser::Parse(const string &rule_set) {
+   size_t rule_set_len = rule_set.size();
+   scoped_array<char> working_copy(new char[rule_set_len + 1]);
    memcpy(working_copy.get(), rule_set.data(), rule_set_len);
    working_copy[rule_set_len] = '\0';
  
@@ -1682,7 +2445,16 @@ diff --git a/src/processor/cfi_frame_info.cc b/src/processor/cfi_frame_info.cc
    expression_.clear();
  
    char *cursor;
-@@ -142,10 +160,10 @@
+   static const char token_breaks[] = " \t\r\n";
+   char *token = strtok_r(working_copy.get(), token_breaks, &cursor);
+ 
+   for (;;) {
+     // End of rule set?
+     if (!token) return Report();
+ 
+     // Register/pseudoregister name?
+     size_t token_len = strlen(token);
+     if (token_len >= 1 && token[token_len - 1] == ':') {
        // Names can't be empty.
        if (token_len < 2) return false;
        // If there is any pending content, report it.
@@ -1695,7 +2467,13 @@ diff --git a/src/processor/cfi_frame_info.cc b/src/processor/cfi_frame_info.cc
        expression_.clear();
      } else {
        // Another expression component.
-@@ -159,9 +177,9 @@
+       assert(token_len > 0); // strtok_r guarantees this, I think.
+       if (!expression_.empty())
+         expression_ += ' ';
+       expression_ += token;
+     }
+     token = strtok_r(NULL, token_breaks, &cursor);
+   }
  }
  
  bool CFIRuleParser::Report() {
@@ -1708,7 +2486,13 @@ diff --git a/src/processor/cfi_frame_info.cc b/src/processor/cfi_frame_info.cc
    else handler_->RegisterRule(name_, expression_);
    return true;
  }
-@@ -175,7 +193,7 @@
+ 
+ void CFIFrameInfoParseHandler::CFARule(const string &expression) {
+   // 'expression' is a postfix expression string.
+   frame_info_->SetCFARule(Module::Expr(expression));
+ }
+ 
+ void CFIFrameInfoParseHandler::RARule(const string &expression) {
    frame_info_->SetRARule(Module::Expr(expression));
  }
  
@@ -1717,10 +2501,17 @@ diff --git a/src/processor/cfi_frame_info.cc b/src/processor/cfi_frame_info.cc
                                              const string &expression) {
    frame_info_->SetRegisterRule(name, Module::Expr(expression));
  }
+ 
+ } // namespace google_breakpad
 diff --git a/src/processor/cfi_frame_info.h b/src/processor/cfi_frame_info.h
 --- a/src/processor/cfi_frame_info.h
 +++ b/src/processor/cfi_frame_info.h
-@@ -42,6 +42,7 @@
+@@ -37,16 +37,17 @@
+ 
+ #ifndef PROCESSOR_CFI_FRAME_INFO_H_
+ #define PROCESSOR_CFI_FRAME_INFO_H_
+ 
+ #include <map>
  #include <string>
  
  #include "common/using_std_string.h"
@@ -1728,7 +2519,17 @@ diff --git a/src/processor/cfi_frame_info.h b/src/processor/cfi_frame_info.h
  #include "google_breakpad/common/breakpad_types.h"
  #include "common/module.h"
  
-@@ -68,14 +69,14 @@
+ namespace google_breakpad {
+ 
+ using std::map;
+ 
+ class MemoryRegion;
+@@ -63,24 +64,24 @@
+ // changes given by the 'STACK CFI' records up to our instruction's
+ // address. Then, use the FindCallerRegs member function to apply the
+ // rules to the callee frame's register values, yielding the caller
+ // frame's register values.
+ class CFIFrameInfo {
   public:
    // A map from register names onto values.
    template<typename ValueType> class RegisterValueMap:
@@ -1745,7 +2546,17 @@ diff --git a/src/processor/cfi_frame_info.h b/src/processor/cfi_frame_info.h
                         const Module::Expr& rule) {
      register_rules_[register_name] = rule;
    }
-@@ -109,7 +110,7 @@
+ 
+   // Compute the values of the calling frame's registers, according to
+   // this rule set. Use ValueType in expression evaluation; this
+   // should be uint32_t on machines with 32-bit addresses, or
+   // uint64_t on machines with 64-bit addresses.
+@@ -104,17 +105,17 @@
+ 
+   // Serialize the rules in this object into a string in the format
+   // of STACK CFI records.
+   string Serialize() const;
+ 
   private:
  
    // A map from register names onto evaluation rules.
@@ -1754,7 +2565,17 @@ diff --git a/src/processor/cfi_frame_info.h b/src/processor/cfi_frame_info.h
  
    // An expression for computing the current frame's CFA (call
    // frame address). The CFA is a reference address for the frame that
-@@ -150,7 +151,8 @@
+   // remains unchanged throughout the frame's lifetime. You should
+   // evaluate this expression with a dictionary initially populated
+   // with the values of the current frame's known registers.
+   Module::Expr cfa_rule_;
+ 
+@@ -145,17 +146,18 @@
+     Handler() { }
+     virtual ~Handler() { }
+ 
+     // The input specifies EXPRESSION as the CFA/RA computation rule.
+     virtual void CFARule(const string &expression) = 0;
      virtual void RARule(const string &expression) = 0;
  
      // The input specifies EXPRESSION as the recovery rule for register NAME.
@@ -1764,7 +2585,17 @@ diff --git a/src/processor/cfi_frame_info.h b/src/processor/cfi_frame_info.h
    };
      
    // Construct a parser which feeds its results to HANDLER.
-@@ -170,7 +172,8 @@
+   CFIRuleParser(Handler *handler) : handler_(handler) { }
+ 
+   // Parse RULE_SET as a set of CFA computation and RA/register
+   // recovery rules, as appearing in STACK CFI records. Report the
+   // results of parsing by making the appropriate calls to handler_.
+@@ -165,30 +167,31 @@
+  private:
+   // Report any accumulated rule to handler_
+   bool Report();
+ 
+   // The handler to which the parser reports its findings.
    Handler *handler_;
  
    // Working data.
@@ -1774,7 +2605,12 @@ diff --git a/src/processor/cfi_frame_info.h b/src/processor/cfi_frame_info.h
  };
  
  // A handler for rule set parsing that populates a CFIFrameInfo with
-@@ -183,7 +186,7 @@
+ // the results.
+ class CFIFrameInfoParseHandler: public CFIRuleParser::Handler {
+  public:
+   // Populate FRAME_INFO with the results of parsing.
+   CFIFrameInfoParseHandler(CFIFrameInfo *frame_info)
+       : frame_info_(frame_info) { }
  
    void CFARule(const string &expression);
    void RARule(const string &expression);
@@ -1783,7 +2619,17 @@ diff --git a/src/processor/cfi_frame_info.h b/src/processor/cfi_frame_info.h
  
   private:
    CFIFrameInfo *frame_info_;
-@@ -210,14 +213,14 @@
+ };
+ 
+ // A utility class template for simple 'STACK CFI'-driven stack walkers.
+ // Given a CFIFrameInfo instance, a table describing the architecture's
+ // register set, and a context holding the last frame's registers, an
+@@ -205,24 +208,24 @@
+ // uint32_t or uint64_t. RawContextType should be the raw context
+ // structure type for this architecture.
+ template <typename RegisterType, class RawContextType>
+ class SimpleCFIWalker {
+  public:
    // A structure describing one architecture register.
    struct RegisterSet {
      // The register name, as it appears in STACK CFI rules.
@@ -1800,10 +2646,20 @@ diff --git a/src/processor/cfi_frame_info.h b/src/processor/cfi_frame_info.h
  
      // True if the callee is expected to preserve the value of this
      // register. If this flag is true for some register R, and the STACK
+     // CFI records provide no rule to recover R, then SimpleCFIWalker
+     // assumes that the callee has not changed R's value, and the caller's
+     // value for R is that currently in the callee's context.
+     bool callee_saves;
+ 
 diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_info_unittest.cc
 --- a/src/processor/cfi_frame_info_unittest.cc
 +++ b/src/processor/cfi_frame_info_unittest.cc
-@@ -43,9 +43,14 @@
+@@ -38,19 +38,24 @@
+ #include "common/module.h"
+ #include "common/using_std_string.h"
+ #include "processor/cfi_frame_info.h"
+ #include "google_breakpad/processor/memory_region.h"
+ 
  using google_breakpad::CFIFrameInfo;
  using google_breakpad::CFIFrameInfoParseHandler;
  using google_breakpad::CFIRuleParser;
@@ -1818,8 +2674,18 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
  using testing::_;
  using testing::A;
  using testing::AtMost;
-@@ -112,8 +117,8 @@
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+ using testing::DoAll;
+ using testing::Return;
+ using testing::SetArgumentPointee;
+ using testing::Test;
+ 
+@@ -107,41 +112,47 @@
+ TEST_F(Simple, SetCFAAndRARule) {
+   ExpectNoMemoryReferences();
+ 
+   cfi.SetCFARule(Module::Expr("330903416631436410"));
+   cfi.SetRARule(Module::Expr("5870666104170902211"));
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(2U, caller_registers.size());
 -  ASSERT_EQ(330903416631436410ULL, caller_registers[".cfa"]);
@@ -1829,7 +2695,10 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
  
    ASSERT_EQ(".cfa: 330903416631436410 .ra: 5870666104170902211",
              cfi.Serialize());
-@@ -124,19 +129,25 @@
+ }
+ 
+ TEST_F(Simple, SetManyRules) {
+   ExpectNoMemoryReferences();
  
    cfi.SetCFARule(Module::Expr("$temp1 68737028 = $temp2 61072337 = $temp1 $temp2 -"));
    cfi.SetRARule(Module::Expr(".cfa 99804755 +"));
@@ -1847,7 +2716,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 +  cfi.SetRegisterRule(reg2, Module::Expr("24076308 .cfa +"));
 +  cfi.SetRegisterRule(reg3, Module::Expr(".cfa 29801007 -"));
 +  cfi.SetRegisterRule(reg4, Module::Expr("92642917 .cfa /"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(6U, caller_registers.size());
 -  ASSERT_EQ(7664691U,           caller_registers[".cfa"]);
@@ -1865,8 +2734,18 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
    ASSERT_EQ(".cfa: $temp1 68737028 = $temp2 61072337 = $temp1 $temp2 - "
              ".ra: .cfa 99804755 + "
              "pubvexingfjordschmaltzy: .cfa 29801007 - "
-@@ -155,8 +166,8 @@
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+             "register1: .cfa 54370437 * "
+             "uncopyrightables: 92642917 .cfa / "
+             "vodkathumbscrewingly: 24076308 .cfa +",
+             cfi.Serialize());
+ }
+@@ -150,18 +161,18 @@
+   ExpectNoMemoryReferences();
+ 
+   cfi.SetCFARule(Module::Expr("330903416631436410"));
+   cfi.SetRARule(Module::Expr("5870666104170902211"));
+   cfi.SetCFARule(Module::Expr("2828089117179001"));
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(2U, caller_registers.size());
 -  ASSERT_EQ(2828089117179001ULL, caller_registers[".cfa"]);
@@ -1876,7 +2755,17 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
    ASSERT_EQ(".cfa: 2828089117179001 .ra: 5870666104170902211",
              cfi.Serialize());
  }
-@@ -188,15 +199,17 @@
+ 
+ class Scope: public CFIFixture, public Test { };
+ 
+ // There should be no value for .cfa in scope when evaluating the CFA rule.
+ TEST_F(Scope, CFALacksCFA) {
+@@ -183,37 +194,39 @@
+                                              &caller_registers));
+ }
+ 
+ // The current frame's registers should be in scope when evaluating
+ // the CFA rule.
  TEST_F(Scope, CFASeesCurrentRegs) {
    ExpectNoMemoryReferences();
  
@@ -1888,7 +2777,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 +  registers[reg2] = 0x5e0bf850bafce9d2ULL;
    cfi.SetCFARule(Module::Expr(".baraminology .ornithorhynchus +"));
    cfi.SetRARule(Module::Expr("0"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(2U, caller_registers.size());
    ASSERT_EQ(0x06a7bc63e4f13893ULL + 0x5e0bf850bafce9d2ULL,
@@ -1897,8 +2786,12 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
  }
  
  // .cfa should be in scope in the return address expression.
-@@ -208,7 +221,7 @@
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+ TEST_F(Scope, RASeesCFA) {
+   ExpectNoMemoryReferences();
+ 
+   cfi.SetCFARule(Module::Expr("48364076"));
+   cfi.SetRARule(Module::Expr(".cfa"));
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(2U, caller_registers.size());
 -  ASSERT_EQ(48364076U, caller_registers[".ra"]);
@@ -1906,7 +2799,17 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
  }
  
  // There should be no value for .ra in scope when evaluating the CFA rule.
-@@ -226,13 +239,14 @@
+ TEST_F(Scope, RALacksRA) {
+   ExpectNoMemoryReferences();
+ 
+   cfi.SetCFARule(Module::Expr("0"));
+   cfi.SetRARule(Module::Expr(".ra"));
+@@ -221,64 +234,69 @@
+                                              &caller_registers));
+ }
+ 
+ // The current frame's registers should be in scope in the return
+ // address expression.
  TEST_F(Scope, RASeesCurrentRegs) {
    ExpectNoMemoryReferences();
  
@@ -1916,7 +2819,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 +  const UniqueString* reg1 = ToUniqueString("noachian");
 +  registers[reg1] = 0x54dc4a5d8e5eb503ULL;
 +  cfi.SetRARule(Module::Expr(reg1, 0, false));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(2U, caller_registers.size());
 -  ASSERT_EQ(0x54dc4a5d8e5eb503ULL, caller_registers[".ra"]);
@@ -1924,14 +2827,15 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
  }
  
  // .cfa should be in scope for register rules.
-@@ -241,11 +255,12 @@
+ TEST_F(Scope, RegistersSeeCFA) {
+   ExpectNoMemoryReferences();
  
    cfi.SetCFARule(Module::Expr("6515179"));
    cfi.SetRARule(Module::Expr(".cfa"));
 -  cfi.SetRegisterRule("rogerian", Module::Expr(".cfa"));
 +  const UniqueString* reg1 = ToUniqueString("rogerian");
 +  cfi.SetRegisterRule(reg1, Module::Expr(".cfa"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(3U, caller_registers.size());
 -  ASSERT_EQ(6515179U, caller_registers["rogerian"]);
@@ -1939,17 +2843,19 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
  }
  
  // The return address should not be in scope for register rules.
-@@ -254,7 +269,8 @@
+ TEST_F(Scope, RegsLackRA) {
+   ExpectNoMemoryReferences();
  
    cfi.SetCFARule(Module::Expr("42740329"));
    cfi.SetRARule(Module::Expr("27045204"));
 -  cfi.SetRegisterRule("$r1", Module::Expr(".ra"));
 +  const UniqueString* reg1 = ToUniqueString("$r1");
 +  cfi.SetRegisterRule(reg1, Module::Expr(".ra"));
-   ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                               &caller_registers));
  }
-@@ -263,17 +279,19 @@
+ 
+ // Register rules can see the current frame's register values.
  TEST_F(Scope, RegsSeeRegs) {
    ExpectNoMemoryReferences();
  
@@ -1965,7 +2871,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 -  cfi.SetRegisterRule("$r2", Module::Expr("$r2 21357221 = $r1"));
 +  cfi.SetRegisterRule(reg1, Module::Expr("$r1 42175211 = $r2"));
 +  cfi.SetRegisterRule(reg2, Module::Expr("$r2 21357221 = $r1"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(4U, caller_registers.size());
 -  ASSERT_EQ(0xd27d9e742b8df6d0ULL, caller_registers["$r1"]);
@@ -1975,7 +2881,17 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
  }
  
  // Each rule's temporaries are separate.
-@@ -295,7 +313,7 @@
+ TEST_F(Scope, SeparateTempsRA) {
+   ExpectNoMemoryReferences();
+ 
+   cfi.SetCFARule(Module::Expr("$temp1 76569129 = $temp1"));
+   cfi.SetRARule(Module::Expr("0"));
+@@ -290,17 +308,17 @@
+   ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
+                                              &caller_registers));
+ }
+ 
+ class MockCFIRuleParserHandler: public CFIRuleParser::Handler {
   public:
    MOCK_METHOD1(CFARule, void(const string &));
    MOCK_METHOD1(RARule,  void(const string &));
@@ -1984,7 +2900,17 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
  };
  
  // A fixture class for testing CFIRuleParser.
-@@ -366,7 +384,7 @@
+ class CFIParserFixture {
+  public:
+   CFIParserFixture() : parser(&mock_handler) {
+     // Expect no parsing results to be reported to mock_handler. Individual
+     // tests can override this.
+@@ -361,100 +379,100 @@
+ }
+ 
+ TEST_F(Parser, RA) {
+   EXPECT_CALL(mock_handler, RARule("notoriety")).WillOnce(Return());
+   EXPECT_TRUE(parser.Parse(".ra: notoriety"));
  }
  
  TEST_F(Parser, Reg) {
@@ -1993,7 +2919,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
        .WillOnce(Return());
    EXPECT_TRUE(parser.Parse("nemo: mellifluous"));
  }
-@@ -374,18 +392,18 @@
+ 
  TEST_F(Parser, CFARARegs) {
    EXPECT_CALL(mock_handler, CFARule("cfa expression")).WillOnce(Return());
    EXPECT_CALL(mock_handler, RARule("ra expression")).WillOnce(Return());
@@ -2016,7 +2942,10 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
        .WillOnce(Return());
    EXPECT_TRUE(parser.Parse(" r1:\tr1\nexpression \tr2:\t\rr2\r\n "
                             "expression  \n"));
-@@ -396,21 +414,21 @@
+ }
+ 
+ TEST_F(Parser, WhitespaceLoneColon) {
+   EXPECT_FALSE(parser.Parse("  \n:\t  "));
  }
  
  TEST_F(Parser, EmptyName) {
@@ -2041,7 +2970,16 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
        .Times(AtMost(1))
        .WillRepeatedly(Return());
    EXPECT_FALSE(parser.Parse("r0: r1:   expr"));
-@@ -427,29 +445,29 @@
+ }
+ 
+ class ParseHandlerFixture: public CFIFixture {
+  public:
+   ParseHandlerFixture() : CFIFixture(), handler(&cfi) { }
+   CFIFrameInfoParseHandler handler;
+ };
+ 
+ class ParseHandler: public ParseHandlerFixture, public Test { };
+ 
  TEST_F(ParseHandler, CFARARule) {
    handler.CFARule("reg-for-cfa");
    handler.RARule("reg-for-ra");
@@ -2049,7 +2987,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 -  registers["reg-for-ra"] = 0x6301b475b8b91c02ULL;
 +  registers[ToUniqueString("reg-for-cfa")] = 0x268a9a4a3821a797ULL;
 +  registers[ToUniqueString("reg-for-ra")] = 0x6301b475b8b91c02ULL;
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
 -  ASSERT_EQ(0x268a9a4a3821a797ULL, caller_registers[".cfa"]);
 -  ASSERT_EQ(0x6301b475b8b91c02ULL, caller_registers[".ra"]);
@@ -2072,7 +3010,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 +  registers[ToUniqueString("reg-for-ra")] = 0x6301b475b8b91c02ULL;
 +  registers[ToUniqueString("reg-for-reg1")] = 0x06cde8e2ff062481ULL;
 +  registers[ToUniqueString("reg-for-reg2")] = 0xff0c4f76403173e2ULL;
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
 -  ASSERT_EQ(0x268a9a4a3821a797ULL, caller_registers[".cfa"]);
 -  ASSERT_EQ(0x6301b475b8b91c02ULL, caller_registers[".ra"]);
@@ -2085,7 +3023,17 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
  }
  
  struct SimpleCFIWalkerFixture {
-@@ -480,13 +498,13 @@
+   struct RawContext {
+     uint64_t r0, r1, r2, r3, r4, sp, pc;
+   };
+   enum Validity {
+     R0_VALID = 0x01,
+@@ -475,23 +493,23 @@
+   CFIFrameInfo call_frame_info;
+   CFIWalker walker;
+   MockMemoryRegion memory;
+   RawContext callee_context, caller_context;
+ };
  
  SimpleCFIWalkerFixture::CFIWalker::RegisterSet
  SimpleCFIWalkerFixture::register_map[7] = {
@@ -2106,7 +3054,17 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
  };
  
  class SimpleWalker: public SimpleCFIWalkerFixture, public Test { };
-@@ -521,8 +539,10 @@
+ 
+ TEST_F(SimpleWalker, Walk) {
+   // Stack_top is the current stack pointer, pointing to the lowest
+   // address of a frame that looks like this (all 64-bit words):
+   //
+@@ -516,18 +534,20 @@
+   // Saved return address.
+   EXPECT_CALL(memory,
+               GetMemoryAtAddress(stack_top + 16, A<uint64_t *>()))
+       .WillRepeatedly(DoAll(SetArgumentPointee<1>(0xba5ad6d9acce28deULL),
+                             Return(true)));
  
    call_frame_info.SetCFARule(Module::Expr("sp 24 +"));
    call_frame_info.SetRARule(Module::Expr(".cfa 8 - ^"));
@@ -2119,10 +3077,20 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
  
    callee_context.r0 = 0x94e030ca79edd119ULL;
    callee_context.r1 = 0x937b4d7e95ce52d9ULL;
+   callee_context.r2 = 0x5fe0027416b8b62aULL; // caller's r1
+   // callee_context.r3 is not valid in callee.
+   // callee_context.r4 is not valid in callee.
+   callee_context.sp = stack_top;
+   callee_context.pc = 0x25b21b224311d280ULL;
 diff --git a/src/processor/fast_source_line_resolver_unittest.cc b/src/processor/fast_source_line_resolver_unittest.cc
 --- a/src/processor/fast_source_line_resolver_unittest.cc
 +++ b/src/processor/fast_source_line_resolver_unittest.cc
-@@ -56,15 +56,24 @@
+@@ -51,25 +51,34 @@
+ #include "processor/module_serializer.h"
+ #include "processor/module_comparer.h"
+ 
+ namespace {
+ 
  using google_breakpad::SourceLineResolverBase;
  using google_breakpad::BasicSourceLineResolver;
  using google_breakpad::FastSourceLineResolver;
@@ -2147,10 +3115,20 @@ diff --git a/src/processor/fast_source_line_resolver_unittest.cc b/src/processor
  
  class TestCodeModule : public CodeModule {
   public:
-@@ -124,10 +133,10 @@
-     const CFIFrameInfo::RegisterValueMap<u_int32_t> &expected,
-     const CFIFrameInfo::RegisterValueMap<u_int32_t> &actual) {
-   CFIFrameInfo::RegisterValueMap<u_int32_t>::const_iterator a;
+   explicit TestCodeModule(string code_file) : code_file_(code_file) {}
+   virtual ~TestCodeModule() {}
+ 
+   virtual uint64_t base_address() const { return 0; }
+   virtual uint64_t size() const { return 0xb000; }
+@@ -119,34 +128,34 @@
+ // association. (That is, ACTUAL's associations should be a subset of
+ // EXPECTED's.) Also verify that ACTUAL has associations for ".ra" and
+ // ".cfa".
+ static bool VerifyRegisters(
+     const char *file, int line,
+     const CFIFrameInfo::RegisterValueMap<uint32_t> &expected,
+     const CFIFrameInfo::RegisterValueMap<uint32_t> &actual) {
+   CFIFrameInfo::RegisterValueMap<uint32_t>::const_iterator a;
 -  a = actual.find(".cfa");
 +  a = actual.find(ustr__ZDcfa());
    if (a == actual.end())
@@ -2160,7 +3138,7 @@ diff --git a/src/processor/fast_source_line_resolver_unittest.cc b/src/processor
    if (a == actual.end())
      return false;
    for (a = actual.begin(); a != actual.end(); a++) {
-@@ -135,13 +144,13 @@
+     CFIFrameInfo::RegisterValueMap<uint32_t>::const_iterator e =
        expected.find(a->first);
      if (e == expected.end()) {
        fprintf(stderr, "%s:%d: unexpected register '%s' recovered, value 0x%x\n",
@@ -2176,7 +3154,17 @@ diff --git a/src/processor/fast_source_line_resolver_unittest.cc b/src/processor
        return false;
      }
      // Don't complain if this doesn't recover all registers. Although
-@@ -287,21 +296,21 @@
+     // the DWARF spec says that unmentioned registers are undefined,
+     // GCC uses omission to mean that they are unchanged.
+   }
+   return true;
+ }
+@@ -282,81 +291,81 @@
+ 
+   CFIFrameInfo::RegisterValueMap<uint32_t> current_registers;
+   CFIFrameInfo::RegisterValueMap<uint32_t> caller_registers;
+   CFIFrameInfo::RegisterValueMap<uint32_t> expected_caller_registers;
+   MockMemoryRegion memory;
  
    // Regardless of which instruction evaluation takes place at, it
    // should produce the same values for the caller's registers.
@@ -2209,7 +3197,9 @@ diff --git a/src/processor/fast_source_line_resolver_unittest.cc b/src/processor
    cfi_frame_info.reset(fast_resolver.FindCFIFrameInfo(&frame));
    ASSERT_TRUE(cfi_frame_info.get());
    ASSERT_TRUE(cfi_frame_info.get()
-@@ -311,7 +320,7 @@
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   ASSERT_TRUE(VerifyRegisters(__FILE__, __LINE__,
                                expected_caller_registers, caller_registers));
  
    frame.instruction = 0x3d41;
@@ -2218,7 +3208,9 @@ diff --git a/src/processor/fast_source_line_resolver_unittest.cc b/src/processor
    cfi_frame_info.reset(fast_resolver.FindCFIFrameInfo(&frame));
    ASSERT_TRUE(cfi_frame_info.get());
    ASSERT_TRUE(cfi_frame_info.get()
-@@ -321,7 +330,7 @@
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   ASSERT_TRUE(VerifyRegisters(__FILE__, __LINE__,
                                expected_caller_registers, caller_registers));
  
    frame.instruction = 0x3d43;
@@ -2227,7 +3219,9 @@ diff --git a/src/processor/fast_source_line_resolver_unittest.cc b/src/processor
    cfi_frame_info.reset(fast_resolver.FindCFIFrameInfo(&frame));
    ASSERT_TRUE(cfi_frame_info.get());
    ASSERT_TRUE(cfi_frame_info.get()
-@@ -331,7 +340,7 @@
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   VerifyRegisters(__FILE__, __LINE__,
                    expected_caller_registers, caller_registers);
  
    frame.instruction = 0x3d54;
@@ -2236,7 +3230,9 @@ diff --git a/src/processor/fast_source_line_resolver_unittest.cc b/src/processor
    cfi_frame_info.reset(fast_resolver.FindCFIFrameInfo(&frame));
    ASSERT_TRUE(cfi_frame_info.get());
    ASSERT_TRUE(cfi_frame_info.get()
-@@ -341,7 +350,7 @@
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   VerifyRegisters(__FILE__, __LINE__,
                    expected_caller_registers, caller_registers);
  
    frame.instruction = 0x3d5a;
@@ -2245,7 +3241,9 @@ diff --git a/src/processor/fast_source_line_resolver_unittest.cc b/src/processor
    cfi_frame_info.reset(fast_resolver.FindCFIFrameInfo(&frame));
    ASSERT_TRUE(cfi_frame_info.get());
    ASSERT_TRUE(cfi_frame_info.get()
-@@ -351,7 +360,7 @@
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   VerifyRegisters(__FILE__, __LINE__,
                    expected_caller_registers, caller_registers);
  
    frame.instruction = 0x3d84;
@@ -2254,10 +3252,20 @@ diff --git a/src/processor/fast_source_line_resolver_unittest.cc b/src/processor
    cfi_frame_info.reset(fast_resolver.FindCFIFrameInfo(&frame));
    ASSERT_TRUE(cfi_frame_info.get());
    ASSERT_TRUE(cfi_frame_info.get()
+               ->FindCallerRegs<uint32_t>(current_registers, memory,
+                                           &caller_registers));
+   VerifyRegisters(__FILE__, __LINE__,
+                   expected_caller_registers, caller_registers);
+ 
 diff --git a/src/processor/postfix_evaluator-inl.h b/src/processor/postfix_evaluator-inl.h
 --- a/src/processor/postfix_evaluator-inl.h
 +++ b/src/processor/postfix_evaluator-inl.h
-@@ -56,13 +56,15 @@
+@@ -51,23 +51,25 @@
+ namespace google_breakpad {
+ 
+ using std::istringstream;
+ using std::ostringstream;
+ 
  
  // A small class used in Evaluate to make sure to clean up the stack
  // before returning failure.
@@ -2275,7 +3283,17 @@ diff --git a/src/processor/postfix_evaluator-inl.h b/src/processor/postfix_evalu
  };
  
  
-@@ -175,14 +177,14 @@
+ template<typename ValueType>
+ bool PostfixEvaluator<ValueType>::EvaluateToken(
+     const string &token,
+     const string &expression,
+     DictionaryValidityType *assigned) {
+@@ -170,38 +172,57 @@
+       BPLOG(INFO) << "Could not PopValue to get value to assign: " <<
+                      expression;
+       return false;
+     }
+ 
      // Assignment is only meaningful when assigning into an identifier.
      // The identifier must name a variable, not a constant.  Variables
      // begin with '$'.
@@ -2292,7 +3310,9 @@ diff --git a/src/processor/postfix_evaluator-inl.h b/src/processor/postfix_evalu
        BPLOG(ERROR) << "Can't assign " << HexString(value) << " to " <<
                        identifier << ": " << expression;
        return false;
-@@ -192,11 +194,30 @@
+     }
+ 
+     (*dictionary_)[identifier] = value;
      if (assigned)
        (*assigned)[identifier] = true;
    } else {
@@ -2328,7 +3348,17 @@ diff --git a/src/processor/postfix_evaluator-inl.h b/src/processor/postfix_evalu
    }
    return true;
  }
-@@ -241,7 +262,7 @@
+ 
+ template<typename ValueType>
+ bool PostfixEvaluator<ValueType>::EvaluateInternal(
+     const string &expression,
+     DictionaryValidityType *assigned) {
+@@ -236,17 +257,17 @@
+   // The expression is being exevaluated only for its side effects.  Skip
+   // expressions that denote values only.
+   if (expr.how_ != Module::kExprPostfix) {
+     BPLOG(ERROR) << "Can't evaluate for side-effects: " << expr;
+     return false;
    }
  
    // Ensure that the stack is cleared before returning.
@@ -2337,7 +3367,17 @@ diff --git a/src/processor/postfix_evaluator-inl.h b/src/processor/postfix_evalu
  
    if (!EvaluateInternal(expr.postfix_, assigned))
      return false;
-@@ -265,7 +286,7 @@
+ 
+   // If there's anything left on the stack, it indicates incomplete execution.
+   // This is a failure case.  If the stack is empty, evalution was complete
+   // and successful.
+   if (stack_.empty())
+@@ -260,17 +281,17 @@
+ bool PostfixEvaluator<ValueType>::EvaluateForValue(const Module::Expr& expr,
+                                                    ValueType* result) {
+   switch (expr.how_) {
+ 
+     // Postfix expression.  Give to the evaluator and return the
      // one-and-only stack element that should be left over.
      case Module::kExprPostfix: {
        // Ensure that the stack is cleared before returning.
@@ -2346,7 +3386,17 @@ diff --git a/src/processor/postfix_evaluator-inl.h b/src/processor/postfix_evalu
  
        if (!EvaluateInternal(expr.postfix_, NULL))
          return false;
-@@ -319,43 +340,21 @@
+ 
+       // A successful execution should leave exactly one value on the stack.
+       if (stack_.size() != 1) {
+         BPLOG(ERROR) << "Expression yielded bad number of results: "
+                      << "'" << expr << "'";
+@@ -314,77 +335,56 @@
+       return false;
+   }
+ }
+ 
+ 
  template<typename ValueType>
  typename PostfixEvaluator<ValueType>::PopResult
  PostfixEvaluator<ValueType>::PopValueOrIdentifier(
@@ -2397,7 +3447,8 @@ diff --git a/src/processor/postfix_evaluator-inl.h b/src/processor/postfix_evalu
      return POP_RESULT_IDENTIFIER;
    }
  }
-@@ -364,7 +363,7 @@
+ 
+ 
  template<typename ValueType>
  bool PostfixEvaluator<ValueType>::PopValue(ValueType *value) {
    ValueType literal = ValueType();
@@ -2406,7 +3457,14 @@ diff --git a/src/processor/postfix_evaluator-inl.h b/src/processor/postfix_evalu
    PopResult result;
    if ((result = PopValueOrIdentifier(&literal, &token)) == POP_RESULT_FAIL) {
      return false;
-@@ -379,7 +378,8 @@
+   } else if (result == POP_RESULT_VALUE) {
+     // This is the easy case.
+     *value = literal;
+   } else {  // result == POP_RESULT_IDENTIFIER
+     // There was an identifier at the top of the stack.  Resolve it to a
+     // value by looking it up in the dictionary.
+     typename DictionaryType::const_iterator iterator =
+         dictionary_->find(token);
      if (iterator == dictionary_->end()) {
        // The identifier wasn't found in the dictionary.  Don't imply any
        // default value, just fail.
@@ -2416,7 +3474,17 @@ diff --git a/src/processor/postfix_evaluator-inl.h b/src/processor/postfix_evalu
        return false;
      }
  
-@@ -399,9 +399,14 @@
+     *value = iterator->second;
+   }
+ 
+   return true;
+ }
+@@ -394,18 +394,23 @@
+ bool PostfixEvaluator<ValueType>::PopValues(ValueType *value1,
+                                             ValueType *value2) {
+   return PopValue(value2) && PopValue(value1);
+ }
+ 
  
  template<typename ValueType>
  void PostfixEvaluator<ValueType>::PushValue(const ValueType &value) {
@@ -2434,10 +3502,19 @@ diff --git a/src/processor/postfix_evaluator-inl.h b/src/processor/postfix_evalu
  }
  
  
+ }  // namespace google_breakpad
+ 
+ 
+ #endif  // PROCESSOR_POSTFIX_EVALUATOR_INL_H__
 diff --git a/src/processor/postfix_evaluator.h b/src/processor/postfix_evaluator.h
 --- a/src/processor/postfix_evaluator.h
 +++ b/src/processor/postfix_evaluator.h
-@@ -75,6 +75,7 @@
+@@ -70,30 +70,41 @@
+ #define PROCESSOR_POSTFIX_EVALUATOR_H__
+ 
+ 
+ #include <map>
+ #include <string>
  #include <vector>
  
  #include "common/using_std_string.h"
@@ -2445,7 +3522,9 @@ diff --git a/src/processor/postfix_evaluator.h b/src/processor/postfix_evaluator
  #include "common/module.h"
  
  namespace google_breakpad {
-@@ -84,11 +85,21 @@
+ 
+ using std::map;
+ using std::vector;
  
  class MemoryRegion;
  
@@ -2469,7 +3548,17 @@ diff --git a/src/processor/postfix_evaluator.h b/src/processor/postfix_evaluator
  
    // Create a PostfixEvaluator object that may be used (with Evaluate) on
    // one or more expressions.  PostfixEvaluator does not take ownership of
-@@ -133,7 +144,8 @@
+   // either argument.  |memory| may be NULL, in which case dereferencing
+   // (^) will not be supported.  |dictionary| may be NULL, but evaluation
+   // will fail in that case unless set_dictionary is used before calling
+   // Evaluate.
+   PostfixEvaluator(DictionaryType *dictionary, const MemoryRegion *memory)
+@@ -128,24 +139,28 @@
+   };
+ 
+   // Retrieves the topmost literal value, constant, or variable from the
+   // stack.  Returns POP_RESULT_VALUE if the topmost entry is a literal
+   // value, and sets |value| accordingly.  Returns POP_RESULT_IDENTIFIER
    // if the topmost entry is a constant or variable identifier, and sets
    // |identifier| accordingly.  Returns POP_RESULT_FAIL on failure, such
    // as when the stack is empty.
@@ -2479,7 +3568,7 @@ diff --git a/src/processor/postfix_evaluator.h b/src/processor/postfix_evaluator
  
    // Retrieves the topmost value on the stack.  If the topmost entry is
    // an identifier, the dictionary is queried for the identifier's value.
-@@ -141,6 +153,9 @@
+   // Returns false on failure, such as when the stack is empty or when
    // a nonexistent identifier is named.
    bool PopValue(ValueType *value);
  
@@ -2489,7 +3578,17 @@ diff --git a/src/processor/postfix_evaluator.h b/src/processor/postfix_evaluator
    // Retrieves the top two values on the stack, in the style of PopValue.
    // value2 is popped before value1, so that value1 corresponds to the
    // entry that was pushed prior to value2.  Returns false on failure.
-@@ -171,7 +186,7 @@
+   bool PopValues(ValueType *value1, ValueType *value2);
+ 
+   // Pushes a new value onto the stack.
+   void PushValue(const ValueType &value);
+ 
+@@ -166,15 +181,15 @@
+ 
+   // If non-NULL, the MemoryRegion used for dereference (^) operations.
+   // If NULL, dereferencing is unsupported and will fail.  Weak pointer.
+   const MemoryRegion *memory_;
+ 
    // The stack contains state information as execution progresses.  Values
    // are pushed on to it as the expression string is read and as operations
    // yield values; values are popped when used as operands to operators.
@@ -2498,10 +3597,18 @@ diff --git a/src/processor/postfix_evaluator.h b/src/processor/postfix_evaluator
  };
  
  }  // namespace google_breakpad
+ 
+ 
+ #endif  // PROCESSOR_POSTFIX_EVALUATOR_H__
 diff --git a/src/processor/postfix_evaluator_unittest.cc b/src/processor/postfix_evaluator_unittest.cc
 --- a/src/processor/postfix_evaluator_unittest.cc
 +++ b/src/processor/postfix_evaluator_unittest.cc
-@@ -48,8 +48,22 @@
+@@ -43,18 +43,32 @@
+ #include "google_breakpad/processor/memory_region.h"
+ #include "processor/logging.h"
+ 
+ 
+ namespace {
  
  
  using std::map;
@@ -2524,7 +3631,17 @@ diff --git a/src/processor/postfix_evaluator_unittest.cc b/src/processor/postfix
  
  
  // FakeMemoryRegion is used to test PostfixEvaluator's dereference (^)
-@@ -100,7 +114,7 @@
+ // operator.  The result of dereferencing a value is one greater than
+ // the value.
+ class FakeMemoryRegion : public MemoryRegion {
+  public:
+   virtual uint64_t GetBase() const { return 0; }
+@@ -95,17 +109,17 @@
+   // The list of tests.
+   const EvaluateTest *evaluate_tests;
+ 
+   // The number of tests.
+   unsigned int evaluate_test_count;
  
    // Identifiers and their expected values upon completion of the Evaluate
    // tests in the set.
@@ -2533,7 +3650,17 @@ diff --git a/src/processor/postfix_evaluator_unittest.cc b/src/processor/postfix
  };
  
  
-@@ -152,29 +166,29 @@
+ struct EvaluateForValueTest {
+   // Expression passed to PostfixEvaluator::Evaluate.
+   const string expression;
+   
+   // True if the expression is expected to be evaluable, false if evaluation
+@@ -147,39 +161,39 @@
+     { "$rMul 9 6 * =",     true },   // $rMul = 9 * 6 = 54
+     { "$rSub 9 6 - =",     true },   // $rSub = 9 - 6 = 3
+     { "$rDivQ 9 6 / =",    true },   // $rDivQ = 9 / 6 = 1
+     { "$rDivM 9 6 % =",    true },   // $rDivM = 9 % 6 = 3
+     { "$rDeref 9 ^ =",     true },   // $rDeref = ^9 = 10 (FakeMemoryRegion)
      { "$rAlign 36 8 @ =",  true },   // $rAlign = 36 @ 8
      { "$rAdd3 2 2 + =$rMul2 9 6 * =", true } // smashed-equals tokenization
    };
@@ -2580,7 +3707,17 @@ diff --git a/src/processor/postfix_evaluator_unittest.cc b/src/processor/postfix
    const EvaluateTest evaluate_tests_1[] = {
      { "$T0 $ebp = $eip $T0 4 + ^ = $ebp $T0 ^ = $esp $T0 8 + = "
        "$L $T0 .cbSavedRegs - = $P $T0 8 + .cbParams + =", true },
-@@ -193,18 +207,18 @@
+     // Intermediate state: $T0  = 0xbfff0010, $eip = 0xbfff0015,
+     //                     $ebp = 0xbfff0011, $esp = 0xbfff0018,
+     //                     $L   = 0xbfff000c, $P   = 0xbfff001c
+     { "$T0 $ebp = $eip $T0 4 + ^ = $ebp $T0 ^ = $esp $T0 8 + = "
+       "$L $T0 .cbSavedRegs - = $P $T0 8 + .cbParams + = $ebx $T0 28 - ^ =",
+@@ -188,28 +202,28 @@
+     //                     $ebp = 0xbfff0012, $esp = 0xbfff0019,
+     //                     $L   = 0xbfff000d, $P   = 0xbfff001d,
+     //                     $ebx = 0xbffefff6
+     { "$T0 $ebp = $T2 $esp = $T1 .raSearchStart = $eip $T1 ^ = $ebp $T0 = "
+       "$esp $T1 4 + = $L $T0 .cbSavedRegs - = $P $T1 4 + .cbParams + = "
        "$ebx $T0 28 - ^ =",
        true }
    };
@@ -2611,7 +3748,17 @@ diff --git a/src/processor/postfix_evaluator_unittest.cc b/src/processor/postfix
  
    EvaluateTestSet evaluate_test_sets[] = {
      { &dictionary_0, evaluate_tests_0,
-@@ -256,14 +270,16 @@
+           sizeof(evaluate_tests_0) / sizeof(EvaluateTest), &validate_data_0 },
+     { &dictionary_1, evaluate_tests_1,
+           sizeof(evaluate_tests_1) / sizeof(EvaluateTest), &validate_data_1 },
+   };
+ 
+@@ -251,97 +265,100 @@
+                 evaluate_test->expression.c_str(),
+                 evaluate_test->evaluable ? "evaluable" : "not evaluable",
+                 result ? "evaluted" : "not evaluated");
+         return false;
+       }
      }
  
      // Validate the results.
@@ -2631,7 +3778,8 @@ diff --git a/src/processor/postfix_evaluator_unittest.cc b/src/processor/postfix
            evaluate_test_set->dictionary->find(identifier);
  
        // The identifier must exist in the dictionary.
-@@ -272,7 +288,7 @@
+       if (dictionary_iterator == evaluate_test_set->dictionary->end()) {
+         fprintf(stderr, "FAIL: evaluate test set %d/%d, "
                          "validate identifier \"%s\", "
                          "expected %d, observed not found\n",
                  evaluate_test_set_index, evaluate_test_set_count,
@@ -2640,7 +3788,10 @@ diff --git a/src/processor/postfix_evaluator_unittest.cc b/src/processor/postfix
          return false;
        }
  
-@@ -283,13 +299,13 @@
+       // The value in the dictionary must be the same as the expected value.
+       unsigned int observed_value = dictionary_iterator->second;
+       if (expected_value != observed_value) {
+         fprintf(stderr, "FAIL: evaluate test set %d/%d, "
                          "validate identifier \"%s\", "
                          "expected %d, observed %d\n",
                  evaluate_test_set_index, evaluate_test_set_count,
@@ -2656,7 +3807,11 @@ diff --git a/src/processor/postfix_evaluator_unittest.cc b/src/processor/postfix
        bool observed_assigned = false;
        PostfixEvaluator<unsigned int>::DictionaryValidityType::const_iterator
            iterator_assigned = assigned.find(identifier);
-@@ -301,7 +317,8 @@
+       if (iterator_assigned != assigned.end()) {
+         observed_assigned = iterator_assigned->second;
+       }
+       if (expected_assigned != observed_assigned) {
+         fprintf(stderr, "FAIL: evaluate test set %d/%d, "
                          "validate assignment of \"%s\", "
                          "expected %d, observed %d\n",
                  evaluate_test_set_index, evaluate_test_set_count,
@@ -2666,7 +3821,7 @@ diff --git a/src/processor/postfix_evaluator_unittest.cc b/src/processor/postfix
          return false;
        }
      }
-@@ -309,12 +326,12 @@
+   }
  
    // EvaluateForValue tests.
    PostfixEvaluator<unsigned int>::DictionaryType dictionary_2;
@@ -2685,7 +3840,14 @@ diff --git a/src/processor/postfix_evaluator_unittest.cc b/src/processor/postfix
    const EvaluateForValueTest evaluate_for_value_tests_2[] = {
      { "28907223",               true,  28907223 },      // simple constant
      { "89854293 40010015 +",    true,  89854293 + 40010015 }, // arithmetic
-@@ -329,14 +346,14 @@
+     { "-870245 8769343 +",      true,  7899098 },       // negative constants
+     { "$ebp $esp - $eip +",     true,  0x10000010 },    // variable references
+     { "18929794 34015074",      false, 0 },             // too many values
+     { "$ebp $ebp 4 - =",        false, 0 },             // too few values
+     { "$new $eip = $new",       true,  0x10000000 },    // make new variable
+     { "$new 4 +",               true,  0x10000004 },    // see prior assignments
+     { ".cfa 42 = 10",           false, 0 }              // can't set constants
+   };
    const int evaluate_for_value_tests_2_size
        = (sizeof (evaluate_for_value_tests_2)
           / sizeof (evaluate_for_value_tests_2[0]));
@@ -2708,7 +3870,17 @@ diff --git a/src/processor/postfix_evaluator_unittest.cc b/src/processor/postfix
  
    postfix_evaluator.set_dictionary(&dictionary_2);
    for (int i = 0; i < evaluate_for_value_tests_2_size; i++) {
-@@ -358,30 +375,33 @@
+     const EvaluateForValueTest *test = &evaluate_for_value_tests_2[i];
+     unsigned int result;
+     if (postfix_evaluator.EvaluateForValue(test->expression, &result)
+         != test->evaluable) {
+       fprintf(stderr, "FAIL: evaluate for value test %d, "
+@@ -353,40 +370,43 @@
+     if (test->evaluable && result != test->value) {
+       fprintf(stderr, "FAIL: evaluate for value test %d, "
+               "expected value to be 0x%x, but it was 0x%x\n",
+               i, test->value, result);
+       return false;
      }
    }
  
@@ -2748,10 +3920,20 @@ diff --git a/src/processor/postfix_evaluator_unittest.cc b/src/processor/postfix
      return false;
    }
  
+   return true;
+ }
+ 
+ 
+ }  // namespace
 diff --git a/src/processor/stackwalker_amd64.cc b/src/processor/stackwalker_amd64.cc
 --- a/src/processor/stackwalker_amd64.cc
 +++ b/src/processor/stackwalker_amd64.cc
-@@ -54,39 +54,39 @@
+@@ -49,49 +49,49 @@
+ 
+ const StackwalkerAMD64::CFIWalker::RegisterSet
+ StackwalkerAMD64::cfi_register_map_[] = {
+   // It may seem like $rip and $rsp are callee-saves, because the callee is
+   // responsible for having them restored upon return. But the callee_saves
    // flags here really means that the walker should assume they're
    // unchanged if the CFI doesn't mention them --- clearly wrong for $rip
    // and $rsp.
@@ -2808,10 +3990,20 @@ diff --git a/src/processor/stackwalker_amd64.cc b/src/processor/stackwalker_amd6
      StackFrameAMD64::CONTEXT_VALID_RIP, &MDRawContextAMD64::rip },
  };
  
+ StackwalkerAMD64::StackwalkerAMD64(const SystemInfo* system_info,
+                                    const MDRawContextAMD64* context,
+                                    MemoryRegion* memory,
+                                    const CodeModules* modules,
+                                    StackFrameSymbolizer* resolver_helper)
 diff --git a/src/processor/stackwalker_arm.cc b/src/processor/stackwalker_arm.cc
 --- a/src/processor/stackwalker_arm.cc
 +++ b/src/processor/stackwalker_arm.cc
-@@ -81,11 +81,20 @@
+@@ -76,21 +76,30 @@
+   return frame;
+ }
+ 
+ StackFrameARM* StackwalkerARM::GetCallerByCFIFrameInfo(
+     const vector<StackFrame*> &frames,
      CFIFrameInfo* cfi_frame_info) {
    StackFrameARM* last_frame = static_cast<StackFrameARM*>(frames.back());
  
@@ -2837,28 +4029,58 @@ diff --git a/src/processor/stackwalker_arm.cc b/src/processor/stackwalker_arm.cc
      NULL
    };
  
-@@ -124,7 +133,7 @@
+   // Populate a dictionary with the valid register values in last_frame.
+   CFIFrameInfo::RegisterValueMap<uint32_t> callee_registers;
+   for (int i = 0; register_names[i]; i++)
+     if (last_frame->context_validity & StackFrameARM::RegisterValidFlag(i))
+       callee_registers[register_names[i]] = last_frame->context.iregs[i];
+@@ -119,17 +128,17 @@
+       // Call Standard for the ARM Architecture, which the Linux ABI follows.
+       frame->context_validity |= StackFrameARM::RegisterValidFlag(i);
+       frame->context.iregs[i] = last_frame->context.iregs[i];
+     }
+   }
    // If the CFI doesn't recover the PC explicitly, then use .ra.
    if (!(frame->context_validity & StackFrameARM::CONTEXT_VALID_PC)) {
-     CFIFrameInfo::RegisterValueMap<u_int32_t>::iterator entry =
+     CFIFrameInfo::RegisterValueMap<uint32_t>::iterator entry =
 -      caller_registers.find(".ra");
 +      caller_registers.find(ustr__ZDra());
      if (entry != caller_registers.end()) {
        if (fp_register_ == -1) {
          frame->context_validity |= StackFrameARM::CONTEXT_VALID_PC;
-@@ -143,7 +152,7 @@
+         frame->context.iregs[MD_CONTEXT_ARM_REG_PC] = entry->second;
+       } else {
+         // The CFI updated the link register and not the program counter.
+         // Handle getting the program counter from the link register.
+         frame->context_validity |= StackFrameARM::CONTEXT_VALID_PC;
+@@ -138,17 +147,17 @@
+         frame->context.iregs[MD_CONTEXT_ARM_REG_PC] =
+             last_frame->context.iregs[MD_CONTEXT_ARM_REG_LR];
+       }
+     }
+   }
    // If the CFI doesn't recover the SP explicitly, then use .cfa.
    if (!(frame->context_validity & StackFrameARM::CONTEXT_VALID_SP)) {
-     CFIFrameInfo::RegisterValueMap<u_int32_t>::iterator entry =
+     CFIFrameInfo::RegisterValueMap<uint32_t>::iterator entry =
 -      caller_registers.find(".cfa");
 +      caller_registers.find(ustr__ZDcfa());
      if (entry != caller_registers.end()) {
        frame->context_validity |= StackFrameARM::CONTEXT_VALID_SP;
        frame->context.iregs[MD_CONTEXT_ARM_REG_SP] = entry->second;
+     }
+   }
+ 
+   // If we didn't recover the PC and the SP, then the frame isn't very useful.
+   static const int essentials = (StackFrameARM::CONTEXT_VALID_SP
 diff --git a/src/processor/stackwalker_x86.cc b/src/processor/stackwalker_x86.cc
 --- a/src/processor/stackwalker_x86.cc
 +++ b/src/processor/stackwalker_x86.cc
-@@ -58,23 +58,23 @@
+@@ -53,33 +53,33 @@
+ 
+ const StackwalkerX86::CFIWalker::RegisterSet
+ StackwalkerX86::cfi_register_map_[] = {
+   // It may seem like $eip and $esp are callee-saves, because (with Unix or
+   // cdecl calling conventions) the callee is responsible for having them
    // restored upon return. But the callee_saves flags here really means
    // that the walker should assume they're unchanged if the CFI doesn't
    // mention them, which is clearly wrong for $eip and $esp.
@@ -2891,9 +4113,19 @@ diff --git a/src/processor/stackwalker_x86.cc b/src/processor/stackwalker_x86.cc
      StackFrameX86::CONTEXT_VALID_EDI, &MDRawContextX86::edi },
  };
  
-@@ -199,16 +199,16 @@
+ StackwalkerX86::StackwalkerX86(const SystemInfo* system_info,
+                                const MDRawContextX86* context,
+                                MemoryRegion* memory,
+                                const CodeModules* modules,
+                                StackFrameSymbolizer* resolver_helper)
+@@ -194,26 +194,26 @@
+     }
+   }
+ 
+   // Set up the dictionary for the PostfixEvaluator.  %ebp and %esp are used
+   // in each program string, and their previous values are known, so set them
    // here.
-   PostfixEvaluator<u_int32_t>::DictionaryType dictionary;
+   PostfixEvaluator<uint32_t>::DictionaryType dictionary;
    // Provide the current register values.
 -  dictionary["$ebp"] = last_frame->context.ebp;
 -  dictionary["$esp"] = last_frame->context.esp;
@@ -2911,9 +4143,19 @@ diff --git a/src/processor/stackwalker_x86.cc b/src/processor/stackwalker_x86.cc
 +  dictionary[ustr__ZDcbSavedRegs()] = last_frame_info->saved_register_size;
 +  dictionary[ustr__ZDcbLocals()] = last_frame_info->local_size;
  
-   u_int32_t raSearchStart = last_frame->context.esp +
+   uint32_t raSearchStart = last_frame->context.esp +
                              last_frame_callee_parameter_size +
-@@ -237,10 +237,10 @@
+                             last_frame_info->local_size +
+                             last_frame_info->saved_register_size;
+ 
+   uint32_t raSearchStartOld = raSearchStart;
+   uint32_t found = 0;  // dummy value
+@@ -232,20 +232,20 @@
+     // Skip one slot from the stack and do another scan in order to get the
+     // actual return address.
+     raSearchStart += 4;
+     ScanForReturnAddress(raSearchStart, &raSearchStart, &found, 3);
+   }
  
    // The difference between raSearch and raSearchStart is unknown,
    // but making them the same seems to work well in practice.
@@ -2927,9 +4169,19 @@ diff --git a/src/processor/stackwalker_x86.cc b/src/processor/stackwalker_x86.cc
  
    // Decide what type of program string to use. The program string is in
    // postfix notation and will be passed to PostfixEvaluator::Evaluate.
-@@ -330,8 +330,8 @@
-       PostfixEvaluator<u_int32_t>(&dictionary, memory_);
-   PostfixEvaluator<u_int32_t>::DictionaryValidityType dictionary_validity;
+   // Given the dictionary and the program string, it is possible to compute
+   // the return address and the values of other registers in the calling
+   // function. Because of bugs described below, the stack may need to be
+   // scanned for these values. The results of program string evaluation
+   // will be used to determine whether to scan for better values.
+@@ -325,18 +325,18 @@
+   }
+ 
+   // Now crank it out, making sure that the program string set at least the
+   // two required variables.
+   PostfixEvaluator<uint32_t> evaluator =
+       PostfixEvaluator<uint32_t>(&dictionary, memory_);
+   PostfixEvaluator<uint32_t>::DictionaryValidityType dictionary_validity;
    if (!evaluator.Evaluate(program_string, &dictionary_validity) ||
 -      dictionary_validity.find("$eip") == dictionary_validity.end() ||
 -      dictionary_validity.find("$esp") == dictionary_validity.end()) {
@@ -2938,7 +4190,17 @@ diff --git a/src/processor/stackwalker_x86.cc b/src/processor/stackwalker_x86.cc
      // Program string evaluation failed. It may be that %eip is not somewhere
      // with stack frame info, and %ebp is pointing to non-stack memory, so
      // our evaluation couldn't succeed. We'll scan the stack for a return
-@@ -349,8 +349,8 @@
+     // address. This can happen if the stack is in a module for which
+     // we don't have symbols, and that module is compiled without a
+     // frame pointer.
+     uint32_t location_start = last_frame->context.esp;
+     uint32_t location, eip;
+@@ -344,69 +344,69 @@
+       // if we can't find an instruction pointer even with stack scanning,
+       // give up.
+       return NULL;
+     }
+ 
      // This seems like a reasonable return address. Since program string
      // evaluation failed, use it and set %esp to the location above the
      // one where the return address was found.
@@ -2949,7 +4211,10 @@ diff --git a/src/processor/stackwalker_x86.cc b/src/processor/stackwalker_x86.cc
      trust = StackFrame::FRAME_TRUST_SCAN;
    }
  
-@@ -361,7 +361,7 @@
+   // Since this stack frame did not use %ebp in a traditional way,
+   // locating the return address isn't entirely deterministic. In that
+   // case, the stack can be scanned to locate the return address.
+   //
    // However, if program string evaluation resulted in both %eip and
    // %ebp values of 0, trust that the end of the stack has been
    // reached and don't scan for anything else.
@@ -2958,18 +4223,25 @@ diff --git a/src/processor/stackwalker_x86.cc b/src/processor/stackwalker_x86.cc
      int offset = 0;
  
      // This scan can only be done if a CodeModules object is available, to
-@@ -376,18 +376,18 @@
+     // check that candidate return addresses are in fact inside a module.
+     //
+     // TODO(mmentovai): This ignores dynamically-generated code.  One possible
+     // solution is to check the minidump's memory map to see if the candidate
+     // %eip value comes from a mapped executable page, although this would
+     // require dumps that contain MINIDUMP_MEMORY_INFO, which the Breakpad
+     // client doesn't currently write (it would need to call MiniDumpWriteDump
+     // with the MiniDumpWithFullMemoryInfo type bit set).  Even given this
      // ability, older OSes (pre-XP SP2) and CPUs (pre-P4) don't enforce
      // an independent execute privilege on memory pages.
  
--    u_int32_t eip = dictionary["$eip"];
-+    u_int32_t eip = dictionary[ustr__ZSeip()];
+-    uint32_t eip = dictionary["$eip"];
++    uint32_t eip = dictionary[ustr__ZSeip()];
      if (modules_ && !modules_->GetModuleForAddress(eip)) {
        // The instruction pointer at .raSearchStart was invalid, so start
        // looking one 32-bit word above that location.
--      u_int32_t location_start = dictionary[".raSearchStart"] + 4;
-+      u_int32_t location_start = dictionary[ustr__ZDraSearchStart()] + 4;
-       u_int32_t location;
+-      uint32_t location_start = dictionary[".raSearchStart"] + 4;
++      uint32_t location_start = dictionary[ustr__ZDraSearchStart()] + 4;
+       uint32_t location;
        if (ScanForReturnAddress(location_start, &location, &eip)) {
          // This is a better return address that what program string
          // evaluation found.  Use it, and set %esp to the location above the
@@ -2981,16 +4253,32 @@ diff --git a/src/processor/stackwalker_x86.cc b/src/processor/stackwalker_x86.cc
          offset = location - location_start;
          trust = StackFrame::FRAME_TRUST_CFI_SCAN;
        }
-@@ -401,7 +401,7 @@
+     }
+ 
+     if (recover_ebp) {
+       // When trying to recover the previous value of the frame pointer (%ebp),
+       // start looking at the lowest possible address in the saved-register
+       // area, and look at the entire saved register area, increased by the
+       // size of |offset| to account for additional data that may be on the
        // stack.  The scan is performed from the highest possible address to
        // the lowest, because the expectation is that the function's prolog
        // would have saved %ebp early.
--      u_int32_t ebp = dictionary["$ebp"];
-+      u_int32_t ebp = dictionary[ustr__ZSebp()];
+-      uint32_t ebp = dictionary["$ebp"];
++      uint32_t ebp = dictionary[ustr__ZSebp()];
  
        // When a scan for return address is used, it is possible to skip one or
        // more frames (when return address is not in a known module).  One
-@@ -425,7 +425,7 @@
+       // indication for skipped frames is when the value of %ebp is lower than
+       // the location of the return address on the stack
+       bool has_skipped_frames =
+         (trust != StackFrame::FRAME_TRUST_CFI && ebp <= raSearchStart + offset);
+ 
+@@ -420,49 +420,49 @@
+              location >= location_end;
+              location -= 4) {
+           if (!memory_->GetMemoryAtAddress(location, &ebp))
+             break;
+ 
            if (memory_->GetMemoryAtAddress(ebp, &value)) {
              // The candidate value is a pointer to the same memory region
              // (the stack).  Prefer it as a recovered %ebp result.
@@ -2999,7 +4287,13 @@ diff --git a/src/processor/stackwalker_x86.cc b/src/processor/stackwalker_x86.cc
              break;
            }
          }
-@@ -439,25 +439,25 @@
+       }
+     }
+   }
+ 
+   // Create a new stack frame (ownership will be transferred to the caller)
+   // and fill it in.
+   StackFrameX86* frame = new StackFrameX86();
  
    frame->trust = trust;
    frame->context = last_frame->context;
@@ -3034,10 +4328,20 @@ diff --git a/src/processor/stackwalker_x86.cc b/src/processor/stackwalker_x86.cc
      frame->context_validity |= StackFrameX86::CONTEXT_VALID_EDI;
    }
  
+   return frame;
+ }
+ 
+ StackFrameX86* StackwalkerX86::GetCallerByCFIFrameInfo(
+     const vector<StackFrame*> &frames,
 diff --git a/src/tools/mac/dump_syms/dump_syms.xcodeproj/project.pbxproj b/src/tools/mac/dump_syms/dump_syms.xcodeproj/project.pbxproj
 --- a/src/tools/mac/dump_syms/dump_syms.xcodeproj/project.pbxproj
 +++ b/src/tools/mac/dump_syms/dump_syms.xcodeproj/project.pbxproj
-@@ -103,6 +103,12 @@
+@@ -98,16 +98,22 @@
+ 		B8C5B51B1166534700D34F4E /* macho_id.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9BE650430B52F6D800611104 /* macho_id.cc */; };
+ 		B8C5B51C1166534700D34F4E /* macho_walker.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9BE650450B52F6D800611104 /* macho_walker.cc */; };
+ 		B8C5B51D1166534700D34F4E /* dump_syms.mm in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* dump_syms.mm */; };
+ 		B8C5B51E1166534700D34F4E /* dump_syms_tool.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9BDF186E0B1BB43700F8391B /* dump_syms_tool.mm */; };
+ 		B8C5B523116653BA00D34F4E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08FB779EFE84155DC02AAC07 /* Foundation.framework */; };
  		D21F97D711CBA12300239E38 /* test_assembler_unittest.cc in Sources */ = {isa = PBXBuildFile; fileRef = B88FB0D9116CEC0600407530 /* test_assembler_unittest.cc */; };
  		D21F97D811CBA13D00239E38 /* libgtestmockall.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B88FB024116BDFFF00407530 /* libgtestmockall.a */; };
  		D21F97E911CBA1FF00239E38 /* test_assembler.cc in Sources */ = {isa = PBXBuildFile; fileRef = B88FAE0911665B5700407530 /* test_assembler.cc */; };
@@ -3050,7 +4354,17 @@ diff --git a/src/tools/mac/dump_syms/dump_syms.xcodeproj/project.pbxproj b/src/t
  /* End PBXBuildFile section */
  
  /* Begin PBXContainerItemProxy section */
-@@ -343,6 +349,8 @@
+ 		8B31051411F100CF00FCF3E4 /* PBXContainerItemProxy */ = {
+ 			isa = PBXContainerItemProxy;
+ 			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+ 			proxyType = 1;
+ 			remoteGlobalIDString = D21F97D111CBA0F200239E38;
+@@ -338,16 +344,18 @@
+ 		B89E0E741166575200DD08C9 /* macho_dump */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = macho_dump; sourceTree = BUILT_PRODUCTS_DIR; };
+ 		B89E0E9511665A6400DD08C9 /* macho_reader_unittest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = macho_reader_unittest; sourceTree = BUILT_PRODUCTS_DIR; };
+ 		B89E0E9F11665AC300DD08C9 /* gtest_main.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = gtest_main.cc; path = ../../../testing/gtest/src/gtest_main.cc; sourceTree = SOURCE_ROOT; };
+ 		B89E0EA011665AC300DD08C9 /* gtest-all.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "gtest-all.cc"; path = "../../../testing/gtest/src/gtest-all.cc"; sourceTree = SOURCE_ROOT; };
+ 		B89E0EA311665AEA00DD08C9 /* gmock-all.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "gmock-all.cc"; path = "../../../testing/src/gmock-all.cc"; sourceTree = SOURCE_ROOT; };
  		B8C5B5111166531A00D34F4E /* dump_syms */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = dump_syms; sourceTree = BUILT_PRODUCTS_DIR; };
  		B8E8CA0C1156C854009E61B2 /* byteswap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = byteswap.h; path = ../../../common/mac/byteswap.h; sourceTree = SOURCE_ROOT; };
  		D21F97D211CBA0F200239E38 /* test_assembler_unittest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_assembler_unittest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -3059,7 +4373,17 @@ diff --git a/src/tools/mac/dump_syms/dump_syms.xcodeproj/project.pbxproj b/src/t
  		F95B422B0E0E22D100DBDE83 /* bytereader-inl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "bytereader-inl.h"; path = "../../../common/dwarf/bytereader-inl.h"; sourceTree = SOURCE_ROOT; };
  		F95B422C0E0E22D100DBDE83 /* bytereader.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bytereader.cc; path = ../../../common/dwarf/bytereader.cc; sourceTree = SOURCE_ROOT; };
  		F95B422D0E0E22D100DBDE83 /* bytereader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bytereader.h; path = ../../../common/dwarf/bytereader.h; sourceTree = SOURCE_ROOT; };
-@@ -536,6 +544,8 @@
+ 		F95B422E0E0E22D100DBDE83 /* dwarf2enums.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dwarf2enums.h; path = ../../../common/dwarf/dwarf2enums.h; sourceTree = SOURCE_ROOT; };
+ 		F95B422F0E0E22D100DBDE83 /* dwarf2reader.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dwarf2reader.cc; path = ../../../common/dwarf/dwarf2reader.cc; sourceTree = SOURCE_ROOT; };
+ 		F95B42300E0E22D100DBDE83 /* dwarf2reader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dwarf2reader.h; path = ../../../common/dwarf/dwarf2reader.h; sourceTree = SOURCE_ROOT; };
+ 		F95B42310E0E22D100DBDE83 /* line_state_machine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = line_state_machine.h; path = ../../../common/dwarf/line_state_machine.h; sourceTree = SOURCE_ROOT; };
+ /* End PBXFileReference section */
+@@ -531,16 +539,18 @@
+ 				D21F97D211CBA0F200239E38 /* test_assembler_unittest */,
+ 			);
+ 			name = Products;
+ 			sourceTree = "<group>";
+ 		};
  		B88FAE1C11665FFD00407530 /* MODULE */ = {
  			isa = PBXGroup;
  			children = (
@@ -3068,7 +4392,17 @@ diff --git a/src/tools/mac/dump_syms/dump_syms.xcodeproj/project.pbxproj b/src/t
  				B88FAE1E1166603300407530 /* dwarf_cu_to_module.cc */,
  				B88FAE1F1166603300407530 /* dwarf_cu_to_module.h */,
  				B88FB0D6116CEC0600407530 /* dwarf_cu_to_module_unittest.cc */,
-@@ -945,6 +955,7 @@
+ 				B88FAE201166603300407530 /* dwarf_line_to_module.cc */,
+ 				B88FAE211166603300407530 /* dwarf_line_to_module.h */,
+ 				B88FB0D7116CEC0600407530 /* dwarf_line_to_module_unittest.cc */,
+ 				B88FAE221166603300407530 /* language.cc */,
+ 				B88FAE231166603300407530 /* language.h */,
+@@ -937,16 +947,17 @@
+ 		};
+ /* End PBXShellScriptBuildPhase section */
+ 
+ /* Begin PBXSourcesBuildPhase section */
+ 		B84A91F1116CF784006C210E /* Sources */ = {
  			isa = PBXSourcesBuildPhase;
  			buildActionMask = 2147483647;
  			files = (
@@ -3076,7 +4410,17 @@ diff --git a/src/tools/mac/dump_syms/dump_syms.xcodeproj/project.pbxproj b/src/t
  				B84A91FB116CF7AF006C210E /* module.cc in Sources */,
  				B84A91FC116CF7AF006C210E /* stabs_to_module.cc in Sources */,
  				B84A91FD116CF7AF006C210E /* stabs_to_module_unittest.cc in Sources */,
-@@ -988,6 +999,7 @@
+ 			);
+ 			runOnlyForDeploymentPostprocessing = 0;
+ 		};
+ 		B88FAF2C116A591D00407530 /* Sources */ = {
+ 			isa = PBXSourcesBuildPhase;
+@@ -980,56 +991,60 @@
+ 			runOnlyForDeploymentPostprocessing = 0;
+ 		};
+ 		B88FB0B6116CEABF00407530 /* Sources */ = {
+ 			isa = PBXSourcesBuildPhase;
+ 			buildActionMask = 2147483647;
  			files = (
  				B88FB0BD116CEAE000407530 /* module_unittest.cc in Sources */,
  				B88FB0C4116CEB4100407530 /* module.cc in Sources */,
@@ -3084,7 +4428,16 @@ diff --git a/src/tools/mac/dump_syms/dump_syms.xcodeproj/project.pbxproj b/src/t
  			);
  			runOnlyForDeploymentPostprocessing = 0;
  		};
-@@ -1004,6 +1016,7 @@
+ 		B88FB0DC116CEEA800407530 /* Sources */ = {
+ 			isa = PBXSourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
+ 				B88FB0E5116CEED300407530 /* dwarf2diehandler.cc in Sources */,
+ 				B88FB0E6116CEED300407530 /* dwarf2diehandler_unittest.cc in Sources */,
+ 			);
+ 			runOnlyForDeploymentPostprocessing = 0;
+ 		};
+ 		B88FB0EF116CEF1900407530 /* Sources */ = {
  			isa = PBXSourcesBuildPhase;
  			buildActionMask = 2147483647;
  			files = (
@@ -3092,7 +4445,10 @@ diff --git a/src/tools/mac/dump_syms/dump_syms.xcodeproj/project.pbxproj b/src/t
  				B88FB0FA116CF00E00407530 /* dwarf_line_to_module.cc in Sources */,
  				B88FB0FE116CF02400407530 /* module.cc in Sources */,
  				B88FB0FB116CF00E00407530 /* dwarf_line_to_module_unittest.cc in Sources */,
-@@ -1014,6 +1027,7 @@
+ 			);
+ 			runOnlyForDeploymentPostprocessing = 0;
+ 		};
+ 		B88FB107116CF07900407530 /* Sources */ = {
  			isa = PBXSourcesBuildPhase;
  			buildActionMask = 2147483647;
  			files = (
@@ -3100,7 +4456,14 @@ diff --git a/src/tools/mac/dump_syms/dump_syms.xcodeproj/project.pbxproj b/src/t
  				B88FB112116CF1F000407530 /* dwarf_cu_to_module.cc in Sources */,
  				B88FB113116CF1F000407530 /* dwarf_cu_to_module_unittest.cc in Sources */,
  				B88FB114116CF1F000407530 /* language.cc in Sources */,
-@@ -1028,6 +1042,7 @@
+ 				B88FB115116CF1F000407530 /* module.cc in Sources */,
+ 			);
+ 			runOnlyForDeploymentPostprocessing = 0;
+ 		};
+ 		B88FB11C116CF27F00407530 /* Sources */ = {
+ 			isa = PBXSourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
  				B88FB129116CF2DD00407530 /* module.cc in Sources */,
  				B88FB12A116CF2DD00407530 /* dwarf_cfi_to_module.cc in Sources */,
  				B88FB12B116CF2DD00407530 /* dwarf_cfi_to_module_unittest.cc in Sources */,
@@ -3108,7 +4471,17 @@ diff --git a/src/tools/mac/dump_syms/dump_syms.xcodeproj/project.pbxproj b/src/t
  			);
  			runOnlyForDeploymentPostprocessing = 0;
  		};
-@@ -1091,6 +1106,7 @@
+ 		B88FB132116CF30F00407530 /* Sources */ = {
+ 			isa = PBXSourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
+ 				B88FB13D116CF38300407530 /* cfi_assembler.cc in Sources */,
+@@ -1083,16 +1098,17 @@
+ 				B88FAE261166603300407530 /* dwarf_cu_to_module.cc in Sources */,
+ 				B88FAE271166603300407530 /* dwarf_line_to_module.cc in Sources */,
+ 				B88FAE281166603300407530 /* language.cc in Sources */,
+ 				B88FAE291166603300407530 /* module.cc in Sources */,
+ 				B88FAE351166673E00407530 /* dwarf_cfi_to_module.cc in Sources */,
  				B88FAE3B11666C6F00407530 /* stabs_reader.cc in Sources */,
  				B88FAE3E11666C8900407530 /* stabs_to_module.cc in Sources */,
  				4D72CAF513DFBAC2006CABE3 /* md5.cc in Sources */,
@@ -3116,3 +4489,8 @@ diff --git a/src/tools/mac/dump_syms/dump_syms.xcodeproj/project.pbxproj b/src/t
  			);
  			runOnlyForDeploymentPostprocessing = 0;
  		};
+ 		D21F97CF11CBA0F200239E38 /* Sources */ = {
+ 			isa = PBXSourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
+ 				D21F97E911CBA1FF00239E38 /* test_assembler.cc in Sources */,

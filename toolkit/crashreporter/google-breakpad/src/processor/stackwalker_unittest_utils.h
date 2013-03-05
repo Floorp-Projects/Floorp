@@ -55,24 +55,24 @@ class MockMemoryRegion: public google_breakpad::MemoryRegion {
   // Set this region's address and contents. If we have placed an
   // instance of this class in a test fixture class, individual tests
   // can use this to provide the region's contents.
-  void Init(u_int64_t base_address, const string &contents) {
+  void Init(uint64_t base_address, const string &contents) {
     base_address_ = base_address;
     contents_ = contents;
   }
 
-  u_int64_t GetBase() const { return base_address_; }
-  u_int32_t GetSize() const { return contents_.size(); }
+  uint64_t GetBase() const { return base_address_; }
+  uint32_t GetSize() const { return contents_.size(); }
 
-  bool GetMemoryAtAddress(u_int64_t address, u_int8_t  *value) const {
+  bool GetMemoryAtAddress(uint64_t address, uint8_t  *value) const {
     return GetMemoryLittleEndian(address, value);
   }
-  bool GetMemoryAtAddress(u_int64_t address, u_int16_t *value) const {
+  bool GetMemoryAtAddress(uint64_t address, uint16_t *value) const {
     return GetMemoryLittleEndian(address, value);
   }
-  bool GetMemoryAtAddress(u_int64_t address, u_int32_t *value) const {
+  bool GetMemoryAtAddress(uint64_t address, uint32_t *value) const {
     return GetMemoryLittleEndian(address, value);
   }
-  bool GetMemoryAtAddress(u_int64_t address, u_int64_t *value) const {
+  bool GetMemoryAtAddress(uint64_t address, uint64_t *value) const {
     return GetMemoryLittleEndian(address, value);
   }
 
@@ -80,7 +80,7 @@ class MockMemoryRegion: public google_breakpad::MemoryRegion {
   // Fetch a little-endian value from ADDRESS in contents_ whose size
   // is BYTES, and store it in *VALUE. Return true on success.
   template<typename ValueType>
-  bool GetMemoryLittleEndian(u_int64_t address, ValueType *value) const {
+  bool GetMemoryLittleEndian(uint64_t address, ValueType *value) const {
     if (address < base_address_ ||
         address - base_address_ + sizeof(ValueType) > contents_.size())
       return false;
@@ -93,18 +93,18 @@ class MockMemoryRegion: public google_breakpad::MemoryRegion {
     return true;
   }
 
-  u_int64_t base_address_;
+  uint64_t base_address_;
   string contents_;
 };
 
 class MockCodeModule: public google_breakpad::CodeModule {
  public:
-  MockCodeModule(u_int64_t base_address, u_int64_t size,
+  MockCodeModule(uint64_t base_address, uint64_t size,
                  const string &code_file, const string &version)
       : base_address_(base_address), size_(size), code_file_(code_file) { }
 
-  u_int64_t base_address()       const { return base_address_; }
-  u_int64_t size()               const { return size_; }
+  uint64_t base_address()       const { return base_address_; }
+  uint64_t size()               const { return size_; }
   string code_file()        const { return code_file_; }
   string code_identifier()  const { return code_file_; }
   string debug_file()       const { return code_file_; }
@@ -115,8 +115,8 @@ class MockCodeModule: public google_breakpad::CodeModule {
   }
 
  private:
-  u_int64_t base_address_;
-  u_int64_t size_;
+  uint64_t base_address_;
+  uint64_t size_;
   string code_file_;
   string version_;
 };
@@ -132,7 +132,7 @@ class MockCodeModules: public google_breakpad::CodeModules {
 
   unsigned int module_count() const { return modules_.size(); }
 
-  const CodeModule *GetModuleForAddress(u_int64_t address) const {
+  const CodeModule *GetModuleForAddress(uint64_t address) const {
     for (ModuleVector::const_iterator i = modules_.begin();
          i != modules_.end(); i++) {
       const MockCodeModule *module = *i;

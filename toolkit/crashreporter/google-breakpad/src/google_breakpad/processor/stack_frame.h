@@ -85,7 +85,7 @@ struct StackFrame {
 
   // Return the actual return address, as saved on the stack or in a
   // register. See the comments for 'instruction', below, for details.
-  virtual u_int64_t ReturnAddress() const { return instruction; }
+  virtual uint64_t ReturnAddress() const { return instruction; }
 
   // The program counter location as an absolute virtual address.
   //
@@ -108,7 +108,7 @@ struct StackFrame {
   // a register is fine for looking up the point of the call. On others, it
   // requires adjustment. ReturnAddress returns the address as saved by the
   // machine.
-  u_int64_t instruction;
+  uint64_t instruction;
 
   // The module in which the instruction resides.
   const CodeModule *module;
@@ -118,7 +118,7 @@ struct StackFrame {
 
   // The start address of the function, may be omitted if debug symbols
   // are not available.
-  u_int64_t function_base;
+  uint64_t function_base;
 
   // The source file name, may be omitted if debug symbols are not available.
   string source_file_name;
@@ -129,7 +129,7 @@ struct StackFrame {
 
   // The start address of the source line, may be omitted if debug symbols
   // are not available.
-  u_int64_t source_line_base;
+  uint64_t source_line_base;
 
   // Amount of trust the stack walker has in the instruction pointer
   // of this frame.

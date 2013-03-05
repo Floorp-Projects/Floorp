@@ -53,10 +53,10 @@ using google_breakpad::MinidumpMiscInfo;
 using google_breakpad::MinidumpBreakpadInfo;
 
 static void DumpRawStream(Minidump *minidump,
-                          u_int32_t stream_type,
+                          uint32_t stream_type,
                           const char *stream_name,
                           int *errors) {
-  u_int32_t length = 0;
+  uint32_t length = 0;
   if (!minidump->SeekToStreamType(stream_type, &length)) {
     return;
   }
@@ -78,7 +78,7 @@ static void DumpRawStream(Minidump *minidump,
     size_t remaining = length - current_offset;
     // Printf requires an int and direct casting from size_t results
     // in compatibility warnings.
-    u_int32_t int_remaining = remaining;
+    uint32_t int_remaining = remaining;
     printf("%.*s", int_remaining, &contents[current_offset]);
     char *next_null = reinterpret_cast<char *>(
         memchr(&contents[current_offset], 0, remaining));

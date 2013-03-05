@@ -1,0 +1,118 @@
+# HG changeset patch
+# Parent b82a8a320d2e1fc61565872cdd355605895a7602
+Allow building symbol dumping without STABS support
+
+diff --git a/src/common/linux/dump_symbols.cc b/src/common/linux/dump_symbols.cc
+--- a/src/common/linux/dump_symbols.cc
++++ b/src/common/linux/dump_symbols.cc
+@@ -58,34 +58,38 @@
+ #include "common/dwarf_cu_to_module.h"
+ #include "common/dwarf_line_to_module.h"
+ #include "common/linux/elfutils.h"
+ #include "common/linux/elfutils-inl.h"
+ #include "common/linux/elf_symbols_to_module.h"
+ #include "common/linux/file_id.h"
+ #include "common/module.h"
+ #include "common/scoped_ptr.h"
++#ifndef NO_STABS_SUPPORT
+ #include "common/stabs_reader.h"
+ #include "common/stabs_to_module.h"
++#endif
+ #include "common/using_std_string.h"
+ 
+ // This namespace contains helper functions.
+ namespace {
+ 
+ using google_breakpad::DwarfCFIToModule;
+ using google_breakpad::DwarfCUToModule;
+ using google_breakpad::DwarfLineToModule;
+ using google_breakpad::ElfClass;
+ using google_breakpad::ElfClass32;
+ using google_breakpad::ElfClass64;
+ using google_breakpad::FindElfSectionByName;
+ using google_breakpad::GetOffset;
+ using google_breakpad::IsValidElf;
+ using google_breakpad::Module;
++#ifndef NO_STABS_SUPPORT
+ using google_breakpad::StabsToModule;
++#endif
+ using google_breakpad::UniqueString;
+ using google_breakpad::scoped_ptr;
+ 
+ //
+ // FDWrapper
+ //
+ // Wrapper class to make sure opened file is closed.
+ //
+@@ -154,16 +158,17 @@
+     if (header.p_type == PT_LOAD &&
+         header.p_offset == 0)
+       return header.p_vaddr;
+   }
+   // For other types of ELF, return 0.
+   return 0;
+ }
+ 
++#ifndef NO_STABS_SUPPORT
+ template<typename ElfClass>
+ bool LoadStabs(const typename ElfClass::Ehdr* elf_header,
+                const typename ElfClass::Shdr* stab_section,
+                const typename ElfClass::Shdr* stabstr_section,
+                const bool big_endian,
+                Module* module) {
+   // A callback object to handle data from the STABS reader.
+   StabsToModule handler(module);
+@@ -179,16 +184,17 @@
+                                       stabstr, stabstr_section->sh_size,
+                                       big_endian, 4, true, &handler);
+   // Read the STABS data, and do post-processing.
+   if (!reader.Process())
+     return false;
+   handler.Finalize();
+   return true;
+ }
++#endif  // NO_STABS_SUPPORT
+ 
+ // A line-to-module loader that accepts line number info parsed by
+ // dwarf2reader::LineInfo and populates a Module and a line vector
+ // with the results.
+ class DumperLineToModule: public DwarfCUToModule::LineToModuleHandler {
+  public:
+   // Create a line-to-module converter using BYTE_READER.
+   explicit DumperLineToModule(dwarf2reader::ByteReader *byte_reader)
+@@ -533,16 +539,17 @@
+   const Shdr* section_names = sections + elf_header->e_shstrndx;
+   const char* names =
+       GetOffset<ElfClass, char>(elf_header, section_names->sh_offset);
+   const char *names_end = names + section_names->sh_size;
+   bool found_debug_info_section = false;
+   bool found_usable_info = false;
+ 
+   if (symbol_data != ONLY_CFI) {
++#ifndef NO_STABS_SUPPORT
+     // Look for STABS debugging information, and load it if present.
+     const Shdr* stab_section =
+       FindElfSectionByName<ElfClass>(".stab", SHT_PROGBITS,
+                                      sections, names, names_end,
+                                      elf_header->e_shnum);
+     if (stab_section) {
+       const Shdr* stabstr_section = stab_section->sh_link + sections;
+       if (stabstr_section) {
+@@ -551,16 +558,17 @@
+         info->LoadedSection(".stab");
+         if (!LoadStabs<ElfClass>(elf_header, stab_section, stabstr_section,
+                                  big_endian, module)) {
+           fprintf(stderr, "%s: \".stab\" section found, but failed to load"
+                   " STABS debugging information\n", obj_file.c_str());
+         }
+       }
+     }
++#endif  // NO_STABS_SUPPORT
+ 
+     // Look for DWARF debugging information, and load it if present.
+     const Shdr* dwarf_section =
+       FindElfSectionByName<ElfClass>(".debug_info", SHT_PROGBITS,
+                                      sections, names, names_end,
+                                      elf_header->e_shnum);
+     if (dwarf_section) {
+       found_debug_info_section = true;
