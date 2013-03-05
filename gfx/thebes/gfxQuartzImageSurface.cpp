@@ -15,15 +15,33 @@ gfxQuartzImageSurface::gfxQuartzImageSurface(gfxImageSurface *imageSurface)
 
     cairo_surface_t *surf = cairo_quartz_image_surface_create (imageSurface->CairoSurface());
     Init (surf);
+    mSize = ComputeSize();
 }
 
 gfxQuartzImageSurface::gfxQuartzImageSurface(cairo_surface_t *csurf)
 {
     Init (csurf, true);
+    mSize = ComputeSize();
 }
 
 gfxQuartzImageSurface::~gfxQuartzImageSurface()
 {
+}
+
+gfxIntSize
+gfxQuartzImageSurface::ComputeSize()
+{
+  if (mSurfaceValid) {
+    cairo_surface_t* isurf = cairo_quartz_image_surface_get_image(mSurface);
+    if (isurf) {
+      return gfxIntSize(cairo_image_surface_get_width(isurf),
+                        cairo_image_surface_get_height(isurf));
+    }
+  }
+
+  // If we reach here then something went wrong. Just use the same default
+  // value as gfxASurface::GetSize.
+  return gfxIntSize(-1, -1);
 }
 
 int32_t
