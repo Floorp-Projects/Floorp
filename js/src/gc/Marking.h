@@ -109,6 +109,13 @@ DeclMarker(TypeObject, types::TypeObject)
 
 #undef DeclMarker
 
+/* Return true if the pointer is NULL, or if it is a tagged pointer to NULL. */
+JS_ALWAYS_INLINE bool
+IsNullTaggedPointer(void *p)
+{
+    return uintptr_t(p) < 32;
+}
+
 /*** Externally Typed Marking ***/
 
 /*

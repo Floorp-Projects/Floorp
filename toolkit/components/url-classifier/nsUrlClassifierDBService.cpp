@@ -42,6 +42,7 @@
 #include "nsIPrincipal.h"
 #include "Classifier.h"
 #include "ProtocolParser.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::safebrowsing;
@@ -1237,9 +1238,15 @@ nsUrlClassifierDBService::LookupURI(nsIPrincipal* aPrincipal,
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_ARG(aPrincipal);
 
+  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+    *didLookup = false;
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIURI> uri;
   nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
   uri = NS_GetInnermostURI(uri);
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);

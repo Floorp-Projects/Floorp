@@ -24,6 +24,7 @@
 #include "logging.h"
 #include "nricectx.h"
 #include "nricemediastream.h"
+#include "nriceresolverfake.h"
 #include "mtransport_test_utils.h"
 #include "runnable_utils.h"
 
@@ -35,6 +36,11 @@ using namespace mozilla;
 MtransportTestUtils *test_utils;
 
 bool stream_added = false;
+
+const std::string kDefaultStunServerAddress((char *)"23.21.150.121");
+const std::string kDefaultStunServerHostname((char *)"stun-server.invalid");
+const std::string kBogusStunServerHostname((char *)"stun-server-nonexistent.invalid");
+const uint16_t kDefaultStunServerPort=3478;
 
 namespace {
 
@@ -53,6 +59,7 @@ class IceTestPeer : public sigslot::has_slots<> {
       ice_complete_(false),
       received_(0),
       sent_(0),
+      fake_resolver_(),
       remote_(nullptr) {
     ice_ctx_->SignalGatheringCompleted.connect(this,
                                               &IceTestPeer::GatheringComplete);
@@ -63,6 +70,10 @@ class IceTestPeer : public sigslot::has_slots<> {
     test_utils->sts_target()->Dispatch(WrapRunnable(this,
                                                     &IceTestPeer::Shutdown),
         NS_DISPATCH_SYNC);
+
+    // Give the ICE destruction callback time to fire before
+    // we destroy the resolver.
+    PR_Sleep(1000);
   }
 
   void AddStream(int components) {
@@ -79,14 +90,30 @@ class IceTestPeer : public sigslot::has_slots<> {
     stream->SignalPacketReceived.connect(this, &IceTestPeer::PacketReceived);
   }
 
-  void Gather() {
-    nsresult res;
-
+  void SetStunServer(const std::string addr, uint16_t port) {
     std::vector<NrIceStunServer> stun_servers;
-    ScopedDeletePtr<NrIceStunServer> server(NrIceStunServer::Create(
-        std::string((char *)"216.93.246.14"), 3478));
+    ScopedDeletePtr<NrIceStunServer> server(NrIceStunServer::Create(addr,
+                                                                    port));
     stun_servers.push_back(*server);
     ASSERT_TRUE(NS_SUCCEEDED(ice_ctx_->SetStunServers(stun_servers)));
+  }
+
+  void AddAddressToResolver(const std::string hostname,
+                            const std::string address) {
+    PRNetAddr addr;
+    PRStatus status = PR_StringToNetAddr(address.c_str(), &addr);
+    ASSERT_EQ(PR_SUCCESS, status);
+
+    fake_resolver_.SetAddr(hostname, addr);
+  }
+
+  void SetResolver() {
+    ASSERT_TRUE(NS_SUCCEEDED(ice_ctx_->SetResolver(
+        fake_resolver_.AllocateResolver())));
+  }
+
+  void Gather() {
+    nsresult res;
 
     test_utils->sts_target()->Dispatch(
         WrapRunnableRet(ice_ctx_, &NrIceCtx::StartGathering, &res),
@@ -242,12 +269,35 @@ class IceTestPeer : public sigslot::has_slots<> {
   bool ice_complete_;
   size_t received_;
   size_t sent_;
+  NrIceResolverFake fake_resolver_;
   IceTestPeer *remote_;
 };
 
-class IceTest : public ::testing::Test {
+class IceGatherTest : public ::testing::Test {
  public:
-  IceTest() : initted_(false) {}
+  void SetUp() {
+    peer_ = new IceTestPeer("P1", true, false);
+    peer_->AddStream(1);
+    peer_->AddAddressToResolver(kDefaultStunServerHostname,
+                                kDefaultStunServerAddress);
+  }
+
+  void SetResolver() {
+    peer_->SetResolver();
+  }
+
+  void Gather() {
+    peer_->Gather();
+
+    ASSERT_TRUE_WAIT(peer_->gathering_complete(), 10000);
+  }
+ protected:
+  mozilla::ScopedDeletePtr<IceTestPeer> peer_;
+};
+
+class IceConnectTest : public ::testing::Test {
+ public:
+  IceConnectTest() : initted_(false) {}
 
   void SetUp() {
     nsresult rv;
@@ -271,6 +321,8 @@ class IceTest : public ::testing::Test {
 
   bool Gather(bool wait) {
     Init(false);
+    p1_->SetStunServer(kDefaultStunServerAddress, kDefaultStunServerPort);
+    p2_->SetStunServer(kDefaultStunServerAddress, kDefaultStunServerPort);
     p1_->Gather();
     p2_->Gather();
 
@@ -315,7 +367,7 @@ class IceTest : public ::testing::Test {
     p1_->Connect(p2_, TRICKLE_NONE, true);
     p2_->Connect(p1_, TRICKLE_NONE, false);
     test_utils->sts_target()->Dispatch(WrapRunnable(this,
-                                                    &IceTest::CloseP1),
+                                                    &IceConnectTest::CloseP1),
                                        NS_DISPATCH_SYNC);
     p2_->StartChecks();
 
@@ -344,32 +396,56 @@ class IceTest : public ::testing::Test {
 }  // end namespace
 
 
-TEST_F(IceTest, TestGather) {
+TEST_F(IceGatherTest, TestGatherStunServerIpAddress) {
+  peer_->SetStunServer(kDefaultStunServerAddress, kDefaultStunServerPort);
+  peer_->SetResolver();
+  Gather();
+}
+
+TEST_F(IceGatherTest, TestGatherStunServerHostname) {
+  peer_->SetStunServer(kDefaultStunServerHostname, kDefaultStunServerPort);
+  peer_->SetResolver();
+  Gather();
+}
+
+TEST_F(IceGatherTest, TestGatherStunBogusHostname) {
+  peer_->SetStunServer(kBogusStunServerHostname, kDefaultStunServerPort);
+  peer_->SetResolver();
+  Gather();
+}
+
+TEST_F(IceGatherTest, TestGatherStunServerHostnameNoResolver) {
+  peer_->SetStunServer(kDefaultStunServerHostname, kDefaultStunServerPort);
+  Gather();
+}
+
+
+TEST_F(IceConnectTest, TestGather) {
   AddStream("first", 1);
   ASSERT_TRUE(Gather(true));
 }
 
-TEST_F(IceTest, TestGatherAutoPrioritize) {
+TEST_F(IceConnectTest, TestGatherAutoPrioritize) {
   Init(false);
   AddStream("first", 1);
   ASSERT_TRUE(Gather(true));
 }
 
 
-TEST_F(IceTest, TestConnect) {
+TEST_F(IceConnectTest, TestConnect) {
   AddStream("first", 1);
   ASSERT_TRUE(Gather(true));
   Connect();
 }
 
-TEST_F(IceTest, TestConnectAutoPrioritize) {
+TEST_F(IceConnectTest, TestConnectAutoPrioritize) {
   Init(false);
   AddStream("first", 1);
   ASSERT_TRUE(Gather(true));
   Connect();
 }
 
-TEST_F(IceTest, TestConnectTrickleOneStreamOneComponent) {
+TEST_F(IceConnectTest, TestConnectTrickleOneStreamOneComponent) {
   AddStream("first", 1);
   ASSERT_TRUE(Gather(true));
   ConnectTrickle();
@@ -378,7 +454,7 @@ TEST_F(IceTest, TestConnectTrickleOneStreamOneComponent) {
   ASSERT_TRUE_WAIT(p2_->ice_complete(), 1000);
 }
 
-TEST_F(IceTest, TestConnectTrickleTwoStreamsOneComponent) {
+TEST_F(IceConnectTest, TestConnectTrickleTwoStreamsOneComponent) {
   AddStream("first", 1);
   AddStream("second", 1);
   ASSERT_TRUE(Gather(true));
@@ -390,14 +466,14 @@ TEST_F(IceTest, TestConnectTrickleTwoStreamsOneComponent) {
 }
 
 
-TEST_F(IceTest, TestSendReceive) {
+TEST_F(IceConnectTest, TestSendReceive) {
   AddStream("first", 1);
   ASSERT_TRUE(Gather(true));
   Connect();
   SendReceive();
 }
 
-TEST_F(IceTest, TestConnectShutdownOneSide) {
+TEST_F(IceConnectTest, TestConnectShutdownOneSide) {
   AddStream("first", 1);
   ASSERT_TRUE(Gather(true));
   ConnectThenDelete();

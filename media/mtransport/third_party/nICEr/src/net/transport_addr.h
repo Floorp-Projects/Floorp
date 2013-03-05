@@ -89,6 +89,8 @@ int nr_transport_addr_cmp(nr_transport_addr *addr1,nr_transport_addr *addr2,int 
 int nr_transport_addr_is_wildcard(nr_transport_addr *addr);
 int nr_transport_addr_is_loopback(nr_transport_addr *addr);
 int nr_transport_addr_copy(nr_transport_addr *to, nr_transport_addr *from);
+int nr_transport_addr_fmt_addr_string(nr_transport_addr *addr);
+int nr_transport_addr_set_port(nr_transport_addr *addr, int port);
 
 #endif
 

@@ -11,6 +11,7 @@
 #include "nsIThread.h"
 
 #include "nsTimerImpl.h"
+#include "nsThreadUtils.h"
 
 #include "nsTArray.h"
 
@@ -48,6 +49,11 @@ public:
 
   void DoBeforeSleep();
   void DoAfterSleep();
+
+  bool IsOnTimerThread() const
+  {
+    return mThread == NS_GetCurrentThread();
+  }
 
 private:
   ~TimerThread();

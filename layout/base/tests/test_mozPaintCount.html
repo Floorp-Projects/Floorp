@@ -16,10 +16,6 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-if (!navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 2); // bug 846096
-}
-
 SimpleTest.waitForExplicitFinish();
 
 var startPaintCount = window.mozPaintCount;

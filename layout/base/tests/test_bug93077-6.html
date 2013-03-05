@@ -20,11 +20,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=93077
 <p><a name=TOP>Top</a></p>
 <pre id="test">
 <script type="application/javascript">
-
-if (navigator.platform.startsWith("Linux")) {
-  SimpleTest.expectAssertions(0, 2); // bug 846096
-}
-
 /** Test for Bug 93077 **/
 ["#top", "#Top"].forEach(function(fragid) {
   document.getElementById("below").scrollIntoView()
