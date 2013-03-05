@@ -107,7 +107,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DocAccessible, Accessible)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNotificationController)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVirtualCursor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildDocuments)
+  tmp->mDependentIDsHash.EnumerateRead(CycleCollectorTraverseDepIDsEntry, &cb);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAccessibleCache)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnchorJumpElm)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DocAccessible, Accessible)
@@ -117,6 +119,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DocAccessible, Accessible)
   tmp->mDependentIDsHash.Clear();
   tmp->mNodeToAccessibleMap.Clear();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAccessibleCache)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAnchorJumpElm)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DocAccessible)
@@ -1979,5 +1982,27 @@ DocAccessible::IsLoadEventTarget() const
   int32_t contentType;
   treeItem->GetItemType(&contentType);
   return (contentType == nsIDocShellTreeItem::typeContent);
+}
+
+PLDHashOperator
+DocAccessible::CycleCollectorTraverseDepIDsEntry(const nsAString& aKey,
+                                                 AttrRelProviderArray* aProviders,
+                                                 void* aUserArg)
+{
+  nsCycleCollectionTraversalCallback* cb =
+    static_cast<nsCycleCollectionTraversalCallback*>(aUserArg);
+
+  for (int32_t jdx = aProviders->Length() - 1; jdx >= 0; jdx--) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
+                                       "content of dependent ids hash entry of document accessible");
+
+    AttrRelProvider* provider = (*aProviders)[jdx];
+    cb->NoteXPCOMChild(provider->mContent);
+
+    NS_ASSERTION(provider->mContent->IsInDoc(),
+                 "Referred content is not in document!");
+  }
+
+  return PL_DHASH_NEXT;
 }
 
