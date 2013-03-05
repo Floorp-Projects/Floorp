@@ -19,7 +19,7 @@ using namespace js::mjit;
 using namespace js::analyze;
 using namespace js::types;
 
-using mozilla::Abs;
+using mozilla::DeprecatedAbs;
 
 LoopState::LoopState(JSContext *cx, analyze::CrossScriptSSA *ssa,
                      mjit::Compiler *cc, FrameState *frame)
@@ -2029,7 +2029,7 @@ LoopState::computeInterval(const CrossSSAValue &cv, int32_t *pmin, int32_t *pmax
         if (!computeInterval(rhsv, &rhsmin, &rhsmax) || rhsmin != rhsmax)
             return false;
 
-        int32_t rhs = Abs(rhsmax);
+        int32_t rhs = DeprecatedAbs(rhsmax);
         *pmin = -(rhs - 1);
         *pmax = rhs - 1;
         return true;
@@ -2063,8 +2063,8 @@ LoopState::computeInterval(const CrossSSAValue &cv, int32_t *pmin, int32_t *pmax
         if (lhsmin == INT32_MIN || rhsmin == INT32_MIN)
             return false;
 
-        int32_t nlhs = Max(Abs(lhsmin), Abs(lhsmax));
-        int32_t nrhs = Max(Abs(rhsmin), Abs(rhsmax));
+        int32_t nlhs = Max(DeprecatedAbs(lhsmin), DeprecatedAbs(lhsmax));
+        int32_t nrhs = Max(DeprecatedAbs(rhsmin), DeprecatedAbs(rhsmax));
 
         if (!SafeMul(nlhs, nrhs, pmax))
             return false;

@@ -790,7 +790,7 @@ CalcStyleMatch(gfxFontEntry *aFontEntry, const gfxFontStyle *aStyle)
          }
 
         // measure of closeness of weight to the desired value
-        rank += 9 - Abs(aFontEntry->Weight() / 100 - aStyle->ComputeWeight());
+        rank += 9 - DeprecatedAbs(aFontEntry->Weight() / 100 - aStyle->ComputeWeight());
     } else {
         // if no font to match, prefer non-bold, non-italic fonts
         if (!aFontEntry->IsItalic()) {
@@ -2966,8 +2966,8 @@ gfxFont::InitMetricsFromSfntTables(Metrics& aMetrics)
             uint16_t(os2->version) >= 2) {
             // version 2 and later includes the x-height field
             SET_SIGNED(xHeight, os2->sxHeight);
-            // Abs because of negative xHeight seen in Kokonor (Tibetan) font
-            aMetrics.xHeight = Abs(aMetrics.xHeight);
+            // DeprecatedAbs because of negative xHeight seen in Kokonor (Tibetan) font
+            aMetrics.xHeight = DeprecatedAbs(aMetrics.xHeight);
         }
         // this should always be present
         if (os2data.Length() >= offsetof(OS2Table, yStrikeoutPosition) +

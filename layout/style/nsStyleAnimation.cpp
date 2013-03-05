@@ -381,7 +381,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
           // just like eUnit_Integer.
           int32_t startInt = aStartValue.GetIntValue();
           int32_t endInt = aEndValue.GetIntValue();
-          aDistance = Abs(endInt - startInt);
+          aDistance = DeprecatedAbs(endInt - startInt);
           return true;
         }
         default:
@@ -404,19 +404,19 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
     case eUnit_Integer: {
       int32_t startInt = aStartValue.GetIntValue();
       int32_t endInt = aEndValue.GetIntValue();
-      aDistance = Abs(endInt - startInt);
+      aDistance = DeprecatedAbs(endInt - startInt);
       return true;
     }
     case eUnit_Coord: {
       nscoord startCoord = aStartValue.GetCoordValue();
       nscoord endCoord = aEndValue.GetCoordValue();
-      aDistance = Abs<double>(endCoord - startCoord);
+      aDistance = DeprecatedAbs<double>(endCoord - startCoord);
       return true;
     }
     case eUnit_Percent: {
       float startPct = aStartValue.GetPercentValue();
       float endPct = aEndValue.GetPercentValue();
-      aDistance = Abs<double>(endPct - startPct);
+      aDistance = DeprecatedAbs<double>(endPct - startPct);
       return true;
     }
     case eUnit_Float: {
@@ -434,7 +434,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
 
       float startFloat = aStartValue.GetFloatValue();
       float endFloat = aEndValue.GetFloatValue();
-      aDistance = Abs<double>(endFloat - startFloat);
+      aDistance = DeprecatedAbs<double>(endFloat - startFloat);
       return true;
     }
     case eUnit_Color: {
@@ -1297,7 +1297,7 @@ Decompose2DMatrix(const gfxMatrix &aMatrix, gfxPoint3D &aScale,
   XYshear /= scaleY;
 
   // A*D - B*C should now be 1 or -1
-  NS_ASSERTION(0.99 < Abs(A*D - B*C) && Abs(A*D - B*C) < 1.01,
+  NS_ASSERTION(0.99 < DeprecatedAbs(A*D - B*C) && DeprecatedAbs(A*D - B*C) < 1.01,
                "determinant should now be 1 or -1");
   if (A * D < B * C) {
     A = -A;

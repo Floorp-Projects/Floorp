@@ -42,7 +42,7 @@ inline double
 TimeClip(double time)
 {
     /* Steps 1-2. */
-    if (!MOZ_DOUBLE_IS_FINITE(time) || mozilla::Abs(time) > 8.64e15)
+    if (!MOZ_DOUBLE_IS_FINITE(time) || mozilla::DeprecatedAbs(time) > 8.64e15)
         return js_NaN;
 
     /* Step 3. */

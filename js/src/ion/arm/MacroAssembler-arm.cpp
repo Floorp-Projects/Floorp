@@ -14,7 +14,7 @@
 using namespace js;
 using namespace ion;
 
-using mozilla::Abs;
+using mozilla::DeprecatedAbs;
 
 bool
 isValueDTRDCandidate(ValueOperand &val)
@@ -2526,7 +2526,7 @@ MacroAssemblerARMCompat::storeValue(ValueOperand val, Operand dst) {
 void
 MacroAssemblerARMCompat::storeValue(ValueOperand val, const BaseIndex &dest)
 {
-    if (isValueDTRDCandidate(val) && Abs(dest.offset) <= 255) {
+    if (isValueDTRDCandidate(val) && DeprecatedAbs(dest.offset) <= 255) {
         Register tmpIdx;
         if (dest.offset == 0) {
             if (dest.scale == TimesOne) {
@@ -2550,7 +2550,7 @@ MacroAssemblerARMCompat::storeValue(ValueOperand val, const BaseIndex &dest)
 void
 MacroAssemblerARMCompat::loadValue(const BaseIndex &addr, ValueOperand val)
 {
-    if (isValueDTRDCandidate(val) && Abs(addr.offset) <= 255) {
+    if (isValueDTRDCandidate(val) && DeprecatedAbs(addr.offset) <= 255) {
         Register tmpIdx;
         if (addr.offset == 0) {
             if (addr.scale == TimesOne) {

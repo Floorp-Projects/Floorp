@@ -1833,7 +1833,7 @@ nsTreeBodyFrame::RowCountChanged(int32_t aIndex, int32_t aCount)
   NS_ASSERTION(rowCount == mRowCount, "row count did not change by the amount suggested, check caller");
 #endif
 
-  int32_t count = Abs(aCount);
+  int32_t count = DeprecatedAbs(aCount);
   int32_t last = GetLastVisibleRow();
   if (aIndex >= mTopRowIndex && aIndex <= last)
     InvalidateRange(aIndex, last);
