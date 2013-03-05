@@ -266,7 +266,7 @@ RegExpObject::createShared(JSContext *cx, RegExpGuard *g)
     return true;
 }
 
-UnrootedShape
+RawShape
 RegExpObject::assignInitialShape(JSContext *cx)
 {
     JS_ASSERT(isRegExp());
@@ -283,18 +283,18 @@ RegExpObject::assignInitialShape(JSContext *cx)
 
     /* The lastIndex property alone is writable but non-configurable. */
     if (!addDataProperty(cx, cx->names().lastIndex, LAST_INDEX_SLOT, JSPROP_PERMANENT))
-        return UnrootedShape(NULL);
+        return NULL;
 
     /* Remaining instance properties are non-writable and non-configurable. */
     unsigned attrs = JSPROP_PERMANENT | JSPROP_READONLY;
     if (!self->addDataProperty(cx, cx->names().source, SOURCE_SLOT, attrs))
-        return UnrootedShape(NULL);
+        return NULL;
     if (!self->addDataProperty(cx, cx->names().global, GLOBAL_FLAG_SLOT, attrs))
-        return UnrootedShape(NULL);
+        return NULL;
     if (!self->addDataProperty(cx, cx->names().ignoreCase, IGNORE_CASE_FLAG_SLOT, attrs))
-        return UnrootedShape(NULL);
+        return NULL;
     if (!self->addDataProperty(cx, cx->names().multiline, MULTILINE_FLAG_SLOT, attrs))
-        return UnrootedShape(NULL);
+        return NULL;
     return self->addDataProperty(cx, cx->names().sticky, STICKY_FLAG_SLOT, attrs);
 }
 

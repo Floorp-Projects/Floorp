@@ -74,7 +74,7 @@ IonBailoutIterator::dump() const
     }
 }
 
-static UnrootedScript
+static RawScript
 GetBailedJSScript(JSContext *cx)
 {
     AutoAssertNoGC nogc;
@@ -484,7 +484,7 @@ ion::RecompileForInlining()
 {
     AutoAssertNoGC nogc;
     JSContext *cx = GetIonContext()->cx;
-    UnrootedScript script = cx->fp()->script();
+    RawScript script = cx->fp()->script();
 
     IonSpew(IonSpew_Inlining, "Recompiling script to inline calls %s:%d", script->filename,
             script->lineno);
@@ -516,7 +516,7 @@ uint32_t
 ion::BoundsCheckFailure()
 {
     JSContext *cx = GetIonContext()->cx;
-    UnrootedScript script = GetBailedJSScript(cx);
+    RawScript script = GetBailedJSScript(cx);
 
     IonSpew(IonSpew_Bailouts, "Bounds check failure %s:%d", script->filename,
             script->lineno);
@@ -537,7 +537,7 @@ uint32_t
 ion::ShapeGuardFailure()
 {
     JSContext *cx = GetIonContext()->cx;
-    UnrootedScript script = GetBailedJSScript(cx);
+    RawScript script = GetBailedJSScript(cx);
 
     JS_ASSERT(script->hasIonScript());
     JS_ASSERT(!script->ion->invalidated());
@@ -553,7 +553,7 @@ uint32_t
 ion::CachedShapeGuardFailure()
 {
     JSContext *cx = GetIonContext()->cx;
-    UnrootedScript script = GetBailedJSScript(cx);
+    RawScript script = GetBailedJSScript(cx);
 
     JS_ASSERT(script->hasIonScript());
     JS_ASSERT(!script->ion->invalidated());

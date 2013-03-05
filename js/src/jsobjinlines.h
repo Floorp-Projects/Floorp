@@ -283,7 +283,7 @@ JSObject::dynamicSlotIndex(size_t slot)
 }
 
 inline void
-JSObject::setLastPropertyInfallible(js::UnrootedShape shape)
+JSObject::setLastPropertyInfallible(js::RawShape shape)
 {
     JS_ASSERT(!shape->inDictionary());
     JS_ASSERT(shape->compartment() == compartment());
@@ -314,7 +314,7 @@ JSObject::canRemoveLastProperty()
      * converted to dictionary mode instead. See BaseShape comment in jsscope.h
      */
     JS_ASSERT(!inDictionaryMode());
-    js::UnrootedShape previous = lastProperty()->previous().get();
+    js::RawShape previous = lastProperty()->previous().get();
     return previous->getObjectParent() == lastProperty()->getObjectParent()
         && previous->getObjectFlags() == lastProperty()->getObjectFlags();
 }
@@ -1733,7 +1733,7 @@ GuessArrayGCKind(size_t numSlots)
  * may or may not need dynamic slots.
  */
 inline bool
-PreallocateObjectDynamicSlots(JSContext *cx, UnrootedShape shape, HeapSlot **slots)
+PreallocateObjectDynamicSlots(JSContext *cx, RawShape shape, HeapSlot **slots)
 {
     if (size_t count = JSObject::dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan())) {
         *slots = cx->pod_malloc<HeapSlot>(count);

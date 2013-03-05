@@ -60,7 +60,7 @@ class JSONSpewer
     ~JSONSpewer();
 
     bool init(const char *path);
-    void beginFunction(UnrootedScript script);
+    void beginFunction(RawScript script);
     void beginPass(const char * pass);
     void spewMDef(MDefinition *def);
     void spewMResumePoint(MResumePoint *rp);

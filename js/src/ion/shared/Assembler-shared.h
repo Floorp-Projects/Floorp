@@ -103,14 +103,6 @@ struct ImmGCPtr
     {
         JS_ASSERT(!IsPoisonedPtr(ptr));
     }
-
-    // ImmGCPtr is rooted so we can convert safely directly from Unrooted<T>.
-    template <typename T>
-    explicit ImmGCPtr(Unrooted<T> ptr)
-      : value(reinterpret_cast<uintptr_t>(static_cast<T>(ptr)))
-    {
-        JS_ASSERT(!IsPoisonedPtr(static_cast<T>(ptr)));
-    }
 };
 
 // Specifies a hardcoded, absolute address.

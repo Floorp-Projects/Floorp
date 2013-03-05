@@ -193,7 +193,7 @@ class SetPropCompiler : public PICStubCompiler
         repatcher.relink(pic.slowPathCall, target);
     }
 
-    LookupStatus patchInline(UnrootedShape shape)
+    LookupStatus patchInline(RawShape shape)
     {
         JS_ASSERT(!pic.inlinePathPatched);
         JaegerSpew(JSpew_PICs, "patch setprop inline at %p\n", pic.fastPathStart.executableAddress());
@@ -770,7 +770,7 @@ namespace js {
 namespace mjit {
 
 inline void
-MarkNotIdempotent(UnrootedScript script, jsbytecode *pc)
+MarkNotIdempotent(RawScript script, jsbytecode *pc)
 {
     if (!script->hasAnalysis())
         return;
@@ -1014,7 +1014,7 @@ class GetPropCompiler : public PICStubCompiler
         return Lookup_Cacheable;
     }
 
-    LookupStatus patchInline(JSObject *holder, UnrootedShape shape)
+    LookupStatus patchInline(JSObject *holder, RawShape shape)
     {
         spew("patch", "inline");
         Repatcher repatcher(f.chunk());
@@ -1049,7 +1049,7 @@ class GetPropCompiler : public PICStubCompiler
     }
 
     /* For JSPropertyOp getters. */
-    void generateGetterStub(Assembler &masm, UnrootedShape shape, jsid userid,
+    void generateGetterStub(Assembler &masm, RawShape shape, jsid userid,
                             Label start, Vector<Jump, 8> &shapeMismatches)
     {
         AutoAssertNoGC nogc;
@@ -1161,7 +1161,7 @@ class GetPropCompiler : public PICStubCompiler
     }
 
     /* For getters backed by a JSNative. */
-    void generateNativeGetterStub(Assembler &masm, UnrootedShape shape,
+    void generateNativeGetterStub(Assembler &masm, RawShape shape,
                                   Label start, Vector<Jump, 8> &shapeMismatches)
     {
         AutoAssertNoGC nogc;
@@ -1680,7 +1680,7 @@ class ScopeNameCompiler : public PICStubCompiler
         JS_ASSERT(obj == getprop.holder);
         JS_ASSERT(getprop.holder != &scopeChain->global());
 
-        UnrootedShape shape = getprop.shape;
+        RawShape shape = getprop.shape;
         if (!shape->hasDefaultGetter())
             return disable("unhandled callobj sprop getter");
 
@@ -2196,7 +2196,7 @@ frameCountersOffset(VMFrame &f)
     }
 
     jsbytecode *pc;
-    UnrootedScript script = cx->stack.currentScript(&pc);
+    RawScript script = cx->stack.currentScript(&pc);
     offset += pc - script->code;
 
     return offset;
