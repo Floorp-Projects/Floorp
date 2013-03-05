@@ -48,7 +48,7 @@ CopyStackFrameArguments(const AbstractFramePtr frame, HeapValue *dst)
 /* static */ void
 ArgumentsObject::MaybeForwardToCallObject(AbstractFramePtr frame, JSObject *obj, ArgumentsData *data)
 {
-    UnrootedScript script = frame.script();
+    RawScript script = frame.script();
     if (frame.fun()->isHeavyweight() && script->argsObjAliasesFormals()) {
         obj->initFixedSlot(MAYBE_CALL_SLOT, ObjectValue(frame.callObj()));
         for (AliasedFormalIter fi(script); fi; fi++)

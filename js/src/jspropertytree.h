@@ -39,11 +39,11 @@ class KidsPointer {
     void setNull() { w = 0; }
 
     bool isShape() const { return (w & TAG) == SHAPE && !isNull(); }
-    UnrootedShape toShape() const {
+    RawShape toShape() const {
         JS_ASSERT(isShape());
         return reinterpret_cast<RawShape>(w & ~uintptr_t(TAG));
     }
-    void setShape(UnrootedShape shape) {
+    void setShape(RawShape shape) {
         JS_ASSERT(shape);
         JS_ASSERT((reinterpret_cast<uintptr_t>(static_cast<RawShape>(shape)) & TAG) == 0);
         w = reinterpret_cast<uintptr_t>(static_cast<RawShape>(shape)) | SHAPE;
@@ -61,7 +61,7 @@ class KidsPointer {
     }
 
 #ifdef DEBUG
-    void checkConsistency(UnrootedShape aKid) const;
+    void checkConsistency(RawShape aKid) const;
 #endif
 };
 
@@ -71,7 +71,7 @@ class PropertyTree
 
     JSCompartment *compartment;
 
-    bool insertChild(JSContext *cx, UnrootedShape parent, UnrootedShape child);
+    bool insertChild(JSContext *cx, RawShape parent, RawShape child);
 
     PropertyTree();
 
@@ -83,8 +83,8 @@ class PropertyTree
     {
     }
 
-    UnrootedShape newShape(JSContext *cx);
-    UnrootedShape getChild(JSContext *cx, Shape *parent, uint32_t nfixed, const StackShape &child);
+    RawShape newShape(JSContext *cx);
+    RawShape getChild(JSContext *cx, Shape *parent, uint32_t nfixed, const StackShape &child);
 
 #ifdef DEBUG
     static void dumpShapes(JSRuntime *rt);

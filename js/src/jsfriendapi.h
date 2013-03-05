@@ -684,8 +684,6 @@ SetRuntimeProfilingStack(JSRuntime *rt, ProfileEntry *stack, uint32_t *size,
 JS_FRIEND_API(void)
 EnableRuntimeProfilingStack(JSRuntime *rt, bool enabled);
 
-// Use RawScript rather than UnrootedScript because it may be called from a
-// signal handler
 JS_FRIEND_API(jsbytecode*)
 ProfilingGetPC(JSRuntime *rt, RawScript script, void *ip);
 

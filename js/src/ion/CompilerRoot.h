@@ -41,7 +41,6 @@ class CompilerRoot : public CompilerRootNode
 
   public:
     operator T () const { return static_cast<T>(ptr_); }
-    operator Unrooted<T> () const { return static_cast<T>(ptr_); }
     T operator ->() const { return static_cast<T>(ptr_); }
 
   private:
