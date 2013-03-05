@@ -713,3 +713,14 @@ ion::IonCompartment::toggleBaselineStubBarriers(bool enabled)
         code->togglePreBarriers(enabled);
     }
 }
+
+void
+ion::SizeOfBaselineData(JSScript *script, JSMallocSizeOfFun mallocSizeOf, size_t *data,
+                        size_t *stubs)
+{
+    *data = 0;
+    *stubs = 0;
+
+    if (script->hasBaselineScript())
+        script->baseline->sizeOfIncludingThis(mallocSizeOf, data, stubs);
+}

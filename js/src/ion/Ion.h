@@ -336,7 +336,7 @@ void ForbidCompilation(JSContext *cx, UnrootedScript script, ExecutionMode mode)
 uint32_t UsesBeforeIonRecompile(UnrootedScript script, jsbytecode *pc);
 
 void PurgeCaches(UnrootedScript script, JSCompartment *c);
-size_t MemoryUsed(UnrootedScript script, JSMallocSizeOfFun mallocSizeOf);
+size_t SizeOfIonData(UnrootedScript script, JSMallocSizeOfFun mallocSizeOf);
 void DestroyIonScripts(FreeOp *fop, UnrootedScript script);
 void TraceIonScripts(JSTracer* trc, UnrootedScript script);
 

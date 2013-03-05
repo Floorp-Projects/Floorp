@@ -48,6 +48,9 @@ struct ICStubSpace
     void free() {
         allocator_.freeAll();
     }
+    size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const {
+        return allocator_.sizeOfExcludingThis(mallocSizeOf);
+    }
 };
 
 class PCMappingSlotInfo
@@ -178,6 +181,15 @@ struct BaselineScript
         return offsetof(BaselineScript, method_);
     }
 
+    void sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *data, size_t *stubs) const {
+        *data = mallocSizeOf(this);
+
+        // data already includes the ICStubSpace itself, so use
+        // sizeOfExcludingThis.
+        *stubs = fallbackStubSpace_.sizeOfExcludingThis(mallocSizeOf) +
+            optimizedStubSpace_.sizeOfExcludingThis(mallocSizeOf);
+    }
+
     bool active() const {
         return flags_ & ACTIVE;
     }
@@ -280,6 +292,9 @@ EnterBaselineAtBranch(JSContext *cx, StackFrame *fp, jsbytecode *pc);
 
 void
 FinishDiscardBaselineScript(FreeOp *fop, UnrootedScript script);
+
+void
+SizeOfBaselineData(JSScript *script, JSMallocSizeOfFun mallocSizeOf, size_t *data, size_t *stubs);
 
 struct BaselineBailoutInfo
 {
