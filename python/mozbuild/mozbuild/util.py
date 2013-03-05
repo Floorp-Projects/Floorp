@@ -162,8 +162,13 @@ def resolve_target_to_make(topobjdir, target):
     A directory resolves to the nearest directory at or above
     containing a Makefile, and target `None`.
 
-    A file resolves to the nearest directory at or above the file
-    containing a Makefile, and an appropriate target.
+    A regular (non-Makefile) file resolves to the nearest directory at
+    or above the file containing a Makefile, and an appropriate
+    target.
+
+    A Makefile resolves to the nearest parent strictly above the
+    Makefile containing a different Makefile, and an appropriate
+    target.
     '''
     if os.path.isabs(target):
         print('Absolute paths for make targets are not allowed.')
@@ -200,7 +205,9 @@ def resolve_target_to_make(topobjdir, target):
     while True:
         make_path = os.path.join(topobjdir, reldir, 'Makefile')
 
-        if os.path.exists(make_path):
+        # We append to target every iteration, so the check below
+        # happens exactly once.
+        if target != 'Makefile' and os.path.exists(make_path):
             return (reldir, target)
 
         target = os.path.join(os.path.basename(reldir), target)
