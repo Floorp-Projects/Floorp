@@ -123,6 +123,28 @@ var tests = [
     fuzzTolerance: 12,
     fuzzToleranceMobile: 15826
   },
+  // An ogg file with two different channels, 44.1khz
+  {
+    url: "ting-dualchannel44.1.ogg",
+    valid: true,
+    expected: "ting-dualchannel44.1-expected.wav",
+    numberOfChannels: 2,
+    duration: 0.6936,
+    length: 33297,
+    fuzzTolerance: 16,
+    fuzzToleranceMobile: 16713
+  },
+  // An ogg file with two different channels, 48khz
+  {
+    url: "ting-dualchannel48.ogg",
+    valid: true,
+    expected: "ting-dualchannel48-expected.wav",
+    numberOfChannels: 2,
+    duration: 0.6373,
+    length: 30592,
+    fuzzTolerance: 9,
+    fuzzToleranceMobile: 2703
+  },
   // An ogg file which needs to be resampled
   {
     url: "small-shot.ogg",
@@ -148,8 +170,8 @@ var tests = [
     numberOfChannels: 2,
     duration: 1.0811,
     length: 51896,
-    fuzzTolerance: 132,
-    fuzzToleranceMobile: 56580
+    fuzzTolerance: 91427,
+    fuzzToleranceMobile: 119684
   },
   // Make sure decoding a wave file results in the same buffer
   {

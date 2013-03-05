@@ -29,6 +29,10 @@ MOCHITEST_FILES := \
   test_singleSourceDest.html \
   ting.ogg \
   ting-expected.wav \
+  ting-dualchannel44.1.ogg \
+  ting-dualchannel44.1-expected.wav \
+  ting-dualchannel48.ogg \
+  ting-dualchannel48-expected.wav \
   small-shot.ogg \
   small-shot-expected.wav \
   invalid.txt \
