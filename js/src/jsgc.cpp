@@ -2023,7 +2023,7 @@ js::MaybeGC(JSContext *cx)
         return;
     }
 
-    double factor = rt->gcHighFrequencyGC ? 0.75 : 0.9;
+    double factor = rt->gcHighFrequencyGC ? 0.85 : 0.9;
     Zone *zone = cx->zone();
     if (zone->gcBytes > 1024 * 1024 &&
         zone->gcBytes >= factor * zone->gcTriggerBytes &&
