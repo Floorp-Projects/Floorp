@@ -173,6 +173,14 @@ this.Social = {
     return null;
   },
 
+  installProvider: function(origin ,sourceURI, data, installCallback) {
+    SocialService.installProvider(origin ,sourceURI, data, installCallback);
+  },
+
+  uninstallProvider: function(origin) {
+    SocialService.uninstallProvider(origin);
+  },
+
   // Activation functionality
   activateFromOrigin: function (origin, callback) {
     // For now only "builtin" providers can be activated.  It's OK if the
@@ -198,10 +206,6 @@ this.Social = {
     this.provider = oldProvider;
     if (provider)
       SocialService.removeProvider(origin);
-  },
-
-  canActivateOrigin: function (origin) {
-    return SocialService.canActivateOrigin(origin);
   },
 
   // Sharing functionality

@@ -111,7 +111,7 @@
     <command id="Social:SharePage" oncommand="SocialShareButton.sharePage();" disabled="true"/>
     <command id="Social:UnsharePage" oncommand="SocialShareButton.unsharePage();"/>
     <command id="Social:ToggleSidebar" oncommand="Social.toggleSidebar();"/>
-    <command id="Social:ToggleNotifications" oncommand="Social.toggleNotifications();"/>
+    <command id="Social:ToggleNotifications" oncommand="Social.toggleNotifications();" hidden="true"/>
     <command id="Social:FocusChat" oncommand="SocialChatBar.focus();" hidden="true" disabled="true"/>
     <command id="Social:Toggle" oncommand="Social.toggle();" hidden="true"/>
     <command id="Social:Addons" oncommand="BrowserOpenAddonsMgr('addons://list/service');"/>

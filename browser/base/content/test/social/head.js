@@ -81,7 +81,7 @@ function runSocialTestWithProvider(manifest, callback) {
             SocialService.removeProvider(origin, cb);
           } catch (ex) {
             // Ignore "provider doesn't exist" errors.
-            if (ex.message == "SocialService.removeProvider: no provider with this origin exists!")
+            if (ex.message.indexOf("SocialService.removeProvider: no provider with origin") == 0)
               return;
             info("Failed to clean up provider " + origin + ": " + ex);
           }
@@ -181,7 +181,7 @@ function checkSocialUI(win) {
     isbool(win.SocialSidebar.opened, enabled, "social sidebar open?");
   isbool(win.SocialChatBar.isAvailable, enabled && Social.haveLoggedInUser(), "chatbar available?");
   isbool(!win.SocialChatBar.chatbar.hidden, enabled && Social.haveLoggedInUser(), "chatbar visible?");
-  isbool(!win.SocialShareButton.shareButton.hidden, enabled && provider.recommendInfo, "share button visible?");
+  isbool(!win.SocialShareButton.shareButton.hidden, enabled && Social.haveLoggedInUser() && provider.recommendInfo, "share button visible?");
   isbool(!doc.getElementById("social-toolbar-item").hidden, enabled, "toolbar items visible?");
   if (enabled)
     is(win.SocialToolbar.button.style.listStyleImage, 'url("' + provider.iconURL + '")', "toolbar button has provider icon");
@@ -191,7 +191,7 @@ function checkSocialUI(win) {
   isbool(!doc.getElementById("Social:ToggleNotifications").hidden, enabled, "Social:ToggleNotifications visible?");
   isbool(!doc.getElementById("Social:FocusChat").hidden, enabled && Social.haveLoggedInUser(), "Social:FocusChat visible?");
   isbool(doc.getElementById("Social:FocusChat").getAttribute("disabled"), enabled ? "false" : "true", "Social:FocusChat disabled?");
-  is(doc.getElementById("Social:SharePage").getAttribute("disabled"), enabled && provider.recommendInfo ? "false" : "true", "Social:SharePage visible?");
+  is(doc.getElementById("Social:SharePage").getAttribute("disabled"), enabled && Social.haveLoggedInUser() && provider.recommendInfo ? "false" : "true", "Social:SharePage visible?");
 
   // broadcasters.
   isbool(!doc.getElementById("socialActiveBroadcaster").hidden, enabled, "socialActiveBroadcaster hidden?");
