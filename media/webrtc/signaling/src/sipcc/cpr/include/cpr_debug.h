@@ -16,7 +16,7 @@ __BEGIN_DECLS
  */
 extern int32_t cprInfo;
 
-#define CPR_INFO if (cprInfo) buginf
+#define CPR_INFO if (cprInfo) notice_msg
 #define CPR_ERROR err_msg
 
 __END_DECLS
