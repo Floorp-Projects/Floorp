@@ -310,6 +310,35 @@ gfxASurface::CreateSimilarSurface(gfxContentType aContent,
     return result.forget();
 }
 
+already_AddRefed<gfxImageSurface>
+gfxASurface::GetAsReadableARGB32ImageSurface()
+{
+    nsRefPtr<gfxImageSurface> imgSurface = GetAsImageSurface();
+    if (!imgSurface || imgSurface->Format() != gfxASurface::ImageFormatARGB32) {
+      imgSurface = CopyToARGB32ImageSurface();
+    }
+    return imgSurface.forget();
+}
+
+already_AddRefed<gfxImageSurface>
+gfxASurface::CopyToARGB32ImageSurface()
+{
+    if (!mSurface || !mSurfaceValid) {
+      return nullptr;
+    }
+
+    const gfxIntSize size = GetSize();
+    nsRefPtr<gfxImageSurface> imgSurface =
+        new gfxImageSurface(size, gfxASurface::ImageFormatARGB32);
+
+    gfxContext ctx(imgSurface);
+    ctx.SetOperator(gfxContext::OPERATOR_SOURCE);
+    ctx.SetSource(this);
+    ctx.Paint();
+
+    return imgSurface.forget();
+}
+
 int
 gfxASurface::CairoStatus()
 {
