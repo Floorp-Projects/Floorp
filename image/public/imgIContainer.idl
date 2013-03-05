@@ -58,7 +58,7 @@ native nsSize(nsSize);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(585f4087-5148-478a-862c-5e90cc61413d)]
+[scriptable, builtinclass, uuid(01c4f92f-f883-4837-a127-d8f30920e374)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -154,7 +154,9 @@ interface imgIContainer : nsISupports
 
   /**
    * Get a surface for the given frame. This may be a platform-native,
-   * optimized surface, so you cannot inspect its pixel data.
+   * optimized surface, so you cannot inspect its pixel data. If you
+   * need that, use gfxASurface::GetAsReadableARGB32ImageSurface or
+   * gfxASurface::CopyToARGB32ImageSurface.
    *
    * @param aWhichFrame Frame specifier of the FRAME_* variety.
    * @param aFlags Flags of the FLAG_* variety
@@ -175,16 +177,6 @@ interface imgIContainer : nsISupports
    * frame. Only valid for RASTER type images.
    */
   [noscript] ImageContainer getImageContainer(in LayerManager aManager);
-
-  /**
-   * Create and return a new copy of the given frame that you can write to
-   * and otherwise inspect the pixels of.
-   *
-   * @param aWhichFrame Frame specifier of the FRAME_* variety.
-   * @param aFlags Flags of the FLAG_* variety
-   */
-  [noscript] gfxImageSurface copyFrame(in uint32_t aWhichFrame,
-                                       in uint32_t aFlags);
 
   /**
    * Create a new imgContainer that contains only a single frame, which itself
