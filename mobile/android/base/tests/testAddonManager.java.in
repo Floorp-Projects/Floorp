@@ -113,7 +113,6 @@ public class testAddonManager extends PixelTest  {
 
         // Addons Manager is not opened 2 separate times when opened from the menu
         selectMenuItem("Add-ons");        
-        contentEventExpecter.blockForEvent();
 
         // Verify tab count not increased
         verifyTabCount(2);
