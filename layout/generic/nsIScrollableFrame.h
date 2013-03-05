@@ -233,6 +233,10 @@ public:
    * completely redrawn.
    */
   virtual void ResetScrollPositionForLayerPixelAlignment() = 0;
+  /**
+   * Was the current presentation state for this frame restored from history?
+   */
+  virtual bool DidHistoryRestore() = 0;
 };
 
 #endif
