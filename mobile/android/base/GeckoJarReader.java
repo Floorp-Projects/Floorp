@@ -5,6 +5,7 @@
 package org.mozilla.gecko.util;
 
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.util.Log;
 
@@ -24,9 +25,14 @@ import java.util.zip.ZipInputStream;
  *  jar:jar:file:///data/app/org.mozilla.fennec.apk!/omni.ja!/chrome/chrome/content/branding/favicon32.png
  */
 public final class GeckoJarReader {
-    private static String LOGTAG = "GeckoJarReader";
+    private static final String LOGTAG = "GeckoJarReader";
 
     private GeckoJarReader() {}
+
+    public static Bitmap getBitmap(Resources resources, String url) {
+        BitmapDrawable drawable = getBitmapDrawable(resources, url);
+        return (drawable != null) ? drawable.getBitmap() : null;
+    }
 
     public static BitmapDrawable getBitmapDrawable(Resources resources, String url) {
         Stack<String> jarUrls = parseUrl(url);
