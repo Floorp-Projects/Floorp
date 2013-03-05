@@ -126,6 +126,54 @@ gfxAndroidPlatform::CreateOffscreenSurface(const gfxIntSize& size,
     return newSurface.forget();
 }
 
+void
+gfxAndroidPlatform::GetCommonFallbackFonts(const uint32_t aCh,
+                                           int32_t aRunScript,
+                                           nsTArray<const char*>& aFontList)
+{
+    static const char kDroidSansJapanese[] = "Droid Sans Japanese";
+
+    if (IS_IN_BMP(aCh)) {
+        // try language-specific "Droid Sans *" fonts for certain blocks,
+        // as most devices probably have these
+        uint8_t block = (aCh >> 8) & 0xff;
+        switch (block) {
+        case 0x05:
+            aFontList.AppendElement("Droid Sans Hebrew");
+            aFontList.AppendElement("Droid Sans Armenian");
+            break;
+        case 0x06:
+            aFontList.AppendElement("Droid Sans Arabic");
+            break;
+        case 0x09:
+            aFontList.AppendElement("Droid Sans Devanagari");
+            break;
+        case 0x0b:
+            aFontList.AppendElement("Droid Sans Tamil");
+            break;
+        case 0x0e:
+            aFontList.AppendElement("Droid Sans Thai");
+            break;
+        case 0x10: case 0x2d:
+            aFontList.AppendElement("Droid Sans Georgian");
+            break;
+        case 0x12: case 0x13:
+            aFontList.AppendElement("Droid Sans Ethiopic");
+            break;
+        case 0xf9: case 0xfa:
+            aFontList.AppendElement(kDroidSansJapanese);
+            break;
+        default:
+            if (block >= 0x2e && block <= 0x9f) {
+                aFontList.AppendElement(kDroidSansJapanese);
+            }
+            break;
+        }
+    }
+    // and try Droid Sans Fallback as a last resort
+    aFontList.AppendElement("Droid Sans Fallback");
+}
+
 nsresult
 gfxAndroidPlatform::GetFontList(nsIAtom *aLangGroup,
                                 const nsACString& aGenericFamily,

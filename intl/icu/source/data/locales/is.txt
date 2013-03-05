@@ -1,0 +1,664 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/is.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/is.xml
+ */
+is{
+    AuxExemplarCharacters{"[c q w x z]"}
+    ExemplarCharacters{"[a á b d ð e é f g h i í j k l m n o ó p r s t u ú v y ý þ æ ö]"}
+    ExemplarCharactersIndex{"[A Á B C D Ð E É F G H I Í J K L M N O Ó P Q R S T U Ú V W X Y Ý Z Þ Æ Ö]"}
+    LocaleScript{
+        "Latn",
+    }
+    NumberElements{
+        latn{
+            patterns{
+                currencyFormat{"¤#,##0.00;(¤#,##0.00)"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
+            patternsLong{
+                decimalFormat{
+                    1000{
+                        one{"0 þúsund"}
+                        other{"0 þúsund"}
+                    }
+                    10000{
+                        one{"00 þúsund"}
+                        other{"00 þúsund"}
+                    }
+                    100000{
+                        one{"000 þúsund"}
+                        other{"000 þúsund"}
+                    }
+                    1000000{
+                        one{"0 milljón"}
+                        other{"0 milljónir"}
+                    }
+                    10000000{
+                        one{"00 milljón"}
+                        other{"00 milljónir"}
+                    }
+                    100000000{
+                        one{"000 milljón"}
+                        other{"000 milljónir"}
+                    }
+                    1000000000{
+                        one{"0 milljarður"}
+                        other{"0 milljarðar"}
+                    }
+                    10000000000{
+                        one{"00 milljarður"}
+                        other{"00 milljarðar"}
+                    }
+                    100000000000{
+                        one{"000 milljarður"}
+                        other{"000 milljarðar"}
+                    }
+                    1000000000000{
+                        one{"0 billjón"}
+                        other{"0 billjónir"}
+                    }
+                    10000000000000{
+                        one{"00 billjón"}
+                        other{"00 billjónir"}
+                    }
+                    100000000000000{
+                        one{"000 billjón"}
+                        other{"000 billjónir"}
+                    }
+                }
+            }
+            patternsShort{
+                decimalFormat{
+                    1000{
+                        one{"0 þ'.'"}
+                        other{"0 þ'.'"}
+                    }
+                    10000{
+                        one{"00 þ'.'"}
+                        other{"00 þ'.'"}
+                    }
+                    100000{
+                        one{"000 þ'.'"}
+                        other{"000 þ'.'"}
+                    }
+                    1000000{
+                        one{"0 m'.'"}
+                        other{"0 m'.'"}
+                    }
+                    10000000{
+                        one{"00 m'.'"}
+                        other{"00 m'.'"}
+                    }
+                    100000000{
+                        one{"000 m'.'"}
+                        other{"000 m'.'"}
+                    }
+                    1000000000{
+                        one{"0 ma'.'"}
+                        other{"0 ma'.'"}
+                    }
+                    10000000000{
+                        one{"00 ma'.'"}
+                        other{"00 ma'.'"}
+                    }
+                    100000000000{
+                        one{"000 ma'.'"}
+                        other{"000 ma'.'"}
+                    }
+                    1000000000000{
+                        one{"0 bn"}
+                        other{"0 bn"}
+                    }
+                    10000000000000{
+                        one{"00 bn"}
+                        other{"00 bn"}
+                    }
+                    100000000000000{
+                        one{"000 bn"}
+                        other{"000 bn"}
+                    }
+                }
+            }
+            symbols{
+                decimal{","}
+                exponential{"E"}
+                group{"."}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+            }
+        }
+    }
+    Version{"2.0.78.32"}
+    calendar{
+        gregorian{
+            AmPmMarkers{
+                "f.h.",
+                "e.h.",
+            }
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d. MMMM y",
+                "d. MMMM y",
+                "d.M.yyyy",
+                "d.M.yyyy",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"e d."}
+                H{"HH"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L."}
+                MEd{"E d.M."}
+                MMM{"LLL"}
+                MMMEd{"E d. MMM"}
+                MMMMEd{"E d. MMMM"}
+                MMMMd{"d. MMMM"}
+                MMMd{"d. MMM"}
+                Md{"d.M"}
+                d{"d"}
+                h{"h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"mm:ss"}
+                y{"y"}
+                yM{"M. yyyy"}
+                yMEd{"E d/M/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E d. MMM y"}
+                yMMMM{"MMMM y"}
+                yMMMd{"d MMM, y"}
+                yMd{"d/M/y"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
+                yyyyM{"M.yyyy"}
+                yyyyMMMM{"MMMM y"}
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "sun",
+                        "mán",
+                        "þri",
+                        "mið",
+                        "fim",
+                        "fös",
+                        "lau",
+                    }
+                    narrow{
+                        "S",
+                        "M",
+                        "Þ",
+                        "M",
+                        "F",
+                        "F",
+                        "L",
+                    }
+                    short{
+                        "su",
+                        "má",
+                        "þr",
+                        "mi",
+                        "fi",
+                        "fö",
+                        "la",
+                    }
+                    wide{
+                        "sunnudagur",
+                        "mánudagur",
+                        "þriðjudagur",
+                        "miðvikudagur",
+                        "fimmtudagur",
+                        "föstudagur",
+                        "laugardagur",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "S",
+                        "M",
+                        "þ",
+                        "M",
+                        "F",
+                        "F",
+                        "L",
+                    }
+                    short{
+                        "su",
+                        "má",
+                        "þr",
+                        "mi",
+                        "fi",
+                        "fö",
+                        "la",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "f.Kr.",
+                    "e.Kr.",
+                }
+                narrow{
+                    "f.k.",
+                    "e.k.",
+                }
+            }
+            fields{
+                day{
+                    dn{"dagur"}
+                    relative{
+                        "-1"{"í gær"}
+                        "-2"{"fyrir tveimur dögum"}
+                        "0"{"í dag"}
+                        "1"{"á morgun"}
+                        "2"{"eftir tvo daga"}
+                    }
+                }
+                dayperiod{
+                    dn{"f.h./e.h."}
+                }
+                era{
+                    dn{"tímabil"}
+                }
+                hour{
+                    dn{"klukkustund"}
+                }
+                minute{
+                    dn{"mínúta"}
+                }
+                month{
+                    dn{"mánuður"}
+                    relative{
+                        "-1"{"Í síðasta mánuði"}
+                        "0"{"Í þessum mánuði"}
+                        "1"{"Í næsta mánuði"}
+                    }
+                }
+                second{
+                    dn{"sekúnda"}
+                }
+                week{
+                    dn{"vika"}
+                    relative{
+                        "-1"{"Í síðustu viku"}
+                        "0"{"Í þessari viku"}
+                        "1"{"Í næstu viku"}
+                    }
+                }
+                weekday{
+                    dn{"vikudagur"}
+                }
+                year{
+                    dn{"ár"}
+                    relative{
+                        "-1"{"Á síðasta ári"}
+                        "0"{"Á þessu ári"}
+                        "1"{"Á næsta ári"}
+                    }
+                }
+                zone{
+                    dn{"svæði"}
+                }
+            }
+            intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
+                }
+                Hv{
+                    H{"HH–HH v"}
+                }
+                M{
+                    M{"M–M"}
+                }
+                MEd{
+                    M{"E, d.M – E, d.M"}
+                    d{"E, d.M – E, d.M"}
+                }
+                MMM{
+                    M{"LLL–LLL"}
+                }
+                MMMEd{
+                    M{"E, d. MMM – E, d. MMM"}
+                    d{"E, d. – E, d. MMM"}
+                }
+                MMMM{
+                    M{"LLLL–LLLL"}
+                }
+                MMMd{
+                    M{"d. MMM – d. MMM"}
+                    d{"d.–d. MMM"}
+                }
+                Md{
+                    M{"d.M–d.M"}
+                    d{"d.M–d.M"}
+                }
+                d{
+                    d{"d–d"}
+                }
+                fallback{"{0} – {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
+                }
+                y{
+                    y{"y–y"}
+                }
+                yM{
+                    M{"M.yyyy – M.yyyy"}
+                    y{"M.yyyy – M.yyyy"}
+                }
+                yMEd{
+                    M{"E, d.M.yyyy – E, d.M.yyyy"}
+                    d{"E, d.M.yyyy – E, d.M.yyyy"}
+                    y{"E, d.M.yyyy – E, d.M.yyyy"}
+                }
+                yMMM{
+                    M{"MMM–MMM y"}
+                    y{"MMM y – MMM y"}
+                }
+                yMMMEd{
+                    M{"E, d. MMM – E, d. MMM y"}
+                    d{"E, d. – E, d. MMM y"}
+                    y{"E, d. MMM y – E, d. MMM y"}
+                }
+                yMMMM{
+                    M{"MMMM–MMMM y"}
+                    y{"MMMM y – MMMM y"}
+                }
+                yMMMd{
+                    M{"d. MMM – d. MMM y"}
+                    d{"d.–d. MMM y"}
+                    y{"d. MMM y – d. MMM y"}
+                }
+                yMd{
+                    M{"d.M.yyyy – d.M.yyyy"}
+                    d{"d.M.yyyy – d.M.yyyy"}
+                    y{"d.M.yyyy – d.M.yyyy"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "jan",
+                        "feb",
+                        "mar",
+                        "apr",
+                        "maí",
+                        "jún",
+                        "júl",
+                        "ágú",
+                        "sep",
+                        "okt",
+                        "nóv",
+                        "des",
+                    }
+                    narrow{
+                        "J",
+                        "F",
+                        "M",
+                        "A",
+                        "M",
+                        "J",
+                        "J",
+                        "Á",
+                        "L",
+                        "O",
+                        "N",
+                        "D",
+                    }
+                    wide{
+                        "janúar",
+                        "febrúar",
+                        "mars",
+                        "apríl",
+                        "maí",
+                        "júní",
+                        "júlí",
+                        "ágúst",
+                        "september",
+                        "október",
+                        "nóvember",
+                        "desember",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "J",
+                        "F",
+                        "M",
+                        "A",
+                        "M",
+                        "J",
+                        "J",
+                        "Á",
+                        "S",
+                        "O",
+                        "N",
+                        "D",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "F1",
+                        "F2",
+                        "F3",
+                        "F4",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
+                    wide{
+                        "1. fjórðungur",
+                        "2. fjórðungur",
+                        "3. fjórðungur",
+                        "4. fjórðungur",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "1F",
+                        "2F",
+                        "3F",
+                        "4F",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
+                    wide{
+                        "1. fjórðungur",
+                        "2. fjórðungur",
+                        "3. fjórðungur",
+                        "4. fjórðungur",
+                    }
+                }
+            }
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"‘"}
+        alternateQuotationStart{"‚"}
+        quotationEnd{"“"}
+        quotationStart{"„"}
+    }
+    listPattern{
+        standard{
+            2{"{0} og {1}"}
+            end{"{0} og {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+    }
+    measurementSystemNames{
+        UK{"Bretland"}
+        US{"bandarískt"}
+        metric{"Metrakerfi"}
+    }
+    units{
+        day{
+            one{"{0} dagur"}
+            other{"{0} dagar"}
+        }
+        day-future{
+            one{"Eftir {0} dag"}
+            other{"Eftir {0} daga"}
+        }
+        day-past{
+            one{"Fyrir {0} degi síðan"}
+            other{"Fyrir {0} dögum síðan"}
+        }
+        hour{
+            one{"{0} klukkustund"}
+            other{"{0} klukkustundir"}
+        }
+        hour-future{
+            one{"Eftir {0} klukkustund"}
+            other{"Eftir {0} klukkustundir"}
+        }
+        hour-past{
+            one{"Fyrir {0} klukkustund síðan"}
+            other{"Fyrir {0} klukkustundum síðan"}
+        }
+        minute{
+            one{"{0} mínúta"}
+            other{"{0} mínútur"}
+        }
+        minute-future{
+            one{"Eftir {0} mínútu"}
+            other{"Eftir {0} mínútur"}
+        }
+        minute-past{
+            one{"Fyrir {0} mínútu síðan"}
+            other{"Fyrir {0} mínútum síðan"}
+        }
+        month{
+            one{"{0} mánuður"}
+            other{"{0} mánuðum"}
+        }
+        month-future{
+            one{"Eftir {0} mánuð"}
+            other{"Eftir {0} mánuði"}
+        }
+        month-past{
+            one{"Fyrir {0} mánuði síðan"}
+            other{"Fyrir {0} mánuðum síðan"}
+        }
+        second{
+            one{"{0} sekúnda"}
+            other{"{0} sekúndur"}
+        }
+        second-future{
+            one{"Eftir {0} sekúndu"}
+            other{"Eftir {0} sekúndur"}
+        }
+        second-past{
+            one{"Fyrir {0} sekúndu síðan"}
+            other{"Fyrir {0} sekúndum síðan"}
+        }
+        week{
+            one{"{0} vika"}
+            other{"{0} vikur"}
+        }
+        week-future{
+            one{"Eftir {0} viku"}
+            other{"Eftir {0} vikur"}
+        }
+        week-past{
+            one{"Fyrir {0} viku síðan"}
+            other{"Fyrir {0} vikum síðan"}
+        }
+        year{
+            one{"{0} ár"}
+            other{"{0} ár"}
+        }
+        year-future{
+            one{"Eftir {0} ár"}
+            other{"Eftir {0} ár"}
+        }
+        year-past{
+            one{"Fyrir {0} ári síðan"}
+            other{"Fyrir {0} árum síðan"}
+        }
+    }
+    unitsShort{
+        day{
+            one{"{0} dagur"}
+            other{"{0} dagar"}
+        }
+        hour{
+            one{"{0} klst."}
+            other{"{0} klst."}
+        }
+        minute{
+            one{"{0} mín."}
+            other{"{0} mín."}
+        }
+        month{
+            one{"{0} mán."}
+            other{"{0} mán."}
+        }
+        second{
+            one{"{0} sek."}
+            other{"{0} sek."}
+        }
+        week{
+            one{"{0} vika"}
+            other{"{0} vikur"}
+        }
+        year{
+            one{"{0} ár"}
+            other{"{0} ár"}
+        }
+    }
+}

@@ -1,0 +1,104 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/uz.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/uz.xml
+ */
+uz{
+    AuxExemplarCharacters{"[ц щ ы ь]"}
+    ExemplarCharacters{"[а б в г ғ д е ё ж з и й к қ л м н о п р с т у ў ф х ҳ ч ш ъ э ю я]"}
+    LocaleScript{
+        "Cyrl",
+    }
+    Version{"2.0.74.65"}
+    calendar{
+        gregorian{
+            dayNames{
+                format{
+                    abbreviated{
+                        "Якш",
+                        "Душ",
+                        "Сеш",
+                        "Чор",
+                        "Пай",
+                        "Жум",
+                        "Шан",
+                    }
+                    wide{
+                        "якшанба",
+                        "душанба",
+                        "сешанба",
+                        "чоршанба",
+                        "пайшанба",
+                        "жума",
+                        "шанба",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "Я",
+                        "Д",
+                        "С",
+                        "Ч",
+                        "П",
+                        "Ж",
+                        "Ш",
+                    }
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Янв",
+                        "Фев",
+                        "Мар",
+                        "Апр",
+                        "Май",
+                        "Июн",
+                        "Июл",
+                        "Авг",
+                        "Сен",
+                        "Окт",
+                        "Ноя",
+                        "Дек",
+                    }
+                    wide{
+                        "Январ",
+                        "Феврал",
+                        "Март",
+                        "Апрел",
+                        "Май",
+                        "Июн",
+                        "Июл",
+                        "Август",
+                        "Сентябр",
+                        "Октябр",
+                        "Ноябр",
+                        "Декабр",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "Я",
+                        "Ф",
+                        "М",
+                        "А",
+                        "М",
+                        "И",
+                        "И",
+                        "А",
+                        "С",
+                        "О",
+                        "Н",
+                        "Д",
+                    }
+                }
+            }
+        }
+    }
+}

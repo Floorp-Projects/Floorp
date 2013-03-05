@@ -10351,6 +10351,58 @@ let ICCRecordHelper = {
   },
 
   /**
+   * Read USIM Phonebook EF_ANR.
+   *
+   * @see TS 131.102, clause 4.4.2.9
+   *
+   * @param fileId       EF id of the ANR.
+   * @param fileType     One of the ICC_USIM_TYPE* constants.
+   * @param recordNumber The number of the record shall be loaded.
+   * @param onsuccess    Callback to be called when success.
+   * @param onerror      Callback to be called when error.
+   */
+  readANR: function readANR(fileId, fileType, recordNumber, onsuccess, onerror) {
+    function callback(optoins) {
+      let strLen = Buf.readUint32();
+      let octetLen = strLen / 2;
+      let number = null;
+
+      // Skip ANR Record ID.
+      Buf.seekIncoming(1 * PDU_HEX_OCTET_SIZE);
+
+      let numLen = GsmPDUHelper.readHexOctet();
+      if (numLen != 0xff) {
+        if (numLen > ADN_MAX_BCD_NUMBER_BYTES) {
+          throw new Error("invalid length of BCD number/SSC contents - " + numLen);
+        }
+        number = GsmPDUHelper.readDiallingNumber(numLen);
+      } else {
+        Buf.seekIncoming(ADN_MAX_BCD_NUMBER_BYTES * PDU_HEX_OCTET_SIZE);
+      }
+
+      // Skip 2 unused octets, CCP and EXT1.
+      Buf.seekIncoming(2 * PDU_HEX_OCTET_SIZE);
+
+      // For Type 2 there are two extra octets.
+      if (fileType == ICC_USIM_TYPE2_TAG) {
+        // Skip 2 unused octets, ADN SFI and Record Identifier.
+        Buf.seekIncoming(2 * PDU_HEX_OCTET_SIZE);
+      }
+
+      Buf.readStringDelimiter(strLen);
+
+      if (onsuccess) {
+        onsuccess(number);
+      }
+    }
+
+    ICCIOHelper.loadLinearFixedEF({fileId: fileId,
+                                   recordNumber: recordNumber,
+                                   callback: callback.bind(this),
+                                   onerror: onerror});
+  },
+
+  /**
    * Read the PLMNsel (Public Land Mobile Network) from the ICC.
    *
    * See ETSI TS 100.977 section 10.3.4 EF_PLMNsel
@@ -10933,20 +10985,17 @@ let ICCUtilsHelper = {
     let pbr = {};
     for (let i = 0; i < pbrTlvs.length; i++) {
       let pbrTlv = pbrTlvs[i];
+      let anrIndex = 0;
       for (let j = 0; j < pbrTlv.value.length; j++) {
         let tlv = pbrTlv.value[j];
         let tagName = USIM_TAG_NAME[tlv.tag];
 
-        // ANR could have multiple files.
+        // ANR could have multiple files. We save it as anr0, anr1,...etc.
         if (tlv.tag == ICC_USIM_EFANR_TAG) {
-          if (!pbr.anr) {
-            pbr.anr = [];
-          }
-          pbr.anr.push(tlv);
-        } else {
-          pbr[tagName] = tlv;
+          tagName += anrIndex;
+          anrIndex++;
         }
-
+        pbr[tagName] = tlv;
         pbr[tagName].fileType = pbrTlv.tag;
         pbr[tagName].fileId = (tlv.value[0] << 8) | tlv.value[1];
 
@@ -11187,15 +11236,7 @@ let ICCContactHelper = {
     let gotPbrCb = function gotPbrCb(pbr) {
       if (pbr.adn) {
         let gotAdnCb = function gotAdnCb(contacts) {
-          // Only try to read contact's email when the email tag is shown in pbr.
-          if (!pbr.email) {
-            if (onsuccess) {
-              onsuccess(contacts)
-            }
-            return;
-          }
-
-          this.readUSimEmails(pbr, contacts, onsuccess, onerror);
+          this.readSupportedPBRFields(pbr, contacts, onsuccess, onerror);
         }.bind(this);
 
         let fileId = pbr.adn.fileId;
@@ -11210,63 +11251,152 @@ let ICCContactHelper = {
   },
 
   /**
-   * Read all contacts' email from USIM.
+   * Read supported Phonebook fields.
    *
-   * @param pbr           The phonebook reference file.
-   * @param contacts      The contacts need to get email.
-   * @param onsuccess     Callback to be called when success.
-   * @param onerror       Callback to be called when error.
+   * @param pbr         Phone Book Reference file.
+   * @param contacts    Contacts stored on ICC.
+   * @param onsuccess   Callback to be called when success.
+   * @param onerror     Callback to be called when error.
    */
-  readUSimEmails: function readUSimEmails(pbr, contacts, onsuccess, onerror) {
-    (function doReadContactEmail(n) {
-      if (n >= contacts.length) {
-        // All contact's email are readed.
+  readSupportedPBRFields: function readSupportedPBRFields(pbr, contacts, onsuccess, onerror) {
+    // Current supported fields. Adding more fields to read will increasing I/O
+    // time dramatically, do check the performance is acceptable when you add
+    // more fileds.
+    const fields = ["email", "anr0"];
+
+    (function readField(field) {
+      let field = fields.pop();
+      if (!field) {
         if (onsuccess) {
           onsuccess(contacts);
         }
         return;
       }
 
-      // get n-th contact's email
-      ICCContactHelper.readUSimContactEmail(
-        pbr, contacts[n], doReadContactEmail.bind(this, n + 1), onerror);
+      ICCContactHelper.readPhonebookField(pbr, contacts, field, readField, onerror);
+    })();
+  },
+
+  /**
+   * Read Phonebook field.
+   *
+   * @param pbr           The phonebook reference file.
+   * @param contacts      Contacts stored on ICC.
+   * @param field         Phonebook field to be retrieved.
+   * @param onsuccess     Callback to be called when success.
+   * @param onerror       Callback to be called when error.
+   */
+  readPhonebookField: function readPhonebookField(pbr, contacts, field, onsuccess, onerror) {
+    if (!pbr[field]) {
+      if (onsuccess) {
+        onsuccess(contacts)
+      }
+      return;
+    }
+
+    (function doReadContactField(n) {
+      if (n >= contacts.length) {
+        // All contact's fields are read.
+        if (onsuccess) {
+          onsuccess(contacts);
+        }
+        return;
+      }
+
+      // get n-th contact's field.
+      ICCContactHelper.readContactField(
+        pbr, contacts[n], field, doReadContactField.bind(this, n + 1), onerror);
     })(0);
   },
 
   /**
-   * Read contact's email from USIM.
+   * Read contact's field from USIM.
    *
    * @param pbr           The phonebook reference file.
-   * @param contact       The contact needs to get email.
+   * @param contact       The contact needs to get field.
+   * @param field         Phonebook field to be retrieved.
    * @param onsuccess     Callback to be called when success.
    * @param onerror       Callback to be called when error.
    */
-  readUSimContactEmail: function readUSimContactEmail(pbr, contact, onsuccess, onerror) {
+  readContactField: function readContactField(pbr, contact, field, onsuccess, onerror) {
     let gotRecordIdCb = function gotRecordIdCb(recordId) {
       if (recordId == 0xff) {
-        // Need not to read EF_EMAIL
         if (onsuccess) {
           onsuccess();
         }
         return;
       }
 
-      let fileId = pbr.email.fileId;
-      let fileType = pbr.email.fileType;
-      let gotEmailCb = function gotEmailCb(email) {
-        // Add email into contact if any
-        if (email) {
-          contact.email = email;
+      let fileId = pbr[field].fileId;
+      let fileType = pbr[field].fileType;
+      let gotFieldCb = function gotFieldCb(value) {
+        if (value) {
+          // Move anr0 anr1,.. into anr[].
+          if (field.startsWith("anr")) {
+            if (!contact["anr"]) {
+              contact["anr"] = [];
+            }
+            contact["anr"].push(value);
+          } else {
+            contact[field] = value;
+          }
         }
+
         if (onsuccess) {
           onsuccess();
         }
       }.bind(this);
 
-      ICCRecordHelper.readEmail(fileId, fileType, recordId, gotEmailCb, onerror);
+      // Detect EF to be read, for anr, it could have anr0, anr1,...
+      let ef = field.startsWith("anr") ? "anr" : field;
+      switch (ef) {
+        case "email":
+          ICCRecordHelper.readEmail(fileId, fileType, recordId, gotFieldCb, onerror);
+          break;
+        case "anr":
+          ICCRecordHelper.readANR(fileId, fileType, recordId, gotFieldCb, onerror);
+          break;
+        default:
+          onerror("Unknown field " + field);
+          break;
+      }
     }.bind(this);
 
-    this.getEmailRecordId(pbr, contact, gotRecordIdCb, onerror);
+    this.getContactFieldRecordId(pbr, contact, field, gotRecordIdCb, onerror);
+  },
+
+  /**
+   * Get the recordId.
+   *
+   * If the fileType of Email is ICC_USIM_TYPE1_TAG, use corresponding ADN recordId.
+   * otherwise get the recordId from IAP.
+   *
+   * @see TS 131.102, clause 4.4.2.2
+   *
+   * @param pbr          The phonebook reference file.
+   * @param contact      The contact will be updated.
+   * @param onsuccess    Callback to be called when success.
+   * @param onerror      Callback to be called when error.
+   */
+  getContactFieldRecordId: function getContactFieldRecordId(pbr, contact, field, onsuccess, onerror) {
+    if (pbr[field].fileType == ICC_USIM_TYPE1_TAG) {
+      // If the file type is ICC_USIM_TYPE1_TAG, use corresponding ADN recordId.
+      if (onsuccess) {
+        onsuccess(contact.recordId);
+      }
+    } else {
+      // If the file type is ICC_USIM_TYPE2_TAG, the recordId shall be got from IAP.
+      let gotIapCb = function gotIapCb(iap) {
+        let indexInIAP = pbr[field].indexInIAP;
+        let recordId = iap[indexInIAP];
+
+        if (onsuccess) {
+          onsuccess(recordId);
+        }
+      }.bind(this);
+
+      ICCRecordHelper.readIAP(pbr.iap.fileId, contact.recordId, gotIapCb, onerror);
+    }
   },
 
   /**
@@ -11309,41 +11439,6 @@ let ICCContactHelper = {
    */
   updateSimContact: function updateSimContact(contact, onsuccess, onerror) {
     ICCRecordHelper.updateADN(ICC_EF_ADN, contact, onsuccess, onerror);
-  },
-
-  /**
-   * Get the recordId of Email.
-   *
-   * If the fileType of Email is ICC_USIM_TYPE1_TAG, use corresponding ADN recordId.
-   * otherwise get the recordId from IAP.
-   *
-   * @see TS 131.102, clause 4.4.2.2
-   *
-   * @param pbr          The phonebook reference file.
-   * @param contact      The contact will be updated.
-   * @param onsuccess    Callback to be called when success.
-   * @param onerror      Callback to be called when error.
-   */
-  getEmailRecordId: function getEmailRecordId(pbr, contact, onsuccess, onerror) {
-    if (pbr.email.fileType == ICC_USIM_TYPE1_TAG) {
-      // If the file type is ICC_USIM_TYPE1_TAG, use corresponding ADN recordId.
-      if (onsuccess) {
-        onsuccess(contact.recordId);
-      }
-    } else {
-      // If the file type is ICC_USIM_TYPE2_TAG, the recordId shall be got from IAP.
-      let gotIapCb = function gotIapCb(iap) {
-        let indexInIAP = pbr.email.indexInIAP;
-        let recordId = iap[indexInIAP];
-
-        if (onsuccess) {
-          onsuccess(recordId);
-        }
-      }.bind(this);
-
-      let fileId = pbr.iap.fileId;
-      ICCRecordHelper.readIAP(fileId, contact.recordId, gotIapCb, onerror);
-    }
   },
 };
 

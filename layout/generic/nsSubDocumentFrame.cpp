@@ -1013,9 +1013,6 @@ nsSubDocumentFrame::BeginSwapDocShells(nsIFrame* aOther)
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  NS_ASSERTION(HasAnyStateBits(NS_FRAME_IN_POPUP) == other->HasAnyStateBits(NS_FRAME_IN_POPUP),
-               "Can't swap doc shells when only one is within a popup!");
-
   if (mInnerView && other->mInnerView) {
     nsView* ourSubdocViews = mInnerView->GetFirstChild();
     nsView* ourRemovedViews = ::BeginSwapDocShellsForViews(ourSubdocViews);
@@ -1071,11 +1068,18 @@ EndSwapDocShellsForViews(nsView* aSibling)
       ::EndSwapDocShellsForDocument(doc, nullptr);
     }
     nsIFrame *frame = aSibling->GetFrame();
-    if (frame && frame->HasInvalidFrameInSubtree()) {
-      nsIFrame *parent = nsLayoutUtils::GetCrossDocParentFrame(frame);
-      while (parent && !parent->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
-        parent->AddStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT);
-        parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
+    if (frame) {
+      nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(frame);
+      if (parent->HasAnyStateBits(NS_FRAME_IN_POPUP)) {
+        nsIFrame::AddInPopupStateBitToDescendants(frame);
+      } else {
+        nsIFrame::RemoveInPopupStateBitFromDescendants(frame);
+      }
+      if (frame->HasInvalidFrameInSubtree()) {
+        while (parent && !parent->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
+          parent->AddStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT);
+          parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
+        }
       }
     }
   }

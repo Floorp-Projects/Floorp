@@ -25,6 +25,7 @@
 #include "nsPluginInstanceOwner.h"
 
 #include "nsIDocument.h"
+#include "nsIDocShell.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsDirectoryServiceDefs.h"
@@ -213,7 +214,7 @@ nsNPAPIPluginInstance::~nsNPAPIPluginInstance()
   }
 }
 
-uint32_t nsNPAPIPluginInstance::gInPluginCalls = 0;
+uint32_t nsNPAPIPluginInstance::gInUnsafePluginCalls = 0;
 
 void
 nsNPAPIPluginInstance::Destroy()
@@ -317,7 +318,8 @@ nsresult nsNPAPIPluginInstance::Stop()
   if (pluginFunctions->destroy) {
     NPSavedData *sdata = 0;
 
-    NS_TRY_SAFE_CALL_RETURN(error, (*pluginFunctions->destroy)(&mNPP, &sdata), this);
+    NS_TRY_SAFE_CALL_RETURN(error, (*pluginFunctions->destroy)(&mNPP, &sdata), this,
+                            NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
 
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
                    ("NPP Destroy called: this=%p, npp=%p, return=%d\n", this, &mNPP, error));
@@ -582,7 +584,8 @@ nsresult nsNPAPIPluginInstance::SetWindow(NPWindow* window)
     NPPAutoPusher nppPusher(&mNPP);
 
     DebugOnly<NPError> error;
-    NS_TRY_SAFE_CALL_RETURN(error, (*pluginFunctions->setwindow)(&mNPP, (NPWindow*)window), this);
+    NS_TRY_SAFE_CALL_RETURN(error, (*pluginFunctions->setwindow)(&mNPP, (NPWindow*)window), this,
+                            NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
 
     mInPluginInitCall = oldVal;
 
@@ -650,7 +653,8 @@ nsresult nsNPAPIPluginInstance::Print(NPPrint* platformPrint)
   }
 
   if (pluginFunctions->print)
-      NS_TRY_SAFE_CALL_VOID((*pluginFunctions->print)(&mNPP, thePrint), this);
+      NS_TRY_SAFE_CALL_VOID((*pluginFunctions->print)(&mNPP, thePrint), this,
+                            NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPP PrintProc called: this=%p, pDC=%p, [x=%d,y=%d,w=%d,h=%d], clip[t=%d,b=%d,l=%d,r=%d]\n",
@@ -668,7 +672,8 @@ nsresult nsNPAPIPluginInstance::Print(NPPrint* platformPrint)
   return NS_OK;
 }
 
-nsresult nsNPAPIPluginInstance::HandleEvent(void* event, int16_t* result)
+nsresult nsNPAPIPluginInstance::HandleEvent(void* event, int16_t* result,
+                                            NSPluginCallReentry aSafeToReenterGecko)
 {
   if (RUNNING != mRunning)
     return NS_OK;
@@ -688,7 +693,8 @@ nsresult nsNPAPIPluginInstance::HandleEvent(void* event, int16_t* result)
   if (pluginFunctions->event) {
     mCurrentPluginEvent = event;
 #if defined(XP_WIN) || defined(XP_OS2)
-    NS_TRY_SAFE_CALL_RETURN(tmpResult, (*pluginFunctions->event)(&mNPP, event), this);
+    NS_TRY_SAFE_CALL_RETURN(tmpResult, (*pluginFunctions->event)(&mNPP, event), this,
+                            aSafeToReenterGecko);
 #else
     MAIN_THREAD_JNI_REF_GUARD;
     tmpResult = (*pluginFunctions->event)(&mNPP, event);
@@ -718,7 +724,8 @@ nsresult nsNPAPIPluginInstance::GetValueFromPlugin(NPPVariable variable, void* v
     PluginDestructionGuard guard(this);
 
     NPError pluginError = NPERR_GENERIC_ERROR;
-    NS_TRY_SAFE_CALL_RETURN(pluginError, (*pluginFunctions->getvalue)(&mNPP, variable, value), this);
+    NS_TRY_SAFE_CALL_RETURN(pluginError, (*pluginFunctions->getvalue)(&mNPP, variable, value), this,
+                            NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
     ("NPP GetValue called: this=%p, npp=%p, var=%d, value=%d, return=%d\n", 
     this, &mNPP, variable, value, pluginError));
@@ -1404,8 +1411,28 @@ nsNPAPIPluginInstance::PrivateModeStateChanged(bool enabled)
 
   NPError error;
   NPBool value = static_cast<NPBool>(enabled);
-  NS_TRY_SAFE_CALL_RETURN(error, (*pluginFunctions->setvalue)(&mNPP, NPNVprivateModeBool, &value), this);
+  NS_TRY_SAFE_CALL_RETURN(error, (*pluginFunctions->setvalue)(&mNPP, NPNVprivateModeBool, &value), this,
+                          NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
   return (error == NPERR_NO_ERROR) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+nsresult
+nsNPAPIPluginInstance::IsPrivateBrowsing(bool* aEnabled)
+{
+  if (!mOwner)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDocument> doc;
+  mOwner->GetDocument(getter_AddRefs(doc));
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsPIDOMWindow> domwindow = doc->GetWindow();
+  NS_ENSURE_TRUE(domwindow, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocShell> docShell = domwindow->GetDocShell();
+  nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
+  *aEnabled = (loadContext && loadContext->UsePrivateBrowsing());
+  return NS_OK;
 }
 
 static void

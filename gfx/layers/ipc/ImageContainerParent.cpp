@@ -61,7 +61,6 @@ bool ImageContainerParent::Recv__delete__()
   NS_ABORT_IF_FALSE(mStop, "Should be in a stopped state when __delete__");
   SharedImage* removed = RemoveSharedImage(mID);
   if (removed) {
-    DeallocSharedImageData(this, *removed);
     delete removed;
   }
 

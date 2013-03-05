@@ -101,7 +101,7 @@ MediaEngineWebRTCAudioSource::Config(bool aEchoOn, uint32_t aEcho,
 }
 
 nsresult
-MediaEngineWebRTCAudioSource::Allocate()
+MediaEngineWebRTCAudioSource::Allocate(const MediaEnginePrefs &aPrefs)
 {
   if (mState == kReleased && mInitDone) {
     webrtc::VoEHardware* ptrVoEHw = webrtc::VoEHardware::GetInterface(mVoiceEngine);

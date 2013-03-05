@@ -50,8 +50,11 @@ function InitDetectorTests()
                 .getComplexValue("intl.charset.default",
                                  Ci.nsIPrefLocalizedString)
                 .data;
+            if (gExpectedCharset == "ISO-8859-1") {
+                gExpectedCharset = "windows-1252";
+            }
         } catch (e) {
-            gExpectedCharset = "ISO-8859-8";
+            gExpectedCharset = "windows-1252";
         }
     }
 

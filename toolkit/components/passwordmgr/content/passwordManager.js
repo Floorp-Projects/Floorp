@@ -59,13 +59,15 @@ var signonsTreeView = {
   isSorted : function() { return false; },
   isContainer : function(index) { return false; },
   cycleHeader : function(column) {},
-  getRowProperties : function(row,prop) {},
-  getColumnProperties : function(column,prop) {},
-  getCellProperties : function(row,column,prop) {
+  getRowProperties : function(row) { return ""; },
+  getColumnProperties : function(column) { return ""; },
+  getCellProperties : function(row,column) {
     if (column.element.getAttribute("id") == "siteCol")
-      prop.AppendElement(kLTRAtom);
+      return "ltr";
+
+    return "";
   }
- };
+};
 
 
 function LoadSignons() {

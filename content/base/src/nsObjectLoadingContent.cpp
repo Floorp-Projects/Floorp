@@ -68,10 +68,16 @@
 #include "sampler.h"
 #include "nsObjectFrame.h"
 #include "nsDOMClassInfo.h"
+#include "nsWrapperCacheInlines.h"
 
 #include "nsWidgetsCID.h"
 #include "nsContentCID.h"
+#include "mozilla/dom/BindingUtils.h"
+
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+
+using namespace mozilla;
+using namespace mozilla::dom;
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo*
@@ -957,7 +963,7 @@ nsObjectLoadingContent::GetActualType(nsACString& aType)
 NS_IMETHODIMP
 nsObjectLoadingContent::GetDisplayedType(uint32_t* aType)
 {
-  *aType = mType;
+  *aType = DisplayedType();
   return NS_OK;
 }
 
@@ -2390,7 +2396,7 @@ nsObjectLoadingContent::AsyncStartPluginInstance()
 NS_IMETHODIMP
 nsObjectLoadingContent::GetSrcURI(nsIURI** aURI)
 {
-  NS_IF_ADDREF(*aURI = mURI);
+  NS_IF_ADDREF(*aURI = GetSrcURI());
   return NS_OK;
 }
 
@@ -2573,24 +2579,34 @@ nsObjectLoadingContent::NotifyContentObjectWrapper()
   nsCxPusher pusher;
   pusher.Push(cx);
 
-  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-  nsContentUtils::XPConnect()->
-  GetWrappedNativeOfNativeObject(cx, sgo->GetGlobalJSObject(), thisContent,
-                                 NS_GET_IID(nsISupports),
-                                 getter_AddRefs(wrapper));
-
-  if (!wrapper) {
+  JSObject *obj = thisContent->GetWrapper();
+  if (!obj) {
     // Nothing to do here if there's no wrapper for mContent. The proto
     // chain will be fixed appropriately when the wrapper is created.
     return;
   }
 
-  JSObject *obj = nullptr;
-  nsresult rv = wrapper->GetJSObject(&obj);
-  if (NS_FAILED(rv))
-    return;
+  JSAutoCompartment ac(cx, obj);
 
-  nsHTMLPluginObjElementSH::SetupProtoChain(wrapper, cx, obj);
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+  JSObject* canonicalPrototype = nullptr;
+  if (thisContent->IsDOMBinding()) {
+    canonicalPrototype =
+      GetCanonicalPrototype(cx, JS_GetGlobalForObject(cx, obj));
+  } else{
+    nsContentUtils::XPConnect()->
+      GetWrappedNativeOfNativeObject(cx, sgo->GetGlobalJSObject(), thisContent,
+                                     NS_GET_IID(nsISupports),
+                                     getter_AddRefs(wrapper));
+  }
+
+  nsHTMLPluginObjElementSH::SetupProtoChain(cx, obj, wrapper, canonicalPrototype);
+}
+
+JSObject*
+nsObjectLoadingContent::GetCanonicalPrototype(JSContext* aCx, JSObject* aGlobal)
+{
+  return nullptr;
 }
 
 NS_IMETHODIMP
@@ -2617,7 +2633,7 @@ nsObjectLoadingContent::PlayPlugin()
 NS_IMETHODIMP
 nsObjectLoadingContent::GetActivated(bool *aActivated)
 {
-  *aActivated = mActivated;
+  *aActivated = Activated();
   return NS_OK;
 }
 
@@ -2747,3 +2763,128 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason)
   return allowPerm;
 }
 
+nsIDocument*
+nsObjectLoadingContent::GetContentDocument()
+{
+  nsCOMPtr<nsIContent> thisContent =
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+
+  if (!thisContent->IsInDoc()) {
+    return nullptr;
+  }
+
+  // XXXbz should this use GetCurrentDoc()?  sXBL/XBL2 issue!
+  nsIDocument *sub_doc = thisContent->OwnerDoc()->GetSubDocumentFor(thisContent);
+  if (!sub_doc) {
+    return nullptr;
+  }
+
+  return sub_doc;
+}
+
+JS::Value
+nsObjectLoadingContent::LegacyCall(JSContext* aCx,
+                                   JS::Value aThisVal,
+                                   const Sequence<JS::Value>& aArguments,
+                                   ErrorResult& aRv)
+{
+  nsCOMPtr<nsIContent> thisContent =
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  JSObject* obj = thisContent->GetWrapper();
+  MOZ_ASSERT(obj, "How did we get called?");
+
+  // Make sure we're not dealing with an Xray.  Our DoCall code can't handle
+  // random cross-compartment wrappers, so we're going to have to wrap
+  // everything up into our compartment, but that means we need to check that
+  // this is not an Xray situation by hand.
+  if (!JS_WrapObject(aCx, &obj)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return JS::UndefinedValue();
+  }
+
+  if (nsDOMClassInfo::ObjectIsNativeWrapper(aCx, obj)) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return JS::UndefinedValue();
+  }
+
+  obj = thisContent->GetWrapper();
+  // Now wrap things up into the compartment of "obj"
+  JSAutoCompartment ac(aCx, obj);
+  nsTArray<JS::Value> args(aArguments);
+  for (JS::Value *arg = args.Elements(), *arg_end = arg + args.Length();
+       arg != arg_end;
+       ++arg) {
+    if (!JS_WrapValue(aCx, arg)) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return JS::UndefinedValue();
+    }
+  }
+
+  if (!JS_WrapValue(aCx, &aThisVal)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return JS::UndefinedValue();
+  }
+
+  JS::Value retval;
+  bool otherRetval;
+  nsresult rv =
+    nsHTMLPluginObjElementSH::DoCall(nullptr, aCx, obj, args.Length(),
+                                     args.Elements(), &retval, aThisVal,
+                                     &otherRetval);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return JS::UndefinedValue();
+  }
+
+  if (!otherRetval) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return JS::UndefinedValue();
+  }
+  return retval;
+}
+
+void
+nsObjectLoadingContent::SetupProtoChain(JSContext* aCx, JSObject* aObject)
+{
+  // We get called on random compartments here for some reason
+  // (perhaps because WrapObject can happen on a random compartment?)
+  // so make sure to enter the compartment of aObject.
+  JSAutoCompartment ac(aCx, aObject);
+  MOZ_ASSERT(nsCOMPtr<nsIContent>(do_QueryInterface(
+    static_cast<nsIObjectLoadingContent*>(this)))->IsDOMBinding());
+  if (nsContentUtils::IsSafeToRunScript()) {
+    nsHTMLPluginObjElementSH::SetupProtoChain(aCx, aObject, nullptr,
+                                              GetCanonicalPrototype(aCx,
+                                                                    JS_GetGlobalForObject(aCx, aObject)));
+  } else {
+    // This may be null if the JS context is not a DOM context. That's ok, we'll
+    // use the safe context from XPConnect in the runnable.
+    nsCOMPtr<nsIScriptContext> scriptContext = GetScriptContextFromJSContext(aCx);
+
+    nsRefPtr<nsHTMLPluginObjElementSH::SetupProtoChainRunner> runner =
+      new nsHTMLPluginObjElementSH::SetupProtoChainRunner(nullptr,
+                                                          scriptContext,
+                                                          this);
+    nsContentUtils::AddScriptRunner(runner);
+  }
+}
+
+bool
+nsObjectLoadingContent::DoNewResolve(JSContext* aCx, JSHandleObject aObject,
+                                     JSHandleId aId, unsigned aFlags,
+                                     JSMutableHandleObject aObjp)
+{
+  // We don't resolve anything; we just try to make sure we're instantiated
+
+  bool callerIsContentJS = (!nsContentUtils::IsCallerChrome() &&
+                            !nsContentUtils::IsCallerXBL() &&
+                            js::IsContextRunningJS(aCx));
+
+  nsRefPtr<nsNPAPIPluginInstance> pi;
+  nsresult rv = ScriptRequestPluginInstance(callerIsContentJS,
+                                            getter_AddRefs(pi));
+  if (NS_FAILED(rv)) {
+    return mozilla::dom::Throw<true>(aCx, rv);
+  }
+  return true;
+}

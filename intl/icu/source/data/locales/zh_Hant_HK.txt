@@ -1,0 +1,91 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/zh_Hant_HK.xml
+// *
+// ***************************************************************************
+zh_Hant_HK{
+    NumberElements{
+        latn{
+            patterns{
+                currencyFormat{"¤#,##0.00;(¤#,##0.00)"}
+            }
+        }
+    }
+    Version{"2.0.78.47"}
+    calendar{
+        buddhist{
+            availableFormats{
+                MEd{"M-d（E）"}
+                Md{"M-d"}
+            }
+        }
+        gregorian{
+            DateTimePatterns{
+                "ah:mm:ss [zzzz]",
+                "ah:mm:ss [z]",
+                "ahh:mm:ss",
+                "ah:mm",
+                "y年M月d日EEEE",
+                "y年M月d日",
+                "y年M月d日",
+                "yy年M月d日",
+                "{1}{0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1}{0}",
+                "{1}{0}",
+            }
+            availableFormats{
+                Ed{"d E"}
+                MEd{"E, M-d"}
+                Md{"M-d"}
+            }
+            fields{
+                month{
+                    relative{
+                        "-1"{"上月"}
+                        "1"{"下月"}
+                    }
+                }
+                year{
+                    relative{
+                        "-1"{"上年"}
+                        "0"{"本年"}
+                        "1"{"下年"}
+                    }
+                }
+            }
+        }
+        roc{
+            availableFormats{
+                MEd{"d-M（E）"}
+                Md{"d-M"}
+            }
+        }
+    }
+    measurementSystemNames{
+        UK{"英國"}
+        US{"美國"}
+        metric{"十進制"}
+    }
+    units{
+        day-future{
+            other{"{0} 日後"}
+        }
+        day-past{
+            other{"{0} 日前"}
+        }
+        hour{
+            other{"{0}時"}
+        }
+        month-past{
+            other{"{0} 月前"}
+        }
+        week{
+            other{"{0}星期"}
+        }
+    }
+}

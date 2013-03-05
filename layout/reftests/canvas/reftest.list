@@ -47,6 +47,8 @@ fails-if(B2G) != text-font-lang.html text-font-lang-notref.html
 
 == text-measure.html text-measure-ref.html
 
+random-if(!d2d) != text-subpixel-1.html text-subpixel-1-ref.html
+
 == strokeText-path.html strokeText-path-ref.html
 
 # check that emoji character renders as something non-blank (for Apple Color Emoji font, bug 715798)

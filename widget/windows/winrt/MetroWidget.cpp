@@ -19,6 +19,8 @@
 #include "nsWindowDefs.h"
 #include "FrameworkView.h"
 #include "nsTextStore.h"
+#include "Layers.h"
+#include "BasicLayers.h"
 
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
@@ -129,6 +131,7 @@ MetroWidget::MetroWidget() :
   mTransparencyMode(eTransparencyOpaque),
   mWnd(NULL),
   mMetroWndProc(NULL),
+  mTempBasicLayerInUse(false),
   nsWindowBase()
 {
   // Global initialization
@@ -752,27 +755,98 @@ MetroWidget::RemoveSubclass()
   RemovePropW(mWnd, kMetroSubclassThisProp);
 }
 
+bool
+MetroWidget::ShouldUseOffMainThreadCompositing()
+{
+  // Either we're not initialized yet, or this is the toolkit widget
+  if (!mView) {
+    return false;
+  }
+  // toolkit or test widgets can't use omtc, they don't have ICoreWindow.
+  return (CompositorParent::CompositorLoop() && mWindowType == eWindowType_toplevel);
+}
+
+bool
+MetroWidget::ShouldUseMainThreadD3D10Manager()
+{
+  // Either we're not initialized yet, or this is the toolkit widget
+  if (!mView) {
+    return false;
+  }
+  return (!CompositorParent::CompositorLoop() && mWindowType == eWindowType_toplevel);
+}
+
+bool
+MetroWidget::ShouldUseBasicManager()
+{
+  // toolkit or test widgets fall back on empty shadow layers
+  return (mWindowType != eWindowType_toplevel);
+}
+
 LayerManager*
 MetroWidget::GetLayerManager(PLayersChild* aShadowManager,
                              LayersBackend aBackendHint,
                              LayerManagerPersistence aPersistence,
                              bool* aAllowRetaining)
 {
-  if (!mView) {
-    Log(L"Attempting to initialize layermanager for a window that has no view!");
-    return nsBaseWidget::GetLayerManager(aShadowManager, aBackendHint, aPersistence, aAllowRetaining);
+  bool retaining = true;
+
+  // If we initialized earlier than the view, recreate the layer manager now
+  if (mLayerManager &&
+      mTempBasicLayerInUse &&
+      ShouldUseOffMainThreadCompositing()) {
+    mLayerManager = nullptr;
+    mTempBasicLayerInUse = false;
+    retaining = false;
+  }
+
+  // If the backend device has changed, create a new manager (pulled from nswindow)
+  if (mLayerManager) {
+    if (mLayerManager->GetBackendType() == LAYERS_D3D10) {
+      LayerManagerD3D10 *layerManagerD3D10 =
+        static_cast<LayerManagerD3D10*>(mLayerManager.get());
+      if (layerManagerD3D10->device() !=
+          gfxWindowsPlatform::GetPlatform()->GetD3D10Device()) {
+        MOZ_ASSERT(!mLayerManager->IsInTransaction());
+
+        mLayerManager->Destroy();
+        mLayerManager = nullptr;
+        retaining = false;
+      }
+    }
+  }
+
+  // Create a layer manager: try to use an async compositor first, if enabled.
+  // Otherwise fall back on the main thread d3d manager.
+  if (!mLayerManager) {
+    if (ShouldUseOffMainThreadCompositing()) {
+      NS_ASSERTION(aShadowManager == nullptr, "Async Compositor not supported with e10s");
+      CreateCompositor();
+    } else if (ShouldUseMainThreadD3D10Manager()) {
+      nsRefPtr<mozilla::layers::LayerManagerD3D10> layerManager =
+        new mozilla::layers::LayerManagerD3D10(this);
+      if (layerManager->Initialize(true)) {
+        mLayerManager = layerManager;
+      }
+    } else if (ShouldUseBasicManager()) {
+      mLayerManager = CreateBasicLayerManager();
+    }
+
+    // Either we're not ready to initialize yet due to a missing view pointer,
+    // or something has gone wrong.
+    if (!mLayerManager) {
+      if (!mView) {
+        NS_WARNING("Using temporary basic layer manager.");
+        mLayerManager = new BasicShadowLayerManager(this);
+        mTempBasicLayerInUse = true;
+      } else {
+        NS_RUNTIMEABORT("Couldn't create layer manager");
+      }
+    }
   }
 
   if (aAllowRetaining) {
-    *aAllowRetaining = true;
-  }
-
-  if (!mLayerManager) {
-    nsRefPtr<mozilla::layers::LayerManagerD3D10> layerManager =
-      new mozilla::layers::LayerManagerD3D10(this);
-    if (layerManager->Initialize(true)) {
-      mLayerManager = layerManager;
-    }
+    *aAllowRetaining = retaining;
   }
 
   return mLayerManager;

@@ -1,0 +1,581 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/ee.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/ee.xml
+ */
+ee{
+    AuxExemplarCharacters{"[ă â å ä ā æ c ç ĕ ê ë ĭ î ï j ñ ŏ ô ö ø œ q ŭ û ü ÿ]"}
+    ExemplarCharacters{
+        "[a á à ã b d ɖ e é è ẽ ɛ {ɛ\u0301} {ɛ\u0300} {ɛ\u0303} f ƒ g ɣ h x i í ì ĩ k"
+        " l m n ŋ o ó ò õ ɔ {ɔ\u0301} {ɔ\u0300} {ɔ\u0303} p r s t u ú ù ũ v ʋ w y z]"
+    }
+    ExemplarCharactersIndex{"[A B D Ɖ E Ɛ F Ƒ G Ɣ H X I K L M N Ŋ O Ɔ P R S T U V Ʋ W Y Z]"}
+    ExemplarCharactersPunctuation{"[\- ‐ – — , ; \: ! ? . … ' ‘ ’ \" “ ” ( ) \[ \] \{ \} § @ * / \& # † ‡ ′ ″]"}
+    LocaleScript{
+        "Latn",
+    }
+    NumberElements{
+        latn{
+            patterns{
+                currencyFormat{"¤#,##0.00;(¤#,##0.00)"}
+            }
+            patternsShort{
+                decimalFormat{
+                    100000{
+                        one{"000K"}
+                        other{"000K"}
+                    }
+                    1000000{
+                        one{"0M"}
+                        other{"0M"}
+                    }
+                    10000000{
+                        one{"00M"}
+                        other{"00M"}
+                    }
+                    100000000{
+                        one{"000M"}
+                        other{"000M"}
+                    }
+                    1000000000{
+                        one{"0000M"}
+                        other{"0000M"}
+                    }
+                    10000000000{
+                        one{"00000M"}
+                        other{"00000M"}
+                    }
+                    100000000000{
+                        one{"000000M"}
+                        other{"000000M"}
+                    }
+                    1000000000000{
+                        one{"0B"}
+                        other{"0B"}
+                    }
+                    10000000000000{
+                        one{"00B"}
+                        other{"00B"}
+                    }
+                    100000000000000{
+                        one{"000B"}
+                        other{"000B"}
+                    }
+                }
+            }
+            symbols{
+                nan{"mnn"}
+            }
+        }
+    }
+    Version{"2.0.78.39"}
+    calendar{
+        gregorian{
+            AmPmMarkers{
+                "ŋdi",
+                "ɣetrɔ",
+            }
+            DateTimePatterns{
+                "a h:mm:ss zzzz",
+                "a 'ga' h:mm:ss z",
+                "a 'ga' h:mm:ss",
+                "a 'ga' h:mm",
+                "EEEE, MMMM d 'lia' y",
+                "MMMM d 'lia' y",
+                "MMM d 'lia', y",
+                "M/d/yy",
+                "{0} {1}",
+                "{0} {1}",
+                "{0} {1}",
+                "{0} {1}",
+                "{0} {1}",
+            }
+            availableFormats{
+                Ed{"E d"}
+                H{"HH"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, M/d"}
+                MMM{"LLL"}
+                MMMEd{"E, MMM d 'lia'"}
+                MMMMEd{"E, MMMM d 'lia'"}
+                MMMMd{"MMMM d 'lia'"}
+                MMMd{"MMM d 'lia'"}
+                Md{"M/d"}
+                d{"d"}
+                h{"a 'ga' h"}
+                hm{"a 'ga' h:mm"}
+                hms{"a 'ga' h:mm:ss"}
+                ms{"'aɖabaƒoƒo' mm:ss"}
+                y{"y"}
+                yM{"M/y"}
+                yMEd{"E, M/d/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, MMM d, y"}
+                yMMMM{"MMMM y"}
+                yMMMd{"MMM d 'lia', y"}
+                yMd{"M/d/y"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "kɔs",
+                        "dzo",
+                        "bla",
+                        "kuɖ",
+                        "yaw",
+                        "fiɖ",
+                        "mem",
+                    }
+                    narrow{
+                        "k",
+                        "d",
+                        "b",
+                        "k",
+                        "y",
+                        "f",
+                        "m",
+                    }
+                    short{
+                        "kɔs",
+                        "dzo",
+                        "bla",
+                        "kuɖ",
+                        "yaw",
+                        "fiɖ",
+                        "mem",
+                    }
+                    wide{
+                        "kɔsiɖa",
+                        "dzoɖa",
+                        "blaɖa",
+                        "kuɖa",
+                        "yawoɖa",
+                        "fiɖa",
+                        "memleɖa",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "kɔs",
+                        "dzo",
+                        "bla",
+                        "kuɖ",
+                        "yaw",
+                        "fiɖ",
+                        "mem",
+                    }
+                    narrow{
+                        "k",
+                        "d",
+                        "b",
+                        "k",
+                        "y",
+                        "f",
+                        "m",
+                    }
+                    short{
+                        "kɔs",
+                        "dzo",
+                        "bla",
+                        "kuɖ",
+                        "yaw",
+                        "fiɖ",
+                        "mem",
+                    }
+                    wide{
+                        "kɔsiɖa",
+                        "dzoɖa",
+                        "blaɖa",
+                        "kuɖa",
+                        "yawoɖa",
+                        "fiɖa",
+                        "memleɖa",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "hY",
+                    "Yŋ",
+                }
+                wide{
+                    "Hafi Yesu Va Do ŋgɔ",
+                    "Yesu Ŋɔli",
+                }
+            }
+            fields{
+                day{
+                    dn{"ŋkeke"}
+                    relative{
+                        "-1"{"etsɔ si va yi"}
+                        "-2"{"nyitsɔ"}
+                        "0"{"egbe"}
+                        "1"{"etsɔ si gbɔna"}
+                        "2"{"nyitsɔ si gbɔna"}
+                    }
+                }
+                dayperiod{
+                    dn{"ŋkekea me"}
+                }
+                era{
+                    dn{"ŋɔli"}
+                }
+                hour{
+                    dn{"gaƒoƒo"}
+                }
+                minute{
+                    dn{"Mintigaƒoƒo"}
+                }
+                month{
+                    dn{"Xleti"}
+                }
+                second{
+                    dn{"sekend"}
+                }
+                week{
+                    dn{"kɔsiɖa ɖeka"}
+                }
+                weekday{
+                    dn{"kɔsiɖa me ŋkeke"}
+                }
+                year{
+                    dn{"ƒe"}
+                }
+                zone{
+                    dn{"nutomegaƒoƒome"}
+                }
+            }
+            intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
+                }
+                Hv{
+                    H{"HH–HH v"}
+                }
+                M{
+                    M{"'ɣleti' M 'lia' – 'ɣleti' M 'lia'"}
+                }
+                MEd{
+                    M{"E, M/d – E, M/d"}
+                    d{"E, M/d – E, M/d"}
+                }
+                MMM{
+                    M{"MMM–MMM"}
+                }
+                MMMEd{
+                    M{"E, MMM d 'lia' – E, MMM d 'lia'"}
+                    d{"E, MMM d 'lia' – E, MMM d 'lia'"}
+                }
+                MMMd{
+                    M{"MMM d 'lia' – MMM d 'lia'"}
+                    d{"MMM d 'lia' – d 'lia'"}
+                }
+                Md{
+                    M{"M/d – M/d"}
+                    d{"M/d – M/d"}
+                }
+                d{
+                    d{"d–d"}
+                }
+                fallback{"{0} - {1}"}
+                h{
+                    a{"a h – a h"}
+                    h{"a h–h"}
+                }
+                hm{
+                    a{"a 'ga' h:mm - a 'ga' h:mm"}
+                    h{"a 'ga' h:mm - 'ga' h:mm"}
+                    m{"a 'ga' h:mm – 'ga' h:mm"}
+                }
+                hmv{
+                    a{"a 'ga' h:mm – a 'ga' h:mm v"}
+                    h{"a 'ga' h:mm–h:mm v"}
+                    m{"a h:mm–h:mm v"}
+                }
+                hv{
+                    a{"a h – a h v"}
+                    h{"a 'ga' h–h v"}
+                }
+                yM{
+                    M{"M/yy – M/yy"}
+                    y{"M/yy – M/yy"}
+                }
+                yMEd{
+                    M{"E, M/d/yy – E, M/d/yy"}
+                    d{"E, M/d/yy – E, M/d/yy"}
+                    y{"E, M/d/yy – E, M/d/yy"}
+                }
+                yMMM{
+                    M{"MMM–MMM y"}
+                    y{"MMM y – MMM y"}
+                }
+                yMMMEd{
+                    M{"E, MMM d 'lia' – E, MMM d 'lia', y"}
+                    d{"E, MMM d 'lia' – E, MMM d 'lia', y"}
+                    y{"E, MMM d 'lia', y – E, MMM d 'lia', y"}
+                }
+                yMMMM{
+                    M{"MMMM–MMMM y"}
+                    y{"MMMM y – MMMM y"}
+                }
+                yMMMd{
+                    M{"MMM d 'lia' – MMM d 'lia', y"}
+                    d{"MMM d 'lia' – d 'lia' , y"}
+                    y{"MMM d 'lia' , y – MMM d 'lia', y"}
+                }
+                yMd{
+                    M{"M/d/yy – M/d/yy"}
+                    d{"M/d/yy – M/d/yy"}
+                    y{"M/d/yy – M/d/yy"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "dzv",
+                        "dzd",
+                        "ted",
+                        "afɔ",
+                        "dam",
+                        "mas",
+                        "sia",
+                        "dea",
+                        "any",
+                        "kel",
+                        "ade",
+                        "dzm",
+                    }
+                    narrow{
+                        "d",
+                        "d",
+                        "t",
+                        "a",
+                        "d",
+                        "m",
+                        "s",
+                        "d",
+                        "a",
+                        "k",
+                        "a",
+                        "d",
+                    }
+                    wide{
+                        "dzove",
+                        "dzodze",
+                        "tedoxe",
+                        "afɔfĩe",
+                        "dama",
+                        "masa",
+                        "siamlɔm",
+                        "deasiamime",
+                        "anyɔnyɔ",
+                        "kele",
+                        "adeɛmekpɔxe",
+                        "dzome",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "dzv",
+                        "dzd",
+                        "ted",
+                        "afɔ",
+                        "dam",
+                        "mas",
+                        "sia",
+                        "dea",
+                        "any",
+                        "kel",
+                        "ade",
+                        "dzm",
+                    }
+                    narrow{
+                        "d",
+                        "d",
+                        "t",
+                        "a",
+                        "d",
+                        "m",
+                        "s",
+                        "d",
+                        "a",
+                        "k",
+                        "a",
+                        "d",
+                    }
+                    wide{
+                        "dzove",
+                        "dzodze",
+                        "tedoxe",
+                        "afɔfĩe",
+                        "dama",
+                        "masa",
+                        "siamlɔm",
+                        "deasiamime",
+                        "anyɔnyɔ",
+                        "kele",
+                        "adeɛmekpɔxe",
+                        "dzome",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "k1",
+                        "k2",
+                        "k3",
+                        "k4",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
+                    wide{
+                        "kɔta gbãtɔ",
+                        "kɔta evelia",
+                        "kɔta etɔ̃lia",
+                        "kɔta enelia",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "k1",
+                        "k2",
+                        "k3",
+                        "k4",
+                    }
+                    wide{
+                        "kɔta gbãtɔ",
+                        "kɔta evelia",
+                        "kɔta etɔ̃lia",
+                        "kɔta enelia",
+                    }
+                }
+            }
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"’"}
+        alternateQuotationStart{"‘"}
+        quotationEnd{"”"}
+        quotationStart{"“"}
+    }
+    listPattern{
+        standard{
+            2{"{0} kple {1}"}
+            end{"{0}, kple {1}"}
+        }
+    }
+    measurementSystemNames{
+        UK{"uk"}
+        US{"us"}
+        metric{"metric"}
+    }
+    units{
+        day{
+            one{"ŋkeke {0} wo"}
+            other{"ŋkeke {0} wo"}
+        }
+        day-future{
+            one{"le ŋkeke {0} wo me"}
+            other{"le ŋkeke {0} wo me"}
+        }
+        day-past{
+            one{"ŋkeke {0} si wo va yi"}
+            other{"ŋkeke {0} si wo va yi"}
+        }
+        hour{
+            one{"gaƒoƒo {0} wo"}
+            other{"gaƒoƒo {0} wo"}
+        }
+        hour-future{
+            one{"le gaƒoƒo {0} wo me"}
+            other{"le gaƒoƒo {0} wo me"}
+        }
+        hour-past{
+            one{"gaƒoƒo {0} si wo va yi"}
+            other{"gaƒoƒo {0} si wo va yi"}
+        }
+        minute{
+            one{"aɖabaƒoƒo {0} wo"}
+            other{"aɖabaƒoƒo {0} wo"}
+        }
+        minute-future{
+            one{"le aɖabaƒoƒo {0} wo me"}
+            other{"le aɖabaƒoƒo {0} wo me"}
+        }
+        minute-past{
+            one{"aɖabaƒoƒo {0} si wo va yi"}
+            other{"aɖabaƒoƒo {0} si wo va yi"}
+        }
+        month{
+            one{"ɣleti {0} wo"}
+            other{"ɣleti {0} wo"}
+        }
+        month-future{
+            one{"le ɣleti {0} wo me"}
+            other{"le ɣleti {0} wo me"}
+        }
+        month-past{
+            one{"ɣleti {0} si wo va yi"}
+            other{"ɣleti {0} si wo va yi"}
+        }
+        second{
+            one{"sekend {0} wo"}
+            other{"sekend {0} wo"}
+        }
+        second-future{
+            one{"le sekend {0} wo me"}
+            other{"le sekend {0} wo me"}
+        }
+        second-past{
+            one{"sekend {0} si wo va yi"}
+            other{"sekend {0} si wo va yi"}
+        }
+        week{
+            one{"kɔsiɖa {0} wo"}
+            other{"kɔsiɖa {0} wo"}
+        }
+        week-future{
+            one{"le kɔsiɖa {0} wo me"}
+            other{"le kɔsiɖa {0} wo me"}
+        }
+        week-past{
+            one{"kɔsiɖa {0} si wo va yi"}
+            other{"kɔsiɖa {0} si wo va yi"}
+        }
+        year{
+            one{"ƒe {0} wo"}
+            other{"ƒe {0} wo"}
+        }
+        year-future{
+            one{"le ƒe {0} wo me"}
+            other{"le ƒe {0} wo me"}
+        }
+        year-past{
+            one{"ƒe {0} si wo va yi"}
+            other{"ƒe {0} si wo va yi"}
+        }
+    }
+}

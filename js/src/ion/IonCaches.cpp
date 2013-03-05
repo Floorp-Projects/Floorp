@@ -739,7 +739,7 @@ bool
 GetPropertyIC::attachReadSlot(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
                               HandleShape shape)
 {
-    MacroAssembler masm;
+    MacroAssembler masm(cx);
     RepatchLabel failures;
 
     GetNativePropertyStub getprop;
@@ -756,7 +756,7 @@ GetPropertyIC::attachCallGetter(JSContext *cx, IonScript *ion, JSObject *obj,
                                 JSObject *holder, HandleShape shape,
                                 const SafepointIndex *safepointIndex, void *returnAddr)
 {
-    MacroAssembler masm;
+    MacroAssembler masm(cx);
     RepatchLabel failures;
 
     JS_ASSERT(!idempotent());
@@ -787,7 +787,7 @@ GetPropertyIC::attachArrayLength(JSContext *cx, IonScript *ion, JSObject *obj)
     JS_ASSERT(!idempotent());
 
     Label failures;
-    MacroAssembler masm;
+    MacroAssembler masm(cx);
 
     // Guard object is a dense array.
     RootedObject globalObj(cx, &script->global());
@@ -838,7 +838,7 @@ GetPropertyIC::attachTypedArrayLength(JSContext *cx, IonScript *ion, JSObject *o
     JS_ASSERT(!idempotent());
 
     Label failures;
-    MacroAssembler masm;
+    MacroAssembler masm(cx);
 
     Register tmpReg;
     if (output().hasValue()) {
@@ -1086,7 +1086,7 @@ bool
 SetPropertyIC::attachNativeExisting(JSContext *cx, IonScript *ion,
                                     HandleObject obj, HandleShape shape)
 {
-    MacroAssembler masm;
+    MacroAssembler masm(cx);
 
     RepatchLabel exit_;
     CodeOffsetJump exitOffset =
@@ -1127,7 +1127,7 @@ SetPropertyIC::attachSetterCall(JSContext *cx, IonScript *ion,
                                 HandleObject obj, HandleObject holder, HandleShape shape,
                                 void *returnAddr)
 {
-    MacroAssembler masm;
+    MacroAssembler masm(cx);
 
     // Need to set correct framePushed on the masm so that exit frame descriptors are
     // properly constructed.
@@ -1290,7 +1290,7 @@ SetPropertyIC::attachNativeAdding(JSContext *cx, IonScript *ion, JSObject *obj,
                                   HandleShape oldShape, HandleShape newShape,
                                   HandleShape propShape)
 {
-    MacroAssembler masm;
+    MacroAssembler masm(cx);
 
     Label failures;
 
@@ -1550,7 +1550,7 @@ GetElementIC::attachGetProp(JSContext *cx, IonScript *ion, HandleObject obj,
 
     RepatchLabel failures;
     Label nonRepatchFailures;
-    MacroAssembler masm;
+    MacroAssembler masm(cx);
 
     // Guard on the index value.
     ValueOperand val = index().reg().valueReg();
@@ -1570,7 +1570,7 @@ GetElementIC::attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, c
     JS_ASSERT(idval.isInt32());
 
     Label failures;
-    MacroAssembler masm;
+    MacroAssembler masm(cx);
 
     Register scratchReg = output().scratchReg().gpr();
     JS_ASSERT(scratchReg != InvalidReg);
@@ -1639,7 +1639,7 @@ GetElementIC::attachTypedArrayElement(JSContext *cx, IonScript *ion, JSObject *o
     JS_ASSERT(idval.isInt32());
 
     Label failures;
-    MacroAssembler masm;
+    MacroAssembler masm(cx);
 
     // The array type is the object within the table of typed array classes.
     int arrayType = TypedArray::type(obj);
@@ -1781,7 +1781,7 @@ BindNameIC::attachGlobal(JSContext *cx, IonScript *ion, JSObject *scopeChain)
 {
     JS_ASSERT(scopeChain->isGlobal());
 
-    MacroAssembler masm;
+    MacroAssembler masm(cx);
 
     // Guard on the scope chain.
     RepatchLabel exit_;
@@ -1851,7 +1851,7 @@ BindNameIC::attachNonGlobal(JSContext *cx, IonScript *ion, JSObject *scopeChain,
 {
     JS_ASSERT(IsCacheableNonGlobalScope(scopeChain));
 
-    MacroAssembler masm;
+    MacroAssembler masm(cx);
 
     // Guard on the shape of the scope chain.
     RepatchLabel failures;
@@ -1950,7 +1950,7 @@ bool
 NameIC::attach(JSContext *cx, IonScript *ion, HandleObject scopeChain, HandleObject holder, HandleShape shape)
 {
     AssertCanGC();
-    MacroAssembler masm;
+    MacroAssembler masm(cx);
     Label failures;
 
     Register scratchReg = outputReg().valueReg().scratchReg();
@@ -2072,7 +2072,7 @@ bool
 CallsiteCloneIC::attach(JSContext *cx, IonScript *ion, HandleFunction original,
                         HandleFunction clone)
 {
-    MacroAssembler masm;
+    MacroAssembler masm(cx);
 
     // Guard against object identity on the original.
     RepatchLabel exit;

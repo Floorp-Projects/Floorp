@@ -1,9 +1,0 @@
-----boundary
-Content-Type: text/xml
-
-<data root="yes"><sub roo="no">text</sub></data>
-
-------boundary
-Content-Type: text/xml
-
-<data root="yes">text 2</data>

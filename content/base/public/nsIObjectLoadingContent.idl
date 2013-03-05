@@ -20,6 +20,9 @@ interface nsIURI;
 
 /**
  * This interface represents a content node that loads objects.
+ *
+ * Please make sure to update the MozObjectLoadingContent WebIDL
+ * interface to mirror this interface when changing it.
  */
 
 [scriptable, uuid(e9102696-4bb4-4a98-a31f-be9da5a3d18e)]

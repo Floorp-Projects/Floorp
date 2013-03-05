@@ -488,6 +488,8 @@ bool CreateThis(JSContext *cx, HandleObject callee, MutableHandleValue rval);
 
 void GetDynamicName(JSContext *cx, JSObject *scopeChain, JSString *str, Value *vp);
 
+JSBool FilterArguments(JSContext *cx, JSString *str);
+
 bool DebugPrologue(JSContext *cx, BaselineFrame *frame, JSBool *mustReturn);
 bool DebugEpilogue(JSContext *cx, BaselineFrame *frame, JSBool ok);
 

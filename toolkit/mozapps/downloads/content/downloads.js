@@ -447,11 +447,9 @@ function Startup()
     }
   }, false);
 
-#ifdef XP_WIN
-  let tempScope = {};
-  Cu.import("resource://gre/modules/DownloadTaskbarProgress.jsm", tempScope);
-  tempScope.DownloadTaskbarProgress.onDownloadWindowLoad(window);
-#endif
+  let DownloadTaskbarProgress =
+    Cu.import("resource://gre/modules/DownloadTaskbarProgress.jsm", {}).DownloadTaskbarProgress;
+  DownloadTaskbarProgress.onDownloadWindowLoad(window);
 }
 
 function Shutdown()

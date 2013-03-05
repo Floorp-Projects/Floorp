@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/MathAlgorithms.h"
 
 #include "ion/arm/MacroAssembler-arm.h"
 #include "ion/BaselineFrame.h"
@@ -13,6 +14,8 @@
 
 using namespace js;
 using namespace ion;
+
+using mozilla::Abs;
 
 bool
 isValueDTRDCandidate(ValueOperand &val)
@@ -2608,7 +2611,7 @@ MacroAssemblerARMCompat::storeValue(ValueOperand val, Operand dst) {
 void
 MacroAssemblerARMCompat::storeValue(ValueOperand val, const BaseIndex &dest)
 {
-    if (isValueDTRDCandidate(val) && (abs(dest.offset) <= 255)) {
+    if (isValueDTRDCandidate(val) && Abs(dest.offset) <= 255) {
         Register tmpIdx;
         if (dest.offset == 0) {
             if (dest.scale == TimesOne) {
@@ -2632,7 +2635,7 @@ MacroAssemblerARMCompat::storeValue(ValueOperand val, const BaseIndex &dest)
 void
 MacroAssemblerARMCompat::loadValue(const BaseIndex &addr, ValueOperand val)
 {
-    if (isValueDTRDCandidate(val) && (abs(addr.offset) <= 255)) {
+    if (isValueDTRDCandidate(val) && Abs(addr.offset) <= 255) {
         Register tmpIdx;
         if (addr.offset == 0) {
             if (addr.scale == TimesOne) {

@@ -6,6 +6,8 @@
 # drop-in replacement for autoconf 2.13's config.status, with features
 # borrowed from autoconf > 2.5, and additional features.
 
+from __future__ import print_function
+
 import logging
 import os
 import sys
@@ -22,13 +24,6 @@ from Preprocessor import Preprocessor
 
 
 log_manager = LoggingManager()
-
-
-# Basic logging facility
-verbose = False
-def log(string):
-    if verbose:
-        print >>sys.stderr, string
 
 
 def config_status(topobjdir = '.', topsrcdir = '.',
@@ -117,17 +112,17 @@ def config_status(topobjdir = '.', topsrcdir = '.',
     log_level = logging.INFO
 
     if options.files or options.headers or options.verbose:
-        global verbose
-        verbose = True
         log_level = logging.DEBUG
 
     log_manager.add_terminal_logging(level=log_level)
     log_manager.enable_unstructured()
 
     if not options.files and not options.headers:
-        print >>sys.stderr, "creating config files and headers..."
+        print('Reticulating splines...', file=sys.stderr)
+        summary = backend.consume(definitions)
 
-        backend.consume(definitions)
+        for line in summary.summaries():
+            print(line, file=sys.stderr)
 
         files = [os.path.join(topobjdir, f) for f in files]
         headers = [os.path.join(topobjdir, f) for f in headers]

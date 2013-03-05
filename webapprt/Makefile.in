@@ -32,6 +32,8 @@ EXTRA_JS_MODULES = \
 PREF_JS_EXPORTS = $(srcdir)/prefs.js \
                   $(NULL)
 
+GENERATED_DIRS_libs = $(FINAL_TARGET)
+
 include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_DEBUG
@@ -42,7 +44,7 @@ ifdef MOZILLA_OFFICIAL
 DEFINES += -DMOZILLA_OFFICIAL
 endif
 
-libs:: $(call mkdir_deps,$(FINAL_TARGET))
+libs::
 	$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/chrome.manifest "resource webapprt ./"
 
 GRE_MILESTONE := $(shell tail -n 1 $(topsrcdir)/config/milestone.txt 2>/dev/null || tail -1 $(topsrcdir)/config/milestone.txt)

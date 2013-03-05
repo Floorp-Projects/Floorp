@@ -16,6 +16,7 @@ function test() {
     gDebuggee = aDebuggee;
     gProcess = aProcess;
 
+    info("Starting test");
     testSimpleCall();
   });
 }

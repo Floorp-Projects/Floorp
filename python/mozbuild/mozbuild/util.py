@@ -113,16 +113,24 @@ class FileAvoidWrite(StringIO):
         self.filename = filename
 
     def close(self):
+        """Stop accepting writes, compare file contents, and rewrite if needed.
+
+        Returns a tuple of bools indicating what action was performed:
+
+            (file existed, file updated)
+        """
         buf = self.getvalue()
         StringIO.close(self)
+        existed = False
         try:
             existing = open(self.filename, 'rU')
+            existed = True
         except IOError:
             pass
         else:
             try:
                 if existing.read() == buf:
-                    return
+                    return True, False
             except IOError:
                 pass
             finally:
@@ -131,6 +139,8 @@ class FileAvoidWrite(StringIO):
         ensureParentDir(self.filename)
         with open(self.filename, 'w') as file:
             file.write(buf)
+
+        return existed, True
 
     def __enter__(self):
         return self

@@ -508,11 +508,15 @@ interface TestInterface {
   [Throws] attribute boolean throwingAttr;
   [GetterThrows] attribute boolean throwingGetterAttr;
   [SetterThrows] attribute boolean throwingSetterAttr;
+  legacycaller short(unsigned long arg1, TestInterface arg2);
 
   // If you add things here, add them to TestExampleGen as well
 };
 
-interface TestChildInterface : TestInterface {
+interface TestParentInterface {
+};
+
+interface TestChildInterface : TestParentInterface {
 };
 
 interface TestNonWrapperCacheInterface {

@@ -30,14 +30,9 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(MediaEngineDefaultVideoSource, nsITimerCallback)
  * Default video source.
  */
 
-MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource(int32_t aWidth,
-                                                             int32_t aHeight,
-                                                             int32_t aFPS)
+MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource()
   : mTimer(nullptr)
 {
-  mOpts.mWidth = aWidth;
-  mOpts.mHeight = aHeight;
-  mOpts.mMaxFPS = aFPS;
   mState = kReleased;
 }
 
@@ -59,12 +54,13 @@ MediaEngineDefaultVideoSource::GetUUID(nsAString& aUUID)
 }
 
 nsresult
-MediaEngineDefaultVideoSource::Allocate()
+MediaEngineDefaultVideoSource::Allocate(const MediaEnginePrefs &aPrefs)
 {
   if (mState != kReleased) {
     return NS_ERROR_FAILURE;
   }
 
+  mOpts = aPrefs;
   mState = kAllocated;
   return NS_OK;
 }
@@ -77,12 +73,6 @@ MediaEngineDefaultVideoSource::Deallocate()
   }
   mState = kReleased;
   return NS_OK;
-}
-
-const MediaEngineVideoOptions *
-MediaEngineDefaultVideoSource::GetOptions()
-{
-  return &mOpts;
 }
 
 static void AllocateSolidColorFrame(layers::PlanarYCbCrImage::Data& aData,
@@ -150,7 +140,7 @@ MediaEngineDefaultVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
 
   // AddTrack takes ownership of segment
   VideoSegment *segment = new VideoSegment();
-  segment->AppendFrame(image.forget(), USECS_PER_S / mOpts.mMaxFPS,
+  segment->AppendFrame(image.forget(), USECS_PER_S / mOpts.mFPS,
                        gfxIntSize(mOpts.mWidth, mOpts.mHeight));
   mSource->AddTrack(aID, VIDEO_RATE, 0, segment);
 
@@ -161,7 +151,7 @@ MediaEngineDefaultVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
   mTrackID = aID;
 
   // Start timer for subsequent frames
-  mTimer->InitWithCallback(this, 1000 / mOpts.mMaxFPS, nsITimer::TYPE_REPEATING_SLACK);
+  mTimer->InitWithCallback(this, 1000 / mOpts.mFPS, nsITimer::TYPE_REPEATING_SLACK);
   mState = kStarted;
 
   return NS_OK;
@@ -250,7 +240,7 @@ MediaEngineDefaultVideoSource::Notify(nsITimer* aTimer)
 
   // AddTrack takes ownership of segment
   VideoSegment segment;
-  segment.AppendFrame(ycbcr_image.forget(), USECS_PER_S / mOpts.mMaxFPS,
+  segment.AppendFrame(ycbcr_image.forget(), USECS_PER_S / mOpts.mFPS,
                       gfxIntSize(mOpts.mWidth, mOpts.mHeight));
   mSource->AppendToTrack(mTrackID, &segment);
 
@@ -301,7 +291,7 @@ MediaEngineDefaultAudioSource::GetUUID(nsAString& aUUID)
 }
 
 nsresult
-MediaEngineDefaultAudioSource::Allocate()
+MediaEngineDefaultAudioSource::Allocate(const MediaEnginePrefs &aPrefs)
 {
   if (mState != kReleased) {
     return NS_ERROR_FAILURE;
@@ -393,45 +383,14 @@ MediaEngineDefaultAudioSource::Notify(nsITimer* aTimer)
 void
 MediaEngineDefault::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSource> >* aVSources) {
   MutexAutoLock lock(mMutex);
-  int32_t found = false;
-  int32_t len = mVSources.Length();
 
-  int32_t width  = MediaEngineDefaultVideoSource::DEFAULT_VIDEO_WIDTH;
-  int32_t height = MediaEngineDefaultVideoSource::DEFAULT_VIDEO_HEIGHT;
-  int32_t fps    = MediaEngineDefaultVideoSource::DEFAULT_VIDEO_FPS;
+  // We once had code here to find a VideoSource with the same settings and re-use that.
+  // This no longer is possible since the resolution is being set in Allocate().
 
-  // FIX - these should be passed in originating in prefs and/or getUserMedia constraints
-  // Bug 778801
-  nsresult rv;
-  nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
+  nsRefPtr<MediaEngineVideoSource> newSource = new MediaEngineDefaultVideoSource();
+  mVSources.AppendElement(newSource);
+  aVSources->AppendElement(newSource);
 
-    if (branch) {
-      // these very rarely change
-      branch->GetIntPref("media.navigator.video.default_width", &width);
-      branch->GetIntPref("media.navigator.video.default_height", &height);
-      branch->GetIntPref("media.navigator.video.default_fps", &fps);
-    }
-  }
-
-  for (int32_t i = 0; i < len; i++) {
-    nsRefPtr<MediaEngineVideoSource> source = mVSources.ElementAt(i);
-    aVSources->AppendElement(source);
-    const MediaEngineVideoOptions *opts = source->GetOptions();
-    if (source->IsAvailable() &&
-        opts->mWidth == width && opts->mHeight == height && opts->mMaxFPS == fps) {
-      found = true;
-    }
-  }
-
-  // All streams are currently busy (or wrong resolution), just make a new one.
-  if (!found) {
-    nsRefPtr<MediaEngineVideoSource> newSource =
-      new MediaEngineDefaultVideoSource(width, height, fps);
-    mVSources.AppendElement(newSource);
-    aVSources->AppendElement(newSource);
-  }
   return;
 }
 

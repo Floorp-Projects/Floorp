@@ -31,6 +31,7 @@ class AutoFallback;
 class AutoSetInstantiatingToFalse;
 class nsObjectFrame;
 class nsFrameLoader;
+class nsXULElement;
 
 class nsObjectLoadingContent : public nsImageLoadingContent
                              , public nsIStreamListener
@@ -136,6 +137,77 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * will not open its own.
      */
     bool SrcStreamLoading() { return mSrcStreamLoading; }
+
+    /**
+     * When a plug-in is instantiated, it can create a scriptable
+     * object that the page wants to interact with.  We expose this
+     * object by placing it on the prototype chain of our element,
+     * between the element itself and its most-derived DOM prototype.
+     *
+     * GetCanonicalPrototype returns this most-derived DOM prototype.
+     *
+     * SetupProtoChain handles actually inserting the plug-in
+     * scriptable object into the proto chain if needed.
+     *
+     * DoNewResolve is a hook that allows us to find out when the web
+     * page is looking up a property name on our object and make sure
+     * that our plug-in, if any, is instantiated.
+     */
+
+    /**
+     * Get the canonical prototype for this content for the given global.  Only
+     * returns non-null for objects that are on WebIDL bindings.
+     */
+    virtual JSObject* GetCanonicalPrototype(JSContext* aCx, JSObject* aGlobal);
+
+    // Helper for WebIDL node wrapping
+    void SetupProtoChain(JSContext* aCx, JSObject* aObject);
+
+    // Helper for WebIDL newResolve
+    bool DoNewResolve(JSContext* aCx, JSHandleObject aObject, JSHandleId aId,
+                      unsigned aFlags, JSMutableHandleObject aObjp);
+
+    // WebIDL API
+    nsIDocument* GetContentDocument();
+    void GetActualType(nsAString& aType) const
+    {
+      CopyUTF8toUTF16(mContentType, aType);
+    }
+    uint32_t DisplayedType() const
+    {
+      return mType;
+    }
+    uint32_t GetContentTypeForMIMEType(const nsAString& aMIMEType)
+    {
+      return GetTypeOfContent(NS_ConvertUTF16toUTF8(aMIMEType));
+    }
+    void PlayPlugin(mozilla::ErrorResult& aRv)
+    {
+      aRv = PlayPlugin();
+    }
+    bool Activated() const
+    {
+      return mActivated;
+    }
+    nsIURI* GetSrcURI() const
+    {
+      return mURI;
+    }
+    uint32_t PluginFallbackType() const
+    {
+      return mFallbackType;
+    }
+    void CancelPlayPreview(mozilla::ErrorResult& aRv)
+    {
+      aRv = CancelPlayPreview();
+    }
+    void SwapFrameLoaders(nsXULElement& aOtherOwner, mozilla::ErrorResult& aRv)
+    {
+      aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    }
+    JS::Value LegacyCall(JSContext* aCx, JS::Value aThisVal,
+                         const mozilla::dom::Sequence<JS::Value>& aArguments,
+                         mozilla::ErrorResult& aRv);
 
   protected:
     /**
