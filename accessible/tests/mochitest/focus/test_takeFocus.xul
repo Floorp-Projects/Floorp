@@ -59,6 +59,8 @@
     var gQueue = null;
     function doTests()
     {
+      disableLogging(); // from test_takeFocus.html
+
       // Test focus events.
       gQueue = new eventQueue();
 
