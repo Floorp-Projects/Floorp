@@ -410,13 +410,13 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
     case eUnit_Coord: {
       nscoord startCoord = aStartValue.GetCoordValue();
       nscoord endCoord = aEndValue.GetCoordValue();
-      aDistance = DeprecatedAbs<double>(endCoord - startCoord);
+      aDistance = Abs(double(endCoord) - double(startCoord));
       return true;
     }
     case eUnit_Percent: {
       float startPct = aStartValue.GetPercentValue();
       float endPct = aEndValue.GetPercentValue();
-      aDistance = DeprecatedAbs<double>(endPct - startPct);
+      aDistance = Abs(double(endPct) - double(startPct));
       return true;
     }
     case eUnit_Float: {
@@ -434,7 +434,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
 
       float startFloat = aStartValue.GetFloatValue();
       float endFloat = aEndValue.GetFloatValue();
-      aDistance = DeprecatedAbs<double>(endFloat - startFloat);
+      aDistance = Abs(double(endFloat) - double(startFloat));
       return true;
     }
     case eUnit_Color: {
@@ -1297,7 +1297,7 @@ Decompose2DMatrix(const gfxMatrix &aMatrix, gfxPoint3D &aScale,
   XYshear /= scaleY;
 
   // A*D - B*C should now be 1 or -1
-  NS_ASSERTION(0.99 < DeprecatedAbs(A*D - B*C) && DeprecatedAbs(A*D - B*C) < 1.01,
+  NS_ASSERTION(0.99 < Abs(A*D - B*C) && Abs(A*D - B*C) < 1.01,
                "determinant should now be 1 or -1");
   if (A * D < B * C) {
     A = -A;

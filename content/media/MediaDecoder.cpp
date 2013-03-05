@@ -594,11 +594,11 @@ nsresult MediaDecoder::Seek(double aTime)
         NS_ENSURE_SUCCESS(res, NS_OK);
         res = seekable.Start(range + 1, &rightBound);
         NS_ENSURE_SUCCESS(res, NS_OK);
-        double distanceLeft = DeprecatedAbs(leftBound - aTime);
-        double distanceRight = DeprecatedAbs(rightBound - aTime);
+        double distanceLeft = Abs(leftBound - aTime);
+        double distanceRight = Abs(rightBound - aTime);
         if (distanceLeft == distanceRight) {
-          distanceLeft = DeprecatedAbs(leftBound - mCurrentTime);
-          distanceRight = DeprecatedAbs(rightBound - mCurrentTime);
+          distanceLeft = Abs(leftBound - mCurrentTime);
+          distanceRight = Abs(rightBound - mCurrentTime);
         } 
         aTime = (distanceLeft < distanceRight) ? leftBound : rightBound;
       } else {

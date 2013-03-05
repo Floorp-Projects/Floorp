@@ -5590,8 +5590,8 @@ nsEventStateManager::WheelPrefs::ComputeActionFor(widget::WheelEvent* aEvent)
   Init(index);
 
   bool deltaXPreferred =
-    (DeprecatedAbs(aEvent->deltaX) > DeprecatedAbs(aEvent->deltaY) &&
-     DeprecatedAbs(aEvent->deltaX) > DeprecatedAbs(aEvent->deltaZ));
+    (Abs(aEvent->deltaX) > Abs(aEvent->deltaY) &&
+     Abs(aEvent->deltaX) > Abs(aEvent->deltaZ));
   Action* actions = deltaXPreferred ? mOverriddenActionsX : mActions;
   if (actions[index] == ACTION_NONE || actions[index] == ACTION_SCROLL) {
     return actions[index];
@@ -5625,7 +5625,7 @@ nsEventStateManager::WheelPrefs::IsOverOnePageScrollAllowedX(
 {
   Index index = GetIndexFor(aEvent);
   Init(index);
-  return DeprecatedAbs(mMultiplierX[index]) >=
+  return Abs(mMultiplierX[index]) >=
            MIN_MULTIPLIER_VALUE_ALLOWING_OVER_ONE_PAGE_SCROLL;
 }
 
@@ -5635,6 +5635,6 @@ nsEventStateManager::WheelPrefs::IsOverOnePageScrollAllowedY(
 {
   Index index = GetIndexFor(aEvent);
   Init(index);
-  return DeprecatedAbs(mMultiplierY[index]) >=
+  return Abs(mMultiplierY[index]) >=
            MIN_MULTIPLIER_VALUE_ALLOWING_OVER_ONE_PAGE_SCROLL;
 }
