@@ -76,9 +76,8 @@ static const char* gRawCodecs[1] = {
   nullptr
 };
 
-/* static */
-bool
-DecoderTraits::IsRawType(const nsACString& aType)
+static bool
+IsRawType(const nsACString& aType)
 {
   if (!MediaDecoder::IsRawEnabled()) {
     return false;
@@ -111,8 +110,8 @@ static char const *const gOggCodecsWithOpus[4] = {
   nullptr
 };
 
-bool
-DecoderTraits::IsOggType(const nsACString& aType)
+static bool
+IsOggType(const nsACString& aType)
 {
   if (!MediaDecoder::IsOggEnabled()) {
     return false;
@@ -139,8 +138,8 @@ static char const *const gWaveCodecs[2] = {
   nullptr
 };
 
-bool
-DecoderTraits::IsWaveType(const nsACString& aType)
+static bool
+IsWaveType(const nsACString& aType)
 {
   if (!MediaDecoder::IsWaveEnabled()) {
     return false;
@@ -164,8 +163,8 @@ static char const *const gWebMCodecs[4] = {
   nullptr
 };
 
-bool
-DecoderTraits::IsWebMType(const nsACString& aType)
+static bool
+IsWebMType(const nsACString& aType)
 {
   if (!MediaDecoder::IsWebMEnabled()) {
     return false;
@@ -183,8 +182,8 @@ static const char* const gH264Types[4] = {
   nullptr
 };
 
-bool
-DecoderTraits::IsGStreamerSupportedType(const nsACString& aMimeType)
+static bool
+IsGStreamerSupportedType(const nsACString& aMimeType)
 {
   if (!MediaDecoder::IsGStreamerEnabled())
     return false;
@@ -203,8 +202,8 @@ DecoderTraits::IsGStreamerSupportedType(const nsACString& aMimeType)
   return false;
 }
 
-bool
-DecoderTraits::IsH264Type(const nsACString& aType)
+static bool
+IsH264Type(const nsACString& aType)
 {
   return CodecListContains(gH264Types, aType);
 }
@@ -220,8 +219,8 @@ static const char* const gOmxTypes[6] = {
   nullptr
 };
 
-bool
-DecoderTraits::IsOmxSupportedType(const nsACString& aType)
+static bool
+IsOmxSupportedType(const nsACString& aType)
 {
   if (!MediaDecoder::IsOmxEnabled()) {
     return false;
@@ -246,8 +245,8 @@ static char const *const gH264Codecs[9] = {
 #endif
 
 #ifdef MOZ_MEDIA_PLUGINS
-bool
-DecoderTraits::IsMediaPluginsType(const nsACString& aType)
+static bool
+IsMediaPluginsType(const nsACString& aType)
 {
   if (!MediaDecoder::IsMediaPluginsEnabled()) {
     return false;
@@ -267,9 +266,8 @@ static const char* const gDASHMPDTypes[2] = {
   nullptr
 };
 
-/* static */
-bool
-DecoderTraits::IsDASHMPDType(const nsACString& aType)
+static bool
+IsDASHMPDType(const nsACString& aType)
 {
   if (!MediaDecoder::IsDASHEnabled()) {
     return false;
@@ -280,7 +278,8 @@ DecoderTraits::IsDASHMPDType(const nsACString& aType)
 #endif
 
 #ifdef MOZ_WMF
-bool DecoderTraits::IsWMFSupportedType(const nsACString& aType)
+static bool
+IsWMFSupportedType(const nsACString& aType)
 {
   return WMFDecoder::GetSupportedCodecs(aType, nullptr);
 }
