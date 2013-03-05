@@ -6,6 +6,7 @@ let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).So
 const ADDON_TYPE_SERVICE     = "service";
 const ID_SUFFIX              = "@services.mozilla.org";
 const STRING_TYPE_NAME       = "type.%ID%.name";
+const XPINSTALL_URL = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
 
 let manifest = { // normal provider
   name: "provider 1",
@@ -14,15 +15,53 @@ let manifest = { // normal provider
   workerURL: "https://example.com/browser/browser/base/content/test/social/social_worker.js",
   iconURL: "https://example.com/browser/browser/base/content/test/moz.png"
 };
+let manifest2 = { // used for testing install
+  name: "provider 2",
+  origin: "https://example1.com",
+  sidebarURL: "https://example1.com/browser/browser/base/content/test/social/social_sidebar.html",
+  workerURL: "https://example1.com/browser/browser/base/content/test/social/social_worker.js",
+  iconURL: "https://example1.com/browser/browser/base/content/test/moz.png"
+};
 
 function test() {
   waitForExplicitFinish();
 
   Services.prefs.setCharPref("social.manifest.good", JSON.stringify(manifest));
+  Services.prefs.setBoolPref("social.remote-install.enabled", true);
   runSocialTests(tests, undefined, undefined, function () {
+    Services.prefs.clearUserPref("social.remote-install.enabled");
     Services.prefs.clearUserPref("social.manifest.good");
+    // just in case the tests failed, clear these here as well
+    Services.prefs.clearUserPref("social.whitelist");
+    Services.prefs.clearUserPref("social.directories");
     finish();
   });
+}
+
+function installListener(next) {
+  let expectEvent = "onInstalling";
+  return {
+    onInstalling: function(addon) {
+      is(expectEvent, "onInstalling", "install started");
+      is(addon.manifest.origin, manifest2.origin, "provider about to be installed");
+      expectEvent = "onInstalled";
+    },
+    onInstalled: function(addon) {
+      is(addon.manifest.origin, manifest2.origin, "provider installed");
+      expectEvent = "onUninstalling";
+    },
+    onUninstalling: function(addon) {
+      is(expectEvent, "onUninstalling", "uninstall started");
+      is(addon.manifest.origin, manifest2.origin, "provider about to be uninstalled");
+      expectEvent = "onUninstalled";
+    },
+    onUninstalled: function(addon) {
+      is(expectEvent, "onUninstalled", "provider has been uninstalled");
+      is(addon.manifest.origin, manifest2.origin, "provider uninstalled");
+      AddonManager.removeAddonListener(this);
+      next();
+    }
+  };
 }
 
 var tests = {
@@ -127,6 +166,70 @@ var tests = {
       SocialService.removeProvider(provider.origin, function() {
         AddonManager.removeAddonListener(listener);
         next();
+      });
+    });
+  },
+  testForeignInstall: function(next) {
+    AddonManager.addAddonListener(installListener(next));
+
+    // we expect the addon install dialog to appear, we need to accept the
+    // install from the dialog.
+    let windowListener = {
+      onWindowTitleChange: function() {},
+      onCloseWindow: function() {},
+      onOpenWindow: function(window) {
+        var domwindow = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                              .getInterface(Components.interfaces.nsIDOMWindow);
+        var self = this;
+        waitForFocus(function() {
+          self.windowReady(domwindow);
+        }, domwindow);
+      },
+      windowReady: function(window) {
+        if (window.document.location.href == XPINSTALL_URL) {
+          // Initially the accept button is disabled on a countdown timer
+          var button = window.document.documentElement.getButton("accept");
+          button.disabled = false;
+          window.document.documentElement.acceptDialog();
+          Services.wm.removeListener(windowListener);
+        }
+      }
+    };
+    Services.wm.addListener(windowListener);
+
+    let installFrom = "https://example1.com";
+    Services.prefs.setCharPref("social.whitelist", "");
+    is(SocialService.getOriginActivationType(installFrom), "foreign", "testing foriegn install");
+    Social.installProvider(installFrom, manifest2, function(addonManifest) {
+      Services.prefs.clearUserPref("social.whitelist");
+      SocialService.addBuiltinProvider(addonManifest.origin, function(provider) {
+        Social.uninstallProvider(addonManifest.origin);
+      });
+    });
+  },
+  testWhitelistInstall: function(next) {
+    AddonManager.addAddonListener(installListener(next));
+
+    let installFrom = "https://example1.com";
+    Services.prefs.setCharPref("social.whitelist", installFrom);
+    is(SocialService.getOriginActivationType(installFrom), "whitelist", "testing whitelist install");
+    Social.installProvider(installFrom, manifest2, function(addonManifest) {
+      Services.prefs.clearUserPref("social.whitelist");
+      SocialService.addBuiltinProvider(addonManifest.origin, function(provider) {
+        Social.uninstallProvider(addonManifest.origin);
+      });
+    });
+  },
+  testDirectoryInstall: function(next) {
+    AddonManager.addAddonListener(installListener(next));
+
+    let installFrom = "https://addons.allizom.org";
+    Services.prefs.setCharPref("social.directories", installFrom);
+    is(SocialService.getOriginActivationType(installFrom), "directory", "testing directory install");
+    Social.installProvider(installFrom, manifest2, function(addonManifest) {
+      Services.prefs.clearUserPref("social.directories");
+      SocialService.addBuiltinProvider(addonManifest.origin, function(provider) {
+        Social.uninstallProvider(addonManifest.origin);
       });
     });
   }
