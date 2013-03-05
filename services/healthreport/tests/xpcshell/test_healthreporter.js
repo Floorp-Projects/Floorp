@@ -88,7 +88,7 @@ function shutdownServer(server) {
 }
 
 function run_test() {
-  run_next_test();
+  makeFakeAppDir().then(run_next_test, do_throw);
 }
 
 add_task(function test_constructor() {
@@ -545,5 +545,27 @@ add_task(function test_upload_save_payload() {
 
   reporter._shutdown();
   yield shutdownServer(server);
+});
+
+add_task(function test_error_message_scrubbing() {
+  let reporter = yield getReporter("error_message_scrubbing");
+
+  try {
+    let profile = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
+    reporter._recordError("Foo " + profile);
+
+    do_check_eq(reporter._errors.length, 1);
+    do_check_eq(reporter._errors[0], "Foo <ProfilePath>");
+
+    reporter._errors = [];
+
+    let appdata = Services.dirsvc.get("UAppData", Ci.nsIFile);
+    let uri = Services.io.newFileURI(appdata);
+
+    reporter._recordError("Foo " + uri.spec);
+    do_check_eq(reporter._errors[0], "Foo <AppDataURI>");
+  } finally {
+    reporter._shutdown();
+  }
 });
 
