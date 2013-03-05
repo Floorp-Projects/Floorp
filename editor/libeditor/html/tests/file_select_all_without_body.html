@@ -14,8 +14,6 @@ function unload()
 
 function boom()
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   var root = document.documentElement;
   while(root.firstChild) {
     root.removeChild(root.firstChild);
@@ -35,7 +33,9 @@ function boom()
   window.close();
 }
 
+window.opener.SimpleTest.waitForFocus(boom, window);
+
 </script></head>
 
-<body onload="boom();" onunload="unload();"></body>
+<body onunload="unload();"></body>
 </html>
