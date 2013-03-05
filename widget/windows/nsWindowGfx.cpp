@@ -608,12 +608,14 @@ nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
                                   HICON *aIcon) {
 
   // Get the image data
-  nsRefPtr<gfxImageSurface> frame;
-  aContainer->CopyFrame(imgIContainer::FRAME_CURRENT,
-                        imgIContainer::FLAG_SYNC_DECODE,
-                        getter_AddRefs(frame));
-  if (!frame)
-    return NS_ERROR_NOT_AVAILABLE;
+  nsRefPtr<gfxASurface> surface;
+  aContainer->GetFrame(imgIContainer::FRAME_CURRENT,
+                       imgIContainer::FLAG_SYNC_DECODE,
+                       getter_AddRefs(surface));
+  NS_ENSURE_TRUE(surface, NS_ERROR_NOT_AVAILABLE);
+
+  nsRefPtr<gfxImageSurface> frame(surface->GetAsReadableARGB32ImageSurface());
+  NS_ENSURE_TRUE(frame, NS_ERROR_NOT_AVAILABLE);
 
   int32_t width = frame->Width();
   int32_t height = frame->Height();

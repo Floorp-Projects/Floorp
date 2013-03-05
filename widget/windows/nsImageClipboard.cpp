@@ -113,13 +113,17 @@ nsImageToClipboard::CalcSpanLength(uint32_t aWidth, uint32_t aBitCount)
 nsresult
 nsImageToClipboard::CreateFromImage ( imgIContainer* inImage, HANDLE* outBitmap )
 {
+    nsresult rv;
     *outBitmap = nullptr;
 
-    nsRefPtr<gfxImageSurface> frame;
-    nsresult rv = inImage->CopyFrame(imgIContainer::FRAME_CURRENT,
-                                     imgIContainer::FLAG_SYNC_DECODE,
-                                     getter_AddRefs(frame));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsRefPtr<gfxASurface> surface;
+    inImage->GetFrame(imgIContainer::FRAME_CURRENT,
+                      imgIContainer::FLAG_SYNC_DECODE,
+                      getter_AddRefs(surface));
+    NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
+
+    nsRefPtr<gfxImageSurface> frame(surface->GetAsReadableARGB32ImageSurface());
+    NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
     nsCOMPtr<imgIEncoder> encoder = do_CreateInstance("@mozilla.org/image/encoder;2?type=image/bmp", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
