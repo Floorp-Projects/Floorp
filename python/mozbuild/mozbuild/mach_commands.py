@@ -35,7 +35,6 @@ class Build(MachCommandBase):
         # building code in bug 780329 lands.
         from mozbuild.compilation.warnings import WarningsCollector
         from mozbuild.compilation.warnings import WarningsDatabase
-        from mozbuild.util import resolve_target_to_make
 
         warnings_path = self._get_state_filename('warnings.json')
         warnings_database = WarningsDatabase()
@@ -61,6 +60,50 @@ class Build(MachCommandBase):
 
             self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
 
+        def resolve_target_to_make(target):
+            if os.path.isabs(target):
+                print('Absolute paths for make targets are not allowed.')
+                return (None, None)
+
+            target = target.replace(os.sep, '/')
+
+            abs_target = os.path.join(self.topobjdir, target)
+
+            # For directories, run |make -C dir|. If the directory does not
+            # contain a Makefile, check parents until we find one. At worst,
+            # this will terminate at the root.
+            if os.path.isdir(abs_target):
+                current = abs_target
+
+                while True:
+                    make_path = os.path.join(current, 'Makefile')
+                    if os.path.exists(make_path):
+                        return (current[len(self.topobjdir) + 1:], None)
+
+                    current = os.path.dirname(current)
+
+            # If it's not in a directory, this is probably a top-level make
+            # target. Treat it as such.
+            if '/' not in target:
+                return (None, target)
+
+            # We have a relative path within the tree. We look for a Makefile
+            # as far into the path as possible. Then, we compute the make
+            # target as relative to that directory.
+            reldir = os.path.dirname(target)
+            target = os.path.basename(target)
+
+            while True:
+                make_path = os.path.join(self.topobjdir, reldir, 'Makefile')
+
+                if os.path.exists(make_path):
+                    return (reldir, target)
+
+                target = os.path.join(os.path.basename(reldir), target)
+                reldir = os.path.dirname(reldir)
+
+        # End of resolve_target_to_make.
+
         if what:
             top_make = os.path.join(self.topobjdir, 'Makefile')
             if not os.path.exists(top_make):
@@ -69,8 +112,7 @@ class Build(MachCommandBase):
                 return 1
 
             for target in what:
-                make_dir, make_target = resolve_target_to_make(self.topobjdir,
-                    target)
+                make_dir, make_target = resolve_target_to_make(target)
 
                 if make_dir is None and make_target is None:
                     return 1
