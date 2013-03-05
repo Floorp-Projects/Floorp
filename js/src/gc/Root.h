@@ -40,8 +40,7 @@
  *
  * If |DoSomething()| cannot trigger a GC, and the same holds for all other
  * calls made between |obj|'s definitions and its last uses, then no rooting
- * is required. The |Unrooted| class below is used to ensure that this
- * property is true and remains true in the future.
+ * is required.
  *
  * SpiderMonkey can trigger a GC at almost any time and in ways that are not
  * always clear. For example, the following innocuous-looking actions can
@@ -95,19 +94,6 @@
  * - AssertCanGC() will assert if an AutoAssertNoGC is in scope either locally
  *   or anywhere in the call stack.
  *
- * - UnrootedT is a typedef for a pointer to thing of type T. In DEBUG builds
- *   it gets replaced by a class that additionally acts as an AutoAssertNoGC
- *   guard. Since there is only minimal compile-time protection against
- *   mis-use, UnrootedT should only be used in places where there is adequate
- *   coverage of AutoAssertNoGC and AssertCanGC guards to ensure that mis-use
- *   is caught at runtime.
- *
- * - DropUnrooted(UnrootedT &v) will poison |v| and end its AutoAssertNoGC
- *   scope. This can be used to force |v| out of scope before its C++ scope
- *   would end naturally. The usage of braces C++ syntactical scopes |{...}|
- *   is strongly perferred to this, but sometimes will not work because of
- *   awkwardly overlapping lifetimes.
- *
  * There also exists a set of RawT typedefs for modules without rooting
  * concerns, such as the GC. Do not use these as they provide no rooting
  * protection whatsoever.
@@ -115,12 +101,8 @@
  * The following diagram explains the list of supported, implicit type
  * conversions between classes of this family:
  *
- *  RawT ----> UnrootedT
- *   |             ^
- *   |             |
- *   |             v
- *   +--------> Rooted<T> <---> Handle<T>
- *                 ^               ^
+ *  RawT -----> Rooted<T> ----> Handle<T>
+ *                 |               ^
  *                 |               |
  *                 |               |
  *                 +---> MutableHandle<T>
@@ -136,7 +118,6 @@ namespace js {
 class Module;
 
 template <typename T> class Rooted;
-template <typename T> class Unrooted;
 
 template <typename T>
 struct RootMethods {};
@@ -394,184 +375,19 @@ class InternalHandle<T*>
     {}
 };
 
-#ifdef DEBUG
 /*
- * |Unrooted<T>| acts as an AutoAssertNoGC after it is initialized. It otherwise
- * acts like as a normal pointer of type T.
+ * This macro simplifies forward declaration of a class and its matching raw-pointer.
  */
-template <typename T>
-class Unrooted
-{
-  public:
-    Unrooted() : ptr_(UninitializedTag()) {}
-
-    /*
-     * |Unrooted<T>| can be initialized from a convertible |Rooted<S>| or
-     * |Handle<S>|. This is so that we can call AutoAssertNoGC methods that
-     * take |Unrooted<T>| parameters with a convertible rooted argument
-     * without explicit unpacking.
-     *
-     * Note: Even though this allows implicit conversion to |Unrooted<T>|
-     * type, this is safe because Unrooted<T> acts as an AutoAssertNoGC scope.
-     */
-    template <typename S>
-    inline Unrooted(const Rooted<S> &root,
-                    typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0);
-
-    template <typename S>
-    Unrooted(const JS::Handle<S> &root,
-             typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0)
-      : ptr_(root.get())
-    {
-        JS_ASSERT(ptr_ != UninitializedTag());
-        JS::EnterAssertNoGCScope();
-    }
-
-    /*
-     * |Unrooted<T>| can initialize by copying from a convertible type
-     * |Unrooted<S>|. This enables usage such as:
-     *
-     * Unrooted<BaseShape*> base = js_NewBaseShape(cx);
-     * Unrooted<UnownedBaseShape*> ubase = static_cast<UnrootedUnownedBaseShape>(ubase);
-     */
-    template <typename S>
-    Unrooted(const Unrooted<S> &other)
-        /* Note: |static_cast<S>| acquires other.ptr_ in DEBUG builds. */
-      : ptr_(static_cast<T>(static_cast<S>(other)))
-    {
-        if (ptr_ != UninitializedTag())
-            JS::EnterAssertNoGCScope();
-    }
-
-    Unrooted(const Unrooted &other) : ptr_(other.ptr_) {
-        if (ptr_ != UninitializedTag())
-            JS::EnterAssertNoGCScope();
-    }
-
-    Unrooted(const T &p) : ptr_(p) {
-        JS_ASSERT(ptr_ != UninitializedTag());
-        JS::EnterAssertNoGCScope();
-    }
-
-    Unrooted(const JS::NullPtr &) : ptr_(NULL) {
-        JS::EnterAssertNoGCScope();
-    }
-
-    ~Unrooted() {
-        if (ptr_ != UninitializedTag())
-            JS::LeaveAssertNoGCScope();
-    }
-
-    void drop() {
-        if (ptr_ != UninitializedTag())
-            JS::LeaveAssertNoGCScope();
-        ptr_ = UninitializedTag();
-    }
-
-    /* See notes for Unrooted::Unrooted(const T &) */
-    Unrooted &operator=(T other) {
-        JS_ASSERT(other != UninitializedTag());
-        if (ptr_ == UninitializedTag())
-            JS::EnterAssertNoGCScope();
-        ptr_ = other;
-        return *this;
-    }
-    Unrooted &operator=(Unrooted other) {
-        JS_ASSERT(other.ptr_ != UninitializedTag());
-        if (ptr_ == UninitializedTag())
-            JS::EnterAssertNoGCScope();
-        ptr_ = other.ptr_;
-        return *this;
-    }
-
-    operator T() const { return (ptr_ == UninitializedTag()) ? NULL : ptr_; }
-    T *operator&() { return &ptr_; }
-    const T operator->() const { JS_ASSERT(ptr_ != UninitializedTag()); return ptr_; }
-    bool operator==(const T &other) { return ptr_ == other; }
-    bool operator!=(const T &other) { return ptr_ != other; }
-
-  private:
-    /*
-     * The after-initialization constraint is to handle the case:
-     *
-     *     Unrooted<Foo> foo = js_NewFoo(cx);
-     *
-     * In this case, C++ may run the default constructor, then call MaybeGC,
-     * and finally call the assignment operator. We cannot handle this case by
-     * simply checking if the pointer is NULL, since that would disable the
-     * NoGCScope on assignment. Instead we tag the pointer when we should
-     * disable the LeaveNoGCScope.
-     */
-    static inline T UninitializedTag() { return reinterpret_cast<T>(2); };
-
-    T ptr_;
-};
-
-/*
- * This macro simplifies declaration of the required matching raw-pointer for
- * optimized builds and Unrooted<T> template for debug builds.
- */
-# define ForwardDeclare(type)                        \
-    class type;                                      \
-    typedef Unrooted<type*> Unrooted##type;          \
+# define ForwardDeclare(type)              \
+    class type;                            \
     typedef type * Raw##type
 
-# define ForwardDeclareJS(type)                      \
-    class JS##type;                                  \
-    namespace js {                                   \
-        typedef js::Unrooted<JS##type*> Unrooted##type; \
-        typedef JS##type * Raw##type;                \
-    }                                                \
+# define ForwardDeclareJS(type)            \
+    class JS##type;                        \
+    namespace js {                         \
+        typedef JS##type * Raw##type;      \
+    }                                      \
     class JS##type
-
-template <typename T>
-T DropUnrooted(Unrooted<T> &unrooted)
-{
-    T rv = unrooted;
-    unrooted.drop();
-    return rv;
-}
-
-template <typename T>
-T DropUnrooted(T &unrooted)
-{
-    T rv = unrooted;
-    JS::PoisonPtr(&unrooted);
-    return rv;
-}
-
-template <>
-inline RawId DropUnrooted(RawId &id) { return id; }
-
-#else /* NDEBUG */
-
-/* In opt builds |UnrootedFoo| is a real |Foo*|. */
-# define ForwardDeclare(type)        \
-    class type;                      \
-    typedef type * Unrooted##type;   \
-    typedef type * Raw##type
-
-# define ForwardDeclareJS(type)                                               \
-    class JS##type;                                                           \
-    namespace js {                                                            \
-        typedef JS##type * Unrooted##type;                                    \
-        typedef JS##type * Raw##type;                                         \
-    }                                                                         \
-    class JS##type
-
-template <typename T>
-class Unrooted
-{
-  private:
-    Unrooted() MOZ_DELETE;
-    Unrooted(const Unrooted &) MOZ_DELETE;
-    ~Unrooted() MOZ_DELETE;
-};
-
-template <typename T>
-T DropUnrooted(T &unrooted) { return unrooted; }
-
-#endif /* DEBUG */
 
 /*
  * By default, pointers should use the inheritance hierarchy to find their
@@ -634,15 +450,6 @@ class Rooted : public RootedBase<T>
         init(cx);
     }
 
-    template <typename S>
-    Rooted(JSContext *cx, const Unrooted<S> &initial
-           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(static_cast<S>(initial))
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(cx);
-    }
-
     Rooted(PerThreadData *pt
            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : ptr(RootMethods<T>::initial())
@@ -654,15 +461,6 @@ class Rooted : public RootedBase<T>
     Rooted(PerThreadData *pt, T initial
            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : ptr(initial)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        init(pt);
-    }
-
-    template <typename S>
-    Rooted(PerThreadData *pt, const Unrooted<S> &initial
-           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(static_cast<S>(initial))
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         init(pt);
@@ -738,18 +536,6 @@ class Rooted : public RootedBase<T>
 template <>
 class Rooted<JSStableString *>;
 #endif
-
-#ifdef DEBUG
-template <typename T> template <typename S>
-inline
-Unrooted<T>::Unrooted(const Rooted<S> &root,
-                      typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy)
-  : ptr_(root.get())
-{
-    JS_ASSERT(ptr_ != UninitializedTag());
-    JS::EnterAssertNoGCScope();
-}
-#endif /* DEBUG */
 
 typedef Rooted<JSObject*>    RootedObject;
 typedef Rooted<js::Module*>  RootedModule;
@@ -848,14 +634,6 @@ class FakeRooted : public RootedBase<T>
     FakeRooted(JSContext *cx, T initial
                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : ptr(initial)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    template <typename S>
-    FakeRooted(JSContext *cx, const Unrooted<S> &initial
-                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(static_cast<S>(initial))
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
