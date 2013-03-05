@@ -48,6 +48,8 @@ MOCHITEST_FILES = \
     test_maxforms_3.html \
     test_notifications.html \
     test_notifications_popup.html \
+    privbrowsing_perwindowpb_iframe.html \
+    test_privbrowsing_perwindowpb.html \
     test_prompt_async.html \
     test_xhr.html \
     test_xml_load.html \
@@ -57,6 +59,10 @@ MOCHITEST_FILES = \
     notification_common.js \
     authenticate.sjs \
     formsubmit.sjs \
+    subtst_privbrowsing_1.html \
+    subtst_privbrowsing_2.html \
+    subtst_privbrowsing_3.html \
+    subtst_privbrowsing_4.html \
     subtst_master_pass.html \
     subtst_notifications_1.html \
     subtst_notifications_2.html \
@@ -78,18 +84,6 @@ MOCHITEST_FILES += \
     test_prompt.html \
     $(NULL)
 endif
-
-MOCHITEST_CHROME_FILES += \
-    privbrowsing_perwindowpb_iframe.html \
-    test_privbrowsing_perwindowpb.html \
-    subtst_privbrowsing_1.html \
-    subtst_privbrowsing_2.html \
-    subtst_privbrowsing_3.html \
-    subtst_privbrowsing_4.html \
-    notification_common.js \
-    pwmgr_common.js \
-    formsubmit.sjs \
-    $(NULL)
 
 # This test doesn't pass because we can't ensure a cross-platform
 # event that occurs between DOMContentLoaded and Pageload
