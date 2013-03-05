@@ -265,9 +265,6 @@ private:
   nsCOMPtr<nsITimer> mDeferredTimer;
   uint32_t mDeferTimeout; // in ms
   bool mTimerRunning;
-
-  // Thread used for connections
-  nsCOMPtr<nsIThread> mConnectThread;
 };
 
 #define ENSURE_DATACONNECTION \
@@ -445,10 +442,10 @@ public:
       mChannel(aChannel),
       mConnection(aConnection) {}
 
-  // for ON_CONNECTION
+  // for ON_CONNECTION/ON_DISCONNECTED
   DataChannelOnMessageAvailable(int32_t     aType,
                                 DataChannelConnection *aConnection,
-                                bool aResult)
+                                bool aResult = true)
     : mType(aType),
       mConnection(aConnection),
       mResult(aResult) {}
@@ -501,7 +498,7 @@ public:
             if (mResult) {
               mConnection->mListener->NotifyConnection();
             }
-            mConnection->mConnectThread = nullptr; // kill the connection thread
+            // FIX - on mResult false (failure) we should do something.  Needs spec work here
             break;
           case ON_DISCONNECTED:
             mConnection->mListener->NotifyClosedConnection();
