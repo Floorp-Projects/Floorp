@@ -148,14 +148,14 @@ js::StringIsArrayIndex(JSLinearString *str, uint32_t *indexp)
     return false;
 }
 
-UnrootedShape
+RawShape
 js::GetDenseArrayShape(JSContext *cx, HandleObject globalObj)
 {
     JS_ASSERT(globalObj);
 
     JSObject *proto = globalObj->global().getOrCreateArrayPrototype(cx);
     if (!proto)
-        return UnrootedShape(NULL);
+        return NULL;
 
     return EmptyShape::getInitialShape(cx, &ArrayClass, proto, proto->getParent(),
                                        gc::FINALIZE_OBJECT0);
@@ -1344,7 +1344,7 @@ MatchNumericComparator(const Value &v)
     if (!fun->hasScript())
         return Match_None;
 
-    UnrootedScript script = fun->nonLazyScript();
+    RawScript script = fun->nonLazyScript();
     jsbytecode *pc = script->code;
 
     uint16_t arg0, arg1;

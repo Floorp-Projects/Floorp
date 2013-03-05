@@ -1315,12 +1315,12 @@ AssertEq(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static UnrootedScript
+static RawScript
 ValueToScript(JSContext *cx, jsval v, JSFunction **funp = NULL)
 {
     RootedFunction fun(cx, JS_ValueToFunction(cx, v));
     if (!fun)
-        return UnrootedScript(NULL);
+        return NULL;
 
     RootedScript script(cx);
     JSFunction::maybeGetOrCreateScript(cx, fun, &script);
@@ -1356,7 +1356,7 @@ SetDebug(JSContext *cx, unsigned argc, jsval *vp)
     return ok;
 }
 
-static UnrootedScript
+static RawScript
 GetTopScript(JSContext *cx)
 {
     RootedScript script(cx);

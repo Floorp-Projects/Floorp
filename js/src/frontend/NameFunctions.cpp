@@ -246,7 +246,7 @@ class NameResolver
         if (buf.empty())
             return NULL;
 
-        UnrootedAtom atom = buf.finishAtom();
+        RawAtom atom = buf.finishAtom();
         fun->setGuessedAtom(atom);
         return atom;
     }
