@@ -21,12 +21,7 @@ interface HTMLAreaElement : HTMLElement {
            [SetterThrows]
            attribute DOMString shape;
            [SetterThrows]
-  // No support for stringifier attributes yet
-  //[SetterThrows]
-  //stringifier attribute DOMString href;
-  stringifier;
-           [SetterThrows]
-           attribute DOMString href;
+  stringifier attribute DOMString href;
            [SetterThrows]
            attribute DOMString target;
            [SetterThrows]
