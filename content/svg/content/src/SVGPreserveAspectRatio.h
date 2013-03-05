@@ -106,9 +106,6 @@ private:
   bool mDefer;
 };
 
-MOZ_STATIC_ASSERT(sizeof(SVGPreserveAspectRatio) <= 4,
-                  "The compiler didn't pack SVGPreserveAspectRatio well");
-
 namespace dom {
 
 class DOMSVGPreserveAspectRatio MOZ_FINAL : public nsISupports,
