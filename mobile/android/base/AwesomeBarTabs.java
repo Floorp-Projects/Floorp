@@ -173,7 +173,7 @@ public class AwesomeBarTabs extends TabHost
 
         styleSelectedTab();
 
-        // Initialize "All Pages" list with no filter
+        // Initialize "App Pages" list with no filter
         filter("");
     }
 
@@ -197,16 +197,6 @@ public class AwesomeBarTabs extends TabHost
     @Override
     public void onLightweightThemeReset() {
         styleSelectedTab();
-    }
-
-    @Override
-    public void setCurrentTabByTag(String tag) {
-        for (int i = 0; i < mTabs.length; i++) {
-            if (tag.equals(mTabs[i].getTag())) {
-                mViewPager.setCurrentItem(i);
-                break;
-            }
-        }
     }
 
     private void styleSelectedTab() {
