@@ -83,6 +83,11 @@ public:
   // were unable to create the decoder.
   static already_AddRefed<MediaDecoder> CreateDecoder(const nsACString& aType,
                                                       MediaDecoderOwner* aOwner);
+
+  // Returns true if MIME type aType is supported in video documents,
+  // or false otherwise. Not all platforms support all MIME types, and
+  // vice versa.
+  static bool IsSupportedInVideoDocument(const nsACString& aType);
 };
 
 }
