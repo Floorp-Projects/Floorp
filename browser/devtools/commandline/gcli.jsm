@@ -7017,7 +7017,7 @@ define('gcli/promise', ['require', 'exports', 'module' ], function(require, expo
 });
 define("text!gcli/ui/intro.html", [], "\n" +
   "<div>\n" +
-  "  <p>${l10n.introTextOpening}</p>\n" +
+  "  <p>${l10n.introTextOpening2}</p>\n" +
   "\n" +
   "  <p>\n" +
   "    ${l10n.introTextCommands}\n" +
