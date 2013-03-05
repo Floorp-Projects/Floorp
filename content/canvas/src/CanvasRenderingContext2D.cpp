@@ -3716,8 +3716,8 @@ CanvasRenderingContext2D::CreateImageData(JSContext* cx, double sw,
   int32_t wi = JS_DoubleToInt32(sw);
   int32_t hi = JS_DoubleToInt32(sh);
 
-  uint32_t w = DeprecatedAbs(wi);
-  uint32_t h = DeprecatedAbs(hi);
+  uint32_t w = Abs(wi);
+  uint32_t h = Abs(hi);
   return mozilla::dom::CreateImageData(cx, this, w, h, error);
 }
 
