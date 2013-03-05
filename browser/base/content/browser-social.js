@@ -202,19 +202,21 @@ let SocialUI = {
   // This handles "ActivateSocialFeature" events fired against content documents
   // in this window.
   _activationEventHandler: function SocialUI_activationHandler(e) {
-    let targetDoc = e.target;
-
-    // Event must be fired against the document
+    let targetDoc;
+    let node;
+    if (e.target instanceof HTMLDocument) {
+      // version 0 support
+      targetDoc = e.target;
+      node = targetDoc.documentElement
+    } else {
+      targetDoc = e.target.ownerDocument;
+      node = e.target;
+    }
     if (!(targetDoc instanceof HTMLDocument))
       return;
 
-    // Ignore events fired in background tabs
-    if (targetDoc.defaultView.top != content)
-      return;
-
-    // Check that the associated document's origin is in our whitelist
-    let providerOrigin = targetDoc.nodePrincipal.origin;
-    if (!Social.canActivateOrigin(providerOrigin))
+    // Ignore events fired in background tabs or iframes
+    if (targetDoc.defaultView != content)
       return;
 
     // If we are in PB mode, we silently do nothing (bug 829404 exists to
@@ -228,11 +230,34 @@ let SocialUI = {
       return;
     Social.lastEventReceived = now;
 
+    // We only want to activate if it is as a result of user input.
+    let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindowUtils);
+    if (!dwu.isHandlingUserInput) {
+      Cu.reportError("attempt to activate provider without user input from " + targetDoc.nodePrincipal.origin);
+      return;
+    }
+
+    let data = node.getAttribute("data-service");
+    if (data) {
+      try {
+        data = JSON.parse(data);
+      } catch(e) {
+        Cu.reportError("Social Service manifest parse error: "+e);
+        return;
+      }
+    }
+    Social.installProvider(targetDoc.location.href, data, function(manifest) {
+      this.doActivation(manifest.origin);
+    }.bind(this));
+  },
+
+  doActivation: function SocialUI_doActivation(origin) {
     // Keep track of the old provider in case of undo
     let oldOrigin = Social.provider ? Social.provider.origin : "";
 
     // Enable the social functionality, and indicate that it was activated
-    Social.activateFromOrigin(providerOrigin, function(provider) {
+    Social.activateFromOrigin(origin, function(provider) {
       // Provider to activate may not have been found
       if (!provider)
         return;
@@ -271,6 +296,7 @@ let SocialUI = {
     let oldOrigin = this.notificationPanel.getAttribute("oldorigin");
     Social.deactivateFromOrigin(origin, oldOrigin);
     this.notificationPanel.hidePopup();
+    Social.uninstallProvider(origin);
   },
 
   get notificationPanel() {
@@ -365,7 +391,7 @@ let SocialChatBar = {
     let command = document.getElementById("Social:FocusChat");
     if (!this.isAvailable) {
       this.chatbar.removeAll();
-      command.hidden = true;
+      this.chatbar.hidden = command.hidden = true;
     } else {
       this.chatbar.hidden = command.hidden = document.mozFullScreen;
     }
