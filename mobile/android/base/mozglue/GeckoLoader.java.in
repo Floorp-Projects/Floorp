@@ -69,6 +69,9 @@ public final class GeckoLoader {
             File pluginDataDir = context.getDir("plugins", 0);
             putenv("ANDROID_PLUGIN_DATADIR=" + pluginDataDir.getPath());
 
+            File pluginPrivateDataDir = context.getDir("plugins_private", 0);
+            putenv("ANDROID_PLUGIN_DATADIR_PRIVATE=" + pluginPrivateDataDir.getPath());
+
         } catch (Exception ex) {
             Log.w(LOGTAG, "Caught exception getting plugin dirs.", ex);
         }

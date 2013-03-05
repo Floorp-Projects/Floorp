@@ -5,6 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/MathAlgorithms.h"
+
 #include "methodjit/Compiler.h"
 #include "methodjit/LoopState.h"
 #include "methodjit/FrameState-inl.h"
@@ -16,6 +18,8 @@ using namespace js;
 using namespace js::mjit;
 using namespace js::analyze;
 using namespace js::types;
+
+using mozilla::Abs;
 
 LoopState::LoopState(JSContext *cx, analyze::CrossScriptSSA *ssa,
                      mjit::Compiler *cc, FrameState *frame)
@@ -2025,7 +2029,7 @@ LoopState::computeInterval(const CrossSSAValue &cv, int32_t *pmin, int32_t *pmax
         if (!computeInterval(rhsv, &rhsmin, &rhsmax) || rhsmin != rhsmax)
             return false;
 
-        int32_t rhs = abs(rhsmax);
+        int32_t rhs = Abs(rhsmax);
         *pmin = -(rhs - 1);
         *pmax = rhs - 1;
         return true;
@@ -2055,8 +2059,8 @@ LoopState::computeInterval(const CrossSSAValue &cv, int32_t *pmin, int32_t *pmax
         CrossSSAValue rhsv(cv.frame, analysis->poppedValue(pc, 0));
         if (!computeInterval(lhsv, &lhsmin, &lhsmax) || !computeInterval(rhsv, &rhsmin, &rhsmax))
             return false;
-        int32_t nlhs = Max(abs(lhsmin), abs(lhsmax));
-        int32_t nrhs = Max(abs(rhsmin), abs(rhsmax));
+        int32_t nlhs = Max(Abs(lhsmin), Abs(lhsmax));
+        int32_t nrhs = Max(Abs(rhsmin), Abs(rhsmax));
 
         if (!SafeMul(nlhs, nrhs, pmax))
             return false;

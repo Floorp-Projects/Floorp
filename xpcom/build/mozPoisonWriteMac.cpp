@@ -163,10 +163,6 @@ void AbortOnBadWrite(int fd, const void *wbuf, size_t count) {
     if (count == 0)
         return;
 
-    // Stdout and Stderr are OK.
-    if(fd == 1 || fd == 2)
-        return;
-
     struct stat buf;
     int rv = fstat(fd, &buf);
     if (!ValidWriteAssert(rv == 0))

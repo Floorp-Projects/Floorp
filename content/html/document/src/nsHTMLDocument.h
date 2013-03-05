@@ -297,8 +297,6 @@ protected:
 
   static uint32_t gWyciwygSessionCnt;
 
-  static bool IsAsciiCompatible(const nsACString& aPreferredName);
-
   static void TryHintCharset(nsIMarkupDocumentViewer* aMarkupDV,
                              int32_t& aCharsetSource,
                              nsACString& aCharset);

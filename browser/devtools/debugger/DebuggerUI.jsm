@@ -530,6 +530,7 @@ ChromeDebuggerProcess.prototype = {
 
     let file = Services.dirsvc.get("XREExeF", Ci.nsIFile);
 
+    dumpn("Initializing chrome debugging process");
     let process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
     process.init(file);
 
@@ -537,6 +538,7 @@ ChromeDebuggerProcess.prototype = {
       "-no-remote", "-P", this._dbgProfile.name,
       "-chrome", DBG_XUL];
 
+    dumpn("Running chrome debugging process");
     process.runwAsync(args, args.length, { observe: this.close.bind(this) });
     this._dbgProcess = process;
 
@@ -549,6 +551,7 @@ ChromeDebuggerProcess.prototype = {
    * Closes the remote debugger, removing the profile and killing the process.
    */
   close: function RDP_close() {
+    dumpn("Closing chrome debugging process");
     if (!this.globalUI) {
       return;
     }
@@ -608,3 +611,21 @@ XPCOMUtils.defineLazyGetter(Prefs, "remoteHost", function() {
 XPCOMUtils.defineLazyGetter(Prefs, "remotePort", function() {
   return Services.prefs.getIntPref("devtools.debugger.remote-port");
 });
+
+/**
+ * Gets the preferred default remote debugging port.
+ * @return number
+ */
+XPCOMUtils.defineLazyGetter(Prefs, "wantLogging", function() {
+  return Services.prefs.getBoolPref("devtools.debugger.log");
+});
+
+/**
+ * Helper method for debugging.
+ * @param string
+ */
+function dumpn(str) {
+  if (Prefs.wantLogging) {
+    dump("DBG-FRONTEND: " + str + "\n");
+  }
+}

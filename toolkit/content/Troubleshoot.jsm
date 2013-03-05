@@ -45,7 +45,7 @@ const PREFS_WHITELIST = [
   "general.useragent.",
   "gfx.",
   "html5.",
-  "image.mem.",
+  "image.",
   "javascript.",
   "keyword.",
   "layers.",

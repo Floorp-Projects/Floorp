@@ -580,17 +580,13 @@ class HashMapEntry
 
 namespace mozilla {
 
-template <class T>
-struct IsPod<js::detail::HashTableEntry<T> >
-{
-    static const bool value = IsPod<T>::value;
-};
+template <typename T>
+struct IsPod<js::detail::HashTableEntry<T> > : IsPod<T> {};
 
-template <class K, class V>
+template <typename K, typename V>
 struct IsPod<js::HashMapEntry<K, V> >
-{
-    static const bool value = IsPod<K>::value && IsPod<V>::value;
-};
+  : IntegralConstant<bool, IsPod<K>::value && IsPod<V>::value>
+{};
 
 } // namespace mozilla
 
@@ -815,8 +811,10 @@ class HashTable : private AllocPolicy
 
         // Potentially rehashes the table.
         ~Enum() {
-            if (rekeyed)
+            if (rekeyed) {
+                table.gen++;
                 table.checkOverRemoved();
+            }
 
             if (removed)
                 table.compactIfUnderloaded();
@@ -1189,9 +1187,8 @@ class HashTable : private AllocPolicy
     void checkOverRemoved()
     {
         if (overloaded()) {
-            METER(stats.rehashes++);
-            rehashTable();
-            JS_ASSERT(!overloaded());
+            if (checkOverloaded() == RehashFailed)
+                rehashTableInPlace();
         }
     }
 
@@ -1241,8 +1238,9 @@ class HashTable : private AllocPolicy
     // the element is already inserted or still waiting to be inserted.  Since
     // already-inserted elements win any conflicts, we get the same table as we
     // would have gotten through random insertion order.
-    void rehashTable()
+    void rehashTableInPlace()
     {
+        METER(stats.rehashes++);
         removedCount = 0;
         for (size_t i = 0; i < capacity(); ++i)
             table[i].unsetCollision();

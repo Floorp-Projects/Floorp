@@ -698,8 +698,8 @@ settings {
   margin-top: 16px;
 }
 
-#prefs-flyoutpanel > setting .preferences-title,
-  font-weight: bold
+#prefs-flyoutpanel > setting .preferences-title {
+  font-weight: bold;
 }
 
 setting[type="integer"] > .preferences-alignment,

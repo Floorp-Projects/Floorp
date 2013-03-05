@@ -353,6 +353,11 @@ pref("gfx.displayport.strategy_vb.danger_y_incr", -1); // additional danger zone
 // prediction bias strategy options
 pref("gfx.displayport.strategy_pb.threshold", -1); // velocity threshold in inches/frame
 
+// disable Graphite font shaping by default on Android until memory footprint
+// of using the Charis SIL fonts that we ship with the product is addressed
+// (see bug 700023, bug 846832, bug 847344)
+pref("gfx.font_rendering.graphite.enabled", false);
+
 // don't allow JS to move and resize existing windows
 pref("dom.disable_window_move_resize", true);
 
@@ -439,7 +444,7 @@ pref("plugins.click_to_play", true);
 
 // product URLs
 // The breakpad report server to link to in about:crashes
-pref("breakpad.reportURL", "http://crash-stats.mozilla.com/report/index/");
+pref("breakpad.reportURL", "https://crash-stats.mozilla.com/report/index/");
 pref("app.support.baseURL", "http://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/");
 // Used to submit data to input from about:feedback
 pref("app.feedback.postURL", "http://m.input.mozilla.org/%LOCALE%/feedback");

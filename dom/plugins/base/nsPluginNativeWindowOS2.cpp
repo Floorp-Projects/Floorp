@@ -173,7 +173,8 @@ static bool ProcessFlashMessageDelayed(nsPluginNativeWindowOS2 * aWin,
   if (msg == sWM_FLASHBOUNCEMSG) {
     // See PluginWindowEvent::Run() below.
     NS_TRY_SAFE_CALL_VOID((aWin->GetWindowProc())(hWnd, WM_USER_FLASH, mp1, mp2),
-                           inst);
+                           inst,
+                           NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
     return TRUE;
   }
 
@@ -309,9 +310,11 @@ static MRESULT EXPENTRY PluginWndProc(HWND hWnd, ULONG msg, MPARAM mp1, MPARAM m
 
   MRESULT res = (MRESULT)TRUE;
   if (win->mPluginType == nsPluginType_Java_vm)
-    NS_TRY_SAFE_CALL_RETURN(res, ::WinDefWindowProc(hWnd, msg, mp1, mp2), inst);
+    NS_TRY_SAFE_CALL_RETURN(res, ::WinDefWindowProc(hWnd, msg, mp1, mp2), inst,
+                            NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
   else
-    NS_TRY_SAFE_CALL_RETURN(res, (win->GetWindowProc())(hWnd, msg, mp1, mp2), inst);
+    NS_TRY_SAFE_CALL_RETURN(res, (win->GetWindowProc())(hWnd, msg, mp1, mp2), inst,
+                            NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
 
   if (inst) {
     // Popups are enabled (were enabled before the call to
@@ -397,7 +400,8 @@ NS_IMETHODIMP PluginWindowEvent::Run()
     // is more generic.
     NS_TRY_SAFE_CALL_VOID((win->GetWindowProc()) 
                           (hWnd, GetMsg(), GetWParam(), GetLParam()),
-                          inst);
+                          inst,
+                          NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
 
   Clear();
   return NS_OK;

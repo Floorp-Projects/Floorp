@@ -103,9 +103,9 @@ pageInfoTreeView.prototype = {
     this.sortcol = treecol.index;
   },
 
-  getRowProperties: function(row, prop) { },
-  getCellProperties: function(row, column, prop) { },
-  getColumnProperties: function(column, prop) { },
+  getRowProperties: function(row) { return ""; },
+  getCellProperties: function(row, column) { return ""; },
+  getColumnProperties: function(column) { return ""; },
   isContainer: function(index) { return false; },
   isContainerOpen: function(index) { return false; },
   isSeparator: function(index) { return false; },
@@ -151,21 +151,19 @@ const COPYCOL_IMAGE = COL_IMAGE_ADDRESS;
 var gMetaView = new pageInfoTreeView('metatree', COPYCOL_META_CONTENT);
 var gImageView = new pageInfoTreeView('imagetree', COPYCOL_IMAGE);
 
-var atomSvc = Components.classes["@mozilla.org/atom-service;1"]
-                        .getService(Components.interfaces.nsIAtomService);
-gImageView._ltrAtom = atomSvc.getAtom("ltr");
-gImageView._brokenAtom = atomSvc.getAtom("broken");
-
-gImageView.getCellProperties = function(row, col, props) {
+gImageView.getCellProperties = function(row, col) {
   var data = gImageView.data[row];
   var item = gImageView.data[row][COL_IMAGE_NODE];
+  var props = "";
   if (!checkProtocol(data) ||
       item instanceof HTMLEmbedElement ||
       (item instanceof HTMLObjectElement && !item.type.startsWith("image/")))
-    props.AppendElement(this._brokenAtom);
+    props += "broken";
 
   if (col.element.id == "image-address")
-    props.AppendElement(this._ltrAtom);
+    props += " ltr";
+
+  return props;
 };
 
 gImageView.getCellText = function(row, column) {

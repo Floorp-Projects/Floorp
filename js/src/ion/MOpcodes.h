@@ -38,6 +38,7 @@ namespace ion {
     _(Call)                                                                 \
     _(ApplyArgs)                                                            \
     _(GetDynamicName)                                                       \
+    _(FilterArguments)                                                      \
     _(CallDirectEval)                                                       \
     _(BitNot)                                                               \
     _(TypeOf)                                                               \

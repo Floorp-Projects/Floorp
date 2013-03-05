@@ -67,6 +67,10 @@ INSTALL_TARGETS += HEADERS
 
 PYTHON_UNIT_TESTS := $(wildcard $(srcdir)/tests/unit-*.py)
 
+ifdef WRAP_SYSTEM_INCLUDES
+  GENERATED_DIRS_export += system_wrappers
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 HOST_CFLAGS += -DUNICODE -D_UNICODE
@@ -88,11 +92,8 @@ else
 endif
 
 ifdef WRAP_SYSTEM_INCLUDES
-export-preqs = \
-  $(call mkdir_deps,system_wrappers) \
-  $(NULL)
 
-export:: $(export-preqs)
+export::
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) \
 		-DMOZ_TREE_CAIRO=$(MOZ_TREE_CAIRO) \
 		-DMOZ_TREE_PIXMAN=$(MOZ_TREE_PIXMAN) \

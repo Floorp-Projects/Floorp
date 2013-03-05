@@ -7,11 +7,13 @@ from __future__ import unicode_literals
 import errno
 import logging
 import os
+import types
 
 from .base import BuildBackend
 from ..frontend.data import (
     ConfigFileSubstitution,
     DirectoryTraversal,
+    SandboxDerived,
 )
 from ..util import FileAvoidWrite
 
@@ -85,10 +87,10 @@ class BackendMakeFile(object):
             l = ' '.join(sorted(self.inputs))
             self.fh.write('BACKEND_INPUT_FILES += %s\n' % l)
 
-        self.fh.close()
+        result = self.fh.close()
 
         if not self.inputs:
-            return
+            return result
 
         # Update mtime iff any of its input files are newer. See class notes
         # for why we do this.
@@ -107,6 +109,8 @@ class BackendMakeFile(object):
 
         if input_mtime > existing_mtime:
             os.utime(self.path, None)
+
+        return result
 
 
 class RecursiveMakeBackend(BuildBackend):
@@ -127,8 +131,35 @@ class RecursiveMakeBackend(BuildBackend):
     def _init(self):
         self._backend_files = {}
 
+        self.summary.managed_count = 0
+        self.summary.created_count = 0
+        self.summary.updated_count = 0
+        self.summary.unchanged_count = 0
+
+        def detailed(summary):
+            return '{:d} total backend files. {:d} created; {:d} updated; {:d} unchanged'.format(
+                summary.managed_count, summary.created_count,
+                summary.updated_count, summary.unchanged_count)
+
+        # This is a little kludgy and could be improved with a better API.
+        self.summary.backend_detailed_summary = types.MethodType(detailed,
+            self.summary)
+
+    def _update_from_avoid_write(self, result):
+        existed, updated = result
+
+        if not existed:
+            self.summary.created_count += 1
+        elif updated:
+            self.summary.updated_count += 1
+        else:
+            self.summary.unchanged_count += 1
+
     def consume_object(self, obj):
         """Write out build files necessary to build with recursive make."""
+
+        if not isinstance(obj, SandboxDerived):
+            return
 
         backend_file = self._backend_files.get(obj.srcdir,
             BackendMakeFile(obj.srcdir, obj.objdir, self.get_environment(obj)))
@@ -144,8 +175,9 @@ class RecursiveMakeBackend(BuildBackend):
             self._process_directory_traversal(obj, backend_file)
         elif isinstance(obj, ConfigFileSubstitution):
             backend_file.write('SUBSTITUTE_FILES += %s\n' % obj.relpath)
-
-            backend_file.environment.create_config_file(obj.output_path)
+            self._update_from_avoid_write(
+                backend_file.environment.create_config_file(obj.output_path))
+            self.summary.managed_count += 1
 
         self._backend_files[obj.srcdir] = backend_file
 
@@ -164,10 +196,13 @@ class RecursiveMakeBackend(BuildBackend):
             out_path = os.path.join(bf.objdir, 'Makefile')
             self.log(logging.DEBUG, 'create_makefile', {'path': out_path},
                 'Generating makefile: {path}')
-            bf.environment.create_config_file(out_path)
+            self._update_from_avoid_write(
+                bf.environment.create_config_file(out_path))
+            self.summary.managed_count += 1
 
             bf.write('SUBSTITUTE_FILES += Makefile\n')
-            bf.close()
+            self._update_from_avoid_write(bf.close())
+            self.summary.managed_count += 1
 
     def _process_directory_traversal(self, obj, backend_file):
         """Process a data.DirectoryTraversal instance."""

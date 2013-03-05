@@ -1,0 +1,118 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/haw.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/haw.xml
+ */
+haw{
+    AuxExemplarCharacters{"[b c d f g j q r s t v x y z]"}
+    ExemplarCharacters{"[a ā e ē i ī o ō u ū h k l m n p w ʻ]"}
+    LocaleScript{
+        "Latn",
+    }
+    NumberElements{
+        latn{
+            patterns{
+                currencyFormat{"¤#,##0.00;(¤#,##0.00)"}
+            }
+        }
+    }
+    Version{"2.0.74.85"}
+    calendar{
+        gregorian{
+            dayNames{
+                format{
+                    abbreviated{
+                        "LP",
+                        "P1",
+                        "P2",
+                        "P3",
+                        "P4",
+                        "P5",
+                        "P6",
+                    }
+                    wide{
+                        "Lāpule",
+                        "Poʻakahi",
+                        "Poʻalua",
+                        "Poʻakolu",
+                        "Poʻahā",
+                        "Poʻalima",
+                        "Poʻaono",
+                    }
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Ian.",
+                        "Pep.",
+                        "Mal.",
+                        "ʻAp.",
+                        "Mei",
+                        "Iun.",
+                        "Iul.",
+                        "ʻAu.",
+                        "Kep.",
+                        "ʻOk.",
+                        "Now.",
+                        "Kek.",
+                    }
+                    wide{
+                        "Ianuali",
+                        "Pepeluali",
+                        "Malaki",
+                        "ʻApelila",
+                        "Mei",
+                        "Iune",
+                        "Iulai",
+                        "ʻAukake",
+                        "Kepakemapa",
+                        "ʻOkakopa",
+                        "Nowemapa",
+                        "Kekemapa",
+                    }
+                }
+            }
+        }
+    }
+    measurementSystemNames{
+        US{"ʻAmelika Hui Pū ʻIa"}
+        metric{"Mekalika"}
+    }
+    units{
+        day{
+            one{"{0} lā"}
+            other{"{0} lā"}
+        }
+        hour{
+            one{"{0} hola"}
+            other{"{0} hola"}
+        }
+        minute{
+            one{"{0} minuke"}
+            other{"{0} minuke"}
+        }
+        month{
+            one{"{0} mahina"}
+            other{"{0} mahina"}
+        }
+        second{
+            one{"{0} kekona"}
+            other{"{0} kekona"}
+        }
+        week{
+            one{"{0} pule"}
+            other{"{0} pule"}
+        }
+        year{
+            one{"{0} makahiki"}
+            other{"{0} makahiki"}
+        }
+    }
+}

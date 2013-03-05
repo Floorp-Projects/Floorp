@@ -25,6 +25,7 @@
 #include "nsIContent.h"
 #include "nsPluginInstanceOwner.h"
 #include "mozilla/HashFunctions.h"
+#include "nsWrapperCacheInlines.h"
 
 #define NPRUNTIME_JSCLASS_NAME "NPObject JS wrapper class"
 
@@ -2023,23 +2024,8 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
     return;
   }
 
-  nsIDocument* doc = content->OwnerDoc();
-
-  nsIScriptGlobalObject* sgo = doc->GetScriptGlobalObject();
-  if (!sgo) {
-    return;
-  }
-
-  nsCOMPtr<nsIXPConnectWrappedNative> holder;
-  xpc->GetWrappedNativeOfNativeObject(cx, sgo->GetGlobalJSObject(), content,
-                                      NS_GET_IID(nsISupports),
-                                      getter_AddRefs(holder));
-  if (!holder) {
-    return;
-  }
-
-  JSObject *obj, *proto;
-  holder->GetJSObject(&obj);
+  JSObject *obj = content->GetWrapper();
+  JSObject *proto;
 
   Maybe<JSAutoCompartment> ac;
   if (obj) {

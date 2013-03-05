@@ -21,6 +21,9 @@ pref("metro.debug.selection.displayRanges", false);
 pref("metro.debug.selection.dumpRanges", false);
 pref("metro.debug.selection.dumpEvents", false);
 
+// Enable off main thread compositing
+pref("layers.offmainthreadcomposition.enabled", false);
+
 // Form helper options: 0 = disabled, 1 = enabled, 2 = dynamic depending on screen size
 pref("formhelper.mode", 0);
 // Auto zoom to form elements when they take focus 
@@ -396,7 +399,7 @@ pref("dom.ipc.content.nice", 1);
 
 // product URLs
 // The breakpad report server to link to in about:crashes
-pref("breakpad.reportURL", "http://crash-stats.mozilla.com/report/index/");
+pref("breakpad.reportURL", "https://crash-stats.mozilla.com/report/index/");
 pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/mobile/%VERSION%/releasenotes/");
 pref("app.sync.tutorialURL", "https://support.mozilla.org/kb/sync-firefox-between-desktop-and-mobile");
 pref("app.support.baseURL", "http://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/");

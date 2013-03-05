@@ -12,6 +12,7 @@ from mozunit import main
 from mozbuild.frontend.data import (
     ConfigFileSubstitution,
     DirectoryTraversal,
+    ReaderSummary,
 )
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import BuildReader
@@ -30,12 +31,18 @@ class TestEmitterBasic(unittest.TestCase):
 
         return BuildReader(config)
 
-    def test_dirs_traversal_simple(self):
-        reader = self.reader('traversal-simple')
+    def read_topsrcdir(self, reader):
         emitter = TreeMetadataEmitter(reader.config)
 
         objs = list(emitter.emit(reader.read_topsrcdir()))
+        self.assertGreater(len(objs), 0)
+        self.assertIsInstance(objs[-1], ReaderSummary)
 
+        return objs[:-1]
+
+    def test_dirs_traversal_simple(self):
+        reader = self.reader('traversal-simple')
+        objs = self.read_topsrcdir(reader)
         self.assertEqual(len(objs), 4)
 
         for o in objs:
@@ -57,9 +64,7 @@ class TestEmitterBasic(unittest.TestCase):
 
     def test_traversal_all_vars(self):
         reader = self.reader('traversal-all-vars')
-        emitter = TreeMetadataEmitter(reader.config)
-
-        objs = list(emitter.emit(reader.read_topsrcdir()))
+        objs = self.read_topsrcdir(reader)
         self.assertEqual(len(objs), 6)
 
         for o in objs:
@@ -84,9 +89,7 @@ class TestEmitterBasic(unittest.TestCase):
 
     def test_tier_simple(self):
         reader = self.reader('traversal-tier-simple')
-        emitter = TreeMetadataEmitter(reader.config)
-
-        objs = list(emitter.emit(reader.read_topsrcdir()))
+        objs = self.read_topsrcdir(reader)
         self.assertEqual(len(objs), 4)
 
         reldirs = [o.relativedir for o in objs]
@@ -94,9 +97,7 @@ class TestEmitterBasic(unittest.TestCase):
 
     def test_config_file_substitution(self):
         reader = self.reader('config-file-substitution')
-        emitter = TreeMetadataEmitter(reader.config)
-
-        objs = list(emitter.emit(reader.read_topsrcdir()))
+        objs = self.read_topsrcdir(reader)
         self.assertEqual(len(objs), 3)
 
         self.assertIsInstance(objs[0], DirectoryTraversal)

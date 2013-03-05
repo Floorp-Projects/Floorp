@@ -8,6 +8,9 @@ interface nsIStandaloneNativeMenu;
 
 /**
  * Allow applications to interface with the Mac OS X Dock.
+ *
+ * Applications may indicate progress on their Dock icon. Only one such
+ * progress indicator is available to the entire application.
  */
 
 [scriptable, uuid(8BE66B0C-5F71-4B74-98CF-6C2551B999B1)]

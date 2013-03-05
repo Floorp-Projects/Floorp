@@ -55,6 +55,11 @@ MediaEngineWebRTCVideoSource::DeliverFrame(
     return 0;
   }
 
+  MOZ_ASSERT(mWidth*mHeight*3/2 == size);
+  if (mWidth*mHeight*3/2 != size) {
+    return 0;
+  }
+
   // Create a video frame and append it to the track.
   ImageFormat format = PLANAR_YCBCR;
 
@@ -119,11 +124,24 @@ MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   TrackTicks delta = target - aLastEndTime;
   LOGFRAME(("NotifyPull, desired = %ld, target = %ld, delta = %ld %s", (int64_t) aDesiredTime, 
             (int64_t) target, (int64_t) delta, image ? "" : "<null>"));
+
+  // Bug 846188 We may want to limit incoming frames to the requested frame rate
+  // mFps - if you want 30FPS, and the camera gives you 60FPS, this could
+  // cause issues.
+  // We may want to signal if the actual frame rate is below mMinFPS -
+  // cameras often don't return the requested frame rate especially in low
+  // light; we should consider surfacing this so that we can switch to a
+  // lower resolution (which may up the frame rate)
+
   // Don't append if we've already provided a frame that supposedly goes past the current aDesiredTime
   // Doing so means a negative delta and thus messes up handling of the graph
   if (delta > 0) {
     // NULL images are allowed
-    segment.AppendFrame(image ? image.forget() : nullptr, delta, gfxIntSize(mWidth, mHeight));
+    if (image) {
+      segment.AppendFrame(image.forget(), delta, gfxIntSize(mWidth, mHeight));
+    } else {
+      segment.AppendFrame(nullptr, delta, gfxIntSize(0,0));
+    }
     // This can fail if either a) we haven't added the track yet, or b)
     // we've removed or finished the track.
     if (aSource->AppendToTrack(aID, &(segment))) {
@@ -133,21 +151,19 @@ MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
 }
 
 void
-MediaEngineWebRTCVideoSource::ChooseCapability(uint32_t aWidth, uint32_t aHeight, uint32_t aMinFPS)
+MediaEngineWebRTCVideoSource::ChooseCapability(const MediaEnginePrefs &aPrefs)
 {
   int num = mViECapture->NumberOfCapabilities(mUniqueId, KMaxUniqueIdLength);
 
-  NS_WARN_IF_FALSE(!mCapabilityChosen,"Shouldn't select capability of a device twice");
+  LOG(("ChooseCapability: prefs: %dx%d @%d-%dfps", aPrefs.mWidth, aPrefs.mHeight, aPrefs.mFPS, aPrefs.mMinFPS));
 
   if (num <= 0) {
     // Set to default values
-    mCapability.width  = mOpts.mWidth  = aWidth;
-    mCapability.height = mOpts.mHeight = aHeight;
-    mCapability.maxFPS = mOpts.mMaxFPS = DEFAULT_VIDEO_FPS;
-    mOpts.codecType = kVideoCodecI420;
+    mCapability.width  = aPrefs.mWidth;
+    mCapability.height = aPrefs.mHeight;
+    mCapability.maxFPS = MediaEngine::DEFAULT_VIDEO_FPS;
 
     // Mac doesn't support capabilities.
-    mCapabilityChosen = true;
     return;
   }
 
@@ -160,31 +176,26 @@ MediaEngineWebRTCVideoSource::ChooseCapability(uint32_t aWidth, uint32_t aHeight
     mViECapture->GetCaptureCapability(mUniqueId, KMaxUniqueIdLength, i, cap);
     if (higher) {
       if (i == 0 ||
-          (mOpts.mWidth > cap.width && mOpts.mHeight > cap.height)) {
-        mOpts.mWidth = cap.width;
-        mOpts.mHeight = cap.height;
-        mOpts.mMaxFPS = cap.maxFPS;
+          (mCapability.width > cap.width && mCapability.height > cap.height)) {
+        // closer than the current choice
         mCapability = cap;
         // FIXME: expose expected capture delay?
       }
-      if (cap.width <= aWidth && cap.height <= aHeight) {
+      if (cap.width <= (uint32_t) aPrefs.mWidth && cap.height <= (uint32_t) aPrefs.mHeight) {
         higher = false;
       }
     } else {
-      if (cap.width > aWidth || cap.height > aHeight || cap.maxFPS < aMinFPS) {
+      if (cap.width > (uint32_t) aPrefs.mWidth || cap.height > (uint32_t) aPrefs.mHeight ||
+          cap.maxFPS < (uint32_t) aPrefs.mMinFPS) {
         continue;
       }
-      if (mOpts.mWidth < cap.width && mOpts.mHeight < cap.height) {
-        mOpts.mWidth = cap.width;
-        mOpts.mHeight = cap.height;
-        mOpts.mMaxFPS = cap.maxFPS;
+      if (mCapability.width < cap.width && mCapability.height < cap.height) {
         mCapability = cap;
         // FIXME: expose expected capture delay?
       }
     }
   }
-  LOG(("chose cap %dx%d @%dfps", mOpts.mWidth, mOpts.mHeight, mOpts.mMaxFPS));
-  mCapabilityChosen = true;
+  LOG(("chose cap %dx%d @%dfps", mCapability.width, mCapability.height, mCapability.maxFPS));
 }
 
 void
@@ -202,15 +213,15 @@ MediaEngineWebRTCVideoSource::GetUUID(nsAString& aUUID)
 }
 
 nsresult
-MediaEngineWebRTCVideoSource::Allocate()
+MediaEngineWebRTCVideoSource::Allocate(const MediaEnginePrefs &aPrefs)
 {
   LOG((__FUNCTION__));
-  if (!mCapabilityChosen) {
-    // XXX these should come from constraints
-    ChooseCapability(mWidth, mHeight, mMinFps);
-  }
-
   if (mState == kReleased && mInitDone) {
+    // Note: if shared, we don't allow a later opener to affect the resolution.
+    // (This may change depending on spec changes for Constraints/settings)
+
+    ChooseCapability(aPrefs);
+
     if (mViECapture->AllocateCaptureDevice(mUniqueId, KMaxUniqueIdLength, mCaptureIndex)) {
       return NS_ERROR_FAILURE;
     }
@@ -260,15 +271,6 @@ MediaEngineWebRTCVideoSource::Deallocate()
     LOG(("Video device %d deallocated but still in use", mCaptureIndex));
   }
   return NS_OK;
-}
-
-const MediaEngineVideoOptions*
-MediaEngineWebRTCVideoSource::GetOptions()
-{
-  if (!mCapabilityChosen) {
-    ChooseCapability(mWidth, mHeight, mMinFps);
-  }
-  return &mOpts;
 }
 
 nsresult
@@ -445,7 +447,9 @@ MediaEngineWebRTCVideoSource::Init()
   mDeviceName[0] = '\0'; // paranoia
   mUniqueId[0] = '\0';
 
-  (void) mFps; // fix compile warning for this being unused. (remove once used)
+  // fix compile warning for these being unused. (remove once used)
+  (void) mFps;
+  (void) mMinFps;
 
   LOG((__FUNCTION__));
   if (mVideoEngine == NULL) {

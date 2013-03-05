@@ -88,7 +88,6 @@ _BROWSER_FILES = \
                  browser_bug435035.js \
                  browser_bug435325.js \
                  browser_bug441778.js \
-                 browser_popupNotification.js \
                  browser_bug455852.js \
                  browser_bug460146.js \
                  browser_bug462673.js \
@@ -185,7 +184,6 @@ _BROWSER_FILES = \
                  browser_pluginnotification.js \
                  browser_plugins_added_dynamically.js \
                  browser_CTPScriptPlugin.js \
-                 browser_CTP_drag_drop.js \
                  browser_pluginplaypreview.js \
                  browser_pluginplaypreview2.js \
                  browser_private_browsing_window.js \
@@ -316,6 +314,13 @@ _BROWSER_FILES = \
                  browser_pluginCrashCommentAndURL.js \
                  pluginCrashCommentAndURL.html \
                  $(NULL)
+
+# Disable test on Windows due to frequent failures (bug 841341)
+ifneq (windows,$(MOZ_WIDGET_TOOLKIT))
+_BROWSER_FILES += \
+                browser_popupNotification.js \
+                $(NULL)
+endif
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 _BROWSER_FILES += \

@@ -17,22 +17,37 @@
 #define ASSIGN(obj, name)   (obj)->name = anp_system_##name
 
 const char*
-anp_system_getApplicationDataDirectory()
+anp_system_getApplicationDataDirectory(NPP instance)
 {
-  static char *dir = NULL;
+  static const char *dir = NULL;
+  static const char *privateDir = NULL;
+
+  bool isPrivate = false;
 
   if (!dir) {
     dir = getenv("ANDROID_PLUGIN_DATADIR");
   }
 
-  LOG("getApplicationDataDirectory return %s", dir);
+  if (!privateDir) {
+    privateDir = getenv("ANDROID_PLUGIN_DATADIR_PRIVATE");
+  }
+
+  if (!instance) {
+    return dir;
+  }
+
+  nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
+  if (pinst && NS_SUCCEEDED(pinst->IsPrivateBrowsing(&isPrivate)) && isPrivate) {
+    return privateDir;
+  }
+
   return dir;
 }
 
 const char*
-anp_system_getApplicationDataDirectory(NPP instance)
+anp_system_getApplicationDataDirectory()
 {
-  return anp_system_getApplicationDataDirectory();
+  return anp_system_getApplicationDataDirectory(nullptr);
 }
 
 jclass anp_system_loadJavaClass(NPP instance, const char* className)
@@ -66,9 +81,11 @@ jclass anp_system_loadJavaClass(NPP instance, const char* className)
 
 void anp_system_setPowerState(NPP instance, ANPPowerState powerState)
 {
-  nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
+  nsNPAPIPluginInstance* pinst = nsNPAPIPluginInstance::GetFromNPP(instance);
 
-  pinst->SetWakeLock(powerState == kScreenOn_ANPPowerState);
+  if (pinst) {
+    pinst->SetWakeLock(powerState == kScreenOn_ANPPowerState);
+  }
 }
 
 void InitSystemInterface(ANPSystemInterfaceV0 *i) {

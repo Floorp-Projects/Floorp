@@ -218,9 +218,9 @@ let gUsageTreeView = {
     return this._collections.length;
   },
 
-  getRowProperties: function(index, properties) {},
-  getCellProperties: function(row, col, properties) {},
-  getColumnProperties: function(col, properties) {},
+  getRowProperties: function(index) { return ""; },
+  getCellProperties: function(row, col) { return ""; },
+  getColumnProperties: function(col) { return ""; },
   isContainer: function(index) { return false; },
   isContainerOpen: function(index) { return false; },
   isContainerEmpty: function(index) { return false; },

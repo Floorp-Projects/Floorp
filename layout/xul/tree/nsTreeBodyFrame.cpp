@@ -3,10 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <cmath> // for std::abs(float/double)
-#include <cstdlib> // for std::abs(int/long)
-
 #include "mozilla/DebugOnly.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Likely.h"
 
 #include "nsCOMPtr.h"
@@ -1125,7 +1123,10 @@ nsTreeBodyFrame::GetCoordsForCellItem(int32_t aRow, nsITreeColumn* aCol, const n
     }
     // Now obtain the properties for our cell.
     PrefillPropertyArray(aRow, currCol);
-    mView->GetCellProperties(aRow, currCol, mScratchArray);
+
+    nsAutoString properties;
+    mView->GetCellProperties(aRow, currCol, properties);
+    nsTreeUtils::TokenizeProperties(properties, mScratchArray);
 
     nsStyleContext* rowContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreerow);
 
@@ -1468,7 +1469,9 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
 
   // Obtain the properties for our cell.
   PrefillPropertyArray(aRowIndex, aColumn);
-  mView->GetCellProperties(aRowIndex, aColumn, mScratchArray);
+  nsAutoString properties;
+  mView->GetCellProperties(aRowIndex, aColumn, properties);
+  nsTreeUtils::TokenizeProperties(properties, mScratchArray);
 
   // Resolve style for the cell.
   nsStyleContext* cellContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreecell);
@@ -1830,7 +1833,7 @@ nsTreeBodyFrame::RowCountChanged(int32_t aIndex, int32_t aCount)
   NS_ASSERTION(rowCount == mRowCount, "row count did not change by the amount suggested, check caller");
 #endif
 
-  int32_t count = std::abs(aCount);
+  int32_t count = Abs(aCount);
   int32_t last = GetLastVisibleRow();
   if (aIndex >= mTopRowIndex && aIndex <= last)
     InvalidateRange(aIndex, last);
@@ -2876,7 +2879,9 @@ nsTreeBodyFrame::PaintColumn(nsTreeColumn*        aColumn,
 
   // Now obtain the properties for our cell.
   PrefillPropertyArray(-1, aColumn);
-  mView->GetColumnProperties(aColumn, mScratchArray);
+  nsAutoString properties;
+  mView->GetColumnProperties(aColumn, properties);
+  nsTreeUtils::TokenizeProperties(properties, mScratchArray);
 
   // Resolve style for the column.  It contains all the info we need to lay ourselves
   // out and to paint.
@@ -2912,7 +2917,10 @@ nsTreeBodyFrame::PaintRow(int32_t              aRowIndex,
   // Now obtain the properties for our row.
   // XXX Automatically fill in the following props: open, closed, container, leaf, selected, focused
   PrefillPropertyArray(aRowIndex, nullptr);
-  mView->GetRowProperties(aRowIndex, mScratchArray);
+
+  nsAutoString properties;
+  mView->GetRowProperties(aRowIndex, properties);
+  nsTreeUtils::TokenizeProperties(properties, mScratchArray);
 
   // Resolve style for the row.  It contains all the info we need to lay ourselves
   // out and to paint.
@@ -3112,7 +3120,9 @@ nsTreeBodyFrame::PaintCell(int32_t              aRowIndex,
   // Now obtain the properties for our cell.
   // XXX Automatically fill in the following props: open, closed, container, leaf, selected, focused, and the col ID.
   PrefillPropertyArray(aRowIndex, aColumn);
-  mView->GetCellProperties(aRowIndex, aColumn, mScratchArray);
+  nsAutoString properties;
+  mView->GetCellProperties(aRowIndex, aColumn, properties);
+  nsTreeUtils::TokenizeProperties(properties, mScratchArray);
 
   // Resolve style for the cell.  It contains all the info we need to lay ourselves
   // out and to paint.

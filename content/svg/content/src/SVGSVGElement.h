@@ -48,8 +48,8 @@ public:
   DOMSVGTranslatePoint(DOMSVGTranslatePoint* aPt)
     : nsISVGPoint(&aPt->mPt), mElement(aPt->mElement) {}
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGTranslatePoint)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DOMSVGTranslatePoint, nsISVGPoint)
 
   virtual nsISVGPoint* Clone();
 

@@ -4,9 +4,13 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "mozilla/MathAlgorithms.h"
+
 #include "jsbool.h"
 #include "jslibmath.h"
 #include "jsnum.h"
+
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
@@ -16,6 +20,8 @@ using namespace js;
 using namespace js::mjit;
 using namespace js::analyze;
 using namespace JSC;
+
+using mozilla::Abs;
 
 typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
 
@@ -327,7 +333,8 @@ mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
         (type == JSVAL_TYPE_INT32 ||
          (type == JSVAL_TYPE_UNKNOWN &&
           !(lhs->isConstant() && lhs->isType(JSVAL_TYPE_INT32) &&
-            abs(lhs->getValue().toInt32()) == 1)))) {
+            Abs(lhs->getValue().toInt32()) == 1))))
+    {
         RegisterID reg = frame.allocReg();
         FPRegisterID fpReg = frame.allocFPReg();
         JumpList isDouble;

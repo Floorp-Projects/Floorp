@@ -4056,7 +4056,7 @@ nsHTMLInputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
                                        "Submit", defaultValue);
     value = defaultValue;
   }
-      
+
   //
   // Submit file if its input type=file and this encoding method accepts files
   //
@@ -4066,13 +4066,13 @@ nsHTMLInputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
     const nsCOMArray<nsIDOMFile>& files = GetFiles();
 
     for (int32_t i = 0; i < files.Count(); ++i) {
-      aFormSubmission->AddNameFilePair(name, files[i]);
+      aFormSubmission->AddNameFilePair(name, files[i], NullString());
     }
 
     if (files.Count() == 0) {
       // If no file was selected, pretend we had an empty file with an
       // empty filename.
-      aFormSubmission->AddNameFilePair(name, nullptr);
+      aFormSubmission->AddNameFilePair(name, nullptr, NullString());
 
     }
 

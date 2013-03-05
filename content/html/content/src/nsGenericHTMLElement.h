@@ -796,6 +796,12 @@ protected:
   {
     GetURIAttr(aName, nullptr, aResult);
   }
+  uint32_t GetHTMLUnsignedIntAttr(nsIAtom* aName, uint32_t aDefault)
+  {
+    uint32_t result;
+    GetUnsignedIntAttr(aName, aDefault, &result);
+    return result;
+  }
 
   void SetHTMLAttr(nsIAtom* aName, const nsAString& aValue)
   {

@@ -1,0 +1,363 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/ka.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/ka.xml
+ */
+ka{
+    AuxExemplarCharacters{
+        "[ⴀ ⴁ ⴂ ⴃ ⴄ ⴅ ⴆ ⴡ ⴇ ⴈ ⴉ ⴊ ⴋ ⴌ ⴢ ⴍ ⴎ ⴏ ⴐ ⴑ ⴒ ⴣ ⴓ ⴔ ⴕ ⴖ ⴗ ⴘ ⴙ ⴚ ⴛ ⴜ ⴝ ⴞ ⴤ ⴟ ⴠ ⴥ"
+        "]"
+    }
+    ExemplarCharacters{
+        "[ა ბ გ დ ე ვ ზ ჱ თ ი კ ლ მ ნ ჲ ო პ ჟ რ ს ტ ჳ უ ფ ქ ღ ყ შ ჩ ც ძ წ ჭ ხ ჴ ჯ ჰ ჵ"
+        " ჶ ჷ ჸ ჹ ჺ]"
+    }
+    ExemplarCharactersIndex{"[ა ბ გ დ ე ვ ზ თ ი კ ლ მ ნ ო პ ჟ რ ს ტ უ ფ ქ ღ ყ შ ჩ ც ძ წ ჭ ხ ჯ ჰ]"}
+    LocaleScript{
+        "Geor",
+    }
+    NumberElements{
+        default{"latn"}
+        latn{
+            patterns{
+                currencyFormat{"#,##0.00 ¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0 %"}
+            }
+            symbols{
+                decimal{","}
+                exponential{"E"}
+                group{"."}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+            }
+        }
+        native{"latn"}
+        traditional{"geor"}
+    }
+    Version{"2.0.78.32"}
+    calendar{
+        gregorian{
+            availableFormats{
+                MMMd{"d MMM"}
+                Md{"d.M."}
+                yM{"M.y"}
+                yMEd{"E, d.M.y"}
+                yMMMEd{"E, d MMM y"}
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "კვი",
+                        "ორშ",
+                        "სამ",
+                        "ოთხ",
+                        "ხუთ",
+                        "პარ",
+                        "შაბ",
+                    }
+                    narrow{
+                        "კ",
+                        "ო",
+                        "ს",
+                        "ო",
+                        "ხ",
+                        "პ",
+                        "შ",
+                    }
+                    wide{
+                        "კვირა",
+                        "ორშაბათი",
+                        "სამშაბათი",
+                        "ოთხშაბათი",
+                        "ხუთშაბათი",
+                        "პარასკევი",
+                        "შაბათი",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "კვი",
+                        "ორშ",
+                        "სამ",
+                        "ოთხ",
+                        "ხუთ",
+                        "პარ",
+                        "შაბ",
+                    }
+                    narrow{
+                        "კ",
+                        "ო",
+                        "ს",
+                        "ო",
+                        "ხ",
+                        "პ",
+                        "შ",
+                    }
+                    wide{
+                        "კვირა",
+                        "ორშაბათი",
+                        "სამშაბათი",
+                        "ოთხშაბათი",
+                        "ხუთშაბათი",
+                        "პარასკევი",
+                        "შაბათი",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "ჩვენს წელთაღრიცხვამდე",
+                    "ჩვენი წელთაღრიცხვით",
+                }
+            }
+            fields{
+                day{
+                    dn{"დღე"}
+                    relative{
+                        "-1"{"გუშინ"}
+                        "0"{"დღეს"}
+                        "1"{"ხვალ"}
+                    }
+                }
+                dayperiod{
+                    dn{"AM/PM"}
+                }
+                era{
+                    dn{"ერა"}
+                }
+                hour{
+                    dn{"საათი"}
+                }
+                minute{
+                    dn{"წუთი"}
+                }
+                month{
+                    dn{"თვე"}
+                }
+                second{
+                    dn{"წამი"}
+                }
+                week{
+                    dn{"კვირა"}
+                }
+                weekday{
+                    dn{"კვირის დღე"}
+                }
+                year{
+                    dn{"წელი"}
+                }
+                zone{
+                    dn{"სასაათო სარტყელი"}
+                }
+            }
+            intervalFormats{
+                M{
+                    M{"M.-M."}
+                }
+                MEd{
+                    M{"E, dd.MM. - E, dd.MM."}
+                    d{"E, dd.MM. - E, dd.MM."}
+                }
+                MMM{
+                    M{"MMM-MMM"}
+                }
+                MMMEd{
+                    M{"E, d MMM - E, d MMM"}
+                    d{"E, d - E, d MMM"}
+                }
+                MMMd{
+                    M{"d MMM - d MMM"}
+                    d{"d-d MMM"}
+                }
+                Md{
+                    M{"dd.MM. - dd.MM."}
+                    d{"dd.MM. - dd.MM."}
+                }
+                yM{
+                    M{"MM.yy - MM.yy"}
+                    y{"MM.yy - MM.yy"}
+                }
+                yMEd{
+                    M{"E, dd.MM.yy - E, dd.MM.yy"}
+                    d{"E, dd.MM.yy - E, dd.MM.yy"}
+                    y{"E, dd.MM.yy - E, dd.MM.yy"}
+                }
+                yMMM{
+                    M{"MMM-MMM y"}
+                    y{"MMM y - MMM y"}
+                }
+                yMMMEd{
+                    M{"E, d MMM - E, d MMM y"}
+                    d{"E, d - E, d MMM y"}
+                    y{"E, d MMM y - E, d MMM y"}
+                }
+                yMMMM{
+                    M{"MM – MM.yyyy"}
+                    y{"MM.yyyy – MM.yyyy"}
+                }
+                yMd{
+                    M{"dd.MM.yy - dd.MM.yy"}
+                    d{"dd.MM.yy - dd.MM.yy"}
+                    y{"dd.MM.yy - dd.MM.yy"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "იან",
+                        "თებ",
+                        "მარ",
+                        "აპრ",
+                        "მაი",
+                        "ივნ",
+                        "ივლ",
+                        "აგვ",
+                        "სექ",
+                        "ოქტ",
+                        "ნოე",
+                        "დეკ",
+                    }
+                    narrow{
+                        "ი",
+                        "თ",
+                        "მ",
+                        "ა",
+                        "მ",
+                        "ი",
+                        "ი",
+                        "ა",
+                        "ს",
+                        "ო",
+                        "ნ",
+                        "დ",
+                    }
+                    wide{
+                        "იანვარი",
+                        "თებერვალი",
+                        "მარტი",
+                        "აპრილი",
+                        "მაისი",
+                        "ივნისი",
+                        "ივლის",
+                        "აგვისტო",
+                        "სექტემბერი",
+                        "ოქტომბერი",
+                        "ნოემბერი",
+                        "დეკემბერი",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "იან",
+                        "თებ",
+                        "მარ",
+                        "აპრ",
+                        "მაი",
+                        "ივნ",
+                        "ივლ",
+                        "აგვ",
+                        "სექ",
+                        "ოქტ",
+                        "ნოე",
+                        "დეკ",
+                    }
+                    narrow{
+                        "ი",
+                        "თ",
+                        "მ",
+                        "ა",
+                        "მ",
+                        "ი",
+                        "ი",
+                        "ა",
+                        "ს",
+                        "ო",
+                        "ნ",
+                        "დ",
+                    }
+                    wide{
+                        "იანვარი",
+                        "თებერვალი",
+                        "მარტი",
+                        "აპრილი",
+                        "მაისი",
+                        "ივნისი",
+                        "ივლის",
+                        "აგვისტო",
+                        "სექტემბერი",
+                        "ოქტომბერი",
+                        "ნოემბერი",
+                        "დეკემბერი",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "I კვ.",
+                        "II კვ.",
+                        "III კვ.",
+                        "IV კვ.",
+                    }
+                    wide{
+                        "1-ლი კვარტალი",
+                        "მე-2 კვარტალი",
+                        "მე-3 კვარტალი",
+                        "მე-4 კვარტალი",
+                    }
+                }
+            }
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"‘"}
+        alternateQuotationStart{"‚"}
+        quotationEnd{"“"}
+        quotationStart{"„"}
+    }
+    listPattern{
+        standard{
+            2{"{0} და {1}"}
+            end{"{0} და {1}"}
+        }
+    }
+    measurementSystemNames{
+        US{"ანგლო-ამერიკული"}
+        metric{"მეტრული"}
+    }
+    units{
+        day{
+            other{"{0} დღე"}
+        }
+        hour{
+            other{"{0} საათი"}
+        }
+        minute{
+            other{"{0} წუთი"}
+        }
+        month{
+            other{"{0} თვე"}
+        }
+        second{
+            other{"{0} წამი"}
+        }
+        week{
+            other{"{0} კვირა"}
+        }
+        year{
+            other{"{0} წელი"}
+        }
+    }
+}

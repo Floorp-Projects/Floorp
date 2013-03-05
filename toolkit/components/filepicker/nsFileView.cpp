@@ -225,8 +225,6 @@ protected:
   nsCOMPtr<nsIFile> mDirectoryPath;
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsCOMPtr<nsITreeSelection> mSelection;
-  nsCOMPtr<nsIAtom> mDirectoryAtom;
-  nsCOMPtr<nsIAtom> mFileAtom;
   nsCOMPtr<nsIDateTimeFormat> mDateFormatter;
 
   int16_t mSortType;
@@ -284,14 +282,6 @@ nsFileView::~nsFileView()
 nsresult
 nsFileView::Init()
 {
-  mDirectoryAtom = do_GetAtom("directory");
-  if (!mDirectoryAtom)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  mFileAtom = do_GetAtom("file");
-  if (!mFileAtom)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   mDateFormatter = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID);
   if (!mDateFormatter)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -585,29 +575,27 @@ nsFileView::SetSelection(nsITreeSelection* aSelection)
 }
 
 NS_IMETHODIMP
-nsFileView::GetRowProperties(int32_t aIndex,
-                             nsISupportsArray* aProperties)
+nsFileView::GetRowProperties(int32_t aIndex, nsAString& aProps)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFileView::GetCellProperties(int32_t aRow, nsITreeColumn* aCol,
-                              nsISupportsArray* aProperties)
+                              nsAString& aProps)
 {
   uint32_t dirCount = mDirList.Length();
 
   if (aRow < (int32_t) dirCount)
-    aProperties->AppendElement(mDirectoryAtom);
+    aProps.AppendLiteral("directory");
   else if (aRow < mTotalRows)
-    aProperties->AppendElement(mFileAtom);
+    aProps.AppendLiteral("file");
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::GetColumnProperties(nsITreeColumn* aCol,
-                                nsISupportsArray* aProperties)
+nsFileView::GetColumnProperties(nsITreeColumn* aCol, nsAString& aProps)
 {
   return NS_OK;
 }

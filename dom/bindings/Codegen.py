@@ -18,7 +18,9 @@ ADDPROPERTY_HOOK_NAME = '_addProperty'
 FINALIZE_HOOK_NAME = '_finalize'
 TRACE_HOOK_NAME = '_trace'
 CONSTRUCT_HOOK_NAME = '_constructor'
+LEGACYCALLER_HOOK_NAME = '_legacycaller'
 HASINSTANCE_HOOK_NAME = '_hasInstance'
+NEWRESOLVE_HOOK_NAME = '_newResolve'
 
 def replaceFileIfChanged(filename, newContents):
     """
@@ -159,21 +161,28 @@ class CGDOMJSClass(CGThing):
     def declare(self):
         return "extern DOMJSClass Class;\n"
     def define(self):
-        traceHook = TRACE_HOOK_NAME if self.descriptor.customTrace else 'NULL'
+        traceHook = TRACE_HOOK_NAME if self.descriptor.customTrace else 'nullptr'
+        callHook = LEGACYCALLER_HOOK_NAME if self.descriptor.operations["LegacyCaller"] else 'nullptr'
+        classFlags = "JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(3)"
+        if self.descriptor.interface.getExtendedAttribute("NeedNewResolve"):
+            newResolveHook = "(JSResolveOp)" + NEWRESOLVE_HOOK_NAME
+            classFlags += " | JSCLASS_NEW_RESOLVE"
+        else:
+            newResolveHook = "JS_ResolveStub"
         return """
 DOMJSClass Class = {
   { "%s",
-    JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(3),
+    %s,
     %s, /* addProperty */
     JS_PropertyStub,       /* delProperty */
     JS_PropertyStub,       /* getProperty */
     JS_StrictPropertyStub, /* setProperty */
     JS_EnumerateStub,
-    JS_ResolveStub,
+    %s,
     JS_ConvertStub,
     %s, /* finalize */
     NULL,                  /* checkAccess */
-    NULL,                  /* call */
+    %s, /* call */
     NULL,                  /* hasInstance */
     NULL,                  /* construct */
     %s, /* trace */
@@ -182,8 +191,9 @@ DOMJSClass Class = {
 %s
 };
 """ % (self.descriptor.interface.identifier.name,
+       classFlags,
        ADDPROPERTY_HOOK_NAME if self.descriptor.concrete and not self.descriptor.workers and self.descriptor.wrapperCache else 'JS_PropertyStub',
-       FINALIZE_HOOK_NAME, traceHook,
+       newResolveHook, FINALIZE_HOOK_NAME, callHook, traceHook,
        CGIndenter(CGGeneric(DOMClass(self.descriptor))).define())
 
 def PrototypeIDAndDepth(descriptor):
@@ -2131,9 +2141,11 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
     If isDefinitelyObject is True, that means we know the value
     isObject() and we have no need to recheck that.
 
-    if isMember is True, we're being converted from a property of some
-    JS object, not from an actual method argument, so we can't rely on
-    our jsval being rooted or outliving us in any way.
+    if isMember is not False, we're being converted from a property of some JS
+    object, not from an actual method argument, so we can't rely on our jsval
+    being rooted or outliving us in any way.  Callers can pass "Dictionary" or
+    "Variadic" to indicate that the conversion is for something that is a
+    dictionary member or a variadic argument respectively.
 
     If isOptional is true, then we are doing conversion of an optional
     argument with no default value.
@@ -2961,7 +2973,8 @@ for (uint32_t i = 0; i < length; ++i) {
                             "  return false;\n"
                             "}")
             nullHandling = "${declName}.SetValue(nullptr, JS::NullValue())"
-        elif isMember:
+        elif isMember and isMember != "Variadic":
+            # Variadic arguments are rooted by being in argv
             raise TypeError("Can't handle sequence member 'any'; need to sort "
                             "out rooting issues")
         else:
@@ -3293,7 +3306,7 @@ class CGArgumentConverter(CGThing):
             isEnforceRange=self.argument.enforceRange,
             isClamp=self.argument.clamp,
             lenientFloatCode=self.lenientFloatCode,
-            isMember=self.argument.variadic,
+            isMember="Variadic" if self.argument.variadic else False,
             allowTreatNonCallableAsNull=self.allowTreatNonCallableAsNull)
 
         if not self.argument.variadic:
@@ -3886,6 +3899,14 @@ if (global.Failed()) {
         if needsCx and not (static and descriptor.workers):
             argsPre.append("cx")
 
+        if idlNode.isMethod() and idlNode.isLegacycaller():
+            # If we can have legacycaller with identifier, we can't
+            # just use the idlNode to determine whether we're
+            # generating code for the legacycaller or not.
+            assert idlNode.isIdentifierLess()
+            # Pass in our thisVal
+            argsPre.append("JS_THIS_VALUE(cx, vp)")
+
         cgThings.extend([CGArgumentConverter(arguments[i], i, self.getArgv(),
                                              self.getArgc(), self.descriptor,
                                              invalidEnumValueFatal=not setter,
@@ -4346,25 +4367,27 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
     function to do the rest of the work.  This function should return a
     CGThing which is already properly indented.
     """
-    def __init__(self, descriptor, name, args, unwrapFailureCode=None):
+    def __init__(self, descriptor, name, args, unwrapFailureCode=None,
+                 getThisObj="JS_THIS_OBJECT(cx, vp)"):
         CGAbstractStaticMethod.__init__(self, descriptor, name, "JSBool", args)
 
         if unwrapFailureCode is None:
             self.unwrapFailureCode = 'return ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s");' % self.descriptor.name
         else:
             self.unwrapFailureCode = unwrapFailureCode
+        self.getThisObj = getThisObj
 
     def definition_body(self):
         # Our descriptor might claim that we're not castable, simply because
         # we're someone's consequential interface.  But for this-unwrapping, we
         # know that we're the real deal.  So fake a descriptor here for
         # consumption by CastableObjectUnwrapper.
-        getThis = CGGeneric("""js::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+        getThis = CGGeneric("""js::RootedObject obj(cx, %s);
 if (!obj) {
   return false;
 }
 
-%s* self;""" % self.descriptor.nativeType)
+%s* self;""" % (self.getThisObj, self.descriptor.nativeType))
         unwrapThis = CGGeneric(
             str(CastableObjectUnwrapper(
                         self.descriptor,
@@ -4440,6 +4463,52 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
     def makeNativeName(descriptor, method):
         name = method.identifier.name
         return MakeNativeName(descriptor.binaryNames.get(name, name))
+
+class CGLegacyCallHook(CGAbstractBindingMethod):
+    """
+    Call hook for our object
+    """
+    def __init__(self, descriptor):
+        self._legacycaller = descriptor.operations["LegacyCaller"]
+        args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
+                Argument('JS::Value*', 'vp')]
+        # Our "self" is actually the callee in this case, not the thisval.
+        CGAbstractBindingMethod.__init__(
+            self, descriptor, LEGACYCALLER_HOOK_NAME,
+            args, getThisObj="&JS_CALLEE(cx, vp).toObject()")
+
+    def define(self):
+        if not self._legacycaller:
+            return ""
+        return CGAbstractBindingMethod.define(self)
+
+    def generate_code(self):
+        name = self._legacycaller.identifier.name
+        nativeName = MakeNativeName(self.descriptor.binaryNames.get(name, name))
+        return CGMethodCall(nativeName, False, self.descriptor,
+                            self._legacycaller)
+
+class CGNewResolveHook(CGAbstractBindingMethod):
+    """
+    NewResolve hook for our object
+    """
+    def __init__(self, descriptor):
+        self._needNewResolve = descriptor.interface.getExtendedAttribute("NeedNewResolve")
+        args = [Argument('JSContext*', 'cx'), Argument('JSHandleObject', 'obj_'),
+                Argument('JSHandleId', 'id'), Argument('unsigned', 'flags'),
+                Argument('JSMutableHandleObject', 'objp')]
+        # Our "self" is actually the callee in this case, not the thisval.
+        CGAbstractBindingMethod.__init__(
+            self, descriptor, NEWRESOLVE_HOOK_NAME,
+            args, getThisObj="obj_")
+
+    def define(self):
+        if not self._needNewResolve:
+            return ""
+        return CGAbstractBindingMethod.define(self)
+
+    def generate_code(self):
+        return CGIndenter(CGGeneric("return self->DoNewResolve(cx, obj, id, flags, objp);"))
 
 class CppKeywords():
     """
@@ -6544,6 +6613,9 @@ class CGDescriptor(CGThing):
                 cgThings.append(CGClassConstructHookHolder(descriptor))
             cgThings.append(CGNamedConstructors(descriptor))
 
+        cgThings.append(CGLegacyCallHook(descriptor))
+        cgThings.append(CGNewResolveHook(descriptor))
+
         if descriptor.interface.hasInterfacePrototypeObject():
             cgThings.append(CGPrototypeJSClass(descriptor, properties))
 
@@ -7400,6 +7472,11 @@ class CGNativeMember(ClassMethod):
         if not 'infallible' in self.extendedAttrs:
             # Use aRv so it won't conflict with local vars named "rv"
             args.append(Argument("ErrorResult&", "aRv"))
+        # The legacycaller thisval
+        if self.member.isMethod() and self.member.isLegacycaller():
+            # If it has an identifier, we can't deal with it yet
+            assert self.member.isIdentifierLess()
+            args.insert(0, Argument("JS::Value", "aThisVal"))
         # And jscontext bits.
         if (self.passCxAsNeeded and
             needCx(returnType, argList, self.extendedAttrs,
@@ -7616,8 +7693,7 @@ class CGExampleClass(CGClass):
             appendMethod(n)
         for m in iface.members:
             if m.isMethod():
-                if (m.isIdentifierLess() and
-                    m != descriptor.operations['Stringifier']):
+                if m.isIdentifierLess():
                     continue
                 appendMethod(m)
             elif m.isAttr():
@@ -7642,9 +7718,20 @@ class CGExampleClass(CGClass):
                 # than trying to somehow make this pretty.
                 args.append(FakeArgument(BuiltinTypes[IDLBuiltinType.Types.boolean],
                                          op, name="&found"))
-            if name == "Stringifier" and op.isIdentifierLess():
-                # XXXbz I wish we were consistent about our renaming here.
-                name = "__stringify"
+            if name == "Stringifier":
+                if op.isIdentifierLess():
+                    # XXXbz I wish we were consistent about our renaming here.
+                    name = "Stringify"
+                else:
+                    # We already added this method
+                    return
+            if name == "LegacyCaller":
+                if op.isIdentifierLess():
+                    # XXXbz I wish we were consistent about our renaming here.
+                    name = "LegacyCall"
+                else:
+                    # We already added this method
+                    return
             methodDecls.append(
                 CGNativeMember(descriptor, op,
                                name,
@@ -7932,6 +8019,8 @@ class FakeMember():
     def isStatic(self):
         return False
     def isAttr(self):
+        return False
+    def isMethod(self):
         return False
     def getExtendedAttribute(self, name):
         # Claim to be a [Creator] so we can avoid the "mark this

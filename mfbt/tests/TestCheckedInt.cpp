@@ -413,12 +413,14 @@ void test()
   VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(int64_t)
   VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(uint64_t)
 
+  typedef signed char signedChar;
   typedef unsigned char unsignedChar;
   typedef unsigned short unsignedShort;
   typedef unsigned int  unsignedInt;
   typedef unsigned long unsignedLong;
 
   VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(char)
+  VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(signedChar)
   VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(unsignedChar)
   VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(short)
   VERIFY_CONSTRUCTION_FROM_INTEGER_TYPE(unsignedShort)
@@ -470,6 +472,7 @@ int main()
   test<uint64_t>();
 
   test<char>();
+  test<signed char>();
   test<unsigned char>();
   test<short>();
   test<unsigned short>();
@@ -478,9 +481,11 @@ int main()
   test<long>();
   test<unsigned long>();
 
-  if (gIntegerTypesTested < 8) {
+  const int MIN_TYPES_TESTED = 9;
+  if (gIntegerTypesTested < MIN_TYPES_TESTED) {
     std::cerr << "Only " << gIntegerTypesTested << " have been tested. "
-              << "This should not be less than 8." << std::endl;
+              << "This should not be less than " << MIN_TYPES_TESTED << "."
+              << std::endl;
     gTestsFailed++;
   }
 
