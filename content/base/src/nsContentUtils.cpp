@@ -1761,9 +1761,11 @@ nsContentUtils::IsCallerXBL()
     JSContext *cx = GetCurrentJSContext();
     if (!cx)
         return false;
+
     // New Hotness.
-    if (xpc::IsXBLScope(js::GetContextCompartment(cx)))
-        return true;
+    if (XPCJSRuntime::Get()->XBLScopesEnabled())
+        return xpc::IsXBLScope(js::GetContextCompartment(cx));
+
     // XBL scopes are behind a pref, so check the XBL bit as well.
     if (!JS_DescribeScriptedCaller(cx, &script, nullptr) || !script)
         return false;
