@@ -14,7 +14,7 @@
 
 /**
  * Tests that the createDownload function exists and can be called.  More
- * detailed tests are implemented separately for the DownloadsCore module.
+ * detailed tests are implemented separately for the DownloadCore module.
  */
 add_task(function test_createDownload()
 {
@@ -45,4 +45,17 @@ add_task(function test_simpleDownload_object_arguments()
   yield Downloads.simpleDownload({ uri: TEST_SOURCE_URI },
                                  { file: targetFile });
   yield promiseVerifyContents(targetFile, TEST_DATA_SHORT);
+});
+
+/**
+ * Tests that the getPublicDownloadList function returns the same list when
+ * called multiple times.  More detailed tests are implemented separately for
+ * the DownloadList module.
+ */
+add_task(function test_getPublicDownloadList()
+{
+  let downloadListOne = yield Downloads.getPublicDownloadList();
+  let downloadListTwo = yield Downloads.getPublicDownloadList();
+
+  do_check_eq(downloadListOne, downloadListTwo);
 });
