@@ -236,6 +236,19 @@ SpecialPowersObserverAPI.prototype = {
           case "remove":
             Services.perms.removeFromPrincipal(principal, msg.type);
             break;
+          case "has":
+            let hasPerm = Services.perms.testPermissionFromPrincipal(principal, msg.type);
+            if (hasPerm == Ci.nsIPermissionManager.ALLOW_ACTION) 
+              return true;
+            return false;
+            break;
+          case "test":
+            let testPerm = Services.perms.testPermissionFromPrincipal(principal, msg.type, msg.value);
+            if (testPerm == msg.value)  {
+              return true;
+            }
+            return false;
+            break;
           default:
             throw new SpecialPowersException("Invalid operation for " +
                                              "SPPermissionManager");
