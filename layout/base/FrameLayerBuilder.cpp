@@ -2856,6 +2856,10 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
                aContainerItem->GetUnderlyingFrame() == aContainerFrame,
                "Container display item must match given frame");
 
+  if (!aParameters.mXScale || !aParameters.mYScale) {
+    return nullptr;
+  }
+
   nsRefPtr<ContainerLayer> containerLayer;
   if (aManager == mRetainingManager) {
     // Using GetOldLayerFor will search merged frames, as well as the underlying
