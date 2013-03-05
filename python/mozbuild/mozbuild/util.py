@@ -147,3 +147,61 @@ class FileAvoidWrite(StringIO):
     def __exit__(self, type, value, traceback):
         self.close()
 
+
+def resolve_target_to_make(topobjdir, target):
+    r'''
+    Resolve `target` (a target, directory, or file) to a make target.
+
+    `topobjdir` is the object directory; all make targets will be
+    rooted at or below the top-level Makefile in this directory.
+
+    Returns a pair `(reldir, target)` where `reldir` is a directory
+    relative to `topobjdir` containing a Makefile and `target` is a
+    make target (possibly `None`).
+
+    A directory resolves to the nearest directory at or above
+    containing a Makefile, and target `None`.
+
+    A file resolves to the nearest directory at or above the file
+    containing a Makefile, and an appropriate target.
+    '''
+    if os.path.isabs(target):
+        print('Absolute paths for make targets are not allowed.')
+        return (None, None)
+
+    target = target.replace(os.sep, '/')
+
+    abs_target = os.path.join(topobjdir, target)
+
+    # For directories, run |make -C dir|. If the directory does not
+    # contain a Makefile, check parents until we find one. At worst,
+    # this will terminate at the root.
+    if os.path.isdir(abs_target):
+        current = abs_target
+
+        while True:
+            make_path = os.path.join(current, 'Makefile')
+            if os.path.exists(make_path):
+                return (current[len(topobjdir) + 1:], None)
+
+            current = os.path.dirname(current)
+
+    # If it's not in a directory, this is probably a top-level make
+    # target. Treat it as such.
+    if '/' not in target:
+        return (None, target)
+
+    # We have a relative path within the tree. We look for a Makefile
+    # as far into the path as possible. Then, we compute the make
+    # target as relative to that directory.
+    reldir = os.path.dirname(target)
+    target = os.path.basename(target)
+
+    while True:
+        make_path = os.path.join(topobjdir, reldir, 'Makefile')
+
+        if os.path.exists(make_path):
+            return (reldir, target)
+
+        target = os.path.join(os.path.basename(reldir), target)
+        reldir = os.path.dirname(reldir)
