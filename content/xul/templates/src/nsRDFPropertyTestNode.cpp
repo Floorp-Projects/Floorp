@@ -187,9 +187,8 @@ nsRDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
             if (hasAssertion) {
                 // it's consistent.
                 Element* element =
-                    nsRDFPropertyTestNode::Element::Create(sourceRes,
-                                                           mProperty,
-                                                           targetValue);
+                    new nsRDFPropertyTestNode::Element(sourceRes, mProperty,
+                                                       targetValue);
 
                 if (! element)
                     return NS_ERROR_OUT_OF_MEMORY;
@@ -286,9 +285,8 @@ nsRDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                 newinst.AddAssignment(variable, value);
 
                 Element* element =
-                    nsRDFPropertyTestNode::Element::Create(sourceRes,
-                                                           mProperty,
-                                                           targetValue);
+                    new nsRDFPropertyTestNode::Element(sourceRes, mProperty,
+                                                       targetValue);
 
                 if (! element)
                     return NS_ERROR_OUT_OF_MEMORY;
