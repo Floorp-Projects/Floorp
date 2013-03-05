@@ -259,6 +259,7 @@ typedef NSInteger NSEventGestureAxis;
   float mCumulativeRotation;
 
   BOOL mDidForceRefreshOpenGL;
+  BOOL mWaitingForPaint;
 
   // Support for fluid swipe tracking.
 #ifdef __LP64__
