@@ -6,7 +6,6 @@
 #ifndef nsXULTemplateResultSetRDF_h__
 #define nsXULTemplateResultSetRDF_h__
 
-#include "nsFixedSizeAllocator.h"
 #include "nsISimpleEnumerator.h"
 #include "nsRuleNetwork.h"
 #include "nsRDFQuery.h"

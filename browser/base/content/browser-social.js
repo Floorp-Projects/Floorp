@@ -351,14 +351,15 @@ let SocialChatBar = {
     return !!this.chatbar.firstElementChild;
   },
   openChat: function(aProvider, aURL, aCallback, aMode) {
-    if (this.isAvailable) {
-      this.chatbar.openChat(aProvider, aURL, aCallback, aMode);
-      // We only want to focus the chat if it is as a result of user input.
-      let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIDOMWindowUtils);
-      if (dwu.isHandlingUserInput)
-        this.chatbar.focus();
-    }
+    if (!this.isAvailable)
+      return false;
+    this.chatbar.openChat(aProvider, aURL, aCallback, aMode);
+    // We only want to focus the chat if it is as a result of user input.
+    let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindowUtils);
+    if (dwu.isHandlingUserInput)
+      this.chatbar.focus();
+    return true;
   },
   update: function() {
     let command = document.getElementById("Social:FocusChat");

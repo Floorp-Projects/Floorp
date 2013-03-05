@@ -348,8 +348,8 @@ public:
         }
 
         SetupLookupFunction();
-
-        bool ok = InitWithPrefix("gl", true);
+        if (!InitWithPrefix("gl", true))
+            return false;
 
         PR_STATIC_ASSERT(sizeof(GLint) >= sizeof(int32_t));
         mMaxTextureImageSize = INT32_MAX;
@@ -358,10 +358,7 @@ public:
                              sEGLLibrary.HasKHRImageTexture2D() &&
                              IsExtensionSupported(OES_EGL_image);
 
-        if (ok)
-            InitFramebuffers();
-
-        return ok;
+        return true;
     }
 
     bool IsDoubleBuffered() {

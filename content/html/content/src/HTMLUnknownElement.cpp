@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsDocument.h"
 #include "HTMLUnknownElement.h"
 #include "mozilla/dom/HTMLElementBinding.h"
 
@@ -18,7 +19,19 @@ JSObject*
 HTMLUnknownElement::WrapNode(JSContext *aCx, JSObject *aScope,
                                bool *aTriedToWrap)
 {
-  return HTMLUnknownElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  JSObject* obj =
+    HTMLUnknownElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  if (obj && Substring(NodeName(), 0, 2).LowerCaseEqualsLiteral("x-")) {
+    // If we have a registered x-tag then we fix the prototype.
+    JSAutoCompartment ac(aCx, obj);
+    nsDocument* document = static_cast<nsDocument*>(OwnerDoc());
+    JSObject* prototype = document->GetCustomPrototype(LocalName());
+    if (prototype) {
+      NS_ENSURE_TRUE(JS_WrapObject(aCx, &prototype), nullptr);
+      NS_ENSURE_TRUE(JS_SetPrototype(aCx, obj, prototype), nullptr);
+    }
+  }
+  return obj;
 }
 
 // QueryInterface implementation for HTMLUnknownElement

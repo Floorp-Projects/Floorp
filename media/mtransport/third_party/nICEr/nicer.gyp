@@ -63,6 +63,8 @@
                 "./src/ice/ice_socket.h",
 
                 # Net
+                "./src/net/nr_resolver.c",
+                "./src/net/nr_resolver.h",
                 "./src/net/nr_socket.c",
                 "./src/net/nr_socket.h",
                 #"./src/net/nr_socket_local.c",

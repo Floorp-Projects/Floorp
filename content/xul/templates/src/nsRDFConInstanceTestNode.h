@@ -7,7 +7,6 @@
 #define nsRDFConInstanceTestNode_h__
 
 #include "nscore.h"
-#include "nsFixedSizeAllocator.h"
 #include "nsRDFTestNode.h"
 #include "nsIRDFResource.h"
 #include "nsIRDFDataSource.h"

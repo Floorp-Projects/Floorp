@@ -418,6 +418,11 @@ IndexedDatabaseManager::GetOrCreate()
     nsCOMPtr<nsIObserverService> obs = GetObserverService();
     NS_ENSURE_TRUE(obs, nullptr);
 
+    // Must initialize the storage service on the main thread.
+    nsCOMPtr<mozIStorageService> ss =
+      do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
+    NS_ENSURE_TRUE(ss, nullptr);
+
     // We need this callback to know when to shut down all our threads.
     rv = obs->AddObserver(instance, PROFILE_BEFORE_CHANGE_OBSERVER_ID, false);
     NS_ENSURE_SUCCESS(rv, nullptr);

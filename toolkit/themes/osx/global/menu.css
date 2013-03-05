@@ -75,27 +75,48 @@ menuitem[src] > .menu-iconic-left > .menu-iconic-icon {
 
 .menu-right,
 .menu-accel-container {
-  -moz-margin-end: -9px;
   -moz-margin-start: 21px;
   -moz-box-pack: end;
 }
 
+.menu-accel-container {
+  -moz-margin-end: -9px;
+}
+
 .menu-right {
-  width: 8px;
+  -moz-margin-end: -10px;
+  width: 9px;
   list-style-image: url("chrome://global/skin/menu/menu-arrow.png");
-  -moz-image-region: rect(0, 8px, 10px, 0);
+  -moz-image-region: rect(0, 9px, 10px, 0);
 }
 
 .menu-right[_moz-menuactive="true"]:not([disabled="true"]) {
-  -moz-image-region: rect(0, 16px, 10px, 8px);
+  -moz-image-region: rect(0, 18px, 10px, 9px);
 }
 
 .menu-right[disabled="true"] {
-  -moz-image-region: rect(0, 24px, 10px, 16px);
+  -moz-image-region: rect(0, 27px, 10px, 18px);
 }
 
 .menu-right:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
+}
+
+@media (min-resolution: 2dppx) {
+  .menu-right > image {
+    list-style-image: url("chrome://global/skin/menu/menu-arrow@2x.png");
+    -moz-image-region: rect(0, 18px, 20px, 0);
+    width: 9px;
+    height: 10px;
+  }
+
+  .menu-right[_moz-menuactive="true"]:not([disabled="true"]) > image {
+    -moz-image-region: rect(0, 36px, 20px, 18px);
+  }
+
+  .menu-right[disabled="true"] > image {
+    -moz-image-region: rect(0, 54px, 20px, 36px);
+  }
 }
 
 /* ::::: menu/menuitems in menubar ::::: */
@@ -166,9 +187,10 @@ menulist[editable="true"] > menupopup > menuitem > .menu-iconic-left {
 
 :not(menulist) > menupopup > menuitem[checked="true"] > .menu-iconic-left,
 :not(menulist) > menupopup > menuitem[selected="true"] > .menu-iconic-left {
+  padding-top: 1px;
   -moz-margin-start: -15px;
   -moz-padding-start: 15px;
-  background: -moz-image-rect("chrome://global/skin/menu/menu-check.png", 0, 10, 11, 0) bottom left no-repeat transparent;
+  background: -moz-image-rect("chrome://global/skin/menu/menu-check.png", 0, 11, 11, 0) bottom left no-repeat transparent;
 }
 
 :not(menulist) > menupopup > menuitem[checked="true"] > .menu-iconic-left:-moz-locale-dir(rtl),
@@ -178,7 +200,20 @@ menulist[editable="true"] > menupopup > menuitem > .menu-iconic-left {
 
 :not(menulist) > menupopup > menuitem[checked="true"][_moz-menuactive="true"]:not([disabled="true"]) > .menu-iconic-left,
 :not(menulist) > menupopup > menuitem[selected="true"][_moz-menuactive="true"]:not([disabled="true"]) > .menu-iconic-left {
-  background-image: -moz-image-rect("chrome://global/skin/menu/menu-check.png", 0, 20, 11, 10);
+  background-image: -moz-image-rect("chrome://global/skin/menu/menu-check.png", 0, 22, 11, 11);
+}
+
+@media (min-resolution: 2dppx) {
+  :not(menulist) > menupopup > menuitem[checked="true"] > .menu-iconic-left,
+  :not(menulist) > menupopup > menuitem[selected="true"] > .menu-iconic-left {
+    background-size: 11px 11px;
+    background-image: -moz-image-rect("chrome://global/skin/menu/menu-check@2x.png", 0, 22, 22, 0);
+  }
+
+  :not(menulist) > menupopup > menuitem[checked="true"][_moz-menuactive="true"]:not([disabled="true"]) > .menu-iconic-left,
+  :not(menulist) > menupopup > menuitem[selected="true"][_moz-menuactive="true"]:not([disabled="true"]) > .menu-iconic-left {
+    background-image: -moz-image-rect("chrome://global/skin/menu/menu-check@2x.png", 0, 44, 22, 22);
+  }
 }
 
 menulist:not([editable="true"]) > menupopup > menuitem[checked="true"]::before,

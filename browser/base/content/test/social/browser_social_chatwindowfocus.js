@@ -248,6 +248,19 @@ var tests = {
   // cause focus to move between all elements in our chat window before moving
   // to the next chat window.
   testTab: function(next) {
+    function sendTabAndWaitForFocus(chat, eltid, callback) {
+      // ideally we would use the 'focus' event here, but that doesn't work
+      // as expected for the iframe - the iframe itself never gets the focus
+      // event (apparently the sub-document etc does.)
+      // So just poll for the correct element getting focus...
+      let doc = chat.iframe.contentDocument;
+      EventUtils.sendKey("tab");
+      waitForCondition(function() {
+        let elt = eltid ? doc.getElementById(eltid) : doc.documentElement;
+        return doc.activeElement == elt;
+      }, callback, "element " + eltid + " never got focus");
+    }
+
     let chatbar = SocialChatBar.chatbar;
     startTestAndWaitForSidebar(function(port) {
       openChatViaSidebarMessage(port, {id: 1}, function() {
@@ -259,22 +272,27 @@ var tests = {
           ok(isChatFocused(chat2), "new chat is focused");
           // Our chats have 3 focusable elements, so it takes 4 TABs to move
           // to the new chat.
-          EventUtils.sendKey("tab");
-          ok(isChatFocused(chat2), "new chat still focused after first tab");
-          is(chat2.iframe.contentDocument.activeElement.getAttribute("id"), "input1",
-             "first input field has focus");
-          EventUtils.sendKey("tab");
-          ok(isChatFocused(chat2), "new chat still focused after tab");
-          is(chat2.iframe.contentDocument.activeElement.getAttribute("id"), "input2",
-             "second input field has focus");
-          EventUtils.sendKey("tab");
-          ok(isChatFocused(chat2), "new chat still focused after tab");
-          is(chat2.iframe.contentDocument.activeElement.getAttribute("id"), "iframe",
-             "iframe has focus");
-          // this tab now should move to the next chat.
-          EventUtils.sendKey("tab");
-          ok(isChatFocused(chat1), "first chat is focused");
-          next();
+          sendTabAndWaitForFocus(chat2, "input1", function() {
+            is(chat2.iframe.contentDocument.activeElement.getAttribute("id"), "input1",
+               "first input field has focus");
+            ok(isChatFocused(chat2), "new chat still focused after first tab");
+            sendTabAndWaitForFocus(chat2, "input2", function() {
+              ok(isChatFocused(chat2), "new chat still focused after tab");
+              is(chat2.iframe.contentDocument.activeElement.getAttribute("id"), "input2",
+                 "second input field has focus");
+              sendTabAndWaitForFocus(chat2, "iframe", function() {
+                ok(isChatFocused(chat2), "new chat still focused after tab");
+                is(chat2.iframe.contentDocument.activeElement.getAttribute("id"), "iframe",
+                   "iframe has focus");
+                // this tab now should move to the next chat, but focus the
+                // document element itself (hence the null eltid)
+                sendTabAndWaitForFocus(chat1, null, function() {
+                  ok(isChatFocused(chat1), "first chat is focused");
+                  next();
+                });
+              });
+            });
+          });
         });
       });
     });

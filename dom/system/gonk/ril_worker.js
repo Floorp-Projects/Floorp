@@ -10315,7 +10315,7 @@ let ICCRecordHelper = {
    * @param onerror      Callback to be called when error.
    */
   readEmail: function readEmail(fileId, fileType, recordNumber, onsuccess, onerror) {
-    function callback(optoins) {
+    function callback(options) {
       let strLen = Buf.readUint32();
       let octetLen = strLen / 2;
       let email = null;
@@ -10362,7 +10362,7 @@ let ICCRecordHelper = {
    * @param onerror      Callback to be called when error.
    */
   readANR: function readANR(fileId, fileType, recordNumber, onsuccess, onerror) {
-    function callback(optoins) {
+    function callback(options) {
       let strLen = Buf.readUint32();
       let octetLen = strLen / 2;
       let number = null;

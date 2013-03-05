@@ -20,6 +20,10 @@ SYNC_JAVA_FILES := \
   background/announcements/AnnouncementsService.java \
   background/announcements/AnnouncementsStartReceiver.java \
   background/BackgroundService.java \
+  background/bagheera/BagheeraClient.java \
+  background/bagheera/BagheeraRequestDelegate.java \
+  background/bagheera/BoundedByteArrayEntity.java \
+  background/bagheera/DeflateHelper.java \
   background/common/log/Logger.java \
   background/common/log/writers/AndroidLevelCachingLogWriter.java \
   background/common/log/writers/AndroidLogWriter.java \
