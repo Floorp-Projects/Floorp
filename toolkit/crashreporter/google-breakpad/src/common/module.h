@@ -371,7 +371,7 @@ class Module {
   // Relation for maps whose keys are strings shared with some other
   // structure.
   struct CompareStringPtrs {
-    bool operator()(const string *x, const string *y) { return *x < *y; }
+    bool operator()(const string *x, const string *y) const { return *x < *y; }
   };
 
   // A map from filenames to File structures.  The map's keys are
