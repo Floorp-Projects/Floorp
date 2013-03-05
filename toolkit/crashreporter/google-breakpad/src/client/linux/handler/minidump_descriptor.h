@@ -45,7 +45,7 @@ namespace google_breakpad {
 
 class MinidumpDescriptor {
  public:
-  MinidumpDescriptor() : fd_(-1) {}
+  MinidumpDescriptor() : fd_(-1), size_limit_(-1) {}
 
   explicit MinidumpDescriptor(const string& directory)
       : fd_(-1),
