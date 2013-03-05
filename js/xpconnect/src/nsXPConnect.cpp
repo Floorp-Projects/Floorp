@@ -946,9 +946,6 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
 
     scope->RemoveWrappedNativeProtos();
 
-    if (!nsXPCComponents::AttachComponentsObject(ccx, scope))
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
     if (!XPCNativeWrapper::AttachNewConstructorObject(ccx, aGlobalJSObj))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
