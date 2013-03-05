@@ -21,7 +21,7 @@ using namespace js::mjit;
 using namespace js::analyze;
 using namespace JSC;
 
-using mozilla::Abs;
+using mozilla::DeprecatedAbs;
 
 typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
 
@@ -333,7 +333,7 @@ mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
         (type == JSVAL_TYPE_INT32 ||
          (type == JSVAL_TYPE_UNKNOWN &&
           !(lhs->isConstant() && lhs->isType(JSVAL_TYPE_INT32) &&
-            Abs(lhs->getValue().toInt32()) == 1))))
+            DeprecatedAbs(lhs->getValue().toInt32()) == 1))))
     {
         RegisterID reg = frame.allocReg();
         FPRegisterID fpReg = frame.allocFPReg();

@@ -1101,7 +1101,7 @@ nsSHistory::GloballyEvictContentViewers()
         for (uint32_t j = 0; j < shTransactions.Length(); j++) {
           TransactionAndDistance &container = shTransactions[j];
           if (container.mViewer == contentViewer) {
-            container.mDistance = std::min(container.mDistance, Abs(i - shist->mIndex));
+            container.mDistance = std::min(container.mDistance, DeprecatedAbs(i - shist->mIndex));
             found = true;
             break;
           }
@@ -1110,7 +1110,7 @@ nsSHistory::GloballyEvictContentViewers()
         // If we didn't find a TransactionAndDistance for this content viewer, make a new
         // one.
         if (!found) {
-          TransactionAndDistance container(trans, Abs(i - shist->mIndex));
+          TransactionAndDistance container(trans, DeprecatedAbs(i - shist->mIndex));
           shTransactions.AppendElement(container);
         }
       }

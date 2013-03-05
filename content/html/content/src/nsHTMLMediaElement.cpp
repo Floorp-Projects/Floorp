@@ -3382,10 +3382,10 @@ static double ClampPlaybackRate(double aPlaybackRate)
   if (aPlaybackRate == 0.0) {
     return aPlaybackRate;
   }
-  if (Abs(aPlaybackRate) < MIN_PLAYBACKRATE) {
+  if (DeprecatedAbs(aPlaybackRate) < MIN_PLAYBACKRATE) {
     return aPlaybackRate < 0 ? -MIN_PLAYBACKRATE : MIN_PLAYBACKRATE;
   }
-  if (Abs(aPlaybackRate) > MAX_PLAYBACKRATE) {
+  if (DeprecatedAbs(aPlaybackRate) > MAX_PLAYBACKRATE) {
     return aPlaybackRate < 0 ? -MAX_PLAYBACKRATE : MAX_PLAYBACKRATE;
   }
   return aPlaybackRate;
