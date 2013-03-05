@@ -5059,7 +5059,7 @@ nsDocument::Register(JSContext* aCx, const nsAString& aName,
       // Don't abort the upgrade algorithm if the callback throws an
       // exception.
       ErrorResult dummy;
-      aOptions.mLifecycle.mCreated->Call(newElement.get(), dummy);
+      aOptions.mLifecycle.mCreated->Call(newElement, dummy);
     }
 
     nsCOMPtr<nsIDOMElementReplaceEvent> ptEvent = do_QueryInterface(event);
