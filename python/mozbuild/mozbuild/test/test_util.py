@@ -5,7 +5,6 @@
 from __future__ import unicode_literals
 
 import hashlib
-import os
 import unittest
 
 from mozfile.mozfile import NamedTemporaryFile
@@ -17,12 +16,7 @@ from mozunit import (
 from mozbuild.util import (
     FileAvoidWrite,
     hash_file,
-    resolve_target_to_make,
 )
-
-
-data_path = os.path.abspath(os.path.dirname(__file__))
-data_path = os.path.join(data_path, 'data')
 
 
 class TestHashing(unittest.TestCase):
@@ -98,47 +92,6 @@ class TestFileAvoidWrite(unittest.TestCase):
             faw.write('content')
             self.assertEqual(faw.close(), (True, False))
 
-
-class TestResolveTargetToMake(unittest.TestCase):
-    def setUp(self):
-        self.topobjdir = data_path
-
-    def assertResolve(self, path, expected):
-        self.assertEqual(resolve_target_to_make(self.topobjdir, path), expected)
-
-    def test_absolute_path(self):
-        abspath = os.path.abspath(os.path.join(self.topobjdir, 'test-dir'))
-        self.assertResolve(abspath, (None, None))
-
-    def test_dir(self):
-        self.assertResolve('test-dir', ('test-dir', None))
-        self.assertResolve('test-dir/with', ('test-dir/with', None))
-        self.assertResolve('test-dir/with', ('test-dir/with', None))
-        self.assertResolve('test-dir/without', ('test-dir', None))
-        self.assertResolve('test-dir/without/with', ('test-dir/without/with', None))
-
-    def test_top_level(self):
-        self.assertResolve('package', (None, 'package'))
-        # Makefile handling shouldn't affect top-level targets.
-        self.assertResolve('Makefile', (None, 'Makefile'))
-
-    def test_regular_file(self):
-        self.assertResolve('test-dir/with/file', ('test-dir/with', 'file'))
-        self.assertResolve('test-dir/with/without/file', ('test-dir/with', 'without/file'))
-        self.assertResolve('test-dir/with/without/with/file', ('test-dir/with/without/with', 'file'))
-
-        self.assertResolve('test-dir/without/file', ('test-dir', 'without/file'))
-        self.assertResolve('test-dir/without/with/file', ('test-dir/without/with', 'file'))
-        self.assertResolve('test-dir/without/with/without/file', ('test-dir/without/with', 'without/file'))
-
-    def test_Makefile(self):
-        self.assertResolve('test-dir/with/Makefile', ('test-dir', 'with/Makefile'))
-        self.assertResolve('test-dir/with/without/Makefile', ('test-dir/with', 'without/Makefile'))
-        self.assertResolve('test-dir/with/without/with/Makefile', ('test-dir/with', 'without/with/Makefile'))
-
-        self.assertResolve('test-dir/without/Makefile', ('test-dir', 'without/Makefile'))
-        self.assertResolve('test-dir/without/with/Makefile', ('test-dir', 'without/with/Makefile'))
-        self.assertResolve('test-dir/without/with/without/Makefile', ('test-dir/without/with', 'without/Makefile'))
 
 if __name__ == '__main__':
     main()
