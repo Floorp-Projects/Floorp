@@ -232,6 +232,9 @@ JS::CheckStackRoots(JSContext *cx)
     if (cx->compartment->activeAnalysis)
         return;
 
+    if (rt->mainThread.suppressGC)
+        return;
+
     // Can switch to the atoms compartment during analysis.
     if (IsAtomsCompartment(cx->compartment)) {
         for (CompartmentsIter c(rt); !c.done(); c.next()) {
