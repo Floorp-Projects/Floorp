@@ -304,7 +304,7 @@ public class CrashReporter extends Activity
                 }
             }
             sendPart(os, boundary, "Android_Version",  Build.VERSION.SDK_INT + " (" + Build.VERSION.CODENAME + ")");
-            if (Build.VERSION.SDK_INT >= 16) {
+            if (Build.VERSION.SDK_INT >= 16 && includeURLCheckbox.isChecked()) {
                 sendPart(os, boundary, "Android_Logcat", readLogcat());
             }
 
