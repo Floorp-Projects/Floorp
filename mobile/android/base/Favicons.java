@@ -241,8 +241,7 @@ public class Favicons {
         // Runs in background thread
         private Bitmap downloadFavicon(URL faviconUrl) {
             if (mFaviconUrl.startsWith("jar:jar:")) {
-                BitmapDrawable d = GeckoJarReader.getBitmapDrawable(mContext.getResources(), mFaviconUrl);
-                return d.getBitmap();
+                return GeckoJarReader.getBitmap(mContext.getResources(), mFaviconUrl);
             }
 
             URI uri;
