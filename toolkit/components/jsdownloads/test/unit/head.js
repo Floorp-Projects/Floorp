@@ -91,6 +91,25 @@ function getTempFile(aLeafName)
 }
 
 /**
+ * Creates a new Download object, using TEST_TARGET_FILE_NAME as the target.
+ * The target is deleted by getTempFile when this function is called.
+ *
+ * @param aSourceURI
+ *        The nsIURI for the download source, or null to use TEST_SOURCE_URI.
+ *
+ * @return {Promise}
+ * @resolves The newly created Download object.
+ * @rejects JavaScript exception.
+ */
+function promiseSimpleDownload(aSourceURI) {
+  return Downloads.createDownload({
+    source: { uri: aSourceURI || TEST_SOURCE_URI },
+    target: { file: getTempFile(TEST_TARGET_FILE_NAME) },
+    saver: { type: "copy" },
+  });
+}
+
+/**
  * Ensures that the given file contents are equal to the given string.
  *
  * @param aFile
