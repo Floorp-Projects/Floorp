@@ -538,11 +538,11 @@ MediaDecodeTask::CopyBuffer()
         uint32_t outSamples = expectedOutSamples;
 
 #ifdef MOZ_SAMPLE_TYPE_S16
-        speex_resampler_process_int(resampler, i, bufferData, &inSamples,
+        speex_resampler_process_int(resampler, i, &bufferData[i * audioData->mFrames], &inSamples,
                                     &resampledBuffer[i * expectedOutSamples],
                                     &outSamples);
 #else
-        speex_resampler_process_float(resampler, i, bufferData, &inSamples,
+        speex_resampler_process_float(resampler, i, &bufferData[i * audioData->mFrames], &inSamples,
                                       &resampledBuffer[i * expectedOutSamples],
                                       &outSamples);
 #endif
