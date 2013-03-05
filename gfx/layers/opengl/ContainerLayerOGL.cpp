@@ -200,8 +200,7 @@ ContainerRender(Container* aContainer,
     // of just clamping the framebuffer's size to the max supported size.
     // This gives us a lower resolution rendering of the intermediate surface (children layers).
     // See bug 827170 for a discussion.
-    GLint maxTexSize;
-    aContainer->gl()->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &maxTexSize);
+    GLint maxTexSize = aContainer->gl()->GetMaxTextureSize();
     framebufferRect.width = std::min(framebufferRect.width, maxTexSize);
     framebufferRect.height = std::min(framebufferRect.height, maxTexSize);
 
