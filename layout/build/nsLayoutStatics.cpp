@@ -112,7 +112,7 @@ using namespace mozilla::system;
 #include "mozilla/dom/time/DateCacheCleaner.h"
 #include "nsIMEStateManager.h"
 
-extern void NS_ShutdownEventTargetChainItemRecyclePool();
+extern void NS_ShutdownChainItemPool();
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -368,7 +368,7 @@ nsLayoutStatics::Shutdown()
 
   nsRegion::ShutdownStatic();
 
-  NS_ShutdownEventTargetChainItemRecyclePool();
+  NS_ShutdownChainItemPool();
 
   nsFrameList::Shutdown();
 
