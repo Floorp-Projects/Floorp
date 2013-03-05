@@ -6246,7 +6246,7 @@ BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect)
   if (!haveIntersect)
     return false;
   mDamageArea = nsIntRect(startColIndex, startRowIndex,
-                          1 + Abs<int32_t>(endColIndex - startColIndex),
+                          1 + DeprecatedAbs<int32_t>(endColIndex - startColIndex),
                           1 + endRowIndex - startRowIndex);
 
   Reset();

@@ -356,7 +356,7 @@ TimeStampValue::CheckQPC(int64_t aDuration, const TimeStampValue &aOther) const
     return false;
 
   // Treat absolutely for calibration purposes
-  aDuration = Abs(aDuration);
+  aDuration = DeprecatedAbs(aDuration);
 
   // Check QPC is sane before using it.
 

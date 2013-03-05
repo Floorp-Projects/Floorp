@@ -2052,8 +2052,8 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 
     // fire drag gesture if mouse has moved enough
     nsIntPoint pt = aEvent->refPoint + aEvent->widget->WidgetToScreenOffset();
-    if (Abs(pt.x - mGestureDownPoint.x) > pixelThresholdX ||
-        Abs(pt.y - mGestureDownPoint.y) > pixelThresholdY) {
+    if (DeprecatedAbs(pt.x - mGestureDownPoint.x) > pixelThresholdX ||
+        DeprecatedAbs(pt.y - mGestureDownPoint.y) > pixelThresholdY) {
       if (mClickHoldContextMenu) {
         // stop the click-hold before we fire off the drag gesture, in case
         // it takes a long time
@@ -2880,14 +2880,14 @@ nsEventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
   nsIntSize devPixelPageSize(pc->AppUnitsToDevPixels(pageSize.width),
                              pc->AppUnitsToDevPixels(pageSize.height));
   if (!WheelPrefs::GetInstance()->IsOverOnePageScrollAllowedX(aEvent) &&
-      Abs(actualDevPixelScrollAmount.x) > devPixelPageSize.width) {
+      DeprecatedAbs(actualDevPixelScrollAmount.x) > devPixelPageSize.width) {
     actualDevPixelScrollAmount.x =
       (actualDevPixelScrollAmount.x >= 0) ? devPixelPageSize.width :
                                             -devPixelPageSize.width;
   }
 
   if (!WheelPrefs::GetInstance()->IsOverOnePageScrollAllowedY(aEvent) &&
-      Abs(actualDevPixelScrollAmount.y) > devPixelPageSize.height) {
+      DeprecatedAbs(actualDevPixelScrollAmount.y) > devPixelPageSize.height) {
     actualDevPixelScrollAmount.y =
       (actualDevPixelScrollAmount.y >= 0) ? devPixelPageSize.height :
                                             -devPixelPageSize.height;
@@ -5590,8 +5590,8 @@ nsEventStateManager::WheelPrefs::ComputeActionFor(widget::WheelEvent* aEvent)
   Init(index);
 
   bool deltaXPreferred =
-    (Abs(aEvent->deltaX) > Abs(aEvent->deltaY) &&
-     Abs(aEvent->deltaX) > Abs(aEvent->deltaZ));
+    (DeprecatedAbs(aEvent->deltaX) > DeprecatedAbs(aEvent->deltaY) &&
+     DeprecatedAbs(aEvent->deltaX) > DeprecatedAbs(aEvent->deltaZ));
   Action* actions = deltaXPreferred ? mOverriddenActionsX : mActions;
   if (actions[index] == ACTION_NONE || actions[index] == ACTION_SCROLL) {
     return actions[index];
@@ -5625,7 +5625,7 @@ nsEventStateManager::WheelPrefs::IsOverOnePageScrollAllowedX(
 {
   Index index = GetIndexFor(aEvent);
   Init(index);
-  return Abs(mMultiplierX[index]) >=
+  return DeprecatedAbs(mMultiplierX[index]) >=
            MIN_MULTIPLIER_VALUE_ALLOWING_OVER_ONE_PAGE_SCROLL;
 }
 
@@ -5635,6 +5635,6 @@ nsEventStateManager::WheelPrefs::IsOverOnePageScrollAllowedY(
 {
   Index index = GetIndexFor(aEvent);
   Init(index);
-  return Abs(mMultiplierY[index]) >=
+  return DeprecatedAbs(mMultiplierY[index]) >=
            MIN_MULTIPLIER_VALUE_ALLOWING_OVER_ONE_PAGE_SCROLL;
 }

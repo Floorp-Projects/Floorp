@@ -31,7 +31,7 @@
 
 using namespace js;
 
-using mozilla::Abs;
+using mozilla::DeprecatedAbs;
 
 #ifndef M_E
 #define M_E             2.7182818284590452354
@@ -105,7 +105,7 @@ js_math_abs(JSContext *cx, unsigned argc, Value *vp)
     }
     if (!ToNumber(cx, vp[2], &x))
         return JS_FALSE;
-    z = Abs(x);
+    z = DeprecatedAbs(x);
     vp->setNumber(z);
     return JS_TRUE;
 }

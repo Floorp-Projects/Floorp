@@ -358,7 +358,7 @@ PRMJ_Now(void)
                itself, but I have only seen it triggered by another program
                doing some kind of file I/O. The symptoms are a negative diff
                followed by an equally large positive diff. */
-            if (mozilla::Abs(diff) > 2 * skewThreshold) {
+            if (mozilla::DeprecatedAbs(diff) > 2 * skewThreshold) {
                 /*fprintf(stderr,"Clock skew detected (diff = %f)!\n", diff);*/
 
                 if (calibrated) {
