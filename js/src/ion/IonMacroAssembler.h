@@ -748,6 +748,11 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void loadBaselineFramePtr(Register framePtr, Register dest);
 
+    void pushBaselineFramePtr(Register framePtr, Register scratch) {
+        loadBaselineFramePtr(framePtr, scratch);
+        push(scratch);
+    }
+
     void printf(const char *output);
     void printf(const char *output, Register value);
 
