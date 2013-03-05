@@ -60,7 +60,7 @@
 /* Vertical disabled */
 .autorepeatbutton-up[disabled="true"]:not([orient="horizontal"]),
 .autorepeatbutton-down[disabled="true"]:not([orient="horizontal"]) {
-  -moz-image-region: rect(0, 24px, 10px, 16px);
+  -moz-image-region: rect(0, 27px, 10px, 18px);
 }
 
 .scrollbutton-up[disabled="true"] {
@@ -80,8 +80,17 @@
 
 autorepeatbutton {
   list-style-image: url("chrome://global/skin/menu/menu-arrow.png");
-  -moz-image-region: rect(0, 8px, 10px, 0);
+  -moz-image-region: rect(0, 9px, 10px, 0);
   -moz-box-align: center;
   -moz-box-pack: center;
   padding: 1px;
+}
+
+@media (min-resolution: 2dppx) {
+  autorepeatbutton > .autorepeatbutton-icon {
+    list-style-image: url("chrome://global/skin/menu/menu-arrow@2x.png");
+    -moz-image-region: rect(0, 18px, 20px, 0);
+    width: 9px;
+    height: 10px;
+  }
 }
