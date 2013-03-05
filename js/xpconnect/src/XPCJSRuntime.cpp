@@ -1711,6 +1711,15 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                   "Memory used by the JaegerMonkey JIT for compilation data: "
                   "JITScripts, native maps, and inline cache structs.");
 
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline-data"),
+                  cStats.baselineData,
+                  "Memory used by the Baseline JIT for compilation data: "
+                  "BaselineScripts.");
+
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline-stubs"),
+                  cStats.baselineStubs,
+                  "Memory used by Baseline IC stubs (excluding code).");
+
     CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("ion-data"),
                   cStats.ionData,
                   "Memory used by the IonMonkey JIT for compilation data: "
