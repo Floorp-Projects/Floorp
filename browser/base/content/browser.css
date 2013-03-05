@@ -627,4 +627,5 @@ chatbox {
 chatbar {
   -moz-binding: url("chrome://browser/content/socialchat.xml#chatbar");
   height: 0;
+  max-height: 0;
 }
