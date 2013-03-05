@@ -81,7 +81,6 @@ using google_breakpad::GetOffset;
 using google_breakpad::IsValidElf;
 using google_breakpad::Module;
 using google_breakpad::StabsToModule;
-using google_breakpad::UniqueString;
 using google_breakpad::scoped_ptr;
 
 //
@@ -270,7 +269,7 @@ bool LoadDwarf(const string& dwarf_filename,
 // supported.
 template<typename ElfClass>
 bool DwarfCFIRegisterNames(const typename ElfClass::Ehdr* elf_header,
-                           std::vector<const UniqueString*>* register_names) {
+                           std::vector<string>* register_names) {
   switch (elf_header->e_machine) {
     case EM_386:
       *register_names = DwarfCFIToModule::RegisterNames::I386();
@@ -298,7 +297,7 @@ bool LoadDwarfCFI(const string& dwarf_filename,
                   Module* module) {
   // Find the appropriate set of register names for this file's
   // architecture.
-  std::vector<const UniqueString*> register_names;
+  std::vector<string> register_names;
   if (!DwarfCFIRegisterNames<ElfClass>(elf_header, &register_names)) {
     fprintf(stderr, "%s: unrecognized ELF machine architecture '%d';"
             " cannot convert DWARF call frame information\n",

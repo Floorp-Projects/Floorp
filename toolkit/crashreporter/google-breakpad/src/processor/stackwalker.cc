@@ -90,7 +90,7 @@ bool Stackwalker::Walk(CallStack* stack) {
     StackFrameSymbolizer::SymbolizerResult symbolizer_result =
         frame_symbolizer_->FillSourceLineInfo(modules_, system_info_,
                                              frame.get());
-    if (symbolizer_result == StackFrameSymbolizer::INTERRUPT) {
+    if (symbolizer_result == StackFrameSymbolizer::kInterrupt) {
       BPLOG(INFO) << "Stack walk is interrupted.";
       return false;
     }
@@ -185,7 +185,7 @@ bool Stackwalker::InstructionAddressSeemsValid(u_int64_t address) {
     return true;
   }
 
-  if (symbolizer_result != StackFrameSymbolizer::NO_ERROR) {
+  if (symbolizer_result != StackFrameSymbolizer::kNoError) {
     // Some error occurred during symbolization, but the address is within a
     // known module
     return true;
