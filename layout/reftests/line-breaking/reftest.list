@@ -10,6 +10,7 @@
 random-if(cocoaWidget) == ja-1.html ja-1-ref.html
 random-if(cocoaWidget) == ja-2.html ja-2-ref.html
 random-if(cocoaWidget) == ja-3.html ja-3-ref.html
+== khmer-1.html khmer-1-ref.html
 == leaders-1.html leaders-1-ref.html
 == markup-src-1.html markup-src-1-ref.html
 == non-breakable-1.html non-breakable-1-ref.html

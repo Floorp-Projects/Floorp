@@ -110,7 +110,6 @@ end:
 //----------------------------------------------------------------------------
 
 #define NS_NET_PREF_ESCAPEUTF8         "network.standard-url.escape-utf8"
-#define NS_NET_PREF_ENABLEIDN          "network.enableIDN"
 #define NS_NET_PREF_ALWAYSENCODEINUTF8 "network.standard-url.encode-utf8"
 
 NS_IMPL_ISUPPORTS1(nsStandardURL::nsPrefObserver, nsIObserver)
@@ -316,7 +315,6 @@ nsStandardURL::InitGlobalObjects()
         nsCOMPtr<nsIObserver> obs( new nsPrefObserver() );
         prefBranch->AddObserver(NS_NET_PREF_ESCAPEUTF8, obs.get(), false);
         prefBranch->AddObserver(NS_NET_PREF_ALWAYSENCODEINUTF8, obs.get(), false);
-        prefBranch->AddObserver(NS_NET_PREF_ENABLEIDN, obs.get(), false);
 
         PrefsChanged(prefBranch, nullptr);
     }
@@ -410,6 +408,13 @@ nsStandardURL::NormalizeIDN(const nsCSubstring &host, nsCString &result)
     NS_ASSERTION(mHostEncoding == eEncoding_ASCII, "unexpected default encoding");
 
     bool isASCII;
+    if (!gIDN) {
+        nsCOMPtr<nsIIDNService> serv(do_GetService(NS_IDNSERVICE_CONTRACTID));
+        if (serv) {
+            NS_ADDREF(gIDN = serv.get());
+        }
+    }
+
     if (gIDN &&
         NS_SUCCEEDED(gIDN->ConvertToDisplayIDN(host, &isASCII, result))) {
         if (!isASCII)
@@ -887,17 +892,6 @@ nsStandardURL::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 #define PREF_CHANGED(p) ((pref == nullptr) || !strcmp(pref, p))
 #define GOT_PREF(p, b) (NS_SUCCEEDED(prefs->GetBoolPref(p, &b)))
 
-    if (PREF_CHANGED(NS_NET_PREF_ENABLEIDN)) {
-        NS_IF_RELEASE(gIDN);
-        if (GOT_PREF(NS_NET_PREF_ENABLEIDN, val) && val) {
-            // initialize IDN
-            nsCOMPtr<nsIIDNService> serv(do_GetService(NS_IDNSERVICE_CONTRACTID));
-            if (serv)
-                NS_ADDREF(gIDN = serv.get());
-        }
-        LOG(("IDN support %s\n", gIDN ? "enabled" : "disabled"));
-    }
-    
     if (PREF_CHANGED(NS_NET_PREF_ESCAPEUTF8)) {
         if (GOT_PREF(NS_NET_PREF_ESCAPEUTF8, val))
             gEscapeUTF8 = val;

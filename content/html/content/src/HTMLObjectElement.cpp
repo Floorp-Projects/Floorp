@@ -4,132 +4,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/HTMLObjectElement.h"
 #include "mozilla/Util.h"
 
+#include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "nsAutoPtr.h"
-#include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
-#include "nsObjectLoadingContent.h"
 #include "nsGkAtoms.h"
 #include "nsError.h"
 #include "nsIDocument.h"
 #include "nsIPluginDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMSVGDocument.h"
-#include "nsIDOMGetSVGDocument.h"
-#include "nsIDOMHTMLObjectElement.h"
 #include "nsFormSubmission.h"
 #include "nsIObjectFrame.h"
 #include "nsNPAPIPluginInstance.h"
-#include "nsIConstraintValidation.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
 
 namespace mozilla {
 namespace dom {
-
-class HTMLObjectElement MOZ_FINAL : public nsGenericHTMLFormElement
-                                  , public nsObjectLoadingContent
-                                  , public nsIDOMHTMLObjectElement
-                                  , public nsIConstraintValidation
-                                  , public nsIDOMGetSVGDocument
-{
-public:
-  using nsIConstraintValidation::GetValidationMessage;
-
-  HTMLObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                    FromParser aFromParser = NOT_FROM_PARSER);
-  virtual ~HTMLObjectElement();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
-  virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
-
-  // nsIDOMHTMLObjectElement
-  NS_DECL_NSIDOMHTMLOBJECTELEMENT
-
-  // nsIDOMGetSVGDocument
-  NS_DECL_NSIDOMGETSVGDOCUMENT
-
-  virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
-                              nsIContent *aBindingParent,
-                              bool aCompileEventHandlers);
-  virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true);
-  virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom *aName,
-                           nsIAtom *aPrefix, const nsAString &aValue,
-                           bool aNotify);
-  virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                             bool aNotify);
-
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, int32_t *aTabIndex);
-  virtual IMEState GetDesiredIMEState();
-
-  // Overriden nsIFormControl methods
-  NS_IMETHOD_(uint32_t) GetType() const
-  {
-    return NS_FORM_OBJECT;
-  }
-
-  NS_IMETHOD Reset();
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission *aFormSubmission);
-
-  virtual bool IsDisabled() const { return false; }
-
-  virtual void DoneAddingChildren(bool aHaveNotified);
-  virtual bool IsDoneAddingChildren();
-
-  virtual bool ParseAttribute(int32_t aNamespaceID,
-                                nsIAtom *aAttribute,
-                                const nsAString &aValue,
-                                nsAttrValue &aResult);
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom *aAttribute) const;
-  virtual nsEventStates IntrinsicState() const;
-  virtual void DestroyContent();
-
-  // nsObjectLoadingContent
-  virtual uint32_t GetCapabilities() const;
-
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  nsresult CopyInnerTo(Element* aDest);
-
-  void StartObjectLoad() { StartObjectLoad(true); }
-
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLObjectElement,
-                                           nsGenericHTMLFormElement)
-
-  virtual nsXPCClassInfo* GetClassInfo();
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-private:
-  /**
-   * Calls LoadObject with the correct arguments to start the plugin load.
-   */
-  NS_HIDDEN_(void) StartObjectLoad(bool aNotify);
-
-  /**
-   * Returns if the element is currently focusable regardless of it's tabindex
-   * value. This is used to know the default tabindex value.
-   */
-  bool IsFocusableForTabIndex();
-  
-  virtual void GetItemValueText(nsAString& text);
-  virtual void SetItemValueText(const nsAString& text);
-
-  bool mIsDoneAddingChildren;
-};
 
 HTMLObjectElement::HTMLObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                                      FromParser aFromParser)
@@ -144,6 +38,8 @@ HTMLObjectElement::HTMLObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
 
   // By default we're in the loading state
   AddStatesSilently(NS_EVENT_STATE_LOADING);
+
+  SetIsDOMBinding();
 }
 
 HTMLObjectElement::~HTMLObjectElement()
@@ -439,19 +335,20 @@ HTMLObjectElement::GetContentDocument(nsIDOMDocument **aContentDocument)
 {
   NS_ENSURE_ARG_POINTER(aContentDocument);
 
-  *aContentDocument = nullptr;
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(GetContentDocument());
+  domDoc.forget(aContentDocument);
+  return NS_OK;
+}
 
-  if (!IsInDoc()) {
-    return NS_OK;
+nsIDOMWindow*
+HTMLObjectElement::GetContentWindow()
+{
+  nsIDocument* doc = GetContentDocument();
+  if (doc) {
+    return doc->GetWindow();
   }
 
-  // XXXbz should this use GetCurrentDoc()?  sXBL/XBL2 issue!
-  nsIDocument *sub_doc = OwnerDoc()->GetSubDocumentFor(this);
-  if (!sub_doc) {
-    return NS_OK;
-  }
-
-  return CallQueryInterface(sub_doc, aContentDocument);
+  return nullptr;
 }
 
 NS_IMETHODIMP
@@ -553,6 +450,24 @@ HTMLObjectElement::CopyInnerTo(Element* aDest)
   }
 
   return rv;
+}
+
+JSObject*
+HTMLObjectElement::WrapNode(JSContext* aCx, JSObject* aScope,
+                            bool* aTriedToWrap)
+{
+  JSObject* obj = HTMLObjectElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  if (!obj) {
+    return nullptr;
+  }
+  SetupProtoChain(aCx, obj);
+  return obj;
+}
+
+JSObject*
+HTMLObjectElement::GetCanonicalPrototype(JSContext* aCx, JSObject* aGlobal)
+{
+  return HTMLObjectElementBinding::GetProtoObject(aCx, aGlobal);
 }
 
 } // namespace dom

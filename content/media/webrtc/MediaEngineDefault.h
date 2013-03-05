@@ -34,14 +34,13 @@ class MediaEngineDefaultVideoSource : public nsITimerCallback,
                                       public MediaEngineVideoSource
 {
 public:
-  MediaEngineDefaultVideoSource(int aWidth, int aHeight, int aFPS);
+  MediaEngineDefaultVideoSource();
   ~MediaEngineDefaultVideoSource();
 
   virtual void GetName(nsAString&);
   virtual void GetUUID(nsAString&);
 
-  virtual const MediaEngineVideoOptions *GetOptions();
-  virtual nsresult Allocate();
+  virtual nsresult Allocate(const MediaEnginePrefs &aPrefs);
   virtual nsresult Deallocate();
   virtual nsresult Start(SourceMediaStream*, TrackID);
   virtual nsresult Stop(SourceMediaStream*, TrackID);
@@ -73,7 +72,7 @@ protected:
 
   SourceMediaStream* mSource;
   layers::PlanarYCbCrImage* mImage;
-  MediaEngineVideoOptions mOpts;
+  MediaEnginePrefs mOpts;
   int mCb;
   int mCr;
 };
@@ -88,7 +87,7 @@ public:
   virtual void GetName(nsAString&);
   virtual void GetUUID(nsAString&);
 
-  virtual nsresult Allocate();
+  virtual nsresult Allocate(const MediaEnginePrefs &aPrefs);
   virtual nsresult Deallocate();
   virtual nsresult Start(SourceMediaStream*, TrackID);
   virtual nsresult Stop(SourceMediaStream*, TrackID);

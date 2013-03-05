@@ -485,17 +485,29 @@
     "kind": "flag",
     "description": "Was the disk startup cache file detected as invalid"
   },
-  "WORD_CACHE_HITS": {
+  "WORD_CACHE_HITS_CONTENT": {
     "kind": "exponential",
     "high": "256",
     "n_buckets": 30,
-    "description": "Word cache hits (chars)"
+    "description": "Word cache hits, content text (chars)"
   },
-  "WORD_CACHE_MISSES": {
+  "WORD_CACHE_HITS_CHROME": {
     "kind": "exponential",
     "high": "256",
     "n_buckets": 30,
-    "description": "Word cache misses (chars)"
+    "description": "Word cache hits, chrome text (chars)"
+  },
+  "WORD_CACHE_MISSES_CONTENT": {
+    "kind": "exponential",
+    "high": "256",
+    "n_buckets": 30,
+    "description": "Word cache misses, content text (chars)"
+  },
+  "WORD_CACHE_MISSES_CHROME": {
+    "kind": "exponential",
+    "high": "256",
+    "n_buckets": 30,
+    "description": "Word cache misses, chrome text (chars)"
   },
   "FONT_CACHE_HIT": {
     "kind": "boolean",
@@ -1588,6 +1600,10 @@
     "extended_statistics_ok": true,
     "description": "Time spent shutting down plugins (ms)"
   },
+  "PLUGIN_CALLED_DIRECTLY": {
+    "kind": "flag",
+    "description": "A plugin object was successfully invoked as a function"
+  },
   "MOZ_SQLITE_OPEN_MS": {
     "kind": "exponential",
     "high": "3000",
@@ -2460,10 +2476,6 @@
   "XMLHTTPREQUEST_ASYNC_OR_SYNC": {
     "kind": "boolean",
     "description": "Type of XMLHttpRequest, async or sync"
-  },
-  "MULTIPART_XHR_RESPONSE": {
-    "kind": "boolean",
-    "description": "XMLHttpRequest response was of type multipart/x-mixed-replace."
   },
   "DOM_TIMERS_FIRED_PER_NATIVE_TIMEOUT": {
     "kind": "exponential",

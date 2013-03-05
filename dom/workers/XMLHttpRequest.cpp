@@ -887,23 +887,6 @@ public:
   }
 };
 
-class SetMultipartRunnable : public WorkerThreadProxySyncRunnable
-{
-  bool mValue;
-
-public:
-  SetMultipartRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
-                       bool aValue)
-  : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy), mValue(aValue)
-  { }
-
-  nsresult
-  MainThreadRun()
-  {
-    return mProxy->mXHR->SetMultipart(mValue);
-  }
-};
-
 class SetBackgroundRequestRunnable : public WorkerThreadProxySyncRunnable
 {
   bool mValue;
@@ -1055,7 +1038,6 @@ class OpenRunnable : public WorkerThreadProxySyncRunnable
   nsString mUserStr;
   Optional<nsAString> mPassword;
   nsString mPasswordStr;
-  bool mMultipart;
   bool mBackgroundRequest;
   bool mWithCredentials;
   uint32_t mTimeout;
@@ -1065,10 +1047,10 @@ public:
                const nsAString& aMethod, const nsAString& aURL,
                const Optional<nsAString>& aUser,
                const Optional<nsAString>& aPassword,
-               bool aMultipart, bool aBackgroundRequest, bool aWithCredentials,
+               bool aBackgroundRequest, bool aWithCredentials,
                uint32_t aTimeout)
   : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy), mMethod(aMethod),
-    mURL(aURL), mMultipart(aMultipart),
+    mURL(aURL),
     mBackgroundRequest(aBackgroundRequest), mWithCredentials(aWithCredentials),
     mTimeout(aTimeout)
   {
@@ -1102,11 +1084,6 @@ public:
     }
 
     nsresult rv;
-
-    if (mMultipart) {
-      rv = mProxy->mXHR->SetMultipart(mMultipart);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
 
     if (mBackgroundRequest) {
       rv = mProxy->mXHR->SetMozBackgroundRequest(mBackgroundRequest);
@@ -1453,7 +1430,7 @@ XMLHttpRequest::XMLHttpRequest(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 : XMLHttpRequestEventTarget(aCx), mJSObject(NULL), mUpload(NULL),
   mWorkerPrivate(aWorkerPrivate),
   mResponseType(XMLHttpRequestResponseTypeValues::Text), mTimeout(0),
-  mJSObjectRooted(false), mMultipart(false), mBackgroundRequest(false),
+  mJSObjectRooted(false), mBackgroundRequest(false),
   mWithCredentials(false), mCanceled(false), mMozAnon(false), mMozSystem(false)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
@@ -1785,7 +1762,7 @@ XMLHttpRequest::Open(const nsAString& aMethod, const nsAString& aUrl,
 
   nsRefPtr<OpenRunnable> runnable =
     new OpenRunnable(mWorkerPrivate, mProxy, aMethod, aUrl, aUser, aPassword,
-                     mMultipart, mBackgroundRequest, mWithCredentials,
+                     mBackgroundRequest, mWithCredentials,
                      mTimeout);
 
   if (!runnable->Dispatch(GetJSContext())) {
@@ -1869,32 +1846,6 @@ XMLHttpRequest::SetWithCredentials(bool aWithCredentials, ErrorResult& aRv)
 
   nsRefPtr<SetWithCredentialsRunnable> runnable =
     new SetWithCredentialsRunnable(mWorkerPrivate, mProxy, aWithCredentials);
-  if (!runnable->Dispatch(GetJSContext())) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-}
-
-void
-XMLHttpRequest::SetMultipart(bool aMultipart, ErrorResult& aRv)
-{
-  mWorkerPrivate->AssertIsOnWorkerThread();
-
-  if (mCanceled) {
-    aRv.Throw(UNCATCHABLE_EXCEPTION);
-    return;
-  }
-
-  mMultipart = aMultipart;
-
-  if (!mProxy) {
-    // Open may not have been called yet, in which case we'll handle the
-    // multipart in OpenRunnable.
-    return;
-  }
-
-  nsRefPtr<SetMultipartRunnable> runnable =
-    new SetMultipartRunnable(mWorkerPrivate, mProxy, aMultipart);
   if (!runnable->Dispatch(GetJSContext())) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;

@@ -1,0 +1,224 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/sq.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/sq.xml
+ */
+sq{
+    AuxExemplarCharacters{"[w]"}
+    ExemplarCharacters{
+        "[a b c ç d {dh} e ë f g {gj} h i j k l {ll} m n {nj} o p q r {rr} s {sh} t {"
+        "th} u v x {xh} y z {zh}]"
+    }
+    ExemplarCharactersIndex{
+        "[A B C Ç D {DH} E Ë F G {GJ} H I J K L {LL} M N {NJ} O P Q R {RR} S {SH} T {"
+        "TH} U V W X {XH} Y Z {ZH}]"
+    }
+    LocaleScript{
+        "Latn",
+    }
+    NumberElements{
+        latn{
+            patterns{
+                currencyFormat{"¤#,##0.00"}
+            }
+            symbols{
+                decimal{","}
+                group{" "}
+            }
+        }
+    }
+    Version{"2.0.77.38"}
+    calendar{
+        gregorian{
+            AmPmMarkers{
+                "PD",
+                "MD",
+            }
+            DateTimePatterns{
+                "h.mm.ss.a zzzz",
+                "h.mm.ss.a z",
+                "h.mm.ss.a",
+                "h.mm.a",
+                "EEEE, dd MMMM y",
+                "dd MMMM y",
+                "yyyy-MM-dd",
+                "yy-MM-dd",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                H{"H"}
+                Hm{"H.mm"}
+                Hms{"H.mm.ss"}
+                M{"L"}
+                MEd{"E, d.M"}
+                MMM{"LLL"}
+                MMMEd{"E d MMM"}
+                MMMMEd{"E d MMMM"}
+                MMMMd{"d MMMM"}
+                MMMd{"d MMM"}
+                Md{"M-d"}
+                d{"d"}
+                h{"h.a"}
+                hm{"h.mm.a"}
+                hms{"h.mm.ss.a"}
+                ms{"mm.ss"}
+                y{"y"}
+                yM{"M.yyyy"}
+                yMEd{"E, d.M.yyyy"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, d MMM y"}
+                yMMMM{"MMMM y"}
+                yyyyMMMM{"MMMM y"}
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "Die",
+                        "Hën",
+                        "Mar",
+                        "Mër",
+                        "Enj",
+                        "Pre",
+                        "Sht",
+                    }
+                    wide{
+                        "e diel",
+                        "e hënë",
+                        "e martë",
+                        "e mërkurë",
+                        "e enjte",
+                        "e premte",
+                        "e shtunë",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "D",
+                        "H",
+                        "M",
+                        "M",
+                        "E",
+                        "P",
+                        "S",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "p.e.r.",
+                    "n.e.r.",
+                }
+            }
+            intervalFormats{
+                yMMM{
+                    M{"yyyy-MM – MM"}
+                    y{"MMM y - MMM y"}
+                }
+                yMMMEd{
+                    M{"E, dd MMM - E, dd MMM y"}
+                    d{"E, dd - E, dd MMM y"}
+                    y{"E, dd MMM y - E, dd MMM y"}
+                }
+                yMMMd{
+                    M{"dd MMM - dd MMM y"}
+                    d{"dd-dd MMM y"}
+                    y{"dd MMM y - dd MMM y"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Jan",
+                        "Shk",
+                        "Mar",
+                        "Pri",
+                        "Maj",
+                        "Qer",
+                        "Kor",
+                        "Gsh",
+                        "Sht",
+                        "Tet",
+                        "Nën",
+                        "Dhj",
+                    }
+                    wide{
+                        "janar",
+                        "shkurt",
+                        "mars",
+                        "prill",
+                        "maj",
+                        "qershor",
+                        "korrik",
+                        "gusht",
+                        "shtator",
+                        "tetor",
+                        "nëntor",
+                        "dhjetor",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "J",
+                        "S",
+                        "M",
+                        "P",
+                        "M",
+                        "Q",
+                        "K",
+                        "G",
+                        "S",
+                        "T",
+                        "N",
+                        "D",
+                    }
+                }
+            }
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"‘"}
+        alternateQuotationStart{"‚"}
+        quotationEnd{"“"}
+        quotationStart{"„"}
+    }
+    units{
+        day{
+            one{"{0} ditë"}
+            other{"{0} ditë"}
+        }
+        hour{
+            one{"{0} orë"}
+            other{"{0} orë"}
+        }
+        minute{
+            one{"{0} minutë"}
+            other{"{0} minuta"}
+        }
+        month{
+            one{"{0} muaj"}
+            other{"{0} muaj"}
+        }
+        second{
+            one{"{0} sekondë"}
+            other{"{0} sekonda"}
+        }
+        week{
+            one{"{0} javë"}
+            other{"{0} javë"}
+        }
+        year{
+            one{"{0} vit"}
+            other{"{0} vjet"}
+        }
+    }
+}

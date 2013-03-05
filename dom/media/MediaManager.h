@@ -13,6 +13,8 @@
 #include "nsClassHashtable.h"
 #include "nsRefPtrHashtable.h"
 #include "nsObserverService.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 #include "nsPIDOMWindow.h"
 #include "nsIDOMNavigatorUserMedia.h"
@@ -379,25 +381,8 @@ public:
   // NOTE: never Dispatch(....,NS_DISPATCH_SYNC) to the MediaManager
   // thread from the MainThread, as we NS_DISPATCH_SYNC to MainThread
   // from MediaManager thread.
-  static MediaManager* Get() {
-    if (!sSingleton) {
-      sSingleton = new MediaManager();
+  static MediaManager* Get();
 
-      NS_NewThread(getter_AddRefs(sSingleton->mMediaThread));
-      MM_LOG(("New Media thread for gum"));
-
-      NS_ASSERTION(NS_IsMainThread(), "Only create MediaManager on main thread");
-      nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-      if (obs) {
-        obs->AddObserver(sSingleton, "xpcom-shutdown", false);
-        obs->AddObserver(sSingleton, "getUserMedia:response:allow", false);
-        obs->AddObserver(sSingleton, "getUserMedia:response:deny", false);
-        obs->AddObserver(sSingleton, "getUserMedia:revoke", false);
-      }
-      // else MediaManager won't work properly and will leak (see bug 837874)
-    }
-    return sSingleton;
-  }
   static nsIThread* GetThread() {
     return Get()->mMediaThread;
   }
@@ -431,20 +416,20 @@ public:
     nsIDOMGetUserMediaErrorCallback* onError);
   void OnNavigation(uint64_t aWindowID);
 
+  MediaEnginePrefs mPrefs;
+
 private:
   WindowTable *GetActiveWindows() {
     NS_ASSERTION(NS_IsMainThread(), "Only access windowlist on main thread");
     return &mActiveWindows;
   }
 
+  void GetPref(nsIPrefBranch *aBranch, const char *aPref,
+               const char *aData, int32_t *aVal);
+  void GetPrefs(nsIPrefBranch *aBranch, const char *aData);
+
   // Make private because we want only one instance of this class
-  MediaManager()
-  : mMediaThread(nullptr)
-  , mMutex("mozilla::MediaManager")
-  , mBackend(nullptr) {
-    mActiveWindows.Init();
-    mActiveCallbacks.Init();
-  }
+  MediaManager();
 
   ~MediaManager() {
     delete mBackend;

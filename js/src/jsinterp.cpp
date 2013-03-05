@@ -1688,6 +1688,7 @@ BEGIN_CASE(JSOP_IN)
     if (!JSObject::lookupGeneric(cx, obj, id, &obj2, &prop))
         goto error;
     bool cond = prop != NULL;
+    prop = NULL;
     TRY_BRANCH_AFTER_COND(cond, 2);
     regs.sp--;
     regs.sp[-1].setBoolean(cond);

@@ -1,0 +1,154 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/zh_Hans_HK.xml
+// *
+// ***************************************************************************
+zh_Hans_HK{
+    NumberElements{
+        latn{
+            patterns{
+                currencyFormat{"¤#,##0.00"}
+            }
+        }
+    }
+    Version{"2.0.78.47"}
+    calendar{
+        buddhist{
+            DateTimePatterns{
+                "zzzzah:mm:ss",
+                "zah:mm:ss",
+                "ah:mm:ss",
+                "ah:mm",
+                "Gy年M月d日EEEE",
+                "Gy年M月d日",
+                "Gy年M月d日",
+                "Gd/M/yy",
+                "{1} {0}",
+                "{1}{0}",
+                "{1}{0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                M{"L"}
+            }
+        }
+        gregorian{
+            DateTimePatterns{
+                "zzzzah:mm:ss",
+                "zah:mm:ss",
+                "ah:mm:ss",
+                "ah:mm",
+                "y年M月d日EEEE",
+                "y年M月d日",
+                "y年M月d日",
+                "d/M/yy",
+                "{1} {0}",
+                "{1}{0}",
+                "{1}{0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                HHmm{"HH:mm"}
+                M{"L"}
+                MMMMdd{"M月d日"}
+                Md{"M-d"}
+                yM{"y年M月"}
+            }
+            fields{
+                era{
+                    dn{"纪元"}
+                }
+            }
+            intervalFormats{
+                Hmv{
+                    H{"vHH:mm–HH:mm"}
+                    m{"vHH:mm–HH:mm"}
+                }
+                Hv{
+                    H{"vHH–HH"}
+                }
+                fallback{"{0}–{1}"}
+                h{
+                    h{"ah至h时"}
+                }
+                yM{
+                    M{"yy年M月至yy年M月"}
+                }
+                yMEd{
+                    M{"d/M/yyE至d/M/yyE"}
+                    d{"d/M/yyE至d/M/yyE"}
+                    y{"d/M/yyE至d/M/yyE"}
+                }
+                yMMMEd{
+                    d{"y年M月d日E至M月d日E"}
+                }
+                yMd{
+                    M{"d/M/yy至d/M/yy"}
+                    d{"d/M/yy至d/M/yy"}
+                    y{"d/M/yy至d/M/yy"}
+                }
+            }
+        }
+        islamic{
+            DateTimePatterns{
+                "zzzzah:mm:ss",
+                "zah:mm:ss",
+                "ah:mm:ss",
+                "ah:mm",
+                "Gy年M月d日EEEE",
+                "Gy年M月d日",
+                "Gy年M月d日",
+                "Gd/M/yy",
+                "{1} {0}",
+                "{1}{0}",
+                "{1}{0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+            }
+        }
+        japanese{
+            DateTimePatterns{
+                "zzzzah:mm:ss",
+                "zah:mm:ss",
+                "ah:mm:ss",
+                "ah:mm",
+                "Gy年M月d日EEEE",
+                "Gy年M月d日",
+                "Gy年M月d日",
+                "Gd/M/yy",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+        }
+        roc{
+            DateTimePatterns{
+                "zzzzah:mm:ss",
+                "zah:mm:ss",
+                "ah:mm:ss",
+                "ah:mm",
+                "Gy年M月d日EEEE",
+                "Gy年M月d日",
+                "Gy年M月d日",
+                "Gd/M/yy",
+                "{1} {0}",
+                "{1}{0}",
+                "{1}{0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+        }
+    }
+}

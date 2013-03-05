@@ -90,6 +90,8 @@ else
 DIST_SUBDIRS = $(DIST_SUBDIR)
 endif
 
+GENERATED_DIRS_libs = $(DIST)/bin
+
 include $(topsrcdir)/config/rules.mk
 
 include $(topsrcdir)/toolkit/locales/l10n.mk
@@ -208,7 +210,7 @@ installers-%: clobber-% langpack-% repackage-win32-installer-% repackage-zip-%
 ifdef MOZ_UPDATER
 # Note that we want updater.ini to be in the top directory, not the browser/
 # subdirectory, because that's where the updater is installed and runs.
-libs:: $(call MERGE_FILE,updater/updater.ini) $(call mkdir_deps,$(DIST)/bin)
+libs:: $(call MERGE_FILE,updater/updater.ini)
 ifeq ($(OS_ARCH),WINNT)
 	cat $< $(srcdir)/../installer/windows/nsis/updater_append.ini | \
 	  sed -e "s/^InfoText=/Info=/" -e "s/^TitleText=/Title=/" | \

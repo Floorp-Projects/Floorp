@@ -126,12 +126,32 @@ void ImageContainerChild::StopChild()
 bool ImageContainerChild::RecvReturnImage(const SharedImage& aImage)
 {
   SharedImage* img = new SharedImage(aImage);
+  // Hold the image because removing it from the image queue
+  // risks deleting the object before we can put it into
+  // the pool
+  nsRefPtr<Image> image;
   // Remove oldest image from the queue.
   if (mImageQueue.Length() > 0) {
+    image = mImageQueue[0];
     mImageQueue.RemoveElementAt(0);
   }
-  if (!AddSharedImageToPool(img) || mStop) {
-    DestroySharedImage(*img);
+  bool isSharedImage;
+  if (image && image->GetFormat() == PLANAR_YCBCR) {
+    SharedPlanarYCbCrImage* sharedYCbCr
+      = static_cast<PlanarYCbCrImage*>(image.get())->AsSharedPlanarYCbCrImage();
+    isSharedImage = !!sharedYCbCr;
+  } else if (image && image->GetFormat() == SHARED_RGB) {
+    SharedRGBImage *rgbImage = static_cast<SharedRGBImage*>(image.get());
+    isSharedImage = !!rgbImage;
+  } else {
+    isSharedImage = false;
+  }
+  if (!isSharedImage) {
+    if (!AddSharedImageToPool(img) || mStop) {
+      delete img;
+      DestroySharedImage(*img);
+    }
+  } else {
     delete img;
   }
   return true;
@@ -383,6 +403,7 @@ void ImageContainerChild::SendImageAsync(ImageContainer* aContainer,
 
   if (InImageBridgeChildThread()) {
     SendImageNow(aImage);
+    return;
   }
 
   // Sending images and (potentially) allocating shmems must be done 
@@ -451,7 +472,7 @@ bool ImageContainerChild::AllocUnsafeShmemSync(size_t aBufSize,
     return false;
   }
   if (InImageBridgeChildThread()) {
-    AllocUnsafeShmem(aBufSize, aType, aShmem);
+    return AllocUnsafeShmem(aBufSize, aType, aShmem);
   }
   ReentrantMonitor barrier("ImageContainerChild::AllocUnsafeShmemSync");
   ReentrantMonitorAutoEnter autoBarrier(barrier);

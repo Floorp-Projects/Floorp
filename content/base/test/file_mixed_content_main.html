@@ -57,7 +57,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=62178
   var objectCount = 0;
 
   function objectStatus(object) {
-    object instanceof SpecialPowers.Ci.nsIObjectLoadingContent;
+    // Expose our privileged bits on the object
+    object = SpecialPowers.wrap(object);
 
     if (object.displayedType != SpecialPowers.Ci.nsIObjectLoadingContent.TYPE_NULL) {
       //object loaded

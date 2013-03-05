@@ -1,0 +1,841 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/main/ro.xml
+// *
+// ***************************************************************************
+/**
+ *  ICU <specials> source: <path>/xml/main/ro.xml
+ */
+ro{
+    Version{"2.0.78.38"}
+    zoneStrings{
+        "Africa:Addis_Ababa"{
+            ec{"Addis Abeba"}
+        }
+        "Africa:Algiers"{
+            ec{"Alger"}
+        }
+        "Africa:Asmera"{
+            ec{"Asmara"}
+        }
+        "Africa:Ndjamena"{
+            ec{"N'Djamena"}
+        }
+        "Africa:Sao_Tome"{
+            ec{"São Tomé"}
+        }
+        "America:Asuncion"{
+            ec{"Asunción"}
+        }
+        "America:Curacao"{
+            ec{"Curaçao"}
+        }
+        "America:Guadeloupe"{
+            ec{"Guadalupe"}
+        }
+        "America:Jujuy"{
+            ec{"Provincia Jujuy"}
+        }
+        "America:Lower_Princes"{
+            ec{"Lower Prince's Quarter"}
+        }
+        "America:Martinique"{
+            ec{"Martinica"}
+        }
+        "America:Mexico_City"{
+            ec{"Mexico"}
+        }
+        "America:Noronha"{
+            ec{"Fernando de Noronha"}
+        }
+        "America:North_Dakota:Beulah"{
+            ec{"Beulah, Dakota de Nord"}
+        }
+        "America:North_Dakota:Center"{
+            ec{"Centru, Dakota de Nord"}
+        }
+        "America:North_Dakota:New_Salem"{
+            ec{"New Salem, Dakota de Nord"}
+        }
+        "America:Scoresbysund"{
+            ec{"Ittoqqortoormiit"}
+        }
+        "America:St_Barthelemy"{
+            ec{"Saint Barthélemy"}
+        }
+        "America:St_Johns"{
+            ec{"St. John’s"}
+        }
+        "America:St_Kitts"{
+            ec{"St. Kitts"}
+        }
+        "America:St_Lucia"{
+            ec{"St. Lucia"}
+        }
+        "America:St_Thomas"{
+            ec{"St. Thomas"}
+        }
+        "America:St_Vincent"{
+            ec{"Saint Vincent și Grenadines"}
+        }
+        "Antarctica:DumontDUrville"{
+            ec{"Dumont D'Urville"}
+        }
+        "Antarctica:South_Pole"{
+            ec{"Polul Sud"}
+        }
+        "Antarctica:Syowa"{
+            ec{"Showa"}
+        }
+        "Asia:Aqtau"{
+            ec{"Aktau"}
+        }
+        "Asia:Aqtobe"{
+            ec{"Aktobe"}
+        }
+        "Asia:Ashgabat"{
+            ec{"Așgabat"}
+        }
+        "Asia:Baghdad"{
+            ec{"Bagdad"}
+        }
+        "Asia:Bishkek"{
+            ec{"Bișkek"}
+        }
+        "Asia:Calcutta"{
+            ec{"Calcutta"}
+        }
+        "Asia:Damascus"{
+            ec{"Damasc"}
+        }
+        "Asia:Dhaka"{
+            ec{"Dacca"}
+        }
+        "Asia:Dushanbe"{
+            ec{"Dușanbe"}
+        }
+        "Asia:Irkutsk"{
+            ec{"Irkuțk"}
+        }
+        "Asia:Jerusalem"{
+            ec{"Ierusalim"}
+        }
+        "Asia:Kamchatka"{
+            ec{"Kamciatka"}
+        }
+        "Asia:Kashgar"{
+            ec{"Kaxgar"}
+        }
+        "Asia:Krasnoyarsk"{
+            ec{"Krasnoiarsk"}
+        }
+        "Asia:Kuwait"{
+            ec{"Kuweit"}
+        }
+        "Asia:Macau"{
+            ec{"Macao"}
+        }
+        "Asia:Oral"{
+            ec{"Uralsk"}
+        }
+        "Asia:Pyongyang"{
+            ec{"Phenian"}
+        }
+        "Asia:Qyzylorda"{
+            ec{"Kyzylorda"}
+        }
+        "Asia:Rangoon"{
+            ec{"Yangon"}
+        }
+        "Asia:Riyadh"{
+            ec{"Riyad"}
+        }
+        "Asia:Sakhalin"{
+            ec{"Sahalin"}
+        }
+        "Asia:Seoul"{
+            ec{"Seul"}
+        }
+        "Asia:Tehran"{
+            ec{"Teheran"}
+        }
+        "Asia:Tokyo"{
+            ec{"Tokio"}
+        }
+        "Asia:Ulaanbaatar"{
+            ec{"Ulan Bator"}
+        }
+        "Asia:Yakutsk"{
+            ec{"Yakuțk"}
+        }
+        "Asia:Yekaterinburg"{
+            ec{"Ekaterinburg"}
+        }
+        "Asia:Yerevan"{
+            ec{"Erevan"}
+        }
+        "Atlantic:Azores"{
+            ec{"Azore"}
+        }
+        "Atlantic:Canary"{
+            ec{"Insulele Canare"}
+        }
+        "Atlantic:Cape_Verde"{
+            ec{"Capul Verde"}
+        }
+        "Atlantic:South_Georgia"{
+            ec{"Georgia de Sud"}
+        }
+        "Atlantic:St_Helena"{
+            ec{"Sf. Elena"}
+        }
+        "Atlantic:Stanley"{
+            ec{"Stanley, Insulele Falkland"}
+        }
+        "Australia:Lindeman"{
+            ec{"Insulele Lindeman"}
+        }
+        "Australia:Lord_Howe"{
+            ec{"Insula Lord Howe"}
+        }
+        "Etc:Unknown"{
+            ec{"Oraș necunoscut"}
+        }
+        "Europe:Athens"{
+            ec{"Atena"}
+        }
+        "Europe:Belgrade"{
+            ec{"Belgrad"}
+        }
+        "Europe:Brussels"{
+            ec{"Bruxelles"}
+        }
+        "Europe:Bucharest"{
+            ec{"București"}
+        }
+        "Europe:Budapest"{
+            ec{"Budapesta"}
+        }
+        "Europe:Chisinau"{
+            ec{"Chișinău"}
+        }
+        "Europe:Copenhagen"{
+            ec{"Copenhaga"}
+        }
+        "Europe:Dublin"{
+            ld{"Ora de vară a Irlandei"}
+        }
+        "Europe:Isle_of_Man"{
+            ec{"Insula Man"}
+        }
+        "Europe:Jersey"{
+            ec{"Insula Jersey"}
+        }
+        "Europe:Lisbon"{
+            ec{"Lisabona"}
+        }
+        "Europe:London"{
+            ec{"Londra"}
+            ld{"Ora de vară britanică"}
+        }
+        "Europe:Luxembourg"{
+            ec{"Luxemburg"}
+        }
+        "Europe:Moscow"{
+            ec{"Moscova"}
+        }
+        "Europe:Podgorica"{
+            ec{"Podgorița"}
+        }
+        "Europe:Prague"{
+            ec{"Praga"}
+        }
+        "Europe:Rome"{
+            ec{"Roma"}
+        }
+        "Europe:Tirane"{
+            ec{"Tirana"}
+        }
+        "Europe:Vienna"{
+            ec{"Viena"}
+        }
+        "Europe:Warsaw"{
+            ec{"Varșovia"}
+        }
+        "Europe:Zaporozhye"{
+            ec{"Zaporoje"}
+        }
+        "Europe:Zurich"{
+            ec{"Zürich"}
+        }
+        "Indian:Christmas"{
+            ec{"Insula Crăciunului"}
+        }
+        "Indian:Cocos"{
+            ec{"Insulele Cocos"}
+        }
+        "Indian:Comoro"{
+            ec{"Comore"}
+        }
+        "Indian:Kerguelen"{
+            ec{"Insulele Kerguelen"}
+        }
+        "Indian:Mahe"{
+            ec{"Insula Mahe"}
+        }
+        "Indian:Maldives"{
+            ec{"Maldive"}
+        }
+        "Indian:Mayotte"{
+            ec{"Insula Mayotte"}
+        }
+        "Indian:Reunion"{
+            ec{"Réunion"}
+        }
+        "Pacific:Easter"{
+            ec{"Insula Paștelui"}
+        }
+        "Pacific:Galapagos"{
+            ec{"Insulele Galapagos"}
+        }
+        "Pacific:Gambier"{
+            ec{"Insulele Gambier"}
+        }
+        "Pacific:Guadalcanal"{
+            ec{"Insula Guadalcanal"}
+        }
+        "Pacific:Guam"{
+            ec{"Insula Guam"}
+        }
+        "Pacific:Johnston"{
+            ec{"Atolul Johnston"}
+        }
+        "Pacific:Kwajalein"{
+            ec{"Insula Kwajalein"}
+        }
+        "Pacific:Marquesas"{
+            ec{"Marchize"}
+        }
+        "Pacific:Midway"{
+            ec{"Atolul Midway"}
+        }
+        "Pacific:Niue"{
+            ec{"Insulele Niue"}
+        }
+        "Pacific:Norfolk"{
+            ec{"Insula Norfolk"}
+        }
+        "Pacific:Pitcairn"{
+            ec{"Insula Pitcairn"}
+        }
+        "Pacific:Rarotonga"{
+            ec{"Insula Rarotonga"}
+        }
+        "Pacific:Tarawa"{
+            ec{"Atolul Tarawa"}
+        }
+        "Pacific:Wake"{
+            ec{"Insula Wake"}
+        }
+        "Pacific:Wallis"{
+            ec{"Insula Wallis"}
+        }
+        "meta:Acre"{
+            ld{"Ora de vară Acre"}
+            lg{"Ora Acre"}
+            ls{"Ora standard Acre"}
+        }
+        "meta:Afghanistan"{
+            ls{"Ora Afganistanului"}
+        }
+        "meta:Africa_Central"{
+            ls{"Ora Africii Centrale"}
+        }
+        "meta:Africa_Eastern"{
+            ls{"Ora Africii Orientale"}
+        }
+        "meta:Africa_Southern"{
+            ls{"Ora Africii Meridionale"}
+        }
+        "meta:Africa_Western"{
+            ld{"Ora de vară a Africii Occidentale"}
+            lg{"Ora Africii Occidentale"}
+            ls{"Ora standard Africii Occidentale"}
+        }
+        "meta:Alaska"{
+            ld{"Ora de vară Alaska"}
+            lg{"Ora Alaska"}
+            ls{"Ora standard Alaska"}
+        }
+        "meta:Alaska_Hawaii"{
+            ld{"Ora de vară Alaska-Hawaii"}
+            lg{"Ora Alaska-Hawaii"}
+            ls{"Ora standard Alaska-Hawaii"}
+        }
+        "meta:Amazon"{
+            ld{"Ora de vară a Amazonului"}
+            lg{"Ora Amazon"}
+            ls{"Ora standard a Amazonului"}
+        }
+        "meta:America_Central"{
+            ld{"Ora de vară centrală"}
+            lg{"Ora Centrală"}
+            ls{"Ora standard centrală"}
+        }
+        "meta:America_Eastern"{
+            ld{"Ora de vară orientală"}
+            lg{"Ora orientală"}
+            ls{"Ora standard orientală"}
+        }
+        "meta:America_Mountain"{
+            ld{"Ora de vară în zona montană"}
+            lg{"Ora zonei montane"}
+            ls{"Ora standard în zona montană"}
+        }
+        "meta:America_Pacific"{
+            ld{"Ora de vară în zona Pacific"}
+            lg{"Ora zonei Pacific"}
+            ls{"Ora standard în zona Pacific"}
+        }
+        "meta:Anadyr"{
+            ld{"Ora de vară din Anadyr"}
+            lg{"Ora din Anadyr"}
+            ls{"Ora standard din Anadyr"}
+        }
+        "meta:Arabian"{
+            ld{"Ora de vară arabă"}
+            lg{"Ora arabă"}
+            ls{"Ora standard arabă"}
+        }
+        "meta:Argentina"{
+            ld{"Ora de vară a Argentinei"}
+            lg{"Ora Argentinei"}
+            ls{"Ora standard din Argentina"}
+        }
+        "meta:Argentina_Western"{
+            ld{"Ora de vară vestică din Argentina"}
+            lg{"Ora regiunii vestice din Argentina"}
+            ls{"Ora Argentinei Occidentale"}
+        }
+        "meta:Armenia"{
+            ld{"Ora de vară a Armeniei"}
+            lg{"Ora Armeniei"}
+            ls{"Ora standard din Armenia"}
+        }
+        "meta:Atlantic"{
+            ld{"Ora de vară în zona Atlantic"}
+            lg{"Ora Atlantic"}
+            ls{"Ora standard în zona Atlantic"}
+        }
+        "meta:Australia_Central"{
+            ld{"Ora de vară a Australiei Centrale"}
+            lg{"Ora Australiei Centrale"}
+            ls{"Ora standard a Australiei Centrale"}
+        }
+        "meta:Australia_CentralWestern"{
+            ld{"Ora de vară a Australiei Central Occidentale"}
+            lg{"Ora Australiei Central Occidentale"}
+            ls{"Ora standard a Australiei Central Occidentale"}
+        }
+        "meta:Australia_Eastern"{
+            ld{"Ora de vară a Australiei Orientale"}
+            lg{"Ora Australiei Orientale"}
+            ls{"Ora standard a Australiei Orientale"}
+        }
+        "meta:Australia_Western"{
+            ld{"Ora de vară a Australiei Occidentale"}
+            lg{"Ora Australiei Occidentale"}
+            ls{"Ora standard a Australiei Occidentale"}
+        }
+        "meta:Azerbaijan"{
+            ld{"Ora de vară a Azerbaidjanului"}
+            lg{"Ora Azerbaidjanului"}
+            ls{"Ora standard a Azerbaidjanului"}
+        }
+        "meta:Bangladesh"{
+            ld{"Ora de vară din Bangladesh"}
+            lg{"Ora din Bangladesh"}
+            ls{"Ora standard din Bangladesh"}
+        }
+        "meta:Bering"{
+            ld{"Ora de vară Bering"}
+            lg{"Ora Bering"}
+            ls{"Ora standard Bering"}
+        }
+        "meta:Bhutan"{
+            ls{"Ora Bhutanului"}
+        }
+        "meta:Bolivia"{
+            ls{"Ora Boliviei"}
+        }
+        "meta:Brasilia"{
+            ld{"Ora de vară a Brasiliei"}
+            lg{"Ora Brasiliei"}
+            ls{"Ora standard a Brasiliei"}
+        }
+        "meta:Brunei"{
+            ls{"Ora din Brunei Darussalam"}
+        }
+        "meta:Cape_Verde"{
+            ld{"Ora de vară din Capul Verde"}
+            lg{"Ora din Capul Verde"}
+            ls{"Ora standard din Capul Verde"}
+        }
+        "meta:Chatham"{
+            ld{"Ora de vară din Chatham"}
+            lg{"Ora din Chatham"}
+            ls{"Ora standard din Chatham"}
+        }
+        "meta:Chile"{
+            ld{"Ora de vară din Chile"}
+            lg{"Ora din Chile"}
+            ls{"Ora standard din Chile"}
+        }
+        "meta:China"{
+            ld{"Ora de vară a Chinei"}
+            lg{"Ora Chinei"}
+            ls{"Ora standard a Chinei"}
+        }
+        "meta:Choibalsan"{
+            ld{"Ora de vară din Choibalsan"}
+            lg{"Ora din Choibalsan"}
+            ls{"Ora standard din Choibalsan"}
+        }
+        "meta:Colombia"{
+            ld{"Ora de vară a Columbiei"}
+            lg{"Ora Columbiei"}
+            ls{"Ora standard a Columbiei"}
+        }
+        "meta:Cook"{
+            ld{"Ora de vară din Insulele Cook"}
+            lg{"Ora din Insulele Cook"}
+            ls{"Ora standard din Insulele Cook"}
+        }
+        "meta:Cuba"{
+            ld{"Ora de vară a Cubei"}
+            lg{"Ora Cubei"}
+            ls{"Ora standard a Cubei"}
+        }
+        "meta:Davis"{
+            ls{"Ora din Davis"}
+        }
+        "meta:DumontDUrville"{
+            ls{"Ora din Dumont-d'Urville"}
+        }
+        "meta:East_Timor"{
+            ls{"Ora Timorului de Est"}
+        }
+        "meta:Ecuador"{
+            ls{"Ora Ecuadorului"}
+        }
+        "meta:Europe_Central"{
+            ld{"Ora de vară a Europei Centrale"}
+            lg{"Ora Europei Centrale"}
+            ls{"Ora standard a Europei Centrale"}
+        }
+        "meta:Europe_Eastern"{
+            ld{"Ora de vară a Europei de Est"}
+            lg{"Ora Europei de Est"}
+            ls{"Ora standard a Europei de Est"}
+        }
+        "meta:Europe_Western"{
+            ld{"Ora de vară a Europei de Vest"}
+            lg{"Ora Europei de Vest"}
+            ls{"Ora standard a Europei de Vest"}
+        }
+        "meta:Falkland"{
+            ld{"Ora de vară din Insulele Falkland"}
+            lg{"Ora din Insulele Falkland"}
+            ls{"Ora standard din Insulele Falkland"}
+        }
+        "meta:Fiji"{
+            ld{"Ora de vară din Fiji"}
+            lg{"Ora din Fiji"}
+            ls{"Ora standard din Fiji"}
+        }
+        "meta:French_Guiana"{
+            ls{"Ora Guianei Franceze"}
+        }
+        "meta:Gambier"{
+            ls{"Ora din Gambier"}
+        }
+        "meta:Georgia"{
+            ld{"Ora de vară a Georgiei"}
+            lg{"Ora Georgiei"}
+            ls{"Ora standard a Georgiei"}
+        }
+        "meta:Greenland_Central"{
+            ld{"Ora de vară a Groenlandei centrale"}
+            lg{"Ora Groenlandei centrale"}
+            ls{"Ora standard a Groenlandei centrale"}
+        }
+        "meta:Greenland_Eastern"{
+            ld{"Ora de vară a Groenlandei orientale"}
+            lg{"Ora Groenlandei orientale"}
+            ls{"Ora standard a Groenlandei orientale"}
+        }
+        "meta:Greenland_Western"{
+            ld{"Ora de vară a Groenlandei occidentale"}
+            lg{"Ora Groenlandei occidentale"}
+            ls{"Ora standard a Groenlandei occidentale"}
+        }
+        "meta:Guyana"{
+            ls{"Ora Guianei"}
+        }
+        "meta:Hawaii_Aleutian"{
+            ld{"Ora de vară a insulelor Aleutine şi a Hawaiului"}
+            lg{"Ora insulelor Aleutine şi a Hawaiului"}
+            ls{"Ora standard a insulelor Aleutine şi a Hawaiului"}
+        }
+        "meta:Hong_Kong"{
+            ld{"Ora de vară din Hong Kong"}
+            lg{"Ora din Hong Kong"}
+            ls{"Ora standard din Hong Kong"}
+        }
+        "meta:Hovd"{
+            ld{"Ora de vară din Hovd"}
+            lg{"Ora din Hovd"}
+            ls{"Ora standard din Hovd"}
+        }
+        "meta:India"{
+            ls{"Ora standard a Indiei"}
+        }
+        "meta:Indian_Ocean"{
+            ls{"Ora Oceanului Indian"}
+        }
+        "meta:Indochina"{
+            ls{"Ora Indochinei"}
+        }
+        "meta:Indonesia_Central"{
+            ls{"Ora regiunii centrale din Indonezia"}
+        }
+        "meta:Indonesia_Eastern"{
+            ls{"Ora regiunii estice din Indonezia"}
+        }
+        "meta:Indonesia_Western"{
+            ls{"Ora regiunii vestice din Indonezia"}
+        }
+        "meta:Irkutsk"{
+            ld{"Ora de vară din Irkutsk"}
+            lg{"Ora din Irkutsk"}
+            ls{"Ora standard din Irkutsk"}
+        }
+        "meta:Israel"{
+            ld{"Ora de vară a Israelului"}
+            lg{"Ora Israelului"}
+            ls{"Ora standard a Israelului"}
+        }
+        "meta:Japan"{
+            ld{"Ora de vară a Japoniei"}
+            lg{"Ora Japoniei"}
+            ls{"Ora standard a Japoniei"}
+        }
+        "meta:Kamchatka"{
+            ld{"Ora de vară din Petropavlovsk-Kamciaţki"}
+            lg{"Ora din Petropavlovsk-Kamciaţki"}
+            ls{"Ora standard din Petropavlovsk-Kamciaţki"}
+        }
+        "meta:Kazakhstan_Eastern"{
+            ls{"Ora regiunii estice din Kazahstan"}
+        }
+        "meta:Kazakhstan_Western"{
+            ls{"Ora regiunii vestice din Kazahstan"}
+        }
+        "meta:Korea"{
+            ld{"Ora de vară a Coreei"}
+            lg{"Ora Coreei"}
+            ls{"Ora standard a Coreei"}
+        }
+        "meta:Krasnoyarsk"{
+            ld{"Ora de vară din Krasnoiarsk"}
+            lg{"Ora din Krasnoiarsk"}
+            ls{"Ora standard din Krasnoiarsk"}
+        }
+        "meta:Lord_Howe"{
+            ld{"Ora de vară Lord Howe"}
+            lg{"Ora Lord Howe"}
+            ls{"Ora standard Lord Howe"}
+        }
+        "meta:Macquarie"{
+            ls{"Ora din Macquarie"}
+        }
+        "meta:Magadan"{
+            ld{"Ora de vară din Magadan"}
+            lg{"Ora din Magadan"}
+            ls{"Ora standard din Magadan"}
+        }
+        "meta:Mawson"{
+            ls{"Ora din Mawson"}
+        }
+        "meta:Mongolia"{
+            ld{"Ora de vară din Ulan Bator"}
+            lg{"Ora din Ulan Bator"}
+            ls{"Ora standard din Ulan Bator"}
+        }
+        "meta:Moscow"{
+            ld{"Ora de vară din Moscova"}
+            lg{"Ora din Moscova"}
+            ls{"Ora standard din Moscova"}
+        }
+        "meta:Nauru"{
+            ls{"Ora din Nauru"}
+        }
+        "meta:Newfoundland"{
+            ld{"Ora de vară din Newfoundland"}
+            lg{"Ora din Newfoundland"}
+            ls{"Ora standard din Newfoundland"}
+        }
+        "meta:Niue"{
+            ls{"Ora din Niue"}
+        }
+        "meta:Noronha"{
+            ld{"Ora de vară din Fernando de Noronha"}
+            lg{"Ora din Fernando de Noronha"}
+            ls{"Ora standard din Fernando de Noronha"}
+        }
+        "meta:Novosibirsk"{
+            ld{"Ora de vară din Novosibirsk"}
+            lg{"Ora din Novosibirsk"}
+            ls{"Ora standard din Novosibirsk"}
+        }
+        "meta:Omsk"{
+            ld{"Ora de vară din Omsk"}
+            lg{"Ora din Omsk"}
+            ls{"Ora standard din Omsk"}
+        }
+        "meta:Palau"{
+            ls{"Ora din Palau"}
+        }
+        "meta:Papua_New_Guinea"{
+            ls{"Ora din Papua Noua Guinee"}
+        }
+        "meta:Paraguay"{
+            ld{"Ora de vară din Paraguay"}
+            lg{"Ora din Paraguay"}
+            ls{"Ora standard din Paraguay"}
+        }
+        "meta:Peru"{
+            ld{"Ora de vară din Peru"}
+            lg{"Ora din Peru"}
+            ls{"Ora standard din Peru"}
+        }
+        "meta:Philippines"{
+            ld{"Ora de vară din Filipine"}
+            lg{"Ora din Filipine"}
+            ls{"Ora standard din Filipine"}
+        }
+        "meta:Pierre_Miquelon"{
+            ld{"Ora de vară din Saint-Pierre şi Miquelon"}
+            lg{"Ora din Saint-Pierre şi Miquelon"}
+            ls{"Ora standard din Saint-Pierre şi Miquelon"}
+        }
+        "meta:Ponape"{
+            ls{"Ora din Ponape"}
+        }
+        "meta:Rothera"{
+            ls{"Ora din Rothera"}
+        }
+        "meta:Sakhalin"{
+            ld{"Ora de vară din Sahalin"}
+            lg{"Ora din Sahalin"}
+            ls{"Ora standard din Sahalin"}
+        }
+        "meta:Samara"{
+            ld{"Ora de vară din Samara"}
+            lg{"Ora din Samara"}
+            ls{"Ora standard din Samara"}
+        }
+        "meta:Samoa"{
+            ls{"Ora standard din Samoa"}
+        }
+        "meta:Seychelles"{
+            ls{"Ora din Seychelles"}
+        }
+        "meta:Suriname"{
+            ls{"Ora Surinamului"}
+        }
+        "meta:Syowa"{
+            ls{"Ora din Syowa"}
+        }
+        "meta:Tahiti"{
+            ls{"Ora din Tahiti"}
+        }
+        "meta:Taipei"{
+            ld{"Ora de vară din Taipei"}
+            lg{"Ora din Taipei"}
+            ls{"Ora standard din Taipei"}
+        }
+        "meta:Tajikistan"{
+            ls{"Ora din Tadjikistan"}
+        }
+        "meta:Tokelau"{
+            ls{"Ora din Tokelau"}
+        }
+        "meta:Tonga"{
+            ld{"Ora de vară din Tonga"}
+            lg{"Ora din Tonga"}
+            ls{"Ora standard din Tonga"}
+        }
+        "meta:Truk"{
+            ls{"Ora din Chuuk"}
+        }
+        "meta:Turkmenistan"{
+            ld{"Ora de vară din Turkmenistan"}
+            lg{"Ora din Turkmenistan"}
+            ls{"Ora standard din Turkmenistan"}
+        }
+        "meta:Tuvalu"{
+            ls{"Ora din Tuvalu"}
+        }
+        "meta:Uruguay"{
+            ld{"Ora de vară din Uruguay"}
+            lg{"Ora din Uruguay"}
+            ls{"Ora standard din Uruguay"}
+        }
+        "meta:Uzbekistan"{
+            ld{"Ora de vară din Uzbekistan"}
+            lg{"Ora din Uzbekistan"}
+            ls{"Ora standard din Uzbekistan"}
+        }
+        "meta:Vanuatu"{
+            ld{"Ora de vară din Vanuatu"}
+            lg{"Ora din Vanuatu"}
+            ls{"Ora standard din Vanuatu"}
+        }
+        "meta:Venezuela"{
+            ls{"Ora Venezuelei"}
+        }
+        "meta:Vladivostok"{
+            ld{"Ora de vară din Vladivostok"}
+            lg{"Ora din Vladivostok"}
+            ls{"Ora standard din Vladivostok"}
+        }
+        "meta:Volgograd"{
+            ld{"Ora de vară din Volgograd"}
+            lg{"Ora din Volgograd"}
+            ls{"Ora standard din Volgograd"}
+        }
+        "meta:Vostok"{
+            ls{"Ora din Vostok"}
+        }
+        "meta:Yakutsk"{
+            ld{"Ora de vară din Yakutsk"}
+            lg{"Ora din Yakutsk"}
+            ls{"Ora standard din Yakutsk"}
+        }
+        "meta:Yekaterinburg"{
+            ld{"Ora de vară din Ekaterinburg"}
+            lg{"Ora din Ekaterinburg"}
+            ls{"Ora standard din Ekaterinburg"}
+        }
+        fallbackFormat{"{1} ({0})"}
+        fallbackRegionFormat{"Ora din {1} ({0})"}
+        gmtFormat{"GMT{0}"}
+        gmtZeroFormat{"GMT"}
+        hourFormat{"+HH:mm;−HH:mm"}
+        regionFormat{"Ora în {0}"}
+    }
+}

@@ -1,0 +1,15 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+
+function boom()
+{
+  document.getElementById("x").appendChild(document.createElementNS("http://www.w3.org/1999/xhtml", "span"));
+}
+
+</script>
+</head>
+<body onload="boom();">
+<div style="-moz-column-count: 15;"><div style="-moz-column-count: 15;" id="x"><td style="display: block; height: 2.5em;"></td></div></div>
+</body>
+</html>

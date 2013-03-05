@@ -137,7 +137,7 @@ protected:
 
 protected:
   void SetDpi(float aDpi);
-  void UpdateSizeAndPosition();
+  void UpdateWidgetSizeAndPosition();
   void PerformURILoad(Microsoft::WRL::ComPtr<ABI::Windows::Foundation::IUriRuntimeClass>& aURI);
   void PerformSearch(Microsoft::WRL::Wrappers::HString& aQuery);
   void PerformURILoadOrSearch(Microsoft::WRL::Wrappers::HString& aString);

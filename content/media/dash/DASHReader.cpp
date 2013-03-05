@@ -660,5 +660,19 @@ DASHReader::PrepareToDecode()
   }
 }
 
-} // namespace mozilla
+DASHRepReader*
+DASHReader::GetReaderForSubsegment(uint32_t aSubsegmentIdx)
+{
+  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  DASHDecoder* dashDecoder = static_cast<DASHDecoder*>(mDecoder);
+  int32_t repIdx =
+    dashDecoder->GetRepIdxForVideoSubsegmentLoadAfterSeek((int32_t)aSubsegmentIdx);
+  if (0 <= repIdx && repIdx < mVideoReaders.Length()) {
+    return mVideoReaders[repIdx];
+  } else {
+    return nullptr;
+  }
+}
 
+
+} // namespace mozilla

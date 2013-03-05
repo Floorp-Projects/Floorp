@@ -5,8 +5,8 @@
 
 /* Utilities for animation of computed style values */
 
-#include "mozilla/Util.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/Util.h"
 
 #include "nsStyleAnimation.h"
 #include "nsStyleTransformMatrix.h"
@@ -24,8 +24,6 @@
 #include "mozilla/Likely.h"
 #include "gfxMatrix.h"
 #include "gfxQuaternion.h"
-#include <cstdlib> // for std::abs(int/long)
-#include <cmath> // for std::abs(float/double)
 
 using namespace mozilla;
 
@@ -383,7 +381,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
           // just like eUnit_Integer.
           int32_t startInt = aStartValue.GetIntValue();
           int32_t endInt = aEndValue.GetIntValue();
-          aDistance = std::abs(endInt - startInt);
+          aDistance = Abs(endInt - startInt);
           return true;
         }
         default:
@@ -406,19 +404,19 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
     case eUnit_Integer: {
       int32_t startInt = aStartValue.GetIntValue();
       int32_t endInt = aEndValue.GetIntValue();
-      aDistance = std::abs(endInt - startInt);
+      aDistance = Abs(endInt - startInt);
       return true;
     }
     case eUnit_Coord: {
       nscoord startCoord = aStartValue.GetCoordValue();
       nscoord endCoord = aEndValue.GetCoordValue();
-      aDistance = fabs(double(endCoord - startCoord));
+      aDistance = Abs<double>(endCoord - startCoord);
       return true;
     }
     case eUnit_Percent: {
       float startPct = aStartValue.GetPercentValue();
       float endPct = aEndValue.GetPercentValue();
-      aDistance = fabs(double(endPct - startPct));
+      aDistance = Abs<double>(endPct - startPct);
       return true;
     }
     case eUnit_Float: {
@@ -436,7 +434,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
 
       float startFloat = aStartValue.GetFloatValue();
       float endFloat = aEndValue.GetFloatValue();
-      aDistance = fabs(double(endFloat - startFloat));
+      aDistance = Abs<double>(endFloat - startFloat);
       return true;
     }
     case eUnit_Color: {
@@ -1299,7 +1297,7 @@ Decompose2DMatrix(const gfxMatrix &aMatrix, gfxPoint3D &aScale,
   XYshear /= scaleY;
 
   // A*D - B*C should now be 1 or -1
-  NS_ASSERTION(0.99 < std::abs(A*D - B*C) && std::abs(A*D - B*C) < 1.01,
+  NS_ASSERTION(0.99 < Abs(A*D - B*C) && Abs(A*D - B*C) < 1.01,
                "determinant should now be 1 or -1");
   if (A * D < B * C) {
     A = -A;

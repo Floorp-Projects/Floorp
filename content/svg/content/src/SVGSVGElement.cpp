@@ -53,10 +53,18 @@ SVGSVGElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
   return SVGSVGElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
 }
 
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGTranslatePoint, mElement)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DOMSVGTranslatePoint,
+                                                nsISVGPoint)
+NS_IMPL_CYCLE_COLLECTION_UNLINK(mElement)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGTranslatePoint)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGTranslatePoint)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DOMSVGTranslatePoint,
+                                                  nsISVGPoint)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_ADDREF_INHERITED(DOMSVGTranslatePoint, nsISVGPoint)
+NS_IMPL_RELEASE_INHERITED(DOMSVGTranslatePoint, nsISVGPoint)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGTranslatePoint)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -667,8 +675,7 @@ SVGSVGElement::GetViewBoxTransform() const
     return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
   }
 
-  return SVGContentUtils::GetViewBoxTransform(this,
-                                              viewportWidth, viewportHeight,
+  return SVGContentUtils::GetViewBoxTransform(viewportWidth, viewportHeight,
                                               viewBox.x, viewBox.y,
                                               viewBox.width, viewBox.height,
                                               GetPreserveAspectRatioWithOverride());

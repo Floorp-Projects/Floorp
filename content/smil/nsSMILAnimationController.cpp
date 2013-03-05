@@ -137,18 +137,18 @@ nsSMILAnimationController::WillRefresh(mozilla::TimeStamp aTime)
 
   nsSMILTime elapsedTime =
     (nsSMILTime)(aTime - mCurrentSampleTime).ToMilliseconds();
-  // First sample:
   if (mAvgTimeBetweenSamples == 0) {
+    // First sample.
     mAvgTimeBetweenSamples = elapsedTime;
-  // Unexpectedly long delay between samples:
-  } else if (elapsedTime > SAMPLE_DEV_THRESHOLD * mAvgTimeBetweenSamples) {
-    NS_WARNING("Detected really long delay between samples, continuing from "
-               "previous sample");
-    mParentOffset += elapsedTime - mAvgTimeBetweenSamples;
-  // Usual case, update moving average:
   } else {
-    // Due to truncation here the average will normally be a little less than
-    // it should be but that's probably ok
+    if (elapsedTime > SAMPLE_DEV_THRESHOLD * mAvgTimeBetweenSamples) {
+      // Unexpectedly long delay between samples.
+      NS_WARNING("Detected really long delay between samples, continuing from "
+                 "previous sample");
+      mParentOffset += elapsedTime - mAvgTimeBetweenSamples;
+    }
+    // Update the moving average. Due to truncation here the average will
+    // normally be a little less than it should be but that's probably ok.
     mAvgTimeBetweenSamples =
       (nsSMILTime)(elapsedTime * SAMPLE_DUR_WEIGHTING +
       mAvgTimeBetweenSamples * (1.0 - SAMPLE_DUR_WEIGHTING));

@@ -180,6 +180,10 @@ pref("media.gstreamer.enabled", true);
 #endif
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", true);
+pref("media.navigator.video.default_width",640);
+pref("media.navigator.video.default_height",480);
+pref("media.navigator.video.default_fps",30);
+pref("media.navigator.video.default_minfps",10);
 pref("media.peerconnection.enabled", true);
 pref("media.navigator.permission.disabled", false);
 pref("media.peerconnection.default_iceservers", "[{\"url\": \"stun:23.21.150.121\"}]");
@@ -1043,10 +1047,6 @@ pref("dom.server-events.default-reconnection-time", 5000); // in milliseconds
 // by the jar channel.
 pref("network.jar.open-unsafe-types", false);
 
-// This preference controls whether or not internationalized domain names (IDN)
-// are handled.  IDN requires a nsIIDNService implementation.
-pref("network.enableIDN", true);
-
 // This preference, if true, causes all UTF-8 domain names to be normalized to
 // punycode.  The intention is to allow UTF-8 domain names as input, but never
 // generate them from punycode.
@@ -1157,11 +1157,8 @@ pref("network.IDN.whitelist.xn--kprw13d", true);  // Simplified
 pref("network.IDN.whitelist.asia", true);
 pref("network.IDN.whitelist.biz", true);
 pref("network.IDN.whitelist.cat", true);
-pref("network.IDN.whitelist.com", true);
 pref("network.IDN.whitelist.info", true);
 pref("network.IDN.whitelist.museum", true);
-pref("network.IDN.whitelist.name", true);
-pref("network.IDN.whitelist.net", true);
 pref("network.IDN.whitelist.org", true);
 pref("network.IDN.whitelist.tel", true);
 

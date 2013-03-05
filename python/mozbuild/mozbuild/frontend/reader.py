@@ -26,6 +26,7 @@ from __future__ import print_function, unicode_literals
 import logging
 import os
 import sys
+import time
 import traceback
 import types
 
@@ -613,8 +614,10 @@ class BuildReader(object):
 
         self._read_files.add(path)
 
+        time_start = time.time()
         sandbox = MozbuildSandbox(self.config, path)
         sandbox.exec_file(path, filesystem_absolute=filesystem_absolute)
+        sandbox.execution_time = time.time() - time_start
         yield sandbox
 
         # Traverse into referenced files.

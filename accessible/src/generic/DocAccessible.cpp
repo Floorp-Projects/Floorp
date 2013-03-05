@@ -104,7 +104,6 @@ DocAccessible::~DocAccessible()
 // nsISupports
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DocAccessible, Accessible)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNotificationController)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVirtualCursor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildDocuments)
@@ -112,7 +111,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DocAccessible, Accessible)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DocAccessible, Accessible)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mNotificationController)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mVirtualCursor)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChildDocuments)
@@ -1429,7 +1427,11 @@ DocAccessible::CacheChildren()
 {
   // Search for accessible children starting from the document element since
   // some web pages tend to insert elements under it rather than document body.
-  TreeWalker walker(this, mDocumentNode->GetRootElement());
+  dom::Element* rootElm = mDocumentNode->GetRootElement();
+  if (!rootElm)
+    return;
+
+  TreeWalker walker(this, rootElm);
 
   Accessible* child = nullptr;
   while ((child = walker.NextChild()) && AppendChild(child));

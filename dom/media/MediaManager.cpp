@@ -11,8 +11,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPopupWindowManager.h"
 #include "nsISupportsArray.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsIDocShell.h"
 
 // For PR_snprintf
@@ -454,6 +452,7 @@ public:
     already_AddRefed<nsIDOMGetUserMediaSuccessCallback> aSuccess,
     already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError,
     uint64_t aWindowID, GetUserMediaCallbackMediaStreamListener *aListener,
+    MediaEnginePrefs &aPrefs,
     MediaDevice* aAudioDevice, MediaDevice* aVideoDevice)
     : mAudio(aAudio)
     , mVideo(aVideo)
@@ -462,22 +461,24 @@ public:
     , mError(aError)
     , mWindowID(aWindowID)
     , mListener(aListener)
+    , mPrefs(aPrefs)
     , mDeviceChosen(true)
     , mBackendChosen(false)
     , mManager(MediaManager::GetInstance())
-    {
-      if (mAudio) {
-        mAudioDevice = aAudioDevice;
-      }
-      if (mVideo) {
-        mVideoDevice = aVideoDevice;
-      }
+  {
+    if (mAudio) {
+      mAudioDevice = aAudioDevice;
     }
+    if (mVideo) {
+      mVideoDevice = aVideoDevice;
+    }
+  }
 
   GetUserMediaRunnable(bool aAudio, bool aVideo, bool aPicture,
     already_AddRefed<nsIDOMGetUserMediaSuccessCallback> aSuccess,
     already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError,
-    uint64_t aWindowID, GetUserMediaCallbackMediaStreamListener *aListener)
+    uint64_t aWindowID, GetUserMediaCallbackMediaStreamListener *aListener,
+    MediaEnginePrefs &aPrefs)
     : mAudio(aAudio)
     , mVideo(aVideo)
     , mPicture(aPicture)
@@ -485,9 +486,11 @@ public:
     , mError(aError)
     , mWindowID(aWindowID)
     , mListener(aListener)
+    , mPrefs(aPrefs)
     , mDeviceChosen(false)
     , mBackendChosen(false)
-    , mManager(MediaManager::GetInstance()) {}
+    , mManager(MediaManager::GetInstance())
+  {}
 
   /**
    * The caller can also choose to provide their own backend instead of
@@ -497,6 +500,7 @@ public:
     already_AddRefed<nsIDOMGetUserMediaSuccessCallback> aSuccess,
     already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError,
     uint64_t aWindowID, GetUserMediaCallbackMediaStreamListener *aListener,
+    MediaEnginePrefs &aPrefs,
     MediaEngine* aBackend)
     : mAudio(aAudio)
     , mVideo(aVideo)
@@ -505,10 +509,12 @@ public:
     , mError(aError)
     , mWindowID(aWindowID)
     , mListener(aListener)
+    , mPrefs(aPrefs)
     , mDeviceChosen(false)
     , mBackendChosen(true)
     , mBackend(aBackend)
-    , mManager(MediaManager::GetInstance()) {}
+    , mManager(MediaManager::GetInstance())
+  {}
 
   ~GetUserMediaRunnable() {
     if (mBackendChosen) {
@@ -678,7 +684,7 @@ public:
   {
     nsresult rv;
     if (aAudioSource) {
-      rv = aAudioSource->Allocate();
+      rv = aAudioSource->Allocate(mPrefs);
       if (NS_FAILED(rv)) {
         LOG(("Failed to allocate audiosource %d",rv));
         NS_DispatchToMainThread(new ErrorCallbackRunnable(
@@ -688,7 +694,7 @@ public:
       }
     }
     if (aVideoSource) {
-      rv = aVideoSource->Allocate();
+      rv = aVideoSource->Allocate(mPrefs);
       if (NS_FAILED(rv)) {
         LOG(("Failed to allocate videosource %d\n",rv));
         if (aAudioSource) {
@@ -714,7 +720,7 @@ public:
   void
   ProcessGetUserMediaSnapshot(MediaEngineSource* aSource, int aDuration)
   {
-    nsresult rv = aSource->Allocate();
+    nsresult rv = aSource->Allocate(mPrefs);
     if (NS_FAILED(rv)) {
       NS_DispatchToMainThread(new ErrorCallbackRunnable(
         mSuccess, mError, NS_LITERAL_STRING("HARDWARE_UNAVAILABLE"), mWindowID
@@ -746,6 +752,7 @@ private:
   nsRefPtr<GetUserMediaCallbackMediaStreamListener> mListener;
   nsRefPtr<MediaDevice> mAudioDevice;
   nsRefPtr<MediaDevice> mVideoDevice;
+  MediaEnginePrefs mPrefs;
 
   bool mDeviceChosen;
   bool mBackendChosen;
@@ -769,8 +776,7 @@ public:
     : mSuccess(aSuccess)
     , mError(aError)
     , mManager(MediaManager::GetInstance())
-    {}
-  ~GetUserMediaDevicesRunnable() {}
+  {}
 
   NS_IMETHOD
   Run()
@@ -817,9 +823,64 @@ private:
   nsRefPtr<MediaManager> mManager;
 };
 
+MediaManager::MediaManager()
+  : mMediaThread(nullptr)
+  , mMutex("mozilla::MediaManager")
+  , mBackend(nullptr) {
+  mPrefs.mWidth  = MediaEngine::DEFAULT_VIDEO_WIDTH;
+  mPrefs.mHeight = MediaEngine::DEFAULT_VIDEO_HEIGHT;
+  mPrefs.mFPS    = MediaEngine::DEFAULT_VIDEO_FPS;
+  mPrefs.mMinFPS = MediaEngine::DEFAULT_VIDEO_MIN_FPS;
+
+  nsresult rv;
+  nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
+    if (branch) {
+      GetPrefs(branch, nullptr);
+    }
+  }
+  LOG(("%s: default prefs: %dx%d @%dfps (min %d)", __FUNCTION__,
+       mPrefs.mWidth, mPrefs.mHeight, mPrefs.mFPS, mPrefs.mMinFPS));
+
+  mActiveWindows.Init();
+  mActiveCallbacks.Init();
+}
+
 NS_IMPL_THREADSAFE_ISUPPORTS2(MediaManager, nsIMediaManagerService, nsIObserver)
 
 /* static */ StaticRefPtr<MediaManager> MediaManager::sSingleton;
+
+// NOTE: never Dispatch(....,NS_DISPATCH_SYNC) to the MediaManager
+// thread from the MainThread, as we NS_DISPATCH_SYNC to MainThread
+// from MediaManager thread.
+/* static */  MediaManager*
+MediaManager::Get() {
+  if (!sSingleton) {
+    sSingleton = new MediaManager();
+
+    NS_NewThread(getter_AddRefs(sSingleton->mMediaThread));
+    LOG(("New Media thread for gum"));
+
+    NS_ASSERTION(NS_IsMainThread(), "Only create MediaManager on main thread");
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    if (obs) {
+      obs->AddObserver(sSingleton, "xpcom-shutdown", false);
+      obs->AddObserver(sSingleton, "getUserMedia:response:allow", false);
+      obs->AddObserver(sSingleton, "getUserMedia:response:deny", false);
+      obs->AddObserver(sSingleton, "getUserMedia:revoke", false);
+    }
+    // else MediaManager won't work properly and will leak (see bug 837874)
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (prefs) {
+      prefs->AddObserver("media.navigator.video.default_width", sSingleton, false);
+      prefs->AddObserver("media.navigator.video.default_height", sSingleton, false);
+      prefs->AddObserver("media.navigator.video.default_fps", sSingleton, false);
+      prefs->AddObserver("media.navigator.video.default_minfps", sSingleton, false);
+    }
+  }
+  return sSingleton;
+}
 
 /* static */ already_AddRefed<MediaManager>
 MediaManager::GetInstance()
@@ -966,23 +1027,24 @@ MediaManager::GetUserMedia(bool aPrivileged, nsPIDOMWindow* aWindow,
    *
    * If a fake stream was requested, we force the use of the default backend.
    */
+  // XXX take options from constraints instead of prefs
   if (fake) {
     // Fake stream from default backend.
     gUMRunnable = new GetUserMediaRunnable(
-      audio, video, onSuccess.forget(), onError.forget(), windowID, listener,
+      audio, video, onSuccess.forget(), onError.forget(), windowID, listener, mPrefs,
       new MediaEngineDefault()
                                            );
   } else if (audiodevice || videodevice) {
     // Stream from provided device.
     gUMRunnable = new GetUserMediaRunnable(
-      audio, video, picture, onSuccess.forget(), onError.forget(), windowID, listener,
+      audio, video, picture, onSuccess.forget(), onError.forget(), windowID, listener, mPrefs,
       static_cast<MediaDevice*>(audiodevice.get()),
       static_cast<MediaDevice*>(videodevice.get())
                                            );
   } else {
     // Stream from default device from WebRTC backend.
     gUMRunnable = new GetUserMediaRunnable(
-      audio, video, picture, onSuccess.forget(), onError.forget(), windowID, listener
+      audio, video, picture, onSuccess.forget(), onError.forget(), windowID, listener, mPrefs
                                            );
   }
 
@@ -1156,6 +1218,27 @@ MediaManager::RemoveFromWindowList(uint64_t aWindowID,
   }
 }
 
+void
+MediaManager::GetPref(nsIPrefBranch *aBranch, const char *aPref,
+                      const char *aData, int32_t *aVal)
+{
+  int32_t temp;
+  if (aData == nullptr || strcmp(aPref,aData) == 0) {
+    if (NS_SUCCEEDED(aBranch->GetIntPref(aPref, &temp))) {
+      *aVal = temp;
+    }
+  }
+}
+
+void
+MediaManager::GetPrefs(nsIPrefBranch *aBranch, const char *aData)
+{
+  GetPref(aBranch, "media.navigator.video.default_width", aData, &mPrefs.mWidth);
+  GetPref(aBranch, "media.navigator.video.default_height", aData, &mPrefs.mHeight);
+  GetPref(aBranch, "media.navigator.video.default_fps", aData, &mPrefs.mFPS);
+  GetPref(aBranch, "media.navigator.video.default_minfps", aData, &mPrefs.mMinFPS);
+}
+
 nsresult
 MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
   const PRUnichar* aData)
@@ -1163,11 +1246,26 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
   NS_ASSERTION(NS_IsMainThread(), "Observer invoked off the main thread");
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
 
-  if (!strcmp(aTopic, "xpcom-shutdown")) {
+  if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
+    nsCOMPtr<nsIPrefBranch> branch( do_QueryInterface(aSubject) );
+    if (branch) {
+      GetPrefs(branch,NS_ConvertUTF16toUTF8(aData).get());
+      LOG(("%s: %dx%d @%dfps (min %d)", __FUNCTION__,
+           mPrefs.mWidth, mPrefs.mHeight, mPrefs.mFPS, mPrefs.mMinFPS));
+    }
+  } else if (!strcmp(aTopic, "xpcom-shutdown")) {
     obs->RemoveObserver(this, "xpcom-shutdown");
     obs->RemoveObserver(this, "getUserMedia:response:allow");
     obs->RemoveObserver(this, "getUserMedia:response:deny");
     obs->RemoveObserver(this, "getUserMedia:revoke");
+
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (prefs) {
+      prefs->RemoveObserver("media.navigator.video.default_width", this);
+      prefs->RemoveObserver("media.navigator.video.default_height", this);
+      prefs->RemoveObserver("media.navigator.video.default_fps", this);
+      prefs->RemoveObserver("media.navigator.video.default_minfps", this);
+    }
 
     // Close off any remaining active windows.
     {
@@ -1178,9 +1276,8 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     }
 
     return NS_OK;
-  }
 
-  if (!strcmp(aTopic, "getUserMedia:response:allow")) {
+  } else if (!strcmp(aTopic, "getUserMedia:response:allow")) {
     nsString key(aData);
     nsRefPtr<nsRunnable> runnable;
     if (!mActiveCallbacks.Get(key, getter_AddRefs(runnable))) {
@@ -1225,9 +1322,8 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     // Reuse the same thread to save memory.
     mMediaThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
     return NS_OK;
-  }
 
-  if (!strcmp(aTopic, "getUserMedia:response:deny")) {
+  } else if (!strcmp(aTopic, "getUserMedia:response:deny")) {
     nsString errorMessage(NS_LITERAL_STRING("PERMISSION_DENIED"));
 
     if (aSubject) {
@@ -1249,9 +1345,8 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
       static_cast<GetUserMediaRunnable*>(runnable.get());
     gUMRunnable->Denied(errorMessage);
     return NS_OK;
-  }
 
-  if (!strcmp(aTopic, "getUserMedia:revoke")) {
+  } else if (!strcmp(aTopic, "getUserMedia:revoke")) {
     nsresult rv;
     uint64_t windowID = nsString(aData).ToInteger64(&rv);
     MOZ_ASSERT(NS_SUCCEEDED(rv));

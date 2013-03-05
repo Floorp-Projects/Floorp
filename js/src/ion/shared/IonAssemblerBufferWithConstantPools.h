@@ -14,7 +14,9 @@ namespace js {
 namespace ion {
 typedef Vector<BufferOffset, 512, IonAllocPolicy> LoadOffsets;
 
-struct Pool {
+struct Pool
+  : public IonAllocPolicy
+{
     const int maxOffset;
     const int immSize;
     const int instSize;
@@ -50,7 +52,7 @@ struct Pool {
         : maxOffset(maxOffset_), immSize(immSize_), instSize(instSize),
           bias(bias_), alignment(alignment_),
           isBackref(isBackref_), canDedup(canDedup_), other(other_),
-          poolData(static_cast<uint8_t *>(malloc(8*immSize))), numEntries(0),
+          poolData(static_cast<uint8_t *>(malloc_(8*immSize))), numEntries(0),
           buffSize(8), loadOffsets(), limitingUser(), limitingUsee(INT_MIN)
     {
     }
@@ -128,7 +130,8 @@ struct Pool {
     uint32_t insertEntry(uint8_t *data, BufferOffset off) {
         if (numEntries == buffSize) {
             buffSize <<= 1;
-            poolData = static_cast<uint8_t*>(realloc(poolData, immSize * buffSize));
+            poolData = static_cast<uint8_t*>(realloc_(poolData, immSize * numEntries,
+                                                      immSize * buffSize));
             if (poolData == NULL) {
                 buffSize = 0;
                 return -1;
@@ -142,7 +145,7 @@ struct Pool {
     bool reset() {
         numEntries = 0;
         buffSize = 8;
-        poolData = static_cast<uint8_t*>(malloc(buffSize * immSize));
+        poolData = static_cast<uint8_t*>(malloc_(buffSize * immSize));
         if (poolData == NULL)
             return false;
         other = new Pool(other->maxOffset, other->immSize, other->instSize, other->bias,
@@ -345,7 +348,7 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
     }
 
     virtual BufferSlice *newSlice() {
-        BufferSlice *tmp = static_cast<BufferSlice*>(malloc(sizeof(BufferSlice)));
+        BufferSlice *tmp = static_cast<BufferSlice*>(this->malloc_(sizeof(BufferSlice)));
         if (!tmp) {
             this->m_oom = true;
             return NULL;
@@ -359,7 +362,7 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
           footerSize(footerSize_),
           pools(pools_),
           instBufferAlign(instBufferAlign_), numDumps(0),
-          poolInfo(static_cast<PoolInfo*>(calloc(sizeof(PoolInfo), 1 << logBasePoolInfo))),
+          poolInfo(NULL),
           poolSize(0), canNotPlacePool(0), inBackref(false),
           perforatedNode(NULL), id(-1)
     {
@@ -367,6 +370,13 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
             entryCount[idx] = 0;
         }
     }
+
+    // We need to wait until an AutoIonContextAlloc is created by the
+    // IonMacroAssembler, before allocating any space.
+    void initWithAllocator() {
+        poolInfo = static_cast<PoolInfo*>(this->calloc_(sizeof(PoolInfo) * (1 << logBasePoolInfo)));
+    }
+
     const PoolInfo & getInfo(int x) const {
         static const PoolInfo nil = {0,0,0};
         if (x < 0 || x >= numDumps)
@@ -661,7 +671,8 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
         JS_ASSERT(perforatedNode != NULL);
         if (numDumps >= (1<<logBasePoolInfo) && (numDumps & (numDumps-1)) == 0) {
             // need to resize.
-            poolInfo = static_cast<PoolInfo*>(realloc(poolInfo, sizeof(PoolInfo) * numDumps * 2));
+            poolInfo = static_cast<PoolInfo*>(realloc_(poolInfo, sizeof(PoolInfo) * numDumps,
+                                                       sizeof(PoolInfo) * numDumps * 2));
             if (poolInfo == NULL) {
                 this->fail_oom();
                 return;
@@ -758,7 +769,7 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
         }
         // bind the current pool to the perforation point.
         Pool **tmp = &perforatedNode->data;
-        *tmp = static_cast<Pool*>(malloc(sizeof(Pool) * numPoolKinds));
+        *tmp = static_cast<Pool*>(this->malloc_(sizeof(Pool) * numPoolKinds));
         if (tmp == NULL) {
             this->fail_oom();
             return;

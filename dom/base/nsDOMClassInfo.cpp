@@ -51,7 +51,6 @@
 #include "prprf.h"
 #include "nsTArray.h"
 #include "nsCSSValue.h"
-#include "nsIRunnable.h"
 #include "nsThreadUtils.h"
 #include "nsDOMEventTargetHelper.h"
 
@@ -72,6 +71,7 @@
 #include "mozilla/Preferences.h"
 #include "nsLocation.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Telemetry.h"
 
 // Window scriptable helper includes
 #include "nsIDocShell.h"
@@ -123,7 +123,7 @@
 // HTMLEmbed/ObjectElement helper includes
 #include "nsNPAPIPluginInstance.h"
 #include "nsIObjectFrame.h"
-#include "nsIObjectLoadingContent.h"
+#include "nsObjectLoadingContent.h"
 #include "nsIPluginHost.h"
 
 #include "nsIDOMHTMLOptionElement.h"
@@ -7729,7 +7729,15 @@ nsHTMLPluginObjElementSH::GetPluginInstanceIfSafe(nsIXPConnectWrappedNative *wra
 {
   *_result = nullptr;
 
-  nsCOMPtr<nsIContent> content(do_QueryWrappedNative(wrapper, obj));
+  nsCOMPtr<nsIContent> content;
+  if (wrapper) {
+    content = do_QueryWrappedNative(wrapper, obj);
+  } else {
+    nsISupports* supports;
+    if (XPCConvert::GetISupportsFromJSObject(obj, &supports)) {
+      content = do_QueryInterface(supports);
+    }
+  }
   NS_ENSURE_TRUE(content, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIObjectLoadingContent> objlc(do_QueryInterface(content));
@@ -7750,44 +7758,54 @@ nsHTMLPluginObjElementSH::GetPluginInstanceIfSafe(nsIXPConnectWrappedNative *wra
                                             _result);
 }
 
-class nsPluginProtoChainInstallRunner MOZ_FINAL : public nsIRunnable
+nsHTMLPluginObjElementSH::SetupProtoChainRunner::SetupProtoChainRunner(
+    nsIXPConnectWrappedNative* aWrapper,
+    nsIScriptContext* aScriptContext,
+    nsObjectLoadingContent* aContent)
+  : mWrapper(aWrapper)
+  , mContext(aScriptContext)
+  , mContent(aContent)
 {
-public:
-  NS_DECL_ISUPPORTS
+}
 
-  nsPluginProtoChainInstallRunner(nsIXPConnectWrappedNative* wrapper,
-                                  nsIScriptContext* scriptContext)
-    : mWrapper(wrapper),
-      mContext(scriptContext)
-  {
-  }
+NS_IMETHODIMP
+nsHTMLPluginObjElementSH::SetupProtoChainRunner::Run()
+{
+  nsCxPusher pusher;
+  JSContext* cx = mContext ? mContext->GetNativeContext()
+                           : nsContentUtils::GetSafeJSContext();
+  pusher.Push(cx);
 
-  NS_IMETHOD Run()
-  {
-    nsCxPusher pusher;
-    JSContext* cx = mContext ? mContext->GetNativeContext()
-                             : nsContentUtils::GetSafeJSContext();
-    pusher.Push(cx);
-
-    JSObject* obj = nullptr;
+  JSObject* obj = nullptr;
+  JSObject* canonicalProto = nullptr;
+  if (mWrapper) {
     mWrapper->GetJSObject(&obj);
     NS_ASSERTION(obj, "Should never be null");
-    nsHTMLPluginObjElementSH::SetupProtoChain(mWrapper, cx, obj);
-    return NS_OK;
+  } else {
+    MOZ_ASSERT(mContent, "Must have mContent if no mWrapper");
+    nsCOMPtr<nsIContent> content;
+    CallQueryInterface(mContent.get(), getter_AddRefs(content));
+    obj = content->GetWrapper();
+    if (!obj) {
+      // No need to set up our proto chain if we don't even have an object
+      return NS_OK;
+    }
+    JSAutoCompartment ac(cx, obj);
+    canonicalProto = static_cast<nsObjectLoadingContent*>(mContent.get())->
+      GetCanonicalPrototype(cx, JS_GetGlobalForObject(cx, obj));
   }
+  nsHTMLPluginObjElementSH::SetupProtoChain(cx, obj, mWrapper, canonicalProto);
+  return NS_OK;
+}
 
-private:
-  nsCOMPtr<nsIXPConnectWrappedNative> mWrapper;
-  nsCOMPtr<nsIScriptContext> mContext;
-};
-
-NS_IMPL_ISUPPORTS1(nsPluginProtoChainInstallRunner, nsIRunnable)
+NS_IMPL_ISUPPORTS1(nsHTMLPluginObjElementSH::SetupProtoChainRunner, nsIRunnable)
 
 // static
 nsresult
-nsHTMLPluginObjElementSH::SetupProtoChain(nsIXPConnectWrappedNative *wrapper,
-                                          JSContext *cx,
-                                          JSObject *obj)
+nsHTMLPluginObjElementSH::SetupProtoChain(JSContext *cx,
+                                          JSObject *obj,
+                                          nsIXPConnectWrappedNative *wrapper,
+                                          JSObject* aCanonicalPrototype)
 {
   NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
                "Shouldn't have gotten in here");
@@ -7822,9 +7840,14 @@ nsHTMLPluginObjElementSH::SetupProtoChain(nsIXPConnectWrappedNative *wrapper,
 
   JSObject *my_proto = nullptr;
 
-  // Get 'this.__proto__'
-  rv = wrapper->GetJSObjectPrototype(&my_proto);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (wrapper) {
+    // Get 'this.__proto__'
+    rv = wrapper->GetJSObjectPrototype(&my_proto);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    my_proto = aCanonicalPrototype;
+  }
+  MOZ_ASSERT(my_proto);
 
   // Set 'this.__proto__' to pi
   if (!::JS_SetPrototype(cx, obj, pi_obj)) {
@@ -7897,7 +7920,7 @@ nsHTMLPluginObjElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper,
 #ifdef DEBUG
     nsresult rv =
 #endif
-      SetupProtoChain(wrapper, cx, obj);
+      SetupProtoChain(cx, obj, wrapper);
 
     // If SetupProtoChain failed then we're in real trouble. We're about to fail
     // PostCreate but it's more than likely that we handed our (now invalid)
@@ -7911,8 +7934,8 @@ nsHTMLPluginObjElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper,
     // use the safe context from XPConnect in the runnable.
     nsCOMPtr<nsIScriptContext> scriptContext = GetScriptContextFromJSContext(cx);
 
-    nsRefPtr<nsPluginProtoChainInstallRunner> runner =
-      new nsPluginProtoChainInstallRunner(wrapper, scriptContext);
+    nsRefPtr<SetupProtoChainRunner> runner =
+      new SetupProtoChainRunner(wrapper, scriptContext, nullptr);
     nsContentUtils::AddScriptRunner(runner);
   }
 
@@ -8002,6 +8025,18 @@ nsHTMLPluginObjElementSH::Call(nsIXPConnectWrappedNative *wrapper,
                                JSContext *cx, JSObject *obj, uint32_t argc,
                                jsval *argv, jsval *vp, bool *_retval)
 {
+  // XPConnect passes us the XPConnect wrapper JSObject as obj, and
+  // not the 'this' parameter that the JS engine passes in. Pass in
+  // the real this parameter from JS (argv[-1]) here.
+  return DoCall(wrapper, cx, obj, argc, argv, vp, argv[-1], _retval);
+}
+
+nsresult
+nsHTMLPluginObjElementSH::DoCall(nsIXPConnectWrappedNative *wrapper,
+                                 JSContext *cx, JSObject *obj, uint32_t argc,
+                                 jsval *argv, jsval *vp, jsval thisVal,
+                                 bool *_retval)
+{
   nsRefPtr<nsNPAPIPluginInstance> pi;
   nsresult rv = GetPluginInstanceIfSafe(wrapper, obj, cx, getter_AddRefs(pi));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -8026,7 +8061,10 @@ nsHTMLPluginObjElementSH::Call(nsIXPConnectWrappedNative *wrapper,
   // not the 'this' parameter that the JS engine passes in. Pass in
   // the real this parameter from JS (argv[-1]) here.
   JSAutoRequest ar(cx);
-  *_retval = ::JS::Call(cx, argv[-1], pi_obj, argc, argv, vp);
+  *_retval = ::JS::Call(cx, thisVal, pi_obj, argc, argv, vp);
+  if (*_retval) {
+    Telemetry::Accumulate(Telemetry::PLUGIN_CALLED_DIRECTLY, true);
+  }
 
   return NS_OK;
 }

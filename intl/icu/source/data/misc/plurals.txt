@@ -1,0 +1,401 @@
+﻿// ***************************************************************************
+// *
+// * Copyright (C) 2012 International Business Machines
+// * Corporation and others.  All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/plurals.xml, ordinals.xml
+// *
+// ***************************************************************************
+plurals:table(nofallback){
+    locales{
+        af{"set3"}
+        ak{"set4"}
+        am{"set4"}
+        ar{"set1"}
+        asa{"set3"}
+        ast{"set3"}
+        az{""}
+        be{"set11"}
+        bem{"set3"}
+        bez{"set3"}
+        bg{"set3"}
+        bh{"set4"}
+        bm{""}
+        bn{"set3"}
+        bo{""}
+        br{"set20"}
+        brx{"set3"}
+        bs{"set11"}
+        ca{"set3"}
+        cgg{"set3"}
+        chr{"set3"}
+        ckb{"set3"}
+        cs{"set12"}
+        cy{"set17"}
+        da{"set3"}
+        de{"set3"}
+        dv{"set3"}
+        dz{""}
+        ee{"set3"}
+        el{"set3"}
+        en{"set3"}
+        eo{"set3"}
+        es{"set3"}
+        et{"set3"}
+        eu{"set3"}
+        fa{""}
+        ff{"set5"}
+        fi{"set3"}
+        fil{"set4"}
+        fo{"set3"}
+        fr{"set5"}
+        fur{"set3"}
+        fy{"set3"}
+        ga{"set8"}
+        gd{"set24"}
+        gl{"set3"}
+        gsw{"set3"}
+        gu{"set3"}
+        guw{"set4"}
+        gv{"set23"}
+        ha{"set3"}
+        haw{"set3"}
+        he{"set2"}
+        hi{"set4"}
+        hr{"set11"}
+        hu{""}
+        id{""}
+        ig{""}
+        ii{""}
+        is{"set3"}
+        it{"set3"}
+        iu{"set7"}
+        ja{""}
+        jgo{"set3"}
+        jmc{"set3"}
+        jv{""}
+        ka{""}
+        kab{"set5"}
+        kaj{"set3"}
+        kcg{"set3"}
+        kde{""}
+        kea{""}
+        kk{"set3"}
+        kkj{"set3"}
+        kl{"set3"}
+        km{""}
+        kn{""}
+        ko{""}
+        ks{"set3"}
+        ksb{"set3"}
+        ksh{"set21"}
+        ku{"set3"}
+        kw{"set7"}
+        ky{"set3"}
+        lag{"set18"}
+        lb{"set3"}
+        lg{"set3"}
+        ln{"set4"}
+        lo{""}
+        lt{"set10"}
+        lv{"set6"}
+        mas{"set3"}
+        mg{"set4"}
+        mgo{"set3"}
+        mk{"set16"}
+        ml{"set3"}
+        mn{"set3"}
+        mo{"set9"}
+        mr{"set3"}
+        ms{""}
+        mt{"set15"}
+        my{""}
+        nah{"set3"}
+        naq{"set7"}
+        nb{"set3"}
+        nd{"set3"}
+        ne{"set3"}
+        nl{"set3"}
+        nn{"set3"}
+        nnh{"set3"}
+        no{"set3"}
+        nr{"set3"}
+        nso{"set4"}
+        ny{"set3"}
+        nyn{"set3"}
+        om{"set3"}
+        or{"set3"}
+        os{"set3"}
+        pa{"set3"}
+        pap{"set3"}
+        pl{"set13"}
+        ps{"set3"}
+        pt{"set3"}
+        rm{"set3"}
+        ro{"set9"}
+        rof{"set3"}
+        ru{"set11"}
+        rwk{"set3"}
+        sah{""}
+        saq{"set3"}
+        se{"set7"}
+        seh{"set3"}
+        ses{""}
+        sg{""}
+        sh{"set11"}
+        shi{"set19"}
+        sk{"set12"}
+        sl{"set14"}
+        sma{"set7"}
+        smi{"set7"}
+        smj{"set7"}
+        smn{"set7"}
+        sms{"set7"}
+        sn{"set3"}
+        so{"set3"}
+        sq{"set3"}
+        sr{"set11"}
+        ss{"set3"}
+        ssy{"set3"}
+        st{"set3"}
+        sv{"set3"}
+        sw{"set3"}
+        syr{"set3"}
+        ta{"set3"}
+        te{"set3"}
+        teo{"set3"}
+        th{""}
+        ti{"set4"}
+        tig{"set3"}
+        tk{"set3"}
+        tl{"set4"}
+        tn{"set3"}
+        to{""}
+        tr{""}
+        ts{"set3"}
+        tzm{"set22"}
+        uk{"set11"}
+        ur{"set3"}
+        ve{"set3"}
+        vi{""}
+        vo{"set3"}
+        vun{"set3"}
+        wa{"set4"}
+        wae{"set3"}
+        wo{""}
+        xh{"set3"}
+        xog{"set3"}
+        yo{""}
+        zh{""}
+        zu{"set3"}
+    }
+    locales_ordinals{
+        af{""}
+        am{""}
+        ar{""}
+        bg{""}
+        bn{"set32"}
+        ca{"set29"}
+        cs{""}
+        da{""}
+        de{""}
+        el{""}
+        en{"set27"}
+        es{""}
+        et{""}
+        eu{""}
+        fa{""}
+        fi{""}
+        fil{"set3"}
+        fr{"set3"}
+        gl{""}
+        gu{"set31"}
+        hi{"set31"}
+        hr{""}
+        hu{"set25"}
+        id{""}
+        is{""}
+        it{"set28"}
+        iw{""}
+        ja{""}
+        kn{""}
+        ko{""}
+        lt{""}
+        lv{""}
+        ml{""}
+        mr{"set30"}
+        ms{"set3"}
+        nl{""}
+        no{""}
+        pl{""}
+        pt{""}
+        ro{"set3"}
+        ru{""}
+        sk{""}
+        sl{""}
+        sr{""}
+        sv{"set26"}
+        sw{""}
+        ta{""}
+        te{""}
+        th{""}
+        tr{""}
+        uk{""}
+        ur{""}
+        vi{"set3"}
+        zh{""}
+        zu{"set33"}
+    }
+    rules{
+        set1{
+            few{"n mod 100 in 3..10"}
+            many{"n mod 100 in 11..99"}
+            one{"n is 1"}
+            two{"n is 2"}
+            zero{"n is 0"}
+        }
+        set10{
+            few{"n mod 10 in 2..9 and n mod 100 not in 11..19"}
+            one{"n mod 10 is 1 and n mod 100 not in 11..19"}
+        }
+        set11{
+            few{"n mod 10 in 2..4 and n mod 100 not in 12..14"}
+            many{"n mod 10 is 0 or n mod 10 in 5..9 or n mod 100 in 11..14"}
+            one{"n mod 10 is 1 and n mod 100 is not 11"}
+        }
+        set12{
+            few{"n in 2..4"}
+            one{"n is 1"}
+        }
+        set13{
+            few{"n mod 10 in 2..4 and n mod 100 not in 12..14"}
+            many{
+                "n is not 1 and n mod 10 in 0..1 or n mod 10 in 5..9 or n mod 100 in "
+                "12..14"
+            }
+            one{"n is 1"}
+        }
+        set14{
+            few{"n mod 100 in 3..4"}
+            one{"n mod 100 is 1"}
+            two{"n mod 100 is 2"}
+        }
+        set15{
+            few{"n is 0 or n mod 100 in 2..10"}
+            many{"n mod 100 in 11..19"}
+            one{"n is 1"}
+        }
+        set16{
+            one{"n mod 10 is 1 and n is not 11"}
+        }
+        set17{
+            few{"n is 3"}
+            many{"n is 6"}
+            one{"n is 1"}
+            two{"n is 2"}
+            zero{"n is 0"}
+        }
+        set18{
+            one{"n within 0..2 and n is not 0 and n is not 2"}
+            zero{"n is 0"}
+        }
+        set19{
+            few{"n in 2..10"}
+            one{"n within 0..1"}
+        }
+        set2{
+            many{"n is not 0 AND n mod 10 is 0"}
+            one{"n is 1"}
+            two{"n is 2"}
+        }
+        set20{
+            few{"n mod 10 in 3..4,9 and n mod 100 not in 10..19,70..79,90..99"}
+            many{"n is not 0 and n mod 1000000 is 0"}
+            one{"n mod 10 is 1 and n mod 100 not in 11,71,91"}
+            two{"n mod 10 is 2 and n mod 100 not in 12,72,92"}
+        }
+        set21{
+            one{"n is 1"}
+            zero{"n is 0"}
+        }
+        set22{
+            one{"n in 0..1 or n in 11..99"}
+        }
+        set23{
+            one{"n mod 10 in 1..2 or n mod 20 is 0"}
+        }
+        set24{
+            few{"n in 3..10,13..19"}
+            one{"n in 1,11"}
+            two{"n in 2,12"}
+        }
+        set25{
+            one{"n in 1,5"}
+        }
+        set26{
+            one{"n mod 10 in 1,2 and n mod 100 not in 11,12"}
+        }
+        set27{
+            few{"n mod 10 is 3 and n mod 100 is not 13"}
+            one{"n mod 10 is 1 and n mod 100 is not 11"}
+            two{"n mod 10 is 2 and n mod 100 is not 12"}
+        }
+        set28{
+            many{"n in 11,8,80,800"}
+        }
+        set29{
+            few{"n is 4"}
+            one{"n in 1,3"}
+            two{"n is 2"}
+        }
+        set3{
+            one{"n is 1"}
+        }
+        set30{
+            few{"n is 4"}
+            one{"n is 1"}
+            two{"n in 2,3"}
+        }
+        set31{
+            few{"n is 4"}
+            many{"n is 6"}
+            one{"n is 1"}
+            two{"n in 2,3"}
+        }
+        set32{
+            few{"n is 4"}
+            many{"n is 6"}
+            one{"n in 1,5,7,8,9,10"}
+            two{"n in 2,3"}
+        }
+        set33{
+            few{"n in 2..9"}
+            many{"n in 10..19,100..199,1000..1999"}
+            one{"n is 1"}
+        }
+        set4{
+            one{"n in 0..1"}
+        }
+        set5{
+            one{"n within 0..2 and n is not 2"}
+        }
+        set6{
+            one{"n mod 10 is 1 and n mod 100 is not 11"}
+            zero{"n is 0"}
+        }
+        set7{
+            one{"n is 1"}
+            two{"n is 2"}
+        }
+        set8{
+            few{"n in 3..6"}
+            many{"n in 7..10"}
+            one{"n is 1"}
+            two{"n is 2"}
+        }
+        set9{
+            few{"n is 0 OR n is not 1 AND n mod 100 in 1..19"}
+            one{"n is 1"}
+        }
+    }
+}

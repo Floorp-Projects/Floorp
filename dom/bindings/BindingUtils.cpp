@@ -20,6 +20,9 @@
 #include "XPCWrapper.h"
 #include "XrayWrapper.h"
 
+#include "mozilla/dom/HTMLObjectElement.h"
+#include "mozilla/dom/HTMLObjectElementBinding.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -1530,7 +1533,11 @@ ReparentWrapper(JSContext* aCx, JSObject* aObj)
     MOZ_CRASH();
   }
 
-  // We might need to call a hook here similar to PostTransplant.
+  HTMLObjectElement* htmlobject;
+  nsresult rv = UnwrapObject<HTMLObjectElement>(aCx, aObj, htmlobject);
+  if (NS_SUCCEEDED(rv)) {
+    htmlobject->SetupProtoChain(aCx, aObj);
+  }
 
   // Now we can just fix up the parent and return the wrapper
 

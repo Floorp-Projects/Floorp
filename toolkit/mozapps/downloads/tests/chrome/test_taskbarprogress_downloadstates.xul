@@ -166,17 +166,20 @@ function testSetup()
     return;
   }
 
-  let isWin7OrHigher = false;
-  try {
-    let version = Cc["@mozilla.org/system-info;1"]
-                    .getService(Ci.nsIPropertyBag2)
-                    .getProperty("version");
-    isWin7OrHigher = (parseFloat(version) >= 6.1);
-  } catch (ex) { }
+  let isWin = /Win/.test(navigator.platform);
+  if (isWin) {
+    let isWin7OrHigher = false;
+    try {
+      let version = Cc["@mozilla.org/system-info;1"]
+                      .getService(Ci.nsIPropertyBag2)
+                      .getProperty("version");
+      isWin7OrHigher = (parseFloat(version) >= 6.1);
+    } catch (ex) { }
 
-  if (!isWin7OrHigher) {
-    ok(true, "This test only runs on Windows 7 or higher");
-    return;
+    if (!isWin7OrHigher) {
+      ok(true, "This test only runs on Windows 7 or higher");
+      return;
+    }
   }
 
   let tempScope = {};
@@ -184,10 +187,13 @@ function testSetup()
   Cu.import("resource://gre/modules/Services.jsm");
 
   DownloadTaskbarProgress = tempScope.DownloadTaskbarProgress;
-  let TaskbarService =  Cc[kTaskbarID].getService(Ci.nsIWinTaskbar);
-
   isnot(DownloadTaskbarProgress, null, "Download taskbar progress service exists");
-  is(TaskbarService.available, true, "Taskbar Service is available");
+  DownloadTaskbarProgress.init();
+
+  if (isWin) {
+    let TaskbarService =  Cc[kTaskbarID].getService(Ci.nsIWinTaskbar);
+    is(TaskbarService.available, true, "Taskbar Service is available");
+  }
 
   dm = Cc["@mozilla.org/download-manager;1"].
            getService(Ci.nsIDownloadManager);
