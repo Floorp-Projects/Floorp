@@ -55,10 +55,6 @@
 
 #include "nsIDOMNodeFilter.h"
 #include "nsIDOMProcessingInstruction.h"
-#include "nsIDOMHTMLBodyElement.h"
-#include "nsIDOMHTMLTableElement.h"
-#include "nsIDOMHTMLTableRowElement.h"
-#include "nsIDOMHTMLTableCellElement.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLImageElement.h"
@@ -2734,30 +2730,22 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
     }
 #endif // MOZ_MEDIA
 
-    nsCOMPtr<nsIDOMHTMLBodyElement> nodeAsBody = do_QueryInterface(aNode);
-    if (nodeAsBody)
-    {
+    if (content->IsHTML(nsGkAtoms::body)) {
         StoreURIAttribute(aNode, "background");
         return NS_OK;
     }
 
-    nsCOMPtr<nsIDOMHTMLTableElement> nodeAsTable = do_QueryInterface(aNode);
-    if (nodeAsTable)
-    {
+    if (content->IsHTML(nsGkAtoms::table)) {
         StoreURIAttribute(aNode, "background");
         return NS_OK;
     }
 
-    nsCOMPtr<nsIDOMHTMLTableRowElement> nodeAsTableRow = do_QueryInterface(aNode);
-    if (nodeAsTableRow)
-    {
+    if (content->IsHTML(nsGkAtoms::tr)) {
         StoreURIAttribute(aNode, "background");
         return NS_OK;
     }
 
-    nsCOMPtr<nsIDOMHTMLTableCellElement> nodeAsTableCell = do_QueryInterface(aNode);
-    if (nodeAsTableCell)
-    {
+    if (content->IsHTML(nsGkAtoms::td) || content->IsHTML(nsGkAtoms::th)) {
         StoreURIAttribute(aNode, "background");
         return NS_OK;
     }
@@ -3024,9 +3012,7 @@ nsWebBrowserPersist::CloneNodeWithFixedUpAttributes(
         return rv;
     }
 
-    nsCOMPtr<nsIDOMHTMLBodyElement> nodeAsBody = do_QueryInterface(aNodeIn);
-    if (nodeAsBody)
-    {
+    if (content->IsHTML(nsGkAtoms::body)) {
         rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut)
         {
@@ -3035,9 +3021,7 @@ nsWebBrowserPersist::CloneNodeWithFixedUpAttributes(
         return rv;
     }
 
-    nsCOMPtr<nsIDOMHTMLTableElement> nodeAsTable = do_QueryInterface(aNodeIn);
-    if (nodeAsTable)
-    {
+    if (content->IsHTML(nsGkAtoms::table)) {
         rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut)
         {
@@ -3046,9 +3030,7 @@ nsWebBrowserPersist::CloneNodeWithFixedUpAttributes(
         return rv;
     }
 
-    nsCOMPtr<nsIDOMHTMLTableRowElement> nodeAsTableRow = do_QueryInterface(aNodeIn);
-    if (nodeAsTableRow)
-    {
+    if (content->IsHTML(nsGkAtoms::tr)) {
         rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut)
         {
@@ -3057,9 +3039,7 @@ nsWebBrowserPersist::CloneNodeWithFixedUpAttributes(
         return rv;
     }
 
-    nsCOMPtr<nsIDOMHTMLTableCellElement> nodeAsTableCell = do_QueryInterface(aNodeIn);
-    if (nodeAsTableCell)
-    {
+    if (content->IsHTML(nsGkAtoms::td) || content->IsHTML(nsGkAtoms::th)) {
         rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut)
         {

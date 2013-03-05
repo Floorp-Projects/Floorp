@@ -285,7 +285,7 @@ static void nr_ice_candidate_pair_stun_cb(NR_SOCKET s, int how, void *cb_arg)
 
           /* OK, nothing found, must be peer reflexive */
           if(!cand){
-            if(r=nr_ice_candidate_create(pair->pctx->ctx,"prflx",
+            if(r=nr_ice_candidate_create(pair->pctx->ctx,
               pair->local->component,pair->local->isock,pair->local->osock,
               PEER_REFLEXIVE,0,pair->local->component->component_id,&cand))
               ABORT(r);

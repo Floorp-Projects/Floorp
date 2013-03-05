@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 const PFS_NS = "http://www.mozilla.org/2004/pfs-rdf#";
 
 function nsRDFItemUpdater(aClientOS, aChromeLocale) {

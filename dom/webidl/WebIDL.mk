@@ -217,6 +217,7 @@ webidl_files = \
   TreeWalker.webidl \
   URL.webidl \
   ValidityState.webidl \
+  WebComponents.webidl \
   WebSocket.webidl \
   UndoManager.webidl \
   URLUtils.webidl \

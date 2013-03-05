@@ -62,6 +62,7 @@
 #include "nsIProgressEventSink.h"
 #include "nsISecurityEventSink.h"
 #include "nsIChannelEventSink.h"
+#include "nsIDocumentRegister.h"
 #include "imgIRequest.h"
 #include "mozilla/dom/DOMImplementation.h"
 #include "nsIDOMTouchEvent.h"
@@ -480,6 +481,7 @@ class nsDocument : public nsIDocument,
                    public nsStubMutationObserver,
                    public nsIDOMDocumentTouch,
                    public nsIInlineEventHandlers,
+                   public nsIDocumentRegister,
                    public nsIObserver
 {
 public:
@@ -779,6 +781,9 @@ public:
   // nsIInlineEventHandlers
   NS_DECL_NSIINLINEEVENTHANDLERS
 
+  // nsIDocumentRegister
+  NS_DECL_NSIDOCUMENTREGISTER
+
   // nsIObserver
   NS_DECL_NSIOBSERVER
 
@@ -1013,9 +1018,22 @@ public:
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
+  JSObject* GetCustomPrototype(const nsAString& aElementName)
+  {
+    JSObject* prototype = nullptr;
+    mCustomPrototypes.Get(aElementName, &prototype);
+    return prototype;
+  }
+
+  static bool RegisterEnabled();
+
   // WebIDL bits
   virtual mozilla::dom::DOMImplementation*
     GetImplementation(mozilla::ErrorResult& rv);
+  virtual JSObject*
+  Register(JSContext* aCx, const nsAString& aName,
+           const mozilla::dom::ElementRegistrationOptions& aOptions,
+           mozilla::ErrorResult& rv);
   virtual nsIDOMStyleSheetList* StyleSheets();
   virtual void SetSelectedStyleSheetSet(const nsAString& aSheetSet);
   virtual void GetLastStyleSheetSet(nsString& aSheetSet);
@@ -1183,6 +1201,10 @@ protected:
   // The root of the doc tree in which this document is in. This is only
   // non-null when this document is in fullscreen mode.
   nsWeakPtr mFullscreenRoot;
+
+  // Hashtable for custom element prototypes in web components.
+  // Custom prototypes are in the document's compartment.
+  nsDataHashtable<nsStringHashKey, JSObject*> mCustomPrototypes;
 
   nsRefPtr<nsEventListenerManager> mListenerManager;
   nsCOMPtr<nsIDOMStyleSheetList> mDOMStyleSheets;

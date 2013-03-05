@@ -6,6 +6,7 @@
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
 
+#include "nsComponentManagerUtils.h"
 #include "nsMacDockSupport.h"
 #include "nsObjCExceptions.h"
 

@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -20,8 +21,6 @@
 #include "nsIDOMNode.h"
 #include "nsGkAtoms.h"
 
-class nsFixedSizeAllocator;
-
 class nsNodeInfo : public nsINodeInfo
 {
 public:
@@ -33,39 +32,27 @@ public:
   virtual bool NamespaceEquals(const nsAString& aNamespaceURI) const;
 
   // nsNodeInfo
-  // Create objects with Create
 public:
   /*
    * aName and aOwnerManager may not be null.
    */
-  static nsNodeInfo *Create(nsIAtom *aName, nsIAtom *aPrefix,
-                            int32_t aNamespaceID, uint16_t aNodeType,
-                            nsIAtom *aExtraName,
-                            nsNodeInfoManager *aOwnerManager);
-private:
-  nsNodeInfo(); // Unimplemented
-  nsNodeInfo(const nsNodeInfo& aOther); // Unimplemented
   nsNodeInfo(nsIAtom *aName, nsIAtom *aPrefix, int32_t aNamespaceID,
              uint16_t aNodeType, nsIAtom *aExtraName,
              nsNodeInfoManager *aOwnerManager);
+
+private:
+  nsNodeInfo(); // Unimplemented
+  nsNodeInfo(const nsNodeInfo& aOther); // Unimplemented
 protected:
   virtual ~nsNodeInfo();
 
 public:
-  /**
-   * Call before shutdown to clear the cache and free memory for this class.
-   */
-  static void ClearCache();
-
   bool CanSkip();
 
 private:
-  static nsFixedSizeAllocator* sNodeInfoPool;
-
   /**
-   * This method gets called by Release() when it's time to delete 
-   * this object, instead of always deleting the object we'll put the
-   * object in the cache unless the cache is already full.
+   * This method gets called by Release() when it's time to delete
+   * this object.
    */
   void LastRelease();
 };
