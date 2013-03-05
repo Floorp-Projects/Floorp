@@ -2966,8 +2966,8 @@ gfxFont::InitMetricsFromSfntTables(Metrics& aMetrics)
             uint16_t(os2->version) >= 2) {
             // version 2 and later includes the x-height field
             SET_SIGNED(xHeight, os2->sxHeight);
-            // DeprecatedAbs because of negative xHeight seen in Kokonor (Tibetan) font
-            aMetrics.xHeight = DeprecatedAbs(aMetrics.xHeight);
+            // Abs because of negative xHeight seen in Kokonor (Tibetan) font
+            aMetrics.xHeight = Abs(aMetrics.xHeight);
         }
         // this should always be present
         if (os2data.Length() >= offsetof(OS2Table, yStrikeoutPosition) +
