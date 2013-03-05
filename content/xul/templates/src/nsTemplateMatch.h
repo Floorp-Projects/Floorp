@@ -6,12 +6,10 @@
 #ifndef nsTemplateMatch_h__
 #define nsTemplateMatch_h__
 
-#include "nsFixedSizeAllocator.h"
 #include "nsIContent.h"
 #include "nsIXULTemplateQueryProcessor.h"
 #include "nsIXULTemplateResult.h"
 #include "nsRuleNetwork.h"
-#include NEW_H
 
 /**
  * A match object, where each match object is associated with one result.
@@ -37,8 +35,8 @@ class nsTemplateMatch {
 private:
     // Hide so that only Create() and Destroy() can be used to
     // allocate and deallocate from the heap
-    void* operator new(size_t) CPP_THROW_NEW { return 0; }
-    void operator delete(void*, size_t) {}
+    void* operator new(size_t) CPP_THROW_NEW { MOZ_ASSERT(0); return nullptr; }
+    void operator delete(void*, size_t) { MOZ_ASSERT(0); }
 
 public:
     nsTemplateMatch(uint16_t aQuerySetPriority,
@@ -59,18 +57,13 @@ public:
     }
 
     static nsTemplateMatch*
-    Create(nsFixedSizeAllocator& aPool,
-           uint16_t aQuerySetPriority,
+    Create(uint16_t aQuerySetPriority,
            nsIXULTemplateResult* aResult,
            nsIContent* aContainer) {
-        void* place = aPool.Alloc(sizeof(nsTemplateMatch));
-        return place ? ::new (place) nsTemplateMatch(aQuerySetPriority,
-                                                     aResult, aContainer)
-                     : nullptr; }
+        return ::new nsTemplateMatch(aQuerySetPriority, aResult, aContainer);
+    }
 
-    static void Destroy(nsFixedSizeAllocator& aPool,
-                        nsTemplateMatch*& aMatch,
-                        bool aRemoveResult);
+    static void Destroy(nsTemplateMatch*& aMatch, bool aRemoveResult);
 
     // return true if the the match is active, and has generated output
     bool IsActive() {
