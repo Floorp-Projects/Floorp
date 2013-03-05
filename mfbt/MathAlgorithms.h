@@ -121,45 +121,34 @@ namespace detail {
 // signed types if you need them.
 
 template<typename T>
-struct SupportedForAbsFixed : FalseType {};
+struct AbsReturnTypeFixed;
 
-template<> struct SupportedForAbsFixed<int8_t> : TrueType {};
-template<> struct SupportedForAbsFixed<int16_t> : TrueType {};
-template<> struct SupportedForAbsFixed<int32_t> : TrueType {};
-template<> struct SupportedForAbsFixed<int64_t> : TrueType {};
+template<> struct AbsReturnTypeFixed<int8_t> { typedef uint8_t Type; };
+template<> struct AbsReturnTypeFixed<int16_t> { typedef uint16_t Type; };
+template<> struct AbsReturnTypeFixed<int32_t> { typedef uint32_t Type; };
+template<> struct AbsReturnTypeFixed<int64_t> { typedef uint64_t Type; };
 
 template<typename T>
-struct SupportedForAbs : SupportedForAbsFixed<T> {};
+struct AbsReturnType : AbsReturnTypeFixed<T> {};
 
-template<> struct SupportedForAbs<char> : IntegralConstant<bool, char(-1) < char(0)> {};
-template<> struct SupportedForAbs<signed char> : TrueType {};
-template<> struct SupportedForAbs<short> : TrueType {};
-template<> struct SupportedForAbs<int> : TrueType {};
-template<> struct SupportedForAbs<long> : TrueType {};
-template<> struct SupportedForAbs<long long> : TrueType {};
-template<> struct SupportedForAbs<float> : TrueType {};
-template<> struct SupportedForAbs<double> : TrueType {};
-template<> struct SupportedForAbs<long double> : TrueType {};
+template<> struct AbsReturnType<char> : EnableIf<char(-1) < char(0), unsigned char> {};
+template<> struct AbsReturnType<signed char> { typedef unsigned char Type; };
+template<> struct AbsReturnType<short> { typedef unsigned short Type; };
+template<> struct AbsReturnType<int> { typedef unsigned int Type; };
+template<> struct AbsReturnType<long> { typedef unsigned long Type; };
+template<> struct AbsReturnType<long long> { typedef unsigned long long Type; };
+template<> struct AbsReturnType<float> { typedef float Type; };
+template<> struct AbsReturnType<double> { typedef double Type; };
+template<> struct AbsReturnType<long double> { typedef long double Type; };
 
 } // namespace detail
 
 template<typename T>
-inline typename mozilla::EnableIf<detail::SupportedForAbs<T>::value, T>::Type
+inline typename detail::AbsReturnType<T>::Type
 Abs(const T t)
 {
-  // The absolute value of the smallest possible value of a signed-integer type
-  // won't fit in that type (on twos-complement systems -- and we're blithely
-  // assuming we're on such systems, for the non-<stdint.h> types listed above),
-  // so assert that the input isn't that value.
-  //
-  // This is the case if: the value is non-negative; or if adding one (giving a
-  // value in the range [-maxvalue, 0]), then negating (giving a value in the
-  // range [0, maxvalue]), doesn't produce maxvalue (because in twos-complement,
-  // (minvalue + 1) == -maxvalue).
-  MOZ_ASSERT(t >= 0 ||
-             -(t + 1) != T((1ULL << (CHAR_BIT * sizeof(T) - 1)) - 1),
-             "You can't negate the smallest possible negative integer!");
-  return t >= 0 ? t : -t;
+  typedef typename detail::AbsReturnType<T>::Type ReturnType;
+  return t >= 0 ? ReturnType(t) : ~ReturnType(t) + 1;
 }
 
 template<>
