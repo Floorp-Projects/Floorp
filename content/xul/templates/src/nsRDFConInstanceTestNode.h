@@ -43,12 +43,6 @@ public:
 
 
     class Element : public MemoryElement {
-    protected:
-        // Hide so that only Create() and Destroy() can be used to
-        // allocate and deallocate from the heap
-        static void* operator new(size_t) CPP_THROW_NEW { return 0; }
-        static void operator delete(void*, size_t) {}
-
     public:
         Element(nsIRDFResource* aContainer,
                 Test aContainerTest,
@@ -59,17 +53,6 @@ public:
             MOZ_COUNT_CTOR(nsRDFConInstanceTestNode::Element); }
 
         virtual ~Element() { MOZ_COUNT_DTOR(nsRDFConInstanceTestNode::Element); }
-
-        static Element*
-        Create(nsIRDFResource* aContainer,
-               Test aContainerTest, Test aEmptyTest) {
-            void* place = MemoryElement::gPool.Alloc(sizeof(Element));
-            return place ? ::new (place) Element(aContainer, aContainerTest, aEmptyTest) : nullptr; }
-
-        void Destroy() {
-            this->~Element();
-            MemoryElement::gPool.Free(this, sizeof(Element));
-        }
 
         virtual const char* Type() const {
             return "nsRDFConInstanceTestNode::Element"; }
