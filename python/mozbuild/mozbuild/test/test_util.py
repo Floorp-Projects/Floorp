@@ -119,6 +119,8 @@ class TestResolveTargetToMake(unittest.TestCase):
 
     def test_top_level(self):
         self.assertResolve('package', (None, 'package'))
+        # Makefile handling shouldn't affect top-level targets.
+        self.assertResolve('Makefile', (None, 'Makefile'))
 
     def test_regular_file(self):
         self.assertResolve('test-dir/with/file', ('test-dir/with', 'file'))
@@ -129,6 +131,14 @@ class TestResolveTargetToMake(unittest.TestCase):
         self.assertResolve('test-dir/without/with/file', ('test-dir/without/with', 'file'))
         self.assertResolve('test-dir/without/with/without/file', ('test-dir/without/with', 'without/file'))
 
+    def test_Makefile(self):
+        self.assertResolve('test-dir/with/Makefile', ('test-dir', 'with/Makefile'))
+        self.assertResolve('test-dir/with/without/Makefile', ('test-dir/with', 'without/Makefile'))
+        self.assertResolve('test-dir/with/without/with/Makefile', ('test-dir/with', 'without/with/Makefile'))
+
+        self.assertResolve('test-dir/without/Makefile', ('test-dir', 'without/Makefile'))
+        self.assertResolve('test-dir/without/with/Makefile', ('test-dir', 'without/with/Makefile'))
+        self.assertResolve('test-dir/without/with/without/Makefile', ('test-dir/without/with', 'without/Makefile'))
 
 if __name__ == '__main__':
     main()
