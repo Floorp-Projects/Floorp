@@ -32,6 +32,7 @@ EXTRA_JS_MODULES = \
 	Keyboard.jsm \
 	TelURIParser.jsm \
 	SignInToWebsite.jsm \
+	ErrorPage.jsm \
 	$(NULL)
 
 ifdef MOZ_UPDATER
