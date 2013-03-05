@@ -33,7 +33,6 @@
 #include "nsIScriptContext.h"
 #include "nsJSEnvironment.h"
 #include "nsXMLHttpRequest.h"
-#include "mozilla/Telemetry.h"
 #include "nsDOMClassInfoID.h"
 
 using namespace mozilla;
@@ -4804,36 +4803,6 @@ nsXPCComponents::SetProperty(nsIXPConnectWrappedNative *wrapper,
     return NS_ERROR_XPC_CANT_MODIFY_PROP_ON_WN;
 }
 
-static JSBool
-ContentComponentsGetterOp(JSContext *cx, JSHandleObject obj, JSHandleId id,
-                          JSMutableHandleValue vp)
-{
-    // If chrome is accessing the Components object of content, allow.
-    MOZ_ASSERT(nsContentUtils::GetCurrentJSContext() == cx);
-    if (nsContentUtils::IsCallerChrome())
-        return true;
-
-    // If the caller is XBL, this is ok.
-    if (nsContentUtils::IsCallerXBL())
-        return true;
-
-    // Do Telemetry on how often this happens.
-    Telemetry::Accumulate(Telemetry::COMPONENTS_OBJECT_ACCESSED_BY_CONTENT, true);
-
-    // Warn once.
-    JSAutoCompartment ac(cx, obj);
-    nsCOMPtr<nsPIDOMWindow> win =
-        do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(obj));
-    if (win) {
-        nsCOMPtr<nsIDocument> doc =
-            do_QueryInterface(win->GetExtantDocument());
-        if (doc)
-            doc->WarnOnceAbout(nsIDocument::eComponents, /* asError = */ true);
-    }
-
-    return true;
-}
-
 // static
 JSBool
 nsXPCComponents::AttachComponentsObject(XPCCallContext& ccx,
@@ -4847,10 +4816,8 @@ nsXPCComponents::AttachComponentsObject(XPCCallContext& ccx,
     MOZ_ASSERT(js::IsObjectInContextCompartment(global, ccx));
 
     jsid id = ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_COMPONENTS);
-    JSPropertyOp getter = AccessCheck::isChrome(global) ? nullptr
-                                                        : &ContentComponentsGetterOp;
     return JS_DefinePropertyById(ccx, global, id, js::ObjectValue(*components),
-                                 getter, nullptr, JSPROP_PERMANENT | JSPROP_READONLY);
+                                 JS_PropertyStub, JS_StrictPropertyStub, JSPROP_PERMANENT | JSPROP_READONLY);
 }
 
 /* void lookupMethod (); */
@@ -4898,12 +4865,6 @@ nsXPCComponents::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, c
 {
     static const char* allowed[] = { "isSuccessCode", "lookupMethod", nullptr };
     *_retval = xpc_CheckAccessList(methodName, allowed);
-    if (*_retval &&
-        methodName[0] == 'l' &&
-        !nsContentUtils::IsCallerXBL())
-    {
-        Telemetry::Accumulate(Telemetry::COMPONENTS_LOOKUPMETHOD_ACCESSED_BY_CONTENT, true);
-    }
     return NS_OK;
 }
 
@@ -4913,12 +4874,6 @@ nsXPCComponents::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName
 {
     static const char* allowed[] = { "interfaces", "interfacesByID", "results", nullptr};
     *_retval = xpc_CheckAccessList(propertyName, allowed);
-    if (*_retval &&
-        propertyName[0] == 'i' &&
-        !nsContentUtils::IsCallerXBL())
-    {
-        Telemetry::Accumulate(Telemetry::COMPONENTS_INTERFACES_ACCESSED_BY_CONTENT, true);
-    }
     return NS_OK;
 }
 
