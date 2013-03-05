@@ -155,6 +155,11 @@ public:
     SetHTMLBoolAttr(nsGkAtoms::nohref, aValue, aError);
   }
 
+  void Stringify(nsAString& aResult)
+  {
+    GetHref(aResult);
+  }
+
 protected:
   virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope,
                              bool* aTriedToWrap) MOZ_OVERRIDE;
