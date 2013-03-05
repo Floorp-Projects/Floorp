@@ -12,6 +12,7 @@ using mozilla::IsSame;
 using mozilla::IsSigned;
 using mozilla::IsUnsigned;
 using mozilla::MakeSigned;
+using mozilla::MakeUnsigned;
 
 MOZ_STATIC_ASSERT(!IsSigned<bool>::value, "bool shouldn't be signed");
 MOZ_STATIC_ASSERT(IsUnsigned<bool>::value, "bool should be unsigned");
@@ -176,6 +177,32 @@ MOZ_STATIC_ASSERT((IsSame<MakeSigned<volatile char>::Type, volatile signed char>
                   "volatile char won't signify correctly");
 MOZ_STATIC_ASSERT((IsSame<MakeSigned<const char>::Type, const signed char>::value),
                   "const char won't signify correctly");
+
+MOZ_STATIC_ASSERT((IsSame<MakeUnsigned<const signed char>::Type, const unsigned char>::value),
+                  "const signed char won't unsignify correctly");
+MOZ_STATIC_ASSERT((IsSame<MakeUnsigned<volatile signed short>::Type, volatile unsigned short>::value),
+                  "volatile signed short won't unsignify correctly");
+MOZ_STATIC_ASSERT((IsSame<MakeUnsigned<const volatile signed int>::Type, const volatile unsigned int>::value),
+                  "const volatile signed int won't unsignify correctly");
+MOZ_STATIC_ASSERT((IsSame<MakeUnsigned<signed long>::Type, unsigned long>::value),
+                  "signed long won't unsignify correctly");
+
+MOZ_STATIC_ASSERT((IsSame<MakeUnsigned<const unsigned char>::Type, const unsigned char>::value),
+                  "const unsigned char won't unsignify correctly");
+
+MOZ_STATIC_ASSERT((IsSame<MakeUnsigned<volatile unsigned short>::Type, volatile unsigned short>::value),
+                  "volatile unsigned short won't unsignify correctly");
+MOZ_STATIC_ASSERT((IsSame<MakeUnsigned<const volatile unsigned int>::Type, const volatile unsigned int>::value),
+                  "const volatile unsigned int won't unsignify correctly");
+MOZ_STATIC_ASSERT((IsSame<MakeUnsigned<unsigned long>::Type, unsigned long>::value),
+                  "signed long won't unsignify correctly");
+
+MOZ_STATIC_ASSERT((IsSame<MakeUnsigned<char>::Type, unsigned char>::value),
+                  "char won't unsignify correctly");
+MOZ_STATIC_ASSERT((IsSame<MakeUnsigned<volatile char>::Type, volatile unsigned char>::value),
+                  "volatile char won't unsignify correctly");
+MOZ_STATIC_ASSERT((IsSame<MakeUnsigned<const char>::Type, const unsigned char>::value),
+                  "const char won't unsignify correctly");
 
 int
 main()
