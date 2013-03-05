@@ -1946,10 +1946,16 @@ CreateNativeGlobalForInner(JSContext* aCx,
 
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
 
+  // If we've got XBL scopes enabled, we can now turn off the Components object
+  // for content.
+  bool usingXBLScope = !nsContentUtils::IsSystemPrincipal(aPrincipal) &&
+                       Preferences::GetBool("dom.xbl_scopes",  true);
+  uint32_t flags = usingXBLScope ? nsIXPConnect::OMIT_COMPONENTS_OBJECT : 0;
+
   nsRefPtr<nsIXPConnectJSObjectHolder> jsholder;
   nsresult rv = xpc->InitClassesWithNewWrappedGlobal(
     aCx, ToSupports(aNewInner),
-    aPrincipal, 0, getter_AddRefs(jsholder));
+    aPrincipal, flags, getter_AddRefs(jsholder));
   NS_ENSURE_SUCCESS(rv, rv);
 
   MOZ_ASSERT(jsholder);

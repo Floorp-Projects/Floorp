@@ -282,8 +282,18 @@ EnableUniversalXPConnect(JSContext *cx)
 
     // Recompute all the cross-compartment wrappers leaving the newly-privileged
     // compartment.
-    return js::RecomputeWrappers(cx, js::SingleCompartment(compartment),
-                                 js::AllCompartments());
+    bool ok = js::RecomputeWrappers(cx, js::SingleCompartment(compartment),
+                                    js::AllCompartments());
+    NS_ENSURE_TRUE(ok, false);
+
+    // The Components object normally isn't defined for unprivileged web content,
+    // but we define it when UniversalXPConnect is enabled to support legacy
+    // tests.
+    XPCWrappedNativeScope *scope = priv->scope;
+    if (!scope)
+        return true;
+    XPCCallContext ccx(NATIVE_CALLER, cx);
+    return nsXPCComponents::AttachComponentsObject(ccx, scope);
 }
 
 }
