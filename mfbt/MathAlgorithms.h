@@ -66,9 +66,6 @@ template<> struct AllowDeprecatedAbs<short> : TrueType {};
 template<> struct AllowDeprecatedAbs<int> : TrueType {};
 template<> struct AllowDeprecatedAbs<long> : TrueType {};
 template<> struct AllowDeprecatedAbs<long long> : TrueType {};
-template<> struct AllowDeprecatedAbs<float> : TrueType {};
-template<> struct AllowDeprecatedAbs<double> : TrueType {};
-template<> struct AllowDeprecatedAbs<long double> : TrueType {};
 
 } // namespace detail
 
@@ -91,27 +88,6 @@ DeprecatedAbs(const T t)
              -(t + 1) != T((1ULL << (CHAR_BIT * sizeof(T) - 1)) - 1),
              "You can't negate the smallest possible negative integer!");
   return t >= 0 ? t : -t;
-}
-
-template<>
-inline float
-DeprecatedAbs<float>(const float f)
-{
-  return fabsf(f);
-}
-
-template<>
-inline double
-DeprecatedAbs<double>(const double d)
-{
-  return fabs(d);
-}
-
-template<>
-inline long double
-DeprecatedAbs<long double>(const long double d)
-{
-  return fabsl(d);
 }
 
 namespace detail {

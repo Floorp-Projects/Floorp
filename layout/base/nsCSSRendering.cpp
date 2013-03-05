@@ -1984,10 +1984,10 @@ ComputeRadialGradientLine(nsPresContext* aPresContext,
 
   // Compute gradient shape: the x and y radii of an ellipse.
   double radiusX, radiusY;
-  double leftDistance = DeprecatedAbs(aLineStart->x);
-  double rightDistance = DeprecatedAbs(aBoxSize.width - aLineStart->x);
-  double topDistance = DeprecatedAbs(aLineStart->y);
-  double bottomDistance = DeprecatedAbs(aBoxSize.height - aLineStart->y);
+  double leftDistance = Abs(aLineStart->x);
+  double rightDistance = Abs(aBoxSize.width - aLineStart->x);
+  double topDistance = Abs(aLineStart->y);
+  double bottomDistance = Abs(aBoxSize.height - aLineStart->y);
   switch (aGradient->mSize) {
   case NS_STYLE_GRADIENT_SIZE_CLOSEST_SIDE:
     radiusX = std::min(leftDistance, rightDistance);
