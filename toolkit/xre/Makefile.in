@@ -132,6 +132,17 @@ SHARED_LIBRARY_LIBS += $(DEPTH)/toolkit/crashreporter/$(LIB_PREFIX)exception_han
 ifeq ($(OS_ARCH),WINNT)
 SHARED_LIBRARY_LIBS += \
   $(DEPTH)/toolkit/crashreporter/breakpad-windows-libxul/$(LIB_PREFIX)google_breakpad_libxul_s.$(LIB_SUFFIX)
+ifdef MOZ_ENABLE_PROFILER_SPS
+SHARED_LIBRARY_LIBS += \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX) \
+  $(NULL)
+endif
+endif
+
+ifdef MOZ_ENABLE_PROFILER_SPS
+SHARED_LIBRARY_LIBS += \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/processor/$(LIB_PREFIX)breakpad_sps_common_s.$(LIB_SUFFIX) \
+  $(NULL)
 endif
 
 ifeq ($(OS_ARCH),Darwin)
