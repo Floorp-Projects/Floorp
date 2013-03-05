@@ -892,7 +892,7 @@ class ICStubCompiler
   public:
     virtual ICStub *getStub(ICStubSpace *space) = 0;
 
-    ICStubSpace *getStubSpace(HandleScript script) {
+    ICStubSpace *getStubSpace(JSScript *script) {
         return ICStub::CanMakeCalls(kind)
             ? script->baselineScript()->fallbackStubSpace()
             : script->baselineScript()->optimizedStubSpace();

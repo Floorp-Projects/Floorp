@@ -964,10 +964,10 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, HandleScript scrip
 }
 
 static bool
-DoTypeMonitorFallback(JSContext *cx, ICTypeMonitor_Fallback *stub, HandleValue value,
-                      MutableHandleValue res)
+DoTypeMonitorFallback(JSContext *cx, BaselineFrame *frame, ICTypeMonitor_Fallback *stub,
+                      HandleValue value, MutableHandleValue res)
 {
-    RootedScript script(cx, GetTopIonJSScript(cx));
+    RootedScript script(cx, frame->script());
     jsbytecode *pc = stub->icEntry()->pc(script);
     TypeFallbackICSpew(cx, stub, "TypeMonitor");
 
@@ -990,8 +990,8 @@ DoTypeMonitorFallback(JSContext *cx, ICTypeMonitor_Fallback *stub, HandleValue v
     return true;
 }
 
-typedef bool (*DoTypeMonitorFallbackFn)(JSContext *, ICTypeMonitor_Fallback *, HandleValue,
-                                        MutableHandleValue);
+typedef bool (*DoTypeMonitorFallbackFn)(JSContext *, BaselineFrame *, ICTypeMonitor_Fallback *,
+                                        HandleValue, MutableHandleValue);
 static const VMFunction DoTypeMonitorFallbackInfo =
     FunctionInfo<DoTypeMonitorFallbackFn>(DoTypeMonitorFallback);
 
@@ -1005,6 +1005,7 @@ ICTypeMonitor_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
+    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
     return tailCallVM(DoTypeMonitorFallbackInfo, masm);
 }
@@ -1176,12 +1177,13 @@ ICUpdatedStub::addUpdateStubForValue(JSContext *cx, HandleScript script, HandleO
 // TypeUpdate_Fallback
 //
 static bool
-DoTypeUpdateFallback(JSContext *cx, ICUpdatedStub *stub, HandleValue objval, HandleValue value)
+DoTypeUpdateFallback(JSContext *cx, BaselineFrame *frame, ICUpdatedStub *stub, HandleValue objval,
+                     HandleValue value)
 {
     FallbackICSpew(cx, stub->getChainFallback(), "TypeUpdate(%s)",
                    ICStub::KindString(stub->kind()));
 
-    RootedScript script(cx, GetTopIonJSScript(cx));
+    RootedScript script(cx, frame->script());
     RootedObject obj(cx, &objval.toObject());
     RootedId id(cx);
 
@@ -1209,7 +1211,8 @@ DoTypeUpdateFallback(JSContext *cx, ICUpdatedStub *stub, HandleValue objval, Han
     return stub->addUpdateStubForValue(cx, script, obj, id, value);
 }
 
-typedef bool (*DoTypeUpdateFallbackFn)(JSContext *, ICUpdatedStub *, HandleValue, HandleValue);
+typedef bool (*DoTypeUpdateFallbackFn)(JSContext *, BaselineFrame *, ICUpdatedStub *, HandleValue,
+                                       HandleValue);
 const VMFunction DoTypeUpdateFallbackInfo =
     FunctionInfo<DoTypeUpdateFallbackFn>(DoTypeUpdateFallback);
 
@@ -1412,11 +1415,10 @@ ICNewObject_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 //
 
 static bool
-DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, HandleValue rhs,
-                  MutableHandleValue ret)
+DoCompareFallback(JSContext *cx, BaselineFrame *frame, ICCompare_Fallback *stub, HandleValue lhs,
+                  HandleValue rhs, MutableHandleValue ret)
 {
-    RootedScript script(cx, GetTopIonJSScript(cx));
-    jsbytecode *pc = stub->icEntry()->pc(script);
+    jsbytecode *pc = stub->icEntry()->pc(frame->script());
     JSOp op = JSOp(*pc);
 
     FallbackICSpew(cx, stub, "Compare(%s)", js_CodeName[op]);
@@ -1478,6 +1480,8 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
         // But for now we just bail.
         return true;
     }
+
+    UnrootedScript script = frame->script();
 
     // Try to generate new stubs.
     if (lhs.isInt32() && rhs.isInt32()) {
@@ -1591,8 +1595,8 @@ DoCompareFallback(JSContext *cx, ICCompare_Fallback *stub, HandleValue lhs, Hand
     return true;
 }
 
-typedef bool (*DoCompareFallbackFn)(JSContext *, ICCompare_Fallback *, HandleValue, HandleValue,
-                                    MutableHandleValue);
+typedef bool (*DoCompareFallbackFn)(JSContext *, BaselineFrame *, ICCompare_Fallback *,
+                                    HandleValue, HandleValue, MutableHandleValue);
 static const VMFunction DoCompareFallbackInfo =
     FunctionInfo<DoCompareFallbackFn>(DoCompareFallback, PopValues(2));
 
@@ -1612,6 +1616,7 @@ ICCompare_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.pushValue(R1);
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
+    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
     return tailCallVM(DoCompareFallbackInfo, masm);
 }
@@ -1867,9 +1872,9 @@ ICCompare_Int32WithBoolean::Compiler::generateStubCode(MacroAssembler &masm)
 //
 
 static bool
-DoToBoolFallback(JSContext *cx, ICToBool_Fallback *stub, HandleValue arg, MutableHandleValue ret)
+DoToBoolFallback(JSContext *cx, BaselineFrame *frame, ICToBool_Fallback *stub, HandleValue arg,
+                 MutableHandleValue ret)
 {
-    RootedScript script(cx, GetTopIonJSScript(cx));
     FallbackICSpew(cx, stub, "ToBool");
 
     bool cond = ToBoolean(arg);
@@ -1883,6 +1888,8 @@ DoToBoolFallback(JSContext *cx, ICToBool_Fallback *stub, HandleValue arg, Mutabl
     }
 
     JS_ASSERT(!arg.isBoolean());
+
+    UnrootedScript script = frame->script();
 
     // Try to generate new stubs.
     if (arg.isInt32()) {
@@ -1942,7 +1949,8 @@ DoToBoolFallback(JSContext *cx, ICToBool_Fallback *stub, HandleValue arg, Mutabl
     return true;
 }
 
-typedef bool (*pf)(JSContext *, ICToBool_Fallback *, HandleValue, MutableHandleValue);
+typedef bool (*pf)(JSContext *, BaselineFrame *, ICToBool_Fallback *, HandleValue,
+                   MutableHandleValue);
 static const VMFunction fun = FunctionInfo<pf>(DoToBoolFallback);
 
 bool
@@ -1956,8 +1964,8 @@ ICToBool_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     // Push arguments.
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
+    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
-    // Call.
     return tailCallVM(fun, masm);
 }
 
@@ -2138,10 +2146,10 @@ ICToNumber_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 //
 
 static bool
-DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue lhs,
-                      HandleValue rhs, MutableHandleValue ret)
+DoBinaryArithFallback(JSContext *cx, BaselineFrame *frame, ICBinaryArith_Fallback *stub,
+                      HandleValue lhs, HandleValue rhs, MutableHandleValue ret)
 {
-    RootedScript script(cx, GetTopIonJSScript(cx));
+    RootedScript script(cx, frame->script());
     jsbytecode *pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
     FallbackICSpew(cx, stub, "BinaryArith(%s,%d,%d)", js_CodeName[op],
@@ -2157,23 +2165,23 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
     switch(op) {
       case JSOP_ADD:
         // Do an add.
-        if (!AddValues(cx, script, stub->icEntry()->pc(script), &lhsCopy, &rhsCopy, ret.address()))
+        if (!AddValues(cx, script, pc, &lhsCopy, &rhsCopy, ret.address()))
             return false;
         break;
       case JSOP_SUB:
-        if (!SubValues(cx, script, stub->icEntry()->pc(script), &lhsCopy, &rhsCopy, ret.address()))
+        if (!SubValues(cx, script, pc, &lhsCopy, &rhsCopy, ret.address()))
             return false;
         break;
       case JSOP_MUL:
-        if (!MulValues(cx, script, stub->icEntry()->pc(script), &lhsCopy, &rhsCopy, ret.address()))
+        if (!MulValues(cx, script, pc, &lhsCopy, &rhsCopy, ret.address()))
             return false;
         break;
       case JSOP_DIV:
-        if (!DivValues(cx, script, stub->icEntry()->pc(script), &lhsCopy, &rhsCopy, ret.address()))
+        if (!DivValues(cx, script, pc, &lhsCopy, &rhsCopy, ret.address()))
             return false;
         break;
       case JSOP_MOD:
-        if (!ModValues(cx, script, stub->icEntry()->pc(script), &lhsCopy, &rhsCopy, ret.address()))
+        if (!ModValues(cx, script, pc, &lhsCopy, &rhsCopy, ret.address()))
             return false;
         break;
       case JSOP_BITOR: {
@@ -2212,7 +2220,7 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
         break;
       }
       case JSOP_URSH: {
-        if (!UrshOperation(cx, script, stub->icEntry()->pc(script), lhs, rhs, ret.address()))
+        if (!UrshOperation(cx, script, pc, lhs, rhs, ret.address()))
             return false;
         break;
       }
@@ -2335,8 +2343,8 @@ DoBinaryArithFallback(JSContext *cx, ICBinaryArith_Fallback *stub, HandleValue l
     return true;
 }
 
-typedef bool (*DoBinaryArithFallbackFn)(JSContext *, ICBinaryArith_Fallback *, HandleValue,
-                                        HandleValue, MutableHandleValue);
+typedef bool (*DoBinaryArithFallbackFn)(JSContext *, BaselineFrame *, ICBinaryArith_Fallback *,
+                                        HandleValue, HandleValue, MutableHandleValue);
 static const VMFunction DoBinaryArithFallbackInfo =
     FunctionInfo<DoBinaryArithFallbackFn>(DoBinaryArithFallback, PopValues(2));
 
@@ -2356,6 +2364,7 @@ ICBinaryArith_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.pushValue(R1);
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
+    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
     return tailCallVM(DoBinaryArithFallbackInfo, masm);
 }
@@ -2683,10 +2692,10 @@ ICBinaryArith_DoubleWithInt32::Compiler::generateStubCode(MacroAssembler &masm)
 //
 
 static bool
-DoUnaryArithFallback(JSContext *cx, ICUnaryArith_Fallback *stub, HandleValue val,
-                     MutableHandleValue res)
+DoUnaryArithFallback(JSContext *cx, BaselineFrame *frame, ICUnaryArith_Fallback *stub,
+                     HandleValue val, MutableHandleValue res)
 {
-    RootedScript script(cx, GetTopIonJSScript(cx));
+    RootedScript script(cx, frame->script());
     jsbytecode *pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
     FallbackICSpew(cx, stub, "UnaryArith(%s)", js_CodeName[op]);
@@ -2739,8 +2748,8 @@ DoUnaryArithFallback(JSContext *cx, ICUnaryArith_Fallback *stub, HandleValue val
     return true;
 }
 
-typedef bool (*DoUnaryArithFallbackFn)(JSContext *, ICUnaryArith_Fallback *, HandleValue,
-                                       MutableHandleValue);
+typedef bool (*DoUnaryArithFallbackFn)(JSContext *, BaselineFrame *, ICUnaryArith_Fallback *,
+                                       HandleValue, MutableHandleValue);
 static const VMFunction DoUnaryArithFallbackInfo =
     FunctionInfo<DoUnaryArithFallbackFn>(DoUnaryArithFallback, PopValues(1));
 
@@ -2758,6 +2767,7 @@ ICUnaryArith_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     // Push arguments.
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
+    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
     return tailCallVM(DoUnaryArithFallbackInfo, masm);
 }
@@ -3097,9 +3107,10 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, ICGetElem_Fallback *stu
 }
 
 static bool
-DoGetElemFallback(JSContext *cx, ICGetElem_Fallback *stub, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
+DoGetElemFallback(JSContext *cx, BaselineFrame *frame, ICGetElem_Fallback *stub, HandleValue lhs,
+                  HandleValue rhs, MutableHandleValue res)
 {
-    RootedScript script(cx, GetTopIonJSScript(cx));
+    RootedScript script(cx, frame->script());
     jsbytecode *pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
     FallbackICSpew(cx, stub, "GetElem(%s)", js_CodeName[op]);
@@ -3112,7 +3123,6 @@ DoGetElemFallback(JSContext *cx, ICGetElem_Fallback *stub, HandleValue lhs, Hand
     bool isOptimizedArgs = false;
     if (lhs.isMagic(JS_OPTIMIZED_ARGUMENTS)) {
         // Handle optimized arguments[i] access.
-        BaselineFrame *frame = GetTopBaselineFrame(cx);
         if (!GetElemOptimizedArguments(cx, frame, &lhsCopy, rhs, res, &isOptimizedArgs))
             return false;
         if (isOptimizedArgs)
@@ -3142,8 +3152,8 @@ DoGetElemFallback(JSContext *cx, ICGetElem_Fallback *stub, HandleValue lhs, Hand
     return true;
 }
 
-typedef bool (*DoGetElemFallbackFn)(JSContext *, ICGetElem_Fallback *, HandleValue, HandleValue,
-                                    MutableHandleValue);
+typedef bool (*DoGetElemFallbackFn)(JSContext *, BaselineFrame *, ICGetElem_Fallback *,
+                                    HandleValue, HandleValue, MutableHandleValue);
 static const VMFunction DoGetElemFallbackInfo =
     FunctionInfo<DoGetElemFallbackFn>(DoGetElemFallback, PopValues(2));
 
@@ -3163,6 +3173,7 @@ ICGetElem_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.pushValue(R1);
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
+    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
     return tailCallVM(DoGetElemFallbackInfo, masm);
 }
@@ -3487,10 +3498,10 @@ CanOptimizeDenseSetElem(JSContext *cx, HandleObject obj, uint32_t index,
 }
 
 static bool
-DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, Value *stack, HandleValue objv,
-                  HandleValue index, HandleValue rhs)
+DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub, Value *stack,
+                  HandleValue objv, HandleValue index, HandleValue rhs)
 {
-    RootedScript script(cx, GetTopIonJSScript(cx));
+    RootedScript script(cx, frame->script());
     jsbytecode *pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
     FallbackICSpew(cx, stub, "SetElem(%s)", js_CodeName[JSOp(*pc)]);
@@ -3605,8 +3616,8 @@ DoSetElemFallback(JSContext *cx, ICSetElem_Fallback *stub, Value *stack, HandleV
     return true;
 }
 
-typedef bool (*DoSetElemFallbackFn)(JSContext *, ICSetElem_Fallback *, Value *, HandleValue,
-                                    HandleValue, HandleValue);
+typedef bool (*DoSetElemFallbackFn)(JSContext *, BaselineFrame *, ICSetElem_Fallback *, Value *,
+                                    HandleValue, HandleValue, HandleValue);
 static const VMFunction DoSetElemFallbackInfo =
     FunctionInfo<DoSetElemFallbackFn>(DoSetElemFallback, PopValues(2));
 
@@ -3641,6 +3652,7 @@ ICSetElem_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.push(R0.scratchReg());
 
     masm.push(BaselineStubReg);
+    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
     return tailCallVM(DoSetElemFallbackInfo, masm);
 }
@@ -4118,9 +4130,10 @@ TryAttachScopeNameStub(JSContext *cx, HandleScript script, ICGetName_Fallback *s
 }
 
 static bool
-DoGetNameFallback(JSContext *cx, ICGetName_Fallback *stub, HandleObject scopeChain, MutableHandleValue res)
+DoGetNameFallback(JSContext *cx, BaselineFrame *frame, ICGetName_Fallback *stub,
+                  HandleObject scopeChain, MutableHandleValue res)
 {
-    RootedScript script(cx, GetTopIonJSScript(cx));
+    RootedScript script(cx, frame->script());
     jsbytecode *pc = stub->icEntry()->pc(script);
     mozilla::DebugOnly<JSOp> op = JSOp(*pc);
     FallbackICSpew(cx, stub, "GetName(%s)", js_CodeName[JSOp(*pc)]);
@@ -4160,7 +4173,8 @@ DoGetNameFallback(JSContext *cx, ICGetName_Fallback *stub, HandleObject scopeCha
     return true;
 }
 
-typedef bool (*DoGetNameFallbackFn)(JSContext *, ICGetName_Fallback *, HandleObject, MutableHandleValue);
+typedef bool (*DoGetNameFallbackFn)(JSContext *, BaselineFrame *, ICGetName_Fallback *,
+                                    HandleObject, MutableHandleValue);
 static const VMFunction DoGetNameFallbackInfo = FunctionInfo<DoGetNameFallbackFn>(DoGetNameFallback);
 
 bool
@@ -4172,6 +4186,7 @@ ICGetName_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 
     masm.push(R0.scratchReg());
     masm.push(BaselineStubReg);
+    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
     return tailCallVM(DoGetNameFallbackInfo, masm);
 }
@@ -4246,17 +4261,16 @@ ICGetName_Scope<NumHops>::Compiler::generateStubCode(MacroAssembler &masm)
 //
 
 static bool
-DoBindNameFallback(JSContext *cx, ICBindName_Fallback *stub, HandleObject scopeChain,
-                   MutableHandleValue res)
+DoBindNameFallback(JSContext *cx, BaselineFrame *frame, ICBindName_Fallback *stub,
+                   HandleObject scopeChain, MutableHandleValue res)
 {
-    RootedScript script(cx, GetTopIonJSScript(cx));
-    jsbytecode *pc = stub->icEntry()->pc(script);
+    jsbytecode *pc = stub->icEntry()->pc(frame->script());
     mozilla::DebugOnly<JSOp> op = JSOp(*pc);
     FallbackICSpew(cx, stub, "BindName(%s)", js_CodeName[JSOp(*pc)]);
 
     JS_ASSERT(op == JSOP_BINDNAME);
 
-    RootedPropertyName name(cx, script->getName(pc));
+    RootedPropertyName name(cx, frame->script()->getName(pc));
 
     RootedObject scope(cx);
     if (!LookupNameWithGlobalDefault(cx, name, scopeChain, &scope))
@@ -4266,8 +4280,10 @@ DoBindNameFallback(JSContext *cx, ICBindName_Fallback *stub, HandleObject scopeC
     return true;
 }
 
-typedef bool (*DoBindNameFallbackFn)(JSContext *, ICBindName_Fallback *, HandleObject, MutableHandleValue);
-static const VMFunction DoBindNameFallbackInfo = FunctionInfo<DoBindNameFallbackFn>(DoBindNameFallback);
+typedef bool (*DoBindNameFallbackFn)(JSContext *, BaselineFrame *, ICBindName_Fallback *,
+                                     HandleObject, MutableHandleValue);
+static const VMFunction DoBindNameFallbackInfo =
+    FunctionInfo<DoBindNameFallbackFn>(DoBindNameFallback);
 
 bool
 ICBindName_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -4278,6 +4294,7 @@ ICBindName_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 
     masm.push(R0.scratchReg());
     masm.push(BaselineStubReg);
+    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
     return tailCallVM(DoBindNameFallbackInfo, masm);
 }
@@ -4287,9 +4304,10 @@ ICBindName_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 //
 
 static bool
-DoGetIntrinsicFallback(JSContext *cx, ICGetIntrinsic_Fallback *stub, MutableHandleValue res)
+DoGetIntrinsicFallback(JSContext *cx, BaselineFrame *frame, ICGetIntrinsic_Fallback *stub,
+                       MutableHandleValue res)
 {
-    RootedScript script(cx, GetTopIonJSScript(cx));
+    RootedScript script(cx, frame->script());
     jsbytecode *pc = stub->icEntry()->pc(script);
     mozilla::DebugOnly<JSOp> op = JSOp(*pc);
     FallbackICSpew(cx, stub, "GetIntrinsic(%s)", js_CodeName[JSOp(*pc)]);
@@ -4315,7 +4333,7 @@ DoGetIntrinsicFallback(JSContext *cx, ICGetIntrinsic_Fallback *stub, MutableHand
     return true;
 }
 
-typedef bool (*DoGetIntrinsicFallbackFn)(JSContext *, ICGetIntrinsic_Fallback *,
+typedef bool (*DoGetIntrinsicFallbackFn)(JSContext *, BaselineFrame *, ICGetIntrinsic_Fallback *,
                                          MutableHandleValue);
 static const VMFunction DoGetIntrinsicFallbackInfo =
     FunctionInfo<DoGetIntrinsicFallbackFn>(DoGetIntrinsicFallback);
@@ -4326,6 +4344,7 @@ ICGetIntrinsic_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     EmitRestoreTailCallReg(masm);
 
     masm.push(BaselineStubReg);
+    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
     return tailCallVM(DoGetIntrinsicFallbackInfo, masm);
 }
@@ -4493,10 +4512,10 @@ TryAttachStringGetPropStub(JSContext *cx, HandleScript script, ICGetProp_Fallbac
 }
 
 static bool
-DoGetPropFallback(JSContext *cx, ICGetProp_Fallback *stub, MutableHandleValue val,
-                  MutableHandleValue res)
+DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub,
+                  MutableHandleValue val, MutableHandleValue res)
 {
-    RootedScript script(cx, GetTopIonJSScript(cx));
+    RootedScript script(cx, frame->script());
     jsbytecode *pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
     FallbackICSpew(cx, stub, "GetProp(%s)", js_CodeName[op]);
@@ -4508,7 +4527,6 @@ DoGetPropFallback(JSContext *cx, ICGetProp_Fallback *stub, MutableHandleValue va
 
     if (op == JSOP_LENGTH && val.isMagic(JS_OPTIMIZED_ARGUMENTS)) {
         // Handle arguments.length access.
-        BaselineFrame *frame = GetTopBaselineFrame(cx);
         if (IsOptimizedArguments(frame, val.address())) {
             // TODO: attach optimized stub.
             res.setInt32(frame->numActualArgs());
@@ -4575,8 +4593,8 @@ DoGetPropFallback(JSContext *cx, ICGetProp_Fallback *stub, MutableHandleValue va
     return true;
 }
 
-typedef bool (*DoGetPropFallbackFn)(JSContext *, ICGetProp_Fallback *, MutableHandleValue,
-                                    MutableHandleValue);
+typedef bool (*DoGetPropFallbackFn)(JSContext *, BaselineFrame *, ICGetProp_Fallback *,
+                                    MutableHandleValue, MutableHandleValue);
 static const VMFunction DoGetPropFallbackInfo =
     FunctionInfo<DoGetPropFallbackFn>(DoGetPropFallback, PopValues(1));
 
@@ -4593,6 +4611,7 @@ ICGetProp_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     // Push arguments.
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
+    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
     return tailCallVM(DoGetPropFallbackInfo, masm);
 }
@@ -4920,10 +4939,10 @@ TryAttachSetPropStub(JSContext *cx, HandleScript script, ICSetProp_Fallback *stu
 }
 
 static bool
-DoSetPropFallback(JSContext *cx, ICSetProp_Fallback *stub, HandleValue lhs, HandleValue rhs,
-                  MutableHandleValue res)
+DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub, HandleValue lhs,
+                  HandleValue rhs, MutableHandleValue res)
 {
-    RootedScript script(cx, GetTopIonJSScript(cx));
+    RootedScript script(cx, frame->script());
     jsbytecode *pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
     FallbackICSpew(cx, stub, "SetProp(%s)", js_CodeName[op]);
@@ -4974,8 +4993,8 @@ DoSetPropFallback(JSContext *cx, ICSetProp_Fallback *stub, HandleValue lhs, Hand
     return true;
 }
 
-typedef bool (*DoSetPropFallbackFn)(JSContext *, ICSetProp_Fallback *, HandleValue, HandleValue,
-                                    MutableHandleValue);
+typedef bool (*DoSetPropFallbackFn)(JSContext *, BaselineFrame *, ICSetProp_Fallback *,
+                                    HandleValue, HandleValue, MutableHandleValue);
 static const VMFunction DoSetPropFallbackInfo =
     FunctionInfo<DoSetPropFallbackFn>(DoSetPropFallback, PopValues(2));
 
@@ -4994,6 +5013,7 @@ ICSetProp_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.pushValue(R1);
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
+    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
     return tailCallVM(DoSetPropFallbackInfo, masm);
 }
@@ -5298,13 +5318,13 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, JSO
 }
 
 static bool
-DoCallFallback(JSContext *cx, ICCall_Fallback *stub, uint32_t argc, Value *vp,
-               MutableHandleValue res)
+DoCallFallback(JSContext *cx, BaselineFrame *frame, ICCall_Fallback *stub, uint32_t argc,
+               Value *vp, MutableHandleValue res)
 {
     // Ensure vp array is rooted - we may GC in here.
     AutoArrayRooter vpRoot(cx, argc + 2, vp);
 
-    RootedScript script(cx, GetTopIonJSScript(cx));
+    RootedScript script(cx, frame->script());
     jsbytecode *pc = stub->icEntry()->pc(script);
     JSOp op = JSOp(*pc);
     FallbackICSpew(cx, stub, "Call(%s)", js_CodeName[op]);
@@ -5317,10 +5337,8 @@ DoCallFallback(JSContext *cx, ICCall_Fallback *stub, uint32_t argc, Value *vp,
     Value *args = vp + 2;
 
     // Handle funapply with JSOP_ARGUMENTS
-    if (op == JSOP_FUNAPPLY && argc == 2 && args[1].isMagic(JS_OPTIMIZED_ARGUMENTS)) {
-        BaselineFrame *frame = GetTopBaselineFrame(cx);
+    if (op == JSOP_FUNAPPLY && argc == 2 && args[1].isMagic(JS_OPTIMIZED_ARGUMENTS))
         GuardFunApplyArgumentsOptimization(cx, frame, callee, args, argc);
-    }
 
     // Compute construcing and useNewType flags.
     bool constructing = (op == JSOP_NEW);
@@ -5335,7 +5353,7 @@ DoCallFallback(JSContext *cx, ICCall_Fallback *stub, uint32_t argc, Value *vp,
     if (op == JSOP_NEW) {
         if (!InvokeConstructor(cx, callee, argc, args, res.address()))
             return false;
-    } else if (op == JSOP_EVAL && IsBuiltinEvalForScope(GetTopBaselineFrame(cx)->scopeChain(), callee)) {
+    } else if (op == JSOP_EVAL && IsBuiltinEvalForScope(frame->scopeChain(), callee)) {
         if (!DirectEval(cx, CallArgsFromVp(argc, vp)))
             return false;
         res.set(vp[0]);
@@ -5390,7 +5408,8 @@ ICCallStubCompiler::pushCallArguments(MacroAssembler &masm, GeneralRegisterSet r
     masm.bind(&done);
 }
 
-typedef bool (*DoCallFallbackFn)(JSContext *, ICCall_Fallback *, uint32_t, Value *, MutableHandleValue);
+typedef bool (*DoCallFallbackFn)(JSContext *, BaselineFrame *, ICCall_Fallback *,
+                                 uint32_t, Value *, MutableHandleValue);
 static const VMFunction DoCallFallbackInfo = FunctionInfo<DoCallFallbackFn>(DoCallFallback);
 
 bool
@@ -5413,6 +5432,10 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.push(BaselineStackReg);
     masm.push(R0.scratchReg());
     masm.push(BaselineStubReg);
+
+    // Load previous frame pointer, push BaselineFrame *.
+    masm.loadPtr(Address(BaselineFrameReg, 0), R0.scratchReg());
+    masm.pushBaselineFramePtr(R0.scratchReg(), R0.scratchReg());
 
     if (!callVM(DoCallFallbackInfo, masm))
         return false;
@@ -5821,11 +5844,10 @@ ICTableSwitch::fixupJumpTable(HandleScript script, BaselineScript *baseline)
 //
 
 static bool
-DoIteratorNewFallback(JSContext *cx, ICIteratorNew_Fallback *stub, HandleValue value,
-                      MutableHandleValue res)
+DoIteratorNewFallback(JSContext *cx, BaselineFrame *frame, ICIteratorNew_Fallback *stub,
+                      HandleValue value, MutableHandleValue res)
 {
-    RootedScript script(cx, GetTopIonJSScript(cx));
-    jsbytecode *pc = stub->icEntry()->pc(script);
+    jsbytecode *pc = stub->icEntry()->pc(frame->script());
     FallbackICSpew(cx, stub, "IteratorNew");
 
     uint8_t flags = GET_UINT8(pc);
@@ -5833,7 +5855,7 @@ DoIteratorNewFallback(JSContext *cx, ICIteratorNew_Fallback *stub, HandleValue v
     return ValueToIterator(cx, flags, res);
 }
 
-typedef bool (*DoIteratorNewFallbackFn)(JSContext *, ICIteratorNew_Fallback *,
+typedef bool (*DoIteratorNewFallbackFn)(JSContext *, BaselineFrame *, ICIteratorNew_Fallback *,
                                         HandleValue, MutableHandleValue);
 static const VMFunction DoIteratorNewFallbackInfo =
     FunctionInfo<DoIteratorNewFallbackFn>(DoIteratorNewFallback, PopValues(1));
@@ -5848,6 +5870,7 @@ ICIteratorNew_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
+    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
     return tailCallVM(DoIteratorNewFallbackInfo, masm);
 }
@@ -5857,8 +5880,8 @@ ICIteratorNew_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 //
 
 static bool
-DoIteratorMoreFallback(JSContext *cx, ICIteratorMore_Fallback *stub, HandleValue iterValue,
-                       MutableHandleValue res)
+DoIteratorMoreFallback(JSContext *cx, BaselineFrame *frame, ICIteratorMore_Fallback *stub,
+                       HandleValue iterValue, MutableHandleValue res)
 {
     FallbackICSpew(cx, stub, "IteratorMore");
 
@@ -5868,9 +5891,8 @@ DoIteratorMoreFallback(JSContext *cx, ICIteratorMore_Fallback *stub, HandleValue
     res.setBoolean(cond);
 
     if (iterValue.toObject().isPropertyIterator() && !stub->hasStub(ICStub::IteratorMore_Native)) {
-        RootedScript script(cx, GetTopIonJSScript(cx));
         ICIteratorMore_Native::Compiler compiler(cx);
-        ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
+        ICStub *newStub = compiler.getStub(compiler.getStubSpace(frame->script()));
         if (!newStub)
             return false;
         stub->addNewStub(newStub);
@@ -5879,7 +5901,7 @@ DoIteratorMoreFallback(JSContext *cx, ICIteratorMore_Fallback *stub, HandleValue
     return true;
 }
 
-typedef bool (*DoIteratorMoreFallbackFn)(JSContext *, ICIteratorMore_Fallback *,
+typedef bool (*DoIteratorMoreFallbackFn)(JSContext *, BaselineFrame *, ICIteratorMore_Fallback *,
                                          HandleValue, MutableHandleValue);
 static const VMFunction DoIteratorMoreFallbackInfo =
     FunctionInfo<DoIteratorMoreFallbackFn>(DoIteratorMoreFallback);
@@ -5891,6 +5913,7 @@ ICIteratorMore_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
+    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
     return tailCallVM(DoIteratorMoreFallbackInfo, masm);
 }
@@ -5936,8 +5959,8 @@ ICIteratorMore_Native::Compiler::generateStubCode(MacroAssembler &masm)
 //
 
 static bool
-DoIteratorNextFallback(JSContext *cx, ICIteratorNext_Fallback *stub, HandleValue iterValue,
-                       MutableHandleValue res)
+DoIteratorNextFallback(JSContext *cx, BaselineFrame *frame, ICIteratorNext_Fallback *stub,
+                       HandleValue iterValue, MutableHandleValue res)
 {
     FallbackICSpew(cx, stub, "IteratorNext");
 
@@ -5946,9 +5969,8 @@ DoIteratorNextFallback(JSContext *cx, ICIteratorNext_Fallback *stub, HandleValue
         return false;
 
     if (iteratorObject->isPropertyIterator() && !stub->hasStub(ICStub::IteratorNext_Native)) {
-        RootedScript script(cx, GetTopIonJSScript(cx));
         ICIteratorNext_Native::Compiler compiler(cx);
-        ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
+        ICStub *newStub = compiler.getStub(compiler.getStubSpace(frame->script()));
         if (!newStub)
             return false;
         stub->addNewStub(newStub);
@@ -5957,7 +5979,7 @@ DoIteratorNextFallback(JSContext *cx, ICIteratorNext_Fallback *stub, HandleValue
     return true;
 }
 
-typedef bool (*DoIteratorNextFallbackFn)(JSContext *, ICIteratorNext_Fallback *,
+typedef bool (*DoIteratorNextFallbackFn)(JSContext *, BaselineFrame *, ICIteratorNext_Fallback *,
                                          HandleValue, MutableHandleValue);
 static const VMFunction DoIteratorNextFallbackInfo =
     FunctionInfo<DoIteratorNextFallbackFn>(DoIteratorNextFallback);
@@ -5969,6 +5991,7 @@ ICIteratorNext_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
+    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
     return tailCallVM(DoIteratorNextFallbackInfo, masm);
 }

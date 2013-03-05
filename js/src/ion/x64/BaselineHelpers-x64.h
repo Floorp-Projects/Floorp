@@ -242,6 +242,10 @@ EmitCallTypeUpdateIC(MacroAssembler &masm, IonCode *code, uint32_t objectOffset)
     masm.pushValue(R1);
     masm.push(BaselineStubReg);
 
+    // Load previous frame pointer, push BaselineFrame *.
+    masm.loadPtr(Address(BaselineFrameReg, 0), R0.scratchReg());
+    masm.pushBaselineFramePtr(R0.scratchReg(), R0.scratchReg());
+
     EmitCallVM(code, masm);
     EmitLeaveStubFrame(masm);
 
