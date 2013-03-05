@@ -175,7 +175,7 @@ TEST(Thread, Simple) {
       0xeb2de4be3f29e3e9ULL); // thread environment block
   string contents;
   ASSERT_TRUE(thread.GetContents(&contents));
-  static const u_int8_t expected_bytes[] = {
+  static const uint8_t expected_bytes[] = {
     0x60, 0xc3, 0x7e, 0x3d, // thread id
     0x4d, 0xf4, 0x93, 0x35, // suspend count
     0x82, 0x2b, 0x35, 0xab, // priority class
@@ -203,7 +203,7 @@ TEST(Exception, Simple) {
                       0x0919a9b9c9d9e9f9ULL); // exception address
   string contents;
   ASSERT_TRUE(exception.GetContents(&contents));
-  static const u_int8_t expected_bytes[] = {
+  static const uint8_t expected_bytes[] = {
     0xcd, 0xab, 0x34, 0x12, // thread id
     0x00, 0x00, 0x00, 0x00, // __align
     0x21, 0x43, 0xba, 0xdc, // exception code

@@ -101,7 +101,7 @@ StackwalkerAMD64::StackwalkerAMD64(const SystemInfo* system_info,
                   (sizeof(cfi_register_map_) / sizeof(cfi_register_map_[0]))) {
 }
 
-u_int64_t StackFrameAMD64::ReturnAddress() const
+uint64_t StackFrameAMD64::ReturnAddress() const
 {
   assert(context_validity & StackFrameAMD64::CONTEXT_VALID_RIP);
   return context.rip;   
@@ -150,8 +150,8 @@ StackFrameAMD64* StackwalkerAMD64::GetCallerByCFIFrameInfo(
 StackFrameAMD64* StackwalkerAMD64::GetCallerByStackScan(
     const vector<StackFrame*> &frames) {
   StackFrameAMD64* last_frame = static_cast<StackFrameAMD64*>(frames.back());
-  u_int64_t last_rsp = last_frame->context.rsp;
-  u_int64_t caller_rip_address, caller_rip;
+  uint64_t last_rsp = last_frame->context.rsp;
+  uint64_t caller_rip_address, caller_rip;
 
   if (!ScanForReturnAddress(last_rsp, &caller_rip_address, &caller_rip)) {
     // No plausible return address was found.
@@ -179,7 +179,7 @@ StackFrameAMD64* StackwalkerAMD64::GetCallerByStackScan(
     // pointing to the first word below the alleged return address, presume
     // that the caller's %rbp is saved there.
     if (caller_rip_address - 8 == last_frame->context.rbp) {
-      u_int64_t caller_rbp = 0;
+      uint64_t caller_rbp = 0;
       if (memory_->GetMemoryAtAddress(last_frame->context.rbp, &caller_rbp) &&
           caller_rbp > caller_rip_address) {
         frame->context.rbp = caller_rbp;

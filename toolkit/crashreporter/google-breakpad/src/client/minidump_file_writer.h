@@ -172,7 +172,7 @@ class UntypedMDRVA {
 
   // Return size and position
   inline MDLocationDescriptor location() const {
-    MDLocationDescriptor location = { static_cast<u_int32_t>(size_),
+    MDLocationDescriptor location = { static_cast<uint32_t>(size_),
                                       position_ };
     return location;
   }

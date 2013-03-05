@@ -83,13 +83,13 @@ LogStream::~LogStream() {
   stream_ << std::endl;
 }
 
-string HexString(u_int32_t number) {
+string HexString(uint32_t number) {
   char buffer[11];
   snprintf(buffer, sizeof(buffer), "0x%x", number);
   return string(buffer);
 }
 
-string HexString(u_int64_t number) {
+string HexString(uint64_t number) {
   char buffer[19];
   snprintf(buffer, sizeof(buffer), "0x%" PRIx64, number);
   return string(buffer);
