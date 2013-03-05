@@ -116,7 +116,7 @@ skip-if(B2G) == anim-offset-01.svg lime.svg # bug 773482
 skip-if(B2G) == anim-feTurbulence-numOctaves-01.svg anim-feTurbulence-numOctaves-01-ref.svg # bug 773482
 
 # animate some <integer-optional-integer> attributes:
-skip-if(B2G) == anim-filter-filterRes-01.svg lime.svg
+skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == anim-filter-filterRes-01.svg lime.svg # bug 818177
 
 # animate some <angle> attributes:
 skip-if(B2G) == anim-marker-orient-01.svg lime.svg # bug 773482
