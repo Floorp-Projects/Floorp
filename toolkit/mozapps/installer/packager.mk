@@ -694,7 +694,7 @@ make-sdk:
 	  (cd $(DIST)/$(MOZ_APP_NAME)-sdk/lib && tar -xf -)
 	$(NSINSTALL) -D $(DIST)/$(SDK_PATH)
 ifndef PKG_SKIP_STRIP
-	USE_ELF_HACK= $(PYTHON) toolkit/mozapps/installer/strip.py $(DIST)/$(MOZ_APP_NAME)-sdk
+	USE_ELF_HACK= $(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/strip.py $(DIST)/$(MOZ_APP_NAME)-sdk
 endif
 	cd $(DIST) && $(MAKE_SDK)
 
