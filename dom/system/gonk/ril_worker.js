@@ -9682,24 +9682,33 @@ let ICCIOHelper = {
    *        The file to operate on, one of the ICC_EF_* constants.
    * @param recordNumber [optional]
    *        The number of the record shall be loaded.
+   * @param recordSize [optional]
+   *        The size of the record.
    * @param callback [optional]
    *        The callback function shall be called when the record(s) is read.
-   * @param this [optional]
-   *        The 'this' object when the callback is called.
    * @param onerror [optional]
    *        The callback function shall be called when failure.
    */
   loadLinearFixedEF: function loadLinearFixedEF(options) {
-    options.type = EF_TYPE_LINEAR_FIXED;
-    let cb = options.callback;
-    options.callback = function callback(options) {
-      options.callback = cb;
+    let cb;
+    function readRecord(options) {
       options.command = ICC_COMMAND_READ_RECORD;
       options.p1 = options.recordNumber || 1; // Record number
       options.p2 = READ_RECORD_ABSOLUTE_MODE;
       options.p3 = options.recordSize;
+      options.callback = cb || options.callback;
       RIL.iccIO(options);
-    }.bind(this);
+    }
+
+    options.type = EF_TYPE_LINEAR_FIXED;
+    options.pathId = ICCFileHelper.getEFPath(options.fileId);
+    if (options.recordSize) {
+      readRecord(options);
+      return;
+    }
+
+    cb = options.callback;
+    options.callback = readRecord.bind(this);
     this.getResponse(options);
   },
 
@@ -9776,7 +9785,7 @@ let ICCIOHelper = {
    */
   getResponse: function getResponse(options) {
     options.command = ICC_COMMAND_GET_RESPONSE;
-    options.pathId = ICCFileHelper.getEFPath(options.fileId);
+    options.pathId = options.pathId || ICCFileHelper.getEFPath(options.fileId);
     if (!options.pathId) {
       throw new Error("Unknown pathId for " + options.fileId.toString(16));
     }
