@@ -392,6 +392,9 @@ private:
   nsZipHandle();
   ~nsZipHandle();
 
+#if defined(XP_WIN)
+  PRFileDesc *                      mFd;     /* nspr file descriptor */
+#endif
   PRFileMap *                       mMap;    /* nspr datastructure for mmap */
   nsAutoPtr<nsZipItemPtr<uint8_t> > mBuf;
   nsrefcnt                          mRefCnt; /* ref count */
