@@ -14,6 +14,39 @@
 #include "Utils.h"
 #include "Logging.h"
 
+class FileBuffer: public MappedPtr
+{
+public:
+  bool Init(const char *name, bool writable_ = false)
+  {
+    fd = open(name, writable_ ? O_RDWR | O_CREAT | O_TRUNC : O_RDONLY, 0666);
+    if (fd == -1)
+      return false;
+    writable = writable_;
+    return true;
+  }
+
+  bool Resize(size_t size)
+  {
+    if (writable) {
+      if (ftruncate(fd, size) == -1)
+        return false;
+    }
+    Assign(mmap(NULL, size, PROT_READ | (writable ? PROT_WRITE : 0),
+                writable ? MAP_SHARED : MAP_PRIVATE, fd, 0), size);
+    return this != MAP_FAILED;
+  }
+
+  int getFd()
+  {
+    return fd;
+  }
+
+private:
+  AutoCloseFD fd;
+  bool writable;
+};
+
 static const size_t CHUNK = 16384;
 
 /* Generate a seekable compressed stream. */
@@ -25,17 +58,16 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  AutoCloseFD origFd;
-  origFd = open(argv[1], O_RDONLY);
-  if (origFd == -1) {
+  FileBuffer origBuf;
+  if (!origBuf.Init(argv[1])) {
     log("Couldn't open %s: %s", argv[1], strerror(errno));
     return 1;
   }
 
   struct stat st;
-  int ret = fstat(origFd, &st);
+  int ret = fstat(origBuf.getFd(), &st);
   if (ret == -1) {
-    log("Couldn't seek %s: %s", argv[1], strerror(errno));
+    log("Couldn't stat %s: %s", argv[1], strerror(errno));
     return 1;
   }
 
@@ -47,17 +79,14 @@ int main(int argc, char* argv[])
   }
 
   /* Mmap the original file */
-  MappedPtr origBuf;
-  origBuf.Assign(mmap(NULL, origSize, PROT_READ, MAP_PRIVATE, origFd, 0), origSize);
-  if (origBuf == MAP_FAILED) {
+  if (!origBuf.Resize(origSize)) {
     log("Couldn't mmap %s: %s", argv[1], strerror(errno));
     return 1;
   }
 
   /* Create the compressed file */
-  AutoCloseFD outFd;
-  outFd = open(argv[2], O_RDWR | O_CREAT | O_TRUNC, 0666);
-  if (outFd == -1) {
+  FileBuffer outBuf;
+  if (!outBuf.Init(argv[2], true)) {
     log("Couldn't open %s: %s", argv[2], strerror(errno));
     return 1;
   }
@@ -70,56 +99,42 @@ int main(int argc, char* argv[])
   size_t offset = sizeof(SeekableZStreamHeader) + nChunks * sizeof(uint32_t);
 
   /* Give enough room for the header and the offset table, and map them */
-  ret = ftruncate(outFd, offset);
-  MOZ_ASSERT(ret == 0);
-  MappedPtr headerMap;
-  headerMap.Assign(mmap(NULL, offset, PROT_READ | PROT_WRITE, MAP_SHARED,
-                        outFd, 0), offset);
-  if (headerMap == MAP_FAILED) {
-    log("Couldn't mmap %s: %s", argv[1], strerror(errno));
+  if (!outBuf.Resize(origSize)) {
+    log("Couldn't mmap %s: %s", argv[2], strerror(errno));
     return 1;
   }
 
-  SeekableZStreamHeader *header = new (headerMap) SeekableZStreamHeader;
+  SeekableZStreamHeader *header = new (outBuf) SeekableZStreamHeader;
   le_uint32 *entry = reinterpret_cast<le_uint32 *>(&header[1]);
 
   /* Initialize header */
   header->chunkSize = CHUNK;
   header->totalSize = offset;
 
-  /* Seek at the end of the output file, where we're going to append
-   * compressed streams */
-  lseek(outFd, offset, SEEK_SET);
-
   /* Initialize zlib structure */
   z_stream zStream;
   memset(&zStream, 0, sizeof(zStream));
-
-  /* Compression buffer */
-  mozilla::ScopedDeleteArray<Bytef> outBuf;
-  outBuf = new Bytef[CHUNK * 2];
+  zStream.avail_out = origSize - offset;
+  zStream.next_out = static_cast<Bytef*>(outBuf) + offset;
 
   Bytef *origData = static_cast<Bytef*>(origBuf);
   size_t avail = 0;
-  while (origSize) {
-    avail = std::min(origSize, CHUNK);
+  size_t size = origSize;
+  while (size) {
+    avail = std::min(size, CHUNK);
 
     /* Compress chunk */
     ret = deflateInit(&zStream, 9);
     MOZ_ASSERT(ret == Z_OK);
     zStream.avail_in = avail;
     zStream.next_in = origData;
-    zStream.avail_out = CHUNK * 2;
-    zStream.next_out = outBuf;
     ret = deflate(&zStream, Z_FINISH);
     MOZ_ASSERT(ret == Z_STREAM_END);
     ret = deflateEnd(&zStream);
     MOZ_ASSERT(ret == Z_OK);
     MOZ_ASSERT(zStream.avail_out > 0);
 
-    /* Write chunk */
-    size_t len = write(outFd, outBuf, 2 * CHUNK - zStream.avail_out);
-    MOZ_ASSERT(len == 2 * CHUNK - zStream.avail_out);
+    size_t len = origSize - offset - zStream.avail_out;
 
     /* Adjust headers */
     header->totalSize += len;
@@ -127,11 +142,15 @@ int main(int argc, char* argv[])
     header->nChunks++;
 
     /* Prepare for next iteration */
-    origSize -= avail;
+    size -= avail;
     origData += avail;
     offset += len;
   }
   header->lastChunkSize = avail;
+  if (!outBuf.Resize(offset)) {
+    log("Error resizing %s: %s", argv[2], strerror(errno));
+    return 1;
+  }
 
   MOZ_ASSERT(header->nChunks == nChunks);
   log("Compressed size is %lu", offset);
