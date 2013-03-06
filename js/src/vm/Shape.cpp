@@ -97,7 +97,6 @@ Shape::makeOwnBaseShape(JSContext *cx)
 void
 Shape::handoffTableTo(RawShape shape)
 {
-    AutoAssertNoGC nogc;
     JS_ASSERT(inDictionary() && shape->inDictionary());
 
     if (this == shape)
@@ -118,7 +117,6 @@ Shape::handoffTableTo(RawShape shape)
 /* static */ bool
 Shape::hashify(JSContext *cx, Shape *shape)
 {
-    AutoAssertNoGC nogc;
     JS_ASSERT(!shape->hasTable());
 
     if (!shape->ensureOwnBaseShape(cx))

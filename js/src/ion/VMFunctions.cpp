@@ -254,7 +254,6 @@ template bool StringsEqual<false>(JSContext *cx, HandleString lhs, HandleString 
 JSBool
 ObjectEmulatesUndefined(RawObject obj)
 {
-    AutoAssertNoGC nogc;
     return EmulatesUndefined(obj);
 }
 
