@@ -6,62 +6,63 @@
 #include "nsIDOMDOMRequest.h"
 #include "nsIDOMClassInfo.h"
 #include "nsDOMEvent.h"
-#include "nsIObserverService.h"
 #include "nsIDOMUSSDReceivedEvent.h"
 #include "nsIDOMDataErrorEvent.h"
 #include "nsIDOMCFStateChangeEvent.h"
-#include "mozilla/Services.h"
-#include "IccManager.h"
-#include "GeneratedEvents.h"
 #include "nsIDOMICCCardLockErrorEvent.h"
+#include "GeneratedEvents.h"
 
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
 #include "nsJSON.h"
 #include "jsapi.h"
-
-#include "mozilla/dom/USSDReceivedEventBinding.h"
-#include "mozilla/dom/CFStateChangeEventBinding.h"
+#include "mozilla/Services.h"
+#include "IccManager.h"
 
 #define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
 
-#define VOICECHANGE_EVENTNAME      NS_LITERAL_STRING("voicechange")
-#define DATACHANGE_EVENTNAME       NS_LITERAL_STRING("datachange")
-#define CARDSTATECHANGE_EVENTNAME  NS_LITERAL_STRING("cardstatechange")
-#define ICCINFOCHANGE_EVENTNAME    NS_LITERAL_STRING("iccinfochange")
-#define USSDRECEIVED_EVENTNAME     NS_LITERAL_STRING("ussdreceived")
-#define DATAERROR_EVENTNAME        NS_LITERAL_STRING("dataerror")
-#define ICCCARDLOCKERROR_EVENTNAME NS_LITERAL_STRING("icccardlockerror")
-#define CFSTATECHANGE_EVENTNAME    NS_LITERAL_STRING("cfstatechange")
+using namespace mozilla::dom::network;
 
-DOMCI_DATA(MozMobileConnection, mozilla::dom::network::MobileConnection)
+class MobileConnection::Listener : public nsIMobileConnectionListener
+{
+  MobileConnection* mMobileConnection;
 
-namespace mozilla {
-namespace dom {
-namespace network {
+public:
+  NS_DECL_ISUPPORTS
+  NS_FORWARD_SAFE_NSIMOBILECONNECTIONLISTENER(mMobileConnection)
 
-const char* kVoiceChangedTopic     = "mobile-connection-voice-changed";
-const char* kDataChangedTopic      = "mobile-connection-data-changed";
-const char* kCardStateChangedTopic = "mobile-connection-cardstate-changed";
-const char* kIccInfoChangedTopic   = "mobile-connection-iccinfo-changed";
-const char* kUssdReceivedTopic     = "mobile-connection-ussd-received";
-const char* kDataErrorTopic        = "mobile-connection-data-error";
-const char* kIccCardLockErrorTopic = "mobile-connection-icccardlock-error";
-const char* kCfStateChangedTopic   = "mobile-connection-cfstate-change";
+  Listener(MobileConnection* aMobileConnection)
+    : mMobileConnection(aMobileConnection)
+  {
+    MOZ_ASSERT(mMobileConnection);
+  }
+
+  void Disconnect()
+  {
+    MOZ_ASSERT(mMobileConnection);
+    mMobileConnection = nullptr;
+  }
+};
+
+NS_IMPL_ISUPPORTS1(MobileConnection::Listener, nsIMobileConnectionListener)
+
+DOMCI_DATA(MozMobileConnection, MobileConnection)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MobileConnection,
                                                   nsDOMEventTargetHelper)
+  // Don't traverse mListener because it doesn't keep any reference to
+  // MobileConnection but a raw pointer instead. Neither does mProvider because
+  // it's an xpcom service and is only released at shutting down.
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIccManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MobileConnection,
                                                 nsDOMEventTargetHelper)
-  tmp->mProvider = nullptr;
-  tmp->mIccManager = nullptr;
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mIccManager)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MobileConnection)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozMobileConnection)
-  NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozMobileConnection)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
@@ -85,30 +86,19 @@ MobileConnection::MobileConnection()
   // for it explicitly below.
   if (!mProvider) {
     NS_WARNING("Could not acquire nsIMobileConnectionProvider!");
-  } else {
-    mProvider->RegisterMobileConnectionMsg();
+    return;
   }
+
+  mListener = new Listener(this);
+  DebugOnly<nsresult> rv = mProvider->RegisterMobileConnectionMsg(mListener);
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
+                   "Failed registering mobile connection messages with provider");
 }
 
 void
 MobileConnection::Init(nsPIDOMWindow* aWindow)
 {
   BindToOwner(aWindow);
-
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (!obs) {
-    NS_WARNING("Could not acquire nsIObserverService!");
-    return;
-  }
-
-  obs->AddObserver(this, kVoiceChangedTopic, false);
-  obs->AddObserver(this, kDataChangedTopic, false);
-  obs->AddObserver(this, kCardStateChangedTopic, false);
-  obs->AddObserver(this, kIccInfoChangedTopic, false);
-  obs->AddObserver(this, kUssdReceivedTopic, false);
-  obs->AddObserver(this, kDataErrorTopic, false);
-  obs->AddObserver(this, kIccCardLockErrorTopic, false);
-  obs->AddObserver(this, kCfStateChangedTopic, false);
 
   mIccManager = new icc::IccManager();
   mIccManager->Init(aWindow);
@@ -117,159 +107,17 @@ MobileConnection::Init(nsPIDOMWindow* aWindow)
 void
 MobileConnection::Shutdown()
 {
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (!obs) {
-    NS_WARNING("Could not acquire nsIObserverService!");
-    return;
+  if (mProvider && mListener) {
+    mListener->Disconnect();
+    mProvider->UnregisterMobileConnectionMsg(mListener);
+    mProvider = nullptr;
+    mListener = nullptr;
   }
-
-  obs->RemoveObserver(this, kVoiceChangedTopic);
-  obs->RemoveObserver(this, kDataChangedTopic);
-  obs->RemoveObserver(this, kCardStateChangedTopic);
-  obs->RemoveObserver(this, kIccInfoChangedTopic);
-  obs->RemoveObserver(this, kUssdReceivedTopic);
-  obs->RemoveObserver(this, kDataErrorTopic);
-  obs->RemoveObserver(this, kIccCardLockErrorTopic);
-  obs->RemoveObserver(this, kCfStateChangedTopic);
 
   if (mIccManager) {
     mIccManager->Shutdown();
     mIccManager = nullptr;
   }
-}
-
-// nsIObserver
-
-NS_IMETHODIMP
-MobileConnection::Observe(nsISupports* aSubject,
-                          const char* aTopic,
-                          const PRUnichar* aData)
-{
-  if (!strcmp(aTopic, kVoiceChangedTopic)) {
-    DispatchTrustedEvent(VOICECHANGE_EVENTNAME);
-    return NS_OK;
-  }
-
-  if (!strcmp(aTopic, kDataChangedTopic)) {
-    DispatchTrustedEvent(DATACHANGE_EVENTNAME);
-    return NS_OK;
-  }
-
-  if (!strcmp(aTopic, kCardStateChangedTopic)) {
-    DispatchTrustedEvent(CARDSTATECHANGE_EVENTNAME);
-    return NS_OK;
-  }
-
-  if (!strcmp(aTopic, kIccInfoChangedTopic)) {
-    DispatchTrustedEvent(ICCINFOCHANGE_EVENTNAME);
-    return NS_OK;
-  }
-
-  if (!strcmp(aTopic, kUssdReceivedTopic)) {
-    mozilla::dom::USSDReceivedEventDict dict;
-    bool ok = dict.Init(nsDependentString(aData));
-    NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIDOMEvent> event;
-    NS_NewDOMUSSDReceivedEvent(getter_AddRefs(event), nullptr, nullptr);
-    nsCOMPtr<nsIDOMUSSDReceivedEvent> ce = do_QueryInterface(event);
-    nsresult rv = ce->InitUSSDReceivedEvent(USSDRECEIVED_EVENTNAME,
-                                            false, false,
-                                            dict.mMessage, dict.mSessionEnded);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return DispatchTrustedEvent(ce);
-  }
-
-  if (!strcmp(aTopic, kDataErrorTopic)) {
-    nsString dataerror;
-    dataerror.Assign(aData);
-
-    nsCOMPtr<nsIDOMEvent> event;
-    NS_NewDOMDataErrorEvent(getter_AddRefs(event), nullptr, nullptr);
-    nsCOMPtr<nsIDOMDataErrorEvent> ce = do_QueryInterface(event);
-    nsresult rv = ce->InitDataErrorEvent(DATAERROR_EVENTNAME,
-                                         false, false, dataerror);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return DispatchTrustedEvent(ce);
-  }
-
-  if (!strcmp(aTopic, kIccCardLockErrorTopic)) {
-    nsString errorMsg;
-    errorMsg.Assign(aData);
-
-    if (errorMsg.IsEmpty()) {
-      NS_ERROR("Got a 'icc-cardlock-error' topic without a valid message!");
-      return NS_OK;
-    }
-
-    nsString lockType;
-    int32_t retryCount = -1;
-
-    // Decode the json string "errorMsg" and retrieve its properties:
-    // "lockType" and "retryCount".
-    nsresult rv;
-    nsIScriptContext* sc = GetContextForEventHandlers(&rv);
-    NS_ENSURE_STATE(sc);
-    AutoPushJSContext cx(sc->GetNativeContext());
-    NS_ASSERTION(cx, "Failed to get a context!");
-
-    nsCOMPtr<nsIJSON> json(new nsJSON());
-    jsval error;
-    rv = json->DecodeToJSVal(errorMsg, cx, &error);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    jsval type;
-    if (JS_GetProperty(cx, JSVAL_TO_OBJECT(error), "lockType", &type)) {
-      if (JSVAL_IS_STRING(type)) {
-        nsDependentJSString str;
-        str.init(cx, type.toString());
-        lockType.Assign(str);
-      }
-    }
-
-    jsval count;
-    if (JS_GetProperty(cx, JSVAL_TO_OBJECT(error), "retryCount", &count)) {
-      if (JSVAL_IS_NUMBER(count)) {
-        retryCount = count.toNumber();
-      }
-    }
-
-    nsCOMPtr<nsIDOMEvent> event;
-    NS_NewDOMICCCardLockErrorEvent(getter_AddRefs(event), nullptr, nullptr);
-
-    nsCOMPtr<nsIDOMICCCardLockErrorEvent> e = do_QueryInterface(event);
-    e->InitICCCardLockErrorEvent(NS_LITERAL_STRING("icccardlockerror"),
-                                 false, false, lockType, retryCount);
-    e->SetTrusted(true);
-    bool dummy;
-    DispatchEvent(event, &dummy);
-
-    return NS_OK;
-  }
-
-  if (!strcmp(aTopic, kCfStateChangedTopic)) {
-    mozilla::dom::CFStateChangeEventDict dict;
-    bool ok = dict.Init(nsDependentString(aData));
-    NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIDOMEvent> event;
-    NS_NewDOMCFStateChangeEvent(getter_AddRefs(event), nullptr, nullptr);
-    nsCOMPtr<nsIDOMCFStateChangeEvent> ce = do_QueryInterface(event);
-    nsresult rv = ce->InitCFStateChangeEvent(CFSTATECHANGE_EVENTNAME,
-                                             false, false,
-                                             dict.mSuccess, dict.mAction,
-                                             dict.mReason, dict.mNumber,
-                                             dict.mTimeSeconds,
-                                             dict.mServiceClass);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return DispatchTrustedEvent(ce);
-  }
-
-  MOZ_NOT_REACHED("Unknown observer topic!");
-  return NS_OK;
 }
 
 // nsIDOMMozMobileConnection
@@ -450,6 +298,95 @@ MobileConnection::SetCallForwardingOption(nsIDOMMozMobileCFInfo* aCFInfo,
   return mProvider->SetCallForwardingOption(GetOwner(), aCFInfo, aRequest);
 }
 
-} // namespace network
-} // namespace dom
-} // namespace mozilla
+// nsIMobileConnectionListener
+
+NS_IMETHODIMP
+MobileConnection::NotifyVoiceChanged()
+{
+  return DispatchTrustedEvent(NS_LITERAL_STRING("voicechange"));
+}
+
+NS_IMETHODIMP
+MobileConnection::NotifyDataChanged()
+{
+  return DispatchTrustedEvent(NS_LITERAL_STRING("datachange"));
+}
+
+NS_IMETHODIMP
+MobileConnection::NotifyCardStateChanged()
+{
+  return DispatchTrustedEvent(NS_LITERAL_STRING("cardstatechange"));
+}
+
+NS_IMETHODIMP
+MobileConnection::NotifyIccInfoChanged()
+{
+  return DispatchTrustedEvent(NS_LITERAL_STRING("iccinfochange"));
+}
+
+NS_IMETHODIMP
+MobileConnection::NotifyUssdReceived(const nsAString& aMessage,
+                                     bool aSessionEnded)
+{
+  nsCOMPtr<nsIDOMEvent> event;
+  NS_NewDOMUSSDReceivedEvent(getter_AddRefs(event), nullptr, nullptr);
+
+  nsCOMPtr<nsIDOMUSSDReceivedEvent> ce = do_QueryInterface(event);
+  nsresult rv = ce->InitUSSDReceivedEvent(NS_LITERAL_STRING("ussdreceived"),
+                                          false, false,
+                                          aMessage, aSessionEnded);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return DispatchTrustedEvent(ce);
+}
+
+NS_IMETHODIMP
+MobileConnection::NotifyDataError(const nsAString& aMessage)
+{
+  nsCOMPtr<nsIDOMEvent> event;
+  NS_NewDOMDataErrorEvent(getter_AddRefs(event), nullptr, nullptr);
+
+  nsCOMPtr<nsIDOMDataErrorEvent> ce = do_QueryInterface(event);
+  nsresult rv = ce->InitDataErrorEvent(NS_LITERAL_STRING("dataerror"),
+                                       false, false, aMessage);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return DispatchTrustedEvent(ce);
+}
+
+NS_IMETHODIMP
+MobileConnection::NotifyIccCardLockError(const nsAString& aLockType,
+                                         uint32_t aRetryCount)
+{
+  nsCOMPtr<nsIDOMEvent> event;
+  NS_NewDOMICCCardLockErrorEvent(getter_AddRefs(event), nullptr, nullptr);
+
+  nsCOMPtr<nsIDOMICCCardLockErrorEvent> ce = do_QueryInterface(event);
+  nsresult rv =
+    ce->InitICCCardLockErrorEvent(NS_LITERAL_STRING("icccardlockerror"),
+                                  false, false, aLockType, aRetryCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return DispatchTrustedEvent(ce);
+}
+
+NS_IMETHODIMP
+MobileConnection::NotifyCFStateChange(bool aSuccess,
+                                      unsigned short aAction,
+                                      unsigned short aReason,
+                                      const nsAString& aNumber,
+                                      unsigned short aSeconds,
+                                      unsigned short aServiceClass)
+{
+  nsCOMPtr<nsIDOMEvent> event;
+  NS_NewDOMCFStateChangeEvent(getter_AddRefs(event), nullptr, nullptr);
+
+  nsCOMPtr<nsIDOMCFStateChangeEvent> ce = do_QueryInterface(event);
+  nsresult rv = ce->InitCFStateChangeEvent(NS_LITERAL_STRING("cfstatechange"),
+                                           false, false,
+                                           aSuccess, aAction, aReason, aNumber,
+                                           aSeconds, aServiceClass);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return DispatchTrustedEvent(ce);
+}
