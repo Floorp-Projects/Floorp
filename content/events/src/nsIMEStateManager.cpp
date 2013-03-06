@@ -598,11 +598,10 @@ nsIMEStateManager::NotifyIME(NotificationToIME aNotification,
   if (!composition || !composition->IsSynthesizedForTests()) {
     switch (aNotification) {
       case NOTIFY_IME_OF_CURSOR_POS_CHANGED:
-        return aWidget->ResetInputState();
+        return aWidget->NotifyIME(aNotification);
       case REQUEST_TO_COMMIT_COMPOSITION:
-        return composition ? aWidget->ResetInputState() : NS_OK;
       case REQUEST_TO_CANCEL_COMPOSITION:
-        return composition ? aWidget->CancelIMEComposition() : NS_OK;
+        return composition ? aWidget->NotifyIME(aNotification) : NS_OK;
       default:
         MOZ_NOT_REACHED("Unsupported notification");
         return NS_ERROR_INVALID_ARG;
@@ -745,9 +744,9 @@ nsTextStateManager::Init(nsIWidget* aWidget,
                          false, false))->RunDOMEventWhenSafe();
   }
 
-  aWidget->OnIMEFocusChange(true);
+  aWidget->NotifyIME(NOTIFY_IME_OF_FOCUS);
 
-  // OnIMEFocusChange(true) might cause recreating nsTextStateManager
+  // NOTIFY_IME_OF_FOCUS might cause recreating nsTextStateManager
   // instance via nsIMEStateManager::UpdateIMEState().  So, this
   // instance might already have been destroyed, check it.
   if (!mRootContent) {
@@ -783,14 +782,14 @@ void
 nsTextStateManager::Destroy(void)
 {
   // If CreateTextStateManager failed, mRootContent will be null,
-  // and we should not call OnIMEFocusChange(false)
+  // and we should not call NotifyIME(NOTIFY_IME_OF_BLUR)
   if (mRootContent) {
     if (nsIMEStateManager::sIsTestingIME && mEditableNode) {
       nsIDocument* doc = mEditableNode->OwnerDoc();
       (new nsAsyncDOMEvent(doc, NS_LITERAL_STRING("MozIMEFocusOut"),
                            false, false))->RunDOMEventWhenSafe();
     }
-    mWidget->OnIMEFocusChange(false);
+    mWidget->NotifyIME(NOTIFY_IME_OF_BLUR);
   }
   // Even if there are some pending notification, it'll never notify the widget.
   mWidget = nullptr;
@@ -837,7 +836,7 @@ public:
 
   NS_IMETHOD Run() {
     if (mDispatcher->mWidget) {
-      mDispatcher->mWidget->OnIMESelectionChange();
+      mDispatcher->mWidget->NotifyIME(NOTIFY_IME_OF_SELECTION_CHANGE);
     }
     return NS_OK;
   }
