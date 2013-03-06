@@ -331,6 +331,13 @@ ArrayLikeToIndexVector(JSContext *cx, HandleObject obj, IndexVector &indices,
     if (!MaybeGetParallelArrayObjectAndLength(cx, obj, &pa, &iv, &length))
         return false;
 
+    // We have to push one argument per index, so don't let this get
+    // too large!
+    if (length >= StackSpace::ARGS_LENGTH_MAX) {
+        ReportBadArg(cx);
+        return false;
+    }
+
     if (!indices.resize(length))
         return false;
 
