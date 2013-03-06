@@ -17,8 +17,8 @@ struct nsMargin : public mozilla::gfx::BaseMargin<nscoord, nsMargin> {
   // Constructors
   nsMargin() : Super() {}
   nsMargin(const nsMargin& aMargin) : Super(aMargin) {}
-  nsMargin(nscoord aLeft,  nscoord aTop, nscoord aRight, nscoord aBottom)
-    : Super(aLeft, aTop, aRight, aBottom) {}
+  nsMargin(nscoord aTop, nscoord aRight, nscoord aBottom, nscoord aLeft)
+    : Super(aTop, aRight, aBottom, aLeft) {}
 };
 
 struct nsIntMargin : public mozilla::gfx::BaseMargin<int32_t, nsIntMargin> {
@@ -27,8 +27,8 @@ struct nsIntMargin : public mozilla::gfx::BaseMargin<int32_t, nsIntMargin> {
   // Constructors
   nsIntMargin() : Super() {}
   nsIntMargin(const nsIntMargin& aMargin) : Super(aMargin) {}
-  nsIntMargin(int32_t aLeft,  int32_t aTop, int32_t aRight, int32_t aBottom)
-    : Super(aLeft, aTop, aRight, aBottom) {}
+  nsIntMargin(int32_t aTop, int32_t aRight, int32_t aBottom, int32_t aLeft)
+    : Super(aTop, aRight, aBottom, aLeft) {}
 };
 
 #endif /* NSMARGIN_H */

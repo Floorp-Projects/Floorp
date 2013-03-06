@@ -297,10 +297,10 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(int32_t aAppUnitsPerPixel,
 
   mInnerRect = mOuterRect;
   mInnerRect.Deflate(
-      gfxMargin(mBorderStyles[3] != NS_STYLE_BORDER_STYLE_NONE ? mBorderWidths[3] : 0,
-                mBorderStyles[0] != NS_STYLE_BORDER_STYLE_NONE ? mBorderWidths[0] : 0,
+      gfxMargin(mBorderStyles[0] != NS_STYLE_BORDER_STYLE_NONE ? mBorderWidths[0] : 0,
                 mBorderStyles[1] != NS_STYLE_BORDER_STYLE_NONE ? mBorderWidths[1] : 0,
-                mBorderStyles[2] != NS_STYLE_BORDER_STYLE_NONE ? mBorderWidths[2] : 0));
+                mBorderStyles[2] != NS_STYLE_BORDER_STYLE_NONE ? mBorderWidths[2] : 0,
+                mBorderStyles[3] != NS_STYLE_BORDER_STYLE_NONE ? mBorderWidths[3] : 0));
 
   ComputeBorderCornerDimensions(mOuterRect, mInnerRect, mBorderRadii, &mBorderCornerDimensions);
 
@@ -1059,8 +1059,8 @@ nsCSSBorderRenderer::DrawBorderSides(int aSides)
   for (unsigned int i = 0; i < borderColorStyleCount; i++) {
     // walk siRect inwards at the start of the loop to get the
     // correct inner rect.
-    siRect.Deflate(gfxMargin(borderWidths[i][3], borderWidths[i][0],
-                             borderWidths[i][1], borderWidths[i][2]));
+    siRect.Deflate(gfxMargin(borderWidths[i][0], borderWidths[i][1],
+                             borderWidths[i][2], borderWidths[i][3]));
 
     if (borderColorStyle[i] != BorderColorStyleNone) {
       gfxRGBA color = ComputeColorForLine(i,
@@ -1393,8 +1393,8 @@ nsCSSBorderRenderer::DrawNoCompositeColorSolidBorder()
   ComputeInnerRadii(mBorderRadii, mBorderWidths, &innerRadii);
 
   gfxRect strokeRect = mOuterRect;
-  strokeRect.Deflate(gfxMargin(mBorderWidths[3] / 2.0, mBorderWidths[0] / 2.0,
-                               mBorderWidths[1] / 2.0, mBorderWidths[2] / 2.0));
+  strokeRect.Deflate(gfxMargin(mBorderWidths[0] / 2.0, mBorderWidths[1] / 2.0,
+                               mBorderWidths[2] / 2.0, mBorderWidths[3] / 2.0));
 
   NS_FOR_CSS_CORNERS(i) {
       // the corner index -- either 1 2 3 0 (cw) or 0 3 2 1 (ccw)
@@ -1543,8 +1543,8 @@ nsCSSBorderRenderer::DrawNoCompositeColorSolidBorderAzure()
   ComputeInnerRadii(mBorderRadii, mBorderWidths, &innerRadii);
 
   gfxRect strokeRect = mOuterRect;
-  strokeRect.Deflate(gfxMargin(mBorderWidths[3] / 2.0, mBorderWidths[0] / 2.0,
-                               mBorderWidths[1] / 2.0, mBorderWidths[2] / 2.0));
+  strokeRect.Deflate(gfxMargin(mBorderWidths[0] / 2.0, mBorderWidths[1] / 2.0,
+                               mBorderWidths[2] / 2.0, mBorderWidths[3] / 2.0));
 
   ColorPattern colorPat(Color(0, 0, 0, 0));
   LinearGradientPattern gradPat(Point(), Point(), NULL);
