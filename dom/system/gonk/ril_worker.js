@@ -1301,14 +1301,14 @@ let RIL = {
   },
 
   /**
-   * Get UICC Phonebook.
+   * Read UICC Phonebook contacts.
    *
    * @param contactType
-   *        "ADN" or "FDN".
+   *        "adn" or "fdn".
    * @param requestId
    *        Request id from RadioInterfaceLayer.
    */
-  getICCContacts: function getICCContacts(options) {
+  readICCContacts: function readICCContacts(options) {
     if (!this.appType) {
       options.rilMessageType = "icccontacts";
       options.errorMsg = GECKO_ERROR_REQUEST_NOT_SUPPORTED;
@@ -1334,7 +1334,7 @@ let RIL = {
   /**
    * Update UICC Phonebook.
    *
-   * @param contactType   "ADN" or "FDN".
+   * @param contactType   "adn" or "fdn".
    * @param contact       The contact will be updated.
    * @param pin2          PIN2 is required for updating FDN.
    * @param requestId     Request id from RadioInterfaceLayer.
@@ -11302,13 +11302,13 @@ let ICCContactHelper = {
    * Helper function to read ICC contacts.
    *
    * @param appType       CARD_APPTYPE_SIM or CARD_APPTYPE_USIM.
-   * @param contactType   "ADN" or "FDN"
+   * @param contactType   "adn" or "fdn".
    * @param onsuccess     Callback to be called when success.
    * @param onerror       Callback to be called when error.
    */
   readICCContacts: function readICCContacts(appType, contactType, onsuccess, onerror) {
     switch (contactType) {
-      case "ADN":
+      case "adn":
         switch (appType) {
           case CARD_APPTYPE_SIM:
             ICCRecordHelper.readADNLike(ICC_EF_ADN, onsuccess, onerror);
@@ -11318,7 +11318,7 @@ let ICCContactHelper = {
             break;
         }
         break;
-      case "FDN":
+      case "fdn":
         ICCRecordHelper.readADNLike(ICC_EF_FDN, onsuccess, onerror);
         break;
     }
@@ -11328,13 +11328,13 @@ let ICCContactHelper = {
    * Helper function to find free contact record.
    *
    * @param appType       CARD_APPTYPE_SIM or CARD_APPTYPE_USIM.
-   * @param contactType   "ADN" or "FDN".
+   * @param contactType   "adn" or "fdn".
    * @param onsuccess     Callback to be called when success.
    * @param onerror       Callback to be called when error.
    */
   findFreeICCContact: function findFreeICCContact(appType, contactType, onsuccess, onerror) {
     switch (contactType) {
-      case "ADN":
+      case "adn":
         switch (appType) {
           case CARD_APPTYPE_SIM:
             ICCRecordHelper.getFreeRecordId(ICC_EF_ADN, onsuccess, onerror);
@@ -11350,7 +11350,7 @@ let ICCContactHelper = {
             break;
         }
         break;
-      case "FDN":
+      case "fdn":
         ICCRecordHelper.getFreeRecordId(ICC_EF_FDN, onsuccess, onerror);
         break;
       default:
@@ -11365,7 +11365,7 @@ let ICCContactHelper = {
    * Helper function to add a new ICC contact.
    *
    * @param appType       CARD_APPTYPE_SIM or CARD_APPTYPE_USIM.
-   * @param contactType   "ADN" or "FDN".
+   * @param contactType   "adn" or "fdn".
    * @param contact       The contact will be added.
    * @param pin2          PIN2 is required for FDN.
    * @param onsuccess     Callback to be called when success.
@@ -11385,7 +11385,7 @@ let ICCContactHelper = {
    * Helper function to update ICC contact.
    *
    * @param appType       CARD_APPTYPE_SIM or CARD_APPTYPE_USIM.
-   * @param contactType   "ADN" or "FDN".
+   * @param contactType   "adn" or "fdn".
    * @param contact       The contact will be updated.
    * @param pin2          PIN2 is required for FDN.
    * @param onsuccess     Callback to be called when success.
@@ -11393,7 +11393,7 @@ let ICCContactHelper = {
    */
   updateICCContact: function updateICCContact(appType, contactType, contact, pin2, onsuccess, onerror) {
     switch (contactType) {
-      case "ADN":
+      case "adn":
         switch (appType) {
           case CARD_APPTYPE_SIM:
             ICCRecordHelper.updateADNLike(ICC_EF_ADN, contact, null, onsuccess, onerror);
@@ -11403,7 +11403,7 @@ let ICCContactHelper = {
             break;
         }
         break;
-      case "FDN":
+      case "fdn":
         ICCRecordHelper.updateADNLike(ICC_EF_FDN, contact, pin2, onsuccess, onerror);
         break;
       default:
