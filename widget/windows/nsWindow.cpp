@@ -7399,9 +7399,9 @@ nsWindow::GetToggledKeyState(uint32_t aKeyCode, bool* aLEDState)
 }
 
 NS_IMETHODIMP
-nsWindow::OnIMETextChange(uint32_t aStart,
-                          uint32_t aOldEnd,
-                          uint32_t aNewEnd)
+nsWindow::NotifyIMEOfTextChange(uint32_t aStart,
+                                uint32_t aOldEnd,
+                                uint32_t aNewEnd)
 {
   return IMEHandler::NotifyIMEOfTextChange(aStart, aOldEnd, aNewEnd);
 }

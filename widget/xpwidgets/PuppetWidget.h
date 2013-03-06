@@ -153,8 +153,8 @@ public:
   NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
                                     const InputContextAction& aAction);
   NS_IMETHOD_(InputContext) GetInputContext();
-  NS_IMETHOD OnIMETextChange(uint32_t aOffset, uint32_t aEnd,
-                             uint32_t aNewEnd);
+  NS_IMETHOD NotifyIMEOfTextChange(uint32_t aOffset, uint32_t aEnd,
+                                   uint32_t aNewEnd) MOZ_OVERRIDE;
   virtual nsIMEUpdatePreference GetIMEUpdatePreference();
 
   NS_IMETHOD SetCursor(nsCursor aCursor);
