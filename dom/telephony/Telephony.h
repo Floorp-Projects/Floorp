@@ -11,7 +11,7 @@
 
 #include "nsIDOMTelephony.h"
 #include "nsIDOMTelephonyCall.h"
-#include "nsIRadioInterfaceLayer.h"
+#include "nsITelephonyProvider.h"
 
 class nsIScriptContext;
 class nsPIDOMWindow;
@@ -21,30 +21,17 @@ BEGIN_TELEPHONY_NAMESPACE
 class Telephony : public nsDOMEventTargetHelper,
                   public nsIDOMTelephony
 {
-  class RILTelephonyCallback : public nsIRILTelephonyCallback
-  {
-    Telephony* mTelephony;
+  /**
+   * Class Telephony doesn't actually inherit nsITelephonyListener.
+   * Instead, it owns an nsITelephonyListener derived instance mListener
+   * and passes it to nsITelephonyProvider. The onreceived events are first
+   * delivered to mListener and then forwarded to its owner, Telephony. See
+   * also bug 775997 comment #51.
+   */
+  class Listener;
 
-  public:
-    NS_DECL_ISUPPORTS
-    NS_FORWARD_SAFE_NSIRILTELEPHONYCALLBACK(mTelephony)
-
-    RILTelephonyCallback(Telephony* aTelephony)
-    : mTelephony(aTelephony)
-    {
-      NS_ASSERTION(mTelephony, "Null pointer!");
-    }
-
-    void
-    Disable()
-    {
-      NS_ASSERTION(mTelephony, "Disable called more than once!");
-      mTelephony = nullptr;
-    }
-  };
-
-  nsCOMPtr<nsIRILContentHelper> mRIL;
-  nsRefPtr<RILTelephonyCallback> mRILTelephonyCallback;
+  nsCOMPtr<nsITelephonyProvider> mProvider;
+  nsRefPtr<Listener> mListener;
 
   TelephonyCall* mActiveCall;
   nsTArray<nsRefPtr<TelephonyCall> > mCalls;
@@ -58,14 +45,15 @@ class Telephony : public nsDOMEventTargetHelper,
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMTELEPHONY
-  NS_DECL_NSIRILTELEPHONYCALLBACK
+  NS_DECL_NSITELEPHONYLISTENER
+
   NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
                                                    Telephony,
                                                    nsDOMEventTargetHelper)
 
   static already_AddRefed<Telephony>
-  Create(nsPIDOMWindow* aOwner, nsIRILContentHelper* aRIL);
+  Create(nsPIDOMWindow* aOwner, nsITelephonyProvider* aProvider);
 
   nsIDOMEventTarget*
   ToIDOMEventTarget() const
@@ -98,10 +86,10 @@ public:
     NotifyCallsChanged(aCall);
   }
 
-  nsIRILContentHelper*
-  RIL() const
+  nsITelephonyProvider*
+  Provider() const
   {
-    return mRIL;
+    return mProvider;
   }
 
 private:
