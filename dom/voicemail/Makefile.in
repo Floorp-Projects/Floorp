@@ -32,6 +32,7 @@ XPIDLSRCS = \
   nsIDOMMozVoicemail.idl \
   nsIDOMMozVoicemailEvent.idl \
   nsIDOMMozVoicemailStatus.idl \
+  nsIVoicemailProvider.idl \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
