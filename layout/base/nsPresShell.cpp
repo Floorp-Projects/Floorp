@@ -9441,6 +9441,18 @@ PresShell::SizeOfTextRuns(nsMallocSizeOfFun aMallocSizeOf) const
 }
 
 void
+nsIPresShell::MarkFixedFramesForReflow(IntrinsicDirty aIntrinsicDirty)
+{
+  nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
+  if (rootFrame) {
+    const nsFrameList& childList = rootFrame->GetChildList(nsIFrame::kFixedList);
+    for (nsFrameList::Enumerator e(childList); !e.AtEnd(); e.Next()) {
+      FrameNeedsReflow(e.get(), aIntrinsicDirty, NS_FRAME_IS_DIRTY);
+    }
+  }
+}
+
+void
 nsIPresShell::SetScrollPositionClampingScrollPortSize(nscoord aWidth, nscoord aHeight)
 {
   if (!mScrollPositionClampingScrollPortSizeSet ||
@@ -9450,16 +9462,20 @@ nsIPresShell::SetScrollPositionClampingScrollPortSize(nscoord aWidth, nscoord aH
     mScrollPositionClampingScrollPortSize.width = aWidth;
     mScrollPositionClampingScrollPortSize.height = aHeight;
 
-    // Reflow fixed position children.
-    nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
-    if (rootFrame) {
-      const nsFrameList& childList = rootFrame->GetChildList(nsIFrame::kFixedList);
-      for (nsIFrame* child = childList.FirstChild(); child;
-           child = child->GetNextSibling()) {
-        FrameNeedsReflow(child, eResize, NS_FRAME_IS_DIRTY);
-      }
-    }
+    MarkFixedFramesForReflow(eResize);
   }
+}
+
+void
+nsIPresShell::SetContentDocumentFixedPositionMargins(const nsMargin& aMargins)
+{
+  if (mContentDocumentFixedPositionMargins == aMargins) {
+    return;
+  }
+
+  mContentDocumentFixedPositionMargins = aMargins;
+
+  MarkFixedFramesForReflow(eResize);
 }
 
 void
