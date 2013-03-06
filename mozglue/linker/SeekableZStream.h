@@ -49,12 +49,6 @@ struct SeekableZStreamHeader: public Zip::SignedEntity<SeekableZStreamHeader>
 
   /* Filter Id */
   unsigned char filter;
-
-  /* Maximum supported size for chunkSize */
-  /* Can't use std::min here because it's not constexpr */
-  static const size_t maxChunkSize =
-    1 << ((sizeof(chunkSize) < sizeof(lastChunkSize) ?
-           sizeof(chunkSize) : sizeof(lastChunkSize)) - 1);
 };
 #pragma pack()
 
