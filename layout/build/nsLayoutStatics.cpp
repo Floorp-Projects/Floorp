@@ -60,6 +60,7 @@
 #include "nsMathMLOperators.h"
 #include "Navigator.h"
 #include "nsDOMStorageBaseDB.h"
+#include "DisplayItemClip.h"
 
 #include "AudioChannelService.h"
 
@@ -391,6 +392,8 @@ nsLayoutStatics::Shutdown()
   ContentParent::ShutDown();
 
   nsRefreshDriver::Shutdown();
+
+  DisplayItemClip::Shutdown();
 
   nsDocument::XPCOMShutdown();
 }
