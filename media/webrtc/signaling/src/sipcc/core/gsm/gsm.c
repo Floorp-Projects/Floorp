@@ -34,7 +34,7 @@ static void sub_process_feature_notify(ccsip_sub_not_data_t *msg, callid_t call_
 static void sub_process_b2bcnf_msg(uint32_t cmd, void *msg);
 void fsmb2bcnf_get_sub_call_id_from_ccb(fsmcnf_ccb_t *ccb, callid_t *cnf_call_id,
                 callid_t *cns_call_id);
-cprMsgQueue_t gsm_msg_queue;
+extern cprMsgQueue_t gsm_msgq;
 void destroy_gsm_thread(void);
 void dp_shutdown();
 extern void dcsm_process_jobs(void);
@@ -86,7 +86,7 @@ gsm_send_msg (uint32_t cmd, cprBuffer_t buf, uint16_t len)
     syshdr->Cmd = cmd;
     syshdr->Len = len;
 
-    if (cprSendMessage(gsm_msg_queue, buf, (void **) &syshdr) == CPR_FAILURE) {
+    if (cprSendMessage(gsm_msgq, buf, (void **) &syshdr) == CPR_FAILURE) {
         cprReleaseSysHeader(syshdr);
         return CPR_FAILURE;
     }
@@ -264,13 +264,9 @@ GSMTask (void *arg)
     phn_syshdr_t   *syshdr;
     boolean        release_msg = TRUE;
 
-    /*
-     * Get the GSM message queue handle
-     * A hack until the tasks in irx are
-     * CPRized.
-     */
-    gsm_msg_queue = (cprMsgQueue_t) arg;
-    if (!gsm_msg_queue) {
+    MOZ_ASSERT (gsm_msgq == (cprMsgQueue_t) arg);
+
+    if (!gsm_msgq) {
         GSM_ERR_MSG(GSM_F_PREFIX"invalid input, exiting\n", fname);
         return;
     }
@@ -312,7 +308,7 @@ GSMTask (void *arg)
 
         release_msg = TRUE;
 
-        msg = cprGetMessage(gsm_msg_queue, TRUE, (void **) &syshdr);
+        msg = cprGetMessage(gsm_msgq, TRUE, (void **) &syshdr);
         if (msg) {
             switch (syshdr->Cmd) {
             case TIMER_EXPIRATION:
