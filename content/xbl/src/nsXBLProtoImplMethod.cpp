@@ -202,7 +202,7 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
                          uncompiledMethod->mBodyText.GetLineNumber())
          .setVersion(JSVERSION_LATEST)
          .setUserBit(true); // Flag us as XBL
-  js::RootedObject rootedNull(cx, nullptr); // See bug 781070.
+  JS::RootedObject rootedNull(cx, nullptr); // See bug 781070.
   nsresult rv = nsJSUtils::CompileFunction(cx, rootedNull, options, cname,
                                            paramCount,
                                            const_cast<const char**>(args),

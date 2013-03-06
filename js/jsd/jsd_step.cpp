@@ -95,7 +95,7 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSAbstractFramePtr frame, bool isCons
     }
 
     if (before && isConstructing) {
-        js::RootedValue newObj(cx);
+        JS::RootedValue newObj(cx);
         if (!frame.getThisValue(cx, &newObj))
             return JS_FALSE;
         jsd_Constructing(jsdc, cx, JSVAL_TO_OBJECT(newObj), frame);
