@@ -272,8 +272,8 @@ class ManifestFile(BaseFile):
         time, e.g. to jar:webapprt/omni.ja!/chrome.manifest, which we don't do
         currently but could in the future.
     '''
-    def __init__(self, base):
-        self._entries = []
+    def __init__(self, base, entries=None):
+        self._entries = entries if entries else []
         self._base = base
 
     def add(self, entry):
