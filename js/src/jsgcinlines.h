@@ -476,9 +476,6 @@ template <typename T, AllowGC allowGC>
 inline T *
 NewGCThing(JSContext *cx, AllocKind kind, size_t thingSize, InitialHeap heap)
 {
-    if (allowGC)
-        AssertCanGC();
-
     JS_ASSERT(thingSize == js::gc::Arena::thingSize(kind));
     JS_ASSERT_IF(cx->compartment == cx->runtime->atomsCompartment,
                  kind == FINALIZE_STRING ||
