@@ -16,8 +16,6 @@
 #include "js/TemplateLib.h"
 #include "vm/Shape.h"
 
-using JS::AssertCanGC;
-
 namespace js {
 
 class Shape;
