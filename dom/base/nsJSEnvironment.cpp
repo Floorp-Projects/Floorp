@@ -1283,7 +1283,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
 
     ++mExecuteDepth;
 
-    js::RootedObject rootedScope(mContext, &aScopeObject);
+    JS::RootedObject rootedScope(mContext, &aScopeObject);
     ok = JS::Evaluate(mContext, rootedScope, aOptions,
                       PromiseFlatString(aScript).get(),
                       aScript.Length(), aRetValue);
@@ -1366,7 +1366,7 @@ nsJSContext::CompileScript(const PRUnichar* aText,
          .setFileAndLine(aURL, aLineNo)
          .setVersion(JSVersion(aVersion))
          .setSourcePolicy(sp);
-  js::RootedObject rootedScope(mContext, scopeObject);
+  JS::RootedObject rootedScope(mContext, scopeObject);
   JSScript* script = JS::Compile(mContext,
                                  rootedScope,
                                  options,
