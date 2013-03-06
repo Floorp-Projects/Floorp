@@ -591,8 +591,8 @@ public:
   /**
    * Returns true if aFrame should apply overflow clipping.
    */
-  static bool ApplyOverflowClipping(const nsIFrame* aFrame,
-                                    const nsStyleDisplay* aDisp)
+  static bool ShouldApplyOverflowClipping(const nsIFrame* aFrame,
+                                          const nsStyleDisplay* aDisp)
   {
     // clip overflow:-moz-hidden-unscrollable ...
     if (MOZ_UNLIKELY(aDisp->mOverflowX == NS_STYLE_OVERFLOW_CLIP)) {
