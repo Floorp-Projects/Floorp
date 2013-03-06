@@ -84,7 +84,6 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitConvertElementsToDoubles(LConvertElementsToDoubles *lir);
     bool visitTypeBarrier(LTypeBarrier *lir);
     bool visitMonitorTypes(LMonitorTypes *lir);
-    bool visitExcludeType(LExcludeType *lir);
     bool visitCallNative(LCallNative *call);
     bool emitCallInvokeFunction(LInstruction *call, Register callereg,
                                 uint32_t argc, uint32_t unusedStack);
