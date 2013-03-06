@@ -497,8 +497,6 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp,
 static void
 PopulateReportBlame(JSContext *cx, JSErrorReport *report)
 {
-    AutoAssertNoGC nogc;
-
     /*
      * Walk stack until we find a frame that is associated with a non-builtin
      * rather than a builtin frame.
@@ -522,8 +520,6 @@ PopulateReportBlame(JSContext *cx, JSErrorReport *report)
 void
 js_ReportOutOfMemory(JSContext *cx)
 {
-    AutoAssertNoGC nogc;
-
     cx->runtime->hadOutOfMemory = true;
 
     JSErrorReport report;

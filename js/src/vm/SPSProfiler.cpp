@@ -376,7 +376,6 @@ void
 SPSProfiler::discardMJITCode(mjit::JITScript *jscr,
                              mjit::JITChunk *chunk, void* address)
 {
-    AutoAssertNoGC nogc;
     if (!jminfo.initialized())
         return;
 
