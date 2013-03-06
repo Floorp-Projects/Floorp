@@ -81,7 +81,8 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:CfStateChanged",
   "RIL:IccOpenChannel",
   "RIL:IccCloseChannel",
-  "RIL:IccExchangeAPDU"
+  "RIL:IccExchangeAPDU",
+  "RIL:IccUpdateContact"
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
@@ -655,6 +656,34 @@ RILContentHelper.prototype = {
     return request;
   },
 
+  updateContact: function updateContact(window, contactType, contact, pin2) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+
+    // Parsing nsDOMContact to Icc Contact format
+    let iccContact = {};
+
+    if (contact.name) {
+      iccContact.alphaId = contact.name[0];
+    }
+
+    if (contact.tel) {
+      iccContact.number = contact.tel[0].value;
+    }
+
+    cpmm.sendAsyncMessage("RIL:IccUpdateContact", {requestId: requestId,
+                                                   contactType: contactType,
+                                                   contact: iccContact,
+                                                   pin2: pin2});
+
+    return request;
+  },
+
   getCallForwardingOption: function getCallForwardingOption(window, reason) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
@@ -1057,6 +1086,9 @@ RILContentHelper.prototype = {
       case "RIL:IccExchangeAPDU":
         this.handleIccExchangeAPDU(msg.json);
         break;
+      case "RIL:IccUpdateContact":
+        this.handleIccUpdateContact(msg.json);
+        break;
       case "RIL:DataError":
         this.updateConnectionInfo(msg.json, this.rilContext.dataConnectionInfo);
         this._deliverEvent("_mobileConnectionListeners", "notifyDataError",
@@ -1165,6 +1197,14 @@ RILContentHelper.prototype = {
     } else {
       var result = [message.sw1, message.sw2, message.simResponse];
       this.fireRequestSuccess(message.requestId, result);
+    }
+  },
+
+  handleIccUpdateContact: function handleIccUpdateContact(message) {
+    if (message.errorMsg) {
+      this.fireRequestError(message.requestId, message.errorMsg);
+    } else {
+      this.fireRequestSuccess(message.requestId, null);
     }
   },
 
