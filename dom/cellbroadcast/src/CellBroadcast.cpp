@@ -8,51 +8,47 @@
 #include "nsIDOMMozCellBroadcastMessage.h"
 #include "mozilla/Services.h"
 #include "nsDOMClassInfo.h"
-#include "nsRadioInterfaceLayer.h"
 #include "GeneratedEvents.h"
 
-DOMCI_DATA(MozCellBroadcast, mozilla::dom::CellBroadcast)
+#define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
 
-namespace mozilla {
-namespace dom {
+using namespace mozilla::dom;
 
 /**
- * CellBroadcastCallback Implementation.
+ * CellBroadcast::Listener Implementation.
  */
 
-class CellBroadcastCallback : public nsIRILCellBroadcastCallback
+class CellBroadcast::Listener : public nsICellBroadcastListener
 {
 private:
   CellBroadcast* mCellBroadcast;
 
 public:
   NS_DECL_ISUPPORTS
-  NS_FORWARD_NSIRILCELLBROADCASTCALLBACK(mCellBroadcast->)
+  NS_FORWARD_SAFE_NSICELLBROADCASTLISTENER(mCellBroadcast)
 
-  CellBroadcastCallback(CellBroadcast* aCellBroadcast);
+  Listener(CellBroadcast* aCellBroadcast)
+    : mCellBroadcast(aCellBroadcast)
+  {
+    MOZ_ASSERT(mCellBroadcast);
+  }
+
+  void Disconnect()
+  {
+    MOZ_ASSERT(mCellBroadcast);
+    mCellBroadcast = nullptr;
+  }
 };
 
-NS_IMPL_ISUPPORTS1(CellBroadcastCallback, nsIRILCellBroadcastCallback)
-
-CellBroadcastCallback::CellBroadcastCallback(CellBroadcast* aCellBroadcast)
-  : mCellBroadcast(aCellBroadcast)
-{
-  MOZ_ASSERT(mCellBroadcast, "Null pointer!");
-}
+NS_IMPL_ISUPPORTS1(CellBroadcast::Listener, nsICellBroadcastListener)
 
 /**
  * CellBroadcast Implementation.
  */
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CellBroadcast,
-                                                  nsDOMEventTargetHelper)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+DOMCI_DATA(MozCellBroadcast, CellBroadcast)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CellBroadcast,
-                                                nsDOMEventTargetHelper)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(CellBroadcast)
+NS_INTERFACE_MAP_BEGIN(CellBroadcast)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozCellBroadcast)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozCellBroadcast)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
@@ -61,32 +57,28 @@ NS_IMPL_ADDREF_INHERITED(CellBroadcast, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(CellBroadcast, nsDOMEventTargetHelper)
 
 CellBroadcast::CellBroadcast(nsPIDOMWindow *aWindow,
-                             nsIRILContentHelper *aRIL)
-  : mRIL(aRIL)
+                             nsICellBroadcastProvider *aProvider)
+  : mProvider(aProvider)
 {
   BindToOwner(aWindow);
 
-  mCallback = new CellBroadcastCallback(this);
-
-  nsresult rv = mRIL->RegisterCellBroadcastCallback(mCallback);
+  mListener = new Listener(this);
+  DebugOnly<nsresult> rv = mProvider->RegisterCellBroadcastMsg(mListener);
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                   "Failed registering Cell Broadcast callback with RIL");
-
-  rv = mRIL->RegisterCellBroadcastMsg();
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                   "Failed registering Cell Broadcast callback with RIL");
+                   "Failed registering Cell Broadcast callback with provider");
 }
 
 CellBroadcast::~CellBroadcast()
 {
-  MOZ_ASSERT(mRIL && mCallback, "Null pointer!");
+  MOZ_ASSERT(mProvider && mListener);
 
-  mRIL->UnregisterCellBroadcastCallback(mCallback);
+  mListener->Disconnect();
+  mProvider->UnregisterCellBroadcastMsg(mListener);
 }
 
 NS_IMPL_EVENT_HANDLER(CellBroadcast, received)
 
-// Forwarded nsIRILCellBroadcastCallback methods
+// Forwarded nsICellBroadcastListener methods
 
 NS_IMETHODIMP
 CellBroadcast::NotifyMessageReceived(nsIDOMMozCellBroadcastMessage* aMessage)
@@ -102,9 +94,6 @@ CellBroadcast::NotifyMessageReceived(nsIDOMMozCellBroadcastMessage* aMessage)
   return DispatchTrustedEvent(ce);
 }
 
-} // namespace dom
-} // namespace mozilla
-
 nsresult
 NS_NewCellBroadcast(nsPIDOMWindow* aWindow,
                     nsIDOMMozCellBroadcast** aCellBroadcast)
@@ -113,12 +102,12 @@ NS_NewCellBroadcast(nsPIDOMWindow* aWindow,
     aWindow :
     aWindow->GetCurrentInnerWindow();
 
-  nsCOMPtr<nsIRILContentHelper> ril =
+  nsCOMPtr<nsICellBroadcastProvider> provider =
     do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
-  NS_ENSURE_STATE(ril);
+  NS_ENSURE_STATE(provider);
 
   nsRefPtr<mozilla::dom::CellBroadcast> cb =
-    new mozilla::dom::CellBroadcast(innerWindow, ril);
+    new mozilla::dom::CellBroadcast(innerWindow, provider);
   cb.forget(aCellBroadcast);
 
   return NS_OK;
