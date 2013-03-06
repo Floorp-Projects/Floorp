@@ -14,8 +14,6 @@
 #include "nsIStreamListener.h"
 #include "nsNetUtil.h"
 #include "nsTArray.h"
-#include "nsIBadCertListener2.h"
-#include "nsISSLErrorListener.h"
 #include "nsITimer.h"
 #include "mozilla/Attributes.h"
 
@@ -26,8 +24,6 @@ class nsUrlClassifierStreamUpdater MOZ_FINAL : public nsIUrlClassifierStreamUpda
                                                public nsIUrlClassifierUpdateObserver,
                                                public nsIStreamListener,
                                                public nsIObserver,
-                                               public nsIBadCertListener2,
-                                               public nsISSLErrorListener,
                                                public nsIInterfaceRequestor,
                                                public nsITimerCallback
 {
@@ -40,8 +36,6 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
-  NS_DECL_NSIBADCERTLISTENER2
-  NS_DECL_NSISSLERRORLISTENER
   NS_DECL_NSIOBSERVER
   NS_DECL_NSITIMERCALLBACK
 

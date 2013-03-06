@@ -42,14 +42,12 @@ nsUrlClassifierStreamUpdater::nsUrlClassifierStreamUpdater()
 
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS9(nsUrlClassifierStreamUpdater,
+NS_IMPL_THREADSAFE_ISUPPORTS7(nsUrlClassifierStreamUpdater,
                               nsIUrlClassifierStreamUpdater,
                               nsIUrlClassifierUpdateObserver,
                               nsIRequestObserver,
                               nsIStreamListener,
                               nsIObserver,
-                              nsIBadCertListener2,
-                              nsISSLErrorListener,
                               nsIInterfaceRequestor,
                               nsITimerCallback)
 
@@ -522,32 +520,6 @@ nsUrlClassifierStreamUpdater::Observe(nsISupports *aSubject, const char *aTopic,
       mTimer = nullptr;
     }
   }
-  return NS_OK;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// nsIBadCertListener2 implementation
-
-NS_IMETHODIMP
-nsUrlClassifierStreamUpdater::NotifyCertProblem(nsIInterfaceRequestor *socketInfo, 
-                                                nsISSLStatus *status, 
-                                                const nsACString &targetSite, 
-                                                bool *_retval)
-{
-  *_retval = true;
-  return NS_OK;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// nsISSLErrorListener implementation
-
-NS_IMETHODIMP
-nsUrlClassifierStreamUpdater::NotifySSLError(nsIInterfaceRequestor *socketInfo, 
-                                             int32_t error, 
-                                             const nsACString &targetSite, 
-                                             bool *_retval)
-{
-  *_retval = true;
   return NS_OK;
 }
 
