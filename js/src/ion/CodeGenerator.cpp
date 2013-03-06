@@ -958,20 +958,6 @@ CodeGenerator::visitMonitorTypes(LMonitorTypes *lir)
 }
 
 bool
-CodeGenerator::visitExcludeType(LExcludeType *lir)
-{
-    ValueOperand operand = ToValue(lir, LExcludeType::Input);
-    Register scratch = ToRegister(lir->temp());
-
-    Label matched, miss;
-    masm.guardType(operand, lir->mir()->type(), scratch, &matched, &miss);
-    if (matched.used() && !bailoutFrom(&matched, lir->snapshot()))
-        return false;
-    masm.bind(&miss);
-    return true;
-}
-
-bool
 CodeGenerator::visitCallNative(LCallNative *call)
 {
     JSFunction *target = call->getSingleTarget();

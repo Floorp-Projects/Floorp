@@ -160,7 +160,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitStoreSlot(MStoreSlot *ins);
     bool visitTypeBarrier(MTypeBarrier *ins);
     bool visitMonitorTypes(MMonitorTypes *ins);
-    bool visitExcludeType(MExcludeType *ins);
     bool visitArrayLength(MArrayLength *ins);
     bool visitTypedArrayLength(MTypedArrayLength *ins);
     bool visitTypedArrayElements(MTypedArrayElements *ins);

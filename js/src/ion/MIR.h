@@ -6162,28 +6162,39 @@ class MParDump
 
 // Given a value, guard that the value is in a particular TypeSet, then returns
 // that value.
-class MTypeBarrier : public MUnaryInstruction
+class MTypeBarrier
+  : public MUnaryInstruction,
+    public BoxInputsPolicy
 {
     BailoutKind bailoutKind_;
     const types::StackTypeSet *typeSet_;
 
-    MTypeBarrier(MDefinition *def, const types::StackTypeSet *types)
+    MTypeBarrier(MDefinition *def, const types::StackTypeSet *types, BailoutKind bailoutKind)
       : MUnaryInstruction(def),
         typeSet_(types)
     {
         setResultType(MIRType_Value);
         setGuard();
         setMovable();
-        bailoutKind_ = def->isEffectful()
-                       ? Bailout_TypeBarrier
-                       : Bailout_Normal;
+        bailoutKind_ = bailoutKind;
     }
 
   public:
     INSTRUCTION_HEADER(TypeBarrier)
 
     static MTypeBarrier *New(MDefinition *def, const types::StackTypeSet *types) {
-        return new MTypeBarrier(def, types);
+        BailoutKind bailoutKind = def->isEffectful()
+                                  ? Bailout_TypeBarrier
+                                  : Bailout_Normal;
+        return new MTypeBarrier(def, types, bailoutKind);
+    }
+    static MTypeBarrier *New(MDefinition *def, const types::StackTypeSet *types,
+                             BailoutKind bailoutKind) {
+        return new MTypeBarrier(def, types, bailoutKind);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
     }
 
     bool congruentTo(MDefinition * const &def) const {
@@ -6204,7 +6215,6 @@ class MTypeBarrier : public MUnaryInstruction
     virtual bool neverHoist() const {
         return typeSet()->empty();
     }
-
 };
 
 // Like MTypeBarrier, guard that the value is in the given type set. This is
@@ -6234,46 +6244,6 @@ class MMonitorTypes : public MUnaryInstruction
     }
     const types::StackTypeSet *typeSet() const {
         return typeSet_;
-    }
-    AliasSet getAliasSet() const {
-        return AliasSet::None();
-    }
-};
-
-// Guards that the incoming value does not have the specified Type.
-class MExcludeType
-  : public MUnaryInstruction,
-    public BoxInputsPolicy
-{
-    types::Type type_;
-
-    MExcludeType(MDefinition *def, types::Type type)
-      : MUnaryInstruction(def),
-        type_(type)
-    {
-        setGuard();
-        setMovable();
-    }
-
-  public:
-    INSTRUCTION_HEADER(ExcludeType);
-
-    static MExcludeType *New(MDefinition *def, types::Type type) {
-        return new MExcludeType(def, type);
-    }
-
-    MDefinition *input() const {
-        return getOperand(0);
-    }
-    BailoutKind bailoutKind() const {
-        return Bailout_Normal;
-    }
-    types::Type type() const {
-        return type_;
-    }
-
-    TypePolicy *typePolicy() {
-        return this;
     }
     AliasSet getAliasSet() const {
         return AliasSet::None();
