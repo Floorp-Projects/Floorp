@@ -759,10 +759,6 @@ void nsDTDContext::ReleaseGlobalObjects(void){
   Now define the nsTokenAllocator class...
  **************************************************************/
 
-static const size_t  kTokenBuckets[]       ={sizeof(CStartToken),sizeof(CAttributeToken),sizeof(CCommentToken),sizeof(CEndToken)};
-static const int32_t kNumTokenBuckets      = sizeof(kTokenBuckets) / sizeof(size_t);
-static const int32_t kInitialTokenPoolSize = sizeof(CToken) * 200;
-
 /**
  * 
  * @update  gess7/25/98
@@ -771,8 +767,6 @@ static const int32_t kInitialTokenPoolSize = sizeof(CToken) * 200;
 nsTokenAllocator::nsTokenAllocator() {
 
   MOZ_COUNT_CTOR(nsTokenAllocator);
-
-  mArenaPool.Init("TokenPool", kTokenBuckets, kNumTokenBuckets, kInitialTokenPoolSize);
 
 #ifdef DEBUG
   int i=0;
@@ -920,15 +914,11 @@ nsNodeAllocator::nsNodeAllocator():mSharedNodes(0){
   mCount=0;
 #endif
 #else 
-  static const size_t  kNodeBuckets[]       = { sizeof(nsCParserNode), sizeof(nsCParserStartNode) };
-  static const int32_t kNumNodeBuckets      = sizeof(kNodeBuckets) / sizeof(size_t);
-  static const int32_t kInitialNodePoolSize = sizeof(nsCParserNode) * 35; // optimal size based on space-trace data
 nsNodeAllocator::nsNodeAllocator() {
-  mNodePool.Init("NodePool", kNodeBuckets, kNumNodeBuckets, kInitialNodePoolSize);
 #endif
   MOZ_COUNT_CTOR(nsNodeAllocator);
 }
-  
+
 nsNodeAllocator::~nsNodeAllocator() {
   MOZ_COUNT_DTOR(nsNodeAllocator);
 
