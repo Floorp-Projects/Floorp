@@ -292,12 +292,13 @@ bool IncomingVideoStream::IncomingVideoStreamThreadFun(void* obj) {
 
 bool IncomingVideoStream::IncomingVideoStreamProcess() {
   if (kEventError != deliver_buffer_event_.Wait(KEventMaxWaitTimeMs)) {
+    thread_critsect_.Enter();
     if (incoming_render_thread_ == NULL) {
       // Terminating
+      thread_critsect_.Leave();
       return false;
     }
 
-    thread_critsect_.Enter();
     I420VideoFrame* frame_to_render = NULL;
 
     // Get a new frame to render and the time for the frame after this one.
