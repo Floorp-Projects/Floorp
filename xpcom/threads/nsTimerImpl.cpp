@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -8,9 +9,8 @@
 #include "nsAutoPtr.h"
 #include "nsThreadManager.h"
 #include "nsThreadUtils.h"
+#include "plarena.h"
 #include "sampler.h"
-#include NEW_H
-#include "nsFixedSizeAllocator.h"
 
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
@@ -57,36 +57,49 @@ myNS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
 
 namespace {
 
-// TimerEventAllocator is a fixed size allocator class which is used in order
-// to avoid the default allocator lock contention when firing timer events.
-// It is a thread-safe wrapper around nsFixedSizeAllocator.  The thread-safety
-// is required because nsTimerEvent objects are allocated on the timer thread,
-// and freed on another thread.  Since this is a TimerEventAllocator specific
-// lock, the lock contention issue is only limited to the allocation and
-// deallocation of nsTimerEvent objects.
-class TimerEventAllocator : public nsFixedSizeAllocator {
+// TimerEventAllocator is a thread-safe allocator used only for nsTimerEvents.
+// It's needed to avoid contention over the default allocator lock when
+// firing timer events (see bug 733277).  The thread-safety is required because
+// nsTimerEvent objects are allocated on the timer thread, and freed on another
+// thread.  Because TimerEventAllocator has its own lock, contention over that
+// lock is limited to the allocation and deallocation of nsTimerEvent objects.
+//
+// Because this allocator is layered over PLArenaPool, it never shrinks -- even
+// "freed" nsTimerEvents aren't truly freed, they're just put onto a free-list
+// for later recycling.  So the amount of memory consumed will always be equal
+// to the high-water mark consumption.  But nsTimerEvents are small and it's
+// unusual to have more than a few hundred of them, so this shouldn't be a
+// problem in practice.
+
+class TimerEventAllocator
+{
+private:
+  struct FreeEntry {
+    FreeEntry* mNext;
+  };
+
+  PLArenaPool mPool;
+  FreeEntry* mFirstFree;
+  mozilla::Monitor mMonitor;
+
 public:
-    TimerEventAllocator() :
+  TimerEventAllocator()
+    : mFirstFree(nullptr),
       mMonitor("TimerEventAllocator")
   {
+    PL_InitArenaPool(&mPool, "TimerEventPool", 4096, /* align = */ 0);
   }
 
-  void* Alloc(size_t aSize)
+  ~TimerEventAllocator()
   {
-    mozilla::MonitorAutoLock lock(mMonitor);
-    return nsFixedSizeAllocator::Alloc(aSize);
-  }
-  void Free(void* aPtr, size_t aSize)
-  {
-    mozilla::MonitorAutoLock lock(mMonitor);
-    nsFixedSizeAllocator::Free(aPtr, aSize);
+    PL_FinishArenaPool(&mPool);
   }
 
-private:
-  mozilla::Monitor mMonitor;
+  void* Alloc(size_t aSize);
+  void Free(void* aPtr);
 };
 
-}
+} // anonymous namespace
 
 class nsTimerEvent : public nsRunnable {
 public:
@@ -115,7 +128,7 @@ public:
     return sAllocator->Alloc(size);
   }
   void operator delete(void* p) {
-    sAllocator->Free(p, sizeof(nsTimerEvent));
+    sAllocator->Free(p);
     DeleteAllocatorIfNeeded();
   }
 
@@ -144,6 +157,40 @@ private:
 TimerEventAllocator* nsTimerEvent::sAllocator = nullptr;
 int32_t nsTimerEvent::sAllocatorUsers = 0;
 bool nsTimerEvent::sCanDeleteAllocator = false;
+
+namespace {
+
+void* TimerEventAllocator::Alloc(size_t aSize)
+{
+  MOZ_ASSERT(aSize == sizeof(nsTimerEvent));
+
+  mozilla::MonitorAutoLock lock(mMonitor);
+
+  void* p;
+  if (mFirstFree) {
+    p = mFirstFree;
+    mFirstFree = mFirstFree->mNext;
+  }
+  else {
+    PL_ARENA_ALLOCATE(p, &mPool, aSize);
+    if (!p)
+      return nullptr;
+  }
+
+  return p;
+}
+
+void TimerEventAllocator::Free(void* aPtr)
+{
+  mozilla::MonitorAutoLock lock(mMonitor);
+
+  FreeEntry* entry = reinterpret_cast<FreeEntry*>(aPtr);
+
+  entry->mNext = mFirstFree;
+  mFirstFree = entry;
+}
+
+} // anonymous namespace
 
 NS_IMPL_THREADSAFE_QUERY_INTERFACE1(nsTimerImpl, nsITimer)
 NS_IMPL_THREADSAFE_ADDREF(nsTimerImpl)
@@ -547,10 +594,6 @@ void nsTimerImpl::Fire()
 void nsTimerEvent::Init()
 {
   sAllocator = new TimerEventAllocator();
-  static const size_t kBucketSizes[] = {sizeof(nsTimerEvent)};
-  static const int32_t kNumBuckets = mozilla::ArrayLength(kBucketSizes);
-  static const int32_t kInitialPoolSize = 4096;
-  sAllocator->Init("TimerEventPool", kBucketSizes, kNumBuckets, kInitialPoolSize);
 }
 
 void nsTimerEvent::Shutdown()
