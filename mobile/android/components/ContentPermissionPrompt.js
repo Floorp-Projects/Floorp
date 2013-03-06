@@ -86,7 +86,7 @@ ContentPermissionPrompt.prototype = {
       }
     }];
 
-    let message = browserBundle.formatStringFromName(entityName + ".wantsTo",
+    let message = browserBundle.formatStringFromName(entityName + ".ask",
                                                      [request.principal.URI.host], 1);
     let options = { checkbox: browserBundle.GetStringFromName(entityName + ".dontAskAgain") };
 
