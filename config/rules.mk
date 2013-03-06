@@ -66,6 +66,17 @@ endif
 USE_AUTOTARGETS_MK = 1
 include $(topsrcdir)/config/makefiles/makeutils.mk
 
+# Only build with Pymake (not GNU make) on Windows.
+ifeq ($(HOST_OS_ARCH),WINNT)
+ifndef L10NBASEDIR
+ifndef .PYMAKE
+$(error Pymake is required to build on Windows. Run |./mach build| to \
+automatically use pymake or invoke pymake directly via \
+|python build/pymake/make.py|.)
+endif
+endif
+endif
+
 ifdef SDK_HEADERS
 _EXTRA_EXPORTS := $(filter-out $(EXPORTS),$(SDK_HEADERS))
 EXPORTS += $(_EXTRA_EXPORTS)
