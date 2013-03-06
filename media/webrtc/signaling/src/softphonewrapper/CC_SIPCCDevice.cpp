@@ -31,7 +31,7 @@ CC_DevicePtr CC_SIPCCDevice::createDevice ()
 
     CC_SIPCCDevicePtr pSIPCCDevice = CC_SIPCCDevice::wrap(deviceHandle);
 
-    return pSIPCCDevice.get();
+    return pSIPCCDevice;
 }
 
 CC_SIPCCDevice::CC_SIPCCDevice (cc_device_handle_t aDeviceHandle)
@@ -44,8 +44,7 @@ CC_SIPCCDevice::CC_SIPCCDevice (cc_device_handle_t aDeviceHandle)
 CC_DeviceInfoPtr CC_SIPCCDevice::getDeviceInfo ()
 {
     cc_deviceinfo_ref_t deviceInfoRef = CCAPI_Device_getDeviceInfo(deviceHandle);
-    CC_DeviceInfoPtr deviceInfoPtr =
-        CC_SIPCCDeviceInfo::wrap(deviceInfoRef).get();
+    CC_DeviceInfoPtr deviceInfoPtr = CC_SIPCCDeviceInfo::wrap(deviceInfoRef);
 
     //A call to CCAPI_Device_getDeviceInfo() needs a matching call to CCAPI_Device_releaseDeviceInfo()
     //However, the CC_SIPCCDeviceInfo() ctor/dtor does a retain/release internally, so I need to explicitly release
@@ -74,7 +73,7 @@ CC_CallPtr CC_SIPCCDevice::createCall ()
 {
     cc_call_handle_t callHandle = CCAPI_Device_CreateCall(deviceHandle);
 
-    return CC_SIPCCCall::wrap(callHandle).get();
+    return CC_SIPCCCall::wrap(callHandle);
 }
 
 void CC_SIPCCDevice::enableVideo(bool enable)

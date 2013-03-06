@@ -8,7 +8,7 @@
 
 namespace CSF
 {
-	DECLARE_NS_PTR(PhoneDetailsImpl);
+	DECLARE_PTR(PhoneDetailsImpl);
 	class PhoneDetailsImpl: public PhoneDetails
 	{
 	public:

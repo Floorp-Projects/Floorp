@@ -286,7 +286,7 @@ string CC_SIPCCCallInfo::getAlternateNumber()
 CC_LinePtr CC_SIPCCCallInfo::getline ()
 {
     cc_lineid_t lineId = CCAPI_CallInfo_getLine(callinfo_ref);
-    return CC_SIPCCLine::wrap(lineId).get();
+    return CC_SIPCCLine::wrap(lineId);
 }
 
 string CC_SIPCCCallInfo::getOriginalCalledPartyName()

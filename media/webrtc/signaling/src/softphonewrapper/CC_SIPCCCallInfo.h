@@ -18,7 +18,7 @@ extern "C" {
 namespace CSF
 {
 
-	DECLARE_NS_PTR(CC_SIPCCCallInfo);
+	DECLARE_PTR(CC_SIPCCCallInfo);
     class CC_SIPCCCallInfo : public CC_CallInfo
     {
 
