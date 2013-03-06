@@ -5732,18 +5732,16 @@ var OfflineApps = {
       }
     },
     {
-      label: strings.GetStringFromName("offlineApps.never"),
-      callback: function() {
-        OfflineApps.disallowSite(aContentWindow.document);
+      label: strings.GetStringFromName("offlineApps.dontAllow2"),
+      callback: function(aChecked) {
+        if (aChecked)
+          OfflineApps.disallowSite(aContentWindow.document);
       }
-    },
-    {
-      label: strings.GetStringFromName("offlineApps.notNow"),
-      callback: function() { /* noop */ }
     }];
 
-    let message = strings.formatStringFromName("offlineApps.available2", [host], 1);
-    NativeWindow.doorhanger.show(message, notificationID, buttons, tab.id);
+    let message = strings.formatStringFromName("offlineApps.ask", [host], 1);
+    let options = { checkbox: Strings.browser.GetStringFromName("offlineApps.dontAskAgain") };
+    NativeWindow.doorhanger.show(message, notificationID, buttons, tab.id, options);
   },
 
   allowSite: function(aDocument) {
@@ -5814,7 +5812,7 @@ var IndexedDB = {
 
     let message, responseTopic;
     if (topic == this._permissionsPrompt) {
-      message = strings.formatStringFromName("offlineApps.available2", [host], 1);
+      message = strings.formatStringFromName("offlineApps.ask", [host], 1);
       responseTopic = this._permissionsResponse;
     } else if (topic == this._quotaPrompt) {
       message = strings.formatStringFromName("indexedDBQuota.wantsTo", [ host, data ], 2);
@@ -5862,21 +5860,16 @@ var IndexedDB = {
       }
     },
     {
-      label: strings.GetStringFromName("offlineApps.never"),
-      callback: function() {
+      label: strings.GetStringFromName("offlineApps.dontAllow2"),
+      callback: function(aChecked) {
         clearTimeout(timeoutId);
-        observer.observe(null, responseTopic, Ci.nsIPermissionManager.DENY_ACTION);
-      }
-    },
-    {
-      label: strings.GetStringFromName("offlineApps.notNow"),
-      callback: function() {
-        clearTimeout(timeoutId);
-        observer.observe(null, responseTopic, Ci.nsIPermissionManager.UNKNOWN_ACTION);
+        let action = aChecked ? Ci.nsIPermissionManager.DENY_ACTION : Ci.nsIPermissionManager.UNKNOWN_ACTION;
+        observer.observe(null, responseTopic, action);
       }
     }];
 
-    NativeWindow.doorhanger.show(message, notificationID, buttons, tab.id);
+    let options = { checkbox: Strings.browser.GetStringFromName("offlineApps.dontAskAgain") };
+    NativeWindow.doorhanger.show(message, notificationID, buttons, tab.id, options);
 
     // Set the timeoutId after the popup has been created, and use the long
     // timeout value. If the user doesn't notice the popup after this amount of
@@ -6424,12 +6417,12 @@ var PermissionsHelper = {
     "indexedDB": {
       label: "offlineApps.storeOfflineData",
       allowed: "offlineApps.allow",
-      denied: "offlineApps.never"
+      denied: "offlineApps.dontAllow2"
     },
     "offline-app": {
       label: "offlineApps.storeOfflineData",
       allowed: "offlineApps.allow",
-      denied: "offlineApps.never"
+      denied: "offlineApps.dontAllow2"
     },
     "desktop-notification": {
       label: "desktopNotification.useNotifications",
