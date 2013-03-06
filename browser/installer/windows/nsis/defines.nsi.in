@@ -29,13 +29,19 @@
 # The value below removes all LSP categories previously set.
 !define LSP_CATEGORIES "0x00000000"
 
+!if "@MOZ_UPDATE_CHANNEL@" == ""
+!define UpdateChannel "Unknown"
+!else
+!define UpdateChannel "@MOZ_UPDATE_CHANNEL@"
+!endif
+
 # Due to official and beta using the same branding this is needed to
 # differentiante between the url used by the stub for downloading.
 !if "@MOZ_UPDATE_CHANNEL@" == "beta"
 !define BETA_UPDATE_CHANNEL
 !endif
 
-!define BaseURLStubPing "http://download-stats.mozilla.org/stub/v4/"
+!define BaseURLStubPing "http://download-stats.mozilla.org/stub"
 
 # NO_INSTDIR_FROM_REG is defined for pre-releases which have a PreReleaseSuffix
 # (e.g. Alpha X, Beta X, etc.) to prevent finding a non-default installation
