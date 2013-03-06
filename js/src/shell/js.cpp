@@ -2026,7 +2026,6 @@ DumpHeap(JSContext *cx, unsigned argc, jsval *vp)
     void *thingToIgnore;
     FILE *dumpFile;
     bool ok;
-    AssertCanGC();
 
     const char *fileName = NULL;
     JSAutoByteString fileNameBytes;

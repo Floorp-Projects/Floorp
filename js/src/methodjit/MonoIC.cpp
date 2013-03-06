@@ -59,8 +59,6 @@ PatchGetFallback(VMFrame &f, ic::GetGlobalNameIC *ic)
 void JS_FASTCALL
 ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
 {
-    AssertCanGC();
-
     RootedObject obj(f.cx, &f.fp()->global());
     PropertyName *name = f.script()->getName(GET_UINT32_INDEX(f.pc()));
 
@@ -104,7 +102,6 @@ ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
 static void JS_FASTCALL
 DisabledSetGlobal(VMFrame &f, ic::SetGlobalNameIC *ic)
 {
-    AssertCanGC();
     RootedPropertyName name(f.cx, f.script()->getName(GET_UINT32_INDEX(f.pc())));
     stubs::SetName(f, name);
 }
@@ -157,8 +154,6 @@ UpdateSetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, RawShape
 void JS_FASTCALL
 ic::SetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic)
 {
-    AssertCanGC();
-
     RootedObject obj(f.cx, &f.fp()->global());
     RootedPropertyName name(f.cx, f.script()->getName(GET_UINT32_INDEX(f.pc())));
 
