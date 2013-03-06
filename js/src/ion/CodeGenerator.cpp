@@ -907,8 +907,7 @@ CodeGenerator::visitParWriteGuard(LParWriteGuard *lir)
     if (!ensureOutOfLineParallelAbort(&bail))
         return false;
 
-    // branch to the OOL failure code if false is returned
-    masm.branchTestBool(Assembler::Zero, ReturnReg, ReturnReg, bail);
+    masm.branchIfFalseBool(ReturnReg, bail);
 
     return true;
 }
@@ -1121,7 +1120,7 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
     } else {
         // Test for failure.
         Label success, exception;
-        masm.branchTestBool(Assembler::Zero, ReturnReg, ReturnReg, &exception);
+        masm.branchIfFalseBool(ReturnReg, &exception);
 
         // Load the outparam vp[0] into output register(s).
         masm.loadValue(Address(StackPointer, IonDOMMethodExitFrameLayout::offsetOfResult()),
@@ -1965,7 +1964,7 @@ CodeGenerator::visitParCheckOverRecursedFailure(ParCheckOverRecursedFailure *ool
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ParCheckOverRecursed));
     masm.movePtr(ReturnReg, tempReg);
     masm.PopRegsInMask(saveSet);
-    masm.branchTestBool(Assembler::Zero, tempReg, tempReg, bail);
+    masm.branchIfFalseBool(tempReg, bail);
     masm.jump(ool->rejoin());
 
     return true;
@@ -2027,7 +2026,7 @@ CodeGenerator::visitOutOfLineParCheckInterrupt(OutOfLineParCheckInterrupt *ool)
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ParCheckInterrupt));
     masm.movePtr(ReturnReg, tempReg);
     masm.PopRegsInMask(saveSet);
-    masm.branchTestBool(Assembler::Zero, tempReg, tempReg, bail);
+    masm.branchIfFalseBool(tempReg, bail);
     masm.jump(ool->rejoin());
 
     return true;
@@ -5529,7 +5528,7 @@ CodeGenerator::visitGetDOMProperty(LGetDOMProperty *ins)
                        JSReturnOperand);
     } else {
         Label success, exception;
-        masm.branchTestBool(Assembler::Zero, ReturnReg, ReturnReg, &exception);
+        masm.branchIfFalseBool(ReturnReg, &exception);
 
         masm.loadValue(Address(StackPointer, IonDOMExitFrameLayout::offsetOfResult()),
                        JSReturnOperand);
@@ -5591,7 +5590,7 @@ CodeGenerator::visitSetDOMProperty(LSetDOMProperty *ins)
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ins->mir()->fun()));
 
     Label success, exception;
-    masm.branchTestBool(Assembler::Zero, ReturnReg, ReturnReg, &exception);
+    masm.branchIfFalseBool(ReturnReg, &exception);
 
     masm.jump(&success);
 
