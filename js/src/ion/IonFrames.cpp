@@ -54,7 +54,6 @@ IonFrameIterator::checkInvalidation() const
 bool
 IonFrameIterator::checkInvalidation(IonScript **ionScriptOut) const
 {
-    AutoAssertNoGC nogc;
     uint8_t *returnAddr = returnAddressToFp();
     RawScript script = this->script();
     // N.B. the current IonScript is not the same as the frame's
@@ -158,7 +157,6 @@ IonFrameIterator::isEntryJSFrame() const
 RawScript
 IonFrameIterator::script() const
 {
-    AutoAssertNoGC nogc;
     JS_ASSERT(isScripted());
     RawScript script = ScriptFromCalleeToken(calleeToken());
     JS_ASSERT(script);
@@ -323,7 +321,6 @@ ion::HandleException(ResumeFromException *rfe)
                 // When profiling, each frame popped needs a notification that
                 // the function has exited, so invoke the probe that a function
                 // is exiting.
-                AutoAssertNoGC nogc;
                 RawScript script = frames.script();
                 Probes::exitScript(cx, script, script->function(), NULL);
                 if (!frames.more())
@@ -934,7 +931,6 @@ InlineFrameIterator::InlineFrameIterator(JSContext *cx, const InlineFrameIterato
 void
 InlineFrameIterator::findNextFrame()
 {
-    AutoAssertNoGC nogc;
     JS_ASSERT(more());
 
     si_ = start_;
@@ -1182,7 +1178,6 @@ struct DumpOp {
 void
 InlineFrameIterator::dump() const
 {
-    AutoAssertNoGC nogc;
     if (more())
         fprintf(stderr, " JS frame (inlined)\n");
     else
