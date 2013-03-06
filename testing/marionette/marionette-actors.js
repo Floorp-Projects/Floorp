@@ -270,11 +270,20 @@ MarionetteDriverActor.prototype = {
       logger.warn("got a response with no command_id");
       return;
     }
-    else if (this.command_id && command_id != -1 &&
-             this.command_id != command_id) {
-      // a command_id of -1 is used for emulator callbacks
-      logger.warn("ignoring out-of-sync response");
-      return;
+    else if (command_id != -1) {
+      // A command_id of -1 is used for emulator callbacks, and those
+      // don't use this.command_id.
+      if (!this.command_id) {
+        // A null value for this.command_id means we've already processed
+        // a message for the previous value, and so the current message is a
+        // duplicate.
+        logger.warn("ignoring duplicate response for command_id " + command_id);
+        return;
+      }
+      else if (this.command_id != command_id) {
+        logger.warn("ignoring out-of-sync response");
+        return;
+      }
     }
     this.conn.send(msg);
     if (command_id != -1) {
@@ -1962,9 +1971,10 @@ MarionetteDriverActor.prototype = {
    * of the window will be taken.
    */
   screenShot: function MDA_saveScreenshot(aRequest) {
+    this.command_id = this.getCommandId();
     this.sendAsync("screenShot", {element: aRequest.element,
                                   highlights: aRequest.highlights,
-                                  command_id: this.getCommandId()});
+                                  command_id: this.command_id});
   },
 
   /**
