@@ -1670,9 +1670,9 @@ RoundedBorderIntersectsRect(nsIFrame* aFrame,
 
   nscoord radii[8];
   return !aFrame->GetBorderRadii(radii) ||
-         RoundedRectIntersectsRect(nsRect(aFrameToReferenceFrame,
-                                          aFrame->GetSize()),
-                                   radii, aTestRect);
+         nsLayoutUtils::RoundedRectIntersectsRect(nsRect(aFrameToReferenceFrame,
+                                                  aFrame->GetSize()),
+                                                  radii, aTestRect);
 }
 
 // Returns TRUE if aContainedRect is guaranteed to be contained in

@@ -1606,7 +1606,7 @@ static bool ApplyOverflowClipping(nsDisplayListBuilder* aBuilder,
   // We allow -moz-hidden-unscrollable to apply to any kind of frame. This
   // is required by comboboxes which make their display text (an inline frame)
   // have clipping.
-  if (!nsFrame::ApplyOverflowClipping(aFrame, aDisp)) {
+  if (!nsFrame::ShouldApplyOverflowClipping(aFrame, aDisp)) {
     return false;
   }
   *aRect = aFrame->GetPaddingRect() - aFrame->GetPosition();
@@ -6932,7 +6932,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   NS_ASSERTION((disp->mOverflowY == NS_STYLE_OVERFLOW_CLIP) ==
                (disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP),
                "If one overflow is clip, the other should be too");
-  if (nsFrame::ApplyOverflowClipping(this, disp)) {
+  if (nsFrame::ShouldApplyOverflowClipping(this, disp)) {
     // The contents are actually clipped to the padding area 
     aOverflowAreas.SetAllTo(bounds);
   }
