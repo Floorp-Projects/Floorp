@@ -31,7 +31,6 @@ MOCHITEST_FILES = \
   test_bfcache.html \
   test_blob_archive.html \
   test_blob_simple.html \
-  test_bug847147.html \
   test_clear.html \
   test_complex_keyPaths.html \
   test_count.html \
@@ -118,6 +117,7 @@ MOCHITEST_FILES = \
   webapp_clearBrowserData_browserFrame.html \
   $(NULL)
 
+#   test_bug847147.html disabled for timeouts
 #   test_writer_starvation.html  disabled for infinite loops, bug 595368
 
 ifeq (browser,$(MOZ_BUILD_APP))
