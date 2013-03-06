@@ -5000,14 +5000,14 @@ lsm_init (void)
      */
     lsm_tmr_tones = cprCreateTimer("lsm_tmr_tones",
                                    GSM_MULTIPART_TONES_TIMER,
-                                   TIMER_EXPIRATION, gsm_msg_queue);
+                                   TIMER_EXPIRATION, gsm_msgq);
     lsm_continuous_tmr_tones = cprCreateTimer("lsm_continuous_tmr_tones",
                                               GSM_CONTINUOUS_TONES_TIMER,
                                               TIMER_EXPIRATION,
-                                              gsm_msg_queue);
+                                              gsm_msgq);
     lsm_tone_duration_tmr = cprCreateTimer("lsm_tone_duration_tmr",
                                    		   GSM_TONE_DURATION_TIMER,
-                                   		   TIMER_EXPIRATION, gsm_msg_queue);
+                                   		   TIMER_EXPIRATION, gsm_msgq);
     lsm_init_config();
 
     for (i=0 ; i<MAX_REG_LINES; i++) {
