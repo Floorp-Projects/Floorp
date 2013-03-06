@@ -16,13 +16,18 @@
 #include "Utils.h"
 #include "Logging.h"
 
+/* Maximum supported size for chunkSize */
+static const size_t maxChunkSize =
+  1 << (8 * std::min(sizeof(((SeekableZStreamHeader *)NULL)->chunkSize),
+                     sizeof(((SeekableZStreamHeader *)NULL)->lastChunkSize)) - 1);
+
 class Buffer: public MappedPtr
 {
 public:
   virtual bool Resize(size_t size)
   {
     void *buf = mmap(NULL, size, PROT_READ | PROT_WRITE,
-                     MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+                     MAP_PRIVATE | MAP_ANON, -1, 0);
     if (buf == MAP_FAILED)
       return false;
     if (*this != MAP_FAILED)
@@ -334,8 +339,7 @@ int main(int argc, char* argv[])
       if (!firstArg[0])
         break;
       if (!GetSize(firstArg[0], &chunkSize) || !chunkSize ||
-          (chunkSize % 4096) ||
-          (chunkSize > SeekableZStreamHeader::maxChunkSize)) {
+          (chunkSize % 4096) || (chunkSize > maxChunkSize)) {
         log("Invalid chunk size");
         return 1;
       }
