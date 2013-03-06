@@ -117,8 +117,6 @@ namespace js {
 
 class Module;
 
-template <typename T> class Rooted;
-
 template <typename T>
 struct RootMethods {};
 
@@ -134,6 +132,8 @@ class MutableHandleBase {};
 } /* namespace js */
 
 namespace JS {
+
+template <typename T> class Rooted;
 
 class AutoAssertNoGC;
 
@@ -215,7 +215,7 @@ class Handle : public js::HandleBase<T>
      */
     template <typename S>
     inline
-    Handle(js::Rooted<S> &root,
+    Handle(Rooted<S> &root,
            typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0);
 
     /* Construct a read only handle from a mutable handle. */
@@ -262,7 +262,7 @@ template <typename T>
 class MutableHandle : public js::MutableHandleBase<T>
 {
   public:
-    inline MutableHandle(js::Rooted<T> *root);
+    inline MutableHandle(Rooted<T> *root);
 
     void set(T v) {
         JS_ASSERT(!js::RootMethods<T>::poisoned(v));
@@ -408,6 +408,10 @@ struct RootMethods<T *>
     static bool poisoned(T *v) { return IsPoisonedPtr(v); }
 };
 
+} /* namespace js */
+
+namespace JS {
+
 /*
  * Local variable of type T whose value is always rooted. This is typically
  * used for local variables, or for non-rooted values being passed to a
@@ -417,18 +421,18 @@ struct RootMethods<T *>
  * specialization, define a RootedBase<T> specialization containing them.
  */
 template <typename T>
-class Rooted : public RootedBase<T>
+class Rooted : public js::RootedBase<T>
 {
     void init(JSContext *cxArg) {
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
-        ContextFriendFields *cx = ContextFriendFields::get(cxArg);
+        js::ContextFriendFields *cx = js::ContextFriendFields::get(cxArg);
         commonInit(cx->thingGCRooters);
 #endif
     }
 
-    void init(PerThreadData *ptArg) {
+    void init(js::PerThreadData *ptArg) {
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
-        PerThreadDataFriendFields *pt = PerThreadDataFriendFields::get(ptArg);
+        js::PerThreadDataFriendFields *pt = js::PerThreadDataFriendFields::get(ptArg);
         commonInit(pt->thingGCRooters);
 #endif
     }
@@ -436,7 +440,7 @@ class Rooted : public RootedBase<T>
   public:
     Rooted(JSContext *cx
            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(RootMethods<T>::initial())
+      : ptr(js::RootMethods<T>::initial())
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         init(cx);
@@ -450,15 +454,15 @@ class Rooted : public RootedBase<T>
         init(cx);
     }
 
-    Rooted(PerThreadData *pt
+    Rooted(js::PerThreadData *pt
            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : ptr(RootMethods<T>::initial())
+      : ptr(js::RootMethods<T>::initial())
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         init(pt);
     }
 
-    Rooted(PerThreadData *pt, T initial
+    Rooted(js::PerThreadData *pt, T initial
            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : ptr(initial)
     {
@@ -485,7 +489,7 @@ class Rooted : public RootedBase<T>
     const T &get() const { return ptr; }
 
     T &operator=(T value) {
-        JS_ASSERT(!RootMethods<T>::poisoned(value));
+        JS_ASSERT(!js::RootMethods<T>::poisoned(value));
         ptr = value;
         return ptr;
     }
@@ -501,12 +505,12 @@ class Rooted : public RootedBase<T>
   private:
     void commonInit(Rooted<void*> **thingGCRooters) {
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
-        ThingRootKind kind = RootMethods<T>::kind();
+        js::ThingRootKind kind = js::RootMethods<T>::kind();
         this->stack = &thingGCRooters[kind];
         this->prev = *stack;
         *stack = reinterpret_cast<Rooted<void*>*>(this);
 
-        JS_ASSERT(!RootMethods<T>::poisoned(ptr));
+        JS_ASSERT(!js::RootMethods<T>::poisoned(ptr));
 #endif
     }
 
@@ -544,6 +548,10 @@ typedef Rooted<JSScript*>    RootedScript;
 typedef Rooted<JSString*>    RootedString;
 typedef Rooted<jsid>         RootedId;
 typedef Rooted<JS::Value>    RootedValue;
+
+} /* namespace JS */
+
+namespace js {
 
 /*
  * Mark a stack location as a root for the rooting analysis, without actually
@@ -753,7 +761,7 @@ namespace JS {
 
 template <typename T> template <typename S>
 inline
-Handle<T>::Handle(js::Rooted<S> &root,
+Handle<T>::Handle(Rooted<S> &root,
                   typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy)
 {
     ptr = reinterpret_cast<const T *>(root.address());
@@ -769,7 +777,7 @@ Handle<T>::Handle(MutableHandle<S> &root,
 
 template <typename T>
 inline
-MutableHandle<T>::MutableHandle(js::Rooted<T> *root)
+MutableHandle<T>::MutableHandle(Rooted<T> *root)
 {
     ptr = root->address();
 }
