@@ -1,0 +1,174 @@
+# HG changeset patch
+# Parent 6131d396790eefed8441bf0566ff38f59ca092b3
+Fix some more Win32 compat issues in processor code
+R=mark at https://breakpad.appspot.com/535003/
+
+diff --git a/src/google_breakpad/common/breakpad_types.h b/src/google_breakpad/common/breakpad_types.h
+--- a/src/google_breakpad/common/breakpad_types.h
++++ b/src/google_breakpad/common/breakpad_types.h
+@@ -57,16 +57,17 @@
+  * there are often subtle type incompatibilities.
+  */
+ #include BREAKPAD_CUSTOM_STDINT_H
+ #else
+ #include <WTypes.h>
+ 
+ typedef unsigned __int8  uint8_t;
+ typedef unsigned __int16 uint16_t;
++typedef __int32 int32_t;
+ typedef unsigned __int32 uint32_t;
+ typedef unsigned __int64 uint64_t;
+ #endif
+ 
+ #endif  /* !_WIN32 */
+ 
+ typedef struct {
+   uint64_t high;
+diff --git a/src/processor/basic_source_line_resolver.cc b/src/processor/basic_source_line_resolver.cc
+--- a/src/processor/basic_source_line_resolver.cc
++++ b/src/processor/basic_source_line_resolver.cc
+@@ -49,16 +49,21 @@
+ #include "processor/tokenize.h"
+ 
+ using std::map;
+ using std::vector;
+ using std::make_pair;
+ 
+ namespace google_breakpad {
+ 
++#ifdef _WIN32
++#define strtok_r strtok_s
++#define strtoull _strtoui64
++#endif
++
+ static const char *kWhitespace = " \r\n";
+ 
+ BasicSourceLineResolver::BasicSourceLineResolver() :
+     SourceLineResolverBase(new BasicModuleFactory) { }
+ 
+ bool BasicSourceLineResolver::Module::LoadMapFromMemory(char *memory_buffer) {
+   linked_ptr<Function> cur_func;
+   int line_number = 0;
+diff --git a/src/processor/cfi_frame_info.cc b/src/processor/cfi_frame_info.cc
+--- a/src/processor/cfi_frame_info.cc
++++ b/src/processor/cfi_frame_info.cc
+@@ -39,16 +39,20 @@
+ #include <algorithm>
+ #include <sstream>
+ 
+ #include "common/scoped_ptr.h"
+ #include "processor/postfix_evaluator-inl.h"
+ 
+ namespace google_breakpad {
+ 
++#ifdef _WIN32
++#define strtok_r strtok_s
++#endif
++
+ template<typename V>
+ bool CFIFrameInfo::FindCallerRegs(const RegisterValueMap<V> &registers,
+                                   const MemoryRegion &memory,
+                                   RegisterValueMap<V> *caller_registers) const {
+   // If there are not rules for both .ra and .cfa in effect at this address,
+   // don't use this CFI data for stack walking.
+   if (cfa_rule_.invalid() || ra_rule_.invalid())
+     return false;
+diff --git a/src/processor/minidump.cc b/src/processor/minidump.cc
+--- a/src/processor/minidump.cc
++++ b/src/processor/minidump.cc
+@@ -32,25 +32,23 @@
+ // See minidump.h for documentation.
+ //
+ // Author: Mark Mentovai
+ 
+ #include "google_breakpad/processor/minidump.h"
+ 
+ #include <assert.h>
+ #include <fcntl.h>
++#include <stddef.h>
+ #include <stdio.h>
+ #include <string.h>
+ #include <time.h>
+ 
+ #ifdef _WIN32
+ #include <io.h>
+-#if _MSC_VER < 1600
+-typedef SSIZE_T ssize_t;
+-#endif
+ #define PRIx64 "llx"
+ #define PRIx32 "lx"
+ #define snprintf _snprintf
+ #else  // _WIN32
+ #include <unistd.h>
+ #define O_BINARY 0
+ #endif  // _WIN32
+ 
+diff --git a/src/processor/source_line_resolver_base_types.h b/src/processor/source_line_resolver_base_types.h
+--- a/src/processor/source_line_resolver_base_types.h
++++ b/src/processor/source_line_resolver_base_types.h
+@@ -38,16 +38,17 @@
+ //
+ // Author: Siyang Xie (lambxsy@google.com)
+ 
+ #include <stdio.h>
+ 
+ #include <map>
+ #include <string>
+ 
++#include "google_breakpad/common/breakpad_types.h"
+ #include "google_breakpad/processor/source_line_resolver_base.h"
+ #include "google_breakpad/processor/stack_frame.h"
+ #include "processor/cfi_frame_info.h"
+ #include "processor/windows_frame_info.h"
+ 
+ #ifndef PROCESSOR_SOURCE_LINE_RESOLVER_BASE_TYPES_H__
+ #define PROCESSOR_SOURCE_LINE_RESOLVER_BASE_TYPES_H__
+ 
+diff --git a/src/processor/tokenize.cc b/src/processor/tokenize.cc
+--- a/src/processor/tokenize.cc
++++ b/src/processor/tokenize.cc
+@@ -31,16 +31,20 @@
+ 
+ #include <string>
+ #include <vector>
+ 
+ #include "common/using_std_string.h"
+ 
+ namespace google_breakpad {
+ 
++#ifdef _WIN32
++#define strtok_r strtok_s
++#endif
++
+ using std::vector;
+ 
+ bool Tokenize(char *line,
+ 	      const char *separators,
+ 	      int max_tokens,
+ 	      vector<char*> *tokens) {
+   tokens->clear();
+   tokens->reserve(max_tokens);
+diff --git a/src/processor/windows_frame_info.h b/src/processor/windows_frame_info.h
+--- a/src/processor/windows_frame_info.h
++++ b/src/processor/windows_frame_info.h
+@@ -46,16 +46,20 @@
+ 
+ #include "common/using_std_string.h"
+ #include "google_breakpad/common/breakpad_types.h"
+ #include "processor/logging.h"
+ #include "processor/tokenize.h"
+ 
+ namespace google_breakpad {
+ 
++#ifdef _WIN32
++#define strtoull _strtoui64
++#endif
++
+ struct WindowsFrameInfo {
+  public:
+   enum Validity {
+     VALID_NONE           = 0,
+     VALID_PARAMETER_SIZE = 1,
+     VALID_ALL            = -1
+   };
+ 

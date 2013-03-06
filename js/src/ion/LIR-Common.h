@@ -3962,7 +3962,7 @@ class LFunctionBoundary : public LInstructionHelper<0, 0, 1>
         return getTemp(0);
     }
 
-    UnrootedScript script() {
+    RawScript script() {
         return mir_->toFunctionBoundary()->script();
     }
 

@@ -397,15 +397,15 @@ TEST_F(ExceptionHandlerTest, WriteMinidumpTest) {
 TEST_F(ExceptionHandlerTest, AdditionalMemory) {
   SYSTEM_INFO si;
   GetSystemInfo(&si);
-  const u_int32_t kMemorySize = si.dwPageSize;
+  const uint32_t kMemorySize = si.dwPageSize;
 
   // Get some heap memory.
-  u_int8_t* memory = new u_int8_t[kMemorySize];
+  uint8_t* memory = new uint8_t[kMemorySize];
   const uintptr_t kMemoryAddress = reinterpret_cast<uintptr_t>(memory);
   ASSERT_TRUE(memory);
 
   // Stick some data into the memory so the contents can be verified.
-  for (u_int32_t i = 0; i < kMemorySize; ++i) {
+  for (uint32_t i = 0; i < kMemorySize; ++i) {
     memory[i] = i % 255;
   }
 
@@ -451,15 +451,15 @@ TEST_F(ExceptionHandlerTest, AdditionalMemory) {
 TEST_F(ExceptionHandlerTest, AdditionalMemoryRemove) {
   SYSTEM_INFO si;
   GetSystemInfo(&si);
-  const u_int32_t kMemorySize = si.dwPageSize;
+  const uint32_t kMemorySize = si.dwPageSize;
 
   // Get some heap memory.
-  u_int8_t* memory = new u_int8_t[kMemorySize];
+  uint8_t* memory = new uint8_t[kMemorySize];
   const uintptr_t kMemoryAddress = reinterpret_cast<uintptr_t>(memory);
   ASSERT_TRUE(memory);
 
   // Stick some data into the memory so the contents can be verified.
-  for (u_int32_t i = 0; i < kMemorySize; ++i) {
+  for (uint32_t i = 0; i < kMemorySize; ++i) {
     memory[i] = i % 255;
   }
 

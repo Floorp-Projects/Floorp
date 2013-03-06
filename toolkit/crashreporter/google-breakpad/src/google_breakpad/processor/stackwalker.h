@@ -78,8 +78,8 @@ class Stackwalker {
      const CodeModules* modules,
      StackFrameSymbolizer* resolver_helper);
 
-  static void set_max_frames(u_int32_t max_frames) { max_frames_ = max_frames; }
-  static u_int32_t max_frames() { return max_frames_; }
+  static void set_max_frames(uint32_t max_frames) { max_frames_ = max_frames; }
+  static uint32_t max_frames() { return max_frames_; }
 
  protected:
   // system_info identifies the operating system, NULL or empty if unknown.
@@ -104,7 +104,7 @@ class Stackwalker {
   // * This address is within a loaded module for which we have symbols,
   //   and falls inside a function in that module.
   // Returns false otherwise.
-  bool InstructionAddressSeemsValid(u_int64_t address);
+  bool InstructionAddressSeemsValid(uint64_t address);
 
   // The default number of words to search through on the stack
   // for a return address.
@@ -185,7 +185,7 @@ class Stackwalker {
 
   // The maximum number of frames Stackwalker will walk through.
   // This defaults to 1024 to prevent infinite loops.
-  static u_int32_t max_frames_;
+  static uint32_t max_frames_;
 };
 
 }  // namespace google_breakpad

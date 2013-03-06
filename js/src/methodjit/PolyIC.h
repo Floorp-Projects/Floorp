@@ -488,14 +488,14 @@ struct PICInfo : public BasePolyIC {
   public:
     void purge(Repatcher &repatcher);
 
-    void setInlinePathShape(UnrootedShape shape) {
+    void setInlinePathShape(RawShape shape) {
         JS_ASSERT(!inlinePathShape_);
         inlinePathShape_ = shape;
     }
 
-    UnrootedShape getSingleShape() {
+    RawShape getSingleShape() {
         if (disabled || hadUncacheable || stubsGenerated > 0)
-            return UnrootedShape(NULL);
+            return NULL;
         return inlinePathShape_;
     }
 

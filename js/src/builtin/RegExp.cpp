@@ -201,7 +201,7 @@ EscapeNakedForwardSlashes(JSContext *cx, HandleAtom unescaped)
             return NULL;
     }
 
-    return sb.empty() ? UnrootedAtom(unescaped) : sb.finishAtom();
+    return sb.empty() ? RawAtom(unescaped) : sb.finishAtom();
 }
 
 /*
@@ -367,7 +367,7 @@ regexp_toString_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsRegExp(args.thisv()));
 
-    UnrootedString str = args.thisv().toObject().asRegExp().toString(cx);
+    RawString str = args.thisv().toObject().asRegExp().toString(cx);
     if (!str)
         return false;
 

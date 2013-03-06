@@ -97,7 +97,7 @@ bool MemoryMappedFile::Map(const char* path) {
 
 void MemoryMappedFile::Unmap() {
   if (content_.data()) {
-    sys_munmap(const_cast<u_int8_t*>(content_.data()), content_.length());
+    sys_munmap(const_cast<uint8_t*>(content_.data()), content_.length());
     content_.Set(NULL, 0);
   }
 }

@@ -21,6 +21,8 @@ class GeckoInstance(object):
                      "marionette.defaultPrefs.port": 2828,
                      "browser.warnOnQuit": False}
             profile = {"preferences": prefs, "restore":False}
+        else:
+            profile = {"profile": profile}
         print "starting runner"
         self.runner = Runner.create(binary=self.bin, profile_args=profile, cmdargs=['-no-remote'])
         self.runner.start()

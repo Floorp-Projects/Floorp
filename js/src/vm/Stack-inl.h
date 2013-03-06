@@ -132,7 +132,7 @@ StackFrame::resetInlinePrev(StackFrame *prevfp, jsbytecode *prevpc)
 
 inline void
 StackFrame::initCallFrame(JSContext *cx, JSFunction &callee,
-                          UnrootedScript script, uint32_t nactual, StackFrame::Flags flagsArg)
+                          RawScript script, uint32_t nactual, StackFrame::Flags flagsArg)
 {
     JS_ASSERT((flagsArg & ~(CONSTRUCTING |
                             LOWERED_CALL_APPLY |
@@ -543,7 +543,7 @@ ContextStack::popFrameAfterOverflow()
     regs.popFrame(fp->actuals() + fp->numActualArgs());
 }
 
-inline UnrootedScript
+inline RawScript
 ContextStack::currentScript(jsbytecode **ppc,
                             MaybeAllowCrossCompartment allowCrossCompartment) const
 {
@@ -563,7 +563,7 @@ ContextStack::currentScript(jsbytecode **ppc,
         JSScript *script = NULL;
         ion::GetPcScript(cx_, &script, ppc);
         if (!allowCrossCompartment && script->compartment() != cx_->compartment)
-            return UnrootedScript(NULL);
+            return NULL;
         return script;
     }
 #endif
@@ -574,18 +574,18 @@ ContextStack::currentScript(jsbytecode **ppc,
         mjit::JITChunk *chunk = fp->jit()->chunk(regs.pc);
         JS_ASSERT(inlined->inlineIndex < chunk->nInlineFrames);
         mjit::InlineFrame *frame = &chunk->inlineFrames()[inlined->inlineIndex];
-        UnrootedScript script = frame->fun->nonLazyScript();
+        RawScript script = frame->fun->nonLazyScript();
         if (!allowCrossCompartment && script->compartment() != cx_->compartment)
-            return UnrootedScript(NULL);
+            return NULL;
         if (ppc)
             *ppc = script->code + inlined->pcOffset;
         return script;
     }
 #endif
 
-    UnrootedScript script = fp->script();
+    RawScript script = fp->script();
     if (!allowCrossCompartment && script->compartment() != cx_->compartment)
-        return UnrootedScript(NULL);
+        return NULL;
 
     if (ppc)
         *ppc = fp->pcQuadratic(*this);
@@ -637,7 +637,7 @@ AbstractFramePtr::setReturnValue(const Value &rval) const
     JS_NOT_REACHED("Invalid frame");
 }
 
-inline UnrootedObject
+inline RawObject
 AbstractFramePtr::scopeChain() const
 {
     if (isStackFrame())
@@ -795,7 +795,7 @@ AbstractFramePtr::isDebuggerFrame() const
     JS_NOT_REACHED("Invalid frame");
     return false;
 }
-inline UnrootedScript
+inline RawScript
 AbstractFramePtr::script() const
 {
     if (isStackFrame())

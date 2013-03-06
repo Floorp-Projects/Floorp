@@ -92,16 +92,16 @@ bool callTrackingActive(JSContext *);
 bool wantNativeAddressInfo(JSContext *);
 
 /* Entering a JS function */
-bool enterScript(JSContext *, UnrootedScript, UnrootedFunction , StackFrame *);
+bool enterScript(JSContext *, RawScript, RawFunction , StackFrame *);
 
 /* About to leave a JS function */
-bool exitScript(JSContext *, UnrootedScript, UnrootedFunction , StackFrame *);
+bool exitScript(JSContext *, RawScript, RawFunction , StackFrame *);
 
 /* Executing a script */
-bool startExecution(UnrootedScript script);
+bool startExecution(RawScript script);
 
 /* Script has completed execution */
-bool stopExecution(UnrootedScript script);
+bool stopExecution(RawScript script);
 
 /* Heap has been resized */
 bool resizeHeap(JS::Zone *zone, size_t oldSize, size_t newSize);
@@ -147,10 +147,10 @@ bool compileScriptBegin(const char *filename, int lineno);
 bool compileScriptEnd(const char *filename, int lineno);
 
 /* About to make a call from JS into native code */
-bool calloutBegin(JSContext *cx, UnrootedFunction fun);
+bool calloutBegin(JSContext *cx, RawFunction fun);
 
 /* Native code called by JS has terminated */
-bool calloutEnd(JSContext *cx, UnrootedFunction fun);
+bool calloutEnd(JSContext *cx, RawFunction fun);
 
 /* Unimplemented */
 bool acquireMemory(JSContext *cx, void *address, size_t nbytes);
@@ -223,7 +223,7 @@ discardMJITCode(FreeOp *fop, mjit::JITScript *jscr, mjit::JITChunk *chunk, void*
  */
 bool
 registerICCode(JSContext *cx,
-               mjit::JITChunk *chunk, UnrootedScript script, jsbytecode* pc,
+               mjit::JITChunk *chunk, RawScript script, jsbytecode* pc,
                void *start, size_t size);
 #endif /* JS_METHODJIT */
 
@@ -240,8 +240,8 @@ discardExecutableRegion(void *start, size_t size);
  * marshalling required for these probe points is expensive enough that it
  * shouldn't really matter.
  */
-void DTraceEnterJSFun(JSContext *cx, UnrootedFunction fun, UnrootedScript script);
-void DTraceExitJSFun(JSContext *cx, UnrootedFunction fun, UnrootedScript script);
+void DTraceEnterJSFun(JSContext *cx, RawFunction fun, RawScript script);
+void DTraceExitJSFun(JSContext *cx, RawFunction fun, RawScript script);
 
 /*
  * Internal: ETW-specific probe functions
@@ -252,8 +252,8 @@ bool ETWCreateRuntime(JSRuntime *rt);
 bool ETWDestroyRuntime(JSRuntime *rt);
 bool ETWShutdown();
 bool ETWCallTrackingActive();
-bool ETWEnterJSFun(JSContext *cx, UnrootedFunction fun, UnrootedScript script, int counter);
-bool ETWExitJSFun(JSContext *cx, UnrootedFunction fun, UnrootedScript script, int counter);
+bool ETWEnterJSFun(JSContext *cx, RawFunction fun, RawScript script, int counter);
+bool ETWExitJSFun(JSContext *cx, RawFunction fun, RawScript script, int counter);
 bool ETWCreateObject(JSContext *cx, JSObject *obj);
 bool ETWFinalizeObject(JSObject *obj);
 bool ETWResizeObject(JSContext *cx, JSObject *obj, size_t oldSize, size_t newSize);
@@ -261,8 +261,8 @@ bool ETWCreateString(JSContext *cx, JSString *string, size_t length);
 bool ETWFinalizeString(JSString *string);
 bool ETWCompileScriptBegin(const char *filename, int lineno);
 bool ETWCompileScriptEnd(const char *filename, int lineno);
-bool ETWCalloutBegin(JSContext *cx, UnrootedFunction fun);
-bool ETWCalloutEnd(JSContext *cx, UnrootedFunction fun);
+bool ETWCalloutBegin(JSContext *cx, RawFunction fun);
+bool ETWCalloutEnd(JSContext *cx, RawFunction fun);
 bool ETWAcquireMemory(JSContext *cx, void *address, size_t nbytes);
 bool ETWReleaseMemory(JSContext *cx, void *address, size_t nbytes);
 bool ETWGCStart();
@@ -274,8 +274,8 @@ bool ETWGCEndSweepPhase();
 bool ETWCustomMark(JSString *string);
 bool ETWCustomMark(const char *string);
 bool ETWCustomMark(int marker);
-bool ETWStartExecution(UnrootedScript script);
-bool ETWStopExecution(JSContext *cx, UnrootedScript script);
+bool ETWStartExecution(RawScript script);
+bool ETWStopExecution(JSContext *cx, RawScript script);
 bool ETWResizeHeap(JSCompartment *compartment, size_t oldSize, size_t newSize);
 #endif
 
@@ -312,7 +312,7 @@ Probes::wantNativeAddressInfo(JSContext *cx)
 }
 
 inline bool
-Probes::enterScript(JSContext *cx, UnrootedScript script, UnrootedFunction maybeFun,
+Probes::enterScript(JSContext *cx, RawScript script, RawFunction maybeFun,
                     StackFrame *fp)
 {
     bool ok = true;
@@ -339,7 +339,7 @@ Probes::enterScript(JSContext *cx, UnrootedScript script, UnrootedFunction maybe
 }
 
 inline bool
-Probes::exitScript(JSContext *cx, UnrootedScript script, UnrootedFunction maybeFun,
+Probes::exitScript(JSContext *cx, RawScript script, RawFunction maybeFun,
                    StackFrame *fp)
 {
     bool ok = true;
@@ -512,7 +512,7 @@ Probes::compileScriptEnd(const char *filename, int lineno)
 }
 
 inline bool
-Probes::calloutBegin(JSContext *cx, UnrootedFunction fun)
+Probes::calloutBegin(JSContext *cx, RawFunction fun)
 {
     bool ok = true;
 
@@ -525,7 +525,7 @@ Probes::calloutBegin(JSContext *cx, UnrootedFunction fun)
 }
 
 inline bool
-Probes::calloutEnd(JSContext *cx, UnrootedFunction fun)
+Probes::calloutEnd(JSContext *cx, RawFunction fun)
 {
     bool ok = true;
 
@@ -681,7 +681,7 @@ Probes::CustomMark(int marker)
 }
 
 inline bool
-Probes::startExecution(UnrootedScript script)
+Probes::startExecution(RawScript script)
 {
     bool ok = true;
 
@@ -699,7 +699,7 @@ Probes::startExecution(UnrootedScript script)
 }
 
 inline bool
-Probes::stopExecution(UnrootedScript script)
+Probes::stopExecution(RawScript script)
 {
     bool ok = true;
 

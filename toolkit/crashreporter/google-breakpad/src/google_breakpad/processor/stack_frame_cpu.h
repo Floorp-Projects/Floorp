@@ -78,7 +78,7 @@ struct StackFrameX86 : public StackFrame {
   ~StackFrameX86();
 
   // Overriden to return the return address as saved on the stack.
-  virtual u_int64_t ReturnAddress() const;
+  virtual uint64_t ReturnAddress() const;
 
   // Register state.  This is only fully valid for the topmost frame in a
   // stack.  In other frames, the values of nonvolatile registers may be
@@ -151,7 +151,7 @@ struct StackFrameAMD64 : public StackFrame {
   StackFrameAMD64() : context(), context_validity(CONTEXT_VALID_NONE) {}
 
   // Overriden to return the return address as saved on the stack.
-  virtual u_int64_t ReturnAddress() const;
+  virtual uint64_t ReturnAddress() const;
 
   // Register state. This is only fully valid for the topmost frame in a
   // stack. In other frames, which registers are present depends on what

@@ -45,11 +45,11 @@ typedef enum {
 
 /*
  * The common code creating the GSM timers needs to have
- * access to the gsm_msg_queue variable since CPR
+ * access to the gsm_msgq variable since CPR
  * needs to know where to send the timer expiration
  * message.
  */
-extern cprMsgQueue_t gsm_msg_queue;
+extern cprMsgQueue_t gsm_msgq;
 
 extern void kpml_process_msg(uint32_t cmd, void *msg);
 extern void dp_process_msg(uint32_t cmd, void *msg);
