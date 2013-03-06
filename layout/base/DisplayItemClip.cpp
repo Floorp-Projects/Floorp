@@ -13,32 +13,41 @@
 
 namespace mozilla {
 
-DisplayItemClip::DisplayItemClip(const DisplayItemClip& aOther, nsDisplayItem* aClipItem)
-  : mRoundedClipRects(aOther.mRoundedClipRects),
-    mHaveClipRect(true)
+void
+DisplayItemClip::SetTo(const nsRect& aRect)
 {
-  nsDisplayItem::Type type = aClipItem->GetType();
-  NS_ABORT_IF_FALSE(type == nsDisplayItem::TYPE_CLIP ||
-                    type == nsDisplayItem::TYPE_CLIP_ROUNDED_RECT,
-                    "unexpected display item type");
-  nsDisplayClip* item = static_cast<nsDisplayClip*>(aClipItem);
-  // Always intersect with mClipRect, even if we're going to add a
-  // rounded rect.
-  if (aOther.mHaveClipRect) {
-    mClipRect.IntersectRect(aOther.mClipRect, item->GetClipRect());
-  } else {
-    mClipRect = item->GetClipRect();
-  }
+  mHaveClipRect = true;
+  mClipRect = aRect;
+  mRoundedClipRects.Clear();
+}
 
-  if (type == nsDisplayItem::TYPE_CLIP_ROUNDED_RECT) {
-    RoundedRect *rr = mRoundedClipRects.AppendElement();
-    if (rr) {
-      rr->mRect = item->GetClipRect();
-      static_cast<nsDisplayClipRoundedRect*>(item)->GetRadii(rr->mRadii);
+void
+DisplayItemClip::SetTo(const nsRect& aRect, const nscoord* aRadii)
+{
+  mHaveClipRect = true;
+  mClipRect = aRect;
+  mRoundedClipRects.SetLength(1);
+  mRoundedClipRects[0].mRect = aRect;
+  memcpy(mRoundedClipRects[0].mRadii, aRadii, sizeof(nscoord)*8);
+}
+
+bool
+DisplayItemClip::MayIntersect(const nsRect& aRect) const
+{
+  if (!mHaveClipRect) {
+    return !aRect.IsEmpty();
+  }
+  nsRect r = aRect.Intersect(mClipRect);
+  if (r.IsEmpty()) {
+    return false;
+  }
+  for (uint32_t i = 0; i < mRoundedClipRects.Length(); ++i) {
+    const RoundedRect& rr = mRoundedClipRects[i];
+    if (!nsLayoutUtils::RoundedRectIntersectsRect(rr.mRect, rr.mRadii, r)) {
+      return false;
     }
   }
-
-  // FIXME: Optimize away excess rounded rectangles due to the new addition.
+  return true;
 }
 
 void
@@ -124,7 +133,7 @@ DisplayItemClip::AddRoundedRectPathTo(gfxContext* aContext,
 }
 
 nsRect
-DisplayItemClip::ApproximateIntersect(const nsRect& aRect) const
+DisplayItemClip::ApproximateIntersectInward(const nsRect& aRect) const
 {
   nsRect r = aRect;
   if (mHaveClipRect) {
@@ -346,5 +355,54 @@ DisplayItemClip::ComputeRegionInClips(DisplayItemClip* aOldClip,
   }
   return true;
 }
+
+void
+DisplayItemClip::MoveBy(nsPoint aPoint)
+{
+  if (!mHaveClipRect)
+    return;
+  mClipRect += aPoint;
+  for (uint32_t i = 0; i < mRoundedClipRects.Length(); ++i) {
+    mRoundedClipRects[i].mRect += aPoint;
+  }
+}
+
+static DisplayItemClip* gNoClip;
+
+const DisplayItemClip&
+DisplayItemClip::NoClip()
+{
+  if (!gNoClip) {
+    gNoClip = new DisplayItemClip();
+  }
+  return *gNoClip;
+}
+
+void
+DisplayItemClip::Shutdown()
+{
+  delete gNoClip;
+  gNoClip = nullptr;
+}
+
+#ifdef DEBUG
+nsCString
+DisplayItemClip::ToString() const
+{
+  nsAutoCString str;
+  if (mHaveClipRect) {
+    str.AppendPrintf("%d,%d,%d,%d", mClipRect.x, mClipRect.y,
+                     mClipRect.width, mClipRect.height);
+    for (uint32_t i = 0; i < mRoundedClipRects.Length(); ++i) {
+      const RoundedRect& r = mRoundedClipRects[i];
+      str.AppendPrintf(" [%d,%d,%d,%d corners %d,%d,%d,%d,%d,%d,%d,%d]",
+                       r.mRect.x, r.mRect.y, r.mRect.width, r.mRect.height,
+                       r.mRadii[0], r.mRadii[1], r.mRadii[2], r.mRadii[3],
+                       r.mRadii[4], r.mRadii[5], r.mRadii[6], r.mRadii[7]);
+    }
+  }
+  return str;
+}
+#endif
 
 }
