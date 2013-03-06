@@ -156,7 +156,7 @@ const char *kStrtabName = ".strtab";
 const int demangleLen = 20000;
 
 // Offset to the string table.
-u_int64_t stringOffset = 0;
+uint64_t stringOffset = 0;
 
 // Update the offset to the start of the string index of the next
 // object module for every N_ENDM stabs.

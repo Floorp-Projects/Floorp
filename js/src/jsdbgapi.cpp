@@ -515,7 +515,7 @@ JS_GetFunctionScript(JSContext *cx, JSFunction *fun)
     if (fun->isInterpretedLazy()) {
         RootedFunction rootedFun(cx, fun);
         AutoCompartment funCompartment(cx, rootedFun);
-        UnrootedScript script = rootedFun->getOrCreateScript(cx);
+        RawScript script = rootedFun->getOrCreateScript(cx);
         if (!script)
             MOZ_CRASH();
         return script;

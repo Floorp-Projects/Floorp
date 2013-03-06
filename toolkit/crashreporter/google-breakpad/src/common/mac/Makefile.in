@@ -43,6 +43,8 @@ HOST_CMMSRCS = \
   dump_syms.mm \
   $(NULL)
 
+DEFINES += -DNO_STABS_SUPPORT
+
 # need static lib
 FORCE_STATIC_LIB = 1
 

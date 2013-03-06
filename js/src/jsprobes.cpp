@@ -73,7 +73,7 @@ Probes::discardMJITCode(FreeOp *fop, mjit::JITScript *jscr, mjit::JITChunk *chun
 
 bool
 Probes::registerICCode(JSContext *cx,
-                       mjit::JITChunk *chunk, UnrootedScript script, jsbytecode* pc,
+                       mjit::JITChunk *chunk, RawScript script, jsbytecode* pc,
                        void *start, size_t size)
 {
     if (cx->runtime->spsProfiler.enabled() &&
@@ -149,7 +149,7 @@ Probes::shutdown()
 
 #ifdef INCLUDE_MOZILLA_DTRACE
 static const char *
-ScriptFilename(const UnrootedScript script)
+ScriptFilename(const RawScript script)
 {
     if (!script)
         return Probes::nullName;
@@ -159,7 +159,7 @@ ScriptFilename(const UnrootedScript script)
 }
 
 static const char *
-FunctionName(JSContext *cx, UnrootedFunction fun, JSAutoByteString* bytes)
+FunctionName(JSContext *cx, RawFunction fun, JSAutoByteString* bytes)
 {
     if (!fun)
         return Probes::nullName;
@@ -176,7 +176,7 @@ FunctionName(JSContext *cx, UnrootedFunction fun, JSAutoByteString* bytes)
  * a number of usually unused lines of code would cause.
  */
 void
-Probes::DTraceEnterJSFun(JSContext *cx, UnrootedFunction fun, UnrootedScript script)
+Probes::DTraceEnterJSFun(JSContext *cx, RawFunction fun, RawScript script)
 {
     JSAutoByteString funNameBytes;
     JAVASCRIPT_FUNCTION_ENTRY(ScriptFilename(script), Probes::nullName,
@@ -184,7 +184,7 @@ Probes::DTraceEnterJSFun(JSContext *cx, UnrootedFunction fun, UnrootedScript scr
 }
 
 void
-Probes::DTraceExitJSFun(JSContext *cx, UnrootedFunction fun, UnrootedScript script)
+Probes::DTraceExitJSFun(JSContext *cx, RawFunction fun, RawScript script)
 {
     JSAutoByteString funNameBytes;
     JAVASCRIPT_FUNCTION_RETURN(ScriptFilename(script), Probes::nullName,
@@ -196,7 +196,7 @@ Probes::DTraceExitJSFun(JSContext *cx, UnrootedFunction fun, UnrootedScript scri
 static void
 current_location(JSContext *cx, int* lineno, char const **filename)
 {
-    UnrootedScript script = cx->stack.currentScript()
+    RawScript script = cx->stack.currentScript()
     if (! script) {
         *lineno = -1;
         *filename = "(uninitialized)";
@@ -243,7 +243,7 @@ Probes::ETWShutdown()
 }
 
 bool
-Probes::ETWEnterJSFun(JSContext *cx, UnrootedFunction fun, UnrootedScript script, int counter)
+Probes::ETWEnterJSFun(JSContext *cx, RawFunction fun, RawScript script, int counter)
 {
     int lineno = script ? script->lineno : -1;
     JSAutoByteString bytes;
@@ -253,7 +253,7 @@ Probes::ETWEnterJSFun(JSContext *cx, UnrootedFunction fun, UnrootedScript script
 }
 
 bool
-Probes::ETWExitJSFun(JSContext *cx, UnrootedFunction fun, UnrootedScript script, int counter)
+Probes::ETWExitJSFun(JSContext *cx, RawFunction fun, RawScript script, int counter)
 {
     int lineno = script ? script->lineno : -1;
     JSAutoByteString bytes;
@@ -263,7 +263,7 @@ Probes::ETWExitJSFun(JSContext *cx, UnrootedFunction fun, UnrootedScript script,
 }
 
 bool
-Probes::ETWCreateObject(JSContext *cx, UnrootedObject obj)
+Probes::ETWCreateObject(JSContext *cx, RawObject obj)
 {
     int lineno;
     const char * script_filename;
@@ -275,14 +275,14 @@ Probes::ETWCreateObject(JSContext *cx, UnrootedObject obj)
 }
 
 bool
-Probes::ETWFinalizeObject(UnrootedObject obj)
+Probes::ETWFinalizeObject(RawObject obj)
 {
     return EventWriteEvtObjectFinalize(ObjectClassname(obj),
                                        reinterpret_cast<uint64_t_t>(obj)) == ERROR_SUCCESS;
 }
 
 bool
-Probes::ETWResizeObject(JSContext *cx, UnrootedObject obj, size_t oldSize, size_t newSize)
+Probes::ETWResizeObject(JSContext *cx, RawObject obj, size_t oldSize, size_t newSize)
 {
     int lineno;
     const char *script_filename;
@@ -294,7 +294,7 @@ Probes::ETWResizeObject(JSContext *cx, UnrootedObject obj, size_t oldSize, size_
 }
 
 bool
-Probes::ETWCreateString(JSContext *cx, UnrootedString string, size_t length)
+Probes::ETWCreateString(JSContext *cx, RawString string, size_t length)
 {
     int lineno;
     const char *script_filename;
@@ -306,7 +306,7 @@ Probes::ETWCreateString(JSContext *cx, UnrootedString string, size_t length)
 }
 
 bool
-Probes::ETWFinalizeString(UnrootedString string)
+Probes::ETWFinalizeString(RawString string)
 {
     return EventWriteEvtStringFinalize(reinterpret_cast<uint64_t>(string),
                                        string->length()) == ERROR_SUCCESS;
@@ -325,7 +325,7 @@ Probes::ETWCompileScriptEnd(const char *filename, int lineno)
 }
 
 bool
-Probes::ETWCalloutBegin(JSContext *cx, UnrootedFunction fun)
+Probes::ETWCalloutBegin(JSContext *cx, RawFunction fun)
 {
     const char *script_filename;
     int lineno;
@@ -339,7 +339,7 @@ Probes::ETWCalloutBegin(JSContext *cx, UnrootedFunction fun)
 }
 
 bool
-Probes::ETWCalloutEnd(JSContext *cx, UnrootedFunction fun)
+Probes::ETWCalloutEnd(JSContext *cx, RawFunction fun)
 {
         const char *script_filename;
         int lineno;
@@ -406,7 +406,7 @@ Probes::ETWGCEndSweepPhase(JSCompartment *compartment)
 }
 
 bool
-Probes::ETWCustomMark(UnrootedString string)
+Probes::ETWCustomMark(RawString string)
 {
     const jschar *chars = string->getCharsZ(NULL);
     return !chars || EventWriteEvtCustomString(chars) == ERROR_SUCCESS;
@@ -425,14 +425,14 @@ Probes::ETWCustomMark(int marker)
 }
 
 bool
-Probes::ETWStartExecution(UnrootedScript script)
+Probes::ETWStartExecution(RawScript script)
 {
     int lineno = script ? script->lineno : -1;
     return EventWriteEvtExecuteStart(ScriptFilename(script), lineno) == ERROR_SUCCESS;
 }
 
 bool
-Probes::ETWStopExecution(UnrootedScript script)
+Probes::ETWStopExecution(RawScript script)
 {
     int lineno = script ? script->lineno : -1;
     return EventWriteEvtExecuteDone(ScriptFilename(script), lineno) == ERROR_SUCCESS;

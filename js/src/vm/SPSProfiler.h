@@ -136,9 +136,9 @@ class SPSProfiler
     bool                 slowAssertions;
     bool                 enabled_;
 
-    const char *allocProfileString(JSContext *cx, UnrootedScript script,
-                                   UnrootedFunction function);
-    void push(const char *string, void *sp, UnrootedScript script, jsbytecode *pc);
+    const char *allocProfileString(JSContext *cx, RawScript script,
+                                   RawFunction function);
+    void push(const char *string, void *sp, RawScript script, jsbytecode *pc);
     void pop();
 
   public:
@@ -165,9 +165,9 @@ class SPSProfiler
      *   - exit: this function has ceased execution, and no further
      *           entries/exits will be made
      */
-    bool enter(JSContext *cx, UnrootedScript script, UnrootedFunction maybeFun);
-    void exit(JSContext *cx, UnrootedScript script, UnrootedFunction maybeFun);
-    void updatePC(UnrootedScript script, jsbytecode *pc) {
+    bool enter(JSContext *cx, RawScript script, RawFunction maybeFun);
+    void exit(JSContext *cx, RawScript script, RawFunction maybeFun);
+    void updatePC(RawScript script, jsbytecode *pc) {
         if (enabled() && *size_ - 1 < max_) {
             JS_ASSERT(*size_ > 0);
             JS_ASSERT(stack_[*size_ - 1].script() == script);
@@ -233,7 +233,7 @@ class SPSProfiler
                           mjit::JSActiveFrame **inlineFrames);
     void discardMJITCode(mjit::JITScript *jscr,
                          mjit::JITChunk *chunk, void* address);
-    bool registerICCode(mjit::JITChunk *chunk, UnrootedScript script, jsbytecode* pc,
+    bool registerICCode(mjit::JITChunk *chunk, RawScript script, jsbytecode* pc,
                         void *start, size_t size);
     jsbytecode *ipToPC(RawScript script, size_t ip);
 
@@ -241,15 +241,15 @@ class SPSProfiler
     JMChunkInfo *registerScript(mjit::JSActiveFrame *frame,
                                 mjit::PCLengthEntry *lenths,
                                 mjit::JITChunk *chunk);
-    void unregisterScript(UnrootedScript script, mjit::JITChunk *chunk);
+    void unregisterScript(RawScript script, mjit::JITChunk *chunk);
   public:
 #else
     jsbytecode *ipToPC(RawScript script, size_t ip) { return NULL; }
 #endif
 
     void setProfilingStack(ProfileEntry *stack, uint32_t *size, uint32_t max);
-    const char *profileString(JSContext *cx, UnrootedScript script, UnrootedFunction maybeFun);
-    void onScriptFinalized(UnrootedScript script);
+    const char *profileString(JSContext *cx, RawScript script, RawFunction maybeFun);
+    void onScriptFinalized(RawScript script);
 
     /* meant to be used for testing, not recommended to call in normal code */
     size_t stringsCount() { return strings.count(); }
@@ -371,7 +371,7 @@ class SPSInstrumentation
      * instrumentation should be emitted. This updates internal state to flag
      * that further instrumentation should actually be emitted.
      */
-    void setPushed(UnrootedScript script) {
+    void setPushed(RawScript script) {
         if (!enabled())
             return;
         JS_ASSERT(frame->left == 0);
@@ -382,7 +382,7 @@ class SPSInstrumentation
      * Flags entry into a JS function for the first time. Before this is called,
      * no instrumentation is emitted, but after this instrumentation is emitted.
      */
-    bool push(JSContext *cx, UnrootedScript script, Assembler &masm, Register scratch) {
+    bool push(JSContext *cx, RawScript script, Assembler &masm, Register scratch) {
         if (!enabled())
             return true;
         const char *string = profiler_->profileString(cx, script,
@@ -399,7 +399,7 @@ class SPSInstrumentation
      * sets the current PC to something non-null, however, so as soon as JIT
      * code is reentered this updates the current pc to NULL.
      */
-    void pushManual(UnrootedScript script, Assembler &masm, Register scratch) {
+    void pushManual(RawScript script, Assembler &masm, Register scratch) {
         if (!enabled())
             return;
         masm.spsUpdatePCIdx(profiler_, ProfileEntry::NullPCIndex, scratch);

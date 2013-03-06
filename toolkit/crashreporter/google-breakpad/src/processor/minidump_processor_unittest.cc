@@ -84,7 +84,7 @@ class MockMinidumpThread : public MinidumpThread {
  public:
   MockMinidumpThread() : MinidumpThread(NULL) {}
 
-  MOCK_CONST_METHOD1(GetThreadID, bool(u_int32_t*));
+  MOCK_CONST_METHOD1(GetThreadID, bool(uint32_t*));
   MOCK_METHOD0(GetContext, MinidumpContext*());
   MOCK_METHOD0(GetMemory, MinidumpMemoryRegion*());
 };
@@ -93,24 +93,24 @@ class MockMinidumpThread : public MinidumpThread {
 // MinidumpMemoryRegion.
 class MockMinidumpMemoryRegion : public MinidumpMemoryRegion {
  public:
-  MockMinidumpMemoryRegion(u_int64_t base, const string& contents) :
+  MockMinidumpMemoryRegion(uint64_t base, const string& contents) :
       MinidumpMemoryRegion(NULL) {
     region_.Init(base, contents);
   }
 
-  u_int64_t GetBase() const { return region_.GetBase(); }
-  u_int32_t GetSize() const { return region_.GetSize(); }
+  uint64_t GetBase() const { return region_.GetBase(); }
+  uint32_t GetSize() const { return region_.GetSize(); }
 
-  bool GetMemoryAtAddress(u_int64_t address, u_int8_t  *value) const {
+  bool GetMemoryAtAddress(uint64_t address, uint8_t  *value) const {
     return region_.GetMemoryAtAddress(address, value);
   }
-  bool GetMemoryAtAddress(u_int64_t address, u_int16_t *value) const {
+  bool GetMemoryAtAddress(uint64_t address, uint16_t *value) const {
     return region_.GetMemoryAtAddress(address, value);
   }
-  bool GetMemoryAtAddress(u_int64_t address, u_int32_t *value) const {
+  bool GetMemoryAtAddress(uint64_t address, uint32_t *value) const {
     return region_.GetMemoryAtAddress(address, value);
   }
-  bool GetMemoryAtAddress(u_int64_t address, u_int64_t *value) const {
+  bool GetMemoryAtAddress(uint64_t address, uint64_t *value) const {
     return region_.GetMemoryAtAddress(address, value);
   }
 
@@ -475,7 +475,7 @@ TEST_F(MinidumpProcessorTest, TestThreadMissingMemory) {
   memset(&no_memory_thread_raw_context, 0,
          sizeof(no_memory_thread_raw_context));
   no_memory_thread_raw_context.context_flags = MD_CONTEXT_X86_FULL;
-  const u_int32_t kExpectedEIP = 0xabcd1234;
+  const uint32_t kExpectedEIP = 0xabcd1234;
   no_memory_thread_raw_context.eip = kExpectedEIP;
   TestMinidumpContext no_memory_thread_context(no_memory_thread_raw_context);
   EXPECT_CALL(no_memory_thread, GetContext()).

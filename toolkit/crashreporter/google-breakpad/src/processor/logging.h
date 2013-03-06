@@ -119,8 +119,8 @@ class LogMessageVoidify {
 };
 
 // Returns number formatted as a hexadecimal string, such as "0x7b".
-string HexString(u_int32_t number);
-string HexString(u_int64_t number);
+string HexString(uint32_t number);
+string HexString(uint64_t number);
 string HexString(int number);
 
 // Returns the error code as set in the global errno variable, and sets

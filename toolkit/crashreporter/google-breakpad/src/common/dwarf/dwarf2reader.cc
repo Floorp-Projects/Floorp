@@ -892,6 +892,21 @@ class CallFrameInfo::Rule {
   // If this is a base+offset rule, change its offset to OFFSET. Otherwise,
   // do nothing. (Ugly, but required for DW_CFA_def_cfa_offset.)
   virtual void SetOffset(long long offset) { }
+
+  // A RTTI workaround, to make it possible to implement equality
+  // comparisons on classes derived from this one.
+  enum CFIRTag {
+    CFIR_UNDEFINED_RULE,
+    CFIR_SAME_VALUE_RULE,
+    CFIR_OFFSET_RULE,
+    CFIR_VAL_OFFSET_RULE,
+    CFIR_REGISTER_RULE,
+    CFIR_EXPRESSION_RULE,
+    CFIR_VAL_EXPRESSION_RULE
+  };
+
+  // Produce the tag that identifies the child class of this object.
+  virtual CFIRTag getTag() const = 0;
 };
 
 // Rule: the value the register had in the caller cannot be recovered.
@@ -899,14 +914,13 @@ class CallFrameInfo::UndefinedRule: public CallFrameInfo::Rule {
  public:
   UndefinedRule() { }
   ~UndefinedRule() { }
+  CFIRTag getTag() const { return CFIR_UNDEFINED_RULE; }
   bool Handle(Handler *handler, uint64 address, int reg) const {
     return handler->UndefinedRule(address, reg);
   }
   bool operator==(const Rule &rhs) const {
-    // dynamic_cast is allowed by the Google C++ Style Guide, if the use has
-    // been carefully considered; cheap RTTI-like workarounds are forbidden.
-    const UndefinedRule *our_rhs = dynamic_cast<const UndefinedRule *>(&rhs);
-    return (our_rhs != NULL);
+    if (rhs.getTag() != CFIR_UNDEFINED_RULE) return false;
+    return true;
   }
   Rule *Copy() const { return new UndefinedRule(*this); }
 };
@@ -916,14 +930,13 @@ class CallFrameInfo::SameValueRule: public CallFrameInfo::Rule {
  public:
   SameValueRule() { }
   ~SameValueRule() { }
+  CFIRTag getTag() const { return CFIR_SAME_VALUE_RULE; }
   bool Handle(Handler *handler, uint64 address, int reg) const {
     return handler->SameValueRule(address, reg);
   }
   bool operator==(const Rule &rhs) const {
-    // dynamic_cast is allowed by the Google C++ Style Guide, if the use has
-    // been carefully considered; cheap RTTI-like workarounds are forbidden.
-    const SameValueRule *our_rhs = dynamic_cast<const SameValueRule *>(&rhs);
-    return (our_rhs != NULL);
+    if (rhs.getTag() != CFIR_SAME_VALUE_RULE) return false;
+    return true;
   }
   Rule *Copy() const { return new SameValueRule(*this); }
 };
@@ -935,15 +948,14 @@ class CallFrameInfo::OffsetRule: public CallFrameInfo::Rule {
   OffsetRule(int base_register, long offset)
       : base_register_(base_register), offset_(offset) { }
   ~OffsetRule() { }
+  CFIRTag getTag() const { return CFIR_OFFSET_RULE; }
   bool Handle(Handler *handler, uint64 address, int reg) const {
     return handler->OffsetRule(address, reg, base_register_, offset_);
   }
   bool operator==(const Rule &rhs) const {
-    // dynamic_cast is allowed by the Google C++ Style Guide, if the use has
-    // been carefully considered; cheap RTTI-like workarounds are forbidden.
-    const OffsetRule *our_rhs = dynamic_cast<const OffsetRule *>(&rhs);
-    return (our_rhs &&
-            base_register_ == our_rhs->base_register_ &&
+    if (rhs.getTag() != CFIR_OFFSET_RULE) return false;
+    const OffsetRule *our_rhs = static_cast<const OffsetRule *>(&rhs);
+    return (base_register_ == our_rhs->base_register_ &&
             offset_ == our_rhs->offset_);
   }
   Rule *Copy() const { return new OffsetRule(*this); }
@@ -964,15 +976,14 @@ class CallFrameInfo::ValOffsetRule: public CallFrameInfo::Rule {
   ValOffsetRule(int base_register, long offset)
       : base_register_(base_register), offset_(offset) { }
   ~ValOffsetRule() { }
+  CFIRTag getTag() const { return CFIR_VAL_OFFSET_RULE; }
   bool Handle(Handler *handler, uint64 address, int reg) const {
     return handler->ValOffsetRule(address, reg, base_register_, offset_);
   }
   bool operator==(const Rule &rhs) const {
-    // dynamic_cast is allowed by the Google C++ Style Guide, if the use has
-    // been carefully considered; cheap RTTI-like workarounds are forbidden.
-    const ValOffsetRule *our_rhs = dynamic_cast<const ValOffsetRule *>(&rhs);
-    return (our_rhs &&
-            base_register_ == our_rhs->base_register_ &&
+    if (rhs.getTag() != CFIR_VAL_OFFSET_RULE) return false;
+    const ValOffsetRule *our_rhs = static_cast<const ValOffsetRule *>(&rhs);
+    return (base_register_ == our_rhs->base_register_ &&
             offset_ == our_rhs->offset_);
   }
   Rule *Copy() const { return new ValOffsetRule(*this); }
@@ -989,14 +1000,14 @@ class CallFrameInfo::RegisterRule: public CallFrameInfo::Rule {
   explicit RegisterRule(int register_number)
       : register_number_(register_number) { }
   ~RegisterRule() { }
+  CFIRTag getTag() const { return CFIR_REGISTER_RULE; }
   bool Handle(Handler *handler, uint64 address, int reg) const {
     return handler->RegisterRule(address, reg, register_number_);
   }
   bool operator==(const Rule &rhs) const {
-    // dynamic_cast is allowed by the Google C++ Style Guide, if the use has
-    // been carefully considered; cheap RTTI-like workarounds are forbidden.
-    const RegisterRule *our_rhs = dynamic_cast<const RegisterRule *>(&rhs);
-    return (our_rhs && register_number_ == our_rhs->register_number_);
+    if (rhs.getTag() != CFIR_REGISTER_RULE) return false;
+    const RegisterRule *our_rhs = static_cast<const RegisterRule *>(&rhs);
+    return (register_number_ == our_rhs->register_number_);
   }
   Rule *Copy() const { return new RegisterRule(*this); }
  private:
@@ -1009,14 +1020,14 @@ class CallFrameInfo::ExpressionRule: public CallFrameInfo::Rule {
   explicit ExpressionRule(const string &expression)
       : expression_(expression) { }
   ~ExpressionRule() { }
+  CFIRTag getTag() const { return CFIR_EXPRESSION_RULE; }
   bool Handle(Handler *handler, uint64 address, int reg) const {
     return handler->ExpressionRule(address, reg, expression_);
   }
   bool operator==(const Rule &rhs) const {
-    // dynamic_cast is allowed by the Google C++ Style Guide, if the use has
-    // been carefully considered; cheap RTTI-like workarounds are forbidden.
-    const ExpressionRule *our_rhs = dynamic_cast<const ExpressionRule *>(&rhs);
-    return (our_rhs && expression_ == our_rhs->expression_);
+    if (rhs.getTag() != CFIR_EXPRESSION_RULE) return false;
+    const ExpressionRule *our_rhs = static_cast<const ExpressionRule *>(&rhs);
+    return (expression_ == our_rhs->expression_);
   }
   Rule *Copy() const { return new ExpressionRule(*this); }
  private:
@@ -1029,15 +1040,15 @@ class CallFrameInfo::ValExpressionRule: public CallFrameInfo::Rule {
   explicit ValExpressionRule(const string &expression)
       : expression_(expression) { }
   ~ValExpressionRule() { }
+  CFIRTag getTag() const { return CFIR_VAL_EXPRESSION_RULE; }
   bool Handle(Handler *handler, uint64 address, int reg) const {
     return handler->ValExpressionRule(address, reg, expression_);
   }
   bool operator==(const Rule &rhs) const {
-    // dynamic_cast is allowed by the Google C++ Style Guide, if the use has
-    // been carefully considered; cheap RTTI-like workarounds are forbidden.
+    if (rhs.getTag() != CFIR_VAL_EXPRESSION_RULE) return false;
     const ValExpressionRule *our_rhs =
-        dynamic_cast<const ValExpressionRule *>(&rhs);
-    return (our_rhs && expression_ == our_rhs->expression_);
+        static_cast<const ValExpressionRule *>(&rhs);
+    return (expression_ == our_rhs->expression_);
   }
   Rule *Copy() const { return new ValExpressionRule(*this); }
  private:

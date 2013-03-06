@@ -130,7 +130,7 @@ static const MDRawContextX86 x86_raw_context = {
   }
 };
 
-static const u_int8_t x86_expected_contents[] = {
+static const uint8_t x86_expected_contents[] = {
   0x1b, 0xd7, 0xd5, 0xde,
   0x2e, 0x43, 0xdb, 0x9f,
   0x1a, 0xa8, 0xb7, 0x26,
@@ -320,7 +320,7 @@ static const MDRawContextARM arm_raw_context = {
   }
 };
 
-static const u_int8_t arm_expected_contents[] = {
+static const uint8_t arm_expected_contents[] = {
   0x6a, 0x9e, 0x1b, 0x59,
   0xde, 0x94, 0x15, 0xa2,
   0x25, 0x8a, 0x0d, 0x82,

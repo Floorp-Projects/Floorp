@@ -125,12 +125,6 @@ public:
                "This flag should be set before creating any wrappers.");
     mWrapperPtrBits = WRAPPER_IS_DOM_BINDING;
   }
-  void ClearIsDOMBinding()
-  {
-    MOZ_ASSERT(!mWrapperPtrBits || mWrapperPtrBits == WRAPPER_IS_DOM_BINDING,
-               "This flag should be cleared before creating any wrappers.");
-    mWrapperPtrBits = 0;
-  }
 
   bool IsDOMBinding() const
   {

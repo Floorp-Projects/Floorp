@@ -1357,6 +1357,23 @@ MarionetteDriverActor.prototype = {
   },
 
   /**
+   * actionChain
+   *
+   * @param object aRequest
+   *        'value' represents a nested array: inner array represents each event; outer array represents collection of events
+   */
+  actionChain: function MDA_actionChain(aRequest) {
+    this.command_id = this.getCommandId();
+    if (this.context == "chrome") {
+      this.sendError("Not in Chrome", 500, null, this.command_id);
+    }
+    else {
+      this.sendAsync("actionChain", {value: aRequest.value,
+                                     command_id: this.command_id});
+    }
+  },
+
+  /**
    * Find an element using the indicated search strategy.
    *
    * @param object aRequest
@@ -2099,6 +2116,7 @@ MarionetteDriverActor.prototype.requestTypes = {
   "doubleTap": MarionetteDriverActor.prototype.doubleTap,
   "press": MarionetteDriverActor.prototype.press,
   "release": MarionetteDriverActor.prototype.release,
+  "actionChain": MarionetteDriverActor.prototype.actionChain,
   "executeAsyncScript": MarionetteDriverActor.prototype.executeWithCallback,
   "executeJSScript": MarionetteDriverActor.prototype.executeJSScript,
   "setSearchTimeout": MarionetteDriverActor.prototype.setSearchTimeout,
