@@ -546,8 +546,12 @@
           <!-- ux spec: https://bug782810.bugzilla.mozilla.org/attachment.cgi?id=714804 -->
 
           <!-- Text related -->
-          <!-- for text inputs, this will copy selected text, or if no text is selected, copy all -->
-          <richlistitem id="context-copy" type="copy,selectable" onclick="ContextCommands.copy();">
+          <!-- for text inputs, this will cut selected text -->
+          <richlistitem id="context-cut" type="cut" onclick="ContextCommands.cut();">
+            <label value="&contextTextCut.label;"/>
+          </richlistitem>
+          <!-- for text inputs, this will copy selected text -->
+          <richlistitem id="context-copy" type="copy" onclick="ContextCommands.copy();">
             <label value="&contextTextCopy.label;"/>
           </richlistitem>
           <!-- only displayed if there is text on the clipboard -->
