@@ -3416,13 +3416,38 @@ DenseSetElemStubExists(JSContext *cx, ICStub::Kind kind, ICSetElem_Fallback *stu
 }
 
 static bool
-TypedArraySetElemStubExists(ICSetElem_Fallback *stub, HandleObject obj)
+TypedArraySetElemStubExists(ICSetElem_Fallback *stub, HandleObject obj, bool expectOutOfBounds)
 {
     for (ICStub *cur = stub->icEntry()->firstStub(); cur != stub; cur = cur->next()) {
         if (!cur->isSetElem_TypedArray())
             continue;
-        if (obj->lastProperty() == cur->toSetElem_TypedArray()->shape())
+        ICSetElem_TypedArray *taStub = cur->toSetElem_TypedArray();
+        if (obj->lastProperty() == taStub->shape() &&
+            taStub->expectOutOfBounds() == expectOutOfBounds)
+        {
             return true;
+        }
+    }
+    return false;
+}
+
+static bool
+RemoveExistingTypedArraySetElemStub(JSContext *cx, ICSetElem_Fallback *stub, HandleObject obj)
+{
+    ICStub *prev = NULL;
+    ICStub *cur = stub->icEntry()->firstStub();
+    while (cur != stub) {
+        if (cur->isSetElem_TypedArray() &&
+            obj->lastProperty() == cur->toSetElem_TypedArray()->shape())
+        {
+            // TypedArraySetElem stubs are only removed using this procedure if
+            // being replaced with one that expects out of bounds index.
+            JS_ASSERT(!cur->toSetElem_TypedArray()->expectOutOfBounds());
+            stub->unlinkStub(cx->zone(), prev, cur);
+            return true;
+        }
+        prev = cur;
+        cur = cur->next();
     }
     return false;
 }
@@ -3600,19 +3625,29 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub,
         return true;
     }
 
-    if (obj->isTypedArray() &&
-        index.isInt32() && rhs.isNumber() &&
-        !TypedArraySetElemStubExists(stub, obj))
-    {
-        IonSpew(IonSpew_BaselineIC, "  Generating SetElem_TypedArray stub (shape=%p, type=%u)",
-                obj->lastProperty(), TypedArray::type(obj));
-        ICSetElem_TypedArray::Compiler compiler(cx, obj->lastProperty(), TypedArray::type(obj));
-        ICStub *typedArrayStub = compiler.getStub(compiler.getStubSpace(script));
-        if (!typedArrayStub)
-            return false;
+    if (obj->isTypedArray() && index.isInt32() && rhs.isNumber()) {
+        uint32_t len = TypedArray::length(obj);
+        int32_t idx = index.toInt32();
+        bool expectOutOfBounds = (idx < 0) || (static_cast<uint32_t>(idx) >= len);
 
-        stub->addNewStub(typedArrayStub);
-        return true;
+        if (!TypedArraySetElemStubExists(stub, obj, expectOutOfBounds)) {
+            // Remove any existing TypedArraySetElemStub that doesn't handle out-of-bounds
+            if (expectOutOfBounds)
+                RemoveExistingTypedArraySetElemStub(cx, stub, obj);
+
+            IonSpew(IonSpew_BaselineIC,
+                    "  Generating SetElem_TypedArray stub (shape=%p, type=%u, oob=%s)",
+                    obj->lastProperty(), TypedArray::type(obj),
+                    expectOutOfBounds ? "yes" : "no");
+            ICSetElem_TypedArray::Compiler compiler(cx, obj->lastProperty(), TypedArray::type(obj),
+                                                    expectOutOfBounds);
+            ICStub *typedArrayStub = compiler.getStub(compiler.getStubSpace(script));
+            if (!typedArrayStub)
+                return false;
+
+            stub->addNewStub(typedArrayStub);
+            return true;
+        }
     }
 
     return true;
@@ -3897,8 +3932,10 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
     Register key = masm.extractInt32(R1, ExtractTemp1);
 
     // Bounds check.
+    Label oobWrite;
     masm.unboxInt32(Address(obj, TypedArray::lengthOffset()), scratchReg);
-    masm.branch32(Assembler::BelowOrEqual, scratchReg, key, &failure);
+    masm.branch32(Assembler::BelowOrEqual, scratchReg, key,
+                  expectOutOfBounds_ ? &oobWrite : &failure);
 
     // Load the elements vector.
     masm.loadPtr(Address(obj, TypedArray::dataOffset()), scratchReg);
@@ -3965,6 +4002,11 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
     // Failure case - jump to next stub
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
+
+    if (expectOutOfBounds_) {
+        masm.bind(&oobWrite);
+        EmitReturnFromIC(masm);
+    }
     return true;
 }
 

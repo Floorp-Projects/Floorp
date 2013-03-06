@@ -3046,21 +3046,32 @@ class ICSetElem_TypedArray : public ICStub
   protected: // Protected to silence Clang warning.
     HeapPtrShape shape_;
 
-    ICSetElem_TypedArray(IonCode *stubCode, HandleShape shape, uint32_t type)
+    ICSetElem_TypedArray(IonCode *stubCode, HandleShape shape, uint32_t type,
+                         bool expectOutOfBounds)
       : ICStub(SetElem_TypedArray, stubCode),
         shape_(shape)
     {
-        extra_ = uint16_t(type);
+        extra_ = uint8_t(type);
         JS_ASSERT(extra_ == type);
+        extra_ |= (static_cast<uint16_t>(expectOutOfBounds) << 8);
     }
 
   public:
     static inline ICSetElem_TypedArray *New(ICStubSpace *space, IonCode *code,
-                                            HandleShape shape, uint32_t type)
+                                            HandleShape shape, uint32_t type,
+                                            bool expectOutOfBounds)
     {
         if (!code)
             return NULL;
-        return space->allocate<ICSetElem_TypedArray>(code, shape, type);
+        return space->allocate<ICSetElem_TypedArray>(code, shape, type, expectOutOfBounds);
+    }
+
+    uint32_t type() const {
+        return extra_ & 0xff;
+    }
+
+    bool expectOutOfBounds() const {
+        return (extra_ >> 8) & 1;
     }
 
     static size_t offsetOfShape() {
@@ -3074,23 +3085,27 @@ class ICSetElem_TypedArray : public ICStub
     class Compiler : public ICStubCompiler {
         RootedShape shape_;
         uint32_t type_;
+        bool expectOutOfBounds_;
 
       protected:
         bool generateStubCode(MacroAssembler &masm);
 
         virtual int32_t getKey() const {
-            return static_cast<int32_t>(kind) | (static_cast<int32_t>(type_) << 16);
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(type_) << 16) |
+                   (static_cast<int32_t>(expectOutOfBounds_) << 24);
         }
 
       public:
-        Compiler(JSContext *cx, UnrootedShape shape, uint32_t type)
+        Compiler(JSContext *cx, UnrootedShape shape, uint32_t type, bool expectOutOfBounds)
           : ICStubCompiler(cx, ICStub::SetElem_TypedArray),
             shape_(cx, shape),
-            type_(type)
+            type_(type),
+            expectOutOfBounds_(expectOutOfBounds)
         {}
 
         ICStub *getStub(ICStubSpace *space) {
-            return ICSetElem_TypedArray::New(space, getStubCode(), shape_, type_);
+            return ICSetElem_TypedArray::New(space, getStubCode(), shape_, type_,
+                                             expectOutOfBounds_);
         }
     };
 };
