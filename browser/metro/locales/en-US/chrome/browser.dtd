@@ -51,6 +51,7 @@
 <!ENTITY consoleErrColumn.label    "Column:">
 
 <!--  TEXT CONTEXT MENU -->
+<!ENTITY contextTextCut.label              "Cut">
 <!ENTITY contextTextCopy.label             "Copy">
 <!ENTITY contextTextPaste.label            "Paste">
 <!-- unique item that is only added to the url bar context menu -->

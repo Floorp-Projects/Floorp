@@ -8,6 +8,7 @@ dump("### ContextMenuHandler.js loaded\n");
 
 var ContextMenuHandler = {
   _types: [],
+  _previousState: null,
 
   init: function ch_init() {
     // Events we catch from content during the bubbling phase
@@ -56,6 +57,18 @@ var ContextMenuHandler = {
     let command = aMessage.json.command;
 
     switch (command) {
+      case "cut":
+        this._onCut();
+        break;
+
+      case "copy":
+        this._onCopy();
+        break;
+
+      case "paste":
+        this._onPaste();
+        break;
+
       case "play":
       case "pause":
         if (node instanceof Ci.nsIDOMHTMLMediaElement)
@@ -75,10 +88,6 @@ var ContextMenuHandler = {
         this._onSelectAll();
         break;
 
-      case "paste":
-        this._onPaste();
-        break;
-
       case "copy-image-contents":
         this._onCopyImage();
         break;
@@ -88,7 +97,7 @@ var ContextMenuHandler = {
   /*
    * Handler for selection overlay context menu events.
    */
-  _onContextAtPoint: function _onContextCommand(aMessage) {
+  _onContextAtPoint: function _onContextAtPoint(aMessage) {
     // we need to find popupNode as if the context menu were
     // invoked on underlying content.
     let { element, frameX, frameY } =
@@ -151,6 +160,35 @@ var ContextMenuHandler = {
     Util.copyImageToClipboard(this._target);
   },
 
+  _onCut: function _onCut() {
+    if (this._isTextInput(this._target)) {
+      let edit = this._target.QueryInterface(Ci.nsIDOMNSEditableElement);
+      if (edit) {
+        edit.editor.cut();
+      } else {
+        Util.dumpLn("error: target element does not support nsIDOMNSEditableElement");
+      }
+    }
+    this.reset();
+  },
+
+  _onCopy: function _onCopy() {
+    if (this._isTextInput(this._target)) {
+      let edit = this._target.QueryInterface(Ci.nsIDOMNSEditableElement);
+      if (edit) {
+        edit.editor.copy();
+      } else {
+        Util.dumpLn("error: target element does not support nsIDOMNSEditableElement");
+      }
+    } else {
+      let selectionText = this._previousState.string;
+
+      Cc["@mozilla.org/widget/clipboardhelper;1"]
+        .getService(Ci.nsIClipboardHelper).copyString(selectionText);
+    }
+    this.reset();
+  },
+
   /******************************************************
    * Utility routines
    */
@@ -205,6 +243,9 @@ var ContextMenuHandler = {
       linkTitle: "",
       linkProtocol: null,
       mediaURL: "",
+      contentType: "",
+      contentDisposition: "",
+      string: "",
     };
 
     // Do checks for nodes that never have children.
@@ -266,6 +307,7 @@ var ContextMenuHandler = {
           // Don't include "copy" for password fields.
           if (!(elem instanceof Ci.nsIDOMHTMLInputElement) || elem.mozIsTextField(true)) {
             if (selectionStart != selectionEnd) {
+              state.types.push("cut");
               state.types.push("copy");
               state.string = elem.value.slice(selectionStart, selectionEnd);
             }
@@ -333,6 +375,8 @@ var ContextMenuHandler = {
     for (let i = 0; i < this._types.length; i++)
       if (this._types[i].handler(state, popupNode))
         state.types.push(this._types[i].name);
+
+    this._previousState = state;
 
     sendAsyncMessage("Content:ContextMenu", state);
   },
