@@ -52,7 +52,7 @@ class SeekableZStream {
 public:
   /* Initialize from the given buffer. Returns whether initialization
    * succeeded (true) or failed (false). */
-  bool Init(const void *buf);
+  bool Init(const void *buf, size_t length);
 
   /* Decompresses starting from the given chunk. The decompressed data is
    * stored at the given location. The given length, in bytes, indicates

@@ -15,7 +15,7 @@
 #endif
 
 bool
-SeekableZStream::Init(const void *buf)
+SeekableZStream::Init(const void *buf, size_t length)
 {
   const SeekableZStreamHeader *header = SeekableZStreamHeader::validate(buf);
   if (!header) {
@@ -35,7 +35,8 @@ SeekableZStream::Init(const void *buf)
       (chunkSize > 8 * PAGE_SIZE) ||
       (offsetTable.numElements() < 1) ||
       (lastChunkSize == 0) ||
-      (lastChunkSize > chunkSize)) {
+      (lastChunkSize > chunkSize) ||
+      (length < totalSize)) {
     log("Malformed or broken seekable zstream");
     return false;
   }
