@@ -855,8 +855,9 @@ CodeGenerator::visitConvertElementsToDoubles(LConvertElementsToDoubles *lir)
     if (!ool)
         return false;
 
-    Address convertedAddress(elements, ObjectElements::offsetOfConvertDoubleElements());
-    masm.branch32(Assembler::Equal, convertedAddress, Imm32(0), ool->entry());
+    Address convertedAddress(elements, ObjectElements::offsetOfFlags());
+    Imm32 bit(ObjectElements::CONVERT_DOUBLE_ELEMENTS);
+    masm.branchTest32(Assembler::Zero, convertedAddress, bit, ool->entry());
     masm.bind(ool->rejoin());
     return true;
 }

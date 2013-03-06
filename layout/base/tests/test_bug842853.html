@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=842853
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 842853</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 842853 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  var win = e.contentWindow;
+  if (win.location.hash != '') {
+    is(win.scrollY,500);
+    SimpleTest.finish();
+    return;
+  }
+  win.location.hash='#anchor'
+  win.scrollTo(0,500);
+  win.location.reload()
+}
+
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=842853">Mozilla Bug 842853</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<script>
+
+var e = document.createElement('iframe');
+var url = 'data:text/html,<a href="%23anchor">Click to scroll to anchor</a><div style="height:5000px"></div><a name="anchor">FAIL</a>'
+e.setAttribute('src',url);
+e.setAttribute('onload','runTest()');
+document.body.appendChild(e);
+
+</script>
+</body>
+</html>

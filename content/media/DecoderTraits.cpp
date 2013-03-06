@@ -7,14 +7,48 @@
 #include "DecoderTraits.h"
 #include "MediaDecoder.h"
 #include "nsCharSeparatedTokenizer.h"
+
 #ifdef MOZ_MEDIA_PLUGINS
 #include "MediaPluginHost.h"
 #endif
+
+#ifdef MOZ_OGG
+#include "OggDecoder.h"
+#include "OggReader.h"
+#endif
+#ifdef MOZ_WAVE
+#include "WaveDecoder.h"
+#include "WaveReader.h"
+#endif
+#ifdef MOZ_WEBM
+#include "WebMDecoder.h"
+#include "WebMReader.h"
+#endif
+#ifdef MOZ_RAW
+#include "RawDecoder.h"
+#include "RawReader.h"
+#endif
 #ifdef MOZ_GSTREAMER
 #include "mozilla/Preferences.h"
+#include "GStreamerDecoder.h"
+#include "GStreamerReader.h"
+#endif
+#ifdef MOZ_MEDIA_PLUGINS
+#include "MediaPluginHost.h"
+#include "MediaPluginDecoder.h"
+#include "MediaPluginReader.h"
+#include "MediaPluginHost.h"
+#endif
+#ifdef MOZ_WIDGET_GONK
+#include "MediaOmxDecoder.h"
+#include "MediaOmxReader.h"
+#endif
+#ifdef MOZ_DASH
+#include "DASHDecoder.h"
 #endif
 #ifdef MOZ_WMF
 #include "WMFDecoder.h"
+#include "WMFReader.h"
 #endif
 
 namespace mozilla
@@ -42,9 +76,8 @@ static const char* gRawCodecs[1] = {
   nullptr
 };
 
-/* static */
-bool
-DecoderTraits::IsRawType(const nsACString& aType)
+static bool
+IsRawType(const nsACString& aType)
 {
   if (!MediaDecoder::IsRawEnabled()) {
     return false;
@@ -77,8 +110,8 @@ static char const *const gOggCodecsWithOpus[4] = {
   nullptr
 };
 
-bool
-DecoderTraits::IsOggType(const nsACString& aType)
+static bool
+IsOggType(const nsACString& aType)
 {
   if (!MediaDecoder::IsOggEnabled()) {
     return false;
@@ -105,8 +138,8 @@ static char const *const gWaveCodecs[2] = {
   nullptr
 };
 
-bool
-DecoderTraits::IsWaveType(const nsACString& aType)
+static bool
+IsWaveType(const nsACString& aType)
 {
   if (!MediaDecoder::IsWaveEnabled()) {
     return false;
@@ -130,8 +163,8 @@ static char const *const gWebMCodecs[4] = {
   nullptr
 };
 
-bool
-DecoderTraits::IsWebMType(const nsACString& aType)
+static bool
+IsWebMType(const nsACString& aType)
 {
   if (!MediaDecoder::IsWebMEnabled()) {
     return false;
@@ -149,8 +182,8 @@ static const char* const gH264Types[4] = {
   nullptr
 };
 
-bool
-DecoderTraits::IsGStreamerSupportedType(const nsACString& aMimeType)
+static bool
+IsGStreamerSupportedType(const nsACString& aMimeType)
 {
   if (!MediaDecoder::IsGStreamerEnabled())
     return false;
@@ -169,8 +202,8 @@ DecoderTraits::IsGStreamerSupportedType(const nsACString& aMimeType)
   return false;
 }
 
-bool
-DecoderTraits::IsH264Type(const nsACString& aType)
+static bool
+IsH264Type(const nsACString& aType)
 {
   return CodecListContains(gH264Types, aType);
 }
@@ -186,8 +219,8 @@ static const char* const gOmxTypes[6] = {
   nullptr
 };
 
-bool
-DecoderTraits::IsOmxSupportedType(const nsACString& aType)
+static bool
+IsOmxSupportedType(const nsACString& aType)
 {
   if (!MediaDecoder::IsOmxEnabled()) {
     return false;
@@ -212,8 +245,8 @@ static char const *const gH264Codecs[9] = {
 #endif
 
 #ifdef MOZ_MEDIA_PLUGINS
-bool
-DecoderTraits::IsMediaPluginsType(const nsACString& aType)
+static bool
+IsMediaPluginsType(const nsACString& aType)
 {
   if (!MediaDecoder::IsMediaPluginsEnabled()) {
     return false;
@@ -233,9 +266,8 @@ static const char* const gDASHMPDTypes[2] = {
   nullptr
 };
 
-/* static */
-bool
-DecoderTraits::IsDASHMPDType(const nsACString& aType)
+static bool
+IsDASHMPDType(const nsACString& aType)
 {
   if (!MediaDecoder::IsDASHEnabled()) {
     return false;
@@ -246,7 +278,8 @@ DecoderTraits::IsDASHMPDType(const nsACString& aType)
 #endif
 
 #ifdef MOZ_WMF
-bool DecoderTraits::IsWMFSupportedType(const nsACString& aType)
+static bool
+IsWMFSupportedType(const nsACString& aType)
 {
   return WMFDecoder::GetSupportedCodecs(aType, nullptr);
 }
@@ -353,5 +386,144 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
   return CANPLAY_YES;
 }
 
+/* static */
+already_AddRefed<MediaDecoder>
+DecoderTraits::CreateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
+{
+  nsRefPtr<MediaDecoder> decoder;
+
+#ifdef MOZ_GSTREAMER
+  if (IsGStreamerSupportedType(aType)) {
+    decoder = new GStreamerDecoder();
+  }
+#endif
+#ifdef MOZ_RAW
+  if (IsRawType(aType)) {
+    decoder = new RawDecoder();
+  }
+#endif
+#ifdef MOZ_OGG
+  if (IsOggType(aType)) {
+    decoder = new OggDecoder();
+  }
+#endif
+#ifdef MOZ_WAVE
+  if (IsWaveType(aType)) {
+    decoder = new WaveDecoder();
+  }
+#endif
+#ifdef MOZ_WIDGET_GONK
+  if (IsOmxSupportedType(aType)) {
+    decoder = new MediaOmxDecoder();
+  }
+#endif
+#ifdef MOZ_MEDIA_PLUGINS
+  if (MediaDecoder::IsMediaPluginsEnabled() && GetMediaPluginHost()->FindDecoder(aType, NULL)) {
+    decoder = new MediaPluginDecoder(aType);
+  }
+#endif
+#ifdef MOZ_WEBM
+  if (IsWebMType(aType)) {
+    decoder = new WebMDecoder();
+  }
+#endif
+#ifdef MOZ_DASH
+  if (IsDASHMPDType(aType)) {
+    decoder = new DASHDecoder();
+  }
+#endif
+#ifdef MOZ_WMF
+  if (IsWMFSupportedType(aType)) {
+    decoder = new WMFDecoder();
+  }
+#endif
+
+  NS_ENSURE_TRUE(decoder != nullptr, nullptr);
+  NS_ENSURE_TRUE(decoder->Init(aOwner), nullptr);
+
+  return decoder.forget();
 }
 
+/* static */
+MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, AbstractMediaDecoder* aDecoder)
+{
+  MediaDecoderReader* decoderReader = nullptr;
+
+#ifdef MOZ_GSTREAMER
+  if (IsGStreamerSupportedType(aType)) {
+    decoderReader = new GStreamerReader(aDecoder);
+  } else
+#endif
+#ifdef MOZ_RAW
+  if (IsRawType(aType)) {
+    decoderReader = new RawReader(aDecoder);
+  } else
+#endif
+#ifdef MOZ_OGG
+  if (IsOggType(aType)) {
+    decoderReader = new OggReader(aDecoder);
+  } else
+#endif
+#ifdef MOZ_WAVE
+  if (IsWaveType(aType)) {
+    decoderReader = new WaveReader(aDecoder);
+  } else
+#endif
+#ifdef MOZ_WIDGET_GONK
+  if (IsOmxSupportedType(aType)) {
+    decoderReader = new MediaOmxReader(aDecoder);
+  } else
+#endif
+#ifdef MOZ_MEDIA_PLUGINS
+  if (MediaDecoder::IsMediaPluginsEnabled() &&
+      GetMediaPluginHost()->FindDecoder(aType, nullptr)) {
+    decoderReader = new MediaPluginReader(aDecoder, aType);
+  } else
+#endif
+#ifdef MOZ_WEBM
+  if (IsWebMType(aType)) {
+    decoderReader = new WebMReader(aDecoder);
+  } else
+#endif
+#ifdef MOZ_WMF
+  if (IsWMFSupportedType(aType)) {
+    decoderReader = new WMFReader(aDecoder);
+  } else
+#endif
+#ifdef MOZ_DASH
+  // The DASH decoder is not supported.
+#endif
+  if (false) {} // dummy if to take care of the dangling else
+
+  return decoderReader;
+}
+
+/* static */
+bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
+{
+  return
+#ifdef MOZ_OGG
+    IsOggType(aType) ||
+#endif
+#ifdef MOZ_WIDGET_GONK
+    IsOmxSupportedType(aType) ||
+#endif
+#ifdef MOZ_WEBM
+    IsWebMType(aType) ||
+#endif
+#ifdef MOZ_DASH
+    IsDASHMPDType(aType) ||
+#endif
+#ifdef MOZ_GSTREAMER
+    IsGStreamerSupportedType(aType) ||
+#endif
+#ifdef MOZ_MEDIA_PLUGINS
+    (MediaDecoder::IsMediaPluginsEnabled() && IsMediaPluginsType(aType)) ||
+#endif
+#ifdef MOZ_WMF
+    IsWMFSupportedType(aType) ||
+#endif
+    false;
+}
+
+}

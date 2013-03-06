@@ -28,8 +28,6 @@
 <script type="application/javascript">
 <![CDATA[
 
-SimpleTest.expectAssertions(0, 2); // bug 846096
-
 SimpleTest.waitForExplicitFinish();
 
 function test_button()

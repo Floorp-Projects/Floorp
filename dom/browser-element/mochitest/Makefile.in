@@ -214,7 +214,6 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_Reload.html \
 		test_browserElement_oop_Stop.html \
 		test_browserElement_oop_ContextmenuEvents.html \
-		test_browserElement_oop_SendEvent.html \
 		test_browserElement_oop_ScrollEvent.html \
 		test_browserElement_oop_Auth.html \
 		test_browserElement_oop_RemoveBrowserElement.html \
@@ -227,16 +226,18 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_DocumentFirstPaint.html \
 	$(NULL)
 
+# Disabled on Linux temporarily due to bug 779753
+# test_browserElement_oop_SendEvent.html
+# test_browserElement_oop_SetVisible.html
+# test_browserElement_oop_SetVisibleFrames.html
+# test_browserElement_oop_SetVisibleFrames2.html
 ifneq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 MOCHITEST_FILES += \
+		test_browserElement_oop_SendEvent.html \
 		test_browserElement_oop_SetVisible.html \
 		test_browserElement_oop_SetVisibleFrames.html \
 		test_browserElement_oop_SetVisibleFrames2.html \
 		$(NULL)
-else
-$(filter disabled-temporarily--bug-779753, test_browserElement_oop_SetVisible.html)
-$(filter disabled-temporarily--bug-779753, test_browserElement_oop_SetVisibleFrames.html)
-$(filter disabled-temporarily--bug-779753, test_browserElement_oop_SetVisibleFrames2.html)
 endif
 
 endif #}

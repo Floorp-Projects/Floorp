@@ -31,7 +31,7 @@ BROWSER_TESTS = \
   $(NULL)
 
 BROWSER_TEST_RESOURCES = \
-  res\image01.png \
+  res/image01.png \
   $(NULL)
 
 libs:: $(BROWSER_TESTS)

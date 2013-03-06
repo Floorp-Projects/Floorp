@@ -1131,12 +1131,8 @@ public class BrowserProvider extends ContentProvider {
 
                 String apkPath = mContext.getPackageResourcePath();
                 File apkFile = new File(apkPath);
-                BitmapDrawable bitmapDrawable = GeckoJarReader.getBitmapDrawable(mContext.getResources(),
-                                                                                 "jar:jar:" + apkFile.toURI() + "!/omni.ja!/" + path);
-                if (bitmapDrawable == null) {
-                    return null;
-                }
-                return bitmapDrawable.getBitmap();
+                String bitmapPath = "jar:jar:" + apkFile.toURI() + "!/omni.ja!/" + path;
+                return GeckoJarReader.getBitmap(mContext.getResources(), bitmapPath);
             } catch (java.lang.IllegalAccessException ex) {
                 Log.e(LOGTAG, "[Path] Can't create favicon " + name, ex);
             } catch (java.lang.NoSuchFieldException ex) {

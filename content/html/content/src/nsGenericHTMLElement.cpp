@@ -1479,8 +1479,8 @@ nsGenericHTMLElement::ParseScrollingValue(const nsAString& aString,
  * Handle attributes common to all html elements
  */
 void
-nsGenericHTMLElement::MapCommonAttributesExceptHiddenInto(const nsMappedAttributes* aAttributes,
-                                                          nsRuleData* aData)
+nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttributes,
+                                              nsRuleData* aData)
 {
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(UserInterface)) {
     nsCSSValue* userModify = aData->ValueForUserModify();
@@ -1508,13 +1508,6 @@ nsGenericHTMLElement::MapCommonAttributesExceptHiddenInto(const nsMappedAttribut
                                             eCSSUnit_Ident);
     }
   }
-}
-
-void
-nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttributes,
-                                              nsRuleData* aData)
-{
-  nsGenericHTMLElement::MapCommonAttributesExceptHiddenInto(aAttributes, aData);
 
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
     nsCSSValue* display = aData->ValueForDisplay();

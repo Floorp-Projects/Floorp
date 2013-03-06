@@ -17,6 +17,8 @@
 typedef DWORD FILESIZE_T; // Limit to 4GB for now...
 #define FILESIZE_UNKNOWN (-1)
 
+#define MAX_STRLEN 1024
+
 HINSTANCE g_hInst;
 NSIS::stack_t*g_pLocations = NULL;
 HANDLE g_hThread = NULL;
@@ -29,10 +31,10 @@ volatile FILESIZE_T g_cbCurrTot = FILESIZE_UNKNOWN;
 CRITICAL_SECTION g_CritLock;
 UINT g_N_CCH;
 PTSTR g_N_Vars;
+TCHAR g_ServerIP[128] = { _T('\0') };
 
 DWORD g_ConnectTimeout = 0;
 DWORD g_ReceiveTimeout = 0;
-bool g_WantRangeRequest = false;
 
 #define NSISPI_INITGLOBALS(N_CCH, N_Vars) do { \
   g_N_CCH = N_CCH; \
@@ -79,6 +81,7 @@ void Reset()
   // The g_hGETStartedEvent event is used to make sure that the Get() call will
   // acquire the lock before the Reset() call acquires the lock.
   if (g_hGETStartedEvent) {
+    TRACE(_T("InetBgDl: waiting on g_hGETStartedEvent\n"));
     WaitForSingleObject(g_hGETStartedEvent, INFINITE);
     CloseHandle(g_hGETStartedEvent);
     g_hGETStartedEvent = NULL;
@@ -91,8 +94,10 @@ void Reset()
   g_FilesTotal = 0; // This causes the Task thread to exit the transfer loop
   if (g_hThread)
   {
+    TRACE(_T("InetBgDl: waiting on g_hThread\n"));
     if (WAIT_OBJECT_0 != WaitForSingleObject(g_hThread, 10 * 1000))
     {
+      TRACE(_T("InetBgDl: terminating g_hThread\n"));
       TerminateThread(g_hThread, ERROR_OPERATION_ABORTED);
     }
     CloseHandle(g_hThread);
@@ -125,95 +130,138 @@ UINT_PTR __cdecl NSISPluginCallback(UINT Event)
   return NULL;
 }
 
-/* ParseURL is a quickly thrown together simple way to parse a URL into parts.
- * It is only designed to support simple URLs and doesn't support things like
- * authorization information in the URL.
- * The format of the URL is assumed to be:
- * <protocol>://<server>:<port>/<path>
- *
- * @param url      The input URL to parse
- * @param protocol Out variable which will store the protocol of the passed url
- * @param server Out variable which will store the server of the passed url
- * @param port Out variable which will store the port of the passed url
- * @param path Out variable which will store the path of the passed url
- * @return true if successful
-*/
-template<size_t A, size_t B, size_t C> static bool
-BasicParseURL(LPCWSTR url, wchar_t (*protocol)[A], INTERNET_PORT *port,
-              wchar_t (*server)[B], wchar_t (*path)[C])
+void __stdcall InetStatusCallback(HINTERNET hInternet, DWORD_PTR dwContext,
+                                  DWORD dwInternetStatus,
+                                  LPVOID lpvStatusInformation,
+                                  DWORD dwStatusInformationLength)
 {
-  ZeroMemory(*protocol, A * sizeof(wchar_t));
-  ZeroMemory(*server, B * sizeof(wchar_t));
-  ZeroMemory(*path, C * sizeof(wchar_t));
-
-  const WCHAR *p = url;
-  // Skip past the protocol
-  int pos = 0;
-  while (*p != L'\0' && *p != L'/' && *p != L':')
-  {
-    if (pos + 1 >= A)
-      return false;
-    (*protocol)[pos++] = *p++;
+  if (dwInternetStatus == INTERNET_STATUS_NAME_RESOLVED) {
+    // The documentation states the IP address is a PCTSTR but it is actually a
+    // PCSTR.
+    StatsLock_AcquireExclusive();
+    wsprintf(g_ServerIP, _T("%S"), lpvStatusInformation);
+    StatsLock_ReleaseExclusive();
   }
 
-  // Skip past the ://
-  p += 3;
-
-  *port = INTERNET_DEFAULT_HTTP_PORT;
-  if (!wcsicmp(*protocol, L"https"))
+#if defined(PLUGIN_DEBUG)
+  switch (dwInternetStatus)
   {
-    *port = INTERNET_DEFAULT_HTTPS_PORT;
+    case INTERNET_STATUS_RESOLVING_NAME:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_RESOLVING_NAME (%d), name=%s\n"),
+            dwStatusInformationLength, lpvStatusInformation);
+      break;
+    case INTERNET_STATUS_NAME_RESOLVED:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_NAME_RESOLVED (%d), resolved name=%s\n"),
+            dwStatusInformationLength, g_ServerIP);
+      break;
+    case INTERNET_STATUS_CONNECTING_TO_SERVER:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_CONNECTING_TO_SERVER (%d)\n"),
+            dwStatusInformationLength);
+      break;
+    case INTERNET_STATUS_CONNECTED_TO_SERVER:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_CONNECTED_TO_SERVER (%d)\n"),
+            dwStatusInformationLength);
+      break;
+    case INTERNET_STATUS_SENDING_REQUEST:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_SENDING_REQUEST (%d)\n"),
+               dwStatusInformationLength);
+      break;
+    case INTERNET_STATUS_REQUEST_SENT:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_REQUEST_SENT (%d), bytes sent=%d\n"),
+             dwStatusInformationLength, lpvStatusInformation);
+      break;
+    case INTERNET_STATUS_RECEIVING_RESPONSE:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_RECEIVING_RESPONSE (%d)\n"),
+            dwStatusInformationLength);
+      break;
+    case INTERNET_STATUS_RESPONSE_RECEIVED:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_RESPONSE_RECEIVED (%d)\n"),
+            dwStatusInformationLength);
+      break;
+    case INTERNET_STATUS_CTL_RESPONSE_RECEIVED:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_CTL_RESPONSE_RECEIVED (%d)\n"),
+            dwStatusInformationLength);
+      break;
+    case INTERNET_STATUS_PREFETCH:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_PREFETCH (%d)\n"),
+            dwStatusInformationLength);
+      break;
+    case INTERNET_STATUS_CLOSING_CONNECTION:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_CLOSING_CONNECTION (%d)\n"),
+            dwStatusInformationLength);
+      break;
+    case INTERNET_STATUS_CONNECTION_CLOSED:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_CONNECTION_CLOSED (%d)\n"),
+            dwStatusInformationLength);
+      break;
+    case INTERNET_STATUS_HANDLE_CREATED:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_HANDLE_CREATED (%d)\n"),
+            dwStatusInformationLength);
+      break;
+    case INTERNET_STATUS_HANDLE_CLOSING:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_HANDLE_CLOSING (%d)\n"),
+            dwStatusInformationLength);
+      break;
+    case INTERNET_STATUS_DETECTING_PROXY:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_DETECTING_PROXY (%d)\n"),
+            dwStatusInformationLength);
+      break;
+    case INTERNET_STATUS_REQUEST_COMPLETE:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_REQUEST_COMPLETE (%d)\n"),
+            dwStatusInformationLength);
+      break;
+    case INTERNET_STATUS_REDIRECT:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_REDIRECT (%d), new url=%s\n"),
+            dwStatusInformationLength, lpvStatusInformation);
+      break;
+    case INTERNET_STATUS_INTERMEDIATE_RESPONSE:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_INTERMEDIATE_RESPONSE (%d)\n"),
+            dwStatusInformationLength);
+      break;
+    case INTERNET_STATUS_USER_INPUT_REQUIRED:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_USER_INPUT_REQUIRED (%d)\n"),
+            dwStatusInformationLength);
+      break;
+    case INTERNET_STATUS_STATE_CHANGE:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_STATE_CHANGE (%d)\n"),
+            dwStatusInformationLength);
+      break;
+    case INTERNET_STATUS_COOKIE_SENT:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_COOKIE_SENT (%d)\n"),
+            dwStatusInformationLength);
+      break;
+    case INTERNET_STATUS_COOKIE_RECEIVED:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_COOKIE_RECEIVED (%d)\n"),
+            dwStatusInformationLength);
+      break;
+    case INTERNET_STATUS_PRIVACY_IMPACTED:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_PRIVACY_IMPACTED (%d)\n"),
+            dwStatusInformationLength);
+      break;
+    case INTERNET_STATUS_P3P_HEADER:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_P3P_HEADER (%d)\n"),
+            dwStatusInformationLength);
+      break;
+    case INTERNET_STATUS_P3P_POLICYREF:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_P3P_POLICYREF (%d)\n"),
+            dwStatusInformationLength);
+      break;
+    case INTERNET_STATUS_COOKIE_HISTORY:
+      TRACE(_T("InetBgDl: INTERNET_STATUS_COOKIE_HISTORY (%d)\n"),
+            dwStatusInformationLength);
+      break;
+    default:
+      TRACE(_T("InetBgDl: Unknown Status %d\n"), dwInternetStatus);
+      break;
   }
-
-  // Get the server
-  pos = 0;
-  while (*p != L'\0' && *p != L'/' && *p != L':')
-  {
-    if (pos + 1 >= B)
-      return false;
-    (*server)[pos++] = *p++;
-  }
-
-  // Get the port if specified
-  if (*p == L':')
-  {
-    WCHAR portStr[16];
-    p++;
-    pos = 0;
-    while (*p != L'\0' && *p != L'/')
-    {
-      if (pos + 1 >= 16)
-        return false;
-      portStr[pos++] = *p++;
-    }
-    portStr[pos] = '\0';
-    *port = (INTERNET_PORT)_wtoi(portStr);
-  }
-  else
-  {
-    // Skip the slash after the server
-    while (*p != L'\0' && *p != L'/')
-    {
-      p++;
-    }
-  }
-
-  // Get the rest as the path
-  pos = 0;
-  while (*p != L'\0')
-  {
-    if (pos + 1 >= C)
-      return false;
-    (*path)[pos++] = *p++;
-  }
-
-  return true;
+#endif
 }
 
 DWORD CALLBACK TaskThreadProc(LPVOID ThreadParam)
 {
   NSIS::stack_t *pURL,*pFile;
-  HINTERNET hInetSes = NULL, hInetCon = NULL;
+  HINTERNET hInetSes = NULL, hInetFile = NULL;
+  DWORD cbio = sizeof(DWORD);
   HANDLE hLocalFile;
   bool completedFile = false;
 startnexttask:
@@ -272,10 +320,6 @@ diegle:
     {
       InternetCloseHandle(hInetSes);
     }
-    if (hInetCon)
-    {
-      InternetCloseHandle(hInetCon);
-    }
     if (INVALID_HANDLE_VALUE != hLocalFile)
     {
       CloseHandle(hLocalFile);
@@ -290,8 +334,11 @@ diegle:
     hInetSes = InternetOpen(USERAGENT, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (!hInetSes)
     {
+      TRACE(_T("InetBgDl: InternetOpen failed with gle=%u\n"),
+            GetLastError());
       goto diegle;
     }
+    InternetSetStatusCallback(hInetSes, (INTERNET_STATUS_CALLBACK)InetStatusCallback);
 
     //msdn.microsoft.com/library/default.asp?url=/workshop/components/offline/offline.asp#Supporting Offline Browsing in Applications and Components
     ULONG longOpt;
@@ -305,17 +352,26 @@ diegle:
       }
     }
 
+    // Change the default connect timeout if specified.
     if(g_ConnectTimeout > 0)
     {
       InternetSetOption(hInetSes, INTERNET_OPTION_CONNECT_TIMEOUT,
                         &g_ConnectTimeout, sizeof(g_ConnectTimeout));
     }
+
+    // Change the default receive timeout if specified.
+    if (g_ReceiveTimeout)
+    {
+      InternetSetOption(hInetSes, INTERNET_OPTION_RECEIVE_TIMEOUT,
+                        &g_ReceiveTimeout, sizeof(DWORD));
+    }
   }
 
   DWORD ec = ERROR_SUCCESS;
-  hLocalFile = CreateFile(pFile->text,GENERIC_WRITE,FILE_SHARE_READ|FILE_SHARE_DELETE,NULL,CREATE_ALWAYS,0,NULL);
+  hLocalFile = CreateFile(pFile->text, GENERIC_WRITE,FILE_SHARE_READ | FILE_SHARE_DELETE,NULL,CREATE_ALWAYS, 0, NULL);
   if (INVALID_HANDLE_VALUE == hLocalFile)
   {
+    TRACE(_T("InetBgDl: CreateFile file handle invalid\n"));
     goto diegle;
   }
 
@@ -329,133 +385,44 @@ diegle:
   DWORD IOUFlags = IOURedirFlags | IOUCacheFlags | IOUCookieFlags |
                    INTERNET_FLAG_NO_UI | INTERNET_FLAG_EXISTING_CONNECT;
 
-  WCHAR protocol[16];
-  WCHAR server[128];
-  WCHAR path[1024];
-  INTERNET_PORT port;
-  // Good old VC6 cannot deduce the size of these params :'(
-  if (!BasicParseURL<16, 128, 1024>(pURL->text, &protocol, &port, &server, &path))
+  TCHAR *hostname = (TCHAR*) GlobalAlloc(GPTR, MAX_STRLEN * sizeof(TCHAR)),
+        *urlpath = (TCHAR*) GlobalAlloc(GPTR, MAX_STRLEN * sizeof(TCHAR)),
+        *extrainfo = (TCHAR*) GlobalAlloc(GPTR, MAX_STRLEN * sizeof(TCHAR));
+
+  URL_COMPONENTS uc = { sizeof(URL_COMPONENTS), NULL, 0, (INTERNET_SCHEME)0,
+                        hostname, MAX_STRLEN, (INTERNET_PORT)0, NULL, 0,
+                        NULL, 0, urlpath, MAX_STRLEN, extrainfo, MAX_STRLEN};
+  uc.dwHostNameLength = uc.dwUrlPathLength = uc.dwExtraInfoLength = MAX_STRLEN;
+
+  if (!InternetCrackUrl(pURL->text, 0, ICU_ESCAPE, &uc))
   {
-    // Insufficient buffer or bad URL passed in
+    // Bad url or param passed in
+    TRACE(_T("InetBgDl: InternetCrackUrl false with url=%s, gle=%u\n"),
+          pURL->text, GetLastError());
     goto diegle;
   }
 
-  DWORD context;
-  hInetCon = InternetConnect(hInetSes, server, port, NULL, NULL,
-                             INTERNET_SERVICE_HTTP, IOUFlags,
-                             (unsigned long)&context);
-  if (!hInetCon)
+  TRACE(_T("InetBgDl: scheme_id=%d, hostname=%s, port=%d, urlpath=%s, extrainfo=%s\n"),
+        uc.nScheme, hostname, uc.nPort, urlpath, extrainfo);
+
+  // Only http and https are supported
+  if (uc.nScheme != INTERNET_SCHEME_HTTP &&
+      uc.nScheme != INTERNET_SCHEME_HTTPS)
   {
+    TRACE(_T("InetBgDl: only http and https is supported, aborting...\n"));
     goto diegle;
   }
 
-  // Setup a buffer of size 256KiB to store the downloaded data.
-  // Get at most 4MiB at a time from the partial HTTP Range requests.
-  // Biffer buffers will be faster.
-  // cbRangeReadBufXF should be a multiple of cbBufXF.
-  const UINT cbBufXF = 262144;
-  const UINT cbRangeReadBufXF = 4194304;
-  BYTE bufXF[cbBufXF];
-
-  // Up the default internal buffer size from 4096 to internalReadBufferSize.
-  DWORD internalReadBufferSize = cbRangeReadBufXF;
-  if (!InternetSetOption(hInetCon, INTERNET_OPTION_READ_BUFFER_SIZE,
-                         &internalReadBufferSize, sizeof(DWORD)))
+  TRACE(_T("InetBgDl: calling InternetOpenUrl with url=%s\n"), pURL->text);
+  hInetFile = InternetOpenUrl(hInetSes, pURL->text,
+                              NULL, 0, IOUFlags |
+                              (uc.nScheme == INTERNET_SCHEME_HTTPS ?
+                               INTERNET_FLAG_SECURE : 0), 1);
+  if (!hInetFile)
   {
-    // Maybe it's too big, try half of the optimal value.  If that fails just
-    // use the default.
-    internalReadBufferSize /= 2;
-    InternetSetOption(hInetCon, INTERNET_OPTION_READ_BUFFER_SIZE,
-                      &internalReadBufferSize, sizeof(DWORD));
-  }
-
-  // Change the default timeout of 30 seconds to the specified value.
-  // Is case a proxy in between caches the results, it could in theory
-  // take longer to get the first chunk, so it is good to set this high.
-  if (g_ReceiveTimeout)
-  {
-    InternetSetOption(hInetCon, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT,
-                      &g_ReceiveTimeout, sizeof(DWORD));
-  }
-
-  HINTERNET hInetFile;
-  DWORD cbio = sizeof(DWORD);
-
-  // Keep looping until we don't have a redirect anymore
-  int redirectCount = 0;
-  for (;;) {
-    // Make sure we aren't stuck in some kind of infinite redirect loop.
-    if (redirectCount > 15) {
-      goto diegle;
-    }
-
-    // If a range request was specified, first do a HEAD request
-    hInetFile = HttpOpenRequest(hInetCon, g_WantRangeRequest ? L"HEAD" : L"GET",
-                                path, NULL, NULL, NULL,
-                                INTERNET_FLAG_NO_AUTO_REDIRECT |
-                                INTERNET_FLAG_PRAGMA_NOCACHE |
-                                INTERNET_FLAG_RELOAD |
-                                (port == INTERNET_DEFAULT_HTTPS_PORT ?
-                                         INTERNET_FLAG_SECURE : 0), 0);
-    if (!hInetFile)
-    {
-      goto diegle;
-    }
-
-    if (!HttpSendRequest(hInetFile, NULL, 0, NULL, 0))
-    {
-      goto diegle;
-    }
-
-    WCHAR responseText[256];
-    cbio = sizeof(responseText);
-    if (!HttpQueryInfo(hInetFile,
-                       HTTP_QUERY_STATUS_CODE,
-                       responseText, &cbio, NULL))
-    {
-      goto diegle;
-    }
-
-    int statusCode = _wtoi(responseText);
-    if (statusCode == HTTP_STATUS_REDIRECT ||
-        statusCode == HTTP_STATUS_MOVED) {
-      redirectCount++;
-      WCHAR URLBuffer[2048];
-      cbio = sizeof(URLBuffer);
-      if (!HttpQueryInfo(hInetFile,
-                         HTTP_QUERY_LOCATION,
-                         (DWORD*)URLBuffer, &cbio, NULL))
-      {
-        goto diegle;
-      }
-
-      WCHAR protocol2[16];
-      WCHAR server2[128];
-      WCHAR path2[1024];
-      INTERNET_PORT port2;
-      BasicParseURL<16, 128, 1024>(URLBuffer, &protocol2, &port2, &server2, &path2);
-      // Check if we need to reconnect to a new server
-      if (wcscmp(protocol, protocol2) || wcscmp(server, server2) ||
-          port != port2) {
-        wcscpy(server, server2);
-        port = port2;
-        InternetCloseHandle(hInetCon);
-        hInetCon = InternetConnect(hInetSes, server, port, NULL, NULL,
-                                   INTERNET_SERVICE_HTTP, IOUFlags,
-                                   (unsigned long)&context);
-        if (!hInetCon)
-        {
-          goto diegle;
-        }
-      }
-      wcscpy(path, path2);
-
-      // Close the existing handle because we'll be issuing a new request
-      // with the new request path.
-      InternetCloseHandle(hInetFile);
-      continue;
-    }
-    break;
+    TRACE(_T("InetBgDl: InternetOpenUrl failed with gle=%u\n"),
+          GetLastError());
+    goto diegle;
   }
 
   // Get the file length via the Content-Length header
@@ -467,158 +434,95 @@ diegle:
   {
     cbThisFile = FILESIZE_UNKNOWN;
   }
+  TRACE(_T("InetBgDl: file size=%d bytes\n"), cbThisFile);
 
-  // Determine if we should use byte range requests. We want to use it if:
-  // 1. Server accepts byte range requests
-  // 2. The size of the file is known and more than our Range buffer size.
-  bool shouldUseRangeRequest = true;
-  WCHAR rangeRequestAccepted[64] = { '\0' };
-  cbio = sizeof(rangeRequestAccepted);
-  if (cbThisFile != FILESIZE_UNKNOWN && cbThisFile <= cbRangeReadBufXF ||
-      !HttpQueryInfo(hInetFile,
-                     HTTP_QUERY_ACCEPT_RANGES,
-                     (LPDWORD)rangeRequestAccepted, &cbio, NULL))
-  {
-    shouldUseRangeRequest = false;
-  }
-  else
-  {
-    shouldUseRangeRequest = wcsstr(rangeRequestAccepted, L"bytes") != 0 &&
-                            cbThisFile != FILESIZE_UNKNOWN;
-  }
+  // Setup a buffer of size 256KiB to store the downloaded data.
+  const UINT cbBufXF = 262144;
+  // Use a 4MiB read buffer for the connection.
+  // Bigger buffers will be faster.
+  // cbReadBufXF should be a multiple of cbBufXF.
+  const UINT cbReadBufXF = 4194304;
+  BYTE bufXF[cbBufXF];
 
-  // If the server doesn't have range request support or doesn't have a
-  // Content-Length header, then get everything all at once.
-  // If the user didn't want a range request, then we already issued the GET
-  // request earlier.  If the user did want a range request, then we issued only
-  // a HEAD so far.
-  if (g_WantRangeRequest && !shouldUseRangeRequest)
+  // Up the default internal buffer size from 4096 to internalReadBufferSize.
+  DWORD internalReadBufferSize = cbReadBufXF;
+  if (!InternetSetOption(hInetFile, INTERNET_OPTION_READ_BUFFER_SIZE,
+                         &internalReadBufferSize, sizeof(DWORD)))
   {
-    InternetCloseHandle(hInetFile);
-    InternetCloseHandle(hInetCon);
-    hInetFile = InternetOpenUrl(hInetSes, pURL->text,
-                                NULL, 0, IOUFlags |
-                                (!wcsicmp(protocol, L"https") ?
-                                 INTERNET_FLAG_SECURE : 0),
-                                NULL);
-    if (!hInetFile)
+    TRACE(_T("InetBgDl: InternetSetOption failed to set read buffer size to %u bytes, gle=%u\n"),
+          internalReadBufferSize, GetLastError());
+
+    // Maybe it's too big, try half of the optimal value.  If that fails just
+    // use the default.
+    internalReadBufferSize /= 2;
+    if (!InternetSetOption(hInetFile, INTERNET_OPTION_READ_BUFFER_SIZE,
+                           &internalReadBufferSize, sizeof(DWORD)))
     {
-      goto diegle;
-    }
-
-    // For some reason this also needs to be set on the hInetFile and
-    // not just the connection.
-    if (g_ReceiveTimeout > 0)
-    {
-      InternetSetOption(hInetCon, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT,
-                        &g_ReceiveTimeout, sizeof(DWORD));
+      TRACE(_T("InetBgDl: InternetSetOption failed to set read buffer size ") \
+            _T("to %u bytes (using default read buffer size), gle=%u\n"),
+            internalReadBufferSize, GetLastError());
     }
   }
 
   for(;;)
   {
-    DWORD cbio = 0,cbXF = 0;
-    // If we know the file size, download it in chunks
-    if (g_WantRangeRequest && shouldUseRangeRequest && cbThisFile != g_cbCurrXF)
+    DWORD cbio = 0, cbXF = 0;
+    BOOL retXF = InternetReadFile(hInetFile, bufXF, cbBufXF, &cbio);
+    if (!retXF)
     {
-      // Close the previous request, but not the connection
-      InternetCloseHandle(hInetFile);
-      hInetFile = HttpOpenRequest(hInetCon, L"GET", path,
-                                  NULL, NULL, NULL,
-                                  INTERNET_FLAG_PRAGMA_NOCACHE |
-                                  INTERNET_FLAG_RELOAD |
-                                  (port == INTERNET_DEFAULT_HTTPS_PORT ?
-                                           INTERNET_FLAG_SECURE : 0), 0);
-      if (!hInetFile)
-      {
-        // TODO: we could add retry here to be more tolerant
-        goto diegle;
-      }
-
-      // For some reason this also needs to be set on the hInetFile and
-      // not just the connection.
-      if (g_ReceiveTimeout > 0)
-      {
-        InternetSetOption(hInetCon, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT,
-                          &g_ReceiveTimeout, sizeof(DWORD));
-      }
-
-      WCHAR range[32];
-      swprintf(range, L"Range: bytes=%d-%d", g_cbCurrXF,
-               min(g_cbCurrXF + cbRangeReadBufXF, cbThisFile));
-      if (!HttpSendRequest(hInetFile, range, wcslen(range), NULL, 0))
-      {
-        // TODO: we could add retry here to be more tolerant
-        goto diegle;
-      }
+      ec = GetLastError();
+      TRACE(_T("InetBgDl: InternetReadFile failed, gle=%u\n"), ec);
+      break;
     }
 
-    // Read the chunk (or full file if we don't know the size) we downloaded
-    BOOL retXF;
-    for (;;)
-    {
-      DWORD cbioThisIteration = 0;
-      retXF = InternetReadFile(hInetFile, bufXF, cbBufXF, &cbioThisIteration);
-      if (!retXF)
-      {
-        ec = GetLastError();
-        TRACE1(_T("InternetReadFile failed, gle=%u\n"), ec);
-        // TODO: we could add retry here to be more tolerant
-        goto diegle;
-      }
-
-      // Check if we're done reading
-      if (cbioThisIteration == 0)
-      {
-        break;
-      }
-
-      // Write what we found
-      cbXF = cbioThisIteration;
-      retXF = WriteFile(hLocalFile, bufXF, cbXF, &cbioThisIteration, NULL);
-      if (!retXF || cbXF != cbioThisIteration)
-      {
-        cbio += cbioThisIteration;
-        ec = GetLastError();
-        break;
-      }
-
-      cbio += cbioThisIteration;
-      StatsLock_AcquireExclusive();
-      if (FILESIZE_UNKNOWN != cbThisFile)
-      {
-        g_cbCurrTot = cbThisFile;
-      }
-      g_cbCurrXF += cbXF;
-      StatsLock_ReleaseExclusive();
-
-      // Avoid an extra call to InternetReadFile if we already read everything
-      // in the current request
-      if (cbio == cbRangeReadBufXF && shouldUseRangeRequest)
-      {
-        break;
-      }
-    }
-
-    // Check if we're done transferring the file successfully
-    if (0 == cbio &&
-        (cbThisFile == FILESIZE_UNKNOWN || cbThisFile == g_cbCurrXF))
+    if (0 == cbio)
     {
       ASSERT(ERROR_SUCCESS == ec);
-      TRACE2(_T("InternetReadFile true with 0 cbio, cbThisFile=%d gle=%u\n"), cbThisFile, GetLastError());
+      // EOF or broken connection?
+      // TODO: Can InternetQueryDataAvailable detect this?
+
+      TRACE(_T("InetBgDl: InternetReadFile true with 0 cbio, cbThisFile=%d, gle=%u\n"),
+            cbThisFile, GetLastError());
+      // If we haven't transferred all of the file, and we know how big the file
+      // is, and we have no more data to read from the HTTP request, then set a
+      // broken pipe error. Reading without StatsLock is ok in this thread.
+      if (FILESIZE_UNKNOWN != cbThisFile && g_cbCurrXF != cbThisFile)
+      {
+        TRACE(_T("InetBgDl: downloaded file size of %d bytes doesn't equal ") \
+              _T("expected file size of %d bytes\n"), g_cbCurrXF, cbThisFile);
+        ec = ERROR_BROKEN_PIPE;
+      }
       break;
     }
 
     // Check if we canceled the download
     if (0 == g_FilesTotal)
     {
-      TRACEA("0==g_FilesTotal, aborting transfer loop...\n");
+      TRACE(_T("InetBgDl: 0 == g_FilesTotal, aborting transfer loop...\n"));
       ec = ERROR_CANCELLED;
       break;
     }
+
+    cbXF = cbio;
+    if (cbXF)
+    {
+      retXF = WriteFile(hLocalFile, bufXF, cbXF, &cbio, NULL);
+      if (!retXF || cbXF != cbio)
+      {
+        ec = GetLastError();
+        break;
+      }
+
+      StatsLock_AcquireExclusive();
+      if (FILESIZE_UNKNOWN != cbThisFile) {
+        g_cbCurrTot = cbThisFile;
+      }
+      g_cbCurrXF += cbXF;
+      StatsLock_ReleaseExclusive();
+    }
   }
 
-  TRACE2(_T("TaskThreadProc completed %s, ec=%u\n"), pURL->text, ec);
+  TRACE(_T("InetBgDl: TaskThreadProc completed %s, ec=%u\n"), pURL->text, ec);
   InternetCloseHandle(hInetFile);
   if (ERROR_SUCCESS == ec)
   {
@@ -633,6 +537,7 @@ diegle:
   }
   else
   {
+    TRACE(_T("InetBgDl: failed with ec=%u\n"), ec);
     SetLastError(ec);
     goto diegle;
   }
@@ -642,7 +547,6 @@ diegle:
 NSISPIEXPORTFUNC Get(HWND hwndNSIS, UINT N_CCH, TCHAR*N_Vars, NSIS::stack_t**ppST, NSIS::xparams_t*pX)
 {
   pX->RegisterPluginCallback(g_hInst, NSISPluginCallback);
-  g_WantRangeRequest = false;
   for (;;)
   {
     NSIS::stack_t*pURL = StackPopItem(ppST);
@@ -651,12 +555,7 @@ NSISPIEXPORTFUNC Get(HWND hwndNSIS, UINT N_CCH, TCHAR*N_Vars, NSIS::stack_t**ppS
       break;
     }
 
-    if (lstrcmpi(pURL->text, _T("/rangerequest")) == 0)
-    {
-      g_WantRangeRequest = true;
-      continue;
-    }
-    else if (lstrcmpi(pURL->text, _T("/connecttimeout")) == 0)
+    if (lstrcmpi(pURL->text, _T("/connecttimeout")) == 0)
     {
       NSIS::stack_t*pConnectTimeout = StackPopItem(ppST);
       g_ConnectTimeout = _tcstol(pConnectTimeout->text, NULL, 10) * 1000;
@@ -741,6 +640,7 @@ NSISPIEXPORTFUNC GetStats(HWND hwndNSIS, UINT N_CCH, TCHAR*N_Vars, NSIS::stack_t
   {
     NSIS_SetRegUINT(4, g_cbCurrTot);
   }
+  NSIS_SetRegStr(5, g_ServerIP);
   StatsLock_ReleaseShared();
 }
 

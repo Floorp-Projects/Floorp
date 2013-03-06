@@ -1244,7 +1244,7 @@ SpecialPowersAPI.prototype = {
                            : Ci.nsIPermissionManager.DENY_ACTION;
 
     var msg = {
-      'op': "add",
+      'op': 'add',
       'type': type,
       'permission': permission,
       'url': url,
@@ -1259,7 +1259,7 @@ SpecialPowersAPI.prototype = {
     let [url, appId, isInBrowserElement] = this._getInfoFromPermissionArg(arg);
 
     var msg = {
-      'op': "remove",
+      'op': 'remove',
       'type': type,
       'url': url,
       'appId': appId,
@@ -1267,6 +1267,33 @@ SpecialPowersAPI.prototype = {
     };
 
     this._sendSyncMessage('SPPermissionManager', msg);
+  },
+
+  hasPermission: function (type, arg) {
+   let [url, appId, isInBrowserElement] = this._getInfoFromPermissionArg(arg);
+
+    var msg = {
+      'op': 'has',
+      'type': type,
+      'url': url,
+      'appId': appId,
+      'isInBrowserElement': isInBrowserElement
+    };
+
+    return this._sendSyncMessage('SPPermissionManager', msg)[0];
+  },
+  testPermission: function (type, value, arg) {
+   let [url, appId, isInBrowserElement] = this._getInfoFromPermissionArg(arg);
+
+    var msg = {
+      'op': 'test',
+      'type': type,
+      'value': value, 
+      'url': url,
+      'appId': appId,
+      'isInBrowserElement': isInBrowserElement
+    };
+    return this._sendSyncMessage('SPPermissionManager', msg)[0];
   },
 
   getMozFullPath: function(file) {

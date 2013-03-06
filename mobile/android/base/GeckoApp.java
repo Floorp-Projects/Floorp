@@ -1844,28 +1844,22 @@ abstract public class GeckoApp
 
         if (Intent.ACTION_MAIN.equals(action)) {
             GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(""));
-        }
-        else if (ACTION_LOAD.equals(action)) {
+        } else if (ACTION_LOAD.equals(action)) {
             String uri = intent.getDataString();
             Tabs.getInstance().loadUrl(uri);
-        }
-        else if (Intent.ACTION_VIEW.equals(action)) {
+        } else if (Intent.ACTION_VIEW.equals(action)) {
             String uri = intent.getDataString();
             GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(uri));
-        }
-        else if (action != null && action.startsWith(ACTION_WEBAPP_PREFIX)) {
+        } else if (action != null && action.startsWith(ACTION_WEBAPP_PREFIX)) {
             String uri = getURIFromIntent(intent);
             GeckoAppShell.sendEventToGecko(GeckoEvent.createWebappLoadEvent(uri));
-        }
-        else if (ACTION_BOOKMARK.equals(action)) {
+        } else if (ACTION_BOOKMARK.equals(action)) {
             String uri = getURIFromIntent(intent);
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBookmarkLoadEvent(uri));
-        }
-        else if (Intent.ACTION_SEARCH.equals(action)) {
+        } else if (Intent.ACTION_SEARCH.equals(action)) {
             String uri = getURIFromIntent(intent);
             GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(uri));
-        }
-        else if (ACTION_ALERT_CALLBACK.equals(action)) {
+        } else if (ACTION_ALERT_CALLBACK.equals(action)) {
             String alertName = "";
             String alertCookie = "";
             Uri data = intent.getData();
@@ -1878,8 +1872,7 @@ abstract public class GeckoApp
                     alertCookie = "";
             }
             handleNotification(ACTION_ALERT_CALLBACK, alertName, alertCookie);
-        }
-        else if (ACTION_WIDGET.equals(action)) {
+        } else if (ACTION_WIDGET.equals(action)) {
             addTab();
         }
     }

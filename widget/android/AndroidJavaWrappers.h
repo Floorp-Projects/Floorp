@@ -782,7 +782,8 @@ public:
         IME_UPDATE_COMPOSITION = 4,
         IME_REMOVE_COMPOSITION = 5,
         IME_ACKNOWLEDGE_FOCUS = 6,
-        IME_FLUSH_CHANGES = 7
+        IME_FLUSH_CHANGES = 7,
+        IME_UPDATE_CONTEXT = 8
     };
 };
 

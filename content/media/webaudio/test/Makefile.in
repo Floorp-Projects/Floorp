@@ -15,6 +15,7 @@ MOCHITEST_FILES := \
   test_bug808374.html \
   test_bug827541.html \
   test_bug839753.html \
+  test_bug845960.html \
   test_AudioBuffer.html \
   test_AudioContext.html \
   test_AudioListener.html \
@@ -28,6 +29,10 @@ MOCHITEST_FILES := \
   test_singleSourceDest.html \
   ting.ogg \
   ting-expected.wav \
+  ting-dualchannel44.1.ogg \
+  ting-dualchannel44.1-expected.wav \
+  ting-dualchannel48.ogg \
+  ting-dualchannel48-expected.wav \
   small-shot.ogg \
   small-shot-expected.wav \
   invalid.txt \

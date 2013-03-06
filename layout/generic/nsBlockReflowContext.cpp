@@ -16,8 +16,6 @@
 #include "nsContainerFrame.h"
 #include "nsBlockFrame.h"
 #include "nsLineBox.h"
-#include "nsIDOMHTMLTableCellElement.h"
-#include "nsIDOMHTMLBodyElement.h"
 #include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsLayoutUtils.h"
