@@ -381,7 +381,7 @@ bool PACResolveToString(const nsCString &aHostName,
 
 // dnsResolve(host) javascript implementation
 static
-JSBool PACDnsResolve(JSContext *cx, unsigned int argc, jsval *vp)
+JSBool PACDnsResolve(JSContext *cx, unsigned int argc, JS::Value *vp)
 {
   if (NS_IsMainThread()) {
     NS_WARNING("DNS Resolution From PAC on Main Thread. How did that happen?");
@@ -410,7 +410,7 @@ JSBool PACDnsResolve(JSContext *cx, unsigned int argc, jsval *vp)
 
 // myIpAddress() javascript implementation
 static
-JSBool PACMyIpAddress(JSContext *cx, unsigned int argc, jsval *vp)
+JSBool PACMyIpAddress(JSContext *cx, unsigned int argc, JS::Value *vp)
 {
   if (NS_IsMainThread()) {
     NS_WARNING("DNS Resolution From PAC on Main Thread. How did that happen?");
@@ -427,7 +427,7 @@ JSBool PACMyIpAddress(JSContext *cx, unsigned int argc, jsval *vp)
 
 // proxyAlert(msg) javascript implementation
 static
-JSBool PACProxyAlert(JSContext *cx, unsigned int argc, jsval *vp)
+JSBool PACProxyAlert(JSContext *cx, unsigned int argc, JS::Value *vp)
 {
   JSString *arg1 = nullptr;
   if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "S", &arg1))
@@ -640,8 +640,8 @@ ProxyAutoConfig::GetProxyForURI(const nsCString &aTestURI,
     js::RootedValue uriValue(cx, STRING_TO_JSVAL(uriString));
     js::RootedValue hostValue(cx, STRING_TO_JSVAL(hostString));
 
-    jsval argv[2] = { uriValue, hostValue };
-    jsval rval;
+    JS::Value argv[2] = { uriValue, hostValue };
+    JS::Value rval;
     JSBool ok = JS_CallFunctionName(cx, mJSRuntime->Global(),
                                     "FindProxyForURL", 2, argv, &rval);
 
@@ -728,7 +728,7 @@ ProxyAutoConfig::SrcAddress(const NetAddr *remoteAddress, nsCString &localAddres
 bool
 ProxyAutoConfig::MyIPAddressTryHost(const nsCString &hostName,
                                     unsigned int timeout,
-                                    jsval *vp)
+                                    JS::Value *vp)
 {
   NetAddr remoteAddress;
   nsAutoCString localDottedDecimal;
@@ -745,7 +745,7 @@ ProxyAutoConfig::MyIPAddressTryHost(const nsCString &hostName,
 }
 
 bool
-ProxyAutoConfig::MyIPAddress(jsval *vp)
+ProxyAutoConfig::MyIPAddress(JS::Value *vp)
 {
   nsAutoCString remoteDottedDecimal;
   nsAutoCString localDottedDecimal;
