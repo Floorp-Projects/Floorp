@@ -9,7 +9,7 @@
 
 namespace CSF
 {
-	DECLARE_PTR(AudioControlWrapper);
+        DECLARE_NS_PTR(AudioControlWrapper)
 	class ECC_API AudioControlWrapper : public AudioControl
 	{
 	public:

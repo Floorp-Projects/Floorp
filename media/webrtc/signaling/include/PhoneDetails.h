@@ -11,10 +11,11 @@
 
 namespace CSF
 {
-	DECLARE_PTR_VECTOR(PhoneDetails);
+	DECLARE_NS_PTR_VECTOR(PhoneDetails);
 	class ECC_API PhoneDetails
 	{
 	public:
+                NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PhoneDetails)
 		virtual ~PhoneDetails() {}
 		/**
 		 * Get the device name (the CUCM device name) and the free text description.
