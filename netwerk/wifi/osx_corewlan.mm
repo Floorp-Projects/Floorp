@@ -5,7 +5,6 @@
 #import <Cocoa/Cocoa.h>
 #import <CoreWLAN/CoreWLAN.h>
 
-#include <mach-o/dyld.h>
 #include <dlfcn.h>
 #include <unistd.h>
 
@@ -18,21 +17,10 @@
 #include "nsWifiMonitor.h"
 #include "nsWifiAccessPoint.h"
 
-BOOL UsingSnowLeopard() {
-  static int32_t gOSXVersion = 0x0;
-  if (gOSXVersion == 0x0) {
-    Gestalt(gestaltSystemVersion, (SInt32*)&gOSXVersion);
-  }
-  return (gOSXVersion >= 0x00001060);
-}
-
 nsresult
 GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint> &accessPoints)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  if (!UsingSnowLeopard())
-    return NS_ERROR_NOT_AVAILABLE;
 
   accessPoints.Clear();
 
