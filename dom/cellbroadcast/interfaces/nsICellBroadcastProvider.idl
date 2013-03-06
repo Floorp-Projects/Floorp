@@ -1,0 +1,35 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMMozCellBroadcastMessage;
+
+[scriptable, uuid(4c6fb794-31bd-4ed7-b21a-34b82aa3efbe)]
+interface nsICellBroadcastListener : nsISupports
+{
+  /**
+   * Called when a Cell Broadcast message has been received by the network.
+   *
+   * @param message
+   *        The received Cell Broadcast Message.
+   */
+  void notifyMessageReceived(in nsIDOMMozCellBroadcastMessage message);
+};
+
+/**
+ * XPCOM component (in the content process) that provides the cell broadcast
+ * information.
+ */
+[scriptable, uuid(e6c01d18-829e-4d5a-9611-60fca36e6b46)]
+interface nsICellBroadcastProvider : nsISupports
+{
+  /**
+   * Called when a content process registers receiving unsolicited messages from
+   * RadioInterfaceLayer in the chrome process. Only a content process that has
+   * the 'cellbroadcast' permission is allowed to register.
+   */
+  void registerCellBroadcastMsg(in nsICellBroadcastListener listener);
+  void unregisterCellBroadcastMsg(in nsICellBroadcastListener listener);
+};
