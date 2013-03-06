@@ -465,7 +465,6 @@ class PerThreadData : public js::PerThreadDataFriendFields
     js::Vector<SavedGCRoot, 0, js::SystemAllocPolicy> gcSavedRoots;
 
     bool                gcRelaxRootChecks;
-    int                 gcAssertNoGCDepth;
 #endif
 
     /*
@@ -2194,7 +2193,7 @@ class AutoObjectHashSet : public AutoHashSetRooter<RawObject>
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class AutoAssertNoGCOrException : public AutoAssertNoGC
+class AutoAssertNoException
 {
 #ifdef DEBUG
     JSContext *cx;
@@ -2202,7 +2201,7 @@ class AutoAssertNoGCOrException : public AutoAssertNoGC
 #endif
 
   public:
-    AutoAssertNoGCOrException(JSContext *cx)
+    AutoAssertNoException(JSContext *cx)
 #ifdef DEBUG
       : cx(cx),
         hadException(cx->isExceptionPending())
@@ -2210,7 +2209,7 @@ class AutoAssertNoGCOrException : public AutoAssertNoGC
     {
     }
 
-    ~AutoAssertNoGCOrException()
+    ~AutoAssertNoException()
     {
         JS_ASSERT_IF(!hadException, !cx->isExceptionPending());
     }
