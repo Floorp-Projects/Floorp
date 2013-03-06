@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style type="text/css">
+      body {
+        font-size: 0.875em;
+        line-height: 1.30em;
+        font-family: Arial;
+      }
+
+      p, ul, li {
+        margin: 0;
+        padding: 0;
+        background-color: rgb(235, 235, 235);
+      }
+
+      ul { -moz-column-count: 2;
+           background-color: rgb(255, 200, 200);
+         }
+
+      li { margin-left: 17px }
+      .wrapper {
+                background-color: rgb(255, 0, 155); max-width: 910px;
+                border: 1px solid green;
+               }
+
+      .column {
+        width: 73%;
+        padding: 20px 60px 20px 40px;
+        -moz-box-sizing: border-box;
+        background-color: rgb(0, 95, 255);
+      }
+
+      .img {
+        float: left;
+        width: 261px;
+        height: 150px;
+        background-color: rgb(88, 20, 100);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div id="colEle" class="column">
+        <ul>
+          <li>
+            <p>123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123</p>
+          </li>
+          <li>
+            <p>123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123</p>
+            <div class="img"></div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </body>
+</html>
