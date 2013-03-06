@@ -517,14 +517,22 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
         } else {
             JS_ASSERT(v.isUndefined());
 
-            // Get scope chain from function or script if not already set. If
-            // pcOffset == 0, we may have to push a new call object, so we leave
-            // scopeChain NULL and enter baseline code before the prologue.
-            if (iter.pcOffset() != 0 || iter.resumeAfter()) {
-                if (fun)
+            // Get scope chain from function or script.
+            if (fun) {
+                // If pcOffset == 0, we may have to push a new call object, so
+                // we leave scopeChain NULL and enter baseline code before the
+                // prologue.
+                if (iter.pcOffset() != 0 || iter.resumeAfter())
                     scopeChain = fun->environment();
-                else
-                    scopeChain = &(script->global());
+            } else {
+                // For global, compile-and-go scripts the scope chain is the
+                // script's global (Ion does not compile non-compile-and-go
+                // scripts). Also note that it's invalid to resume into the
+                // prologue in this case because the prologue expects the scope
+                // chain in R1 for eval and global scripts.
+                JS_ASSERT(!script->isForEval());
+                JS_ASSERT(script->compileAndGo);
+                scopeChain = &(script->global());
             }
         }
     }
@@ -724,6 +732,9 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
             // In this case, resume into the prologue.
             uint8_t *opReturnAddr;
             if (scopeChain == NULL) {
+                // Global and eval scripts expect the scope chain in R1, so only
+                // resume into the prologue for function scripts.
+                JS_ASSERT(fun);
                 JS_ASSERT(numUnsynced == 0);
                 opReturnAddr = baselineScript->prologueEntryAddr();
                 IonSpew(IonSpew_BaselineBailouts, "      Resuming into prologue.");
