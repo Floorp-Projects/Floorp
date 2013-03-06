@@ -7583,14 +7583,14 @@ var Telemetry = {
                                                   [serverOwner, brandShortName], 2);
     buttons = [
       {
-        label: Strings.browser.GetStringFromName("telemetry.optin.yes"),
+        label: Strings.browser.GetStringFromName("telemetry.optin.send"),
         callback: function () {
           Services.prefs.setIntPref(self._PREF_TELEMETRY_DISPLAYED, self._TELEMETRY_DISPLAY_REV);
           Services.prefs.setBoolPref(self._PREF_TELEMETRY_ENABLED, true);
         }
       },
       {
-        label: Strings.browser.GetStringFromName("telemetry.optin.no"),
+        label: Strings.browser.GetStringFromName("telemetry.optin.dontSend"),
         callback: function () {
           Services.prefs.setIntPref(self._PREF_TELEMETRY_DISPLAYED, self._TELEMETRY_DISPLAY_REV);
           Services.prefs.setBoolPref(self._PREF_TELEMETRY_REJECTED, true);
