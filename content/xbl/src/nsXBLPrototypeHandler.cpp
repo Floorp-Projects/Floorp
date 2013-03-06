@@ -390,7 +390,7 @@ nsXBLPrototypeHandler::EnsureEventHandler(nsIScriptGlobalObject* aGlobal,
          .setVersion(JSVERSION_LATEST)
          .setUserBit(true); // Flag us as XBL
 
-  js::RootedObject rootedNull(cx, nullptr); // See bug 781070.
+  JS::RootedObject rootedNull(cx, nullptr); // See bug 781070.
   JSObject* handlerFun = nullptr;
   nsresult rv = nsJSUtils::CompileFunction(cx, rootedNull, options,
                                            nsAtomCString(aName), argCount,
