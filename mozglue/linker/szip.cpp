@@ -123,6 +123,7 @@ int do_compress(const char *name, Buffer &origBuf,
   /* Initialize header */
   header->chunkSize = CHUNK;
   header->totalSize = offset;
+  header->windowBits = -15; // Raw stream, window size of 32k.
 
   /* Initialize zlib structure */
   z_stream zStream;
@@ -137,7 +138,8 @@ int do_compress(const char *name, Buffer &origBuf,
     avail = std::min(size, CHUNK);
 
     /* Compress chunk */
-    int ret = deflateInit(&zStream, 9);
+    int ret = deflateInit2(&zStream, 9, Z_DEFLATED, header->windowBits,
+                           MAX_MEM_LEVEL, Z_DEFAULT_STRATEGY);
     MOZ_ASSERT(ret == Z_OK);
     zStream.avail_in = avail;
     zStream.next_in = origData;

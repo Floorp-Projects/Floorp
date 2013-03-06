@@ -27,6 +27,7 @@ SeekableZStream::Init(const void *buf, size_t length)
   totalSize = header->totalSize;
   chunkSize = header->chunkSize;
   lastChunkSize = header->lastChunkSize;
+  windowBits = header->windowBits;
   offsetTable.Init(&header[1], header->nChunks);
 
   /* Sanity check */
@@ -85,7 +86,7 @@ SeekableZStream::DecompressChunk(void *where, size_t chunk, size_t length)
   zStream.next_out = reinterpret_cast<Bytef *>(where);
 
   /* Decompress chunk */
-  if (inflateInit(&zStream) != Z_OK) {
+  if (inflateInit2(&zStream, windowBits) != Z_OK) {
     log("inflateInit failed: %s", zStream.msg);
     return false;
   }
