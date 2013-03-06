@@ -6402,9 +6402,9 @@ var PermissionsHelper = {
                     "offline-app", "desktop-notification", "plugins", "native-intent"],
   _permissionStrings: {
     "password": {
-      label: "password.savePassword",
-      allowed: "password.save",
-      denied: "password.dontSave"
+      label: "password.rememberPassword",
+      allowed: "password.remember",
+      denied: "password.never"
     },
     "geolocation": {
       label: "geolocation.shareLocation",
