@@ -139,11 +139,7 @@ function runTests()
     ok(inputEvent.isTrusted, aDescription + "input event by Undo wasn't trusted event");
 
     inputEvent = null;
-    if (kIsMac) {
-      synthesizeKey("z", { accelKey: true, shiftKey: true }, aWindow);
-    } else {
-      synthesizeKey("y", { accelKey: true }, aWindow);
-    }
+    synthesizeKey("z", { accelKey: true, shiftKey: true }, aWindow);
     ok(inputEvent, aDescription + "input event wasn't fired by Redo");
     ok(inputEvent.isTrusted, aDescription + "input event by Redo wasn't trusted event");
 

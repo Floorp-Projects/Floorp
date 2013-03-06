@@ -68,4 +68,14 @@ AudioBlockCopyChannelWithScale(const float aInput[WEBAUDIO_BLOCK_SIZE],
   }
 }
 
+void
+AudioBlockCopyChannelWithScale(const float aInput[WEBAUDIO_BLOCK_SIZE],
+                               const float aScale[WEBAUDIO_BLOCK_SIZE],
+                               float aOutput[WEBAUDIO_BLOCK_SIZE])
+{
+  for (uint32_t i = 0; i < WEBAUDIO_BLOCK_SIZE; ++i) {
+    aOutput[i] = aInput[i]*aScale[i];
+  }
+}
+
 }

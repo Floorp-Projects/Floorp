@@ -20,7 +20,6 @@
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMHTMLTableCellElement.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
 #include "nsINameSpaceManager.h"

@@ -689,6 +689,23 @@ WebGLContext::ValidateUniformLocation(const char* info, WebGLUniformLocation *lo
 }
 
 bool
+WebGLContext::ValidateSamplerUniformSetter(const char* info, WebGLUniformLocation *location, WebGLint value)
+{
+    if (location->Info().type != SH_SAMPLER_2D &&
+        location->Info().type != SH_SAMPLER_CUBE)
+    {
+        return true;
+    }
+
+    if (value >= 0 && value < mGLMaxTextureUnits)
+        return true;
+
+    ErrorInvalidValue("%s: this uniform location is a sampler, but %d is not a valid texture unit",
+                      info, value);
+    return false;
+}
+
+bool
 WebGLContext::ValidateAttribArraySetter(const char* name, uint32_t cnt, uint32_t arrayLength)
 {
     if (!IsContextStable()) {

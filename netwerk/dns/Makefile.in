@@ -58,7 +58,9 @@ LOCAL_INCLUDES = \
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DIMPL_NS_NET
+DEFINES += -DIMPL_NS_NET \
+           -DHB_DONT_DEFINE_STDINT \
+           $(NULL)
 
 # Generate the include file containing compact, static definitions
 # for effective TLD data.

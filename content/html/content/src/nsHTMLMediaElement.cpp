@@ -75,35 +75,6 @@
 #include "nsIPowerManagerService.h"
 #include <algorithm>
 
-#ifdef MOZ_OGG
-#include "OggDecoder.h"
-#endif
-#ifdef MOZ_WAVE
-#include "WaveDecoder.h"
-#endif
-#ifdef MOZ_WEBM
-#include "WebMDecoder.h"
-#endif
-#ifdef MOZ_RAW
-#include "RawDecoder.h"
-#endif
-#ifdef MOZ_GSTREAMER
-#include "GStreamerDecoder.h"
-#endif
-#ifdef MOZ_MEDIA_PLUGINS
-#include "MediaPluginHost.h"
-#include "MediaPluginDecoder.h"
-#endif
-#ifdef MOZ_WIDGET_GONK
-#include "MediaOmxDecoder.h"
-#endif
-#ifdef MOZ_DASH
-#include "DASHDecoder.h"
-#endif
-#ifdef MOZ_WMF
-#include "WMFDecoder.h"
-#endif
-
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gMediaElementLog;
 static PRLogModuleInfo* gMediaElementEventsLog;
@@ -2194,89 +2165,6 @@ nsHTMLMediaElement::CanPlayType(const nsAString& aType, nsAString& aResult)
   return NS_OK;
 }
 
-already_AddRefed<MediaDecoder>
-nsHTMLMediaElement::CreateDecoder(const nsACString& aType)
-{
-  // If you change this list to add support for new decoders for codecs that
-  // can be used by <audio>, please consider updating MediaDecodeTask::CreateDecoder
-  // as well.
-
-#ifdef MOZ_GSTREAMER
-  if (DecoderTraits::IsGStreamerSupportedType(aType)) {
-    nsRefPtr<GStreamerDecoder> decoder = new GStreamerDecoder();
-    if (decoder->Init(this)) {
-      return decoder.forget();
-    }
-  }
-#endif
-#ifdef MOZ_RAW
-  if (DecoderTraits::IsRawType(aType)) {
-    nsRefPtr<RawDecoder> decoder = new RawDecoder();
-    if (decoder->Init(this)) {
-      return decoder.forget();
-    }
-  }
-#endif
-#ifdef MOZ_OGG
-  if (DecoderTraits::IsOggType(aType)) {
-    nsRefPtr<OggDecoder> decoder = new OggDecoder();
-    if (decoder->Init(this)) {
-      return decoder.forget();
-    }
-  }
-#endif
-#ifdef MOZ_WAVE
-  if (DecoderTraits::IsWaveType(aType)) {
-    nsRefPtr<WaveDecoder> decoder = new WaveDecoder();
-    if (decoder->Init(this)) {
-      return decoder.forget();
-    }
-  }
-#endif
-#ifdef MOZ_WIDGET_GONK
-  if (DecoderTraits::IsOmxSupportedType(aType)) {
-    nsRefPtr<MediaOmxDecoder> decoder = new MediaOmxDecoder();
-    if (decoder->Init(this)) {
-      return decoder.forget();
-    }
-  }
-#endif
-#ifdef MOZ_MEDIA_PLUGINS
-  if (MediaDecoder::IsMediaPluginsEnabled() && GetMediaPluginHost()->FindDecoder(aType, NULL)) {
-    nsRefPtr<MediaPluginDecoder> decoder = new MediaPluginDecoder(aType);
-    if (decoder->Init(this)) {
-      return decoder.forget();
-    }
-  }
-#endif
-#ifdef MOZ_WEBM
-  if (DecoderTraits::IsWebMType(aType)) {
-    nsRefPtr<WebMDecoder> decoder = new WebMDecoder();
-    if (decoder->Init(this)) {
-      return decoder.forget();
-    }
-  }
-#endif
-#ifdef MOZ_DASH
-  if (DecoderTraits::IsDASHMPDType(aType)) {
-    nsRefPtr<DASHDecoder> decoder = new DASHDecoder();
-    if (decoder->Init(this)) {
-      return decoder.forget();
-    }
-  }
-#endif
-#ifdef MOZ_WMF
-  if (DecoderTraits::IsWMFSupportedType(aType)) {
-    nsRefPtr<WMFDecoder> decoder = new WMFDecoder();
-    if (decoder->Init(this)) {
-      return decoder.forget();
-    }
-  }
-#endif
-
-  return nullptr;
-}
-
 nsresult nsHTMLMediaElement::InitializeDecoderAsClone(MediaDecoder* aOriginal)
 {
   NS_ASSERTION(mLoadingSrc, "mLoadingSrc must already be set");
@@ -2323,7 +2211,7 @@ nsresult nsHTMLMediaElement::InitializeDecoderForChannel(nsIChannel *aChannel,
   aChannel->GetContentType(mimeType);
   NS_ASSERTION(!mimeType.IsEmpty(), "We should have the Content-Type.");
 
-  nsRefPtr<MediaDecoder> decoder = CreateDecoder(mimeType);
+  nsRefPtr<MediaDecoder> decoder = DecoderTraits::CreateDecoder(mimeType, this);
   if (!decoder) {
     nsAutoString src;
     GetCurrentSrc(src);

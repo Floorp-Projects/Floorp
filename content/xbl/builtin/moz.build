@@ -7,6 +7,8 @@ if CONFIG['OS_ARCH'] in ('OS2', 'WINNT'):
     DIRS += ['win']
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     DIRS += ['mac']
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    DIRS += ['android']
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] in ('qt', 'gtk2'):
     DIRS += ['unix']
 else:

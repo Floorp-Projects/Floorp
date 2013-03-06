@@ -159,9 +159,7 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
         ABORT(r);
 
       /* Create one host candidate */
-
-      snprintf(label, sizeof(label), "host(%s)", addrs[i].as_string);
-      if(r=nr_ice_candidate_create(ctx,label,component,isock,sock,HOST,0,
+      if(r=nr_ice_candidate_create(ctx,component,isock,sock,HOST,0,
         component->component_id,&cand))
         ABORT(r);
 
@@ -171,8 +169,7 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
 
       /* And a srvrflx candidate for each STUN server */
       for(j=0;j<ctx->stun_server_ct;j++){
-        snprintf(label, sizeof(label), "srvrflx(%s|%s)", addrs[i].as_string, ctx->stun_servers[j].addr.as_string);
-        if(r=nr_ice_candidate_create(ctx,label,component,
+        if(r=nr_ice_candidate_create(ctx,component,
           isock,sock,SERVER_REFLEXIVE,
           &ctx->stun_servers[j],component->component_id,&cand))
           ABORT(r);
@@ -188,8 +185,7 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
         nr_ice_candidate *srvflx_cand;
 
         /* srvrflx */
-        snprintf(label, sizeof(label), "srvrflx(%s|%s)", addrs[i].as_string, ctx->turn_servers[j].turn_server.addr.as_string);
-        if(r=nr_ice_candidate_create(ctx,label,component,
+        if(r=nr_ice_candidate_create(ctx,component,
           isock,sock,SERVER_REFLEXIVE,
           &ctx->turn_servers[j].turn_server,component->component_id,&cand))
           ABORT(r);
@@ -204,8 +200,7 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
         /* relayed*/
         if(r=nr_socket_turn_create(sock, 0, &turn_sock))
           ABORT(r);
-        snprintf(label, sizeof(label), "turn-relayed(%s|%s)", addrs[i].as_string, ctx->turn_servers[j].turn_server.addr.as_string);
-        if(r=nr_ice_candidate_create(ctx,label,component,
+        if(r=nr_ice_candidate_create(ctx,component,
           isock,turn_sock,RELAYED,
           &ctx->turn_servers[j].turn_server,component->component_id,&cand))
            ABORT(r);
@@ -248,6 +243,7 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
       if(cand->state!=NR_ICE_CAND_STATE_INITIALIZING){
         if(r=nr_ice_candidate_initialize(cand,nr_ice_initialize_finished_cb,ctx)){
           if(r!=R_WOULDBLOCK){
+            ctx->uninitialized_candidates--;
             cand->state=NR_ICE_CAND_STATE_FAILED;
           }
         }

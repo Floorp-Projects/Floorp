@@ -7,10 +7,15 @@
 #ifndef DecoderTraits_h_
 #define DecoderTraits_h_
 
+#include "nsCOMPtr.h"
 #include "nsAString.h"
 
-namespace mozilla
-{
+namespace mozilla {
+
+class AbstractMediaDecoder;
+class MediaDecoder;
+class MediaDecoderOwner;
+class MediaDecoderReader;
 
 enum CanPlayStatus {
   CANPLAY_NO,
@@ -36,44 +41,20 @@ public:
   // false here even if CanHandleMediaType would return true.
   static bool ShouldHandleMediaType(const char* aMIMEType);
 
-#ifdef MOZ_RAW
-  static bool IsRawType(const nsACString& aType);
-#endif
+  // Create a decoder for the given aType. Returns null if we
+  // were unable to create the decoder.
+  static already_AddRefed<MediaDecoder> CreateDecoder(const nsACString& aType,
+                                                      MediaDecoderOwner* aOwner);
 
-#ifdef MOZ_OGG
-  static bool IsOggType(const nsACString& aType);
-#endif
+  // Create a reader for thew given MIME type aType. Returns null
+  // if we were unable to create the reader.
+  static MediaDecoderReader* CreateReader(const nsACString& aType,
+                                          AbstractMediaDecoder* aDecoder);
 
-#ifdef MOZ_WAVE
-  static bool IsWaveType(const nsACString& aType);
-#endif
-
-#ifdef MOZ_WEBM
-  static bool IsWebMType(const nsACString& aType);
-#endif
-
-#ifdef MOZ_GSTREAMER
-  // When enabled, use GStreamer for H.264, but not for codecs handled by our
-  // bundled decoders, unless the "media.prefer-gstreamer" pref is set.
-  static bool IsGStreamerSupportedType(const nsACString& aType);
-  static bool IsH264Type(const nsACString& aType);
-#endif
-
-#ifdef MOZ_WIDGET_GONK
-  static bool IsOmxSupportedType(const nsACString& aType);
-#endif
-
-#ifdef MOZ_MEDIA_PLUGINS
-  static bool IsMediaPluginsType(const nsACString& aType);
-#endif
-
-#ifdef MOZ_DASH
-  static bool IsDASHMPDType(const nsACString& aType);
-#endif
-
-#ifdef MOZ_WMF
-  static bool IsWMFSupportedType(const nsACString& aType);
-#endif
+  // Returns true if MIME type aType is supported in video documents,
+  // or false otherwise. Not all platforms support all MIME types, and
+  // vice versa.
+  static bool IsSupportedInVideoDocument(const nsACString& aType);
 };
 
 }

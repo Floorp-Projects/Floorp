@@ -60,6 +60,7 @@ CPPSRCS		= \
 		nsSocketTransport2.cpp \
 		nsSocketTransportService2.cpp \
 		nsServerSocket.cpp \
+		nsUDPServerSocket.cpp \
 		nsStreamListenerTee.cpp \
 		nsStreamLoader.cpp \
 		nsSyncStreamListener.cpp \

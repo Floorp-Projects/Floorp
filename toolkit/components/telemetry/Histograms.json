@@ -23,6 +23,11 @@
     "extended_statistics_ok": true,
     "description": "time spent updating accessibility (ms)"
   },
+  "BACKGROUNDFILESAVER_THREAD_COUNT": {
+    "kind": "enumerated",
+    "n_values": 21,
+    "description": "Maximum number of concurrent threads reached during a given download session"
+  },
   "CYCLE_COLLECTOR": {
     "kind": "exponential",
     "high": "10000",

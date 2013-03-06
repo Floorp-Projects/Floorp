@@ -13,9 +13,11 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 const SNIPPETS_URL_PREF = "browser.aboutHomeSnippets.updateUrl";
 
 // Should be bumped up if the snippets content format changes.
-const STARTPAGE_VERSION = 3;
+const STARTPAGE_VERSION = 4;
 
-this.AboutHomeUtils = new Object();
+this.AboutHomeUtils = {
+  get snippetsVersion() STARTPAGE_VERSION
+};
 
 /**
  * Returns an object containing the name and searchURL of the original default

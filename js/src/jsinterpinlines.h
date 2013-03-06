@@ -1129,7 +1129,9 @@ class FastInvokeGuard
     RootedFunction fun_;
     RootedScript script_;
 #ifdef JS_ION
-    ion::IonContext ictx_;
+    // Constructing an IonContext is pretty expensive due to the TLS access,
+    // so only do this if we have to.
+    mozilla::Maybe<ion::IonContext> ictx_;
     bool useIon_;
 #endif
 
@@ -1138,7 +1140,6 @@ class FastInvokeGuard
       : fun_(cx)
       , script_(cx)
 #ifdef JS_ION
-      , ictx_(cx, cx->compartment, NULL)
       , useIon_(ion::IsEnabled(cx))
 #endif
     {
@@ -1163,6 +1164,8 @@ class FastInvokeGuard
     bool invoke(JSContext *cx) {
 #ifdef JS_ION
         if (useIon_ && fun_) {
+            if (ictx_.empty())
+                ictx_.construct(cx, cx->compartment, (js::ion::TempAllocator *)NULL);
             JS_ASSERT(fun_->nonLazyScript() == script_);
 
             ion::MethodStatus status = ion::CanEnterUsingFastInvoke(cx, script_, args_.length());

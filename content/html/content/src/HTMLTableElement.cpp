@@ -10,6 +10,7 @@
 #include "nsAttrValueInlines.h"
 #include "nsRuleData.h"
 #include "nsHTMLStyleSheet.h"
+#include "nsMappedAttributes.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/HTMLCollectionBinding.h"
 #include "mozilla/dom/HTMLTableElementBinding.h"
@@ -1209,6 +1210,15 @@ HTMLTableElement::BuildInheritedAttributes()
     mTableInheritedAttributes = newAttrs;
     NS_IF_ADDREF(mTableInheritedAttributes);
   }
+}
+
+void
+HTMLTableElement::ReleaseInheritedAttributes()
+{
+  if (mTableInheritedAttributes &&
+      mTableInheritedAttributes != TABLE_ATTRS_DIRTY)
+    NS_RELEASE(mTableInheritedAttributes);
+  mTableInheritedAttributes = TABLE_ATTRS_DIRTY;
 }
 
 nsresult

@@ -71,7 +71,7 @@ const BackgroundFileSaverStreamListener = Components.Constructor(
  */
 function Download()
 {
-  this._deferStopped = Promise.defer();
+  this._deferSucceeded = Promise.defer();
 }
 
 Download.prototype = {
@@ -91,22 +91,34 @@ Download.prototype = {
   saver: null,
 
   /**
-   * Becomes true when the download has been completed successfully, failed, or
-   * has been canceled.  This property can become true, then it can be reset to
-   * false when a failed or canceled download is restarted.
+   * Indicates that the download never started, has been completed successfully,
+   * failed, or has been canceled.  This property becomes false when a download
+   * is started for the first time, or when a failed or canceled download is
+   * restarted.
    */
-  stopped: false,
+  stopped: true,
+
+  /**
+   * Indicates that the download has been completed successfully.
+   */
+  succeeded: false,
 
   /**
    * Indicates that the download has been canceled.  This property can become
    * true, then it can be reset to false when a canceled download is restarted.
+   *
+   * This property becomes true as soon as the "cancel" method is called, though
+   * the "stopped" property might remain false until the cancellation request
+   * has been processed.  Temporary files or part files may still exist even if
+   * they are expected to be deleted, until the "stopped" property becomes true.
    */
   canceled: false,
 
   /**
    * When the download fails, this is set to a DownloadError instance indicating
    * the cause of the failure.  If the download has been completed successfully
-   * or has been canceled, this property is null.
+   * or has been canceled, this property is null.  This property is reset to
+   * null when a failed download is restarted.
    */
   error: null,
 
@@ -164,13 +176,34 @@ Download.prototype = {
   },
 
   /**
-   * This deferred object is resolved when this download finishes successfully,
-   * and rejected if this download fails.
+   * The download may be stopped and restarted multiple times before it
+   * completes successfully. This may happen if any of the download attempts is
+   * canceled or fails.
+   *
+   * This property contains a promise that is linked to the current attempt, or
+   * null if the download is either stopped or in the process of being canceled.
+   * If the download restarts, this property is replaced with a new promise.
+   *
+   * The promise is resolved if the attempt it represents finishes successfully,
+   * and rejected if the attempt fails.
    */
-  _deferStopped: null,
+  _currentAttempt: null,
 
   /**
-   * Starts the download.
+   * Starts the download for the first time, or restarts a download that failed
+   * or has been canceled.
+   *
+   * Calling this method when the download has been completed successfully has
+   * no effect, and the method returns a resolved promise.  If the download is
+   * in progress, the method returns the same promise as the previous call.
+   *
+   * If the "cancel" method was called but the cancellation process has not
+   * finished yet, this method waits for the cancellation to finish, then
+   * restarts the download immediately.
+   *
+   * @note If you need to start a new download from the same source, rather than
+   *       restarting a failed or canceled one, you should create a separate
+   *       Download object with the same source as the current one.
    *
    * @return {Promise}
    * @resolves When the download has finished successfully.
@@ -178,36 +211,172 @@ Download.prototype = {
    */
   start: function D_start()
   {
-    this._deferStopped.resolve(Task.spawn(function task_D_start() {
+    // If the download succeeded, it's the final state, we have nothing to do.
+    if (this.succeeded) {
+      return Promise.resolve();
+    }
+
+    // If the download already started and hasn't failed or hasn't been
+    // canceled, return the same promise as the previous call, allowing the
+    // caller to wait for the current attempt to finish.
+    if (this._currentAttempt) {
+      return this._currentAttempt;
+    }
+
+    // Initialize all the status properties for a new or restarted download.
+    this.stopped = false;
+    this.canceled = false;
+    this.error = null;
+    this.hasProgress = false;
+    this.progress = 0;
+    this.totalBytes = 0;
+    this.currentBytes = 0;
+
+    // Create a new deferred object and an associated promise before starting
+    // the actual download.  We store it on the download as the current attempt.
+    let deferAttempt = Promise.defer();
+    let currentAttempt = deferAttempt.promise;
+    this._currentAttempt = currentAttempt;
+
+    // This function propagates progress from the DownloadSaver object, unless
+    // it comes in late from a download attempt that was replaced by a new one.
+    function DS_setProgressBytes(aCurrentBytes, aTotalBytes)
+    {
+      if (this._currentAttempt == currentAttempt || !this._currentAttempt) {
+        this._setBytes(aCurrentBytes, aTotalBytes);
+      }
+    }
+
+    // Now that we stored the promise in the download object, we can start the
+    // task that will actually execute the download.
+    deferAttempt.resolve(Task.spawn(function task_D_start() {
+      // Wait upon any pending cancellation request.
+      if (this._promiseCanceled) {
+        yield this._promiseCanceled;
+      }
+
       try {
-        yield this.saver.execute();
+        // Execute the actual download through the saver object.
+        yield this.saver.execute(DS_setProgressBytes.bind(this));
+
+        // Update the status properties for a successful download.
         this.progress = 100;
+        this.succeeded = true;
       } catch (ex) {
-        if (this.canceled) {
+        // Fail with a generic status code on cancellation, so that the caller
+        // is forced to actually check the status properties to see if the
+        // download was canceled or failed because of other reasons.
+        if (this._promiseCanceled) {
           throw new DownloadError(Cr.NS_ERROR_FAILURE, "Download canceled.");
         }
-        this.error = ex;
+
+        // Update the download error, unless a new attempt already started. The
+        // change in the status property is notified in the finally block.
+        if (this._currentAttempt == currentAttempt || !this._currentAttempt) {
+          this.error = ex;
+        }
         throw ex;
       } finally {
-        this.stopped = true;
-        this._notifyChange();
+        // Any cancellation request has now been processed.
+        this._promiseCanceled = null;
+
+        // Update the status properties, unless a new attempt already started.
+        if (this._currentAttempt == currentAttempt || !this._currentAttempt) {
+          this._currentAttempt = null;
+          this.stopped = true;
+          this._notifyChange();
+          if (this.succeeded) {
+            this._deferSucceeded.resolve();
+          }
+        }
       }
     }.bind(this)));
 
-    return this._deferStopped.promise;
+    // Notify the new download state before returning.
+    this._notifyChange();
+    return this._currentAttempt;
   },
 
   /**
+   * When a request to cancel the download is received, contains a promise that
+   * will be resolved when the cancellation request is processed.  When the
+   * request is processed, this property becomes null again.
+   */
+  _promiseCanceled: null,
+
+  /**
    * Cancels the download.
+   *
+   * The cancellation request is asynchronous.  Until the cancellation process
+   * finishes, temporary files or part files may still exist even if they are
+   * expected to be deleted.
+   *
+   * In case the download completes successfully before the cancellation request
+   * could be processed, this method has no effect, and it returns a resolved
+   * promise.  You should check the properties of the download at the time the
+   * returned promise is resolved to determine if the download was cancelled.
+   *
+   * Calling this method when the download has been completed successfully,
+   * failed, or has been canceled has no effect, and the method returns a
+   * resolved promise.  This behavior is designed for the case where the call
+   * to "cancel" happens asynchronously, and is consistent with the case where
+   * the cancellation request could not be processed in time.
+   *
+   * @return {Promise}
+   * @resolves When the cancellation process has finished.
+   * @rejects Never.
    */
   cancel: function D_cancel()
   {
-    if (this.stopped || this.canceled) {
-      return;
+    // If the download is currently stopped, we have nothing to do.
+    if (this.stopped) {
+      return Promise.resolve();
     }
 
-    this.canceled = true;
-    this.saver.cancel();
+    if (!this._promiseCanceled) {
+      // Start a new cancellation request.
+      let deferCanceled = Promise.defer();
+      this._currentAttempt.then(function () deferCanceled.resolve(),
+                                function () deferCanceled.resolve());
+      this._promiseCanceled = deferCanceled.promise;
+
+      // The download can already be restarted.
+      this._currentAttempt = null;
+
+      // Notify that the cancellation request was received.
+      this.canceled = true;
+      this._notifyChange();
+
+      // Execute the actual cancellation through the saver object.
+      this.saver.cancel();
+    }
+
+    return this._promiseCanceled;
+  },
+
+  /**
+   * This deferred object contains a promise that is resolved as soon as this
+   * download finishes successfully, and is never rejected.  This property is
+   * initialized when the download is created, and never changes.
+   */
+  _deferSucceeded: null,
+
+  /**
+   * Returns a promise that is resolved as soon as this download finishes
+   * successfully, even if the download was stopped and restarted meanwhile.
+   *
+   * You can use this property for scheduling download completion actions in the
+   * current session, for downloads that are controlled interactively.  If the
+   * download is not controlled interactively, you should use the promise
+   * returned by the "start" method instead, to check for success or failure.
+   *
+   * @return {Promise}
+   * @resolves When the download has finished successfully.
+   * @rejects Never.
+   */
+  whenSucceeded: function D_whenSucceeded()
+  {
+    return this._deferSucceeded.promise;
   },
 
   /**
@@ -337,11 +506,17 @@ DownloadSaver.prototype = {
   /**
    * Executes the download.
    *
+   * @param aSetProgressBytesFn
+   *        This function may be called by the saver to report progress. It
+   *        takes two arguments: the first is the number of bytes transferred
+   *        until now, the second is the total number of bytes to be
+   *        transferred, or -1 if unknown.
+   *
    * @return {Promise}
    * @resolves When the download has finished successfully.
    * @rejects JavaScript exception if the download failed.
    */
-  execute: function DS_execute()
+  execute: function DS_execute(aSetProgressBytesFn)
   {
     throw new Error("Not implemented.");
   },
@@ -374,7 +549,7 @@ DownloadCopySaver.prototype = {
   /**
    * Implements "DownloadSaver.execute".
    */
-  execute: function DCS_execute()
+  execute: function DCS_execute(aSetProgressBytesFn)
   {
     let deferred = Promise.defer();
     let download = this.download;
@@ -388,6 +563,11 @@ DownloadCopySaver.prototype = {
         onTargetChange: function () { },
         onSaveComplete: function DCSE_onSaveComplete(aSaver, aStatus)
         {
+          // Free the reference cycle, in order to release resources earlier.
+          backgroundFileSaver.observer = null;
+          this._backgroundFileSaver = null;
+
+          // Send notifications now that we can restart the download if needed.
           if (Components.isSuccessCode(aStatus)) {
             deferred.resolve();
           } else {
@@ -395,9 +575,6 @@ DownloadCopySaver.prototype = {
             // BackgroundFileSaver does not provide more specific data.
             deferred.reject(new DownloadError(aStatus, null, true));
           }
-
-          // Free the reference cycle, in order to release resources earlier.
-          backgroundFileSaver.observer = null;
         },
       };
 
@@ -413,7 +590,7 @@ DownloadCopySaver.prototype = {
         onProgress: function DCSE_onProgress(aRequest, aContext, aProgress,
                                              aProgressMax)
         {
-          download._setBytes(aProgress, aProgressMax);
+          aSetProgressBytesFn(aProgress, aProgressMax);
         },
         onStatus: function () { },
       };
@@ -424,6 +601,13 @@ DownloadCopySaver.prototype = {
         onStartRequest: function DCSE_onStartRequest(aRequest, aContext)
         {
           backgroundFileSaver.onStartRequest(aRequest, aContext);
+
+          // Ensure we report the value of "Content-Length", if available, even
+          // if the download doesn't generate any progress events later.
+          if (aRequest instanceof Ci.nsIChannel &&
+              aRequest.contentLength >= 0) {
+            aSetProgressBytesFn(0, aRequest.contentLength);
+          }
         },
         onStopRequest: function DCSE_onStopRequest(aRequest, aContext,
                                                    aStatusCode)
