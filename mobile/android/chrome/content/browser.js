@@ -6136,11 +6136,11 @@ var PluginHelper = {
       return;
     }
 
-    let message = Strings.browser.formatStringFromName("clickToPlayPlugins.message1",
+    let message = Strings.browser.formatStringFromName("clickToPlayPlugins.message2",
                                                        [uri.host], 1);
     let buttons = [
       {
-        label: Strings.browser.GetStringFromName("clickToPlayPlugins.yes"),
+        label: Strings.browser.GetStringFromName("clickToPlayPlugins.activate"),
         callback: function(aChecked) {
           // If the user checked "Don't ask again", make a permanent exception
           if (aChecked)
@@ -6150,7 +6150,7 @@ var PluginHelper = {
         }
       },
       {
-        label: Strings.browser.GetStringFromName("clickToPlayPlugins.no"),
+        label: Strings.browser.GetStringFromName("clickToPlayPlugins.dontActivate"),
         callback: function(aChecked) {
           // If the user checked "Don't ask again", make a permanent exception
           if (aChecked)
@@ -6430,9 +6430,9 @@ var PermissionsHelper = {
       denied: "desktopNotification.dontAllow"
     },
     "plugins": {
-      label: "clickToPlayPlugins.playPlugins",
-      allowed: "clickToPlayPlugins.yes",
-      denied: "clickToPlayPlugins.no"
+      label: "clickToPlayPlugins.activatePlugins",
+      allowed: "clickToPlayPlugins.activate",
+      denied: "clickToPlayPlugins.dontActivate"
     },
     "native-intent": {
       label: "helperapps.openWithList2",
