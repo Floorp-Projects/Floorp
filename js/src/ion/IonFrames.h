@@ -69,7 +69,6 @@ CalleeTokenToScript(CalleeToken token)
 static inline RawScript
 ScriptFromCalleeToken(CalleeToken token)
 {
-    AutoAssertNoGC nogc;
     switch (GetCalleeTokenTag(token)) {
       case CalleeToken_Script:
         return CalleeTokenToScript(token);
