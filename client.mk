@@ -82,7 +82,16 @@ endif
 ####################################
 # Sanity checks
 
+# Windows checks.
 ifneq (,$(findstring mingw,$(CONFIG_GUESS)))
+
+# Require pymake (as opposed to GNU make).
+ifndef .PYMAKE
+$(error Pymake is required to build on Windows. Run |./mach build| to \
+automatically use pymake. Or, invoke pymake directly via \
+|python build/pymake/make.py|.)
+endif
+
 # check for CRLF line endings
 ifneq (0,$(shell $(PERL) -e 'binmode(STDIN); while (<STDIN>) { if (/\r/) { print "1"; exit } } print "0"' < $(TOPSRCDIR)/client.mk))
 $(error This source tree appears to have Windows-style line endings. To \
