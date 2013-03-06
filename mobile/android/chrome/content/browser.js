@@ -6728,8 +6728,8 @@ var CharacterEncoding = {
 
   setEncoding: function setEncoding(aEncoding) {
     let browser = BrowserApp.selectedBrowser;
-    let docCharset = browser.docShell.QueryInterface(Ci.nsIDocCharset);
-    docCharset.charset = aEncoding;
+    browser.docShell.gatherCharsetMenuTelemetry();
+    browser.docShell.charset = aEncoding;
     browser.reload(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
   }
 };
