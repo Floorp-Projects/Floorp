@@ -741,7 +741,7 @@ TabParent::RecvNotifyIMETextChange(const uint32_t& aStart,
   if (!widget)
     return true;
 
-  widget->OnIMETextChange(aStart, aEnd, aNewEnd);
+  widget->NotifyIMEOfTextChange(aStart, aEnd, aNewEnd);
   return true;
 }
 

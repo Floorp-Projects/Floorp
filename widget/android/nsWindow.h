@@ -129,7 +129,9 @@ public:
                                       const InputContextAction& aAction);
     NS_IMETHOD_(InputContext) GetInputContext();
 
-    NS_IMETHOD OnIMETextChange(uint32_t aStart, uint32_t aOldEnd, uint32_t aNewEnd);
+    NS_IMETHOD NotifyIMEOfTextChange(uint32_t aStart,
+                                     uint32_t aOldEnd,
+                                     uint32_t aNewEnd) MOZ_OVERRIDE;
     virtual nsIMEUpdatePreference GetIMEUpdatePreference();
 
     LayerManager* GetLayerManager (PLayersChild* aShadowManager = nullptr,

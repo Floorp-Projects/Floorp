@@ -475,7 +475,9 @@ PuppetWidget::GetIMEUpdatePreference()
 }
 
 NS_IMETHODIMP
-PuppetWidget::OnIMETextChange(uint32_t aStart, uint32_t aEnd, uint32_t aNewEnd)
+PuppetWidget::NotifyIMEOfTextChange(uint32_t aStart,
+                                    uint32_t aEnd,
+                                    uint32_t aNewEnd)
 {
 #ifndef MOZ_CROSS_PROCESS_IME
   return NS_OK;
