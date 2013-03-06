@@ -705,9 +705,9 @@ class DtrOffImm : public DtrOff
 {
   public:
     DtrOffImm(int32_t imm)
-      : DtrOff(datastore::Imm12Data(mozilla::DeprecatedAbs(imm)), imm >= 0 ? IsUp : IsDown)
+      : DtrOff(datastore::Imm12Data(mozilla::Abs(imm)), imm >= 0 ? IsUp : IsDown)
     {
-        JS_ASSERT((imm < 4096) && (imm > -4096));
+        JS_ASSERT(mozilla::Abs(imm) < 4096);
     }
 };
 
@@ -790,8 +790,10 @@ class EDtrOffImm : public EDtrOff
 {
   public:
     EDtrOffImm(int32_t imm)
-      : EDtrOff(datastore::Imm8Data(mozilla::DeprecatedAbs(imm)), (imm >= 0) ? IsUp : IsDown)
-    { }
+      : EDtrOff(datastore::Imm8Data(mozilla::Abs(imm)), (imm >= 0) ? IsUp : IsDown)
+    {
+        JS_ASSERT(mozilla::Abs(imm) < 256);
+    }
 };
 
 // this is the most-derived class, since the extended data
@@ -838,8 +840,10 @@ class VFPOffImm : public VFPOff
 {
   public:
     VFPOffImm(int32_t imm)
-      : VFPOff(datastore::Imm8VFPOffData(mozilla::DeprecatedAbs(imm) >> 2), imm < 0 ? IsDown : IsUp)
-    { }
+      : VFPOff(datastore::Imm8VFPOffData(mozilla::Abs(imm) / 4), imm < 0 ? IsDown : IsUp)
+    {
+        JS_ASSERT(mozilla::Abs(imm) <= 255 * 4);
+    }
 };
 class VFPAddr
 {
