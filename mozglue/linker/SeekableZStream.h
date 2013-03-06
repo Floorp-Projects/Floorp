@@ -22,7 +22,8 @@ struct SeekableZStreamHeader: public Zip::SignedEntity<SeekableZStreamHeader>
 {
   SeekableZStreamHeader()
   : Zip::SignedEntity<SeekableZStreamHeader>(magic)
-  , totalSize(0), chunkSize(0), nChunks(0), lastChunkSize(0), windowBits(0) { }
+  , totalSize(0), chunkSize(0), nChunks(0), lastChunkSize(0), windowBits(0)
+  , filter(0) { }
 
   /* Reuse Zip::SignedEntity to handle the magic number used in the Seekable
    * ZStream file format. The magic number is "SeZz". */
@@ -43,8 +44,8 @@ struct SeekableZStreamHeader: public Zip::SignedEntity<SeekableZStreamHeader>
   /* windowBits value used when deflating */
   signed char windowBits;
 
-  /* Padding */
-  unsigned char unused;
+  /* Filter Id */
+  unsigned char filter;
 
   /* Maximum supported size for chunkSize */
   /* Can't use std::min here because it's not constexpr */
@@ -94,6 +95,28 @@ public:
     return offsetTable.numElements();
   }
 
+  /**
+   * Filters used to improve compression rate.
+   */
+  enum FilterDirection {
+    FILTER,
+    UNFILTER
+  };
+  typedef void (*ZStreamFilter)(off_t, FilterDirection,
+                                  unsigned char *, size_t);
+
+  enum FilterId {
+    NONE,
+    BCJ_THUMB,
+    BCJ_ARM,
+    FILTER_MAX
+  };
+  static ZStreamFilter GetFilter(FilterId id);
+
+  static ZStreamFilter GetFilter(uint16_t id) {
+    return GetFilter(static_cast<FilterId>(id));
+  }
+
 private:
   /* RAW Seekable SZtream buffer */
   const unsigned char *buffer;
@@ -112,6 +135,9 @@ private:
 
   /* Offsets table */
   Array<le_uint32> offsetTable;
+
+  /* Filter */
+  ZStreamFilter filter;
 };
 
 #endif /* SeekableZStream_h */

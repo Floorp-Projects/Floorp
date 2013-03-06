@@ -80,18 +80,31 @@ public:
           const char *outName, Buffer &outBuf);
 };
 
+
 class SzipCompress: public SzipAction
 {
 public:
   int run(const char *name, Buffer &origBuf,
           const char *outName, Buffer &outBuf);
 
-  SzipCompress(size_t aChunkSize)
+  SzipCompress(size_t aChunkSize, SeekableZStream::FilterId aFilter)
   : chunkSize(aChunkSize ? aChunkSize : 16384)
+  , filter(aFilter == SeekableZStream::FILTER_MAX ? DEFAULT_FILTER : aFilter)
   {}
 
 private:
+
+  const static SeekableZStream::FilterId DEFAULT_FILTER =
+#if defined(TARGET_THUMB)
+    SeekableZStream::BCJ_THUMB;
+#elif defined(TARGET_ARM)
+    SeekableZStream::BCJ_ARM;
+#else
+    SeekableZStream::NONE;
+#endif
+
   size_t chunkSize;
+  SeekableZStream::FilterId filter;
 };
 
 /* Decompress a seekable compressed stream */
@@ -153,6 +166,7 @@ int SzipCompress::run(const char *name, Buffer &origBuf,
   header->chunkSize = chunkSize;
   header->totalSize = offset;
   header->windowBits = -15; // Raw stream, window size of 32k.
+  header->filter = filter;
 
   /* Initialize zlib structure */
   z_stream zStream;
@@ -160,7 +174,29 @@ int SzipCompress::run(const char *name, Buffer &origBuf,
   zStream.avail_out = origSize - offset;
   zStream.next_out = static_cast<Bytef*>(outBuf) + offset;
 
-  Bytef *origData = static_cast<Bytef*>(origBuf);
+  /* Filter buffer */
+  SeekableZStream::ZStreamFilter filter =
+    SeekableZStream::GetFilter(header->filter);
+  Buffer filteredData;
+  Bytef *origData;
+  if (filter) {
+    filteredData.Resize(origSize);
+    origData = filteredData;
+    memcpy(origData, origBuf, origSize);
+    size_t size = origSize;
+    Bytef *data = origData;
+    size_t avail = 0;
+    /* Filter needs to be applied in chunks. */
+    while (size) {
+      avail = std::min(size, chunkSize);
+      filter(data - origData, SeekableZStream::FILTER, data, avail);
+      size -= avail;
+      data += avail;
+    }
+  } else {
+    origData = origBuf;
+  }
+
   size_t avail = 0;
   size_t size = origSize;
   while (size) {
@@ -233,6 +269,7 @@ int main(int argc, char* argv[])
   char **firstArg;
   bool compress = true;
   size_t chunkSize = 0;
+  SeekableZStream::FilterId filter = SeekableZStream::FILTER_MAX;
 
   for (firstArg = &argv[1]; argc > 3; argc--, firstArg++) {
     if (!firstArg[0] || firstArg[0][0] != '-')
@@ -250,17 +287,30 @@ int main(int argc, char* argv[])
         log("Invalid chunk size");
         return 1;
       }
+    } else if (strcmp(firstArg[0], "-f") == 0) {
+      firstArg++;
+      argc--;
+      if (!firstArg[0])
+        break;
+      if (strcmp(firstArg[0], "arm") == 0)
+        filter = SeekableZStream::BCJ_ARM;
+      else if (strcmp(firstArg[0], "thumb") == 0)
+        filter = SeekableZStream::BCJ_THUMB;
+      else {
+        log("Invalid filter");
+        return 1;
+      }
     }
   }
 
   if (argc != 3 || !firstArg[0] || !firstArg[1] ||
       (strcmp(firstArg[0], firstArg[1]) == 0)) {
-    log("usage: %s [-d] [-c CHUNKSIZE] in_file out_file", argv[0]);
+    log("usage: %s [-d] [-c CHUNKSIZE] [-f FILTER] in_file out_file", argv[0]);
     return 1;
   }
 
   if (compress) {
-    action = new SzipCompress(chunkSize);
+    action = new SzipCompress(chunkSize, filter);
   } else {
     if (chunkSize) {
       log("-c is incompatible with -d");
