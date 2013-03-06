@@ -49,47 +49,44 @@ private:
 
 static const size_t CHUNK = 16384;
 
-/* Generate a seekable compressed stream. */
-
-int main(int argc, char* argv[])
+/* Decompress a seekable compressed stream */
+int do_decompress(const char *name, FileBuffer &origBuf,
+                  const char *outName, FileBuffer &outBuf)
 {
-  if (argc != 3 || !argv[1] || !argv[2] || (strcmp(argv[1], argv[2]) == 0)) {
-    log("usage: %s file_to_compress out_file", argv[0]);
+  size_t origSize = origBuf.GetLength();
+  if (origSize < sizeof(SeekableZStreamHeader)) {
+    log("%s is not a seekable zstream", name);
     return 1;
   }
 
-  FileBuffer origBuf;
-  if (!origBuf.Init(argv[1])) {
-    log("Couldn't open %s: %s", argv[1], strerror(errno));
+  SeekableZStream zstream;
+  if (!zstream.Init(origBuf, origSize))
+    return 1;
+
+  size_t size = zstream.GetUncompressedSize();
+
+  /* Give enough room for the uncompressed data */
+  if (!outBuf.Resize(size)) {
+    log("Error resizing %s: %s", outName, strerror(errno));
     return 1;
   }
 
-  struct stat st;
-  int ret = fstat(origBuf.getFd(), &st);
-  if (ret == -1) {
-    log("Couldn't stat %s: %s", argv[1], strerror(errno));
+  if (!zstream.Decompress(outBuf, 0, size))
     return 1;
-  }
 
-  size_t origSize = st.st_size;
-  log("Size = %lu", origSize);
+  return 0;
+}
+
+/* Generate a seekable compressed stream. */
+int do_compress(const char *name, FileBuffer &origBuf,
+                const char *outName, FileBuffer &outBuf)
+{
+  size_t origSize = origBuf.GetLength();
   if (origSize == 0) {
-    log("Won't compress %s: it's empty", argv[1]);
+    log("Won't compress %s: it's empty", name);
     return 1;
   }
-
-  /* Mmap the original file */
-  if (!origBuf.Resize(origSize)) {
-    log("Couldn't mmap %s: %s", argv[1], strerror(errno));
-    return 1;
-  }
-
-  /* Create the compressed file */
-  FileBuffer outBuf;
-  if (!outBuf.Init(argv[2], true)) {
-    log("Couldn't open %s: %s", argv[2], strerror(errno));
-    return 1;
-  }
+  log("Size = %" PRIuSize, origSize);
 
   /* Expected total number of chunks */
   size_t nChunks = ((origSize + CHUNK - 1) / CHUNK);
@@ -100,7 +97,7 @@ int main(int argc, char* argv[])
 
   /* Give enough room for the header and the offset table, and map them */
   if (!outBuf.Resize(origSize)) {
-    log("Couldn't mmap %s: %s", argv[2], strerror(errno));
+    log("Couldn't mmap %s: %s", outName, strerror(errno));
     return 1;
   }
 
@@ -124,7 +121,7 @@ int main(int argc, char* argv[])
     avail = std::min(size, CHUNK);
 
     /* Compress chunk */
-    ret = deflateInit(&zStream, 9);
+    int ret = deflateInit(&zStream, 9);
     MOZ_ASSERT(ret == Z_OK);
     zStream.avail_in = avail;
     zStream.next_in = origData;
@@ -148,12 +145,61 @@ int main(int argc, char* argv[])
   }
   header->lastChunkSize = avail;
   if (!outBuf.Resize(offset)) {
-    log("Error resizing %s: %s", argv[2], strerror(errno));
+    log("Error resizing %s: %s", outName, strerror(errno));
     return 1;
   }
 
   MOZ_ASSERT(header->nChunks == nChunks);
-  log("Compressed size is %lu", offset);
+  log("Compressed size is %" PRIuSize, offset);
 
   return 0;
+}
+
+int main(int argc, char* argv[])
+{
+  int (*func)(const char *, FileBuffer &,
+              const char *, FileBuffer &) = do_compress;
+  char **firstArg = &argv[1];
+
+  if ((argc > 1) && strcmp(argv[1], "-d") == 0) {
+    func = do_decompress;
+    firstArg++;
+    argc--;
+  }
+
+  if (argc != 3 || !firstArg[0] || !firstArg[1] ||
+      (strcmp(firstArg[0], firstArg[1]) == 0)) {
+    log("usage: %s [-d] in_file out_file", argv[0]);
+    return 1;
+  }
+
+  FileBuffer origBuf;
+  if (!origBuf.Init(firstArg[0])) {
+    log("Couldn't open %s: %s", firstArg[0], strerror(errno));
+    return 1;
+  }
+
+  struct stat st;
+  int ret = fstat(origBuf.getFd(), &st);
+  if (ret == -1) {
+    log("Couldn't stat %s: %s", firstArg[0], strerror(errno));
+    return 1;
+  }
+
+  size_t origSize = st.st_size;
+
+  /* Mmap the original file */
+  if (!origBuf.Resize(origSize)) {
+    log("Couldn't mmap %s: %s", firstArg[0], strerror(errno));
+    return 1;
+  }
+
+  /* Create the compressed file */
+  FileBuffer outBuf;
+  if (!outBuf.Init(firstArg[1], true)) {
+    log("Couldn't open %s: %s", firstArg[1], strerror(errno));
+    return 1;
+  }
+
+  return func(firstArg[0], origBuf, firstArg[1], outBuf);
 }
