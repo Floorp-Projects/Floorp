@@ -1,5 +1,8 @@
 # mozilla/autoload.py: Autoload SpiderMonkey pretty-printers.
 
+print "Loading JavaScript value pretty-printers; see js/src/gdb/README."
+print "If they cause trouble, type: disable pretty-printer .* SpiderMonkey"
+
 import gdb.printing
 import mozilla.prettyprinters
 

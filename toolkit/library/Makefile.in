@@ -649,6 +649,17 @@ ifdef MOZ_GSTREAMER
 EXTRA_DSO_LDOPTS += $(GSTREAMER_LIBS)
 endif
 
+# Generate GDB pretty printer-autoload files only on Linux. OSX's GDB is
+# too old to support Python pretty-printers; if this changes, we could make
+# this 'ifdef GNU_CC'.
+ifeq (Linux,$(OS_ARCH))
+# Create a GDB Python auto-load file alongside the libxul shared library in
+# the build directory.
+PP_TARGETS += LIBXUL_AUTOLOAD
+LIBXUL_AUTOLOAD = libxul.so-gdb.py.in
+LIBXUL_AUTOLOAD_FLAGS := -Dtopsrcdir=$(abspath $(topsrcdir))
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 export:: $(RDF_UTIL_SRC_CPPSRCS) $(INTL_UNICHARUTIL_UTIL_CPPSRCS)
