@@ -167,8 +167,6 @@ GQI_SRCS = contentbase.gqi
 FORCE_STATIC_LIB = 1
 
 EXTRA_COMPONENTS = \
-		$(srcdir)/nsBadCertHandler.js \
-		nsBadCertHandler.manifest \
 		contentSecurityPolicy.manifest \
 		contentAreaDropListener.js \
 		contentAreaDropListener.manifest \
