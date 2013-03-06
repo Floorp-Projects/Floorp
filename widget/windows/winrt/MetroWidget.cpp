@@ -1183,9 +1183,9 @@ MetroWidget::GetToggledKeyState(uint32_t aKeyCode, bool* aLEDState)
 }
 
 NS_IMETHODIMP
-MetroWidget::OnIMETextChange(uint32_t aStart,
-                             uint32_t aOldEnd,
-                             uint32_t aNewEnd)
+MetroWidget::NotifyIMEOfTextChange(uint32_t aStart,
+                                   uint32_t aOldEnd,
+                                   uint32_t aNewEnd)
 {
   return nsTextStore::OnTextChange(aStart, aOldEnd, aNewEnd);
 }

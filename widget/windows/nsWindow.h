@@ -175,7 +175,9 @@ public:
   virtual nsTransparencyMode GetTransparencyMode();
   virtual void            UpdateOpaqueRegion(const nsIntRegion& aOpaqueRegion);
 #endif // MOZ_XUL
-  NS_IMETHOD              OnIMETextChange(uint32_t aStart, uint32_t aOldEnd, uint32_t aNewEnd);
+  NS_IMETHOD              NotifyIMEOfTextChange(uint32_t aStart,
+                                                uint32_t aOldEnd,
+                                                uint32_t aNewEnd) MOZ_OVERRIDE;
   virtual nsIMEUpdatePreference GetIMEUpdatePreference();
   NS_IMETHOD              GetNonClientMargins(nsIntMargin &margins);
   NS_IMETHOD              SetNonClientMargins(nsIntMargin &margins);

@@ -92,8 +92,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0xAD5FEF46, 0x7200, 0x417C, \
-    { 0xA9, 0x1C, 0xAB, 0x30, 0x1C, 0x86, 0xE4, 0x6F } }
+  { 0x48568C1E, 0xAF56, 0x4F73, \
+    { 0x94, 0x6D, 0xAA, 0x43, 0xD8, 0x96, 0x78, 0x6B } }
 
 /*
  * Window shadow styles
@@ -188,12 +188,12 @@ enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
  * Preference for receiving IME updates
  *
  * If mWantUpdates is true, nsTextStateManager will observe text change and
- * selection change and call nsIWidget::OnIMETextChange() and
+ * selection change and call nsIWidget::NotifyIMEOfTextChange() and
  * nsIWidget::NotifyIME(NOTIFY_IME_OF_SELECTION_CHANGE). The observing cost is
  * very expensive.
  * If the IME implementation on a particular platform doesn't care about
- * OnIMETextChange and NotifyIME(NOTIFY_IME_OF_SELECTION_CHANGE), they should
- * set mWantUpdates to false to avoid the cost.
+ * NotifyIMEOfTextChange and NotifyIME(NOTIFY_IME_OF_SELECTION_CHANGE), they
+ * should set mWantUpdates to false to avoid the cost.
  *
  * If mWantHints is true, PuppetWidget will forward the content of text fields
  * to the chrome process to be cached. This way we return the cached content
@@ -1526,9 +1526,9 @@ class nsIWidget : public nsISupports {
      * aOldEnd is the ending offset of the change
      * aNewEnd is the caret offset after the change
      */
-    NS_IMETHOD OnIMETextChange(uint32_t aStart,
-                               uint32_t aOldEnd,
-                               uint32_t aNewEnd) = 0;
+    NS_IMETHOD NotifyIMEOfTextChange(uint32_t aStart,
+                                     uint32_t aOldEnd,
+                                     uint32_t aNewEnd) = 0;
 
     /*
      * Retrieves preference for IME updates

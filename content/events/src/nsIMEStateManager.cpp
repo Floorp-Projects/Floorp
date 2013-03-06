@@ -874,7 +874,7 @@ public:
 
   NS_IMETHOD Run() {
     if (mDispatcher->mWidget) {
-      mDispatcher->mWidget->OnIMETextChange(mStart, mOldEnd, mNewEnd);
+      mDispatcher->mWidget->NotifyIMEOfTextChange(mStart, mOldEnd, mNewEnd);
     }
     return NS_OK;
   }
