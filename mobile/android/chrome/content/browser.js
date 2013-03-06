@@ -5622,32 +5622,30 @@ var PopupBlockerObserver = {
 
         let strings = Strings.browser;
         if (popupCount > 1)
-          message = strings.formatStringFromName("popup.warningMultiple", [brandShortName, popupCount], 2);
+          message = strings.formatStringFromName("popupWarningMultiple", [brandShortName, popupCount], 2);
         else
-          message = strings.formatStringFromName("popup.warning", [brandShortName], 1);
+          message = strings.formatStringFromName("popupWarning", [brandShortName], 1);
 
         let buttons = [
           {
-            label: strings.GetStringFromName("popup.show"),
-            callback: function(aChecked) {
+            label: strings.GetStringFromName("popupButtonAllowOnce"),
+            callback: function() { PopupBlockerObserver.showPopupsForSite(); }
+          },
+          {
+            label: strings.GetStringFromName("popupButtonAlwaysAllow2"),
+            callback: function() {
               // Set permission before opening popup windows
-              if (aChecked)
-                PopupBlockerObserver.allowPopupsForSite(true);
-
+              PopupBlockerObserver.allowPopupsForSite(true);
               PopupBlockerObserver.showPopupsForSite();
             }
           },
           {
-            label: strings.GetStringFromName("popup.dontShow"),
-            callback: function(aChecked) {
-              if (aChecked)
-                PopupBlockerObserver.allowPopupsForSite(false);
-            }
+            label: strings.GetStringFromName("popupButtonNeverWarn2"),
+            callback: function() { PopupBlockerObserver.allowPopupsForSite(false); }
           }
         ];
 
-        let options = { checkbox: Strings.browser.GetStringFromName("popup.dontAskAgain") };
-        NativeWindow.doorhanger.show(message, "popup-blocked", buttons, null, options);
+        NativeWindow.doorhanger.show(message, "popup-blocked", buttons);
       }
       // Record the fact that we've reported this blocked popup, so we don't
       // show it again.
@@ -6413,8 +6411,8 @@ var PermissionsHelper = {
     },
     "popup": {
       label: "blockPopups.label",
-      allowed: "popup.show",
-      denied: "popup.dontShow"
+      allowed: "popupButtonAlwaysAllow2",
+      denied: "popupButtonNeverWarn2"
     },
     "indexedDB": {
       label: "offlineApps.storeOfflineData",
