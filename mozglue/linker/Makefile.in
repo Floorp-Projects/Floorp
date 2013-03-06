@@ -22,6 +22,7 @@ HOST_PROGRAM = szip
 
 HOST_CPPSRCS = \
   szip.cpp \
+  SeekableZStream.cpp \
   $(NULL)
 
 HOST_LIBS = -lz
