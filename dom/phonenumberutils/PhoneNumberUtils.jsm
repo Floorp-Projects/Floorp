@@ -16,9 +16,9 @@ Cu.import("resource://gre/modules/PhoneNumber.jsm");
 Cu.import("resource://gre/modules/mcc_iso3166_table.jsm");
 
 #ifdef MOZ_B2G_RIL
-XPCOMUtils.defineLazyServiceGetter(this, "ril",
+XPCOMUtils.defineLazyServiceGetter(this, "mobileConnection",
                                    "@mozilla.org/ril/content-helper;1",
-                                   "nsIRILContentHelper");
+                                   "nsIMobileConnectionProvider");
 #endif
 
 this.PhoneNumberUtils = {
@@ -36,18 +36,19 @@ this.PhoneNumberUtils = {
 
 #ifdef MOZ_B2G_RIL
     // Get network mcc
-    if (ril.voiceConnectionInfo && ril.voiceConnectionInfo.network) {
-      mcc = ril.voiceConnectionInfo.network.mcc;
+    if (mobileConnection.voiceConnectionInfo &&
+        mobileConnection.voiceConnectionInfo.network) {
+      mcc = mobileConnection.voiceConnectionInfo.network.mcc;
     }
 
     // Get SIM mcc
     if (!mcc) {
-      mcc = ril.iccInfo.mcc;
+      mcc = mobileConnection.iccInfo.mcc;
     }
 
     // Get previous mcc
-    if (!mcc && ril.voiceConnectionInfo) {
-      mcc = ril.voiceConnectionInfo.lastKnownMcc;
+    if (!mcc && mobileConnection.voiceConnectionInfo) {
+      mcc = mobileConnection.voiceConnectionInfo.lastKnownMcc;
     }
 
     // Set to default mcc
