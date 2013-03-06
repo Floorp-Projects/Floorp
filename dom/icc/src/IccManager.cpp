@@ -158,6 +158,16 @@ IccManager::IccCloseChannel(int32_t aChannel, nsIDOMDOMRequest** aRequest)
 }
 
 NS_IMETHODIMP
+IccManager::ReadContacts(const nsAString& aContactType, nsIDOMDOMRequest** aRequest)
+{
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->ReadContacts(GetOwner(), aContactType, aRequest);
+}
+
+NS_IMETHODIMP
 IccManager::UpdateContact(const nsAString& aContactType,
                           nsIDOMContact* aContact,
                           const nsAString& aPin2,
