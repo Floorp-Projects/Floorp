@@ -11,8 +11,8 @@
 
 BEGIN_TEST(testArrayBuffer_bug720949_steal)
 {
-    js::RootedObject buf_len1(cx), buf_len200(cx);
-    js::RootedObject tarray_len1(cx), tarray_len200(cx);
+    JS::RootedObject buf_len1(cx), buf_len200(cx);
+    JS::RootedObject tarray_len1(cx), tarray_len200(cx);
 
     uint32_t sizes[NUM_TEST_BUFFERS] = { sizeof(uint32_t), 200 * sizeof(uint32_t) };
     JS::HandleObject testBuf[NUM_TEST_BUFFERS] = { buf_len1, buf_len200 };
@@ -33,7 +33,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         JS::HandleObject obj = testBuf[i];
         JS::HandleObject view = testArray[i];
         uint32_t size = sizes[i];
-        js::RootedValue v(cx);
+        JS::RootedValue v(cx);
 
         // Byte lengths should all agree
         CHECK(JS_IsArrayBufferObject(obj));
@@ -72,11 +72,11 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         CHECK_SAME(v, JSVAL_VOID);
 
         // Transfer to a new ArrayBuffer
-        js::RootedObject dst(cx, JS_NewArrayBufferWithContents(cx, contents));
+        JS::RootedObject dst(cx, JS_NewArrayBufferWithContents(cx, contents));
         CHECK(JS_IsArrayBufferObject(dst));
         data = JS_GetArrayBufferData(obj);
 
-        js::RootedObject dstview(cx, JS_NewInt32ArrayWithBuffer(cx, dst, 0, -1));
+        JS::RootedObject dstview(cx, JS_NewInt32ArrayWithBuffer(cx, dst, 0, -1));
         CHECK(dstview != NULL);
 
         CHECK_EQUAL(JS_GetArrayBufferByteLength(dst), size);
@@ -100,7 +100,7 @@ static void GC(JSContext *cx)
 // Varying number of views of a buffer, to test the neutering weak pointers
 BEGIN_TEST(testArrayBuffer_bug720949_viewList)
 {
-    js::RootedObject buffer(cx);
+    JS::RootedObject buffer(cx);
 
     // No views
     buffer = JS_NewArrayBuffer(cx, 2000);
@@ -110,7 +110,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_viewList)
     // One view.
     {
         buffer = JS_NewArrayBuffer(cx, 2000);
-        js::RootedObject view(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, -1));
+        JS::RootedObject view(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, -1));
         void *contents;
         uint8_t *data;
         CHECK(JS_StealArrayBufferContents(cx, buffer, &contents, &data));
@@ -130,8 +130,8 @@ BEGIN_TEST(testArrayBuffer_bug720949_viewList)
     {
         buffer = JS_NewArrayBuffer(cx, 2000);
 
-        js::RootedObject view1(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, -1));
-        js::RootedObject view2(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 1, 200));
+        JS::RootedObject view1(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, -1));
+        JS::RootedObject view2(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 1, 200));
 
         // Remove, re-add a view
         view2 = NULL;
@@ -162,7 +162,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_viewList)
 }
 
 bool isNeutered(JS::HandleObject obj) {
-    js::RootedValue v(cx);
+    JS::RootedValue v(cx);
     return JS_GetProperty(cx, obj, "byteLength", v.address()) && v.toInt32() == 0;
 }
 
