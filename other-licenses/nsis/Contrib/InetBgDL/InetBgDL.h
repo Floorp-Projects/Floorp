@@ -21,13 +21,20 @@
 
 #if defined(_DEBUG) || 0
 #  define PLUGIN_DEBUG 1
-#  define TRACE2(fmt,p1,p2) do {TCHAR b[666];wsprintf(b,fmt,p1,p2);OutputDebugString(b);}while(0)
-#  define TRACEA OutputDebugStringA
+void MYTRACE(LPCTSTR fmt, ...)
+{
+  va_list argptr;
+  va_start(argptr, fmt);
+  TCHAR buffer[2048] = { _T('\0') };
+  wvsprintf(buffer, fmt, argptr);
+  buffer[(sizeof(buffer)/sizeof(*buffer)) - 1] = _T('\0');
+  OutputDebugString(buffer);
+  va_end(argptr);
+}
 #else
-#  define TRACE2(fmt,p1,p2)
-#  define TRACEA(fmt)
+void MYTRACE(...) { }
 #endif
-#define TRACE1(fmt,p1) TRACE2(fmt,p1,0)
+#  define TRACE MYTRACE
 
 #ifndef ASSERT
 #  define ASSERT(x)
