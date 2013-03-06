@@ -139,7 +139,7 @@ if (!isWindows) {
 
 if (!isWindows && !isOSXMtnLion) {
   tests.push([ 'bug106855-1.html' , 'bug106855-1-ref.html' ]); // bug 682837
-  tests.push([ 'bug106855-2.html' , 'bug106855-1-ref.html' ]); // bug 681138
+  tests.push([ 'bug106855-2.html' , 'bug106855-1-ref.html?' ]); // bug 681138
 }
 
 tests.push(function() {SpecialPowers.setBoolPref("bidi.browser.ui", true);});
