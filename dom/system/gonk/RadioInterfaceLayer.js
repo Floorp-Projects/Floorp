@@ -41,7 +41,7 @@ const RILNETWORKINTERFACE_CID =
   Components.ID("{3bdd52a9-3965-4130-b569-0ac5afed045e}");
 
 const nsIAudioManager = Ci.nsIAudioManager;
-const nsIRadioInterfaceLayer = Ci.nsIRadioInterfaceLayer;
+const nsITelephonyProvider = Ci.nsITelephonyProvider;
 
 const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
 const kSmsReceivedObserverTopic          = "sms-received";
@@ -164,18 +164,18 @@ XPCOMUtils.defineLazyGetter(this, "PhoneNumberUtils", function () {
 function convertRILCallState(state) {
   switch (state) {
     case RIL.CALL_STATE_ACTIVE:
-      return nsIRadioInterfaceLayer.CALL_STATE_CONNECTED;
+      return nsITelephonyProvider.CALL_STATE_CONNECTED;
     case RIL.CALL_STATE_HOLDING:
-      return nsIRadioInterfaceLayer.CALL_STATE_HELD;
+      return nsITelephonyProvider.CALL_STATE_HELD;
     case RIL.CALL_STATE_DIALING:
-      return nsIRadioInterfaceLayer.CALL_STATE_DIALING;
+      return nsITelephonyProvider.CALL_STATE_DIALING;
     case RIL.CALL_STATE_ALERTING:
-      return nsIRadioInterfaceLayer.CALL_STATE_ALERTING;
+      return nsITelephonyProvider.CALL_STATE_ALERTING;
     case RIL.CALL_STATE_INCOMING:
     case RIL.CALL_STATE_WAITING:
-      return nsIRadioInterfaceLayer.CALL_STATE_INCOMING;
+      return nsITelephonyProvider.CALL_STATE_INCOMING;
     case RIL.CALL_STATE_BUSY:
-      return nsIRadioInterfaceLayer.CALL_STATE_BUSY;
+      return nsITelephonyProvider.CALL_STATE_BUSY;
     default:
       throw new Error("Unknown rilCallState: " + state);
   }
@@ -1267,9 +1267,9 @@ RadioInterfaceLayer.prototype = {
   _activeCall: null,
   updateCallAudioState: function updateCallAudioState(call) {
     switch (call.state) {
-      case nsIRadioInterfaceLayer.CALL_STATE_DIALING: // Fall through...
-      case nsIRadioInterfaceLayer.CALL_STATE_ALERTING:
-      case nsIRadioInterfaceLayer.CALL_STATE_CONNECTED:
+      case nsITelephonyProvider.CALL_STATE_DIALING: // Fall through...
+      case nsITelephonyProvider.CALL_STATE_ALERTING:
+      case nsITelephonyProvider.CALL_STATE_CONNECTED:
         call.isActive = true;
         this._activeCall = call;
         gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_IN_CALL;
@@ -1280,7 +1280,7 @@ RadioInterfaceLayer.prototype = {
         debug("Active call, put audio system into PHONE_STATE_IN_CALL: "
               + gAudioManager.phoneState);
         break;
-      case nsIRadioInterfaceLayer.CALL_STATE_INCOMING:
+      case nsITelephonyProvider.CALL_STATE_INCOMING:
         call.isActive = false;
         if (!this._activeCall) {
           // We can change the phone state into RINGTONE only when there's
@@ -1290,8 +1290,8 @@ RadioInterfaceLayer.prototype = {
                 + gAudioManager.phoneState);
         }
         break;
-      case nsIRadioInterfaceLayer.CALL_STATE_HELD: // Fall through...
-      case nsIRadioInterfaceLayer.CALL_STATE_DISCONNECTED:
+      case nsITelephonyProvider.CALL_STATE_HELD: // Fall through...
+      case nsITelephonyProvider.CALL_STATE_DISCONNECTED:
         call.isActive = false;
         if (this._activeCall &&
             this._activeCall.callIndex == call.callIndex) {
@@ -1350,7 +1350,7 @@ RadioInterfaceLayer.prototype = {
     debug("handleCallStateChange: " + JSON.stringify(call));
     call.state = convertRILCallState(call.state);
 
-    if (call.state == nsIRadioInterfaceLayer.CALL_STATE_DIALING) {
+    if (call.state == nsITelephonyProvider.CALL_STATE_DIALING) {
       gSystemMessenger.broadcastMessage("telephony-new-call", {});
     }
     this.updateCallAudioState(call);
@@ -1362,7 +1362,7 @@ RadioInterfaceLayer.prototype = {
    */
   handleCallDisconnected: function handleCallDisconnected(call) {
     debug("handleCallDisconnected: " + JSON.stringify(call));
-    call.state = nsIRadioInterfaceLayer.CALL_STATE_DISCONNECTED;
+    call.state = nsITelephonyProvider.CALL_STATE_DISCONNECTED;
     let duration = ("started" in call && typeof call.started == "number") ?
       new Date().getTime() - call.started : 0;
     let data = {

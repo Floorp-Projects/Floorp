@@ -59,7 +59,7 @@ CPPSRCS += \
   $(NULL)
 
 ifdef MOZ_B2G_RIL
-CPPSRCS += BluetoothRilListener.cpp
+CPPSRCS += BluetoothTelephonyListener.cpp
 endif
 
 XPIDLSRCS = \
