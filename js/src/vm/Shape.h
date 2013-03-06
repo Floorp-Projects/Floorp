@@ -1054,8 +1054,6 @@ namespace js {
 inline RawShape
 Shape::search(JSContext *cx, Shape *start, jsid id, Shape ***pspp, bool adding)
 {
-    AutoAssertNoGC nogc;
-
     if (start->inDictionary()) {
         *pspp = start->table().search(id, adding);
         return SHAPE_FETCH(*pspp);

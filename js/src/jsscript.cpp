@@ -2260,7 +2260,6 @@ js_GetScriptLineExtent(RawScript script)
 unsigned
 js::CurrentLine(JSContext *cx)
 {
-    AutoAssertNoGC nogc;
     return PCToLineNumber(cx->fp()->script(), cx->regs().pc);
 }
 
@@ -2268,7 +2267,6 @@ void
 js::CurrentScriptFileLineOriginSlow(JSContext *cx, const char **file, unsigned *linenop,
                                     JSPrincipals **origin)
 {
-    AutoAssertNoGC nogc;
     NonBuiltinScriptFrameIter iter(cx);
 
     if (iter.done()) {
@@ -2390,7 +2388,6 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
         js_free(data);
         return NULL;
     }
-    AutoAssertNoGC nogc;
 
     dst->bindings = bindings;
 

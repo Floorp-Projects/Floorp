@@ -124,7 +124,6 @@ ComputeThis(JSContext *cx, AbstractFramePtr frame)
 static inline bool
 IsOptimizedArguments(AbstractFramePtr frame, Value *vp)
 {
-    AutoAssertNoGC nogc;
     if (vp->isMagic(JS_OPTIMIZED_ARGUMENTS) && frame.script()->needsArgsObj())
         *vp = ObjectValue(frame.argsObj());
     return vp->isMagic(JS_OPTIMIZED_ARGUMENTS);
