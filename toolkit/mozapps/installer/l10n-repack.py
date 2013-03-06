@@ -23,6 +23,7 @@ NON_CHROME = set([
     'update.locale',
     'extensions/langpack-*@*',
     'distribution/extensions/langpack-*@*',
+    'chrome/**/searchplugins/*.xml',
 ])
 
 
