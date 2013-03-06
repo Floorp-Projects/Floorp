@@ -979,7 +979,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // make sure our kids fit too.
   if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE &&
       aReflowState.ComputedHeight() != NS_AUTOHEIGHT &&
-      ApplyOverflowClipping(this, aReflowState.mStyleDisplay)) {
+      ShouldApplyOverflowClipping(this, aReflowState.mStyleDisplay)) {
     nsMargin heightExtras = aReflowState.mComputedBorderPadding;
     if (GetSkipSides() & NS_SIDE_TOP) {
       heightExtras.top = 0;
@@ -1502,7 +1502,7 @@ nsBlockFrame::ComputeOverflowAreas(const nsRect&         aBounds,
   // XXX_perf: This can be done incrementally.  It is currently one of
   // the things that makes incremental reflow O(N^2).
   nsOverflowAreas areas(aBounds, aBounds);
-  if (!ApplyOverflowClipping(this, aDisplay)) {
+  if (!ShouldApplyOverflowClipping(this, aDisplay)) {
     for (line_iterator line = begin_lines(), line_end = end_lines();
          line != line_end;
          ++line) {
