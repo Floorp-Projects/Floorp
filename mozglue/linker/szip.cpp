@@ -14,7 +14,23 @@
 #include "Utils.h"
 #include "Logging.h"
 
-class FileBuffer: public MappedPtr
+class Buffer: public MappedPtr
+{
+public:
+  virtual bool Resize(size_t size)
+  {
+    void *buf = mmap(NULL, size, PROT_READ | PROT_WRITE,
+                     MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (buf == MAP_FAILED)
+      return false;
+    if (*this != MAP_FAILED)
+      memcpy(buf, *this, std::min(size, GetLength()));
+    Assign(buf, size);
+    return true;
+  }
+};
+
+class FileBuffer: public Buffer
 {
 public:
   bool Init(const char *name, bool writable_ = false)
@@ -26,7 +42,7 @@ public:
     return true;
   }
 
-  bool Resize(size_t size)
+  virtual bool Resize(size_t size)
   {
     if (writable) {
       if (ftruncate(fd, size) == -1)
@@ -50,8 +66,8 @@ private:
 static const size_t CHUNK = 16384;
 
 /* Decompress a seekable compressed stream */
-int do_decompress(const char *name, FileBuffer &origBuf,
-                  const char *outName, FileBuffer &outBuf)
+int do_decompress(const char *name, Buffer &origBuf,
+                  const char *outName, Buffer &outBuf)
 {
   size_t origSize = origBuf.GetLength();
   if (origSize < sizeof(SeekableZStreamHeader)) {
@@ -78,8 +94,8 @@ int do_decompress(const char *name, FileBuffer &origBuf,
 }
 
 /* Generate a seekable compressed stream. */
-int do_compress(const char *name, FileBuffer &origBuf,
-                const char *outName, FileBuffer &outBuf)
+int do_compress(const char *name, Buffer &origBuf,
+                const char *outName, Buffer &outBuf)
 {
   size_t origSize = origBuf.GetLength();
   if (origSize == 0) {
@@ -152,13 +168,27 @@ int do_compress(const char *name, FileBuffer &origBuf,
   MOZ_ASSERT(header->nChunks == nChunks);
   log("Compressed size is %" PRIuSize, offset);
 
+  /* Sanity check */
+  Buffer tmpBuf;
+  if (do_decompress("buffer", outBuf, "buffer", tmpBuf))
+    return 1;
+
+  size = tmpBuf.GetLength();
+  if (size != origSize) {
+    log("Compression error: %" PRIuSize " != %" PRIuSize, size, origSize);
+    return 1;
+  }
+  if (memcmp(static_cast<void *>(origBuf), static_cast<void *>(tmpBuf), size)) {
+    log("Compression error: content mismatch");
+    return 1;
+  }
+
   return 0;
 }
 
 int main(int argc, char* argv[])
 {
-  int (*func)(const char *, FileBuffer &,
-              const char *, FileBuffer &) = do_compress;
+  int (*func)(const char *, Buffer &, const char *, Buffer &) = do_compress;
   char **firstArg = &argv[1];
 
   if ((argc > 1) && strcmp(argv[1], "-d") == 0) {
