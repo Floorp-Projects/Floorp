@@ -198,7 +198,7 @@ fsm_init_cac_failure_timer(cac_data_t *cac_data, uint32_t timeout)
 
     cac_data->cac_fail_timer =
         cprCreateTimer("CAC failure timer", GSM_CAC_FAILURE_TIMER, TIMER_EXPIRATION,
-                       gsm_msg_queue);
+                       gsm_msgq);
 
     if (cac_data->cac_fail_timer == NULL) {
         CAC_ERROR(CAC_F_PREFIX"CAC Timer allocation failed.\n",
