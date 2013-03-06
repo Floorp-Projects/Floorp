@@ -46,7 +46,12 @@ const FAKE_SERVER_PORT = 4445;
 const FAKE_BASE = "http://localhost:" + FAKE_SERVER_PORT;
 
 const TEST_SOURCE_URI = NetUtil.newURI(HTTP_BASE + "/source.txt");
+const TEST_EMPTY_URI = NetUtil.newURI(HTTP_BASE + "/empty.txt");
 const TEST_FAKE_SOURCE_URI = NetUtil.newURI(FAKE_BASE + "/source.txt");
+
+const TEST_EMPTY_NOPROGRESS_PATH = "/empty-noprogress.txt";
+const TEST_EMPTY_NOPROGRESS_URI = NetUtil.newURI(HTTP_BASE +
+                                                 TEST_EMPTY_NOPROGRESS_PATH);
 
 const TEST_INTERRUPTIBLE_PATH = "/interruptible.txt";
 const TEST_INTERRUPTIBLE_URI = NetUtil.newURI(HTTP_BASE +
@@ -88,6 +93,39 @@ function getTempFile(aLeafName)
   do_register_cleanup(GTF_removeFile);
 
   return file;
+}
+
+/**
+ * Waits for pending events to be processed.
+ *
+ * @return {Promise}
+ * @resolves When pending events have been processed.
+ * @rejects Never.
+ */
+function promiseExecuteSoon()
+{
+  let deferred = Promise.defer();
+  do_execute_soon(deferred.resolve);
+  return deferred.promise;
+}
+
+/**
+ * Creates a new Download object, using TEST_TARGET_FILE_NAME as the target.
+ * The target is deleted by getTempFile when this function is called.
+ *
+ * @param aSourceURI
+ *        The nsIURI for the download source, or null to use TEST_SOURCE_URI.
+ *
+ * @return {Promise}
+ * @resolves The newly created Download object.
+ * @rejects JavaScript exception.
+ */
+function promiseSimpleDownload(aSourceURI) {
+  return Downloads.createDownload({
+    source: { uri: aSourceURI || TEST_SOURCE_URI },
+    target: { file: getTempFile(TEST_TARGET_FILE_NAME) },
+    saver: { type: "copy" },
+  });
 }
 
 /**
@@ -143,8 +181,15 @@ function startFakeServer()
  * This function allows testing events or actions that need to happen in the
  * middle of a download.
  *
- * Calling this function registers a new request handler in the internal HTTP
- * server, accessible at the TEST_INTERRUPTIBLE_URI address.  The HTTP handler
+ * Normally, the internal HTTP server returns all the available data as soon as
+ * a request is received.  In order for some requests to be served one part at a
+ * time, special interruptible handlers are registered on the HTTP server.
+ *
+ * Before making a request to one of the addresses served by the interruptible
+ * handlers, you may call "deferNextResponse" to get a reference to an object
+ * that allows you to control the next request.
+ *
+ * For example, the handler accessible at the TEST_INTERRUPTIBLE_URI address
  * returns the TEST_DATA_SHORT text, then waits until the "resolve" method is
  * called on the object returned by the function.  At this point, the handler
  * sends the TEST_DATA_SHORT text again to complete the response.
@@ -153,32 +198,85 @@ function startFakeServer()
  * response midway.  Because of how the network layer is implemented, this does
  * not cause the socket to return an error.
  *
- * The handler is unregistered when the response finishes or is interrupted.
- *
  * @returns Deferred object used to control the response.
  */
-function startInterruptibleResponseHandler()
+function deferNextResponse()
 {
-  let deferResponse = Promise.defer();
-  gHttpServer.registerPathHandler(TEST_INTERRUPTIBLE_PATH,
-    function (aRequest, aResponse)
-    {
-      aResponse.processAsync();
-      aResponse.setHeader("Content-Type", "text/plain", false);
-      aResponse.setHeader("Content-Length", "" + (TEST_DATA_SHORT.length * 2),
-                          false);
-      aResponse.write(TEST_DATA_SHORT);
+  do_print("Interruptible request will be controlled.");
 
-      deferResponse.promise.then(function SIRH_onSuccess() {
-        aResponse.write(TEST_DATA_SHORT);
-        aResponse.finish();
-        gHttpServer.registerPathHandler(TEST_INTERRUPTIBLE_PATH, null);
-      }, function SIRH_onFailure() {
-        aResponse.abort();
-        gHttpServer.registerPathHandler(TEST_INTERRUPTIBLE_PATH, null);
-      });
+  // Store an internal reference that should not be used directly by tests.
+  if (!deferNextResponse._deferred) {
+    deferNextResponse._deferred = Promise.defer();
+  }
+  return deferNextResponse._deferred;
+}
+
+/**
+ * Returns a promise that is resolved when the next interruptible response
+ * handler has received the request, and has started sending the first part of
+ * the response.  The response might not have been received by the client yet.
+ *
+ * @return {Promise}
+ * @resolves When the next request has been received.
+ * @rejects Never.
+ */
+function promiseNextRequestReceived()
+{
+  do_print("Requested notification when interruptible request is received.");
+
+  // Store an internal reference that should not be used directly by tests.
+  promiseNextRequestReceived._deferred = Promise.defer();
+  return promiseNextRequestReceived._deferred.promise;
+}
+
+/**
+ * Registers an interruptible response handler.
+ *
+ * @param aPath
+ *        Path passed to nsIHttpServer.registerPathHandler.
+ * @param aFirstPartFn
+ *        This function is called when the response is received, with the
+ *        aRequest and aResponse arguments of the server.
+ * @param aSecondPartFn
+ *        This function is called after the "resolve" method of the object
+ *        returned by deferNextResponse is called.  This function is called with
+ *        the aRequest and aResponse arguments of the server.
+ */
+function registerInterruptibleHandler(aPath, aFirstPartFn, aSecondPartFn)
+{
+  gHttpServer.registerPathHandler(aPath, function (aRequest, aResponse) {
+    // Get a reference to the controlling object for this request.  If the
+    // deferNextResponse function was not called, interrupt the test.
+    let deferResponse = deferNextResponse._deferred;
+    deferNextResponse._deferred = null;
+    if (deferResponse) {
+      do_print("Interruptible request started under control.");
+    } else {
+      do_print("Interruptible request started without being controlled.");
+      deferResponse = Promise.defer();
+      deferResponse.resolve();
+    }
+
+    // Process the first part of the response.
+    aResponse.processAsync();
+    aFirstPartFn(aRequest, aResponse);
+
+    if (promiseNextRequestReceived._deferred) {
+      do_print("Notifying that interruptible request has been received.");
+      promiseNextRequestReceived._deferred.resolve();
+      promiseNextRequestReceived._deferred = null;
+    }
+
+    // Wait on the deferred object, then finish or abort the request.
+    deferResponse.promise.then(function RIH_onSuccess() {
+      aSecondPartFn(aRequest, aResponse);
+      aResponse.finish();
+      do_print("Interruptible request finished.");
+    }, function RIH_onFailure() {
+      aResponse.abort();
+      do_print("Interruptible request aborted.");
     });
-  return deferResponse;
+  });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -192,4 +290,19 @@ add_task(function test_common_initialize()
   gHttpServer = new HttpServer();
   gHttpServer.registerDirectory("/", do_get_file("../data"));
   gHttpServer.start(HTTP_SERVER_PORT);
+
+  registerInterruptibleHandler(TEST_INTERRUPTIBLE_PATH,
+    function firstPart(aRequest, aResponse) {
+      aResponse.setHeader("Content-Type", "text/plain", false);
+      aResponse.setHeader("Content-Length", "" + (TEST_DATA_SHORT.length * 2),
+                          false);
+      aResponse.write(TEST_DATA_SHORT);
+    }, function secondPart(aRequest, aResponse) {
+      aResponse.write(TEST_DATA_SHORT);
+    });
+
+  registerInterruptibleHandler(TEST_EMPTY_NOPROGRESS_PATH,
+    function firstPart(aRequest, aResponse) {
+      aResponse.setHeader("Content-Type", "text/plain", false);
+    }, function secondPart(aRequest, aResponse) { });
 });

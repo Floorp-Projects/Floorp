@@ -854,16 +854,11 @@ class GeckoInputConnection
             return;
         }
         restartInput();
-        GeckoApp.mAppContext.mMainHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (mIMEState == IME_STATE_DISABLED) {
-                    hideSoftInput();
-                } else {
-                    showSoftInput();
-                }
-            }
-        }, 200); // Delay 200ms to prevent repeated IME showing/hiding
+        if (mIMEState == IME_STATE_DISABLED) {
+            hideSoftInput();
+        } else {
+            showSoftInput();
+        }
     }
 }
 

@@ -2320,7 +2320,9 @@ DoBinaryArithFallback(JSContext *cx, BaselineFrame *frame, ICBinaryArith_Fallbac
     }
 
     // Handle Double <BITOP> Int32 or Int32 <BITOP> Double case.
-    if ((lhs.isDouble() && rhs.isInt32()) || (lhs.isInt32() && rhs.isDouble()) && ret.isInt32()) {
+    if (((lhs.isDouble() && rhs.isInt32()) || (lhs.isInt32() && rhs.isDouble())) &&
+        ret.isInt32())
+    {
         switch(op) {
           case JSOP_BITOR:
           case JSOP_BITXOR:
@@ -3728,8 +3730,10 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     // case the heap typeset is guaranteed to contain both int32 and double, so
     // it's okay to store a double.
     Label convertDoubles, convertDoublesDone;
-    Address convertDoublesAddr(scratchReg, ObjectElements::offsetOfConvertDoubleElements());
-    masm.branch32(Assembler::NotEqual, convertDoublesAddr, Imm32(0), &convertDoubles);
+    Address elementsFlags(scratchReg, ObjectElements::offsetOfFlags());
+    masm.branchTest32(Assembler::NonZero, elementsFlags,
+                      Imm32(ObjectElements::CONVERT_DOUBLE_ELEMENTS),
+                      &convertDoubles);
     masm.bind(&convertDoublesDone);
 
     // It's safe to overwrite R0 now.
@@ -3841,8 +3845,10 @@ ICSetElem_DenseAdd::Compiler::generateStubCode(MacroAssembler &masm)
     // case the heap typeset is guaranteed to contain both int32 and double, so
     // it's okay to store a double.
     Label convertDoubles, convertDoublesDone;
-    Address convertDoublesAddr(scratchReg, ObjectElements::offsetOfConvertDoubleElements());
-    masm.branch32(Assembler::NotEqual, convertDoublesAddr, Imm32(0), &convertDoubles);
+    Address elementsFlags(scratchReg, ObjectElements::offsetOfFlags());
+    masm.branchTest32(Assembler::NonZero, elementsFlags,
+                      Imm32(ObjectElements::CONVERT_DOUBLE_ELEMENTS),
+                      &convertDoubles);
     masm.bind(&convertDoublesDone);
 
     // Write the value.  No need for write barrier since we're not overwriting an old value.

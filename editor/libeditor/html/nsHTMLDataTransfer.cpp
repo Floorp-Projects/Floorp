@@ -39,7 +39,6 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLAnchorElement.h"
-#include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLEmbedElement.h"
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
@@ -48,9 +47,6 @@
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMHTMLScriptElement.h"
-#include "nsIDOMHTMLTableCellElement.h"
-#include "nsIDOMHTMLTableElement.h"
-#include "nsIDOMHTMLTableRowElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMRange.h"
 #include "nsIDocument.h"
@@ -737,30 +733,24 @@ nsHTMLEditor::GetAttributeToModifyOnNode(nsIDOMNode *aNode, nsAString &aAttr)
   }
 
   NS_NAMED_LITERAL_STRING(bgStr, "background");
-  nsCOMPtr<nsIDOMHTMLBodyElement> nodeAsBody = do_QueryInterface(aNode);
-  if (nodeAsBody)
-  {
+  nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
+  if (element && element->IsHTML(nsGkAtoms::body)) {
     aAttr = bgStr;
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMHTMLTableElement> nodeAsTable = do_QueryInterface(aNode);
-  if (nodeAsTable)
-  {
+  if (element && element->IsHTML(nsGkAtoms::table)) {
     aAttr = bgStr;
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMHTMLTableRowElement> nodeAsTableRow = do_QueryInterface(aNode);
-  if (nodeAsTableRow)
-  {
+  if (element && element->IsHTML(nsGkAtoms::tr)) {
     aAttr = bgStr;
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMHTMLTableCellElement> nodeAsTableCell = do_QueryInterface(aNode);
-  if (nodeAsTableCell)
-  {
+  if (element &&
+      (element->IsHTML(nsGkAtoms::td) || element->IsHTML(nsGkAtoms::th))) {
     aAttr = bgStr;
     return NS_OK;
   }

@@ -86,7 +86,7 @@ let gObserver = new MutationObserver(function (mutations) {
     if (mutation.attributeName == "searchEngineURL") {
       gObserver.disconnect();
       setupSearchEngine();
-      loadSnippets();
+      ensureSnippetsMapThen(loadSnippets);
       return;
     }
   }
@@ -99,6 +99,70 @@ window.addEventListener("load", function () {
   fitToWidth();
   window.addEventListener("resize", fitToWidth);
 });
+
+// This object has the same interface as Map and is used to store and retrieve
+// the snippets data.  It is lazily initialized by ensureSnippetsMapThen(), so
+// be sure its callback returned before trying to use it.
+let gSnippetsMap;
+let gSnippetsMapCallbacks = [];
+
+/**
+ * Ensure the snippets map is properly initialized.
+ *
+ * @param aCallback
+ *        Invoked once the map has been initialized, gets the map as argument.
+ * @note Snippets should never directly manage the underlying storage, since
+ *       it may change inadvertently.
+ */
+function ensureSnippetsMapThen(aCallback)
+{
+  if (gSnippetsMap) {
+    aCallback(gSnippetsMap);
+    return;
+  }
+
+  // Handle multiple requests during the async initialization.
+  gSnippetsMapCallbacks.push(aCallback);
+  if (gSnippetsMapCallbacks.length > 1) {
+    // We are already updating, the callbacks will be invoked when done.
+    return;
+  }
+
+  // TODO (bug 789348): use a real asynchronous storage here.  This setTimeout
+  // is done just to catch bugs with the asynchronous behavior.
+  setTimeout(function() {
+    // Populate the cache from the persistent storage.
+    let cache = new Map();
+    for (let key of [ "snippets-last-update",
+                      "snippets-cached-version",
+                      "snippets" ]) {
+      cache.set(key, localStorage[key]);
+    }
+
+    gSnippetsMap = Object.freeze({
+      get: function (aKey) cache.get(aKey),
+      set: function (aKey, aValue) {
+        localStorage[aKey] = aValue;
+        return cache.set(aKey, aValue);
+      },
+      has: function(aKey) cache.has(aKey),
+      delete: function(aKey) {
+        delete localStorage[aKey];
+        return cache.delete(aKey);
+      },
+      clear: function() {
+        localStorage.clear();
+        return cache.clear();
+      },
+      get size() cache.size
+    });
+
+    for (let callback of gSnippetsMapCallbacks) {
+      callback(gSnippetsMap);
+    }
+    gSnippetsMapCallbacks.length = 0;
+  }, 0);
+}
 
 function onSearchSubmit(aEvent)
 {
@@ -157,13 +221,29 @@ function setupSearchEngine()
 
 }
 
+/**
+ * Update the local snippets from the remote storage, then show them through
+ * showSnippets.
+ */
 function loadSnippets()
 {
+  if (!gSnippetsMap)
+    throw new Error("Snippets map has not properly been initialized");
+
+  // Check cached snippets version.
+  let cachedVersion = gSnippetsMap.get("snippets-cached-version") || 0;
+  let currentVersion = document.documentElement.getAttribute("snippetsVersion");
+  if (cachedVersion < currentVersion) {
+    // The cached snippets are old and unsupported, restart from scratch.
+    gSnippetsMap.clear();
+  }
+
   // Check last snippets update.
-  let lastUpdate = localStorage["snippets-last-update"];
+  let lastUpdate = gSnippetsMap.get("snippets-last-update");
   let updateURL = document.documentElement.getAttribute("snippetsURL");
-  if (updateURL && (!lastUpdate ||
-                    Date.now() - lastUpdate > SNIPPETS_UPDATE_INTERVAL_MS)) {
+  let shouldUpdate = !lastUpdate ||
+                     Date.now() - lastUpdate > SNIPPETS_UPDATE_INTERVAL_MS;
+  if (updateURL && shouldUpdate) {
     // Try to update from network.
     let xhr = new XMLHttpRequest();
     try {
@@ -174,14 +254,15 @@ function loadSnippets()
     }
     // Even if fetching should fail we don't want to spam the server, thus
     // set the last update time regardless its results.  Will retry tomorrow.
-    localStorage["snippets-last-update"] = Date.now();
+    gSnippetsMap.set("snippets-last-update", Date.now());
     xhr.onerror = function (event) {
       showSnippets();
     };
     xhr.onload = function (event)
     {
       if (xhr.status == 200) {
-        localStorage["snippets"] = xhr.responseText;
+        gSnippetsMap.set("snippets", xhr.responseText);
+        gSnippetsMap.set("snippets-cached-version", currentVersion);
       }
       showSnippets();
     };
@@ -191,10 +272,27 @@ function loadSnippets()
   }
 }
 
+/**
+ * Shows locally cached remote snippets, or default ones when not available.
+ *
+ * @note: snippets should never invoke showSnippets(), or they may cause
+ *        a "too much recursion" exception.
+ */
+let _snippetsShown = false;
 function showSnippets()
 {
+  if (!gSnippetsMap)
+    throw new Error("Snippets map has not properly been initialized");
+  if (_snippetsShown) {
+    // There's something wrong with the remote snippets, just in case fall back
+    // to the default snippets.
+    showDefaultSnippets();
+    throw new Error("showSnippets should never be invoked multiple times");
+  }
+  _snippetsShown = true;
+
   let snippetsElt = document.getElementById("snippets");
-  let snippets = localStorage["snippets"];
+  let snippets = gSnippetsMap.get("snippets");
   // If there are remotely fetched snippets, try to to show them.
   if (snippets) {
     // Injecting snippets can throw if they're invalid XML.
@@ -214,7 +312,19 @@ function showSnippets()
     }
   }
 
-  // Show default snippets otherwise.
+  showDefaultSnippets();
+}
+
+/**
+ * Clear snippets element contents and show default snippets.
+ */
+function showDefaultSnippets()
+{
+  // Clear eventual contents...
+  let snippetsElt = document.getElementById("snippets");
+  snippetsElt.innerHTML = "";
+
+  // ...then show default snippets.
   let defaultSnippetsElt = document.getElementById("defaultSnippets");
   let entries = defaultSnippetsElt.querySelectorAll("span");
   // Choose a random snippet.  Assume there is always at least one.

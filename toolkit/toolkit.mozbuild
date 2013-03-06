@@ -49,16 +49,11 @@ if CONFIG['MOZ_UPDATER']:
 
     add_tier_dir('platform', 'other-licenses/bsdiff')
 
-add_tier_dir('platform', 'gfx/qcms')
-
 # Gecko/Core components.
 
 add_tier_dir('platform', ['ipc', 'js/ipc'])
 
 add_tier_dir('platform', ['hal', 'js/xpconnect', 'intl/chardet'])
-
-if CONFIG['MOZ_ENABLE_GTK2'] and CONFIG['MOZ_X11']:
-    add_tier_dir('platform', 'widget/gtkxtbin')
 
 add_tier_dir('platform', ['modules/libjar', 'storage'])
 

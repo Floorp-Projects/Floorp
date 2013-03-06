@@ -194,6 +194,10 @@ public class GeckoEvent {
         mFlags = k.getFlags();
         mKeyCode = k.getKeyCode();
         mUnicodeChar = k.getUnicodeChar();
+        if (mUnicodeChar == 0) {
+            // e.g. for Ctrl+A, Android returns 0, but Gecko expects 'a' as mUnicodeChar
+            mUnicodeChar = k.getUnicodeChar(0);
+        }
         mRepeatCount = k.getRepeatCount();
         mCharacters = k.getCharacters();
         mDomKeyLocation = isJoystickButton(mKeyCode) ? DOM_KEY_LOCATION_JOYSTICK : DOM_KEY_LOCATION_MOBILE;

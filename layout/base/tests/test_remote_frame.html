@@ -20,10 +20,6 @@
   <script type="application/javascript;version=1.7">
     "use strict";
 
-    if (!navigator.platform.startsWith("Win")) {
-      SimpleTest.expectAssertions(0, 2); // bug 846096
-    }
-
     var referenceSnapshot;
     var iterations = 0;
 

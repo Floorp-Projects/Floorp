@@ -4,7 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #####################################################################################
-# Dependency build overhead: 
+# Dependency build overhead:
 #   o always create/update/hard link targets boomkarks.json & searchplugins
 #   o latest symlink will be correct for the current locale / local build.
 #   o logic is essentially FORCE for language packs w/o all the build overhead
@@ -88,7 +88,7 @@ GARBAGE += $(plugin-file-ts)
 # plugin-file-ts track searchlist file used ($path/list.txt)
 # and time when the file was last modified.
 ###########################################################################
-plugin-file-ts-preqs =\
+plugin-file-ts-preqs = \
   $(call mkdir_deps,$(dir $(plugin-file-ts))) \
   $(plugin_file) \
   $(NULL)
@@ -112,7 +112,7 @@ GARBAGE += $(search-jar) $(search-jar-ts) $(search-jar-common)
 SEARCH_PLUGINS = $(shell cat $(plugin_file))
 $(call errorIfEmpty,SEARCH_PLUGINS)
 
-search-jar-preqs =\
+search-jar-preqs = \
   $(plugin-file-ts) \
   $(if $(IS_LANGUAGE_REPACK),FORCE) \
   $(NULL)
@@ -128,7 +128,7 @@ $(search-jar): $(search-jar-preqs)
 
 .PHONY: searchplugins
 searchplugins: $(search-jar-ts)
-	@echo "\nGenerating: $@"	
+	@echo "\nGenerating: $@"
 
 ###################
 search-dir-deps = \
@@ -193,7 +193,7 @@ bookmarks-inc-array = \
   )
 bookmarks-inc = $(firstword $(bookmarks-inc-array))
 
-bookmarks-preqs =\
+bookmarks-preqs = \
   $(bookmarks-inc) \
   $(call mkdir_deps,$(dir $(bookmarks-ts))) \
   $(src-bookmarks) \

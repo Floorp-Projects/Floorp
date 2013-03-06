@@ -574,7 +574,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         }
 
         // We're ready for final setup.
-        InitFramebuffers();
+        fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
 
         if (mCaps.any)
             DetermineCaps();

@@ -54,6 +54,7 @@ MOCHITEST_CHROME_FILES = \
     test_domparsing.xul \
     test_bug814638.xul \
     host_bug814638.xul \
+    test_document_register.xul \
     frame_bug814638.xul \
     $(NULL)
 

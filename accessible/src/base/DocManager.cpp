@@ -348,6 +348,19 @@ DocManager::AddListeners(nsIDocument* aDocument,
   }
 }
 
+void
+DocManager::RemoveListeners(nsIDocument* aDocument)
+{
+  nsPIDOMWindow* window = aDocument->GetWindow();
+  nsIDOMEventTarget* target = window->GetChromeEventHandler();
+  nsEventListenerManager* elm = target->GetListenerManager(true);
+  elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("pagehide"),
+                                 dom::TrustedEventsAtCapture());
+
+  elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("DOMContentLoaded"),
+                                 dom::TrustedEventsAtCapture());
+}
+
 DocAccessible*
 DocManager::CreateDocOrRootAccessible(nsIDocument* aDocument)
 {
