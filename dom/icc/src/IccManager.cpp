@@ -4,37 +4,42 @@
 
 #include "mozilla/Services.h"
 #include "nsIDOMClassInfo.h"
-#include "nsIObserverService.h"
 #include "IccManager.h"
 #include "SimToolKit.h"
 #include "StkCommandEvent.h"
 
 #define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
 
-#define STKCOMMAND_EVENTNAME      NS_LITERAL_STRING("stkcommand")
-#define STKSESSIONEND_EVENTNAME   NS_LITERAL_STRING("stksessionend")
+using namespace mozilla::dom::icc;
+
+class IccManager::Listener : public nsIIccListener
+{
+  IccManager* mIccManager;
+
+public:
+  NS_DECL_ISUPPORTS
+  NS_FORWARD_SAFE_NSIICCLISTENER(mIccManager)
+
+  Listener(IccManager* aIccManager)
+    : mIccManager(aIccManager)
+  {
+    MOZ_ASSERT(mIccManager);
+  }
+
+  void
+  Disconnect()
+  {
+    MOZ_ASSERT(mIccManager);
+    mIccManager = nullptr;
+  }
+};
+
+NS_IMPL_ISUPPORTS1(IccManager::Listener, nsIIccListener)
 
 DOMCI_DATA(MozIccManager, mozilla::dom::icc::IccManager)
 
-namespace mozilla {
-namespace dom {
-namespace icc {
-
-const char* kStkCommandTopic     = "icc-manager-stk-command";
-const char* kStkSessionEndTopic  = "icc-manager-stk-session-end";
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IccManager,
-                                                  nsDOMEventTargetHelper)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IccManager,
-                                                nsDOMEventTargetHelper)
-  tmp->mProvider = nullptr;
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IccManager)
+NS_INTERFACE_MAP_BEGIN(IccManager)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozIccManager)
-  NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozIccManager)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
@@ -48,66 +53,31 @@ IccManager::IccManager()
   // Not being able to acquire the provider isn't fatal since we check
   // for it explicitly below.
   if (!mProvider) {
-    NS_WARNING("Could not acquire nsIMobileConnectionProvider!");
+    NS_WARNING("Could not acquire nsIIccProvider!");
+    return;
   }
+
+  mListener = new Listener(this);
+  DebugOnly<nsresult> rv = mProvider->RegisterIccMsg(mListener);
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
+                   "Failed registering icc messages with provider");
 }
 
 void
 IccManager::Init(nsPIDOMWindow* aWindow)
 {
   BindToOwner(aWindow);
-
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (!obs) {
-    NS_WARNING("Could not acquire nsIObserverService!");
-    return;
-  }
-
-  obs->AddObserver(this, kStkCommandTopic, false);
-  obs->AddObserver(this, kStkSessionEndTopic, false);
 }
 
 void
 IccManager::Shutdown()
 {
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (!obs) {
-    NS_WARNING("Could not acquire nsIObserverService!");
-    return;
+  if (mProvider && mListener) {
+    mListener->Disconnect();
+    mProvider->UnregisterIccMsg(mListener);
+    mProvider = nullptr;
+    mListener = nullptr;
   }
-
-  obs->RemoveObserver(this, kStkCommandTopic);
-  obs->RemoveObserver(this, kStkSessionEndTopic);
-}
-
-// nsIObserver
-
-NS_IMETHODIMP
-IccManager::Observe(nsISupports* aSubject,
-                    const char* aTopic,
-                    const PRUnichar* aData)
-{
-  if (!strcmp(aTopic, kStkCommandTopic)) {
-    nsString stkMsg;
-    stkMsg.Assign(aData);
-    nsRefPtr<StkCommandEvent> event = StkCommandEvent::Create(stkMsg);
-
-    NS_ASSERTION(event, "This should never fail!");
-
-    nsresult rv = event->Dispatch(ToIDOMEventTarget(), STKCOMMAND_EVENTNAME);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return NS_OK;
-  }
-
-  if (!strcmp(aTopic, kStkSessionEndTopic)) {
-    DispatchTrustedEvent(STKSESSIONEND_EVENTNAME);
-    return NS_OK;
-  }
-
-  MOZ_NOT_REACHED("Unknown observer topic!");
-
-  return NS_OK;
 }
 
 // nsIDOMMozIccManager
@@ -191,6 +161,19 @@ IccManager::IccCloseChannel(int32_t aChannel, nsIDOMDOMRequest** aRequest)
 NS_IMPL_EVENT_HANDLER(IccManager, stkcommand)
 NS_IMPL_EVENT_HANDLER(IccManager, stksessionend)
 
-} // namespace icc
-} // namespace dom
-} // namespace mozilla
+// nsIIccListener
+
+NS_IMETHODIMP
+IccManager::NotifyStkCommand(const nsAString& aMessage)
+{
+  nsRefPtr<StkCommandEvent> event = StkCommandEvent::Create(aMessage);
+  NS_ASSERTION(event, "This should never fail!");
+
+  return event->Dispatch(ToIDOMEventTarget(), NS_LITERAL_STRING("stkcommand"));
+}
+
+NS_IMETHODIMP
+IccManager::NotifyStkSessionEnd()
+{
+  return DispatchTrustedEvent(NS_LITERAL_STRING("stksessionend"));
+}
