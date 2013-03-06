@@ -21,6 +21,14 @@ class SearchProvider(object):
         uri = 'https://mxr.mozilla.org/mozilla-central/search?string=%s' % term
         webbrowser.open_new_tab(uri)
 
+    @Command('dxr', help='Search for something in DXR.')
+    @CommandArgument('term', nargs='+', help='Term(s) to search for.')
+    def dxr(self, term):
+        import webbrowser
+        term = ' '.join(term)
+        uri = 'http://dxr.mozilla.org/search?tree=mozilla-central&q=%s' % term
+        webbrowser.open_new_tab(uri)
+
     @Command('mdn', help='Search for something on MDN.')
     @CommandArgument('term', nargs='+', help='Term(s) to search for.')
     def mdn(self, term):
