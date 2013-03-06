@@ -78,7 +78,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Testing
 
-    //gA11yEventDumpToConsole = true; // debug
+    gA11yEventDumpToConsole = true; // debug
 
     var gQueue = null;
     function doTests()
@@ -86,6 +86,7 @@
       testRelation(browserDocument(), RELATION_EMBEDS,
                    getAccessible(currentTabDocument()));
 
+      enableLogging("docload");
       gQueue = new eventQueue();
 
       gQueue.push(new loadURI("about:about"));
@@ -93,6 +94,7 @@
 
       gQueue.onFinish = function()
       {
+        disableLogging();
         closeBrowserWindow();
       }
       gQueue.invoke();
