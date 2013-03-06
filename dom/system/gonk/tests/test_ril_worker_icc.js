@@ -2055,7 +2055,7 @@ add_test(function test_read_icc_contacts() {
     run_next_test();
   };
 
-  contactHelper.readICCContacts(CARD_APPTYPE_USIM, "ADN", successCb, errorCb);
+  contactHelper.readICCContacts(CARD_APPTYPE_USIM, "adn", successCb, errorCb);
 });
 
 /**
@@ -2078,8 +2078,8 @@ add_test(function test_update_icc_contact() {
   };
 
   let contact = {recordId: 1, alphaId: "test", number: "123456"};
-  do_test(contact, "ADN", ICC_EF_ADN);
-  do_test(contact, "FDN", ICC_EF_FDN, "1111");
+  do_test(contact, "adn", ICC_EF_ADN);
+  do_test(contact, "fdn", ICC_EF_FDN, "1111");
 
   run_next_test();
 });

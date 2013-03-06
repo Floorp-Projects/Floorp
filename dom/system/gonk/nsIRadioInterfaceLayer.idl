@@ -51,24 +51,6 @@ interface nsIRILDataCallback : nsISupports
                            in unsigned long length);
 };
 
-[scriptable, function, uuid(a94282b6-da60-4daf-95c1-82ee6889d0df)]
-interface nsIRILContactCallback : nsISupports
-{
-  /**
-   * Called when nsIRadioInterfaceLayer is asked to provide ICC contacts.
-   *
-   * @param errorMsg
-   *        error message from RIL.
-   * @param contactType
-   *        Type of the dialling number, i.e. ADN, FDN.
-   * @param contacts
-   *        Array of the ICC contacts of the specified type.
-   */
-  void receiveContactsList(in DOMString errorMsg,
-                           in DOMString contactType,
-                           in jsval contacts);
-};
-
 [scriptable, uuid(c0c5cb9f-6372-4b5a-b74c-baacc2da5e4f)]
 interface nsIVoicemailInfo : nsISupports
 {
@@ -95,7 +77,7 @@ interface nsIRilContext : nsISupports
   readonly attribute nsIDOMMozMobileConnectionInfo data;
 };
 
-[scriptable, uuid(9a914550-8f7a-11e2-9e96-0800200c9a66)]
+[scriptable, uuid(c1c9d1e6-fec6-4c99-880d-7a310d736e64)]
 interface nsIRadioInterfaceLayer : nsISupports
 {
   /**
@@ -136,19 +118,4 @@ interface nsIRadioInterfaceLayer : nsISupports
   void sendSMS(in DOMString number,
                in DOMString message,
                in nsIMobileMessageCallback request);
-
-  /**
-   * ICC-related functionality.
-   */
-
-  /**
-   * Get ICC Contact List.
-   *
-   * @param contactType One of the values below.
-   *                    "ADN" (Abbreviated Dialling Numbers)
-   *                    "FDN" (Fixed Dialling Numbers)
-   * @param callback  A nsIRILContactCallback object.
-   */
-  void getICCContacts(in DOMString contactType,
-                      in nsIRILContactCallback callback);
 };
