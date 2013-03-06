@@ -20,6 +20,8 @@ namespace CSF
 
 	class ECC_API CC_CallInfo
     {
+    public:
+        NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CC_CallInfo)
     protected:
         CC_CallInfo() { }
 
