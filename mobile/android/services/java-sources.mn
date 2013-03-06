@@ -22,6 +22,8 @@ background/common/log/writers/SimpleTagLogWriter.java
 background/common/log/writers/StringLogWriter.java
 background/common/log/writers/TagLogWriter.java
 background/common/log/writers/ThreadLocalTagLogWriter.java
+background/db/CursorDumper.java
+background/db/Tab.java
 sync/AlreadySyncingException.java
 sync/CollectionKeys.java
 sync/CommandProcessor.java
@@ -237,7 +239,6 @@ sync/stage/SafeConstrainedServer11Repository.java
 sync/stage/ServerSyncStage.java
 sync/stage/SyncClientsEngineStage.java
 sync/stage/UploadMetaGlobalStage.java
-sync/StubActivity.java
 sync/syncadapter/SyncAdapter.java
 sync/syncadapter/SyncService.java
 sync/SyncConfiguration.java

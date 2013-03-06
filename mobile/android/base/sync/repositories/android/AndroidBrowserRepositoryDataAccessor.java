@@ -7,6 +7,7 @@ package org.mozilla.gecko.sync.repositories.android;
 import java.util.List;
 
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.db.CursorDumper;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.domain.Record;
@@ -47,7 +48,7 @@ public abstract class AndroidBrowserRepositoryDataAccessor {
     Cursor cur = null;
     try {
       cur = queryHelper.safeQuery(".dumpDB", null, null, null, null);
-      RepoUtils.dumpCursor(cur);
+      CursorDumper.dumpCursor(cur);
     } catch (NullCursorException e) {
     } finally {
       if (cur != null) {
