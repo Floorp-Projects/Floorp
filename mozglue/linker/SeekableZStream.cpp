@@ -28,7 +28,9 @@ SeekableZStream::Init(const void *buf, size_t length)
   chunkSize = header->chunkSize;
   lastChunkSize = header->lastChunkSize;
   windowBits = header->windowBits;
-  offsetTable.Init(&header[1], header->nChunks);
+  dictionary.Init(buffer + sizeof(SeekableZStreamHeader), header->dictSize);
+  offsetTable.Init(buffer + sizeof(SeekableZStreamHeader) + header->dictSize,
+                   header->nChunks);
   filter = GetFilter(header->filter);
 
   /* Sanity check */
@@ -89,6 +91,11 @@ SeekableZStream::DecompressChunk(void *where, size_t chunk, size_t length)
   /* Decompress chunk */
   if (inflateInit2(&zStream, windowBits) != Z_OK) {
     log("inflateInit failed: %s", zStream.msg);
+    return false;
+  }
+  if (dictionary && inflateSetDictionary(&zStream, dictionary,
+                                         dictionary.numElements()) != Z_OK) {
+    log("inflateSetDictionary failed: %s", zStream.msg);
     return false;
   }
   if (inflate(&zStream, (length == chunkLen) ? Z_FINISH : Z_SYNC_FLUSH)
