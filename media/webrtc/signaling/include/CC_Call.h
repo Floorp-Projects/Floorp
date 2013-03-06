@@ -6,6 +6,7 @@
 
 #include "CC_Common.h"
 #include "ECC_Types.h"
+#include "mozilla/RefPtr.h"
 
 extern "C"
 {
@@ -16,6 +17,9 @@ namespace CSF
 {
     class ECC_API CC_Call
     {
+    public:
+        NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CC_Call)
+
     protected:
         CC_Call () { }
 
@@ -285,6 +289,7 @@ namespace CSF
         virtual const std::string& getPeerConnection() const = 0;
 
         virtual void addICECandidate(const std::string & candidate, const std::string & mid, unsigned short level) = 0;
+
     };
 }
 

@@ -17,6 +17,8 @@ namespace CSF
 {
     class ECC_API CC_CallServerInfo
     {
+    public:
+        NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CC_CallServerInfo)
     protected:
         CC_CallServerInfo() { }
 

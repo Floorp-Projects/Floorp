@@ -126,7 +126,7 @@ CC_CallInfoPtr CC_SIPCCCall::getCallInfo ()
     cc_callinfo_ref_t callInfo = CCAPI_Call_getCallInfo(callHandle);
     CC_SIPCCCallInfoPtr callInfoPtr = CC_SIPCCCallInfo::wrap(callInfo);
     callInfoPtr->setMediaData( pMediaData);
-    return callInfoPtr;
+    return callInfoPtr.get();
 }
 
 
