@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <sys/stat.h>
 #include <cstring>
+#include <cstdlib>
 #include <zlib.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -63,11 +64,39 @@ private:
   bool writable;
 };
 
-static const size_t CHUNK = 16384;
+class SzipAction
+{
+public:
+  virtual int run(const char *name, Buffer &origBuf,
+                  const char *outName, Buffer &outBuf) = 0;
+
+  virtual ~SzipAction() {}
+};
+
+class SzipDecompress: public SzipAction
+{
+public:
+  int run(const char *name, Buffer &origBuf,
+          const char *outName, Buffer &outBuf);
+};
+
+class SzipCompress: public SzipAction
+{
+public:
+  int run(const char *name, Buffer &origBuf,
+          const char *outName, Buffer &outBuf);
+
+  SzipCompress(size_t aChunkSize)
+  : chunkSize(aChunkSize ? aChunkSize : 16384)
+  {}
+
+private:
+  size_t chunkSize;
+};
 
 /* Decompress a seekable compressed stream */
-int do_decompress(const char *name, Buffer &origBuf,
-                  const char *outName, Buffer &outBuf)
+int SzipDecompress::run(const char *name, Buffer &origBuf,
+                        const char *outName, Buffer &outBuf)
 {
   size_t origSize = origBuf.GetLength();
   if (origSize < sizeof(SeekableZStreamHeader)) {
@@ -94,8 +123,8 @@ int do_decompress(const char *name, Buffer &origBuf,
 }
 
 /* Generate a seekable compressed stream. */
-int do_compress(const char *name, Buffer &origBuf,
-                const char *outName, Buffer &outBuf)
+int SzipCompress::run(const char *name, Buffer &origBuf,
+                      const char *outName, Buffer &outBuf)
 {
   size_t origSize = origBuf.GetLength();
   if (origSize == 0) {
@@ -105,7 +134,7 @@ int do_compress(const char *name, Buffer &origBuf,
   log("Size = %" PRIuSize, origSize);
 
   /* Expected total number of chunks */
-  size_t nChunks = ((origSize + CHUNK - 1) / CHUNK);
+  size_t nChunks = ((origSize + chunkSize - 1) / chunkSize);
 
   /* The first chunk is going to be stored after the header and the offset
    * table */
@@ -121,7 +150,7 @@ int do_compress(const char *name, Buffer &origBuf,
   le_uint32 *entry = reinterpret_cast<le_uint32 *>(&header[1]);
 
   /* Initialize header */
-  header->chunkSize = CHUNK;
+  header->chunkSize = chunkSize;
   header->totalSize = offset;
   header->windowBits = -15; // Raw stream, window size of 32k.
 
@@ -135,7 +164,7 @@ int do_compress(const char *name, Buffer &origBuf,
   size_t avail = 0;
   size_t size = origSize;
   while (size) {
-    avail = std::min(size, CHUNK);
+    avail = std::min(size, chunkSize);
 
     /* Compress chunk */
     int ret = deflateInit2(&zStream, 9, Z_DEFLATED, header->windowBits,
@@ -172,7 +201,8 @@ int do_compress(const char *name, Buffer &origBuf,
 
   /* Sanity check */
   Buffer tmpBuf;
-  if (do_decompress("buffer", outBuf, "buffer", tmpBuf))
+  SzipDecompress decompress;
+  if (decompress.run("buffer", outBuf, "buffer", tmpBuf))
     return 1;
 
   size = tmpBuf.GetLength();
@@ -188,21 +218,55 @@ int do_compress(const char *name, Buffer &origBuf,
   return 0;
 }
 
+bool GetSize(const char *str, size_t *out)
+{
+  char *end;
+  MOZ_ASSERT(out);
+  errno = 0;
+  *out = strtol(str, &end, 10);
+  return (!errno && !*end);
+}
+
 int main(int argc, char* argv[])
 {
-  int (*func)(const char *, Buffer &, const char *, Buffer &) = do_compress;
-  char **firstArg = &argv[1];
+  mozilla::ScopedDeletePtr<SzipAction> action;
+  char **firstArg;
+  bool compress = true;
+  size_t chunkSize = 0;
 
-  if ((argc > 1) && strcmp(argv[1], "-d") == 0) {
-    func = do_decompress;
-    firstArg++;
-    argc--;
+  for (firstArg = &argv[1]; argc > 3; argc--, firstArg++) {
+    if (!firstArg[0] || firstArg[0][0] != '-')
+      break;
+    if (strcmp(firstArg[0], "-d") == 0) {
+      compress = false;
+    } else if (strcmp(firstArg[0], "-c") == 0) {
+      firstArg++;
+      argc--;
+      if (!firstArg[0])
+        break;
+      if (!GetSize(firstArg[0], &chunkSize) || !chunkSize ||
+          (chunkSize % 4096) ||
+          (chunkSize > SeekableZStreamHeader::maxChunkSize)) {
+        log("Invalid chunk size");
+        return 1;
+      }
+    }
   }
 
   if (argc != 3 || !firstArg[0] || !firstArg[1] ||
       (strcmp(firstArg[0], firstArg[1]) == 0)) {
-    log("usage: %s [-d] in_file out_file", argv[0]);
+    log("usage: %s [-d] [-c CHUNKSIZE] in_file out_file", argv[0]);
     return 1;
+  }
+
+  if (compress) {
+    action = new SzipCompress(chunkSize);
+  } else {
+    if (chunkSize) {
+      log("-c is incompatible with -d");
+      return 1;
+    }
+    action = new SzipDecompress();
   }
 
   FileBuffer origBuf;
@@ -233,5 +297,6 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  return func(firstArg[0], origBuf, firstArg[1], outBuf);
+  ret = action->run(firstArg[0], origBuf, firstArg[1], outBuf);
+  return ret;
 }
