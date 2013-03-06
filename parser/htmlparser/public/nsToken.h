@@ -16,20 +16,11 @@
  * of that particular token type gets detected in the 
  * input stream.
  *
- * CToken objects that are allocated from the heap _must_ be allocated
- * using the nsTokenAllocator: the nsTokenAllocator object uses an
- * arena to manage the tokens.
- *
- * The nsTokenAllocator object's arena implementation requires
- * object size at destruction time to properly recycle the object;
- * therefore, CToken::operator delete() is not public. Instead,
- * heap-allocated tokens should be destroyed using the static
- * Destroy() method, which accepts a token and the arena from which
- * the token was allocated.
- *
- * Leaf classes (that are actually instantiated from the heap) must
- * implement the SizeOf() method, which Destroy() uses to determine
- * the size of the token in order to properly recycle it.
+ * CToken objects that are allocated from the heap are allocated
+ * using the nsTokenAllocator object.  nsTokenAllocator used to use
+ * an arena-style allocator, but that is no longer necessary or helpful;
+ * it now uses a trivial drop-in replacement for the arena-style
+ * allocator called nsDummyAllocator, which just wraps malloc/free.
  */
 
 
@@ -39,25 +30,24 @@
 #include "prtypes.h"
 #include "nsString.h"
 #include "nsError.h"
-#include "nsFixedSizeAllocator.h"
 
 class nsScanner;
 class nsTokenAllocator;
+
+/**
+ * A trivial allocator.  See the comment at the top of this file.
+ */
+class nsDummyAllocator {
+public:
+  void* Alloc(size_t aSize) { return malloc(aSize); }
+  void Free(void* aPtr) { free(aPtr); }
+};
 
 enum eContainerInfo {
   eWellFormed,
   eMalformed,
   eFormUnknown
 };
-
-/**
- * Implement the SizeOf() method; leaf classes derived from CToken
- * must declare this.
- */
-#define CTOKEN_IMPL_SIZEOF                                \
-protected:                                                \
-  virtual size_t SizeOf() const { return sizeof(*this); } \
-public:
 
 /**
  *  Token objects represent sequences of characters as they
@@ -85,7 +75,7 @@ class CToken {
      * @param   aSize    - 
      * @param   aArena   - Allocate memory from this pool.
      */
-    static void * operator new (size_t aSize,nsFixedSizeAllocator& anArena) CPP_THROW_NEW
+    static void * operator new (size_t aSize, nsDummyAllocator& anArena) CPP_THROW_NEW
     {
       return anArena.Alloc(aSize);
     }
@@ -106,11 +96,10 @@ class CToken {
     /**
      * Destroy a token.
      */
-    static void Destroy(CToken* aToken,nsFixedSizeAllocator& aArenaPool)
+    static void Destroy(CToken* aToken, nsDummyAllocator& aArenaPool)
     {
-      size_t sz = aToken->SizeOf();
       aToken->~CToken();
-      aArenaPool.Free(aToken, sz);
+      aArenaPool.Free(aToken);
     }
 
   public:
@@ -127,7 +116,7 @@ class CToken {
      * Free yourself if no one is holding you.
      * @update	harishd 08/02/00
      */
-    void Release(nsFixedSizeAllocator& aArenaPool) {
+    void Release(nsDummyAllocator& aArenaPool) {
       --mUseCount;
       NS_LOG_RELEASE(this, mUseCount, "CToken");
       if (mUseCount==0)
@@ -259,11 +248,6 @@ class CToken {
     
 
 protected:
-    /**
-     * Returns the size of the token object.
-     */
-    virtual size_t SizeOf() const = 0;
-
     int32_t mTypeID;
     int32_t mUseCount;
     int32_t mNewlineCount;
