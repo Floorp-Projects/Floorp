@@ -2978,6 +2978,19 @@ nsDisplayFixedPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   layer->SetFixedPositionAnchor(anchor);
 
+  // Also make sure the layer is aware of any fixed position margins that have
+  // been set.
+  nsMargin fixedMargins = presContext->PresShell()->GetContentDocumentFixedPositionMargins();
+  mozilla::gfx::Margin fixedLayerMargins(NSAppUnitsToFloatPixels(fixedMargins.top, factor) *
+                                           aContainerParameters.mYScale,
+                                         NSAppUnitsToFloatPixels(fixedMargins.right, factor) *
+                                           aContainerParameters.mXScale,
+                                         NSAppUnitsToFloatPixels(fixedMargins.bottom, factor) *
+                                           aContainerParameters.mYScale,
+                                         NSAppUnitsToFloatPixels(fixedMargins.left, factor) *
+                                           aContainerParameters.mXScale);
+  layer->SetFixedPositionMargins(fixedLayerMargins);
+
   return layer.forget();
 }
 
