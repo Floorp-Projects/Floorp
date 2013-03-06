@@ -410,7 +410,7 @@ bool MinidumpGenerator::WriteContext(breakpad_thread_state_data_t state,
   }
 }
 
-u_int64_t MinidumpGenerator::CurrentPCForStack(
+uint64_t MinidumpGenerator::CurrentPCForStack(
     breakpad_thread_state_data_t state) {
   switch (cpu_type_) {
 #ifdef HAS_ARM_SUPPORT
@@ -444,7 +444,7 @@ bool MinidumpGenerator::WriteStackARM(breakpad_thread_state_data_t state,
   return WriteStackFromStartAddress(start_addr, stack_location);
 }
 
-u_int64_t
+uint64_t
 MinidumpGenerator::CurrentPCForStackARM(breakpad_thread_state_data_t state) {
   arm_thread_state_t *machine_state =
       reinterpret_cast<arm_thread_state_t *>(state);
@@ -510,7 +510,7 @@ bool MinidumpGenerator::WriteStackPPC64(breakpad_thread_state_data_t state,
   return WriteStackFromStartAddress(start_addr, stack_location);
 }
 
-u_int64_t
+uint64_t
 MinidumpGenerator::CurrentPCForStackPPC(breakpad_thread_state_data_t state) {
   ppc_thread_state_t *machine_state =
       reinterpret_cast<ppc_thread_state_t *>(state);
@@ -518,7 +518,7 @@ MinidumpGenerator::CurrentPCForStackPPC(breakpad_thread_state_data_t state) {
   return REGISTER_FROM_THREADSTATE(machine_state, srr0);
 }
 
-u_int64_t
+uint64_t
 MinidumpGenerator::CurrentPCForStackPPC64(breakpad_thread_state_data_t state) {
   ppc_thread_state64_t *machine_state =
       reinterpret_cast<ppc_thread_state64_t *>(state);
@@ -672,7 +672,7 @@ bool MinidumpGenerator::WriteStackX86_64(breakpad_thread_state_data_t state,
   return WriteStackFromStartAddress(start_addr, stack_location);
 }
 
-u_int64_t
+uint64_t
 MinidumpGenerator::CurrentPCForStackX86(breakpad_thread_state_data_t state) {
   i386_thread_state_t *machine_state =
       reinterpret_cast<i386_thread_state_t *>(state);
@@ -680,7 +680,7 @@ MinidumpGenerator::CurrentPCForStackX86(breakpad_thread_state_data_t state) {
   return REGISTER_FROM_THREADSTATE(machine_state, eip);
 }
 
-u_int64_t
+uint64_t
 MinidumpGenerator::CurrentPCForStackX86_64(breakpad_thread_state_data_t state) {
   x86_thread_state64_t *machine_state =
       reinterpret_cast<x86_thread_state64_t *>(state);
@@ -764,7 +764,7 @@ bool MinidumpGenerator::WriteContextX86_64(
   // not used in the flags register.  Since the minidump format
   // specifies 32 bits for the flags register, we can truncate safely
   // with no loss.
-  context_ptr->eflags = static_cast<u_int32_t>(REGISTER_FROM_THREADSTATE(machine_state, rflags));
+  context_ptr->eflags = static_cast<uint32_t>(REGISTER_FROM_THREADSTATE(machine_state, rflags));
   AddReg(cs);
   AddReg(fs);
   AddReg(gs);
@@ -899,7 +899,7 @@ bool MinidumpGenerator::WriteMemoryListStream(
       = static_cast<mach_msg_type_number_t>(sizeof(state));
 
     if (GetThreadState(exception_thread_, state, &stateCount)) {
-      u_int64_t ip = CurrentPCForStack(state);
+      uint64_t ip = CurrentPCForStack(state);
       // Bound it to the upper and lower bounds of the region
       // it's contained within. If it's not in a known memory region,
       // don't bother trying to write it.
@@ -1162,7 +1162,7 @@ bool MinidumpGenerator::WriteModuleStream(unsigned int index,
       return false;
 
     module->base_of_image = image->GetVMAddr() + image->GetVMAddrSlide();
-    module->size_of_image = static_cast<u_int32_t>(image->GetVMSize());
+    module->size_of_image = static_cast<uint32_t>(image->GetVMSize());
     module->module_name_rva = string_location.rva;
 
     // We'll skip the executable module, because they don't have
@@ -1228,7 +1228,7 @@ bool MinidumpGenerator::WriteModuleStream(unsigned int index,
             return false;
 
           module->base_of_image = seg->vmaddr + slide;
-          module->size_of_image = static_cast<u_int32_t>(seg->vmsize);
+          module->size_of_image = static_cast<uint32_t>(seg->vmsize);
           module->module_name_rva = string_location.rva;
 
           bool in_memory = false;
@@ -1287,7 +1287,7 @@ bool MinidumpGenerator::WriteCVRecord(MDRawModule *module, int cpu_type,
 
   size_t module_name_length = strlen(module_name);
 
-  if (!cv.AllocateObjectAndArray(module_name_length + 1, sizeof(u_int8_t)))
+  if (!cv.AllocateObjectAndArray(module_name_length + 1, sizeof(uint8_t)))
     return false;
 
   if (!cv.CopyIndexAfterObject(0, module_name, module_name_length))
@@ -1388,7 +1388,7 @@ bool MinidumpGenerator::WriteMiscInfoStream(MDRawDirectory *misc_info_stream) {
   misc_info_stream->location = info.location();
 
   MDRawMiscInfo *info_ptr = info.get();
-  info_ptr->size_of_info = static_cast<u_int32_t>(sizeof(MDRawMiscInfo));
+  info_ptr->size_of_info = static_cast<uint32_t>(sizeof(MDRawMiscInfo));
   info_ptr->flags1 = MD_MISCINFO_FLAGS1_PROCESS_ID |
     MD_MISCINFO_FLAGS1_PROCESS_TIMES |
     MD_MISCINFO_FLAGS1_PROCESSOR_POWER_INFO;
@@ -1401,18 +1401,18 @@ bool MinidumpGenerator::WriteMiscInfoStream(MDRawDirectory *misc_info_stream) {
   if (getrusage(RUSAGE_SELF, &usage) != -1) {
     // Omit the fractional time since the MDRawMiscInfo only wants seconds
     info_ptr->process_user_time =
-        static_cast<u_int32_t>(usage.ru_utime.tv_sec);
+        static_cast<uint32_t>(usage.ru_utime.tv_sec);
     info_ptr->process_kernel_time =
-        static_cast<u_int32_t>(usage.ru_stime.tv_sec);
+        static_cast<uint32_t>(usage.ru_stime.tv_sec);
   }
   int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PID,
                  static_cast<int>(info_ptr->process_id) };
-  u_int mibsize = static_cast<u_int>(sizeof(mib) / sizeof(mib[0]));
+  uint mibsize = static_cast<uint>(sizeof(mib) / sizeof(mib[0]));
   struct kinfo_proc proc;
   size_t size = sizeof(proc);
   if (sysctl(mib, mibsize, &proc, &size, NULL, 0) == 0) {
     info_ptr->process_create_time =
-        static_cast<u_int32_t>(proc.kp_proc.p_starttime.tv_sec);
+        static_cast<uint32_t>(proc.kp_proc.p_starttime.tv_sec);
   }
 
   // Speed
@@ -1420,11 +1420,11 @@ bool MinidumpGenerator::WriteMiscInfoStream(MDRawDirectory *misc_info_stream) {
   const uint64_t kOneMillion = 1000 * 1000;
   size = sizeof(speed);
   sysctlbyname("hw.cpufrequency_max", &speed, &size, NULL, 0);
-  info_ptr->processor_max_mhz = static_cast<u_int32_t>(speed / kOneMillion);
-  info_ptr->processor_mhz_limit = static_cast<u_int32_t>(speed / kOneMillion);
+  info_ptr->processor_max_mhz = static_cast<uint32_t>(speed / kOneMillion);
+  info_ptr->processor_mhz_limit = static_cast<uint32_t>(speed / kOneMillion);
   size = sizeof(speed);
   sysctlbyname("hw.cpufrequency", &speed, &size, NULL, 0);
-  info_ptr->processor_current_mhz = static_cast<u_int32_t>(speed / kOneMillion);
+  info_ptr->processor_current_mhz = static_cast<uint32_t>(speed / kOneMillion);
 
   return true;
 }

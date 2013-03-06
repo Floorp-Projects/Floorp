@@ -64,7 +64,7 @@ class StackwalkerAMD64 : public Stackwalker {
 
  private:
   // A STACK CFI-driven frame walker for the AMD64
-  typedef SimpleCFIWalker<u_int64_t, MDRawContextAMD64> CFIWalker;
+  typedef SimpleCFIWalker<uint64_t, MDRawContextAMD64> CFIWalker;
 
   // Implementation of Stackwalker, using amd64 context (stack pointer in %rsp,
   // stack base in %rbp) and stack conventions (saved stack pointer at 0(%rbp))

@@ -56,17 +56,17 @@ class binarystream {
     : stream_(string(str, size), which) {}
 
   binarystream &operator>>(string &str);
-  binarystream &operator>>(u_int8_t &u8);
-  binarystream &operator>>(u_int16_t &u16);
-  binarystream &operator>>(u_int32_t &u32);
-  binarystream &operator>>(u_int64_t &u64);
+  binarystream &operator>>(uint8_t &u8);
+  binarystream &operator>>(uint16_t &u16);
+  binarystream &operator>>(uint32_t &u32);
+  binarystream &operator>>(uint64_t &u64);
 
   // Note: strings are truncated at 65535 characters
   binarystream &operator<<(const string &str);
-  binarystream &operator<<(u_int8_t u8);
-  binarystream &operator<<(u_int16_t u16);
-  binarystream &operator<<(u_int32_t u32);
-  binarystream &operator<<(u_int64_t u64);
+  binarystream &operator<<(uint8_t u8);
+  binarystream &operator<<(uint16_t u16);
+  binarystream &operator<<(uint32_t u32);
+  binarystream &operator<<(uint64_t u64);
 
   // Forward a few methods directly from the stream object
   bool eof() const { return stream_.eof(); }

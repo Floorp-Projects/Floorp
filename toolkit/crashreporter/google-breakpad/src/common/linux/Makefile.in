@@ -36,6 +36,8 @@ ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 DEFINES += -DELFSIZE=32
 endif
 
+DEFINES += -DNO_STABS_SUPPORT
+
 HOST_CPPSRCS = \
   dump_symbols.cc \
   elf_symbols_to_module.cc \

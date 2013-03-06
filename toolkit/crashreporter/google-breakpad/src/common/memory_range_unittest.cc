@@ -37,9 +37,9 @@ using testing::Message;
 
 namespace {
 
-const u_int32_t kBuffer[10] = { 0 };
+const uint32_t kBuffer[10] = { 0 };
 const size_t kBufferSize = sizeof(kBuffer);
-const u_int8_t* kBufferPointer = reinterpret_cast<const u_int8_t*>(kBuffer);
+const uint8_t* kBufferPointer = reinterpret_cast<const uint8_t*>(kBuffer);
 
 // Test vectors for verifying Covers, GetData, and Subrange.
 const struct {
