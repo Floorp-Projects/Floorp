@@ -11,7 +11,7 @@
 
 namespace CSF
 {
-	DECLARE_NS_PTR(CC_SIPCCDeviceInfo);
+	DECLARE_PTR(CC_SIPCCDeviceInfo);
     class CC_SIPCCDeviceInfo : public CC_DeviceInfo
     {
     private:

@@ -12,11 +12,10 @@
 
 namespace CSF
 {
-	DECLARE_NS_PTR(VideoControl)
+	DECLARE_PTR(VideoControl);
 	class ECC_API VideoControl
 	{
 	public:
-                NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoControl)
 		virtual ~VideoControl() {};
 
 		virtual void setVideoMode( bool enable ) = 0;
