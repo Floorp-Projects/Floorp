@@ -18,6 +18,8 @@ namespace CSF
 {
     class ECC_API CC_LineInfo
     {
+    public:
+        NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CC_LineInfo)
     protected:
         CC_LineInfo() { }
 
