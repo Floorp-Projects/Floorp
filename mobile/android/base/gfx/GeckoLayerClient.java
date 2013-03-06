@@ -17,6 +17,7 @@ import org.mozilla.gecko.util.FloatUtils;
 
 import android.content.Context;
 import android.graphics.PointF;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.SystemClock;
 import android.util.DisplayMetrics;
@@ -303,7 +304,8 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             default:
             case UPDATE:
                 // Keep the old viewport size
-                metrics = messageMetrics.setViewportSize(oldMetrics.getWidth(), oldMetrics.getHeight());
+                metrics = messageMetrics.setViewportSize(oldMetrics.getWidth(), oldMetrics.getHeight())
+                                        .setFixedLayerMarginsFrom(oldMetrics);
                 if (!oldMetrics.fuzzyEquals(metrics)) {
                     abortPanZoomAnimation();
                 }
@@ -344,6 +346,17 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             // get to java, and again once java figures out the display port).
             return DisplayPortCalculator.calculate(metrics, null);
         }
+    }
+
+    /**
+     * Sets margins on fixed-position layers, to be used when compositing.
+     * Must be called on the UI thread!
+     */
+    public void setFixedLayerMargins(float left, float top, float right, float bottom) {
+        ImmutableViewportMetrics oldMetrics = getViewportMetrics();
+        setViewportMetrics(oldMetrics.setFixedLayerMargins(left, top, right, bottom), false);
+
+        mView.requestRender();
     }
 
     // This is called on the Gecko thread to determine if we're still interested
@@ -536,6 +549,10 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mCurrentViewTransform.x = mFrameMetrics.viewportRectLeft;
         mCurrentViewTransform.y = mFrameMetrics.viewportRectTop;
         mCurrentViewTransform.scale = mFrameMetrics.zoomFactor;
+        mCurrentViewTransform.fixedLayerMarginLeft = mFrameMetrics.fixedLayerMarginLeft;
+        mCurrentViewTransform.fixedLayerMarginTop = mFrameMetrics.fixedLayerMarginTop;
+        mCurrentViewTransform.fixedLayerMarginRight = mFrameMetrics.fixedLayerMarginRight;
+        mCurrentViewTransform.fixedLayerMarginBottom = mFrameMetrics.fixedLayerMarginBottom;
 
         mRootLayer.setPositionAndResolution(x, y, x + width, y + height, resolution);
 
@@ -673,7 +690,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
                     return;
                 }
                 ImmutableViewportMetrics m = mViewportMetrics;
-                BrowserApp.mBrowserToolbar.setShadowVisibility(m.viewportRectTop >= m.pageRectTop);
+                BrowserApp.mBrowserToolbar.setShadowVisibility(m.viewportRectTop >= m.pageRectTop - m.fixedLayerMarginTop);
             }
         });
     }
