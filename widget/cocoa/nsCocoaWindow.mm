@@ -1651,11 +1651,6 @@ NS_IMETHODIMP nsCocoaWindow::GetSheetWindowParent(NSWindow** sheetWindowParent)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCocoaWindow::ResetInputState()
-{
-  return NS_OK;
-}
-
 // Invokes callback and ProcessEvent methods on Event Listener object
 NS_IMETHODIMP 
 nsCocoaWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
