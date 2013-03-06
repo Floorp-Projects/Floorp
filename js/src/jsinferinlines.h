@@ -604,7 +604,6 @@ TrackPropertyTypes(JSContext *cx, RawObject obj, RawId id)
 inline void
 AddTypePropertyId(JSContext *cx, JSObject *obj, jsid id, Type type)
 {
-    AssertCanGC();
     if (cx->typeInferenceEnabled())
         id = IdToTypeId(id);
     if (TrackPropertyTypes(cx, obj, id))
@@ -614,7 +613,6 @@ AddTypePropertyId(JSContext *cx, JSObject *obj, jsid id, Type type)
 inline void
 AddTypePropertyId(JSContext *cx, JSObject *obj, jsid id, const Value &value)
 {
-    AssertCanGC();
     if (cx->typeInferenceEnabled())
         id = IdToTypeId(id);
     if (TrackPropertyTypes(cx, obj, id))
@@ -624,7 +622,6 @@ AddTypePropertyId(JSContext *cx, JSObject *obj, jsid id, const Value &value)
 inline void
 AddTypeProperty(JSContext *cx, TypeObject *obj, const char *name, Type type)
 {
-    AssertCanGC();
     if (cx->typeInferenceEnabled() && !obj->unknownProperties())
         obj->addPropertyType(cx, name, type);
 }
@@ -632,7 +629,6 @@ AddTypeProperty(JSContext *cx, TypeObject *obj, const char *name, Type type)
 inline void
 AddTypeProperty(JSContext *cx, TypeObject *obj, const char *name, const Value &value)
 {
-    AssertCanGC();
     if (cx->typeInferenceEnabled() && !obj->unknownProperties())
         obj->addPropertyType(cx, name, value);
 }
@@ -1577,7 +1573,6 @@ inline HeapTypeSet *
 TypeObject::getProperty(JSContext *cx, RawId id, bool own)
 {
     JS_ASSERT(cx->compartment->activeAnalysis);
-    AssertCanGC();
 
     JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id));
     JS_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));

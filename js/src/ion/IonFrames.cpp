@@ -247,7 +247,6 @@ IonFrameIterator::machineState() const
 static void
 CloseLiveIterator(JSContext *cx, const InlineFrameIterator &frame, uint32_t localSlot)
 {
-    AssertCanGC();
     SnapshotIterator si = frame.snapshotIterator();
 
     // Skip stack slots until we reach the iterator object.
@@ -269,7 +268,6 @@ CloseLiveIterator(JSContext *cx, const InlineFrameIterator &frame, uint32_t loca
 static void
 CloseLiveIterators(JSContext *cx, const InlineFrameIterator &frame)
 {
-    AssertCanGC();
     RootedScript script(cx, frame.script());
     jsbytecode *pc = frame.pc();
 
@@ -300,7 +298,6 @@ CloseLiveIterators(JSContext *cx, const InlineFrameIterator &frame)
 void
 ion::HandleException(ResumeFromException *rfe)
 {
-    AssertCanGC();
     JSContext *cx = GetIonContext()->cx;
 
     IonSpew(IonSpew_Invalidate, "handling exception");

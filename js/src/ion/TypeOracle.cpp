@@ -606,7 +606,6 @@ TypeInferenceOracle::callArgsBarrier(HandleScript caller, jsbytecode *pc)
 bool
 TypeInferenceOracle::canEnterInlinedFunction(RawScript caller, jsbytecode *pc, RawFunction target)
 {
-    AssertCanGC();
     RootedScript targetScript(cx, target->nonLazyScript());
 
     // Make sure empty script has type information, to allow inlining in more cases.

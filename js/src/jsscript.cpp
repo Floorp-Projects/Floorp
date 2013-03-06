@@ -2014,7 +2014,6 @@ JSScript::enclosingScriptsCompiledSuccessfully() const
 void
 js::CallNewScriptHook(JSContext *cx, HandleScript script, HandleFunction fun)
 {
-    AssertCanGC();
     JS_ASSERT(!script->isActiveEval);
     if (JSNewScriptHook hook = cx->runtime->debugHooks.newScriptHook) {
         AutoKeepAtoms keep(cx->runtime);
@@ -2293,8 +2292,6 @@ Rebase(RawScript dst, RawScript src, T *srcp)
 RawScript
 js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript src)
 {
-    AssertCanGC();
-
     /* NB: Keep this in sync with XDRScript. */
 
     uint32_t nconsts   = src->hasConsts()   ? src->consts()->length   : 0;
@@ -2831,7 +2828,6 @@ js::SetFrameArgumentsObject(JSContext *cx, AbstractFramePtr frame,
 /* static */ bool
 JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
 {
-    AssertCanGC();
     JS_ASSERT(script->function());
     JS_ASSERT(script->analyzedArgsUsage());
     JS_ASSERT(script->argumentsHasVarBinding());

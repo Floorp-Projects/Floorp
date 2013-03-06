@@ -1329,7 +1329,6 @@ js::NumberValueToStringBuffer(JSContext *cx, const Value &v, StringBuffer &sb)
 JS_PUBLIC_API(bool)
 js::ToNumberSlow(JSContext *cx, Value v, double *out)
 {
-    AssertCanGC();
 #ifdef DEBUG
     /*
      * MSVC bizarrely miscompiles this, complaining about the first brace below

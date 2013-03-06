@@ -4361,7 +4361,6 @@ CodeGenerator::generate()
 bool
 CodeGenerator::link()
 {
-    AssertCanGC();
     JSContext *cx = GetIonContext()->cx;
 
     Linker linker(masm);
@@ -4624,7 +4623,6 @@ const VMFunction CallsiteCloneIC::UpdateInfo =
 bool
 CodeGenerator::visitCallsiteCloneIC(OutOfLineUpdateCache *ool, CallsiteCloneIC *ic)
 {
-    AssertCanGC();
     LInstruction *lir = ool->lir();
     saveLive(lir);
 
@@ -4656,7 +4654,6 @@ const VMFunction NameIC::UpdateInfo = FunctionInfo<NameICFn>(NameIC::update);
 bool
 CodeGenerator::visitNameIC(OutOfLineUpdateCache *ool, NameIC *ic)
 {
-    AssertCanGC();
     LInstruction *lir = ool->lir();
     saveLive(lir);
 
@@ -4704,7 +4701,6 @@ const VMFunction GetPropertyIC::UpdateInfo =
 bool
 CodeGenerator::visitGetPropertyIC(OutOfLineUpdateCache *ool, GetPropertyIC *ic)
 {
-    AssertCanGC();
     LInstruction *lir = ool->lir();
     saveLive(lir);
 
@@ -4750,7 +4746,6 @@ const VMFunction GetElementIC::UpdateInfo =
 bool
 CodeGenerator::visitGetElementIC(OutOfLineUpdateCache *ool, GetElementIC *ic)
 {
-    AssertCanGC();
     LInstruction *lir = ool->lir();
     saveLive(lir);
 
@@ -4783,7 +4778,6 @@ const VMFunction BindNameIC::UpdateInfo =
 bool
 CodeGenerator::visitBindNameIC(OutOfLineUpdateCache *ool, BindNameIC *ic)
 {
-    AssertCanGC();
     LInstruction *lir = ool->lir();
     saveLive(lir);
 
@@ -4877,7 +4871,6 @@ const VMFunction SetPropertyIC::UpdateInfo =
 bool
 CodeGenerator::visitSetPropertyIC(OutOfLineUpdateCache *ool, SetPropertyIC *ic)
 {
-    AssertCanGC();
     LInstruction *lir = ool->lir();
     saveLive(lir);
 
@@ -5612,7 +5605,6 @@ static const VMFunction SPSExitInfo = FunctionInfo<SPSFn>(SPSExit);
 bool
 CodeGenerator::visitFunctionBoundary(LFunctionBoundary *lir)
 {
-    AssertCanGC();
     Register temp = ToRegister(lir->temp()->output());
 
     switch (lir->type()) {
