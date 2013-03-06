@@ -55,9 +55,6 @@ interface imgIRequest : nsIRequest
    *
    * STATUS_ERROR: An error occurred loading the image.
    *
-   * STATUS_DECODE_STARTED: The decoding process has begun, but not yet
-   * finished.
-   *
    * STATUS_FRAME_COMPLETE: The first frame has been
    * completely decoded.
    *
@@ -69,9 +66,8 @@ interface imgIRequest : nsIRequest
   const long STATUS_LOAD_PARTIAL     = 0x2;
   const long STATUS_LOAD_COMPLETE    = 0x4;
   const long STATUS_ERROR            = 0x8;
-  const long STATUS_DECODE_STARTED   = 0x10;
-  const long STATUS_FRAME_COMPLETE   = 0x20;
-  const long STATUS_DECODE_COMPLETE  = 0x40;
+  const long STATUS_FRAME_COMPLETE   = 0x10;
+  const long STATUS_DECODE_COMPLETE  = 0x20;
   //@}
 
   /**
