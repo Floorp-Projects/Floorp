@@ -24,11 +24,13 @@ class TestL10NRepack(unittest.TestCase):
         foo = GeneratedFile('foo')
         foobar = GeneratedFile('foobar')
         qux = GeneratedFile('qux')
+        bar = GeneratedFile('bar')
         baz = GeneratedFile('baz')
         dict_aa = GeneratedFile('dict_aa')
         dict_bb = GeneratedFile('dict_bb')
         dict_cc = GeneratedFile('dict_cc')
         barbaz = GeneratedFile('barbaz')
+        lst = GeneratedFile('foo\nbar')
         app_finder = MockFinder({
             'bar/foo': foo,
             'chrome/foo/foobar': foobar,
@@ -49,12 +51,17 @@ class TestL10NRepack(unittest.TestCase):
             ManifestFile('app', [Manifest('app', 'chrome/chrome.manifest')]),
             'app/dict/bb': dict_bb,
             'app/dict/cc': dict_cc,
+            'app/chrome/bar/search/foo.xml': foo,
+            'app/chrome/bar/search/bar.xml': bar,
+            'app/chrome/bar/search/lst.txt': lst,
         })
         app_finder.jarlogs = {}
         app_finder.base = 'app'
+        foo_l10n = GeneratedFile('foo_l10n')
         qux_l10n = GeneratedFile('qux_l10n')
         baz_l10n = GeneratedFile('baz_l10n')
         barbaz_l10n = GeneratedFile('barbaz_l10n')
+        lst_l10n = GeneratedFile('foo\nqux')
         l10n_finder = MockFinder({
             'chrome/qux-l10n/qux.properties': qux_l10n,
             'chrome/qux-l10n/baz/baz.properties': baz_l10n,
@@ -72,12 +79,16 @@ class TestL10NRepack(unittest.TestCase):
             'app/chrome.manifest':
             ManifestFile('app', [Manifest('app', 'chrome/chrome.manifest')]),
             'app/dict/aa': dict_aa,
+            'app/chrome/bar-l10n/search/foo.xml': foo_l10n,
+            'app/chrome/bar-l10n/search/qux.xml': qux_l10n,
+            'app/chrome/bar-l10n/search/lst.txt': lst_l10n,
         })
         l10n_finder.base = 'l10n'
         copier = FileRegistry()
         formatter = FlatFormatter(copier)
 
-        l10n._repack(app_finder, l10n_finder, copier, formatter, ['dict'])
+        l10n._repack(app_finder, l10n_finder, copier, formatter,
+                     ['dict', 'chrome/**/search/*.xml'])
         self.maxDiff = None
 
         repacked = {
@@ -100,6 +111,9 @@ class TestL10NRepack(unittest.TestCase):
             'app/chrome.manifest':
             ManifestFile('app', [Manifest('app', 'chrome/chrome.manifest')]),
             'app/dict/aa': dict_aa,
+            'app/chrome/bar-l10n/search/foo.xml': foo_l10n,
+            'app/chrome/bar-l10n/search/qux.xml': qux_l10n,
+            'app/chrome/bar-l10n/search/lst.txt': lst_l10n,
         }
 
         self.assertEqual(
