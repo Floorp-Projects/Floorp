@@ -20,16 +20,75 @@ DisplayListClipState::GetCurrentCombinedClip(nsDisplayListBuilder* aBuilder)
   }
   void* mem = aBuilder->Allocate(sizeof(DisplayItemClip));
   if (mClipContentDescendants) {
-    mCurrentCombinedClip =
+    DisplayItemClip* newClip =
       new (mem) DisplayItemClip(*mClipContentDescendants);
     if (mClipContainingBlockDescendants) {
-      mCurrentCombinedClip->IntersectWith(*mClipContainingBlockDescendants);
+      newClip->IntersectWith(*mClipContainingBlockDescendants);
     }
+    mCurrentCombinedClip = newClip;
   } else {
     mCurrentCombinedClip =
       new (mem) DisplayItemClip(*mClipContainingBlockDescendants);
   }
   return mCurrentCombinedClip;
+}
+
+void
+DisplayListClipState::ClipContainingBlockDescendants(const nsRect& aRect,
+                                                     const nscoord* aRadii,
+                                                     DisplayItemClip& aClipOnStack)
+{
+  if (aRadii) {
+    aClipOnStack.SetTo(aRect, aRadii);
+  } else {
+    aClipOnStack.SetTo(aRect);
+  }
+  if (mClipContainingBlockDescendants) {
+    aClipOnStack.IntersectWith(*mClipContainingBlockDescendants);
+  }
+  mClipContainingBlockDescendants = &aClipOnStack;
+  mCurrentCombinedClip = nullptr;
+}
+
+void
+DisplayListClipState::ClipContentDescendants(const nsRect& aRect,
+                                             DisplayItemClip& aClipOnStack)
+{
+  aClipOnStack.SetTo(aRect);
+  if (mClipContentDescendants) {
+    aClipOnStack.IntersectWith(*mClipContentDescendants);
+  }
+  mClipContentDescendants = &aClipOnStack;
+  mCurrentCombinedClip = nullptr;
+}
+
+DisplayListClipState::AutoClipContainingBlockDescendantsToContentBox::
+AutoClipContainingBlockDescendantsToContentBox(nsDisplayListBuilder* aBuilder,
+                                               nsIFrame* aFrame,
+                                               uint32_t aFlags)
+  : AutoSaveRestore(aBuilder->ClipState())
+{
+  mState.ClipContainingBlockDescendantsToContentBox(aBuilder, aFrame, mClip, aFlags);
+}
+
+void
+DisplayListClipState::ClipContainingBlockDescendantsToContentBox(nsDisplayListBuilder* aBuilder,
+                                                                 nsIFrame* aFrame,
+                                                                 DisplayItemClip& aClipOnStack,
+                                                                 uint32_t aFlags)
+{
+  nscoord radii[8];
+  bool hasBorderRadius = aFrame->GetContentBoxBorderRadii(radii);
+  if (!hasBorderRadius && (aFlags & ASSUME_DRAWING_RESTRICTED_TO_CONTENT_RECT)) {
+    return;
+  }
+
+  nsRect clipRect = aFrame->GetContentRectRelativeToSelf() +
+    aBuilder->ToReferenceFrame(aFrame);
+  // If we have a border-radius, we have to clip our content to that
+  // radius.
+  ClipContainingBlockDescendants(clipRect, hasBorderRadius ? radii : nullptr,
+                                 aClipOnStack);
 }
 
 }
