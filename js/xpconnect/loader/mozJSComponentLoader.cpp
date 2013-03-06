@@ -898,7 +898,7 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
                .setSourcePolicy(mReuseLoaderGlobal ?
                                 JS::CompileOptions::NO_SOURCE :
                                 JS::CompileOptions::LAZY_SOURCE);
-        js::RootedObject rootedObject(cx, obj);
+        JS::RootedObject rootedObject(cx, obj);
 
         if (realFile) {
 #ifdef HAVE_PR_MEMMAP
