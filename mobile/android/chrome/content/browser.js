@@ -6406,8 +6406,8 @@ var PermissionsHelper = {
     },
     "geolocation": {
       label: "geolocation.shareLocation",
-      allowed: "geolocation.allow",
-      denied: "geolocation.dontAllow"
+      allowed: "geolocation.alwaysAllow",
+      denied: "geolocation.neverAllow"
     },
     "popup": {
       label: "blockPopups.label",
