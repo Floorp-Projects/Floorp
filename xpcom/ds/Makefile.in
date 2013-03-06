@@ -23,7 +23,6 @@ CPPSRCS		= \
 		nsAtomService.cpp \
 		nsByteBuffer.cpp \
 		nsCRT.cpp \
-		nsFixedSizeAllocator.cpp \
 		nsHashPropertyBag.cpp \
 		nsHashtable.cpp \
 		nsINIParserImpl.cpp \
@@ -71,7 +70,6 @@ EXPORTS		= \
 		nsCppSharedAllocator.h \
 		nsCRT.h \
 		nsExpirationTracker.h \
-		nsFixedSizeAllocator.h \
 		nsHashtable.h \
 		nsIByteBuffer.h \
 		nsIUnicharBuffer.h \
