@@ -8,11 +8,10 @@
 
 namespace CSF
 {
-        DECLARE_NS_PTR(AudioControl)
+	DECLARE_PTR(AudioControl);
 	class ECC_API AudioControl
 	{
 	public:
-                NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioControl)
 		// device names are in UTF-8 encoding
 
 		virtual std::vector<std::string> getRecordingDevices() = 0;

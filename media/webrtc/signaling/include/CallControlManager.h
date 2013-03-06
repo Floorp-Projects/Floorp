@@ -34,7 +34,7 @@
 
 namespace CSF
 {
-	DECLARE_NS_PTR(CallControlManager)
+	DECLARE_PTR(CallControlManager)
 	/**
 	 * CallControlManager
 	 *
@@ -48,7 +48,6 @@ namespace CSF
     class ECC_API CallControlManager
     {
     public:
-        NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CallControlManager)
 		/**
 		 *  Use create() to create a CallControlManager instance.
 		 *
