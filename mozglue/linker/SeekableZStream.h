@@ -22,7 +22,7 @@ struct SeekableZStreamHeader: public Zip::SignedEntity<SeekableZStreamHeader>
 {
   SeekableZStreamHeader()
   : Zip::SignedEntity<SeekableZStreamHeader>(magic)
-  , totalSize(0), chunkSize(0), nChunks(0), lastChunkSize(0) { }
+  , totalSize(0), chunkSize(0), nChunks(0), lastChunkSize(0), windowBits(0) { }
 
   /* Reuse Zip::SignedEntity to handle the magic number used in the Seekable
    * ZStream file format. The magic number is "SeZz". */
@@ -38,7 +38,13 @@ struct SeekableZStreamHeader: public Zip::SignedEntity<SeekableZStreamHeader>
   le_uint32 nChunks;
 
   /* Size of last chunk (> 0, <= Chunk size) */
-  le_uint32 lastChunkSize;
+  le_uint16 lastChunkSize;
+
+  /* windowBits value used when deflating */
+  signed char windowBits;
+
+  /* Padding */
+  unsigned char unused;
 };
 #pragma pack()
 
@@ -94,6 +100,9 @@ private:
 
   /* Size of last chunk (> 0, <= Chunk size) */
   uint32_t lastChunkSize;
+
+  /* windowBits value used when deflating */
+  int windowBits;
 
   /* Offsets table */
   Array<le_uint32> offsetTable;
