@@ -10,8 +10,13 @@
 #include "mozilla/Attributes.h"
 #include "CallControlManager.h"
 #include "CC_Device.h"
+#include "CC_DeviceInfo.h"
 #include "CC_Call.h"
+#include "CC_CallInfo.h"
+#include "CC_Line.h"
+#include "CC_LineInfo.h"
 #include "CC_Observer.h"
+#include "CC_FeatureInfo.h"
 
 #include "StaticPtr.h"
 #include "PeerConnectionImpl.h"
