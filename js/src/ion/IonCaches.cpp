@@ -96,7 +96,6 @@ IonCache::CacheName(IonCache::Kind kind)
 IonCache::LinkStatus
 IonCache::linkCode(JSContext *cx, MacroAssembler &masm, IonScript *ion, IonCode **code)
 {
-    AssertCanGC();
     Linker linker(masm);
     *code = linker.newCode(cx);
     if (!code)
@@ -1924,7 +1923,6 @@ BindNameIC::update(JSContext *cx, size_t cacheIndex, HandleObject scopeChain)
 bool
 NameIC::attach(JSContext *cx, IonScript *ion, HandleObject scopeChain, HandleObject holder, HandleShape shape)
 {
-    AssertCanGC();
     MacroAssembler masm(cx);
     Label failures;
 
