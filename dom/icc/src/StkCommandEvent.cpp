@@ -19,7 +19,7 @@ namespace dom {
 namespace icc {
 
 already_AddRefed<StkCommandEvent>
-StkCommandEvent::Create(nsAString& aMessage)
+StkCommandEvent::Create(const nsAString& aMessage)
 {
   nsRefPtr<StkCommandEvent> event = new StkCommandEvent();
   event->mCommand = aMessage;
