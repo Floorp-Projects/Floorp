@@ -1665,6 +1665,20 @@
     "extended_statistics_ok": true,
     "description": "Time spent on SQLite read() (ms)"
   },
+  "MOZ_SQLITE_COOKIES_OPEN_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Time spent on cookie DB open (ms)"
+  },
+  "MOZ_SQLITE_COOKIES_OPEN_READAHEAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Time spent on cookie DB open with readahead (ms)"
+  },
   "MOZ_SQLITE_COOKIES_READ_MS": {
     "kind": "exponential",
     "high": "3000",
