@@ -53,11 +53,18 @@ public:
   };
 
   // Constructs a DisplayItemClip that does no clipping at all.
-  DisplayItemClip() : mHaveClipRect(false) {}
+  DisplayItemClip() : mHaveClipRect(false), mHasBeenDestroyed(false) {}
+  ~DisplayItemClip() { mHasBeenDestroyed = true; }
 
-  // Construct as the intersection of aOther and aClipItem.
-  DisplayItemClip(const DisplayItemClip& aOther, nsDisplayItem* aClipItem);
+  void MaybeDestroy() const
+  {
+    if (!mHasBeenDestroyed) {
+      this->~DisplayItemClip();
+    }
+  }
 
+  void SetTo(const nsRect& aRect);
+  void SetTo(const nsRect& aRect, const nscoord* aRadii);
   void IntersectWith(const DisplayItemClip& aOther);
 
   // Apply this |DisplayItemClip| to the given gfxContext.  Any saving of state
@@ -80,10 +87,16 @@ public:
   void AddRoundedRectPathTo(gfxContext* aContext, int32_t A2D,
                             const RoundedRect &aRoundRect) const;
 
+  // Returns true if the intersection of aRect and this clip region is
+  // non-empty. This is precise for DisplayItemClips with at most one
+  // rounded rectangle. When multiple rounded rectangles are present, we just
+  // check that the rectangle intersects all of them (but possibly in different
+  // places). So it may return true when the correct answer is false.
+  bool MayIntersect(const nsRect& aRect) const;
   // Return a rectangle contained in the intersection of aRect with this
   // clip region. Tries to return the largest possible rectangle, but may
   // not succeed.
-  nsRect ApproximateIntersect(const nsRect& aRect) const;
+  nsRect ApproximateIntersectInward(const nsRect& aRect) const;
 
   /*
    * Computes a region which contains the clipped area of this DisplayItemClip,
@@ -138,6 +151,12 @@ public:
     return mClipRect;
   }
 
+  void MoveBy(nsPoint aPoint);
+
+#ifdef DEBUG
+  nsCString ToString() const;
+#endif
+
   /**
    * Find the largest N such that the first N rounded rects in 'this' are
    * equal to the first N rounded rects in aOther, and N <= aMax.
@@ -147,12 +166,19 @@ public:
   uint32_t GetRoundedRectCount() const { return mRoundedClipRects.Length(); }
   void AppendRoundedRects(nsTArray<RoundedRect>* aArray, uint32_t aCount) const;
 
+  static const DisplayItemClip& NoClip();
+
+  static void Shutdown();
+
 private:
   nsRect mClipRect;
   nsTArray<RoundedRect> mRoundedClipRects;
   // If mHaveClipRect is false then this object represents no clipping at all
   // and mRoundedClipRects must be empty.
   bool mHaveClipRect;
+  // Set to true when the destructor has run. This is a bit of a hack
+  // to ensure that we can easily share arena-allocated DisplayItemClips.
+  bool mHasBeenDestroyed;
 };
 
 }
