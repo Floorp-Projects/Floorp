@@ -444,14 +444,12 @@ public:
   NS_IMETHOD        ActivateNativeMenuItemAt(const nsAString& indexString);
   NS_IMETHOD        ForceUpdateNativeMenuAt(const nsAString& indexString);
 
-  NS_IMETHOD        ResetInputState();
+  NS_IMETHOD        NotifyIME(NotificationToIME aNotification) MOZ_OVERRIDE;
   NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
                                     const InputContextAction& aAction);
   NS_IMETHOD_(InputContext) GetInputContext();
-  NS_IMETHOD        CancelIMEComposition();
   NS_IMETHOD        GetToggledKeyState(uint32_t aKeyCode,
                                        bool* aLEDState);
-  NS_IMETHOD        OnIMEFocusChange(bool aFocus);
 
   // nsIPluginWidget
   // outClipRect and outOrigin are in display pixels (not device pixels)
