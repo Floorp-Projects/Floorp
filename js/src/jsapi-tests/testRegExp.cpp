@@ -6,10 +6,10 @@
 
 BEGIN_TEST(testObjectIsRegExp)
 {
-    js::RootedValue val(cx);
+    JS::RootedValue val(cx);
 
     EVAL("new Object", val.address());
-    js::RootedObject obj(cx, JSVAL_TO_OBJECT(val));
+    JS::RootedObject obj(cx, JSVAL_TO_OBJECT(val));
     CHECK(!JS_ObjectIsRegExp(cx, obj));
 
     EVAL("/foopy/", val.address());
@@ -22,8 +22,8 @@ END_TEST(testObjectIsRegExp)
 
 BEGIN_TEST(testGetRegExpFlags)
 {
-    js::RootedValue val(cx);
-    js::RootedObject obj(cx);
+    JS::RootedValue val(cx);
+    JS::RootedObject obj(cx);
 
     EVAL("/foopy/", val.address());
     obj = JSVAL_TO_OBJECT(val);
@@ -43,8 +43,8 @@ END_TEST(testGetRegExpFlags)
 
 BEGIN_TEST(testGetRegExpSource)
 {
-    js::RootedValue val(cx);
-    js::RootedObject obj(cx);
+    JS::RootedValue val(cx);
+    JS::RootedObject obj(cx);
 
     EVAL("/foopy/", val.address());
     obj = JSVAL_TO_OBJECT(val);

@@ -188,7 +188,7 @@ class JSAPITest
                    const char *actualExpr, const char *expectedExpr,
                    const char *filename, int lineno) {
         JSBool same;
-        js::RootedValue actual(cx, actualArg), expected(cx, expectedArg);
+        JS::RootedValue actual(cx, actualArg), expected(cx, expectedArg);
         return (JS_SameValue(cx, actual, expected, &same) && same) ||
                fail(JSAPITestString("CHECK_SAME failed: expected JS_SameValue(cx, ") +
                     actualExpr + ", " + expectedExpr + "), got !JS_SameValue(cx, " +
@@ -210,7 +210,7 @@ class JSAPITest
     bool fail(JSAPITestString msg = JSAPITestString(), const char *filename = "-", int lineno = 0) {
         if (JS_IsExceptionPending(cx)) {
             js::gc::AutoSuppressGC gcoff(cx);
-            js::RootedValue v(cx);
+            JS::RootedValue v(cx);
             JS_GetPendingException(cx, v.address());
             JS_ClearPendingException(cx);
             JSString *s = JS_ValueToString(cx, v);
