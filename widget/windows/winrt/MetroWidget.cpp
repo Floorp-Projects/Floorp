@@ -1152,18 +1152,26 @@ MetroWidget::GetInputContext()
 }
 
 NS_IMETHODIMP
-MetroWidget::ResetInputState()
+MetroWidget::NotifyIME(NotificationToIME aNotification)
 {
-  nsTextStore::CommitComposition(false);
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-MetroWidget::CancelIMEComposition()
-{
-  nsTextStore::CommitComposition(true);
-  return NS_OK;
+  switch (aNotification) {
+    case REQUEST_TO_COMMIT_COMPOSITION:
+      nsTextStore::CommitComposition(false);
+      return NS_OK;
+    case REQUEST_TO_CANCEL_COMPOSITION:
+      nsTextStore::CommitComposition(true);
+      return NS_OK;
+    case NOTIFY_IME_OF_FOCUS:
+      return nsTextStore::OnFocusChange(true, this,
+                                        mInputContext.mIMEState.mEnabled);
+    case NOTIFY_IME_OF_BLUR:
+      return nsTextStore::OnFocusChange(false, this,
+                                        mInputContext.mIMEState.mEnabled);
+    case NOTIFY_IME_OF_SELECTION_CHANGE:
+      return nsTextStore::OnSelectionChange();
+    default:
+      return NS_ERROR_NOT_IMPLEMENTED;
+  }
 }
 
 NS_IMETHODIMP
@@ -1175,24 +1183,11 @@ MetroWidget::GetToggledKeyState(uint32_t aKeyCode, bool* aLEDState)
 }
 
 NS_IMETHODIMP
-MetroWidget::OnIMEFocusChange(bool aFocus)
-{
-  return nsTextStore::OnFocusChange(aFocus, this,
-                                    mInputContext.mIMEState.mEnabled);
-}
-
-NS_IMETHODIMP
 MetroWidget::OnIMETextChange(uint32_t aStart,
                              uint32_t aOldEnd,
                              uint32_t aNewEnd)
 {
   return nsTextStore::OnTextChange(aStart, aOldEnd, aNewEnd);
-}
-
-NS_IMETHODIMP
-MetroWidget::OnIMESelectionChange(void)
-{
-  return nsTextStore::OnSelectionChange();
 }
 
 NS_IMETHODIMP

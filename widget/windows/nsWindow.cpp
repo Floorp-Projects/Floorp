@@ -6859,7 +6859,7 @@ LRESULT nsWindow::OnChar(const MSG &aMsg,
   }
 
   if (IMEHandler::IsComposingOn(this)) {
-    ResetInputState();
+    IMEHandler::NotifyIME(this, REQUEST_TO_COMMIT_COMPOSITION);
   }
 
   wchar_t uniChar;
@@ -7360,9 +7360,10 @@ nsWindow::OnSysColorChanged()
  **************************************************************
  **************************************************************/
 
-NS_IMETHODIMP nsWindow::ResetInputState()
+NS_IMETHODIMP
+nsWindow::NotifyIME(NotificationToIME aNotification)
 {
-  return IMEHandler::NotifyIME(this, REQUEST_TO_COMMIT_COMPOSITION);
+  return IMEHandler::NotifyIME(this, aNotification);
 }
 
 NS_IMETHODIMP_(void)
@@ -7386,11 +7387,6 @@ nsWindow::GetInputContext()
   return mInputContext;
 }
 
-NS_IMETHODIMP nsWindow::CancelIMEComposition()
-{
-  return IMEHandler::NotifyIME(this, REQUEST_TO_CANCEL_COMPOSITION);
-}
-
 NS_IMETHODIMP
 nsWindow::GetToggledKeyState(uint32_t aKeyCode, bool* aLEDState)
 {
@@ -7403,24 +7399,11 @@ nsWindow::GetToggledKeyState(uint32_t aKeyCode, bool* aLEDState)
 }
 
 NS_IMETHODIMP
-nsWindow::OnIMEFocusChange(bool aFocus)
-{
-  return IMEHandler::NotifyIME(this, aFocus ? NOTIFY_IME_OF_FOCUS :
-                                              NOTIFY_IME_OF_BLUR);
-}
-
-NS_IMETHODIMP
 nsWindow::OnIMETextChange(uint32_t aStart,
                           uint32_t aOldEnd,
                           uint32_t aNewEnd)
 {
   return IMEHandler::NotifyIMEOfTextChange(aStart, aOldEnd, aNewEnd);
-}
-
-NS_IMETHODIMP
-nsWindow::OnIMESelectionChange(void)
-{
-  return IMEHandler::NotifyIME(this, NOTIFY_IME_OF_SELECTION_CHANGE);
 }
 
 nsIMEUpdatePreference
