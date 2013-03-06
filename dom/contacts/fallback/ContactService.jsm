@@ -21,19 +21,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
                                    "nsIMessageListenerManager");
 
-XPCOMUtils.defineLazyGetter(this, "mRIL", function () {
-  let telephony = Cc["@mozilla.org/ril;1"];
-  if (!telephony) {
-    // Return a mock RIL because B2G Desktop build does not support telephony.
-    return {
-      getICCContacts: function(aContactType, aCallback) {
-        aCallback("!telephony", null, null);
-      }
-    };
-  }
-  return telephony.getService(Ci.nsIRadioInterfaceLayer);
-});
-
 let myGlobal = this;
 
 let ContactService = {
@@ -41,9 +28,8 @@ let ContactService = {
     if (DEBUG) debug("Init");
     this._messages = ["Contacts:Find", "Contacts:GetAll", "Contacts:GetAll:SendNow",
                       "Contacts:Clear", "Contact:Save",
-                      "Contact:Remove", "Contacts:GetSimContacts",
-                      "Contacts:RegisterForMessages", "child-process-shutdown",
-                      "Contacts:GetRevision"];
+                      "Contact:Remove", "Contacts:RegisterForMessages",
+                      "child-process-shutdown", "Contacts:GetRevision"];
     this._children = [];
     this._messages.forEach(function(msgName) {
       ppmm.addMessageListener(msgName, this);
@@ -172,24 +158,6 @@ let ContactService = {
           }.bind(this),
           function(aErrorMsg) { mm.sendAsyncMessage("Contacts:Clear:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this)
         );
-        break;
-      case "Contacts:GetSimContacts":
-        if (!this.assertPermission(aMessage, "contacts-read")) {
-          return null;
-        }
-        mRIL.getICCContacts(
-          msg.options.contactType,
-          function (aErrorMsg, aType, aContacts) {
-            if (aErrorMsg !== 'undefined') {
-              mm.sendAsyncMessage("Contacts:GetSimContacts:Return:KO",
-                                  {requestID: msg.requestID,
-                                   errorMsg: aErrorMsg});
-            } else {
-              mm.sendAsyncMessage("Contacts:GetSimContacts:Return:OK",
-                                  {requestID: msg.requestID,
-                                   contacts: aContacts});
-            }
-          }.bind(this));
         break;
       case "Contacts:GetRevision":
         if (!this.assertPermission(aMessage, "contacts-read")) {

@@ -14,7 +14,6 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
-Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 
 XPCOMUtils.defineLazyGetter(Services, "DOMRequest", function() {
   return Cc["@mozilla.org/dom/dom-request-service;1"].getService(Ci.nsIDOMRequestService);
@@ -477,34 +476,6 @@ ContactManager.prototype = {
           this._pushArray(data.cachedContacts, result);
         }
         break;
-      case "Contacts:GetSimContacts:Return:OK":
-        req = this.getRequest(msg.requestID);
-        if (req) {
-          let result = contacts.map(function(c) {
-            let contact = new Contact();
-            let prop = {name: [c.alphaId], tel: [ { value: c.number } ]};
-
-            if (c.email) {
-              prop.email = [{value: c.email}];
-            }
-
-            // ANR - Additional Number
-            if (c.anr) {
-              for (let i = 0; i < c.anr.length; i++) {
-                prop.tel.push({value: c.anr[i]});
-              }
-            }
-
-            contact.init(prop);
-            return contact;
-          });
-          if (DEBUG) debug("result: " + JSON.stringify(result));
-          Services.DOMRequest.fireSuccess(req.request,
-                                          ObjectWrapper.wrap(result, this._window));
-        } else {
-          if (DEBUG) debug("no request stored!" + msg.requestID);
-        }
-        break;
       case "Contact:Save:Return:OK":
       case "Contacts:Clear:Return:OK":
       case "Contact:Remove:Return:OK":
@@ -516,7 +487,6 @@ ContactManager.prototype = {
       case "Contact:Save:Return:KO":
       case "Contact:Remove:Return:KO":
       case "Contacts:Clear:Return:KO":
-      case "Contacts:GetSimContacts:Return:KO":
         req = this.getRequest(msg.requestID);
         if (req)
           Services.DOMRequest.fireError(req.request, msg.errorMsg);
@@ -570,7 +540,6 @@ ContactManager.prototype = {
         access = "write";
         break;
       case "find":
-      case "getSimContacts":
       case "listen":
       case "revision":
         access = "read";
@@ -743,25 +712,6 @@ ContactManager.prototype = {
     return request;
   },
 
-  getSimContacts: function(aContactType) {
-    let request;
-    request = this.createRequest();
-    let options = {contactType: aContactType};
-
-    let allowCallback = function() {
-      if (DEBUG) debug("getSimContacts " + aContactType);
-      cpmm.sendAsyncMessage("Contacts:GetSimContacts",
-        {requestID: this.getRequestId({request: request, reason: "getSimContacts"}),
-         options: options});
-    }.bind(this);
-
-    let cancelCallback = function() {
-      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-    }
-    this.askPermission("getSimContacts", request, allowCallback, cancelCallback);
-    return request;
-  },
-
   getRevision: function() {
     let request = this.createRequest();
 
@@ -784,8 +734,6 @@ ContactManager.prototype = {
                               "Contacts:Clear:Return:OK", "Contacts:Clear:Return:KO",
                               "Contact:Save:Return:OK", "Contact:Save:Return:KO",
                               "Contact:Remove:Return:OK", "Contact:Remove:Return:KO",
-                              "Contacts:GetSimContacts:Return:OK",
-                              "Contacts:GetSimContacts:Return:KO",
                               "Contact:Changed",
                               "PermissionPromptHelper:AskPermission:OK",
                               "Contacts:GetAll:Next",
