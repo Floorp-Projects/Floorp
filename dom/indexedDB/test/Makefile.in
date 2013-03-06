@@ -31,6 +31,7 @@ MOCHITEST_FILES = \
   test_bfcache.html \
   test_blob_archive.html \
   test_blob_simple.html \
+  test_bug847147.html \
   test_clear.html \
   test_complex_keyPaths.html \
   test_count.html \
