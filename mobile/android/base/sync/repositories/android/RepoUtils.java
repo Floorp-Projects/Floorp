@@ -246,69 +246,6 @@ public class RepoUtils {
     return a.equals(b);
   }
 
-  private static String fixedWidth(int width, String s) {
-    if (s == null) {
-      return spaces(width);
-    }
-    int length = s.length();
-    if (width == length) {
-      return s;
-    }
-    if (width > length) {
-      return s + spaces(width - length);
-    }
-    return s.substring(0, width);
-  }
-
-  private static String spaces(int i) {
-    return "                                     ".substring(0, i);
-  }
-
-  private static String dashes(int i) {
-    return "-------------------------------------".substring(0, i);
-  }
-
-  public static void dumpCursor(Cursor cur) {
-    dumpCursor(cur, 18, "records");
-  }
-
-  public static void dumpCursor(Cursor cur, int columnWidth, String tag) {
-    int originalPosition = cur.getPosition();
-    try {
-      String[] columnNames = cur.getColumnNames();
-      int columnCount      = cur.getColumnCount();
-
-      for (int i = 0; i < columnCount; ++i) {
-        System.out.print(fixedWidth(columnWidth, columnNames[i]) + " | ");
-      }
-      System.out.println("(" + cur.getCount() + " " + tag + ")");
-      for (int i = 0; i < columnCount; ++i) {
-        System.out.print(dashes(columnWidth) + " | ");
-      }
-      System.out.println("");
-      if (!cur.moveToFirst()) {
-        System.out.println("EMPTY");
-        return;
-      }
-
-      cur.moveToFirst();
-      while (!cur.isAfterLast()) {
-        for (int i = 0; i < columnCount; ++i) {
-          System.out.print(fixedWidth(columnWidth, cur.getString(i)) + " | ");
-        }
-        System.out.println("");
-        cur.moveToNext();
-      }
-      for (int i = 0; i < columnCount-1; ++i) {
-        System.out.print(dashes(columnWidth + 3));
-      }
-      System.out.print(dashes(columnWidth + 3 - 1));
-      System.out.println("");
-    } finally {
-      cur.moveToPosition(originalPosition);
-    }
-  }
-
   public static String computeSQLInClause(int items, String field) {
     StringBuilder builder = new StringBuilder(field);
     builder.append(" IN (");
