@@ -1113,8 +1113,6 @@ js::CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 fun_isGenerator(JSContext *cx, unsigned argc, Value *vp)
 {
-    AutoAssertNoGC nogc;
-
     RawFunction fun;
     if (!IsFunctionObject(vp[1], &fun)) {
         JS_SET_RVAL(cx, vp, BooleanValue(false));

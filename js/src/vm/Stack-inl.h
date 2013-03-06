@@ -75,7 +75,6 @@ StackFrame::compartment() const
 inline mjit::JITScript *
 StackFrame::jit()
 {
-    AutoAssertNoGC nogc;
     return script()->getJIT(isConstructing(), script()->zone()->compileBarriers());
 }
 #endif
@@ -192,7 +191,6 @@ StackFrame::jitHeavyweightFunctionPrologue(JSContext *cx)
 inline void
 StackFrame::initVarsToUndefined()
 {
-    AutoAssertNoGC nogc;
     SetValueRangeToUndefined(slots(), script()->nfixed);
 }
 
@@ -208,7 +206,6 @@ StackFrame::createRestParameter(JSContext *cx)
 inline Value &
 StackFrame::unaliasedVar(unsigned i, MaybeCheckAliasing checkAliasing)
 {
-    AutoAssertNoGC nogc;
     JS_ASSERT_IF(checkAliasing, !script()->varIsAliased(i));
     JS_ASSERT(i < script()->nfixed);
     return slots()[i];
@@ -218,7 +215,6 @@ inline Value &
 StackFrame::unaliasedLocal(unsigned i, MaybeCheckAliasing checkAliasing)
 {
 #ifdef DEBUG
-    AutoAssertNoGC nogc;
     if (checkAliasing) {
         JS_ASSERT(i < script()->nslots);
         if (i < script()->nfixed) {
@@ -379,11 +375,8 @@ STATIC_POSTCONDITION(!return || ubound(from) >= nvals)
 JS_ALWAYS_INLINE bool
 StackSpace::ensureSpace(JSContext *cx, MaybeReportError report, Value *from, ptrdiff_t nvals) const
 {
-    mozilla::Maybe<AutoAssertNoGC> maybeNoGC;
     if (report)
         AssertCanGC();
-    else
-        maybeNoGC.construct();
 
     assertInvariants();
     JS_ASSERT(from >= firstUnused());
@@ -412,11 +405,8 @@ JS_ALWAYS_INLINE StackFrame *
 ContextStack::getCallFrame(JSContext *cx, MaybeReportError report, const CallArgs &args,
                            JSFunction *fun, HandleScript script, StackFrame::Flags *flags) const
 {
-    mozilla::Maybe<AutoAssertNoGC> maybeNoGC;
     if (report)
         AssertCanGC();
-    else
-        maybeNoGC.construct();
 
     JS_ASSERT(fun->nonLazyScript() == script);
     unsigned nformal = fun->nargs;
@@ -459,11 +449,8 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
                               HandleFunction callee, HandleScript script,
                               InitialFrameFlags initial, MaybeReportError report)
 {
-    mozilla::Maybe<AutoAssertNoGC> maybeNoGC;
     if (report)
         AssertCanGC();
-    else
-        maybeNoGC.construct();
 
     JS_ASSERT(onTop());
     JS_ASSERT(regs.sp == args.end());
@@ -547,8 +534,6 @@ inline RawScript
 ContextStack::currentScript(jsbytecode **ppc,
                             MaybeAllowCrossCompartment allowCrossCompartment) const
 {
-    AutoAssertNoGC nogc;
-
     if (ppc)
         *ppc = NULL;
 

@@ -1899,7 +1899,6 @@ ion::FastInvoke(JSContext *cx, HandleFunction fun, CallArgsList &args)
 static void
 InvalidateActivation(FreeOp *fop, uint8_t *ionTop, bool invalidateAll)
 {
-    AutoAssertNoGC nogc;
     IonSpew(IonSpew_Invalidate, "BEGIN invalidating activation");
 
     size_t frameno = 1;
@@ -2041,7 +2040,6 @@ void
 ion::Invalidate(types::TypeCompartment &types, FreeOp *fop,
                 const Vector<types::RecompileInfo> &invalid, bool resetUses)
 {
-    AutoAssertNoGC nogc;
     IonSpew(IonSpew_Invalidate, "Start invalidation.");
     AutoFlushCache afc ("Invalidate");
 
@@ -2117,14 +2115,12 @@ ion::Invalidate(types::TypeCompartment &types, FreeOp *fop,
 void
 ion::Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool resetUses)
 {
-    AutoAssertNoGC nogc;
     ion::Invalidate(cx->compartment->types, cx->runtime->defaultFreeOp(), invalid, resetUses);
 }
 
 bool
 ion::Invalidate(JSContext *cx, RawScript script, ExecutionMode mode, bool resetUses)
 {
-    AutoAssertNoGC nogc;
     JS_ASSERT(script->hasIonScript());
 
     Vector<types::RecompileInfo> scripts(cx);

@@ -1331,8 +1331,6 @@ enum ComparatorMatchResult {
 ComparatorMatchResult
 MatchNumericComparator(const Value &v)
 {
-    AutoAssertNoGC nogc;
-
     if (!v.isObject())
         return Match_None;
 
