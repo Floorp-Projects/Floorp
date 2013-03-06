@@ -104,7 +104,13 @@ class TestResolveTargetToMake(unittest.TestCase):
         self.topobjdir = data_path
 
     def assertResolve(self, path, expected):
-        self.assertEqual(resolve_target_to_make(self.topobjdir, path), expected)
+        # Handle Windows path separators.
+        (reldir, target) = resolve_target_to_make(self.topobjdir, path)
+        if reldir is not None:
+            reldir = reldir.replace(os.sep, '/')
+        if target is not None:
+            target = target.replace(os.sep, '/')
+        self.assertEqual((reldir, target), expected)
 
     def test_absolute_path(self):
         abspath = os.path.abspath(os.path.join(self.topobjdir, 'test-dir'))
