@@ -22,8 +22,8 @@ struct gfxMargin : public mozilla::gfx::BaseMargin<gfxFloat, gfxMargin> {
   // Constructors
   gfxMargin() : Super() {}
   gfxMargin(const gfxMargin& aMargin) : Super(aMargin) {}
-  gfxMargin(gfxFloat aLeft,  gfxFloat aTop, gfxFloat aRight, gfxFloat aBottom)
-    : Super(aLeft, aTop, aRight, aBottom) {}
+  gfxMargin(gfxFloat aTop, gfxFloat aRight, gfxFloat aBottom, gfxFloat aLeft)
+    : Super(aTop, aRight, aBottom, aLeft) {}
 };
 
 namespace mozilla {

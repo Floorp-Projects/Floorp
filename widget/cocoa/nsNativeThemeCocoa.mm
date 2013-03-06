@@ -2371,15 +2371,18 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
 nsIntMargin
 nsNativeThemeCocoa::RTLAwareMargin(const nsIntMargin& aMargin, nsIFrame* aFrame)
 {
-  if (IsFrameRTL(aFrame))
-    return nsIntMargin(aMargin.right, aMargin.top, aMargin.left, aMargin.bottom);
+  if (IsFrameRTL(aFrame)) {
+    // Return a copy of aMargin w/ right & left reversed:
+    return nsIntMargin(aMargin.top, aMargin.left,
+                       aMargin.bottom, aMargin.right);
+  }
 
   return aMargin;
 }
 
-static const nsIntMargin kAquaDropdownBorder(5, 1, 22, 2);
-static const nsIntMargin kAquaComboboxBorder(4, 3, 20, 3);
-static const nsIntMargin kAquaSearchfieldBorder(19, 3, 5, 2);
+static const nsIntMargin kAquaDropdownBorder(1, 22, 2, 5);
+static const nsIntMargin kAquaComboboxBorder(3, 20, 3, 4);
+static const nsIntMargin kAquaSearchfieldBorder(3, 5, 2, 19);
 
 NS_IMETHODIMP
 nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext, 
@@ -2397,14 +2400,14 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
       if (IsButtonTypeMenu(aFrame)) {
         *aResult = RTLAwareMargin(kAquaDropdownBorder, aFrame);
       } else {
-        aResult->SizeTo(7, 1, 7, 3);
+        aResult->SizeTo(1, 7, 3, 7);
       }
       break;
     }
 
     case NS_THEME_TOOLBAR_BUTTON:
     {
-      aResult->SizeTo(4, 1, 4, 1);
+      aResult->SizeTo(1, 4, 1, 4);
       break;
     }
 
@@ -2475,16 +2478,16 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
           int32_t endcapSize = isSmall ? 5 : 6;
 
           if (isHorizontal)
-            aResult->SizeTo(endcapSize, 0, 0, 0);
+            aResult->SizeTo(0, 0, 0, endcapSize);
           else
-            aResult->SizeTo(0, endcapSize, 0, 0);
+            aResult->SizeTo(endcapSize, 0, 0, 0);
         }
       }
       break;
     }
 
     case NS_THEME_STATUSBAR:
-      aResult->SizeTo(0, 1, 0, 0);
+      aResult->SizeTo(1, 0, 0, 0);
       break;
   }
 
@@ -2543,18 +2546,21 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFram
     {
       // We assume that the above widgets can draw a focus ring that will be less than
       // or equal to 4 pixels thick.
-      nsIntMargin extraSize = nsIntMargin(MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH);
-      nsMargin m(NSIntPixelsToAppUnits(extraSize.left, p2a),
-                 NSIntPixelsToAppUnits(extraSize.top, p2a),
+      nsIntMargin extraSize = nsIntMargin(MAX_FOCUS_RING_WIDTH,
+                                          MAX_FOCUS_RING_WIDTH,
+                                          MAX_FOCUS_RING_WIDTH,
+                                          MAX_FOCUS_RING_WIDTH);
+      nsMargin m(NSIntPixelsToAppUnits(extraSize.top, p2a),
                  NSIntPixelsToAppUnits(extraSize.right, p2a),
-                 NSIntPixelsToAppUnits(extraSize.bottom, p2a));
+                 NSIntPixelsToAppUnits(extraSize.bottom, p2a),
+                 NSIntPixelsToAppUnits(extraSize.left, p2a));
       aOverflowRect->Inflate(m);
       return true;
     }
     case NS_THEME_PROGRESSBAR:
     {
       // Progress bars draw a 2 pixel white shadow under their progress indicators
-      nsMargin m(0, 0, 0, NSIntPixelsToAppUnits(2, p2a));
+      nsMargin m(0, 0, NSIntPixelsToAppUnits(2, p2a), 0);
       aOverflowRect->Inflate(m);
       return true;
     }

@@ -1912,8 +1912,8 @@ nsWindow::SetDrawsInTitlebar(bool aState)
   }
 
   if (aState) {
-     // left, top, right, bottom for nsIntMargin
-    nsIntMargin margins(-1, 0, -1, -1);
+    // top, right, bottom, left for nsIntMargin
+    nsIntMargin margins(0, -1, -1, -1);
     SetNonClientMargins(margins);
   }
   else {
@@ -5509,14 +5509,14 @@ nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my)
 
   // Ensure being accessible to borders of window.  Even if contents are in
   // this area, the area must behave as border.
-  nsIntMargin nonClientSize(std::max(mHorResizeMargin - mNonClientOffset.left,
-                                   kResizableBorderMinSize),
-                            std::max(mCaptionHeight - mNonClientOffset.top,
-                                   kResizableBorderMinSize),
+  nsIntMargin nonClientSize(std::max(mCaptionHeight - mNonClientOffset.top,
+                                     kResizableBorderMinSize),
                             std::max(mHorResizeMargin - mNonClientOffset.right,
-                                   kResizableBorderMinSize),
+                                     kResizableBorderMinSize),
                             std::max(mVertResizeMargin - mNonClientOffset.bottom,
-                                   kResizableBorderMinSize));
+                                     kResizableBorderMinSize),
+                            std::max(mHorResizeMargin - mNonClientOffset.left,
+                                     kResizableBorderMinSize));
 
   bool allowContentOverride = mSizeMode == nsSizeMode_Maximized ||
                               (mx >= winRect.left + nonClientSize.left &&
@@ -5529,10 +5529,10 @@ nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my)
   // contents under the mouse cursor should be able to override the behavior.
   // E.g., user must expect that Firefox button always opens the popup menu
   // even when the user clicks on the above edge of it.
-  nsIntMargin borderSize(std::max(nonClientSize.left, mHorResizeMargin),
-                         std::max(nonClientSize.top, mVertResizeMargin),
-                         std::max(nonClientSize.right, mHorResizeMargin),
-                         std::max(nonClientSize.bottom, mVertResizeMargin));
+  nsIntMargin borderSize(std::max(nonClientSize.top,    mVertResizeMargin),
+                         std::max(nonClientSize.right,  mHorResizeMargin),
+                         std::max(nonClientSize.bottom, mVertResizeMargin),
+                         std::max(nonClientSize.left,   mHorResizeMargin));
 
   bool top    = false;
   bool bottom = false;

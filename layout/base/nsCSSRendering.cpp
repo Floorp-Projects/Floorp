@@ -1241,8 +1241,8 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
     skipGfxRect = nsLayoutUtils::RectToGfxRect(paddingRect, twipsPerPixel);
   } else if (hasBorderRadius) {
     skipGfxRect.Deflate(gfxMargin(
-        0, std::max(borderRadii[C_TL].height, borderRadii[C_TR].height),
-        0, std::max(borderRadii[C_BL].height, borderRadii[C_BR].height)));
+        std::max(borderRadii[C_TL].height, borderRadii[C_TR].height), 0,
+        std::max(borderRadii[C_BL].height, borderRadii[C_BR].height), 0));
   }
 
   for (uint32_t i = shadows->Length(); i > 0; --i) {
@@ -1466,9 +1466,9 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
     skipRect.Deflate(blurMargin);
     gfxRect skipGfxRect = nsLayoutUtils::RectToGfxRect(skipRect, twipsPerPixel);
     if (hasBorderRadius) {
-      skipGfxRect.Deflate(
-          gfxMargin(0, std::max(clipRectRadii[C_TL].height, clipRectRadii[C_TR].height),
-                    0, std::max(clipRectRadii[C_BL].height, clipRectRadii[C_BR].height)));
+      skipGfxRect.Deflate(gfxMargin(
+          std::max(clipRectRadii[C_TL].height, clipRectRadii[C_TR].height), 0,
+          std::max(clipRectRadii[C_BL].height, clipRectRadii[C_BR].height), 0));
     }
 
     // When there's a blur radius, gfxAlphaBoxBlur leaves the skiprect area
