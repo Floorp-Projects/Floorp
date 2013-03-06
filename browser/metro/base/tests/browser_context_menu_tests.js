@@ -43,6 +43,7 @@ gTests.push({
     yield addTab(chromeRoot + "browser_context_menu_tests_02.html");
 
     purgeEventQueue();
+    emptyClipboard();
 
     let win = Browser.selectedTab.browser.contentWindow;
 
@@ -68,10 +69,21 @@ gTests.push({
     checkContextUIMenuItemVisibility(["context-copy",
                                       "context-search"]);
 
+    let menuItem = document.getElementById("context-copy");
     promise = waitForEvent(document, "popuphidden");
-    ContextMenuUI.hide();
+    EventUtils.synthesizeMouse(menuItem, 10, 10, {}, win);
+
     yield promise;
     ok(promise && !(promise instanceof Error), "promise error");
+
+    // The wait is needed to give time to populate the clipboard.
+    let string = "";
+    yield waitForCondition(function () {
+      string = SpecialPowers.getClipboardData("text/unicode");
+      return string === span.textContent;
+    });
+    ok(string === span.textContent, "copied selected text from span");
+
     win.getSelection().removeAllRanges();
 
     ////////////////////////////////////////////////////////////
@@ -136,21 +148,46 @@ gTests.push({
     // should be visible
     ok(ContextMenuUI._menuPopup._visible, "is visible");
 
-    checkContextUIMenuItemVisibility(["context-copy",
+    checkContextUIMenuItemVisibility(["context-select",
+                                      "context-select-all"]);
+
+    // copy menu item should not exist when no text is selected
+    let menuItem = document.getElementById("context-copy");
+    ok(menuItem && menuItem.hidden, "menu item is not visible");
+
+    promise = waitForEvent(document, "popuphidden");
+    ContextMenuUI.hide();
+    yield promise;
+    ok(promise && !(promise instanceof Error), "promise error");
+
+    ////////////////////////////////////////////////////////////
+    // context in input with selection copied to clipboard
+
+    let input = win.document.getElementById("text3-input");
+    input.value = "hello, I'm sorry but I must be going.";
+    input.setSelectionRange(0, 5);
+    promise = waitForEvent(document, "popupshown");
+    sendContextMenuClickToElement(win, input, 20, 10);
+    yield promise;
+    ok(promise && !(promise instanceof Error), "promise error");
+
+    // should be visible
+    ok(ContextMenuUI._menuPopup._visible, "is visible");
+
+    checkContextUIMenuItemVisibility(["context-cut",
+                                      "context-copy",
                                       "context-select",
                                       "context-select-all"]);
 
-    // copy menu item should copy all text
     let menuItem = document.getElementById("context-copy");
-    ok(menuItem, "menu item exists");
-    ok(!menuItem.hidden, "menu item visible");
-
     let popupPromise = waitForEvent(document, "popuphidden");
     EventUtils.synthesizeMouse(menuItem, 10, 10, {}, win);
+
     yield popupPromise;
     ok(popupPromise && !(popupPromise instanceof Error), "promise error");
+
     let string = SpecialPowers.getClipboardData("text/unicode");
-    ok(string, "hello, I'm sorry but I must be going.", "copy all");
+    ok(string === "hello", "copied selected text");
 
     emptyClipboard();
 
@@ -168,8 +205,8 @@ gTests.push({
     ok(ContextMenuUI._menuPopup._visible, "is visible");
 
     // selected text context:
-    checkContextUIMenuItemVisibility(["context-copy",
-                                      "context-search"]);
+    checkContextUIMenuItemVisibility(["context-cut",
+                                      "context-copy"]);
 
     promise = waitForEvent(document, "popuphidden");
     ContextMenuUI.hide();
@@ -191,14 +228,49 @@ gTests.push({
     ok(ContextMenuUI._menuPopup._visible, "is visible");
 
     // selected text context:
-    checkContextUIMenuItemVisibility(["context-copy",
-                                      "context-search",
+    checkContextUIMenuItemVisibility(["context-cut",
+                                      "context-copy",
                                       "context-paste"]);
 
     promise = waitForEvent(document, "popuphidden");
     ContextMenuUI.hide();
     yield promise;
     ok(promise && !(promise instanceof Error), "promise error");
+
+    ////////////////////////////////////////////////////////////
+    // context in input with selection cut to clipboard
+
+    emptyClipboard();
+
+    let input = win.document.getElementById("text3-input");
+    input.value = "hello, I'm sorry but I must be going.";
+    input.setSelectionRange(0, 5);
+    promise = waitForEvent(document, "popupshown");
+    sendContextMenuClickToElement(win, input, 20, 10);
+    yield promise;
+    ok(promise && !(promise instanceof Error), "promise error");
+
+    // should be visible
+    ok(ContextMenuUI._menuPopup._visible, "is visible");
+
+    checkContextUIMenuItemVisibility(["context-cut",
+                                      "context-copy",
+                                      "context-select",
+                                      "context-select-all"]);
+
+    let menuItem = document.getElementById("context-cut");
+    let popupPromise = waitForEvent(document, "popuphidden");
+    EventUtils.synthesizeMouse(menuItem, 10, 10, {}, win);
+
+    yield popupPromise;
+    ok(popupPromise && !(popupPromise instanceof Error), "promise error");
+
+    let string = SpecialPowers.getClipboardData("text/unicode");
+    let inputValue = input.value;
+    ok(string === "hello", "cut selected text in clipboard");
+    ok(inputValue === ", I'm sorry but I must be going.", "cut selected text from input value");
+
+    emptyClipboard();
 
     ////////////////////////////////////////////////////////////
     // context in empty input, data on clipboard (paste operation)
