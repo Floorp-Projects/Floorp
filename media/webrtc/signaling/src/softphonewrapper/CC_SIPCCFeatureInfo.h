@@ -11,7 +11,7 @@
 
 namespace CSF
 {
-	DECLARE_PTR(CC_SIPCCFeatureInfo);
+	DECLARE_NS_PTR(CC_SIPCCFeatureInfo);
     class CC_SIPCCFeatureInfo : public CC_FeatureInfo
     {
     private:
