@@ -455,14 +455,15 @@ nsGtkIMModule::ResetIME()
 }
 
 nsresult
-nsGtkIMModule::ResetInputState(nsWindow* aCaller)
+nsGtkIMModule::CommitIMEComposition(nsWindow* aCaller)
 {
     if (MOZ_UNLIKELY(IsDestroyed())) {
         return NS_OK;
     }
 
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-        ("GtkIMModule(%p): ResetInputState, aCaller=%p, mCompositionState=%s",
+        ("GtkIMModule(%p): CommitIMEComposition, aCaller=%p, "
+         "mCompositionState=%s",
          this, aCaller, GetCompositionStateName()));
 
     if (aCaller != mLastFocusedWindow) {
@@ -558,7 +559,7 @@ nsGtkIMModule::SetInputContext(nsWindow* aCaller,
 
     // Release current IME focus if IME is enabled.
     if (changingEnabledState && IsEditable()) {
-        ResetInputState(mLastFocusedWindow);
+        CommitIMEComposition(mLastFocusedWindow);
         Blur();
     }
 
