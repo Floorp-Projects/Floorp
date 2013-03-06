@@ -124,15 +124,12 @@ public:
     NS_IMETHOD GetAttention(int32_t aCycleCount) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD BeginResizeDrag(nsGUIEvent* aEvent, int32_t aHorizontal, int32_t aVertical) { return NS_ERROR_NOT_IMPLEMENTED; }
 
-    NS_IMETHOD ResetInputState();
+    NS_IMETHOD NotifyIME(NotificationToIME aNotification) MOZ_OVERRIDE;
     NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
                                       const InputContextAction& aAction);
     NS_IMETHOD_(InputContext) GetInputContext();
-    NS_IMETHOD CancelIMEComposition();
 
-    NS_IMETHOD OnIMEFocusChange(bool aFocus);
     NS_IMETHOD OnIMETextChange(uint32_t aStart, uint32_t aOldEnd, uint32_t aNewEnd);
-    NS_IMETHOD OnIMESelectionChange(void);
     virtual nsIMEUpdatePreference GetIMEUpdatePreference();
 
     LayerManager* GetLayerManager (PLayersChild* aShadowManager = nullptr,
