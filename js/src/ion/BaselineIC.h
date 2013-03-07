@@ -893,9 +893,9 @@ class ICStubCompiler
     virtual ICStub *getStub(ICStubSpace *space) = 0;
 
     ICStubSpace *getStubSpace(JSScript *script) {
-        return ICStub::CanMakeCalls(kind)
-            ? script->baselineScript()->fallbackStubSpace()
-            : script->baselineScript()->optimizedStubSpace();
+        if (ICStub::CanMakeCalls(kind))
+            return script->baselineScript()->fallbackStubSpace();
+        return script->compartment()->ionCompartment()->optimizedStubSpace();
     }
 };
 

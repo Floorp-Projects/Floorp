@@ -364,7 +364,8 @@ struct JSCompartment : private JS::shadow::Zone, public js::gc::GraphNodeBase<JS
     void sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *compartmentObject,
                              JS::TypeInferenceSizes *tiSizes,
                              size_t *shapesCompartmentTables, size_t *crossCompartmentWrappers,
-                             size_t *regexpCompartment, size_t *debuggeesSet);
+                             size_t *regexpCompartment, size_t *debuggeesSet,
+                             size_t *baselineOptimizedStubs);
 
     /*
      * Shared scope property tree, and arena-pool for allocating its nodes.
