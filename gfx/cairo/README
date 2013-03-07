@@ -233,3 +233,6 @@ pixman-enable-altivec-acceleration.patch: enable building the altivec accelerati
 ==== disable printing patch ====
 
 disable-printing.patch:  allows us to use NS_PRINTING to disable printing.
+
+==== cairo clamp bounday patch ====
+cairo-clamp-boundary.patch: don't call pixman_fill with negative starts or negative sizes
