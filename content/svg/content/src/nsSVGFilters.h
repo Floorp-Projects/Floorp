@@ -130,6 +130,9 @@ public:
   // nsSVGElement interface
   virtual bool HasValidDimensions() const;
 
+  bool IsNodeOfType(uint32_t aFlags) const
+    { return !(aFlags & ~(eCONTENT | eFILTER)); }
+
   virtual nsSVGString& GetResultImageName() = 0;
   // Return a list of all image names used as sources. Default is to
   // return no sources.
