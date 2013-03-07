@@ -210,6 +210,14 @@
     "extended_statistics_ok": true,
     "description": "Total JavaScript compartments used for web pages"
   },
+  "MEMORY_JS_MAIN_RUNTIME_TEMPORARY_PEAK": {
+    "kind": "exponential",
+    "low": 1024,
+    "high": "16 * 1024 * 1024",
+    "n_buckets": 200,
+    "extended_statistics_ok": true,
+    "description": "Peak memory used by the main JSRuntime to store transient data (KB)"
+  },
   "MEMORY_JS_GC_HEAP": {
     "kind": "exponential",
     "low": 1024,

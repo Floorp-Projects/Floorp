@@ -429,6 +429,9 @@ SystemCompartmentCount(JSRuntime *rt);
 extern JS_PUBLIC_API(size_t)
 UserCompartmentCount(JSRuntime *rt);
 
+extern JS_PUBLIC_API(size_t)
+PeakSizeOfTemporary(const JSRuntime *rt);
+
 } // namespace JS
 
 #endif // js_MemoryMetrics_h

@@ -60,9 +60,16 @@ LifoAlloc::freeAll()
     while (first) {
         BumpChunk *victim = first;
         first = first->next();
+        decrementCurSize(victim->computedSizeOfIncludingThis());
         BumpChunk::delete_(victim);
     }
     first = latest = last = NULL;
+
+    /*
+     * Nb: maintaining curSize_ correctly isn't easy.  Fortunately, this is an
+     * excellent sanity check.
+     */
+    JS_ASSERT(curSize_ == 0);
 }
 
 LifoAlloc::BumpChunk *
@@ -105,6 +112,11 @@ LifoAlloc::getOrCreateChunk(size_t n)
         latest->setNext(newChunk);
         latest = last = newChunk;
     }
+
+    size_t computedChunkSize = newChunk->computedSizeOfIncludingThis();
+    JS_ASSERT(computedChunkSize == chunkSize);
+    incrementCurSize(computedChunkSize);
+
     return newChunk;
 }
 
@@ -118,8 +130,10 @@ LifoAlloc::transferFrom(LifoAlloc *other)
     if (!other->first)
         return;
 
+    incrementCurSize(other->curSize_);
     append(other->first, other->last);
     other->first = other->last = other->latest = NULL;
+    other->curSize_ = 0;
 }
 
 void
@@ -131,14 +145,22 @@ LifoAlloc::transferUnusedFrom(LifoAlloc *other)
     if (other->markCount || !other->first)
         return;
 
-    /*
-     * Because of how getOrCreateChunk works, there may be unused chunks before
-     * |last|. We do not transfer those chunks. In most cases it is expected
-     * that last == first, so this should be a rare situation that, when it
-     * happens, should not recur.
-     */
+    // Transfer all chunks *after* |latest|.
 
     if (other->latest->next()) {
+        if (other->latest == other->first) {
+            // We're transferring everything except the first chunk.
+            size_t delta = other->curSize_ - other->first->computedSizeOfIncludingThis();
+            other->decrementCurSize(delta);
+            incrementCurSize(delta);
+        } else {
+            for (BumpChunk *chunk = other->latest->next(); chunk; chunk = chunk->next()) {
+                size_t size = chunk->computedSizeOfIncludingThis();
+                incrementCurSize(size);
+                other->decrementCurSize(size);
+            }
+        }
+
         append(other->latest->next(), other->last);
         other->latest->setNext(NULL);
         other->last = other->latest;

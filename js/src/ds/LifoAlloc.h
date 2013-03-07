@@ -94,8 +94,13 @@ class BumpChunk
     void setNext(BumpChunk *succ) { next_ = succ; }
 
     size_t used() const { return bump - bumpBase(); }
+
     size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) {
         return mallocSizeOf(this);
+    }
+
+    size_t computedSizeOfIncludingThis() {
+        return limit - headerBase();
     }
 
     void resetBump() {
@@ -165,11 +170,13 @@ class LifoAlloc
     BumpChunk   *last;
     size_t      markCount;
     size_t      defaultChunkSize_;
+    size_t      curSize_;
+    size_t      peakSize_;
 
     void operator=(const LifoAlloc &) MOZ_DELETE;
     LifoAlloc(const LifoAlloc &) MOZ_DELETE;
 
-    /* 
+    /*
      * Return a BumpChunk that can perform an allocation of at least size |n|
      * and add it to the chain appropriately.
      *
@@ -183,6 +190,7 @@ class LifoAlloc
         first = latest = last = NULL;
         defaultChunkSize_ = defaultChunkSize;
         markCount = 0;
+        curSize_ = 0;
     }
 
     void append(BumpChunk *start, BumpChunk *end) {
@@ -194,17 +202,39 @@ class LifoAlloc
         last = end;
     }
 
+    void incrementCurSize(size_t size) {
+        curSize_ += size;
+        if (curSize_ > peakSize_)
+            peakSize_ = curSize_;
+    }
+    void decrementCurSize(size_t size) {
+        JS_ASSERT(curSize_ >= size);
+        curSize_ -= size;
+    }
+
   public:
-    explicit LifoAlloc(size_t defaultChunkSize) { reset(defaultChunkSize); }
+    explicit LifoAlloc(size_t defaultChunkSize)
+      : peakSize_(0)
+    {
+        reset(defaultChunkSize);
+    }
 
     /* Steal allocated chunks from |other|. */
     void steal(LifoAlloc *other) {
         JS_ASSERT(!other->markCount);
+
+        /*
+         * Copy everything from |other| to |this| except for |peakSize_|, which
+         * requires some care.
+         */
+        size_t oldPeakSize = peakSize_;
         PodCopy((char *) this, (char *) other, sizeof(*this));
+        peakSize_ = Max(oldPeakSize, curSize_);
+
         other->reset(defaultChunkSize_);
     }
 
-    /* Append allocated chunks from |other|. They are removed from |other|. */
+    /* Append all chunks from |other|. They are removed from |other|. */
     void transferFrom(LifoAlloc *other);
 
     /* Append unused chunks from |other|. They are removed from |other|. */
@@ -249,12 +279,10 @@ class LifoAlloc
     JS_ALWAYS_INLINE
     bool ensureUnusedApproximate(size_t n) {
         size_t total = 0;
-        BumpChunk *chunk = latest;
-        while (chunk) {
+        for (BumpChunk *chunk = latest; chunk; chunk = chunk->next()) {
             total += chunk->unused();
             if (total >= n)
                 return true;
-            chunk = chunk->next();
         }
         BumpChunk *latestBefore = latest;
         if (!getOrCreateChunk(n))
@@ -298,18 +326,15 @@ class LifoAlloc
             return;
         }
 
-        /* 
+        /*
          * Find the chunk that contains |mark|, and make sure we don't pass
          * |latest| along the way -- we should be making the chain of active
          * chunks shorter, not longer!
          */
-        BumpChunk *container = first;
-        while (true) {
-            if (container->contains(mark))
-                break;
+        BumpChunk *container;
+        for (container = first; !container->contains(mark); container = container->next())
             JS_ASSERT(container != latest);
-            container = container->next();
-        }
+
         latest = container;
         latest->release(mark);
     }
@@ -324,31 +349,32 @@ class LifoAlloc
     /* Get the total "used" (occupied bytes) count for the arena chunks. */
     size_t used() const {
         size_t accum = 0;
-        BumpChunk *it = first;
-        while (it) {
-            accum += it->used();
-            if (it == latest)
+        for (BumpChunk *chunk = first; chunk; chunk = chunk->next()) {
+            accum += chunk->used();
+            if (chunk == latest)
                 break;
-            it = it->next();
         }
         return accum;
     }
 
     /* Get the total size of the arena chunks (including unused space). */
     size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const {
-        size_t accum = 0;
-        BumpChunk *it = first;
-        while (it) {
-            accum += it->sizeOfIncludingThis(mallocSizeOf);
-            it = it->next();
-        }
-        return accum;
+        size_t n = 0;
+        for (BumpChunk *chunk = first; chunk; chunk = chunk->next())
+            n += chunk->sizeOfIncludingThis(mallocSizeOf);
+        return n;
     }
 
     /* Like sizeOfExcludingThis(), but includes the size of the LifoAlloc itself. */
     size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const {
         return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
     }
+
+    /*
+     * Get the peak size of the arena chunks (including unused space and
+     * bookkeeping space).
+     */
+    size_t peakSizeOfExcludingThis() const { return peakSize_; }
 
     /* Doesn't perform construction; useful for lazily-initialized POD types. */
     template <typename T>
