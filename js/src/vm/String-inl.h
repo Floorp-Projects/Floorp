@@ -252,7 +252,7 @@ JSDependentString::new_(JSContext *cx, JSLinearString *baseArg, const jschar *ch
         return str;
     }
 
-    JS::Rooted<JSLinearString*> base(cx, baseArg);
+    js::Rooted<JSLinearString*> base(cx, baseArg);
 
     str = (JSDependentString *)js_NewGCString<js::CanGC>(cx);
     if (!str)

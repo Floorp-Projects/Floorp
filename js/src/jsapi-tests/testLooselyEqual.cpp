@@ -29,15 +29,15 @@ struct LooseEqualityFixture : public JSAPITest
 
 struct LooseEqualityData
 {
-    JS::RootedValue qNaN;
-    JS::RootedValue sNaN;
-    JS::RootedValue d42;
-    JS::RootedValue i42;
-    JS::RootedValue undef;
-    JS::RootedValue null;
-    JS::RootedValue obj;
-    JS::RootedValue poszero;
-    JS::RootedValue negzero;
+    js::RootedValue qNaN;
+    js::RootedValue sNaN;
+    js::RootedValue d42;
+    js::RootedValue i42;
+    js::RootedValue undef;
+    js::RootedValue null;
+    js::RootedValue obj;
+    js::RootedValue poszero;
+    js::RootedValue negzero;
 
     LooseEqualityData(JSContext *cx)
       : qNaN(cx),
