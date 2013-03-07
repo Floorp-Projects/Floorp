@@ -37,6 +37,7 @@ namespace mozilla {
 #endif
 
 #include "nricectx.h"
+#include "nriceresolver.h"
 #include "nricemediastream.h"
 #include "MediaPipeline.h"
 
@@ -239,13 +240,12 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   PeerConnectionMedia(PeerConnectionImpl *parent)
       : mParent(parent),
       mLocalSourceStreamsLock("PeerConnectionMedia.mLocalSourceStreamsLock"),
-      mIceCtx(NULL) {}
+      mIceCtx(NULL),
+      mDNSResolver(new mozilla::NrIceResolver()) {}
 
-  ~PeerConnectionMedia() {
-  }
+  ~PeerConnectionMedia() {}
 
   nsresult Init(const std::vector<mozilla::NrIceStunServer>& stun_servers);
-
   // WARNING: This destroys the object!
   void SelfDestruct();
 
@@ -353,6 +353,9 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // ICE objects
   mozilla::RefPtr<mozilla::NrIceCtx> mIceCtx;
   std::vector<mozilla::RefPtr<mozilla::NrIceMediaStream> > mIceStreams;
+
+  // DNS
+  nsRefPtr<mozilla::NrIceResolver> mDNSResolver;
 
   // Transport flows: even is RTP, odd is RTCP
   std::map<int, mozilla::RefPtr<mozilla::TransportFlow> > mTransportFlows;
