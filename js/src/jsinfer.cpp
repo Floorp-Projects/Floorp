@@ -6025,6 +6025,7 @@ JSObject::makeLazyType(JSContext *cx, HandleObject obj)
     }
     Rooted<TaggedProto> proto(cx, obj->getTaggedProto());
     TypeObject *type = cx->compartment->types.newTypeObject(cx, obj->getClass(), proto);
+    AutoAssertNoGC nogc;
     if (!type) {
         if (cx->typeInferenceEnabled())
             cx->compartment->types.setPendingNukeTypes(cx);

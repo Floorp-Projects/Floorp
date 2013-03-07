@@ -1777,6 +1777,7 @@ static inline void
 GenerateScopeChainGuard(MacroAssembler &masm, JSObject *scopeObj,
                         Register scopeObjReg, RawShape shape, Label *failures)
 {
+    AutoAssertNoGC nogc;
     if (scopeObj->isCall()) {
         // We can skip a guard on the call object if the script's bindings are
         // guaranteed to be immutable (and thus cannot introduce shadowing

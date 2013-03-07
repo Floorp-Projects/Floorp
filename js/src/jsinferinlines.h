@@ -275,6 +275,7 @@ TypeFlagPrimitive(TypeFlags flags)
 inline RawId
 IdToTypeId(RawId id)
 {
+    AutoAssertNoGC nogc;
     JS_ASSERT(!JSID_IS_EMPTY(id));
 
     /*
@@ -591,6 +592,8 @@ TypeMonitorCall(JSContext *cx, const js::CallArgs &args, bool constructing)
 inline bool
 TrackPropertyTypes(JSContext *cx, RawObject obj, RawId id)
 {
+    AutoAssertNoGC nogc;
+
     if (!cx->typeInferenceEnabled() || obj->hasLazyType() || obj->type()->unknownProperties())
         return false;
 
@@ -680,6 +683,7 @@ MarkTypePropertyConfigured(JSContext *cx, HandleObject obj, RawId id)
 inline void
 MarkObjectStateChange(JSContext *cx, RawObject obj)
 {
+    AutoAssertNoGC nogc;
     if (cx->typeInferenceEnabled() && !obj->hasLazyType() && !obj->type()->unknownProperties())
         obj->type()->markStateChange(cx);
 }
@@ -722,6 +726,8 @@ UseNewTypeAtEntry(JSContext *cx, StackFrame *fp)
 inline bool
 UseNewTypeForClone(JSFunction *fun)
 {
+    AutoAssertNoGC nogc;
+
     if (!fun->isInterpreted())
         return false;
 
@@ -792,6 +798,7 @@ TypeScript::NumTypeSets(RawScript script)
 /* static */ inline HeapTypeSet *
 TypeScript::ReturnTypes(RawScript script)
 {
+    AutoAssertNoGC nogc;
     TypeSet *types = script->types->typeArray() + script->nTypeSets + js::analyze::CalleeSlot();
     return types->toHeapTypeSet();
 }
@@ -799,6 +806,7 @@ TypeScript::ReturnTypes(RawScript script)
 /* static */ inline StackTypeSet *
 TypeScript::ThisTypes(RawScript script)
 {
+    AutoAssertNoGC nogc;
     TypeSet *types = script->types->typeArray() + script->nTypeSets + js::analyze::ThisSlot();
     return types->toStackTypeSet();
 }
@@ -812,6 +820,7 @@ TypeScript::ThisTypes(RawScript script)
 /* static */ inline StackTypeSet *
 TypeScript::ArgTypes(RawScript script, unsigned i)
 {
+    AutoAssertNoGC nogc;
     JS_ASSERT(i < script->function()->nargs);
     TypeSet *types = script->types->typeArray() + script->nTypeSets + js::analyze::ArgSlot(i);
     return types->toStackTypeSet();
@@ -820,6 +829,7 @@ TypeScript::ArgTypes(RawScript script, unsigned i)
 /* static */ inline StackTypeSet *
 TypeScript::LocalTypes(RawScript script, unsigned i)
 {
+    AutoAssertNoGC nogc;
     JS_ASSERT(i < script->nfixed);
     TypeSet *types = script->types->typeArray() + script->nTypeSets + js::analyze::LocalSlot(script, i);
     return types->toStackTypeSet();
@@ -828,6 +838,7 @@ TypeScript::LocalTypes(RawScript script, unsigned i)
 /* static */ inline StackTypeSet *
 TypeScript::SlotTypes(RawScript script, unsigned slot)
 {
+    AutoAssertNoGC nogc;
     JS_ASSERT(slot < js::analyze::TotalSlots(script));
     TypeSet *types = script->types->typeArray() + script->nTypeSets + slot;
     return types->toStackTypeSet();
@@ -957,6 +968,7 @@ TypeScript::MonitorUnknown(JSContext *cx, JSScript *script, jsbytecode *pc)
 /* static */ inline void
 TypeScript::GetPcScript(JSContext *cx, JSScript **script, jsbytecode **pc)
 {
+    AutoAssertNoGC nogc;
 #ifdef JS_ION
     if (cx->fp()->beginsIonActivation()) {
         ion::GetPcScript(cx, script, pc);
@@ -1598,6 +1610,7 @@ TypeObject::getProperty(JSContext *cx, RawId id, bool own)
             propertySet = NULL;
             return NULL;
         }
+        AutoAssertNoGC nogc;
         if (propertyCount == OBJECT_FLAG_PROPERTY_COUNT_LIMIT) {
             markUnknown(cx);
 
@@ -1626,6 +1639,7 @@ TypeObject::getProperty(JSContext *cx, RawId id, bool own)
 inline HeapTypeSet *
 TypeObject::maybeGetProperty(RawId id, JSContext *cx)
 {
+    AutoAssertNoGC nogc;
     JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id));
     JS_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));
     JS_ASSERT(!unknownProperties());

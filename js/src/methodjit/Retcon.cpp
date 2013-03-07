@@ -140,6 +140,8 @@ Recompiler::patchNative(JSCompartment *compartment, JITChunk *chunk, StackFrame 
 void
 Recompiler::patchFrame(JSCompartment *compartment, VMFrame *f, JSScript *script)
 {
+    AutoAssertNoGC nogc;
+
     /*
      * Check if the VMFrame returns directly into the script's jitcode. This
      * depends on the invariant that f->fp() reflects the frame at the point
@@ -183,6 +185,8 @@ Recompiler::patchFrame(JSCompartment *compartment, VMFrame *f, JSScript *script)
 StackFrame *
 Recompiler::expandInlineFrameChain(StackFrame *outer, InlineFrame *inner)
 {
+    AutoAssertNoGC nogc;
+
     StackFrame *parent;
     if (inner->parent)
         parent = expandInlineFrameChain(outer, inner->parent);
@@ -227,6 +231,7 @@ Recompiler::expandInlineFrames(JSCompartment *compartment,
                                StackFrame *fp, mjit::CallSite *inlined,
                                StackFrame *next, VMFrame *f)
 {
+    AutoAssertNoGC nogc;
     JS_ASSERT_IF(next, next->prev() == fp && next->prevInline() == inlined);
 
     /*
@@ -332,6 +337,7 @@ ExpandInlineFrames(JSCompartment *compartment)
 void
 ClearAllFrames(JSCompartment *compartment)
 {
+    AutoAssertNoGC nogc;
     if (!compartment || !compartment->rt->hasJaegerRuntime())
         return;
 
@@ -398,6 +404,7 @@ ClearAllFrames(JSCompartment *compartment)
 void
 Recompiler::clearStackReferences(FreeOp *fop, JSScript *script)
 {
+    AutoAssertNoGC nogc;
     JS_ASSERT(script->hasMJITInfo());
 
     JaegerSpew(JSpew_Recompile, "recompiling script (file \"%s\") (line \"%d\") (length \"%d\") (usecount=\"%d\")\n",

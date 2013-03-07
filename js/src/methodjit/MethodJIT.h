@@ -1075,6 +1075,7 @@ VMFrame::script()
 inline jsbytecode *
 VMFrame::pc()
 {
+    AutoAssertNoGC nogc;
     if (regs.inlined())
         return script()->code + regs.inlined()->pcOffset;
     return regs.pc;
