@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioBuffer.h"
+#include <speex/speex_resampler.h>
 #include "mozilla/dom/AudioBufferBinding.h"
 #include "nsContentUtils.h"
 #include "AudioContext.h"
@@ -192,17 +193,31 @@ AudioBuffer::GetThreadSharedChannelsForRate(JSContext* aJSContext, uint32_t aRat
     return mResampledChannels;
   }
 
+  SpeexResamplerState* resampler = speex_resampler_init(NumberOfChannels(),
+                                                        mSampleRate,
+                                                        aRate,
+                                                        SPEEX_RESAMPLER_QUALITY_DEFAULT,
+                                                        nullptr);
+
   for (uint32_t i = 0; i < NumberOfChannels(); ++i) {
-    NS_ERROR("Resampling not supported yet");
-    // const float* inputData = mSharedChannels->GetData(i);
-    // Resample(inputData, mLength, mSampleRate, outputData, newLength, aRate);
+    const float* inputData = mSharedChannels->GetData(i);
+    uint32_t inSamples = mLength;
+    uint32_t outSamples = newLength;
+
+    speex_resampler_process_float(resampler, i,
+                                  inputData, &inSamples,
+                                  outputData, &outSamples);
+
     mResampledChannels->SetData(i, i == 0 ? outputData : nullptr, outputData);
     outputData += newLength;
   }
+
+  speex_resampler_destroy(resampler);
+
   mResampledChannelsRate = aRate;
   mResampledChannelsLength = newLength;
   return mResampledChannels;
 }
- 
+
 }
 }
