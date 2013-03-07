@@ -868,7 +868,7 @@ nsIFrame::GetUsedMargin() const
   nsMargin margin(0, 0, 0, 0);
   if (((mState & NS_FRAME_FIRST_REFLOW) &&
        !(mState & NS_FRAME_IN_REFLOW)) ||
-      (mState & NS_FRAME_IS_SVG_TEXT))
+      IsSVGText())
     return margin;
 
   nsMargin *m = static_cast<nsMargin*>
@@ -891,7 +891,7 @@ nsIFrame::GetUsedBorder() const
   nsMargin border(0, 0, 0, 0);
   if (((mState & NS_FRAME_FIRST_REFLOW) &&
        !(mState & NS_FRAME_IN_REFLOW)) ||
-      (mState & NS_FRAME_IS_SVG_TEXT))
+      IsSVGText())
     return border;
 
   // Theme methods don't use const-ness.
@@ -927,7 +927,7 @@ nsIFrame::GetUsedPadding() const
   nsMargin padding(0, 0, 0, 0);
   if (((mState & NS_FRAME_FIRST_REFLOW) &&
        !(mState & NS_FRAME_IN_REFLOW)) ||
-      (mState & NS_FRAME_IS_SVG_TEXT))
+      IsSVGText())
     return padding;
 
   // Theme methods don't use const-ness.
@@ -7474,7 +7474,7 @@ ConvertSVGDominantBaselineToVerticalAlign(uint8_t aDominantBaseline)
 uint8_t
 nsIFrame::VerticalAlignEnum() const
 {
-  if (mState & NS_FRAME_IS_SVG_TEXT) {
+  if (IsSVGText()) {
     uint8_t dominantBaseline;
     for (const nsIFrame* frame = this; frame; frame = frame->GetParent()) {
       dominantBaseline = frame->StyleSVGReset()->mDominantBaseline;
