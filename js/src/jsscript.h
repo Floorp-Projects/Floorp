@@ -191,7 +191,7 @@ class Bindings
     unsigned count() const { return numArgs() + numVars(); }
 
     /* Return the initial shape of call objects created for this scope. */
-    UnrootedShape callObjShape() const { return callObjShape_.get(); }
+    RawShape callObjShape() const { return callObjShape_; }
 
     /* Convenience method to get the var index of 'arguments'. */
     static unsigned argumentsVarIndex(JSContext *cx, InternalBindingsHandle);
@@ -526,9 +526,9 @@ class JSScript : public js::gc::Cell
     //
 
   public:
-    static js::UnrootedScript Create(JSContext *cx, js::HandleObject enclosingScope, bool savedCallerFun,
-                                    const JS::CompileOptions &options, unsigned staticLevel,
-                                    js::ScriptSource *ss, uint32_t sourceStart, uint32_t sourceEnd);
+    static js::RawScript Create(JSContext *cx, js::HandleObject enclosingScope, bool savedCallerFun,
+                                const JS::CompileOptions &options, unsigned staticLevel,
+                                js::ScriptSource *ss, uint32_t sourceStart, uint32_t sourceEnd);
 
     // Three ways ways to initialize a JSScript. Callers of partiallyInit()
     // and fullyInitTrivial() are responsible for notifying the debugger after
@@ -791,7 +791,7 @@ class JSScript : public js::gc::Cell
 
     bool hasArray(ArrayKind kind)           { return (hasArrayBits & (1 << kind)); }
     void setHasArray(ArrayKind kind)        { hasArrayBits |= (1 << kind); }
-    void cloneHasArray(js::UnrootedScript script) { hasArrayBits = script->hasArrayBits; }
+    void cloneHasArray(js::RawScript script) { hasArrayBits = script->hasArrayBits; }
 
     bool hasConsts()        { return hasArray(CONSTS);      }
     bool hasObjects()       { return hasArray(OBJECTS);     }
@@ -940,8 +940,8 @@ class JSScript : public js::gc::Cell
 
     void finalize(js::FreeOp *fop);
 
-    static inline void writeBarrierPre(js::UnrootedScript script);
-    static inline void writeBarrierPost(js::UnrootedScript script, void *addr);
+    static inline void writeBarrierPre(js::RawScript script);
+    static inline void writeBarrierPost(js::RawScript script, void *addr);
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_SCRIPT; }
 
@@ -1017,7 +1017,7 @@ class AliasedFormalIter
     }
 
   public:
-    explicit inline AliasedFormalIter(js::UnrootedScript script);
+    explicit inline AliasedFormalIter(js::RawScript script);
 
     bool done() const { return p_ == end_; }
     operator bool() const { return !done(); }
@@ -1375,7 +1375,7 @@ enum LineOption {
 inline void
 CurrentScriptFileLineOrigin(JSContext *cx, unsigned *linenop, LineOption = NOT_CALLED_FROM_JSOP_EVAL);
 
-extern UnrootedScript
+extern RawScript
 CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript script);
 
 bool

@@ -1,0 +1,57 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7" src="unit/test_transaction_lifetimes.js"></script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+<script>
+
+var win;
+var r1;
+
+function e()
+{
+  win = window.open("data:text/html,<body onload='opener.f()'>1", "_blank", "");
+}
+
+function f()
+{
+  setTimeout(function() {
+    r1 = win.document.documentElement;
+    win.location.replace("data:text/html,<body onload='opener.g()'>2");
+  }, 0);
+}
+
+function g()
+{
+  r1.appendChild(document.createElement("iframe"));
+  setTimeout(function() {
+    win.location = "data:text/html,<body onload='opener.h()'>3";
+  }, 0);
+}
+
+function h()
+{
+  win.close();
+  ok(true, "This test is looking for assertions so this is irrelevant.");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</head>
+
+<body onload="e();">
+<button onclick="e();">Start test</button>
+</body>
+</html>

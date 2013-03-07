@@ -58,13 +58,13 @@ StaticScopeIter::hasDynamicScopeObject() const
            : obj->toFunction()->isHeavyweight();
 }
 
-UnrootedShape
+RawShape
 StaticScopeIter::scopeShape() const
 {
     JS_ASSERT(hasDynamicScopeObject());
     JS_ASSERT(type() != NAMED_LAMBDA);
     return type() == BLOCK
-           ? UnrootedShape(block().lastProperty())
+           ? block().lastProperty()
            : funScript()->bindings.callObjShape();
 }
 
@@ -83,7 +83,7 @@ StaticScopeIter::block() const
     return obj->asStaticBlock();
 }
 
-UnrootedScript
+RawScript
 StaticScopeIter::funScript() const
 {
     JS_ASSERT(type() == FUNCTION);
@@ -92,7 +92,7 @@ StaticScopeIter::funScript() const
 
 /*****************************************************************************/
 
-UnrootedShape
+RawShape
 js::ScopeCoordinateToStaticScopeShape(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     JS_ASSERT(pc >= script->code && pc < script->code + script->length);
@@ -146,7 +146,8 @@ CallObject::create(JSContext *cx, HandleShape shape, HandleTypeObject type, Heap
     JS_ASSERT(CanBeFinalizedInBackground(kind, &CallClass));
     kind = gc::GetBackgroundAllocKind(kind);
 
-    JSObject *obj = JSObject::create(cx, kind, gc::DefaultHeap, shape, type, slots);
+    JSObject *obj = JSObject::create(cx, kind, GetInitialHeap(GenericObject, &CallClass),
+                                     shape, type, slots);
     if (!obj)
         return NULL;
     return &obj->asCall();
@@ -687,7 +688,7 @@ StaticBlockObject::create(JSContext *cx)
     return &obj->asStaticBlock();
 }
 
-/* static */ UnrootedShape
+/* static */ RawShape
 StaticBlockObject::addVar(JSContext *cx, Handle<StaticBlockObject*> block, HandleId id,
                           int index, bool *redeclared)
 {
@@ -699,7 +700,7 @@ StaticBlockObject::addVar(JSContext *cx, Handle<StaticBlockObject*> block, Handl
     Shape **spp;
     if (Shape::search(cx, block->lastProperty(), id, &spp, true)) {
         *redeclared = true;
-        return UnrootedShape(NULL);
+        return NULL;
     }
 
     /*
@@ -798,7 +799,7 @@ js::XDRStaticBlockObject(XDRState<mode> *xdr, HandleObject enclosingScope, Handl
             return false;
 
         for (Shape::Range r(obj->lastProperty()); !r.empty(); r.popFront()) {
-            UnrootedShape shape = &r.front();
+            RawShape shape = &r.front();
             shapes[shape->shortid()] = shape;
         }
 
@@ -1229,7 +1230,7 @@ class DebugScopeProxy : public BaseProxyHandler
         /* Handle unaliased let and catch bindings at block scope. */
         if (scope->isClonedBlock()) {
             Rooted<ClonedBlockObject *> block(cx, &scope->asClonedBlock());
-            UnrootedShape shape = block->lastProperty()->search(cx, id);
+            RawShape shape = block->lastProperty()->search(cx, id);
             if (!shape)
                 return false;
 
@@ -1239,7 +1240,7 @@ class DebugScopeProxy : public BaseProxyHandler
                 return false;
 
             if (maybeframe) {
-                UnrootedScript script = maybeframe.script();
+                RawScript script = maybeframe.script();
                 unsigned local = block->slotToLocalIndex(script->bindings, shape->slot());
                 if (action == GET)
                     *vp = maybeframe.unaliasedLocal(local);

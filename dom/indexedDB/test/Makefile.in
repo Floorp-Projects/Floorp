@@ -117,6 +117,7 @@ MOCHITEST_FILES = \
   webapp_clearBrowserData_browserFrame.html \
   $(NULL)
 
+#   test_bug847147.html disabled for timeouts
 #   test_writer_starvation.html  disabled for infinite loops, bug 595368
 
 ifeq (browser,$(MOZ_BUILD_APP))

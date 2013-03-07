@@ -99,6 +99,7 @@ function closeConsoles() {
   }
 
   waitForSuccess({
+    timeout: 10000,
     name: "4 web consoles closed",
     validatorFn: function()
     {

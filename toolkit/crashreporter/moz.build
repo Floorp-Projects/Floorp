@@ -4,7 +4,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['OS_ARCH'] == 'WINNT':
-    DIRS += ['breakpad-windows-libxul']
+    DIRS += [
+    'google-breakpad/src/common',
+    'google-breakpad/src/processor',
+    'breakpad-windows-libxul'
+    ]
 
     if CONFIG['MOZ_CRASHREPORTER_INJECTOR']:
         DIRS += ['breakpad-windows-standalone']
@@ -16,6 +20,7 @@ elif CONFIG['OS_ARCH'] == 'Darwin':
         'google-breakpad/src/client',
         'google-breakpad/src/client/mac/crash_generation',
         'google-breakpad/src/client/mac/handler',
+        'google-breakpad/src/processor',
         'google-breakpad/src/tools/mac/dump_syms',
     ]
 
@@ -27,6 +32,7 @@ elif CONFIG['OS_ARCH'] == 'Linux':
         'google-breakpad/src/client/linux/crash_generation',
         'google-breakpad/src/client/linux/handler',
         'google-breakpad/src/client/linux/minidump_writer',
+        'google-breakpad/src/processor',
         'google-breakpad/src/tools/linux/dump_syms',
     ]
 

@@ -65,7 +65,7 @@ size_t ModuleSerializer::SizeOf(const BasicSourceLineResolver::Module &module) {
      module.cfi_delta_rules_);
 
   // Header size.
-  total_size_alloc_ = kNumberMaps_ * sizeof(u_int32_t);
+  total_size_alloc_ = kNumberMaps_ * sizeof(uint32_t);
 
   for (int i = 0; i < kNumberMaps_; ++i)
    total_size_alloc_ += map_sizes_[i];
@@ -79,8 +79,8 @@ size_t ModuleSerializer::SizeOf(const BasicSourceLineResolver::Module &module) {
 char *ModuleSerializer::Write(const BasicSourceLineResolver::Module &module,
                               char *dest) {
   // Write header.
-  memcpy(dest, map_sizes_, kNumberMaps_ * sizeof(u_int32_t));
-  dest += kNumberMaps_ * sizeof(u_int32_t);
+  memcpy(dest, map_sizes_, kNumberMaps_ * sizeof(uint32_t));
+  dest += kNumberMaps_ * sizeof(uint32_t);
   // Write each map.
   dest = files_serializer_.Write(module.files_, dest);
   dest = functions_serializer_.Write(module.functions_, dest);

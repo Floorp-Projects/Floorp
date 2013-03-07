@@ -46,7 +46,7 @@ class ExceptionHandler;
 
 struct MappingEntry {
   MappingInfo first;
-  u_int8_t second[sizeof(MDGUID)];
+  uint8_t second[sizeof(MDGUID)];
 };
 
 // A list of <MappingInfo, GUID>

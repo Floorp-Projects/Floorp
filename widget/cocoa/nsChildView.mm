@@ -1200,13 +1200,16 @@ nsresult nsChildView::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
+  NSPoint pt =
+    nsCocoaUtils::DevPixelsToCocoaPoints(aPoint, BackingScaleFactor());
+
   // Move the mouse cursor to the requested position and reconnect it to the mouse.
-  CGWarpMouseCursorPosition(CGPointMake(aPoint.x, aPoint.y));
+  CGWarpMouseCursorPosition(NSPointToCGPoint(pt));
   CGAssociateMouseAndMouseCursorPosition(true);
 
   // aPoint is given with the origin on the top left, but convertScreenToBase
   // expects a point in a coordinate system that has its origin on the bottom left.
-  NSPoint screenPoint = NSMakePoint(aPoint.x, [[NSScreen mainScreen] frame].size.height - aPoint.y);
+  NSPoint screenPoint = NSMakePoint(pt.x, nsCocoaUtils::FlippedScreenY(pt.y));
   NSPoint windowPoint = [[mView window] convertScreenToBase:screenPoint];
 
   NSEvent* event = [NSEvent mouseEventWithType:aNativeMessage

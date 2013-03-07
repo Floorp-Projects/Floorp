@@ -46,7 +46,7 @@ struct PcScriptCache
     bool get(JSRuntime *rt, uint32_t hash, uint8_t *addr,
              JSScript **scriptRes, jsbytecode **pcRes);
 
-    void add(uint32_t hash, uint8_t *addr, jsbytecode *pc, UnrootedScript script) {
+    void add(uint32_t hash, uint8_t *addr, jsbytecode *pc, RawScript script) {
         entries[hash].returnAddress = addr;
         entries[hash].pc = pc;
         entries[hash].script = script;

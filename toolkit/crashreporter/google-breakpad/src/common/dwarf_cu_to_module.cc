@@ -56,6 +56,7 @@ namespace google_breakpad {
 using std::map;
 using std::pair;
 using std::set;
+using std::sort;
 using std::vector;
 
 // Data provided by a DWARF specification DIE.

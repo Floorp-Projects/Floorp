@@ -59,27 +59,27 @@ StackFrameSymbolizer::SymbolizerResult StackFrameSymbolizer::FillSourceLineInfo(
     StackFrame* frame) {
   assert(frame);
 
-  if (!modules) return ERROR;
+  if (!modules) return kError;
   const CodeModule* module = modules->GetModuleForAddress(frame->instruction);
-  if (!module) return ERROR;
+  if (!module) return kError;
   frame->module = module;
 
-  if (!resolver_) return ERROR;  // no resolver.
+  if (!resolver_) return kError;  // no resolver.
   // If module is known to have missing symbol file, return.
   if (no_symbol_modules_.find(module->code_file()) !=
       no_symbol_modules_.end()) {
-    return ERROR;
+    return kError;
   }
 
   // If module is already loaded, go ahead to fill source line info and return.
   if (resolver_->HasModule(frame->module)) {
     resolver_->FillSourceLineInfo(frame);
-    return NO_ERROR;
+    return kNoError;
   }
 
   // Module needs to fetch symbol file. First check to see if supplier exists.
   if (!supplier_) {
-    return ERROR;
+    return kError;
   }
 
   // Start fetching symbol from supplier.
@@ -98,26 +98,26 @@ StackFrameSymbolizer::SymbolizerResult StackFrameSymbolizer::FillSourceLineInfo(
 
       if (load_success) {
         resolver_->FillSourceLineInfo(frame);
-        return NO_ERROR;
+        return kNoError;
       } else {
         BPLOG(ERROR) << "Failed to load symbol file in resolver.";
         no_symbol_modules_.insert(module->code_file());
-        return ERROR;
+        return kError;
       }
     }
 
     case SymbolSupplier::NOT_FOUND:
       no_symbol_modules_.insert(module->code_file());
-      return ERROR;
+      return kError;
 
     case SymbolSupplier::INTERRUPT:
-      return INTERRUPT;
+      return kInterrupt;
 
     default:
       BPLOG(ERROR) << "Unknown SymbolResult enum: " << symbol_result;
-      return ERROR;
+      return kError;
   }
-  return ERROR;
+  return kError;
 }
 
 WindowsFrameInfo* StackFrameSymbolizer::FindWindowsFrameInfo(

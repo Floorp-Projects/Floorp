@@ -4,16 +4,44 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
-
   A simple fixed-size allocator that allocates its memory from an
   arena.
 
-  Although the allocator can handle blocks of any size, its
-  preformance will degrade rapidly if used to allocate blocks of
-  arbitrary size. Ideally, it should be used to allocate and recycle a
-  large number of fixed-size blocks.
+  WARNING: you probably shouldn't use this class.  If you are thinking of using
+  it, you should have measurements that indicate it has a clear advantage over
+  vanilla malloc/free or vanilla new/delete.
 
-  Here is a typical usage pattern:
+  This allocator has the following notable properties.
+
+  - Although it can handle blocks of any size, its performance will degrade
+    rapidly if used to allocate blocks of many different sizes.  Ideally, it
+    should be used to allocate and recycle many fixed-size blocks.
+
+  - None of the chunks allocated are released back to the OS unless Init() is
+    re-called or the nsFixedSizeAllocator is destroyed.  So it's generally a
+    bad choice if it might live for a long time (e.g. see bug 847210).
+
+  - You have to manually construct and destruct objects allocated with it.
+    Furthermore, any objects that haven't been freed when the allocator is
+    destroyed won't have their destructors run.  So if you are allocating
+    objects that have destructors they should all be manually freed (and
+    destructed) before the allocator is destroyed.
+
+  - It does no locking and so is not thread-safe.  If all allocations and
+    deallocations are on a single thread, this is fine and these operations
+    might be faster than vanilla malloc/free due to the lack of locking.
+
+    Otherwise, you need to add locking yourself.  In unusual circumstances,
+    this can be a good thing, because it reduces contention over the main
+    malloc/free lock.  See TimerEventAllocator and bug 733277 for an example.
+
+  - Because it's an arena-style allocator, it might reduce fragmentation,
+    because objects allocated with the arena won't be co-allocated with
+    longer-lived objects.  However, this is hard to demonstrate and you should
+    not assume the effects are significant without conclusive measurements.
+
+  Here is a typical usage pattern.  Note that no locking is done in this
+  example so it's only safe for use on a single thread.
 
     #include NEW_H // You'll need this!
     #include "nsFixedSizeAllocator.h"
@@ -42,7 +70,6 @@
       ~Foo() {}
     };
 
-
     int main(int argc, char* argv[])
     {
       // Somewhere in your code, you'll need to create an
@@ -53,42 +80,37 @@
       // This array lists an initial set of sizes that the allocator
       // should be prepared to support. In our case, there's just one,
       // which is Foo.
-      static const size_t kBucketSizes[]
-        = { sizeof(Foo) }
+      static const size_t kBucketSizes[] = { sizeof(Foo) }
 
       // This is the number of different "buckets" you'll need for
       // fixed size objects. In our example, this will be "1".
-      static const int32_t kNumBuckets
-        = sizeof(kBucketSizes) / sizeof(size_t);
+      static const int32_t kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
 
-      // This is the intial size of the allocator, in bytes. We'll
-      // assume that we want to start with space for 1024 Foo objects.
-      static const int32_t kInitialPoolSize = sizeof(Foo) * 1024;
+      // This is the size of the chunks used by the allocator, which should be
+      // a power of two to minimize slop.
+      static const int32_t kInitialPoolSize = 4096;
 
-      // Initialize (or re-initialize) the pool
+      // Initialize (or re-initialize) the pool.
       pool.Init("TheFooPool", kBucketSizes, kNumBuckets, kInitialPoolSize);
-
-      // Now we can use the pool.
 
       // Create a new Foo object using the pool:
       Foo* foo = Foo::Create(pool);
-      if (! foo) {
+      if (!foo) {
         // uh oh, out of memory!
       }
 
       // Delete the object. The memory used by `foo' is recycled in
-      // the pool, and placed in a freelist
+      // the pool, and placed in a freelist.
       Foo::Destroy(foo);
 
       // Create another foo: this one will be allocated from the
-      // free-list
+      // free-list.
       foo = Foo::Create(pool);
 
       // When pool is destroyed, all of its memory is automatically
       // freed. N.B. it will *not* call your objects' destructors! In
       // this case, foo's ~Foo() method would never be called.
     }
-
 */
 
 #ifndef nsFixedSizeAllocator_h__
@@ -136,17 +158,23 @@ public:
     }
 
     /**
-     * Initialize the fixed size allocator. 'aName' is used to tag
-     * the underlying PLArena object for debugging and measurement
-     * purposes. 'aNumBuckets' specifies the number of elements in
-     * 'aBucketSizes', which is an array of integral block sizes
-     * that this allocator should be prepared to handle.
+     * Initialize the fixed size allocator.
+     * - 'aName' is used to tag the underlying PLArena object for debugging and
+     *   measurement purposes.
+     * - 'aNumBuckets' specifies the number of elements in 'aBucketSizes'.
+     * - 'aBucketSizes' is an array of integral block sizes that this allocator
+     *   should be prepared to handle.
+     * - 'aChunkSize' is the size of the chunks used.  It should be a power of
+     *   two to minimize slop bytes caused by the underlying malloc
+     *   implementation rounding up request sizes.  Some of the space in each
+     *   chunk will be used by the nsFixedSizeAllocator (or the underlying
+     *   PLArena) itself.
      */
     nsresult
     Init(const char* aName,
          const size_t* aBucketSizes,
          int32_t aNumBuckets,
-         int32_t aInitialSize,
+         int32_t aChunkSize,
          int32_t aAlign = 0);
 
     /**

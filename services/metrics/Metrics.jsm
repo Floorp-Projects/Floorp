@@ -19,7 +19,7 @@ const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 // issue.
 #define MERGED_COMPARTMENT
 
-#include collector.jsm
+#include providermanager.jsm
 ;
 #include dataprovider.jsm
 ;
@@ -27,7 +27,7 @@ const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 ;
 
 this.Metrics = {
-  Collector: Collector,
+  ProviderManager: ProviderManager,
   DailyValues: DailyValues,
   Measurement: Measurement,
   Provider: Provider,

@@ -87,9 +87,9 @@ ProcessResult MinidumpProcessor::Process(
   bool has_cpu_info = GetCPUInfo(dump, &process_state->system_info_);
   bool has_os_info = GetOSInfo(dump, &process_state->system_info_);
 
-  u_int32_t dump_thread_id = 0;
+  uint32_t dump_thread_id = 0;
   bool has_dump_thread = false;
-  u_int32_t requesting_thread_id = 0;
+  uint32_t requesting_thread_id = 0;
   bool has_requesting_thread = false;
 
   MinidumpBreakpadInfo *breakpad_info = dump->GetBreakpadInfo();
@@ -156,7 +156,7 @@ ProcessResult MinidumpProcessor::Process(
       return PROCESS_ERROR_GETTING_THREAD;
     }
 
-    u_int32_t thread_id;
+    uint32_t thread_id;
     if (!thread->GetThreadID(&thread_id)) {
       BPLOG(ERROR) << "Could not get thread ID for " << thread_string;
       return PROCESS_ERROR_GETTING_THREAD_ID;
@@ -450,7 +450,7 @@ bool MinidumpProcessor::GetOSInfo(Minidump *dump, SystemInfo *info) {
 }
 
 // static
-string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
+string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
   MinidumpException *exception = dump->GetException();
   if (!exception)
     return "";
@@ -467,8 +467,8 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
   // map the codes to a string (because there's no system info, or because
   // it's an unrecognized platform, or because it's an unrecognized code.)
   char reason_string[24];
-  u_int32_t exception_code = raw_exception->exception_record.exception_code;
-  u_int32_t exception_flags = raw_exception->exception_record.exception_flags;
+  uint32_t exception_code = raw_exception->exception_record.exception_code;
+  uint32_t exception_flags = raw_exception->exception_record.exception_flags;
   snprintf(reason_string, sizeof(reason_string), "0x%08x / 0x%08x",
            exception_code, exception_flags);
   string reason = reason_string;

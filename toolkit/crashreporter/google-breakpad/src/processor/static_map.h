@@ -131,7 +131,7 @@ class StaticMap {
   // Array of offset addresses for stored values.
   // For example:
   // address_of_i-th_node_value = raw_data_ + offsets_[i]
-  const u_int32_t* offsets_;
+  const uint32_t* offsets_;
 
   // keys_[i] = key of i_th node
   const Key* keys_;

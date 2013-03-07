@@ -3948,9 +3948,9 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, bool *aResult)
     content = content->GetParent();
   }
   if (content && content->IsElement()) {
-    elementStyle = nsComputedDOMStyle::GetStyleContextForElement(content->AsElement(),
-                                                                 nullptr,
-                                                                 ps);
+    elementStyle = nsComputedDOMStyle::GetStyleContextForElementNoFlush(content->AsElement(),
+                                                                        nullptr,
+                                                                        ps);
   }
 
   if (!elementStyle)

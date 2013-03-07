@@ -63,10 +63,11 @@ LayerManagerOGL::Initialize(bool force)
 int32_t
 LayerManagerOGL::GetMaxTextureSize() const
 {
-  int32_t maxSize;
+  // TODO: It seems wrong that this call should have a side effect
+  // of making mGLContext current, but to be safe, leave it in
+  // and sort it out in another bug.
   mGLContext->MakeCurrent();
-  mGLContext->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &maxSize);
-  return maxSize;
+  return (int32_t) mGLContext->GetMaxTextureSize();
 }
 
 void

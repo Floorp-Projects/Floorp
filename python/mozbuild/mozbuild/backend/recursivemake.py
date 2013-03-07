@@ -14,6 +14,7 @@ from ..frontend.data import (
     ConfigFileSubstitution,
     DirectoryTraversal,
     SandboxDerived,
+    VariablePassthru,
 )
 from ..util import FileAvoidWrite
 
@@ -178,6 +179,15 @@ class RecursiveMakeBackend(BuildBackend):
             self._update_from_avoid_write(
                 backend_file.environment.create_config_file(obj.output_path))
             self.summary.managed_count += 1
+        elif isinstance(obj, VariablePassthru):
+            # Sorted so output is consistent and we don't bump mtimes.
+            for k, v in sorted(obj.variables.items()):
+                if isinstance(v, list):
+                    for item in v:
+                        backend_file.write('%s += %s\n' % (k, item))
+
+                else:
+                    backend_file.write('%s := %s\n' % (k, v))
 
         self._backend_files[obj.srcdir] = backend_file
 

@@ -240,12 +240,6 @@ JSObject::finalize(js::FreeOp *fop)
         fop->runtime()->assertValidThread();
     }
 #endif
-
-    /*
-     * Finalize obj first, in case it needs map and slots. Objects with
-     * finalize hooks are not finalized in the background, as the class is
-     * stored in the object's shape, which may have already been destroyed.
-     */
     js::Class *clasp = getClass();
     if (clasp->finalize)
         clasp->finalize(fop, this);
@@ -283,7 +277,7 @@ JSObject::dynamicSlotIndex(size_t slot)
 }
 
 inline void
-JSObject::setLastPropertyInfallible(js::UnrootedShape shape)
+JSObject::setLastPropertyInfallible(js::RawShape shape)
 {
     JS_ASSERT(!shape->inDictionary());
     JS_ASSERT(shape->compartment() == compartment());
@@ -314,7 +308,7 @@ JSObject::canRemoveLastProperty()
      * converted to dictionary mode instead. See BaseShape comment in jsscope.h
      */
     JS_ASSERT(!inDictionaryMode());
-    js::UnrootedShape previous = lastProperty()->previous().get();
+    js::RawShape previous = lastProperty()->previous().get();
     return previous->getObjectParent() == lastProperty()->getObjectParent()
         && previous->getObjectFlags() == lastProperty()->getObjectFlags();
 }
@@ -943,6 +937,8 @@ JSObject::create(JSContext *cx, js::gc::AllocKind kind, js::gc::InitialHeap heap
     JS_ASSERT(!!dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan()) == !!slots);
     JS_ASSERT(js::gc::GetGCKindSlots(kind, type->clasp) == shape->numFixedSlots());
     JS_ASSERT(cx->compartment == type->compartment());
+    JS_ASSERT_IF(type->clasp->flags & JSCLASS_BACKGROUND_FINALIZE, IsBackgroundFinalized(kind));
+    JS_ASSERT_IF(type->clasp->finalize, heap == js::gc::TenuredHeap);
 
     JSObject *obj = js_NewGCObject<js::CanGC>(cx, kind, heap);
     if (!obj)
@@ -973,6 +969,7 @@ JSObject::createArray(JSContext *cx, js::gc::AllocKind kind, js::gc::InitialHeap
     JS_ASSERT(type->clasp == shape->getObjectClass());
     JS_ASSERT(type->clasp == &js::ArrayClass);
     JS_ASSERT(cx->compartment == type->compartment());
+    JS_ASSERT_IF(type->clasp->finalize, heap == js::gc::TenuredHeap);
 
     /*
      * Arrays use their fixed slots to store elements, and must have enough
@@ -1563,7 +1560,8 @@ CanBeFinalizedInBackground(gc::AllocKind kind, Class *clasp)
      * IsBackgroundFinalized is called to prevent recursively incrementing
      * the finalize kind; kind may already be a background finalize kind.
      */
-    return (!gc::IsBackgroundFinalized(kind) && !clasp->finalize);
+    return (!gc::IsBackgroundFinalized(kind) &&
+            (!clasp->finalize || (clasp->flags & JSCLASS_BACKGROUND_FINALIZE)));
 }
 
 /*
@@ -1733,7 +1731,7 @@ GuessArrayGCKind(size_t numSlots)
  * may or may not need dynamic slots.
  */
 inline bool
-PreallocateObjectDynamicSlots(JSContext *cx, UnrootedShape shape, HeapSlot **slots)
+PreallocateObjectDynamicSlots(JSContext *cx, RawShape shape, HeapSlot **slots)
 {
     if (size_t count = JSObject::dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan())) {
         *slots = cx->pod_malloc<HeapSlot>(count);

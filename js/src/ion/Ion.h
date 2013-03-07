@@ -298,8 +298,8 @@ IonExecStatus FastInvoke(JSContext *cx, HandleFunction fun, CallArgsList &args);
 void Invalidate(types::TypeCompartment &types, FreeOp *fop,
                 const Vector<types::RecompileInfo> &invalid, bool resetUses = true);
 void Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool resetUses = true);
-bool Invalidate(JSContext *cx, UnrootedScript script, ExecutionMode mode, bool resetUses = true);
-bool Invalidate(JSContext *cx, UnrootedScript script, bool resetUses = true);
+bool Invalidate(JSContext *cx, RawScript script, ExecutionMode mode, bool resetUses = true);
+bool Invalidate(JSContext *cx, RawScript script, bool resetUses = true);
 
 void MarkValueFromIon(JSRuntime *rt, Value *vp);
 void MarkShapeFromIon(JSRuntime *rt, Shape **shapep);
@@ -319,14 +319,14 @@ static inline bool IsEnabled(JSContext *cx)
     return cx->hasOption(JSOPTION_ION) && cx->typeInferenceEnabled();
 }
 
-void ForbidCompilation(JSContext *cx, UnrootedScript script);
-void ForbidCompilation(JSContext *cx, UnrootedScript script, ExecutionMode mode);
-uint32_t UsesBeforeIonRecompile(UnrootedScript script, jsbytecode *pc);
+void ForbidCompilation(JSContext *cx, RawScript script);
+void ForbidCompilation(JSContext *cx, RawScript script, ExecutionMode mode);
+uint32_t UsesBeforeIonRecompile(RawScript script, jsbytecode *pc);
 
-void PurgeCaches(UnrootedScript script, JSCompartment *c);
-size_t MemoryUsed(UnrootedScript script, JSMallocSizeOfFun mallocSizeOf);
-void DestroyIonScripts(FreeOp *fop, UnrootedScript script);
-void TraceIonScripts(JSTracer* trc, UnrootedScript script);
+void PurgeCaches(RawScript script, JSCompartment *c);
+size_t MemoryUsed(RawScript script, JSMallocSizeOfFun mallocSizeOf);
+void DestroyIonScripts(FreeOp *fop, RawScript script);
+void TraceIonScripts(JSTracer* trc, RawScript script);
 
 } // namespace ion
 } // namespace js

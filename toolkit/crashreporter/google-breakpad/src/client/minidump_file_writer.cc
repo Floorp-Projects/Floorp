@@ -99,11 +99,11 @@ bool MinidumpFileWriter::CopyStringToMDString(const wchar_t *str,
                                               unsigned int length,
                                               TypedMDRVA<MDString> *mdstring) {
   bool result = true;
-  if (sizeof(wchar_t) == sizeof(u_int16_t)) {
+  if (sizeof(wchar_t) == sizeof(uint16_t)) {
     // Shortcut if wchar_t is the same size as MDString's buffer
     result = mdstring->Copy(str, mdstring->get()->length);
   } else {
-    u_int16_t out[2];
+    uint16_t out[2];
     int out_idx = 0;
 
     // Copy the string character by character
@@ -120,7 +120,7 @@ bool MinidumpFileWriter::CopyStringToMDString(const wchar_t *str,
       // zero, but the second one may be zero, depending on the conversion from
       // UTF-32.
       int out_count = out[1] ? 2 : 1;
-      size_t out_size = sizeof(u_int16_t) * out_count;
+      size_t out_size = sizeof(uint16_t) * out_count;
       result = mdstring->CopyIndexAfterObject(out_idx, out, out_size);
       out_idx += out_count;
     }
@@ -132,7 +132,7 @@ bool MinidumpFileWriter::CopyStringToMDString(const char *str,
                                               unsigned int length,
                                               TypedMDRVA<MDString> *mdstring) {
   bool result = true;
-  u_int16_t out[2];
+  uint16_t out[2];
   int out_idx = 0;
 
   // Copy the string character by character
@@ -147,7 +147,7 @@ bool MinidumpFileWriter::CopyStringToMDString(const char *str,
 
     // Append the one or two UTF-16 characters
     int out_count = out[1] ? 2 : 1;
-    size_t out_size = sizeof(u_int16_t) * out_count;
+    size_t out_size = sizeof(uint16_t) * out_count;
     result = mdstring->CopyIndexAfterObject(out_idx, out, out_size);
     out_idx += out_count;
   }
@@ -170,17 +170,17 @@ bool MinidumpFileWriter::WriteStringCore(const CharType *str,
 
   // Allocate the string buffer
   TypedMDRVA<MDString> mdstring(this);
-  if (!mdstring.AllocateObjectAndArray(mdstring_length + 1, sizeof(u_int16_t)))
+  if (!mdstring.AllocateObjectAndArray(mdstring_length + 1, sizeof(uint16_t)))
     return false;
 
   // Set length excluding the NULL and copy the string
   mdstring.get()->length =
-      static_cast<u_int32_t>(mdstring_length * sizeof(u_int16_t));
+      static_cast<uint32_t>(mdstring_length * sizeof(uint16_t));
   bool result = CopyStringToMDString(str, mdstring_length, &mdstring);
 
   // NULL terminate
   if (result) {
-    u_int16_t ch = 0;
+    uint16_t ch = 0;
     result = mdstring.CopyIndexAfterObject(mdstring_length, &ch, sizeof(ch));
 
     if (result)
@@ -211,7 +211,7 @@ bool MinidumpFileWriter::WriteMemory(const void *src, size_t size,
   if (!mem.Copy(src, mem.size()))
     return false;
 
-  output->start_of_memory_range = reinterpret_cast<u_int64_t>(src);
+  output->start_of_memory_range = reinterpret_cast<uint64_t>(src);
   output->memory = mem.location();
 
   return true;

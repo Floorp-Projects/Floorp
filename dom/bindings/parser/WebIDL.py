@@ -1661,6 +1661,14 @@ class IDLArrayType(IDLType):
     def complete(self, scope):
         self.inner = self.inner.complete(scope)
         self.name = self.inner.name
+
+        if self.inner.isDictionary():
+            raise WebIDLError("Array type must not contain "
+                              "dictionary as element type.",
+                              [self.inner.location])
+
+        assert not self.inner.isSequence()
+
         return self
 
     def unroll(self):

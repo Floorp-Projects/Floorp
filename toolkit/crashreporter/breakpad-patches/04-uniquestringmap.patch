@@ -148,15 +148,15 @@ diff --git a/src/processor/basic_source_line_resolver_unittest.cc b/src/processo
  // ".cfa".
  static bool VerifyRegisters(
      const char *file, int line,
--    const CFIFrameInfo::RegisterValueMap<u_int32_t> &expected,
--    const CFIFrameInfo::RegisterValueMap<u_int32_t> &actual) {
--  CFIFrameInfo::RegisterValueMap<u_int32_t>::const_iterator a;
-+    const std::map<const UniqueString*, u_int32_t> &expected,
-+    const CFIFrameInfo::RegisterValueMap<u_int32_t> &actual_regmap) {
-+  std::map<const UniqueString*, u_int32_t> actual;
+-    const CFIFrameInfo::RegisterValueMap<uint32_t> &expected,
+-    const CFIFrameInfo::RegisterValueMap<uint32_t> &actual) {
+-  CFIFrameInfo::RegisterValueMap<uint32_t>::const_iterator a;
++    const std::map<const UniqueString*, uint32_t> &expected,
++    const CFIFrameInfo::RegisterValueMap<uint32_t> &actual_regmap) {
++  std::map<const UniqueString*, uint32_t> actual;
 +  actual_regmap.copy_to_map(&actual);
 +
-+  std::map<const UniqueString*, u_int32_t>::const_iterator a;
++  std::map<const UniqueString*, uint32_t>::const_iterator a;
    a = actual.find(ustr__ZDcfa());
    if (a == actual.end())
      return false;
@@ -164,17 +164,17 @@ diff --git a/src/processor/basic_source_line_resolver_unittest.cc b/src/processo
    if (a == actual.end())
      return false;
    for (a = actual.begin(); a != actual.end(); a++) {
--    CFIFrameInfo::RegisterValueMap<u_int32_t>::const_iterator e =
-+    std::map<const UniqueString*, u_int32_t>::const_iterator e =
+-    CFIFrameInfo::RegisterValueMap<uint32_t>::const_iterator e =
++    std::map<const UniqueString*, uint32_t>::const_iterator e =
        expected.find(a->first);
      if (e == expected.end()) {
        fprintf(stderr, "%s:%d: unexpected register '%s' recovered, value 0x%x\n",
 @@ -263,7 +268,7 @@
  
-   CFIFrameInfo::RegisterValueMap<u_int32_t> current_registers;
-   CFIFrameInfo::RegisterValueMap<u_int32_t> caller_registers;
--  CFIFrameInfo::RegisterValueMap<u_int32_t> expected_caller_registers;
-+  std::map<const UniqueString*, u_int32_t> expected_caller_registers;
+   CFIFrameInfo::RegisterValueMap<uint32_t> current_registers;
+   CFIFrameInfo::RegisterValueMap<uint32_t> caller_registers;
+-  CFIFrameInfo::RegisterValueMap<uint32_t> expected_caller_registers;
++  std::map<const UniqueString*, uint32_t> expected_caller_registers;
    MockMemoryRegion memory;
  
    // Regardless of which instruction evaluation takes place at, it
@@ -360,7 +360,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 +++ b/src/processor/cfi_frame_info_unittest.cc
 @@ -116,9 +116,8 @@
    cfi.SetRARule(Module::Expr("5870666104170902211"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
 -  ASSERT_EQ(2U, caller_registers.size());
 -  ASSERT_EQ(330903416631436410ULL, caller_registers[ustr__ZDcfa()]);
@@ -372,7 +372,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
              cfi.Serialize());
 @@ -141,13 +140,12 @@
    cfi.SetRegisterRule(reg4, Module::Expr("92642917 .cfa /"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
 -  ASSERT_EQ(6U, caller_registers.size());
 -  ASSERT_EQ(7664691U,           caller_registers[ustr__ZDcfa()]);
@@ -392,7 +392,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
              "pubvexingfjordschmaltzy: .cfa 29801007 - "
 @@ -165,9 +163,8 @@
    cfi.SetCFARule(Module::Expr("2828089117179001"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
 -  ASSERT_EQ(2U, caller_registers.size());
 -  ASSERT_EQ(2828089117179001ULL, caller_registers[ustr__ZDcfa()]);
@@ -412,7 +412,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 +  registers.set(reg2, 0x5e0bf850bafce9d2ULL);
    cfi.SetCFARule(Module::Expr(".baraminology .ornithorhynchus +"));
    cfi.SetRARule(Module::Expr("0"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
 -  ASSERT_EQ(2U, caller_registers.size());
    ASSERT_EQ(0x06a7bc63e4f13893ULL + 0x5e0bf850bafce9d2ULL,
@@ -423,7 +423,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
  // .cfa should be in scope in the return address expression.
 @@ -220,8 +216,7 @@
    cfi.SetRARule(Module::Expr(".cfa"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
 -  ASSERT_EQ(2U, caller_registers.size());
 -  ASSERT_EQ(48364076U, caller_registers[ustr__ZDra()]);
@@ -438,7 +438,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 -  registers[reg1] = 0x54dc4a5d8e5eb503ULL;
 +  registers.set(reg1, 0x54dc4a5d8e5eb503ULL);
    cfi.SetRARule(Module::Expr(reg1, 0, false));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
 -  ASSERT_EQ(2U, caller_registers.size());
 -  ASSERT_EQ(0x54dc4a5d8e5eb503ULL, caller_registers[ustr__ZDra()]);
@@ -448,7 +448,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
  // .cfa should be in scope for register rules.
 @@ -259,8 +253,7 @@
    cfi.SetRegisterRule(reg1, Module::Expr(".cfa"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
 -  ASSERT_EQ(3U, caller_registers.size());
 -  ASSERT_EQ(6515179U, caller_registers[reg1]);
@@ -468,7 +468,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
    cfi.SetRARule(Module::Expr("30503835"));
    cfi.SetRegisterRule(reg1, Module::Expr("$r1 42175211 = $r2"));
    cfi.SetRegisterRule(reg2, Module::Expr("$r2 21357221 = $r1"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
 -  ASSERT_EQ(4U, caller_registers.size());
 -  ASSERT_EQ(0xd27d9e742b8df6d0ULL, caller_registers[reg1]);
@@ -486,7 +486,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 -  registers[ToUniqueString("reg-for-ra")] = 0x6301b475b8b91c02ULL;
 +  registers.set(ToUniqueString("reg-for-cfa"), 0x268a9a4a3821a797ULL);
 +  registers.set(ToUniqueString("reg-for-ra"), 0x6301b475b8b91c02ULL);
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
 -  ASSERT_EQ(0x268a9a4a3821a797ULL, caller_registers[ustr__ZDcfa()]);
 -  ASSERT_EQ(0x6301b475b8b91c02ULL, caller_registers[ustr__ZDra()]);
@@ -507,7 +507,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 +  registers.set(ToUniqueString("reg-for-ra"), 0x6301b475b8b91c02ULL);
 +  registers.set(ToUniqueString("reg-for-reg1"), 0x06cde8e2ff062481ULL);
 +  registers.set(ToUniqueString("reg-for-reg2"), 0xff0c4f76403173e2ULL);
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
 -  ASSERT_EQ(0x268a9a4a3821a797ULL, caller_registers[ustr__ZDcfa()]);
 -  ASSERT_EQ(0x6301b475b8b91c02ULL, caller_registers[ustr__ZDra()]);
@@ -535,15 +535,15 @@ diff --git a/src/processor/fast_source_line_resolver_unittest.cc b/src/processor
  // ".cfa".
  static bool VerifyRegisters(
      const char *file, int line,
--    const CFIFrameInfo::RegisterValueMap<u_int32_t> &expected,
--    const CFIFrameInfo::RegisterValueMap<u_int32_t> &actual) {
--  CFIFrameInfo::RegisterValueMap<u_int32_t>::const_iterator a;
-+    const std::map<const UniqueString*, u_int32_t> &expected,
-+    const CFIFrameInfo::RegisterValueMap<u_int32_t> &actual_regmap) {
-+  std::map<const UniqueString*, u_int32_t> actual;
+-    const CFIFrameInfo::RegisterValueMap<uint32_t> &expected,
+-    const CFIFrameInfo::RegisterValueMap<uint32_t> &actual) {
+-  CFIFrameInfo::RegisterValueMap<uint32_t>::const_iterator a;
++    const std::map<const UniqueString*, uint32_t> &expected,
++    const CFIFrameInfo::RegisterValueMap<uint32_t> &actual_regmap) {
++  std::map<const UniqueString*, uint32_t> actual;
 +  actual_regmap.copy_to_map(&actual);
 +
-+  std::map<const UniqueString*, u_int32_t>::const_iterator a;
++  std::map<const UniqueString*, uint32_t>::const_iterator a;
    a = actual.find(ustr__ZDcfa());
    if (a == actual.end())
      return false;
@@ -551,17 +551,17 @@ diff --git a/src/processor/fast_source_line_resolver_unittest.cc b/src/processor
    if (a == actual.end())
      return false;
    for (a = actual.begin(); a != actual.end(); a++) {
--    CFIFrameInfo::RegisterValueMap<u_int32_t>::const_iterator e =
-+    std::map<const UniqueString*, u_int32_t>::const_iterator e =
+-    CFIFrameInfo::RegisterValueMap<uint32_t>::const_iterator e =
++    std::map<const UniqueString*, uint32_t>::const_iterator e =
        expected.find(a->first);
      if (e == expected.end()) {
        fprintf(stderr, "%s:%d: unexpected register '%s' recovered, value 0x%x\n",
 @@ -291,13 +295,14 @@
  
-   CFIFrameInfo::RegisterValueMap<u_int32_t> current_registers;
-   CFIFrameInfo::RegisterValueMap<u_int32_t> caller_registers;
--  CFIFrameInfo::RegisterValueMap<u_int32_t> expected_caller_registers;
-+  std::map<const UniqueString*, u_int32_t> expected_caller_registers;
+   CFIFrameInfo::RegisterValueMap<uint32_t> current_registers;
+   CFIFrameInfo::RegisterValueMap<uint32_t> caller_registers;
+-  CFIFrameInfo::RegisterValueMap<uint32_t> expected_caller_registers;
++  std::map<const UniqueString*, uint32_t> expected_caller_registers;
    MockMemoryRegion memory;
  
    // Regardless of which instruction evaluation takes place at, it
@@ -832,23 +832,23 @@ diff --git a/src/processor/stackwalker_arm.cc b/src/processor/stackwalker_arm.cc
 --- a/src/processor/stackwalker_arm.cc
 +++ b/src/processor/stackwalker_arm.cc
 @@ -102,7 +102,7 @@
-   CFIFrameInfo::RegisterValueMap<u_int32_t> callee_registers;
+   CFIFrameInfo::RegisterValueMap<uint32_t> callee_registers;
    for (int i = 0; register_names[i]; i++)
      if (last_frame->context_validity & StackFrameARM::RegisterValidFlag(i))
 -      callee_registers[register_names[i]] = last_frame->context.iregs[i];
 +      callee_registers.set(register_names[i], last_frame->context.iregs[i]);
  
    // Use the STACK CFI data to recover the caller's register values.
-   CFIFrameInfo::RegisterValueMap<u_int32_t> caller_registers;
+   CFIFrameInfo::RegisterValueMap<uint32_t> caller_registers;
 @@ -113,13 +113,13 @@
    // Construct a new stack frame given the values the CFI recovered.
    scoped_ptr<StackFrameARM> frame(new StackFrameARM());
    for (int i = 0; register_names[i]; i++) {
--    CFIFrameInfo::RegisterValueMap<u_int32_t>::iterator entry =
+-    CFIFrameInfo::RegisterValueMap<uint32_t>::iterator entry =
 -      caller_registers.find(register_names[i]);
 -    if (entry != caller_registers.end()) {
 +    bool found = false;
-+    u_int32_t v = caller_registers.get(&found, register_names[i]);
++    uint32_t v = caller_registers.get(&found, register_names[i]);
 +    if (found) {
        // We recovered the value of this register; fill the context with the
        // value from caller_registers.
@@ -862,11 +862,11 @@ diff --git a/src/processor/stackwalker_arm.cc b/src/processor/stackwalker_arm.cc
    }
    // If the CFI doesn't recover the PC explicitly, then use .ra.
    if (!(frame->context_validity & StackFrameARM::CONTEXT_VALID_PC)) {
--    CFIFrameInfo::RegisterValueMap<u_int32_t>::iterator entry =
+-    CFIFrameInfo::RegisterValueMap<uint32_t>::iterator entry =
 -      caller_registers.find(ustr__ZDra());
 -    if (entry != caller_registers.end()) {
 +    bool found = false;
-+    u_int32_t v = caller_registers.get(&found, ustr__ZDra());
++    uint32_t v = caller_registers.get(&found, ustr__ZDra());
 +    if (found) {
        if (fp_register_ == -1) {
          frame->context_validity |= StackFrameARM::CONTEXT_VALID_PC;
@@ -886,11 +886,11 @@ diff --git a/src/processor/stackwalker_arm.cc b/src/processor/stackwalker_arm.cc
    }
    // If the CFI doesn't recover the SP explicitly, then use .cfa.
    if (!(frame->context_validity & StackFrameARM::CONTEXT_VALID_SP)) {
--    CFIFrameInfo::RegisterValueMap<u_int32_t>::iterator entry =
+-    CFIFrameInfo::RegisterValueMap<uint32_t>::iterator entry =
 -      caller_registers.find(ustr__ZDcfa());
 -    if (entry != caller_registers.end()) {
 +    bool found = false;
-+    u_int32_t v = caller_registers.get(&found, ustr__ZDcfa());
++    uint32_t v = caller_registers.get(&found, ustr__ZDcfa());
 +    if (found) {
        frame->context_validity |= StackFrameARM::CONTEXT_VALID_SP;
 -      frame->context.iregs[MD_CONTEXT_ARM_REG_SP] = entry->second;
@@ -903,7 +903,7 @@ diff --git a/src/processor/stackwalker_x86.cc b/src/processor/stackwalker_x86.cc
 +++ b/src/processor/stackwalker_x86.cc
 @@ -199,16 +199,16 @@
    // here.
-   PostfixEvaluator<u_int32_t>::DictionaryType dictionary;
+   PostfixEvaluator<uint32_t>::DictionaryType dictionary;
    // Provide the current register values.
 -  dictionary[ustr__ZSebp()] = last_frame->context.ebp;
 -  dictionary[ustr__ZSesp()] = last_frame->context.esp;
@@ -921,7 +921,7 @@ diff --git a/src/processor/stackwalker_x86.cc b/src/processor/stackwalker_x86.cc
 +  dictionary.set(ustr__ZDcbSavedRegs(), last_frame_info->saved_register_size);
 +  dictionary.set(ustr__ZDcbLocals(), last_frame_info->local_size);
  
-   u_int32_t raSearchStart = last_frame->context.esp +
+   uint32_t raSearchStart = last_frame->context.esp +
                              last_frame_callee_parameter_size +
 @@ -237,10 +237,10 @@
  
@@ -938,8 +938,8 @@ diff --git a/src/processor/stackwalker_x86.cc b/src/processor/stackwalker_x86.cc
    // Decide what type of program string to use. The program string is in
    // postfix notation and will be passed to PostfixEvaluator::Evaluate.
 @@ -330,8 +330,8 @@
-       PostfixEvaluator<u_int32_t>(&dictionary, memory_);
-   PostfixEvaluator<u_int32_t>::DictionaryValidityType dictionary_validity;
+       PostfixEvaluator<uint32_t>(&dictionary, memory_);
+   PostfixEvaluator<uint32_t>::DictionaryValidityType dictionary_validity;
    if (!evaluator.Evaluate(program_string, &dictionary_validity) ||
 -      dictionary_validity.find(ustr__ZSeip()) == dictionary_validity.end() ||
 -      dictionary_validity.find(ustr__ZSesp()) == dictionary_validity.end()) {
@@ -973,14 +973,14 @@ diff --git a/src/processor/stackwalker_x86.cc b/src/processor/stackwalker_x86.cc
      // ability, older OSes (pre-XP SP2) and CPUs (pre-P4) don't enforce
      // an independent execute privilege on memory pages.
  
--    u_int32_t eip = dictionary[ustr__ZSeip()];
-+    u_int32_t eip = dictionary.get(ustr__ZSeip());
+-    uint32_t eip = dictionary[ustr__ZSeip()];
++    uint32_t eip = dictionary.get(ustr__ZSeip());
      if (modules_ && !modules_->GetModuleForAddress(eip)) {
        // The instruction pointer at .raSearchStart was invalid, so start
        // looking one 32-bit word above that location.
--      u_int32_t location_start = dictionary[ustr__ZDraSearchStart()] + 4;
-+      u_int32_t location_start = dictionary.get(ustr__ZDraSearchStart()) + 4;
-       u_int32_t location;
+-      uint32_t location_start = dictionary[ustr__ZDraSearchStart()] + 4;
++      uint32_t location_start = dictionary.get(ustr__ZDraSearchStart()) + 4;
+       uint32_t location;
        if (ScanForReturnAddress(location_start, &location, &eip)) {
          // This is a better return address that what program string
          // evaluation found.  Use it, and set %esp to the location above the
@@ -996,8 +996,8 @@ diff --git a/src/processor/stackwalker_x86.cc b/src/processor/stackwalker_x86.cc
        // stack.  The scan is performed from the highest possible address to
        // the lowest, because the expectation is that the function's prolog
        // would have saved %ebp early.
--      u_int32_t ebp = dictionary[ustr__ZSebp()];
-+      u_int32_t ebp = dictionary.get(ustr__ZSebp());
+-      uint32_t ebp = dictionary[ustr__ZSebp()];
++      uint32_t ebp = dictionary.get(ustr__ZSebp());
  
        // When a scan for return address is used, it is possible to skip one or
        // more frames (when return address is not in a known module).  One

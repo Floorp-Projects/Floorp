@@ -51,7 +51,7 @@ using mozilla::DebugOnly;
 /*****************************************************************************/
 
 void
-StackFrame::initExecuteFrame(UnrootedScript script, StackFrame *prevLink, AbstractFramePtr prev,
+StackFrame::initExecuteFrame(RawScript script, StackFrame *prevLink, AbstractFramePtr prev,
                              FrameRegs *regs, const Value &thisv, JSObject &scopeChain,
                              ExecuteType type)
 {

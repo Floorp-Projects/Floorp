@@ -62,7 +62,7 @@ using std::map;
 class Module {
  public:
   // The type of addresses and sizes in a symbol table.
-  typedef u_int64_t Address;
+  typedef uint64_t Address;
   struct File;
   struct Function;
   struct Line;
@@ -371,7 +371,7 @@ class Module {
   // Relation for maps whose keys are strings shared with some other
   // structure.
   struct CompareStringPtrs {
-    bool operator()(const string *x, const string *y) { return *x < *y; }
+    bool operator()(const string *x, const string *y) const { return *x < *y; }
   };
 
   // A map from filenames to File structures.  The map's keys are

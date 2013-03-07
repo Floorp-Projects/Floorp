@@ -38,9 +38,9 @@ using testing::Message;
 
 namespace {
 
-const u_int32_t kBuffer[10] = { 0 };
+const uint32_t kBuffer[10] = { 0 };
 const size_t kBufferSize = sizeof(kBuffer);
-const u_int8_t* kBufferPointer = reinterpret_cast<const u_int8_t*>(kBuffer);
+const uint8_t* kBufferPointer = reinterpret_cast<const uint8_t*>(kBuffer);
 
 // Test vectors for verifying Covers, GetData, and Subrange.
 const struct {
@@ -222,7 +222,7 @@ TEST(MinidumpMemoryRangeTest, GetArrayElmentWithTemplateType) {
 }
 
 TEST(MinidumpMemoryRangeTest, GetAsciiMDString) {
-  u_int8_t buffer[100] = { 0 };
+  uint8_t buffer[100] = { 0 };
 
   MDString* md_str = reinterpret_cast<MDString*>(buffer);
   md_str->length = 4;
@@ -233,7 +233,7 @@ TEST(MinidumpMemoryRangeTest, GetAsciiMDString) {
   md_str->buffer[4] = '\0';
 
   size_t str2_offset =
-      sizeof(MDString) + (md_str->length + 1) * sizeof(u_int16_t);
+      sizeof(MDString) + (md_str->length + 1) * sizeof(uint16_t);
 
   md_str = reinterpret_cast<MDString*>(buffer + str2_offset);
   md_str->length = 9;  // Test length larger than actual string
