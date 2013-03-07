@@ -1591,8 +1591,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
   const nsStyleBackground* bg = nullptr;
   nsPresContext* presContext = aFrame->PresContext();
   bool isThemed = aFrame->IsThemed();
-  if (!isThemed &&
-      nsCSSRendering::FindBackground(presContext, aFrame, &bgSC)) {
+  if (!isThemed && nsCSSRendering::FindBackground(aFrame, &bgSC)) {
     bg = bgSC->StyleBackground();
   }
 

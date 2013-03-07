@@ -3773,7 +3773,7 @@ nsLayoutUtils::GetGraphicsFilterForFrame(nsIFrame* aForFrame)
   GraphicsFilter defaultFilter = gfxPattern::FILTER_GOOD;
   nsStyleContext *sc;
   if (nsCSSRendering::IsCanvasFrame(aForFrame)) {
-    nsCSSRendering::FindBackground(aForFrame->PresContext(), aForFrame, &sc);
+    nsCSSRendering::FindBackground(aForFrame, &sc);
   } else {
     sc = aForFrame->StyleContext();
   }
@@ -4323,8 +4323,7 @@ nsLayoutUtils::GetFrameTransparency(nsIFrame* aBackgroundFrame,
   }
 
   nsStyleContext* bgSC;
-  if (!nsCSSRendering::FindBackground(aBackgroundFrame->PresContext(),
-                                      aBackgroundFrame, &bgSC)) {
+  if (!nsCSSRendering::FindBackground(aBackgroundFrame, &bgSC)) {
     return eTransparencyTransparent;
   }
   const nsStyleBackground* bg = bgSC->StyleBackground();
