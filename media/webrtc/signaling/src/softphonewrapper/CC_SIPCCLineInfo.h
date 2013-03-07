@@ -11,7 +11,7 @@
 
 namespace CSF
 {
-	DECLARE_NS_PTR(CC_SIPCCLineInfo);
+	DECLARE_PTR(CC_SIPCCLineInfo);
     class CC_SIPCCLineInfo : public CC_LineInfo
     {
     public:

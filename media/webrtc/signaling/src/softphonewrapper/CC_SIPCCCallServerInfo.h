@@ -11,7 +11,7 @@
 
 namespace CSF
 {
-	DECLARE_NS_PTR(CC_SIPCCCallServerInfo);
+	DECLARE_PTR(CC_SIPCCCallServerInfo);
     class CC_SIPCCCallServerInfo : public CC_CallServerInfo
     {
     private:
