@@ -219,6 +219,12 @@ InspectorPanel.prototype = {
                         "chrome://browser/content/devtools/csshtmltree.xul",
                         "computedview" == defaultTab);
 
+    if (Services.prefs.getBoolPref("devtools.fontinspector.enabled")) {
+      this.sidebar.addTab("fontinspector",
+                          "chrome://browser/content/devtools/fontinspector/font-inspector.xhtml",
+                          "fontinspector" == defaultTab);
+    }
+
     this.sidebar.addTab("layoutview",
                         "chrome://browser/content/devtools/layoutview/view.xhtml",
                         "layoutview" == defaultTab);
