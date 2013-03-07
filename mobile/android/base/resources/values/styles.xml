@@ -361,7 +361,7 @@
       <item name="android:paddingBottom">1dip</item>
       <item name="android:paddingLeft">5dip</item>
       <item name="android:paddingRight">5dip</item>
-      <item name="android:textSize">10sp</item>
+      <item name="android:textSize">12sp</item>
       <item name="android:gravity">center|left</item>
     </style>
 
@@ -389,7 +389,7 @@
     <style name="AboutHome.LastTabRow" />
 
     <style name="AboutHome.LastTabRow.Title">
-        <item name="android:textSize">15sp</item>
+        <item name="android:textSize">16sp</item>
         <item name="android:singleLine">true</item>
         <item name="android:textColor">@color/abouthome_section_title</item>
     </style>
