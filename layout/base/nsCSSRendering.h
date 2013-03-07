@@ -243,9 +243,8 @@ struct nsCSSRendering {
    * backgrounds between BODY, the root element, and the canvas.
    * @return true if there is some meaningful background.
    */
-  static bool FindBackground(nsPresContext* aPresContext,
-                               nsIFrame* aForFrame,
-                               nsStyleContext** aBackgroundSC);
+  static bool FindBackground(nsIFrame* aForFrame,
+                             nsStyleContext** aBackgroundSC);
 
   /**
    * As FindBackground, but the passed-in frame is known to be a root frame
