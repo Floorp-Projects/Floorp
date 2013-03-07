@@ -815,6 +815,14 @@
     "n_values": 8,
     "description": "HTTP Proxy Type (none, http, socks)"
   },
+  "HTTP_TRANSACTION_IS_SSL": {
+    "kind": "boolean",
+    "description": "Whether a HTTP transaction was over SSL or not."
+  },
+  "HTTP_PAGELOAD_IS_SSL": {
+    "kind": "boolean",
+    "description": "Whether a HTTP base page load was over SSL or not."
+  },
   "SSL_HANDSHAKE_VERSION": {
     "kind": "enumerated",
     "n_values": 16,
