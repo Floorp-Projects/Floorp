@@ -5,6 +5,7 @@
 
 #include "mozilla/dom/SVGFEMergeElement.h"
 #include "mozilla/dom/SVGFEMergeElementBinding.h"
+#include "mozilla/dom/SVGFEMergeNodeElement.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEMerge)
 
@@ -53,10 +54,9 @@ SVGFEMergeElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
   for (nsIContent* child = nsINode::GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    nsRefPtr<nsSVGFEMergeNodeElement> node;
-    CallQueryInterface(child, (nsSVGFEMergeNodeElement**)getter_AddRefs(node));
-    if (node) {
-      aSources.AppendElement(nsSVGStringInfo(node->In1(), node));
+    if (child->IsSVG(nsGkAtoms::feMergeNode)) {
+      SVGFEMergeNodeElement* node = static_cast<SVGFEMergeNodeElement*>(child);
+      aSources.AppendElement(nsSVGStringInfo(node->GetIn1(), node));
     }
   }
 }
