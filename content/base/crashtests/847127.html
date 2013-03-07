@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var outer = document.createElement("span");
+  outer.dir = "auto";
+  var inner = document.createElement("span");
+  outer.appendChild(inner);
+  inner.appendChild(document.createTextNode("\u202B"));
+  inner.dir = "auto";
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
