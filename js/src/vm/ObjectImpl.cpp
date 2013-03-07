@@ -293,6 +293,7 @@ MOZ_NEVER_INLINE
 RawShape
 js::ObjectImpl::nativeLookup(JSContext *cx, jsid id)
 {
+    AutoAssertNoGC nogc;
     MOZ_ASSERT(isNative());
     Shape **spp;
     return Shape::search(cx, lastProperty(), id, &spp);

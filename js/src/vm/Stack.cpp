@@ -721,8 +721,11 @@ StackSpace::markActiveCompartments()
 JS_FRIEND_API(bool)
 StackSpace::ensureSpaceSlow(JSContext *cx, MaybeReportError report, Value *from, ptrdiff_t nvals) const
 {
+    mozilla::Maybe<AutoAssertNoGC> maybeNoGC;
     if (report)
         AssertCanGC();
+    else
+        maybeNoGC.construct();
 
     assertInvariants();
 
@@ -891,8 +894,11 @@ Value *
 ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, unsigned nvars,
                           MaybeExtend extend, bool *pushedSeg)
 {
+    mozilla::Maybe<AutoAssertNoGC> maybeNoGC;
     if (report)
         AssertCanGC();
+    else
+        maybeNoGC.construct();
 
     Value *firstUnused = space().firstUnused();
     FrameRegs *regs = cx->maybeRegs();
@@ -972,8 +978,11 @@ bool
 ContextStack::pushInvokeArgs(JSContext *cx, unsigned argc, InvokeArgsGuard *iag,
                              MaybeReportError report)
 {
+    mozilla::Maybe<AutoAssertNoGC> maybeNoGC;
     if (report)
         AssertCanGC();
+    else
+        maybeNoGC.construct();
 
     JS_ASSERT(argc <= StackSpace::ARGS_LENGTH_MAX);
 
@@ -1013,8 +1022,11 @@ ContextStack::pushInvokeFrame(JSContext *cx, MaybeReportError report,
                               const CallArgs &args, JSFunction *funArg,
                               InitialFrameFlags initial, FrameGuard *fg)
 {
+    mozilla::Maybe<AutoAssertNoGC> maybeNoGC;
     if (report)
         AssertCanGC();
+    else
+        maybeNoGC.construct();
 
     JS_ASSERT(onTop());
     JS_ASSERT(space().firstUnused() == args.end());
@@ -1270,6 +1282,7 @@ StackIter::poisonRegs()
 void
 StackIter::popFrame()
 {
+    AutoAssertNoGC nogc;
     StackFrame *oldfp = data_.fp_;
     JS_ASSERT(data_.seg_->contains(oldfp));
     data_.fp_ = data_.fp_->prev();
@@ -1296,6 +1309,7 @@ StackIter::popCall()
 void
 StackIter::settleOnNewSegment()
 {
+    AutoAssertNoGC nogc;
     if (FrameRegs *regs = data_.seg_->maybeRegs())
         data_.pc_ = regs->pc;
     else
@@ -1333,6 +1347,8 @@ StackIter::startOnSegment(StackSegment *seg)
 void
 StackIter::settleOnNewState()
 {
+    AutoAssertNoGC nogc;
+
     /* Reset whether or we popped a call last time we settled. */
     data_.poppedCallDuringSettle_ = false;
 
@@ -1537,6 +1553,7 @@ StackIter::StackIter(const Data &data)
 void
 StackIter::popIonFrame()
 {
+    AutoAssertNoGC nogc;
     // Keep fp which describes all ion frames.
     poisonRegs();
     if (data_.ionFrames_.isScripted() && ionInlineFrames_.more()) {
@@ -2011,6 +2028,7 @@ StackIter::setReturnValue(const Value &v)
 size_t
 StackIter::numFrameSlots() const
 {
+    AutoAssertNoGC nogc;
     switch (data_.state_) {
       case DONE:
       case NATIVE:
@@ -2033,6 +2051,7 @@ StackIter::numFrameSlots() const
 Value
 StackIter::frameSlotValue(size_t index) const
 {
+    AutoAssertNoGC nogc;
     switch (data_.state_) {
       case DONE:
       case NATIVE:

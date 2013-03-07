@@ -1181,6 +1181,8 @@ str_contains(JSContext *cx, unsigned argc, Value *vp)
         }
     }
 
+    AutoAssertNoGC nogc;
+
     // Step 8
     uint32_t textLen = str->length();
     const jschar *textChars = str->getChars(cx);
@@ -1233,7 +1235,9 @@ str_indexOf(JSContext *cx, unsigned argc, Value *vp)
         }
     }
 
-   // Step 8
+    AutoAssertNoGC nogc;
+
+    // Step 8
     uint32_t textLen = str->length();
     const jschar *textChars = str->getChars(cx);
     if (!textChars)
@@ -1362,6 +1366,8 @@ str_startsWith(JSContext *cx, unsigned argc, Value *vp)
         }
     }
 
+    AutoAssertNoGC nogc;
+
     // Step 8
     uint32_t textLen = str->length();
     const jschar *textChars = str->getChars(cx);
@@ -1419,6 +1425,8 @@ str_endsWith(JSContext *cx, unsigned argc, Value *vp)
             pos = uint32_t(Min(Max(d, 0.0), double(UINT32_MAX)));
         }
     }
+
+    AutoAssertNoGC nogc;
 
     // Step 6
     const jschar *textChars = str->getChars(cx);
@@ -2608,6 +2616,8 @@ static const uint32_t ReplaceOptArg = 2;
 static JSObject *
 LambdaIsGetElem(JSObject &lambda)
 {
+    AutoAssertNoGC nogc;
+
     if (!lambda.isFunction())
         return NULL;
 
@@ -2941,6 +2951,7 @@ class SplitStringMatcher
 
     bool operator()(JSContext *cx, JSLinearString *str, size_t index, SplitMatchResult *res) const
     {
+        AutoAssertNoGC nogc;
         JS_ASSERT(index == 0 || index < str->length());
         const jschar *chars = str->chars();
         int match = StringMatch(chars + index, str->length() - index,

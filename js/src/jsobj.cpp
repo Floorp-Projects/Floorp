@@ -1886,6 +1886,7 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *aArg, JSObject *bArg,
 void
 JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &reserved)
 {
+    AutoAssertNoGC nogc;
     JS_ASSERT(a->compartment() == b->compartment());
     JS_ASSERT(a->isFunction() == b->isFunction());
 
@@ -4358,6 +4359,8 @@ baseops::DeleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
 bool
 js::HasDataProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
+    AutoAssertNoGC nogc;
+
     if (JSID_IS_INT(id) && obj->containsDenseElement(JSID_TO_INT(id))) {
         *vp = obj->getDenseElement(JSID_TO_INT(id));
         return true;
@@ -4780,6 +4783,7 @@ js_GetterOnlyPropertyStub(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBo
 void
 dumpValue(const Value &v)
 {
+    AutoAssertNoGC nogc;
     if (v.isNull())
         fprintf(stderr, "null");
     else if (v.isUndefined())
@@ -5060,6 +5064,7 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
 JS_FRIEND_API(void)
 js_DumpBacktrace(JSContext *cx)
 {
+    AutoAssertNoGC nogc;
     Sprinter sprinter(cx);
     sprinter.init();
     size_t depth = 0;
