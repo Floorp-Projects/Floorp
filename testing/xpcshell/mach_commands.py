@@ -6,6 +6,7 @@
 
 from __future__ import unicode_literals
 
+import mozpack.path
 import os
 import sys
 
@@ -52,19 +53,16 @@ class XPCShellRunner(MozbuildObject):
                 keep_going=keep_going, shuffle=shuffle)
             return
 
-        # dirname() gets confused if there isn't a trailing slash.
-        if os.path.isdir(test_file) and not test_file.endswith(os.path.sep):
-            test_file += os.path.sep
+        test_src_file = self.get_src_path(test_file)
+        test_src_dir = test_src_file if os.path.isdir(test_src_file) \
+            else mozpack.path.dirname(test_src_file)
 
-        relative_dir = test_file
+        relative_dir = mozpack.path.relpath(test_src_dir, self.topsrcdir)
 
-        if test_file.startswith(self.topsrcdir):
-            relative_dir = test_file[len(self.topsrcdir):]
+        test_obj_dir = mozpack.path.join(self.topobjdir, '_tests', 'xpcshell',
+                relative_dir)
 
-        test_dir = os.path.join(self.topobjdir, '_tests', 'xpcshell',
-                os.path.dirname(relative_dir))
-
-        xpcshell_ini_file = os.path.join(test_dir, 'xpcshell.ini')
+        xpcshell_ini_file = mozpack.path.join(test_obj_dir, 'xpcshell.ini')
         if not os.path.exists(xpcshell_ini_file):
             raise InvalidTestPathError('An xpcshell.ini could not be found '
                 'for the passed test path. Please select a path whose '
@@ -77,13 +75,21 @@ class XPCShellRunner(MozbuildObject):
             'interactive': interactive,
             'keep_going': keep_going,
             'shuffle': shuffle,
-            'test_dirs': [test_dir],
+            'test_dirs': [test_obj_dir],
         }
 
-        if os.path.isfile(test_file):
-            args['test_path'] = os.path.basename(test_file)
+        if os.path.isfile(test_src_file):
+            args['test_path'] = mozpack.path.basename(test_src_file)
 
         return self._run_xpcshell_harness(**args)
+
+    def get_src_path(self, test_file):
+        """Returns the absolute path to test_file within topsrcdir."""
+        test_file = mozpack.path.normsep(test_file)
+        topsrcdir = mozpack.path.normsep(self.topsrcdir)
+        if test_file.startswith(topsrcdir):
+            return test_file
+        return mozpack.path.join(topsrcdir, test_file)
 
     def _run_xpcshell_harness(self, test_dirs=None, manifest=None,
         test_path=None, debug=False, shuffle=False, interactive=False,
