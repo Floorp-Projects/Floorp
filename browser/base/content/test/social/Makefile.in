@@ -16,6 +16,7 @@ _BROWSER_FILES = \
 		 blocklistEmpty.xml \
 		 browser_blocklist.js \
 		 browser_addons.js \
+                 browser_social_activation.js \
                  browser_social_perwindowPB.js \
                  browser_social_toolbar.js \
                  browser_social_shareButton.js \
@@ -27,6 +28,8 @@ _BROWSER_FILES = \
                  browser_social_chatwindowfocus.js \
                  browser_social_multiprovider.js \
                  browser_social_errorPage.js \
+                 social_activate.html \
+                 social_activate_iframe.html \
                  social_panel.html \
                  social_share_image.png \
                  social_sidebar.html \

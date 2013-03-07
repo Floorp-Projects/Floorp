@@ -155,6 +155,19 @@ public:
       return nullptr;
     }
 
+    /**
+     * Returns a read-only ARGB32 image surface for this surface. If this is an
+     * optimized surface this may require a copy.
+     * Returns null on error.
+     */
+    virtual already_AddRefed<gfxImageSurface> GetAsReadableARGB32ImageSurface();
+
+    /**
+     * Creates a new ARGB32 image surface with the same contents as this surface.
+     * Returns null on error.
+     */
+    already_AddRefed<gfxImageSurface> CopyToARGB32ImageSurface();
+
     int CairoStatus();
 
     /* Make sure that the given dimensions don't overflow a 32-bit signed int

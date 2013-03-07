@@ -388,16 +388,19 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest)
     mImageRegionRect.SetRect(0, 0, origWidth, origHeight);
   }
   
-  nsRefPtr<gfxImageSurface> frame;
-  nsresult rv = imageContainer->CopyFrame(  imgIContainer::FRAME_CURRENT,
-                                            imgIContainer::FLAG_NONE,
-                                            getter_AddRefs(frame));
-  if (NS_FAILED(rv) || !frame) {
+  nsRefPtr<gfxASurface> surface;
+  imageContainer->GetFrame(imgIContainer::FRAME_CURRENT,
+                           imgIContainer::FLAG_NONE,
+                           getter_AddRefs(surface));
+  if (!surface) {
     [mNativeMenuItem setImage:nil];
     return NS_ERROR_FAILURE;
-  }      
+  }
+  nsRefPtr<gfxImageSurface> frame(surface->GetAsReadableARGB32ImageSurface());
+  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
+
   CGImageRef origImage = NULL;
-  rv = nsCocoaUtils::CreateCGImageFromSurface(frame, &origImage);
+  nsresult rv = nsCocoaUtils::CreateCGImageFromSurface(frame, &origImage);
   if (NS_FAILED(rv) || !origImage) {
     [mNativeMenuItem setImage:nil];
     return NS_ERROR_FAILURE;

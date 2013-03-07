@@ -11,14 +11,37 @@
 #include "mozilla/Services.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
-#include "nsRadioInterfaceLayer.h"
 #include "nsServiceManagerUtils.h"
 #include "GeneratedEvents.h"
 
-DOMCI_DATA(MozVoicemail, mozilla::dom::Voicemail)
+#define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
 
-namespace mozilla {
-namespace dom {
+using namespace mozilla::dom;
+
+class Voicemail::Listener : public nsIVoicemailListener
+{
+  Voicemail* mVoicemail;
+
+public:
+  NS_DECL_ISUPPORTS
+  NS_FORWARD_SAFE_NSIVOICEMAILLISTENER(mVoicemail)
+
+  Listener(Voicemail* aVoicemail)
+    : mVoicemail(aVoicemail)
+  {
+    MOZ_ASSERT(mVoicemail);
+  }
+
+  void Disconnect()
+  {
+    MOZ_ASSERT(mVoicemail);
+    mVoicemail = nullptr;
+  }
+};
+
+NS_IMPL_ISUPPORTS1(Voicemail::Listener, nsIVoicemailListener)
+
+DOMCI_DATA(MozVoicemail, Voicemail)
 
 NS_INTERFACE_MAP_BEGIN(Voicemail)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozVoicemail)
@@ -28,31 +51,24 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(Voicemail, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(Voicemail, nsDOMEventTargetHelper)
 
-NS_IMPL_ISUPPORTS1(Voicemail::RILVoicemailCallback, nsIRILVoicemailCallback)
-
-Voicemail::Voicemail(nsPIDOMWindow* aWindow, nsIRILContentHelper* aRIL)
-  : mRIL(aRIL)
+Voicemail::Voicemail(nsPIDOMWindow* aWindow,
+                     nsIVoicemailProvider* aProvider)
+  : mProvider(aProvider)
 {
   BindToOwner(aWindow);
 
-  mRILVoicemailCallback = new RILVoicemailCallback(this);
-
-  nsresult rv = aRIL->RegisterVoicemailCallback(mRILVoicemailCallback);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed registering voicemail callback with RIL");
-  }
-
-  rv = aRIL->RegisterVoicemailMsg();
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed registering voicemail messages with RIL");
-  }
+  mListener = new Listener(this);
+  DebugOnly<nsresult> rv = mProvider->RegisterVoicemailMsg(mListener);
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
+                   "Failed registering voicemail messages with provider");
 }
 
 Voicemail::~Voicemail()
 {
-  if (mRIL && mRILVoicemailCallback) {
-    mRIL->UnregisterVoicemailCallback(mRILVoicemailCallback);
-  }
+  MOZ_ASSERT(mProvider && mListener);
+
+  mListener->Disconnect();
+  mProvider->UnregisterVoicemailMsg(mListener);
 }
 
 // nsIDOMMozVoicemail
@@ -62,34 +78,34 @@ Voicemail::GetStatus(nsIDOMMozVoicemailStatus** aStatus)
 {
   *aStatus = nullptr;
 
-  NS_ENSURE_STATE(mRIL);
-  return mRIL->GetVoicemailStatus(aStatus);
+  NS_ENSURE_STATE(mProvider);
+  return mProvider->GetVoicemailStatus(aStatus);
 }
 
 NS_IMETHODIMP
 Voicemail::GetNumber(nsAString& aNumber)
 {
-  NS_ENSURE_STATE(mRIL);
+  NS_ENSURE_STATE(mProvider);
   aNumber.SetIsVoid(true);
 
-  return mRIL->GetVoicemailNumber(aNumber);
+  return mProvider->GetVoicemailNumber(aNumber);
 }
 
 NS_IMETHODIMP
 Voicemail::GetDisplayName(nsAString& aDisplayName)
 {
-  NS_ENSURE_STATE(mRIL);
+  NS_ENSURE_STATE(mProvider);
   aDisplayName.SetIsVoid(true);
 
-  return mRIL->GetVoicemailDisplayName(aDisplayName);
+  return mProvider->GetVoicemailDisplayName(aDisplayName);
 }
 
 NS_IMPL_EVENT_HANDLER(Voicemail, statuschanged)
 
-// nsIRILVoicemailCallback
+// nsIVoicemailListener
 
 NS_IMETHODIMP
-Voicemail::VoicemailNotification(nsIDOMMozVoicemailStatus* aStatus)
+Voicemail::NotifyStatusChanged(nsIDOMMozVoicemailStatus* aStatus)
 {
   nsCOMPtr<nsIDOMEvent> event;
   NS_NewDOMMozVoicemailEvent(getter_AddRefs(event), nullptr, nullptr);
@@ -102,9 +118,6 @@ Voicemail::VoicemailNotification(nsIDOMMozVoicemailStatus* aStatus)
   return DispatchTrustedEvent(ce);
 }
 
-} // namespace dom
-} // namespace mozilla
-
 nsresult
 NS_NewVoicemail(nsPIDOMWindow* aWindow, nsIDOMMozVoicemail** aVoicemail)
 {
@@ -112,12 +125,12 @@ NS_NewVoicemail(nsPIDOMWindow* aWindow, nsIDOMMozVoicemail** aVoicemail)
     aWindow :
     aWindow->GetCurrentInnerWindow();
 
-  nsCOMPtr<nsIRILContentHelper> ril =
+  nsCOMPtr<nsIVoicemailProvider> provider =
     do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
-  NS_ENSURE_STATE(ril);
+  NS_ENSURE_STATE(provider);
 
   nsRefPtr<mozilla::dom::Voicemail> voicemail =
-    new mozilla::dom::Voicemail(innerWindow, ril);
+    new mozilla::dom::Voicemail(innerWindow, provider);
   voicemail.forget(aVoicemail);
   return NS_OK;
 }

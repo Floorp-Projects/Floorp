@@ -9,3 +9,5 @@ See the relevant bugs in bugzilla for information on these patches:
 0009-Bug-777614-Re-apply-759683-Handle-compilers-that-don.patch
 0010-Bug-836892-Add-new-blending-modes-to-SkXfermode.patch
 0011-Bug-839347-no-anon-namespace-around-SkNO_RETURN_HINT.patch
+0012-Bug-751418-Add-our-own-GrUserConfig-r-mattwoodrow.patch
+0013-Bug-751418-Fix-compile-error-on-gcc-in-Skia-GL-r-mat.patch

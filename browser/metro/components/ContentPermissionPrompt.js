@@ -11,31 +11,17 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 const kCountBeforeWeRemember = 5;
 
-function setPagePermission(type, principal, allow) {
-  let pm = Services.perms;
-  let contentPrefs = Services.contentPrefs;
-  let contentPrefName = type + ".request.remember";
+const kEntities = {
+  "geolocation": "geolocation2",
+  "desktop-notification": "desktopNotification",
+  "indexedDB": "offlineApps",
+  "indexedDBQuota": "indexedDBQuota",
+  "openWebappsManage": "openWebappsManage"
+};
 
-  if (!contentPrefs.hasPref(principal.URI, contentPrefName))
-      contentPrefs.setPref(principal.URI, contentPrefName, 0);
-
-  let count = contentPrefs.getPref(principal.URI, contentPrefName);
-
-  if (allow == false)
-    count--;
-  else
-    count++;
-
-  contentPrefs.setPref(principal.URI, contentPrefName, count);
-  if (count == kCountBeforeWeRemember)
-    pm.addFromPrincipal(principal, type, Ci.nsIPermissionManager.ALLOW_ACTION);
-  else if (count == -kCountBeforeWeRemember)
-    pm.addFromPrincipal(principal, type, Ci.nsIPermissionManager.DENY_ACTION);
-}
-
-const kEntities = { "geolocation": "geolocation", "desktop-notification": "desktopNotification",
-                    "indexedDB": "offlineApps", "indexedDBQuota": "indexedDBQuota",
-                    "openWebappsManage": "openWebappsManage" };
+const kIcons = {
+  geolocation: "chrome://browser/skin/images/infobar-geolocation.png"
+};
 
 function ContentPermissionPrompt() {}
 
@@ -96,20 +82,28 @@ ContentPermissionPrompt.prototype = {
       return;
 
     let entityName = kEntities[request.type];
+    let icon = kIcons[request.type] || "";
 
     let buttons = [{
       label: browserBundle.GetStringFromName(entityName + ".allow"),
-      accessKey: null,
+      accessKey: "",
       callback: function(notification) {
-        setPagePermission(request.type, request.principal, true);
         request.allow();
       }
     },
     {
-      label: browserBundle.GetStringFromName(entityName + ".dontAllow"),
-      accessKey: null,
+      label: browserBundle.GetStringFromName("contentPermissions.alwaysForSite"),
+      accessKey: "",
       callback: function(notification) {
-        setPagePermission(request.type, request.principal, false);
+        Services.perms.addFromPrincipal(request.principal, request.type, Ci.nsIPermissionManager.ALLOW_ACTION);
+        request.allow();
+      }
+    },
+    {
+      label: browserBundle.GetStringFromName("contentPermissions.neverForSite"),
+      accessKey: "",
+      callback: function(notification) {
+        Services.perms.addFromPrincipal(request.principal, request.type, Ci.nsIPermissionManager.DENY_ACTION);
         request.cancel();
       }
     }];
@@ -118,7 +112,7 @@ ContentPermissionPrompt.prototype = {
                                                      [request.principal.URI.host], 1);
     let newBar = notificationBox.appendNotification(message,
                                                     request.type,
-                                                    "", // Notifications in Fennec do not display images.
+                                                    icon,
                                                     notificationBox.PRIORITY_WARNING_MEDIUM,
                                                     buttons);
   }

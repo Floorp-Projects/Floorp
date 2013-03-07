@@ -2368,6 +2368,32 @@ struct StringRange
     { }
 };
 
+static inline JSShortString *
+FlattenSubstrings(JSContext *cx, Handle<JSStableString*> stableStr,
+                  const StringRange *ranges, size_t rangesLen, size_t outputLen)
+{
+    JS_ASSERT(JSShortString::lengthFits(outputLen));
+
+    const jschar *chars = stableStr->getChars(cx);
+    if (!chars)
+        return NULL;
+
+    JSShortString *str = js_NewGCShortString<CanGC>(cx);
+    if (!str)
+        return NULL;
+    jschar *buf = str->init(outputLen);
+
+    size_t pos = 0;
+    for (size_t i = 0; i < rangesLen; i++) {
+        PodCopy(buf + pos, chars + ranges[i].start, ranges[i].length);
+        pos += ranges[i].length;
+    }
+    JS_ASSERT(pos == outputLen);
+
+    buf[outputLen] = 0;
+    return str;
+}
+
 static JSString *
 AppendSubstrings(JSContext *cx, Handle<JSStableString*> stableStr,
                  const StringRange *ranges, size_t rangesLen)
@@ -2378,17 +2404,36 @@ AppendSubstrings(JSContext *cx, Handle<JSStableString*> stableStr,
     if (rangesLen == 1)
         return js_NewDependentString(cx, stableStr, ranges[0].start, ranges[0].length);
 
-    /* Collect substrings into a rope. */
+    /* Collect substrings into a rope */
+    size_t i = 0;
     RopeBuilder rope(cx);
-    for (size_t i = 0; i < rangesLen; i++) {
-        const StringRange &sr = ranges[i];
+    RootedString part(cx, NULL);
+    while (i < rangesLen) {
 
-        RootedString substr(cx, js_NewDependentString(cx, stableStr, sr.start, sr.length));
-        if (!substr)
+        /* Find maximum range that fits in JSShortString */
+        size_t substrLen = 0;
+        size_t end = i;
+        for (; end < rangesLen; end++) {
+            if (substrLen + ranges[end].length > JSShortString::MAX_SHORT_LENGTH)
+                break;
+            substrLen += ranges[end].length;
+        }
+
+        if (i == end) {
+            /* Not even one range fits JSShortString, use DependentString */
+            const StringRange &sr = ranges[i++];
+            part = js_NewDependentString(cx, stableStr, sr.start, sr.length);
+        } else {
+            /* Copy the ranges (linearly) into a JSShortString */
+            part = FlattenSubstrings(cx, stableStr, ranges + i, end - i, substrLen);
+            i = end;
+        }
+
+        if (!part)
             return NULL;
 
         /* Appending to the rope permanently roots the substring. */
-        rope.append(substr);
+        rope.append(part);
     }
 
     return rope.result();

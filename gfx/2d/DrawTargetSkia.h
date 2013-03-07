@@ -5,7 +5,10 @@
 
 #pragma once
 
+#include "skia/GrContext.h"
 #include "skia/SkCanvas.h"
+#include "skia/GrContext.h"
+#include "skia/GrGLInterface.h"
 #include "2D.h"
 #include "Rect.h"
 #include "PathSkia.h"
@@ -87,6 +90,7 @@ public:
 
   bool Init(const IntSize &aSize, SurfaceFormat aFormat);
   void Init(unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat);
+  void InitWithFBO(unsigned int aFBOID, GrContext* aGrContext, const IntSize &aSize, SurfaceFormat aFormat);
   
   operator std::string() const {
     std::stringstream stream;

@@ -66,6 +66,7 @@ MOCHITEST_FILES := \
   test_namedNoIndexed.html \
   test_bug759621.html \
   test_queryInterface.html \
+  test_exceptionThrowing.html \
   $(NULL)
 
 MOCHITEST_CHROME_FILES = \

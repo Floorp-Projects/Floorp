@@ -87,6 +87,21 @@ class TestPreprocessManifest(unittest.TestCase):
                          [((self.MANIFEST_PATH, 10), 'add', 'baz', 'baz.exe')])
 
 
+class MockFinder(object):
+    def __init__(self, files):
+        self.files = files
+        self.log = []
+
+    def find(self, path):
+        self.log.append(path)
+        for f in sorted(self.files):
+            if mozpack.path.match(f, path):
+                yield f, self.files[f]
+
+    def __iter__(self):
+        return self.find('')
+
+
 class MockFormatter(object):
     def __init__(self):
         self.log = []
@@ -178,17 +193,6 @@ class TestSimplePackager(unittest.TestCase):
 
 class TestSimpleManifestSink(unittest.TestCase):
     def test_simple_manifest_parser(self):
-        class MockFinder(object):
-            def __init__(self, files):
-                self.files = files
-                self.log = []
-
-            def find(self, path):
-                self.log.append(path)
-                for f in sorted(self.files):
-                    if mozpack.path.match(f, path):
-                        yield f, self.files[f]
-
         formatter = MockFormatter()
         foobar = GeneratedFile('foobar')
         foobaz = GeneratedFile('foobaz')

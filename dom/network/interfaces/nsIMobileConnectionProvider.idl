@@ -11,22 +11,40 @@ interface nsIDOMMozMobileCFInfo;
 interface nsIDOMDOMRequest;
 interface nsIDOMWindow;
 
+[scriptable, uuid(2cb8e811-7eaf-4cb9-8aa8-581e7a245edc)]
+interface nsIMobileConnectionListener : nsISupports
+{
+  void notifyVoiceChanged();
+  void notifyDataChanged();
+  void notifyCardStateChanged();
+  void notifyIccInfoChanged();
+  void notifyUssdReceived(in DOMString message,
+                          in boolean sessionEnded);
+  void notifyDataError(in DOMString message);
+  void notifyIccCardLockError(in DOMString lockType,
+                              in unsigned long retryCount);
+  void notifyCFStateChange(in boolean success,
+                           in unsigned short action,
+                           in unsigned short reason,
+                           in DOMString number,
+                           in unsigned short timeSeconds,
+                           in unsigned short serviceClass);
+};
+
 /**
  * XPCOM component (in the content process) that provides the mobile
  * network information.
  */
-[scriptable, uuid(0fb90831-801d-4a84-a56f-7cbc77ba9d61)]
+[scriptable, uuid(152da558-c3c0-45ad-9ac5-1adaf7a83c0d)]
 interface nsIMobileConnectionProvider : nsISupports
 {
   /**
    * Called when a content process registers receiving unsolicited messages from
    * RadioInterfaceLayer in the chrome process. Only a content process that has
-   * the 'mobileconnection' permission is allowed to register. Note that content
-   * doesn't need to unregister because the chrome process will remove it from
-   * the registration list once the chrome receives a 'child-process-shutdown'
-   * message.
+   * the 'mobileconnection' permission is allowed to register.
    */
-  void registerMobileConnectionMsg();
+  void registerMobileConnectionMsg(in nsIMobileConnectionListener listener);
+  void unregisterMobileConnectionMsg(in nsIMobileConnectionListener listener);
 
   readonly attribute DOMString cardState;
   readonly attribute nsIDOMMozMobileICCInfo iccInfo;
@@ -45,32 +63,8 @@ interface nsIMobileConnectionProvider : nsISupports
   nsIDOMDOMRequest sendMMI(in nsIDOMWindow window, in DOMString mmi);
   nsIDOMDOMRequest cancelMMI(in nsIDOMWindow window);
 
-  void sendStkResponse(in nsIDOMWindow window,
-                       in jsval        command,
-                       in jsval        response);
-  void sendStkMenuSelection(in nsIDOMWindow   window,
-                            in unsigned short itemIdentifier,
-                            in boolean        helpRequested);
-  void sendStkTimerExpiration(in nsIDOMWindow window,
-                              in jsval        timer);
-  void sendStkEventDownload(in nsIDOMWindow window,
-                            in jsval        event);
-
   nsIDOMDOMRequest getCallForwardingOption(in nsIDOMWindow   window,
                                            in unsigned short reason);
   nsIDOMDOMRequest setCallForwardingOption(in nsIDOMWindow          window,
                                            in nsIDOMMozMobileCFInfo CFInfo);
-
-  /**
-   * Secure Card Icc communication channel
-   */
-  nsIDOMDOMRequest iccOpenChannel(in nsIDOMWindow window,
-                                  in DOMString aid);
-
-  nsIDOMDOMRequest iccExchangeAPDU(in nsIDOMWindow window,
-                                   in long channel,
-                                   in jsval apdu);
-
-  nsIDOMDOMRequest iccCloseChannel(in nsIDOMWindow window,
-                                   in long channel);
 };

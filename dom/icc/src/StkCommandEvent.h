@@ -24,7 +24,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(StkCommandEvent, nsDOMEvent)
 
   static already_AddRefed<StkCommandEvent>
-  Create(nsAString& aMessage);
+  Create(const nsAString& aMessage);
 
   nsresult
   Dispatch(nsIDOMEventTarget* aTarget, const nsAString& aEventType)

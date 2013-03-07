@@ -22,7 +22,8 @@ struct SeekableZStreamHeader: public Zip::SignedEntity<SeekableZStreamHeader>
 {
   SeekableZStreamHeader()
   : Zip::SignedEntity<SeekableZStreamHeader>(magic)
-  , totalSize(0), chunkSize(0), nChunks(0), lastChunkSize(0) { }
+  , totalSize(0), chunkSize(0), dictSize(0), nChunks(0), lastChunkSize(0)
+  , windowBits(0), filter(0) { }
 
   /* Reuse Zip::SignedEntity to handle the magic number used in the Seekable
    * ZStream file format. The magic number is "SeZz". */
@@ -32,13 +33,28 @@ struct SeekableZStreamHeader: public Zip::SignedEntity<SeekableZStreamHeader>
   le_uint32 totalSize;
 
   /* Chunk size */
-  le_uint32 chunkSize;
+  le_uint16 chunkSize;
+
+  /* Size of the dictionary */
+  le_uint16 dictSize;
 
   /* Number of chunks */
   le_uint32 nChunks;
 
   /* Size of last chunk (> 0, <= Chunk size) */
-  le_uint32 lastChunkSize;
+  le_uint16 lastChunkSize;
+
+  /* windowBits value used when deflating */
+  signed char windowBits;
+
+  /* Filter Id */
+  unsigned char filter;
+
+  /* Maximum supported size for chunkSize */
+  /* Can't use std::min here because it's not constexpr */
+  static const size_t maxChunkSize =
+    1 << ((sizeof(chunkSize) < sizeof(lastChunkSize) ?
+           sizeof(chunkSize) : sizeof(lastChunkSize)) - 1);
 };
 #pragma pack()
 
@@ -52,7 +68,7 @@ class SeekableZStream {
 public:
   /* Initialize from the given buffer. Returns whether initialization
    * succeeded (true) or failed (false). */
-  bool Init(const void *buf);
+  bool Init(const void *buf, size_t length);
 
   /* Decompresses starting from the given chunk. The decompressed data is
    * stored at the given location. The given length, in bytes, indicates
@@ -82,6 +98,28 @@ public:
     return offsetTable.numElements();
   }
 
+  /**
+   * Filters used to improve compression rate.
+   */
+  enum FilterDirection {
+    FILTER,
+    UNFILTER
+  };
+  typedef void (*ZStreamFilter)(off_t, FilterDirection,
+                                  unsigned char *, size_t);
+
+  enum FilterId {
+    NONE,
+    BCJ_THUMB,
+    BCJ_ARM,
+    FILTER_MAX
+  };
+  static ZStreamFilter GetFilter(FilterId id);
+
+  static ZStreamFilter GetFilter(uint16_t id) {
+    return GetFilter(static_cast<FilterId>(id));
+  }
+
 private:
   /* RAW Seekable SZtream buffer */
   const unsigned char *buffer;
@@ -95,8 +133,17 @@ private:
   /* Size of last chunk (> 0, <= Chunk size) */
   uint32_t lastChunkSize;
 
+  /* windowBits value used when deflating */
+  int windowBits;
+
   /* Offsets table */
   Array<le_uint32> offsetTable;
+
+  /* Filter */
+  ZStreamFilter filter;
+
+  /* Deflate dictionary */
+  Array<unsigned char> dictionary;
 };
 
 #endif /* SeekableZStream_h */

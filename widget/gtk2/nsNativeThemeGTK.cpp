@@ -985,17 +985,15 @@ nsNativeThemeGTK::GetWidgetOverflow(nsDeviceContext* aContext,
                                     nsIFrame* aFrame, uint8_t aWidgetType,
                                     nsRect* aOverflowRect)
 {
-  nsMargin m;
-  int32_t p2a;
   nsIntMargin extraSize;
   if (!GetExtraSizeForWidget(aFrame, aWidgetType, &extraSize))
     return false;
 
-  p2a = aContext->AppUnitsPerDevPixel();
-  m = nsMargin(NSIntPixelsToAppUnits(extraSize.left, p2a),
-               NSIntPixelsToAppUnits(extraSize.top, p2a),
-               NSIntPixelsToAppUnits(extraSize.right, p2a),
-               NSIntPixelsToAppUnits(extraSize.bottom, p2a));
+  int32_t p2a = aContext->AppUnitsPerDevPixel();
+  nsMargin m(NSIntPixelsToAppUnits(extraSize.top, p2a),
+             NSIntPixelsToAppUnits(extraSize.right, p2a),
+             NSIntPixelsToAppUnits(extraSize.bottom, p2a),
+             NSIntPixelsToAppUnits(extraSize.left, p2a));
 
   aOverflowRect->Inflate(m);
   return true;

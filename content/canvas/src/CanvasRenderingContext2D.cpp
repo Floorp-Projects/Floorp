@@ -96,6 +96,12 @@
 #include "nsHTMLVideoElement.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 
+#ifdef USE_SKIA
+#include "GLContext.h"
+#include "GLContextProvider.h"
+#include "SurfaceTypes.h"
+#endif
+
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
 #endif
@@ -298,10 +304,10 @@ public:
 
     // We need to enlarge and possibly offset our temporary surface
     // so that things outside of the canvas may cast shadows.
-    mTempRect.Inflate(Margin(blurRadius + std::max<Float>(state.shadowOffset.x, 0),
-                             blurRadius + std::max<Float>(state.shadowOffset.y, 0),
+    mTempRect.Inflate(Margin(blurRadius + std::max<Float>(state.shadowOffset.y, 0),
                              blurRadius + std::max<Float>(-state.shadowOffset.x, 0),
-                             blurRadius + std::max<Float>(-state.shadowOffset.y, 0)));
+                             blurRadius + std::max<Float>(-state.shadowOffset.y, 0),
+                             blurRadius + std::max<Float>(state.shadowOffset.x, 0)));
 
     if (aBounds) {
       // We actually include the bounds of the shadow blur, this makes it
@@ -460,6 +466,20 @@ public:
       mContext->mUserDatas.RemoveElement(this);
     }
   }
+
+#ifdef USE_SKIA
+  static void PreTransactionCallback(void* aData)
+  {
+    CanvasRenderingContext2DUserData* self =
+      static_cast<CanvasRenderingContext2DUserData*>(aData);
+    CanvasRenderingContext2D* context = self->mContext;
+    if (self->mContext && context->mGLContext) {
+      context->mGLContext->MakeCurrent();
+      context->mGLContext->PublishFrame();
+    }
+  }
+#endif
+
   static void DidTransactionCallback(void* aData)
   {
     CanvasRenderingContext2DUserData* self =
@@ -780,7 +800,16 @@ CanvasRenderingContext2D::EnsureTarget()
     }
 
      if (layerManager) {
-       mTarget = layerManager->CreateDrawTarget(size, format);
+#ifdef USE_SKIA
+       if (gfxPlatform::GetPlatform()->UseAcceleratedSkiaCanvas()) {
+         mGLContext = mozilla::gl::GLContextProvider::CreateOffscreen(gfxIntSize(size.width,
+                                                                                 size.height),
+                                                                      SurfaceCaps::ForRGBA(),
+                                                                      mozilla::gl::GLContext::ContextFlagsNone);
+         mTarget = gfxPlatform::GetPlatform()->CreateDrawTargetForFBO(0, mGLContext, size, format);
+       } else
+#endif
+         mTarget = layerManager->CreateDrawTarget(size, format);
      } else {
        mTarget = gfxPlatform::GetPlatform()->CreateOffscreenDrawTarget(size, format);
      }
@@ -3758,8 +3787,17 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
   canvasLayer->SetUserData(&g2DContextLayerUserData, userData);
 
   CanvasLayer::Data data;
+#ifdef USE_SKIA
+  if (mGLContext) {
+    canvasLayer->SetPreTransactionCallback(
+            CanvasRenderingContext2DUserData::PreTransactionCallback, userData);
+    data.mGLContext = mGLContext;
+  } else
+#endif
+  {
+    data.mDrawTarget = mTarget;
+  }
 
-  data.mDrawTarget = mTarget;
   data.mSize = nsIntSize(mWidth, mHeight);
 
   canvasLayer->Initialize(data);
