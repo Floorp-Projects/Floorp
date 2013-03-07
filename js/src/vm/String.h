@@ -578,7 +578,7 @@ class JSStableString : public JSFlatString
 JS_STATIC_ASSERT(sizeof(JSStableString) == sizeof(JSString));
 
 #if !(defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING))
-namespace JS {
+namespace js {
 /*
  * Specialization of Rooted<T> to explicitly root the string rather than
  * relying on conservative stack scanning.
@@ -616,7 +616,7 @@ class Rooted<JSStableString *>
 
     Rooted & operator =(JSStableString *value)
     {
-        JS_ASSERT(!js::RootMethods<JSStableString *>::poisoned(value));
+        JS_ASSERT(!RootMethods<JSStableString *>::poisoned(value));
         rooter.setString(value);
         return *this;
     }
