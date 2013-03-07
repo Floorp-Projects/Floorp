@@ -19,6 +19,8 @@ svn export $1 ${crashreporter_dir}/google-breakpad
 rm -rf ${crashreporter_dir}/google-breakpad/src/third_party/protobuf ${crashreporter_dir}/google-breakpad/src/testing/ ${crashreporter_dir}/google-breakpad/src/tools/gyp/
 # restore our Makefile.ins
 hg -R ${repo} st -n | grep "Makefile\.in$" | xargs hg revert --no-backup
+# and moz.build files
+hg -R ${repo} st -n | grep "moz\.build$" | xargs hg revert --no-backup
 # and some other makefiles
 hg -R ${repo} st -n | grep "objs\.mk$" | xargs hg revert --no-backup
 
@@ -40,5 +42,7 @@ for p in ${crashreporter_dir}/breakpad-patches/*.patch; do
       exit 1
     fi
 done
+# remove any .orig files that snuck in
+find ${crashreporter_dir}/google-breakpad -name "*.orig" -print0 | xargs -0 rm
 
 hg addremove ${crashreporter_dir}/google-breakpad/
