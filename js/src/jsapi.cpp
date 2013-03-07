@@ -666,6 +666,25 @@ static JSBool js_NewRuntimeWasCalled = JS_FALSE;
 mozilla::ThreadLocal<PerThreadData *> js::TlsPerThreadData;
 
 #ifdef DEBUG
+JS_FRIEND_API(void)
+JS::EnterAssertNoGCScope()
+{
+    ++TlsPerThreadData.get()->gcAssertNoGCDepth;
+}
+
+JS_FRIEND_API(void)
+JS::LeaveAssertNoGCScope()
+{
+    --TlsPerThreadData.get()->gcAssertNoGCDepth;
+    JS_ASSERT(TlsPerThreadData.get()->gcAssertNoGCDepth >= 0);
+}
+
+JS_FRIEND_API(bool)
+JS::InNoGCScope()
+{
+    return TlsPerThreadData.get()->gcAssertNoGCDepth > 0;
+}
+
 JS_FRIEND_API(bool)
 JS::isGCEnabled()
 {
@@ -678,6 +697,9 @@ JS::NeedRelaxedRootChecks()
     return TlsPerThreadData.get()->gcRelaxRootChecks;
 }
 #else
+JS_FRIEND_API(void) JS::EnterAssertNoGCScope() {}
+JS_FRIEND_API(void) JS::LeaveAssertNoGCScope() {}
+JS_FRIEND_API(bool) JS::InNoGCScope() { return false; }
 JS_FRIEND_API(bool) JS::isGCEnabled() { return true; }
 JS_FRIEND_API(bool) JS::NeedRelaxedRootChecks() { return false; }
 #endif
@@ -689,6 +711,7 @@ js::PerThreadData::PerThreadData(JSRuntime *runtime)
     runtime_(runtime),
 #ifdef DEBUG
     gcRelaxRootChecks(false),
+    gcAssertNoGCDepth(0),
 #endif
     ionTop(NULL),
     ionJSContext(NULL),
