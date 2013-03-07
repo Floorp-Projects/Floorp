@@ -13,6 +13,6 @@
                 android:padding="10dp"
                 android:singleLine="true"
                 android:ellipsize="marquee"
-                android:textSize="13sp"
+                android:textSize="14sp"
                 android:textColor="@color/awesome_bar_title"
                 gecko:autoUpdateTheme="false"/>
