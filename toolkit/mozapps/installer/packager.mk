@@ -323,11 +323,7 @@ ABI_DIR = armeabi
 endif
 endif
 
-ifneq (,$(filter mobile/xul b2g,$(MOZ_BUILD_APP)))
-GECKO_APP_AP_PATH = $(call core_abspath,$(DEPTH)/embedding/android)
-else
 GECKO_APP_AP_PATH = $(call core_abspath,$(DEPTH)/mobile/android/base)
-endif
 
 ifdef ENABLE_TESTS
 INNER_ROBOCOP_PACKAGE=echo
