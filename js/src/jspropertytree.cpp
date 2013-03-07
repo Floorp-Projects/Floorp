@@ -130,6 +130,8 @@ Shape::removeChild(RawShape child)
 RawShape
 PropertyTree::getChild(JSContext *cx, Shape *parent_, uint32_t nfixed, const StackShape &child)
 {
+    AssertCanGC();
+
     {
         RawShape shape = NULL;
 

@@ -69,6 +69,7 @@ StringBuffer::finishString()
 RawAtom
 StringBuffer::finishAtom()
 {
+    AssertCanGC();
     JSContext *cx = context();
 
     size_t length = cb.length();

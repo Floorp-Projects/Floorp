@@ -328,6 +328,8 @@ template <AllowGC allowGC>
 RawAtom
 js::AtomizeString(JSContext *cx, JSString *str, js::InternBehavior ib /* = js::DoNotInternAtom */)
 {
+    AssertCanGC();
+
     if (str->isAtom()) {
         JSAtom &atom = str->asAtom();
         /* N.B. static atoms are effectively always interned. */
@@ -369,6 +371,7 @@ js::AtomizeString<NoGC>(JSContext *cx, JSString *str, js::InternBehavior ib);
 RawAtom
 js::Atomize(JSContext *cx, const char *bytes, size_t length, InternBehavior ib)
 {
+    AssertCanGC();
     CHECK_REQUEST(cx);
 
     if (!JSString::validateLength(cx, length))
@@ -465,6 +468,7 @@ template<XDRMode mode>
 bool
 js::XDRAtom(XDRState<mode> *xdr, MutableHandleAtom atomp)
 {
+    AssertCanGC();
     if (mode == XDR_ENCODE) {
         uint32_t nchars = atomp->length();
         if (!xdr->codeUint32(&nchars))

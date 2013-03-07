@@ -119,6 +119,8 @@ template <typename CopyArgs>
 ArgumentsObject::create(JSContext *cx, HandleScript script, HandleFunction callee, unsigned numActuals,
                         CopyArgs &copy)
 {
+    AssertCanGC();
+
     RootedObject proto(cx, callee->global().getOrCreateObjectPrototype(cx));
     if (!proto)
         return NULL;
