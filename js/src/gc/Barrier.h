@@ -507,19 +507,6 @@ class HeapSlot : public EncapsulatedValue
 inline void
 DenseRangeWriteBarrierPost(JSRuntime *rt, JSObject *obj, uint32_t start, uint32_t count);
 
-/*
- * This is a post barrier for HashTables whose key can be moved during a GC.
- */
-template <class Map, class Key>
-inline void
-HashTableWriteBarrierPost(JSRuntime *rt, const Map *map, const Key &key)
-{
-#ifdef JS_GCGENERATIONAL
-    if (key && comp->gcNursery.isInside(key))
-        comp->gcStoreBuffer.putGeneric(HashKeyRef(map, key));
-#endif
-}
-
 static inline const Value *
 Valueify(const EncapsulatedValue *array)
 {
