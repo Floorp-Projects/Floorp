@@ -4,7 +4,7 @@
 
 """This routine controls which localizable files and entries are
 reported and l10n-merged.
-This needs to stay in sync with the copy in mobile/android.
+This needs to stay in sync with the copy in mobile/android/locales.
 """
 
 def test(mod, path, entity = None):
