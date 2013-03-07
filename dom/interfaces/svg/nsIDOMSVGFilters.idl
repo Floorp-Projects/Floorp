@@ -118,11 +118,6 @@ interface nsIDOMSVGFEGaussianBlurElement : nsIDOMSVGFilterPrimitiveStandardAttri
     void setStdDeviation ( in float stdDeviationX, in float stdDeviationY );
 };
 
-[scriptable, uuid(517828DE-69F7-4FAB-915E-862E4F77493D)]
-interface nsIDOMSVGFEMergeNodeElement : nsIDOMSVGElement { 
-    readonly attribute nsIDOMSVGAnimatedString in1;
-};
-
 [scriptable, uuid(0BAE928A-92FE-4C5F-A8CB-DAED171FA6A2)]
 interface nsIDOMSVGFEOffsetElement : nsIDOMSVGFilterPrimitiveStandardAttributes { 
     readonly attribute nsIDOMSVGAnimatedString in1;

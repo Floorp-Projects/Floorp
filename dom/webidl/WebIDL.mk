@@ -166,6 +166,7 @@ webidl_files = \
   SVGFEFuncGElement.webidl \
   SVGFEFuncRElement.webidl \
   SVGFEMergeElement.webidl \
+  SVGFEMergeNodeElement.webidl \
   SVGFitToViewBox.webidl \
   SVGForeignObjectElement.webidl \
   SVGGElement.webidl \
