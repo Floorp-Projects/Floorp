@@ -714,8 +714,6 @@ void SetAncestorDirectionIfAuto(nsINode* aTextNode, Directionality aDir,
       break;
     }
 
-    aTextNode->SetAncestorHasDirAuto();
-
     if (parent->HasDirAuto()) {
       bool resetDirection = false;
 
@@ -812,10 +810,15 @@ SetDirectionFromChangedTextNode(nsIContent* aTextNode, uint32_t aOffset,
 }
 
 void
-SetDirectionFromNewTextNode(nsTextNode* aTextNode)
+SetDirectionFromNewTextNode(nsIContent* aTextNode)
 {
   if (!NodeAffectsDirAutoAncestor(aTextNode)) {
     return;
+  }
+
+  Element* parent = aTextNode->GetParentElement();
+  if (parent && parent->NodeOrAncestorHasDirAuto()) {
+    aTextNode->SetAncestorHasDirAuto();
   }
 
   Directionality dir = GetDirectionFromText(aTextNode->GetText());

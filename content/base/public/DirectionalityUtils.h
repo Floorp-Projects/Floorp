@@ -90,7 +90,7 @@ void SetDirectionFromChangedTextNode(nsIContent* aTextNode, uint32_t aOffset,
  * When a text node is appended to an element, find any ancestors with dir=auto
  * whose directionality will be determined by the text node
  */
-void SetDirectionFromNewTextNode(nsTextNode* aTextNode);
+void SetDirectionFromNewTextNode(nsIContent* aTextNode);
 
 /**
  * When a text node is removed from a document, find any ancestors whose
