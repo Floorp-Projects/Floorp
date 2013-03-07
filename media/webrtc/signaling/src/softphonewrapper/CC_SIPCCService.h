@@ -33,7 +33,7 @@ extern "C" {
 namespace CSF
 {
     class PhoneConfig;
-	DECLARE_NS_PTR(CC_SIPCCService);
+	DECLARE_PTR(CC_SIPCCService);
 
 	class CC_SIPCCService : public CC_Service, public StreamObserver, public MediaProviderObserver
     {

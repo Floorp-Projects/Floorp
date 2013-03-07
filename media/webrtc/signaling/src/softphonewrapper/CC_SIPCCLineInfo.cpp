@@ -104,7 +104,7 @@ vector<CC_CallPtr> CC_SIPCCLineInfo::getCalls (CC_LinePtr linePtr)
 
     for (int i=0; i<numCalls; i++)
     {
-        CC_CallPtr callPtr = CC_SIPCCCall::wrap(handles[i]).get();
+        CC_CallPtr callPtr = CC_SIPCCCall::wrap(handles[i]);
         callsVector.push_back(callPtr);
     }
 
@@ -122,7 +122,7 @@ vector<CC_CallPtr> CC_SIPCCLineInfo::getCallsByState (CC_LinePtr linePtr, cc_cal
 
     for (int i=0; i<numCalls; i++)
     {
-        CC_CallPtr callPtr = CC_SIPCCCall::wrap(handles[i]).get();
+        CC_CallPtr callPtr = CC_SIPCCCall::wrap(handles[i]);
         callsVector.push_back(callPtr);
     }
 

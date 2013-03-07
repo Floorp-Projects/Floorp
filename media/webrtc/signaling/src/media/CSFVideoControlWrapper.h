@@ -15,9 +15,9 @@
 
 namespace CSF
 {
-    DECLARE_NS_PTR(VideoControlWrapper)
     typedef void *VideoWindowHandle;
 
+	DECLARE_PTR(VideoControlWrapper);
 	class ECC_API VideoControlWrapper : public VideoControl
 	{
 	public:

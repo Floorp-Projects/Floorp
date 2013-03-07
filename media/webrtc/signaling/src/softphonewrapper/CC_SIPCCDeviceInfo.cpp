@@ -59,7 +59,7 @@ vector<CC_CallPtr> CC_SIPCCDeviceInfo::getCalls ()
 
     for (int i=0; i<numHandles; i++)
     {
-        CC_CallPtr callPtr = CC_SIPCCCall::wrap(handles[i]).get();
+        CC_CallPtr callPtr = CC_SIPCCCall::wrap(handles[i]);
         callsVector.push_back(callPtr);
     }
 
@@ -77,7 +77,7 @@ vector<CC_LinePtr> CC_SIPCCDeviceInfo::getLines ()
 
     for (int i=0; i<numLines; i++)
     {
-        CC_LinePtr linePtr = CC_SIPCCLine::wrap(lines[i]).get();
+        CC_LinePtr linePtr = CC_SIPCCLine::wrap(lines[i]);
         linesVector.push_back(linePtr);
     }
 
@@ -95,8 +95,7 @@ vector<CC_FeatureInfoPtr> CC_SIPCCDeviceInfo::getFeatures ()
 
     for (int i=0; i<numFeatureInfos; i++)
     {
-        CC_FeatureInfoPtr featurePtr =
-          CC_SIPCCFeatureInfo::wrap(features[i]).get();
+        CC_FeatureInfoPtr featurePtr = CC_SIPCCFeatureInfo::wrap(features[i]);
         featuresVector.push_back(featurePtr);
     }
 
@@ -114,8 +113,7 @@ vector<CC_CallServerInfoPtr> CC_SIPCCDeviceInfo::getCallServers ()
 
     for (int i=0; i<numCallServerInfos; i++)
     {
-        CC_CallServerInfoPtr callServerPtr =
-          CC_SIPCCCallServerInfo::wrap(callServers[i]).get();
+        CC_CallServerInfoPtr callServerPtr = CC_SIPCCCallServerInfo::wrap(callServers[i]);
         callServersVector.push_back(callServerPtr);
     }
 

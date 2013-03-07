@@ -13,7 +13,7 @@
 
 namespace CSF
 {
-	DECLARE_NS_PTR(CC_SIPCCLine);
+	DECLARE_PTR(CC_SIPCCLine);
     class CC_SIPCCLine : public CC_Line
     {
     private:
