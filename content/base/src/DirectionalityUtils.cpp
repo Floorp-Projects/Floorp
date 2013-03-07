@@ -862,7 +862,7 @@ SetDirectionalityFromValue(Element* aElement, const nsAString& value,
 
 void
 OnSetDirAttr(Element* aElement, const nsAttrValue* aNewValue,
-             bool hadValidDir, bool aNotify)
+             bool hadValidDir, bool hadDirAuto, bool aNotify)
 {
   if (aElement->IsHTML(nsGkAtoms::input)) {
     return;
@@ -883,6 +883,20 @@ OnSetDirAttr(Element* aElement, const nsAttrValue* aNewValue,
       // determined by a text node descendant
       WalkAncestorsResetAutoDirection(aElement, aNotify);
     }
+  } else if (hadDirAuto && !aElement->HasDirAuto()) {
+    // The element isn't a descendant of an element with dir = auto, and is
+    // having its dir attribute set to something other than auto.
+    // Walk the descendant tree and clear the AncestorHasDirAuto flag.
+    //
+    // N.B: For elements other than <bdi> it would be enough to test that the
+    //      current value of dir was "auto" in BeforeSetAttr to know that we
+    //      were unsetting dir="auto". For <bdi> things are more complicated,
+    //      since it behaves like dir="auto" whenever the dir attribute is
+    //      empty or invalid, so we would have to check whether the old value
+    //      was not either "ltr" or "rtl", and the new value was either "ltr"
+    //      or "rtl". Element::HasDirAuto() encapsulates all that, so doing it
+    //      here is simpler.
+    WalkDescendantsClearAncestorDirAuto(aElement);
   }
 
   if (aElement->HasDirAuto()) {
