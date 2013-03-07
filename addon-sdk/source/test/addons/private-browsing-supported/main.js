@@ -11,6 +11,7 @@ const { isPrivate } = require('sdk/private-browsing');
 const { getOwnerWindow } = require('sdk/private-browsing/window/utils');
 const { is } = require('sdk/system/xul-app');
 const { isWindowPBSupported, isTabPBSupported } = require('sdk/private-browsing/utils');
+const { merge } = require('sdk/util/object');
 
 const TAB_URL = 'data:text/html;charset=utf-8,TEST-TAB';
 
@@ -39,13 +40,13 @@ exports.testGetOwnerWindow = function(assert, done) {
       else {
         if (isWindowPBSupported) {
           assert.notStrictEqual(chromeWindow,
-          	                    getOwnerWindow(tab),
-          	                    'associated window is not the same for window and window\'s tab'); 
+                                getOwnerWindow(tab),
+                                'associated window is not the same for window and window\'s tab'); 
         }
         else {
           assert.strictEqual(chromeWindow,
-          	                 getOwnerWindow(tab),
-          	                 'associated window is the same for window and window\'s tab');
+                            getOwnerWindow(tab),
+                            'associated window is the same for window and window\'s tab');
         }
       }
 
@@ -162,5 +163,8 @@ if (!is('Fennec')) {
     })
   }
 }
+
+merge(module.exports, require('./windows'));
+merge(module.exports, require('./tabs'));
 
 require('sdk/test/runner').runTestsFromModule(module);
