@@ -1713,18 +1713,17 @@ DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, RegExpShared &re,
     if (!linearStr)
         return false;
 
-    const jschar *chars = linearStr->chars();
     size_t charsLen = linearStr->length();
 
     ScopedMatchPairs matches(&cx->tempLifoAlloc());
 
     if (re.global()) {
         bool isTest = bool(flags & TEST_GLOBAL_BIT);
-        for (size_t count = 0, i = 0, length = str->length(); i <= length; ++count) {
+        for (size_t count = 0, i = 0; i <= charsLen; ++count) {
             if (!JS_CHECK_OPERATION_LIMIT(cx))
                 return false;
 
-            RegExpRunStatus status = re.execute(cx, chars, charsLen, &i, matches);
+            RegExpRunStatus status = re.execute(cx, linearStr->chars(), charsLen, &i, matches);
             if (status == RegExpRunStatus_Error)
                 return false;
 
@@ -1747,7 +1746,7 @@ DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, RegExpShared &re,
         bool callbackOnSingle = !!(flags & CALLBACK_ON_SINGLE_BIT);
         size_t i = 0;
 
-        RegExpRunStatus status = re.execute(cx, chars, charsLen, &i, matches);
+        RegExpRunStatus status = re.execute(cx, linearStr->chars(), charsLen, &i, matches);
         if (status == RegExpRunStatus_Error)
             return false;
 
