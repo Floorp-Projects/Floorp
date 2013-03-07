@@ -365,6 +365,9 @@ public:
    */
   virtual void DestroyImpl();
   StreamTime GetBufferEnd() { return mBuffer.GetEnd(); }
+#ifdef DEBUG
+  void DumpTrackInfo() { return mBuffer.DumpTrackInfo(); }
+#endif
   void SetAudioOutputVolumeImpl(void* aKey, float aVolume);
   void AddAudioOutputImpl(void* aKey)
   {
