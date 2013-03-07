@@ -7017,13 +7017,13 @@ define('gcli/promise', ['require', 'exports', 'module' ], function(require, expo
 });
 define("text!gcli/ui/intro.html", [], "\n" +
   "<div>\n" +
-  "  <p>${l10n.introTextOpening}</p>\n" +
+  "  <p>${l10n.introTextOpening2}</p>\n" +
   "\n" +
   "  <p>\n" +
   "    ${l10n.introTextCommands}\n" +
   "    <span class=\"gcli-out-shortcut\" onclick=\"${onclick}\"\n" +
-  "        ondblclick=\"${ondblclick}\" data-command=\"help\">help</span>,\n" +
-  "    ${l10n.introTextKeys} <code>${l10n.introTextF1Escape}</code>.\n" +
+  "        ondblclick=\"${ondblclick}\" data-command=\"help\">help</span>\n" +
+  "    ${l10n.introTextKeys2} <code>${l10n.introTextF1Escape}</code>.\n" +
   "  </p>\n" +
   "\n" +
   "  <button onclick=\"${onGotIt}\" if=\"${showHideButton}\">${l10n.introTextGo}</button>\n" +

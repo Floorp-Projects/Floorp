@@ -4,6 +4,11 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
+const BRAND_SHORT_NAME = Cc["@mozilla.org/intl/stringbundle;1"]
+                           .getService(Ci.nsIStringBundleService)
+                           .createBundle("chrome://branding/locale/brand.properties")
+                           .GetStringFromName("brandShortName");
+
 this.EXPORTED_SYMBOLS = [ "CmdAddonFlags", "CmdCommands" ];
 
 Cu.import("resource:///modules/devtools/gcli.jsm");
@@ -1791,14 +1796,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
   * >> restart --nocache
   * - restarts immediately and starts Firefox without using cache
   */
+
   gcli.addCommand({
     name: "restart",
-    description: gcli.lookup("restartFirefoxDesc"),
+    description: gcli.lookupFormat("restartBrowserDesc", [BRAND_SHORT_NAME]),
     params: [
       {
         name: "nocache",
         type: "boolean",
-        description: gcli.lookup("restartFirefoxNocacheDesc")
+        description: gcli.lookup("restartBrowserNocacheDesc")
       }
     ],
     returnType: "string",
@@ -1807,7 +1813,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
                       .createInstance(Ci.nsISupportsPRBool);
       Services.obs.notifyObservers(canceled, "quit-application-requested", "restart");
       if (canceled.data) {
-        return gcli.lookup("restartFirefoxRequestCancelled");
+        return gcli.lookup("restartBrowserRequestCancelled");
       }
 
       // disable loading content from cache.
@@ -1819,7 +1825,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
       Cc['@mozilla.org/toolkit/app-startup;1']
         .getService(Ci.nsIAppStartup)
         .quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
-      return gcli.lookup("restartFirefoxRestarting");
+      return gcli.lookupFormat("restartBrowserRestarting", [BRAND_SHORT_NAME]);
     }
   });
 }(this));
@@ -1862,8 +1868,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
           {
             name: "chrome",
             type: "boolean",
-            description: gcli.lookup("screenshotChromeDesc"),
-            manual: gcli.lookup("screenshotChromeManual")
+            description: gcli.lookupFormat("screenshotChromeDesc2", [BRAND_SHORT_NAME]),
+            manual: gcli.lookupFormat("screenshotChromeManual2", [BRAND_SHORT_NAME])
           },
           {
             name: "delay",
