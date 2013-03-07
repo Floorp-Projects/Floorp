@@ -155,6 +155,7 @@
     _(LoadTypedArrayElement)        \
     _(LoadTypedArrayElementHole)    \
     _(StoreTypedArrayElement)       \
+    _(StoreTypedArrayElementHole)   \
     _(ClampIToUint8)                \
     _(ClampDToUint8)                \
     _(ClampVToUint8)                \

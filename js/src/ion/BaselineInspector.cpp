@@ -11,6 +11,22 @@
 using namespace js;
 using namespace js::ion;
 
+bool
+SetElemICInspector::sawOOBTypedArrayWrite() const
+{
+    if (!icEntry_)
+        return false;
+
+    // Check for SetElem_TypedArray stubs with expectOutOfBounds set.
+    for (ICStub *stub = icEntry_->firstStub(); stub; stub = stub->next()) {
+        if (!stub->isSetElem_TypedArray())
+            continue;
+        if (stub->toSetElem_TypedArray()->expectOutOfBounds())
+            return true;
+    }
+    return false;
+}
+
 RawShape
 BaselineInspector::maybeMonomorphicShapeForPropertyOp(jsbytecode *pc)
 {

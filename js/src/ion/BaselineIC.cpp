@@ -597,6 +597,9 @@ EnsureCanEnterIon(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *frame
         if (stat == Method_CantCompile ||
             (script->hasIonScript() && script->ion->bailoutExpected()))
         {
+            IonSpew(IonSpew_BaselineOSR, "  Reset UseCount cantCompile=%s bailoutExpected=%s!",
+                    stat == Method_CantCompile ? "yes" : "no",
+                    (script->hasIonScript() && script->ion->bailoutExpected()) ? "yes" : "no");
             script->resetUseCount();
         }
         return true;

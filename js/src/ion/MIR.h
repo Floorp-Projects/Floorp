@@ -4493,7 +4493,6 @@ class MStoreTypedArrayElement
                             int arrayType)
       : MTernaryInstruction(elements, index, value), arrayType_(arrayType), racy_(false)
     {
-        setResultType(MIRType_Value);
         setMovable();
         JS_ASSERT(elements->type() == MIRType_Elements);
         JS_ASSERT(index->type() == MIRType_Int32);
@@ -4540,6 +4539,68 @@ class MStoreTypedArrayElement
     }
     void setRacy() {
         racy_ = true;
+    }
+};
+
+class MStoreTypedArrayElementHole
+  : public MAryInstruction<4>,
+    public StoreTypedArrayHolePolicy
+{
+    int arrayType_;
+
+    MStoreTypedArrayElementHole(MDefinition *elements, MDefinition *length, MDefinition *index,
+                                MDefinition *value, int arrayType)
+      : MAryInstruction<4>(), arrayType_(arrayType)
+    {
+        setOperand(0, elements);
+        setOperand(1, length);
+        setOperand(2, index);
+        setOperand(3, value);
+        setMovable();
+        JS_ASSERT(elements->type() == MIRType_Elements);
+        JS_ASSERT(length->type() == MIRType_Int32);
+        JS_ASSERT(index->type() == MIRType_Int32);
+        JS_ASSERT(arrayType >= 0 && arrayType < TypedArray::TYPE_MAX);
+    }
+
+  public:
+    INSTRUCTION_HEADER(StoreTypedArrayElementHole)
+
+    static MStoreTypedArrayElementHole *New(MDefinition *elements, MDefinition *length,
+                                            MDefinition *index, MDefinition *value, int arrayType)
+    {
+        return new MStoreTypedArrayElementHole(elements, length, index, value, arrayType);
+    }
+
+    int arrayType() const {
+        return arrayType_;
+    }
+    bool isByteArray() const {
+        return (arrayType_ == TypedArray::TYPE_INT8 ||
+                arrayType_ == TypedArray::TYPE_UINT8 ||
+                arrayType_ == TypedArray::TYPE_UINT8_CLAMPED);
+    }
+    bool isFloatArray() const {
+        return (arrayType_ == TypedArray::TYPE_FLOAT32 ||
+                arrayType_ == TypedArray::TYPE_FLOAT64);
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *elements() const {
+        return getOperand(0);
+    }
+    MDefinition *length() const {
+        return getOperand(1);
+    }
+    MDefinition *index() const {
+        return getOperand(2);
+    }
+    MDefinition *value() const {
+        return getOperand(3);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::Store(AliasSet::TypedArrayElement);
     }
 };
 
