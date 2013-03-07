@@ -14,7 +14,6 @@ MODULE_NAME = jsinspector
 GRE_MODULE = 1
 
 LIBRARY_NAME = jsinspector
-XPIDL_MODULE = jsinspector
 LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 IS_COMPONENT = 1

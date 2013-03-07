@@ -12,7 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = url-classifier
 LIBRARY_NAME = urlclassifier_s
-XPIDL_MODULE = url-classifier
 LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 FAIL_ON_WARNINGS = 1

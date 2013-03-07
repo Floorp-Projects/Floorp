@@ -13,7 +13,6 @@ USE_RCS_MK := 1
 include $(topsrcdir)/config/makefiles/rcs.mk
 
 MODULE = telemetry
-XPIDL_MODULE = telemetry
 MODULE_NAME = telemetry
 GRE_MODULE = 1
 
