@@ -407,6 +407,9 @@ pref("view_source.editor.path", "");
 // for jumping to a specific line (e.g. "/line:%LINE%" or "--goto %LINE%")
 pref("view_source.editor.args", "");
 
+// When true this will word-wrap plain text documents.
+pref("plain_text.wrap_long_lines", false);
+
 // dispatch left clicks only to content in browser (still allows clicks to chrome/xul)
 pref("nglayout.events.dispatchLeftClickOnly", true);
 

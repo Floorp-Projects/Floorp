@@ -7,6 +7,7 @@ toolkit.jar:
    res/html.css    (html.css)
    res/quirk.css    (quirk.css)
    res/full-screen-override.css    (full-screen-override.css)
+   res/plaintext.css     (plaintext.css)
    res/viewsource.css    (viewsource.css)
 *  res/forms.css    (forms.css)
    res/arrow.gif    (arrow.gif)
