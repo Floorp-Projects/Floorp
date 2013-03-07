@@ -405,7 +405,7 @@ Measurement.prototype = Object.freeze({
  * The main role of a `Provider` is to produce metrics data and to store said
  * data in the storage backend.
  *
- * Metrics data collection is initiated either by a collector calling a
+ * Metrics data collection is initiated either by a manager calling a
  * `collect*` function on `Provider` instances or by the `Provider` registering
  * to some external event and then reacting whenever they occur.
  *
