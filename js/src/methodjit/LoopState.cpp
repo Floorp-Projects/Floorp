@@ -2059,6 +2059,10 @@ LoopState::computeInterval(const CrossSSAValue &cv, int32_t *pmin, int32_t *pmax
         CrossSSAValue rhsv(cv.frame, analysis->poppedValue(pc, 0));
         if (!computeInterval(lhsv, &lhsmin, &lhsmax) || !computeInterval(rhsv, &rhsmin, &rhsmax))
             return false;
+
+        if (lhsmin == INT32_MIN || rhsmin == INT32_MIN)
+            return false;
+
         int32_t nlhs = Max(Abs(lhsmin), Abs(lhsmax));
         int32_t nrhs = Max(Abs(rhsmin), Abs(rhsmax));
 
