@@ -1,5 +1,8 @@
 # HG changeset patch
-# Parent 370ef99fecb269ea8c30a56c4a0cf5ab11844868
+# User Ted Mielczarek <ted@mielczarek.org>
+# Date 1362600444 18000
+# Node ID 0eb3c7ba8a38a269ab975eff3f95a1a5d5d937b9
+# Parent  6b68e82037b8322fb392cea369d517aeeaaee9d3
 Stop using dynamic_cast in dwarf2reader
 Patch by Julian Seward <jseward@acm.org>, R=ted
 

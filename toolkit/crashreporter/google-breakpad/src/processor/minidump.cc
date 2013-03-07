@@ -125,7 +125,7 @@ static inline void Swap(uint64_t* value) {
 
 // Given a pointer to a 128-bit int in the minidump data, set the "low"
 // and "high" fields appropriately.
-static void Normalize128(uint128_t* value, bool is_big_endian) {
+static void Normalize128(uint128_struct* value, bool is_big_endian) {
   // The struct format is [high, low], so if the format is big-endian,
   // the most significant bytes will already be in the high field.
   if (!is_big_endian) {
@@ -137,7 +137,7 @@ static void Normalize128(uint128_t* value, bool is_big_endian) {
 
 // This just swaps each int64 half of the 128-bit value.
 // The value should also be normalized by calling Normalize128().
-static void Swap(uint128_t* value) {
+static void Swap(uint128_struct* value) {
   Swap(&value->low);
   Swap(&value->high);
 }

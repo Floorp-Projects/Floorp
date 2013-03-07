@@ -106,6 +106,9 @@ class ProcessState {
   }
   const SystemInfo* system_info() const { return &system_info_; }
   const CodeModules* modules() const { return modules_; }
+  const vector<const CodeModule*>* modules_without_symbols() const {
+    return &modules_without_symbols_;
+  }
   ExploitabilityRating exploitability() const { return exploitability_; }
 
  private:
@@ -157,6 +160,9 @@ class ProcessState {
   // The modules that were loaded into the process represented by the
   // ProcessState.
   const CodeModules *modules_;
+
+  // The modules that didn't have symbols when the report was processed.
+  vector<const CodeModule*> modules_without_symbols_;
 
   // The exploitability rating as determined by the exploitability
   // engine. When the exploitability engine is not enabled this

@@ -70,10 +70,15 @@ Stackwalker::Stackwalker(const SystemInfo* system_info,
 }
 
 
-bool Stackwalker::Walk(CallStack* stack) {
+bool Stackwalker::Walk(CallStack* stack,
+                       vector<const CodeModule*>* modules_without_symbols) {
   BPLOG_IF(ERROR, !stack) << "Stackwalker::Walk requires |stack|";
   assert(stack);
   stack->Clear();
+
+  BPLOG_IF(ERROR, !modules_without_symbols) << "Stackwalker::Walk requires "
+                                            << "|modules_without_symbols|";
+  assert(modules_without_symbols);
 
   // Begin with the context frame, and keep getting callers until there are
   // no more.
@@ -93,6 +98,27 @@ bool Stackwalker::Walk(CallStack* stack) {
     if (symbolizer_result == StackFrameSymbolizer::kInterrupt) {
       BPLOG(INFO) << "Stack walk is interrupted.";
       return false;
+    }
+
+    // Keep track of modules that have no symbols.
+    if (symbolizer_result == StackFrameSymbolizer::kError &&
+        frame->module != NULL) {
+      bool found = false;
+      vector<const CodeModule*>::iterator iter;
+      for (iter = modules_without_symbols->begin();
+           iter != modules_without_symbols->end();
+           ++iter) {
+        if (*iter == frame->module) {
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        BPLOG(INFO) << "Couldn't load symbols for: "
+                    << frame->module->debug_file() << "|"
+                    << frame->module->debug_identifier();
+        modules_without_symbols->push_back(frame->module);
+      }
     }
 
     // Add the frame to the call stack.  Relinquish the ownership claim

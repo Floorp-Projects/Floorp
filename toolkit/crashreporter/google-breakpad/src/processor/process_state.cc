@@ -57,6 +57,9 @@ void ProcessState::Clear() {
   }
   threads_.clear();
   system_info_.Clear();
+  // modules_without_symbols_ DOES NOT owns the underlying CodeModule pointers.
+  // Just clear the vector.
+  modules_without_symbols_.clear();
   delete modules_;
   modules_ = NULL;
 }

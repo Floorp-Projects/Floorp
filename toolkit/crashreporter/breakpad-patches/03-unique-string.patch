@@ -1,10 +1,10 @@
 # HG changeset patch
 # User Ted Mielczarek <ted.mielczarek@gmail.com>
 # Date 1360255134 18000
-# Node ID 229852c0b835929a56f207996034cf072307b343
-# Parent c53ab35ef4dce39824c2d8103f75faccb4c380e9
+# Node ID d7bfb673574a3afe8b4f76f42fb52e2545770dad
+# Parent  d23a69a6c34a1f1c21e241f37b388c8689f2386b
 Rework PostfixEvaluator to use a UniqueString type
-R=ted
+Patch by Julian Seward <jseward@acm.org>, R=ted
 
 diff --git a/Makefile.am b/Makefile.am
 --- a/Makefile.am
@@ -1353,15 +1353,15 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
 diff --git a/src/common/linux/dump_symbols.cc b/src/common/linux/dump_symbols.cc
 --- a/src/common/linux/dump_symbols.cc
 +++ b/src/common/linux/dump_symbols.cc
-@@ -76,16 +76,17 @@
- using google_breakpad::ElfClass;
- using google_breakpad::ElfClass32;
+@@ -80,16 +80,17 @@
  using google_breakpad::ElfClass64;
  using google_breakpad::FindElfSectionByName;
  using google_breakpad::GetOffset;
  using google_breakpad::IsValidElf;
  using google_breakpad::Module;
+ #ifndef NO_STABS_SUPPORT
  using google_breakpad::StabsToModule;
+ #endif
 +using google_breakpad::UniqueString;
  using google_breakpad::scoped_ptr;
  
@@ -1371,7 +1371,7 @@ diff --git a/src/common/linux/dump_symbols.cc b/src/common/linux/dump_symbols.cc
  // Wrapper class to make sure opened file is closed.
  //
  class FDWrapper {
-@@ -264,17 +265,17 @@
+@@ -270,17 +271,17 @@
  
  // Fill REGISTER_NAMES with the register names appropriate to the
  // machine architecture given in HEADER, indexed by the register
@@ -1390,7 +1390,7 @@ diff --git a/src/common/linux/dump_symbols.cc b/src/common/linux/dump_symbols.cc
        *register_names = DwarfCFIToModule::RegisterNames::ARM();
        return true;
      case EM_X86_64:
-@@ -292,17 +293,17 @@
+@@ -298,17 +299,17 @@
                    const typename ElfClass::Shdr* section,
                    const bool eh_frame,
                    const typename ElfClass::Shdr* got_section,
@@ -2357,8 +2357,8 @@ diff --git a/src/processor/cfi_frame_info.cc b/src/processor/cfi_frame_info.cc
  
  namespace google_breakpad {
  
- template<typename V>
-@@ -61,33 +62,33 @@
+ #ifdef _WIN32
+@@ -65,33 +66,33 @@
    V cfa;
    working = registers;
    if (!evaluator.EvaluateForValue(cfa_rule_, &cfa))
@@ -2396,7 +2396,7 @@ diff --git a/src/processor/cfi_frame_info.cc b/src/processor/cfi_frame_info.cc
  template bool CFIFrameInfo::FindCallerRegs<uint32_t>(
      const RegisterValueMap<uint32_t> &registers,
      const MemoryRegion &memory,
-@@ -103,81 +104,98 @@
+@@ -107,81 +108,98 @@
    if (!cfa_rule_.invalid()) {
      stream << ".cfa: " << cfa_rule_;
    }
@@ -4397,7 +4397,7 @@ diff --git a/src/tools/mac/dump_syms/dump_syms.xcodeproj/project.pbxproj b/src/t
  				B88FB0D7116CEC0600407530 /* dwarf_line_to_module_unittest.cc */,
  				B88FAE221166603300407530 /* language.cc */,
  				B88FAE231166603300407530 /* language.h */,
-@@ -937,16 +947,17 @@
+@@ -940,16 +950,17 @@
  		};
  /* End PBXShellScriptBuildPhase section */
  
@@ -4415,7 +4415,7 @@ diff --git a/src/tools/mac/dump_syms/dump_syms.xcodeproj/project.pbxproj b/src/t
  		};
  		B88FAF2C116A591D00407530 /* Sources */ = {
  			isa = PBXSourcesBuildPhase;
-@@ -980,56 +991,60 @@
+@@ -983,56 +994,60 @@
  			runOnlyForDeploymentPostprocessing = 0;
  		};
  		B88FB0B6116CEABF00407530 /* Sources */ = {
@@ -4476,7 +4476,7 @@ diff --git a/src/tools/mac/dump_syms/dump_syms.xcodeproj/project.pbxproj b/src/t
  			buildActionMask = 2147483647;
  			files = (
  				B88FB13D116CF38300407530 /* cfi_assembler.cc in Sources */,
-@@ -1083,16 +1098,17 @@
+@@ -1086,16 +1101,17 @@
  				B88FAE261166603300407530 /* dwarf_cu_to_module.cc in Sources */,
  				B88FAE271166603300407530 /* dwarf_line_to_module.cc in Sources */,
  				B88FAE281166603300407530 /* language.cc in Sources */,
