@@ -148,6 +148,9 @@ public:
   static void KillFullGCTimer();
   static void KillInterSliceGCTimer();
 
+  // Calling LikelyShortLivingObjectCreated() makes a GC more likely.
+  static void LikelyShortLivingObjectCreated();
+
   virtual void GC(JS::gcreason::Reason aReason);
 
   static uint32_t CleanupsSinceLastGC();
