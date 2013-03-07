@@ -62,6 +62,7 @@ const MEM_HISTOGRAMS = {
   "js-gc-heap": "MEMORY_JS_GC_HEAP",
   "js-compartments/system": "MEMORY_JS_COMPARTMENTS_SYSTEM",
   "js-compartments/user": "MEMORY_JS_COMPARTMENTS_USER",
+  "js-main-runtime-temporary-peak": "MEMORY_JS_MAIN_RUNTIME_TEMPORARY_PEAK",
   "explicit": "MEMORY_EXPLICIT",
   "resident-fast": "MEMORY_RESIDENT",
   "vsize": "MEMORY_VSIZE",

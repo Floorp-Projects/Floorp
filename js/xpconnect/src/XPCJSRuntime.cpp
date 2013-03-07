@@ -1428,6 +1428,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSGCHeap,
                              nsIMemoryReporter::UNITS_BYTES,
                              GetGCChunkTotalBytes,
                              "Memory used by the garbage-collected JavaScript heap.")
+
 static int64_t
 GetJSSystemCompartmentCount()
 {
@@ -1466,6 +1467,22 @@ NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSUserCompartmentCount,
     "and 'js-compartments-system' might not match the number of compartments "
     "listed under 'js' if a garbage collection occurs at an inopportune time, "
     "but such cases should be rare.")
+
+static int64_t
+GetJSMainRuntimeTemporaryPeakSize()
+{
+    return JS::PeakSizeOfTemporary(nsXPConnect::GetRuntimeInstance()->GetJSRuntime());
+}
+
+// This is also a single reporter so it can be used by telemetry.
+NS_MEMORY_REPORTER_IMPLEMENT(JSMainRuntimeTemporaryPeak,
+    "js-main-runtime-temporary-peak",
+    KIND_OTHER,
+    nsIMemoryReporter::UNITS_BYTES,
+    GetJSMainRuntimeTemporaryPeakSize,
+    "The peak size of the transient storage in the main JSRuntime (the "
+    "current size of which is reported as "
+    "'explicit/js-non-window/runtime/temporary').");
 
 // The REPORT* macros do an unconditional report.  The ZCREPORT* macros are for
 // compartments and zones; they aggregate any entries smaller than
@@ -2683,6 +2700,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSGCHeap));
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSSystemCompartmentCount));
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSUserCompartmentCount));
+    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(JSMainRuntimeTemporaryPeak));
     NS_RegisterMemoryMultiReporter(new JSCompartmentsMultiReporter);
 
     mJSHolders.Init(512);
