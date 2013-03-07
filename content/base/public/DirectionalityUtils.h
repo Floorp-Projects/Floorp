@@ -117,6 +117,7 @@ void SetDirectionalityFromValue(mozilla::dom::Element* aElement,
 void OnSetDirAttr(mozilla::dom::Element* aElement,
                   const nsAttrValue* aNewValue,
                   bool hadValidDir,
+                  bool hadDirAuto,
                   bool aNotify);
 
 /**
