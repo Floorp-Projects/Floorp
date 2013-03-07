@@ -1085,7 +1085,7 @@ JSObject::hasShapeTable() const
 inline size_t
 JSObject::computedSizeOfThisSlotsElements() const
 {
-    size_t n = sizeOfThis();
+    size_t n = js::gc::Arena::thingSize(js::gc::GetGCObjectFixedSlotsKind(numFixedSlots()));
 
     if (hasDynamicSlots())
         n += numDynamicSlots() * sizeof(js::Value);
@@ -1721,7 +1721,7 @@ CopyInitializerObject(JSContext *cx, HandleObject baseobj, NewObjectKind newKind
 
     gc::AllocKind allocKind = gc::GetGCObjectFixedSlotsKind(baseobj->numFixedSlots());
     allocKind = gc::GetBackgroundAllocKind(allocKind);
-    JS_ASSERT(allocKind == baseobj->getAllocKind());
+    JS_ASSERT_IF(baseobj->isTenured(), allocKind == baseobj->getAllocKind());
     RootedObject obj(cx);
     obj = NewBuiltinClassInstance(cx, &ObjectClass, allocKind, newKind);
     if (!obj)
