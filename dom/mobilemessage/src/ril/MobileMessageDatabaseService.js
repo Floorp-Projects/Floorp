@@ -16,7 +16,7 @@ const RIL_MOBILEMESSAGEDATABASESERVICE_CID = Components.ID("{29785f90-6b5b-11e2-
 const DEBUG = false;
 const DB_NAME = "sms";
 const DB_VERSION = 7;
-const STORE_NAME = "sms";
+const MESSAGE_STORE_NAME = "sms";
 const MOST_RECENT_STORE_NAME = "most-recent";
 
 const DELIVERY_SENDING = "sending";
@@ -54,8 +54,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "gIDBManager",
 
 const GLOBAL_SCOPE = this;
 
-function getNumberFromRecord(aRecord) {
-  return aRecord.delivery == DELIVERY_RECEIVED ? aRecord.sender : aRecord.receiver;
+function getNumberFromRecord(aMessageRecord) {
+  return aMessageRecord.delivery == DELIVERY_RECEIVED ? aMessageRecord.sender
+                                                      : aMessageRecord.receiver;
 }
 
 /**
@@ -69,13 +70,13 @@ function MobileMessageDatabaseService() {
   gIDBManager.initWindowless(GLOBAL_SCOPE);
 
   let that = this;
-  this.newTxn(READ_ONLY, function(error, txn, store){
+  this.newTxn(READ_ONLY, function(error, txn, messageStore){
     if (error) {
       return;
     }
     // In order to get the highest key value, we open a key cursor in reverse
     // order and get only the first pointed value.
-    let request = store.openCursor(null, PREV);
+    let request = messageStore.openCursor(null, PREV);
     request.onsuccess = function onsuccess(event) {
       let cursor = event.target.result;
       if (!cursor) {
@@ -85,8 +86,8 @@ function MobileMessageDatabaseService() {
         }
         return;
       }
-      that.lastKey = cursor.key || 0;
-      if (DEBUG) debug("Last assigned message ID was " + that.lastKey);
+      that.lastMessageId = cursor.key || 0;
+      if (DEBUG) debug("Last assigned message ID was " + that.lastMessageId);
     };
     request.onerror = function onerror(event) {
       if (DEBUG) {
@@ -119,9 +120,9 @@ MobileMessageDatabaseService.prototype = {
   lastMessageListId: 0,
 
   /**
-   * Last key value stored in the database.
+   * Last sms object store key value in the database.
    */
-  lastKey: 0,
+  lastMessageId: 0,
 
   /**
    * nsIObserver
@@ -175,13 +176,11 @@ MobileMessageDatabaseService.prototype = {
             break;
           case 1:
             if (DEBUG) debug("Upgrade to version 2. Including `read` index");
-            let objectStore = event.target.transaction.objectStore(STORE_NAME);
-            self.upgradeSchema(objectStore);
+            self.upgradeSchema(event.target.transaction);
             break;
           case 2:
             if (DEBUG) debug("Upgrade to version 3. Fix existing entries.");
-            objectStore = event.target.transaction.objectStore(STORE_NAME);
-            self.upgradeSchema2(objectStore);
+            self.upgradeSchema2(event.target.transaction);
             break;
           case 3:
             if (DEBUG) debug("Upgrade to version 4. Add quick threads view.");
@@ -223,23 +222,22 @@ MobileMessageDatabaseService.prototype = {
    *        Type of transaction (e.g. READ_WRITE)
    * @param callback
    *        Function to call when the transaction is available. It will
-   *        be invoked with the transaction and the mobile message object store.
-   * @param objectStores
-   *        Function to call when the transaction is available. It will
-   *        be invoked with the transaction and the mobile message object store.
+   *        be invoked with the transaction and opened object stores.
+   * @param storeNames
+   *        Names of the stores to open.
    */
-  newTxn: function newTxn(txn_type, callback, objectStores) {
-    if (!objectStores) {
-      objectStores = [STORE_NAME];
+  newTxn: function newTxn(txn_type, callback, storeNames) {
+    if (!storeNames) {
+      storeNames = [MESSAGE_STORE_NAME];
     }
-    if (DEBUG) debug("Opening transaction for objectStores: " + objectStores);
+    if (DEBUG) debug("Opening transaction for object stores: " + storeNames);
     this.ensureDB(function (error, db) {
       if (error) {
         if (DEBUG) debug("Could not open database: " + error);
         callback(error);
         return;
       }
-      let txn = db.transaction(objectStores, txn_type);
+      let txn = db.transaction(storeNames, txn_type);
       if (DEBUG) debug("Started transaction " + txn + " of type " + txn_type);
       if (DEBUG) {
         txn.oncomplete = function oncomplete(event) {
@@ -252,12 +250,12 @@ MobileMessageDatabaseService.prototype = {
         };
       }
       let stores;
-      if (objectStores.length == 1) {
-        if (DEBUG) debug("Retrieving object store " + objectStores[0]);
-        stores = txn.objectStore(objectStores[0]);
+      if (storeNames.length == 1) {
+        if (DEBUG) debug("Retrieving object store " + storeNames[0]);
+        stores = txn.objectStore(storeNames[0]);
       } else {
         stores = [];
-        for each (let storeName in objectStores) {
+        for each (let storeName in storeNames) {
           if (DEBUG) debug("Retrieving object store " + storeName);
           stores.push(txn.objectStore(storeName));
         }
@@ -273,44 +271,46 @@ MobileMessageDatabaseService.prototype = {
    * TODO full text search on body???
    */
   createSchema: function createSchema(db) {
-    // This objectStore holds the main mobile message data.
-    let objectStore = db.createObjectStore(STORE_NAME, { keyPath: "id" });
-    objectStore.createIndex("timestamp", "timestamp", { unique: false });
+    // This messageStore holds the main mobile message data.
+    let messageStore = db.createObjectStore(MESSAGE_STORE_NAME, { keyPath: "id" });
+    messageStore.createIndex("timestamp", "timestamp", { unique: false });
     if (DEBUG) debug("Created object stores and indexes");
   },
 
   /**
    * Upgrade to the corresponding database schema version.
    */
-  upgradeSchema: function upgradeSchema(objectStore) {
-    objectStore.createIndex("read", "read", { unique: false });
+  upgradeSchema: function upgradeSchema(transaction) {
+    let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
+    messageStore.createIndex("read", "read", { unique: false });
   },
 
-  upgradeSchema2: function upgradeSchema2(objectStore) {
-    objectStore.openCursor().onsuccess = function(event) {
+  upgradeSchema2: function upgradeSchema2(transaction) {
+    let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
+    messageStore.openCursor().onsuccess = function(event) {
       let cursor = event.target.result;
       if (!cursor) {
         return;
       }
 
-      let record = cursor.value;
-      record.messageClass = MESSAGE_CLASS_NORMAL;
-      record.deliveryStatus = DELIVERY_STATUS_NOT_APPLICABLE;
-      cursor.update(record);
+      let messageRecord = cursor.value;
+      messageRecord.messageClass = MESSAGE_CLASS_NORMAL;
+      messageRecord.deliveryStatus = DELIVERY_STATUS_NOT_APPLICABLE;
+      cursor.update(messageRecord);
       cursor.continue();
     };
   },
 
   upgradeSchema3: function upgradeSchema3(db, transaction) {
     // Delete redundant "id" index.
-    let objectStore = transaction.objectStore(STORE_NAME);
-    if (objectStore.indexNames.contains("id")) {
-      objectStore.deleteIndex("id");
+    let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
+    if (messageStore.indexNames.contains("id")) {
+      messageStore.deleteIndex("id");
     }
 
     /**
-     * This objectStore can be used to quickly construct a thread view of the
-     * mobile message database. Each entry looks like this:
+     * This mostRecentStore can be used to quickly construct a thread view of
+     * the mobile message database. Each entry looks like this:
      *
      * { senderOrReceiver: <String> (primary key),
      *   id: <Number>,
@@ -319,17 +319,17 @@ MobileMessageDatabaseService.prototype = {
      *   unreadCount: <Number> }
      *
      */
-    objectStore = db.createObjectStore(MOST_RECENT_STORE_NAME,
-                                       { keyPath: "senderOrReceiver" });
-    objectStore.createIndex("timestamp", "timestamp");
+    let mostRecentStore = db.createObjectStore(MOST_RECENT_STORE_NAME,
+                                               { keyPath: "senderOrReceiver" });
+    mostRecentStore.createIndex("timestamp", "timestamp");
   },
 
   upgradeSchema4: function upgradeSchema4(transaction) {
     let threads = {};
-    let mobileMessageStore = transaction.objectStore(STORE_NAME);
+    let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
     let mostRecentStore = transaction.objectStore(MOST_RECENT_STORE_NAME);
 
-    mobileMessageStore.openCursor().onsuccess = function(event) {
+    messageStore.openCursor().onsuccess = function(event) {
       let cursor = event.target.result;
       if (!cursor) {
         for (let thread in threads) {
@@ -338,26 +338,26 @@ MobileMessageDatabaseService.prototype = {
         return;
       }
 
-      let record = cursor.value;
-      let contact = record.sender || record.receiver;
+      let messageRecord = cursor.value;
+      let contact = messageRecord.sender || messageRecord.receiver;
 
       if (contact in threads) {
         let thread = threads[contact];
-        if (!record.read) {
+        if (!messageRecord.read) {
           thread.unreadCount++;
         }
-        if (record.timestamp > thread.timestamp) {
-          thread.id = record.id;
-          thread.body = record.body;
-          thread.timestamp = record.timestamp;
+        if (messageRecord.timestamp > thread.timestamp) {
+          thread.id = messageRecord.id;
+          thread.body = messageRecord.body;
+          thread.timestamp = messageRecord.timestamp;
         }
       } else {
         threads[contact] = {
           senderOrReceiver: contact,
-          id: record.id,
-          timestamp: record.timestamp,
-          body: record.body,
-          unreadCount: record.read ? 0 : 1
+          id: messageRecord.id,
+          timestamp: messageRecord.timestamp,
+          body: messageRecord.body,
+          unreadCount: messageRecord.read ? 0 : 1
         };
       }
       cursor.continue();
@@ -369,61 +369,63 @@ MobileMessageDatabaseService.prototype = {
   },
 
   upgradeSchema6: function upgradeSchema6(transaction) {
-    let objectStore = transaction.objectStore(STORE_NAME);
+    let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
 
     // Delete "delivery" index.
-    if (objectStore.indexNames.contains("delivery")) {
-      objectStore.deleteIndex("delivery");
+    if (messageStore.indexNames.contains("delivery")) {
+      messageStore.deleteIndex("delivery");
     }
     // Delete "sender" index.
-    if (objectStore.indexNames.contains("sender")) {
-      objectStore.deleteIndex("sender");
+    if (messageStore.indexNames.contains("sender")) {
+      messageStore.deleteIndex("sender");
     }
     // Delete "receiver" index.
-    if (objectStore.indexNames.contains("receiver")) {
-      objectStore.deleteIndex("receiver");
+    if (messageStore.indexNames.contains("receiver")) {
+      messageStore.deleteIndex("receiver");
     }
     // Delete "read" index.
-    if (objectStore.indexNames.contains("read")) {
-      objectStore.deleteIndex("read");
+    if (messageStore.indexNames.contains("read")) {
+      messageStore.deleteIndex("read");
     }
 
     // Create new "delivery", "number" and "read" indexes.
-    objectStore.createIndex("delivery", "deliveryIndex");
-    objectStore.createIndex("number", "numberIndex", { multiEntry: true });
-    objectStore.createIndex("read", "readIndex");
+    messageStore.createIndex("delivery", "deliveryIndex");
+    messageStore.createIndex("number", "numberIndex", { multiEntry: true });
+    messageStore.createIndex("read", "readIndex");
 
     // Populate new "deliverIndex", "numberIndex" and "readIndex" attributes.
-    objectStore.openCursor().onsuccess = function(event) {
+    messageStore.openCursor().onsuccess = function(event) {
       let cursor = event.target.result;
       if (!cursor) {
         return;
       }
 
-      let record = cursor.value;
-      let timestamp = record.timestamp;
-      record.deliveryIndex = [record.delivery, timestamp];
-      record.numberIndex = [
-        [record.sender, timestamp],
-        [record.receiver, timestamp]
+      let messageRecord = cursor.value;
+      let timestamp = messageRecord.timestamp;
+      messageRecord.deliveryIndex = [messageRecord.delivery, timestamp];
+      messageRecord.numberIndex = [
+        [messageRecord.sender, timestamp],
+        [messageRecord.receiver, timestamp]
       ];
-      record.readIndex = [record.read, timestamp];
-      cursor.update(record);
+      messageRecord.readIndex = [messageRecord.read, timestamp];
+      cursor.update(messageRecord);
       cursor.continue();
     };
   },
 
-  createSmsMessageFromRecord: function createSmsMessageFromRecord(aRecord) {
-    if (DEBUG) debug("createSmsMessageFromRecord: " + JSON.stringify(aRecord));
-    return gSmsService.createSmsMessage(aRecord.id,
-                                        aRecord.delivery,
-                                        aRecord.deliveryStatus,
-                                        aRecord.sender,
-                                        aRecord.receiver,
-                                        aRecord.body,
-                                        aRecord.messageClass,
-                                        aRecord.timestamp,
-                                        aRecord.read);
+  createSmsMessageFromRecord: function createSmsMessageFromRecord(aMessageRecord) {
+    if (DEBUG) {
+      debug("createSmsMessageFromRecord: " + JSON.stringify(aMessageRecord));
+    }
+    return gSmsService.createSmsMessage(aMessageRecord.id,
+                                        aMessageRecord.delivery,
+                                        aMessageRecord.deliveryStatus,
+                                        aMessageRecord.sender,
+                                        aMessageRecord.receiver,
+                                        aMessageRecord.body,
+                                        aMessageRecord.messageClass,
+                                        aMessageRecord.timestamp,
+                                        aMessageRecord.read);
   },
 
   /**
@@ -431,7 +433,7 @@ MobileMessageDatabaseService.prototype = {
    * more messages, negtive for errors and valid otherwise.
    */
   onNextMessageInListGot: function onNextMessageInListGot(
-      aObjectStore, aMessageList, aMessageId) {
+      aMessageStore, aMessageList, aMessageId) {
 
     if (DEBUG) {
       debug("onNextMessageInListGot - listId: "
@@ -479,7 +481,7 @@ MobileMessageDatabaseService.prototype = {
     let firstMessageId = aMessageList.results.shift();
     if (DEBUG) debug ("Fetching message " + firstMessageId);
 
-    let getRequest = aObjectStore.get(firstMessageId);
+    let getRequest = aMessageStore.get(firstMessageId);
     let self = this;
     getRequest.onsuccess = function onsuccess(event) {
       let sms = self.createSmsMessageFromRecord(event.target.result);
@@ -515,7 +517,7 @@ MobileMessageDatabaseService.prototype = {
    * another match.
    */
   onNextMessageInMultiFiltersGot: function onNextMessageInMultiFiltersGot(
-      aObjectStore, aMessageList, aContextIndex, aMessageId, aTimestamp) {
+      aMessageStore, aMessageList, aContextIndex, aMessageId, aTimestamp) {
 
     if (DEBUG) {
       debug("onNextMessageInMultiFiltersGot: "
@@ -531,7 +533,7 @@ MobileMessageDatabaseService.prototype = {
         }
       }
 
-      this.onNextMessageInListGot(aObjectStore, aMessageList, 0);
+      this.onNextMessageInListGot(aMessageStore, aMessageList, 0);
       return false;
     }
 
@@ -575,7 +577,7 @@ MobileMessageDatabaseService.prototype = {
 
           // Impossible to find another match because all results in ctx have
           // timestamps smaller than aTimestamp.
-          return this.onNextMessageInMultiFiltersGot(aObjectStore, aMessageList,
+          return this.onNextMessageInMultiFiltersGot(aMessageStore, aMessageList,
                                                      aContextIndex, 0, 0);
         }
 
@@ -589,12 +591,12 @@ MobileMessageDatabaseService.prototype = {
     }
 
     // Now id is found in all other results. Report it.
-    this.onNextMessageInListGot(aObjectStore, aMessageList, aMessageId);
+    this.onNextMessageInListGot(aMessageStore, aMessageList, aMessageId);
     return true;
   },
 
   onNextMessageInMultiNumbersGot: function onNextMessageInMultiNumbersGot(
-      aObjectStore, aMessageList, aContextIndex,
+      aMessageStore, aMessageList, aContextIndex,
       aQueueIndex, aMessageId, aTimestamp) {
 
     if (DEBUG) {
@@ -632,32 +634,32 @@ MobileMessageDatabaseService.prototype = {
     });
     if (aContextIndex < 0) {
       for (let i = 0; i < tres.length; i++) {
-        this.onNextMessageInListGot(aObjectStore, aMessageList, tres[i].id);
+        this.onNextMessageInListGot(aMessageStore, aMessageList, tres[i].id);
       }
-      this.onNextMessageInListGot(aObjectStore, aMessageList, 0);
+      this.onNextMessageInListGot(aMessageStore, aMessageList, 0);
     } else {
       for (let i = 0; i < tres.length; i++) {
-        this.onNextMessageInMultiFiltersGot(aObjectStore, aMessageList,
+        this.onNextMessageInMultiFiltersGot(aMessageStore, aMessageList,
                                             aContextIndex,
                                             tres[i].id, tres[i].timestamp);
       }
-      this.onNextMessageInMultiFiltersGot(aObjectStore, aMessageList,
+      this.onNextMessageInMultiFiltersGot(aMessageStore, aMessageList,
                                           aContextIndex, 0, 0);
     }
     return false;
   },
 
-  saveRecord: function saveRecord(aRecord, aCallback) {
-    this.lastKey += 1;
-    aRecord.id = this.lastKey;
-    if (DEBUG) debug("Going to store " + JSON.stringify(aRecord));
+  saveRecord: function saveRecord(aMessageRecord, aCallback) {
+    this.lastMessageId += 1;
+    aMessageRecord.id = this.lastMessageId;
+    if (DEBUG) debug("Going to store " + JSON.stringify(aMessageRecord));
 
     let self = this;
     function notifyResult(rv) {
       if (!aCallback) {
         return;
       }
-      aCallback.notify(rv, aRecord);
+      aCallback.notify(rv, aMessageRecord);
     }
 
     this.newTxn(READ_WRITE, function(error, txn, stores) {
@@ -674,41 +676,46 @@ MobileMessageDatabaseService.prototype = {
         notifyResult(Cr.NS_ERROR_FAILURE);
       };
 
-      // First add to main objectStore.
-      stores[0].put(aRecord);
+      let messageStore = stores[0];
+      let mostRecentStore = stores[1];
 
-      // Next update the other objectStore.
-      let number = getNumberFromRecord(aRecord);
-      stores[1].get(number).onsuccess = function onsuccess(event) {
-        let mostRecentEntry = event.target.result;
-        if (mostRecentEntry) {
+      // First add to message store.
+      messageStore.put(aMessageRecord);
+
+      // Next update most recent store.
+      let number = getNumberFromRecord(aMessageRecord);
+      mostRecentStore.get(number).onsuccess = function onsuccess(event) {
+        let mostRecentRecord = event.target.result;
+        if (mostRecentRecord) {
           let needsUpdate = false;
 
-          if (mostRecentEntry.timestamp <= aRecord.timestamp) {
-            mostRecentEntry.timestamp = aRecord.timestamp;
-            mostRecentEntry.body = aRecord.body;
+          if (mostRecentRecord.timestamp <= aMessageRecord.timestamp) {
+            mostRecentRecord.timestamp = aMessageRecord.timestamp;
+            mostRecentRecord.body = aMessageRecord.body;
             needsUpdate = true;
           }
 
-          if (!aRecord.read) {
-            mostRecentEntry.unreadCount++;
+          if (!aMessageRecord.read) {
+            mostRecentRecord.unreadCount++;
             needsUpdate = true;
           }
 
           if (needsUpdate) {
-            event.target.source.put(mostRecentEntry);
+            mostRecentStore.put(mostRecentRecord);
           }
         } else {
-          event.target.source.add({ senderOrReceiver: number,
-                                    timestamp: aRecord.timestamp,
-                                    body: aRecord.body,
-                                    id: aRecord.id,
-                                    unreadCount: aRecord.read ? 0 : 1 });
+          mostRecentStore.add({
+            senderOrReceiver: number,
+            timestamp: aMessageRecord.timestamp,
+            body: aMessageRecord.body,
+            id: aMessageRecord.id,
+            unreadCount: aMessageRecord.read ? 0 : 1
+          });
         }
       };
-    }, [STORE_NAME, MOST_RECENT_STORE_NAME]);
+    }, [MESSAGE_STORE_NAME, MOST_RECENT_STORE_NAME]);
     // We return the key that we expect to store in the db
-    return aRecord.id;
+    return aMessageRecord.id;
   },
 
   getRilIccInfoMsisdn: function getRilIccInfoMsisdn() {
@@ -811,15 +818,15 @@ MobileMessageDatabaseService.prototype = {
     }
 
     let self = this;
-    let record;
+    let messageRecord;
     function notifyResult(rv) {
       if (!callback) {
         return;
       }
-      callback.notify(rv, record);
+      callback.notify(rv, messageRecord);
     }
 
-    this.newTxn(READ_WRITE, function (error, txn, store) {
+    this.newTxn(READ_WRITE, function (error, txn, messageStore) {
       if (error) {
         // TODO bug 832140 check event.target.errorCode
         notifyResult(Cr.NS_ERROR_FAILURE);
@@ -833,14 +840,14 @@ MobileMessageDatabaseService.prototype = {
         notifyResult(Cr.NS_ERROR_FAILURE);
       };
 
-      let getRequest = store.get(messageId);
+      let getRequest = messageStore.get(messageId);
       getRequest.onsuccess = function onsuccess(event) {
-        record = event.target.result;
-        if (!record) {
+        messageRecord = event.target.result;
+        if (!messageRecord) {
           if (DEBUG) debug("Message ID " + messageId + " not found");
           return;
         }
-        if (record.id != messageId) {
+        if (messageRecord.id != messageId) {
           if (DEBUG) {
             debug("Retrieve message ID (" + messageId + ") is " +
                   "different from the one we got");
@@ -848,22 +855,22 @@ MobileMessageDatabaseService.prototype = {
           return;
         }
         // Only updates messages that have different delivery or deliveryStatus.
-        if ((record.delivery == delivery)
-            && (record.deliveryStatus == deliveryStatus)) {
+        if ((messageRecord.delivery == delivery)
+            && (messageRecord.deliveryStatus == deliveryStatus)) {
           if (DEBUG) {
             debug("The values of attribute delivery and deliveryStatus are the"
                   + " the same with given parameters.");
           }
           return;
         }
-        record.delivery = delivery;
-        record.deliveryIndex = [delivery, record.timestamp];
-        record.deliveryStatus = deliveryStatus;
+        messageRecord.delivery = delivery;
+        messageRecord.deliveryIndex = [delivery, messageRecord.timestamp];
+        messageRecord.deliveryStatus = deliveryStatus;
         if (DEBUG) {
           debug("Message.delivery set to: " + delivery
                 + ", and Message.deliveryStatus set to: " + deliveryStatus);
         }
-        store.put(record);
+        messageStore.put(messageRecord);
       };
     });
   },
@@ -875,13 +882,13 @@ MobileMessageDatabaseService.prototype = {
   getMessage: function getMessage(messageId, aRequest) {
     if (DEBUG) debug("Retrieving message with ID " + messageId);
     let self = this;
-    this.newTxn(READ_ONLY, function (error, txn, store) {
+    this.newTxn(READ_ONLY, function (error, txn, messageStore) {
       if (error) {
         if (DEBUG) debug(error);
         aRequest.notifyGetMessageFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
         return;
       }
-      let request = store.mozGetAll(messageId);
+      let request = messageStore.mozGetAll(messageId);
 
       txn.oncomplete = function oncomplete() {
         if (DEBUG) debug("Transaction " + txn + " completed.");
@@ -890,13 +897,13 @@ MobileMessageDatabaseService.prototype = {
           aRequest.notifyGetMessageFailed(Ci.nsISmsRequest.UNKNOWN_ERROR);
           return;
         }
-        let record = request.result[0];
-        if (!record) {
+        let messageRecord = request.result[0];
+        if (!messageRecord) {
           if (DEBUG) debug("Message ID " + messageId + " not found");
           aRequest.notifyGetMessageFailed(Ci.nsISmsRequest.NOT_FOUND_ERROR);
           return;
         }
-        if (record.id != messageId) {
+        if (messageRecord.id != messageId) {
           if (DEBUG) {
             debug("Requested message ID (" + messageId + ") is " +
                   "different from the one we got");
@@ -904,7 +911,7 @@ MobileMessageDatabaseService.prototype = {
           aRequest.notifyGetMessageFailed(Ci.nsISmsRequest.UNKNOWN_ERROR);
           return;
         }
-        let sms = self.createSmsMessageFromRecord(record);
+        let sms = self.createSmsMessageFromRecord(messageRecord);
         aRequest.notifyMessageGot(sms);
       };
 
@@ -933,8 +940,8 @@ MobileMessageDatabaseService.prototype = {
         aRequest.notifyDeleteMessageFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
       };
 
-      const mobileMessageStore = stores[0];
-      const mruStore = stores[1];
+      const messageStore = stores[0];
+      const mostRecentStore = stores[1];
 
       let deleted = false;
 
@@ -943,59 +950,59 @@ MobileMessageDatabaseService.prototype = {
         aRequest.notifyMessageDeleted(deleted);
       };
 
-      mobileMessageStore.get(messageId).onsuccess = function(event) {
-        let record = event.target.result;
-        if (record) {
+      messageStore.get(messageId).onsuccess = function(event) {
+        let messageRecord = event.target.result;
+        if (messageRecord) {
           if (DEBUG) debug("Deleting message id " + messageId);
 
           // First actually delete the message.
-          event.target.source.delete(messageId).onsuccess = function(event) {
+          messageStore.delete(messageId).onsuccess = function(event) {
             deleted = true;
 
             // Then update unread count and most recent message.
-            let number = getNumberFromRecord(record);
+            let number = getNumberFromRecord(messageRecord);
 
-            mruStore.get(number).onsuccess = function(event) {
+            mostRecentStore.get(number).onsuccess = function(event) {
               // This must exist.
-              let mostRecentEntry = event.target.result;
+              let mostRecentRecord = event.target.result;
 
-              if (!record.read) {
-                mostRecentEntry.unreadCount--;
+              if (!messageRecord.read) {
+                mostRecentRecord.unreadCount--;
               }
 
-              if (mostRecentEntry.id == messageId) {
+              if (mostRecentRecord.id == messageId) {
                 // Check most recent sender/receiver.
                 let numberRange = IDBKeyRange.bound([number, 0], [number, ""]);
-                let numberRequest = mobileMessageStore.index("number")
-                                                      .openCursor(numberRange, PREV);
+                let numberRequest = messageStore.index("number")
+                                                .openCursor(numberRange, PREV);
                 numberRequest.onsuccess = function(event) {
                   let cursor = event.target.result;
                   if (!cursor) {
                     if (DEBUG) {
                       debug("Deleting mru entry for number '" + number + "'");
                     }
-                    mruStore.delete(number);
+                    mostRecentStore.delete(number);
                     return;
                   }
 
                   let nextMsg = cursor.value;
-                  mostRecentEntry.id = nextMsg.id;
-                  mostRecentEntry.timestamp = nextMsg.timestamp;
-                  mostRecentEntry.body = nextMsg.body;
+                  mostRecentRecord.id = nextMsg.id;
+                  mostRecentRecord.timestamp = nextMsg.timestamp;
+                  mostRecentRecord.body = nextMsg.body;
                   if (DEBUG) {
                     debug("Updating mru entry: " +
-                          JSON.stringify(mostRecentEntry));
+                          JSON.stringify(mostRecentRecord));
                   }
-                  mruStore.put(mostRecentEntry);
+                  mostRecentStore.put(mostRecentRecord);
                 };
-              } else if (!record.read) {
+              } else if (!messageRecord.read) {
                 // Shortcut, just update the unread count.
                 if (DEBUG) {
                   debug("Updating unread count for number '" + number + "': " +
-                        (mostRecentEntry.unreadCount + 1) + " -> " +
-                        mostRecentEntry.unreadCount);
+                        (mostRecentRecord.unreadCount + 1) + " -> " +
+                        mostRecentRecord.unreadCount);
                 }
-                mruStore.put(mostRecentEntry);
+                mostRecentStore.put(mostRecentRecord);
               }
             };
           };
@@ -1003,7 +1010,7 @@ MobileMessageDatabaseService.prototype = {
           debug("Message id " + messageId + " does not exist");
         }
       };
-    }, [STORE_NAME, MOST_RECENT_STORE_NAME]);
+    }, [MESSAGE_STORE_NAME, MOST_RECENT_STORE_NAME]);
   },
 
   createMessageList: function createMessageList(filter, reverse, aRequest) {
@@ -1018,7 +1025,7 @@ MobileMessageDatabaseService.prototype = {
     }
 
     let self = this;
-    this.newTxn(READ_ONLY, function (error, txn, store) {
+    this.newTxn(READ_ONLY, function (error, txn, messageStore) {
       if (error) {
         //TODO look at event.target.errorCode, pick appropriate error constant.
         if (DEBUG) debug("IDBRequest error " + error.target.errorCode);
@@ -1041,7 +1048,7 @@ MobileMessageDatabaseService.prototype = {
       };
 
       let onNextMessageInListGotCb =
-        self.onNextMessageInListGot.bind(self, store, messageList);
+        self.onNextMessageInListGot.bind(self, messageStore, messageList);
 
       let singleFilterSuccessCb = function onsfsuccess(event) {
         if (messageList.stop) {
@@ -1074,7 +1081,7 @@ MobileMessageDatabaseService.prototype = {
       // by number/delivery status/read status with an optional date range.
       if (filter.delivery || filter.numbers || filter.read != undefined) {
         let multiFiltersGotCb = self.onNextMessageInMultiFiltersGot
-                                    .bind(self, store, messageList);
+                                    .bind(self, messageStore, messageList);
 
         let multiFiltersSuccessCb = function onmfsuccess(contextIndex, event) {
           if (messageList.stop) {
@@ -1128,7 +1135,7 @@ MobileMessageDatabaseService.prototype = {
 
         let createRangedRequest = function crr(indexName, key) {
           let range = IDBKeyRange.bound([key, startDate], [key, endDate]);
-          return store.index(indexName).openKeyCursor(range, direction);
+          return messageStore.index(indexName).openKeyCursor(range, direction);
         };
 
         let createSimpleRangedRequest = function csrr(indexName, key) {
@@ -1173,7 +1180,7 @@ MobileMessageDatabaseService.prototype = {
 
             let multiNumbersGotCb =
               self.onNextMessageInMultiNumbersGot
-                  .bind(self, store, messageList, contextIndex);
+                  .bind(self, messageStore, messageList, contextIndex);
 
             let multiNumbersSuccessCb = function onmnsuccess(queueIndex, event) {
               if (messageList.stop) {
@@ -1222,8 +1229,8 @@ MobileMessageDatabaseService.prototype = {
               timeRange = IDBKeyRange.upperBound(filter.endDate.getTime());
             }
 
-            let timeRequest = store.index("timestamp")
-                                   .openKeyCursor(timeRange, direction);
+            let timeRequest = messageStore.index("timestamp")
+                                          .openKeyCursor(timeRange, direction);
             timeRequest.onsuccess = multiNumbersSuccessCb.bind(null, 0);
             timeRequest.onerror = multiNumbersErrorCb.bind(null, 0);
 
@@ -1258,7 +1265,7 @@ MobileMessageDatabaseService.prototype = {
           range = IDBKeyRange.upperBound(filter.endDate.getTime());
         }
 
-        let request = store.index("timestamp").openKeyCursor(range, direction);
+        let request = messageStore.index("timestamp").openKeyCursor(range, direction);
         request.onsuccess = singleFilterSuccessCb;
         request.onerror = singleFilterErrorCb;
       }
@@ -1303,21 +1310,21 @@ MobileMessageDatabaseService.prototype = {
     }
     messageId = list.results.shift();
     let self = this;
-    this.newTxn(READ_ONLY, function (error, txn, store) {
+    this.newTxn(READ_ONLY, function (error, txn, messageStore) {
       if (DEBUG) debug("Fetching message " + messageId);
-      let request = store.get(messageId);
-      let record;
+      let request = messageStore.get(messageId);
+      let messageRecord;
       request.onsuccess = function onsuccess(event) {
-        record = request.result;
+        messageRecord = request.result;
       };
 
       txn.oncomplete = function oncomplete(event) {
         if (DEBUG) debug("Transaction " + txn + " completed.");
-        if (!record) {
+        if (!messageRecord) {
           if (DEBUG) debug("Could not get message id " + messageId);
           aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.NOT_FOUND_ERROR);
         }
-        let sms = self.createSmsMessageFromRecord(record);
+        let sms = self.createSmsMessageFromRecord(messageRecord);
         aRequest.notifyNextMessageInListGot(sms);
       };
 
@@ -1352,14 +1359,16 @@ MobileMessageDatabaseService.prototype = {
         if (DEBUG) debug("Caught error on transaction ", event.target.errorCode);
         aRequest.notifyMarkMessageReadFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
       };
-      stores[0].get(messageId).onsuccess = function onsuccess(event) {
-        let record = event.target.result;
-        if (!record) {
+      let messageStore = stores[0];
+      let mostRecentStore = stores[1];
+      messageStore.get(messageId).onsuccess = function onsuccess(event) {
+        let messageRecord = event.target.result;
+        if (!messageRecord) {
           if (DEBUG) debug("Message ID " + messageId + " not found");
           aRequest.notifyMarkMessageReadFailed(Ci.nsISmsRequest.NOT_FOUND_ERROR);
           return;
         }
-        if (record.id != messageId) {
+        if (messageRecord.id != messageId) {
           if (DEBUG) {
             debug("Retrieve message ID (" + messageId + ") is " +
                   "different from the one we got");
@@ -1369,44 +1378,44 @@ MobileMessageDatabaseService.prototype = {
         }
         // If the value to be set is the same as the current message `read`
         // value, we just notify successfully.
-        if (record.read == value) {
-          if (DEBUG) debug("The value of record.read is already " + value);
-          aRequest.notifyMessageMarkedRead(record.read);
+        if (messageRecord.read == value) {
+          if (DEBUG) debug("The value of messageRecord.read is already " + value);
+          aRequest.notifyMessageMarkedRead(messageRecord.read);
           return;
         }
-        record.read = value ? FILTER_READ_READ : FILTER_READ_UNREAD;
-        record.readIndex = [record.read, record.timestamp];
+        messageRecord.read = value ? FILTER_READ_READ : FILTER_READ_UNREAD;
+        messageRecord.readIndex = [messageRecord.read, messageRecord.timestamp];
         if (DEBUG) debug("Message.read set to: " + value);
-        event.target.source.put(record).onsuccess = function onsuccess(event) {
+        messageStore.put(messageRecord).onsuccess = function onsuccess(event) {
           if (DEBUG) {
             debug("Update successfully completed. Message: " +
                   JSON.stringify(event.target.result));
           }
 
           // Now update the unread count.
-          let number = getNumberFromRecord(record);
+          let number = getNumberFromRecord(messageRecord);
 
-          stores[1].get(number).onsuccess = function(event) {
-            let mostRecentEntry = event.target.result;
-            mostRecentEntry.unreadCount += value ? -1 : 1;
+          mostRecentStore.get(number).onsuccess = function(event) {
+            let mostRecentRecord = event.target.result;
+            mostRecentRecord.unreadCount += value ? -1 : 1;
             if (DEBUG) {
               debug("Updating unreadCount for '" + number + "': " +
                     (value ?
-                     mostRecentEntry.unreadCount + 1 :
-                     mostRecentEntry.unreadCount - 1) +
-                    " -> " + mostRecentEntry.unreadCount);
+                     mostRecentRecord.unreadCount + 1 :
+                     mostRecentRecord.unreadCount - 1) +
+                    " -> " + mostRecentRecord.unreadCount);
             }
-            event.target.source.put(mostRecentEntry).onsuccess = function(event) {
-              aRequest.notifyMessageMarkedRead(record.read);
+            mostRecentStore.put(mostRecentRecord).onsuccess = function(event) {
+              aRequest.notifyMessageMarkedRead(messageRecord.read);
             };
           };
         };
       };
-    }, [STORE_NAME, MOST_RECENT_STORE_NAME]);
+    }, [MESSAGE_STORE_NAME, MOST_RECENT_STORE_NAME]);
   },
   getThreadList: function getThreadList(aRequest) {
     if (DEBUG) debug("Getting thread list");
-    this.newTxn(READ_ONLY, function (error, txn, store) {
+    this.newTxn(READ_ONLY, function (error, txn, mostRecentStore) {
       if (error) {
         if (DEBUG) debug(error);
         aRequest.notifyThreadListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
@@ -1416,7 +1425,7 @@ MobileMessageDatabaseService.prototype = {
         if (DEBUG) debug("Caught error on transaction ", event.target.errorCode);
         aRequest.notifyThreadListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
       };
-      store.index("timestamp").mozGetAll().onsuccess = function(event) {
+      mostRecentStore.index("timestamp").mozGetAll().onsuccess = function(event) {
         aRequest.notifyThreadList(event.target.result);
       };
     }, [MOST_RECENT_STORE_NAME]);
