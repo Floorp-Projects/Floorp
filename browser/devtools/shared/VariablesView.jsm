@@ -9,7 +9,6 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 const DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
-const LAZY_EMPTY_DELAY = 150; // ms
 const LAZY_EXPAND_DELAY = 50; // ms
 const LAZY_APPEND_DELAY = 100; // ms
 const LAZY_APPEND_BATCH = 100; // nodes
@@ -105,7 +104,7 @@ VariablesView.prototype = {
    *        The number of milliseconds to delay the operation if
    *        lazy emptying of this container is enabled.
    */
-  empty: function VV_empty(aTimeout = LAZY_EMPTY_DELAY) {
+  empty: function VV_empty(aTimeout = this.lazyEmptyDelay) {
     // If there are no items in this container, emptying is useless.
     if (!this._store.size) {
       return;
@@ -168,6 +167,11 @@ VariablesView.prototype = {
       }
     }.bind(this), aTimeout);
   },
+
+  /**
+   * The amount of time (in milliseconds) it takes to empty this view lazily.
+   */
+  lazyEmptyDelay: 150,
 
   /**
    * Specifies if this view may be emptied lazily.
@@ -2701,7 +2705,7 @@ VariablesView.prototype.commitHierarchy = function VV_commitHierarchy() {
         aTarget.removeAttribute("changed");
       }, false);
       aTarget.setAttribute("changed", "");
-    }.bind(this, currVariable.target), LAZY_EMPTY_DELAY + 1);
+    }.bind(this, currVariable.target), this.lazyEmptyDelay + 1);
   }
 };
 
