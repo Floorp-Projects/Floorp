@@ -392,6 +392,7 @@ nsContextMenu.prototype = {
     this.showItem("context-media-pause", onMedia && !this.target.paused && !this.target.ended);
     this.showItem("context-media-mute",   onMedia && !this.target.muted);
     this.showItem("context-media-unmute", onMedia && this.target.muted);
+    this.showItem("context-media-playbackrate", onMedia);
     this.showItem("context-media-showcontrols", onMedia && !this.target.controls);
     this.showItem("context-media-hidecontrols", onMedia && this.target.controls);
     this.showItem("context-video-fullscreen", this.onVideo && this.target.ownerDocument.mozFullScreenElement == null);
@@ -401,12 +402,21 @@ nsContextMenu.prototype = {
 
     // Disable them when there isn't a valid media source loaded.
     if (onMedia) {
+      this.setItemAttr("context-media-playbackrate-050x", "checked", this.target.playbackRate == 0.5);
+      this.setItemAttr("context-media-playbackrate-100x", "checked", this.target.playbackRate == 1.0);
+      this.setItemAttr("context-media-playbackrate-150x", "checked", this.target.playbackRate == 1.5);
+      this.setItemAttr("context-media-playbackrate-200x", "checked", this.target.playbackRate == 2.0);
       var hasError = this.target.error != null ||
                      this.target.networkState == this.target.NETWORK_NO_SOURCE;
       this.setItemAttr("context-media-play",  "disabled", hasError);
       this.setItemAttr("context-media-pause", "disabled", hasError);
       this.setItemAttr("context-media-mute",   "disabled", hasError);
       this.setItemAttr("context-media-unmute", "disabled", hasError);
+      this.setItemAttr("context-media-playbackrate", "disabled", hasError);
+      this.setItemAttr("context-media-playbackrate-050x", "disabled", hasError);
+      this.setItemAttr("context-media-playbackrate-100x", "disabled", hasError);
+      this.setItemAttr("context-media-playbackrate-150x", "disabled", hasError);
+      this.setItemAttr("context-media-playbackrate-200x", "disabled", hasError);
       this.setItemAttr("context-media-showcontrols", "disabled", hasError);
       this.setItemAttr("context-media-hidecontrols", "disabled", hasError);
       if (this.onVideo) {
@@ -1470,7 +1480,7 @@ nsContextMenu.prototype = {
     SwitchDocumentDirection(this.browser.contentWindow);
   },
 
-  mediaCommand : function CM_mediaCommand(command) {
+  mediaCommand : function CM_mediaCommand(command, data) {
     var media = this.target;
 
     switch (command) {
@@ -1485,6 +1495,9 @@ nsContextMenu.prototype = {
         break;
       case "unmute":
         media.muted = false;
+        break;
+      case "playbackRate":
+        media.playbackRate = data;
         break;
       case "hidecontrols":
         media.removeAttribute("controls");
