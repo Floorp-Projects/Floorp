@@ -4128,8 +4128,17 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
     // Inline native call.
     if (inliningEnabled() && targets.length() == 1 && targets[0]->toFunction()->isNative()) {
         InliningStatus status = inlineNativeCall(callInfo, targets[0]->toFunction()->native());
-        if (status != InliningStatus_NotInlined)
-            return status != InliningStatus_Error;
+        switch (status) {
+          case InliningStatus_Error:
+            return false;
+          case InliningStatus_Inlined:
+            callInfo.fun()->setFoldedUnchecked();
+            return true;
+          case InliningStatus_NotInlined:
+            break;
+          default:
+            JS_NOT_REACHED("Invalid status");
+        }
     }
 
     // Inline scriped call(s).
