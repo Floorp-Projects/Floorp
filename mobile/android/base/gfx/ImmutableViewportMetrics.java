@@ -237,19 +237,20 @@ public class ImmutableViewportMetrics {
     }
 
     /** Clamps the viewport to remain within the page rect. */
-    public ImmutableViewportMetrics clamp() {
+    private ImmutableViewportMetrics clamp(float marginLeft, float marginTop,
+                                           float marginRight, float marginBottom) {
         RectF newViewport = getViewport();
 
         // The viewport bounds ought to never exceed the page bounds.
-        if (newViewport.right > pageRectRight)
-            newViewport.offset(pageRectRight - newViewport.right, 0);
-        if (newViewport.left < pageRectLeft)
-            newViewport.offset(pageRectLeft - newViewport.left, 0);
+        if (newViewport.right > pageRectRight + marginRight)
+            newViewport.offset((pageRectRight + marginRight) - newViewport.right, 0);
+        if (newViewport.left < pageRectLeft - marginLeft)
+            newViewport.offset((pageRectLeft - marginLeft) - newViewport.left, 0);
 
-        if (newViewport.bottom > pageRectBottom)
-            newViewport.offset(0, pageRectBottom - newViewport.bottom);
-        if (newViewport.top < pageRectTop)
-            newViewport.offset(0, pageRectTop - newViewport.top);
+        if (newViewport.bottom > pageRectBottom + marginBottom)
+            newViewport.offset(0, (pageRectBottom + marginBottom) - newViewport.bottom);
+        if (newViewport.top < pageRectTop - marginTop)
+            newViewport.offset(0, (pageRectTop - marginTop) - newViewport.top);
 
         return new ImmutableViewportMetrics(
             pageRectLeft, pageRectTop, pageRectRight, pageRectBottom,
@@ -257,6 +258,15 @@ public class ImmutableViewportMetrics {
             newViewport.left, newViewport.top, newViewport.right, newViewport.bottom,
             fixedLayerMarginLeft, fixedLayerMarginTop, fixedLayerMarginRight, fixedLayerMarginBottom,
             zoomFactor);
+    }
+
+    public ImmutableViewportMetrics clamp() {
+        return clamp(0, 0, 0, 0);
+    }
+
+    public ImmutableViewportMetrics clampWithMargins() {
+        return clamp(fixedLayerMarginLeft, fixedLayerMarginTop,
+                     fixedLayerMarginRight, fixedLayerMarginBottom);
     }
 
     public boolean fuzzyEquals(ImmutableViewportMetrics other) {
