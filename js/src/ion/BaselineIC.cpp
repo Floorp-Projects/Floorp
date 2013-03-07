@@ -6163,16 +6163,31 @@ ICInstanceOf_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 //
 
 static bool
-DoTypeOfFallback(JSContext *cx, ICTypeOf_Fallback *stub, HandleValue val, MutableHandleValue res)
+DoTypeOfFallback(JSContext *cx, BaselineFrame *frame, ICTypeOf_Fallback *stub, HandleValue val,
+                 MutableHandleValue res)
 {
     FallbackICSpew(cx, stub, "TypeOf");
+    JSType type = JS_TypeOfValue(cx, val);
+    RootedString string(cx, TypeName(type, cx));
 
-    res.setString(TypeOfOperation(cx, val));
+    res.setString(string);
+
+    JS_ASSERT(type != JSTYPE_NULL);
+    if (type != JSTYPE_OBJECT && type != JSTYPE_FUNCTION) {
+        // Create a new TypeOf stub.
+        IonSpew(IonSpew_BaselineIC, "  Generating TypeOf stub for JSType (%d)", (int) type);
+        ICTypeOf_Typed::Compiler compiler(cx, type, string);
+        ICStub *typeOfStub = compiler.getStub(compiler.getStubSpace(frame->script()));
+        if (!typeOfStub)
+            return false;
+        stub->addNewStub(typeOfStub);
+    }
+
     return true;
 }
 
-typedef bool (*DoTypeOfFallbackFn)(JSContext *, ICTypeOf_Fallback *, HandleValue,
-                                   MutableHandleValue);
+typedef bool (*DoTypeOfFallbackFn)(JSContext *, BaselineFrame *frame, ICTypeOf_Fallback *,
+                                   HandleValue, MutableHandleValue);
 static const VMFunction DoTypeOfFallbackInfo =
     FunctionInfo<DoTypeOfFallbackFn>(DoTypeOfFallback);
 
@@ -6183,8 +6198,47 @@ ICTypeOf_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 
     masm.pushValue(R0);
     masm.push(BaselineStubReg);
+    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
     return tailCallVM(DoTypeOfFallbackInfo, masm);
+}
+
+bool
+ICTypeOf_Typed::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    JS_ASSERT(type_ != JSTYPE_NULL);
+    JS_ASSERT(type_ != JSTYPE_FUNCTION);
+    JS_ASSERT(type_ != JSTYPE_OBJECT);
+
+    Label failure;
+    switch(type_) {
+      case JSTYPE_VOID:
+        masm.branchTestUndefined(Assembler::NotEqual, R0, &failure);
+        break;
+
+      case JSTYPE_STRING:
+        masm.branchTestString(Assembler::NotEqual, R0, &failure);
+        break;
+
+      case JSTYPE_NUMBER:
+        masm.branchTestNumber(Assembler::NotEqual, R0, &failure);
+        break;
+
+      case JSTYPE_BOOLEAN:
+        masm.branchTestBoolean(Assembler::NotEqual, R0, &failure);
+        break;
+
+      default:
+        JS_NOT_REACHED("Unexpected type");
+    }
+
+    masm.movePtr(ImmGCPtr(typeString_), R0.scratchReg());
+    masm.tagValue(JSVAL_TYPE_STRING, R0.scratchReg(), R0);
+    EmitReturnFromIC(masm);
+
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
 }
 
 } // namespace ion
