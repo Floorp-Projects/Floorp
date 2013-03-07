@@ -234,10 +234,6 @@ public:
    */
   StreamTime GetEnd() const;
 
-#ifdef DEBUG
-  void DumpTrackInfo() const;
-#endif
-
   Track* FindTrack(TrackID aID);
 
   class TrackIter {
