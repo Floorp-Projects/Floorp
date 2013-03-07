@@ -15,7 +15,6 @@
   locale/browser/config.dtd               (%chrome/config.dtd)
   locale/browser/preferences.dtd          (%chrome/preferences.dtd)
   locale/browser/checkbox.dtd             (%chrome/checkbox.dtd)
-  locale/browser/notification.dtd         (%chrome/notification.dtd)
   locale/browser/sync.dtd                 (%chrome/sync.dtd)
   locale/browser/sync.properties          (%chrome/sync.properties)
   locale/browser/prompt.dtd               (%chrome/prompt.dtd)

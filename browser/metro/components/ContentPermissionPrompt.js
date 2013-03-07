@@ -37,6 +37,10 @@ const kEntities = { "geolocation": "geolocation", "desktop-notification": "deskt
                     "indexedDB": "offlineApps", "indexedDBQuota": "indexedDBQuota",
                     "openWebappsManage": "openWebappsManage" };
 
+const kIcons = {
+  geolocation: "chrome://browser/skin/images/infobar-geolocation.png"
+};
+
 function ContentPermissionPrompt() {}
 
 ContentPermissionPrompt.prototype = {
@@ -96,6 +100,7 @@ ContentPermissionPrompt.prototype = {
       return;
 
     let entityName = kEntities[request.type];
+    let icon = kIcons[request.type] || "";
 
     let buttons = [{
       label: browserBundle.GetStringFromName(entityName + ".allow"),
@@ -118,7 +123,7 @@ ContentPermissionPrompt.prototype = {
                                                      [request.principal.URI.host], 1);
     let newBar = notificationBox.appendNotification(message,
                                                     request.type,
-                                                    "", // Notifications in Fennec do not display images.
+                                                    icon,
                                                     notificationBox.PRIORITY_WARNING_MEDIUM,
                                                     buttons);
   }
