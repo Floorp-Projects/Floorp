@@ -5,7 +5,7 @@
 "use strict";
 
 #ifndef MERGED_COMPARTMENT
-this.EXPORTED_SYMBOLS = ["Collector"];
+this.EXPORTED_SYMBOLS = ["ProviderManager"];
 
 const {utils: Cu} = Components;
 
@@ -24,8 +24,8 @@ Cu.import("resource://services-common/utils.js");
  * This provides an interface for managing `Metrics.Provider` instances. It
  * provides APIs for bulk collection of data.
  */
-this.Collector = function (storage) {
-  this._log = Log4Moz.repository.getLogger("Services.Metrics.Collector");
+this.ProviderManager = function (storage) {
+  this._log = Log4Moz.repository.getLogger("Services.Metrics.ProviderManager");
 
   this._providers = new Map();
   this._storage = storage;
@@ -34,7 +34,7 @@ this.Collector = function (storage) {
   this._providerInitializing = false;
 }
 
-Collector.prototype = Object.freeze({
+this.ProviderManager.prototype = Object.freeze({
   get providers() {
     let providers = [];
     for (let [name, entry] of this._providers) {
@@ -58,7 +58,7 @@ Collector.prototype = Object.freeze({
   },
 
   /**
-   * Registers a `MetricsProvider` with this collector.
+   * Registers a `MetricsProvider` with this manager.
    *
    * Once a `MetricsProvider` is registered, data will be collected from it
    * whenever we collect data.
@@ -94,7 +94,7 @@ Collector.prototype = Object.freeze({
   },
 
   /**
-   * Remove a named provider from the collector.
+   * Remove a named provider from the manager.
    *
    * It is the caller's responsibility to shut down the provider
    * instance.
@@ -139,8 +139,8 @@ Collector.prototype = Object.freeze({
    *
    * Returns a Promise that will be fulfilled once all data providers have
    * provided their constant data. A side-effect of this promise fulfillment
-   * is that the collector is populated with the obtained collection results.
-   * The resolved value to the promise is this `Collector` instance.
+   * is that the manager is populated with the obtained collection results.
+   * The resolved value to the promise is this `ProviderManager` instance.
    */
   collectConstantData: function () {
     let entries = [];

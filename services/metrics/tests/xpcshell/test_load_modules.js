@@ -4,8 +4,8 @@
 "use strict";
 
 const modules = [
-  "collector.jsm",
   "dataprovider.jsm",
+  "providermanager.jsm",
   "storage.jsm",
 ];
 

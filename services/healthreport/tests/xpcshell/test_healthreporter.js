@@ -134,38 +134,40 @@ add_task(function test_shutdown_storage_in_progress() {
   };
 
   reporter._waitForShutdown();
-  do_check_eq(reporter.collectorShutdownCount, 0);
+  do_check_eq(reporter.providerManagerShutdownCount, 0);
   do_check_eq(reporter.storageCloseCount, 1);
 });
 
-// Ensure that a shutdown triggered while collector is initializing results in
-// shutdown and storage closure.
-add_task(function test_shutdown_collector_in_progress() {
-  let reporter = yield getJustReporter("shutdown_collect_in_progress", SERVER_URI, true);
+// Ensure that a shutdown triggered while provider manager is initializing
+// results in shutdown and storage closure.
+add_task(function test_shutdown_provider_manager_in_progress() {
+  let reporter = yield getJustReporter("shutdown_provider_manager_in_progress",
+                                       SERVER_URI, true);
 
-  reporter.onCollectorInitialized = function () {
-    print("Faking shutdown during collector initialization.");
+  reporter.onProviderManagerInitialized = function () {
+    print("Faking shutdown during provider manager initialization.");
     reporter._initiateShutdown();
   };
 
   // This will hang if shutdown logic is busted.
   reporter._waitForShutdown();
-  do_check_eq(reporter.collectorShutdownCount, 1);
+  do_check_eq(reporter.providerManagerShutdownCount, 1);
   do_check_eq(reporter.storageCloseCount, 1);
 });
 
-// Simulates an error during collector initialization and verifies we shut down.
-add_task(function test_shutdown_when_collector_errors() {
-  let reporter = yield getJustReporter("shutdown_when_collector_errors", SERVER_URI, true);
+// Simulates an error during provider manager initialization and verifies we shut down.
+add_task(function test_shutdown_when_provider_manager_errors() {
+  let reporter = yield getJustReporter("shutdown_when_provider_manager_errors",
+                                       SERVER_URI, true);
 
-  reporter.onInitializeCollectorFinished = function () {
+  reporter.onInitializeProviderManagerFinished = function () {
     print("Throwing fake error.");
-    throw new Error("Fake error during collector initialization.");
+    throw new Error("Fake error during provider manager initialization.");
   };
 
   // This will hang if shutdown logic is busted.
   reporter._waitForShutdown();
-  do_check_eq(reporter.collectorShutdownCount, 1);
+  do_check_eq(reporter.providerManagerShutdownCount, 1);
   do_check_eq(reporter.storageCloseCount, 1);
 });
 
@@ -179,9 +181,9 @@ add_task(function test_register_providers_from_category_manager() {
                       false, true);
 
   let reporter = yield getReporter("category_manager");
-  do_check_eq(reporter._collector._providers.size, 0);
+  do_check_eq(reporter._providerManager._providers.size, 0);
   yield reporter.registerProvidersFromCategoryManager(category);
-  do_check_eq(reporter._collector._providers.size, 1);
+  do_check_eq(reporter._providerManager._providers.size, 1);
 
   reporter._shutdown();
 });
@@ -200,9 +202,9 @@ add_task(function test_pull_only_providers() {
                       false, true);
 
   let reporter = yield getReporter("constant_only_providers");
-  do_check_eq(reporter._collector._providers.size, 0);
+  do_check_eq(reporter._providerManager._providers.size, 0);
   yield reporter.registerProvidersFromCategoryManager(category);
-  do_check_eq(reporter._collector._providers.size, 1);
+  do_check_eq(reporter._providerManager._providers.size, 1);
   do_check_true(reporter._storage.hasProvider("DummyProvider"));
   do_check_false(reporter._storage.hasProvider("DummyConstantProvider"));
   do_check_neq(reporter.getProvider("DummyProvider"), null);
@@ -212,7 +214,7 @@ add_task(function test_pull_only_providers() {
   yield reporter.collectMeasurements();
   yield reporter.ensurePullOnlyProvidersUnregistered();
 
-  do_check_eq(reporter._collector._providers.size, 1);
+  do_check_eq(reporter._providerManager._providers.size, 1);
   do_check_true(reporter._storage.hasProvider("DummyConstantProvider"));
 
   let mID = reporter._storage.measurementID("DummyConstantProvider", "DummyMeasurement", 1);
@@ -333,7 +335,7 @@ add_task(function test_constant_only_providers_in_json_payload() {
   do_check_true("DummyProvider.DummyMeasurement" in o.data.last);
   do_check_true("DummyConstantProvider.DummyMeasurement" in o.data.last);
 
-  let providers = reporter._collector.providers;
+  let providers = reporter._providerManager.providers;
   do_check_eq(providers.length, 1);
 
   // Do it again for good measure.
@@ -342,7 +344,7 @@ add_task(function test_constant_only_providers_in_json_payload() {
   do_check_true("DummyProvider.DummyMeasurement" in o.data.last);
   do_check_true("DummyConstantProvider.DummyMeasurement" in o.data.last);
 
-  providers = reporter._collector.providers;
+  providers = reporter._providerManager.providers;
   do_check_eq(providers.length, 1);
 
   // Ensure throwing getJSONPayload is handled properly.
@@ -355,7 +357,7 @@ add_task(function test_constant_only_providers_in_json_payload() {
   let deferred = Promise.defer();
 
   reporter.collectAndObtainJSONPayload().then(do_throw, function onError() {
-    providers = reporter._collector.providers;
+    providers = reporter._providerManager.providers;
     do_check_eq(providers.length, 1);
     deferred.resolve();
   });
