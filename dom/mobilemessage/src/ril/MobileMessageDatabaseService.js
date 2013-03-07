@@ -15,8 +15,10 @@ const RIL_MOBILEMESSAGEDATABASESERVICE_CID = Components.ID("{29785f90-6b5b-11e2-
 
 const DEBUG = false;
 const DB_NAME = "sms";
-const DB_VERSION = 7;
+const DB_VERSION = 8;
 const MESSAGE_STORE_NAME = "sms";
+const THREAD_STORE_NAME = "thread";
+const PARTICIPANT_STORE_NAME = "participant";
 const MOST_RECENT_STORE_NAME = "most-recent";
 
 const DELIVERY_SENDING = "sending";
@@ -197,6 +199,10 @@ MobileMessageDatabaseService.prototype = {
           case 6:
             if (DEBUG) debug("Upgrade to version 7. Use multiple entry indexes.");
             self.upgradeSchema6(event.target.transaction);
+            break;
+          case 7:
+            if (DEBUG) debug("Upgrade to version 8. Add participant/thread stores.");
+            self.upgradeSchema7(db, event.target.transaction);
             break;
           default:
             event.target.transaction.abort();
@@ -410,6 +416,150 @@ MobileMessageDatabaseService.prototype = {
       messageRecord.readIndex = [messageRecord.read, timestamp];
       cursor.update(messageRecord);
       cursor.continue();
+    };
+  },
+
+  /**
+   * Add participant/thread stores.
+   *
+   * The message store now saves original phone numbers/addresses input from
+   * content to message records. No normalization is made.
+   *
+   * For filtering messages by phone numbers, it first looks up corresponding
+   * participant IDs from participant table and fetch message records with
+   * matching keys defined in per record "participantIds" field.
+   *
+   * For message threading, messages with the same participant ID array are put
+   * in the same thread. So updating "unreadCount", "lastMessageId" and
+   * "lastTimestamp" are through the "threadId" carried by per message record.
+   * Fetching threads list is now simply walking through the thread sotre. The
+   * "mostRecentStore" is dropped.
+   */
+  upgradeSchema7: function upgradeSchema7(db, transaction) {
+    /**
+     * This "participant" object store keeps mappings of multiple phone numbers
+     * of the same recipient to an integer participant id. Each entry looks
+     * like:
+     *
+     * { id: <Number> (primary key),
+     *   addresses: <Array of strings> }
+     */
+    let participantStore = db.createObjectStore(PARTICIPANT_STORE_NAME,
+                                                { keyPath: "id",
+                                                  autoIncrement: true });
+    participantStore.createIndex("addresses", "addresses", { multiEntry: true });
+
+    /**
+     * This "threads" object store keeps mappings from an integer thread id to
+     * ids of the participants of that message thread. Each entry looks like:
+     *
+     * { id: <Number> (primary key),
+     *   participantIds: <Array of participant IDs>,
+     *   participantAddresses: <Array of the first addresses of the participants>,
+     *   lastMessageId: <Number>,
+     *   lastTimestamp: <Date>,
+     *   subject: <String>,
+     *   unreadCount: <Number> }
+     *
+     */
+    let threadStore = db.createObjectStore(THREAD_STORE_NAME,
+                                           { keyPath: "id",
+                                             autoIncrement: true });
+    threadStore.createIndex("participantIds", "participantIds");
+    threadStore.createIndex("lastTimestamp", "lastTimestamp");
+
+    /**
+     * Replace "numberIndex" with "participantIdsIndex" and create an additional
+     * "threadId". "numberIndex" will be removed later.
+     */
+    let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
+    messageStore.createIndex("threadId", "threadIdIndex");
+    messageStore.createIndex("participantIds", "participantIdsIndex",
+                             { multiEntry: true });
+
+    // Now populate participantStore & threadStore.
+    let mostRecentStore = transaction.objectStore(MOST_RECENT_STORE_NAME);
+    let self = this;
+    let mostRecentRequest = mostRecentStore.openCursor();
+    mostRecentRequest.onsuccess = function(event) {
+      let mostRecentCursor = event.target.result;
+      if (!mostRecentCursor) {
+        db.deleteObjectStore(MOST_RECENT_STORE_NAME);
+
+        // No longer need the "number" index in messageStore, use
+        // "participantIds" index instead.
+        messageStore.deleteIndex("number");
+        return;
+      }
+
+      let mostRecentRecord = mostRecentCursor.value;
+
+      // Each entry in mostRecentStore is supposed to be a unique thread, so we
+      // retrieve the records out and insert its "senderOrReceiver" column as a
+      // new record in participantStore.
+      let number = mostRecentRecord.senderOrReceiver;
+      self.findParticipantRecordByAddress(participantStore, number, true,
+                                          function (participantRecord) {
+        // Also create a new record in threadStore.
+        let threadRecord = {
+          participantIds: [participantRecord.id],
+          participantAddresses: [number],
+          lastMessageId: mostRecentRecord.id,
+          lastTimestamp: mostRecentRecord.timestamp,
+          subject: mostRecentRecord.body,
+          unreadCount: mostRecentRecord.unreadCount,
+        };
+        let addThreadRequest = threadStore.add(threadRecord);
+        addThreadRequest.onsuccess = function (event) {
+          threadRecord.id = event.target.result;
+
+          let numberRange = IDBKeyRange.bound([number, 0], [number, ""]);
+          let messageRequest = messageStore.index("number")
+                                           .openCursor(numberRange, NEXT);
+          messageRequest.onsuccess = function (event) {
+            let messageCursor = event.target.result;
+            if (!messageCursor) {
+              // No more message records, check next most recent record.
+              mostRecentCursor.continue();
+              return;
+            }
+
+            let messageRecord = messageCursor.value;
+            // Check whether the message really belongs to this thread.
+            let matchSenderOrReceiver = false;
+            if (messageRecord.delivery == DELIVERY_RECEIVED) {
+              if (messageRecord.sender == number) {
+                matchSenderOrReceiver = true;
+              }
+            } else if (messageRecord.receiver == number) {
+              matchSenderOrReceiver = true;
+            }
+            if (!matchSenderOrReceiver) {
+              // Check next message record.
+              messageCursor.continue();
+              return;
+            }
+
+            messageRecord.threadId = threadRecord.id;
+            messageRecord.threadIdIndex = [threadRecord.id,
+                                           messageRecord.timestamp];
+            messageRecord.participantIdsIndex = [
+              [participantRecord.id, messageRecord.timestamp]
+            ];
+            messageCursor.update(messageRecord);
+            // Check next message record.
+            messageCursor.continue();
+          };
+          messageRequest.onerror = function () {
+            // Error in fetching message records, check next most recent record.
+            mostRecentCursor.continue();
+          };
+        };
+        addThreadRequest.onerror = function () {
+          // Error in fetching message records, check next most recent record.
+          mostRecentCursor.continue();
+        };
+      });
     };
   },
 
@@ -649,6 +799,104 @@ MobileMessageDatabaseService.prototype = {
     return false;
   },
 
+  findParticipantRecordByAddress: function findParticipantRecordByAddress(
+      aParticipantStore, aAddress, aCreate, aCallback) {
+    if (DEBUG) {
+      debug("findParticipantRecordByAddress("
+            + JSON.stringify(aAddress) + ", " + aCreate + ")");
+    }
+
+    // Two types of input number to match here, international(+886987654321),
+    // and local(0987654321) types. The "nationalNumber" parsed from
+    // phonenumberutils will be "987654321" in this case.
+
+    let request = aParticipantStore.index("addresses").get(aAddress);
+    request.onsuccess = (function (event) {
+      let participantRecord = event.target.result;
+      // 1) First try matching through "addresses" index of participant store.
+      //    If we're lucky, return the fetched participant record.
+      if (participantRecord) {
+        if (DEBUG) {
+          debug("findParticipantRecordByAddress: got "
+                + JSON.stringify(participantRecord));
+        }
+        aCallback(participantRecord);
+        return;
+      }
+
+      // Only parse aAddress if it's already an international number.
+      let parsedAddress = PhoneNumberUtils.parseWithMCC(aAddress, null);
+      // 2) Traverse throught all participants and check all alias addresses.
+      aParticipantStore.openCursor().onsuccess = (function (event) {
+        let cursor = event.target.result;
+        if (!cursor) {
+          // Have traversed whole object store but still in vain.
+          if (!aCreate) {
+            aCallback(null);
+            return;
+          }
+
+          let participantRecord = { addresses: [aAddress] };
+          let addRequest = aParticipantStore.add(participantRecord);
+          addRequest.onsuccess = function (event) {
+            participantRecord.id = event.target.result;
+            if (DEBUG) {
+              debug("findParticipantRecordByAddress: created "
+                    + JSON.stringify(participantRecord));
+            }
+            aCallback(participantRecord);
+          };
+          return;
+        }
+
+        let participantRecord = cursor.value;
+        for each (let storedAddress in participantRecord.addresses) {
+          let match = false;
+          if (parsedAddress) {
+            // 2-1) If input number is an international one, then a potential
+            //      participant must be stored as local type.  Then just check
+            //      if stored number ends with the national number(987654321) of
+            //      the input number.
+            if (storedAddress.endsWith(parsedAddress.nationalNumber)) {
+              match = true;
+            }
+          } else {
+            // 2-2) Else if the stored number is an international one, then the
+            //      input number must be local type.  Then just check whether
+            //      does it ends with the national number of the stored number.
+            let parsedStoredAddress =
+              PhoneNumberUtils.parseWithMCC(storedAddress, null);
+            if (parsedStoredAddress
+                && aAddress.endsWith(parsedStoredAddress.nationalNumber)) {
+              match = true;
+            }
+          }
+          if (!match) {
+            // 3) Else we fail to match current stored participant record.
+            continue;
+          }
+
+          // Match!
+          if (aCreate) {
+            // In a READ-WRITE transaction, append one more possible address for
+            // this participant record.
+            participantRecord.addresses.push(aAddress);
+            cursor.update(participantRecord);
+          }
+          if (DEBUG) {
+            debug("findParticipantRecordByAddress: got "
+                  + JSON.stringify(cursor.value));
+          }
+          aCallback(participantRecord);
+          return;
+        }
+
+        // Check next participant record if available.
+        cursor.continue();
+      }).bind(this);
+    }).bind(this);
+  },
+
   saveRecord: function saveRecord(aMessageRecord, aCallback) {
     this.lastMessageId += 1;
     aMessageRecord.id = this.lastMessageId;
@@ -728,17 +976,6 @@ MobileMessageDatabaseService.prototype = {
       return null;
     }
     return number;
-  },
-
-  makePhoneNumberInternational: function makePhoneNumberInternational(aNumber) {
-    if (!aNumber) {
-      return aNumber;
-    }
-    let parsedNumber = PhoneNumberUtils.parse(aNumber.toString());
-    if (!parsedNumber || !parsedNumber.internationalNumber) {
-      return aNumber;
-    }
-    return parsedNumber.internationalNumber;
   },
 
   /**
