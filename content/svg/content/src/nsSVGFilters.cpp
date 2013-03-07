@@ -1988,55 +1988,6 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncAElement)
 } // namespace dom
 } // namespace mozilla
 
-//---------------------Merge------------------------
-
-typedef nsSVGFE nsSVGFEMergeElementBase;
-
-class nsSVGFEMergeElement : public nsSVGFEMergeElementBase,
-                            public nsIDOMSVGFEMergeElement
-{
-  friend nsresult NS_NewSVGFEMergeElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo);
-protected:
-  nsSVGFEMergeElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsSVGFEMergeElementBase(aNodeInfo) {}
-
-public:
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // FE Base
-  NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEMergeElementBase::)
-
-  virtual nsresult Filter(nsSVGFilterInstance* aInstance,
-                          const nsTArray<const Image*>& aSources,
-                          const Image* aTarget,
-                          const nsIntRect& aDataRect);
-  virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
-  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources);
-
-  // Merge
-  NS_DECL_NSIDOMSVGFEMERGEELEMENT
-
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEMergeElementBase::)
-
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIContent
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-protected:
-  virtual StringAttributesInfo GetStringInfo();
-
-  enum { RESULT };
-  nsSVGString mStringAttributes[1];
-  static StringInfo sStringInfo[1];
-};
-
 typedef SVGFEUnstyledElement nsSVGFEMergeNodeElementBase;
 
 #define NS_SVG_FE_MERGE_NODE_CID \
@@ -2084,74 +2035,6 @@ protected:
   nsSVGString mStringAttributes[1];
   static StringInfo sStringInfo[1];
 };
-
-nsSVGElement::StringInfo nsSVGFEMergeElement::sStringInfo[1] =
-{
-  { &nsGkAtoms::result, kNameSpaceID_None, true }
-};
-
-NS_IMPL_NS_NEW_SVG_ELEMENT(FEMerge)
-
-//----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ADDREF_INHERITED(nsSVGFEMergeElement,nsSVGFEMergeElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGFEMergeElement,nsSVGFEMergeElementBase)
-
-DOMCI_NODE_DATA(SVGFEMergeElement, nsSVGFEMergeElement)
-
-NS_INTERFACE_TABLE_HEAD(nsSVGFEMergeElement)
-  NS_NODE_INTERFACE_TABLE5(nsSVGFEMergeElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement,
-                           nsIDOMSVGFilterPrimitiveStandardAttributes,
-                           nsIDOMSVGFEMergeElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEMergeElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGFEMergeElementBase)
-
-//----------------------------------------------------------------------
-// nsIDOMNode methods
-
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEMergeElement)
-
-nsresult
-nsSVGFEMergeElement::Filter(nsSVGFilterInstance *instance,
-                            const nsTArray<const Image*>& aSources,
-                            const Image* aTarget,
-                            const nsIntRect& rect)
-{
-  gfxContext ctx(aTarget->mImage);
-  ctx.Clip(aTarget->mFilterPrimitiveSubregion);
-
-  for (uint32_t i = 0; i < aSources.Length(); i++) {
-    ctx.SetSource(aSources[i]->mImage);
-    ctx.Paint();
-  }
-  return NS_OK;
-}
-
-void
-nsSVGFEMergeElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
-{
-  for (nsIContent* child = nsINode::GetFirstChild();
-       child;
-       child = child->GetNextSibling()) {
-    nsRefPtr<nsSVGFEMergeNodeElement> node;
-    CallQueryInterface(child, (nsSVGFEMergeNodeElement**)getter_AddRefs(node));
-    if (node) {
-      aSources.AppendElement(nsSVGStringInfo(node->In1(), node));
-    }
-  }
-}
-
-//----------------------------------------------------------------------
-// nsSVGElement methods
-
-nsSVGElement::StringAttributesInfo
-nsSVGFEMergeElement::GetStringInfo()
-{
-  return StringAttributesInfo(mStringAttributes, sStringInfo,
-                              ArrayLength(sStringInfo));
-}
 
 //---------------------Merge Node------------------------
 
