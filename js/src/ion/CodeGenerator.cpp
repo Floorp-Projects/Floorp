@@ -5247,6 +5247,43 @@ CodeGenerator::visitStoreTypedArrayElement(LStoreTypedArrayElement *lir)
 }
 
 bool
+CodeGenerator::visitStoreTypedArrayElementHole(LStoreTypedArrayElementHole *lir)
+{
+    Register elements = ToRegister(lir->elements());
+    const LAllocation *value = lir->value();
+
+    int arrayType = lir->mir()->arrayType();
+    int width = TypedArray::slotWidth(arrayType);
+
+    bool guardLength = true;
+    if (lir->index()->isConstant() && lir->length()->isConstant()) {
+        uint32_t idx = ToInt32(lir->index());
+        uint32_t len = ToInt32(lir->length());
+        if (idx >= len)
+            return true;
+        guardLength = false;
+    }
+    Label skip;
+    if (lir->index()->isConstant()) {
+        uint32_t idx = ToInt32(lir->index());
+        if (guardLength)
+            masm.branch32(Assembler::BelowOrEqual, ToOperand(lir->length()), Imm32(idx), &skip);
+        Address dest(elements, idx * width);
+        StoreToTypedArray(masm, arrayType, value, dest);
+    } else {
+        Register idxReg = ToRegister(lir->index());
+        if (guardLength)
+            masm.branch32(Assembler::BelowOrEqual, ToOperand(lir->length()), idxReg, &skip);
+        BaseIndex dest(elements, ToRegister(lir->index()), ScaleFromElemWidth(width));
+        StoreToTypedArray(masm, arrayType, value, dest);
+    }
+    if (guardLength)
+        masm.bind(&skip);
+
+    return true;
+}
+
+bool
 CodeGenerator::visitClampIToUint8(LClampIToUint8 *lir)
 {
     Register input = ToRegister(lir->input());

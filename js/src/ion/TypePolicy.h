@@ -203,6 +203,15 @@ class InstanceOfPolicy : public TypePolicy
 
 class StoreTypedArrayPolicy : public BoxInputsPolicy
 {
+  protected:
+    bool adjustValueInput(MInstruction *ins, int arrayType, MDefinition *value, int valueOperand);
+
+  public:
+    bool adjustInputs(MInstruction *ins);
+};
+
+class StoreTypedArrayHolePolicy : public StoreTypedArrayPolicy
+{
   public:
     bool adjustInputs(MInstruction *ins);
 };

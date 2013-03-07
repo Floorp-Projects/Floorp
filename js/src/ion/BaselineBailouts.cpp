@@ -627,9 +627,9 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
                  exprStackSlots == expectedDepth);
 #endif
 
-    IonSpew(IonSpew_BaselineBailouts, "      Resuming %s pc offset %d (line %d) of %s:%d",
-                resumeAfter ? "after" : "at", (int) pcOff, PCToLineNumber(script, pc),
-                script->filename, (int) script->lineno);
+    IonSpew(IonSpew_BaselineBailouts, "      Resuming %s pc offset %d (op %s) (line %d) of %s:%d",
+                resumeAfter ? "after" : "at", (int) pcOff, js_CodeName[op],
+                PCToLineNumber(script, pc), script->filename, (int) script->lineno);
     IonSpew(IonSpew_BaselineBailouts, "      Bailout kind: %s",
             BailoutKindString(iter.bailoutKind()));
 
@@ -1056,10 +1056,9 @@ HandleBoundsCheckFailure(JSContext *cx, HandleScript outerScript, HandleScript i
     // inner and outer scripts, instead of just the outer one.
     if (!outerScript->failedBoundsCheck) {
         outerScript->failedBoundsCheck = true;
-        IonSpew(IonSpew_BaselineBailouts, "Invalidating due to bounds check failure");
-        return Invalidate(cx, outerScript);
     }
-    return true;
+    IonSpew(IonSpew_BaselineBailouts, "Invalidating due to bounds check failure");
+    return Invalidate(cx, outerScript);
 }
 
 static bool
