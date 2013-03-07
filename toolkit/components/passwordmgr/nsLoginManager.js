@@ -284,6 +284,7 @@ LoginManager.prototype = {
 
             switch (event.type) {
                 case "DOMContentLoaded":
+                    event.target.removeEventListener(event.type, this, false);
                     this._pwmgr._fillDocument(event.target);
                     return;
 
