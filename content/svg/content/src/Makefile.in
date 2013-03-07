@@ -79,6 +79,7 @@ CPPSRCS		= \
 		SVGDescElement.cpp \
 		SVGElementFactory.cpp \
 		SVGEllipseElement.cpp \
+		SVGFEBlendElement.cpp \
 		SVGFilterElement.cpp \
 		SVGForeignObjectElement.cpp \
 		SVGFragmentIdentifier.cpp \
@@ -170,6 +171,7 @@ EXPORTS_mozilla/dom = \
 	SVGDefsElement.h \
 	SVGDescElement.h \
 	SVGEllipseElement.h \
+	SVGFEBlendElement.h \
 	SVGFilterElement.h \
 	SVGForeignObjectElement.h \
 	SVGGElement.h \
