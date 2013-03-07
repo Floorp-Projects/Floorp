@@ -153,6 +153,7 @@ GuardFunApplyArgumentsOptimization(JSContext *cx, AbstractFramePtr frame, Handle
 static inline bool
 GuardFunApplyArgumentsOptimization(JSContext *cx)
 {
+    AssertCanGC();
     FrameRegs &regs = cx->regs();
     CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
     return GuardFunApplyArgumentsOptimization(cx, cx->fp(), args.calleev(), args.array(),
@@ -863,6 +864,7 @@ static JS_ALWAYS_INLINE bool
 GetElementOperation(JSContext *cx, JSOp op, MutableHandleValue lref, HandleValue rref,
                     MutableHandleValue res)
 {
+    AssertCanGC();
     JS_ASSERT(op == JSOP_GETELEM || op == JSOP_CALLELEM);
 
     uint32_t index;

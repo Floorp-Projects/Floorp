@@ -30,6 +30,7 @@ class Linker
     }
 
     IonCode *newCode(JSContext *cx, IonCompartment *comp) {
+        AssertCanGC();
         gc::AutoSuppressGC suppressGC(cx);
         if (masm.oom())
             return fail(cx);

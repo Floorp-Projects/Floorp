@@ -27,6 +27,7 @@ using mozilla::DebugOnly;
 void
 analyze::PrintBytecode(JSContext *cx, HandleScript script, jsbytecode *pc)
 {
+    AssertCanGC();
     printf("#%u:", script->id());
     Sprinter sprinter(cx);
     if (!sprinter.init())

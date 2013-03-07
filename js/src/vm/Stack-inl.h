@@ -375,6 +375,9 @@ STATIC_POSTCONDITION(!return || ubound(from) >= nvals)
 JS_ALWAYS_INLINE bool
 StackSpace::ensureSpace(JSContext *cx, MaybeReportError report, Value *from, ptrdiff_t nvals) const
 {
+    if (report)
+        AssertCanGC();
+
     assertInvariants();
     JS_ASSERT(from >= firstUnused());
 #ifdef XP_WIN
@@ -388,6 +391,7 @@ StackSpace::ensureSpace(JSContext *cx, MaybeReportError report, Value *from, ptr
 inline Value *
 StackSpace::getStackLimit(JSContext *cx, MaybeReportError report)
 {
+    AssertCanGC();
     FrameRegs &regs = cx->regs();
     unsigned nvals = regs.fp()->script()->nslots + STACK_JIT_EXTRA;
     return ensureSpace(cx, report, regs.sp, nvals)
@@ -401,6 +405,9 @@ JS_ALWAYS_INLINE StackFrame *
 ContextStack::getCallFrame(JSContext *cx, MaybeReportError report, const CallArgs &args,
                            JSFunction *fun, HandleScript script, StackFrame::Flags *flags) const
 {
+    if (report)
+        AssertCanGC();
+
     JS_ASSERT(fun->nonLazyScript() == script);
     unsigned nformal = fun->nargs;
 
@@ -442,6 +449,9 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
                               HandleFunction callee, HandleScript script,
                               InitialFrameFlags initial, MaybeReportError report)
 {
+    if (report)
+        AssertCanGC();
+
     JS_ASSERT(onTop());
     JS_ASSERT(regs.sp == args.end());
     /* Cannot assert callee == args.callee() since this is called from LeaveTree. */
@@ -468,6 +478,7 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
                               HandleFunction callee, HandleScript script,
                               InitialFrameFlags initial, Value **stackLimit)
 {
+    AssertCanGC();
     if (!pushInlineFrame(cx, regs, args, callee, script, initial))
         return false;
     *stackLimit = space().conservativeEnd_;
@@ -479,6 +490,7 @@ ContextStack::getFixupFrame(JSContext *cx, MaybeReportError report,
                             const CallArgs &args, JSFunction *fun, HandleScript script,
                             void *ncode, InitialFrameFlags initial, Value **stackLimit)
 {
+    AssertCanGC();
     JS_ASSERT(onTop());
     JS_ASSERT(fun->nonLazyScript() == args.callee().toFunction()->nonLazyScript());
     JS_ASSERT(fun->nonLazyScript() == script);
