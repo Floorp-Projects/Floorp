@@ -72,7 +72,7 @@ typedef unsigned __int64 uint64_t;
 typedef struct {
   uint64_t high;
   uint64_t low;
-} uint128_t;
+} uint128_struct;
 
 typedef uint64_t breakpad_time_t;
 

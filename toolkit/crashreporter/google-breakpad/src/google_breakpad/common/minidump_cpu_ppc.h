@@ -94,11 +94,11 @@ typedef struct {
 typedef struct {
   /* Vector registers (including vscr) are 128 bits, but mach/ppc/_types.h
    * exposes them as four 32-bit quantities. */
-  uint128_t save_vr[MD_VECTORSAVEAREA_PPC_VR_COUNT];
-  uint128_t save_vscr;  /* Status/control */
-  uint32_t  save_pad5[4];
-  uint32_t  save_vrvalid;  /* Identifies which vector registers are saved */
-  uint32_t  save_pad6[7];
+  uint128_struct save_vr[MD_VECTORSAVEAREA_PPC_VR_COUNT];
+  uint128_struct save_vscr;  /* Status/control */
+  uint32_t       save_pad5[4];
+  uint32_t       save_vrvalid;  /* Indicates which vector registers are saved */
+  uint32_t       save_pad6[7];
 } MDVectorSaveAreaPPC;  /* ppc_vector_state */
 
 
@@ -117,21 +117,21 @@ typedef struct {
   /* context_flags is not present in ppc_thread_state, but it aids
    * identification of MDRawContextPPC among other raw context types,
    * and it guarantees alignment when we get to float_save. */
-  uint32_t             context_flags;
+  uint32_t              context_flags;
 
-  uint32_t             srr0;    /* Machine status save/restore: stores pc
+  uint32_t              srr0;    /* Machine status save/restore: stores pc
                                   * (instruction) */
-  uint32_t             srr1;    /* Machine status save/restore: stores msr
+  uint32_t              srr1;    /* Machine status save/restore: stores msr
                                   * (ps, program/machine state) */
   /* ppc_thread_state contains 32 fields, r0 .. r31.  Here, an array is
    * used for brevity. */
-  uint32_t             gpr[MD_CONTEXT_PPC_GPR_COUNT];
-  uint32_t             cr;      /* Condition */
-  uint32_t             xer;     /* Integer (fiXed-point) exception */
-  uint32_t             lr;      /* Link */
-  uint32_t             ctr;     /* Count */
-  uint32_t             mq;      /* Multiply/Quotient (PPC 601, POWER only) */
-  uint32_t             vrsave;  /* Vector save */
+  uint32_t              gpr[MD_CONTEXT_PPC_GPR_COUNT];
+  uint32_t              cr;      /* Condition */
+  uint32_t              xer;     /* Integer (fiXed-point) exception */
+  uint32_t              lr;      /* Link */
+  uint32_t              ctr;     /* Count */
+  uint32_t              mq;      /* Multiply/Quotient (PPC 601, POWER only) */
+  uint32_t              vrsave;  /* Vector save */
 
   /* float_save and vector_save aren't present in ppc_thread_state, but
    * are represented in separate structures that still define a thread's

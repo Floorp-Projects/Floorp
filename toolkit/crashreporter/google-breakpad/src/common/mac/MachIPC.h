@@ -210,7 +210,7 @@ class MachMessage {
   struct MessageDataPacket {
     int32_t      id;          // little-endian
     int32_t      data_length; // little-endian
-    uint8_t     data[1];     // actual size limited by sizeof(MachMessage)
+    uint8_t      data[1];     // actual size limited by sizeof(MachMessage)
   };
 
   MessageDataPacket* GetDataPacket();
@@ -223,7 +223,7 @@ class MachMessage {
 
   mach_msg_header_t  head;
   mach_msg_body_t    body;
-  uint8_t           padding[1024]; // descriptors and data may be embedded here
+  uint8_t            padding[1024]; // descriptors and data may be embedded here
 };
 
 //==============================================================================

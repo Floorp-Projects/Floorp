@@ -363,11 +363,14 @@ bool ExceptionHandler::WriteMinidumpWithException(int exception_type,
       // decide if this should be sent.
       if (filter_ && !filter_(callback_context_))
         return false;
-      return crash_generation_client_->RequestDumpForException(
+      result = crash_generation_client_->RequestDumpForException(
           exception_type,
           exception_code,
           exception_subcode,
           thread_name);
+      if (result && exit_after_write) {
+        _exit(exception_type);
+      }
     }
 #endif
   } else {

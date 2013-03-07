@@ -57,7 +57,6 @@
 #include "common/stabs_reader.h"
 #include "common/stabs_to_module.h"
 #include "common/symbol_data.h"
-#include "common/unique_string.h"
 
 #ifndef CPU_TYPE_ARM
 #define CPU_TYPE_ARM (static_cast<cpu_type_t>(12))
