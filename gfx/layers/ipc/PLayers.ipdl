@@ -26,6 +26,7 @@ using mozilla::TimeStamp;
 using mozilla::ScreenRotation;
 using nsCSSProperty;
 using mozilla::dom::ScreenOrientation;
+using mozilla::gfx::Margin;
 
 /**
  * The layers protocol is spoken between thread contexts that manage
@@ -185,6 +186,7 @@ struct CommonLayerAttributes {
   nsIntRect clipRect;
   bool isFixedPosition;
   gfxPoint fixedPositionAnchor;
+  Margin fixedPositionMargin;
   nullable PLayer maskLayer;
   // Animated colors will only honored for ColorLayers.
   Animation[] animations;
