@@ -2,7 +2,6 @@
 <html>
 <head>
   <title>Test Non-Permitted Application for Alarm API</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -13,21 +12,37 @@
 
 "use strict";
 
-SimpleTest.waitForExplicitFinish();
+function alarmtests() {
+  SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.pushPrefEnv({"set": [["dom.mozAlarms.enabled", true]]}, function() {
+  SpecialPowers.pushPrefEnv({"set": [["dom.mozAlarms.enabled", true]]}, function() {
+
+    // mozAlarms is intalled on all platforms except Android for the moment.
+    if (navigator.appVersion.indexOf("Android") != -1) {
+      ok(!('mozAlarms' in navigator), "navigator.mozAlarms should not exist");
+    } else {
+      ok('mozAlarms' in navigator, "navigator.mozAlarms should exist");
+      is(navigator.mozAlarms, null, "navigator.mozAlarms should return null");
+    }
+    SpecialPowers.addPermission("alarms", true, document);
+    SimpleTest.finish();
+  });
+
+}
+
+if(!SpecialPowers.hasPermission("alarms", document)) {
+  var head = document.getElementsByTagName('head')[0];
+  var js = document.createElement("script");
+  js.type = "application/javascript";
+  js.src = "/tests/SimpleTest/SimpleTest.js";
+  js.onload = alarmtests;
+  head.appendChild(js);
+  
+} else {
   SpecialPowers.removePermission("alarms", document);
+  window.location = window.location; 
+}
 
-  // mozAlarms is intalled on all platforms except Android for the moment.
-  if (navigator.appVersion.indexOf("Android") != -1) {
-    ok(!('mozAlarms' in navigator), "navigator.mozAlarms should not exist");
-  } else {
-    ok('mozAlarms' in navigator, "navigator.mozAlarms should exist");
-    is(navigator.mozAlarms, null, "navigator.mozAlarms should return null");
-  }
-
-  SimpleTest.finish();
-});
 
 </script>
 </pre>
