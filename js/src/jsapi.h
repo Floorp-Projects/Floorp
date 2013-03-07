@@ -2657,13 +2657,18 @@ JSVAL_TRACE_KIND(jsval v)
 typedef void
 (* JSTraceCallback)(JSTracer *trc, void **thingp, JSGCTraceKind kind);
 
+enum WeakMapTraceKind {
+    DoNotTraceWeakMaps = 0,
+    TraceWeakMapValues = 1
+};
+
 struct JSTracer {
     JSRuntime           *runtime;
     JSTraceCallback     callback;
     JSTraceNamePrinter  debugPrinter;
     const void          *debugPrintArg;
     size_t              debugPrintIndex;
-    JSBool              eagerlyTraceWeakMaps;
+    WeakMapTraceKind    eagerlyTraceWeakMaps;
 #ifdef JS_GC_ZEAL
     void                *realLocation;
 #endif
