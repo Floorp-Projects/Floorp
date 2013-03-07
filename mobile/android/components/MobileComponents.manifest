@@ -93,6 +93,7 @@ contract @mozilla.org/addons/blocklist-prompt;1 {4e6ea350-b09a-11df-94e2-0800200
 # NSSDialogService.js
 component {cbc08081-49b6-4561-9c18-a7707a50bda1} NSSDialogService.js
 contract @mozilla.org/nsCertificateDialogs;1 {cbc08081-49b6-4561-9c18-a7707a50bda1}
+contract @mozilla.org/nsClientAuthDialogs;1 {cbc08081-49b6-4561-9c18-a7707a50bda1}
 
 # SiteSpecificUserAgent.js
 component {d5234c9d-0ee2-4b3c-9da3-18be9e5cf7e6} SiteSpecificUserAgent.js
