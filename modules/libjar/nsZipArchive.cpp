@@ -30,7 +30,6 @@
 #define ZIP_ARENABLOCKSIZE (1*1024)
 
 #ifdef XP_UNIX
-    #include <sys/mman.h>
     #include <sys/types.h>
     #include <sys/stat.h>
     #include <limits.h>
@@ -157,9 +156,6 @@ nsresult gZlibInit(z_stream *zs)
 nsZipHandle::nsZipHandle()
   : mFileData(nullptr)
   , mLen(0)
-#if defined(XP_WIN)
-  , mFd(nullptr)
-#endif
   , mMap(nullptr)
   , mRefCnt(0)
 {
@@ -172,11 +168,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsZipHandle)
 nsresult nsZipHandle::Init(nsIFile *file, nsZipHandle **ret)
 {
   mozilla::AutoFDClose fd;
-  int32_t flags = PR_RDONLY;
-#if defined(XP_WIN)
-  flags |= nsIFile::OS_READAHEAD;
-#endif
-  nsresult rv = file->OpenNSPRFileDesc(flags, 0000, &fd.rwget());
+  nsresult rv = file->OpenNSPRFileDesc(PR_RDONLY, 0000, &fd.rwget());
   if (NS_FAILED(rv))
     return rv;
 
@@ -202,9 +194,6 @@ nsresult nsZipHandle::Init(nsIFile *file, nsZipHandle **ret)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-#if defined(XP_WIN)
-  handle->mFd = fd.forget();
-#endif
   handle->mMap = map;
   handle->mFile.Init(file);
   handle->mLen = (uint32_t) size;
@@ -242,11 +231,6 @@ int64_t nsZipHandle::SizeOfMapping()
 
 nsZipHandle::~nsZipHandle()
 {
-#if defined(XP_WIN)
-  if (mFd) {
-    PR_Close(mFd);
-  }
-#endif
   if (mMap) {
     PR_MemUnmap((void *)mFileData, mLen);
     PR_CloseFileMap(mMap);
@@ -585,15 +569,6 @@ MOZ_WIN_MEM_TRY_BEGIN
   uint32_t centralOffset = 4;
   if (mFd->mLen > ZIPCENTRAL_SIZE && xtolong(startp + centralOffset) == CENTRALSIG) {
     // Success means optimized jar layout from bug 559961 is in effect
-    uint32_t readaheadLength = xtolong(startp);
-    if (readaheadLength) {
-#if defined(XP_UNIX)
-      madvise(const_cast<uint8_t*>(startp), readaheadLength, MADV_WILLNEED);
-#elif defined(XP_WIN)
-      HANDLE hFile = (HANDLE) PR_FileDesc2NativeHandle(mFd->mFd);
-      mozilla::ReadAhead(hFile, 0, readaheadLength);
-#endif
-    }
   } else {
     for (buf = endp - ZIPEND_SIZE; buf > startp; buf--)
       {
