@@ -894,6 +894,8 @@ class GetPropCompiler : public PICStubCompiler
 
     LookupStatus generateStringPropertyStub()
     {
+        AssertCanGC();
+
         if (!f.fp()->script()->compileAndGo)
             return disable("String.prototype without compile-and-go global");
 
@@ -1248,6 +1250,7 @@ class GetPropCompiler : public PICStubCompiler
 
     LookupStatus generateStub(HandleObject holder, HandleShape shape)
     {
+        AssertCanGC();
         Vector<Jump, 8> shapeMismatches(cx);
 
         MJITInstrumentation sps(&f.cx->runtime->spsProfiler);

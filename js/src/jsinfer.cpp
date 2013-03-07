@@ -6154,6 +6154,8 @@ JSCompartment::getNewType(JSContext *cx, Class *clasp, TaggedProto proto_, JSFun
     Rooted<TaggedProto> proto(cx, proto_);
     RootedFunction fun(cx, fun_);
 
+    AssertCanGC();
+
     if (proto.isObject() && !proto.toObject()->setDelegate(cx))
         return NULL;
 

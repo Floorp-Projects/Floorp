@@ -263,6 +263,7 @@ Shape::matchesParamsAfterId(RawBaseShape base, uint32_t aslot,
 inline bool
 Shape::getUserId(JSContext *cx, MutableHandleId idp) const
 {
+    AssertCanGC();
     const Shape *self = this;
 #ifdef DEBUG
     {
