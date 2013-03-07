@@ -420,6 +420,7 @@ BasicTiledThebesLayer::ProgressiveUpdate(BasicTiledLayerBuffer& aTiledBuffer,
                                          void* aCallbackData)
 {
   bool repeat = false;
+  bool isBufferChanged = false;
   do {
     // Compute the region that should be updated. Repeat as many times as
     // is required.
@@ -434,15 +435,12 @@ BasicTiledThebesLayer::ProgressiveUpdate(BasicTiledLayerBuffer& aTiledBuffer,
                                             aResolution,
                                             repeat);
 
-    // There's no further work to be done, return if nothing has been
-    // drawn, or give what has been drawn to the shadow layer to upload.
+    // There's no further work to be done.
     if (regionToPaint.IsEmpty()) {
-      if (repeat) {
-        break;
-      } else {
-        return false;
-      }
+      break;
     }
+
+    isBufferChanged |= true;
 
     // Keep track of what we're about to refresh.
     aValidRegion.Or(aValidRegion, regionToPaint);
@@ -458,7 +456,9 @@ BasicTiledThebesLayer::ProgressiveUpdate(BasicTiledLayerBuffer& aTiledBuffer,
     aInvalidRegion.Sub(aInvalidRegion, regionToPaint);
   } while (repeat);
 
-  return true;
+  // Return false if nothing has been drawn, or give what has been drawn
+  // to the shadow layer to upload.
+  return isBufferChanged;
 }
 
 void
