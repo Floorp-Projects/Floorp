@@ -534,7 +534,7 @@ GetClassForProtoKey(JSProtoKey key)
 inline TypeObject *
 GetTypeNewObject(JSContext *cx, JSProtoKey key)
 {
-    RootedObject proto(cx);
+    js::RootedObject proto(cx);
     if (!js_GetClassPrototype(cx, key, &proto))
         return NULL;
     return proto->getNewType(cx, GetClassForProtoKey(key));
@@ -847,7 +847,7 @@ TypeScript::SlotTypes(RawScript script, unsigned slot)
 /* static */ inline TypeObject *
 TypeScript::StandardType(JSContext *cx, JSProtoKey key)
 {
-    RootedObject proto(cx);
+    js::RootedObject proto(cx);
     if (!js_GetClassPrototype(cx, key, &proto, NULL))
         return NULL;
     return proto->getNewType(cx, GetClassForProtoKey(key));

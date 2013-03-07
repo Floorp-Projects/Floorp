@@ -185,7 +185,7 @@ class JSFunction : public JSObject
     js::RawScript getOrCreateScript(JSContext *cx) {
         JS_ASSERT(isInterpreted());
         if (isInterpretedLazy()) {
-            JS::RootedFunction self(cx, this);
+            js::RootedFunction self(cx, this);
             js::MaybeCheckStackRoots(cx);
             if (!self->initializeLazyScript(cx))
                 return NULL;

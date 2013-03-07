@@ -6,7 +6,7 @@
 
 BEGIN_TEST(testJSEvaluateScript)
 {
-    JS::RootedObject obj(cx, JS_NewObject(cx, NULL, NULL, global));
+    js::RootedObject obj(cx, JS_NewObject(cx, NULL, NULL, global));
     CHECK(obj);
 
     uint32_t options = JS_GetOptions(cx);
@@ -14,7 +14,7 @@ BEGIN_TEST(testJSEvaluateScript)
 
     static const char src[] = "var x = 5;";
 
-    JS::RootedValue retval(cx);
+    js::RootedValue retval(cx);
     CHECK(JS_EvaluateScript(cx, obj, src, sizeof(src) - 1, __FILE__, __LINE__,
                             retval.address()));
 

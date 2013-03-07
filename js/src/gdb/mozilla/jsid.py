@@ -56,7 +56,7 @@ class jsid(object):
 
 # Hard-code the referent type pretty-printer for jsid roots and handles.
 # See the comment for mozilla.Root.Common.__init__.
-@pretty_printer('JS::Rooted<long>')
+@pretty_printer('js::Rooted<long>')
 def RootedJSID(value, cache):
     return mozilla.Root.Rooted(value, cache, jsid)
 @pretty_printer('JS::Handle<long>')

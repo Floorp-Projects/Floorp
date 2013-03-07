@@ -93,7 +93,7 @@ JSObject::setGeneric(JSContext *cx, js::HandleObject obj, js::HandleObject recei
 JSObject::setProperty(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
                       js::PropertyName *name, js::MutableHandleValue vp, JSBool strict)
 {
-    JS::RootedId id(cx, js::NameToId(name));
+    js::RootedId id(cx, js::NameToId(name));
     return setGeneric(cx, obj, receiver, id, vp, strict);
 }
 
@@ -110,7 +110,7 @@ JSObject::setElement(JSContext *cx, js::HandleObject obj, js::HandleObject recei
 JSObject::setSpecial(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
                      js::SpecialId sid, js::MutableHandleValue vp, JSBool strict)
 {
-    JS::RootedId id(cx, SPECIALID_TO_JSID(sid));
+    js::RootedId id(cx, SPECIALID_TO_JSID(sid));
     return setGeneric(cx, obj, receiver, id, vp, strict);
 }
 
@@ -127,7 +127,7 @@ JSObject::setGenericAttributes(JSContext *cx, js::HandleObject obj,
 JSObject::setPropertyAttributes(JSContext *cx, js::HandleObject obj,
                                 js::PropertyName *name, unsigned *attrsp)
 {
-    JS::RootedId id(cx, js::NameToId(name));
+    js::RootedId id(cx, js::NameToId(name));
     return setGenericAttributes(cx, obj, id, attrsp);
 }
 
@@ -143,7 +143,7 @@ JSObject::setElementAttributes(JSContext *cx, js::HandleObject obj,
 JSObject::setSpecialAttributes(JSContext *cx, js::HandleObject obj,
                                js::SpecialId sid, unsigned *attrsp)
 {
-    JS::RootedId id(cx, SPECIALID_TO_JSID(sid));
+    js::RootedId id(cx, SPECIALID_TO_JSID(sid));
     return setGenericAttributes(cx, obj, id, attrsp);
 }
 
@@ -183,7 +183,7 @@ JSObject::getGenericNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
 JSObject::getProperty(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
                       js::PropertyName *name, js::MutableHandleValue vp)
 {
-    JS::RootedId id(cx, js::NameToId(name));
+    js::RootedId id(cx, js::NameToId(name));
     return getGeneric(cx, obj, receiver, id, vp);
 }
 
@@ -198,7 +198,7 @@ JSObject::getPropertyNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
 JSObject::deleteProperty(JSContext *cx, js::HandleObject obj,
                          js::HandlePropertyName name, js::MutableHandleValue rval, bool strict)
 {
-    JS::RootedId id(cx, js::NameToId(name));
+    js::RootedId id(cx, js::NameToId(name));
     js::types::AddTypePropertyId(cx, obj, id, js::types::Type::UndefinedType());
     js::types::MarkTypePropertyConfigured(cx, obj, id);
     js::DeletePropertyOp op = obj->getOps()->deleteProperty;
@@ -209,7 +209,7 @@ JSObject::deleteProperty(JSContext *cx, js::HandleObject obj,
 JSObject::deleteElement(JSContext *cx, js::HandleObject obj,
                         uint32_t index, js::MutableHandleValue rval, bool strict)
 {
-    JS::RootedId id(cx);
+    js::RootedId id(cx);
     if (!js::IndexToId(cx, index, &id))
         return false;
     js::types::AddTypePropertyId(cx, obj, id, js::types::Type::UndefinedType());
@@ -222,7 +222,7 @@ JSObject::deleteElement(JSContext *cx, js::HandleObject obj,
 JSObject::deleteSpecial(JSContext *cx, js::HandleObject obj,
                         js::HandleSpecialId sid, js::MutableHandleValue rval, bool strict)
 {
-    JS::RootedId id(cx, SPECIALID_TO_JSID(sid));
+    js::RootedId id(cx, SPECIALID_TO_JSID(sid));
     js::types::AddTypePropertyId(cx, obj, id, js::types::Type::UndefinedType());
     js::types::MarkTypePropertyConfigured(cx, obj, id);
     js::DeleteSpecialOp op = obj->getOps()->deleteSpecial;
@@ -292,7 +292,7 @@ inline void
 JSObject::removeLastProperty(JSContext *cx)
 {
     JS_ASSERT(canRemoveLastProperty());
-    JS::RootedObject self(cx, this);
+    js::RootedObject self(cx, this);
     js::RootedShape prev(cx, lastProperty()->previous());
     JS_ALWAYS_TRUE(setLastProperty(cx, self, prev));
 }
@@ -759,7 +759,7 @@ JSObject::getType(JSContext *cx)
 {
     JS_ASSERT(cx->compartment == compartment());
     if (hasLazyType()) {
-        JS::RootedObject self(cx, this);
+        js::RootedObject self(cx, this);
         return makeLazyType(cx, self);
     }
     return static_cast<js::types::TypeObject*>(type_);
@@ -1014,7 +1014,7 @@ JSObject::finish(js::FreeOp *fop)
 JSObject::hasProperty(JSContext *cx, js::HandleObject obj,
                       js::HandleId id, bool *foundp, unsigned flags)
 {
-    JS::RootedObject pobj(cx);
+    js::RootedObject pobj(cx);
     js::RootedShape prop(cx);
     JSAutoResolveFlags rf(cx, flags);
     if (!lookupGeneric(cx, obj, id, &pobj, &prop)) {
@@ -1124,7 +1124,7 @@ JSObject::lookupGeneric(JSContext *cx, js::HandleObject obj, js::HandleId id,
 JSObject::lookupProperty(JSContext *cx, js::HandleObject obj, js::PropertyName *name,
                          js::MutableHandleObject objp, js::MutableHandleShape propp)
 {
-    JS::RootedId id(cx, js::NameToId(name));
+    js::RootedId id(cx, js::NameToId(name));
     return lookupGeneric(cx, obj, id, objp, propp);
 }
 
@@ -1147,7 +1147,7 @@ JSObject::defineProperty(JSContext *cx, js::HandleObject obj,
                         JSStrictPropertyOp setter /* = JS_StrictPropertyStub */,
                         unsigned attrs /* = JSPROP_ENUMERATE */)
 {
-    JS::RootedId id(cx, js::NameToId(name));
+    js::RootedId id(cx, js::NameToId(name));
     return defineGeneric(cx, obj, id, value, getter, setter, attrs);
 }
 
@@ -1168,7 +1168,7 @@ JSObject::defineSpecial(JSContext *cx, js::HandleObject obj, js::SpecialId sid, 
                         JSStrictPropertyOp setter /* = JS_StrictPropertyStub */,
                         unsigned attrs /* = JSPROP_ENUMERATE */)
 {
-    JS::RootedId id(cx, SPECIALID_TO_JSID(sid));
+    js::RootedId id(cx, SPECIALID_TO_JSID(sid));
     return defineGeneric(cx, obj, id, value, getter, setter, attrs);
 }
 
@@ -1184,7 +1184,7 @@ JSObject::lookupElement(JSContext *cx, js::HandleObject obj, uint32_t index,
 JSObject::lookupSpecial(JSContext *cx, js::HandleObject obj, js::SpecialId sid,
                         js::MutableHandleObject objp, js::MutableHandleShape propp)
 {
-    JS::RootedId id(cx, SPECIALID_TO_JSID(sid));
+    js::RootedId id(cx, SPECIALID_TO_JSID(sid));
     return lookupGeneric(cx, obj, id, objp, propp);
 }
 
@@ -1196,7 +1196,7 @@ JSObject::getElement(JSContext *cx, js::HandleObject obj, js::HandleObject recei
     if (op)
         return op(cx, obj, receiver, index, vp);
 
-    JS::RootedId id(cx);
+    js::RootedId id(cx);
     if (!js::IndexToId(cx, index, &id))
         return false;
     return getGeneric(cx, obj, receiver, id, vp);
@@ -1230,11 +1230,11 @@ JSObject::getElementIfPresent(JSContext *cx, js::HandleObject obj, js::HandleObj
      * lookupGeneric/getGeneric.  Once lookupElement and getElement stop both
      * doing index-to-id conversions, we can use those here.
      */
-    JS::RootedId id(cx);
+    js::RootedId id(cx);
     if (!js::IndexToId(cx, index, &id))
         return false;
 
-    JS::RootedObject obj2(cx);
+    js::RootedObject obj2(cx);
     js::RootedShape prop(cx);
     if (!lookupGeneric(cx, obj, id, &obj2, &prop))
         return false;
@@ -1252,7 +1252,7 @@ JSObject::getElementIfPresent(JSContext *cx, js::HandleObject obj, js::HandleObj
 JSObject::getSpecial(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
                      js::SpecialId sid, js::MutableHandleValue vp)
 {
-    JS::RootedId id(cx, SPECIALID_TO_JSID(sid));
+    js::RootedId id(cx, SPECIALID_TO_JSID(sid));
     return getGeneric(cx, obj, receiver, id, vp);
 }
 
@@ -1268,7 +1268,7 @@ JSObject::getGenericAttributes(JSContext *cx, js::HandleObject obj,
 JSObject::getPropertyAttributes(JSContext *cx, js::HandleObject obj,
                                 js::PropertyName *name, unsigned *attrsp)
 {
-    JS::RootedId id(cx, js::NameToId(name));
+    js::RootedId id(cx, js::NameToId(name));
     return getGenericAttributes(cx, obj, id, attrsp);
 }
 
@@ -1276,7 +1276,7 @@ JSObject::getPropertyAttributes(JSContext *cx, js::HandleObject obj,
 JSObject::getElementAttributes(JSContext *cx, js::HandleObject obj,
                                uint32_t index, unsigned *attrsp)
 {
-    JS::RootedId id(cx);
+    js::RootedId id(cx);
     if (!js::IndexToId(cx, index, &id))
         return false;
     return getGenericAttributes(cx, obj, id, attrsp);
@@ -1286,7 +1286,7 @@ JSObject::getElementAttributes(JSContext *cx, js::HandleObject obj,
 JSObject::getSpecialAttributes(JSContext *cx, js::HandleObject obj,
                                js::SpecialId sid, unsigned *attrsp)
 {
-    JS::RootedId id(cx, SPECIALID_TO_JSID(sid));
+    js::RootedId id(cx, SPECIALID_TO_JSID(sid));
     return getGenericAttributes(cx, obj, id, attrsp);
 }
 
@@ -1794,7 +1794,7 @@ IsObjectWithClass(const Value &v, ESClassValue classValue, JSContext *cx)
 {
     if (!v.isObject())
         return false;
-    RootedObject obj(cx, &v.toObject());
+    js::RootedObject obj(cx, &v.toObject());
     return ObjectClassIs(obj, classValue, cx);
 }
 

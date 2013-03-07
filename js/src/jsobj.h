@@ -773,15 +773,15 @@ class JSObject : public js::ObjectImpl
     /* Add a data property whose id is not yet in this scope. */
     js::RawShape addDataProperty(JSContext *cx, jsid id_, uint32_t slot, unsigned attrs) {
         JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
-        JS::RootedObject self(cx, this);
-        JS::RootedId id(cx, id_);
+        js::RootedObject self(cx, this);
+        js::RootedId id(cx, id_);
         return addProperty(cx, self, id, NULL, NULL, slot, attrs, 0, 0);
     }
 
     js::RawShape addDataProperty(JSContext *cx, js::HandlePropertyName name, uint32_t slot, unsigned attrs) {
         JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
-        JS::RootedObject self(cx, this);
-        JS::RootedId id(cx, NameToId(name));
+        js::RootedObject self(cx, this);
+        js::RootedId id(cx, NameToId(name));
         return addProperty(cx, self, id, NULL, NULL, slot, attrs, 0, 0);
     }
 
@@ -796,7 +796,7 @@ class JSObject : public js::ObjectImpl
                                     uint32_t slot, unsigned attrs,
                                     unsigned flags, int shortid)
     {
-        JS::RootedId id(cx, js::NameToId(name));
+        js::RootedId id(cx, js::NameToId(name));
         return putProperty(cx, obj, id, getter, setter, slot, attrs, flags, shortid);
     }
 
