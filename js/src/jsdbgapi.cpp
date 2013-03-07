@@ -847,6 +847,7 @@ GetAtomTotalSize(JSContext *cx, JSAtom *atom)
 JS_PUBLIC_API(size_t)
 JS_GetFunctionTotalSize(JSContext *cx, JSFunction *fun)
 {
+    AutoAssertNoGC nogc;
     size_t nbytes = sizeof *fun;
     nbytes += JS_GetObjectTotalSize(cx, fun);
     if (fun->isInterpreted())
@@ -1037,6 +1038,7 @@ js_CallContextDebugHandler(JSContext *cx)
 JS_PUBLIC_API(StackDescription *)
 JS::DescribeStack(JSContext *cx, unsigned maxFrames)
 {
+    AutoAssertNoGC nogc;
     Vector<FrameDescription> frames(cx);
 
     for (ScriptFrameIter i(cx); !i.done(); ++i) {

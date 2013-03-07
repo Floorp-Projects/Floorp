@@ -156,6 +156,7 @@ template<typename T>
 static void
 MarkInternal(JSTracer *trc, T **thingp)
 {
+    AutoAssertNoGC nogc;
     JS_ASSERT(thingp);
     T *thing = *thingp;
 

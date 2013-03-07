@@ -659,6 +659,7 @@ ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, Abst
 void
 ClonedBlockObject::copyUnaliasedValues(AbstractFramePtr frame)
 {
+    AutoAssertNoGC nogc;
     StaticBlockObject &block = staticBlock();
     unsigned base = frame.script()->nfixed + block.stackDepth();
     for (unsigned i = 0; i < slotCount(); ++i) {
@@ -1013,6 +1014,7 @@ ScopeIter::operator++()
 void
 ScopeIter::settle()
 {
+    AutoAssertNoGC nogc;
     /*
      * Given an iterator state (cur_, block_), figure out which (potentially
      * optimized) scope the iterator should report. Thus, the result is a pair
@@ -1232,6 +1234,7 @@ class DebugScopeProxy : public BaseProxyHandler
             if (!shape)
                 return false;
 
+            AutoAssertNoGC nogc;
             unsigned i = shape->shortid();
             if (block->staticBlock().isAliased(i))
                 return false;

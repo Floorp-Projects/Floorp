@@ -1237,6 +1237,7 @@ Debugger::onSingleStep(JSContext *cx, MutableHandleValue vp)
      * be done with unit tests.
      */
     {
+        AutoAssertNoGC nogc;
         uint32_t stepperCount = 0;
         RawScript trappingScript = iter.script();
         GlobalObject *global = cx->global();
@@ -3737,6 +3738,7 @@ static JSBool
 DebuggerFrame_getOffset(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_FRAME(cx, argc, vp, "get offset", args, thisobj, iter);
+    AutoAssertNoGC nogc;
     RawScript script = iter.script();
     iter.updatePcQuadratic();
     jsbytecode *pc = iter.pc();

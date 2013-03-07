@@ -428,6 +428,8 @@ mjit::NativeStubEpilogue(VMFrame &f, Assembler &masm, NativeStubLinker::FinalJum
                          int32_t initialFrameDepth, int32_t vpOffset,
                          MaybeRegisterID typeReg, MaybeRegisterID dataReg)
 {
+    AutoAssertNoGC nogc;
+
     /* Reload fp, which may have been clobbered by restoreStackBase(). */
     masm.loadPtr(FrameAddress(VMFrame::offsetOfFp), JSFrameReg);
 
@@ -839,6 +841,8 @@ class CallCompiler : public BaseCompiler
 
     bool generateFullCallStub(JSScript *script, uint32_t flags)
     {
+        AutoAssertNoGC nogc;
+
         /*
          * Create a stub that works with arity mismatches. Like the fast-path,
          * this allocates a frame on the caller side, but also performs extra
@@ -984,6 +988,7 @@ class CallCompiler : public BaseCompiler
 
     bool generateStubForClosures(JSObject *obj)
     {
+        AutoAssertNoGC nogc;
         JS_ASSERT(ic.frameSize.isStatic());
 
         /* Slightly less fast path - guard on fun->script() instead. */
@@ -1211,6 +1216,8 @@ class CallCompiler : public BaseCompiler
 
     bool generateCallsiteCloneStub(HandleFunction original, HandleFunction fun)
     {
+        AutoAssertNoGC nogc;
+
         Assembler masm;
 
         // If we have a callsite clone, we do the folowing hack:
@@ -1295,6 +1302,7 @@ class CallCompiler : public BaseCompiler
                 disable();
 
 #ifdef JS_ION
+            AutoAssertNoGC nogc;
 
             // If the following conditions pass, try to inline a call into
             // an IonMonkey JIT'd function.
@@ -1489,6 +1497,7 @@ ic::SplatApplyArgs(VMFrame &f)
 void
 ic::GenerateArgumentCheckStub(VMFrame &f)
 {
+    AutoAssertNoGC nogc;
     JS_ASSERT(f.cx->typeInferenceEnabled());
 
     JITScript *jit = f.jit();

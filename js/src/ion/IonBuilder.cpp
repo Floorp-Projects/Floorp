@@ -142,6 +142,8 @@ IonBuilder::CFGState::TableSwitch(jsbytecode *exitpc, MTableSwitch *ins)
 JSFunction *
 IonBuilder::getSingleCallTarget(types::StackTypeSet *calleeTypes)
 {
+    AutoAssertNoGC nogc;
+
     if (!calleeTypes)
         return NULL;
 
@@ -5149,6 +5151,8 @@ bool
 IonBuilder::pushTypeBarrier(MInstruction *ins, types::StackTypeSet *actual,
                             types::StackTypeSet *observed)
 {
+    AutoAssertNoGC nogc;
+
     // If the instruction has no side effects, we'll resume the entire operation.
     // The actual type barrier will occur in the interpreter. If the
     // instruction is effectful, even if it has a singleton type, there
