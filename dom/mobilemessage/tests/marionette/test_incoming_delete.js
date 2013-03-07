@@ -6,9 +6,8 @@ MARIONETTE_TIMEOUT = 10000;
 SpecialPowers.setBoolPref("dom.sms.enabled", true);
 SpecialPowers.addPermission("sms", true, document);
 
-const REMOTE = "5555552368";
-const SENDER = "+15555552368"; // the normalized remote number
-const RECEIVER = "+15555215554"; // the emulator's number
+const SENDER = "5555552368"; // the remote number
+const RECEIVER = "15555215554"; // the emulator's number
 
 let sms = window.navigator.mozSms;
 let msgText = "Mozilla Firefox OS!";
@@ -39,7 +38,7 @@ function simulateIncomingSms() {
 
     verifySmsExists(incomingSms);
   };
-  runEmulatorCmd("sms send " + REMOTE + " " + msgText, function(result) {
+  runEmulatorCmd("sms send " + SENDER + " " + msgText, function(result) {
     is(result[0], "OK", "emulator output");
   });
 }
