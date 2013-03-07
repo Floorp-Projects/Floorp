@@ -111,11 +111,11 @@ this.DOMContactManager = {
           return null;
         }
         this._db.getAll(
-          function(aContact) {
-            mm.sendAsyncMessage("Contacts:GetAll:Next", {cursorId: msg.cursorId, contact: aContact});
+          function(aContacts) {
+            mm.sendAsyncMessage("Contacts:GetAll:Next", {cursorId: msg.cursorId, contacts: aContacts});
           },
           function(aErrorMsg) { mm.sendAsyncMessage("Contacts:Find:Return:KO", { errorMsg: aErrorMsg }); },
-          msg.findOptions, msg.cursorId);
+          msg.findOptions);
         break;
       case "Contact:Save":
         if (msg.options.reason === "create") {

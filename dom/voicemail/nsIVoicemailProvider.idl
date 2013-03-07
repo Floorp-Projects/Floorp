@@ -1,0 +1,39 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMMozVoicemailStatus;
+
+[scriptable, uuid(214b0963-da48-4859-a56c-f065a90e0403)]
+interface nsIVoicemailListener : nsISupports
+{
+  /**
+   * Called when a voicemail notification has been received by the network.
+   *
+   * @param status
+   *        The new voicemail status
+   */
+  void notifyStatusChanged(in nsIDOMMozVoicemailStatus status);
+};
+
+/**
+ * XPCOM component (in the content process) that provides the voicemail
+ * information.
+ */
+[scriptable, uuid(37bc0991-21a3-4de9-b888-d667fea6c05d)]
+interface nsIVoicemailProvider : nsISupports
+{
+  /**
+   * Called when a content process registers receiving unsolicited messages from
+   * RadioInterfaceLayer in the chrome process. Only a content process that has
+   * the 'voicemail' permission is allowed to register.
+   */
+  void registerVoicemailMsg(in nsIVoicemailListener listener);
+  void unregisterVoicemailMsg(in nsIVoicemailListener listener);
+
+  readonly attribute nsIDOMMozVoicemailStatus voicemailStatus;
+  readonly attribute DOMString voicemailNumber;
+  readonly attribute DOMString voicemailDisplayName;
+};

@@ -22,6 +22,7 @@ HOST_PROGRAM = szip
 
 HOST_CPPSRCS = \
   szip.cpp \
+  SeekableZStream.cpp \
   $(NULL)
 
 HOST_LIBS = -lz
@@ -34,3 +35,11 @@ CPPSRCS += \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+ifeq (arm,$(TARGET_CPU))
+ifdef MOZ_THUMB2
+HOST_CXXFLAGS += -DTARGET_THUMB
+else
+HOST_CXXFLAGS += -DTARGET_ARM
+endif
+endif

@@ -315,15 +315,17 @@ nsresult nsCocoaUtils::CreateNSImageFromCGImage(CGImageRef aInputImage, NSImage 
 
 nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, uint32_t aWhichFrame, NSImage **aResult)
 {
-  nsRefPtr<gfxImageSurface> frame;
-  nsresult rv = aImage->CopyFrame(aWhichFrame,
-                                  imgIContainer::FLAG_SYNC_DECODE,
-                                  getter_AddRefs(frame));
-  if (NS_FAILED(rv) || !frame) {
-    return NS_ERROR_FAILURE;
-  }
+  nsRefPtr<gfxASurface> surface;
+  aImage->GetFrame(aWhichFrame,
+                   imgIContainer::FLAG_SYNC_DECODE,
+                   getter_AddRefs(surface));
+  NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
+
+  nsRefPtr<gfxImageSurface> frame(surface->GetAsReadableARGB32ImageSurface());
+  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
+
   CGImageRef imageRef = NULL;
-  rv = nsCocoaUtils::CreateCGImageFromSurface(frame, &imageRef);
+  nsresult rv = nsCocoaUtils::CreateCGImageFromSurface(frame, &imageRef);
   if (NS_FAILED(rv) || !imageRef) {
     return NS_ERROR_FAILURE;
   }

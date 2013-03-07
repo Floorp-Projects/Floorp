@@ -5,12 +5,10 @@
 #ifndef mozilla_dom_network_MobileConnection_h
 #define mozilla_dom_network_MobileConnection_h
 
-#include "nsIObserver.h"
 #include "nsIDOMMobileConnection.h"
 #include "nsIMobileConnectionProvider.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
-#include "IccManager.h"
 
 namespace mozilla {
 namespace dom {
@@ -23,12 +21,21 @@ namespace network {
 
 class MobileConnection : public nsDOMEventTargetHelper
                        , public nsIDOMMozMobileConnection
-                       , public nsIObserver
 {
+  /**
+   * Class MobileConnection doesn't actually inherit
+   * nsIMobileConnectionListener. Instead, it owns an
+   * nsIMobileConnectionListener derived instance mListener and passes it to
+   * nsIMobileConnectionProvider. The onreceived events are first delivered to
+   * mListener and then forwarded to its owner, MobileConnection. See also bug
+   * 775997 comment #51.
+   */
+  class Listener;
+
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMMOZMOBILECONNECTION
+  NS_DECL_NSIMOBILECONNECTIONLISTENER
 
   NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
 
@@ -42,6 +49,7 @@ public:
 
 private:
   nsCOMPtr<nsIMobileConnectionProvider> mProvider;
+  nsRefPtr<Listener> mListener;
   nsRefPtr<icc::IccManager> mIccManager;
 
   nsIDOMEventTarget*

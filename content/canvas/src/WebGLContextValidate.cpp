@@ -339,6 +339,16 @@ bool WebGLContext::ValidateGLSLVariableName(const nsAString& name, const char *i
         return false;
     }
 
+    nsString prefix1 = NS_LITERAL_STRING("webgl_");
+    nsString prefix2 = NS_LITERAL_STRING("_webgl_");
+
+    if (Substring(name, 0, prefix1.Length()).Equals(prefix1) ||
+        Substring(name, 0, prefix2.Length()).Equals(prefix2))
+    {
+        ErrorInvalidOperation("%s: string contains a reserved GLSL prefix", info);
+        return false;
+    }
+
     return true;
 }
 

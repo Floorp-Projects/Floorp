@@ -171,7 +171,6 @@ members = [
     # dom/interfaces/svg - None.
 
     # dom/interfaces/traversal
-    'nsIDOMNodeIterator.nextNode',
 
     # dom/interfaces/xbl - None.
 

@@ -724,7 +724,6 @@ DownloadElementShell.prototype = {
         case nsIDM.DOWNLOAD_FAILED:
         case nsIDM.DOWNLOAD_CANCELED:
           return "downloadsCmd_retry";
-        case nsIDM.DOWNLOAD_DOWNLOADING:
         case nsIDM.DOWNLOAD_SCANNING:
           return "downloadsCmd_show";
         case nsIDM.DOWNLOAD_BLOCKED_PARENTAL:
@@ -735,7 +734,7 @@ DownloadElementShell.prototype = {
       return "";
     }
     let command = getDefaultCommandForState(this.getDownloadMetaData().state);
-    if (this.isCommandEnabled(command))
+    if (command && this.isCommandEnabled(command))
       this.doCommand(command);
   },
 

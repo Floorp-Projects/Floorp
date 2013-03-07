@@ -20,11 +20,10 @@ With the --symbol-order argument, followed by a file name, it will add the
 relevant linker options to change the order in which the linker puts the
 symbols appear in the resulting binary. Only works for ELF targets.
 '''
-from __future__ import print_function
+from __future__ import with_statement
 import sys
 import os
-from expandlibs import (ExpandArgs, relativize, isObject, ensureParentDir,
-                        ExpandLibsDeps)
+from expandlibs import ExpandArgs, relativize, isObject, ensureParentDir, ExpandLibsDeps
 import expandlibs_config as conf
 from optparse import OptionParser
 import subprocess
@@ -93,10 +92,10 @@ class ExpandArgsMore(ExpandArgs):
         if not len(objs): return
         fd, tmp = tempfile.mkstemp(suffix=".list",dir=os.curdir)
         if conf.EXPAND_LIBS_LIST_STYLE == "linkerscript":
-            content = ['INPUT("{0}")\n'.format(obj) for obj in objs]
+            content = ['INPUT("%s")\n' % obj for obj in objs]
             ref = tmp
         elif conf.EXPAND_LIBS_LIST_STYLE == "list":
-            content = ["{0}\n".format(obj) for obj in objs]
+            content = ["%s\n" % obj for obj in objs]
             ref = "@" + tmp
         else:
             os.close(fd)
@@ -140,13 +139,9 @@ class ExpandArgsMore(ExpandArgs):
     def _getOrderedSections(self, ordered_symbols):
         '''Given an ordered list of symbols, returns the corresponding list
         of sections following the order.'''
-        if conf.EXPAND_LIBS_ORDER_STYLE not in ['linkerscript',
-                                                'section-ordering-file']:
-            raise Exception('EXPAND_LIBS_ORDER_STYLE "{0}" is not supported'
-                            .format(conf.EXPAND_LIBS_ORDER_STYLE))
-        finder = SectionFinder([arg for arg in self 
-                                if isObject(arg) or 
-                                os.path.splitext(arg)[1] == conf.LIB_SUFFIX])
+        if not conf.EXPAND_LIBS_ORDER_STYLE in ['linkerscript', 'section-ordering-file']:
+            raise Exception('EXPAND_LIBS_ORDER_STYLE "%s" is not supported' % conf.EXPAND_LIBS_ORDER_STYLE)
+        finder = SectionFinder([arg for arg in self if isObject(arg) or os.path.splitext(arg)[1] == conf.LIB_SUFFIX])
         folded = self._getFoldedSections()
         sections = set()
         ordered_sections = []
@@ -187,35 +182,32 @@ class ExpandArgsMore(ExpandArgs):
         linked_sections = [s for s in linked_sections if s in split_sections]
 
         if conf.EXPAND_LIBS_ORDER_STYLE == 'section-ordering-file':
-            option = '-Wl,--section-ordering-file,{0}'
+            option = '-Wl,--section-ordering-file,%s'
             content = sections
             for linked_section in linked_sections:
                 content.extend(split_sections[linked_section])
-                content.append('{0}.*'.format(linked_section))
+                content.append('%s.*' % linked_section)
                 content.append(linked_section)
 
         elif conf.EXPAND_LIBS_ORDER_STYLE == 'linkerscript':
-            option = '-Wl,-T,{0}'
+            option = '-Wl,-T,%s'
             section_insert_before = dict(SECTION_INSERT_BEFORE)
             for linked_section in linked_sections:
-                content.append('SECTIONS {{')
-                content.append('  {0} : {{'.format(linked_section))
-                content.extend('    *({0})'
-                               .format(s for s in split_sections[linked_section]))
-                content.append('  }}')
-                content.append('}}')
-                content.append('INSERT BEFORE {0}'
-                               .format(section_insert_before[linked_section]))
+                content.append('SECTIONS {')
+                content.append('  %s : {' % linked_section)
+                content.extend('    *(%s)' % s for s in split_sections[linked_section])
+                content.append('  }')
+                content.append('}')
+                content.append('INSERT BEFORE %s' % section_insert_before[linked_section])
         else:
-            raise Exception('EXPAND_LIBS_ORDER_STYLE "{0}" is not supported'
-                            .format(conf.EXPAND_LIBS_ORDER_STYLE))
+            raise Exception('EXPAND_LIBS_ORDER_STYLE "%s" is not supported' % conf.EXPAND_LIBS_ORDER_STYLE)
 
         fd, tmp = tempfile.mkstemp(dir=os.curdir)
         f = os.fdopen(fd, "w")
         f.write('\n'.join(content)+'\n')
         f.close()
         self.tmp.append(tmp)
-        self.append(option.format(tmp))
+        self.append(option % tmp)
 
 class SectionFinder(object):
     '''Instances of this class allow to map symbol names to sections in
@@ -224,17 +216,15 @@ class SectionFinder(object):
     def __init__(self, objs):
         '''Creates an instance, given a list of object files.'''
         if not conf.EXPAND_LIBS_ORDER_STYLE in ['linkerscript', 'section-ordering-file']:
-            raise Exception('EXPAND_LIBS_ORDER_STYLE "{0}" is not supported'
-                            .format(conf.EXPAND_LIBS_ORDER_STYLE))
+            raise Exception('EXPAND_LIBS_ORDER_STYLE "%s" is not supported' % conf.EXPAND_LIBS_ORDER_STYLE)
         self.mapping = {}
         for obj in objs:
             if not isObject(obj) and os.path.splitext(obj)[1] != conf.LIB_SUFFIX:
-                raise Exception('{0} is not an object nor a static library'
-                                .format(obj))
+                raise Exception('%s is not an object nor a static library' % obj)
             for symbol, section in SectionFinder._getSymbols(obj):
                 sym = SectionFinder._normalize(symbol)
                 if sym in self.mapping:
-                    if section not in self.mapping[sym]:
+                    if not section in self.mapping[sym]:
                         self.mapping[sym].append(section)
                 else:
                     self.mapping[sym] = [section]
@@ -278,11 +268,11 @@ class SectionFinder(object):
         return syms
 
 def print_command(out, args):
-    print("Executing: " + " ".join(args), file=out)
+    print >>out, "Executing: " + " ".join(args)
     for tmp in [f for f in args.tmp if os.path.isfile(f)]:
-        print(tmp + ":", file=out)
+        print >>out, tmp + ":"
         with open(tmp) as file:
-            print("".join(["    " + l for l in file.readlines()]), file=out)
+            print >>out, "".join(["    " + l for l in file.readlines()])
     out.flush()
 
 def main():
@@ -333,10 +323,7 @@ def main():
         return
     ensureParentDir(options.depend)
     with open(options.depend, 'w') as depfile:
-        depfile.write("{0} : {1}\n"
-                      .format(options.target, ' '.join(dep for dep in deps 
-                                                       if os.path.isfile(dep) and 
-                                                       dep != options.target)))
+        depfile.write("%s : %s\n" % (options.target, ' '.join(dep for dep in deps if os.path.isfile(dep) and dep != options.target)))
 
 
 if __name__ == '__main__':

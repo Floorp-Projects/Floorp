@@ -84,7 +84,7 @@ public:
                       bool aKeyDownEventWasSent = false);
 
     // IME related nsIWidget methods.
-    nsresult ResetInputState(nsWindow* aCaller);
+    nsresult CommitIMEComposition(nsWindow* aCaller);
     void SetInputContext(nsWindow* aCaller,
                          const InputContext* aContext,
                          const InputContextAction* aAction);

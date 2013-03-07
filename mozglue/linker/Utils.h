@@ -227,6 +227,10 @@ public:
     return contents[index];
   }
 
+  operator const T *() const
+  {
+    return contents;
+  }
   /**
    * Returns whether the array points somewhere
    */

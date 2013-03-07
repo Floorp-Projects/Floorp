@@ -187,10 +187,10 @@ static nsRect
 GetTargetRect(nsIFrame* aRootFrame, const nsPoint& aPointRelativeToRootFrame,
               const EventRadiusPrefs* aPrefs)
 {
-  nsMargin m(AppUnitsFromMM(aRootFrame, aPrefs->mSideRadii[3], false),
-             AppUnitsFromMM(aRootFrame, aPrefs->mSideRadii[0], true),
+  nsMargin m(AppUnitsFromMM(aRootFrame, aPrefs->mSideRadii[0], true),
              AppUnitsFromMM(aRootFrame, aPrefs->mSideRadii[1], false),
-             AppUnitsFromMM(aRootFrame, aPrefs->mSideRadii[2], true));
+             AppUnitsFromMM(aRootFrame, aPrefs->mSideRadii[2], true),
+             AppUnitsFromMM(aRootFrame, aPrefs->mSideRadii[3], false));
   nsRect r(aPointRelativeToRootFrame, nsSize(0,0));
   r.Inflate(m);
   return r;
