@@ -11,6 +11,7 @@ Cu.import("resource://testing-common/httpd.js");
 
 var httpserver = new HttpServer();
 var testpath = "/simple";
+var httpbody = "0123456789";
 
 function run_test() {
   // Simulate a profile dir for xpcshell
@@ -39,8 +40,8 @@ function setupChannel(path) {
 }
 
 function serverHandler(metadata, response) {
-  response.write("HTTP/1.0 200 OK\r\n\r\nfoobar");
-  respose.finish();
+  response.setHeader("Content-Type", "text/plain", false);
+  response.bodyOutputStream.write(httpbody, httpbody.length);
 }
 
 function checkRequest(request, data, context) {
