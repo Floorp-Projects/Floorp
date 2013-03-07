@@ -400,6 +400,7 @@ abstract public class BrowserApp extends GeckoApp
 
         mBrowserToolbar.updateBackButton(false);
         mBrowserToolbar.updateForwardButton(false);
+        ((BrowserToolbarLayout)mBrowserToolbar.getLayout()).refreshMargins();
 
         mDoorHangerPopup.setAnchor(mBrowserToolbar.mFavicon);
 
