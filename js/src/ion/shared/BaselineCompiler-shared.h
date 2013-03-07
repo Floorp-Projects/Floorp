@@ -29,7 +29,7 @@ class BaselineCompilerShared
 
     FrameInfo frame;
 
-    ICStubSpace stubSpace_;
+    FallbackICStubSpace stubSpace_;
     js::Vector<ICEntry, 16, SystemAllocPolicy> icEntries_;
 
     // Stores the native code offset for a bytecode pc.

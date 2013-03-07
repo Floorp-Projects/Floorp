@@ -35,7 +35,6 @@ PCMappingSlotInfo::ToSlotLocation(const StackValue *stackVal)
 BaselineScript::BaselineScript(uint32_t prologueOffset)
   : method_(NULL),
     fallbackStubSpace_(),
-    optimizedStubSpace_(),
     prologueOffset_(prologueOffset),
     flags_(0)
 { }
@@ -509,7 +508,7 @@ BaselineScript::copyICEntries(HandleScript script, const ICEntry *entries, Macro
 }
 
 void
-BaselineScript::adoptFallbackStubs(ICStubSpace *stubSpace)
+BaselineScript::adoptFallbackStubs(FallbackICStubSpace *stubSpace)
 {
     fallbackStubSpace_.adoptFrom(stubSpace);
 }
@@ -680,8 +679,6 @@ BaselineScript::purgeOptimizedStubs(Zone *zone)
         }
     }
 #endif
-
-    optimizedStubSpace_.free();
 }
 
 void
@@ -716,11 +713,11 @@ ion::IonCompartment::toggleBaselineStubBarriers(bool enabled)
 
 void
 ion::SizeOfBaselineData(JSScript *script, JSMallocSizeOfFun mallocSizeOf, size_t *data,
-                        size_t *stubs)
+                        size_t *fallbackStubs)
 {
     *data = 0;
-    *stubs = 0;
+    *fallbackStubs = 0;
 
     if (script->hasBaselineScript())
-        script->baseline->sizeOfIncludingThis(mallocSizeOf, data, stubs);
+        script->baseline->sizeOfIncludingThis(mallocSizeOf, data, fallbackStubs);
 }

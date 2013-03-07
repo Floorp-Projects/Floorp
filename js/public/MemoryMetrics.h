@@ -170,7 +170,8 @@ struct CompartmentStats
       , scriptData(0)
       , jaegerData(0)
       , baselineData(0)
-      , baselineStubs(0)
+      , baselineFallbackStubs(0)
+      , baselineOptimizedStubs(0)
       , ionData(0)
       , compartmentObject(0)
       , crossCompartmentWrappersTable(0)
@@ -208,7 +209,8 @@ struct CompartmentStats
       , scriptData(other.scriptData)
       , jaegerData(other.jaegerData)
       , baselineData(other.baselineData)
-      , baselineStubs(other.baselineStubs)
+      , baselineFallbackStubs(other.baselineFallbackStubs)
+      , baselineOptimizedStubs(other.baselineOptimizedStubs)
       , ionData(other.ionData)
       , compartmentObject(other.compartmentObject)
       , crossCompartmentWrappersTable(other.crossCompartmentWrappersTable)
@@ -252,7 +254,8 @@ struct CompartmentStats
     size_t scriptData;
     size_t jaegerData;
     size_t baselineData;
-    size_t baselineStubs;
+    size_t baselineFallbackStubs;
+    size_t baselineOptimizedStubs;
     size_t ionData;
     size_t compartmentObject;
     size_t crossCompartmentWrappersTable;
@@ -294,7 +297,8 @@ struct CompartmentStats
         ADD(scriptData);
         ADD(jaegerData);
         ADD(baselineData);
-        ADD(baselineStubs);
+        ADD(baselineFallbackStubs);
+        ADD(baselineOptimizedStubs);
         ADD(ionData);
         ADD(compartmentObject);
         ADD(crossCompartmentWrappersTable);

@@ -634,6 +634,12 @@ JSCompartment::discardJitCode(FreeOp *fop, bool discardConstraints)
             script->resetUseCount();
         }
 
+#ifdef JS_ION
+        /* Free optimized baseline stubs. */
+        if (ionCompartment())
+            ionCompartment()->optimizedStubSpace()->free();
+#endif
+
         types.sweepCompilerOutputs(fop, discardConstraints);
     }
 
@@ -1016,7 +1022,7 @@ void
 JSCompartment::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *compartmentObject,
                                    TypeInferenceSizes *tiSizes, size_t *shapesCompartmentTables,
                                    size_t *crossCompartmentWrappersArg, size_t *regexpCompartment,
-                                   size_t *debuggeesSet)
+                                   size_t *debuggeesSet, size_t *baselineOptimizedStubs)
 {
     *compartmentObject = mallocSizeOf(this);
     sizeOfTypeInferenceData(tiSizes, mallocSizeOf);
@@ -1027,6 +1033,9 @@ JSCompartment::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *compa
     *crossCompartmentWrappersArg = crossCompartmentWrappers.sizeOfExcludingThis(mallocSizeOf);
     *regexpCompartment = regExps.sizeOfExcludingThis(mallocSizeOf);
     *debuggeesSet = debuggees.sizeOfExcludingThis(mallocSizeOf);
+    *baselineOptimizedStubs = ionCompartment()
+        ? ionCompartment()->optimizedStubSpace()->sizeOfExcludingThis(mallocSizeOf)
+        : 0;
 }
 
 void
