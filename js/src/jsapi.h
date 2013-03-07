@@ -2914,9 +2914,6 @@ typedef enum JSGCParamKey {
 
     /* Lower limit after which we limit the heap growth. */
     JSGC_ALLOCATION_THRESHOLD = 20,
-
-    /* Enable the generational GC. */
-    JSGC_ENABLE_GENERATIONAL = 21
 } JSGCParamKey;
 
 typedef enum JSGCMode {

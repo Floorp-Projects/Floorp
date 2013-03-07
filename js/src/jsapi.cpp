@@ -782,6 +782,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcInterFrameGC(0),
     gcSliceBudget(SliceBudget::Unlimited),
     gcIncrementalEnabled(true),
+    gcGenerationalEnabled(true),
     gcManipulatingDeadZones(false),
     gcObjectsMarkedInDeadZones(0),
     gcPoke(false),
@@ -2888,9 +2889,6 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32_t value)
         break;
       case JSGC_ALLOCATION_THRESHOLD:
         rt->gcAllocationThreshold = value * 1024 * 1024;
-        break;
-      case JSGC_ENABLE_GENERATIONAL:
-        rt->gcGenerationalEnabled = bool(value);
         break;
       default:
         JS_ASSERT(key == JSGC_MODE);
