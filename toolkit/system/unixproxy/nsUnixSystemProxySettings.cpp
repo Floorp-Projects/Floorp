@@ -56,13 +56,15 @@ nsresult
 nsUnixSystemProxySettings::Init()
 {
   mSchemeProxySettings.Init(5);
-  mGConf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
   mGSettings = do_GetService(NS_GSETTINGSSERVICE_CONTRACTID);
   if (mGSettings) {
     mGSettings->GetCollectionForSchema(NS_LITERAL_CSTRING("org.gnome.system.proxy"),
                                        getter_AddRefs(mProxySettings));
   }
-
+  if (!mProxySettings) {
+    mGConf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
+  }
+  
   return NS_OK;
 }
 
@@ -382,9 +384,9 @@ nsUnixSystemProxySettings::GetProxyFromGConf(const nsACString& aScheme,
 {
   bool masterProxySwitch = false;
   mGConf->GetBool(NS_LITERAL_CSTRING("/system/http_proxy/use_http_proxy"), &masterProxySwitch);
+  // if no proxy is set in GConf return NS_ERROR_FAILURE
   if (!(IsProxyMode("manual") || masterProxySwitch)) {
-    aResult.AppendLiteral("DIRECT");
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
   
   nsCOMPtr<nsIArray> ignoreList;
@@ -427,10 +429,7 @@ nsUnixSystemProxySettings::GetProxyFromGConf(const nsACString& aScheme,
     rv = NS_ERROR_FAILURE;
   }
   
-  if (NS_FAILED(rv)) {
-    aResult.AppendLiteral("DIRECT");
-  }
-  return NS_OK;
+  return rv;
 }
 
 nsresult
@@ -443,9 +442,9 @@ nsUnixSystemProxySettings::GetProxyFromGSettings(const nsACString& aScheme,
   nsresult rv = mProxySettings->GetString(NS_LITERAL_CSTRING("mode"), proxyMode);
   NS_ENSURE_SUCCESS(rv, rv);
   
+  // return NS_ERROR_FAILURE when no proxy is set
   if (!proxyMode.Equals("manual")) {
-    aResult.AppendLiteral("DIRECT");
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIArray> ignoreList;
