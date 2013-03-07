@@ -1252,7 +1252,7 @@ MobileMessageDatabaseService.prototype = {
       };
 
       const messageStore = stores[0];
-      const mostRecentStore = stores[1];
+      const threadStore = stores[1];
 
       let deleted = false;
 
@@ -1271,49 +1271,49 @@ MobileMessageDatabaseService.prototype = {
             deleted = true;
 
             // Then update unread count and most recent message.
-            let number = getNumberFromRecord(messageRecord);
+            let threadId = messageRecord.threadId;
 
-            mostRecentStore.get(number).onsuccess = function(event) {
+            threadStore.get(threadId).onsuccess = function(event) {
               // This must exist.
-              let mostRecentRecord = event.target.result;
+              let threadRecord = event.target.result;
 
               if (!messageRecord.read) {
-                mostRecentRecord.unreadCount--;
+                threadRecord.unreadCount--;
               }
 
-              if (mostRecentRecord.id == messageId) {
+              if (threadRecord.lastMessageId == messageId) {
                 // Check most recent sender/receiver.
-                let numberRange = IDBKeyRange.bound([number, 0], [number, ""]);
-                let numberRequest = messageStore.index("number")
-                                                .openCursor(numberRange, PREV);
-                numberRequest.onsuccess = function(event) {
+                let range = IDBKeyRange.bound([threadId, 0], [threadId, ""]);
+                let request = messageStore.index("threadId")
+                                          .openCursor(range, PREV);
+                request.onsuccess = function(event) {
                   let cursor = event.target.result;
                   if (!cursor) {
                     if (DEBUG) {
-                      debug("Deleting mru entry for number '" + number + "'");
+                      debug("Deleting mru entry for thread id " + threadId);
                     }
-                    mostRecentStore.delete(number);
+                    threadStore.delete(threadId);
                     return;
                   }
 
                   let nextMsg = cursor.value;
-                  mostRecentRecord.id = nextMsg.id;
-                  mostRecentRecord.timestamp = nextMsg.timestamp;
-                  mostRecentRecord.body = nextMsg.body;
+                  threadRecord.lastMessageId = nextMsg.id;
+                  threadRecord.lastTimestamp = nextMsg.timestamp;
+                  threadRecord.subject = nextMsg.body;
                   if (DEBUG) {
                     debug("Updating mru entry: " +
-                          JSON.stringify(mostRecentRecord));
+                          JSON.stringify(threadRecord));
                   }
-                  mostRecentStore.put(mostRecentRecord);
+                  threadStore.put(threadRecord);
                 };
               } else if (!messageRecord.read) {
                 // Shortcut, just update the unread count.
                 if (DEBUG) {
                   debug("Updating unread count for number '" + number + "': " +
-                        (mostRecentRecord.unreadCount + 1) + " -> " +
-                        mostRecentRecord.unreadCount);
+                        (threadRecord.unreadCount + 1) + " -> " +
+                        threadRecord.unreadCount);
                 }
-                mostRecentStore.put(mostRecentRecord);
+                threadStore.put(threadRecord);
               }
             };
           };
@@ -1321,7 +1321,7 @@ MobileMessageDatabaseService.prototype = {
           debug("Message id " + messageId + " does not exist");
         }
       };
-    }, [MESSAGE_STORE_NAME, MOST_RECENT_STORE_NAME]);
+    }, [MESSAGE_STORE_NAME, THREAD_STORE_NAME]);
   },
 
   createMessageList: function createMessageList(filter, reverse, aRequest) {
