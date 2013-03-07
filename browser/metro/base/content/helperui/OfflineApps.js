@@ -36,21 +36,21 @@ var OfflineApps = {
     } else {
       let buttons = [{
         label: strings.GetStringFromName("offlineApps.allow"),
-        accessKey: null,
+        accessKey: "",
         callback: function() {
           for (let i = 0; i < notification.documents.length; i++)
             OfflineApps.allowSite(notification.documents[i], aTarget);
         }
       },{
         label: strings.GetStringFromName("offlineApps.never"),
-        accessKey: null,
+        accessKey: "",
         callback: function() {
           for (let i = 0; i < notification.documents.length; i++)
             OfflineApps.disallowSite(notification.documents[i]);
         }
       },{
         label: strings.GetStringFromName("offlineApps.notNow"),
-        accessKey: null,
+        accessKey: "",
         callback: function() { /* noop */ }
       }];
 
