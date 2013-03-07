@@ -94,26 +94,28 @@ function run_test() {
 add_task(function test_constructor() {
   let reporter = yield getReporter("constructor");
 
-  do_check_eq(reporter.lastPingDate.getTime(), 0);
-  do_check_null(reporter.lastSubmitID);
-
-  reporter.lastSubmitID = "foo";
-  do_check_eq(reporter.lastSubmitID, "foo");
-  reporter.lastSubmitID = null;
-  do_check_null(reporter.lastSubmitID);
-
-  let failed = false;
   try {
-    new HealthReporter("foo.bar");
-  } catch (ex) {
-    failed = true;
-    do_check_true(ex.message.startsWith("Branch must end"));
-  } finally {
-    do_check_true(failed);
-    failed = false;
-  }
+    do_check_eq(reporter.lastPingDate.getTime(), 0);
+    do_check_null(reporter.lastSubmitID);
 
-  reporter._shutdown();
+    reporter.lastSubmitID = "foo";
+    do_check_eq(reporter.lastSubmitID, "foo");
+    reporter.lastSubmitID = null;
+    do_check_null(reporter.lastSubmitID);
+
+    let failed = false;
+    try {
+      new HealthReporter("foo.bar");
+    } catch (ex) {
+      failed = true;
+      do_check_true(ex.message.startsWith("Branch must end"));
+    } finally {
+      do_check_true(failed);
+      failed = false;
+    }
+  } finally {
+    reporter._shutdown();
+  }
 });
 
 add_task(function test_shutdown_normal() {
@@ -181,11 +183,13 @@ add_task(function test_register_providers_from_category_manager() {
                       false, true);
 
   let reporter = yield getReporter("category_manager");
-  do_check_eq(reporter._providerManager._providers.size, 0);
-  yield reporter.registerProvidersFromCategoryManager(category);
-  do_check_eq(reporter._providerManager._providers.size, 1);
-
-  reporter._shutdown();
+  try {
+    do_check_eq(reporter._providerManager._providers.size, 0);
+    yield reporter.registerProvidersFromCategoryManager(category);
+    do_check_eq(reporter._providerManager._providers.size, 1);
+  } finally {
+    reporter._shutdown();
+  }
 });
 
 // Pull-only providers are only initialized at collect time.
@@ -202,116 +206,126 @@ add_task(function test_pull_only_providers() {
                       false, true);
 
   let reporter = yield getReporter("constant_only_providers");
-  do_check_eq(reporter._providerManager._providers.size, 0);
-  yield reporter.registerProvidersFromCategoryManager(category);
-  do_check_eq(reporter._providerManager._providers.size, 1);
-  do_check_true(reporter._storage.hasProvider("DummyProvider"));
-  do_check_false(reporter._storage.hasProvider("DummyConstantProvider"));
-  do_check_neq(reporter.getProvider("DummyProvider"), null);
-  do_check_null(reporter.getProvider("DummyConstantProvider"));
+  try {
+    do_check_eq(reporter._providerManager._providers.size, 0);
+    yield reporter.registerProvidersFromCategoryManager(category);
+    do_check_eq(reporter._providerManager._providers.size, 1);
+    do_check_true(reporter._storage.hasProvider("DummyProvider"));
+    do_check_false(reporter._storage.hasProvider("DummyConstantProvider"));
+    do_check_neq(reporter.getProvider("DummyProvider"), null);
+    do_check_null(reporter.getProvider("DummyConstantProvider"));
 
-  yield reporter.ensurePullOnlyProvidersRegistered();
-  yield reporter.collectMeasurements();
-  yield reporter.ensurePullOnlyProvidersUnregistered();
+    yield reporter.ensurePullOnlyProvidersRegistered();
+    yield reporter.collectMeasurements();
+    yield reporter.ensurePullOnlyProvidersUnregistered();
 
-  do_check_eq(reporter._providerManager._providers.size, 1);
-  do_check_true(reporter._storage.hasProvider("DummyConstantProvider"));
+    do_check_eq(reporter._providerManager._providers.size, 1);
+    do_check_true(reporter._storage.hasProvider("DummyConstantProvider"));
 
-  let mID = reporter._storage.measurementID("DummyConstantProvider", "DummyMeasurement", 1);
-  let values = yield reporter._storage.getMeasurementValues(mID);
-  do_check_true(values.singular.size > 0);
-
-  reporter._shutdown();
+    let mID = reporter._storage.measurementID("DummyConstantProvider", "DummyMeasurement", 1);
+    let values = yield reporter._storage.getMeasurementValues(mID);
+    do_check_true(values.singular.size > 0);
+  } finally {
+    reporter._shutdown();
+  }
 });
 
 add_task(function test_collect_daily() {
   let reporter = yield getReporter("collect_daily");
 
-  let now = new Date();
-  let provider = new DummyProvider();
-  yield reporter.registerProvider(provider);
-  yield reporter.collectMeasurements();
+  try {
+    let now = new Date();
+    let provider = new DummyProvider();
+    yield reporter.registerProvider(provider);
+    yield reporter.collectMeasurements();
 
-  do_check_eq(provider.collectConstantCount, 1);
-  do_check_eq(provider.collectDailyCount, 1);
+    do_check_eq(provider.collectConstantCount, 1);
+    do_check_eq(provider.collectDailyCount, 1);
 
-  yield reporter.collectMeasurements();
-  do_check_eq(provider.collectConstantCount, 1);
-  do_check_eq(provider.collectDailyCount, 1);
+    yield reporter.collectMeasurements();
+    do_check_eq(provider.collectConstantCount, 1);
+    do_check_eq(provider.collectDailyCount, 1);
 
-  yield reporter.collectMeasurements();
-  do_check_eq(provider.collectDailyCount, 1); // Too soon.
+    yield reporter.collectMeasurements();
+    do_check_eq(provider.collectDailyCount, 1); // Too soon.
 
-  reporter._lastDailyDate = now.getTime() - MILLISECONDS_PER_DAY - 1;
-  yield reporter.collectMeasurements();
-  do_check_eq(provider.collectDailyCount, 2);
+    reporter._lastDailyDate = now.getTime() - MILLISECONDS_PER_DAY - 1;
+    yield reporter.collectMeasurements();
+    do_check_eq(provider.collectDailyCount, 2);
 
-  reporter._lastDailyDate = null;
-  yield reporter.collectMeasurements();
-  do_check_eq(provider.collectDailyCount, 3);
-
-  reporter._shutdown();
+    reporter._lastDailyDate = null;
+    yield reporter.collectMeasurements();
+    do_check_eq(provider.collectDailyCount, 3);
+  } finally {
+    reporter._shutdown();
+  }
 });
 
 add_task(function test_json_payload_simple() {
   let reporter = yield getReporter("json_payload_simple");
 
-  let now = new Date();
-  let payload = yield reporter.getJSONPayload();
-  do_check_eq(typeof payload, "string");
-  let original = JSON.parse(payload);
+  try {
+    let now = new Date();
+    let payload = yield reporter.getJSONPayload();
+    do_check_eq(typeof payload, "string");
+    let original = JSON.parse(payload);
 
-  do_check_eq(original.version, 1);
-  do_check_eq(original.thisPingDate, reporter._formatDate(now));
-  do_check_eq(Object.keys(original.data.last).length, 0);
-  do_check_eq(Object.keys(original.data.days).length, 0);
+    do_check_eq(original.version, 1);
+    do_check_eq(original.thisPingDate, reporter._formatDate(now));
+    do_check_eq(Object.keys(original.data.last).length, 0);
+    do_check_eq(Object.keys(original.data.days).length, 0);
 
-  reporter.lastPingDate = new Date(now.getTime() - 24 * 60 * 60 * 1000 - 10);
+    reporter.lastPingDate = new Date(now.getTime() - 24 * 60 * 60 * 1000 - 10);
 
-  original = JSON.parse(yield reporter.getJSONPayload());
-  do_check_eq(original.lastPingDate, reporter._formatDate(reporter.lastPingDate));
+    original = JSON.parse(yield reporter.getJSONPayload());
+    do_check_eq(original.lastPingDate, reporter._formatDate(reporter.lastPingDate));
 
-  // This could fail if we cross UTC day boundaries at the exact instance the
-  // test is executed. Let's tempt fate.
-  do_check_eq(original.thisPingDate, reporter._formatDate(now));
+    // This could fail if we cross UTC day boundaries at the exact instance the
+    // test is executed. Let's tempt fate.
+    do_check_eq(original.thisPingDate, reporter._formatDate(now));
 
-  payload = yield reporter.getJSONPayload(true);
-  do_check_eq(typeof payload, "object");
-
-  reporter._shutdown();
+    payload = yield reporter.getJSONPayload(true);
+    do_check_eq(typeof payload, "object");
+  } finally {
+    reporter._shutdown();
+  }
 });
 
 add_task(function test_json_payload_dummy_provider() {
   let reporter = yield getReporter("json_payload_dummy_provider");
 
-  yield reporter.registerProvider(new DummyProvider());
-  yield reporter.collectMeasurements();
-  let payload = yield reporter.getJSONPayload();
-  print(payload);
-  let o = JSON.parse(payload);
+  try {
+    yield reporter.registerProvider(new DummyProvider());
+    yield reporter.collectMeasurements();
+    let payload = yield reporter.getJSONPayload();
+    print(payload);
+    let o = JSON.parse(payload);
 
-  let name = "DummyProvider.DummyMeasurement";
-  do_check_eq(Object.keys(o.data.last).length, 1);
-  do_check_true(name in o.data.last);
-  do_check_eq(o.data.last[name]._v, 1);
-
-  reporter._shutdown();
+    let name = "DummyProvider.DummyMeasurement";
+    do_check_eq(Object.keys(o.data.last).length, 1);
+    do_check_true(name in o.data.last);
+    do_check_eq(o.data.last[name]._v, 1);
+  } finally {
+    reporter._shutdown();
+  }
 });
 
 add_task(function test_collect_and_obtain_json_payload() {
   let reporter = yield getReporter("collect_and_obtain_json_payload");
 
-  yield reporter.registerProvider(new DummyProvider());
-  let payload = yield reporter.collectAndObtainJSONPayload();
-  do_check_eq(typeof payload, "string");
+  try {
+    yield reporter.registerProvider(new DummyProvider());
+    let payload = yield reporter.collectAndObtainJSONPayload();
+    do_check_eq(typeof payload, "string");
 
-  let o = JSON.parse(payload);
-  do_check_true("DummyProvider.DummyMeasurement" in o.data.last);
+    let o = JSON.parse(payload);
+    do_check_true("DummyProvider.DummyMeasurement" in o.data.last);
 
-  payload = yield reporter.collectAndObtainJSONPayload(true);
-  do_check_eq(typeof payload, "object");
-
-  reporter._shutdown();
+    payload = yield reporter.collectAndObtainJSONPayload(true);
+    do_check_eq(typeof payload, "object");
+  } finally {
+    reporter._shutdown();
+  }
 });
 
 // Ensure constant-only providers make their way into the JSON payload.
@@ -328,225 +342,244 @@ add_task(function test_constant_only_providers_in_json_payload() {
                       false, true);
 
   let reporter = yield getReporter("constant_only_providers_in_json_payload");
-  yield reporter.registerProvidersFromCategoryManager(category);
+  try {
+    yield reporter.registerProvidersFromCategoryManager(category);
 
-  let payload = yield reporter.collectAndObtainJSONPayload();
-  let o = JSON.parse(payload);
-  do_check_true("DummyProvider.DummyMeasurement" in o.data.last);
-  do_check_true("DummyConstantProvider.DummyMeasurement" in o.data.last);
+    let payload = yield reporter.collectAndObtainJSONPayload();
+    let o = JSON.parse(payload);
+    do_check_true("DummyProvider.DummyMeasurement" in o.data.last);
+    do_check_true("DummyConstantProvider.DummyMeasurement" in o.data.last);
 
-  let providers = reporter._providerManager.providers;
-  do_check_eq(providers.length, 1);
+    let providers = reporter._providerManager.providers;
+    do_check_eq(providers.length, 1);
 
-  // Do it again for good measure.
-  payload = yield reporter.collectAndObtainJSONPayload();
-  o = JSON.parse(payload);
-  do_check_true("DummyProvider.DummyMeasurement" in o.data.last);
-  do_check_true("DummyConstantProvider.DummyMeasurement" in o.data.last);
+    // Do it again for good measure.
+    payload = yield reporter.collectAndObtainJSONPayload();
+    o = JSON.parse(payload);
+    do_check_true("DummyProvider.DummyMeasurement" in o.data.last);
+    do_check_true("DummyConstantProvider.DummyMeasurement" in o.data.last);
 
-  providers = reporter._providerManager.providers;
-  do_check_eq(providers.length, 1);
-
-  // Ensure throwing getJSONPayload is handled properly.
-  Object.defineProperty(reporter, "_getJSONPayload", {
-    value: function () {
-      throw new Error("Silly error.");
-    },
-  });
-
-  let deferred = Promise.defer();
-
-  reporter.collectAndObtainJSONPayload().then(do_throw, function onError() {
     providers = reporter._providerManager.providers;
     do_check_eq(providers.length, 1);
-    deferred.resolve();
-  });
 
-  yield deferred.promise;
+    // Ensure throwing getJSONPayload is handled properly.
+    Object.defineProperty(reporter, "_getJSONPayload", {
+      value: function () {
+        throw new Error("Silly error.");
+      },
+    });
 
-  reporter._shutdown();
+    let deferred = Promise.defer();
+
+    reporter.collectAndObtainJSONPayload().then(do_throw, function onError() {
+      providers = reporter._providerManager.providers;
+      do_check_eq(providers.length, 1);
+      deferred.resolve();
+    });
+
+    yield deferred.promise;
+  } finally {
+    reporter._shutdown();
+  }
 });
 
 add_task(function test_json_payload_multiple_days() {
   let reporter = yield getReporter("json_payload_multiple_days");
-  let provider = new DummyProvider();
-  yield reporter.registerProvider(provider);
 
-  let now = new Date();
-  let m = provider.getMeasurement("DummyMeasurement", 1);
-  for (let i = 0; i < 200; i++) {
-    let date = new Date(now.getTime() - i * MILLISECONDS_PER_DAY);
-    yield m.incrementDailyCounter("daily-counter", date);
-    yield m.addDailyDiscreteNumeric("daily-discrete-numeric", i, date);
-    yield m.addDailyDiscreteNumeric("daily-discrete-numeric", i + 100, date);
-    yield m.addDailyDiscreteText("daily-discrete-text", "" + i, date);
-    yield m.addDailyDiscreteText("daily-discrete-text", "" + (i + 50), date);
-    yield m.setDailyLastNumeric("daily-last-numeric", date.getTime(), date);
+  try {
+    let provider = new DummyProvider();
+    yield reporter.registerProvider(provider);
+
+    let now = new Date();
+    let m = provider.getMeasurement("DummyMeasurement", 1);
+    for (let i = 0; i < 200; i++) {
+      let date = new Date(now.getTime() - i * MILLISECONDS_PER_DAY);
+      yield m.incrementDailyCounter("daily-counter", date);
+      yield m.addDailyDiscreteNumeric("daily-discrete-numeric", i, date);
+      yield m.addDailyDiscreteNumeric("daily-discrete-numeric", i + 100, date);
+      yield m.addDailyDiscreteText("daily-discrete-text", "" + i, date);
+      yield m.addDailyDiscreteText("daily-discrete-text", "" + (i + 50), date);
+      yield m.setDailyLastNumeric("daily-last-numeric", date.getTime(), date);
+    }
+
+    let payload = yield reporter.getJSONPayload();
+    print(payload);
+    let o = JSON.parse(payload);
+
+    do_check_eq(Object.keys(o.data.days).length, 180);
+    let today = reporter._formatDate(now);
+    do_check_true(today in o.data.days);
+  } finally {
+    reporter._shutdown();
   }
-
-  let payload = yield reporter.getJSONPayload();
-  print(payload);
-  let o = JSON.parse(payload);
-
-  do_check_eq(Object.keys(o.data.days).length, 180);
-  let today = reporter._formatDate(now);
-  do_check_true(today in o.data.days);
-
-  reporter._shutdown();
 });
 
 add_task(function test_idle_daily() {
   let reporter = yield getReporter("idle_daily");
-  let provider = new DummyProvider();
-  yield reporter.registerProvider(provider);
+  try {
+    let provider = new DummyProvider();
+    yield reporter.registerProvider(provider);
 
-  let now = new Date();
-  let m = provider.getMeasurement("DummyMeasurement", 1);
-  for (let i = 0; i < 200; i++) {
-    let date = new Date(now.getTime() - i * MILLISECONDS_PER_DAY);
-    yield m.incrementDailyCounter("daily-counter", date);
+    let now = new Date();
+    let m = provider.getMeasurement("DummyMeasurement", 1);
+    for (let i = 0; i < 200; i++) {
+      let date = new Date(now.getTime() - i * MILLISECONDS_PER_DAY);
+      yield m.incrementDailyCounter("daily-counter", date);
+    }
+
+    let values = yield m.getValues();
+    do_check_eq(values.days.size, 200);
+
+    Services.obs.notifyObservers(null, "idle-daily", null);
+
+    values = yield m.getValues();
+    do_check_eq(values.days.size, 180);
+  } finally {
+    reporter._shutdown();
   }
-
-  let values = yield m.getValues();
-  do_check_eq(values.days.size, 200);
-
-  Services.obs.notifyObservers(null, "idle-daily", null);
-
-  let values = yield m.getValues();
-  do_check_eq(values.days.size, 180);
-
-  reporter._shutdown();
 });
 
 add_task(function test_data_submission_transport_failure() {
   let reporter = yield getReporter("data_submission_transport_failure");
-  reporter.serverURI = "http://localhost:8080/";
-  reporter.serverNamespace = "test00";
+  try {
+    reporter.serverURI = "http://localhost:8080/";
+    reporter.serverNamespace = "test00";
 
-  let deferred = Promise.defer();
-  let request = new DataSubmissionRequest(deferred, new Date(Date.now + 30000));
-  reporter.requestDataUpload(request);
+    let deferred = Promise.defer();
+    let request = new DataSubmissionRequest(deferred, new Date(Date.now + 30000));
+    reporter.requestDataUpload(request);
 
-  yield deferred.promise;
-  do_check_eq(request.state, request.SUBMISSION_FAILURE_SOFT);
-
-  reporter._shutdown();
+    yield deferred.promise;
+    do_check_eq(request.state, request.SUBMISSION_FAILURE_SOFT);
+  } finally {
+    reporter._shutdown();
+  }
 });
 
 add_task(function test_data_submission_success() {
   let [reporter, server] = yield getReporterAndServer("data_submission_success");
+  try {
+    yield reporter.registerProviderFromType(DummyProvider);
+    yield reporter.registerProviderFromType(DummyConstantProvider);
 
-  yield reporter.registerProviderFromType(DummyProvider);
-  yield reporter.registerProviderFromType(DummyConstantProvider);
+    do_check_eq(reporter.lastPingDate.getTime(), 0);
+    do_check_false(reporter.haveRemoteData());
 
-  do_check_eq(reporter.lastPingDate.getTime(), 0);
-  do_check_false(reporter.haveRemoteData());
+    let deferred = Promise.defer();
 
-  let deferred = Promise.defer();
+    let request = new DataSubmissionRequest(deferred, new Date());
+    reporter.requestDataUpload(request);
+    yield deferred.promise;
+    do_check_eq(request.state, request.SUBMISSION_SUCCESS);
+    do_check_true(reporter.lastPingDate.getTime() > 0);
+    do_check_true(reporter.haveRemoteData());
 
-  let request = new DataSubmissionRequest(deferred, new Date());
-  reporter.requestDataUpload(request);
-  yield deferred.promise;
-  do_check_eq(request.state, request.SUBMISSION_SUCCESS);
-  do_check_true(reporter.lastPingDate.getTime() > 0);
-  do_check_true(reporter.haveRemoteData());
+    // Ensure data from providers made it to payload.
+    let o = yield reporter.getLastPayload();
+    do_check_true("DummyProvider.DummyMeasurement" in o.data.last);
+    do_check_true("DummyConstantProvider.DummyMeasurement" in o.data.last);
 
-  // Ensure data from providers made it to payload.
-  let o = yield reporter.getLastPayload();
-  do_check_true("DummyProvider.DummyMeasurement" in o.data.last);
-  do_check_true("DummyConstantProvider.DummyMeasurement" in o.data.last);
-
-  reporter._shutdown();
-  yield shutdownServer(server);
+    reporter._shutdown();
+  } finally {
+    yield shutdownServer(server);
+  }
 });
 
 add_task(function test_recurring_daily_pings() {
   let [reporter, server] = yield getReporterAndServer("recurring_daily_pings");
-  reporter.registerProvider(new DummyProvider());
+  try {
+    reporter.registerProvider(new DummyProvider());
 
-  let policy = reporter._policy;
+    let policy = reporter._policy;
 
-  defineNow(policy, policy._futureDate(-24 * 60 * 68 * 1000));
-  policy.recordUserAcceptance();
-  defineNow(policy, policy.nextDataSubmissionDate);
-  let promise = policy.checkStateAndTrigger();
-  do_check_neq(promise, null);
-  yield promise;
+    defineNow(policy, policy._futureDate(-24 * 60 * 68 * 1000));
+    policy.recordUserAcceptance();
+    defineNow(policy, policy.nextDataSubmissionDate);
+    let promise = policy.checkStateAndTrigger();
+    do_check_neq(promise, null);
+    yield promise;
 
-  let lastID = reporter.lastSubmitID;
-  do_check_neq(lastID, null);
-  do_check_true(server.hasDocument(reporter.serverNamespace, lastID));
+    let lastID = reporter.lastSubmitID;
+    do_check_neq(lastID, null);
+    do_check_true(server.hasDocument(reporter.serverNamespace, lastID));
 
-  // Skip forward to next scheduled submission time.
-  defineNow(policy, policy.nextDataSubmissionDate);
-  promise = policy.checkStateAndTrigger();
-  do_check_neq(promise, null);
-  yield promise;
-  do_check_neq(reporter.lastSubmitID, lastID);
-  do_check_true(server.hasDocument(reporter.serverNamespace, reporter.lastSubmitID));
-  do_check_false(server.hasDocument(reporter.serverNamespace, lastID));
-
-  reporter._shutdown();
-  yield shutdownServer(server);
+    // Skip forward to next scheduled submission time.
+    defineNow(policy, policy.nextDataSubmissionDate);
+    promise = policy.checkStateAndTrigger();
+    do_check_neq(promise, null);
+    yield promise;
+    do_check_neq(reporter.lastSubmitID, lastID);
+    do_check_true(server.hasDocument(reporter.serverNamespace, reporter.lastSubmitID));
+    do_check_false(server.hasDocument(reporter.serverNamespace, lastID));
+  } finally {
+    reporter._shutdown();
+    yield shutdownServer(server);
+  }
 });
 
 add_task(function test_request_remote_data_deletion() {
   let [reporter, server] = yield getReporterAndServer("request_remote_data_deletion");
 
-  let policy = reporter._policy;
-  defineNow(policy, policy._futureDate(-24 * 60 * 60 * 1000));
-  policy.recordUserAcceptance();
-  defineNow(policy, policy.nextDataSubmissionDate);
-  yield policy.checkStateAndTrigger();
-  let id = reporter.lastSubmitID;
-  do_check_neq(id, null);
-  do_check_true(server.hasDocument(reporter.serverNamespace, id));
+  try {
+    let policy = reporter._policy;
+    defineNow(policy, policy._futureDate(-24 * 60 * 60 * 1000));
+    policy.recordUserAcceptance();
+    defineNow(policy, policy.nextDataSubmissionDate);
+    yield policy.checkStateAndTrigger();
+    let id = reporter.lastSubmitID;
+    do_check_neq(id, null);
+    do_check_true(server.hasDocument(reporter.serverNamespace, id));
 
-  defineNow(policy, policy._futureDate(10 * 1000));
+    defineNow(policy, policy._futureDate(10 * 1000));
 
-  let promise = reporter.requestDeleteRemoteData();
-  do_check_neq(promise, null);
-  yield promise;
-  do_check_null(reporter.lastSubmitID);
-  do_check_false(reporter.haveRemoteData());
-  do_check_false(server.hasDocument(reporter.serverNamespace, id));
-
-  reporter._shutdown();
-  yield shutdownServer(server);
+    let promise = reporter.requestDeleteRemoteData();
+    do_check_neq(promise, null);
+    yield promise;
+    do_check_null(reporter.lastSubmitID);
+    do_check_false(reporter.haveRemoteData());
+    do_check_false(server.hasDocument(reporter.serverNamespace, id));
+  } finally {
+    reporter._shutdown();
+    yield shutdownServer(server);
+  }
 });
 
 add_task(function test_policy_accept_reject() {
   let [reporter, server] = yield getReporterAndServer("policy_accept_reject");
 
-  let policy = reporter._policy;
+  try {
+    let policy = reporter._policy;
 
-  do_check_false(policy.dataSubmissionPolicyAccepted);
-  do_check_false(reporter.willUploadData);
+    do_check_false(policy.dataSubmissionPolicyAccepted);
+    do_check_false(reporter.willUploadData);
 
-  policy.recordUserAcceptance();
-  do_check_true(policy.dataSubmissionPolicyAccepted);
-  do_check_true(reporter.willUploadData);
+    policy.recordUserAcceptance();
+    do_check_true(policy.dataSubmissionPolicyAccepted);
+    do_check_true(reporter.willUploadData);
 
-  policy.recordUserRejection();
-  do_check_false(policy.dataSubmissionPolicyAccepted);
-  do_check_false(reporter.willUploadData);
-
-  reporter._shutdown();
-  yield shutdownServer(server);
+    policy.recordUserRejection();
+    do_check_false(policy.dataSubmissionPolicyAccepted);
+    do_check_false(reporter.willUploadData);
+  } finally {
+    reporter._shutdown();
+    yield shutdownServer(server);
+  }
 });
 
 add_task(function test_upload_save_payload() {
   let [reporter, server] = yield getReporterAndServer("upload_save_payload");
 
-  let deferred = Promise.defer();
-  let request = new DataSubmissionRequest(deferred, new Date(), false);
+  try {
+    let deferred = Promise.defer();
+    let request = new DataSubmissionRequest(deferred, new Date(), false);
 
-  yield reporter._uploadData(request);
-  let json = yield reporter.getLastPayload();
-  do_check_true("thisPingDate" in json);
-
-  reporter._shutdown();
-  yield shutdownServer(server);
+    yield reporter._uploadData(request);
+    let json = yield reporter.getLastPayload();
+    do_check_true("thisPingDate" in json);
+  } finally {
+    reporter._shutdown();
+    yield shutdownServer(server);
+  }
 });
 
 add_task(function test_error_message_scrubbing() {
