@@ -5,6 +5,3 @@
 
 DIRS += ['base', 'components', 'browser']
 TEST_DIRS += ['test']
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android' and CONFIG['MOZ_BUILD_APP'] in 'mobile/xul':
-    DIRS += ['android']
