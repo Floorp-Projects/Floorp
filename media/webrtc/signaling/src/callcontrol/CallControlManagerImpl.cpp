@@ -38,7 +38,7 @@ namespace CSF
 CallControlManagerImpl::CallControlManagerImpl()
 : m_lock("CallControlManagerImpl"),
   multiClusterMode(false),
-  sipccLoggingMask(0),
+  sipccLoggingMask(0xFFFFFFFF),
   authenticationStatus(AuthenticationStatusEnum::eNotAuthenticated),
   connectionState(ConnectionStatusEnum::eIdle)
 {
