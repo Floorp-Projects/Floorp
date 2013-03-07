@@ -1611,7 +1611,7 @@ let RIL = {
         // Notify error in establishing the call with an invalid number.
         options.callIndex = -1;
         options.rilMessageType = "callError";
-        options.error =
+        options.errorMsg =
           RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[CALL_FAIL_UNOBTAINABLE_NUMBER];
         this.sendDOMMessage(options);
         return;
@@ -3227,9 +3227,9 @@ let RIL = {
   _sendDataCallError: function _sendDataCallError(message, errorCode) {
     message.rilMessageType = "datacallerror";
     if (errorCode == ERROR_GENERIC_FAILURE) {
-      message.error = RIL_ERROR_TO_GECKO_ERROR[errorCode];
+      message.errorMsg = RIL_ERROR_TO_GECKO_ERROR[errorCode];
     } else {
-      message.error = RIL_DATACALL_FAILCAUSE_TO_GECKO_DATACALL_ERROR[errorCode];
+      message.errorMsg = RIL_DATACALL_FAILCAUSE_TO_GECKO_DATACALL_ERROR[errorCode];
     }
     this.sendDOMMessage(message);
   },
@@ -3832,7 +3832,7 @@ let RIL = {
           this.sendDOMMessage({
             rilMessageType: "sms-send-failed",
             envelopeId: options.envelopeId,
-            error: options.rilRequestError,
+            errorMsg: options.rilRequestError,
           });
           break;
       }
@@ -4444,7 +4444,7 @@ RIL[REQUEST_LAST_CALL_FAIL_CAUSE] = function REQUEST_LAST_CALL_FAIL_CAUSE(length
       break;
     default:
       options.rilMessageType = "callError";
-      options.error = RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[failCause];
+      options.errorMsg = RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[failCause];
       this.sendDOMMessage(options);
       break;
   }
@@ -4730,7 +4730,7 @@ RIL[REQUEST_SET_FACILITY_LOCK] = function REQUEST_SET_FACILITY_LOCK(length, opti
 RIL[REQUEST_CHANGE_BARRING_PASSWORD] = null;
 RIL[REQUEST_SIM_OPEN_CHANNEL] = function REQUEST_SIM_OPEN_CHANNEL(length, options) {
   if (options.rilRequestError) {
-    options.error = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
     this.sendDOMMessage(options);
     return;
   }
@@ -4796,7 +4796,7 @@ RIL[REQUEST_QUERY_NETWORK_SELECTION_MODE] = function REQUEST_QUERY_NETWORK_SELEC
 };
 RIL[REQUEST_SET_NETWORK_SELECTION_AUTOMATIC] = function REQUEST_SET_NETWORK_SELECTION_AUTOMATIC(length, options) {
   if (options.rilRequestError) {
-    options.error = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
     this.sendDOMMessage(options);
     return;
   }
@@ -4805,7 +4805,7 @@ RIL[REQUEST_SET_NETWORK_SELECTION_AUTOMATIC] = function REQUEST_SET_NETWORK_SELE
 };
 RIL[REQUEST_SET_NETWORK_SELECTION_MANUAL] = function REQUEST_SET_NETWORK_SELECTION_MANUAL(length, options) {
   if (options.rilRequestError) {
-    options.error = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
     this.sendDOMMessage(options);
     return;
   }
@@ -4814,7 +4814,7 @@ RIL[REQUEST_SET_NETWORK_SELECTION_MANUAL] = function REQUEST_SET_NETWORK_SELECTI
 };
 RIL[REQUEST_QUERY_AVAILABLE_NETWORKS] = function REQUEST_QUERY_AVAILABLE_NETWORKS(length, options) {
   if (options.rilRequestError) {
-    options.error = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
     this.sendDOMMessage(options);
     return;
   }
