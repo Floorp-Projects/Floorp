@@ -456,7 +456,7 @@ richgriditem .richgrid-item-content {
   padding: 10px 8px 6px 8px;
 }
 
-richgriditem:not([customColorPresent]) .richgrid-item-content {
+.richgrid-item-content {
   background: #fff;
 }
 
@@ -475,20 +475,47 @@ richgriditem .richgrid-icon-box {
   opacity: 1.0;
 }
 
-richgriditem[customColorPresent="true"] description {
+
+richgriditem[customColorPresent="true"] {
   color: #f1f1f1;
 }
+richgriditem[customImagePresent] {
+  color: #1a1a1a;
+}
+
 
 richgriditem[customColorPresent="true"] .richgrid-icon-box {
   opacity: 0.8;
   background-color: #fff;
 }
 
-richgriditem description {
+.richgrid-item-content[customImagePresent] {
+  height: 120px;
+  width: 200px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  -moz-box-pack: end;
+  padding: 0px;
+}
+
+/* hide icon if there is an image background */
+.richgrid-icon-container[customImagePresent] {
+  visibility: collapse;
+}
+
+.richgrid-item-desc {
   width: @tile_width@;
   font-size: @metro_font_normal@;
   margin-left: 0px !important;
   padding-left: 0px !important;
+}
+
+.richgrid-item-content[customImagePresent] > .richgrid-item-desc {
+  background: hsla(0,2%,98%,.95);
+  /*margin-bottom: 0px;
+  margin-right: 0px;*/
+  margin: 0px;
 }
 
 richgriditem image {
