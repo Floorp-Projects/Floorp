@@ -377,7 +377,8 @@ class ICEntry
                                 \
     _(InstanceOf_Fallback)      \
                                 \
-    _(TypeOf_Fallback)
+    _(TypeOf_Fallback)          \
+    _(TypeOf_Typed)
 
 #define FORWARD_DECLARE_STUBS(kindName) class IC##kindName;
     IC_STUB_KIND_LIST(FORWARD_DECLARE_STUBS)
@@ -4686,6 +4687,51 @@ class ICTypeOf_Fallback : public ICFallbackStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICTypeOf_Fallback::New(space, getStubCode());
+        }
+    };
+};
+
+class ICTypeOf_Typed : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    ICTypeOf_Typed(IonCode *stubCode, JSType type)
+      : ICFallbackStub(ICStub::TypeOf_Typed, stubCode)
+    {
+        extra_ = uint16_t(type);
+        JS_ASSERT(JSType(extra_) == type);
+    }
+
+  public:
+    static inline ICTypeOf_Typed *New(ICStubSpace *space, IonCode *code, JSType type) {
+        if (!code)
+            return NULL;
+        return space->allocate<ICTypeOf_Typed>(code, type);
+    }
+
+    JSType type() const {
+        return JSType(extra_);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        JSType type_;
+        RootedString typeString_;
+        bool generateStubCode(MacroAssembler &masm);
+
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(type_) << 16);
+        }
+
+      public:
+        Compiler(JSContext *cx, JSType type, HandleString string)
+          : ICStubCompiler(cx, ICStub::TypeOf_Typed),
+            type_(type),
+            typeString_(cx, string)
+        { }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICTypeOf_Typed::New(space, getStubCode(), type_);
         }
     };
 };
