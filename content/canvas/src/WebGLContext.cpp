@@ -381,8 +381,23 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
     if (gl) {
         MakeContextCurrent();
 
-        gl->ResizeOffscreen(gfxIntSize(width, height)); // Doesn't matter if it succeeds (soft-fail)
+        bool success = false;
+        while (width && height) {
+            gfxIntSize size(width, height);
+            if (gl->ResizeOffscreen(size)) {
+                success = true;
+                break;
+            }
+
+            width /= 2;
+            height /= 2;
+        }
         // It's unlikely that we'll get a proper-sized context if we recreate if we didn't on resize
+
+        if (!success) {
+            ForceLoseContext();
+            return NS_OK;
+        }
 
         // everything's good, we're done here
         mWidth = gl->OffscreenSize().width;
@@ -505,12 +520,19 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
     }
 #endif
 
-    gfxIntSize size(width, height);
-
 #ifdef XP_WIN
     // if we want EGL, try it now
     if (!gl && (preferEGL || useANGLE) && !preferOpenGL) {
-        gl = gl::GLContextProviderEGL::CreateOffscreen(size, caps);
+        while (width && height) {
+            gfxIntSize size(width, height);
+            gl = gl::GLContextProviderEGL::CreateOffscreen(size, caps);
+            if (gl)
+                break;
+
+            width /= 2;
+            height /= 2;
+        }
+
         if (!gl || !InitAndValidateGL()) {
             GenerateWarning("Error during ANGLE OpenGL ES initialization");
             return NS_ERROR_FAILURE;
@@ -523,7 +545,17 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
         GLContext::ContextFlags flag = useMesaLlvmPipe 
                                        ? GLContext::ContextFlagsMesaLLVMPipe
                                        : GLContext::ContextFlagsNone;
-        gl = gl::GLContextProvider::CreateOffscreen(size, caps, flag);
+
+        while (width && height) {
+            gfxIntSize size(width, height);
+            gl = gl::GLContextProvider::CreateOffscreen(size, caps, flag);
+            if (gl)
+                break;
+
+            width /= 2;
+            height /= 2;
+        }
+
         if (gl && !InitAndValidateGL()) {
             GenerateWarning("Error during %s initialization", 
                             useMesaLlvmPipe ? "Mesa LLVMpipe" : "OpenGL");
