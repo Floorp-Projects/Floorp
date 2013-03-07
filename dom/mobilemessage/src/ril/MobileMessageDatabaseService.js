@@ -56,11 +56,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gIDBManager",
 
 const GLOBAL_SCOPE = this;
 
-function getNumberFromRecord(aMessageRecord) {
-  return aMessageRecord.delivery == DELIVERY_RECEIVED ? aMessageRecord.sender
-                                                      : aMessageRecord.receiver;
-}
-
 /**
  * MobileMessageDatabaseService
  */
@@ -897,7 +892,78 @@ MobileMessageDatabaseService.prototype = {
     }).bind(this);
   },
 
-  saveRecord: function saveRecord(aMessageRecord, aCallback) {
+  findParticipantIdsByAddresses: function findParticipantIdsByAddresses(
+      aParticipantStore, aAddresses, aCreate, aSkipNonexistent, aCallback) {
+    if (DEBUG) {
+      debug("findParticipantIdsByAddresses("
+            + JSON.stringify(aAddresses) + ", "
+            + aCreate + ", " + aSkipNonexistent + ")");
+    }
+
+    if (!aAddresses || !aAddresses.length) {
+      if (DEBUG) debug("findParticipantIdsByAddresses: returning null");
+      aCallback(null);
+      return;
+    }
+
+    let self = this;
+    (function findParticipantId(index, result) {
+      if (index >= aAddresses.length) {
+        // Sort numerically.
+        result.sort(function (a, b) {
+          return a - b;
+        });
+        if (DEBUG) debug("findParticipantIdsByAddresses: returning " + result);
+        aCallback(result);
+        return;
+      }
+
+      self.findParticipantRecordByAddress(aParticipantStore,
+                                          aAddresses[index++], aCreate,
+                                          function (participantRecord) {
+        if (!participantRecord) {
+          if (!aSkipNonexistent) {
+            if (DEBUG) debug("findParticipantIdsByAddresses: returning null");
+            aCallback(null);
+            return;
+          }
+        } else if (result.indexOf(participantRecord.id) < 0) {
+          result.push(participantRecord.id);
+        }
+        findParticipantId(index, result);
+      });
+    }) (0, []);
+  },
+
+  findThreadRecordByParticipants: function findThreadRecordByParticipants(
+      aThreadStore, aParticipantStore, aAddresses,
+      aCreateParticipants, aCallback) {
+    if (DEBUG) {
+      debug("findThreadRecordByParticipants(" + JSON.stringify(aAddresses)
+            + ", " + aCreateParticipants + ")");
+    }
+    this.findParticipantIdsByAddresses(aParticipantStore, aAddresses,
+                                       aCreateParticipants, false,
+                                       function (participantIds) {
+      if (!participantIds) {
+        if (DEBUG) debug("findThreadRecordByParticipants: returning null");
+        aCallback(null, null);
+        return;
+      }
+      // Find record from thread store.
+      let request = aThreadStore.index("participantIds").get(participantIds);
+      request.onsuccess = function (event) {
+        let threadRecord = event.target.result;
+        if (DEBUG) {
+          debug("findThreadRecordByParticipants: return "
+                + JSON.stringify(threadRecord));
+        }
+        aCallback(threadRecord, participantIds);
+      };
+    });
+  },
+
+  saveRecord: function saveRecord(aMessageRecord, aAddresses, aCallback) {
     this.lastMessageId += 1;
     aMessageRecord.id = this.lastMessageId;
     if (DEBUG) debug("Going to store " + JSON.stringify(aMessageRecord));
@@ -925,43 +991,66 @@ MobileMessageDatabaseService.prototype = {
       };
 
       let messageStore = stores[0];
-      let mostRecentStore = stores[1];
+      let participantStore = stores[1];
+      let threadStore = stores[2];
 
-      // First add to message store.
-      messageStore.put(aMessageRecord);
+      self.findThreadRecordByParticipants(threadStore, participantStore,
+                                          aAddresses, true,
+                                          function (threadRecord,
+                                                    participantIds) {
+        if (!participantIds) {
+          notifyResult(Cr.NS_ERROR_FAILURE);
+          return;
+        }
 
-      // Next update most recent store.
-      let number = getNumberFromRecord(aMessageRecord);
-      mostRecentStore.get(number).onsuccess = function onsuccess(event) {
-        let mostRecentRecord = event.target.result;
-        if (mostRecentRecord) {
+        let insertMessageRecord = function (threadId) {
+          // Setup threadId & threadIdIndex.
+          aMessageRecord.threadId = threadId;
+          aMessageRecord.threadIdIndex = [threadId, timestamp];
+          // Setup participantIdsIndex.
+          aMessageRecord.participantIdsIndex = [];
+          for each (let id in participantIds) {
+            aMessageRecord.participantIdsIndex.push([id, timestamp]);
+          }
+          // Really add to message store.
+          messageStore.put(aMessageRecord);
+        };
+
+        let timestamp = aMessageRecord.timestamp;
+        if (threadRecord) {
           let needsUpdate = false;
 
-          if (mostRecentRecord.timestamp <= aMessageRecord.timestamp) {
-            mostRecentRecord.timestamp = aMessageRecord.timestamp;
-            mostRecentRecord.body = aMessageRecord.body;
+          if (threadRecord.lastTimestamp <= timestamp) {
+            threadRecord.lastTimestamp = timestamp;
+            threadRecord.subject = aMessageRecord.body;
             needsUpdate = true;
           }
 
           if (!aMessageRecord.read) {
-            mostRecentRecord.unreadCount++;
+            threadRecord.unreadCount++;
             needsUpdate = true;
           }
 
           if (needsUpdate) {
-            mostRecentStore.put(mostRecentRecord);
+            threadStore.put(threadRecord);
           }
-        } else {
-          mostRecentStore.add({
-            senderOrReceiver: number,
-            timestamp: aMessageRecord.timestamp,
-            body: aMessageRecord.body,
-            id: aMessageRecord.id,
-            unreadCount: aMessageRecord.read ? 0 : 1
-          });
+
+	  insertMessageRecord(threadRecord.id);
+          return;
         }
-      };
-    }, [MESSAGE_STORE_NAME, MOST_RECENT_STORE_NAME]);
+
+        threadStore.add({participantIds: participantIds,
+                         participantAddresses: aAddresses,
+                         lastMessageId: aMessageRecord.id,
+                         lastTimestamp: timestamp,
+                         subject: aMessageRecord.body,
+                         unreadCount: aMessageRecord.read ? 0 : 1})
+                   .onsuccess = function (event) {
+          let threadId = event.target.result;
+          insertMessageRecord(threadId);
+        };
+      });
+    }, [MESSAGE_STORE_NAME, PARTICIPANT_STORE_NAME, THREAD_STORE_NAME]);
     // We return the key that we expect to store in the db
     return aMessageRecord.id;
   },
@@ -993,24 +1082,18 @@ MobileMessageDatabaseService.prototype = {
       return;
     }
 
-    let receiver = this.getRilIccInfoMsisdn();
-    receiver = this.makePhoneNumberInternational(receiver);
-
-    let sender = aMessage.sender =
-      this.makePhoneNumberInternational(aMessage.sender);
-
+    aMessage.receiver = this.getRilIccInfoMsisdn();
     let timestamp = aMessage.timestamp;
 
     // Adding needed indexes and extra attributes for internal use.
+    // threadIdIndex & participantIdsIndex are filled in saveRecord().
     aMessage.deliveryIndex = [DELIVERY_RECEIVED, timestamp];
-    aMessage.numberIndex = [[sender, timestamp], [receiver, timestamp]];
     aMessage.readIndex = [FILTER_READ_UNREAD, timestamp];
     aMessage.delivery = DELIVERY_RECEIVED;
     aMessage.deliveryStatus = DELIVERY_STATUS_SUCCESS;
-    aMessage.receiver = receiver;
     aMessage.read = FILTER_READ_UNREAD;
 
-    return this.saveRecord(aMessage, aCallback);
+    return this.saveRecord(aMessage, [aMessage.sender], aCallback);
   },
 
   saveSendingMessage: function saveSendingMessage(aMessage, aCallback) {
@@ -1024,27 +1107,18 @@ MobileMessageDatabaseService.prototype = {
       return;
     }
 
-    let sender = this.getRilIccInfoMsisdn();
-    let receiver = aMessage.receiver;
-
-    let rilContext = this.mRIL.rilContext;
-    if (rilContext.voice.network.mcc === rilContext.iccInfo.mcc) {
-      receiver = aMessage.receiver = this.makePhoneNumberInternational(receiver);
-      sender = this.makePhoneNumberInternational(sender);
-    }
-
+    aMessage.sender = this.getRilIccInfoMsisdn();
     let timestamp = aMessage.timestamp;
 
     // Adding needed indexes and extra attributes for internal use.
+    // threadIdIndex & participantIdsIndex are filled in saveRecord().
     aMessage.deliveryIndex = [DELIVERY_SENDING, timestamp];
-    aMessage.numberIndex = [[sender, timestamp], [receiver, timestamp]];
     aMessage.readIndex = [FILTER_READ_READ, timestamp];
     aMessage.delivery = DELIVERY_SENDING;
-    aMessage.sender = sender;
     aMessage.messageClass = MESSAGE_CLASS_NORMAL;
     aMessage.read = FILTER_READ_READ;
 
-    return this.saveRecord(aMessage, aCallback);
+    return this.saveRecord(aMessage, [aMessage.receiver], aCallback);
   },
 
   setMessageDelivery: function setMessageDelivery(
