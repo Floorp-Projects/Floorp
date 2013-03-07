@@ -1,6 +1,6 @@
 # Test printing Handles.
 
-assert_subprinter_registered('SpiderMonkey', 'instantiations-of-JS::Rooted')
+assert_subprinter_registered('SpiderMonkey', 'instantiations-of-js::Rooted')
 assert_subprinter_registered('SpiderMonkey', 'instantiations-of-JS::Handle')
 assert_subprinter_registered('SpiderMonkey', 'instantiations-of-JS::MutableHandle')
 assert_subprinter_registered('SpiderMonkey', 'instantiations-of-js::EncapsulatedPtr')

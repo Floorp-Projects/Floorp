@@ -21,7 +21,7 @@ BEGIN_TEST(testGCOutOfMemory)
 {
     JS_SetErrorReporter(cx, ErrorCounter);
 
-    JS::RootedValue root(cx);
+    js::RootedValue root(cx);
 
     static const char source[] =
         "var max = 0; (function() {"

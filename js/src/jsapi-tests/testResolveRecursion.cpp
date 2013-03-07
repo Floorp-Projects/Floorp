@@ -42,7 +42,7 @@ BEGIN_TEST(testResolveRecursion)
     resolveExitCount = 0;
 
     /* Start the essence of the test via invoking the first resolve hook. */
-    JS::RootedValue v(cx);
+    js::RootedValue v(cx);
     EVAL("obj1.x", v.address());
     CHECK_SAME(v, JSVAL_FALSE);
     CHECK_EQUAL(resolveEntryCount, 4);
@@ -79,7 +79,7 @@ doResolve(JSHandleObject obj, JSHandleId id, unsigned flags, JSMutableHandleObje
 
     JSFlatString *str = JS_FlattenString(cx, JSID_TO_STRING(id));
     CHECK(str);
-    JS::RootedValue v(cx);
+    js::RootedValue v(cx);
     if (JS_FlatStringEqualsAscii(str, "x")) {
         if (obj == obj1) {
             /* First resolve hook invocation. */

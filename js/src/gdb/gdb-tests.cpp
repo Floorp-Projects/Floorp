@@ -68,7 +68,7 @@ main (int argc, const char **argv)
     JSAutoRequest ar(cx);
 
     /* Create the global object. */
-    RootedObject global(cx, checkPtr(JS_NewGlobalObject(cx, &global_class, NULL)));
+    js::RootedObject global(cx, checkPtr(JS_NewGlobalObject(cx, &global_class, NULL)));
     JS_SetGlobalObject(cx, global);
 
     JSAutoCompartment ac(cx, global);

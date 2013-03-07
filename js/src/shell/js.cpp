@@ -4576,7 +4576,7 @@ static JSClass *GetDomClass() {
 static JSBool
 dom_genericGetter(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-    RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+    js::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
     if (!obj)
         return false;
 
@@ -4596,7 +4596,7 @@ dom_genericGetter(JSContext *cx, unsigned argc, JS::Value *vp)
 static JSBool
 dom_genericSetter(JSContext* cx, unsigned argc, JS::Value* vp)
 {
-    RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+    js::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
     if (!obj)
         return false;
 
@@ -4622,7 +4622,7 @@ dom_genericSetter(JSContext* cx, unsigned argc, JS::Value* vp)
 static JSBool
 dom_genericMethod(JSContext* cx, unsigned argc, JS::Value *vp)
 {
-    RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+    js::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
     if (!obj)
         return false;
 

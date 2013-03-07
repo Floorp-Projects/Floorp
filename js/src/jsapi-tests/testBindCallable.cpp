@@ -6,20 +6,20 @@
 
 BEGIN_TEST(test_BindCallable)
 {
-  JS::RootedValue v(cx);
+  js::RootedValue v(cx);
   EVAL("({ somename : 1717 })", v.address());
   CHECK(v.isObject());
 
-  JS::RootedValue func(cx);
+  js::RootedValue func(cx);
   EVAL("(function() { return this.somename; })", func.address());
   CHECK(func.isObject());
 
-  JS::RootedObject funcObj(cx, JSVAL_TO_OBJECT(func));
-  JS::RootedObject vObj(cx, JSVAL_TO_OBJECT(v));
+  js::RootedObject funcObj(cx, JSVAL_TO_OBJECT(func));
+  js::RootedObject vObj(cx, JSVAL_TO_OBJECT(v));
   JSObject* newCallable = JS_BindCallable(cx, funcObj, vObj);
   CHECK(newCallable);
 
-  JS::RootedValue retval(cx);
+  js::RootedValue retval(cx);
   bool called = JS_CallFunctionValue(cx, NULL, OBJECT_TO_JSVAL(newCallable), 0, NULL, retval.address());
   CHECK(called);
 
