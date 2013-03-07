@@ -99,7 +99,7 @@ let DebuggerController = {
   /**
    * Prepares the hostname and port number for a remote debugger connection
    * and handles connection retries and timeouts.
-   *
+   * XXX: remove all this (bug 823577)
    * @return boolean
    *         True if connection should proceed normally, false otherwise.
    */
@@ -165,15 +165,11 @@ let DebuggerController = {
       window.dispatchEvent("Debugger:Connected");
     }
 
-    let client;
-
-    // Remote debugging gets the debuggee from a RemoteTarget object.
-    if (this._target && this._target.isRemote) {
-      window._isRemoteDebugger = true;
-
-      client = this.client = this._target.client;
+    if (!window._isChromeDebugger) {
+      let client = this.client = this._target.client;
       this._target.on("close", this._onTabDetached);
       this._target.on("navigate", this._onTabNavigated);
+      this._target.on("will-navigate", this._onTabNavigated);
 
       if (this._target.chrome) {
         let dbg = this._target.form.chromeDebugger;
@@ -184,25 +180,16 @@ let DebuggerController = {
       return;
     }
 
-    // Content or chrome debugging can connect directly to the debuggee.
-    // TODO: convert this to use a TabTarget.
-    let transport = window._isChromeDebugger
-      ? debuggerSocketConnect(Prefs.remoteHost, Prefs.remotePort)
-      : DebuggerServer.connectPipe();
+    // Chrome debugging needs to make the connection to the debuggee.
+    let transport = debuggerSocketConnect(Prefs.remoteHost, Prefs.remotePort);
 
-    client = this.client = new DebuggerClient(transport);
+    let client = this.client = new DebuggerClient(transport);
     client.addListener("tabNavigated", this._onTabNavigated);
     client.addListener("tabDetached", this._onTabDetached);
 
     client.connect(function(aType, aTraits) {
       client.listTabs(function(aResponse) {
-        if (window._isChromeDebugger) {
-          let dbg = aResponse.chromeDebugger;
-          this._startChromeDebugging(client, dbg, callback);
-        } else {
-          let tab = aResponse.tabs[aResponse.selected];
-          this._startDebuggingTab(client, tab, callback);
-        }
+        this._startChromeDebugging(client, aResponse.chromeDebugger, callback);
       }.bind(this));
     }.bind(this));
   },
@@ -218,8 +205,9 @@ let DebuggerController = {
     this.client.removeListener("tabNavigated", this._onTabNavigated);
     this.client.removeListener("tabDetached", this._onTabDetached);
 
-    // When remote debugging, the connection is closed by the RemoteTarget.
-    if (!window._isRemoteDebugger) {
+    // When debugging content or a remote instance, the connection is closed by
+    // the RemoteTarget.
+    if (window._isChromeDebugger) {
       this.client.close();
     }
 

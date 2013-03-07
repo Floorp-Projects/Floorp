@@ -644,7 +644,7 @@ MarkupView.prototype = {
     delete this._boundFocus;
 
     this._frame.contentWindow.removeEventListener("scroll", this._boundUpdatePreview, true);
-    this._frame.contentWindow.removeEventListener("resize", this._boundUpdatePreview, true);
+    this._frame.contentWindow.removeEventListener("resize", this._boundResizePreview, true);
     this._frame.contentWindow.removeEventListener("overflow", this._boundResizePreview, true);
     this._frame.contentWindow.removeEventListener("underflow", this._boundResizePreview, true);
     delete this._boundUpdatePreview;

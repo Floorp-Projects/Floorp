@@ -237,12 +237,11 @@ WebConsole.prototype = {
     if ((win = this.iframe.contentWindow) &&
         (doc = win.document) &&
         doc.readyState == "complete") {
-      this.iframe.addEventListener("load", onIframeLoad, true);
-    }
-    else {
       initUI();
     }
-
+    else {
+      this.iframe.addEventListener("load", onIframeLoad, true);
+    }
     return deferred.promise;
   },
 
@@ -359,8 +358,6 @@ WebConsole.prototype = {
 
     delete HUDService.hudReferences[this.hudId];
 
-    let tabWindow = this.target.isLocalTab ? this.target.window : null;
-
     this._destroyer = Promise.defer();
 
     let popupset = this.mainPopupSet;
@@ -371,15 +368,15 @@ WebConsole.prototype = {
 
     let onDestroy = function WC_onDestroyUI() {
       try {
+        let tabWindow = this.target.isLocalTab ? this.target.window : null;
         tabWindow && tabWindow.focus();
       }
       catch (ex) {
-        // Tab focus can fail if the tab is closed.
+        // Tab focus can fail if the tab or target is closed.
       }
 
       let id = WebConsoleUtils.supportsString(this.hudId);
       Services.obs.notifyObservers(id, "web-console-destroyed", null);
-
       this._destroyer.resolve(null);
     }.bind(this);
 
