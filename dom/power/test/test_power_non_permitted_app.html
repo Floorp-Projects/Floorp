@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Power API</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Power API **/
+
+function powertests() {
+  SimpleTest.waitForExplicitFinish();
+  power = navigator.mozPower;
+  ok(!power, "Shouldn't be able to access power manager without permission.");
+  SimpleTest.finish();
+}
+
+if(!SpecialPowers.hasPermission("power", document)) {
+  var head = document.getElementsByTagName('head')[0];
+  var js = document.createElement("script");
+  js.type = "application/javascript";
+  js.src = "/tests/SimpleTest/SimpleTest.js";
+  js.onload = powertests;
+  head.appendChild(js);
+
+} else {
+  SpecialPowers.removePermission("power", document);
+  window.location = window.location;
+}
+
+</script>
+</pre>
+</body>
+</html>
