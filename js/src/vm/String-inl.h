@@ -97,17 +97,11 @@ NewShortString(JSContext *cx, TwoByteChars chars)
 static inline void
 StringWriteBarrierPost(JSRuntime *rt, JSString **strp)
 {
-#ifdef JSGC_GENERATIONAL
-    rt->gcStoreBuffer.putRelocatableCell(reinterpret_cast<gc::Cell **>(strp));
-#endif
 }
 
 static inline void
 StringWriteBarrierPostRemove(JSRuntime *rt, JSString **strp)
 {
-#ifdef JSGC_GENERATIONAL
-    rt->gcStoreBuffer.removeRelocatableCell(reinterpret_cast<gc::Cell **>(strp));
-#endif
 }
 
 } /* namespace js */
@@ -131,11 +125,6 @@ JSString::writeBarrierPre(JSString *str)
 inline void
 JSString::writeBarrierPost(JSString *str, void *addr)
 {
-#ifdef JSGC_GENERATIONAL
-    if (!str)
-        return;
-    str->runtime()->gcStoreBuffer.putCell((Cell **)addr);
-#endif
 }
 
 inline bool
