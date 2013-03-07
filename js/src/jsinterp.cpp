@@ -1094,11 +1094,13 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 #define SET_SCRIPT(s)                                                         \
     JS_BEGIN_MACRO                                                            \
+        EnterAssertNoGCScope();                                               \
         script = (s);                                                         \
         if (script->hasAnyBreakpointsOrStepMode() || script->hasScriptCounts) \
             interrupts.enable();                                              \
         JS_ASSERT_IF(interpMode == JSINTERP_SKIP_TRAP,                        \
                      script->hasAnyBreakpointsOrStepMode());                  \
+        LeaveAssertNoGCScope();                                               \
     JS_END_MACRO
 
     /* Repoint cx->regs to a local variable for faster access. */
