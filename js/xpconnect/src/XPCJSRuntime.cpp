@@ -1716,9 +1716,13 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                   "Memory used by the Baseline JIT for compilation data: "
                   "BaselineScripts.");
 
-    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline-stubs"),
-                  cStats.baselineStubs,
-                  "Memory used by Baseline IC stubs (excluding code).");
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline-fallback-stubs"),
+                  cStats.baselineFallbackStubs,
+                  "Memory used by Baseline fallback IC stubs (excluding code).");
+
+    CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline-optimized-stubs"),
+                  cStats.baselineOptimizedStubs,
+                  "Memory used by Baseline optimized IC stubs (excluding code).");
 
     CREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("ion-data"),
                   cStats.ionData,

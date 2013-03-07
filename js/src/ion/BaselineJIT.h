@@ -24,35 +24,6 @@ class StackValue;
 struct ICEntry;
 class ICStub;
 
-// ICStubSpace is an abstraction for allocation policy and storage for stub data.
-struct ICStubSpace
-{
-  private:
-    const static size_t STUB_DEFAULT_CHUNK_SIZE = 256;
-    LifoAlloc allocator_;
-
-  public:
-    inline ICStubSpace()
-      : allocator_(STUB_DEFAULT_CHUNK_SIZE) {}
-
-    inline void *alloc(size_t size) {
-        return allocator_.alloc(size);
-    }
-
-    JS_DECLARE_NEW_METHODS(allocate, alloc, inline)
-
-    inline void adoptFrom(ICStubSpace *other) {
-        allocator_.steal(&(other->allocator_));
-    }
-
-    void free() {
-        allocator_.freeAll();
-    }
-    size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const {
-        return allocator_.sizeOfExcludingThis(mallocSizeOf);
-    }
-};
-
 class PCMappingSlotInfo
 {
     uint8_t slotInfo_;
@@ -132,10 +103,7 @@ struct BaselineScript
     HeapPtr<IonCode> method_;
 
     // Allocated space for fallback stubs.
-    ICStubSpace fallbackStubSpace_;
-
-    // Allocated space for optimized stubs.
-    ICStubSpace optimizedStubSpace_;
+    FallbackICStubSpace fallbackStubSpace_;
 
     // Native code offset right before the scope chain is initialized.
     uint32_t prologueOffset_;
@@ -181,13 +149,13 @@ struct BaselineScript
         return offsetof(BaselineScript, method_);
     }
 
-    void sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *data, size_t *stubs) const {
+    void sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *data,
+                             size_t *fallbackStubs) const {
         *data = mallocSizeOf(this);
 
         // data already includes the ICStubSpace itself, so use
         // sizeOfExcludingThis.
-        *stubs = fallbackStubSpace_.sizeOfExcludingThis(mallocSizeOf) +
-            optimizedStubSpace_.sizeOfExcludingThis(mallocSizeOf);
+        *fallbackStubs = fallbackStubSpace_.sizeOfExcludingThis(mallocSizeOf);
     }
 
     bool active() const {
@@ -220,12 +188,8 @@ struct BaselineScript
     uint8_t *pcMappingData() {
         return reinterpret_cast<uint8_t *>(this) + pcMappingOffset_;
     }
-    ICStubSpace *fallbackStubSpace() {
+    FallbackICStubSpace *fallbackStubSpace() {
         return &fallbackStubSpace_;
-    }
-
-    ICStubSpace *optimizedStubSpace() {
-        return &optimizedStubSpace_;
     }
 
     IonCode *method() const {
@@ -252,7 +216,7 @@ struct BaselineScript
     }
 
     void copyICEntries(HandleScript script, const ICEntry *entries, MacroAssembler &masm);
-    void adoptFallbackStubs(ICStubSpace *stubSpace);
+    void adoptFallbackStubs(FallbackICStubSpace *stubSpace);
 
     PCMappingIndexEntry &pcMappingIndexEntry(size_t index);
     CompactBufferReader pcMappingReader(size_t indexEntry);
@@ -294,7 +258,8 @@ void
 FinishDiscardBaselineScript(FreeOp *fop, UnrootedScript script);
 
 void
-SizeOfBaselineData(JSScript *script, JSMallocSizeOfFun mallocSizeOf, size_t *data, size_t *stubs);
+SizeOfBaselineData(JSScript *script, JSMallocSizeOfFun mallocSizeOf, size_t *data,
+                   size_t *fallbackStubs);
 
 struct BaselineBailoutInfo
 {
