@@ -1727,7 +1727,7 @@ MobileMessageDatabaseService.prototype = {
 
   getThreadList: function getThreadList(aRequest) {
     if (DEBUG) debug("Getting thread list");
-    this.newTxn(READ_ONLY, function (error, txn, mostRecentStore) {
+    this.newTxn(READ_ONLY, function (error, txn, threadStore) {
       if (error) {
         if (DEBUG) debug(error);
         aRequest.notifyThreadListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
@@ -1737,10 +1737,21 @@ MobileMessageDatabaseService.prototype = {
         if (DEBUG) debug("Caught error on transaction ", event.target.errorCode);
         aRequest.notifyThreadListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
       };
-      mostRecentStore.index("timestamp").mozGetAll().onsuccess = function(event) {
-        aRequest.notifyThreadList(event.target.result);
+      let request = threadStore.index("lastTimestamp").mozGetAll();
+      request.onsuccess = function(event) {
+        // TODO: keep backward compatibility of original API interface only.
+        let results = [];
+        for each (let item in event.target.result) {
+          results.push({
+            senderOrReceiver: item.participantAddresses[0],
+            timestamp: item.lastTimestamp,
+            body: item.subject,
+            unreadCount: item.unreadCount
+          });
+        }
+        aRequest.notifyThreadList(results);
       };
-    }, [MOST_RECENT_STORE_NAME]);
+    }, [THREAD_STORE_NAME]);
   }
 };
 
