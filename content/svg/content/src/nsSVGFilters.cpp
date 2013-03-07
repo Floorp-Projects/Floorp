@@ -37,7 +37,6 @@
 #include "SVGContentUtils.h"
 #include <algorithm>
 #include "nsContentUtils.h"
-#include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGComponentTransferFunctionElement.h"
 #include "mozilla/dom/SVGFEFuncAElementBinding.h"
 #include "mozilla/dom/SVGFEFuncBElementBinding.h"
@@ -54,7 +53,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-void
+static void
 CopyDataRect(uint8_t *aDest, const uint8_t *aSrc, uint32_t aStride,
              const nsIntRect& aDataRect)
 {
@@ -63,6 +62,18 @@ CopyDataRect(uint8_t *aDest, const uint8_t *aSrc, uint32_t aStride,
            aSrc + y * aStride + 4 * aDataRect.x,
            4 * aDataRect.width);
   }
+}
+
+static void
+CopyRect(const nsSVGFE::Image* aDest, const nsSVGFE::Image* aSrc, const nsIntRect& aDataRect)
+{
+  NS_ASSERTION(aDest->mImage->Stride() == aSrc->mImage->Stride(), "stride mismatch");
+  NS_ASSERTION(aDest->mImage->GetSize() == aSrc->mImage->GetSize(), "size mismatch");
+  NS_ASSERTION(nsIntRect(0, 0, aDest->mImage->Width(), aDest->mImage->Height()).Contains(aDataRect),
+               "aDataRect out of bounds");
+
+  CopyDataRect(aDest->mImage->Data(), aSrc->mImage->Data(),
+               aSrc->mImage->Stride(), aDataRect);
 }
 
 static void
@@ -251,66 +262,31 @@ nsSVGFE::AttributeAffectsRendering(int32_t aNameSpaceID,
 /* readonly attribute nsIDOMSVGAnimatedLength x; */
 NS_IMETHODIMP nsSVGFE::GetX(nsIDOMSVGAnimatedLength * *aX)
 {
-  *aX = X().get();
-  return NS_OK;
-}
-
-already_AddRefed<SVGAnimatedLength>
-nsSVGFE::X()
-{
-  return mLengthAttributes[ATTR_X].ToDOMAnimatedLength(this);
+  return mLengthAttributes[X].ToDOMAnimatedLength(aX, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength y; */
 NS_IMETHODIMP nsSVGFE::GetY(nsIDOMSVGAnimatedLength * *aY)
 {
-  *aY = Y().get();
-  return NS_OK;
-}
-
-already_AddRefed<SVGAnimatedLength>
-nsSVGFE::Y()
-{
-  return mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(this);
+  return mLengthAttributes[Y].ToDOMAnimatedLength(aY, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength width; */
 NS_IMETHODIMP nsSVGFE::GetWidth(nsIDOMSVGAnimatedLength * *aWidth)
 {
-  *aWidth = Width().get();
-  return NS_OK;
-}
-
-already_AddRefed<SVGAnimatedLength>
-nsSVGFE::Width()
-{
-  return mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(this);
+  return mLengthAttributes[WIDTH].ToDOMAnimatedLength(aWidth, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength height; */
 NS_IMETHODIMP nsSVGFE::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
 {
-  *aHeight = Height().get();
-  return NS_OK;
-}
-
-already_AddRefed<SVGAnimatedLength>
-nsSVGFE::Height()
-{
-  return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
+  return mLengthAttributes[HEIGHT].ToDOMAnimatedLength(aHeight, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedString result; */
 NS_IMETHODIMP nsSVGFE::GetResult(nsIDOMSVGAnimatedString * *aResult)
 {
-  *aResult = Result().get();
-  return NS_OK;
-}
-
-already_AddRefed<nsIDOMSVGAnimatedString>
-nsSVGFE::Result()
-{
-  return GetResultImageName().ToDOMAnimatedString(this);
+  return GetResultImageName().ToDOMAnimatedString(aResult, this);
 }
 
 //----------------------------------------------------------------------
@@ -333,10 +309,10 @@ nsSVGFE::IsAttributeMapped(const nsIAtom* name) const
 /* virtual */ bool
 nsSVGFE::HasValidDimensions() const
 {
-  return (!mLengthAttributes[ATTR_WIDTH].IsExplicitlySet() ||
-           mLengthAttributes[ATTR_WIDTH].GetAnimValInSpecifiedUnits() > 0) &&
-         (!mLengthAttributes[ATTR_HEIGHT].IsExplicitlySet() ||
-           mLengthAttributes[ATTR_HEIGHT].GetAnimValInSpecifiedUnits() > 0);
+  return (!mLengthAttributes[WIDTH].IsExplicitlySet() ||
+           mLengthAttributes[WIDTH].GetAnimValInSpecifiedUnits() > 0) &&
+         (!mLengthAttributes[HEIGHT].IsExplicitlySet() || 
+           mLengthAttributes[HEIGHT].GetAnimValInSpecifiedUnits() > 0);
 }
 
 nsSVGElement::LengthAttributesInfo
@@ -825,6 +801,223 @@ nsSVGFEGaussianBlurElement::GetNumberPairInfo()
 
 nsSVGElement::StringAttributesInfo
 nsSVGFEGaussianBlurElement::GetStringInfo()
+{
+  return StringAttributesInfo(mStringAttributes, sStringInfo,
+                              ArrayLength(sStringInfo));
+}
+
+//---------------------Blend------------------------
+
+typedef nsSVGFE nsSVGFEBlendElementBase;
+
+class nsSVGFEBlendElement : public nsSVGFEBlendElementBase,
+                            public nsIDOMSVGFEBlendElement
+{
+  friend nsresult NS_NewSVGFEBlendElement(nsIContent **aResult,
+                                          already_AddRefed<nsINodeInfo> aNodeInfo);
+protected:
+  nsSVGFEBlendElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+    : nsSVGFEBlendElementBase(aNodeInfo) {}
+
+public:
+  // interfaces:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // FE Base
+  NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEBlendElementBase::)
+
+  virtual nsresult Filter(nsSVGFilterInstance* aInstance,
+                          const nsTArray<const Image*>& aSources,
+                          const Image* aTarget,
+                          const nsIntRect& aDataRect);
+  virtual bool AttributeAffectsRendering(
+          int32_t aNameSpaceID, nsIAtom* aAttribute) const;
+  virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources);
+
+  // Blend
+  NS_DECL_NSIDOMSVGFEBLENDELEMENT
+
+  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEBlendElementBase::)
+
+  NS_FORWARD_NSIDOMNODE_TO_NSINODE
+  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+  virtual nsXPCClassInfo* GetClassInfo();
+
+  virtual nsIDOMNode* AsDOMNode() { return this; }
+protected:
+
+  virtual EnumAttributesInfo GetEnumInfo();
+  virtual StringAttributesInfo GetStringInfo();
+
+  enum { MODE };
+  nsSVGEnum mEnumAttributes[1];
+  static nsSVGEnumMapping sModeMap[];
+  static EnumInfo sEnumInfo[1];
+
+  enum { RESULT, IN1, IN2 };
+  nsSVGString mStringAttributes[3];
+  static StringInfo sStringInfo[3];
+};
+
+nsSVGEnumMapping nsSVGFEBlendElement::sModeMap[] = {
+  {&nsGkAtoms::normal, nsSVGFEBlendElement::SVG_MODE_NORMAL},
+  {&nsGkAtoms::multiply, nsSVGFEBlendElement::SVG_MODE_MULTIPLY},
+  {&nsGkAtoms::screen, nsSVGFEBlendElement::SVG_MODE_SCREEN},
+  {&nsGkAtoms::darken, nsSVGFEBlendElement::SVG_MODE_DARKEN},
+  {&nsGkAtoms::lighten, nsSVGFEBlendElement::SVG_MODE_LIGHTEN},
+  {nullptr, 0}
+};
+
+nsSVGElement::EnumInfo nsSVGFEBlendElement::sEnumInfo[1] =
+{
+  { &nsGkAtoms::mode,
+    sModeMap,
+    nsSVGFEBlendElement::SVG_MODE_NORMAL
+  }
+};
+
+nsSVGElement::StringInfo nsSVGFEBlendElement::sStringInfo[3] =
+{
+  { &nsGkAtoms::result, kNameSpaceID_None, true },
+  { &nsGkAtoms::in, kNameSpaceID_None, true },
+  { &nsGkAtoms::in2, kNameSpaceID_None, true }
+};
+
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEBlend)
+
+//----------------------------------------------------------------------
+// nsISupports methods
+
+NS_IMPL_ADDREF_INHERITED(nsSVGFEBlendElement,nsSVGFEBlendElementBase)
+NS_IMPL_RELEASE_INHERITED(nsSVGFEBlendElement,nsSVGFEBlendElementBase)
+
+DOMCI_NODE_DATA(SVGFEBlendElement, nsSVGFEBlendElement)
+
+NS_INTERFACE_TABLE_HEAD(nsSVGFEBlendElement)
+  NS_NODE_INTERFACE_TABLE5(nsSVGFEBlendElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement,
+                           nsIDOMSVGFilterPrimitiveStandardAttributes,
+                           nsIDOMSVGFEBlendElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEBlendElement)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGFEBlendElementBase)
+
+//----------------------------------------------------------------------
+// nsIDOMNode methods
+
+
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEBlendElement)
+
+//----------------------------------------------------------------------
+// nsIDOMSVGFEBlendElement methods
+
+/* readonly attribute nsIDOMSVGAnimatedString in1; */
+NS_IMETHODIMP nsSVGFEBlendElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
+{
+  return mStringAttributes[IN1].ToDOMAnimatedString(aIn, this);
+}
+
+/* readonly attribute nsIDOMSVGAnimatedString in2; */
+NS_IMETHODIMP nsSVGFEBlendElement::GetIn2(nsIDOMSVGAnimatedString * *aIn)
+{
+  return mStringAttributes[IN2].ToDOMAnimatedString(aIn, this);
+}
+
+/* readonly attribute nsIDOMSVGAnimatedEnumeration mode; */
+NS_IMETHODIMP nsSVGFEBlendElement::GetMode(nsIDOMSVGAnimatedEnumeration * *aMode)
+{
+  return mEnumAttributes[MODE].ToDOMAnimatedEnum(aMode, this);
+}
+
+nsresult
+nsSVGFEBlendElement::Filter(nsSVGFilterInstance* aInstance,
+                            const nsTArray<const Image*>& aSources,
+                            const Image* aTarget,
+                            const nsIntRect& rect)
+{
+  CopyRect(aTarget, aSources[0], rect);
+
+  uint8_t* sourceData = aSources[1]->mImage->Data();
+  uint8_t* targetData = aTarget->mImage->Data();
+  uint32_t stride = aTarget->mImage->Stride();
+
+  uint16_t mode = mEnumAttributes[MODE].GetAnimValue();
+
+  for (int32_t x = rect.x; x < rect.XMost(); x++) {
+    for (int32_t y = rect.y; y < rect.YMost(); y++) {
+      uint32_t targIndex = y * stride + 4 * x;
+      uint32_t qa = targetData[targIndex + GFX_ARGB32_OFFSET_A];
+      uint32_t qb = sourceData[targIndex + GFX_ARGB32_OFFSET_A];
+      for (int32_t i = std::min(GFX_ARGB32_OFFSET_B, GFX_ARGB32_OFFSET_R);
+           i <= std::max(GFX_ARGB32_OFFSET_B, GFX_ARGB32_OFFSET_R); i++) {
+        uint32_t ca = targetData[targIndex + i];
+        uint32_t cb = sourceData[targIndex + i];
+        uint32_t val;
+        switch (mode) {
+          case nsSVGFEBlendElement::SVG_MODE_NORMAL:
+            val = (255 - qa) * cb + 255 * ca;
+            break;
+          case nsSVGFEBlendElement::SVG_MODE_MULTIPLY:
+            val = ((255 - qa) * cb + (255 - qb + cb) * ca);
+            break;
+          case nsSVGFEBlendElement::SVG_MODE_SCREEN:
+            val = 255 * (cb + ca) - ca * cb;
+            break;
+          case nsSVGFEBlendElement::SVG_MODE_DARKEN:
+            val = std::min((255 - qa) * cb + 255 * ca,
+                         (255 - qb) * ca + 255 * cb);
+            break;
+          case nsSVGFEBlendElement::SVG_MODE_LIGHTEN:
+            val = std::max((255 - qa) * cb + 255 * ca,
+                         (255 - qb) * ca + 255 * cb);
+            break;
+          default:
+            return NS_ERROR_FAILURE;
+            break;
+        }
+        val = std::min(val / 255, 255U);
+        targetData[targIndex + i] =  static_cast<uint8_t>(val);
+      }
+      uint32_t alpha = 255 * 255 - (255 - qa) * (255 - qb);
+      FAST_DIVIDE_BY_255(targetData[targIndex + GFX_ARGB32_OFFSET_A], alpha);
+    }
+  }
+  return NS_OK;
+}
+
+bool
+nsSVGFEBlendElement::AttributeAffectsRendering(int32_t aNameSpaceID,
+                                               nsIAtom* aAttribute) const
+{
+  return nsSVGFEBlendElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
+         (aNameSpaceID == kNameSpaceID_None &&
+          (aAttribute == nsGkAtoms::in ||
+           aAttribute == nsGkAtoms::in2 ||
+           aAttribute == nsGkAtoms::mode));
+}
+
+void
+nsSVGFEBlendElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
+{
+  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
+  aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN2], this));
+}
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::EnumAttributesInfo
+nsSVGFEBlendElement::GetEnumInfo()
+{
+  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
+                            ArrayLength(sEnumInfo));
+}
+
+nsSVGElement::StringAttributesInfo
+nsSVGFEBlendElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
