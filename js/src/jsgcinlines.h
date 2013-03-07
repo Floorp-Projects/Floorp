@@ -181,6 +181,18 @@ GetGCKindSlots(AllocKind thingKind, Class *clasp)
     return nslots;
 }
 
+inline bool
+IsInsideNursery(JSRuntime *rt, void *thing)
+{
+#ifdef JSGC_GENERATIONAL
+#if JS_GC_ZEAL
+    if (rt->gcVerifyPostData)
+        return rt->gcNursery.isInside(thing);
+#endif
+#endif
+    return false;
+}
+
 static inline void
 GCPoke(JSRuntime *rt)
 {
