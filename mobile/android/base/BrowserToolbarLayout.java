@@ -45,6 +45,13 @@ public class BrowserToolbarLayout extends LinearLayout {
         super.onSizeChanged(w, h, oldw, oldh);
 
         if (h != oldh) {
+            // In the current UI, this is the only place we have need of
+            // viewport margins (to stop the toolbar from obscuring fixed-pos
+            // content).
+            GeckoAppShell.sendEventToGecko(
+                GeckoEvent.createBroadcastEvent("Viewport:FixedMarginsChanged",
+                    "{ \"top\" : " + h + ", \"right\" : 0, \"bottom\" : 0, \"left\" : 0 }"));
+
             refreshMargins();
         }
     }
