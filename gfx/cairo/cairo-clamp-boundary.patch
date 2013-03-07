@@ -1,0 +1,71 @@
+# HG changeset patch
+# User Milan Sreckovic <msreckovic@mozilla.com>
+# Date 1362078121 18000
+# Node ID e9e6d97b153d8ec17ee03bb1deef1dec24c7a17c
+# Parent  c65d59d33aa86b7e75bc420ea3beda6201e0aceb
+Bug 825721: clamp negative box starts and disallow negative sizes. r=jmuizelaar
+
+diff --git a/gfx/cairo/cairo/src/cairo-image-surface.c b/gfx/cairo/cairo/src/cairo-image-surface.c
+--- a/gfx/cairo/cairo/src/cairo-image-surface.c
++++ b/gfx/cairo/cairo/src/cairo-image-surface.c
+@@ -1846,16 +1846,20 @@ static cairo_status_t
+     if (likely (status == CAIRO_STATUS_SUCCESS)) {
+ 	for (chunk = &clear.chunks; chunk != NULL; chunk = chunk->next) {
+ 	    for (i = 0; i < chunk->count; i++) {
+ 		int x1 = _cairo_fixed_integer_part (chunk->base[i].p1.x);
+ 		int y1 = _cairo_fixed_integer_part (chunk->base[i].p1.y);
+ 		int x2 = _cairo_fixed_integer_part (chunk->base[i].p2.x);
+ 		int y2 = _cairo_fixed_integer_part (chunk->base[i].p2.y);
+ 
++		x1 = (x1 < 0 ? 0 : x1);
++		y1 = (y1 < 0 ? 0 : y1);
++		if (x2 <= x1 || y2 <= y1)
++		    continue;
+ 		pixman_fill ((uint32_t *) dst->data, dst->stride / sizeof (uint32_t),
+ 			     PIXMAN_FORMAT_BPP (dst->pixman_format),
+ 			     x1, y1, x2 - x1, y2 - y1,
+ 			     0);
+ 	    }
+ 	}
+     }
+ 
+@@ -2669,16 +2673,18 @@ static cairo_status_t
+ 	const cairo_box_t *box = chunk->base;
+ 
+ 	for (i = 0; i < chunk->count; i++) {
+ 	    int x1 = _cairo_fixed_integer_ceil (box[i].p1.x);
+ 	    int y1 = _cairo_fixed_integer_ceil (box[i].p1.y);
+ 	    int x2 = _cairo_fixed_integer_floor (box[i].p2.x);
+ 	    int y2 = _cairo_fixed_integer_floor (box[i].p2.y);
+ 
++	    x1 = (x1 < 0 ? 0 : x1);
++	    y1 = (y1 < 0 ? 0 : y1);
+ 	    if (x2 > x1 && y2 > y1) {
+ 		cairo_box_t b;
+ 
+ 		pixman_fill ((uint32_t *) dst->data,
+ 			     dst->stride / sizeof (uint32_t),
+ 			     PIXMAN_FORMAT_BPP (dst->pixman_format),
+ 			     x1, y1, x2 - x1, y2 - y1,
+ 			     pixel);
+@@ -2929,17 +2935,19 @@ static cairo_status_t
+ 	    cairo_box_t *box = chunk->base;
+ 
+ 	    for (i = 0; i < chunk->count; i++) {
+ 		int x1 = _cairo_fixed_integer_round_down (box[i].p1.x);
+ 		int y1 = _cairo_fixed_integer_round_down (box[i].p1.y);
+ 		int x2 = _cairo_fixed_integer_round_down (box[i].p2.x);
+ 		int y2 = _cairo_fixed_integer_round_down (box[i].p2.y);
+ 
+-		if (x2 == x1 || y2 == y1)
++		x1 = (x1 < 0 ? 0 : x1);
++		y1 = (y1 < 0 ? 0 : y1);
++		if (x2 <= x1 || y2 <= y1)
+ 		    continue;
+ 
+ 		pixman_fill ((uint32_t *) dst->data, dst->stride / sizeof (uint32_t),
+ 			     PIXMAN_FORMAT_BPP (dst->pixman_format),
+ 			     x1, y1, x2 - x1, y2 - y1,
+ 			     pixel);
+ 	    }
+ 	}
