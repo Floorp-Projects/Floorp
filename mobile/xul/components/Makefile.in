@@ -10,7 +10,6 @@ VPATH      = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = MobileComponents
-XPIDL_MODULE = MobileComponents
 
 XPIDLSRCS = \
         SessionStore.idl \

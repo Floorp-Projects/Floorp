@@ -10,7 +10,6 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE        = fuel
-XPIDL_MODULE  = fuel
 
 XPIDLSRCS = fuelIApplication.idl
 
