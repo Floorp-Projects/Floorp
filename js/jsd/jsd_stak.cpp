@@ -94,7 +94,7 @@ jsd_NewThreadState(JSDContext* jsdc, JSContext *cx )
         JSAbstractFramePtr frame = iter.abstractFramePtr();
         JSScript* script = frame.script();
         uintptr_t  pc = (uintptr_t)iter.pc();
-        JS::RootedValue dummyThis(cx);
+        js::RootedValue dummyThis(cx);
 
         /*
          * don't construct a JSDStackFrame for dummy frames (those without a
@@ -311,7 +311,7 @@ jsd_GetThisForStackFrame(JSDContext* jsdc,
     if( jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe) )
     {
         JSBool ok;
-        JS::RootedValue thisval(jsdthreadstate->context);
+        js::RootedValue thisval(jsdthreadstate->context);
         JS_BeginRequest(jsdthreadstate->context);
         ok = jsdframe->frame.getThisValue(jsdthreadstate->context, &thisval);
         JS_EndRequest(jsdthreadstate->context);

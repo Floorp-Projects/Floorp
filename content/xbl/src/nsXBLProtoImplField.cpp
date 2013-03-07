@@ -170,7 +170,7 @@ InstallXBLField(JSContext* cx,
   {
     JSAutoCompartment ac(cx, callee);
 
-    JS::Rooted<JSObject*> xblProto(cx);
+    js::Rooted<JSObject*> xblProto(cx);
     xblProto = &js::GetFunctionNativeReserved(callee, XBLPROTO_SLOT).toObject();
 
     JS::Value name = js::GetFunctionNativeReserved(callee, FIELD_SLOT);
@@ -220,7 +220,7 @@ FieldGetterImpl(JSContext *cx, JS::CallArgs args)
   const JS::Value &thisv = args.thisv();
   MOZ_ASSERT(ValueHasISupportsPrivate(thisv));
 
-  JS::Rooted<JSObject*> thisObj(cx, &thisv.toObject());
+  js::Rooted<JSObject*> thisObj(cx, &thisv.toObject());
 
   // We should be in the compartment of |this|. If we got here via nativeCall,
   // |this| is not same-compartment with |callee|, and it's possible via
@@ -228,8 +228,8 @@ FieldGetterImpl(JSContext *cx, JS::CallArgs args)
   // wrapper. In this case, we know we want to do an unsafe unwrap, and
   // InstallXBLField knows how to handle cross-compartment pointers.
   bool installed = false;
-  JS::Rooted<JSObject*> callee(cx, js::UnwrapObject(&args.calleev().toObject()));
-  JS::Rooted<jsid> id(cx);
+  js::Rooted<JSObject*> callee(cx, js::UnwrapObject(&args.calleev().toObject()));
+  js::Rooted<jsid> id(cx);
   if (!InstallXBLField(cx, callee, thisObj, id.address(), &installed)) {
     return false;
   }
@@ -239,7 +239,7 @@ FieldGetterImpl(JSContext *cx, JS::CallArgs args)
     return true;
   }
 
-  JS::Rooted<JS::Value> v(cx);
+  js::Rooted<JS::Value> v(cx);
   if (!JS_GetPropertyById(cx, thisObj, id, v.address())) {
     return false;
   }
@@ -261,7 +261,7 @@ FieldSetterImpl(JSContext *cx, JS::CallArgs args)
   const JS::Value &thisv = args.thisv();
   MOZ_ASSERT(ValueHasISupportsPrivate(thisv));
 
-  JS::Rooted<JSObject*> thisObj(cx, &thisv.toObject());
+  js::Rooted<JSObject*> thisObj(cx, &thisv.toObject());
 
   // We should be in the compartment of |this|. If we got here via nativeCall,
   // |this| is not same-compartment with |callee|, and it's possible via
@@ -269,14 +269,14 @@ FieldSetterImpl(JSContext *cx, JS::CallArgs args)
   // wrapper. In this case, we know we want to do an unsafe unwrap, and
   // InstallXBLField knows how to handle cross-compartment pointers.
   bool installed = false;
-  JS::Rooted<JSObject*> callee(cx, js::UnwrapObject(&args.calleev().toObject()));
-  JS::Rooted<jsid> id(cx);
+  js::Rooted<JSObject*> callee(cx, js::UnwrapObject(&args.calleev().toObject()));
+  js::Rooted<jsid> id(cx);
   if (!InstallXBLField(cx, callee, thisObj, id.address(), &installed)) {
     return false;
   }
 
   if (installed) {
-    JS::Rooted<JS::Value> v(cx,
+    js::Rooted<JS::Value> v(cx,
                             args.length() > 0 ? args[0] : JS::UndefinedValue());
     if (!::JS_SetPropertyById(cx, thisObj, id, v.address())) {
       return false;

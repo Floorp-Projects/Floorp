@@ -1437,7 +1437,7 @@ nsXBLBinding::LookupMember(JSContext* aCx, JS::HandleId aId,
   // Enter the xbl scope and invoke the internal version.
   {
     JSAutoCompartment ac(aCx, xblScope);
-    JS::RootedId id(aCx, aId);
+    js::RootedId id(aCx, aId);
     if (!JS_WrapId(aCx, id.address()) ||
         !LookupMemberInternal(aCx, name, id, aDesc, xblScope))
     {
@@ -1467,7 +1467,7 @@ nsXBLBinding::LookupMemberInternal(JSContext* aCx, nsString& aName,
 
   // Find our class object. It's in a protected scope and permanent just in case,
   // so should be there no matter what.
-  JS::RootedValue classObject(aCx);
+  js::RootedValue classObject(aCx);
   if (!JS_GetProperty(aCx, aXBLScope, mJSClass->name, classObject.address())) {
     return false;
   }

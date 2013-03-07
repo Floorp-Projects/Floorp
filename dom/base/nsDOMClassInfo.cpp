@@ -5352,7 +5352,7 @@ static JSBool
 LocationSetterUnwrapper(JSContext *cx, JSHandleObject obj_, JSHandleId id, JSBool strict,
                         JSMutableHandleValue vp)
 {
-  JS::RootedObject obj(cx, obj_);
+  js::RootedObject obj(cx, obj_);
 
   JSObject *wrapped = XPCWrapper::UnsafeUnwrapSecurityWrapper(obj);
   if (wrapped) {
@@ -5367,8 +5367,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject *obj_, jsid id_, uint32_t flags,
                        JSObject **objp, bool *_retval)
 {
-  JS::RootedObject obj(cx, obj_);
-  JS::RootedId id(cx, id_);
+  js::RootedObject obj(cx, obj_);
+  js::RootedId id(cx, id_);
 
   if (!JSID_IS_STRING(id)) {
     return NS_OK;
@@ -5562,7 +5562,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   // Handle resolving if id refers to a name resolved by DOM worker code.
-  JS::RootedObject tmp(cx, NULL);
+  js::RootedObject tmp(cx, NULL);
   if (!ResolveWorkerClasses(cx, obj, id, flags, &tmp)) {
     return NS_ERROR_FAILURE;
   }
@@ -5753,7 +5753,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       // Since we always create the undeclared property here, shortcutting the
       // normal process, we go out of our way to tell the JS engine to report
       // strict warnings/errors using js::ReportIfUndeclaredVarAssignment.
-      JS::Rooted<JSString*> str(cx, JSID_TO_STRING(id));
+      js::Rooted<JSString*> str(cx, JSID_TO_STRING(id));
       if (!js::ReportIfUndeclaredVarAssignment(cx, str) ||
           !::JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, JS_PropertyStub,
                                    JS_StrictPropertyStub, JSPROP_ENUMERATE)) {
@@ -7034,7 +7034,7 @@ JSBool
 nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id,
                                         unsigned flags, JSMutableHandleObject objp)
 {
-  JS::RootedValue v(cx);
+  js::RootedValue v(cx);
 
   if (sItem_id == id || sNamedItem_id == id) {
     // Define the item() or namedItem() method.
@@ -7171,7 +7171,7 @@ nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSHandleObject obj
       return JS_FALSE;
     }
 
-    JS::Rooted<JSObject*> all(cx);
+    js::Rooted<JSObject*> all(cx);
     all = ::JS_NewObject(cx, &sHTMLDocumentAllClass, nullptr,
                          ::JS_GetGlobalForObject(cx, obj));
     if (!all) {
