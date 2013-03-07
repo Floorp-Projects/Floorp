@@ -8,32 +8,35 @@
 
 #include "nsSVGFilters.h"
 
+class SVGFEImageFrame;
+
+nsresult NS_NewSVGFEImageElement(nsIContent **aResult,
+                                 already_AddRefed<nsINodeInfo> aNodeInfo);
+
 namespace mozilla {
 namespace dom {
 
-typedef nsSVGFE nsSVGFEImageElementBase;
+typedef nsSVGFE SVGFEImageElementBase;
 
-class nsSVGFEImageElement : public nsSVGFEImageElementBase,
-                            public nsIDOMSVGFEImageElement,
-                            public nsIDOMSVGURIReference,
-                            public nsImageLoadingContent
+class SVGFEImageElement : public SVGFEImageElementBase,
+                          public nsIDOMSVGElement,
+                          public nsIDOMSVGURIReference,
+                          public nsImageLoadingContent
 {
-  friend class SVGFEImageFrame;
+  friend class ::SVGFEImageFrame;
 
 protected:
-  friend nsresult NS_NewSVGFEImageElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGFEImageElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsSVGFEImageElement();
+  friend nsresult (::NS_NewSVGFEImageElement(nsIContent **aResult,
+                                             already_AddRefed<nsINodeInfo> aNodeInfo));
+  SVGFEImageElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  virtual ~SVGFEImageElement();
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap) MOZ_OVERRIDE;
 
 public:
   virtual bool SubregionIsUnionOfRegions() { return false; }
 
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
-
-  // FE Base
-  NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEImageElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance* aInstance,
                           const nsTArray<const Image*>& aSources,
@@ -45,10 +48,9 @@ public:
   virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
 
-  NS_DECL_NSIDOMSVGFEIMAGEELEMENT
   NS_DECL_NSIDOMSVGURIREFERENCE
 
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEImageElementBase::)
+  NS_FORWARD_NSIDOMSVGELEMENT(SVGFEImageElementBase::)
 
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
@@ -70,9 +72,12 @@ public:
 
   void MaybeLoadSVGImage();
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL
+  already_AddRefed<nsIDOMSVGAnimatedString> Href();
+  already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
+
 private:
   // Invalidate users of the filter containing this element.
   void Invalidate();
