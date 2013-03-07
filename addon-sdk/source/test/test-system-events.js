@@ -6,8 +6,7 @@ const events = require("sdk/system/events");
 const self = require("sdk/self");
 const { Cc, Ci, Cu } = require("chrome");
 const { setTimeout } = require("sdk/timers");
-const { Loader } = require("sdk/test/loader");
-const { PlainTextConsole } = require("sdk/console/plain-text");
+const { LoaderWithHookedConsole2 } = require("sdk/test/loader");
 const nsIObserverService = Cc["@mozilla.org/observer-service;1"].
                            getService(Ci.nsIObserverService);
 
@@ -36,12 +35,7 @@ exports["test basic"] = function(assert) {
 }
 
 exports["test error reporting"] = function(assert) {
-  let prints = [];
-  let loader = Loader(module, {
-    console: new PlainTextConsole(function(_) {
-      prints.push(_);
-    })
-  });
+  let { loader, messages } = LoaderWithHookedConsole2(module);
 
   let events = loader.require("sdk/system/events");
   function brokenHandler(subject, data) { throw new Error("foo"); };
@@ -49,18 +43,18 @@ exports["test error reporting"] = function(assert) {
   let lineNumber;
   try { brokenHandler() } catch (error) { lineNumber = error.lineNumber }
 
-
-
   let errorType = Date.now().toString(32);
 
   events.on(errorType, brokenHandler);
   events.emit(errorType, { data: "yo yo" });
 
-  assert.ok(prints[0].indexOf(self.name + ": An exception occurred.") >= 0,
+  assert.equal(messages.length, 1, "Got an exception");
+  let text = messages[0];
+  assert.ok(text.indexOf(self.name + ": An exception occurred.") >= 0,
             "error is logged");
-  assert.ok(prints[0].indexOf("Error: foo") >= 0, "error message is logged");
-  assert.ok(prints[0].indexOf(module.uri) >= 0, "module uri is logged");
-  assert.ok(prints[0].indexOf(lineNumber) >= 0, "error line is logged");
+  assert.ok(text.indexOf("Error: foo") >= 0, "error message is logged");
+  assert.ok(text.indexOf(module.uri) >= 0, "module uri is logged");
+  assert.ok(text.indexOf(lineNumber) >= 0, "error line is logged");
 
   events.off(errorType, brokenHandler);
 

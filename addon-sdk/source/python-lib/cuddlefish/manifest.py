@@ -269,8 +269,7 @@ class ManifestBuilder:
                 yield absname
 
         for me in self.get_module_entries():
-            # Do not add manifest entries for system modules,
-            # so that we won't ship SDK files.
+            # Only ship SDK files if we are told to do so
             if me.packageName != "addon-sdk" or bundle_sdk_modules:
                 yield me.js_filename
 
@@ -281,8 +280,9 @@ class ManifestBuilder:
         manifest = {}
         for me in self.get_module_entries():
             path = me.get_path()
-            # Do not add manifest entries for system modules,
-            # so that we won't ship SDK files.
+            # Do not add manifest entries for system modules.
+            # Doesn't prevent from shipping modules.
+            # Shipping modules is decided in `get_used_files`.
             if me.packageName != "addon-sdk" or bundle_sdk_modules:
                 manifest[path] = me.get_entry_for_manifest()
         return manifest
@@ -474,18 +474,6 @@ class ManifestBuilder:
         # non-relative import. Might be a short name (requiring a search
         # through "library" packages), or a fully-qualified one.
 
-        # Search for a module in new layout.
-        # First normalize require argument in order to easily find a mapping
-        normalized = reqname
-        if normalized.endswith(".js"):
-            normalized = normalized[:-len(".js")]
-        if normalized.startswith("addon-kit/"):
-            normalized = normalized[len("addon-kit/"):]
-        if normalized.startswith("api-utils/"):
-            normalized = normalized[len("api-utils/"):]
-        if normalized in NEW_LAYOUT_MAPPING:
-          reqname = NEW_LAYOUT_MAPPING[normalized]
-
         if "/" in reqname:
             # 2: PKG/MOD: find PKG, look inside for MOD
             bits = reqname.split("/")
@@ -507,9 +495,32 @@ class ManifestBuilder:
         # their own package first, then the list of packages defined by their
         # .dependencies list
         from_pkg = from_module.package.name
-        return self._search_packages_for_module(from_pkg,
-                                                lookfor_sections, reqname,
-                                                looked_in)
+        mi = self._search_packages_for_module(from_pkg,
+                                              lookfor_sections, reqname,
+                                              looked_in)
+        if mi:
+            return mi
+
+        # Only after we look for module in the addon itself, search for a module
+        # in new layout.
+        # First normalize require argument in order to easily find a mapping
+        normalized = reqname
+        if normalized.endswith(".js"):
+            normalized = normalized[:-len(".js")]
+        if normalized.startswith("addon-kit/"):
+            normalized = normalized[len("addon-kit/"):]
+        if normalized.startswith("api-utils/"):
+            normalized = normalized[len("api-utils/"):]
+        if normalized in NEW_LAYOUT_MAPPING:
+            # get the new absolute path for this module
+            reqname = NEW_LAYOUT_MAPPING[normalized]
+            from_pkg = from_module.package.name
+            return self._search_packages_for_module(from_pkg,
+                                                    lookfor_sections, reqname,
+                                                    looked_in)
+        else:
+            # We weren't able to find this module, really.
+            return None
 
     def _handle_module(self, mi):
         if not mi:
@@ -659,12 +670,13 @@ def scan_requirements_with_grep(fn, lines):
                     iscomment = True
             if iscomment:
                 continue
-            mo = re.search(REQUIRE_RE, clause)
+            mo = re.finditer(REQUIRE_RE, clause)
             if mo:
-                modname = mo.group(1)
-                requires[modname] = {}
-                if modname not in first_location:
-                    first_location[modname] = lineno0+1
+                for mod in mo:
+                    modname = mod.group(1)
+                    requires[modname] = {}
+                    if modname not in first_location:
+                        first_location[modname] = lineno0 + 1
 
     # define() can happen across multiple lines, so join everyone up.
     wholeshebang = "\n".join(lines)
