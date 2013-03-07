@@ -234,8 +234,8 @@ bool CallControlManagerImpl::disconnect()
     phone->removeCCObserver(this);
     phone->stop();
     phone->destroy();
-    phone = nullptr;
-    softPhone = nullptr;
+    phone.reset();
+    softPhone.reset();
 
     return true;
 }
@@ -275,7 +275,7 @@ PhoneDetailsVtrPtr CallControlManagerImpl::getAvailablePhoneDetails()
   PhoneDetailsVtrPtr result = PhoneDetailsVtrPtr(new PhoneDetailsVtr());
   for(PhoneDetailsMap::iterator it = phoneDetailsMap.begin(); it != phoneDetailsMap.end(); it++)
   {
-    PhoneDetailsPtr details = it->second.get();
+    PhoneDetailsPtr details = it->second;
     result->push_back(details);
   }
   return result;
@@ -286,7 +286,7 @@ PhoneDetailsPtr CallControlManagerImpl::getAvailablePhoneDetails(const std::stri
     PhoneDetailsMap::iterator it = phoneDetailsMap.find(deviceName);
     if(it != phoneDetailsMap.end())
     {
-        return it->second.get();
+        return it->second;
     }
     return PhoneDetailsPtr();
 }
