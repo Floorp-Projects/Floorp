@@ -61,12 +61,12 @@ using testing::Test;
 
 class MockMemoryRegion: public MemoryRegion {
  public:
-  MOCK_CONST_METHOD0(GetBase, u_int64_t());
-  MOCK_CONST_METHOD0(GetSize, u_int32_t());
-  MOCK_CONST_METHOD2(GetMemoryAtAddress, bool(u_int64_t, u_int8_t *));
-  MOCK_CONST_METHOD2(GetMemoryAtAddress, bool(u_int64_t, u_int16_t *));
-  MOCK_CONST_METHOD2(GetMemoryAtAddress, bool(u_int64_t, u_int32_t *));
-  MOCK_CONST_METHOD2(GetMemoryAtAddress, bool(u_int64_t, u_int64_t *));
+  MOCK_CONST_METHOD0(GetBase, uint64_t());
+  MOCK_CONST_METHOD0(GetSize, uint32_t());
+  MOCK_CONST_METHOD2(GetMemoryAtAddress, bool(uint64_t, uint8_t *));
+  MOCK_CONST_METHOD2(GetMemoryAtAddress, bool(uint64_t, uint16_t *));
+  MOCK_CONST_METHOD2(GetMemoryAtAddress, bool(uint64_t, uint32_t *));
+  MOCK_CONST_METHOD2(GetMemoryAtAddress, bool(uint64_t, uint64_t *));
 };
 
 // Handy definitions for all tests.
@@ -76,15 +76,15 @@ struct CFIFixture {
   void ExpectNoMemoryReferences() {
     EXPECT_CALL(memory, GetBase()).Times(0);
     EXPECT_CALL(memory, GetSize()).Times(0);
-    EXPECT_CALL(memory, GetMemoryAtAddress(_, A<u_int8_t *>())).Times(0);
-    EXPECT_CALL(memory, GetMemoryAtAddress(_, A<u_int16_t *>())).Times(0);
-    EXPECT_CALL(memory, GetMemoryAtAddress(_, A<u_int32_t *>())).Times(0);
-    EXPECT_CALL(memory, GetMemoryAtAddress(_, A<u_int64_t *>())).Times(0);
+    EXPECT_CALL(memory, GetMemoryAtAddress(_, A<uint8_t *>())).Times(0);
+    EXPECT_CALL(memory, GetMemoryAtAddress(_, A<uint16_t *>())).Times(0);
+    EXPECT_CALL(memory, GetMemoryAtAddress(_, A<uint32_t *>())).Times(0);
+    EXPECT_CALL(memory, GetMemoryAtAddress(_, A<uint64_t *>())).Times(0);
   }
 
   CFIFrameInfo cfi;
   MockMemoryRegion memory;
-  CFIFrameInfo::RegisterValueMap<u_int64_t> registers, caller_registers;
+  CFIFrameInfo::RegisterValueMap<uint64_t> registers, caller_registers;
 };
 
 class Simple: public CFIFixture, public Test { };
@@ -94,7 +94,7 @@ TEST_F(Simple, NoCFA) {
   ExpectNoMemoryReferences();
 
   cfi.SetRARule(Module::Expr("0"));
-  ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+  ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
   ASSERT_EQ(".ra: 0", cfi.Serialize());
 }
@@ -104,7 +104,7 @@ TEST_F(Simple, NoRA) {
   ExpectNoMemoryReferences();
 
   cfi.SetCFARule(Module::Expr("0"));
-  ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+  ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
   ASSERT_EQ(".cfa: 0", cfi.Serialize());
 }
@@ -114,7 +114,7 @@ TEST_F(Simple, SetCFAAndRARule) {
 
   cfi.SetCFARule(Module::Expr("330903416631436410"));
   cfi.SetRARule(Module::Expr("5870666104170902211"));
-  ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+  ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                             &caller_registers));
   ASSERT_EQ(330903416631436410ULL, caller_registers.get(ustr__ZDcfa()));
   ASSERT_EQ(5870666104170902211ULL, caller_registers.get(ustr__ZDra()));
@@ -138,7 +138,7 @@ TEST_F(Simple, SetManyRules) {
   cfi.SetRegisterRule(reg2, Module::Expr("24076308 .cfa +"));
   cfi.SetRegisterRule(reg3, Module::Expr(".cfa 29801007 -"));
   cfi.SetRegisterRule(reg4, Module::Expr("92642917 .cfa /"));
-  ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+  ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                             &caller_registers));
   ASSERT_EQ(7664691U,           caller_registers.get(ustr__ZDcfa()));
   ASSERT_EQ(107469446U,         caller_registers.get(ustr__ZDra()));
@@ -161,7 +161,7 @@ TEST_F(Simple, RulesOverride) {
   cfi.SetCFARule(Module::Expr("330903416631436410"));
   cfi.SetRARule(Module::Expr("5870666104170902211"));
   cfi.SetCFARule(Module::Expr("2828089117179001"));
-  ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+  ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                             &caller_registers));
   ASSERT_EQ(2828089117179001ULL, caller_registers.get(ustr__ZDcfa()));
   ASSERT_EQ(5870666104170902211ULL, caller_registers.get(ustr__ZDra()));
@@ -177,7 +177,7 @@ TEST_F(Scope, CFALacksCFA) {
 
   cfi.SetCFARule(Module::Expr(".cfa"));
   cfi.SetRARule(Module::Expr("0"));
-  ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+  ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
 }
 
@@ -187,7 +187,7 @@ TEST_F(Scope, CFALacksRA) {
 
   cfi.SetCFARule(Module::Expr(".ra"));
   cfi.SetRARule(Module::Expr("0"));
-  ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+  ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
 }
 
@@ -202,7 +202,7 @@ TEST_F(Scope, CFASeesCurrentRegs) {
   registers.set(reg2, 0x5e0bf850bafce9d2ULL);
   cfi.SetCFARule(Module::Expr(".baraminology .ornithorhynchus +"));
   cfi.SetRARule(Module::Expr("0"));
-  ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+  ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                             &caller_registers));
   ASSERT_EQ(0x06a7bc63e4f13893ULL + 0x5e0bf850bafce9d2ULL,
             caller_registers.get(ustr__ZDcfa()));
@@ -214,7 +214,7 @@ TEST_F(Scope, RASeesCFA) {
 
   cfi.SetCFARule(Module::Expr("48364076"));
   cfi.SetRARule(Module::Expr(".cfa"));
-  ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+  ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                             &caller_registers));
   ASSERT_EQ(48364076U, caller_registers.get(ustr__ZDra()));
 }
@@ -225,7 +225,7 @@ TEST_F(Scope, RALacksRA) {
 
   cfi.SetCFARule(Module::Expr("0"));
   cfi.SetRARule(Module::Expr(".ra"));
-  ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+  ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
 }
 
@@ -238,7 +238,7 @@ TEST_F(Scope, RASeesCurrentRegs) {
   const UniqueString* reg1 = ToUniqueString("noachian");
   registers.set(reg1, 0x54dc4a5d8e5eb503ULL);
   cfi.SetRARule(Module::Expr(reg1, 0, false));
-  ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+  ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                             &caller_registers));
   ASSERT_EQ(0x54dc4a5d8e5eb503ULL, caller_registers.get(ustr__ZDra()));
 }
@@ -251,7 +251,7 @@ TEST_F(Scope, RegistersSeeCFA) {
   cfi.SetRARule(Module::Expr(".cfa"));
   const UniqueString* reg1 = ToUniqueString("rogerian");
   cfi.SetRegisterRule(reg1, Module::Expr(".cfa"));
-  ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+  ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                             &caller_registers));
   ASSERT_EQ(6515179U, caller_registers.get(reg1));
 }
@@ -264,7 +264,7 @@ TEST_F(Scope, RegsLackRA) {
   cfi.SetRARule(Module::Expr("27045204"));
   const UniqueString* reg1 = ToUniqueString("$r1");
   cfi.SetRegisterRule(reg1, Module::Expr(".ra"));
-  ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+  ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
 }
 
@@ -280,7 +280,7 @@ TEST_F(Scope, RegsSeeRegs) {
   cfi.SetRARule(Module::Expr("30503835"));
   cfi.SetRegisterRule(reg1, Module::Expr("$r1 42175211 = $r2"));
   cfi.SetRegisterRule(reg2, Module::Expr("$r2 21357221 = $r1"));
-  ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+  ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                             &caller_registers));
   ASSERT_EQ(0xd27d9e742b8df6d0ULL, caller_registers.get(reg1));
   ASSERT_EQ(0x6ed3582c4bedb9adULL, caller_registers.get(reg2));
@@ -292,12 +292,12 @@ TEST_F(Scope, SeparateTempsRA) {
 
   cfi.SetCFARule(Module::Expr("$temp1 76569129 = $temp1"));
   cfi.SetRARule(Module::Expr("0"));
-  ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+  ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                             &caller_registers));
 
   cfi.SetCFARule(Module::Expr("$temp1 76569129 = $temp1"));
   cfi.SetRARule(Module::Expr("$temp1"));
-  ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+  ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
 }
 
@@ -439,7 +439,7 @@ TEST_F(ParseHandler, CFARARule) {
   handler.RARule("reg-for-ra");
   registers.set(ToUniqueString("reg-for-cfa"), 0x268a9a4a3821a797ULL);
   registers.set(ToUniqueString("reg-for-ra"), 0x6301b475b8b91c02ULL);
-  ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+  ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                             &caller_registers));
   ASSERT_EQ(0x268a9a4a3821a797ULL, caller_registers.get(ustr__ZDcfa()));
   ASSERT_EQ(0x6301b475b8b91c02ULL, caller_registers.get(ustr__ZDra()));
@@ -454,7 +454,7 @@ TEST_F(ParseHandler, RegisterRules) {
   registers.set(ToUniqueString("reg-for-ra"), 0x6301b475b8b91c02ULL);
   registers.set(ToUniqueString("reg-for-reg1"), 0x06cde8e2ff062481ULL);
   registers.set(ToUniqueString("reg-for-reg2"), 0xff0c4f76403173e2ULL);
-  ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+  ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                             &caller_registers));
   ASSERT_EQ(0x268a9a4a3821a797ULL, caller_registers.get(ustr__ZDcfa()));
   ASSERT_EQ(0x6301b475b8b91c02ULL, caller_registers.get(ustr__ZDra()));
@@ -464,7 +464,7 @@ TEST_F(ParseHandler, RegisterRules) {
 
 struct SimpleCFIWalkerFixture {
   struct RawContext {
-    u_int64_t r0, r1, r2, r3, r4, sp, pc;
+    uint64_t r0, r1, r2, r3, r4, sp, pc;
   };
   enum Validity {
     R0_VALID = 0x01,
@@ -475,7 +475,7 @@ struct SimpleCFIWalkerFixture {
     SP_VALID = 0x20,
     PC_VALID = 0x40
   };
-  typedef SimpleCFIWalker<u_int64_t, RawContext> CFIWalker;
+  typedef SimpleCFIWalker<uint64_t, RawContext> CFIWalker;
 
   SimpleCFIWalkerFixture()
       : walker(register_map,
@@ -516,16 +516,16 @@ TEST_F(SimpleWalker, Walk) {
   // r4 is not recoverable, even though it is a callee-saves register.
   //    Some earlier frame's unwinder must have failed to recover it.
 
-  u_int64_t stack_top = 0x83254944b20d5512ULL;
+  uint64_t stack_top = 0x83254944b20d5512ULL;
 
   // Saved r0.
   EXPECT_CALL(memory,
-              GetMemoryAtAddress(stack_top, A<u_int64_t *>()))
+              GetMemoryAtAddress(stack_top, A<uint64_t *>()))
       .WillRepeatedly(DoAll(SetArgumentPointee<1>(0xdc1975eba8602302ULL),
                             Return(true)));
   // Saved return address.
   EXPECT_CALL(memory,
-              GetMemoryAtAddress(stack_top + 16, A<u_int64_t *>()))
+              GetMemoryAtAddress(stack_top + 16, A<uint64_t *>()))
       .WillRepeatedly(DoAll(SetArgumentPointee<1>(0xba5ad6d9acce28deULL),
                             Return(true)));
 

@@ -34,7 +34,7 @@ function hitEventLoop(aFunc, aTimes)
   if (--aTimes) {
     setTimeout(hitEventLoop, 0, aFunc, aTimes);
   } else {
-    setTimeout(aFunc, 20);
+    setTimeout(aFunc, 100);
   }
 }
 

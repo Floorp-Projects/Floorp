@@ -1470,7 +1470,11 @@ nsTextControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
   nsIFrame* kid = mFrames.FirstChild();
-  nsDisplayListSet set(aLists, aLists.Content());
+  // Redirect all lists to the Content list so that nothing can escape, ie
+  // opacity creating stacking contexts that then get sorted with stacking
+  // contexts external to us.
+  nsDisplayList* content = aLists.Content();
+  nsDisplayListSet set(content, content, content, content, content, content);
 
   while (kid) {
     // If the frame is the placeholder frame, we should only show it if the

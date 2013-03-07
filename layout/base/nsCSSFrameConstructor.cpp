@@ -4917,8 +4917,7 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
   // be created will be an nsInlineFrame, so it can never be a filter.
   bool parentIsFilter = aParentFrame &&
     aParentFrame->GetType() == nsGkAtoms::svgFilterFrame;
-  nsCOMPtr<nsIDOMSVGFilterPrimitiveStandardAttributes> filterPrimitive =
-    do_QueryInterface(aElement);
+  bool filterPrimitive = aElement->IsNodeOfType(nsINode::eFILTER);
   if ((parentIsFilter && !filterPrimitive) ||
       (!parentIsFilter && filterPrimitive)) {
     return &sSuppressData;

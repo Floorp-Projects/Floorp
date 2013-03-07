@@ -222,17 +222,17 @@ enum InternBehavior
     InternAtom = true
 };
 
-extern UnrootedAtom
+extern RawAtom
 Atomize(JSContext *cx, const char *bytes, size_t length,
         js::InternBehavior ib = js::DoNotInternAtom);
 
 template <AllowGC allowGC>
-extern UnrootedAtom
+extern RawAtom
 AtomizeChars(JSContext *cx, const jschar *chars, size_t length,
              js::InternBehavior ib = js::DoNotInternAtom);
 
 template <AllowGC allowGC>
-extern UnrootedAtom
+extern RawAtom
 AtomizeString(JSContext *cx, JSString *str, js::InternBehavior ib = js::DoNotInternAtom);
 
 template <AllowGC allowGC>

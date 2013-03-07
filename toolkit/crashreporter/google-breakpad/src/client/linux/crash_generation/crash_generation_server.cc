@@ -90,7 +90,7 @@ GetInodeForProcPath(ino_t* inode_out, const char* path)
   }
 
   char* endptr;
-  const u_int64_t inode_ul =
+  const uint64_t inode_ul =
       strtoull(buf + sizeof(kSocketLinkPrefix) - 1, &endptr, 10);
   if (*endptr != ']')
     return false;

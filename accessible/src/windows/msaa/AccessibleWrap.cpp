@@ -1780,13 +1780,8 @@ AccessibleWrap::UpdateSystemCaret()
     return;
   }
 
-  nsRefPtr<nsCaretAccessible> caretAccessible = rootAccessible->GetCaretAccessible();
-  if (!caretAccessible) {
-    return;
-  }
-
-  nsIWidget *widget;
-  nsIntRect caretRect = caretAccessible->GetCaretRect(&widget);
+  nsIWidget* widget = nullptr;
+  nsIntRect caretRect = SelectionMgr()->GetCaretRect(&widget);
   HWND caretWnd; 
   if (caretRect.IsEmpty() || !(caretWnd = (HWND)widget->GetNativeData(NS_NATIVE_WINDOW))) {
     return;

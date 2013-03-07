@@ -79,10 +79,10 @@
  */
 
 typedef struct {
-  u_int32_t data1;
-  u_int16_t data2;
-  u_int16_t data3;
-  u_int8_t  data4[8];
+  uint32_t data1;
+  uint16_t data2;
+  uint16_t data3;
+  uint8_t  data4[8];
 } MDGUID;  /* GUID */
 
 
@@ -110,7 +110,7 @@ typedef struct {
  * structure should never be allocated directly.  The actual structure type
  * can be determined by examining the context_flags field. */
 typedef struct {
-  u_int32_t context_flags;
+  uint32_t context_flags;
 } MDRawContextBase;
 
 #include "minidump_cpu_amd64.h"
@@ -126,19 +126,19 @@ typedef struct {
 
 
 typedef struct {
-  u_int32_t signature;
-  u_int32_t struct_version;
-  u_int32_t file_version_hi;
-  u_int32_t file_version_lo;
-  u_int32_t product_version_hi;
-  u_int32_t product_version_lo;
-  u_int32_t file_flags_mask;    /* Identifies valid bits in fileFlags */
-  u_int32_t file_flags;
-  u_int32_t file_os;
-  u_int32_t file_type;
-  u_int32_t file_subtype;
-  u_int32_t file_date_hi;
-  u_int32_t file_date_lo;
+  uint32_t signature;
+  uint32_t struct_version;
+  uint32_t file_version_hi;
+  uint32_t file_version_lo;
+  uint32_t product_version_hi;
+  uint32_t product_version_lo;
+  uint32_t file_flags_mask;    /* Identifies valid bits in fileFlags */
+  uint32_t file_flags;
+  uint32_t file_os;
+  uint32_t file_type;
+  uint32_t file_subtype;
+  uint32_t file_date_hi;
+  uint32_t file_date_lo;
 } MDVSFixedFileInfo;  /* VS_FIXEDFILEINFO */
 
 /* For (MDVSFixedFileInfo).signature */
@@ -231,10 +231,10 @@ typedef struct {
 
 /* An MDRVA is an offset into the minidump file.  The beginning of the
  * MDRawHeader is at offset 0. */
-typedef u_int32_t MDRVA;  /* RVA */
+typedef uint32_t MDRVA;  /* RVA */
 
 typedef struct {
-  u_int32_t data_size;
+  uint32_t data_size;
   MDRVA     rva;
 } MDLocationDescriptor;  /* MINIDUMP_LOCATION_DESCRIPTOR */
 
@@ -242,22 +242,22 @@ typedef struct {
 typedef struct {
   /* The base address of the memory range on the host that produced the
    * minidump. */
-  u_int64_t            start_of_memory_range;
+  uint64_t            start_of_memory_range;
 
   MDLocationDescriptor memory;
 } MDMemoryDescriptor;  /* MINIDUMP_MEMORY_DESCRIPTOR */
 
 
 typedef struct {
-  u_int32_t signature;
-  u_int32_t version;
-  u_int32_t stream_count;
+  uint32_t signature;
+  uint32_t version;
+  uint32_t stream_count;
   MDRVA     stream_directory_rva;  /* A |stream_count|-sized array of
                                     * MDRawDirectory structures. */
-  u_int32_t checksum;              /* Can be 0.  In fact, that's all that's
+  uint32_t checksum;              /* Can be 0.  In fact, that's all that's
                                     * been found in minidump files. */
-  u_int32_t time_date_stamp;       /* time_t */
-  u_int64_t flags;
+  uint32_t time_date_stamp;       /* time_t */
+  uint64_t flags;
 } MDRawHeader;  /* MINIDUMP_HEADER */
 
 /* For (MDRawHeader).signature and (MDRawHeader).version.  Note that only the
@@ -302,7 +302,7 @@ typedef enum {
 
 
 typedef struct {
-  u_int32_t            stream_type;
+  uint32_t            stream_type;
   MDLocationDescriptor location;
 } MDRawDirectory;  /* MINIDUMP_DIRECTORY */
 
@@ -346,27 +346,27 @@ typedef enum {
 
 
 typedef struct {
-  u_int32_t length;     /* Length of buffer in bytes (not characters),
+  uint32_t length;     /* Length of buffer in bytes (not characters),
                          * excluding 0-terminator */
-  u_int16_t buffer[1];  /* UTF-16-encoded, 0-terminated */
+  uint16_t buffer[1];  /* UTF-16-encoded, 0-terminated */
 } MDString;  /* MINIDUMP_STRING */
 
 static const size_t MDString_minsize = offsetof(MDString, buffer[0]);
 
 
 typedef struct {
-  u_int32_t            thread_id;
-  u_int32_t            suspend_count;
-  u_int32_t            priority_class;
-  u_int32_t            priority;
-  u_int64_t            teb;             /* Thread environment block */
+  uint32_t            thread_id;
+  uint32_t            suspend_count;
+  uint32_t            priority_class;
+  uint32_t            priority;
+  uint64_t            teb;             /* Thread environment block */
   MDMemoryDescriptor   stack;
   MDLocationDescriptor thread_context;  /* MDRawContext[CPU] */
 } MDRawThread;  /* MINIDUMP_THREAD */
 
 
 typedef struct {
-  u_int32_t   number_of_threads;
+  uint32_t   number_of_threads;
   MDRawThread threads[1];
 } MDRawThreadList;  /* MINIDUMP_THREAD_LIST */
 
@@ -375,10 +375,10 @@ static const size_t MDRawThreadList_minsize = offsetof(MDRawThreadList,
 
 
 typedef struct {
-  u_int64_t            base_of_image;
-  u_int32_t            size_of_image;
-  u_int32_t            checksum;         /* 0 if unknown */
-  u_int32_t            time_date_stamp;  /* time_t */
+  uint64_t            base_of_image;
+  uint32_t            size_of_image;
+  uint32_t            checksum;         /* 0 if unknown */
+  uint32_t            time_date_stamp;  /* time_t */
   MDRVA                module_name_rva;  /* MDString, pathname or filename */
   MDVSFixedFileInfo    version_info;
 
@@ -402,8 +402,8 @@ typedef struct {
    * As a workaround, reserved0 and reserved1 are instead defined here as
    * four 32-bit quantities.  This should be harmless, as there are
    * currently no known uses for these fields. */
-  u_int32_t            reserved0[2];
-  u_int32_t            reserved1[2];
+  uint32_t            reserved0[2];
+  uint32_t            reserved1[2];
 } MDRawModule;  /* MINIDUMP_MODULE */
 
 /* The inclusion of a 64-bit type in MINIDUMP_MODULE forces the struct to
@@ -419,15 +419,15 @@ typedef struct {
  * MDCVInfoPDB70 is the expected structure type with recent toolchains. */
 
 typedef struct {
-  u_int32_t signature;
-  u_int32_t offset;     /* Offset to debug data (expect 0 in minidump) */
+  uint32_t signature;
+  uint32_t offset;     /* Offset to debug data (expect 0 in minidump) */
 } MDCVHeader;
 
 typedef struct {
   MDCVHeader cv_header;
-  u_int32_t  signature;         /* time_t debug information created */
-  u_int32_t  age;               /* revision of PDB file */
-  u_int8_t   pdb_file_name[1];  /* Pathname or filename of PDB file */
+  uint32_t  signature;         /* time_t debug information created */
+  uint32_t  age;               /* revision of PDB file */
+  uint8_t   pdb_file_name[1];  /* Pathname or filename of PDB file */
 } MDCVInfoPDB20;
 
 static const size_t MDCVInfoPDB20_minsize = offsetof(MDCVInfoPDB20,
@@ -436,10 +436,10 @@ static const size_t MDCVInfoPDB20_minsize = offsetof(MDCVInfoPDB20,
 #define MD_CVINFOPDB20_SIGNATURE 0x3031424e  /* cvHeader.signature = '01BN' */
 
 typedef struct {
-  u_int32_t cv_signature;
+  uint32_t cv_signature;
   MDGUID    signature;         /* GUID, identifies PDB file */
-  u_int32_t age;               /* Identifies incremental changes to PDB file */
-  u_int8_t  pdb_file_name[1];  /* Pathname or filename of PDB file,
+  uint32_t age;               /* Identifies incremental changes to PDB file */
+  uint8_t  pdb_file_name[1];  /* Pathname or filename of PDB file,
                                 * 0-terminated 8-bit character data (UTF-8?) */
 } MDCVInfoPDB70;
 
@@ -449,12 +449,12 @@ static const size_t MDCVInfoPDB70_minsize = offsetof(MDCVInfoPDB70,
 #define MD_CVINFOPDB70_SIGNATURE 0x53445352  /* cvSignature = 'SDSR' */
 
 typedef struct {
-  u_int32_t data1[2];
-  u_int32_t data2;
-  u_int32_t data3;
-  u_int32_t data4;
-  u_int32_t data5[3];
-  u_int8_t extra[2];
+  uint32_t data1[2];
+  uint32_t data2;
+  uint32_t data3;
+  uint32_t data4;
+  uint32_t data5[3];
+  uint8_t extra[2];
 } MDCVInfoELF;
 
 /* In addition to the two CodeView record formats above, used for linking
@@ -479,12 +479,12 @@ typedef struct {
  * obsolete with modules built by recent toolchains. */
 
 typedef struct {
-  u_int32_t data_type;    /* IMAGE_DEBUG_TYPE_*, not defined here because
+  uint32_t data_type;    /* IMAGE_DEBUG_TYPE_*, not defined here because
                            * this debug record type is mostly obsolete. */
-  u_int32_t length;       /* Length of entire MDImageDebugMisc structure */
-  u_int8_t  unicode;      /* True if data is multibyte */
-  u_int8_t  reserved[3];
-  u_int8_t  data[1];
+  uint32_t length;       /* Length of entire MDImageDebugMisc structure */
+  uint8_t  unicode;      /* True if data is multibyte */
+  uint8_t  reserved[3];
+  uint8_t  data[1];
 } MDImageDebugMisc;  /* IMAGE_DEBUG_MISC */
 
 static const size_t MDImageDebugMisc_minsize = offsetof(MDImageDebugMisc,
@@ -492,7 +492,7 @@ static const size_t MDImageDebugMisc_minsize = offsetof(MDImageDebugMisc,
 
 
 typedef struct {
-  u_int32_t   number_of_modules;
+  uint32_t   number_of_modules;
   MDRawModule modules[1];
 } MDRawModuleList;  /* MINIDUMP_MODULE_LIST */
 
@@ -501,7 +501,7 @@ static const size_t MDRawModuleList_minsize = offsetof(MDRawModuleList,
 
 
 typedef struct {
-  u_int32_t          number_of_memory_ranges;
+  uint32_t          number_of_memory_ranges;
   MDMemoryDescriptor memory_ranges[1];
 } MDRawMemoryList;  /* MINIDUMP_MEMORY_LIST */
 
@@ -512,21 +512,21 @@ static const size_t MDRawMemoryList_minsize = offsetof(MDRawMemoryList,
 #define MD_EXCEPTION_MAXIMUM_PARAMETERS 15
 
 typedef struct {
-  u_int32_t exception_code;     /* Windows: MDExceptionCodeWin,
+  uint32_t exception_code;     /* Windows: MDExceptionCodeWin,
                                  * Mac OS X: MDExceptionMac,
                                  * Linux: MDExceptionCodeLinux. */
-  u_int32_t exception_flags;    /* Windows: 1 if noncontinuable,
+  uint32_t exception_flags;    /* Windows: 1 if noncontinuable,
                                    Mac OS X: MDExceptionCodeMac. */
-  u_int64_t exception_record;   /* Address (in the minidump-producing host's
+  uint64_t exception_record;   /* Address (in the minidump-producing host's
                                  * memory) of another MDException, for
                                  * nested exceptions. */
-  u_int64_t exception_address;  /* The address that caused the exception.
+  uint64_t exception_address;  /* The address that caused the exception.
                                  * Mac OS X: exception subcode (which is
                                  *           typically the address). */
-  u_int32_t number_parameters;  /* Number of valid elements in
+  uint32_t number_parameters;  /* Number of valid elements in
                                  * exception_information. */
-  u_int32_t __align;
-  u_int64_t exception_information[MD_EXCEPTION_MAXIMUM_PARAMETERS];
+  uint32_t __align;
+  uint64_t exception_information[MD_EXCEPTION_MAXIMUM_PARAMETERS];
 } MDException;  /* MINIDUMP_EXCEPTION */
 
 #include "minidump_exception_win32.h"
@@ -535,10 +535,10 @@ typedef struct {
 #include "minidump_exception_solaris.h"
 
 typedef struct {
-  u_int32_t            thread_id;         /* Thread in which the exception
+  uint32_t            thread_id;         /* Thread in which the exception
                                            * occurred.  Corresponds to
                                            * (MDRawThread).thread_id. */
-  u_int32_t            __align;
+  uint32_t            __align;
   MDException          exception_record;
   MDLocationDescriptor thread_context;    /* MDRawContext[CPU] */
 } MDRawExceptionStream;  /* MINIDUMP_EXCEPTION_STREAM */
@@ -546,13 +546,13 @@ typedef struct {
 
 typedef union {
   struct {
-    u_int32_t vendor_id[3];               /* cpuid 0: ebx, edx, ecx */
-    u_int32_t version_information;        /* cpuid 1: eax */
-    u_int32_t feature_information;        /* cpuid 1: edx */
-    u_int32_t amd_extended_cpu_features;  /* cpuid 0x80000001, ebx */
+    uint32_t vendor_id[3];               /* cpuid 0: ebx, edx, ecx */
+    uint32_t version_information;        /* cpuid 1: eax */
+    uint32_t feature_information;        /* cpuid 1: edx */
+    uint32_t amd_extended_cpu_features;  /* cpuid 0x80000001, ebx */
   } x86_cpu_info;
   struct {
-    u_int64_t processor_features[2];
+    uint64_t processor_features[2];
   } other_cpu_info;
 } MDCPUInformation;  /* CPU_INFORMATION */
 
@@ -560,20 +560,20 @@ typedef union {
 typedef struct {
   /* The next 3 fields and numberOfProcessors are from the SYSTEM_INFO
    * structure as returned by GetSystemInfo */
-  u_int16_t        processor_architecture;
-  u_int16_t        processor_level;         /* x86: 5 = 586, 6 = 686, ... */
-  u_int16_t        processor_revision;      /* x86: 0xMMSS, where MM=model,
+  uint16_t        processor_architecture;
+  uint16_t        processor_level;         /* x86: 5 = 586, 6 = 686, ... */
+  uint16_t        processor_revision;      /* x86: 0xMMSS, where MM=model,
                                              *      SS=stepping */
 
-  u_int8_t         number_of_processors;
-  u_int8_t         product_type;            /* Windows: VER_NT_* from WinNT.h */
+  uint8_t         number_of_processors;
+  uint8_t         product_type;            /* Windows: VER_NT_* from WinNT.h */
 
   /* The next 5 fields are from the OSVERSIONINFO structure as returned
    * by GetVersionEx */
-  u_int32_t        major_version;
-  u_int32_t        minor_version;
-  u_int32_t        build_number;
-  u_int32_t        platform_id;
+  uint32_t        major_version;
+  uint32_t        minor_version;
+  uint32_t        build_number;
+  uint32_t        platform_id;
   MDRVA            csd_version_rva;  /* MDString further identifying the
                                       * host OS.
                                       * Windows: name of the installed OS
@@ -582,8 +582,8 @@ typedef struct {
                                       *           (sw_vers -buildVersion).
                                       * Linux: uname -srvmo */
 
-  u_int16_t        suite_mask;       /* Windows: VER_SUITE_* from WinNT.h */
-  u_int16_t        reserved2;
+  uint16_t        suite_mask;       /* Windows: VER_SUITE_* from WinNT.h */
+  uint16_t        reserved2;
 
   MDCPUInformation cpu;
 } MDRawSystemInfo;  /* MINIDUMP_SYSTEM_INFO */
@@ -627,29 +627,29 @@ typedef enum {
 
 
 typedef struct {
-  u_int32_t size_of_info;  /* Length of entire MDRawMiscInfo structure. */
-  u_int32_t flags1;
+  uint32_t size_of_info;  /* Length of entire MDRawMiscInfo structure. */
+  uint32_t flags1;
 
   /* The next field is only valid if flags1 contains
    * MD_MISCINFO_FLAGS1_PROCESS_ID. */
-  u_int32_t process_id;
+  uint32_t process_id;
 
   /* The next 3 fields are only valid if flags1 contains
    * MD_MISCINFO_FLAGS1_PROCESS_TIMES. */
-  u_int32_t process_create_time;  /* time_t process started */
-  u_int32_t process_user_time;    /* seconds of user CPU time */
-  u_int32_t process_kernel_time;  /* seconds of kernel CPU time */
+  uint32_t process_create_time;  /* time_t process started */
+  uint32_t process_user_time;    /* seconds of user CPU time */
+  uint32_t process_kernel_time;  /* seconds of kernel CPU time */
 
   /* The following fields are not present in MINIDUMP_MISC_INFO but are
    * in MINIDUMP_MISC_INFO_2.  When this struct is populated, these values
    * may not be set.  Use flags1 or sizeOfInfo to determine whether these
    * values are present.  These are only valid when flags1 contains
    * MD_MISCINFO_FLAGS1_PROCESSOR_POWER_INFO. */
-  u_int32_t processor_max_mhz;
-  u_int32_t processor_current_mhz;
-  u_int32_t processor_mhz_limit;
-  u_int32_t processor_max_idle_state;
-  u_int32_t processor_current_idle_state;
+  uint32_t processor_max_mhz;
+  uint32_t processor_current_mhz;
+  uint32_t processor_mhz_limit;
+  uint32_t processor_max_idle_state;
+  uint32_t processor_current_idle_state;
 } MDRawMiscInfo;  /* MINIDUMP_MISC_INFO, MINIDUMP_MISC_INFO2 */
 
 #define MD_MISCINFO_SIZE 24
@@ -677,24 +677,24 @@ typedef enum {
  */
 
 typedef struct {
-  u_int32_t size_of_header;    /* sizeof(MDRawMemoryInfoList) */
-  u_int32_t size_of_entry;     /* sizeof(MDRawMemoryInfo) */
-  u_int64_t number_of_entries;
+  uint32_t size_of_header;    /* sizeof(MDRawMemoryInfoList) */
+  uint32_t size_of_entry;     /* sizeof(MDRawMemoryInfo) */
+  uint64_t number_of_entries;
 } MDRawMemoryInfoList;  /* MINIDUMP_MEMORY_INFO_LIST */
 
 typedef struct {
-  u_int64_t base_address;           /* Base address of a region of pages */
-  u_int64_t allocation_base;        /* Base address of a range of pages
+  uint64_t base_address;           /* Base address of a region of pages */
+  uint64_t allocation_base;        /* Base address of a range of pages
                                      * within this region. */
-  u_int32_t allocation_protection;  /* Memory protection when this region
+  uint32_t allocation_protection;  /* Memory protection when this region
                                      * was originally allocated:
                                      * MDMemoryProtection */
-  u_int32_t __alignment1;
-  u_int64_t region_size;
-  u_int32_t state;                  /* MDMemoryState */
-  u_int32_t protection;             /* MDMemoryProtection */
-  u_int32_t type;                   /* MDMemoryType */
-  u_int32_t __alignment2;
+  uint32_t __alignment1;
+  uint64_t region_size;
+  uint32_t state;                  /* MDMemoryState */
+  uint32_t protection;             /* MDMemoryProtection */
+  uint32_t type;                   /* MDMemoryType */
+  uint32_t __alignment2;
 } MDRawMemoryInfo;  /* MINIDUMP_MEMORY_INFO */
 
 /* For (MDRawMemoryInfo).state */
@@ -721,7 +721,7 @@ typedef enum {
 } MDMemoryProtection;
 
 /* Used to mask the mutually exclusive options from the combinable flags. */
-const u_int32_t MD_MEMORY_PROTECTION_ACCESS_MASK = 0xFF;
+const uint32_t MD_MEMORY_PROTECTION_ACCESS_MASK = 0xFF;
 
 /* For (MDRawMemoryInfo).type */
 typedef enum {
@@ -738,7 +738,7 @@ typedef enum {
 typedef struct {
   /* validity is a bitmask with values from MDBreakpadInfoValidity, indicating
    * which of the other fields in the structure are valid. */
-  u_int32_t validity;
+  uint32_t validity;
 
   /* Thread ID of the handler thread.  dump_thread_id should correspond to
    * the thread_id of an MDRawThread in the minidump's MDRawThreadList if
@@ -746,7 +746,7 @@ typedef struct {
    * the MDRawThreadList does not contain a dedicated thread used to produce
    * the minidump, this field should be set to 0 and the validity field
    * must not contain MD_BREAKPAD_INFO_VALID_DUMP_THREAD_ID. */
-  u_int32_t dump_thread_id;
+  uint32_t dump_thread_id;
 
   /* Thread ID of the thread that requested the minidump be produced.  As
    * with dump_thread_id, requesting_thread_id should correspond to the
@@ -759,7 +759,7 @@ typedef struct {
    * other than a thread in the MDRawThreadList, this field should be set
    * to 0 and the validity field must not contain
    * MD_BREAKPAD_INFO_VALID_REQUESTING_THREAD_ID. */
-  u_int32_t requesting_thread_id;
+  uint32_t requesting_thread_id;
 } MDRawBreakpadInfo;
 
 /* For (MDRawBreakpadInfo).validity: */
@@ -777,11 +777,11 @@ typedef struct {
    * written to a file.
    * Fixed-length strings are used because MiniDumpWriteDump doesn't offer
    * a way for user streams to point to arbitrary RVAs for strings. */
-  u_int16_t expression[128];  /* Assertion that failed... */
-  u_int16_t function[128];    /* ...within this function... */
-  u_int16_t file[128];        /* ...in this file... */
-  u_int32_t line;             /* ...at this line. */
-  u_int32_t type;
+  uint16_t expression[128];  /* Assertion that failed... */
+  uint16_t function[128];    /* ...within this function... */
+  uint16_t file[128];        /* ...in this file... */
+  uint32_t line;             /* ...at this line. */
+  uint32_t type;
 } MDRawAssertionInfo;
 
 /* For (MDRawAssertionInfo).type: */
@@ -806,9 +806,9 @@ typedef struct {
 } MDRawLinkMap;
 
 typedef struct {
-  u_int32_t version;
+  uint32_t version;
   MDRVA     map;
-  u_int32_t dso_count;
+  uint32_t dso_count;
   void*     brk;
   void*     ldbase;
   void*     dynamic;

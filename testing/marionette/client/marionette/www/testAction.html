@@ -1,0 +1,70 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+
+<html>
+<head>
+<title>Marionette Test</title>
+</head>
+<body>
+  <h1 id="testh1">Test Page</h1>
+  <!-- "mozLink" and "mozLinkPos" work together to perform touchdown on mozLink, vertical move and then touchup on mozLinkPos-->
+  <button id="mozLink" style="position:absolute;left:0px;top:55px;" type="button" allowevents=true>Button1</button>
+  <button id="mozLinkPos" style="position:absolute;left:0px;top:355px;" type="button" allowevents=true>Button2</button>
+  <!-- "mozLinkCopy" listens for a touchdown and touchup -->
+  <button id="mozLinkCopy" style="position:absolute;left:0px;top:455px;" type="button" allowevents=true>Button3</button>
+  <script type="text/javascript">
+    window.ready = true;
+    var press = document.getElementById("mozLink");
+    var second = document.getElementById("mozLinkCopy");
+    // touchmove and touchend must be performed on the same element as touchstart
+    // here is press for vertical move
+    press.addEventListener("touchstart", changePressText, false);
+    press.addEventListener("touchmove", changeMoveText, false);
+    press.addEventListener("touchend", changeReleaseText, false);
+    // here is second for a tap
+    second.addEventListener("touchstart", changeCopyText, false);
+    second.addEventListener("touchend", changeClickText, false);
+    function changePressText() {
+      var press = document.getElementById("mozLink");
+      press.innerHTML = "Start";
+    }
+
+    function changeMoveText() {
+      var move = document.getElementById("mozLink");
+      move.innerHTML = "Move";
+    }
+
+    function changeReleaseText(event) {
+      var touches = event.changedTouches;
+      var clientX = touches[0].clientX;
+      var clientY = touches[0].clientY;
+      var release = document.getElementById("mozLinkPos");
+      var boxr = release.getBoundingClientRect();
+      if (clientY >= boxr.top &&
+          clientY <= boxr.bottom &&
+          clientX >= boxr.left &&
+          clientX <= boxr.right) {
+        release.innerHTML ="End";
+      }
+    }
+
+    function changeCopyText() {
+      var second = document.getElementById("mozLinkCopy");
+      second.innerHTML = "Start";
+    }
+
+    function changeClickText() {
+      var second = document.getElementById("mozLinkCopy");
+      if (second.innerHTML == "Start") {
+        second.innerHTML = "End";
+      }
+      else {
+        second.innerHTML = "Error";
+      }
+    }
+  </script>
+</body>
+</html>

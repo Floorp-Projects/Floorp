@@ -600,7 +600,7 @@ js_NewGCScript(JSContext *cx)
                                                    sizeof(JSScript), js::gc::TenuredHeap);
 }
 
-inline js::UnrootedShape
+inline js::RawShape
 js_NewGCShape(JSContext *cx)
 {
     return js::gc::NewGCThing<js::Shape, js::CanGC>(cx, js::gc::FINALIZE_SHAPE,
@@ -608,7 +608,7 @@ js_NewGCShape(JSContext *cx)
 }
 
 template <js::AllowGC allowGC>
-inline js::UnrootedBaseShape
+inline js::RawBaseShape
 js_NewGCBaseShape(JSContext *cx)
 {
     return js::gc::NewGCThing<js::BaseShape, allowGC>(cx, js::gc::FINALIZE_BASE_SHAPE,

@@ -48,6 +48,7 @@ EXPORTS		= \
 		nsHtml5UTF16BufferHSupplement.h \
 		nsHtml5DependentUTF16Buffer.h \
 		nsHtml5OwningUTF16Buffer.h \
+		nsHtml5PlainTextUtils.h \
 		nsHtml5ViewSourceUtils.h \
 		nsHtml5StringParser.h \
 		nsParserUtils.h \
@@ -83,6 +84,7 @@ CPPSRCS		= \
 		nsHtml5SpeculativeLoad.cpp \
 		nsHtml5SVGLoadDispatcher.cpp \
 		nsHtml5Highlighter.cpp \
+		nsHtml5PlainTextUtils.cpp \
 		nsHtml5ViewSourceUtils.cpp \
 		nsHtml5StringParser.cpp \
 		nsParserUtils.cpp \

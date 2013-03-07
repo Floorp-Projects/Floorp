@@ -32,6 +32,10 @@ public class ImmutableViewportMetrics {
     public final float viewportRectTop;
     public final float viewportRectRight;
     public final float viewportRectBottom;
+    public final float fixedLayerMarginLeft;
+    public final float fixedLayerMarginTop;
+    public final float fixedLayerMarginRight;
+    public final float fixedLayerMarginBottom;
     public final float zoomFactor;
 
     public ImmutableViewportMetrics(DisplayMetrics metrics) {
@@ -39,6 +43,7 @@ public class ImmutableViewportMetrics {
         viewportRectTop    = pageRectTop    = cssPageRectTop    = 0;
         viewportRectRight  = pageRectRight  = cssPageRectRight  = metrics.widthPixels;
         viewportRectBottom = pageRectBottom = cssPageRectBottom = metrics.heightPixels;
+        fixedLayerMarginLeft = fixedLayerMarginTop = fixedLayerMarginRight = fixedLayerMarginBottom = 0;
         zoomFactor = 1.0f;
     }
 
@@ -47,6 +52,21 @@ public class ImmutableViewportMetrics {
         float aCssPageRectTop, float aCssPageRectRight, float aCssPageRectBottom,
         float aViewportRectLeft, float aViewportRectTop, float aViewportRectRight,
         float aViewportRectBottom, float aZoomFactor)
+    {
+        this(aPageRectLeft, aPageRectTop,
+             aPageRectRight, aPageRectBottom, aCssPageRectLeft,
+             aCssPageRectTop, aCssPageRectRight, aCssPageRectBottom,
+             aViewportRectLeft, aViewportRectTop, aViewportRectRight,
+             aViewportRectBottom, 0.0f, 0.0f, 0.0f, 0.0f, aZoomFactor);
+    }
+
+    private ImmutableViewportMetrics(float aPageRectLeft, float aPageRectTop,
+        float aPageRectRight, float aPageRectBottom, float aCssPageRectLeft,
+        float aCssPageRectTop, float aCssPageRectRight, float aCssPageRectBottom,
+        float aViewportRectLeft, float aViewportRectTop, float aViewportRectRight,
+        float aViewportRectBottom, float aFixedLayerMarginLeft,
+        float aFixedLayerMarginTop, float aFixedLayerMarginRight,
+        float aFixedLayerMarginBottom, float aZoomFactor)
     {
         pageRectLeft = aPageRectLeft;
         pageRectTop = aPageRectTop;
@@ -60,6 +80,10 @@ public class ImmutableViewportMetrics {
         viewportRectTop = aViewportRectTop;
         viewportRectRight = aViewportRectRight;
         viewportRectBottom = aViewportRectBottom;
+        fixedLayerMarginLeft = aFixedLayerMarginLeft;
+        fixedLayerMarginTop = aFixedLayerMarginTop;
+        fixedLayerMarginRight = aFixedLayerMarginRight;
+        fixedLayerMarginBottom = aFixedLayerMarginBottom;
         zoomFactor = aZoomFactor;
     }
 
@@ -125,6 +149,10 @@ public class ImmutableViewportMetrics {
             FloatUtils.interpolate(viewportRectTop, to.viewportRectTop, t),
             FloatUtils.interpolate(viewportRectRight, to.viewportRectRight, t),
             FloatUtils.interpolate(viewportRectBottom, to.viewportRectBottom, t),
+            FloatUtils.interpolate(fixedLayerMarginLeft, to.fixedLayerMarginLeft, t),
+            FloatUtils.interpolate(fixedLayerMarginTop, to.fixedLayerMarginTop, t),
+            FloatUtils.interpolate(fixedLayerMarginRight, to.fixedLayerMarginRight, t),
+            FloatUtils.interpolate(fixedLayerMarginBottom, to.fixedLayerMarginBottom, t),
             FloatUtils.interpolate(zoomFactor, to.zoomFactor, t));
     }
 
@@ -133,6 +161,7 @@ public class ImmutableViewportMetrics {
             pageRectLeft, pageRectTop, pageRectRight, pageRectBottom,
             cssPageRectLeft, cssPageRectTop, cssPageRectRight, cssPageRectBottom,
             viewportRectLeft, viewportRectTop, viewportRectLeft + width, viewportRectTop + height,
+            fixedLayerMarginLeft, fixedLayerMarginTop, fixedLayerMarginRight, fixedLayerMarginBottom,
             zoomFactor);
     }
 
@@ -141,6 +170,7 @@ public class ImmutableViewportMetrics {
             pageRectLeft, pageRectTop, pageRectRight, pageRectBottom,
             cssPageRectLeft, cssPageRectTop, cssPageRectRight, cssPageRectBottom,
             newOriginX, newOriginY, newOriginX + getWidth(), newOriginY + getHeight(),
+            fixedLayerMarginLeft, fixedLayerMarginTop, fixedLayerMarginRight, fixedLayerMarginBottom,
             zoomFactor);
     }
 
@@ -149,6 +179,7 @@ public class ImmutableViewportMetrics {
             pageRectLeft, pageRectTop, pageRectRight, pageRectBottom,
             cssPageRectLeft, cssPageRectTop, cssPageRectRight, cssPageRectBottom,
             viewportRectLeft, viewportRectTop, viewportRectRight, viewportRectBottom,
+            fixedLayerMarginLeft, fixedLayerMarginTop, fixedLayerMarginRight, fixedLayerMarginBottom,
             newZoomFactor);
     }
 
@@ -161,7 +192,23 @@ public class ImmutableViewportMetrics {
             pageRect.left, pageRect.top, pageRect.right, pageRect.bottom,
             cssPageRect.left, cssPageRect.top, cssPageRect.right, cssPageRect.bottom,
             viewportRectLeft, viewportRectTop, viewportRectRight, viewportRectBottom,
+            fixedLayerMarginLeft, fixedLayerMarginTop, fixedLayerMarginRight, fixedLayerMarginBottom,
             zoomFactor);
+    }
+
+    public ImmutableViewportMetrics setFixedLayerMargins(float left, float top, float right, float bottom) {
+        return new ImmutableViewportMetrics(
+            pageRectLeft, pageRectTop, pageRectRight, pageRectBottom,
+            cssPageRectLeft, cssPageRectTop, cssPageRectRight, cssPageRectBottom,
+            viewportRectLeft, viewportRectTop, viewportRectRight, viewportRectBottom,
+            left, top, right, bottom, zoomFactor);
+    }
+
+    public ImmutableViewportMetrics setFixedLayerMarginsFrom(ImmutableViewportMetrics fromMetrics) {
+        return setFixedLayerMargins(fromMetrics.fixedLayerMarginLeft,
+                                    fromMetrics.fixedLayerMarginTop,
+                                    fromMetrics.fixedLayerMarginRight,
+                                    fromMetrics.fixedLayerMarginBottom);
     }
 
     /* This will set the zoom factor and re-scale page-size and viewport offset
@@ -185,35 +232,51 @@ public class ImmutableViewportMetrics {
             newPageRectLeft, newPageRectTop, newPageRectRight, newPageRectBottom,
             cssPageRectLeft, cssPageRectTop, cssPageRectRight, cssPageRectBottom,
             origin.x, origin.y, origin.x + getWidth(), origin.y + getHeight(),
+            fixedLayerMarginLeft, fixedLayerMarginTop, fixedLayerMarginRight, fixedLayerMarginBottom,
             newZoomFactor);
     }
 
     /** Clamps the viewport to remain within the page rect. */
-    public ImmutableViewportMetrics clamp() {
+    private ImmutableViewportMetrics clamp(float marginLeft, float marginTop,
+                                           float marginRight, float marginBottom) {
         RectF newViewport = getViewport();
 
         // The viewport bounds ought to never exceed the page bounds.
-        if (newViewport.right > pageRectRight)
-            newViewport.offset(pageRectRight - newViewport.right, 0);
-        if (newViewport.left < pageRectLeft)
-            newViewport.offset(pageRectLeft - newViewport.left, 0);
+        if (newViewport.right > pageRectRight + marginRight)
+            newViewport.offset((pageRectRight + marginRight) - newViewport.right, 0);
+        if (newViewport.left < pageRectLeft - marginLeft)
+            newViewport.offset((pageRectLeft - marginLeft) - newViewport.left, 0);
 
-        if (newViewport.bottom > pageRectBottom)
-            newViewport.offset(0, pageRectBottom - newViewport.bottom);
-        if (newViewport.top < pageRectTop)
-            newViewport.offset(0, pageRectTop - newViewport.top);
+        if (newViewport.bottom > pageRectBottom + marginBottom)
+            newViewport.offset(0, (pageRectBottom + marginBottom) - newViewport.bottom);
+        if (newViewport.top < pageRectTop - marginTop)
+            newViewport.offset(0, (pageRectTop - marginTop) - newViewport.top);
 
         return new ImmutableViewportMetrics(
             pageRectLeft, pageRectTop, pageRectRight, pageRectBottom,
             cssPageRectLeft, cssPageRectTop, cssPageRectRight, cssPageRectBottom,
             newViewport.left, newViewport.top, newViewport.right, newViewport.bottom,
+            fixedLayerMarginLeft, fixedLayerMarginTop, fixedLayerMarginRight, fixedLayerMarginBottom,
             zoomFactor);
+    }
+
+    public ImmutableViewportMetrics clamp() {
+        return clamp(0, 0, 0, 0);
+    }
+
+    public ImmutableViewportMetrics clampWithMargins() {
+        return clamp(fixedLayerMarginLeft, fixedLayerMarginTop,
+                     fixedLayerMarginRight, fixedLayerMarginBottom);
     }
 
     public boolean fuzzyEquals(ImmutableViewportMetrics other) {
         // Don't bother checking the pageRectXXX values because they are a product
         // of the cssPageRectXXX values and the zoomFactor, except with more rounding
         // error. Checking those is both inefficient and can lead to false negatives.
+        //
+        // This doesn't return false if the fixed layer margins differ as none
+        // of the users of this function are interested in the margins in that
+        // way.
         return FloatUtils.fuzzyEquals(cssPageRectLeft, other.cssPageRectLeft)
             && FloatUtils.fuzzyEquals(cssPageRectTop, other.cssPageRectTop)
             && FloatUtils.fuzzyEquals(cssPageRectRight, other.cssPageRectRight)
@@ -231,6 +294,8 @@ public class ImmutableViewportMetrics {
                 + viewportRectRight + "," + viewportRectBottom + ") p=(" + pageRectLeft + ","
                 + pageRectTop + "," + pageRectRight + "," + pageRectBottom + ") c=("
                 + cssPageRectLeft + "," + cssPageRectTop + "," + cssPageRectRight + ","
-                + cssPageRectBottom + ") z=" + zoomFactor;
+                + cssPageRectBottom + ") m=(" + fixedLayerMarginLeft + ","
+                + fixedLayerMarginTop + "," + fixedLayerMarginRight + ","
+                + fixedLayerMarginBottom + ") z=" + zoomFactor;
     }
 }

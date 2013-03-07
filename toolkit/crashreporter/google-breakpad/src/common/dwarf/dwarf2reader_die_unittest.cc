@@ -289,7 +289,7 @@ TEST_P(DwarfForms, addr) {
   StartSingleAttributeDIE(GetParam(), dwarf2reader::DW_TAG_compile_unit,
                           dwarf2reader::DW_AT_low_pc,
                           dwarf2reader::DW_FORM_addr);
-  u_int64_t value;
+  uint64_t value;
   if (GetParam().address_size == 4) {
     value = 0xc8e9ffcc;
     info.D32(value);
@@ -372,7 +372,7 @@ TEST_P(DwarfForms, sec_offset) {
   StartSingleAttributeDIE(GetParam(), (DwarfTag) 0x1d971689,
                           (DwarfAttribute) 0xa060bfd1,
                           dwarf2reader::DW_FORM_sec_offset);
-  u_int64_t value;
+  uint64_t value;
   if (GetParam().format_size == 4) {
     value = 0xacc9c388;
     info.D32(value);

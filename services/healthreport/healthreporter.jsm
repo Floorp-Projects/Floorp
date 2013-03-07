@@ -78,8 +78,8 @@ function AbstractHealthReporter(branch, policy, sessionRecorder) {
 
   this._storage = null;
   this._storageInProgress = false;
-  this._collector = null;
-  this._collectorInProgress = false;
+  this._providerManager = null;
+  this._providerManagerInProgress = false;
   this._initialized = false;
   this._initializeHadError = false;
   this._initializedDeferred = Promise.defer();
@@ -164,20 +164,20 @@ AbstractHealthReporter.prototype = Object.freeze({
       return;
     }
 
-    Task.spawn(this._initializeCollector.bind(this))
-        .then(this._onCollectorInitialized.bind(this),
+    Task.spawn(this._initializeProviderManager.bind(this))
+        .then(this._onProviderManagerInitialized.bind(this),
               this._onInitError.bind(this));
   },
 
-  _initializeCollector: function () {
+  _initializeProviderManager: function () {
     if (this._collector) {
-      throw new Error("Collector has already been initialized.");
+      throw new Error("Provider manager has already been initialized.");
     }
 
-    this._log.info("Initializing collector.");
-    this._collector = new Metrics.Collector(this._storage);
-    this._collector.onProviderError = this._recordError.bind(this);
-    this._collectorInProgress = true;
+    this._log.info("Initializing provider manager.");
+    this._providerManager = new Metrics.ProviderManager(this._storage);
+    this._providerManager.onProviderError = this._recordError.bind(this);
+    this._providerManagerInProgress = true;
 
     let catString = this._prefs.get("service.providerCategories") || "";
     if (catString.length) {
@@ -187,11 +187,11 @@ AbstractHealthReporter.prototype = Object.freeze({
     }
   },
 
-  _onCollectorInitialized: function () {
+  _onProviderManagerInitialized: function () {
     TelemetryStopwatch.finish(this._initHistogram, this);
     delete this._initHistogram;
-    this._log.debug("Collector initialized.");
-    this._collectorInProgress = false;
+    this._log.debug("Provider manager initialized.");
+    this._providerManagerInProgress = false;
 
     if (this._shutdownRequested) {
       this._initiateShutdown();
@@ -241,8 +241,9 @@ AbstractHealthReporter.prototype = Object.freeze({
     if (this._initializeHadError) {
       this._log.warn("Initialization had error. Shutting down immediately.");
     } else {
-      if (this._collectorInProgress) {
-        this._log.warn("Collector is in progress of initializing. Waiting to finish.");
+      if (this._providerManagerInProcess) {
+        this._log.warn("Provider manager is in progress of initializing. " +
+                       "Waiting to finish.");
         return;
       }
 
@@ -269,21 +270,20 @@ AbstractHealthReporter.prototype = Object.freeze({
       Services.obs.removeObserver(this, "idle-daily");
     } catch (ex) { }
 
-    // If we have collectors, we need to shut down providers.
-    if (this._collector) {
-      let onShutdown = this._onCollectorShutdown.bind(this);
-      Task.spawn(this._shutdownCollector.bind(this))
+    if (this._providerManager) {
+      let onShutdown = this._onProviderManagerShutdown.bind(this);
+      Task.spawn(this._shutdownProviderManager.bind(this))
           .then(onShutdown, onShutdown);
       return;
     }
 
-    this._log.warn("Don't have collector. Proceeding to storage shutdown.");
+    this._log.warn("Don't have provider manager. Proceeding to storage shutdown.");
     this._shutdownStorage();
   },
 
-  _shutdownCollector: function () {
-    this._log.info("Shutting down collector.");
-    for (let provider of this._collector.providers) {
+  _shutdownProviderManager: function () {
+    this._log.info("Shutting down provider manager.");
+    for (let provider of this._providerManager.providers) {
       try {
         yield provider.shutdown();
       } catch (ex) {
@@ -293,9 +293,9 @@ AbstractHealthReporter.prototype = Object.freeze({
     }
   },
 
-  _onCollectorShutdown: function () {
-    this._log.info("Collector shut down.");
-    this._collector = null;
+  _onProviderManagerShutdown: function () {
+    this._log.info("Provider manager shut down.");
+    this._providerManager = null;
     this._shutdownStorage();
   },
 
@@ -397,7 +397,7 @@ AbstractHealthReporter.prototype = Object.freeze({
    * will likely not return anything.
    */
   getProvider: function (name) {
-    return this._collector.getProvider(name);
+    return this._providerManager.getProvider(name);
   },
 
   /**
@@ -410,7 +410,7 @@ AbstractHealthReporter.prototype = Object.freeze({
    *        (Metrics.Provider) The provider to register for collection.
    */
   registerProvider: function (provider) {
-    return this._collector.registerProvider(provider);
+    return this._providerManager.registerProvider(provider);
   },
 
   /**
@@ -549,7 +549,7 @@ AbstractHealthReporter.prototype = Object.freeze({
     }.bind(this);
 
     return Task.spawn(function unregisterPullProviders() {
-      for (let provider of this._collector.providers) {
+      for (let provider of this._providerManager.providers) {
         if (!provider.pullOnly) {
           continue;
         }
@@ -563,7 +563,7 @@ AbstractHealthReporter.prototype = Object.freeze({
           this._recordError("Error when shutting down provider: " +
                             provider.name, ex);
         } finally {
-          this._collector.unregisterProvider(provider.name);
+          this._providerManager.unregisterProvider(provider.name);
         }
       }
     }.bind(this)).then(onFinished, onFinished);
@@ -635,7 +635,7 @@ AbstractHealthReporter.prototype = Object.freeze({
     return Task.spawn(function doCollection() {
       try {
         TelemetryStopwatch.start(TELEMETRY_COLLECT_CONSTANT, this);
-        yield this._collector.collectConstantData();
+        yield this._providerManager.collectConstantData();
         TelemetryStopwatch.finish(TELEMETRY_COLLECT_CONSTANT, this);
       } catch (ex) {
         TelemetryStopwatch.cancel(TELEMETRY_COLLECT_CONSTANT, this);
@@ -655,7 +655,7 @@ AbstractHealthReporter.prototype = Object.freeze({
         try {
           TelemetryStopwatch.start(TELEMETRY_COLLECT_DAILY, this);
           this._lastDailyDate = new Date();
-          yield this._collector.collectDailyData();
+          yield this._providerManager.collectDailyData();
           TelemetryStopwatch.finish(TELEMETRY_COLLECT_DAILY, this);
         } catch (ex) {
           TelemetryStopwatch.cancel(TELEMETRY_COLLECT_DAILY, this);
@@ -759,7 +759,7 @@ AbstractHealthReporter.prototype = Object.freeze({
       o.lastPingDate = this._formatDate(lastPingDate);
     }
 
-    for (let provider of this._collector.providers) {
+    for (let provider of this._providerManager.providers) {
       let providerName = provider.name;
 
       let providerEntry = {

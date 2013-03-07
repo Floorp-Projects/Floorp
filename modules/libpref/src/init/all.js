@@ -407,6 +407,9 @@ pref("view_source.editor.path", "");
 // for jumping to a specific line (e.g. "/line:%LINE%" or "--goto %LINE%")
 pref("view_source.editor.args", "");
 
+// When true this will word-wrap plain text documents.
+pref("plain_text.wrap_long_lines", false);
+
 // dispatch left clicks only to content in browser (still allows clicks to chrome/xul)
 pref("nglayout.events.dispatchLeftClickOnly", true);
 
@@ -708,10 +711,6 @@ pref("dom.send_after_paint_to_content", false);
 pref("dom.min_timeout_value", 4);
 // And for background windows
 pref("dom.min_background_timeout_value", 1000);
-
-// Use the new DOM bindings (only affects any scopes created after the pref is
-// changed)
-pref("dom.experimental_bindings", true);
 
 // Run content XBL in a separate scope.
 pref("dom.xbl_scopes", true);
@@ -1788,6 +1787,7 @@ pref("dom.archivereader.enabled", false);
 // resolved.
 pref("hangmonitor.timeout", 0);
 
+pref("plugins.load_appdir_plugins", false);
 // If true, plugins will be click to play
 pref("plugins.click_to_play", false);
 

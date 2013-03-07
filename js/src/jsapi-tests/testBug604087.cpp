@@ -22,6 +22,10 @@ struct OuterWrapper : js::Wrapper
         return true;
     }
 
+    virtual bool finalizeInBackground(JS::HandleValue priv) {
+        return false;
+    }
+
     static OuterWrapper singleton;
 };
 

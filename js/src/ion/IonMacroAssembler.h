@@ -152,6 +152,12 @@ class MacroAssembler : public MacroAssemblerSpecific
         branchPtr(cond, Address(obj, JSObject::offsetOfShape()), ImmGCPtr(shape), label);
     }
 
+    // Branches to |label| if |reg| is false. |reg| should be a C++ bool.
+    void branchIfFalseBool(const Register &reg, Label *label) {
+        // Note that C++ bool is only 1 byte, so ignore the higher-order bits.
+        branchTest32(Assembler::Zero, reg, Imm32(0xFF), label);
+    }
+
     void loadObjPrivate(Register obj, uint32_t nfixed, Register dest) {
         loadPtr(Address(obj, JSObject::getPrivateDataOffset(nfixed)), dest);
     }
@@ -674,7 +680,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         bind(&stackFull);
     }
 
-    void spsPushFrame(SPSProfiler *p, const char *str, UnrootedScript s, Register temp) {
+    void spsPushFrame(SPSProfiler *p, const char *str, RawScript s, Register temp) {
         Label stackFull;
         spsProfileEntryAddress(p, 0, temp, &stackFull);
 

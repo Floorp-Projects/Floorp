@@ -118,9 +118,9 @@ class StackwalkerX86Fixture {
 
   // Fill RAW_CONTEXT with pseudo-random data, for round-trip checking.
   void BrandContext(MDRawContextX86 *raw_context) {
-    u_int8_t x = 173;
+    uint8_t x = 173;
     for (size_t i = 0; i < sizeof(*raw_context); i++)
-      reinterpret_cast<u_int8_t *>(raw_context)[i] = (x += 17);
+      reinterpret_cast<uint8_t *>(raw_context)[i] = (x += 17);
   }
   
   SystemInfo system_info;

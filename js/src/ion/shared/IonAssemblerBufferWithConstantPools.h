@@ -675,8 +675,9 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
         JS_ASSERT(perforatedNode != NULL);
         if (numDumps >= (1<<logBasePoolInfo) && (numDumps & (numDumps-1)) == 0) {
             // need to resize.
-            poolInfo = static_cast<PoolInfo*>(realloc_(poolInfo, sizeof(PoolInfo) * numDumps,
-                                                       sizeof(PoolInfo) * numDumps * 2));
+            poolInfo = static_cast<PoolInfo*>(
+                this->realloc_(poolInfo, sizeof(PoolInfo) * numDumps,
+                               sizeof(PoolInfo) * numDumps * 2));
             if (poolInfo == NULL) {
                 this->fail_oom();
                 return;

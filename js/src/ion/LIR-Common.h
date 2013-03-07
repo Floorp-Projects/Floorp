@@ -3735,11 +3735,10 @@ class LParDump : public LCallInstructionHelper<0, BOX_PIECES, 0>
 };
 
 // Guard that a value is in a TypeSet.
-class LTypeBarrier : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 1>
+class LTypeBarrier : public LInstructionHelper<0, BOX_PIECES, 1>
 {
   public:
     LIR_HEADER(TypeBarrier)
-    BOX_OUTPUT_ACCESSORS()
 
     LTypeBarrier(const LDefinition &temp) {
         setTemp(0, temp);
@@ -3769,27 +3768,6 @@ class LMonitorTypes : public LInstructionHelper<0, BOX_PIECES, 1>
 
     const MMonitorTypes *mir() const {
         return mir_->toMonitorTypes();
-    }
-    const LDefinition *temp() {
-        return getTemp(0);
-    }
-};
-
-// Guard that a value is in a TypeSet.
-class LExcludeType : public LInstructionHelper<0, BOX_PIECES, 1>
-{
-  public:
-    LIR_HEADER(ExcludeType);
-    BOX_OUTPUT_ACCESSORS();
-
-    LExcludeType(const LDefinition &temp) {
-        setTemp(0, temp);
-    }
-
-    static const size_t Input = 0;
-
-    const MExcludeType *mir() const {
-        return mir_->toExcludeType();
     }
     const LDefinition *temp() {
         return getTemp(0);
@@ -3962,7 +3940,7 @@ class LFunctionBoundary : public LInstructionHelper<0, 0, 1>
         return getTemp(0);
     }
 
-    UnrootedScript script() {
+    RawScript script() {
         return mir_->toFunctionBoundary()->script();
     }
 

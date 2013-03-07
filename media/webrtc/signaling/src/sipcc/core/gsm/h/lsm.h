@@ -174,7 +174,7 @@ lsm_util_tone_start_with_speaker_as_backup (vcm_tones_t tone, short alert_info,
                                     cc_call_handle_t call_handle, groupid_t group_id,
                                     streamid_t stream_id, uint16_t direction);
 
-void lsm_data_channel_negotiated (line_t line, callid_t call_id, fsmdef_media_t *media, int *pc_stream_id);
+void lsm_initialize_datachannel (fsmdef_dcb_t *dcb, fsmdef_media_t *media);
 
 #endif //_LSM_H_
 

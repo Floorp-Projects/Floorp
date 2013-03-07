@@ -27,14 +27,14 @@ using namespace js;
 using namespace js::gc;
 
 static inline HeapSlot &
-GetCall(UnrootedObject proxy)
+GetCall(RawObject proxy)
 {
     JS_ASSERT(IsFunctionProxy(proxy));
     return proxy->getSlotRef(JSSLOT_PROXY_CALL);
 }
 
 static inline Value
-GetConstruct(UnrootedObject proxy)
+GetConstruct(RawObject proxy)
 {
     if (proxy->slotSpan() <= JSSLOT_PROXY_CONSTRUCT)
         return UndefinedValue();
@@ -42,7 +42,7 @@ GetConstruct(UnrootedObject proxy)
 }
 
 static inline HeapSlot &
-GetFunctionProxyConstruct(UnrootedObject proxy)
+GetFunctionProxyConstruct(RawObject proxy)
 {
     JS_ASSERT(IsFunctionProxy(proxy));
     JS_ASSERT(proxy->slotSpan() > JSSLOT_PROXY_CONSTRUCT);
@@ -3264,7 +3264,10 @@ NewProxyObject(JSContext *cx, BaseProxyHandler *handler, const Value &priv_, Tag
     }
 
     NewObjectKind newKind = clasp == &OuterWindowProxyClass ? SingletonObject : GenericObject;
-    RootedObject obj(cx, NewObjectWithGivenProto(cx, clasp, proto, parent, newKind));
+    gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
+    if (handler->finalizeInBackground(priv))
+        allocKind = GetBackgroundAllocKind(allocKind);
+    RootedObject obj(cx, NewObjectWithGivenProto(cx, clasp, proto, parent, allocKind, newKind));
     if (!obj)
         return NULL;
     obj->initSlot(JSSLOT_PROXY_HANDLER, PrivateValue(handler));

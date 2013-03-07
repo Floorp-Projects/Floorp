@@ -5035,7 +5035,7 @@ class MBindNameCache
     CompilerRootScript script_;
     jsbytecode *pc_;
 
-    MBindNameCache(MDefinition *scopeChain, PropertyName *name, UnrootedScript script, jsbytecode *pc)
+    MBindNameCache(MDefinition *scopeChain, PropertyName *name, RawScript script, jsbytecode *pc)
       : MUnaryInstruction(scopeChain), name_(name), script_(script), pc_(pc)
     {
         setResultType(MIRType_Object);
@@ -5044,7 +5044,7 @@ class MBindNameCache
   public:
     INSTRUCTION_HEADER(BindNameCache)
 
-    static MBindNameCache *New(MDefinition *scopeChain, PropertyName *name, UnrootedScript script,
+    static MBindNameCache *New(MDefinition *scopeChain, PropertyName *name, RawScript script,
                                jsbytecode *pc) {
         return new MBindNameCache(scopeChain, name, script, pc);
     }
@@ -5058,7 +5058,7 @@ class MBindNameCache
     PropertyName *name() const {
         return name_;
     }
-    UnrootedScript script() const {
+    RawScript script() const {
         return script_;
     }
     jsbytecode *pc() const {
@@ -5074,7 +5074,7 @@ class MGuardShape
     CompilerRootShape shape_;
     BailoutKind bailoutKind_;
 
-    MGuardShape(MDefinition *obj, UnrootedShape shape, BailoutKind bailoutKind)
+    MGuardShape(MDefinition *obj, RawShape shape, BailoutKind bailoutKind)
       : MUnaryInstruction(obj),
         shape_(shape),
         bailoutKind_(bailoutKind)
@@ -5087,7 +5087,7 @@ class MGuardShape
   public:
     INSTRUCTION_HEADER(GuardShape)
 
-    static MGuardShape *New(MDefinition *obj, UnrootedShape shape, BailoutKind bailoutKind) {
+    static MGuardShape *New(MDefinition *obj, RawShape shape, BailoutKind bailoutKind) {
         return new MGuardShape(obj, shape, bailoutKind);
     }
 
@@ -5097,7 +5097,7 @@ class MGuardShape
     MDefinition *obj() const {
         return getOperand(0);
     }
-    const UnrootedShape shape() const {
+    const RawShape shape() const {
         return shape_;
     }
     BailoutKind bailoutKind() const {
@@ -6162,28 +6162,39 @@ class MParDump
 
 // Given a value, guard that the value is in a particular TypeSet, then returns
 // that value.
-class MTypeBarrier : public MUnaryInstruction
+class MTypeBarrier
+  : public MUnaryInstruction,
+    public BoxInputsPolicy
 {
     BailoutKind bailoutKind_;
     const types::StackTypeSet *typeSet_;
 
-    MTypeBarrier(MDefinition *def, const types::StackTypeSet *types)
+    MTypeBarrier(MDefinition *def, const types::StackTypeSet *types, BailoutKind bailoutKind)
       : MUnaryInstruction(def),
         typeSet_(types)
     {
         setResultType(MIRType_Value);
         setGuard();
         setMovable();
-        bailoutKind_ = def->isEffectful()
-                       ? Bailout_TypeBarrier
-                       : Bailout_Normal;
+        bailoutKind_ = bailoutKind;
     }
 
   public:
     INSTRUCTION_HEADER(TypeBarrier)
 
     static MTypeBarrier *New(MDefinition *def, const types::StackTypeSet *types) {
-        return new MTypeBarrier(def, types);
+        BailoutKind bailoutKind = def->isEffectful()
+                                  ? Bailout_TypeBarrier
+                                  : Bailout_Normal;
+        return new MTypeBarrier(def, types, bailoutKind);
+    }
+    static MTypeBarrier *New(MDefinition *def, const types::StackTypeSet *types,
+                             BailoutKind bailoutKind) {
+        return new MTypeBarrier(def, types, bailoutKind);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
     }
 
     bool congruentTo(MDefinition * const &def) const {
@@ -6204,7 +6215,6 @@ class MTypeBarrier : public MUnaryInstruction
     virtual bool neverHoist() const {
         return typeSet()->empty();
     }
-
 };
 
 // Like MTypeBarrier, guard that the value is in the given type set. This is
@@ -6234,46 +6244,6 @@ class MMonitorTypes : public MUnaryInstruction
     }
     const types::StackTypeSet *typeSet() const {
         return typeSet_;
-    }
-    AliasSet getAliasSet() const {
-        return AliasSet::None();
-    }
-};
-
-// Guards that the incoming value does not have the specified Type.
-class MExcludeType
-  : public MUnaryInstruction,
-    public BoxInputsPolicy
-{
-    types::Type type_;
-
-    MExcludeType(MDefinition *def, types::Type type)
-      : MUnaryInstruction(def),
-        type_(type)
-    {
-        setGuard();
-        setMovable();
-    }
-
-  public:
-    INSTRUCTION_HEADER(ExcludeType);
-
-    static MExcludeType *New(MDefinition *def, types::Type type) {
-        return new MExcludeType(def, type);
-    }
-
-    MDefinition *input() const {
-        return getOperand(0);
-    }
-    BailoutKind bailoutKind() const {
-        return Bailout_Normal;
-    }
-    types::Type type() const {
-        return type_;
-    }
-
-    TypePolicy *typePolicy() {
-        return this;
     }
     AliasSet getAliasSet() const {
         return AliasSet::None();
@@ -6456,7 +6426,7 @@ class MFunctionBoundary : public MNullaryInstruction
     Type type_;
     unsigned inlineLevel_;
 
-    MFunctionBoundary(UnrootedScript script, Type type, unsigned inlineLevel)
+    MFunctionBoundary(RawScript script, Type type, unsigned inlineLevel)
       : script_(script), type_(type), inlineLevel_(inlineLevel)
     {
         JS_ASSERT_IF(type != Inline_Exit, script != NULL);
@@ -6467,12 +6437,12 @@ class MFunctionBoundary : public MNullaryInstruction
   public:
     INSTRUCTION_HEADER(FunctionBoundary)
 
-    static MFunctionBoundary *New(UnrootedScript script, Type type,
+    static MFunctionBoundary *New(RawScript script, Type type,
                                   unsigned inlineLevel = 0) {
         return new MFunctionBoundary(script, type, inlineLevel);
     }
 
-    UnrootedScript script() {
+    RawScript script() {
         return script_;
     }
 

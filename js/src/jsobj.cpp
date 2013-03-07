@@ -1198,7 +1198,7 @@ NewObject(JSContext *cx, Class *clasp, types::TypeObject *type_, JSObject *paren
     if (!PreallocateObjectDynamicSlots(cx, shape, &slots))
         return NULL;
 
-    gc::InitialHeap heap = InitialHeapForNewKind(newKind);
+    gc::InitialHeap heap = GetInitialHeap(newKind, clasp);
     JSObject *obj = JSObject::create(cx, kind, heap, shape, type, slots);
     if (!obj) {
         js_free(slots);
@@ -1243,7 +1243,7 @@ js::NewObjectWithGivenProto(JSContext *cx, js::Class *clasp,
         (!parent || parent == proto.toObject()->getParent()) && !proto.toObject()->isGlobal())
     {
         if (cache.lookupProto(clasp, proto.toObject(), allocKind, &entry)) {
-            JSObject *obj = cache.newObjectFromHit(cx, entry, InitialHeapForNewKind(newKind));
+            JSObject *obj = cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, clasp));
             if (obj)
                 return obj;
         }
@@ -1299,7 +1299,7 @@ js::NewObjectWithClassProtoCommon(JSContext *cx, js::Class *clasp, JSObject *pro
     NewObjectCache::EntryIndex entry = -1;
     if (parentArg->isGlobal() && protoKey != JSProto_Null && newKind != SingletonObject) {
         if (cache.lookupGlobal(clasp, &parentArg->asGlobal(), allocKind, &entry)) {
-            JSObject *obj = cache.newObjectFromHit(cx, entry, InitialHeapForNewKind(newKind));
+            JSObject *obj = cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, clasp));
             if (obj)
                 return obj;
         }
@@ -1341,7 +1341,7 @@ js::NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent, gc
     NewObjectCache::EntryIndex entry = -1;
     if (parent == type->proto->getParent() && newKind != SingletonObject) {
         if (cache.lookupType(&ObjectClass, type, allocKind, &entry)) {
-            JSObject *obj = cache.newObjectFromHit(cx, entry, InitialHeapForNewKind(newKind));
+            JSObject *obj = cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, &ObjectClass));
             if (obj)
                 return obj;
         }
@@ -1398,7 +1398,7 @@ js::NewReshapedObject(JSContext *cx, HandleTypeObject type, JSObject *parent,
             if (!ids.append(JSID_VOID))
                 return NULL;
         }
-        UnrootedShape nshape = shape;
+        RawShape nshape = shape;
         while (!nshape->isEmptyShape()) {
             ids[nshape->slot()] = nshape->propid();
             nshape = nshape->previous();
@@ -1515,7 +1515,7 @@ js::CreateThisForFunction(JSContext *cx, HandleObject callee, bool newType)
  * checking whether document.all is defined.
  */
 static bool
-Detecting(JSContext *cx, UnrootedScript script, jsbytecode *pc)
+Detecting(JSContext *cx, RawScript script, jsbytecode *pc)
 {
     /* General case: a branch or equality op follows the access. */
     JSOp op = JSOp(*pc);
@@ -1566,7 +1566,7 @@ js_InferFlags(JSContext *cx, unsigned defaultFlags)
      * handle the case of cross-compartment property access.
      */
     jsbytecode *pc;
-    UnrootedScript script = cx->stack.currentScript(&pc, ContextStack::ALLOW_CROSS_COMPARTMENT);
+    RawScript script = cx->stack.currentScript(&pc, ContextStack::ALLOW_CROSS_COMPARTMENT);
     if (!script)
         return defaultFlags;
 
@@ -3101,7 +3101,7 @@ js_PurgeScopeChainHelper(JSContext *cx, HandleObject objArg, HandleId id)
     return true;
 }
 
-UnrootedShape
+RawShape
 js_AddNativeProperty(JSContext *cx, HandleObject obj, HandleId id,
                      PropertyOp getter, StrictPropertyOp setter, uint32_t slot,
                      unsigned attrs, unsigned flags, int shortid)
@@ -3112,9 +3112,9 @@ js_AddNativeProperty(JSContext *cx, HandleObject obj, HandleId id,
      * we can lock the shadowed scope.
      */
     if (!js_PurgeScopeChain(cx, obj, id))
-        return UnrootedShape(NULL);
+        return NULL;
 
-    UnrootedShape shape =
+    RawShape shape =
         JSObject::putProperty(cx, obj, id, getter, setter, slot, attrs, flags, shortid);
     if (!shape)
         return shape;
@@ -3438,7 +3438,7 @@ CallResolveOp(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
         return true;
     }
 
-    UnrootedShape shape;
+    RawShape shape;
     if (!objp->nativeEmpty() && (shape = objp->nativeLookup(cx, id)))
         propp.set(shape);
     else
@@ -3471,7 +3471,7 @@ LookupPropertyWithFlagsInline(JSContext *cx,
                 return true;
             }
 
-            UnrootedShape shape = current->nativeLookup(cx, id);
+            RawShape shape = current->nativeLookup(cx, id);
             if (shape) {
                 objp.set(current);
                 propp.set(shape);
@@ -3658,7 +3658,7 @@ NativeGetInline(JSContext *cx,
 
     {
         jsbytecode *pc;
-        UnrootedScript script = cx->stack.currentScript(&pc);
+        RawScript script = cx->stack.currentScript(&pc);
         if (script && script->hasAnalysis()) {
             analyze::Bytecode *code = script->analysis()->maybeCode(pc);
             if (code)
@@ -3918,7 +3918,7 @@ static bool
 MaybeReportUndeclaredVarAssignment(JSContext *cx, JSString *propname)
 {
     {
-        UnrootedScript script = cx->stack.currentScript(NULL, ContextStack::ALLOW_CROSS_COMPARTMENT);
+        RawScript script = cx->stack.currentScript(NULL, ContextStack::ALLOW_CROSS_COMPARTMENT);
         if (!script)
             return true;
 
@@ -3941,7 +3941,7 @@ js::ReportIfUndeclaredVarAssignment(JSContext *cx, HandleString propname)
 {
     {
         jsbytecode *pc;
-        UnrootedScript script = cx->stack.currentScript(&pc, ContextStack::ALLOW_CROSS_COMPARTMENT);
+        RawScript script = cx->stack.currentScript(&pc, ContextStack::ALLOW_CROSS_COMPARTMENT);
         if (!script)
             return true;
 
@@ -4366,7 +4366,7 @@ js::HasDataProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         return true;
     }
 
-    if (UnrootedShape shape = obj->nativeLookup(cx, id)) {
+    if (RawShape shape = obj->nativeLookup(cx, id)) {
         if (shape->hasDefaultGetter() && shape->hasSlot()) {
             *vp = obj->nativeGetSlot(shape->slot());
             return true;
@@ -4721,7 +4721,7 @@ js_GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
     JSObject *obj = (JSObject *)trc->debugPrintArg;
     uint32_t slot = uint32_t(trc->debugPrintIndex);
 
-    UnrootedShape shape;
+    RawShape shape;
     if (obj->isNative()) {
         shape = obj->lastProperty();
         while (shape && (!shape->hasSlot() || shape->slot() != slot))
@@ -4803,7 +4803,7 @@ dumpValue(const Value &v)
             fputs("<unnamed function", stderr);
         }
         if (fun->hasScript()) {
-            UnrootedScript script = fun->nonLazyScript();
+            RawScript script = fun->nonLazyScript();
             fprintf(stderr, " (%s:%u)",
                     script->filename ? script->filename : "", script->lineno);
         }
