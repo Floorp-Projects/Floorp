@@ -5,7 +5,7 @@
 'use strict';
 
 const { on, once, off, emit, count, amass } = require('sdk/event/core');
-const { Loader } = require('sdk/test/loader');
+const { LoaderWithHookedConsole } = require("sdk/test/loader");
 
 exports['test add a listener'] = function(assert) {
   let events = [ { name: 'event#1' }, 'event#2' ];
@@ -159,13 +159,8 @@ exports['test error handling'] = function(assert) {
 
 exports['test unhandled errors'] = function(assert) {
   let exceptions = [];
-  let loader = Loader(module, {
-    console: Object.create(console, {
-      exception: { value: function(e) {
-        exceptions.push(e);
-      }}
-    })
-  });
+  let { loader, messages } = LoaderWithHookedConsole(module);
+  
   let { emit, on } = loader.require('sdk/event/core');
   let target = {};
   let boom = Error('Boom!');
@@ -174,12 +169,16 @@ exports['test unhandled errors'] = function(assert) {
   on(target, 'message', function() { throw boom; });
 
   emit(target, 'message');
-  assert.ok(~String(exceptions[0]).indexOf('Boom!'),
+  assert.equal(messages.length, 1, 'Got the first exception');
+  assert.equal(messages[0].type, 'exception', 'The console message is exception');
+  assert.ok(~String(messages[0].msg).indexOf('Boom!'),
             'unhandled exception is logged');
 
   on(target, 'error', function() { throw drax; });
   emit(target, 'message');
-  assert.ok(~String(exceptions[1]).indexOf('Draax!'),
+  assert.equal(messages.length, 2, 'Got the second exception');
+  assert.equal(messages[1].type, 'exception', 'The console message is exception');
+  assert.ok(~String(messages[1].msg).indexOf('Draax!'),
             'error in error handler is logged');
 };
 

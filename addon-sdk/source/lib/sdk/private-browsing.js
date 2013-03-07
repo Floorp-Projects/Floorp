@@ -7,7 +7,8 @@ module.metadata = {
   "stability": "stable"
 };
 
-const { setMode, getMode, on: onStateChange, isWindowPrivate } = require('./private-browsing/utils');
+const { setMode, getMode, on: onStateChange } = require('./private-browsing/utils');
+const { isWindowPrivate } = require('./window/utils');
 const { emit, on, once, off } = require('./event/core');
 const { when: unload } = require('./system/unload');
 const { deprecateUsage, deprecateFunction, deprecateEvent } = require('./util/deprecate');
@@ -38,15 +39,24 @@ exports.removeListener = deprecateEvents(function removeListener(type, listener)
 });
 
 exports.isPrivate = function(thing) {
+  // if thing is defined, and we can find a window for it
+  // then check if the window is private
   if (!!thing) {
+    // if the thing is a window, and the window is private
+    // then return true
     if (isWindowPrivate(thing)) {
       return true;
     }
 
+    // can we find an associated window?
     let window = getOwnerWindow(thing);
     if (window)
       return isWindowPrivate(window);
   }
+
+  // if we get here, and global private browsing
+  // is available, and it is true, then return
+  // true otherwise false is returned here
   return getMode();
 };
 
