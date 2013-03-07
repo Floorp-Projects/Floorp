@@ -83,6 +83,17 @@
  * - Pass Handle<T> through your hot call stack to avoid re-rooting costs at
  *   every invocation.
  *
+ * If this is not enough, the following family of two classes and two
+ * functions can provide partially type-safe and mostly runtime-safe access to
+ * GC things.
+ *
+ * - AutoAssertNoGC is a scoped guard that will trigger an assertion if a GC,
+ *   or an appropriately marked method that might GC, is entered when it is in
+ *   scope.  By convention the name given to instances of this guard is |nogc|.
+ *
+ * - AssertCanGC() will assert if an AutoAssertNoGC is in scope either locally
+ *   or anywhere in the call stack.
+ *
  * There also exists a set of RawT typedefs for modules without rooting
  * concerns, such as the GC. Do not use these as they provide no rooting
  * protection whatsoever.
@@ -124,10 +135,16 @@ namespace JS {
 
 template <typename T> class Rooted;
 
+class AutoAssertNoGC;
+
 template <typename T> class Handle;
 template <typename T> class MutableHandle;
 
-/* This is exposing internal state of the GC for inlining purposes. */
+JS_FRIEND_API(void) EnterAssertNoGCScope();
+JS_FRIEND_API(void) LeaveAssertNoGCScope();
+
+/* These are exposing internal state of the GC for inlining purposes. */
+JS_FRIEND_API(bool) InNoGCScope();
 JS_FRIEND_API(bool) isGCEnabled();
 
 #if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
@@ -765,6 +782,39 @@ MutableHandle<T>::MutableHandle(Rooted<T> *root)
     ptr = root->address();
 }
 
+/*
+ * The scoped guard object AutoAssertNoGC forces the GC to assert if a GC is
+ * attempted while the guard object is live.  If you have a GC-unsafe operation
+ * to perform, use this guard object to protect your operation.
+ */
+class AutoAssertNoGC
+{
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+public:
+    AutoAssertNoGC(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+#ifdef DEBUG
+        EnterAssertNoGCScope();
+#endif
+    }
+
+    ~AutoAssertNoGC() {
+#ifdef DEBUG
+        LeaveAssertNoGCScope();
+#endif
+    }
+};
+
+/*
+ * AssertCanGC will assert if it is called inside of an AutoAssertNoGC region.
+ */
+JS_ALWAYS_INLINE void
+AssertCanGC()
+{
+    JS_ASSERT_IF(isGCEnabled(), !InNoGCScope());
+}
+
 JS_FRIEND_API(bool) NeedRelaxedRootChecks();
 
 } /* namespace JS */
@@ -777,6 +827,7 @@ namespace js {
  */
 inline void MaybeCheckStackRoots(JSContext *cx, bool relax = true)
 {
+    JS::AssertCanGC();
 #if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
     if (relax && NeedRelaxedRootChecks())
         return;

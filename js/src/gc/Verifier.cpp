@@ -217,6 +217,17 @@ JS::CheckStackRoots(JSContext *cx)
     if (rt->gcZeal_ != ZealStackRootingValue)
         return;
 
+    // If this assertion fails, it means that an AutoAssertNoGC was placed
+    // around code that could trigger GC, and is therefore wrong. The
+    // AutoAssertNoGC should be removed and the code it was guarding should be
+    // modified to properly root any gcthings, and very possibly any code
+    // calling that function should also be modified if it was improperly
+    // assuming that GC could not happen at all within the called function.
+    // (The latter may not apply if the AutoAssertNoGC only protected a portion
+    // of a function, so the callers were already assuming that GC could
+    // happen.)
+    JS_ASSERT(!InNoGCScope());
+
     // GCs can't happen when analysis/inference/compilation are active.
     if (cx->compartment->activeAnalysis)
         return;

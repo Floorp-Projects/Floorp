@@ -3584,7 +3584,7 @@ bool
 js::LookupNameNoGC(JSContext *cx, PropertyName *name, JSObject *scopeChain,
                    JSObject **objp, JSObject **pobjp, Shape **propp)
 {
-    AutoAssertNoException nogc(cx);
+    AutoAssertNoGCOrException nogc(cx);
 
     JS_ASSERT(!*objp && !*pobjp && !*propp);
 
@@ -3862,7 +3862,7 @@ baseops::GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, Han
 JSBool
 baseops::GetPropertyNoGC(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
 {
-    AutoAssertNoException nogc(cx);
+    AutoAssertNoGCOrException nogc(cx);
     return GetPropertyHelperInline<NoGC>(cx, obj, receiver, id, 0, vp);
 }
 
