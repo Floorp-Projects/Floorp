@@ -1060,7 +1060,16 @@ public class GeckoAppShell
         }
 
         final String scheme = uri.getScheme();
-        final Intent intent = getIntentForActionString(action);
+
+        final Intent intent;
+        if ("vnd.youtube".equals(scheme) && getHandlersForURL(targetURI, action).length == 0) {
+            // Special case youtube to fallback to our own player
+            intent = new Intent(VideoPlayer.VIDEO_ACTION);
+            intent.setClassName(GeckoApp.mAppContext.getPackageName(),
+                                "org.mozilla.gecko.VideoPlayer");
+        } else {
+            intent = getIntentForActionString(action);
+        }
 
         // Start with the original URI. If we end up modifying it,
         // we'll overwrite it.

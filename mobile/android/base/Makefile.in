@@ -154,6 +154,7 @@ FENNEC_JAVA_FILES = \
   TextSelection.java \
   TextSelectionHandle.java \
   ThumbnailHelper.java \
+  VideoPlayer.java \
   WebAppAllocator.java \
   ZoomConstraints.java \
   gfx/Axis.java \
@@ -430,6 +431,7 @@ RES_LAYOUT = \
   res/layout/abouthome_remote_tab_row.xml \
   res/layout/abouthome_topsite_item.xml \
   res/layout/validation_message.xml \
+  res/layout/videoplayer.xml \
   $(NULL)
 
 RES_LAYOUT_LAND_V14 = \
