@@ -1892,7 +1892,7 @@ var ContentAreaObserver = {
       let [scrollbox, scrollInterface] = ScrollUtils.getScrollboxFromElement(currentElement);
       if (scrollbox && scrollInterface && currentElement && currentElement != scrollbox) {
         // retrieve the direct child of the scrollbox
-        while (currentElement.parentNode != scrollbox)
+        while (currentElement && currentElement.parentNode != scrollbox)
           currentElement = currentElement.parentNode;
   
         setTimeout(function() { scrollInterface.ensureElementIsVisible(currentElement) }, 0);
