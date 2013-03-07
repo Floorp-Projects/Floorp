@@ -24,16 +24,6 @@ static WindowsDllInterceptor sNtDllInterceptor;
 void AbortOnBadWrite(HANDLE);
 bool ValidWriteAssert(bool ok);
 
-typedef NTSTATUS (WINAPI* FlushBuffersFile_fn)(HANDLE, PIO_STATUS_BLOCK);
-FlushBuffersFile_fn gOriginalFlushBuffersFile;
-
-NTSTATUS WINAPI
-patched_FlushBuffersFile(HANDLE aFileHandle, PIO_STATUS_BLOCK aIoStatusBlock)
-{
-  AbortOnBadWrite(aFileHandle);
-  return gOriginalFlushBuffersFile(aFileHandle, aIoStatusBlock);
-}
-
 typedef NTSTATUS (WINAPI* WriteFile_fn)(HANDLE, HANDLE, PIO_APC_ROUTINE,
                                         void*, PIO_STATUS_BLOCK,
                                         const void*, ULONG, PLARGE_INTEGER,
@@ -93,7 +83,6 @@ void PoisonWrite() {
     return;
 
   sNtDllInterceptor.Init("ntdll.dll");
-  sNtDllInterceptor.AddHook("NtFlushBuffersFile", reinterpret_cast<intptr_t>(patched_FlushBuffersFile), reinterpret_cast<void**>(&gOriginalFlushBuffersFile));
   sNtDllInterceptor.AddHook("NtWriteFile", reinterpret_cast<intptr_t>(patched_WriteFile), reinterpret_cast<void**>(&gOriginalWriteFile));
   sNtDllInterceptor.AddHook("NtWriteFileGather", reinterpret_cast<intptr_t>(patched_WriteFileGather), reinterpret_cast<void**>(&gOriginalWriteFileGather));
 }
