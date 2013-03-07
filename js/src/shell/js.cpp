@@ -5256,7 +5256,8 @@ main(int argc, char **argv, char **envp)
 
     JS_SetGCParameter(rt, JSGC_MAX_BYTES, 0xffffffff);
 #ifdef JSGC_GENERATIONAL
-    JS_SetGCParameter(rt, JSGC_ENABLE_GENERATIONAL, op.getBoolOption("ggc"));
+    if (!op.getBoolOption("ggc"))
+        JS::DisableGenerationalGC(rt);
 #endif
 
     JS_SetTrustedPrincipals(rt, &shellTrustedPrincipals);
