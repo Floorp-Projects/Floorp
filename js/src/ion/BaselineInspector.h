@@ -12,9 +12,35 @@
 #include "jscompartment.h"
 
 #include "BaselineJIT.h"
+#include "BaselineIC.h"
 
 namespace js {
 namespace ion {
+
+class BaselineInspector;
+
+class ICInspector
+{
+  protected:
+    BaselineInspector *inspector_;
+    jsbytecode *pc_;
+    ICEntry *icEntry_;
+
+    ICInspector(BaselineInspector *inspector, jsbytecode *pc, ICEntry *icEntry)
+      : inspector_(inspector), pc_(pc), icEntry_(icEntry)
+    { }
+};
+
+class SetElemICInspector : public ICInspector
+{
+
+  public:
+    SetElemICInspector(BaselineInspector *inspector, jsbytecode *pc, ICEntry *icEntry)
+      : ICInspector(inspector, pc, icEntry)
+    { }
+
+    bool sawOOBTypedArrayWrite() const;
+};
 
 class BaselineInspector
 {
@@ -49,12 +75,27 @@ class BaselineInspector
         JS_ASSERT(hasBaselineScript());
         JS_ASSERT(isValidPC(pc));
         ICEntry &ent = baselineScript()->icEntryFromPCOffset(pc - script->code, prevLookedUpEntry);
+        JS_ASSERT(ent.isForOp());
         prevLookedUpEntry = &ent;
         return ent;
     }
 
+    template <typename ICInspectorType>
+    ICInspectorType makeICInspector(jsbytecode *pc, ICStub::Kind expectedFallbackKind) {
+        ICEntry *ent = NULL;
+        if (hasBaselineScript()) {
+            ent = &icEntryFromPC(pc);
+            JS_ASSERT(ent->fallbackStub()->kind() == expectedFallbackKind);
+        }
+        return ICInspectorType(this, pc, ent);
+    }
+
   public:
     RawShape maybeMonomorphicShapeForPropertyOp(jsbytecode *pc);
+
+    SetElemICInspector setElemICInspector(jsbytecode *pc) {
+        return makeICInspector<SetElemICInspector>(pc, ICStub::SetElem_Fallback);
+    }
 };
 
 } // namespace ion

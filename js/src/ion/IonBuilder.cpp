@@ -5909,6 +5909,11 @@ IonBuilder::jsop_setelem_typed(int arrayType)
     MDefinition *id = current->pop();
     MDefinition *obj = current->pop();
 
+    SetElemICInspector icInspect(inspector->setElemICInspector(pc));
+    bool expectOOB = icInspect.sawOOBTypedArrayWrite();
+    if (expectOOB)
+        spew("Emitting OOB TypedArray SetElem");
+
     // Ensure id is an integer.
     MInstruction *idInt32 = MToInt32::New(id);
     current->add(idInt32);
@@ -5918,26 +5923,31 @@ IonBuilder::jsop_setelem_typed(int arrayType)
     MInstruction *length = getTypedArrayLength(obj);
     current->add(length);
 
-    // Bounds check.
-    id = addBoundsCheck(id, length);
+    if (!expectOOB) {
+        // Bounds check.
+        id = addBoundsCheck(id, length);
+    }
 
     // Get the elements vector.
     MInstruction *elements = getTypedArrayElements(obj);
     current->add(elements);
 
     // Clamp value to [0, 255] for Uint8ClampedArray.
-    MDefinition *unclampedValue = value;
+    MDefinition *toWrite = value;
     if (arrayType == TypedArray::TYPE_UINT8_CLAMPED) {
-        value = MClampToUint8::New(value);
-        current->add(value->toInstruction());
+        toWrite = MClampToUint8::New(value);
+        current->add(toWrite->toInstruction());
     }
 
     // Store the value.
-    MStoreTypedArrayElement *store = MStoreTypedArrayElement::New(elements, id, value, arrayType);
-    current->add(store);
-
-    current->push(unclampedValue);
-    return resumeAfter(store);
+    MInstruction *ins;
+    if (expectOOB)
+        ins = MStoreTypedArrayElementHole::New(elements, length, id, toWrite, arrayType);
+    else
+        ins = MStoreTypedArrayElement::New(elements, id, toWrite, arrayType);
+    current->add(ins);
+    current->push(value);
+    return resumeAfter(ins);
 }
 
 bool

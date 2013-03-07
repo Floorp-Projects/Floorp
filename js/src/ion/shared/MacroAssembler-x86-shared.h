@@ -124,6 +124,14 @@ class MacroAssemblerX86Shared : public Assembler
         xorl(imm, dest);
     }
 
+    void branch32(Condition cond, const Operand &lhs, const Register &rhs, Label *label) {
+        cmpl(lhs, rhs);
+        j(cond, label);
+    }
+    void branch32(Condition cond, const Operand &lhs, Imm32 rhs, Label *label) {
+        cmpl(lhs, rhs);
+        j(cond, label);
+    }
     void branch32(Condition cond, const Address &lhs, const Register &rhs, Label *label) {
         cmpl(Operand(lhs), rhs);
         j(cond, label);
