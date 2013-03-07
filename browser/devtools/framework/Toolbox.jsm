@@ -126,7 +126,7 @@ this.Toolbox = function Toolbox(target, selectedTool, hostType) {
   this._toolUnregistered = this._toolUnregistered.bind(this);
   this.destroy = this.destroy.bind(this);
 
-  this._target.once("close", this.destroy);
+  this._target.on("close", this.destroy);
 
   if (!hostType) {
     hostType = Services.prefs.getCharPref(this._prefs.LAST_HOST);
@@ -432,11 +432,12 @@ Toolbox.prototype = {
    *        The id of the tool to switch to
    */
   selectTool: function TBOX_selectTool(id) {
-    if (this._currentToolId == id) {
-      return;
-    }
-
     let deferred = Promise.defer();
+
+    if (this._currentToolId == id) {
+      // Return the existing panel in order to have a consistent return value.
+      return Promise.resolve(this._toolPanels.get(id));
+    }
 
     if (!this.isReady) {
       throw new Error("Can't select tool, wait for toolbox 'ready' event");
@@ -686,13 +687,10 @@ Toolbox.prototype = {
     this.off("select", this._refreshHostTitle);
     this.off("host-changed", this._refreshHostTitle);
 
-    let outstanding = [];
+    gDevTools.off("tool-registered", this._toolRegistered);
+    gDevTools.off("tool-unregistered", this._toolUnregistered);
 
-    // Remote targets need to be notified that the toolbox is being torn down.
-    if (this._target && this._target.isRemote) {
-      outstanding.push(this._target.destroy());
-    }
-    this._target = null;
+    let outstanding = [];
 
     for (let [id, panel] of this._toolPanels) {
       outstanding.push(panel.destroy());
@@ -700,8 +698,13 @@ Toolbox.prototype = {
 
     outstanding.push(this._host.destroy());
 
-    gDevTools.off("tool-registered", this._toolRegistered);
-    gDevTools.off("tool-unregistered", this._toolUnregistered);
+    // Targets need to be notified that the toolbox is being torn down, so that
+    // remote protocol connections can be gracefully terminated.
+    if (this._target) {
+      this._target.off("close", this.destroy);
+      outstanding.push(this._target.destroy());
+    }
+    this._target = null;
 
     Promise.all(outstanding).then(function() {
       this.emit("destroyed");

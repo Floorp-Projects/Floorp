@@ -412,6 +412,7 @@ InspectorPanel.prototype = {
     this.nodemenu = null;
     this.searchBox = null;
     this.highlighter = null;
+    this._searchResults = null;
 
     return Promise.resolve(null);
   },

@@ -164,7 +164,14 @@ function handleConnectionTimeout() {
  * Opens the toolbox.
  */
 function openToolbox(form, chrome=false) {
-  let target = TargetFactory.forRemote(form, gClient, chrome);
-  gDevTools.showToolbox(target, "webconsole", Toolbox.HostType.WINDOW);
-  window.close();
+  let options = {
+    form: form,
+    client: gClient,
+    chrome: chrome
+  };
+  let target = TargetFactory.forTab(options);
+  target.makeRemote(options).then(function() {
+    gDevTools.showToolbox(target, "webconsole", Toolbox.HostType.WINDOW);
+    window.close();
+  });
 }
