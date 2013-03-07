@@ -237,16 +237,6 @@ interface nsIDOMSVGFESpotLightElement : nsIDOMSVGElement {
   readonly attribute nsIDOMSVGAnimatedNumber limitingConeAngle;
 };
 
-[scriptable, uuid(6457A423-0686-486F-AB12-846B9542DFCF)]
-interface nsIDOMSVGFEImageElement : nsIDOMSVGFilterPrimitiveStandardAttributes
-/*
-  nsIDOMSVGURIReference,
-  nsIDOMSVGLangSpace,
-  nsIDOMSVGExternalResourcesRequired
-*/
-{
-};
-
 [scriptable, uuid(9B82CB0B-004D-4F26-BF3C-4E2BD4E1E82C)]
 interface nsIDOMSVGFEDisplacementMapElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 {
