@@ -92,8 +92,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0xDAEE334D, 0x9031, 0x4928, \
-    { 0x9D, 0xD7, 0x75, 0x2E, 0x8B, 0x6B, 0xF7, 0x0E } }
+  { 0x48568C1E, 0xAF56, 0x4F73, \
+    { 0x94, 0x6D, 0xAA, 0x43, 0xD8, 0x96, 0x78, 0x6B } }
 
 /*
  * Window shadow styles
@@ -188,11 +188,12 @@ enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
  * Preference for receiving IME updates
  *
  * If mWantUpdates is true, nsTextStateManager will observe text change and
- * selection change and call nsIWidget::OnIMETextChange() and
- * nsIWidget::OnIMESelectionChange(). The observing cost is very expensive.
+ * selection change and call nsIWidget::NotifyIMEOfTextChange() and
+ * nsIWidget::NotifyIME(NOTIFY_IME_OF_SELECTION_CHANGE). The observing cost is
+ * very expensive.
  * If the IME implementation on a particular platform doesn't care about
- * OnIMETextChange and OnIMESelectionChange, they should set mWantUpdates to
- * false to avoid the cost.
+ * NotifyIMEOfTextChange and NotifyIME(NOTIFY_IME_OF_SELECTION_CHANGE), they
+ * should set mWantUpdates to false to avoid the cost.
  *
  * If mWantHints is true, PuppetWidget will forward the content of text fields
  * to the chrome process to be cached. This way we return the cached content
@@ -419,6 +420,7 @@ class nsIWidget : public nsISupports {
     typedef mozilla::layers::LayerManager LayerManager;
     typedef mozilla::layers::LayersBackend LayersBackend;
     typedef mozilla::layers::PLayersChild PLayersChild;
+    typedef mozilla::widget::NotificationToIME NotificationToIME;
     typedef mozilla::widget::IMEState IMEState;
     typedef mozilla::widget::InputContext InputContext;
     typedef mozilla::widget::InputContextAction InputContextAction;
@@ -1486,25 +1488,10 @@ class nsIWidget : public nsISupports {
      */
     virtual nsresult ForceUpdateNativeMenuAt(const nsAString& indexString) = 0;
 
-    /*
-     * Force Input Method Editor to commit the uncommitted input
+    /**
+     * Notify IME of the specified notification.
      */
-    NS_IMETHOD ResetInputState()=0;
-
-    /*
-     * Following methods relates to IME 'Opened'/'Closed' state.
-     * 'Opened' means the user can input any character. I.e., users can input Japanese  
-     * and other characters. The user can change the state to 'Closed'.
-     * 'Closed' means the user can input ASCII characters only. This is the same as a
-     * non-IME environment. The user can change the state to 'Opened'.
-     * For more information is here.
-     * http://bugzilla.mozilla.org/show_bug.cgi?id=16940#c48
-     */
-
-    /*
-     * Destruct and don't commit the IME composition string.
-     */
-    NS_IMETHOD CancelIMEComposition() = 0;
+    NS_IMETHOD NotifyIME(NotificationToIME aNotification) = 0;
 
     /*
      * Notifies the input context changes.
@@ -1534,27 +1521,14 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD GetToggledKeyState(uint32_t aKeyCode, bool* aLEDState) = 0;
 
     /*
-     * An editable node (i.e. input/textarea/design mode document)
-     *  is receiving or giving up focus
-     * aFocus is true if node is receiving focus
-     * aFocus is false if node is giving up focus (blur)
-     */
-    NS_IMETHOD OnIMEFocusChange(bool aFocus) = 0;
-
-    /*
      * Text content of the focused node has changed
      * aStart is the starting offset of the change
      * aOldEnd is the ending offset of the change
      * aNewEnd is the caret offset after the change
      */
-    NS_IMETHOD OnIMETextChange(uint32_t aStart,
-                               uint32_t aOldEnd,
-                               uint32_t aNewEnd) = 0;
-
-    /*
-     * Selection has changed in the focused node
-     */
-    NS_IMETHOD OnIMESelectionChange(void) = 0;
+    NS_IMETHOD NotifyIMEOfTextChange(uint32_t aStart,
+                                     uint32_t aOldEnd,
+                                     uint32_t aNewEnd) = 0;
 
     /*
      * Retrieves preference for IME updates

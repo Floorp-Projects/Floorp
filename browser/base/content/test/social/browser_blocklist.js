@@ -96,6 +96,28 @@ var tests = {
       }
     });
   },
+  testInstallingBlockedProvider: function(next) {
+    function finish(good) {
+      ok(good, "Unable to add blocklisted provider");
+      Services.prefs.clearUserPref("social.whitelist");
+      setAndUpdateBlocklist(blocklistEmpty, next);
+    }
+    let installFrom = "https://bad.com";
+    // whitelist to avoid the 3rd party install dialog, we only want to test
+    // the blocklist inside installProvider.
+    Services.prefs.setCharPref("social.whitelist", installFrom);
+    setAndUpdateBlocklist(blocklistURL, function() {
+      try {
+        // expecting an exception when attempting to install a hard blocked
+        // provider
+        Social.installProvider(installFrom, manifest_bad, function(addonManifest) {
+          finish(false);
+        });
+      } catch(e) {
+        finish(true);
+      }
+    });
+  },
   testBlockingExistingProvider: function(next) {
 
     addWindowListener(URI_EXTENSION_BLOCKLIST_DIALOG,  function(win) {

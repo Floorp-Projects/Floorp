@@ -140,15 +140,12 @@ public:
   NS_IMETHOD              BeginMoveDrag(nsMouseEvent* aEvent);
   virtual nsresult        ActivateNativeMenuItemAt(const nsAString& indexString) { return NS_ERROR_NOT_IMPLEMENTED; }
   virtual nsresult        ForceUpdateNativeMenuAt(const nsAString& indexString) { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD              ResetInputState() { return NS_OK; }
-  NS_IMETHOD              CancelIMEComposition() { return NS_OK; }
+  NS_IMETHOD              NotifyIME(NotificationToIME aNotification) MOZ_OVERRIDE { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              SetLayersAcceleration(bool aEnabled);
   virtual bool            GetLayersAcceleration() { return mUseLayersAcceleration; }
   virtual bool            ComputeShouldAccelerate(bool aDefault);
   NS_IMETHOD              GetToggledKeyState(uint32_t aKeyCode, bool* aLEDState) { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD              OnIMEFocusChange(bool aFocus) { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD              OnIMETextChange(uint32_t aStart, uint32_t aOldEnd, uint32_t aNewEnd) { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD              OnIMESelectionChange(void) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD              NotifyIMEOfTextChange(uint32_t aStart, uint32_t aOldEnd, uint32_t aNewEnd) MOZ_OVERRIDE { return NS_ERROR_NOT_IMPLEMENTED; }
   virtual nsIMEUpdatePreference GetIMEUpdatePreference() { return nsIMEUpdatePreference(false, false); }
   NS_IMETHOD              OnDefaultButtonLoaded(const nsIntRect &aButtonRect) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              OverrideSystemMouseScrollSpeed(int32_t aOriginalDelta, bool aIsHorizontal, int32_t &aOverriddenDelta);

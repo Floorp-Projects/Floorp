@@ -16,11 +16,13 @@ const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 
 const DB_NAME = "contacts";
 const DB_VERSION = 8;
 const STORE_NAME = "contacts";
 const SAVED_GETALL_STORE_NAME = "getallcache";
+const CHUNK_SIZE = 20;
 
 this.ContactDB = function ContactDB(aGlobal) {
   if (DEBUG) debug("Constructor");
@@ -503,7 +505,6 @@ ContactDB.prototype = {
       req.onsuccess = function(e) {
         if (e.target.result) {
           if (DEBUG) debug("cache exists");
-          debug("sending: " + JSON.stringify(e.target.result));
           aSuccessCb(e.target.result, false);
         } else {
           if (DEBUG) debug("creating cache for query " + aQuery);
@@ -517,6 +518,7 @@ ContactDB.prototype = {
   },
 
   getAll: function CDB_getAll(aSuccessCb, aFailureCb, aOptions) {
+    if (DEBUG) debug("getAll")
     let optionStr = JSON.stringify(aOptions);
     this.getCacheForQuery(optionStr, function(aCachedResults, aFullContacts) {
       // aFullContacts is true if the cache didn't exist and had to be created.
@@ -524,26 +526,35 @@ ContactDB.prototype = {
       // in memory to create the cache anyway. This allows us to avoid accessing
       // the main object store again.
       if (aCachedResults && aCachedResults.length > 0) {
-        if (DEBUG) debug("query returned at least one contact");
+        if (DEBUG) debug("query returned " + aCachedResults.length + " contacts");
         if (aFullContacts) {
           if (DEBUG) debug("full contacts: " + aCachedResults.length);
-          for (let i = 0; i < aCachedResults.length; ++i) {
-            aSuccessCb(aCachedResults[i]);
+          while(aCachedResults.length) {
+            aSuccessCb(aCachedResults.splice(0, CHUNK_SIZE));
           }
           aSuccessCb(null);
         } else {
           let count = 0;
-          this.newTxn("readonly", STORE_NAME, function(txn, store) {
-            for (let i = 0; i < aCachedResults.length; ++i) {
-              store.get(aCachedResults[i]).onsuccess = function(e) {
-                aSuccessCb(e.target.result);
-                count++;
-                if (count == aCachedResults.length) {
-                  aSuccessCb(null);
-                }
-              };
-            }
-          });
+          let sendChunk = function(start) {
+            let chunk = [];
+            this.newTxn("readonly", STORE_NAME, function(txn, store) {
+              for (let i = start; i < Math.min(start+CHUNK_SIZE, aCachedResults.length); ++i) {
+                store.get(aCachedResults[i]).onsuccess = function(e) {
+                  chunk.push(e.target.result);
+                  count++;
+                  if (count == aCachedResults.length) {
+                    aSuccessCb(chunk);
+                    aSuccessCb(null);
+                  } else if (chunk.length == CHUNK_SIZE) {
+                    aSuccessCb(chunk);
+                    chunk.length = 0;
+                    setTimeout(sendChunk.bind(this, start+CHUNK_SIZE), 0);
+                  }
+                };
+              }
+            });
+          }.bind(this);
+          sendChunk(0);
         }
       } else { // no contacts
         if (DEBUG) debug("query returned no contacts");

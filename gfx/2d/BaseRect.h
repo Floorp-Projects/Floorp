@@ -244,8 +244,10 @@ struct BaseRect {
   // Find difference as a Margin
   Margin operator-(const Sub& aRect) const
   {
-    return Margin(aRect.x - x, aRect.y - y,
-                  XMost() - aRect.XMost(), YMost() - aRect.YMost());
+    return Margin(aRect.y - y,
+                  XMost() - aRect.XMost(),
+                  YMost() - aRect.YMost(),
+                  aRect.x - x);
   }
 
   // Helpers for accessing the vertices

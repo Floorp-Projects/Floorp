@@ -5,9 +5,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=248970
 -->
 <head>
   <title>Test for Bug 248970</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="notification_common.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css">
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=248970">Mozilla Bug 248970</a>
@@ -18,12 +20,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=248970
 /** Test for Bug 248970 **/
 // based on test_notifications.html
 
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
 
-var testpath = document.location.pathname + "/../";
+var testpath = "/tests/toolkit/components/passwordmgr/test/";
 var prefix = "http://test2.example.com" + testpath;
 var subtests = [
                    "subtst_privbrowsing_1.html", // 1
@@ -195,13 +196,17 @@ function testOnWindow(aIsPrivate, aCallback) {
   win.addEventListener("load", function onLoad() {
     win.removeEventListener("load", onLoad, false);
     win.addEventListener("DOMContentLoaded", function onInnerLoad() {
-      if (win.content.location.href == "about:privatebrowsing") {
+      if (win.content.location.href != contentPage) {
         win.gBrowser.loadURI(contentPage);
         return;
       }
       win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
-      testWindows.push(win);
-      SimpleTest.executeSoon(function() { aCallback(win); });
+
+      win.content.addEventListener('load', function innerLoad2() {
+        win.content.removeEventListener('load', innerLoad2, false);
+        testWindows.push(win);
+        SimpleTest.executeSoon(function() { aCallback(win); });
+      }, false, true);
     }, true);
     SimpleTest.executeSoon(function() { win.gBrowser.loadURI(contentPage); });
   }, true);

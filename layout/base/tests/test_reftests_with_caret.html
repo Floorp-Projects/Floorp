@@ -47,12 +47,9 @@ function doSnapShot(iframe) {
   callbackTestCanvas(iframe);
 };
 
-function remotePageLoaded(callback) {
+function remotePageLoaded() {
   var iframe = this;
-  setTimeout(function(){
-    doSnapShot(iframe);
-    callback();
-  }, 0);
+  setTimeout(function(){doSnapShot(iframe);}, 0)
 };
 
 const MAX_ITERATIONS = 1000;
@@ -74,11 +71,8 @@ function createIframe(url,next) {
       }
       return;
     }
-    iframe.remotePageLoaded(function() {
-      if (next) {
-        setTimeout(function(){createIframe(next,null);}, 0)
-      }
-    });
+    iframe.remotePageLoaded();
+    if (next) setTimeout(function(){createIframe(next,null);}, 0)
   }
   iframe.addEventListener("load", iframeLoadCompleted, false);
   window.document.body.appendChild(iframe);

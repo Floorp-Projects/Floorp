@@ -1458,7 +1458,6 @@ DownloadsViewItemController.prototype = {
       let defaultCommand = function () {
         switch (this.dataItem.state) {
           case nsIDM.DOWNLOAD_NOTSTARTED:       return "downloadsCmd_cancel";
-          case nsIDM.DOWNLOAD_DOWNLOADING:      return "downloadsCmd_show";
           case nsIDM.DOWNLOAD_FINISHED:         return "downloadsCmd_open";
           case nsIDM.DOWNLOAD_FAILED:           return "downloadsCmd_retry";
           case nsIDM.DOWNLOAD_CANCELED:         return "downloadsCmd_retry";
@@ -1469,10 +1468,10 @@ DownloadsViewItemController.prototype = {
           case nsIDM.DOWNLOAD_DIRTY:            return "downloadsCmd_openReferrer";
           case nsIDM.DOWNLOAD_BLOCKED_POLICY:   return "downloadsCmd_openReferrer";
         }
-        return null;
+        return "";
       }.apply(this);
-      // Invoke the command.
-      this.doCommand(defaultCommand);
+      if (defaultCommand && this.isCommandEnabled(defaultCommand))
+        this.doCommand(defaultCommand);
     }
   }
 };

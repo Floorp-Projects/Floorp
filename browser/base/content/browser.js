@@ -4771,6 +4771,11 @@ var TabsProgressListener = {
       if (!Object.getOwnPropertyDescriptor(window, "PopupNotifications").get)
         PopupNotifications.locationChange(aBrowser);
 
+      // Only handle background browsers as long as the selected browser is
+      // handled in XULBrowserWindow.onLocationChange (bug 839516).
+      if (aBrowser != gBrowser.selectedBrowser)
+        gBrowser.getNotificationBox(aBrowser).removeTransientNotifications();
+
       FullZoom.onLocationChange(aLocationURI, false, aBrowser);
     }
   },

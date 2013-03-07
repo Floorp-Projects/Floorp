@@ -1,0 +1,29 @@
+From 4c25387e6e6cdb55f19e51631a78c3fa9b4a3c73 Mon Sep 17 00:00:00 2001
+From: George Wright <gw@gwright.org.uk>
+Date: Thu, 1 Nov 2012 17:29:50 -0400
+Subject: [PATCH 2/8] Bug 751418 - Add our own GrUserConfig r=mattwoodrow
+
+---
+ gfx/skia/include/gpu/GrUserConfig.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/gfx/skia/include/gpu/GrUserConfig.h b/gfx/skia/include/gpu/GrUserConfig.h
+index d514486..b729ab3 100644
+--- a/gfx/skia/include/gpu/GrUserConfig.h
++++ b/gfx/skia/include/gpu/GrUserConfig.h
+@@ -64,6 +64,12 @@
+ #define GR_TEXT_SCALAR_IS_FIXED     0
+ #define GR_TEXT_SCALAR_IS_FLOAT     1
+ 
++/*
++ * This allows us to set a callback to be called before each GL call to ensure
++ * that our context is set correctly
++ */
++#define GR_GL_PER_GL_FUNC_CALLBACK  1
++
+ #endif
+ 
+ 
+-- 
+1.7.11.7
+

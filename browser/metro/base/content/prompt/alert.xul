@@ -34,7 +34,7 @@
     </vbox>
   
     <hbox class="prompt-buttons">
-      <button id="prompt-button-ok" class="prompt-button" label="&ok.label;" command="cmd_ok"/>
+      <button id="prompt-button-ok" class="prompt-button button-default" label="&ok.label;" command="cmd_ok"/>
     </hbox>
   </vbox>
 </dialog>

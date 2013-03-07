@@ -491,6 +491,9 @@ private:
                                     const gfxRect &aFill,
                                     const nsIntRect &aSubimage);
 
+  nsresult CopyFrame(uint32_t aWhichFrame,
+                     uint32_t aFlags,
+                     gfxImageSurface **_retval);
   /**
    * Advances the animation. Typically, this will advance a single frame, but it
    * may advance multiple frames. This may happen if we have infrequently

@@ -34,12 +34,17 @@ LOCAL_INCLUDES += \
 	-I$(srcdir)/src/core \
 	-I$(srcdir)/src/image \
 	-I$(srcdir)/src/gpu \
+	-I$(srcdir)/src/gpu/effects \
+	-I$(srcdir)/src/gpu/gl \
 	-I$(srcdir)/src/utils \
 	-I$(srcdir)/src/sfnt \
 	$(NULL)
 
 VPATH += \
 	$(srcdir)/src/core \
+	$(srcdir)/src/gpu \
+	$(srcdir)/src/gpu/effects \
+	$(srcdir)/src/gpu/gl \
 	$(srcdir)/src/image \
 	$(srcdir)/src/images \
 	$(srcdir)/src/pipe \
@@ -115,7 +120,9 @@ EXPORTS_skia = \
 	include/core/SkSize.h \
 	include/core/SkStream.h \
 	include/core/SkString.h \
+	include/core/SkTArray.h \
 	include/core/SkTDArray.h \
+	include/core/SkTDLinkedList.h \
 	include/core/SkTDStack.h \
 	include/core/SkTDict.h \
 	include/core/SkTLazy.h \
@@ -143,11 +150,133 @@ EXPORTS_skia = \
 	include/effects/SkLayerDrawLooper.h \
 	include/effects/SkLayerRasterizer.h \
 	include/effects/SkMorphologyImageFilter.h \
+	include/gpu/GrAARectRenderer.h \
+	include/gpu/GrCacheID.h \
+	include/gpu/GrClipData.h \
+	include/gpu/GrColor.h \
+	include/gpu/GrConfig.h \
+	include/gpu/GrContextFactory.h \
+	include/gpu/GrContext.h \
+	include/gpu/GrCustomStage.h \
+	include/gpu/GrCustomStageUnitTest.h \
+	include/gpu/GrFontScaler.h \
+	include/gpu/GrGlyph.h \
+	include/gpu/GrInstanceCounter.h \
+	include/gpu/GrKey.h \
+	include/gpu/GrMatrix.h \
+	include/gpu/GrNoncopyable.h \
+	include/gpu/GrPaint.h \
+	include/gpu/GrPoint.h \
+	include/gpu/GrProgramStageFactory.h \
+	include/gpu/GrRect.h \
+	include/gpu/GrRefCnt.h \
+	include/gpu/GrRenderTarget.h \
+	include/gpu/GrResource.h \
+	include/gpu/GrSamplerState.h \
+	include/gpu/GrScalar.h \
+	include/gpu/GrSurface.h \
+	include/gpu/GrTextContext.h \
+	include/gpu/GrTextureAccess.h \
+	include/gpu/GrTexture.h \
+	include/gpu/GrTypes.h \
+	include/gpu/GrUserConfig.h \
+	include/gpu/SkGpuCanvas.h \
+	include/gpu/SkGpuDevice.h \
+	include/gpu/SkGr.h \
+	include/gpu/SkGrPixelRef.h \
+	include/gpu/SkGrTexturePixelRef.h \
+	include/gpu/gl/GrGLConfig.h \
+	include/gpu/gl/GrGLFunctions.h \
+	include/gpu/gl/GrGLInterface.h \
+	include/gpu/gl/SkANGLEGLContext.h \
+	include/gpu/gl/SkDebugGLContext.h \
+	include/gpu/gl/SkGLContext.h \
+	include/gpu/gl/SkMesaGLContext.h \
+	include/gpu/gl/SkNativeGLContext.h \
+	include/gpu/gl/SkNullGLContext.h \
 	include/utils/SkDeferredCanvas.h \
 	include/views/SkTextBox.h \
 	$(NULL)
 
-DEFINES += -DUSE_SKIA
+GPU_CPPSRCS = \
+	GrAAConvexPathRenderer.cpp \
+	GrAAHairLinePathRenderer.cpp \
+	GrAARectRenderer.cpp \
+	GrAddPathRenderers_default.cpp \
+	GrAllocPool.cpp \
+	GrAtlas.cpp \
+	GrBufferAllocPool.cpp \
+	GrCacheID.cpp \
+	GrClipData.cpp \
+	GrClipMaskCache.cpp \
+	GrClipMaskManager.cpp \
+	GrContext.cpp \
+	GrCustomStage.cpp \
+	GrDefaultPathRenderer.cpp \
+	GrDrawTarget.cpp \
+	GrGeometryBuffer.cpp \
+	GrGpu.cpp \
+	GrGpuFactory.cpp \
+	GrInOrderDrawBuffer.cpp \
+	GrMatrix.cpp \
+	GrMemory.cpp \
+	GrMemoryPool.cpp \
+	GrPath.cpp \
+	GrPathRendererChain.cpp \
+	GrPathRenderer.cpp \
+	GrPathUtils.cpp \
+	GrRectanizer.cpp \
+	GrRenderTarget.cpp \
+	GrResourceCache.cpp \
+	GrResource.cpp \
+	GrSoftwarePathRenderer.cpp \
+	GrStencilAndCoverPathRenderer.cpp \
+	GrStencilBuffer.cpp \
+	GrStencil.cpp \
+	GrSurface.cpp \
+	GrSWMaskHelper.cpp \
+	GrTextContext.cpp \
+	GrTextStrike.cpp \
+	GrTextureAccess.cpp \
+	GrTexture.cpp \
+	SkGpuCanvas.cpp \
+	SkGpuDevice.cpp \
+	SkGr.cpp \
+	SkGrFontScaler.cpp \
+	SkGrPixelRef.cpp \
+	SkGrTexturePixelRef.cpp \
+	GrColorTableEffect.cpp \
+	GrConfigConversionEffect.cpp \
+	GrConvolutionEffect.cpp \
+	GrSingleTextureEffect.cpp \
+	GrTextureDomainEffect.cpp \
+	GrTextureStripAtlas.cpp \
+	$(NULL)
+
+GPU_GL_CPPSRCS = \
+	GrGLCaps.cpp \
+	GrGLContextInfo.cpp \
+	GrGLCreateNativeInterface_none.cpp \
+	GrGLCreateNullInterface.cpp \
+	GrGLDefaultInterface_native.cpp \
+	GrGLIndexBuffer.cpp \
+	GrGLInterface.cpp \
+	GrGLPath.cpp \
+	GrGLProgram.cpp \
+	GrGLProgramStage.cpp \
+	GrGLRenderTarget.cpp \
+	GrGLShaderBuilder.cpp \
+	GrGLSL.cpp \
+	GrGLStencilBuffer.cpp \
+	GrGLTexture.cpp \
+	GrGLUniformManager.cpp \
+	GrGLUtil.cpp \
+	GrGLVertexBuffer.cpp \
+	GrGpuGL.cpp \
+	GrGpuGL_program.cpp \
+	SkGLContext.cpp \
+	SkNullGLContext.cpp \
+	$(NULL)
 
 CPPSRCS = \
 	Sk64.cpp \
@@ -300,6 +429,8 @@ CPPSRCS = \
 	SkUtils.cpp \
 	SkWriter32.cpp \
 	SkXfermode.cpp \
+	$(GPU_CPPSRCS) \
+	$(GPU_GL_CPPSRCS) \
 	$(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
@@ -325,7 +456,6 @@ CPPSRCS += \
 	SkThread_pthread.cpp \
 	$(NULL)
 
-DEFINES += -DSK_BUILD_FOR_ANDROID_NDK
 OS_CXXFLAGS += $(CAIRO_FT_CFLAGS)
 else
 CPPSRCS += \

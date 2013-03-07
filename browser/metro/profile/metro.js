@@ -365,9 +365,6 @@ pref("privacy.sanitize.timeSpan", 1);
 pref("privacy.sanitize.sanitizeOnShutdown", false);
 pref("privacy.sanitize.migrateFx3Prefs",    false);
 
-// URL to the Learn More link XXX this is the firefox one.  Bug 495578 fixes this.
-pref("browser.geolocation.warning.infoURL", "http://www.mozilla.com/%LOCALE%/firefox/geolocation/");
-
 // enable geo
 pref("geo.enabled", true);
 
@@ -403,7 +400,6 @@ pref("breakpad.reportURL", "https://crash-stats.mozilla.com/report/index/");
 pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/mobile/%VERSION%/releasenotes/");
 pref("app.sync.tutorialURL", "https://support.mozilla.org/kb/sync-firefox-between-desktop-and-mobile");
 pref("app.support.baseURL", "http://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/");
-pref("app.feedbackURL", "http://input.mozilla.com/feedback/");
 pref("app.privacyURL", "http://www.mozilla.com/legal/privacy/");
 pref("app.creditsURL", "http://www.mozilla.org/credits/");
 pref("app.channelURL", "http://www.mozilla.org/%LOCALE%/firefox/channel/");
@@ -538,8 +534,8 @@ pref("browser.safebrowsing.provider.0.reportMalwareURL", "http://{moz:locale}.ma
 pref("browser.safebrowsing.provider.0.reportMalwareErrorURL", "http://{moz:locale}.malware-error.mozilla.com/?hl={moz:locale}");
 
 // FAQ URLs
-pref("browser.safebrowsing.warning.infoURL", "http://www.mozilla.com/%LOCALE%/%APP%/phishing-protection/");
-pref("browser.geolocation.warning.infoURL", "http://www.mozilla.com/%LOCALE%/%APP%/geolocation/");
+pref("browser.safebrowsing.warning.infoURL", "https://www.mozilla.org/%LOCALE%/firefox/phishing-protection/");
+pref("browser.geolocation.warning.infoURL", "https://www.mozilla.org/%LOCALE%/firefox/geolocation/");
 
 // Name of the about: page contributed by safebrowsing to handle display of error
 // pages on phishing/malware hits.  (bug 399233)

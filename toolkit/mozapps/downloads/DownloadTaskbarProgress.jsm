@@ -207,11 +207,11 @@ var DownloadTaskbarProgressUpdater =
   _totalSize: 0,
   _totalTransferred: 0,
 
-  // If the active window is not the download manager window, set the state
-  // only if it is normal or indeterminate.
   _shouldSetState: function DTPU_shouldSetState()
   {
 #ifdef XP_WIN
+    // If the active window is not the download manager window, set the state
+    // only if it is normal or indeterminate.
     return this._activeWindowIsDownloadWindow ||
            (this._taskbarState == Ci.nsITaskbarProgress.STATE_NORMAL ||
             this._taskbarState == Ci.nsITaskbarProgress.STATE_INDETERMINATE);

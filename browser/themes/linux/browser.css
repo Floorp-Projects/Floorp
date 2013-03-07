@@ -1436,6 +1436,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 #socialUserPortrait {
   width: 48px;
   height: 48px;
+  list-style-image:url("chrome://global/skin/icons/information-32.png");
 }
 
 #socialUserDisplayName,
@@ -2140,6 +2141,10 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
   margin-top: 0;
   margin-left: -12px;
   margin-right: -12px;
+}
+
+.social-statusarea-user {
+  list-style-image:url("chrome://global/skin/icons/information-32.png");
 }
 
 .social-statusarea-user-portrait {

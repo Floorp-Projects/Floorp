@@ -1664,14 +1664,29 @@ bool nsChildView::HasPendingInputEvent()
 
 #pragma mark -
 
-// Force Input Method Editor to commit the uncommitted input
-// Note that this and other IME methods don't necessarily
-// get called on the same ChildView that input is going through.
-NS_IMETHODIMP nsChildView::ResetInputState()
+NS_IMETHODIMP
+nsChildView::NotifyIME(NotificationToIME aNotification)
 {
-  NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
-  mTextInputHandler->CommitIMEComposition();
-  return NS_OK;
+  switch (aNotification) {
+    case REQUEST_TO_COMMIT_COMPOSITION:
+      NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
+      mTextInputHandler->CommitIMEComposition();
+      return NS_OK;
+    case REQUEST_TO_CANCEL_COMPOSITION:
+      NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
+      mTextInputHandler->CancelIMEComposition();
+      return NS_OK;
+    case NOTIFY_IME_OF_FOCUS:
+      NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
+      mTextInputHandler->OnFocusChangeInGecko(true);
+      return NS_OK;
+    case NOTIFY_IME_OF_BLUR:
+      NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
+      mTextInputHandler->OnFocusChangeInGecko(false);
+      return NS_OK;
+    default:
+      return NS_ERROR_NOT_IMPLEMENTED;
+  }
 }
 
 NS_IMETHODIMP_(void)
@@ -1729,14 +1744,6 @@ nsChildView::GetInputContext()
   return mInputContext;
 }
 
-// Destruct and don't commit the IME composition string.
-NS_IMETHODIMP nsChildView::CancelIMEComposition()
-{
-  NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
-  mTextInputHandler->CancelIMEComposition();
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsChildView::GetToggledKeyState(uint32_t aKeyCode,
                                               bool* aLEDState)
 {
@@ -1760,13 +1767,6 @@ NS_IMETHODIMP nsChildView::GetToggledKeyState(uint32_t aKeyCode,
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-NS_IMETHODIMP nsChildView::OnIMEFocusChange(bool aFocus)
-{
-  NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
-  mTextInputHandler->OnFocusChangeInGecko(aFocus);
-  return NS_OK;
 }
 
 NSView<mozView>* nsChildView::GetEditorView()
