@@ -54,7 +54,7 @@ public:
   }
 
 private:
-  JS::RootedObject mGlobalJSObject;
+  js::RootedObject mGlobalJSObject;
   nsISupports* mGlobalObject;
   nsCOMPtr<nsISupports> mGlobalObjectRef;
 };
@@ -82,7 +82,7 @@ public:
   }
 
 private:
-  JS::RootedObject mGlobalJSObject;
+  js::RootedObject mGlobalJSObject;
   JSContext* mCx;
 };
 

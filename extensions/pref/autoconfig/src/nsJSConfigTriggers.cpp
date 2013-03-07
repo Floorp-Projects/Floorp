@@ -201,7 +201,7 @@ nsresult EvaluateAdminConfigScript(const char *js_buffer, size_t length,
     JS::CompileOptions options(autoconfig_cx);
     options.setPrincipals(nsJSPrincipals::get(principal))
            .setFileAndLine(filename, 1);
-    JS::RootedObject glob(autoconfig_cx, autoconfig_glob);
+    js::RootedObject glob(autoconfig_cx, autoconfig_glob);
     ok = JS::Evaluate(autoconfig_cx, glob, options, js_buffer, length, nullptr);
     JS_EndRequest(autoconfig_cx);
 

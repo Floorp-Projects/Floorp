@@ -633,12 +633,12 @@ ProxyAutoConfig::GetProxyForURI(const nsCString &aTestURI,
   mRunningHost = aTestHost;
 
   nsresult rv = NS_ERROR_FAILURE;
-  JS::RootedString uriString(cx, JS_NewStringCopyZ(cx, aTestURI.get()));
-  JS::RootedString hostString(cx, JS_NewStringCopyZ(cx, aTestHost.get()));
+  js::RootedString uriString(cx, JS_NewStringCopyZ(cx, aTestURI.get()));
+  js::RootedString hostString(cx, JS_NewStringCopyZ(cx, aTestHost.get()));
 
   if (uriString && hostString) {
-    JS::RootedValue uriValue(cx, STRING_TO_JSVAL(uriString));
-    JS::RootedValue hostValue(cx, STRING_TO_JSVAL(hostString));
+    js::RootedValue uriValue(cx, STRING_TO_JSVAL(uriString));
+    js::RootedValue hostValue(cx, STRING_TO_JSVAL(hostString));
 
     JS::Value argv[2] = { uriValue, hostValue };
     JS::Value rval;
