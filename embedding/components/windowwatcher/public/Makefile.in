@@ -12,7 +12,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= windowwatcher
-XPIDL_MODULE	= windowwatcher
 GRE_MODULE	= 1
 
 SDK_XPIDLSRCS   = nsIWindowWatcher.idl \

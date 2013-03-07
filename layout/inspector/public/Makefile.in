@@ -12,7 +12,6 @@ VPATH=@srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE=inspector
-XPIDL_MODULE=inspector
 
 XPIDLSRCS = inIDOMView.idl \
             inIDeepTreeWalker.idl \

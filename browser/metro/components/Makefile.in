@@ -12,7 +12,6 @@ include $(topsrcdir)/config/config.mk
 
 # metro/components.manifest
 MODULE = components
-XPIDL_MODULE = components
 
 XPIDLSRCS = \
         SessionStore.idl \
