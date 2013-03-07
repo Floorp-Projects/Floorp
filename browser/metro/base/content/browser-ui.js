@@ -988,6 +988,7 @@ var ContextUI = {
   init: function init() {
     Elements.browsers.addEventListener("mousedown", this, true);
     Elements.browsers.addEventListener("touchstart", this, true);
+    Elements.browsers.addEventListener("AlertActive", this, true);
     window.addEventListener("MozEdgeUIGesture", this, true);
     window.addEventListener("keypress", this, true);
     window.addEventListener("KeyboardChanged", this, false);
@@ -1198,6 +1199,8 @@ var ContextUI = {
           this.dismiss();
         break;
       case "touchstart":
+      // ContextUI can hide the notification bar. Workaround until bug 845348 is fixed.
+      case "AlertActive":
         this.dismiss();
         break;
       case "keypress":

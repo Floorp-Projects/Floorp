@@ -150,7 +150,7 @@ LoginManagerPrompter.prototype = {
         this.log("Adding new " + aName + " notification bar");
         var newBar = aNotifyBox.appendNotification(
                                 aText, aName,
-                                "chrome://mozapps/skin/passwordmgr/key.png",
+                                "chrome://browser/skin/images/infobar-key.png",
                                 priority, aButtons);
 
         // The page we're going to hasn't loaded yet, so we want to persist
@@ -179,23 +179,18 @@ LoginManagerPrompter.prototype = {
      *
      */
     _showSaveLoginNotification : function (aNotifyBox, aLogin) {
-
         // Ugh. We can't use the strings from the popup window, because they
         // have the access key marked in the string (eg "Mo&zilla"), along
         // with some weird rules for handling access keys that do not occur
         // in the string, for L10N. See commonDialog.js's setLabelForNode().
         var neverButtonText =
-              this._getLocalizedString("notifyBarNeverForSiteButtonText");
+              this._getLocalizedString("notifyBarNotForThisSiteButtonText");
         var neverButtonAccessKey =
-              this._getLocalizedString("notifyBarNeverForSiteButtonAccessKey");
+              this._getLocalizedString("notifyBarNotForThisSiteButtonAccessKey");
         var rememberButtonText =
-              this._getLocalizedString("notifyBarRememberButtonText");
+              this._getLocalizedString("notifyBarRememberPasswordButtonText");
         var rememberButtonAccessKey =
-              this._getLocalizedString("notifyBarRememberButtonAccessKey");
-        var notNowButtonText =
-              this._getLocalizedString("notifyBarNotNowButtonText");
-        var notNowButtonAccessKey =
-              this._getLocalizedString("notifyBarNotNowButtonAccessKey");
+              this._getLocalizedString("notifyBarRememberPasswordButtonAccessKey");
 
         var brandShortName =
               this._brandBundle.GetStringFromName("brandShortName");
@@ -237,14 +232,6 @@ LoginManagerPrompter.prototype = {
                 callback: function(aNotificationBar, aButton) {
                     pwmgr.setLoginSavingEnabled(aLogin.hostname, false);
                 }
-            },
-
-            // "Not now" button
-            {
-                label:     notNowButtonText,
-                accessKey: notNowButtonAccessKey,
-                popup:     null,
-                callback:  function() { /* NOP */ } 
             }
         ];
 

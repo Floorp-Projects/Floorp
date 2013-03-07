@@ -1260,6 +1260,7 @@ var PopupBlockerObserver = {
         else {
           var buttons = [
             {
+              isDefault: false,
               label: strings.GetStringFromName("popupButtonAllowOnce"),
               accessKey: null,
               callback: function() { PopupBlockerObserver.showPopupsForSite(); }

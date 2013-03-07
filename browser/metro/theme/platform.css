@@ -16,7 +16,6 @@
   font-size: @font_normal@;
 }
 
-button,
 textbox,
 menulist {
   -moz-appearance: none;
@@ -34,18 +33,79 @@ menulist {
   border-radius: 0;
 }
 
-button[disabled="true"],
 textbox[disabled="true"],
 menulist[disabled="true"] {
   border-color: @field_disabled_foreground_color@ !important;
   color: @field_disabled_foreground_color@;
 }
 
-button:not([disabled]):hover:active,
-button:not([disabled])[checked="true"],
 menulist:not([disabled]):hover:active {
   color: @field_background_color@;
   background: @field_foreground_color@;
+}
+
+
+/* Button ------------------------------------------------------------------ */
+
+button {
+  -moz-appearance: none;
+  border: 1px solid;
+  font-size: @metro_font_normal@;
+  font-weight: normal;
+  margin: @metro_spacing_small@;
+  min-width: @field_sizing@;
+  min-height: 32px;
+  padding: 3px 16px;
+}
+
+/* Non-default button colors */
+
+button {
+  background: linear-gradient(to bottom, hsl(210, 5%, 89%), hsl(210, 5%, 87%));
+  border-color: hsl(220, 5%, 86%);
+  color: hsl(0, 0%, 10%);
+}
+
+button:not([disabled]):hover {
+  background: linear-gradient(to bottom, hsl(210, 5%, 75%), hsl(210, 5%, 73%));
+  border-color: hsl(210, 5%, 71%);
+  color: hsl(0, 0%, 10%);
+}
+
+/* Default button colors */
+
+.button-default,
+.notification-button-default {
+  background: linear-gradient(to bottom, hsl(35, 100%, 50%), hsl(30, 100%, 50%));
+  border-color: hsl(30, 100%, 48%);
+  color: white;
+}
+
+.button-default:not([disabled]):hover,
+.notification-button-default:not([disabled]):hover {
+  background: linear-gradient(to bottom, hsl(25, 100%, 47%), hsl(25, 100%, 45%));
+  border-color: hsl(25, 100%, 43%);
+  color: white;
+}
+
+/* Pushed button colors (both default and non-default */
+
+/* Note: these need enough specificity to override all the :hover rules above. */
+button:not([disabled]):hover:active,
+button:not([disabled])[checked="true"],
+.button-default:not([disabled])[checked="true"],
+.notification-button-default:not([disabled])[checked="true"] {
+  background: linear-gradient(to bottom, hsl(210, 5%, 28%), hsl(210, 5%, 25%));
+  border-color: hsl(216, 4%, 27%);
+  color: white;
+}
+
+/* Disabled button colors (both default and non-default */
+
+button[disabled] {
+  background: linear-gradient(to bottom, hsl(210, 3%, 93%), hsl(210, 3%, 92%));
+  border-color: hsl(210, 3%, 91%);
+  color: hsl(0, 0%, 60%);
 }
 
 /* Textbox ----------------------------------------------------------------- */
@@ -317,6 +377,62 @@ richlistitem .hide-on-select {
 richlistitem[typeName="message"] {
   border-bottom: 0;
 }
+
+/* Notification box ("info app bar") ---------------------------------------- */
+
+notification {
+  background: hsl(0, 0%, 98%);
+  border-bottom: 1px solid hsla(0, 0%, 0%, .07);
+  box-shadow: 0 0 10px hsla(0, 0%, 0%, .1);
+  min-height: 64px;
+}
+
+.notification-inner {
+  border-style: none;
+}
+
+.notification-button {
+  -moz-margin-start: 0;
+  -moz-margin-end: 20px;
+}
+
+.messageImage {
+  width: 32px;
+  height: 32px;
+  -moz-margin-start: 40px;
+  -moz-margin-end: 16px;
+}
+
+/* If there is no image set, collapse the image but keep the starting margin */
+.messageImage:not([src]) {
+  width: 0;
+  -moz-margin-end: 0;
+}
+
+.messageText {
+  margin: 0;
+}
+
+.messageCloseButton {
+  list-style-image: url("chrome://browser/skin/images/infobar-close.png");
+  padding: 0;
+  -moz-margin-start: 0;
+  -moz-margin-end: 40px;
+  -moz-image-region: rect(0, 40px, 40px, 0);
+}
+
+.messageCloseButton > .toolbarbutton-icon {
+  margin: 0;
+}
+
+.messageCloseButton:hover {
+  -moz-image-region: rect(0, 80px, 40px, 40px);
+}
+
+.messageCloseButton:hover:active {
+  -moz-image-region: rect(0, 120px, 40px, 80px);
+}
+
 
 /* Rich Grid ---------------------------------------------------------------- */
 
