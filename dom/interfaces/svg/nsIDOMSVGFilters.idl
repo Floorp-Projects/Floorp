@@ -125,11 +125,6 @@ interface nsIDOMSVGFEOffsetElement : nsIDOMSVGFilterPrimitiveStandardAttributes 
     readonly attribute nsIDOMSVGAnimatedNumber dy;
 };
 
-[scriptable, uuid(F1635489-F34F-4554-8284-C848500FE0DD)]
-interface nsIDOMSVGFEFloodElement : nsIDOMSVGFilterPrimitiveStandardAttributes
-{
-};
-
 [scriptable, uuid(C587EFE9-0A22-44E6-9964-B68DA564804A)]
 interface nsIDOMSVGFETileElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 {
