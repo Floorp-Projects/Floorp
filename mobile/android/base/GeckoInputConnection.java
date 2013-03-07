@@ -535,7 +535,8 @@ class GeckoInputConnection
         outAttrs.imeOptions = EditorInfo.IME_ACTION_NONE;
         outAttrs.actionLabel = null;
 
-        if (mIMEState == IME_STATE_PASSWORD)
+        if (mIMEState == IME_STATE_PASSWORD ||
+            "password".equalsIgnoreCase(mIMETypeHint))
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_PASSWORD;
         else if (mIMEState == IME_STATE_PLUGIN)
             outAttrs.inputType = InputType.TYPE_NULL; // "send key events" mode
