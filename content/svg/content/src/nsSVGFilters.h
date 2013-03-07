@@ -130,6 +130,9 @@ public:
   // nsSVGElement interface
   virtual bool HasValidDimensions() const;
 
+  bool IsNodeOfType(uint32_t aFlags) const
+    { return !(aFlags & ~(eCONTENT | eFILTER)); }
+
   virtual nsSVGString& GetResultImageName() = 0;
   // Return a list of all image names used as sources. Default is to
   // return no sources.
@@ -186,7 +189,14 @@ public:
   }
 
   operator nsISupports*() { return static_cast<nsIContent*>(this); }
-  
+
+  // WebIDL
+  already_AddRefed<mozilla::dom::SVGAnimatedLength> X();
+  already_AddRefed<mozilla::dom::SVGAnimatedLength> Y();
+  already_AddRefed<mozilla::dom::SVGAnimatedLength> Width();
+  already_AddRefed<mozilla::dom::SVGAnimatedLength> Height();
+  already_AddRefed<nsIDOMSVGAnimatedString> Result();
+
 protected:
   virtual bool OperatesOnPremultipledAlpha(int32_t) { return true; }
 
@@ -207,91 +217,9 @@ protected:
   virtual LengthAttributesInfo GetLengthInfo();
 
   // nsIDOMSVGFitlerPrimitiveStandardAttributes values
-  enum { X, Y, WIDTH, HEIGHT };
+  enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
   nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
-};
-
-typedef nsSVGFE nsSVGFEImageElementBase;
-
-class nsSVGFEImageElement : public nsSVGFEImageElementBase,
-                            public nsIDOMSVGFEImageElement,
-                            public nsIDOMSVGURIReference,
-                            public nsImageLoadingContent
-{
-  friend class SVGFEImageFrame;
-
-protected:
-  friend nsresult NS_NewSVGFEImageElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo);
-  nsSVGFEImageElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsSVGFEImageElement();
-
-public:
-  virtual bool SubregionIsUnionOfRegions() { return false; }
-
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // FE Base
-  NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEImageElementBase::)
-
-  virtual nsresult Filter(nsSVGFilterInstance* aInstance,
-                          const nsTArray<const Image*>& aSources,
-                          const Image* aTarget,
-                          const nsIntRect& aDataRect);
-  virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsIAtom* aAttribute) const;
-  virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
-  virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
-          const nsSVGFilterInstance& aInstance);
-
-  NS_DECL_NSIDOMSVGFEIMAGEELEMENT
-  NS_DECL_NSIDOMSVGURIREFERENCE
-
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEImageElementBase::)
-
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIContent
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify);
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              bool aCompileEventHandlers);
-  virtual void UnbindFromTree(bool aDeep, bool aNullParent);
-  virtual nsEventStates IntrinsicState() const;
-
-  NS_IMETHODIMP Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData);
-
-  void MaybeLoadSVGImage();
-
-  virtual nsXPCClassInfo* GetClassInfo();
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-private:
-  // Invalidate users of the filter containing this element.
-  void Invalidate();
-
-  nsresult LoadSVGImage(bool aForce, bool aNotify);
-
-protected:
-  virtual bool OperatesOnSRGB(nsSVGFilterInstance*,
-                                int32_t, Image*) { return true; }
-
-  virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio();
-  virtual StringAttributesInfo GetStringInfo();
-
-  enum { RESULT, HREF };
-  nsSVGString mStringAttributes[2];
-  static StringInfo sStringInfo[2];
-
-  SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;
 };
 
 typedef nsSVGElement SVGFEUnstyledElementBase;
@@ -308,5 +236,21 @@ public:
   virtual bool AttributeAffectsRendering(
           int32_t aNameSpaceID, nsIAtom* aAttribute) const = 0;
 };
+
+void
+CopyDataRect(uint8_t *aDest, const uint8_t *aSrc, uint32_t aStride,
+             const nsIntRect& aDataRect);
+
+inline void
+CopyRect(const nsSVGFE::Image* aDest, const nsSVGFE::Image* aSrc, const nsIntRect& aDataRect)
+{
+  NS_ASSERTION(aDest->mImage->Stride() == aSrc->mImage->Stride(), "stride mismatch");
+  NS_ASSERTION(aDest->mImage->GetSize() == aSrc->mImage->GetSize(), "size mismatch");
+  NS_ASSERTION(nsIntRect(0, 0, aDest->mImage->Width(), aDest->mImage->Height()).Contains(aDataRect),
+               "aDataRect out of bounds");
+
+  CopyDataRect(aDest->mImage->Data(), aSrc->mImage->Data(),
+               aSrc->mImage->Stride(), aDataRect);
+}
 
 #endif

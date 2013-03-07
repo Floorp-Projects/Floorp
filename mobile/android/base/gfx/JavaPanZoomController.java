@@ -909,15 +909,21 @@ class JavaPanZoomController
 
         // Ensure minZoomFactor keeps the page at least as big as the viewport.
         if (pageRect.width() > 0) {
-            float scaleFactor = viewport.width() / pageRect.width();
+            float pageWidth = pageRect.width() +
+              viewportMetrics.fixedLayerMarginLeft +
+              viewportMetrics.fixedLayerMarginRight;
+            float scaleFactor = viewport.width() / pageWidth;
             minZoomFactor = Math.max(minZoomFactor, zoomFactor * scaleFactor);
-            if (viewport.width() > pageRect.width())
+            if (viewport.width() > pageWidth)
                 focusX = 0.0f;
         }
         if (pageRect.height() > 0) {
-            float scaleFactor = viewport.height() / pageRect.height();
+            float pageHeight = pageRect.height() +
+              viewportMetrics.fixedLayerMarginTop +
+              viewportMetrics.fixedLayerMarginBottom;
+            float scaleFactor = viewport.height() / pageHeight;
             minZoomFactor = Math.max(minZoomFactor, zoomFactor * scaleFactor);
-            if (viewport.height() > pageRect.height())
+            if (viewport.height() > pageHeight)
                 focusY = 0.0f;
         }
 
@@ -937,7 +943,7 @@ class JavaPanZoomController
         }
 
         /* Now we pan to the right origin. */
-        viewportMetrics = viewportMetrics.clamp();
+        viewportMetrics = viewportMetrics.clampWithMargins();
 
         return viewportMetrics;
     }
@@ -949,9 +955,15 @@ class JavaPanZoomController
         @Override
         protected float getViewportLength() { return getMetrics().getWidth(); }
         @Override
-        protected float getPageStart() { return getMetrics().pageRectLeft; }
+        protected float getPageStart() {
+            ImmutableViewportMetrics metrics = getMetrics();
+            return metrics.pageRectLeft - metrics.fixedLayerMarginLeft;
+        }
         @Override
-        protected float getPageLength() { return getMetrics().getPageWidth(); }
+        protected float getPageLength() {
+            ImmutableViewportMetrics metrics = getMetrics();
+            return metrics.getPageWidth() + metrics.fixedLayerMarginLeft + metrics.fixedLayerMarginRight;
+        }
     }
 
     private class AxisY extends Axis {
@@ -961,9 +973,15 @@ class JavaPanZoomController
         @Override
         protected float getViewportLength() { return getMetrics().getHeight(); }
         @Override
-        protected float getPageStart() { return getMetrics().pageRectTop; }
+        protected float getPageStart() {
+            ImmutableViewportMetrics metrics = getMetrics();
+            return metrics.pageRectTop - metrics.fixedLayerMarginTop;
+        }
         @Override
-        protected float getPageLength() { return getMetrics().getPageHeight(); }
+        protected float getPageLength() {
+            ImmutableViewportMetrics metrics = getMetrics();
+            return metrics.getPageHeight() + metrics.fixedLayerMarginTop + metrics.fixedLayerMarginBottom;
+        }
     }
 
     /*

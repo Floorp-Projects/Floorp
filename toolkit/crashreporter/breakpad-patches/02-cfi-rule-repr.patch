@@ -3406,7 +3406,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
  
 -  cfi.SetRARule("0");
 +  cfi.SetRARule(Module::Expr("0"));
-   ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                               &caller_registers));
    ASSERT_EQ(".ra: 0", cfi.Serialize());
 @@ -96,7 +98,7 @@
@@ -3415,7 +3415,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
  
 -  cfi.SetCFARule("0");
 +  cfi.SetCFARule(Module::Expr("0"));
-   ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                               &caller_registers));
    ASSERT_EQ(".cfa: 0", cfi.Serialize());
 @@ -105,8 +107,8 @@
@@ -3426,7 +3426,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 -  cfi.SetRARule("5870666104170902211");
 +  cfi.SetCFARule(Module::Expr("330903416631436410"));
 +  cfi.SetRARule(Module::Expr("5870666104170902211"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(2U, caller_registers.size());
 @@ -120,12 +122,12 @@
@@ -3445,7 +3445,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 +  cfi.SetRegisterRule("vodkathumbscrewingly", Module::Expr("24076308 .cfa +"));
 +  cfi.SetRegisterRule("pubvexingfjordschmaltzy", Module::Expr(".cfa 29801007 -"));
 +  cfi.SetRegisterRule("uncopyrightables", Module::Expr("92642917 .cfa /"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(6U, caller_registers.size());
 @@ -147,9 +149,9 @@
@@ -3458,7 +3458,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 +  cfi.SetCFARule(Module::Expr("330903416631436410"));
 +  cfi.SetRARule(Module::Expr("5870666104170902211"));
 +  cfi.SetCFARule(Module::Expr("2828089117179001"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(2U, caller_registers.size());
 @@ -165,8 +167,8 @@
@@ -3469,7 +3469,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 -  cfi.SetRARule("0");
 +  cfi.SetCFARule(Module::Expr(".cfa"));
 +  cfi.SetRARule(Module::Expr("0"));
-   ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                               &caller_registers));
  }
 @@ -175,8 +177,8 @@
@@ -3480,7 +3480,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 -  cfi.SetRARule("0");
 +  cfi.SetCFARule(Module::Expr(".ra"));
 +  cfi.SetRARule(Module::Expr("0"));
-   ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                               &caller_registers));
  }
 @@ -188,8 +190,8 @@
@@ -3491,7 +3491,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 -  cfi.SetRARule("0");
 +  cfi.SetCFARule(Module::Expr(".baraminology .ornithorhynchus +"));
 +  cfi.SetRARule(Module::Expr("0"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(2U, caller_registers.size());
 @@ -201,8 +203,8 @@
@@ -3502,7 +3502,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 -  cfi.SetRARule(".cfa");
 +  cfi.SetCFARule(Module::Expr("48364076"));
 +  cfi.SetRARule(Module::Expr(".cfa"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(2U, caller_registers.size());
 @@ -213,8 +215,8 @@
@@ -3513,7 +3513,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 -  cfi.SetRARule(".ra");
 +  cfi.SetCFARule(Module::Expr("0"));
 +  cfi.SetRARule(Module::Expr(".ra"));
-   ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                               &caller_registers));
  }
 @@ -225,8 +227,8 @@
@@ -3524,7 +3524,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 -  cfi.SetRARule("noachian");
 +  cfi.SetCFARule(Module::Expr("10359370"));
 +  cfi.SetRARule(Module::Expr("noachian"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(2U, caller_registers.size());
 @@ -237,9 +239,9 @@
@@ -3537,7 +3537,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 +  cfi.SetCFARule(Module::Expr("6515179"));
 +  cfi.SetRARule(Module::Expr(".cfa"));
 +  cfi.SetRegisterRule("rogerian", Module::Expr(".cfa"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(3U, caller_registers.size());
 @@ -250,9 +252,9 @@
@@ -3550,7 +3550,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 +  cfi.SetCFARule(Module::Expr("42740329"));
 +  cfi.SetRARule(Module::Expr("27045204"));
 +  cfi.SetRegisterRule("$r1", Module::Expr(".ra"));
-   ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                               &caller_registers));
  }
 @@ -263,10 +265,10 @@
@@ -3565,7 +3565,7 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 +  cfi.SetRARule(Module::Expr("30503835"));
 +  cfi.SetRegisterRule("$r1", Module::Expr("$r1 42175211 = $r2"));
 +  cfi.SetRegisterRule("$r2", Module::Expr("$r2 21357221 = $r1"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(4U, caller_registers.size());
 @@ -278,13 +280,13 @@
@@ -3576,14 +3576,14 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 -  cfi.SetRARule("0");
 +  cfi.SetCFARule(Module::Expr("$temp1 76569129 = $temp1"));
 +  cfi.SetRARule(Module::Expr("0"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
  
 -  cfi.SetCFARule("$temp1 76569129 = $temp1");
 -  cfi.SetRARule("$temp1");
 +  cfi.SetCFARule(Module::Expr("$temp1 76569129 = $temp1"));
 +  cfi.SetRARule(Module::Expr("$temp1"));
-   ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                               &caller_registers));
  }
 @@ -517,10 +519,10 @@

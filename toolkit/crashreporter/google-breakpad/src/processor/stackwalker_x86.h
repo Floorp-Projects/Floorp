@@ -67,7 +67,7 @@ class StackwalkerX86 : public Stackwalker {
 
  private:
   // A STACK CFI-driven frame walker for the X86.
-  typedef SimpleCFIWalker<u_int32_t, MDRawContextX86> CFIWalker;
+  typedef SimpleCFIWalker<uint32_t, MDRawContextX86> CFIWalker;
 
   // Implementation of Stackwalker, using x86 context (%ebp, %esp, %eip) and
   // stack conventions (saved %ebp at [%ebp], saved %eip at 4[%ebp], or

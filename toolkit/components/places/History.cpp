@@ -231,7 +231,7 @@ GetURIFromJSObject(JSContext* aCtx,
                    JSObject* aObject,
                    const char* aProperty)
 {
-  jsval uriVal;
+  JS::Value uriVal;
   JSBool rc = JS_GetProperty(aCtx, aObject, aProperty, &uriVal);
   NS_ENSURE_TRUE(rc, nullptr);
 
@@ -266,7 +266,7 @@ GetStringFromJSObject(JSContext* aCtx,
                       const char* aProperty,
                       nsString& _string)
 {
-  jsval val;
+  JS::Value val;
   JSBool rc = JS_GetProperty(aCtx, aObject, aProperty, &val);
   if (!rc || JSVAL_IS_VOID(val) ||
       !(JSVAL_IS_NULL(val) || JSVAL_IS_STRING(val))) {
@@ -307,7 +307,7 @@ GetIntFromJSObject(JSContext* aCtx,
                    const char* aProperty,
                    IntType* _int)
 {
-  jsval value;
+  JS::Value value;
   JSBool rc = JS_GetProperty(aCtx, aObject, aProperty, &value);
   NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
   if (JSVAL_IS_VOID(value)) {
@@ -348,7 +348,7 @@ GetJSObjectFromArray(JSContext* aCtx,
   NS_PRECONDITION(JS_IsArrayObject(aCtx, aArray),
                   "Must provide an object that is an array!");
 
-  jsval value;
+  JS::Value value;
   JSBool rc = JS_GetElement(aCtx, aArray, aIndex, &value);
   NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
   NS_ENSURE_ARG(!JSVAL_IS_PRIMITIVE(value));
@@ -2537,7 +2537,7 @@ History::RemoveAllDownloads()
 //// mozIAsyncHistory
 
 NS_IMETHODIMP
-History::UpdatePlaces(const jsval& aPlaceInfos,
+History::UpdatePlaces(const JS::Value& aPlaceInfos,
                       mozIVisitInfoCallback* aCallback,
                       JSContext* aCtx)
 {
@@ -2598,7 +2598,7 @@ History::UpdatePlaces(const jsval& aPlaceInfos,
 
     JSObject* visits = NULL;
     {
-      jsval visitsVal;
+      JS::Value visitsVal;
       JSBool rc = JS_GetProperty(aCtx, info, "visits", &visitsVal);
       NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
       if (!JSVAL_IS_PRIMITIVE(visitsVal)) {

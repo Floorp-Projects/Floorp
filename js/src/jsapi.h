@@ -3053,6 +3053,8 @@ struct JSClass {
 #define JSCLASS_USERBIT2                (1<<(JSCLASS_HIGH_FLAGS_SHIFT+6))
 #define JSCLASS_USERBIT3                (1<<(JSCLASS_HIGH_FLAGS_SHIFT+7))
 
+#define JSCLASS_BACKGROUND_FINALIZE     (1<<(JSCLASS_HIGH_FLAGS_SHIFT+8))
+
 /*
  * Bits 26 through 31 are reserved for the CACHED_PROTO_KEY mechanism, see
  * below.

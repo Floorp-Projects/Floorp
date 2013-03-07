@@ -71,7 +71,7 @@ PlaceInfo::GetFrecency(int64_t* _frecency)
 
 NS_IMETHODIMP
 PlaceInfo::GetVisits(JSContext* aContext,
-                     jsval* _visits)
+                     JS::Value* _visits)
 {
   // TODO bug 625913 when we use this in situations that have more than one
   // visit here, we will likely want to make this cache the value.
@@ -93,7 +93,7 @@ PlaceInfo::GetVisits(JSContext* aContext,
     JSObject* jsobj;
     rv = wrapper->GetJSObject(&jsobj);
     NS_ENSURE_SUCCESS(rv, rv);
-    jsval wrappedVisit = OBJECT_TO_JSVAL(jsobj);
+    JS::Value wrappedVisit = OBJECT_TO_JSVAL(jsobj);
 
     JSBool rc = JS_SetElement(aContext, visits, idx, &wrappedVisit);
     NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);

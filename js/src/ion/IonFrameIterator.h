@@ -130,7 +130,7 @@ class IonFrameIterator
     JSFunction *callee() const;
     JSFunction *maybeCallee() const;
     unsigned numActualArgs() const;
-    UnrootedScript script() const;
+    RawScript script() const;
     Value *nativeVp() const;
     Value *actualArgs() const;
 
@@ -293,7 +293,7 @@ class InlineFrameIterator
     template <class Op>
     inline void forEachCanonicalActualArg(JSContext *cx, Op op, unsigned start, unsigned count) const;
 
-    UnrootedScript script() const {
+    RawScript script() const {
         return script_;
     }
     jsbytecode *pc() const {

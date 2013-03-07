@@ -28,6 +28,7 @@ _BROWSER_FILES = \
                  browser_social_chatwindowfocus.js \
                  browser_social_multiprovider.js \
                  browser_social_errorPage.js \
+                 browser_social_window.js \
                  social_activate.html \
                  social_activate_iframe.html \
                  social_panel.html \

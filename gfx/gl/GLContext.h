@@ -548,22 +548,40 @@ public:
     }
 
     void fGetIntegerv(GLenum pname, GLint *params) {
-        if (!mScreen) {
-            raw_fGetIntegerv(pname, params);
-            return;
-        }
-
         switch (pname)
         {
             // LOCAL_GL_FRAMEBUFFER_BINDING is equal to
             // LOCAL_GL_DRAW_FRAMEBUFFER_BINDING_EXT,
             // so we don't need two cases.
             case LOCAL_GL_DRAW_FRAMEBUFFER_BINDING_EXT:
-                *params = mScreen->GetDrawFB();
+                if (mScreen) {
+                    *params = mScreen->GetDrawFB();
+                } else {
+                    raw_fGetIntegerv(pname, params);
+                }
                 break;
 
             case LOCAL_GL_READ_FRAMEBUFFER_BINDING_EXT:
-                *params = mScreen->GetReadFB();
+                if (mScreen) {
+                    *params = mScreen->GetReadFB();
+                } else {
+                    raw_fGetIntegerv(pname, params);
+                }
+                break;
+
+            case LOCAL_GL_MAX_TEXTURE_SIZE:
+                MOZ_ASSERT(mMaxTextureSize>0);
+                *params = mMaxTextureSize;
+                break;
+
+            case LOCAL_GL_MAX_CUBE_MAP_TEXTURE_SIZE:
+                MOZ_ASSERT(mMaxCubeMapTextureSize>0);
+                *params = mMaxCubeMapTextureSize;
+                break;
+
+            case LOCAL_GL_MAX_RENDERBUFFER_SIZE:
+                MOZ_ASSERT(mMaxRenderbufferSize>0);
+                *params = mMaxRenderbufferSize;
                 break;
 
             default:
@@ -1015,6 +1033,7 @@ public:
                                  const char *extension);
 
     GLint GetMaxTextureImageSize() { return mMaxTextureImageSize; }
+    GLint GetMaxTextureSize() { MOZ_ASSERT(mMaxTextureSize>0); return mMaxTextureSize; }
     void SetFlipped(bool aFlipped) { mFlipped = aFlipped; }
 
     // this should just be a std::bitset, but that ended up breaking

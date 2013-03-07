@@ -143,17 +143,6 @@ class MacroAssemblerX86Shared : public Assembler
         testl(Operand(address), imm);
         j(cond, label);
     }
-    void branchTestBool(Condition cond, const Register &lhs, const Register &rhs, Label *label) {
-        if (GeneralRegisterSet(Registers::SingleByteRegs).has(lhs) &&
-            GeneralRegisterSet(Registers::SingleByteRegs).has(rhs))
-        {
-            testb(lhs, rhs);
-        } else {
-            testl(lhs, rhs);
-        }
-
-        j(cond, label);
-    }
 
     // The following functions are exposed for use in platform-shared code.
     template <typename T>

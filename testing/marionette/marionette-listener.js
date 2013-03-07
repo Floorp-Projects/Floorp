@@ -63,7 +63,9 @@ let EVENT_INTERVAL = 30; // milliseconds
 let touches = [];
 // For assigning unique ids to all touches
 let nextTouchId = 1000;
-let touchIds = [];
+let touchIds = {};
+// last touch for single finger
+let lastTouch = null;
 /**
  * Called when listener is first started up. 
  * The listener sends its unique window ID and its current URI to the actor.
@@ -106,6 +108,7 @@ function startListeners() {
   addMessageListenerId("Marionette:doubleTap", doubleTap);
   addMessageListenerId("Marionette:press", press);
   addMessageListenerId("Marionette:release", release);
+  addMessageListenerId("Marionette:actionChain", actionChain);
   addMessageListenerId("Marionette:setSearchTimeout", setSearchTimeout);
   addMessageListenerId("Marionette:goUrl", goUrl);
   addMessageListenerId("Marionette:getUrl", getUrl);
@@ -197,6 +200,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:doubleTap", doubleTap);
   removeMessageListenerId("Marionette:press", press);
   removeMessageListenerId("Marionette:release", release);
+  removeMessageListenerId("Marionette:actionChain", actionChain);
   removeMessageListenerId("Marionette:setSearchTimeout", setSearchTimeout);
   removeMessageListenerId("Marionette:goUrl", goUrl);
   removeMessageListenerId("Marionette:getTitle", getTitle);
@@ -236,7 +240,7 @@ function deleteSession(msg) {
   curWindow = content;
   curWindow.focus();
   touches = [];
-  touchIds = [];
+  touchIds = {};
 }
 
 /*
@@ -548,11 +552,8 @@ function executeWithCallback(msg, useFinish) {
  * This function creates a touch event given a touch type and a touch
  */
 function emitTouchEvent(type, touch) {
-  var target = touch.target;
-  var doc = target.ownerDocument;
-  var win = doc.defaultView;
   // Using domWindowUtils
-  var domWindowUtils = curWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
+  let domWindowUtils = curWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
   domWindowUtils.sendTouchEvent(type, [touch.identifier], [touch.screenX], [touch.screenY], [touch.radiusX], [touch.radiusY], [touch.rotationAngle], [touch.force], 1, 0);
 }
 
@@ -561,29 +562,29 @@ function emitTouchEvent(type, touch) {
  * @param 'xt' and 'yt' are two-element array [from, to] and then is a callback that will be invoked after touchend event is sent
  */
 function touch(target, duration, xt, yt, then) {
-  var doc = target.ownerDocument;
-  var win = doc.defaultView;
-  var touchId = nextTouchId++;
-  var x = xt;
+  let doc = target.ownerDocument;
+  let win = doc.defaultView;
+  let touchId = nextTouchId++;
+  let x = xt;
   if (typeof xt !== 'function') {
     x = function(t) { return xt[0] + t / duration * (xt[1] - xt[0]); };
   }
-  var y = yt;
+  let y = yt;
   if (typeof yt !== 'function') {
     y = function(t) { return yt[0] + t / duration * (yt[1] - yt[0]); };
   }
   // viewport coordinates
-  var clientX = Math.round(x(0)), clientY = Math.round(y(0));
+  let clientX = Math.round(x(0)), clientY = Math.round(y(0));
   // document coordinates
-  var pageX = clientX + win.pageXOffset,
+  let pageX = clientX + win.pageXOffset,
       pageY = clientY + win.pageYOffset;
   // screen coordinates
-  var screenX = clientX + win.mozInnerScreenX,
+  let screenX = clientX + win.mozInnerScreenX,
       screenY = clientY + win.mozInnerScreenY;
   // Remember the coordinates
-  var lastX = clientX, lastY = clientY;
+  let lastX = clientX, lastY = clientY;
   // Create the touch object
-  var touch = doc.createTouch(win, target, touchId,
+  let touch = doc.createTouch(win, target, touchId,
                               pageX, pageY,
                               screenX, screenY,
                               clientX, clientY);
@@ -591,16 +592,16 @@ function touch(target, duration, xt, yt, then) {
   touches.push(touch);
   // Send the start event
   emitTouchEvent('touchstart', touch);
-  var startTime = Date.now();
+  let startTime = Date.now();
   checkTimer.initWithCallback(nextEvent, EVENT_INTERVAL, Ci.nsITimer.TYPE_ONE_SHOT);
   function nextEvent() {
   // Figure out if this is the last of the touchmove events
-    var time = Date.now();
-    var dt = time - startTime;
-    var last = dt + EVENT_INTERVAL / 2 > duration;
+    let time = Date.now();
+    let dt = time - startTime;
+    let last = dt + EVENT_INTERVAL / 2 > duration;
     // Find our touch object in the touches[] array.
     // Note that its index may have changed since we pushed it
-    var touchIndex = touches.indexOf(touch);
+    let touchIndex = touches.indexOf(touch);
     // If this is the last move event, make sure we move all the way
     if (last)
        dt = duration;
@@ -647,21 +648,21 @@ function touch(target, duration, xt, yt, then) {
  *        If they are not specified, then the center of the target is used.
  */
 function coordinates(target, x0, y0, x1, y1) {
-  var coords = {};
-  var box = target.getBoundingClientRect();
-  var tx0 = typeof x0;
-  var ty0 = typeof y0;
-  var tx1 = typeof x1;
-  var ty1 = typeof y1; 
+  let coords = {};
+  let box = target.getBoundingClientRect();
+  let tx0 = typeof x0;
+  let ty0 = typeof y0;
+  let tx1 = typeof x1;
+  let ty1 = typeof y1; 
   function percent(s, x) {
     s = s.trim();
-    var f = parseFloat(s);
+    let f = parseFloat(s);
     if (s[s.length - 1] === '%')
       f = f * x / 100;
       return f;
   }
   function relative(s, x) {
-    var factor;
+    let factor;
     if (s[0] === '+')
       factor = 1;
     else
@@ -704,10 +705,10 @@ function coordinates(target, x0, y0, x1, y1) {
  * This function returns if the element is in viewport 
  */
 function elementInViewport(el) {
-  var top = el.offsetTop;
-  var left = el.offsetLeft;
-  var width = el.offsetWidth;
-  var height = el.offsetHeight;
+  let top = el.offsetTop;
+  let left = el.offsetLeft;
+  let width = el.offsetWidth;
+  let height = el.offsetHeight;
   while(el.offsetParent) {
     el = el.offsetParent;
     top += el.offsetTop;
@@ -724,20 +725,24 @@ function elementInViewport(el) {
  * This function throws the visibility of the element error
  */
 function checkVisible(el, command_id) {
-    //check if the element is visible
-    let visible = utils.isElementDisplayed(el);
-    if (!visible) {
-      return false;
-    }
+  //check if the element is visible
+  let visible = utils.isElementDisplayed(el);
+  if (!visible) {
+    return false;
+  }
+  if (!elementInViewport(el)) {
     //check if scroll function exist. If so, call it.
     if (el.scrollIntoView) {
       el.scrollIntoView(true);
+      if (!elementInViewport(el)) {
+        return false;
+      }
     }
-    var scroll = elementInViewport(el);
-    if (!scroll){
+    else {
       return false;
     }
-    return true;
+  }
+  return true;
 }
 
 /**
@@ -806,29 +811,33 @@ function doubleTap(msg) {
 
 /**
  * Function to create a touch based on the element
+ * corx and cory are related to the el, id is the touchId
  */
 function createATouch(el, corx, cory, id) {
-  var doc = el.ownerDocument;
-  var win = doc.defaultView;
+  let doc = el.ownerDocument;
+  let win = doc.defaultView;
   if (corx == null) {
     corx = '50%';
   }
   if (cory == null){
     cory = '50%';
   }
-  var c = coordinates(el, corx, cory);
-  var clientX = Math.round(c.x0),
+  // corx and cory are relative to the el target. They must be within the same viewport
+  // c are the coordinates relative to the current viewport
+  let c = coordinates(el, corx, cory);
+  let clientX = Math.round(c.x0),
       clientY = Math.round(c.y0);
-  var pageX = clientX + win.pageXOffset,
+  let pageX = clientX + win.pageXOffset,
       pageY = clientY + win.pageYOffset;
-  var screenX = clientX + win.mozInnerScreenX,
+  let screenX = clientX + win.mozInnerScreenX,
       screenY = clientY + win.mozInnerScreenY;
-  var atouch = doc.createTouch(win, el, id, pageX, pageY, screenX, screenY, clientX, clientY);
+  let atouch = doc.createTouch(win, el, id, pageX, pageY, screenX, screenY, clientX, clientY);
   return atouch;
 }
 
 /**
  * Function to start a touch event
+ * corx and cory are relative to the element
  */
 function press(msg) {
   let command_id = msg.json.command_id;
@@ -841,10 +850,10 @@ function press(msg) {
       sendError("Element is not currently visible and may not be manipulated", 11, null, command_id);
       return;
     }
-    var touchId = nextTouchId++;
-    var touch = createATouch(el, corx, cory, touchId);
+    let touchId = nextTouchId++;
+    let touch = createATouch(el, corx, cory, touchId);
     emitTouchEvent('touchstart', touch);
-    touchIds.push(touchId);
+    touchIds[touchId] = touch;
     sendResponse({value: touch.identifier}, command_id);
   }
   catch (e) {
@@ -860,24 +869,124 @@ function release(msg) {
   let el;
   try {
     let id = msg.json.touchId;
-    let currentIndex = touchIds.indexOf(id);
-    if (currentIndex != -1) {
-      el = elementManager.getKnownElement(msg.json.value, curWindow);
+    if (id in touchIds) {
+      let startTouch = touchIds[id];
+      el = startTouch.target;
       let corx = msg.json.corx;
       let cory = msg.json.cory;
       if (!checkVisible(el, command_id)) {
         sendError("Element is not currently visible and may not be manipulated", 11, null, command_id);
         return;
       }
-      var touch = createATouch(el, corx, cory, id);
+      let touch = createATouch(el, corx, cory, id);
+      if (touch.clientX != startTouch.clientX ||
+          touch.clientY != startTouch.clientY) {
+        emitTouchEvent('touchmove', touch);
+      }
       emitTouchEvent('touchend', touch);
-      touchIds.splice(currentIndex, 1);
+      delete touchIds[id];
       sendOk(msg.json.command_id);
     }
     else {
       sendError("Element has not be pressed: InvalidElementCoordinates", 29, null, command_id);
-      return;
     }
+  }
+  catch (e) {
+    sendError(e.message, e.code, e.stack, msg.json.command_id);
+  }
+}
+
+/**
+ * Function to emit touch events for each finger. e.g. finger=[['press', id], ['wait', 5], ['release']]
+ * touchId represents the finger id, i keeps track of the current action of the finger
+ */
+function actions(finger, touchId, command_id, i){
+  if (typeof i === "undefined") {
+    i = 0;
+  }
+  if (i == finger.length) {
+    return;
+  }
+  let pack = finger[i];
+  let command = pack[0];
+  // el has the id
+  let el;
+  let corx;
+  let cory;
+  let touch;
+  i++;
+  switch(command) {
+    case 'press':
+      el = elementManager.getKnownElement(pack[1], curWindow);
+      corx = pack[2];
+      cory = pack[3];
+      // after this block, the element will be scrolled into view
+      if (!checkVisible(el, command_id)) {
+         sendError("Element is not currently visible and may not be manipulated", 11, null, command_id);
+         return;
+      }
+      touch = createATouch(el, corx, cory, touchId);
+      lastTouch = touch;
+      emitTouchEvent('touchstart', touch);
+      actions(finger,touchId, command_id, i);
+      break;
+    case 'release':
+      touch = lastTouch;
+      emitTouchEvent('touchend', touch);
+      actions(finger, touchId, command_id, i);
+      break;
+    case 'move':
+      el = elementManager.getKnownElement(pack[1], curWindow);
+      let boxTarget = el.getBoundingClientRect();
+      let startElement = lastTouch.target;
+      let boxStart = startElement.getBoundingClientRect();
+      corx = boxTarget.left - boxStart.left + boxTarget.width * 0.5;
+      cory = boxTarget.top - boxStart.top + boxTarget.height * 0.5;
+      touch = createATouch(startElement, corx, cory, touchId);
+      lastTouch = touch;
+      emitTouchEvent('touchmove', touch);
+      actions(finger, touchId, command_id, i);
+      break;
+    case 'moveByOffset':
+      el = lastTouch.target;
+      let doc = el.ownerDocument;
+      let win = doc.defaultView;
+      let clientX = lastTouch.clientX + pack[1],
+          clientY = lastTouch.clientY + pack[2];
+      let pageX = clientX + win.pageXOffset,
+          pageY = clientY + win.pageYOffset;
+      let screenX = clientX + win.mozInnerScreenX,
+          screenY = clientY + win.mozInnerScreenY;
+      touch = doc.createTouch(win, el, touchId, pageX, pageY, screenX, screenY, clientX, clientY);
+      lastTouch = touch;
+      emitTouchEvent('touchmove', touch);
+      actions(finger, touchId, command_id, i);
+      break;
+    case 'wait':
+      if (pack[1] != null ) {
+        let time = pack[1]*1000;
+        checkTimer.initWithCallback(function(){actions(finger, touchId, command_id, i);}, time, Ci.nsITimer.TYPE_ONE_SHOT);
+      }
+      else {
+        actions(finger, touchId, command_id, i);
+      }
+      break;
+  }
+}
+
+/**
+ * Function to start action chain on one finger 
+ */
+function actionChain(msg) {
+  let command_id = msg.json.command_id;
+  let args = msg.json.value;
+  try {
+    let commandArray = elementManager.convertWrappedArguments(args, curWindow);
+    // each finger associates with one touchId
+    let touchId = nextTouchId++;
+    // loop the action array [ ['press', id], ['move', id], ['release', id] ]
+    actions(commandArray, touchId, command_id);
+    sendOk(msg.json.command_id);
   }
   catch (e) {
     sendError(e.message, e.code, e.stack, msg.json.command_id);
