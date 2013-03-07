@@ -91,6 +91,8 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     private final PanZoomController mPanZoomController;
     private LayerView mView;
 
+    private boolean mClampOnMarginChange;
+
     public GeckoLayerClient(Context context, LayerView view, EventDispatcher eventDispatcher) {
         // we can fill these in with dummy values because they are always written
         // to before being read
@@ -105,6 +107,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mProgressiveUpdateDisplayPort = new DisplayPortMetrics();
         mLastProgressiveUpdateWasLowPrecision = false;
         mProgressiveUpdateWasInDanger = false;
+        mClampOnMarginChange = true;
 
         mForceRedraw = true;
         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
@@ -354,7 +357,17 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
      */
     public void setFixedLayerMargins(float left, float top, float right, float bottom) {
         ImmutableViewportMetrics oldMetrics = getViewportMetrics();
-        setViewportMetrics(oldMetrics.setFixedLayerMargins(left, top, right, bottom), false);
+        ImmutableViewportMetrics newMetrics = oldMetrics.setFixedLayerMargins(left, top, right, bottom);
+
+        if (mClampOnMarginChange) {
+            newMetrics = newMetrics.clampWithMargins();
+        }
+
+        setViewportMetrics(newMetrics, false);
+    }
+
+    public void setClampOnFixedLayerMarginsChange(boolean aClamp) {
+        mClampOnMarginChange = aClamp;
     }
 
     // This is called on the Gecko thread to determine if we're still interested
@@ -468,7 +481,15 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             float pageLeft, float pageTop, float pageRight, float pageBottom,
             float cssPageLeft, float cssPageTop, float cssPageRight, float cssPageBottom) {
         synchronized (this) {
-            final ImmutableViewportMetrics newMetrics = getViewportMetrics()
+            ImmutableViewportMetrics currentMetrics = getViewportMetrics();
+
+            // If we're meant to be scrolled to the top, take into account any
+            // margin set on the pan zoom controller.
+            if (offsetY == 0) {
+                offsetY = -currentMetrics.fixedLayerMarginTop;
+            }
+
+            final ImmutableViewportMetrics newMetrics = currentMetrics
                 .setViewportOrigin(offsetX, offsetY)
                 .setZoomFactor(zoom)
                 .setPageRect(new RectF(pageLeft, pageTop, pageRight, pageBottom),
@@ -547,10 +568,20 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mCurrentViewTransform.x = mFrameMetrics.viewportRectLeft;
         mCurrentViewTransform.y = mFrameMetrics.viewportRectTop;
         mCurrentViewTransform.scale = mFrameMetrics.zoomFactor;
-        mCurrentViewTransform.fixedLayerMarginLeft = mFrameMetrics.fixedLayerMarginLeft;
-        mCurrentViewTransform.fixedLayerMarginTop = mFrameMetrics.fixedLayerMarginTop;
-        mCurrentViewTransform.fixedLayerMarginRight = mFrameMetrics.fixedLayerMarginRight;
-        mCurrentViewTransform.fixedLayerMarginBottom = mFrameMetrics.fixedLayerMarginBottom;
+
+        // Adjust the fixed layer margins so that overscroll subtracts from them.
+        mCurrentViewTransform.fixedLayerMarginLeft =
+            Math.max(0, mFrameMetrics.fixedLayerMarginLeft +
+                     Math.min(0, mFrameMetrics.viewportRectLeft - mFrameMetrics.pageRectLeft));
+        mCurrentViewTransform.fixedLayerMarginTop =
+            Math.max(0, mFrameMetrics.fixedLayerMarginTop +
+                     Math.min(0, mFrameMetrics.viewportRectTop - mFrameMetrics.pageRectTop));
+        mCurrentViewTransform.fixedLayerMarginRight =
+            Math.max(0, mFrameMetrics.fixedLayerMarginRight +
+                     Math.min(0, (mFrameMetrics.pageRectRight - mFrameMetrics.viewportRectRight)));
+        mCurrentViewTransform.fixedLayerMarginBottom =
+            Math.max(0, mFrameMetrics.fixedLayerMarginBottom +
+                     Math.min(0, (mFrameMetrics.pageRectBottom - mFrameMetrics.viewportRectBottom)));
 
         mRootLayer.setPositionAndResolution(x, y, x + width, y + height, resolution);
 
