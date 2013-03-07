@@ -4343,7 +4343,7 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
         # we're someone's consequential interface.  But for this-unwrapping, we
         # know that we're the real deal.  So fake a descriptor here for
         # consumption by CastableObjectUnwrapper.
-        getThis = CGGeneric("""JS::RootedObject obj(cx, %s);
+        getThis = CGGeneric("""js::RootedObject obj(cx, %s);
 if (!obj) {
   return false;
 }
@@ -4371,7 +4371,7 @@ class CGAbstractStaticBindingMethod(CGAbstractStaticMethod):
         CGAbstractStaticMethod.__init__(self, descriptor, name, "JSBool", args)
 
     def definition_body(self):
-        unwrap = CGGeneric("""JS::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+        unwrap = CGGeneric("""js::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
 if (!obj) {
   return false;
 }
@@ -4679,7 +4679,7 @@ class CGSpecializedForwardingSetter(CGSpecializedSetter):
         # JS_GetProperty and JS_SetProperty can only deal with ASCII
         assert all(ord(c) < 128 for c in attrName)
         assert all(ord(c) < 128 for c in forwardToAttrName)
-        return CGIndenter(CGGeneric("""JS::RootedValue v(cx);
+        return CGIndenter(CGGeneric("""js::RootedValue v(cx);
 if (!JS_GetProperty(cx, obj, "%s", v.address())) {
   return false;
 }

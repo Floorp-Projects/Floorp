@@ -1295,7 +1295,7 @@ IsTransparent(JSContext *cx, JSObject *wrapper, jsid id)
     if (EnsureCompartmentPrivate(wrapper)->scope->IsXBLScope() &&
         (content = do_QueryInterfaceNative(cx, wrapper)))
     {
-        JS::RootedId id_(cx, id);
+        js::RootedId id_(cx, id);
         if (nsContentUtils::IsBindingField(cx, content, id_))
             return true;
     }
@@ -1503,7 +1503,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
         EnsureCompartmentPrivate(wrapper)->scope->IsXBLScope() &&
         (content = do_QueryInterfaceNative(cx, wrapper)))
     {
-        JS::RootedId id_(cx, id);
+        js::RootedId id_(cx, id);
         if (!nsContentUtils::LookupBindingMember(cx, content, id_, desc))
             return false;
         DEBUG_CheckXBLLookup(cx, desc);
