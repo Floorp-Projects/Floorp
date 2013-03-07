@@ -141,11 +141,12 @@ nsAccessibilityService::~nsAccessibilityService()
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsAccessibilityService,
+NS_IMPL_ISUPPORTS_INHERITED4(nsAccessibilityService,
                              DocManager,
                              nsIAccessibilityService,
                              nsIAccessibleRetrieval,
-                             nsIObserver)
+                             nsIObserver,
+                             nsISelectionListener) // from SelectionManager
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIObserver
@@ -1024,6 +1025,8 @@ nsAccessibilityService::Shutdown()
   // Stop accessible document loader.
   DocManager::Shutdown();
 
+  SelectionManager::Shutdown();
+
   // Application is going to be closed, shutdown accessibility and mark
   // accessibility service as shutdown to prevent calls of its methods.
   // Don't null accessibility service static member at this point to be safe
@@ -1604,6 +1607,12 @@ namespace a11y {
 
 FocusManager*
 FocusMgr()
+{
+  return nsAccessibilityService::gAccessibilityService;
+}
+
+SelectionManager*
+SelectionMgr()
 {
   return nsAccessibilityService::gAccessibilityService;
 }

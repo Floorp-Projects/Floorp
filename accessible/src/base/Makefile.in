@@ -32,9 +32,9 @@ CPPSRCS = \
   nsAccessibilityService.cpp \
   nsAccessiblePivot.cpp \
   nsEventShell.cpp \
-  nsCaretAccessible.cpp \
   nsTextEquivUtils.cpp \
   RoleAsserts.cpp \
+  SelectionManager.cpp \
   StyleInfo.cpp \
   TextAttrs.cpp \
   TextUpdater.cpp \
@@ -61,6 +61,7 @@ EXPORTS_mozilla/a11y = \
   AccTypes.h \
   Platform.h \
   States.h \
+  SelectionManager.h \
   Role.h \
   $(NULL)
 
