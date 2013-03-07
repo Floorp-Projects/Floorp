@@ -226,6 +226,14 @@
         </activity>
         -->
 
+        <activity android:name="org.mozilla.gecko.VideoPlayer"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation"
+                  android:theme="@android:style/Theme.NoTitleBar">
+            <intent-filter>
+                <action android:name="org.mozilla.gecko.PLAY_VIDEO" />
+            </intent-filter>
+        </activity>
+
         <activity android:name="org.mozilla.gecko.AwesomeBar"
                   android:theme="@style/Gecko.Light.AwesomeBar"
                   android:configChanges="orientation|screenSize"
