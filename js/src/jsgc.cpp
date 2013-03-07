@@ -1624,7 +1624,7 @@ js::InitTracer(JSTracer *trc, JSRuntime *rt, JSTraceCallback callback)
     trc->debugPrinter = NULL;
     trc->debugPrintArg = NULL;
     trc->debugPrintIndex = size_t(-1);
-    trc->eagerlyTraceWeakMaps = true;
+    trc->eagerlyTraceWeakMaps = TraceWeakMapValues;
 #ifdef JS_GC_ZEAL
     trc->realLocation = NULL;
 #endif
@@ -1703,7 +1703,7 @@ GCMarker::start()
      * The GC is recomputing the liveness of WeakMap entries, so we delay
      * visting entries.
      */
-    eagerlyTraceWeakMaps = JS_FALSE;
+    eagerlyTraceWeakMaps = DoNotTraceWeakMaps;
 }
 
 void

@@ -1508,14 +1508,14 @@ struct UnmarkGrayTracer : public JSTracer
       : tracingShape(false), previousShape(NULL)
     {
         JS_TracerInit(this, rt, UnmarkGrayChildren);
-        eagerlyTraceWeakMaps = false;
+        eagerlyTraceWeakMaps = DoNotTraceWeakMaps;
     }
 
     UnmarkGrayTracer(JSTracer *trc, bool tracingShape)
       : tracingShape(tracingShape), previousShape(NULL)
     {
         JS_TracerInit(this, trc->runtime, UnmarkGrayChildren);
-        eagerlyTraceWeakMaps = false;
+        eagerlyTraceWeakMaps = DoNotTraceWeakMaps;
     }
 
     /* True iff we are tracing the immediate children of a shape. */
