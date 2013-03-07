@@ -7,11 +7,7 @@
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 PROGRAM = $(MOZ_APP_NAME)$(BIN_SUFFIX)
 else
-ifeq ($(MOZ_BUILD_APP),mobile/xul)
-PROGRAM = $(MOZ_APP_NAME)$(BIN_SUFFIX)
-else
 PROGRAM = $(MOZ_APP_NAME)-bin$(BIN_SUFFIX)
-endif
 endif
 
 TARGET_DIST = $(TARGET_DEPTH)/dist
