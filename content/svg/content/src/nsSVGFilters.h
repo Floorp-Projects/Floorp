@@ -189,14 +189,7 @@ public:
   }
 
   operator nsISupports*() { return static_cast<nsIContent*>(this); }
-
-  // WebIDL
-  already_AddRefed<mozilla::dom::SVGAnimatedLength> X();
-  already_AddRefed<mozilla::dom::SVGAnimatedLength> Y();
-  already_AddRefed<mozilla::dom::SVGAnimatedLength> Width();
-  already_AddRefed<mozilla::dom::SVGAnimatedLength> Height();
-  already_AddRefed<nsIDOMSVGAnimatedString> Result();
-
+  
 protected:
   virtual bool OperatesOnPremultipledAlpha(int32_t) { return true; }
 
@@ -217,7 +210,7 @@ protected:
   virtual LengthAttributesInfo GetLengthInfo();
 
   // nsIDOMSVGFitlerPrimitiveStandardAttributes values
-  enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
+  enum { X, Y, WIDTH, HEIGHT };
   nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 };
@@ -318,21 +311,5 @@ public:
   virtual bool AttributeAffectsRendering(
           int32_t aNameSpaceID, nsIAtom* aAttribute) const = 0;
 };
-
-void
-CopyDataRect(uint8_t *aDest, const uint8_t *aSrc, uint32_t aStride,
-             const nsIntRect& aDataRect);
-
-inline void
-CopyRect(const nsSVGFE::Image* aDest, const nsSVGFE::Image* aSrc, const nsIntRect& aDataRect)
-{
-  NS_ASSERTION(aDest->mImage->Stride() == aSrc->mImage->Stride(), "stride mismatch");
-  NS_ASSERTION(aDest->mImage->GetSize() == aSrc->mImage->GetSize(), "size mismatch");
-  NS_ASSERTION(nsIntRect(0, 0, aDest->mImage->Width(), aDest->mImage->Height()).Contains(aDataRect),
-               "aDataRect out of bounds");
-
-  CopyDataRect(aDest->mImage->Data(), aSrc->mImage->Data(),
-               aSrc->mImage->Stride(), aDataRect);
-}
 
 #endif
