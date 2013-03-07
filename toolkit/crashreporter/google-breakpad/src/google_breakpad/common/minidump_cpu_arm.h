@@ -77,10 +77,10 @@
  * are not exactly minidumps.
  */
 typedef struct {
-  uint64_t	fpscr;      /* FPU status register */
+  uint64_t      fpscr;      /* FPU status register */
 
   /* 32 64-bit floating point registers, d0 .. d31. */
-  uint64_t	regs[MD_FLOATINGSAVEAREA_ARM_FPR_COUNT];
+  uint64_t      regs[MD_FLOATINGSAVEAREA_ARM_FPR_COUNT];
 
   /* Miscellaneous control words */
   uint32_t     extra[MD_FLOATINGSAVEAREA_ARM_FPEXTRA_COUNT];
@@ -92,7 +92,7 @@ typedef struct {
   /* The next field determines the layout of the structure, and which parts
    * of it are populated
    */
-  uint32_t	context_flags;
+  uint32_t      context_flags;
 
   /* 16 32-bit integer registers, r0 .. r15
    * Note the following fixed uses:
@@ -116,7 +116,7 @@ typedef struct {
 
 } MDRawContextARM;
 
-/* Indices into iregs for registers with a dedicated or conventional 
+/* Indices into iregs for registers with a dedicated or conventional
  * purpose.
  */
 enum MDARMRegisterNumbers {

@@ -63,10 +63,10 @@ class MemoryRegion {
   // program.  Returns true on success.  Fails and returns false if address
   // is out of the region's bounds (after considering the width of value),
   // or for other types of errors.
-  virtual bool GetMemoryAtAddress(uint64_t address, uint8_t*  value) const =0;
-  virtual bool GetMemoryAtAddress(uint64_t address, uint16_t* value) const =0;
-  virtual bool GetMemoryAtAddress(uint64_t address, uint32_t* value) const =0;
-  virtual bool GetMemoryAtAddress(uint64_t address, uint64_t* value) const =0;
+  virtual bool GetMemoryAtAddress(uint64_t address, uint8_t*  value) const = 0;
+  virtual bool GetMemoryAtAddress(uint64_t address, uint16_t* value) const = 0;
+  virtual bool GetMemoryAtAddress(uint64_t address, uint32_t* value) const = 0;
+  virtual bool GetMemoryAtAddress(uint64_t address, uint64_t* value) const = 0;
 };
 
 

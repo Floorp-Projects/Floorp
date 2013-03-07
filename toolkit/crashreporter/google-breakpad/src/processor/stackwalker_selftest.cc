@@ -69,12 +69,14 @@
 #include "google_breakpad/common/minidump_format.h"
 #include "google_breakpad/processor/basic_source_line_resolver.h"
 #include "google_breakpad/processor/call_stack.h"
+#include "google_breakpad/processor/code_module.h"
 #include "google_breakpad/processor/memory_region.h"
 #include "google_breakpad/processor/stack_frame.h"
 #include "google_breakpad/processor/stack_frame_cpu.h"
 
 using google_breakpad::BasicSourceLineResolver;
 using google_breakpad::CallStack;
+using google_breakpad::CodeModule;
 using google_breakpad::MemoryRegion;
 using google_breakpad::scoped_ptr;
 using google_breakpad::StackFrame;
@@ -337,7 +339,8 @@ static unsigned int CountCallerFrames() {
 #endif  // __i386__ || __ppc__ || __sparc__
 
   CallStack stack;
-  stackwalker.Walk(&stack);
+  vector<const CodeModule*> modules_without_symbols;
+  stackwalker.Walk(&stack, &modules_without_symbols);
 
 #ifdef PRINT_STACKS
   printf("\n");

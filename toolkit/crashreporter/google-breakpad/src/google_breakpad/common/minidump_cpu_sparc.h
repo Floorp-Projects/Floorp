@@ -82,10 +82,10 @@
 typedef struct {
 
   /* FPU floating point regs */
-  uint64_t	regs[MD_FLOATINGSAVEAREA_SPARC_FPR_COUNT];
+  uint64_t      regs[MD_FLOATINGSAVEAREA_SPARC_FPR_COUNT];
 
-  uint64_t	filler;
-  uint64_t	fsr;        /* FPU status register */
+  uint64_t      filler;
+  uint64_t      fsr;        /* FPU status register */
 } MDFloatingSaveAreaSPARC;  /* FLOATING_SAVE_AREA */
 
 #define MD_CONTEXT_SPARC_GPR_COUNT 32
@@ -94,8 +94,8 @@ typedef struct {
   /* The next field determines the layout of the structure, and which parts
    * of it are populated
    */
-  uint32_t	context_flags;
-  uint32_t	flag_pad;
+  uint32_t      context_flags;
+  uint32_t      flag_pad;
   /*
    * General register access (SPARC).
    * Don't confuse definitions here with definitions in <sys/regset.h>.
