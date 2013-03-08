@@ -115,7 +115,6 @@ class PICStubCompiler : public BaseCompiler
   protected:
     void spew(const char *event, const char *op) {
 #ifdef JS_METHODJIT_SPEW
-        AutoAssertNoGC nogc;
         JaegerSpew(JSpew_PICs, "%s %s: %s (%s: %d)\n",
                    type, event, op, f.script()->filename, CurrentLine(cx));
 #endif
@@ -193,7 +192,7 @@ class SetPropCompiler : public PICStubCompiler
         repatcher.relink(pic.slowPathCall, target);
     }
 
-    LookupStatus patchInline(UnrootedShape shape)
+    LookupStatus patchInline(RawShape shape)
     {
         JS_ASSERT(!pic.inlinePathPatched);
         JaegerSpew(JSpew_PICs, "patch setprop inline at %p\n", pic.fastPathStart.executableAddress());
@@ -729,7 +728,6 @@ struct GetPropHelper {
     }
 
     LookupStatus testForGet() {
-        AutoAssertNoGC nogc;
         if (!shape->hasDefaultGetter()) {
             if (shape->hasGetterValue()) {
                 JSObject *getterObj = shape->getterObject();
@@ -770,7 +768,7 @@ namespace js {
 namespace mjit {
 
 inline void
-MarkNotIdempotent(UnrootedScript script, jsbytecode *pc)
+MarkNotIdempotent(RawScript script, jsbytecode *pc)
 {
     if (!script->hasAnalysis())
         return;
@@ -896,8 +894,6 @@ class GetPropCompiler : public PICStubCompiler
 
     LookupStatus generateStringPropertyStub()
     {
-        AssertCanGC();
-
         if (!f.fp()->script()->compileAndGo)
             return disable("String.prototype without compile-and-go global");
 
@@ -1014,7 +1010,7 @@ class GetPropCompiler : public PICStubCompiler
         return Lookup_Cacheable;
     }
 
-    LookupStatus patchInline(JSObject *holder, UnrootedShape shape)
+    LookupStatus patchInline(JSObject *holder, RawShape shape)
     {
         spew("patch", "inline");
         Repatcher repatcher(f.chunk());
@@ -1049,11 +1045,9 @@ class GetPropCompiler : public PICStubCompiler
     }
 
     /* For JSPropertyOp getters. */
-    void generateGetterStub(Assembler &masm, UnrootedShape shape, jsid userid,
+    void generateGetterStub(Assembler &masm, RawShape shape, jsid userid,
                             Label start, Vector<Jump, 8> &shapeMismatches)
     {
-        AutoAssertNoGC nogc;
-
         /*
          * Getter hook needs to be called from the stub. The state is fully
          * synced and no registers are live except the result registers.
@@ -1161,12 +1155,10 @@ class GetPropCompiler : public PICStubCompiler
     }
 
     /* For getters backed by a JSNative. */
-    void generateNativeGetterStub(Assembler &masm, UnrootedShape shape,
+    void generateNativeGetterStub(Assembler &masm, RawShape shape,
                                   Label start, Vector<Jump, 8> &shapeMismatches)
     {
-        AutoAssertNoGC nogc;
-
-        /*
+       /*
          * Getter hook needs to be called from the stub. The state is fully
          * synced and no registers are live except the result registers.
          */
@@ -1256,7 +1248,6 @@ class GetPropCompiler : public PICStubCompiler
 
     LookupStatus generateStub(HandleObject holder, HandleShape shape)
     {
-        AssertCanGC();
         Vector<Jump, 8> shapeMismatches(cx);
 
         MJITInstrumentation sps(&f.cx->runtime->spsProfiler);
@@ -1680,7 +1671,7 @@ class ScopeNameCompiler : public PICStubCompiler
         JS_ASSERT(obj == getprop.holder);
         JS_ASSERT(getprop.holder != &scopeChain->global());
 
-        UnrootedShape shape = getprop.shape;
+        RawShape shape = getprop.shape;
         if (!shape->hasDefaultGetter())
             return disable("unhandled callobj sprop getter");
 
@@ -2171,7 +2162,6 @@ void
 BaseIC::spew(VMFrame &f, const char *event, const char *message)
 {
 #ifdef JS_METHODJIT_SPEW
-    AutoAssertNoGC nogc;
     JaegerSpew(JSpew_PICs, "%s %s: %s (%s: %d)\n",
                js_CodeName[JSOp(*f.pc())], event, message,
                f.cx->fp()->script()->filename, CurrentLine(f.cx));
@@ -2182,8 +2172,6 @@ BaseIC::spew(VMFrame &f, const char *event, const char *message)
 inline uint32_t
 frameCountersOffset(VMFrame &f)
 {
-    AutoAssertNoGC nogc;
-
     JSContext *cx = f.cx;
 
     uint32_t offset = 0;
@@ -2196,7 +2184,7 @@ frameCountersOffset(VMFrame &f)
     }
 
     jsbytecode *pc;
-    UnrootedScript script = cx->stack.currentScript(&pc);
+    RawScript script = cx->stack.currentScript(&pc);
     offset += pc - script->code;
 
     return offset;

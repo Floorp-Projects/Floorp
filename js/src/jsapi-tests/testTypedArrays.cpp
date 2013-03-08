@@ -120,9 +120,9 @@ TestArrayFromBuffer(JSContext *cx)
     CHECK_EQUAL(JS_GetTypedArrayByteLength(ofsArray), nbytes / 2);
 
     // Make sure all 3 views reflect the same buffer at the expected locations
-    js::RootedValue v(cx, INT_TO_JSVAL(39));
+    JS::RootedValue v(cx, INT_TO_JSVAL(39));
     JS_SetElement(cx, array, 0, v.address());
-    js::RootedValue v2(cx);
+    JS::RootedValue v2(cx);
     CHECK(JS_GetElement(cx, array, 0, v2.address()));
     CHECK_SAME(v, v2);
     CHECK(JS_GetElement(cx, shortArray, 0, v2.address()));
@@ -145,7 +145,7 @@ TestArrayFromBuffer(JSContext *cx)
     CHECK_SAME(v, v2);
     CHECK_EQUAL(long(JSVAL_TO_INT(v)), long(reinterpret_cast<Element*>(data)[elts - 1]));
 
-    js::RootedObject copy(cx, CreateFromArray(cx, array));
+    JS::RootedObject copy(cx, CreateFromArray(cx, array));
     CHECK(JS_GetElement(cx, array, 0, v.address()));
     CHECK(JS_GetElement(cx, copy, 0, v2.address()));
     CHECK_SAME(v, v2);

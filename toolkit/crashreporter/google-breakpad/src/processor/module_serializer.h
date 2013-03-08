@@ -110,7 +110,7 @@ class ModuleSerializer {
       FastSourceLineResolver::Module::kNumberMaps_;
 
   // Memory sizes required to serialize map components in Module.
-  u_int32_t map_sizes_[kNumberMaps_];
+  uint32_t map_sizes_[kNumberMaps_];
 
   // Serializers for each individual map component in Module class.
   StdMapSerializer<int, string> files_serializer_;

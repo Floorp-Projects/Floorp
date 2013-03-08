@@ -27,7 +27,6 @@ using mozilla::DebugOnly;
 void
 analyze::PrintBytecode(JSContext *cx, HandleScript script, jsbytecode *pc)
 {
-    AssertCanGC();
     printf("#%u:", script->id());
     Sprinter sprinter(cx);
     if (!sprinter.init())
@@ -1956,7 +1955,7 @@ CrossScriptSSA::foldValue(const CrossSSAValue &cv)
     const Frame &frame = getFrame(cv.frame);
     const SSAValue &v = cv.v;
 
-    UnrootedScript parentScript = NULL;
+    RawScript parentScript = NULL;
     ScriptAnalysis *parentAnalysis = NULL;
     if (frame.parent != INVALID_FRAME) {
         parentScript = getFrame(frame.parent).script;
@@ -1989,7 +1988,7 @@ CrossScriptSSA::foldValue(const CrossSSAValue &cv)
              * If there is a single inline callee with a single return site,
              * propagate back to that.
              */
-            UnrootedScript callee = NULL;
+            RawScript callee = NULL;
             uint32_t calleeFrame = INVALID_FRAME;
             for (unsigned i = 0; i < numFrames(); i++) {
                 if (iterFrame(i).parent == cv.frame && iterFrame(i).parentpc == pc) {

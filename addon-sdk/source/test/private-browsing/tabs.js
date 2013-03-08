@@ -1,13 +1,13 @@
 'use strict';
 
 const { Ci } = require('chrome');
-const { pb, pbUtils, loader: pbLoader, getOwnerWindow } = require('./helper');
+const { openTab, closeTab } = require('sdk/tabs/utils');
+const browserWindows = require('sdk/windows');
+const { getOwnerWindow } = require('sdk/private-browsing/window/utils');
 
 exports.testIsPrivateOnTab = function(test) {
-  const { openTab, closeTab } = pbLoader.require('sdk/tabs/utils');
-
-  let window = pbLoader.require('sdk/windows').browserWindows.activeWindow;
-  let chromeWindow = pbLoader.require('sdk/private-browsing/window/utils').getOwnerWindow(window);
+  let window = browserWindows.activeWindow;
+  let chromeWindow = getOwnerWindow(window);
   test.assert(chromeWindow instanceof Ci.nsIDOMWindow, 'associated window is found');
   test.assert(!pb.isPrivate(chromeWindow), 'the top level window is not private');
 

@@ -815,6 +815,14 @@
     "n_values": 8,
     "description": "HTTP Proxy Type (none, http, socks)"
   },
+  "HTTP_TRANSACTION_IS_SSL": {
+    "kind": "boolean",
+    "description": "Whether a HTTP transaction was over SSL or not."
+  },
+  "HTTP_PAGELOAD_IS_SSL": {
+    "kind": "boolean",
+    "description": "Whether a HTTP base page load was over SSL or not."
+  },
   "SSL_HANDSHAKE_VERSION": {
     "kind": "enumerated",
     "n_values": 16,
@@ -1664,6 +1672,20 @@
     "n_buckets": 10,
     "extended_statistics_ok": true,
     "description": "Time spent on SQLite read() (ms)"
+  },
+  "MOZ_SQLITE_COOKIES_OPEN_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Time spent on cookie DB open (ms)"
+  },
+  "MOZ_SQLITE_COOKIES_OPEN_READAHEAD_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Time spent on cookie DB open with readahead (ms)"
   },
   "MOZ_SQLITE_COOKIES_READ_MS": {
     "kind": "exponential",

@@ -4,7 +4,7 @@
 
 'use strict';
 
-const { Loader } = require('sdk/test/loader');
+const { LoaderWithHookedConsole } = require("sdk/test/loader");
 
 // Exposing private methods as public in order to test
 const EventEmitter = require('sdk/deprecated/events').EventEmitter.compose({
@@ -256,11 +256,7 @@ exports["test:removing once"] = function(test) {
 exports['test:emitLoop'] = function(test) {
   // Override the console for this test so it doesn't log the exception to the
   // test output
-  let loader = Loader(module, {
-    console: Object.create(console, {
-      exception: { value: function(e) { }}
-    })
-  });
+  let { loader } = LoaderWithHookedConsole(module);
 
   let EventEmitter = loader.require('sdk/deprecated/events').EventEmitter.compose({
     listeners: function(type) this._listeners(type),

@@ -2912,7 +2912,7 @@ class ICGetElem_Dense : public ICMonitoredStub
         bool generateStubCode(MacroAssembler &masm);
 
       public:
-        Compiler(JSContext *cx, ICStub *firstMonitorStub, UnrootedShape shape)
+        Compiler(JSContext *cx, ICStub *firstMonitorStub, RawShape shape)
           : ICStubCompiler(cx, ICStub::GetElem_Dense),
             firstMonitorStub_(firstMonitorStub),
             shape_(cx, shape)
@@ -2968,7 +2968,7 @@ class ICGetElem_TypedArray : public ICStub
         }
 
       public:
-        Compiler(JSContext *cx, UnrootedShape shape, uint32_t type)
+        Compiler(JSContext *cx, RawShape shape, uint32_t type)
           : ICStubCompiler(cx, ICStub::GetElem_TypedArray),
             shape_(cx, shape),
             type_(type)
@@ -3063,7 +3063,7 @@ class ICSetElem_Dense : public ICUpdatedStub
         bool generateStubCode(MacroAssembler &masm);
 
       public:
-        Compiler(JSContext *cx, UnrootedShape shape, HandleTypeObject type)
+        Compiler(JSContext *cx, RawShape shape, HandleTypeObject type)
           : ICStubCompiler(cx, ICStub::SetElem_Dense),
             shape_(cx, shape),
             type_(type)
@@ -3146,8 +3146,8 @@ class ICSetElem_DenseAdd : public ICUpdatedStub
         bool generateStubCode(MacroAssembler &masm);
 
       public:
-        Compiler(JSContext *cx, UnrootedShape shape, HandleTypeObject type,
-                 UnrootedObject lastProto, UnrootedShape lastProtoShape)
+        Compiler(JSContext *cx, RawShape shape, HandleTypeObject type,
+                 RawObject lastProto, RawShape lastProtoShape)
           : ICStubCompiler(cx, ICStub::SetElem_DenseAdd),
             shape_(cx, shape),
             type_(type),
@@ -3222,7 +3222,7 @@ class ICSetElem_TypedArray : public ICStub
         }
 
       public:
-        Compiler(JSContext *cx, UnrootedShape shape, uint32_t type, bool expectOutOfBounds)
+        Compiler(JSContext *cx, RawShape shape, uint32_t type, bool expectOutOfBounds)
           : ICStubCompiler(cx, ICStub::SetElem_TypedArray),
             shape_(cx, shape),
             type_(type),

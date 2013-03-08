@@ -6,22 +6,22 @@
 #include "vm/String.h"
 
 FRAGMENT(JSString, simple) {
-  js::Rooted<JSString *> empty(cx, JS_NewStringCopyN(cx, NULL, 0));
-  js::Rooted<JSString *> x(cx, JS_NewStringCopyN(cx, "x", 1));
-  js::Rooted<JSString *> z(cx, JS_NewStringCopyZ(cx, "z"));
+  JS::Rooted<JSString *> empty(cx, JS_NewStringCopyN(cx, NULL, 0));
+  JS::Rooted<JSString *> x(cx, JS_NewStringCopyN(cx, "x", 1));
+  JS::Rooted<JSString *> z(cx, JS_NewStringCopyZ(cx, "z"));
 
   // I expect this will be a non-inlined string.
-  js::Rooted<JSString *> stars(cx, JS_NewStringCopyZ(cx,
+  JS::Rooted<JSString *> stars(cx, JS_NewStringCopyZ(cx,
                                                      "*************************"
                                                      "*************************"
                                                      "*************************"
                                                      "*************************"));
 
   // This may well be an inlined string.
-  js::Rooted<JSString *> xz(cx, JS_ConcatStrings(cx, x, z));
+  JS::Rooted<JSString *> xz(cx, JS_ConcatStrings(cx, x, z));
 
   // This will probably be a rope.
-  js::Rooted<JSString *> doubleStars(cx, JS_ConcatStrings(cx, stars, stars));
+  JS::Rooted<JSString *> doubleStars(cx, JS_ConcatStrings(cx, stars, stars));
 
   // Ensure we're not confused by typedefs for pointer types.
   js::RawString xRaw = x;
@@ -38,7 +38,7 @@ FRAGMENT(JSString, simple) {
 }
 
 FRAGMENT(JSString, null) {
-  js::Rooted<JSString *> null(cx, NULL);
+  JS::Rooted<JSString *> null(cx, NULL);
   js::RawString nullRaw = null;
 
   breakpoint();
@@ -48,7 +48,7 @@ FRAGMENT(JSString, null) {
 }
 
 FRAGMENT(JSString, subclasses) {
-  js::Rooted<JSFlatString *> flat(cx, JS_FlattenString(cx, JS_NewStringCopyZ(cx, "Hi!")));
+  JS::Rooted<JSFlatString *> flat(cx, JS_FlattenString(cx, JS_NewStringCopyZ(cx, "Hi!")));
 
   breakpoint();
 

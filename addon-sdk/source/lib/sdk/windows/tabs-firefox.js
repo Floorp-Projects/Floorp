@@ -16,7 +16,7 @@ const { getOwnerWindow, getActiveTab, getTabs,
         openTab } = require("../tabs/utils");
 const { Options } = require("../tabs/common");
 const { observer: tabsObserver } = require("../tabs/observer");
-const { isWindowPrivate } = require("../private-browsing/utils");
+const { ignoreWindow, isWindowPrivate } = require("../private-browsing/utils");
 
 const TAB_BROWSER = "tabbrowser";
 
@@ -91,7 +91,9 @@ const WindowTabTracker = Trait.compose({
     tabsObserver.removeListener("deactivate", this._onTabDeactivate);
   },
   _onTabEvent: function _onTabEvent(type, tab) {
-    if (this._window === getOwnerWindow(tab)) {
+    // Accept only tabs for the watched window, and ignore private tabs
+    // if addon doesn't have private permission
+    if (this._window === getOwnerWindow(tab) && !ignoreWindow(this._window)) {
       let options = this._tabOptions.shift() || {};
       options.tab = tab;
       options.window = this._public;

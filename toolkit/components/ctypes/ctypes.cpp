@@ -66,7 +66,7 @@ Module::~Module()
 static JSBool
 SealObjectAndPrototype(JSContext* cx, JSObject* parent, const char* name)
 {
-  jsval prop;
+  JS::Value prop;
   if (!JS_GetProperty(cx, parent, name, &prop))
     return false;
 
@@ -91,7 +91,7 @@ InitAndSealCTypesClass(JSContext* cx, JSObject* global)
     return false;
 
   // Set callbacks for charset conversion and such.
-  jsval ctypes;
+  JS::Value ctypes;
   if (!JS_GetProperty(cx, global, "ctypes", &ctypes))
     return false;
 
@@ -116,8 +116,8 @@ Module::Call(nsIXPConnectWrappedNative* wrapper,
              JSContext* cx,
              JSObject* obj,
              uint32_t argc,
-             jsval* argv,
-             jsval* vp,
+             JS::Value* argv,
+             JS::Value* vp,
              bool* _retval)
 {
   JSObject* targetObj = nullptr;

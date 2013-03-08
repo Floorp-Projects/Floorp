@@ -120,3 +120,19 @@ class ConfigFileSubstitution(SandboxDerived):
         self.output_path = None
         self.relpath = None
 
+
+class VariablePassthru(SandboxDerived):
+    """A dict of variables to pass through to backend.mk unaltered.
+
+    The purpose of this object is to facilitate rapid transitioning of
+    variables from Makefile.in to moz.build. In the ideal world, this class
+    does not exist and every variable has a richer class representing it.
+    As long as we rely on this class, we lose the ability to have flexibility
+    in our build backends since we will continue to be tied to our rules.mk.
+    """
+    __slots__ = ('variables')
+
+    def __init__(self, sandbox):
+        SandboxDerived.__init__(self, sandbox)
+        self.variables = {}
+

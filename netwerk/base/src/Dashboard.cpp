@@ -62,7 +62,7 @@ Dashboard::GetSocketsDispatch()
 nsresult
 Dashboard::GetSockets()
 {
-    jsval val;
+    JS::Value val;
     JSContext* cx = nsContentUtils::GetSafeJSContext();
     JSAutoRequest request(cx);
 
@@ -138,7 +138,7 @@ Dashboard::GetHttpDispatch()
 nsresult
 Dashboard::GetHttpConnections()
 {
-    jsval val;
+    JS::Value val;
     JSContext* cx = nsContentUtils::GetSafeJSContext();
     JSAutoRequest request(cx);
 
@@ -288,7 +288,7 @@ Dashboard::RequestWebsocketConnections(NetDashboardCallback* cb)
 nsresult
 Dashboard::GetWebSocketConnections()
 {
-    jsval val;
+    JS::Value val;
     JSString* jsstring;
     JSContext* cx = nsContentUtils::GetSafeJSContext();
     JSAutoRequest request(cx);
@@ -362,7 +362,7 @@ Dashboard::GetDnsInfoDispatch()
 nsresult
 Dashboard::GetDNSCacheEntries()
 {
-    jsval val;
+    JS::Value val;
     JSContext* cx = nsContentUtils::GetSafeJSContext();
     JSAutoRequest request(cx);
 

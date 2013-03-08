@@ -20,7 +20,7 @@ IterNext(JSContext *cx, unsigned argc, jsval *vp)
 static JSObject *
 IterHook(JSContext *cx, JS::HandleObject obj, JSBool keysonly)
 {
-    js::RootedObject iterObj(cx, JS_NewObject(cx, NULL, NULL, NULL));
+    JS::RootedObject iterObj(cx, JS_NewObject(cx, NULL, NULL, NULL));
     if (!iterObj)
         return NULL;
     if (!JS_DefineFunction(cx, iterObj, "next", IterNext, 0, 0))
@@ -67,7 +67,7 @@ BEGIN_TEST(testCustomIterator_bug612523)
     CHECK(JS_InitClass(cx, global, NULL, Jsvalify(&HasCustomIterClass),
                        IterClassConstructor, 0, NULL, NULL, NULL, NULL));
 
-    js::RootedValue result(cx);
+    JS::RootedValue result(cx);
     EVAL("var o = new HasCustomIter(); \n"
          "var j = 0; \n"
          "for (var i in o) { ++j; }; \n"

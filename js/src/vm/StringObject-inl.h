@@ -15,7 +15,6 @@ namespace js {
 inline bool
 StringObject::init(JSContext *cx, HandleString str)
 {
-    AssertCanGC();
     JS_ASSERT(gc::GetGCKindSlots(getAllocKind()) == 2);
 
     Rooted<StringObject *> self(cx, this);

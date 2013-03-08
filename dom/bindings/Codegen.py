@@ -1700,34 +1700,6 @@ class CGGetConstructorObjectMethod(CGGetPerInterfaceObject):
   /* Get the interface object for this class.  This will create the object as
      needed. */""" + CGGetPerInterfaceObject.definition_body(self)
 
-def CheckPref(descriptor, globalName, varName, retval, wrapperCache = None):
-    """
-    Check whether bindings should be enabled for this descriptor.  If not, set
-    varName to false and return retval.
-    """
-    if not descriptor.prefable:
-        return ""
-
-    if wrapperCache:
-       wrapperCache = "      %s->ClearIsDOMBinding();\n" % (wrapperCache)
-    else:
-        wrapperCache = ""
-
-    failureCode = ("      %s = false;\n" +
-                   "      return %s;") % (varName, retval)
-    return """
-  {
-    XPCWrappedNativeScope* scope = xpc::GetObjectScope(%s);
-    if (!scope) {
-%s
-    }
-
-    if (!scope->ExperimentalBindingsEnabled()) {
-%s%s
-    }
-  }
-""" % (globalName, failureCode, wrapperCache, failureCode)
-
 class CGDefineDOMInterfaceMethod(CGAbstractMethod):
     """
     A method for resolve hooks to try to lazily define the interface object for
@@ -1760,8 +1732,7 @@ class CGDefineDOMInterfaceMethod(CGAbstractMethod):
   return interfaceObject;"""
         else:
             getConstructor = "  return GetConstructorObject(aCx, aGlobal);"
-        return (CheckPref(self.descriptor, "aGlobal", "*aEnabled", "nullptr") + 
-                """  *aEnabled = true;
+        return ("""  *aEnabled = true;
 
 """ + getConstructor)
 
@@ -1912,7 +1883,6 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
 
   JSAutoCompartment ac(aCx, parent);
   JSObject* global = JS_GetGlobalForObject(aCx, parent);
-%s
   JSObject* proto = GetProtoObject(aCx, global);
   if (!proto) {
     return NULL;
@@ -1923,7 +1893,6 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
   aCache->SetWrapper(obj);
 
   return obj;""" % (AssertInheritanceChain(self.descriptor),
-                    CheckPref(self.descriptor, "global", "*aTriedToWrap", "NULL", "aCache"),
                     CreateBindingJSObject(self.descriptor, "parent"),
                     InitUnforgeableProperties(self.descriptor, self.properties))
 
@@ -2686,11 +2655,6 @@ for (uint32_t i = 0; i < length; ++i) {
                     exceptionCode,
                     codeOnFailure=failureCode))
         elif not descriptor.skipGen and not descriptor.interface.isConsequential() and not descriptor.interface.isExternal():
-            if descriptor.prefable and not descriptor.hasXPConnectImpls:
-                raise TypeError("We don't support prefable castable object "
-                                "arguments (like %s), because we don't know "
-                                "how to handle them being preffed off" %
-                                descriptor.interface.identifier.name)
             if failureCode is not None:
                 templateBody += str(CastableObjectUnwrapper(
                         descriptor,
@@ -3486,20 +3450,17 @@ if (!returnArray) {
                     raise MethodNotCreatorError(descriptor.interface.identifier.name)
                 wrapMethod = "WrapNewBindingNonWrapperCachedObject"
             wrap = "%s(cx, ${obj}, %s, ${jsvalPtr})" % (wrapMethod, result)
-            # We don't support prefable stuff in workers.
-            assert(not descriptor.prefable or not descriptor.workers)
-            if not descriptor.prefable and not descriptor.hasXPConnectImpls:
-                # Non-prefable bindings can only fail to wrap as a new-binding object
-                # if they already threw an exception.  Same thing for
-                # non-prefable bindings.
+            if not descriptor.hasXPConnectImpls:
+                # Can only fail to wrap as a new-binding object
+                # if they already threw an exception.
                 failed = ("MOZ_ASSERT(JS_IsExceptionPending(cx));\n" +
                           "%s" % exceptionCode)
             else:
                 if descriptor.notflattened:
-                    raise TypeError("%s is prefable but not flattened; "
+                    raise TypeError("%s has XPConnect impls but not flattened; "
                                     "fallback won't work correctly" %
                                     descriptor.interface.identifier.name)
-                # Try old-style wrapping for bindings which might be preffed off.
+                # Try old-style wrapping for bindings which might be XPConnect impls.
                 failed = wrapAndSetPtr("HandleNewBindingWrappingFailure(cx, ${obj}, %s, ${jsvalPtr})" % result)
         else:
             if descriptor.notflattened:
@@ -4382,7 +4343,7 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
         # we're someone's consequential interface.  But for this-unwrapping, we
         # know that we're the real deal.  So fake a descriptor here for
         # consumption by CastableObjectUnwrapper.
-        getThis = CGGeneric("""js::RootedObject obj(cx, %s);
+        getThis = CGGeneric("""JS::RootedObject obj(cx, %s);
 if (!obj) {
   return false;
 }
@@ -4410,7 +4371,7 @@ class CGAbstractStaticBindingMethod(CGAbstractStaticMethod):
         CGAbstractStaticMethod.__init__(self, descriptor, name, "JSBool", args)
 
     def definition_body(self):
-        unwrap = CGGeneric("""js::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+        unwrap = CGGeneric("""JS::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
 if (!obj) {
   return false;
 }
@@ -4718,7 +4679,7 @@ class CGSpecializedForwardingSetter(CGSpecializedSetter):
         # JS_GetProperty and JS_SetProperty can only deal with ASCII
         assert all(ord(c) < 128 for c in attrName)
         assert all(ord(c) < 128 for c in forwardToAttrName)
-        return CGIndenter(CGGeneric("""js::RootedValue v(cx);
+        return CGIndenter(CGGeneric("""JS::RootedValue v(cx);
 if (!JS_GetProperty(cx, obj, "%s", v.address())) {
   return false;
 }
@@ -6416,6 +6377,14 @@ class CGDOMJSProxyHandler_obj_toString(ClassMethod):
     def getBody(self):
         return "return mozilla::dom::DOMProxyHandler::obj_toString(cx, \"%s\");" % self.descriptor.name
 
+class CGDOMJSProxyHandler_finalizeInBackground(ClassMethod):
+    def __init__(self, descriptor):
+        args = [Argument('JS::HandleValue', 'priv')]
+        ClassMethod.__init__(self, "finalizeInBackground", "bool", args)
+        self.descriptor = descriptor
+    def getBody(self):
+        return ("return false;")
+
 class CGDOMJSProxyHandler_finalize(ClassMethod):
     def __init__(self, descriptor):
         args = [Argument('JSFreeOp*', 'fop'), Argument('JSObject*', 'proxy')]
@@ -6503,6 +6472,7 @@ class CGDOMJSProxyHandler(CGClass):
                         CGDOMJSProxyHandler_hasOwn(descriptor),
                         CGDOMJSProxyHandler_get(descriptor),
                         CGDOMJSProxyHandler_obj_toString(descriptor),
+                        CGDOMJSProxyHandler_finalizeInBackground(descriptor),
                         CGDOMJSProxyHandler_finalize(descriptor),
                         CGDOMJSProxyHandler_getElementIfPresent(descriptor),
                         CGDOMJSProxyHandler_getInstance(),

@@ -41,6 +41,7 @@
 #include "google_breakpad/common/minidump_format.h"
 #include "google_breakpad/processor/basic_source_line_resolver.h"
 #include "google_breakpad/processor/call_stack.h"
+#include "google_breakpad/processor/code_module.h"
 #include "google_breakpad/processor/source_line_resolver_interface.h"
 #include "google_breakpad/processor/stack_frame_cpu.h"
 #include "processor/stackwalker_unittest_utils.h"
@@ -48,6 +49,7 @@
 
 using google_breakpad::BasicSourceLineResolver;
 using google_breakpad::CallStack;
+using google_breakpad::CodeModule;
 using google_breakpad::StackFrameSymbolizer;
 using google_breakpad::StackFrame;
 using google_breakpad::StackFrameAMD64;
@@ -109,9 +111,9 @@ class StackwalkerAMD64Fixture {
 
   // Fill RAW_CONTEXT with pseudo-random data, for round-trip checking.
   void BrandContext(MDRawContextAMD64 *raw_context) {
-    u_int8_t x = 173;
+    uint8_t x = 173;
     for (size_t i = 0; i < sizeof(*raw_context); i++)
-      reinterpret_cast<u_int8_t *>(raw_context)[i] = (x += 17);
+      reinterpret_cast<uint8_t *>(raw_context)[i] = (x += 17);
   }
 
   SystemInfo system_info;
@@ -143,7 +145,10 @@ TEST_F(SanityCheck, NoResolver) {
   StackwalkerAMD64 walker(&system_info, &raw_context, &stack_region, &modules,
                           &frame_symbolizer);
   // This should succeed even without a resolver or supplier.
-  ASSERT_TRUE(walker.Walk(&call_stack));
+  vector<const CodeModule*> modules_without_symbols;
+  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols));
+  ASSERT_EQ(1U, modules_without_symbols.size());
+  ASSERT_EQ("module1", modules_without_symbols[0]->debug_file());
   frames = call_stack.frames();
   ASSERT_GE(1U, frames->size());
   StackFrameAMD64 *frame = static_cast<StackFrameAMD64 *>(frames->at(0));
@@ -163,7 +168,10 @@ TEST_F(GetContextFrame, Simple) {
   StackFrameSymbolizer frame_symbolizer(&supplier, &resolver);
   StackwalkerAMD64 walker(&system_info, &raw_context, &stack_region, &modules,
                           &frame_symbolizer);
-  ASSERT_TRUE(walker.Walk(&call_stack));
+  vector<const CodeModule*> modules_without_symbols;
+  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols));
+  ASSERT_EQ(1U, modules_without_symbols.size());
+  ASSERT_EQ("module1", modules_without_symbols[0]->debug_file());
   frames = call_stack.frames();
   ASSERT_GE(1U, frames->size());
   StackFrameAMD64 *frame = static_cast<StackFrameAMD64 *>(frames->at(0));
@@ -181,7 +189,10 @@ TEST_F(GetContextFrame, NoStackMemory) {
   StackFrameSymbolizer frame_symbolizer(&supplier, &resolver);
   StackwalkerAMD64 walker(&system_info, &raw_context, NULL, &modules,
                           &frame_symbolizer);
-  ASSERT_TRUE(walker.Walk(&call_stack));
+  vector<const CodeModule*> modules_without_symbols;
+  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols));
+  ASSERT_EQ(1U, modules_without_symbols.size());
+  ASSERT_EQ("module1", modules_without_symbols[0]->debug_file());
   frames = call_stack.frames();
   ASSERT_GE(1U, frames->size());
   StackFrameAMD64 *frame = static_cast<StackFrameAMD64 *>(frames->at(0));
@@ -199,8 +210,8 @@ TEST_F(GetCallerFrame, ScanWithoutSymbols) {
   // Force scanning through three frames to ensure that the
   // stack pointer is set properly in scan-recovered frames.
   stack_section.start() = 0x8000000080000000ULL;
-  u_int64_t return_address1 = 0x50000000b0000100ULL;
-  u_int64_t return_address2 = 0x50000000b0000900ULL;
+  uint64_t return_address1 = 0x50000000b0000100ULL;
+  uint64_t return_address2 = 0x50000000b0000900ULL;
   Label frame1_sp, frame2_sp, frame1_rbp;
   stack_section
     // frame 0
@@ -236,7 +247,11 @@ TEST_F(GetCallerFrame, ScanWithoutSymbols) {
   StackFrameSymbolizer frame_symbolizer(&supplier, &resolver);
   StackwalkerAMD64 walker(&system_info, &raw_context, &stack_region, &modules,
                           &frame_symbolizer);
-  ASSERT_TRUE(walker.Walk(&call_stack));
+  vector<const CodeModule*> modules_without_symbols;
+  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols));
+  ASSERT_EQ(2U, modules_without_symbols.size());
+  ASSERT_EQ("module1", modules_without_symbols[0]->debug_file());
+  ASSERT_EQ("module2", modules_without_symbols[1]->debug_file());
   frames = call_stack.frames();
   ASSERT_EQ(3U, frames->size());
 
@@ -270,7 +285,7 @@ TEST_F(GetCallerFrame, ScanWithFunctionSymbols) {
   // it is only considered a valid return address if it
   // lies within a function's bounds.
   stack_section.start() = 0x8000000080000000ULL;
-  u_int64_t return_address = 0x50000000b0000110ULL;
+  uint64_t return_address = 0x50000000b0000110ULL;
   Label frame1_sp, frame1_rbp;
 
   stack_section
@@ -304,7 +319,9 @@ TEST_F(GetCallerFrame, ScanWithFunctionSymbols) {
   StackFrameSymbolizer frame_symbolizer(&supplier, &resolver);
   StackwalkerAMD64 walker(&system_info, &raw_context, &stack_region, &modules,
                           &frame_symbolizer);
-  ASSERT_TRUE(walker.Walk(&call_stack));
+  vector<const CodeModule*> modules_without_symbols;
+  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols));
+  ASSERT_EQ(0U, modules_without_symbols.size());
   frames = call_stack.frames();
   ASSERT_EQ(2U, frames->size());
 
@@ -333,7 +350,7 @@ TEST_F(GetCallerFrame, CallerPushedRBP) {
   // %rbp directly below the return address, assume that it is indeed the
   // next frame's %rbp.
   stack_section.start() = 0x8000000080000000ULL;
-  u_int64_t return_address = 0x50000000b0000110ULL;
+  uint64_t return_address = 0x50000000b0000110ULL;
   Label frame0_rbp, frame1_sp, frame1_rbp;
 
   stack_section
@@ -369,7 +386,9 @@ TEST_F(GetCallerFrame, CallerPushedRBP) {
   StackFrameSymbolizer frame_symbolizer(&supplier, &resolver);
   StackwalkerAMD64 walker(&system_info, &raw_context, &stack_region, &modules,
                           &frame_symbolizer);
-  ASSERT_TRUE(walker.Walk(&call_stack));
+  vector<const CodeModule*> modules_without_symbols;
+  ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols));
+  ASSERT_EQ(0U, modules_without_symbols.size());
   frames = call_stack.frames();
   ASSERT_EQ(2U, frames->size());
 
@@ -445,7 +464,9 @@ struct CFIFixture: public StackwalkerAMD64Fixture {
     StackFrameSymbolizer frame_symbolizer(&supplier, &resolver);
     StackwalkerAMD64 walker(&system_info, &raw_context, &stack_region, &modules,
                             &frame_symbolizer);
-    ASSERT_TRUE(walker.Walk(&call_stack));
+    vector<const CodeModule*> modules_without_symbols;
+    ASSERT_TRUE(walker.Walk(&call_stack, &modules_without_symbols));
+    ASSERT_EQ(0U, modules_without_symbols.size());
     frames = call_stack.frames();
     ASSERT_EQ(2U, frames->size());
 

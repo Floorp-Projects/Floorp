@@ -47,8 +47,8 @@ static BOOL
 IsStatusApplying(LPCWSTR updateDirPath, BOOL &isApplying)
 {
   isApplying = FALSE;
-  WCHAR updateStatusFilePath[MAX_PATH + 1];
-  wcscpy(updateStatusFilePath, updateDirPath);
+  WCHAR updateStatusFilePath[MAX_PATH + 1] = {L'\0'};
+  wcsncpy(updateStatusFilePath, updateDirPath, MAX_PATH);
   if (!PathAppendSafe(updateStatusFilePath, L"update.status")) {
     LOG_WARN(("Could not append path for update.status file"));
     return FALSE;
@@ -102,12 +102,12 @@ IsUpdateBeingStaged(int argc, LPWSTR *argv)
  * @param aResultDir Buffer to hold the installation directory.
  */
 static BOOL
-GetInstallationDir(int argcTmp, LPWSTR *argvTmp, WCHAR aResultDir[MAX_PATH])
+GetInstallationDir(int argcTmp, LPWSTR *argvTmp, WCHAR aResultDir[MAX_PATH + 1])
 {
   if (argcTmp < 2) {
     return FALSE;
   }
-  wcscpy(aResultDir, argvTmp[2]);
+  wcsncpy(aResultDir, argvTmp[2], MAX_PATH);
   WCHAR* backSlash = wcsrchr(aResultDir, L'\\');
   // Make sure that the path does not include trailing backslashes
   if (backSlash && (backSlash[1] == L'\0')) {
@@ -304,7 +304,7 @@ ProcessSoftwareUpdateCommand(DWORD argc, LPWSTR *argv)
     return FALSE;
   }
 
-  WCHAR installDir[MAX_PATH] = {L'\0'};
+  WCHAR installDir[MAX_PATH + 1] = {L'\0'};
   if (!GetInstallationDir(argc, argv, installDir)) {
     LOG_WARN(("Could not get the installation directory"));
     if (!WriteStatusFailure(argv[1],

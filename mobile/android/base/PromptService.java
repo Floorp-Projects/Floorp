@@ -204,6 +204,8 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
                     if (listitems.length > 0) {
                         ArrayAdapter<String> adapter = new ArrayAdapter<String>(GeckoApp.mAppContext, android.R.layout.simple_dropdown_item_1line, listitems);
                         spinner.setAdapter(adapter);
+                        int selectedIndex = getSafeInt(mJSONInput, "selected");
+                        spinner.setSelection(selectedIndex);
                     }
                 } catch(Exception ex) { }
                 mView = (View)spinner;

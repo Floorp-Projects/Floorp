@@ -328,9 +328,9 @@ bool Module::Write(std::ostream &stream, SymbolData symbol_data) {
              << func->size << " "
              << func->parameter_size << " "
              << func->name << dec << endl;
-
       if (!stream.good())
         return ReportError();
+
       for (vector<Line>::iterator line_it = func->lines.begin();
            line_it != func->lines.end(); ++line_it) {
         stream << hex
@@ -351,8 +351,6 @@ bool Module::Write(std::ostream &stream, SymbolData symbol_data) {
       stream << "PUBLIC " << hex
              << (ext->address - load_address_) << " 0 "
              << ext->name << dec << endl;
-      if (!stream.good())
-        return ReportError();
     }
   }
 

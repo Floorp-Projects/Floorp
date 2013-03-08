@@ -1154,7 +1154,6 @@ RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, uint32_t patlen, 
 static JSBool
 str_contains(JSContext *cx, unsigned argc, Value *vp)
 {
-    AssertCanGC();
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // Steps 1, 2, and 3
@@ -1180,8 +1179,6 @@ str_contains(JSContext *cx, unsigned argc, Value *vp)
             pos = uint32_t(Min(Max(d, 0.0), double(UINT32_MAX)));
         }
     }
-
-    AutoAssertNoGC nogc;
 
     // Step 8
     uint32_t textLen = str->length();
@@ -1208,7 +1205,6 @@ str_contains(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 str_indexOf(JSContext *cx, unsigned argc, Value *vp)
 {
-    AssertCanGC();
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // Steps 1, 2, and 3
@@ -1235,9 +1231,7 @@ str_indexOf(JSContext *cx, unsigned argc, Value *vp)
         }
     }
 
-    AutoAssertNoGC nogc;
-
-    // Step 8
+   // Step 8
     uint32_t textLen = str->length();
     const jschar *textChars = str->getChars(cx);
     if (!textChars)
@@ -1339,7 +1333,6 @@ str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 str_startsWith(JSContext *cx, unsigned argc, Value *vp)
 {
-    AssertCanGC();
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // Steps 1, 2, and 3
@@ -1365,8 +1358,6 @@ str_startsWith(JSContext *cx, unsigned argc, Value *vp)
             pos = uint32_t(Min(Max(d, 0.0), double(UINT32_MAX)));
         }
     }
-
-    AutoAssertNoGC nogc;
 
     // Step 8
     uint32_t textLen = str->length();
@@ -1396,7 +1387,6 @@ str_startsWith(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 str_endsWith(JSContext *cx, unsigned argc, Value *vp)
 {
-    AssertCanGC();
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // Steps 1, 2, and 3
@@ -1425,8 +1415,6 @@ str_endsWith(JSContext *cx, unsigned argc, Value *vp)
             pos = uint32_t(Min(Max(d, 0.0), double(UINT32_MAX)));
         }
     }
-
-    AutoAssertNoGC nogc;
 
     // Step 6
     const jschar *textChars = str->getChars(cx);
@@ -1725,18 +1713,17 @@ DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, RegExpShared &re,
     if (!linearStr)
         return false;
 
-    const jschar *chars = linearStr->chars();
     size_t charsLen = linearStr->length();
 
     ScopedMatchPairs matches(&cx->tempLifoAlloc());
 
     if (re.global()) {
         bool isTest = bool(flags & TEST_GLOBAL_BIT);
-        for (size_t count = 0, i = 0, length = str->length(); i <= length; ++count) {
+        for (size_t count = 0, i = 0; i <= charsLen; ++count) {
             if (!JS_CHECK_OPERATION_LIMIT(cx))
                 return false;
 
-            RegExpRunStatus status = re.execute(cx, chars, charsLen, &i, matches);
+            RegExpRunStatus status = re.execute(cx, linearStr->chars(), charsLen, &i, matches);
             if (status == RegExpRunStatus_Error)
                 return false;
 
@@ -1759,7 +1746,7 @@ DoMatch(JSContext *cx, RegExpStatics *res, JSString *str, RegExpShared &re,
         bool callbackOnSingle = !!(flags & CALLBACK_ON_SINGLE_BIT);
         size_t i = 0;
 
-        RegExpRunStatus status = re.execute(cx, chars, charsLen, &i, matches);
+        RegExpRunStatus status = re.execute(cx, linearStr->chars(), charsLen, &i, matches);
         if (status == RegExpRunStatus_Error)
             return false;
 
@@ -2617,8 +2604,6 @@ static const uint32_t ReplaceOptArg = 2;
 static JSObject *
 LambdaIsGetElem(JSObject &lambda)
 {
-    AutoAssertNoGC nogc;
-
     if (!lambda.isFunction())
         return NULL;
 
@@ -2626,7 +2611,7 @@ LambdaIsGetElem(JSObject &lambda)
     if (!fun->hasScript())
         return NULL;
 
-    UnrootedScript script = fun->nonLazyScript();
+    RawScript script = fun->nonLazyScript();
     jsbytecode *pc = script->code;
 
     /*
@@ -2915,7 +2900,6 @@ class SplitRegExpMatcher
     bool operator()(JSContext *cx, Handle<JSLinearString*> str, size_t index,
                     SplitMatchResult *result) const
     {
-        AssertCanGC();
         const jschar *chars = str->chars();
         size_t length = str->length();
 
@@ -2952,7 +2936,6 @@ class SplitStringMatcher
 
     bool operator()(JSContext *cx, JSLinearString *str, size_t index, SplitMatchResult *res) const
     {
-        AutoAssertNoGC nogc;
         JS_ASSERT(index == 0 || index < str->length());
         const jschar *chars = str->chars();
         int match = StringMatch(chars + index, str->length() - index,
@@ -3493,7 +3476,7 @@ static JSFunctionSpec string_static_methods[] = {
     JS_FS_END
 };
 
-UnrootedShape
+RawShape
 StringObject::assignInitialShape(JSContext *cx)
 {
     JS_ASSERT(nativeEmpty());
@@ -3887,7 +3870,6 @@ js_strchr_limit(const jschar *s, jschar c, const jschar *limit)
 jschar *
 js::InflateString(JSContext *cx, const char *bytes, size_t *lengthp)
 {
-    AssertCanGC();
     size_t nchars;
     jschar *chars;
     size_t nbytes = *lengthp;
@@ -3914,7 +3896,6 @@ js::InflateString(JSContext *cx, const char *bytes, size_t *lengthp)
 jschar *
 js::InflateUTF8String(JSContext *cx, const char *bytes, size_t *lengthp)
 {
-    AssertCanGC();
     size_t nchars;
     jschar *chars;
     size_t nbytes = *lengthp;
@@ -4247,7 +4228,7 @@ const bool js_isspace[] = {
 static inline bool
 TransferBufferToString(StringBuffer &sb, MutableHandleValue rval)
 {
-    UnrootedString str = sb.finishString();
+    RawString str = sb.finishString();
     if (!str)
         return false;
     rval.setString(str);

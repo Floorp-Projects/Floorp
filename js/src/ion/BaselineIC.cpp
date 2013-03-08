@@ -1502,7 +1502,7 @@ DoCompareFallback(JSContext *cx, BaselineFrame *frame, ICCompare_Fallback *stub,
         return true;
     }
 
-    UnrootedScript script = frame->script();
+    RawScript script = frame->script();
 
     // Try to generate new stubs.
     if (lhs.isInt32() && rhs.isInt32()) {
@@ -1910,7 +1910,7 @@ DoToBoolFallback(JSContext *cx, BaselineFrame *frame, ICToBool_Fallback *stub, H
 
     JS_ASSERT(!arg.isBoolean());
 
-    UnrootedScript script = frame->script();
+    RawScript script = frame->script();
 
     // Try to generate new stubs.
     if (arg.isInt32()) {
@@ -2397,9 +2397,9 @@ DoConcatStrings(JSContext *cx, HandleValue lhs, HandleValue rhs, MutableHandleVa
 {
     JS_ASSERT(lhs.isString());
     JS_ASSERT(rhs.isString());
-    UnrootedString lstr = lhs.toString();
-    UnrootedString rstr = rhs.toString();
-    UnrootedString result = ConcatStrings<NoGC>(cx, lstr, rstr);
+    RawString lstr = lhs.toString();
+    RawString rstr = rhs.toString();
+    RawString result = ConcatStrings<NoGC>(cx, lstr, rstr);
     if (result) {
         res.set(StringValue(result));
         return true;

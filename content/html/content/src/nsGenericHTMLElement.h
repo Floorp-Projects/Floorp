@@ -760,10 +760,6 @@ private:
   void RegUnRegAccessKey(bool aDoReg);
 
 protected:
-  virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                                 const nsAttrValueOrString* aValue,
-                                 bool aNotify);
-
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify);
 

@@ -1163,6 +1163,15 @@ nsHttpChannel::ProcessResponse()
     nsresult rv;
     uint32_t httpStatus = mResponseHead->Status();
 
+    // Gather data on whether the transaction and page (if this is
+    // the initial page load) is being loaded with SSL.
+    Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_IS_SSL,
+                          mConnectionInfo->UsingSSL());
+    if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) {
+        Telemetry::Accumulate(Telemetry::HTTP_PAGELOAD_IS_SSL,
+                              mConnectionInfo->UsingSSL());
+    }
+
     LOG(("nsHttpChannel::ProcessResponse [this=%p httpStatus=%u]\n",
         this, httpStatus));
 

@@ -84,10 +84,9 @@ IonFrameIterator::frameSize() const
 }
 
 // Returns the JSScript associated with the topmost Ion frame.
-inline UnrootedScript
+inline RawScript
 GetTopIonJSScript(JSContext *cx, const SafepointIndex **safepointIndexOut, void **returnAddrOut)
 {
-    AutoAssertNoGC nogc;
     IonFrameIterator iter(cx->mainThread().ionTop);
     JS_ASSERT(iter.type() == IonFrame_Exit);
     ++iter;

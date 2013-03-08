@@ -11,9 +11,9 @@ module.metadata = {
   }
 };
 
-if (require('../system/xul-app').is('Firefox')) {
-  module.exports = require('./tab-firefox');
-}
-else if (require('../system/xul-app').is('Fennec')) {
+if (require('../system/xul-app').name == 'Fennec') {
   module.exports = require('./tab-fennec');
+}
+else {
+  module.exports = require('./tab-firefox');
 }

@@ -816,8 +816,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   // SVG element classes
   NS_DEFINE_CLASSINFO_DATA(TimeEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGFEBlendElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGFEColorMatrixElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGFEComponentTransferElement, nsElementSH,
@@ -832,15 +830,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGFEDistantLightElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGFEFloodElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGFEGaussianBlurElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGFEImageElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGFEMergeElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGFEMergeNodeElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGFEMorphologyElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
@@ -2275,12 +2265,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(SVGFEBlendElement, nsIDOMSVGFEBlendElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFEBlendElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
-    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(SVGFEColorMatrixElement, nsIDOMSVGFEColorMatrixElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFEColorMatrixElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
@@ -2322,27 +2306,8 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(SVGFEFloodElement, nsIDOMSVGFEFloodElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFEFloodElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
-    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(SVGFEGaussianBlurElement, nsIDOMSVGFEGaussianBlurElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFEGaussianBlurElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
-    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(SVGFEImageElement, nsIDOMSVGFEImageElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFEImageElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGURIReference)
-    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(SVGFEMergeElement, nsIDOMSVGFEMergeElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFEMergeElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
@@ -2350,11 +2315,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(SVGFEMorphologyElement, nsIDOMSVGFEMorphologyElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFEMorphologyElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
-    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(SVGFEMergeNodeElement, nsIDOMSVGFEMergeNodeElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFEMergeNodeElement)
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -5392,7 +5352,7 @@ static JSBool
 LocationSetterUnwrapper(JSContext *cx, JSHandleObject obj_, JSHandleId id, JSBool strict,
                         JSMutableHandleValue vp)
 {
-  js::RootedObject obj(cx, obj_);
+  JS::RootedObject obj(cx, obj_);
 
   JSObject *wrapped = XPCWrapper::UnsafeUnwrapSecurityWrapper(obj);
   if (wrapped) {
@@ -5407,8 +5367,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject *obj_, jsid id_, uint32_t flags,
                        JSObject **objp, bool *_retval)
 {
-  js::RootedObject obj(cx, obj_);
-  js::RootedId id(cx, id_);
+  JS::RootedObject obj(cx, obj_);
+  JS::RootedId id(cx, id_);
 
   if (!JSID_IS_STRING(id)) {
     return NS_OK;
@@ -5602,7 +5562,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   // Handle resolving if id refers to a name resolved by DOM worker code.
-  js::RootedObject tmp(cx, NULL);
+  JS::RootedObject tmp(cx, NULL);
   if (!ResolveWorkerClasses(cx, obj, id, flags, &tmp)) {
     return NS_ERROR_FAILURE;
   }
@@ -5793,7 +5753,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       // Since we always create the undeclared property here, shortcutting the
       // normal process, we go out of our way to tell the JS engine to report
       // strict warnings/errors using js::ReportIfUndeclaredVarAssignment.
-      js::Rooted<JSString*> str(cx, JSID_TO_STRING(id));
+      JS::Rooted<JSString*> str(cx, JSID_TO_STRING(id));
       if (!js::ReportIfUndeclaredVarAssignment(cx, str) ||
           !::JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, JS_PropertyStub,
                                    JS_StrictPropertyStub, JSPROP_ENUMERATE)) {
@@ -7074,7 +7034,7 @@ JSBool
 nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id,
                                         unsigned flags, JSMutableHandleObject objp)
 {
-  js::RootedValue v(cx);
+  JS::RootedValue v(cx);
 
   if (sItem_id == id || sNamedItem_id == id) {
     // Define the item() or namedItem() method.
@@ -7211,7 +7171,7 @@ nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSHandleObject obj
       return JS_FALSE;
     }
 
-    js::Rooted<JSObject*> all(cx);
+    JS::Rooted<JSObject*> all(cx);
     all = ::JS_NewObject(cx, &sHTMLDocumentAllClass, nullptr,
                          ::JS_GetGlobalForObject(cx, obj));
     if (!all) {

@@ -844,6 +844,16 @@ public:
    */
   void SetFixedPositionAnchor(const gfxPoint& aAnchor) { mAnchor = aAnchor; }
 
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * If a layer represents a fixed position element or elements that are on
+   * a document that has had fixed position element margins set on it, these
+   * will be mirrored here. This allows for asynchronous animation of the
+   * margins by reconciling the difference between this value and a value that
+   * is updated more frequently.
+   */
+  void SetFixedPositionMargins(const gfx::Margin& aMargins) { mMargins = aMargins; }
+
   // These getters can be used anytime.
   float GetOpacity() { return mOpacity; }
   const nsIntRect* GetClipRect() { return mUseClipRect ? &mClipRect : nullptr; }
@@ -860,6 +870,7 @@ public:
   float GetPostYScale() { return mPostYScale; }
   bool GetIsFixedPosition() { return mIsFixedPosition; }
   gfxPoint GetFixedPositionAnchor() { return mAnchor; }
+  const gfx::Margin& GetFixedPositionMargins() { return mMargins; }
   Layer* GetMaskLayer() { return mMaskLayer; }
 
   // Note that all lengths in animation data are either in CSS pixels or app
@@ -1208,6 +1219,7 @@ protected:
   bool mUseTileSourceRect;
   bool mIsFixedPosition;
   gfxPoint mAnchor;
+  gfx::Margin mMargins;
   DebugOnly<uint32_t> mDebugColorIndex;
   // If this layer is used for OMTA, then this counter is used to ensure we
   // stay in sync with the animation manager

@@ -56,7 +56,7 @@
 namespace google_breakpad {
 
 const int Stackwalker::kRASearchWords = 30;
-u_int32_t Stackwalker::max_frames_ = 1024;
+uint32_t Stackwalker::max_frames_ = 1024;
 
 Stackwalker::Stackwalker(const SystemInfo* system_info,
                          MemoryRegion* memory,
@@ -70,10 +70,15 @@ Stackwalker::Stackwalker(const SystemInfo* system_info,
 }
 
 
-bool Stackwalker::Walk(CallStack* stack) {
+bool Stackwalker::Walk(CallStack* stack,
+                       vector<const CodeModule*>* modules_without_symbols) {
   BPLOG_IF(ERROR, !stack) << "Stackwalker::Walk requires |stack|";
   assert(stack);
   stack->Clear();
+
+  BPLOG_IF(ERROR, !modules_without_symbols) << "Stackwalker::Walk requires "
+                                            << "|modules_without_symbols|";
+  assert(modules_without_symbols);
 
   // Begin with the context frame, and keep getting callers until there are
   // no more.
@@ -90,9 +95,30 @@ bool Stackwalker::Walk(CallStack* stack) {
     StackFrameSymbolizer::SymbolizerResult symbolizer_result =
         frame_symbolizer_->FillSourceLineInfo(modules_, system_info_,
                                              frame.get());
-    if (symbolizer_result == StackFrameSymbolizer::INTERRUPT) {
+    if (symbolizer_result == StackFrameSymbolizer::kInterrupt) {
       BPLOG(INFO) << "Stack walk is interrupted.";
       return false;
+    }
+
+    // Keep track of modules that have no symbols.
+    if (symbolizer_result == StackFrameSymbolizer::kError &&
+        frame->module != NULL) {
+      bool found = false;
+      vector<const CodeModule*>::iterator iter;
+      for (iter = modules_without_symbols->begin();
+           iter != modules_without_symbols->end();
+           ++iter) {
+        if (*iter == frame->module) {
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        BPLOG(INFO) << "Couldn't load symbols for: "
+                    << frame->module->debug_file() << "|"
+                    << frame->module->debug_identifier();
+        modules_without_symbols->push_back(frame->module);
+      }
     }
 
     // Add the frame to the call stack.  Relinquish the ownership claim
@@ -125,7 +151,7 @@ Stackwalker* Stackwalker::StackwalkerForCPU(
 
   Stackwalker* cpu_stackwalker = NULL;
 
-  u_int32_t cpu = context->GetContextCPU();
+  uint32_t cpu = context->GetContextCPU();
   switch (cpu) {
     case MD_CONTEXT_X86:
       cpu_stackwalker = new StackwalkerX86(system_info,
@@ -168,7 +194,7 @@ Stackwalker* Stackwalker::StackwalkerForCPU(
   return cpu_stackwalker;
 }
 
-bool Stackwalker::InstructionAddressSeemsValid(u_int64_t address) {
+bool Stackwalker::InstructionAddressSeemsValid(uint64_t address) {
   StackFrame frame;
   frame.instruction = address;
   StackFrameSymbolizer::SymbolizerResult symbolizer_result =
@@ -185,7 +211,7 @@ bool Stackwalker::InstructionAddressSeemsValid(u_int64_t address) {
     return true;
   }
 
-  if (symbolizer_result != StackFrameSymbolizer::NO_ERROR) {
+  if (symbolizer_result != StackFrameSymbolizer::kNoError) {
     // Some error occurred during symbolization, but the address is within a
     // known module
     return true;

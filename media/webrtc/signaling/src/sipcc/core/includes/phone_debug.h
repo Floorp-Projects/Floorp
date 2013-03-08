@@ -7,6 +7,7 @@
 
 #include "cpr_stdio.h"
 #include "cc_constants.h"
+#include "CSFLog.h"
 
 extern cc_int32_t SipDebugMessage;
 extern cc_int32_t SipDebugState;
@@ -82,80 +83,170 @@ extern int32_t nbuginf(const char *_format, ...);
 #define logMsg buginf
 
 /* SIP debug macros */
-#define CCSIP_DEBUG_MESSAGE     if (SipDebugMessage) buginf
+#define CCSIP_DEBUG_MESSAGE(format,...) if (SipDebugMessage) \
+        CSFLogDebug("ccsip_message", format, ## __VA_ARGS__)
+
 #define CCSIP_DEBUG_MESSAGE_PKT if (SipDebugMessage) platform_print_sip_msg
-#define CCSIP_DEBUG_STATE       if (SipDebugState) buginf
-#define CCSIP_DEBUG_TASK        if (SipDebugTask) buginf
-#define CCSIP_DEBUG_REG_STATE   if (SipDebugRegState) buginf
-#define CCSIP_DEBUG_TRX         if (SipDebugTrx) buginf
-#define CCSIP_DEBUG_DM          if (SipDebugDM) buginf
+#define CCSIP_DEBUG_STATE(format,...) if (SipDebugState) \
+        CSFLogDebug("ccsip_state", format, ## __VA_ARGS__)
+
+#define CCSIP_DEBUG_TASK(format,...) if (SipDebugTask) \
+        CSFLogDebug("ccsip_task", format, ## __VA_ARGS__)
+
+#define CCSIP_DEBUG_REG_STATE(format,...) if (SipDebugRegState) \
+        CSFLogDebug("ccsip_reg_state", format, ## __VA_ARGS__)
+
+#define CCSIP_DEBUG_TRX(format,...) if (SipDebugTrx) \
+        CSFLogDebug("ccsip_trx", format, ## __VA_ARGS__)
+
+#define CCSIP_DEBUG_DM(format,...) if (SipDebugDM) \
+        CSFLogDebug("ccsip_dm", format, ## __VA_ARGS__)
+
 
 /* Platform debug macros */
 #define PHN_DEBUG_SNTP        if (DebugSNTP)
 #define PHN_DEBUG_SNTP_PACKET if (DebugSNTPPacket)
 
 /* TNP adapter debugs */
-#define TNP_DEBUG  if (TNPDebug) buginf
+#define TNP_DEBUG(format,...) if (TNPDebug) \
+        CSFLogDebug("tnp", format, ## __VA_ARGS__)
+
 
 #define DEF_DISPLAY_BUF          128
 /*
  * Only used in the IOS SIP Parser routines
  */
-#define CCSIP_ERR_MSG           err_msg
-#define CCSIP_DEBUG_ERROR       err_msg
+#define CCSIP_ERR_MSG(format,...)  \
+        CSFLogError("ccsip", format, ## __VA_ARGS__)
+
+#define CCSIP_DEBUG_ERROR(format,...)  \
+        CSFLogError("ccsip", format, ## __VA_ARGS__)
+
 #define CCSIP_ERR_DEBUG         if (1)
 #define CCSIP_INFO_DEBUG        if (1)
 
-#define TMR_DEBUG     if (TMRDebug)    buginf
-#define GSM_DEBUG     if (GSMDebug)    buginf
-#define FIM_DEBUG     if (FIMDebug)    buginf
-#define LSM_DEBUG     if (LSMDebug)    buginf
-#define CALL_EVENT     if (CCEVENTDebug)    buginf
-#define FSM_DEBUG_SM  if (FSMDebugSM)  buginf
-#define CSM_DEBUG_SM  if (CSMDebugSM)  buginf
-#define DEF_DEBUG     if (g_DEFDebug) notice_msg
+#define TMR_DEBUG(format,...) if (TMRDebug) \
+        CSFLogDebug("tmr", format, ## __VA_ARGS__)
 
-#define CC_DEBUG      if (CCDebug)       buginf
+#define GSM_DEBUG(format,...) if (GSMDebug) \
+        CSFLogDebug("gsm", format, ## __VA_ARGS__)
+
+#define FIM_DEBUG(format,...) if (FIMDebug) \
+        CSFLogDebug("fim", format, ## __VA_ARGS__)
+
+#define LSM_DEBUG(format,...) if (LSMDebug) \
+        CSFLogDebug("lsm", format, ## __VA_ARGS__)
+
+#define CALL_EVENT(format,...) if (CCEVENTDebug) \
+        CSFLogDebug("call_event", format, ## __VA_ARGS__)
+
+#define FSM_DEBUG_SM(format,...) if (FSMDebugSM) \
+        CSFLogNotice("fsm_sm", format, ## __VA_ARGS__)
+
+#define CSM_DEBUG_SM(format,...) if (CSMDebugSM) \
+        CSFLogDebug("csm_sm", format, ## __VA_ARGS__)
+
+#define DEF_DEBUG(format,...) if (g_DEFDebug) \
+        CSFLogNotice("def", format, ## __VA_ARGS__)
+
+
+#define CC_DEBUG(format,...) if (CCDebug) \
+        CSFLogDebug("cc", format, ## __VA_ARGS__)
+
 #define CC_DEBUG_MSG  if (CCDebugMsg)
-#define AUTH_DEBUG    if (AuthDebug)     buginf
-#define ARP_DEBUG     if (arp_debug_flag) buginf
-#define ARP_BCAST_DEBUG if (arp_debug_broadcast_flag) buginf
-#define CDP_DEBUG     if (cdp_debug) buginf
+#define AUTH_DEBUG(format,...) if (AuthDebug) \
+        CSFLogDebug("auth", format, ## __VA_ARGS__)
 
-#define NOTIFY_CALL_DEBUG if (g_NotifyCallDebug) buginf
-#define NOTIFY_LINE_DEBUG if (g_NotifyLineDebug) buginf
+#define ARP_DEBUG(format,...) if (arp_debug_flag) \
+        CSFLogDebug("arp", format, ## __VA_ARGS__)
+
+#define ARP_BCAST_DEBUG(format,...) if (arp_debug_broadcast_flag) \
+        CSFLogDebug("arp_bcast", format, ## __VA_ARGS__)
+
+#define CDP_DEBUG(format,...) if (cdp_debug) \
+        CSFLogDebug("cdp", format, ## __VA_ARGS__)
+
+
+#define NOTIFY_CALL_DEBUG(format,...) if (g_NotifyCallDebug) \
+        CSFLogDebug("notify_call", format, ## __VA_ARGS__)
+
+#define NOTIFY_LINE_DEBUG(format,...) if (g_NotifyLineDebug) \
+        CSFLogDebug("notify_line", format, ## __VA_ARGS__)
+
 
 /* String library macro */
-#define CONFIG_DEBUG  if (ConfigDebug) buginf
-#define FLASH_DEBUG   if (DebugFlash) buginf
-#define KPML_DEBUG    if (KpmlDebug) buginf
-#define CAC_DEBUG    if (g_cacDebug) buginf
-#define DCSM_DEBUG    if (g_dcsmDebug) buginf
-#define BLF_DEBUG    if (g_blfDebug) buginf
-#define BLF_ERROR  err_msg
-#define MISC_APP_DEBUG  if (g_miscAppDebug) buginf
-#define DPINT_DEBUG   if (DpintDebug) buginf
-#define CONFIGAPP_DEBUG  if (g_configappDebug) buginf
-#define CCAPP_DEBUG  if (g_CCAppDebug) buginf
-#define CCLOG_DEBUG  if (g_CCLogDebug) buginf
-#define MSP_DEBUG    if (VCMDebug) buginf
-#define CCAPP_ERROR    err_msg
-#define MSP_ERROR    err_msg
-#define CCAPP_ERROR  err_msg
-#define TNP_ERR  err_msg
-#define VCM_ERR  err_msg
-#define DEF_ERROR  err_msg
-#define DEF_ERR    err_msg
+#define CONFIG_DEBUG(format,...) if (ConfigDebug) \
+        CSFLogDebug("config", format, ## __VA_ARGS__)
+
+#define FLASH_DEBUG(format,...) if (DebugFlash) \
+        CSFLogDebug("flash", format, ## __VA_ARGS__)
+
+#define KPML_DEBUG(format,...) if (KpmlDebug) \
+        CSFLogDebug("kpml", format, ## __VA_ARGS__)
+
+#define CAC_DEBUG(format,...) if (g_cacDebug) \
+        CSFLogDebug("cac", format, ## __VA_ARGS__)
+
+#define DCSM_DEBUG(format,...) if (g_dcsmDebug) \
+        CSFLogDebug("dcsm", format, ## __VA_ARGS__)
+
+#define BLF_DEBUG(format,...) if (g_blfDebug) \
+        CSFLogDebug("blf", format, ## __VA_ARGS__)
+
+#define BLF_ERROR(format,...)  \
+        CSFLogError("blf", format, ## __VA_ARGS__)
+
+#define MISC_APP_DEBUG(format,...) if (g_miscAppDebug) \
+        CSFLogDebug("misc_app", format, ## __VA_ARGS__)
+
+#define DPINT_DEBUG(format,...) if (DpintDebug) \
+        CSFLogDebug("dpint", format, ## __VA_ARGS__)
+
+#define CONFIGAPP_DEBUG(format,...) if (g_configappDebug) \
+        CSFLogDebug("configapp", format, ## __VA_ARGS__)
+
+#define CCAPP_DEBUG(format,...) if (g_CCAppDebug) \
+        CSFLogDebug("ccapp", format, ## __VA_ARGS__)
+
+#define CCLOG_DEBUG(format,...) if (g_CCLogDebug) \
+        CSFLogDebug("cclog", format, ## __VA_ARGS__)
+
+#define MSP_DEBUG(format,...) if (VCMDebug) \
+        CSFLogDebug("msp", format, ## __VA_ARGS__)
+
+#define CCAPP_ERROR(format,...)  \
+        CSFLogError("ccapp", format, ## __VA_ARGS__)
+
+#define MSP_ERROR(format,...)  \
+        CSFLogError("msp", format, ## __VA_ARGS__)
+
+#define CCAPP_ERROR(format,...)  \
+        CSFLogError("ccapp", format, ## __VA_ARGS__)
+
+#define TNP_ERR(format,...)  \
+        CSFLogError("tnp", format, ## __VA_ARGS__)
+
+#define VCM_ERR(format,...)  \
+        CSFLogError("vcm", format, ## __VA_ARGS__)
+
+#define DEF_ERROR(format,...)  \
+        CSFLogError("def", format, ## __VA_ARGS__)
+
+#define DEF_ERR(format,...)  \
+        CSFLogError("def", format, ## __VA_ARGS__)
+
 
 #define APP_NAME "SIPCC-"
 #define DEB_L_C_F_PREFIX APP_NAME"%s: %d/%d, %s: "
 #define DEB_L_C_F_PREFIX_ARGS(msg_name, line, call_id, func_name) \
-	msg_name, line, call_id, func_name
+        msg_name, line, call_id, func_name
 #define DEB_F_PREFIX APP_NAME"%s: %s: "
 #define DEB_F_PREFIX_ARGS(msg_name, func_name) msg_name, func_name
 #define GSM_L_C_F_PREFIX "GSM : %d/%d : %s : " // requires 3 args: line_id, call_id, fname
 #define GSM_F_PREFIX "GSM : %s : " // requires 1 arg: fname
-#define GSM_DEBUG_ERROR       err_msg
+#define GSM_DEBUG_ERROR(format,...)  \
+        CSFLogError("gsm", format, ## __VA_ARGS__)
+
 #define LSM_L_C_F_PREFIX "LSM : %d/%d : %s : " // requires 3 args: line_id, call_id, fname
 #define LSM_F_PREFIX "LSM : %s : " // requires 1 arg: fname
 #define CCA_L_C_F_PREFIX "CCA : %d/%d : %s : " // requires 3 args: line_id, call_id, fname
@@ -167,11 +258,21 @@ extern int32_t nbuginf(const char *_format, ...);
 
 #define KPML_L_C_F_PREFIX "KPM : %d/%d : %s : " // requires 3 args: line_id, call_id, fname
 #define KPML_F_PREFIX "KPM : %s : " // requires 1 arg: fname
-#define KPML_ERROR       err_msg
-#define CAC_ERROR        err_msg
-#define DCSM_ERROR        err_msg
-#define CONFIG_ERROR        err_msg
-#define PLAT_ERROR        err_msg
+#define KPML_ERROR(format,...)  \
+        CSFLogError("kpml", format, ## __VA_ARGS__)
+
+#define CAC_ERROR(format,...)  \
+        CSFLogError("cac", format, ## __VA_ARGS__)
+
+#define DCSM_ERROR(format,...)  \
+        CSFLogError("dcsm", format, ## __VA_ARGS__)
+
+#define CONFIG_ERROR(format,...)  \
+        CSFLogError("config", format, ## __VA_ARGS__)
+
+#define PLAT_ERROR(format,...)  \
+        CSFLogError("plat", format, ## __VA_ARGS__)
+
 
 #define CAC_L_C_F_PREFIX "CAC : %d/%d : %s : " // requires 3 args: line_id, call_id, fname
 #define CAC_F_PREFIX "CAC : %s : " // requires 1 arg: fname

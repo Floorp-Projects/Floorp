@@ -38,27 +38,27 @@ StringBuffer::extractWellSized()
     return buf;
 }
 
-UnrootedFlatString
+RawFlatString
 StringBuffer::finishString()
 {
     JSContext *cx = context();
     if (cb.empty())
-        return UnrootedFlatString(cx->names().empty);
+        return cx->names().empty;
 
     size_t length = cb.length();
     if (!JSString::validateLength(cx, length))
-        return UnrootedFlatString();
+        return NULL;
 
     JS_STATIC_ASSERT(JSShortString::MAX_SHORT_LENGTH < CharBuffer::InlineLength);
     if (JSShortString::lengthFits(length))
         return NewShortString<CanGC>(cx, TwoByteChars(cb.begin(), length));
 
     if (!cb.append('\0'))
-        return UnrootedFlatString();
+        return NULL;
 
     jschar *buf = extractWellSized();
     if (!buf)
-        return UnrootedFlatString();
+        return NULL;
 
     JSFlatString *str = js_NewString<CanGC>(cx, buf, length);
     if (!str)
@@ -66,17 +66,16 @@ StringBuffer::finishString()
     return str;
 }
 
-UnrootedAtom
+RawAtom
 StringBuffer::finishAtom()
 {
-    AssertCanGC();
     JSContext *cx = context();
 
     size_t length = cb.length();
     if (length == 0)
-        return UnrootedAtom(cx->names().empty);
+        return cx->names().empty;
 
-    UnrootedAtom atom = AtomizeChars<CanGC>(cx, cb.begin(), length);
+    RawAtom atom = AtomizeChars<CanGC>(cx, cb.begin(), length);
     cb.clear();
     return atom;
 }

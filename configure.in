@@ -4331,9 +4331,10 @@ if test -z "$MOZ_BUILD_APP"; then
   AC_MSG_RESULT([browser])
   MOZ_BUILD_APP=browser
 else
-  # default mobile to be mobile/xul
+  # "mobile" no longer exists.
   if test "$MOZ_BUILD_APP" = "mobile" ; then
-    MOZ_BUILD_APP=mobile/xul
+    AC_MSG_RESULT([none])
+    AC_MSG_ERROR([--enable-application=mobile is no longer supported.])
   fi
   # We have a valid application only if it has a build.mk file in its top
   # directory.
@@ -4443,9 +4444,6 @@ dnl ========================================================
 if test -z "$gonkdir" ; then
     # Minimum Android SDK API Level we require.
     case "$MOZ_BUILD_APP" in
-    mobile/xul)
-        android_min_api_level=13
-        ;;
     mobile/android)
         android_min_api_level=16
         ;;
@@ -5981,9 +5979,12 @@ if test -n "$MOZ_CRASHREPORTER"; then
     AC_MSG_ERROR([Breakpad tools do not support compiling on $HOST_OS_ARCH while targeting $OS_ARCH.  Use --disable-crashreporter.])
   fi
 
-  if test "$OS_ARCH" = "WINNT" -a -z "$HAVE_64BIT_OS"; then
-    MOZ_CRASHREPORTER_INJECTOR=1
-    AC_DEFINE(MOZ_CRASHREPORTER_INJECTOR)
+  if test "$OS_ARCH" = "WINNT"; then
+    AC_DEFINE_UNQUOTED(BREAKPAD_CUSTOM_STDINT_H, "mozilla/StandardInteger.h")
+    if test -z "$HAVE_64BIT_OS"; then
+      MOZ_CRASHREPORTER_INJECTOR=1
+      AC_DEFINE(MOZ_CRASHREPORTER_INJECTOR)
+    fi
   fi
 fi
 

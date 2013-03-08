@@ -5,27 +5,40 @@
 
 const { Cc, Ci } = require('chrome');
 const { Class } = require('../core/heritage');
-const { tabNS } = require('./namespace');
+const { tabNS, rawTabNS } = require('./namespace');
 const { EventTarget } = require('../event/target');
 const { activateTab, getTabTitle, setTabTitle, closeTab, getTabURL, getContentWindowForTab,
+        getTabForBrowser,
         setTabURL, getOwnerWindow, getTabContentType, getTabId } = require('./utils');
 const { emit } = require('../event/core');
 const { getOwnerWindow: getPBOwnerWindow } = require('../private-browsing/window/utils');
 const { when: unload } = require('../system/unload');
-
 const { EVENTS } = require('./events');
+
 const ERR_FENNEC_MSG = 'This method is not yet supported by Fennec';
 
 const Tab = Class({
   extends: EventTarget,
   initialize: function initialize(options) {
     options = options.tab ? options : { tab: options };
+    let tab = options.tab;
 
     EventTarget.prototype.initialize.call(this, options);
     let tabInternals = tabNS(this);
+    rawTabNS(tab).tab = this;
 
-    tabInternals.window = options.window || getOwnerWindow(options.tab);
-    tabInternals.tab = options.tab;
+    let window = tabInternals.window = options.window || getOwnerWindow(tab);
+    tabInternals.tab = tab;
+
+    // TabReady
+    let onReady = tabInternals.onReady = onTabReady.bind(this);
+    tab.browser.addEventListener(EVENTS.ready.dom, onReady, false);
+
+    // TabClose
+    let onClose = tabInternals.onClose = onTabClose.bind(this);
+    window.BrowserApp.deck.addEventListener(EVENTS.close.dom, onClose, false);
+
+    unload(cleanupTab.bind(null, this));
   },
 
   /**
@@ -144,6 +157,41 @@ const Tab = Class({
   }
 });
 exports.Tab = Tab;
+
+function cleanupTab(tab) {
+  let tabInternals = tabNS(tab);
+  if (!tabInternals.tab)
+    return;
+
+  if (tabInternals.tab.browser) {
+    tabInternals.tab.browser.removeEventListener(EVENTS.ready.dom, tabInternals.onReady, false);
+  }
+  tabInternals.onReady = null;
+  tabInternals.window.BrowserApp.deck.removeEventListener(EVENTS.close.dom, tabInternals.onClose, false);
+  tabInternals.onClose = null;
+  rawTabNS(tabInternals.tab).tab = null;
+  tabInternals.tab = null;
+  tabInternals.window = null;
+}
+
+function onTabReady(event) {
+  let win = event.target.defaultView;
+
+  // ignore frames
+  if (win === win.top) {
+    emit(this, 'ready', this);
+  }
+}
+
+// TabClose
+function onTabClose(event) {
+  let rawTab = getTabForBrowser(event.target);
+  if (tabNS(this).tab !== rawTab)
+    return;
+
+  emit(this, EVENTS.close.name, this);
+  cleanupTab(this);
+};
 
 getPBOwnerWindow.define(Tab, function(tab) {
   return getContentWindowForTab(tabNS(tab).tab);

@@ -73,7 +73,6 @@
       <preference id="browser.privatebrowsing.autostart"
                   name="browser.privatebrowsing.autostart"
                   onchange="gPrivacyPane.updatePrivacyMicroControls();"
-                  instantApply="true"
                   type="bool"/>
 
     </preferences>
@@ -113,7 +112,8 @@
         <menulist id="historyMode"
                   oncommand="gPrivacyPane.updateHistoryModePane();
                              gPrivacyPane.updateHistoryModePrefs();
-                             gPrivacyPane.updatePrivacyMicroControls();">
+                             gPrivacyPane.updatePrivacyMicroControls();
+                             gPrivacyPane.updateAutostart();">
           <menupopup>
             <menuitem label="&historyHeader.remember.label;" value="remember"/>
             <menuitem label="&historyHeader.dontremember.label;" value="dontremember"/>
@@ -160,7 +160,8 @@
           <checkbox id="privateBrowsingAutoStart" class="indent"
                     label="&privateBrowsingPermanent2.label;"
                     accesskey="&privateBrowsingPermanent2.accesskey;"
-                    preference="browser.privatebrowsing.autostart"/>
+                    preference="browser.privatebrowsing.autostart"
+                    oncommand="gPrivacyPane.updateAutostart()"/>
 
           <vbox class="indent">
             <vbox class="indent">

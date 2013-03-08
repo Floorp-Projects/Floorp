@@ -302,8 +302,7 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     nsStyleContext* bgSC;
     const nsStyleBackground* bg = nullptr;
     bool isThemed = IsThemed();
-    if (!isThemed &&
-        nsCSSRendering::FindBackground(PresContext(), this, &bgSC)) {
+    if (!isThemed && nsCSSRendering::FindBackground(this, &bgSC)) {
       bg = bgSC->StyleBackground();
     }
     aLists.BorderBackground()->AppendNewToTop(

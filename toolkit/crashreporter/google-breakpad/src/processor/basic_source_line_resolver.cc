@@ -37,7 +37,6 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 #include <map>
 #include <utility>
@@ -54,6 +53,11 @@ using std::vector;
 using std::make_pair;
 
 namespace google_breakpad {
+
+#ifdef _WIN32
+#define strtok_r strtok_s
+#define strtoull _strtoui64
+#endif
 
 static const char *kWhitespace = " \r\n";
 
@@ -300,8 +304,8 @@ BasicSourceLineResolver::Module::ParseFunction(char *function_line) {
     return NULL;
   }
 
-  u_int64_t address    = strtoull(tokens[0], NULL, 16);
-  u_int64_t size       = strtoull(tokens[1], NULL, 16);
+  uint64_t address     = strtoull(tokens[0], NULL, 16);
+  uint64_t size        = strtoull(tokens[1], NULL, 16);
   int stack_param_size = strtoull(tokens[2], NULL, 16);
   char *name           = tokens[3];
 
@@ -316,8 +320,8 @@ BasicSourceLineResolver::Line* BasicSourceLineResolver::Module::ParseLine(
     return NULL;
   }
 
-  u_int64_t address = strtoull(tokens[0], NULL, 16);
-  u_int64_t size    = strtoull(tokens[1], NULL, 16);
+  uint64_t address  = strtoull(tokens[0], NULL, 16);
+  uint64_t size     = strtoull(tokens[1], NULL, 16);
   int line_number   = atoi(tokens[2]);
   int source_file   = atoi(tokens[3]);
   if (line_number <= 0) {
@@ -338,7 +342,7 @@ bool BasicSourceLineResolver::Module::ParsePublicSymbol(char *public_line) {
     return false;
   }
 
-  u_int64_t address    = strtoull(tokens[0], NULL, 16);
+  uint64_t address     = strtoull(tokens[0], NULL, 16);
   int stack_param_size = strtoull(tokens[1], NULL, 16);
   char *name           = tokens[2];
 
@@ -373,7 +377,7 @@ bool BasicSourceLineResolver::Module::ParseStackInfo(char *stack_info_line) {
   // MSVC stack frame info.
   if (strcmp(platform, "WIN") == 0) {
     int type = 0;
-    u_int64_t rva, code_size;
+    uint64_t rva, code_size;
     linked_ptr<WindowsFrameInfo>
       stack_frame_info(WindowsFrameInfo::ParseFromString(stack_info_line,
                                                          type,

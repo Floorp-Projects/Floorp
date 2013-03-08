@@ -446,7 +446,6 @@ static bool
 InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, SnapshotIterator &iter,
                 bool invalidate, BaselineStackBuilder &builder, MutableHandleFunction nextCallee)
 {
-    AutoAssertNoGC nogc;
     uint32_t exprStackSlots = iter.slots() - (script->nfixed + CountArgSlots(fun));
 
     builder.resetFramePushed();

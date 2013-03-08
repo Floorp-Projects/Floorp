@@ -4,6 +4,7 @@
 
 let { Cc, Ci } = require("chrome");
 const { Loader } = require('sdk/test/loader');
+const { LoaderWithHookedConsole } = require("sdk/test/loader");
 const timer = require("sdk/timers");
 const self = require('sdk/self');
 
@@ -492,26 +493,21 @@ exports["test console.log in Panel"] = function(assert, done) {
                 console.log("' + text + '");\
               }</script>';
 
-  let panel;
-
-  let loader = Loader(module,  {
-    console: {
-      log: function (message) {
-        assert.equal(message, text, 'console.log() works');
-
-        panel.destroy();
-        done();
-      }
-    }
-  });
-
+  let { loader } = LoaderWithHookedConsole(module, onMessage);
   let { Panel } = loader.require('sdk/panel');
 
-  panel = Panel({
+  let panel = Panel({
     contentURL: 'data:text/html;charset=utf-8,' + encodeURIComponent(html)
   });
 
   panel.show();
+  
+  function onMessage(type, message) {
+    assert.equal(type, 'log', 'console.log() works');
+    assert.equal(message, text, 'console.log() works');
+    panel.destroy();
+    done();
+  }
 };
 
 try {

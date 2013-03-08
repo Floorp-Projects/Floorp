@@ -373,7 +373,7 @@ MConstant::printOpcode(FILE *fp)
                 fputs("unnamed function", fp);
             }
             if (fun->hasScript()) {
-                UnrootedScript script = fun->nonLazyScript();
+                RawScript script = fun->nonLazyScript();
                 fprintf(fp, " (%s:%u)",
                         script->filename ? script->filename : "", script->lineno);
             }

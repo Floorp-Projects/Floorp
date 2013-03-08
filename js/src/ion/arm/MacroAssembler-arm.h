@@ -769,9 +769,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_ldr(Operand(address.base, address.offset), ScratchRegister);
         branchTest32(cond, ScratchRegister, imm, label);
     }
-    void branchTestBool(Condition cond, const Register &lhs, const Register &rhs, Label *label) {
-        branchTest32(cond, lhs, rhs, label);
-    }
     void branchTestPtr(Condition cond, const Register &lhs, const Register &rhs, Label *label) {
         branchTest32(cond, lhs, rhs, label);
     }

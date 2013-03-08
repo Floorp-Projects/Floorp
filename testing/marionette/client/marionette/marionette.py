@@ -104,6 +104,35 @@ class HTMLElement(object):
     def location(self):
         return self.marionette._send_message('getElementPosition', 'value', element=self.id)
 
+class Actions(object):
+    def __init__(self, marionette):
+        self.action_chain = []
+        self.marionette = marionette
+
+    def press(self, element, x=None, y=None):
+        element=element.id
+        self.action_chain.append(['press', element, x, y])
+        return self
+
+    def release(self):
+        self.action_chain.append(['release'])
+        return self
+
+    def move(self, element):
+        element=element.id
+        self.action_chain.append(['move', element])
+        return self
+
+    def move_by_offset(self, x, y):
+        self.action_chain.append(['moveByOffset', x, y])
+        return self
+
+    def wait(self, time=None):
+        self.action_chain.append(['wait', time])
+        return self
+
+    def perform(self):
+        return self.marionette._send_message('actionChain', 'ok', value=self.action_chain)
 
 class Marionette(object):
 
