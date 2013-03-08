@@ -33,6 +33,7 @@ CPPSRCS += \
   GonkCameraControl.cpp \
   GonkCameraHwMgr.cpp \
   GonkNativeWindow.cpp \
+  GonkNativeWindowClient.cpp \
   GonkRecorder.cpp \
   GonkCameraSource.cpp \
   AudioParameter.cpp \
@@ -43,6 +44,7 @@ CPPSRCS += \
   FallbackCameraManager.cpp \
   FallbackCameraControl.cpp \
   GonkNativeWindow.cpp \
+  GonkNativeWindowClient.cpp \
   $(NULL)
 else
 CPPSRCS += \
@@ -60,6 +62,7 @@ EXPORTS = \
   CameraCommon.h \
   DOMCameraManager.h \
   GonkNativeWindow.h \
+  GonkNativeWindowClient.h \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
