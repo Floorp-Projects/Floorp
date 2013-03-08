@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <alsa/asoundlib.h>
 #include "cubeb/cubeb.h"
+#include "cubeb-internal.h"
 
 #define CUBEB_STREAM_MAX 16
 #define CUBEB_WATCHDOG_MS 10000
@@ -30,7 +31,11 @@
 static pthread_mutex_t cubeb_alsa_mutex = PTHREAD_MUTEX_INITIALIZER;
 static int cubeb_alsa_error_handler_set = 0;
 
+static struct cubeb_ops const alsa_ops;
+
 struct cubeb {
+  struct cubeb_ops const * ops;
+
   pthread_t thread;
 
   /* Mutex for streams array, must not be held while blocked in poll(2). */
@@ -39,7 +44,7 @@ struct cubeb {
   /* Sparse array of streams managed by this context. */
   cubeb_stream * streams[CUBEB_STREAM_MAX];
 
-  /* fds and nfds are only updated by cubeb_run when rebuild is set. */
+  /* fds and nfds are only updated by alsa_run when rebuild is set. */
   struct pollfd * fds;
   nfds_t nfds;
   int rebuild;
@@ -227,7 +232,7 @@ set_timeout(struct timeval * timeout, unsigned int ms)
 }
 
 static void
-cubeb_set_stream_state(cubeb_stream * stm, enum stream_state state)
+alsa_set_stream_state(cubeb_stream * stm, enum stream_state state)
 {
   cubeb * ctx;
   int r;
@@ -241,7 +246,7 @@ cubeb_set_stream_state(cubeb_stream * stm, enum stream_state state)
 }
 
 static enum stream_state
-cubeb_refill_stream(cubeb_stream * stm)
+alsa_refill_stream(cubeb_stream * stm)
 {
   int r;
   unsigned short revents;
@@ -334,7 +339,7 @@ cubeb_refill_stream(cubeb_stream * stm)
 }
 
 static int
-cubeb_run(cubeb * ctx)
+alsa_run(cubeb * ctx)
 {
   int r;
   int timeout;
@@ -378,11 +383,11 @@ cubeb_run(cubeb * ctx)
     for (i = 0; i < CUBEB_STREAM_MAX; ++i) {
       stm = ctx->streams[i];
       if (stm && stm->state == RUNNING && stm->fds && any_revents(stm->fds, stm->nfds)) {
-        cubeb_set_stream_state(stm, PROCESSING);
+        alsa_set_stream_state(stm, PROCESSING);
         pthread_mutex_unlock(&ctx->mutex);
-        state = cubeb_refill_stream(stm);
+        state = alsa_refill_stream(stm);
         pthread_mutex_lock(&ctx->mutex);
-        cubeb_set_stream_state(stm, state);
+        alsa_set_stream_state(stm, state);
       }
     }
   } else if (r == 0) {
@@ -390,10 +395,10 @@ cubeb_run(cubeb * ctx)
       stm = ctx->streams[i];
       if (stm) {
         if (stm->state == DRAINING && ms_since(&stm->drain_timeout) >= 0) {
-          cubeb_set_stream_state(stm, INACTIVE);
+          alsa_set_stream_state(stm, INACTIVE);
           stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_DRAINED);
         } else if (stm->state == RUNNING && ms_since(&stm->last_activity) > CUBEB_WATCHDOG_MS) {
-          cubeb_set_stream_state(stm, ERROR);
+          alsa_set_stream_state(stm, ERROR);
           stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_ERROR);
         }
       }
@@ -406,13 +411,13 @@ cubeb_run(cubeb * ctx)
 }
 
 static void *
-cubeb_run_thread(void * context)
+alsa_run_thread(void * context)
 {
   cubeb * ctx = context;
   int r;
 
   do {
-    r = cubeb_run(ctx);
+    r = alsa_run(ctx);
   } while (r >= 0);
 
   return NULL;
@@ -567,7 +572,7 @@ init_local_config_with_workaround(char const * pcm_name)
 
 
 static int
-cubeb_locked_pcm_open(snd_pcm_t ** pcm, snd_pcm_stream_t stream, snd_config_t * local_config)
+alsa_locked_pcm_open(snd_pcm_t ** pcm, snd_pcm_stream_t stream, snd_config_t * local_config)
 {
   int r;
 
@@ -583,7 +588,7 @@ cubeb_locked_pcm_open(snd_pcm_t ** pcm, snd_pcm_stream_t stream, snd_config_t * 
 }
 
 static int
-cubeb_locked_pcm_close(snd_pcm_t * pcm)
+alsa_locked_pcm_close(snd_pcm_t * pcm)
 {
   int r;
 
@@ -595,7 +600,7 @@ cubeb_locked_pcm_close(snd_pcm_t * pcm)
 }
 
 static int
-cubeb_register_stream(cubeb * ctx, cubeb_stream * stm)
+alsa_register_stream(cubeb * ctx, cubeb_stream * stm)
 {
   int i;
 
@@ -612,7 +617,7 @@ cubeb_register_stream(cubeb * ctx, cubeb_stream * stm)
 }
 
 static void
-cubeb_unregister_stream(cubeb_stream * stm)
+alsa_unregister_stream(cubeb_stream * stm)
 {
   cubeb * ctx;
   int i;
@@ -635,8 +640,8 @@ silent_error_handler(char const * file, int line, char const * function,
 {
 }
 
-int
-cubeb_init(cubeb ** context, char const * context_name)
+/*static*/ int
+alsa_init(cubeb ** context, char const * context_name)
 {
   cubeb * ctx;
   int r;
@@ -658,6 +663,8 @@ cubeb_init(cubeb ** context, char const * context_name)
   ctx = calloc(1, sizeof(*ctx));
   assert(ctx);
 
+  ctx->ops = &alsa_ops;
+
   r = pthread_mutex_init(&ctx->mutex, NULL);
   assert(r == 0);
 
@@ -672,7 +679,7 @@ cubeb_init(cubeb ** context, char const * context_name)
   ctx->control_fd_read = fd[0];
   ctx->control_fd_write = fd[1];
 
-  /* Force an early rebuild when cubeb_run is first called to ensure fds and
+  /* Force an early rebuild when alsa_run is first called to ensure fds and
      nfds have been initialized. */
   ctx->rebuild = 1;
 
@@ -682,7 +689,7 @@ cubeb_init(cubeb ** context, char const * context_name)
   r = pthread_attr_setstacksize(&attr, 256 * 1024);
   assert(r == 0);
 
-  r = pthread_create(&ctx->thread, &attr, cubeb_run_thread, ctx);
+  r = pthread_create(&ctx->thread, &attr, alsa_run_thread, ctx);
   assert(r == 0);
 
   r = pthread_attr_destroy(&attr);
@@ -690,9 +697,9 @@ cubeb_init(cubeb ** context, char const * context_name)
 
   /* Open a dummy PCM to force the configuration space to be evaluated so that
      init_local_config_with_workaround can find and modify the default node. */
-  r = cubeb_locked_pcm_open(&dummy, SND_PCM_STREAM_PLAYBACK, NULL);
+  r = alsa_locked_pcm_open(&dummy, SND_PCM_STREAM_PLAYBACK, NULL);
   if (r >= 0) {
-    cubeb_locked_pcm_close(dummy);
+    alsa_locked_pcm_close(dummy);
   }
   ctx->is_pa = 0;
   pthread_mutex_lock(&cubeb_alsa_mutex);
@@ -700,7 +707,7 @@ cubeb_init(cubeb ** context, char const * context_name)
   pthread_mutex_unlock(&cubeb_alsa_mutex);
   if (ctx->local_config) {
     ctx->is_pa = 1;
-    r = cubeb_locked_pcm_open(&dummy, SND_PCM_STREAM_PLAYBACK, ctx->local_config);
+    r = alsa_locked_pcm_open(&dummy, SND_PCM_STREAM_PLAYBACK, ctx->local_config);
     /* If we got a local_config, we found a PA PCM.  If opening a PCM with that
        config fails with EINVAL, the PA PCM is too old for this workaround. */
     if (r == -EINVAL) {
@@ -709,7 +716,7 @@ cubeb_init(cubeb ** context, char const * context_name)
       pthread_mutex_unlock(&cubeb_alsa_mutex);
       ctx->local_config = NULL;
     } else if (r >= 0) {
-      cubeb_locked_pcm_close(dummy);
+      alsa_locked_pcm_close(dummy);
     }
   }
 
@@ -718,14 +725,14 @@ cubeb_init(cubeb ** context, char const * context_name)
   return CUBEB_OK;
 }
 
-char const *
-cubeb_get_backend_id(cubeb * ctx)
+static char const *
+alsa_get_backend_id(cubeb * ctx)
 {
   return "alsa";
 }
 
-void
-cubeb_destroy(cubeb * ctx)
+static void
+alsa_destroy(cubeb * ctx)
 {
   int r;
 
@@ -753,11 +760,13 @@ cubeb_destroy(cubeb * ctx)
   free(ctx);
 }
 
-int
-cubeb_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name,
-                  cubeb_stream_params stream_params, unsigned int latency,
-                  cubeb_data_callback data_callback, cubeb_state_callback state_callback,
-                  void * user_ptr)
+static void alsa_stream_destroy(cubeb_stream * stm);
+
+static int
+alsa_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name,
+                 cubeb_stream_params stream_params, unsigned int latency,
+                 cubeb_data_callback data_callback, cubeb_state_callback state_callback,
+                 void * user_ptr)
 {
   cubeb_stream * stm;
   int r;
@@ -766,12 +775,6 @@ cubeb_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name,
   assert(ctx && stream);
 
   *stream = NULL;
-
-  if (stream_params.rate < 1 || stream_params.rate > 192000 ||
-      stream_params.channels < 1 || stream_params.channels > 32 ||
-      latency < 1 || latency > 2000) {
-    return CUBEB_ERROR_INVALID_FORMAT;
-  }
 
   switch (stream_params.format) {
   case CUBEB_SAMPLE_S16LE:
@@ -811,9 +814,9 @@ cubeb_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name,
   r = pthread_mutex_init(&stm->mutex, NULL);
   assert(r == 0);
 
-  r = cubeb_locked_pcm_open(&stm->pcm, SND_PCM_STREAM_PLAYBACK, ctx->local_config);
+  r = alsa_locked_pcm_open(&stm->pcm, SND_PCM_STREAM_PLAYBACK, ctx->local_config);
   if (r < 0) {
-    cubeb_stream_destroy(stm);
+    alsa_stream_destroy(stm);
     return CUBEB_ERROR;
   }
 
@@ -831,7 +834,7 @@ cubeb_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name,
                          stm->params.channels, stm->params.rate, 1,
                          latency * 1000);
   if (r < 0) {
-    cubeb_stream_destroy(stm);
+    alsa_stream_destroy(stm);
     return CUBEB_ERROR_INVALID_FORMAT;
   }
 
@@ -849,8 +852,8 @@ cubeb_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name,
   r = pthread_cond_init(&stm->cond, NULL);
   assert(r == 0);
 
-  if (cubeb_register_stream(ctx, stm) != 0) {
-    cubeb_stream_destroy(stm);
+  if (alsa_register_stream(ctx, stm) != 0) {
+    alsa_stream_destroy(stm);
     return CUBEB_ERROR;
   }
 
@@ -859,8 +862,8 @@ cubeb_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name,
   return CUBEB_OK;
 }
 
-void
-cubeb_stream_destroy(cubeb_stream * stm)
+static void
+alsa_stream_destroy(cubeb_stream * stm)
 {
   int r;
   cubeb * ctx;
@@ -871,7 +874,7 @@ cubeb_stream_destroy(cubeb_stream * stm)
 
   pthread_mutex_lock(&stm->mutex);
   if (stm->pcm) {
-    cubeb_locked_pcm_close(stm->pcm);
+    alsa_locked_pcm_close(stm->pcm);
     stm->pcm = NULL;
   }
   free(stm->saved_fds);
@@ -881,7 +884,7 @@ cubeb_stream_destroy(cubeb_stream * stm)
   r = pthread_cond_destroy(&stm->cond);
   assert(r == 0);
 
-  cubeb_unregister_stream(stm);
+  alsa_unregister_stream(stm);
 
   pthread_mutex_lock(&ctx->mutex);
   assert(ctx->active_streams >= 1);
@@ -891,8 +894,8 @@ cubeb_stream_destroy(cubeb_stream * stm)
   free(stm);
 }
 
-int
-cubeb_stream_start(cubeb_stream * stm)
+static int
+alsa_stream_start(cubeb_stream * stm)
 {
   cubeb * ctx;
 
@@ -909,14 +912,14 @@ cubeb_stream_start(cubeb_stream * stm)
     pthread_mutex_unlock(&ctx->mutex);
     return CUBEB_ERROR;
   }
-  cubeb_set_stream_state(stm, RUNNING);
+  alsa_set_stream_state(stm, RUNNING);
   pthread_mutex_unlock(&ctx->mutex);
 
   return CUBEB_OK;
 }
 
-int
-cubeb_stream_stop(cubeb_stream * stm)
+static int
+alsa_stream_stop(cubeb_stream * stm)
 {
   cubeb * ctx;
   int r;
@@ -930,7 +933,7 @@ cubeb_stream_stop(cubeb_stream * stm)
     assert(r == 0);
   }
 
-  cubeb_set_stream_state(stm, INACTIVE);
+  alsa_set_stream_state(stm, INACTIVE);
   pthread_mutex_unlock(&ctx->mutex);
 
   pthread_mutex_lock(&stm->mutex);
@@ -940,8 +943,8 @@ cubeb_stream_stop(cubeb_stream * stm)
   return CUBEB_OK;
 }
 
-int
-cubeb_stream_get_position(cubeb_stream * stm, uint64_t * position)
+static int
+alsa_stream_get_position(cubeb_stream * stm, uint64_t * position)
 {
   snd_pcm_sframes_t delay;
 
@@ -969,3 +972,14 @@ cubeb_stream_get_position(cubeb_stream * stm, uint64_t * position)
   pthread_mutex_unlock(&stm->mutex);
   return CUBEB_OK;
 }
+
+static struct cubeb_ops const alsa_ops = {
+  .init = alsa_init,
+  .get_backend_id = alsa_get_backend_id,
+  .destroy = alsa_destroy,
+  .stream_init = alsa_stream_init,
+  .stream_destroy = alsa_stream_destroy,
+  .stream_start = alsa_stream_start,
+  .stream_stop = alsa_stream_stop,
+  .stream_get_position = alsa_stream_get_position
+};

@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "cubeb/cubeb.h"
+#include "cubeb-internal.h"
 
 #ifdef CUBEB_SNDIO_DEBUG
 #define DPR(...) fprintf(stderr, __VA_ARGS__);
@@ -17,7 +18,14 @@
 #define DPR(...) do {} while(0)
 #endif
 
+static struct cubeb_ops const sndio_ops;
+
+struct cubeb {
+  struct cubeb_ops const * ops;
+};
+
 struct cubeb_stream {
+  cubeb * context;
   pthread_t th;			  /* to run real-time audio i/o */
   pthread_mutex_t mtx;		  /* protects hdl and pos */
   struct sio_hdl *hdl;		  /* link us to sndio */
@@ -34,7 +42,7 @@ struct cubeb_stream {
   void *arg;			  /* user arg to {data,state}_cb */
 };
 
-void
+static void
 float_to_s16(void *ptr, long nsamp)
 {
   int16_t *dst = ptr;
@@ -44,16 +52,16 @@ float_to_s16(void *ptr, long nsamp)
     *(dst++) = *(src++) * 32767;
 }
 
-void
-cubeb_onmove(void *arg, int delta)
+static void
+sndio_onmove(void *arg, int delta)
 {
   struct cubeb_stream *s = (struct cubeb_stream *)arg;
 
   s->rdpos += delta;
 }
 
-void *
-cubeb_mainloop(void *arg)
+static void *
+sndio_mainloop(void *arg)
 {
 #define MAXFDS 8
   struct pollfd pfds[MAXFDS];
@@ -62,25 +70,25 @@ cubeb_mainloop(void *arg)
   size_t start = 0, end = 0;
   long nfr;
 
-  DPR("cubeb_mainloop()\n");
+  DPR("sndio_mainloop()\n");
   s->state_cb(s, s->arg, CUBEB_STATE_STARTED);
   pthread_mutex_lock(&s->mtx);
   if (!sio_start(s->hdl)) {
     pthread_mutex_unlock(&s->mtx);
     return NULL;
   }
-  DPR("cubeb_mainloop(), started\n");
+  DPR("sndio_mainloop(), started\n");
 
   start = end = s->nfr;
   for (;;) {
     if (!s->active) {
-      DPR("cubeb_mainloop() stopped\n");
+      DPR("sndio_mainloop() stopped\n");
       state = CUBEB_STATE_STOPPED;
       break;
     }
     if (start == end) {
       if (end < s->nfr) {
-        DPR("cubeb_mainloop() drained\n");
+        DPR("sndio_mainloop() drained\n");
         state = CUBEB_STATE_DRAINED;
         break;
       }
@@ -88,7 +96,7 @@ cubeb_mainloop(void *arg)
       nfr = s->data_cb(s, s->arg, s->buf, s->nfr);
       pthread_mutex_lock(&s->mtx);
       if (nfr < 0) {
-        DPR("cubeb_mainloop() cb err\n");
+        DPR("sndio_mainloop() cb err\n");
         state = CUBEB_STATE_ERROR;
         break;
       }
@@ -99,7 +107,7 @@ cubeb_mainloop(void *arg)
     }
     if (end == 0)
       continue;
-    nfds = sio_pollfd(s->hdl, pfds, POLLOUT);    
+    nfds = sio_pollfd(s->hdl, pfds, POLLOUT);
     if (nfds > 0) {
       pthread_mutex_unlock(&s->mtx);
       n = poll(pfds, nfds, -1);
@@ -113,7 +121,7 @@ cubeb_mainloop(void *arg)
     if (revents & POLLOUT) {
       n = sio_write(s->hdl, s->buf + start, end - start);
       if (n == 0) {
-        DPR("cubeb_mainloop() werr\n");
+        DPR("sndio_mainloop() werr\n");
         state = CUBEB_STATE_ERROR;
         break;
       }
@@ -128,43 +136,51 @@ cubeb_mainloop(void *arg)
   return NULL;
 }
 
-int
-cubeb_init(cubeb **context, char const *context_name)
+/*static*/ int
+sndio_init(cubeb **context, char const *context_name)
 {
-  DPR("cubeb_init(%s)\n", context_name);
-  *context = (void *)0xdeadbeef;
+  DPR("sndio_init(%s)\n", context_name);
+  *context = malloc(sizeof(*context));
+  (*context)->ops = &sndio_ops;
   (void)context_name;
   return CUBEB_OK;
 }
 
-void
-cubeb_destroy(cubeb *context)
+static char const *
+sndio_get_backend_id(cubeb *context)
 {
-  DPR("cubeb_destroy()\n");
-  (void)context;
+  return "sndio";
 }
 
-int
-cubeb_stream_init(cubeb *context,
-    cubeb_stream **stream,
-    char const *stream_name,
-    cubeb_stream_params stream_params, unsigned int latency,
-    cubeb_data_callback data_callback,
-    cubeb_state_callback state_callback,
-    void *user_ptr)
+static void
+sndio_destroy(cubeb *context)
+{
+  DPR("sndio_destroy()\n");
+  free(context);
+}
+
+static int
+sndio_stream_init(cubeb *context,
+                  cubeb_stream **stream,
+                  char const *stream_name,
+                  cubeb_stream_params stream_params, unsigned int latency,
+                  cubeb_data_callback data_callback,
+                  cubeb_state_callback state_callback,
+                  void *user_ptr)
 {
   struct cubeb_stream *s;
   struct sio_par wpar, rpar;
-  DPR("cubeb_stream_init(%s)\n", stream_name);
+  DPR("sndio_stream_init(%s)\n", stream_name);
   size_t size;
 
   s = malloc(sizeof(struct cubeb_stream));
   if (s == NULL)
     return CUBEB_ERROR;
+  s->context = context;
   s->hdl = sio_open(NULL, SIO_PLAY, 0);
   if (s->hdl == NULL) {
     free(s);
-    DPR("cubeb_stream_init(), sio_open() failed\n");
+    DPR("sndio_stream_init(), sio_open() failed\n");
     return CUBEB_ERROR;
   }
   sio_initpar(&wpar);
@@ -181,7 +197,7 @@ cubeb_stream_init(cubeb *context,
     wpar.le = SIO_LE_NATIVE;
     break;
   default:
-    DPR("cubeb_stream_init() unsupported format\n");
+    DPR("sndio_stream_init() unsupported format\n");
     return CUBEB_ERROR_INVALID_FORMAT;
   }
   wpar.rate = stream_params.rate;
@@ -190,7 +206,7 @@ cubeb_stream_init(cubeb *context,
   if (!sio_setpar(s->hdl, &wpar) || !sio_getpar(s->hdl, &rpar)) {
     sio_close(s->hdl);
     free(s);
-    DPR("cubeb_stream_init(), sio_setpar() failed\n");
+    DPR("sndio_stream_init(), sio_setpar() failed\n");
     return CUBEB_ERROR;
   }
   if (rpar.bits != wpar.bits || rpar.le != wpar.le ||
@@ -198,7 +214,7 @@ cubeb_stream_init(cubeb *context,
       rpar.pchan != wpar.pchan) {
     sio_close(s->hdl);
     free(s);
-    DPR("cubeb_stream_init() unsupported params\n");
+    DPR("sndio_stream_init() unsupported params\n");
     return CUBEB_ERROR_INVALID_FORMAT;
   }
   sio_onmove(s->hdl, cubeb_onmove, s);
@@ -225,26 +241,26 @@ cubeb_stream_init(cubeb *context,
     return CUBEB_ERROR;
   }
   *stream = s;
-  DPR("cubeb_stream_init() end, ok\n");
+  DPR("sndio_stream_init() end, ok\n");
   (void)context;
   (void)stream_name;
   return CUBEB_OK;
 }
 
-void
-cubeb_stream_destroy(cubeb_stream *s)
+static void
+sndio_stream_destroy(cubeb_stream *s)
 {
-  DPR("cubeb_stream_destroy()\n");
+  DPR("sndio_stream_destroy()\n");
   sio_close(s->hdl);
   free(s);
 }
 
-int
-cubeb_stream_start(cubeb_stream *s)
+static int
+sndio_stream_start(cubeb_stream *s)
 {
   int err;
 
-  DPR("cubeb_stream_start()\n");
+  DPR("sndio_stream_start()\n");
   s->active = 1;
   err = pthread_create(&s->th, NULL, cubeb_mainloop, s);
   if (err) {
@@ -254,12 +270,12 @@ cubeb_stream_start(cubeb_stream *s)
   return CUBEB_OK;
 }
 
-int
-cubeb_stream_stop(cubeb_stream *s)
+static int
+sndio_stream_stop(cubeb_stream *s)
 {
   void *dummy;
 
-  DPR("cubeb_stream_stop()\n");
+  DPR("sndio_stream_stop()\n");
   if (s->active) {
     s->active = 0;
     pthread_join(s->th, &dummy);
@@ -267,22 +283,33 @@ cubeb_stream_stop(cubeb_stream *s)
   return CUBEB_OK;
 }
 
-int
-cubeb_stream_get_position(cubeb_stream *s, uint64_t *p)
+static int
+sndio_stream_get_position(cubeb_stream *s, uint64_t *p)
 {
   pthread_mutex_lock(&s->mtx);
-  DPR("cubeb_stream_get_position() %lld\n", s->rdpos);
+  DPR("sndio_stream_get_position() %lld\n", s->rdpos);
   *p = s->rdpos;
   pthread_mutex_unlock(&s->mtx);
   return CUBEB_OK;
 }
 
-int
-cubeb_stream_set_volume(cubeb_stream *s, float volume)
+static int
+sndio_stream_set_volume(cubeb_stream *s, float volume)
 {
-  DPR("cubeb_stream_set_volume(%f)\n", volume);
+  DPR("sndio_stream_set_volume(%f)\n", volume);
   pthread_mutex_lock(&s->mtx);
   sio_setvol(s->hdl, SIO_MAXVOL * volume);
   pthread_mutex_unlock(&s->mtx);
   return CUBEB_OK;
 }
+
+static struct cubeb_ops const sndio_ops = {
+  .init = sndio_init,
+  .get_backend_id = sndio_get_backend_id,
+  .destroy = sndio_destroy,
+  .stream_init = sndio_stream_init,
+  .stream_destroy = sndio_stream_destroy,
+  .stream_start = sndio_stream_start,
+  .stream_stop = sndio_stream_stop,
+  .stream_get_position = sndio_stream_get_position
+};
