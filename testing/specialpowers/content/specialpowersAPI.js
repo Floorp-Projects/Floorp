@@ -711,6 +711,17 @@ SpecialPowersAPI.prototype = {
      return obj1 instanceof obj2;
   },
 
+  // Returns a privileged getter from an object. GetOwnPropertyDescriptor does
+  // not work here because xray wrappers don't properly implement it.
+  //
+  // This terribleness is used by content/base/test/test_object.html because
+  // <object> and <embed> tags will spawn plugins if their prototype is touched,
+  // so we need to get and cache the getter of |hasRunningPlugin| if we want to
+  // call it without paradoxically spawning the plugin.
+  do_lookupGetter: function(obj, name) {
+    return Object.prototype.__lookupGetter__.call(obj, name);
+  },
+
   // Mimic the get*Pref API
   getBoolPref: function(aPrefName) {
     return (this._getPref(aPrefName, 'BOOL'));
