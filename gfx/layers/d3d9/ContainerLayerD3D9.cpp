@@ -198,6 +198,7 @@ ContainerRender(Container* aContainer,
         return;
       }
 
+      nsRefPtr<IDirect3DSurface9> renderSurface;
       renderTexture->GetSurfaceLevel(0, getter_AddRefs(renderSurface));
       aManager->device()->SetRenderTarget(0, renderSurface);
     }
