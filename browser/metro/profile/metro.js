@@ -226,10 +226,6 @@ pref("accessibility.browsewithcaret", false);
 // successfully applied.
 pref("app.update.showInstalledUI", false);
 
-// Whether the character encoding options are displayed in the app bar.
-pref("browser.menu.showCharacterEncoding", false);
-pref("intl.charsetmenu.browser.static", "chrome://browser/locale/browser.properties");
-
 // pointer to the default engine name
 pref("browser.search.defaultenginename", "chrome://browser/locale/browser.properties");
 

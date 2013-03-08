@@ -564,7 +564,6 @@ var Browser = {
     } else {
       // Update all of our UI to reflect the new tab's location
       BrowserUI.updateURI();
-      IdentityUI.checkIdentity();
 
       let event = document.createEvent("Events");
       event.initEvent("TabSelect", true, false);

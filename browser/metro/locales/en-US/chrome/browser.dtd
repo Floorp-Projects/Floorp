@@ -38,15 +38,6 @@
 <!ENTITY bookmarksHeader.label     "Bookmarks">
 <!ENTITY allBookmarks.label        "See all bookmarks">
 
-<!ENTITY identity.unverifiedsite2 "This website does not supply identity information.">
-<!ENTITY identity.connectedTo2 "Connected to">
-<!-- Localization note (identity.runBy2)
- The layout of the identity dialog prevents combining this into a single string with
- substitution variables.  If it is difficult to translate the sense of the string
- with that structure, consider a translation which ignores the preceding domain and
- just addresses the organization to follow, e.g. "This site is run by " -->
-<!ENTITY identity.runBy2 "run by">
-
 <!ENTITY consoleHeader.label       "Error Console">
 <!ENTITY consoleAll.label          "All">
 <!ENTITY consoleErrors.label       "Errors">
@@ -84,7 +75,3 @@
 <!ENTITY contextSaveVideoLib.label         "Save to video library">
 <!ENTITY contextCopyVideoLocation.label    "Copy video location">
 <!ENTITY contextOpenVideoTab.label         "Open video in new tab">
-
-<!ENTITY pageactions.password.forget "Forget Password">
-<!ENTITY pageactions.reset           "Clear Site Preferences">
-<!ENTITY pageactions.charEncoding    "Character Encoding">
