@@ -22,6 +22,7 @@ const PARTICIPANT_STORE_NAME = "participant";
 const MOST_RECENT_STORE_NAME = "most-recent";
 
 const DELIVERY_SENDING = "sending";
+const DELIVERY_SENT = "sent";
 const DELIVERY_RECEIVED = "received";
 
 const DELIVERY_STATUS_NOT_APPLICABLE = "not-applicable";
@@ -117,7 +118,7 @@ MobileMessageDatabaseService.prototype = {
   lastMessageListId: 0,
 
   /**
-   * Last sms object store key value in the database.
+   * Last sms/mms object store key value in the database.
    */
   lastMessageId: 0,
 
@@ -558,19 +559,73 @@ MobileMessageDatabaseService.prototype = {
     };
   },
 
-  createSmsMessageFromRecord: function createSmsMessageFromRecord(aMessageRecord) {
+  createDomMessageFromRecord: function createDomMessageFromRecord(aMessageRecord) {
     if (DEBUG) {
-      debug("createSmsMessageFromRecord: " + JSON.stringify(aMessageRecord));
+      debug("createDomMessageFromRecord: " + JSON.stringify(aMessageRecord));
     }
-    return gMobileMessageService.createSmsMessage(aMessageRecord.id,
-                                                  aMessageRecord.delivery,
-                                                  aMessageRecord.deliveryStatus,
-                                                  aMessageRecord.sender,
-                                                  aMessageRecord.receiver,
-                                                  aMessageRecord.body,
-                                                  aMessageRecord.messageClass,
-                                                  aMessageRecord.timestamp,
-                                                  aMessageRecord.read);
+    if (aMessageRecord.type == "sms") {
+      return gMobileMessageService.createSmsMessage(aMessageRecord.id,
+                                                    aMessageRecord.delivery,
+                                                    aMessageRecord.deliveryStatus,
+                                                    aMessageRecord.sender,
+                                                    aMessageRecord.receiver,
+                                                    aMessageRecord.body,
+                                                    aMessageRecord.messageClass,
+                                                    aMessageRecord.timestamp,
+                                                    aMessageRecord.read);
+    } else if (aMessageRecord.type == "mms") {
+      let headers = aMessageRecord["headers"];
+
+      let subject = headers["subject"];
+      if (subject == undefined) {
+        subject = "";
+      }
+
+      let smil = "";
+      let attachments = [];
+      let parts = aMessageRecord.parts;
+      if (parts) {
+        for (let i = 0; i < parts.length; i++) {
+          let part = parts[i];
+          let partHeaders = part["headers"];
+          let partContent = part["content"];
+          // Don't need to make the SMIL part if it's present.
+          if (partHeaders["content-type"]["media"] == "application/smil") {
+            smil = part.content;
+            continue;
+          }
+          attachments.push({
+            "id": partHeaders["content-id"],
+            "location": partHeaders["content-location"],
+            "content": partContent
+          });
+        }
+      }
+      if (DEBUG) {
+        debug("createDomMessageFromRecord: createMmsMessage: " + JSON.stringify({
+          id: aMessageRecord.id,
+          delivery: aMessageRecord.delivery,
+          deliveryStatus: aMessageRecord.deliveryStatus,
+          sender: aMessageRecord.sender,
+          receivers: aMessageRecord.receivers,
+          timestamp: aMessageRecord.timestamp,
+          read: aMessageRecord.read,
+          subject: subject,
+          smil: smil,
+          attachments: attachments
+        }));
+      }
+      return gMobileMessageService.createMmsMessage(aMessageRecord.id,
+                                                    aMessageRecord.delivery,
+                                                    aMessageRecord.deliveryStatus,
+                                                    aMessageRecord.sender,
+                                                    aMessageRecord.receivers,
+                                                    aMessageRecord.timestamp,
+                                                    aMessageRecord.read,
+                                                    subject,
+                                                    smil,
+                                                    attachments);
+    }
   },
 
   /**
@@ -602,14 +657,14 @@ MobileMessageDatabaseService.prototype = {
     // retrieving process. So we don't bother continuing to process further
     // waiting requests here. This assumption comes from SmsCursor::Continue()
     // implementation.
-    let smsRequest = aMessageList.requestWaiting;
+    let request = aMessageList.requestWaiting;
     aMessageList.requestWaiting = null;
 
     if (!aMessageList.results.length) {
       // No fetched results yet.
       if (!aMessageList.processing) {
         if (DEBUG) debug("No messages matching the filter criteria");
-        smsRequest.notifyNoMessageInList();
+        request.notifyNoMessageInList();
       }
       // No fetched results yet and still processing. Let's wait a bit more.
       return;
@@ -619,7 +674,7 @@ MobileMessageDatabaseService.prototype = {
       // An previous error found. Keep the answer in results so that we can
       // reply INTERNAL_ERROR for further requests.
       if (DEBUG) debug("An previous error found");
-      smsRequest.notifyReadMessageListFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+      request.notifyReadMessageListFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
       return;
     }
 
@@ -629,13 +684,14 @@ MobileMessageDatabaseService.prototype = {
     let getRequest = aMessageStore.get(firstMessageId);
     let self = this;
     getRequest.onsuccess = function onsuccess(event) {
-      let sms = self.createSmsMessageFromRecord(event.target.result);
+      let messageRecord = event.target.result;
+      let domMessage = self.createDomMessageFromRecord(messageRecord);
       if (aMessageList.listId >= 0) {
         if (DEBUG) {
           debug("notifyNextMessageInListGot - listId: "
                 + aMessageList.listId + ", messageId: " + firstMessageId);
         }
-        smsRequest.notifyNextMessageInListGot(sms);
+        request.notifyNextMessageInListGot(domMessage);
       } else {
         self.lastMessageListId += 1;
         aMessageList.listId = self.lastMessageListId;
@@ -644,7 +700,7 @@ MobileMessageDatabaseService.prototype = {
           debug("notifyMessageListCreated - listId: "
                 + aMessageList.listId + ", messageId: " + firstMessageId);
         }
-        smsRequest.notifyMessageListCreated(aMessageList.listId, sms);
+        request.notifyMessageListCreated(aMessageList.listId, domMessage);
       }
     };
     getRequest.onerror = function onerror(event) {
@@ -652,7 +708,7 @@ MobileMessageDatabaseService.prototype = {
         debug("notifyReadMessageListFailed - listId: "
               + aMessageList.listId + ", messageId: " + firstMessageId);
       }
-      smsRequest.notifyReadMessageListFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+      request.notifyReadMessageListFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
     };
   },
 
@@ -976,7 +1032,8 @@ MobileMessageDatabaseService.prototype = {
       if (!aCallback) {
         return;
       }
-      aCallback.notify(rv, aMessageRecord);
+      let domMessage = self.createDomMessageFromRecord(aMessageRecord);
+      aCallback.notify(rv, domMessage);
     }
 
     this.newTxn(READ_WRITE, function(error, txn, stores) {
@@ -1188,7 +1245,8 @@ MobileMessageDatabaseService.prototype = {
       if (!callback) {
         return;
       }
-      callback.notify(rv, messageRecord);
+      let domMessage = self.createDomMessageFromRecord(messageRecord);
+      callback.notify(rv, domMessage);
     }
 
     this.newTxn(READ_WRITE, function (error, txn, messageStore) {
@@ -1313,8 +1371,8 @@ MobileMessageDatabaseService.prototype = {
           aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.UNKNOWN_ERROR);
           return;
         }
-        let sms = self.createSmsMessageFromRecord(messageRecord);
-        aRequest.notifyMessageGot(sms);
+        let domMessage = self.createDomMessageFromRecord(messageRecord);
+        aRequest.notifyMessageGot(domMessage);
       };
 
       txn.onerror = function onerror(event) {
@@ -1447,7 +1505,7 @@ MobileMessageDatabaseService.prototype = {
         contexts: null,
         // Result queues for multiple numbers filter's case.
         numberQueues: null,
-        // Pending createMessageList or getNextMessageInList SmsRequest.
+        // Pending createMessageList or getNextMessageInList request.
         requestWaiting: aRequest,
         results: []
       };
@@ -1758,8 +1816,8 @@ MobileMessageDatabaseService.prototype = {
           if (DEBUG) debug("Could not get message id " + messageId);
           aRequest.notifyReadMessageListFailed(Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR);
         }
-        let sms = self.createSmsMessageFromRecord(messageRecord);
-        aRequest.notifyNextMessageInListGot(sms);
+        let domMessage = self.createDomMessageFromRecord(messageRecord);
+        aRequest.notifyNextMessageInListGot(domMessage);
       };
 
       txn.onerror = function onerror(event) {

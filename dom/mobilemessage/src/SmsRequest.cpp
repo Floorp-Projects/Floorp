@@ -370,13 +370,21 @@ SmsRequest::NotifySendMessageFailed(int32_t aError)
 }
 
 NS_IMETHODIMP
-SmsRequest::NotifyMessageGot(nsIDOMMozSmsMessage *aMessage)
+SmsRequest::NotifyMessageGot(nsISupports *aMessage)
 {
+  // We only support nsIDOMMozSmsMessage for SmsRequest.
+  nsCOMPtr<nsIDOMMozSmsMessage> message(do_QueryInterface(aMessage));
+  if (!message) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  SmsMessage* smsMessage = static_cast<SmsMessage*>(message.get());
+
   if (mParent) {
-    SmsMessageData data = SmsMessageData(static_cast<SmsMessage*>(aMessage)->GetData());
+    SmsMessageData data = SmsMessageData(smsMessage->GetData());
     return SendMessageReply(MessageReply(ReplyGetMessage(data)));
   }
-  return NotifySuccess<nsIDOMMozSmsMessage*>(aMessage);
+  return NotifySuccess<nsIDOMMozSmsMessage*>(smsMessage);
 
 }
 
@@ -408,15 +416,22 @@ SmsRequest::NotifyDeleteMessageFailed(int32_t aError)
 }
 
 NS_IMETHODIMP
-SmsRequest::NotifyMessageListCreated(int32_t aListId,
-                                     nsIDOMMozSmsMessage *aMessage)
+SmsRequest::NotifyMessageListCreated(int32_t aListId, nsISupports *aMessage)
 {
+  // We only support nsIDOMMozSmsMessage for SmsRequest.
+  nsCOMPtr<nsIDOMMozSmsMessage> message(do_QueryInterface(aMessage));
+  if (!message) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  SmsMessage* smsMessage = static_cast<SmsMessage*>(message.get());
+
   if (mParent) {
-    SmsMessageData data = SmsMessageData(static_cast<SmsMessage*>(aMessage)->GetData());
+    SmsMessageData data = SmsMessageData(smsMessage->GetData());
     return SendMessageReply(MessageReply(ReplyCreateMessageList(aListId, data)));
   } else {
     nsCOMPtr<SmsCursor> cursor = new SmsCursor(aListId, this);
-    cursor->SetMessage(aMessage);
+    cursor->SetMessage(smsMessage);
     return NotifySuccess<nsIDOMMozSmsCursor*>(cursor);
   }
 }
@@ -434,15 +449,23 @@ SmsRequest::NotifyReadMessageListFailed(int32_t aError)
 }
 
 NS_IMETHODIMP
-SmsRequest::NotifyNextMessageInListGot(nsIDOMMozSmsMessage *aMessage)
+SmsRequest::NotifyNextMessageInListGot(nsISupports *aMessage)
 {
+  // We only support nsIDOMMozSmsMessage for SmsRequest.
+  nsCOMPtr<nsIDOMMozSmsMessage> message(do_QueryInterface(aMessage));
+  if (!message) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  SmsMessage* smsMessage = static_cast<SmsMessage*>(message.get());
+
   if (mParent) {
-    SmsMessageData data = SmsMessageData(static_cast<SmsMessage*>(aMessage)->GetData());
+    SmsMessageData data = SmsMessageData(smsMessage->GetData());
     return SendMessageReply(MessageReply(ReplyGetNextMessage(data)));
   }
   nsCOMPtr<SmsCursor> cursor = static_cast<SmsCursor*>(mCursor.get());
   NS_ASSERTION(cursor, "Request should have an cursor in that case!");
-  cursor->SetMessage(aMessage);
+  cursor->SetMessage(smsMessage);
   return NotifySuccess<nsIDOMMozSmsCursor*>(cursor);
 }
 
