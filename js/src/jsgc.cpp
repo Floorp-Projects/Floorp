@@ -266,7 +266,7 @@ ArenaHeader::checkSynchronizedWithFreeList() const
      * list in the zone can mutate at any moment. We cannot do any
      * checks in this case.
      */
-    if (IsBackgroundFinalized(getAllocKind()) && !zone->rt->isHeapBusy())
+    if (IsBackgroundFinalized(getAllocKind()) && zone->rt->gcHelperThread.onBackgroundThread())
         return;
 
     FreeSpan firstSpan = FreeSpan::decodeOffsets(arenaAddress(), firstFreeSpanOffsets);
@@ -2518,6 +2518,16 @@ GCHelperThread::doSweep()
     }
 }
 #endif /* JS_THREADSAFE */
+
+bool
+GCHelperThread::onBackgroundThread()
+{
+#ifdef JS_THREADSAFE
+    return PR_GetCurrentThread() == getThread();
+#else
+    return false;
+#endif
+}
 
 static bool
 ReleaseObservedTypes(JSRuntime *rt)
