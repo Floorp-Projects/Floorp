@@ -1,0 +1,79 @@
+* {
+  -moz-box-sizing: border-box;
+}
+
+body {
+  background: #F9F9F9;
+  margin: 0;
+  padding-bottom: 20px;
+}
+
+#all-fonts {
+  padding: 0 5px;
+  margin: 0;
+}
+
+#showall {
+  border-radius: 0;
+  border: 1px solid black;
+  margin: 3px;
+  cursor: pointer;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+}
+
+.font {
+  border-bottom: 1px solid #DDD;
+  padding: 10px 5px;
+  font-size: 0;
+}
+
+.font:last-of-type {
+  border-bottom: 0;
+}
+
+.font:nth-child(even) {
+  background: #F4F4F4;
+}
+
+.font-preview {
+  height: 60px;
+  width: 100%;
+  border: 0;
+  display: block;
+}
+
+.font-info {
+  font-size: 1rem;
+  display: block;
+}
+
+.font-name {
+  display: inline;
+}
+
+.font-css-code {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: white;
+  padding: 5px;
+  border: 1px dotted #CCC;
+}
+
+.font-is-local,
+.font-is-remote,
+.font-format-url,
+.font-css {
+  color: #999
+}
+
+.font-url {
+  border: 1px solid #CCC;
+  color: #888;
+}
+
+.font-url:focus {
+  color: black;
+}
