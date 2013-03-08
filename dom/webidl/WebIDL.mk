@@ -159,10 +159,16 @@ webidl_files = \
   SVGElement.webidl \
   SVGEllipseElement.webidl \
   SVGFilterElement.webidl \
+  SVGFilterPrimitiveStandardAttributes.webidl \
+  SVGFEBlendElement.webidl \
+  SVGFEFloodElement.webidl \
   SVGFEFuncAElement.webidl \
   SVGFEFuncBElement.webidl \
   SVGFEFuncGElement.webidl \
   SVGFEFuncRElement.webidl \
+  SVGFEImageElement.webidl \
+  SVGFEMergeElement.webidl \
+  SVGFEMergeNodeElement.webidl \
   SVGFitToViewBox.webidl \
   SVGForeignObjectElement.webidl \
   SVGGElement.webidl \

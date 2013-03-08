@@ -47,9 +47,9 @@ BEGIN_TEST(testGCFinalizeCallback)
     CHECK(checkFinalizeStatus());
     CHECK(checkFinalizeIsCompartmentGC(false));
 
-    js::RootedObject global1(cx, createGlobal());
-    js::RootedObject global2(cx, createGlobal());
-    js::RootedObject global3(cx, createGlobal());
+    JS::RootedObject global1(cx, createGlobal());
+    JS::RootedObject global2(cx, createGlobal());
+    JS::RootedObject global3(cx, createGlobal());
     CHECK(global1);
     CHECK(global2);
     CHECK(global3);
@@ -107,7 +107,7 @@ BEGIN_TEST(testGCFinalizeCallback)
     CHECK(rt->gcIncrementalState == js::gc::MARK);
     CHECK(rt->gcIsFull);
 
-    js::RootedObject global4(cx, createGlobal());
+    JS::RootedObject global4(cx, createGlobal());
     js::GCDebugSlice(rt, true, 1);
     CHECK(rt->gcIncrementalState == js::gc::NO_INCREMENTAL);
     CHECK(!rt->gcIsFull);

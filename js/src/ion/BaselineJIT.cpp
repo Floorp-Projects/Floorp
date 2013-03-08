@@ -581,7 +581,7 @@ BaselineScript::nativeCodeForPC(JSScript *script, jsbytecode *pc, PCMappingSlotI
 }
 
 void
-BaselineScript::toggleDebugTraps(UnrootedScript script, jsbytecode *pc)
+BaselineScript::toggleDebugTraps(RawScript script, jsbytecode *pc)
 {
     JS_ASSERT(script->baseline == this);
 
@@ -682,7 +682,7 @@ BaselineScript::purgeOptimizedStubs(Zone *zone)
 }
 
 void
-ion::FinishDiscardBaselineScript(FreeOp *fop, UnrootedScript script)
+ion::FinishDiscardBaselineScript(FreeOp *fop, RawScript script)
 {
     if (!script->hasBaselineScript())
         return;

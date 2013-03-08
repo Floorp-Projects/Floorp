@@ -129,6 +129,28 @@ void CSFLogV(CSFLogLevel priority, const char* sourceFile, int sourceLine, const
   vprintf(format, args);
 #else
 
+  PRLogModuleLevel level = static_cast<PRLogModuleLevel>(priority);
+
+  GetSignalingLogInfo();
+
+  // Skip doing any of this work if we're not logging the indicated level...
+  if (!PR_LOG_TEST(gLogModuleInfo,level)) {
+    return;
+  }
+
+  // Trim the path component from the filename
+  const char *lastSlash = sourceFile;
+  while (*sourceFile) {
+    if (*sourceFile == '/' || *sourceFile == '\\') {
+      lastSlash = sourceFile;
+    }
+    sourceFile++;
+  }
+  sourceFile = lastSlash;
+  if (*sourceFile == '/' || *sourceFile == '\\') {
+    sourceFile++;
+  }
+
 #define MAX_MESSAGE_LENGTH 1024
   char message[MAX_MESSAGE_LENGTH];
   char buffer[64] = "";
@@ -171,31 +193,9 @@ void CSFLogV(CSFLogLevel priority, const char* sourceFile, int sourceLine, const
   }
 
   vsnprintf(message, MAX_MESSAGE_LENGTH, format, args);
-
-  GetSignalingLogInfo();
-
-  switch(priority)
-  {
-    case CSF_LOG_CRITICAL:
-    case CSF_LOG_ERROR:
-      PR_LOG(gLogModuleInfo, PR_LOG_ERROR, ("[%s] %s %s",
-                                            threadName, tag, message));
-      break;
-    case CSF_LOG_WARNING:
-    case CSF_LOG_INFO:
-    case CSF_LOG_NOTICE:
-      PR_LOG(gLogModuleInfo, PR_LOG_WARNING, ("[%s] %s %s",
-                                            threadName, tag, message));
-      break;
-    case CSF_LOG_DEBUG:
-      PR_LOG(gLogModuleInfo, PR_LOG_DEBUG, ("[%s] %s %s",
-                                            threadName, tag, message));
-      break;
-    default:
-      PR_LOG(gLogModuleInfo, PR_LOG_ALWAYS, ("[%s] %s %s",
-                                            threadName, tag, message));
-  }
-
+  PR_LOG(gLogModuleInfo, level, ("[%s|%s] %s:%d: %s",
+                                  threadName, tag, sourceFile, sourceLine,
+                                  message));
 #endif
 
 }

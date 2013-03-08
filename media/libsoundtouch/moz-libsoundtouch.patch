@@ -1,4 +1,77 @@
-unchanged:
+diff -u /src/cpu_detect_x86.cpp /src/cpu_detect_x86.cpp
+--- /src/cpu_detect_x86.cpp
++++ /src/cpu_detect_x86.cpp
+@@ -43,18 +43,23 @@
+ #include "STTypes.h"
+ 
+ #if defined(SOUNDTOUCH_ALLOW_X86_OPTIMIZATIONS)
+-
+-    #if defined(__GNUC__) && defined(__i386__)
+-        // gcc
++    #if defined(__GNUC__) && defined (HAVE_CPUID_H)
++        // gcc and clang
+         #include "cpuid.h"
+     #elif defined(_M_IX86)
+         // windows non-gcc
+         #include <intrin.h>
+-        #define bit_MMX     (1 << 23)
+-        #define bit_SSE     (1 << 25)
+-        #define bit_SSE2    (1 << 26)
+     #endif
+-
++    // If we still don't have the macros, define them (Windows, MacOS)
++    #ifndef bit_MMX
++        #define bit_MMX (1 << 23)
++    #endif
++    #ifndef bit_SSE
++       #define bit_SSE (1 << 25)
++    #endif
++    #ifndef bit_SSE2
++        #define bit_SSE2 (1 << 26)
++    #endif
+ #endif
+ 
+ 
+@@ -101,18 +106,7 @@
+  
+     uint res = 0;
+  
+-#if defined(__GNUC__)
+-    // GCC version of cpuid. Requires GCC 4.3.0 or later for __cpuid intrinsic support.
+-    uint eax, ebx, ecx, edx;  // unsigned int is the standard type. uint is defined by the compiler and not guaranteed to be portable.
+-
+-    // Check if no cpuid support.
+-    if (!__get_cpuid (1, &eax, &ebx, &ecx, &edx)) return 0; // always disable extensions.
+-
+-    if (edx & bit_MMX)  res = res | SUPPORT_MMX;
+-    if (edx & bit_SSE)  res = res | SUPPORT_SSE;
+-    if (edx & bit_SSE2) res = res | SUPPORT_SSE2;
+-
+-#else
++#if !defined(__GNUC__)
+     // Window / VS version of cpuid. Notice that Visual Studio 2005 or later required 
+     // for __cpuid intrinsic support.
+     int reg[4] = {-1};
+@@ -125,7 +119,19 @@
+     if ((unsigned int)reg[3] & bit_MMX)  res = res | SUPPORT_MMX;
+     if ((unsigned int)reg[3] & bit_SSE)  res = res | SUPPORT_SSE;
+     if ((unsigned int)reg[3] & bit_SSE2) res = res | SUPPORT_SSE2;
++#elif defined(HAVE_CPUID_H)
++    // GCC version of cpuid. Requires GCC 4.3.0 or later for __cpuid intrinsic support.
++    uint eax, ebx, ecx, edx;  // unsigned int is the standard type. uint is defined by the compiler and not guaranteed to be portable.
++
++    // Check if no cpuid support.
++    if (!__get_cpuid (1, &eax, &ebx, &ecx, &edx)) return 0; // always disable extensions.
+ 
++    if (edx & bit_MMX)  res = res | SUPPORT_MMX;
++    if (edx & bit_SSE)  res = res | SUPPORT_SSE;
++    if (edx & bit_SSE2) res = res | SUPPORT_SSE2;
++#else
++    // Compatible with GCC but no cpuid.h.
++    return 0;
+ #endif
+ 
+     return res & ~_dwDisabledISA;
 --- /src/STTypes.h	2012-08-02 10:04:06.301691592 -0700
 +++ /src/STTypes.h
 @@ -42,21 +42,13 @@
@@ -461,46 +534,3 @@ unchanged:
      /// 'sequenceMS' = one processing sequence length in milliseconds
      /// 'seekwindowMS' = seeking window length for scanning the best overlapping 
      ///      position
---- /src/cpu_detect_x86.cpp
-+++ /src/cpu_detect_x86.cpp
-@@ -38,28 +38,33 @@
- //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- //
- ////////////////////////////////////////////////////////////////////////////////
- 
- #include "cpu_detect.h"
- #include "STTypes.h"
- 
- #if defined(SOUNDTOUCH_ALLOW_X86_OPTIMIZATIONS)
--
--    #if defined(__GNUC__) && defined(__i386__)
--        // gcc
-+    #if defined(__GNUC__) && defined (HAVE_CPUID_H)
-+        // gcc and clang
-         #include "cpuid.h"
-     #elif defined(_M_IX86)
-         // windows non-gcc
-         #include <intrin.h>
--        #define bit_MMX     (1 << 23)
--        #define bit_SSE     (1 << 25)
--        #define bit_SSE2    (1 << 26)
-     #endif
--
-+    // If we still don't have the macros, define them (Windows, MacOS)
-+    #ifndef bit_MMX
-+        #define bit_MMX (1 << 23)
-+    #endif
-+    #ifndef bit_SSE
-+       #define bit_SSE (1 << 25)
-+    #endif
-+    #ifndef bit_SSE2
-+        #define bit_SSE2 (1 << 26)
-+    #endif
- #endif
- 
- 
- //////////////////////////////////////////////////////////////////////////////
- //
- // processor instructions extension detection routines
- //
- //////////////////////////////////////////////////////////////////////////////

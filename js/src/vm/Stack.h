@@ -215,7 +215,7 @@ enum MaybeCheckAliasing { CHECK_ALIASING = true, DONT_CHECK_ALIASING = false };
 
 #ifdef DEBUG
 extern void
-CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, UnrootedScript script,
+CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script,
                     StaticBlockObject *maybeBlock, unsigned i);
 #endif
 
@@ -279,7 +279,7 @@ class AbstractFramePtr
 
     inline JSGenerator *maybeSuspendedGenerator(JSRuntime *rt) const;
 
-    inline UnrootedObject scopeChain() const;
+    inline RawObject scopeChain() const;
     inline CallObject &callObj() const;
     inline bool initFunctionScopeObjects(JSContext *cx);
     inline JSCompartment *compartment() const;
@@ -294,7 +294,7 @@ class AbstractFramePtr
     inline bool isFramePushedByExecute() const;
     inline bool isDebuggerFrame() const;
 
-    inline UnrootedScript script() const;
+    inline RawScript script() const;
     inline JSFunction *fun() const;
     inline JSFunction *maybeFun() const;
     inline JSFunction *callee() const;
@@ -486,13 +486,13 @@ class StackFrame
 
     /* Used for Invoke, Interpret, trace-jit LeaveTree, and method-jit stubs. */
     void initCallFrame(JSContext *cx, JSFunction &callee,
-                       UnrootedScript script, uint32_t nactual, StackFrame::Flags flags);
+                       RawScript script, uint32_t nactual, StackFrame::Flags flags);
 
     /* Used for getFixupFrame (for FixupArity). */
     void initFixupFrame(StackFrame *prev, StackFrame::Flags flags, void *ncode, unsigned nactual);
 
     /* Used for eval. */
-    void initExecuteFrame(UnrootedScript script, StackFrame *prevLink, AbstractFramePtr prev,
+    void initExecuteFrame(RawScript script, StackFrame *prevLink, AbstractFramePtr prev,
                           FrameRegs *regs, const Value &thisv, JSObject &scopeChain,
                           ExecuteType type);
 
@@ -761,11 +761,11 @@ class StackFrame
      *   the same VMFrame. Other calls force expansion of the inlined frames.
      */
 
-    UnrootedScript script() const {
+    RawScript script() const {
         return isFunctionFrame()
                ? isEvalFrame()
                  ? u.evalScript
-                 : (RawScript)fun()->nonLazyScript()
+                 : fun()->nonLazyScript()
                : exec.script;
     }
 
@@ -1343,7 +1343,7 @@ class FrameRegs
     }
 
     /* For stubs::CompileFunction, ContextStack: */
-    void prepareToRun(StackFrame &fp, UnrootedScript script) {
+    void prepareToRun(StackFrame &fp, RawScript script) {
         pc = script->code;
         sp = fp.slots() + script->nfixed;
         fp_ = &fp;
@@ -1351,7 +1351,7 @@ class FrameRegs
     }
 
     void setToEndOfScript() {
-        UnrootedScript script = fp()->script();
+        RawScript script = fp()->script();
         sp = fp()->base();
         pc = script->code + script->length - JSOP_STOP_LENGTH;
         JS_ASSERT(*pc == JSOP_STOP);
@@ -1771,8 +1771,8 @@ class ContextStack
         DONT_ALLOW_CROSS_COMPARTMENT = false,
         ALLOW_CROSS_COMPARTMENT = true
     };
-    inline UnrootedScript currentScript(jsbytecode **pc = NULL,
-                                        MaybeAllowCrossCompartment = DONT_ALLOW_CROSS_COMPARTMENT) const;
+    inline RawScript currentScript(jsbytecode **pc = NULL,
+                                   MaybeAllowCrossCompartment = DONT_ALLOW_CROSS_COMPARTMENT) const;
 
     /* Get the scope chain for the topmost scripted call on the stack. */
     inline HandleObject currentScriptedScopeChain() const;
@@ -1966,7 +1966,7 @@ class StackIter
 #endif
         return data_.state_ == SCRIPTED;
     }
-    UnrootedScript script() const {
+    RawScript script() const {
         JS_ASSERT(isScript());
         if (data_.state_ == SCRIPTED)
             return interpFrame()->script();

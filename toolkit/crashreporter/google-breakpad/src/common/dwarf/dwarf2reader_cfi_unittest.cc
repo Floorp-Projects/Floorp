@@ -2326,14 +2326,14 @@ struct ELFSectionHeader {
         alignment(1), entry_size(0) { }
   Label name;
   unsigned int type;
-  u_int64_t flags;
-  u_int64_t address;
+  uint64_t flags;
+  uint64_t address;
   Label file_offset;
   Label file_size;
   unsigned int link;
   unsigned int info;
-  u_int64_t alignment;
-  u_int64_t entry_size;
+  uint64_t alignment;
+  uint64_t entry_size;
 };
 
 void AppendSectionHeader(CFISection *table, const ELFSectionHeader &header) {

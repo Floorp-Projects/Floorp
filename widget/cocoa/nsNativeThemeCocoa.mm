@@ -2061,7 +2061,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
 
     case NS_THEME_BUTTON:
       if (IsDefaultButton(aFrame)) {
-        if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 10)) {
+        if (!IsDisabled(aFrame, eventState) && FrameIsInActiveWindow(aFrame) &&
+            !QueueAnimatedContentForRefresh(aFrame->GetContent(), 10)) {
           NS_WARNING("Unable to animate button!");
         }
         DrawButton(cgContext, kThemePushButton, macRect, true,

@@ -22,8 +22,7 @@ Object.defineProperties(tabs, {
         });
         return undefined;
     }
-    // Open in active window if new window was not required..
-
+    // Open in active window if new window was not required.
 
     let activeWindow = windows.activeWindow;
     let privateState = !!options.isPrivate;
@@ -35,7 +34,7 @@ Object.defineProperties(tabs, {
       // find a window in the state that we need
       let window = getWindow(privateState);
       if (window) {
-      	window.tabs.open(options);
+        window.tabs.open(options);
       }
       // open a window in the state that we need
       else {
@@ -52,9 +51,9 @@ Object.defineProperties(tabs, {
 
 function getWindow(privateState) {
   for each (let window in windows) {
-  	if (privateState === isPrivate(window)) {
-  	  return window;
-  	}
+    if (privateState === isPrivate(window)) {
+      return window;
+    }
   }
   return null;
 }

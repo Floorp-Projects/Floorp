@@ -78,7 +78,7 @@ interface nsIRILContactUpdateCallback : nsISupports
    * @param errorMsg
    *        Error message from RIL.
    * @param contactType
-   *        Type of the contact, i.e. ADN.
+   *        Type of the contact, i.e. ADN, FDN.
    */
   void onUpdated(in DOMString errorMsg,
                  in DOMString contactType);
@@ -108,7 +108,7 @@ interface nsIRilContext : nsISupports
   readonly attribute nsIDOMMozMobileConnectionInfo data;
 };
 
-[scriptable, uuid(c8336da3-2539-42ce-a63f-e5cbdfc0da36)]
+[scriptable, uuid(e5f8cfa9-fd23-4c8d-b06b-635fdbae8b90)]
 interface nsIRadioInterfaceLayer : nsISupports
 {
   /**
@@ -175,12 +175,15 @@ interface nsIRadioInterfaceLayer : nsISupports
    *
    * @param contactType One of the values below.
    *                    "ADN" (Abbreviated Dialling Numbers)
+   *                    "FDN" (Fixed Dialling Numbers)
    * @param contact     The contact will be updated.
    *                    If has 'recordId' property, updates corresponding record.
    *                    If not, finds a free record and updates it.
+   * @param pin2        PIN2 is required for updating FDN, otherwise should be "".
    * @param callback    A nsIRILContactUpdateCallback object.
    */
   void updateICCContact(in DOMString contactType,
                         in jsval contact,
+                        in DOMString pin2,
                         in nsIRILContactUpdateCallback callback);
 };

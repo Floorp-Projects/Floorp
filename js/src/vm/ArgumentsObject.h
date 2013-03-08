@@ -111,7 +111,7 @@ class ArgumentsObject : public JSObject
 
   public:
     static const uint32_t RESERVED_SLOTS = 3;
-    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4;
+    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4_BACKGROUND;
 
     /* Create an arguments object for a frame that is expecting them. */
     static ArgumentsObject *createExpected(JSContext *cx, AbstractFramePtr frame);

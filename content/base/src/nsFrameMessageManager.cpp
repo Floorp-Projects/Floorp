@@ -1084,7 +1084,7 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
         options.setNoScriptRval(true)
                .setFileAndLine(url.get(), 1)
                .setPrincipals(nsJSPrincipals::get(mPrincipal));
-        js::RootedObject empty(mCx, NULL);
+        JS::RootedObject empty(mCx, NULL);
         JSScript* script = JS::Compile(mCx, empty, options,
                                        dataString.get(), dataString.Length());
 

@@ -151,6 +151,11 @@ function startup(data, reasonCode) {
       if (path) path += '/';
       let fileURI = branch.getCharPref(name);
 
+      // On mobile, file URI has to end with a `/` otherwise, setSubstitution
+      // takes the parent folder instead.
+      if (fileURI[fileURI.length-1] !== '/')
+        fileURI += '/';
+
       // Maps the given file:// URI to a resource:// in order to avoid various
       // failure that happens with file:// URI and be close to production env
       let resourcesURI = ioService.newURI(fileURI, null, null);

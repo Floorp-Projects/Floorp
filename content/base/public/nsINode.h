@@ -363,7 +363,9 @@ public:
     /** nsHTMLMediaElement */
     eMEDIA               = 1 << 9,
     /** animation elements */
-    eANIMATION           = 1 << 10
+    eANIMATION           = 1 << 10,
+    /** filter elements that implement SVGFilterPrimitiveStandardAttributes */
+    eFILTER              = 1 << 11
   };
 
   /**

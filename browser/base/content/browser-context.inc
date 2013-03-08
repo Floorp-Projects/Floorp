@@ -66,6 +66,35 @@
                 label="&mediaUnmute.label;"
                 accesskey="&mediaUnmute.accesskey;"
                 oncommand="gContextMenu.mediaCommand('unmute');"/>
+      <menu id="context-media-playbackrate" label="&mediaPlaybackRate.label;" accesskey="&mediaPlaybackRate.accesskey;">
+        <menupopup>
+          <menuitem id="context-media-playbackrate-050x"
+                    label="&mediaPlaybackRate050x.label;"
+                    accesskey="&mediaPlaybackRate050x.accesskey;"
+                    type="radio"
+                    name="playbackrate"
+                    oncommand="gContextMenu.mediaCommand('playbackRate', 0.5);"/>
+          <menuitem id="context-media-playbackrate-100x"
+                    label="&mediaPlaybackRate100x.label;"
+                    accesskey="&mediaPlaybackRate100x.accesskey;"
+                    type="radio"
+                    name="playbackrate"
+                    checked="true"
+                    oncommand="gContextMenu.mediaCommand('playbackRate', 1.0);"/>
+          <menuitem id="context-media-playbackrate-150x"
+                    label="&mediaPlaybackRate150x.label;"
+                    accesskey="&mediaPlaybackRate150x.accesskey;"
+                    type="radio"
+                    name="playbackrate"
+                    oncommand="gContextMenu.mediaCommand('playbackRate', 1.5);"/>
+          <menuitem id="context-media-playbackrate-200x"
+                    label="&mediaPlaybackRate200x.label;"
+                    accesskey="&mediaPlaybackRate200x.accesskey;"
+                    type="radio"
+                    name="playbackrate"
+                    oncommand="gContextMenu.mediaCommand('playbackRate', 2.0);"/>
+        </menupopup>
+      </menu>
       <menuitem id="context-media-showcontrols"
                 label="&mediaShowControls.label;"
                 accesskey="&mediaShowControls.accesskey;"

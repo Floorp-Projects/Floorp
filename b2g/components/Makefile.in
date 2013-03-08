@@ -10,7 +10,6 @@ VPATH      = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = B2GComponents
-XPIDL_MODULE = B2GComponents
 
 XPIDLSRCS = \
         b2g.idl \

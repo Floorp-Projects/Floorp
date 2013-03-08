@@ -72,8 +72,6 @@ CompiledScriptMatches(JSCompartment *compartment, JSScript *script, JSScript *ta
 void
 js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
 {
-    AutoAssertNoGC nogc;
-
     if (!compartment->rt->workerThreadState)
         return;
 

@@ -125,7 +125,7 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *target_ob
     JS::CompileOptions options(cx);
     options.setPrincipals(nsJSPrincipals::get(principal))
            .setFileAndLine(uriStr, 1);
-    js::RootedObject target_obj_root(cx, target_obj);
+    JS::RootedObject target_obj_root(cx, target_obj);
     if (!charset.IsVoid()) {
         nsString script;
         rv = nsScriptLoader::ConvertToUTF16(nullptr, reinterpret_cast<const uint8_t*>(buf.get()), len,

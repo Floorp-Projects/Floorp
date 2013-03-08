@@ -29,12 +29,24 @@
 #include "js/Vector.h"
 #include "js/TemplateLib.h"
 
+struct JSAtom;
 struct JSCompartment;
+struct JSFunction;
+struct JSFlatString;
+struct JSLinearString;
 
 namespace js {
 
+class ArgumentsObject;
+class ArrayBufferObject;
+class BaseShape;
+class DebugScopeObject;
 class GCHelperThread;
+class GlobalObject;
+class PropertyName;
+class ScopeObject;
 class Shape;
+class UnownedBaseShape;
 struct SliceBudget;
 
 enum HeapState {
@@ -117,6 +129,26 @@ MapAllocToTraceKind(AllocKind kind)
     return map[kind];
 }
 
+template <typename T> struct MapTypeToTraceKind {};
+template <> struct MapTypeToTraceKind<JSObject>         { const static JSGCTraceKind kind = JSTRACE_OBJECT; };
+template <> struct MapTypeToTraceKind<JSFunction>       { const static JSGCTraceKind kind = JSTRACE_OBJECT; };
+template <> struct MapTypeToTraceKind<ArgumentsObject>  { const static JSGCTraceKind kind = JSTRACE_OBJECT; };
+template <> struct MapTypeToTraceKind<ArrayBufferObject>{ const static JSGCTraceKind kind = JSTRACE_OBJECT; };
+template <> struct MapTypeToTraceKind<DebugScopeObject> { const static JSGCTraceKind kind = JSTRACE_OBJECT; };
+template <> struct MapTypeToTraceKind<GlobalObject>     { const static JSGCTraceKind kind = JSTRACE_OBJECT; };
+template <> struct MapTypeToTraceKind<ScopeObject>      { const static JSGCTraceKind kind = JSTRACE_OBJECT; };
+template <> struct MapTypeToTraceKind<JSScript>         { const static JSGCTraceKind kind = JSTRACE_SCRIPT; };
+template <> struct MapTypeToTraceKind<Shape>            { const static JSGCTraceKind kind = JSTRACE_SHAPE; };
+template <> struct MapTypeToTraceKind<BaseShape>        { const static JSGCTraceKind kind = JSTRACE_BASE_SHAPE; };
+template <> struct MapTypeToTraceKind<UnownedBaseShape> { const static JSGCTraceKind kind = JSTRACE_BASE_SHAPE; };
+template <> struct MapTypeToTraceKind<types::TypeObject>{ const static JSGCTraceKind kind = JSTRACE_TYPE_OBJECT; };
+template <> struct MapTypeToTraceKind<JSAtom>           { const static JSGCTraceKind kind = JSTRACE_STRING; };
+template <> struct MapTypeToTraceKind<JSString>         { const static JSGCTraceKind kind = JSTRACE_STRING; };
+template <> struct MapTypeToTraceKind<JSFlatString>     { const static JSGCTraceKind kind = JSTRACE_STRING; };
+template <> struct MapTypeToTraceKind<JSLinearString>   { const static JSGCTraceKind kind = JSTRACE_STRING; };
+template <> struct MapTypeToTraceKind<PropertyName>     { const static JSGCTraceKind kind = JSTRACE_STRING; };
+template <> struct MapTypeToTraceKind<ion::IonCode>     { const static JSGCTraceKind kind = JSTRACE_IONCODE; };
+
 #ifdef JSGC_GENERATIONAL
 static inline bool
 IsNurseryAllocable(AllocKind kind)
@@ -139,8 +171,8 @@ IsNurseryAllocable(AllocKind kind)
         false,     /* FINALIZE_SHAPE */
         false,     /* FINALIZE_BASE_SHAPE */
         false,     /* FINALIZE_TYPE_OBJECT */
-        true,      /* FINALIZE_SHORT_STRING */
-        true,      /* FINALIZE_STRING */
+        false,     /* FINALIZE_SHORT_STRING */
+        false,     /* FINALIZE_STRING */
         false,     /* FINALIZE_EXTERNAL_STRING */
         false,     /* FINALIZE_IONCODE */
     };

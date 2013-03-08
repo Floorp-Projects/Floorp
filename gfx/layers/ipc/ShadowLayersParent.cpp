@@ -248,6 +248,7 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       layer->SetPostScale(common.postXScale(), common.postYScale());
       layer->SetIsFixedPosition(common.isFixedPosition());
       layer->SetFixedPositionAnchor(common.fixedPositionAnchor());
+      layer->SetFixedPositionMargins(common.fixedPositionMargin());
       if (PLayerParent* maskLayer = common.maskLayerParent()) {
         layer->SetMaskLayer(cast(maskLayer)->AsLayer());
       } else {

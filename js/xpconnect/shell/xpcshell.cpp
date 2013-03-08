@@ -473,7 +473,7 @@ Load(JSContext *cx, unsigned argc, jsval *vp)
         options.setUTF8(true)
                .setFileAndLine(filename.ptr(), 1)
                .setPrincipals(gJSPrincipals);
-        js::RootedObject rootedObj(cx, obj);
+        JS::RootedObject rootedObj(cx, obj);
         JSScript *script = JS::Compile(cx, rootedObj, options, file);
         fclose(file);
         if (!script)
@@ -1041,7 +1041,7 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
         options.setUTF8(true)
                .setFileAndLine(filename, 1)
                .setPrincipals(gJSPrincipals);
-        js::RootedObject rootedObj(cx, obj);
+        JS::RootedObject rootedObj(cx, obj);
         script = JS::Compile(cx, rootedObj, options, file);
         if (script && !compileOnly)
             (void)JS_ExecuteScript(cx, obj, script, &result);

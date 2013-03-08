@@ -65,7 +65,7 @@ var colors = {
   "-moz-dialog": ["rgb(232, 232, 232)"],
   "-moz-dialogtext": ["rgb(0, 0, 0)"],
   "-moz-dragtargetzone": ["rgb(199, 208, 218)", "rgb(198, 198, 198)", "rgb(180, 213, 255)", "rgb(250, 236, 115)", "rgb(255, 176, 139)", "rgb(255, 209, 129)", "rgb(194, 249, 144)", "rgb(232, 184, 255)"],
-  "-moz-hyperlinktext": ["rgb(0, 0, 238)"],
+  "-moz-hyperlinktext": ["rgb(11, 108, 218)"],
   "-moz-html-cellhighlight": ["rgb(212, 212, 212)"],
   "-moz-html-cellhighlighttext": ["rgb(0, 0, 0)"],
   "-moz-mac-chrome-active": ["rgb(150, 150, 150)", "rgb(167, 167, 167)", "rgb(178, 178, 178)"],

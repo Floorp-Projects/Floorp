@@ -2028,7 +2028,7 @@ jsdStackFrame::Eval (const nsAString &bytes, const nsACString &fileName,
 
     JSContext *cx = JSD_GetJSContext (mCx, mThreadState);
 
-    js::RootedValue jv(cx);
+    JS::RootedValue jv(cx);
     JSAutoRequest ar(cx);
 
     estate = JS_SaveExceptionState (cx);

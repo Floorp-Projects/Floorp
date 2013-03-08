@@ -148,7 +148,6 @@ class Assembler : public ValueAssembler
         vmframe(vmframe),
         pc(NULL)
     {
-        AutoAssertNoGC nogc;
         startLabel = label();
         if (vmframe)
             sps->setPushed(vmframe->script());
@@ -200,7 +199,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
         loadPtr(Address(obj, JSObject::offsetOfShape()), shape);
     }
 
-    Jump guardShape(RegisterID objReg, UnrootedShape shape) {
+    Jump guardShape(RegisterID objReg, RawShape shape) {
         return branchPtr(NotEqual, Address(objReg, JSObject::offsetOfShape()), ImmPtr(shape));
     }
 
@@ -984,7 +983,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
     }
 
     void loadObjProp(JSObject *obj, RegisterID objReg,
-                     js::UnrootedShape shape,
+                     js::RawShape shape,
                      RegisterID typeReg, RegisterID dataReg)
     {
         if (obj->isFixedSlot(shape->slot()))
@@ -1345,7 +1344,6 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
      */
     Jump getNewObject(JSContext *cx, RegisterID result, JSObject *templateObject)
     {
-        AutoAssertNoGC nogc;
         gc::AllocKind allocKind = templateObject->getAllocKind();
 
         JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);

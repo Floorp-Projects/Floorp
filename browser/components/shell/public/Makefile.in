@@ -11,7 +11,6 @@ VPATH   = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = shellservice
-XPIDL_MODULE  = shellservice
 
 XPIDLSRCS = nsIShellService.idl
 

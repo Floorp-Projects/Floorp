@@ -12,6 +12,7 @@
 #include "nsNodeUtils.h"
 #include "nsIFrame.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Preferences.h"
 
 class nsPresContext;
 
@@ -722,11 +723,23 @@ nsHtml5TreeBuilder::StartPlainTextViewSource(const nsAutoString& aTitle)
            nsHtml5ViewSourceUtils::NewBodyAttributes(),
            false);
 
-  StartPlainText();
+  StartPlainTextBody();
 }
 
 void
 nsHtml5TreeBuilder::StartPlainText()
+{
+  if (mozilla::Preferences::GetBool("plain_text.wrap_long_lines", true)) {
+    startTag(nsHtml5ElementName::ELT_LINK,
+             nsHtml5PlainTextUtils::NewLinkAttributes(),
+             false);
+  }
+
+  StartPlainTextBody();
+}
+
+void
+nsHtml5TreeBuilder::StartPlainTextBody()
 {
   startTag(nsHtml5ElementName::ELT_PRE,
            nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES,

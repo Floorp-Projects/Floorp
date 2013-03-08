@@ -535,7 +535,8 @@ class GeckoInputConnection
         outAttrs.imeOptions = EditorInfo.IME_ACTION_NONE;
         outAttrs.actionLabel = null;
 
-        if (mIMEState == IME_STATE_PASSWORD)
+        if (mIMEState == IME_STATE_PASSWORD ||
+            "password".equalsIgnoreCase(mIMETypeHint))
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_PASSWORD;
         else if (mIMEState == IME_STATE_PLUGIN)
             outAttrs.inputType = InputType.TYPE_NULL; // "send key events" mode
@@ -815,18 +816,17 @@ class GeckoInputConnection
     }
 
     @Override
-    public void notifyIMEEnabled(final int state, final String typeHint,
-                                 final String modeHint, final String actionHint) {
+    public void notifyIMEEnabled(int state, String typeHint, String modeHint, String actionHint) {
         // For some input type we will use a widget to display the ui, for those we must not
         // display the ime. We can display a widget for date and time types and, if the sdk version
-        // is greater than 11, for datetime/month/week as well.
+        // is 11 or greater, for datetime/month/week as well.
         if (typeHint != null &&
-            (typeHint.equals("date") ||
-             typeHint.equals("time") ||
-             (Build.VERSION.SDK_INT > 10 && (typeHint.equals("datetime") ||
-                                             typeHint.equals("month") ||
-                                             typeHint.equals("week") ||
-                                             typeHint.equals("datetime-local"))))) {
+            (typeHint.equalsIgnoreCase("date") ||
+             typeHint.equalsIgnoreCase("time") ||
+             (Build.VERSION.SDK_INT >= 11 && (typeHint.equalsIgnoreCase("datetime") ||
+                                              typeHint.equalsIgnoreCase("month") ||
+                                              typeHint.equalsIgnoreCase("week") ||
+                                              typeHint.equalsIgnoreCase("datetime-local"))))) {
             mIMEState = IME_STATE_DISABLED;
             return;
         }

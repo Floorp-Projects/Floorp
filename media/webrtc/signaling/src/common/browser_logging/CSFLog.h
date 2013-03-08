@@ -33,6 +33,8 @@ typedef enum{
 #define CSFLogErrorV(tag , format, va_list_arg) CSFLogV(CSF_LOG_ERROR, __FILE__ , __LINE__ , tag , format , va_list_arg )
 #define CSFLogWarn(tag , format, ...) CSFLog( CSF_LOG_WARNING, __FILE__ , __LINE__ , tag , format , ## __VA_ARGS__ )
 #define CSFLogWarnV(tag , format, va_list_arg) CSFLogV(CSF_LOG_WARNING, __FILE__ , __LINE__ , tag , format , va_list_arg )
+#define CSFLogNotice(tag , format, ...) CSFLog( CSF_LOG_NOTICE, __FILE__ , __LINE__ , tag , format , ## __VA_ARGS__ )
+#define CSFLogNoticeV(tag , format, va_list_arg) CSFLogV(CSF_LOG_NOTICE, __FILE__ , __LINE__ , tag , format , va_list_arg )
 #define CSFLogInfo(tag , format, ...) CSFLog( CSF_LOG_INFO, __FILE__ , __LINE__ , tag , format , ## __VA_ARGS__ )
 #define CSFLogInfoV(tag , format, va_list_arg) CSFLogV(CSF_LOG_INFO, __FILE__ , __LINE__ , tag , format , va_list_arg )
 #define CSFLogDebug(tag , format, ...) CSFLog(CSF_LOG_DEBUG, __FILE__ , __LINE__ , tag , format , ## __VA_ARGS__ )

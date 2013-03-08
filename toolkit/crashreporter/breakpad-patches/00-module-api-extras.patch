@@ -1,15 +1,20 @@
 # HG changeset patch
 # User Ted Mielczarek <ted@mielczarek.org>
 # Date 1352220493 18000
-# Node ID a38d670da97e338234375756313b2f47650e01fb
-# Parent  201b7c6793586b6b7cfcaa02f4e29700c4c12ef1
+# Node ID c3b1109dd392c16a9fe4e85da693010966dbbf0b
+# Parent  03db269a2868503cca9e80f62ce676aabbf967fd
 Add APIs for querying Module data
 R=glandium at https://breakpad.appspot.com/511003/
 
 diff --git a/src/common/module.cc b/src/common/module.cc
 --- a/src/common/module.cc
 +++ b/src/common/module.cc
-@@ -63,7 +63,7 @@
+@@ -58,17 +58,17 @@
+ 
+ Module::~Module() {
+   for (FileByNameMap::iterator it = files_.begin(); it != files_.end(); ++it)
+     delete it->second;
+   for (FunctionSet::iterator it = functions_.begin();
         it != functions_.end(); ++it) {
      delete *it;
    }
@@ -18,7 +23,17 @@ diff --git a/src/common/module.cc b/src/common/module.cc
         it != stack_frame_entries_.end(); ++it) {
      delete *it;
    }
-@@ -93,8 +93,14 @@
+   for (ExternSet::iterator it = externs_.begin(); it != externs_.end(); ++it)
+     delete *it;
+ }
+ 
+ void Module::SetLoadAddress(Address address) {
+@@ -88,39 +88,84 @@
+ }
+ 
+ void Module::AddFunctions(vector<Function *>::iterator begin,
+                           vector<Function *>::iterator end) {
+   for (vector<Function *>::iterator it = begin; it != end; ++it)
      AddFunction(*it);
  }
  
@@ -35,7 +50,16 @@ diff --git a/src/common/module.cc b/src/common/module.cc
  }
  
  void Module::AddExtern(Extern *ext) {
-@@ -111,11 +117,50 @@
+   std::pair<ExternSet::iterator,bool> ret = externs_.insert(ext);
+   if (!ret.second) {
+     // Free the duplicate that was not inserted because this Module
+     // now owns it.
+     delete ext;
+   }
+ }
+ 
+ void Module::GetFunctions(vector<Function *> *vec,
+                           vector<Function *>::iterator i) {
    vec->insert(i, functions_.begin(), functions_.end());
  }
  
@@ -86,7 +110,17 @@ diff --git a/src/common/module.cc b/src/common/module.cc
  Module::File *Module::FindFile(const string &name) {
    // A tricky bit here.  The key of each map entry needs to be a
    // pointer to the entry's File's name string.  This means that we
-@@ -155,8 +200,25 @@
+   // can't do the initial lookup with any operation that would create
+   // an empty entry for us if the name isn't found (like, say,
+   // operator[] or insert do), because such a created entry's key will
+   // be a pointer the string passed as our argument.  Since the key of
+   // a map's value type is const, we can't fix it up once we've
+@@ -150,18 +195,35 @@
+ }
+ 
+ void Module::GetFiles(vector<File *> *vec) {
+   vec->clear();
+   for (FileByNameMap::iterator it = files_.begin(); it != files_.end(); ++it)
      vec->push_back(it->second);
  }
  
@@ -114,19 +148,39 @@ diff --git a/src/common/module.cc b/src/common/module.cc
  }
  
  void Module::AssignSourceIds() {
-@@ -261,7 +323,7 @@
+   // First, give every source file an id of -1.
+   for (FileByNameMap::iterator file_it = files_.begin();
+        file_it != files_.end(); ++file_it) {
+     file_it->second->source_id = -1;
+   }
+@@ -256,17 +318,17 @@
+       stream << "PUBLIC " << hex
+              << (ext->address - load_address_) << " 0 "
+              << ext->name << dec << endl;
+     }
+   }
  
-   if (cfi) {
+   if (symbol_data != NO_CFI) {
      // Write out 'STACK CFI INIT' and 'STACK CFI' records.
 -    vector<StackFrameEntry *>::const_iterator frame_it;
 +    StackFrameEntrySet::const_iterator frame_it;
      for (frame_it = stack_frame_entries_.begin();
           frame_it != stack_frame_entries_.end(); ++frame_it) {
        StackFrameEntry *entry = *frame_it;
+       stream << "STACK CFI INIT " << hex
+              << (entry->address - load_address_) << " "
+              << entry->size << " " << dec;
+       if (!stream.good()
+           || !WriteRuleMap(entry->initial_rules, stream))
 diff --git a/src/common/module.h b/src/common/module.h
 --- a/src/common/module.h
 +++ b/src/common/module.h
-@@ -168,6 +168,13 @@
+@@ -164,16 +164,23 @@
+ 
+   struct ExternCompare {
+     bool operator() (const Extern *lhs,
+                      const Extern *rhs) const {
+       return lhs->address < rhs->address;
      }
    };
  
@@ -140,7 +194,17 @@ diff --git a/src/common/module.h b/src/common/module.h
    // Create a new module with the given name, operating system,
    // architecture, and ID string.
    Module(const string &name, const string &os, const string &architecture,
-@@ -227,6 +234,10 @@
+          const string &id);
+   ~Module();
+ 
+   // Set the module's load address to LOAD_ADDRESS; addresses given
+   // for functions and lines will be written to the Breakpad symbol
+@@ -223,37 +230,49 @@
+ 
+   // Insert pointers to the functions added to this module at I in
+   // VEC. The pointed-to Functions are still owned by this module.
+   // (Since this is effectively a copy of the function list, this is
+   // mostly useful for testing; other uses should probably get a more
    // appropriate interface.)
    void GetFunctions(vector<Function *> *vec, vector<Function *>::iterator i);
  
@@ -151,7 +215,7 @@ diff --git a/src/common/module.h b/src/common/module.h
    // Insert pointers to the externs added to this module at I in
    // VEC. The pointed-to Externs are still owned by this module.
    // (Since this is effectively a copy of the extern list, this is
-@@ -234,6 +245,10 @@
+   // mostly useful for testing; other uses should probably get a more
    // appropriate interface.)
    void GetExterns(vector<Extern *> *vec, vector<Extern *>::iterator i);
  
@@ -162,7 +226,14 @@ diff --git a/src/common/module.h b/src/common/module.h
    // Clear VEC and fill it with pointers to the Files added to this
    // module, sorted by name. The pointed-to Files are still owned by
    // this module. (Since this is effectively a copy of the file list,
-@@ -248,6 +263,10 @@
+   // this is mostly useful for testing; other uses should probably get
+   // a more appropriate interface.)
+   void GetFiles(vector<File *> *vec);
+ 
+   // Clear VEC and fill it with pointers to the StackFrameEntry
+   // objects that have been added to this module. (Since this is
+   // effectively a copy of the stack frame entry list, this is mostly
+   // useful for testing; other uses should probably get
    // a more appropriate interface.)
    void GetStackFrameEntries(vector<StackFrameEntry *> *vec);
  
@@ -173,7 +244,17 @@ diff --git a/src/common/module.h b/src/common/module.h
    // Find those files in this module that are actually referred to by
    // functions' line number data, and assign them source id numbers.
    // Set the source id numbers for all other files --- unused by the
-@@ -301,6 +320,9 @@
+   // source line data --- to -1.  We do this before writing out the
+   // symbol file, at which point we omit any unused files.
+   void AssignSourceIds();
+ 
+   // Call AssignSourceIds, and write this module to STREAM in the
+@@ -299,25 +318,28 @@
+   typedef map<const string *, File *, CompareStringPtrs> FileByNameMap;
+ 
+   // A set containing Function structures, sorted by address.
+   typedef set<Function *, FunctionCompare> FunctionSet;
+ 
    // A set containing Extern structures, sorted by address.
    typedef set<Extern *, ExternCompare> ExternSet;
  
@@ -183,7 +264,8 @@ diff --git a/src/common/module.h b/src/common/module.h
    // The module owns all the files and functions that have been added
    // to it; destroying the module frees the Files and Functions these
    // point to.
-@@ -309,7 +331,7 @@
+   FileByNameMap files_;    // This module's source files.
+   FunctionSet functions_;  // This module's functions.
  
    // The module owns all the call frame info entries that have been
    // added to it.
@@ -192,11 +274,21 @@ diff --git a/src/common/module.h b/src/common/module.h
  
    // The module owns all the externs that have been added to it;
    // destroying the module frees the Externs these point to.
+   ExternSet externs_;
+ };
+ 
+ }  // namespace google_breakpad
+ 
 diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
 --- a/src/common/module_unittest.cc
 +++ b/src/common/module_unittest.cc
-@@ -334,11 +334,6 @@
-   m.Write(s, true);
+@@ -329,63 +329,63 @@
+   entry3->rule_changes[0x36682fad3763ffffULL][".cfa"] =
+     "I think I know";
+   m.AddStackFrameEntry(entry3);
+ 
+   // Check that Write writes STACK CFI records properly.
+   m.Write(s, ALL_SYMBOL_DATA);
    string contents = s.str();
    EXPECT_STREQ("MODULE os-name architecture id-string name with spaces\n"
 -               "STACK CFI INIT ddb5f41285aa7757 1486493370dc5073 \n"
@@ -207,7 +299,7 @@ diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
                 "STACK CFI INIT 5e8d0db0a7075c6c 1c7edb12a7aea229"
                 " .cfa: Whose woods are these\n"
                 "STACK CFI 36682fad3763ffff"
-@@ -346,7 +341,12 @@
+                " .cfa: I think I know"
                 " stromboli: his house is in\n"
                 "STACK CFI 47ceb0f63c269d7f"
                 " calzone: the village though"
@@ -221,7 +313,7 @@ diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
                 contents.c_str());
  
    // Check that GetStackFrameEntries works.
-@@ -354,10 +354,18 @@
+   vector<Module::StackFrameEntry *> entries;
    m.GetStackFrameEntries(&entries);
    ASSERT_EQ(3U, entries.size());
    // Check first entry.
@@ -244,7 +336,11 @@ diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
    // Check second entry.
    EXPECT_EQ(0x8064f3af5e067e38ULL, entries[1]->address);
    EXPECT_EQ(0x0de2a5ee55509407ULL, entries[1]->size);
-@@ -369,18 +377,10 @@
+   ASSERT_EQ(3U, entries[1]->initial_rules.size());
+   Module::RuleMap entry2_initial;
+   entry2_initial[".cfa"] = "I think that I shall never see";
+   entry2_initial["stromboli"] = "a poem lovely as a tree";
+   entry2_initial["cannoli"] = "a tree whose hungry mouth is prest";
    EXPECT_THAT(entries[1]->initial_rules, ContainerEq(entry2_initial));
    ASSERT_EQ(0U, entries[1]->rule_changes.size());
    // Check third entry.
@@ -267,7 +363,17 @@ diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
  }
  
  TEST(Construct, UniqueFiles) {
-@@ -488,3 +488,150 @@
+   Module m(MODULE_NAME, MODULE_OS, MODULE_ARCH, MODULE_ID);
+   Module::File *file1 = m.FindFile("foo");
+   Module::File *file2 = m.FindFile(string("bar"));
+   Module::File *file3 = m.FindFile(string("foo"));
+   Module::File *file4 = m.FindFile("bar");
+@@ -483,8 +483,155 @@
+   m.Write(s, ALL_SYMBOL_DATA);
+   string contents = s.str();
+ 
+   EXPECT_STREQ("MODULE " MODULE_OS " " MODULE_ARCH " "
+                MODULE_ID " " MODULE_NAME "\n"
                 "PUBLIC ffff 0 _xyz\n",
                 contents.c_str());
  }

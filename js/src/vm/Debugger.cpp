@@ -1243,10 +1243,9 @@ Debugger::onSingleStep(JSContext *cx, MutableHandleValue vp)
      * be done with unit tests.
      */
     {
-        AutoAssertNoGC nogc;
         uint32_t stepperCount = 0;
-        UnrootedScript trappingScript = iter.script();
-        Unrooted<GlobalObject*> global = cx->global();
+        RawScript trappingScript = iter.script();
+        GlobalObject *global = cx->global();
         if (GlobalObject::DebuggerVector *debuggers = global->getDebuggers()) {
             for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
                 Debugger *dbg = *p;
@@ -3627,7 +3626,6 @@ Class DebuggerArguments_class = {
 static JSBool
 DebuggerArguments_getArg(JSContext *cx, unsigned argc, Value *vp)
 {
-    AssertCanGC();
     CallArgs args = CallArgsFromVp(argc, vp);
     int32_t i = args.callee().toFunction()->getExtendedSlot(0).toInt32();
 
@@ -3775,8 +3773,7 @@ static JSBool
 DebuggerFrame_getOffset(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_FRAME(cx, argc, vp, "get offset", args, thisobj, iter);
-    AutoAssertNoGC nogc;
-    UnrootedScript script = iter.script();
+    RawScript script = iter.script();
     iter.updatePcQuadratic();
     jsbytecode *pc = iter.pc();
     JS_ASSERT(script->code <= pc);
@@ -4084,7 +4081,6 @@ Class DebuggerObject_class = {
 static JSObject *
 DebuggerObject_checkThis(JSContext *cx, const CallArgs &args, const char *fnname)
 {
-    AssertCanGC();
     if (!args.thisv().isObject()) {
         ReportObjectRequired(cx);
         return NULL;
@@ -4129,7 +4125,6 @@ DebuggerObject_checkThis(JSContext *cx, const CallArgs &args, const char *fnname
 static JSBool
 DebuggerObject_construct(JSContext *cx, unsigned argc, Value *vp)
 {
-    AssertCanGC();
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_CONSTRUCTOR, "Debugger.Object");
     return false;
 }
@@ -4137,7 +4132,6 @@ DebuggerObject_construct(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 DebuggerObject_getProto(JSContext *cx, unsigned argc, Value *vp)
 {
-    AssertCanGC();
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get proto", args, dbg, refobj);
     RootedObject proto(cx);
     {
@@ -4155,7 +4149,6 @@ DebuggerObject_getProto(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 DebuggerObject_getClass(JSContext *cx, unsigned argc, Value *vp)
 {
-    AssertCanGC();
     THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get class", args, refobj);
     const char *s = refobj->getClass()->name;
     JSAtom *str = Atomize(cx, s, strlen(s));
@@ -4176,7 +4169,6 @@ DebuggerObject_getCallable(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 DebuggerObject_getName(JSContext *cx, unsigned argc, Value *vp)
 {
-    AssertCanGC();
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get name", args, dbg, obj);
     if (!obj->isFunction()) {
         args.rval().setUndefined();
@@ -4199,7 +4191,6 @@ DebuggerObject_getName(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 DebuggerObject_getDisplayName(JSContext *cx, unsigned argc, Value *vp)
 {
-    AssertCanGC();
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get display name", args, dbg, obj);
     if (!obj->isFunction()) {
         args.rval().setUndefined();
@@ -4222,7 +4213,6 @@ DebuggerObject_getDisplayName(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
 {
-    AssertCanGC();
     THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get parameterNames", args, obj);
     if (!obj->isFunction()) {
         args.rval().setUndefined();
@@ -4264,7 +4254,6 @@ DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 DebuggerObject_getScript(JSContext *cx, unsigned argc, Value *vp)
 {
-    AssertCanGC();
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get script", args, dbg, obj);
 
     if (!obj->isFunction()) {
@@ -4290,7 +4279,6 @@ DebuggerObject_getScript(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 DebuggerObject_getEnvironment(JSContext *cx, unsigned argc, Value *vp)
 {
-    AssertCanGC();
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get environment", args, dbg, obj);
 
     /* Don't bother switching compartments just to check obj's type and get its env. */
@@ -4326,7 +4314,6 @@ DebuggerObject_getGlobal(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 DebuggerObject_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
 {
-    AssertCanGC();
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "getOwnPropertyDescriptor", args, dbg, obj);
 
     RootedId id(cx);
@@ -4373,7 +4360,6 @@ DebuggerObject_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 DebuggerObject_getOwnPropertyNames(JSContext *cx, unsigned argc, Value *vp)
 {
-    AssertCanGC();
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "getOwnPropertyNames", args, dbg, obj);
 
     AutoIdVector keys(cx);

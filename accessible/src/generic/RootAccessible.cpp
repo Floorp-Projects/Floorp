@@ -197,10 +197,6 @@ RootAccessible::AddEventListeners()
     }
   }
 
-  if (!mCaretAccessible) {
-    mCaretAccessible = new nsCaretAccessible(this);
-  }
-
   return DocAccessible::AddEventListeners();
 }
 
@@ -220,23 +216,11 @@ RootAccessible::RemoveEventListeners()
   // Do this before removing clearing caret accessible, so that it can use
   // shutdown the caret accessible's selection listener
   DocAccessible::RemoveEventListeners();
-
-  if (mCaretAccessible) {
-    mCaretAccessible->Shutdown();
-    mCaretAccessible = nullptr;
-  }
-
   return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // public
-
-nsCaretAccessible*
-RootAccessible::GetCaretAccessible()
-{
-  return mCaretAccessible;
-}
 
 void
 RootAccessible::DocumentActivated(DocAccessible* aDocument)

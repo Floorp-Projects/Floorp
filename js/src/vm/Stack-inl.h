@@ -76,7 +76,6 @@ StackFrame::compartment() const
 inline mjit::JITScript *
 StackFrame::jit()
 {
-    AutoAssertNoGC nogc;
     return script()->getJIT(isConstructing(), script()->zone()->compileBarriers());
 }
 #endif
@@ -133,7 +132,7 @@ StackFrame::resetInlinePrev(StackFrame *prevfp, jsbytecode *prevpc)
 
 inline void
 StackFrame::initCallFrame(JSContext *cx, JSFunction &callee,
-                          UnrootedScript script, uint32_t nactual, StackFrame::Flags flagsArg)
+                          RawScript script, uint32_t nactual, StackFrame::Flags flagsArg)
 {
     JS_ASSERT((flagsArg & ~(CONSTRUCTING |
                             LOWERED_CALL_APPLY |
@@ -193,7 +192,6 @@ StackFrame::jitHeavyweightFunctionPrologue(JSContext *cx)
 inline void
 StackFrame::initVarsToUndefined()
 {
-    AutoAssertNoGC nogc;
     SetValueRangeToUndefined(slots(), script()->nfixed);
 }
 
@@ -209,7 +207,6 @@ StackFrame::createRestParameter(JSContext *cx)
 inline Value &
 StackFrame::unaliasedVar(unsigned i, MaybeCheckAliasing checkAliasing)
 {
-    AutoAssertNoGC nogc;
     JS_ASSERT_IF(checkAliasing, !script()->varIsAliased(i));
     JS_ASSERT(i < script()->nfixed);
     return slots()[i];
@@ -366,12 +363,6 @@ STATIC_POSTCONDITION(!return || ubound(from) >= nvals)
 JS_ALWAYS_INLINE bool
 StackSpace::ensureSpace(JSContext *cx, MaybeReportError report, Value *from, ptrdiff_t nvals) const
 {
-    mozilla::Maybe<AutoAssertNoGC> maybeNoGC;
-    if (report)
-        AssertCanGC();
-    else
-        maybeNoGC.construct();
-
     assertInvariants();
     JS_ASSERT(from >= firstUnused());
 #ifdef XP_WIN
@@ -385,7 +376,6 @@ StackSpace::ensureSpace(JSContext *cx, MaybeReportError report, Value *from, ptr
 inline Value *
 StackSpace::getStackLimit(JSContext *cx, MaybeReportError report)
 {
-    AssertCanGC();
     FrameRegs &regs = cx->regs();
     unsigned nvals = regs.fp()->script()->nslots + STACK_JIT_EXTRA;
     return ensureSpace(cx, report, regs.sp, nvals)
@@ -399,12 +389,6 @@ JS_ALWAYS_INLINE StackFrame *
 ContextStack::getCallFrame(JSContext *cx, MaybeReportError report, const CallArgs &args,
                            JSFunction *fun, HandleScript script, StackFrame::Flags *flags) const
 {
-    mozilla::Maybe<AutoAssertNoGC> maybeNoGC;
-    if (report)
-        AssertCanGC();
-    else
-        maybeNoGC.construct();
-
     JS_ASSERT(fun->nonLazyScript() == script);
     unsigned nformal = fun->nargs;
 
@@ -446,12 +430,6 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
                               HandleFunction callee, HandleScript script,
                               InitialFrameFlags initial, MaybeReportError report)
 {
-    mozilla::Maybe<AutoAssertNoGC> maybeNoGC;
-    if (report)
-        AssertCanGC();
-    else
-        maybeNoGC.construct();
-
     JS_ASSERT(onTop());
     JS_ASSERT(regs.sp == args.end());
     /* Cannot assert callee == args.callee() since this is called from LeaveTree. */
@@ -478,7 +456,6 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
                               HandleFunction callee, HandleScript script,
                               InitialFrameFlags initial, Value **stackLimit)
 {
-    AssertCanGC();
     if (!pushInlineFrame(cx, regs, args, callee, script, initial))
         return false;
     *stackLimit = space().conservativeEnd_;
@@ -490,7 +467,6 @@ ContextStack::getFixupFrame(JSContext *cx, MaybeReportError report,
                             const CallArgs &args, JSFunction *fun, HandleScript script,
                             void *ncode, InitialFrameFlags initial, Value **stackLimit)
 {
-    AssertCanGC();
     JS_ASSERT(onTop());
     JS_ASSERT(fun->nonLazyScript() == args.callee().toFunction()->nonLazyScript());
     JS_ASSERT(fun->nonLazyScript() == script);
@@ -530,12 +506,10 @@ ContextStack::popFrameAfterOverflow()
     regs.popFrame(fp->actuals() + fp->numActualArgs());
 }
 
-inline UnrootedScript
+inline RawScript
 ContextStack::currentScript(jsbytecode **ppc,
                             MaybeAllowCrossCompartment allowCrossCompartment) const
 {
-    AutoAssertNoGC nogc;
-
     if (ppc)
         *ppc = NULL;
 
@@ -550,7 +524,7 @@ ContextStack::currentScript(jsbytecode **ppc,
         JSScript *script = NULL;
         ion::GetPcScript(cx_, &script, ppc);
         if (!allowCrossCompartment && script->compartment() != cx_->compartment)
-            return UnrootedScript(NULL);
+            return NULL;
         return script;
     }
 #endif
@@ -561,18 +535,18 @@ ContextStack::currentScript(jsbytecode **ppc,
         mjit::JITChunk *chunk = fp->jit()->chunk(regs.pc);
         JS_ASSERT(inlined->inlineIndex < chunk->nInlineFrames);
         mjit::InlineFrame *frame = &chunk->inlineFrames()[inlined->inlineIndex];
-        UnrootedScript script = frame->fun->nonLazyScript();
+        RawScript script = frame->fun->nonLazyScript();
         if (!allowCrossCompartment && script->compartment() != cx_->compartment)
-            return UnrootedScript(NULL);
+            return NULL;
         if (ppc)
             *ppc = script->code + inlined->pcOffset;
         return script;
     }
 #endif
 
-    UnrootedScript script = fp->script();
+    RawScript script = fp->script();
     if (!allowCrossCompartment && script->compartment() != cx_->compartment)
-        return UnrootedScript(NULL);
+        return NULL;
 
     if (ppc)
         *ppc = fp->pcQuadratic(*this);
@@ -640,7 +614,7 @@ AbstractFramePtr::setReturnValue(const Value &rval) const
 #endif
 }
 
-inline UnrootedObject
+inline RawObject
 AbstractFramePtr::scopeChain() const
 {
     if (isStackFrame())
@@ -854,7 +828,7 @@ AbstractFramePtr::isDebuggerFrame() const
 #endif
     return false;
 }
-inline UnrootedScript
+inline RawScript
 AbstractFramePtr::script() const
 {
     if (isStackFrame())

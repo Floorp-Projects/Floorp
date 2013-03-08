@@ -70,7 +70,7 @@ BEGIN_TEST(testChromeBuffer)
             trusted_fun = JS_GetFunctionObject(fun);
         }
 
-        js::RootedValue v(cx, JS::ObjectValue(*trusted_fun));
+        JS::RootedValue v(cx, JS::ObjectValue(*trusted_fun));
         CHECK(JS_WrapValue(cx, v.address()));
 
         const char *paramName = "trusted";
@@ -82,7 +82,7 @@ BEGIN_TEST(testChromeBuffer)
         CHECK(fun = JS_CompileFunction(cx, global, "untrusted", 1, &paramName,
                                        bytes, strlen(bytes), "", 0));
 
-        js::RootedValue rval(cx);
+        JS::RootedValue rval(cx);
         CHECK(JS_CallFunction(cx, NULL, fun, 1, v.address(), rval.address()));
         CHECK(JSVAL_TO_INT(rval) == 100);
     }
@@ -107,7 +107,7 @@ BEGIN_TEST(testChromeBuffer)
             trusted_fun = JS_GetFunctionObject(fun);
         }
 
-        js::RootedValue v(cx, JS::ObjectValue(*trusted_fun));
+        JS::RootedValue v(cx, JS::ObjectValue(*trusted_fun));
         CHECK(JS_WrapValue(cx, v.address()));
 
         const char *paramName = "trusted";
@@ -119,7 +119,7 @@ BEGIN_TEST(testChromeBuffer)
         CHECK(fun = JS_CompileFunction(cx, global, "untrusted", 1, &paramName,
                                        bytes, strlen(bytes), "", 0));
 
-        js::RootedValue rval(cx);
+        JS::RootedValue rval(cx);
         CHECK(JS_CallFunction(cx, NULL, fun, 1, v.address(), rval.address()));
         JSBool match;
         CHECK(JS_StringEqualsAscii(cx, JSVAL_TO_STRING(rval), "From trusted: InternalError: too much recursion", &match));
@@ -141,8 +141,8 @@ BEGIN_TEST(testChromeBuffer)
             trusted_fun = JS_GetFunctionObject(fun);
         }
 
-        js::RootedFunction fun(cx, JS_NewFunction(cx, CallTrusted, 0, 0, global, "callTrusted"));
-        js::RootedObject callTrusted(cx, JS_GetFunctionObject(fun));
+        JS::RootedFunction fun(cx, JS_NewFunction(cx, CallTrusted, 0, 0, global, "callTrusted"));
+        JS::RootedObject callTrusted(cx, JS_GetFunctionObject(fun));
 
         const char *paramName = "f";
         const char *bytes = "try {                                      "
@@ -153,8 +153,8 @@ BEGIN_TEST(testChromeBuffer)
         CHECK(fun = JS_CompileFunction(cx, global, "untrusted", 1, &paramName,
                                        bytes, strlen(bytes), "", 0));
 
-        js::RootedValue arg(cx, JS::ObjectValue(*callTrusted));
-        js::RootedValue rval(cx);
+        JS::RootedValue arg(cx, JS::ObjectValue(*callTrusted));
+        JS::RootedValue rval(cx);
         CHECK(JS_CallFunction(cx, NULL, fun, 1, arg.address(), rval.address()));
         CHECK(JSVAL_TO_INT(rval) == 42);
     }

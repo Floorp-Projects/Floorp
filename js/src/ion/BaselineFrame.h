@@ -90,7 +90,7 @@ class BaselineFrame
     inline uint32_t *addressOfFrameSize() {
         return &frameSize_;
     }
-    UnrootedObject scopeChain() const {
+    JSObject *scopeChain() const {
         return scopeChain_;
     }
     void setScopeChain(JSObject *scopeChain) {
@@ -111,7 +111,7 @@ class BaselineFrame
         uint8_t *pointer = (uint8_t *)this + Size() + offsetOfCalleeToken();
         return *(CalleeToken *)pointer;
     }
-    UnrootedScript script() const {
+    JSScript *script() const {
         if (isEvalFrame())
             return evalScript();
         return ScriptFromCalleeToken(calleeToken());
@@ -122,7 +122,7 @@ class BaselineFrame
     JSFunction *maybeFun() const {
         return isFunctionFrame() ? fun() : NULL;
     }
-    UnrootedFunction callee() const {
+    JSFunction *callee() const {
         return CalleeTokenToFunction(calleeToken());
     }
     Value calleev() const {

@@ -99,13 +99,13 @@ StackFrameARM* StackwalkerARM::GetCallerByCFIFrameInfo(
   };
 
   // Populate a dictionary with the valid register values in last_frame.
-  CFIFrameInfo::RegisterValueMap<u_int32_t> callee_registers;
+  CFIFrameInfo::RegisterValueMap<uint32_t> callee_registers;
   for (int i = 0; register_names[i]; i++)
     if (last_frame->context_validity & StackFrameARM::RegisterValidFlag(i))
       callee_registers.set(register_names[i], last_frame->context.iregs[i]);
 
   // Use the STACK CFI data to recover the caller's register values.
-  CFIFrameInfo::RegisterValueMap<u_int32_t> caller_registers;
+  CFIFrameInfo::RegisterValueMap<uint32_t> caller_registers;
   if (!cfi_frame_info->FindCallerRegs(callee_registers, *memory_,
                                       &caller_registers))
     return NULL;
@@ -114,7 +114,7 @@ StackFrameARM* StackwalkerARM::GetCallerByCFIFrameInfo(
   scoped_ptr<StackFrameARM> frame(new StackFrameARM());
   for (int i = 0; register_names[i]; i++) {
     bool found = false;
-    u_int32_t v = caller_registers.get(&found, register_names[i]);
+    uint32_t v = caller_registers.get(&found, register_names[i]);
     if (found) {
       // We recovered the value of this register; fill the context with the
       // value from caller_registers.
@@ -133,7 +133,7 @@ StackFrameARM* StackwalkerARM::GetCallerByCFIFrameInfo(
   // If the CFI doesn't recover the PC explicitly, then use .ra.
   if (!(frame->context_validity & StackFrameARM::CONTEXT_VALID_PC)) {
     bool found = false;
-    u_int32_t v = caller_registers.get(&found, ustr__ZDra());
+    uint32_t v = caller_registers.get(&found, ustr__ZDra());
     if (found) {
       if (fp_register_ == -1) {
         frame->context_validity |= StackFrameARM::CONTEXT_VALID_PC;
@@ -152,7 +152,7 @@ StackFrameARM* StackwalkerARM::GetCallerByCFIFrameInfo(
   // If the CFI doesn't recover the SP explicitly, then use .cfa.
   if (!(frame->context_validity & StackFrameARM::CONTEXT_VALID_SP)) {
     bool found = false;
-    u_int32_t v = caller_registers.get(&found, ustr__ZDcfa());
+    uint32_t v = caller_registers.get(&found, ustr__ZDcfa());
     if (found) {
       frame->context_validity |= StackFrameARM::CONTEXT_VALID_SP;
       frame->context.iregs[MD_CONTEXT_ARM_REG_SP] = v;
@@ -172,8 +172,8 @@ StackFrameARM* StackwalkerARM::GetCallerByCFIFrameInfo(
 StackFrameARM* StackwalkerARM::GetCallerByStackScan(
     const vector<StackFrame*> &frames) {
   StackFrameARM* last_frame = static_cast<StackFrameARM*>(frames.back());
-  u_int32_t last_sp = last_frame->context.iregs[MD_CONTEXT_ARM_REG_SP];
-  u_int32_t caller_sp, caller_pc;
+  uint32_t last_sp = last_frame->context.iregs[MD_CONTEXT_ARM_REG_SP];
+  uint32_t caller_sp, caller_pc;
 
   // When searching for the caller of the context frame,
   // allow the scanner to look farther down the stack.
@@ -215,23 +215,23 @@ StackFrameARM* StackwalkerARM::GetCallerByFramePointer(
     return NULL;
   }
 
-  u_int32_t last_fp = last_frame->context.iregs[fp_register_];
+  uint32_t last_fp = last_frame->context.iregs[fp_register_];
 
-  u_int32_t caller_fp = 0;
+  uint32_t caller_fp = 0;
   if (last_fp && !memory_->GetMemoryAtAddress(last_fp, &caller_fp)) {
     BPLOG(ERROR) << "Unable to read caller_fp from last_fp: 0x"
                  << std::hex << last_fp;
     return NULL;
   }
 
-  u_int32_t caller_lr = 0;
+  uint32_t caller_lr = 0;
   if (last_fp && !memory_->GetMemoryAtAddress(last_fp + 4, &caller_lr)) {
     BPLOG(ERROR) << "Unable to read caller_lr from last_fp + 4: 0x"
                  << std::hex << (last_fp + 4);
     return NULL;
   }
 
-  u_int32_t caller_sp = last_fp ? last_fp + 8 :
+  uint32_t caller_sp = last_fp ? last_fp + 8 :
       last_frame->context.iregs[MD_CONTEXT_ARM_REG_SP];
 
   // Create a new stack frame (ownership will be transferred to the caller)

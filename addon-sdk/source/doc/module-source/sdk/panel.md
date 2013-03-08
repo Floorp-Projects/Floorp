@@ -242,6 +242,7 @@ Finally, the "text-entry.html" file defines the `<textarea>` element:
 &lt;html&gt;
 
 &lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
   &lt;style type="text/css" media="all"&gt;
     textarea {
       margin: 10px;

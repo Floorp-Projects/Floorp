@@ -1,8 +1,8 @@
 # HG changeset patch
 # User Ted Mielczarek <ted.mielczarek@gmail.com>
 # Date 1360255133 18000
-# Node ID dc6d795f6d0b9357f39ac2a291be4e1c533d3c09
-# Parent  e57a7855d118e645730887e2b921dc83f89a25e7
+# Node ID d23a69a6c34a1f1c21e241f37b388c8689f2386b
+# Parent  c3b1109dd392c16a9fe4e85da693010966dbbf0b
 Change the representation of CFI rules to avoid postfix expressions in most cases
 Patch by Julian Seward <jseward@acm.org>
 R=ted
@@ -10,7 +10,12 @@ R=ted
 diff --git a/Makefile.am b/Makefile.am
 --- a/Makefile.am
 +++ b/Makefile.am
-@@ -138,6 +138,7 @@
+@@ -133,16 +133,17 @@
+ 	src/google_breakpad/processor/source_line_resolver_base.h \
+ 	src/google_breakpad/processor/source_line_resolver_interface.h \
+ 	src/google_breakpad/processor/stack_frame.h \
+ 	src/google_breakpad/processor/stack_frame_cpu.h \
+ 	src/google_breakpad/processor/stack_frame_symbolizer.h \
  	src/google_breakpad/processor/stackwalker.h \
  	src/google_breakpad/processor/symbol_supplier.h \
  	src/google_breakpad/processor/system_info.h \
@@ -18,7 +23,17 @@ diff --git a/Makefile.am b/Makefile.am
  	src/processor/address_map-inl.h \
  	src/processor/address_map.h \
  	src/processor/basic_code_module.h \
-@@ -560,6 +561,7 @@
+ 	src/processor/basic_code_modules.cc \
+ 	src/processor/basic_code_modules.h \
+ 	src/processor/basic_source_line_resolver_types.h \
+ 	src/processor/basic_source_line_resolver.cc \
+ 	src/processor/binarystream.h \
+@@ -555,30 +556,32 @@
+ 	src/testing/src/gmock-all.cc
+ src_processor_basic_source_line_resolver_unittest_CPPFLAGS = \
+ 	-I$(top_srcdir)/src \
+ 	-I$(top_srcdir)/src/testing/include \
+ 	-I$(top_srcdir)/src/testing/gtest/include \
  	-I$(top_srcdir)/src/testing/gtest \
  	-I$(top_srcdir)/src/testing
  src_processor_basic_source_line_resolver_unittest_LDADD = \
@@ -26,7 +41,14 @@ diff --git a/Makefile.am b/Makefile.am
  	src/processor/basic_source_line_resolver.o \
  	src/processor/cfi_frame_info.o \
  	src/processor/pathname_stripper.o \
-@@ -574,6 +576,7 @@
+ 	src/processor/logging.o \
+ 	src/processor/source_line_resolver_base.o \
+ 	src/processor/tokenize.o \
+ 	$(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
+ 
+ src_processor_cfi_frame_info_unittest_SOURCES = \
+ 	src/processor/cfi_frame_info_unittest.cc \
+ 	src/testing/gtest/src/gtest-all.cc \
  	src/testing/gtest/src/gtest_main.cc \
  	src/testing/src/gmock-all.cc
  src_processor_cfi_frame_info_unittest_LDADD = \
@@ -34,7 +56,17 @@ diff --git a/Makefile.am b/Makefile.am
  	src/processor/cfi_frame_info.o \
  	src/processor/logging.o \
  	src/processor/pathname_stripper.o \
-@@ -603,6 +606,7 @@
+ 	$(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
+ src_processor_cfi_frame_info_unittest_CPPFLAGS = \
+ 	-I$(top_srcdir)/src \
+ 	-I$(top_srcdir)/src/testing/include \
+ 	-I$(top_srcdir)/src/testing/gtest/include \
+@@ -598,16 +601,17 @@
+ 	src/testing/src/gmock-all.cc
+ src_processor_exploitability_unittest_CPPFLAGS = \
+ 	-I$(top_srcdir)/src \
+ 	-I$(top_srcdir)/src/testing/include \
+ 	-I$(top_srcdir)/src/testing/gtest/include \
  	-I$(top_srcdir)/src/testing/gtest \
  	-I$(top_srcdir)/src/testing
  src_processor_exploitability_unittest_LDADD = \
@@ -42,7 +74,17 @@ diff --git a/Makefile.am b/Makefile.am
  	src/processor/minidump_processor.o \
  	src/processor/process_state.o \
  	src/processor/disassembler_x86.o \
-@@ -654,6 +658,7 @@
+ 	src/processor/exploitability.o \
+ 	src/processor/exploitability_win.o \
+ 	src/processor/basic_code_modules.o \
+ 	src/processor/basic_source_line_resolver.o \
+ 	src/processor/call_stack.o \
+@@ -649,16 +653,17 @@
+ 	src/testing/src/gmock-all.cc
+ src_processor_fast_source_line_resolver_unittest_CPPFLAGS = \
+ 	-I$(top_srcdir)/src \
+ 	-I$(top_srcdir)/src/testing/include \
+ 	-I$(top_srcdir)/src/testing/gtest/include \
  	-I$(top_srcdir)/src/testing/gtest \
  	-I$(top_srcdir)/src/testing
  src_processor_fast_source_line_resolver_unittest_LDADD = \
@@ -50,7 +92,17 @@ diff --git a/Makefile.am b/Makefile.am
  	src/processor/fast_source_line_resolver.o \
  	src/processor/basic_source_line_resolver.o \
  	src/processor/cfi_frame_info.o \
-@@ -691,6 +696,7 @@
+ 	src/processor/module_comparer.o \
+ 	src/processor/module_serializer.o \
+ 	src/processor/pathname_stripper.o \
+ 	src/processor/logging.o \
+ 	src/processor/source_line_resolver_base.o \
+@@ -686,16 +691,17 @@
+ 	src/testing/src/gmock-all.cc
+ src_processor_minidump_processor_unittest_CPPFLAGS = \
+ 	-I$(top_srcdir)/src \
+ 	-I$(top_srcdir)/src/testing/include \
+ 	-I$(top_srcdir)/src/testing/gtest/include \
  	-I$(top_srcdir)/src/testing/gtest \
  	-I$(top_srcdir)/src/testing
  src_processor_minidump_processor_unittest_LDADD = \
@@ -58,7 +110,17 @@ diff --git a/Makefile.am b/Makefile.am
  	src/processor/basic_code_modules.o \
  	src/processor/basic_source_line_resolver.o \
  	src/processor/call_stack.o \
-@@ -804,6 +810,7 @@
+ 	src/processor/cfi_frame_info.o \
+ 	src/processor/disassembler_x86.o \
+ 	src/processor/exploitability.o \
+ 	src/processor/exploitability_win.o \
+ 	src/processor/logging.o \
+@@ -799,16 +805,17 @@
+ 	src/processor/pathname_stripper_unittest.cc
+ src_processor_pathname_stripper_unittest_LDADD = \
+ 	src/processor/pathname_stripper.o \
+ 	$(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
+ 
  src_processor_postfix_evaluator_unittest_SOURCES = \
  	src/processor/postfix_evaluator_unittest.cc
  src_processor_postfix_evaluator_unittest_LDADD = \
@@ -66,7 +128,17 @@ diff --git a/Makefile.am b/Makefile.am
  	src/processor/logging.o \
  	src/processor/pathname_stripper.o \
  	$(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
-@@ -933,6 +940,7 @@
+ 
+ src_processor_range_map_unittest_SOURCES = \
+ 	src/processor/range_map_unittest.cc
+ src_processor_range_map_unittest_LDADD = \
+ 	src/processor/logging.o \
+@@ -928,16 +935,17 @@
+ 	src/processor/basic_code_modules.o \
+ 	src/processor/logging.o \
+ 	src/processor/minidump.o \
+ 	src/processor/pathname_stripper.o
+ 
  src_processor_minidump_stackwalk_SOURCES = \
  	src/processor/minidump_stackwalk.cc
  src_processor_minidump_stackwalk_LDADD = \
@@ -74,10 +146,15 @@ diff --git a/Makefile.am b/Makefile.am
  	src/processor/basic_code_modules.o \
  	src/processor/basic_source_line_resolver.o \
  	src/processor/binarystream.o \
+ 	src/processor/call_stack.o \
+ 	src/processor/cfi_frame_info.o \
+ 	src/processor/disassembler_x86.o \
+ 	src/processor/exploitability.o \
+ 	src/processor/exploitability_win.o \
 diff --git a/Makefile.in b/Makefile.in
 --- a/Makefile.in
 +++ b/Makefile.in
-@@ -1,9 +1,9 @@
+@@ -1,14 +1,14 @@
 -# Makefile.in generated by automake 1.11.1 from Makefile.am.
 +# Makefile.in generated by automake 1.11.3 from Makefile.am.
  # @configure_input@
@@ -90,7 +167,17 @@ diff --git a/Makefile.in b/Makefile.in
  # This Makefile.in is free software; the Free Software Foundation
  # gives unlimited permission to copy and/or distribute it,
  # with or without modifications, as long as this notice is preserved.
-@@ -195,6 +195,12 @@
+ 
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+ # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ # PARTICULAR PURPOSE.
+@@ -190,16 +190,22 @@
+   sed "s| $$srcdirstrip/| |;"' / .*\//!s/ .*/ ./; s,\( .*\)/[^/]*$$,\1,' | \
+   $(AWK) 'BEGIN { files["."] = "" } { files[$$2] = files[$$2] " " $$1; \
+     if (++n[$$2] == $(am__install_max)) \
+       { print $$2, files[$$2]; n[$$2] = 0; files[$$2] = "" } } \
+     END { for (dir in files) print dir, files[dir] }'
  am__base_list = \
    sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
    sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
@@ -103,7 +190,17 @@ diff --git a/Makefile.in b/Makefile.in
  am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
  	"$(DESTDIR)$(docdir)"
  LIBRARIES = $(lib_LIBRARIES) $(noinst_LIBRARIES)
-@@ -266,8 +272,8 @@
+ AR = ar
+ ARFLAGS = cru
+ src_client_linux_libbreakpad_client_a_AR = $(AR) $(ARFLAGS)
+ src_client_linux_libbreakpad_client_a_LIBADD =
+ am__src_client_linux_libbreakpad_client_a_SOURCES_DIST =  \
+@@ -261,18 +267,18 @@
+ 	src/google_breakpad/processor/source_line_resolver_base.h \
+ 	src/google_breakpad/processor/source_line_resolver_interface.h \
+ 	src/google_breakpad/processor/stack_frame.h \
+ 	src/google_breakpad/processor/stack_frame_cpu.h \
+ 	src/google_breakpad/processor/stack_frame_symbolizer.h \
  	src/google_breakpad/processor/stackwalker.h \
  	src/google_breakpad/processor/symbol_supplier.h \
  	src/google_breakpad/processor/system_info.h \
@@ -114,7 +211,17 @@ diff --git a/Makefile.in b/Makefile.in
  	src/processor/basic_code_modules.cc \
  	src/processor/basic_code_modules.h \
  	src/processor/basic_source_line_resolver_types.h \
-@@ -327,7 +333,9 @@
+ 	src/processor/basic_source_line_resolver.cc \
+ 	src/processor/binarystream.h src/processor/binarystream.cc \
+ 	src/processor/call_stack.cc src/processor/cfi_frame_info.cc \
+ 	src/processor/cfi_frame_info.h \
+ 	src/processor/contained_range_map-inl.h \
+@@ -322,17 +328,19 @@
+ 	src/processor/static_contained_range_map-inl.h \
+ 	src/processor/static_contained_range_map.h \
+ 	src/processor/static_map_iterator-inl.h \
+ 	src/processor/static_map_iterator.h \
+ 	src/processor/static_map-inl.h src/processor/static_map.h \
  	src/processor/static_range_map-inl.h \
  	src/processor/static_range_map.h src/processor/tokenize.cc \
  	src/processor/tokenize.h
@@ -125,7 +232,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.$(OBJEXT) \
  @DISABLE_PROCESSOR_FALSE@	src/processor/binarystream.$(OBJEXT) \
  @DISABLE_PROCESSOR_FALSE@	src/processor/call_stack.$(OBJEXT) \
-@@ -625,7 +633,9 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/disassembler_x86.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability_win.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/fast_source_line_resolver.$(OBJEXT) \
+@@ -620,17 +628,19 @@
+ am__src_processor_basic_source_line_resolver_unittest_SOURCES_DIST =  \
+ 	src/processor/basic_source_line_resolver_unittest.cc \
+ 	src/testing/gtest/src/gtest-all.cc \
+ 	src/testing/src/gmock-all.cc
+ @DISABLE_PROCESSOR_FALSE@am_src_processor_basic_source_line_resolver_unittest_OBJECTS = src/processor/src_processor_basic_source_line_resolver_unittest-basic_source_line_resolver_unittest.$(OBJEXT) \
  @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/src_processor_basic_source_line_resolver_unittest-gtest-all.$(OBJEXT) \
  @DISABLE_PROCESSOR_FALSE@	src/testing/src/src_processor_basic_source_line_resolver_unittest-gmock-all.$(OBJEXT)
  src_processor_basic_source_line_resolver_unittest_OBJECTS = $(am_src_processor_basic_source_line_resolver_unittest_OBJECTS)
@@ -136,7 +253,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
-@@ -658,6 +668,7 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/source_line_resolver_base.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/tokenize.o \
+ @DISABLE_PROCESSOR_FALSE@	$(am__DEPENDENCIES_1) \
+ @DISABLE_PROCESSOR_FALSE@	$(am__DEPENDENCIES_1)
+ am__src_processor_binarystream_unittest_SOURCES_DIST =  \
+@@ -653,16 +663,17 @@
+ 	src/testing/src/gmock-all.cc
+ @DISABLE_PROCESSOR_FALSE@am_src_processor_cfi_frame_info_unittest_OBJECTS = src/processor/src_processor_cfi_frame_info_unittest-cfi_frame_info_unittest.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/src_processor_cfi_frame_info_unittest-gtest-all.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/src_processor_cfi_frame_info_unittest-gtest_main.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/src/src_processor_cfi_frame_info_unittest-gmock-all.$(OBJEXT)
  src_processor_cfi_frame_info_unittest_OBJECTS =  \
  	$(am_src_processor_cfi_frame_info_unittest_OBJECTS)
  @DISABLE_PROCESSOR_FALSE@src_processor_cfi_frame_info_unittest_DEPENDENCIES =  \
@@ -144,7 +271,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o \
-@@ -699,6 +710,7 @@
+ @DISABLE_PROCESSOR_FALSE@	$(am__DEPENDENCIES_1) \
+ @DISABLE_PROCESSOR_FALSE@	$(am__DEPENDENCIES_1)
+ am__src_processor_contained_range_map_unittest_SOURCES_DIST =  \
+ 	src/processor/contained_range_map_unittest.cc
+ @DISABLE_PROCESSOR_FALSE@am_src_processor_contained_range_map_unittest_OBJECTS = src/processor/contained_range_map_unittest.$(OBJEXT)
+@@ -694,16 +705,17 @@
+ 	src/testing/src/gmock-all.cc
+ @DISABLE_PROCESSOR_FALSE@am_src_processor_exploitability_unittest_OBJECTS = src/processor/src_processor_exploitability_unittest-exploitability_unittest.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/src_processor_exploitability_unittest-gtest-all.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/src_processor_exploitability_unittest-gtest_main.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/src/src_processor_exploitability_unittest-gmock-all.$(OBJEXT)
  src_processor_exploitability_unittest_OBJECTS =  \
  	$(am_src_processor_exploitability_unittest_OBJECTS)
  @DISABLE_PROCESSOR_FALSE@src_processor_exploitability_unittest_DEPENDENCIES =  \
@@ -152,7 +289,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/minidump_processor.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/process_state.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/disassembler_x86.o \
-@@ -731,7 +743,9 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability_win.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/basic_code_modules.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/call_stack.o \
+@@ -726,17 +738,19 @@
+ am__src_processor_fast_source_line_resolver_unittest_SOURCES_DIST =  \
+ 	src/processor/fast_source_line_resolver_unittest.cc \
+ 	src/testing/gtest/src/gtest-all.cc \
+ 	src/testing/src/gmock-all.cc
+ @DISABLE_PROCESSOR_FALSE@am_src_processor_fast_source_line_resolver_unittest_OBJECTS = src/processor/src_processor_fast_source_line_resolver_unittest-fast_source_line_resolver_unittest.$(OBJEXT) \
  @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/src_processor_fast_source_line_resolver_unittest-gtest-all.$(OBJEXT) \
  @DISABLE_PROCESSOR_FALSE@	src/testing/src/src_processor_fast_source_line_resolver_unittest-gmock-all.$(OBJEXT)
  src_processor_fast_source_line_resolver_unittest_OBJECTS = $(am_src_processor_fast_source_line_resolver_unittest_OBJECTS)
@@ -163,7 +310,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/module_comparer.o \
-@@ -776,6 +790,7 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/module_serializer.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/source_line_resolver_base.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/tokenize.o \
+@@ -771,16 +785,17 @@
+ 	src/testing/gtest/src/gtest-all.cc \
+ 	src/testing/src/gmock-all.cc
+ @DISABLE_PROCESSOR_FALSE@am_src_processor_minidump_processor_unittest_OBJECTS = src/processor/src_processor_minidump_processor_unittest-minidump_processor_unittest.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/src_processor_minidump_processor_unittest-gtest-all.$(OBJEXT) \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/src/src_processor_minidump_processor_unittest-gmock-all.$(OBJEXT)
  src_processor_minidump_processor_unittest_OBJECTS =  \
  	$(am_src_processor_minidump_processor_unittest_OBJECTS)
  @DISABLE_PROCESSOR_FALSE@src_processor_minidump_processor_unittest_DEPENDENCIES =  \
@@ -171,7 +328,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_code_modules.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/call_stack.o \
-@@ -806,6 +821,7 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/disassembler_x86.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability_win.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
+@@ -801,16 +816,17 @@
+ @DISABLE_PROCESSOR_FALSE@	$(am__DEPENDENCIES_1) \
+ @DISABLE_PROCESSOR_FALSE@	$(am__DEPENDENCIES_1)
+ am__src_processor_minidump_stackwalk_SOURCES_DIST =  \
+ 	src/processor/minidump_stackwalk.cc
+ @DISABLE_PROCESSOR_FALSE@am_src_processor_minidump_stackwalk_OBJECTS = src/processor/minidump_stackwalk.$(OBJEXT)
  src_processor_minidump_stackwalk_OBJECTS =  \
  	$(am_src_processor_minidump_stackwalk_OBJECTS)
  @DISABLE_PROCESSOR_FALSE@src_processor_minidump_stackwalk_DEPENDENCIES =  \
@@ -179,7 +346,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_code_modules.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/binarystream.o \
-@@ -867,6 +883,7 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/call_stack.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/disassembler_x86.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability_win.o \
+@@ -862,16 +878,17 @@
+ @DISABLE_PROCESSOR_FALSE@	$(am__DEPENDENCIES_1) \
+ @DISABLE_PROCESSOR_FALSE@	$(am__DEPENDENCIES_1)
+ am__src_processor_postfix_evaluator_unittest_SOURCES_DIST =  \
+ 	src/processor/postfix_evaluator_unittest.cc
+ @DISABLE_PROCESSOR_FALSE@am_src_processor_postfix_evaluator_unittest_OBJECTS = src/processor/postfix_evaluator_unittest.$(OBJEXT)
  src_processor_postfix_evaluator_unittest_OBJECTS =  \
  	$(am_src_processor_postfix_evaluator_unittest_OBJECTS)
  @DISABLE_PROCESSOR_FALSE@src_processor_postfix_evaluator_unittest_DEPENDENCIES =  \
@@ -187,7 +364,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o \
  @DISABLE_PROCESSOR_FALSE@	$(am__DEPENDENCIES_1) \
-@@ -1217,12 +1234,16 @@
+ @DISABLE_PROCESSOR_FALSE@	$(am__DEPENDENCIES_1)
+ am__src_processor_range_map_unittest_SOURCES_DIST =  \
+ 	src/processor/range_map_unittest.cc
+ @DISABLE_PROCESSOR_FALSE@am_src_processor_range_map_unittest_OBJECTS = src/processor/range_map_unittest.$(OBJEXT)
+ src_processor_range_map_unittest_OBJECTS =  \
+@@ -1212,22 +1229,26 @@
+ ETAGS = etags
+ CTAGS = ctags
+ am__tty_colors = \
+ red=; grn=; lgn=; blu=; std=
+ DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
  distdir = $(PACKAGE)-$(VERSION)
  top_distdir = $(distdir)
  am__remove_distdir = \
@@ -207,7 +394,17 @@ diff --git a/Makefile.in b/Makefile.in
  distcleancheck_listfiles = find . -type f -print
  ACLOCAL = @ACLOCAL@
  AMTAR = @AMTAR@
-@@ -1388,6 +1409,7 @@
+ AUTOCONF = @AUTOCONF@
+ AUTOHEADER = @AUTOHEADER@
+ AUTOMAKE = @AUTOMAKE@
+ AWK = @AWK@
+ CC = @CC@
+@@ -1383,16 +1404,17 @@
+ @DISABLE_PROCESSOR_FALSE@	src/google_breakpad/processor/source_line_resolver_base.h \
+ @DISABLE_PROCESSOR_FALSE@	src/google_breakpad/processor/source_line_resolver_interface.h \
+ @DISABLE_PROCESSOR_FALSE@	src/google_breakpad/processor/stack_frame.h \
+ @DISABLE_PROCESSOR_FALSE@	src/google_breakpad/processor/stack_frame_cpu.h \
+ @DISABLE_PROCESSOR_FALSE@	src/google_breakpad/processor/stack_frame_symbolizer.h \
  @DISABLE_PROCESSOR_FALSE@	src/google_breakpad/processor/stackwalker.h \
  @DISABLE_PROCESSOR_FALSE@	src/google_breakpad/processor/symbol_supplier.h \
  @DISABLE_PROCESSOR_FALSE@	src/google_breakpad/processor/system_info.h \
@@ -215,7 +412,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/address_map-inl.h \
  @DISABLE_PROCESSOR_FALSE@	src/processor/address_map.h \
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_code_module.h \
-@@ -1720,6 +1742,7 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/basic_code_modules.cc \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/basic_code_modules.h \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver_types.h \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.cc \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/binarystream.h \
+@@ -1715,31 +1737,33 @@
+ @DISABLE_PROCESSOR_FALSE@src_processor_basic_source_line_resolver_unittest_CPPFLAGS = \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/include \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/gtest/include \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/gtest \
  @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing
  
  @DISABLE_PROCESSOR_FALSE@src_processor_basic_source_line_resolver_unittest_LDADD = \
@@ -223,7 +430,15 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o \
-@@ -1735,6 +1758,7 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/source_line_resolver_base.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/tokenize.o \
+ @DISABLE_PROCESSOR_FALSE@	$(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
+ 
+ @DISABLE_PROCESSOR_FALSE@src_processor_cfi_frame_info_unittest_SOURCES = \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info_unittest.cc \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/gtest-all.cc \
+ @DISABLE_PROCESSOR_FALSE@	src/testing/gtest/src/gtest_main.cc \
  @DISABLE_PROCESSOR_FALSE@	src/testing/src/gmock-all.cc
  
  @DISABLE_PROCESSOR_FALSE@src_processor_cfi_frame_info_unittest_LDADD = \
@@ -231,7 +446,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o \
-@@ -1768,6 +1792,7 @@
+ @DISABLE_PROCESSOR_FALSE@	$(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
+ 
+ @DISABLE_PROCESSOR_FALSE@src_processor_cfi_frame_info_unittest_CPPFLAGS = \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/include \
+@@ -1763,16 +1787,17 @@
+ @DISABLE_PROCESSOR_FALSE@src_processor_exploitability_unittest_CPPFLAGS = \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/include \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/gtest/include \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/gtest \
  @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing
  
  @DISABLE_PROCESSOR_FALSE@src_processor_exploitability_unittest_LDADD = \
@@ -239,7 +464,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/minidump_processor.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/process_state.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/disassembler_x86.o \
-@@ -1823,6 +1848,7 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability_win.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/basic_code_modules.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/call_stack.o \
+@@ -1818,16 +1843,17 @@
+ @DISABLE_PROCESSOR_FALSE@src_processor_fast_source_line_resolver_unittest_CPPFLAGS = \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/include \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/gtest/include \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/gtest \
  @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing
  
  @DISABLE_PROCESSOR_FALSE@src_processor_fast_source_line_resolver_unittest_LDADD = \
@@ -247,7 +482,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/fast_source_line_resolver.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info.o \
-@@ -1864,6 +1890,7 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/module_comparer.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/module_serializer.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/source_line_resolver_base.o \
+@@ -1859,16 +1885,17 @@
+ @DISABLE_PROCESSOR_FALSE@src_processor_minidump_processor_unittest_CPPFLAGS = \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/include \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/gtest/include \
+ @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing/gtest \
  @DISABLE_PROCESSOR_FALSE@	-I$(top_srcdir)/src/testing
  
  @DISABLE_PROCESSOR_FALSE@src_processor_minidump_processor_unittest_LDADD = \
@@ -255,7 +500,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_code_modules.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/call_stack.o \
-@@ -1989,6 +2016,7 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/disassembler_x86.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability_win.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
+@@ -1984,16 +2011,17 @@
+ @DISABLE_PROCESSOR_FALSE@src_processor_pathname_stripper_unittest_LDADD = \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o \
+ @DISABLE_PROCESSOR_FALSE@	$(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
+ 
+ @DISABLE_PROCESSOR_FALSE@src_processor_postfix_evaluator_unittest_SOURCES = \
  @DISABLE_PROCESSOR_FALSE@	src/processor/postfix_evaluator_unittest.cc
  
  @DISABLE_PROCESSOR_FALSE@src_processor_postfix_evaluator_unittest_LDADD = \
@@ -263,7 +518,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o \
  @DISABLE_PROCESSOR_FALSE@	$(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
-@@ -2127,6 +2155,7 @@
+ 
+ @DISABLE_PROCESSOR_FALSE@src_processor_range_map_unittest_SOURCES = \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/range_map_unittest.cc
+ 
+ @DISABLE_PROCESSOR_FALSE@src_processor_range_map_unittest_LDADD = \
+@@ -2122,16 +2150,17 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/logging.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/minidump.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/pathname_stripper.o
+ 
+ @DISABLE_PROCESSOR_FALSE@src_processor_minidump_stackwalk_SOURCES = \
  @DISABLE_PROCESSOR_FALSE@	src/processor/minidump_stackwalk.cc
  
  @DISABLE_PROCESSOR_FALSE@src_processor_minidump_stackwalk_LDADD = \
@@ -271,7 +536,17 @@ diff --git a/Makefile.in b/Makefile.in
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_code_modules.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/basic_source_line_resolver.o \
  @DISABLE_PROCESSOR_FALSE@	src/processor/binarystream.o \
-@@ -2294,7 +2323,7 @@
+ @DISABLE_PROCESSOR_FALSE@	src/processor/call_stack.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/cfi_frame_info.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/disassembler_x86.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability.o \
+ @DISABLE_PROCESSOR_FALSE@	src/processor/exploitability_win.o \
+@@ -2289,17 +2318,17 @@
+ 	src/tools/windows/dump_syms/testdata/dump_syms_regtest.sym \
+ 	src/tools/windows/symupload/symupload.cc \
+ 	src/tools/windows/symupload/symupload.vcproj
+ 
+ all: all-am
  
  .SUFFIXES:
  .SUFFIXES: .S .c .cc .o .obj
@@ -280,7 +555,17 @@ diff --git a/Makefile.in b/Makefile.in
  	@:
  $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
  	@for dep in $?; do \
-@@ -2330,10 +2359,8 @@
+ 	  case '$(am__configure_deps)' in \
+ 	    *$$dep*) \
+ 	      echo ' cd $(srcdir) && $(AUTOMAKE) --gnu'; \
+ 	      $(am__cd) $(srcdir) && $(AUTOMAKE) --gnu \
+ 		&& exit 0; \
+@@ -2325,20 +2354,18 @@
+ 
+ $(top_srcdir)/configure:  $(am__configure_deps)
+ 	$(am__cd) $(srcdir) && $(AUTOCONF)
+ $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
+ 	$(am__cd) $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
  $(am__aclocal_m4_deps):
  
  src/config.h: src/stamp-h1
@@ -293,7 +578,17 @@ diff --git a/Makefile.in b/Makefile.in
  
  src/stamp-h1: $(top_srcdir)/src/config.h.in $(top_builddir)/config.status
  	@rm -f src/stamp-h1
-@@ -2371,9 +2398,7 @@
+ 	cd $(top_builddir) && $(SHELL) ./config.status src/config.h
+ $(top_srcdir)/src/config.h.in:  $(am__configure_deps) 
+ 	($(am__cd) $(top_srcdir) && $(AUTOHEADER))
+ 	rm -f src/stamp-h1
+ 	touch $@
+@@ -2366,19 +2393,17 @@
+ 	    ( cd "$(DESTDIR)$(libdir)" && $(RANLIB) $$f ) || exit $$?; \
+ 	  else :; fi; \
+ 	done
+ 
+ uninstall-libLIBRARIES:
  	@$(NORMAL_UNINSTALL)
  	@list='$(lib_LIBRARIES)'; test -n "$(libdir)" || list=; \
  	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
@@ -304,7 +599,17 @@ diff --git a/Makefile.in b/Makefile.in
  
  clean-libLIBRARIES:
  	-test -z "$(lib_LIBRARIES)" || rm -f $(lib_LIBRARIES)
-@@ -2482,10 +2507,12 @@
+ 
+ clean-noinstLIBRARIES:
+ 	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
+ src/client/linux/crash_generation/$(am__dirstamp):
+ 	@$(MKDIR_P) src/client/linux/crash_generation
+@@ -2477,20 +2502,22 @@
+ 	@$(MKDIR_P) src/common/android/$(DEPDIR)
+ 	@: > src/common/android/$(DEPDIR)/$(am__dirstamp)
+ src/common/android/breakpad_getcontext.$(OBJEXT):  \
+ 	src/common/android/$(am__dirstamp) \
+ 	src/common/android/$(DEPDIR)/$(am__dirstamp)
  src/client/linux/$(am__dirstamp):
  	@$(MKDIR_P) src/client/linux
  	@: > src/client/linux/$(am__dirstamp)
@@ -318,7 +623,17 @@ diff --git a/Makefile.in b/Makefile.in
  src/processor/$(am__dirstamp):
  	@$(MKDIR_P) src/processor
  	@: > src/processor/$(am__dirstamp)
-@@ -2564,7 +2591,7 @@
+ src/processor/$(DEPDIR)/$(am__dirstamp):
+ 	@$(MKDIR_P) src/processor/$(DEPDIR)
+ 	@: > src/processor/$(DEPDIR)/$(am__dirstamp)
+ src/processor/basic_code_modules.$(OBJEXT):  \
+ 	src/processor/$(am__dirstamp) \
+@@ -2559,17 +2586,17 @@
+ src/processor/stackwalker_x86.$(OBJEXT):  \
+ 	src/processor/$(am__dirstamp) \
+ 	src/processor/$(DEPDIR)/$(am__dirstamp)
+ src/processor/tokenize.$(OBJEXT): src/processor/$(am__dirstamp) \
+ 	src/processor/$(DEPDIR)/$(am__dirstamp)
  src/$(am__dirstamp):
  	@$(MKDIR_P) src
  	@: > src/$(am__dirstamp)
@@ -327,7 +642,17 @@ diff --git a/Makefile.in b/Makefile.in
  	-rm -f src/libbreakpad.a
  	$(src_libbreakpad_a_AR) src/libbreakpad.a $(src_libbreakpad_a_OBJECTS) $(src_libbreakpad_a_LIBADD)
  	$(RANLIB) src/libbreakpad.a
-@@ -2616,7 +2643,7 @@
+ src/third_party/libdisasm/$(am__dirstamp):
+ 	@$(MKDIR_P) src/third_party/libdisasm
+ 	@: > src/third_party/libdisasm/$(am__dirstamp)
+ src/third_party/libdisasm/$(DEPDIR)/$(am__dirstamp):
+ 	@$(MKDIR_P) src/third_party/libdisasm/$(DEPDIR)
+@@ -2611,17 +2638,17 @@
+ 	src/third_party/libdisasm/$(am__dirstamp) \
+ 	src/third_party/libdisasm/$(DEPDIR)/$(am__dirstamp)
+ src/third_party/libdisasm/x86_misc.$(OBJEXT):  \
+ 	src/third_party/libdisasm/$(am__dirstamp) \
+ 	src/third_party/libdisasm/$(DEPDIR)/$(am__dirstamp)
  src/third_party/libdisasm/x86_operand_list.$(OBJEXT):  \
  	src/third_party/libdisasm/$(am__dirstamp) \
  	src/third_party/libdisasm/$(DEPDIR)/$(am__dirstamp)
@@ -336,7 +661,17 @@ diff --git a/Makefile.in b/Makefile.in
  	-rm -f src/third_party/libdisasm/libdisasm.a
  	$(src_third_party_libdisasm_libdisasm_a_AR) src/third_party/libdisasm/libdisasm.a $(src_third_party_libdisasm_libdisasm_a_OBJECTS) $(src_third_party_libdisasm_libdisasm_a_LIBADD)
  	$(RANLIB) src/third_party/libdisasm/libdisasm.a
-@@ -2663,7 +2690,7 @@
+ install-binPROGRAMS: $(bin_PROGRAMS)
+ 	@$(NORMAL_INSTALL)
+ 	test -z "$(bindir)" || $(MKDIR_P) "$(DESTDIR)$(bindir)"
+ 	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
+ 	for p in $$list; do echo "$$p $$p"; done | \
+@@ -2658,17 +2685,17 @@
+ clean-binPROGRAMS:
+ 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
+ 
+ clean-checkPROGRAMS:
+ 	-test -z "$(check_PROGRAMS)" || rm -f $(check_PROGRAMS)
  
  clean-noinstPROGRAMS:
  	-test -z "$(noinst_PROGRAMS)" || rm -f $(noinst_PROGRAMS)
@@ -345,7 +680,17 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/client/linux/linux_client_unittest$(EXEEXT)
  	$(src_client_linux_linux_client_unittest_LINK) $(src_client_linux_linux_client_unittest_OBJECTS) $(src_client_linux_linux_client_unittest_LDADD) $(LIBS)
  src/client/linux/handler/src_client_linux_linux_client_unittest_shlib-exception_handler_unittest.$(OBJEXT):  \
-@@ -2756,13 +2783,13 @@
+ 	src/client/linux/handler/$(am__dirstamp) \
+ 	src/client/linux/handler/$(DEPDIR)/$(am__dirstamp)
+ src/client/linux/minidump_writer/src_client_linux_linux_client_unittest_shlib-directory_reader_unittest.$(OBJEXT):  \
+ 	src/client/linux/minidump_writer/$(am__dirstamp) \
+ 	src/client/linux/minidump_writer/$(DEPDIR)/$(am__dirstamp)
+@@ -2751,23 +2778,23 @@
+ 	src/processor/$(am__dirstamp) \
+ 	src/processor/$(DEPDIR)/$(am__dirstamp)
+ src/common/android/src_client_linux_linux_client_unittest_shlib-breakpad_getcontext.$(OBJEXT):  \
+ 	src/common/android/$(am__dirstamp) \
+ 	src/common/android/$(DEPDIR)/$(am__dirstamp)
  src/common/android/src_client_linux_linux_client_unittest_shlib-breakpad_getcontext_unittest.$(OBJEXT):  \
  	src/common/android/$(am__dirstamp) \
  	src/common/android/$(DEPDIR)/$(am__dirstamp)
@@ -361,7 +706,17 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/client/linux/linux_dumper_unittest_helper$(EXEEXT)
  	$(src_client_linux_linux_dumper_unittest_helper_LINK) $(src_client_linux_linux_dumper_unittest_helper_OBJECTS) $(src_client_linux_linux_dumper_unittest_helper_LDADD) $(LIBS)
  src/common/src_common_dumper_unittest-byte_cursor_unittest.$(OBJEXT):  \
-@@ -2906,7 +2933,7 @@
+ 	src/common/$(am__dirstamp) \
+ 	src/common/$(DEPDIR)/$(am__dirstamp)
+ src/common/src_common_dumper_unittest-dwarf_cfi_to_module.$(OBJEXT):  \
+ 	src/common/$(am__dirstamp) \
+ 	src/common/$(DEPDIR)/$(am__dirstamp)
+@@ -2901,17 +2928,17 @@
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
+ src/testing/gtest/src/src_common_dumper_unittest-gtest_main.$(OBJEXT):  \
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
  src/testing/src/src_common_dumper_unittest-gmock-all.$(OBJEXT):  \
  	src/testing/src/$(am__dirstamp) \
  	src/testing/src/$(DEPDIR)/$(am__dirstamp)
@@ -370,7 +725,17 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/common/dumper_unittest$(EXEEXT)
  	$(CXXLINK) $(src_common_dumper_unittest_OBJECTS) $(src_common_dumper_unittest_LDADD) $(LIBS)
  src/common/src_common_test_assembler_unittest-test_assembler.$(OBJEXT):  \
-@@ -2924,13 +2951,13 @@
+ 	src/common/$(am__dirstamp) \
+ 	src/common/$(DEPDIR)/$(am__dirstamp)
+ src/common/src_common_test_assembler_unittest-test_assembler_unittest.$(OBJEXT):  \
+ 	src/common/$(am__dirstamp) \
+ 	src/common/$(DEPDIR)/$(am__dirstamp)
+@@ -2919,145 +2946,145 @@
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
+ src/testing/gtest/src/src_common_test_assembler_unittest-gtest_main.$(OBJEXT):  \
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
  src/testing/src/src_common_test_assembler_unittest-gmock-all.$(OBJEXT):  \
  	src/testing/src/$(am__dirstamp) \
  	src/testing/src/$(DEPDIR)/$(am__dirstamp)
@@ -386,7 +751,11 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/processor/address_map_unittest$(EXEEXT)
  	$(CXXLINK) $(src_processor_address_map_unittest_OBJECTS) $(src_processor_address_map_unittest_LDADD) $(LIBS)
  src/processor/src_processor_basic_source_line_resolver_unittest-basic_source_line_resolver_unittest.$(OBJEXT):  \
-@@ -2942,7 +2969,7 @@
+ 	src/processor/$(am__dirstamp) \
+ 	src/processor/$(DEPDIR)/$(am__dirstamp)
+ src/testing/gtest/src/src_processor_basic_source_line_resolver_unittest-gtest-all.$(OBJEXT):  \
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
  src/testing/src/src_processor_basic_source_line_resolver_unittest-gmock-all.$(OBJEXT):  \
  	src/testing/src/$(am__dirstamp) \
  	src/testing/src/$(DEPDIR)/$(am__dirstamp)
@@ -395,7 +764,11 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/processor/basic_source_line_resolver_unittest$(EXEEXT)
  	$(CXXLINK) $(src_processor_basic_source_line_resolver_unittest_OBJECTS) $(src_processor_basic_source_line_resolver_unittest_LDADD) $(LIBS)
  src/processor/src_processor_binarystream_unittest-binarystream_unittest.$(OBJEXT):  \
-@@ -2954,7 +2981,7 @@
+ 	src/processor/$(am__dirstamp) \
+ 	src/processor/$(DEPDIR)/$(am__dirstamp)
+ src/testing/gtest/src/src_processor_binarystream_unittest-gtest-all.$(OBJEXT):  \
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
  src/testing/src/src_processor_binarystream_unittest-gmock-all.$(OBJEXT):  \
  	src/testing/src/$(am__dirstamp) \
  	src/testing/src/$(DEPDIR)/$(am__dirstamp)
@@ -404,7 +777,14 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/processor/binarystream_unittest$(EXEEXT)
  	$(CXXLINK) $(src_processor_binarystream_unittest_OBJECTS) $(src_processor_binarystream_unittest_LDADD) $(LIBS)
  src/processor/src_processor_cfi_frame_info_unittest-cfi_frame_info_unittest.$(OBJEXT):  \
-@@ -2969,13 +2996,13 @@
+ 	src/processor/$(am__dirstamp) \
+ 	src/processor/$(DEPDIR)/$(am__dirstamp)
+ src/testing/gtest/src/src_processor_cfi_frame_info_unittest-gtest-all.$(OBJEXT):  \
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
+ src/testing/gtest/src/src_processor_cfi_frame_info_unittest-gtest_main.$(OBJEXT):  \
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
  src/testing/src/src_processor_cfi_frame_info_unittest-gmock-all.$(OBJEXT):  \
  	src/testing/src/$(am__dirstamp) \
  	src/testing/src/$(DEPDIR)/$(am__dirstamp)
@@ -420,7 +800,14 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/processor/contained_range_map_unittest$(EXEEXT)
  	$(CXXLINK) $(src_processor_contained_range_map_unittest_OBJECTS) $(src_processor_contained_range_map_unittest_LDADD) $(LIBS)
  src/processor/src_processor_disassembler_x86_unittest-disassembler_x86_unittest.$(OBJEXT):  \
-@@ -2990,7 +3017,7 @@
+ 	src/processor/$(am__dirstamp) \
+ 	src/processor/$(DEPDIR)/$(am__dirstamp)
+ src/testing/gtest/src/src_processor_disassembler_x86_unittest-gtest-all.$(OBJEXT):  \
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
+ src/testing/gtest/src/src_processor_disassembler_x86_unittest-gtest_main.$(OBJEXT):  \
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
  src/testing/src/src_processor_disassembler_x86_unittest-gmock-all.$(OBJEXT):  \
  	src/testing/src/$(am__dirstamp) \
  	src/testing/src/$(DEPDIR)/$(am__dirstamp)
@@ -429,7 +816,14 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/processor/disassembler_x86_unittest$(EXEEXT)
  	$(CXXLINK) $(src_processor_disassembler_x86_unittest_OBJECTS) $(src_processor_disassembler_x86_unittest_LDADD) $(LIBS)
  src/processor/src_processor_exploitability_unittest-exploitability_unittest.$(OBJEXT):  \
-@@ -3005,7 +3032,7 @@
+ 	src/processor/$(am__dirstamp) \
+ 	src/processor/$(DEPDIR)/$(am__dirstamp)
+ src/testing/gtest/src/src_processor_exploitability_unittest-gtest-all.$(OBJEXT):  \
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
+ src/testing/gtest/src/src_processor_exploitability_unittest-gtest_main.$(OBJEXT):  \
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
  src/testing/src/src_processor_exploitability_unittest-gmock-all.$(OBJEXT):  \
  	src/testing/src/$(am__dirstamp) \
  	src/testing/src/$(DEPDIR)/$(am__dirstamp)
@@ -438,7 +832,11 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/processor/exploitability_unittest$(EXEEXT)
  	$(CXXLINK) $(src_processor_exploitability_unittest_OBJECTS) $(src_processor_exploitability_unittest_LDADD) $(LIBS)
  src/processor/src_processor_fast_source_line_resolver_unittest-fast_source_line_resolver_unittest.$(OBJEXT):  \
-@@ -3017,7 +3044,7 @@
+ 	src/processor/$(am__dirstamp) \
+ 	src/processor/$(DEPDIR)/$(am__dirstamp)
+ src/testing/gtest/src/src_processor_fast_source_line_resolver_unittest-gtest-all.$(OBJEXT):  \
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
  src/testing/src/src_processor_fast_source_line_resolver_unittest-gmock-all.$(OBJEXT):  \
  	src/testing/src/$(am__dirstamp) \
  	src/testing/src/$(DEPDIR)/$(am__dirstamp)
@@ -447,7 +845,11 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/processor/fast_source_line_resolver_unittest$(EXEEXT)
  	$(CXXLINK) $(src_processor_fast_source_line_resolver_unittest_OBJECTS) $(src_processor_fast_source_line_resolver_unittest_LDADD) $(LIBS)
  src/processor/src_processor_map_serializers_unittest-map_serializers_unittest.$(OBJEXT):  \
-@@ -3029,12 +3056,12 @@
+ 	src/processor/$(am__dirstamp) \
+ 	src/processor/$(DEPDIR)/$(am__dirstamp)
+ src/testing/gtest/src/src_processor_map_serializers_unittest-gtest-all.$(OBJEXT):  \
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
  src/testing/src/src_processor_map_serializers_unittest-gmock-all.$(OBJEXT):  \
  	src/testing/src/$(am__dirstamp) \
  	src/testing/src/$(DEPDIR)/$(am__dirstamp)
@@ -462,7 +864,11 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/processor/minidump_dump$(EXEEXT)
  	$(CXXLINK) $(src_processor_minidump_dump_OBJECTS) $(src_processor_minidump_dump_LDADD) $(LIBS)
  src/processor/src_processor_minidump_processor_unittest-minidump_processor_unittest.$(OBJEXT):  \
-@@ -3046,13 +3073,13 @@
+ 	src/processor/$(am__dirstamp) \
+ 	src/processor/$(DEPDIR)/$(am__dirstamp)
+ src/testing/gtest/src/src_processor_minidump_processor_unittest-gtest-all.$(OBJEXT):  \
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
  src/testing/src/src_processor_minidump_processor_unittest-gmock-all.$(OBJEXT):  \
  	src/testing/src/$(am__dirstamp) \
  	src/testing/src/$(DEPDIR)/$(am__dirstamp)
@@ -478,7 +884,17 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/processor/minidump_stackwalk$(EXEEXT)
  	$(CXXLINK) $(src_processor_minidump_stackwalk_OBJECTS) $(src_processor_minidump_stackwalk_LDADD) $(LIBS)
  src/common/src_processor_minidump_unittest-test_assembler.$(OBJEXT):  \
-@@ -3073,25 +3100,25 @@
+ 	src/common/$(am__dirstamp) \
+ 	src/common/$(DEPDIR)/$(am__dirstamp)
+ src/processor/src_processor_minidump_unittest-minidump_unittest.$(OBJEXT):  \
+ 	src/processor/$(am__dirstamp) \
+ 	src/processor/$(DEPDIR)/$(am__dirstamp)
+@@ -3068,35 +3095,35 @@
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
+ src/testing/gtest/src/src_processor_minidump_unittest-gtest_main.$(OBJEXT):  \
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
  src/testing/src/src_processor_minidump_unittest-gmock-all.$(OBJEXT):  \
  	src/testing/src/$(am__dirstamp) \
  	src/testing/src/$(DEPDIR)/$(am__dirstamp)
@@ -508,7 +924,17 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/processor/range_map_unittest$(EXEEXT)
  	$(CXXLINK) $(src_processor_range_map_unittest_OBJECTS) $(src_processor_range_map_unittest_LDADD) $(LIBS)
  src/common/src_processor_stackwalker_amd64_unittest-test_assembler.$(OBJEXT):  \
-@@ -3109,7 +3136,7 @@
+ 	src/common/$(am__dirstamp) \
+ 	src/common/$(DEPDIR)/$(am__dirstamp)
+ src/processor/src_processor_stackwalker_amd64_unittest-stackwalker_amd64_unittest.$(OBJEXT):  \
+ 	src/processor/$(am__dirstamp) \
+ 	src/processor/$(DEPDIR)/$(am__dirstamp)
+@@ -3104,17 +3131,17 @@
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
+ src/testing/gtest/src/src_processor_stackwalker_amd64_unittest-gtest_main.$(OBJEXT):  \
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
  src/testing/src/src_processor_stackwalker_amd64_unittest-gmock-all.$(OBJEXT):  \
  	src/testing/src/$(am__dirstamp) \
  	src/testing/src/$(DEPDIR)/$(am__dirstamp)
@@ -517,7 +943,17 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/processor/stackwalker_amd64_unittest$(EXEEXT)
  	$(CXXLINK) $(src_processor_stackwalker_amd64_unittest_OBJECTS) $(src_processor_stackwalker_amd64_unittest_LDADD) $(LIBS)
  src/common/src_processor_stackwalker_arm_unittest-test_assembler.$(OBJEXT):  \
-@@ -3127,13 +3154,13 @@
+ 	src/common/$(am__dirstamp) \
+ 	src/common/$(DEPDIR)/$(am__dirstamp)
+ src/processor/src_processor_stackwalker_arm_unittest-stackwalker_arm_unittest.$(OBJEXT):  \
+ 	src/processor/$(am__dirstamp) \
+ 	src/processor/$(DEPDIR)/$(am__dirstamp)
+@@ -3122,23 +3149,23 @@
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
+ src/testing/gtest/src/src_processor_stackwalker_arm_unittest-gtest_main.$(OBJEXT):  \
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
  src/testing/src/src_processor_stackwalker_arm_unittest-gmock-all.$(OBJEXT):  \
  	src/testing/src/$(am__dirstamp) \
  	src/testing/src/$(DEPDIR)/$(am__dirstamp)
@@ -533,7 +969,17 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/processor/stackwalker_selftest$(EXEEXT)
  	$(CXXLINK) $(src_processor_stackwalker_selftest_OBJECTS) $(src_processor_stackwalker_selftest_LDADD) $(LIBS)
  src/common/src_processor_stackwalker_x86_unittest-test_assembler.$(OBJEXT):  \
-@@ -3151,7 +3178,7 @@
+ 	src/common/$(am__dirstamp) \
+ 	src/common/$(DEPDIR)/$(am__dirstamp)
+ src/processor/src_processor_stackwalker_x86_unittest-stackwalker_x86_unittest.$(OBJEXT):  \
+ 	src/processor/$(am__dirstamp) \
+ 	src/processor/$(DEPDIR)/$(am__dirstamp)
+@@ -3146,65 +3173,65 @@
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
+ src/testing/gtest/src/src_processor_stackwalker_x86_unittest-gtest_main.$(OBJEXT):  \
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
  src/testing/src/src_processor_stackwalker_x86_unittest-gmock-all.$(OBJEXT):  \
  	src/testing/src/$(am__dirstamp) \
  	src/testing/src/$(DEPDIR)/$(am__dirstamp)
@@ -542,7 +988,11 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/processor/stackwalker_x86_unittest$(EXEEXT)
  	$(CXXLINK) $(src_processor_stackwalker_x86_unittest_OBJECTS) $(src_processor_stackwalker_x86_unittest_LDADD) $(LIBS)
  src/processor/src_processor_static_address_map_unittest-static_address_map_unittest.$(OBJEXT):  \
-@@ -3163,7 +3190,7 @@
+ 	src/processor/$(am__dirstamp) \
+ 	src/processor/$(DEPDIR)/$(am__dirstamp)
+ src/testing/gtest/src/src_processor_static_address_map_unittest-gtest-all.$(OBJEXT):  \
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
  src/testing/src/src_processor_static_address_map_unittest-gmock-all.$(OBJEXT):  \
  	src/testing/src/$(am__dirstamp) \
  	src/testing/src/$(DEPDIR)/$(am__dirstamp)
@@ -551,7 +1001,11 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/processor/static_address_map_unittest$(EXEEXT)
  	$(CXXLINK) $(src_processor_static_address_map_unittest_OBJECTS) $(src_processor_static_address_map_unittest_LDADD) $(LIBS)
  src/processor/src_processor_static_contained_range_map_unittest-static_contained_range_map_unittest.$(OBJEXT):  \
-@@ -3175,7 +3202,7 @@
+ 	src/processor/$(am__dirstamp) \
+ 	src/processor/$(DEPDIR)/$(am__dirstamp)
+ src/testing/gtest/src/src_processor_static_contained_range_map_unittest-gtest-all.$(OBJEXT):  \
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
  src/testing/src/src_processor_static_contained_range_map_unittest-gmock-all.$(OBJEXT):  \
  	src/testing/src/$(am__dirstamp) \
  	src/testing/src/$(DEPDIR)/$(am__dirstamp)
@@ -560,7 +1014,11 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/processor/static_contained_range_map_unittest$(EXEEXT)
  	$(CXXLINK) $(src_processor_static_contained_range_map_unittest_OBJECTS) $(src_processor_static_contained_range_map_unittest_LDADD) $(LIBS)
  src/processor/src_processor_static_map_unittest-static_map_unittest.$(OBJEXT):  \
-@@ -3187,7 +3214,7 @@
+ 	src/processor/$(am__dirstamp) \
+ 	src/processor/$(DEPDIR)/$(am__dirstamp)
+ src/testing/gtest/src/src_processor_static_map_unittest-gtest-all.$(OBJEXT):  \
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
  src/testing/src/src_processor_static_map_unittest-gmock-all.$(OBJEXT):  \
  	src/testing/src/$(am__dirstamp) \
  	src/testing/src/$(DEPDIR)/$(am__dirstamp)
@@ -569,7 +1027,11 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/processor/static_map_unittest$(EXEEXT)
  	$(CXXLINK) $(src_processor_static_map_unittest_OBJECTS) $(src_processor_static_map_unittest_LDADD) $(LIBS)
  src/processor/src_processor_static_range_map_unittest-static_range_map_unittest.$(OBJEXT):  \
-@@ -3199,7 +3226,7 @@
+ 	src/processor/$(am__dirstamp) \
+ 	src/processor/$(DEPDIR)/$(am__dirstamp)
+ src/testing/gtest/src/src_processor_static_range_map_unittest-gtest-all.$(OBJEXT):  \
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
  src/testing/src/src_processor_static_range_map_unittest-gmock-all.$(OBJEXT):  \
  	src/testing/src/$(am__dirstamp) \
  	src/testing/src/$(DEPDIR)/$(am__dirstamp)
@@ -578,7 +1040,17 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/processor/static_range_map_unittest$(EXEEXT)
  	$(CXXLINK) $(src_processor_static_range_map_unittest_OBJECTS) $(src_processor_static_range_map_unittest_LDADD) $(LIBS)
  src/common/src_processor_synth_minidump_unittest-test_assembler.$(OBJEXT):  \
-@@ -3220,7 +3247,7 @@
+ 	src/common/$(am__dirstamp) \
+ 	src/common/$(DEPDIR)/$(am__dirstamp)
+ src/processor/src_processor_synth_minidump_unittest-synth_minidump_unittest.$(OBJEXT):  \
+ 	src/processor/$(am__dirstamp) \
+ 	src/processor/$(DEPDIR)/$(am__dirstamp)
+@@ -3215,17 +3242,17 @@
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
+ src/testing/src/src_processor_synth_minidump_unittest-gmock-all.$(OBJEXT):  \
+ 	src/testing/src/$(am__dirstamp) \
+ 	src/testing/src/$(DEPDIR)/$(am__dirstamp)
  src/processor/src_processor_synth_minidump_unittest-synth_minidump.$(OBJEXT):  \
  	src/processor/$(am__dirstamp) \
  	src/processor/$(DEPDIR)/$(am__dirstamp)
@@ -587,7 +1059,17 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/processor/synth_minidump_unittest$(EXEEXT)
  	$(CXXLINK) $(src_processor_synth_minidump_unittest_OBJECTS) $(src_processor_synth_minidump_unittest_LDADD) $(LIBS)
  src/tools/linux/core2md/$(am__dirstamp):
-@@ -3238,7 +3265,7 @@
+ 	@$(MKDIR_P) src/tools/linux/core2md
+ 	@: > src/tools/linux/core2md/$(am__dirstamp)
+ src/tools/linux/core2md/$(DEPDIR)/$(am__dirstamp):
+ 	@$(MKDIR_P) src/tools/linux/core2md/$(DEPDIR)
+ 	@: > src/tools/linux/core2md/$(DEPDIR)/$(am__dirstamp)
+@@ -3233,29 +3260,27 @@
+ 	src/tools/linux/core2md/$(am__dirstamp) \
+ 	src/tools/linux/core2md/$(DEPDIR)/$(am__dirstamp)
+ src/client/linux/minidump_writer/linux_core_dumper.$(OBJEXT):  \
+ 	src/client/linux/minidump_writer/$(am__dirstamp) \
+ 	src/client/linux/minidump_writer/$(DEPDIR)/$(am__dirstamp)
  src/common/linux/elf_core_dump.$(OBJEXT):  \
  	src/common/linux/$(am__dirstamp) \
  	src/common/linux/$(DEPDIR)/$(am__dirstamp)
@@ -596,7 +1078,10 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/tools/linux/core2md/core2md$(EXEEXT)
  	$(CXXLINK) $(src_tools_linux_core2md_core2md_OBJECTS) $(src_tools_linux_core2md_core2md_LDADD) $(LIBS)
  src/common/dwarf_cfi_to_module.$(OBJEXT): src/common/$(am__dirstamp) \
-@@ -3249,8 +3276,6 @@
+ 	src/common/$(DEPDIR)/$(am__dirstamp)
+ src/common/dwarf_cu_to_module.$(OBJEXT): src/common/$(am__dirstamp) \
+ 	src/common/$(DEPDIR)/$(am__dirstamp)
+ src/common/dwarf_line_to_module.$(OBJEXT): src/common/$(am__dirstamp) \
  	src/common/$(DEPDIR)/$(am__dirstamp)
  src/common/language.$(OBJEXT): src/common/$(am__dirstamp) \
  	src/common/$(DEPDIR)/$(am__dirstamp)
@@ -605,7 +1090,17 @@ diff --git a/Makefile.in b/Makefile.in
  src/common/stabs_reader.$(OBJEXT): src/common/$(am__dirstamp) \
  	src/common/$(DEPDIR)/$(am__dirstamp)
  src/common/stabs_to_module.$(OBJEXT): src/common/$(am__dirstamp) \
-@@ -3279,7 +3304,7 @@
+ 	src/common/$(DEPDIR)/$(am__dirstamp)
+ src/common/dwarf/bytereader.$(OBJEXT):  \
+ 	src/common/dwarf/$(am__dirstamp) \
+ 	src/common/dwarf/$(DEPDIR)/$(am__dirstamp)
+ src/common/dwarf/dwarf2diehandler.$(OBJEXT):  \
+@@ -3274,65 +3299,65 @@
+ 	@$(MKDIR_P) src/tools/linux/dump_syms
+ 	@: > src/tools/linux/dump_syms/$(am__dirstamp)
+ src/tools/linux/dump_syms/$(DEPDIR)/$(am__dirstamp):
+ 	@$(MKDIR_P) src/tools/linux/dump_syms/$(DEPDIR)
+ 	@: > src/tools/linux/dump_syms/$(DEPDIR)/$(am__dirstamp)
  src/tools/linux/dump_syms/dump_syms.$(OBJEXT):  \
  	src/tools/linux/dump_syms/$(am__dirstamp) \
  	src/tools/linux/dump_syms/$(DEPDIR)/$(am__dirstamp)
@@ -614,7 +1109,11 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/tools/linux/dump_syms/dump_syms$(EXEEXT)
  	$(CXXLINK) $(src_tools_linux_dump_syms_dump_syms_OBJECTS) $(src_tools_linux_dump_syms_dump_syms_LDADD) $(LIBS)
  src/tools/linux/md2core/$(am__dirstamp):
-@@ -3291,7 +3316,7 @@
+ 	@$(MKDIR_P) src/tools/linux/md2core
+ 	@: > src/tools/linux/md2core/$(am__dirstamp)
+ src/tools/linux/md2core/$(DEPDIR)/$(am__dirstamp):
+ 	@$(MKDIR_P) src/tools/linux/md2core/$(DEPDIR)
+ 	@: > src/tools/linux/md2core/$(DEPDIR)/$(am__dirstamp)
  src/tools/linux/md2core/minidump-2-core.$(OBJEXT):  \
  	src/tools/linux/md2core/$(am__dirstamp) \
  	src/tools/linux/md2core/$(DEPDIR)/$(am__dirstamp)
@@ -623,7 +1122,14 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/tools/linux/md2core/minidump-2-core$(EXEEXT)
  	$(CXXLINK) $(src_tools_linux_md2core_minidump_2_core_OBJECTS) $(src_tools_linux_md2core_minidump_2_core_LDADD) $(LIBS)
  src/testing/gtest/src/src_tools_linux_md2core_minidump_2_core_unittest-gtest-all.$(OBJEXT):  \
-@@ -3306,7 +3331,7 @@
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
+ src/testing/gtest/src/src_tools_linux_md2core_minidump_2_core_unittest-gtest_main.$(OBJEXT):  \
+ 	src/testing/gtest/src/$(am__dirstamp) \
+ 	src/testing/gtest/src/$(DEPDIR)/$(am__dirstamp)
+ src/testing/src/src_tools_linux_md2core_minidump_2_core_unittest-gmock-all.$(OBJEXT):  \
+ 	src/testing/src/$(am__dirstamp) \
+ 	src/testing/src/$(DEPDIR)/$(am__dirstamp)
  src/tools/linux/md2core/src_tools_linux_md2core_minidump_2_core_unittest-minidump_memory_range_unittest.$(OBJEXT):  \
  	src/tools/linux/md2core/$(am__dirstamp) \
  	src/tools/linux/md2core/$(DEPDIR)/$(am__dirstamp)
@@ -632,7 +1138,14 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/tools/linux/md2core/minidump_2_core_unittest$(EXEEXT)
  	$(CXXLINK) $(src_tools_linux_md2core_minidump_2_core_unittest_OBJECTS) $(src_tools_linux_md2core_minidump_2_core_unittest_LDADD) $(LIBS)
  src/common/linux/http_upload.$(OBJEXT):  \
-@@ -3321,13 +3346,13 @@
+ 	src/common/linux/$(am__dirstamp) \
+ 	src/common/linux/$(DEPDIR)/$(am__dirstamp)
+ src/tools/linux/symupload/$(am__dirstamp):
+ 	@$(MKDIR_P) src/tools/linux/symupload
+ 	@: > src/tools/linux/symupload/$(am__dirstamp)
+ src/tools/linux/symupload/$(DEPDIR)/$(am__dirstamp):
+ 	@$(MKDIR_P) src/tools/linux/symupload/$(DEPDIR)
+ 	@: > src/tools/linux/symupload/$(DEPDIR)/$(am__dirstamp)
  src/tools/linux/symupload/minidump_upload.$(OBJEXT):  \
  	src/tools/linux/symupload/$(am__dirstamp) \
  	src/tools/linux/symupload/$(DEPDIR)/$(am__dirstamp)
@@ -648,7 +1161,17 @@ diff --git a/Makefile.in b/Makefile.in
  	@rm -f src/tools/linux/symupload/sym_upload$(EXEEXT)
  	$(CXXLINK) $(src_tools_linux_symupload_sym_upload_OBJECTS) $(src_tools_linux_symupload_sym_upload_LDADD) $(LIBS)
  
-@@ -5864,9 +5889,7 @@
+ mostlyclean-compile:
+ 	-rm -f *.$(OBJEXT)
+ 	-rm -f src/client/linux/crash_generation/crash_generation_client.$(OBJEXT)
+ 	-rm -f src/client/linux/crash_generation/crash_generation_server.$(OBJEXT)
+ 	-rm -f src/client/linux/handler/exception_handler.$(OBJEXT)
+@@ -5859,19 +5884,17 @@
+ 	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(docdir)'"; \
+ 	  $(INSTALL_DATA) $$files "$(DESTDIR)$(docdir)" || exit $$?; \
+ 	done
+ 
+ uninstall-dist_docDATA:
  	@$(NORMAL_UNINSTALL)
  	@list='$(dist_doc_DATA)'; test -n "$(docdir)" || list=; \
  	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
@@ -659,7 +1182,17 @@ diff --git a/Makefile.in b/Makefile.in
  
  ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
  	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
-@@ -6001,14 +6024,15 @@
+ 	unique=`for i in $$list; do \
+ 	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+ 	  done | \
+ 	  $(AWK) '{ files[$$0] = 1; nonempty = 1; } \
+ 	      END { if (nonempty) { for (i in files) print i; }; }'`; \
+@@ -5996,24 +6019,25 @@
+ 	  report=""; \
+ 	  if test "$$failed" -ne 0 && test -n "$(PACKAGE_BUGREPORT)"; then \
+ 	    report="Please report to $(PACKAGE_BUGREPORT)"; \
+ 	    test `echo "$$report" | wc -c` -le `echo "$$banner" | wc -c` || \
+ 	      dashes="$$report"; \
  	  fi; \
  	  dashes=`echo "$$dashes" | sed s/./=/g`; \
  	  if test "$$failed" -eq 0; then \
@@ -681,7 +1214,17 @@ diff --git a/Makefile.in b/Makefile.in
  	  test "$$failed" -eq 0; \
  	else :; fi
  
-@@ -6056,7 +6080,11 @@
+ distdir: $(DISTFILES)
+ 	$(am__remove_distdir)
+ 	test -d "$(distdir)" || mkdir "$(distdir)"
+ 	@srcdirstrip=`echo "$(srcdir)" | sed 's/[].[^$$\\*]/\\\\&/g'`; \
+ 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's/[].[^$$\\*]/\\\\&/g'`; \
+@@ -6051,25 +6075,29 @@
+ 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
+ 	  ! -type d ! -perm -444 -exec $(install_sh) -c -m a+r {} {} \; \
+ 	|| chmod -R a+r "$(distdir)"
+ dist-gzip: distdir
+ 	tardir=$(distdir) && $(am__tar) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
  	$(am__remove_distdir)
  
  dist-bzip2: distdir
@@ -694,7 +1237,7 @@ diff --git a/Makefile.in b/Makefile.in
  	$(am__remove_distdir)
  
  dist-lzma: distdir
-@@ -6064,7 +6092,7 @@
+ 	tardir=$(distdir) && $(am__tar) | lzma -9 -c >$(distdir).tar.lzma
  	$(am__remove_distdir)
  
  dist-xz: distdir
@@ -703,7 +1246,17 @@ diff --git a/Makefile.in b/Makefile.in
  	$(am__remove_distdir)
  
  dist-tarZ: distdir
-@@ -6095,6 +6123,8 @@
+ 	tardir=$(distdir) && $(am__tar) | compress -c >$(distdir).tar.Z
+ 	$(am__remove_distdir)
+ 
+ dist-shar: distdir
+ 	shar $(distdir) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).shar.gz
+@@ -6090,16 +6118,18 @@
+ distcheck: dist
+ 	case '$(DIST_ARCHIVES)' in \
+ 	*.tar.gz*) \
+ 	  GZIP=$(GZIP_ENV) gzip -dc $(distdir).tar.gz | $(am__untar) ;;\
+ 	*.tar.bz2*) \
  	  bzip2 -dc $(distdir).tar.bz2 | $(am__untar) ;;\
  	*.tar.lzma*) \
  	  lzma -dc $(distdir).tar.lzma | $(am__untar) ;;\
@@ -712,7 +1265,17 @@ diff --git a/Makefile.in b/Makefile.in
  	*.tar.xz*) \
  	  xz -dc $(distdir).tar.xz | $(am__untar) ;;\
  	*.tar.Z*) \
-@@ -6114,6 +6144,7 @@
+ 	  uncompress -c $(distdir).tar.Z | $(am__untar) ;;\
+ 	*.shar.gz*) \
+ 	  GZIP=$(GZIP_ENV) gzip -dc $(distdir).shar.gz | unshar ;;\
+ 	*.zip*) \
+ 	  unzip $(distdir).zip ;;\
+@@ -6109,16 +6139,17 @@
+ 	mkdir $(distdir)/_inst
+ 	chmod a-w $(distdir)
+ 	test -d $(distdir)/_build || exit 0; \
+ 	dc_install_base=`$(am__cd) $(distdir)/_inst && pwd | sed -e 's,^[^:\\/]:[\\/],/,'` \
+ 	  && dc_destdir="$${TMPDIR-/tmp}/am-dc-$$$$/" \
  	  && am__cwd=`pwd` \
  	  && $(am__cd) $(distdir)/_build \
  	  && ../configure --srcdir=.. --prefix="$$dc_install_base" \
@@ -720,7 +1283,17 @@ diff --git a/Makefile.in b/Makefile.in
  	    $(DISTCHECK_CONFIGURE_FLAGS) \
  	  && $(MAKE) $(AM_MAKEFLAGS) \
  	  && $(MAKE) $(AM_MAKEFLAGS) dvi \
-@@ -6142,8 +6173,16 @@
+ 	  && $(MAKE) $(AM_MAKEFLAGS) check \
+ 	  && $(MAKE) $(AM_MAKEFLAGS) install \
+ 	  && $(MAKE) $(AM_MAKEFLAGS) installcheck \
+ 	  && $(MAKE) $(AM_MAKEFLAGS) uninstall \
+ 	  && $(MAKE) $(AM_MAKEFLAGS) distuninstallcheck_dir="$$dc_install_base" \
+@@ -6137,18 +6168,26 @@
+ 	  && $(MAKE) $(AM_MAKEFLAGS) distcleancheck \
+ 	  && cd "$$am__cwd" \
+ 	  || exit 1
+ 	$(am__remove_distdir)
+ 	@(echo "$(distdir) archives ready for distribution: "; \
  	  list='$(DIST_ARCHIVES)'; for i in $$list; do echo $$i; done) | \
  	  sed -e 1h -e 1s/./=/g -e 1p -e 1x -e '$$p' -e '$$x'
  distuninstallcheck:
@@ -739,7 +1312,17 @@ diff --git a/Makefile.in b/Makefile.in
  	   || { echo "ERROR: files left after uninstall:" ; \
  	        if test -n "$(DESTDIR)"; then \
  	          echo "  (check DESTDIR support)"; \
-@@ -6178,10 +6217,15 @@
+ 	        fi ; \
+ 	        $(distuninstallcheck_listfiles) ; \
+ 	        exit 1; } >&2
+ distcleancheck: distclean
+ 	@if test '$(srcdir)' = . ; then \
+@@ -6173,20 +6212,25 @@
+ install-data: install-data-am
+ uninstall: uninstall-am
+ 
+ install-am: all-am
+ 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
  
  installcheck: installcheck-am
  install-strip:
@@ -759,7 +1342,17 @@ diff --git a/Makefile.in b/Makefile.in
  mostlyclean-generic:
  
  clean-generic:
-@@ -6313,8 +6357,8 @@
+ 
+ distclean-generic:
+ 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
+ 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
+ 	-rm -f src/$(am__dirstamp)
+@@ -6308,18 +6352,18 @@
+ uninstall-am: uninstall-binPROGRAMS uninstall-dist_docDATA \
+ 	uninstall-libLIBRARIES
+ 
+ .MAKE: check-am install-am install-strip
+ 
  .PHONY: CTAGS GTAGS all all-am am--refresh check check-TESTS check-am \
  	clean clean-binPROGRAMS clean-checkPROGRAMS clean-generic \
  	clean-libLIBRARIES clean-noinstLIBRARIES clean-noinstPROGRAMS \
@@ -770,10 +1363,15 @@ diff --git a/Makefile.in b/Makefile.in
  	distclean-compile distclean-generic distclean-hdr \
  	distclean-tags distcleancheck distdir distuninstallcheck dvi \
  	dvi-am html html-am info info-am install install-am \
+ 	install-binPROGRAMS install-data install-data-am \
+ 	install-dist_docDATA install-dvi install-dvi-am install-exec \
+ 	install-exec-am install-html install-html-am install-info \
+ 	install-info-am install-libLIBRARIES install-man install-pdf \
+ 	install-pdf-am install-ps install-ps-am install-strip \
 diff --git a/aclocal.m4 b/aclocal.m4
 --- a/aclocal.m4
 +++ b/aclocal.m4
-@@ -1,7 +1,8 @@
+@@ -1,61 +1,65 @@
 -# generated automatically by aclocal 1.11.1 -*- Autoconf -*-
 +# generated automatically by aclocal 1.11.3 -*- Autoconf -*-
  
@@ -784,7 +1382,11 @@ diff --git a/aclocal.m4 b/aclocal.m4
  # This file is free software; the Free Software Foundation
  # gives unlimited permission to copy and/or distribute it,
  # with or without modifications, as long as this notice is preserved.
-@@ -13,18 +14,21 @@
+ 
+ # This program is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+ # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ # PARTICULAR PURPOSE.
  
  m4_ifndef([AC_AUTOCONF_VERSION],
    [m4_copy([m4_PACKAGE_VERSION], [AC_AUTOCONF_VERSION])])dnl
@@ -809,7 +1411,9 @@ diff --git a/aclocal.m4 b/aclocal.m4
  # AM_AUTOMAKE_VERSION(VERSION)
  # ----------------------------
  # Automake X.Y traces this macro to ensure aclocal.m4 has been
-@@ -34,7 +38,7 @@
+ # generated from the m4 files accompanying Automake X.Y.
+ # (This private macro should not be called outside this file.)
+ AC_DEFUN([AM_AUTOMAKE_VERSION],
  [am__api_version='1.11'
  dnl Some users find AM_AUTOMAKE_VERSION and mistake it for a way to
  dnl require some minimum version.  Point them to the right macro.
@@ -818,7 +1422,15 @@ diff --git a/aclocal.m4 b/aclocal.m4
        [AC_FATAL([Do not call $0, use AM_INIT_AUTOMAKE([$1]).])])dnl
  ])
  
-@@ -50,7 +54,7 @@
+ # _AM_AUTOCONF_VERSION(VERSION)
+ # -----------------------------
+ # aclocal traces this macro to find the Autoconf version.
+ # This is a private macro too.  Using m4_define simplifies
+ # the logic in aclocal, which can simply ignore this definition.
+ m4_define([_AM_AUTOCONF_VERSION], [])
+ 
+ # AM_SET_CURRENT_AUTOMAKE_VERSION
+ # -------------------------------
  # Call AM_AUTOMAKE_VERSION and AM_AUTOMAKE_VERSION so they can be traced.
  # This function is AC_REQUIREd by AM_INIT_AUTOMAKE.
  AC_DEFUN([AM_SET_CURRENT_AUTOMAKE_VERSION],
@@ -827,7 +1439,17 @@ diff --git a/aclocal.m4 b/aclocal.m4
  m4_ifndef([AC_AUTOCONF_VERSION],
    [m4_copy([m4_PACKAGE_VERSION], [AC_AUTOCONF_VERSION])])dnl
  _AM_AUTOCONF_VERSION(m4_defn([AC_AUTOCONF_VERSION]))])
-@@ -79,12 +83,14 @@
+ 
+ # Figure out how to run the assembler.                      -*- Autoconf -*-
+ 
+ # Copyright (C) 2001, 2003, 2004, 2005, 2006  Free Software Foundation, Inc.
+ #
+@@ -74,22 +78,24 @@
+ test "${CCASFLAGS+set}" = set || CCASFLAGS=$CFLAGS
+ AC_ARG_VAR([CCAS],      [assembler compiler command (defaults to CC)])
+ AC_ARG_VAR([CCASFLAGS], [assembler compiler flags (defaults to CFLAGS)])
+ _AM_IF_OPTION([no-dependencies],, [_AM_DEPENDENCIES([CCAS])])dnl
+ ])
  
  # AM_AUX_DIR_EXPAND                                         -*- Autoconf -*-
  
@@ -843,7 +1465,17 @@ diff --git a/aclocal.m4 b/aclocal.m4
  # For projects using AC_CONFIG_AUX_DIR([foo]), Autoconf sets
  # $ac_aux_dir to `$srcdir/foo'.  In other projects, it is set to
  # `$srcdir', `$srcdir/..', or `$srcdir/../..'.
-@@ -166,14 +172,14 @@
+ #
+ # Of course, Automake must honor this variable whenever it calls a
+ # tool from the auxiliary directory.  The problem is that $srcdir (and
+ # therefore $ac_aux_dir as well) can be either absolute or relative,
+ # depending on how configure is run.  This is pretty annoying, since
+@@ -161,24 +167,24 @@
+   $1_FALSE=
+ fi
+ AC_CONFIG_COMMANDS_PRE(
+ [if test -z "${$1_TRUE}" && test -z "${$1_FALSE}"; then
+   AC_MSG_ERROR([[conditional "$1" was never defined.
  Usually this means the macro was only invoked conditionally.]])
  fi])])
  
@@ -861,7 +1493,17 @@ diff --git a/aclocal.m4 b/aclocal.m4
  
  # There are a few dirty hacks below to avoid letting `AC_PROG_CC' be
  # written in clear, in which case automake, when reading aclocal.m4,
-@@ -213,6 +219,7 @@
+ # will think it sees a *use*, and therefore will trigger all it's
+ # C support machinery.  Also note that it means that autoscan, seeing
+ # CC etc. in the Makefile, will ask for an AC_PROG_CC use...
+ 
+ 
+@@ -208,16 +214,17 @@
+ AC_CACHE_CHECK([dependency style of $depcc],
+                [am_cv_$1_dependencies_compiler_type],
+ [if test -z "$AMDEP_TRUE" && test -f "$am_depcomp"; then
+   # We make a subdir and do the tests there.  Otherwise we can end up
+   # making bogus files that we don't know about and never remove.  For
    # instance it was reported that on HP-UX the gcc test will end up
    # making a dummy file named `D' -- because `-MD' means `put the output
    # in D'.
@@ -869,7 +1511,17 @@ diff --git a/aclocal.m4 b/aclocal.m4
    mkdir conftest.dir
    # Copy depcomp to subdir because otherwise we won't find it if we're
    # using a relative directory.
-@@ -277,7 +284,7 @@
+   cp "$am_depcomp" conftest.dir
+   cd conftest.dir
+   # We will build objects and dependencies in a subdirectory because
+   # it helps to detect inapplicable dependency modes.  For instance
+   # both Tru64's cc and ICC support -MD to output dependencies as a
+@@ -272,17 +279,17 @@
+       # after this tag, mechanisms are not by side-effect, so they'll
+       # only be used when explicitly requested
+       if test "x$enable_dependency_tracking" = xyes; then
+ 	continue
+       else
  	break
        fi
        ;;
@@ -878,7 +1530,17 @@ diff --git a/aclocal.m4 b/aclocal.m4
        # This compiler won't grok `-c -o', but also, the minuso test has
        # not run yet.  These depmodes are late enough in the game, and
        # so weak that their functioning should not be impacted.
-@@ -342,10 +349,13 @@
+       am__obj=conftest.${OBJEXT-o}
+       am__minus_obj=
+       ;;
+     none) break ;;
+     esac
+@@ -337,20 +344,23 @@
+ # ------------
+ AC_DEFUN([AM_DEP_TRACK],
+ [AC_ARG_ENABLE(dependency-tracking,
+ [  --disable-dependency-tracking  speeds up one-time build
+   --enable-dependency-tracking   do not reject slow dependency extractors])
  if test "x$enable_dependency_tracking" != xno; then
    am_depcomp="$ac_aux_dir/depcomp"
    AMDEPBACKSLASH='\'
@@ -892,7 +1554,17 @@ diff --git a/aclocal.m4 b/aclocal.m4
  ])
  
  # Generate code to set up dependency tracking.              -*- Autoconf -*-
-@@ -579,12 +589,15 @@
+ 
+ # Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2008
+ # Free Software Foundation, Inc.
+ #
+ # This file is free software; the Free Software Foundation
+@@ -574,22 +584,25 @@
+     $_am_arg | $_am_arg:* )
+       break ;;
+     * )
+       _am_stamp_count=`expr $_am_stamp_count + 1` ;;
+   esac
  done
  echo "timestamp for $_am_arg" >`AS_DIRNAME(["$_am_arg"])`/stamp-h[]$_am_stamp_count])
  
@@ -909,7 +1581,17 @@ diff --git a/aclocal.m4 b/aclocal.m4
  # AM_PROG_INSTALL_SH
  # ------------------
  # Define $install_sh.
-@@ -751,12 +764,15 @@
+ AC_DEFUN([AM_PROG_INSTALL_SH],
+ [AC_REQUIRE([AM_AUX_DIR_EXPAND])dnl
+ if test x"${install_sh}" != xset; then
+   case $am_aux_dir in
+   *\ * | *\	*)
+@@ -746,22 +759,25 @@
+ if eval "$MISSING --run true"; then
+   am_missing_run="$MISSING --run "
+ else
+   am_missing_run=
+   AC_MSG_WARN([`missing' script is too old or missing])
  fi
  ])
  
@@ -926,7 +1608,17 @@ diff --git a/aclocal.m4 b/aclocal.m4
  # AM_PROG_MKDIR_P
  # ---------------
  # Check for `mkdir -p'.
-@@ -779,13 +795,14 @@
+ AC_DEFUN([AM_PROG_MKDIR_P],
+ [AC_PREREQ([2.60])dnl
+ AC_REQUIRE([AC_PROG_MKDIR_P])dnl
+ dnl Automake 1.8 to 1.9.6 used to define mkdir_p.  We now use MKDIR_P,
+ dnl while keeping a definition of mkdir_p for backward compatibility.
+@@ -774,53 +790,56 @@
+ case $mkdir_p in
+   [[\\/$]]* | ?:[[\\/]]*) ;;
+   */*) mkdir_p="\$(top_builddir)/$mkdir_p" ;;
+ esac
+ ])
  
  # Helper functions for option handling.                     -*- Autoconf -*-
  
@@ -943,7 +1635,7 @@ diff --git a/aclocal.m4 b/aclocal.m4
  
  # _AM_MANGLE_OPTION(NAME)
  # -----------------------
-@@ -793,13 +810,13 @@
+ AC_DEFUN([_AM_MANGLE_OPTION],
  [[_AM_OPTION_]m4_bpatsubst($1, [[^a-zA-Z0-9_]], [_])])
  
  # _AM_SET_OPTION(NAME)
@@ -959,7 +1651,10 @@ diff --git a/aclocal.m4 b/aclocal.m4
  # OPTIONS is a space-separated list of Automake options.
  AC_DEFUN([_AM_SET_OPTIONS],
  [m4_foreach_w([_AM_Option], [$1], [_AM_SET_OPTION(_AM_Option)])])
-@@ -810,12 +827,14 @@
+ 
+ # _AM_IF_OPTION(OPTION, IF-SET, [IF-NOT-SET])
+ # -------------------------------------------
+ # Execute IF-SET if OPTION is set, IF-NOT-SET otherwise.
  AC_DEFUN([_AM_IF_OPTION],
  [m4_ifset(_AM_MANGLE_OPTION([$1]), [$2], [$3])])
  
@@ -975,7 +1670,17 @@ diff --git a/aclocal.m4 b/aclocal.m4
  # AM_RUN_LOG(COMMAND)
  # -------------------
  # Run COMMAND, save the exit status in ac_status, and log it.
-@@ -892,12 +911,14 @@
+ # (This has been adapted from Autoconf's _AC_RUN_LOG macro.)
+ AC_DEFUN([AM_RUN_LOG],
+ [{ echo "$as_me:$LINENO: $1" >&AS_MESSAGE_LOG_FD
+    ($1) >&AS_MESSAGE_LOG_FD 2>&AS_MESSAGE_LOG_FD
+    ac_status=$?
+@@ -887,22 +906,24 @@
+    # Ok.
+    :
+ else
+    AC_MSG_ERROR([newly created file is older than distributed files!
+ Check your system clock])
  fi
  AC_MSG_RESULT(yes)])
  
@@ -991,7 +1696,17 @@ diff --git a/aclocal.m4 b/aclocal.m4
  # AM_PROG_INSTALL_STRIP
  # ---------------------
  # One issue with vendor `install' (even GNU) is that you can't
-@@ -920,13 +941,13 @@
+ # specify the program used to strip binaries.  This is especially
+ # annoying in cross-compiling environments, where the build's strip
+ # is unlikely to handle the host's binaries.
+ # Fortunately install-sh will honor a STRIPPROG variable, so we
+ # always use install-sh in `make install-strip', and initialize
+@@ -915,38 +936,38 @@
+ # will honor the `STRIP' environment variable to overrule this program.
+ dnl Don't test for $cross_compiling = yes, because it might be `maybe'.
+ if test "$cross_compiling" != no; then
+   AC_CHECK_TOOL([STRIP], [strip], :)
+ fi
  INSTALL_STRIP_PROGRAM="\$(install_sh) -c -s"
  AC_SUBST([INSTALL_STRIP_PROGRAM])])
  
@@ -1007,7 +1722,8 @@ diff --git a/aclocal.m4 b/aclocal.m4
  
  # _AM_SUBST_NOTMAKE(VARIABLE)
  # ---------------------------
-@@ -935,13 +956,13 @@
+ # Prevent Automake from outputting VARIABLE = @VARIABLE@ in Makefile.in.
+ # This macro is traced by Automake.
  AC_DEFUN([_AM_SUBST_NOTMAKE])
  
  # AM_SUBST_NOTMAKE(VARIABLE)
@@ -1023,7 +1739,17 @@ diff --git a/aclocal.m4 b/aclocal.m4
  #
  # This file is free software; the Free Software Foundation
  # gives unlimited permission to copy and/or distribute it,
-@@ -963,10 +984,11 @@
+ # with or without modifications, as long as this notice is preserved.
+ 
+ # serial 2
+ 
+ # _AM_PROG_TAR(FORMAT)
+@@ -958,20 +979,21 @@
+ # writing to stdout a FORMAT-tarball containing the directory
+ # $tardir.
+ #     tardir=directory && $(am__tar) > result.tar
+ #
+ # Substitute a variable $(am__untar) that extract such
  # a tarball read from stdin.
  #     $(am__untar) < result.tar
  AC_DEFUN([_AM_PROG_TAR],
@@ -1038,10 +1764,15 @@ diff --git a/aclocal.m4 b/aclocal.m4
       [m4_case([$1], [ustar],, [pax],,
                [m4_fatal([Unknown tar format])])
  AC_MSG_CHECKING([how to create a $1 tar archive])
+ # Loop over all known methods to create a tar archive until one works.
+ _am_tools='gnutar m4_if([$1], [ustar], [plaintar]) pax cpio none'
+ _am_tools=${am_cv_prog_tar_$1-$_am_tools}
+ # Do not fold the above two line into one, because Tru64 sh and
+ # Solaris sh will not grok spaces in the rhs of `-'.
 diff --git a/configure b/configure
 --- a/configure
 +++ b/configure
-@@ -1,13 +1,13 @@
+@@ -1,18 +1,18 @@
  #! /bin/sh
  # Guess values for system-dependent variables and create Makefiles.
 -# Generated by GNU Autoconf 2.65 for breakpad 0.1.
@@ -1058,7 +1789,17 @@ diff --git a/configure b/configure
  #
  #
  # This configure script is free software; the Free Software Foundation
-@@ -91,6 +91,7 @@
+ # gives unlimited permission to copy, distribute and modify it.
+ ## -------------------- ##
+ ## M4sh Initialization. ##
+ ## -------------------- ##
+ 
+@@ -86,16 +86,17 @@
+ # IFS
+ # We need space, tab and new line, in precisely that order.  Quoting is
+ # there to prevent editors from complaining about space-tab.
+ # (If _AS_PATH_WALK were called with IFS unset, it would disable word
+ # splitting by setting IFS to empty value.)
  IFS=" ""	$as_nl"
  
  # Find who we are.  Look in the path if we contain no directory separator.
@@ -1066,7 +1807,17 @@ diff --git a/configure b/configure
  case $0 in #((
    *[\\/]* ) as_myself=$0 ;;
    *) as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-@@ -216,11 +217,18 @@
+ for as_dir in $PATH
+ do
+   IFS=$as_save_IFS
+   test -z "$as_dir" && as_dir=.
+     test -r "$as_dir/$0" && as_myself=$as_dir/$0 && break
+@@ -211,21 +212,28 @@
+ fi; }
+ IFS=$as_save_IFS
+ 
+ 
+       if test "x$CONFIG_SHELL" != x; then :
    # We cannot yet assume a decent shell, so we have to provide a
  	# neutralization value for shells without unset; and this also
  	# works around shells that cannot unset nonexistent variables.
@@ -1086,7 +1837,17 @@ diff --git a/configure b/configure
  fi
  
      if test x$as_have_required = xno; then :
-@@ -319,7 +327,7 @@
+   $as_echo "$0: This script requires a shell more modern than all"
+   $as_echo "$0: the shells that I found on your system."
+   if test x${ZSH_VERSION+set} = xset ; then
+     $as_echo "$0: In particular, zsh $ZSH_VERSION has bugs and should"
+     $as_echo "$0: be upgraded to zsh 4.3.4 or later."
+@@ -314,17 +322,17 @@
+ 	  /^X\(\/\).*/{
+ 	    s//\1/
+ 	    q
+ 	  }
+ 	  s/.*/./; q'`
        test -d "$as_dir" && break
      done
      test -z "$as_dirs" || eval "mkdir $as_dirs"
@@ -1095,7 +1856,17 @@ diff --git a/configure b/configure
  
  
  } # as_fn_mkdir_p
-@@ -359,19 +367,19 @@
+ # as_fn_append VAR VALUE
+ # ----------------------
+ # Append the text in VALUE to the end of the definition contained in VAR. Take
+ # advantage of any shell optimizations that allow amortized linear growth over
+ # repeated appends, instead of the typical quadratic growth present in naive
+@@ -354,29 +362,29 @@
+ else
+   as_fn_arith ()
+   {
+     as_val=`expr "$@" || test $? -eq 1`
+   }
  fi # as_fn_arith
  
  
@@ -1123,7 +1894,17 @@ diff --git a/configure b/configure
    as_fn_exit $as_status
  } # as_fn_error
  
-@@ -533,7 +541,7 @@
+ if expr a : '\(a\)' >/dev/null 2>&1 &&
+    test "X`expr 00001 : '.*\(...\)'`" = X001; then
+   as_expr=expr
+ else
+   as_expr=false
+@@ -528,17 +536,17 @@
+ # Sed expression to map a string onto a valid variable name.
+ as_tr_sh="eval sed 'y%*+%pp%;s%[^_$as_cr_alnum]%_%g'"
+ 
+ 
+ test -n "$DJDIR" || exec 7<&0 </dev/null
  exec 6>&1
  
  # Name of the host.
@@ -1132,7 +1913,17 @@ diff --git a/configure b/configure
  # so uname gets run too.
  ac_hostname=`(hostname || uname -n) 2>/dev/null | sed 1q`
  
-@@ -632,6 +640,7 @@
+ #
+ # Initializations.
+ #
+ ac_default_prefix=/usr/local
+ ac_clean_files=
+@@ -627,16 +635,17 @@
+ am__fastdepCCAS_FALSE
+ am__fastdepCCAS_TRUE
+ CCASDEPMODE
+ CCASFLAGS
+ CCAS
  am__fastdepCC_FALSE
  am__fastdepCC_TRUE
  CCDEPMODE
@@ -1140,7 +1931,17 @@ diff --git a/configure b/configure
  AMDEPBACKSLASH
  AMDEP_FALSE
  AMDEP_TRUE
-@@ -799,8 +808,9 @@
+ am__quote
+ am__include
+ DEPDIR
+ OBJEXT
+ EXEEXT
+@@ -794,18 +803,19 @@
+   # If the previous option needs an argument, assign it.
+   if test -n "$ac_prev"; then
+     eval $ac_prev=\$ac_option
+     ac_prev=
+     continue
    fi
  
    case $ac_option in
@@ -1152,7 +1953,17 @@ diff --git a/configure b/configure
    esac
  
    # Accept the important Cygnus configure options, so we can diagnose typos.
-@@ -845,7 +855,7 @@
+ 
+   case $ac_dashdash$ac_option in
+   --)
+     ac_dashdash=yes ;;
+ 
+@@ -840,17 +850,17 @@
+   -datarootdir=* | --datarootdir=* | --datarootdi=* | --datarootd=* \
+   | --dataroot=* | --dataroo=* | --dataro=* | --datar=*)
+     datarootdir=$ac_optarg ;;
+ 
+   -disable-* | --disable-*)
      ac_useropt=`expr "x$ac_option" : 'x-*disable-\(.*\)'`
      # Reject names that are not valid shell variable names.
      expr "x$ac_useropt" : ".*[^-+._$as_cr_alnum]" >/dev/null &&
@@ -1161,7 +1972,17 @@ diff --git a/configure b/configure
      ac_useropt_orig=$ac_useropt
      ac_useropt=`$as_echo "$ac_useropt" | sed 's/[-+.]/_/g'`
      case $ac_user_opts in
-@@ -871,7 +881,7 @@
+       *"
+ "enable_$ac_useropt"
+ "*) ;;
+       *) ac_unrecognized_opts="$ac_unrecognized_opts$ac_unrecognized_sep--disable-$ac_useropt_orig"
+ 	 ac_unrecognized_sep=', ';;
+@@ -866,17 +876,17 @@
+     ac_prev=dvidir ;;
+   -dvidir=* | --dvidir=* | --dvidi=* | --dvid=* | --dvi=* | --dv=*)
+     dvidir=$ac_optarg ;;
+ 
+   -enable-* | --enable-*)
      ac_useropt=`expr "x$ac_option" : 'x-*enable-\([^=]*\)'`
      # Reject names that are not valid shell variable names.
      expr "x$ac_useropt" : ".*[^-+._$as_cr_alnum]" >/dev/null &&
@@ -1170,7 +1991,17 @@ diff --git a/configure b/configure
      ac_useropt_orig=$ac_useropt
      ac_useropt=`$as_echo "$ac_useropt" | sed 's/[-+.]/_/g'`
      case $ac_user_opts in
-@@ -1075,7 +1085,7 @@
+       *"
+ "enable_$ac_useropt"
+ "*) ;;
+       *) ac_unrecognized_opts="$ac_unrecognized_opts$ac_unrecognized_sep--enable-$ac_useropt_orig"
+ 	 ac_unrecognized_sep=', ';;
+@@ -1070,33 +1080,33 @@
+ 
+   -version | --version | --versio | --versi | --vers | -V)
+     ac_init_version=: ;;
+ 
+   -with-* | --with-*)
      ac_useropt=`expr "x$ac_option" : 'x-*with-\([^=]*\)'`
      # Reject names that are not valid shell variable names.
      expr "x$ac_useropt" : ".*[^-+._$as_cr_alnum]" >/dev/null &&
@@ -1179,7 +2010,15 @@ diff --git a/configure b/configure
      ac_useropt_orig=$ac_useropt
      ac_useropt=`$as_echo "$ac_useropt" | sed 's/[-+.]/_/g'`
      case $ac_user_opts in
-@@ -1091,7 +1101,7 @@
+       *"
+ "with_$ac_useropt"
+ "*) ;;
+       *) ac_unrecognized_opts="$ac_unrecognized_opts$ac_unrecognized_sep--with-$ac_useropt_orig"
+ 	 ac_unrecognized_sep=', ';;
+     esac
+     eval with_$ac_useropt=\$ac_optarg ;;
+ 
+   -without-* | --without-*)
      ac_useropt=`expr "x$ac_option" : 'x-*without-\(.*\)'`
      # Reject names that are not valid shell variable names.
      expr "x$ac_useropt" : ".*[^-+._$as_cr_alnum]" >/dev/null &&
@@ -1188,7 +2027,17 @@ diff --git a/configure b/configure
      ac_useropt_orig=$ac_useropt
      ac_useropt=`$as_echo "$ac_useropt" | sed 's/[-+.]/_/g'`
      case $ac_user_opts in
-@@ -1121,8 +1131,8 @@
+       *"
+ "with_$ac_useropt"
+ "*) ;;
+       *) ac_unrecognized_opts="$ac_unrecognized_opts$ac_unrecognized_sep--without-$ac_useropt_orig"
+ 	 ac_unrecognized_sep=', ';;
+@@ -1116,50 +1126,50 @@
+ 
+   -x-libraries | --x-libraries | --x-librarie | --x-librari \
+   | --x-librar | --x-libra | --x-libr | --x-lib | --x-li | --x-l)
+     ac_prev=x_libraries ;;
+   -x-libraries=* | --x-libraries=* | --x-librarie=* | --x-librari=* \
    | --x-librar=* | --x-libra=* | --x-libr=* | --x-lib=* | --x-li=* | --x-l=*)
      x_libraries=$ac_optarg ;;
  
@@ -1199,7 +2048,7 @@ diff --git a/configure b/configure
      ;;
  
    *=*)
-@@ -1130,7 +1140,7 @@
+     ac_envvar=`expr "x$ac_option" : 'x\([^=]*\)='`
      # Reject names that are not valid shell variable names.
      case $ac_envvar in #(
        '' | [0-9]* | *[!_$as_cr_alnum]* )
@@ -1208,7 +2057,9 @@ diff --git a/configure b/configure
      esac
      eval $ac_envvar=\$ac_optarg
      export $ac_envvar ;;
-@@ -1140,7 +1150,7 @@
+ 
+   *)
+     # FIXME: should be removed in autoconf 3.0.
      $as_echo "$as_me: WARNING: you should use --build, --host, --target" >&2
      expr "x$ac_option" : ".*[^-._$as_cr_alnum]" >/dev/null &&
        $as_echo "$as_me: WARNING: invalid host type: $ac_option" >&2
@@ -1217,7 +2068,7 @@ diff --git a/configure b/configure
      ;;
  
    esac
-@@ -1148,13 +1158,13 @@
+ done
  
  if test -n "$ac_prev"; then
    ac_option=--`echo $ac_prev | sed 's/_/-/g'`
@@ -1233,7 +2084,17 @@ diff --git a/configure b/configure
      *)     $as_echo "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2 ;;
    esac
  fi
-@@ -1177,7 +1187,7 @@
+ 
+ # Check all directory arguments for consistency.
+ for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
+ 		datadir sysconfdir sharedstatedir localstatedir includedir \
+ 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
+@@ -1172,49 +1182,49 @@
+       ac_val=`expr "X$ac_val" : 'X\(.*[^/]\)' \| "X$ac_val" : 'X\(.*\)'`
+       eval $ac_var=\$ac_val;;
+   esac
+   # Be sure to have absolute directory names.
+   case $ac_val in
      [\\/$]* | ?:[\\/]* )  continue;;
      NONE | '' ) case $ac_var in *prefix ) continue;; esac;;
    esac
@@ -1242,7 +2103,13 @@ diff --git a/configure b/configure
  done
  
  # There might be people who depend on the old broken behavior: `$host'
-@@ -1191,8 +1201,8 @@
+ # used to hold the argument of --host etc.
+ # FIXME: To remove some day.
+ build=$build_alias
+ host=$host_alias
+ target=$target_alias
+ 
+ # FIXME: To remove some day.
  if test "x$host_alias" != x; then
    if test "x$build_alias" = x; then
      cross_compiling=maybe
@@ -1253,7 +2120,14 @@ diff --git a/configure b/configure
    elif test "x$build_alias" != "x$host_alias"; then
      cross_compiling=yes
    fi
-@@ -1207,9 +1217,9 @@
+ fi
+ 
+ ac_tool_prefix=
+ test -n "$host_alias" && ac_tool_prefix=$host_alias-
+ 
+ test "$silent" = yes && exec 6>/dev/null
+ 
+ 
  ac_pwd=`pwd` && test -n "$ac_pwd" &&
  ac_ls_di=`ls -di .` &&
  ac_pwd_ls_di=`cd "$ac_pwd" && ls -di .` ||
@@ -1265,7 +2139,17 @@ diff --git a/configure b/configure
  
  
  # Find the source files, if location was not specified.
-@@ -1248,11 +1258,11 @@
+ if test -z "$srcdir"; then
+   ac_srcdir_defaulted=yes
+   # Try the directory containing this script, then the parent directory.
+   ac_confdir=`$as_dirname -- "$as_myself" ||
+ $as_expr X"$as_myself" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
+@@ -1243,21 +1253,21 @@
+   if test ! -r "$srcdir/$ac_unique_file"; then
+     srcdir=..
+   fi
+ else
+   ac_srcdir_defaulted=no
  fi
  if test ! -r "$srcdir/$ac_unique_file"; then
    test "$ac_srcdir_defaulted" = yes && srcdir="$ac_confdir or .."
@@ -1279,7 +2163,17 @@ diff --git a/configure b/configure
  	pwd)`
  # When building in place, set srcdir=.
  if test "$ac_abs_confdir" = "$ac_pwd"; then
-@@ -1292,7 +1302,7 @@
+   srcdir=.
+ fi
+ # Remove unnecessary trailing slashes from srcdir.
+ # Double slashes in file names in object file debugging info
+ # mess up M-x gdb in Emacs.
+@@ -1287,17 +1297,17 @@
+ 
+ Defaults for the options are specified in brackets.
+ 
+ Configuration:
+   -h, --help              display this help and exit
        --help=short        display options specific to this package
        --help=recursive    display the short help of all the included packages
    -V, --version           display version information and exit
@@ -1288,7 +2182,17 @@ diff --git a/configure b/configure
        --cache-file=FILE   cache test results in FILE [disabled]
    -C, --config-cache      alias for \`--cache-file=config.cache'
    -n, --no-create         do not create output files
-@@ -1445,9 +1455,9 @@
+       --srcdir=DIR        find the sources in DIR [configure dir or \`..']
+ 
+ Installation directories:
+   --prefix=PREFIX         install architecture-independent files in PREFIX
+                           [$ac_default_prefix]
+@@ -1440,19 +1450,19 @@
+     cd "$ac_pwd" || { ac_status=$?; break; }
+   done
+ fi
+ 
+ test -n "$ac_init_help" && exit $ac_status
  if $ac_init_version; then
    cat <<\_ACEOF
  breakpad configure 0.1
@@ -1301,7 +2205,17 @@ diff --git a/configure b/configure
  This configure script is free software; the Free Software Foundation
  gives unlimited permission to copy, distribute and modify it.
  _ACEOF
-@@ -1491,7 +1501,7 @@
+   exit
+ fi
+ 
+ ## ------------------------ ##
+ ## Autoconf initialization. ##
+@@ -1486,17 +1496,17 @@
+        } && test -s conftest.$ac_objext; then :
+   ac_retval=0
+ else
+   $as_echo "$as_me: failed program was:" >&5
+ sed 's/^/| /' conftest.$ac_ext >&5
  
  	ac_retval=1
  fi
@@ -1310,7 +2224,17 @@ diff --git a/configure b/configure
    as_fn_set_status $ac_retval
  
  } # ac_fn_c_try_compile
-@@ -1517,7 +1527,7 @@
+ 
+ # ac_fn_c_try_cpp LINENO
+ # ----------------------
+ # Try to preprocess conftest.$ac_ext, and return whether this succeeded.
+ ac_fn_c_try_cpp ()
+@@ -1512,28 +1522,28 @@
+   (eval "$ac_cpp conftest.$ac_ext") 2>conftest.err
+   ac_status=$?
+   if test -s conftest.err; then
+     grep -v '^ *+' conftest.err >conftest.er1
+     cat conftest.er1 >&5
      mv -f conftest.er1 conftest.err
    fi
    $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
@@ -1319,7 +2243,10 @@ diff --git a/configure b/configure
  	 test -z "$ac_c_preproc_warn_flag$ac_c_werror_flag" ||
  	 test ! -s conftest.err
         }; then :
-@@ -1528,7 +1538,7 @@
+   ac_retval=0
+ else
+   $as_echo "$as_me: failed program was:" >&5
+ sed 's/^/| /' conftest.$ac_ext >&5
  
      ac_retval=1
  fi
@@ -1328,7 +2255,17 @@ diff --git a/configure b/configure
    as_fn_set_status $ac_retval
  
  } # ac_fn_c_try_cpp
-@@ -1566,7 +1576,7 @@
+ 
+ # ac_fn_cxx_try_compile LINENO
+ # ----------------------------
+ # Try to compile conftest.$ac_ext, and return whether this succeeded.
+ ac_fn_cxx_try_compile ()
+@@ -1561,17 +1571,17 @@
+        } && test -s conftest.$ac_objext; then :
+   ac_retval=0
+ else
+   $as_echo "$as_me: failed program was:" >&5
+ sed 's/^/| /' conftest.$ac_ext >&5
  
  	ac_retval=1
  fi
@@ -1337,7 +2274,17 @@ diff --git a/configure b/configure
    as_fn_set_status $ac_retval
  
  } # ac_fn_cxx_try_compile
-@@ -1608,7 +1618,7 @@
+ 
+ # ac_fn_c_try_run LINENO
+ # ----------------------
+ # Try to link conftest.$ac_ext, and return whether this succeeded. Assumes
+ # that executables *can* be run.
+@@ -1603,17 +1613,17 @@
+ else
+   $as_echo "$as_me: program exited with status $ac_status" >&5
+        $as_echo "$as_me: failed program was:" >&5
+ sed 's/^/| /' conftest.$ac_ext >&5
+ 
         ac_retval=$ac_status
  fi
    rm -rf conftest.dSYM conftest_ipa8_conftest.oo
@@ -1346,7 +2293,17 @@ diff --git a/configure b/configure
    as_fn_set_status $ac_retval
  
  } # ac_fn_c_try_run
-@@ -1654,7 +1664,7 @@
+ 
+ # ac_fn_c_try_link LINENO
+ # -----------------------
+ # Try to link conftest.$ac_ext, and return whether this succeeded.
+ ac_fn_c_try_link ()
+@@ -1649,33 +1659,33 @@
+ 
+ 	ac_retval=1
+ fi
+   # Delete the IPA/IPO (Inter Procedural Analysis/Optimization) information
+   # created by the PGI compiler (conftest_ipa8_conftest.oo), as it would
    # interfere with the next link command; also delete a directory that is
    # left behind by Apple's compiler.  We do this before executing the actions.
    rm -rf conftest.dSYM conftest_ipa8_conftest.oo
@@ -1355,7 +2312,12 @@ diff --git a/configure b/configure
    as_fn_set_status $ac_retval
  
  } # ac_fn_c_try_link
-@@ -1667,10 +1677,10 @@
+ 
+ # ac_fn_c_check_header_mongrel LINENO HEADER VAR INCLUDES
+ # -------------------------------------------------------
+ # Tests whether HEADER exists, giving a warning if it cannot be compiled using
+ # the include files in INCLUDES and setting the cache variable VAR
+ # accordingly.
  ac_fn_c_check_header_mongrel ()
  {
    as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
@@ -1368,7 +2330,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  fi
  eval ac_res=\$$3
-@@ -1706,7 +1716,7 @@
+ 	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+ $as_echo "$ac_res" >&6; }
+ else
+   # Is the header compilable?
+ { $as_echo "$as_me:${as_lineno-$LINENO}: checking $2 usability" >&5
+@@ -1701,17 +1711,17 @@
+ /* end confdefs.h.  */
+ #include <$2>
+ _ACEOF
+ if ac_fn_c_try_cpp "$LINENO"; then :
+   ac_header_preproc=yes
  else
    ac_header_preproc=no
  fi
@@ -1377,7 +2349,17 @@ diff --git a/configure b/configure
  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_header_preproc" >&5
  $as_echo "$ac_header_preproc" >&6; }
  
-@@ -1729,17 +1739,15 @@
+ # So?  What about this header?
+ case $ac_header_compiler:$ac_header_preproc:$ac_c_preproc_warn_flag in #((
+   yes:no: )
+     { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $2: accepted by the compiler, rejected by the preprocessor!" >&5
+ $as_echo "$as_me: WARNING: $2: accepted by the compiler, rejected by the preprocessor!" >&2;}
+@@ -1724,49 +1734,47 @@
+     { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $2:     check for missing prerequisite headers?" >&5
+ $as_echo "$as_me: WARNING: $2:     check for missing prerequisite headers?" >&2;}
+     { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $2: see the Autoconf documentation" >&5
+ $as_echo "$as_me: WARNING: $2: see the Autoconf documentation" >&2;}
+     { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $2:     section \"Present But Cannot Be Compiled\"" >&5
  $as_echo "$as_me: WARNING: $2:     section \"Present But Cannot Be Compiled\"" >&2;}
      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $2: proceeding with the compiler's result" >&5
  $as_echo "$as_me: WARNING: $2: proceeding with the compiler's result" >&2;}
@@ -1398,7 +2380,8 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    eval "$3=\$ac_header_compiler"
-@@ -1748,7 +1756,7 @@
+ fi
+ eval ac_res=\$$3
  	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
  $as_echo "$ac_res" >&6; }
  fi
@@ -1407,7 +2390,12 @@ diff --git a/configure b/configure
  
  } # ac_fn_c_check_header_mongrel
  
-@@ -1761,7 +1769,7 @@
+ # ac_fn_c_check_header_compile LINENO HEADER VAR INCLUDES
+ # -------------------------------------------------------
+ # Tests whether HEADER exists and can be compiled using the include files in
+ # INCLUDES, setting the cache variable VAR accordingly.
+ ac_fn_c_check_header_compile ()
+ {
    as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $2" >&5
  $as_echo_n "checking for $2... " >&6; }
@@ -1416,7 +2404,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-@@ -1779,7 +1787,7 @@
+ /* end confdefs.h.  */
+ $4
+ #include <$2>
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+@@ -1774,25 +1782,25 @@
+ else
+   eval "$3=no"
+ fi
+ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+ fi
  eval ac_res=\$$3
  	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
  $as_echo "$ac_res" >&6; }
@@ -1425,7 +2423,7 @@ diff --git a/configure b/configure
  
  } # ac_fn_c_check_header_compile
  cat >config.log <<_ACEOF
-@@ -1787,7 +1795,7 @@
+ This file contains any messages produced by compilers while
  running configure, to aid debugging if configure makes a mistake.
  
  It was created by breakpad $as_me 0.1, which was
@@ -1434,7 +2432,17 @@ diff --git a/configure b/configure
  
    $ $0 $@
  
-@@ -1897,11 +1905,9 @@
+ _ACEOF
+ exec 5>>config.log
+ {
+ cat <<_ASUNAME
+ ## --------- ##
+@@ -1892,21 +1900,19 @@
+ # would cause problems or look ugly.
+ # WARNING: Use '\'' to represent an apostrophe within the trap.
+ # WARNING: Do not start the trap code with a newline, due to a FreeBSD 4.0 bug.
+ trap 'exit_status=$?
+   # Save into config.log some information that might help in debugging.
    {
      echo
  
@@ -1448,7 +2456,17 @@ diff --git a/configure b/configure
      echo
      # The following way of writing the cache mishandles newlines in values,
  (
-@@ -1935,11 +1941,9 @@
+   for ac_var in `(set) 2>&1 | sed -n '\''s/^\([a-zA-Z_][a-zA-Z0-9_]*\)=.*/\1/p'\''`; do
+     eval ac_val=\$$ac_var
+     case $ac_val in #(
+     *${as_nl}*)
+       case $ac_var in #(
+@@ -1930,56 +1936,50 @@
+     *)
+       sed -n "/^[_$as_cr_alnum]*_cv_[_$as_cr_alnum]*=/p"
+       ;;
+     esac |
+     sort
  )
      echo
  
@@ -1462,7 +2480,12 @@ diff --git a/configure b/configure
      echo
      for ac_var in $ac_subst_vars
      do
-@@ -1952,11 +1956,9 @@
+       eval ac_val=\$$ac_var
+       case $ac_val in
+       *\'\''*) ac_val=`$as_echo "$ac_val" | sed "s/'\''/'\''\\\\\\\\'\'''\''/g"`;;
+       esac
+       $as_echo "$ac_var='\''$ac_val'\''"
+     done | sort
      echo
  
      if test -n "$ac_subst_files"; then
@@ -1476,7 +2499,13 @@ diff --git a/configure b/configure
        echo
        for ac_var in $ac_subst_files
        do
-@@ -1970,11 +1972,9 @@
+ 	eval ac_val=\$$ac_var
+ 	case $ac_val in
+ 	*\'\''*) ac_val=`$as_echo "$ac_val" | sed "s/'\''/'\''\\\\\\\\'\'''\''/g"`;;
+ 	esac
+ 	$as_echo "$ac_var='\''$ac_val'\''"
+       done | sort
+       echo
      fi
  
      if test -s confdefs.h; then
@@ -1490,7 +2519,17 @@ diff --git a/configure b/configure
        echo
        cat confdefs.h
        echo
-@@ -2029,7 +2029,12 @@
+     fi
+     test "$ac_signal" != 0 &&
+       $as_echo "$as_me: caught signal $ac_signal"
+     $as_echo "$as_me: exit $exit_status"
+   } >&5
+@@ -2024,32 +2024,41 @@
+ _ACEOF
+ 
+ 
+ # Let the site file select an alternate cache file if it wants to.
+ # Prefer an explicitly selected file to automatically selected ones.
  ac_site_file1=NONE
  ac_site_file2=NONE
  if test -n "$CONFIG_SITE"; then
@@ -1504,7 +2543,14 @@ diff --git a/configure b/configure
  elif test "x$prefix" != xNONE; then
    ac_site_file1=$prefix/share/config.site
    ac_site_file2=$prefix/etc/config.site
-@@ -2044,7 +2049,11 @@
+ else
+   ac_site_file1=$ac_default_prefix/share/config.site
+   ac_site_file2=$ac_default_prefix/etc/config.site
+ fi
+ for ac_site_file in "$ac_site_file1" "$ac_site_file2"
+ do
+   test "x$ac_site_file" = xNONE && continue
+   if test /dev/null != "$ac_site_file" && test -r "$ac_site_file"; then
      { $as_echo "$as_me:${as_lineno-$LINENO}: loading site script $ac_site_file" >&5
  $as_echo "$as_me: loading site script $ac_site_file" >&6;}
      sed 's/^/| /' "$ac_site_file" >&5
@@ -1517,7 +2563,17 @@ diff --git a/configure b/configure
    fi
  done
  
-@@ -2120,7 +2129,7 @@
+ if test -r "$cache_file"; then
+   # Some versions of bash will fail to source /dev/null (special files
+   # actually), so we avoid doing that.  DJGPP emulates it as a regular file.
+   if test /dev/null != "$cache_file" && test -f "$cache_file"; then
+     { $as_echo "$as_me:${as_lineno-$LINENO}: loading cache $cache_file" >&5
+@@ -2115,77 +2124,83 @@
+     esac
+   fi
+ done
+ if $ac_cache_corrupted; then
+   { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
  $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
    { $as_echo "$as_me:${as_lineno-$LINENO}: error: changes in the environment can compromise the build" >&5
  $as_echo "$as_me: error: changes in the environment can compromise the build" >&2;}
@@ -1526,7 +2582,15 @@ diff --git a/configure b/configure
  fi
  ## -------------------- ##
  ## Main body of script. ##
-@@ -2136,16 +2145,22 @@
+ ## -------------------- ##
+ 
+ ac_ext=c
+ ac_cpp='$CPP $CPPFLAGS'
+ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ ac_compiler_gnu=$ac_cv_c_compiler_gnu
+ 
+ 
  
  ac_aux_dir=
  for ac_dir in autotools "$srcdir"/autotools; do
@@ -1557,7 +2621,14 @@ diff --git a/configure b/configure
  fi
  
  # These three variables are undocumented and unsupported,
-@@ -2160,27 +2175,27 @@
+ # and are intended to be withdrawn in a future Autoconf release.
+ # They can cause serious problems if a builder's source tree is in a directory
+ # whose full name contains unusual characters.
+ ac_config_guess="$SHELL $ac_aux_dir/config.guess"  # Please don't use this var.
+ ac_config_sub="$SHELL $ac_aux_dir/config.sub"  # Please don't use this var.
+ ac_configure="$SHELL $ac_aux_dir/configure"  # Please don't use this var.
+ 
+ 
  
  # Make sure we can run config.sub.
  $SHELL "$ac_aux_dir/config.sub" sun4 >/dev/null 2>&1 ||
@@ -1590,7 +2661,17 @@ diff --git a/configure b/configure
  esac
  build=$ac_cv_build
  ac_save_IFS=$IFS; IFS='-'
-@@ -2198,14 +2213,14 @@
+ set x $ac_cv_build
+ shift
+ build_cpu=$1
+ build_vendor=$2
+ shift; shift
+@@ -2193,32 +2208,32 @@
+ # except with old shells:
+ build_os=$*
+ IFS=$ac_save_IFS
+ case $build_os in *\ *) build_os=`echo "$build_os" | sed 's/ /-/g'`;; esac
+ 
  
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking host system type" >&5
  $as_echo_n "checking host system type... " >&6; }
@@ -1607,7 +2688,7 @@ diff --git a/configure b/configure
  fi
  
  fi
-@@ -2213,7 +2228,7 @@
+ { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_host" >&5
  $as_echo "$ac_cv_host" >&6; }
  case $ac_cv_host in
  *-*-*) ;;
@@ -1616,7 +2697,17 @@ diff --git a/configure b/configure
  esac
  host=$ac_cv_host
  ac_save_IFS=$IFS; IFS='-'
-@@ -2249,7 +2264,7 @@
+ set x $ac_cv_host
+ shift
+ host_cpu=$1
+ host_vendor=$2
+ shift; shift
+@@ -2244,17 +2259,17 @@
+ # AFS /usr/afsws/bin/install, which mishandles nonexistent args
+ # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
+ # OS/2's system install, which has a completely different semantic
+ # ./install, which can be erroneously created by make from ./install.sh.
+ # Reject install programs that cannot install multiple files.
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for a BSD-compatible install" >&5
  $as_echo_n "checking for a BSD-compatible install... " >&6; }
  if test -z "$INSTALL"; then
@@ -1625,7 +2716,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-@@ -2336,11 +2351,11 @@
+ for as_dir in $PATH
+ do
+   IFS=$as_save_IFS
+   test -z "$as_dir" && as_dir=.
+     # Account for people who put trailing slashes in PATH elements.
+@@ -2331,21 +2346,21 @@
+ sleep 1
+ echo timestamp > conftest.file
+ # Reject unsafe characters in $srcdir or the absolute working directory
+ # name.  Accept space and tab only in the latter.
+ am_lf='
  '
  case `pwd` in
    *[\\\"\#\$\&\'\`$am_lf]*)
@@ -1639,7 +2740,17 @@ diff --git a/configure b/configure
  esac
  
  # Do `set' in a subshell so we don't clobber the current shell's
-@@ -2362,7 +2377,7 @@
+ # arguments.  Must try -L first in case configure is actually a
+ # symlink; some systems play weird games with the mod time of symlinks
+ # (eg FreeBSD returns the mod time of the symlink's containing
+ # directory).
+ if (
+@@ -2357,27 +2372,27 @@
+    rm -f conftest.file
+    if test "$*" != "X $srcdir/configure conftest.file" \
+       && test "$*" != "X conftest.file $srcdir/configure"; then
+ 
+       # If neither matched, then we have a broken ls.  This can happen
        # if, for instance, CONFIG_SHELL is bash and it inherits a
        # broken ls alias from the environment.  This has actually
        # happened.  Such a system could not be considered "sane".
@@ -1648,7 +2759,9 @@ diff --git a/configure b/configure
  alias in your environment" "$LINENO" 5
     fi
  
-@@ -2372,7 +2387,7 @@
+    test "$2" = conftest.file
+    )
+ then
     # Ok.
     :
  else
@@ -1657,7 +2770,17 @@ diff --git a/configure b/configure
  Check your system clock" "$LINENO" 5
  fi
  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-@@ -2426,7 +2441,7 @@
+ $as_echo "yes" >&6; }
+ test "$program_prefix" != NONE &&
+   program_transform_name="s&^&$program_prefix&;$program_transform_name"
+ # Use a double $ so make ignores it.
+ test "$program_suffix" != NONE &&
+@@ -2421,17 +2436,17 @@
+ # tool to use in cross-compilation environments, therefore Automake
+ # will honor the `STRIP' environment variable to overrule this program.
+ if test "$cross_compiling" != no; then
+   if test -n "$ac_tool_prefix"; then
+   # Extract the first word of "${ac_tool_prefix}strip", so it can be a program name with args.
  set dummy ${ac_tool_prefix}strip; ac_word=$2
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
  $as_echo_n "checking for $ac_word... " >&6; }
@@ -1666,7 +2789,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -n "$STRIP"; then
-@@ -2466,7 +2481,7 @@
+   ac_cv_prog_STRIP="$STRIP" # Let the user override the test.
+ else
+ as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+ for as_dir in $PATH
+ do
+@@ -2461,17 +2476,17 @@
+ 
+ fi
+ if test -z "$ac_cv_prog_STRIP"; then
+   ac_ct_STRIP=$STRIP
+   # Extract the first word of "strip", so it can be a program name with args.
  set dummy strip; ac_word=$2
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
  $as_echo_n "checking for $ac_word... " >&6; }
@@ -1675,7 +2808,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -n "$ac_ct_STRIP"; then
-@@ -2519,7 +2534,7 @@
+   ac_cv_prog_ac_ct_STRIP="$ac_ct_STRIP" # Let the user override the test.
+ else
+ as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+ for as_dir in $PATH
+ do
+@@ -2514,17 +2529,17 @@
+ fi
+ 
+ fi
+ INSTALL_STRIP_PROGRAM="\$(install_sh) -c -s"
+ 
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for a thread-safe mkdir -p" >&5
  $as_echo_n "checking for a thread-safe mkdir -p... " >&6; }
  if test -z "$MKDIR_P"; then
@@ -1684,7 +2827,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-@@ -2570,7 +2585,7 @@
+ for as_dir in $PATH$PATH_SEPARATOR/opt/sfw/bin
+ do
+   IFS=$as_save_IFS
+   test -z "$as_dir" && as_dir=.
+     for ac_prog in mkdir gmkdir; do
+@@ -2565,17 +2580,17 @@
+ esac
+ 
+ for ac_prog in gawk mawk nawk awk
+ do
+   # Extract the first word of "$ac_prog", so it can be a program name with args.
  set dummy $ac_prog; ac_word=$2
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
  $as_echo_n "checking for $ac_word... " >&6; }
@@ -1693,7 +2846,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -n "$AWK"; then
-@@ -2610,7 +2625,7 @@
+   ac_cv_prog_AWK="$AWK" # Let the user override the test.
+ else
+ as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+ for as_dir in $PATH
+ do
+@@ -2605,25 +2620,25 @@
+ 
+   test -n "$AWK" && break
+ done
+ 
+ { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether ${MAKE-make} sets \$(MAKE)" >&5
  $as_echo_n "checking whether ${MAKE-make} sets \$(MAKE)... " >&6; }
  set x ${MAKE-make}
  ac_make=`$as_echo "$2" | sed 's/+/p/g; s/[^a-zA-Z0-9_]/_/g'`
@@ -1702,7 +2865,7 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    cat >conftest.make <<\_ACEOF
-@@ -2618,7 +2633,7 @@
+ SHELL = /bin/sh
  all:
  	@echo '@@@%%%=$(MAKE)=@@@%%%'
  _ACEOF
@@ -1711,7 +2874,17 @@ diff --git a/configure b/configure
  case `${MAKE-make} -f conftest.make 2>/dev/null` in
    *@@@%%%=?*=@@@%%%*)
      eval ac_cv_prog_make_${ac_make}_set=yes;;
-@@ -2652,7 +2667,7 @@
+   *)
+     eval ac_cv_prog_make_${ac_make}_set=no;;
+ esac
+ rm -f conftest.make
+ fi
+@@ -2647,17 +2662,17 @@
+ rmdir .tst 2>/dev/null
+ 
+ if test "`cd $srcdir && pwd`" != "`pwd`"; then
+   # Use -I$(srcdir) only when $(srcdir) != ., so that make's output
+   # is not polluted with repeated "-I."
    am__isrc=' -I$(srcdir)'
    # test to see if srcdir already configured
    if test -f $srcdir/config.status; then
@@ -1720,7 +2893,17 @@ diff --git a/configure b/configure
    fi
  fi
  
-@@ -2698,9 +2713,9 @@
+ # test whether we have cygpath
+ if test -z "$CYGPATH_W"; then
+   if (cygpath --version) >/dev/null 2>/dev/null; then
+     CYGPATH_W='cygpath -w'
+   else
+@@ -2693,19 +2708,19 @@
+ 
+ AUTOHEADER=${AUTOHEADER-"${am_missing_run}autoheader"}
+ 
+ 
+ MAKEINFO=${MAKEINFO-"${am_missing_run}makeinfo"}
  
  # We need awk for the "check" target.  The system "awk" is bad on
  # some platforms.
@@ -1733,7 +2916,17 @@ diff --git a/configure b/configure
  
  
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking how to create a ustar tar archive" >&5
-@@ -2776,7 +2791,7 @@
+ $as_echo_n "checking how to create a ustar tar archive... " >&6; }
+ # Loop over all known methods to create a tar archive until one works.
+ _am_tools='gnutar plaintar pax cpio none'
+ _am_tools=${am_cv_prog_tar_ustar-$_am_tools}
+ # Do not fold the above two line into one, because Tru64 sh and
+@@ -2771,17 +2786,17 @@
+    ac_status=$?
+    echo "$as_me:$LINENO: \$? = $ac_status" >&5
+    (exit $ac_status); }
+     grep GrepMe conftest.dir/file >/dev/null 2>&1 && break
+   fi
  done
  rm -rf conftest.dir
  
@@ -1742,7 +2935,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    am_cv_prog_tar_ustar=$_am_tool
-@@ -2844,6 +2859,7 @@
+ fi
+ 
+ { $as_echo "$as_me:${as_lineno-$LINENO}: result: $am_cv_prog_tar_ustar" >&5
+ $as_echo "$am_cv_prog_tar_ustar" >&6; }
+ 
+@@ -2839,16 +2854,17 @@
+ # Check whether --enable-dependency-tracking was given.
+ if test "${enable_dependency_tracking+set}" = set; then :
+   enableval=$enable_dependency_tracking;
+ fi
+ 
  if test "x$enable_dependency_tracking" != xno; then
    am_depcomp="$ac_aux_dir/depcomp"
    AMDEPBACKSLASH='\'
@@ -1750,7 +2953,17 @@ diff --git a/configure b/configure
  fi
   if test "x$enable_dependency_tracking" != xno; then
    AMDEP_TRUE=
-@@ -2864,7 +2880,7 @@
+   AMDEP_FALSE='#'
+ else
+   AMDEP_TRUE='#'
+   AMDEP_FALSE=
+ fi
+@@ -2859,17 +2875,17 @@
+ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ ac_compiler_gnu=$ac_cv_c_compiler_gnu
+ if test -n "$ac_tool_prefix"; then
+   # Extract the first word of "${ac_tool_prefix}gcc", so it can be a program name with args.
  set dummy ${ac_tool_prefix}gcc; ac_word=$2
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
  $as_echo_n "checking for $ac_word... " >&6; }
@@ -1759,7 +2972,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -n "$CC"; then
-@@ -2904,7 +2920,7 @@
+   ac_cv_prog_CC="$CC" # Let the user override the test.
+ else
+ as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+ for as_dir in $PATH
+ do
+@@ -2899,17 +2915,17 @@
+ 
+ fi
+ if test -z "$ac_cv_prog_CC"; then
+   ac_ct_CC=$CC
+   # Extract the first word of "gcc", so it can be a program name with args.
  set dummy gcc; ac_word=$2
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
  $as_echo_n "checking for $ac_word... " >&6; }
@@ -1768,7 +2991,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -n "$ac_ct_CC"; then
-@@ -2957,7 +2973,7 @@
+   ac_cv_prog_ac_ct_CC="$ac_ct_CC" # Let the user override the test.
+ else
+ as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+ for as_dir in $PATH
+ do
+@@ -2952,17 +2968,17 @@
+ fi
+ 
+ if test -z "$CC"; then
+           if test -n "$ac_tool_prefix"; then
+     # Extract the first word of "${ac_tool_prefix}cc", so it can be a program name with args.
  set dummy ${ac_tool_prefix}cc; ac_word=$2
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
  $as_echo_n "checking for $ac_word... " >&6; }
@@ -1777,7 +3010,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -n "$CC"; then
-@@ -2997,7 +3013,7 @@
+   ac_cv_prog_CC="$CC" # Let the user override the test.
+ else
+ as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+ for as_dir in $PATH
+ do
+@@ -2992,17 +3008,17 @@
+ 
+   fi
+ fi
+ if test -z "$CC"; then
+   # Extract the first word of "cc", so it can be a program name with args.
  set dummy cc; ac_word=$2
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
  $as_echo_n "checking for $ac_word... " >&6; }
@@ -1786,7 +3029,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -n "$CC"; then
-@@ -3056,7 +3072,7 @@
+   ac_cv_prog_CC="$CC" # Let the user override the test.
+ else
+   ac_prog_rejected=no
+ as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+ for as_dir in $PATH
+@@ -3051,17 +3067,17 @@
+ if test -z "$CC"; then
+   if test -n "$ac_tool_prefix"; then
+   for ac_prog in cl.exe
+   do
+     # Extract the first word of "$ac_tool_prefix$ac_prog", so it can be a program name with args.
  set dummy $ac_tool_prefix$ac_prog; ac_word=$2
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
  $as_echo_n "checking for $ac_word... " >&6; }
@@ -1795,7 +3048,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -n "$CC"; then
-@@ -3100,7 +3116,7 @@
+   ac_cv_prog_CC="$CC" # Let the user override the test.
+ else
+ as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+ for as_dir in $PATH
+ do
+@@ -3095,17 +3111,17 @@
+ if test -z "$CC"; then
+   ac_ct_CC=$CC
+   for ac_prog in cl.exe
+ do
+   # Extract the first word of "$ac_prog", so it can be a program name with args.
  set dummy $ac_prog; ac_word=$2
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
  $as_echo_n "checking for $ac_word... " >&6; }
@@ -1804,7 +3067,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -n "$ac_ct_CC"; then
-@@ -3154,8 +3170,8 @@
+   ac_cv_prog_ac_ct_CC="$ac_ct_CC" # Let the user override the test.
+ else
+ as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+ for as_dir in $PATH
+ do
+@@ -3149,18 +3165,18 @@
+   fi
+ fi
+ 
+ fi
+ 
  
  test -z "$CC" && { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
  $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -1815,7 +3088,17 @@ diff --git a/configure b/configure
  
  # Provide some information about the compiler.
  $as_echo "$as_me:${as_lineno-$LINENO}: checking for C compiler version" >&5
-@@ -3269,9 +3285,8 @@
+ set X $ac_compile
+ ac_compiler=$2
+ for ac_option in --version -v -V -qversion; do
+   { { ac_try="$ac_compiler $ac_option >&5"
+ case "(($ac_try" in
+@@ -3264,19 +3280,18 @@
+ if test -z "$ac_file"; then :
+   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+ $as_echo "no" >&6; }
+ $as_echo "$as_me: failed program was:" >&5
+ sed 's/^/| /' conftest.$ac_ext >&5
  
  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
  $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -1827,7 +3110,17 @@ diff --git a/configure b/configure
  else
    { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
  $as_echo "yes" >&6; }
-@@ -3313,8 +3328,8 @@
+ fi
+ { $as_echo "$as_me:${as_lineno-$LINENO}: checking for C compiler default output file name" >&5
+ $as_echo_n "checking for C compiler default output file name... " >&6; }
+ { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_file" >&5
+ $as_echo "$ac_file" >&6; }
+@@ -3308,18 +3323,18 @@
+     *.* ) ac_cv_exeext=`expr "$ac_file" : '[^.]*\(\..*\)'`
+ 	  break;;
+     * ) break;;
+   esac
+ done
  else
    { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
  $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -1838,7 +3131,17 @@ diff --git a/configure b/configure
  fi
  rm -f conftest conftest$ac_cv_exeext
  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_exeext" >&5
-@@ -3371,9 +3386,9 @@
+ $as_echo "$ac_cv_exeext" >&6; }
+ 
+ rm -f conftest.$ac_ext
+ EXEEXT=$ac_cv_exeext
+ ac_exeext=$EXEEXT
+@@ -3366,30 +3381,30 @@
+   test $ac_status = 0; }; }; then
+     cross_compiling=no
+   else
+     if test "$cross_compiling" = maybe; then
+ 	cross_compiling=yes
      else
  	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
  $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -1850,7 +3153,10 @@ diff --git a/configure b/configure
      fi
    fi
  fi
-@@ -3384,7 +3399,7 @@
+ { $as_echo "$as_me:${as_lineno-$LINENO}: result: $cross_compiling" >&5
+ $as_echo "$cross_compiling" >&6; }
+ 
+ rm -f conftest.$ac_ext conftest$ac_cv_exeext conftest.out
  ac_clean_files=$ac_clean_files_save
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for suffix of object files" >&5
  $as_echo_n "checking for suffix of object files... " >&6; }
@@ -1859,7 +3165,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-@@ -3424,8 +3439,8 @@
+ /* end confdefs.h.  */
+ 
+ int
+ main ()
+ {
+@@ -3419,28 +3434,28 @@
+   esac
+ done
+ else
+   $as_echo "$as_me: failed program was:" >&5
+ sed 's/^/| /' conftest.$ac_ext >&5
  
  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
  $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -1870,7 +3186,9 @@ diff --git a/configure b/configure
  fi
  rm -f conftest.$ac_cv_objext conftest.$ac_ext
  fi
-@@ -3435,7 +3450,7 @@
+ { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_objext" >&5
+ $as_echo "$ac_cv_objext" >&6; }
+ OBJEXT=$ac_cv_objext
  ac_objext=$OBJEXT
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether we are using the GNU C compiler" >&5
  $as_echo_n "checking whether we are using the GNU C compiler... " >&6; }
@@ -1879,7 +3197,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-@@ -3472,7 +3487,7 @@
+ /* end confdefs.h.  */
+ 
+ int
+ main ()
+ {
+@@ -3467,17 +3482,17 @@
+   GCC=yes
+ else
+   GCC=
+ fi
+ ac_test_CFLAGS=${CFLAGS+set}
  ac_save_CFLAGS=$CFLAGS
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $CC accepts -g" >&5
  $as_echo_n "checking whether $CC accepts -g... " >&6; }
@@ -1888,7 +3216,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    ac_save_c_werror_flag=$ac_c_werror_flag
-@@ -3550,7 +3565,7 @@
+    ac_c_werror_flag=yes
+    ac_cv_prog_cc_g=no
+    CFLAGS="-g"
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+@@ -3545,17 +3560,17 @@
+   if test "$GCC" = yes; then
+     CFLAGS="-O2"
+   else
+     CFLAGS=
+   fi
  fi
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $CC option to accept ISO C89" >&5
  $as_echo_n "checking for $CC option to accept ISO C89... " >&6; }
@@ -1897,7 +3235,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    ac_cv_prog_cc_c89=no
-@@ -3649,7 +3664,7 @@
+ ac_save_CC=$CC
+ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ #include <stdarg.h>
+ #include <stdio.h>
+@@ -3644,25 +3659,26 @@
+ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ ac_compiler_gnu=$ac_cv_c_compiler_gnu
+ 
+ depcc="$CC"   am_compiler_list=
  
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking dependency style of $depcc" >&5
  $as_echo_n "checking dependency style of $depcc... " >&6; }
@@ -1906,7 +3254,8 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -z "$AMDEP_TRUE" && test -f "$am_depcomp"; then
-@@ -3658,6 +3673,7 @@
+   # We make a subdir and do the tests there.  Otherwise we can end up
+   # making bogus files that we don't know about and never remove.  For
    # instance it was reported that on HP-UX the gcc test will end up
    # making a dummy file named `D' -- because `-MD' means `put the output
    # in D'.
@@ -1914,7 +3263,17 @@ diff --git a/configure b/configure
    mkdir conftest.dir
    # Copy depcomp to subdir because otherwise we won't find it if we're
    # using a relative directory.
-@@ -3717,7 +3733,7 @@
+   cp "$am_depcomp" conftest.dir
+   cd conftest.dir
+   # We will build objects and dependencies in a subdirectory because
+   # it helps to detect inapplicable dependency modes.  For instance
+   # both Tru64's cc and ICC support -MD to output dependencies as a
+@@ -3712,17 +3728,17 @@
+       # after this tag, mechanisms are not by side-effect, so they'll
+       # only be used when explicitly requested
+       if test "x$enable_dependency_tracking" = xyes; then
+ 	continue
+       else
  	break
        fi
        ;;
@@ -1923,7 +3282,17 @@ diff --git a/configure b/configure
        # This compiler won't grok `-c -o', but also, the minuso test has
        # not run yet.  These depmodes are late enough in the game, and
        # so weak that their functioning should not be impacted.
-@@ -3783,7 +3799,7 @@
+       am__obj=conftest.${OBJEXT-o}
+       am__minus_obj=
+       ;;
+     none) break ;;
+     esac
+@@ -3778,25 +3794,26 @@
+ test "${CCASFLAGS+set}" = set || CCASFLAGS=$CFLAGS
+ 
+ 
+ 
+ depcc="$CCAS"   am_compiler_list=
  
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking dependency style of $depcc" >&5
  $as_echo_n "checking dependency style of $depcc... " >&6; }
@@ -1932,7 +3301,8 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -z "$AMDEP_TRUE" && test -f "$am_depcomp"; then
-@@ -3792,6 +3808,7 @@
+   # We make a subdir and do the tests there.  Otherwise we can end up
+   # making bogus files that we don't know about and never remove.  For
    # instance it was reported that on HP-UX the gcc test will end up
    # making a dummy file named `D' -- because `-MD' means `put the output
    # in D'.
@@ -1940,7 +3310,17 @@ diff --git a/configure b/configure
    mkdir conftest.dir
    # Copy depcomp to subdir because otherwise we won't find it if we're
    # using a relative directory.
-@@ -3849,7 +3866,7 @@
+   cp "$am_depcomp" conftest.dir
+   cd conftest.dir
+   # We will build objects and dependencies in a subdirectory because
+   # it helps to detect inapplicable dependency modes.  For instance
+   # both Tru64's cc and ICC support -MD to output dependencies as a
+@@ -3844,17 +3861,17 @@
+       # after this tag, mechanisms are not by side-effect, so they'll
+       # only be used when explicitly requested
+       if test "x$enable_dependency_tracking" = xyes; then
+ 	continue
+       else
  	break
        fi
        ;;
@@ -1949,7 +3329,17 @@ diff --git a/configure b/configure
        # This compiler won't grok `-c -o', but also, the minuso test has
        # not run yet.  These depmodes are late enough in the game, and
        # so weak that their functioning should not be impacted.
-@@ -3914,7 +3931,7 @@
+       am__obj=conftest.${OBJEXT-o}
+       am__minus_obj=
+       ;;
+     none) break ;;
+     esac
+@@ -3909,17 +3926,17 @@
+ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ ac_compiler_gnu=$ac_cv_c_compiler_gnu
+ if test -n "$ac_tool_prefix"; then
+   # Extract the first word of "${ac_tool_prefix}gcc", so it can be a program name with args.
  set dummy ${ac_tool_prefix}gcc; ac_word=$2
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
  $as_echo_n "checking for $ac_word... " >&6; }
@@ -1958,7 +3348,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -n "$CC"; then
-@@ -3954,7 +3971,7 @@
+   ac_cv_prog_CC="$CC" # Let the user override the test.
+ else
+ as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+ for as_dir in $PATH
+ do
+@@ -3949,17 +3966,17 @@
+ 
+ fi
+ if test -z "$ac_cv_prog_CC"; then
+   ac_ct_CC=$CC
+   # Extract the first word of "gcc", so it can be a program name with args.
  set dummy gcc; ac_word=$2
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
  $as_echo_n "checking for $ac_word... " >&6; }
@@ -1967,7 +3367,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -n "$ac_ct_CC"; then
-@@ -4007,7 +4024,7 @@
+   ac_cv_prog_ac_ct_CC="$ac_ct_CC" # Let the user override the test.
+ else
+ as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+ for as_dir in $PATH
+ do
+@@ -4002,17 +4019,17 @@
+ fi
+ 
+ if test -z "$CC"; then
+           if test -n "$ac_tool_prefix"; then
+     # Extract the first word of "${ac_tool_prefix}cc", so it can be a program name with args.
  set dummy ${ac_tool_prefix}cc; ac_word=$2
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
  $as_echo_n "checking for $ac_word... " >&6; }
@@ -1976,7 +3386,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -n "$CC"; then
-@@ -4047,7 +4064,7 @@
+   ac_cv_prog_CC="$CC" # Let the user override the test.
+ else
+ as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+ for as_dir in $PATH
+ do
+@@ -4042,17 +4059,17 @@
+ 
+   fi
+ fi
+ if test -z "$CC"; then
+   # Extract the first word of "cc", so it can be a program name with args.
  set dummy cc; ac_word=$2
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
  $as_echo_n "checking for $ac_word... " >&6; }
@@ -1985,7 +3405,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -n "$CC"; then
-@@ -4106,7 +4123,7 @@
+   ac_cv_prog_CC="$CC" # Let the user override the test.
+ else
+   ac_prog_rejected=no
+ as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+ for as_dir in $PATH
+@@ -4101,17 +4118,17 @@
+ if test -z "$CC"; then
+   if test -n "$ac_tool_prefix"; then
+   for ac_prog in cl.exe
+   do
+     # Extract the first word of "$ac_tool_prefix$ac_prog", so it can be a program name with args.
  set dummy $ac_tool_prefix$ac_prog; ac_word=$2
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
  $as_echo_n "checking for $ac_word... " >&6; }
@@ -1994,7 +3424,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -n "$CC"; then
-@@ -4150,7 +4167,7 @@
+   ac_cv_prog_CC="$CC" # Let the user override the test.
+ else
+ as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+ for as_dir in $PATH
+ do
+@@ -4145,17 +4162,17 @@
+ if test -z "$CC"; then
+   ac_ct_CC=$CC
+   for ac_prog in cl.exe
+ do
+   # Extract the first word of "$ac_prog", so it can be a program name with args.
  set dummy $ac_prog; ac_word=$2
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
  $as_echo_n "checking for $ac_word... " >&6; }
@@ -2003,7 +3443,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -n "$ac_ct_CC"; then
-@@ -4204,8 +4221,8 @@
+   ac_cv_prog_ac_ct_CC="$ac_ct_CC" # Let the user override the test.
+ else
+ as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+ for as_dir in $PATH
+ do
+@@ -4199,18 +4216,18 @@
+   fi
+ fi
+ 
+ fi
+ 
  
  test -z "$CC" && { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
  $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -2014,7 +3464,17 @@ diff --git a/configure b/configure
  
  # Provide some information about the compiler.
  $as_echo "$as_me:${as_lineno-$LINENO}: checking for C compiler version" >&5
-@@ -4234,7 +4251,7 @@
+ set X $ac_compile
+ ac_compiler=$2
+ for ac_option in --version -v -V -qversion; do
+   { { ac_try="$ac_compiler $ac_option >&5"
+ case "(($ac_try" in
+@@ -4229,17 +4246,17 @@
+   fi
+   rm -f conftest.er1 conftest.err
+   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+   test $ac_status = 0; }
+ done
  
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether we are using the GNU C compiler" >&5
  $as_echo_n "checking whether we are using the GNU C compiler... " >&6; }
@@ -2023,7 +3483,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-@@ -4271,7 +4288,7 @@
+ /* end confdefs.h.  */
+ 
+ int
+ main ()
+ {
+@@ -4266,17 +4283,17 @@
+   GCC=yes
+ else
+   GCC=
+ fi
+ ac_test_CFLAGS=${CFLAGS+set}
  ac_save_CFLAGS=$CFLAGS
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $CC accepts -g" >&5
  $as_echo_n "checking whether $CC accepts -g... " >&6; }
@@ -2032,7 +3502,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    ac_save_c_werror_flag=$ac_c_werror_flag
-@@ -4349,7 +4366,7 @@
+    ac_c_werror_flag=yes
+    ac_cv_prog_cc_g=no
+    CFLAGS="-g"
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+@@ -4344,17 +4361,17 @@
+   if test "$GCC" = yes; then
+     CFLAGS="-O2"
+   else
+     CFLAGS=
+   fi
  fi
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $CC option to accept ISO C89" >&5
  $as_echo_n "checking for $CC option to accept ISO C89... " >&6; }
@@ -2041,7 +3521,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    ac_cv_prog_cc_c89=no
-@@ -4448,7 +4465,7 @@
+ ac_save_CC=$CC
+ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ #include <stdarg.h>
+ #include <stdio.h>
+@@ -4443,25 +4460,26 @@
+ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ ac_compiler_gnu=$ac_cv_c_compiler_gnu
+ 
+ depcc="$CC"   am_compiler_list=
  
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking dependency style of $depcc" >&5
  $as_echo_n "checking dependency style of $depcc... " >&6; }
@@ -2050,7 +3540,8 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -z "$AMDEP_TRUE" && test -f "$am_depcomp"; then
-@@ -4457,6 +4474,7 @@
+   # We make a subdir and do the tests there.  Otherwise we can end up
+   # making bogus files that we don't know about and never remove.  For
    # instance it was reported that on HP-UX the gcc test will end up
    # making a dummy file named `D' -- because `-MD' means `put the output
    # in D'.
@@ -2058,7 +3549,17 @@ diff --git a/configure b/configure
    mkdir conftest.dir
    # Copy depcomp to subdir because otherwise we won't find it if we're
    # using a relative directory.
-@@ -4516,7 +4534,7 @@
+   cp "$am_depcomp" conftest.dir
+   cd conftest.dir
+   # We will build objects and dependencies in a subdirectory because
+   # it helps to detect inapplicable dependency modes.  For instance
+   # both Tru64's cc and ICC support -MD to output dependencies as a
+@@ -4511,17 +4529,17 @@
+       # after this tag, mechanisms are not by side-effect, so they'll
+       # only be used when explicitly requested
+       if test "x$enable_dependency_tracking" = xyes; then
+ 	continue
+       else
  	break
        fi
        ;;
@@ -2067,7 +3568,17 @@ diff --git a/configure b/configure
        # This compiler won't grok `-c -o', but also, the minuso test has
        # not run yet.  These depmodes are late enough in the game, and
        # so weak that their functioning should not be impacted.
-@@ -4580,7 +4598,7 @@
+       am__obj=conftest.${OBJEXT-o}
+       am__minus_obj=
+       ;;
+     none) break ;;
+     esac
+@@ -4575,17 +4593,17 @@
+   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $CC and cc understand -c and -o together" >&5
+ $as_echo_n "checking whether $CC and cc understand -c and -o together... " >&6; }
+ else
+   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether cc understands -c and -o together" >&5
+ $as_echo_n "checking whether cc understands -c and -o together... " >&6; }
  fi
  set dummy $CC; ac_cc=`$as_echo "$2" |
  		      sed 's/[^a-zA-Z0-9_]/_/g;s/^[0-9]/_/'`
@@ -2076,7 +3587,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-@@ -4709,7 +4727,7 @@
+ /* end confdefs.h.  */
+ 
+ int
+ main ()
+ {
+@@ -4704,17 +4722,17 @@
+ ac_compiler_gnu=$ac_cv_c_compiler_gnu
+ { $as_echo "$as_me:${as_lineno-$LINENO}: checking how to run the C preprocessor" >&5
+ $as_echo_n "checking how to run the C preprocessor... " >&6; }
+ # On Suns, sometimes $CPP names a directory.
+ if test -n "$CPP" && test -d "$CPP"; then
    CPP=
  fi
  if test -z "$CPP"; then
@@ -2085,7 +3606,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
        # Double quotes because CPP needs to be expanded
-@@ -4739,7 +4757,7 @@
+     for CPP in "$CC -E" "$CC -E -traditional-cpp" "/lib/cpp"
+     do
+       ac_preproc_ok=false
+ for ac_c_preproc_warn_flag in '' yes
+ do
+@@ -4734,37 +4752,37 @@
+ 		     Syntax error
+ _ACEOF
+ if ac_fn_c_try_cpp "$LINENO"; then :
+ 
+ else
    # Broken: fails on valid input.
  continue
  fi
@@ -2094,7 +3625,15 @@ diff --git a/configure b/configure
  
    # OK, works on sane cases.  Now check whether nonexistent headers
    # can be detected and how.
-@@ -4755,11 +4773,11 @@
+   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ #include <ac_nonexistent.h>
+ _ACEOF
+ if ac_fn_c_try_cpp "$LINENO"; then :
+   # Broken: success on invalid input.
+ continue
+ else
+   # Passes both tests.
  ac_preproc_ok=:
  break
  fi
@@ -2108,7 +3647,17 @@ diff --git a/configure b/configure
  if $ac_preproc_ok; then :
    break
  fi
-@@ -4798,7 +4816,7 @@
+ 
+     done
+     ac_cv_prog_CPP=$CPP
+ 
+ fi
+@@ -4793,44 +4811,44 @@
+ 		     Syntax error
+ _ACEOF
+ if ac_fn_c_try_cpp "$LINENO"; then :
+ 
+ else
    # Broken: fails on valid input.
  continue
  fi
@@ -2117,7 +3666,15 @@ diff --git a/configure b/configure
  
    # OK, works on sane cases.  Now check whether nonexistent headers
    # can be detected and how.
-@@ -4814,18 +4832,18 @@
+   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ #include <ac_nonexistent.h>
+ _ACEOF
+ if ac_fn_c_try_cpp "$LINENO"; then :
+   # Broken: success on invalid input.
+ continue
+ else
+   # Passes both tests.
  ac_preproc_ok=:
  break
  fi
@@ -2140,7 +3697,17 @@ diff --git a/configure b/configure
  fi
  
  ac_ext=c
-@@ -4850,7 +4868,7 @@
+ ac_cpp='$CPP $CPPFLAGS'
+ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ ac_compiler_gnu=$ac_cv_c_compiler_gnu
+ 
+@@ -4845,17 +4863,17 @@
+   else
+     if test -n "$ac_tool_prefix"; then
+   for ac_prog in g++ c++ gpp aCC CC cxx cc++ cl.exe FCC KCC RCC xlC_r xlC
+   do
+     # Extract the first word of "$ac_tool_prefix$ac_prog", so it can be a program name with args.
  set dummy $ac_tool_prefix$ac_prog; ac_word=$2
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
  $as_echo_n "checking for $ac_word... " >&6; }
@@ -2149,7 +3716,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -n "$CXX"; then
-@@ -4894,7 +4912,7 @@
+   ac_cv_prog_CXX="$CXX" # Let the user override the test.
+ else
+ as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+ for as_dir in $PATH
+ do
+@@ -4889,17 +4907,17 @@
+ if test -z "$CXX"; then
+   ac_ct_CXX=$CXX
+   for ac_prog in g++ c++ gpp aCC CC cxx cc++ cl.exe FCC KCC RCC xlC_r xlC
+ do
+   # Extract the first word of "$ac_prog", so it can be a program name with args.
  set dummy $ac_prog; ac_word=$2
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
  $as_echo_n "checking for $ac_word... " >&6; }
@@ -2158,7 +3735,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -n "$ac_ct_CXX"; then
-@@ -4972,7 +4990,7 @@
+   ac_cv_prog_ac_ct_CXX="$ac_ct_CXX" # Let the user override the test.
+ else
+ as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+ for as_dir in $PATH
+ do
+@@ -4967,17 +4985,17 @@
+   fi
+   rm -f conftest.er1 conftest.err
+   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+   test $ac_status = 0; }
+ done
  
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether we are using the GNU C++ compiler" >&5
  $as_echo_n "checking whether we are using the GNU C++ compiler... " >&6; }
@@ -2167,7 +3754,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-@@ -5009,7 +5027,7 @@
+ /* end confdefs.h.  */
+ 
+ int
+ main ()
+ {
+@@ -5004,17 +5022,17 @@
+   GXX=yes
+ else
+   GXX=
+ fi
+ ac_test_CXXFLAGS=${CXXFLAGS+set}
  ac_save_CXXFLAGS=$CXXFLAGS
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $CXX accepts -g" >&5
  $as_echo_n "checking whether $CXX accepts -g... " >&6; }
@@ -2176,7 +3773,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    ac_save_cxx_werror_flag=$ac_cxx_werror_flag
-@@ -5095,7 +5113,7 @@
+    ac_cxx_werror_flag=yes
+    ac_cv_prog_cxx_g=no
+    CXXFLAGS="-g"
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+@@ -5090,25 +5108,26 @@
+ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ ac_compiler_gnu=$ac_cv_c_compiler_gnu
+ 
+ depcc="$CXX"  am_compiler_list=
  
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking dependency style of $depcc" >&5
  $as_echo_n "checking dependency style of $depcc... " >&6; }
@@ -2185,7 +3792,8 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -z "$AMDEP_TRUE" && test -f "$am_depcomp"; then
-@@ -5104,6 +5122,7 @@
+   # We make a subdir and do the tests there.  Otherwise we can end up
+   # making bogus files that we don't know about and never remove.  For
    # instance it was reported that on HP-UX the gcc test will end up
    # making a dummy file named `D' -- because `-MD' means `put the output
    # in D'.
@@ -2193,7 +3801,17 @@ diff --git a/configure b/configure
    mkdir conftest.dir
    # Copy depcomp to subdir because otherwise we won't find it if we're
    # using a relative directory.
-@@ -5163,7 +5182,7 @@
+   cp "$am_depcomp" conftest.dir
+   cd conftest.dir
+   # We will build objects and dependencies in a subdirectory because
+   # it helps to detect inapplicable dependency modes.  For instance
+   # both Tru64's cc and ICC support -MD to output dependencies as a
+@@ -5158,17 +5177,17 @@
+       # after this tag, mechanisms are not by side-effect, so they'll
+       # only be used when explicitly requested
+       if test "x$enable_dependency_tracking" = xyes; then
+ 	continue
+       else
  	break
        fi
        ;;
@@ -2202,7 +3820,17 @@ diff --git a/configure b/configure
        # This compiler won't grok `-c -o', but also, the minuso test has
        # not run yet.  These depmodes are late enough in the game, and
        # so weak that their functioning should not be impacted.
-@@ -5223,7 +5242,7 @@
+       am__obj=conftest.${OBJEXT-o}
+       am__minus_obj=
+       ;;
+     none) break ;;
+     esac
+@@ -5218,17 +5237,17 @@
+ fi
+ 
+ 
+ if test -n "$ac_tool_prefix"; then
+   # Extract the first word of "${ac_tool_prefix}ranlib", so it can be a program name with args.
  set dummy ${ac_tool_prefix}ranlib; ac_word=$2
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
  $as_echo_n "checking for $ac_word... " >&6; }
@@ -2211,7 +3839,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -n "$RANLIB"; then
-@@ -5263,7 +5282,7 @@
+   ac_cv_prog_RANLIB="$RANLIB" # Let the user override the test.
+ else
+ as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+ for as_dir in $PATH
+ do
+@@ -5258,17 +5277,17 @@
+ 
+ fi
+ if test -z "$ac_cv_prog_RANLIB"; then
+   ac_ct_RANLIB=$RANLIB
+   # Extract the first word of "ranlib", so it can be a program name with args.
  set dummy ranlib; ac_word=$2
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
  $as_echo_n "checking for $ac_word... " >&6; }
@@ -2220,7 +3858,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -n "$ac_ct_RANLIB"; then
-@@ -5323,7 +5342,7 @@
+   ac_cv_prog_ac_ct_RANLIB="$ac_ct_RANLIB" # Let the user override the test.
+ else
+ as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+ for as_dir in $PATH
+ do
+@@ -5318,17 +5337,17 @@
+   GCC_FALSE=
+ fi
+    # let the Makefile know if we're gcc
+ 
+ 
  
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for grep that handles long lines and -e" >&5
  $as_echo_n "checking for grep that handles long lines and -e... " >&6; }
@@ -2229,7 +3877,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -z "$GREP"; then
-@@ -5372,7 +5391,7 @@
+   ac_path_GREP_found=false
+   # Loop through the user's path and test for each of PROGNAME-LIST
+   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+ for as_dir in $PATH$PATH_SEPARATOR/usr/xpg4/bin
+ do
+@@ -5367,31 +5386,31 @@
+ esac
+ 
+       $ac_path_GREP_found && break 3
+     done
+   done
    done
  IFS=$as_save_IFS
    if test -z "$ac_cv_path_GREP"; then
@@ -2238,7 +3896,13 @@ diff --git a/configure b/configure
    fi
  else
    ac_cv_path_GREP=$GREP
-@@ -5386,7 +5405,7 @@
+ fi
+ 
+ fi
+ { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_path_GREP" >&5
+ $as_echo "$ac_cv_path_GREP" >&6; }
+  GREP="$ac_cv_path_GREP"
+ 
  
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for egrep" >&5
  $as_echo_n "checking for egrep... " >&6; }
@@ -2247,7 +3911,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if echo a | $GREP -E '(a|b)' >/dev/null 2>&1
-@@ -5438,7 +5457,7 @@
+    then ac_cv_path_EGREP="$GREP -E"
+    else
+      if test -z "$EGREP"; then
+   ac_path_EGREP_found=false
+   # Loop through the user's path and test for each of PROGNAME-LIST
+@@ -5433,32 +5452,32 @@
+ esac
+ 
+       $ac_path_EGREP_found && break 3
+     done
+   done
    done
  IFS=$as_save_IFS
    if test -z "$ac_cv_path_EGREP"; then
@@ -2256,7 +3930,14 @@ diff --git a/configure b/configure
    fi
  else
    ac_cv_path_EGREP=$EGREP
-@@ -5453,7 +5472,7 @@
+ fi
+ 
+    fi
+ fi
+ { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_path_EGREP" >&5
+ $as_echo "$ac_cv_path_EGREP" >&6; }
+  EGREP="$ac_cv_path_EGREP"
+ 
  
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ANSI C header files" >&5
  $as_echo_n "checking for ANSI C header files... " >&6; }
@@ -2265,7 +3946,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-@@ -5790,7 +5809,7 @@
+ /* end confdefs.h.  */
+ #include <stdlib.h>
+ #include <stdarg.h>
+ #include <string.h>
+ #include <float.h>
+@@ -5785,17 +5804,17 @@
+                 PTHREAD_CFLAGS="$flag"
+                 ;;
+ 
+ 		pthread-config)
+ 		# Extract the first word of "pthread-config", so it can be a program name with args.
  set dummy pthread-config; ac_word=$2
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
  $as_echo_n "checking for $ac_word... " >&6; }
@@ -2274,7 +3965,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -n "$ax_pthread_config"; then
-@@ -5951,7 +5970,7 @@
+   ac_cv_prog_ax_pthread_config="$ax_pthread_config" # Let the user override the test.
+ else
+ as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+ for as_dir in $PATH
+ do
+@@ -5946,17 +5965,17 @@
+         # More AIX lossage: must compile with xlc_r or cc_r
+ 	if test x"$GCC" != xyes; then
+           for ac_prog in xlc_r cc_r
+ do
+   # Extract the first word of "$ac_prog", so it can be a program name with args.
  set dummy $ac_prog; ac_word=$2
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
  $as_echo_n "checking for $ac_word... " >&6; }
@@ -2283,7 +3984,17 @@ diff --git a/configure b/configure
    $as_echo_n "(cached) " >&6
  else
    if test -n "$PTHREAD_CC"; then
-@@ -6023,8 +6042,7 @@
+   ac_cv_prog_PTHREAD_CC="$PTHREAD_CC" # Let the user override the test.
+ else
+ as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+ for as_dir in $PATH
+ do
+@@ -6018,31 +6037,30 @@
+ 
+ # On IRIX 5.3, sys/types and inttypes.h are conflicting.
+ for ac_header in sys/types.h sys/stat.h stdlib.h string.h memory.h strings.h \
+ 		  inttypes.h stdint.h unistd.h
+ do :
    as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
  ac_fn_c_check_header_compile "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default
  "
@@ -2293,7 +4004,12 @@ diff --git a/configure b/configure
    cat >>confdefs.h <<_ACEOF
  #define `$as_echo "HAVE_$ac_header" | $as_tr_cpp` 1
  _ACEOF
-@@ -6037,7 +6055,7 @@
+ 
+ fi
+ 
+ done
+ 
+ 
  for ac_header in a.out.h
  do :
    ac_fn_c_check_header_mongrel "$LINENO" "a.out.h" "ac_cv_header_a_out_h" "$ac_includes_default"
@@ -2302,7 +4018,17 @@ diff --git a/configure b/configure
    cat >>confdefs.h <<_ACEOF
  #define HAVE_A_OUT_H 1
  _ACEOF
-@@ -6089,7 +6107,7 @@
+ 
+ fi
+ 
+ done
+ 
+@@ -6084,17 +6102,17 @@
+                    CFLAGS="${CFLAGS} -m32"
+                    CXXFLAGS="${CXXFLAGS} -m32"
+                    usem32=true
+                    ;;
+                  no)
                     usem32=false
                     ;;
                   *)
@@ -2311,7 +4037,17 @@ diff --git a/configure b/configure
                     ;;
                 esac
  else
-@@ -6107,7 +6125,7 @@
+   usem32=false
+ fi
+ 
+ 
+ # Check whether --enable-processor was given.
+@@ -6102,17 +6120,17 @@
+   enableval=$enable_processor; case "${enableval}" in
+                  yes)
+                    disable_processor=false
+                    ;;
+                  no)
                     disable_processor=true
                     ;;
                   *)
@@ -2320,7 +4056,17 @@ diff --git a/configure b/configure
                     ;;
                 esac
  else
-@@ -6133,7 +6151,7 @@
+   disable_processor=false
+ fi
+ 
+  if test x$disable_processor = xtrue; then
+   DISABLE_PROCESSOR_TRUE=
+@@ -6128,47 +6146,47 @@
+   enableval=$enable_tools; case "${enableval}" in
+                  yes)
+                    disable_tools=false
+                    ;;
+                  no)
                     disable_tools=true
                     ;;
                   *)
@@ -2329,7 +4075,16 @@ diff --git a/configure b/configure
                     ;;
                 esac
  else
-@@ -6150,7 +6168,7 @@
+   disable_tools=false
+ fi
+ 
+  if test x$disable_tools = xtrue; then
+   DISABLE_TOOLS_TRUE=
+   DISABLE_TOOLS_FALSE='#'
+ else
+   DISABLE_TOOLS_TRUE='#'
+   DISABLE_TOOLS_FALSE=
+ fi
  
  
  if test x$LINUX_HOST = xfalse -a x$disable_processor = xtrue -a x$disable_tools = xtrue; then
@@ -2338,7 +4093,12 @@ diff --git a/configure b/configure
  fi
  
  # Check whether --enable-selftest was given.
-@@ -6163,7 +6181,7 @@
+ if test "${enable_selftest+set}" = set; then :
+   enableval=$enable_selftest; case "${enableval}" in
+                  yes)
+                    selftest=true
+                    ;;
+                  no)
                     selftest=false
                     ;;
                   *)
@@ -2347,7 +4107,17 @@ diff --git a/configure b/configure
                     ;;
                 esac
  else
-@@ -6245,10 +6263,21 @@
+   selftest=false
+ fi
+ 
+  if test x$selftest = xtrue; then
+   SELFTEST_TRUE=
+@@ -6240,35 +6258,47 @@
+      t clear
+      :clear
+      s/^\([^=]*\)=\(.*[{}].*\)$/test "${\1+set}" = set || &/
+      t end
+      s/^\([^=]*\)=\(.*\)$/\1=${\1=\2}/
       :end' >>confcache
  if diff "$cache_file" confcache >/dev/null 2>&1; then :; else
    if test -w "$cache_file"; then
@@ -2371,7 +4141,15 @@ diff --git a/configure b/configure
    else
      { $as_echo "$as_me:${as_lineno-$LINENO}: not updating unwritable cache $cache_file" >&5
  $as_echo "$as_me: not updating unwritable cache $cache_file" >&6;}
-@@ -6264,6 +6293,7 @@
+   fi
+ fi
+ rm -f confcache
+ 
+ test "x$prefix" = xNONE && prefix=$ac_default_prefix
+ # Let make expand exec_prefix.
+ test "x$exec_prefix" = xNONE && exec_prefix='${prefix}'
+ 
+ DEFS=-DHAVE_CONFIG_H
  
  ac_libobjs=
  ac_ltlibobjs=
@@ -2379,7 +4157,17 @@ diff --git a/configure b/configure
  for ac_i in : $LIBOBJS; do test "x$ac_i" = x: && continue
    # 1. Remove the extension, and $U if already installed.
    ac_script='s/\$U\././;s/\.o$//;s/\.obj$//'
-@@ -6287,51 +6317,51 @@
+   ac_i=`$as_echo "$ac_i" | sed "$ac_script"`
+   # 2. Prepend LIBOBJDIR.  When used with automake>=1.10 LIBOBJDIR
+   #    will be set to the directory where LIBOBJS objects are built.
+   as_fn_append ac_libobjs " \${LIBOBJDIR}$ac_i\$U.$ac_objext"
+   as_fn_append ac_ltlibobjs " \${LIBOBJDIR}$ac_i"'$U.lo'
+@@ -6282,61 +6312,61 @@
+   am__EXEEXT_TRUE=
+   am__EXEEXT_FALSE='#'
+ else
+   am__EXEEXT_TRUE='#'
+   am__EXEEXT_FALSE=
  fi
  
  if test -z "${AMDEP_TRUE}" && test -z "${AMDEP_FALSE}"; then
@@ -2443,7 +4231,17 @@ diff --git a/configure b/configure
  ac_write_fail=0
  ac_clean_files_save=$ac_clean_files
  ac_clean_files="$ac_clean_files $CONFIG_STATUS"
-@@ -6432,6 +6462,7 @@
+ { $as_echo "$as_me:${as_lineno-$LINENO}: creating $CONFIG_STATUS" >&5
+ $as_echo "$as_me: creating $CONFIG_STATUS" >&6;}
+ as_write_fail=0
+ cat >$CONFIG_STATUS <<_ASEOF || as_write_fail=1
+ #! $SHELL
+@@ -6427,16 +6457,17 @@
+ # IFS
+ # We need space, tab and new line, in precisely that order.  Quoting is
+ # there to prevent editors from complaining about space-tab.
+ # (If _AS_PATH_WALK were called with IFS unset, it would disable word
+ # splitting by setting IFS to empty value.)
  IFS=" ""	$as_nl"
  
  # Find who we are.  Look in the path if we contain no directory separator.
@@ -2451,7 +4249,17 @@ diff --git a/configure b/configure
  case $0 in #((
    *[\\/]* ) as_myself=$0 ;;
    *) as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-@@ -6477,19 +6508,19 @@
+ for as_dir in $PATH
+ do
+   IFS=$as_save_IFS
+   test -z "$as_dir" && as_dir=.
+     test -r "$as_dir/$0" && as_myself=$as_dir/$0 && break
+@@ -6472,29 +6503,29 @@
+ export LC_ALL
+ LANGUAGE=C
+ export LANGUAGE
+ 
+ # CDPATH.
  (unset CDPATH) >/dev/null 2>&1 && unset CDPATH
  
  
@@ -2479,7 +4287,17 @@ diff --git a/configure b/configure
    as_fn_exit $as_status
  } # as_fn_error
  
-@@ -6685,7 +6716,7 @@
+ 
+ # as_fn_set_status STATUS
+ # -----------------------
+ # Set $? to STATUS, without forking.
+ as_fn_set_status ()
+@@ -6680,17 +6711,17 @@
+ 	  /^X\(\/\).*/{
+ 	    s//\1/
+ 	    q
+ 	  }
+ 	  s/.*/./; q'`
        test -d "$as_dir" && break
      done
      test -z "$as_dirs" || eval "mkdir $as_dirs"
@@ -2488,7 +4306,17 @@ diff --git a/configure b/configure
  
  
  } # as_fn_mkdir_p
-@@ -6739,7 +6770,7 @@
+ if mkdir -p . 2>/dev/null; then
+   as_mkdir_p='mkdir -p "$as_dir"'
+ else
+   test -d ./-p && rmdir ./-p
+   as_mkdir_p=false
+@@ -6734,17 +6765,17 @@
+ test $as_write_fail = 0 && chmod +x $CONFIG_STATUS || ac_write_fail=1
+ 
+ cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
+ # Save the log message, to keep $0 and so on meaningful, and to
+ # report actual input values of CONFIG_FILES etc. instead of their
  # values after options handling.
  ac_log="
  This file was extended by breakpad $as_me 0.1, which was
@@ -2497,7 +4325,17 @@ diff --git a/configure b/configure
  
    CONFIG_FILES    = $CONFIG_FILES
    CONFIG_HEADERS  = $CONFIG_HEADERS
-@@ -6805,10 +6836,10 @@
+   CONFIG_LINKS    = $CONFIG_LINKS
+   CONFIG_COMMANDS = $CONFIG_COMMANDS
+   $ $0 $@
+ 
+ on `(hostname || uname -n) 2>/dev/null | sed 1q`
+@@ -6800,20 +6831,20 @@
+ 
+ Report bugs to <google-breakpad-dev@googlegroups.com>."
+ 
+ _ACEOF
+ cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1
  ac_cs_config="`$as_echo "$ac_configure_args" | sed 's/^ //; s/[\\""\`\$]/\\\\&/g'`"
  ac_cs_version="\\
  breakpad config.status 0.1
@@ -2510,7 +4348,17 @@ diff --git a/configure b/configure
  This config.status script is free software; the Free Software Foundation
  gives unlimited permission to copy, distribute and modify it."
  
-@@ -6826,11 +6857,16 @@
+ ac_pwd='$ac_pwd'
+ srcdir='$srcdir'
+ INSTALL='$INSTALL'
+ MKDIR_P='$MKDIR_P'
+ AWK='$AWK'
+@@ -6821,21 +6852,26 @@
+ _ACEOF
+ 
+ cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
+ # The default lists apply if the user does not specify any file.
+ ac_need_defaults=:
  while test $# != 0
  do
    case $1 in
@@ -2528,7 +4376,17 @@ diff --git a/configure b/configure
    *)
      ac_option=$1
      ac_optarg=$2
-@@ -6852,6 +6888,7 @@
+     ac_shift=shift
+     ;;
+   esac
+ 
+   case $ac_option in
+@@ -6847,38 +6883,39 @@
+   --config | --confi | --conf | --con | --co | --c )
+     $as_echo "$ac_cs_config"; exit ;;
+   --debug | --debu | --deb | --de | --d | -d )
+     debug=: ;;
+   --file | --fil | --fi | --f )
      $ac_shift
      case $ac_optarg in
      *\'*) ac_optarg=`$as_echo "$ac_optarg" | sed "s/'/'\\\\\\\\''/g"` ;;
@@ -2536,7 +4394,12 @@ diff --git a/configure b/configure
      esac
      as_fn_append CONFIG_FILES " '$ac_optarg'"
      ac_need_defaults=false;;
-@@ -6864,7 +6901,7 @@
+   --header | --heade | --head | --hea )
+     $ac_shift
+     case $ac_optarg in
+     *\'*) ac_optarg=`$as_echo "$ac_optarg" | sed "s/'/'\\\\\\\\''/g"` ;;
+     esac
+     as_fn_append CONFIG_HEADERS " '$ac_optarg'"
      ac_need_defaults=false;;
    --he | --h)
      # Conflict between --help and --header
@@ -2545,7 +4408,8 @@ diff --git a/configure b/configure
  Try \`$0 --help' for more information.";;
    --help | --hel | -h )
      $as_echo "$ac_cs_usage"; exit ;;
-@@ -6873,7 +6910,7 @@
+   -q | -quiet | --quiet | --quie | --qui | --qu | --q \
+   | -silent | --silent | --silen | --sile | --sil | --si | --s)
      ac_cs_silent=: ;;
  
    # This is an error.
@@ -2554,7 +4418,17 @@ diff --git a/configure b/configure
  Try \`$0 --help' for more information." ;;
  
    *) as_fn_append ac_config_targets " $1"
-@@ -6931,7 +6968,7 @@
+      ac_need_defaults=false ;;
+ 
+   esac
+   shift
+ done
+@@ -6926,17 +6963,17 @@
+ # Handling of arguments.
+ for ac_config_target in $ac_config_targets
+ do
+   case $ac_config_target in
+     "src/config.h") CONFIG_HEADERS="$CONFIG_HEADERS src/config.h" ;;
      "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
      "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
  
@@ -2563,7 +4437,17 @@ diff --git a/configure b/configure
    esac
  done
  
-@@ -6954,9 +6991,10 @@
+ 
+ # If the user did not use the arguments to specify the items to instantiate,
+ # then the envvar interface is used.  Set only those that are not.
+ # We use the long form for the default assignment because of an extremely
+ # bizarre bug on SunOS 4.1.3.
+@@ -6949,82 +6986,84 @@
+ # Have a temporary directory for convenience.  Make it in the build tree
+ # simply because there is no reason against having it here, and in addition,
+ # creating and moving files from /tmp can sometimes cause problems.
+ # Hook for its removal unless debugging.
+ # Note that there is a small window in which the directory will not be cleaned:
  # after its creation but before its name has been assigned to `$tmp'.
  $debug ||
  {
@@ -2576,7 +4460,7 @@ diff --git a/configure b/configure
  ' 0
    trap 'as_fn_exit 1' 1 2 13 15
  }
-@@ -6964,12 +7002,13 @@
+ # Create a (secure) tmp directory for tmp files.
  
  {
    tmp=`(umask 077 && mktemp -d "./confXXXXXX") 2>/dev/null` &&
@@ -2592,7 +4476,16 @@ diff --git a/configure b/configure
  
  # Set up the scripts for CONFIG_FILES section.
  # No need to generate them if there are no CONFIG_FILES.
-@@ -6986,12 +7025,12 @@
+ # This happens for instance with `./config.status config.h'.
+ if test -n "$CONFIG_FILES"; then
+ 
+ 
+ ac_cr=`echo X | tr X '\015'`
+ # On cygwin, bash can eat \r inside `` if the user requested igncr.
+ # But we know of no other shell where ac_cr would be empty at this
+ # point, so we can use a bashism as a fallback.
+ if test "x$ac_cr" = x; then
+   eval ac_cr=\$\'\\r\'
  fi
  ac_cs_awk_cr=`$AWK 'BEGIN { print "a\rb" }' </dev/null 2>/dev/null`
  if test "$ac_cs_awk_cr" = "a${ac_cr}b"; then
@@ -2607,7 +4500,8 @@ diff --git a/configure b/configure
  _ACEOF
  
  
-@@ -7000,18 +7039,18 @@
+ {
+   echo "cat >conf$$subs.awk <<_ACEOF" &&
    echo "$ac_subst_vars" | sed 's/.*/&!$&$ac_delim/' &&
    echo "_ACEOF"
  } >conf$$subs.sh ||
@@ -2630,7 +4524,7 @@ diff --git a/configure b/configure
    else
      ac_delim="$ac_delim!$ac_delim _$ac_delim!! "
    fi
-@@ -7019,7 +7058,7 @@
+ done
  rm -f conf$$subs.sh
  
  cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1
@@ -2639,7 +4533,17 @@ diff --git a/configure b/configure
  _ACEOF
  sed -n '
  h
-@@ -7067,7 +7106,7 @@
+ s/^/S["/; s/!.*/"]=/
+ p
+ g
+ s/^[^!]*!//
+ :repl
+@@ -7062,17 +7101,17 @@
+ /^[^""]/{
+   N
+   s/\n//
+ }
+ ' >>$CONFIG_STATUS || ac_write_fail=1
  rm -f conf$$subs.awk
  cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1
  _ACAWK
@@ -2648,7 +4552,17 @@ diff --git a/configure b/configure
    for (key in S) S_is_set[key] = 1
    FS = ""
  
-@@ -7099,21 +7138,29 @@
+ }
+ {
+   line = $ 0
+   nfields = split(line, field, "@")
+   substed = 0
+@@ -7094,59 +7133,67 @@
+ 
+ _ACAWK
+ _ACEOF
+ cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
+ if sed "s/$ac_cr//" < /dev/null > /dev/null 2>&1; then
    sed "s/$ac_cr\$//; s/$ac_cr/$ac_cs_awk_cr/g"
  else
    cat
@@ -2687,7 +4601,11 @@ diff --git a/configure b/configure
  s/^[^=]*=[	 ]*$//
  }'
  fi
-@@ -7125,7 +7172,7 @@
+ 
+ cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
+ fi # test -n "$CONFIG_FILES"
+ 
+ # Set up the scripts for CONFIG_HEADERS section.
  # No need to generate them if there are no CONFIG_HEADERS.
  # This happens for instance with `./config.status Makefile'.
  if test -n "$CONFIG_HEADERS"; then
@@ -2696,7 +4614,11 @@ diff --git a/configure b/configure
  BEGIN {
  _ACEOF
  
-@@ -7137,11 +7184,11 @@
+ # Transform confdefs.h into an awk script `defines.awk', embedded as
+ # here-document in config.status, that substitutes the proper values into
+ # config.h.in to produce config.h.
+ 
+ # Create a delimiter string that does not exist in confdefs.h, to ease
  # handling of long lines.
  ac_delim='%!_!# '
  for ac_last_try in false false :; do
@@ -2711,7 +4633,17 @@ diff --git a/configure b/configure
    else
      ac_delim="$ac_delim!$ac_delim _$ac_delim!! "
    fi
-@@ -7226,7 +7273,7 @@
+ done
+ 
+ # For the awk script, D is an array of macro values keyed by name,
+ # likewise P contains macro parameters if any.  Preserve backslash
+ # newline sequences.
+@@ -7221,30 +7268,30 @@
+       next
+     }
+   }
+ }
+ { print }
  _ACAWK
  _ACEOF
  cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
@@ -2720,7 +4652,12 @@ diff --git a/configure b/configure
  fi # test -n "$CONFIG_HEADERS"
  
  
-@@ -7239,7 +7286,7 @@
+ eval set X "  :F $CONFIG_FILES  :H $CONFIG_HEADERS    :C $CONFIG_COMMANDS"
+ shift
+ for ac_tag
+ do
+   case $ac_tag in
+   :[FHLC]) ac_mode=$ac_tag; continue;;
    esac
    case $ac_mode$ac_tag in
    :[FHL]*:*);;
@@ -2729,7 +4666,17 @@ diff --git a/configure b/configure
    :[FH]-) ac_tag=-:-;;
    :[FH]*) ac_tag=$ac_tag:$ac_tag.in;;
    esac
-@@ -7258,7 +7305,7 @@
+   ac_save_IFS=$IFS
+   IFS=:
+   set x $ac_tag
+   IFS=$ac_save_IFS
+   shift
+@@ -7253,26 +7300,26 @@
+ 
+   case $ac_mode in
+   :L) ac_source=$1;;
+   :[FH])
+     ac_file_inputs=
      for ac_f
      do
        case $ac_f in
@@ -2738,7 +4685,8 @@ diff --git a/configure b/configure
        *) # Look for the file first in the build tree, then in the source tree
  	 # (if the path is not absolute).  The absolute path cannot be DOS-style,
  	 # because $ac_f cannot contain `:'.
-@@ -7267,7 +7314,7 @@
+ 	 test -f "$ac_f" ||
+ 	   case $ac_f in
  	   [\\/$]*) false;;
  	   *) test -f "$srcdir/$ac_f" && ac_f="$srcdir/$ac_f";;
  	   esac ||
@@ -2747,7 +4695,17 @@ diff --git a/configure b/configure
        esac
        case $ac_f in *\'*) ac_f=`$as_echo "$ac_f" | sed "s/'/'\\\\\\\\''/g"`;; esac
        as_fn_append ac_file_inputs " '$ac_f'"
-@@ -7293,8 +7340,8 @@
+     done
+ 
+     # Let's still pretend it is `configure' which instantiates (i.e., don't
+     # use $as_me), people would be surprised to read:
+     #    /* config.h.  Generated by config.status.  */
+@@ -7288,18 +7335,18 @@
+     case $configure_input in #(
+     *\&* | *\|* | *\\* )
+        ac_sed_conf_input=`$as_echo "$configure_input" |
+        sed 's/[\\\\&|]/\\\\&/g'`;; #(
+     *) ac_sed_conf_input=$configure_input;;
      esac
  
      case $ac_tag in
@@ -2758,7 +4716,17 @@ diff --git a/configure b/configure
      esac
      ;;
    esac
-@@ -7430,23 +7477,24 @@
+ 
+   ac_dir=`$as_dirname -- "$ac_file" ||
+ $as_expr X"$ac_file" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
+ 	 X"$ac_file" : 'X\(//\)[^/]' \| \
+ 	 X"$ac_file" : 'X\(//\)$' \| \
+@@ -7425,56 +7472,57 @@
+ s&@abs_top_srcdir@&$ac_abs_top_srcdir&;t t
+ s&@builddir@&$ac_builddir&;t t
+ s&@abs_builddir@&$ac_abs_builddir&;t t
+ s&@abs_top_builddir@&$ac_abs_top_builddir&;t t
+ s&@INSTALL@&$ac_INSTALL&;t t
  s&@MKDIR_P@&$ac_MKDIR_P&;t t
  $ac_datarootdir_hack
  "
@@ -2794,7 +4762,8 @@ diff --git a/configure b/configure
   ;;
    :H)
    #
-@@ -7455,21 +7503,21 @@
+   # CONFIG_HEADER
+   #
    if test x"$ac_file" != x-; then
      {
        $as_echo "/* $configure_input  */" \
@@ -2824,7 +4793,17 @@ diff --git a/configure b/configure
    fi
  # Compute "$ac_file"'s index in $config_headers.
  _am_arg="$ac_file"
-@@ -7619,7 +7667,7 @@
+ _am_stamp_count=1
+ for _am_header in $config_headers :; do
+   case $_am_header in
+     $_am_arg | $_am_arg:* )
+       break ;;
+@@ -7614,17 +7662,17 @@
+ done # for ac_tag
+ 
+ 
+ as_fn_exit 0
+ _ACEOF
  ac_clean_files=$ac_clean_files_save
  
  test $ac_write_fail = 0 ||
@@ -2833,7 +4812,17 @@ diff --git a/configure b/configure
  
  
  # configure is writing to config.log, and then calls config.status.
-@@ -7640,7 +7688,7 @@
+ # config.status does its own redirection, appending to config.log.
+ # Unfortunately, on DOS this fails, as config.log is still kept open
+ # by configure, so config.status won't be able to write to it; its
+ # output is simply discarded.  So we exec the FD to /dev/null,
+ # effectively closing config.log, so it can be properly (re)opened and
+@@ -7635,15 +7683,15 @@
+   ac_config_status_args=
+   test "$silent" = yes &&
+     ac_config_status_args="$ac_config_status_args --quiet"
+   exec 5>/dev/null
+   $SHELL $CONFIG_STATUS $ac_config_status_args || ac_cs_success=false
    exec 5>>config.log
    # Use ||, not &&, to avoid exiting from the if with $? = 1, which
    # would make configure fail if this is the last instruction.
@@ -2842,10 +4831,18 @@ diff --git a/configure b/configure
  fi
  if test -n "$ac_unrecognized_opts" && test "$enable_option_checking" != no; then
    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: unrecognized options: $ac_unrecognized_opts" >&5
+ $as_echo "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
+ fi
+ 
 diff --git a/src/common/dwarf_cfi_to_module.cc b/src/common/dwarf_cfi_to_module.cc
 --- a/src/common/dwarf_cfi_to_module.cc
 +++ b/src/common/dwarf_cfi_to_module.cc
-@@ -127,7 +127,8 @@
+@@ -122,17 +122,18 @@
+   return_address_ = return_address;
+ 
+   // Breakpad STACK CFI records must provide a .ra rule, but DWARF CFI
+   // may not establish any rule for .ra if the return address column
+   // is an ordinary register, and that register holds the return
    // address on entry to the function. So establish an initial .ra
    // rule citing the return address register.
    if (return_address_ < register_names_.size())
@@ -2855,7 +4852,17 @@ diff --git a/src/common/dwarf_cfi_to_module.cc b/src/common/dwarf_cfi_to_module.
  
    return true;
  }
-@@ -153,23 +154,15 @@
+ 
+ string DwarfCFIToModule::RegisterName(int i) {
+   assert(entry_);
+   if (i < 0) {
+     assert(i == kCFARegister);
+@@ -148,69 +149,65 @@
+ 
+   reporter_->UnnamedRegister(entry_offset_, reg);
+   char buf[30];
+   sprintf(buf, "unnamed_register%u", reg);
+   return buf;
  }
  
  void DwarfCFIToModule::Record(Module::Address address, int reg,
@@ -2882,7 +4889,9 @@ diff --git a/src/common/dwarf_cfi_to_module.cc b/src/common/dwarf_cfi_to_module.
  }
  
  bool DwarfCFIToModule::UndefinedRule(uint64 address, int reg) {
-@@ -179,33 +172,37 @@
+   reporter_->UndefinedNotSupported(entry_offset_, RegisterName(reg));
+   // Treat this as a non-fatal error.
+   return true;
  }
  
  bool DwarfCFIToModule::SameValueRule(uint64 address, int reg) {
@@ -2932,10 +4941,20 @@ diff --git a/src/common/dwarf_cfi_to_module.cc b/src/common/dwarf_cfi_to_module.
    return true;
  }
  
+ bool DwarfCFIToModule::ExpressionRule(uint64 address, int reg,
+                                       const string &expression) {
+   reporter_->ExpressionsNotSupported(entry_offset_, RegisterName(reg));
+   // Treat this as a non-fatal error.
+   return true;
 diff --git a/src/common/dwarf_cfi_to_module.h b/src/common/dwarf_cfi_to_module.h
 --- a/src/common/dwarf_cfi_to_module.h
 +++ b/src/common/dwarf_cfi_to_module.h
-@@ -152,7 +152,7 @@
+@@ -147,17 +147,17 @@
+                                  const string &expression);
+   virtual bool End();
+ 
+  private:
+   // Return the name to use for register REG.
    string RegisterName(int i);
  
    // Record RULE for register REG at ADDRESS.
@@ -2944,10 +4963,20 @@ diff --git a/src/common/dwarf_cfi_to_module.h b/src/common/dwarf_cfi_to_module.h
  
    // The module to which we should add entries.
    Module *module_;
+ 
+   // Map from register numbers to register names.
+   const vector<string> &register_names_;
+ 
+   // The reporter to use to report problems.
 diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_to_module_unittest.cc
 --- a/src/common/dwarf_cfi_to_module_unittest.cc
 +++ b/src/common/dwarf_cfi_to_module_unittest.cc
-@@ -158,7 +158,7 @@
+@@ -153,69 +153,71 @@
+ }
+ 
+ TEST_F(Rule, SameValueRule) {
+   StartEntry();
+   ASSERT_TRUE(handler.SameValueRule(entry_address, 6));
    ASSERT_TRUE(handler.End());
    CheckEntry();
    Module::RuleMap expected_initial;
@@ -2956,7 +4985,13 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
    EXPECT_THAT(entries[0]->initial_rules, ContainerEq(expected_initial));
    EXPECT_EQ(0U, entries[0]->rule_changes.size());
  }
-@@ -172,7 +172,8 @@
+ 
+ TEST_F(Rule, OffsetRule) {
+   StartEntry();
+   ASSERT_TRUE(handler.OffsetRule(entry_address + 1, return_reg,
+                                  DwarfCFIToModule::kCFARegister,
+                                  16927065));
+   ASSERT_TRUE(handler.End());
    CheckEntry();
    EXPECT_EQ(0U, entries[0]->initial_rules.size());
    Module::RuleChangeMap expected_changes;
@@ -2966,7 +5001,11 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
    EXPECT_THAT(entries[0]->rule_changes, ContainerEq(expected_changes));
  }
  
-@@ -184,7 +185,8 @@
+ TEST_F(Rule, OffsetRuleNegative) {
+   StartEntry();
+   ASSERT_TRUE(handler.OffsetRule(entry_address + 1,
+                                  DwarfCFIToModule::kCFARegister, 4, -34530721));
+   ASSERT_TRUE(handler.End());
    CheckEntry();
    EXPECT_EQ(0U, entries[0]->initial_rules.size());
    Module::RuleChangeMap expected_changes;
@@ -2976,7 +5015,15 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
    EXPECT_THAT(entries[0]->rule_changes, ContainerEq(expected_changes));
  }
  
-@@ -200,7 +202,7 @@
+ TEST_F(Rule, ValOffsetRule) {
+   // Use an unnamed register number, to exercise that branch of RegisterName.
+   EXPECT_CALL(reporter, UnnamedRegister(_, 11));
+   StartEntry();
+   ASSERT_TRUE(handler.ValOffsetRule(entry_address + 0x5ab7,
+                                     DwarfCFIToModule::kCFARegister,
+                                     11, 61812979));
+   ASSERT_TRUE(handler.End());
+   CheckEntry();
    EXPECT_EQ(0U, entries[0]->initial_rules.size());
    Module::RuleChangeMap expected_changes;
    expected_changes[entry_address + 0x5ab7][".cfa"] =
@@ -2985,7 +5032,9 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
    EXPECT_THAT(entries[0]->rule_changes, ContainerEq(expected_changes));
  }
  
-@@ -210,7 +212,7 @@
+ TEST_F(Rule, RegisterRule) {
+   StartEntry();
+   ASSERT_TRUE(handler.RegisterRule(entry_address, return_reg, 3));
    ASSERT_TRUE(handler.End());
    CheckEntry();
    Module::RuleMap expected_initial;
@@ -2994,7 +5043,17 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
    EXPECT_THAT(entries[0]->initial_rules, ContainerEq(expected_initial));
    EXPECT_EQ(0U, entries[0]->rule_changes.size());
  }
-@@ -244,8 +246,8 @@
+ 
+ TEST_F(Rule, ExpressionRule) {
+   EXPECT_CALL(reporter, ExpressionsNotSupported(_, "reg2"));
+   StartEntry();
+   ASSERT_TRUE(handler.ExpressionRule(entry_address + 0xf326, 2,
+@@ -239,45 +241,46 @@
+ 
+ TEST_F(Rule, DefaultReturnAddressRule) {
+   return_reg = 2;
+   StartEntry();
+   ASSERT_TRUE(handler.RegisterRule(entry_address, 0, 1));
    ASSERT_TRUE(handler.End());
    CheckEntry();
    Module::RuleMap expected_initial;
@@ -3005,7 +5064,11 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
    EXPECT_THAT(entries[0]->initial_rules, ContainerEq(expected_initial));
    EXPECT_EQ(0U, entries[0]->rule_changes.size());
  }
-@@ -257,7 +259,7 @@
+ 
+ TEST_F(Rule, DefaultReturnAddressRuleOverride) {
+   return_reg = 2;
+   StartEntry();
+   ASSERT_TRUE(handler.RegisterRule(entry_address, return_reg, 1));
    ASSERT_TRUE(handler.End());
    CheckEntry();
    Module::RuleMap expected_initial;
@@ -3014,7 +5077,11 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
    EXPECT_THAT(entries[0]->initial_rules, ContainerEq(expected_initial));
    EXPECT_EQ(0U, entries[0]->rule_changes.size());
  }
-@@ -269,10 +271,11 @@
+ 
+ TEST_F(Rule, DefaultReturnAddressRuleLater) {
+   return_reg = 2;
+   StartEntry();
+   ASSERT_TRUE(handler.RegisterRule(entry_address + 1, return_reg, 1));
    ASSERT_TRUE(handler.End());
    CheckEntry();
    Module::RuleMap expected_initial;
@@ -3028,10 +5095,20 @@ diff --git a/src/common/dwarf_cfi_to_module_unittest.cc b/src/common/dwarf_cfi_t
    EXPECT_THAT(entries[0]->rule_changes, ContainerEq(expected_changes));
  }
  
+ TEST(RegisterNames, I386) {
+   vector<string> names = DwarfCFIToModule::RegisterNames::I386();
+ 
+   EXPECT_EQ("$eax", names[0]);
+   EXPECT_EQ("$ecx", names[1]);
 diff --git a/src/common/module.cc b/src/common/module.cc
 --- a/src/common/module.cc
 +++ b/src/common/module.cc
-@@ -256,6 +256,24 @@
+@@ -251,16 +251,34 @@
+ }
+ 
+ bool Module::ReportError() {
+   fprintf(stderr, "error writing symbol file: %s\n",
+           strerror(errno));
    return false;
  }
  
@@ -3056,10 +5133,20 @@ diff --git a/src/common/module.cc b/src/common/module.cc
  bool Module::WriteRuleMap(const RuleMap &rule_map, std::ostream &stream) {
    for (RuleMap::const_iterator it = rule_map.begin();
         it != rule_map.end(); ++it) {
+     if (it != rule_map.begin())
+       stream << ' ';
+     stream << it->first << ": " << it->second;
+   }
+   return stream.good();
 diff --git a/src/common/module.h b/src/common/module.h
 --- a/src/common/module.h
 +++ b/src/common/module.h
-@@ -124,11 +124,71 @@
+@@ -119,21 +119,81 @@
+   };
+ 
+   // An exported symbol.
+   struct Extern {
+     Address address;
      string name;
    };
  
@@ -3134,10 +5221,20 @@ diff --git a/src/common/module.h b/src/common/module.h
  
    // A map from addresses to RuleMaps, representing changes that take
    // effect at given addresses.
+   typedef map<Address, RuleMap> RuleChangeMap;
+ 
+   // A range of 'STACK CFI' stack walking information. An instance of
+   // this structure corresponds to a 'STACK CFI INIT' record and the
+   // subsequent 'STACK CFI' records that fall within its range.
 diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
 --- a/src/common/module_unittest.cc
 +++ b/src/common/module_unittest.cc
-@@ -130,11 +130,11 @@
+@@ -125,21 +125,21 @@
+   function->lines.push_back(line1);
+ 
+   m.AddFunction(function);
+ 
+   // Some stack information.
    Module::StackFrameEntry *entry = new Module::StackFrameEntry();
    entry->address = 0x30f9e5c83323973dULL;
    entry->size = 0x49fc9ca7c7c13dc2ULL;
@@ -3153,7 +5250,17 @@ diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
    m.AddStackFrameEntry(entry);
  
    // Set the load address.  Doing this after adding all the data to
-@@ -234,11 +234,11 @@
+   // the module must work fine.
+   m.SetLoadAddress(0x2ab698b0b6407073LL);
+ 
+   m.Write(s, ALL_SYMBOL_DATA);
+   string contents = s.str();
+@@ -229,21 +229,21 @@
+   function->lines.push_back(line1);
+ 
+   m.AddFunction(function);
+ 
+   // Some stack information.
    Module::StackFrameEntry *entry = new Module::StackFrameEntry();
    entry->address = 0x30f9e5c83323973dULL;
    entry->size = 0x49fc9ca7c7c13dc2ULL;
@@ -3169,7 +5276,17 @@ diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
    m.AddStackFrameEntry(entry);
  
    // Set the load address.  Doing this after adding all the data to
-@@ -310,24 +310,24 @@
+   // the module must work fine.
+   m.SetLoadAddress(0x2ab698b0b6407073LL);
+ 
+   m.Write(s, NO_CFI);
+   string contents = s.str();
+@@ -305,34 +305,34 @@
+   entry1->address = 0xddb5f41285aa7757ULL;
+   entry1->size = 0x1486493370dc5073ULL;
+   m.AddStackFrameEntry(entry1);
+ 
+   // Second STACK CFI entry, with initial rules but no deltas.
    Module::StackFrameEntry *entry2 = new Module::StackFrameEntry();
    entry2->address = 0x8064f3af5e067e38ULL;
    entry2->size = 0x0de2a5ee55509407ULL;
@@ -3202,7 +5319,17 @@ diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
    m.AddStackFrameEntry(entry3);
  
    // Check that Write writes STACK CFI records properly.
-@@ -357,23 +357,23 @@
+   m.Write(s, ALL_SYMBOL_DATA);
+   string contents = s.str();
+   EXPECT_STREQ("MODULE os-name architecture id-string name with spaces\n"
+                "STACK CFI INIT 5e8d0db0a7075c6c 1c7edb12a7aea229"
+                " .cfa: Whose woods are these\n"
+@@ -352,33 +352,33 @@
+   // Check that GetStackFrameEntries works.
+   vector<Module::StackFrameEntry *> entries;
+   m.GetStackFrameEntries(&entries);
+   ASSERT_EQ(3U, entries.size());
+   // Check first entry.
    EXPECT_EQ(0x5e8d0db0a7075c6cULL, entries[0]->address);
    EXPECT_EQ(0x1c7edb12a7aea229ULL, entries[0]->size);
    Module::RuleMap entry1_initial;
@@ -3234,7 +5361,17 @@ diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
    EXPECT_THAT(entries[1]->initial_rules, ContainerEq(entry2_initial));
    ASSERT_EQ(0U, entries[1]->rule_changes.size());
    // Check third entry.
-@@ -590,24 +590,24 @@
+   EXPECT_EQ(0xddb5f41285aa7757ULL, entries[2]->address);
+   EXPECT_EQ(0x1486493370dc5073ULL, entries[2]->size);
+   ASSERT_EQ(0U, entries[2]->initial_rules.size());
+   ASSERT_EQ(0U, entries[2]->rule_changes.size());
+ }
+@@ -585,34 +585,34 @@
+   entry1->address = 0x2000;
+   entry1->size = 0x900;
+   m.AddStackFrameEntry(entry1);
+ 
+   // Second STACK CFI entry, with initial rules but no deltas.
    Module::StackFrameEntry *entry2 = new Module::StackFrameEntry();
    entry2->address = 0x3000;
    entry2->size = 0x900;
@@ -3267,10 +5404,20 @@ diff --git a/src/common/module_unittest.cc b/src/common/module_unittest.cc
    m.AddStackFrameEntry(entry3);
  
    Module::StackFrameEntry* s = m.FindStackFrameEntryByAddress(0x1000);
+   EXPECT_EQ(entry3, s);
+   s = m.FindStackFrameEntryByAddress(0x18FF);
+   EXPECT_EQ(entry3, s);
+ 
+   s = m.FindStackFrameEntryByAddress(0x1900);
 diff --git a/src/processor/cfi_frame_info.cc b/src/processor/cfi_frame_info.cc
 --- a/src/processor/cfi_frame_info.cc
 +++ b/src/processor/cfi_frame_info.cc
-@@ -49,7 +49,7 @@
+@@ -48,17 +48,17 @@
+ #endif
+ 
+ template<typename V>
+ bool CFIFrameInfo::FindCallerRegs(const RegisterValueMap<V> &registers,
+                                   const MemoryRegion &memory,
                                    RegisterValueMap<V> *caller_registers) const {
    // If there are not rules for both .ra and .cfa in effect at this address,
    // don't use this CFI data for stack walking.
@@ -3279,7 +5426,17 @@ diff --git a/src/processor/cfi_frame_info.cc b/src/processor/cfi_frame_info.cc
      return false;
  
    RegisterValueMap<V> working;
-@@ -100,10 +100,10 @@
+   PostfixEvaluator<V> evaluator(&working, &memory);
+ 
+   caller_registers->clear();
+ 
+   // First, compute the CFA.
+@@ -99,20 +99,20 @@
+ template bool CFIFrameInfo::FindCallerRegs<uint64_t>(
+     const RegisterValueMap<uint64_t> &registers,
+     const MemoryRegion &memory,
+     RegisterValueMap<uint64_t> *caller_registers) const;
+ 
  string CFIFrameInfo::Serialize() const {
    std::ostringstream stream;
  
@@ -3292,7 +5449,17 @@ diff --git a/src/processor/cfi_frame_info.cc b/src/processor/cfi_frame_info.cc
      if (static_cast<std::streamoff>(stream.tellp()) != 0)
        stream << " ";
      stream << ".ra: " << ra_rule_;
-@@ -167,16 +167,17 @@
+   }
+   for (RuleMap::const_iterator iter = register_rules_.begin();
+        iter != register_rules_.end();
+        ++iter) {
+     if (static_cast<std::streamoff>(stream.tellp()) != 0)
+@@ -166,21 +166,22 @@
+   if (name_.empty() || expression_.empty()) return false;
+   if (name_ == ".cfa") handler_->CFARule(expression_);
+   else if (name_ == ".ra") handler_->RARule(expression_);
+   else handler_->RegisterRule(name_, expression_);
+   return true;
  }
  
  void CFIFrameInfoParseHandler::CFARule(const string &expression) {
@@ -3316,7 +5483,12 @@ diff --git a/src/processor/cfi_frame_info.cc b/src/processor/cfi_frame_info.cc
 diff --git a/src/processor/cfi_frame_info.h b/src/processor/cfi_frame_info.h
 --- a/src/processor/cfi_frame_info.h
 +++ b/src/processor/cfi_frame_info.h
-@@ -43,6 +43,7 @@
+@@ -38,16 +38,17 @@
+ #ifndef PROCESSOR_CFI_FRAME_INFO_H_
+ #define PROCESSOR_CFI_FRAME_INFO_H_
+ 
+ #include <map>
+ #include <string>
  
  #include "common/using_std_string.h"
  #include "google_breakpad/common/breakpad_types.h"
@@ -3324,7 +5496,17 @@ diff --git a/src/processor/cfi_frame_info.h b/src/processor/cfi_frame_info.h
  
  namespace google_breakpad {
  
-@@ -66,16 +67,17 @@
+ using std::map;
+ 
+ class MemoryRegion;
+ 
+ // A set of rules for recovering the calling frame's registers'
+@@ -61,26 +62,27 @@
+ // INIT' record that covers that instruction, and then apply the
+ // changes given by the 'STACK CFI' records up to our instruction's
+ // address. Then, use the FindCallerRegs member function to apply the
+ // rules to the callee frame's register values, yielding the caller
+ // frame's register values.
  class CFIFrameInfo {
   public:
    // A map from register names onto values.
@@ -3347,7 +5529,17 @@ diff --git a/src/processor/cfi_frame_info.h b/src/processor/cfi_frame_info.h
    }
  
    // Compute the values of the calling frame's registers, according to
-@@ -106,27 +108,23 @@
+   // this rule set. Use ValueType in expression evaluation; this
+   // should be uint32_t on machines with 32-bit addresses, or
+   // uint64_t on machines with 64-bit addresses.
+   //
+   // Return true on success, false otherwise.
+@@ -101,37 +103,33 @@
+                       RegisterValueMap<ValueType> *caller_registers) const;
+ 
+   // Serialize the rules in this object into a string in the format
+   // of STACK CFI records.
+   string Serialize() const;
  
   private:
  
@@ -3381,10 +5573,20 @@ diff --git a/src/processor/cfi_frame_info.h b/src/processor/cfi_frame_info.h
  
    // For a register named REG, rules[REG] is a postfix expression
    // which leaves the value of REG in the calling frame on the top of
+   // the stack. You should evaluate this expression
+   RuleMap register_rules_;
+ };
+ 
+ // A parser for STACK CFI-style rule sets.
 diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_info_unittest.cc
 --- a/src/processor/cfi_frame_info_unittest.cc
 +++ b/src/processor/cfi_frame_info_unittest.cc
-@@ -35,6 +35,7 @@
+@@ -30,24 +30,26 @@
+ // Original author: Jim Blandy <jimb@mozilla.com> <jimb@red-bean.com>
+ 
+ // cfi_frame_info_unittest.cc: Unit tests for CFIFrameInfo,
+ // CFIRuleParser, CFIFrameInfoParseHandler, and SimpleCFIWalker.
+ 
  #include <string.h>
  
  #include "breakpad_googletest_includes.h"
@@ -3392,7 +5594,8 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
  #include "common/using_std_string.h"
  #include "processor/cfi_frame_info.h"
  #include "google_breakpad/processor/memory_region.h"
-@@ -43,6 +44,7 @@
+ 
+ using google_breakpad::CFIFrameInfo;
  using google_breakpad::CFIFrameInfoParseHandler;
  using google_breakpad::CFIRuleParser;
  using google_breakpad::MemoryRegion;
@@ -3400,25 +5603,38 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
  using google_breakpad::SimpleCFIWalker;
  using testing::_;
  using testing::A;
-@@ -86,7 +88,7 @@
+ using testing::AtMost;
+ using testing::DoAll;
+ using testing::Return;
+ using testing::SetArgumentPointee;
+ using testing::Test;
+@@ -81,56 +83,56 @@
+ };
+ 
+ class Simple: public CFIFixture, public Test { };
+ 
+ // FindCallerRegs should fail if no .cfa rule is provided.
  TEST_F(Simple, NoCFA) {
    ExpectNoMemoryReferences();
  
 -  cfi.SetRARule("0");
 +  cfi.SetRARule(Module::Expr("0"));
-   ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                               &caller_registers));
    ASSERT_EQ(".ra: 0", cfi.Serialize());
-@@ -96,7 +98,7 @@
+ }
+ 
+ // FindCallerRegs should fail if no .ra rule is provided.
  TEST_F(Simple, NoRA) {
    ExpectNoMemoryReferences();
  
 -  cfi.SetCFARule("0");
 +  cfi.SetCFARule(Module::Expr("0"));
-   ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                               &caller_registers));
    ASSERT_EQ(".cfa: 0", cfi.Serialize());
-@@ -105,8 +107,8 @@
+ }
+ 
  TEST_F(Simple, SetCFAAndRARule) {
    ExpectNoMemoryReferences();
  
@@ -3426,10 +5642,16 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 -  cfi.SetRARule("5870666104170902211");
 +  cfi.SetCFARule(Module::Expr("330903416631436410"));
 +  cfi.SetRARule(Module::Expr("5870666104170902211"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(2U, caller_registers.size());
-@@ -120,12 +122,12 @@
+   ASSERT_EQ(330903416631436410ULL, caller_registers[".cfa"]);
+   ASSERT_EQ(5870666104170902211ULL, caller_registers[".ra"]);
+ 
+   ASSERT_EQ(".cfa: 330903416631436410 .ra: 5870666104170902211",
+             cfi.Serialize());
+ }
+ 
  TEST_F(Simple, SetManyRules) {
    ExpectNoMemoryReferences();
  
@@ -3445,10 +5667,20 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 +  cfi.SetRegisterRule("vodkathumbscrewingly", Module::Expr("24076308 .cfa +"));
 +  cfi.SetRegisterRule("pubvexingfjordschmaltzy", Module::Expr(".cfa 29801007 -"));
 +  cfi.SetRegisterRule("uncopyrightables", Module::Expr("92642917 .cfa /"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(6U, caller_registers.size());
-@@ -147,9 +149,9 @@
+   ASSERT_EQ(7664691U,           caller_registers[".cfa"]);
+   ASSERT_EQ(107469446U,         caller_registers[".ra"]);
+   ASSERT_EQ(416732599139967ULL, caller_registers["register1"]);
+   ASSERT_EQ(31740999U,          caller_registers["vodkathumbscrewingly"]);
+   ASSERT_EQ(-22136316ULL,       caller_registers["pubvexingfjordschmaltzy"]);
+@@ -142,154 +144,154 @@
+             "uncopyrightables: 92642917 .cfa / "
+             "vodkathumbscrewingly: 24076308 .cfa +",
+             cfi.Serialize());
+ }
+ 
  TEST_F(Simple, RulesOverride) {
    ExpectNoMemoryReferences();
  
@@ -3458,10 +5690,18 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 +  cfi.SetCFARule(Module::Expr("330903416631436410"));
 +  cfi.SetRARule(Module::Expr("5870666104170902211"));
 +  cfi.SetCFARule(Module::Expr("2828089117179001"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(2U, caller_registers.size());
-@@ -165,8 +167,8 @@
+   ASSERT_EQ(2828089117179001ULL, caller_registers[".cfa"]);
+   ASSERT_EQ(5870666104170902211ULL, caller_registers[".ra"]);
+   ASSERT_EQ(".cfa: 2828089117179001 .ra: 5870666104170902211",
+             cfi.Serialize());
+ }
+ 
+ class Scope: public CFIFixture, public Test { };
+ 
+ // There should be no value for .cfa in scope when evaluating the CFA rule.
  TEST_F(Scope, CFALacksCFA) {
    ExpectNoMemoryReferences();
  
@@ -3469,10 +5709,11 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 -  cfi.SetRARule("0");
 +  cfi.SetCFARule(Module::Expr(".cfa"));
 +  cfi.SetRARule(Module::Expr("0"));
-   ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                               &caller_registers));
  }
-@@ -175,8 +177,8 @@
+ 
+ // There should be no value for .ra in scope when evaluating the CFA rule.
  TEST_F(Scope, CFALacksRA) {
    ExpectNoMemoryReferences();
  
@@ -3480,10 +5721,14 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 -  cfi.SetRARule("0");
 +  cfi.SetCFARule(Module::Expr(".ra"));
 +  cfi.SetRARule(Module::Expr("0"));
-   ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                               &caller_registers));
  }
-@@ -188,8 +190,8 @@
+ 
+ // The current frame's registers should be in scope when evaluating
+ // the CFA rule.
+ TEST_F(Scope, CFASeesCurrentRegs) {
+   ExpectNoMemoryReferences();
  
    registers[".baraminology"] = 0x06a7bc63e4f13893ULL;
    registers[".ornithorhynchus"] = 0x5e0bf850bafce9d2ULL;
@@ -3491,10 +5736,14 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 -  cfi.SetRARule("0");
 +  cfi.SetCFARule(Module::Expr(".baraminology .ornithorhynchus +"));
 +  cfi.SetRARule(Module::Expr("0"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(2U, caller_registers.size());
-@@ -201,8 +203,8 @@
+   ASSERT_EQ(0x06a7bc63e4f13893ULL + 0x5e0bf850bafce9d2ULL,
+             caller_registers[".cfa"]);
+ }
+ 
+ // .cfa should be in scope in the return address expression.
  TEST_F(Scope, RASeesCFA) {
    ExpectNoMemoryReferences();
  
@@ -3502,10 +5751,13 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 -  cfi.SetRARule(".cfa");
 +  cfi.SetCFARule(Module::Expr("48364076"));
 +  cfi.SetRARule(Module::Expr(".cfa"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(2U, caller_registers.size());
-@@ -213,8 +215,8 @@
+   ASSERT_EQ(48364076U, caller_registers[".ra"]);
+ }
+ 
+ // There should be no value for .ra in scope when evaluating the CFA rule.
  TEST_F(Scope, RALacksRA) {
    ExpectNoMemoryReferences();
  
@@ -3513,10 +5765,13 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 -  cfi.SetRARule(".ra");
 +  cfi.SetCFARule(Module::Expr("0"));
 +  cfi.SetRARule(Module::Expr(".ra"));
-   ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                               &caller_registers));
  }
-@@ -225,8 +227,8 @@
+ 
+ // The current frame's registers should be in scope in the return
+ // address expression.
+ TEST_F(Scope, RASeesCurrentRegs) {
    ExpectNoMemoryReferences();
  
    registers["noachian"] = 0x54dc4a5d8e5eb503ULL;
@@ -3524,10 +5779,13 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 -  cfi.SetRARule("noachian");
 +  cfi.SetCFARule(Module::Expr("10359370"));
 +  cfi.SetRARule(Module::Expr("noachian"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(2U, caller_registers.size());
-@@ -237,9 +239,9 @@
+   ASSERT_EQ(0x54dc4a5d8e5eb503ULL, caller_registers[".ra"]);
+ }
+ 
+ // .cfa should be in scope for register rules.
  TEST_F(Scope, RegistersSeeCFA) {
    ExpectNoMemoryReferences();
  
@@ -3537,10 +5795,13 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 +  cfi.SetCFARule(Module::Expr("6515179"));
 +  cfi.SetRARule(Module::Expr(".cfa"));
 +  cfi.SetRegisterRule("rogerian", Module::Expr(".cfa"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(3U, caller_registers.size());
-@@ -250,9 +252,9 @@
+   ASSERT_EQ(6515179U, caller_registers["rogerian"]);
+ }
+ 
+ // The return address should not be in scope for register rules.
  TEST_F(Scope, RegsLackRA) {
    ExpectNoMemoryReferences();
  
@@ -3550,10 +5811,13 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 +  cfi.SetCFARule(Module::Expr("42740329"));
 +  cfi.SetRARule(Module::Expr("27045204"));
 +  cfi.SetRegisterRule("$r1", Module::Expr(".ra"));
-   ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                               &caller_registers));
  }
-@@ -263,10 +265,10 @@
+ 
+ // Register rules can see the current frame's register values.
+ TEST_F(Scope, RegsSeeRegs) {
+   ExpectNoMemoryReferences();
  
    registers["$r1"] = 0x6ed3582c4bedb9adULL;
    registers["$r2"] = 0xd27d9e742b8df6d0ULL;
@@ -3565,10 +5829,14 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 +  cfi.SetRARule(Module::Expr("30503835"));
 +  cfi.SetRegisterRule("$r1", Module::Expr("$r1 42175211 = $r2"));
 +  cfi.SetRegisterRule("$r2", Module::Expr("$r2 21357221 = $r1"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
    ASSERT_EQ(4U, caller_registers.size());
-@@ -278,13 +280,13 @@
+   ASSERT_EQ(0xd27d9e742b8df6d0ULL, caller_registers["$r1"]);
+   ASSERT_EQ(0x6ed3582c4bedb9adULL, caller_registers["$r2"]);
+ }
+ 
+ // Each rule's temporaries are separate.
  TEST_F(Scope, SeparateTempsRA) {
    ExpectNoMemoryReferences();
  
@@ -3576,17 +5844,27 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
 -  cfi.SetRARule("0");
 +  cfi.SetCFARule(Module::Expr("$temp1 76569129 = $temp1"));
 +  cfi.SetRARule(Module::Expr("0"));
-   ASSERT_TRUE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_TRUE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                              &caller_registers));
  
 -  cfi.SetCFARule("$temp1 76569129 = $temp1");
 -  cfi.SetRARule("$temp1");
 +  cfi.SetCFARule(Module::Expr("$temp1 76569129 = $temp1"));
 +  cfi.SetRARule(Module::Expr("$temp1"));
-   ASSERT_FALSE(cfi.FindCallerRegs<u_int64_t>(registers, memory,
+   ASSERT_FALSE(cfi.FindCallerRegs<uint64_t>(registers, memory,
                                               &caller_registers));
  }
-@@ -517,10 +519,10 @@
+ 
+ class MockCFIRuleParserHandler: public CFIRuleParser::Handler {
+  public:
+   MOCK_METHOD1(CFARule, void(const string &));
+   MOCK_METHOD1(RARule,  void(const string &));
+@@ -512,20 +514,20 @@
+       .WillRepeatedly(DoAll(SetArgumentPointee<1>(0xdc1975eba8602302ULL),
+                             Return(true)));
+   // Saved return address.
+   EXPECT_CALL(memory,
+               GetMemoryAtAddress(stack_top + 16, A<uint64_t *>()))
        .WillRepeatedly(DoAll(SetArgumentPointee<1>(0xba5ad6d9acce28deULL),
                              Return(true)));
  
@@ -3601,10 +5879,20 @@ diff --git a/src/processor/cfi_frame_info_unittest.cc b/src/processor/cfi_frame_
  
    callee_context.r0 = 0x94e030ca79edd119ULL;
    callee_context.r1 = 0x937b4d7e95ce52d9ULL;
+   callee_context.r2 = 0x5fe0027416b8b62aULL; // caller's r1
+   // callee_context.r3 is not valid in callee.
+   // callee_context.r4 is not valid in callee.
+   callee_context.sp = stack_top;
+   callee_context.pc = 0x25b21b224311d280ULL;
 diff --git a/src/processor/postfix_evaluator-inl.h b/src/processor/postfix_evaluator-inl.h
 --- a/src/processor/postfix_evaluator-inl.h
 +++ b/src/processor/postfix_evaluator-inl.h
-@@ -231,12 +231,19 @@
+@@ -226,52 +226,100 @@
+       return false;
+     }
+   }
+ 
+   return true;
  }
  
  template<typename ValueType>
@@ -3627,7 +5915,8 @@ diff --git a/src/processor/postfix_evaluator-inl.h b/src/processor/postfix_evalu
      return false;
  
    // If there's anything left on the stack, it indicates incomplete execution.
-@@ -245,28 +252,69 @@
+   // This is a failure case.  If the stack is empty, evalution was complete
+   // and successful.
    if (stack_.empty())
      return true;
  
@@ -3711,10 +6000,20 @@ diff --git a/src/processor/postfix_evaluator-inl.h b/src/processor/postfix_evalu
  
  template<typename ValueType>
  typename PostfixEvaluator<ValueType>::PopResult
+ PostfixEvaluator<ValueType>::PopValueOrIdentifier(
+     ValueType *value, string *identifier) {
+   // There needs to be at least one element on the stack to pop.
+   if (!stack_.size())
+     return POP_RESULT_FAIL;
 diff --git a/src/processor/postfix_evaluator.h b/src/processor/postfix_evaluator.h
 --- a/src/processor/postfix_evaluator.h
 +++ b/src/processor/postfix_evaluator.h
-@@ -75,6 +75,7 @@
+@@ -70,16 +70,17 @@
+ #define PROCESSOR_POSTFIX_EVALUATOR_H__
+ 
+ 
+ #include <map>
+ #include <string>
  #include <vector>
  
  #include "common/using_std_string.h"
@@ -3722,7 +6021,17 @@ diff --git a/src/processor/postfix_evaluator.h b/src/processor/postfix_evaluator
  
  namespace google_breakpad {
  
-@@ -105,13 +106,13 @@
+ using std::map;
+ using std::vector;
+ 
+ class MemoryRegion;
+ 
+@@ -100,23 +101,23 @@
+ 
+   // Evaluate the expression, starting with an empty stack. The results of
+   // execution will be stored in one (or more) variables in the dictionary.
+   // Returns false if any failures occur during execution, leaving
+   // variables in the dictionary in an indeterminate state. If assigned is
    // non-NULL, any keys set in the dictionary as a result of evaluation
    // will also be set to true in assigned, providing a way to determine if
    // an expression modifies any of its input variables.
@@ -3742,3 +6051,8 @@ diff --git a/src/processor/postfix_evaluator.h b/src/processor/postfix_evaluator
  
    DictionaryType* dictionary() const { return dictionary_; }
  
+   // Reset the dictionary.  PostfixEvaluator does not take ownership.
+   void set_dictionary(DictionaryType *dictionary) {dictionary_ = dictionary; }
+ 
+  private:
+   // Return values for PopValueOrIdentifier

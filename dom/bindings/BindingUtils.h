@@ -1412,7 +1412,7 @@ protected:
 #endif
 };
 
-class NonNullLazyRootedObject : public Maybe<js::RootedObject>
+class NonNullLazyRootedObject : public Maybe<JS::RootedObject>
 {
 public:
   operator JSObject&() const {
@@ -1421,7 +1421,7 @@ public:
   }
 };
 
-class LazyRootedObject : public Maybe<js::RootedObject>
+class LazyRootedObject : public Maybe<JS::RootedObject>
 {
 public:
   operator JSObject*() const {

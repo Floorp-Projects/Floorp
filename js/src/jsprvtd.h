@@ -196,10 +196,10 @@ typedef JS::Handle<PropertyName*>      HandlePropertyName;
 typedef JS::MutableHandle<Shape*>      MutableHandleShape;
 typedef JS::MutableHandle<JSAtom*>     MutableHandleAtom;
 
-typedef js::Rooted<Shape*>             RootedShape;
-typedef js::Rooted<types::TypeObject*> RootedTypeObject;
-typedef js::Rooted<JSAtom*>            RootedAtom;
-typedef js::Rooted<PropertyName*>      RootedPropertyName;
+typedef JS::Rooted<Shape*>             RootedShape;
+typedef JS::Rooted<types::TypeObject*> RootedTypeObject;
+typedef JS::Rooted<JSAtom*>            RootedAtom;
+typedef JS::Rooted<PropertyName*>      RootedPropertyName;
 
 enum XDRMode {
     XDR_ENCODE,

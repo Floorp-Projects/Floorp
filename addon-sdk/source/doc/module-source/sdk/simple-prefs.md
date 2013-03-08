@@ -355,3 +355,17 @@ for more details.
   The listener function that processes the event.
 </api>
 
+## Using the Preferences Service to Access Simple Prefs ##
+
+If you ever need to access your simple-prefs with the `preferences/service` module,
+you can do so using the extended preference name.  To get this
+just prepend `"extensions." + require("sdk/self").id + "."` to the preference name `"somePreference"`.
+
+For example, if you had a simple-pref named `"somePreference"` then you could
+get its value like so:
+
+    require('sdk/preferences/service').get(['extensions', require('sdk/self').id, 'somePreference'].join('.'))
+
+This would give you the same value as:
+
+    require('sdk/simple-prefs').prefs['somePreference']

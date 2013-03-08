@@ -783,7 +783,10 @@
             var docElement = this.ownerDocument.documentElement;
             var sep = docElement.getAttribute("titlemenuseparator");
 
-            var docTitle = aBrowser.contentTitle;
+            // Strip out any null bytes in the content title, since the
+            // underlying widget implementations of nsWindow::SetTitle pass
+            // null-terminated strings to system APIs.
+            var docTitle = aBrowser.contentTitle.replace("\0", "");
 
             if (!docTitle)
               docTitle = docElement.getAttribute("titledefault");
@@ -1258,28 +1261,13 @@
             // When overflowing, new tabs are scrolled into view smoothly, which
             // doesn't go well together with the width transition. So we skip the
             // transition in that case.
-            if (aSkipAnimation ||
-                this.tabContainer.getAttribute("overflow") == "true" ||
-                !Services.prefs.getBoolPref("browser.tabs.animate")) {
+            let animate = !aSkipAnimation &&
+                          this.tabContainer.getAttribute("overflow") != "true" &&
+                          Services.prefs.getBoolPref("browser.tabs.animate");
+            if (!animate) {
               t.setAttribute("fadein", "true");
               setTimeout(function (tabContainer) {
                 tabContainer._handleNewTab(t);
-              }, 0, this.tabContainer);
-            } else {
-              setTimeout(function (tabContainer) {
-                if (t.pinned)
-                  tabContainer._handleNewTab(t);
-                else {
-                  tabContainer._handleTabTelemetryStart(tabContainer, t, aURI);
-
-                  t.setAttribute("fadein", "true");
-
-                  // This call to adjustTabstrip is redundant but needed so that
-                  // when opening a second tab, the first tab's close buttons
-                  // appears immediately rather than when the transition ends.
-                  if (tabContainer.childNodes.length == 2)
-                    tabContainer.adjustTabstrip();
-                }
               }, 0, this.tabContainer);
             }
 
@@ -1441,6 +1429,20 @@
                 t.owner = this.selectedTab;
               this.moveTabTo(t, newTabPos);
               this._lastRelatedTab = t;
+            }
+
+            if (animate) {
+              this.tabContainer._handleTabTelemetryStart(this.tabContainer, t, aURI);
+
+              // kick the animation off
+              t.clientTop;
+              t.setAttribute("fadein", "true");
+
+              // This call to adjustTabstrip is redundant but needed so that
+              // when opening a second tab, the first tab's close buttons
+              // appears immediately rather than when the transition ends.
+              if (this.tabContainer.childNodes.length == 2)
+                this.tabContainer.adjustTabstrip();
             }
 
             return t;

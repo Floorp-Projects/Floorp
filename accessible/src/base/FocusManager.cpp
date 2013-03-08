@@ -127,11 +127,8 @@ FocusManager::NotifyOfDOMFocus(nsISupports* aTarget)
       GetAccService()->GetDocAccessible(targetNode->OwnerDoc());
     if (document) {
       // Set selection listener for focused element.
-      if (targetNode->IsElement()) {
-        RootAccessible* root = document->RootAccessible();
-        nsCaretAccessible* caretAcc = root->GetCaretAccessible();
-        caretAcc->SetControlSelectionListener(targetNode->AsElement());
-      }
+      if (targetNode->IsElement())
+        SelectionMgr()->SetControlSelectionListener(targetNode->AsElement());
 
       document->HandleNotification<FocusManager, nsINode>
         (this, &FocusManager::ProcessDOMFocus, targetNode);

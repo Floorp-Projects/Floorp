@@ -182,6 +182,13 @@ tabs in this window, not all tabs in all windows. This property is read-only.
 <api name="isPrivateBrowsing">
 @property {boolean}
 Returns `true` if the window is in private browsing mode, and `false` otherwise.
+
+<div class="warning">
+  This property is deprecated.
+  From version 1.14, please consider using following code instead:<br/>
+  <code>require("private-browsing").isPrivate(browserWindow)</code>
+</div>
+
 </api>
 
 <api name="activate">

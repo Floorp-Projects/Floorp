@@ -1,24 +1,24 @@
 #include "gdb-tests.h"
 
 FRAGMENT(jsval, simple) {
-  js::Rooted<jsval> fortytwo(cx, INT_TO_JSVAL(42));
-  js::Rooted<jsval> negone(cx, INT_TO_JSVAL(-1));
-  js::Rooted<jsval> undefined(cx, JSVAL_VOID);
-  js::Rooted<jsval> null(cx, JSVAL_NULL);
-  js::Rooted<jsval> js_true(cx, JSVAL_TRUE);
-  js::Rooted<jsval> js_false(cx, JSVAL_FALSE);
-  js::Rooted<jsval> elements_hole(cx, js::MagicValue(JS_ELEMENTS_HOLE));
+  JS::Rooted<jsval> fortytwo(cx, INT_TO_JSVAL(42));
+  JS::Rooted<jsval> negone(cx, INT_TO_JSVAL(-1));
+  JS::Rooted<jsval> undefined(cx, JSVAL_VOID);
+  JS::Rooted<jsval> null(cx, JSVAL_NULL);
+  JS::Rooted<jsval> js_true(cx, JSVAL_TRUE);
+  JS::Rooted<jsval> js_false(cx, JSVAL_FALSE);
+  JS::Rooted<jsval> elements_hole(cx, js::MagicValue(JS_ELEMENTS_HOLE));
 
-  js::Rooted<jsval> empty_string(cx);
+  JS::Rooted<jsval> empty_string(cx);
   empty_string.setString(JS_NewStringCopyZ(cx, ""));
-  js::Rooted<jsval> friendly_string(cx);
+  JS::Rooted<jsval> friendly_string(cx);
   friendly_string.setString(JS_NewStringCopyZ(cx, "Hello!"));
 
-  js::Rooted<jsval> global(cx);
+  JS::Rooted<jsval> global(cx);
   global.setObject(*JS_GetGlobalObject(cx));
 
   // Some interesting value that floating-point won't munge.
-  js::Rooted<jsval> onehundredthirtysevenonehundredtwentyeighths(cx, DOUBLE_TO_JSVAL(137.0 / 128.0));
+  JS::Rooted<jsval> onehundredthirtysevenonehundredtwentyeighths(cx, DOUBLE_TO_JSVAL(137.0 / 128.0));
 
   breakpoint();
 

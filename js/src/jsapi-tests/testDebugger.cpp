@@ -18,7 +18,7 @@ callCountHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructing, JSBo
 {
     callCount[before]++;
 
-    js::RootedValue thisv(cx);
+    JS::RootedValue thisv(cx);
     frame.getThisValue(cx, &thisv); // assert if fp is incomplete
 
     return cx;  // any non-null value causes the hook to be called again after
@@ -44,7 +44,7 @@ nonStrictThisHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructing, 
 {
     if (before) {
         bool *allWrapped = (bool *) closure;
-        js::RootedValue thisv(cx);
+        JS::RootedValue thisv(cx);
         frame.getThisValue(cx, &thisv);
         *allWrapped = *allWrapped && !JSVAL_IS_PRIMITIVE(thisv);
     }
@@ -83,7 +83,7 @@ strictThisHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructing, JSB
 {
     if (before) {
         bool *anyWrapped = (bool *) closure;
-        js::RootedValue thisv(cx);
+        JS::RootedValue thisv(cx);
         frame.getThisValue(cx, &thisv);
         *anyWrapped = *anyWrapped || !JSVAL_IS_PRIMITIVE(thisv);
     }
@@ -120,7 +120,7 @@ ThrowHook(JSContext *cx, JSScript *, jsbytecode *, jsval *rval, void *closure)
     JS_ASSERT(!closure);
     called = true;
 
-    js::RootedObject global(cx, JS_GetGlobalForScopeChain(cx));
+    JS::RootedObject global(cx, JS_GetGlobalForScopeChain(cx));
 
     char text[] = "new Error()";
     jsval _;
@@ -153,7 +153,7 @@ END_TEST(testDebugger_throwHook)
 BEGIN_TEST(testDebugger_debuggerObjectVsDebugMode)
 {
     CHECK(JS_DefineDebuggerObject(cx, global));
-    js::RootedObject debuggee(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL));
+    JS::RootedObject debuggee(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL));
     CHECK(debuggee);
 
     {
@@ -162,9 +162,9 @@ BEGIN_TEST(testDebugger_debuggerObjectVsDebugMode)
         CHECK(JS_InitStandardClasses(cx, debuggee));
     }
 
-    js::RootedObject debuggeeWrapper(cx, debuggee);
+    JS::RootedObject debuggeeWrapper(cx, debuggee);
     CHECK(JS_WrapObject(cx, debuggeeWrapper.address()));
-    js::RootedValue v(cx, JS::ObjectValue(*debuggeeWrapper));
+    JS::RootedValue v(cx, JS::ObjectValue(*debuggeeWrapper));
     CHECK(JS_SetProperty(cx, global, "debuggee", v.address()));
 
     EVAL("var dbg = new Debugger(debuggee);\n"
@@ -193,16 +193,16 @@ BEGIN_TEST(testDebugger_newScriptHook)
 {
     // Test that top-level indirect eval fires the newScript hook.
     CHECK(JS_DefineDebuggerObject(cx, global));
-    js::RootedObject g(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL));
+    JS::RootedObject g(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL));
     CHECK(g);
     {
         JSAutoCompartment ae(cx, g);
         CHECK(JS_InitStandardClasses(cx, g));
     }
 
-    js::RootedObject gWrapper(cx, g);
+    JS::RootedObject gWrapper(cx, g);
     CHECK(JS_WrapObject(cx, gWrapper.address()));
-    js::RootedValue v(cx, JS::ObjectValue(*gWrapper));
+    JS::RootedValue v(cx, JS::ObjectValue(*gWrapper));
     CHECK(JS_SetProperty(cx, global, "g", v.address()));
 
     EXEC("var dbg = Debugger(g);\n"
@@ -234,7 +234,7 @@ bool testIndirectEval(JS::HandleObject scope, const char *code)
         CHECK(JS_CallFunctionName(cx, scope, "eval", 1, argv, &v));
     }
 
-    js::RootedValue hitsv(cx);
+    JS::RootedValue hitsv(cx);
     EVAL("hits", hitsv.address());
     CHECK_SAME(hitsv, INT_TO_JSVAL(1));
     return true;

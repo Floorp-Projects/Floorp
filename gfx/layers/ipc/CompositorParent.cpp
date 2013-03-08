@@ -640,7 +640,8 @@ Translate2D(gfx3DMatrix& aTransform, const gfxPoint& aOffset)
 void
 CompositorParent::TransformFixedLayers(Layer* aLayer,
                                        const gfxPoint& aTranslation,
-                                       const gfxSize& aScaleDiff)
+                                       const gfxSize& aScaleDiff,
+                                       const gfx::Margin& aFixedLayerMargins)
 {
   if (aLayer->GetIsFixedPosition() &&
       !aLayer->GetParent()->GetIsFixedPosition()) {
@@ -649,6 +650,26 @@ CompositorParent::TransformFixedLayers(Layer* aLayer,
     // aScaleDiff has already been applied) to re-focus the scale.
     const gfxPoint& anchor = aLayer->GetFixedPositionAnchor();
     gfxPoint translation(aTranslation - (anchor - anchor / aScaleDiff));
+
+    // Offset this translation by the fixed layer margins, depending on what
+    // side of the viewport the layer is anchored to, reconciling the
+    // difference between the current fixed layer margins and the Gecko-side
+    // fixed layer margins.
+    // aFixedLayerMargins are the margins we expect to be at at the current
+    // time, obtained via SyncViewportInfo, and fixedMargins are the margins
+    // that were used during layout.
+    const gfx::Margin& fixedMargins = aLayer->GetFixedPositionMargins();
+    if (anchor.x > 0) {
+      translation.x -= aFixedLayerMargins.right - fixedMargins.right;
+    } else {
+      translation.x += aFixedLayerMargins.left - fixedMargins.left;
+    }
+
+    if (anchor.y > 0) {
+      translation.y -= aFixedLayerMargins.bottom - fixedMargins.bottom;
+    } else {
+      translation.y += aFixedLayerMargins.top - fixedMargins.top;
+    }
 
     // The transform already takes the resolution scale into account.  Since we
     // will apply the resolution scale again when computing the effective
@@ -676,7 +697,7 @@ CompositorParent::TransformFixedLayers(Layer* aLayer,
 
   for (Layer* child = aLayer->GetFirstChild();
        child; child = child->GetNextSibling()) {
-    TransformFixedLayers(child, aTranslation, aScaleDiff);
+    TransformFixedLayers(child, aTranslation, aScaleDiff, aFixedLayerMargins);
   }
 }
 
@@ -869,10 +890,12 @@ CompositorParent::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFrame,
                         1);
     shadow->SetShadowTransform(transform);
 
+    gfx::Margin fixedLayerMargins(0, 0, 0, 0);
     TransformFixedLayers(
       aLayer,
       -treeTransform.mTranslation / treeTransform.mScale,
-      treeTransform.mScale);
+      treeTransform.mScale,
+      fixedLayerMargins);
 
     appliedTransform = true;
   }
@@ -937,8 +960,9 @@ CompositorParent::TransformScrollableLayer(Layer* aLayer, const gfx3DMatrix& aRo
   displayPortDevPixels.x += scrollOffsetDevPixels.x;
   displayPortDevPixels.y += scrollOffsetDevPixels.y;
 
+  gfx::Margin fixedLayerMargins(0, 0, 0, 0);
   SyncViewportInfo(displayPortDevPixels, 1/rootScaleX, mLayersUpdated,
-                   mScrollOffset, mXScale, mYScale);
+                   mScrollOffset, mXScale, mYScale, fixedLayerMargins);
   mLayersUpdated = false;
 
   // Handle transformations for asynchronous panning and zooming. We determine the
@@ -995,7 +1019,7 @@ CompositorParent::TransformScrollableLayer(Layer* aLayer, const gfx3DMatrix& aRo
                               1.0f/container->GetPostYScale(),
                               1);
   shadow->SetShadowTransform(computedTransform);
-  TransformFixedLayers(aLayer, offset, scaleDiff);
+  TransformFixedLayers(aLayer, offset, scaleDiff, fixedLayerMargins);
 }
 
 bool
@@ -1059,11 +1083,12 @@ CompositorParent::SetPageRect(const gfx::Rect& aCssPageRect)
 void
 CompositorParent::SyncViewportInfo(const nsIntRect& aDisplayPort,
                                    float aDisplayResolution, bool aLayersUpdated,
-                                   nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY)
+                                   nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY,
+                                   gfx::Margin& aFixedLayerMargins)
 {
 #ifdef MOZ_WIDGET_ANDROID
   AndroidBridge::Bridge()->SyncViewportInfo(aDisplayPort, aDisplayResolution, aLayersUpdated,
-                                            aScrollOffset, aScaleX, aScaleY);
+                                            aScrollOffset, aScaleX, aScaleY, aFixedLayerMargins);
 #endif
 }
 

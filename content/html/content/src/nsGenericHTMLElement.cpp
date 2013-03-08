@@ -775,25 +775,6 @@ nsGenericHTMLElement::GetHrefURIForAnchors() const
 }
 
 nsresult
-nsGenericHTMLElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                                    const nsAttrValueOrString* aValue,
-                                    bool aNotify)
-{
-  if (aNamespaceID == kNameSpaceID_None &&
-      aName == nsGkAtoms::dir &&
-      HasDirAuto() && !AncestorHasDirAuto()) {
-    // When setting dir on an element that currently has dir=auto, we walk the
-    // descendant tree and clear the AncestorHasDirAuto flag; unless this
-    // element itself has the AncestorHasDirAuto flag
-    WalkDescendantsClearAncestorDirAuto(this);
-    SetHasDirAuto();
-  }
-
-  return nsGenericHTMLElementBase::BeforeSetAttr(aNamespaceID, aName,
-                                                 aValue, aNotify);
-}
-
-nsresult
 nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                    const nsAttrValue* aValue, bool aNotify)
 {

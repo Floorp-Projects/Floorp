@@ -12,14 +12,19 @@ const { EventEmitter } = require('../deprecated/events');
 const { Trait } = require('../deprecated/traits');
 const { when } = require('../system/unload');
 const { getInnerId, getOuterId, windows, isDocumentLoaded, isBrowser,
-        getMostRecentBrowserWindow } = require('../window/utils');
+        getMostRecentBrowserWindow, getMostRecentWindow } = require('../window/utils');
 const errors = require('../deprecated/errors');
 const { deprecateFunction } = require('../util/deprecate');
+const { ignoreWindow } = require('sdk/private-browsing/utils');
+const { isPrivateBrowsingSupported } = require('../self');
 
 const windowWatcher = Cc['@mozilla.org/embedcomp/window-watcher;1'].
                        getService(Ci.nsIWindowWatcher);
 const appShellService = Cc['@mozilla.org/appshell/appShellService;1'].
                         getService(Ci.nsIAppShellService);
+
+// Bug 834961: ignore private windows when they are not supported
+function getWindows() windows(null, { includePrivate: isPrivateBrowsingSupported });
 
 /**
  * An iterator for XUL windows currently in the application.
@@ -31,7 +36,7 @@ function windowIterator() {
   // Bug 752631: We only pass already loaded window in order to avoid
   // breaking XUL windows DOM. DOM is broken when some JS code try
   // to access DOM during "uninitialized" state of the related document.
-  let list = windows().filter(isDocumentLoaded);
+  let list = getWindows().filter(isDocumentLoaded);
   for (let i = 0, l = list.length; i < l; i++) {
     yield list[i];
   }
@@ -60,7 +65,7 @@ function WindowTracker(delegate) {
   this._delegate = delegate;
   this._loadingWindows = [];
 
-  for each (let window in windows())
+  for each (let window in getWindows())
     this._regWindow(window);
   windowWatcher.registerNotification(this);
 
@@ -71,6 +76,10 @@ function WindowTracker(delegate) {
 
 WindowTracker.prototype = {
   _regLoadingWindow: function _regLoadingWindow(window) {
+    // Bug 834961: ignore private windows when they are not supported
+    if (ignoreWindow(window))
+      return;
+
     this._loadingWindows.push(window);
     window.addEventListener('load', this, true);
   },
@@ -85,6 +94,10 @@ WindowTracker.prototype = {
   },
 
   _regWindow: function _regWindow(window) {
+    // Bug 834961: ignore private windows when they are not supported
+    if (ignoreWindow(window))
+      return;
+
     if (window.document.readyState == 'complete') {
       this._unregLoadingWindow(window);
       this._delegate.onTrack(window);
@@ -103,7 +116,7 @@ WindowTracker.prototype = {
 
   unload: function unload() {
     windowWatcher.unregisterNotification(this);
-    for each (let window in windows())
+    for each (let window in getWindows())
       this._unregWindow(window);
   },
 
@@ -117,6 +130,9 @@ WindowTracker.prototype = {
 
   observe: errors.catchAndLog(function observe(subject, topic, data) {
     var window = subject.QueryInterface(Ci.nsIDOMWindow);
+    // ignore private windows if they are not supported
+    if (ignoreWindow(window))
+      return;
     if (topic == 'domwindowopened')
       this._regWindow(window);
     else
@@ -159,12 +175,12 @@ Object.defineProperties(exports, {
   activeWindow: {
     enumerable: true,
     get: function() {
-      return Cc['@mozilla.org/appshell/window-mediator;1']
-        .getService(Ci.nsIWindowMediator)
-        .getMostRecentWindow(null);
+      return getMostRecentWindow(null);
     },
     set: function(window) {
-      try { window.focus(); } catch (e) { }
+      try {
+        window.focus();
+      } catch (e) {}
     }
   },
   activeBrowserWindow: {
