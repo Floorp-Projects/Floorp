@@ -42,20 +42,16 @@ var OfflineApps = {
             OfflineApps.allowSite(notification.documents[i], aTarget);
         }
       },{
-        label: strings.GetStringFromName("offlineApps.never"),
+        label: strings.GetStringFromName("contentPermissions.neverForSite"),
         accessKey: "",
         callback: function() {
           for (let i = 0; i < notification.documents.length; i++)
             OfflineApps.disallowSite(notification.documents[i]);
         }
-      },{
-        label: strings.GetStringFromName("offlineApps.notNow"),
-        accessKey: "",
-        callback: function() { /* noop */ }
       }];
 
       const priority = notificationBox.PRIORITY_INFO_LOW;
-      let message = strings.formatStringFromName("offlineApps.available2", [host], 1);
+      let message = strings.formatStringFromName("offlineApps.wantsTo", [host], 1);
       notification = notificationBox.appendNotification(message, notificationID, "", priority, buttons);
       notification.documents = [aRequest];
     }
