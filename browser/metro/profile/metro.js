@@ -471,8 +471,6 @@ pref("services.sync.prefs.sync.signon.rememberSignons", true);
 pref("ui.dragThresholdX", 50);
 pref("ui.dragThresholdY", 50);
 
-pref("notification.feature.enabled", true);
-
 // prevent tooltips from showing up
 pref("browser.chrome.toolbar_tips", false);
 
