@@ -17,6 +17,7 @@
 
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
+#include "nsNetUtil.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsISocketTransportService.h"
@@ -44,10 +45,10 @@ class MtransportTestUtils {
 
   void InitServices() {
     nsresult rv;
-
+    ioservice_ = do_GetIOService(&rv);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
     sts_target_ = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-
     sts_ = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
@@ -78,6 +79,7 @@ class MtransportTestUtils {
 
  private:
   ScopedXPCOM xpcom_;
+  nsCOMPtr<nsIIOService> ioservice_;
   nsCOMPtr<nsIEventTarget> sts_target_;
   nsCOMPtr<nsPISocketTransportService> sts_;
 #ifdef MOZ_CRASHREPORTER

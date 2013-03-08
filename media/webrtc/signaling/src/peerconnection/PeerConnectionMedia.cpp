@@ -79,8 +79,17 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
     CSFLogError(logTag, "%s: Failed to create Ice Context", __FUNCTION__);
     return NS_ERROR_FAILURE;
   }
-  nsresult rv = mIceCtx->SetStunServers(stun_servers);
-  if (NS_FAILED(rv)) {
+  nsresult rv;
+  if (NS_FAILED(rv = mIceCtx->SetStunServers(stun_servers))) {
+    CSFLogError(logTag, "%s: Failed to set stun servers", __FUNCTION__);
+    return rv;
+  }
+  if (NS_FAILED(rv = mDNSResolver->Init())) {
+    CSFLogError(logTag, "%s: Failed to initialize dns resolver", __FUNCTION__);
+    return rv;
+  }
+  if (NS_FAILED(rv = mIceCtx->SetResolver(mDNSResolver->AllocateResolver()))) {
+    CSFLogError(logTag, "%s: Failed to get dns resolver", __FUNCTION__);
     return rv;
   }
   mIceCtx->SignalGatheringCompleted.connect(this,
