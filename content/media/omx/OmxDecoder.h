@@ -1,7 +1,5 @@
-#include <OMX.h>
-#include <stagefright/MediaSource.h>
 #include <stagefright/DataSource.h>
-
+#include <stagefright/MediaSource.h>
 #include <utils/RefBase.h>
 
 #include "GonkNativeWindow.h"

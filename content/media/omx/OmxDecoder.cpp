@@ -8,11 +8,10 @@
 
 #include "base/basictypes.h"
 #include <cutils/properties.h>
-#include <stagefright/DataSource.h>
 #include <stagefright/MediaExtractor.h>
 #include <stagefright/MetaData.h>
+#include <stagefright/OMXClient.h>
 #include <stagefright/OMXCodec.h>
-#include <OMX.h>
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Types.h"
@@ -170,14 +169,6 @@ public:
   }
 };
 
-static sp<IOMX> sOMX = nullptr;
-static sp<IOMX> GetOMX() {
-  if(sOMX.get() == nullptr) {
-    sOMX = new OMX;
-    }
-  return sOMX;
-}
-
 bool OmxDecoder::Init() {
 #ifdef PR_LOGGING
   if (!gOmxDecoderLog) {
@@ -237,6 +228,13 @@ bool OmxDecoder::Init() {
 
   mNativeWindow = new GonkNativeWindow();
 
+  // OMXClient::connect() always returns OK and abort's fatally if
+  // it can't connect.
+  OMXClient client;
+  status_t err = client.connect();
+  NS_ASSERTION(err == OK, "Failed to connect to OMX in mediaserver.");
+  sp<IOMX> omx = client.interface();
+
   sp<MediaSource> videoTrack;
   sp<MediaSource> videoSource;
   if (videoTrackIndex != -1 && (videoTrack = extractor->getTrack(videoTrackIndex)) != nullptr) {
@@ -246,7 +244,7 @@ bool OmxDecoder::Init() {
     // for (h.264).  So if we don't get a hardware decoder, just give
     // up.
     int flags = kHardwareCodecsOnly;
-    videoSource = OMXCodec::Create(GetOMX(),
+    videoSource = OMXCodec::Create(omx,
                                    videoTrack->getFormat(),
                                    false, // decoder
                                    videoTrack,
@@ -296,7 +294,7 @@ bool OmxDecoder::Init() {
     if (!strcasecmp(audioMime, "audio/raw")) {
       audioSource = audioTrack;
     } else {
-      audioSource = OMXCodec::Create(GetOMX(),
+      audioSource = OMXCodec::Create(omx,
                                      audioTrack->getFormat(),
                                      false, // decoder
                                      audioTrack);
