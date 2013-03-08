@@ -470,7 +470,13 @@ var gPluginHandler = {
         if (!(aEvent.originalTarget instanceof HTMLAnchorElement) &&
             (aEvent.originalTarget.getAttribute('anonid') != 'closeIcon') &&
             aEvent.button == 0 && aEvent.isTrusted) {
-          gPluginHandler.activateSinglePlugin(aEvent.target.ownerDocument.defaultView.top, aPlugin);
+          if (objLoadingContent.pluginFallbackType ==
+                Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE ||
+              objLoadingContent.pluginFallbackType ==
+                Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_NO_UPDATE)
+            gPluginHandler._showClickToPlayNotification(browser, true);
+          else
+            gPluginHandler.activateSinglePlugin(aEvent.target.ownerDocument.defaultView.top, aPlugin);
           aEvent.stopPropagation();
           aEvent.preventDefault();
         }
@@ -648,7 +654,7 @@ var gPluginHandler = {
     }
   },
 
-  _showClickToPlayNotification: function PH_showClickToPlayNotification(aBrowser) {
+  _showClickToPlayNotification: function PH_showClickToPlayNotification(aBrowser, aForceOpenNotification) {
     let contentWindow = aBrowser.contentWindow;
     let messageString = gNavigatorBundle.getString("activatePluginsMessage.message");
     let mainAction = {
@@ -689,7 +695,7 @@ var gPluginHandler = {
     let notification = PopupNotifications.getNotification("click-to-play-plugins", aBrowser);
     let dismissed = notification ? notification.dismissed : true;
     // Always show the doorhanger if the anchor is not available.
-    if (!isElementVisible(gURLBar))
+    if (!isElementVisible(gURLBar) || aForceOpenNotification)
       dismissed = false;
     let options = { dismissed: dismissed, centerActions: centerActions };
     let icon = haveVulnerablePlugin ? "blocked-plugins-notification-icon" : "plugins-notification-icon"
