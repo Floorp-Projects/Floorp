@@ -453,12 +453,12 @@ OS_LIBS += \
   -lcutils \
   -lsysutils \
   -lcamera_client \
-  -lbinder \
   -lsensorservice \
   -ldbus \
   -lstagefright \
   -lstagefright_omx \
   -lbinder \
+  -lgui \
   $(NULL)
 endif
 
