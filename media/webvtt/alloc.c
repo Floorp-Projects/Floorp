@@ -26,11 +26,7 @@
  */
 
 #include <webvtt/util.h>
-#if ( defined(__APPLE__) && defined(__MACH__) )
 #include <stdlib.h>
-#else
-#include <malloc.h>
-#endif
 #include <string.h>
 
 static void *default_alloc( void *unused, webvtt_uint nb );
