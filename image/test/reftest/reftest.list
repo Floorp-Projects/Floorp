@@ -46,3 +46,5 @@ include color-management/reftest.list
 # Lossless encoders
 skip-if(Android||B2G) include encoders-lossless/reftest.list # bug 783621
 
+# WBMP tests
+skip-if(Android) include wbmp/reftest.list
