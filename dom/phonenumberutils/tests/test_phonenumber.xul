@@ -22,12 +22,21 @@
 
 Components.utils.import("resource://gre/modules/PhoneNumber.jsm");
 
-function IsViable(dial, expected) {
-  var result = PhoneNumber.IsViable(dial);
+function IsPlain(dial, expected) {
+  var result = PhoneNumber.IsPlain(dial);
   if (result != expected) {
-    ok(false, dial + " is " + (result ? "" : "not ") + "viable, expects otherwise.");
+    ok(false, dial + " is " + (result ? "" : "not ") + "plain, expects otherwise.");
   } else {
-    ok(true, dial + " is " + (result ? "" : "not ") + "viable as expected.");
+    ok(true, dial + " is " + (result ? "" : "not ") + "plain as expected.");
+  }
+}
+
+function Normalize(dial, expected) {
+  var result = PhoneNumber.Normalize(dial);
+  if (result !== expected) {
+    ok(false, "normalized " + dial + " to " + result + ", expected " + expected + " instead.");
+  } else {
+    ok(true, "normalized " + dial + " to " + result + " as expected.");
   }
 }
 
@@ -89,42 +98,75 @@ function Format(dial, currentRegion, nationalNumber, region, nationalFormat, int
       result.internationalFormat != internationalFormat) {
     ok(false, "expected: " + nationalFormat + " " + internationalFormat + 
       "got: " + result.nationalFormat + " " + result.internationalFormat);
-    return result;
   }
 }
 
 // Test whether could a string be a phone number.
-IsViable(null, false);
-IsViable("", false);
-IsViable("1", false);
-IsViable("*2", true); // Real number used in Venezuela
-IsViable("*8", true); // Real number used in Venezuela
-IsViable("12", true); // MIN_LENGTH_PHONE_NUMBER
-IsViable("123", true); // MIN_LENGTH_PHONE_NUMBER
-IsViable("1a2", false);
-IsViable("12a", false);
-IsViable("1234", true); // MIN_LENGTH_PHONE_NUMBER
-IsViable("123a", true);
-IsViable("+", false);
-IsViable("+1", false);
-IsViable("+12", false);
-IsViable("+123", true);
-IsViable("()123", true);
-IsViable("(1)23", true);
-IsViable("(12)3", true);
-IsViable("(123)", true);
-IsViable("(123)4", true);
-IsViable("(123)4", true);
-IsViable("123;ext=", false);
-IsViable("123;ext=1", true);
-IsViable("123;ext=1234567", true);
-IsViable("123;ext=12345678", false);
-IsViable("123 ext:1", true);
-IsViable("123 ext:1#", true);
-IsViable("123-1#", true);
-IsViable("123 1#", true);
-IsViable("123 12345#", true);
-IsViable("123 +123456#", false);
+IsPlain(null, false);
+IsPlain("", false);
+IsPlain("1", true);
+IsPlain("*2", true); // Real number used in Venezuela
+IsPlain("*8", true); // Real number used in Venezuela
+IsPlain("12", true);
+IsPlain("123", true);
+IsPlain("1a2", false);
+IsPlain("12a", false);
+IsPlain("1234", true);
+IsPlain("123a", false);
+IsPlain("+", true);
+IsPlain("+1", true);
+IsPlain("+12", true);
+IsPlain("+123", true);
+IsPlain("()123", false);
+IsPlain("(1)23", false);
+IsPlain("(12)3", false);
+IsPlain("(123)", false);
+IsPlain("(123)4", false);
+IsPlain("123;ext=", false);
+IsPlain("123;ext=1", false);
+IsPlain("123;ext=1234567", false);
+IsPlain("123;ext=12345678", false);
+IsPlain("123 ext:1", false);
+IsPlain("123 ext:1#", false);
+IsPlain("123-1#", false);
+IsPlain("123 1#", false);
+IsPlain("123 12345#", false);
+IsPlain("123 +123456#", false);
+IsPlain("#123#", true);
+IsPlain("*#004#", true);
+IsPlain("*30#", true);
+IsPlain("*#06#", true);
+IsPlain("123456789012345678901234567890123456789012345678901", false); // more than 50 characters
+
+// test normalization
+Normalize(null, "");
+Normalize("", "");
+Normalize("1", "1");
+Normalize("*2", "*2"); // Real number used in Venezuela
+Normalize("*8", "*8"); // Real number used in Venezuela
+Normalize("12", "12");
+Normalize("123", "123");
+Normalize("1a2", "122");
+Normalize("12a", "122");
+Normalize("1234", "1234");
+Normalize("123a", "1232");
+Normalize("+", "+");
+Normalize("+1", "+1");
+Normalize("+12", "+12");
+Normalize("+123", "+123");
+Normalize("()123", "123");
+Normalize("(1)23", "123");
+Normalize("(12)3", "123");
+Normalize("(123)", "123");
+Normalize("(123)4", "1234");
+Normalize("123-1#", "1231#");
+Normalize("123 1#", "1231#");
+Normalize("123 12345#", "12312345#");
+Normalize("123 +123456#", "123+123456#");
+Normalize("#123#", "#123#");
+Normalize("*#004#", "*#004#");
+Normalize("*30#", "*30#");
+Normalize("*#06#", "*#06#");
 
 // Test parsing national numbers.
 Parse("033316005", "NZ");
