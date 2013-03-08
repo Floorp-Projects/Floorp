@@ -29,7 +29,7 @@
 #include <media/stagefright/MediaDebug.h>
 #include <media/stagefright/MediaDefs.h>
 #include <media/stagefright/MetaData.h>
-#include <OMX.h>
+#include <media/stagefright/OMXClient.h>
 #include <media/stagefright/OMXCodec.h>
 #include <media/MediaProfiles.h>
 #include <utils/String8.h>
@@ -47,14 +47,6 @@
 #include "GonkCameraSource.h"
 
 namespace android {
-
-static sp<IOMX> sOMX = NULL;
-static sp<IOMX> GetOMX() {
-  if(sOMX.get() == NULL) {
-    sOMX = new OMX;
-    }
-  return sOMX;
-}
 
 GonkRecorder::GonkRecorder()
     : mWriter(NULL),
@@ -765,10 +757,14 @@ sp<MediaSource> GonkRecorder::createAudioSource() {
         encMeta->setInt32(kKeyTimeScale, mAudioTimeScale);
     }
 
-    // use direct OMX interface instead of connecting to
-    // mediaserver over binder calls
+    // OMXClient::connect() always returns OK and abort's fatally if
+    // it can't connect.
+    OMXClient client;
+    // CHECK_EQ causes an abort if the given condition fails.
+    CHECK_EQ(client.connect(), OK);
+
     sp<MediaSource> audioEncoder =
-        OMXCodec::Create(GetOMX(), encMeta,
+        OMXCodec::Create(client.interface(), encMeta,
                          true /* createEncoder */, audioSource);
     mAudioSourceNode = audioSource;
 
@@ -1273,9 +1269,14 @@ status_t GonkRecorder::setupVideoEncoder(
         encoder_flags |= OMXCodec::kOnlySubmitOneInputBufferAtOneTime;
     }
 
+    // OMXClient::connect() always returns OK and abort's fatally if
+    // it can't connect.
+    OMXClient client;
+    // CHECK_EQ causes an abort if the given condition fails.
+    CHECK_EQ(client.connect(), OK);
+
     sp<MediaSource> encoder = OMXCodec::Create(
-            GetOMX(),
-            enc_meta,
+            client.interface(), enc_meta,
             true /* createEncoder */, cameraSource,
             NULL, encoder_flags);
     if (encoder == NULL) {
