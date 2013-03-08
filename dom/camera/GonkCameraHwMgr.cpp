@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
+#include <binder/IPCThreadState.h>
+#include <sys/system_properties.h>
+
 #include "base/basictypes.h"
 #include "nsDebug.h"
+#include "GonkCameraControl.h"
 #include "GonkCameraHwMgr.h"
 #include "GonkNativeWindow.h"
 #include "CameraCommon.h"
-#include <sys/system_properties.h>
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -47,13 +50,15 @@ static __inline void timespecSubtract(struct timespec* a, struct timespec* b)
 }
 #endif
 
-GonkCameraHardware::GonkCameraHardware(GonkCamera* aTarget, uint32_t aCamera)
-  : mCamera(aCamera)
+GonkCameraHardware::GonkCameraHardware(mozilla::nsGonkCameraControl* aTarget, uint32_t aCameraId, const sp<Camera>& aCamera)
+  : mCameraId(aCameraId)
   , mClosing(false)
   , mMonitor("GonkCameraHardware.Monitor")
   , mNumFrames(0)
+  , mCamera(aCamera)
   , mTarget(aTarget)
   , mInitialized(false)
+  , mSensorOrientation(0)
 {
   DOM_CAMERA_LOGT( "%s:%d : this=%p (aTarget=%p)\n", __func__, __LINE__, (void*)this, (void*)aTarget );
   Init();
@@ -65,60 +70,39 @@ GonkCameraHardware::OnNewFrame()
   if (mClosing) {
     return;
   }
-  GonkNativeWindow* window = static_cast<GonkNativeWindow*>(mWindow.get());
-  nsRefPtr<GraphicBufferLocked> buffer = window->getCurrentBuffer();
+  nsRefPtr<GraphicBufferLocked> buffer = mNativeWindow->getCurrentBuffer();
   ReceiveFrame(mTarget, buffer);
 }
 
 // Android data callback
 void
-GonkCameraHardware::DataCallback(int32_t aMsgType, const sp<IMemory> &aDataPtr, camera_frame_metadata_t* aMetadata, void* aUser)
+GonkCameraHardware::postData(int32_t aMsgType, const sp<IMemory>& aDataPtr, camera_frame_metadata_t* metadata)
 {
-  GonkCameraHardware* hw = GetHardware((uint32_t)aUser);
-  if (!hw) {
-    DOM_CAMERA_LOGW("%s:aUser = %d resolved to no camera hw\n", __func__, (uint32_t)aUser);
-    return;
-  }
-  if (hw->mClosing) {
+  if (mClosing) {
     return;
   }
 
-  GonkCamera* camera = hw->mTarget;
-  if (camera) {
-    switch (aMsgType) {
-      case CAMERA_MSG_PREVIEW_FRAME:
-        // Do nothing
-        break;
+  switch (aMsgType) {
+    case CAMERA_MSG_PREVIEW_FRAME:
+      // Do nothing
+      break;
 
-      case CAMERA_MSG_COMPRESSED_IMAGE:
-        ReceiveImage(camera, (uint8_t*)aDataPtr->pointer(), aDataPtr->size());
-        break;
+    case CAMERA_MSG_COMPRESSED_IMAGE:
+      ReceiveImage(mTarget, (uint8_t*)aDataPtr->pointer(), aDataPtr->size());
+      break;
 
-      default:
-        DOM_CAMERA_LOGE("Unhandled data callback event %d\n", aMsgType);
-        break;
-    }
-  } else {
-    DOM_CAMERA_LOGW("%s: hw = %p (camera = NULL)\n", __func__, hw);
+    default:
+      DOM_CAMERA_LOGE("Unhandled data callback event %d\n", aMsgType);
+      break;
   }
 }
 
 // Android notify callback
 void
-GonkCameraHardware::NotifyCallback(int32_t aMsgType, int32_t ext1, int32_t ext2, void* aUser)
+GonkCameraHardware::notify(int32_t aMsgType, int32_t ext1, int32_t ext2)
 {
   bool bSuccess;
-  GonkCameraHardware* hw = GetHardware((uint32_t)aUser);
-  if (!hw) {
-    DOM_CAMERA_LOGW("%s:aUser = %d resolved to no camera hw\n", __func__, (uint32_t)aUser);
-    return;
-  }
-  if (hw->mClosing) {
-    return;
-  }
-
-  GonkCamera* camera = hw->mTarget;
-  if (!camera) {
+  if (mClosing) {
     return;
   }
 
@@ -131,11 +115,11 @@ GonkCameraHardware::NotifyCallback(int32_t aMsgType, int32_t ext1, int32_t ext2,
         DOM_CAMERA_LOGW("Autofocus failed");
         bSuccess = false;
       }
-      AutoFocusComplete(camera, bSuccess);
+      AutoFocusComplete(mTarget, bSuccess);
       break;
 
     case CAMERA_MSG_SHUTTER:
-      OnShutter(camera);
+      OnShutter(mTarget);
       break;
 
     default:
@@ -145,30 +129,19 @@ GonkCameraHardware::NotifyCallback(int32_t aMsgType, int32_t ext1, int32_t ext2,
 }
 
 void
-GonkCameraHardware::DataCallbackTimestamp(nsecs_t aTimestamp, int32_t aMsgType, const sp<IMemory> &aDataPtr, void* aUser)
+GonkCameraHardware::postDataTimestamp(nsecs_t aTimestamp, int32_t aMsgType, const sp<IMemory>& aDataPtr)
 {
   DOM_CAMERA_LOGI("%s",__func__);
-  GonkCameraHardware* hw = GetHardware((uint32_t)aUser);
-  if (!hw) {
-    DOM_CAMERA_LOGE("%s:aUser = %d resolved to no camera hw\n", __func__, (uint32_t)aUser);
-    return;
-  }
-  if (hw->mClosing) {
+  if (mClosing) {
     return;
   }
 
-  sp<GonkCameraListener> listener;
-  {
-    //TODO
-    //Mutex::Autolock _l(hw->mLock);
-    listener = hw->mListener;
-  }
-  if (listener.get()) {
+  if (mListener.get()) {
     DOM_CAMERA_LOGI("Listener registered, posting recording frame!");
-    listener->postDataTimestamp(aTimestamp, aMsgType, aDataPtr);
+    mListener->postDataTimestamp(aTimestamp, aMsgType, aDataPtr);
   } else {
     DOM_CAMERA_LOGW("No listener was set. Drop a recording frame.");
-    hw->mHardware->releaseRecordingFrame(aDataPtr);
+    mCamera->releaseRecordingFrame(aDataPtr);
   }
 }
 
@@ -177,22 +150,13 @@ GonkCameraHardware::Init()
 {
   DOM_CAMERA_LOGT("%s: this=%p\n", __func__, (void* )this);
 
-  if (hw_get_module(CAMERA_HARDWARE_MODULE_ID, (const hw_module_t**)&mModule) < 0) {
-    return;
-  }
-  char cameraDeviceName[4];
-  snprintf(cameraDeviceName, sizeof(cameraDeviceName), "%d", mCamera);
-  mHardware = new CameraHardwareInterface(cameraDeviceName);
-  if (mHardware->initialize(&mModule->common) != OK) {
-    mHardware.clear();
-    return;
-  }
-
-  struct camera_info info;
-  int rv = mModule->get_camera_info(mCamera, &info);
+  CameraInfo info;
+  int rv = Camera::getCameraInfo(mCameraId, &info);
   if (rv != 0) {
+    DOM_CAMERA_LOGE("%s: failed to get CameraInfo mCameraId %d\n", __func__, mCameraId);
     return;
-  }
+   }
+
   mRawSensorOrientation = info.orientation;
   mSensorOrientation = mRawSensorOrientation;
 
@@ -201,7 +165,7 @@ GonkCameraHardware::Init()
   char propname[PROP_NAME_MAX];
   char prop[PROP_VALUE_MAX];
   int offset = 0;
-  snprintf(propname, sizeof(propname), "ro.moz.cam.%d.sensor_offset", mCamera);
+  snprintf(propname, sizeof(propname), "ro.moz.cam.%d.sensor_offset", mCameraId);
   if (__system_property_get(propname, prop) > 0) {
     offset = clamped(atoi(prop), 0, 270);
     mSensorOrientation += offset;
@@ -209,17 +173,47 @@ GonkCameraHardware::Init()
   }
   DOM_CAMERA_LOGI("Sensor orientation: base=%d, offset=%d, final=%d\n", info.orientation, offset, mSensorOrientation);
 
-  if (sHwHandle == 0) {
-    sHwHandle = 1;  // don't use 0
-  }
-  mHardware->setCallbacks(GonkCameraHardware::NotifyCallback, GonkCameraHardware::DataCallback, GonkCameraHardware::DataCallbackTimestamp, (void*)sHwHandle);
+  mNativeWindow = new GonkNativeWindow();
+  mNativeWindow->setNewFrameCallback(this);
+  mCamera->setListener(this);
+  mCamera->setPreviewTexture(mNativeWindow);
   mInitialized = true;
+}
+
+sp<GonkCameraHardware>
+GonkCameraHardware::Connect(mozilla::nsGonkCameraControl* aTarget, uint32_t aCameraId)
+{
+  sp<Camera> camera = Camera::connect(aCameraId);
+  if (camera.get() == nullptr) {
+    return nullptr;
+  }
+  sp<GonkCameraHardware> cameraHardware = new GonkCameraHardware(aTarget, aCameraId, camera);
+  return cameraHardware;
+ }
+
+void
+GonkCameraHardware::Close()
+{
+  DOM_CAMERA_LOGT( "%s:%d : this=%p\n", __func__, __LINE__, (void*)this );
+
+  mClosing = true;
+  mCamera->stopPreview();
+  mCamera->disconnect();
+  if (mNativeWindow.get()) {
+    mNativeWindow->abandon();
+  }
+  mCamera.clear();
+  mNativeWindow.clear();
+
+  // Ensure that ICamera's destructor is actually executed
+  IPCThreadState::self()->flushCommands();
 }
 
 GonkCameraHardware::~GonkCameraHardware()
 {
   DOM_CAMERA_LOGT( "%s:%d : this=%p\n", __func__, __LINE__, (void*)this );
-  sHw = nullptr;
+  mCamera.clear();
+  mNativeWindow.clear();
 
   /**
    * Trigger the OnClosed event; the upper layers can't do anything
@@ -230,67 +224,17 @@ GonkCameraHardware::~GonkCameraHardware()
   }
 }
 
-GonkCameraHardware* GonkCameraHardware::sHw         = nullptr;
-uint32_t            GonkCameraHardware::sHwHandle   = 0;
-
-void
-GonkCameraHardware::ReleaseHandle(uint32_t aHwHandle,
-                                  bool aUnregisterTarget = false)
-{
-  GonkCameraHardware* hw = GetHardware(aHwHandle);
-  DOM_CAMERA_LOGI("%s: aHwHandle = %d, hw = %p (sHwHandle = %d)\n", __func__, aHwHandle, (void*)hw, sHwHandle);
-  if (!hw) {
-    return;
-  }
-
-  DOM_CAMERA_LOGT("%s: before: sHwHandle = %d\n", __func__, sHwHandle);
-  sHwHandle += 1; // invalidate old handles before deleting
-  hw->mClosing = true;
-  hw->mHardware->disableMsgType(CAMERA_MSG_ALL_MSGS);
-  hw->mHardware->stopPreview();
-  hw->mHardware->release();
-  GonkNativeWindow* window = static_cast<GonkNativeWindow*>(hw->mWindow.get());
-  if (window) {
-    window->abandon();
-  }
-  DOM_CAMERA_LOGT("%s: after: sHwHandle = %d\n", __func__, sHwHandle);
-  if (aUnregisterTarget) {
-    hw->mTarget = nullptr;
-  }
-  delete hw;     // destroy the camera hardware instance
-}
-
-uint32_t
-GonkCameraHardware::GetHandle(GonkCamera* aTarget, uint32_t aCamera)
-{
-  ReleaseHandle(sHwHandle);
-
-  sHw = new GonkCameraHardware(aTarget, aCamera);
-
-  if (sHw->IsInitialized()) {
-    return sHwHandle;
-  }
-
-  DOM_CAMERA_LOGE("failed to initialize camera hardware\n");
-  delete sHw;
-  sHw = nullptr;
-  return 0;
-}
-
 int
-GonkCameraHardware::GetSensorOrientation(uint32_t aHwHandle, uint32_t aType)
+GonkCameraHardware::GetSensorOrientation(uint32_t aType)
 {
-  DOM_CAMERA_LOGI("%s: aHwHandle = %d\n", __func__, aHwHandle);
-  GonkCameraHardware* hw = GetHardware(aHwHandle);
-  if (!hw) {
-    return 0;
-  }
+  DOM_CAMERA_LOGI("%s\n", __func__);
+
   switch (aType) {
     case OFFSET_SENSOR_ORIENTATION:
-      return hw->mSensorOrientation;
+      return mSensorOrientation;
 
     case RAW_SENSOR_ORIENTATION:
-      return hw->mRawSensorOrientation;
+      return mRawSensorOrientation;
 
     default:
       DOM_CAMERA_LOGE("%s:%d : unknown aType=%d\n", __func__, __LINE__, aType);
@@ -299,133 +243,66 @@ GonkCameraHardware::GetSensorOrientation(uint32_t aHwHandle, uint32_t aType)
 }
 
 int
-GonkCameraHardware::AutoFocus(uint32_t aHwHandle)
+GonkCameraHardware::AutoFocus()
 {
-  DOM_CAMERA_LOGI("%s: aHwHandle = %d\n", __func__, aHwHandle);
-  GonkCameraHardware* hw = GetHardware(aHwHandle);
-  if (!hw) {
-    return DEAD_OBJECT;
-  }
-
-  hw->mHardware->enableMsgType(CAMERA_MSG_FOCUS);
-  return hw->mHardware->autoFocus();
+  DOM_CAMERA_LOGI("%s\n", __func__);
+  return mCamera->autoFocus();
 }
 
 void
-GonkCameraHardware::CancelAutoFocus(uint32_t aHwHandle)
+GonkCameraHardware::CancelAutoFocus()
 {
-  DOM_CAMERA_LOGI("%s: aHwHandle = %d\n", __func__, aHwHandle);
-  GonkCameraHardware* hw = GetHardware(aHwHandle);
-  if (hw) {
-    hw->mHardware->cancelAutoFocus();
-  }
+  DOM_CAMERA_LOGI("%s\n", __func__);
+  mCamera->cancelAutoFocus();
 }
 
 int
-GonkCameraHardware::TakePicture(uint32_t aHwHandle)
+GonkCameraHardware::TakePicture()
 {
-  GonkCameraHardware* hw = GetHardware(aHwHandle);
-  if (!hw) {
-    return DEAD_OBJECT;
-  }
-
-  hw->mHardware->enableMsgType(CAMERA_MSG_COMPRESSED_IMAGE);
-  return hw->mHardware->takePicture();
+  return mCamera->takePicture(CAMERA_MSG_SHUTTER | CAMERA_MSG_COMPRESSED_IMAGE);
 }
 
 void
-GonkCameraHardware::CancelTakePicture(uint32_t aHwHandle)
+GonkCameraHardware::CancelTakePicture()
 {
-  GonkCameraHardware* hw = GetHardware(aHwHandle);
-  if (hw) {
-    hw->mHardware->cancelPicture();
-  }
+  DOM_CAMERA_LOGW("%s: android::Camera do not provide this capability\n", __func__);
 }
 
 int
-GonkCameraHardware::PushParameters(uint32_t aHwHandle, const CameraParameters& aParams)
+GonkCameraHardware::PushParameters(const CameraParameters& aParams)
 {
-  GonkCameraHardware* hw = GetHardware(aHwHandle);
-  if (!hw) {
-    return DEAD_OBJECT;
-  }
-
-  return hw->mHardware->setParameters(aParams);
+  String8 s = aParams.flatten();
+  return mCamera->setParameters(s);
 }
 
 void
-GonkCameraHardware::PullParameters(uint32_t aHwHandle, CameraParameters& aParams)
+GonkCameraHardware::PullParameters(CameraParameters& aParams)
 {
-  GonkCameraHardware* hw = GetHardware(aHwHandle);
-  if (hw) {
-    aParams = hw->mHardware->getParameters();
-  }
+  const String8 s = mCamera->getParameters();
+  aParams.unflatten(s);
 }
 
 int
 GonkCameraHardware::StartPreview()
 {
-  if (!mWindow.get()) {
-    mWindow = new GonkNativeWindow(this);
-    mHardware->setPreviewWindow(mWindow);
-  }
-
-  mHardware->enableMsgType(CAMERA_MSG_PREVIEW_FRAME);
-  return mHardware->startPreview();
-}
-
-int
-GonkCameraHardware::StartPreview(uint32_t aHwHandle)
-{
-  GonkCameraHardware* hw = GetHardware(aHwHandle);
-  DOM_CAMERA_LOGI("%s : aHwHandle = %d, hw = %p\n", __func__, aHwHandle, hw);
-  if (!hw) {
-    return DEAD_OBJECT;
-  }
-
-  return hw->StartPreview();
+  DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  return mCamera->startPreview();
 }
 
 void
-GonkCameraHardware::StopPreview(uint32_t aHwHandle)
+GonkCameraHardware::StopPreview()
 {
-  GonkCameraHardware* hw = GetHardware(aHwHandle);
-  DOM_CAMERA_LOGI("%s : aHwHandle = %d, hw = %p\n", __func__, aHwHandle, hw);
-  if (hw) {
-    // Must disable messages first; else some drivers will silently discard
-    //  the stopPreview() request, which can lead to crashes and other
-    //  Very Bad Things that are Hard To Diagnose.
-    hw->mHardware->disableMsgType(CAMERA_MSG_ALL_MSGS);
-    hw->mHardware->stopPreview();
-  }
+  DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  return mCamera->stopPreview();
 }
 
 int
-GonkCameraHardware::StartRecording(uint32_t aHwHandle)
+GonkCameraHardware::StartRecording()
 {
-  DOM_CAMERA_LOGI("%s: aHwHandle = %d\n", __func__, aHwHandle);
+  DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
   int rv = OK;
-  GonkCameraHardware* hw = GetHardware(aHwHandle);
-  if (!hw) {
-    return DEAD_OBJECT;
-  }
 
-  if (hw->mHardware->recordingEnabled()) {
-    return OK;
-  }
-
-  if (!hw->mHardware->previewEnabled()) {
-    DOM_CAMERA_LOGW("Preview was not enabled, enabling now!\n");
-    rv = StartPreview(aHwHandle);
-    if (rv != OK) {
-      return rv;
-    }
-  }
-
-  // start recording mode
-  hw->mHardware->enableMsgType(CAMERA_MSG_VIDEO_FRAME);
-  DOM_CAMERA_LOGI("Calling hw->startRecording\n");
-  rv = hw->mHardware->startRecording();
+  rv = mCamera->startRecording();
   if (rv != OK) {
     DOM_CAMERA_LOGE("mHardware->startRecording() failed with status %d", rv);
   }
@@ -433,47 +310,28 @@ GonkCameraHardware::StartRecording(uint32_t aHwHandle)
 }
 
 int
-GonkCameraHardware::StopRecording(uint32_t aHwHandle)
+GonkCameraHardware::StopRecording()
 {
-  DOM_CAMERA_LOGI("%s: aHwHandle = %d\n", __func__, aHwHandle);
-  GonkCameraHardware* hw = GetHardware(aHwHandle);
-  if (!hw) {
-    return DEAD_OBJECT;
-  }
-
-  hw->mHardware->disableMsgType(CAMERA_MSG_VIDEO_FRAME);
-  hw->mHardware->stopRecording();
+  DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  mCamera->stopRecording();
   return OK;
 }
 
 int
-GonkCameraHardware::SetListener(uint32_t aHwHandle, const sp<GonkCameraListener>& aListener)
+GonkCameraHardware::SetListener(const sp<GonkCameraListener>& aListener)
 {
-  GonkCameraHardware* hw = GetHardware(aHwHandle);
-  if (!hw) {
-    return DEAD_OBJECT;
-  }
-
-  hw->mListener = aListener;
+  mListener = aListener;
   return OK;
 }
 
 void
-GonkCameraHardware::ReleaseRecordingFrame(uint32_t aHwHandle, const sp<IMemory>& aFrame)
+GonkCameraHardware::ReleaseRecordingFrame(const sp<IMemory>& aFrame)
 {
-  GonkCameraHardware* hw = GetHardware(aHwHandle);
-  if (hw) {
-    hw->mHardware->releaseRecordingFrame(aFrame);
-  }
+  mCamera->releaseRecordingFrame(aFrame);
 }
 
 int
-GonkCameraHardware::StoreMetaDataInBuffers(uint32_t aHwHandle, bool aEnabled)
+GonkCameraHardware::StoreMetaDataInBuffers(bool aEnabled)
 {
-  GonkCameraHardware* hw = GetHardware(aHwHandle);
-  if (!hw) {
-    return DEAD_OBJECT;
-  }
-
-  return hw->mHardware->storeMetaDataInBuffers(aEnabled);
+  return mCamera->storeMetaDataInBuffers(aEnabled);
 }

@@ -17,16 +17,17 @@
 #ifndef DOM_CAMERA_GONKCAMERAHWMGR_H
 #define DOM_CAMERA_GONKCAMERAHWMGR_H
 
-#include "libcameraservice/CameraHardwareInterface.h"
-#include "binder/IMemory.h"
-#include "mozilla/ReentrantMonitor.h"
-#include "GonkCameraListener.h"
+#include <binder/IMemory.h>
+#include <camera/Camera.h>
+#include <camera/CameraParameters.h>
 #include <utils/threads.h>
 
 #include "GonkCameraControl.h"
 #include "CameraCommon.h"
 
+#include "GonkCameraListener.h"
 #include "GonkNativeWindow.h"
+#include "mozilla/ReentrantMonitor.h"
 
 // config
 #define GIHM_TIMING_RECEIVEFRAME    0
@@ -34,25 +35,30 @@
 
 
 namespace mozilla {
+  class nsGonkCameraControl;
+}
 
-typedef class nsGonkCameraControl GonkCamera;
+namespace android {
 
-class GonkCameraHardware : android::GonkNativeWindowNewFrameCallback
+class GonkCameraHardware : public GonkNativeWindowNewFrameCallback
+                         , public CameraListener
 {
 protected:
-  GonkCameraHardware(GonkCamera* aTarget, uint32_t aCamera);
-  ~GonkCameraHardware();
+  GonkCameraHardware(mozilla::nsGonkCameraControl* aTarget, uint32_t aCameraId, const sp<Camera>& aCamera);
+  virtual ~GonkCameraHardware();
   void Init();
 
-  static void     DataCallback(int32_t aMsgType, const android::sp<android::IMemory> &aDataPtr, camera_frame_metadata_t* aMetadata, void* aUser);
-  static void     NotifyCallback(int32_t aMsgType, int32_t ext1, int32_t ext2, void* aUser);
-  static void     DataCallbackTimestamp(nsecs_t aTimestamp, int32_t aMsgType, const android::sp<android::IMemory>& aDataPtr, void* aUser);
-
 public:
+  static  sp<GonkCameraHardware>  Connect(mozilla::nsGonkCameraControl* aTarget, uint32_t aCameraId);
+  void    Close();
+
+  // derived from GonkNativeWindowNewFrameCallback
   virtual void    OnNewFrame() MOZ_OVERRIDE;
 
-  static void     ReleaseHandle(uint32_t aHwHandle, bool aUnregisterTarget);
-  static uint32_t GetHandle(GonkCamera* aTarget, uint32_t aCamera);
+  // derived from CameraListener
+  virtual void notify(int32_t aMsgType, int32_t ext1, int32_t ext2);
+  virtual void postData(int32_t aMsgType, const sp<IMemory>& aDataPtr, camera_frame_metadata_t* metadata);
+  virtual void postDataTimestamp(nsecs_t aTimestamp, int32_t aMsgType, const sp<IMemory>& aDataPtr);
 
   /**
    * The physical orientation of the camera sensor: 0, 90, 180, or 270.
@@ -72,55 +78,36 @@ public:
     RAW_SENSOR_ORIENTATION,
     OFFSET_SENSOR_ORIENTATION
   };
-  static int      GetSensorOrientation(uint32_t aHwHandle, uint32_t aType = OFFSET_SENSOR_ORIENTATION);
+  int      GetSensorOrientation(uint32_t aType = OFFSET_SENSOR_ORIENTATION);
 
-  static int      AutoFocus(uint32_t aHwHandle);
-  static void     CancelAutoFocus(uint32_t aHwHandle);
-  static int      TakePicture(uint32_t aHwHandle);
-  static void     CancelTakePicture(uint32_t aHwHandle);
-  static int      StartPreview(uint32_t aHwHandle);
-  static void     StopPreview(uint32_t aHwHandle);
-  static int      PushParameters(uint32_t aHwHandle, const android::CameraParameters& aParams);
-  static void     PullParameters(uint32_t aHwHandle, android::CameraParameters& aParams);
-  static int      StartRecording(uint32_t aHwHandle);
-  static int      StopRecording(uint32_t aHwHandle);
-  static int      SetListener(uint32_t aHwHandle, const android::sp<android::GonkCameraListener>& aListener);
-  static void     ReleaseRecordingFrame(uint32_t aHwHandle, const android::sp<android::IMemory>& aFrame);
-  static int      StoreMetaDataInBuffers(uint32_t aHwHandle, bool aEnabled);
+  int      AutoFocus();
+  void     CancelAutoFocus();
+  int      TakePicture();
+  void     CancelTakePicture();
+  int      StartPreview();
+  void     StopPreview();
+  int      PushParameters(const CameraParameters& aParams);
+  void     PullParameters(CameraParameters& aParams);
+  int      StartRecording();
+  int      StopRecording();
+  int      SetListener(const sp<GonkCameraListener>& aListener);
+  void     ReleaseRecordingFrame(const sp<IMemory>& aFrame);
+  int      StoreMetaDataInBuffers(bool aEnabled);
 
 protected:
-  static GonkCameraHardware*    sHw;
-  static uint32_t               sHwHandle;
 
-  static GonkCameraHardware*    GetHardware(uint32_t aHwHandle)
-  {
-    if (aHwHandle == sHwHandle) {
-      /**
-       * In the initial case, sHw will be null and sHwHandle will be 0,
-       * so even if this function is called with aHwHandle = 0, the
-       * result will still be null.
-       */
-      return sHw;
-    }
-    return nullptr;
-  }
-
-  // Instance wrapper to make member function access easier.
-  int StartPreview();
-
-  uint32_t                      mCamera;
+  uint32_t                      mCameraId;
   bool                          mClosing;
   mozilla::ReentrantMonitor     mMonitor;
   uint32_t                      mNumFrames;
-  android::sp<android::CameraHardwareInterface>   mHardware;
-  GonkCamera*                   mTarget;
-  camera_module_t*              mModule;
-  android::sp<ANativeWindow>             mWindow;
+  sp<Camera>                    mCamera;
+  mozilla::nsGonkCameraControl* mTarget;
+  sp<GonkNativeWindow>          mNativeWindow;
 #if GIHM_TIMING_OVERALL
   struct timespec               mStart;
   struct timespec               mAutoFocusStart;
 #endif
-  android::sp<android::GonkCameraListener>        mListener;
+  sp<GonkCameraListener>        mListener;
   bool                          mInitialized;
   int                           mRawSensorOrientation;
   int                           mSensorOrientation;
@@ -135,6 +122,6 @@ private:
   GonkCameraHardware& operator=(const GonkCameraHardware&) MOZ_DELETE;
 };
 
-} // namespace mozilla
+} // namespace android
 
 #endif // GONK_IMPL_HW_MGR_H
