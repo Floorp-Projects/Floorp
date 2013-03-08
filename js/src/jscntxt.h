@@ -770,7 +770,7 @@ struct JSRuntime : js::RuntimeFriendFields,
     js::RootedValueMap  gcRootsHash;
     js::GCLocks         gcLocksHash;
     unsigned            gcKeepAtoms;
-    size_t              gcBytes;
+    volatile size_t     gcBytes;
     size_t              gcMaxBytes;
     size_t              gcMaxMallocBytes;
 
@@ -926,7 +926,7 @@ struct JSRuntime : js::RuntimeFriendFields,
 
     bool                gcPoke;
 
-    js::HeapState       heapState;
+    volatile js::HeapState heapState;
 
     bool isHeapBusy() { return heapState != js::Idle; }
 

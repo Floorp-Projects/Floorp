@@ -2987,7 +2987,7 @@ js::gc::MarkingValidator::nonIncrementalMark()
         if (!entry)
             return;
 
-        memcpy(entry->bitmap, bitmap->bitmap, sizeof(bitmap->bitmap));
+        memcpy((void *)entry->bitmap, (void *)bitmap->bitmap, sizeof(bitmap->bitmap));
         if (!map.putNew(r.front(), entry))
             return;
     }
