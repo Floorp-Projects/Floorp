@@ -1293,7 +1293,7 @@ var PopupBlockerObserver = {
 
           const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
           notificationBox.appendNotification(message, "popup-blocked",
-                                             "",
+                                             "chrome://browser/skin/images/infobar-popup.png",
                                              priority, buttons);
         }
       }
