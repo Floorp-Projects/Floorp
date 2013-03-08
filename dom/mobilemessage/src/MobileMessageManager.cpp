@@ -219,22 +219,23 @@ MobileMessageManager::GetMessageMoz(int32_t aId, nsIDOMDOMRequest** aRequest)
 }
 
 nsresult
-MobileMessageManager::Delete(int32_t aId, nsIDOMMozSmsRequest** aRequest)
+MobileMessageManager::Delete(int32_t aId, nsIDOMDOMRequest** aRequest)
 {
-  nsCOMPtr<nsIDOMMozSmsRequest> req = SmsRequest::Create(this);
   nsCOMPtr<nsIMobileMessageDatabaseService> mobileMessageDBService =
     do_GetService(MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(mobileMessageDBService, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIMobileMessageCallback> forwarder =
-    new SmsRequestForwarder(static_cast<SmsRequest*>(req.get()));
-  mobileMessageDBService->DeleteMessage(aId, forwarder);
-  req.forget(aRequest);
+  nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
+  nsCOMPtr<nsIMobileMessageCallback> msgCallback = new MobileMessageCallback(request);
+  nsresult rv = mobileMessageDBService->DeleteMessage(aId, msgCallback);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  request.forget(aRequest);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MobileMessageManager::Delete(const jsval& aParam, nsIDOMMozSmsRequest** aRequest)
+MobileMessageManager::Delete(const jsval& aParam, nsIDOMDOMRequest** aRequest)
 {
   if (aParam.isInt32()) {
     return Delete(aParam.toInt32(), aRequest);
@@ -248,12 +249,21 @@ MobileMessageManager::Delete(const jsval& aParam, nsIDOMMozSmsRequest** aRequest
   nsIScriptContext* sc = GetContextForEventHandlers(&rv);
   AutoPushJSContext cx(sc->GetNativeContext());
   NS_ENSURE_STATE(sc);
-  nsCOMPtr<nsIDOMMozSmsMessage> message =
-    do_QueryInterface(nsContentUtils::XPConnect()->GetNativeOfWrapper(cx, &aParam.toObject()));
-  NS_ENSURE_TRUE(message, NS_ERROR_INVALID_ARG);
 
   int32_t id;
-  message->GetId(&id);
+  nsCOMPtr<nsIDOMMozSmsMessage> smsMessage =
+    do_QueryInterface(nsContentUtils::XPConnect()->GetNativeOfWrapper(cx, &aParam.toObject()));
+  if (smsMessage) {
+    smsMessage->GetId(&id);
+  } else {
+    nsCOMPtr<nsIDOMMozMmsMessage> mmsMessage =
+      do_QueryInterface(nsContentUtils::XPConnect()->GetNativeOfWrapper(cx, &aParam.toObject()));
+    if (mmsMessage) {
+      mmsMessage->GetId(&id);
+    } else {
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
 
   return Delete(id, aRequest);
 }
