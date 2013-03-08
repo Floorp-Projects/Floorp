@@ -13,9 +13,14 @@ dictionary MmsAttachment
   nsIDOMBlob content;
 };
 
-[scriptable, builtinclass, uuid(df002ad2-71d7-11e2-9f1c-af6fa139069f)]
+[scriptable, builtinclass, uuid(c9683d00-88a6-11e2-85cc-57a33dfbea3b)]
 interface nsIDOMMozMmsMessage : nsISupports
 {
+  /**
+   * |type| is always "mms".
+   */
+  readonly attribute DOMString type;
+
   readonly attribute long      id;
 
   /**

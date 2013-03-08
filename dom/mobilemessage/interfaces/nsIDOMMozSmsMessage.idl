@@ -4,9 +4,14 @@
 
 #include "nsISupports.idl"
 
-[scriptable, builtinclass, uuid(59fc5ea8-33fe-40ba-890b-b9abaeb5ac26)]
+[scriptable, builtinclass, uuid(d4d848c4-88a6-11e2-b6da-6f252cbfa716)]
 interface nsIDOMMozSmsMessage : nsISupports
 {
+  /**
+   * |type| is always "sms".
+   */
+  readonly attribute DOMString type;
+
   readonly attribute long      id;
 
   /**

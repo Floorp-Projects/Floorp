@@ -207,6 +207,13 @@ MmsMessage::Create(int32_t               aId,
 }
 
 NS_IMETHODIMP
+MmsMessage::GetType(nsAString& aType)
+{
+  aType = NS_LITERAL_STRING("mms");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 MmsMessage::GetId(int32_t* aId)
 {
   *aId = mId;
