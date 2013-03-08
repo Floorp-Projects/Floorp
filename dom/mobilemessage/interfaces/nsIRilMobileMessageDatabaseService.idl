@@ -6,13 +6,13 @@
 #include "nsISupports.idl"
 #include "nsIMobileMessageDatabaseService.idl"
 
-[scriptable, function, uuid(0bffae74-71db-11e2-962a-73cf64d6393e)]
+[scriptable, function, uuid(92986322-8d56-11e2-8816-73a531c493c2)]
 interface nsIRilMobileMessageDatabaseCallback : nsISupports
 {
   /**
-   * |aRecord| Object: the mobile-message database record
+   * |aDomMessage|: the nsIDOMMoz{Mms,Sms}Message
    */
-  void notify(in nsresult aRv, in jsval aRecord);
+  void notify(in nsresult aRv, in nsISupports aDomMessage);
 };
 
 [scriptable, uuid(a31b1716-8631-11e2-afaa-2fbd087f426e)]

@@ -4,8 +4,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMMozSmsMessage;
-
 dictionary SmsThreadListItem
 {
   DOMString senderOrReceiver;
@@ -14,7 +12,7 @@ dictionary SmsThreadListItem
   unsigned long long unreadCount;
 };
 
-[scriptable, builtinclass, uuid(18d7c4da-848f-11e2-a3a5-f749c4ba31b5)]
+[scriptable, builtinclass, uuid(edb1de12-8d58-11e2-b382-7bf132b20cb2)]
 interface nsIMobileMessageCallback : nsISupports
 {
   /**
@@ -29,21 +27,27 @@ interface nsIMobileMessageCallback : nsISupports
   const unsigned short INTERNAL_ERROR   = 4;
 
   /**
-   * |message| can be either |nsIDOMMozSmsMessage| or |nsIDOMMozMmsMessage|.
+   * |message| can be nsIDOMMoz{Mms,Sms}Message.
    */
   void notifyMessageSent(in nsISupports message);
   void notifySendMessageFailed(in long error);
 
-  void notifyMessageGot(in nsIDOMMozSmsMessage message);
+  /**
+   * |message| can be nsIDOMMoz{Mms,Sms}Message.
+   */
+  void notifyMessageGot(in nsISupports message);
   void notifyGetMessageFailed(in long error);
 
   void notifyMessageDeleted(in boolean deleted);
   void notifyDeleteMessageFailed(in long error);
 
+  /**
+   * |message| can be nsIDOMMoz{Mms,Sms}Message.
+   */
   void notifyMessageListCreated(in long listId,
-                                in nsIDOMMozSmsMessage message);
+                                in nsISupports message);
   void notifyReadMessageListFailed(in long error);
-  void notifyNextMessageInListGot(in nsIDOMMozSmsMessage message);
+  void notifyNextMessageInListGot(in nsISupports message);
   void notifyNoMessageInList();
 
   void notifyMessageMarkedRead(in boolean read);
