@@ -1223,6 +1223,9 @@ SetDeterministicGC(JSContext *cx, bool enabled);
 void
 SetValidateGC(JSContext *cx, bool enabled);
 
+void
+SetFullCompartmentChecks(JSContext *cx, bool enabled);
+
 /* Wait for the background thread to finish sweeping if it is running. */
 void
 FinishBackgroundFinalize(JSRuntime *rt);

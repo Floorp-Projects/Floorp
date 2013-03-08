@@ -799,6 +799,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcIncrementalLimit(0),
 #endif
     gcValidate(true),
+    gcFullCompartmentChecks(false),
     gcCallback(NULL),
     gcSliceCallback(NULL),
     gcFinalizeCallback(NULL),
