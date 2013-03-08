@@ -64,10 +64,6 @@ const WebProgress = {
 
     aTab.hostChanged = false;
     aTab.state = aJson.state;
-
-    if (aTab == Browser.selectedTab) {
-      IdentityUI.checkIdentity();
-    }
   },
 
   _locationChange: function _locationChange(aJson, aTab) {
