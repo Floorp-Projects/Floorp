@@ -1871,15 +1871,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 /* Tabstrip */
 
-/*
- Tab background pseudo-elements which are positioned above .tab-background-start/end:
-   - ::before - provides the fill of the tab curve and is clipped to the tab shape. This is where
-                pointer events go for the curve.
-   - ::after  - provides the border/stroke of the tab curve and is overlayed on ::before.  Pointer
-                events go through to ::before to get the proper shape. For now, no borders are
-                shown for lightweight themes.
- */
-
 #TabsToolbar {
   min-height: 0;
   padding: 0;
@@ -1899,136 +1890,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 %endif
 
-.tabbrowser-tab,
-.tabs-newtab-button {
-  -moz-appearance: none;
-  background-color: transparent;
-  border-radius: 0;
-  border-width: 0;
-  margin: 0;
-  padding: 0;
-}
-
-/* The selected tab should appear above adjacent tabs and .tabs-newtab-button */
-.tabbrowser-tab[selected=true] {
-  position: relative;
-  z-index: 1;
-}
-
-.tab-background,
-.tabs-newtab-button {
-  /* overlap the tab curves */
-  -moz-margin-end: -14px;
-  -moz-margin-start: -14px;
-}
-
-/* Background tab separators (1px wide).
-   Also show separators beside the selected tab when dragging it. */
-#tabbrowser-tabs[movingtab] > .tabbrowser-tab[beforeselected]:not([last-visible-tab])::after,
-.tabbrowser-tab:not([selected]):not([afterselected-visible]):not([afterhovered]):not([first-visible-tab]):not(:hover)::before,
-#tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([selected]):not([beforehovered]):not(:hover)::after {
-  -moz-margin-start: -1px;
-  background-image: linear-gradient(rgba(10,31,51,0), rgba(10,31,51,0.3));
-  background-position: left bottom;
-  background-repeat: no-repeat;
-  background-size: 1px 100%;
-  content: '';
-  display: -moz-box;
-  height: 29px;
-  width: 1px;
-}
-
-/* pinned tabs need position: fixed for separator when overflowing */
-#tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-tab[pinned]::before {
-  position: fixed;
-}
-
-.tab-background-start[selected=true]::after,
-.tab-background-start[selected=true]::before,
-.tab-background-start,
-.tab-background-end,
-.tab-background-end[selected=true]::after,
-.tab-background-end[selected=true]::before {
-  min-height: 29px;
-  width: 29px;
-}
-
-.tab-background-start[selected=true]::after,
-.tab-background-end[selected=true]::after {
-  /* position ::after on top of its parent */
-  content: "";
-  display: -moz-box;
-  -moz-margin-start: -29px;
-}
-
-.tab-background-start[selected=true]::before,
-.tab-background-end[selected=true]::before {
-  /* all ::before pseudo elements */
-  content: "";
-  display: -moz-box;
-}
-
-.tab-background-start[selected=true]::before {
-  clip-path: url(chrome://browser/content/browser.xul#windows-tab-curve-clip-path-start);
-}
-
-.tab-background-end[selected=true]::before {
-  clip-path: url(chrome://browser/content/browser.xul#windows-tab-curve-clip-path-end);
-}
-
-/* new tab button border and gradient on hover */
-.tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]),
-.tabs-newtab-button:hover {
-  background-image: url(chrome://browser/skin/tabbrowser/tab-background-start.png),
-                    url(chrome://browser/skin/tabbrowser/tab-background-middle.png),
-                    url(chrome://browser/skin/tabbrowser/tab-background-end.png);
-  background-position: 0px, 29px, right 0;
-  background-size: 29px 100%, calc(100% - 58px) 100%, 29px 100%;
-  background-repeat: no-repeat;
-}
-
-.tab-background-start[selected=true]:not(:-moz-lwtheme)::after,
-.tab-background-end[selected=true]:not(:-moz-lwtheme)::after {
-  background-repeat: no-repeat;
-}
-
-.tab-background-start[selected=true]:not(:-moz-lwtheme)::after {
-  background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-start.png);
-}
-
-.tab-background-end[selected=true]:not(:-moz-lwtheme)::after {
-  background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-end.png);
-}
-
-.tab-background-start[selected=true]::before,
-.tab-background-end[selected=true]::before {
-  background-color: -moz-dialog;
-  background-image: @fgTabTexture@;
-  background-repeat: no-repeat;
-}
-
-.tab-background-middle[selected=true] {
-  background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle.png),
-                    @fgTabBackgroundMiddle@;
-  background-color: transparent;
-  background-repeat: repeat-x;
-}
-
-/* Same as above but without border or -moz-dialog background */
-.tab-background-start[selected=true]:-moz-lwtheme::before,
-.tab-background-end[selected=true]:-moz-lwtheme::before,
-.tab-background-middle[selected=true]:-moz-lwtheme {
-  background-image: @fgTabTexture@;
-  background-color: transparent;
-  background-position: left 0 top 2px;
-}
-
-.tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) > .tab-stack > .tab-content {
-  background-image: radial-gradient(farthest-corner at center bottom, rgb(255,255,255) 3%, rgba(186,221,251,0.75) 20%, rgba(127,179,255,0.25) 40%, rgba(127,179,255,0) 70%);
-  background-repeat: no-repeat;
-  background-position: center bottom 1px;
-  background-size: 85% 100%;
-}
+%include ../shared/tabs.inc.css
 
 %ifndef WINDOWS_AERO
 /* Use lighter colors of buttons and text in the titlebar on luna-blue */
@@ -2061,42 +1923,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   }
 }
 %endif
-
-.tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox {
-  -moz-padding-start: 14px;
-  -moz-padding-end: 14px;
-}
-
-.tabbrowser-tab,
-.tab-background,
-.tab-background-start[selected=true],
-.tab-background-end[selected=true],
-.tab-background-start[selected=true]::after,
-.tab-background-end[selected=true]::after,
-.tab-content {
-  pointer-events: none;
-}
-
-.tab-background-start[selected=true]::before,
-.tab-background-end[selected=true]::before,
-.tab-background-middle,
-.tabs-newtab-button,
-.tab-close-button {
-  pointer-events: auto;
-}
-
-.tab-background-middle {
-  -moz-box-flex: 1;
-  background-clip: padding-box;
-  border-left: 15px solid transparent;
-  border-right: 15px solid transparent;
-  margin: 0 -15px;
-}
-
-.tab-content {
-  -moz-padding-start: 10px;
-  -moz-padding-end: 10px;
-}
 
 .tabbrowser-tab:-moz-lwtheme {
   color: inherit;
@@ -2215,11 +2041,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 #TabsToolbar > #new-tab-button:-moz-lwtheme-brighttext,
 #TabsToolbar > toolbarpaletteitem > #new-tab-button:-moz-lwtheme-brighttext {
   list-style-image: url(chrome://browser/skin/tabbrowser/newtab-inverted.png);
-}
-
-.tabs-newtab-button {
-  clip-path: url(chrome://browser/content/browser.xul#windows-tab-clip-path-outer);
-  width: 66px;
 }
 
 #TabsToolbar > #new-tab-button {
