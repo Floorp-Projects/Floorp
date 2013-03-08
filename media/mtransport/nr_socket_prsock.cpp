@@ -95,7 +95,6 @@ nrappkit copyright:
 #include "prio.h"
 #include "prnetdb.h"
 
-#include "mozilla/net/DNS.h"
 #include "nsCOMPtr.h"
 #include "nsASocketHandler.h"
 #include "nsISocketTransportService.h"
@@ -111,6 +110,7 @@ extern "C" {
 #include "nr_socket.h"
 #include "nr_socket_local.h"
 }
+
 #include "nr_socket_prsock.h"
 
 // Implement the nsISupports ref counting
@@ -240,30 +240,6 @@ static int nr_transport_addr_to_praddr(nr_transport_addr *addr,
     return(_status);
   }
 
-int nr_netaddr_to_transport_addr(const net::NetAddr *netaddr,
-  nr_transport_addr *addr)
-  {
-    int _status;
-    int r;
-
-    switch(netaddr->raw.family) {
-      case AF_INET:
-        if ((r = nr_ip4_port_to_transport_addr(ntohl(netaddr->inet.ip),
-                                               ntohs(netaddr->inet.port),
-                                               IPPROTO_UDP, addr)))
-          ABORT(r);
-        break;
-      case AF_INET6:
-        ABORT(R_BAD_ARGS);
-      default:
-        MOZ_ASSERT(false);
-        ABORT(R_BAD_ARGS);
-    }
-    _status=0;
-  abort:
-    return(_status);
-  }
-
 int nr_praddr_to_transport_addr(const PRNetAddr *praddr,
   nr_transport_addr *addr, int keep)
   {
@@ -277,9 +253,9 @@ int nr_praddr_to_transport_addr(const PRNetAddr *praddr,
         ip4.sin_addr.s_addr = praddr->inet.ip;
         ip4.sin_port = praddr->inet.port;
         if ((r = nr_sockaddr_to_transport_addr((sockaddr *)&ip4,
-                                               sizeof(ip4),
-                                               IPPROTO_UDP, keep,
-                                               addr)))
+                                              sizeof(ip4),
+                                              IPPROTO_UDP, 1,
+              addr)))
           ABORT(r);
         break;
       case PR_AF_INET6:
@@ -290,7 +266,6 @@ int nr_praddr_to_transport_addr(const PRNetAddr *praddr,
 #endif
         ABORT(R_BAD_ARGS);
       default:
-        MOZ_ASSERT(false);
         ABORT(R_BAD_ARGS);
     }
 

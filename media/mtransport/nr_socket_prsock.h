@@ -61,10 +61,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace mozilla {
 
-namespace net {
-  union NetAddr;
-}
-
 class NrSocket : public nsASocketHandler {
 public:
   NrSocket() : fd_(nullptr) {
@@ -114,9 +110,8 @@ private:
   nsCOMPtr<nsIEventTarget> ststhread_;
 };
 
-int nr_netaddr_to_transport_addr(const net::NetAddr *netaddr,
-                                 nr_transport_addr *addr);
 int nr_praddr_to_transport_addr(const PRNetAddr *praddr,
                                 nr_transport_addr *addr, int keep);
+
 }  // close namespace
 #endif

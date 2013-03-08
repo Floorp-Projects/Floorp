@@ -27,10 +27,6 @@ using namespace std;
 #include "runnable_utils.h"
 #include "nsStaticComponents.h"
 #include "nsIDOMRTCPeerConnection.h"
-#include "nsServiceManagerUtils.h"
-#include "nsNetUtil.h"
-#include "nsIIOService.h"
-#include "nsIDNSService.h"
 #include "nsWeakReference.h"
 #include "nricectx.h"
 
@@ -1143,6 +1139,7 @@ public:
   SignalingAgent a1_;  // Canonically "caller"
   SignalingAgent a2_;  // Canonically "callee"
 };
+
 
 TEST_F(SignalingTest, JustInit)
 {

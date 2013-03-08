@@ -25,7 +25,6 @@
 #include "nricectx.h"
 #include "nricemediastream.h"
 #include "nriceresolverfake.h"
-#include "nriceresolver.h"
 #include "mtransport_test_utils.h"
 #include "runnable_utils.h"
 
@@ -39,7 +38,7 @@ MtransportTestUtils *test_utils;
 bool stream_added = false;
 
 const std::string kDefaultStunServerAddress((char *)"23.21.150.121");
-const std::string kDefaultStunServerHostname((char *)"ec2-23-21-150-121.compute-1.amazonaws.com");
+const std::string kDefaultStunServerHostname((char *)"stun-server.invalid");
 const std::string kBogusStunServerHostname((char *)"stun-server-nonexistent.invalid");
 const uint16_t kDefaultStunServerPort=3478;
 
@@ -61,10 +60,9 @@ class IceTestPeer : public sigslot::has_slots<> {
       received_(0),
       sent_(0),
       fake_resolver_(),
-      dns_resolver_(new NrIceResolver()),
       remote_(nullptr) {
     ice_ctx_->SignalGatheringCompleted.connect(this,
-                                               &IceTestPeer::GatheringComplete);
+                                              &IceTestPeer::GatheringComplete);
     ice_ctx_->SignalCompleted.connect(this, &IceTestPeer::IceCompleted);
   }
 
@@ -100,18 +98,18 @@ class IceTestPeer : public sigslot::has_slots<> {
     ASSERT_TRUE(NS_SUCCEEDED(ice_ctx_->SetStunServers(stun_servers)));
   }
 
-  void SetFakeResolver() {
-    ASSERT_TRUE(NS_SUCCEEDED(dns_resolver_->Init()));
+  void AddAddressToResolver(const std::string hostname,
+                            const std::string address) {
     PRNetAddr addr;
-    PRStatus status = PR_StringToNetAddr(kDefaultStunServerAddress.c_str(), &addr);
+    PRStatus status = PR_StringToNetAddr(address.c_str(), &addr);
     ASSERT_EQ(PR_SUCCESS, status);
-    fake_resolver_.SetAddr(kDefaultStunServerHostname, addr);
-    ASSERT_TRUE(NS_SUCCEEDED(ice_ctx_->SetResolver(fake_resolver_.AllocateResolver())));
+
+    fake_resolver_.SetAddr(hostname, addr);
   }
 
-  void SetDNSResolver() {
-    ASSERT_TRUE(NS_SUCCEEDED(dns_resolver_->Init()));
-    ASSERT_TRUE(NS_SUCCEEDED(ice_ctx_->SetResolver(dns_resolver_->AllocateResolver())));
+  void SetResolver() {
+    ASSERT_TRUE(NS_SUCCEEDED(ice_ctx_->SetResolver(
+        fake_resolver_.AllocateResolver())));
   }
 
   void Gather() {
@@ -272,7 +270,6 @@ class IceTestPeer : public sigslot::has_slots<> {
   size_t received_;
   size_t sent_;
   NrIceResolverFake fake_resolver_;
-  nsRefPtr<NrIceResolver> dns_resolver_;
   IceTestPeer *remote_;
 };
 
@@ -281,6 +278,12 @@ class IceGatherTest : public ::testing::Test {
   void SetUp() {
     peer_ = new IceTestPeer("P1", true, false);
     peer_->AddStream(1);
+    peer_->AddAddressToResolver(kDefaultStunServerHostname,
+                                kDefaultStunServerAddress);
+  }
+
+  void SetResolver() {
+    peer_->SetResolver();
   }
 
   void Gather() {
@@ -392,47 +395,30 @@ class IceConnectTest : public ::testing::Test {
 
 }  // end namespace
 
-TEST_F(IceGatherTest, TestGatherFakeStunServerHostnameNoResolver) {
-  peer_->SetStunServer(kDefaultStunServerHostname, kDefaultStunServerPort);
-  Gather();
-}
 
-TEST_F(IceGatherTest, TestGatherFakeStunServerIpAddress) {
+TEST_F(IceGatherTest, TestGatherStunServerIpAddress) {
   peer_->SetStunServer(kDefaultStunServerAddress, kDefaultStunServerPort);
-  peer_->SetFakeResolver();
+  peer_->SetResolver();
   Gather();
 }
 
-TEST_F(IceGatherTest, TestGatherFakeStunServerHostname) {
+TEST_F(IceGatherTest, TestGatherStunServerHostname) {
   peer_->SetStunServer(kDefaultStunServerHostname, kDefaultStunServerPort);
-  peer_->SetFakeResolver();
+  peer_->SetResolver();
   Gather();
 }
 
-TEST_F(IceGatherTest, TestGatherFakeStunBogusHostname) {
+TEST_F(IceGatherTest, TestGatherStunBogusHostname) {
   peer_->SetStunServer(kBogusStunServerHostname, kDefaultStunServerPort);
-  peer_->SetFakeResolver();
+  peer_->SetResolver();
   Gather();
 }
 
-TEST_F(IceGatherTest, TestGatherDNSStunServerIpAddress) {
-  peer_->SetStunServer(kDefaultStunServerAddress, kDefaultStunServerPort);
-  peer_->SetDNSResolver();
-  Gather();
-  // TODO(jib@mozilla.com): ensure we get server reflexive candidates Bug 848094
-}
-
-TEST_F(IceGatherTest, TestGatherDNSStunServerHostname) {
+TEST_F(IceGatherTest, TestGatherStunServerHostnameNoResolver) {
   peer_->SetStunServer(kDefaultStunServerHostname, kDefaultStunServerPort);
-  peer_->SetDNSResolver();
   Gather();
 }
 
-TEST_F(IceGatherTest, TestGatherDNSStunBogusHostname) {
-  peer_->SetStunServer(kBogusStunServerHostname, kDefaultStunServerPort);
-  peer_->SetDNSResolver();
-  Gather();
-}
 
 TEST_F(IceConnectTest, TestGather) {
   AddStream("first", 1);
