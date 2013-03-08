@@ -29,6 +29,7 @@ private:
 
   nsRefPtr<DOMRequest> mDOMRequest;
 
+  nsresult NotifySuccess(const jsval& aResult);
   nsresult NotifySuccess(nsISupports *aMessage);
   nsresult NotifyError(int32_t aError);
 };
