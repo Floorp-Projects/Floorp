@@ -32,6 +32,7 @@ var suffix = "><resizer dir='bottomright' flex='1' width='150' height='150' styl
 var titledpanel = "<panel noautohide='true' titlebar='normal' minwidth='120' minheight='140'/><label value='Test'/>";
 
 // width and height in the tests below specify the expected size of the window.
+// note, win8 has a minimum inner window size of around 122 pixels. Don't go below this on min-width tests.
 var tests = [
   { testname: "unconstrained",
     style: "", attrs: "",
@@ -40,8 +41,8 @@ var tests = [
     style: "min-width: 180px; min-height: 210px;", attrs: "",
     width: 180, height: 210 },
   { testname: "constraint max style",
-    style: "max-width: 120px; max-height: 140px;", attrs: "",
-    width: 120, height: 140 },
+    style: "max-width: 125px; max-height: 140px;", attrs: "",
+    width: 125, height: 140 },
   { testname: "constraint min attributes",
     style: "", attrs: "minwidth='240' minheight='220'",
     width: 240, height: 220 },
