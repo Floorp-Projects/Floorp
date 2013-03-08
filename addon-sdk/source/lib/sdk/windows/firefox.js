@@ -10,7 +10,7 @@ const { Cc, Ci, Cr } = require('chrome'),
       { WindowTabs, WindowTabTracker } = require('./tabs-firefox'),
       { WindowDom } = require('./dom'),
       { WindowLoader } = require('./loader'),
-      { isBrowser, getWindowDocShell } = require('../window/utils'),
+      { isBrowser, getWindowDocShell, windows: windowIterator } = require('../window/utils'),
       { Options } = require('../tabs/common'),
       apiUtils = require('../deprecated/api-utils'),
       unload = require('../system/unload'),
@@ -21,6 +21,7 @@ const { Cc, Ci, Cr } = require('chrome'),
       { getOwnerWindow } = require('../private-browsing/window/utils'),
       viewNS = require('../core/namespace').ns(),
       { isPrivateBrowsingSupported } = require('../self');
+const { ignoreWindow } = require('sdk/private-browsing/utils');
 
 /**
  * Window trait composes safe wrappers for browser window that are E10S
@@ -207,6 +208,9 @@ const browserWindows = Trait.resolve({ toString: null }).compose(
      */
     get activeWindow() {
       let window = windowUtils.activeBrowserWindow;
+      // Bug 834961: ignore private windows when they are not supported
+      if (ignoreWindow(window))
+        window = windowIterator()[0];
       return window ? BrowserWindow({window: window}) : null;
     },
     open: function open(options) {
@@ -231,6 +235,7 @@ const browserWindows = Trait.resolve({ toString: null }).compose(
       this._add(window);
       this._emit('open', window);
     },
+
     /**
      * Internal listener which is called whenever window gets closed.
      * Cleans up references and removes wrapper from this list.

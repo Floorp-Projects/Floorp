@@ -218,7 +218,7 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
              .setVersion(JSVERSION_LATEST)
              .setUserBit(true); // Flag us as XBL
       nsCString name = NS_LITERAL_CSTRING("get_") + NS_ConvertUTF16toUTF8(mName);
-      js::RootedObject rootedNull(cx, nullptr); // See bug 781070.
+      JS::RootedObject rootedNull(cx, nullptr); // See bug 781070.
       rv = nsJSUtils::CompileFunction(cx, rootedNull, options, name, 0, nullptr,
                                       getter, &getterObject);
 
@@ -268,7 +268,7 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
              .setVersion(JSVERSION_LATEST)
              .setUserBit(true); // Flag us as XBL
       nsCString name = NS_LITERAL_CSTRING("set_") + NS_ConvertUTF16toUTF8(mName);
-      js::RootedObject rootedNull(cx, nullptr); // See bug 781070.
+      JS::RootedObject rootedNull(cx, nullptr); // See bug 781070.
       rv = nsJSUtils::CompileFunction(cx, rootedNull, options, name, 1,
                                       gPropertyArgs, setter, &setterObject);
 

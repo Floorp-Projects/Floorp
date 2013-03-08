@@ -480,7 +480,7 @@ bool CC_SIPCCService::isStarted()
 // method are not safe except from ccapp_thread.
 CC_DevicePtr CC_SIPCCService::getActiveDevice()
 {
-    return CC_SIPCCDevice::wrap(CCAPI_Device_getDeviceID());
+    return CC_SIPCCDevice::wrap(CCAPI_Device_getDeviceID()).get();
 }
 
 // !!! Note that accessing *Ptr instances from multiple threads can
@@ -493,7 +493,7 @@ vector<CC_DevicePtr> CC_SIPCCService::getDevices()
 	CC_SIPCCDevicePtr pDevice = CC_SIPCCDevice::wrap(CCAPI_Device_getDeviceID());
 	if(pDevice != NULL)
 	{
-        devices.push_back(pDevice);
+        devices.push_back(pDevice.get());
     }
 
     return devices;
@@ -506,12 +506,12 @@ AudioControlPtr CC_SIPCCService::getAudioControl ()
 {
 	if(audioControlWrapper != NULL)
 	{
-		return audioControlWrapper;
+		return audioControlWrapper.get();
 	}
 	else
 	{
 		audioControlWrapper = AudioControlWrapperPtr(new AudioControlWrapper(VcmSIPCCBinding::getAudioControl()));
-		return audioControlWrapper;
+		return audioControlWrapper.get();
 	}
 }
 
@@ -522,12 +522,12 @@ VideoControlPtr CC_SIPCCService::getVideoControl ()
 {
 	if(videoControlWrapper != NULL)
 	{
-		return videoControlWrapper;
+		return videoControlWrapper.get();
 	}
 	else
 	{
 		videoControlWrapper = VideoControlWrapperPtr(new VideoControlWrapper(VcmSIPCCBinding::getVideoControl()));
-		return videoControlWrapper;
+		return videoControlWrapper.get();
 	}
 }
 
@@ -626,7 +626,7 @@ void CC_SIPCCService::onDeviceEvent(ccapi_device_event_e type, cc_device_handle_
       device_event_getname(type),
       devicePtr->toString().c_str(),
       infoPtr->getDeviceName().c_str());
-    _self->notifyDeviceEventObservers(type, devicePtr, infoPtr);
+    _self->notifyDeviceEventObservers(type, devicePtr.get(), infoPtr.get());
 }
 
 void CC_SIPCCService::onFeatureEvent(ccapi_device_event_e type, cc_deviceinfo_ref_t /* device_info */, cc_featureinfo_ref_t feature_info)
@@ -641,14 +641,14 @@ void CC_SIPCCService::onFeatureEvent(ccapi_device_event_e type, cc_deviceinfo_re
      mozilla::MutexAutoLock lock(_self->m_lock);
 
      cc_device_handle_t hDevice = CCAPI_Device_getDeviceID();
-     CC_DevicePtr devicePtr = CC_SIPCCDevice::wrap(hDevice);
+     CC_DevicePtr devicePtr = CC_SIPCCDevice::wrap(hDevice).get();
      if (devicePtr == NULL)
      {
          CSFLogError( logTag, "Unable to notify device observers for device handle (%u), as failed to create CC_DevicePtr", hDevice);
          return;
      }
 
-     CC_FeatureInfoPtr infoPtr = CC_SIPCCFeatureInfo::wrap(feature_info);
+     CC_FeatureInfoPtr infoPtr = CC_SIPCCFeatureInfo::wrap(feature_info).get();
      if (infoPtr  == NULL)
      {
          CSFLogError( logTag, "Unable to notify call observers for feature info handle (%u), as failed to create CC_FeatureInfoPtr", feature_info);
@@ -672,14 +672,14 @@ void CC_SIPCCService::onLineEvent(ccapi_line_event_e eventType, cc_lineid_t line
 
     mozilla::MutexAutoLock lock(_self->m_lock);
 
-    CC_LinePtr linePtr = CC_SIPCCLine::wrap(line);
+    CC_LinePtr linePtr = CC_SIPCCLine::wrap(line).get();
     if (linePtr == NULL)
     {
         CSFLogError( logTag, "Unable to notify line observers for line lineId (%u), as failed to create CC_LinePtr", line);
         return;
     }
 
-    CC_LineInfoPtr infoPtr = CC_SIPCCLineInfo::wrap(info);
+    CC_LineInfoPtr infoPtr = CC_SIPCCLineInfo::wrap(info).get();
     if (infoPtr == NULL)
     {
         CSFLogError( logTag, "Unable to notify line observers for line lineId (%u), as failed to create CC_LineInfoPtr", line);
@@ -722,7 +722,7 @@ void CC_SIPCCService::onCallEvent(ccapi_call_event_e eventType, cc_call_handle_t
     CSFLogInfo( logTag, "onCallEvent(%s, %s, [%s|%s]",
         call_event_getname(eventType), callPtr->toString().c_str(),
     	call_state_getname(infoPtr->getCallState()), CC_CallCapabilityEnum::toString(capSet).c_str());
-    _self->notifyCallEventObservers(eventType, callPtr, infoPtr);
+    _self->notifyCallEventObservers(eventType, callPtr.get(), infoPtr.get());
 }
 
 void CC_SIPCCService::addCCObserver ( CC_Observer * observer )

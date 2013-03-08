@@ -565,7 +565,7 @@ TEST_F(Stabs, OnePublicSymbol) {
   stabs.set_endianness(kLittleEndian);
   stabs.set_value_size(4);
 
-  const u_int32_t kExpectedAddress = 0x9000;
+  const uint32_t kExpectedAddress = 0x9000;
   const string kExpectedFunctionName("public_function");
   stabs
     .Stab(N_SECT, 1, 0, kExpectedAddress, kExpectedFunctionName);
@@ -584,9 +584,9 @@ TEST_F(Stabs, TwoPublicSymbols) {
   stabs.set_endianness(kLittleEndian);
   stabs.set_value_size(4);
 
-  const u_int32_t kExpectedAddress1 = 0xB0B0B0B0;
+  const uint32_t kExpectedAddress1 = 0xB0B0B0B0;
   const string kExpectedFunctionName1("public_function");
-  const u_int32_t kExpectedAddress2 = 0xF0F0F0F0;
+  const uint32_t kExpectedAddress2 = 0xF0F0F0F0;
   const string kExpectedFunctionName2("something else");
   stabs
     .Stab(N_SECT, 1, 0, kExpectedAddress1, kExpectedFunctionName1)

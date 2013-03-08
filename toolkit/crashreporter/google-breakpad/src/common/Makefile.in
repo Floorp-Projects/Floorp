@@ -11,14 +11,53 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= breakpad_common
 LIBRARY_NAME	= breakpad_common_s
+ifneq (WINNT,$(OS_TARGET))
 HOST_LIBRARY_NAME = host_breakpad_common_s
+endif
 
 LOCAL_INCLUDES 	= -I$(srcdir)/..
 
 CPPSRCS	= \
-  md5.cc \
   string_conversion.cc \
+  module.cc \
+  unique_string.cc \
   $(NULL)
+
+ifneq (WINNT,$(OS_TARGET))
+CPPSRCS += \
+  md5.cc \
+  dwarf/bytereader.cc \
+  dwarf_cfi_to_module.cc \
+  dwarf/dwarf2reader.cc \
+  dwarf_cu_to_module.cc \
+  language.cc \
+  dwarf/dwarf2diehandler.cc \
+  dwarf_line_to_module.cc \
+  $(NULL)
+HOST_CPPSRCS = \
+  string_conversion.cc \
+  module.cc \
+  unique_string.cc \
+  md5.cc \
+  dwarf_cfi_to_module.cc \
+  dwarf_cu_to_module.cc \
+  language.cc \
+  stabs_to_module.cc \
+  stabs_reader.cc \
+  dwarf_line_to_module.cc \
+  $(NULL)
+endif
+
+ifeq ($(OS_ARCH),Linux)
+CPPSRCS += \
+  linux/dump_symbols.cc \
+  linux/elf_symbols_to_module.cc
+endif
+
+ifeq ($(OS_ARCH),Darwin)
+CMMSRCS += \
+  mac/dump_syms.mm
+endif
 
 CSRCS = \
   convert_UTF.c \
@@ -28,19 +67,19 @@ ifeq ($(OS_TARGET),Android)
 VPATH += $(srcdir)/android
 SSRCS := breakpad_getcontext.S
 TARGET_LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/crashreporter/google-breakpad/src/common/android/include/
+DEFINES += -DNO_STABS_SUPPORT
+else
+ifneq (WINNT,$(OS_TARGET))
+CPPSRCS += \
+  stabs_to_module.cc \
+  stabs_reader.cc \
+  $(NULL)
+endif
 endif
 
-HOST_CPPSRCS = $(CPPSRCS)
-HOST_CPPSRCS += \
-  dwarf_cfi_to_module.cc \
-  dwarf_cu_to_module.cc \
-  dwarf_line_to_module.cc \
-  language.cc \
-  module.cc \
-  stabs_reader.cc \
-  stabs_to_module.cc \
-  unique_string.cc \
-  $(NULL)
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+DEFINES += -DELFSIZE=32
+endif
 
 ifdef MOZ_PLATFORM_MAEMO
 # The GCC in scratchbox crashes writing DWARF debug info for language.cc.
@@ -52,19 +91,25 @@ endif
 # This kind of sucks.
 ifeq (Linux,$(OS_ARCH))
 HOST_CXXFLAGS += -DHAVE_A_OUT_H
+OS_CXXFLAGS += -DHAVE_A_OUT_H
 endif
 ifeq (Darwin,$(OS_ARCH))
 HOST_CXXFLAGS += -DHAVE_MACH_O_NLIST_H
+OS_CXXFLAGS += -DHAVE_MACH_O_NLIST_H
 endif
 
+ifneq (WINNT,$(OS_TARGET))
 HOST_CSRCS = $(CSRCS)
+endif
 
 # need static lib
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
+ifneq (WINNT,$(OS_TARGET))
 # Headers from this directory are included as "common/header.h". Having
 # -I$(srcdir) on the command line makes us use common/memory.h when
 # <memory.h> is included from system headers, which is not intended.
 INCLUDES = $(LOCAL_INCLUDES) -I$(DIST)/include
+endif

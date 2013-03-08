@@ -1,2 +1,3 @@
 conformance/misc/type-conversion-test.html
+conformance/reading/read-pixels-test.html
 

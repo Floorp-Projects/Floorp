@@ -77,6 +77,14 @@ class JS_FRIEND_API(BaseProxyHandler) {
         return false;
     }
 
+    virtual bool finalizeInBackground(HandleValue priv) {
+        /*
+         * Called on creation of a proxy to determine whether its finalize
+         * method can be finalized on the background thread.
+         */
+        return true;
+    }
+
     /* Policy enforcement traps.
      *
      * enter() allows the policy to specify whether the caller may perform |act|

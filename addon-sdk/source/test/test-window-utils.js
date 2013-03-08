@@ -1,34 +1,34 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
-var windowUtils = require("sdk/deprecated/window-utils");
-var timer = require("sdk/timers");
-var { Cc, Ci } = require("chrome");
-var { Loader, unload } = require("sdk/test/loader");
+const windowUtils = require("sdk/deprecated/window-utils");
+const timer = require("sdk/timers");
+const { Cc, Ci } = require("chrome");
+const { Loader } = require("sdk/test/loader");
+const { open, getFrames, getWindowTitle, onFocus } = require('sdk/window/utils');
+const { close } = require('sdk/window/helpers');
+const { fromIterator: toArray } = require('sdk/util/array');
 
-function toArray(iterator) {
-  let array = [];
-  for each (let item in iterator)
-    array.push(item);
-  return array;
-}
+const WM = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
 
-function makeEmptyWindow() {
+function makeEmptyWindow(options) {
+  options = options || {};
   var xulNs = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
   var blankXul = ('<?xml version="1.0"?>' +
                   '<?xml-stylesheet href="chrome://global/skin/" ' +
                   '                 type="text/css"?>' +
                   '<window xmlns="' + xulNs + '" windowtype="test:window">' +
                   '</window>');
-  var url = "data:application/vnd.mozilla.xul+xml;charset=utf-8," + escape(blankXul);
-  var features = ["chrome", "width=10", "height=10"];
 
-  var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"]
-           .getService(Ci.nsIWindowWatcher);
-  return ww.openWindow(null, url, null, features.join(","), null);
+  return open("data:application/vnd.mozilla.xul+xml;charset=utf-8," + escape(blankXul), {
+    features: {
+      chrome: true,
+      width: 10,
+      height: 10
+    }
+  });
 }
 
 exports['test close on unload'] = function(assert) {
@@ -83,7 +83,7 @@ exports['test close on unload'] = function(assert) {
                    "window not closed again on module unload.");
 };
 
-exports['test window watcher'] = function(assert, done) {
+exports.testWindowTracker = function(assert, done) {
   var myWindow;
   var finished = false;
 
@@ -91,21 +91,23 @@ exports['test window watcher'] = function(assert, done) {
     onTrack: function(window) {
       if (window == myWindow) {
         assert.pass("onTrack() called with our test window");
-        timer.setTimeout(function() { myWindow.close(); }, 1);
+        timer.setTimeout(function() myWindow.close());
       }
     },
     onUntrack: function(window) {
       if (window == myWindow) {
         assert.pass("onUntrack() called with our test window");
         timer.setTimeout(function() {
-                           if (!finished) {
-                             finished = true;
-                             myWindow = null;
-                             wt.unload();
-                             done();
-                           } else
-                             assert.fail("finishTest() called multiple times.");
-                         }, 1);
+          if (!finished) {
+           finished = true;
+           myWindow = null;
+           wt.unload();
+           done();
+          }
+          else {
+           assert.fail("finishTest() called multiple times.");
+          }
+        });
       }
     }
   };
@@ -159,9 +161,7 @@ exports['test window watcher untracker'] = function(assert, done) {
 exports['test window watcher unregs 4 loading wins'] = function(assert, done) {
   var myWindow;
   var finished = false;
-  let browserWindow =  Cc["@mozilla.org/appshell/window-mediator;1"]
-      .getService(Ci.nsIWindowMediator)
-      .getMostRecentWindow("navigator:browser");
+  let browserWindow =  WM.getMostRecentWindow("navigator:browser");
   var counter = 0;
 
   var delegate = {
@@ -236,9 +236,8 @@ exports['test window watcher without untracker'] = function(assert, done) {
 };
 
 exports['test active window'] = function(assert, done) {
-  let browserWindow =  Cc["@mozilla.org/appshell/window-mediator;1"]
-                      .getService(Ci.nsIWindowMediator)
-                      .getMostRecentWindow("navigator:browser");
+  let browserWindow = WM.getMostRecentWindow("navigator:browser");
+  let continueAfterFocus = function(window) onFocus(window).then(nextTest);
 
   assert.equal(windowUtils.activeBrowserWindow, browserWindow,
                "Browser window is the active browser window.");
@@ -246,8 +245,7 @@ exports['test active window'] = function(assert, done) {
 
   let testSteps = [
     function() {
-      windowUtils.activeWindow = browserWindow;
-      continueAfterFocus(browserWindow);
+      continueAfterFocus(windowUtils.activeWindow = browserWindow);
     },
     function() {
       assert.equal(windowUtils.activeWindow, browserWindow,
@@ -267,49 +265,18 @@ exports['test active window'] = function(assert, done) {
     function() {
       assert.equal(windowUtils.activeBrowserWindow, browserWindow,
                        "Correct active browser window [4]");
-      browserWindow = null;
       done();
     }
   ];
 
-  let nextTest = function() {
-    let func = testSteps.shift();
-    if (func) {
-      func();
-    }
+  function nextTest() {
+    if (testSteps.length)
+      testSteps.shift()();
   }
-
-  function continueAfterFocus(targetWindow) {
-    // Based on SimpleTest.waitForFocus
-    var fm = Cc["@mozilla.org/focus-manager;1"].
-             getService(Ci.nsIFocusManager);
-
-    var childTargetWindow = {};
-    fm.getFocusedElementForWindow(targetWindow, true, childTargetWindow);
-    childTargetWindow = childTargetWindow.value;
-
-    var focusedChildWindow = {};
-    if (fm.activeWindow) {
-      fm.getFocusedElementForWindow(fm.activeWindow, true, focusedChildWindow);
-      focusedChildWindow = focusedChildWindow.value;
-    }
-
-    var focused = (focusedChildWindow == childTargetWindow);
-    if (focused) {
-      nextTest();
-    } else {
-      childTargetWindow.addEventListener("focus", function focusListener() {
-        childTargetWindow.removeEventListener("focus", focusListener, true);
-        nextTest();
-      }, true);
-    }
-
-  }
-
   nextTest();
 };
 
-exports['test windowIterator'] = function(assert, done) {
+exports.testWindowIterator = function(assert, done) {
   // make a new window
   let window = makeEmptyWindow();
 
@@ -327,17 +294,12 @@ exports['test windowIterator'] = function(assert, done) {
   window.addEventListener("load", function onload() {
     window.addEventListener("load", onload, false);
     assert.ok(toArray(windowUtils.windowIterator()).indexOf(window) !== -1,
-              "window is now in windowIterator(false)");
+              "window is now in windowIterator()");
 
     // Wait for the window unload before ending test
-    window.addEventListener("unload", function onunload() {
-      window.addEventListener("unload", onunload, false);
-      done();
-    }, false);
-    window.close();
+    close(window).then(done);
   }, false);
-}
-
+};
 
 if (require("sdk/system/xul-app").is("Fennec")) {
   module.exports = {

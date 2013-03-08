@@ -328,7 +328,6 @@ JS_FRIEND_API(JSBool)
 js_DisassembleAtPC(JSContext *cx, JSScript *scriptArg, JSBool lines,
                    jsbytecode *pc, bool showAll, Sprinter *sp)
 {
-    AssertCanGC();
     RootedScript script(cx, scriptArg);
 
     jsbytecode *next, *end;
@@ -447,7 +446,6 @@ QuoteString(Sprinter *sp, JSString *str, uint32_t quote);
 static bool
 ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
 {
-    AssertCanGC();
     if (JSVAL_IS_STRING(v)) {
         Sprinter sprinter(cx);
         if (!sprinter.init())
@@ -528,7 +526,6 @@ unsigned
 js_Disassemble1(JSContext *cx, HandleScript script, jsbytecode *pc,
                 unsigned loc, JSBool lines, Sprinter *sp)
 {
-    AssertCanGC();
     JSOp op = (JSOp)*pc;
     if (op >= JSOP_LIMIT) {
         char numBuf1[12], numBuf2[12];
@@ -1536,7 +1533,6 @@ FindStartPC(JSContext *cx, ScriptFrameIter &iter, int spindex, int skipStackHits
 static bool
 DecompileExpressionFromStack(JSContext *cx, int spindex, int skipStackHits, HandleValue v, char **res)
 {
-    AssertCanGC();
     JS_ASSERT(spindex < 0 ||
               spindex == JSDVG_IGNORE_STACK ||
               spindex == JSDVG_SEARCH_STACK);
@@ -1588,7 +1584,6 @@ char *
 js::DecompileValueGenerator(JSContext *cx, int spindex, HandleValue v,
                             HandleString fallbackArg, int skipStackHits)
 {
-    AssertCanGC();
     RootedString fallback(cx, fallbackArg);
     {
         char *result;
@@ -1683,7 +1678,6 @@ DecompileArgumentFromStack(JSContext *cx, int formalIndex, char **res)
 char *
 js::DecompileArgument(JSContext *cx, int formalIndex, HandleValue v)
 {
-    AssertCanGC();
     {
         char *result;
         if (!DecompileArgumentFromStack(cx, formalIndex, &result))

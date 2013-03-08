@@ -41,6 +41,7 @@ MOCHITEST_FILES = \
   test_resolveWorker-assignment.html \
   test_json.html \
   json_worker.js \
+  test_loadError.html \
   test_location.html \
   location_worker.js \
   test_longThread.html \

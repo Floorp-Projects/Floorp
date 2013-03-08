@@ -21,21 +21,6 @@ interface nsIDOMSVGFilterPrimitiveStandardAttributes : nsIDOMSVGElement
     readonly attribute nsIDOMSVGAnimatedString      result;
 };
 
-[scriptable, uuid(02DB0A51-087B-4EA4-ABC4-3DCAB65BFE83)]
-interface nsIDOMSVGFEBlendElement : nsIDOMSVGFilterPrimitiveStandardAttributes
-{
-    const unsigned short SVG_MODE_UNKNOWN   = 0;
-    const unsigned short SVG_MODE_NORMAL    = 1;
-    const unsigned short SVG_MODE_MULTIPLY  = 2;
-    const unsigned short SVG_MODE_SCREEN    = 3;
-    const unsigned short SVG_MODE_DARKEN    = 4;
-    const unsigned short SVG_MODE_LIGHTEN   = 5;
-
-    readonly attribute nsIDOMSVGAnimatedString        in1;
-    readonly attribute nsIDOMSVGAnimatedString        in2;
-    readonly attribute nsIDOMSVGAnimatedEnumeration   mode;
-};
-
 [scriptable, uuid(BB966D00-CF60-4696-9954-43525401E209)]
 interface nsIDOMSVGFEColorMatrixElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 {
@@ -133,26 +118,11 @@ interface nsIDOMSVGFEGaussianBlurElement : nsIDOMSVGFilterPrimitiveStandardAttri
     void setStdDeviation ( in float stdDeviationX, in float stdDeviationY );
 };
 
-[scriptable, uuid(F698E5A2-DA0E-4D6F-9F45-C57D6464ECF1)]
-interface nsIDOMSVGFEMergeElement : nsIDOMSVGFilterPrimitiveStandardAttributes
-{
-};
-
-[scriptable, uuid(517828DE-69F7-4FAB-915E-862E4F77493D)]
-interface nsIDOMSVGFEMergeNodeElement : nsIDOMSVGElement { 
-    readonly attribute nsIDOMSVGAnimatedString in1;
-};
-
 [scriptable, uuid(0BAE928A-92FE-4C5F-A8CB-DAED171FA6A2)]
 interface nsIDOMSVGFEOffsetElement : nsIDOMSVGFilterPrimitiveStandardAttributes { 
     readonly attribute nsIDOMSVGAnimatedString in1;
     readonly attribute nsIDOMSVGAnimatedNumber dx;
     readonly attribute nsIDOMSVGAnimatedNumber dy;
-};
-
-[scriptable, uuid(F1635489-F34F-4554-8284-C848500FE0DD)]
-interface nsIDOMSVGFEFloodElement : nsIDOMSVGFilterPrimitiveStandardAttributes
-{
 };
 
 [scriptable, uuid(C587EFE9-0A22-44E6-9964-B68DA564804A)]
@@ -265,16 +235,6 @@ interface nsIDOMSVGFESpotLightElement : nsIDOMSVGElement {
   readonly attribute nsIDOMSVGAnimatedNumber pointsAtZ;
   readonly attribute nsIDOMSVGAnimatedNumber specularExponent;
   readonly attribute nsIDOMSVGAnimatedNumber limitingConeAngle;
-};
-
-[scriptable, uuid(6457A423-0686-486F-AB12-846B9542DFCF)]
-interface nsIDOMSVGFEImageElement : nsIDOMSVGFilterPrimitiveStandardAttributes
-/*
-  nsIDOMSVGURIReference,
-  nsIDOMSVGLangSpace,
-  nsIDOMSVGExternalResourcesRequired
-*/
-{
 };
 
 [scriptable, uuid(9B82CB0B-004D-4F26-BF3C-4E2BD4E1E82C)]

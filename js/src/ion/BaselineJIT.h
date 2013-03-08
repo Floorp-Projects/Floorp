@@ -233,7 +233,7 @@ struct BaselineScript
     // Toggle debug traps (used for breakpoints and step mode) in the script.
     // If |pc| is NULL, toggle traps for all ops in the script. Else, only
     // toggle traps at |pc|.
-    void toggleDebugTraps(UnrootedScript script, jsbytecode *pc);
+    void toggleDebugTraps(RawScript script, jsbytecode *pc);
 
     static size_t offsetOfFlags() {
         return offsetof(BaselineScript, flags_);
@@ -255,7 +255,7 @@ IonExecStatus
 EnterBaselineAtBranch(JSContext *cx, StackFrame *fp, jsbytecode *pc);
 
 void
-FinishDiscardBaselineScript(FreeOp *fop, UnrootedScript script);
+FinishDiscardBaselineScript(FreeOp *fop, RawScript script);
 
 void
 SizeOfBaselineData(JSScript *script, JSMallocSizeOfFun mallocSizeOf, size_t *data,

@@ -69,14 +69,17 @@ Assert.prototype = {
       return;
     }
     let message = e.message;
-    if ('operator' in e) {
-      message += [
-        " -",
-        source(e.expected),
-        e.operator,
-        source(e.actual)
-      ].join(" ");
+    try {
+      if ('operator' in e) {
+        message += [
+          " -",
+          source(e.expected),
+          e.operator,
+          source(e.actual)
+        ].join(" ");
+      }
     }
+    catch(e) {}
     this._log.fail(message);
   },
   pass: function pass(message) {

@@ -1,4 +1,0 @@
-locale mozapps te-st chrome # locale
-locale browser te-st chrome # duplicate locale
-locale browser te-st-a chrome # second locale
-locale branding te-st-3 chrome # wrong component

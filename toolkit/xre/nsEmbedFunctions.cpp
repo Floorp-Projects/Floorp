@@ -726,7 +726,7 @@ XRE_SendTestShellCommand(JSContext* aCx,
         tsp->SendPTestShellCommandConstructor(command));
     NS_ENSURE_TRUE(callback, false);
 
-    jsval callbackVal = *reinterpret_cast<jsval*>(aCallback);
+    JS::Value callbackVal = *reinterpret_cast<JS::Value*>(aCallback);
     NS_ENSURE_TRUE(callback->SetCallback(aCx, callbackVal), false);
 
     return true;

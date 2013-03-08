@@ -124,7 +124,7 @@ Bindings::initWithTemporaryStorage(JSContext *cx, InternalBindingsHandle self,
 
         StackBaseShape base(&CallClass, cx->global(), BaseShape::VAROBJ | BaseShape::DELEGATE);
 
-        UnrootedUnownedBaseShape nbase = BaseShape::getUnowned(cx, base);
+        RawUnownedBaseShape nbase = BaseShape::getUnowned(cx, base);
         if (!nbase)
             return false;
 
@@ -133,9 +133,8 @@ Bindings::initWithTemporaryStorage(JSContext *cx, InternalBindingsHandle self,
                          (bi->kind() == CONSTANT ? JSPROP_READONLY : 0);
         unsigned frameIndex = bi.frameIndex();
         StackShape child(nbase, id, slot++, 0, attrs, Shape::HAS_SHORTID, frameIndex);
-        DropUnrooted(nbase);
 
-        UnrootedShape shape = self->callObjShape_->getChildBinding(cx, child);
+        RawShape shape = self->callObjShape_->getChildBinding(cx, child);
         if (!shape)
             return false;
 
@@ -867,7 +866,7 @@ JSScript::initScriptCounts(JSContext *cx)
     return true;
 }
 
-static inline ScriptCountsMap::Ptr GetScriptCountsMapEntry(UnrootedScript script)
+static inline ScriptCountsMap::Ptr GetScriptCountsMapEntry(RawScript script)
 {
     JS_ASSERT(script->hasScriptCounts);
     ScriptCountsMap *map = script->compartment()->scriptCountsMap;
@@ -1694,14 +1693,14 @@ ScriptDataSize(uint32_t nbindings, uint32_t nobjects, uint32_t nregexps,
     return size;
 }
 
-UnrootedScript
+RawScript
 JSScript::Create(JSContext *cx, HandleObject enclosingScope, bool savedCallerFun,
                  const CompileOptions &options, unsigned staticLevel,
                  ScriptSource *ss, uint32_t bufStart, uint32_t bufEnd)
 {
     RootedScript script(cx, js_NewGCScript(cx));
     if (!script)
-        return UnrootedScript(NULL);
+        return NULL;
 
     PodZero(script.get());
     new (&script->bindings) Bindings;
@@ -1732,7 +1731,7 @@ JSScript::Create(JSContext *cx, HandleObject enclosingScope, bool savedCallerFun
     // never trigger.  Oh well.
     if (staticLevel > UINT16_MAX) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TOO_DEEP, js_function_str);
-        return UnrootedScript(NULL);
+        return NULL;
     }
     script->staticLevel = uint16_t(staticLevel);
 
@@ -2016,7 +2015,6 @@ JSScript::enclosingScriptsCompiledSuccessfully() const
 void
 js::CallNewScriptHook(JSContext *cx, HandleScript script, HandleFunction fun)
 {
-    AssertCanGC();
     JS_ASSERT(!script->isActiveEval);
     if (JSNewScriptHook hook = cx->runtime->debugHooks.newScriptHook) {
         AutoKeepAtoms keep(cx->runtime);
@@ -2262,7 +2260,6 @@ js_GetScriptLineExtent(RawScript script)
 unsigned
 js::CurrentLine(JSContext *cx)
 {
-    AutoAssertNoGC nogc;
     return PCToLineNumber(cx->fp()->script(), cx->regs().pc);
 }
 
@@ -2270,7 +2267,6 @@ void
 js::CurrentScriptFileLineOriginSlow(JSContext *cx, const char **file, unsigned *linenop,
                                     JSPrincipals **origin)
 {
-    AutoAssertNoGC nogc;
     NonBuiltinScriptFrameIter iter(cx);
 
     if (iter.done()) {
@@ -2280,7 +2276,7 @@ js::CurrentScriptFileLineOriginSlow(JSContext *cx, const char **file, unsigned *
         return;
     }
 
-    UnrootedScript script = iter.script();
+    RawScript script = iter.script();
     *file = script->filename;
     *linenop = PCToLineNumber(iter.script(), iter.pc());
     *origin = script->originPrincipals;
@@ -2294,11 +2290,9 @@ Rebase(RawScript dst, RawScript src, T *srcp)
     return reinterpret_cast<T *>(dst->data + off);
 }
 
-UnrootedScript
+RawScript
 js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript src)
 {
-    AssertCanGC();
-
     /* NB: Keep this in sync with XDRScript. */
 
     uint32_t nconsts   = src->hasConsts()   ? src->consts()->length   : 0;
@@ -2311,7 +2305,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     size_t size = src->dataSize;
     uint8_t *data = AllocScriptData(cx, size);
     if (!data)
-        return UnrootedScript(NULL);
+        return NULL;
 
     /* Bindings */
 
@@ -2319,7 +2313,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     InternalHandle<Bindings*> bindingsHandle =
         InternalHandle<Bindings*>::fromMarkedLocation(bindings.address());
     if (!Bindings::clone(cx, bindingsHandle, data, src))
-        return UnrootedScript(NULL);
+        return NULL;
 
     /* Objects */
 
@@ -2360,7 +2354,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
                 clone = CloneObjectLiteral(cx, cx->global(), obj);
             }
             if (!clone || !objects.append(clone))
-                return UnrootedScript(NULL);
+                return NULL;
         }
     }
 
@@ -2372,7 +2366,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
         for (unsigned i = 0; i < nregexps; i++) {
             RawObject clone = CloneScriptRegExpObject(cx, vector[i]->asRegExp());
             if (!clone || !regexps.append(clone))
-                return UnrootedScript(NULL);
+                return NULL;
         }
     }
 
@@ -2390,9 +2384,8 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
                                           src->scriptSource(), src->sourceStart, src->sourceEnd));
     if (!dst) {
         js_free(data);
-        return UnrootedScript(NULL);
+        return NULL;
     }
-    AutoAssertNoGC nogc;
 
     dst->bindings = bindings;
 
@@ -2841,7 +2834,6 @@ js::SetFrameArgumentsObject(JSContext *cx, AbstractFramePtr frame,
 /* static */ bool
 JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
 {
-    AssertCanGC();
     JS_ASSERT(script->function());
     JS_ASSERT(script->analyzedArgsUsage());
     JS_ASSERT(script->argumentsHasVarBinding());

@@ -8,8 +8,9 @@ const { Tab } = require('../tabs/tab');
 const { browserWindows } = require('./fennec');
 const { windowNS } = require('../window/namespace');
 const { tabsNS, tabNS } = require('../tabs/namespace');
-const { openTab, getTabs, getSelectedTab } = require('../tabs/utils');
+const { openTab, getTabs, getSelectedTab, getTabForBrowser: getRawTabForBrowser } = require('../tabs/utils');
 const { Options } = require('../tabs/common');
+const { getTabForBrowser, getTabForRawTab } = require('../tabs/helpers');
 const { on, once, off, emit } = require('../event/core');
 const { method } = require('../lang/functional');
 const { EVENTS } = require('../tabs/events');
@@ -41,9 +42,6 @@ const Tabs = Class({
 
     // TabSelect
     window.BrowserApp.deck.addEventListener(EVENTS.activate.dom, onTabSelect, false);
-
-    // TabClose
-    window.BrowserApp.deck.addEventListener(EVENTS.close.dom, onTabClose, false);
   },
   get activeTab() {
     return getTabForRawTab(getSelectedTab(tabsNS(this).window));
@@ -92,7 +90,6 @@ function tabsUnloader(event, window) {
     return;
   window.BrowserApp.deck.removeEventListener(EVENTS.open.dom, onTabOpen, false);
   window.BrowserApp.deck.removeEventListener(EVENTS.activate.dom, onTabSelect, false);
-  window.BrowserApp.deck.removeEventListener(EVENTS.close.dom, onTabClose, false);
 }
 
 // unload handler
@@ -112,20 +109,6 @@ function removeTab(tab) {
   return tab;
 }
 
-function getTabForBrowser(browser) {
-  return getTabForRawTab(getRawTabForBrowser(browser));
-}
-
-function getRawTabForBrowser(browser) {
-  let tabs = mainWindow.BrowserApp.tabs;
-  for (let i = 0; i < tabs.length; i++) {
-    let tab = tabs[i];
-    if (tab.browser === browser)
-      return tab
-  }
-  return null;
-}
-
 // TabOpen
 function onTabOpen(event) {
   let browser = event.target;
@@ -140,18 +123,12 @@ function onTabOpen(event) {
 
   tabNS(tab).opened = true;
 
-    // TabReady
-  let onReady = tabNS(tab).onReady = onTabReady.bind(tab);
-  browser.addEventListener(EVENTS.ready.dom, onReady, false);
+  tab.on('ready', function() emit(gTabs, 'ready', tab));
+  tab.once('close', onTabClose);
 
   emit(tab, 'open', tab);
   emit(gTabs, 'open', tab);
 };
-
-function onTabReady() {
-  emit(this, 'ready', this);
-  emit(gTabs, 'ready', this);
-}
 
 // TabSelect
 function onTabSelect(event) {
@@ -168,28 +145,7 @@ function onTabSelect(event) {
 };
 
 // TabClose
-function onTabClose(event) {
-  let tab = getTabForBrowser(event.target);
+function onTabClose(tab) {
   removeTab(tab);
-
-  emit(gTabs, 'close', tab);
-  emit(tab, 'close', tab);
+  emit(gTabs, EVENTS.close.name, tab);
 };
-
-function getTabForRawTab(rawTab) {
-  for each (let tab in gTabs) {
-    if (tabNS(tab).tab === rawTab)
-      return tab;
-  }
-  return null;
-}
-
-unload(function() {
-  for each (let tab in gTabs) {
-    let tabInternals = tabNS(tab);
-    tabInternals.tab.browser.removeEventListener(EVENTS.ready.dom, tabInternals.onReady, false);
-    tabInternals.onReady = null;
-    tabInternals.tab = null;
-    tabInternals.window = null;
-  }
-});

@@ -21,13 +21,20 @@ function NSSDialogs() { }
 
 NSSDialogs.prototype = {
   classID: Components.ID("{cbc08081-49b6-4561-9c18-a7707a50bda1}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsICertificateDialogs]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsICertificateDialogs, Ci.nsIClientAuthDialogs]),
 
   getString: function(aName) {
     if (!this.bundle) {
         this.bundle = Services.strings.createBundle("chrome://browser/locale/pippki.properties");
     }
     return this.bundle.GetStringFromName(aName);
+  },
+
+  formatString: function(aName, argList) {
+    if (!this.bundle) {
+      this.bundle = Services.strings.createBundle("chrome://browser/locale/pippki.properties");
+    }
+    return this.bundle.formatStringFromName(aName, argList, 1);
   },
 
   showPrompt: function(aTitle, aText, aButtons, aInputs) {
@@ -129,6 +136,62 @@ NSSDialogs.prototype = {
     // this dialog is never shown in Fennec; in Desktop it is shown after importing a CRL
     // via Preferences->Advanced->Encryption->Revocation Lists->Import.
     throw "Unimplemented";
+  },
+
+  viewCertDetails: function(details) {
+    this.showPrompt(this.getString("clientAuthAsk.message3"),
+                    '',
+                    [ this.getString("nssdialogs.ok.label") ],
+                    [ { type: "label", label: details
+                      }
+                    ]);
+  },
+
+  ChooseCertificate: function(aCtx, cn, organization, issuer, certNickList, certDetailsList, count, selectedIndex, canceled) {
+    let rememberSetting = true;
+    var pref = Cc['@mozilla.org/preferences-service;1']
+               .getService(Components.interfaces.nsIPrefService);
+    if (pref) {
+      pref = pref.getBranch(null);
+      try {
+        rememberSetting = pref.getBoolPref("security.remember_cert_checkbox_default_setting");
+      } catch (e) {
+        // pref is missing
+      }
+    }
+
+    let organizationString = this.formatString("clientAuthAsk.organization",
+                                               [organization]);
+    let issuerString = this.formatString("clientAuthAsk.issuer",
+                                         [issuer]);
+    let serverRequestedDetails = cn + '<br/>' + organizationString + '<br/>' + issuerString;
+
+    selectedIndex = 0;
+    while (true) {
+      let response = this.showPrompt(this.getString("clientAuthAsk.title"),
+                                     this.getString("clientAuthAsk.message1"),
+                                     [ this.getString("nssdialogs.ok.label"),
+                                       this.getString("clientAuthAsk.viewCert.label"),
+                                       this.getString("nssdialogs.cancel.label")
+                                     ],
+                                     [ { type: "label", id: "requestedDetails", label: serverRequestedDetails },
+                                       { type: "menulist", id: "nicknames", label: this.getString("clientAuthAsk.message2"), values: certNickList, selected: selectedIndex },
+                                       { type: "checkbox", id: "rememberBox", label: this.getString("clientAuthAsk.remember.label"), checked: rememberSetting },
+                                     ]);
+      selectedIndex = response.nicknames;
+      if (response.button == 1) {
+        this.viewCertDetails(certDetailsList[selectedIndex]);
+        continue;
+      } else if (response.button == 0) {
+        canceled.value = false;
+        if (response.rememberBox == "true") {
+          aCtx.QueryInterface(Ci.nsIClientAuthUserDecision).rememberClientAuthCertificate = true;
+        }
+        return true;
+      }
+      canceled.value = true;
+      return false;
+    }
   }
 };
 

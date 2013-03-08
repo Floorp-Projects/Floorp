@@ -4,8 +4,7 @@
 
 """This routine controls which localizable files and entries are
 reported and l10n-merged.
-It's common to all of mobile, mobile/android and mobile/xul, so
-those three versions need to stay in sync.
+This needs to stay in sync with the copy in mobile/locales.
 """
 
 def test(mod, path, entity = None):
@@ -13,14 +12,13 @@ def test(mod, path, entity = None):
   # ignore anything but mobile, which is our local repo checkout name
   if mod not in ("netwerk", "dom", "toolkit", "security/manager",
                  "services/sync", "mobile",
-                 "mobile/android/base",  "mobile/android",
-                 "mobile/xul"):
+                 "mobile/android/base",  "mobile/android"):
     return "ignore"
 
-  if mod not in ("mobile", "mobile/android", "mobile/xul"):
+  if mod not in ("mobile", "mobile/android"):
     # we only have exceptions for mobile*
     return "error"
-  if mod in ("mobile/android", "mobile/xul"):
+  if mod == "mobile/android":
     if not entity:
       if (re.match(r"mobile-l10n.js", path) or
           re.match(r"defines.inc", path)):

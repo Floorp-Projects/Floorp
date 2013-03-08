@@ -23,11 +23,12 @@ namespace CSF
     };
     typedef std::map<int, StreamInfo> StreamMapType;
 
-    DECLARE_PTR(CC_SIPCCCallMediaData);
+    DECLARE_NS_PTR(CC_SIPCCCallMediaData);
 
     class CC_SIPCCCallMediaData
 	{
 	public:
+        NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CC_SipCCCAllMediaData)
 		CC_SIPCCCallMediaData():
           remoteWindow(NULL),
           streamMapMutex("CC_SIPCCCallMediaData"),
@@ -54,7 +55,7 @@ namespace CSF
         CC_SIPCCCallMediaData& operator=(const CC_SIPCCCallMediaData&);
 	};
 
-	DECLARE_PTR(CC_SIPCCCall);
+	DECLARE_NS_PTR(CC_SIPCCCall);
     class CC_SIPCCCall : public CC_Call
     {
 

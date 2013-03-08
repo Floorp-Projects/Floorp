@@ -4,6 +4,8 @@
 
 from marionette_test import MarionetteTestCase
 from errors import JavascriptException, MarionetteException, ScriptTimeoutException
+import time
+
 
 class TestExecuteAsyncContent(MarionetteTestCase):
     def setUp(self):
@@ -22,6 +24,7 @@ class TestExecuteAsyncContent(MarionetteTestCase):
     def test_execute_async_unique_timeout(self):
         self.assertEqual(2, self.marionette.execute_async_script("setTimeout(function() {marionetteScriptFinished(2);}, 2000);", script_timeout=5000))
         self.assertRaises(ScriptTimeoutException, self.marionette.execute_async_script, "setTimeout(function() {marionetteScriptFinished(3);}, 2000);")
+        time.sleep(3) # XXX: bug 837137
 
     def test_no_timeout(self):
         self.marionette.set_script_timeout(10000)

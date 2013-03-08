@@ -84,7 +84,7 @@ static const char kOutputSeparator = '|';
 // of registers is completely printed, regardless of the number of calls
 // to PrintRegister.
 static const int kMaxWidth = 80;  // optimize for an 80-column terminal
-static int PrintRegister(const char *name, u_int32_t value, int start_col) {
+static int PrintRegister(const char *name, uint32_t value, int start_col) {
   char buffer[64];
   snprintf(buffer, sizeof(buffer), " %5s = 0x%08x", name, value);
 
@@ -98,7 +98,7 @@ static int PrintRegister(const char *name, u_int32_t value, int start_col) {
 }
 
 // PrintRegister64 does the same thing, but for 64-bit registers.
-static int PrintRegister64(const char *name, u_int64_t value, int start_col) {
+static int PrintRegister64(const char *name, uint64_t value, int start_col) {
   char buffer[64];
   snprintf(buffer, sizeof(buffer), " %5s = 0x%016" PRIx64 , name, value);
 
@@ -144,7 +144,7 @@ static void PrintStack(const CallStack *stack, const string &cpu) {
     const StackFrame *frame = stack->frames()->at(frame_index);
     printf("%2d  ", frame_index);
 
-    u_int64_t instruction_address = frame->ReturnAddress();
+    uint64_t instruction_address = frame->ReturnAddress();
 
     if (frame->module) {
       printf("%s", PathnameStripper::File(frame->module->code_file()).c_str());
@@ -288,7 +288,7 @@ static void PrintStackMachineReadable(int thread_num, const CallStack *stack) {
     printf("%d%c%d%c", thread_num, kOutputSeparator, frame_index,
            kOutputSeparator);
 
-    u_int64_t instruction_address = frame->ReturnAddress();
+    uint64_t instruction_address = frame->ReturnAddress();
 
     if (frame->module) {
       assert(!frame->module->code_file().empty());
@@ -333,14 +333,58 @@ static void PrintStackMachineReadable(int thread_num, const CallStack *stack) {
   }
 }
 
-static void PrintModules(const CodeModules *modules) {
+// ContainsModule checks whether a given |module| is in the vector
+// |modules_without_symbols|.
+static bool ContainsModule(
+    const vector<const CodeModule*> *modules,
+    const CodeModule *module) {
+  assert(modules);
+  assert(module);
+  vector<const CodeModule*>::const_iterator iter;
+  for (iter = modules->begin(); iter != modules->end(); ++iter) {
+    if (module->debug_file().compare((*iter)->debug_file()) == 0 &&
+        module->debug_identifier().compare((*iter)->debug_identifier()) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// PrintModule prints a single |module| to stdout.
+// |modules_without_symbols| should contain the list of modules that were
+// confirmed to be missing their symbols during the stack walk.
+static void PrintModule(
+    const CodeModule *module,
+    const vector<const CodeModule*> *modules_without_symbols,
+    uint64_t main_address) {
+  string missing_symbols;
+  if (ContainsModule(modules_without_symbols, module)) {
+    missing_symbols = "  (WARNING: No symbols, " +
+        PathnameStripper::File(module->debug_file()) + ", " +
+        module->debug_identifier() + ")";
+  }
+  uint64_t base_address = module->base_address();
+  printf("0x%08" PRIx64 " - 0x%08" PRIx64 "  %s  %s%s%s\n",
+         base_address, base_address + module->size() - 1,
+         PathnameStripper::File(module->code_file()).c_str(),
+         module->version().empty() ? "???" : module->version().c_str(),
+         main_address != 0 && base_address == main_address ? "  (main)" : "",
+         missing_symbols.c_str());
+}
+
+// PrintModules prints the list of all loaded |modules| to stdout.
+// |modules_without_symbols| should contain the list of modules that were
+// confirmed to be missing their symbols during the stack walk.
+static void PrintModules(
+    const CodeModules *modules,
+    const vector<const CodeModule*> *modules_without_symbols) {
   if (!modules)
     return;
 
   printf("\n");
   printf("Loaded modules:\n");
 
-  u_int64_t main_address = 0;
+  uint64_t main_address = 0;
   const CodeModule *main_module = modules->GetMainModule();
   if (main_module) {
     main_address = main_module->base_address();
@@ -351,13 +395,7 @@ static void PrintModules(const CodeModules *modules) {
        module_sequence < module_count;
        ++module_sequence) {
     const CodeModule *module = modules->GetModuleAtSequence(module_sequence);
-    u_int64_t base_address = module->base_address();
-    printf("0x%08" PRIx64 " - 0x%08" PRIx64 "  %s  %s%s\n",
-           base_address, base_address + module->size() - 1,
-           PathnameStripper::File(module->code_file()).c_str(),
-           module->version().empty() ? "???" : module->version().c_str(),
-           main_module != NULL && base_address == main_address ?
-               "  (main)" : "");
+    PrintModule(module, modules_without_symbols, main_address);
   }
 }
 
@@ -370,7 +408,7 @@ static void PrintModulesMachineReadable(const CodeModules *modules) {
   if (!modules)
     return;
 
-  u_int64_t main_address = 0;
+  uint64_t main_address = 0;
   const CodeModule *main_module = modules->GetMainModule();
   if (main_module) {
     main_address = main_module->base_address();
@@ -381,7 +419,7 @@ static void PrintModulesMachineReadable(const CodeModules *modules) {
        module_sequence < module_count;
        ++module_sequence) {
     const CodeModule *module = modules->GetModuleAtSequence(module_sequence);
-    u_int64_t base_address = module->base_address();
+    uint64_t base_address = module->base_address();
     printf("Module%c%s%c%s%c%s%c%s%c0x%08" PRIx64 "%c0x%08" PRIx64 "%c%d\n",
            kOutputSeparator,
            StripSeparator(PathnameStripper::File(module->code_file())).c_str(),
@@ -449,7 +487,8 @@ static void PrintProcessState(const ProcessState& process_state) {
     }
   }
 
-  PrintModules(process_state.modules());
+  PrintModules(process_state.modules(),
+               process_state.modules_without_symbols());
 }
 
 static void PrintProcessStateMachineReadable(const ProcessState& process_state)

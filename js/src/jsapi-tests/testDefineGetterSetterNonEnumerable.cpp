@@ -18,22 +18,22 @@ static const char PROPERTY_NAME[] = "foo";
 
 BEGIN_TEST(testDefineGetterSetterNonEnumerable)
 {
-    js::RootedValue vobj(cx);
-    js::RootedObject obj(cx, JS_NewObject(cx, NULL, NULL, NULL));
+    JS::RootedValue vobj(cx);
+    JS::RootedObject obj(cx, JS_NewObject(cx, NULL, NULL, NULL));
     CHECK(obj);
     vobj = OBJECT_TO_JSVAL(obj);
 
     JSFunction *funGet = JS_NewFunction(cx, native, 0, 0, NULL, "get");
     CHECK(funGet);
-    js::RootedObject funGetObj(cx, JS_GetFunctionObject(funGet));
-    js::RootedValue vget(cx, OBJECT_TO_JSVAL(funGetObj));
+    JS::RootedObject funGetObj(cx, JS_GetFunctionObject(funGet));
+    JS::RootedValue vget(cx, OBJECT_TO_JSVAL(funGetObj));
 
     JSFunction *funSet = JS_NewFunction(cx, native, 1, 0, NULL, "set");
     CHECK(funSet);
-    js::RootedObject funSetObj(cx, JS_GetFunctionObject(funSet));
-    js::RootedValue vset(cx, OBJECT_TO_JSVAL(funSetObj));
+    JS::RootedObject funSetObj(cx, JS_GetFunctionObject(funSet));
+    JS::RootedValue vset(cx, OBJECT_TO_JSVAL(funSetObj));
 
-    js::RootedObject vObject(cx, JSVAL_TO_OBJECT(vobj));
+    JS::RootedObject vObject(cx, JSVAL_TO_OBJECT(vobj));
     CHECK(JS_DefineProperty(cx, vObject, PROPERTY_NAME,
                             JSVAL_VOID,
                             JS_DATA_TO_FUNC_PTR(JSPropertyOp, (JSObject*) funGetObj),

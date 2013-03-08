@@ -7,7 +7,9 @@ const { Loader } = require('sdk/test/loader');
 const { browserWindows } = require('sdk/windows');
 const tabs = require('sdk/tabs');
 const { isPrivate } = require('sdk/private-browsing');
-const { isWindowPBSupported, isTabPBSupported } = require('sdk/private-browsing/utils');
+const { openDialog } = require('sdk/window/utils');
+const pbUtils = require('sdk/private-browsing/utils');
+const { isWindowPrivate } = require('sdk/window/utils');
 
 const URL = 'data:text/html;charset=utf-8,<html><head><title>#title#</title></head></html>';
 
@@ -299,7 +301,7 @@ exports.testTabContentTypeAndReload = function(test) {
   });
 };
 
-// test that it is possible to open a private tab
+// test that it isn't possible to open a private tab without the private permission
 exports.testTabOpenPrivate = function(test) {
   test.waitUntilDone();
 
@@ -309,11 +311,44 @@ exports.testTabOpenPrivate = function(test) {
     isPrivate: true,
     onReady: function(tab) {
       test.assertEqual(tab.url, url, 'opened correct tab');
-      test.assertEqual(isPrivate(tab), false, 'private tabs arenot supported by default');
+      test.assertEqual(isPrivate(tab), false, 'private tabs are not supported by default');
 
       tab.close(function() {
         test.done();
       });
     }
+  });
+}
+
+// We need permission flag in order to see private window's tabs
+exports.testPrivateAreNotListed = function (test) {
+  test.waitUntilDone();
+  let originalTabCount = tabs.length;
+
+  let win = openDialog({
+    private: true
+  });
+
+  win.addEventListener("load", function onload() {
+    win.removeEventListener("load", onload);
+
+    // PWPB case
+    if (pbUtils.isWindowPBSupported) {
+      test.assert(isWindowPrivate(win), "window is private");
+      test.assertEqual(tabs.length, originalTabCount,
+                       'New private window\'s tab isn\'t visible in tabs list');
+    }
+    else {
+    // Global case, openDialog didn't opened a private window/tab
+      test.assert(!isWindowPrivate(win), "window is private");
+      test.assertEqual(tabs.length, originalTabCount + 1,
+                       'New non-private window\'s tab is visible in tabs list');
+    }
+
+    win.addEventListener("unload", function onunload() {
+      win.removeEventListener('unload', onunload);
+      test.done();
+    });
+    win.close();
   });
 }

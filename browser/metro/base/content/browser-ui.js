@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+Cu.import("resource://gre/modules/PageThumbs.jsm");
+
 /**
  * Constants
  */
@@ -83,6 +85,7 @@ var BrowserUI = {
 
     messageManager.addMessageListener("Browser:OpenURI", this);
     messageManager.addMessageListener("Browser:SaveAs:Return", this);
+    messageManager.addMessageListener("Content:StateChange", this);
 
     // listening escape to dismiss dialog on VK_ESCAPE
     window.addEventListener("keypress", this, true);
@@ -102,6 +105,7 @@ var BrowserUI = {
       StartUI.show();
     }
     FlyoutPanelsUI.init();
+    PageThumbs.init();
 
     // show the right toolbars, awesomescreen, etc for the os viewstate
     BrowserUI._adjustDOMforViewState();
@@ -195,6 +199,8 @@ var BrowserUI = {
     StartUI.uninit();
     Downloads.uninit();
     SettingsCharm.uninit();
+    messageManager.removeMessageListener("Content:StateChange", this);
+    PageThumbs.uninit();
   },
 
 
@@ -805,9 +811,87 @@ var BrowserUI = {
         //Browser.addTab(json.uri, json.bringFront, Browser.selectedTab, { referrerURI: referrerURI });
         this.goToURI(json.uri);
         break;
+      case "Content:StateChange":
+        let currBrowser = Browser.selectedBrowser;
+        if (this.shouldCaptureThumbnails(currBrowser)) {
+          PageThumbs.captureAndStore(currBrowser);
+          let currPage = currBrowser.currentURI.spec;
+          Services.obs.notifyObservers(null, "Metro:RefreshTopsiteThumbnail", currPage);
+        }
+        break;
     }
 
     return {};
+  },
+
+  // Private Browsing is not supported on metro at this time, when it is added
+  //  this function must be updated to skip capturing those pages
+  shouldCaptureThumbnails: function shouldCaptureThumbnails(aBrowser) {
+    // Capture only if it's the currently selected tab.
+    if (aBrowser != Browser.selectedBrowser) {
+      return false;
+    }
+    // FIXME Bug 720575 - Don't capture thumbnails for SVG or XML documents as
+    //       that currently regresses Talos SVG tests.
+    let doc = aBrowser.contentDocument;
+    if (doc instanceof SVGDocument || doc instanceof XMLDocument) {
+      return false;
+    }
+
+    // There's no point in taking screenshot of loading pages.
+    if (aBrowser.docShell.busyFlags != Ci.nsIDocShell.BUSY_FLAGS_NONE) {
+      return false;
+    }
+
+    // Don't take screenshots of about: pages.
+    if (aBrowser.currentURI.schemeIs("about")) {
+      return false;
+    }
+
+    // No valid document channel. We shouldn't take a screenshot.
+    let channel = aBrowser.docShell.currentDocumentChannel;
+    if (!channel) {
+      return false;
+    }
+
+    // Don't take screenshots of internally redirecting about: pages.
+    // This includes error pages.
+    let uri = channel.originalURI;
+    if (uri.schemeIs("about")) {
+      return false;
+    }
+
+    // http checks
+    let httpChannel;
+    try {
+      httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
+    } catch (e) { /* Not an HTTP channel. */ }
+
+    if (httpChannel) {
+      // Continue only if we have a 2xx status code.
+      try {
+        if (Math.floor(httpChannel.responseStatus / 100) != 2) {
+          return false;
+        }
+      } catch (e) {
+        // Can't get response information from the httpChannel
+        // because mResponseHead is not available.
+        return false;
+      }
+
+      // Cache-Control: no-store.
+      if (httpChannel.isNoStoreResponse()) {
+        return false;
+      }
+
+      // Desktop has a pref that allows users to override this. We do not
+      //   support that pref currently
+      if (uri.schemeIs("https")) {
+        return false;
+      }
+    }
+
+    return true;
   },
 
   supportsCommand : function(cmd) {

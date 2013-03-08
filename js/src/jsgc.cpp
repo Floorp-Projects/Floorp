@@ -282,6 +282,12 @@ ArenaHeader::checkSynchronizedWithFreeList() const
      */
     JS_ASSERT(firstSpan.isSameNonEmptySpan(list));
 }
+
+bool
+js::gc::Cell::isTenured() const
+{
+    return true;
+}
 #endif
 
 /* static */ void
@@ -1618,7 +1624,7 @@ js::InitTracer(JSTracer *trc, JSRuntime *rt, JSTraceCallback callback)
     trc->debugPrinter = NULL;
     trc->debugPrintArg = NULL;
     trc->debugPrintIndex = size_t(-1);
-    trc->eagerlyTraceWeakMaps = true;
+    trc->eagerlyTraceWeakMaps = TraceWeakMapValues;
 #ifdef JS_GC_ZEAL
     trc->realLocation = NULL;
 #endif
@@ -1697,7 +1703,7 @@ GCMarker::start()
      * The GC is recomputing the liveness of WeakMap entries, so we delay
      * visting entries.
      */
-    eagerlyTraceWeakMaps = JS_FALSE;
+    eagerlyTraceWeakMaps = DoNotTraceWeakMaps;
 }
 
 void
@@ -4329,7 +4335,7 @@ static JS_NEVER_INLINE void
 GCCycle(JSRuntime *rt, bool incremental, int64_t budget, JSGCInvocationKind gckind, gcreason::Reason reason)
 {
     /* If we attempt to invoke the GC while we are running in the GC, assert. */
-    AutoAssertNoGC nogc;
+    JS_ASSERT(!rt->isHeapBusy());
 
 #ifdef DEBUG
     for (ZonesIter zone(rt); !zone.done(); zone.next())
@@ -4509,14 +4515,12 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
 void
 js::GC(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason)
 {
-    AssertCanGC();
     Collect(rt, false, SliceBudget::Unlimited, gckind, reason);
 }
 
 void
 js::GCSlice(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason, int64_t millis)
 {
-    AssertCanGC();
     int64_t sliceBudget;
     if (millis)
         sliceBudget = SliceBudget::TimeBudget(millis);
@@ -4531,7 +4535,6 @@ js::GCSlice(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason, i
 void
 js::GCFinalSlice(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason)
 {
-    AssertCanGC();
     Collect(rt, true, SliceBudget::Unlimited, gckind, reason);
 }
 
@@ -4548,7 +4551,6 @@ ZonesSelected(JSRuntime *rt)
 void
 js::GCDebugSlice(JSRuntime *rt, bool limit, int64_t objCount)
 {
-    AssertCanGC();
     int64_t budget = limit ? SliceBudget::WorkBudget(objCount) : SliceBudget::Unlimited;
     if (!ZonesSelected(rt)) {
         if (IsIncrementalGCInProgress(rt))

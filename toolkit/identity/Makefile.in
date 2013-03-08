@@ -13,7 +13,6 @@ FAIL_ON_WARNINGS := 1
 
 MODULE = identity
 MODULE_NAME = identity
-XPIDL_MODULE = identity
 LIBRARY_NAME = identity
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1

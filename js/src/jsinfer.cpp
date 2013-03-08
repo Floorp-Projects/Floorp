@@ -585,7 +585,7 @@ class TypeConstraintProp : public TypeConstraint
     /* Property being accessed. This is unrooted. */
     RawId id;
 
-    TypeConstraintProp(UnrootedScript script, jsbytecode *pc, StackTypeSet *target, RawId id)
+    TypeConstraintProp(RawScript script, jsbytecode *pc, StackTypeSet *target, RawId id)
         : script_(script), pc(pc), target(target), id(id)
     {
         JS_ASSERT(script && pc && target);
@@ -646,7 +646,7 @@ class TypeConstraintCallProp : public TypeConstraint
     /* Property being accessed. */
     jsid id;
 
-    TypeConstraintCallProp(UnrootedScript script, jsbytecode *callpc, jsid id)
+    TypeConstraintCallProp(RawScript script, jsbytecode *callpc, jsid id)
         : script_(script), callpc(callpc), id(id)
     {
         JS_ASSERT(script && callpc);
@@ -691,7 +691,7 @@ class TypeConstraintSetElement : public TypeConstraint
     StackTypeSet *objectTypes;
     StackTypeSet *valueTypes;
 
-    TypeConstraintSetElement(UnrootedScript script, jsbytecode *pc,
+    TypeConstraintSetElement(RawScript script, jsbytecode *pc,
                              StackTypeSet *objectTypes, StackTypeSet *valueTypes)
         : script_(script), pc(pc),
           objectTypes(objectTypes), valueTypes(valueTypes)
@@ -753,7 +753,7 @@ class TypeConstraintArith : public TypeConstraint
     /* For addition operations, the other operand. */
     TypeSet *other;
 
-    TypeConstraintArith(UnrootedScript script, jsbytecode *pc, TypeSet *target, TypeSet *other)
+    TypeConstraintArith(RawScript script, jsbytecode *pc, TypeSet *target, TypeSet *other)
         : script_(script), pc(pc), target(target), other(other)
     {
         JS_ASSERT(target);
@@ -779,7 +779,7 @@ class TypeConstraintTransformThis : public TypeConstraint
   public:
     TypeSet *target;
 
-    TypeConstraintTransformThis(UnrootedScript script, TypeSet *target)
+    TypeConstraintTransformThis(RawScript script, TypeSet *target)
         : script_(script), target(target)
     {}
 
@@ -807,7 +807,7 @@ class TypeConstraintPropagateThis : public TypeConstraint
     Type type;
     StackTypeSet *types;
 
-    TypeConstraintPropagateThis(UnrootedScript script, jsbytecode *callpc, Type type, StackTypeSet *types)
+    TypeConstraintPropagateThis(RawScript script, jsbytecode *callpc, Type type, StackTypeSet *types)
         : script_(script), callpc(callpc), type(type), types(types)
     {}
 
@@ -852,16 +852,16 @@ HeapTypeSet::addFilterPrimitives(JSContext *cx, TypeSet *target)
 }
 
 /* If id is a normal slotful 'own' property of an object, get its shape. */
-static inline UnrootedShape
+static inline RawShape
 GetSingletonShape(JSContext *cx, RawObject obj, RawId idArg)
 {
     if (!obj->isNative())
-        return UnrootedShape(NULL);
+        return NULL;
     RootedId id(cx, idArg);
-    UnrootedShape shape = DropUnrooted(obj)->nativeLookup(cx, id);
+    RawShape shape = obj->nativeLookup(cx, id);
     if (shape && shape->hasDefaultGetter() && shape->hasSlot())
         return shape;
-    return UnrootedShape(NULL);
+    return NULL;
 }
 
 void
@@ -877,7 +877,7 @@ ScriptAnalysis::pruneTypeBarriers(JSContext *cx, uint32_t offset)
         }
         if (barrier->singleton) {
             JS_ASSERT(barrier->type.isPrimitive(JSVAL_TYPE_UNDEFINED));
-            UnrootedShape shape = GetSingletonShape(cx, barrier->singleton, barrier->singletonId);
+            RawShape shape = GetSingletonShape(cx, barrier->singleton, barrier->singletonId);
             if (shape && !barrier->singleton->nativeGetSlot(shape->slot()).isUndefined()) {
                 /*
                  * When we analyzed the script the singleton had an 'own'
@@ -966,7 +966,7 @@ class TypeConstraintSubsetBarrier : public TypeConstraint
     jsbytecode *pc;
     TypeSet *target;
 
-    TypeConstraintSubsetBarrier(UnrootedScript script, jsbytecode *pc, TypeSet *target)
+    TypeConstraintSubsetBarrier(RawScript script, jsbytecode *pc, TypeSet *target)
         : script(script), pc(pc), target(target)
     {}
 
@@ -2250,7 +2250,7 @@ enum RecompileKind {
  * compilation.
  */
 static inline bool
-JITCodeHasCheck(UnrootedScript script, jsbytecode *pc, RecompileKind kind)
+JITCodeHasCheck(RawScript script, jsbytecode *pc, RecompileKind kind)
 {
     if (kind == RECOMPILE_NONE)
         return false;
@@ -2292,7 +2292,7 @@ JITCodeHasCheck(UnrootedScript script, jsbytecode *pc, RecompileKind kind)
  * which this script was inlined into.
  */
 static inline void
-AddPendingRecompile(JSContext *cx, UnrootedScript script, jsbytecode *pc,
+AddPendingRecompile(JSContext *cx, RawScript script, jsbytecode *pc,
                     RecompileKind kind = RECOMPILE_NONE)
 {
     /*
@@ -2340,7 +2340,7 @@ class TypeConstraintFreezeStack : public TypeConstraint
     RawScript script_;
 
   public:
-    TypeConstraintFreezeStack(UnrootedScript script)
+    TypeConstraintFreezeStack(RawScript script)
         : script_(script)
     {}
 
@@ -2563,7 +2563,7 @@ TypeCompartment::addAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey ke
 }
 
 static inline RawId
-GetAtomId(JSContext *cx, UnrootedScript script, const jsbytecode *pc, unsigned offset)
+GetAtomId(JSContext *cx, RawScript script, const jsbytecode *pc, unsigned offset)
 {
     PropertyName *name = script->getName(GET_UINT32_INDEX(pc + offset));
     return IdToTypeId(NameToId(name));
@@ -2868,7 +2868,7 @@ TypeCompartment::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
 }
 
 void
-TypeCompartment::addPendingRecompile(JSContext *cx, UnrootedScript script, jsbytecode *pc)
+TypeCompartment::addPendingRecompile(JSContext *cx, RawScript script, jsbytecode *pc)
 {
     JS_ASSERT(script);
     if (!constrainedOutputs)
@@ -3301,7 +3301,7 @@ struct types::ObjectTableKey
             obj->getTaggedProto() != v.proto) {
             return false;
         }
-        UnrootedShape shape = obj->lastProperty();
+        RawShape shape = obj->lastProperty();
         obj = NULL;
         while (!shape->isEmptyShape()) {
             if (shape->propid() != v.ids[shape->slot()])
@@ -3467,7 +3467,7 @@ TypeObject::getFromPrototypes(JSContext *cx, jsid id, TypeSet *types, bool force
 }
 
 static inline void
-UpdatePropertyType(JSContext *cx, TypeSet *types, UnrootedObject obj, UnrootedShape shape,
+UpdatePropertyType(JSContext *cx, TypeSet *types, RawObject obj, RawShape shape,
                    bool force)
 {
     types->setOwnProperty(cx, false);
@@ -3530,7 +3530,7 @@ TypeObject::addProperty(JSContext *cx, RawId id, Property **pprop)
             }
         } else if (!JSID_IS_EMPTY(id)) {
             RootedId rootedId(cx, id);
-            UnrootedShape shape = singleton->nativeLookup(cx, rootedId);
+            RawShape shape = singleton->nativeLookup(cx, rootedId);
             if (shape)
                 UpdatePropertyType(cx, &base->types, rSingleton, shape, false);
         }
@@ -3590,7 +3590,7 @@ TypeObject::matchDefiniteProperties(HandleObject obj)
             unsigned slot = prop->types.definiteSlot();
 
             bool found = false;
-            UnrootedShape shape = obj->lastProperty();
+            RawShape shape = obj->lastProperty();
             while (!shape->isEmptyShape()) {
                 if (shape->slot() == slot && shape->propid() == prop->id) {
                     found = true;
@@ -6028,7 +6028,6 @@ JSObject::makeLazyType(JSContext *cx, HandleObject obj)
     }
     Rooted<TaggedProto> proto(cx, obj->getTaggedProto());
     TypeObject *type = cx->compartment->types.newTypeObject(cx, obj->getClass(), proto);
-    AutoAssertNoGC nogc;
     if (!type) {
         if (cx->typeInferenceEnabled())
             cx->compartment->types.setPendingNukeTypes(cx);
@@ -6157,8 +6156,6 @@ JSCompartment::getNewType(JSContext *cx, Class *clasp, TaggedProto proto_, JSFun
 
     Rooted<TaggedProto> proto(cx, proto_);
     RootedFunction fun(cx, fun_);
-
-    AssertCanGC();
 
     if (proto.isObject() && !proto.toObject()->setDelegate(cx))
         return NULL;

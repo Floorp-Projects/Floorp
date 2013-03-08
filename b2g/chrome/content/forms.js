@@ -264,9 +264,14 @@ let FormAssistant = {
           this.showKeyboard(target);
         break;
 
+      case "pagehide":
+        // We are only interested to the pagehide event from the root document.
+        if (target && target != content.document) {
+          break;
+        }
+        // fall through
       case "blur":
       case "submit":
-      case "pagehide":
         if (this.focusedElement)
           this.hideKeyboard();
         break;

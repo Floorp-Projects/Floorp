@@ -109,7 +109,7 @@ pref("browser.display.normal_lineheight_calc_control", 2);
 pref("browser.display.show_image_placeholders", true); // true = show image placeholders while image is loaded and when image is broken
 // min font device pixel size at which to turn on high quality
 pref("browser.display.auto_quality_min_font_size", 20);
-pref("browser.anchor_color",                "#0000EE");
+pref("browser.anchor_color",                "#0B6CDA");
 pref("browser.active_color",                "#EE0000");
 pref("browser.visited_color",               "#551A8B");
 pref("browser.underline_anchors",           true);
@@ -406,6 +406,9 @@ pref("view_source.editor.path", "");
 // allows to add further arguments to the editor; use the %LINE% placeholder
 // for jumping to a specific line (e.g. "/line:%LINE%" or "--goto %LINE%")
 pref("view_source.editor.args", "");
+
+// When true this will word-wrap plain text documents.
+pref("plain_text.wrap_long_lines", false);
 
 // dispatch left clicks only to content in browser (still allows clicks to chrome/xul)
 pref("nglayout.events.dispatchLeftClickOnly", true);
@@ -708,10 +711,6 @@ pref("dom.send_after_paint_to_content", false);
 pref("dom.min_timeout_value", 4);
 // And for background windows
 pref("dom.min_background_timeout_value", 1000);
-
-// Use the new DOM bindings (only affects any scopes created after the pref is
-// changed)
-pref("dom.experimental_bindings", true);
 
 // Run content XBL in a separate scope.
 pref("dom.xbl_scopes", true);
@@ -1790,6 +1789,7 @@ pref("dom.archivereader.enabled", false);
 // resolved.
 pref("hangmonitor.timeout", 0);
 
+pref("plugins.load_appdir_plugins", false);
 // If true, plugins will be click to play
 pref("plugins.click_to_play", false);
 

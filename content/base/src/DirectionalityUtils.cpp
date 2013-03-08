@@ -376,10 +376,14 @@ GetDirectionFromText(const nsTextFragment* aFrag,
  * Set the directionality of a node with dir=auto as defined in
  * http://www.whatwg.org/specs/web-apps/current-work/multipage/elements.html#the-directionality
  *
+ * @param[in] changedNode If we call this method because the content of a text
+ *            node is about to change, pass in the changed node, so that we
+ *            know not to return it
  * @return the text node containing the character that determined the direction
  */
 static nsINode*
-WalkDescendantsSetDirectionFromText(Element* aElement, bool aNotify = true)
+WalkDescendantsSetDirectionFromText(Element* aElement, bool aNotify = true,
+                                    nsINode* aChangedNode = nullptr)
 {
   MOZ_ASSERT(aElement, "aElement is null");
   if (DoesNotParticipateInAutoDirection(aElement)) {
@@ -394,7 +398,8 @@ WalkDescendantsSetDirectionFromText(Element* aElement, bool aNotify = true)
       continue;
     }
 
-    if (child->NodeType() == nsIDOMNode::TEXT_NODE) {
+    if (child->NodeType() == nsIDOMNode::TEXT_NODE &&
+        child != aChangedNode) {
       Directionality textNodeDir = GetDirectionFromText(child->GetText());
       if (textNodeDir != eDir_NotSet) {
         // We found a descendant text node with strong directional characters.
@@ -490,10 +495,12 @@ private:
     MOZ_ASSERT(aEntry->GetKey()->IsElement(), "Must be an Element");
     // run the downward propagation algorithm
     // and remove the text node from the map
+    nsINode* oldTextNode = static_cast<Element*>(aData);
     Element* rootNode = aEntry->GetKey();
-    nsINode* textNode = WalkDescendantsSetDirectionFromText(rootNode, true);
-    if (textNode) {
-      nsTextNodeDirectionalityMap::AddEntryToMap(textNode, rootNode);
+    nsINode* newTextNode = WalkDescendantsSetDirectionFromText(rootNode, true,
+                                                               oldTextNode);
+    if (newTextNode) {
+      nsTextNodeDirectionalityMap::AddEntryToMap(newTextNode, rootNode);
     } else {
       rootNode->ClearHasDirAutoSet();
       rootNode->UnsetProperty(nsGkAtoms::dirAutoSetBy);
@@ -507,9 +514,9 @@ public:
     mElements.EnumerateEntries(SetNodeDirection, &aDir);
   }
 
-  void ResetAutoDirection()
+  void ResetAutoDirection(nsINode* aTextNode)
   {
-    mElements.EnumerateEntries(ResetNodeDirection, nullptr);
+    mElements.EnumerateEntries(ResetNodeDirection, aTextNode);
   }
 
   static void RemoveElementFromMap(nsINode* aTextNode, Element* aElement)
@@ -540,7 +547,7 @@ public:
   {
     MOZ_ASSERT(aTextNode->HasTextNodeDirectionalityMap(),
                "Map missing in ResetTextNodeDirection");
-    GetDirectionalityMap(aTextNode)->ResetAutoDirection();
+    GetDirectionalityMap(aTextNode)->ResetAutoDirection(aTextNode);
   }
 };
 
@@ -714,8 +721,6 @@ void SetAncestorDirectionIfAuto(nsINode* aTextNode, Directionality aDir,
       break;
     }
 
-    aTextNode->SetAncestorHasDirAuto();
-
     if (parent->HasDirAuto()) {
       bool resetDirection = false;
 
@@ -812,10 +817,15 @@ SetDirectionFromChangedTextNode(nsIContent* aTextNode, uint32_t aOffset,
 }
 
 void
-SetDirectionFromNewTextNode(nsTextNode* aTextNode)
+SetDirectionFromNewTextNode(nsIContent* aTextNode)
 {
   if (!NodeAffectsDirAutoAncestor(aTextNode)) {
     return;
+  }
+
+  Element* parent = aTextNode->GetParentElement();
+  if (parent && parent->NodeOrAncestorHasDirAuto()) {
+    aTextNode->SetAncestorHasDirAuto();
   }
 
   Directionality dir = GetDirectionFromText(aTextNode->GetText());
@@ -852,7 +862,7 @@ SetDirectionalityFromValue(Element* aElement, const nsAString& value,
 
 void
 OnSetDirAttr(Element* aElement, const nsAttrValue* aNewValue,
-             bool hadValidDir, bool aNotify)
+             bool hadValidDir, bool hadDirAuto, bool aNotify)
 {
   if (aElement->IsHTML(nsGkAtoms::input)) {
     return;
@@ -873,6 +883,20 @@ OnSetDirAttr(Element* aElement, const nsAttrValue* aNewValue,
       // determined by a text node descendant
       WalkAncestorsResetAutoDirection(aElement, aNotify);
     }
+  } else if (hadDirAuto && !aElement->HasDirAuto()) {
+    // The element isn't a descendant of an element with dir = auto, and is
+    // having its dir attribute set to something other than auto.
+    // Walk the descendant tree and clear the AncestorHasDirAuto flag.
+    //
+    // N.B: For elements other than <bdi> it would be enough to test that the
+    //      current value of dir was "auto" in BeforeSetAttr to know that we
+    //      were unsetting dir="auto". For <bdi> things are more complicated,
+    //      since it behaves like dir="auto" whenever the dir attribute is
+    //      empty or invalid, so we would have to check whether the old value
+    //      was not either "ltr" or "rtl", and the new value was either "ltr"
+    //      or "rtl". Element::HasDirAuto() encapsulates all that, so doing it
+    //      here is simpler.
+    WalkDescendantsClearAncestorDirAuto(aElement);
   }
 
   if (aElement->HasDirAuto()) {

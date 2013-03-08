@@ -164,7 +164,7 @@ class JSFunction : public JSObject
     inline void initAtom(JSAtom *atom);
     JSAtom *displayAtom() const { return atom_; }
 
-    inline void setGuessedAtom(js::UnrootedAtom atom);
+    inline void setGuessedAtom(js::RawAtom atom);
 
     /* uint16_t representation bounds number of call object dynamic slots. */
     enum { MAX_ARGS_AND_VARS = 2 * ((1U << 16) - 1) };
@@ -182,13 +182,13 @@ class JSFunction : public JSObject
 
     bool initializeLazyScript(JSContext *cx);
 
-    js::UnrootedScript getOrCreateScript(JSContext *cx) {
+    js::RawScript getOrCreateScript(JSContext *cx) {
         JS_ASSERT(isInterpreted());
         if (isInterpretedLazy()) {
-            js::RootedFunction self(cx, this);
+            JS::RootedFunction self(cx, this);
             js::MaybeCheckStackRoots(cx);
             if (!self->initializeLazyScript(cx))
-                return js::UnrootedScript(NULL);
+                return NULL;
             return self->u.i.script_;
         }
         JS_ASSERT(hasScript());
@@ -206,13 +206,13 @@ class JSFunction : public JSObject
         return fun->hasScript();
     }
 
-    js::UnrootedScript nonLazyScript() const {
+    js::RawScript nonLazyScript() const {
         JS_ASSERT(hasScript());
         return JS::HandleScript::fromMarkedLocation(&u.i.script_);
     }
 
-    js::UnrootedScript maybeNonLazyScript() const {
-        return isInterpreted() ? nonLazyScript() : js::UnrootedScript(NULL);
+    js::RawScript maybeNonLazyScript() const {
+        return isInterpreted() ? nonLazyScript() : NULL;
     }
 
     js::HeapPtrScript &mutableScript() {

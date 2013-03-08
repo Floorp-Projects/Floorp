@@ -45,9 +45,11 @@ function init(aEvent)
 #ifdef MOZ_UPDATER
   gAppUpdater = new appUpdater();
 
+#if MOZ_UPDATE_CHANNEL != release
   let defaults = Services.prefs.getDefaultBranch("");
   let channelLabel = document.getElementById("currentChannel");
   channelLabel.value = defaults.getCharPref("app.update.channel");
+#endif
 #endif
 
 #ifdef XP_MACOSX

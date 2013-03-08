@@ -131,7 +131,7 @@ class MinidumpProcessor {
   // address when the crash was caused by problems such as illegal
   // instructions or divisions by zero, or a data address when the crash
   // was caused by a memory access violation.
-  static string GetCrashReason(Minidump* dump, u_int64_t* address);
+  static string GetCrashReason(Minidump* dump, uint64_t* address);
 
   // This function returns true if the passed-in error code is
   // something unrecoverable(i.e. retry should not happen).  For

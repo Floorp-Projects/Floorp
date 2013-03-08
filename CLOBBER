@@ -15,4 +15,4 @@
 #
 # Note: The description below will be part of the error message shown to users.
 #
-Bug 784841 pretty much changed how the build system works. It's best to clobber.
+Bug 848395 resulted in Windows test failures when landed without clobber

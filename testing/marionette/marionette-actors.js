@@ -270,11 +270,20 @@ MarionetteDriverActor.prototype = {
       logger.warn("got a response with no command_id");
       return;
     }
-    else if (this.command_id && command_id != -1 &&
-             this.command_id != command_id) {
-      // a command_id of -1 is used for emulator callbacks
-      logger.warn("ignoring out-of-sync response");
-      return;
+    else if (command_id != -1) {
+      // A command_id of -1 is used for emulator callbacks, and those
+      // don't use this.command_id.
+      if (!this.command_id) {
+        // A null value for this.command_id means we've already processed
+        // a message for the previous value, and so the current message is a
+        // duplicate.
+        logger.warn("ignoring duplicate response for command_id " + command_id);
+        return;
+      }
+      else if (this.command_id != command_id) {
+        logger.warn("ignoring out-of-sync response");
+        return;
+      }
     }
     this.conn.send(msg);
     if (command_id != -1) {
@@ -1357,6 +1366,23 @@ MarionetteDriverActor.prototype = {
   },
 
   /**
+   * actionChain
+   *
+   * @param object aRequest
+   *        'value' represents a nested array: inner array represents each event; outer array represents collection of events
+   */
+  actionChain: function MDA_actionChain(aRequest) {
+    this.command_id = this.getCommandId();
+    if (this.context == "chrome") {
+      this.sendError("Not in Chrome", 500, null, this.command_id);
+    }
+    else {
+      this.sendAsync("actionChain", {value: aRequest.value,
+                                     command_id: this.command_id});
+    }
+  },
+
+  /**
    * Find an element using the indicated search strategy.
    *
    * @param object aRequest
@@ -1945,9 +1971,10 @@ MarionetteDriverActor.prototype = {
    * of the window will be taken.
    */
   screenShot: function MDA_saveScreenshot(aRequest) {
+    this.command_id = this.getCommandId();
     this.sendAsync("screenShot", {element: aRequest.element,
                                   highlights: aRequest.highlights,
-                                  command_id: this.getCommandId()});
+                                  command_id: this.command_id});
   },
 
   /**
@@ -2099,6 +2126,7 @@ MarionetteDriverActor.prototype.requestTypes = {
   "doubleTap": MarionetteDriverActor.prototype.doubleTap,
   "press": MarionetteDriverActor.prototype.press,
   "release": MarionetteDriverActor.prototype.release,
+  "actionChain": MarionetteDriverActor.prototype.actionChain,
   "executeAsyncScript": MarionetteDriverActor.prototype.executeWithCallback,
   "executeJSScript": MarionetteDriverActor.prototype.executeJSScript,
   "setSearchTimeout": MarionetteDriverActor.prototype.setSearchTimeout,

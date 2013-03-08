@@ -1591,8 +1591,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
   const nsStyleBackground* bg = nullptr;
   nsPresContext* presContext = aFrame->PresContext();
   bool isThemed = aFrame->IsThemed();
-  if (!isThemed &&
-      nsCSSRendering::FindBackground(presContext, aFrame, &bgSC)) {
+  if (!isThemed && nsCSSRendering::FindBackground(aFrame, &bgSC)) {
     bg = bgSC->StyleBackground();
   }
 
@@ -2977,6 +2976,19 @@ nsDisplayFixedPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
     anchor.y = anchorRect.YMost();
 
   layer->SetFixedPositionAnchor(anchor);
+
+  // Also make sure the layer is aware of any fixed position margins that have
+  // been set.
+  nsMargin fixedMargins = presContext->PresShell()->GetContentDocumentFixedPositionMargins();
+  mozilla::gfx::Margin fixedLayerMargins(NSAppUnitsToFloatPixels(fixedMargins.top, factor) *
+                                           aContainerParameters.mYScale,
+                                         NSAppUnitsToFloatPixels(fixedMargins.right, factor) *
+                                           aContainerParameters.mXScale,
+                                         NSAppUnitsToFloatPixels(fixedMargins.bottom, factor) *
+                                           aContainerParameters.mYScale,
+                                         NSAppUnitsToFloatPixels(fixedMargins.left, factor) *
+                                           aContainerParameters.mXScale);
+  layer->SetFixedPositionMargins(fixedLayerMargins);
 
   return layer.forget();
 }

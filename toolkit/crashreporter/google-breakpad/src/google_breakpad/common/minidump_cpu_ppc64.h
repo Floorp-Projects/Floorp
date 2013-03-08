@@ -90,20 +90,20 @@ typedef struct {
   /* context_flags is not present in ppc_thread_state, but it aids
    * identification of MDRawContextPPC among other raw context types,
    * and it guarantees alignment when we get to float_save. */
-  u_int64_t             context_flags;
+  uint64_t              context_flags;
 
-  u_int64_t             srr0;    /* Machine status save/restore: stores pc
+  uint64_t              srr0;    /* Machine status save/restore: stores pc
                                   * (instruction) */
-  u_int64_t             srr1;    /* Machine status save/restore: stores msr
+  uint64_t              srr1;    /* Machine status save/restore: stores msr
                                   * (ps, program/machine state) */
   /* ppc_thread_state contains 32 fields, r0 .. r31.  Here, an array is
    * used for brevity. */
-  u_int64_t             gpr[MD_CONTEXT_PPC64_GPR_COUNT];
-  u_int64_t             cr;      /* Condition */
-  u_int64_t             xer;     /* Integer (fiXed-point) exception */
-  u_int64_t             lr;      /* Link */
-  u_int64_t             ctr;     /* Count */
-  u_int64_t             vrsave;  /* Vector save */
+  uint64_t              gpr[MD_CONTEXT_PPC64_GPR_COUNT];
+  uint64_t              cr;      /* Condition */
+  uint64_t              xer;     /* Integer (fiXed-point) exception */
+  uint64_t              lr;      /* Link */
+  uint64_t              ctr;     /* Count */
+  uint64_t              vrsave;  /* Vector save */
 
   /* float_save and vector_save aren't present in ppc_thread_state, but
    * are represented in separate structures that still define a thread's

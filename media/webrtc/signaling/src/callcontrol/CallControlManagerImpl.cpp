@@ -38,7 +38,7 @@ namespace CSF
 CallControlManagerImpl::CallControlManagerImpl()
 : m_lock("CallControlManagerImpl"),
   multiClusterMode(false),
-  sipccLoggingMask(0),
+  sipccLoggingMask(0xFFFFFFFF),
   authenticationStatus(AuthenticationStatusEnum::eNotAuthenticated),
   connectionState(ConnectionStatusEnum::eIdle)
 {
@@ -234,8 +234,8 @@ bool CallControlManagerImpl::disconnect()
     phone->removeCCObserver(this);
     phone->stop();
     phone->destroy();
-    phone.reset();
-    softPhone.reset();
+    phone = nullptr;
+    softPhone = nullptr;
 
     return true;
 }
@@ -275,7 +275,7 @@ PhoneDetailsVtrPtr CallControlManagerImpl::getAvailablePhoneDetails()
   PhoneDetailsVtrPtr result = PhoneDetailsVtrPtr(new PhoneDetailsVtr());
   for(PhoneDetailsMap::iterator it = phoneDetailsMap.begin(); it != phoneDetailsMap.end(); it++)
   {
-    PhoneDetailsPtr details = it->second;
+    PhoneDetailsPtr details = it->second.get();
     result->push_back(details);
   }
   return result;
@@ -286,7 +286,7 @@ PhoneDetailsPtr CallControlManagerImpl::getAvailablePhoneDetails(const std::stri
     PhoneDetailsMap::iterator it = phoneDetailsMap.find(deviceName);
     if(it != phoneDetailsMap.end())
     {
-        return it->second;
+        return it->second.get();
     }
     return PhoneDetailsPtr();
 }

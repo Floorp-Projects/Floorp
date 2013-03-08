@@ -89,7 +89,7 @@ TEST_F(MinidumpTest, TestMinidumpFromFile) {
   ASSERT_TRUE(minidump.Read());
   const MDRawHeader* header = minidump.header();
   ASSERT_NE(header, (MDRawHeader*)NULL);
-  ASSERT_EQ(header->signature, u_int32_t(MD_HEADER_SIGNATURE));
+  ASSERT_EQ(header->signature, uint32_t(MD_HEADER_SIGNATURE));
   //TODO: add more checks here
 }
 
@@ -115,7 +115,7 @@ TEST_F(MinidumpTest, TestMinidumpFromStream) {
   ASSERT_TRUE(minidump.Read());
   const MDRawHeader* header = minidump.header();
   ASSERT_NE(header, (MDRawHeader*)NULL);
-  ASSERT_EQ(header->signature, u_int32_t(MD_HEADER_SIGNATURE));
+  ASSERT_EQ(header->signature, uint32_t(MD_HEADER_SIGNATURE));
   //TODO: add more checks here
 }
 
@@ -159,7 +159,7 @@ TEST(Dump, OneStream) {
   ASSERT_TRUE(dir != NULL);
   EXPECT_EQ(0xfbb7fa2bU, dir->stream_type);
 
-  u_int32_t stream_length;
+  uint32_t stream_length;
   ASSERT_TRUE(minidump.SeekToStreamType(0xfbb7fa2bU, &stream_length));
   ASSERT_EQ(15U, stream_length);
   char stream_contents[15];
@@ -193,7 +193,7 @@ TEST(Dump, OneMemory) {
 
   const MDRawDirectory *dir = minidump.GetDirectoryEntryAtIndex(0);
   ASSERT_TRUE(dir != NULL);
-  EXPECT_EQ((u_int32_t) MD_MEMORY_LIST_STREAM, dir->stream_type);
+  EXPECT_EQ((uint32_t) MD_MEMORY_LIST_STREAM, dir->stream_type);
 
   MinidumpMemoryList *memory_list = minidump.GetMemoryList();
   ASSERT_TRUE(memory_list != NULL);
@@ -202,7 +202,7 @@ TEST(Dump, OneMemory) {
   MinidumpMemoryRegion *region1 = memory_list->GetMemoryRegionAtIndex(0);
   ASSERT_EQ(0x309d68010bd21b2cULL, region1->GetBase());
   ASSERT_EQ(15U, region1->GetSize());
-  const u_int8_t *region1_bytes = region1->GetMemory();
+  const uint8_t *region1_bytes = region1->GetMemory();
   ASSERT_TRUE(memcmp("memory contents", region1_bytes, 15) == 0);
 }
 
@@ -213,7 +213,7 @@ TEST(Dump, OneThread) {
   stack.Append("stack for thread");
 
   MDRawContextX86 raw_context;
-  const u_int32_t kExpectedEIP = 0x6913f540;
+  const uint32_t kExpectedEIP = 0x6913f540;
   raw_context.context_flags = MD_CONTEXT_X86_INTEGER | MD_CONTEXT_X86_CONTROL;
   raw_context.edi = 0x3ecba80d;
   raw_context.esi = 0x382583b9;
@@ -252,7 +252,7 @@ TEST(Dump, OneThread) {
   MinidumpMemoryRegion *md_region = md_memory_list->GetMemoryRegionAtIndex(0);
   ASSERT_EQ(0x2326a0faU, md_region->GetBase());
   ASSERT_EQ(16U, md_region->GetSize());
-  const u_int8_t *region_bytes = md_region->GetMemory();
+  const uint8_t *region_bytes = md_region->GetMemory();
   ASSERT_TRUE(memcmp("stack for thread", region_bytes, 16) == 0);
 
   MinidumpThreadList *thread_list = minidump.GetThreadList();
@@ -261,27 +261,27 @@ TEST(Dump, OneThread) {
 
   MinidumpThread *md_thread = thread_list->GetThreadAtIndex(0);
   ASSERT_TRUE(md_thread != NULL);
-  u_int32_t thread_id;
+  uint32_t thread_id;
   ASSERT_TRUE(md_thread->GetThreadID(&thread_id));
   ASSERT_EQ(0xa898f11bU, thread_id);
   MinidumpMemoryRegion *md_stack = md_thread->GetMemory();
   ASSERT_TRUE(md_stack != NULL);
   ASSERT_EQ(0x2326a0faU, md_stack->GetBase());
   ASSERT_EQ(16U, md_stack->GetSize());
-  const u_int8_t *md_stack_bytes = md_stack->GetMemory();
+  const uint8_t *md_stack_bytes = md_stack->GetMemory();
   ASSERT_TRUE(memcmp("stack for thread", md_stack_bytes, 16) == 0);
 
   MinidumpContext *md_context = md_thread->GetContext();
   ASSERT_TRUE(md_context != NULL);
-  ASSERT_EQ((u_int32_t) MD_CONTEXT_X86, md_context->GetContextCPU());
+  ASSERT_EQ((uint32_t) MD_CONTEXT_X86, md_context->GetContextCPU());
 
-  u_int64_t eip;
+  uint64_t eip;
   ASSERT_TRUE(md_context->GetInstructionPointer(&eip));
   EXPECT_EQ(kExpectedEIP, eip);
 
   const MDRawContextX86 *md_raw_context = md_context->GetContextX86();
   ASSERT_TRUE(md_raw_context != NULL);
-  ASSERT_EQ((u_int32_t) (MD_CONTEXT_X86_INTEGER | MD_CONTEXT_X86_CONTROL),
+  ASSERT_EQ((uint32_t) (MD_CONTEXT_X86_INTEGER | MD_CONTEXT_X86_CONTROL),
             (md_raw_context->context_flags
              & (MD_CONTEXT_X86_INTEGER | MD_CONTEXT_X86_CONTROL)));
   EXPECT_EQ(0x3ecba80dU, raw_context.edi);
@@ -332,7 +332,7 @@ TEST(Dump, ThreadMissingMemory) {
   MinidumpThread* md_thread = thread_list->GetThreadAtIndex(0);
   ASSERT_TRUE(md_thread != NULL);
 
-  u_int32_t thread_id;
+  uint32_t thread_id;
   ASSERT_TRUE(md_thread->GetThreadID(&thread_id));
   ASSERT_EQ(0xa898f11bU, thread_id);
 
@@ -375,7 +375,7 @@ TEST(Dump, ThreadMissingContext) {
   MinidumpThread* md_thread = thread_list->GetThreadAtIndex(0);
   ASSERT_TRUE(md_thread != NULL);
 
-  u_int32_t thread_id;
+  uint32_t thread_id;
   ASSERT_TRUE(md_thread->GetThreadID(&thread_id));
   ASSERT_EQ(0xa898f11bU, thread_id);
   MinidumpMemoryRegion* md_stack = md_thread->GetMemory();
@@ -424,7 +424,7 @@ TEST(Dump, OneModule) {
 
   const MDRawDirectory *dir = minidump.GetDirectoryEntryAtIndex(0);
   ASSERT_TRUE(dir != NULL);
-  EXPECT_EQ((u_int32_t) MD_MODULE_LIST_STREAM, dir->stream_type);
+  EXPECT_EQ((uint32_t) MD_MODULE_LIST_STREAM, dir->stream_type);
 
   MinidumpModuleList *md_module_list = minidump.GetModuleList();
   ASSERT_TRUE(md_module_list != NULL);
@@ -462,7 +462,7 @@ TEST(Dump, OneSystemInfo) {
 
   const MDRawDirectory *dir = minidump.GetDirectoryEntryAtIndex(0);
   ASSERT_TRUE(dir != NULL);
-  EXPECT_EQ((u_int32_t) MD_SYSTEM_INFO_STREAM, dir->stream_type);
+  EXPECT_EQ((uint32_t) MD_SYSTEM_INFO_STREAM, dir->stream_type);
 
   MinidumpSystemInfo *md_system_info = minidump.GetSystemInfo();
   ASSERT_TRUE(md_system_info != NULL);
@@ -576,7 +576,7 @@ TEST(Dump, BigDump) {
   MinidumpThreadList *thread_list = minidump.GetThreadList();
   ASSERT_TRUE(thread_list != NULL);
   ASSERT_EQ(5U, thread_list->thread_count());
-  u_int32_t thread_id;
+  uint32_t thread_id;
   ASSERT_TRUE(thread_list->GetThreadAtIndex(0)->GetThreadID(&thread_id));
   ASSERT_EQ(0xbbef4432U, thread_id);
   ASSERT_EQ(0x70b9ebfcU,
@@ -634,15 +634,15 @@ TEST(Dump, OneMemoryInfo) {
   Stream stream(dump, MD_MEMORY_INFO_LIST_STREAM);
 
   // Add the MDRawMemoryInfoList header.
-  const u_int64_t kNumberOfEntries = 1;
+  const uint64_t kNumberOfEntries = 1;
   stream.D32(sizeof(MDRawMemoryInfoList))  // size_of_header
         .D32(sizeof(MDRawMemoryInfo))      // size_of_entry
         .D64(kNumberOfEntries);            // number_of_entries
 
   
   // Now add a MDRawMemoryInfo entry.
-  const u_int64_t kBaseAddress = 0x1000;
-  const u_int64_t kRegionSize = 0x2000;
+  const uint64_t kBaseAddress = 0x1000;
+  const uint64_t kRegionSize = 0x2000;
   stream.D64(kBaseAddress)                         // base_address
         .D64(kBaseAddress)                         // allocation_base
         .D32(MD_MEMORY_PROTECT_EXECUTE_READWRITE)  // allocation_protection
@@ -665,7 +665,7 @@ TEST(Dump, OneMemoryInfo) {
 
   const MDRawDirectory *dir = minidump.GetDirectoryEntryAtIndex(0);
   ASSERT_TRUE(dir != NULL);
-  EXPECT_EQ((u_int32_t) MD_MEMORY_INFO_LIST_STREAM, dir->stream_type);
+  EXPECT_EQ((uint32_t) MD_MEMORY_INFO_LIST_STREAM, dir->stream_type);
 
   MinidumpMemoryInfoList *info_list = minidump.GetMemoryInfoList();
   ASSERT_TRUE(info_list != NULL);
@@ -724,7 +724,7 @@ TEST(Dump, OneExceptionX86) {
   MinidumpException *md_exception = minidump.GetException();
   ASSERT_TRUE(md_exception != NULL);
 
-  u_int32_t thread_id;
+  uint32_t thread_id;
   ASSERT_TRUE(md_exception->GetThreadID(&thread_id));
   ASSERT_EQ(0x1234abcdU, thread_id);
 
@@ -737,10 +737,10 @@ TEST(Dump, OneExceptionX86) {
 
   MinidumpContext *md_context = md_exception->GetContext();
   ASSERT_TRUE(md_context != NULL);
-  ASSERT_EQ((u_int32_t) MD_CONTEXT_X86, md_context->GetContextCPU());
+  ASSERT_EQ((uint32_t) MD_CONTEXT_X86, md_context->GetContextCPU());
   const MDRawContextX86 *md_raw_context = md_context->GetContextX86();
   ASSERT_TRUE(md_raw_context != NULL);
-  ASSERT_EQ((u_int32_t) (MD_CONTEXT_X86_INTEGER | MD_CONTEXT_X86_CONTROL),
+  ASSERT_EQ((uint32_t) (MD_CONTEXT_X86_INTEGER | MD_CONTEXT_X86_CONTROL),
             (md_raw_context->context_flags
              & (MD_CONTEXT_X86_INTEGER | MD_CONTEXT_X86_CONTROL)));
   EXPECT_EQ(0x3ecba80dU, raw_context.edi);
@@ -798,7 +798,7 @@ TEST(Dump, OneExceptionX86XState) {
   MinidumpException *md_exception = minidump.GetException();
   ASSERT_TRUE(md_exception != NULL);
 
-  u_int32_t thread_id;
+  uint32_t thread_id;
   ASSERT_TRUE(md_exception->GetThreadID(&thread_id));
   ASSERT_EQ(0x1234abcdU, thread_id);
 
@@ -811,10 +811,10 @@ TEST(Dump, OneExceptionX86XState) {
 
   MinidumpContext *md_context = md_exception->GetContext();
   ASSERT_TRUE(md_context != NULL);
-  ASSERT_EQ((u_int32_t) MD_CONTEXT_X86, md_context->GetContextCPU());
+  ASSERT_EQ((uint32_t) MD_CONTEXT_X86, md_context->GetContextCPU());
   const MDRawContextX86 *md_raw_context = md_context->GetContextX86();
   ASSERT_TRUE(md_raw_context != NULL);
-  ASSERT_EQ((u_int32_t) (MD_CONTEXT_X86_INTEGER | MD_CONTEXT_X86_CONTROL),
+  ASSERT_EQ((uint32_t) (MD_CONTEXT_X86_INTEGER | MD_CONTEXT_X86_CONTROL),
             (md_raw_context->context_flags
              & (MD_CONTEXT_X86_INTEGER | MD_CONTEXT_X86_CONTROL)));
   EXPECT_EQ(0x3ecba80dU, raw_context.edi);
@@ -883,7 +883,7 @@ TEST(Dump, OneExceptionX86NoCPUFlags) {
   MinidumpException *md_exception = minidump.GetException();
   ASSERT_TRUE(md_exception != NULL);
 
-  u_int32_t thread_id;
+  uint32_t thread_id;
   ASSERT_TRUE(md_exception->GetThreadID(&thread_id));
   ASSERT_EQ(0x1234abcdU, thread_id);
 
@@ -897,14 +897,14 @@ TEST(Dump, OneExceptionX86NoCPUFlags) {
   MinidumpContext *md_context = md_exception->GetContext();
   ASSERT_TRUE(md_context != NULL);
 
-  ASSERT_EQ((u_int32_t) MD_CONTEXT_X86, md_context->GetContextCPU());
+  ASSERT_EQ((uint32_t) MD_CONTEXT_X86, md_context->GetContextCPU());
   const MDRawContextX86 *md_raw_context = md_context->GetContextX86();
   ASSERT_TRUE(md_raw_context != NULL);
 
   // Even though the CPU flags were missing from the context_flags, the
   // GetContext call above is expected to load the missing CPU flags from the
   // system info stream and set the CPU type bits in context_flags.
-  ASSERT_EQ((u_int32_t) (MD_CONTEXT_X86), md_raw_context->context_flags);
+  ASSERT_EQ((uint32_t) (MD_CONTEXT_X86), md_raw_context->context_flags);
 
   EXPECT_EQ(0x3ecba80dU, raw_context.edi);
   EXPECT_EQ(0x382583b9U, raw_context.esi);
@@ -965,7 +965,7 @@ TEST(Dump, OneExceptionX86NoCPUFlagsNoSystemInfo) {
   MinidumpException *md_exception = minidump.GetException();
   ASSERT_TRUE(md_exception != NULL);
 
-  u_int32_t thread_id;
+  uint32_t thread_id;
   ASSERT_TRUE(md_exception->GetThreadID(&thread_id));
   ASSERT_EQ(0x1234abcdU, thread_id);
 
@@ -1028,7 +1028,7 @@ TEST(Dump, OneExceptionARM) {
   MinidumpException *md_exception = minidump.GetException();
   ASSERT_TRUE(md_exception != NULL);
 
-  u_int32_t thread_id;
+  uint32_t thread_id;
   ASSERT_TRUE(md_exception->GetThreadID(&thread_id));
   ASSERT_EQ(0x1234abcdU, thread_id);
 
@@ -1041,10 +1041,10 @@ TEST(Dump, OneExceptionARM) {
 
   MinidumpContext *md_context = md_exception->GetContext();
   ASSERT_TRUE(md_context != NULL);
-  ASSERT_EQ((u_int32_t) MD_CONTEXT_ARM, md_context->GetContextCPU());
+  ASSERT_EQ((uint32_t) MD_CONTEXT_ARM, md_context->GetContextCPU());
   const MDRawContextARM *md_raw_context = md_context->GetContextARM();
   ASSERT_TRUE(md_raw_context != NULL);
-  ASSERT_EQ((u_int32_t) MD_CONTEXT_ARM_INTEGER,
+  ASSERT_EQ((uint32_t) MD_CONTEXT_ARM_INTEGER,
             (md_raw_context->context_flags
              & MD_CONTEXT_ARM_INTEGER));
   EXPECT_EQ(0x3ecba80dU, raw_context.iregs[0]);
@@ -1112,7 +1112,7 @@ TEST(Dump, OneExceptionARMOldFlags) {
   MinidumpException *md_exception = minidump.GetException();
   ASSERT_TRUE(md_exception != NULL);
 
-  u_int32_t thread_id;
+  uint32_t thread_id;
   ASSERT_TRUE(md_exception->GetThreadID(&thread_id));
   ASSERT_EQ(0x1234abcdU, thread_id);
 
@@ -1125,10 +1125,10 @@ TEST(Dump, OneExceptionARMOldFlags) {
 
   MinidumpContext *md_context = md_exception->GetContext();
   ASSERT_TRUE(md_context != NULL);
-  ASSERT_EQ((u_int32_t) MD_CONTEXT_ARM, md_context->GetContextCPU());
+  ASSERT_EQ((uint32_t) MD_CONTEXT_ARM, md_context->GetContextCPU());
   const MDRawContextARM *md_raw_context = md_context->GetContextARM();
   ASSERT_TRUE(md_raw_context != NULL);
-  ASSERT_EQ((u_int32_t) MD_CONTEXT_ARM_INTEGER,
+  ASSERT_EQ((uint32_t) MD_CONTEXT_ARM_INTEGER,
             (md_raw_context->context_flags
              & MD_CONTEXT_ARM_INTEGER));
   EXPECT_EQ(0x3ecba80dU, raw_context.iregs[0]);

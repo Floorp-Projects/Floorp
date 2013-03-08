@@ -130,7 +130,7 @@ class MinidumpGenerator {
   bool WriteBreakpadInfoStream(MDRawDirectory *breakpad_info_stream);
 
   // Helpers
-  u_int64_t CurrentPCForStack(breakpad_thread_state_data_t state);
+  uint64_t CurrentPCForStack(breakpad_thread_state_data_t state);
   bool GetThreadState(thread_act_t target_thread, thread_state_t state,
                       mach_msg_type_number_t *count);
   bool WriteStackFromStartAddress(mach_vm_address_t start_addr,
@@ -151,31 +151,31 @@ class MinidumpGenerator {
                      MDMemoryDescriptor *stack_location);
   bool WriteContextARM(breakpad_thread_state_data_t state,
                        MDLocationDescriptor *register_location);
-  u_int64_t CurrentPCForStackARM(breakpad_thread_state_data_t state);
+  uint64_t CurrentPCForStackARM(breakpad_thread_state_data_t state);
 #endif
 #ifdef HAS_PPC_SUPPORT
   bool WriteStackPPC(breakpad_thread_state_data_t state,
                      MDMemoryDescriptor *stack_location);
   bool WriteContextPPC(breakpad_thread_state_data_t state,
                        MDLocationDescriptor *register_location);
-  u_int64_t CurrentPCForStackPPC(breakpad_thread_state_data_t state);
+  uint64_t CurrentPCForStackPPC(breakpad_thread_state_data_t state);
   bool WriteStackPPC64(breakpad_thread_state_data_t state,
                        MDMemoryDescriptor *stack_location);
   bool WriteContextPPC64(breakpad_thread_state_data_t state,
                        MDLocationDescriptor *register_location);
-  u_int64_t CurrentPCForStackPPC64(breakpad_thread_state_data_t state);
+  uint64_t CurrentPCForStackPPC64(breakpad_thread_state_data_t state);
 #endif
 #ifdef HAS_X86_SUPPORT
   bool WriteStackX86(breakpad_thread_state_data_t state,
                        MDMemoryDescriptor *stack_location);
   bool WriteContextX86(breakpad_thread_state_data_t state,
                        MDLocationDescriptor *register_location);
-  u_int64_t CurrentPCForStackX86(breakpad_thread_state_data_t state);
+  uint64_t CurrentPCForStackX86(breakpad_thread_state_data_t state);
   bool WriteStackX86_64(breakpad_thread_state_data_t state,
                         MDMemoryDescriptor *stack_location);
   bool WriteContextX86_64(breakpad_thread_state_data_t state,
                           MDLocationDescriptor *register_location);
-  u_int64_t CurrentPCForStackX86_64(breakpad_thread_state_data_t state);
+  uint64_t CurrentPCForStackX86_64(breakpad_thread_state_data_t state);
 #endif
 
   // disallow copy ctor and operator=

@@ -5,17 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var unload = require("sdk/system/unload");
-var { Loader } = require("sdk/test/loader");
+var { Loader, LoaderWithHookedConsole } = require("sdk/test/loader");
 
 exports.testUnloading = function(test) {
-  var loader = Loader(module, {
-    console: Object.create(console, {
-      exception: { value: function(error) {
-        exceptions.push(error);
-      }}
-    })
-  });
-  var exceptions = [];
+  let { loader, messages } = LoaderWithHookedConsole(module);
   var ul = loader.require("sdk/system/unload");
   var unloadCalled = 0;
   function unload() {
@@ -32,8 +25,10 @@ exports.testUnloading = function(test) {
   loader.unload();
   test.assertEqual(unloadCalled, 2,
                    "Unloader functions are called on unload.");
-  test.assertEqual(exceptions.length, 1,
-                   "One unload handler threw exception");
+  test.assertEqual(messages.length, 1,
+                   "One unload handler threw exception 1/2");
+  test.assertEqual(messages[0].type, "exception",
+                   "One unload handler threw exception 2/2");
 };
 
 exports.testEnsure = function(test) {

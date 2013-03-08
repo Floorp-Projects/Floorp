@@ -43,6 +43,7 @@
 
 #include <set>
 #include <string>
+#include <vector>
 
 #include "common/using_std_string.h"
 #include "google_breakpad/common/breakpad_types.h"
@@ -57,6 +58,7 @@ class MinidumpContext;
 class StackFrameSymbolizer;
 
 using std::set;
+using std::vector;
 
 class Stackwalker {
  public:
@@ -66,7 +68,15 @@ class Stackwalker {
   // GetCallerFrame.  The frames are further processed to fill all available
   // data.  Returns true if the stackwalk completed, or false if it was
   // interrupted by SymbolSupplier::GetSymbolFile().
-  bool Walk(CallStack* stack);
+  // Upon return, modules_without_symbols will be populated with pointers to
+  // the code modules (CodeModule*) that DON'T have symbols.
+  // modules_without_symbols DOES NOT take ownership of the code modules.
+  // The lifetime of these code modules is the same as the lifetime of the
+  // CodeModules passed to the StackWalker constructor (which currently
+  // happens to be the lifetime of the Breakpad's ProcessingState object).
+  // There is a check for duplicate modules so no duplicates are expected.
+  bool Walk(CallStack* stack,
+            vector<const CodeModule*>* modules_without_symbols);
 
   // Returns a new concrete subclass suitable for the CPU that a stack was
   // generated on, according to the CPU type indicated by the context
@@ -78,8 +88,8 @@ class Stackwalker {
      const CodeModules* modules,
      StackFrameSymbolizer* resolver_helper);
 
-  static void set_max_frames(u_int32_t max_frames) { max_frames_ = max_frames; }
-  static u_int32_t max_frames() { return max_frames_; }
+  static void set_max_frames(uint32_t max_frames) { max_frames_ = max_frames; }
+  static uint32_t max_frames() { return max_frames_; }
 
  protected:
   // system_info identifies the operating system, NULL or empty if unknown.
@@ -104,7 +114,7 @@ class Stackwalker {
   // * This address is within a loaded module for which we have symbols,
   //   and falls inside a function in that module.
   // Returns false otherwise.
-  bool InstructionAddressSeemsValid(u_int64_t address);
+  bool InstructionAddressSeemsValid(uint64_t address);
 
   // The default number of words to search through on the stack
   // for a return address.
@@ -185,7 +195,7 @@ class Stackwalker {
 
   // The maximum number of frames Stackwalker will walk through.
   // This defaults to 1024 to prevent infinite loops.
-  static u_int32_t max_frames_;
+  static uint32_t max_frames_;
 };
 
 }  // namespace google_breakpad

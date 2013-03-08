@@ -94,10 +94,10 @@ class ProcessState {
   void Clear();
 
   // Accessors.  See the data declarations below.
-  u_int32_t time_date_stamp() const { return time_date_stamp_; }
+  uint32_t time_date_stamp() const { return time_date_stamp_; }
   bool crashed() const { return crashed_; }
   string crash_reason() const { return crash_reason_; }
-  u_int64_t crash_address() const { return crash_address_; }
+  uint64_t crash_address() const { return crash_address_; }
   string assertion() const { return assertion_; }
   int requesting_thread() const { return requesting_thread_; }
   const vector<CallStack*>* threads() const { return &threads_; }
@@ -106,6 +106,9 @@ class ProcessState {
   }
   const SystemInfo* system_info() const { return &system_info_; }
   const CodeModules* modules() const { return modules_; }
+  const vector<const CodeModule*>* modules_without_symbols() const {
+    return &modules_without_symbols_;
+  }
   ExploitabilityRating exploitability() const { return exploitability_; }
 
  private:
@@ -113,7 +116,7 @@ class ProcessState {
   friend class MinidumpProcessor;
 
   // The time-date stamp of the minidump (time_t format)
-  u_int32_t time_date_stamp_;
+  uint32_t time_date_stamp_;
 
   // True if the process crashed, false if the dump was produced outside
   // of an exception handler.
@@ -129,7 +132,7 @@ class ProcessState {
   // the memory address that caused the crash.  For data access errors,
   // this will be the data address that caused the fault.  For code errors,
   // this will be the address of the instruction that caused the fault.
-  u_int64_t crash_address_;
+  uint64_t crash_address_;
 
   // If there was an assertion that was hit, a textual representation
   // of that assertion, possibly including the file and line at which
@@ -157,6 +160,9 @@ class ProcessState {
   // The modules that were loaded into the process represented by the
   // ProcessState.
   const CodeModules *modules_;
+
+  // The modules that didn't have symbols when the report was processed.
+  vector<const CodeModule*> modules_without_symbols_;
 
   // The exploitability rating as determined by the exploitability
   // engine. When the exploitability engine is not enabled this
