@@ -2038,7 +2038,8 @@ BluetoothDBusService::SetProperty(BluetoothObjectType aType,
     return NS_ERROR_FAILURE;
   }
 
-  const char* propName = NS_ConvertUTF16toUTF8(aValue.name()).get();
+  nsCString intermediatePropName(NS_ConvertUTF16toUTF8(aValue.name()));
+  const char* propName = intermediatePropName.get();
   if (!dbus_message_append_args(msg, DBUS_TYPE_STRING, &propName, DBUS_TYPE_INVALID)) {
     NS_WARNING("Couldn't append arguments to dbus message!");
     return NS_ERROR_FAILURE;
