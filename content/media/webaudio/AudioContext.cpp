@@ -79,6 +79,11 @@ AudioContext::CreateBuffer(JSContext* aJSContext, uint32_t aNumberOfChannels,
                            uint32_t aLength, float aSampleRate,
                            ErrorResult& aRv)
 {
+  if (aSampleRate < 8000 || aSampleRate > 96000) {
+    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    return nullptr;
+  }
+
   if (aLength > INT32_MAX) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
