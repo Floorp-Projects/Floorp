@@ -5,7 +5,6 @@
 from __future__ import unicode_literals
 
 import os
-import sys
 import unittest
 
 from mozfile.mozfile import NamedTemporaryFile
@@ -18,8 +17,6 @@ from mozbuild.base import (
     BuildConfig,
     MozbuildObject,
 )
-
-from mozbuild.backend.configenvironment import ConfigEnvironment
 
 
 
@@ -52,33 +49,6 @@ class TestMozbuildObject(unittest.TestCase):
 
         self.assertIsNotNone(result)
         self.assertGreater(len(result), 0)
-
-    def test_config_environment(self):
-        base = self.get_base()
-
-        # This relies on the tree being built. make check only runs after the
-        # tree is built, so this shouldn't be an issue. If this ever changes,
-        # we'll need to stub out a fake config.status.
-        ce = base.config_environment
-        self.assertIsInstance(ce, ConfigEnvironment)
-
-        self.assertEqual(base.defines, ce.defines)
-        self.assertEqual(base.substs, ce.substs)
-
-        self.assertIsInstance(base.defines, dict)
-        self.assertIsInstance(base.substs, dict)
-
-    def test_get_binary_path(self):
-        base = self.get_base()
-
-        p = base.get_binary_path('xpcshell', False)
-        platform = sys.platform
-        if platform.startswith('darwin'):
-            self.assertTrue(p.endswith('Contents/MacOS/xpcshell'))
-        elif platform.startswith('win32', 'cygwin'):
-            self.assertTrue(p.endswith('xpcshell.exe'))
-        else:
-            self.assertTrue(p.endswith('dist/bin/xpcshell'))
 
 
 if __name__ == '__main__':
