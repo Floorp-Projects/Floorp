@@ -49,7 +49,6 @@ public:
     , mIOLoop(nullptr)
     , mConnector(aConnector)
     , mShuttingDownOnIOThread(false)
-    , mTask(nullptr)
     , mAddress(aAddress)
   {
   }
@@ -98,37 +97,6 @@ public:
     mWriteWatcher.StopWatchingFileDescriptor();
 
     mShuttingDownOnIOThread = true;
-    if (mTask) {
-      mTask->Cancel();
-      mTask = nullptr;
-    }
-  }
-
-  // NB: Any CancelableTask that is passed into EnqueueTask *must* set mTask to
-  // nullptr in its run method if it was not already canceled.
-  void EnqueueTask(int aDelayMs, CancelableTask* aTask)
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-
-    nsAutoPtr<CancelableTask> task(aTask);
-    MessageLoopForIO* ioLoop = MessageLoopForIO::current();
-    if (!ioLoop) {
-      NS_WARNING("No IOLoop to attach to, cancelling self!");
-      return;
-    }
-    if (mTask) {
-      return;
-    }
-    if (mShuttingDownOnIOThread) {
-      return;
-    }
-
-    mTask = task.forget();
-    if (aDelayMs) {
-      ioLoop->PostDelayedTask(FROM_HERE, mTask, aDelayMs);
-    } else {
-      ioLoop->PostTask(FROM_HERE, mTask);
-    }
   }
 
   void SetUpIO()
@@ -236,12 +204,6 @@ private:
    * If true, do not requeue whatever task we're running
    */
   bool mShuttingDownOnIOThread;
-
-  /**
-   * Pointer to the task we're currently running. DO NOT DELETE MANUALLY. This
-   * will be taken care of by the IO loop. Just set to nullptr.
-   */
-  CancelableTask* mTask;
 
   /**
    * Address we are connecting to, assuming we are creating a client connection.
@@ -471,7 +433,6 @@ void
 UnixSocketImpl::Accept()
 {
   MOZ_ASSERT(!NS_IsMainThread());
-  mTask = nullptr;
 
   if (!mConnector) {
     NS_WARNING("No connector object available!");
