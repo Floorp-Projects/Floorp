@@ -26,14 +26,14 @@ function run_test() {
 
   const rootPrefBranch = prefSvc.getBranch("");
   
-  let isWin7OrHigher = false;
+  let isWin7 = false;
   let isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
   if (isWindows) {
     try {
       let version = Cc["@mozilla.org/system-info;1"]
                       .getService(Ci.nsIPropertyBag2)
                       .getProperty("version");
-      isWin7OrHigher = (parseFloat(version) >= 6.1);
+      isWin7 = (parseFloat(version) == 6.1);
     } catch (ex) { }
   }
 
@@ -151,7 +151,7 @@ function run_test() {
     do_check_eq(0, protoInfo.possibleApplicationHandlers.length);
 
   // Win7 doesn't have a default mailto: handler
-  if (isWin7OrHigher)
+  if (isWin7)
     do_check_true(protoInfo.alwaysAskBeforeHandling);
   else
     do_check_false(protoInfo.alwaysAskBeforeHandling);
@@ -166,7 +166,7 @@ function run_test() {
     // the pref is true, the value in RDF is false. The injected mailto handler
     // carried over the default pref value, and so when we set the pref above
     // to true it's ignored.
-    if (isWin7OrHigher)
+    if (isWin7)
       do_check_true(protoInfo.alwaysAskBeforeHandling);
     else
       do_check_false(protoInfo.alwaysAskBeforeHandling);
