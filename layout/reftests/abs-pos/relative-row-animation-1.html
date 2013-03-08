@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<title>Testcase, bug 845837</title>
+<meta charset="UTF-8">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=845837
+-->
+
+<div style="height: 20px"></div>
+
+<table border>
+  <tr id="tr" style="position: relative">
+    <td>hello
+</table>
+
+<script>
+var tr = document.getElementById("tr");
+tr.offsetTop;
+tr.style.top = '20px';
+tr.offsetTop;
+tr.style.fontSize = '100px';
+tr.offsetTop;
+tr.style.fontSize = '';
+tr.offsetTop;
+tr.style.top = '0px';
+tr.offsetTop;
+// Just check that we have no relative positioning applied when we're done,
+// since we don't currently support relative positioning on table rows.
+</script>
