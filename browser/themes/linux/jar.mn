@@ -190,6 +190,7 @@ browser.jar:
   skin/classic/browser/devtools/tool-profiler.png         (devtools/tool-profiler.png)
   skin/classic/browser/devtools/close.png                 (devtools/close.png)
   skin/classic/browser/devtools/undock.png                (devtools/undock.png)
+  skin/classic/browser/devtools/font-inspector.css        (devtools/font-inspector.css)
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-16-throbber.png
   skin/classic/browser/sync-16.png

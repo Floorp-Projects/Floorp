@@ -51,7 +51,10 @@ function selectAndCheckById(id) {
 
 function testToggle() {
   toolbox.once("destroyed", function() {
-    gDevTools.showToolbox(target, "styleeditor").then(function() {
+    // Cannot reuse a target after it's destroyed.
+    target = TargetFactory.forTab(gBrowser.selectedTab);
+    gDevTools.showToolbox(target, "styleeditor").then(function(aToolbox) {
+      toolbox = aToolbox;
       is(toolbox.currentToolId, "styleeditor", "The style editor is selected");
       finishUp();
     });
@@ -61,9 +64,10 @@ function testToggle() {
 }
 
 function finishUp() {
-  toolbox.destroy();
-  toolbox = null;
-  target = null;
-  gBrowser.removeCurrentTab();
-  finish();
+  toolbox.destroy().then(function() {
+    toolbox = null;
+    target = null;
+    gBrowser.removeCurrentTab();
+    finish();
+  });
 }
