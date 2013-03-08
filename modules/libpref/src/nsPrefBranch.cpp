@@ -15,6 +15,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
+#include "nsPrintfCString.h"
 #include "nsIStringBundle.h"
 #include "prefapi.h"
 #include "pldhash.h"
@@ -23,6 +24,10 @@
 #include "mozilla/Services.h"
 
 #include "prefapi_private_data.h"
+
+#ifdef MOZ_CRASHREPORTER
+#include "nsICrashReporter.h"
+#endif
 
 // Definitions
 struct EnumerateData {
@@ -308,7 +313,23 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
     nsCOMPtr<nsISupportsString> theString(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv));
 
     if (NS_SUCCEEDED(rv)) {
-      theString->SetData(NS_ConvertUTF8toUTF16(utf8String));
+      // Debugging to see why we end up with very long strings here with
+      // some addons, see bug 836263.
+      nsAutoString wdata;
+      if (!AppendUTF8toUTF16(utf8String, wdata, mozilla::fallible_t())) {
+#ifdef MOZ_CRASHREPORTER
+        nsCOMPtr<nsICrashReporter> cr =
+          do_GetService("@mozilla.org/toolkit/crash-reporter;1");
+        if (cr) {
+          cr->AnnotateCrashReport(NS_LITERAL_CSTRING("bug836263-size"),
+                                  nsPrintfCString("%x", utf8String.Length()));
+          cr->RegisterAppMemory(uint64_t(utf8String.BeginReading()),
+                                std::min(0x1000U, utf8String.Length()));
+        }
+#endif
+        NS_RUNTIMEABORT("bug836263");
+      }
+      theString->SetData(wdata);
       theString.forget(reinterpret_cast<nsISupportsString**>(_retval));
     }
     return rv;
