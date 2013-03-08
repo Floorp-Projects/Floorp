@@ -225,8 +225,8 @@ function synthesizeDrop(srcElement, destElement, dragData, dropEffect, aWindow, 
   var synthesizeMouseAtCenter = (eventUtils || window).synthesizeMouseAtCenter;
   var synthesizeMouse = (eventUtils || window).synthesizeMouse;
 
-  var gWindowUtils  = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                             getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var gWindowUtils = aDestWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                                 getInterface(Components.interfaces.nsIDOMWindowUtils);
   var ds = Components.classes["@mozilla.org/widget/dragservice;1"].
            getService(Components.interfaces.nsIDragService);
 
