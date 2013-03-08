@@ -765,8 +765,6 @@ MutableHandle<T>::MutableHandle(Rooted<T> *root)
     ptr = root->address();
 }
 
-JS_FRIEND_API(bool) NeedRelaxedRootChecks();
-
 } /* namespace JS */
 
 namespace js {
@@ -775,11 +773,9 @@ namespace js {
  * Hook for dynamic root analysis. Checks the native stack and poisons
  * references to GC things which have not been rooted.
  */
-inline void MaybeCheckStackRoots(JSContext *cx, bool relax = true)
+inline void MaybeCheckStackRoots(JSContext *cx)
 {
 #if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
-    if (relax && JS::NeedRelaxedRootChecks())
-        return;
     JS::CheckStackRoots(cx);
 #endif
 }
