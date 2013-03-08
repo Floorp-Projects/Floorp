@@ -184,7 +184,7 @@ public class testBookmarksTab extends BaseTest {
         View child;
         mSolo.clickOnText("Bookmarks");
         child = list.getChildAt(bookmarkIndex);
-        waitForText("about:firefox");
+        waitForText("about:home");
         mSolo.clickLongOnView(child);
         waitForText("Open in New Tab");
         mSolo.clickOnText("Edit");
@@ -207,7 +207,7 @@ public class testBookmarksTab extends BaseTest {
         View child;
         mSolo.clickOnText("Bookmarks");
         child = list.getChildAt(bookmarkIndex);
-        waitForText("about:firefox");
+        waitForText("about:home");
         mSolo.clickLongOnView(child);
         waitForText("Open in New Tab");
         mSolo.clickOnText("Edit");
@@ -221,12 +221,12 @@ public class testBookmarksTab extends BaseTest {
         // Check if the new text was added
         if (mSolo.searchText(addedText)) {
            mSolo.clickOnText("Cancel");
-           waitForText("about:firefox");
+           waitForText("about:home");
            mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
            return true;
         } else {
            mSolo.clickOnText("Cancel");
-           waitForText("about:firefox");
+           waitForText("about:home");
            mActions.sendSpecialKey(Actions.SpecialKey.BACK); // close the VKB
            return false;
         }
