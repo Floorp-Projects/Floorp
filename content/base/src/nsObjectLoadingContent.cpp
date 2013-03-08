@@ -2646,13 +2646,21 @@ nsObjectLoadingContent::GetPluginFallbackType(uint32_t* aPluginFallbackType)
 }
 
 NS_IMETHODIMP
+nsObjectLoadingContent::GetHasRunningPlugin(bool *aHasPlugin)
+{
+  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
+  *aHasPlugin = HasRunningPlugin();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsObjectLoadingContent::CancelPlayPreview()
 {
   if (!nsContentUtils::IsCallerChrome())
     return NS_ERROR_NOT_AVAILABLE;
 
   mPlayPreviewCanceled = true;
-  
+
   // If we're in play preview state already, reload
   if (mType == eType_Null && mFallbackType == eFallbackPlayPreview) {
     return LoadObject(true, true);
