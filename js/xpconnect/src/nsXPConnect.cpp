@@ -225,7 +225,7 @@ nsXPConnect::ReleaseXPConnectSingleton()
 
 // static
 nsresult
-nsXPConnect::GetInterfaceInfoManager(nsIInterfaceInfoSuperManager** iim,
+nsXPConnect::GetInterfaceInfoManager(nsIInterfaceInfoManager** iim,
                                      nsXPConnect* xpc /*= nullptr*/)
 {
     if (!xpc && !(xpc = GetXPConnect()))
@@ -275,29 +275,11 @@ static bool NameTester(nsIInterfaceInfoManager* manager, const void* data,
 }
 
 static nsresult FindInfo(InfoTester tester, const void* data,
-                         nsIInterfaceInfoSuperManager* iism,
+                         nsIInterfaceInfoManager* iism,
                          nsIInterfaceInfo** info)
 {
     if (tester(iism, data, info))
         return NS_OK;
-
-    // If not found, then let's ask additional managers.
-
-    bool yes;
-    nsCOMPtr<nsISimpleEnumerator> list;
-
-    if (NS_SUCCEEDED(iism->HasAdditionalManagers(&yes)) && yes &&
-        NS_SUCCEEDED(iism->EnumerateAdditionalManagers(getter_AddRefs(list))) &&
-        list) {
-        bool more;
-        nsCOMPtr<nsIInterfaceInfoManager> current;
-
-        while (NS_SUCCEEDED(list->HasMoreElements(&more)) && more &&
-               NS_SUCCEEDED(list->GetNext(getter_AddRefs(current))) && current) {
-            if (tester(current, data, info))
-                return NS_OK;
-        }
-    }
 
     return NS_ERROR_NO_INTERFACE;
 }

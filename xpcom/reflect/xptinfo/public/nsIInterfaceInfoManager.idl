@@ -28,16 +28,6 @@ interface nsIInterfaceInfoManager : nsISupports
     nsIEnumerator enumerateInterfacesWhoseNamesStartWith(in string prefix);
 };
 
-[uuid(0ee22850-bc6a-11d5-9134-0010a4e73d9a)]
-interface nsIInterfaceInfoSuperManager : nsIInterfaceInfoManager
-{
-    void addAdditionalManager(in nsIInterfaceInfoManager manager);        
-    void removeAdditionalManager(in nsIInterfaceInfoManager manager);        
-
-    boolean hasAdditionalManagers();
-    nsISimpleEnumerator enumerateAdditionalManagers();
-};
-
 %{C++
 #define NS_INTERFACEINFOMANAGER_SERVICE_CID            \
  { /* 13bef784-f8e0-4f96-85c1-09f9ef4f9a19 */          \
