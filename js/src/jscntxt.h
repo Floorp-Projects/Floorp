@@ -991,6 +991,7 @@ struct JSRuntime : js::RuntimeFriendFields,
 #endif
 
     bool                gcValidate;
+    bool                gcFullCompartmentChecks;
 
     JSGCCallback        gcCallback;
     js::GCSliceCallback gcSliceCallback;

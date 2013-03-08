@@ -2688,7 +2688,8 @@ BeginMarkPhase(JSRuntime *rt)
     int64_t currentTime = PRMJ_Now();
 
 #ifdef DEBUG
-    CheckForCompartmentMismatches(rt);
+    if (rt->gcFullCompartmentChecks)
+        CheckForCompartmentMismatches(rt);
 #endif
 
     rt->gcIsFull = true;
@@ -4713,6 +4714,13 @@ gc::SetValidateGC(JSContext *cx, bool enabled)
 {
     JSRuntime *rt = cx->runtime;
     rt->gcValidate = enabled;
+}
+
+void
+gc::SetFullCompartmentChecks(JSContext *cx, bool enabled)
+{
+    JSRuntime *rt = cx->runtime;
+    rt->gcFullCompartmentChecks = enabled;
 }
 
 #ifdef DEBUG
