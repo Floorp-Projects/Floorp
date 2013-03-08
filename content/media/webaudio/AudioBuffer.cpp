@@ -12,6 +12,7 @@
 #include "jsfriendapi.h"
 #include "mozilla/ErrorResult.h"
 #include "AudioSegment.h"
+#include "nsIScriptError.h"
 
 namespace mozilla {
 namespace dom {
@@ -190,6 +191,16 @@ AudioBuffer::GetThreadSharedChannelsForRate(JSContext* aJSContext, uint32_t aRat
   }
   float* outputData = static_cast<float*>(malloc(uint32_t(size)));
   if (!outputData) {
+    nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(mContext->GetParentObject());
+    nsIDocument* doc = nullptr;
+    if (pWindow) {
+      doc = pWindow->GetExtantDoc();
+    }
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    "Media",
+                                    doc,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "MediaBufferSourceNodeResampleOutOfMemory");
     return mResampledChannels;
   }
 
