@@ -317,7 +317,7 @@ struct JSCompartment : private JS::shadow::Zone, public js::gc::GraphNodeBase<JS
         return gcState == Finished;
     }
 
-    volatile size_t              gcBytes;
+    size_t                       gcBytes;
     size_t                       gcTriggerBytes;
     size_t                       gcMaxMallocBytes;
     double                       gcHeapGrowthFactor;

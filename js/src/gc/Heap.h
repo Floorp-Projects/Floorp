@@ -664,7 +664,7 @@ const size_t ArenasPerChunk = ChunkBytesAvailable / BytesPerArenaWithHeader;
 /* A chunk bitmap contains enough mark bits for all the cells in a chunk. */
 struct ChunkBitmap
 {
-    volatile uintptr_t bitmap[ArenaBitmapWords * ArenasPerChunk];
+    uintptr_t bitmap[ArenaBitmapWords * ArenasPerChunk];
 
     MOZ_ALWAYS_INLINE void getMarkWordAndMask(const Cell *cell, uint32_t color,
                                               uintptr_t **wordp, uintptr_t *maskp)
