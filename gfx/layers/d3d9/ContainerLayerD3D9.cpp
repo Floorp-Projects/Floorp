@@ -296,8 +296,6 @@ ContainerRender(Container* aContainer,
     }
   }
     
-  aManager->device()->SetScissorRect(&containerD3D9ClipRect);
-
   if (useIntermediate && !aManager->CompositingDisabled()) {
     aManager->device()->SetRenderTarget(0, previousRenderTarget);
     aManager->device()->SetVertexShaderConstantF(CBvRenderTargetOffset, previousRenderTargetOffset, 1);
@@ -311,13 +309,15 @@ ContainerRender(Container* aContainer,
                                        1);
 
     aContainer->SetShaderTransformAndOpacity();
-
     aManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER,
                             aContainer->GetMaskLayer(),
                             aContainer->GetTransform().CanDraw2D());
 
     aManager->device()->SetTexture(0, renderTexture);
+    aManager->device()->SetScissorRect(&containerD3D9ClipRect);
     aManager->device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+  } else {
+    aManager->device()->SetScissorRect(&containerD3D9ClipRect);
   }
 }
 
