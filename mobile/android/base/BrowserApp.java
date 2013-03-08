@@ -1513,4 +1513,14 @@ abstract public class BrowserApp extends GeckoApp
             }
         }).execute();
     }
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+        if (mAboutHomeContent != null) {
+            mAboutHomeContent.refresh();
+        }
+
+    }
 }
