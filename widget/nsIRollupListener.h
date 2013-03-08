@@ -29,9 +29,14 @@ class nsIRollupListener {
   virtual bool Rollup(uint32_t aCount, nsIContent** aLastRolledUp) = 0;
 
   /**
-   * Asks the RollupListener if it should rollup on mousevents
+   * Asks the RollupListener if it should rollup on mouse wheel events
    */
   virtual bool ShouldRollupOnMouseWheelEvent() = 0;
+
+  /**
+   * Asks the RollupListener if it should consume mouse wheel events
+   */
+  virtual bool ShouldConsumeOnMouseWheelEvent() = 0;
 
   /**
    * Asks the RollupListener if it should rollup on mouse activate, eg. X-Mouse
