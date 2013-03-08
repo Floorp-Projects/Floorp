@@ -70,6 +70,7 @@ var Browser = {
     ScrollwheelModule.init(Elements.browsers);
     GestureModule.init();
     BrowserTouchHandler.init();
+    PopupBlockerObserver.init();
 
     // Warning, total hack ahead. All of the real-browser related scrolling code
     // lies in a pretend scrollbox here. Let's not land this as-is. Maybe it's time
@@ -1223,8 +1224,22 @@ nsBrowserAccess.prototype = {
  * Handler for blocked popups, triggered by DOMUpdatePageReport events in browser.xml
  */
 var PopupBlockerObserver = {
-  onUpdatePageReport: function onUpdatePageReport(aEvent)
-  {
+  init: function init() {
+    Elements.browsers.addEventListener("mousedown", this, true);
+  },
+
+  handleEvent: function handleEvent(aEvent) {
+    switch (aEvent.type) {
+      case "mousedown":
+        let box = Browser.getNotificationBox();
+        let notification = box.getNotificationWithValue("popup-blocked");
+        if (notification)
+          box.removeNotification(notification);
+        break;
+    }
+  },
+
+  onUpdatePageReport: function onUpdatePageReport(aEvent) {
     var cBrowser = Browser.selectedBrowser;
     if (aEvent.originalTarget != cBrowser)
       return;
