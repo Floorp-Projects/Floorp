@@ -16,6 +16,7 @@
 #include <process.h>
 #include <stdlib.h>
 #include "cubeb/cubeb.h"
+#include "cubeb-internal.h"
 
 /* This is missing from the MinGW headers. Use a safe fallback. */
 #ifndef MEMORY_ALLOCATION_ALIGNMENT
@@ -35,7 +36,10 @@ struct cubeb_stream_item {
   cubeb_stream * stream;
 };
 
+static struct cubeb_ops const winmm_ops;
+
 struct cubeb {
+  struct cubeb_ops const * ops;
   HANDLE event;
   HANDLE thread;
   int shutdown;
@@ -82,7 +86,7 @@ bytes_per_frame(cubeb_stream_params params)
 }
 
 static WAVEHDR *
-cubeb_get_next_buffer(cubeb_stream * stm)
+winmm_get_next_buffer(cubeb_stream * stm)
 {
   WAVEHDR * hdr = NULL;
 
@@ -97,7 +101,7 @@ cubeb_get_next_buffer(cubeb_stream * stm)
 }
 
 static void
-cubeb_refill_stream(cubeb_stream * stm)
+winmm_refill_stream(cubeb_stream * stm)
 {
   WAVEHDR * hdr;
   long got;
@@ -123,7 +127,7 @@ cubeb_refill_stream(cubeb_stream * stm)
     return;
   }
 
-  hdr = cubeb_get_next_buffer(stm);
+  hdr = winmm_get_next_buffer(stm);
 
   wanted = (DWORD) stm->buffer_size / bytes_per_frame(stm->params);
 
@@ -157,7 +161,7 @@ cubeb_refill_stream(cubeb_stream * stm)
 }
 
 static unsigned __stdcall
-cubeb_buffer_thread(void * user_ptr)
+winmm_buffer_thread(void * user_ptr)
 {
   cubeb * ctx = (cubeb *) user_ptr;
   assert(ctx);
@@ -175,7 +179,7 @@ cubeb_buffer_thread(void * user_ptr)
     item = InterlockedFlushSList(ctx->work);
     while (item != NULL) {
       PSLIST_ENTRY tmp = item;
-      cubeb_refill_stream(((struct cubeb_stream_item *) tmp)->stream);
+      winmm_refill_stream(((struct cubeb_stream_item *) tmp)->stream);
       item = item->Next;
       _aligned_free(tmp);
     }
@@ -189,7 +193,7 @@ cubeb_buffer_thread(void * user_ptr)
 }
 
 static void CALLBACK
-cubeb_buffer_callback(HWAVEOUT waveout, UINT msg, DWORD_PTR user_ptr, DWORD_PTR p1, DWORD_PTR p2)
+winmm_buffer_callback(HWAVEOUT waveout, UINT msg, DWORD_PTR user_ptr, DWORD_PTR p1, DWORD_PTR p2)
 {
   cubeb_stream * stm = (cubeb_stream *) user_ptr;
   struct cubeb_stream_item * item;
@@ -234,8 +238,10 @@ calculate_minimum_latency(void)
   return 0;
 }
 
-int
-cubeb_init(cubeb ** context, char const * context_name)
+static void winmm_destroy(cubeb * ctx);
+
+/*static*/ int
+winmm_init(cubeb ** context, char const * context_name)
 {
   cubeb * ctx;
 
@@ -245,19 +251,21 @@ cubeb_init(cubeb ** context, char const * context_name)
   ctx = calloc(1, sizeof(*ctx));
   assert(ctx);
 
+  ctx->ops = &winmm_ops;
+
   ctx->work = _aligned_malloc(sizeof(*ctx->work), MEMORY_ALLOCATION_ALIGNMENT);
   assert(ctx->work);
   InitializeSListHead(ctx->work);
 
   ctx->event = CreateEvent(NULL, FALSE, FALSE, NULL);
   if (!ctx->event) {
-    cubeb_destroy(ctx);
+    winmm_destroy(ctx);
     return CUBEB_ERROR;
   }
 
-  ctx->thread = (HANDLE) _beginthreadex(NULL, 64 * 1024, cubeb_buffer_thread, ctx, 0, NULL);
+  ctx->thread = (HANDLE) _beginthreadex(NULL, 64 * 1024, winmm_buffer_thread, ctx, 0, NULL);
   if (!ctx->thread) {
-    cubeb_destroy(ctx);
+    winmm_destroy(ctx);
     return CUBEB_ERROR;
   }
 
@@ -273,14 +281,14 @@ cubeb_init(cubeb ** context, char const * context_name)
   return CUBEB_OK;
 }
 
-char const *
-cubeb_get_backend_id(cubeb * ctx)
+static char const *
+winmm_get_backend_id(cubeb * ctx)
 {
   return "winmm";
 }
 
-void
-cubeb_destroy(cubeb * ctx)
+static void
+winmm_destroy(cubeb * ctx)
 {
   DWORD rv;
 
@@ -306,8 +314,10 @@ cubeb_destroy(cubeb * ctx)
   free(ctx);
 }
 
-int
-cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_name,
+static void winmm_stream_destroy(cubeb_stream * stm);
+
+static int
+winmm_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_name,
                   cubeb_stream_params stream_params, unsigned int latency,
                   cubeb_data_callback data_callback,
                   cubeb_state_callback state_callback,
@@ -323,12 +333,6 @@ cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
   assert(stream);
 
   *stream = NULL;
-
-  if (stream_params.rate < 1 || stream_params.rate > 192000 ||
-      stream_params.channels < 1 || stream_params.channels > 32 ||
-      latency < 1 || latency > 2000) {
-    return CUBEB_ERROR_INVALID_FORMAT;
-  }
 
   memset(&wfx, 0, sizeof(wfx));
   if (stream_params.channels > 2) {
@@ -402,23 +406,23 @@ cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
 
   stm->event = CreateEvent(NULL, FALSE, FALSE, NULL);
   if (!stm->event) {
-    cubeb_stream_destroy(stm);
+    winmm_stream_destroy(stm);
     return CUBEB_ERROR;
   }
 
-  /* cubeb_buffer_callback will be called during waveOutOpen, so all
+  /* winmm_buffer_callback will be called during waveOutOpen, so all
      other initialization must be complete before calling it. */
   r = waveOutOpen(&stm->waveout, WAVE_MAPPER, &wfx.Format,
-                  (DWORD_PTR) cubeb_buffer_callback, (DWORD_PTR) stm,
+                  (DWORD_PTR) winmm_buffer_callback, (DWORD_PTR) stm,
                   CALLBACK_FUNCTION);
   if (r != MMSYSERR_NOERROR) {
-    cubeb_stream_destroy(stm);
+    winmm_stream_destroy(stm);
     return CUBEB_ERROR;
   }
 
   r = waveOutPause(stm->waveout);
   if (r != MMSYSERR_NOERROR) {
-    cubeb_stream_destroy(stm);
+    winmm_stream_destroy(stm);
     return CUBEB_ERROR;
   }
 
@@ -432,11 +436,11 @@ cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
 
     r = waveOutPrepareHeader(stm->waveout, hdr, sizeof(*hdr));
     if (r != MMSYSERR_NOERROR) {
-      cubeb_stream_destroy(stm);
+      winmm_stream_destroy(stm);
       return CUBEB_ERROR;
     }
 
-    cubeb_refill_stream(stm);
+    winmm_refill_stream(stm);
   }
 
   *stream = stm;
@@ -444,8 +448,8 @@ cubeb_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
   return CUBEB_OK;
 }
 
-void
-cubeb_stream_destroy(cubeb_stream * stm)
+static void
+winmm_stream_destroy(cubeb_stream * stm)
 {
   DWORD rv;
   int i;
@@ -501,8 +505,8 @@ cubeb_stream_destroy(cubeb_stream * stm)
   free(stm);
 }
 
-int
-cubeb_stream_start(cubeb_stream * stm)
+static int
+winmm_stream_start(cubeb_stream * stm)
 {
   MMRESULT r;
 
@@ -519,8 +523,8 @@ cubeb_stream_start(cubeb_stream * stm)
   return CUBEB_OK;
 }
 
-int
-cubeb_stream_stop(cubeb_stream * stm)
+static int
+winmm_stream_stop(cubeb_stream * stm)
 {
   MMRESULT r;
 
@@ -537,8 +541,8 @@ cubeb_stream_stop(cubeb_stream * stm)
   return CUBEB_OK;
 }
 
-int
-cubeb_stream_get_position(cubeb_stream * stm, uint64_t * position)
+static int
+winmm_stream_get_position(cubeb_stream * stm, uint64_t * position)
 {
   MMRESULT r;
   MMTIME time;
@@ -557,3 +561,13 @@ cubeb_stream_get_position(cubeb_stream * stm, uint64_t * position)
   return CUBEB_OK;
 }
 
+static struct cubeb_ops const winmm_ops = {
+  /*.init =*/ winmm_init,
+  /*.get_backend_id =*/ winmm_get_backend_id,
+  /*.destroy =*/ winmm_destroy,
+  /*.stream_init =*/ winmm_stream_init,
+  /*.stream_destroy =*/ winmm_stream_destroy,
+  /*.stream_start =*/ winmm_stream_start,
+  /*.stream_stop =*/ winmm_stream_stop,
+  /*.stream_get_position =*/ winmm_stream_get_position
+};
