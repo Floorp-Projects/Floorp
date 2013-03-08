@@ -83,6 +83,48 @@ ICEntry::fallbackStub() const
     return firstStub()->getChainFallback();
 }
 
+
+ICStubConstIterator &
+ICStubConstIterator::operator++()
+{
+    JS_ASSERT(currentStub_ != NULL);
+    currentStub_ = currentStub_->next();
+    return *this;
+}
+
+
+ICStubIterator::ICStubIterator(ICFallbackStub *fallbackStub, bool end)
+  : icEntry_(fallbackStub->icEntry()),
+    fallbackStub_(fallbackStub),
+    previousStub_(NULL),
+    currentStub_(end ? fallbackStub : icEntry_->firstStub()),
+    unlinked_(false)
+{ }
+
+ICStubIterator &
+ICStubIterator::operator++()
+{
+    JS_ASSERT(currentStub_->next() != NULL);
+    if (!unlinked_)
+        previousStub_ = currentStub_;
+    currentStub_ = currentStub_->next();
+    unlinked_ = false;
+    return *this;
+}
+
+void
+ICStubIterator::unlink(Zone *zone)
+{
+    JS_ASSERT(currentStub_->next() != NULL);
+    JS_ASSERT(currentStub_ != fallbackStub_);
+    JS_ASSERT(!unlinked_);
+    fallbackStub_->unlinkStub(zone, previousStub_, currentStub_);
+
+    // Mark the current iterator position as unlinked, so operator++ works properly.
+    unlinked_ = true;
+}
+
+
 void
 ICStub::markCode(JSTracer *trc, const char *name)
 {
@@ -111,22 +153,16 @@ ICStub::trace(JSTracer *trc)
     // that references the same stub chain.
     if (isMonitoredFallback()) {
         ICTypeMonitor_Fallback *lastMonStub = toMonitoredFallbackStub()->fallbackMonitorStub();
-        for (ICStub *monStub = lastMonStub->firstMonitorStub();
-             monStub != NULL;
-             monStub = monStub->next())
-        {
-            JS_ASSERT_IF(monStub->next() == NULL, monStub == lastMonStub);
-            monStub->markCode(trc, "baseline-monitor-stub-ioncode");
+        for (ICStubConstIterator iter = lastMonStub->firstMonitorStub(); !iter.atEnd(); iter++) {
+            JS_ASSERT_IF(iter->next() == NULL, *iter == lastMonStub);
+            iter->markCode(trc, "baseline-monitor-stub-ioncode");
         }
     }
 
     if (isUpdated()) {
-        for (ICStub *updateStub = toUpdatedStub()->firstUpdateStub();
-             updateStub != NULL;
-             updateStub = updateStub->next())
-        {
-            JS_ASSERT_IF(updateStub->next() == NULL, updateStub->isTypeUpdate_Fallback());
-            updateStub->markCode(trc, "baseline-update-stub-ioncode");
+        for (ICStubConstIterator iter = toUpdatedStub()->firstUpdateStub(); !iter.atEnd(); iter++) {
+            JS_ASSERT_IF(iter->next() == NULL, iter->isTypeUpdate_Fallback());
+            iter->markCode(trc, "baseline-update-stub-ioncode");
         }
     }
 
@@ -336,18 +372,10 @@ ICFallbackStub::unlinkStub(Zone *zone, ICStub *prev, ICStub *stub)
 void
 ICFallbackStub::unlinkStubsWithKind(JSContext *cx, ICStub::Kind kind)
 {
-    ICStub *stub = icEntry_->firstStub();
-    ICStub *last = NULL;
-    do {
-        if (stub->kind() == kind) {
-            unlinkStub(cx->zone(), last, stub);
-            stub = stub->next();
-            continue;
-        }
-
-        last = stub;
-        stub = stub->next();
-    } while (stub);
+    for (ICStubIterator iter = beginChain(); !iter.atEnd(); iter++) {
+        if (iter->kind() == kind)
+            iter.unlink(cx->zone());
+    }
 }
 
 void
@@ -367,15 +395,12 @@ ICTypeMonitor_Fallback::resetMonitorStubChain(Zone *zone)
         lastMonitorStubPtrAddr_ = NULL;
 
         // Reset firstMonitorStub_ field of all monitored stubs.
-        ICEntry *ent = mainFallbackStub_->icEntry();
-        for (ICStub *mainStub = ent->firstStub();
-             mainStub != mainFallbackStub_;
-             mainStub = mainStub->next())
+        for (ICStubConstIterator iter = mainFallbackStub_->beginChainConst();
+             !iter.atEnd(); iter++)
         {
-            if (!mainStub->isMonitored())
+            if (!iter->isMonitored())
                 continue;
-
-            mainStub->toMonitoredStub()->resetFirstMonitorStub(this);
+            iter->toMonitoredStub()->resetFirstMonitorStub(this);
         }
     } else {
         icEntry_->setFirstStub(this);
@@ -868,9 +893,9 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, HandleScript scrip
 
         // Check for existing TypeMonitor stub.
         ICTypeMonitor_PrimitiveSet *existingStub = NULL;
-        for (ICStub *chk = firstMonitorStub(); chk != this; chk = chk->next()) {
-            if (chk->isTypeMonitor_PrimitiveSet()) {
-                existingStub = chk->toTypeMonitor_PrimitiveSet();
+        for (ICStubConstIterator iter = firstMonitorStub(); !iter.atEnd(); iter++) {
+            if (iter->isTypeMonitor_PrimitiveSet()) {
+                existingStub = iter->toTypeMonitor_PrimitiveSet();
                 if (existingStub->containsType(type))
                     return true;
             }
@@ -894,9 +919,9 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, HandleScript scrip
         RootedObject obj(cx, &val.toObject());
 
         // Check for existing TypeMonitor stub.
-        for (ICStub *chk = firstMonitorStub(); chk != this; chk = chk->next()) {
-            if (chk->isTypeMonitor_SingleObject() &&
-                chk->toTypeMonitor_SingleObject()->object() == obj)
+        for (ICStubConstIterator iter = firstMonitorStub(); !iter.atEnd(); iter++) {
+            if (iter->isTypeMonitor_SingleObject() &&
+                iter->toTypeMonitor_SingleObject()->object() == obj)
             {
                 return true;
             }
@@ -916,9 +941,9 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, HandleScript scrip
         RootedTypeObject type(cx, val.toObject().type());
 
         // Check for existing TypeMonitor stub.
-        for (ICStub *chk = firstMonitorStub(); chk != this; chk = chk->next()) {
-            if (chk->isTypeMonitor_TypeObject() &&
-                chk->toTypeMonitor_TypeObject()->type() == type)
+        for (ICStubConstIterator iter = firstMonitorStub(); !iter.atEnd(); iter++) {
+            if (iter->isTypeMonitor_TypeObject() &&
+                iter->toTypeMonitor_TypeObject()->type() == type)
             {
                 return true;
             }
@@ -941,25 +966,18 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, HandleScript scrip
         // Was an empty monitor chain before, but a new stub was added.  This is the
         // only time that any main stubs' firstMonitorStub fields need to be updated to
         // refer to the newly added monitor stub.
-        ICEntry *ent = mainFallbackStub_->icEntry();
-        for (ICStub *mainStub = ent->firstStub();
-             mainStub != mainFallbackStub_;
-             mainStub = mainStub->next())
-        {
-            // Since we stop at the last stub, all stubs MUST have a valid next stub.
-            JS_ASSERT(mainStub->next() != NULL);
+        ICStub *firstStub = mainFallbackStub_->icEntry()->firstStub();
+        for (ICStubConstIterator iter = firstStub; !iter.atEnd(); iter++) {
+            // Non-monitored stubs are used if the result has always the same type,
+            // e.g. a StringLength stub will always return int32.
+            if (!iter->isMonitored())
+                continue;
 
             // Since we just added the first optimized monitoring stub, any
             // existing main stub's |firstMonitorStub| MUST be pointing to the fallback
             // monitor stub (i.e. this stub).
-
-            // Non-monitored stubs are used if the result has always the same type,
-            // e.g. a StringLength stub will always return int32.
-            if (!mainStub->isMonitored())
-                continue;
-
-            JS_ASSERT(mainStub->toMonitoredStub()->firstMonitorStub() == this);
-            mainStub->toMonitoredStub()->updateFirstMonitorStub(firstMonitorStub_);
+            JS_ASSERT(iter->toMonitoredStub()->firstMonitorStub() == this);
+            iter->toMonitoredStub()->updateFirstMonitorStub(firstMonitorStub_);
         }
     }
 
@@ -1108,9 +1126,9 @@ ICUpdatedStub::addUpdateStubForValue(JSContext *cx, HandleScript script, HandleO
 
         // Check for existing TypeUpdate stub.
         ICTypeUpdate_PrimitiveSet *existingStub = NULL;
-        for (ICStub *chk = firstUpdateStub_; chk->next() != NULL; chk = chk->next()) {
-            if (chk->isTypeUpdate_PrimitiveSet()) {
-                existingStub = chk->toTypeUpdate_PrimitiveSet();
+        for (ICStubConstIterator iter = firstUpdateStub_; !iter.atEnd(); iter++) {
+            if (iter->isTypeUpdate_PrimitiveSet()) {
+                existingStub = iter->toTypeUpdate_PrimitiveSet();
                 if (existingStub->containsType(type))
                     return true;
             }
@@ -1133,9 +1151,9 @@ ICUpdatedStub::addUpdateStubForValue(JSContext *cx, HandleScript script, HandleO
         RootedObject obj(cx, &val.toObject());
 
         // Check for existing TypeUpdate stub.
-        for (ICStub *chk = firstUpdateStub_; chk->next() != NULL; chk = chk->next()) {
-            if (chk->isTypeUpdate_SingleObject() &&
-                chk->toTypeUpdate_SingleObject()->object() == obj)
+        for (ICStubConstIterator iter = firstUpdateStub_; !iter.atEnd(); iter++) {
+            if (iter->isTypeUpdate_SingleObject() &&
+                iter->toTypeUpdate_SingleObject()->object() == obj)
             {
                 return true;
             }
@@ -1154,9 +1172,9 @@ ICUpdatedStub::addUpdateStubForValue(JSContext *cx, HandleScript script, HandleO
         RootedTypeObject type(cx, val.toObject().type());
 
         // Check for existing TypeUpdate stub.
-        for (ICStub *chk = firstUpdateStub_; chk->next() != NULL; chk = chk->next()) {
-            if (chk->isTypeUpdate_TypeObject() &&
-                chk->toTypeUpdate_TypeObject()->type() == type)
+        for (ICStubConstIterator iter = firstUpdateStub_; !iter.atEnd(); iter++) {
+            if (iter->isTypeUpdate_TypeObject() &&
+                iter->toTypeUpdate_TypeObject()->type() == type)
             {
                 return true;
             }
@@ -2996,10 +3014,10 @@ IsCacheableSetPropCallScripted(JSObject *obj, JSObject *holder, Shape *shape)
 static bool
 TypedArrayGetElemStubExists(ICGetElem_Fallback *stub, HandleObject obj)
 {
-    for (ICStub *cur = stub->icEntry()->firstStub(); cur != stub; cur = cur->next()) {
-        if (!cur->isGetElem_TypedArray())
+    for (ICStubConstIterator iter = stub->beginChainConst(); !iter.atEnd(); iter++) {
+        if (!iter->isGetElem_TypedArray())
             continue;
-        if (obj->lastProperty() == cur->toGetElem_TypedArray()->shape())
+        if (obj->lastProperty() == iter->toGetElem_TypedArray()->shape())
             return true;
     }
     return false;
@@ -3398,38 +3416,33 @@ ICGetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
 static bool
 DenseSetElemStubExists(JSContext *cx, ICStub::Kind kind, ICSetElem_Fallback *stub, HandleObject obj)
 {
-    for (ICStub *cur = stub->icEntry()->firstStub(); cur != stub; cur = cur->next()) {
-        if (kind == ICStub::SetElem_Dense) {
-            if (!cur->isSetElem_Dense())
-                continue;
-            ICSetElem_Dense *dense = cur->toSetElem_Dense();
+    JS_ASSERT(kind == ICStub::SetElem_Dense || kind == ICStub::SetElem_DenseAdd);
+
+    for (ICStubConstIterator iter = stub->beginChainConst(); !iter.atEnd(); iter++) {
+        if (kind == ICStub::SetElem_Dense && iter->isSetElem_Dense()) {
+            ICSetElem_Dense *dense = iter->toSetElem_Dense();
             if (obj->lastProperty() == dense->shape() && obj->getType(cx) == dense->type())
                 return true;
-        } else if (kind == ICStub::SetElem_DenseAdd) {
-            if (!cur->isSetElem_DenseAdd())
-                continue;
-            ICSetElem_DenseAdd *dense = cur->toSetElem_DenseAdd();
+        }
+
+        if (kind == ICStub::SetElem_DenseAdd && iter->isSetElem_DenseAdd()) {
+            ICSetElem_DenseAdd *dense = iter->toSetElem_DenseAdd();
             if (obj->lastProperty() == dense->shape() && obj->getType(cx) == dense->type())
                 return true;
-        } else {
-            JS_NOT_REACHED("Invalid SetElem_Dense kind!");
         }
     }
     return false;
 }
 
 static bool
-TypedArraySetElemStubExists(ICSetElem_Fallback *stub, HandleObject obj, bool expectOutOfBounds)
+TypedArraySetElemStubExists(ICSetElem_Fallback *stub, HandleObject obj, bool expectOOB)
 {
-    for (ICStub *cur = stub->icEntry()->firstStub(); cur != stub; cur = cur->next()) {
-        if (!cur->isSetElem_TypedArray())
+    for (ICStubConstIterator iter = stub->beginChainConst(); !iter.atEnd(); iter++) {
+        if (!iter->isSetElem_TypedArray())
             continue;
-        ICSetElem_TypedArray *taStub = cur->toSetElem_TypedArray();
-        if (obj->lastProperty() == taStub->shape() &&
-            taStub->expectOutOfBounds() == expectOutOfBounds)
-        {
+        ICSetElem_TypedArray *taStub = iter->toSetElem_TypedArray();
+        if (obj->lastProperty() == taStub->shape() && taStub->expectOutOfBounds() == expectOOB)
             return true;
-        }
     }
     return false;
 }
@@ -3437,20 +3450,18 @@ TypedArraySetElemStubExists(ICSetElem_Fallback *stub, HandleObject obj, bool exp
 static bool
 RemoveExistingTypedArraySetElemStub(JSContext *cx, ICSetElem_Fallback *stub, HandleObject obj)
 {
-    ICStub *prev = NULL;
-    ICStub *cur = stub->icEntry()->firstStub();
-    while (cur != stub) {
-        if (cur->isSetElem_TypedArray() &&
-            obj->lastProperty() == cur->toSetElem_TypedArray()->shape())
-        {
-            // TypedArraySetElem stubs are only removed using this procedure if
-            // being replaced with one that expects out of bounds index.
-            JS_ASSERT(!cur->toSetElem_TypedArray()->expectOutOfBounds());
-            stub->unlinkStub(cx->zone(), prev, cur);
-            return true;
-        }
-        prev = cur;
-        cur = cur->next();
+    for (ICStubIterator iter = stub->beginChain(); !iter.atEnd(); iter++) {
+        if (!iter->isSetElem_TypedArray())
+            continue;
+
+        if (obj->lastProperty() != iter->toSetElem_TypedArray()->shape())
+            continue;
+
+        // TypedArraySetElem stubs are only removed using this procedure if
+        // being replaced with one that expects out of bounds index.
+        JS_ASSERT(!iter->toSetElem_TypedArray()->expectOutOfBounds());
+        iter.unlink(cx->zone());
+        return true;
     }
     return false;
 }
