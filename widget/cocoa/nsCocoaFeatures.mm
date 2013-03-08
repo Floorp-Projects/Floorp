@@ -20,24 +20,52 @@
 
 int32_t nsCocoaFeatures::mOSXVersion = 0;
 
+static int intAtStringIndex(NSArray *array, int index)
+{
+    return [(NSString *)[array objectAtIndex:index] integerValue];
+}
+
+static void GetSystemVersion(int &major, int &minor, int &bugfix)
+{
+    major = minor = bugfix = 0;
+    
+    NSString* versionString = [[NSDictionary dictionaryWithContentsOfFile:
+                                @"/System/Library/CoreServices/SystemVersion.plist"] objectForKey:@"ProductVersion"];
+    NSArray* versions = [versionString componentsSeparatedByString:@"."];
+    NSUInteger count = [versions count];
+    if (count > 0) {
+        major = intAtStringIndex(versions, 0);
+        if (count > 1) {
+            minor = intAtStringIndex(versions, 1);
+            if (count > 2) {
+                bugfix = intAtStringIndex(versions, 2);
+            }
+        }
+    }
+}
+
 /* static */ int32_t
 nsCocoaFeatures::OSXVersion()
 {
     NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
+    
     if (!mOSXVersion) {
-        // minor version is not accurate, use gestaltSystemVersionMajor, 
-        // gestaltSystemVersionMinor, gestaltSystemVersionBugFix for these
-        OSErr err = ::Gestalt(gestaltSystemVersion, reinterpret_cast<SInt32*>(&mOSXVersion));
-        if (err != noErr) {
-            // This should probably be changed when our minimum version changes
-            NS_ERROR("Couldn't determine OS X version, assuming 10.5");
-            mOSXVersion = MAC_OS_X_VERSION_10_5_HEX;
+        int major, minor, bugfix;
+        GetSystemVersion(major, minor, bugfix);
+        if (major != 10) {
+            NS_ERROR("Couldn't determine OS X version, assuming 10.6");
+            mOSXVersion = MAC_OS_X_VERSION_10_6_HEX;
         }
-        mOSXVersion &= MAC_OS_X_VERSION_MASK;
+        else if (minor < 6) {
+            NS_ERROR("OS X version too old, assuming 10.6");
+            mOSXVersion = MAC_OS_X_VERSION_10_6_HEX;
+        }
+        else {
+            mOSXVersion = 0x1000 + (minor << 4);
+        }
     }
     return mOSXVersion;
-
+    
     NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 }
 
@@ -60,4 +88,3 @@ nsCocoaFeatures::OnMountainLionOrLater()
 {
     return (OSXVersion() >= MAC_OS_X_VERSION_10_8_HEX);
 }
-
