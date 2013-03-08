@@ -756,8 +756,6 @@ class GCHelperThread {
         return thread;
     }
 
-    bool onBackgroundThread();
-
     /*
      * Outside the GC lock may give true answer when in fact the sweeping has
      * been done.
