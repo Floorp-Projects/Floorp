@@ -1275,17 +1275,17 @@ var PopupBlockerObserver = {
           var buttons = [
             {
               isDefault: false,
-              label: strings.GetStringFromName("popupButtonAllowOnce"),
+              label: strings.GetStringFromName("popupButtonAllowOnce2"),
               accessKey: null,
               callback: function() { PopupBlockerObserver.showPopupsForSite(); }
             },
             {
-              label: strings.GetStringFromName("popupButtonAlwaysAllow2"),
+              label: strings.GetStringFromName("popupButtonAlwaysAllow3"),
               accessKey: null,
               callback: function() { PopupBlockerObserver.allowPopupsForSite(true); }
             },
             {
-              label: strings.GetStringFromName("popupButtonNeverWarn2"),
+              label: strings.GetStringFromName("popupButtonNeverWarn3"),
               accessKey: null,
               callback: function() { PopupBlockerObserver.allowPopupsForSite(false); }
             }
