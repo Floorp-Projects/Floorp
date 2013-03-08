@@ -127,11 +127,11 @@ public:
   void Accept();
 
   /**
-   * Set up nonblocking flags on whatever our current file descriptor is.
+   * Set up flags on whatever our current file descriptor is.
    *
    * @return true if successful, false otherwise
    */
-  bool SetNonblockFlags();
+  bool SetSocketFlags();
 
   void GetSocketAddr(nsAString& aAddrStr)
   {
@@ -450,7 +450,7 @@ UnixSocketImpl::Accept()
       return;
     }
 
-    if (!SetNonblockFlags()) {
+    if (!SetSocketFlags()) {
       return;
     }
 
@@ -508,6 +508,10 @@ UnixSocketImpl::Connect()
     return;
   }
 
+  if (!SetSocketFlags()) {
+    return;
+  }
+
   if (!mConnector->SetUp(mFd)) {
     NS_WARNING("Could not set up socket!");
     return;
@@ -521,7 +525,7 @@ UnixSocketImpl::Connect()
 }
 
 bool
-UnixSocketImpl::SetNonblockFlags()
+UnixSocketImpl::SetSocketFlags()
 {
   // Set socket addr to be reused even if kernel is still waiting to close
   int n = 1;
@@ -671,6 +675,10 @@ UnixSocketImpl::OnFileCanReadWithoutBlocking(int aFd)
     mWriteWatcher.StopWatchingFileDescriptor();
 
     mFd.reset(client_fd);
+    if (!SetSocketFlags()) {
+      return;
+    }
+
     mIOLoop = nullptr;
 
     nsRefPtr<OnSocketEventTask> t =
