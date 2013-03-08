@@ -331,6 +331,54 @@ nsRangeFrame::GetValueAsFractionOfRange()
   return (value - minimum) / (maximum - minimum);
 }
 
+double
+nsRangeFrame::GetValueAtEventPoint(nsGUIEvent* aEvent)
+{
+  MOZ_ASSERT(aEvent->eventStructType == NS_MOUSE_EVENT ||
+             aEvent->eventStructType == NS_TOUCH_EVENT,
+             "Unexpected event type - aEvent->refPoint may be meaningless");
+
+  MOZ_ASSERT(mContent->IsHTML(nsGkAtoms::input), "bad cast");
+  nsHTMLInputElement* input = static_cast<nsHTMLInputElement*>(mContent);
+
+  MOZ_ASSERT(input->GetType() == NS_FORM_INPUT_RANGE);
+
+  double minimum = input->GetMinimum();
+  double maximum = input->GetMaximum();
+  MOZ_ASSERT(MOZ_DOUBLE_IS_FINITE(minimum) &&
+             MOZ_DOUBLE_IS_FINITE(maximum),
+             "type=range should have a default maximum/minimum");
+  nsRect contentRect = GetContentRectRelativeToSelf();
+  if (maximum <= minimum ||
+      (IsHorizontal() && contentRect.width <= 0) ||
+      (!IsHorizontal() && contentRect.height <= 0)) {
+    return minimum;
+  }
+
+  double range = maximum - minimum;
+
+  nsIntPoint point;
+  if (aEvent->eventStructType == NS_TOUCH_EVENT) {
+    MOZ_ASSERT(static_cast<nsTouchEvent*>(aEvent)->touches.Length() == 1,
+               "Unexpected number of touches");
+    point = static_cast<nsTouchEvent*>(aEvent)->touches[0]->mRefPoint;
+  } else {
+    point = aEvent->refPoint;
+  }
+
+  nsMargin borderAndPadding = GetUsedBorderAndPadding();
+  nsPoint contentPoint =
+    nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, point, this) -
+      nsPoint(borderAndPadding.left, borderAndPadding.top);
+  contentPoint.x = mozilla::clamped(contentPoint.x, 0, contentRect.width);
+  contentPoint.y = mozilla::clamped(contentPoint.y, 0, contentRect.height);
+  if (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+    return maximum - (double(contentPoint.x) / double(contentRect.width)) * range;
+  }
+  return minimum + (double(contentPoint.x) / double(contentRect.width)) * range;
+}
+
+
 NS_IMETHODIMP
 nsRangeFrame::AttributeChanged(int32_t  aNameSpaceID,
                                nsIAtom* aAttribute,

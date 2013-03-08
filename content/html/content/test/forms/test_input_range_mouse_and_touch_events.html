@@ -1,0 +1,199 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=846380
+-->
+<head>
+  <title>Test mouse and touch events for range</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* synthesizeMouse and synthesizeFunc uses getBoundingClientRect. We set
+     * the following properties to avoid fractional values in the rect returned
+     * by getBoundingClientRect in order to avoid rounding that would occur
+     * when event coordinates are internally converted to be relative to the
+     * top-left of the element. (Such rounding would make it difficult to
+     * predict exactly what value the input should take on for events at
+     * certain coordinates.)
+     */
+    input { margin: 0 ! important; width: 200px ! important; }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=846380">Mozilla Bug 846380</a>
+<p id="display"></p>
+<div id="content">
+  <input id="range" type="range">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * Test for Bug 846380
+ * This test checks how the value of <input type=range> changes in response to
+ * various mouse and touch events.
+ **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  test(synthesizeMouse, "click", "mousedown", "mousemove", "mouseup");
+  test(synthesizeTouch, "tap", "touchstart", "touchmove", "touchend");
+  SimpleTest.finish();
+});
+
+const MIDDLE_OF_RANGE = 50;
+const MINIMUM_OF_RANGE = 0;
+const MAXIMUM_OF_RANGE = 100;
+const QUARTER_OF_RANGE = 25;
+const THREE_QUARTERS_OF_RANGE = 75;
+
+function flush() {
+  // Flush style, specifically to flush the 'direction' property so that the
+  // browser uses the new value for thumb positioning.
+  var flush = document.body.clientWidth;
+}
+
+function test(synthesizeFunc, clickOrTap, startName, moveName, endName) {
+  var elem = document.getElementById("range");
+  elem.focus();
+  flush();
+
+  var width = parseFloat(window.getComputedStyle(elem).width);
+  var height = parseFloat(window.getComputedStyle(elem).height);
+  var borderLeft = parseFloat(window.getComputedStyle(elem).borderLeftWidth);
+  var borderTop = parseFloat(window.getComputedStyle(elem).borderTopWidth);
+  var paddingLeft = parseFloat(window.getComputedStyle(elem).paddingLeft);
+  var paddingTop = parseFloat(window.getComputedStyle(elem).paddingTop);
+
+  // Extrema for mouse/touch events:
+  var midY = height / 2 + borderTop + paddingTop;
+  var minX = borderLeft + paddingLeft;
+  var midX = minX + width / 2;
+  var maxX = minX + width;
+
+  // Test click/tap in the middle of the range:
+  elem.value = QUARTER_OF_RANGE;
+  synthesizeFunc(elem, midX, midY, {});
+  is(elem.value, MIDDLE_OF_RANGE, "Test " + clickOrTap + " in middle of range");
+
+  // Test mouse/touch dragging of ltr range:
+  elem.value = QUARTER_OF_RANGE;
+  synthesizeFunc(elem, midX, midY, { type: startName });
+  is(elem.value, MIDDLE_OF_RANGE, "Test " + startName + " in middle of range");
+  synthesizeFunc(elem, minX, midY, { type: moveName });
+  is(elem.value, MINIMUM_OF_RANGE, "Test dragging of range to left of ltr range");
+
+  synthesizeFunc(elem, maxX, midY, { type: moveName });
+  is(elem.value, MAXIMUM_OF_RANGE, "Test dragging of range to right of ltr range (" + moveName + ")");
+
+  synthesizeFunc(elem, maxX, midY, { type: endName });
+  is(elem.value, MAXIMUM_OF_RANGE, "Test dragging of range to right of ltr range (" + endName + ")");
+
+  // Test mouse/touch dragging of rtl range:
+  elem.value = QUARTER_OF_RANGE;
+  elem.style.direction = "rtl";
+  flush();
+  synthesizeFunc(elem, midX, midY, { type: startName });
+  is(elem.value, MIDDLE_OF_RANGE, "Test " + startName + " in middle of rtl range");
+  synthesizeFunc(elem, minX, midY, { type: moveName });
+  is(elem.value, MAXIMUM_OF_RANGE, "Test dragging of range to left of rtl range");
+
+  synthesizeFunc(elem, maxX, midY, { type: moveName });
+  is(elem.value, MINIMUM_OF_RANGE, "Test dragging of range to right of rtl range (" + moveName + ")");
+
+  synthesizeFunc(elem, maxX, midY, { type: endName });
+  is(elem.value, MINIMUM_OF_RANGE, "Test dragging of range to right of rtl range (" + endName + ")");
+
+  elem.style.direction = "ltr"; // reset direction
+  flush();
+
+  // Test mouse/touch capturing by moving pointer to a position outside the range:
+  elem.value = QUARTER_OF_RANGE;
+  synthesizeFunc(elem, midX, midY, { type: startName });
+  is(elem.value, MIDDLE_OF_RANGE, "Test " + startName + " in middle of range");
+  synthesizeFunc(elem, maxX+100, midY, { type: moveName });
+  is(elem.value, MAXIMUM_OF_RANGE, "Test dragging of range to position outside range (" + moveName + ")");
+
+  synthesizeFunc(elem, maxX+100, midY, { type: endName });
+  is(elem.value, MAXIMUM_OF_RANGE, "Test dragging of range to position outside range (" + endName + ")");
+
+  // Test mouse/touch capturing by moving pointer to a position outside a rtl range:
+  elem.value = QUARTER_OF_RANGE;
+  elem.style.direction = "rtl";
+  flush();
+  synthesizeFunc(elem, midX, midY, { type: startName });
+  is(elem.value, MIDDLE_OF_RANGE, "Test " + startName + " in middle of rtl range");
+  synthesizeFunc(elem, maxX+100, midY, { type: moveName });
+  is(elem.value, MINIMUM_OF_RANGE, "Test dragging of range to position outside range (" + moveName + ")");
+
+  synthesizeFunc(elem, maxX+100, midY, { type: endName });
+  is(elem.value, MINIMUM_OF_RANGE, "Test dragging of range to position outside range (" + endName + ")");
+
+  elem.style.direction = "ltr"; // reset direction
+  flush();
+
+  // Test mouse/touch events with modifiers are ignored:
+  var modifiers = ["shiftKey", "ctrlKey", "altKey", "metaKey", "accelKey", "altGrKey", "fnKey", "osKey"];
+  for (var modifier of modifiers) {
+    elem.value = QUARTER_OF_RANGE;
+    var eventParams = {};
+    eventParams[modifier] = true;
+    synthesizeFunc(elem, midX, midY, eventParams);
+    is(elem.value, QUARTER_OF_RANGE, "Test " + clickOrTap + " in the middle of range with " + modifier + " modifier key is ignored");
+  }
+
+  // Test that preventDefault() works:
+  function preventDefault(e) {
+    e.preventDefault();
+  }
+  elem.value = QUARTER_OF_RANGE;
+  elem.addEventListener(startName, preventDefault, false);
+  synthesizeFunc(elem, midX, midY, {});
+  is(elem.value, QUARTER_OF_RANGE, "Test that preventDefault() works");
+  elem.removeEventListener(startName, preventDefault, false);
+
+  // Test that changing the input type in the middle of a drag cancels the drag:
+  elem.value = QUARTER_OF_RANGE;
+  synthesizeFunc(elem, midX, midY, { type: startName });
+  is(elem.value, MIDDLE_OF_RANGE, "Test " + startName + " in middle of range");
+  elem.type = "text";
+  is(elem.value, QUARTER_OF_RANGE, "Test that changing the input type cancels a drag");
+  synthesizeFunc(elem, midX, midY, { type: endName });
+  is(elem.value, QUARTER_OF_RANGE, "Test that changing the input type cancels a drag (after " + endName + ")");
+  elem.type = "range";
+
+  // Check that we do not drag when the mousedown/touchstart occurs outside the range:
+  elem.value = QUARTER_OF_RANGE;
+  synthesizeFunc(elem, maxX+100, midY, { type: startName });
+  is(elem.value, QUARTER_OF_RANGE, "Test " + startName + " outside range doesn't change its value");
+  synthesizeFunc(elem, midX, midY, { type: moveName });
+  is(elem.value, QUARTER_OF_RANGE, "Test dragging is not occurring when " + startName + " was outside range");
+
+  synthesizeFunc(elem, midX, midY, { type: endName });
+  is(elem.value, QUARTER_OF_RANGE, "Test dragging is not occurring when " + startName + " was outside range");
+
+  elem.focus(); // RESTORE FOCUS SO WE GET THE FOCUSED STYLE FOR TESTING OR ELSE minX/midX/maxX may be wrong!
+
+  // Check what happens when a value changing key is pressed during a drag:
+  elem.value = QUARTER_OF_RANGE;
+  synthesizeFunc(elem, midX, midY, { type: startName });
+  is(elem.value, MIDDLE_OF_RANGE, "Test " + startName + " in middle of range");
+  synthesizeKey("VK_HOME", {});
+  // The VK_HOME tests are disabled until I can figure out why they fail on Android -jwatt
+  //is(elem.value, MINIMUM_OF_RANGE, "Test VK_HOME during a drag sets the value to the minimum of the range");
+  synthesizeFunc(elem, midX+100, midY, { type: moveName });
+  is(elem.value, MAXIMUM_OF_RANGE, "Test " + moveName + " outside range after key press that occurred during a drag changes the value");
+  synthesizeFunc(elem, midX, midY, { type: moveName });
+  is(elem.value, MIDDLE_OF_RANGE, "Test " + moveName + " in middle of range");
+  synthesizeKey("VK_HOME", {});
+  //is(elem.value, MINIMUM_OF_RANGE, "Test VK_HOME during a drag sets the value to the minimum of the range (second time)");
+  synthesizeFunc(elem, maxX+100, midY, { type: endName });
+  is(elem.value, MAXIMUM_OF_RANGE, "Test " + endName + " outside range after key press that occurred during a drag changes the value");
+}
+
+</script>
+</pre>
+</body>
+</html>
