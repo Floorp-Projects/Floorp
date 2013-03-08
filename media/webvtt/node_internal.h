@@ -24,32 +24,27 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-#ifndef __INTERN_CUE_H__
-# define __INTERN_CUE_H__
-# include <webvtt/cue.h>
+ 
+#ifndef __WEBVTT_NODE_INTERNAL_H__
+# define __WEBVTT_NODE_INTERNAL_H__
+# include <webvtt/node.h>
 
 /**
- * Private cue flags
+ * Routines for creating nodes.
  */
-enum {
-  CUE_HAVE_VERTICAL = (1 << 0),
-  CUE_HAVE_SIZE = (1 << 1),
-  CUE_HAVE_POSITION = (1 << 2),
-  CUE_HAVE_LINE = (1 << 3),
-  CUE_HAVE_ALIGN = (1 << 4),
+WEBVTT_INTERN webvtt_status webvtt_create_node( webvtt_node **node, webvtt_node_kind kind, webvtt_node *parent );
+WEBVTT_INTERN webvtt_status webvtt_create_internal_node( webvtt_node **node, webvtt_node *parent, webvtt_node_kind kind, webvtt_stringlist *css_classes, webvtt_string *annotation );
+/**
+ * We probably shouldn't have a 'head node' type.
+ * We should just return a list of node trees...
+ */
+WEBVTT_INTERN webvtt_status webvtt_create_head_node( webvtt_node **node );
+WEBVTT_INTERN webvtt_status webvtt_create_timestamp_node( webvtt_node **node, webvtt_node *parent, webvtt_timestamp time_stamp );
+WEBVTT_INTERN webvtt_status webvtt_create_text_node( webvtt_node **node, webvtt_node *parent, webvtt_string *text );
 
-  CUE_HAVE_SETTINGS = (CUE_HAVE_VERTICAL | CUE_HAVE_SIZE
-    | CUE_HAVE_POSITION | CUE_HAVE_LINE | CUE_HAVE_ALIGN),
-
-  CUE_HAVE_CUEPARAMS = 0x40000000,
-  CUE_HAVE_ID = 0x80000000,
-  CUE_HEADER_MASK = CUE_HAVE_CUEPARAMS|CUE_HAVE_ID,
-};
-
-static webvtt_bool
-cue_is_incomplete( const webvtt_cue *cue ) {
-  return !cue || ( cue->flags & CUE_HEADER_MASK ) == CUE_HAVE_ID;
-}
+/**
+ * Attaches a node to the internal node list of another node.
+ */
+WEBVTT_INTERN webvtt_status webvtt_attach_node( webvtt_node *parent, webvtt_node *to_attach );
 
 #endif
