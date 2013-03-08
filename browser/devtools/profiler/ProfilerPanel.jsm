@@ -9,11 +9,13 @@ const Cu = Components.utils;
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
 Cu.import("resource:///modules/devtools/ProfilerController.jsm");
 Cu.import("resource:///modules/devtools/ProfilerHelpers.jsm");
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 Cu.import("resource:///modules/devtools/EventEmitter.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 this.EXPORTED_SYMBOLS = ["ProfilerPanel"];
+
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+    "resource://gre/modules/commonjs/sdk/core/promise.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DebuggerServer",
   "resource://gre/modules/devtools/dbg-server.jsm");
@@ -205,7 +207,6 @@ function ProfilerPanel(frame, toolbox) {
   this.window = frame.window;
   this.document = frame.document;
   this.target = toolbox.target;
-  this.controller = new ProfilerController(this.target);
 
   this.profiles = new Map();
   this._uid = 0;
@@ -256,23 +257,39 @@ ProfilerPanel.prototype = {
    * @return Promise
    */
   open: function PP_open() {
-    let deferred = Promise.defer();
+    let promise;
+    // Local profiling needs to make the target remote.
+    if (!this.target.isRemote) {
+      promise = this.target.makeRemote();
+    } else {
+      promise = Promise.resolve(this.target);
+    }
 
-    this.controller.connect(function onConnect() {
-      let create = this.document.getElementById("profiler-create");
-      create.addEventListener("click", this.createProfile.bind(this), false);
-      create.removeAttribute("disabled");
+    return promise
+      .then(function(target) {
+        let deferred = Promise.defer();
+        this.controller = new ProfilerController(this.target);
 
-      let profile = this.createProfile();
-      this.switchToProfile(profile, function () {
-        this.isReady = true;
-        this.emit("ready");
+        this.controller.connect(function onConnect() {
+          let create = this.document.getElementById("profiler-create");
+          create.addEventListener("click", this.createProfile.bind(this), false);
+          create.removeAttribute("disabled");
 
-        deferred.resolve(this);
+          let profile = this.createProfile();
+          this.switchToProfile(profile, function () {
+            this.isReady = true;
+            this.emit("ready");
+
+            deferred.resolve(this);
+          }.bind(this))
+        }.bind(this));
+
+        return deferred.promise;
       }.bind(this))
-    }.bind(this));
-
-    return deferred.promise;
+      .then(null, function onError(reason) {
+        Cu.reportError("ProfilerPanel open failed. " +
+                       reason.error + ": " + reason.message);
+      });
   },
 
   /**

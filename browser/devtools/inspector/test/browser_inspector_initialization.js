@@ -20,7 +20,7 @@ function createDocument()
     'solely to provide some things to test the inspector initialization.</p>\n' +
     'If you are reading this, you should go do something else instead. Maybe ' +
     'read a book. Or better yet, write some test-cases for another bit of code. ' +
-    '<span style="{font-style: italic}">Maybe more inspector test-cases!</span></p>\n' +
+    '<span style="{font-style: italic}">Inspector\'s!</span></p>\n' +
     '<p id="closing">end transmission</p>\n' +
     '</div>';
   doc.title = "Inspector Initialization Test";

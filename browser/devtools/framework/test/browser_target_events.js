@@ -41,7 +41,9 @@ function onVisible() {
 
 function onWillNavigate(event, request) {
   ok(true, "will-navigate event received");
-  target.once("navigate", onNavigate);
+  // Wait for navigation handling to complete before removing the tab, in order
+  // to avoid triggering assertions.
+  target.once("navigate", executeSoon.bind(null, onNavigate));
 }
 
 function onNavigate() {
