@@ -77,19 +77,19 @@ function tab2Loaded(aEvent) {
 
     try {
       let target1 = TargetFactory.forTab(tab1);
-      gDevTools.closeToolbox(target1);
+      gDevTools.closeToolbox(target1).then(function() {
+        try {
+          let target2 = TargetFactory.forTab(tab2);
+          gDevTools.closeToolbox(target2);
+        }
+        catch (ex) {
+          ok(false, "gDevTools.closeToolbox(target2) exception: " + ex);
+          noErrors = false;
+        }
+      });
     }
     catch (ex) {
       ok(false, "gDevTools.closeToolbox(target1) exception: " + ex);
-      noErrors = false;
-    }
-
-    try {
-      let target2 = TargetFactory.forTab(tab2);
-      gDevTools.closeToolbox(target2);
-    }
-    catch (ex) {
-      ok(false, "gDevTools.closeToolbox(target2) exception: " + ex);
       noErrors = false;
     }
   }
