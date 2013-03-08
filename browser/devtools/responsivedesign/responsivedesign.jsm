@@ -154,6 +154,7 @@ function ResponsiveUI(aWindow, aTab)
   this.bound_addPreset = this.addPreset.bind(this);
   this.bound_removePreset = this.removePreset.bind(this);
   this.bound_rotate = this.rotate.bind(this);
+  this.bound_close = this.close.bind(this);
   this.bound_startResizing = this.startResizing.bind(this);
   this.bound_stopResizing = this.stopResizing.bind(this);
   this.bound_onDrag = this.onDrag.bind(this);
@@ -222,6 +223,7 @@ ResponsiveUI.prototype = {
     this.tab.removeEventListener("TabClose", this);
     this.tabContainer.removeEventListener("TabSelect", this);
     this.rotatebutton.removeEventListener("command", this.bound_rotate, true);
+    this.closebutton.removeEventListener("command", this.bound_close, true);
     this.addbutton.removeEventListener("command", this.bound_addPreset, true);
     this.removebutton.removeEventListener("command", this.bound_removePreset, true);
 
@@ -292,6 +294,7 @@ ResponsiveUI.prototype = {
    *  <toolbar class="devtools-toolbar devtools-responsiveui-toolbar">
    *    <menulist class="devtools-menulist"/> // presets
    *    <toolbarbutton tabindex="0" class="devtools-toolbarbutton" label="rotate"/> // rotate
+   *    <toolbarbutton tabindex="0" class="devtools-toolbarbutton devtools-closebutton" tooltiptext="Leave Responsive Design View"/> // close
    *  </toolbar>
    *  <stack class="browserStack"> From tabbrowser.xml
    *    <browser/>
@@ -334,6 +337,13 @@ ResponsiveUI.prototype = {
     this.rotatebutton.className = "devtools-toolbarbutton";
     this.rotatebutton.addEventListener("command", this.bound_rotate, true);
 
+    this.closebutton = this.chromeDoc.createElement("toolbarbutton");
+    this.closebutton.setAttribute("tabindex", "0");
+    this.closebutton.className = "devtools-toolbarbutton devtools-closebutton";
+    this.closebutton.setAttribute("tooltiptext", this.strings.GetStringFromName("responsiveUI.close"));
+    this.closebutton.addEventListener("command", this.bound_close, true);
+
+    this.toolbar.appendChild(this.closebutton);
     this.toolbar.appendChild(this.menulist);
     this.toolbar.appendChild(this.rotatebutton);
 
