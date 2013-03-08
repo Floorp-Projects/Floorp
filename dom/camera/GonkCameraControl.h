@@ -26,6 +26,13 @@
 #include "CameraControlImpl.h"
 #include "CameraCommon.h"
 #include "GonkRecorder.h"
+#include "GonkCameraHwMgr.h"
+
+namespace android {
+class GonkCameraHardware;
+class MediaProfiles;
+class GonkRecorder;
+}
 
 namespace mozilla {
 
@@ -83,7 +90,7 @@ protected:
   void SetPreviewSize(uint32_t aWidth, uint32_t aHeight);
   void SetupThumbnail(uint32_t aPictureWidth, uint32_t aPictureHeight, uint32_t aPercentQuality);
 
-  uint32_t                  mHwHandle;
+  android::sp<android::GonkCameraHardware> mCameraHw;
   double                    mExposureCompensationMin;
   double                    mExposureCompensationStep;
   bool                      mDeferConfigUpdate;
