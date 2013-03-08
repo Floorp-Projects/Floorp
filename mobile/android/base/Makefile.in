@@ -15,10 +15,7 @@ DIST_FILES = package-name.txt
 include $(topsrcdir)/mobile/android/base/android-services-files.mk
 
 MOZGLUE_JAVA_FILES := \
-  mozglue/ByteBufferInputStream.java \
   mozglue/DirectBufferAllocator.java \
-  mozglue/NativeReference.java \
-  mozglue/NativeZip.java \
   $(NULL)
 
 MOZGLUE_PP_JAVA_FILES := \
@@ -1093,10 +1090,10 @@ jars/gecko-mozglue.jar: $(addprefix $(srcdir)/,$(MOZGLUE_JAVA_FILES)) $(MOZGLUE_
 	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all -d classes/gecko-mozglue $(addprefix $(srcdir)/,$(MOZGLUE_JAVA_FILES)) $(MOZGLUE_PP_JAVA_FILES)
 	$(JAR) cMf jars/gecko-mozglue.jar -C classes/gecko-mozglue .
 
-jars/gecko-util.jar: jars/gecko-mozglue.jar $(addprefix $(srcdir)/,$(UTIL_JAVA_FILES)) jars
+jars/gecko-util.jar: $(addprefix $(srcdir)/,$(UTIL_JAVA_FILES)) jars
 	@echo "JAR gecko-util.jar"
 	$(NSINSTALL) -D classes/gecko-util
-	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation -d classes/gecko-util -classpath "jars/gecko-mozglue.jar" $(addprefix $(srcdir)/,$(UTIL_JAVA_FILES))
+	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation -d classes/gecko-util $(addprefix $(srcdir)/,$(UTIL_JAVA_FILES))
 	$(JAR) cMf jars/gecko-util.jar -C classes/gecko-util .
 
 jars/sync-thirdparty.jar: $(addprefix $(srcdir)/,$(SYNC_THIRDPARTY_JAVA_FILES)) jars
