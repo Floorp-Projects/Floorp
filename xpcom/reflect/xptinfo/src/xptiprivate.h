@@ -397,11 +397,10 @@ private:
 /***************************************************************************/
 
 class xptiInterfaceInfoManager MOZ_FINAL
-    : public nsIInterfaceInfoSuperManager
+    : public nsIInterfaceInfoManager
 {
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINTERFACEINFOMANAGER
-    NS_DECL_NSIINTERFACEINFOSUPERMANAGER
 
     typedef mozilla::ReentrantMonitor ReentrantMonitor;
     typedef mozilla::Mutex Mutex;
@@ -441,8 +440,6 @@ private:
 private:
     xptiWorkingSet               mWorkingSet;
     Mutex                        mResolveLock;
-    Mutex                        mAdditionalManagersLock;
-    nsCOMArray<nsISupports>      mAdditionalManagers;
 };
 
 #endif /* xptiprivate_h___ */

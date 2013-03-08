@@ -492,7 +492,7 @@ public:
 #endif
 
     // Gets addref'd pointer
-    static nsresult GetInterfaceInfoManager(nsIInterfaceInfoSuperManager** iim,
+    static nsresult GetInterfaceInfoManager(nsIInterfaceInfoManager** iim,
                                             nsXPConnect* xpc = nullptr);
 
     static JSBool IsISupportsDescendant(nsIInterfaceInfo* info);
@@ -568,7 +568,7 @@ private:
     static JSBool            gOnceAliveNowDead;
 
     XPCJSRuntime*            mRuntime;
-    nsCOMPtr<nsIInterfaceInfoSuperManager> mInterfaceInfoManager;
+    nsCOMPtr<nsIInterfaceInfoManager> mInterfaceInfoManager;
     nsIXPCSecurityManager*   mDefaultSecurityManager;
     uint16_t                 mDefaultSecurityManagerFlags;
     JSBool                   mShuttingDown;
