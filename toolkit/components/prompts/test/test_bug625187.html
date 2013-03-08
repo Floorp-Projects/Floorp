@@ -30,7 +30,6 @@ SimpleTest.waitForExplicitFinish();
 
 var testNum = 0;
 var dialogNum = 0;
-var utils = SpecialPowers.getDOMWindowUtils(window);
 
 function hasTabModalPrompts() {
   var prefName = "prompts.tab_modal.enabled";
@@ -97,6 +96,7 @@ function dispatchMouseEvent(target, type)
   var e = document.createEvent("MouseEvent");
   e.initEvent(type, false, false, win, 0, 1, 1, 1, 1,
               false, false, false, false, 0, null);
+  var utils = SpecialPowers.getDOMWindowUtils(win);
   utils.dispatchDOMEventViaPresShell(target, e, true);
 }
 </script>

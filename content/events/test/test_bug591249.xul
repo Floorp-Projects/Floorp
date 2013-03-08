@@ -29,9 +29,10 @@ function completeTest(aBox) {
 }
 
 function fireEvent(target, event) {
+  var win = target.ownerDocument.defaultView;
   var utils =
-    window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-           getInterface(Components.interfaces.nsIDOMWindowUtils);
+    win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+        getInterface(Components.interfaces.nsIDOMWindowUtils);
   utils.dispatchDOMEventViaPresShell(target, event, true);
 }
 
@@ -60,7 +61,7 @@ function RunTest() {
   synthesizeMouse(image, 20, 20, { type: "mouseup" });
 
   var event = document.createEvent("DragEvents");
-  event.initDragEvent("dragover", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, iBox, dataTransfer);
+  event.initDragEvent("dragover", true, true, iBox.ownerDocument.defaultView, 0, 0, 0, 0, 0, false, false, false, false, 0, iBox, dataTransfer);
   fireEvent(iBox, event);
   synthesizeMouse(image, 3, 3, { type: "mousedown" });
   synthesizeMouse(image, 23, 23, { type: "mousemove" });
