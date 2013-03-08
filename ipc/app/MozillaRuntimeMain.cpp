@@ -22,9 +22,21 @@
 #include "nsSetDllDirectory.h"
 #endif
 
+#ifdef MOZ_WIDGET_GONK
+# include <binder/ProcessState.h>
+#endif
+
 int
 main(int argc, char* argv[])
 {
+#ifdef MOZ_WIDGET_GONK
+    // This creates a ThreadPool for binder ipc. A ThreadPool is necessary to
+    // receive binder calls, though not necessary to send binder calls.
+    // ProcessState::Self() also needs to be called once on the main thread to
+    // register the main thread with the binder driver.
+    android::ProcessState::self()->startThreadPool();
+#endif
+
 #if defined(XP_WIN) && defined(DEBUG_bent)
     MessageBox(NULL, L"Hi", L"Hi", MB_OK);
 #endif
