@@ -2094,11 +2094,12 @@ public:
     eXULBox =                           1 << 10,
     eCanContainOverflowContainers =     1 << 11,
     eBlockFrame =                       1 << 12,
+    eTablePart =                        1 << 13,
     // If this bit is set, the frame doesn't allow ignorable whitespace as
     // children. For example, the whitespace between <table>\n<tr>\n<td>
     // will be excluded during the construction of children. 
-    eExcludesIgnorableWhitespace =      1 << 13,
-    eSupportsCSSTransforms =            1 << 14,
+    eExcludesIgnorableWhitespace =      1 << 14,
+    eSupportsCSSTransforms =            1 << 15,
 
     // These are to allow nsFrame::Init to assert that IsFrameOfType
     // implementations all call the base class method.  They are only
