@@ -7022,8 +7022,8 @@ define("text!gcli/ui/intro.html", [], "\n" +
   "  <p>\n" +
   "    ${l10n.introTextCommands}\n" +
   "    <span class=\"gcli-out-shortcut\" onclick=\"${onclick}\"\n" +
-  "        ondblclick=\"${ondblclick}\" data-command=\"help\">help</span>\n" +
-  "    ${l10n.introTextKeys2} <code>${l10n.introTextF1Escape}</code>.\n" +
+  "        ondblclick=\"${ondblclick}\" data-command=\"help\">help</span>${l10n.introTextKeys2}\n" +
+  "    <code>${l10n.introTextF1Escape}</code>.\n" +
   "  </p>\n" +
   "\n" +
   "  <button onclick=\"${onGotIt}\" if=\"${showHideButton}\">${l10n.introTextGo}</button>\n" +

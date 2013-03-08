@@ -237,12 +237,11 @@ WebConsole.prototype = {
     if ((win = this.iframe.contentWindow) &&
         (doc = win.document) &&
         doc.readyState == "complete") {
-      this.iframe.addEventListener("load", onIframeLoad, true);
-    }
-    else {
       initUI();
     }
-
+    else {
+      this.iframe.addEventListener("load", onIframeLoad, true);
+    }
     return deferred.promise;
   },
 
@@ -345,6 +344,67 @@ WebConsole.prototype = {
   },
 
   /**
+   * Tries to open a JavaScript file related to the web page for the web console
+   * instance in the Script Debugger. If the file is not found, it is opened in
+   * source view instead.
+   *
+   * @param string aSourceURL
+   *        The URL of the file.
+   * @param integer aSourceLine
+   *        The line number which you want to place the caret.
+   */
+  viewSourceInDebugger:
+  function WC_viewSourceInDebugger(aSourceURL, aSourceLine)
+  {
+    let self = this;
+    let panelWin = null;
+    let debuggerWasOpen = true;
+    let toolbox = gDevTools.getToolbox(this.target);
+
+    if (!toolbox.getPanel("jsdebugger")) {
+      debuggerWasOpen = false;
+      let toolboxWin = toolbox.doc.defaultView;
+      toolboxWin.addEventListener("Debugger:AfterSourcesAdded",
+                                  function afterSourcesAdded() {
+        toolboxWin.removeEventListener("Debugger:AfterSourcesAdded",
+                                       afterSourcesAdded);
+        loadScript();
+      });
+    }
+
+    toolbox.selectTool("jsdebugger").then(function onDebuggerOpen(dbg) {
+      panelWin = dbg.panelWin;
+      if (debuggerWasOpen) {
+        loadScript();
+      }
+    });
+
+    function loadScript() {
+      let debuggerView = panelWin.DebuggerView;
+      if (!debuggerView.Sources.containsValue(aSourceURL)) {
+        toolbox.selectTool("webconsole");
+        self.viewSource(aSourceURL, aSourceLine);
+        return;
+      }
+      if (debuggerWasOpen && debuggerView.Sources.selectedValue == aSourceURL) {
+        debuggerView.editor.setCaretPosition(aSourceLine - 1);
+        return;
+      }
+
+      panelWin.addEventListener("Debugger:SourceShown", onSource, false);
+      debuggerView.Sources.preferredSource = aSourceURL;
+    }
+
+    function onSource(aEvent) {
+      if (aEvent.detail.url != aSourceURL) {
+        return;
+      }
+      panelWin.removeEventListener("Debugger:SourceShown", onSource, false);
+      panelWin.DebuggerView.editor.setCaretPosition(aSourceLine - 1);
+    }
+  },
+
+  /**
    * Destroy the object. Call this method to avoid memory leaks when the Web
    * Console is closed.
    *
@@ -359,8 +419,6 @@ WebConsole.prototype = {
 
     delete HUDService.hudReferences[this.hudId];
 
-    let tabWindow = this.target.isLocalTab ? this.target.window : null;
-
     this._destroyer = Promise.defer();
 
     let popupset = this.mainPopupSet;
@@ -371,15 +429,15 @@ WebConsole.prototype = {
 
     let onDestroy = function WC_onDestroyUI() {
       try {
+        let tabWindow = this.target.isLocalTab ? this.target.window : null;
         tabWindow && tabWindow.focus();
       }
       catch (ex) {
-        // Tab focus can fail if the tab is closed.
+        // Tab focus can fail if the tab or target is closed.
       }
 
       let id = WebConsoleUtils.supportsString(this.hudId);
       Services.obs.notifyObservers(id, "web-console-destroyed", null);
-
       this._destroyer.resolve(null);
     }.bind(this);
 

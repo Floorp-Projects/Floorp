@@ -1,0 +1,41 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html [
+<!ENTITY % fontinspectorDTD SYSTEM "chrome://browser/locale/devtools/font-inspector.dtd" >
+ %fontinspectorDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>&title;</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="stylesheet" href="font-inspector.css" type="text/css"/>
+    <link rel="stylesheet" href="chrome://browser/skin/devtools/common.css" type="text/css"/>
+    <link rel="stylesheet" href="chrome://browser/skin/devtools/font-inspector.css" type="text/css"/>
+  </head>
+  <body class="devtools-monospace" role="application">
+    <script type="application/javascript;version=1.8" src="font-inspector.js"></script>
+    <div id="root">
+      <ul id="all-fonts"></ul>
+      <button id="showall" onclick="fontInspector.showAll()">&showAllFonts;</button>
+    </div>
+    <div id="template" style="display:none">
+      <section class="font">
+        <iframe sandbox="allow-same-origin" class="font-preview"></iframe>
+        <div class="font-info">
+          <h1 class="font-name"></h1>
+          <span class="font-is-local">&system;</span>
+          <span class="font-is-remote">&remote;</span>
+          <p class="font-format-url">
+            <input readonly="readonly" class="font-url"></input>
+            (<span class="font-format"></span>)
+          </p>
+          <p class="font-css">&usedAs; "<span class="font-css-name"></span>"</p>
+          <pre class="font-css-code"></pre>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>
