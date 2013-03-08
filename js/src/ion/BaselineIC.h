@@ -384,10 +384,122 @@ class ICEntry
     IC_STUB_KIND_LIST(FORWARD_DECLARE_STUBS)
 #undef FORWARD_DECLARE_STUBS
 
-class ICFallbackStub;
 class ICMonitoredStub;
 class ICMonitoredFallbackStub;
 class ICUpdatedStub;
+
+// Constant iterator that traverses arbitrary chains of ICStubs.
+// No requirements are made of the ICStub used to construct this
+// iterator, aside from that the stub be part of a NULL-terminated
+// chain.
+// The iterator is considered to be at its end once it has been
+// incremented _past_ the last stub.  Thus, if 'atEnd()' returns
+// true, the '*' and '->' operations are not valid.
+class ICStubConstIterator
+{
+    friend class ICStub;
+    friend class ICFallbackStub;
+
+  private:
+    ICStub *currentStub_;
+
+  public:
+    ICStubConstIterator(ICStub *currentStub) : currentStub_(currentStub) {}
+
+    static ICStubConstIterator StartingAt(ICStub *stub) {
+        return ICStubConstIterator(stub);
+    }
+    static ICStubConstIterator End(ICStub *stub) {
+        return ICStubConstIterator(NULL);
+    }
+
+    bool operator ==(const ICStubConstIterator &other) const {
+        return currentStub_ == other.currentStub_;
+    }
+    bool operator !=(const ICStubConstIterator &other) const {
+        return !(*this == other);
+    }
+
+    ICStubConstIterator &operator++();
+
+    ICStubConstIterator operator++(int) {
+        ICStubConstIterator oldThis(*this);
+        ++(*this);
+        return oldThis;
+    }
+
+    ICStub *operator *() const {
+        JS_ASSERT(currentStub_);
+        return currentStub_;
+    }
+
+    ICStub *operator ->() const {
+        JS_ASSERT(currentStub_);
+        return currentStub_;
+    }
+
+    bool atEnd() const {
+        return currentStub_ == NULL;
+    }
+};
+
+// Iterator that traverses "regular" IC chains that start at an ICEntry
+// and are terminated with an ICFallbackStub.
+//
+// The iterator is considered to be at its end once it is _at_ the
+// fallback stub.  Thus, unlike the ICStubConstIterator, operators
+// '*' and '->' are valid even if 'atEnd()' returns true - they
+// will act on the fallback stub.
+//
+// This iterator also allows unlinking of stubs being traversed.
+// Note that 'unlink' does not implicitly advance the iterator -
+// it must be advanced explicitly using '++'.
+class ICStubIterator
+{
+    friend class ICFallbackStub;
+
+  private:
+    ICEntry *icEntry_;
+    ICFallbackStub *fallbackStub_;
+    ICStub *previousStub_;
+    ICStub *currentStub_;
+    bool unlinked_;
+
+    ICStubIterator(ICFallbackStub *fallbackStub, bool end=false);
+  public:
+
+    bool operator ==(const ICStubIterator &other) const {
+        // == should only ever be called on stubs from the same chain.
+        JS_ASSERT(icEntry_ == other.icEntry_);
+        JS_ASSERT(fallbackStub_ == other.fallbackStub_);
+        return currentStub_ == other.currentStub_;
+    }
+    bool operator !=(const ICStubIterator &other) const {
+        return !(*this == other);
+    }
+
+    ICStubIterator &operator++();
+
+    ICStubIterator operator++(int) {
+        ICStubIterator oldThis(*this);
+        ++(*this);
+        return oldThis;
+    }
+
+    ICStub *operator *() const {
+        return currentStub_;
+    }
+
+    ICStub *operator ->() const {
+        return currentStub_;
+    }
+
+    bool atEnd() const {
+        return currentStub_ == (ICStub *) fallbackStub_;
+    }
+
+    void unlink(Zone *zone);
+};
 
 //
 // Base class for all IC stubs.
@@ -582,6 +694,10 @@ class ICStub
         return lastStub->toFallbackStub();
     }
 
+    inline ICStubConstIterator beginHere() {
+        return ICStubConstIterator::StartingAt(this);
+    }
+
     static inline size_t offsetOfNext() {
         return offsetof(ICStub, next_);
     }
@@ -620,6 +736,7 @@ class ICStub
 
 class ICFallbackStub : public ICStub
 {
+    friend class ICStubConstIterator;
   protected:
     // Fallback stubs need these fields to easily add new stubs to
     // the linked list of stubs for an IC.
@@ -692,6 +809,14 @@ class ICFallbackStub : public ICStub
         } while (stub);
 
         return false;
+    }
+
+    ICStubConstIterator beginChainConst() {
+        return ICStubConstIterator(this->icEntry()->firstStub());
+    }
+
+    ICStubIterator beginChain() {
+        return ICStubIterator(this);
     }
 
     void unlinkStub(Zone *zone, ICStub *prev, ICStub *stub);
