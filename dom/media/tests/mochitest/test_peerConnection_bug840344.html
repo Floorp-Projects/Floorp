@@ -1,14 +1,25 @@
 <!DOCTYPE HTML>
 <html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=840344
+-->
 <head>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="head.js"></script>
-  <script type="application/javascript" src="pc.js"></script>
+  <meta charset="utf-8">
+    <title>Bug 840344: Assertion failure</title>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js">
+    </script>
+    <script type="application/javascript" src="head.js"></script>
+  </meta>
 </head>
 <body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=840344">
+Bug 840344</a>
+<p id="display"></p>
 <pre id="test">
-<script type="application/javascript">
+
+<script class="testbody" type="application/javascript">
 
   if (navigator.platform.startsWith("Linux")) {
     SimpleTest.expectAssertions(0, 1);
@@ -16,107 +27,108 @@
     SimpleTest.expectAssertions(0, 125);
   }
 
-  createHTML({
-    bug: "840344",
-    title: "Prevent multiple creations of local SDP"
-  });
+  runTest(function () {
+    var answerCount = 0;
+    var setLocalCount = 0;
 
-  // SDP to stand in for an offer coming from a (theoretical) remote endpoint
-  var offer = {
-    sdp: "v=0\r\n"+
-         "o=Mozilla-SIPUA 23597 0 IN IP4 0.0.0.0\r\n"+
-         "s=SIP Call\r\n"+
-         "t=0 0\r\n"+
-         "a=ice-ufrag:f5fda439\r\n"+
-         "a=ice-pwd:d0df8e2904bdbd29587966e797655970\r\n"+
-         "a=fingerprint:sha-256 DF:69:78:20:8D:2E:08:CE:49:82:A3:11:79:1D:BF:"+
-         "B5:49:49:2D:32:82:2F:0D:88:84:A7:C6:63:23:63:A9:0F\r\n"+
-         "m=audio 52757 RTP/SAVPF 109 0 8 101\r\n"+
-         "c=IN IP4 192.168.129.33\r\n"+
-         "a=rtpmap:109 opus/48000/2\r\n"+
-         "a=ptime:20\r\n"+
-         "a=rtpmap:0 PCMU/8000\r\n"+
-         "a=rtpmap:8 PCMA/8000\r\n"+
-         "a=rtpmap:101 telephone-event/8000\r\n"+
-         "a=fmtp:101 0-15\r\n"+
-         "a=sendrecv\r\n"+
-         "a=candidate:0 1 UDP 2113601791 192.168.129.33 52757 typ host\r\n"+
-         "a=candidate:0 2 UDP 2113601790 192.168.129.33 59738 typ host\r\n"+
-         "m=video 63901 RTP/SAVPF 120\r\n"+
-         "c=IN IP4 192.168.129.33\r\n"+
-         "a=rtpmap:120 VP8/90000\r\n"+
-         "a=sendrecv\r\n"+
-         "a=candidate:0 1 UDP 2113601791 192.168.129.33 63901 typ host\r\n"+
-         "a=candidate:0 2 UDP 2113601790 192.168.129.33 54165 typ host\r\n"+
-         "m=application 65080 SCTP/DTLS 5000 \r\n"+
-         "c=IN IP4 192.168.129.33\r\n"+
-         "a=fmtp:5000 protocol=webrtc-datachannel;streams=16\r\n"+
-         "a=sendrecv\r\n"+
-         "a=candidate:0 1 UDP 2113601791 192.168.129.33 65080 typ host\r\n"+
-         "a=candidate:0 2 UDP 2113601790 192.168.129.33 62658 typ host\r\n",
-    type: "offer"
-  };
+    // SDP to stand in for an offer coming from a (theoretical) remote endpoint
+    var offer = { sdp: "v=0\r\n"+
+          "o=Mozilla-SIPUA 23597 0 IN IP4 0.0.0.0\r\n"+
+          "s=SIP Call\r\n"+
+          "t=0 0\r\n"+
+          "a=ice-ufrag:f5fda439\r\n"+
+          "a=ice-pwd:d0df8e2904bdbd29587966e797655970\r\n"+
+          "a=fingerprint:sha-256 DF:69:78:20:8D:2E:08:CE:49:82:A3:11:79:1D:BF:"+
+            "B5:49:49:2D:32:82:2F:0D:88:84:A7:C6:63:23:63:A9:0F\r\n"+
+          "m=audio 52757 RTP/SAVPF 109 0 8 101\r\n"+
+          "c=IN IP4 192.168.129.33\r\n"+
+          "a=rtpmap:109 opus/48000/2\r\n"+
+          "a=ptime:20\r\n"+
+          "a=rtpmap:0 PCMU/8000\r\n"+
+          "a=rtpmap:8 PCMA/8000\r\n"+
+          "a=rtpmap:101 telephone-event/8000\r\n"+
+          "a=fmtp:101 0-15\r\n"+
+          "a=sendrecv\r\n"+
+          "a=candidate:0 1 UDP 2113601791 192.168.129.33 52757 typ host\r\n"+
+          "a=candidate:0 2 UDP 2113601790 192.168.129.33 59738 typ host\r\n"+
+          "m=video 63901 RTP/SAVPF 120\r\n"+
+          "c=IN IP4 192.168.129.33\r\n"+
+          "a=rtpmap:120 VP8/90000\r\n"+
+          "a=sendrecv\r\n"+
+          "a=candidate:0 1 UDP 2113601791 192.168.129.33 63901 typ host\r\n"+
+          "a=candidate:0 2 UDP 2113601790 192.168.129.33 54165 typ host\r\n"+
+          "m=application 65080 SCTP/DTLS 5000 \r\n"+
+          "c=IN IP4 192.168.129.33\r\n"+
+          "a=fmtp:5000 protocol=webrtc-datachannel;streams=16\r\n"+
+          "a=sendrecv\r\n"+
+          "a=candidate:0 1 UDP 2113601791 192.168.129.33 65080 typ host\r\n"+
+          "a=candidate:0 2 UDP 2113601790 192.168.129.33 62658 typ host\r\n",
+          type: "offer" };
 
-  var steps = [
-    [
-      "SET_REMOTE_DESCRIPTION",
-      function (test) {
-        var osd = new mozRTCSessionDescription(offer);
-        test.pcLocal.setRemoteDescription(osd, function () {
-          test.next();
-        });
+    info("Step 0: Instantiate a Peer Connection");
+    var pc = new mozRTCPeerConnection();
+
+    // First: Kick off the chain of events by asking for a mic and camera
+    var start = function() {
+      info("Step 1: Get User Media for Audio and Video");
+      getUserMedia({audio:true, video:true},
+                   gumSuccess, unexpectedCallbackAndFinish);
+    };
+
+    // Second: set the remote description
+    var gumSuccess = function(x) {
+      info("Step 2a: Add stream");
+      pc.addStream(x);
+      info("Step 2b: Create Session Description");
+      var osd = new mozRTCSessionDescription(offer);
+      info("Step 2c: Set Remote Description");
+      pc.setRemoteDescription(osd,
+                              setRemoteSuccess,
+                              unexpectedCallbackAndFinish);
+    };
+
+    // Third: Attempt to create an answer. Twice.
+    var setRemoteSuccess = function() {
+      info("Step 3a: Create answer #1");
+      pc.createAnswer(answerSuccess, unexpectedCallbackAndFinish);
+      info("Step 3b: Create answer #2");
+      pc.createAnswer(answerSuccess, unexpectedCallbackAndFinish);
+    };
+
+    // Fourth: Count the answers and push them into the local description
+    var answerSuccess = function(answer) {
+      answerCount++;
+      ok (answerCount < 3, "Answer count is less than three.")
+      info("got answer #" + answerCount);
+      is(answer.type,'answer',"Answer is of type 'answer'");
+      ok(answer.sdp.length > 10, "Answer has length " + answer.sdp.length);
+      info("Step 4: Set local description");
+      pc.setLocalDescription(answer,
+                             setLocalSuccess,
+                             unexpectedCallbackAndFinish);
+    };
+
+    // Fifth: Once we have two successful rounds through here, we're done.
+    var setLocalSuccess = function(x) {
+      setLocalCount++;
+      info("Set local description #" + setLocalCount);
+      // Then shalt thou count to two, no more, no less. Two shall be the
+      // number thou shalt count, and the number of the counting shall be
+      // two. Three shalt thou not count, neither count thou one, excepting
+      // that thou then proceed to two. Four is right out. Once the number two,
+      // being the second number, be reached, then thou shalt declare success.
+      ok (setLocalCount < 3, "Set local count is less than three.")
+      if (setLocalCount === 2) {
+        is (answerCount, 2, "Answer count is 2.")
+        info("Step 5: Finished");
+        SimpleTest.finish();
       }
-    ],
-    [
-      "CHECK_MULTIPLE_ANSWERS",
-      function (test) {
-        var answerCount = 0;
-        var setLocalCount = 0;
+    };
 
-        info("Create answer #1");
-        test.pcLocal.createAnswer(answerSuccess);
+    start();
 
-        info("Create answer #2");
-        test.pcLocal.createAnswer(answerSuccess);
+  }, true);
 
-
-        // Fourth: Count the answers and push them into the local description
-        function answerSuccess(answer) {
-          answerCount++;
-          ok (answerCount < 3, "Answer count is less than three.")
-
-          info("Got answer #" + answerCount);
-          is(answer.type, 'answer', "Answer is of type 'answer'");
-          ok(answer.sdp.length > 10, "Answer has length " + answer.sdp.length);
-
-          info("Set local description for answer #" + answerCount);
-          test.pcLocal.setLocalDescription(answer, setLocalSuccess);
-        }
-
-        // Fifth: Once we have two successful rounds through here, we're done.
-        function setLocalSuccess() {
-          setLocalCount++;
-
-          info("Set local description #" + setLocalCount);
-          // Then shalt thou count to two, no more, no less. Two shall be the
-          // number thou shalt count, and the number of the counting shall be
-          // two. Three shalt thou not count, neither count thou one, excepting
-          // that thou then proceed to two. Four is right out. Once the number two,
-          // being the second number, be reached, then thou shalt declare success.
-          ok (setLocalCount < 3, "Set local count is less than three.")
-          if (setLocalCount === 2) {
-            is (answerCount, 2, "Answer count is 2.")
-            test.next();
-          }
-        }
-      }
-    ]
-  ];
-
-  var test = new PeerConnectionTest({ desktopSupportedOnly: true });
-  test.setMediaConstraints([{audio: true, video: true}], [ ]);
-  test.chain.replaceAfter("PC_LOCAL_GUM", steps);
-  test.run();
 </script>
 </pre>
 </body>

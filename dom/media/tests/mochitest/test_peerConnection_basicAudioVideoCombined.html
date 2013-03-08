@@ -1,27 +1,119 @@
 ﻿<!DOCTYPE HTML>
 <html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=796890
+-->
 <head>
+  <meta charset="utf-8">
+  <title>Basic video-only peer connection</title>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="head.js"></script>
-  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
   <script type="application/javascript" src="pc.js"></script>
 </head>
 <body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=796890">Basic audio-video peer connection</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <audio id="audioLocal" controls></audio>
+
+  <video id="videoPCLocal" width="160" height="120" controls></video>
+  <video id="videoPCRemote" width="160" height="120" controls></video>
+  <video id="videoLocal" width="160" height="120" controls></video>
+</div>
 <pre id="test">
 <script type="application/javascript">
 
   SimpleTest.expectAssertions(0, 13);
 
-  createHTML({
-    bug: "796890",
-    title: "Basic audio/video (combined) peer connection"
-  });
+  var audioLocal;
+  var videoLocal;
+  var videoPCLocal;
+  var videoPCRemote;
 
-  var test = new PeerConnectionTest({ desktopSupportedOnly: true });
-  test.setMediaConstraints([{audio: true}, {video: true}],
-                           [{audio: true}, {video: true}]);
-  test.run();
+  var pcLocal;
+  var pcRemote;
+
+  var test_data = {
+    pcLocal: [],
+    pcRemote: []
+  };
+
+  runTest(function () {
+    audioLocal = document.getElementById("audioLocal");
+    videoLocal = document.getElementById("videoLocal");
+    videoPCLocal = document.getElementById("videoPCLocal");
+    videoPCRemote = document.getElementById("videoPCRemote");
+
+    pcLocal = new mozRTCPeerConnection();
+    pcRemote = new mozRTCPeerConnection();
+
+    pcLocal.onaddstream = function (aObj) {
+      info("Local Peer Connection onaddstream has been called");
+      test_data.pcLocal.push(aObj.stream);
+
+      videoPCRemote.mozSrcObject = aObj.stream;
+      videoPCRemote.play();
+    };
+
+    pcRemote.onaddstream = function (aObj) {
+      info("Remote Peer Connection onaddstream has been called");
+      test_data.pcRemote.push(aObj.stream);
+
+      videoPCLocal.mozSrcObject = aObj.stream;
+      videoPCLocal.play();
+    };
+
+    navigator.mozGetUserMedia({audio: true, video: true, fake: true},
+                              function onSuccess(aLocalInputStream) {
+      info("Calling addStream on local peer connection");
+      pcLocal.addStream(aLocalInputStream);
+
+      navigator.mozGetUserMedia({audio: true, video: true, fake: true},
+                                function onSuccess(aRemoteInputStream) {
+        info("Calling addStream on remote peer connection");
+        pcRemote.addStream(aRemoteInputStream);
+
+        videoLocal.mozSrcObject = aLocalInputStream;
+        videoLocal.play();
+
+        PeerConnection.handShake(pcLocal, pcRemote, function () {
+          info("Finished peer connection handshake");
+          is(pcLocal.localStreams.length, 1,
+             "A single local stream has been attached to the local peer");
+          is(pcRemote.localStreams.length, 1,
+             "A single local stream has been attached to the remote peer");
+
+          is(test_data.pcLocal.length, 1,
+             "A remote stream has been attached to the local peer");
+          is(test_data.pcRemote.length, 1,
+             "A remote stream has been attached to the remote peer");
+
+          // TODO: check that the streams are of the expected types.
+          // Bug 834837.
+
+          ok(PeerConnection.findStream(pcLocal.remoteStreams, test_data.pcLocal[0]) !== -1,
+             "Remote stream for local peer is accessible");
+          ok(PeerConnection.findStream(pcRemote.remoteStreams, test_data.pcRemote[0]) !== -1,
+             "Remote stream for remote peer is accessible");
+
+          info("For now simply disconnect. We will add checks for media in a follow-up bug");
+          disconnect();
+        });
+      }, unexpectedCallbackAndFinish);
+    }, unexpectedCallbackAndFinish);
+  }, true);
+
+  function disconnect() {
+    info("Calling close on the local peer connection");
+    pcLocal.close();
+    info("Calling close on the remote peer connection");
+    pcRemote.close();
+
+    info("We can't run any checks and clean-up code due to a crash (see bug 820072)");
+
+    SimpleTest.finish();
+  }
 </script>
 </pre>
 </body>
