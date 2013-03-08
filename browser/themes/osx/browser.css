@@ -6,6 +6,8 @@
 
 %include shared.inc
 %filter substitution
+%define fgTabTexture linear-gradient(hsla(0,0%,100%,0.6), hsla(0,0%,100%,0.6) 0px, hsl(0,0%,99%) 1px, hsl(0,0%,92%))
+%define fgTabBackgroundMiddle linear-gradient(transparent, transparent)
 %define forwardTransitionLength 150ms
 %define conditionalForwardWithUrlbar window:not([chromehidden~=toolbar]) #navigator-toolbox[iconsize=large][mode=icons] > :-moz-any(#nav-bar[currentset*="unified-back-forward-button,urlbar-container"],#nav-bar:not([currentset])) > #unified-back-forward-button
 %define conditionalForwardWithUrlbarWidth 27
@@ -62,6 +64,17 @@ toolbarseparator {
   min-height: 22px;
 }
 
+toolbox[tabsontop=true] > toolbar:not(#TabsToolbar):not(#nav-bar):not(#toolbar-menubar),
+toolbox[tabsontop=false] > toolbar:not(#nav-bar) {
+  margin-top: -2px; /* overlay the bottom border of the toolbar above us */
+  padding-top: 1px !important;
+}
+
+toolbox[tabsontop=true] > toolbar:not(#TabsToolbar):not(#nav-bar):not(:-moz-lwtheme) {
+  -moz-appearance: none;
+  background: url(chrome://browser/skin/Toolbar-background-noise.png) hsl(0,0%,83%);
+}
+
 /* We need more height when toolbar buttons show both icon and text. */
 toolbar[mode="full"] toolbarseparator {
   min-height: 36px;
@@ -73,10 +86,9 @@ toolbar[mode="full"] toolbarseparator {
 
 #PersonalToolbar {
   -moz-appearance: none;
-  margin-top: -2px; /* overlay the bottom border of the toolbar above us */
-  padding-top: 1px !important;
   background-color: -moz-mac-chrome-active;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.57);
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: hsla(0,0%,0%,.15) hsla(0,0%,100%,.15);
 }
 
 #nav-bar[tabsontop=true],
@@ -85,9 +97,11 @@ toolbar[mode="full"] toolbarseparator {
   -moz-appearance: none;
   margin-top: 0; /* don't overlay the bottom border of the tabs toolbar */
   padding-top: 4px !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.57);
-  background-color: -moz-mac-chrome-active;
-  background-image: linear-gradient(rgba(255,255,255,.43), rgba(255,255,255,0)) !important; /* override lwtheme style */
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: hsla(0,0%,0%,.15) hsla(0,0%,100%,.15);
+  background: url(chrome://browser/skin/Toolbar-background-noise.png),
+              linear-gradient(hsl(0,0%,93%), hsl(0,0%,83%)); !important; /* override lwtheme style */
+  background-clip: border-box;
   background-origin: border-box !important;
 }
 
@@ -104,7 +118,6 @@ toolbar[mode="full"] toolbarseparator {
 #nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + toolbar:not(:-moz-lwtheme):-moz-window-inactive,
 #nav-bar[tabsontop=true][collapsed=true]:not([customizing]) + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme):-moz-window-inactive {
   background-color: -moz-mac-chrome-inactive;
-  border-bottom-color: rgba(0, 0, 0, 0.32);
 }
 
 /* ----- BOOKMARK TOOLBAR ----- */
@@ -2165,6 +2178,8 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   margin: 0;
 }
 
+%include ../shared/tabs.inc.css
+
 .tab-throbber,
 .tab-icon-image {
   width: 16px;
@@ -2196,7 +2211,11 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .tabbrowser-tab:not(:hover) > .tab-stack > .tab-content > .tab-icon-image:not([selected="true"]) {
-  opacity: .8;
+  opacity: .9;
+}
+
+.tab-label:not([selected="true"]) {
+  opacity: .7;
 }
 
 .tabbrowser-tab:not([pinned]):not([fadein]) {
@@ -2205,57 +2224,27 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
               opacity 50ms ease-out 100ms /* hide the tab for the last 100ms of the max-width transition */;
 }
 
-.tab-stack {
-  /* ensure stable tab height with and without toolbarbuttons on the tab bar */
-  height: 26px;
-}
-
 .tabbrowser-tab,
 .tabs-newtab-button {
   -moz-appearance: none;
   font: message-box;
   font-weight: bold;
   text-shadow: @loweredShadow@;
-  margin: 0;
-  padding: 0;
   border: none;
-  text-align: center;
   -moz-box-align: stretch;
 }
 
-%define TABSONTOP_TAB #tabbrowser-tabs[tabsontop="true"] > .tabbrowser-tab
-%define TABSONBOTTOM_TAB #tabbrowser-tabs[tabsontop="false"] > .tabbrowser-tab
-%define TABSONTOP_TAB_STACK #tabbrowser-tabs[tabsontop="true"] > .tabbrowser-tab > .tab-stack
-%define TABSONBOTTOM_TAB_STACK #tabbrowser-tabs[tabsontop="false"] > .tabbrowser-tab > .tab-stack
+.tabbrowser-tab {
+  color: #333;
+}
+
 %define TABSONTOP_NEWTAB_BUTTON #tabbrowser-tabs[tabsontop="true"] > .tabbrowser-arrowscrollbox > .tabs-newtab-button
 %define TABSONBOTTOM_NEWTAB_BUTTON #tabbrowser-tabs[tabsontop="false"] > .tabbrowser-arrowscrollbox > .tabs-newtab-button
 
-@TABSONTOP_TAB_STACK@ > .tab-background {
-  margin-top: 3px;
-}
-
-@TABSONBOTTOM_TAB_STACK@ > .tab-background {
-  margin-bottom: 3px;
-}
-
-@TABSONTOP_TAB_STACK@ > .tab-background:not([selected="true"]):not(:-moz-lwtheme) {
-  margin-bottom: 2px;
-}
-
-@TABSONBOTTOM_TAB_STACK@ > .tab-background:not([selected="true"]) {
-  margin-top: 2px;
-}
-
-.tab-background,
-.tab-content,
-.tabs-newtab-button > .toolbarbutton-icon {
-  -moz-margin-start: -5px;
-  -moz-margin-end: -4px;
-  pointer-events: none;
-}
-
-.tab-close-button {
-  pointer-events: auto;
+.tab-background-start[selected=true]::before,
+.tab-background-end[selected=true]::before {
+  /* The fill is in the image of ::after on OS X */
+  background: none;
 }
 
 .tabbrowser-tabs[closebuttons="hidden"] > * > * > * > .tab-close-button:not([pinned]) {
@@ -2263,176 +2252,14 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   visibility: hidden;
 }
 
-.tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox {
-  -moz-padding-start: 5px;
-  -moz-padding-end: 4px;
-}
-
-.tab-content,
 .tabs-newtab-button > .toolbarbutton-icon {
   -moz-box-align: center;
   border: solid transparent;
   border-width: 0 11px;
 }
 
-.tab-background-start,
-.tab-background-end {
-  width: 12px;
-  height: 21px;
-}
-
-.tab-background-middle {
-  -moz-box-flex: 1;
-}
-
-@TABSONTOP_TAB_STACK@ > .tab-background > .tab-background-start:-moz-locale-dir(ltr),
-@TABSONTOP_TAB_STACK@ > .tab-background > .tab-background-end:-moz-locale-dir(rtl) {
-  clip-path: url(chrome://browser/content/browser.xul#osx-tab-ontop-left-curve-clip-path);
-}
-
-@TABSONTOP_TAB_STACK@ > .tab-background > .tab-background-end:-moz-locale-dir(ltr),
-@TABSONTOP_TAB_STACK@ > .tab-background > .tab-background-start:-moz-locale-dir(rtl) {
-  clip-path: url(chrome://browser/content/browser.xul#osx-tab-ontop-right-curve-clip-path);
-}
-
-@TABSONBOTTOM_TAB_STACK@ > .tab-background > .tab-background-start:-moz-locale-dir(ltr),
-@TABSONBOTTOM_TAB_STACK@ > .tab-background > .tab-background-end:-moz-locale-dir(rtl) {
-  clip-path: url(chrome://browser/content/browser.xul#osx-tab-onbottom-left-curve-clip-path);
-}
-
-@TABSONBOTTOM_TAB_STACK@ > .tab-background > .tab-background-end:-moz-locale-dir(ltr),
-@TABSONBOTTOM_TAB_STACK@ > .tab-background > .tab-background-start:-moz-locale-dir(rtl) {
-  clip-path: url(chrome://browser/content/browser.xul#osx-tab-onbottom-right-curve-clip-path);
-}
-
-.tab-background-start[selected="true"]:not(:-moz-lwtheme),
-.tab-background-middle[selected="true"]:not(:-moz-lwtheme),
-.tab-background-end[selected="true"]:not(:-moz-lwtheme) {
-  background-color: -moz-mac-chrome-active;
-}
-
-.tab-background-start[selected="true"]:not(:-moz-lwtheme):-moz-window-inactive,
-.tab-background-middle[selected="true"]:not(:-moz-lwtheme):-moz-window-inactive,
-.tab-background-end[selected="true"]:not(:-moz-lwtheme):-moz-window-inactive {
-  background-color: -moz-mac-chrome-inactive;
-}
-
-.tab-background-start[pinned][titlechanged]:not([selected="true"]),
-.tab-background-end[pinned][titlechanged]:not([selected="true"]) {
-  background-image: linear-gradient(rgba(148,205,253,.2), rgba(148,205,253,.2)) !important;
-}
-
-@TABSONBOTTOM_TAB_STACK@ > .tab-background > .tab-background-middle[pinned][titlechanged]:not([selected="true"]) {
-  background-image: radial-gradient(circle farthest-corner at 50% 99%, rgba(254,254,255,1) 3%, rgba(210,235,255,.9) 12%, rgba(148,205,253,.6) 30%, rgba(148,205,253,.2) 70%);
-}
-
-@TABSONTOP_TAB_STACK@ > .tab-background > .tab-background-middle[pinned][titlechanged]:not([selected="true"]) {
-  background-image: radial-gradient(circle farthest-corner at 50% 2px, rgba(254,254,255,1) 3%, rgba(210,235,255,.9) 12%, rgba(148,205,253,.6) 30%, rgba(148,205,253,.2) 70%);
-}
-
-.tabbrowser-tab > .tab-stack > .tab-background > .tab-background-start:-moz-lwtheme-brighttext:not([selected="true"]),
-.tabbrowser-tab > .tab-stack > .tab-background > .tab-background-middle:-moz-lwtheme-brighttext:not([selected="true"]),
-.tabbrowser-tab > .tab-stack > .tab-background > .tab-background-end:-moz-lwtheme-brighttext:not([selected="true"]) {
-  background-image: linear-gradient(hsla(0,0%,40%,.6), hsla(0,0%,30%,.6) 50%);
-}
-
-.tabbrowser-tab > .tab-stack > .tab-background > .tab-background-start:-moz-lwtheme-darktext:not([selected="true"]),
-.tabbrowser-tab > .tab-stack > .tab-background > .tab-background-middle:-moz-lwtheme-darktext:not([selected="true"]),
-.tabbrowser-tab > .tab-stack > .tab-background > .tab-background-end:-moz-lwtheme-darktext:not([selected="true"]) {
-  background-image: linear-gradient(hsla(0,0%,60%,.5), hsla(0,0%,45%,.5) 50%);
-}
-
-@TABSONTOP_TAB_STACK@ > .tab-content,
-@TABSONTOP_NEWTAB_BUTTON@ > .toolbarbutton-icon {
-  border-image: url(chrome://browser/skin/tabbrowser/tab-top-normal-active.png) 0 11 fill repeat stretch;
-}
-
-@TABSONTOP_TAB@:hover > .tab-stack > .tab-content:not([selected="true"]),
-@TABSONTOP_NEWTAB_BUTTON@:hover > .toolbarbutton-icon {
-  border-image: url(chrome://browser/skin/tabbrowser/tab-top-hover-active.png) 0 11 fill repeat stretch;
-}
-
-@TABSONTOP_TAB_STACK@ > .tab-content[selected="true"] {
-  border-image: url(chrome://browser/skin/tabbrowser/tab-top-selected-active.png) 0 11 fill repeat stretch;
-}
-
-@TABSONBOTTOM_TAB_STACK@ > .tab-content,
-@TABSONBOTTOM_NEWTAB_BUTTON@ > .toolbarbutton-icon {
-  border-image: url(chrome://browser/skin/tabbrowser/tab-bottom-normal-active.png) 0 11 fill repeat stretch;
-}
-
-@media (min-resolution: 2dppx) {
-  @TABSONTOP_TAB_STACK@ > .tab-content,
-  @TABSONTOP_NEWTAB_BUTTON@ > .toolbarbutton-icon {
-    border-image: url(chrome://browser/skin/tabbrowser/tab-top-normal-active@2x.png) 0 22 fill repeat stretch;
-  }
-
-  @TABSONTOP_TAB@:hover > .tab-stack > .tab-content:not([selected="true"]),
-  @TABSONTOP_NEWTAB_BUTTON@:hover > .toolbarbutton-icon {
-    border-image: url(chrome://browser/skin/tabbrowser/tab-top-hover-active@2x.png) 0 22 fill repeat stretch;
-  }
-
-  @TABSONTOP_TAB_STACK@ > .tab-content[selected="true"] {
-    border-image: url(chrome://browser/skin/tabbrowser/tab-top-selected-active@2x.png) 0 22 fill repeat stretch;
-  }
-}
-
-@TABSONBOTTOM_TAB@:hover > .tab-stack > .tab-content:not([selected="true"]),
-@TABSONBOTTOM_NEWTAB_BUTTON@:hover > .toolbarbutton-icon {
-  border-image: url(chrome://browser/skin/tabbrowser/tab-bottom-hover-active.png) 0 11 fill repeat stretch;
-}
-
-@TABSONBOTTOM_TAB_STACK@ > .tab-content[selected="true"] {
-  border-image: url(chrome://browser/skin/tabbrowser/tab-bottom-selected-active.png) 0 11 fill repeat stretch;
-}
-
-/* preloading hack */
-#TabsToolbar::after {
-  content: '';
-  display: block;
-  background-image:
-    url(chrome://browser/skin/tabbrowser/tab-top-normal-active.png),
-    url(chrome://browser/skin/tabbrowser/tab-top-hover-active.png),
-    url(chrome://browser/skin/tabbrowser/tab-top-selected-active.png),
-    url(chrome://browser/skin/tabbrowser/tab-bottom-normal-active.png),
-    url(chrome://browser/skin/tabbrowser/tab-bottom-hover-active.png),
-    url(chrome://browser/skin/tabbrowser/tab-bottom-selected-active.png),
-    url(chrome://browser/skin/tabbrowser/tabbar-top-bg-active.png),
-    url(chrome://browser/skin/tabbrowser/tabbar-top-bg-inactive.png),
-    url(chrome://browser/skin/tabbrowser/tabbar-bottom-bg-active.png),
-    url(chrome://browser/skin/tabbrowser/tabbar-bottom-bg-inactive.png);
-}
-
-@media (min-resolution: 2dppx) {
-  #TabsToolbar::after {
-    content: '';
-    display: block;
-    background-image:
-      url(chrome://browser/skin/tabbrowser/tab-top-normal-active@2x.png),
-      url(chrome://browser/skin/tabbrowser/tab-top-hover-active@2x.png),
-      url(chrome://browser/skin/tabbrowser/tab-top-selected-active@2x.png),
-      url(chrome://browser/skin/tabbrowser/tab-bottom-normal-active.png),
-      url(chrome://browser/skin/tabbrowser/tab-bottom-hover-active.png),
-      url(chrome://browser/skin/tabbrowser/tab-bottom-selected-active.png),
-      url(chrome://browser/skin/tabbrowser/tabbar-top-bg-active.png),
-      url(chrome://browser/skin/tabbrowser/tabbar-top-bg-inactive.png),
-      url(chrome://browser/skin/tabbrowser/tabbar-bottom-bg-active.png),
-      url(chrome://browser/skin/tabbrowser/tabbar-bottom-bg-inactive.png);
-  }
-}
-
 .tabbrowser-tab:focus > .tab-stack {
   box-shadow: @focusRingShadow@;
-}
-
-.tabbrowser-tab:not([selected="true"]):not(:hover):not(:-moz-lwtheme) {
-  color: #222;
-}
-
-.tabbrowser-tab[selected="true"] {
-  color: #000;
-  z-index: 1;
-  position: relative;
 }
 
 .tabbrowser-tab:-moz-lwtheme {
@@ -2449,13 +2276,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   content: '';
   display: block;
   -moz-appearance: toolbar;
-  height: 25px;
-  margin-bottom: -25px;
+  height: calc(@tabHeight@ + 1px);
+  margin-bottom: calc(-1px - @tabHeight@);
 }
 
 #TabsToolbar {
   -moz-appearance: none;
-  height: 26px;
   background-repeat: repeat-x;
 }
 
@@ -2464,59 +2290,34 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   padding-top: 2px;
 }
 
-/* For tabs-on-top, only fill the bottom 2px with the chrome background
- * color, so that the borders in tabbar-top-bg-*.png can mix with it.
- * In the top 24px the unified toolbar (from the ::before above) will show.
+/*
+ * Draw the bottom border of the tabstrip above ::before
  */
 #TabsToolbar[tabsontop="true"]:not(:-moz-lwtheme) {
-  padding-bottom: 2px;
-  background: url(chrome://browser/skin/tabbrowser/tabbar-top-bg-active.png),
-              linear-gradient(to top, -moz-mac-chrome-active 2px, transparent 2px);
-}
-
-#TabsToolbar[tabsontop="true"]:not(:-moz-lwtheme):-moz-window-inactive {
-  background: url(chrome://browser/skin/tabbrowser/tabbar-top-bg-inactive.png),
-              linear-gradient(to top, -moz-mac-chrome-inactive 2px, transparent 2px);
+  background: linear-gradient(to top, hsla(0,0%,0%,.3), hsla(0,0%,0%,.3) 1px, transparent 1px);
 }
 
 /* In tabs-on-bottom mode, fill the whole toolbar with the chrome
  * background color.
  */
 #TabsToolbar[tabsontop="false"]:not(:-moz-lwtheme) {
-  background: url(chrome://browser/skin/tabbrowser/tabbar-bottom-bg-active.png) -moz-mac-chrome-active;
+  background: -moz-mac-chrome-active;
 }
 
 #TabsToolbar[tabsontop="false"]:not(:-moz-lwtheme):-moz-window-inactive {
-  background: url(chrome://browser/skin/tabbrowser/tabbar-bottom-bg-inactive.png) -moz-mac-chrome-inactive;
+  background: -moz-mac-chrome-inactive;
 }
 
 #tabbrowser-tabs {
   -moz-box-align: stretch;
-  height: 26px;
-}
-
-#tabbrowser-tabs[tabsontop="true"] > .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox:not(:-moz-lwtheme) {
-  margin-bottom: -2px;
-}
-
-#tabbrowser-tabs[tabsontop="false"] > .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox {
-  margin-top: -2px;
 }
 
 @TABSONTOP_NEWTAB_BUTTON@ > .toolbarbutton-icon {
-  padding: 4px 0 2px;
-}
-
-@TABSONTOP_TAB_STACK@ > .tab-content {
-  padding-top: 2px;
+  padding: 6px 0 4px;
 }
 
 @TABSONBOTTOM_NEWTAB_BUTTON@ > .toolbarbutton-icon {
-  padding: 2px 0 4px;
-}
-
-@TABSONBOTTOM_TAB_STACK@ > .tab-content {
-  padding-bottom: 2px;
+  padding: 4px 0 6px;
 }
 
 /**

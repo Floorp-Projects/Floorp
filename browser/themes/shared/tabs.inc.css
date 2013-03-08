@@ -8,6 +8,16 @@
 %define tabCurveWidth 30px
 %define tabCurveHalfWidth 15px
 
+/* image preloading hack */
+#TabsToolbar::after {
+  content: '';
+  display: block;
+  background-image:
+    url(chrome://browser/skin/tabbrowser/tab-background-end.png),
+    url(chrome://browser/skin/tabbrowser/tab-background-middle.png),
+    url(chrome://browser/skin/tabbrowser/tab-background-start.png);
+}
+
 .tabbrowser-tab,
 .tabs-newtab-button {
   -moz-appearance: none;
