@@ -16,3 +16,4 @@ fuzzy-if(gtk2Widget,1,19) fuzzy-if(Android||B2G,17,726) == select-3.html select-
 == multi-column-1.html multi-column-1-ref.html
 == button-1.html button-1-ref.html
 == button-2.html button-2-ref.html
+== relative-row-animation-1.html relative-row-animation-1-ref.html
