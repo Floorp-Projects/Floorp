@@ -187,7 +187,7 @@ nsMacDockSupport::RedrawIcon()
 
     int stepsPerSecond = isIndeterminate ? 60 : 30;
     mProgressDrawInfo.trackInfo.progress.phase =
-      PR_IntervalToMilliseconds(PR_IntervalNow()) * stepsPerSecond / 1000 % 32;
+      uint8_t(PR_IntervalToMilliseconds(PR_IntervalNow()) * stepsPerSecond / 1000);
 
     [icon lockFocus];
     CGContextRef ctx = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
