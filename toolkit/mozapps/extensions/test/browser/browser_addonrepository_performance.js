@@ -8,6 +8,7 @@ let tmp = {};
 Components.utils.import("resource://gre/modules/AddonRepository.jsm", tmp);
 let AddonRepository = tmp.AddonRepository;
 
+var gTelemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
 var gManagerWindow;
 var gProvider;
 
@@ -41,13 +42,38 @@ function test() {
     }
     info(url.query);
 
+    // Check if we encountered telemetry errors and turn the tests for which
+    // we don't have valid data into known failures.
+    let snapshot = gTelemetry.getHistogramById("STARTUP_MEASUREMENT_ERRORS")
+                             .snapshot();
+
+    let tProcessValid = (snapshot.counts[0] == 0);
+    let tMainValid = tProcessValid && (snapshot.counts[2] == 0);
+    let tFirstPaintValid = tProcessValid && (snapshot.counts[5] == 0);
+    let tSessionRestoredValid = tProcessValid && (snapshot.counts[6] == 0);
+
     let params = parseParams(url.query);
 
     is(params.appOS, Services.appinfo.OS, "OS should be correct");
     is(params.appVersion, Services.appinfo.version, "Version should be correct");
-    ok(params.tMain >= 0, "Should be a sensible tMain");
-    ok(params.tFirstPaint >= 0, "Should be a sensible tFirstPaint");
-    ok(params.tSessionRestored >= 0, "Should be a sensible tSessionRestored");
+
+    if (tMainValid) {
+      ok(params.tMain >= 0, "Should be a sensible tMain");
+    } else {
+      todo(false, "An error occurred while recording the startup timestamps, skipping this test");
+    }
+
+    if (tFirstPaintValid) {
+      ok(params.tFirstPaint >= 0, "Should be a sensible tFirstPaint");
+    } else {
+      todo(false, "An error occurred while recording the startup timestamps, skipping this test");
+    }
+
+    if (tSessionRestoredValid) {
+      ok(params.tSessionRestored >= 0, "Should be a sensible tSessionRestored");
+    } else {
+      todo(false, "An error occurred while recording the startup timestamps, skipping this test");
+    }
 
     gSeenRequest = true;
   }
