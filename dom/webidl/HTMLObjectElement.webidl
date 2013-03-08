@@ -180,13 +180,6 @@ interface MozObjectLoadingContent {
   readonly attribute unsigned long pluginFallbackType;
 
   /**
-   * If this object currently owns a running plugin, regardless of whether or
-   * not one is pending spawn/despawn.
-   */
-  [ChromeOnly]
-  readonly attribute boolean hasRunningPlugin;
-
-  /**
    * This method will disable the play-preview plugin state.
    */
   [ChromeOnly, Throws]

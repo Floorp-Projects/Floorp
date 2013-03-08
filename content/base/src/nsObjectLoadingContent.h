@@ -197,10 +197,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     {
       return mFallbackType;
     }
-    bool HasRunningPlugin() const
-    {
-      return !!mInstanceOwner;
-    }
     void CancelPlayPreview(mozilla::ErrorResult& aRv)
     {
       aRv = CancelPlayPreview();
