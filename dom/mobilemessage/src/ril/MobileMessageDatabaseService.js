@@ -46,9 +46,9 @@ const READ_WRITE = "readwrite";
 const PREV = "prev";
 const NEXT = "next";
 
-XPCOMUtils.defineLazyServiceGetter(this, "gSmsService",
-                                   "@mozilla.org/sms/smsservice;1",
-                                   "nsISmsService");
+XPCOMUtils.defineLazyServiceGetter(this, "gMobileMessageService",
+                                   "@mozilla.org/mobilemessage/mobilemessageservice;1",
+                                   "nsIMobileMessageService");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gIDBManager",
                                    "@mozilla.org/dom/indexeddb/manager;1",
@@ -562,15 +562,15 @@ MobileMessageDatabaseService.prototype = {
     if (DEBUG) {
       debug("createSmsMessageFromRecord: " + JSON.stringify(aMessageRecord));
     }
-    return gSmsService.createSmsMessage(aMessageRecord.id,
-                                        aMessageRecord.delivery,
-                                        aMessageRecord.deliveryStatus,
-                                        aMessageRecord.sender,
-                                        aMessageRecord.receiver,
-                                        aMessageRecord.body,
-                                        aMessageRecord.messageClass,
-                                        aMessageRecord.timestamp,
-                                        aMessageRecord.read);
+    return gMobileMessageService.createSmsMessage(aMessageRecord.id,
+                                                  aMessageRecord.delivery,
+                                                  aMessageRecord.deliveryStatus,
+                                                  aMessageRecord.sender,
+                                                  aMessageRecord.receiver,
+                                                  aMessageRecord.body,
+                                                  aMessageRecord.messageClass,
+                                                  aMessageRecord.timestamp,
+                                                  aMessageRecord.read);
   },
 
   /**

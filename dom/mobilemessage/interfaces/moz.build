@@ -17,6 +17,7 @@ XPIDL_SOURCES += [
     'nsIDOMSmsSegmentInfo.idl',
     'nsIMobileMessageCallback.idl',
     'nsIMobileMessageDatabaseService.idl',
+    'nsIMobileMessageService.idl',
     'nsISmsService.idl',
 ]
 
