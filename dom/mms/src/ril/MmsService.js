@@ -18,6 +18,10 @@ const RIL_MMSSERVICE_CID = Components.ID("{217ddd76-75db-4210-955d-8806cd8d87f9}
 
 const DEBUG = false;
 
+const kMmsSendingObserverTopic           = "mms-sending";
+const kMmsSentObserverTopic              = "mms-sent";
+const kMmsFailedObserverTopic            = "mms-failed";
+
 const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
 const kXpcomShutdownObserverTopic        = "xpcom-shutdown";
 const kPrefenceChangedObserverTopic      = "nsPref:changed";
@@ -1098,7 +1102,13 @@ MmsService.prototype = {
    *        The MMS message object.
    */
   handleDeliveryIndication: function handleDeliveryIndication(msg) {
-    // TODO: bug 811252 - implement MMS database
+    // TODO Bug 850140 Two things we need to do in the future:
+    //
+    // 1. Use gMobileMessageDatabaseService.setMessageDelivery() to reset
+    // the delivery status to "success" or "error" for a specific receiver.
+    //
+    // 2. Fire "mms-delivery-success" or "mms-delivery-error" observer
+    // topics to MobileMessageManager.
     let messageId = msg.headers["message-id"];
     debug("handleDeliveryIndication: got delivery report for " + messageId);
   },
@@ -1231,9 +1241,11 @@ MmsService.prototype = {
         debug("Marking the delivery state/staus is done. Notify sent or failed.");
         if (!aIsSentSuccess) {
           aRequest.notifySendMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+          Services.obs.notifyObservers(aMmsMessage, kMmsFailedObserverTopic, null);
           return;
         }
         aRequest.notifyMessageSent(aMmsMessage);
+        Services.obs.notifyObservers(aMmsMessage, kMmsSentObserverTopic, null);
       });
     };
 
@@ -1243,6 +1255,7 @@ MmsService.prototype = {
                           function notifySendingResult(sendingRv, sendingRecord) {
       debug("Saving sending message is done. Start to send.");
       let mmsMessage = self.createMmsMessageFromRecord(sendingRecord);
+      Services.obs.notifyObservers(mmsMessage, kMmsSendingObserverTopic, null);
       let sendTransaction;
       try {
         sendTransaction = new SendTransaction(sendingRecord);

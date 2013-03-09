@@ -860,6 +860,8 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
     return NS_NewDOMCustomEvent(aDOMEvent, aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("mozsmsevent"))
     return NS_NewDOMMozSmsEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+  if (aEventType.LowerCaseEqualsLiteral("mozmmsevent"))
+    return NS_NewDOMMozMmsEvent(aDOMEvent, aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("storageevent")) {
     return NS_NewDOMStorageEvent(aDOMEvent, aOwner, aPresContext, nullptr);
   }

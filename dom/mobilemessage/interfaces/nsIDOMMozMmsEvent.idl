@@ -1,0 +1,23 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEvent.idl"
+
+interface nsIDOMMozMmsMessage;
+
+[scriptable, builtinclass, uuid(b33cc0f2-8886-11e2-9433-eff9a8af9a70)]
+interface nsIDOMMozMmsEvent : nsIDOMEvent
+{
+  readonly attribute nsIDOMMozMmsMessage message;
+
+  [noscript] void initMozMmsEvent(in DOMString aType,
+                                  in boolean aCanBubble,
+                                  in boolean aCancelable,
+                                  in nsIDOMMozMmsMessage aMessage);
+};
+
+dictionary MozMmsEventInit : EventInit
+{
+  nsIDOMMozMmsMessage message;
+};
