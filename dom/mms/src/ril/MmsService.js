@@ -687,26 +687,51 @@ SendTransaction.prototype = {
       return;
     }
 
+    this.retryCount = 0;
+    let retryCallback = (function (mmsStatus, msg) {
+      if ((MMS.MMS_PDU_ERROR_TRANSIENT_FAILURE == mmsStatus ||
+            MMS.MMS_PDU_ERROR_PERMANENT_FAILURE == mmsStatus) &&
+          this.retryCount < MAX_RETRY_COUNT) {
+        this.retryCount++;
+
+        let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+        timer.initWithCallback(this.send.bind(this, retryCallback),
+                               DELAY_TIME_TO_RETRY,
+                               Ci.nsITimer.TYPE_ONE_SHOT);
+        return;
+      }
+
+      callbackIfValid(mmsStatus, msg);
+    }).bind(this);
+    this.send(retryCallback);
+  },
+
+  /**
+   * @param callback
+   *        A callback function that takes two arguments: one for
+   *        X-Mms-Response-Status, the other for the parsed M-Send.conf message.
+   */
+  send: function send(callback) {
     gMmsTransactionHelper.sendRequest("POST", gMmsConnection.mmsc, this.istream,
                                       function (httpStatus, data) {
       if (httpStatus != HTTP_STATUS_OK) {
-        callbackIfValid(MMS.MMS_PDU_ERROR_TRANSIENT_FAILURE, null);
+        callback(MMS.MMS_PDU_ERROR_TRANSIENT_FAILURE, null);
         return;
       }
 
       if (!data) {
-        callbackIfValid(MMS.MMS_PDU_ERROR_PERMANENT_FAILURE, null);
+        callback(MMS.MMS_PDU_ERROR_PERMANENT_FAILURE, null);
         return;
       }
 
       let response = MMS.PduHelper.parse(data, null);
       if (!response || (response.type != MMS.MMS_PDU_TYPE_SEND_CONF)) {
-        callbackIfValid(MMS.MMS_PDU_RESPONSE_ERROR_UNSUPPORTED_MESSAGE, null);
+        callback(MMS.MMS_PDU_RESPONSE_ERROR_UNSUPPORTED_MESSAGE, null);
         return;
       }
 
       let responseStatus = response.headers["x-mms-response-status"];
-      callbackIfValid(responseStatus, response);
+      callback(responseStatus, response);
     });
   }
 };
