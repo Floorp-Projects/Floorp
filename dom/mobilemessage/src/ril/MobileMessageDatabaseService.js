@@ -1120,14 +1120,39 @@ MobileMessageDatabaseService.prototype = {
   },
 
   saveSendingMessage: function saveSendingMessage(aMessage, aCallback) {
-    if (aMessage.type === undefined ||
-        aMessage.receiver === undefined ||
-        aMessage.deliveryStatus === undefined ||
-        aMessage.timestamp === undefined) {
+    if ((aMessage.type != "sms" && aMessage.type != "mms") ||
+        (aMessage.type == "sms" && !aMessage.receiver) ||
+        (aMessage.type == "mms" && !aMessage.receivers) ||
+        aMessage.deliveryStatusRequested == undefined ||
+        aMessage.timestamp == undefined) {
       if (aCallback) {
         aCallback.notify(Cr.NS_ERROR_FAILURE, null);
       }
       return;
+    }
+
+    // Set |aMessage.deliveryStatus|. Note that for MMS record
+    // it must be an array of strings; For SMS, it's a string.
+    let deliveryStatus = aMessage.deliveryStatusRequested
+                       ? DELIVERY_STATUS_PENDING
+                       : DELIVERY_STATUS_NOT_APPLICABLE;
+    if (aMessage.type == "sms") {
+      aMessage.deliveryStatus = deliveryStatus;
+    } else if (aMessage.type == "mms") {
+      let receivers = aMessage.receivers
+      if (!Array.isArray(receivers)) {
+        if (DEBUG) {
+          debug("Need receivers for MMS. Fail to save the sending message.");
+        }
+        if (aCallback) {
+          aCallback.notify(Cr.NS_ERROR_FAILURE, null);
+        }
+        return;
+      }
+      aMessage.deliveryStatus = [];
+      for (let i = 0; i < receivers.length; i++) {
+        aMessage.deliveryStatus.push(deliveryStatus);
+      }
     }
 
     aMessage.sender = this.getRilIccInfoMsisdn();
@@ -1141,11 +1166,17 @@ MobileMessageDatabaseService.prototype = {
     aMessage.messageClass = MESSAGE_CLASS_NORMAL;
     aMessage.read = FILTER_READ_READ;
 
-    return this.saveRecord(aMessage, [aMessage.receiver], aCallback);
+    let addresses;
+    if (aMessage.type == "sms") {
+      addresses = [aMessage.receiver];
+    } else if (aMessage.type == "mms") {
+      addresses = aMessage.receivers;
+    }
+    return this.saveRecord(aMessage, addresses, aCallback);
   },
 
   setMessageDelivery: function setMessageDelivery(
-      messageId, delivery, deliveryStatus, callback) {
+      messageId, receiver, delivery, deliveryStatus, callback) {
     if (DEBUG) {
       debug("Setting message " + messageId + " delivery to " + delivery
             + ", and deliveryStatus to " + deliveryStatus);
@@ -1188,21 +1219,58 @@ MobileMessageDatabaseService.prototype = {
           }
           return;
         }
+
+        let isRecordUpdated = false;
+
+        // Update |messageRecord.delivery| if needed.
+        if (delivery && messageRecord.delivery != delivery) {
+          messageRecord.delivery = delivery;
+          messageRecord.deliveryIndex = [delivery, messageRecord.timestamp];
+          isRecordUpdated = true;
+        }
+
+        // Update |messageRecord.deliveryStatus| if needed.
+        if (deliveryStatus) {
+          if (messageRecord.type == "sms") {
+            if (messageRecord.deliveryStatus != deliveryStatus) {
+              messageRecord.deliveryStatus = deliveryStatus;
+              isRecordUpdated = true;
+            }
+          } else if (messageRecord.type == "mms") {
+            if (!receiver) {
+              for (let i = 0; i < messageRecord.deliveryStatus.length; i++) {
+                if (messageRecord.deliveryStatus[i] != deliveryStatus) {
+                  messageRecord.deliveryStatus[i] = deliveryStatus;
+                  isRecordUpdated = true;
+                }
+              }
+            } else {
+              let index = messageRecord.receivers.indexOf(receiver);
+              if (index == -1) {
+                if (DEBUG) {
+                  debug("Cannot find the receiver. Fail to set delivery status.");
+                }
+                return;
+              }
+              if (messageRecord.deliveryStatus[index] != deliveryStatus) {
+                messageRecord.deliveryStatus[index] = deliveryStatus;
+                isRecordUpdated = true;
+              }
+            }
+          }
+        }
+
         // Only updates messages that have different delivery or deliveryStatus.
-        if ((messageRecord.delivery == delivery)
-            && (messageRecord.deliveryStatus == deliveryStatus)) {
+        if (!isRecordUpdated) {
           if (DEBUG) {
             debug("The values of attribute delivery and deliveryStatus are the"
                   + " the same with given parameters.");
           }
           return;
         }
-        messageRecord.delivery = delivery;
-        messageRecord.deliveryIndex = [delivery, messageRecord.timestamp];
-        messageRecord.deliveryStatus = deliveryStatus;
+
         if (DEBUG) {
-          debug("Message.delivery set to: " + delivery
-                + ", and Message.deliveryStatus set to: " + deliveryStatus);
+          debug("The record's delivery and/or deliveryStatus are updated.");
         }
         messageStore.put(messageRecord);
       };
