@@ -1613,6 +1613,7 @@ RadioInterfaceLayer.prototype = {
     }
 
     gMobileMessageDatabaseService.setMessageDelivery(options.sms.id,
+                                                     null,
                                                      DOM_MOBILE_MESSAGE_DELIVERY_SENT,
                                                      options.sms.deliveryStatus,
                                                      function notifyResult(rv, record) {
@@ -1652,6 +1653,7 @@ RadioInterfaceLayer.prototype = {
     delete this._sentSmsEnvelopes[message.envelopeId];
 
     gMobileMessageDatabaseService.setMessageDelivery(options.sms.id,
+                                                     null,
                                                      options.sms.delivery,
                                                      message.deliveryStatus,
                                                      function notifyResult(rv, record) {
@@ -1681,6 +1683,7 @@ RadioInterfaceLayer.prototype = {
     }
 
     gMobileMessageDatabaseService.setMessageDelivery(options.sms.id,
+                                                     null,
                                                      DOM_MOBILE_MESSAGE_DELIVERY_ERROR,
                                                      RIL.GECKO_SMS_DELIVERY_STATUS_ERROR,
                                                      function notifyResult(rv, record) {
@@ -2677,16 +2680,12 @@ RadioInterfaceLayer.prototype = {
       options.segmentRef = this.nextSegmentRef;
     }
 
-    let timestamp = Date.now();
-    let deliveryStatus = options.requestStatusReport
-                       ? RIL.GECKO_SMS_DELIVERY_STATUS_PENDING
-                       : RIL.GECKO_SMS_DELIVERY_STATUS_NOT_APPLICABLE;
     let sendingMessage = {
       type: "sms",
       receiver: number,
       body: message,
-      deliveryStatus: deliveryStatus,
-      timestamp: timestamp
+      deliveryStatusRequested: options.requestStatusReport,
+      timestamp: Date.now()
     };
 
     let id = gMobileMessageDatabaseService.saveSendingMessage(sendingMessage,
