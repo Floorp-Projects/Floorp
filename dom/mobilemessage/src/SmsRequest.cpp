@@ -14,6 +14,7 @@
 #include "SmsCursor.h"
 #include "SmsMessage.h"
 #include "SmsManager.h"
+#include "MobileMessageManager.h"
 #include "mozilla/dom/DOMError.h"
 #include "SmsParent.h"
 #include "jsapi.h"
@@ -73,6 +74,13 @@ SmsRequest::Create(SmsManager* aManager)
   return request.forget();
 }
 
+already_AddRefed<nsIDOMMozSmsRequest>
+SmsRequest::Create(MobileMessageManager* aManager)
+{
+  nsCOMPtr<nsIDOMMozSmsRequest> request = new SmsRequest(aManager);
+  return request.forget();
+}
+
 already_AddRefed<SmsRequest>
 SmsRequest::Create(SmsRequestParent* aRequestParent)
 {
@@ -81,6 +89,16 @@ SmsRequest::Create(SmsRequestParent* aRequestParent)
 }
 
 SmsRequest::SmsRequest(SmsManager* aManager)
+  : mResult(JSVAL_VOID)
+  , mResultRooted(false)
+  , mDone(false)
+  , mParentAlive(false)
+  , mParent(nullptr)
+{
+  BindToOwner(aManager);
+}
+
+SmsRequest::SmsRequest(MobileMessageManager* aManager)
   : mResult(JSVAL_VOID)
   , mResultRooted(false)
   , mDone(false)
