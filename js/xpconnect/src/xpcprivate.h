@@ -491,10 +491,6 @@ public:
     void AssertNoObjectsToTrace(void* aPossibleJSHolder);
 #endif
 
-    // Gets addref'd pointer
-    static nsresult GetInterfaceInfoManager(nsIInterfaceInfoManager** iim,
-                                            nsXPConnect* xpc = nullptr);
-
     static JSBool IsISupportsDescendant(nsIInterfaceInfo* info);
 
     nsIXPCSecurityManager* GetDefaultSecurityManager() const
