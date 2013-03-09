@@ -32,7 +32,7 @@ SmsService::GetSegmentInfoForText(const nsAString & aText,
 NS_IMETHODIMP
 SmsService::Send(const nsAString& aNumber,
                  const nsAString& aMessage,
-                 nsISmsRequest* aRequest)
+                 nsIMobileMessageCallback* aRequest)
 {
   NS_ERROR("We should not be here!");
   return NS_OK;

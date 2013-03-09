@@ -13,7 +13,7 @@ NS_IMPL_ISUPPORTS1(MobileMessageDatabaseService, nsIMobileMessageDatabaseService
 
 NS_IMETHODIMP
 MobileMessageDatabaseService::GetMessageMoz(int32_t aMessageId,
-                                            nsISmsRequest* aRequest)
+                                            nsIMobileMessageCallback* aRequest)
 {
   NS_ERROR("We should not be here!");
   return NS_OK;
@@ -21,7 +21,7 @@ MobileMessageDatabaseService::GetMessageMoz(int32_t aMessageId,
 
 NS_IMETHODIMP
 MobileMessageDatabaseService::DeleteMessage(int32_t aMessageId,
-                                            nsISmsRequest* aRequest)
+                                            nsIMobileMessageCallback* aRequest)
 {
   NS_ERROR("We should not be here!");
   return NS_OK;
@@ -30,7 +30,7 @@ MobileMessageDatabaseService::DeleteMessage(int32_t aMessageId,
 NS_IMETHODIMP
 MobileMessageDatabaseService::CreateMessageList(nsIDOMMozSmsFilter* aFilter,
                                                 bool aReverse,
-                                                nsISmsRequest* aRequest)
+                                                nsIMobileMessageCallback* aRequest)
 {
   NS_ERROR("We should not be here!");
   return NS_OK;
@@ -38,7 +38,7 @@ MobileMessageDatabaseService::CreateMessageList(nsIDOMMozSmsFilter* aFilter,
 
 NS_IMETHODIMP
 MobileMessageDatabaseService::GetNextMessageInList(int32_t aListId,
-                                                   nsISmsRequest* aRequest)
+                                                   nsIMobileMessageCallback* aRequest)
 {
   NS_ERROR("We should not be here!");
   return NS_OK;
@@ -54,14 +54,14 @@ MobileMessageDatabaseService::ClearMessageList(int32_t aListId)
 NS_IMETHODIMP
 MobileMessageDatabaseService::MarkMessageRead(int32_t aMessageId,
                                               bool aValue,
-                                              nsISmsRequest* aRequest)
+                                              nsIMobileMessageCallback* aRequest)
 {
   NS_ERROR("We should not be here!");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MobileMessageDatabaseService::GetThreadList(nsISmsRequest* aRequest)
+MobileMessageDatabaseService::GetThreadList(nsIMobileMessageCallback* aRequest)
 {
   NS_ERROR("We should not be here!");
   return NS_OK;

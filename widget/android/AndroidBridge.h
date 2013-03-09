@@ -25,7 +25,7 @@
 #include "gfxRect.h"
 
 #include "nsIAndroidBridge.h"
-#include "nsISmsRequest.h"
+#include "nsIMobileMessageCallback.h"
 
 #include "mozilla/Likely.h"
 #include "mozilla/StaticPtr.h"
@@ -314,14 +314,17 @@ public:
     void DisableBatteryNotifications();
     void GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo);
 
-    nsresult GetSegmentInfoForText(const nsAString& aText, dom::mobilemessage::SmsSegmentInfoData* aData);
-    void SendMessage(const nsAString& aNumber, const nsAString& aText, nsISmsRequest* aRequest);
-    void GetMessage(int32_t aMessageId, nsISmsRequest* aRequest);
-    void DeleteMessage(int32_t aMessageId, nsISmsRequest* aRequest);
-    void CreateMessageList(const dom::mobilemessage::SmsFilterData& aFilter, bool aReverse, nsISmsRequest* aRequest);
-    void GetNextMessageInList(int32_t aListId, nsISmsRequest* aRequest);
+    nsresult GetSegmentInfoForText(const nsAString& aText,
+                                   dom::mobilemessage::SmsSegmentInfoData* aData);
+    void SendMessage(const nsAString& aNumber, const nsAString& aText,
+                     nsIMobileMessageCallback* aRequest);
+    void GetMessage(int32_t aMessageId, nsIMobileMessageCallback* aRequest);
+    void DeleteMessage(int32_t aMessageId, nsIMobileMessageCallback* aRequest);
+    void CreateMessageList(const dom::mobilemessage::SmsFilterData& aFilter,
+                           bool aReverse, nsIMobileMessageCallback* aRequest);
+    void GetNextMessageInList(int32_t aListId, nsIMobileMessageCallback* aRequest);
     void ClearMessageList(int32_t aListId);
-    already_AddRefed<nsISmsRequest> DequeueSmsRequest(uint32_t aRequestId);
+    already_AddRefed<nsIMobileMessageCallback> DequeueSmsRequest(uint32_t aRequestId);
 
     bool IsTablet();
 
@@ -367,7 +370,7 @@ public:
                             nsACString & aResult);
 protected:
     static AndroidBridge *sBridge;
-    static StaticAutoPtr<nsTArray<nsCOMPtr<nsISmsRequest> > > sSmsRequests;
+    static StaticAutoPtr<nsTArray<nsCOMPtr<nsIMobileMessageCallback> > > sSmsRequests;
 
     // the global JavaVM
     JavaVM *mJavaVM;
@@ -398,7 +401,7 @@ protected:
 
     int mAPIVersion;
 
-    bool QueueSmsRequest(nsISmsRequest* aRequest, uint32_t* aRequestIdOut);
+    bool QueueSmsRequest(nsIMobileMessageCallback* aRequest, uint32_t* aRequestIdOut);
 
     // other things
     jmethodID jNotifyIME;

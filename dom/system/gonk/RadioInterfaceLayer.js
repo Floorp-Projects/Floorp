@@ -1673,10 +1673,10 @@ RadioInterfaceLayer.prototype = {
     }
     delete this._sentSmsEnvelopes[message.envelopeId];
 
-    let error = Ci.nsISmsRequest.UNKNOWN_ERROR;
+    let error = Ci.nsIMobileMessageCallback.UNKNOWN_ERROR;
     switch (message.errorMsg) {
       case RIL.ERROR_RADIO_NOT_AVAILABLE:
-        error = Ci.nsISmsRequest.NO_SIGNAL_ERROR;
+        error = Ci.nsIMobileMessageCallback.NO_SIGNAL_ERROR;
         break;
     }
 
