@@ -7,6 +7,9 @@
 
 #include "xptcprivate.h"
 #include "xptiprivate.h"
+#include "mozilla/XPTInterfaceInfoManager.h"
+
+using namespace mozilla;
 
 NS_IMETHODIMP
 nsXPTCStubBase::QueryInterface(REFNSIID aIID,
@@ -39,8 +42,8 @@ NS_GetXPTCallStub(REFNSIID aIID, nsIXPTCProxy* aOuter,
 {
     NS_ENSURE_ARG(aOuter && aResult);
 
-    xptiInterfaceInfoManager *iim =
-        xptiInterfaceInfoManager::GetSingleton();
+    XPTInterfaceInfoManager *iim =
+        XPTInterfaceInfoManager::GetSingleton();
     NS_ENSURE_TRUE(iim, NS_ERROR_NOT_INITIALIZED);
 
     xptiInterfaceEntry *iie = iim->GetInterfaceEntryForIID(&aIID);
