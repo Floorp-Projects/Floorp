@@ -49,6 +49,7 @@ private:
 };
 
 class SmsManager;
+class MobileMessageManager;
 
 class SmsRequest : public nsDOMEventTargetHelper
                  , public nsIDOMMozSmsRequest
@@ -68,6 +69,7 @@ public:
                                                          nsDOMEventTargetHelper)
 
   static already_AddRefed<nsIDOMMozSmsRequest> Create(SmsManager* aManager);
+  static already_AddRefed<nsIDOMMozSmsRequest> Create(MobileMessageManager* aManager);
 
   static already_AddRefed<SmsRequest> Create(mobilemessage::SmsRequestParent* requestParent);
   void Reset();
@@ -83,6 +85,7 @@ private:
   SmsRequest() MOZ_DELETE;
 
   SmsRequest(SmsManager* aManager);
+  SmsRequest(MobileMessageManager* aManager);
   SmsRequest(mobilemessage::SmsRequestParent* aParent);
   ~SmsRequest();
 
