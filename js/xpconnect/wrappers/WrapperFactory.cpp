@@ -361,8 +361,6 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
 
     Wrapper *wrapper;
     CompartmentPrivate *targetdata = EnsureCompartmentPrivate(target);
-    bool canAccessNAC = targetIsChrome ||
-                        (targetSubsumesOrigin && nsContentUtils::IsCallerXBL());
 
     //
     // First, handle the special cases.
@@ -383,7 +381,9 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *existing, JSObject *obj,
     } else if (IsComponentsObject(obj) && !AccessCheck::isChrome(target)) {
         wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
                                     ComponentsObjectPolicy>::singleton;
-    } else if (AccessCheck::needsSystemOnlyWrapper(obj) && !canAccessNAC) {
+    } else if (AccessCheck::needsSystemOnlyWrapper(obj) &&
+               !(targetIsChrome || (targetSubsumesOrigin && nsContentUtils::IsCallerXBL())))
+    {
         wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
                                     OnlyIfSubjectIsSystem>::singleton;
     }
