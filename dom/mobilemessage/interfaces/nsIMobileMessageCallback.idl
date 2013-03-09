@@ -14,7 +14,7 @@ dictionary SmsThreadListItem
   unsigned long long unreadCount;
 };
 
-[scriptable, builtinclass, uuid(9b4f6e3e-8577-11e2-83c1-e3a75aac027d)]
+[scriptable, builtinclass, uuid(18d7c4da-848f-11e2-a3a5-f749c4ba31b5)]
 interface nsIMobileMessageCallback : nsISupports
 {
   /**
@@ -28,7 +28,10 @@ interface nsIMobileMessageCallback : nsISupports
   const unsigned short UNKNOWN_ERROR    = 3;
   const unsigned short INTERNAL_ERROR   = 4;
 
-  void notifyMessageSent(in nsIDOMMozSmsMessage message);
+  /**
+   * |message| can be either |nsIDOMMozSmsMessage| or |nsIDOMMozMmsMessage|.
+   */
+  void notifyMessageSent(in nsISupports message);
   void notifySendMessageFailed(in long error);
 
   void notifyMessageGot(in nsIDOMMozSmsMessage message);
