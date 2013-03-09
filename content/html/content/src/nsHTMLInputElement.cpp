@@ -2961,16 +2961,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                   newValue = value - std::max(step, 0.1 * (maximum - minimum));
                   break;
               }
-              MOZ_ASSERT(MOZ_DOUBLE_IS_FINITE(newValue));
-              nsAutoString val;
-              ConvertNumberToString(newValue, val);
-              SetValueInternal(val, true, true);
-              nsIFrame* frame = GetPrimaryFrame();
-              if (frame) {
-                // Trigger reflow to update the position of the thumb:
-                frame->PresContext()->GetPresShell()->
-                  FrameNeedsReflow(frame, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
-              }
+              SetValueOfRangeForUserEvent(newValue);
               aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
             }
           }
