@@ -224,19 +224,6 @@ nsXPConnect::ReleaseXPConnectSingleton()
 }
 
 // static
-nsresult
-nsXPConnect::GetInterfaceInfoManager(nsIInterfaceInfoManager** iim,
-                                     nsXPConnect* xpc /*= nullptr*/)
-{
-    if (!xpc && !(xpc = GetXPConnect()))
-        return NS_ERROR_FAILURE;
-
-    *iim = xpc->mInterfaceInfoManager;
-    NS_IF_ADDREF(*iim);
-    return NS_OK;
-}
-
-// static
 XPCJSRuntime*
 nsXPConnect::GetRuntimeInstance()
 {
