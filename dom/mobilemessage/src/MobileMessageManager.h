@@ -11,6 +11,7 @@
 #include "nsDOMEventTargetHelper.h"
 
 class nsIDOMMozSmsMessage;
+class nsIDOMMozMmsMessage;
 
 namespace mozilla {
 namespace dom {
@@ -43,6 +44,9 @@ private:
 
   nsresult DispatchTrustedSmsEventToSelf(const nsAString& aEventName,
                                          nsIDOMMozSmsMessage* aMessage);
+
+  nsresult DispatchTrustedMmsEventToSelf(const nsAString& aEventName,
+                                         nsIDOMMozMmsMessage* aMessage);
 };
 
 } // namespace dom

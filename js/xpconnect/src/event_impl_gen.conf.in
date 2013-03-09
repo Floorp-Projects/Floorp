@@ -41,6 +41,7 @@ simple_events = [
 #endif
     'ElementReplaceEvent',
     'MozSmsEvent',
+    'MozMmsEvent',
     'DeviceStorageChangeEvent',
     'PopupBlockedEvent',
     'BlobEvent'

@@ -13,7 +13,9 @@
 #include "mozilla/Services.h"
 #include "Constants.h"
 #include "nsIDOMMozSmsEvent.h"
+#include "nsIDOMMozMmsEvent.h"
 #include "nsIDOMMozSmsMessage.h"
+#include "nsIDOMMozMmsMessage.h"
 #include "SmsRequest.h"
 #include "nsJSUtils.h"
 #include "nsContentUtils.h"
@@ -72,6 +74,10 @@ MobileMessageManager::Init(nsPIDOMWindow *aWindow)
   obs->AddObserver(this, kSmsFailedObserverTopic, false);
   obs->AddObserver(this, kSmsDeliverySuccessObserverTopic, false);
   obs->AddObserver(this, kSmsDeliveryErrorObserverTopic, false);
+
+  obs->AddObserver(this, kMmsSendingObserverTopic, false);
+  obs->AddObserver(this, kMmsSentObserverTopic, false);
+  obs->AddObserver(this, kMmsFailedObserverTopic, false);
 }
 
 void
@@ -89,6 +95,10 @@ MobileMessageManager::Shutdown()
   obs->RemoveObserver(this, kSmsFailedObserverTopic);
   obs->RemoveObserver(this, kSmsDeliverySuccessObserverTopic);
   obs->RemoveObserver(this, kSmsDeliveryErrorObserverTopic);
+
+  obs->RemoveObserver(this, kMmsSendingObserverTopic);
+  obs->RemoveObserver(this, kMmsSentObserverTopic);
+  obs->RemoveObserver(this, kMmsFailedObserverTopic);
 }
 
 NS_IMETHODIMP
@@ -305,8 +315,22 @@ MobileMessageManager::DispatchTrustedSmsEventToSelf(const nsAString& aEventName,
   NS_ASSERTION(event, "This should never fail!");
 
   nsCOMPtr<nsIDOMMozSmsEvent> se = do_QueryInterface(event);
-  MOZ_ASSERT(se);
   nsresult rv = se->InitMozSmsEvent(aEventName, false, false, aMessage);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return DispatchTrustedEvent(event);
+}
+
+nsresult
+MobileMessageManager::DispatchTrustedMmsEventToSelf(const nsAString& aEventName,
+                                                    nsIDOMMozMmsMessage* aMessage)
+{
+  nsCOMPtr<nsIDOMEvent> event;
+  NS_NewDOMMozMmsEvent(getter_AddRefs(event), this, nullptr, nullptr);
+  NS_ASSERTION(event, "This should never fail!");
+
+  nsCOMPtr<nsIDOMMozMmsEvent> se = do_QueryInterface(event);
+  nsresult rv = se->InitMozMmsEvent(aEventName, false, false, aMessage);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return DispatchTrustedEvent(event);
@@ -379,6 +403,39 @@ MobileMessageManager::Observe(nsISupports* aSubject, const char* aTopic,
     }
 
     DispatchTrustedSmsEventToSelf(DELIVERY_ERROR_EVENT_NAME, message);
+    return NS_OK;
+  }
+
+  if (!strcmp(aTopic, kMmsSendingObserverTopic)) {
+    nsCOMPtr<nsIDOMMozMmsMessage> message = do_QueryInterface(aSubject);
+    if (!message) {
+      NS_ERROR("Got a 'mms-sending' topic without a valid message!");
+      return NS_OK;
+    }
+
+    DispatchTrustedMmsEventToSelf(SENDING_EVENT_NAME, message);
+    return NS_OK;
+  }
+
+  if (!strcmp(aTopic, kMmsSentObserverTopic)) {
+    nsCOMPtr<nsIDOMMozMmsMessage> message = do_QueryInterface(aSubject);
+    if (!message) {
+      NS_ERROR("Got a 'mms-sent' topic without a valid message!");
+      return NS_OK;
+    }
+
+    DispatchTrustedMmsEventToSelf(SENT_EVENT_NAME, message);
+    return NS_OK;
+  }
+
+  if (!strcmp(aTopic, kMmsFailedObserverTopic)) {
+    nsCOMPtr<nsIDOMMozMmsMessage> message = do_QueryInterface(aSubject);
+    if (!message) {
+      NS_ERROR("Got a 'mms-failed' topic without a valid message!");
+      return NS_OK;
+    }
+
+    DispatchTrustedMmsEventToSelf(FAILED_EVENT_NAME, message);
     return NS_OK;
   }
 
