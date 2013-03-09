@@ -29,8 +29,10 @@ public:
     virtual ~XULContentSinkImpl();
 
     // nsISupports
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_NSIEXPATSINK
+
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(XULContentSinkImpl, nsIXMLContentSink)
 
     // nsIContentSink
     NS_IMETHOD WillParse(void) { return NS_OK; }
@@ -128,6 +130,8 @@ protected:
         nsresult GetTopChildren(nsPrototypeArray** aChildren);
 
         void Clear();
+
+        void Traverse(nsCycleCollectionTraversalCallback& aCallback);
     };
 
     friend class ContextStack;
