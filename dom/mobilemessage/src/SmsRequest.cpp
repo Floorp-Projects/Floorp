@@ -342,13 +342,21 @@ SmsRequest::SendMessageReply(const MessageReply& aReply)
 }
 
 NS_IMETHODIMP
-SmsRequest::NotifyMessageSent(nsIDOMMozSmsMessage *aMessage)
+SmsRequest::NotifyMessageSent(nsISupports *aMessage)
 {
+  // We only support nsIDOMMozSmsMessage for SmsRequest.
+  nsCOMPtr<nsIDOMMozSmsMessage> message(do_QueryInterface(aMessage));
+  if (!message) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  SmsMessage* smsMessage = static_cast<SmsMessage*>(message.get());
+
   if (mParent) {
-    SmsMessageData data = SmsMessageData(static_cast<SmsMessage*>(aMessage)->GetData());
+    SmsMessageData data = SmsMessageData(smsMessage->GetData());
     return SendMessageReply(MessageReply(ReplyMessageSend(data)));
   }
-  return NotifySuccess<nsIDOMMozSmsMessage*>(aMessage);
+  return NotifySuccess<nsIDOMMozSmsMessage*>(smsMessage);
 }
 
 NS_IMETHODIMP
