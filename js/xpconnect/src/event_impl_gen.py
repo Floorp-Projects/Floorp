@@ -69,10 +69,17 @@ def print_header_file(fd, conf):
     fd.write("#include \"nscore.h\"\n")
     fd.write("class nsEvent;\n")
     fd.write("class nsIDOMEvent;\n")
-    fd.write("class nsPresContext;\n\n")
+    fd.write("class nsPresContext;\n")
+    fd.write("namespace mozilla {\n");
+    fd.write("namespace dom {\n");
+    fd.write("class EventTarget;\n")
+    fd.write("}\n");
+    fd.write("}\n\n");
     for e in conf.simple_events:
         fd.write("nsresult\n")
-        fd.write("NS_NewDOM%s(nsIDOMEvent** aInstance, nsPresContext* aPresContext, nsEvent* aEvent);\n" % e)
+        fd.write("NS_NewDOM%s(nsIDOMEvent** aInstance, " % e)
+        fd.write("mozilla::dom::EventTarget* aOwner, ")
+        fd.write("nsPresContext* aPresContext, nsEvent* aEvent);\n")
  
     fd.write("\n#endif\n")
     fd.write("#endif\n")
@@ -116,6 +123,7 @@ def print_cpp_file(fd, conf):
     fd.write('#include "nsPresContext.h"\n')
     fd.write('#include "nsGUIEvent.h"\n')
     fd.write('#include "nsDOMEvent.h"\n');
+    fd.write('#include "mozilla/dom/EventTarget.h"\n');
 
     includes = []
     for s in conf.special_includes:
@@ -231,8 +239,9 @@ def write_cpp(eventname, iface, fd):
     fd.write("\nclass %s : public %s, public %s\n" % (classname, basename, iface.name))
     fd.write("{\n")
     fd.write("public:\n")
-    fd.write("  %s(nsPresContext* aPresContext, nsEvent* aEvent)\n" % classname)
-    fd.write("  : %s(aPresContext, aEvent)" % basename)
+    fd.write("  %s(mozilla::dom::EventTarget* aOwner, " % classname)
+    fd.write("nsPresContext* aPresContext = nullptr, nsEvent* aEvent = nullptr)\n");
+    fd.write("  : %s(aOwner, aPresContext, aEvent)" % basename)
     for a in attributes:
         fd.write(",\n    m%s(%s)" % (firstCap(a.name), init_value(a)))
     fd.write("\n  {}\n")
@@ -307,9 +316,10 @@ def write_cpp(eventname, iface, fd):
         writeAttributeGetter(fd, classname, a)
 
     fd.write("nsresult\n")
-    fd.write("NS_NewDOM%s(nsIDOMEvent** aInstance, nsPresContext* aPresContext, nsEvent* aEvent)\n" % eventname)
+    fd.write("NS_NewDOM%s(nsIDOMEvent** aInstance, "  % eventname)
+    fd.write("mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext = nullptr, nsEvent* aEvent = nullptr)\n")
     fd.write("{\n")
-    fd.write("  %s* it = new %s(aPresContext, aEvent);\n" % (classname, classname))
+    fd.write("  %s* it = new %s(aOwner, aPresContext, aEvent);\n" % (classname, classname))
     fd.write("  return CallQueryInterface(it, aInstance);\n")
     fd.write("}\n\n")
 

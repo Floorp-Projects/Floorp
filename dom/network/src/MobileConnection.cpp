@@ -329,7 +329,7 @@ MobileConnection::NotifyUssdReceived(const nsAString& aMessage,
                                      bool aSessionEnded)
 {
   nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMUSSDReceivedEvent(getter_AddRefs(event), nullptr, nullptr);
+  NS_NewDOMUSSDReceivedEvent(getter_AddRefs(event), this, nullptr, nullptr);
 
   nsCOMPtr<nsIDOMUSSDReceivedEvent> ce = do_QueryInterface(event);
   nsresult rv = ce->InitUSSDReceivedEvent(NS_LITERAL_STRING("ussdreceived"),
@@ -344,7 +344,7 @@ NS_IMETHODIMP
 MobileConnection::NotifyDataError(const nsAString& aMessage)
 {
   nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMDataErrorEvent(getter_AddRefs(event), nullptr, nullptr);
+  NS_NewDOMDataErrorEvent(getter_AddRefs(event), this, nullptr, nullptr);
 
   nsCOMPtr<nsIDOMDataErrorEvent> ce = do_QueryInterface(event);
   nsresult rv = ce->InitDataErrorEvent(NS_LITERAL_STRING("dataerror"),
@@ -359,7 +359,7 @@ MobileConnection::NotifyIccCardLockError(const nsAString& aLockType,
                                          uint32_t aRetryCount)
 {
   nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMICCCardLockErrorEvent(getter_AddRefs(event), nullptr, nullptr);
+  NS_NewDOMICCCardLockErrorEvent(getter_AddRefs(event), this, nullptr, nullptr);
 
   nsCOMPtr<nsIDOMICCCardLockErrorEvent> ce = do_QueryInterface(event);
   nsresult rv =
@@ -379,7 +379,7 @@ MobileConnection::NotifyCFStateChange(bool aSuccess,
                                       unsigned short aServiceClass)
 {
   nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMCFStateChangeEvent(getter_AddRefs(event), nullptr, nullptr);
+  NS_NewDOMCFStateChangeEvent(getter_AddRefs(event), this, nullptr, nullptr);
 
   nsCOMPtr<nsIDOMCFStateChangeEvent> ce = do_QueryInterface(event);
   nsresult rv = ce->InitCFStateChangeEvent(NS_LITERAL_STRING("cfstatechange"),

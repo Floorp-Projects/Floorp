@@ -166,7 +166,7 @@ NS_IMPL_EVENT_HANDLER(IccManager, stksessionend)
 NS_IMETHODIMP
 IccManager::NotifyStkCommand(const nsAString& aMessage)
 {
-  nsRefPtr<StkCommandEvent> event = StkCommandEvent::Create(aMessage);
+  nsRefPtr<StkCommandEvent> event = StkCommandEvent::Create(this, aMessage);
   NS_ASSERTION(event, "This should never fail!");
 
   return event->Dispatch(ToIDOMEventTarget(), NS_LITERAL_STRING("stkcommand"));

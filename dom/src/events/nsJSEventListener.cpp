@@ -25,6 +25,7 @@
 #include "nsDOMJSUtils.h"
 #include "mozilla/Likely.h"
 #include "mozilla/dom/UnionTypes.h"
+#include "nsDOMEvent.h"
 
 #ifdef DEBUG
 
@@ -192,7 +193,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
       lineNumber.Construct();
       lineNumber.Value() = scriptEvent->lineNr;
     } else {
-      msgOrEvent.SetAsEvent() = aEvent;
+      msgOrEvent.SetAsEvent() = aEvent->InternalDOMEvent();
     }
 
     nsRefPtr<OnErrorEventHandlerNonNull> handler =
@@ -217,7 +218,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
       mHandler.BeforeUnloadEventHandler();
     ErrorResult rv;
     nsString retval;
-    handler->Call(mTarget, aEvent, retval, rv);
+    handler->Call(mTarget, *(aEvent->InternalDOMEvent()), retval, rv);
     if (rv.Failed()) {
       return rv.ErrorCode();
     }
@@ -245,7 +246,8 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   MOZ_ASSERT(mHandler.Type() == nsEventHandler::eNormal);
   ErrorResult rv;
   nsRefPtr<EventHandlerNonNull> handler = mHandler.EventHandler();
-  JS::Value retval = handler->Call(mTarget, aEvent, rv);
+  JS::Value retval =
+    handler->Call(mTarget, *(aEvent->InternalDOMEvent()), rv);
   if (rv.Failed()) {
     return rv.ErrorCode();
   }

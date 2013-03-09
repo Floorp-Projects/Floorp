@@ -14,7 +14,8 @@ class nsDOMCompositionEvent : public nsDOMUIEvent,
                               public nsIDOMCompositionEvent
 {
 public:
-  nsDOMCompositionEvent(nsPresContext* aPresContext,
+  nsDOMCompositionEvent(mozilla::dom::EventTarget* aOwner,
+                        nsPresContext* aPresContext,
                         nsCompositionEvent* aEvent);
   virtual ~nsDOMCompositionEvent();
 

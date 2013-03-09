@@ -16,7 +16,8 @@ class nsDOMXULCommandEvent : public nsDOMUIEvent,
                              public nsIDOMXULCommandEvent
 {
 public:
-  nsDOMXULCommandEvent(nsPresContext* aPresContext, nsInputEvent* aEvent);
+  nsDOMXULCommandEvent(mozilla::dom::EventTarget* aOwner,
+                       nsPresContext* aPresContext, nsInputEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMXULCommandEvent, nsDOMUIEvent)

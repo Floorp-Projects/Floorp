@@ -420,10 +420,10 @@ AsyncConnectionHelper::Init()
   return NS_OK;
 }
 
-already_AddRefed<nsDOMEvent>
-AsyncConnectionHelper::CreateSuccessEvent()
+already_AddRefed<nsIDOMEvent>
+AsyncConnectionHelper::CreateSuccessEvent(mozilla::dom::EventTarget* aOwner)
 {
-  return CreateGenericEvent(NS_LITERAL_STRING(SUCCESS_EVT_STR),
+  return CreateGenericEvent(mRequest, NS_LITERAL_STRING(SUCCESS_EVT_STR),
                             eDoesNotBubble, eNotCancelable);
 }
 
@@ -433,7 +433,7 @@ AsyncConnectionHelper::OnSuccess()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(mRequest, "Null request!");
 
-  nsRefPtr<nsDOMEvent> event = CreateSuccessEvent();
+  nsRefPtr<nsIDOMEvent> event = CreateSuccessEvent(mRequest);
   if (!event) {
     NS_ERROR("Failed to create event!");
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -468,8 +468,8 @@ AsyncConnectionHelper::OnError()
   NS_ASSERTION(mRequest, "Null request!");
 
   // Make an error event and fire it at the target.
-  nsRefPtr<nsDOMEvent> event =
-    CreateGenericEvent(NS_LITERAL_STRING(ERROR_EVT_STR), eDoesBubble,
+  nsRefPtr<nsIDOMEvent> event =
+    CreateGenericEvent(mRequest, NS_LITERAL_STRING(ERROR_EVT_STR), eDoesBubble,
                        eCancelable);
   if (!event) {
     NS_ERROR("Failed to create event!");

@@ -38,6 +38,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowCollection.h"
+#include "nsIDocument.h"
 #include "nsIDOMSmartCardEvent.h"
 #include "nsSmartCardMonitor.h"
 #include "nsIDOMCryptoLegacy.h"
@@ -526,9 +527,11 @@ nsNSSComponent::DispatchEventToWindow(nsIDOMWindow *domWin,
     return NS_FAILED(rv) ? rv : NS_ERROR_FAILURE;
   }
 
+  nsCOMPtr<nsIDocument> d = do_QueryInterface(doc);
+
   // create the event
   nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMSmartCardEvent(getter_AddRefs(event), nullptr, nullptr);
+  NS_NewDOMSmartCardEvent(getter_AddRefs(event), d, nullptr, nullptr);
   nsCOMPtr<nsIDOMSmartCardEvent> smartCardEvent = do_QueryInterface(event);
   rv = smartCardEvent->InitSmartCardEvent(eventType, false, true, tokenName);
   NS_ENSURE_SUCCESS(rv, rv);
