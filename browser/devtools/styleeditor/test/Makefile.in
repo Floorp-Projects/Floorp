@@ -27,6 +27,7 @@ _BROWSER_TEST_FILES = \
                  browser_styleeditor_reopen.js \
                  browser_styleeditor_sv_keynav.js \
                  browser_styleeditor_sv_resize.js \
+                 browser_styleeditor_bug_826982_location_changed.js \
                  head.js \
                  helpers.js \
                  four.html \
