@@ -440,6 +440,10 @@ FunctionEnd
 !endif
 
 Function .onGUIEnd
+  Delete "$PLUGINSDIR\_temp"
+  Delete "$PLUGINSDIR\download.exe"
+  Delete "$PLUGINSDIR\${CONFIG_INI}"
+
   ${UnloadUAC}
 FunctionEnd
 
@@ -451,21 +455,11 @@ Function .onUserAbort
   ${NSD_KillTimer} FinishInstall
   ${NSD_KillTimer} DisplayDownloadError
 
-  Delete "$PLUGINSDIR\_temp"
-  Delete "$PLUGINSDIR\download.exe"
-  Delete "$PLUGINSDIR\${CONFIG_INI}"
-  ${If} "$IsDownloadFinished" == ""
-  ${OrIf} $CheckboxSendPing != 1
-    ; When not sending a ping cancel the download if it is in progress and exit
-    ; the installer.
-    ${If} "$IsDownloadFinished" == "false"
-      HideWindow
-      InetBgDL::Get /RESET /END
-    ${EndIf}
-  ${Else}
-    Call SendPing
-    ; Aborting the abort will allow SendPing to hide the installer window and
-    ; close the installer after it sends the metrics ping.
+  ${If} "$IsDownloadFinished" != ""
+    Call DisplayDownloadError
+    ; Aborting the abort will allow SendPing which is called by
+    ; DisplayDownloadError to hide the installer window and close the installer
+    ; after it sends the metrics ping.
     Abort 
   ${EndIf}
 FunctionEnd
@@ -484,6 +478,7 @@ Function SendPing
     ; $EndFinishPhaseTickCount is used to determine how long the download was
     ; in progress.
     ${If} "$IsDownloadFinished" == "false"
+    ${OrIf} "$EndDownloadPhaseTickCount" == ""
       StrCpy $EndDownloadPhaseTickCount "$EndFinishPhaseTickCount"
       ; Cancel the download in progress
       InetBgDL::Get /RESET /END
@@ -498,10 +493,10 @@ Function SendPing
       StrCpy $DownloadFirstTransferSeconds "0"
     ${EndIf}
 
-    ; When $StartLastDownloadTickCount equals 0 the download never successfully
-    ; started so set the value to $EndDownloadPhaseTickCount to compute the
-    ; correct value.
-    ${If} $StartLastDownloadTickCount == "0"
+    ; When $StartLastDownloadTickCount equals an empty string the download never
+    ; successfully started so set the value to $EndDownloadPhaseTickCount to
+    ; compute the correct value.
+    ${If} $StartLastDownloadTickCount == ""
       ; This could happen if the download never successfully starts
       StrCpy $StartLastDownloadTickCount "$EndDownloadPhaseTickCount"
     ${EndIf}
@@ -605,8 +600,8 @@ Function SendPing
                       $\nIntroduction Phase Seconds = $IntroPhaseSeconds \
                       $\nOptions Phase Seconds = $OptionsPhaseSeconds \
                       $\nDownload Phase Seconds = $0 \
-                      $\nDownload First Transfer Seconds = $DownloadFirstTransferSeconds \
                       $\nLast Download Seconds = $1 \
+                      $\nDownload First Transfer Seconds = $DownloadFirstTransferSeconds \
                       $\nPreinstall Phase Seconds = $2 \
                       $\nInstall Phase Seconds = $3 \
                       $\nFinish Phase Seconds = $4 \
@@ -622,14 +617,24 @@ Function SendPing
                       $\nDefault Install Dir = $R7 \
                       $\nHas Admin = $R8 \
                       $\nDownload Server IP = $DownloadServerIP"
+    ; The following will exit the installer
+    SetAutoClose true
+    StrCpy $R9 "2"
+    Call RelativeGotoPage
 !else
     ${NSD_CreateTimer} OnPing ${DownloadIntervalMS}
     InetBgDL::Get "${BaseURLStubPing}/${StubURLVersion}/${Channel}/${UpdateChannel}/${AB_CD}/$R0/$R1/$R2/$R3/$R4/$ExitCode/$FirefoxLaunchCode/$DownloadRetryCount/$DownloadedBytes/$IntroPhaseSeconds/$OptionsPhaseSeconds/$0/$1/$DownloadFirstTransferSeconds/$2/$3/$4/$IntroPageShownCount/$OptionsPageShownCount/$InitialInstallRequirementsCode/$OpenedDownloadPage/$ExistingProfile/$ExistingVersion/$ExistingBuildID/$R5/$R6/$R7/$R8/$DownloadServerIP" \
                   "$PLUGINSDIR\_temp" /END
 !endif
-  ${ElseIf} "$IsDownloadFinished" == "false"
-    ; Cancel the download in progress
-    InetBgDL::Get /RESET /END
+  ${Else}
+    ${If} "$IsDownloadFinished" == "false"
+      ; Cancel the download in progress
+      InetBgDL::Get /RESET /END
+    ${EndIf}
+    ; The following will exit the installer
+    SetAutoClose true
+    StrCpy $R9 "2"
+    Call RelativeGotoPage
   ${EndIf}
 FunctionEnd
 
@@ -1177,7 +1182,9 @@ Function createInstall
   StrCpy $DownloadReset "true"
   StrCpy $IsDownloadFinished "false"
   StrCpy $DownloadRetryCount "0"
-  StrCpy $StartLastDownloadTickCount "0"
+  StrCpy $DownloadedBytes "0"
+  StrCpy $StartLastDownloadTickCount ""
+  StrCpy $EndDownloadPhaseTickCount ""
   StrCpy $DownloadFirstTransferSeconds ""
   StrCpy $ExitCode "${ERR_DOWNLOAD_CANCEL}"
   StrCpy $OpenedDownloadPage "0"
