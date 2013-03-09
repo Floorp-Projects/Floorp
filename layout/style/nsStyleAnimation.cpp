@@ -381,7 +381,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
           // just like eUnit_Integer.
           int32_t startInt = aStartValue.GetIntValue();
           int32_t endInt = aEndValue.GetIntValue();
-          aDistance = DeprecatedAbs(endInt - startInt);
+          aDistance = Abs(endInt - startInt);
           return true;
         }
         default:
@@ -404,7 +404,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
     case eUnit_Integer: {
       int32_t startInt = aStartValue.GetIntValue();
       int32_t endInt = aEndValue.GetIntValue();
-      aDistance = DeprecatedAbs(endInt - startInt);
+      aDistance = Abs(double(endInt) - double(startInt));
       return true;
     }
     case eUnit_Coord: {
