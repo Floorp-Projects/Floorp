@@ -12,7 +12,7 @@ var summary =
 
 print(BUGNUMBER + ": " + summary);
 
-load("defineProperty-setup.js");
+load("ecma_5/Object/defineProperty-setup.js");
 
 /**************
  * BEGIN TEST *

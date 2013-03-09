@@ -8,7 +8,7 @@ var summary = 'ES5 Object.defineProperty(O, P, Attributes): Function.length';
 
 print(BUGNUMBER + ": " + summary);
 
-load("defineProperty-setup.js");
+load("ecma_5/Object/defineProperty-setup.js");
 
 /**************
  * BEGIN TEST *
