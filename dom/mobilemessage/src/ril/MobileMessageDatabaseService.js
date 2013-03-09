@@ -619,7 +619,7 @@ MobileMessageDatabaseService.prototype = {
       // An previous error found. Keep the answer in results so that we can
       // reply INTERNAL_ERROR for further requests.
       if (DEBUG) debug("An previous error found");
-      smsRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
+      smsRequest.notifyReadMessageListFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
       return;
     }
 
@@ -652,7 +652,7 @@ MobileMessageDatabaseService.prototype = {
         debug("notifyReadMessageListFailed - listId: "
               + aMessageList.listId + ", messageId: " + firstMessageId);
       }
-      smsRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
+      smsRequest.notifyReadMessageListFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
     };
   },
 
@@ -1219,7 +1219,7 @@ MobileMessageDatabaseService.prototype = {
     this.newTxn(READ_ONLY, function (error, txn, messageStore) {
       if (error) {
         if (DEBUG) debug(error);
-        aRequest.notifyGetMessageFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
+        aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
         return;
       }
       let request = messageStore.mozGetAll(messageId);
@@ -1228,13 +1228,13 @@ MobileMessageDatabaseService.prototype = {
         if (DEBUG) debug("Transaction " + txn + " completed.");
         if (request.result.length > 1) {
           if (DEBUG) debug("Got too many results for id " + messageId);
-          aRequest.notifyGetMessageFailed(Ci.nsISmsRequest.UNKNOWN_ERROR);
+          aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.UNKNOWN_ERROR);
           return;
         }
         let messageRecord = request.result[0];
         if (!messageRecord) {
           if (DEBUG) debug("Message ID " + messageId + " not found");
-          aRequest.notifyGetMessageFailed(Ci.nsISmsRequest.NOT_FOUND_ERROR);
+          aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR);
           return;
         }
         if (messageRecord.id != messageId) {
@@ -1242,7 +1242,7 @@ MobileMessageDatabaseService.prototype = {
             debug("Requested message ID (" + messageId + ") is " +
                   "different from the one we got");
           }
-          aRequest.notifyGetMessageFailed(Ci.nsISmsRequest.UNKNOWN_ERROR);
+          aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.UNKNOWN_ERROR);
           return;
         }
         let sms = self.createSmsMessageFromRecord(messageRecord);
@@ -1255,7 +1255,7 @@ MobileMessageDatabaseService.prototype = {
             debug("Caught error on transaction", event.target.errorCode);
         }
         //TODO look at event.target.errorCode, pick appropriate error constant
-        aRequest.notifyGetMessageFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
+        aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
       };
     });
   },
@@ -1265,13 +1265,13 @@ MobileMessageDatabaseService.prototype = {
     let self = this;
     this.newTxn(READ_WRITE, function (error, txn, stores) {
       if (error) {
-        aRequest.notifyDeleteMessageFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
+        aRequest.notifyDeleteMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
         return;
       }
       txn.onerror = function onerror(event) {
         if (DEBUG) debug("Caught error on transaction", event.target.errorCode);
         //TODO look at event.target.errorCode, pick appropriate error constant
-        aRequest.notifyDeleteMessageFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
+        aRequest.notifyDeleteMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
       };
 
       const messageStore = stores[0];
@@ -1363,7 +1363,7 @@ MobileMessageDatabaseService.prototype = {
       if (error) {
         //TODO look at event.target.errorCode, pick appropriate error constant.
         if (DEBUG) debug("IDBRequest error " + error.target.errorCode);
-        aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
+        aRequest.notifyReadMessageListFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
         return;
       }
 
@@ -1652,7 +1652,7 @@ MobileMessageDatabaseService.prototype = {
     let list = this.messageLists[listId];
     if (!list) {
       if (DEBUG) debug("Wrong list id");
-      aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.NOT_FOUND_ERROR);
+      aRequest.notifyReadMessageListFailed(Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR);
       return;
     }
     if (list.processing) {
@@ -1671,7 +1671,7 @@ MobileMessageDatabaseService.prototype = {
       return;
     }
     if (list.results[0] < 0) {
-      aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
+      aRequest.notifyReadMessageListFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
       return;
     }
     messageId = list.results.shift();
@@ -1688,7 +1688,7 @@ MobileMessageDatabaseService.prototype = {
         if (DEBUG) debug("Transaction " + txn + " completed.");
         if (!messageRecord) {
           if (DEBUG) debug("Could not get message id " + messageId);
-          aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.NOT_FOUND_ERROR);
+          aRequest.notifyReadMessageListFailed(Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR);
         }
         let sms = self.createSmsMessageFromRecord(messageRecord);
         aRequest.notifyNextMessageInListGot(sms);
@@ -1700,7 +1700,7 @@ MobileMessageDatabaseService.prototype = {
           debug("Error retrieving message id: " + messageId +
                 ". Error code: " + event.target.errorCode);
         }
-        aRequest.notifyReadMessageListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
+        aRequest.notifyReadMessageListFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
       };
     });
   },
@@ -1718,12 +1718,12 @@ MobileMessageDatabaseService.prototype = {
     this.newTxn(READ_WRITE, function (error, txn, stores) {
       if (error) {
         if (DEBUG) debug(error);
-        aRequest.notifyMarkMessageReadFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
+        aRequest.notifyMarkMessageReadFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
         return;
       }
       txn.onerror = function onerror(event) {
         if (DEBUG) debug("Caught error on transaction ", event.target.errorCode);
-        aRequest.notifyMarkMessageReadFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
+        aRequest.notifyMarkMessageReadFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
       };
       let messageStore = stores[0];
       let threadStore = stores[1];
@@ -1731,7 +1731,7 @@ MobileMessageDatabaseService.prototype = {
         let messageRecord = event.target.result;
         if (!messageRecord) {
           if (DEBUG) debug("Message ID " + messageId + " not found");
-          aRequest.notifyMarkMessageReadFailed(Ci.nsISmsRequest.NOT_FOUND_ERROR);
+          aRequest.notifyMarkMessageReadFailed(Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR);
           return;
         }
         if (messageRecord.id != messageId) {
@@ -1739,7 +1739,7 @@ MobileMessageDatabaseService.prototype = {
             debug("Retrieve message ID (" + messageId + ") is " +
                   "different from the one we got");
           }
-          aRequest.notifyMarkMessageReadFailed(Ci.nsISmsRequest.UNKNOWN_ERROR);
+          aRequest.notifyMarkMessageReadFailed(Ci.nsIMobileMessageCallback.UNKNOWN_ERROR);
           return;
         }
         // If the value to be set is the same as the current message `read`
@@ -1785,12 +1785,12 @@ MobileMessageDatabaseService.prototype = {
     this.newTxn(READ_ONLY, function (error, txn, threadStore) {
       if (error) {
         if (DEBUG) debug(error);
-        aRequest.notifyThreadListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
+        aRequest.notifyThreadListFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
         return;
       }
       txn.onerror = function onerror(event) {
         if (DEBUG) debug("Caught error on transaction ", event.target.errorCode);
-        aRequest.notifyThreadListFailed(Ci.nsISmsRequest.INTERNAL_ERROR);
+        aRequest.notifyThreadListFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
       };
       let request = threadStore.index("lastTimestamp").mozGetAll();
       request.onsuccess = function(event) {

@@ -14,8 +14,8 @@ dictionary SmsThreadListItem
   unsigned long long unreadCount;
 };
 
-[scriptable, builtinclass, uuid(82a6d16d-cf33-4745-8662-8b5d441f512f)]
-interface nsISmsRequest : nsISupports
+[scriptable, builtinclass, uuid(9b4f6e3e-8577-11e2-83c1-e3a75aac027d)]
+interface nsIMobileMessageCallback : nsISupports
 {
   /**
    * All SMS related errors that could apply to SmsRequest objects.
