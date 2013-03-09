@@ -8,6 +8,8 @@ interface nsIDOMEventListener;
 interface nsIDOMMozSmsRequest;
 interface nsIDOMMozSmsFilter;
 interface nsIDOMMozSmsSegmentInfo;
+interface nsIDOMDOMRequest;
+interface nsIDOMBlob;
 
 dictionary MmsParameters
 {
@@ -17,7 +19,7 @@ dictionary MmsParameters
   jsval      attachments; // MmsAttachment[]
 };
 
-[scriptable, builtinclass, uuid(228508d0-7fe4-11e2-a028-83810f98f20b)]
+[scriptable, builtinclass, uuid(f020e48e-84c7-11e2-939e-53a3106dde16)]
 interface nsIDOMMozMobileMessageManager : nsIDOMEventTarget
 {
   nsIDOMMozSmsSegmentInfo getSegmentInfoForText(in DOMString text);
@@ -27,6 +29,8 @@ interface nsIDOMMozMobileMessageManager : nsIDOMEventTarget
   // The method returns a SmsRequest object if one number has been passed.
   // An array of SmsRequest objects otherwise.
   jsval send(in jsval number, in DOMString message);
+
+  nsIDOMDOMRequest sendMMS(in jsval parameters /* MmsParameters */);
 
   [binaryname(GetMessageMoz)]
   nsIDOMMozSmsRequest getMessage(in long id);
