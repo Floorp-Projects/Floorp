@@ -13,7 +13,8 @@
 nsAsyncDOMEvent::nsAsyncDOMEvent(nsINode *aEventNode, nsEvent &aEvent)
   : mEventNode(aEventNode), mDispatchChromeOnly(false)
 {
-  nsEventDispatcher::CreateEvent(nullptr, &aEvent, EmptyString(),
+  MOZ_ASSERT(mEventNode);
+  nsEventDispatcher::CreateEvent(aEventNode, nullptr, &aEvent, EmptyString(),
                                  getter_AddRefs(mEvent));
   NS_ASSERTION(mEvent, "Should never fail to create an event");
   mEvent->DuplicatePrivateData();
@@ -22,10 +23,6 @@ nsAsyncDOMEvent::nsAsyncDOMEvent(nsINode *aEventNode, nsEvent &aEvent)
 
 NS_IMETHODIMP nsAsyncDOMEvent::Run()
 {
-  if (!mEventNode) {
-    return NS_OK;
-  }
-
   if (mEvent) {
     NS_ASSERTION(!mDispatchChromeOnly, "Can't do that");
     nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mEventNode);

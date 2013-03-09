@@ -19,9 +19,10 @@ namespace dom {
 namespace icc {
 
 already_AddRefed<StkCommandEvent>
-StkCommandEvent::Create(const nsAString& aMessage)
+StkCommandEvent::Create(mozilla::dom::EventTarget* aOwner,
+                        const nsAString& aMessage)
 {
-  nsRefPtr<StkCommandEvent> event = new StkCommandEvent();
+  nsRefPtr<StkCommandEvent> event = new StkCommandEvent(aOwner);
   event->mCommand = aMessage;
   return event.forget();
 }

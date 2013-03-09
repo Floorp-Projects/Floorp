@@ -985,6 +985,13 @@ WrapObject<JSObject>(JSContext* cx, JSObject* scope, JSObject* p, JS::Value* vp)
   return true;
 }
 
+inline bool
+WrapObject(JSContext* cx, JSObject* scope, JSObject& p, JS::Value* vp)
+{
+  vp->setObject(p);
+  return true;
+}
+
 bool
 WrapCallbackInterface(JSContext *cx, JSObject *scope, nsISupports* callback,
                       JS::Value* vp);

@@ -16,10 +16,12 @@ DOMCI_DATA(WheelEvent, mozilla::dom::DOMWheelEvent)
 namespace mozilla {
 namespace dom {
 
-DOMWheelEvent::DOMWheelEvent(nsPresContext* aPresContext,
+DOMWheelEvent::DOMWheelEvent(EventTarget* aOwner,
+                             nsPresContext* aPresContext,
                              widget::WheelEvent* aWheelEvent)
-  : nsDOMMouseEvent(aPresContext, aWheelEvent ? aWheelEvent :
-                                    new widget::WheelEvent(false, 0, nullptr))
+  : nsDOMMouseEvent(aOwner, aPresContext,
+                    aWheelEvent ? aWheelEvent :
+                                  new widget::WheelEvent(false, 0, nullptr))
 {
   if (aWheelEvent) {
     mEventIsInternal = false;
@@ -168,9 +170,10 @@ DOMWheelEvent::InitFromCtor(const nsAString& aType,
 using namespace mozilla;
 
 nsresult NS_NewDOMWheelEvent(nsIDOMEvent** aInstancePtrResult,
+                             mozilla::dom::EventTarget* aOwner,
                              nsPresContext* aPresContext,
                              widget::WheelEvent *aEvent)
 {
-  dom::DOMWheelEvent* it = new dom::DOMWheelEvent(aPresContext, aEvent);
+  dom::DOMWheelEvent* it = new dom::DOMWheelEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);
 }

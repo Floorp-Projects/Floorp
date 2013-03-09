@@ -22,7 +22,8 @@ class nsDOMMessageEvent : public nsDOMEvent,
                           public nsIDOMMessageEvent
 {
 public:
-  nsDOMMessageEvent(nsPresContext* aPresContext, nsEvent* aEvent);
+  nsDOMMessageEvent(mozilla::dom::EventTarget* aOwner,
+                    nsPresContext* aPresContext, nsEvent* aEvent);
   ~nsDOMMessageEvent();
                      
   NS_DECL_ISUPPORTS_INHERITED

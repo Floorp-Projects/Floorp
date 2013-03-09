@@ -84,7 +84,7 @@ NS_IMETHODIMP
 CellBroadcast::NotifyMessageReceived(nsIDOMMozCellBroadcastMessage* aMessage)
 {
   nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMMozCellBroadcastEvent(getter_AddRefs(event), nullptr, nullptr);
+  NS_NewDOMMozCellBroadcastEvent(getter_AddRefs(event), this, nullptr, nullptr);
 
   nsCOMPtr<nsIDOMMozCellBroadcastEvent> ce = do_QueryInterface(event);
   nsresult rv = ce->InitMozCellBroadcastEvent(NS_LITERAL_STRING("received"),

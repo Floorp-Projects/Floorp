@@ -13,7 +13,8 @@ class nsDOMKeyboardEvent : public nsDOMUIEvent,
                            public nsIDOMKeyEvent
 {
 public:
-  nsDOMKeyboardEvent(nsPresContext* aPresContext, nsKeyEvent* aEvent);
+  nsDOMKeyboardEvent(mozilla::dom::EventTarget* aOwner,
+                     nsPresContext* aPresContext, nsKeyEvent* aEvent);
   virtual ~nsDOMKeyboardEvent();
 
   NS_DECL_ISUPPORTS_INHERITED

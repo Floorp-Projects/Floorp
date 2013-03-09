@@ -9,12 +9,13 @@
 #include "nsIClassInfo.h"
 #include "nsIXPCScriptable.h"
 
-nsDOMTransitionEvent::nsDOMTransitionEvent(nsPresContext *aPresContext,
+nsDOMTransitionEvent::nsDOMTransitionEvent(mozilla::dom::EventTarget* aOwner,
+                                           nsPresContext *aPresContext,
                                            nsTransitionEvent *aEvent)
-  : nsDOMEvent(aPresContext, aEvent ? aEvent
-                                    : new nsTransitionEvent(false, 0,
-                                                            EmptyString(),
-                                                            0.0))
+  : nsDOMEvent(aOwner, aPresContext,
+               aEvent ? aEvent : new nsTransitionEvent(false, 0,
+                                                       EmptyString(),
+                                                       0.0))
 {
   if (aEvent) {
     mEventIsInternal = false;
@@ -75,9 +76,11 @@ nsDOMTransitionEvent::InitTransitionEvent(const nsAString & typeArg,
 
 nsresult
 NS_NewDOMTransitionEvent(nsIDOMEvent **aInstancePtrResult,
+                         mozilla::dom::EventTarget* aOwner,
                          nsPresContext *aPresContext,
                          nsTransitionEvent *aEvent)
 {
-  nsDOMTransitionEvent *it = new nsDOMTransitionEvent(aPresContext, aEvent);
+  nsDOMTransitionEvent *it =
+    new nsDOMTransitionEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);
 }

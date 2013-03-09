@@ -12,11 +12,12 @@
 #include "nsIFrame.h"
 #include "nsDOMClassInfoID.h"
 
-nsDOMNotifyPaintEvent::nsDOMNotifyPaintEvent(nsPresContext* aPresContext,
+nsDOMNotifyPaintEvent::nsDOMNotifyPaintEvent(mozilla::dom::EventTarget* aOwner,
+                                             nsPresContext* aPresContext,
                                              nsEvent* aEvent,
                                              uint32_t aEventType,
                                              nsInvalidateRequestList* aInvalidateRequests)
-: nsDOMEvent(aPresContext, aEvent)
+: nsDOMEvent(aOwner, aPresContext, aEvent)
 {
   if (mEvent) {
     mEvent->message = aEventType;
@@ -157,13 +158,14 @@ nsDOMNotifyPaintEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 }
 
 nsresult NS_NewDOMNotifyPaintEvent(nsIDOMEvent** aInstancePtrResult,
+                                   mozilla::dom::EventTarget* aOwner,
                                    nsPresContext* aPresContext,
                                    nsEvent *aEvent,
                                    uint32_t aEventType,
                                    nsInvalidateRequestList* aInvalidateRequests) 
 {
   nsDOMNotifyPaintEvent* it =
-    new nsDOMNotifyPaintEvent(aPresContext, aEvent, aEventType,
+    new nsDOMNotifyPaintEvent(aOwner, aPresContext, aEvent, aEventType,
                               aInvalidateRequests);
   if (nullptr == it) {
     return NS_ERROR_OUT_OF_MEMORY;

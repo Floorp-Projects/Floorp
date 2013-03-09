@@ -13,9 +13,10 @@
 #include "nsIClassInfo.h"
 #include "nsIXPCScriptable.h"
 
-nsDOMScrollAreaEvent::nsDOMScrollAreaEvent(nsPresContext *aPresContext,
+nsDOMScrollAreaEvent::nsDOMScrollAreaEvent(mozilla::dom::EventTarget* aOwner,
+                                           nsPresContext *aPresContext,
                                            nsScrollAreaEvent *aEvent)
-  : nsDOMUIEvent(aPresContext, aEvent)
+  : nsDOMUIEvent(aOwner, aPresContext, aEvent)
 {
   mClientArea.SetLayoutRect(aEvent ? aEvent->mArea : nsRect());
 }
@@ -120,9 +121,11 @@ nsDOMScrollAreaEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 
 nsresult
 NS_NewDOMScrollAreaEvent(nsIDOMEvent **aInstancePtrResult,
+                         mozilla::dom::EventTarget* aOwner,
                          nsPresContext *aPresContext,
                          nsScrollAreaEvent *aEvent)
 {
-  nsDOMScrollAreaEvent *ev = new nsDOMScrollAreaEvent(aPresContext, aEvent);
+  nsDOMScrollAreaEvent* ev =
+    new nsDOMScrollAreaEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(ev, aInstancePtrResult);
 }
