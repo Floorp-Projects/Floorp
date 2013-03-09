@@ -9,6 +9,14 @@ interface nsIDOMMozSmsRequest;
 interface nsIDOMMozSmsFilter;
 interface nsIDOMMozSmsSegmentInfo;
 
+dictionary MmsParameters
+{
+  jsval      receivers; // DOMString[]
+  DOMString? subject;
+  DOMString? smil;
+  jsval      attachments; // MmsAttachment[]
+};
+
 [scriptable, builtinclass, uuid(228508d0-7fe4-11e2-a028-83810f98f20b)]
 interface nsIDOMMozMobileMessageManager : nsIDOMEventTarget
 {
