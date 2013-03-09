@@ -36,6 +36,7 @@ EXPORTS_NAMESPACES = \
 
 EXPORTS_mozilla/dom = \
   SmsManager.h \
+  MobileMessageManager.h \
   SmsMessage.h \
   SmsRequest.h \
   SmsSegmentInfo.h \
@@ -52,6 +53,7 @@ EXPORTS_mozilla/dom/mobilemessage = \
 
 CPPSRCS = \
   SmsManager.cpp \
+  MobileMessageManager.cpp \
   SmsService.cpp \
   SmsIPCService.cpp \
   SmsServicesFactory.cpp \
