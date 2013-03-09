@@ -7,6 +7,7 @@
 #include "MobileMessageManager.h"
 #include "nsIDOMClassInfo.h"
 #include "nsISmsService.h"
+#include "nsIMmsService.h"
 #include "nsIObserverService.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -20,6 +21,9 @@
 #include "nsIXPConnect.h"
 #include "nsIPermissionManager.h"
 #include "GeneratedEvents.h"
+#include "DOMRequest.h"
+#include "nsIMobileMessageCallback.h"
+#include "MobileMessageCallback.h"
 
 #define RECEIVED_EVENT_NAME         NS_LITERAL_STRING("received")
 #define SENDING_EVENT_NAME          NS_LITERAL_STRING("sending")
@@ -170,6 +174,21 @@ MobileMessageManager::Send(const jsval& aNumber, const nsAString& aMessage, jsva
   aReturn->setObjectOrNull(JS_NewArrayObject(cx, size, requests));
   NS_ENSURE_TRUE(aReturn->isObject(), NS_ERROR_FAILURE);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MobileMessageManager::SendMMS(const JS::Value& aParams, nsIDOMDOMRequest** aRequest)
+{
+  nsCOMPtr<nsIMmsService> mmsService = do_GetService(RIL_MMSSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(mmsService, NS_ERROR_FAILURE);
+
+  nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
+  nsCOMPtr<nsIMobileMessageCallback> msgCallback = new MobileMessageCallback(request);
+  nsresult rv = mmsService->Send(aParams, msgCallback);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  request.forget(aRequest);
   return NS_OK;
 }
 
