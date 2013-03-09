@@ -302,33 +302,15 @@ class StoreBuffer
             return object != other.object || offset != other.offset || kind != other.kind;
         }
 
-        HeapSlot *slotLocation() const {
-            if (kind == HeapSlot::Element) {
-                if (offset >= object->getDenseInitializedLength())
-                    return NULL;
-                return (HeapSlot *)&object->getDenseElement(offset);
-            }
-            if (offset >= object->slotSpan())
-                return NULL;
-            return &object->getSlotRef(offset);
-        }
+        JS_ALWAYS_INLINE HeapSlot *slotLocation() const;
 
-        void *deref() const {
-            HeapSlot *loc = slotLocation();
-            return (loc && loc->isGCThing()) ? loc->toGCThing() : NULL;
-        }
+        JS_ALWAYS_INLINE void *deref() const;
 
-        void *location() const {
-            return (void *)slotLocation();
-        }
+        JS_ALWAYS_INLINE void *location() const;
 
-        bool inRememberedSet(Nursery *n) {
-            return !n->isInside(object) && n->isInside(deref());
-        }
+        JS_ALWAYS_INLINE bool inRememberedSet(Nursery *n) const;
 
-        bool isNullEdge() const {
-            return !deref();
-        }
+        JS_ALWAYS_INLINE bool isNullEdge() const;
     };
 
     MonoTypeBuffer<ValueEdge> bufferVal;
