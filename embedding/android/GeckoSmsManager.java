@@ -319,10 +319,13 @@ public class GeckoSmsManager
    * Keep the following state codes in syng with |DeliveryState| in:
    * dom/mobilemessage/src/Types.h
    */
-  private final static int kDeliveryStateSent     = 0;
-  private final static int kDeliveryStateReceived = 1;
-  private final static int kDeliveryStateUnknown  = 2;
-  private final static int kDeliveryStateEndGuard = 3;
+  private final static int kDeliveryStateSent          = 0;
+  private final static int kDeliveryStateReceived      = 1;
+  private final static int kDeliveryStateSending       = 2;
+  private final static int kDeliveryStateError         = 3;
+  private final static int kDeliveryStateUnknown       = 4;
+  private final static int kDeliveryStateNotDownloaded = 5;
+  private final static int kDeliveryStateEndGuard      = 6;
 
   /*
    * Keep the following status codes in sync with |DeliveryStatus| in:
