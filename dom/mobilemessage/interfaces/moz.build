@@ -5,6 +5,7 @@
 
 XPIDL_SOURCES += [
     'nsIDOMMobileMessageManager.idl',
+    'nsIDOMMozMmsMessage.idl',
     'nsIDOMMozSmsEvent.idl',
     'nsIDOMMozSmsMessage.idl',
     'nsIDOMNavigatorMobileMessage.idl',
