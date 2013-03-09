@@ -13,7 +13,7 @@ interface nsIMobileMessageCallback;
 #define SMS_SERVICE_CONTRACTID "@mozilla.org/sms/smsservice;1"
 %}
 
-[scriptable, builtinclass, uuid(5d066568-86d2-11e2-a0d0-7351fb5ae50a)]
+[scriptable, builtinclass, uuid(c4b2ed2a-8714-11e2-bd2b-13f1a0759342)]
 interface nsISmsService : nsISupports
 {
   boolean hasSupport();
@@ -23,19 +23,4 @@ interface nsISmsService : nsISupports
   void send(in DOMString number,
             in DOMString message,
             in nsIMobileMessageCallback request);
-
-  [implicit_jscontext]
-  nsIDOMMozSmsMessage createSmsMessage(in long      id,
-                                       in DOMString delivery,
-                                       in DOMString deliveryStatus,
-                                       in DOMString sender,
-                                       in DOMString receiver,
-                                       in DOMString body,
-                                       in DOMString messageClass,
-                                       in jsval     timestamp,
-                                       in bool      read);
-
-  nsIDOMMozSmsSegmentInfo createSmsSegmentInfo(in long segments,
-                                               in long charsPerSegment,
-                                               in long charsAvailableInLastSegment);
 };
