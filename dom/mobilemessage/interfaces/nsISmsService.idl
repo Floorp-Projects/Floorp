@@ -6,14 +6,14 @@
 
 interface nsIDOMMozSmsMessage;
 interface nsIDOMMozSmsSegmentInfo;
-interface nsISmsRequest;
+interface nsIMobileMessageCallback;
 
 %{C++
 #define SMS_SERVICE_CID { 0xbada3cb8, 0xa568, 0x4dff, { 0xb5, 0x43, 0x52, 0xbb, 0xb3, 0x14, 0x31, 0x21 } }
 #define SMS_SERVICE_CONTRACTID "@mozilla.org/sms/smsservice;1"
 %}
 
-[scriptable, builtinclass, uuid(4310bdb5-eefa-4f70-965a-74041228ab26)]
+[scriptable, builtinclass, uuid(5d066568-86d2-11e2-a0d0-7351fb5ae50a)]
 interface nsISmsService : nsISupports
 {
   boolean hasSupport();
@@ -22,7 +22,7 @@ interface nsISmsService : nsISupports
 
   void send(in DOMString number,
             in DOMString message,
-            in nsISmsRequest request);
+            in nsIMobileMessageCallback request);
 
   [implicit_jscontext]
   nsIDOMMozSmsMessage createSmsMessage(in long      id,

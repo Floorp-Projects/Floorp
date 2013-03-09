@@ -31,7 +31,7 @@ DOMCI_DATA(MozSmsRequest, mozilla::dom::SmsRequest)
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS1(SmsRequestForwarder, nsISmsRequest)
+NS_IMPL_ISUPPORTS1(SmsRequestForwarder, nsIMobileMessageCallback)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SmsRequest,
                                                   nsDOMEventTargetHelper)
@@ -57,7 +57,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(SmsRequest)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozSmsRequest)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDOMRequest)
-  NS_INTERFACE_MAP_ENTRY(nsISmsRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIMobileMessageCallback)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozSmsRequest)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
@@ -205,7 +205,7 @@ SmsRequest::SetSuccessInternal(nsISupports* aObject)
   nsresult rv;
   nsIScriptContext* sc = GetContextForEventHandlers(&rv);
   if (!sc) {
-    SetError(nsISmsRequest::INTERNAL_ERROR);
+    SetError(nsIMobileMessageCallback::INTERNAL_ERROR);
     return false;
   }
 
@@ -222,7 +222,7 @@ SmsRequest::SetSuccessInternal(nsISupports* aObject)
 
   if (NS_FAILED(nsContentUtils::WrapNative(cx, global, aObject, &mResult))) {
     UnrootResult();
-    SetError(nsISmsRequest::INTERNAL_ERROR);
+    SetError(nsIMobileMessageCallback::INTERNAL_ERROR);
     return false;
   }
 
@@ -236,23 +236,23 @@ SmsRequest::SetError(int32_t aError)
   NS_PRECONDITION(!mDone, "mDone shouldn't have been set to true already!");
   NS_PRECONDITION(!mError, "mError shouldn't have been set!");
   NS_PRECONDITION(mResult == JSVAL_VOID, "mResult shouldn't have been set!");
-  NS_PRECONDITION(aError != nsISmsRequest::SUCCESS_NO_ERROR,
+  NS_PRECONDITION(aError != nsIMobileMessageCallback::SUCCESS_NO_ERROR,
                   "Can't call SetError() with SUCCESS_NO_ERROR!");
 
   mDone = true;
   mCursor = nullptr;
 
   switch (aError) {
-    case nsISmsRequest::NO_SIGNAL_ERROR:
+    case nsIMobileMessageCallback::NO_SIGNAL_ERROR:
       mError = DOMError::CreateWithName(NS_LITERAL_STRING("NoSignalError"));
       break;
-    case nsISmsRequest::NOT_FOUND_ERROR:
+    case nsIMobileMessageCallback::NOT_FOUND_ERROR:
       mError = DOMError::CreateWithName(NS_LITERAL_STRING("NotFoundError"));
       break;
-    case nsISmsRequest::UNKNOWN_ERROR:
+    case nsIMobileMessageCallback::UNKNOWN_ERROR:
       mError = DOMError::CreateWithName(NS_LITERAL_STRING("UnknownError"));
       break;
-    case nsISmsRequest::INTERNAL_ERROR:
+    case nsIMobileMessageCallback::INTERNAL_ERROR:
       mError = DOMError::CreateWithName(NS_LITERAL_STRING("InternalError"));
       break;
     default: // SUCCESS_NO_ERROR is handled above.

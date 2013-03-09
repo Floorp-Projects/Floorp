@@ -39,7 +39,7 @@ SmsService::GetSegmentInfoForText(const nsAString & aText,
 NS_IMETHODIMP
 SmsService::Send(const nsAString& aNumber,
                  const nsAString& aMessage,
-                 nsISmsRequest* aRequest)
+                 nsIMobileMessageCallback* aRequest)
 {
   if (!mRIL) {
     return NS_OK;
