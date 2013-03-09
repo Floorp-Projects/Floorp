@@ -108,7 +108,7 @@ NS_IMETHODIMP
 Voicemail::NotifyStatusChanged(nsIDOMMozVoicemailStatus* aStatus)
 {
   nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMMozVoicemailEvent(getter_AddRefs(event), nullptr, nullptr);
+  NS_NewDOMMozVoicemailEvent(getter_AddRefs(event), this, nullptr, nullptr);
 
   nsCOMPtr<nsIDOMMozVoicemailEvent> ce = do_QueryInterface(event);
   nsresult rv = ce->InitMozVoicemailEvent(NS_LITERAL_STRING("statuschanged"),

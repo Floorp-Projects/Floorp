@@ -506,7 +506,7 @@ Telephony::DispatchCallEvent(const nsAString& aType,
   MOZ_ASSERT(aCall);
 
   nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMCallEvent(getter_AddRefs(event), nullptr, nullptr);
+  NS_NewDOMCallEvent(getter_AddRefs(event), this, nullptr, nullptr);
   NS_ASSERTION(event, "This should never fail!");
 
   nsCOMPtr<nsIDOMCallEvent> callEvent = do_QueryInterface(event);

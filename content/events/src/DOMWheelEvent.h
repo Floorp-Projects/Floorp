@@ -17,7 +17,8 @@ class DOMWheelEvent : public nsDOMMouseEvent,
                       public nsIDOMWheelEvent
 {
 public:
-  DOMWheelEvent(nsPresContext* aPresContext,
+  DOMWheelEvent(mozilla::dom::EventTarget* aOwner,
+                nsPresContext* aPresContext,
                 widget::WheelEvent* aWheelEvent);
   virtual ~DOMWheelEvent();
 

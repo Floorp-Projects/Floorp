@@ -6,8 +6,11 @@
 #include "nsDOMClassInfoID.h"
 #include "nsDOMSimpleGestureEvent.h"
 
-nsDOMSimpleGestureEvent::nsDOMSimpleGestureEvent(nsPresContext* aPresContext, nsSimpleGestureEvent* aEvent)
-  : nsDOMMouseEvent(aPresContext, aEvent ? aEvent : new nsSimpleGestureEvent(false, 0, nullptr, 0, 0.0))
+nsDOMSimpleGestureEvent::nsDOMSimpleGestureEvent(mozilla::dom::EventTarget* aOwner,
+                                                 nsPresContext* aPresContext,
+                                                 nsSimpleGestureEvent* aEvent)
+  : nsDOMMouseEvent(aOwner, aPresContext,
+                    aEvent ? aEvent : new nsSimpleGestureEvent(false, 0, nullptr, 0, 0.0))
 {
   NS_ASSERTION(mEvent->eventStructType == NS_SIMPLE_GESTURE_EVENT, "event type mismatch");
 
@@ -112,12 +115,11 @@ nsDOMSimpleGestureEvent::InitSimpleGestureEvent(const nsAString& aTypeArg,
 }
 
 nsresult NS_NewDOMSimpleGestureEvent(nsIDOMEvent** aInstancePtrResult,
+                                     mozilla::dom::EventTarget* aOwner,
                                      nsPresContext* aPresContext,
                                      nsSimpleGestureEvent *aEvent)
 {
-  nsDOMSimpleGestureEvent *it = new nsDOMSimpleGestureEvent(aPresContext, aEvent);
-  if (nullptr == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  nsDOMSimpleGestureEvent* it =
+    new nsDOMSimpleGestureEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);
 }

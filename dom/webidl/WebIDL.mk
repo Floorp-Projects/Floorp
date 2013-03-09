@@ -45,6 +45,7 @@ webidl_files = \
   DummyBinding.webidl \
   DynamicsCompressorNode.webidl \
   Element.webidl \
+  Event.webidl \
   EventHandler.webidl \
   EventListener.webidl \
   EventSource.webidl \

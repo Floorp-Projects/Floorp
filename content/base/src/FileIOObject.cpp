@@ -104,7 +104,7 @@ nsresult
 FileIOObject::DispatchProgressEvent(const nsAString& aType)
 {
   nsCOMPtr<nsIDOMEvent> event;
-  nsresult rv = NS_NewDOMProgressEvent(getter_AddRefs(event),
+  nsresult rv = NS_NewDOMProgressEvent(getter_AddRefs(event), this,
                                        nullptr, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 

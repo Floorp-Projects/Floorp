@@ -10,8 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface Event;
-
 callback interface EventListener {
   void handleEvent(Event event);
 };

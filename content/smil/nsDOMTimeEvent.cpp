@@ -9,8 +9,9 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsDOMClassInfoID.h"
 
-nsDOMTimeEvent::nsDOMTimeEvent(nsPresContext* aPresContext, nsEvent* aEvent)
-  : nsDOMEvent(aPresContext, aEvent ? aEvent : new nsUIEvent(false, 0, 0)),
+nsDOMTimeEvent::nsDOMTimeEvent(mozilla::dom::EventTarget* aOwner,
+                               nsPresContext* aPresContext, nsEvent* aEvent)
+  : nsDOMEvent(aOwner, aPresContext, aEvent ? aEvent : new nsUIEvent(false, 0, 0)),
     mDetail(0)
 {
   if (aEvent) {
@@ -88,9 +89,10 @@ nsDOMTimeEvent::InitTimeEvent(const nsAString& aTypeArg,
 }
 
 nsresult NS_NewDOMTimeEvent(nsIDOMEvent** aInstancePtrResult,
+                            mozilla::dom::EventTarget* aOwner,
                             nsPresContext* aPresContext,
                             nsEvent* aEvent)
 {
-  nsDOMTimeEvent* it = new nsDOMTimeEvent(aPresContext, aEvent);
+  nsDOMTimeEvent* it = new nsDOMTimeEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);
 }

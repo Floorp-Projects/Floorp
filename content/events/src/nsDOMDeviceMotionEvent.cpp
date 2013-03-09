@@ -23,7 +23,6 @@ NS_IMPL_RELEASE_INHERITED(nsDOMDeviceMotionEvent, nsDOMEvent)
 DOMCI_DATA(DeviceMotionEvent, nsDOMDeviceMotionEvent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMDeviceMotionEvent)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMDeviceMotionEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDeviceMotionEvent)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DeviceMotionEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
@@ -86,12 +85,14 @@ nsDOMDeviceMotionEvent::GetInterval(double *aInterval)
 
 nsresult
 NS_NewDOMDeviceMotionEvent(nsIDOMEvent** aInstancePtrResult,
+                           mozilla::dom::EventTarget* aOwner,
                            nsPresContext* aPresContext,
                            nsEvent *aEvent) 
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
-  nsDOMDeviceMotionEvent* it = new nsDOMDeviceMotionEvent(aPresContext, aEvent);
+  nsDOMDeviceMotionEvent* it =
+    new nsDOMDeviceMotionEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);
 }
 

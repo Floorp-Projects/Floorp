@@ -6,9 +6,10 @@
 #include "nsDOMKeyboardEvent.h"
 #include "nsDOMClassInfoID.h"
 
-nsDOMKeyboardEvent::nsDOMKeyboardEvent(nsPresContext* aPresContext,
+nsDOMKeyboardEvent::nsDOMKeyboardEvent(mozilla::dom::EventTarget* aOwner,
+                                       nsPresContext* aPresContext,
                                        nsKeyEvent* aEvent)
-  : nsDOMUIEvent(aPresContext, aEvent ? aEvent :
+  : nsDOMUIEvent(aOwner, aPresContext, aEvent ? aEvent :
                  new nsKeyEvent(false, 0, nullptr))
 {
   NS_ASSERTION(mEvent->eventStructType == NS_KEY_EVENT, "event type mismatch");
@@ -178,9 +179,10 @@ nsDOMKeyboardEvent::InitKeyEvent(const nsAString& aType, bool aCanBubble, bool a
 }
 
 nsresult NS_NewDOMKeyboardEvent(nsIDOMEvent** aInstancePtrResult,
+                                mozilla::dom::EventTarget* aOwner,
                                 nsPresContext* aPresContext,
                                 nsKeyEvent *aEvent)
 {
-  nsDOMKeyboardEvent* it = new nsDOMKeyboardEvent(aPresContext, aEvent);
+  nsDOMKeyboardEvent* it = new nsDOMKeyboardEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);
 }

@@ -45,15 +45,15 @@ private:
   // sensor -> window listener
   nsTArray<nsTArray<nsIDOMWindow*>* > mWindowListeners;
 
-  void FireDOMLightEvent(nsIDOMEventTarget *target,
+  void FireDOMLightEvent(mozilla::dom::EventTarget* aTarget,
                          double value);
 
-  void FireDOMProximityEvent(nsIDOMEventTarget *aTarget,
+  void FireDOMProximityEvent(mozilla::dom::EventTarget* aTarget,
                              double aValue,
                              double aMin,
                              double aMax);
 
-  void FireDOMUserProximityEvent(nsIDOMEventTarget *aTarget,
+  void FireDOMUserProximityEvent(mozilla::dom::EventTarget* aTarget,
                                  bool aNear);
 
   void FireDOMOrientationEvent(class nsIDOMDocument *domDoc, 

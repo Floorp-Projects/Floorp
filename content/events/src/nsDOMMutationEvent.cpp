@@ -11,10 +11,11 @@
 
 class nsPresContext;
 
-nsDOMMutationEvent::nsDOMMutationEvent(nsPresContext* aPresContext,
+nsDOMMutationEvent::nsDOMMutationEvent(mozilla::dom::EventTarget* aOwner,
+                                       nsPresContext* aPresContext,
                                        nsMutationEvent* aEvent)
-  : nsDOMEvent(aPresContext, aEvent ? aEvent :
-               new nsMutationEvent(false, 0))
+  : nsDOMEvent(aOwner, aPresContext,
+               aEvent ? aEvent : new nsMutationEvent(false, 0))
 {
   mEventIsInternal = (aEvent == nullptr);
 }
@@ -106,10 +107,11 @@ nsDOMMutationEvent::InitMutationEvent(const nsAString& aTypeArg, bool aCanBubble
 }
 
 nsresult NS_NewDOMMutationEvent(nsIDOMEvent** aInstancePtrResult,
+                                mozilla::dom::EventTarget* aOwner,
                                 nsPresContext* aPresContext,
                                 nsMutationEvent *aEvent) 
 {
-  nsDOMMutationEvent* it = new nsDOMMutationEvent(aPresContext, aEvent);
+  nsDOMMutationEvent* it = new nsDOMMutationEvent(aOwner, aPresContext, aEvent);
   if (nullptr == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

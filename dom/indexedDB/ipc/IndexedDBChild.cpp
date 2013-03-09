@@ -91,8 +91,8 @@ public:
   virtual nsresult
   DoDatabaseWork(mozIStorageConnection* aConnection) MOZ_OVERRIDE;
 
-  virtual already_AddRefed<nsDOMEvent>
-  CreateSuccessEvent() MOZ_OVERRIDE;
+  virtual already_AddRefed<nsIDOMEvent>
+  CreateSuccessEvent(mozilla::dom::EventTarget* aOwner) MOZ_OVERRIDE;
 
   virtual nsresult
   GetSuccessResult(JSContext* aCx, jsval* aVal) MOZ_OVERRIDE;
@@ -140,7 +140,7 @@ public:
     }
 
     nsRefPtr<nsDOMEvent> event =
-      IDBVersionChangeEvent::Create(mOldVersion, mNewVersion);
+      IDBVersionChangeEvent::Create(mDatabase, mOldVersion, mNewVersion);
     MOZ_ASSERT(event);
 
     bool dummy;
@@ -434,8 +434,7 @@ IndexedDBDatabaseChild::RecvBlocked(const uint64_t& aOldVersion)
   MOZ_ASSERT(!mDatabase);
 
   nsCOMPtr<nsIRunnable> runnable =
-    IDBVersionChangeEvent::CreateBlockedRunnable(aOldVersion, mVersion,
-                                                 mRequest);
+    IDBVersionChangeEvent::CreateBlockedRunnable(mRequest, aOldVersion, mVersion);
 
   MainThreadEventTarget target;
   if (NS_FAILED(target.Dispatch(runnable, NS_DISPATCH_NORMAL))) {
@@ -1257,8 +1256,8 @@ IndexedDBDeleteDatabaseRequestChild::RecvBlocked(
   MOZ_ASSERT(mOpenRequest);
 
   nsCOMPtr<nsIRunnable> runnable =
-    IDBVersionChangeEvent::CreateBlockedRunnable(aCurrentVersion, 0,
-                                                 mOpenRequest);
+    IDBVersionChangeEvent::CreateBlockedRunnable(mOpenRequest,
+                                                 aCurrentVersion, 0);
 
   MainThreadEventTarget target;
   if (NS_FAILED(target.Dispatch(runnable, NS_DISPATCH_NORMAL))) {
@@ -1323,10 +1322,11 @@ IPCSetVersionHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   return NS_ERROR_FAILURE;
 }
 
-already_AddRefed<nsDOMEvent>
-IPCSetVersionHelper::CreateSuccessEvent()
+already_AddRefed<nsIDOMEvent>
+IPCSetVersionHelper::CreateSuccessEvent(mozilla::dom::EventTarget* aOwner)
 {
-  return IDBVersionChangeEvent::CreateUpgradeNeeded(mOldVersion,
+  return IDBVersionChangeEvent::CreateUpgradeNeeded(aOwner,
+                                                    mOldVersion,
                                                     mRequestedVersion);
 }
 

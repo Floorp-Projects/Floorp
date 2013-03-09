@@ -527,7 +527,7 @@ nsDOMOfflineResourceList::SendEvent(const nsAString &aEventName)
   }
 
   nsCOMPtr<nsIDOMEvent> event;
-  nsresult rv = nsEventDispatcher::CreateEvent(nullptr, nullptr,
+  nsresult rv = nsEventDispatcher::CreateEvent(this, nullptr, nullptr,
                                                NS_LITERAL_STRING("Events"),
                                                getter_AddRefs(event));
   NS_ENSURE_SUCCESS(rv, rv);
