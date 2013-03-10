@@ -25,7 +25,10 @@ class AudioBufferSourceNodeEngine : public AudioNodeEngine
 {
 public:
   AudioBufferSourceNodeEngine() :
-    mStart(0), mStop(TRACK_TICKS_MAX), mOffset(0), mDuration(0) {}
+    mStart(0), mStop(TRACK_TICKS_MAX),
+    mOffset(0), mDuration(0),
+    mLoop(false), mLoopStart(0), mLoopEnd(0)
+  {}
 
   // START, OFFSET and DURATION are always set by start() (along with setting
   // mBuffer to something non-null).
@@ -34,7 +37,10 @@ public:
     START,
     STOP,
     OFFSET,
-    DURATION
+    DURATION,
+    LOOP,
+    LOOPSTART,
+    LOOPEND
   };
   virtual void SetStreamTimeParameter(uint32_t aIndex, TrackTicks aParam)
   {
@@ -50,6 +56,9 @@ public:
     switch (aIndex) {
     case OFFSET: mOffset = aParam; break;
     case DURATION: mDuration = aParam; break;
+    case LOOP: mLoop = !!aParam; break;
+    case LOOPSTART: mLoopStart = aParam; break;
+    case LOOPEND: mLoopEnd = aParam; break;
     default:
       NS_ERROR("Bad AudioBufferSourceNodeEngine Int32Parameter");
     }
@@ -123,6 +132,9 @@ public:
   nsRefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
   int32_t mOffset;
   int32_t mDuration;
+  bool mLoop;
+  int32_t mLoopStart;
+  int32_t mLoopEnd;
 };
 
 AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
