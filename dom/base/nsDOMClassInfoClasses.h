@@ -20,7 +20,7 @@ DOMCI_CLASS(XMLDocument)
 DOMCI_CLASS(DOMException)
 DOMCI_CLASS(Element)
 DOMCI_CLASS(Attr)
-DOMCI_CLASS(NamedNodeMap)
+DOMCI_CLASS(MozNamedAttrMap)
 
 // Event classes
 DOMCI_CLASS(Event)

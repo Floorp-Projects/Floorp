@@ -16,7 +16,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(59C0DC07-D784-410B-8B5E-C26BAF7CB8A6)]
+[scriptable, uuid(aefc1e79-e2e6-4702-9baf-b9545be412f1)]
 interface nsIDOMHTMLFormElement : nsIDOMHTMLElement
 {
            attribute DOMString            acceptCharset;

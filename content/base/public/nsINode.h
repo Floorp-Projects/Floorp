@@ -34,6 +34,7 @@ class nsDOMAttributeMap;
 class nsIContent;
 class nsIDocument;
 class nsIDOMElement;
+class nsIDOMMozNamedAttrMap;
 class nsIDOMNodeList;
 class nsIDOMUserDataHandler;
 class nsIEditor;
@@ -1656,7 +1657,7 @@ protected:
   nsresult GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
   nsresult CompareDocumentPosition(nsIDOMNode* aOther,
                                    uint16_t* aReturn);
-  nsresult GetAttributes(nsIDOMNamedNodeMap** aAttributes);
+  nsresult GetAttributes(nsIDOMMozNamedAttrMap** aAttributes);
 
   nsresult ReplaceOrInsertBefore(bool aReplace, nsIDOMNode *aNewChild,
                                  nsIDOMNode *aRefChild, nsIDOMNode **aReturn);
@@ -1958,7 +1959,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsINode, NS_INODE_IID)
   { \
     return nsINode::GetNextSibling(aNextSibling); \
   } \
-  NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap** aAttributes) __VA_ARGS__ \
+  NS_IMETHOD GetAttributes(nsIDOMMozNamedAttrMap** aAttributes) __VA_ARGS__ \
   { \
     return nsINode::GetAttributes(aAttributes); \
   } \

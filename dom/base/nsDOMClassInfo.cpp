@@ -105,7 +105,7 @@
 #include "nsError.h"
 #include "nsIDOMDOMException.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMNamedNodeMap.h"
+#include "nsIDOMMozNamedAttrMap.h"
 #include "nsIDOMDOMStringList.h"
 
 // HTMLFormElement helper includes
@@ -642,7 +642,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Attr, nsAttributeSH,
                            NODE_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(NamedNodeMap, nsNamedNodeMapSH,
+  NS_DEFINE_CLASSINFO_DATA(MozNamedAttrMap, nsNamedNodeMapSH,
                            ARRAY_SCRIPTABLE_FLAGS)
 
   // Misc Core related classes
@@ -1952,8 +1952,8 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(NamedNodeMap, nsIDOMNamedNodeMap)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNamedNodeMap)
+  DOM_CLASSINFO_MAP_BEGIN(MozNamedAttrMap, nsIDOMMozNamedAttrMap)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozNamedAttrMap)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Event, nsIDOMEvent)

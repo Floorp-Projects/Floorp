@@ -785,13 +785,13 @@ Element::SetAttributeNode(nsIDOMAttr* aNewAttr, ErrorResult& aError)
 {
   OwnerDoc()->WarnOnceAbout(nsIDocument::eSetAttributeNode);
 
-  nsCOMPtr<nsIDOMNode> returnNode;
-  aError = Attributes()->SetNamedItem(aNewAttr, getter_AddRefs(returnNode));
+  nsCOMPtr<nsIDOMAttr> returnAttr;
+  aError = Attributes()->SetNamedItem(aNewAttr, getter_AddRefs(returnAttr));
   if (aError.Failed()) {
     return nullptr;
   }
 
-  return static_cast<nsIDOMAttr*>(returnNode.forget().get());
+  return returnAttr.forget();
 }
 
 already_AddRefed<nsIDOMAttr>
@@ -807,13 +807,13 @@ Element::RemoveAttributeNode(nsIDOMAttr* aAttribute,
     return nullptr;
   }
 
-  nsCOMPtr<nsIDOMNode> node;
-  aError = Attributes()->RemoveNamedItem(name, getter_AddRefs(node));
+  nsCOMPtr<nsIDOMAttr> returnAttr;
+  aError = Attributes()->RemoveNamedItem(name, getter_AddRefs(returnAttr));
   if (aError.Failed()) {
     return nullptr;
   }
 
-  return static_cast<nsIDOMAttr*>(node.forget().get());
+  return returnAttr.forget();
 }
 
 void
@@ -1474,7 +1474,7 @@ Element::GetExistingAttrNameFromQName(const nsAString& aStr) const
 }
 
 NS_IMETHODIMP
-Element::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
+Element::GetAttributes(nsIDOMMozNamedAttrMap** aAttributes)
 {
   NS_ADDREF(*aAttributes = Attributes());
   return NS_OK;
@@ -2008,7 +2008,7 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     attrNode = GetAttributeNodeNSInternal(ns, nsDependentAtomString(aName), rv);
   }
 
-  // Clear binding to nsIDOMNamedNodeMap
+  // Clear binding to nsIDOMMozNamedAttrMap
   nsDOMSlots *slots = GetExistingDOMSlots();
   if (slots && slots->mAttributeMap) {
     slots->mAttributeMap->DropAttribute(aNameSpaceID, aName);

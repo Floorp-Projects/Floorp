@@ -73,7 +73,7 @@
 #include "nsID.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMNamedNodeMap.h"
+#include "nsIDOMMozNamedAttrMap.h"
 #include "nsIDOMNode.h"
 #include "nsISupportsUtils.h"
 #include "nsString.h"
@@ -131,16 +131,12 @@ nsHTMLURIRefObject::GetNextURI(nsAString & aURI)
 #endif
   while (mCurAttrIndex < mAttributeCnt)
   {
-    nsCOMPtr<nsIDOMNode> attrNode;
+    nsCOMPtr<nsIDOMAttr> attrNode;
     rv = mAttributes->Item(mCurAttrIndex++, getter_AddRefs(attrNode));
-      // XXX Does Item() addref, or not?
-      // The comparable code in nsEditor assumes it doesn't.
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_ARG_POINTER(attrNode);
-    nsCOMPtr<nsIDOMAttr> curAttrNode (do_QueryInterface(attrNode));
-    NS_ENSURE_ARG_POINTER(curAttrNode);
     nsString curAttr;
-    rv = curAttrNode->GetName(curAttr);
+    rv = attrNode->GetName(curAttr);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // href >> A, AREA, BASE, LINK
@@ -153,7 +149,7 @@ nsHTMLURIRefObject::GetNextURI(nsAString & aURI)
       if (!MATCHES(tagName, "a") && !MATCHES(tagName, "area")
           && !MATCHES(tagName, "base") && !MATCHES(tagName, "link"))
         continue;
-      rv = curAttrNode->GetValue(aURI);
+      rv = attrNode->GetValue(aURI);
       NS_ENSURE_SUCCESS(rv, rv);
       nsString uri (aURI);
       // href pointing to a named anchor doesn't count
@@ -169,7 +165,7 @@ nsHTMLURIRefObject::GetNextURI(nsAString & aURI)
           && !MATCHES(tagName, "frame") && !MATCHES(tagName, "iframe")
           && !MATCHES(tagName, "input") && !MATCHES(tagName, "script"))
         continue;
-      return curAttrNode->GetValue(aURI);
+      return attrNode->GetValue(aURI);
     }
     //<META http-equiv="refresh" content="3,http://www.acme.com/intro.html">
     else if (MATCHES(curAttr, "content"))
@@ -287,7 +283,6 @@ nsHTMLURIRefObject::SetNode(nsIDOMNode *aNode)
 nsresult NS_NewHTMLURIRefObject(nsIURIRefObject** aResult, nsIDOMNode* aNode)
 {
   nsHTMLURIRefObject* refObject = new nsHTMLURIRefObject();
-  NS_ENSURE_TRUE(refObject, NS_ERROR_OUT_OF_MEMORY);
   nsresult rv = refObject->SetNode(aNode);
   if (NS_FAILED(rv)) {
     *aResult = 0;

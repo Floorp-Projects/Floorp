@@ -14,7 +14,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Core/
  */
 
-[scriptable, uuid(4a15eb0c-d5bc-4902-9d50-21b12cab47e7)]
+[scriptable, uuid(b098fc8f-9ef4-4de8-bbd0-4a0fc712dd6e)]
 interface nsIDOMDocumentFragment : nsIDOMNode
 {
 };
