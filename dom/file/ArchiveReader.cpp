@@ -69,8 +69,10 @@ ArchiveReader::Initialize(nsISupports* aOwner,
 
   // Extra param is an object
   if (aArgc > 1) {
-    nsresult rv = mOptions.Init(aCx, &aArgv[1]);
+    mozilla::idl::ArchiveReaderOptions options;
+    nsresult rv = options.Init(aCx, &aArgv[1]);
     NS_ENSURE_SUCCESS(rv, rv);
+    mEncoding = options.encoding;
   }
 
   mWindow = do_QueryInterface(aOwner);
@@ -140,7 +142,7 @@ ArchiveReader::OpenArchive()
   nsRefPtr<ArchiveReaderEvent> event;
 
   /* FIXME: If we want to support more than 1 format we should check the content type here: */
-  event = new ArchiveReaderZipEvent(this, mOptions);
+  event = new ArchiveReaderZipEvent(this, mEncoding);
   rv = target->Dispatch(event, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
 
