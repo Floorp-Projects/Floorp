@@ -367,6 +367,7 @@ browser.jar:
         skin/classic/aero/browser/tabview/tabview-inverted.png       (tabview/tabview-inverted.png)
         skin/classic/aero/browser/tabview/tabview.css                (tabview/tabview.css)
 *       skin/classic/aero/browser/devtools/common.css                (devtools/common.css)
+        skin/classic/aero/browser/devtools/widgets.css               (devtools/widgets.css)
         skin/classic/aero/browser/devtools/arrows.png                (devtools/arrows.png)
         skin/classic/aero/browser/devtools/commandline.png           (devtools/commandline.png)
         skin/classic/aero/browser/devtools/command-responsivemode.png (devtools/command-responsivemode.png)
