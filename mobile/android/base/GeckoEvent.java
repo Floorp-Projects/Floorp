@@ -49,7 +49,7 @@ public class GeckoEvent {
     private static final int ACTIVITY_PAUSING = 10;
     private static final int ACTIVITY_SHUTDOWN = 11;
     private static final int LOAD_URI = 12;
-    private static final int GECKO_EVENT_SYNC = 15;
+    private static final int NOOP = 15;
     private static final int ACTIVITY_START = 17;
     private static final int BROADCAST = 19;
     private static final int VIEWPORT = 20;
@@ -105,6 +105,7 @@ public class GeckoEvent {
 
     final public int mType;
     public int mAction;
+    public boolean mAckNeeded;
     public long mTime;
     public Point[] mPoints;
     public int[] mPointIndicies;
@@ -169,8 +170,8 @@ public class GeckoEvent {
         return new GeckoEvent(ACTIVITY_SHUTDOWN);
     }
 
-    public static GeckoEvent createSyncEvent() {
-        return new GeckoEvent(GECKO_EVENT_SYNC);
+    public static GeckoEvent createNoOpEvent() {
+        return new GeckoEvent(NOOP);
     }
 
     public static GeckoEvent createKeyEvent(KeyEvent k) {
@@ -609,5 +610,9 @@ public class GeckoEvent {
         GeckoEvent event = new GeckoEvent(SCREENORIENTATION_CHANGED);
         event.mScreenOrientation = aScreenOrientation;
         return event;
+    }
+
+    public void setAckNeeded(boolean ackNeeded) {
+        mAckNeeded = ackNeeded;
     }
 }
