@@ -188,6 +188,25 @@ AudioBufferSourceNode::Start(JSContext* aCx, double aWhen, double aOffset,
     return;
   }
 
+  // Don't compute and set the loop parameters unnecessarily
+  if (mLoop) {
+    double actualLoopStart, actualLoopEnd;
+    if (((mLoopStart != 0.0) || (mLoopEnd != 0.0)) &&
+        mLoopStart >= 0.0 && mLoopEnd > 0.0 &&
+        mLoopStart < mLoopEnd) {
+      actualLoopStart = (mLoopStart > length) ? 0.0 : mLoopStart;
+      actualLoopEnd = std::min(mLoopEnd, length);
+    } else {
+      actualLoopStart = 0.0;
+      actualLoopEnd = length;
+    }
+    int32_t loopStartTicks = NS_lround(actualLoopStart * rate);
+    int32_t loopEndTicks = NS_lround(actualLoopEnd * rate);
+    ns->SetInt32Parameter(AudioBufferSourceNodeEngine::LOOP, 1);
+    ns->SetInt32Parameter(AudioBufferSourceNodeEngine::LOOPSTART, loopStartTicks);
+    ns->SetInt32Parameter(AudioBufferSourceNodeEngine::LOOPEND, loopEndTicks);
+  }
+
   ns->SetBuffer(data.forget());
   // Don't set parameter unnecessarily
   if (aWhen > 0.0) {
