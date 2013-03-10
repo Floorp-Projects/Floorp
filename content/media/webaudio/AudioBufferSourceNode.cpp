@@ -127,6 +127,9 @@ public:
 
 AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
   : AudioSourceNode(aContext)
+  , mLoopStart(0.0)
+  , mLoopEnd(0.0)
+  , mLoop(false)
   , mStartCalled(false)
 {
   SetProduceOwnOutput(true);
