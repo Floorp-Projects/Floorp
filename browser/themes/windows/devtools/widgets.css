@@ -599,8 +599,7 @@
 .arrow {
   background: url("chrome://global/skin/tree/twisty-clsd.png") center center no-repeat;
   width: 9px;
-  height: 9px;
-  margin-top: -2px;
+  height: 20px;
   -moz-margin-start: 5px;
   -moz-margin-end: 5px;
 }

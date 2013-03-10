@@ -593,6 +593,8 @@
 
 .arrow {
   -moz-appearance: treetwisty;
+  height: 20px;
+  margin-top: 1px;
   -moz-margin-start: 10px;
   -moz-margin-end: 5px;
 }
