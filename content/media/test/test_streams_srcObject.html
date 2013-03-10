@@ -24,7 +24,12 @@ function doTest() {
   var stream = a.mozCaptureStream();
   b.mozSrcObject = stream;
   is(b.mozSrcObject, stream, "Stream set correctly");
-  b.mozSrcObject = "invalid";
+  try {
+    b.mozSrcObject = "invalid";
+    ok(false, "Setting mozSrcObject to an invalid value should throw.");
+  } catch (e) {
+    todo(e instanceof TypeError, "Exception should be a TypeError");
+  }
   is(b.mozSrcObject, stream, "Stream not set to invalid value");
   is(b.src, newSrc, "src attribute not affected by setting srcObject");
   var step = 0;
