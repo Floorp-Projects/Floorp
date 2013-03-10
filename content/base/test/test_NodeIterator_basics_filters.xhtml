@@ -121,8 +121,8 @@
       iterator.nextNode();
     try {
       iterator[method]();
-      ok(false, "Able to call " + method + " on a detached NodeIterator");
-    } catch (x) { ok(true, x) }
+      ok(true, "Able to call " + method + " on a NodeIterator after calling no-op detach()");
+    } catch (x) { ok(false, x) }
   }
   checkBadFilter("nextNode", 2);
   checkBadFilter("previousNode", 3);

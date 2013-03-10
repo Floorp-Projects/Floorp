@@ -143,7 +143,6 @@ NodeIterator::NodeIterator(nsINode *aRoot,
                            uint32_t aWhatToShow,
                            const NodeFilterHolder &aFilter) :
     nsTraversal(aRoot, aWhatToShow, aFilter),
-    mDetached(false),
     mPointer(mRoot, true)
 {
     aRoot->AddMutationObserver(this);
@@ -152,7 +151,7 @@ NodeIterator::NodeIterator(nsINode *aRoot,
 NodeIterator::~NodeIterator()
 {
     /* destructor code */
-    if (!mDetached && mRoot)
+    if (mRoot)
         mRoot->RemoveMutationObserver(this);
 }
 
@@ -161,7 +160,7 @@ NodeIterator::~NodeIterator()
  */
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(NodeIterator)
-    if (!tmp->mDetached && tmp->mRoot)
+    if (tmp->mRoot)
         tmp->mRoot->RemoveMutationObserver(tmp);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRoot)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFilter)
@@ -222,7 +221,7 @@ already_AddRefed<nsINode>
 NodeIterator::NextOrPrevNode(NodePointer::MoveToMethodType aMove,
                              ErrorResult& aResult)
 {
-    if (mDetached || mInAcceptNode) {
+    if (mInAcceptNode) {
         aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
         return nullptr;
     }
@@ -242,11 +241,6 @@ NodeIterator::NextOrPrevNode(NodePointer::MoveToMethodType aMove,
             return nullptr;
         }
 
-        if (mDetached) {
-            aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-            return nullptr;
-        }
-
         if (filtered == nsIDOMNodeFilter::FILTER_ACCEPT) {
             mPointer = mWorkingPointer;
             return testNode.forget();
@@ -259,14 +253,9 @@ NodeIterator::NextOrPrevNode(NodePointer::MoveToMethodType aMove,
 /* void detach (); */
 NS_IMETHODIMP NodeIterator::Detach(void)
 {
-    if (!mDetached) {
-        mRoot->RemoveMutationObserver(this);
-
-        mPointer.Clear();
-
-        mDetached = true;
+    if (mRoot) {
+        mRoot->OwnerDoc()->WarnOnceAbout(nsIDocument::eNodeIteratorDetach);
     }
-
     return NS_OK;
 }
 
