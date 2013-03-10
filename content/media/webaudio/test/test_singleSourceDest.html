@@ -29,6 +29,9 @@ addLoadEvent(function() {
   is(source.context, context, "Source node has proper context");
   is(source.numberOfInputs, 0, "Source node has 0 inputs");
   is(source.numberOfOutputs, 1, "Source node has 1 outputs");
+  is(source.loop, false, "Source node is not looping");
+  is(source.loopStart, 0, "Correct default value for loopStart");
+  is(source.loopEnd, 0, "Correct default value for loopEnd");
   ok(!source.buffer, "Source node should not have a buffer when it's created");
 
   source.buffer = buffer;
