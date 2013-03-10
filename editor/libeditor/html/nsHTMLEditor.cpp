@@ -4579,26 +4579,30 @@ nsHTMLEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
 }
 
 nsresult
-nsHTMLEditor::RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
-                                          const nsAString & aAttribute,
+nsHTMLEditor::RemoveAttributeOrEquivalent(nsIDOMElement* aElement,
+                                          const nsAString& aAttribute,
                                           bool aSuppressTransaction)
 {
+  nsCOMPtr<dom::Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_TRUE(element, NS_OK);
+
+  nsCOMPtr<nsIAtom> attribute = do_GetAtom(aAttribute);
+  MOZ_ASSERT(attribute);
+
   nsresult res = NS_OK;
   if (IsCSSEnabled() && mHTMLCSSUtils) {
-    res = mHTMLCSSUtils->RemoveCSSEquivalentToHTMLStyle(aElement, nullptr, &aAttribute, nullptr,
-                                                        aSuppressTransaction);
+    res = mHTMLCSSUtils->RemoveCSSEquivalentToHTMLStyle(
+        element, nullptr, &aAttribute, nullptr, aSuppressTransaction);
     NS_ENSURE_SUCCESS(res, res);
   }
 
-  nsAutoString existingValue;
-  bool wasSet = false;
-  res = GetAttributeValue(aElement, aAttribute, existingValue, &wasSet);
-  NS_ENSURE_SUCCESS(res, res);
-  if (wasSet) {
-    if (aSuppressTransaction)
-      res = aElement->RemoveAttribute(aAttribute);
-    else
+  if (element->HasAttr(kNameSpaceID_None, attribute)) {
+    if (aSuppressTransaction) {
+      res = element->UnsetAttr(kNameSpaceID_None, attribute,
+                               /* aNotify = */ true);
+    } else {
       res = RemoveAttribute(aElement, aAttribute);
+    }
   }
   return res;
 }
