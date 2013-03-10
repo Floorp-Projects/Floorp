@@ -112,7 +112,7 @@ public:
              uint32_t(start - currentPosition),
              mBuffer->GetData(i) +
              uintptr_t(start - mStart + mOffset),
-             uint32_t(end - start));
+             uint32_t(end - start) * sizeof(float));
     }
     uint32_t endOffset = uint32_t(end - currentPosition);
     WriteZeroesToAudioBlock(aOutput, endOffset, WEBAUDIO_BLOCK_SIZE - endOffset);
