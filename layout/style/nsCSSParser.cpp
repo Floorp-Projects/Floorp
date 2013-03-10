@@ -1611,8 +1611,7 @@ CSSParserImpl::ParseAtRule(RuleAppendFunc aAppendFunc,
     parseFunc = &CSSParserImpl::ParsePageRule;
     newSection = eCSSSection_General;
 
-  } else if ((nsCSSProps::IsEnabled(eCSSPropertyAlias_MozAnimation) &&
-              mToken.mIdent.LowerCaseEqualsLiteral("-moz-keyframes")) ||
+  } else if (mToken.mIdent.LowerCaseEqualsLiteral("-moz-keyframes") ||
              mToken.mIdent.LowerCaseEqualsLiteral("keyframes")) {
     parseFunc = &CSSParserImpl::ParseKeyframesRule;
     newSection = eCSSSection_General;
