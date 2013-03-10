@@ -368,8 +368,6 @@ VectorImage::OnImageDataComplete(nsIRequest* aRequest,
                                  nsresult aStatus,
                                  bool aLastPart)
 {
-  MOZ_ASSERT(mStopRequest.empty(), "Duplicate call to OnImageDataComplete?");
-
   // Call our internal OnStopRequest method, which only talks to our embedded
   // SVG document. This won't have any effect on our imgStatusTracker.
   nsresult finalStatus = OnStopRequest(aRequest, aContext, aStatus);
@@ -378,18 +376,8 @@ VectorImage::OnImageDataComplete(nsIRequest* aRequest,
   if (NS_FAILED(aStatus))
     finalStatus = aStatus;
 
-  // If there's an error already, we need to fire OnStopRequest on our
-  // imgStatusTracker immediately. We might not get another chance.
-  if (mError || NS_FAILED(finalStatus)) {
-    GetStatusTracker().OnStopRequest(aLastPart, finalStatus);
-    return finalStatus;
-  }
-
-  // Otherwise, we record the parameters we'll use to call OnStopRequest, and
-  // return. We'll actually call it in OnSVGDocumentLoaded or
-  // OnSVGDocumentError.
-  mStopRequest.construct(aLastPart, finalStatus);
-
+  // Actually fire OnStopRequest.
+  GetStatusTracker().OnStopRequest(aLastPart, finalStatus);
   return finalStatus;
 }
 
@@ -922,13 +910,6 @@ VectorImage::OnSVGDocumentLoaded()
     observer->OnStartContainer(); // Signal that width/height are available.
     observer->FrameChanged(&nsIntRect::GetMaxSizedIntRect());
     observer->OnStopFrame();
-
-    if (!mStopRequest.empty()) {
-      GetStatusTracker().OnStopRequest(mStopRequest.ref().lastPart,
-                                       mStopRequest.ref().status);
-      mStopRequest.destroy();
-    }
-
     observer->OnStopDecode(NS_OK); // Unblock page load.
   }
 
@@ -946,14 +927,6 @@ VectorImage::OnSVGDocumentError()
   mError = true;
 
   if (mStatusTracker) {
-    if (!mStopRequest.empty()) {
-      nsresult status = NS_FAILED(mStopRequest.ref().status)
-                      ? mStopRequest.ref().status
-                      : NS_ERROR_FAILURE;
-      GetStatusTracker().OnStopRequest(mStopRequest.ref().lastPart, status);
-      mStopRequest.destroy();
-    }
-
     // Unblock page load.
     mStatusTracker->GetDecoderObserver()->OnStopDecode(NS_ERROR_FAILURE);
   }
