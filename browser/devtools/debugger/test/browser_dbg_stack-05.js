@@ -83,7 +83,7 @@ function testRecurse()
      "editor debugger location is correct after click.");
 
   EventUtils.sendMouseEvent({ type: "click" },
-    frames.querySelector("#stackframe-0 .dbg-stackframe-name"),
+    frames.querySelector("#stackframe-0 .dbg-stackframe-title"),
     gDebugger);
 
   ok(frames.querySelector("#stackframe-0").classList.contains("selected"),

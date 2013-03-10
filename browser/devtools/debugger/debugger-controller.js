@@ -33,6 +33,7 @@ Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 Cu.import("resource:///modules/source-editor.jsm");
 Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
+Cu.import("resource:///modules/devtools/BreadcrumbsWidget.jsm");
 Cu.import("resource:///modules/devtools/VariablesView.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this,
@@ -573,6 +574,9 @@ StackFrames.prototype = {
     }
 
 
+    // Make sure the debugger view panes are visible.
+    DebuggerView.showPanesSoon();
+
     // Make sure all the previous stackframes are removed before re-adding them.
     DebuggerView.StackFrames.empty();
 
@@ -672,7 +676,7 @@ StackFrames.prototype = {
 
     do {
       // Create a scope to contain all the inspected variables.
-      let label = this._getScopeLabel(environment);
+      let label = StackFrameUtils.getScopeLabel(environment);
       let scope = DebuggerView.Variables.addScope(label);
 
       // Handle additions to the innermost scope.
@@ -755,7 +759,7 @@ StackFrames.prototype = {
     // Add nodes for every watch expression in scope.
     this.activeThread.pauseGrip(aExp).getPrototypeAndProperties(function(aResponse) {
       let ownProperties = aResponse.ownProperties;
-      let totalExpressions = DebuggerView.WatchExpressions.totalItems;
+      let totalExpressions = DebuggerView.WatchExpressions.itemCount;
 
       for (let i = 0; i < totalExpressions; i++) {
         let name = DebuggerView.WatchExpressions.getExpression(i);
@@ -932,41 +936,6 @@ StackFrames.prototype = {
   },
 
   /**
-   * Constructs a scope label based on its environment.
-   *
-   * @param object aEnv
-   *        The scope's environment.
-   * @return string
-   *         The scope's label.
-   */
-  _getScopeLabel: function SV__getScopeLabel(aEnv) {
-    let name = "";
-
-    // Name the outermost scope Global.
-    if (!aEnv.parent) {
-      name = L10N.getStr("globalScopeLabel");
-    }
-    // Otherwise construct the scope name.
-    else {
-      name = aEnv.type.charAt(0).toUpperCase() + aEnv.type.slice(1);
-    }
-
-    let label = L10N.getFormatStr("scopeLabel", [name]);
-    switch (aEnv.type) {
-      case "with":
-      case "object":
-        label += " [" + aEnv.object.class + "]";
-        break;
-      case "function":
-        let f = aEnv.function;
-        label += " [" + (f.name || f.userDisplayName || f.displayName ||
-                         "(anonymous)") + "]";
-        break;
-    }
-    return label;
-  },
-
-  /**
    * Adds the specified stack frame to the list.
    *
    * @param object aFrame
@@ -975,10 +944,9 @@ StackFrames.prototype = {
   _addFrame: function SF__addFrame(aFrame) {
     let depth = aFrame.depth;
     let { url, line } = aFrame.where;
+    let frameTitle = StackFrameUtils.getFrameTitle(aFrame);
 
-    let startText = StackFrameUtils.getFrameTitle(aFrame);
-    let endText = SourceUtils.getSourceLabel(url) + ":" + line;
-    DebuggerView.StackFrames.addFrame(startText, endText, depth);
+    DebuggerView.StackFrames.addFrame(frameTitle, url, line, depth);
   },
 
   /**
@@ -1115,7 +1083,7 @@ SourceScripts.prototype = {
       url: aPacket.source.url,
       source: aPacket.source
     }, {
-      forced: true
+      staged: false
     });
 
     let container = DebuggerView.Sources;
@@ -1172,6 +1140,8 @@ SourceScripts.prototype = {
       this._addSource({
         url: source.url,
         source: source
+      }, {
+        staged: true
       });
     }
 
@@ -1179,7 +1149,7 @@ SourceScripts.prototype = {
     let preferredValue = container.preferredValue;
 
     // Flushes all the prepared sources into the sources container.
-    container.commit();
+    container.commit({ sorted: true });
 
     // Select the preferred source if it exists and was part of the response.
     if (container.containsValue(preferredValue)) {
@@ -1210,10 +1180,10 @@ SourceScripts.prototype = {
    */
   _addSource: function SS__addSource(aSource, aOptions = {}) {
     let url = aSource.url;
-    let label = SourceUtils.getSourceLabel(url);
+    let staged = aOptions.staged;
 
-    DebuggerView.Sources.push(label, url, {
-      forced: aOptions.forced,
+    DebuggerView.Sources.push([SourceUtils.getSourceLabel(url), url], {
+      staged: staged, /* stage the item to be appended later? */
       tooltip: url,
       attachment: aSource
     });

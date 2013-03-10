@@ -36,7 +36,7 @@ function testEvalCall() {
       is(childNodes.length, frames.querySelectorAll(".dbg-stackframe").length,
         "All children should be frames.");
 
-      is(frames.querySelector("#stackframe-0 .dbg-stackframe-name").getAttribute("value"),
+      is(frames.querySelector("#stackframe-0 .dbg-stackframe-title").getAttribute("value"),
         "(eval)", "Frame name should be (eval)");
 
       ok(frames.querySelector("#stackframe-0").classList.contains("selected"),
@@ -58,7 +58,7 @@ function testEvalCall() {
 
 
       EventUtils.sendMouseEvent({ type: "click" },
-        frames.querySelector("#stackframe-0 .dbg-stackframe-name"),
+        frames.querySelector("#stackframe-0 .dbg-stackframe-title"),
         gDebugger);
 
       ok(frames.querySelector("#stackframe-0").classList.contains("selected"),

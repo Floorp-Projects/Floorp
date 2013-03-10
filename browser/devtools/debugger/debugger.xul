@@ -6,6 +6,7 @@
 <?xml-stylesheet href="chrome://browser/content/debugger.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/debugger.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/inspector.css" type="text/css"?>
 <!DOCTYPE window [
 <!ENTITY % debuggerDTD SYSTEM "chrome://browser/locale/devtools/debugger.dtd">
   %debuggerDTD;
@@ -235,9 +236,9 @@
       <menulist id="sources"
                 class="devtools-menulist"
                 sizetopopup="none"/>
+      <vbox id="stackframes" flex="1"/>
       <textbox id="searchbox"
                class="devtools-searchinput" type="search"/>
-      <spacer flex="1"/>
       <toolbarbutton id="toggle-panes"
                      class="devtools-toolbarbutton"
                      tooltiptext="&debuggerUI.panesButton.tooltip;"
@@ -295,9 +296,7 @@
                 class="devtools-horizontal-splitter" hidden="true"/>
       <hbox flex="1">
         <vbox id="stackframes+breakpoints">
-          <vbox id="stackframes" flex="1"/>
-          <splitter class="devtools-horizontal-splitter"/>
-          <vbox id="breakpoints"/>
+          <vbox id="breakpoints" flex="1"/>
         </vbox>
         <splitter class="devtools-side-splitter"/>
         <vbox id="editor" flex="1"/>

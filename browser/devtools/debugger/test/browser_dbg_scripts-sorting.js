@@ -67,15 +67,15 @@ function addScriptAndCheckOrder(method, callback) {
     case 1:
       urls.forEach(function(url) {
         let loc = url.href + url.leaf;
-        vs.push(sv.getSourceLabel(loc, url.href), { url: loc });
+        vs.push([sv.getSourceLabel(loc), { url: loc }], { staged: true });
       });
-      vs.commit();
+      vs.commit({ sorted: true });
       break;
 
     case 2:
       urls.forEach(function(url) {
         let loc = url.href + url.leaf;
-        vs.push(sv.getSourceLabel(loc, url.href), { url: loc }, { forced: true });
+        vs.push([sv.getSourceLabel(loc), { url: loc }]);
       });
       break;
 
@@ -84,14 +84,14 @@ function addScriptAndCheckOrder(method, callback) {
       for (; i < urls.length / 2; i++) {
         let url = urls[i];
         let loc = url.href + url.leaf;
-        vs.push(sv.getSourceLabel(loc, url.href), { url: loc });
+        vs.push([sv.getSourceLabel(loc), { url: loc }], { staged: true });
       }
-      vs.commit();
+      vs.commit({ sorted: true });
 
       for (; i < urls.length; i++) {
         let url = urls[i];
         let loc = url.href + url.leaf;
-        vs.push(sv.getSourceLabel(loc, url.href), { url: loc }, { forced: true });
+        vs.push([sv.getSourceLabel(loc), { url: loc }]);
       }
       break;
   }
