@@ -1,11 +1,5 @@
 {
-  "createDocument test 15: \"http://example.com/\",null,null,null": true,
-  "createDocument test 30: \"/\",null,null,null": true,
-  "createDocument test 45: \"http://www.w3.org/XML/1998/namespace\",null,null,null": true,
-  "createDocument test 60: \"http://www.w3.org/2000/xmlns/\",null,null,null": true,
-  "createDocument test 75: \"foo:\",null,null,null": true,
   "createDocument test 91: null,null,DocumentType node,\"WRONG_DOCUMENT_ERR\"": true,
   "createDocument test 92: null,null,DocumentType node,\"WRONG_DOCUMENT_ERR\"": true,
-  "createDocument test 94: null,null,DocumentType node,\"WRONG_DOCUMENT_ERR\"": true,
-  "createDocument test 96: \"foo\",null,DocumentType node,null": true
+  "createDocument test 94: null,null,DocumentType node,\"WRONG_DOCUMENT_ERR\"": true
 }
