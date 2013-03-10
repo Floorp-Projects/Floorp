@@ -103,40 +103,50 @@ public class GeckoEvent {
     public static final int ACTION_MAGNIFY = 12;
     public static final int ACTION_MAGNIFY_END = 13;
 
-    final public int mType;
-    public int mAction;
-    public boolean mAckNeeded;
-    public long mTime;
-    public Point[] mPoints;
-    public int[] mPointIndicies;
-    public int mPointerIndex; // index of the point that has changed
-    public float[] mOrientations;
-    public float[] mPressures;
-    public Point[] mPointRadii;
-    public Rect mRect;
-    public double mX, mY, mZ;
+    private final int mType;
+    private int mAction;
+    private boolean mAckNeeded;
+    private long mTime;
+    private Point[] mPoints;
+    private int[] mPointIndicies;
+    private int mPointerIndex; // index of the point that has changed
+    private float[] mOrientations;
+    private float[] mPressures;
+    private Point[] mPointRadii;
+    private Rect mRect;
+    private double mX;
+    private double mY;
+    private double mZ;
 
-    public int mMetaState, mFlags;
-    public int mKeyCode, mUnicodeChar;
-    public int mRepeatCount;
-    public int mCount;
-    public int mStart, mEnd;
-    public String mCharacters, mCharactersExtra;
-    public int mRangeType, mRangeStyles, mRangeLineStyle;
-    public boolean mRangeBoldLine;
-    public int mRangeForeColor, mRangeBackColor, mRangeLineColor;
-    public Location mLocation;
-    public Address  mAddress;
-    public int mDomKeyLocation;
+    private int mMetaState;
+    private int mFlags;
+    private int mKeyCode;
+    private int mUnicodeChar;
+    private int mRepeatCount;
+    private int mCount;
+    private int mStart;
+    private int mEnd;
+    private String mCharacters;
+    private String mCharactersExtra;
+    private int mRangeType;
+    private int mRangeStyles;
+    private int mRangeLineStyle;
+    private boolean mRangeBoldLine;
+    private int mRangeForeColor;
+    private int mRangeBackColor;
+    private int mRangeLineColor;
+    private Location mLocation;
+    private Address mAddress;
+    private int mDomKeyLocation;
 
-    public double mBandwidth;
-    public boolean mCanBeMetered;
+    private double mBandwidth;
+    private boolean mCanBeMetered;
 
-    public int mNativeWindow;
+    private int mNativeWindow;
 
-    public short mScreenOrientation;
+    private short mScreenOrientation;
 
-    public ByteBuffer mBuffer;
+    private ByteBuffer mBuffer;
 
     private GeckoEvent(int evType) {
         mType = evType;
