@@ -934,8 +934,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(FileReader, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(ArchiveReader, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(ArchiveRequest, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
@@ -1176,7 +1174,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   }
 
 NS_DEFINE_CONTRACT_CTOR(FileReader, NS_FILEREADER_CONTRACTID)
-NS_DEFINE_CONTRACT_CTOR(ArchiveReader, NS_ARCHIVEREADER_CONTRACTID)
 NS_DEFINE_CONTRACT_CTOR(XSLTProcessor,
                         "@mozilla.org/document-transformer;1?type=xslt")
 #ifdef MOZ_SYS_MSG
@@ -1235,7 +1232,6 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
 #undef MOZ_GENERATED_EVENT_LIST
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MozSmsFilter, SmsFilter::NewSmsFilter)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(FileReader, FileReaderCtor)
-  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(ArchiveReader, ArchiveReaderCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(XSLTProcessor, XSLTProcessorCtor)
 #ifdef MOZ_SYS_MSG
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MozActivity, MozActivityCtor)
@@ -2484,10 +2480,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(FileReader, nsIDOMFileReader)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMFileReader)
     DOM_CLASSINFO_MAP_ENTRY(nsIInterfaceRequestor)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(ArchiveReader, nsIDOMArchiveReader)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMArchiveReader)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(ArchiveRequest, nsIDOMArchiveRequest)
@@ -4981,9 +4973,8 @@ ConstructorEnabled(const nsGlobalNameStruct *aStruct, nsGlobalWindow *aWin)
     }
   }
 
-  // Don't expose ArchiveReader unless user has explicitly enabled it
-  if (aStruct->mDOMClassInfoID == eDOMClassInfo_ArchiveReader_id ||
-      aStruct->mDOMClassInfoID == eDOMClassInfo_ArchiveRequest_id) {
+  // Don't expose ArchiveRequest unless user has explicitly enabled it
+  if (aStruct->mDOMClassInfoID == eDOMClassInfo_ArchiveRequest_id) {
     if (!dom::file::ArchiveReader::PrefEnabled()) {
       return false;
     }

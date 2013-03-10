@@ -9,6 +9,7 @@ generated_webidl_files = \
   $(NULL)
 
 webidl_files = \
+  ArchiveReader.webidl \
   AudioBuffer.webidl \
   AudioBufferSourceNode.webidl \
   AudioContext.webidl \
