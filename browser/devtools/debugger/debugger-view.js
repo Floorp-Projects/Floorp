@@ -5,8 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const SOURCE_URL_MAX_LENGTH = 64; // chars
+const SOURCE_URL_DEFAULT_MAX_LENGTH = 64; // chars
 const SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE = 1048576; // 1 MB in bytes
+const STACK_FRAMES_SOURCE_URL_MAX_LENGTH = 15; // chars
+const STACK_FRAMES_SOURCE_URL_TRIM_SECTION = "center";
+const STACK_FRAMES_POPUP_SOURCE_URL_MAX_LENGTH = 32; // chars
+const STACK_FRAMES_POPUP_SOURCE_URL_TRIM_SECTION = "center";
+const STACK_FRAMES_SCROLL_DELAY = 100; // ms
 const PANES_APPEARANCE_DELAY = 50; // ms
 const BREAKPOINT_LINE_TOOLTIP_MAX_LENGTH = 1000; // chars
 const BREAKPOINT_CONDITIONAL_POPUP_POSITION = "after_start";
@@ -109,7 +114,7 @@ let DebuggerView = {
   /**
    * Destroys the UI for the window.
    */
-  _destroyWindow: function DV__initializeWindow() {
+  _destroyWindow: function DV__destroyWindow() {
     dumpn("Destroying the DebuggerView window");
 
     if (window._isRemoteDebugger || window._isChromeDebugger) {
@@ -141,7 +146,7 @@ let DebuggerView = {
   /**
    * Destroys the UI for all the displayed panes.
    */
-  _destroyPanes: function DV__initializePanes() {
+  _destroyPanes: function DV__destroyPanes() {
     dumpn("Destroying the DebuggerView panes");
 
     Prefs.stackframesWidth = this._stackframesAndBreakpoints.getAttribute("width");
@@ -575,17 +580,13 @@ MenuItem.prototype = {
  *   - An "item" is an instance (or compatible iterface) of a MenuItem.
  *   - An "element" or "node" is a nsIDOMNode.
  *
- * The container node supplied to all instances of this constructor can either
- * be a <menulist> element, or any other object interfacing the following
- * methods:
- *   - function:nsIDOMNode appendItem(aLabel:string, aValue:string)
+ * The container node or widget supplied to all instances of this constructor
+ * can either be a <menulist> element, or any other object interfacing the
+ * following methods:
  *   - function:nsIDOMNode insertItemAt(aIndex:number, aLabel:string, aValue:string)
  *   - function:nsIDOMNode getItemAtIndex(aIndex:number)
  *   - function removeChild(aChild:nsIDOMNode)
  *   - function removeAllItems()
- *   - get:number itemCount()
- *   - get:number selectedIndex()
- *   - set selectedIndex(aIndex:number)
  *   - get:nsIDOMNode selectedItem()
  *   - set selectedItem(aChild:nsIDOMNode)
  *   - function getAttribute(aName:string)
@@ -593,72 +594,86 @@ MenuItem.prototype = {
  *   - function removeAttribute(aName:string)
  *   - function addEventListener(aName:string, aCallback:function, aBubbleFlag:boolean)
  *   - function removeEventListener(aName:string, aCallback:function, aBubbleFlag:boolean)
- *
- * @param nsIDOMNode aContainerNode [optional]
- *        The element associated with the displayed container. Although required,
- *        derived objects may set this value later, upon debugger initialization.
  */
-function MenuContainer(aContainerNode) {
-  this._container = aContainerNode;
-  this._stagedItems = [];
-  this._itemsByLabel = new Map();
-  this._itemsByValue = new Map();
-  this._itemsByElement = new Map();
-}
+function MenuContainer() {}
+const FIRST = 0;
+const LAST = -1;
 
 MenuContainer.prototype = {
+  /**
+   * Sets the element node or widget associated with this displayed container.
+   * @param nsIDOMNode | object aWidget
+   */
+  set node(aWidget) {
+    this._container = aWidget;
+    this._stagedItems = [];
+    this._itemsByLabel = new Map();
+    this._itemsByValue = new Map();
+    this._itemsByElement = new Map();
+  },
+
+  /**
+   * Gets the element node or widget associated with this displayed container.
+   * @return nsIDOMNode | object
+   */
+  get node() this._container,
+
   /**
    * Prepares an item to be added to this container. This allows for a large
    * number of items to be batched up before being alphabetically sorted and
    * added in this menu.
    *
-   * If the "forced" flag is true, the item will be immediately inserted at the
-   * correct position in this container, so that all the items remain sorted.
-   * This can (possibly) be much slower than batching up multiple items.
+   * If the "staged" flag is not set to true, the item will be immediately
+   * inserted at the correct position in this container, so that all the items
+   * remain sorted. This can (possibly) be much slower than batching up
+   * multiple items.
    *
    * By default, this container assumes that all the items should be displayed
-   * sorted by their label. This can be overridden with the "unsorted" flag.
+   * sorted by their label. This can be overridden with the "index" flag,
+   * specifying on which position should the item be appended.
    *
    * Furthermore, this container makes sure that all the items are unique
    * (two items with the same label or value are not allowed) and non-degenerate
    * (items with "undefined" or "null" labels/values). This can, as well, be
    * overridden via the "relaxed" flag.
    *
-   * @param string aLabel
-   *        The label displayed in the container.
-   * @param string aValue
-   *        The actual internal value of the item.
+   * @param nsIDOMNode | object aContents
+   *        An nsIDOMNode, or an array containing the following properties:
+   *          - label: the label displayed in the container
+   *          - value: the actual internal value of the item
+   *          - description: an optional description of the item
    * @param object aOptions [optional]
    *        Additional options or flags supported by this operation:
-   *          - forced: true to force the item to be immediately appended
-   *          - unsorted: true if the items should not always remain sorted
+   *          - staged: true to stage the item to be appended later
+   *          - index: specifies on which position should the item be appended
    *          - relaxed: true if this container should allow dupes & degenerates
-   *          - description: an optional description of the item
    *          - tooltip: an optional tooltip for the item
    *          - attachment: some attached primitive/object
    * @return MenuItem
-   *         The item associated with the displayed element if a forced push,
+   *         The item associated with the displayed element if an unstaged push,
    *         undefined if the item was staged for a later commit.
    */
-  push: function DVMC_push(aLabel, aValue, aOptions = {}) {
-    let item = new MenuItem(
-      aLabel, aValue, aOptions.description, aOptions.attachment);
+  push: function DVMC_push(aContents, aOptions = {}) {
+    if (aContents instanceof Node || aContents instanceof Element) {
+      aOptions.nsIDOMNode = aContents;
+      aContents = [];
+    }
+
+    let [label, value, description] = aContents;
+    let item = new MenuItem(label, value, description || "", aOptions.attachment);
 
     // Batch the item to be added later.
-    if (!aOptions.forced) {
+    if (aOptions.staged) {
       this._stagedItems.push({ item: item, options: aOptions });
     }
-    // Immediately insert the item at the specified index.
-    else if (aOptions.forced && aOptions.forced.atIndex !== undefined) {
-      return this._insertItemAt(aOptions.forced.atIndex, item, aOptions);
-    }
     // Find the target position in this container and insert the item there.
-    else if (!aOptions.unsorted) {
-      return this._insertItemAt(this._findExpectedIndex(aLabel), item, aOptions);
+    else if (!("index" in aOptions)) {
+      return this._insertItemAt(this._findExpectedIndex(label), item, aOptions);
     }
-    // Just append the item in this container.
+    // Insert the item at the specified index. If negative or out of bounds,
+    // the item will be simply appended.
     else {
-      return this._appendItem(item, aOptions);
+      return this._insertItemAt(aOptions.index, item, aOptions);
     }
   },
 
@@ -667,19 +682,19 @@ MenuContainer.prototype = {
    *
    * @param object aOptions [optional]
    *        Additional options or flags supported by this operation:
-   *          - unsorted: true if the items should not be sorted beforehand
+   *          - sorted: true to sort all the items before adding them
    */
   commit: function DVMC_commit(aOptions = {}) {
     let stagedItems = this._stagedItems;
 
     // By default, sort the items before adding them to this container.
-    if (!aOptions.unsorted) {
+    if (aOptions.sorted) {
       stagedItems.sort(function(a, b) a.item.label.toLowerCase() >
                                       b.item.label.toLowerCase());
     }
     // Append the prepared items to this container.
     for (let { item, options } of stagedItems) {
-      this._appendItem(item, options);
+      this._insertItemAt(LAST, item, options);
     }
     // Recreate the temporary items list for ulterior pushes.
     this._stagedItems = [];
@@ -712,6 +727,9 @@ MenuContainer.prototype = {
    *        The item associated with the element to remove.
    */
   remove: function DVMC__remove(aItem) {
+    if (!aItem) {
+      return;
+    }
     this._container.removeChild(aItem.target);
     this._untangleItem(aItem);
   },
@@ -721,10 +739,10 @@ MenuContainer.prototype = {
    */
   empty: function DVMC_empty() {
     this._preferredValue = this.selectedValue;
-    this._container.selectedIndex = -1;
+    this._container.selectedItem = null;
+    this._container.removeAllItems();
     this._container.setAttribute("label", this._emptyLabel);
     this._container.removeAttribute("tooltiptext");
-    this._container.removeAllItems();
 
     for (let [, item] of this._itemsByElement) {
       this._untangleItem(item);
@@ -737,6 +755,26 @@ MenuContainer.prototype = {
   },
 
   /**
+   * Does not remove any item in this container. Instead, it overrides the
+   * current label to signal that it is unavailable and removes the tooltip.
+   */
+  setUnavailable: function DVMC_setUnavailable() {
+    this._container.setAttribute("label", this._unavailableLabel);
+    this._container.removeAttribute("tooltiptext");
+  },
+
+  /**
+   * The label string automatically added to this container when there are
+   * no child nodes present.
+   */
+  _emptyLabel: "",
+
+  /**
+   * The label string added to this container when it is marked as unavailable.
+   */
+  _unavailableLabel: "",
+
+  /**
    * Toggles all the items in this container hidden or visible.
    *
    * @param boolean aVisibleFlag
@@ -746,15 +784,6 @@ MenuContainer.prototype = {
     for (let [, item] of this._itemsByElement) {
       item.target.hidden = !aVisibleFlag;
     }
-  },
-
-  /**
-   * Does not remove any item in this container. Instead, it overrides the
-   * current label to signal that it is unavailable and removes the tooltip.
-   */
-  setUnavailable: function DVMC_setUnavailable() {
-    this._container.setAttribute("label", this._unavailableLabel);
-    this._container.removeAttribute("tooltiptext");
   },
 
   /**
@@ -791,14 +820,12 @@ MenuContainer.prototype = {
    *
    * @param string aValue
    *        The item's value.
-   * @param function aTrim [optional]
-   *        A custom trimming function.
+   * @param function aTrim
+   *        The custom trimming function.
    * @return boolean
    *         True if the trimmed value is known, false otherwise.
    */
-  containsTrimmedValue:
-  function DVMC_containsTrimmedValue(aValue,
-                                     aTrim = SourceUtils.trimUrlQuery) {
+  containsTrimmedValue: function DVMC_containsTrimmedValue(aValue, aTrim) {
     let trimmedValue = aTrim(aValue);
 
     for (let [value] of this._itemsByValue) {
@@ -819,7 +846,9 @@ MenuContainer.prototype = {
    * Retrieves the selected element's index in this container.
    * @return number
    */
-  get selectedIndex() this._container.selectedIndex,
+  get selectedIndex()
+    this._container.selectedItem ?
+    this.indexOfItem(this.selectedItem) : -1,
 
   /**
    * Retrieves the item associated with the selected element.
@@ -849,13 +878,15 @@ MenuContainer.prototype = {
    * Selects the element at the specified index in this container.
    * @param number aIndex
    */
-  set selectedIndex(aIndex) this._container.selectedIndex = aIndex,
+  set selectedIndex(aIndex)
+    this._container.selectedItem = this._container.getItemAtIndex(aIndex),
 
   /**
    * Selects the element with the entangled item in this container.
    * @param MenuItem aItem
    */
-  set selectedItem(aItem) this._container.selectedItem = aItem.target,
+  set selectedItem(aItem)
+    this._container.selectedItem = aItem ? aItem.target : null,
 
   /**
    * Selects the element with the specified label in this container.
@@ -935,6 +966,25 @@ MenuContainer.prototype = {
   },
 
   /**
+   * Finds the index of an item in the container.
+   *
+   * @param MenuItem
+   *        The element item get the index for.
+   * @return number
+   *         The index of the matched item, or -1 if nothing is found.
+   */
+  indexOfItem: function indexOfItem({target}) {
+    let itemCount = this._itemsByElement.size;
+
+    for (let i = 0; i < itemCount; i++) {
+      if (this._container.getItemAtIndex(i) == target) {
+        return i;
+      }
+    }
+    return -1;
+  },
+
+  /**
    * Returns the list of labels in this container.
    * @return array
    */
@@ -962,9 +1012,7 @@ MenuContainer.prototype = {
    * Gets the total number of items in this container.
    * @return number
    */
-  get totalItems() {
-    return this._itemsByElement.size;
-  },
+  get itemCount() this._itemsByElement.size,
 
   /**
    * Returns a list of all the visible (non-hidden) items in this container.
@@ -1038,41 +1086,14 @@ MenuContainer.prototype = {
    */
   _findExpectedIndex: function DVMC__findExpectedIndex(aLabel) {
     let container = this._container;
-    let itemCount = container.itemCount;
+    let itemCount = this.itemCount;
 
     for (let i = 0; i < itemCount; i++) {
-      if (this.getItemForElement(container.getItemAtIndex(i)).label > aLabel) {
+      if (this.getItemAtIndex(i).label > aLabel) {
         return i;
       }
     }
     return itemCount;
-  },
-
-  /**
-   * Immediately appends an item in this container.
-   *
-   * @param MenuItem aItem
-   *        An object containing a label and a value property.
-   * @param object aOptions [optional]
-   *        Additional options or flags supported by this operation:
-   *          - relaxed: true if this container should allow dupes & degenerates
-   * @return MenuItem
-   *         The item associated with the displayed element, null if rejected.
-   */
-  _appendItem: function DVMC__appendItem(aItem, aOptions = {}) {
-    if (!aOptions.relaxed && !this.isEligible(aItem)) {
-      return null;
-    }
-
-    this._entangleItem(aItem, this._container.appendItem(
-      aItem.label, aItem.value, "", aOptions.attachment));
-
-    // Handle any additional options after entangling the item.
-    if (aOptions.tooltip) {
-      aItem._target.setAttribute("tooltiptext", aOptions.tooltip);
-    }
-
-    return aItem;
   },
 
   /**
@@ -1085,6 +1106,7 @@ MenuContainer.prototype = {
    * @param object aOptions [optional]
    *        Additional options or flags supported by this operation:
    *          - relaxed: true if this container should allow dupes & degenerates
+   *          - tooltip: an optional tooltip for the item
    * @return MenuItem
    *         The item associated with the displayed element, null if rejected.
    */
@@ -1093,14 +1115,18 @@ MenuContainer.prototype = {
       return null;
     }
 
-    this._entangleItem(aItem, this._container.insertItemAt(
-      aIndex, aItem.label, aItem.value, "", aOptions.attachment));
+    this._entangleItem(aItem, this._container.insertItemAt(aIndex,
+      aOptions.nsIDOMNode || aItem.label,
+      aItem.value,
+      aItem.description,
+      aOptions.attachment));
 
     // Handle any additional options after entangling the item.
     if (aOptions.tooltip) {
       aItem._target.setAttribute("tooltiptext", aOptions.tooltip);
     }
 
+    // Return the item associated with the displayed element.
     return aItem;
   },
 
@@ -1111,8 +1137,6 @@ MenuContainer.prototype = {
    *        The item describing the element.
    * @param nsIDOMNode aElement
    *        The element displaying the item.
-   * @return MenuItem
-   *         The same item.
    */
   _entangleItem: function DVMC__entangleItem(aItem, aElement) {
     this._itemsByLabel.set(aItem.label, aItem);
@@ -1120,7 +1144,6 @@ MenuContainer.prototype = {
     this._itemsByElement.set(aElement, aItem);
 
     aItem._target = aElement;
-    return aItem;
   },
 
   /**
@@ -1128,8 +1151,6 @@ MenuContainer.prototype = {
    *
    * @param MenuItem aItem
    *        The item describing the element.
-   * @return MenuItem
-   *         The same item.
    */
   _untangleItem: function DVMC__untangleItem(aItem) {
     if (aItem.finalize instanceof Function) {
@@ -1141,7 +1162,25 @@ MenuContainer.prototype = {
     this._itemsByElement.delete(aItem.target);
 
     aItem._target = null;
-    return aItem;
+  },
+
+  /**
+   * Helper decorating some of the DOM methods of a widget (not element node)
+   * associated with this menu container, to satisfy the required interface.
+   * @see MenuContainer constructor
+   *
+   * @param string aTarget
+   *        The name of a nsIDOMNode property in the widget.
+   */
+  decorateWidgetMethods: function DVMC_decorateWidgetMethods(aTarget) {
+    let widget = this.node;
+    let targetNode = widget[aTarget];
+
+    widget.getAttribute = targetNode.getAttribute.bind(targetNode);
+    widget.setAttribute = targetNode.setAttribute.bind(targetNode);
+    widget.removeAttribute = targetNode.removeAttribute.bind(targetNode);
+    widget.addEventListener = targetNode.addEventListener.bind(targetNode);
+    widget.removeEventListener = targetNode.removeEventListener.bind(targetNode);
   },
 
   /**
@@ -1158,14 +1197,15 @@ MenuContainer.prototype = {
   _itemsByLabel: null,
   _itemsByValue: null,
   _itemsByElement: null,
-  _preferredValue: null,
-  _emptyLabel: "",
-  _unavailableLabel: ""
+  _preferredValue: null
 };
 
 /**
  * A stacked list of items, compatible with MenuContainer instances, used for
  * displaying views like the StackFrames, Breakpoints etc.
+ *
+ * You should never need to access these methods directly, use the wrapper
+ * MenuContainer instances.
  *
  * Custom methods introduced by this view, not necessary for a MenuContainer:
  * set emptyText(aValue:string)
@@ -1182,29 +1222,13 @@ function StackList(aAssociatedNode) {
   // Create an internal list container.
   this._list = document.createElement("vbox");
   this._parent.appendChild(this._list);
+
+  // Delegate some of the associated node's methods to satisfy the interface
+  // required by MenuContainer instances.
+  MenuContainer.prototype.decorateWidgetMethods.call({ node: this }, "_parent");
 }
 
 StackList.prototype = {
-  /**
-   * Immediately appends an item in this container.
-   *
-   * @param string aLabel
-   *        The label displayed in the container.
-   * @param string aValue
-   *        The actual internal value of the item.
-   * @param string aDescription [optional]
-   *        An optional description of the item.
-   * @param any aAttachment [optional]
-   *        Some attached primitive/object.
-   * @return nsIDOMNode
-   *         The element associated with the displayed item.
-   */
-  appendItem:
-  function DVSL_appendItem(aLabel, aValue, aDescription, aAttachment) {
-    return this.insertItemAt(
-      Number.MAX_VALUE, aLabel, aValue, aDescription, aAttachment);
-  },
-
   /**
    * Immediately inserts an item in this container at the specified index.
    *
@@ -1227,7 +1251,7 @@ StackList.prototype = {
     let childNodes = list.childNodes;
 
     let element = document.createElement(this.itemType);
-    this._createItemView(element, aLabel, aValue, aAttachment);
+    this.itemFactory(element, aLabel, aValue, aAttachment);
     this._removeEmptyNotice();
 
     return list.insertBefore(element, childNodes[aIndex]);
@@ -1254,7 +1278,10 @@ StackList.prototype = {
   removeChild: function DVSL__removeChild(aChild) {
     this._list.removeChild(aChild);
 
-    if (!this.itemCount) {
+    if (this._selectedItem == aChild) {
+      this._selectedItem = null;
+    }
+    if (!this._list.hasChildNodes()) {
       this._appendEmptyNotice();
     }
   },
@@ -1274,28 +1301,8 @@ StackList.prototype = {
     parent.scrollLeft = 0;
 
     this._selectedItem = null;
-    this._selectedIndex = -1;
     this._appendEmptyNotice();
   },
-
-  /**
-   * Gets the number of child nodes present in this container.
-   * @return number
-   */
-  get itemCount() this._list.childNodes.length,
-
-  /**
-   * Gets the index of the selected child node in this container.
-   * @return number
-   */
-  get selectedIndex() this._selectedIndex,
-
-  /**
-   * Sets the index of the selected child node in this container.
-   * Only one child node may be selected at a time.
-   * @param number aIndex
-   */
-  set selectedIndex(aIndex) this.selectedItem = this._list.childNodes[aIndex],
 
   /**
    * Gets the currently selected child node in this container.
@@ -1312,81 +1319,15 @@ StackList.prototype = {
 
     if (!aChild) {
       this._selectedItem = null;
-      this._selectedIndex = -1;
     }
     for (let node of childNodes) {
       if (node == aChild) {
         node.classList.add("selected");
-        this._selectedIndex = Array.indexOf(childNodes, node);
         this._selectedItem = node;
       } else {
         node.classList.remove("selected");
       }
     }
-  },
-
-  /**
-   * Applies an attribute to this container.
-   *
-   * @param string aName
-   *        The name of the attribute to set.
-   * @return string
-   *         The attribute value.
-   */
-  getAttribute: function DVSL_setAttribute(aName) {
-    return this._parent.getAttribute(aName);
-  },
-
-  /**
-   * Applies an attribute to this container.
-   *
-   * @param string aName
-   *        The name of the attribute to set.
-   * @param any aValue
-   *        The supplied attribute value.
-   */
-  setAttribute: function DVSL_setAttribute(aName, aValue) {
-    this._parent.setAttribute(aName, aValue);
-  },
-
-  /**
-   * Removes an attribute applied to this container.
-   *
-   * @param string aName
-   *        The name of the attribute to remove.
-   */
-  removeAttribute: function DVSL_removeAttribute(aName) {
-    this._parent.removeAttribute(aName);
-  },
-
-  /**
-   * Adds an event listener to this container.
-   *
-   * @param string aName
-   *        The name of the listener to set.
-   * @param function aCallback
-   *        The function to be called when the event is triggered.
-   * @param boolean aBubbleFlag
-   *        True if the event should bubble.
-   */
-  addEventListener:
-  function DVSL_addEventListener(aName, aCallback, aBubbleFlag) {
-    this._parent.addEventListener(aName, aCallback, aBubbleFlag);
-  },
-
-  /**
-   * Removes an event listener added to this container.
-   *
-   * @param string aName
-   *        The name of the listener to remove.
-   * @param function aCallback
-   *        The function called when the event was triggered.
-   * @param boolean aBubbleFlag
-   *        True if the event was bubbling.
-   */
-  removeEventListener:
-  function DVSL_removeEventListener(aName, aCallback, aBubbleFlag) {
-    this._parent.removeEventListener(aName, aCallback, aBubbleFlag);
   },
 
   /**
@@ -1414,19 +1355,13 @@ StackList.prototype = {
   },
 
   /**
-   * Overrides the item's element type (e.g. "vbox" or "hbox").
+   * Overrides an item's element type (e.g. "vbox" or "hbox") in this container.
    * @param string aType
    */
   itemType: "hbox",
 
   /**
-   * Overrides the customization function for creating an item's UI.
-   * @param function aCallback
-   */
-  set itemFactory(aCallback) this._createItemView = aCallback,
-
-  /**
-   * Customization function for creating an item's UI for this container.
+   * Customization function for creating an item's UI in this container.
    *
    * @param nsIDOMNode aElementNode
    *        The element associated with the displayed item.
@@ -1435,22 +1370,7 @@ StackList.prototype = {
    * @param string aValue
    *        The item's value.
    */
-  _createItemView: function DVSL__createItemView(aElementNode, aLabel, aValue) {
-    let labelNode = document.createElement("label");
-    let valueNode = document.createElement("label");
-    let spacer = document.createElement("spacer");
-
-    labelNode.setAttribute("value", aLabel);
-    valueNode.setAttribute("value", aValue);
-    spacer.setAttribute("flex", "1");
-
-    aElementNode.appendChild(labelNode);
-    aElementNode.appendChild(spacer);
-    aElementNode.appendChild(valueNode);
-
-    aElementNode.labelNode = labelNode;
-    aElementNode.valueNode = valueNode;
-  },
+  itemFactory: null,
 
   /**
    * Creates and appends a label displayed permanently in this container's header.
@@ -1498,7 +1418,6 @@ StackList.prototype = {
 
   _parent: null,
   _list: null,
-  _selectedIndex: -1,
   _selectedItem: null,
   _permaTextNode: null,
   _permaTextValue: "",

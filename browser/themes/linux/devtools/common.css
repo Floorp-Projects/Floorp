@@ -158,6 +158,7 @@
   background-image: url(magnifying-glass.png), -moz-linear-gradient(hsla(210,16%,76%,.15), hsla(210,16%,76%,.35));
   background-position: 4px center, top left, top left;
   background-repeat: no-repeat;
+  font-size: inherit;
 }
 
 .devtools-searchinput:-moz-locale-dir(rtl) {
