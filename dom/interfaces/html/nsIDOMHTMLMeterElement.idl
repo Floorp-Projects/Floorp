@@ -13,7 +13,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/multipage/the-button-element.html#the-meter-element
  */
 
-[scriptable, uuid(d4466510-8143-11e0-b278-0800200c9a66)]
+[scriptable, uuid(dadff222-3298-4083-804a-f7a8c33c97a8)]
 interface nsIDOMHTMLMeterElement : nsIDOMHTMLElement
 {
            attribute double value;

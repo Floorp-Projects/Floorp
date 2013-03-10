@@ -2412,7 +2412,7 @@ nsINode::GetAttributes()
 }
 
 nsresult
-nsINode::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
+nsINode::GetAttributes(nsIDOMMozNamedAttrMap** aAttributes)
 {
   nsRefPtr<nsDOMAttributeMap> map = GetAttributes();
   map.forget(aAttributes);

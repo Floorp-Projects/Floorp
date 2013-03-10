@@ -6,7 +6,7 @@
 #include "nsIDOMXULSelectCntrlEl.idl"
 interface nsIDOMXULTextBoxElement;
 
-[scriptable, uuid(510561F2-7772-4DE3-934E-F4619509398B)]
+[scriptable, uuid(85b9d1c1-5dad-402e-923f-5c8676782774)]
 interface nsIDOMXULMenuListElement : nsIDOMXULSelectControlElement {
   attribute boolean editable;
   attribute boolean open;
