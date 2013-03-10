@@ -1390,7 +1390,7 @@ NS_IMETHODIMP nsHTMLMediaElement::GetVolume(double *aVolume)
 
 NS_IMETHODIMP nsHTMLMediaElement::SetVolume(double aVolume)
 {
-  if (aVolume < 0.0 || aVolume > 1.0)
+  if (!(aVolume >= 0.0 && aVolume <= 1.0))
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
   if (aVolume == mVolume)
