@@ -68,6 +68,20 @@ public:
     mBuffer = aBuffer;
   }
 
+  void BorrowFromInputBuffer(AudioChunk* aOutput,
+                             uint32_t aChannels,
+                             uintptr_t aBufferOffset)
+  {
+    aOutput->mDuration = WEBAUDIO_BLOCK_SIZE;
+    aOutput->mBuffer = mBuffer;
+    aOutput->mChannelData.SetLength(aChannels);
+    for (uint32_t i = 0; i < aChannels; ++i) {
+      aOutput->mChannelData[i] = mBuffer->GetData(i) + aBufferOffset;
+    }
+    aOutput->mVolume = 1.0f;
+    aOutput->mBufferFormat = AUDIO_FORMAT_FLOAT32;
+  }
+
   virtual void ProduceAudioBlock(AudioNodeStream* aStream,
                                  const AudioChunk& aInput,
                                  AudioChunk* aOutput,
@@ -100,15 +114,8 @@ public:
     if (currentPosition >= mStart &&
         currentPosition + WEBAUDIO_BLOCK_SIZE <= endTime) {
       // Data is entirely within the buffer. Avoid copying it.
-      aOutput->mDuration = WEBAUDIO_BLOCK_SIZE;
-      aOutput->mBuffer = mBuffer;
-      aOutput->mChannelData.SetLength(channels);
-      for (uint32_t i = 0; i < channels; ++i) {
-        aOutput->mChannelData[i] =
-          mBuffer->GetData(i) + uintptr_t(currentPosition - mStart + mOffset);
-      }
-      aOutput->mVolume = 1.0f;
-      aOutput->mBufferFormat = AUDIO_FORMAT_FLOAT32;
+      BorrowFromInputBuffer(aOutput, channels,
+                            uintptr_t(currentPosition - mStart + mOffset));
       return;
     }
 
