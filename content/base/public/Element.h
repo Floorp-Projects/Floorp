@@ -548,9 +548,9 @@ public:
   }
 
   nsDOMTokenList* GetClassList();
-  nsDOMAttributeMap* GetAttributes()
+  nsDOMAttributeMap* Attributes()
   {
-    nsDOMSlots *slots = DOMSlots();
+    nsDOMSlots* slots = DOMSlots();
     if (!slots->mAttributeMap) {
       slots->mAttributeMap = new nsDOMAttributeMap(this);
     }
