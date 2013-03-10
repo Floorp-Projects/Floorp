@@ -11,7 +11,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= breakpad_sps_common
 LIBRARY_NAME	= breakpad_sps_common_s
+ifdef MOZ_CRASHREPORTER
 HOST_LIBRARY_NAME = host_breakpad_sps_common_s
+endif
 
 LOCAL_INCLUDES 	= -I$(srcdir)/../.. -I$(srcdir)/..
 
@@ -34,10 +36,12 @@ CPPSRCS	= \
   stack_frame_symbolizer.cc \
   $(NULL)
 
+ifdef MOZ_CRASHREPORTER
 HOST_CPPSRCS = \
   logging.cc \
   pathname_stripper.cc \
   $(NULL)
+endif
 
 # need static lib
 FORCE_STATIC_LIB = 1

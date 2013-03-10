@@ -11,7 +11,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= breakpad_linux_common
 LIBRARY_NAME	= breakpad_linux_common_s
+ifdef MOZ_CRASHREPORTER
 HOST_LIBRARY_NAME = host_breakpad_linux_common_s
+endif
 
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/toolkit/crashreporter/google-breakpad/src \
@@ -38,6 +40,7 @@ endif
 
 DEFINES += -DNO_STABS_SUPPORT
 
+ifdef MOZ_CRASHREPORTER
 HOST_CPPSRCS = \
   dump_symbols.cc \
   elf_symbols_to_module.cc \
@@ -47,6 +50,7 @@ HOST_CPPSRCS = \
   linux_libc_support.cc \
   memory_mapped_file.cc \
   $(NULL)
+endif
 
 # need static lib
 FORCE_STATIC_LIB = 1
