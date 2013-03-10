@@ -16,7 +16,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(76cf0381-19fd-442d-bb18-c794fd8b5c25)]
+[scriptable, uuid(c609e2a7-558b-47a3-b6cd-b5b5e1269d34)]
 interface nsIDOMHTMLImageElement : nsIDOMHTMLElement
 {
            attribute DOMString        alt;

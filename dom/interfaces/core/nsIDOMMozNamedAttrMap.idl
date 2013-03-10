@@ -6,31 +6,28 @@
 #include "domstubs.idl"
 
 /**
- * Objects implementing the nsIDOMNamedNodeMap interface are used to 
- * represent collections of nodes that can be accessed by name.
- *
- * For more information on this interface please see 
- * http://www.w3.org/TR/DOM-Level-2-Core/
+ * This is a temporary, non-standard interface, to ease the transition to a
+ * world where Attr no longer inherits from Node.
  */
 
-[scriptable, uuid(a6cf907b-15b3-11d2-932e-00805f8add32)]
-interface nsIDOMNamedNodeMap : nsISupports
+[scriptable, uuid(cb5564cd-26ec-418f-a6d6-1d57cd2c971c)]
+interface nsIDOMMozNamedAttrMap : nsISupports
 {
-  nsIDOMNode                getNamedItem(in DOMString name);
-  nsIDOMNode                setNamedItem(in nsIDOMNode arg)
+  nsIDOMAttr                getNamedItem(in DOMString name);
+  nsIDOMAttr                setNamedItem(in nsIDOMAttr arg)
                                   raises(DOMException);
-  nsIDOMNode                removeNamedItem(in DOMString name)
+  nsIDOMAttr                removeNamedItem(in DOMString name)
                                   raises(DOMException);
-  nsIDOMNode                item(in unsigned long index);
+  nsIDOMAttr                item(in unsigned long index);
   readonly attribute  unsigned long        length;
   // Introduced in DOM Level 2:
-  nsIDOMNode                getNamedItemNS(in DOMString namespaceURI, 
+  nsIDOMAttr                getNamedItemNS(in DOMString namespaceURI, 
                                            in DOMString localName);
   // Introduced in DOM Level 2:
-  nsIDOMNode                setNamedItemNS(in nsIDOMNode arg)
+  nsIDOMAttr                setNamedItemNS(in nsIDOMAttr arg)
                                   raises(DOMException);
   // Introduced in DOM Level 2:
-  nsIDOMNode                removeNamedItemNS(in DOMString namespaceURI, 
+  nsIDOMAttr                removeNamedItemNS(in DOMString namespaceURI, 
                                               in DOMString localName)
                                   raises(DOMException);
 };

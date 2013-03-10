@@ -20,7 +20,7 @@
 #include "nsHTMLURIRefObject.h"
 
 #include "nsIDOMText.h"
-#include "nsIDOMNamedNodeMap.h"
+#include "nsIDOMMozNamedAttrMap.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMAttr.h"
@@ -2676,7 +2676,7 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
   nsAutoEditBatch beginBatching(this);
 
   // Set all attributes found on the supplied anchor element
-  nsCOMPtr<nsIDOMNamedNodeMap> attrMap;
+  nsCOMPtr<nsIDOMMozNamedAttrMap> attrMap;
   aAnchorElement->GetAttributes(getter_AddRefs(attrMap));
   NS_ENSURE_TRUE(attrMap, NS_ERROR_FAILURE);
 
@@ -2685,11 +2685,10 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
   nsAutoString name, value;
 
   for (uint32_t i = 0; i < count; ++i) {
-    nsCOMPtr<nsIDOMNode> attrNode;
-    res = attrMap->Item(i, getter_AddRefs(attrNode));
+    nsCOMPtr<nsIDOMAttr> attribute;
+    res = attrMap->Item(i, getter_AddRefs(attribute));
     NS_ENSURE_SUCCESS(res, res);
 
-    nsCOMPtr<nsIDOMAttr> attribute = do_QueryInterface(attrNode);
     if (attribute) {
       // We must clear the string buffers
       //   because GetName, GetValue appends to previous string!
