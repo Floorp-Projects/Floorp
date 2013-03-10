@@ -2408,17 +2408,15 @@ nsINode::GetAttributes()
   if (!IsElement()) {
     return nullptr;
   }
-  return AsElement()->GetAttributes();
+  return AsElement()->Attributes();
 }
 
 nsresult
 nsINode::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
-  if (!IsElement()) {
-    *aAttributes = nullptr;
-    return NS_OK;
-  }
-  return CallQueryInterface(GetAttributes(), aAttributes);
+  nsRefPtr<nsDOMAttributeMap> map = GetAttributes();
+  map.forget(aAttributes);
+  return NS_OK;
 }
 
 bool
