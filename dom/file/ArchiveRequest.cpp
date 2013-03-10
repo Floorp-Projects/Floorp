@@ -74,11 +74,11 @@ ArchiveRequest::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 }
 
 NS_IMETHODIMP
-ArchiveRequest::GetReader(nsIDOMArchiveReader** aArchiveReader)
+ArchiveRequest::GetReader(nsISupports** aArchiveReader)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsCOMPtr<nsIDOMArchiveReader> archiveReader(mArchiveReader);
+  nsCOMPtr<nsISupports> archiveReader(mArchiveReader);
   archiveReader.forget(aArchiveReader);
   return NS_OK;
 }

@@ -64,7 +64,6 @@ XPIDLSRCS = \
   nsIDOMFileHandle.idl \
   nsIDOMFileRequest.idl \
   nsIDOMLockedFile.idl \
-  nsIDOMArchiveReader.idl \
   nsIDOMArchiveRequest.idl \
   $(NULL)
 
