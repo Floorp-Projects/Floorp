@@ -50,12 +50,12 @@ function firstSearch() {
     info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    is(gFilteredSources.totalItems, 3,
+    is(gFilteredSources.itemCount, 3,
       "The filtered sources view should have 3 items available.");
     is(gFilteredSources.visibleItems.length, 3,
       "The filtered sources view should have 3 items visible.");
 
-    for (let i = 0; i < gFilteredSources.totalItems; i++) {
+    for (let i = 0; i < gFilteredSources.itemCount; i++) {
       is(gFilteredSources.labels[i],
          gDebugger.SourceUtils.trimUrlLength(gScripts.labels[i]),
         "The filtered sources view should have the correct labels.");
@@ -127,12 +127,12 @@ function secondSearch() {
     info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    is(gFilteredSources.totalItems, 1,
+    is(gFilteredSources.itemCount, 1,
       "The filtered sources view should have 1 items available.");
     is(gFilteredSources.visibleItems.length, 1,
       "The filtered sources view should have 1 items visible.");
 
-    for (let i = 0; i < gFilteredSources.totalItems; i++) {
+    for (let i = 0; i < gFilteredSources.itemCount; i++) {
       is(gFilteredSources.labels[i],
          gDebugger.SourceUtils.trimUrlLength(gScripts.visibleItems[i].label),
         "The filtered sources view should have the correct labels.");
@@ -204,12 +204,12 @@ function thirdSearch() {
     info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    is(gFilteredSources.totalItems, 3,
+    is(gFilteredSources.itemCount, 3,
       "The filtered sources view should have 3 items available.");
     is(gFilteredSources.visibleItems.length, 3,
       "The filtered sources view should have 3 items visible.");
 
-    for (let i = 0; i < gFilteredSources.totalItems; i++) {
+    for (let i = 0; i < gFilteredSources.itemCount; i++) {
       is(gFilteredSources.labels[i],
          gDebugger.SourceUtils.trimUrlLength(gScripts.visibleItems[i].label),
         "The filtered sources view should have the correct labels.");
@@ -262,7 +262,7 @@ function goDown() {
     info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    is(gFilteredSources.totalItems, 3,
+    is(gFilteredSources.itemCount, 3,
       "The filtered sources view should have 3 items available.");
     is(gFilteredSources.visibleItems.length, 3,
       "The filtered sources view should have 3 items visible.");
@@ -300,7 +300,7 @@ function goDownAgain() {
     info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    is(gFilteredSources.totalItems, 3,
+    is(gFilteredSources.itemCount, 3,
       "The filtered sources view should have 3 items available.");
     is(gFilteredSources.visibleItems.length, 3,
       "The filtered sources view should have 3 items visible.");
@@ -338,7 +338,7 @@ function goDownAndWrap() {
     info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    is(gFilteredSources.totalItems, 3,
+    is(gFilteredSources.itemCount, 3,
       "The filtered sources view should have 3 items available.");
     is(gFilteredSources.visibleItems.length, 3,
       "The filtered sources view should have 3 items visible.");
@@ -376,7 +376,7 @@ function goUpAndWrap() {
     info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    is(gFilteredSources.totalItems, 3,
+    is(gFilteredSources.itemCount, 3,
       "The filtered sources view should have 3 items available.");
     is(gFilteredSources.visibleItems.length, 3,
       "The filtered sources view should have 3 items visible.");
@@ -414,7 +414,7 @@ function clickAndSwitch() {
     info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    is(gFilteredSources.totalItems, 3,
+    is(gFilteredSources.itemCount, 3,
       "The filtered sources view should have 3 items available.");
     is(gFilteredSources.visibleItems.length, 3,
       "The filtered sources view should have 3 items visible.");
@@ -452,7 +452,7 @@ function clickAndSwitchAgain() {
     info("Current script url:\n" + gScripts.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    is(gFilteredSources.totalItems, 3,
+    is(gFilteredSources.itemCount, 3,
       "The filtered sources view should have 3 items available.");
     is(gFilteredSources.visibleItems.length, 3,
       "The filtered sources view should have 3 items visible.");

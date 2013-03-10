@@ -142,7 +142,7 @@ function test()
 
     is(gWatch.getExpressions().length, total,
       "There should be " + total + " watch expressions available (1)");
-    is(gWatch.totalItems, total,
+    is(gWatch.itemCount, total,
       "There should be " + total + " watch expressions available (2)");
 
     ok(gWatch.getItemAtIndex(index),
@@ -209,7 +209,7 @@ function test()
 
     is(gWatch.getExpressions().length, total,
       "There should be " + total + " watch expressions available (1)");
-    is(gWatch.totalItems, total,
+    is(gWatch.itemCount, total,
       "There should be " + total + " watch expressions available (2)");
 
     ok(gWatch.getItemAtIndex(index),

@@ -34,6 +34,44 @@
   margin-bottom: -1px;
 }
 
+/* preloading hack */
+#inspector-breadcrumbs::after {
+  content: '';
+  display: block;
+  background-image:
+    url(chrome://browser/skin/devtools/breadcrumbs/ltr-start.png),
+    url(chrome://browser/skin/devtools/breadcrumbs/ltr-start-selected.png),
+    url(chrome://browser/skin/devtools/breadcrumbs/ltr-start-pressed.png),
+    url(chrome://browser/skin/devtools/breadcrumbs/ltr-start-selected-pressed.png),
+    url(chrome://browser/skin/devtools/breadcrumbs/ltr-middle.png),
+    url(chrome://browser/skin/devtools/breadcrumbs/ltr-middle-selected.png),
+    url(chrome://browser/skin/devtools/breadcrumbs/ltr-middle-pressed.png),
+    url(chrome://browser/skin/devtools/breadcrumbs/ltr-middle-selected-pressed.png),
+    url(chrome://browser/skin/devtools/breadcrumbs/ltr-end.png),
+    url(chrome://browser/skin/devtools/breadcrumbs/ltr-end-selected.png),
+    url(chrome://browser/skin/devtools/breadcrumbs/ltr-end-pressed.png),
+    url(chrome://browser/skin/devtools/breadcrumbs/ltr-end-selected-pressed.png);
+}
+
+/* preloading hack */
+#inspector-breadcrumbs:-moz-locale-dir(rtl)::after {
+  content: '';
+  display: block;
+  background-image:
+    url(chrome://browser/skin/devtools/breadcrumbs/rtl-start.png),
+    url(chrome://browser/skin/devtools/breadcrumbs/rtl-start-selected.png),
+    url(chrome://browser/skin/devtools/breadcrumbs/rtl-start-pressed.png),
+    url(chrome://browser/skin/devtools/breadcrumbs/rtl-start-selected-pressed.png),
+    url(chrome://browser/skin/devtools/breadcrumbs/rtl-middle.png),
+    url(chrome://browser/skin/devtools/breadcrumbs/rtl-middle-selected.png),
+    url(chrome://browser/skin/devtools/breadcrumbs/rtl-middle-pressed.png),
+    url(chrome://browser/skin/devtools/breadcrumbs/rtl-middle-selected-pressed.png),
+    url(chrome://browser/skin/devtools/breadcrumbs/rtl-end.png),
+    url(chrome://browser/skin/devtools/breadcrumbs/rtl-end-selected.png),
+    url(chrome://browser/skin/devtools/breadcrumbs/rtl-end-pressed.png),
+    url(chrome://browser/skin/devtools/breadcrumbs/rtl-end-selected-pressed.png);
+}
+
 #inspector-breadcrumbs > .scrollbutton-up,
 #inspector-breadcrumbs > .scrollbutton-down {
   -moz-appearance: none;

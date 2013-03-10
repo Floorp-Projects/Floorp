@@ -107,8 +107,13 @@
 }
 
 /**
- * Searchbox panel
+ * Searchbox
  */
+
+.devtools-searchinput {
+  min-width: 220px;
+  -moz-margin-start: 1px;
+}
 
 #searchbox-panel .description {
   margin: -6px 0 8px 0;
@@ -154,10 +159,10 @@
 }
 
 .dbg-source-item:only-of-type {
-  border-radius: 4px 4px 4px 4px;
+  border-radius: 4px;
 }
 
-.dbg-source-item:not(:hover) {
+.dbg-source-item:not(.selected):not(:hover) {
   text-shadow: 0 1px #fff;
 }
 
@@ -198,37 +203,31 @@
  * Stack frames view
  */
 
-#stackframes {
-  min-height: 10px;
-}
-
 .dbg-stackframe {
-  -moz-padding-start: 4px;
-  -moz-padding-end: 4px;
+  width: auto !important;
+  min-width: 64px;
 }
 
-.dbg-stackframe-name {
+.dbg-stackframe-menuitem[checked] {
+  outline: 1px solid #eee;
+  margin-top: 3px;
+  margin-bottom: 3px;
   font-weight: 600;
 }
 
-.dbg-stackframe-details {
-  -moz-padding-start: 4px;
+.dbg-stackframe-menuitem-title {
+  -moz-padding-end: 8px;
+}
+
+.dbg-stackframe-menuitem-details {
+  -moz-padding-start: 8px;
 }
 
 /**
  * Breakpoints view
  */
 
-#breakpoints {
-  min-height: 10px;
-}
-
-#breakpoints > vbox:not(:empty) {
-  min-height: 10px;
-  max-height: 200px;
-}
-
-.dbg-breakpoint:not(:last-child) {
+.dbg-breakpoint {
   border-bottom: 1px solid #eee;
 }
 

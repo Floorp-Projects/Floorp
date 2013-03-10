@@ -162,6 +162,7 @@
   padding-bottom: 0;
   -moz-padding-start: 18px;
   -moz-padding-end: 12px;
+  font-size: inherit;
 }
 
 .devtools-searchinput[focused] {
