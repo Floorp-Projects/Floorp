@@ -10,39 +10,39 @@
  * liability, trademark and document use rules apply.
  */
 
+enum PanningModelType {
+  "equalpower",
+  "HRTF",
+  "soundfield"
+};
+
+enum DistanceModelType {
+  "linear",
+  "inverse",
+  "exponential"
+};
+
 [PrefControlled]
 interface PannerNode : AudioNode {
 
-    // Panning model 
-    const unsigned short EQUALPOWER = 0;
-    const unsigned short HRTF = 1;
-    const unsigned short SOUNDFIELD = 2;
-
-    // Distance model 
-    const unsigned short LINEAR_DISTANCE = 0;
-    const unsigned short INVERSE_DISTANCE = 1;
-    const unsigned short EXPONENTIAL_DISTANCE = 2;
-
     // Default for stereo is HRTF 
-    [SetterThrows]
-    attribute unsigned short panningModel;
+    attribute PanningModelType panningModel;
 
     // Uses a 3D cartesian coordinate system 
-    void setPosition(float x, float y, float z);
-    void setOrientation(float x, float y, float z);
-    void setVelocity(float x, float y, float z);
+    void setPosition(double x, double y, double z);
+    void setOrientation(double x, double y, double z);
+    void setVelocity(double x, double y, double z);
 
     // Distance model and attributes 
-    [SetterThrows]
-    attribute unsigned short distanceModel;
-    attribute float refDistance;
-    attribute float maxDistance;
-    attribute float rolloffFactor;
+    attribute DistanceModelType distanceModel;
+    attribute double refDistance;
+    attribute double maxDistance;
+    attribute double rolloffFactor;
 
     // Directional sound cone 
-    attribute float coneInnerAngle;
-    attribute float coneOuterAngle;
-    attribute float coneOuterGain;
+    attribute double coneInnerAngle;
+    attribute double coneOuterAngle;
+    attribute double coneOuterGain;
 
 };
 
