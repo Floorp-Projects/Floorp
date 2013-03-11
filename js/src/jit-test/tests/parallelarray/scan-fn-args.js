@@ -1,3 +1,4 @@
+
 function testScan() {
   // Test reduce elemental fun args
   var p = new ParallelArray([1,2,3,4]);

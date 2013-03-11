@@ -1077,10 +1077,6 @@ class MNewParallelArray : public MNullaryInstruction
         return new MNewParallelArray(templateObject);
     }
 
-    AliasSet getAliasSet() const {
-        return AliasSet::None();
-    }
-
     JSObject *templateObject() const {
         return templateObject_;
     }
