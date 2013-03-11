@@ -174,7 +174,7 @@ skip-if(B2G) == 726392-3.html 726392-3-ref.html
 pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-01.html graphite-01-ref.html
 # Test 02 (using Pig Latin) is fuzzy on Win7 because glyph positioning is not guaranteed to match exactly
 # between a sequence of simple glyphs rendered individually, and the same sequence treated as a single cluster.
-fuzzy-if(winWidget,43,220) pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-02.html graphite-02-ref.html
+fuzzy-if(winWidget,49,220) pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-02.html graphite-02-ref.html
 pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) != graphite-03a.html graphite-03-notref.html
 pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) != graphite-03b.html graphite-03-notref.html
 pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) != graphite-01.html graphite-01-ref.html
