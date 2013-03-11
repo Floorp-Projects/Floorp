@@ -13,4 +13,16 @@ interface nsIDOMClipboardEvent : nsIDOMEvent
 {
   readonly attribute nsIDOMDataTransfer clipboardData;
 
+  // The constructor must be used from script to initialize
+  // clipboard events.
+  [noscript] void initClipboardEvent(in DOMString typeArg,
+                                     in boolean canBubbleArg,
+                                     in boolean cancelableArg,
+                                     in nsIDOMDataTransfer clipboardData);
+};
+
+dictionary ClipboardEventInit : EventInit
+{
+  DOMString data;
+  DOMString dataType;
 };
