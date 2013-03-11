@@ -51,7 +51,7 @@ class SyntaxParseHandler
         return NodeString;
     }
     Node newNumber(double value, DecimalPoint decimalPoint = NoDecimal) { return NodeGeneric; }
-    Node newNumber(const Token &tok) { return NodeGeneric; }
+    Node newNumber(Token tok) { return NodeGeneric; }
     Node newBooleanLiteral(bool cond, const TokenPos &pos) { return NodeGeneric; }
     Node newThisLiteral(const TokenPos &pos) { return NodeGeneric; }
     Node newNullLiteral(const TokenPos &pos) { return NodeGeneric; }
@@ -82,15 +82,15 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
 
-    Node newBreak(PropertyName *label, const TokenPtr &begin, const TokenPtr &end) {
+    Node newBreak(PropertyName *label, uint32_t begin, uint32_t end) {
         return NodeGeneric;
     }
-    Node newContinue(PropertyName *label, const TokenPtr &begin, const TokenPtr &end) {
+    Node newContinue(PropertyName *label, uint32_t begin, uint32_t end) {
         return NodeGeneric;
     }
     Node newDebuggerStatement(const TokenPos &pos) { return NodeGeneric; }
-    Node newPropertyAccess(Node pn, PropertyName *name, const TokenPtr &end) { return NodeLValue; }
-    Node newPropertyByValue(Node pn, Node kid, const TokenPtr &end) { return NodeLValue; }
+    Node newPropertyAccess(Node pn, PropertyName *name, uint32_t end) { return NodeLValue; }
+    Node newPropertyByValue(Node pn, Node kid, uint32_t end) { return NodeLValue; }
 
     bool addCatchBlock(Node catchList, Node letBlock,
                        Node catchName, Node catchGuard, Node catchBody) { return true; }
@@ -114,10 +114,10 @@ class SyntaxParseHandler
     bool finishInitializerAssignment(Node pn, Node init, JSOp op) { return true; }
 
     void setBeginPosition(Node pn, Node oth) {}
-    void setBeginPosition(Node pn, const TokenPtr &begin) {}
+    void setBeginPosition(Node pn, uint32_t begin) {}
 
     void setEndPosition(Node pn, Node oth) {}
-    void setEndPosition(Node pn, const TokenPtr &end) {}
+    void setEndPosition(Node pn, uint32_t end) {}
 
     TokenPos getPosition(Node pn) {
         return tokenStream.currentToken().pos;
