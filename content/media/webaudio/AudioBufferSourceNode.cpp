@@ -100,26 +100,15 @@ public:
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
       return;
     }
-
-    // Loop until stop() has not been called
     TrackTicks endTime = std::min(mStart + mDuration, mStop);
-    if (mLoop != NotLooping) {
-      if (mStop != TRACK_TICKS_MAX &&
-          currentPosition + WEBAUDIO_BLOCK_SIZE >= mStop) {
-        *aFinished = true;
-        aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
-        return;
-      }
-    } else {
-      // Don't set *aFinished just because we passed mStop. Maybe someone
-      // will call stop() again with a different value.
-      if (currentPosition + WEBAUDIO_BLOCK_SIZE >= mStart + mDuration) {
-        *aFinished = true;
-      }
-      if (currentPosition >= endTime || mStart >= endTime) {
-        aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
-        return;
-      }
+    // Don't set *aFinished just because we passed mStop. Maybe someone
+    // will call stop() again with a different value.
+    if (currentPosition + WEBAUDIO_BLOCK_SIZE >= mStart + mDuration) {
+      *aFinished = true;
+    }
+    if (currentPosition >= endTime || mStart >= endTime) {
+      aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
+      return;
     }
 
     uint32_t channels = mBuffer->GetChannels();
@@ -128,9 +117,7 @@ public:
       return;
     }
 
-    // If we're not in loop mode
-    if (mLoop == NotLooping &&
-        currentPosition >= mStart &&
+    if (currentPosition >= mStart &&
         currentPosition + WEBAUDIO_BLOCK_SIZE <= endTime) {
       // Data is entirely within the buffer. Avoid copying it.
       BorrowFromInputBuffer(aOutput, channels,
@@ -138,103 +125,19 @@ public:
       return;
     }
 
-    // If we're in the loop mode but have not started looping yet
-    TrackTicks startLoop = std::min(mStart + mLoopEnd - mOffset, mStop);
-    if (mLoop == WillLoop &&
-        currentPosition >= mStart &&
-        currentPosition + WEBAUDIO_BLOCK_SIZE <= startLoop) {
-      // Data is entirely within the buffer. Avoid copying it.
-      BorrowFromInputBuffer(aOutput, channels,
-                            uintptr_t(currentPosition - mStart + mOffset));
-
-      if (currentPosition + WEBAUDIO_BLOCK_SIZE == startLoop) {
-        // Move to the first repeat of the loop
-        mLoop = IsLooping;
-      }
-      return;
-    }
-
-    // If we're already looping
-    int32_t loopLength;
-    TrackTicks distanceFromLoopStart;
-    if (mLoop == IsLooping &&
-        currentPosition + WEBAUDIO_BLOCK_SIZE <= mStop) {
-      MOZ_ASSERT(currentPosition >= mStart);
-
-      loopLength = mLoopEnd - mLoopStart;
-      TrackTicks intoLoop = currentPosition - mStart + mOffset - mLoopEnd;
-      distanceFromLoopStart = intoLoop % loopLength;
-
-      if (loopLength >= WEBAUDIO_BLOCK_SIZE &&
-          distanceFromLoopStart + WEBAUDIO_BLOCK_SIZE <= loopLength) {
-        // Data is entirely within the buffer. Avoid copying it.
-        BorrowFromInputBuffer(aOutput, channels, mLoopStart + distanceFromLoopStart);
-        return;
-      }
-    }
-
-    // Now, handle the case where we're close to the edge of the total output
-    // buffer, and build the output chunk manually.
     AllocateAudioBlock(channels, aOutput);
     TrackTicks start = std::max(currentPosition, mStart);
-    if (mLoop == NotLooping) {
-      // Not in loop mode
-      TrackTicks end = std::min(currentPosition + WEBAUDIO_BLOCK_SIZE, endTime);
-      WriteZeroesToAudioBlock(aOutput, 0, uint32_t(start - currentPosition));
-      for (uint32_t i = 0; i < channels; ++i) {
-        memcpy(static_cast<float*>(const_cast<void*>(aOutput->mChannelData[i])) +
-               uint32_t(start - currentPosition),
-               mBuffer->GetData(i) +
-               uintptr_t(start - mStart + mOffset),
-               uint32_t(end - start) * sizeof(float));
-      }
-      uint32_t endOffset = uint32_t(end - currentPosition);
-      WriteZeroesToAudioBlock(aOutput, endOffset, WEBAUDIO_BLOCK_SIZE - endOffset);
-    } else if (mLoop == WillLoop) {
-      // In loop mode but not looping yet
-      TrackTicks end = std::min(currentPosition + WEBAUDIO_BLOCK_SIZE, mStop);
-      TrackTicks endPreLoop = std::min(currentPosition + WEBAUDIO_BLOCK_SIZE,
-                                       std::min(mStart + mLoopEnd, mStop));
-      WriteZeroesToAudioBlock(aOutput, 0, uint32_t(start - currentPosition));
-      for (uint32_t i = 0; i < channels; ++i) {
-        float* baseChannelData = static_cast<float*>(const_cast<void*>(aOutput->mChannelData[i]));
-        // Copy the chunk before we hit the loop point
-        memcpy(baseChannelData + uint32_t(start - currentPosition),
-               mBuffer->GetData(i) + uintptr_t(start - mStart + mOffset),
-               uint32_t(endPreLoop - start) * sizeof(float));
-        // Start back from mLoopStart and fill in the rest of the buffer
-        memcpy(baseChannelData + uint32_t(endPreLoop - currentPosition),
-               mBuffer->GetData(i) + mLoopStart,
-               uint32_t(end - endPreLoop) * sizeof(float));
-      }
-      uint32_t endOffset = uint32_t(end - currentPosition);
-      WriteZeroesToAudioBlock(aOutput, endOffset, WEBAUDIO_BLOCK_SIZE - endOffset);
-
-      if (currentPosition + WEBAUDIO_BLOCK_SIZE >= startLoop) {
-        // Move to the first repeat of the loop
-        mLoop = IsLooping;
-      }
-    } else {
-      // Already looping
-      MOZ_ASSERT(start == currentPosition);
-
-      TrackTicks end = std::min(currentPosition + WEBAUDIO_BLOCK_SIZE, mStop);
-      TrackTicks endLoop = std::min(currentPosition + loopLength - distanceFromLoopStart, mStop);
-      MOZ_ASSERT(endLoop < currentPosition + WEBAUDIO_BLOCK_SIZE);
-      for (uint32_t i = 0; i < channels; ++i) {
-        float* baseChannelData = static_cast<float*>(const_cast<void*>(aOutput->mChannelData[i]));
-        // Copy the chunk before we hit the loop point
-        memcpy(baseChannelData + uint32_t(start - currentPosition),
-               mBuffer->GetData(i) + uintptr_t(distanceFromLoopStart + mLoopStart),
-               uint32_t(endLoop - start) * sizeof(float));
-        // Start back from mLoopStart and fill in the rest of the buffer
-        memcpy(baseChannelData + uint32_t(endLoop - currentPosition),
-               mBuffer->GetData(i) + mLoopStart,
-               uint32_t(end - endLoop) * sizeof(float));
-      }
-      uint32_t endOffset = uint32_t(end - currentPosition);
-      WriteZeroesToAudioBlock(aOutput, endOffset, WEBAUDIO_BLOCK_SIZE - endOffset);
+    TrackTicks end = std::min(currentPosition + WEBAUDIO_BLOCK_SIZE, endTime);
+    WriteZeroesToAudioBlock(aOutput, 0, uint32_t(start - currentPosition));
+    for (uint32_t i = 0; i < channels; ++i) {
+      memcpy(static_cast<float*>(const_cast<void*>(aOutput->mChannelData[i])) +
+             uint32_t(start - currentPosition),
+             mBuffer->GetData(i) +
+             uintptr_t(start - mStart + mOffset),
+             uint32_t(end - start) * sizeof(float));
     }
+    uint32_t endOffset = uint32_t(end - currentPosition);
+    WriteZeroesToAudioBlock(aOutput, endOffset, WEBAUDIO_BLOCK_SIZE - endOffset);
   }
 
   TrackTicks mStart;
