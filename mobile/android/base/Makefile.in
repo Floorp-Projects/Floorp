@@ -72,6 +72,7 @@ FENNEC_JAVA_FILES = \
   db/LocalBrowserDB.java \
   db/DBUtils.java \
   Distribution.java \
+  Divider.java \
   DoorHanger.java \
   DoorHangerPopup.java \
   Favicons.java \
