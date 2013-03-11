@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+function go() {
+  // document.open() doesn't play well with reftest-wait, so we use an iframe.
+  var ifr = document.getElementById('ifr');
+  ifr.contentWindow.doTest();
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+<body>
+  <iframe id="ifr" onload="go()" src="786142-iframe.html"></iframe>
+</body>
+</html>
