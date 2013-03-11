@@ -25,10 +25,7 @@ interface AudioBufferSourceNode : AudioSourceNode {
     attribute AudioBuffer? buffer;
 
     //attribute AudioParam playbackRate;
-
-    attribute boolean loop;
-    attribute double loopStart;
-    attribute double loopEnd;
+    //attribute boolean loop;
 
     [Throws]
     void start(optional double when = 0, optional double grainOffset = 0,
