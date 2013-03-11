@@ -689,15 +689,12 @@ RegisterLocalAgent(const char* adapterPath,
     return false;
   }
 
-  DBusError err;
-  dbus_error_init(&err);
+  DBusError err = DBUS_ERROR_INIT;
+  DBusMessage* reply;
 
-  DBusMessage* reply =
-    dbus_connection_send_with_reply_and_block(gThreadConnection->GetConnection(),
-                                              msg, -1, &err);
-  dbus_message_unref(msg);
-
-  if (!reply) {
+  dbus_bool_t success = dbus_func_send_and_block(gThreadConnection->GetConnection(),
+                                                 -1, &reply, &err, msg);
+  if (!success) {
     if (dbus_error_is_set(&err)) {
       if (!strcmp(err.name, "org.bluez.Error.AlreadyExists")) {
         LOG_AND_FREE_DBUS_ERROR(&err);
@@ -710,7 +707,7 @@ RegisterLocalAgent(const char* adapterPath,
         return false;
       }
     }
-  } else {
+  } else if (reply) {
     dbus_message_unref(reply);
   }
 
