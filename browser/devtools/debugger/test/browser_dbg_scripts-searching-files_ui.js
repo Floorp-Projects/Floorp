@@ -13,10 +13,9 @@ var gTab = null;
 var gDebuggee = null;
 var gDebugger = null;
 var gEditor = null;
-var gScripts = null;
+var gSources = null;
 var gSearchBox = null;
 var gFilteredSources = null;
-var gMenulist = null;
 
 function test()
 {
@@ -36,10 +35,9 @@ function test()
 
 function testScriptSearching() {
   gEditor = gDebugger.DebuggerView.editor;
-  gScripts = gDebugger.DebuggerView.Sources;
+  gSources = gDebugger.DebuggerView.Sources;
   gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
   gFilteredSources = gDebugger.DebuggerView.FilteredSources;
-  gMenulist = gScripts._container;
 
   firstSearch();
 }
@@ -47,43 +45,43 @@ function testScriptSearching() {
 function firstSearch() {
   gDebugger.addEventListener("popupshown", function _onEvent(aEvent) {
     gDebugger.removeEventListener(aEvent.type, _onEvent);
-    info("Current script url:\n" + gScripts.selectedValue + "\n");
+    info("Current script url:\n" + gSources.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    is(gFilteredSources.totalItems, 3,
+    is(gFilteredSources.itemCount, 3,
       "The filtered sources view should have 3 items available.");
     is(gFilteredSources.visibleItems.length, 3,
       "The filtered sources view should have 3 items visible.");
 
-    for (let i = 0; i < gFilteredSources.totalItems; i++) {
+    for (let i = 0; i < gFilteredSources.itemCount; i++) {
       is(gFilteredSources.labels[i],
-         gDebugger.SourceUtils.trimUrlLength(gScripts.labels[i]),
+         gDebugger.SourceUtils.trimUrlLength(gSources.labels[i]),
         "The filtered sources view should have the correct labels.");
       is(gFilteredSources.values[i],
-         gDebugger.SourceUtils.trimUrlLength(gScripts.values[i]),
+         gDebugger.SourceUtils.trimUrlLength(gSources.values[i]),
         "The filtered sources view should have the correct values.");
 
       is(gFilteredSources.visibleItems[i].label,
-         gDebugger.SourceUtils.trimUrlLength(gScripts.labels[i]),
+         gDebugger.SourceUtils.trimUrlLength(gSources.labels[i]),
         "The filtered sources view should have the correct labels.");
       is(gFilteredSources.visibleItems[i].value,
-         gDebugger.SourceUtils.trimUrlLength(gScripts.values[i]),
+         gDebugger.SourceUtils.trimUrlLength(gSources.values[i]),
         "The filtered sources view should have the correct values.");
 
-      is(gFilteredSources.visibleItems[i].attachment.fullLabel, gScripts.labels[i],
+      is(gFilteredSources.visibleItems[i].attachment.fullLabel, gSources.labels[i],
         "The filtered sources view should have the correct labels.");
-      is(gFilteredSources.visibleItems[i].attachment.fullValue, gScripts.values[i],
+      is(gFilteredSources.visibleItems[i].attachment.fullValue, gSources.values[i],
         "The filtered sources view should have the correct values.");
     }
 
     is(gFilteredSources.selectedValue,
-       gDebugger.SourceUtils.trimUrlLength(gScripts.selectedValue),
+       gDebugger.SourceUtils.trimUrlLength(gSources.selectedValue),
       "The correct item should be selected in the filtered sources view");
     is(gFilteredSources.selectedLabel,
-       gDebugger.SourceUtils.trimUrlLength(gScripts.selectedLabel),
+       gDebugger.SourceUtils.trimUrlLength(gSources.selectedLabel),
       "The correct item should be selected in the filtered sources view");
 
-    let url = gScripts.selectedValue;
+    let url = gSources.selectedValue;
     if (url.indexOf("update-editor-mode.html") != -1) {
 
       executeSoon(function() {
@@ -91,7 +89,7 @@ function firstSearch() {
         ok(gEditor.getCaretPosition().line == 0 &&
            gEditor.getCaretPosition().col == 0,
           "The editor didn't jump to the correct line.");
-        is(gScripts.visibleItems.length, 3,
+        is(gSources.visibleItems.length, 3,
           "Not all the correct scripts are shown after the search.");
 
         secondSearch();
@@ -124,43 +122,43 @@ function secondSearch() {
       return;
     }
     proceeded = true;
-    info("Current script url:\n" + gScripts.selectedValue + "\n");
+    info("Current script url:\n" + gSources.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    is(gFilteredSources.totalItems, 1,
+    is(gFilteredSources.itemCount, 1,
       "The filtered sources view should have 1 items available.");
     is(gFilteredSources.visibleItems.length, 1,
       "The filtered sources view should have 1 items visible.");
 
-    for (let i = 0; i < gFilteredSources.totalItems; i++) {
+    for (let i = 0; i < gFilteredSources.itemCount; i++) {
       is(gFilteredSources.labels[i],
-         gDebugger.SourceUtils.trimUrlLength(gScripts.visibleItems[i].label),
+         gDebugger.SourceUtils.trimUrlLength(gSources.visibleItems[i].label),
         "The filtered sources view should have the correct labels.");
       is(gFilteredSources.values[i],
-         gDebugger.SourceUtils.trimUrlLength(gScripts.visibleItems[i].value),
+         gDebugger.SourceUtils.trimUrlLength(gSources.visibleItems[i].value),
         "The filtered sources view should have the correct values.");
 
       is(gFilteredSources.visibleItems[i].label,
-         gDebugger.SourceUtils.trimUrlLength(gScripts.visibleItems[i].label),
+         gDebugger.SourceUtils.trimUrlLength(gSources.visibleItems[i].label),
         "The filtered sources view should have the correct labels.");
       is(gFilteredSources.visibleItems[i].value,
-         gDebugger.SourceUtils.trimUrlLength(gScripts.visibleItems[i].value),
+         gDebugger.SourceUtils.trimUrlLength(gSources.visibleItems[i].value),
         "The filtered sources view should have the correct values.");
 
-      is(gFilteredSources.visibleItems[i].attachment.fullLabel, gScripts.visibleItems[i].label,
+      is(gFilteredSources.visibleItems[i].attachment.fullLabel, gSources.visibleItems[i].label,
         "The filtered sources view should have the correct labels.");
-      is(gFilteredSources.visibleItems[i].attachment.fullValue, gScripts.visibleItems[i].value,
+      is(gFilteredSources.visibleItems[i].attachment.fullValue, gSources.visibleItems[i].value,
         "The filtered sources view should have the correct values.");
     }
 
     is(gFilteredSources.selectedValue,
-       gDebugger.SourceUtils.trimUrlLength(gScripts.selectedValue),
+       gDebugger.SourceUtils.trimUrlLength(gSources.selectedValue),
       "The correct item should be selected in the filtered sources view");
     is(gFilteredSources.selectedLabel,
-       gDebugger.SourceUtils.trimUrlLength(gScripts.selectedLabel),
+       gDebugger.SourceUtils.trimUrlLength(gSources.selectedLabel),
       "The correct item should be selected in the filtered sources view");
 
-    let url = gScripts.selectedValue;
+    let url = gSources.selectedValue;
     if (url.indexOf("test-script-switching-01.js") != -1) {
 
       executeSoon(function() {
@@ -168,7 +166,7 @@ function secondSearch() {
         ok(gEditor.getCaretPosition().line == 0 &&
            gEditor.getCaretPosition().col == 0,
           "The editor didn't jump to the correct line.");
-        is(gScripts.visibleItems.length, 1,
+        is(gSources.visibleItems.length, 1,
           "Not all the correct scripts are shown after the search.");
 
         thirdSearch();
@@ -201,43 +199,43 @@ function thirdSearch() {
       return;
     }
     proceeded = true;
-    info("Current script url:\n" + gScripts.selectedValue + "\n");
+    info("Current script url:\n" + gSources.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    is(gFilteredSources.totalItems, 3,
+    is(gFilteredSources.itemCount, 3,
       "The filtered sources view should have 3 items available.");
     is(gFilteredSources.visibleItems.length, 3,
       "The filtered sources view should have 3 items visible.");
 
-    for (let i = 0; i < gFilteredSources.totalItems; i++) {
+    for (let i = 0; i < gFilteredSources.itemCount; i++) {
       is(gFilteredSources.labels[i],
-         gDebugger.SourceUtils.trimUrlLength(gScripts.visibleItems[i].label),
+         gDebugger.SourceUtils.trimUrlLength(gSources.visibleItems[i].label),
         "The filtered sources view should have the correct labels.");
       is(gFilteredSources.values[i],
-         gDebugger.SourceUtils.trimUrlLength(gScripts.visibleItems[i].value),
+         gDebugger.SourceUtils.trimUrlLength(gSources.visibleItems[i].value),
         "The filtered sources view should have the correct values.");
 
       is(gFilteredSources.visibleItems[i].label,
-         gDebugger.SourceUtils.trimUrlLength(gScripts.visibleItems[i].label),
+         gDebugger.SourceUtils.trimUrlLength(gSources.visibleItems[i].label),
         "The filtered sources view should have the correct labels.");
       is(gFilteredSources.visibleItems[i].value,
-         gDebugger.SourceUtils.trimUrlLength(gScripts.visibleItems[i].value),
+         gDebugger.SourceUtils.trimUrlLength(gSources.visibleItems[i].value),
         "The filtered sources view should have the correct values.");
 
-      is(gFilteredSources.visibleItems[i].attachment.fullLabel, gScripts.visibleItems[i].label,
+      is(gFilteredSources.visibleItems[i].attachment.fullLabel, gSources.visibleItems[i].label,
         "The filtered sources view should have the correct labels.");
-      is(gFilteredSources.visibleItems[i].attachment.fullValue, gScripts.visibleItems[i].value,
+      is(gFilteredSources.visibleItems[i].attachment.fullValue, gSources.visibleItems[i].value,
         "The filtered sources view should have the correct values.");
     }
 
     is(gFilteredSources.selectedValue,
-       gDebugger.SourceUtils.trimUrlLength(gScripts.selectedValue),
+       gDebugger.SourceUtils.trimUrlLength(gSources.selectedValue),
       "The correct item should be selected in the filtered sources view");
     is(gFilteredSources.selectedLabel,
-       gDebugger.SourceUtils.trimUrlLength(gScripts.selectedLabel),
+       gDebugger.SourceUtils.trimUrlLength(gSources.selectedLabel),
       "The correct item should be selected in the filtered sources view");
 
-    let url = gScripts.selectedValue;
+    let url = gSources.selectedValue;
     if (url.indexOf("update-editor-mode.html") != -1) {
 
       executeSoon(function() {
@@ -245,7 +243,7 @@ function thirdSearch() {
         ok(gEditor.getCaretPosition().line == 0 &&
            gEditor.getCaretPosition().col == 0,
           "The editor didn't jump to the correct line.");
-        is(gScripts.visibleItems.length, 3,
+        is(gSources.visibleItems.length, 3,
           "Not all the correct scripts are shown after the search.");
 
         goDown();
@@ -259,22 +257,22 @@ function thirdSearch() {
 
 function goDown() {
   gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
-    info("Current script url:\n" + gScripts.selectedValue + "\n");
+    info("Current script url:\n" + gSources.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    is(gFilteredSources.totalItems, 3,
+    is(gFilteredSources.itemCount, 3,
       "The filtered sources view should have 3 items available.");
     is(gFilteredSources.visibleItems.length, 3,
       "The filtered sources view should have 3 items visible.");
 
     is(gFilteredSources.selectedValue,
-       gDebugger.SourceUtils.trimUrlLength(gScripts.selectedValue),
+       gDebugger.SourceUtils.trimUrlLength(gSources.selectedValue),
       "The correct item should be selected in the filtered sources view");
     is(gFilteredSources.selectedLabel,
-       gDebugger.SourceUtils.trimUrlLength(gScripts.selectedLabel),
+       gDebugger.SourceUtils.trimUrlLength(gSources.selectedLabel),
       "The correct item should be selected in the filtered sources view");
 
-    let url = gScripts.selectedValue;
+    let url = gSources.selectedValue;
     if (url.indexOf("test-editor-mode") != -1) {
       gDebugger.removeEventListener(aEvent.type, _onEvent);
 
@@ -283,7 +281,7 @@ function goDown() {
         ok(gEditor.getCaretPosition().line == 0 &&
            gEditor.getCaretPosition().col == 0,
           "The editor didn't jump to the correct line.");
-        is(gScripts.visibleItems.length, 3,
+        is(gSources.visibleItems.length, 3,
           "Not all the correct scripts are shown after the search.");
 
         goDownAgain();
@@ -297,22 +295,22 @@ function goDown() {
 
 function goDownAgain() {
   gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
-    info("Current script url:\n" + gScripts.selectedValue + "\n");
+    info("Current script url:\n" + gSources.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    is(gFilteredSources.totalItems, 3,
+    is(gFilteredSources.itemCount, 3,
       "The filtered sources view should have 3 items available.");
     is(gFilteredSources.visibleItems.length, 3,
       "The filtered sources view should have 3 items visible.");
 
     is(gFilteredSources.selectedValue,
-       gDebugger.SourceUtils.trimUrlLength(gScripts.selectedValue),
+       gDebugger.SourceUtils.trimUrlLength(gSources.selectedValue),
       "The correct item should be selected in the filtered sources view");
     is(gFilteredSources.selectedLabel,
-       gDebugger.SourceUtils.trimUrlLength(gScripts.selectedLabel),
+       gDebugger.SourceUtils.trimUrlLength(gSources.selectedLabel),
       "The correct item should be selected in the filtered sources view");
 
-    let url = gScripts.selectedValue;
+    let url = gSources.selectedValue;
     if (url.indexOf("test-script-switching-01.js") != -1) {
       gDebugger.removeEventListener(aEvent.type, _onEvent);
 
@@ -321,7 +319,7 @@ function goDownAgain() {
         ok(gEditor.getCaretPosition().line == 0 &&
            gEditor.getCaretPosition().col == 0,
           "The editor didn't jump to the correct line.");
-        is(gScripts.visibleItems.length, 3,
+        is(gSources.visibleItems.length, 3,
           "Not all the correct scripts are shown after the search.");
 
         goDownAndWrap();
@@ -335,22 +333,22 @@ function goDownAgain() {
 
 function goDownAndWrap() {
   gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
-    info("Current script url:\n" + gScripts.selectedValue + "\n");
+    info("Current script url:\n" + gSources.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    is(gFilteredSources.totalItems, 3,
+    is(gFilteredSources.itemCount, 3,
       "The filtered sources view should have 3 items available.");
     is(gFilteredSources.visibleItems.length, 3,
       "The filtered sources view should have 3 items visible.");
 
     is(gFilteredSources.selectedValue,
-       gDebugger.SourceUtils.trimUrlLength(gScripts.selectedValue),
+       gDebugger.SourceUtils.trimUrlLength(gSources.selectedValue),
       "The correct item should be selected in the filtered sources view");
     is(gFilteredSources.selectedLabel,
-       gDebugger.SourceUtils.trimUrlLength(gScripts.selectedLabel),
+       gDebugger.SourceUtils.trimUrlLength(gSources.selectedLabel),
       "The correct item should be selected in the filtered sources view");
 
-    let url = gScripts.selectedValue;
+    let url = gSources.selectedValue;
     if (url.indexOf("update-editor-mode.html") != -1) {
       gDebugger.removeEventListener(aEvent.type, _onEvent);
 
@@ -359,7 +357,7 @@ function goDownAndWrap() {
         ok(gEditor.getCaretPosition().line == 0 &&
            gEditor.getCaretPosition().col == 0,
           "The editor didn't jump to the correct line.");
-        is(gScripts.visibleItems.length, 3,
+        is(gSources.visibleItems.length, 3,
           "Not all the correct scripts are shown after the search.");
 
         goUpAndWrap();
@@ -373,22 +371,22 @@ function goDownAndWrap() {
 
 function goUpAndWrap() {
   gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
-    info("Current script url:\n" + gScripts.selectedValue + "\n");
+    info("Current script url:\n" + gSources.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    is(gFilteredSources.totalItems, 3,
+    is(gFilteredSources.itemCount, 3,
       "The filtered sources view should have 3 items available.");
     is(gFilteredSources.visibleItems.length, 3,
       "The filtered sources view should have 3 items visible.");
 
     is(gFilteredSources.selectedValue,
-       gDebugger.SourceUtils.trimUrlLength(gScripts.selectedValue),
+       gDebugger.SourceUtils.trimUrlLength(gSources.selectedValue),
       "The correct item should be selected in the filtered sources view");
     is(gFilteredSources.selectedLabel,
-       gDebugger.SourceUtils.trimUrlLength(gScripts.selectedLabel),
+       gDebugger.SourceUtils.trimUrlLength(gSources.selectedLabel),
       "The correct item should be selected in the filtered sources view");
 
-    let url = gScripts.selectedValue;
+    let url = gSources.selectedValue;
     if (url.indexOf("test-script-switching-01.js") != -1) {
       gDebugger.removeEventListener(aEvent.type, _onEvent);
 
@@ -397,7 +395,7 @@ function goUpAndWrap() {
         ok(gEditor.getCaretPosition().line == 0 &&
            gEditor.getCaretPosition().col == 0,
           "The editor didn't jump to the correct line.");
-        is(gScripts.visibleItems.length, 3,
+        is(gSources.visibleItems.length, 3,
           "Not all the correct scripts are shown after the search.");
 
         clickAndSwitch();
@@ -410,23 +408,63 @@ function goUpAndWrap() {
 }
 
 function clickAndSwitch() {
+  let sourceshown = false;
+  let popuphidden = false;
+  let popupshown = false;
+  let reopened = false;
+  let proceeded = false;
+
+  gDebugger.addEventListener("popuphidden", function _onEvent2(aEvent) {
+    gDebugger.removeEventListener(aEvent.type, _onEvent2);
+    info("Popup was hidden...");
+    popuphidden = true;
+
+    gDebugger.addEventListener("popupshown", function _onEvent3(aEvent) {
+      gDebugger.removeEventListener(aEvent.type, _onEvent3);
+      info("Popup was shown...");
+      popupshown = true;
+
+      proceed();
+    });
+
+    reopen();
+  });
+
+  function reopen() {
+    if (!sourceshown || !popuphidden || reopened) {
+      return;
+    }
+    info("Reopening popup...");
+    reopened = true;
+    append(".-");
+  }
+
+  function proceed() {
+    if (!sourceshown || !popuphidden || !popupshown || proceeded) {
+      return;
+    }
+    info("Proceeding with next test...");
+    proceeded = true;
+    executeSoon(clickAndSwitchAgain);
+  }
+
   gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
-    info("Current script url:\n" + gScripts.selectedValue + "\n");
+    info("Current script url:\n" + gSources.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    is(gFilteredSources.totalItems, 3,
+    is(gFilteredSources.itemCount, 3,
       "The filtered sources view should have 3 items available.");
     is(gFilteredSources.visibleItems.length, 3,
       "The filtered sources view should have 3 items visible.");
 
     is(gFilteredSources.selectedValue,
-       gDebugger.SourceUtils.trimUrlLength(gScripts.selectedValue),
+       gDebugger.SourceUtils.trimUrlLength(gSources.selectedValue),
       "The correct item should be selected in the filtered sources view");
     is(gFilteredSources.selectedLabel,
-       gDebugger.SourceUtils.trimUrlLength(gScripts.selectedLabel),
+       gDebugger.SourceUtils.trimUrlLength(gSources.selectedLabel),
       "The correct item should be selected in the filtered sources view");
 
-    let url = gScripts.selectedValue;
+    let url = gSources.selectedValue;
     if (url.indexOf("update-editor-mode.html") != -1) {
       gDebugger.removeEventListener(aEvent.type, _onEvent);
 
@@ -435,10 +473,12 @@ function clickAndSwitch() {
         ok(gEditor.getCaretPosition().line == 0 &&
            gEditor.getCaretPosition().col == 0,
           "The editor didn't jump to the correct line.");
-        is(gScripts.visibleItems.length, 3,
+        is(gSources.visibleItems.length, 3,
           "Not all the correct scripts are shown after the search.");
 
-        clickAndSwitchAgain();
+        info("Source was shown and verified");
+        sourceshown = true;
+        reopen();
       });
     } else {
       ok(false, "How did you get here?");
@@ -448,23 +488,63 @@ function clickAndSwitch() {
 }
 
 function clickAndSwitchAgain() {
+  let sourceshown = false;
+  let popuphidden = false;
+  let popupshown = false;
+  let reopened = false;
+  let proceeded = false;
+
+  gDebugger.addEventListener("popuphidden", function _onEvent2(aEvent) {
+    gDebugger.removeEventListener(aEvent.type, _onEvent2);
+    info("Popup was hidden...");
+    popuphidden = true;
+
+    gDebugger.addEventListener("popupshown", function _onEvent3(aEvent) {
+      gDebugger.removeEventListener(aEvent.type, _onEvent3);
+      info("Popup was shown...");
+      popupshown = true;
+
+      proceed();
+    });
+
+    reopen();
+  });
+
+  function reopen() {
+    if (!sourceshown || !popuphidden || reopened) {
+      return;
+    }
+    info("Reopening popup...");
+    reopened = true;
+    append(".-");
+  }
+
+  function proceed() {
+    if (!sourceshown || !popuphidden || !popupshown || proceeded) {
+      return;
+    }
+    info("Proceeding with next test...");
+    proceeded = true;
+    executeSoon(switchFocusWithEscape);
+  }
+
   gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
-    info("Current script url:\n" + gScripts.selectedValue + "\n");
+    info("Current script url:\n" + gSources.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    is(gFilteredSources.totalItems, 3,
+    is(gFilteredSources.itemCount, 3,
       "The filtered sources view should have 3 items available.");
     is(gFilteredSources.visibleItems.length, 3,
       "The filtered sources view should have 3 items visible.");
 
     is(gFilteredSources.selectedValue,
-       gDebugger.SourceUtils.trimUrlLength(gScripts.selectedValue),
+       gDebugger.SourceUtils.trimUrlLength(gSources.selectedValue),
       "The correct item should be selected in the filtered sources view");
     is(gFilteredSources.selectedLabel,
-       gDebugger.SourceUtils.trimUrlLength(gScripts.selectedLabel),
+       gDebugger.SourceUtils.trimUrlLength(gSources.selectedLabel),
       "The correct item should be selected in the filtered sources view");
 
-    let url = gScripts.selectedValue;
+    let url = gSources.selectedValue;
     if (url.indexOf("test-script-switching-01.js") != -1) {
       gDebugger.removeEventListener(aEvent.type, _onEvent);
 
@@ -473,10 +553,12 @@ function clickAndSwitchAgain() {
         ok(gEditor.getCaretPosition().line == 0 &&
            gEditor.getCaretPosition().col == 0,
           "The editor didn't jump to the correct line.");
-        is(gScripts.visibleItems.length, 3,
+        is(gSources.visibleItems.length, 3,
           "Not all the correct scripts are shown after the search.");
 
-        switchFocusWithEscape();
+        info("Source was shown and verified");
+        sourceshown = true;
+        reopen();
       });
     } else {
       ok(false, "How did you get here?");
@@ -489,18 +571,18 @@ function switchFocusWithEscape() {
   gDebugger.addEventListener("popuphidden", function _onEvent(aEvent) {
     gDebugger.removeEventListener(aEvent.type, _onEvent);
 
-    info("Current script url:\n" + gScripts.selectedValue + "\n");
+    info("Current script url:\n" + gSources.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    let url = gScripts.selectedValue;
-    if (url.indexOf("test-script-switching-01.js") != -1) {
+    let url = gSources.selectedValue;
+    if (url.indexOf("update-editor-mode.html") != -1) {
 
       executeSoon(function() {
         info("Editor caret position: " + gEditor.getCaretPosition().toSource() + "\n");
         ok(gEditor.getCaretPosition().line == 0 &&
            gEditor.getCaretPosition().col == 0,
           "The editor didn't jump to the correct line.");
-        is(gScripts.visibleItems.length, 3,
+        is(gSources.visibleItems.length, 3,
           "Not all the correct scripts are shown after the search.");
 
         focusAgainAfterEscape();
@@ -516,10 +598,10 @@ function focusAgainAfterEscape() {
   gDebugger.addEventListener("popupshown", function _onEvent(aEvent) {
     gDebugger.removeEventListener(aEvent.type, _onEvent);
 
-    info("Current script url:\n" + gScripts.selectedValue + "\n");
+    info("Current script url:\n" + gSources.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    let url = gScripts.selectedValue;
+    let url = gSources.selectedValue;
     if (url.indexOf("test-script-switching-01.js") != -1) {
 
       executeSoon(function() {
@@ -527,7 +609,7 @@ function focusAgainAfterEscape() {
         ok(gEditor.getCaretPosition().line == 0 &&
            gEditor.getCaretPosition().col == 0,
           "The editor didn't jump to the correct line.");
-        is(gScripts.visibleItems.length, 1,
+        is(gSources.visibleItems.length, 1,
           "Not all the correct scripts are shown after the search.");
 
         switchFocusWithReturn();
@@ -543,10 +625,10 @@ function switchFocusWithReturn() {
   gDebugger.addEventListener("popuphidden", function _onEvent(aEvent) {
     gDebugger.removeEventListener(aEvent.type, _onEvent);
 
-    info("Current script url:\n" + gScripts.selectedValue + "\n");
+    info("Current script url:\n" + gSources.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    let url = gScripts.selectedValue;
+    let url = gSources.selectedValue;
     if (url.indexOf("test-script-switching-01.js") != -1) {
 
       executeSoon(function() {
@@ -554,7 +636,7 @@ function switchFocusWithReturn() {
         ok(gEditor.getCaretPosition().line == 0 &&
            gEditor.getCaretPosition().col == 0,
           "The editor didn't jump to the correct line.");
-        is(gScripts.visibleItems.length, 3,
+        is(gSources.visibleItems.length, 3,
           "Not all the correct scripts are shown after the search.");
 
         closeDebuggerAndFinish();
@@ -598,8 +680,7 @@ registerCleanupFunction(function() {
   gDebuggee = null;
   gDebugger = null;
   gEditor = null;
-  gScripts = null;
+  gSources = null;
   gSearchBox = null;
   gFilteredSources = null;
-  gMenulist = null;
 });

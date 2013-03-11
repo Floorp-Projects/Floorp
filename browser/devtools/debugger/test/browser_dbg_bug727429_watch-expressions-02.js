@@ -24,7 +24,7 @@ function test()
     gWatch = gDebugger.DebuggerView.WatchExpressions;
     gVars = gDebugger.DebuggerView.Variables;
 
-    gDebugger.DebuggerView.togglePanes({ visible: true, animated: false });
+    gDebugger.DebuggerView.toggleInstrumentsPane({ visible: true, animated: false });
     addExpressions();
     performTest();
   });

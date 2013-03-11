@@ -17,7 +17,7 @@ var gDebugger = null;
 var gWatch = null;
 var gVars = null;
 
-requestLongerTimeout(2);
+requestLongerTimeout(3);
 
 function test() {
   debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
@@ -42,8 +42,8 @@ function testFrameEval() {
       is(gDebugger.DebuggerController.activeThread.state, "paused",
         "Should only be getting stack frames while paused.");
 
-      var localScope = gDebugger.DebuggerView.Variables._list.querySelectorAll(".scope")[1],
-          localNodes = localScope.querySelector(".details").childNodes,
+      var localScope = gDebugger.DebuggerView.Variables._list.querySelectorAll(".variables-view-scope")[1],
+          localNodes = localScope.querySelector(".variables-view-element-details").childNodes,
           aArg = localNodes[1],
           varT = localNodes[3];
 
@@ -70,7 +70,7 @@ function testFrameEval() {
 
       is(scope.get("this")._isContentVisible, true,
         "Should have the right visibility state for 'this'.");
-      is(scope.get("this").target.querySelectorAll(".dbg-variable-delete").length, 1,
+      is(scope.get("this").target.querySelectorAll(".variables-view-delete").length, 1,
         "Should have the one close button visible for 'this'.");
       is(scope.get("this").name, "this",
         "Should have the right name for 'this'.");
@@ -81,7 +81,7 @@ function testFrameEval() {
 
       is(scope.get("ermahgerd")._isContentVisible, true,
         "Should have the right visibility state for 'ermahgerd'.");
-      is(scope.get("ermahgerd").target.querySelectorAll(".dbg-variable-delete").length, 1,
+      is(scope.get("ermahgerd").target.querySelectorAll(".variables-view-delete").length, 1,
         "Should have the one close button visible for 'ermahgerd'.");
       is(scope.get("ermahgerd").name, "ermahgerd",
         "Should have the right name for 'ermahgerd'.");
@@ -92,7 +92,7 @@ function testFrameEval() {
 
       is(scope.get("aArg")._isContentVisible, true,
         "Should have the right visibility state for 'aArg'.");
-      is(scope.get("aArg").target.querySelectorAll(".dbg-variable-delete").length, 1,
+      is(scope.get("aArg").target.querySelectorAll(".variables-view-delete").length, 1,
         "Should have the one close button visible for 'aArg'.");
       is(scope.get("aArg").name, "aArg",
         "Should have the right name for 'aArg'.");
@@ -101,7 +101,7 @@ function testFrameEval() {
 
       is(scope.get("document.title")._isContentVisible, true,
         "Should have the right visibility state for 'document.title'.");
-      is(scope.get("document.title").target.querySelectorAll(".dbg-variable-delete").length, 1,
+      is(scope.get("document.title").target.querySelectorAll(".variables-view-delete").length, 1,
         "Should have the one close button visible for 'document.title'.");
       is(scope.get("document.title").name, "document.title",
         "Should have the right name for 'document.title'.");
@@ -112,7 +112,7 @@ function testFrameEval() {
 
       is(scope.get("document.title = 42")._isContentVisible, true,
         "Should have the right visibility state for 'document.title = 42'.");
-      is(scope.get("document.title = 42").target.querySelectorAll(".dbg-variable-delete").length, 1,
+      is(scope.get("document.title = 42").target.querySelectorAll(".variables-view-delete").length, 1,
         "Should have the one close button visible for 'document.title = 42'.");
       is(scope.get("document.title = 42").name, "document.title = 42",
         "Should have the right name for 'document.title = 42'.");
@@ -204,8 +204,8 @@ function testModification(aVar, aTest, aCallback, aNewValue, aNewResult, aArgRes
 
       // Get the variable reference anew, since the old ones were discarded when
       // we resumed.
-      var localScope = gDebugger.DebuggerView.Variables._list.querySelectorAll(".scope")[aLocalScopeIndex],
-          localNodes = localScope.querySelector(".details").childNodes,
+      var localScope = gDebugger.DebuggerView.Variables._list.querySelectorAll(".variables-view-scope")[aLocalScopeIndex],
+          localNodes = localScope.querySelector(".variables-view-element-details").childNodes,
           aArg = localNodes[1];
 
       is(aArg.querySelector(".value").getAttribute("value"), aArgResult,
@@ -286,8 +286,8 @@ function testExprDeletion(aVar, aTest, aCallback, aArgResult,
 
     // Get the variable reference anew, since the old ones were discarded when
     // we resumed.
-    var localScope = gDebugger.DebuggerView.Variables._list.querySelectorAll(".scope")[aLocalScopeIndex],
-        localNodes = localScope.querySelector(".details").childNodes,
+    var localScope = gDebugger.DebuggerView.Variables._list.querySelectorAll(".variables-view-scope")[aLocalScopeIndex],
+        localNodes = localScope.querySelector(".variables-view-element-details").childNodes,
         aArg = localNodes[1];
 
     is(aArg.querySelector(".value").getAttribute("value"), aArgResult,
@@ -325,7 +325,7 @@ function testExprDeletion(aVar, aTest, aCallback, aArgResult,
   }
 
   EventUtils.sendMouseEvent({ type: "click" },
-    aVar.querySelector(".dbg-variable-delete"),
+    aVar.querySelector(".variables-view-delete"),
     gDebugger);
 }
 
@@ -338,23 +338,23 @@ function test1(scope) {
   ok(scope, "There should be a wach expressions scope in the variables view");
   is(scope._store.size, 5, "There should be 5 evaluations availalble");
 
-  is(gWatch._cache[0].target.inputNode.value, "document.title = 43",
+  is(gWatch._cache[0].attachment.inputNode.value, "document.title = 43",
     "The first textbox input value is not the correct one");
   is(gWatch._cache[0].attachment.currentExpression, "document.title = 43",
     "The first textbox input value is not the correct one");
-  is(gWatch._cache[1].target.inputNode.value, "document.title",
+  is(gWatch._cache[1].attachment.inputNode.value, "document.title",
     "The second textbox input value is not the correct one");
   is(gWatch._cache[1].attachment.currentExpression, "document.title",
     "The second textbox input value is not the correct one");
-  is(gWatch._cache[2].target.inputNode.value, "aArg",
+  is(gWatch._cache[2].attachment.inputNode.value, "aArg",
     "The third textbox input value is not the correct one");
   is(gWatch._cache[2].attachment.currentExpression, "aArg",
     "The third textbox input value is not the correct one");
-  is(gWatch._cache[3].target.inputNode.value, "ermahgerd",
+  is(gWatch._cache[3].attachment.inputNode.value, "ermahgerd",
     "The fourth textbox input value is not the correct one");
   is(gWatch._cache[3].attachment.currentExpression, "ermahgerd",
     "The fourth textbox input value is not the correct one");
-  is(gWatch._cache[4].target.inputNode.value, "this",
+  is(gWatch._cache[4].attachment.inputNode.value, "this",
     "The fifth textbox input value is not the correct one");
   is(gWatch._cache[4].attachment.currentExpression, "this",
     "The fifth textbox input value is not the correct one");
@@ -369,23 +369,23 @@ function test2(scope) {
   ok(scope, "There should be a wach expressions scope in the variables view");
   is(scope._store.size, 5, "There should be 5 evaluations availalble");
 
-  is(gWatch._cache[0].target.inputNode.value, "document.title = 43",
+  is(gWatch._cache[0].attachment.inputNode.value, "document.title = 43",
     "The first textbox input value is not the correct one");
   is(gWatch._cache[0].attachment.currentExpression, "document.title = 43",
     "The first textbox input value is not the correct one");
-  is(gWatch._cache[1].target.inputNode.value, "document.title",
+  is(gWatch._cache[1].attachment.inputNode.value, "document.title",
     "The second textbox input value is not the correct one");
   is(gWatch._cache[1].attachment.currentExpression, "document.title",
     "The second textbox input value is not the correct one");
-  is(gWatch._cache[2].target.inputNode.value, "aArg = 44",
+  is(gWatch._cache[2].attachment.inputNode.value, "aArg = 44",
     "The third textbox input value is not the correct one");
   is(gWatch._cache[2].attachment.currentExpression, "aArg = 44",
     "The third textbox input value is not the correct one");
-  is(gWatch._cache[3].target.inputNode.value, "ermahgerd",
+  is(gWatch._cache[3].attachment.inputNode.value, "ermahgerd",
     "The fourth textbox input value is not the correct one");
   is(gWatch._cache[3].attachment.currentExpression, "ermahgerd",
     "The fourth textbox input value is not the correct one");
-  is(gWatch._cache[4].target.inputNode.value, "this",
+  is(gWatch._cache[4].attachment.inputNode.value, "this",
     "The fifth textbox input value is not the correct one");
   is(gWatch._cache[4].attachment.currentExpression, "this",
     "The fifth textbox input value is not the correct one");
@@ -400,19 +400,19 @@ function test3(scope) {
   ok(scope, "There should be a wach expressions scope in the variables view");
   is(scope._store.size, 4, "There should be 4 evaluations availalble");
 
-  is(gWatch._cache[0].target.inputNode.value, "document.title = 43",
+  is(gWatch._cache[0].attachment.inputNode.value, "document.title = 43",
     "The first textbox input value is not the correct one");
   is(gWatch._cache[0].attachment.currentExpression, "document.title = 43",
     "The first textbox input value is not the correct one");
-  is(gWatch._cache[1].target.inputNode.value, "document.title",
+  is(gWatch._cache[1].attachment.inputNode.value, "document.title",
     "The second textbox input value is not the correct one");
   is(gWatch._cache[1].attachment.currentExpression, "document.title",
     "The second textbox input value is not the correct one");
-  is(gWatch._cache[2].target.inputNode.value, "ermahgerd",
+  is(gWatch._cache[2].attachment.inputNode.value, "ermahgerd",
     "The third textbox input value is not the correct one");
   is(gWatch._cache[2].attachment.currentExpression, "ermahgerd",
     "The third textbox input value is not the correct one");
-  is(gWatch._cache[3].target.inputNode.value, "this",
+  is(gWatch._cache[3].attachment.inputNode.value, "this",
     "The fourth textbox input value is not the correct one");
   is(gWatch._cache[3].attachment.currentExpression, "this",
     "The fourth textbox input value is not the correct one");
@@ -427,15 +427,15 @@ function test4(scope) {
   ok(scope, "There should be a wach expressions scope in the variables view");
   is(scope._store.size, 3, "There should be 3 evaluations availalble");
 
-  is(gWatch._cache[0].target.inputNode.value, "document.title",
+  is(gWatch._cache[0].attachment.inputNode.value, "document.title",
     "The first textbox input value is not the correct one");
   is(gWatch._cache[0].attachment.currentExpression, "document.title",
     "The first textbox input value is not the correct one");
-  is(gWatch._cache[1].target.inputNode.value, "ermahgerd",
+  is(gWatch._cache[1].attachment.inputNode.value, "ermahgerd",
     "The second textbox input value is not the correct one");
   is(gWatch._cache[1].attachment.currentExpression, "ermahgerd",
     "The second textbox input value is not the correct one");
-  is(gWatch._cache[2].target.inputNode.value, "this",
+  is(gWatch._cache[2].attachment.inputNode.value, "this",
     "The third textbox input value is not the correct one");
   is(gWatch._cache[2].attachment.currentExpression, "this",
     "The third textbox input value is not the correct one");
@@ -450,11 +450,11 @@ function test5(scope) {
   ok(scope, "There should be a wach expressions scope in the variables view");
   is(scope._store.size, 2, "There should be 2 evaluations availalble");
 
-  is(gWatch._cache[0].target.inputNode.value, "ermahgerd",
+  is(gWatch._cache[0].attachment.inputNode.value, "ermahgerd",
     "The second textbox input value is not the correct one");
   is(gWatch._cache[0].attachment.currentExpression, "ermahgerd",
     "The second textbox input value is not the correct one");
-  is(gWatch._cache[1].target.inputNode.value, "this",
+  is(gWatch._cache[1].attachment.inputNode.value, "this",
     "The third textbox input value is not the correct one");
   is(gWatch._cache[1].attachment.currentExpression, "this",
     "The third textbox input value is not the correct one");
@@ -469,7 +469,7 @@ function test6(scope) {
   ok(scope, "There should be a wach expressions scope in the variables view");
   is(scope._store.size, 1, "There should be 1 evaluation availalble");
 
-  is(gWatch._cache[0].target.inputNode.value, "ermahgerd",
+  is(gWatch._cache[0].attachment.inputNode.value, "ermahgerd",
     "The third textbox input value is not the correct one");
   is(gWatch._cache[0].attachment.currentExpression, "ermahgerd",
     "The third textbox input value is not the correct one");

@@ -61,11 +61,11 @@ function testlabelshortening() {
       { href: "ftp://interesting.address.com/random/", leaf: "script.js" },
       { href: "ftp://interesting.address.com/random/", leaf: "x/script.js" },
       { href: "ftp://interesting.address.com/random/", leaf: "x/y/script.js?a=1" },
-      { href: "ftp://interesting.address.com/random/x/", leaf: "y/script.js?a=1&b=2", dupe: true },
-      { href: "ftp://interesting.address.com/random/x/y/", leaf: "script.js?a=1&b=2&c=3", dupe: true },
-      { href: "ftp://interesting.address.com/random/", leaf: "x/y/script.js?a=2", dupe: true },
-      { href: "ftp://interesting.address.com/random/x/", leaf: "y/script.js?a=2&b=3", dupe: true },
-      { href: "ftp://interesting.address.com/random/x/y/", leaf: "script.js?a=2&b=3&c=4", dupe: true },
+      { href: "ftp://interesting.address.com/random/x/", leaf: "y/script.js?a=1&b=2" },
+      { href: "ftp://interesting.address.com/random/x/y/", leaf: "script.js?a=1&b=2&c=3" },
+      { href: "ftp://interesting.address.com/random/", leaf: "x/y/script.js?a=2" },
+      { href: "ftp://interesting.address.com/random/x/", leaf: "y/script.js?a=2&b=3" },
+      { href: "ftp://interesting.address.com/random/x/y/", leaf: "script.js?a=2&b=3&c=4" },
 
       { href: "file://random/", leaf: "script_t1.js&a=1&b=2&c=3" },
       { href: "file://random/", leaf: "script_t2_1.js#id" },
@@ -81,7 +81,7 @@ function testlabelshortening() {
     urls.forEach(function(url) {
       executeSoon(function() {
         let loc = url.href + url.leaf;
-        vs.push(sv.getSourceLabel(loc, url.href), loc, { forced: true });
+        vs.push([sv.getSourceLabel(loc), loc], { forced: true });
       });
     });
 
@@ -137,7 +137,7 @@ function testlabelshortening() {
       ok(vs.containsLabel(nanana + "Batman!" + ellipsis),
         "Script (15) label is incorrect.");
 
-      is(vs._container.itemCount, urls.filter(function(url) !url.dupe).length,
+      is(vs.itemCount, urls.filter(function(url) !url.dupe).length,
         "Didn't get the correct number of scripts in the list.");
 
       is(vs.getItemByValue("http://some.address.com/random/subrandom/").label, "random/subrandom/",
