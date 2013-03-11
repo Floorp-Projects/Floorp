@@ -93,7 +93,6 @@ public class MenuPopup extends PopupWindow {
         anchor.getLocationOnScreen(anchorLocation);
 
         int screenWidth = mResources.getDisplayMetrics().widthPixels;
-        int screenHeight = mResources.getDisplayMetrics().heightPixels;
         int arrowWidth = mResources.getDimensionPixelSize(R.dimen.menu_popup_arrow_width);
         int arrowOffset = (anchor.getWidth() - arrowWidth)/2;
        
@@ -107,17 +106,9 @@ public class MenuPopup extends PopupWindow {
             ((LayoutParams) mArrowBottom.getLayoutParams()).rightMargin = mArrowMargin;
         }
 
-        if ((anchorLocation[1] + anchor.getHeight() + mPanel.getMeasuredHeight() >= screenHeight) &&
-            (anchorLocation[1] > mPanel.getMeasuredHeight())) {
-            // shown above anchor, only if there is enough space above
-            mArrowTop.setVisibility(View.GONE);
-            mArrowBottom.setVisibility(View.VISIBLE);
-            showAsDropDown(anchor, 0, -(mYOffset + mPanel.getMeasuredHeight() + anchor.getHeight()));
-        } else {
-            // shown below anchor
-            mArrowTop.setVisibility(View.VISIBLE);
-            mArrowBottom.setVisibility(View.GONE);
-            showAsDropDown(anchor, 0, -mYOffset);
-        }
+        // shown below anchor
+        mArrowTop.setVisibility(View.VISIBLE);
+        mArrowBottom.setVisibility(View.GONE);
+        showAsDropDown(anchor, 0, -mYOffset);
     }
 }
