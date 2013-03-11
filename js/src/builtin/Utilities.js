@@ -37,6 +37,7 @@ var std_Boolean_toString = Boolean.prototype.toString;
 var Std_Date = Date;
 var std_Date_now = Date.now;
 var std_Function_bind = Function.prototype.bind;
+var std_Function_apply = Function.prototype.apply;
 var std_Math_floor = Math.floor;
 var std_Math_max = Math.max;
 var std_Math_min = Math.min;
