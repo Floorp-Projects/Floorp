@@ -321,6 +321,7 @@ class ICEntry
                                 \
     _(Call_Fallback)            \
     _(Call_Scripted)            \
+    _(Call_AnyScripted)         \
     _(Call_Native)              \
                                 \
     _(GetElem_Fallback)         \
@@ -713,6 +714,7 @@ class ICStub
     static bool CanMakeCalls(ICStub::Kind kind) {
         switch (kind) {
           case Call_Scripted:
+          case Call_AnyScripted:
           case Call_Native:
           case Call_Fallback:
           case UseCount_Fallback:
@@ -799,24 +801,30 @@ class ICFallbackStub : public ICStub
         lastStubPtrAddr_ = stub->addressOfNext();
         numOptimizedStubs_++;
     }
-    bool hasStub(ICStub::Kind kind) {
-        ICStub *stub = icEntry_->firstStub();
-        do {
-            if (stub->kind() == kind)
-                return true;
 
-            stub = stub->next();
-        } while (stub);
-
-        return false;
-    }
-
-    ICStubConstIterator beginChainConst() {
-        return ICStubConstIterator(this->icEntry()->firstStub());
+    ICStubConstIterator beginChainConst() const {
+        return ICStubConstIterator(icEntry_->firstStub());
     }
 
     ICStubIterator beginChain() {
         return ICStubIterator(this);
+    }
+
+    bool hasStub(ICStub::Kind kind) const {
+        for (ICStubConstIterator iter = beginChainConst(); !iter.atEnd(); iter++) {
+            if (iter->kind() == kind)
+                return true;
+        }
+        return false;
+    }
+
+    unsigned numStubsWithKind(ICStub::Kind kind) const {
+        unsigned count = 0;
+        for (ICStubConstIterator iter = beginChainConst(); !iter.atEnd(); iter++) {
+            if (iter->kind() == kind)
+                count++;
+        }
+        return count;
     }
 
     void unlinkStub(Zone *zone, ICStub *prev, ICStub *stub);
@@ -4368,15 +4376,23 @@ class ICCallStubCompiler : public ICStubCompiler
 class ICCall_Fallback : public ICMonitoredFallbackStub
 {
     friend class ICStubSpace;
-    uint32_t isConstructing_;
+  public:
+    static const unsigned CONSTRUCTING_FLAG = 0x0001;
+
+    static const uint32_t MAX_OPTIMIZED_STUBS = 16;
+    static const uint32_t MAX_SCRIPTED_STUBS = 7;
+    static const uint32_t MAX_NATIVE_STUBS = 7;
+  private:
 
     ICCall_Fallback(IonCode *stubCode, bool isConstructing)
-      : ICMonitoredFallbackStub(ICStub::Call_Fallback, stubCode),
-        isConstructing_(isConstructing ? 1 : 0)
-    { }
+      : ICMonitoredFallbackStub(ICStub::Call_Fallback, stubCode)
+    {
+        extra_ = 0;
+        if (isConstructing)
+            extra_ |= CONSTRUCTING_FLAG;
+    }
 
   public:
-    static const uint32_t MAX_OPTIMIZED_STUBS = 8;
 
     static inline ICCall_Fallback *New(ICStubSpace *space, IonCode *code, bool isConstructing)
     {
@@ -4386,10 +4402,22 @@ class ICCall_Fallback : public ICMonitoredFallbackStub
     }
 
     bool isConstructing() const {
-        return isConstructing_;
+        return extra_ & CONSTRUCTING_FLAG;
     }
-    static size_t offsetOfIsConstructing() {
-        return offsetof(ICCall_Fallback, isConstructing_);
+
+    unsigned scriptedStubCount() const {
+        return numStubsWithKind(Call_Scripted);
+    }
+    bool scriptedStubsAreGeneralized() const {
+        return hasStub(Call_AnyScripted);
+    }
+
+    unsigned nativeStubCount() const {
+        return numStubsWithKind(Call_Native);
+    }
+    bool nativeStubsAreGeneralized() const {
+        // Return hasStub(Call_AnyNative) after Call_AnyNative stub is added.
+        return false;
     }
 
     // Compiler for this stub kind.
@@ -4441,32 +4469,59 @@ class ICCall_Scripted : public ICMonitoredStub
     HeapPtrScript &calleeScript() {
         return calleeScript_;
     }
+};
 
-    // Compiler for this stub kind.
-    class Compiler : public ICCallStubCompiler {
-      protected:
-        ICStub *firstMonitorStub_;
-        bool isConstructing_;
-        RootedScript calleeScript_;
-        bool generateStubCode(MacroAssembler &masm);
+class ICCall_AnyScripted : public ICMonitoredStub
+{
+    friend class ICStubSpace;
 
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(kind) | (static_cast<int32_t>(isConstructing_) << 16);
-        }
+    ICCall_AnyScripted(IonCode *stubCode, ICStub *firstMonitorStub)
+      : ICMonitoredStub(ICStub::Call_AnyScripted, stubCode, firstMonitorStub)
+    { }
 
-      public:
-        Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleScript calleeScript,
-                 bool isConstructing)
-          : ICCallStubCompiler(cx, ICStub::Call_Scripted),
-            firstMonitorStub_(firstMonitorStub),
-            isConstructing_(isConstructing),
-            calleeScript_(cx, calleeScript)
-        { }
+  public:
+    static inline ICCall_AnyScripted *New(ICStubSpace *space, IonCode *code,
+                                          ICStub *firstMonitorStub)
+    {
+        if (!code)
+            return NULL;
+        return space->allocate<ICCall_AnyScripted>(code, firstMonitorStub);
+    }
+};
 
-        ICStub *getStub(ICStubSpace *space) {
+// Compiler for Call_Scripted and Call_AnyScripted stubs.
+class ICCallScriptedCompiler : public ICCallStubCompiler {
+  protected:
+    ICStub *firstMonitorStub_;
+    bool isConstructing_;
+    RootedScript calleeScript_;
+    bool generateStubCode(MacroAssembler &masm);
+
+    virtual int32_t getKey() const {
+        return static_cast<int32_t>(kind) | (static_cast<int32_t>(isConstructing_) << 16);
+    }
+
+  public:
+    ICCallScriptedCompiler(JSContext *cx, ICStub *firstMonitorStub, HandleScript calleeScript,
+                            bool isConstructing)
+      : ICCallStubCompiler(cx, ICStub::Call_Scripted),
+        firstMonitorStub_(firstMonitorStub),
+        isConstructing_(isConstructing),
+        calleeScript_(cx, calleeScript)
+    { }
+
+    ICCallScriptedCompiler(JSContext *cx, ICStub *firstMonitorStub, bool isConstructing)
+      : ICCallStubCompiler(cx, ICStub::Call_AnyScripted),
+        firstMonitorStub_(firstMonitorStub),
+        isConstructing_(isConstructing),
+        calleeScript_(cx, NULL)
+    { }
+
+    ICStub *getStub(ICStubSpace *space) {
+        if (calleeScript_)
             return ICCall_Scripted::New(space, getStubCode(), firstMonitorStub_, calleeScript_);
-        }
-    };
+        return ICCall_AnyScripted::New(space, getStubCode(), firstMonitorStub_);
+    }
 };
 
 class ICCall_Native : public ICMonitoredStub
