@@ -370,7 +370,7 @@ abstract public class BrowserApp extends GeckoApp
                         if (tab == null || tab.isPrivate()) {
                             return null;
                         }
-                        return new NdefMessage(NdefRecord.createUri(tab.getURL()));
+                        return new NdefMessage(new NdefRecord[] { NdefRecord.createUri(tab.getURL()) });
                     }
                 }, this);
             }
@@ -1512,5 +1512,15 @@ abstract public class BrowserApp extends GeckoApp
                     GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Feedback:LastUrl", url));
             }
         }).execute();
+    }
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+        if (mAboutHomeContent != null) {
+            mAboutHomeContent.refresh();
+        }
+
     }
 }

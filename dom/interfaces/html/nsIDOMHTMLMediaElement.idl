@@ -27,7 +27,7 @@ interface nsIDOMMediaStream;
 #endif
 %}
 
-[scriptable, uuid(d9331886-3928-11e2-b0e1-10bf48d64bd4)]
+[scriptable, uuid(076770ab-988c-49a2-b3f0-90542f4a8c32)]
 interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 {
   // error state
@@ -35,7 +35,7 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
 
   // network state
            attribute DOMString src;
-  [implicit_jscontext] attribute jsval mozSrcObject;
+           attribute nsIDOMMediaStream mozSrcObject;
   readonly attribute DOMString currentSrc;
            attribute DOMString crossorigin;
   const unsigned short NETWORK_EMPTY = 0;

@@ -31,7 +31,6 @@ class nsIControllers;
 class nsICSSDeclaration;
 class nsIDocument;
 class nsDOMStringMap;
-class nsIDOMNamedNodeMap;
 class nsIHTMLCollection;
 class nsINodeInfo;
 class nsIURI;
@@ -332,7 +331,7 @@ public:
     nsRefPtr<mozilla::css::StyleRule> mSMILOverrideStyleRule;
 
     /**
-     * An object implementing nsIDOMNamedNodeMap for this content (attributes)
+     * An object implementing nsIDOMMozNamedAttrMap for this content (attributes)
      * @see FragmentOrElement::GetAttributes
      */
     nsRefPtr<nsDOMAttributeMap> mAttributeMap;

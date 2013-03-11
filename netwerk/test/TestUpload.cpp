@@ -120,15 +120,15 @@ main(int argc, char* argv[])
         nsCOMPtr<nsIServiceManager> servMan;
         NS_InitXPCOM2(getter_AddRefs(servMan), nullptr, nullptr);
 
-        nsCOMPtr<nsIIOService> ioService(do_GetService(kIOServiceCID, &rv));
         // first thing to do is create ourselves a stream that
         // is to be uploaded.
         nsCOMPtr<nsIInputStream> uploadStream;
         rv = NS_NewPostDataStream(getter_AddRefs(uploadStream),
                                   true,
-                                  nsDependentCString(fileName), // XXX UTF-8
-                                  0, ioService);
+                                  nsDependentCString(fileName)); // XXX UTF-8
         if (NS_FAILED(rv)) return -1;
+
+        nsCOMPtr<nsIIOService> ioService(do_GetService(kIOServiceCID, &rv));
 
         // create our url.
         nsCOMPtr<nsIURI> uri;

@@ -260,7 +260,7 @@ ElfLoader::Load(const char *path, int flags, LibHandle *parent)
   if ((subpath = strchr(path, '!'))) {
     char *zip_path = strndup(path, subpath - path);
     while (*(++subpath) == '/') { }
-    zip = zips.GetZip(zip_path);
+    zip = ZipCollection::GetZip(zip_path);
     Zip::Stream s;
     if (zip && zip->GetStream(subpath, &s)) {
       /* When the MOZ_LINKER_EXTRACT environment variable is set to "1",

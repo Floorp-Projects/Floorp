@@ -10,8 +10,10 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 this.EXPORTED_SYMBOLS = ["DebuggerPanel"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 Cu.import("resource:///modules/devtools/EventEmitter.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+    "resource://gre/modules/commonjs/sdk/core/promise.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DebuggerServer",
   "resource://gre/modules/devtools/dbg-server.jsm");
@@ -37,13 +39,6 @@ DebuggerPanel.prototype = {
 
     this._ensureOnlyOneRunningDebugger();
 
-    if (!this.target.isRemote) {
-      if (!DebuggerServer.initialized) {
-        DebuggerServer.init();
-        DebuggerServer.addBrowserActors();
-      }
-    }
-
     let onDebuggerLoaded = function () {
       this.panelWin.removeEventListener("Debugger:Loaded",
                                         onDebuggerLoaded, true);
@@ -62,7 +57,16 @@ DebuggerPanel.prototype = {
     this.panelWin.addEventListener("Debugger:Connected",
                                    onDebuggerConnected, true);
 
-    return deferred.promise;
+    // Remote debugging gets the debuggee from a RemoteTarget object.
+    if (this.target.isRemote) {
+      this.panelWin._remoteFlag = true;
+      return deferred.promise;
+    }
+
+    // Local debugging needs to convert the TabTarget to a RemoteTarget.
+    return this.target.makeRemote().then(function success() {
+      return deferred.promise;
+    });
   },
 
   // DevToolPanel API
@@ -71,6 +75,7 @@ DebuggerPanel.prototype = {
   get isReady() this._isReady,
 
   destroy: function() {
+    this.emit("destroyed");
     return Promise.resolve(null);
   },
 

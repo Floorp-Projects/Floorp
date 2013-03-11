@@ -23,8 +23,8 @@
 #include <media/mediarecorder.h>
 #include <camera/CameraParameters.h>
 #include <utils/String8.h>
-
 #include <system/audio.h>
+#include "GonkCameraHwMgr.h"
 
 namespace android {
 
@@ -34,6 +34,7 @@ struct MediaWriter;
 class MetaData;
 struct AudioSource;
 class MediaProfiles;
+class GonkCameraHardware;
 
 struct GonkRecorder {
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GonkRecorder)
@@ -51,7 +52,7 @@ struct GonkRecorder {
     virtual status_t setOutputFile(const char *path);
     virtual status_t setOutputFile(int fd, int64_t offset, int64_t length);
     virtual status_t setParameters(const String8& params);
-    virtual status_t setCameraHandle(int32_t handle);
+    virtual status_t setCamera(const sp<GonkCameraHardware>& aCameraHw);
     virtual status_t setListener(const sp<IMediaRecorderClient>& listener);
     virtual status_t prepare();
     virtual status_t start();
@@ -111,7 +112,7 @@ private:
     // will be sent to the client side using which the
     // frame buffers will be queued and dequeued
     bool mDisableAudio;
-    int32_t mCameraHandle;
+    sp<GonkCameraHardware> mCameraHw;
 
     status_t setupMPEG4Recording(
         int outputFd,

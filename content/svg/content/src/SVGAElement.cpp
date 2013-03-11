@@ -68,9 +68,7 @@ SVGAElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
 already_AddRefed<nsIDOMSVGAnimatedString>
 SVGAElement::Href()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedString> href;
-  mStringAttributes[HREF].ToDOMAnimatedString(getter_AddRefs(href), this);
-  return href.forget();
+  return mStringAttributes[HREF].ToDOMAnimatedString(this);
 }
 
 //----------------------------------------------------------------------
@@ -99,9 +97,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGAElement)
 already_AddRefed<nsIDOMSVGAnimatedString>
 SVGAElement::Target()
 {
-  nsCOMPtr<nsIDOMSVGAnimatedString> target;
-  mStringAttributes[TARGET].ToDOMAnimatedString(getter_AddRefs(target), this);
-  return target.forget();
+  return mStringAttributes[TARGET].ToDOMAnimatedString(this);
 }
 
 void

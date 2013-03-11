@@ -34,6 +34,7 @@
 #include "nsIFormControlFrame.h"
 #include "nsITextControlFrame.h"
 #include "nsIFrame.h"
+#include "nsRangeFrame.h"
 #include "nsEventStates.h"
 #include "nsIServiceManager.h"
 #include "nsError.h"
@@ -583,6 +584,7 @@ nsHTMLInputElement::nsHTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   , mCanShowValidUI(true)
   , mCanShowInvalidUI(true)
   , mHasRange(false)
+  , mIsDraggingRange(false)
 {
   // We are in a type=text so we now we currenty need a nsTextEditorState.
   mInputData.mState = new nsTextEditorState(this);
@@ -2551,6 +2553,60 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   return nsGenericHTMLFormElement::PreHandleEvent(aVisitor);
 }
 
+void
+nsHTMLInputElement::StartRangeThumbDrag(nsGUIEvent* aEvent)
+{
+  mIsDraggingRange = true;
+  mRangeThumbDragStartValue = GetValueAsDouble();
+  nsIPresShell::SetCapturingContent(this, CAPTURE_IGNOREALLOWED |
+                                          CAPTURE_RETARGETTOELEMENT);
+  nsRangeFrame* rangeFrame = do_QueryFrame(GetPrimaryFrame());
+  SetValueOfRangeForUserEvent(rangeFrame->GetValueAtEventPoint(aEvent));
+}
+
+void
+nsHTMLInputElement::FinishRangeThumbDrag(nsGUIEvent* aEvent)
+{
+  MOZ_ASSERT(mIsDraggingRange);
+  
+  if (nsIPresShell::GetCapturingContent() == this) {
+    nsIPresShell::SetCapturingContent(nullptr, 0); // cancel capture
+  }
+  if (aEvent) {
+    nsRangeFrame* rangeFrame = do_QueryFrame(GetPrimaryFrame());
+    SetValueOfRangeForUserEvent(rangeFrame->GetValueAtEventPoint(aEvent));
+  }
+  mIsDraggingRange = false;
+}
+
+void
+nsHTMLInputElement::CancelRangeThumbDrag()
+{
+  MOZ_ASSERT(mIsDraggingRange);
+
+  if (nsIPresShell::GetCapturingContent() == this) {
+    nsIPresShell::SetCapturingContent(nullptr, 0); // cancel capture
+  }
+  SetValueOfRangeForUserEvent(mRangeThumbDragStartValue);
+  mIsDraggingRange = false;
+}
+
+void
+nsHTMLInputElement::SetValueOfRangeForUserEvent(double aValue)
+{
+  MOZ_ASSERT(MOZ_DOUBLE_IS_FINITE(aValue));
+
+  nsAutoString val;
+  ConvertNumberToString(aValue, val);
+  SetValueInternal(val, true, true);
+  nsIFrame* frame = GetPrimaryFrame();
+  if (frame) {
+    // Trigger reflow to update the position of the thumb:
+    frame->PresContext()->GetPresShell()->
+      FrameNeedsReflow(frame, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+  }
+}
+
 static bool
 SelectTextFieldOnFocus()
 {
@@ -2592,6 +2648,11 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     if (aVisitor.mEvent->message == NS_FOCUS_CONTENT && 
         IsSingleLineTextControl(false)) {
       GetValueInternal(mFocusedValue);
+    }
+
+    if (mIsDraggingRange &&
+        aVisitor.mEvent->message == NS_BLUR_CONTENT) {
+      FinishRangeThumbDrag();
     }
 
     UpdateValidityUIBits(aVisitor.mEvent->message == NS_FOCUS_CONTENT);
@@ -2900,16 +2961,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                   newValue = value - std::max(step, 0.1 * (maximum - minimum));
                   break;
               }
-              MOZ_ASSERT(MOZ_DOUBLE_IS_FINITE(newValue));
-              nsAutoString val;
-              ConvertNumberToString(newValue, val);
-              SetValueInternal(val, true, true);
-              nsIFrame* frame = GetPrimaryFrame();
-              if (frame) {
-                // Trigger reflow to update the position of the thumb:
-                frame->PresContext()->GetPresShell()->
-                  FrameNeedsReflow(frame, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
-              }
+              SetValueOfRangeForUserEvent(newValue);
               aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
             }
           }
@@ -3002,7 +3054,113 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     }
   } // if
 
+  if (NS_SUCCEEDED(rv) && mType == NS_FORM_INPUT_RANGE) {
+    PostHandleEventForRangeThumb(aVisitor);
+  }
+
   return rv;
+}
+
+void
+nsHTMLInputElement::PostHandleEventForRangeThumb(nsEventChainPostVisitor& aVisitor)
+{
+  MOZ_ASSERT(mType == NS_FORM_INPUT_RANGE);
+
+  if (nsEventStatus_eConsumeNoDefault == aVisitor.mEventStatus ||
+      !(aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT ||
+        aVisitor.mEvent->eventStructType == NS_TOUCH_EVENT ||
+        aVisitor.mEvent->eventStructType == NS_KEY_EVENT)) {
+    return;
+  }
+
+  nsRangeFrame* rangeFrame = do_QueryFrame(GetPrimaryFrame());
+  if (!rangeFrame && mIsDraggingRange) {
+    CancelRangeThumbDrag();
+    return;
+  }
+
+  switch (aVisitor.mEvent->message)
+  {
+    case NS_MOUSE_BUTTON_DOWN:
+    case NS_TOUCH_START: {
+      if (mIsDraggingRange) {
+        break;
+      }
+      if (nsIPresShell::GetCapturingContent()) {
+        break; // don't start drag if someone else is already capturing
+      }
+      nsInputEvent* inputEvent = static_cast<nsInputEvent*>(aVisitor.mEvent);
+      if (inputEvent->IsShift() || inputEvent->IsControl() ||
+          inputEvent->IsAlt() || inputEvent->IsMeta() ||
+          inputEvent->IsAltGraph() || inputEvent->IsFn() ||
+          inputEvent->IsOS()) {
+        break; // ignore
+      }
+      if (aVisitor.mEvent->message == NS_MOUSE_BUTTON_DOWN) {
+        nsMouseEvent* mouseEvent = static_cast<nsMouseEvent*>(aVisitor.mEvent);
+        if (mouseEvent->buttons == nsMouseEvent::eLeftButtonFlag) {
+          StartRangeThumbDrag(inputEvent);
+        } else if (mIsDraggingRange) {
+          CancelRangeThumbDrag();
+        }
+      } else {
+        nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aVisitor.mEvent);
+        if (touchEvent->touches.Length() == 1) {
+          StartRangeThumbDrag(inputEvent);
+        } else if (mIsDraggingRange) {
+          CancelRangeThumbDrag();
+        }
+      }
+      aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
+      // Also set this to tell the native code on Android that it should not
+      // scroll:
+      aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+    } break;
+
+    case NS_MOUSE_MOVE:
+    case NS_TOUCH_MOVE:
+      if (!mIsDraggingRange) {
+        break;
+      }
+      if (nsIPresShell::GetCapturingContent() != this) {
+        // Someone else grabbed capture.
+        CancelRangeThumbDrag();
+        break;
+      }
+      SetValueOfRangeForUserEvent(rangeFrame->GetValueAtEventPoint(
+                                    static_cast<nsInputEvent*>(aVisitor.mEvent)));
+      aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
+      // Also set this to tell the native code on Android that it should not
+      // scroll:
+      aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+      break;
+
+    case NS_MOUSE_BUTTON_UP:
+    case NS_TOUCH_END:
+      if (!mIsDraggingRange) {
+        break;
+      }
+      // We don't check to see whether we are the capturing content here and
+      // call CancelRangeThumbDrag() if that is the case. We just finish off
+      // the drag and set our final value (unless someone has called
+      // preventDefault() and prevents us getting here).
+      FinishRangeThumbDrag(static_cast<nsInputEvent*>(aVisitor.mEvent));
+      aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
+      break;
+
+    case NS_KEY_PRESS:
+      if (mIsDraggingRange &&
+          static_cast<nsKeyEvent*>(aVisitor.mEvent)->keyCode == NS_VK_ESCAPE) {
+        CancelRangeThumbDrag();
+      }
+      break;
+
+    case NS_TOUCH_CANCEL:
+      if (mIsDraggingRange) {
+        CancelRangeThumbDrag();
+      }
+      break;
+  }
 }
 
 void
@@ -3097,6 +3255,10 @@ nsHTMLInputElement::UnbindFromTree(bool aDeep, bool aNullParent)
 void
 nsHTMLInputElement::HandleTypeChange(uint8_t aNewType)
 {
+  if (mType == NS_FORM_INPUT_RANGE && mIsDraggingRange) {
+    CancelRangeThumbDrag();
+  }
+
   ValueModeType aOldValueMode = GetValueMode();
   uint8_t oldType = mType;
   nsAutoString aOldValue;
@@ -3915,7 +4077,8 @@ FireEventForAccessibility(nsIDOMHTMLInputElement* aTarget,
                           const nsAString& aEventType)
 {
   nsCOMPtr<nsIDOMEvent> event;
-  if (NS_SUCCEEDED(nsEventDispatcher::CreateEvent(aPresContext, nullptr,
+  nsCOMPtr<mozilla::dom::Element> element = do_QueryInterface(aTarget);
+  if (NS_SUCCEEDED(nsEventDispatcher::CreateEvent(element, aPresContext, nullptr,
                                                   NS_LITERAL_STRING("Events"),
                                                   getter_AddRefs(event)))) {
     event->InitEvent(aEventType, true, true);

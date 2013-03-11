@@ -293,15 +293,15 @@ kpml_start_timers (kpml_data_t *kpml_data)
 
     kpml_data->inter_digit_timer =
         cprCreateTimer("Interdigit timer", GSM_KPML_INTER_DIGIT_TIMER,
-                       TIMER_EXPIRATION, gsm_msg_queue);
+                       TIMER_EXPIRATION, gsm_msgq);
 
     kpml_data->critical_timer =
         cprCreateTimer("Criticaldigit timer", GSM_KPML_CRITICAL_DIGIT_TIMER,
-                       TIMER_EXPIRATION, gsm_msg_queue);
+                       TIMER_EXPIRATION, gsm_msgq);
 
     kpml_data->extra_digit_timer =
         cprCreateTimer("Extradigit timer", GSM_KPML_EXTRA_DIGIT_TIMER,
-                       TIMER_EXPIRATION, gsm_msg_queue);
+                       TIMER_EXPIRATION, gsm_msgq);
 
     /* Check if any of the timer cannot be allocated */
     if (kpml_data->inter_digit_timer == NULL ||
@@ -665,7 +665,7 @@ kpml_start_subscription_timer (kpml_data_t * kpml_data, unsigned long duration)
 
     kpml_data->sub_timer = cprCreateTimer("sub timer",
                                           GSM_KPML_SUBSCRIPTION_TIMER,
-                                          TIMER_EXPIRATION, gsm_msg_queue);
+                                          TIMER_EXPIRATION, gsm_msgq);
 
     kpml_data->sub_duration = duration;
 

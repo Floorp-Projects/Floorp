@@ -106,6 +106,7 @@ public:
     NONE,
     BCJ_THUMB,
     BCJ_ARM,
+    BCJ_X86,
     FILTER_MAX
   };
   static ZStreamFilter GetFilter(FilterId id);

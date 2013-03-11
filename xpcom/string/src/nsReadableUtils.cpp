@@ -68,33 +68,11 @@ CopyUTF8toUTF16( const char* aSource, nsAString& aDest )
     AppendUTF8toUTF16(aSource, aDest);
   }
 
-// Like GetMutableData, but returns false if it can't
-// allocate enough memory (e.g. due to OOM) rather than
-// returning zero (which could have other meanings) and
-// throws away the out-param pointer.
-bool
-SetLengthForWriting(nsAString& aDest, uint32_t aDesiredLength)
-  {
-    PRUnichar* dummy;
-    uint32_t len = aDest.GetMutableData(&dummy, aDesiredLength);
-    return (len >= aDesiredLength);
-  }
-
-bool
-SetLengthForWritingC(nsACString& aDest, uint32_t aDesiredLength)
-  {
-    char* dummy;
-    uint32_t len = aDest.GetMutableData(&dummy, aDesiredLength);
-    return (len >= aDesiredLength);
-  }
-
-
 void
 LossyAppendUTF16toASCII( const nsAString& aSource, nsACString& aDest )
   {
     uint32_t old_dest_length = aDest.Length();
-    if (!SetLengthForWritingC(aDest, old_dest_length + aSource.Length()))
-        return;
+    aDest.SetLength(old_dest_length + aSource.Length());
 
     nsAString::const_iterator fromBegin, fromEnd;
 
@@ -113,8 +91,7 @@ void
 AppendASCIItoUTF16( const nsACString& aSource, nsAString& aDest )
   {
     uint32_t old_dest_length = aDest.Length();
-    if (!SetLengthForWriting(aDest, old_dest_length + aSource.Length()))
-        return;
+    aDest.SetLength(old_dest_length + aSource.Length());
 
     nsACString::const_iterator fromBegin, fromEnd;
 
@@ -160,8 +137,7 @@ AppendUTF16toUTF8( const nsAString& aSource, nsACString& aDest )
         uint32_t old_dest_length = aDest.Length();
 
         // Grow the buffer if we need to.
-        if(!SetLengthForWritingC(aDest, old_dest_length + count))
-            return;
+        aDest.SetLength(old_dest_length + count);
 
         // All ready? Time to convert
 
@@ -177,6 +153,15 @@ AppendUTF16toUTF8( const nsAString& aSource, nsACString& aDest )
 
 void
 AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest )
+{
+  if (!AppendUTF8toUTF16(aSource, aDest, mozilla::fallible_t())) {
+    NS_RUNTIMEABORT("OOM");
+  }
+}
+
+bool
+AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest,
+                   const mozilla::fallible_t& )
   {
     nsACString::const_iterator source_start, source_end;
     CalculateUTF8Length calculator;
@@ -191,8 +176,9 @@ AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest )
         uint32_t old_dest_length = aDest.Length();
 
         // Grow the buffer if we need to.
-        if(!SetLengthForWriting(aDest, old_dest_length + count))
-          return;
+        if (!aDest.SetLength(old_dest_length + count, mozilla::fallible_t())) {
+          return false;
+        }
 
         // All ready? Time to convert
 
@@ -210,6 +196,8 @@ AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest )
             aDest.SetLength(old_dest_length);
           }
       }
+
+    return true;
   }
 
 void
@@ -381,8 +369,7 @@ CopyUnicodeTo( const nsAString::const_iterator& aSrcStart,
                nsAString& aDest )
   {
     nsAString::iterator writer;
-    if (!SetLengthForWriting(aDest, Distance(aSrcStart, aSrcEnd)))
-        return;
+    aDest.SetLength(Distance(aSrcStart, aSrcEnd));
 
     aDest.BeginWriting(writer);
     nsAString::const_iterator fromBegin(aSrcStart);
@@ -397,8 +384,7 @@ AppendUnicodeTo( const nsAString::const_iterator& aSrcStart,
   {
     nsAString::iterator writer;
     uint32_t oldLength = aDest.Length();
-    if(!SetLengthForWriting(aDest, oldLength + Distance(aSrcStart, aSrcEnd)))
-        return;
+    aDest.SetLength(oldLength + Distance(aSrcStart, aSrcEnd));
 
     aDest.BeginWriting(writer).advance(oldLength);
     nsAString::const_iterator fromBegin(aSrcStart);
@@ -620,8 +606,7 @@ ToUpperCase( const nsACString& aSource, nsACString& aDest )
   {
     nsACString::const_iterator fromBegin, fromEnd;
     nsACString::iterator toBegin;
-    if (!SetLengthForWritingC(aDest, aSource.Length()))
-        return;
+    aDest.SetLength(aSource.Length());
 
     CopyToUpperCase converter(aDest.BeginWriting(toBegin));
     copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
@@ -699,8 +684,7 @@ ToLowerCase( const nsACString& aSource, nsACString& aDest )
   {
     nsACString::const_iterator fromBegin, fromEnd;
     nsACString::iterator toBegin;
-    if (!SetLengthForWritingC(aDest, aSource.Length()))
-        return;
+    aDest.SetLength(aSource.Length());
 
     CopyToLowerCase converter(aDest.BeginWriting(toBegin));
     copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);

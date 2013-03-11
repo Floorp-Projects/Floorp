@@ -16,7 +16,8 @@ class nsDOMNotifyAudioAvailableEvent : public nsDOMEvent,
                                        public nsIDOMNotifyAudioAvailableEvent
 {
 public:
-  nsDOMNotifyAudioAvailableEvent(nsPresContext* aPresContext, nsEvent* aEvent,
+  nsDOMNotifyAudioAvailableEvent(mozilla::dom::EventTarget* aOwner,
+                                 nsPresContext* aPresContext, nsEvent* aEvent,
                                  uint32_t aEventType, float * aFrameBuffer,
                                  uint32_t aFrameBufferLength, float aTime);
 
@@ -28,6 +29,7 @@ public:
   NS_FORWARD_NSIDOMEVENT(nsDOMEvent::)
 
   nsresult NS_NewDOMAudioAvailableEvent(nsIDOMEvent** aInstancePtrResult,
+                                        mozilla::dom::EventTarget* aOwner,
                                         nsPresContext* aPresContext,
                                         nsEvent *aEvent,
                                         uint32_t aEventType,

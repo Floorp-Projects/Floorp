@@ -863,6 +863,28 @@ public:
   }
 
   /**
+   * An alternative default implementation of ComputeInvalidationRegion,
+   * that instead invalidates only the changed area between the two items.
+   */
+  void ComputeInvalidationRegionDifference(nsDisplayListBuilder* aBuilder,
+                                           const nsDisplayItemBoundsGeometry* aGeometry,
+                                           nsRegion* aInvalidRegion)
+  {
+    bool snap;
+    nsRect bounds = GetBounds(aBuilder, &snap);
+
+    if (!aGeometry->mBounds.IsEqualInterior(bounds)) {
+      nscoord radii[8];
+      if (aGeometry->mHasRoundedCorners ||
+          GetUnderlyingFrame()->GetBorderRadii(radii)) {
+        aInvalidRegion->Or(aGeometry->mBounds, bounds);
+      } else {
+        aInvalidRegion->Xor(aGeometry->mBounds, bounds);
+      }
+    }
+  }
+
+  /**
    * Called when the area rendered by this display item has changed (been
    * invalidated or changed geometry) since the last paint. This includes
    * when the display item was not rendered at all in the last paint.
@@ -1815,6 +1837,19 @@ public:
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) MOZ_OVERRIDE;
 
+  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE
+  {
+    return new nsDisplayItemBoundsGeometry(this, aBuilder);
+  }
+
+  virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                         const nsDisplayItemGeometry* aGeometry,
+                                         nsRegion* aInvalidRegion)
+  {
+    const nsDisplayItemBoundsGeometry* geometry = static_cast<const nsDisplayItemBoundsGeometry*>(aGeometry);
+    ComputeInvalidationRegionDifference(aBuilder, geometry, aInvalidRegion);
+  }
+
   NS_DISPLAY_DECL_NAME("SolidColor", TYPE_SOLID_COLOR)
 
 private:
@@ -1963,6 +1998,19 @@ public:
   {
     *aSnap = true;
     return nsRect(ToReferenceFrame(), GetUnderlyingFrame()->GetSize());
+  }
+
+  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE
+  {
+    return new nsDisplayItemBoundsGeometry(this, aBuilder);
+  }
+
+  virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                         const nsDisplayItemGeometry* aGeometry,
+                                         nsRegion* aInvalidRegion)
+  {
+    const nsDisplayItemBoundsGeometry* geometry = static_cast<const nsDisplayItemBoundsGeometry*>(aGeometry);
+    ComputeInvalidationRegionDifference(aBuilder, geometry, aInvalidRegion);
   }
 
   NS_DISPLAY_DECL_NAME("BackgroundColor", TYPE_BACKGROUND_COLOR)

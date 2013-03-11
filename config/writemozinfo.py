@@ -30,10 +30,10 @@ def build_dict(env=os.environ):
                         ', '.join(missing))
 
     if 'MOZCONFIG' in env:
-      d["mozconfig"] = env["MOZCONFIG"]
+        d["mozconfig"] = env["MOZCONFIG"]
 
     if 'TOPSRCDIR' in env:
-      d["topsrcdir"] = env["TOPSRCDIR"]
+        d["topsrcdir"] = env["TOPSRCDIR"]
 
     # os
     o = env["OS_TARGET"]
@@ -49,10 +49,10 @@ def build_dict(env=os.environ):
 
     # Widget toolkit, just pass the value directly through.
     d["toolkit"] = env["MOZ_WIDGET_TOOLKIT"]
-    
+
     # Application name
     if 'MOZ_APP_NAME' in env:
-      d["appname"] = env["MOZ_APP_NAME"]
+        d["appname"] = env["MOZ_APP_NAME"]
 
     # processor
     p = env["TARGET_CPU"]

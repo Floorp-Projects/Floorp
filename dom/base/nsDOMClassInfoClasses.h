@@ -20,7 +20,7 @@ DOMCI_CLASS(XMLDocument)
 DOMCI_CLASS(DOMException)
 DOMCI_CLASS(Element)
 DOMCI_CLASS(Attr)
-DOMCI_CLASS(NamedNodeMap)
+DOMCI_CLASS(MozNamedAttrMap)
 
 // Event classes
 DOMCI_CLASS(Event)
@@ -183,7 +183,6 @@ DOMCI_CLASS(OfflineResourceList)
 DOMCI_CLASS(Blob)
 DOMCI_CLASS(File)
 DOMCI_CLASS(FileReader)
-DOMCI_CLASS(ArchiveReader)
 DOMCI_CLASS(ArchiveRequest)
 
 // DOM modal content window class, almost identical to Window

@@ -464,7 +464,6 @@ SuggestAutoComplete.prototype = {
     this._suggestURI = submission.uri;
     var method = (submission.postData ? "POST" : "GET");
     this._request.open(method, this._suggestURI.spec, true);
-    this._request.channel.notificationCallbacks = new SearchSuggestLoadListener();
     if (this._request.channel instanceof Ci.nsIPrivateBrowsingChannel) {
       this._request.channel.setPrivate(privacyMode);
     }
@@ -522,30 +521,6 @@ SuggestAutoComplete.prototype = {
   // nsISupports
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteSearch,
                                          Ci.nsIAutoCompleteObserver])
-};
-
-function SearchSuggestLoadListener() {
-}
-SearchSuggestLoadListener.prototype = {
-  // nsIBadCertListener2
-  notifyCertProblem: function SSLL_certProblem(socketInfo, status, targetSite) {
-    return true;
-  },
-
-  // nsISSLErrorListener
-  notifySSLError: function SSLL_SSLError(socketInfo, error, targetSite) {
-    return true;
-  },
-
-  // nsIInterfaceRequestor
-  getInterface: function SSLL_getInterface(iid) {
-    return this.QueryInterface(iid);
-  },
-
-  // nsISupports
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIBadCertListener2,
-                                         Ci.nsISSLErrorListener,
-                                         Ci.nsIInterfaceRequestor])
 };
 
 /**

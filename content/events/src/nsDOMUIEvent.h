@@ -15,7 +15,8 @@ class nsDOMUIEvent : public nsDOMEvent,
                      public nsIDOMUIEvent
 {
 public:
-  nsDOMUIEvent(nsPresContext* aPresContext, nsGUIEvent* aEvent);
+  nsDOMUIEvent(mozilla::dom::EventTarget* aOwner,
+               nsPresContext* aPresContext, nsGUIEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMUIEvent, nsDOMEvent)

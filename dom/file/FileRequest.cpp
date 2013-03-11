@@ -131,7 +131,8 @@ FileRequest::FireProgressEvent(uint64_t aLoaded, uint64_t aTotal)
   }
 
   nsCOMPtr<nsIDOMEvent> event;
-  nsresult rv = NS_NewDOMProgressEvent(getter_AddRefs(event), nullptr, nullptr);
+  nsresult rv = NS_NewDOMProgressEvent(getter_AddRefs(event), this,
+                                       nullptr, nullptr);
   if (NS_FAILED(rv)) {
     return;
   }

@@ -43,3 +43,6 @@ else
 HOST_CXXFLAGS += -DTARGET_ARM
 endif
 endif
+ifeq (x86,$(CPU_ARCH))
+HOST_CXXFLAGS += -DTARGET_X86
+endif

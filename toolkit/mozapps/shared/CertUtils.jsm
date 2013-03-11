@@ -209,16 +209,6 @@ BadCertHandler.prototype = {
     callback.onRedirectVerifyCallback(Components.results.NS_OK);
   },
 
-  // Suppress any certificate errors
-  notifyCertProblem: function(socketInfo, status, targetSite) {
-    return true;
-  },
-
-  // Suppress any ssl errors
-  notifySSLError: function(socketInfo, error, targetSite) {
-    return true;
-  },
-
   // nsIInterfaceRequestor
   getInterface: function(iid) {
     return this.QueryInterface(iid);
@@ -227,8 +217,6 @@ BadCertHandler.prototype = {
   // nsISupports
   QueryInterface: function(iid) {
     if (!iid.equals(Ci.nsIChannelEventSink) &&
-        !iid.equals(Ci.nsIBadCertListener2) &&
-        !iid.equals(Ci.nsISSLErrorListener) &&
         !iid.equals(Ci.nsIInterfaceRequestor) &&
         !iid.equals(Ci.nsISupports))
       throw Cr.NS_ERROR_NO_INTERFACE;

@@ -8,8 +8,8 @@
 
 interface nsIDOMArchiveReader;
 
-[scriptable, builtinclass, uuid(6e59f1be-24bc-43ee-810a-8abb21599f29)]
+[scriptable, builtinclass, uuid(cb72a719-f07d-4271-a120-16e9148a8699)]
 interface nsIDOMArchiveRequest : nsIDOMDOMRequest
 {
-  readonly attribute nsIDOMArchiveReader reader;
+  readonly attribute nsISupports /* ArchiveReader */ reader;
 };

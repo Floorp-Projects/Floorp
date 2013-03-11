@@ -16,22 +16,73 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsAutoPtr.h"
 #include "nsIJSNativeInitializer.h"
+#include "mozilla/dom/EventTarget.h"
+#include "mozilla/dom/EventBinding.h"
+#include "mozilla/dom/BindingUtils.h"
+#include "nsIScriptGlobalObject.h"
 
 class nsIContent;
 class nsPresContext;
 struct JSContext;
 class JSObject;
- 
-class nsDOMEvent : public nsIDOMEvent,
-                   public nsIJSNativeInitializer
-{
-public:
 
-  nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent);
+class nsDOMEvent : public nsIDOMEvent,
+                   public nsIJSNativeInitializer,
+                   public nsWrapperCache
+{
+protected:
+  nsDOMEvent(mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,
+             nsEvent* aEvent);
   virtual ~nsDOMEvent();
+public:
+  void GetParentObject(nsIScriptGlobalObject** aParentObject)
+  {
+    if (mOwner) {
+      CallQueryInterface(mOwner, aParentObject);
+    } else {
+      *aParentObject = nullptr;
+    }
+  }
+
+  static nsDOMEvent* FromSupports(nsISupports* aSupports)
+  {
+    nsIDOMEvent* event =
+      static_cast<nsIDOMEvent*>(aSupports);
+#ifdef DEBUG
+    {
+      nsCOMPtr<nsIDOMEvent> target_qi =
+        do_QueryInterface(aSupports);
+
+      // If this assertion fires the QI implementation for the object in
+      // question doesn't use the nsIDOMEvent pointer as the
+      // nsISupports pointer. That must be fixed, or we'll crash...
+      MOZ_ASSERT(target_qi == event, "Uh, fix QI!");
+    }
+#endif
+    return static_cast<nsDOMEvent*>(event);
+  }
+
+  static already_AddRefed<nsDOMEvent> CreateEvent(mozilla::dom::EventTarget* aOwner,
+                                                  nsPresContext* aPresContext,
+                                                  nsEvent* aEvent)
+  {
+    nsRefPtr<nsDOMEvent> e = new nsDOMEvent(aOwner, aPresContext, aEvent);
+    e->SetIsDOMBinding();
+    return e.forget();
+  }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMEvent, nsIDOMEvent)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsDOMEvent, nsIDOMEvent)
+
+  nsISupports* GetParentObject()
+  {
+    return mOwner;
+  }
+
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+  {
+    return mozilla::dom::EventBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  }
 
   // nsIDOMEvent Interface
   NS_DECL_NSIDOMEVENT
@@ -63,6 +114,111 @@ public:
   static nsIntPoint GetScreenCoords(nsPresContext* aPresContext,
                                     nsEvent* aEvent,
                                     nsIntPoint aPoint);
+
+  static already_AddRefed<nsDOMEvent> Constructor(const mozilla::dom::GlobalObject& aGlobal,
+                                                  const nsAString& aType,
+                                                  const mozilla::dom::EventInit& aParam,
+                                                  mozilla::ErrorResult& aRv);
+
+  // Implemented as xpidl method
+  // void GetType(nsString& aRetval) {}
+
+  already_AddRefed<mozilla::dom::EventTarget> GetTarget()
+  {
+    nsCOMPtr<nsIDOMEventTarget> t;
+    GetTarget(getter_AddRefs(t));
+    nsCOMPtr<mozilla::dom::EventTarget> et = do_QueryInterface(t);
+    return et.forget();
+  }
+
+  already_AddRefed<mozilla::dom::EventTarget> GetCurrentTarget()
+  {
+    nsCOMPtr<nsIDOMEventTarget> t;
+    GetCurrentTarget(getter_AddRefs(t));
+    nsCOMPtr<mozilla::dom::EventTarget> et = do_QueryInterface(t);
+    return et.forget();
+  }
+
+  uint16_t EventPhase()
+  {
+    uint16_t p;
+    GetEventPhase(&p);
+    return p;
+  }
+
+  // xpidl implementation
+  // void StopPropagation();
+
+  // xpidl implementation
+  // void StopImmediatePropagation();
+
+  bool Bubbles()
+  {
+    bool b;
+    GetBubbles(&b);
+    return b;
+  }
+
+  bool Cancelable()
+  {
+    bool c;
+    GetCancelable(&c);
+    return c;
+  }
+
+  // xpidl implementation
+  // void PreventDefault();
+
+  bool DefaultPrevented()
+  {
+    bool d;
+    GetDefaultPrevented(&d);
+    return d;
+  }
+
+  bool IsTrusted()
+  {
+    bool i;
+    GetIsTrusted(&i);
+    return i;
+  }
+
+  uint64_t TimeStamp()
+  {
+    uint64_t t;
+    GetTimeStamp(&t);
+    return t;
+  }
+
+  void InitEvent(const nsAString& aType, bool aBubbles, bool aCancelable,
+                 mozilla::ErrorResult& aRv)
+  {
+    aRv = InitEvent(aType, aBubbles, aCancelable);
+  }
+
+  already_AddRefed<mozilla::dom::EventTarget> GetOriginalTarget()
+  {
+    nsCOMPtr<nsIDOMEventTarget> t;
+    GetOriginalTarget(getter_AddRefs(t));
+    nsCOMPtr<mozilla::dom::EventTarget> et = do_QueryInterface(t);
+    return et.forget();
+  }
+
+  already_AddRefed<mozilla::dom::EventTarget> GetExplicitOriginalTarget()
+  {
+    nsCOMPtr<nsIDOMEventTarget> t;
+    GetExplicitOriginalTarget(getter_AddRefs(t));
+    nsCOMPtr<mozilla::dom::EventTarget> et = do_QueryInterface(t);
+    return et.forget();
+  }
+
+  bool GetPreventDefault()
+  {
+    bool d;
+    GetDefaultPrevented(&d);
+    return d;
+  }
+
 protected:
 
   // Internal helper functions
@@ -72,6 +228,7 @@ protected:
   nsEvent*                    mEvent;
   nsRefPtr<nsPresContext>     mPresContext;
   nsCOMPtr<nsIDOMEventTarget> mExplicitOriginalTarget;
+  nsCOMPtr<nsPIDOMWindow>     mOwner; // nsPIDOMWindow for now.
   nsString                    mCachedType;
   bool                        mEventIsInternal;
   bool                        mPrivateDataDuplicated;
@@ -102,9 +259,23 @@ protected:
   NS_IMETHOD SetTarget(nsIDOMEventTarget *aTarget) { return _to SetTarget(aTarget); } \
   NS_IMETHOD_(bool) IsDispatchStopped(void) { return _to IsDispatchStopped(); } \
   NS_IMETHOD_(nsEvent *) GetInternalNSEvent(void) { return _to GetInternalNSEvent(); } \
-  NS_IMETHOD_(void) SetTrusted(bool aTrusted) { _to SetTrusted(aTrusted); }
+  NS_IMETHOD_(void) SetTrusted(bool aTrusted) { _to SetTrusted(aTrusted); } \
+  NS_IMETHOD_(void) SetOwner(mozilla::dom::EventTarget* aOwner) { _to SetOwner(aOwner); } \
+  NS_IMETHOD_(nsDOMEvent *) InternalDOMEvent(void) { return _to InternalDOMEvent(); }
 
 #define NS_FORWARD_TO_NSDOMEVENT_NO_SERIALIZATION_NO_DUPLICATION \
   NS_FORWARD_NSIDOMEVENT_NO_SERIALIZATION_NO_DUPLICATION(nsDOMEvent::)
+
+inline nsISupports*
+ToSupports(nsDOMEvent* e)
+{
+  return static_cast<nsIDOMEvent*>(e);
+}
+
+inline nsISupports*
+ToCanonicalSupports(nsDOMEvent* e)
+{
+  return static_cast<nsIDOMEvent*>(e);
+}
 
 #endif // nsDOMEvent_h__

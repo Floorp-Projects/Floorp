@@ -107,9 +107,8 @@ is(e.style.font, "", "should not have font shorthand");
 e.setAttribute("style", "font: medium serif; font-stretch: condensed");
 is(e.style.font, "", "should not have font shorthand");
 
-// For background, we can only express the value as a shorthand if
-// origin and clip are both their default, or if they're both the same.
-// ... or at least we will once we support them in the shorthand.
+// Test that all combinations of background-clip and background-origin
+// can be expressed in the shorthand (which wasn't the case previously).
 e.setAttribute("style", "background: red");
 isnot(e.style.background, "", "should have background shorthand");
 e.setAttribute("style", "background: red; background-origin: border-box");
@@ -117,17 +116,21 @@ isnot(e.style.background, "", "should have background shorthand (origin:border-b
 e.setAttribute("style", "background: red; background-clip: padding-box");
 isnot(e.style.background, "", "should have background shorthand (clip:padding-box)");
 e.setAttribute("style", "background: red; background-origin: content-box");
-is(e.style.background, "", "should not have background shorthand (origin:content-box)");
+isnot(e.style.background, "", "should have background shorthand (origin:content-box)");
 e.setAttribute("style", "background: red; background-clip: content-box");
-is(e.style.background, "", "should not have background shorthand (clip:content-box)");
+isnot(e.style.background, "", "should have background shorthand (clip:content-box)");
 e.setAttribute("style", "background: red; background-clip: content-box; background-origin: content-box;");
 isnot(e.style.background, "", "should have background shorthand (clip:content-box;origin:content-box)");
+
+// Test background-size in the background shorthand.
 e.setAttribute("style", "background: red; background-size: 100% 100%");
 isnot(e.style.background, "", "should have background shorthand (size:100% 100%)");
 e.setAttribute("style", "background: red; background-size: 100% auto");
 isnot(e.style.background, "", "should have background shorthand (size:100% auto)");
 e.setAttribute("style", "background: red; background-size: auto 100%");
 isnot(e.style.background, "", "should have background shorthand (size:auto 100%)");
+
+// Test background-inline-policy not interacting with the background shorthand.
 e.setAttribute("style", "background: red; -moz-background-inline-policy: each-box");
 isnot(e.style.background, "", "should have background shorthand (-moz-background-inline-policy not relevant)");
 

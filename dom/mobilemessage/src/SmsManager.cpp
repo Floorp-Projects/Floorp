@@ -319,7 +319,7 @@ nsresult
 SmsManager::DispatchTrustedSmsEventToSelf(const nsAString& aEventName, nsIDOMMozSmsMessage* aMessage)
 {
   nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMMozSmsEvent(getter_AddRefs(event), nullptr, nullptr);
+  NS_NewDOMMozSmsEvent(getter_AddRefs(event), this, nullptr, nullptr);
   NS_ASSERTION(event, "This should never fail!");
 
   nsCOMPtr<nsIDOMMozSmsEvent> se = do_QueryInterface(event);

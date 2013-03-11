@@ -2916,6 +2916,14 @@ public:
 
     nsExpirationState *GetExpirationState() { return &mExpirationState; }
 
+    // Tell the textrun to release its reference to its creating gfxFontGroup
+    // immediately, rather than on destruction. This is used for textruns
+    // that are actually owned by a gfxFontGroup, so that they don't keep it
+    // permanently alive due to a circular reference. (The caller of this is
+    // taking responsibility for ensuring the textrun will not outlive its
+    // mFontGroup.)
+    void ReleaseFontGroup();
+
     struct LigatureData {
         // textrun offsets of the start and end of the containing ligature
         uint32_t mLigatureStart;
@@ -3040,13 +3048,16 @@ private:
     nsAutoTArray<GlyphRun,1>        mGlyphRuns;
 
     void             *mUserData;
-    gfxFontGroup     *mFontGroup; // addrefed
+    gfxFontGroup     *mFontGroup; // addrefed on creation, but our reference
+                                  // may be released by ReleaseFontGroup()
     gfxSkipChars      mSkipChars;
     nsExpirationState mExpirationState;
 
     bool              mSkipDrawing; // true if the font group we used had a user font
                                     // download that's in progress, so we should hide text
                                     // until the download completes (or timeout fires)
+    bool              mReleasedFontGroup; // we already called NS_RELEASE on
+                                          // mFontGroup, so don't do it again
 };
 
 class THEBES_API gfxFontGroup : public gfxTextRunFactory {
@@ -3210,6 +3221,18 @@ public:
         return mSkipDrawing;
     }
 
+    class LazyReferenceContextGetter {
+    public:
+      virtual already_AddRefed<gfxContext> GetRefContext() = 0;
+    };
+    // The gfxFontGroup keeps ownership of this textrun.
+    // It is only guaranteed to exist until the next call to GetEllipsisTextRun
+    // (which might use a different appUnitsPerDev value) for the font group,
+    // or until UpdateFontList is called, or the fontgroup is destroyed.
+    // Get it/use it/forget it :) - don't keep a reference that might go stale.
+    gfxTextRun* GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel,
+                                   LazyReferenceContextGetter& aRefContextGetter);
+
 protected:
     nsString mFamilies;
     gfxFontStyle mStyle;
@@ -3218,6 +3241,10 @@ protected:
 
     gfxUserFontSet* mUserFontSet;
     uint64_t mCurrGeneration;  // track the current user font set generation, rebuild font list if needed
+
+    // Cache a textrun representing an ellipsis (useful for CSS text-overflow)
+    // at a specific appUnitsPerDevPixel size
+    nsAutoPtr<gfxTextRun>   mCachedEllipsisTextRun;
 
     // cache the most recent pref font to avoid general pref font lookup
     nsRefPtr<gfxFontFamily> mLastPrefFamily;

@@ -95,9 +95,9 @@ network-events
 Network Events, 795136
 Receive events when a packet is downloaded or uploaded from the device.
 
-network-http
+systemXHR
 {}
-old name: systemXHR
+Allow XMLHtppRequest from any source
 
 network-tcp
 {}

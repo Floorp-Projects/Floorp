@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim: set ts=4 et sw=4 tw=80: */
 /*
  * Copyright (C) 2010 The Android Open Source Project
  * Copyright (C) 2012 Mozilla Foundation
@@ -37,20 +35,19 @@
 using namespace android;
 using namespace mozilla::layers;
 
-GonkNativeWindow::GonkNativeWindow(GonkNativeWindowNewFrameCallback* aCallback)
-  : mNewFrameCallback(aCallback)
-{
-    GonkNativeWindow::init();
+GonkNativeWindow::GonkNativeWindow() :
+    mDefaultWidth(1),
+    mDefaultHeight(1),
+    mPixelFormat(PIXEL_FORMAT_RGBA_8888),
+    mBufferCount(MIN_BUFFER_SLOTS + 1),
+    mConnectedApi(NO_CONNECTED_API),
+    mAbandoned(false),
+    mFrameCounter(0),
+    mGeneration(0),
+    mNewFrameCallback(nullptr) {
 }
 
-GonkNativeWindow::GonkNativeWindow()
-  : mNewFrameCallback(nullptr)
-{
-    GonkNativeWindow::init();
-}
-
-GonkNativeWindow::~GonkNativeWindow()
-{
+GonkNativeWindow::~GonkNativeWindow() {
     nsAutoTArray<SurfaceDescriptor, NUM_BUFFER_SLOTS> freeList;
     freeAllBuffersLocked(freeList);
     releaseBufferFreeListUnlocked(freeList);
@@ -58,87 +55,17 @@ GonkNativeWindow::~GonkNativeWindow()
 
 void GonkNativeWindow::abandon()
 {
+    CNW_LOGD("abandon");
     nsAutoTArray<SurfaceDescriptor, NUM_BUFFER_SLOTS> freeList;
     {
         Mutex::Autolock lock(mMutex);
+        mQueue.clear();
         mAbandoned = true;
         freeAllBuffersLocked(freeList);
     }
 
     releaseBufferFreeListUnlocked(freeList);
     mDequeueCondition.signal();
-}
-
-void GonkNativeWindow::init()
-{
-    // Initialize the ANativeWindow function pointers.
-    ANativeWindow::setSwapInterval  = hook_setSwapInterval;
-    ANativeWindow::dequeueBuffer    = hook_dequeueBuffer;
-    ANativeWindow::cancelBuffer     = hook_cancelBuffer;
-    ANativeWindow::lockBuffer       = hook_lockBuffer;
-    ANativeWindow::queueBuffer      = hook_queueBuffer;
-    ANativeWindow::query            = hook_query;
-    ANativeWindow::perform          = hook_perform;
-
-    mDefaultWidth = 0;
-    mDefaultHeight = 0;
-    mPixelFormat = 0;
-    mUsage = 0;
-    mTimestamp = NATIVE_WINDOW_TIMESTAMP_AUTO;
-    mBufferCount = MIN_BUFFER_SLOTS;
-    mFrameCounter = 0;
-    mGeneration = 0;
-    mAbandoned =false;
-}
-
-
-int GonkNativeWindow::hook_setSwapInterval(ANativeWindow* window, int interval)
-{
-    GonkNativeWindow* c = getSelf(window);
-    return c->setSwapInterval(interval);
-}
-
-int GonkNativeWindow::hook_dequeueBuffer(ANativeWindow* window,
-        ANativeWindowBuffer** buffer)
-{
-    GonkNativeWindow* c = getSelf(window);
-    return c->dequeueBuffer(buffer);
-}
-
-int GonkNativeWindow::hook_cancelBuffer(ANativeWindow* window,
-        ANativeWindowBuffer* buffer)
-{
-    GonkNativeWindow* c = getSelf(window);
-    return c->cancelBuffer(buffer);
-}
-
-int GonkNativeWindow::hook_lockBuffer(ANativeWindow* window,
-        ANativeWindowBuffer* buffer)
-{
-    GonkNativeWindow* c = getSelf(window);
-    return c->lockBuffer(buffer);
-}
-
-int GonkNativeWindow::hook_queueBuffer(ANativeWindow* window,
-        ANativeWindowBuffer* buffer)
-{
-    GonkNativeWindow* c = getSelf(window);
-    return c->queueBuffer(buffer);
-}
-
-int GonkNativeWindow::hook_query(const ANativeWindow* window,
-                                int what, int* value)
-{
-    const GonkNativeWindow* c = getSelf(window);
-    return c->query(what, value);
-}
-
-int GonkNativeWindow::hook_perform(ANativeWindow* window, int operation, ...)
-{
-    va_list args;
-    va_start(args, operation);
-    GonkNativeWindow* c = getSelf(window);
-    return c->perform(operation, args);
 }
 
 void GonkNativeWindow::freeAllBuffersLocked(nsTArray<SurfaceDescriptor>& freeList)
@@ -194,7 +121,7 @@ void GonkNativeWindow::clearRenderingStateBuffersLocked()
     }
 }
 
-int GonkNativeWindow::setBufferCount(int bufferCount)
+status_t GonkNativeWindow::setBufferCount(int bufferCount)
 {
     CNW_LOGD("setBufferCount: count=%d", bufferCount);
     nsAutoTArray<SurfaceDescriptor, NUM_BUFFER_SLOTS> freeList;
@@ -230,15 +157,16 @@ int GonkNativeWindow::setBufferCount(int bufferCount)
             mBufferCount = bufferCount;
             //clear only buffers in RENDERING state.
             clearRenderingStateBuffersLocked();
+            mQueue.clear();
             mDequeueCondition.signal();
             return OK;
         }
 
-        // reducing the number of buffers
         // here we're guaranteed that the client doesn't have dequeued buffers
         // and will release all of its buffer references.
         freeAllBuffersLocked(freeList);
         mBufferCount = bufferCount;
+        mQueue.clear();
         mDequeueCondition.signal();
     }
 
@@ -246,12 +174,49 @@ int GonkNativeWindow::setBufferCount(int bufferCount)
     return OK;
 }
 
-int GonkNativeWindow::dequeueBuffer(android_native_buffer_t** buffer)
+status_t GonkNativeWindow::setDefaultBufferSize(uint32_t w, uint32_t h)
 {
-    uint32_t defaultWidth;
-    uint32_t defaultHeight;
-    uint32_t pixelFormat;
-    uint32_t usage;
+    CNW_LOGD("setDefaultBufferSize: w=%d, h=%d", w, h);
+    if (!w || !h) {
+        CNW_LOGE("setDefaultBufferSize: dimensions cannot be 0 (w=%d, h=%d)",
+                w, h);
+        return BAD_VALUE;
+    }
+
+    Mutex::Autolock lock(mMutex);
+    mDefaultWidth = w;
+    mDefaultHeight = h;
+    return OK;
+}
+
+status_t GonkNativeWindow::requestBuffer(int slot, sp<GraphicBuffer>* buf)
+{
+    CNW_LOGD("requestBuffer: slot=%d", slot);
+    Mutex::Autolock lock(mMutex);
+    if (mAbandoned) {
+        CNW_LOGE("requestBuffer: GonkNativeWindow has been abandoned!");
+        return NO_INIT;
+    }
+    if (slot < 0 || mBufferCount <= slot) {
+        CNW_LOGE("requestBuffer: slot index out of range [0, %d]: %d",
+                mBufferCount, slot);
+        return BAD_VALUE;
+    }
+    mSlots[slot].mRequestBufferCalled = true;
+    *buf = mSlots[slot].mGraphicBuffer;
+    return NO_ERROR;
+}
+
+status_t GonkNativeWindow::dequeueBuffer(int *outBuf, uint32_t w, uint32_t h,
+        uint32_t format, uint32_t usage)
+{
+    if ((w && !h) || (!w && h)) {
+        CNW_LOGE("dequeueBuffer: invalid size: w=%u, h=%u", w, h);
+        return BAD_VALUE;
+    }
+
+    status_t returnFlags(OK);
+    bool updateFormat = false;
     uint32_t generation;
     bool alloc = false;
     int buf = INVALID_BUFFER_SLOT;
@@ -330,27 +295,32 @@ int GonkNativeWindow::dequeueBuffer(android_native_buffer_t** buffer)
         }
 
         buf = found;
+        *outBuf = found;
 
-        // buffer is now in DEQUEUED
+        const bool useDefaultSize = !w && !h;
+        if (useDefaultSize) {
+            // use the default size
+            w = mDefaultWidth;
+            h = mDefaultHeight;
+        }
+
+        updateFormat = (format != 0);
+        if (!updateFormat) {
+            // keep the current (or default) format
+            format = mPixelFormat;
+        }
+
         mSlots[buf].mBufferState = BufferSlot::DEQUEUED;
 
         const sp<GraphicBuffer>& gbuf(mSlots[buf].mGraphicBuffer);
         alloc = (gbuf == NULL);
         if ((gbuf!=NULL) &&
-           ((uint32_t(gbuf->width)  != mDefaultWidth) ||
-            (uint32_t(gbuf->height) != mDefaultHeight) ||
-            (uint32_t(gbuf->format) != mPixelFormat) ||
-            ((uint32_t(gbuf->usage) & mUsage) != mUsage))) {
+           ((uint32_t(gbuf->width)  != w) ||
+            (uint32_t(gbuf->height) != h) ||
+            (uint32_t(gbuf->format) != format) ||
+            ((uint32_t(gbuf->usage) & usage) != usage))) {
             alloc = true;
             descOld = mSlots[buf].mSurfaceDescriptor;
-        }
-
-        if (alloc) {
-            // get local copies for graphics buffer allocations
-            defaultWidth = mDefaultWidth;
-            defaultHeight = mDefaultHeight;
-            pixelFormat = mPixelFormat;
-            usage = mUsage;
         }
     }
     
@@ -365,11 +335,12 @@ int GonkNativeWindow::dequeueBuffer(android_native_buffer_t** buffer)
     ImageBridgeChild* ibc;
     sp<GraphicBuffer> graphicBuffer;
     if (alloc) {
+        usage |= GraphicBuffer::USAGE_HW_TEXTURE;
         status_t error;
         ibc = ImageBridgeChild::GetSingleton();
         CNW_LOGD("dequeueBuffer: about to alloc surface descriptor");
-        ibc->AllocSurfaceDescriptorGralloc(gfxIntSize(defaultWidth, defaultHeight),
-                                           pixelFormat,
+        ibc->AllocSurfaceDescriptorGralloc(gfxIntSize(w, h),
+                                           format,
                                            usage,
                                            &desc);
         // We can only use a gralloc buffer here.  If we didn't get
@@ -392,17 +363,20 @@ int GonkNativeWindow::dequeueBuffer(android_native_buffer_t** buffer)
     {
         Mutex::Autolock lock(mMutex);
         if (generation == mGeneration) {
+            if (updateFormat) {
+                mPixelFormat = format;
+            }
             if (alloc) {
                 mSlots[buf].mGraphicBuffer = graphicBuffer;
                 mSlots[buf].mSurfaceDescriptor = desc;
                 mSlots[buf].mSurfaceDescriptor.get_SurfaceDescriptorGralloc().external() = true;
-            }
-            *buffer = mSlots[buf].mGraphicBuffer.get();
+                mSlots[buf].mRequestBufferCalled = false;
 
+                returnFlags |= ISurfaceTexture::BUFFER_NEEDS_REALLOCATION;
+            }
             CNW_LOGD("dequeueBuffer: returning slot=%d buf=%p ", buf,
                     mSlots[buf].mGraphicBuffer->handle);
         } else {
-            *buffer = nullptr;
             tooOld = true;
         }
     }
@@ -415,7 +389,15 @@ int GonkNativeWindow::dequeueBuffer(android_native_buffer_t** buffer)
         ibc->DeallocSurfaceDescriptorGralloc(desc);
     }
 
+    CNW_LOGD("dequeueBuffer: returning slot=%d buf=%p ", buf,
+            mSlots[buf].mGraphicBuffer->handle );
+
     CNW_LOGD("dequeueBuffer: X");
+    return returnFlags;
+}
+
+status_t GonkNativeWindow::setSynchronousMode(bool enabled)
+{
     return NO_ERROR;
 }
 
@@ -448,7 +430,8 @@ GonkNativeWindow::getSurfaceDescriptorFromBuffer(ANativeWindowBuffer* buffer)
   return &mSlots[buf].mSurfaceDescriptor;
 }
 
-int GonkNativeWindow::queueBuffer(ANativeWindowBuffer* buffer)
+status_t GonkNativeWindow::queueBuffer(int buf, int64_t timestamp,
+        uint32_t* outWidth, uint32_t* outHeight, uint32_t* outTransform)
 {
     {
         Mutex::Autolock lock(mMutex);
@@ -458,9 +441,6 @@ int GonkNativeWindow::queueBuffer(ANativeWindowBuffer* buffer)
             CNW_LOGE("queueBuffer: GonkNativeWindow has been abandoned!");
             return NO_INIT;
         }
-
-        int buf = getSlotFromBufferLocked(buffer);
-
         if (buf < 0 || buf >= mBufferCount) {
             CNW_LOGE("queueBuffer: slot index out of range [0, %d]: %d",
                      mBufferCount, buf);
@@ -469,14 +449,13 @@ int GonkNativeWindow::queueBuffer(ANativeWindowBuffer* buffer)
             CNW_LOGE("queueBuffer: slot %d is not owned by the client "
                      "(state=%d)", buf, mSlots[buf].mBufferState);
             return -EINVAL;
+        } else if (!mSlots[buf].mRequestBufferCalled) {
+            CNW_LOGE("queueBuffer: slot %d was enqueued without requesting a "
+                    "buffer", buf);
+            return -EINVAL;
         }
 
-        int64_t timestamp;
-        if (mTimestamp == NATIVE_WINDOW_TIMESTAMP_AUTO) {
-            timestamp = systemTime(SYSTEM_TIME_MONOTONIC);
-        } else {
-            timestamp = mTimestamp;
-        }
+        mQueue.push_back(buf);
 
         mSlots[buf].mBufferState = BufferSlot::QUEUED;
         mSlots[buf].mTimestamp = timestamp;
@@ -484,6 +463,10 @@ int GonkNativeWindow::queueBuffer(ANativeWindowBuffer* buffer)
         mSlots[buf].mFrameNumber = mFrameCounter;
 
         mDequeueCondition.signal();
+
+        *outWidth = mDefaultWidth;
+        *outHeight = mDefaultHeight;
+        *outTransform = 0;
     }
 
     // OnNewFrame might call lockCurrentBuffer so we must release the
@@ -507,26 +490,19 @@ GonkNativeWindow::getCurrentBuffer()
     return NULL;
   }
 
-  int found = -1;
-  for (int i = 0; i < mBufferCount; i++) {
-    const int state = mSlots[i].mBufferState;
-    if (state == BufferSlot::QUEUED) {
-      if (found < 0 ||
-          mSlots[i].mFrameNumber < mSlots[found].mFrameNumber) {
-        found = i;
-      }
-    }
-  }
-
-  if (found < 0) {
+  if(mQueue.empty()) {
     mDequeueCondition.signal();
-    return NULL;
+    return nullptr;
   }
 
-  mSlots[found].mBufferState = BufferSlot::RENDERING;
+  Fifo::iterator front(mQueue.begin());
+  int buf = *front;
+
+  mSlots[buf].mBufferState = BufferSlot::RENDERING;
 
   nsRefPtr<GraphicBufferLocked> ret =
-    new CameraGraphicBuffer(this, found, mGeneration, mSlots[found].mSurfaceDescriptor);
+    new CameraGraphicBuffer(this, buf, mGeneration, mSlots[buf].mSurfaceDescriptor);
+  mQueue.erase(front);
   mDequeueCondition.signal();
   return ret.forget();
 }
@@ -563,78 +539,123 @@ GonkNativeWindow::returnBuffer(uint32_t aIndex, uint32_t aGeneration)
   return true;
 }
 
-int GonkNativeWindow::lockBuffer(ANativeWindowBuffer* buffer)
-{
-    CNW_LOGD("GonkNativeWindow::lockBuffer");
-    Mutex::Autolock lock(mMutex);
-
-    if (mAbandoned) {
-        CNW_LOGE("lockBuffer: GonkNativeWindow has been abandoned!");
-        return NO_INIT;
-    }
-    return OK;
-}
-
-int GonkNativeWindow::cancelBuffer(ANativeWindowBuffer* buffer)
-{
+void GonkNativeWindow::cancelBuffer(int buf) {
+    CNW_LOGD("cancelBuffer: slot=%d", buf);
     Mutex::Autolock lock(mMutex);
 
     if (mAbandoned) {
         CNW_LOGD("cancelBuffer: GonkNativeWindow has been abandoned!");
-        return NO_INIT;
+        return;
     }
-    int buf = getSlotFromBufferLocked(buffer);
 
-    CNW_LOGD("cancelBuffer: slot=%d", buf);
     if (buf < 0 || buf >= mBufferCount) {
         CNW_LOGE("cancelBuffer: slot index out of range [0, %d]: %d",
                 mBufferCount, buf);
-        return -EINVAL;
+        return;
     } else if (mSlots[buf].mBufferState != BufferSlot::DEQUEUED) {
         CNW_LOGE("cancelBuffer: slot %d is not owned by the client (state=%d)",
                 buf, mSlots[buf].mBufferState);
-        return -EINVAL;
+        return;
     }
     mSlots[buf].mBufferState = BufferSlot::FREE;
     mSlots[buf].mFrameNumber = 0;
     mDequeueCondition.signal();
+}
+
+status_t GonkNativeWindow::setCrop(const Rect& crop) {
     return OK;
 }
 
-int GonkNativeWindow::perform(int operation, va_list args)
-{
-    switch (operation) {
-        case NATIVE_WINDOW_SET_BUFFERS_TRANSFORM:
-        case NATIVE_WINDOW_SET_BUFFERS_SIZE:
-        case NATIVE_WINDOW_SET_SCALING_MODE:
-        case NATIVE_WINDOW_SET_CROP:
-        case NATIVE_WINDOW_CONNECT:
-        case NATIVE_WINDOW_DISCONNECT:
-            // deprecated. must return NO_ERROR.
-            return NO_ERROR;
-        case NATIVE_WINDOW_SET_USAGE:
-            return dispatchSetUsage(args);
-        case NATIVE_WINDOW_SET_BUFFER_COUNT:
-            return dispatchSetBufferCount(args);
-        case NATIVE_WINDOW_SET_BUFFERS_GEOMETRY:
-            return dispatchSetBuffersGeometry(args);
-        case NATIVE_WINDOW_SET_BUFFERS_TIMESTAMP:
-            return dispatchSetBuffersTimestamp(args);
-        case NATIVE_WINDOW_SET_BUFFERS_DIMENSIONS:
-            return dispatchSetBuffersDimensions(args);
-        case NATIVE_WINDOW_SET_BUFFERS_FORMAT:
-            return dispatchSetBuffersFormat(args);
-        case NATIVE_WINDOW_LOCK:
-        case NATIVE_WINDOW_UNLOCK_AND_POST:
-        case NATIVE_WINDOW_API_CONNECT:
-        case NATIVE_WINDOW_API_DISCONNECT:
-        default:
-            NS_WARNING("Unsupported operation");
-            return INVALID_OPERATION;
-    }
+status_t GonkNativeWindow::setTransform(uint32_t transform) {
+    return OK;
 }
 
-int GonkNativeWindow::query(int what, int* outValue) const
+status_t GonkNativeWindow::connect(int api,
+        uint32_t* outWidth, uint32_t* outHeight, uint32_t* outTransform) {
+    CNW_LOGD("connect: api=%d", api);
+    Mutex::Autolock lock(mMutex);
+
+    if (mAbandoned) {
+        CNW_LOGE("connect: GonkNativeWindow has been abandoned!");
+        return NO_INIT;
+    }
+
+    int err = NO_ERROR;
+    switch (api) {
+        case NATIVE_WINDOW_API_EGL:
+        case NATIVE_WINDOW_API_CPU:
+        case NATIVE_WINDOW_API_MEDIA:
+        case NATIVE_WINDOW_API_CAMERA:
+            if (mConnectedApi != NO_CONNECTED_API) {
+                CNW_LOGE("connect: already connected (cur=%d, req=%d)",
+                        mConnectedApi, api);
+                err = -EINVAL;
+            } else {
+                mConnectedApi = api;
+                *outWidth = mDefaultWidth;
+                *outHeight = mDefaultHeight;
+                *outTransform = 0;
+            }
+            break;
+        default:
+            err = -EINVAL;
+            break;
+    }
+    return err;
+}
+
+status_t GonkNativeWindow::disconnect(int api) {
+    CNW_LOGD("disconnect: api=%d", api);
+
+    int err = NO_ERROR;
+    nsAutoTArray<SurfaceDescriptor, NUM_BUFFER_SLOTS> freeList;
+    {
+        Mutex::Autolock lock(mMutex);
+
+        if (mAbandoned) {
+            // it is not really an error to disconnect after the surface
+            // has been abandoned, it should just be a no-op.
+            return NO_ERROR;
+        }
+
+        switch (api) {
+            case NATIVE_WINDOW_API_EGL:
+            case NATIVE_WINDOW_API_CPU:
+            case NATIVE_WINDOW_API_MEDIA:
+            case NATIVE_WINDOW_API_CAMERA:
+                if (mConnectedApi == api) {
+                    mQueue.clear();
+                    freeAllBuffersLocked(freeList);
+                    mConnectedApi = NO_CONNECTED_API;
+                    mDequeueCondition.signal();
+                } else {
+                    CNW_LOGE("disconnect: connected to another api (cur=%d, req=%d)",
+                            mConnectedApi, api);
+                    err = -EINVAL;
+                }
+                break;
+            default:
+                CNW_LOGE("disconnect: unknown API %d", api);
+                err = -EINVAL;
+                break;
+        }
+    }
+    releaseBufferFreeListUnlocked(freeList);
+    return err;
+}
+
+status_t GonkNativeWindow::setScalingMode(int mode) {
+    return OK;
+}
+
+void GonkNativeWindow::setNewFrameCallback(
+        GonkNativeWindowNewFrameCallback* aCallback) {
+    CNW_LOGD("setNewFrameCallback");
+    Mutex::Autolock lock(mMutex);
+    mNewFrameCallback = aCallback;
+}
+
+int GonkNativeWindow::query(int what, int* outValue)
 {
     Mutex::Autolock lock(mMutex);
 
@@ -662,119 +683,4 @@ int GonkNativeWindow::query(int what, int* outValue) const
     }
     outValue[0] = value;
     return NO_ERROR;
-}
-
-int GonkNativeWindow::setSwapInterval(int interval)
-{
-    return NO_ERROR;
-}
-
-int GonkNativeWindow::dispatchSetUsage(va_list args)
-{
-    int usage = va_arg(args, int);
-    return setUsage(usage);
-}
-
-int GonkNativeWindow::dispatchSetBufferCount(va_list args)
-{
-    size_t bufferCount = va_arg(args, size_t);
-    return setBufferCount(bufferCount);
-}
-
-int GonkNativeWindow::dispatchSetBuffersGeometry(va_list args)
-{
-    int w = va_arg(args, int);
-    int h = va_arg(args, int);
-    int f = va_arg(args, int);
-    int err = setBuffersDimensions(w, h);
-    if (err != 0) {
-        return err;
-    }
-    return setBuffersFormat(f);
-}
-
-int GonkNativeWindow::dispatchSetBuffersDimensions(va_list args)
-{
-    int w = va_arg(args, int);
-    int h = va_arg(args, int);
-    return setBuffersDimensions(w, h);
-}
-
-int GonkNativeWindow::dispatchSetBuffersFormat(va_list args)
-{
-    int f = va_arg(args, int);
-    return setBuffersFormat(f);
-}
-
-int GonkNativeWindow::dispatchSetBuffersTimestamp(va_list args)
-{
-    int64_t timestamp = va_arg(args, int64_t);
-    return setBuffersTimestamp(timestamp);
-}
-
-int GonkNativeWindow::setUsage(uint32_t reqUsage)
-{
-    CNW_LOGD("GonkNativeWindow::setUsage");
-    Mutex::Autolock lock(mMutex);
-
-    if (mAbandoned) {
-        CNW_LOGE("setUsage: GonkNativeWindow has been abandoned!");
-        return NO_INIT;
-    }
-    mUsage = reqUsage;
-    return OK;
-}
-
-int GonkNativeWindow::setBuffersDimensions(int w, int h)
-{
-    CNW_LOGD("GonkNativeWindow::setBuffersDimensions");
-    Mutex::Autolock lock(mMutex);
-
-    if (mAbandoned) {
-        CNW_LOGE("setBuffersDimensions: GonkNativeWindow has been abandoned!");
-        return NO_INIT;
-    }
-
-    if (w<0 || h<0)
-        return BAD_VALUE;
-
-    if ((w && !h) || (!w && h))
-        return BAD_VALUE;
-
-    mDefaultWidth = w;
-    mDefaultHeight = h;
-
-    return OK;
-}
-
-int GonkNativeWindow::setBuffersFormat(int format)
-{
-    CNW_LOGD("GonkNativeWindow::setBuffersFormat");
-    Mutex::Autolock lock(mMutex);
-
-    if (mAbandoned) {
-        CNW_LOGE("setBuffersFormat: GonkNativeWindow has been abandoned!");
-        return NO_INIT;
-    }
-
-    if (format<0)
-        return BAD_VALUE;
-
-    mPixelFormat = format;
-
-    return NO_ERROR;
-}
-
-int GonkNativeWindow::setBuffersTimestamp(int64_t timestamp)
-{
-    CNW_LOGD("GonkNativeWindow::setBuffersTimestamp");
-    Mutex::Autolock lock(mMutex);
-
-    if (mAbandoned) {
-        CNW_LOGE("setBuffersTimestamp: GonkNativeWindow has been abandoned!");
-        return NO_INIT;
-    }
-
-    mTimestamp = timestamp;
-    return OK;
 }

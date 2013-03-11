@@ -2154,7 +2154,7 @@ fsmdef_set_req_pending_timer (fsmdef_dcb_t *dcb)
         dcb->req_pending_tmr = cprCreateTimer("Request Pending",
                                               GSM_REQ_PENDING_TIMER,
                                               TIMER_EXPIRATION,
-                                              gsm_msg_queue);
+                                              gsm_msgq);
 
         if (dcb->req_pending_tmr == NULL) {
             FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG_TMR_CREATE_FAILED),
@@ -4179,7 +4179,7 @@ fsmdef_ev_collectinginfo_release (sm_event_t *event)
     dcb->err_onhook_tmr = cprCreateTimer("Error Onhook",
                                          GSM_ERROR_ONHOOK_TIMER,
                                          TIMER_EXPIRATION,
-                                         gsm_msg_queue);
+                                         gsm_msgq);
     if (dcb->err_onhook_tmr == NULL) {
         FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG_TMR_CREATE_FAILED),
                      dcb->call_id, dcb->line, "", "Error Onhook");
@@ -4517,7 +4517,7 @@ fsmdef_ev_callsent_release (sm_event_t *event)
             dcb->err_onhook_tmr = cprCreateTimer("Error Onhook",
                     GSM_ERROR_ONHOOK_TIMER,
                     TIMER_EXPIRATION,
-                    gsm_msg_queue);
+                    gsm_msgq);
             if (dcb->err_onhook_tmr == NULL) {
                 FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG_TMR_CREATE_FAILED),
                         dcb->call_id, dcb->line, "", "Error Onhook");
@@ -8685,7 +8685,7 @@ fsmdef_init (void)
         dcb->ringback_delay_tmr = cprCreateTimer("Ringback Delay",
                                                  GSM_RINGBACK_DELAY_TIMER,
                                                  TIMER_EXPIRATION,
-                                                 gsm_msg_queue);
+                                                 gsm_msgq);
         if (dcb->ringback_delay_tmr == NULL) {
             FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG_TMR_CREATE_FAILED),
                          dcb->call_id, dcb->line, fname, "Ringback Delay");
@@ -8698,7 +8698,7 @@ fsmdef_init (void)
         dcb->autoAnswerTimer = cprCreateTimer("Auto Answer",
                                               GSM_AUTOANSWER_TIMER,
                                               TIMER_EXPIRATION,
-                                              gsm_msg_queue);
+                                              gsm_msgq);
         if (dcb->autoAnswerTimer == NULL) {
             FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG_TMR_CREATE_FAILED),
                          dcb->call_id, dcb->line, fname, "Auto Answer");
@@ -8709,7 +8709,7 @@ fsmdef_init (void)
         dcb->revertTimer = cprCreateTimer("Call Reversion",
                                               GSM_REVERSION_TIMER,
                                               TIMER_EXPIRATION,
-                                              gsm_msg_queue);
+                                              gsm_msgq);
 		dcb->reversionInterval = -1;
         if (dcb->revertTimer == NULL) {
             FSM_DEBUG_SM(get_debug_string(FSMDEF_DBG_TMR_CREATE_FAILED),

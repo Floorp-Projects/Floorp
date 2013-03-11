@@ -1,0 +1,12 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- LOCALIZATION NOTE : FILE This file contains the Font Inspector strings.
+  - The Font Inspector is the panel accessible in the Inspector sidebar. -->
+
+<!ENTITY title "Fonts">
+<!ENTITY showAllFonts "See all the fonts used in the page">
+<!ENTITY usedAs "Used as: ">
+<!ENTITY system "system">
+<!ENTITY remote "remote">
