@@ -119,7 +119,6 @@
 #include "nsMemory.h"
 #include "nsIXPConnect.h"
 #include "nsIInterfaceInfo.h"
-#include "nsIInterfaceInfoManager.h"
 #include "nsIXPCScriptable.h"
 #include "nsIXPCSecurityManager.h"
 #include "nsIJSRuntimeService.h"
@@ -564,7 +563,6 @@ private:
     static JSBool            gOnceAliveNowDead;
 
     XPCJSRuntime*            mRuntime;
-    nsCOMPtr<nsIInterfaceInfoManager> mInterfaceInfoManager;
     nsIXPCSecurityManager*   mDefaultSecurityManager;
     uint16_t                 mDefaultSecurityManagerFlags;
     JSBool                   mShuttingDown;
