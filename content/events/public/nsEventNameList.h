@@ -671,27 +671,27 @@ NON_IDL_EVENT(underflow,
 NON_IDL_EVENT(SVGLoad,
               NS_SVG_LOAD,
               EventNameType_None,
-              NS_SVG_EVENT)
+              NS_EVENT)
 NON_IDL_EVENT(SVGUnload,
               NS_SVG_UNLOAD,
               EventNameType_None,
-              NS_SVG_EVENT)
+              NS_EVENT)
 NON_IDL_EVENT(SVGAbort,
               NS_SVG_ABORT,
               EventNameType_None,
-              NS_SVG_EVENT)
+              NS_EVENT)
 NON_IDL_EVENT(SVGError,
               NS_SVG_ERROR,
               EventNameType_None,
-              NS_SVG_EVENT)
+              NS_EVENT)
 NON_IDL_EVENT(SVGResize,
               NS_SVG_RESIZE,
               EventNameType_None,
-              NS_SVG_EVENT)
+              NS_EVENT)
 NON_IDL_EVENT(SVGScroll,
               NS_SVG_SCROLL,
               EventNameType_None,
-              NS_SVG_EVENT)
+              NS_EVENT)
 
 NON_IDL_EVENT(SVGZoom,
               NS_SVG_ZOOM,

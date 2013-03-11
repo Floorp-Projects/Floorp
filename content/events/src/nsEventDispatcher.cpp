@@ -744,9 +744,6 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
     case NS_CLIPBOARD_EVENT:
       return NS_NewDOMClipboardEvent(aDOMEvent, aOwner, aPresContext,
                                      static_cast<nsClipboardEvent*>(aEvent));
-    case NS_SVG_EVENT:
-      return NS_NewDOMSVGEvent(aDOMEvent, aOwner, aPresContext,
-                               aEvent);
     case NS_SVGZOOM_EVENT:
       return NS_NewDOMSVGZoomEvent(aDOMEvent, aOwner, aPresContext,
                                    static_cast<nsGUIEvent*>(aEvent));
@@ -807,11 +804,10 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
     return NS_NewDOMUIEvent(aDOMEvent, aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("event") ||
       aEventType.LowerCaseEqualsLiteral("events") ||
-      aEventType.LowerCaseEqualsLiteral("htmlevents"))
-    return NS_NewDOMEvent(aDOMEvent, aOwner, aPresContext, nullptr);
-  if (aEventType.LowerCaseEqualsLiteral("svgevent") ||
+      aEventType.LowerCaseEqualsLiteral("htmlevents") ||
+      aEventType.LowerCaseEqualsLiteral("svgevent") ||
       aEventType.LowerCaseEqualsLiteral("svgevents"))
-    return NS_NewDOMSVGEvent(aDOMEvent, aOwner, aPresContext, nullptr);
+    return NS_NewDOMEvent(aDOMEvent, aOwner, aPresContext, nullptr);
   if (aEventType.LowerCaseEqualsLiteral("svgzoomevent") ||
       aEventType.LowerCaseEqualsLiteral("svgzoomevents"))
     return NS_NewDOMSVGZoomEvent(aDOMEvent, aOwner, aPresContext, nullptr);

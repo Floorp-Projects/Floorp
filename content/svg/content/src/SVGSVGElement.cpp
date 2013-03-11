@@ -526,7 +526,7 @@ SVGSVGElement::SetCurrentScaleTranslate(float s, float x, float y)
       bool scaling = (mPreviousScale != mCurrentScale);
       nsEventStatus status = nsEventStatus_eIgnore;
       nsGUIEvent event(true, scaling ? NS_SVG_ZOOM : NS_SVG_SCROLL, 0);
-      event.eventStructType = scaling ? NS_SVGZOOM_EVENT : NS_SVG_EVENT;
+      event.eventStructType = scaling ? NS_SVGZOOM_EVENT : NS_EVENT;
       presShell->HandleDOMEventWithTarget(this, &event, &status);
       InvalidateTransformNotifyFrame();
     }
