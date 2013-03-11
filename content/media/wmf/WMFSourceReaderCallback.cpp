@@ -10,8 +10,8 @@
 namespace mozilla {
 
 #ifdef PR_LOGGING
-extern PRLogModuleInfo* gMediaDecoderLog;
-#define LOG(...) PR_LOG(gMediaDecoderLog, PR_LOG_DEBUG, (__VA_ARGS__))
+static PRLogModuleInfo* gWMFSourceReaderCallbackLog = nullptr;
+#define LOG(...) PR_LOG(gWMFSourceReaderCallbackLog, PR_LOG_DEBUG, (__VA_ARGS__))
 #else
 #define LOG(...)
 #endif
@@ -44,6 +44,11 @@ WMFSourceReaderCallback::WMFSourceReaderCallback()
   , mReadFinished(false)
   , mMonitor("WMFSourceReaderCallback")
 {
+#ifdef PR_LOGGING
+  if (!gWMFSourceReaderCallbackLog) {
+    gWMFSourceReaderCallbackLog = PR_NewLogModule("WMFSourceReaderCallback");
+  }
+#endif
 }
 
 HRESULT
