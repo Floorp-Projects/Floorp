@@ -16,8 +16,8 @@
   <color name="doorhanger_text">#FF222222</color>
   <color name="doorhanger_link">#ACC4D5</color>
   <color name="validation_message_text">#ffffff</color>
-  <color name="identity_verified">#77BAFF</color>
-  <color name="identity_identified">#B7D46A</color>
+  <color name="identity_verified">#FF3298FF</color>
+  <color name="identity_identified">#FF89C450</color>
   <color name="url_bar_text_highlight">#FFFF9500</color>
   <color name="url_bar_text_highlight_pb">#FFD06BFF</color>
   <color name="suggestion_primary">#dddddd</color>

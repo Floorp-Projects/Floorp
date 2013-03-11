@@ -137,7 +137,7 @@ public class SiteIdentityPopup extends PopupWindow {
             mSupplemental.setText(supplemental);
             mSupplemental.setVisibility(View.VISIBLE);
         } catch (JSONException e) {
-            mSupplemental.setVisibility(View.INVISIBLE);
+            mSupplemental.setVisibility(View.GONE);
         }
 
         if (mode.equals(VERIFIED)) {
