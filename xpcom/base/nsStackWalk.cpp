@@ -606,7 +606,7 @@ static BOOL CALLBACK callbackEspecial64(
        ? (addr >= aModuleBase && addr <= (aModuleBase + aModuleSize))
        : (addr <= aModuleBase && addr >= (aModuleBase - aModuleSize))
         ) {
-        retval = SymLoadModule64(GetCurrentProcess(), NULL, (PSTR)aModuleName, NULL, aModuleBase, aModuleSize);
+        retval = !!SymLoadModule64(GetCurrentProcess(), NULL, (PSTR)aModuleName, NULL, aModuleBase, aModuleSize);
         if (!retval)
             PrintError("SymLoadModule64");
     }
@@ -775,7 +775,7 @@ NS_DescribeCodeAddress(void *aPC, nsCodeAddressDetails *aDetails)
     if (ok) {
         PL_strncpyz(aDetails->function, pSymbol->Name,
                     sizeof(aDetails->function));
-        aDetails->foffset = displacement;
+        aDetails->foffset = static_cast<ptrdiff_t>(displacement);
     }
 
     LeaveCriticalSection(&gDbgHelpCS); // release our lock
@@ -786,11 +786,16 @@ EXPORT_XPCOM_API(nsresult)
 NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
                             char *aBuffer, uint32_t aBufferSize)
 {
-    if (aDetails->function[0])
-        _snprintf(aBuffer, aBufferSize, "%s!%s+0x%016lX",
-                  aDetails->library, aDetails->function, aDetails->foffset);
-    else
-        _snprintf(aBuffer, aBufferSize, "0x%016lX", aPC);
+    if (aDetails->function[0]) {
+        _snprintf(aBuffer, aBufferSize, "%s+0x%08lX [%s +0x%016lX]",
+                  aDetails->function, aDetails->foffset,
+                  aDetails->library, aDetails->loffset);
+    } else if (aDetails->library[0]) {
+        _snprintf(aBuffer, aBufferSize, "UNKNOWN [%s +0x%016lX]",
+                  aDetails->library, aDetails->loffset);
+    } else {
+        _snprintf(aBuffer, aBufferSize, "UNKNOWN 0x%016lX", aPC);
+    }
 
     aBuffer[aBufferSize - 1] = '\0';
 
