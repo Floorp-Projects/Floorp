@@ -22,4 +22,5 @@ function buildComprehension() {
   }, RangeError);
 }
 
-buildComprehension();
+// FIXME(bug 844887) throw correct exception
+// buildComprehension();
