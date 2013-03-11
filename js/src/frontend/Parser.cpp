@@ -2340,8 +2340,7 @@ static inline bool
 ForEachLetDef(JSContext *cx, ParseContext<ParseHandler> *pc,
               HandleStaticBlockObject blockObj, Op op)
 {
-    for (Shape::Range r = blockObj->lastProperty()->all(); !r.empty(); r.popFront()) {
-        Shape::Range::AutoRooter rooter(cx, &r);
+    for (Shape::Range<CanGC> r(cx, blockObj->lastProperty()); !r.empty(); r.popFront()) {
         Shape &shape = r.front();
 
         /* Beware the destructuring dummy slots. */
