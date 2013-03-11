@@ -43,10 +43,13 @@ public class SiteIdentityPopup extends PopupWindow {
     private ImageView mLarry;
     private ImageView mArrow;
 
+    private int mYOffset;
+
     private SiteIdentityPopup() {
         super(GeckoApp.mAppContext);
 
         mResources = GeckoApp.mAppContext.getResources();
+        mYOffset = mResources.getDimensionPixelSize(R.dimen.menu_popup_offset);
         mInflated = false;
     }
 
@@ -154,7 +157,7 @@ public class SiteIdentityPopup extends PopupWindow {
         int[] anchorLocation = new int[2];
         v.getLocationOnScreen(anchorLocation);
 
-        int arrowWidth = mResources.getDimensionPixelSize(R.dimen.doorhanger_arrow_width);
+        int arrowWidth = mResources.getDimensionPixelSize(R.dimen.menu_popup_arrow_width);
         int leftMargin = anchorLocation[0] + (v.getWidth() - arrowWidth) / 2;
 
         int offset = 0;
@@ -164,10 +167,8 @@ public class SiteIdentityPopup extends PopupWindow {
         }
 
         LayoutParams layoutParams = (LayoutParams) mArrow.getLayoutParams();
-        LayoutParams newLayoutParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        newLayoutParams.setMargins(leftMargin, layoutParams.topMargin, 0, 0);
-        mArrow.setLayoutParams(newLayoutParams);
+        layoutParams.setMargins(leftMargin, 0, 0, 0);
 
-        showAsDropDown(v, offset, 0);
+        showAsDropDown(v, offset, -mYOffset);
     }
 }

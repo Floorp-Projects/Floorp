@@ -63,7 +63,6 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
     // Postpone stuff that needs to be done on the main thread
     void init(String message, JSONArray buttons, JSONObject options) {
         setOrientation(VERTICAL);
-        setBackgroundResource(R.drawable.doorhanger_shadow_bg);
 
         LayoutInflater.from(mActivity).inflate(R.layout.doorhanger, this);
         setVisibility(View.GONE);
