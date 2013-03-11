@@ -9,7 +9,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMSVGElement.h"
-#include "nsIDOMSVGURIReference.h"
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
 #include "nsSVGString.h"
@@ -40,8 +39,7 @@ static const unsigned short TEXTPATH_SPACINGTYPE_EXACT   = 2;
 typedef SVGTextContentElement SVGTextPathElementBase;
 
 class SVGTextPathElement MOZ_FINAL : public SVGTextPathElementBase,
-                                     public nsIDOMSVGElement,
-                                     public nsIDOMSVGURIReference
+                                     public nsIDOMSVGElement
 {
 friend class ::nsSVGTextPathFrame;
 friend class ::nsSVGTextFrame2;
@@ -56,7 +54,6 @@ public:
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGURIREFERENCE
 
   // xxx If xpcom allowed virtual inheritance we wouldn't need to
   // forward here :-(

@@ -54,10 +54,9 @@ nsSVGElement::StringInfo SVGPatternElement::sStringInfo[1] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ISUPPORTS_INHERITED4(SVGPatternElement, SVGPatternElementBase,
+NS_IMPL_ISUPPORTS_INHERITED3(SVGPatternElement, SVGPatternElementBase,
                              nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement,
-                             nsIDOMSVGURIReference)
+                             nsIDOMSVGElement)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -136,17 +135,6 @@ already_AddRefed<SVGAnimatedLength>
 SVGPatternElement::Height()
 {
   return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
-}
-
-//----------------------------------------------------------------------
-// nsIDOMSVGURIReference methods:
-
-/* readonly attribute nsIDOMSVGAnimatedString href; */
-NS_IMETHODIMP
-SVGPatternElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
-{
-  *aHref = Href().get();
-  return NS_OK;
 }
 
 already_AddRefed<nsIDOMSVGAnimatedString>
