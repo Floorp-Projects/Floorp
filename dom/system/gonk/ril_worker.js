@@ -803,6 +803,11 @@ let RIL = {
     this.cdmaHome = null;
 
     /**
+     * CDMA Subscription information.
+     */
+    this.cdmaSubscription = {};
+
+    /**
      * Application identification for apps in ICC.
      */
     this.aid = null;
@@ -3054,8 +3059,8 @@ let RIL = {
         baseStationLatitude = baseStationLongitude = null;
       }
       let cssIndicator = RIL.parseInt(state[7]);
-      let systemId = RIL.parseInt(state[8]);
-      let networkId = RIL.parseInt(state[9]);
+      RIL.cdmaSubscription.systemId = RIL.parseInt(state[8]);
+      RIL.cdmaSubscription.networkId = RIL.parseInt(state[9]);
       let roamingIndicator = RIL.parseInt(state[10]);
       let systemIsInPRL = RIL.parseInt(state[11]);
       let defaultRoamingIndicator = RIL.parseInt(state[12]);
@@ -10936,7 +10941,53 @@ let ICCUtilsHelper = {
     if (!iccSpn) {
       iccInfo.isDisplayNetworkNameRequired = true;
       iccInfo.isDisplaySpnRequired = false;
+    } else if (RIL._isCdma) {
+      // CDMA family display rule.
+      let cdmaHome = RIL.cdmaHome;
+      let sid = RIL.cdmaSubscription.systemId;
+      let nid = RIL.cdmaSubscription.networkId;
+
+      iccInfo.isDisplayNetworkNameRequired = false;
+
+      // If display condition is false, we don't even need to check network id
+      // or system id.
+      if (iccSpn.spnDisplayCondition == false) {
+        iccInfo.isDisplaySpnRequired = false;
+      } else {
+        // CDMA SPN Display condition dosen't specify whenever network name is
+        // reqired.
+        if (!cdmaHome ||
+            !cdmaHome.systemId ||
+            cdmaHome.systemId.length == 0 ||
+            cdmaHome.systemId.length != cdmaHome.networkId.length ||
+            !sid || !nid) {
+          // CDMA Home haven't been ready, or we haven't got the system id and
+          // network id of the network we register to, assuming we are in home
+          // network.
+          iccInfo.isDisplaySpnRequired = true;
+        } else {
+          // Determine if we are registered in the home service area.
+          // System ID and Network ID are described in 3GPP2 C.S0005 Sec. 2.6.5.2.
+          let inHomeArea = false;
+          for (let i = 0; i < cdmaHome.systemId.length; i++) {
+            let homeSid = cdmaHome.systemId[i],
+                homeNid = cdmaHome.networkId[i];
+            if (homeSid == 0 || homeNid == 0 // Reserved system id/network id
+               || homeSid != sid) {
+              continue;
+            }
+            // According to 3GPP2 C.S0005 Sec. 2.6.5.2, NID number 65535 means
+            // all networks in the system should be considered as home.
+            if (homeNid == 65535 || homeNid == nid) {
+              inHomeArea = true;
+              break;
+            }
+          }
+          iccInfo.isDisplaySpnRequired = inHomeArea;
+        }
+      }
     } else {
+      // GSM family display rule.
       let operatorMnc = RIL.operator.mnc;
       let operatorMcc = RIL.operator.mcc;
 
