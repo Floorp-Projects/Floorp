@@ -13,25 +13,13 @@ checkup = \
   check-final-lib-link-list \
   $(NULL)
 
-undefine_supported=no
-$(eval undefine undefine_supported)
-undefine_supported ?= yes
-
-
 checkup: $(checkup)
 
 
 # <CHECK: final-lib-link-list>
 LIBRARY_NAME   = foo# real_data: xptcmd
 EXPORT_LIBRARY = foo# real_data: ../..
-
-ifeq (yes,$(undefine_supported))
-  undefine IS_COMPONENT
-else
-  $(info ===========================================================================)
-  $(warning $(MAKE)[$(MAKE_VERSION)]: makefile directive 'undefined' not supported, disabling test)
-  $(info ===========================================================================)
-endif
+undefine IS_COMPONENT
 
 test-data = $(CURDIR)/check-export-targets-test-data
 FINAL_LINK_LIBS     = $(test-data)
