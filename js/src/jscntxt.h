@@ -1581,7 +1581,6 @@ struct JSContext : js::ContextFriendFields,
 
     bool hasStrictOption() const { return hasOption(JSOPTION_STRICT); }
     bool hasWErrorOption() const { return hasOption(JSOPTION_WERROR); }
-    bool hasAtLineOption() const { return hasOption(JSOPTION_ATLINE); }
 
     js::LifoAlloc &tempLifoAlloc() { return runtime->tempLifoAlloc; }
     inline js::LifoAlloc &analysisLifoAlloc();
