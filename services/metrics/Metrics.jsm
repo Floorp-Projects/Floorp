@@ -8,7 +8,7 @@
 
 this.EXPORTED_SYMBOLS = ["Metrics"];
 
-const {utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 

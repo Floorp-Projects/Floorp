@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://testing-common/services/metrics/mocks.jsm");
@@ -47,6 +47,26 @@ add_task(function test_register_provider() {
   do_check_null(manager.getProvider(dummy.name));
 
   yield storage.close();
+});
+
+add_task(function test_register_providers_from_category_manager() {
+  const category = "metrics-providers-js-modules";
+
+  let cm = Cc["@mozilla.org/categorymanager;1"]
+             .getService(Ci.nsICategoryManager);
+  cm.addCategoryEntry(category, "DummyProvider",
+                      "resource://testing-common/services/metrics/mocks.jsm",
+                      false, true);
+
+  let storage = yield Metrics.Storage("register_providers_from_category_manager");
+  let manager = new Metrics.ProviderManager(storage);
+  try {
+    do_check_eq(manager._providers.size, 0);
+    yield manager.registerProvidersFromCategoryManager(category);
+    do_check_eq(manager._providers.size, 1);
+  } finally {
+    yield storage.close();
+  }
 });
 
 add_task(function test_collect_constant_data() {
