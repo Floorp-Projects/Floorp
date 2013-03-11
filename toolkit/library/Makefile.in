@@ -296,10 +296,6 @@ endif
 
 STATIC_LIBS += thebes gl ycbcr
 
-ifdef MOZ_ENABLE_GTEST
-COMPONENT_LIBS += gtest xpcom_glue_gtest
-endif
-
 ifdef MOZ_ENABLE_PROFILER_SPS
 COMPONENT_LIBS += profiler
 endif
@@ -682,7 +678,39 @@ ifeq (WINNT_1,$(OS_TARGET)_$(MOZ_PROFILE_USE))
 LD := $(PYTHON) $(topsrcdir)/build/link.py $(CURDIR)/linker-vsize $(LD)
 endif
 
+ifndef LINK_GTEST
 libs:: $(FINAL_TARGET)/dependentlibs.list
+else
+libs::
+endif
+
+ifdef MAKE_FRAMEWORK
+EFFECTIVE_LIB_PREFIX=
+else
+EFFECTIVE_LIB_PREFIX=$(LIB_PREFIX)
+endif
+
+$(FINAL_TARGET)/dependentlibs.list.gtest: $(FINAL_TARGET)/dependentlibs.list
+	sed -e "s|$(SHARED_LIBRARY)|gtest/$(SHARED_LIBRARY)|" $< > $@
+
+.PHONY: gtestxul
+
+gtestxul: $(EFFECTIVE_LIB_PREFIX)gtest/$(EFFECTIVE_LIB_PREFIX)$(LIBRARY_NAME)
+
+# Remove this target when actually linking gtest to prevent redefining
+# the implicit rules.mk target
+ifndef LINK_GTEST
+$(EFFECTIVE_LIB_PREFIX)gtest/$(EFFECTIVE_LIB_PREFIX)$(LIBRARY_NAME): $(FINAL_TARGET)/dependentlibs.list.gtest
+	$(MKDIR) -p $(EFFECTIVE_LIB_PREFIX)gtest
+	$(MAKE) libs SHARED_LIBRARY_NAME=gtest/$(EFFECTIVE_LIB_PREFIX)$(LIBRARY_NAME) FINAL_TARGET=$(FINAL_TARGET)/gtest SDK_LIBRARY= IMPORT_LIB_DEST=$(IMPORT_LIB_DEST)/gtest LINK_GTEST=true
+endif
+
+ifdef LINK_GTEST
+COMPONENT_LIBS += \
+  gtest \
+  gfxtest \
+  $(NULL)
+endif
 
 $(FINAL_TARGET)/dependentlibs.list: dependentlibs.py $(SHARED_LIBRARY) $(wildcard $(if $(wildcard $(FINAL_TARGET)/dependentlibs.list),$(addprefix $(FINAL_TARGET)/,$(shell cat $(FINAL_TARGET)/dependentlibs.list))))
 	$(PYTHON) $< $(SHARED_LIBRARY) -L $(FINAL_TARGET) $(if $(TOOLCHAIN_PREFIX),$(addprefix -p ,$(TOOLCHAIN_PREFIX))) > $@
