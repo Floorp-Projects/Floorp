@@ -86,7 +86,8 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
 
         // Enable the button layout if we have buttons.
         if (buttons.length() > 0) {
-            mChoicesLayout.setVisibility(LinearLayout.VISIBLE);
+            findViewById(R.id.divider).setVisibility(View.VISIBLE);
+            mChoicesLayout.setVisibility(View.VISIBLE);
         }
 
         setOptions(options);
@@ -98,11 +99,11 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
                                              LayoutParams.FILL_PARENT,
                                              1.0f);
 
-        Button mButton = new Button(mActivity);
-        mButton.setText(aText);
-        mButton.setTag(Integer.toString(aCallback));
-        mButton.setOnClickListener(this);
-        mChoicesLayout.addView(mButton, mLayoutParams);
+        Button button = (Button) LayoutInflater.from(mActivity).inflate(R.layout.doorhanger_button, null);
+        button.setText(aText);
+        button.setTag(Integer.toString(aCallback));
+        button.setOnClickListener(this);
+        mChoicesLayout.addView(button, mLayoutParams);
     }
 
     @Override
