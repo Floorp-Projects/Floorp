@@ -20,7 +20,6 @@ typedef nsSVGFE SVGFEImageElementBase;
 
 class SVGFEImageElement : public SVGFEImageElementBase,
                           public nsIDOMSVGElement,
-                          public nsIDOMSVGURIReference,
                           public nsImageLoadingContent
 {
   friend class ::SVGFEImageFrame;
@@ -47,8 +46,6 @@ public:
   virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
   virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
-
-  NS_DECL_NSIDOMSVGURIREFERENCE
 
   NS_FORWARD_NSIDOMSVGELEMENT(SVGFEImageElementBase::)
 

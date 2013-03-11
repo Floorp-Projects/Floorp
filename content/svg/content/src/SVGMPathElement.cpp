@@ -47,8 +47,8 @@ NS_IMPL_ADDREF_INHERITED(SVGMPathElement,SVGMPathElementBase)
 NS_IMPL_RELEASE_INHERITED(SVGMPathElement,SVGMPathElementBase)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(SVGMPathElement)
-  NS_NODE_INTERFACE_TABLE5(SVGMPathElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement,  nsIDOMSVGURIReference,
+  NS_NODE_INTERFACE_TABLE4(SVGMPathElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement,
                            nsIMutationObserver)
 NS_INTERFACE_MAP_END_INHERITING(SVGMPathElementBase)
 
@@ -80,21 +80,10 @@ SVGMPathElement::~SVGMPathElement()
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGMPathElement)
 
-//----------------------------------------------------------------------
-// nsIDOMSVGURIReference methods
-
-/* readonly attribute nsIDOMSVGAnimatedString href; */
 already_AddRefed<nsIDOMSVGAnimatedString>
 SVGMPathElement::Href()
 {
   return mStringAttributes[HREF].ToDOMAnimatedString(this);
-}
-
-NS_IMETHODIMP
-SVGMPathElement::GetHref(nsIDOMSVGAnimatedString** aHref)
-{
-  *aHref = Href().get();
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------

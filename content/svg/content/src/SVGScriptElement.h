@@ -8,7 +8,6 @@
 #define mozilla_dom_SVGScriptElement_h
 
 #include "nsSVGElement.h"
-#include "nsIDOMSVGURIReference.h"
 #include "nsCOMPtr.h"
 #include "nsSVGString.h"
 #include "nsIDocument.h"
@@ -25,7 +24,6 @@ typedef nsSVGElement SVGScriptElementBase;
 
 class SVGScriptElement MOZ_FINAL : public SVGScriptElementBase,
                                    public nsIDOMSVGElement,
-                                   public nsIDOMSVGURIReference,
                                    public nsScriptElement
 {
 protected:
@@ -41,7 +39,6 @@ public:
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGURIREFERENCE
 
   // xxx If xpcom allowed virtual inheritance we wouldn't need to
   // forward here :-(
