@@ -27,7 +27,7 @@ namespace gc {
  */
 class VerifierNursery
 {
-    HashSet<void*, PointerHasher<void*, 3>, SystemAllocPolicy> nursery;
+    HashSet<const void *, PointerHasher<const void *, 3>, SystemAllocPolicy> nursery;
 
   public:
     VerifierNursery() : nursery() {}
@@ -53,7 +53,7 @@ class VerifierNursery
         return enable();
     }
 
-    bool isInside(void *cell) const {
+    bool isInside(const void *cell) const {
         JS_ASSERT((uintptr_t(cell) & 0x3) == 0);
         return nursery.initialized() && nursery.has(cell);
     }

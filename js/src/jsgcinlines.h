@@ -48,14 +48,6 @@ struct AutoMarkInDeadZone
 
 namespace gc {
 
-inline JSGCTraceKind
-GetGCThingTraceKind(const void *thing)
-{
-    JS_ASSERT(thing);
-    const Cell *cell = reinterpret_cast<const Cell *>(thing);
-    return MapAllocToTraceKind(cell->getAllocKind());
-}
-
 /* Capacity for slotsToThingKind */
 const size_t SLOTS_TO_THING_KIND_LIMIT = 17;
 
@@ -191,7 +183,7 @@ ShouldNurseryAllocate(const NurseryType &nursery, AllocKind kind, InitialHeap he
 #endif
 
 inline bool
-IsInsideNursery(JSRuntime *rt, void *thing)
+IsInsideNursery(JSRuntime *rt, const void *thing)
 {
 #ifdef JSGC_GENERATIONAL
 #if JS_GC_ZEAL
@@ -200,6 +192,18 @@ IsInsideNursery(JSRuntime *rt, void *thing)
 #endif
 #endif
     return false;
+}
+
+inline JSGCTraceKind
+GetGCThingTraceKind(const void *thing)
+{
+    JS_ASSERT(thing);
+    const Cell *cell = static_cast<const Cell *>(thing);
+#ifdef JSGC_GENERATIONAL
+    if (IsInsideNursery(cell->runtime(), cell))
+        return JSTRACE_OBJECT;
+#endif
+    return MapAllocToTraceKind(cell->getAllocKind());
 }
 
 static inline void
