@@ -432,8 +432,6 @@
 @BINPATH@/components/nsHandlerService.js
 @BINPATH@/components/nsWebHandlerApp.manifest
 @BINPATH@/components/nsWebHandlerApp.js
-@BINPATH@/components/nsBadCertHandler.manifest
-@BINPATH@/components/nsBadCertHandler.js
 @BINPATH@/components/satchel.manifest
 @BINPATH@/components/nsFormAutoComplete.js
 @BINPATH@/components/nsFormHistory.js

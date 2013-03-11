@@ -423,7 +423,7 @@ nsDOMDataChannel::DoOnMessageAvailable(const nsACString& aData,
   }
 
   nsCOMPtr<nsIDOMEvent> event;
-  rv = NS_NewDOMMessageEvent(getter_AddRefs(event), nullptr, nullptr);
+  rv = NS_NewDOMMessageEvent(getter_AddRefs(event), this, nullptr, nullptr);
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr<nsIDOMMessageEvent> messageEvent = do_QueryInterface(event);
@@ -469,7 +469,7 @@ nsDOMDataChannel::OnSimpleEvent(nsISupports* aContext, const nsAString& aName)
   }
 
   nsCOMPtr<nsIDOMEvent> event;
-  rv = NS_NewDOMEvent(getter_AddRefs(event), nullptr, nullptr);
+  rv = NS_NewDOMEvent(getter_AddRefs(event), this, nullptr, nullptr);
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = event->InitEvent(aName, false, false);

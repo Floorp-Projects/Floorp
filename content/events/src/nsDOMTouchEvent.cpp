@@ -186,10 +186,11 @@ nsDOMTouchList::IdentifiedTouch(int32_t aIdentifier, nsIDOMTouch** aRetVal)
 
 // TouchEvent
 
-nsDOMTouchEvent::nsDOMTouchEvent(nsPresContext* aPresContext,
+nsDOMTouchEvent::nsDOMTouchEvent(mozilla::dom::EventTarget* aOwner,
+                                 nsPresContext* aPresContext,
                                  nsTouchEvent* aEvent)
-  : nsDOMUIEvent(aPresContext, aEvent ? aEvent :
-                                        new nsTouchEvent(false, 0, nullptr))
+  : nsDOMUIEvent(aOwner, aPresContext,
+                 aEvent ? aEvent : new nsTouchEvent(false, 0, nullptr))
 {
   if (aEvent) {
     mEventIsInternal = false;
@@ -410,10 +411,10 @@ nsDOMTouchEvent::PrefEnabled()
 
 nsresult
 NS_NewDOMTouchEvent(nsIDOMEvent** aInstancePtrResult,
+                    mozilla::dom::EventTarget* aOwner,
                     nsPresContext* aPresContext,
                     nsTouchEvent *aEvent)
 {
-  nsDOMTouchEvent* it = new nsDOMTouchEvent(aPresContext, aEvent);
-
+  nsDOMTouchEvent* it = new nsDOMTouchEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);
 }

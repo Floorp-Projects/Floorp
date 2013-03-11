@@ -594,7 +594,7 @@ function getSelectionRange(element) {
     // Get the selection range of <input> and <textarea> elements
     start = element.selectionStart;
     end = element.selectionEnd;
-  } else {
+  } else if (isContentEditable(element)){
     // Get the selection range of contenteditable elements
     let win = element.ownerDocument.defaultView;
     let sel = win.getSelection();

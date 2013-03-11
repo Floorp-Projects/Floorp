@@ -13,7 +13,7 @@
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(437ed60c-febd-4bd0-892f-cf358adc3c96)]
+[scriptable, uuid(d3c734f2-47e9-4eac-84f9-3592022aac13)]
 interface nsIDOMText : nsIDOMCharacterData
 {
   nsIDOMText                      splitText(in unsigned long offset)

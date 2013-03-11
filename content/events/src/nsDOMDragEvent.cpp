@@ -11,9 +11,10 @@
 #include "nsIDragService.h"
 #include "nsDOMClassInfoID.h"
 
-nsDOMDragEvent::nsDOMDragEvent(nsPresContext* aPresContext,
+nsDOMDragEvent::nsDOMDragEvent(mozilla::dom::EventTarget* aOwner,
+                               nsPresContext* aPresContext,
                                nsInputEvent* aEvent)
-  : nsDOMMouseEvent(aPresContext, aEvent ? aEvent :
+  : nsDOMMouseEvent(aOwner, aPresContext, aEvent ? aEvent :
                     new nsDragEvent(false, 0, nullptr))
 {
   if (aEvent) {
@@ -97,9 +98,10 @@ nsDOMDragEvent::GetDataTransfer(nsIDOMDataTransfer** aDataTransfer)
 }
 
 nsresult NS_NewDOMDragEvent(nsIDOMEvent** aInstancePtrResult,
+                            mozilla::dom::EventTarget* aOwner,
                             nsPresContext* aPresContext,
                             nsDragEvent *aEvent) 
 {
-  nsDOMDragEvent* event = new nsDOMDragEvent(aPresContext, aEvent);
+  nsDOMDragEvent* event = new nsDOMDragEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(event, aInstancePtrResult);
 }

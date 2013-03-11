@@ -30,6 +30,19 @@ nsDisplayItemGenericGeometry::MoveBy(const nsPoint& aOffset)
   mBorderRect.MoveBy(aOffset);
 }
 
+nsDisplayItemBoundsGeometry::nsDisplayItemBoundsGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
+  : nsDisplayItemGeometry(aItem, aBuilder)
+{
+  nscoord radii[8];
+  mHasRoundedCorners = aItem->GetUnderlyingFrame()->GetBorderRadii(radii);
+}
+
+void
+nsDisplayItemBoundsGeometry::MoveBy(const nsPoint& aOffset)
+{
+  mBounds.MoveBy(aOffset);
+}
+
 nsDisplayBorderGeometry::nsDisplayBorderGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
   : nsDisplayItemGeometry(aItem, aBuilder)
   , mContentRect(aItem->GetContentRect())

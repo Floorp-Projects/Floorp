@@ -2263,7 +2263,7 @@ void
 nsDOMDeviceStorage::DispatchMountChangeEvent(nsAString& aType)
 {
   nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMDeviceStorageChangeEvent(getter_AddRefs(event), nullptr, nullptr);
+  NS_NewDOMDeviceStorageChangeEvent(getter_AddRefs(event), this, nullptr, nullptr);
 
   nsCOMPtr<nsIDOMDeviceStorageChangeEvent> ce = do_QueryInterface(event);
   nsresult rv = ce->InitDeviceStorageChangeEvent(NS_LITERAL_STRING("change"),
@@ -2359,7 +2359,8 @@ nsDOMDeviceStorage::Notify(const char* aReason, DeviceStorageFile* aFile)
   nsDependentSubstring newPath (fullpath, len, fullpath.Length() - len);
 
   nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMDeviceStorageChangeEvent(getter_AddRefs(event), nullptr, nullptr);
+  NS_NewDOMDeviceStorageChangeEvent(getter_AddRefs(event), this,
+                                    nullptr, nullptr);
 
   nsCOMPtr<nsIDOMDeviceStorageChangeEvent> ce = do_QueryInterface(event);
 

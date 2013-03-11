@@ -442,37 +442,20 @@ NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLMediaElement, Preload, preload, NULL)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLMediaElement, MozAudioChannelType, mozaudiochannel, "normal")
 
 NS_IMETHODIMP
-nsHTMLMediaElement::GetMozSrcObject(JSContext* aCtx, jsval *aParams)
+nsHTMLMediaElement::GetMozSrcObject(nsIDOMMediaStream** aStream)
 {
-  if (mSrcAttrStream) {
-    NS_ASSERTION(mSrcAttrStream->GetStream(), "MediaStream should have been set up properly");
-    return nsContentUtils::WrapNative(aCtx, JS_GetGlobalForScopeChain(aCtx),
-                                      mSrcAttrStream, aParams);
-  }
-  *aParams = JSVAL_NULL;
+  NS_ASSERTION(!mSrcAttrStream || mSrcAttrStream->GetStream(),
+               "MediaStream should have been set up properly");
+  nsRefPtr<DOMMediaStream> stream = mSrcAttrStream;
+  stream.forget(aStream);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLMediaElement::SetMozSrcObject(JSContext* aCtx, const jsval & aParams)
+nsHTMLMediaElement::SetMozSrcObject(nsIDOMMediaStream* aStream)
 {
-  if (aParams.isNull()) {
-    mSrcAttrStream = nullptr;
-    Load();
-    return NS_OK;
-  }
-  if (aParams.isObject()) {
-    nsCOMPtr<nsIDOMMediaStream> stream;
-    stream = do_QueryInterface(nsContentUtils::XPConnect()->
-        GetNativeOfWrapper(aCtx, JSVAL_TO_OBJECT(aParams)));
-    if (stream) {
-      mSrcAttrStream = static_cast<DOMMediaStream*>(stream.get());
-      Load();
-      return NS_OK;
-    }
-  }
-  // Should we store unsupported values on the element's attribute anyway?
-  // Let's not.
+  mSrcAttrStream = static_cast<DOMMediaStream*>(aStream);
+  Load();
   return NS_OK;
 }
 

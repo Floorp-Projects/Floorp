@@ -104,6 +104,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_webconsole_bug_622303_persistent_filters.js \
 	browser_webconsole_bug_770099_bad_policyuri.js \
 	browser_webconsole_bug_770099_violation.js \
+	browser_webconsole_bug_766001_JS_Console_in_Debugger.js \
 	browser_webconsole_bug_782653_CSS_links_in_Style_Editor.js \
 	browser_cached_messages.js \
 	browser_bug664688_sandbox_update_after_navigation.js \
@@ -210,6 +211,9 @@ MOCHITEST_BROWSER_FILES += \
 	test-result-format-as-string.html \
 	test-bug-737873-mixedcontent.html \
 	test-repeated-messages.html \
+	test-bug-766001-console-log.js \
+	test-bug-766001-js-console-links.html \
+	test-bug-766001-js-errors.js \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

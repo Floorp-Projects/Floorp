@@ -327,7 +327,7 @@ PopupNotifications.prototype = {
    *        The Notification object to remove.
    */
   remove: function PopupNotifications_remove(notification) {
-    let isCurrent = this._currentNotifications.indexOf(notification) != -1;
+    let isCurrent = notification.browser == this.tabbrowser.selectedBrowser;
     this._remove(notification);
 
     // update the panel, if needed
@@ -381,7 +381,8 @@ PopupNotifications.prototype = {
     if (index == -1)
       return;
 
-    notification.anchorElement.removeAttribute(ICON_ATTRIBUTE_SHOWING);
+    if (notification.browser == this.tabbrowser.selectedBrowser)
+      notification.anchorElement.removeAttribute(ICON_ATTRIBUTE_SHOWING);
 
     // remove the notification
     notifications.splice(index, 1);

@@ -25,7 +25,7 @@ ReadRemoteEvent(const IPC::Message* aMsg, void** aIter,
   NS_ENSURE_TRUE(ReadParam(aMsg, aIter, &type), false);
 
   nsCOMPtr<nsIDOMEvent> event;
-  nsEventDispatcher::CreateEvent(nullptr, nullptr, type, getter_AddRefs(event));
+  nsEventDispatcher::CreateEvent(nullptr, nullptr, nullptr, type, getter_AddRefs(event));
   aResult->mEvent = do_QueryInterface(event);
   NS_ENSURE_TRUE(aResult->mEvent, false);
 

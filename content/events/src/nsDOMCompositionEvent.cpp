@@ -7,9 +7,10 @@
 #include "nsDOMCompositionEvent.h"
 #include "nsDOMClassInfoID.h"
 
-nsDOMCompositionEvent::nsDOMCompositionEvent(nsPresContext* aPresContext,
+nsDOMCompositionEvent::nsDOMCompositionEvent(mozilla::dom::EventTarget* aOwner,
+                                             nsPresContext* aPresContext,
                                              nsCompositionEvent* aEvent)
-  : nsDOMUIEvent(aPresContext, aEvent ? aEvent :
+  : nsDOMUIEvent(aOwner, aPresContext, aEvent ? aEvent :
                  new nsCompositionEvent(false, 0, nullptr))
 {
   NS_ASSERTION(mEvent->eventStructType == NS_COMPOSITION_EVENT,
@@ -82,10 +83,11 @@ nsDOMCompositionEvent::InitCompositionEvent(const nsAString& aType,
 
 nsresult
 NS_NewDOMCompositionEvent(nsIDOMEvent** aInstancePtrResult,
+                          mozilla::dom::EventTarget* aOwner,
                           nsPresContext* aPresContext,
                           nsCompositionEvent *aEvent)
 {
   nsDOMCompositionEvent* event =
-    new nsDOMCompositionEvent(aPresContext, aEvent);
+    new nsDOMCompositionEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(event, aInstancePtrResult);
 }

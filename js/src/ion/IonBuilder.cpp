@@ -45,7 +45,7 @@ IonBuilder::IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
     callerBuilder_(NULL),
     oracle(oracle),
     inspector(inspector),
-    inliningDepth(inliningDepth),
+    inliningDepth_(inliningDepth),
     failedBoundsCheck_(info->script()->failedBoundsCheck),
     failedShapeGuard_(info->script()->failedShapeGuard),
     lazyArguments_(NULL)
@@ -437,7 +437,7 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
     if (instrumentedProfiling())
         predecessor->add(MFunctionBoundary::New(script(),
                                                 MFunctionBoundary::Inline_Enter,
-                                                inliningDepth));
+                                                inliningDepth_));
 
     predecessor->end(MGoto::New(current));
     if (!current->addPredecessorWithoutPhis(predecessor))
@@ -1039,7 +1039,11 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_CALLEE:
       {
-        MCallee *callee = MCallee::New();
+        MInstruction *callee;
+        if (inliningDepth_ == 0)
+            callee = MCallee::New();
+        else
+            callee = MConstant::New(ObjectValue(*info().fun()));
         current->add(callee);
         current->push(callee);
         return true;
@@ -2974,7 +2978,7 @@ IonBuilder::inlineScriptedCall(HandleFunction target, CallInfo &callInfo)
     AutoAccumulateExits aae(graph(), saveExits);
 
     // Build the graph.
-    IonBuilder inlineBuilder(cx, &temp(), &graph(), &oracle, &inspector, info, inliningDepth + 1,
+    IonBuilder inlineBuilder(cx, &temp(), &graph(), &oracle, &inspector, info, inliningDepth_ + 1,
                              loopDepth_);
     if (!inlineBuilder.buildInline(this, outerResumePoint, callInfo)) {
         JS_ASSERT(calleeScript->hasAnalysis());
@@ -3179,7 +3183,7 @@ IonBuilder::makeInliningDecision(AutoObjectVector &targets)
     if (allFunctionsAreSmall)
         maxInlineDepth = js_IonOptions.smallFunctionMaxInlineDepth;
 
-    if (inliningDepth >= maxInlineDepth)
+    if (inliningDepth_ >= maxInlineDepth)
         return false;
 
     if (script()->getUseCount() < js_IonOptions.usesBeforeInlining()) {
@@ -3997,7 +4001,7 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
 
     // When this script isn't inlined, use MApplyArgs,
     // to copy the arguments from the stack and call the function
-    if (inliningDepth == 0) {
+    if (inliningDepth_ == 0) {
 
         // Vp
         MPassArg *passVp = current->pop()->toPassArg();
@@ -4035,7 +4039,7 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
 
     // When inlining we have the arguments the function gets called with
     // and can optimize even more, by just calling the functions with the args.
-    JS_ASSERT(inliningDepth > 0);
+    JS_ASSERT(inliningDepth_ > 0);
 
     CallInfo callInfo(cx, false);
 
@@ -4989,7 +4993,7 @@ IonBuilder::insertRecompileCheck()
     if (!inliningEnabled())
         return;
 
-    if (inliningDepth > 0)
+    if (inliningDepth_ > 0)
         return;
 
     // Don't recompile if we are already inlining.
@@ -6029,7 +6033,7 @@ IonBuilder::jsop_arguments_length()
     args->setFoldedUnchecked();
 
     // We don't know anything from the callee
-    if (inliningDepth == 0) {
+    if (inliningDepth_ == 0) {
         MInstruction *ins = MArgumentsLength::New();
         current->add(ins);
         current->push(ins);
@@ -6043,7 +6047,7 @@ IonBuilder::jsop_arguments_length()
 bool
 IonBuilder::jsop_arguments_getelem()
 {
-    if (inliningDepth != 0)
+    if (inliningDepth_ != 0)
         return abort("NYI inlined get argument element");
 
     RootedScript scriptRoot(cx, script());

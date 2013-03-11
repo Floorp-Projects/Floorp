@@ -170,6 +170,88 @@ BCJ_ARM_filter(off_t offset, SeekableZStream::FilterDirection dir,
   }
 }
 
+/* Branch/Call/Jump conversion filter for x86, derived from xz-utils
+ * by Igor Pavlov and Lasse Collin, published in the public domain */
+
+#define Test86MSByte(b) ((b) == 0 || (b) == 0xff)
+
+static void
+BCJ_X86_filter(off_t offset, SeekableZStream::FilterDirection dir,
+               unsigned char *buf, size_t size)
+{
+  static const bool MASK_TO_ALLOWED_STATUS[8] =
+    { true, true, true, false, true, false, false, false };
+
+  static const uint32_t MASK_TO_BIT_NUMBER[8] =
+    { 0, 1, 2, 2, 3, 3, 3, 3 };
+
+  uint32_t prev_mask = 0;
+  uint32_t prev_pos = 0;
+
+  for (size_t i = 0; i <= size - 5;) {
+    uint8_t b = buf[i];
+    if (b != 0xe8 && b != 0xe9) {
+      ++i;
+      continue;
+    }
+
+    const uint32_t off = offset + (uint32_t)(i) - prev_pos;
+    prev_pos = offset + (uint32_t)(i);
+
+    if (off > 5) {
+      prev_mask = 0;
+    } else {
+      for (uint32_t i = 0; i < off; ++i) {
+        prev_mask &= 0x77;
+        prev_mask <<= 1;
+      }
+    }
+
+    b = buf[i + 4];
+
+    if (Test86MSByte(b) && MASK_TO_ALLOWED_STATUS[(prev_mask >> 1) & 0x7]
+        && (prev_mask >> 1) < 0x10) {
+
+      uint32_t src = ((uint32_t)(b) << 24)
+                     | ((uint32_t)(buf[i + 3]) << 16)
+                     | ((uint32_t)(buf[i + 2]) << 8)
+                     | (buf[i + 1]);
+
+      uint32_t dest;
+      while (true) {
+        if (dir == SeekableZStream::FILTER)
+          dest = src + (offset + (uint32_t)(i) + 5);
+        else
+          dest = src - (offset + (uint32_t)(i) + 5);
+
+        if (prev_mask == 0)
+          break;
+
+        const uint32_t i = MASK_TO_BIT_NUMBER[prev_mask >> 1];
+
+        b = (uint8_t)(dest >> (24 - i * 8));
+
+        if (!Test86MSByte(b))
+          break;
+
+        src = dest ^ ((1 << (32 - i * 8)) - 1);
+      }
+
+      buf[i + 4] = (uint8_t)(~(((dest >> 24) & 1) - 1));
+      buf[i + 3] = (uint8_t)(dest >> 16);
+      buf[i + 2] = (uint8_t)(dest >> 8);
+      buf[i + 1] = (uint8_t)(dest);
+      i += 5;
+      prev_mask = 0;
+
+    } else {
+      ++i;
+      prev_mask |= 1;
+      if (Test86MSByte(b))
+        prev_mask |= 0x10;
+    }
+  }
+}
 
 SeekableZStream::ZStreamFilter
 SeekableZStream::GetFilter(SeekableZStream::FilterId id)
@@ -179,6 +261,8 @@ SeekableZStream::GetFilter(SeekableZStream::FilterId id)
     return BCJ_Thumb_filter;
   case BCJ_ARM:
     return BCJ_ARM_filter;
+  case BCJ_X86:
+    return BCJ_X86_filter;
   default:
     return NULL;
   }

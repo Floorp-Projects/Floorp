@@ -288,6 +288,7 @@ public:
   // nsIRollupListener
   virtual bool Rollup(uint32_t aCount, nsIContent** aLastRolledUp);
   virtual bool ShouldRollupOnMouseWheelEvent();
+  virtual bool ShouldConsumeOnMouseWheelEvent();
   virtual bool ShouldRollupOnMouseActivate();
   virtual uint32_t GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain);
   virtual void NotifyGeometryChange() {}

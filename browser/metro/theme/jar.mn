@@ -41,6 +41,7 @@ chrome.jar:
   skin/images/infobar-close.png             (images/infobar-close.png)
   skin/images/infobar-geolocation.png       (images/infobar-geolocation.png)
   skin/images/infobar-key.png               (images/infobar-key.png)
+  skin/images/infobar-popup.png             (images/infobar-popup.png)
   skin/images/firefox-watermark.png         (images/firefox-watermark.png)
   skin/images/flyout-back-button.png        (images/flyout-back-button.png)
   skin/images/about-footer.png              (images/about-footer.png)

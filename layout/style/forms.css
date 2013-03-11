@@ -728,6 +728,8 @@ input[type="range"] {
   background: none;
   border: none;
   -moz-binding: none; /* we don't want any of platformHTMLBindings.xml#inputFields */
+  /* Prevent nsFrame::HandlePress setting mouse capture to this element. */
+  -moz-user-select: none ! important;
 }
 
 /**
@@ -750,6 +752,8 @@ input[type="range"] {
   background-color: grey;
   width: 100%;
   height: 0.2em;
+  /* Prevent nsFrame::HandlePress setting mouse capture to this element. */
+  -moz-user-select: none ! important;
 }
 
 /**
@@ -768,6 +772,8 @@ input[type="range"] {
   border: 0.1em solid grey;
   border-radius: 0.5em;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><linearGradient id='g' x2='0' y2='100%'><stop stop-color='%23ddd'/><stop offset='100%' stop-color='white'/></linearGradient><rect fill='url(%23g)' width='100%' height='100%'/></svg>");
+  /* Prevent nsFrame::HandlePress setting mouse capture to this element. */
+  -moz-user-select: none ! important;
 }
 
 %ifdef XP_OS2

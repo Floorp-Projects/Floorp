@@ -117,6 +117,10 @@ EXPORTS_GENERATED_DEST := $(DIST)/include/$(binding_include_path)
 EXPORTS_GENERATED_TARGET := webidl-export
 INSTALL_TARGETS += EXPORTS_GENERATED
 
+ifdef GNU_CC
+CXXFLAGS += -Wno-uninitialized
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 # We need to create a separate target so we can ensure that the pickle is

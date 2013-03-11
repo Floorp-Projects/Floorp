@@ -184,11 +184,6 @@ public:
   void CloseSocket();
 
   /** 
-   * Cancels connect/accept task loop, if one is currently running.
-   */
-  void CancelSocketTask();
-
-  /** 
    * Callback for socket connect/accept success. Called after connect/accept has
    * finished. Will be run on main thread, before any reads take place.
    */

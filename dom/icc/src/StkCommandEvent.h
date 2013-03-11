@@ -24,7 +24,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(StkCommandEvent, nsDOMEvent)
 
   static already_AddRefed<StkCommandEvent>
-  Create(const nsAString& aMessage);
+  Create(mozilla::dom::EventTarget* aOwner, const nsAString& aMessage);
 
   nsresult
   Dispatch(nsIDOMEventTarget* aTarget, const nsAString& aEventType)
@@ -47,8 +47,8 @@ public:
   }
 
 private:
-  StkCommandEvent()
-  : nsDOMEvent(nullptr, nullptr)
+  StkCommandEvent(mozilla::dom::EventTarget* aOwner)
+  : nsDOMEvent(aOwner, nullptr, nullptr)
   { }
 
   ~StkCommandEvent()

@@ -152,6 +152,8 @@ JS::TwoByteCharsToNewUTF8CharsZ(JSContext *cx, TwoByteChars tbchars)
 
     /* Allocate buffer. */
     unsigned char *utf8 = cx->pod_malloc<unsigned char>(len + 1);
+    if (!utf8)
+        return UTF8CharsZ();
 
     /* Encode to UTF8. */
     DeflateStringToUTF8Buffer(cx, str, tbchars.length(), (char *)utf8, &len);

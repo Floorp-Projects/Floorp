@@ -446,7 +446,7 @@ public:
 
   // This creates a trusted readystatechange event, which is not cancelable and
   // doesn't bubble.
-  static nsresult CreateReadystatechangeEvent(nsIDOMEvent** aDOMEvent);
+  nsresult CreateReadystatechangeEvent(nsIDOMEvent** aDOMEvent);
   void DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
                              const nsAString& aType,
                              bool aLengthComputable,

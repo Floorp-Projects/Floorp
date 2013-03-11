@@ -25,6 +25,8 @@
 #include <utils/RefBase.h>
 #include <utils/threads.h>
 
+#include "GonkCameraHwMgr.h"
+
 namespace android {
 
 class IMemory;
@@ -33,7 +35,7 @@ class GonkCameraSourceListener;
 class GonkCameraSource : public MediaSource, public MediaBufferObserver {
 public:
 
-    static GonkCameraSource *Create(int32_t cameraHandle,
+    static GonkCameraSource *Create(const sp<GonkCameraHardware>& aCameraHw,
                                     Size videoSize,
                                     int32_t frameRate,
                                     bool storeMetaDataInVideoBuffers = false);
@@ -98,7 +100,7 @@ protected:
     // Time between capture of two frames.
     int64_t mTimeBetweenFrameCaptureUs;
 
-    GonkCameraSource(int32_t cameraHandle,
+    GonkCameraSource(const sp<GonkCameraHardware>& aCameraHw,
                  Size videoSize, int32_t frameRate,
                  bool storeMetaDataInVideoBuffers = false);
 
@@ -132,7 +134,7 @@ private:
     int64_t mGlitchDurationThresholdUs;
     bool mCollectStats;
     bool mIsMetaDataStoredInVideoBuffers;
-    int32_t mCameraHandle;
+    sp<GonkCameraHardware> mCameraHw;
 
     void releaseQueuedFrames();
     void releaseOneRecordingFrame(const sp<IMemory>& frame);

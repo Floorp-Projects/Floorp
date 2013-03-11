@@ -26,10 +26,11 @@
 
 #include "prlog.h"
 #include "nsNetUtil.h"
+#include "nsIDOMAttr.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMParser.h"
-#include "nsIDOMNamedNodeMap.h"
+#include "nsIDOMMozNamedAttrMap.h"
 #include "nsIDOMNode.h"
 #include "nsString.h"
 #include "IMPDManager.h"
@@ -141,7 +142,7 @@ nsDASHMPDParser::PrintDOMElement(nsIDOMElement* aElem, int32_t offset)
   ss += tagName;
 
   // Attributes.
-  nsCOMPtr<nsIDOMNamedNodeMap> attributes;
+  nsCOMPtr<nsIDOMMozNamedAttrMap> attributes;
   NS_ENSURE_SUCCESS_VOID(aElem->GetAttributes(getter_AddRefs(attributes)));
 
   uint32_t count;
@@ -150,18 +151,18 @@ nsDASHMPDParser::PrintDOMElement(nsIDOMElement* aElem, int32_t offset)
   for(uint32_t i = 0; i < count; i++)
   {
     ss += NS_LITERAL_STRING(" ");
-    nsCOMPtr<nsIDOMNode> node;
-    NS_ENSURE_SUCCESS_VOID(attributes->Item(i, getter_AddRefs(node)));
+    nsCOMPtr<nsIDOMAttr> attr;
+    NS_ENSURE_SUCCESS_VOID(attributes->Item(i, getter_AddRefs(attr)));
 
-    nsAutoString nodeName;
-    NS_ENSURE_SUCCESS_VOID(node->GetNodeName(nodeName));
-    ss += nodeName;
+    nsAutoString name;
+    NS_ENSURE_SUCCESS_VOID(attr->GetName(name));
+    ss += name;
 
-    nsAutoString nodeValue;
-    NS_ENSURE_SUCCESS_VOID(node->GetNodeValue(nodeValue));
-    if(!nodeValue.IsEmpty()) {
+    nsAutoString value;
+    NS_ENSURE_SUCCESS_VOID(attr->GetValue(value));
+    if (!value.IsEmpty()) {
       ss += NS_LITERAL_STRING("=");
-      ss += nodeValue;
+      ss += value;
     }
   }
   ss += NS_LITERAL_STRING(">");

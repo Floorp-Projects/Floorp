@@ -16,7 +16,8 @@ class nsDOMSVGEvent : public nsDOMEvent,
                       public nsIDOMSVGEvent
 {
 public:
-  nsDOMSVGEvent(nsPresContext* aPresContext, nsEvent* aEvent);
+  nsDOMSVGEvent(mozilla::dom::EventTarget* aOwner,
+                nsPresContext* aPresContext, nsEvent* aEvent);
 
   // nsISupports interface:
   NS_DECL_ISUPPORTS_INHERITED

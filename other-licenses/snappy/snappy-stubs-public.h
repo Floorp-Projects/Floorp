@@ -38,6 +38,10 @@
 
 #include "mozilla/StandardInteger.h"
 
+#if defined IS_BIG_ENDIAN || defined __BIG_ENDIAN__
+#define WORDS_BIGENDIAN
+#endif
+
 #define SNAPPY_MAJOR 1
 #define SNAPPY_MINOR 0
 #define SNAPPY_PATCHLEVEL 4

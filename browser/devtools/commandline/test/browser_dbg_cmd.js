@@ -47,13 +47,21 @@ function testCommands(dbg, cmd) {
                         is(output.value, "dbg continue", "debugger continued");
                         DeveloperToolbarTest.exec({
                           typed: "dbg close",
+                          completed: false,
                           blankOutput: true
                         });
 
                         let target = TargetFactory.forTab(gBrowser.selectedTab);
-                        ok(!gDevTools.getToolbox(target),
-                          "Debugger was closed.");
-                        finish();
+                        let toolbox = gDevTools.getToolbox(target);
+                        if (!toolbox) {
+                          ok(true, "Debugger was closed.");
+                          finish();
+                        } else {
+                          toolbox.on("destroyed", function () {
+                            ok(true, "Debugger was closed.");
+                            finish();
+                          });
+                        }
                       });
                     });
                   });

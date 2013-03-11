@@ -95,7 +95,11 @@ dbus_bool_t dbus_func_send_async(DBusConnection *conn,
   reply = dbus_connection_send_with_reply(conn, msg,
                                           &call,
                                           timeout_ms);
-  if (!reply) {
+  /**
+   * dbus_connection_send_with_reply() may return TRUE but leave *pending_return
+   * as NULL, we'd better to check both reply value and return DBusPendingCall.
+   */
+  if (!reply || !call) {
     goto done;
   }
 

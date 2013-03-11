@@ -19,6 +19,7 @@ namespace mozilla {
 namespace dom {
 struct RemoteDOMEvent
 {
+  // Make sure to set the owner after deserializing.
   nsCOMPtr<nsIDOMEvent> mEvent;
 };
 

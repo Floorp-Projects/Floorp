@@ -16,7 +16,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(5b639ece-7b49-4507-9d38-550beb71955b)]
+[scriptable, uuid(3c798909-b3a6-4cc3-a659-8752979d4034)]
 interface nsIDOMHTMLLinkElement : nsIDOMHTMLElement
 {
            attribute boolean          disabled;

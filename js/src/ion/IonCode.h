@@ -134,6 +134,7 @@ class IonCode : public gc::Cell
     static void readBarrier(IonCode *code);
     static void writeBarrierPre(IonCode *code);
     static void writeBarrierPost(IonCode *code, void *addr);
+    static inline ThingRootKind rootKind() { return THING_ROOT_ION_CODE; }
 };
 
 class SnapshotWriter;

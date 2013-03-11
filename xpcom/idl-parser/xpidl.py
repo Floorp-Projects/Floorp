@@ -768,7 +768,7 @@ class Attribute(object):
                            self.location)
         if self.infallible and not self.realtype.kind == 'builtin':
             raise IDLError('[infallible] only works on builtin types '
-                           '(numbers, bool, and raw char types)',
+                           '(numbers, booleans, and raw char types)',
                            self.location)
         if self.infallible and not iface.attributes.builtinclass:
             raise IDLError('[infallible] attributes are only allowed on '

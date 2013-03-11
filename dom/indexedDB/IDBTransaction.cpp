@@ -837,7 +837,8 @@ CommitHelper::Run()
         DatabaseInfo::Remove(mTransaction->Database()->Id());
       }
 
-      event = CreateGenericEvent(NS_LITERAL_STRING(ABORT_EVT_STR),
+      event = CreateGenericEvent(mTransaction,
+                                 NS_LITERAL_STRING(ABORT_EVT_STR),
                                  eDoesBubble, eNotCancelable);
 
       // The transaction may already have an error object (e.g. if one of the
@@ -849,7 +850,8 @@ CommitHelper::Run()
       }
     }
     else {
-      event = CreateGenericEvent(NS_LITERAL_STRING(COMPLETE_EVT_STR),
+      event = CreateGenericEvent(mTransaction,
+                                 NS_LITERAL_STRING(COMPLETE_EVT_STR),
                                  eDoesNotBubble, eNotCancelable);
     }
     NS_ENSURE_TRUE(event, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);

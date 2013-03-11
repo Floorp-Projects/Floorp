@@ -284,8 +284,7 @@ NS_OpenURI(nsIStreamListener     *listener,
 inline nsresult
 NS_MakeAbsoluteURI(nsACString       &result,
                    const nsACString &spec, 
-                   nsIURI           *baseURI, 
-                   nsIIOService     *unused = nullptr)
+                   nsIURI           *baseURI)
 {
     nsresult rv;
     if (!baseURI) {
@@ -303,8 +302,7 @@ NS_MakeAbsoluteURI(nsACString       &result,
 inline nsresult
 NS_MakeAbsoluteURI(char        **result,
                    const char   *spec, 
-                   nsIURI       *baseURI, 
-                   nsIIOService *unused = nullptr)
+                   nsIURI       *baseURI)
 {
     nsresult rv;
     nsAutoCString resultBuf;
@@ -320,8 +318,7 @@ NS_MakeAbsoluteURI(char        **result,
 inline nsresult
 NS_MakeAbsoluteURI(nsAString       &result,
                    const nsAString &spec, 
-                   nsIURI          *baseURI,
-                   nsIIOService    *unused = nullptr)
+                   nsIURI          *baseURI)
 {
     nsresult rv;
     if (!baseURI) {
@@ -387,8 +384,7 @@ NS_StringToACE(const nsACString &idn, nsACString &result)
  * concept of ports or if there was an error getting the port.
  */
 inline int32_t
-NS_GetRealPort(nsIURI* aURI,
-               nsIIOService* ioService = nullptr)     // pass in nsIIOService to optimize callers
+NS_GetRealPort(nsIURI* aURI)
 {
     int32_t port;
     nsresult rv = aURI->GetPort(&port);
@@ -1101,9 +1097,7 @@ NS_BufferOutputStream(nsIOutputStream *aOutputStream,
 inline nsresult
 NS_NewPostDataStream(nsIInputStream  **result,
                      bool              isFile,
-                     const nsACString &data,
-                     uint32_t          encodeFlags,
-                     nsIIOService     *unused = nullptr)
+                     const nsACString &data)
 {
     nsresult rv;
 

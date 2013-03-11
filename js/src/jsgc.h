@@ -756,6 +756,8 @@ class GCHelperThread {
         return thread;
     }
 
+    bool onBackgroundThread();
+
     /*
      * Outside the GC lock may give true answer when in fact the sweeping has
      * been done.
@@ -1220,6 +1222,9 @@ SetDeterministicGC(JSContext *cx, bool enabled);
 
 void
 SetValidateGC(JSContext *cx, bool enabled);
+
+void
+SetFullCompartmentChecks(JSContext *cx, bool enabled);
 
 /* Wait for the background thread to finish sweeping if it is running. */
 void
