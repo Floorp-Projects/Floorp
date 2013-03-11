@@ -13,11 +13,13 @@ function createRootActor()
         actor.thread = new ThreadActor({});
         actor.thread.addDebuggee(g);
         actor.thread.global = g;
+
         actor.json = function() {
           return { actor: actor.actorID,
                    url: "http://www.example.com/",
                    title: actor.thread.global.__name };
         };
+
         actor.requestTypes["attach"] = function (aRequest) {
           dump("actor.thread.actorID = " + actor.thread.actorID + "\n");
           return {
@@ -26,6 +28,56 @@ function createRootActor()
             threadActor: actor.thread.actorID
           };
         };
+
+        actor.thread.requestTypes["scripts"] = function (aRequest) {
+          this._discoverScriptsAndSources();
+
+          let scripts = [];
+          for (let url in this._scripts) {
+            for (let i = 0; i < this._scripts[url].length; i++) {
+              if (!this._scripts[url][i]) {
+                continue;
+              }
+
+              let script = {
+                url: url,
+                startLine: i,
+                lineCount: this._scripts[url][i].lineCount,
+                source: this._getSource(url).form()
+              };
+              scripts.push(script);
+            }
+          }
+
+          return {
+            from: this.actorID,
+            scripts: scripts
+          };
+        };
+
+        // Pretend that we do not know about the "sources" packet to force the
+        // client to go into its backwards compatibility mode.
+        actor.thread.requestTypes["sources"] = function () {
+          return {
+            error: "unrecognizedPacketType"
+          };
+        };
+
+        let { conn } = this;
+        actor.thread.onNewScript = (function (oldOnNewScript) {
+          return function (aScript) {
+            oldOnNewScript.call(this, aScript);
+            conn.send({
+              from: actor.thread.actorID,
+              type: "newScript",
+              url: aScript.url,
+              startLine: aScript.startLine,
+              lineCount: aScript.lineCount,
+              source: actor.thread._getSource(aScript.url).form()
+            });
+          };
+        }(actor.thread.onNewScript));
+
         this.conn.addActor(actor);
         this.conn.addActor(actor.thread);
         this._tabActors.push(actor);
@@ -60,13 +112,6 @@ function createRootActor()
   actor.requestTypes = {
     "listTabs": actor.listTabs,
     "echo": function(aRequest) { return aRequest; },
-    // Pretend that we do not know about the "sources" packet to force the
-    // client to go into its backwards compatibility mode.
-    "sources": function () {
-      return {
-        error: "unrecognizedPacketType"
-      }
-    },
   };
   return actor;
 }
