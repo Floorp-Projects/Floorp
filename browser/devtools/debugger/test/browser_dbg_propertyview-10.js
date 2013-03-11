@@ -42,10 +42,10 @@ function testWithFrame()
 
       var frames = gDebugger.DebuggerView.StackFrames._container._list,
           scopes = gDebugger.DebuggerView.Variables._list,
-          innerScope = scopes.querySelectorAll(".scope")[0],
-          globalScope = scopes.querySelectorAll(".scope")[4],
-          innerNodes = innerScope.querySelector(".details").childNodes,
-          globalNodes = globalScope.querySelector(".details").childNodes;
+          innerScope = scopes.querySelectorAll(".variables-view-scope")[0],
+          globalScope = scopes.querySelectorAll(".variables-view-scope")[4],
+          innerNodes = innerScope.querySelector(".variables-view-element-details").childNodes,
+          globalNodes = globalScope.querySelector(".variables-view-element-details").childNodes;
 
       is(gDebugger.DebuggerController.activeThread.state, "paused",
         "Should only be getting stack frames while paused.");

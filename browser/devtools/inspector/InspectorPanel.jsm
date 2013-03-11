@@ -626,6 +626,7 @@ InspectorPanel.prototype = {
       }
     }
     this.selection.emit("pseudoclass");
+    this.breadcrumbs.scroll();
   },
 
   /**
