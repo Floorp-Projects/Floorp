@@ -9,7 +9,6 @@
 
     <RelativeLayout android:layout_width="@dimen/popup_width"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="15dip"
                     android:layout_alignParentTop="true"
                     android:background="@drawable/doorhanger_popup_bg">
 
@@ -17,7 +16,6 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:padding="12dip"
-                    android:background="@drawable/doorhanger_bg"
                     android:orientation="vertical">
 
           <TextView android:layout_width="wrap_content"
@@ -75,10 +73,10 @@
     </RelativeLayout>
 
     <ImageView android:id="@+id/arrow"
-               android:layout_width="@dimen/doorhanger_arrow_width"
-               android:layout_height="16dip"
+               android:layout_width="@dimen/menu_popup_arrow_width"
+               android:layout_height="12dip"
                android:layout_alignParentTop="true"
-               android:src="@drawable/doorhanger_arrow"
+               android:src="@drawable/menu_popup_arrow_top"
                android:scaleType="fitXY"/>
 
 </RelativeLayout>
