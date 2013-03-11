@@ -21,6 +21,7 @@
 #include "imgStatusTracker.h"
 #include "RasterImage.h"
 #include "VectorImage.h"
+#include "FrozenImage.h"
 #include "Image.h"
 
 #include "ImageFactory.h"
@@ -171,6 +172,13 @@ GetContentSize(nsIRequest* aRequest)
 
   // Fallback - neither http nor file. We'll use dynamic allocation.
   return 0;
+}
+
+/* static */ already_AddRefed<Image>
+ImageFactory::Freeze(Image* aImage)
+{
+  nsRefPtr<Image> frozenImage = new FrozenImage(aImage);
+  return frozenImage.forget();
 }
 
 /* static */ already_AddRefed<Image>
