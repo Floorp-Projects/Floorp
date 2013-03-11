@@ -259,6 +259,7 @@ public class DoorHangerPopup extends PopupWindow
             return;
         }
 
+        showDividers();
         if (isShowing()) {
             update();
             return;
@@ -278,6 +279,17 @@ public class DoorHangerPopup extends PopupWindow
         showAsDropDown(mAnchor, offset, -mYOffset);
         // Make the popup focusable for keyboard accessibility.
         setFocusable(true);
+    }
+
+    private void showDividers() {
+        int count = mContent.getChildCount();
+
+        for (int i = 0; i < count; i++) {
+            DoorHanger dh = (DoorHanger) mContent.getChildAt(i);
+            dh.showDivider();
+        }
+
+        ((DoorHanger) mContent.getChildAt(count-1)).hideDivider();
     }
 
     private void registerEventListener(String event) {
