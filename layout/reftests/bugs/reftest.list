@@ -681,7 +681,7 @@ skip-if(B2G) == 378937-1.html 378937-1-ref.html
 == 379178-html.html 379178-html-ref.html
 == 379178-svg.svg 379178-svg-ref.svg
 == 379316-1.html 379316-1-ref.html
-skip-if(B2G) fails-if(Android) random-if(cocoaWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(gtk2Widget,1,191) == 379316-2.html 379316-2-ref.html # bug 379786
+skip-if(B2G) fails-if(Android) random-if(cocoaWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,170) fuzzy-if(gtk2Widget,1,191) == 379316-2.html 379316-2-ref.html # bug 379786
 == 379328-1.html 379328-1-ref.html
 == 379349-1a.xhtml 379349-1-ref.xhtml
 == 379349-1b.xhtml 379349-1-ref.xhtml
@@ -1724,8 +1724,8 @@ fuzzy-if(true,17,5859) == 759036-2.html 759036-2-ref.html
 == 776265-2d.html 776265-2-ref.html
 == 787947-1.html 787947-1-ref.html
 == 796847-1.svg 796847-1-ref.svg
-fuzzy(40,800) == 797797-1.html 797797-1-ref.html # 'opacity:N' and rgba(,,,N) text don't match precisely
-fuzzy(40,800) == 797797-2.html 797797-2-ref.html # 'opacity:N' and rgba(,,,N) text don't match precisely
+fuzzy(40,850) == 797797-1.html 797797-1-ref.html # 'opacity:N' and rgba(,,,N) text don't match precisely
+fuzzy(40,850) == 797797-2.html 797797-2-ref.html # 'opacity:N' and rgba(,,,N) text don't match precisely
 == 801681-1.html 801681-1-ref.html
 == 801681-2.html 801681-2-ref.html
 == 801994-1.html 801994-1-ref.html
