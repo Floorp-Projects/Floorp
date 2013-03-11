@@ -7,7 +7,7 @@ load 56746-1.html
 load 89101-1.html
 load 89358-1.html
 load 90205-1.html
-load 99776-1.html
+skip-if((OSX==10.7||OSX==10.8)&&browserIsRemote) load 99776-1.html # Bug 849747
 load 118931-1.html
 load 121533-1.html
 load 123049-1.html
