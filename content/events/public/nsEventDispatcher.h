@@ -16,6 +16,11 @@ class nsIScriptGlobalObject;
 class nsIDOMEventTarget;
 class nsEventTargetChainItem;
 template<class E> class nsCOMArray;
+namespace mozilla {
+namespace dom {
+class EventTarget;
+}
+}
 
 /**
  * About event dispatching:
@@ -241,7 +246,8 @@ public:
   /**
    * Creates a DOM Event.
    */
-  static nsresult CreateEvent(nsPresContext* aPresContext,
+  static nsresult CreateEvent(mozilla::dom::EventTarget* aOwner,
+                              nsPresContext* aPresContext,
                               nsEvent* aEvent,
                               const nsAString& aEventType,
                               nsIDOMEvent** aDOMEvent);

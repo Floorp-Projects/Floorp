@@ -144,6 +144,8 @@ private:
     SeekableZStream::BCJ_THUMB;
 #elif defined(TARGET_ARM)
     SeekableZStream::BCJ_ARM;
+#elif defined(TARGET_X86)
+    SeekableZStream::BCJ_X86;
 #else
     SeekableZStream::NONE;
 #endif
@@ -352,6 +354,8 @@ int main(int argc, char* argv[])
         filter = SeekableZStream::BCJ_ARM;
       else if (strcmp(firstArg[0], "thumb") == 0)
         filter = SeekableZStream::BCJ_THUMB;
+      else if (strcmp(firstArg[0], "x86") == 0)
+        filter = SeekableZStream::BCJ_X86;
       else {
         log("Invalid filter");
         return 1;

@@ -178,6 +178,9 @@ public:
   virtual bool ShouldRollupOnMouseWheelEvent()
     { return true; }
 
+  virtual bool ShouldConsumeOnMouseWheelEvent()
+    { return false; }
+
   /**
    * A combobox should not roll up if activated by a mouse activate message
    * (eg. X-mouse).

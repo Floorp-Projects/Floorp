@@ -23,15 +23,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=764240
 
 SimpleTest.waitForExplicitFinish();
 
-// Error margin allowed for the window's size.
-// The window size being set by the platform, we can't guarantee it will be respected.
-// In platforms other than Windows, 5 is a good epsilon. On windows, it seems
-// that most of the time, the width is 14/15 higher than expected so we need
-// to have an epsilon that matches this difference.
-// Actually, on platforms other than Windows, epsilon of 0 might work.
-// Only innerWidth on Windows has a 14/15 pixels difference to what is
-// requested.
+// Error margin allowed for the window's size. Windows has varying minimum
+// sizes depending on the os due to outer window chrome. Unix is given 5
+// pixels to protect against minor variances.
 var epsilon =  navigator.platform.indexOf("Win") == -1 ? 5 : 20;
+
+// Windows 8 has a minimum 122 pixel inner window width due to
+// outer window chrome.
+var isWin8 = (navigator.userAgent.indexOf("Windows NT 6.2") != -1);
+
+var innerWidthMin = (isWin8 ? 120 : 100);
+var innerWidthMax = (isWin8 ? 125 : 100);
 
 function test() {
   var w = window.open('data:text/html,null', null, 'width=300,height=300');
@@ -45,8 +47,8 @@ function test() {
         return;
       }
 
-      ok(w.innerWidth + epsilon >= 100 && w.innerWidth - epsilon <= 100,
-         "innerWidth should be around 100");
+      ok(w.innerWidth + epsilon >= innerWidthMin && w.innerWidth - epsilon <= innerWidthMax,
+         "innerWidth should be between " + innerWidthMin + " and " + innerWidthMax);
       ok(w.innerHeight + epsilon >= 100 && w.innerHeight - epsilon <= 100,
          "innerHeight should be around 100");
 

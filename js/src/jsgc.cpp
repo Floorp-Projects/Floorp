@@ -266,7 +266,7 @@ ArenaHeader::checkSynchronizedWithFreeList() const
      * list in the zone can mutate at any moment. We cannot do any
      * checks in this case.
      */
-    if (IsBackgroundFinalized(getAllocKind()) && !zone->rt->isHeapBusy())
+    if (IsBackgroundFinalized(getAllocKind()) && zone->rt->gcHelperThread.onBackgroundThread())
         return;
 
     FreeSpan firstSpan = FreeSpan::decodeOffsets(arenaAddress(), firstFreeSpanOffsets);
@@ -2519,6 +2519,16 @@ GCHelperThread::doSweep()
 }
 #endif /* JS_THREADSAFE */
 
+bool
+GCHelperThread::onBackgroundThread()
+{
+#ifdef JS_THREADSAFE
+    return PR_GetCurrentThread() == getThread();
+#else
+    return false;
+#endif
+}
+
 static bool
 ReleaseObservedTypes(JSRuntime *rt)
 {
@@ -2678,7 +2688,8 @@ BeginMarkPhase(JSRuntime *rt)
     int64_t currentTime = PRMJ_Now();
 
 #ifdef DEBUG
-    CheckForCompartmentMismatches(rt);
+    if (rt->gcFullCompartmentChecks)
+        CheckForCompartmentMismatches(rt);
 #endif
 
     rt->gcIsFull = true;
@@ -2977,7 +2988,7 @@ js::gc::MarkingValidator::nonIncrementalMark()
         if (!entry)
             return;
 
-        memcpy(entry->bitmap, bitmap->bitmap, sizeof(bitmap->bitmap));
+        memcpy((void *)entry->bitmap, (void *)bitmap->bitmap, sizeof(bitmap->bitmap));
         if (!map.putNew(r.front(), entry))
             return;
     }
@@ -4703,6 +4714,13 @@ gc::SetValidateGC(JSContext *cx, bool enabled)
 {
     JSRuntime *rt = cx->runtime;
     rt->gcValidate = enabled;
+}
+
+void
+gc::SetFullCompartmentChecks(JSContext *cx, bool enabled)
+{
+    JSRuntime *rt = cx->runtime;
+    rt->gcFullCompartmentChecks = enabled;
 }
 
 #ifdef DEBUG

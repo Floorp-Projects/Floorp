@@ -1358,7 +1358,8 @@ protected:
   { }
 
   // Need an upgradeneeded event here.
-  virtual already_AddRefed<nsDOMEvent> CreateSuccessEvent() MOZ_OVERRIDE;
+  virtual already_AddRefed<nsIDOMEvent> CreateSuccessEvent(
+    mozilla::dom::EventTarget* aOwner) MOZ_OVERRIDE;
 
   virtual nsresult NotifyTransactionPreComplete(IDBTransaction* aTransaction)
                                                 MOZ_OVERRIDE;
@@ -1530,7 +1531,7 @@ public:
 
       // Otherwise fire a versionchange event.
       nsRefPtr<nsDOMEvent> event = 
-        IDBVersionChangeEvent::Create(mOldVersion, mNewVersion);
+        IDBVersionChangeEvent::Create(database, mOldVersion, mNewVersion);
       NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
 
       bool dummy;
@@ -1542,7 +1543,8 @@ public:
     for (uint32_t index = 0; index < count; index++) {
       if (!mWaitingDatabases[index]->IsClosed()) {
         nsRefPtr<nsDOMEvent> event =
-          IDBVersionChangeEvent::CreateBlocked(mOldVersion, mNewVersion);
+          IDBVersionChangeEvent::CreateBlocked(mRequest,
+                                               mOldVersion, mNewVersion);
         NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
 
         bool dummy;
@@ -2200,8 +2202,8 @@ OpenDatabaseHelper::BlockDatabase()
 void
 OpenDatabaseHelper::DispatchSuccessEvent()
 {
-  nsRefPtr<nsDOMEvent> event =
-    CreateGenericEvent(NS_LITERAL_STRING(SUCCESS_EVT_STR),
+  nsRefPtr<nsIDOMEvent> event =
+    CreateGenericEvent(mOpenDBRequest, NS_LITERAL_STRING(SUCCESS_EVT_STR),
                        eDoesNotBubble, eNotCancelable);
   if (!event) {
     NS_ERROR("Failed to create event!");
@@ -2215,8 +2217,8 @@ OpenDatabaseHelper::DispatchSuccessEvent()
 void
 OpenDatabaseHelper::DispatchErrorEvent()
 {
-  nsRefPtr<nsDOMEvent> event =
-    CreateGenericEvent(NS_LITERAL_STRING(ERROR_EVT_STR),
+  nsRefPtr<nsIDOMEvent> event =
+    CreateGenericEvent(mOpenDBRequest, NS_LITERAL_STRING(ERROR_EVT_STR),
                        eDoesBubble, eCancelable);
   if (!event) {
     NS_ERROR("Failed to create event!");
@@ -2318,12 +2320,13 @@ VersionChangeEventsRunnable::QueueVersionChange(
   NS_DispatchToCurrentThread(eventsRunnable);
 }
 
-already_AddRefed<nsDOMEvent>
-SetVersionHelper::CreateSuccessEvent()
+already_AddRefed<nsIDOMEvent>
+SetVersionHelper::CreateSuccessEvent(mozilla::dom::EventTarget* aOwner)
 {
   NS_ASSERTION(mCurrentVersion < mRequestedVersion, "Huh?");
 
-  return IDBVersionChangeEvent::CreateUpgradeNeeded(mCurrentVersion,
+  return IDBVersionChangeEvent::CreateUpgradeNeeded(aOwner,
+                                                    mCurrentVersion,
                                                     mRequestedVersion);
 }
 

@@ -9,12 +9,13 @@
 #include "nsIClassInfo.h"
 #include "nsIXPCScriptable.h"
 
-nsDOMAnimationEvent::nsDOMAnimationEvent(nsPresContext *aPresContext,
+nsDOMAnimationEvent::nsDOMAnimationEvent(mozilla::dom::EventTarget* aOwner,
+                                         nsPresContext *aPresContext,
                                          nsAnimationEvent *aEvent)
-  : nsDOMEvent(aPresContext, aEvent ? aEvent
-                                    : new nsAnimationEvent(false, 0,
-                                                           EmptyString(),
-                                                           0.0))
+  : nsDOMEvent(aOwner, aPresContext,
+               aEvent ? aEvent : new nsAnimationEvent(false, 0,
+                                                      EmptyString(),
+                                                      0.0))
 {
   if (aEvent) {
     mEventIsInternal = false;
@@ -75,9 +76,11 @@ nsDOMAnimationEvent::InitAnimationEvent(const nsAString & typeArg,
 
 nsresult
 NS_NewDOMAnimationEvent(nsIDOMEvent **aInstancePtrResult,
+                        mozilla::dom::EventTarget* aOwner,
                         nsPresContext *aPresContext,
                         nsAnimationEvent *aEvent)
 {
-  nsDOMAnimationEvent *it = new nsDOMAnimationEvent(aPresContext, aEvent);
+  nsDOMAnimationEvent* it =
+    new nsDOMAnimationEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);
 }

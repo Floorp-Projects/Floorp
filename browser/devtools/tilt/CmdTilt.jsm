@@ -57,9 +57,11 @@ gcli.addCommand({
       tilt.on("change", aChangeHandler);
     },
     offChange: function(aTarget, aChangeHandler) {
-      let browserWindow = aTarget.tab.ownerDocument.defaultView;
-      let tilt = TiltManager.getTiltForBrowser(browserWindow);
-      tilt.off("change", aChangeHandler);
+      if (aTarget.tab) {
+        let browserWindow = aTarget.tab.ownerDocument.defaultView;
+        let tilt = TiltManager.getTiltForBrowser(browserWindow);
+        tilt.off("change", aChangeHandler);
+      }
     },
   },
   exec: function(args, context) {

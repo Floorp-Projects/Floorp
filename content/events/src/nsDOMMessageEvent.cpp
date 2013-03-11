@@ -16,11 +16,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMMessageEvent, nsDOMEvent)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDOMMessageEvent, nsDOMEvent)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSource)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsDOMMessageEvent)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(nsDOMMessageEvent, nsDOMEvent)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mData)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
@@ -34,9 +33,10 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 NS_IMPL_ADDREF_INHERITED(nsDOMMessageEvent, nsDOMEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMMessageEvent, nsDOMEvent)
 
-nsDOMMessageEvent::nsDOMMessageEvent(nsPresContext* aPresContext,
+nsDOMMessageEvent::nsDOMMessageEvent(mozilla::dom::EventTarget* aOwner,
+                                     nsPresContext* aPresContext,
                                      nsEvent* aEvent)
-  : nsDOMEvent(aPresContext, aEvent),
+  : nsDOMEvent(aOwner, aPresContext, aEvent),
     mData(JSVAL_VOID),
     mDataRooted(false)
 {
@@ -122,10 +122,11 @@ nsDOMMessageEvent::InitMessageEvent(const nsAString& aType,
 
 nsresult
 NS_NewDOMMessageEvent(nsIDOMEvent** aInstancePtrResult,
+                      mozilla::dom::EventTarget* aOwner,
                       nsPresContext* aPresContext,
                       nsEvent* aEvent) 
 {
-  nsDOMMessageEvent* it = new nsDOMMessageEvent(aPresContext, aEvent);
+  nsDOMMessageEvent* it = new nsDOMMessageEvent(aOwner, aPresContext, aEvent);
 
   return CallQueryInterface(it, aInstancePtrResult);
 }

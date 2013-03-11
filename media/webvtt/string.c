@@ -180,7 +180,6 @@ WEBVTT_EXPORT void
 webvtt_copy_string( webvtt_string *left, const webvtt_string *right )
 {
   if( left ) {
-    webvtt_string_data *d = left->d;
     if( right && right->d ) {
       left->d = right->d;
     } else {
@@ -332,7 +331,7 @@ webvtt_string_getline( webvtt_string *src, const webvtt_byte *buffer,
       /* truncate. */
       (*truncate)++;
     } else {
-      if( grow( str, len ) == WEBVTT_OUT_OF_MEMORY ) {
+      if( grow( str, len + 1 ) == WEBVTT_OUT_OF_MEMORY ) {
         ret = -1;
       }
       d = str->d;
@@ -369,6 +368,15 @@ webvtt_string_putc( webvtt_string *str, webvtt_byte to_append )
   }
 
   return result;
+}
+
+WEBVTT_EXPORT webvtt_bool
+webvtt_string_is_equal( webvtt_string *str, webvtt_byte *to_compare, webvtt_uint len )
+{
+  if( !str || !to_compare || webvtt_string_length( str ) != len ) {
+    return 0;
+  }
+  return memcmp( webvtt_string_text( str ), to_compare, len ) == 0;
 }
 
 WEBVTT_EXPORT webvtt_status

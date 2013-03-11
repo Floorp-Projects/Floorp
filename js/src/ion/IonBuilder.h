@@ -532,7 +532,7 @@ class IonBuilder : public MIRGenerator
     TypeOracle *oracle;
     BaselineInspector *inspector;
 
-    size_t inliningDepth;
+    size_t inliningDepth_;
     Vector<MDefinition *, 0, IonAllocPolicy> inlinedArguments_;
 
     // True if script->failedBoundsCheck is set for the current script or

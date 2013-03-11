@@ -15,7 +15,8 @@ class nsDOMTransitionEvent : public nsDOMEvent,
                              public nsIDOMTransitionEvent
 {
 public:
-  nsDOMTransitionEvent(nsPresContext *aPresContext,
+  nsDOMTransitionEvent(mozilla::dom::EventTarget* aOwner,
+                       nsPresContext *aPresContext,
                        nsTransitionEvent *aEvent);
   ~nsDOMTransitionEvent();
 

@@ -17,7 +17,7 @@
 
 interface nsIDOMValidityState;
 
-[scriptable, uuid(01542000-CD00-4E8A-841C-9BAAD6BA0368)]
+[scriptable, uuid(433f8f1d-437e-443a-a0ae-80b1a2f8021a)]
 interface nsIDOMHTMLOutputElement : nsIDOMHTMLElement
 {
   // DOMSettableTokenList

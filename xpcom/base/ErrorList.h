@@ -93,72 +93,23 @@
   /* 3: NS_ERROR_MODULE_GFX */
   /* ======================================================================= */
 #define MODULE NS_ERROR_MODULE_GFX
-  /* error codes for printer device contexts */
-  /* Unix: print command (lp/lpr) not found */
-  ERROR(NS_ERROR_GFX_PRINTER_CMD_NOT_FOUND,               FAILURE(2)),
-  /* Unix: print command returned an error */
-  ERROR(NS_ERROR_GFX_PRINTER_CMD_FAILURE,                 FAILURE(3)),
   /* no printer available (e.g. cannot find _any_ printer) */
-  ERROR(NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE,        FAILURE(4)),
+  ERROR(NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE,        FAILURE(1)),
   /* _specified_ (by name) printer not found */
-  ERROR(NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND,              FAILURE(5)),
-  /* access to printer denied */
-  ERROR(NS_ERROR_GFX_PRINTER_ACCESS_DENIED,               FAILURE(6)),
-  /* invalid printer attribute (for example: unsupported paper size etc.) */
-  ERROR(NS_ERROR_GFX_PRINTER_INVALID_ATTRIBUTE,           FAILURE(7)),
-  /* printer not "ready" (offline ?) */
-  ERROR(NS_ERROR_GFX_PRINTER_PRINTER_NOT_READY,           FAILURE(9)),
-  /* printer out of paper */
-  ERROR(NS_ERROR_GFX_PRINTER_OUT_OF_PAPER,                FAILURE(10)),
-  /* generic printer I/O error */
-  ERROR(NS_ERROR_GFX_PRINTER_PRINTER_IO_ERROR,            FAILURE(11)),
+  ERROR(NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND,              FAILURE(2)),
   /* print-to-file: could not open output file */
-  ERROR(NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE,         FAILURE(12)),
-  /* print-to-file: I/O error while printing to file */
-  ERROR(NS_ERROR_GFX_PRINTER_FILE_IO_ERROR,               FAILURE(13)),
-  /* print preview: needs at least one printer */
-  ERROR(NS_ERROR_GFX_PRINTER_PRINTPREVIEW,                FAILURE(14)),
+  ERROR(NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE,         FAILURE(3)),
   /* print: starting document */
-  ERROR(NS_ERROR_GFX_PRINTER_STARTDOC,                    FAILURE(15)),
+  ERROR(NS_ERROR_GFX_PRINTER_STARTDOC,                    FAILURE(4)),
   /* print: ending document */
-  ERROR(NS_ERROR_GFX_PRINTER_ENDDOC,                      FAILURE(16)),
+  ERROR(NS_ERROR_GFX_PRINTER_ENDDOC,                      FAILURE(5)),
   /* print: starting page */
-  ERROR(NS_ERROR_GFX_PRINTER_STARTPAGE,                   FAILURE(17)),
-  /* print: ending page */
-  ERROR(NS_ERROR_GFX_PRINTER_ENDPAGE,                     FAILURE(18)),
-  /* print: print while in print preview */
-  ERROR(NS_ERROR_GFX_PRINTER_PRINT_WHILE_PREVIEW,         FAILURE(19)),
-  /* requested page size not supported by printer */
-  ERROR(NS_ERROR_GFX_PRINTER_PAPER_SIZE_NOT_SUPPORTED,    FAILURE(20)),
-  /* requested page orientation not supported */
-  ERROR(NS_ERROR_GFX_PRINTER_ORIENTATION_NOT_SUPPORTED,   FAILURE(21)),
-  /* requested colorspace not supported (like printing "color" on a
-     "grayscale"-only printer) */
-  ERROR(NS_ERROR_GFX_PRINTER_COLORSPACE_NOT_SUPPORTED,    FAILURE(22)),
-  /* too many copies requested */
-  ERROR(NS_ERROR_GFX_PRINTER_TOO_MANY_COPIES,             FAILURE(23)),
-  /* driver configuration error */
-  ERROR(NS_ERROR_GFX_PRINTER_DRIVER_CONFIGURATION_ERROR,  FAILURE(24)),
-  /* The document is still being loaded, can't Print Preview */
-  ERROR(NS_ERROR_GFX_PRINTER_DOC_IS_BUSY_PP,              FAILURE(25)),
-  /* The document was asked to be destroyed while we were preparing printing */
-  ERROR(NS_ERROR_GFX_PRINTER_DOC_WAS_DESTORYED,           FAILURE(26)),
-  /* Cannot Print or Print Preview XUL Documents */
-  ERROR(NS_ERROR_GFX_PRINTER_NO_XUL,                      FAILURE(27)),
-  /* The toolkit no longer supports the Print Dialog (for embedders) */
-  ERROR(NS_ERROR_GFX_NO_PRINTDIALOG_IN_TOOLKIT,           FAILURE(28)),
-  /* The was wasn't any Print Prompt service registered (this shouldn't happen) */
-  ERROR(NS_ERROR_GFX_NO_PRINTROMPTSERVICE,                FAILURE(29)),
-  /* requested plex mode not supported by printer */
-  ERROR(NS_ERROR_GFX_PRINTER_PLEX_NOT_SUPPORTED,          FAILURE(30)),
+  ERROR(NS_ERROR_GFX_PRINTER_STARTPAGE,                   FAILURE(6)),
   /* The document is still being loaded */
-  ERROR(NS_ERROR_GFX_PRINTER_DOC_IS_BUSY,                 FAILURE(31)),
-  /* Printing is not implemented */
-  ERROR(NS_ERROR_GFX_PRINTING_NOT_IMPLEMENTED,            FAILURE(32)),
-  /* Cannot load the matching print module */
-  ERROR(NS_ERROR_GFX_COULD_NOT_LOAD_PRINT_MODULE,         FAILURE(33)),
-  /* requested resolution/quality mode not supported by printer */
-  ERROR(NS_ERROR_GFX_PRINTER_RESOLUTION_NOT_SUPPORTED,    FAILURE(34)),
+  ERROR(NS_ERROR_GFX_PRINTER_DOC_IS_BUSY,                 FAILURE(7)),
+  /* Cannot Print or Print Preview XUL Documents (bug 136185 / bug 240490) */
+  ERROR(NS_ERROR_GFX_PRINTER_NO_XUL,                      FAILURE(8)),
+
   /* Font cmap is strangely structured - avoid this font! */
   ERROR(NS_ERROR_GFX_CMAP_MALFORMED,                      FAILURE(51)),
 #undef MODULE

@@ -924,7 +924,8 @@ JSObject::isDebugScope() const
 
 /* static */ inline JSObject *
 JSObject::create(JSContext *cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
-                 js::HandleShape shape, js::HandleTypeObject type, js::HeapSlot *slots)
+                 js::HandleShape shape, js::HandleTypeObject type,
+                 js::HeapSlot *extantSlots /* = NULL */)
 {
     /*
      * Callers must use dynamicSlotsCount to size the initial slot array of the
@@ -934,15 +935,28 @@ JSObject::create(JSContext *cx, js::gc::AllocKind kind, js::gc::InitialHeap heap
     JS_ASSERT(shape && type);
     JS_ASSERT(type->clasp == shape->getObjectClass());
     JS_ASSERT(type->clasp != &js::ArrayClass);
-    JS_ASSERT(!!dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan()) == !!slots);
     JS_ASSERT(js::gc::GetGCKindSlots(kind, type->clasp) == shape->numFixedSlots());
     JS_ASSERT(cx->compartment == type->compartment());
     JS_ASSERT_IF(type->clasp->flags & JSCLASS_BACKGROUND_FINALIZE, IsBackgroundFinalized(kind));
     JS_ASSERT_IF(type->clasp->finalize, heap == js::gc::TenuredHeap);
+    JS_ASSERT_IF(extantSlots, dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan()));
+
+    js::HeapSlot *slots = extantSlots;
+    if (!slots) {
+        size_t nDynamicSlots = dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan());
+        if (nDynamicSlots) {
+            slots = cx->pod_malloc<js::HeapSlot>(nDynamicSlots);
+            if (!slots)
+                return NULL;
+            js::Debug_SetSlotRangeToCrashOnTouch(slots, nDynamicSlots);
+        }
+    }
 
     JSObject *obj = js_NewGCObject<js::CanGC>(cx, kind, heap);
-    if (!obj)
+    if (!obj) {
+        js_free(slots);
         return NULL;
+    }
 
     obj->shape_.init(shape);
     obj->type_.init(type);
@@ -1724,24 +1738,6 @@ GuessArrayGCKind(size_t numSlots)
     if (numSlots)
         return gc::GetGCArrayKind(numSlots);
     return gc::FINALIZE_OBJECT8;
-}
-
-/*
- * Fill slots with the initial slot array to use for a newborn object which
- * may or may not need dynamic slots.
- */
-inline bool
-PreallocateObjectDynamicSlots(JSContext *cx, RawShape shape, HeapSlot **slots)
-{
-    if (size_t count = JSObject::dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan())) {
-        *slots = cx->pod_malloc<HeapSlot>(count);
-        if (!*slots)
-            return false;
-        Debug_SetSlotRangeToCrashOnTouch(*slots, count);
-        return true;
-    }
-    *slots = NULL;
-    return true;
 }
 
 inline bool

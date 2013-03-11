@@ -73,6 +73,10 @@ MOCHITEST_CHROME_FILES = \
   test_bug775543.html \
   $(NULL)
 
+ifdef GNU_CC
+CXXFLAGS += -Wno-uninitialized
+endif
+
 # Include rules.mk before any of our targets so our first target is coming from
 # rules.mk and running make with no target in this dir does the right thing.
 include $(topsrcdir)/config/rules.mk

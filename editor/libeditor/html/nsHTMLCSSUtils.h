@@ -239,6 +239,20 @@ public:
                                              const nsAString *aAttribute,
                                              const nsAString *aValue,
                                              bool aSuppressTransaction);
+  /** removes from the node the CSS inline styles equivalent to the HTML style
+    *
+    * @param aElement       [IN] a DOM Element (must not be null)
+    * @param aHTMLProperty  [IN] an atom containing an HTML property
+    * @param aAttribute     [IN] a pointer to an attribute name or nullptr if irrelevant
+    * @param aValue         [IN] the attribute value
+    * @param aSuppressTransaction [IN] a boolean indicating, when true,
+    *                                  that no transaction should be recorded
+    */
+  nsresult    RemoveCSSEquivalentToHTMLStyle(mozilla::dom::Element* aElement,
+                                             nsIAtom* aHTMLProperty,
+                                             const nsAString* aAttribute,
+                                             const nsAString* aValue,
+                                             bool aSuppressTransaction);
 
   /** parses a "xxxx.xxxxxuuu" string where x is a digit and u an alpha char
     * we need such a parser because nsIDOMCSSStyleDeclaration::GetPropertyCSSValue() is not

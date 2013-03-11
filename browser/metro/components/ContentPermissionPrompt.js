@@ -13,10 +13,8 @@ const kCountBeforeWeRemember = 5;
 
 const kEntities = {
   "geolocation": "geolocation2",
-  "desktop-notification": "desktopNotification",
   "indexedDB": "offlineApps",
-  "indexedDBQuota": "indexedDBQuota",
-  "openWebappsManage": "openWebappsManage"
+  "indexedDBQuota": "indexedDBQuota"
 };
 
 const kIcons = {

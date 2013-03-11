@@ -168,17 +168,15 @@ CallObject::createTemplateObject(JSContext *cx, HandleScript script)
     if (!type)
         return NULL;
 
-    HeapSlot *slots;
-    if (!PreallocateObjectDynamicSlots(cx, shape, &slots))
+    gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
+    JS_ASSERT(CanBeFinalizedInBackground(kind, &CallClass));
+    kind = gc::GetBackgroundAllocKind(kind);
+
+    JSObject *obj = JSObject::create(cx, kind, gc::TenuredHeap, shape, type);
+    if (!obj)
         return NULL;
 
-    CallObject *callobj = CallObject::create(cx, shape, type, slots);
-    if (!callobj) {
-        js_free(slots);
-        return NULL;
-    }
-
-    return callobj;
+    return &obj->asCall();
 }
 
 /*
@@ -296,7 +294,7 @@ DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun)
     if (!emptyDeclEnvShape)
         return NULL;
 
-    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, gc::DefaultHeap, emptyDeclEnvShape, type, NULL));
+    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, gc::DefaultHeap, emptyDeclEnvShape, type));
     if (!obj)
         return NULL;
 
@@ -338,7 +336,7 @@ WithObject::create(JSContext *cx, HandleObject proto, HandleObject enclosing, ui
     if (!shape)
         return NULL;
 
-    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, gc::DefaultHeap, shape, type, NULL));
+    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, gc::DefaultHeap, shape, type));
     if (!obj)
         return NULL;
 
@@ -612,13 +610,9 @@ ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, Abst
     if (!type)
         return NULL;
 
-    HeapSlot *slots;
-    if (!PreallocateObjectDynamicSlots(cx, block->lastProperty(), &slots))
-        return NULL;
-
     RootedShape shape(cx, block->lastProperty());
 
-    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, gc::TenuredHeap, shape, type, slots));
+    RootedObject obj(cx, JSObject::create(cx, FINALIZE_KIND, gc::TenuredHeap, shape, type));
     if (!obj)
         return NULL;
 
@@ -676,7 +670,7 @@ StaticBlockObject::create(JSContext *cx)
     if (!emptyBlockShape)
         return NULL;
 
-    JSObject *obj = JSObject::create(cx, FINALIZE_KIND, gc::TenuredHeap, emptyBlockShape, type, NULL);
+    JSObject *obj = JSObject::create(cx, FINALIZE_KIND, gc::TenuredHeap, emptyBlockShape, type);
     if (!obj)
         return NULL;
 

@@ -38,12 +38,14 @@ private:
 
 } // anonymous namespace
 
-already_AddRefed<nsDOMEvent>
-mozilla::dom::indexedDB::CreateGenericEvent(const nsAString& aType,
+already_AddRefed<nsIDOMEvent>
+mozilla::dom::indexedDB::CreateGenericEvent(mozilla::dom::EventTarget* aOwner,
+                                            const nsAString& aType,
                                             Bubbles aBubbles,
                                             Cancelable aCancelable)
 {
-  nsRefPtr<nsDOMEvent> event(new nsDOMEvent(nullptr, nullptr));
+  nsCOMPtr<nsIDOMEvent> event;
+  NS_NewDOMEvent(getter_AddRefs(event), aOwner, nullptr, nullptr);
   nsresult rv = event->InitEvent(aType,
                                  aBubbles == eDoesBubble ? true : false,
                                  aCancelable == eCancelable ? true : false);
@@ -56,11 +58,12 @@ mozilla::dom::indexedDB::CreateGenericEvent(const nsAString& aType,
 
 // static
 already_AddRefed<nsDOMEvent>
-IDBVersionChangeEvent::CreateInternal(const nsAString& aType,
+IDBVersionChangeEvent::CreateInternal(mozilla::dom::EventTarget* aOwner,
+                                      const nsAString& aType,
                                       uint64_t aOldVersion,
                                       uint64_t aNewVersion)
 {
-  nsRefPtr<IDBVersionChangeEvent> event(new IDBVersionChangeEvent());
+  nsRefPtr<IDBVersionChangeEvent> event(new IDBVersionChangeEvent(aOwner));
 
   nsresult rv = event->InitEvent(aType, false, false);
   NS_ENSURE_SUCCESS(rv, nullptr);
@@ -75,13 +78,13 @@ IDBVersionChangeEvent::CreateInternal(const nsAString& aType,
 
 // static
 already_AddRefed<nsIRunnable>
-IDBVersionChangeEvent::CreateRunnableInternal(const nsAString& aType,
+IDBVersionChangeEvent::CreateRunnableInternal(mozilla::dom::EventTarget* aTarget,
+                                              const nsAString& aType,
                                               uint64_t aOldVersion,
-                                              uint64_t aNewVersion,
-                                              nsIDOMEventTarget* aTarget)
+                                              uint64_t aNewVersion)
 {
   nsRefPtr<nsDOMEvent> event =
-    CreateInternal(aType, aOldVersion, aNewVersion);
+    CreateInternal(aTarget, aType, aOldVersion, aNewVersion);
   NS_ENSURE_TRUE(event, nullptr);
 
   nsCOMPtr<nsIRunnable> runnable(new EventFiringRunnable(aTarget, event));

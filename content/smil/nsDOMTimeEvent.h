@@ -13,7 +13,8 @@ class nsDOMTimeEvent : public nsDOMEvent,
                        public nsIDOMTimeEvent
 {
 public:
-  nsDOMTimeEvent(nsPresContext* aPresContext, nsEvent* aEvent);
+  nsDOMTimeEvent(mozilla::dom::EventTarget* aOwner,
+                 nsPresContext* aPresContext, nsEvent* aEvent);
                      
   // nsISupports interface:
   NS_DECL_ISUPPORTS_INHERITED

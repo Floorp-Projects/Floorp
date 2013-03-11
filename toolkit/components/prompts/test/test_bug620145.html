@@ -27,7 +27,6 @@ SimpleTest.waitForExplicitFinish();
 
 var selectionTest = false;
 var testNum = 0;
-var utils = SpecialPowers.DOMWindowUtils;
 
 function hasTabModalPrompts() {
   var prefName = "prompts.tab_modal.enabled";
@@ -73,9 +72,11 @@ function runtest()
 
 function dispatchMouseEvent(target, type)
 {
+  var win = target.ownerDocument.defaultView;
   e = document.createEvent("MouseEvent");
-  e.initEvent(type, false, false, window, 0, 1, 1, 1, 1,
+  e.initEvent(type, false, false, win, 0, 1, 1, 1, 1,
               false, false, false, false, 0, null);
+  var utils = SpecialPowers.getDOMWindowUtils(win);
   utils.dispatchDOMEventViaPresShell(target, e, true);
   ok(true, type + " sent to " + target.id);
 }

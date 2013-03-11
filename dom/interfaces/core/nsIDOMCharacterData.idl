@@ -13,7 +13,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Core/
  */
 
-[scriptable, uuid(cb75c251-afc7-444f-b2d6-b9635555f3ed)]
+[scriptable, uuid(f891fa15-2652-4a88-9be5-364b9192b209)]
 interface nsIDOMCharacterData : nsIDOMNode
 {
            attribute DOMString            data;

@@ -457,31 +457,6 @@ VerifyPostBarriers(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
-GCSlice(JSContext *cx, unsigned argc, jsval *vp)
-{
-    bool limit = true;
-    uint32_t budget = 0;
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (argc > 1) {
-        RootedObject callee(cx, &args.callee());
-        ReportUsageError(cx, callee, "Wrong number of arguments");
-        return JS_FALSE;
-    }
-
-    if (argc == 1) {
-        if (!JS_ValueToECMAUint32(cx, args[0], &budget))
-            return false;
-    } else {
-        limit = false;
-    }
-
-    GCDebugSlice(cx->runtime, limit, budget);
-    *vp = JSVAL_VOID;
-    return JS_TRUE;
-}
-
-static JSBool
 GCState(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -528,6 +503,31 @@ DeterministicGC(JSContext *cx, unsigned argc, jsval *vp)
 #endif /* JS_GC_ZEAL */
 
 static JSBool
+GCSlice(JSContext *cx, unsigned argc, jsval *vp)
+{
+    bool limit = true;
+    uint32_t budget = 0;
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (argc > 1) {
+        RootedObject callee(cx, &args.callee());
+        ReportUsageError(cx, callee, "Wrong number of arguments");
+        return JS_FALSE;
+    }
+
+    if (argc == 1) {
+        if (!JS_ValueToECMAUint32(cx, args[0], &budget))
+            return false;
+    } else {
+        limit = false;
+    }
+
+    GCDebugSlice(cx->runtime, limit, budget);
+    *vp = JSVAL_VOID;
+    return JS_TRUE;
+}
+
+static JSBool
 ValidateGC(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -539,6 +539,22 @@ ValidateGC(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     gc::SetValidateGC(cx, ToBoolean(vp[2]));
+    *vp = JSVAL_VOID;
+    return JS_TRUE;
+}
+
+static JSBool
+FullCompartmentChecks(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (argc != 1) {
+        RootedObject callee(cx, &args.callee());
+        ReportUsageError(cx, callee, "Wrong number of arguments");
+        return JS_FALSE;
+    }
+
+    gc::SetFullCompartmentChecks(cx, ToBoolean(vp[2]));
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
@@ -964,10 +980,6 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "verifypostbarriers()",
 "  Start or end a run of the post-write barrier verifier."),
 
-    JS_FN_HELP("gcslice", GCSlice, 1, 0,
-"gcslice(n)",
-"  Run an incremental GC slice that marks about n objects."),
-
     JS_FN_HELP("gcstate", GCState, 0, 0,
 "gcstate()",
 "  Report the global GC state."),
@@ -977,9 +989,17 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "  If true, only allow determinstic GCs to run."),
 #endif
 
+    JS_FN_HELP("gcslice", GCSlice, 1, 0,
+"gcslice(n)",
+"  Run an incremental GC slice that marks about n objects."),
+
     JS_FN_HELP("validategc", ValidateGC, 1, 0,
 "validategc(true|false)",
 "  If true, a separate validation step is performed after an incremental GC."),
+
+    JS_FN_HELP("fullcompartmentchecks", FullCompartmentChecks, 1, 0,
+"fullcompartmentchecks(true|false)",
+"  If true, check for compartment mismatches before every GC."),
 
     JS_FN_HELP("nondeterministicGetWeakMapKeys", NondeterminsticGetWeakMapKeys, 1, 0,
 "nondeterministicGetWeakMapKeys(weakmap)",

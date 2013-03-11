@@ -59,8 +59,8 @@ members = [
     'nsIDOMCanvasPattern.*',
 
     # dom/interfaces/core
-    'nsIDOMNamedNodeMap.item',
-    'nsIDOMNamedNodeMap.length',
+    'nsIDOMMozNamedAttrMap.item',
+    'nsIDOMMozNamedAttrMap.length',
     'nsIDOMDOMStringList.*',
     'nsIDOMXULDocument.getBoxObjectFor',
 

@@ -18,6 +18,7 @@
 #include "nsCOMPtr.h"
 
 class inDOMViewNode;
+class nsIDOMMozNamedAttrMap;
 
 class inDOMView : public inIDOMView,
                   public nsITreeView,
@@ -79,7 +80,7 @@ protected:
 
   nsresult GetChildNodesFor(nsIDOMNode* aNode, nsCOMArray<nsIDOMNode>& aResult);
   nsresult AppendKidsToArray(nsIDOMNodeList* aKids, nsCOMArray<nsIDOMNode>& aArray);
-  nsresult AppendAttrsToArray(nsIDOMNamedNodeMap* aKids, nsCOMArray<nsIDOMNode>& aArray);
+  nsresult AppendAttrsToArray(nsIDOMMozNamedAttrMap* aKids, nsCOMArray<nsIDOMNode>& aArray);
   nsresult GetFirstDescendantOf(inDOMViewNode* aNode, int32_t aRow, int32_t* aResult);
   nsresult GetLastDescendantOf(inDOMViewNode* aNode, int32_t aRow, int32_t* aResult);
   nsresult GetRealPreviousSibling(nsIDOMNode* aNode, nsIDOMNode* aRealParent, nsIDOMNode** aSibling);

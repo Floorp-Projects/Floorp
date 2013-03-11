@@ -226,10 +226,6 @@ pref("accessibility.browsewithcaret", false);
 // successfully applied.
 pref("app.update.showInstalledUI", false);
 
-// Whether the character encoding options are displayed in the app bar.
-pref("browser.menu.showCharacterEncoding", false);
-pref("intl.charsetmenu.browser.static", "chrome://browser/locale/browser.properties");
-
 // pointer to the default engine name
 pref("browser.search.defaultenginename", "chrome://browser/locale/browser.properties");
 
@@ -474,8 +470,6 @@ pref("services.sync.prefs.sync.signon.rememberSignons", true);
 // The names of the preferences are to be in sync with nsEventStateManager.cpp
 pref("ui.dragThresholdX", 50);
 pref("ui.dragThresholdY", 50);
-
-pref("notification.feature.enabled", true);
 
 // prevent tooltips from showing up
 pref("browser.chrome.toolbar_tips", false);

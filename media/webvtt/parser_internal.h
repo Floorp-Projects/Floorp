@@ -29,6 +29,18 @@
 # define __INTERN_PARSER_H__
 # include <webvtt/parser.h>
 # include "string_internal.h"
+# ifndef NDEBUG
+#   define NDEBUG
+# endif
+
+# if defined(FATAL_ASSERTION)
+#   undef NDEBUG
+#   include <assert.h>
+# else
+#   if defined(BREAK_ON_ASSERTION) && !WEBVTT_OS_WIN32
+static void break_on_assert();
+#   endif
+# endif
 
 typedef enum
 webvtt_token_t {
@@ -217,20 +229,102 @@ WEBVTT_INTERN webvtt_token webvtt_lex( webvtt_parser self, const webvtt_byte *bu
 WEBVTT_INTERN webvtt_status webvtt_lex_word( webvtt_parser self, webvtt_string *pba, const webvtt_byte *buffer, webvtt_uint *pos, webvtt_uint length, webvtt_bool finish );
 WEBVTT_INTERN int parse_timestamp( const webvtt_byte *b, webvtt_timestamp *result );
 
+/** 
+ * Flags which can apply additional meaning to a token. find_token() will
+ * test for only the actual token and ignore the additional flags.
+ */
+typedef
+enum webvtt_token_flags_t
+{
+  /* Number can be positive */
+  TF_POSITIVE = 0x80000000,
+
+  /* Number can be negative */
+  TF_NEGATIVE = 0x40000000,
+  /* (token & TF_SIGN_MASK) == combination of TF_POSITIVE and
+     TF_NEGATIVE, which indicate what values a number token is allowed
+     to be */
+  TF_SIGN_MASK = ( TF_POSITIVE | TF_NEGATIVE ),
+
+  /* (token & TF_FLAGS_MASK) == webvtt_token_flags value
+     that is being asked for */
+  TF_FLAGS_MASK = TF_SIGN_MASK,
+
+  /* (token & TF_TOKEN_MASK) == webvtt_token value */
+  TF_TOKEN_MASK = ( 0xFFFFFFFF & ~TF_FLAGS_MASK ),
+} webvtt_token_flags;
+
+/**
+ * Return non-zero if a token is found in a NULL-terminated array of tokens, or
+ * zero if not.
+ *
+ * Unlike find_token(), token_in_list() does not make use of
+ * webvtt_token_flags and thus requiers an exact match.
+ */
+WEBVTT_INTERN webvtt_bool token_in_list( webvtt_token search_for,
+  const webvtt_token token_list[] );
+
+/**
+ * Return the index of a token in a NULL-terminated array of tokens,
+ * or -1 if the token is not found.
+ *
+ * find_token() will search for an occurrence of `token' in a list
+ * where webvtt_token_flags are used. For instance, if the list of
+ * tokens contains { TF_POSITIVE | INTEGER, TF_POSITIVE | PERCENTAGE,
+ * 0 }, find_token() will return a match for INTEGER or PERCENTAGE if
+ * either is searched for.
+ */
+WEBVTT_INTERN int find_token( webvtt_token search_for,
+  const webvtt_token token_list[] );
+
 #define BAD_TIMESTAMP(ts) ( ( ts ) == 0xFFFFFFFFFFFFFFFF )
 
-#define ERROR(Code) \
+#ifdef FATAL_ASSERTION
+#  define SAFE_ASSERT(condition) assert(condition)
+#  define DIE_IF(condition) assert( !(condition) )
+#else
+#  ifdef BREAK_ON_ASSERTION
+static void
+break_on_assert(void) {
+#if WEBVTT_OS_WIN32
+  /* __declspec(dllimport) should work for cross compiling gcc as well */
+  __declspec(dllimport) void __stdcall DebugBreak( void );
+  DebugBreak();
+#else
+  volatile int *ptr = (volatile int *)0;
+  *ptr = 1;
+#endif
+}
+#    define SAFE_ASSERT(condition) \
+if( !(condition) ) { \
+  break_on_assert(); \
+  return WEBVTT_FAILED_ASSERTION; \
+}
+#    define DIE_IF(condition) \
+if( (condition) ) { \
+  break_on_assert(); \
+}
+#  else
+#    define SAFE_ASSERT(condition) \
+if( !(condition) ) { \
+  return WEBVTT_FAILED_ASSERTION; \
+}
+#    define DIE_IF(condition)
+#  endif
+#endif
+
+#define ERROR_AT(errno, line, column) \
 do \
 { \
-  if( !self->error || self->error(self->userdata,self->line,self->column,Code) < 0 ) \
+  if( !self->error \
+    || self->error( (self->userdata), (line), (column), (errno) ) < 0 ) { \
     return WEBVTT_PARSE_ERROR; \
+  } \
 } while(0)
 
-#define ERROR_AT_COLUMN(Code,Column) \
-do \
-{ \
-  if( !self->error || self->error(self->userdata,self->line,(Column),Code) < 0 ) \
-    return WEBVTT_PARSE_ERROR; \
-} while(0)
+#define ERROR(error) \
+  ERROR_AT( (error), (self->line), (self->column) )
 
+#define ERROR_AT_COLUMN(error, column) \
+  ERROR_AT( (error), (self->line), (column) )
 #endif

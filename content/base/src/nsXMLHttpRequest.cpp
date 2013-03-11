@@ -1405,7 +1405,7 @@ nsXMLHttpRequest::GetLoadGroup() const
 nsresult
 nsXMLHttpRequest::CreateReadystatechangeEvent(nsIDOMEvent** aDOMEvent)
 {
-  nsresult rv = nsEventDispatcher::CreateEvent(nullptr, nullptr,
+  nsresult rv = nsEventDispatcher::CreateEvent(this, nullptr, nullptr,
                                                NS_LITERAL_STRING("Events"),
                                                aDOMEvent);
   if (NS_FAILED(rv)) {
@@ -1441,7 +1441,7 @@ nsXMLHttpRequest::DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
                          aType.EqualsLiteral(ABORT_STR);
 
   nsCOMPtr<nsIDOMEvent> event;
-  nsresult rv = NS_NewDOMProgressEvent(getter_AddRefs(event),
+  nsresult rv = NS_NewDOMProgressEvent(getter_AddRefs(event), this,
                                        nullptr, nullptr);
   if (NS_FAILED(rv)) {
     return;

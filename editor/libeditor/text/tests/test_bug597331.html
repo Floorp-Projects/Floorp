@@ -24,8 +24,9 @@ line3
 
 /** Test for Bug 597331 **/
 
-// Bug 718316: This test fails on Windows 7
-if (navigator.userAgent.indexOf("Windows NT 6.1") == -1) {
+// Bug 718316: This test fails on Windows 7 and 8
+if (navigator.userAgent.indexOf("Windows NT 6.1") == -1 &&
+    navigator.userAgent.indexOf("Windows NT 6.2") == -1) {
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
