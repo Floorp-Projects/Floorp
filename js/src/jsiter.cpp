@@ -142,8 +142,7 @@ EnumerateNativeProperties(JSContext *cx, HandleObject pobj, unsigned flags, IdSe
     size_t initialLength = props->length();
 
     /* Collect all unique properties from this object's scope. */
-    Shape::Range r = pobj->lastProperty()->all();
-    Shape::Range::AutoRooter root(cx, &r);
+    Shape::Range<NoGC> r(pobj->lastProperty());
     for (; !r.empty(); r.popFront()) {
         Shape &shape = r.front();
 
