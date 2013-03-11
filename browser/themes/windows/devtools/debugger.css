@@ -1,264 +1,94 @@
-/* -*- Mode: javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
+/* vim:set ts=2 sw=2 sts=2 et: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #body {
-  background-color: white;
+  background: #fff;
 }
 
-/**
- * Debugger content
- */
+/* Sources and breakpoints pane */
 
-#chrome-globals, #sources {
-  width: 200px;
+#sources-pane {
+  min-width: 50px;
 }
 
-/**
- * This hardcoded width likely due to a toolkit Windows specific bug.
- * See http://hg.mozilla.org/mozilla-central/annotate/f38d6df93cad/toolkit/themes/winstripe/global/textbox-aero.css#l7
- */
-#searchbox {
-  width: 200px;
+#sources-pane + .devtools-side-splitter {
+  -moz-border-start-color: transparent;
 }
 
-/**
- * Lists and headers
- */
+/* Watch expressions, variables and other instruments pane */
 
-.list-item {
+#instruments-pane {
+  min-width: 50px;
+  -moz-margin-start: 0px !important;
+  /* Unfortunately, transitions don't work properly with locale-aware properties,
+     so both the left and right margins are set via js, while the start margin
+     is always overridden here. */
+}
+
+#instruments-pane[animated] {
+  transition: margin 0.25s ease-in-out;
+}
+
+/* ListWidget items */
+
+.list-widget-item {
   padding: 2px;
 }
 
-.list-item:not(.selected):not(.empty):hover {
-  background: #cddae5;
+.list-widget-item:not(.selected):not(.empty):hover {
+  background: linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.85)), Highlight;
 }
 
-.list-item.selected {
+.list-widget-item.selected.light {
+  background: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.8)), Highlight;
+  color: #000;
+}
+
+.list-widget-item.selected {
   background: Highlight;
   color: HighlightText;
 }
 
-.list-item.empty {
+.list-widget-item.empty {
   color: GrayText;
   padding: 2px;
 }
 
-/**
- * Sources searching
- */
-
-#globalsearch {
-  background-color: white;
-  min-height: 10px;
-}
-
-#globalsearch > vbox:not(:empty) {
-  min-height: 10px;
-  max-height: 150px;
-}
-
-.dbg-source-results:not(:last-child) {
-  border-bottom: 1px dotted #aaa;
-}
-
-.dbg-results-header {
-  -moz-padding-start: 6px;
-}
-
-.dbg-results-header .location {
-  font-weight: 600;
-}
-
-.dbg-results-header .match-count {
-  -moz-padding-start: 6px;
-  color: GrayText;
-}
-
-.dbg-results-container .line-number {
-  background: hsl(0,0%,89%);
-  min-width: 40px;
-  -moz-padding-end: 4px;
-  -moz-border-end: 1px dotted #aaa;
-  text-align: end;
-  font: 8pt monospace;
-  color: hsl(0,0%,55%);
-}
-
-.dbg-results-container .line-contents {
-  -moz-padding-start: 4px;
-  font: 8pt monospace;
-}
-
-.dbg-results-container .line-contents:hover {
-  background: #cddae5;
-}
-
-.dbg-results-container .line-contents > .string {
-  padding: 1px;
-}
-
-.dbg-results-container .line-contents > .string[match=true] {
-  background: rgba(255, 255, 0, 0.65);
-  padding: 0;
-  border: 1px solid #aaa;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: transform 0.25s ease-in-out;
-}
-
-.dbg-results-container .line-contents > .string[match=true][focused] {
-  transition-duration: 0.1s;
-  transform: scale(1.75, 1.75);
-}
-
-/**
- * Searchbox panel
- */
-
-#searchbox-panel .description {
-  margin: -6px 0 8px 0;
-}
-
-#searchbox-panel button.operator {
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  font: 9pt monospace;
-}
-
-#searchbox-panel label.operator {
-  -moz-padding-start: 6px;
-  padding-bottom: 1px;
-}
-
-/**
- * Filtered sources panel
- */
-
-#filtered-sources-panel {
-  padding: 4px;
-}
-
-.dbg-source-item {
-  background: #f4f4f4;
-  border: 1px solid #ddd;
-  border-top-color: #fff;
-}
-
-.dbg-source-item.selected {
-  background: #cddae5;
-}
-
-.dbg-source-item:first-of-type {
-  border-top-color: #ddd;
-  border-radius: 4px 4px 0 0;
-}
-
-.dbg-source-item:last-of-type {
-  border-radius: 0 0 4px 4px;
-}
-
-.dbg-source-item:only-of-type {
-  border-radius: 4px 4px 4px 4px;
-}
-
-.dbg-source-item:not(:hover) {
-  text-shadow: 0 1px #fff;
-}
-
-.dbg-source-item-name {
-  color: #333;
-  font-weight: 600;
-}
-
-.dbg-source-item-details {
-  color: #888;
-}
-
-/**
- * Stack frames and breakpoints pane
- */
-
-#stackframes\+breakpoints {
-  min-width: 50px;
-}
-
-#stackframes\+breakpoints[animated] {
-  transition: margin 0.25s ease-in-out;
-}
-
-/**
- * Variables and watch expressions pane
- */
-
-#variables\+expressions {
-  min-width: 50px;
-}
-
-#variables\+expressions[animated] {
-  transition: margin 0.25s ease-in-out;
-}
-
-/**
- * Stack frames view
- */
-
-#stackframes {
-  min-height: 10px;
-}
-
-.dbg-stackframe {
-  -moz-padding-start: 4px;
-  -moz-padding-end: 4px;
-}
-
-.dbg-stackframe-name {
-  font-weight: 600;
-}
+/* Stack frames view */
 
 .dbg-stackframe-details {
   -moz-padding-start: 4px;
 }
 
-/**
- * Breakpoints view
- */
-
-#breakpoints {
-  min-height: 10px;
+.dbg-stackframe-menuitem[checked] {
+  margin-top: 3px;
+  margin-bottom: 3px;
+  outline: 1px solid #eee;
+  font-weight: 600;
 }
 
-#breakpoints > vbox:not(:empty) {
-  min-height: 10px;
-  max-height: 200px;
+.dbg-stackframe-menuitem-details {
+  -moz-padding-start: 16px;
 }
 
-.dbg-breakpoint:not(:last-child) {
-  border-bottom: 1px solid #eee;
+/* Sources and breakpoints view */
+
+.dbg-breakpoint {
+  font-family: monospace;
 }
 
-.dbg-breakpoint-info {
+.dbg-breakpoint-line {
   font-weight: 600;
 }
 
 .dbg-breakpoint-text {
-  font: 8pt monospace;
+  -moz-margin-start: 10px !important;
+  font-style: italic;
 }
 
-#conditional-breakpoint-panel .description {
-  margin: -6px 0 8px 0;
-}
-
-#conditional-breakpoint-panel textbox {
-  margin: 0 0 -2px 0;
-}
-
-/**
- * Watch expressions view
- */
+/* Watch expressions view */
 
 #expressions {
   min-height: 10px;
@@ -277,342 +107,163 @@
 }
 
 .dbg-expression-input {
-  font: 9pt monospace;
+  -moz-padding-start: 2px !important;
+  font-family: Menlo, Monaco, monospace;
 }
 
-.dbg-expression-delete {
-  opacity: 0;
+/* Searchbox and the search operations help panel */
+
+.devtools-searchinput {
+  min-width: 220px;
+  -moz-margin-start: 1px;
 }
 
-.dbg-expression-delete:not(:hover) {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
+#searchbox-panel-description {
+  margin-top: 0;
+  margin-bottom: 8px;
+  -moz-margin-start: 2px;
 }
 
-.dbg-expression-delete:hover {
-  opacity: 1;
+.searchbox-panel-operator-button {
+  min-width: 26px;
+  margin-top: 0;
+  margin-bottom: 0;
+  -moz-margin-start: 2px;
+  -moz-margin-end: 6px;
+  text-align: center;
+  font-family: Menlo, Monaco, monospace;
 }
 
-.dbg-expression:hover > .dbg-expression-delete:not(:hover) {
-  opacity: 0.5;
-  transition: opacity 0.2s ease-in-out;
+.searchbox-panel-operator-label {
+  padding-bottom: 2px;
 }
 
-/**
- * Variables view
- */
+/* Filtering results panel */
 
-#variables {
-  min-height: 10px;
+#filtered-sources-panel {
+  padding: 4px;
+  opacity: 0.9;
 }
 
-.dbg-variable-delete {
-  opacity: 0;
-}
-
-.dbg-variable-delete:not(:hover) {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-.dbg-variable-delete:hover {
-  opacity: 1;
-}
-
-.variable-or-property:hover > .title > .dbg-variable-delete:not(:hover),
-.variable-or-property:focus > .title > .dbg-variable-delete:not(:hover) {
-  opacity: 0.5;
-  transition: opacity 0.2s ease-in-out;
-}
-
-.dbg-variable-edit {
-  background: url("chrome://browser/skin/tabview/edit-light.png") center no-repeat;
-  width: 20px;
-  height: 16px;
+.dbg-source-item {
+  background: #f4f4f4;
+  border: 1px solid #ddd;
+  border-top-color: #fff;
+  padding: 5px;
   cursor: pointer;
 }
 
-.dbg-variable-throbber {
-  background: url("chrome://global/skin/icons/loading_16.png") center no-repeat;
-  width: 16px;
-  height: 16px;
+.dbg-source-item:first-of-type {
+  border-top-color: #ddd;
+  border-radius: 4px 4px 0 0;
 }
 
-/**
- * Scope element
- */
-
-.scope:focus > .title {
-  background: Highlight;
-  color: HighlightText;
+.dbg-source-item:last-of-type {
+  border-radius: 0 0 4px 4px;
 }
 
-.scope > .title {
-  text-shadow: 0 1px #222;
-  color: #fff;
-}
-
-.scope > .details {
-  -moz-margin-start: 2px;
-  -moz-margin-end: 1px;
-}
-
-.scope > .details.nonenum:not(:empty) {
-  border-top: 1px solid #ddd;
-}
-
-/**
- * Variable element
- */
-
-.variable {
-  -moz-margin-start: 1px;
-  -moz-margin-end: 1px;
-  border-bottom: 1px solid #eee;
-  transition: background 1s ease-in-out;
-}
-
-.variable[changed] {
-  background: rgba(255, 255, 0, 0.65);
-  transition-duration: 0.4s;
-}
-
-.variable:focus > .title {
-  background: Highlight;
-  color: HighlightText;
+.dbg-source-item:only-of-type {
   border-radius: 4px;
 }
 
-.variable > .title > .name {
+.dbg-source-item:not(.selected):not(:hover) {
+  text-shadow: 0 1px #fff;
+}
+
+.dbg-source-item-name {
+  color: #111;
   font-weight: 600;
+  cursor: inherit;
 }
 
-.variable:not(:focus) > .title > .name {
-  color: #048;
-}
-
-.variable > .title > .value {
-  -moz-padding-start: 6px;
-  -moz-padding-end: 4px;
-}
-
-.variable[editable] > .title > .value {
-  cursor: text;
-}
-
-.variable:not([non-header]) > .details {
-  -moz-margin-start: 10px;
-}
-
-/**
- * Property element
- */
-
-.property {
-  transition: background 1s ease-in-out;
-}
-
-.property[changed] {
-  background: rgba(255, 255, 0, 0.65);
-  transition-duration: 0.4s;
-}
-
-.property:focus > .title {
-  background: Highlight;
-  color: HighlightText;
-  border-radius: 4px;
-}
-
-.property:not(:focus) > .title > .name {
-  color: #881090;
-}
-
-.property > .title > .value {
-  -moz-padding-start: 6px;
-  -moz-padding-end: 4px;
-}
-
-.property[editable] > .title > .value {
-  cursor: text;
-}
-
-.property:not([non-header]) > .details {
-  -moz-margin-start: 10px;
-}
-
-/**
- * Non enumerable, configurable and writable variables and properties
- */
-
-.variable[proto] > .title > .name,
-.property[proto] > .title > .name,
-.variable[non-enumerable]:not([self]):not([exception]) > .title > .name,
-.property[non-enumerable]:not([self]):not([exception]) > .title > .name {
-  opacity: 0.5;
-}
-
-.variable[non-configurable] > .title > .name,
-.property[non-configurable] > .title > .name {
-  border-bottom: 1px dashed #99f;
-}
-
-.variable[non-configurable][non-writable] > .title > .name,
-.property[non-configurable][non-writable] > .title > .name {
-  border-bottom: 1px dashed #f99;
-}
-
-.variable[non-writable] > .title:after,
-.property[non-writable] > .title:after {
-  content: " ";
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  background: url("chrome://browser/skin/identity-icons-https.png") no-repeat;
-  opacity: 0.5;
-}
-
-@media (min-resolution: 2dppx) {
-  .variable[non-writable] > .title:after,
-  .property[non-writable] > .title:after {
-    background-image: url("chrome://browser/skin/identity-icons-https@2x.png");
-    background-size: 32px;
-  }
-}
-
-.variable[exception]:not(:focus) > .title > .name,
-.property[exception]:not(:focus) > .title > .name {
-  color: #a00;
-  text-shadow: 0 0 8px #fcc;
-}
-
-.variable > tooltip > label,
-.property > tooltip > label {
-  margin: 0 2px 0 2px;
-}
-
-.variable[non-enumerable] > tooltip > label[value="enumerable"],
-.property[non-enumerable] > tooltip > label[value="enumerable"],
-.variable[non-configurable] > tooltip > label[value="configurable"],
-.property[non-configurable] > tooltip > label[value="configurable"],
-.variable[non-writable] > tooltip > label[value="writable"],
-.property[non-writable] > tooltip > label[value="writable"] {
-  text-decoration: line-through;
-}
-
-/**
- * Variables and properties editing
- */
-
-.element-value-input {
-  -moz-margin-start: 4px !important;
-}
-
-.element-name-input {
-  -moz-margin-start: -2px !important;
-  color: #048;
-  font-weight: 600;
-}
-
-.element-value-input,
-.element-name-input {
-  max-width: 30em;
-  border: 1px solid #999 !important;
-  box-shadow: 1px 2px 4px #aaa;
-}
-
-/**
- * Variables and properties searching
- */
-
-.variables-searchinput.devtools-searchinput {
-  min-height: 24px;
-}
-
-.variable[non-match],
-.property[non-match] {
-  border: none;
-  margin: 0;
-}
-
-/**
- * Token value colors
- */
-
-.variable-or-property:not(:focus) > .title > .token-undefined {
-  color: #bbb;
-}
-
-.variable-or-property:not(:focus) > .title > .token-null {
-  color: #999;
-}
-
-.variable-or-property:not(:focus) > .title > .token-boolean {
+.dbg-source-item-details {
   color: #777;
+  cursor: inherit;
 }
 
-.variable-or-property:not(:focus) > .title > .token-number {
-  color: #c40a16;
+/* Sources search view */
+
+#globalsearch {
+  min-height: 10px;
+  box-shadow: inset 0 -4px 8px #eee;
+  background: url(background-noise-toolbar.png);
 }
 
-.variable-or-property:not(:focus) > .title > .token-string {
-  max-width: 30em;
-  color: #1c00cf;
+#globalsearch > vbox:not(:empty) {
+  min-height: 10px;
+  max-height: 125px;
 }
 
-.variable-or-property:not(:focus) > .title > .token-other {
-  color: #333;
+#globalsearch + .devtools-horizontal-splitter {
+  -moz-border-top-colors: #bfbfbf;
 }
 
-/**
- * Expand/collapse arrow
- */
-
-.arrow {
-  width: 9px;
-  height: 9px;
-  -moz-margin-start: 5px;
-  -moz-margin-end: 5px;
-  margin-top: -2px;
-  background: url("chrome://global/skin/tree/twisty-clsd.png") center center no-repeat;
+.dbg-source-results {
+  padding: 0;
+  background: none !important;
 }
 
-.arrow[open] {
-  background-image: url("chrome://global/skin/tree/twisty-open.png");
+.dbg-results-header {
+  -moz-padding-start: 6px;
 }
 
-.arrow[invisible] {
-  visibility: hidden;
+.dbg-results-header-location {
+  font-weight: 600;
 }
 
-/**
- * Toolbar Controls
- */
-
-#toggle-panes {
-  background: none;
-  box-shadow: none;
-  border: none;
-  list-style-image: url("chrome://browser/skin/devtools/debugger-expand.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
+.dbg-results-header-match-count {
+  -moz-padding-start: 6px;
+  color: GrayText;
 }
 
-#toggle-panes:not([panesHidden]) {
-  list-style-image: url("chrome://browser/skin/devtools/debugger-collapse.png");
+.dbg-results-line-number {
+  background: #e2e2e2;
+  min-width: 40px;
+  -moz-border-end: 1px solid #b4c4d3;
+  -moz-padding-end: 4px;
+  padding-top: 2px;
+  text-align: end;
+  font-family: monospace;
+  color: #8c8c8c;
 }
 
-#toggle-panes:hover {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
+.dbg-results-line-contents {
+  -moz-padding-start: 4px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  font-family: monospace;
 }
 
-#toggle-panes:hover:active {
-  -moz-image-region: rect(0px, 48px, 16px, 32px);
+.dbg-results-line-contents-string {
+  padding: 1px;
 }
+
+.dbg-results-line-contents-string[match=true] {
+  background: rgba(255,255,0,0.5);
+  padding: 0;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.dbg-results-line-contents-string[match=true][focusing] {
+  transition: transform 0.3s ease-in-out;
+}
+
+.dbg-results-line-contents-string[match=true][focused] {
+  transition-duration: 0.1s;
+  transform: scale(1.75, 1.75);
+}
+
+/* Toolbar Controls */
 
 #resume {
   list-style-image: url("chrome://browser/skin/devtools/debugger-play.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
+  -moz-image-region: rect(0px,16px,16px,0px);
 }
 
-#resume[checked=true] {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
+#resume[checked] {
+  -moz-image-region: rect(0px,32px,16px,16px);
 }
 
 #step-over {
@@ -628,11 +279,11 @@
 }
 
 #debugger-controls > toolbarbutton {
+  margin: 0;
+  box-shadow: none;
+  border-radius: 0;
   border-width: 0;
   -moz-border-end-width: 1px;
-  border-radius: 0;
-  box-shadow: none;
-  margin: 0;
   outline-offset: -3px;
 }
 
@@ -641,8 +292,31 @@
 }
 
 #debugger-controls {
+  box-shadow: 0 1px 0 hsla(209,29%,72%,.15) inset,
+              0 0 0 1px hsla(209,29%,72%,.1) inset,
+              0 0 0 1px hsla(209,29%,72%,.1),
+              0 1px 0 hsla(210,16%,76%,.1);
   border: 1px solid hsla(210,8%,5%,.45);
   border-radius: 3px;
-  box-shadow: 0 1px 0 hsla(209,29%,72%,.15) inset, 0 0 0 1px hsla(209,29%,72%,.1) inset, 0 0 0 1px hsla(209,29%,72%,.1), 0 1px 0 hsla(210,16%,76%,.1);
   margin: 0 3px;
+}
+
+#instruments-pane-toggle {
+  background: none;
+  box-shadow: none;
+  border: none;
+  list-style-image: url("chrome://browser/skin/devtools/debugger-expand.png");
+  -moz-image-region: rect(0px,16px,16px,0px);
+}
+
+#instruments-pane-toggle:not([toggled]) {
+  list-style-image: url("chrome://browser/skin/devtools/debugger-collapse.png");
+}
+
+#instruments-pane-toggle:hover {
+  -moz-image-region: rect(0px,32px,16px,16px);
+}
+
+#instruments-pane-toggle:hover:active {
+  -moz-image-region: rect(0px,48px,16px,32px);
 }

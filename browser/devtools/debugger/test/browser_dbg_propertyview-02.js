@@ -34,7 +34,7 @@ function testSimpleCall() {
       is(testScope.target.querySelector(".name").getAttribute("value"), "test",
         "Any new scope should have the designated title.");
 
-      is(testScope.target.querySelector(".details").childNodes.length, 0,
+      is(testScope.target.querySelector(".variables-view-element-details").childNodes.length, 0,
         "Any new scope should have a container with no child nodes.");
 
       is(gDebugger.DebuggerView.Variables._list.childNodes.length, 3,
