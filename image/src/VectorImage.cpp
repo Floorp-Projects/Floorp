@@ -560,9 +560,7 @@ VectorImage::GetFrame(uint32_t aWhichFrame,
                       gfxASurface** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-  // XXXdholbert NOTE: Currently assuming FRAME_CURRENT for simplicity.
-  // Could handle FRAME_FIRST by saving helper-doc current time, seeking
-  // to time 0, rendering, and then seeking to saved time.
+
   if (aWhichFrame > FRAME_MAX_VALUE)
     return NS_ERROR_INVALID_ARG;
 
@@ -603,11 +601,10 @@ VectorImage::GetFrame(uint32_t aWhichFrame,
                      gfxRect(gfxPoint(0,0), gfxIntSize(imageIntSize.width,
                                                        imageIntSize.height)),
                      nsIntRect(nsIntPoint(0,0), imageIntSize),
-                     imageIntSize, nullptr, aFlags);
-  if (NS_SUCCEEDED(rv)) {
-    *_retval = surface.forget().get();
-  }
+                     imageIntSize, nullptr, aWhichFrame, aFlags);
 
+  NS_ENSURE_SUCCESS(rv, rv);
+  *_retval = surface.forget().get();
   return rv;
 }
 
@@ -677,6 +674,7 @@ VectorImage::ExtractFrame(uint32_t aWhichFrame,
  *                      [const] in nsIntRect aSubimage,
  *                      [const] in nsIntSize aViewportSize,
  *                      [const] in SVGImageContext aSVGContext,
+ *                      in uint32_t aWhichFrame,
  *                      in uint32_t aFlags); */
 NS_IMETHODIMP
 VectorImage::Draw(gfxContext* aContext,
@@ -686,8 +684,12 @@ VectorImage::Draw(gfxContext* aContext,
                   const nsIntRect& aSubimage,
                   const nsIntSize& aViewportSize,
                   const SVGImageContext* aSVGContext,
+                  uint32_t aWhichFrame,
                   uint32_t aFlags)
 {
+  if (aWhichFrame > FRAME_MAX_VALUE)
+    return NS_ERROR_INVALID_ARG;
+
   NS_ENSURE_ARG_POINTER(aContext);
   if (mError || !mIsFullyLoaded)
     return NS_ERROR_FAILURE;
@@ -699,7 +701,10 @@ VectorImage::Draw(gfxContext* aContext,
   AutoRestore<bool> autoRestoreIsDrawing(mIsDrawing);
   mIsDrawing = true;
 
+  float time = aWhichFrame == FRAME_FIRST ? 0.0f
+                                          : mSVGDocumentWrapper->GetCurrentTime();
   AutoSVGRenderingState autoSVGState(aSVGContext,
+                                     time,
                                      mSVGDocumentWrapper->GetRootSVGElem());
   mSVGDocumentWrapper->UpdateViewportBounds(aViewportSize);
   mSVGDocumentWrapper->FlushImageTransformInvalidation();
