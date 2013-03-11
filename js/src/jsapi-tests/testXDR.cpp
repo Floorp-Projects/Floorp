@@ -152,36 +152,6 @@ JSScript *createScriptViaXDR(JSPrincipals *prin, JSPrincipals *orig, int testCas
 
 END_TEST(testXDR_principals)
 
-BEGIN_TEST(testXDR_atline)
-{
-    JS_ToggleOptions(cx, JSOPTION_ATLINE);
-    CHECK(JS_GetOptions(cx) & JSOPTION_ATLINE);
-
-    const char src[] =
-"//@line 100 \"foo\"\n"
-"function nested() { }\n"
-"//@line 200 \"bar\"\n"
-"nested;\n";
-
-    JSScript *script = JS_CompileScript(cx, global, src, strlen(src), "internal", 1);
-    CHECK(script);
-    CHECK(script = FreezeThaw(cx, script));
-    CHECK(!strcmp("bar", JS_GetScriptFilename(cx, script)));
-
-    JS::RootedValue v(cx);
-    JSBool ok = JS_ExecuteScript(cx, global, script, v.address());
-    CHECK(ok);
-    CHECK(v.isObject());
-
-    JS::RootedObject funobj(cx, &v.toObject());
-    script = JS_GetFunctionScript(cx, JS_GetObjectFunction(funobj));
-    CHECK(!strcmp("foo", JS_GetScriptFilename(cx, script)));
-
-    return true;
-}
-
-END_TEST(testXDR_atline)
-
 BEGIN_TEST(testXDR_bug506491)
 {
     const char *s =
