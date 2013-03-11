@@ -51,7 +51,7 @@ public:
     return mWindow;
   }
   virtual JSObject*
-  WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
   already_AddRefed<nsIDOMArchiveRequest> GetFilenames();
   already_AddRefed<nsIDOMArchiveRequest> GetFile(const nsAString& filename);

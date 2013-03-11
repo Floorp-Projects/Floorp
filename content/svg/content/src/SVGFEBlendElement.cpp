@@ -13,9 +13,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGFEBlendElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+SVGFEBlendElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return SVGFEBlendElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGFEBlendElementBinding::Wrap(aCx, aScope, this);
 }
 
 nsSVGEnumMapping SVGFEBlendElement::sModeMap[] = {

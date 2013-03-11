@@ -45,7 +45,7 @@ class SVGGradientElement : public SVGGradientElementBase
 protected:
   SVGGradientElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual JSObject*
-  WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap) MOZ_OVERRIDE = 0;
+  WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE = 0;
 
 public:
   // interfaces:
@@ -98,7 +98,7 @@ class SVGLinearGradientElement : public SVGLinearGradientElementBase
 protected:
   SVGLinearGradientElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual JSObject*
-  WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap) MOZ_OVERRIDE;
+  WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
 public:
   // interfaces:
@@ -144,7 +144,7 @@ class SVGRadialGradientElement : public SVGRadialGradientElementBase
 protected:
   SVGRadialGradientElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual JSObject*
-  WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap) MOZ_OVERRIDE;
+  WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
 public:
   // interfaces:

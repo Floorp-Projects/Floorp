@@ -36,10 +36,9 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext, MediaStreamGr
 }
 
 JSObject*
-AudioDestinationNode::WrapObject(JSContext* aCx, JSObject* aScope,
-                                 bool* aTriedToWrap)
+AudioDestinationNode::WrapObject(JSContext* aCx, JSObject* aScope)
 {
-  return AudioDestinationNodeBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return AudioDestinationNodeBinding::Wrap(aCx, aScope, this);
 }
 
 }

@@ -38,8 +38,7 @@ public:
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
 protected:
-  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
-                             bool *aTriedToWrap) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope) MOZ_OVERRIDE;
 };
 
 HTMLElement::HTMLElement(already_AddRefed<nsINodeInfo> aNodeInfo)
@@ -83,9 +82,9 @@ HTMLElement::GetInnerHTML(nsAString& aInnerHTML, ErrorResult& aError)
 }
 
 JSObject*
-HTMLElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+HTMLElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return dom::HTMLElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return dom::HTMLElementBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace dom

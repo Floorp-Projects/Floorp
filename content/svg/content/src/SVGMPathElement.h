@@ -30,7 +30,7 @@ protected:
   SVGMPathElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   ~SVGMPathElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope) MOZ_OVERRIDE;
 
 public:
   // interfaces:

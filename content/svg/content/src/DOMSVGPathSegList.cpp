@@ -74,10 +74,9 @@ DOMSVGPathSegList::~DOMSVGPathSegList()
 }
 
 JSObject*
-DOMSVGPathSegList::WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap)
+DOMSVGPathSegList::WrapObject(JSContext *cx, JSObject *scope)
 {
-  return mozilla::dom::SVGPathSegListBinding::Wrap(cx, scope, this,
-                                                   triedToWrap);
+  return mozilla::dom::SVGPathSegListBinding::Wrap(cx, scope, this);
 }
 
 void

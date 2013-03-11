@@ -81,7 +81,7 @@ public:
 
   // WebIDL
   DOMSVGTransform* GetParentObject() const;
-  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap);
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
   float A() const { return static_cast<float>(Matrix().xx); }
   void SetA(float aA, ErrorResult& rv);

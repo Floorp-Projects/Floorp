@@ -53,8 +53,7 @@ public:
     return SetHTMLAttr(nsGkAtoms::clear, aClear, aError);
   }
 
-  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
-                             bool *aTriedToWrap);
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope) MOZ_OVERRIDE;
 };
 
 } // namespace dom

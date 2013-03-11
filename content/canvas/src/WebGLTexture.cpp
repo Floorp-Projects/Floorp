@@ -12,8 +12,8 @@
 using namespace mozilla;
 
 JSObject*
-WebGLTexture::WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap) {
-    return dom::WebGLTextureBinding::Wrap(cx, scope, this, triedToWrap);
+WebGLTexture::WrapObject(JSContext *cx, JSObject *scope) {
+    return dom::WebGLTextureBinding::Wrap(cx, scope, this);
 }
 
 WebGLTexture::WebGLTexture(WebGLContext *context)

@@ -114,8 +114,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsScreen,
                                            nsDOMEventTargetHelper)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope,
-                               bool* aTriedToWrap);
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
   void Notify(const mozilla::hal::ScreenConfiguration& aConfiguration);
 

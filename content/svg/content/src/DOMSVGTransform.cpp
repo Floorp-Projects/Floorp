@@ -58,9 +58,9 @@ NS_INTERFACE_MAP_END
 
 
 JSObject*
-DOMSVGTransform::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+DOMSVGTransform::WrapObject(JSContext* aCx, JSObject* aScope)
 {
-  return mozilla::dom::SVGTransformBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return mozilla::dom::SVGTransformBinding::Wrap(aCx, aScope, this);
 }
 
 //----------------------------------------------------------------------

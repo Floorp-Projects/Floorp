@@ -85,8 +85,7 @@ public:
   void SetAsync(bool aValue, ErrorResult& rv);
 
 protected:
-  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
-                             bool *aTriedToWrap) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope) MOZ_OVERRIDE;
   // nsScriptElement
   virtual bool HasScriptContent();
 };

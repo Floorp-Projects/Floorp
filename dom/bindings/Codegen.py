@@ -1853,18 +1853,15 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
         assert descriptor.interface.hasInterfacePrototypeObject()
         args = [Argument('JSContext*', 'aCx'), Argument('JSObject*', 'aScope'),
                 Argument(descriptor.nativeType + '*', 'aObject'),
-                Argument('nsWrapperCache*', 'aCache'),
-                Argument('bool*', 'aTriedToWrap')]
+                Argument('nsWrapperCache*', 'aCache')]
         CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'JSObject*', args)
         self.properties = properties
 
     def definition_body(self):
         if self.descriptor.workers:
-            return """  *aTriedToWrap = true;
-  return aObject->GetJSObject();"""
+            return """  return aObject->GetJSObject();"""
 
         return """%s
-  *aTriedToWrap = true;
 
   JSObject* parent = WrapNativeParent(aCx, aScope, aObject->GetParentObject());
   if (!parent) {
@@ -1901,11 +1898,11 @@ class CGWrapMethod(CGAbstractMethod):
         # XXX can we wrap if we don't have an interface prototype object?
         assert descriptor.interface.hasInterfacePrototypeObject()
         args = [Argument('JSContext*', 'aCx'), Argument('JSObject*', 'aScope'),
-                Argument('T*', 'aObject'), Argument('bool*', 'aTriedToWrap')]
+                Argument('T*', 'aObject')]
         CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'JSObject*', args, inline=True, templateArgs=["class T"])
 
     def definition_body(self):
-        return "  return Wrap(aCx, aScope, aObject, aObject, aTriedToWrap);"
+        return "  return Wrap(aCx, aScope, aObject, aObject);"
 
 class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
     """
@@ -7735,8 +7732,6 @@ class CGExampleClass(CGClass):
 
         wrapArgs = [Argument('JSContext*', 'aCx'),
                     Argument('JSObject*', 'aScope')]
-        if descriptor.wrapperCache:
-            wrapArgs.append(Argument('bool*', 'aTriedToWrap'))
         methodDecls.insert(0,
                            ClassMethod("WrapObject", "JSObject*",
                                        wrapArgs, virtual=descriptor.wrapperCache,
@@ -7788,9 +7783,9 @@ ${ifaceName}::~${ifaceName}()
         if self.descriptor.wrapperCache:
             classImpl += """
 JSObject*
-${ifaceName}::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+${ifaceName}::WrapObject(JSContext* aCx, JSObject* aScope)
 {
-  return ${ifaceName}Binding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return ${ifaceName}Binding::Wrap(aCx, aScope, this);
 }
 
 """

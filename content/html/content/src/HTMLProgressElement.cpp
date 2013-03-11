@@ -148,10 +148,9 @@ HTMLProgressElement::IsIndeterminate() const
 }
 
 JSObject*
-HTMLProgressElement::WrapNode(JSContext* aCx, JSObject* aScope,
-                              bool* aTriedToWrap)
+HTMLProgressElement::WrapNode(JSContext* aCx, JSObject* aScope)
 {
-  return HTMLProgressElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return HTMLProgressElementBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace dom

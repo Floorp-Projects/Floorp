@@ -58,10 +58,9 @@ nsDOMStringMap::~nsDOMStringMap()
 
 /* virtual */
 JSObject*
-nsDOMStringMap::WrapObject(JSContext *cx, JSObject *scope,
-                           bool *triedToWrap)
+nsDOMStringMap::WrapObject(JSContext *cx, JSObject *scope)
 {
-  return DOMStringMapBinding::Wrap(cx, scope, this, triedToWrap);
+  return DOMStringMapBinding::Wrap(cx, scope, this);
 }
 
 void

@@ -28,8 +28,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(AudioDestinationNode,
                                                          AudioNode)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope,
-                               bool* aTriedToWrap);
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
   virtual uint32_t NumberOfOutputs() const MOZ_FINAL MOZ_OVERRIDE
   {

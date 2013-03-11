@@ -57,7 +57,7 @@ public:
     return nullptr;
   }
 
-  virtual JSObject *WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap);
+  virtual JSObject *WrapObject(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
 
 private:
   bool                        mCommaDelimited;  // some value lists use a comma

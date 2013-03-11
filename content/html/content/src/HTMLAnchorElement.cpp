@@ -57,9 +57,9 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 NS_IMPL_ELEMENT_CLONE(HTMLAnchorElement)
 
 JSObject*
-HTMLAnchorElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+HTMLAnchorElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return HTMLAnchorElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return HTMLAnchorElementBinding::Wrap(aCx, aScope, this);
 }
 
 NS_IMPL_STRING_ATTR(HTMLAnchorElement, Charset, charset)
