@@ -408,35 +408,71 @@ dbus_bool_t dbus_func_args_async(DBusConnection *conn,
 //
 class DBusConnectionSendAndBlockRunnable : public DBusConnectionSendSyncRunnable
 {
+private:
+  static void Notify(DBusPendingCall* aCall, void* aData)
+  {
+    DBusConnectionSendAndBlockRunnable* runnable(
+        static_cast<DBusConnectionSendAndBlockRunnable*>(aData));
+
+    runnable->mReply = dbus_pending_call_steal_reply(aCall);
+
+    bool success = !!runnable->mReply;
+
+    if (runnable->mError) {
+      success = success && !dbus_error_is_set(runnable->mError);
+
+      if (!dbus_set_error_from_message(runnable->mError, runnable->mReply)) {
+        dbus_error_init(runnable->mError);
+      }
+    }
+
+    dbus_pending_call_cancel(aCall);
+    dbus_pending_call_unref(aCall);
+
+    runnable->Completed(success);
+  }
+
 public:
   DBusConnectionSendAndBlockRunnable(DBusConnection* aConnection,
                                      DBusMessage* aMessage,
                                      int aTimeout,
                                      DBusError* aError)
   : DBusConnectionSendSyncRunnable(aConnection, aMessage),
-    mTimeout(aTimeout),
     mError(aError),
-    mReply(nullptr)
+    mReply(nullptr),
+    mTimeout(aTimeout)
   { }
 
   NS_IMETHOD Run()
   {
     MOZ_ASSERT(!NS_IsMainThread());
 
-    DBusError error;
+    DBusPendingCall* call = nullptr;
 
-    if (!mError) {
-      mError = &error;
+    dbus_bool_t success = dbus_connection_send_with_reply(mConnection,
+                                                          mMessage,
+                                                          &call,
+                                                          mTimeout);
+    if (!success) {
+      if (mError) {
+        if (!call) {
+          dbus_set_error(mError, DBUS_ERROR_DISCONNECTED, "Connection is closed");
+        } else {
+          dbus_error_init(mError);
+        }
+      }
+      goto done;
     }
 
-    dbus_error_init(mError);
+    success = dbus_pending_call_set_notify(call, Notify, this, nullptr);
 
-    mReply = dbus_connection_send_with_reply_and_block(mConnection, mMessage, mTimeout, mError);
-    bool success = mReply || dbus_error_has_name(mError, DBUS_ERROR_NO_REPLY);
+  done:
+    dbus_message_unref(mMessage);
 
-    Completed(success);
-
-    NS_ENSURE_TRUE(success, NS_ERROR_FAILURE);
+    if (!success) {
+      Completed(false);
+      NS_ENSURE_TRUE(success == TRUE, NS_ERROR_FAILURE);
+    }
 
     return NS_OK;
   }
@@ -451,9 +487,9 @@ protected:
   { }
 
 private:
-  int          mTimeout;
   DBusError*   mError;
   DBusMessage* mReply;
+  int          mTimeout;
 };
 
 dbus_bool_t
