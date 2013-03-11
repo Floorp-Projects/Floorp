@@ -117,6 +117,8 @@ FENNEC_JAVA_FILES = \
   MenuPanel.java \
   MenuPopup.java \
   MultiChoicePreference.java \
+  NotificationService.java \
+  NotificationServiceClient.java \
   NSSBridge.java \
   CustomEditText.java \
   OnInterceptTouchListener.java \
