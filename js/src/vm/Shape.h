@@ -545,15 +545,21 @@ class Shape : public js::gc::Cell
         return parent;
     }
 
+    template <AllowGC allowGC>
     class Range {
       protected:
         friend class Shape;
 
-        /* |cursor| is rooted manually when necessary using Range::AutoRooter. */
-        RawShape cursor;
+        typename MaybeRooted<Shape*, allowGC>::RootType cursor;
 
       public:
-        Range(RawShape shape) : cursor(shape) { }
+        Range(JSContext *cx, Shape *shape) : cursor(cx, shape) {
+            JS_STATIC_ASSERT(allowGC == CanGC);
+        }
+
+        Range(Shape *shape) : cursor(NULL, shape) {
+            JS_STATIC_ASSERT(allowGC == NoGC);
+        }
 
         bool empty() const {
             return !cursor || cursor->isEmptyShape();
@@ -568,30 +574,7 @@ class Shape : public js::gc::Cell
             JS_ASSERT(!empty());
             cursor = cursor->parent;
         }
-
-        class AutoRooter : private AutoGCRooter
-        {
-          public:
-            explicit AutoRooter(JSContext *cx, Range *r_
-                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-              : AutoGCRooter(cx, SHAPERANGE), r(r_), skip(cx, r_)
-            {
-                MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-            }
-
-            friend void AutoGCRooter::trace(JSTracer *trc);
-            void trace(JSTracer *trc);
-
-          private:
-            Range *r;
-            SkipRoot skip;
-            MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-        };
     };
-
-    Range all() {
-        return Range(this);
-    }
 
     Class *getObjectClass() const { return base()->clasp; }
     JSObject *getObjectParent() const { return base()->parent; }
@@ -798,7 +781,7 @@ class Shape : public js::gc::Cell
 
         RawShape shape = this;
         uint32_t count = 0;
-        for (Shape::Range r = shape->all(); !r.empty(); r.popFront())
+        for (Shape::Range<NoGC> r(shape); !r.empty(); r.popFront())
             ++count;
         return count;
     }
@@ -807,7 +790,7 @@ class Shape : public js::gc::Cell
         JS_ASSERT(!hasTable());
         RawShape shape = this;
         uint32_t count = 0;
-        for (Shape::Range r = shape->all(); !r.empty(); r.popFront()) {
+        for (Shape::Range<NoGC> r(shape); !r.empty(); r.popFront()) {
             ++count;
             if (count >= ShapeTable::MIN_ENTRIES)
                 return true;

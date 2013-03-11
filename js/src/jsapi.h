@@ -129,7 +129,6 @@ class JS_PUBLIC_API(AutoGCRooter) {
         STRINGVECTOR =-17, /* js::AutoStringVector */
         SCRIPTVECTOR =-18, /* js::AutoScriptVector */
         PROPDESC =    -19, /* js::PropDesc::AutoRooter */
-        SHAPERANGE =  -20, /* js::Shape::Range::AutoRooter */
         STACKSHAPE =  -21, /* js::StackShape::AutoRooter */
         STACKBASESHAPE=-22,/* js::StackBaseShape::AutoRooter */
         GETTERSETTER =-24, /* js::AutoRooterGetterSetter */
