@@ -13,9 +13,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGLineElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+SVGLineElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return SVGLineElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGLineElementBinding::Wrap(aCx, aScope, this);
 }
 
 nsSVGElement::LengthInfo SVGLineElement::sLengthInfo[4] =

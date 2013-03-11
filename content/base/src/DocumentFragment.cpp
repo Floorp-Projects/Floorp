@@ -54,9 +54,9 @@ DocumentFragment::DocumentFragment(already_AddRefed<nsINodeInfo> aNodeInfo)
 }
 
 JSObject*
-DocumentFragment::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+DocumentFragment::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return DocumentFragmentBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return DocumentFragmentBinding::Wrap(aCx, aScope, this);
 }
 
 bool

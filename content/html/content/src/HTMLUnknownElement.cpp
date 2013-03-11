@@ -16,11 +16,10 @@ NS_IMPL_ADDREF_INHERITED(HTMLUnknownElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLUnknownElement, Element)
 
 JSObject*
-HTMLUnknownElement::WrapNode(JSContext *aCx, JSObject *aScope,
-                               bool *aTriedToWrap)
+HTMLUnknownElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
   JSObject* obj =
-    HTMLUnknownElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+    HTMLUnknownElementBinding::Wrap(aCx, aScope, this);
   if (obj && Substring(NodeName(), 0, 2).LowerCaseEqualsLiteral("x-")) {
     // If we have a registered x-tag then we fix the prototype.
     JSAutoCompartment ac(aCx, obj);

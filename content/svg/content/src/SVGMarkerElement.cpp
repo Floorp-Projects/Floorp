@@ -21,9 +21,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGMarkerElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+SVGMarkerElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return SVGMarkerElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGMarkerElementBinding::Wrap(aCx, aScope, this);
 }
 
 nsSVGElement::LengthInfo SVGMarkerElement::sLengthInfo[4] =

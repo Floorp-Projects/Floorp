@@ -1894,10 +1894,9 @@ NS_IMPL_ISUPPORTS_INHERITED5(SVGFEFuncRElement,
                              nsIDOMSVGFEFuncRElement)
 
 /* virtual */ JSObject*
-SVGFEFuncRElement::WrapNode(JSContext* aCx, JSObject* aScope,
-                            bool* aTriedToWrap)
+SVGFEFuncRElement::WrapNode(JSContext* aCx, JSObject* aScope)
 {
-  return SVGFEFuncRElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGFEFuncRElementBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace dom
@@ -1918,10 +1917,9 @@ NS_IMPL_ISUPPORTS_INHERITED5(SVGFEFuncGElement,
                              nsIDOMSVGFEFuncGElement)
 
 /* virtual */ JSObject*
-SVGFEFuncGElement::WrapNode(JSContext* aCx, JSObject* aScope,
-                            bool* aTriedToWrap)
+SVGFEFuncGElement::WrapNode(JSContext* aCx, JSObject* aScope)
 {
-  return SVGFEFuncGElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGFEFuncGElementBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace dom
@@ -1942,10 +1940,9 @@ NS_IMPL_ISUPPORTS_INHERITED5(SVGFEFuncBElement,
                              nsIDOMSVGFEFuncBElement)
 
 /* virtual */ JSObject*
-SVGFEFuncBElement::WrapNode(JSContext* aCx, JSObject* aScope,
-                            bool* aTriedToWrap)
+SVGFEFuncBElement::WrapNode(JSContext* aCx, JSObject* aScope)
 {
-  return SVGFEFuncBElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGFEFuncBElementBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace dom
@@ -1966,10 +1963,9 @@ NS_IMPL_ISUPPORTS_INHERITED5(SVGFEFuncAElement,
                              nsIDOMSVGFEFuncAElement)
 
 /* virtual */ JSObject*
-SVGFEFuncAElement::WrapNode(JSContext* aCx, JSObject* aScope,
-                            bool* aTriedToWrap)
+SVGFEFuncAElement::WrapNode(JSContext* aCx, JSObject* aScope)
 {
-  return SVGFEFuncAElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGFEFuncAElementBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace dom

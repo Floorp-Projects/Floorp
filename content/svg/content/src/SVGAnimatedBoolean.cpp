@@ -21,8 +21,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGAnimatedBoolean)
 NS_INTERFACE_MAP_END
 
 JSObject*
-SVGAnimatedBoolean::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+SVGAnimatedBoolean::WrapObject(JSContext* aCx, JSObject* aScope)
 {
-  return SVGAnimatedBooleanBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGAnimatedBooleanBinding::Wrap(aCx, aScope, this);
 }
 

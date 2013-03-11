@@ -12,9 +12,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGAnimateElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+SVGAnimateElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return SVGAnimateElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGAnimateElementBinding::Wrap(aCx, aScope, this);
 }
 
 //----------------------------------------------------------------------

@@ -20,9 +20,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGImageElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+SVGImageElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return SVGImageElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGImageElementBinding::Wrap(aCx, aScope, this);
 }
 
 nsSVGElement::LengthInfo SVGImageElement::sLengthInfo[4] =

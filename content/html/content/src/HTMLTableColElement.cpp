@@ -25,10 +25,9 @@ HTMLTableColElement::~HTMLTableColElement()
 }
 
 JSObject*
-HTMLTableColElement::WrapNode(JSContext *aCx, JSObject *aScope,
-                              bool *aTriedToWrap)
+HTMLTableColElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return HTMLTableColElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return HTMLTableColElementBinding::Wrap(aCx, aScope, this);
 }
 
 NS_IMPL_ADDREF_INHERITED(HTMLTableColElement, Element)

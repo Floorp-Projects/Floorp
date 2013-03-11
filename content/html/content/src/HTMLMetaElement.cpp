@@ -99,9 +99,9 @@ HTMLMetaElement::CreateAndDispatchEvent(nsIDocument* aDoc,
 }
 
 JSObject*
-HTMLMetaElement::WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+HTMLMetaElement::WrapNode(JSContext* aCx, JSObject* aScope)
 {
-  return HTMLMetaElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return HTMLMetaElementBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace dom

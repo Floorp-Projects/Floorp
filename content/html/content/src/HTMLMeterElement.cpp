@@ -350,10 +350,9 @@ HTMLMeterElement::GetOptimumState() const
 }
 
 JSObject*
-HTMLMeterElement::WrapNode(JSContext* aCx, JSObject* aScope,
-                           bool* aTriedToWrap)
+HTMLMeterElement::WrapNode(JSContext* aCx, JSObject* aScope)
 {
-  return HTMLMeterElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return HTMLMeterElementBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace dom

@@ -21,10 +21,9 @@ HTMLTableCaptionElement::~HTMLTableCaptionElement()
 }
 
 JSObject*
-HTMLTableCaptionElement::WrapNode(JSContext *aCx, JSObject *aScope,
-                                  bool *aTriedToWrap)
+HTMLTableCaptionElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return HTMLTableCaptionElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return HTMLTableCaptionElementBinding::Wrap(aCx, aScope, this);
 }
 
 NS_IMPL_ADDREF_INHERITED(HTMLTableCaptionElement, Element)

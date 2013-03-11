@@ -34,9 +34,9 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 NS_IMPL_ELEMENT_CLONE(HTMLSpanElement)
 
 JSObject*
-HTMLSpanElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+HTMLSpanElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return HTMLSpanElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return HTMLSpanElementBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace dom

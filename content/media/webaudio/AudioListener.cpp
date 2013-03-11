@@ -32,10 +32,9 @@ AudioListener::AudioListener(AudioContext* aContext)
 }
 
 JSObject*
-AudioListener::WrapObject(JSContext* aCx, JSObject* aScope,
-                          bool* aTriedToWrap)
+AudioListener::WrapObject(JSContext* aCx, JSObject* aScope)
 {
-  return AudioListenerBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return AudioListenerBinding::Wrap(aCx, aScope, this);
 }
 
 }

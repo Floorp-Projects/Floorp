@@ -46,9 +46,9 @@ namespace dom {
 class SVGAnimatedLength;
 
 JSObject*
-SVGSVGElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+SVGSVGElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return SVGSVGElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGSVGElementBinding::Wrap(aCx, aScope, this);
 }
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DOMSVGTranslatePoint,

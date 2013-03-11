@@ -327,26 +327,26 @@ HTMLSharedElement::GetAttributeMappingFunction() const
 }
 
 JSObject*
-HTMLSharedElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+HTMLSharedElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
   if (mNodeInfo->Equals(nsGkAtoms::param)) {
-    return HTMLParamElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+    return HTMLParamElementBinding::Wrap(aCx, aScope, this);
   }
   if (mNodeInfo->Equals(nsGkAtoms::base)) {
-    return HTMLBaseElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+    return HTMLBaseElementBinding::Wrap(aCx, aScope, this);
   }
   if (mNodeInfo->Equals(nsGkAtoms::dir)) {
-    return HTMLDirectoryElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+    return HTMLDirectoryElementBinding::Wrap(aCx, aScope, this);
   }
   if (mNodeInfo->Equals(nsGkAtoms::q) ||
       mNodeInfo->Equals(nsGkAtoms::blockquote)) {
-    return HTMLQuoteElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+    return HTMLQuoteElementBinding::Wrap(aCx, aScope, this);
   }
   if (mNodeInfo->Equals(nsGkAtoms::head)) {
-    return HTMLHeadElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+    return HTMLHeadElementBinding::Wrap(aCx, aScope, this);
   }
   MOZ_ASSERT(mNodeInfo->Equals(nsGkAtoms::html));
-  return HTMLHtmlElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return HTMLHtmlElementBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace mozilla

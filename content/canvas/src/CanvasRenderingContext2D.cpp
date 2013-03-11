@@ -569,10 +569,9 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D()
 }
 
 JSObject*
-CanvasRenderingContext2D::WrapObject(JSContext *cx, JSObject *scope,
-                                     bool *triedToWrap)
+CanvasRenderingContext2D::WrapObject(JSContext *cx, JSObject *scope)
 {
-  return CanvasRenderingContext2DBinding::Wrap(cx, scope, this, triedToWrap);
+  return CanvasRenderingContext2DBinding::Wrap(cx, scope, this);
 }
 
 bool

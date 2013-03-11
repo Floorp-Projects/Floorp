@@ -23,7 +23,7 @@ protected:
   friend nsresult (::NS_NewSVGTSpanElement(nsIContent **aResult,
                                            already_AddRefed<nsINodeInfo> aNodeInfo));
   SVGTSpanElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
 
 public:
   // interfaces:
