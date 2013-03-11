@@ -6,7 +6,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/SVGStyleElement.h"
 #include "nsContentUtils.h"
-#include "nsStubMutationObserver.h"
 #include "mozilla/dom/SVGStyleElementBinding.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Style)

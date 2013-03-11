@@ -6,10 +6,8 @@
 #include "mozilla/Util.h"
 
 #include "DOMSVGAnimatedTransformList.h"
-#include "nsIDOMMutationEvent.h"
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
-#include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGPatternElement.h"
 #include "mozilla/dom/SVGPatternElementBinding.h"
 

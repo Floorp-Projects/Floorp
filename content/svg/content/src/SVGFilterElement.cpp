@@ -9,7 +9,7 @@
 #include "nsCOMPtr.h"
 #include "mozilla/dom/SVGFilterElement.h"
 #include "mozilla/dom/SVGFilterElementBinding.h"
-#include "nsSVGEffects.h"
+#include "nsSVGUtils.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Filter)
 

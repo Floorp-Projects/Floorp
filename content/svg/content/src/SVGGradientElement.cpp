@@ -6,13 +6,11 @@
 #include "mozilla/dom/SVGGradientElement.h"
 
 #include "DOMSVGAnimatedTransformList.h"
-#include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGRadialGradientElementBinding.h"
 #include "mozilla/dom/SVGLinearGradientElementBinding.h"
 #include "mozilla/Util.h"
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMMutationEvent.h"
 #include "nsIDOMSVGAnimatedEnum.h"
 #include "nsSVGElement.h"
 
