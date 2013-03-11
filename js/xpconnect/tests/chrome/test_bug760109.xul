@@ -49,6 +49,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=760109
     is(chromeArray.indexOf('b'), 1, "indexOf works correctly");
     is(chromeArray.join(''), concat, "join works correctly");
     is(chromeArray.slice(1).join(''), 'bz', "slice works correctly");
+    is(chromeArray.length, 3, "Able to check array length");
 
     // Try some operations that modify the array.
     is(chromeArray.pop(), 'z', "Able to call pop");
