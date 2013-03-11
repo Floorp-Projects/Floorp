@@ -134,6 +134,7 @@ DOMCI_CLASS(SVGFEOffsetElement)
 DOMCI_CLASS(SVGFEPointLightElement)
 DOMCI_CLASS(SVGFESpecularLightingElement)
 DOMCI_CLASS(SVGFESpotLightElement)
+DOMCI_CLASS(SVGFETileElement)
 DOMCI_CLASS(SVGFETurbulenceElement)
 DOMCI_CLASS(SVGUnknownElement)
 
