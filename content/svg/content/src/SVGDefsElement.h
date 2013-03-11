@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_SVGDefsElement_h
 #define mozilla_dom_SVGDefsElement_h
 
-#include "mozilla/Util.h"
 #include "SVGGraphicsElement.h"
 
 nsresult NS_NewSVGDefsElement(nsIContent **aResult,

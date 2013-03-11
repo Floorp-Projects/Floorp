@@ -7,7 +7,6 @@
 #include "gfxPlatform.h"
 #include "nsError.h"
 #include "nsString.h"
-#include "nsSVGElement.h"
 #include "nsSVGPathDataParser.h"
 #include "nsSVGPathGeometryElement.h" // for nsSVGMark
 #include <stdarg.h>

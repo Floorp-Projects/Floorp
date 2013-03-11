@@ -6,8 +6,6 @@
 #ifndef mozilla_dom_SVGTextPathElement_h
 #define mozilla_dom_SVGTextPathElement_h
 
-#include "nsIDOMElement.h"
-#include "nsIDOMNode.h"
 #include "nsIDOMSVGElement.h"
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
@@ -16,9 +14,7 @@
 
 class nsIAtom;
 class nsIContent;
-class nsINode;
 class nsINodeInfo;
-class nsXPCClassInfo;
 class nsSVGTextPathFrame;
 
 nsresult NS_NewSVGTextPathElement(nsIContent **aResult,

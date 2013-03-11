@@ -17,7 +17,6 @@
 #include "nsAttrValueInlines.h"
 #include "SVGAngle.h"
 #include "SVGAnimatedAngle.h"
-#include "mozilla/Attributes.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

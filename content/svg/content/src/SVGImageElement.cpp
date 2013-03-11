@@ -6,11 +6,9 @@
 #include "mozilla/Util.h"
 
 #include "mozilla/dom/SVGImageElement.h"
-#include "mozilla/dom/SVGAnimatedLength.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
-#include "imgIContainer.h"
 #include "imgINotificationObserver.h"
 #include "gfxContext.h"
 #include "mozilla/dom/SVGImageElementBinding.h"

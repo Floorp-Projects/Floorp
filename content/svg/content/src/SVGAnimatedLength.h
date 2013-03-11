@@ -7,7 +7,10 @@
 #define mozilla_dom_SVGAnimatedLength_h
 
 #include "nsSVGElement.h"
-#include "nsSVGLength2.h"
+#include "nsIDOMSVGAnimatedLength.h"
+
+class nsSVGLength2;
+class nsIDOMSVGLength;
 
 namespace mozilla {
 namespace dom {

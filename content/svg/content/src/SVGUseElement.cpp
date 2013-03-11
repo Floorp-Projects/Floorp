@@ -5,7 +5,6 @@
 
 #include "mozilla/Util.h"
 
-#include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGUseElement.h"
 #include "mozilla/dom/SVGUseElementBinding.h"
 #include "nsGkAtoms.h"

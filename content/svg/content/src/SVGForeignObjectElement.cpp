@@ -6,7 +6,6 @@
 #include "mozilla/Util.h"
 
 #include "nsCOMPtr.h"
-#include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGForeignObjectElement.h"
 #include "mozilla/dom/SVGForeignObjectElementBinding.h"
 

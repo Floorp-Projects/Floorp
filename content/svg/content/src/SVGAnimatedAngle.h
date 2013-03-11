@@ -3,17 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#pragma once
+#ifndef mozilla_dom_SVGAnimatedAngle_h
+#define mozilla_dom_SVGAnimatedAngle_h
 
 #include "nsWrapperCache.h"
 #include "nsSVGElement.h"
-#include "SVGAngle.h"
 #include "mozilla/Attributes.h"
 
 class nsSVGAngle;
 
 namespace mozilla {
 namespace dom {
+
+class SVGAngle;
 
 class SVGAnimatedAngle MOZ_FINAL : public nsISupports,
                                    public nsWrapperCache
@@ -43,3 +45,4 @@ protected:
 } //namespace dom
 } //namespace mozilla
 
+#endif // mozilla_dom_SVGAnimatedAngle_h
