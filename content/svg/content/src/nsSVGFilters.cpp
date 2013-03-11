@@ -3336,6 +3336,12 @@ static int32_t BoundInterval(int32_t aVal, int32_t aMax)
   return std::min(aVal, aMax - 1);
 }
 
+static int32_t WrapInterval(int32_t aVal, int32_t aMax)
+{
+  aVal = aVal % aMax;
+  return aVal < 0 ? aMax + aVal : aVal;
+}
+
 static void
 ConvolvePixel(const uint8_t *aSourceData,
               uint8_t *aTargetData,
