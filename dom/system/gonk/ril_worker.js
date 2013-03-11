@@ -8163,57 +8163,36 @@ let CdmaPDUHelper = {
     return header;
   },
 
-  /**
-   * User data subparameter decoder : User Data
-   *
-   * @see 3GGP2 C.S0015-B 2.0, 4.5.2 User Data
-   */
-  decodeUserDataMsg: function cdma_decodeUserDataMsg(hasUserHeader) {
-    let result = {},
-        encoding = BitBufferHelper.readBits(5);
-
-    if(encoding === PDU_CDMA_MSG_CODING_IS_91) {
-      let msgType = BitBufferHelper.readBits(8);
-    }
-
-    let msgBodySize = BitBufferHelper.readBits(8);
-    const langTable = PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
-    const langShiftTable = PDU_NL_SINGLE_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+  getCdmaMsgEncoding: function getCdmaMsgEncoding(encoding) {
     // Determine encoding method
     switch (encoding) {
       case PDU_CDMA_MSG_CODING_7BITS_ASCII:
       case PDU_CDMA_MSG_CODING_IA5:
       case PDU_CDMA_MSG_CODING_7BITS_GSM:
-        result.encoding = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
-        break;
+        return PDU_DCS_MSG_CODING_7BITS_ALPHABET;
       case PDU_CDMA_MSG_CODING_OCTET:
       case PDU_CDMA_MSG_CODING_IS_91:
       case PDU_CDMA_MSG_CODING_LATIN_HEBREW:
       case PDU_CDMA_MSG_CODING_LATIN:
-        result.encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
-        break;
+        return PDU_DCS_MSG_CODING_8BITS_ALPHABET;
       case PDU_CDMA_MSG_CODING_UNICODE:
       case PDU_CDMA_MSG_CODING_SHIFT_JIS:
       case PDU_CDMA_MSG_CODING_KOREAN:
-        result.encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
-        break;
+        return PDU_DCS_MSG_CODING_16BITS_ALPHABET;
     }
+    return null;
+  },
 
-    // For segmented SMS, a user header is included before sms content
-    if (hasUserHeader) {
-      result.header = this.decodeUserDataHeader(result.encoding);
-      // header size is included in body size, they are decoded
-      msgBodySize -= result.header.length;
-    }
-
-    // Decode sms content
-    result.body = "";
+  decodeCdmaPDUMsg: function decodeCdmaPDUMsg(encoding, msgType, msgBodySize) {
+    const langTable = PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+    const langShiftTable = PDU_NL_SINGLE_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+    let result = "";
     let msgDigit;
     switch (encoding) {
       case PDU_CDMA_MSG_CODING_OCTET:         // TODO : Require Test
         while(msgBodySize > 0) {
           msgDigit = String.fromCharCode(BitBufferHelper.readBits(8));
-          result.body += msgDigit;
+          result += msgDigit;
           msgBodySize--;
         }
         break;
@@ -8225,7 +8204,7 @@ let CdmaPDUHelper = {
           case PDU_CDMA_MSG_CODING_IS_91_TYPE_VOICEMAIL_STATUS:
             while(msgBodySize > 0) {
               msgDigit = String.fromCharCode(BitBufferHelper.readBits(6) + 0x20);
-              result.body += msgDigit;
+              result += msgDigit;
               msgBodySize--;
             }
             break;
@@ -8240,7 +8219,7 @@ let CdmaPDUHelper = {
             for (let i = 0; i < addrInfo.addrLength; i++) {
               addrInfo.address.push(BitBufferHelper.readBits(4));
             }
-            result.body = this.decodeAddr(addrInfo);
+            result = this.decodeAddr(addrInfo);
             break;
         }
       case PDU_CDMA_MSG_CODING_7BITS_ASCII:
@@ -8258,14 +8237,14 @@ let CdmaPDUHelper = {
               msgDigit = langShiftTable[msgDigit];
             }
           }
-          result.body += msgDigit;
+          result += msgDigit;
           msgBodySize--;
         }
         break;
       case PDU_CDMA_MSG_CODING_UNICODE:
         while(msgBodySize > 0) {
           msgDigit = String.fromCharCode(BitBufferHelper.readBits(16));
-          result.body += msgDigit;
+          result += msgDigit;
           msgBodySize--;
         }
         break;
@@ -8279,7 +8258,7 @@ let CdmaPDUHelper = {
             msgBodySize--;
             msgDigit = langShiftTable[msgDigit];
           }
-          result.body += msgDigit;
+          result += msgDigit;
           msgBodySize--;
         }
         break;
@@ -8287,7 +8266,7 @@ let CdmaPDUHelper = {
         // Reference : http://en.wikipedia.org/wiki/ISO/IEC_8859-1
         while(msgBodySize > 0) {
           msgDigit = String.fromCharCode(BitBufferHelper.readBits(8));
-          result.body += msgDigit;
+          result += msgDigit;
           msgBodySize--;
         }
         break;
@@ -8306,7 +8285,7 @@ let CdmaPDUHelper = {
           } else {
             msgDigit = String.fromCharCode(msgDigit);
           }
-          result.body += msgDigit;
+          result += msgDigit;
           msgBodySize--;
         }
         break;
@@ -8318,6 +8297,35 @@ let CdmaPDUHelper = {
       default:
         break;
     }
+    return result;
+  },
+
+  /**
+   * User data subparameter decoder : User Data
+   *
+   * @see 3GGP2 C.S0015-B 2.0, 4.5.2 User Data
+   */
+  decodeUserDataMsg: function cdma_decodeUserDataMsg(hasUserHeader) {
+    let result = {},
+        encoding = BitBufferHelper.readBits(5),
+        msgType;
+
+    if(encoding === PDU_CDMA_MSG_CODING_IS_91) {
+      msgType = BitBufferHelper.readBits(8);
+    }
+    result.encoding = this.getCdmaMsgEncoding(encoding);
+
+    let msgBodySize = BitBufferHelper.readBits(8);
+
+    // For segmented SMS, a user header is included before sms content
+    if (hasUserHeader) {
+      result.header = this.decodeUserDataHeader(result.encoding);
+      // header size is included in body size, they are decoded
+      msgBodySize -= result.header.length;
+    }
+
+    // Decode sms content
+    result.body = this.decodeCdmaPDUMsg(encoding, msgType, msgBodySize);
 
     return result;
   },
