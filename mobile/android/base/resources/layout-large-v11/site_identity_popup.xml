@@ -42,23 +42,12 @@
                       android:layout_height="wrap_content"
                       android:textSize="18sp"/>
 
-            <TextView android:id="@+id/supplemental"
-                      android:layout_width="wrap_content"
-                      android:layout_height="wrap_content"
-                      android:textSize="18sp"/>
-
             <TextView android:id="@+id/verifier"
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
                       android:textSize="12sp"
                       android:textColor="@color/doorhanger_text"
                       android:paddingTop="12dip"/>
-
-            <TextView android:id="@+id/encrypted"
-                      android:layout_width="fill_parent"
-                      android:layout_height="wrap_content"
-                      android:textSize="12sp"
-                      android:textColor="@color/doorhanger_text"/>
 
         </LinearLayout>
 
