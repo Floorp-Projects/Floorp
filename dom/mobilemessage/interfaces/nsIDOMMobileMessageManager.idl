@@ -19,7 +19,7 @@ dictionary MmsParameters
   jsval      attachments; // MmsAttachment[]
 };
 
-[scriptable, builtinclass, uuid(1746e0dc-8e18-11e2-a73d-3f802fe818fb)]
+[scriptable, builtinclass, uuid(e4db3360-8e9d-11e2-8ca6-0ba19c435073)]
 interface nsIDOMMozMobileMessageManager : nsIDOMEventTarget
 {
   nsIDOMMozSmsSegmentInfo getSegmentInfoForText(in DOMString text);
@@ -40,7 +40,7 @@ interface nsIDOMMozMobileMessageManager : nsIDOMEventTarget
 
   nsIDOMMozSmsRequest getMessages(in nsIDOMMozSmsFilter filter, in boolean reverse);
 
-  nsIDOMMozSmsRequest markMessageRead(in long id, in boolean aValue);
+  nsIDOMDOMRequest markMessageRead(in long id, in boolean aValue);
 
   nsIDOMMozSmsRequest getThreadList();
 

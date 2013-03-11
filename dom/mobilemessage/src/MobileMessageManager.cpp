@@ -291,16 +291,18 @@ MobileMessageManager::GetMessages(nsIDOMMozSmsFilter* aFilter, bool aReverse,
 
 NS_IMETHODIMP
 MobileMessageManager::MarkMessageRead(int32_t aId, bool aValue,
-                                      nsIDOMMozSmsRequest** aRequest)
+                                      nsIDOMDOMRequest** aRequest)
 {
-  nsCOMPtr<nsIDOMMozSmsRequest> req = SmsRequest::Create(this);
   nsCOMPtr<nsIMobileMessageDatabaseService> mobileMessageDBService =
     do_GetService(MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(mobileMessageDBService, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIMobileMessageCallback> forwarder =
-    new SmsRequestForwarder(static_cast<SmsRequest*>(req.get()));
-  mobileMessageDBService->MarkMessageRead(aId, aValue, forwarder);
-  req.forget(aRequest);
+
+  nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
+  nsCOMPtr<nsIMobileMessageCallback> msgCallback = new MobileMessageCallback(request);
+  nsresult rv = mobileMessageDBService->MarkMessageRead(aId, aValue, msgCallback);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  request.forget(aRequest);
   return NS_OK;
 }
 

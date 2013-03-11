@@ -150,13 +150,13 @@ MobileMessageCallback::NotifyNoMessageInList()
 NS_IMETHODIMP
 MobileMessageCallback::NotifyMessageMarkedRead(bool aRead)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NotifySuccess(aRead ? JSVAL_TRUE : JSVAL_FALSE);
 }
 
 NS_IMETHODIMP
 MobileMessageCallback::NotifyMarkMessageReadFailed(int32_t aError)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NotifyError(aError);
 }
 
 NS_IMETHODIMP
