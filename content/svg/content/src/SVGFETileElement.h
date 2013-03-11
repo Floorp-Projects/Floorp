@@ -14,25 +14,26 @@ nsresult NS_NewSVGFETileElement(nsIContent **aResult,
 namespace mozilla {
 namespace dom {
 
-typedef nsSVGFE nsSVGFETileElementBase;
+typedef nsSVGFE SVGFETileElementBase;
 
-class nsSVGFETileElement : public nsSVGFETileElementBase,
-                           public nsIDOMSVGFETileElement
+class SVGFETileElement : public SVGFETileElementBase,
+                         public nsIDOMSVGElement
 {
   friend nsresult (::NS_NewSVGFETileElement(nsIContent **aResult,
                                             already_AddRefed<nsINodeInfo> aNodeInfo));
 protected:
-  nsSVGFETileElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsSVGFETileElementBase(aNodeInfo) {}
+  SVGFETileElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+    : SVGFETileElementBase(aNodeInfo)
+  {
+    SetIsDOMBinding();
+  }
+  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap) MOZ_OVERRIDE;
 
 public:
   virtual bool SubregionIsUnionOfRegions() { return false; }
 
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
-
-  // FE Base
-  NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFETileElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance* aInstance,
                           const nsTArray<const Image*>& aSources,
@@ -49,19 +50,18 @@ public:
   virtual nsIntRect ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChangeBoxes,
           const nsSVGFilterInstance& aInstance);
 
-  // Tile
-  NS_DECL_NSIDOMSVGFETILEELEMENT
-
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFETileElementBase::)
+  NS_FORWARD_NSIDOMSVGELEMENT(SVGFETileElementBase::)
 
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL
+  already_AddRefed<nsIDOMSVGAnimatedString> In1();
+
 protected:
   virtual StringAttributesInfo GetStringInfo();
 
