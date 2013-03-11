@@ -329,13 +329,6 @@ SetProxyHandler(RawObject obj, BaseProxyHandler *handler)
 }
 
 inline void
-SetProxyPrivate(RawObject obj, const Value &value)
-{
-    JS_ASSERT(IsProxy(obj));
-    SetReservedSlot(obj, JSSLOT_PROXY_PRIVATE, value);
-}
-
-inline void
 SetProxyExtra(RawObject obj, size_t n, const Value &extra)
 {
     JS_ASSERT(IsProxy(obj));
