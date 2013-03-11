@@ -5,10 +5,10 @@ export CC="$topsrcdir/clang/bin/clang -fgnu89-inline"
 export CXX="$topsrcdir/clang/bin/clang++"
 
 # Mandatory flags for ASan
-export ASANFLAGS="-faddress-sanitizer -Dxmalloc=myxmalloc -fPIC"
+export ASANFLAGS="-fsanitize=address -Dxmalloc=myxmalloc -fPIC"
 export CFLAGS="$ASANFLAGS"
 export CXXFLAGS="$ASANFLAGS"
-export LDFLAGS="-faddress-sanitizer"
+export LDFLAGS="-fsanitize=address"
 
 # Enable ASan specific code and build workarounds
 ac_add_options --enable-address-sanitizer
