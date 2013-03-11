@@ -1,2 +1,2 @@
-skip-if(!winWidget) HTTP == bug415761.sjs bug415761.ico
+skip-if(!winWidget) HTTP == bug415761.sjs ref.png
 skip-if(!winWidget) HTTP == bug415761cleanup.sjs about:blank
