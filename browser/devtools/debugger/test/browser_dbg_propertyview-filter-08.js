@@ -58,9 +58,9 @@ function testVariablesFiltering()
         "The arguments pseudoarray in the testScope should now be expanded");
 
       waitForFetchedProperties(2, function() {
-        is(testScopeItem.get("arguments").target.querySelectorAll(".property:not([non-match])").length, 4,
+        is(testScopeItem.get("arguments").target.querySelectorAll(".variables-view-property:not([non-match])").length, 4,
           "The arguments in the testScope should have 4 visible properties");
-        is(loadScopeItem.get("arguments").target.querySelectorAll(".property:not([non-match])").length, 4,
+        is(loadScopeItem.get("arguments").target.querySelectorAll(".variables-view-property:not([non-match])").length, 4,
           "The arguments in the loadScope should have 4 visible properties");
 
         assertExpansion(2, [true, true, true, true, true]);
@@ -76,9 +76,9 @@ function testVariablesFiltering()
         "The arguments pseudoarray in the testScope should now be expanded");
 
       waitForFetchedProperties(0, function() {
-        is(testScopeItem.get("arguments").target.querySelectorAll(".property:not([non-match])").length, 4,
+        is(testScopeItem.get("arguments").target.querySelectorAll(".variables-view-property:not([non-match])").length, 4,
           "The arguments in the testScope should have 4 visible properties");
-        is(loadScopeItem.get("arguments").target.querySelectorAll(".property:not([non-match])").length, 4,
+        is(loadScopeItem.get("arguments").target.querySelectorAll(".variables-view-property:not([non-match])").length, 4,
           "The arguments in the loadScope should have 4 visible properties");
 
         assertExpansion(3, [true, true, true, true, true]);
@@ -94,9 +94,9 @@ function testVariablesFiltering()
         "The arguments pseudoarray in the testScope should now be expanded");
 
       waitForFetchedProperties(0, function() {
-        is(testScopeItem.get("arguments").target.querySelectorAll(".property:not([non-match])").length, 4,
+        is(testScopeItem.get("arguments").target.querySelectorAll(".variables-view-property:not([non-match])").length, 4,
           "The arguments in the testScope should have 4 visible properties");
-        is(loadScopeItem.get("arguments").target.querySelectorAll(".property:not([non-match])").length, 4,
+        is(loadScopeItem.get("arguments").target.querySelectorAll(".variables-view-property:not([non-match])").length, 4,
           "The arguments in the loadScope should have 4 visible properties");
 
         assertExpansion(4, [true, true, true, true, true]);
@@ -112,9 +112,9 @@ function testVariablesFiltering()
         "The arguments pseudoarray in the testScope should now be expanded");
 
       waitForFetchedProperties(0, function() {
-        is(testScopeItem.get("arguments").target.querySelectorAll(".property:not([non-match])").length, 4,
+        is(testScopeItem.get("arguments").target.querySelectorAll(".variables-view-property:not([non-match])").length, 4,
           "The arguments in the testScope should have 4 visible properties");
-        is(loadScopeItem.get("arguments").target.querySelectorAll(".property:not([non-match])").length, 4,
+        is(loadScopeItem.get("arguments").target.querySelectorAll(".variables-view-property:not([non-match])").length, 4,
           "The arguments in the loadScope should have 4 visible properties");
 
         assertExpansion(5, [true, true, true, true, true]);
@@ -130,9 +130,9 @@ function testVariablesFiltering()
         "The arguments pseudoarray in the testScope should now be expanded");
 
       waitForFetchedProperties(0, function() {
-        is(testScopeItem.get("arguments").target.querySelectorAll(".property:not([non-match])").length, 4,
+        is(testScopeItem.get("arguments").target.querySelectorAll(".variables-view-property:not([non-match])").length, 4,
           "The arguments in the testScope should have 4 visible properties");
-        is(loadScopeItem.get("arguments").target.querySelectorAll(".property:not([non-match])").length, 4,
+        is(loadScopeItem.get("arguments").target.querySelectorAll(".variables-view-property:not([non-match])").length, 4,
           "The arguments in the loadScope should have 4 visible properties");
 
         assertExpansion(5, [true, true, true, true, true]);
@@ -148,9 +148,9 @@ function testVariablesFiltering()
         "The arguments pseudoarray in the testScope should now be expanded");
 
       waitForFetchedProperties(0, function() {
-        is(testScopeItem.get("arguments").target.querySelectorAll(".property:not([non-match])").length, 0,
+        is(testScopeItem.get("arguments").target.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
           "The arguments in the testScope should have 0 visible properties");
-        is(loadScopeItem.get("arguments").target.querySelectorAll(".property:not([non-match])").length, 0,
+        is(loadScopeItem.get("arguments").target.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
           "The arguments in the loadScope should have 0 visible properties");
 
         assertExpansion(5, [true, true, true, true, true]);
@@ -202,11 +202,11 @@ function testVariablesFiltering()
   }
 
   var scopes = gDebugger.DebuggerView.Variables._list,
-      innerScope = scopes.querySelectorAll(".scope")[0],
-      mathScope = scopes.querySelectorAll(".scope")[1],
-      testScope = scopes.querySelectorAll(".scope")[2],
-      loadScope = scopes.querySelectorAll(".scope")[3],
-      globalScope = scopes.querySelectorAll(".scope")[4];
+      innerScope = scopes.querySelectorAll(".variables-view-scope")[0],
+      mathScope = scopes.querySelectorAll(".variables-view-scope")[1],
+      testScope = scopes.querySelectorAll(".variables-view-scope")[2],
+      loadScope = scopes.querySelectorAll(".variables-view-scope")[3],
+      globalScope = scopes.querySelectorAll(".variables-view-scope")[4];
 
   let innerScopeItem = gDebugger.DebuggerView.Variables._currHierarchy.get(
     innerScope.querySelector(".name").getAttribute("value"));
@@ -257,11 +257,11 @@ function prepareVariables(aCallback)
 
       var frames = gDebugger.DebuggerView.StackFrames._container._list,
           scopes = gDebugger.DebuggerView.Variables._list,
-          innerScope = scopes.querySelectorAll(".scope")[0],
-          mathScope = scopes.querySelectorAll(".scope")[1],
-          testScope = scopes.querySelectorAll(".scope")[2],
-          loadScope = scopes.querySelectorAll(".scope")[3],
-          globalScope = scopes.querySelectorAll(".scope")[4];
+          innerScope = scopes.querySelectorAll(".variables-view-scope")[0],
+          mathScope = scopes.querySelectorAll(".variables-view-scope")[1],
+          testScope = scopes.querySelectorAll(".variables-view-scope")[2],
+          loadScope = scopes.querySelectorAll(".variables-view-scope")[3],
+          globalScope = scopes.querySelectorAll(".variables-view-scope")[4];
 
       let innerScopeItem = gDebugger.DebuggerView.Variables._currHierarchy.get(
         innerScope.querySelector(".name").getAttribute("value"));

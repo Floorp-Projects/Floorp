@@ -86,13 +86,13 @@ function testLocationChange()
       gDebugger.addEventListener("Debugger:AfterSourcesAdded", function _onEvent(aEvent) {
         gDebugger.removeEventListener(aEvent.type, _onEvent);
 
-        is(gDebugger.DebuggerView.Sources.selectedValue, null,
+        is(gDebugger.DebuggerView.Sources.selectedValue, "",
           "There should be no selected script.");
         is(gDebugger.editor.getText().length, 0,
           "The source editor not have any text displayed.");
 
         let menulist = gDebugger.DebuggerView.Sources._container;
-        let noScripts = gDebugger.L10N.getStr("noScriptsText");
+        let noScripts = gDebugger.L10N.getStr("noSourcesText");
         is(menulist.getAttribute("label"), noScripts,
           "The menulist should display a notice that there are no scripts availalble.");
         is(menulist.getAttribute("tooltiptext"), "",

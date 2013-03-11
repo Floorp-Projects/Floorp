@@ -30,8 +30,8 @@ function testFrameParameters()
     Services.tm.currentThread.dispatch({ run: function() {
 
       var frames = gDebugger.DebuggerView.StackFrames._container._list,
-          localScope = gDebugger.DebuggerView.Variables._list.querySelectorAll(".scope")[0],
-          localNodes = localScope.querySelector(".details").childNodes,
+          localScope = gDebugger.DebuggerView.Variables._list.querySelectorAll(".variables-view-scope")[0],
+          localNodes = localScope.querySelector(".variables-view-element-details").childNodes,
           localNonEnums = localScope.querySelector(".nonenum").childNodes;
 
       is(gDebugger.DebuggerController.activeThread.state, "paused",
@@ -54,23 +54,23 @@ function testFrameParameters()
       let gVars = gDebugger.DebuggerView.Variables;
 
       is(gVars.getScopeForNode(
-         gVars._list.querySelectorAll(".scope")[0]).target,
-         gVars._list.querySelectorAll(".scope")[0],
+         gVars._list.querySelectorAll(".variables-view-scope")[0]).target,
+         gVars._list.querySelectorAll(".variables-view-scope")[0],
         "getScopeForNode([0]) didn't return the expected scope.");
       is(gVars.getScopeForNode(
-         gVars._list.querySelectorAll(".scope")[1]).target,
-         gVars._list.querySelectorAll(".scope")[1],
+         gVars._list.querySelectorAll(".variables-view-scope")[1]).target,
+         gVars._list.querySelectorAll(".variables-view-scope")[1],
         "getScopeForNode([1]) didn't return the expected scope.");
       is(gVars.getScopeForNode(
-         gVars._list.querySelectorAll(".scope")[2]).target,
-         gVars._list.querySelectorAll(".scope")[2],
+         gVars._list.querySelectorAll(".variables-view-scope")[2]).target,
+         gVars._list.querySelectorAll(".variables-view-scope")[2],
         "getScopeForNode([2]) didn't return the expected scope.");
 
-      is(gVars.getScopeForNode(gVars._list.querySelectorAll(".scope")[0]).expanded, true,
+      is(gVars.getScopeForNode(gVars._list.querySelectorAll(".variables-view-scope")[0]).expanded, true,
         "The local scope should be expanded by default.");
-      is(gVars.getScopeForNode(gVars._list.querySelectorAll(".scope")[1]).expanded, false,
+      is(gVars.getScopeForNode(gVars._list.querySelectorAll(".variables-view-scope")[1]).expanded, false,
         "The block scope should be collapsed by default.");
-      is(gVars.getScopeForNode(gVars._list.querySelectorAll(".scope")[2]).expanded, false,
+      is(gVars.getScopeForNode(gVars._list.querySelectorAll(".variables-view-scope")[2]).expanded, false,
         "The global scope should be collapsed by default.");
 
 
@@ -139,17 +139,17 @@ function testFrameParameters()
            .getAttribute("value"), "[object Arguments]",
           "Should have the right property value for 'arguments'.");
 
-        is(argumentsNode.target.querySelectorAll(".property > .title > .name")[0]
+        is(argumentsNode.target.querySelectorAll(".variables-view-property > .title > .name")[0]
            .getAttribute("value"), "0",
           "Should have the right property name for 'arguments[0]'.");
-        ok(argumentsNode.target.querySelectorAll(".property > .title > .value")[0]
+        ok(argumentsNode.target.querySelectorAll(".variables-view-property > .title > .value")[0]
            .getAttribute("value").search(/object/) != -1,
           "'arguments[0]' should be an object.");
 
-        is(argumentsNode.target.querySelectorAll(".property > .title > .name")[7]
+        is(argumentsNode.target.querySelectorAll(".variables-view-property > .title > .name")[7]
            .getAttribute("value"), "__proto__",
           "Should have the right property name for '__proto__'.");
-        ok(argumentsNode.target.querySelectorAll(".property > .title > .value")[7]
+        ok(argumentsNode.target.querySelectorAll(".variables-view-property > .title > .value")[7]
            .getAttribute("value").search(/object/) != -1,
           "'__proto__' should be an object.");
 
@@ -158,57 +158,57 @@ function testFrameParameters()
            .getAttribute("value"), "[object Object]",
           "Should have the right property value for 'c'.");
 
-        is(cNode.target.querySelectorAll(".property > .title > .name")[0]
+        is(cNode.target.querySelectorAll(".variables-view-property > .title > .name")[0]
            .getAttribute("value"), "a",
           "Should have the right property name for 'c.a'.");
-        is(cNode.target.querySelectorAll(".property > .title > .value")[0]
+        is(cNode.target.querySelectorAll(".variables-view-property > .title > .value")[0]
            .getAttribute("value"), "1",
           "Should have the right value for 'c.a'.");
 
-        is(cNode.target.querySelectorAll(".property > .title > .name")[1]
+        is(cNode.target.querySelectorAll(".variables-view-property > .title > .name")[1]
            .getAttribute("value"), "b",
           "Should have the right property name for 'c.b'.");
-        is(cNode.target.querySelectorAll(".property > .title > .value")[1]
+        is(cNode.target.querySelectorAll(".variables-view-property > .title > .value")[1]
            .getAttribute("value"), "\"beta\"",
           "Should have the right value for 'c.b'.");
 
-        is(cNode.target.querySelectorAll(".property > .title > .name")[2]
+        is(cNode.target.querySelectorAll(".variables-view-property > .title > .name")[2]
            .getAttribute("value"), "c",
           "Should have the right property name for 'c.c'.");
-        is(cNode.target.querySelectorAll(".property > .title > .value")[2]
+        is(cNode.target.querySelectorAll(".variables-view-property > .title > .value")[2]
            .getAttribute("value"), "true",
           "Should have the right value for 'c.c'.");
 
 
         is(gVars.getItemForNode(
-           cNode.target.querySelectorAll(".property")[0]).target,
-           cNode.target.querySelectorAll(".property")[0],
+           cNode.target.querySelectorAll(".variables-view-property")[0]).target,
+           cNode.target.querySelectorAll(".variables-view-property")[0],
           "getItemForNode([0]) didn't return the expected property.");
 
         is(gVars.getItemForNode(
-           cNode.target.querySelectorAll(".property")[1]).target,
-           cNode.target.querySelectorAll(".property")[1],
+           cNode.target.querySelectorAll(".variables-view-property")[1]).target,
+           cNode.target.querySelectorAll(".variables-view-property")[1],
           "getItemForNode([1]) didn't return the expected property.");
 
         is(gVars.getItemForNode(
-           cNode.target.querySelectorAll(".property")[2]).target,
-           cNode.target.querySelectorAll(".property")[2],
+           cNode.target.querySelectorAll(".variables-view-property")[2]).target,
+           cNode.target.querySelectorAll(".variables-view-property")[2],
           "getItemForNode([2]) didn't return the expected property.");
 
 
         is(cNode.find(
-           cNode.target.querySelectorAll(".property")[0]).target,
-           cNode.target.querySelectorAll(".property")[0],
+           cNode.target.querySelectorAll(".variables-view-property")[0]).target,
+           cNode.target.querySelectorAll(".variables-view-property")[0],
           "find([0]) didn't return the expected property.");
 
         is(cNode.find(
-           cNode.target.querySelectorAll(".property")[1]).target,
-           cNode.target.querySelectorAll(".property")[1],
+           cNode.target.querySelectorAll(".variables-view-property")[1]).target,
+           cNode.target.querySelectorAll(".variables-view-property")[1],
           "find([1]) didn't return the expected property.");
 
         is(cNode.find(
-           cNode.target.querySelectorAll(".property")[2]).target,
-           cNode.target.querySelectorAll(".property")[2],
+           cNode.target.querySelectorAll(".variables-view-property")[2]).target,
+           cNode.target.querySelectorAll(".variables-view-property")[2],
           "find([2]) didn't return the expected property.");
 
 
