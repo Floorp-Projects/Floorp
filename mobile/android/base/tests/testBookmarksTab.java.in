@@ -58,6 +58,7 @@ public class testBookmarksTab extends BaseTest {
         }
 
         child = list.getChildAt(0);
+        mAsserter.ok(child != null, "first list item can be retrieved", child != null ? child.toString() : "null!");
         mSolo.clickOnView(child);
         waitForText("Bookmarks Toolbar");
 
@@ -69,6 +70,7 @@ public class testBookmarksTab extends BaseTest {
         }
 
         child = list.getChildAt(1);
+        mAsserter.ok(child != null, "second list item can be retrieved", child != null ? child.toString() : "null!");
         mSolo.clickOnView(child);
         waitForText("BOOKMARK_TITLE");
 
@@ -137,6 +139,7 @@ public class testBookmarksTab extends BaseTest {
 
             // test long tap on a folder, this should fail but will still open the folder
             child = list.getChildAt(0);
+            mAsserter.ok(child != null, "first list item can be retrieved", child != null ? child.toString() : "null!");
             mSolo.clickLongOnView(child);
             mAsserter.is(mSolo.waitForText("Open in New Tab"), false, "Folders have no context menu");
         } else {
@@ -160,6 +163,7 @@ public class testBookmarksTab extends BaseTest {
         // Remove Bookmark from Context Menu
         waitForText("Bookmarks");
         child = list.getChildAt(1);
+        mAsserter.ok(child != null, "second list item can be retrieved", child != null ? child.toString() : "null!");
         mSolo.clickLongOnView(child);
         waitForText("Open in New Tab");
         mSolo.clickOnText("Remove");
@@ -169,6 +173,7 @@ public class testBookmarksTab extends BaseTest {
 
         // Verify Bookmark is removed
         child = list.getChildAt(1);
+        mAsserter.ok(child != null, "second list item can be retrieved", child != null ? child.toString() : "null!");
         mSolo.clickLongOnView(child);
         waitForText("Open in New Tab");
         mAsserter.is(mSolo.searchText("Bookmark Name"), false, "Removed bookmark has been deleted");
@@ -184,6 +189,7 @@ public class testBookmarksTab extends BaseTest {
         View child;
         mSolo.clickOnText("Bookmarks");
         child = list.getChildAt(bookmarkIndex);
+        mAsserter.ok(child != null, "edit item can be retrieved", child != null ? child.toString() : "null!");
         waitForText("about:home");
         mSolo.clickLongOnView(child);
         waitForText("Open in New Tab");
@@ -207,6 +213,7 @@ public class testBookmarksTab extends BaseTest {
         View child;
         mSolo.clickOnText("Bookmarks");
         child = list.getChildAt(bookmarkIndex);
+        mAsserter.ok(child != null, "check item can be retrieved", child != null ? child.toString() : "null!");
         waitForText("about:home");
         mSolo.clickLongOnView(child);
         waitForText("Open in New Tab");
@@ -233,6 +240,11 @@ public class testBookmarksTab extends BaseTest {
     }
 
     private void compareRow(View child, int numTextViews, int numImageViews) {
+        if (child == null) {
+            // this list item may be obscured or offscreen
+            mAsserter.dumpLog("ListView child not available for comparison - offscreen?");
+            return;
+        }
         ArrayList<View> views = mSolo.getViews(child);
         ArrayList<ImageView> imageViews = new ArrayList<ImageView>();
         ArrayList<TextView> textViews = new ArrayList<TextView>();
