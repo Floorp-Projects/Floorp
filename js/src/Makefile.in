@@ -958,6 +958,7 @@ selfhosting_srcs := \
   $(srcdir)/builtin/Array.js \
   $(srcdir)/builtin/Intl.js \
   $(srcdir)/builtin/IntlData.js \
+  $(srcdir)/builtin/ParallelArray.js \
   $(NULL)
 
 selfhosted_out_h_deps := \
