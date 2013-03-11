@@ -16,6 +16,11 @@
   font-size: @font_normal@;
 }
 
+.text-link {
+  text-decoration: none;
+  color: #1167bd;
+}
+
 textbox,
 menulist {
   -moz-appearance: none;
@@ -43,7 +48,6 @@ menulist:not([disabled]):hover:active {
   color: @field_background_color@;
   background: @field_foreground_color@;
 }
-
 
 /* Button ------------------------------------------------------------------ */
 
@@ -431,6 +435,11 @@ notification {
 
 .messageCloseButton:hover:active {
   -moz-image-region: rect(0, 120px, 40px, 80px);
+}
+
+.notification-link {
+  /* Make the link take up all the space before the buttons. */
+  -moz-box-flex: 9999;
 }
 
 
