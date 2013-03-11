@@ -4,13 +4,17 @@
   <title>Test for Clipboard Events</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>      
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <p id="display"></p>
 <div id="content" style="border: 3px solid black; padding: 3em;">CONTENT TEXT<input id="content-input" value="INPUT TEXT"></div>
 <button id="button">Button</button>
+
+<div id="syntheticSpot" oncut="compareSynthetic(event, 'cut')"
+                        oncopy="compareSynthetic(event, 'copy')"
+                        onpaste="compareSynthetic(event, 'paste')">Spot</div>
 
 <pre id="test">
 <script class="testbody" type="text/javascript;version=1.7">
@@ -64,24 +68,26 @@ window.onfocus = function()
     test_input_copypaste_dataTransfer_multiple,
     test_input_copy_button_dataTransfer
     ];
-  
+
   // Run the main tests.  This will also populate the delayedTests array
   for (let i = 0; i < testFunctions.length; i++) {
     // Init clipboard
     setClipboardText(clipboardInitialValue);
-  
+
     // Reset value of contentInput.
     contentInput.value = "INPUT TEXT";
-    
+
     var func = testFunctions[i];
     func();
   }
-  
-  // Finally, check if the cached clipboard data can be accessed or modified
+
+  // Check if the cached clipboard data can be accessed or modified
   // and whether it modifies the real clipboard
   checkCachedDataTransfer(cachedCutData, "cut");
   checkCachedDataTransfer(cachedCopyData, "copy");
   checkCachedDataTransfer(cachedPasteData, "paste");
+
+  checkSyntheticEvents();
 
   SimpleTest.finish();
 }
@@ -102,7 +108,7 @@ function getClipboardText() {
   trans = trans.QueryInterface(Components.interfaces.nsITransferable);
   trans.init(getLoadContext());
   trans.addDataFlavor("text/unicode");
-  
+
   var clipboard = Components.classes["@mozilla.org/widget/clipboard;1"]
     .getService();
   clipboard = clipboard.QueryInterface(Components.interfaces.nsIClipboard);
@@ -110,7 +116,7 @@ function getClipboardText() {
 
   var str = new Object();
   var strLen = new Object();
-    
+
   try {
     trans.getTransferData("text/unicode", str, strLen);
   } catch(e) {
@@ -124,15 +130,15 @@ function getClipboardText() {
       throw e;
     }
   }
-    
+
   if (!str) return null;
 
   str = str.value.QueryInterface(Components.interfaces.nsISupportsString);
   if (!str) return null;
- 
+
   str = str.data.substring(0, strLen.value / 2);
   if (!str) return null;
- 
+
   return str;
 }
 
@@ -160,6 +166,7 @@ function test_dom_oncopy() {
   // handler was called, and the clipboard contents have set to CONTENT TEXT.
   // Test firing oncopy event on ctrl-c:
   selectContentDiv();
+  
   var oncopy_fired = false;
   content.oncopy = function() { oncopy_fired = true; };
   try {
@@ -561,6 +568,85 @@ function test_input_copy_button_dataTransfer() {
 
   } finally {
     document.documentElement.oncopy = null;
+  }
+}
+
+let expectedData = [];
+
+// Check to make that synthetic events do not change the clipboard
+function checkSyntheticEvents()
+{
+  let syntheticSpot = document.getElementById("syntheticSpot");
+  setClipboardText(clipboardInitialValue);
+
+  // No dataType specified
+  let event = new ClipboardEvent("cut", { data: "something" });
+  expectedData = { type: "cut", data: null }
+  compareSynthetic(event, "before");
+  syntheticSpot.dispatchEvent(event);
+  ok(expectedData.eventFired, "cut event fired");
+  compareSynthetic(event, "after");
+
+  event = new ClipboardEvent("cut", { dataType: "text/plain", data: "something" });
+  expectedData = { type: "cut", dataType: "text/plain", data: "something" }
+  compareSynthetic(event, "before");
+  syntheticSpot.dispatchEvent(event);
+  ok(expectedData.eventFired, "cut event fired");
+  compareSynthetic(event, "after");
+
+  event = new ClipboardEvent("copy", { dataType: "text/plain", data: "something" });
+  expectedData = { type: "copy", dataType: "text/plain", data: "something" }
+  compareSynthetic(event, "before");
+  syntheticSpot.dispatchEvent(event);
+  ok(expectedData.eventFired, "copy event fired");
+  compareSynthetic(event, "after");
+
+  event = new ClipboardEvent("copy", { dataType: "text/plain" });
+  expectedData = { type: "copy", dataType: "text/plain", data: "" }
+  compareSynthetic(event, "before");
+  syntheticSpot.dispatchEvent(event);
+  ok(expectedData.eventFired, "copy event fired");
+  compareSynthetic(event, "after");
+
+  event = new ClipboardEvent("paste", { dataType: "text/plain", data: "something" });
+  expectedData = { type: "paste", dataType: "text/plain", data: "something" }
+  compareSynthetic(event, "before");
+  syntheticSpot.dispatchEvent(event);
+  ok(expectedData.eventFired, "paste event fired");
+  compareSynthetic(event, "after");
+
+  event = new ClipboardEvent("paste", { dataType: "application/unknown", data: "unknown" });
+  expectedData = { type: "paste", dataType: "application/unknown", data: "unknown" }
+  compareSynthetic(event, "before");
+  syntheticSpot.dispatchEvent(event);
+  ok(expectedData.eventFired, "paste event fired");
+  compareSynthetic(event, "after");
+}
+
+function compareSynthetic(event, eventtype)
+{
+  let step = (eventtype == "cut" || eventtype == "copy" || eventtype == "paste") ? "during" : eventtype;
+  if (step == "during") {
+    is(eventtype, expectedData.type, "synthetic " + eventtype + " event fired");
+  }
+
+  ok(event.clipboardData instanceof DataTransfer, "clipboardData is assigned");
+
+  is(event.type, expectedData.type, "synthetic " + eventtype + " event type");
+  if (expectedData.data === null) {
+    is(event.clipboardData.mozItemCount, 0, "synthetic " + eventtype + " empty data");
+  }
+  else {
+    is(event.clipboardData.mozItemCount, 1, "synthetic " + eventtype + " item count");
+    is(event.clipboardData.types.length, 1, "synthetic " + eventtype + " types length");
+    is(event.clipboardData.getData(expectedData.dataType), expectedData.data,
+       "synthetic " + eventtype + " data");
+  }
+
+  is(getClipboardText(), "empty", "event does not change the clipboard " + step + " dispatch");
+
+  if (step == "during") {
+    expectedData.eventFired = true;
   }
 }
 
