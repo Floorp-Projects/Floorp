@@ -17,13 +17,15 @@ def prettyFileName(name):
     # and/or don't correspond to the layout of the source tree.
     return os.path.basename(name) + ":"
   elif name.startswith("hg:"):
-    (junk, repo, path, rev) = name.split(":")
-    # We could construct an hgweb URL with /file/ or /annotate/, like this:
-    # return "http://%s/annotate/%s/%s#l" % (repo, rev, path)
-    return path  + ":"
+    bits = name.split(":")
+    if len(bits) == 4:
+      (junk, repo, path, rev) = bits
+      # We could construct an hgweb URL with /file/ or /annotate/, like this:
+      # return "http://%s/annotate/%s/%s#l" % (repo, rev, path)
+      return path  + ":"
   return name  + ":"
 
-class readSymbolFile:
+class SymbolFile:
   def __init__(self, fn):
     addrs = [] # list of addresses, which will be sorted once we're done initializing
     funcs = {} # hash: address --> (function name + possible file/line)
@@ -62,6 +64,7 @@ class readSymbolFile:
     #print "Loaded %d functions from symbol file %s" % (len(funcs), os.path.basename(fn))
     self.addrs = sorted(addrs)
     self.funcs = funcs
+
   def addrToSymbol(self, address):
     i = bisect.bisect(self.addrs, address) - 1
     if i > 0:
@@ -70,38 +73,46 @@ class readSymbolFile:
     else:
       return ""
 
-
 def guessSymbolFile(fn, symbolsDir):
   """Guess a symbol file based on an object file's basename, ignoring the path and UUID."""
   fn = os.path.basename(fn)
   d1 = os.path.join(symbolsDir, fn)
   if not os.path.exists(d1):
-    return None
+    fn = fn + ".pdb"
+    d1 = os.path.join(symbolsDir, fn)
+    if not os.path.exists(d1):
+      return None
   uuids = os.listdir(d1)
   if len(uuids) == 0:
     raise Exception("Missing symbol file for " + fn)
   if len(uuids) > 1:
     raise Exception("Ambiguous symbol file for " + fn)
+  if fn.endswith(".pdb"):
+    fn = fn[:-4]
   return os.path.join(d1, uuids[0], fn + ".sym")
 
 parsedSymbolFiles = {}
-def addressToSymbol(file, address, symbolsDir):
+def getSymbolFile(file, symbolsDir):
   p = None
   if not file in parsedSymbolFiles:
     symfile = guessSymbolFile(file, symbolsDir)
     if symfile:
-      p = readSymbolFile(symfile)
+      p = SymbolFile(symfile)
     else:
       p = None
     parsedSymbolFiles[file] = p
   else:
     p = parsedSymbolFiles[file]
+  return p
+
+def addressToSymbol(file, address, symbolsDir):
+  p = getSymbolFile(file, symbolsDir)
   if p:
     return p.addrToSymbol(address)
   else:
     return ""
 
-line_re = re.compile("^(.*) ?\[([^ ]*) \+(0x[0-9A-F]{1,8})\](.*)$")
+line_re = re.compile("^(.*) ?\[([^ ]*) \+(0x[0-9A-F]{1,16})\](.*)$")
 balance_tree_re = re.compile("^([ \|0-9-]*)")
 
 def fixSymbols(line, symbolsDir):
@@ -118,7 +129,7 @@ def fixSymbols(line, symbolsDir):
       symbol = "%s + 0x%x" % (os.path.basename(file), address)
     return before + symbol + after + "\n"
   else:
-      return line
+    return line
 
 if __name__ == "__main__":
   symbolsDir = sys.argv[1]
