@@ -601,7 +601,7 @@ FindBody(JSContext *cx, HandleFunction fun, StableCharPtr chars, size_t length,
         return false;
     bool braced = tt == TOK_LC;
     JS_ASSERT_IF(fun->isExprClosure(), !braced);
-    *bodyStart = ts.offsetOfToken(ts.currentToken());
+    *bodyStart = ts.currentToken().pos.begin;
     if (braced)
         *bodyStart += 1;
     StableCharPtr end(chars.get() + length, chars.get(), length);

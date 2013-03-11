@@ -430,10 +430,8 @@ struct ParseNode {
         pn_offset(0), pn_next(NULL), pn_link(NULL)
     {
         JS_ASSERT(kind < PNK_LIMIT);
-        pn_pos.begin.index = 0;
-        pn_pos.begin.lineno = 0;
-        pn_pos.end.index = 0;
-        pn_pos.end.lineno = 0;
+        pn_pos.begin = 0;
+        pn_pos.end = 0;
         memset(&pn_u, 0, sizeof pn_u);
     }
 
@@ -962,8 +960,7 @@ struct LexicalScopeNode : public ParseNode {
 
 class LoopControlStatement : public ParseNode {
   protected:
-    LoopControlStatement(ParseNodeKind kind, PropertyName *label,
-                         const TokenPtr &begin, const TokenPtr &end)
+    LoopControlStatement(ParseNodeKind kind, PropertyName *label, uint32_t begin, uint32_t end)
       : ParseNode(kind, JSOP_NOP, PN_NULLARY, TokenPos::make(begin, end))
     {
         JS_ASSERT(kind == PNK_BREAK || kind == PNK_CONTINUE);
@@ -986,7 +983,7 @@ class LoopControlStatement : public ParseNode {
 
 class BreakStatement : public LoopControlStatement {
   public:
-    BreakStatement(PropertyName *label, const TokenPtr &begin, const TokenPtr &end)
+    BreakStatement(PropertyName *label, uint32_t begin, uint32_t end)
       : LoopControlStatement(PNK_BREAK, label, begin, end)
     { }
 
@@ -1000,7 +997,7 @@ class BreakStatement : public LoopControlStatement {
 
 class ContinueStatement : public LoopControlStatement {
   public:
-    ContinueStatement(PropertyName *label, TokenPtr &begin, TokenPtr &end)
+    ContinueStatement(PropertyName *label, uint32_t begin, uint32_t end)
       : LoopControlStatement(PNK_CONTINUE, label, begin, end)
     { }
 
@@ -1072,8 +1069,7 @@ class BooleanLiteral : public ParseNode {
 
 class PropertyAccess : public ParseNode {
   public:
-    PropertyAccess(ParseNode *lhs, PropertyName *name,
-                   const TokenPtr &begin, const TokenPtr &end)
+    PropertyAccess(ParseNode *lhs, PropertyName *name, uint32_t begin, uint32_t end)
       : ParseNode(PNK_DOT, JSOP_GETPROP, PN_NAME, TokenPos::make(begin, end))
     {
         JS_ASSERT(lhs != NULL);
@@ -1099,8 +1095,7 @@ class PropertyAccess : public ParseNode {
 
 class PropertyByValue : public ParseNode {
   public:
-    PropertyByValue(ParseNode *lhs, ParseNode *propExpr,
-                    const TokenPtr &begin, const TokenPtr &end)
+    PropertyByValue(ParseNode *lhs, ParseNode *propExpr, uint32_t begin, uint32_t end)
       : ParseNode(PNK_ELEM, JSOP_GETELEM, PN_BINARY, TokenPos::make(begin, end))
     {
         pn_u.binary.left = lhs;
