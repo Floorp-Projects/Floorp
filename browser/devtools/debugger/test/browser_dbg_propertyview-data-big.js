@@ -43,11 +43,11 @@ function testWithFrame()
     Services.tm.currentThread.dispatch({ run: function() {
 
       var scopes = gDebugger.DebuggerView.Variables._list,
-          innerScope = scopes.querySelectorAll(".scope")[0],
-          loadScope = scopes.querySelectorAll(".scope")[1],
-          globalScope = scopes.querySelectorAll(".scope")[2],
-          innerNodes = innerScope.querySelector(".details").childNodes,
-          arrayNodes = innerNodes[4].querySelector(".details").childNodes;
+          innerScope = scopes.querySelectorAll(".variables-view-scope")[0],
+          loadScope = scopes.querySelectorAll(".variables-view-scope")[1],
+          globalScope = scopes.querySelectorAll(".variables-view-scope")[2],
+          innerNodes = innerScope.querySelector(".variables-view-element-details").childNodes,
+          arrayNodes = innerNodes[4].querySelector(".variables-view-element-details").childNodes;
 
       is(innerNodes[3].querySelector(".name").getAttribute("value"), "buffer",
         "Should have the right property name for |buffer|.");
@@ -115,9 +115,9 @@ function testWithFrame()
 function waitForProperties(total, callbacks)
 {
   var scopes = gDebugger.DebuggerView.Variables._list,
-      innerScope = scopes.querySelectorAll(".scope")[0],
-      innerNodes = innerScope.querySelector(".details").childNodes,
-      arrayNodes = innerNodes[4].querySelector(".details").childNodes;
+      innerScope = scopes.querySelectorAll(".variables-view-scope")[0],
+      innerNodes = innerScope.querySelector(".variables-view-element-details").childNodes,
+      arrayNodes = innerNodes[4].querySelector(".variables-view-element-details").childNodes;
 
   // Poll every few milliseconds until the properties are retrieved.
   let count = 0;

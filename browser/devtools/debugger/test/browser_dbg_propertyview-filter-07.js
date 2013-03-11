@@ -145,11 +145,11 @@ function testVariablesFiltering()
   }
 
   var scopes = gDebugger.DebuggerView.Variables._list,
-      innerScope = scopes.querySelectorAll(".scope")[0],
-      mathScope = scopes.querySelectorAll(".scope")[1],
-      testScope = scopes.querySelectorAll(".scope")[2],
-      loadScope = scopes.querySelectorAll(".scope")[3],
-      globalScope = scopes.querySelectorAll(".scope")[4];
+      innerScope = scopes.querySelectorAll(".variables-view-scope")[0],
+      mathScope = scopes.querySelectorAll(".variables-view-scope")[1],
+      testScope = scopes.querySelectorAll(".variables-view-scope")[2],
+      loadScope = scopes.querySelectorAll(".variables-view-scope")[3],
+      globalScope = scopes.querySelectorAll(".variables-view-scope")[4];
 
   let innerScopeItem = gDebugger.DebuggerView.Variables._currHierarchy.get(
     innerScope.querySelector(".name").getAttribute("value"));
@@ -187,11 +187,11 @@ function prepareVariables(aCallback)
 
       var frames = gDebugger.DebuggerView.StackFrames._container._list,
           scopes = gDebugger.DebuggerView.Variables._list,
-          innerScope = scopes.querySelectorAll(".scope")[0],
-          mathScope = scopes.querySelectorAll(".scope")[1],
-          testScope = scopes.querySelectorAll(".scope")[2],
-          loadScope = scopes.querySelectorAll(".scope")[3],
-          globalScope = scopes.querySelectorAll(".scope")[4];
+          innerScope = scopes.querySelectorAll(".variables-view-scope")[0],
+          mathScope = scopes.querySelectorAll(".variables-view-scope")[1],
+          testScope = scopes.querySelectorAll(".variables-view-scope")[2],
+          loadScope = scopes.querySelectorAll(".variables-view-scope")[3],
+          globalScope = scopes.querySelectorAll(".variables-view-scope")[4];
 
       let innerScopeItem = gDebugger.DebuggerView.Variables._currHierarchy.get(
         innerScope.querySelector(".name").getAttribute("value"));

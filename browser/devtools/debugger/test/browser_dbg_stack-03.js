@@ -39,7 +39,6 @@ function testRecurse() {
 
 
       gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
-
         is(frames.querySelectorAll(".dbg-stackframe").length, pageSize * 2,
           "Should now have twice the max limit of frames.");
 
@@ -48,14 +47,15 @@ function testRecurse() {
             "Should have reached the recurse limit.");
 
           gDebugger.DebuggerController.activeThread.resume(function() {
+            window.clearInterval(scrollingInterval);
             closeDebuggerAndFinish();
           });
         });
-
-        frames.parentNode.scrollTop = frames.scrollHeight;
       });
 
-      frames.parentNode.scrollTop = frames.scrollHeight;
+      let scrollingInterval = window.setInterval(function() {
+        frames.scrollByIndex(-1);
+      }, 100);
     }}, 0);
   });
 

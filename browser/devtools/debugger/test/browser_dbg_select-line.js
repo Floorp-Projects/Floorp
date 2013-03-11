@@ -8,88 +8,108 @@
 
 const TAB_URL = EXAMPLE_URL + "browser_dbg_script-switching.html";
 
-let tempScope = {};
-Cu.import("resource:///modules/source-editor.jsm", tempScope);
-let SourceEditor = tempScope.SourceEditor;
-
 var gPane = null;
 var gTab = null;
 var gDebuggee = null;
 var gDebugger = null;
-var gScripts = null;
+var gSources = null;
 
 function test()
 {
+  let scriptShown = false;
+  let framesAdded = false;
+  let testStarted = false;
+  let resumed = false;
+
   debug_tab_pane(TAB_URL, function(aTab, aDebuggee, aPane) {
     gTab = aTab;
     gDebuggee = aDebuggee;
     gPane = aPane;
     gDebugger = gPane.panelWin;
+    gSources = gDebugger.DebuggerView.Sources;
+    resumed = true;
 
-    testSelectLine();
+    gDebugger.addEventListener("Debugger:SourceShown", onScriptShown);
+
+    gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
+      framesAdded = true;
+      executeSoon(startTest);
+    });
+
+    executeSoon(function() {
+      gDebuggee.firstCall();
+    });
   });
+
+  function onScriptShown(aEvent) {
+    scriptShown = aEvent.detail.url.indexOf("-02.js") != -1;
+    executeSoon(startTest);
+  }
+
+  function startTest()
+  {
+    if (scriptShown && framesAdded && resumed && !testStarted) {
+      gDebugger.removeEventListener("Debugger:SourceShown", onScriptShown);
+      testStarted = true;
+      Services.tm.currentThread.dispatch({ run: testSelectLine }, 0);
+    }
+  }
 }
 
 function testSelectLine() {
-  gDebugger.DebuggerController.activeThread.addOneTimeListener("scriptsadded", function() {
-    Services.tm.currentThread.dispatch({ run: function() {
-      gScripts = gDebugger.DebuggerView.Sources._container;
+  is(gDebugger.DebuggerController.activeThread.state, "paused",
+    "Should only be getting stack frames while paused.");
 
-      is(gDebugger.DebuggerController.activeThread.state, "paused",
-        "Should only be getting stack frames while paused.");
+  is(gSources.itemCount, 2, "Found the expected number of scripts.");
 
-      is(gScripts.itemCount, 2, "Found the expected number of scripts.");
+  ok(gDebugger.editor.getText().search(/debugger/) != -1,
+    "The correct script was loaded initially.");
 
-      ok(gDebugger.editor.getText().search(/debugger/) != -1,
-        "The correct script was loaded initially.");
+  // Yield control back to the event loop so that the debugger has a
+  // chance to highlight the proper line.
+  executeSoon(function() {
+    // getCaretPosition is 0-based.
+    is(gDebugger.editor.getCaretPosition().line, 5,
+       "The correct line is selected.");
+
+    gDebugger.editor.addEventListener(SourceEditor.EVENTS.TEXT_CHANGED, function onChange() {
+      // Wait for the actual text to be shown.
+      if (gDebugger.editor.getText() == gDebugger.L10N.getStr("loadingText")) {
+        return;
+      }
+      // The requested source text has been shown, remove the event listener.
+      gDebugger.editor.removeEventListener(SourceEditor.EVENTS.TEXT_CHANGED, onChange);
+
+      ok(gDebugger.editor.getText().search(/debugger/) == -1,
+        "The second script is no longer displayed.");
+
+      ok(gDebugger.editor.getText().search(/firstCall/) != -1,
+        "The first script is displayed.");
 
       // Yield control back to the event loop so that the debugger has a
       // chance to highlight the proper line.
       executeSoon(function(){
         // getCaretPosition is 0-based.
-        is(gDebugger.editor.getCaretPosition().line, 5,
+        is(gDebugger.editor.getCaretPosition().line, 4,
            "The correct line is selected.");
 
-        gDebugger.editor.addEventListener(SourceEditor.EVENTS.TEXT_CHANGED,
-                                          function onChange() {
-          gDebugger.editor.removeEventListener(SourceEditor.EVENTS.TEXT_CHANGED,
-                                               onChange);
-          ok(gDebugger.editor.getText().search(/debugger/) == -1,
-            "The second script is no longer displayed.");
-
-          ok(gDebugger.editor.getText().search(/firstCall/) != -1,
-            "The first script is displayed.");
-
-          // Yield control back to the event loop so that the debugger has a
-          // chance to highlight the proper line.
-          executeSoon(function(){
-            // getCaretPosition is 0-based.
-            is(gDebugger.editor.getCaretPosition().line, 4,
-               "The correct line is selected.");
-
-            gDebugger.DebuggerController.activeThread.resume(function() {
-              closeDebuggerAndFinish();
-            });
-          });
-        });
-
-        // Scroll all the way down to ensure stackframe-3 is visible.
-        let stackframes = gDebugger.document.getElementById("stackframes");
-        stackframes.scrollTop = stackframes.scrollHeight;
-
-        // Click the oldest stack frame.
-        let frames = gDebugger.DebuggerView.Stackframes._container._list;
-        is(frames.querySelectorAll(".dbg-stackframe").length, 4,
-          "Should have four frames.");
-
-        let element = gDebugger.document.getElementById("stackframe-3");
-        isnot(element, null, "Found the third stack frame.");
-        EventUtils.synthesizeMouseAtCenter(element, {}, gDebugger);
+        closeDebuggerAndFinish();
       });
-    }}, 0);
-  });
+    });
 
-  gDebuggee.firstCall();
+    let frames = gDebugger.DebuggerView.StackFrames._container._list;
+    let childNodes = frames.childNodes;
+
+    is(frames.querySelectorAll(".dbg-stackframe").length, 4,
+      "Should have two frames.");
+
+    is(childNodes.length, frames.querySelectorAll(".dbg-stackframe").length,
+      "All children should be frames.");
+
+    EventUtils.sendMouseEvent({ type: "mousedown" },
+      frames.querySelector("#stackframe-3"),
+      gDebugger);
+  });
 }
 
 registerCleanupFunction(function() {
@@ -98,4 +118,5 @@ registerCleanupFunction(function() {
   gTab = null;
   gDebuggee = null;
   gDebugger = null;
+  gSources = null;
 });
