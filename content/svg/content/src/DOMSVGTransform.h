@@ -12,7 +12,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
 #include "nsID.h"
-#include "nsTArray.h"
 #include "SVGTransform.h"
 #include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"

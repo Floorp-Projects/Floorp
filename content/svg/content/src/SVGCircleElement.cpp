@@ -6,7 +6,6 @@
 #include "mozilla/dom/SVGCircleElement.h"
 #include "nsGkAtoms.h"
 #include "gfxContext.h"
-#include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGCircleElementBinding.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Circle)

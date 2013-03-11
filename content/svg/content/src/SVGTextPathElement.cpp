@@ -7,16 +7,16 @@
 #include "mozilla/dom/SVGTextPathElementBinding.h"
 #include "nsSVGElement.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMSVGURIReference.h"
 #include "nsIFrame.h"
 #include "nsError.h"
 #include "nsContentUtils.h"
-#include "mozilla/dom/SVGAnimatedLength.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(TextPath)
 
 namespace mozilla {
 namespace dom {
+
+class SVGAnimatedLength;
 
 JSObject*
 SVGTextPathElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)

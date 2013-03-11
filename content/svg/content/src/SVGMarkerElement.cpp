@@ -10,8 +10,6 @@
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "nsError.h"
 #include "mozilla/dom/SVGAngle.h"
-#include "mozilla/dom/SVGAnimatedAngle.h"
-#include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGMarkerElement.h"
 #include "mozilla/dom/SVGMarkerElementBinding.h"
 #include "gfxMatrix.h"

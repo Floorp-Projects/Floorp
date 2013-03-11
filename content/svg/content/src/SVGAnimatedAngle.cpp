@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGAnimatedAngle.h"
-#include "SVGAngle.h"
 #include "nsSVGAngle.h"
 #include "mozilla/dom/SVGAnimatedAngleBinding.h"
 #include "nsContentUtils.h"

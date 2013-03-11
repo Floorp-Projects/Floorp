@@ -9,12 +9,8 @@
 #include "SVGMotionSMILType.h"
 #include "nsISMILAnimationElement.h"
 #include "nsSMILValue.h"
-#include "nsAttrValue.h"
-#include "nsGkAtoms.h"
 #include "nsDebug.h"
-#include "nsCRT.h"
-#include "nsSVGLength2.h"
-#include "nsSMILParserUtils.h"
+#include "nsSVGElement.h"
 
 namespace mozilla {
 

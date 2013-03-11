@@ -9,7 +9,6 @@
 
 // Keep others in (case-insensitive) order:
 #include "gfxMatrix.h"
-#include "mozilla/Preferences.h"
 #include "nsComputedDOMStyle.h"
 #include "nsFontMetrics.h"
 #include "nsIFrame.h"

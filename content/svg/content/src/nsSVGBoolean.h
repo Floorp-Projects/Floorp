@@ -6,16 +6,15 @@
 #ifndef __NS_SVGBOOLEAN_H__
 #define __NS_SVGBOOLEAN_H__
 
-#include "nsAutoPtr.h"
-#include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
 #include "nsISMILAttr.h"
-#include "nsISupportsImpl.h"
-#include "nsSVGElement.h"
 #include "mozilla/Attributes.h"
 
+class nsIAtom;
 class nsISMILAnimationElement;
+class nsISupports;
 class nsSMILValue;
+class nsSVGElement;
 
 class nsSVGBoolean
 {
