@@ -178,6 +178,28 @@ StyleEditorChrome.prototype = {
   },
 
   /**
+   * Get whether any of the editors have unsaved changes.
+   *
+   * @return boolean
+   */
+  get isDirty()
+  {
+    if (this._markedDirty === true) {
+      return true;
+    }
+    return this.editors.some(function(editor) {
+      return editor.sourceEditor && editor.sourceEditor.dirty;
+    });
+  },
+
+  /*
+   * Mark the style editor as having unsaved changes.
+   */
+  markDirty: function SEC_markDirty() {
+    this._markedDirty = true;
+  },
+
+  /**
    * Add a listener for StyleEditorChrome events.
    *
    * The listener implements IStyleEditorChromeListener := {

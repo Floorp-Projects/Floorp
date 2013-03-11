@@ -15,7 +15,7 @@ var gTab = null;
 var gDebuggee = null;
 var gDebugger = null;
 var gEditor = null;
-var gScripts = null;
+var gSources = null;
 var gSearchView = null;
 var gSearchBox = null;
 
@@ -57,23 +57,21 @@ function test()
 }
 
 function testScriptSearching() {
-  gDebugger.DebuggerController.activeThread.resume(function() {
-    gEditor = gDebugger.DebuggerView.editor;
-    gScripts = gDebugger.DebuggerView.Sources;
-    gSearchView = gDebugger.DebuggerView.GlobalSearch;
-    gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
+  gEditor = gDebugger.DebuggerView.editor;
+  gSources = gDebugger.DebuggerView.Sources;
+  gSearchView = gDebugger.DebuggerView.GlobalSearch;
+  gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
 
-    doSearch();
-  });
+  doSearch();
 }
 
 function doSearch() {
   gDebugger.addEventListener("Debugger:GlobalSearch:MatchFound", function _onEvent(aEvent) {
     gDebugger.removeEventListener(aEvent.type, _onEvent);
-    info("Current script url:\n" + gScripts.selectedValue + "\n");
+    info("Current script url:\n" + gSources.selectedValue + "\n");
     info("Debugger editor text:\n" + gEditor.getText() + "\n");
 
-    let url = gScripts.selectedValue;
+    let url = gSources.selectedValue;
     if (url.indexOf("-02.js") != -1) {
       executeSoon(function() {
         continueTest();
@@ -182,7 +180,7 @@ function testClickLineToJump(scriptResults, callbacks) {
         ok(gEditor.getCaretPosition().line == 0 &&
            gEditor.getCaretPosition().col == 4,
           "The editor didn't jump to the correct line. (1)");
-        is(gScripts.visibleItems.length, 2,
+        is(gSources.visibleItems.length, 2,
           "Not all the correct scripts are shown after the search. (1)");
 
         callbacks[0](scriptResults, callbacks.slice(1));
@@ -192,7 +190,7 @@ function testClickLineToJump(scriptResults, callbacks) {
     }
   });
 
-  let firstLine = targetResults.querySelector(".line-contents");
+  let firstLine = targetResults.querySelector(".dbg-results-line-contents");
   EventUtils.sendMouseEvent({ type: "click" }, firstLine);
 }
 
@@ -217,7 +215,7 @@ function testClickMatchToJump(scriptResults, callbacks) {
         ok(gEditor.getCaretPosition().line == 5 &&
            gEditor.getCaretPosition().col == 5,
           "The editor didn't jump to the correct line. (1)");
-        is(gScripts.visibleItems.length, 2,
+        is(gSources.visibleItems.length, 2,
           "Not all the correct scripts are shown after the search. (1)");
 
         callbacks[0]();
@@ -227,7 +225,7 @@ function testClickMatchToJump(scriptResults, callbacks) {
     }
   });
 
-  let matches = targetResults.querySelectorAll(".string[match=true]");
+  let matches = targetResults.querySelectorAll(".dbg-results-line-contents-string[match=true]");
   let lastMatch = matches[matches.length - 1];
   EventUtils.sendMouseEvent({ type: "click" }, lastMatch);
 }
@@ -258,7 +256,7 @@ registerCleanupFunction(function() {
   gDebuggee = null;
   gDebugger = null;
   gEditor = null;
-  gScripts = null;
+  gSources = null;
   gSearchView = null;
   gSearchBox = null;
 });

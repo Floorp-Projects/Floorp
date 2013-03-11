@@ -32,12 +32,11 @@ function testSimpleCall() {
             "type": "object",
             "class": "Object"
           },
-
           "enumerable": true
         }
       });
 
-      is(testVar.target.querySelector(".details").childNodes.length, 1,
+      is(testVar.target.querySelector(".variables-view-element-details").childNodes.length, 1,
         "A new detail node should have been added in the variable tree.");
 
       ok(testVar.get("child"),
@@ -50,12 +49,11 @@ function testSimpleCall() {
             "type": "object",
             "class": "Object"
           },
-
           "enumerable": true
         }
       });
 
-      is(testVar.get("child").target.querySelector(".details").childNodes.length, 1,
+      is(testVar.get("child").target.querySelector(".variables-view-element-details").childNodes.length, 1,
         "A new detail node should have been added in the variable tree.");
 
       ok(testVar.get("child").get("grandchild"),

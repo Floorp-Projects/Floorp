@@ -22,7 +22,7 @@ function test()
     gDebugger = gPane.panelWin;
     gWatch = gDebugger.DebuggerView.WatchExpressions;
 
-    gDebugger.DebuggerView.togglePanes({ visible: true, animated: false });
+    gDebugger.DebuggerView.toggleInstrumentsPane({ visible: true, animated: false });
     performTest();
   });
 
@@ -69,7 +69,7 @@ function test()
 
 
     EventUtils.sendMouseEvent({ type: "click" },
-      gWatch.getItemAtIndex(0).target.closeNode,
+      gWatch.getItemAtIndex(0).attachment.closeNode,
       gDebugger);
 
     is(gWatch.getExpressions().length, 2,
@@ -81,7 +81,7 @@ function test()
 
 
     EventUtils.sendMouseEvent({ type: "click" },
-      gWatch.getItemAtIndex(0).target.closeNode,
+      gWatch.getItemAtIndex(0).attachment.closeNode,
       gDebugger);
 
     is(gWatch.getExpressions().length, 1,
@@ -91,7 +91,7 @@ function test()
 
 
     EventUtils.sendMouseEvent({ type: "click" },
-      gWatch.getItemAtIndex(0).target.closeNode,
+      gWatch.getItemAtIndex(0).attachment.closeNode,
       gDebugger);
 
     is(gWatch.getExpressions().length, 0,
@@ -142,7 +142,7 @@ function test()
 
     is(gWatch.getExpressions().length, total,
       "There should be " + total + " watch expressions available (1)");
-    is(gWatch.totalItems, total,
+    is(gWatch.itemCount, total,
       "There should be " + total + " watch expressions available (2)");
 
     ok(gWatch.getItemAtIndex(index),
@@ -169,11 +169,11 @@ function test()
     is(element, gWatch._container.getItemAtIndex(index),
       "The correct watch expression element was accessed (3)");
 
-    is(element.arrowNode.hidden, false,
+    is(gWatch.getItemForElement(element).attachment.arrowNode.hidden, false,
       "The arrow node should be visible");
-    is(element.closeNode.hidden, false,
+    is(gWatch.getItemForElement(element).attachment.closeNode.hidden, false,
       "The close button should be visible");
-    is(element.inputNode.getAttribute("focused"), "true",
+    is(gWatch.getItemForElement(element).attachment.inputNode.getAttribute("focused"), "true",
       "The textbox input should be focused");
 
     is(gWatch._variables.scrollTop, 0,
@@ -209,7 +209,7 @@ function test()
 
     is(gWatch.getExpressions().length, total,
       "There should be " + total + " watch expressions available (1)");
-    is(gWatch.totalItems, total,
+    is(gWatch.itemCount, total,
       "There should be " + total + " watch expressions available (2)");
 
     ok(gWatch.getItemAtIndex(index),

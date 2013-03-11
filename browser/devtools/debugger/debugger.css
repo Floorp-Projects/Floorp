@@ -4,84 +4,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/**
- * Sources searching
- */
+/* Sources search view */
 
 #globalsearch {
   overflow-x: hidden;
   overflow-y: auto;
 }
 
-.dbg-results-container:not([open]) {
-  display: none;
-}
-
-/**
- * Stack frames
- */
-
-#stackframes {
-  overflow: auto;
-}
-
-/**
- * Breakpoints view
- */
-
-#breakpoints {
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
-.dbg-breakpoint > .state,
-.dbg-breakpoint > .content {
-  overflow: hidden;
-}
-
-/**
- * Watch expressions view
- */
+/* Watch expressions view */
 
 #expressions {
   overflow-x: hidden;
   overflow-y: auto;
 }
 
-/**
- * Variables view
- */
-
-#variables {
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
-/**
- * Scope, variable and property elements
- */
-
-.details:not([open]) {
-  display: none;
-}
-
-.scope,
-.variable,
-.property {
-  -moz-user-focus: normal;
-}
-
-.scope[non-header] > .title,
-.variable[non-header] > .title,
-.variable[non-match] > .title,
-.property[non-header] > .title,
-.property[non-match] > .title {
-  display: none;
-}
-
-/**
- * Toolbar
- */
+/* Toolbar */
 
 .devtools-toolbarbutton:not([label]) > .toolbarbutton-text {
   display: none;
