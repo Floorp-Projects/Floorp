@@ -30,6 +30,7 @@ DOMCI_CLASS(MouseEvent)
 DOMCI_CLASS(MouseScrollEvent)
 DOMCI_CLASS(WheelEvent)
 DOMCI_CLASS(DragEvent)
+DOMCI_CLASS(ClipboardEvent)
 DOMCI_CLASS(KeyboardEvent)
 DOMCI_CLASS(CompositionEvent)
 #define MOZ_GENERATED_EVENT_LIST

@@ -43,23 +43,12 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMDataTransfer, nsIDOMDataTransfer)
 
-  friend class nsDOMDragEvent;
   friend class nsEventStateManager;
-  friend class nsContentUtils;
 
 protected:
 
-  // the constructors are protected so only our friends can call them
-
-  // default constructor used for the dragstart/draggesture event and
-  // synthetic events
+  // hide the default constructor
   nsDOMDataTransfer();
-
-  // this constructor must only be used to create a dataTransfer for a drag
-  // that was started without using a data transfer, either an external drag,
-  // that is, a drag where the source is another application, or a drag
-  // started by calling the drag service directly.
-  nsDOMDataTransfer(uint32_t aEventType);
 
   // this constructor is used only by the Clone method to copy the fields as
   // needed to a new data transfer.
@@ -85,6 +74,17 @@ protected:
 
 public:
 
+  // Constructor for nsDOMDataTransfer.
+  //
+  // aEventType is an event constant (such as NS_DRAGDROP_START)
+  //
+  // aIsExternal must only be true when used to create a dataTransfer for a
+  // paste or a drag that was started without using a data transfer. The
+  // latter will occur when an external drag occurs, that is, a drag where the
+  // source is another application, or a drag is started by calling the drag
+  // service directly.
+  nsDOMDataTransfer(uint32_t aEventType, bool aIsExternal);
+
   void GetDragTarget(nsIDOMElement** aDragTarget)
   {
     *aDragTarget = mDragTarget;
@@ -97,8 +97,11 @@ public:
 
   // converts the data into an array of nsITransferable objects to be used for
   // drag and drop or clipboard operations.
-  void GetTransferables(nsISupportsArray** transferables,
-                        nsIDOMNode* aDragTarget);
+  already_AddRefed<nsISupportsArray> GetTransferables(nsIDOMNode* aDragTarget);
+
+  // converts the data for a single item at aIndex into an nsITransferable object.
+  already_AddRefed<nsITransferable> GetTransferable(uint32_t aIndex,
+                                                    nsILoadContext* aLoadContext);
 
   // converts the data in the variant to an nsISupportString if possible or
   // an nsISupports or null otherwise.
@@ -110,7 +113,8 @@ public:
   void ClearAll();
 
   // Similar to SetData except also specifies the principal to store.
-  // aData may be null when called from CacheExternalFormats.
+  // aData may be null when called from CacheExternalDragFormats or
+  // CacheExternalClipboardFormats.
   nsresult SetDataWithPrincipal(const nsAString& aFormat,
                                 nsIVariant* aData,
                                 uint32_t aIndex,
@@ -133,13 +137,20 @@ protected:
   // Text and text/unicode become text/plain, and URL becomes text/uri-list
   void GetRealFormat(const nsAString& aInFormat, nsAString& aOutFormat);
 
+  // caches text and uri-list data formats that exist in the drag service or
+  // clipboard for retrieval later.
+  void CacheExternalData(const char* aFormat, uint32_t aIndex, nsIPrincipal* aPrincipal);
+
   // caches the formats that exist in the drag service that were added by an
   // external drag
-  void CacheExternalFormats();
+  void CacheExternalDragFormats();
 
-  // fills in the data field of aItem with the data from the drag service for
-  // a given index.
-  void FillInExternalDragData(TransferItem& aItem, uint32_t aIndex);
+  // caches the formats that exist in the clipboard
+  void CacheExternalClipboardFormats();
+
+  // fills in the data field of aItem with the data from the drag service or
+  // clipboard for a given index.
+  void FillInExternalData(TransferItem& aItem, uint32_t aIndex);
 
   // the event type this data transfer is for. This will correspond to an
   // event->message value.
