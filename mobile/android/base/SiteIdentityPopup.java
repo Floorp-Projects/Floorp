@@ -76,9 +76,7 @@ public class SiteIdentityPopup extends PopupWindow {
 
         mHost = (TextView) layout.findViewById(R.id.host);
         mOwner = (TextView) layout.findViewById(R.id.owner);
-        mSupplemental = (TextView) layout.findViewById(R.id.supplemental);
         mVerifier = (TextView) layout.findViewById(R.id.verifier);
-        mEncrypted = (TextView) layout.findViewById(R.id.encrypted);
 
         mLarry = (ImageView) layout.findViewById(R.id.larry);
         mArrow = (ImageView) layout.findViewById(R.id.arrow);
@@ -120,24 +118,20 @@ public class SiteIdentityPopup extends PopupWindow {
             mHost.setText(host);
 
             String owner = identityData.getString("owner");
+
+            try {
+                String supplemental = identityData.getString("supplemental");
+                owner += "\n" + supplemental;
+            } catch (JSONException e) { }
+
             mOwner.setText(owner);
 
             String verifier = identityData.getString("verifier");
-            mVerifier.setText(verifier);
-
             String encrypted = identityData.getString("encrypted");
-            mEncrypted.setText(encrypted);
+            mVerifier.setText(verifier + "\n" + encrypted);
         } catch (JSONException e) {
             Log.e(LOGTAG, "Exception trying to get identity data", e);
             return;
-        }
-
-        try {
-            String supplemental = identityData.getString("supplemental");
-            mSupplemental.setText(supplemental);
-            mSupplemental.setVisibility(View.VISIBLE);
-        } catch (JSONException e) {
-            mSupplemental.setVisibility(View.GONE);
         }
 
         if (mode.equals(VERIFIED)) {
@@ -145,13 +139,11 @@ public class SiteIdentityPopup extends PopupWindow {
             mLarry.setImageResource(R.drawable.larry_blue);
             mHost.setTextColor(mResources.getColor(R.color.identity_verified));
             mOwner.setTextColor(mResources.getColor(R.color.identity_verified));
-            mSupplemental.setTextColor(mResources.getColor(R.color.identity_verified));
         } else {
             // Use a green theme for EV
             mLarry.setImageResource(R.drawable.larry_green);
             mHost.setTextColor(mResources.getColor(R.color.identity_identified));
             mOwner.setTextColor(mResources.getColor(R.color.identity_identified));
-            mSupplemental.setTextColor(mResources.getColor(R.color.identity_identified));
         }
 
         int[] anchorLocation = new int[2];
