@@ -55,9 +55,9 @@ nsSVGElement::StringInfo SVGFilterElement::sStringInfo[1] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ISUPPORTS_INHERITED4(SVGFilterElement, SVGFilterElementBase,
+NS_IMPL_ISUPPORTS_INHERITED3(SVGFilterElement, SVGFilterElementBase,
                              nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement, nsIDOMSVGURIReference)
+                             nsIDOMSVGElement)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -131,16 +131,6 @@ void
 SVGFilterElement::SetFilterRes(uint32_t filterResX, uint32_t filterResY)
 {
   mIntegerPairAttributes[FILTERRES].SetBaseValues(filterResX, filterResY, this);
-}
-
-//----------------------------------------------------------------------
-// nsIDOMSVGURIReference methods
-
-NS_IMETHODIMP
-SVGFilterElement::GetHref(nsIDOMSVGAnimatedString** aHref)
-{
-  *aHref = Href().get();
-  return NS_OK;
 }
 
 already_AddRefed<nsIDOMSVGAnimatedString>

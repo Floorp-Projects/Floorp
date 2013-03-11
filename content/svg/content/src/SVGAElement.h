@@ -7,7 +7,6 @@
 #define mozilla_dom_SVGAElement_h
 
 #include "Link.h"
-#include "nsIDOMSVGURIReference.h"
 #include "nsILink.h"
 #include "nsSVGString.h"
 #include "mozilla/dom/SVGGraphicsElement.h"
@@ -22,7 +21,6 @@ typedef SVGGraphicsElement SVGAElementBase;
 
 class SVGAElement MOZ_FINAL : public SVGAElementBase,
                               public nsIDOMSVGElement,
-                              public nsIDOMSVGURIReference,
                               public nsILink,
                               public Link
 {
@@ -36,7 +34,6 @@ public:
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGURIREFERENCE
 
   // XXX: I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_TO_NSINODE

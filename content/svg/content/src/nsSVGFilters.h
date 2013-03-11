@@ -9,7 +9,6 @@
 #include "gfxImageSurface.h"
 #include "gfxRect.h"
 #include "nsIDOMSVGFilters.h"
-#include "nsIDOMSVGURIReference.h"
 #include "nsIFrame.h"
 #include "nsImageLoadingContent.h"
 #include "nsSVGLength2.h"

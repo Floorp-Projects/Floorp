@@ -6,7 +6,6 @@
 #ifndef __NS_SVGGRADIENTELEMENT_H__
 #define __NS_SVGGRADIENTELEMENT_H__
 
-#include "nsIDOMSVGURIReference.h"
 #include "nsSVGElement.h"
 #include "nsSVGLength2.h"
 #include "nsSVGEnum.h"
@@ -40,7 +39,6 @@ namespace dom {
 typedef nsSVGElement SVGGradientElementBase;
 
 class SVGGradientElement : public SVGGradientElementBase
-                         , public nsIDOMSVGURIReference
 {
   friend class ::nsSVGGradientFrame;
 
@@ -52,9 +50,6 @@ protected:
 public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
-
-  // URI Reference
-  NS_DECL_NSIDOMSVGURIREFERENCE
 
   // nsIContent
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
