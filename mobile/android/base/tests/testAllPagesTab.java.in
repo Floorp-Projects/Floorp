@@ -74,7 +74,12 @@ public class testAllPagesTab extends BaseTest {
         String loadUrl = "";
         for (int i = count - 1; i >= 0; i--) {
             View child = list.getChildAt(i);
-
+            if (child == null) {
+                // this may simply indicate that the item is not visible
+                Object item = list.getAdapter().getItem(i);
+                mAsserter.ok(item != null, "adapter item is set", item != null ? item.toString() : "null!");
+                continue;
+            }
             ArrayList<View> views = mSolo.getViews(child);
             ArrayList<ImageView> imageViews = new ArrayList<ImageView>();
 
@@ -114,6 +119,7 @@ public class testAllPagesTab extends BaseTest {
         ListView list = getAllPagesList(bookmarks[0]);
 
         View child = list.getChildAt(0);
+        mAsserter.ok(child != null, "first list item can be retrieved", child != null ? child.toString() : "null!");
         mSolo.clickLongOnView(child);
 
         // TODO: Test clicking these does the right thing
@@ -131,6 +137,7 @@ public class testAllPagesTab extends BaseTest {
 
         Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
         View child = list.getChildAt(0);
+        mAsserter.ok(child != null, "first list item can be retrieved", child != null ? child.toString() : "null!");
         mSolo.clickOnView(child);
         contentEventExpecter.blockForEvent();
         verifyUrl(url);
