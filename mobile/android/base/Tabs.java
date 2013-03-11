@@ -104,8 +104,15 @@ public class Tabs implements GeckoEventListener {
         }
     }
 
-    public int getCount() {
-        return mTabs.size();
+    public int getDisplayCount() {
+        boolean getPrivate = mSelectedTab != null && mSelectedTab.isPrivate();
+        int count = 0;
+        for (Tab tab : mTabs.values()) {
+            if (tab.isPrivate() == getPrivate) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private void lazyRegisterBookmarkObserver() {
@@ -206,7 +213,7 @@ public class Tabs implements GeckoEventListener {
     }
 
     public Tab getTab(int id) {
-        if (getCount() == 0)
+        if (mTabs.size() == 0)
             return null;
 
         if (!mTabs.containsKey(id))
