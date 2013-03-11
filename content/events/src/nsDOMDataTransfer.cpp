@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -19,6 +19,7 @@
 #include "nsGUIEvent.h"
 #include "nsError.h"
 #include "nsIDragService.h"
+#include "nsIClipboard.h"
 #include "nsIScriptableRegion.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
@@ -59,33 +60,33 @@ const char nsDOMDataTransfer::sEffects[8][9] = {
   "none", "copy", "move", "copyMove", "link", "copyLink", "linkMove", "all"
 };
 
-nsDOMDataTransfer::nsDOMDataTransfer()
-  : mEventType(NS_DRAGDROP_START),
-    mDropEffect(nsIDragService::DRAGDROP_ACTION_NONE),
-    mEffectAllowed(nsIDragService::DRAGDROP_ACTION_UNINITIALIZED),
-    mCursorState(false),
-    mReadOnly(false),
-    mIsExternal(false),
-    mUserCancelled(false),
-    mIsCrossDomainSubFrameDrop(false),
-    mDragImageX(0),
-    mDragImageY(0)
-{
-}
-
-nsDOMDataTransfer::nsDOMDataTransfer(uint32_t aEventType)
+nsDOMDataTransfer::nsDOMDataTransfer(uint32_t aEventType, bool aIsExternal)
   : mEventType(aEventType),
     mDropEffect(nsIDragService::DRAGDROP_ACTION_NONE),
     mEffectAllowed(nsIDragService::DRAGDROP_ACTION_UNINITIALIZED),
     mCursorState(false),
     mReadOnly(true),
-    mIsExternal(true),
+    mIsExternal(aIsExternal),
     mUserCancelled(false),
     mIsCrossDomainSubFrameDrop(false),
     mDragImageX(0),
     mDragImageY(0)
 {
-  CacheExternalFormats();
+  // For these events, we want to be able to add data to the data transfer, so
+  // clear the readonly state. Otherwise, the data is already present. For
+  // external usage, cache the data from the native clipboard or drag.
+  if (aEventType == NS_CUT ||
+      aEventType == NS_COPY ||
+      aEventType == NS_DRAGDROP_START ||
+      aEventType == NS_DRAGDROP_GESTURE) {
+    mReadOnly = false;
+} else if (mIsExternal) {
+    if (aEventType == NS_PASTE) {
+      CacheExternalClipboardFormats();
+    } else if (aEventType >= NS_DRAGDROP_EVENT_START && aEventType <= NS_DRAGDROP_LEAVE_SYNTH) {
+      CacheExternalDragFormats();
+    }
+  }
 }
 
 nsDOMDataTransfer::nsDOMDataTransfer(uint32_t aEventType,
@@ -218,8 +219,10 @@ nsDOMDataTransfer::GetFiles(nsIDOMFileList** aFileList)
 {
   *aFileList = nullptr;
 
-  if (mEventType != NS_DRAGDROP_DROP && mEventType != NS_DRAGDROP_DRAGDROP)
+  if (mEventType != NS_DRAGDROP_DROP && mEventType != NS_DRAGDROP_DRAGDROP &&
+      mEventType != NS_PASTE) {
     return NS_OK;
+  }
 
   if (!mFiles) {
     mFiles = new nsDOMFileList(static_cast<nsIDOMDataTransfer*>(this));
@@ -267,7 +270,7 @@ nsDOMDataTransfer::GetTypes(nsIDOMDOMStringList** aTypes)
   NS_ENSURE_TRUE(types, NS_ERROR_OUT_OF_MEMORY);
 
   if (mItems.Length()) {
-    nsTArray<TransferItem>& item = mItems[0];
+    const nsTArray<TransferItem>& item = mItems[0];
     for (uint32_t i = 0; i < item.Length(); i++)
       types->Add(item[i].mFormat);
 
@@ -292,8 +295,9 @@ nsDOMDataTransfer::GetData(const nsAString& aFormat, nsAString& aData)
 
   nsCOMPtr<nsIVariant> data;
   nsresult rv = MozGetDataAt(aFormat, 0, getter_AddRefs(data));
-  if (rv == NS_ERROR_DOM_INDEX_SIZE_ERR)
+  if (rv == NS_ERROR_DOM_INDEX_SIZE_ERR) {
     return NS_OK;
+  }
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -308,7 +312,7 @@ nsDOMDataTransfer::GetData(const nsAString& aFormat, nsAString& aData)
     if (NS_FAILED(rv)) {
       return rv;
     }
-    
+
     if (lowercaseFormat.EqualsLiteral("url")) {
       int32_t lastidx = 0, idx;
       int32_t length = stringdata.Length();
@@ -406,6 +410,12 @@ nsDOMDataTransfer::MozTypesAt(uint32_t aIndex, nsIDOMDOMStringList** aTypes)
 {
   *aTypes = nullptr;
 
+  // Only the first item is valid for clipboard events
+  if (aIndex > 0 &&
+      (mEventType == NS_CUT || mEventType == NS_COPY || mEventType == NS_PASTE)) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
   nsRefPtr<nsDOMStringList> types = new nsDOMStringList();
   NS_ENSURE_TRUE(types, NS_ERROR_OUT_OF_MEMORY);
 
@@ -432,8 +442,16 @@ nsDOMDataTransfer::MozGetDataAt(const nsAString& aFormat,
   if (aFormat.IsEmpty())
     return NS_OK;
 
-  if (aIndex >= mItems.Length())
+  if (aIndex >= mItems.Length()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  // Only the first item is valid for clipboard events
+  if (aIndex > 0 &&
+      (mEventType == NS_CUT || mEventType == NS_COPY || mEventType == NS_PASTE)) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
 
   nsAutoString format;
   GetRealFormat(aFormat, format);
@@ -449,6 +467,7 @@ nsDOMDataTransfer::MozGetDataAt(const nsAString& aFormat,
   nsIPrincipal* principal = nullptr;
   if (mIsCrossDomainSubFrameDrop ||
       (mEventType != NS_DRAGDROP_DROP && mEventType != NS_DRAGDROP_DRAGDROP &&
+       mEventType != NS_PASTE &&
        !nsContentUtils::IsCallerChrome())) {
     nsresult rv = NS_OK;
     principal = GetCurrentPrincipal(&rv);
@@ -465,7 +484,7 @@ nsDOMDataTransfer::MozGetDataAt(const nsAString& aFormat,
         return NS_ERROR_DOM_SECURITY_ERR;
 
       if (!formatitem.mData) {
-        FillInExternalDragData(formatitem, aIndex);
+        FillInExternalData(formatitem, aIndex);
       } else {
         nsCOMPtr<nsISupports> data;
         formatitem.mData->GetAsISupports(getter_AddRefs(data));
@@ -511,8 +530,15 @@ nsDOMDataTransfer::MozSetDataAt(const nsAString& aFormat,
 
   // Specifying an index less than the current length will replace an existing
   // item. Specifying an index equal to the current length will add a new item.
-  if (aIndex > mItems.Length())
+  if (aIndex > mItems.Length()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  // Only the first item is valid for clipboard events
+  if (aIndex > 0 &&
+      (mEventType == NS_CUT || mEventType == NS_COPY || mEventType == NS_PASTE)) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
 
   // don't allow non-chrome to add file data
   // XXX perhaps this should also limit any non-string type as well
@@ -534,8 +560,15 @@ nsDOMDataTransfer::MozClearDataAt(const nsAString& aFormat, uint32_t aIndex)
   if (mReadOnly)
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 
-  if (aIndex >= mItems.Length())
+  if (aIndex >= mItems.Length()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  // Only the first item is valid for clipboard events
+  if (aIndex > 0 &&
+      (mEventType == NS_CUT || mEventType == NS_COPY || mEventType == NS_PASTE)) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
 
   nsAutoString format;
   GetRealFormat(aFormat, format);
@@ -625,82 +658,106 @@ nsDOMDataTransfer::Clone(uint32_t aEventType, bool aUserCancelled,
   return NS_OK;
 }
 
-void
-nsDOMDataTransfer::GetTransferables(nsISupportsArray** aArray,
-                                    nsIDOMNode* aDragTarget)
+already_AddRefed<nsISupportsArray>
+nsDOMDataTransfer::GetTransferables(nsIDOMNode* aDragTarget)
 {
   MOZ_ASSERT(aDragTarget);
 
-  *aArray = nullptr;
-
   nsCOMPtr<nsISupportsArray> transArray =
     do_CreateInstance("@mozilla.org/supports-array;1");
-  if (!transArray)
-    return;
+  if (!transArray) {
+    return nullptr;
+  }
+    
 
   nsCOMPtr<nsINode> dragNode = do_QueryInterface(aDragTarget);
-  if (!dragNode)
-    return;
+  if (!dragNode) {
+    return nullptr;
+  }
+    
   nsIDocument* doc = dragNode->GetCurrentDoc();
-  if (!doc)
-    return;
+  if (!doc) {
+    return nullptr;
+  }
+    
   nsILoadContext* loadContext = doc->GetLoadContext();
 
-  bool added = false;
   uint32_t count = mItems.Length();
   for (uint32_t i = 0; i < count; i++) {
-
-    nsTArray<TransferItem>& item = mItems[i];
-    uint32_t count = item.Length();
-    if (!count)
-      continue;
-
-    nsCOMPtr<nsITransferable> transferable =
-      do_CreateInstance("@mozilla.org/widget/transferable;1");
-    if (!transferable)
-      return;
-    transferable->Init(loadContext);
-
-    for (uint32_t f = 0; f < count; f++) {
-      TransferItem& formatitem = item[f];
-      if (!formatitem.mData) // skip empty items
-        continue;
-
-      uint32_t length;
-      nsCOMPtr<nsISupports> convertedData;
-      if (!ConvertFromVariant(formatitem.mData, getter_AddRefs(convertedData), &length))
-        continue;
-
-      // the underlying drag code uses text/unicode, so use that instead of text/plain
-      const char* format;
-      NS_ConvertUTF16toUTF8 utf8format(formatitem.mFormat);
-      if (utf8format.EqualsLiteral("text/plain"))
-        format = kUnicodeMime;
-      else
-        format = utf8format.get();
-
-      // if a converter is set for a format, set the converter for the
-      // transferable and don't add the item
-      nsCOMPtr<nsIFormatConverter> converter = do_QueryInterface(convertedData);
-      if (converter) {
-        transferable->AddDataFlavor(format);
-        transferable->SetConverter(converter);
-        continue;
-      }
-
-      nsresult rv = transferable->SetTransferData(format, convertedData, length);
-      if (NS_FAILED(rv))
-        return;
-
-      added = true;
-    }
-
-    // only append the transferable if data was successfully added to it
-    if (added)
+    nsCOMPtr<nsITransferable> transferable = GetTransferable(i, loadContext);
+    if (transferable) {
       transArray->AppendElement(transferable);
+    }
   }
 
-  NS_ADDREF(*aArray = transArray);
+  return transArray.forget();
+}
+
+already_AddRefed<nsITransferable>
+nsDOMDataTransfer::GetTransferable(uint32_t aIndex, nsILoadContext* aLoadContext)
+{
+  if (aIndex >= mItems.Length()) {
+    return nullptr;
+  }
+
+  nsTArray<TransferItem>& item = mItems[aIndex];
+  uint32_t count = item.Length();
+  if (!count) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsITransferable> transferable =
+    do_CreateInstance("@mozilla.org/widget/transferable;1");
+  if (!transferable) {
+    return nullptr;
+  }
+  transferable->Init(aLoadContext);
+
+  bool added = false;
+  for (uint32_t f = 0; f < count; f++) {
+    const TransferItem& formatitem = item[f];
+    if (!formatitem.mData) { // skip empty items
+      continue;
+    }
+
+    uint32_t length;
+    nsCOMPtr<nsISupports> convertedData;
+    if (!ConvertFromVariant(formatitem.mData, getter_AddRefs(convertedData), &length)) {
+      continue;
+    }
+
+    // the underlying drag code uses text/unicode, so use that instead of text/plain
+    const char* format;
+    NS_ConvertUTF16toUTF8 utf8format(formatitem.mFormat);
+    if (utf8format.EqualsLiteral("text/plain")) {
+      format = kUnicodeMime;
+    } else {
+      format = utf8format.get();
+    }
+
+    // if a converter is set for a format, set the converter for the
+    // transferable and don't add the item
+    nsCOMPtr<nsIFormatConverter> converter = do_QueryInterface(convertedData);
+    if (converter) {
+      transferable->AddDataFlavor(format);
+      transferable->SetConverter(converter);
+      continue;
+    }
+
+    nsresult rv = transferable->SetTransferData(format, convertedData, length);
+    if (NS_FAILED(rv)) {
+      return nullptr;
+    }
+
+    added = true;
+  }
+
+  // only return the transferable if data was successfully added to it
+  if (added) {
+    return transferable.forget();
+  }
+
+  return nullptr;
 }
 
 bool
@@ -855,7 +912,20 @@ nsDOMDataTransfer::GetRealFormat(const nsAString& aInFormat, nsAString& aOutForm
 }
 
 void
-nsDOMDataTransfer::CacheExternalFormats()
+nsDOMDataTransfer::CacheExternalData(const char* aFormat, uint32_t aIndex, nsIPrincipal* aPrincipal)
+{
+  if (strcmp(aFormat, kUnicodeMime) == 0) {
+    SetDataWithPrincipal(NS_LITERAL_STRING("text/plain"), nullptr, aIndex, aPrincipal);
+  } else {
+    if (strcmp(aFormat, kURLDataMime) == 0) {
+      SetDataWithPrincipal(NS_LITERAL_STRING("text/uri-list"), nullptr, aIndex, aPrincipal);
+    }
+    SetDataWithPrincipal(NS_ConvertUTF8toUTF16(aFormat), nullptr, aIndex, aPrincipal);
+  }
+}
+
+void
+nsDOMDataTransfer::CacheExternalDragFormats()
 {
   // Called during the constructor to cache the formats available from an
   // external drag. The data associated with each format will be set to null.
@@ -890,25 +960,60 @@ nsDOMDataTransfer::CacheExternalFormats()
       // if the format is supported, add an item to the array with null as
       // the data. When retrieved, GetRealData will read the data.
       if (supported) {
-        if (strcmp(formats[f], kUnicodeMime) == 0) {
-          SetDataWithPrincipal(NS_LITERAL_STRING("text/plain"), nullptr, c, sysPrincipal);
-        }
-        else {
-          if (strcmp(formats[f], kURLDataMime) == 0)
-            SetDataWithPrincipal(NS_LITERAL_STRING("text/uri-list"), nullptr, c, sysPrincipal);
-          SetDataWithPrincipal(NS_ConvertUTF8toUTF16(formats[f]), nullptr, c, sysPrincipal);
-        }
+        CacheExternalData(formats[f], c, sysPrincipal);
       }
     }
   }
 }
 
 void
-nsDOMDataTransfer::FillInExternalDragData(TransferItem& aItem, uint32_t aIndex)
+nsDOMDataTransfer::CacheExternalClipboardFormats()
 {
-  NS_PRECONDITION(mIsExternal, "Not an external drag");
+  NS_ASSERTION(mEventType == NS_PASTE, "caching clipboard data for invalid event");
 
-  if (!aItem.mData) {
+  // Called during the constructor for paste events to cache the formats
+  // available on the clipboard. As with CacheExternalDragFormats, the
+  // data will only be retrieved when needed.
+
+  nsCOMPtr<nsIClipboard> clipboard = do_GetService("@mozilla.org/widget/clipboard;1");
+  if (!clipboard) {
+    return;
+  }
+
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  nsCOMPtr<nsIPrincipal> sysPrincipal;
+  ssm->GetSystemPrincipal(getter_AddRefs(sysPrincipal));
+
+  // there isn't a way to get a list of the formats that might be available on
+  // all platforms, so just check for the types that can actually be imported
+  const char* formats[] = { kFileMime, kHTMLMime, kURLMime, kURLDataMime, kUnicodeMime };
+
+  for (uint32_t f = 0; f < mozilla::ArrayLength(formats); ++f) {
+    // check each format one at a time
+    bool supported;
+    clipboard->HasDataMatchingFlavors(&(formats[f]), 1,
+                                      nsIClipboard::kGlobalClipboard, &supported);
+    // if the format is supported, add an item to the array with null as
+    // the data. When retrieved, GetRealData will read the data.
+    if (supported) {
+      CacheExternalData(formats[f], 0, sysPrincipal);
+    }
+  }
+}
+
+void
+nsDOMDataTransfer::FillInExternalData(TransferItem& aItem, uint32_t aIndex)
+{
+  NS_PRECONDITION(mIsExternal, "Not an external data transfer");
+
+  if (aItem.mData) {
+    return;
+  }
+
+  // only drag and paste events should be calling FillInExternalData
+  NS_ASSERTION(mEventType != NS_CUT && mEventType != NS_COPY,
+               "clipboard event with empty data");
+
     NS_ConvertUTF16toUTF8 utf8format(aItem.mFormat);
     const char* format = utf8format.get();
     if (strcmp(format, "text/plain") == 0)
@@ -916,22 +1021,38 @@ nsDOMDataTransfer::FillInExternalDragData(TransferItem& aItem, uint32_t aIndex)
     else if (strcmp(format, "text/uri-list") == 0)
       format = kURLDataMime;
 
-    nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
-    if (!dragSession)
-      return;
-
     nsCOMPtr<nsITransferable> trans =
       do_CreateInstance("@mozilla.org/widget/transferable;1");
     if (!trans)
       return;
 
+  trans->Init(nullptr);
+  trans->AddDataFlavor(format);
+
+  if (mEventType == NS_PASTE) {
+    MOZ_ASSERT(aIndex == 0, "index in clipboard must be 0");
+
+    nsCOMPtr<nsIClipboard> clipboard = do_GetService("@mozilla.org/widget/clipboard;1");
+    if (!clipboard) {
+      return;
+    }
+
+    clipboard->GetData(trans, nsIClipboard::kGlobalClipboard);
+  } else {
+    nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+    if (!dragSession) {
+      return;
+    }
+
+#ifdef DEBUG
+    // Since this is an external drag, the source document will always be null.
     nsCOMPtr<nsIDOMDocument> domDoc;
     dragSession->GetSourceDocument(getter_AddRefs(domDoc));
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-    trans->Init(doc ? doc->GetLoadContext() : nullptr);
+    MOZ_ASSERT(!domDoc);
+#endif
 
-    trans->AddDataFlavor(format);
     dragSession->GetData(trans, aIndex);
+  }
 
     uint32_t length = 0;
     nsCOMPtr<nsISupports> data;
@@ -952,6 +1073,6 @@ nsDOMDataTransfer::FillInExternalDragData(TransferItem& aItem, uint32_t aIndex)
     else {
       variant->SetAsISupports(data);
     }
+
     aItem.mData = variant;
   }
-}
