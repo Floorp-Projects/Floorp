@@ -13,19 +13,19 @@ namespace dom {
 
 struct ThreeDPoint {
   ThreeDPoint()
-    : x(0.f)
-    , y(0.f)
-    , z(0.f)
+    : x(0.)
+    , y(0.)
+    , z(0.)
   {
   }
-  ThreeDPoint(float aX, float aY, float aZ)
+  ThreeDPoint(double aX, double aY, double aZ)
     : x(aX)
     , y(aY)
     , z(aZ)
   {
   }
 
-  float x, y, z;
+  double x, y, z;
 };
 
 }
