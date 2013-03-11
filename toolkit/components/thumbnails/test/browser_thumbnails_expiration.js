@@ -51,6 +51,14 @@ function runTests() {
   urls.forEach(createDummyThumbnail);
   ok(urls.every(thumbnailExists), "all dummy thumbnails created");
 
+  // Make sure our dummy thumbnails aren't expired too early.
+  let dontExpireDummyURLs = function (cb) cb(urls);
+  PageThumbs.addExpirationFilter(dontExpireDummyURLs);
+
+  registerCleanupFunction(function () {
+    PageThumbs.removeExpirationFilter(dontExpireDummyURLs);
+  });
+
   // Expire thumbnails and expect 10 remaining.
   yield expireThumbnails([]);
   let remainingURLs = [u for (u of urls) if (thumbnailExists(u))];
