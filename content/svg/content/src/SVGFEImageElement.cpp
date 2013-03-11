@@ -16,9 +16,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGFEImageElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+SVGFEImageElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return SVGFEImageElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGFEImageElementBinding::Wrap(aCx, aScope, this);
 }
 
 nsSVGElement::StringInfo SVGFEImageElement::sStringInfo[2] =

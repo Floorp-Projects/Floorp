@@ -26,7 +26,7 @@ protected:
   friend nsresult (::NS_NewSVGSetElement(nsIContent **aResult,
                                          already_AddRefed<nsINodeInfo> aNodeInfo));
 
-  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope) MOZ_OVERRIDE;
 
 public:
   // interfaces:

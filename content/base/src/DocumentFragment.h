@@ -41,8 +41,7 @@ public:
   {
   }
 
-  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
-                             bool *aTriedToWrap);
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope) MOZ_OVERRIDE;
 
   // nsIContent
   virtual already_AddRefed<nsINodeInfo>

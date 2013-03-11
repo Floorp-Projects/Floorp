@@ -51,7 +51,7 @@ public:
   {
     return mWindow;
   }
-  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap);
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
   double CurrentTime();
   MediaStream* GetStream() { return mStream; }
@@ -119,7 +119,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap);
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
   virtual void Stop();
 

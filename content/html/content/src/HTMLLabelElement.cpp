@@ -23,9 +23,9 @@ HTMLLabelElement::~HTMLLabelElement()
 }
 
 JSObject*
-HTMLLabelElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+HTMLLabelElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return HTMLLabelElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return HTMLLabelElementBinding::Wrap(aCx, aScope, this);
 }
 
 // nsISupports 

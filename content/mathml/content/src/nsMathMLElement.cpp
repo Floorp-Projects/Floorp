@@ -941,7 +941,7 @@ nsMathMLElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttr,
 }
 
 JSObject*
-nsMathMLElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+nsMathMLElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return ElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return ElementBinding::Wrap(aCx, aScope, this);
 }

@@ -574,10 +574,9 @@ HTMLImageElement::GetCORSMode()
 }
 
 JSObject*
-HTMLImageElement::WrapNode(JSContext* aCx, JSObject* aScope,
-                           bool* aTriedToWrap)
+HTMLImageElement::WrapNode(JSContext* aCx, JSObject* aScope)
 {
-  return HTMLImageElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return HTMLImageElementBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace dom

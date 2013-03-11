@@ -17,9 +17,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGPatternElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+SVGPatternElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return SVGPatternElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGPatternElementBinding::Wrap(aCx, aScope, this);
 }
 
 //--------------------- Patterns ------------------------

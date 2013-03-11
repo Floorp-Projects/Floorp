@@ -86,9 +86,7 @@ public:
   // nsWrapperCache
   nsPIDOMWindow* GetParentObject() { return GetOwner(); }
 
-  JSObject* WrapObject(JSContext *cx,
-                       JSObject *scope,
-                       bool *triedToWrap);
+  JSObject* WrapObject(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
 
 public: // static helpers:
 

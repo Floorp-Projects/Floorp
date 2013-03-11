@@ -79,10 +79,9 @@ public:
   nsXBLInsertionPoint* GetInsertionPointAt(int32_t i) { return static_cast<nsXBLInsertionPoint*>(mElements->ElementAt(i)); }
   void RemoveInsertionPointAt(int32_t i) { mElements->RemoveElementAt(i); }
 
-  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
-                               bool *triedToWrap)
+  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope) MOZ_OVERRIDE
   {
-    return mozilla::dom::NodeListBinding::Wrap(cx, scope, this, triedToWrap);
+    return mozilla::dom::NodeListBinding::Wrap(cx, scope, this);
   }
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ANONYMOUS_CONTENT_LIST_IID)

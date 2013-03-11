@@ -12,9 +12,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGFEFloodElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+SVGFEFloodElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return SVGFEFloodElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGFEFloodElementBinding::Wrap(aCx, aScope, this);
 }
 
 nsSVGElement::StringInfo SVGFEFloodElement::sStringInfo[1] =

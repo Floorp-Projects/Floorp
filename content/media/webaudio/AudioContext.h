@@ -63,8 +63,7 @@ public:
     mDecoder.Shutdown();
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope,
-                               bool* aTriedToWrap);
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
   static already_AddRefed<AudioContext>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);

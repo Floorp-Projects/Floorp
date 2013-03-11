@@ -18,10 +18,9 @@ HTMLFrameSetElement::~HTMLFrameSetElement()
 }
 
 JSObject*
-HTMLFrameSetElement::WrapNode(JSContext *aCx, JSObject *aScope,
-                              bool *aTriedToWrap)
+HTMLFrameSetElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return HTMLFrameSetElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return HTMLFrameSetElementBinding::Wrap(aCx, aScope, this);
 }
 
 NS_IMPL_ADDREF_INHERITED(HTMLFrameSetElement, Element)

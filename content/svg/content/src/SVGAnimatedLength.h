@@ -36,7 +36,7 @@ public:
 
   // WebIDL
   nsSVGElement* GetParentObject() { return mSVGElement; }
-  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap);
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
   already_AddRefed<nsIDOMSVGLength> BaseVal();
   already_AddRefed<nsIDOMSVGLength> AnimVal();
 
