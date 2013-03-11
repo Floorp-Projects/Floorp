@@ -25,16 +25,7 @@ class AudioBufferSourceNodeEngine : public AudioNodeEngine
 {
 public:
   AudioBufferSourceNodeEngine() :
-    mStart(0), mStop(TRACK_TICKS_MAX),
-    mOffset(0), mDuration(0),
-    mLoop(NotLooping), mLoopStart(0), mLoopEnd(0)
-  {}
-
-  enum LoopState {
-    NotLooping, // Will never loop
-    WillLoop,   // In loop mode, but has not started to loop yet
-    IsLooping   // Is looping
-  };
+    mStart(0), mStop(TRACK_TICKS_MAX), mOffset(0), mDuration(0) {}
 
   // START, OFFSET and DURATION are always set by start() (along with setting
   // mBuffer to something non-null).
@@ -43,10 +34,7 @@ public:
     START,
     STOP,
     OFFSET,
-    DURATION,
-    LOOP,
-    LOOPSTART,
-    LOOPEND
+    DURATION
   };
   virtual void SetStreamTimeParameter(uint32_t aIndex, TrackTicks aParam)
   {
@@ -62,9 +50,6 @@ public:
     switch (aIndex) {
     case OFFSET: mOffset = aParam; break;
     case DURATION: mDuration = aParam; break;
-    case LOOP: mLoop = aParam ? WillLoop: NotLooping; break;
-    case LOOPSTART: mLoopStart = aParam; break;
-    case LOOPEND: mLoopEnd = aParam; break;
     default:
       NS_ERROR("Bad AudioBufferSourceNodeEngine Int32Parameter");
     }
@@ -72,20 +57,6 @@ public:
   virtual void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer)
   {
     mBuffer = aBuffer;
-  }
-
-  void BorrowFromInputBuffer(AudioChunk* aOutput,
-                             uint32_t aChannels,
-                             uintptr_t aBufferOffset)
-  {
-    aOutput->mDuration = WEBAUDIO_BLOCK_SIZE;
-    aOutput->mBuffer = mBuffer;
-    aOutput->mChannelData.SetLength(aChannels);
-    for (uint32_t i = 0; i < aChannels; ++i) {
-      aOutput->mChannelData[i] = mBuffer->GetData(i) + aBufferOffset;
-    }
-    aOutput->mVolume = 1.0f;
-    aOutput->mBufferFormat = AUDIO_FORMAT_FLOAT32;
   }
 
   virtual void ProduceAudioBlock(AudioNodeStream* aStream,
@@ -120,8 +91,15 @@ public:
     if (currentPosition >= mStart &&
         currentPosition + WEBAUDIO_BLOCK_SIZE <= endTime) {
       // Data is entirely within the buffer. Avoid copying it.
-      BorrowFromInputBuffer(aOutput, channels,
-                            uintptr_t(currentPosition - mStart + mOffset));
+      aOutput->mDuration = WEBAUDIO_BLOCK_SIZE;
+      aOutput->mBuffer = mBuffer;
+      aOutput->mChannelData.SetLength(channels);
+      for (uint32_t i = 0; i < channels; ++i) {
+        aOutput->mChannelData[i] =
+          mBuffer->GetData(i) + uintptr_t(currentPosition - mStart + mOffset);
+      }
+      aOutput->mVolume = 1.0f;
+      aOutput->mBufferFormat = AUDIO_FORMAT_FLOAT32;
       return;
     }
 
@@ -145,16 +123,10 @@ public:
   nsRefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
   int32_t mOffset;
   int32_t mDuration;
-  LoopState mLoop;
-  int32_t mLoopStart;
-  int32_t mLoopEnd;
 };
 
 AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
   : AudioSourceNode(aContext)
-  , mLoopStart(0.0)
-  , mLoopEnd(0.0)
-  , mLoop(false)
   , mStartCalled(false)
 {
   SetProduceOwnOutput(true);
@@ -199,25 +171,6 @@ AudioBufferSourceNode::Start(JSContext* aCx, double aWhen, double aOffset,
       std::min(aOffset + aDuration.Value(), length) : length;
   if (offset >= endOffset) {
     return;
-  }
-
-  // Don't compute and set the loop parameters unnecessarily
-  if (mLoop) {
-    double actualLoopStart, actualLoopEnd;
-    if (((mLoopStart != 0.0) || (mLoopEnd != 0.0)) &&
-        mLoopStart >= 0.0 && mLoopEnd > 0.0 &&
-        mLoopStart < mLoopEnd) {
-      actualLoopStart = (mLoopStart > length) ? 0.0 : mLoopStart;
-      actualLoopEnd = std::min(mLoopEnd, length);
-    } else {
-      actualLoopStart = 0.0;
-      actualLoopEnd = length;
-    }
-    int32_t loopStartTicks = NS_lround(actualLoopStart * rate);
-    int32_t loopEndTicks = NS_lround(actualLoopEnd * rate);
-    ns->SetInt32Parameter(AudioBufferSourceNodeEngine::LOOP, 1);
-    ns->SetInt32Parameter(AudioBufferSourceNodeEngine::LOOPSTART, loopStartTicks);
-    ns->SetInt32Parameter(AudioBufferSourceNodeEngine::LOOPEND, loopEndTicks);
   }
 
   ns->SetBuffer(data.forget());
