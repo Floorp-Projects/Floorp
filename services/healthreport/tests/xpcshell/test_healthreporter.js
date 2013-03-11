@@ -173,25 +173,6 @@ add_task(function test_shutdown_when_provider_manager_errors() {
   do_check_eq(reporter.storageCloseCount, 1);
 });
 
-add_task(function test_register_providers_from_category_manager() {
-  const category = "healthreporter-js-modules";
-
-  let cm = Cc["@mozilla.org/categorymanager;1"]
-             .getService(Ci.nsICategoryManager);
-  cm.addCategoryEntry(category, "DummyProvider",
-                      "resource://testing-common/services/metrics/mocks.jsm",
-                      false, true);
-
-  let reporter = yield getReporter("category_manager");
-  try {
-    do_check_eq(reporter._providerManager._providers.size, 0);
-    yield reporter.registerProvidersFromCategoryManager(category);
-    do_check_eq(reporter._providerManager._providers.size, 1);
-  } finally {
-    reporter._shutdown();
-  }
-});
-
 // Pull-only providers are only initialized at collect time.
 add_task(function test_pull_only_providers() {
   const category = "healthreporter-constant-only";
@@ -208,16 +189,16 @@ add_task(function test_pull_only_providers() {
   let reporter = yield getReporter("constant_only_providers");
   try {
     do_check_eq(reporter._providerManager._providers.size, 0);
-    yield reporter.registerProvidersFromCategoryManager(category);
+    yield reporter._providerManager.registerProvidersFromCategoryManager(category);
     do_check_eq(reporter._providerManager._providers.size, 1);
     do_check_true(reporter._storage.hasProvider("DummyProvider"));
     do_check_false(reporter._storage.hasProvider("DummyConstantProvider"));
     do_check_neq(reporter.getProvider("DummyProvider"), null);
     do_check_null(reporter.getProvider("DummyConstantProvider"));
 
-    yield reporter.ensurePullOnlyProvidersRegistered();
+    yield reporter._providerManager.ensurePullOnlyProvidersRegistered();
     yield reporter.collectMeasurements();
-    yield reporter.ensurePullOnlyProvidersUnregistered();
+    yield reporter._providerManager.ensurePullOnlyProvidersUnregistered();
 
     do_check_eq(reporter._providerManager._providers.size, 1);
     do_check_true(reporter._storage.hasProvider("DummyConstantProvider"));
@@ -236,7 +217,7 @@ add_task(function test_collect_daily() {
   try {
     let now = new Date();
     let provider = new DummyProvider();
-    yield reporter.registerProvider(provider);
+    yield reporter._providerManager.registerProvider(provider);
     yield reporter.collectMeasurements();
 
     do_check_eq(provider.collectConstantCount, 1);
@@ -295,7 +276,7 @@ add_task(function test_json_payload_dummy_provider() {
   let reporter = yield getReporter("json_payload_dummy_provider");
 
   try {
-    yield reporter.registerProvider(new DummyProvider());
+    yield reporter._providerManager.registerProvider(new DummyProvider());
     yield reporter.collectMeasurements();
     let payload = yield reporter.getJSONPayload();
     print(payload);
@@ -314,7 +295,7 @@ add_task(function test_collect_and_obtain_json_payload() {
   let reporter = yield getReporter("collect_and_obtain_json_payload");
 
   try {
-    yield reporter.registerProvider(new DummyProvider());
+    yield reporter._providerManager.registerProvider(new DummyProvider());
     let payload = yield reporter.collectAndObtainJSONPayload();
     do_check_eq(typeof payload, "string");
 
@@ -343,7 +324,7 @@ add_task(function test_constant_only_providers_in_json_payload() {
 
   let reporter = yield getReporter("constant_only_providers_in_json_payload");
   try {
-    yield reporter.registerProvidersFromCategoryManager(category);
+    yield reporter._providerManager.registerProvidersFromCategoryManager(category);
 
     let payload = yield reporter.collectAndObtainJSONPayload();
     let o = JSON.parse(payload);
@@ -388,7 +369,7 @@ add_task(function test_json_payload_multiple_days() {
 
   try {
     let provider = new DummyProvider();
-    yield reporter.registerProvider(provider);
+    yield reporter._providerManager.registerProvider(provider);
 
     let now = new Date();
     let m = provider.getMeasurement("DummyMeasurement", 1);
@@ -418,7 +399,7 @@ add_task(function test_idle_daily() {
   let reporter = yield getReporter("idle_daily");
   try {
     let provider = new DummyProvider();
-    yield reporter.registerProvider(provider);
+    yield reporter._providerManager.registerProvider(provider);
 
     let now = new Date();
     let m = provider.getMeasurement("DummyMeasurement", 1);
@@ -459,8 +440,8 @@ add_task(function test_data_submission_transport_failure() {
 add_task(function test_data_submission_success() {
   let [reporter, server] = yield getReporterAndServer("data_submission_success");
   try {
-    yield reporter.registerProviderFromType(DummyProvider);
-    yield reporter.registerProviderFromType(DummyConstantProvider);
+    yield reporter._providerManager.registerProviderFromType(DummyProvider);
+    yield reporter._providerManager.registerProviderFromType(DummyConstantProvider);
 
     do_check_eq(reporter.lastPingDate.getTime(), 0);
     do_check_false(reporter.haveRemoteData());
@@ -488,7 +469,7 @@ add_task(function test_data_submission_success() {
 add_task(function test_recurring_daily_pings() {
   let [reporter, server] = yield getReporterAndServer("recurring_daily_pings");
   try {
-    reporter.registerProvider(new DummyProvider());
+    reporter._providerManager.registerProvider(new DummyProvider());
 
     let policy = reporter._policy;
 
