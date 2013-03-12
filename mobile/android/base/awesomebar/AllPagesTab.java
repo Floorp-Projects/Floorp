@@ -55,7 +55,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
-    public static final String LOGTAG = "ALL_PAGES";
+    public static final String LOGTAG = "GeckoAllPagesTab";
     private static final String TAG = "allPages";
 
     private static final int SUGGESTION_TIMEOUT = 3000;
@@ -222,10 +222,8 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
                     postLoadFavicons();
 
                     long end = SystemClock.uptimeMillis();
-                    int time = (int)(end - start);
-                    Log.i(LOGTAG, "Got cursor in " + time + "ms");
-
                     if (!mTelemetrySent && TextUtils.isEmpty(constraint)) {
+                        int time = (int)(end - start);
                         Telemetry.HistogramAdd("FENNEC_AWESOMEBAR_ALLPAGES_EMPTY_TIME", time);
                         mTelemetrySent = true;
                     }
