@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "skia/GrGLInterface.h"
-#include "skia/SkString.h"
 
 /* SkPostConfig.h includes windows.h, which includes windef.h
  * which redefines min/max. We don't want that. */
@@ -300,25 +299,25 @@ const GLubyte* glGetString_mozilla(GrGLenum name)
         // Only expose the bare minimum extensions we want to support to ensure a functional Ganesh
         // as GLContext only exposes certain extensions
         static bool extensionsStringBuilt = false;
-        static SkString extensionsString;
+        static char extensionsString[120];
 
         if (!extensionsStringBuilt) {
             if (sGLContext->IsExtensionSupported(GLContext::EXT_texture_format_BGRA8888)) {
-                extensionsString.append("GL_EXT_texture_format_BGRA8888 ");
+                strcpy(extensionsString, "GL_EXT_texture_format_BGRA8888 ");
             }
 
             if (sGLContext->IsExtensionSupported(GLContext::OES_packed_depth_stencil)) {
-                extensionsString.append("GL_OES_packed_depth_stencil ");
+                strcat(extensionsString, "GL_OES_packed_depth_stencil ");
             }
 
             if (sGLContext->IsExtensionSupported(GLContext::EXT_packed_depth_stencil)) {
-                extensionsString.append("GL_EXT_packed_depth_stencil ");
+                strcat(extensionsString, "GL_EXT_packed_depth_stencil ");
             }
 
             extensionsStringBuilt = true;
         }
 
-        return reinterpret_cast<const GLubyte*>(extensionsString.c_str());
+        return reinterpret_cast<const GLubyte*>(extensionsString);
 
     } else if (name == LOCAL_GL_SHADING_LANGUAGE_VERSION) {
         if (sGLContext->IsGLES2()) {

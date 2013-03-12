@@ -2605,7 +2605,7 @@ nsHTMLDocument::DeferredContentEditableCountChange(nsIContent *aElement)
       nsCOMPtr<nsIEditor> editor;
       docshell->GetEditor(getter_AddRefs(editor));
       if (editor) {
-        nsRefPtr<nsRange> range = new nsRange();
+        nsRefPtr<nsRange> range = new nsRange(aElement);
         rv = range->SelectNode(node);
         if (NS_FAILED(rv)) {
           // The node might be detached from the document at this point,

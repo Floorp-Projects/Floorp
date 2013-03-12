@@ -22,20 +22,33 @@ nsresult
 NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
                        nsNodeInfoManager *aNodeInfoManager)
 {
+  mozilla::ErrorResult rv;
+  *aInstancePtrResult = NS_NewDocumentFragment(aNodeInfoManager, rv).get();
+  return rv.ErrorCode();
+}
+
+already_AddRefed<mozilla::dom::DocumentFragment>
+NS_NewDocumentFragment(nsNodeInfoManager* aNodeInfoManager,
+                       mozilla::ErrorResult& aRv)
+{
   using namespace mozilla::dom;
 
-  NS_ENSURE_ARG(aNodeInfoManager);
+  if (!aNodeInfoManager) {
+    aRv.Throw(NS_ERROR_INVALID_ARG);
+    return nullptr;
+  }
 
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-  nodeInfo = aNodeInfoManager->GetNodeInfo(nsGkAtoms::documentFragmentNodeName,
-                                           nullptr, kNameSpaceID_None,
-                                           nsIDOMNode::DOCUMENT_FRAGMENT_NODE);
-  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
+  nsCOMPtr<nsINodeInfo> nodeInfo =
+    aNodeInfoManager->GetNodeInfo(nsGkAtoms::documentFragmentNodeName,
+                                  nullptr, kNameSpaceID_None,
+                                  nsIDOMNode::DOCUMENT_FRAGMENT_NODE);
+  if (!nodeInfo) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
 
-  DocumentFragment *it = new DocumentFragment(nodeInfo.forget());
-  NS_ADDREF(*aInstancePtrResult = it);
-
-  return NS_OK;
+  nsRefPtr<DocumentFragment> it = new DocumentFragment(nodeInfo.forget());
+  return it.forget();
 }
 
 namespace mozilla {
@@ -54,9 +67,9 @@ DocumentFragment::DocumentFragment(already_AddRefed<nsINodeInfo> aNodeInfo)
 }
 
 JSObject*
-DocumentFragment::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+DocumentFragment::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return DocumentFragmentBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return DocumentFragmentBinding::Wrap(aCx, aScope, this);
 }
 
 bool

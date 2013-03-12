@@ -15,11 +15,13 @@
 #include "nsIChannel.h"
 #include "nsInterfaceHashtable.h"
 #include "nsHashKeys.h"
+#include <prinrval.h>
 #ifdef MOZ_WIDGET_ANDROID
 #include "nsAutoPtr.h"
 #include "nsIRunnable.h"
 #include "GLContext.h"
 #include "nsSurfaceTexture.h"
+#include "AndroidBridge.h"
 #include <map>
 class PluginEventRunnable;
 class SharedPluginTexture;
@@ -400,5 +402,32 @@ private:
 
   static uint32_t gInUnsafePluginCalls;
 };
+
+// On Android, we need to guard against plugin code leaking entries in the local
+// JNI ref table. See https://bugzilla.mozilla.org/show_bug.cgi?id=780831#c21
+#ifdef MOZ_WIDGET_ANDROID
+  #define MAIN_THREAD_JNI_REF_GUARD mozilla::AutoLocalJNIFrame jniFrame
+#else
+  #define MAIN_THREAD_JNI_REF_GUARD
+#endif
+
+PRIntervalTime NS_NotifyBeginPluginCall(NSPluginCallReentry aReentryState);
+void NS_NotifyPluginCall(PRIntervalTime aTime, NSPluginCallReentry aReentryState);
+
+#define NS_TRY_SAFE_CALL_RETURN(ret, fun, pluginInst, pluginCallReentry) \
+PR_BEGIN_MACRO                                     \
+  MAIN_THREAD_JNI_REF_GUARD;                       \
+  PRIntervalTime startTime = NS_NotifyBeginPluginCall(pluginCallReentry); \
+  ret = fun;                                       \
+  NS_NotifyPluginCall(startTime, pluginCallReentry); \
+PR_END_MACRO
+
+#define NS_TRY_SAFE_CALL_VOID(fun, pluginInst, pluginCallReentry) \
+PR_BEGIN_MACRO                                     \
+  MAIN_THREAD_JNI_REF_GUARD;                       \
+  PRIntervalTime startTime = NS_NotifyBeginPluginCall(pluginCallReentry); \
+  fun;                                             \
+  NS_NotifyPluginCall(startTime, pluginCallReentry); \
+PR_END_MACRO
 
 #endif // nsNPAPIPluginInstance_h_

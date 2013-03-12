@@ -4396,8 +4396,8 @@ JS_DeleteProperty(JSContext *cx, JSObject *objArg, const char *name)
 static RawShape
 LastConfigurableShape(JSObject *obj)
 {
-    for (Shape::Range r(obj->lastProperty()->all()); !r.empty(); r.popFront()) {
-        RawShape shape = &r.front();
+    for (Shape::Range<NoGC> r(obj->lastProperty()); !r.empty(); r.popFront()) {
+        Shape *shape = &r.front();
         if (shape->configurable())
             return shape;
     }
@@ -4425,8 +4425,8 @@ JS_ClearNonGlobalObject(JSContext *cx, JSObject *objArg)
     }
 
     /* Set all remaining writable plain data properties to undefined. */
-    for (Shape::Range r(obj->lastProperty()->all()); !r.empty(); r.popFront()) {
-        RawShape shape = &r.front();
+    for (Shape::Range<NoGC> r(obj->lastProperty()); !r.empty(); r.popFront()) {
+        Shape *shape = &r.front();
         if (shape->isDataDescriptor() &&
             shape->writable() &&
             shape->hasDefaultSetter() &&

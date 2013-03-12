@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGAnimatedAngle.h"
-#include "SVGAngle.h"
 #include "nsSVGAngle.h"
 #include "mozilla/dom/SVGAnimatedAngleBinding.h"
 #include "nsContentUtils.h"
@@ -23,9 +22,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGAnimatedAngle)
 NS_INTERFACE_MAP_END
 
 JSObject*
-SVGAnimatedAngle::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+SVGAnimatedAngle::WrapObject(JSContext* aCx, JSObject* aScope)
 {
-  return SVGAnimatedAngleBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGAnimatedAngleBinding::Wrap(aCx, aScope, this);
 }
 
 already_AddRefed<SVGAngle>

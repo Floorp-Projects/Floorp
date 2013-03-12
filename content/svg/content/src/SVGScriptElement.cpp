@@ -16,9 +16,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGScriptElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+SVGScriptElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return SVGScriptElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGScriptElementBinding::Wrap(aCx, aScope, this);
 }
 
 nsSVGElement::StringInfo SVGScriptElement::sStringInfo[1] =
@@ -29,10 +29,10 @@ nsSVGElement::StringInfo SVGScriptElement::sStringInfo[1] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ISUPPORTS_INHERITED7(SVGScriptElement, SVGScriptElementBase,
+NS_IMPL_ISUPPORTS_INHERITED6(SVGScriptElement, SVGScriptElementBase,
                              nsIDOMNode, nsIDOMElement,
                              nsIDOMSVGElement,
-                             nsIDOMSVGURIReference, nsIScriptLoaderObserver,
+                             nsIScriptLoaderObserver,
                              nsIScriptElement, nsIMutationObserver)
 
 //----------------------------------------------------------------------
@@ -97,17 +97,6 @@ void
 SVGScriptElement::SetCrossOrigin(const nsAString & aOrigin, ErrorResult& rv)
 {
   rv = SetAttr(kNameSpaceID_None, nsGkAtoms::crossorigin, aOrigin, true);
-}
-
-//----------------------------------------------------------------------
-// nsIDOMSVGURIReference methods
-
-/* readonly attribute nsIDOMSVGAnimatedString href; */
-NS_IMETHODIMP
-SVGScriptElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
-{
-  *aHref = Href().get();
-  return NS_OK;
 }
 
 already_AddRefed<nsIDOMSVGAnimatedString>

@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 final class DisplayPortCalculator {
-    private static final String LOGTAG = "GeckoDisplayPortCalculator";
+    private static final String LOGTAG = "GeckoDisplayPort";
     private static final PointF ZERO_VELOCITY = new PointF(0, 0);
 
     // Keep this in sync with the TILEDLAYERBUFFER_TILE_SIZE defined in gfx/layers/TiledLayerBuffer.h

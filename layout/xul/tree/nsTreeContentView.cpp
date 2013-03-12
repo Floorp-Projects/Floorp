@@ -37,19 +37,6 @@ namespace dom = mozilla::dom;
 class Row
 {
   public:
-    static Row*
-    Create(nsFixedSizeAllocator& aAllocator,
-           nsIContent* aContent, int32_t aParentIndex) {
-      void* place = aAllocator.Alloc(sizeof(Row));
-      return place ? ::new(place) Row(aContent, aParentIndex) : nullptr;
-    }
-
-    static void
-    Destroy(nsFixedSizeAllocator& aAllocator, Row* aRow) {
-      aRow->~Row();
-      aAllocator.Free(aRow, sizeof(*aRow));
-    }
-
     Row(nsIContent* aContent, int32_t aParentIndex)
       : mContent(aContent), mParentIndex(aParentIndex),
         mSubtreeSize(0), mFlags(0) {
@@ -88,11 +75,6 @@ class Row
     int32_t             mSubtreeSize;
 
   private:
-    // Hide so that only Create() and Destroy() can be used to
-    // allocate and deallocate from the heap
-    static void* operator new(size_t) CPP_THROW_NEW { return 0; } 
-    static void operator delete(void*, size_t) {}
-
     // State flags
     int8_t		mFlags;
 };
@@ -110,13 +92,6 @@ nsTreeContentView::nsTreeContentView(void) :
   mRoot(nullptr),
   mDocument(nullptr)
 {
-  static const size_t kBucketSizes[] = {
-    sizeof(Row)
-  };
-  static const int32_t kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
-  static const int32_t kInitialSize = 16;
-
-  mAllocator.Init("nsTreeContentView", kBucketSizes, kNumBuckets, kInitialSize);
 }
 
 nsTreeContentView::~nsTreeContentView(void)
@@ -1089,7 +1064,7 @@ nsTreeContentView::SerializeItem(nsIContent* aContent, int32_t aParentIndex,
                             nsGkAtoms::_true, eCaseMatters))
     return;
 
-  Row* row = Row::Create(mAllocator, aContent, aParentIndex);
+  Row* row = new Row(aContent, aParentIndex);
   aRows.AppendElement(row);
 
   if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::container,
@@ -1125,7 +1100,7 @@ nsTreeContentView::SerializeSeparator(nsIContent* aContent,
                             nsGkAtoms::_true, eCaseMatters))
     return;
 
-  Row* row = Row::Create(mAllocator, aContent, aParentIndex);
+  Row* row = new Row(aContent, aParentIndex);
   row->SetSeparator(true);
   aRows.AppendElement(row);
 }
@@ -1205,9 +1180,8 @@ nsTreeContentView::RemoveSubtree(int32_t aIndex)
   Row* row = mRows[aIndex];
   int32_t count = row->mSubtreeSize;
 
-  for(int32_t i = 0; i < count; i++) {
-    Row* nextRow = mRows[aIndex + i + 1];
-    Row::Destroy(mAllocator, nextRow);
+  for (int32_t i = 0; i < count; i++) {
+    delete mRows[aIndex + i + 1];
   }
   mRows.RemoveElementsAt(aIndex + 1, count);
 
@@ -1286,15 +1260,14 @@ nsTreeContentView::RemoveRow(int32_t aIndex)
   int32_t count = row->mSubtreeSize + 1;
   int32_t parentIndex = row->mParentIndex;
 
-  Row::Destroy(mAllocator, row);
+  delete row;
   for(int32_t i = 1; i < count; i++) {
-    Row* nextRow = mRows[aIndex + i];
-    Row::Destroy(mAllocator, nextRow);
+    delete mRows[aIndex + i];
   }
   mRows.RemoveElementsAt(aIndex, count);
 
   UpdateSubtreeSizes(parentIndex, -count);
-  
+
   UpdateParentIndexes(aIndex, 0, -count);
 
   return count;
@@ -1303,8 +1276,9 @@ nsTreeContentView::RemoveRow(int32_t aIndex)
 void
 nsTreeContentView::ClearRows()
 {
-  for (uint32_t i = 0; i < mRows.Length(); i++)
-    Row::Destroy(mAllocator, mRows[i]);
+  for (uint32_t i = 0; i < mRows.Length(); i++) {
+    delete mRows[i];
+  }
   mRows.Clear();
   mRoot = nullptr;
   mBody = nullptr;
@@ -1313,7 +1287,7 @@ nsTreeContentView::ClearRows()
     mDocument->RemoveObserver(this);
     mDocument = nullptr;
   }
-} 
+}
 
 void
 nsTreeContentView::OpenContainer(int32_t aIndex)

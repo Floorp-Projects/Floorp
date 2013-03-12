@@ -98,6 +98,7 @@ public class testBookmark extends PixelTest  {
         // Click on the bookmark we created and wait for the bookmarked page to load
         Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
         View child = bookmarksList.getChildAt(1);
+        mAsserter.ok(child != null, "list item can be retrieved", child != null ? child.toString() : "null!");
         mSolo.clickOnView(child);
         paintExpecter.blockUntilClear(PAINT_CLEAR_DELAY);
 

@@ -34,9 +34,9 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsDOMCSSValueList, mCSSValues)
 
 JSObject*
-nsDOMCSSValueList::WrapObject(JSContext *cx, JSObject *scope, bool *tried)
+nsDOMCSSValueList::WrapObject(JSContext *cx, JSObject *scope)
 {
-  return dom::CSSValueListBinding::Wrap(cx, scope, this, tried);
+  return dom::CSSValueListBinding::Wrap(cx, scope, this);
 }
 
 void

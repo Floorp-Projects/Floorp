@@ -1094,7 +1094,7 @@ abstract public class GeckoApp
         final String fileName = aSrc.substring(aSrc.lastIndexOf("/") + 1);
         final PendingIntent emptyIntent = PendingIntent.getActivity(mAppContext, 0, new Intent(), 0);
         final AlertNotification notification = new AlertNotification(mAppContext, fileName.hashCode(), 
-                                R.drawable.alert_download, fileName, progText, System.currentTimeMillis() );
+                                R.drawable.alert_download, fileName, progText, System.currentTimeMillis(), null);
         notification.setLatestEventInfo(mAppContext, fileName, progText, emptyIntent );
         notification.flags |= Notification.FLAG_ONGOING_EVENT;
         notification.show();
@@ -1324,8 +1324,8 @@ abstract public class GeckoApp
     public boolean isSmallTablet() {
         if (sIsSmallTablet == null) {
             int screenLayout = getResources().getConfiguration().screenLayout;
-            return (Build.VERSION.SDK_INT >= 11 &&
-                    ((screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_LARGE));
+            sIsSmallTablet = (Build.VERSION.SDK_INT >= 11 &&
+                              ((screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_LARGE));
         }
 
         return sIsSmallTablet;
@@ -1677,8 +1677,6 @@ abstract public class GeckoApp
             }
         });
 
-        final GeckoApp self = this;
-
         // End of the startup of our Java App
         mJavaUiStartupTimer.stop();
 
@@ -1731,8 +1729,9 @@ abstract public class GeckoApp
             } else {
                 onSearchRequested();
             }
+        } else if (ACTION_ALERT_CALLBACK.equals(action)) {
+            processAlertCallback(intent);
         }
-
     }
 
     public GeckoProfile getProfile() {
@@ -1820,6 +1819,21 @@ abstract public class GeckoApp
         }
     }
 
+    private void processAlertCallback(Intent intent) {
+        String alertName = "";
+        String alertCookie = "";
+        Uri data = intent.getData();
+        if (data != null) {
+            alertName = data.getQueryParameter("name");
+            if (alertName == null)
+                alertName = "";
+            alertCookie = data.getQueryParameter("cookie");
+            if (alertCookie == null)
+                alertCookie = "";
+        }
+        handleNotification(ACTION_ALERT_CALLBACK, alertName, alertCookie);
+    }
+
     @Override
     protected void onNewIntent(Intent intent) {
         if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoExiting)) {
@@ -1860,18 +1874,7 @@ abstract public class GeckoApp
             String uri = getURIFromIntent(intent);
             GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(uri));
         } else if (ACTION_ALERT_CALLBACK.equals(action)) {
-            String alertName = "";
-            String alertCookie = "";
-            Uri data = intent.getData();
-            if (data != null) {
-                alertName = data.getQueryParameter("name");
-                if (alertName == null)
-                    alertName = "";
-                alertCookie = data.getQueryParameter("cookie");
-                if (alertCookie == null)
-                    alertCookie = "";
-            }
-            handleNotification(ACTION_ALERT_CALLBACK, alertName, alertCookie);
+            processAlertCallback(intent);
         } else if (ACTION_WIDGET.equals(action)) {
             addTab();
         }
@@ -2012,11 +2015,6 @@ abstract public class GeckoApp
     @Override
     public void onDestroy()
     {
-        // Tell Gecko to shutting down; we'll end up calling System.exit()
-        // in onXreExit.
-        if (isFinishing())
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createShutdownEvent());
-
         unregisterEventListener("log");
         unregisterEventListener("Reader:Added");
         unregisterEventListener("Reader:Removed");
@@ -2173,7 +2171,12 @@ abstract public class GeckoApp
     }
 
     public void handleNotification(String action, String alertName, String alertCookie) {
-        GeckoAppShell.handleNotification(action, alertName, alertCookie);
+        // If Gecko isn't running yet, we ignore the notification. Note that
+        // even if Gecko is running but it was restarted since the notification
+        // was created, the notification won't be handled (bug 849653).
+        if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
+            GeckoAppShell.handleNotification(action, alertName, alertCookie);
+        }
     }
 
     private void checkMigrateProfile() {

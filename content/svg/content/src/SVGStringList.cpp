@@ -3,15 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
-
 #include "SVGStringList.h"
 #include "nsError.h"
 #include "nsCharSeparatedTokenizer.h"
-#include "nsMathUtils.h"
 #include "nsString.h"
-#include "nsSVGElement.h"
-#include "nsTextFormatter.h"
 #include "nsWhitespaceTokenizer.h"
 #include "SVGContentUtils.h"
 

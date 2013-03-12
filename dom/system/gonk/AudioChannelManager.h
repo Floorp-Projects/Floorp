@@ -38,8 +38,7 @@ public:
      return GetOwner();
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope,
-                               bool* aTriedToWrap);
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
   bool Headphones() const
   {
