@@ -9,3 +9,8 @@ XPIDL_SOURCES += [
     'nsIStyleSheetService.idl',
 ]
 
+if not CONFIG['MOZ_XUL']:
+    XPIDL_SOURCES += [
+        'nsIBoxObject.idl',
+    ]
+

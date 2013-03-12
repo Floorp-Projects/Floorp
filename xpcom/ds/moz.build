@@ -30,3 +30,8 @@ XPIDL_SOURCES += [
     'nsIWritablePropertyBag2.idl',
 ]
 
+if CONFIG['OS_ARCH'] == 'WINNT':
+    XPIDL_SOURCES += [
+        'nsIWindowsRegKey.idl',
+    ]
+

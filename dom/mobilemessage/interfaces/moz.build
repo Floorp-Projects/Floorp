@@ -17,3 +17,8 @@ XPIDL_SOURCES += [
     'nsISmsService.idl',
 ]
 
+if CONFIG['MOZ_B2G_RIL']:
+    XPIDL_SOURCES += [
+        'nsIRilMobileMessageDatabaseService.idl',
+    ]
+

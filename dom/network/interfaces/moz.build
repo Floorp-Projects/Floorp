@@ -13,3 +13,13 @@ XPIDL_SOURCES += [
     'nsITCPSocketParent.idl',
 ]
 
+if CONFIG['MOZ_B2G_RIL']:
+    XPIDL_SOURCES += [
+        'nsIDOMMobileConnection.idl',
+        'nsIMobileConnectionProvider.idl',
+        'nsINavigatorMobileConnection.idl',
+        'nsIDOMNetworkStatsManager.idl',
+        'nsIDOMNetworkStats.idl',
+        'nsIDOMCFStateChangeEvent.idl',
+    ]
+

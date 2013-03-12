@@ -92,7 +92,6 @@ EXPORTS		= \
 
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS += nsWindowsRegKey.cpp
-XPIDLSRCS += nsIWindowsRegKey.idl
 EXPORTS += nsWindowsRegKey.h
 endif
 

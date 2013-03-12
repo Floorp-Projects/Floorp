@@ -57,3 +57,8 @@ XPIDL_SOURCES += [
     'nsIX509CertValidity.idl',
 ]
 
+if CONFIG['MOZ_XUL']:
+    XPIDL_SOURCES += [
+        'nsICertTree.idl',
+    ]
+

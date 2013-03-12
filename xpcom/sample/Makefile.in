@@ -37,10 +37,6 @@ CPPSRCS		=		   \
 		nsSampleModule.cpp \
 		$(NULL)
 
-# XPIDLSRCS specified IDL files. The build system runs the xpidl tool on these
-# files to generate C++ headers and .xpt typelib files.
-XPIDLSRCS	= nsISample.idl
-
 include $(topsrcdir)/config/config.mk
 
 # EXTRA_COMPONENTS installs components written JavaScript to

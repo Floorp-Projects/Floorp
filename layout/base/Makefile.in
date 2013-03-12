@@ -94,9 +94,6 @@ CPPSRCS		= \
 		$(NULL)
 
 ifndef MOZ_XUL
-XPIDLSRCS  += \
-		nsIBoxObject.idl \
-		$(NULL)
 EXPORTS    += \
 		nsPIBoxObject.h \
 		$(NULL)

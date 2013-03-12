@@ -21,3 +21,10 @@ XPIDL_SOURCES += [
     'nsIWebBrowserStream.idl',
 ]
 
+if CONFIG['NS_PRINTING']:
+    XPIDL_SOURCES += [
+        'nsIPrintingPrompt.idl',
+        'nsIPrintingPromptService.idl',
+        'nsIWebBrowserPrint.idl',
+    ]
+
