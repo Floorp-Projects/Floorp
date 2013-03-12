@@ -964,8 +964,11 @@ MobileMessageDatabaseService.prototype = {
   },
 
   saveRecord: function saveRecord(aMessageRecord, aAddresses, aCallback) {
-    this.lastMessageId += 1;
-    aMessageRecord.id = this.lastMessageId;
+    if (aMessageRecord.id === undefined) {
+      // Assign a new id.
+      this.lastMessageId += 1;
+      aMessageRecord.id = this.lastMessageId;
+    }
     if (DEBUG) debug("Going to store " + JSON.stringify(aMessageRecord));
 
     let self = this;
@@ -1074,26 +1077,46 @@ MobileMessageDatabaseService.prototype = {
   saveReceivedMessage: function saveReceivedMessage(aMessage, aCallback) {
     if (aMessage.type === undefined ||
         aMessage.sender === undefined ||
-        aMessage.messageClass === undefined ||
+        (aMessage.type == "sms" && aMessage.messageClass === undefined) ||
+        (aMessage.type == "mms" && aMessage.delivery === undefined) ||
         aMessage.timestamp === undefined) {
       if (aCallback) {
         aCallback.notify(Cr.NS_ERROR_FAILURE, null);
       }
       return;
     }
+    let self = this.getRilIccInfoMsisdn();
+    let threadParticipants = [aMessage.sender];
+    if (aMessage.type == "sms") {
+      aMessage.receiver = self;
+    } else if (aMessage.type == "mms") {
+      if (!aMessage.receivers.length) {
+        if (self) {
+          aMessage.receivers.push(self);
+        }
+      } else {
+        let slicedReceivers = aMessage.receivers.slice();
+        let found = slicedReceivers.indexOf(self);
+        if (self && (found !== -1)) {
+          slicedReceivers.splice(found, 1);
+        }
+        threadParticipants = threadParticipants.concat(slicedReceivers);
+      }
+    }
 
-    aMessage.receiver = this.getRilIccInfoMsisdn();
     let timestamp = aMessage.timestamp;
 
     // Adding needed indexes and extra attributes for internal use.
     // threadIdIndex & participantIdsIndex are filled in saveRecord().
     aMessage.deliveryIndex = [DELIVERY_RECEIVED, timestamp];
     aMessage.readIndex = [FILTER_READ_UNREAD, timestamp];
-    aMessage.delivery = DELIVERY_RECEIVED;
+    if (aMessage.type == "sms") {
+      aMessage.delivery = DELIVERY_RECEIVED;
+    }
     aMessage.deliveryStatus = DELIVERY_STATUS_SUCCESS;
     aMessage.read = FILTER_READ_UNREAD;
 
-    return this.saveRecord(aMessage, [aMessage.sender], aCallback);
+    return this.saveRecord(aMessage, threadParticipants, aCallback);
   },
 
   saveSendingMessage: function saveSendingMessage(aMessage, aCallback) {
