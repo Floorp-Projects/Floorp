@@ -13,6 +13,31 @@ if toolkit in ('os2', 'cocoa', 'qt', 'android', 'gonk'):
 if toolkit == 'windows':
     DIRS += ['windows']
 
+    XPIDL_SOURCES += [
+        'nsIJumpListBuilder.idl',
+        'nsIJumpListItem.idl',
+        'nsIPrintSettingsWin.idl',
+        'nsITaskbarPreview.idl',
+        'nsITaskbarTabPreview.idl',
+        'nsITaskbarWindowPreview.idl',
+        'nsITaskbarPreviewController.idl',
+        'nsITaskbarPreviewButton.idl',
+        'nsITaskbarProgress.idl',
+        'nsITaskbarOverlayIconController.idl',
+        'nsIWinTaskbar.idl',
+    ]
+elif toolkit == 'cocoa':
+    XPIDL_SOURCES += [
+        'nsIMacDockSupport.idl',
+        'nsIMacWebAppUtils.idl',
+        'nsIStandaloneNativeMenu.idl',
+        'nsITaskbarProgress.idl',
+    ]
+elif toolkit == 'os2':
+    XPIDL_SOURCES += [
+        'nsIRwsService.idl',
+    ]
+
 TEST_TOOL_DIRS += ['tests']
 
 # Don't build the DSO under the 'build' directory as windows does.
@@ -54,4 +79,10 @@ XPIDL_SOURCES += [
     'nsISound.idl',
     'nsITransferable.idl',
 ]
+
+if CONFIG['MOZ_METRO']:
+    XPIDL_SOURCES += [
+        'MetroUIUtils.idl',
+        'nsIWinMetroUtils.idl',
+    ]
 

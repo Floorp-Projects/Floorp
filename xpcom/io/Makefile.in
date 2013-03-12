@@ -99,14 +99,6 @@ EXPORTS_mozilla = \
     Base64.h \
     $(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-XPIDLSRCS	+= nsILocalFileOS2.idl
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-XPIDLSRCS	+= nsILocalFileMac.idl
-endif # cocoa
-endif # os2
-
 SDK_HEADERS =  \
 		nsDirectoryServiceDefs.h \
 		nsDirectoryServiceUtils.h \

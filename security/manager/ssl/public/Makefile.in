@@ -13,8 +13,4 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = pipnss
 GRE_MODULE	= 1
 
-ifdef MOZ_XUL
-XPIDLSRCS += nsICertTree.idl
-endif
-
 include $(topsrcdir)/config/rules.mk

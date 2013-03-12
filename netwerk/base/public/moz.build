@@ -108,3 +108,8 @@ XPIDL_SOURCES += [
     'nsPISocketTransportService.idl',
 ]
 
+if CONFIG['MOZ_TOOLKIT_SEARCH']:
+    XPIDL_SOURCES += [
+        'nsIBrowserSearchService.idl',
+    ]
+

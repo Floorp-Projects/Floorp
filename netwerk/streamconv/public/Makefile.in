@@ -15,12 +15,6 @@ MODULE		= necko
 XPIDL_MODULE	= necko_strconv
 GRE_MODULE	= 1
 
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-XPIDLSRCS += \
-		nsIAppleFileDecoder.idl \
-		$(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DIMPL_NS_NET

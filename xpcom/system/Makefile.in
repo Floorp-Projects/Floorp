@@ -12,8 +12,4 @@ include $(DEPTH)/config/autoconf.mk
 MODULE          = xpcom
 XPIDL_MODULE    = xpcom_system
 
-ifdef MOZ_CRASHREPORTER
-XPIDLSRCS += nsICrashReporter.idl
-endif
-
 include $(topsrcdir)/config/rules.mk
