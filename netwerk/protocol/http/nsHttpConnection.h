@@ -12,6 +12,7 @@
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
+#include "nsProxyRelease.h"
 #include "prinrval.h"
 #include "ASpdySession.h"
 #include "mozilla/TimeStamp.h"
@@ -199,7 +200,7 @@ private:
     nsRefPtr<nsAHttpTransaction>    mTransaction;
 
     mozilla::Mutex                  mCallbacksLock;
-    nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+    nsMainThreadPtrHandle<nsIInterfaceRequestor> mCallbacks;
 
     nsRefPtr<nsHttpConnectionInfo> mConnInfo;
 
