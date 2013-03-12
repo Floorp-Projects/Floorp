@@ -3253,7 +3253,7 @@ nsHTMLEditor::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
 
     // Update spellcheck for only the newly-inserted node (bug 743819)
     if (mInlineSpellChecker) {
-      nsRefPtr<nsRange> range = new nsRange(aChild);
+      nsRefPtr<nsRange> range = new nsRange();
       nsresult res = range->Set(aContainer, aIndexInContainer,
                                 aContainer, aIndexInContainer + 1);
       if (NS_SUCCEEDED(res)) {
