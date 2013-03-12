@@ -1,0 +1,43 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH           = @DEPTH@
+topsrcdir       = @top_srcdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
+relativesrcdir  = @relativesrcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MOCHITEST_BROWSER_TESTS = \
+	browser_net_aaa_leaktest.js \
+	browser_net_simple-init.js \
+	browser_net_page-nav.js \
+	browser_net_prefs-and-l10n.js \
+	browser_net_prefs-reload.js \
+	browser_net_pane-collapse.js \
+	browser_net_simple-request.js \
+	browser_net_simple-request-data.js \
+	browser_net_simple-request-details.js \
+	browser_net_content-type.js \
+	browser_net_status-codes.js \
+	browser_net_post-data.js \
+	head.js \
+	$(NULL)
+
+MOCHITEST_BROWSER_PAGES = \
+	test-image.png \
+	html_simple-test-page.html \
+	html_navigate-test-page.html \
+	html_content-type-test-page.html \
+	html_status-codes-test-page.html \
+	html_post-data-test-page.html \
+	sjs_simple-test-server.sjs \
+	sjs_content-type-test-server.sjs \
+	sjs_status-codes-test-server.sjs \
+	$(NULL)
+
+MOCHITEST_BROWSER_FILES_PARTS = MOCHITEST_BROWSER_TESTS MOCHITEST_BROWSER_PAGES
+
+include $(topsrcdir)/config/rules.mk

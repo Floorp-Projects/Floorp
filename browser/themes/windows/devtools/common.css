@@ -276,7 +276,7 @@
 
 .devtools-sidebar-tabs > tabs > tab {
   -moz-appearance: none;
-  /* We want to match the height of a toolbar with a toolbarbutton 
+  /* We want to match the height of a toolbar with a toolbarbutton
    * First, we need to replicated the padding of toolbar (4px),
    * then, the padding of the button itself from toolbarbutton.css (3px),
    * Also, we need to take the border of the buttons into accout (1px).

@@ -17,20 +17,6 @@
   -moz-border-start-color: transparent;
 }
 
-/* Watch expressions, variables and other instruments pane */
-
-#instruments-pane {
-  min-width: 50px;
-  -moz-margin-start: 0px !important;
-  /* Unfortunately, transitions don't work properly with locale-aware properties,
-     so both the left and right margins are set via js, while the start margin
-     is always overridden here. */
-}
-
-#instruments-pane[animated] {
-  transition: margin 0.25s ease-in-out;
-}
-
 /* ListWidget items */
 
 .list-widget-item {
@@ -310,12 +296,12 @@
   background: none;
   box-shadow: none;
   border: none;
-  list-style-image: url("chrome://browser/skin/devtools/debugger-expand.png");
+  list-style-image: url("chrome://browser/skin/devtools/debugger-collapse.png");
   -moz-image-region: rect(0px,16px,16px,0px);
 }
 
-#instruments-pane-toggle:not([toggled]) {
-  list-style-image: url("chrome://browser/skin/devtools/debugger-collapse.png");
+#instruments-pane-toggle[pane-collapsed] {
+  list-style-image: url("chrome://browser/skin/devtools/debugger-expand.png");
 }
 
 #instruments-pane-toggle:active {

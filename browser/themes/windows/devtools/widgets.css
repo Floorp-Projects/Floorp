@@ -3,6 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* Generic pane helpers */
+
+.generic-toggled-side-pane {
+  min-width: 50px;
+  -moz-margin-start: 0px !important;
+  /* Unfortunately, transitions don't work properly with locale-aware properties,
+     so both the left and right margins are set via js, while the start margin
+     is always overridden here. */
+}
+
+.generic-toggled-side-pane[animated] {
+  transition: margin 0.25s ease-in-out;
+}
+
 /* BreacrumbsWidget */
 
 .breadcrumbs-widget-container {
@@ -302,7 +316,7 @@
 }
 
 .side-menu-widget-item.selected {
-  background: -moz-linear-gradient(hsl(206,61%,40%), hsl(206,61%,31%)) repeat-x top left;
+  background: -moz-linear-gradient(hsl(206,61%,40%), hsl(206,61%,31%)) repeat-x top left !important;
   box-shadow: inset 0 1px 0 hsla(210,40%,83%,.15),
               inset 0 -1px 0 hsla(210,40%,83%,.05);
   border-top: 0;
@@ -334,7 +348,7 @@
   padding: 4px;
 }
 
-.side-menu-widget-item-label {
+.side-menu-widget-item label {
   cursor: inherit;
 }
 
@@ -364,9 +378,7 @@
 }
 
 .side-menu-widget-item-other > label {
-  cursor: inherit;
   color: #f5f7fa;
-  text-shadow: 0 1px 1px #111;
 }
 
 .side-menu-widget-empty-notice-container {
@@ -402,14 +414,15 @@
   -moz-margin-end: 1px;
 }
 
-.variables-view-scope > .variables-view-element-details.nonenum:not(:empty) {
-  border-top: 1px solid #ddd;
+.variables-view-scope > .variables-view-element-details.enum:not(:empty) {
+  border-bottom: 1px solid #ddd;
 }
 
 /* Generic traits applied to both variables and properties */
 
 .variable-or-property {
   transition: background 1s ease-in-out;
+  color: #000;
 }
 
 .variable-or-property[changed] {
@@ -475,7 +488,6 @@
 }
 
 .variable-or-property:not(:focus) > .title > .token-string {
-  max-width: 30em;
   color: #1c00cf;
 }
 

@@ -273,7 +273,7 @@
         <splitter class="devtools-side-splitter"/>
         <vbox id="editor" flex="1"/>
         <splitter class="devtools-side-splitter"/>
-        <vbox id="instruments-pane">
+        <vbox id="instruments-pane" hidden="true">
           <vbox id="expressions"/>
           <splitter class="devtools-horizontal-splitter"/>
           <vbox id="variables" flex="1"/>
