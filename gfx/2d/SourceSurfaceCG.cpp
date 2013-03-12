@@ -46,39 +46,6 @@ static void releaseCallback(void *info, const void *data, size_t size) {
   free(info);
 }
 
-static void
-AssignSurfaceParametersFromFormat(SurfaceFormat aFormat,
-                                  CGColorSpaceRef &aColorSpace,
-                                  CGBitmapInfo &aBitinfo,
-                                  int &aBitsPerComponent,
-                                  int &aBitsPerPixel)
-{
-  switch (aFormat) {
-    case FORMAT_B8G8R8A8:
-      aColorSpace = CGColorSpaceCreateDeviceRGB();
-      aBitinfo = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host;
-      aBitsPerComponent = 8;
-      aBitsPerPixel = 32;
-      break;
-
-    case FORMAT_B8G8R8X8:
-      aColorSpace = CGColorSpaceCreateDeviceRGB();
-      aBitinfo = kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Host;
-      aBitsPerComponent = 8;
-      aBitsPerPixel = 32;
-      break;
-
-    case FORMAT_A8:
-      // XXX: why don't we set a colorspace here?
-      aBitsPerComponent = 8;
-      aBitsPerPixel = 8;
-      break;
-
-    default:
-      MOZ_CRASH();
-  }
-}
-
 static CGImageRef
 CreateCGImage(void *aInfo,
               const void *aData,
@@ -92,8 +59,30 @@ CreateCGImage(void *aInfo,
   int bitsPerComponent = 0;
   int bitsPerPixel = 0;
 
-  AssignSurfaceParametersFromFormat(aFormat, colorSpace, bitinfo,
-                                    bitsPerComponent, bitsPerPixel);
+  switch (aFormat) {
+    case FORMAT_B8G8R8A8:
+      colorSpace = CGColorSpaceCreateDeviceRGB();
+      bitinfo = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host;
+      bitsPerComponent = 8;
+      bitsPerPixel = 32;
+      break;
+
+    case FORMAT_B8G8R8X8:
+      colorSpace = CGColorSpaceCreateDeviceRGB();
+      bitinfo = kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Host;
+      bitsPerComponent = 8;
+      bitsPerPixel = 32;
+      break;
+
+    case FORMAT_A8:
+      // XXX: why don't we set a colorspace here?
+      bitsPerComponent = 8;
+      bitsPerPixel = 8;
+      break;
+
+    default:
+      MOZ_CRASH();
+  }
 
   CGDataProviderRef dataProvider = CGDataProviderCreateWithData(aInfo,
                                                                 aData,
