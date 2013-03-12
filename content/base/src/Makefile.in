@@ -160,12 +160,6 @@ ifneq (,$(INTEL_ARCHITECTURE))
 CPPSRCS += nsTextFragmentSSE2.cpp
 endif
 
-ifeq (ppc,$(CPU_ARCH))
-ifdef GNU_CC
-CPPSRCS += nsTextFragmentAltiVec.cpp
-endif
-endif
-
 GQI_SRCS = contentbase.gqi
 
 # we don't want the shared lib, but we want to force the creation of a
@@ -229,10 +223,3 @@ ifdef SOLARIS_SUNPRO_CXX
 nsTextFragmentSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-xarch=sse2 -xO4
 endif
 endif
-
-ifeq (ppc,$(CPU_ARCH))
-ifdef GNU_CC
-nsTextFragmentAltiVec.$(OBJ_SUFFIX): CXXFLAGS+=-maltivec
-endif
-endif
-
