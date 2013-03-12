@@ -4,7 +4,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: blapi.h,v 1.50 2013/02/05 18:10:42 wtc%google.com Exp $ */
+/* $Id: blapi.h,v 1.51 2013/02/14 21:20:46 wtc%google.com Exp $ */
 
 #ifndef _BLAPI_H_
 #define _BLAPI_H_
@@ -875,8 +875,8 @@ extern void MD5_End(MD5Context *cx, unsigned char *digest,
 		    unsigned int *digestLen, unsigned int maxDigestLen);
 
 /*
-** Export the raw state of the MD5 hash without appending the standard padding
-** and length bytes. Produce the digested results in "digest"
+** Export the current state of the MD5 hash without appending the standard
+** padding and length bytes. Produce the digested results in "digest"
 **	"cx" the context
 **	"digest" where the 16 bytes of digest data are stored
 **	"digestLen" where the digest length (16) is stored (optional)
@@ -1044,9 +1044,9 @@ extern void SHA1_End(SHA1Context *cx, unsigned char *digest,
 
 /*
 ** Export the current state of the SHA-1 hash without appending the standard
-** padding and length. Produce the digested results in "digest"
+** padding and length bytes. Produce the digested results in "digest"
 **	"cx" the context
-**	"digest" where the 16 bytes of digest data are stored
+**	"digest" where the 20 bytes of digest data are stored
 **	"digestLen" where the digest length (20) is stored (optional)
 **	"maxDigestLen" the maximum amount of data that can ever be
 **	   stored in "digest"
@@ -1092,6 +1092,15 @@ extern void SHA224_Update(SHA224Context *cx, const unsigned char *input,
 			unsigned int inputLen);
 extern void SHA224_End(SHA224Context *cx, unsigned char *digest,
 		     unsigned int *digestLen, unsigned int maxDigestLen);
+/*
+** Export the current state of the SHA-224 hash without appending the standard
+** padding and length bytes. Produce the digested results in "digest"
+**	"cx" the context
+**	"digest" where the 28 bytes of digest data are stored
+**	"digestLen" where the digest length (28) is stored (optional)
+**	"maxDigestLen" the maximum amount of data that can ever be
+**	   stored in "digest"
+*/
 extern void SHA224_EndRaw(SHA224Context *cx, unsigned char *digest,
 			  unsigned int *digestLen, unsigned int maxDigestLen);
 extern SECStatus SHA224_HashBuf(unsigned char *dest, const unsigned char *src,
@@ -1112,6 +1121,15 @@ extern void SHA256_Update(SHA256Context *cx, const unsigned char *input,
 			unsigned int inputLen);
 extern void SHA256_End(SHA256Context *cx, unsigned char *digest,
 		     unsigned int *digestLen, unsigned int maxDigestLen);
+/*
+** Export the current state of the SHA-256 hash without appending the standard
+** padding and length bytes. Produce the digested results in "digest"
+**	"cx" the context
+**	"digest" where the 32 bytes of digest data are stored
+**	"digestLen" where the digest length (32) is stored (optional)
+**	"maxDigestLen" the maximum amount of data that can ever be
+**	   stored in "digest"
+*/
 extern void SHA256_EndRaw(SHA256Context *cx, unsigned char *digest,
 			  unsigned int *digestLen, unsigned int maxDigestLen);
 extern SECStatus SHA256_HashBuf(unsigned char *dest, const unsigned char *src,
@@ -1130,6 +1148,15 @@ extern void SHA512_DestroyContext(SHA512Context *cx, PRBool freeit);
 extern void SHA512_Begin(SHA512Context *cx);
 extern void SHA512_Update(SHA512Context *cx, const unsigned char *input,
 			unsigned int inputLen);
+/*
+** Export the current state of the SHA-512 hash without appending the standard
+** padding and length bytes. Produce the digested results in "digest"
+**	"cx" the context
+**	"digest" where the 64 bytes of digest data are stored
+**	"digestLen" where the digest length (64) is stored (optional)
+**	"maxDigestLen" the maximum amount of data that can ever be
+**	   stored in "digest"
+*/
 extern void SHA512_EndRaw(SHA512Context *cx, unsigned char *digest,
 			  unsigned int *digestLen, unsigned int maxDigestLen);
 extern void SHA512_End(SHA512Context *cx, unsigned char *digest,
@@ -1152,6 +1179,15 @@ extern void SHA384_Update(SHA384Context *cx, const unsigned char *input,
 			unsigned int inputLen);
 extern void SHA384_End(SHA384Context *cx, unsigned char *digest,
 		     unsigned int *digestLen, unsigned int maxDigestLen);
+/*
+** Export the current state of the SHA-384 hash without appending the standard
+** padding and length bytes. Produce the digested results in "digest"
+**	"cx" the context
+**	"digest" where the 48 bytes of digest data are stored
+**	"digestLen" where the digest length (48) is stored (optional)
+**	"maxDigestLen" the maximum amount of data that can ever be
+**	   stored in "digest"
+*/
 extern void SHA384_EndRaw(SHA384Context *cx, unsigned char *digest,
 			  unsigned int *digestLen, unsigned int maxDigestLen);
 extern SECStatus SHA384_HashBuf(unsigned char *dest, const unsigned char *src,
