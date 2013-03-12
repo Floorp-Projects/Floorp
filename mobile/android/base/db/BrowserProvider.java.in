@@ -1727,13 +1727,18 @@ public class BrowserProvider extends ContentProvider {
             debug("Opening browser.db: " + db.getPath());
 
             Cursor cursor = null;
-            if (Build.VERSION.SDK_INT >= 8) {
-                try {
-                    cursor = db.rawQuery("PRAGMA foreign_keys=ON", null);
-                } finally {
-                    if (cursor != null)
-                        cursor.close();
-                }
+            try {
+                cursor = db.rawQuery("PRAGMA foreign_keys=ON", null);
+            } finally {
+                if (cursor != null)
+                    cursor.close();
+            }
+            cursor = null;
+            try {
+                cursor = db.rawQuery("PRAGMA synchronous=NORMAL", null);
+            } finally {
+                if (cursor != null)
+                    cursor.close();
             }
 
             // From Honeycomb on, it's possible to run several db
@@ -1742,13 +1747,6 @@ public class BrowserProvider extends ContentProvider {
                 db.enableWriteAheadLogging();
             } else {
                 // Pre-Honeycomb, we can do some lesser optimizations.
-                cursor = null;
-                try {
-                    cursor = db.rawQuery("PRAGMA synchronous=NORMAL", null);
-                } finally {
-                    if (cursor != null)
-                        cursor.close();
-                }
                 cursor = null;
                 try {
                     cursor = db.rawQuery("PRAGMA journal_mode=PERSIST", null);
