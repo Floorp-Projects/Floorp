@@ -206,7 +206,6 @@ cprPostInit (void)
      */
 
     debug_bind_keyword("cpr-info", &cprInfo);
-    //bind_show_keyword("cpr-msgq", cprShowMessageQueueStats);
 
     return CPR_SUCCESS;
 }
