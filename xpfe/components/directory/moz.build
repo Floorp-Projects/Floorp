@@ -7,3 +7,5 @@ XPIDL_SOURCES += [
     'nsIHTTPIndex.idl',
 ]
 
+XPIDL_MODULE = 'directory'
+

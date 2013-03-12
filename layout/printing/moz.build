@@ -9,3 +9,5 @@ XPIDL_SOURCES += [
     'nsIPrintStatusFeedback.idl',
 ]
 
+XPIDL_MODULE = 'layout_printing'
+

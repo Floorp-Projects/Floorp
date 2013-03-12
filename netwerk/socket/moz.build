@@ -11,3 +11,5 @@ XPIDL_SOURCES += [
     'nsITransportSecurityInfo.idl',
 ]
 
+XPIDL_MODULE = 'necko_socket'
+

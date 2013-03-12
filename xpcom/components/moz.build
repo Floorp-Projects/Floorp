@@ -13,3 +13,5 @@ XPIDL_SOURCES += [
     'nsIServiceManager.idl',
 ]
 
+XPIDL_MODULE = 'xpcom_components'
+

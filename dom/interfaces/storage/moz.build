@@ -13,3 +13,5 @@ XPIDL_SOURCES += [
     'nsIDOMToString.idl',
 ]
 
+XPIDL_MODULE = 'dom_storage'
+

@@ -26,3 +26,5 @@ XPIDL_SOURCES += [
     'nsIDOMXULTreeElement.idl',
 ]
 
+XPIDL_MODULE = 'dom_xul'
+

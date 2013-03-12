@@ -8,3 +8,5 @@ XPIDL_SOURCES += [
     'nsIFMRadio.idl',
 ]
 
+XPIDL_MODULE = 'dom_fm'
+

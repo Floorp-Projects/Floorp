@@ -11,3 +11,5 @@ XPIDL_SOURCES += [
     'nsIToolkitProfileService.idl',
 ]
 
+XPIDL_MODULE = 'toolkitprofile'
+

@@ -21,3 +21,5 @@ if CONFIG['MOZ_CRASHREPORTER']:
         'nsICrashReporter.idl',
     ]
 
+XPIDL_MODULE = 'xpcom_system'
+

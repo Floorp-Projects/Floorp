@@ -7,3 +7,5 @@ XPIDL_SOURCES += [
     'nsIDOMTimeEvent.idl',
 ]
 
+XPIDL_MODULE = 'dom_smil'
+

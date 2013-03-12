@@ -10,3 +10,5 @@ XPIDL_SOURCES += [
     'nsIIccProvider.idl',
 ]
 
+XPIDL_MODULE = 'dom_icc'
+

@@ -12,3 +12,5 @@ XPIDL_SOURCES += [
     'nsICacheVisitor.idl',
 ]
 
+XPIDL_MODULE = 'necko_cache'
+

@@ -8,3 +8,5 @@ XPIDL_SOURCES += [
     'nsIUserInfo.idl',
 ]
 
+XPIDL_MODULE = 'appstartup'
+

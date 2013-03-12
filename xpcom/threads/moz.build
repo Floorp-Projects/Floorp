@@ -17,3 +17,5 @@ XPIDL_SOURCES += [
     'nsITimer.idl',
 ]
 
+XPIDL_MODULE = 'xpcom_threads'
+

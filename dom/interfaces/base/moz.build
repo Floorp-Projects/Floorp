@@ -57,3 +57,5 @@ if CONFIG['MOZ_B2G']:
         'nsIDOMWindowB2G.idl',
     ]
 
+XPIDL_MODULE = 'dom_base'
+

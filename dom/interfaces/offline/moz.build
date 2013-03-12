@@ -8,3 +8,5 @@ XPIDL_SOURCES += [
     'nsIDOMOfflineResourceList.idl',
 ]
 
+XPIDL_MODULE = 'dom_offline'
+
