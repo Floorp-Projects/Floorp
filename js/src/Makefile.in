@@ -176,14 +176,10 @@ INSTALLED_HEADERS = \
 # BEGIN exported headers that are only exported
 #       because of inclusion by an INSTALLED_HEADER
 #
-EXPORTS_NAMESPACES += ds gc
+EXPORTS_NAMESPACES += ds
 
 EXPORTS_ds = \
 		BitArray.h \
-		$(NULL)
-
-EXPORTS_gc = \
-		Root.h \
 		$(NULL)
 
 ######################################################
@@ -212,6 +208,7 @@ EXPORTS_js = \
 		MemoryMetrics.h \
 		PropertyKey.h \
 		RequiredDefines.h \
+		RootingAPI.h \
 		TemplateLib.h \
 		Utility.h \
 		Value.h \

@@ -16,8 +16,8 @@
 
 #include <limits> /* for std::numeric_limits */
 
-#include "gc/Root.h"
 #include "js/Anchor.h"
+#include "js/RootingAPI.h"
 #include "js/Utility.h"
 
 namespace JS { class Value; }

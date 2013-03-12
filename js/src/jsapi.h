@@ -25,11 +25,11 @@
 #include "jspubtd.h"
 #include "jsutil.h"
 
-#include "gc/Root.h"
 #include "js/Anchor.h"
 #include "js/CharacterEncoding.h"
 #include "js/HashTable.h"
 #include "js/PropertyKey.h"
+#include "js/RootingAPI.h"
 #include "js/Utility.h"
 #include "js/Value.h"
 #include "js/Vector.h"
