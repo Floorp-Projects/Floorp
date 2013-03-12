@@ -183,7 +183,7 @@ function ResponsiveUI(aWindow, aTab)
 
 ResponsiveUI.prototype = {
   _transitionsEnabled: true,
-  _floatingScrollbars: false, // See bug 799471
+  _floatingScrollbars: true,
   get transitionsEnabled() this._transitionsEnabled,
   set transitionsEnabled(aValue) {
     this._transitionsEnabled = aValue;
