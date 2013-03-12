@@ -14,7 +14,6 @@
 #include "nsAutoPtr.h"
 #include "ThreeDPoint.h"
 #include "AudioContext.h"
-#include "PannerNode.h"
 
 struct JSContext;
 
@@ -47,7 +46,6 @@ public:
   void SetDopplerFactor(double aDopplerFactor)
   {
     mDopplerFactor = aDopplerFactor;
-    SendDoubleParameterToStream(PannerNode::LISTENER_DOPPLER_FACTOR, mDopplerFactor);
   }
 
   double SpeedOfSound() const
@@ -57,7 +55,6 @@ public:
   void SetSpeedOfSound(double aSpeedOfSound)
   {
     mSpeedOfSound = aSpeedOfSound;
-    SendDoubleParameterToStream(PannerNode::LISTENER_SPEED_OF_SOUND, mSpeedOfSound);
   }
 
   void SetPosition(double aX, double aY, double aZ)
@@ -65,7 +62,6 @@ public:
     mPosition.x = aX;
     mPosition.y = aY;
     mPosition.z = aZ;
-    SendThreeDPointParameterToStream(PannerNode::LISTENER_POSITION, mPosition);
   }
 
   void SetOrientation(double aX, double aY, double aZ,
@@ -77,8 +73,6 @@ public:
     mUpVector.x = aXUp;
     mUpVector.y = aYUp;
     mUpVector.z = aZUp;
-    SendThreeDPointParameterToStream(PannerNode::LISTENER_ORIENTATION, mOrientation);
-    SendThreeDPointParameterToStream(PannerNode::LISTENER_UPVECTOR, mUpVector);
   }
 
   void SetVelocity(double aX, double aY, double aZ)
@@ -86,18 +80,7 @@ public:
     mVelocity.x = aX;
     mVelocity.y = aY;
     mVelocity.z = aZ;
-    SendThreeDPointParameterToStream(PannerNode::LISTENER_VELOCITY, mVelocity);
   }
-
-  void RegisterPannerNode(PannerNode* aPannerNode);
-  void UnregisterPannerNode(PannerNode* aPannerNode)
-  {
-    mPanners.RemoveElement(aPannerNode);
-  }
-
-private:
-  void SendDoubleParameterToStream(uint32_t aIndex, double aValue);
-  void SendThreeDPointParameterToStream(uint32_t aIndex, const ThreeDPoint& aValue);
 
 private:
   nsRefPtr<AudioContext> mContext;
@@ -107,7 +90,6 @@ private:
   ThreeDPoint mVelocity;
   double mDopplerFactor;
   double mSpeedOfSound;
-  nsTArray<PannerNode*> mPanners;
 };
 
 }
