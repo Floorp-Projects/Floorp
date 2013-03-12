@@ -40,6 +40,8 @@
 
 namespace mozilla {
 
+template<typename T> class CheckedInt;
+
 namespace detail {
 
 /*
@@ -454,23 +456,32 @@ IsDivValid(T x, T y)
          !(IsSigned<T>::value && x == MinValue<T>::value && y == T(-1));
 }
 
-// This is just to shut up msvc warnings about negating unsigned ints.
-template<typename T, bool IsTSigned = IsSigned<T>::value>
-struct OppositeIfSignedImpl
-{
-    static T run(T x) { return -x; }
-};
+template<typename T, bool IsSigned = IsSigned<T>::value>
+struct NegateImpl;
+
 template<typename T>
-struct OppositeIfSignedImpl<T, false>
+struct NegateImpl<T, false>
 {
-    static T run(T x) { return x; }
+    static CheckedInt<T> negate(const CheckedInt<T>& val)
+    {
+      // Handle negation separately for signed/unsigned, for simpler code and to
+      // avoid an MSVC warning negating an unsigned value.
+      return CheckedInt<T>(0, val.isValid() && val.mValue == 0);
+    }
 };
+
 template<typename T>
-inline T
-OppositeIfSigned(T x)
+struct NegateImpl<T, true>
 {
-  return OppositeIfSignedImpl<T>::run(x);
-}
+    static CheckedInt<T> negate(const CheckedInt<T>& val)
+    {
+      // Watch out for the min-value, which (with twos-complement) can't be
+      // negated as -min-value is then (max-value + 1).
+      if (!val.isValid() || val.mValue == MinValue<T>::value)
+        return CheckedInt<T>(val.mValue, false);
+      return CheckedInt<T>(-val.mValue, true);
+    }
+};
 
 } // namespace detail
 
@@ -560,6 +571,8 @@ class CheckedInt
                         "This type is not supported by CheckedInt");
     }
 
+    friend class detail::NegateImpl<T>;
+
   public:
     /**
      * Constructs a checked integer with given @a value. The checked integer is
@@ -628,14 +641,7 @@ class CheckedInt
 
     CheckedInt operator -() const
     {
-      // Circumvent msvc warning about - applied to unsigned int.
-      // if we're unsigned, the only valid case anyway is 0
-      // in which case - is a no-op.
-      T result = detail::OppositeIfSigned(mValue);
-      /* Help the compiler perform RVO (return value optimization). */
-      return CheckedInt(result,
-                        mIsValid && detail::IsSubValid(T(0),
-                                                       mValue));
+      return detail::NegateImpl<T>::negate(*this);
     }
 
     /**
