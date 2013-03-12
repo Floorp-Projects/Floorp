@@ -1349,4 +1349,9 @@ interface nsIDOMWindowUtils : nsISupports {
     * attribute or -moz-user-input: none/disabled.
     */
    boolean isNodeDisabledForEvents(in nsIDOMNode aNode);
+
+   /**
+    * Setting paintFlashing to true will flash newly painted area.
+    */
+   attribute boolean paintFlashing;
 };
