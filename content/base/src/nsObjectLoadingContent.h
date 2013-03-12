@@ -449,8 +449,8 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // Frame loader, for content documents we load.
     nsRefPtr<nsFrameLoader>     mFrameLoader;
 
-    // A pending nsAsyncInstantiateEvent (may be null).  This is a weak ref.
-    nsIRunnable                *mPendingInstantiateEvent;
+    // Track if we have a pending AsyncInstantiateEvent
+    nsCOMPtr<nsIRunnable>       mPendingInstantiateEvent;
 
     // The content type of our current load target, updated by
     // UpdateObjectParameters(). Takes the channel's type into account once
