@@ -363,19 +363,19 @@ EVENT(wheel,
       NS_WHEEL_WHEEL,
       EventNameType_All,
       NS_WHEEL_EVENT)
-// Gecko-specific extensions that apply to elements
 EVENT(copy,
       NS_COPY,
       EventNameType_HTMLXUL,
-      NS_EVENT)
+      NS_CLIPBOARD_EVENT)
 EVENT(cut,
       NS_CUT,
       EventNameType_HTMLXUL,
-      NS_EVENT)
+      NS_CLIPBOARD_EVENT)
 EVENT(paste,
       NS_PASTE,
       EventNameType_HTMLXUL,
-      NS_EVENT)
+      NS_CLIPBOARD_EVENT)
+// Gecko-specific extensions that apply to elements
 EVENT(beforescriptexecute,
       NS_BEFORE_SCRIPT_EXECUTE,
       EventNameType_HTMLXUL,

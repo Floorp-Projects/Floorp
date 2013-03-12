@@ -160,7 +160,6 @@ CPPSRCS		+= \
 		nsHTMLAudioElement.cpp \
 		nsHTMLMediaElement.cpp \
 		MediaError.cpp \
-		nsMediaFragmentURIParser.cpp \
 		HTMLSourceElement.cpp \
 		TimeRanges.cpp \
 		nsHTMLVideoElement.cpp \
@@ -188,6 +187,7 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../../editor/libeditor/base \
 		-I$(srcdir)/../../../../editor/libeditor/text \
 		-I$(srcdir)/../../../../editor/txmgr/src \
+		-I$(srcdir)/../../../../netwerk/base/src \
 		-I$(srcdir) \
 		-I$(topsrcdir)/xpcom/ds \
 		$(NULL)

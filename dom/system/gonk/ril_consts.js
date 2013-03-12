@@ -449,6 +449,7 @@ this.ICC_EF_SPDI   = 0x6fcd;
 // CSIM files
 this.ICC_EF_CSIM_CDMAHOME = 0x6f28;
 this.ICC_EF_CSIM_CST      = 0x6f32; // CDMA Service table
+this.ICC_EF_CSIM_SPN      = 0x6f41;
 
 this.ICC_PHASE_1 = 0x00;
 this.ICC_PHASE_2 = 0x02;

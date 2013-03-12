@@ -7,6 +7,9 @@
 #ifndef MOZILLA_IMAGELIB_IMAGEFACTORY_H_
 #define MOZILLA_IMAGELIB_IMAGEFACTORY_H_
 
+#include "nsCOMPtr.h"
+
+class nsCString;
 class nsIRequest;
 class nsIURI;
 class imgStatusTracker;
@@ -43,6 +46,13 @@ public:
    */
   static already_AddRefed<Image> CreateAnonymousImage(const nsCString& aMimeType);
 
+  /**
+   * Creates a version of an existing image which does not animate and is frozen
+   * at the first frame.
+   *
+   * @param aImage         The existing image.
+   */
+  static already_AddRefed<Image> Freeze(Image* aImage);
 
 private:
   // Factory functions that create specific types of image containers.

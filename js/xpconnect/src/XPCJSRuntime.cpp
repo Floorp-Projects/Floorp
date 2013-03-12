@@ -1354,7 +1354,7 @@ XPCJSRuntime::~XPCJSRuntime()
     }
 #ifdef MOZ_ENABLE_PROFILER_SPS
     // Tell the profiler that the runtime is gone
-    if (ProfileStack *stack = mozilla_profile_stack())
+    if (PseudoStack *stack = mozilla_get_pseudo_stack())
         stack->sampleRuntime(nullptr);
 #endif
 
@@ -2574,7 +2574,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     JS_EnumerateDiagnosticMemoryRegions(DiagnosticMemoryCallback);
 #endif
 #ifdef MOZ_ENABLE_PROFILER_SPS
-    if (ProfileStack *stack = mozilla_profile_stack())
+    if (PseudoStack *stack = mozilla_get_pseudo_stack())
         stack->sampleRuntime(mJSRuntime);
 #endif
     JS_SetAccumulateTelemetryCallback(mJSRuntime, AccumulateTelemetryCallback);

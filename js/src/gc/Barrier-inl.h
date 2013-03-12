@@ -42,6 +42,30 @@ RelocatablePtr<T>::relocate(JSRuntime *rt)
 #endif
 }
 
+inline
+EncapsulatedValue::~EncapsulatedValue()
+{
+    pre();
+}
+
+inline EncapsulatedValue &
+EncapsulatedValue::operator=(const Value &v)
+{
+    pre();
+    JS_ASSERT(!IsPoisonedValue(v));
+    value = v;
+    return *this;
+}
+
+inline EncapsulatedValue &
+EncapsulatedValue::operator=(const EncapsulatedValue &v)
+{
+    pre();
+    JS_ASSERT(!IsPoisonedValue(v));
+    value = v.get();
+    return *this;
+}
+
 inline void
 EncapsulatedValue::writeBarrierPre(const Value &value)
 {

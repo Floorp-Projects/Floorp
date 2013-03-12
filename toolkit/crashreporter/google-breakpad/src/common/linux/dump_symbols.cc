@@ -626,7 +626,7 @@ bool LoadSymbols(const string& obj_file,
     }
   }
 
-  if (!found_debug_info_section) {
+  if (!found_debug_info_section && symbol_data != ONLY_CFI) {
     fprintf(stderr, "%s: file contains no debugging information"
             " (no \".stab\" or \".debug_info\" sections)\n",
             obj_file.c_str());
