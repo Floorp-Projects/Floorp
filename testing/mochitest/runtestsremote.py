@@ -544,6 +544,7 @@ def main():
         options.extraPrefs.append('browser.search.suggest.enabled=true')
         options.extraPrefs.append('browser.search.suggest.prompted=true')
         options.extraPrefs.append('browser.viewport.scaleRatio=100')
+        options.extraPrefs.append('browser.chrome.dynamictoolbar=false')
 
         if (options.dm_trans == 'adb' and options.robocopPath):
           dm._checkCmd(["install", "-r", os.path.join(options.robocopPath, "robocop.apk")])
