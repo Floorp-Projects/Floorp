@@ -727,11 +727,11 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
     GetFrameSelection(aWindow, getter_AddRefs(sel));
     NS_ENSURE_ARG_POINTER(sel);
 
-    nsCOMPtr<nsIDOMRange> searchRange = nsFind::CreateRange(theDoc);
+    nsCOMPtr<nsIDOMRange> searchRange = nsFind::CreateRange();
     NS_ENSURE_ARG_POINTER(searchRange);
-    nsCOMPtr<nsIDOMRange> startPt  = nsFind::CreateRange(theDoc);
+    nsCOMPtr<nsIDOMRange> startPt  = nsFind::CreateRange();
     NS_ENSURE_ARG_POINTER(startPt);
-    nsCOMPtr<nsIDOMRange> endPt  = nsFind::CreateRange(theDoc);
+    nsCOMPtr<nsIDOMRange> endPt  = nsFind::CreateRange();
     NS_ENSURE_ARG_POINTER(endPt);
 
     nsCOMPtr<nsIDOMRange> foundRange;

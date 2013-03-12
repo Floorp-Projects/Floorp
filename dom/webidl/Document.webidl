@@ -17,6 +17,7 @@
 
 interface Attr;
 interface Comment;
+interface Range;
 interface StyleSheetList;
 interface Touch;
 interface TouchList;
