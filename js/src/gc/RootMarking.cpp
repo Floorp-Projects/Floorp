@@ -21,7 +21,6 @@
 #ifdef JS_ION
 # include "ion/IonMacroAssembler.h"
 # include "ion/IonFrameIterator.h"
-# include "ion/BaselineCompiler.h"
 #endif
 #include "js/HashTable.h"
 #include "vm/Debugger.h"
@@ -594,13 +593,6 @@ AutoGCRooter::trace(JSTracer *trc)
       case IONMASM: {
 #ifdef JS_ION
         static_cast<js::ion::MacroAssembler::AutoRooter *>(this)->masm()->trace(trc);
-#endif
-        return;
-      }
-
-      case BASELINECOMPILER: {
-#ifdef JS_ION
-        static_cast<js::ion::BaselineCompiler::AutoRooter *>(this)->compiler()->trace(trc);
 #endif
         return;
       }

@@ -39,27 +39,7 @@ BaselineScript::BaselineScript(uint32_t prologueOffset)
     flags_(0)
 { }
 
-static const size_t BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12; //XXX
-
-// XXX copied from Ion.cpp
-class AutoDestroyAllocator
-{
-    LifoAlloc *alloc;
-
-  public:
-    AutoDestroyAllocator(LifoAlloc *alloc) : alloc(alloc) {}
-
-    void cancel()
-    {
-        alloc = NULL;
-    }
-
-    ~AutoDestroyAllocator()
-    {
-        if (alloc)
-            js_delete(alloc);
-    }
-};
+static const size_t BASELINE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 4096;
 
 static bool
 CheckFrame(StackFrame *fp)
@@ -219,13 +199,9 @@ BaselineCompile(JSContext *cx, HandleScript script, StackFrame *fp)
 {
     JS_ASSERT(!script->baseline);
 
-    LifoAlloc *alloc = cx->new_<LifoAlloc>(BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
-    if (!alloc)
-        return Method_Error;
+    LifoAlloc alloc(BASELINE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
 
-    AutoDestroyAllocator autoDestroy(alloc);
-
-    TempAllocator *temp = alloc->new_<TempAllocator>(alloc);
+    TempAllocator *temp = alloc.new_<TempAllocator>(&alloc);
     if (!temp)
         return Method_Error;
 
