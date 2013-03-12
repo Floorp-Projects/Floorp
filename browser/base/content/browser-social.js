@@ -1030,7 +1030,11 @@ var SocialToolbar = {
     let anchor = navBar.getAttribute("mode") == "text" ?
                    document.getAnonymousElementByAttribute(aToolbarButton, "class", "toolbarbutton-text") :
                    document.getAnonymousElementByAttribute(aToolbarButton, "class", "toolbarbutton-icon");
-    panel.openPopup(anchor, "bottomcenter topright", 0, 0, false, false);
+    // Bug 849216 - open the popup in a setTimeout so we avoid the auto-rollup
+    // handling from preventing it being opened in some cases.
+    setTimeout(function() {
+      panel.openPopup(anchor, "bottomcenter topright", 0, 0, false, false);
+    }, 0);
   },
 
   setPanelErrorMessage: function SocialToolbar_setPanelErrorMessage(aNotificationFrame) {
