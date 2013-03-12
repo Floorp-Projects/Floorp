@@ -1324,8 +1324,8 @@ abstract public class GeckoApp
     public boolean isSmallTablet() {
         if (sIsSmallTablet == null) {
             int screenLayout = getResources().getConfiguration().screenLayout;
-            return (Build.VERSION.SDK_INT >= 11 &&
-                    ((screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_LARGE));
+            sIsSmallTablet = (Build.VERSION.SDK_INT >= 11 &&
+                              ((screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_LARGE));
         }
 
         return sIsSmallTablet;
