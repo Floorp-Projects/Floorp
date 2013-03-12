@@ -115,20 +115,27 @@ public class FennecNativeActions implements Actions {
         }
 
         public synchronized void blockForEvent() {
+            blockForEvent(MAX_WAIT_MS, true);
+        }
+
+        private synchronized void blockForEvent(long millis, boolean failOnTimeout) {
             long startTime = SystemClock.uptimeMillis();
             long endTime = 0;
             while (! mEventReceived) {
                 try {
-                    this.wait(MAX_WAIT_MS);
+                    this.wait(millis);
                 } catch (InterruptedException ie) {
                     FennecNativeDriver.log(LogLevel.ERROR, ie);
                     break;
                 }
                 endTime = SystemClock.uptimeMillis();
-                if (!mEventReceived && (endTime - startTime >= MAX_WAIT_MS)) {
-                    FennecNativeDriver.logAllStackTraces(FennecNativeDriver.LogLevel.ERROR);
-                    mAsserter.ok(false, "GeckoEventExpecter", 
-                        "blockForEvent timeout: "+mGeckoEvent);
+                if (!mEventReceived && (endTime - startTime >= millis)) {
+                    if (failOnTimeout) {
+                        FennecNativeDriver.logAllStackTraces(FennecNativeDriver.LogLevel.ERROR);
+                        mAsserter.ok(false, "GeckoEventExpecter", 
+                            "blockForEvent timeout: "+mGeckoEvent);
+                    }
+                    mEventData = null;
                     return;
                 }
             }
@@ -196,6 +203,11 @@ public class FennecNativeActions implements Actions {
 
         public synchronized String blockForEventData() {
             blockForEvent();
+            return mEventData;
+        }
+
+        public synchronized String blockForEventDataWithTimeout(long millis) {
+            blockForEvent(millis, false);
             return mEventData;
         }
 
@@ -287,20 +299,22 @@ public class FennecNativeActions implements Actions {
             }
         }
 
-        public synchronized void blockForEvent() {
+        private synchronized void blockForEvent(long millis, boolean failOnTimeout) {
             long startTime = SystemClock.uptimeMillis();
             long endTime = 0;
             while (!mPaintDone) {
                 try {
-                    this.wait(MAX_WAIT_MS);
+                    this.wait(millis);
                 } catch (InterruptedException ie) {
                     FennecNativeDriver.log(LogLevel.ERROR, ie);
                     break;
                 }
                 endTime = SystemClock.uptimeMillis();
-                if (!mPaintDone && (endTime - startTime >= MAX_WAIT_MS)) {
-                    FennecNativeDriver.logAllStackTraces(FennecNativeDriver.LogLevel.ERROR);
-                    mAsserter.ok(false, "PaintExpecter", "blockForEvent timeout");
+                if (!mPaintDone && (endTime - startTime >= millis)) {
+                    if (failOnTimeout) {
+                        FennecNativeDriver.logAllStackTraces(FennecNativeDriver.LogLevel.ERROR);
+                        mAsserter.ok(false, "PaintExpecter", "blockForEvent timeout");
+                    }
                     return;
                 }
             }
@@ -311,8 +325,17 @@ public class FennecNativeActions implements Actions {
             }
         }
 
+        public synchronized void blockForEvent() {
+            blockForEvent(MAX_WAIT_MS, true);
+        }
+
         public synchronized String blockForEventData() {
             blockForEvent();
+            return null;
+        }
+
+        public synchronized String blockForEventDataWithTimeout(long millis) {
+            blockForEvent(millis, false);
             return null;
         }
 
