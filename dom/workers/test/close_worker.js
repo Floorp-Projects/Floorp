@@ -4,6 +4,13 @@
  */
 onclose = function() {
   postMessage("closed");
+  // Try to open a new worker.
+  try {
+    var worker = new Worker("close_worker.js");
+    throw new Error("We shouldn't get here!");
+  } catch (e) {
+    // pass
+  }
 };
 
 setTimeout(function () {
