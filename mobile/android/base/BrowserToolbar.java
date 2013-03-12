@@ -1158,7 +1158,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     }
 
     public void requestFocusFromTouch() {
-        mLayout.requestFocusFromTouch();
+        mAwesomeBar.requestFocusFromTouch();
     }
 
     public void updateBackButton(boolean enabled) {
