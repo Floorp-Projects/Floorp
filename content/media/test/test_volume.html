@@ -27,10 +27,12 @@ var ids = new Array(document.getElementById('v1'), document.getElementById('a1')
 
 for (i=0; i<ids.length; i++) {
   var element = ids[i];
-  test(element, 0.0,false);
+  test(element, 0.0, false);
   test(element, 1.0, false);
   test(element, -0.1, true);
   test(element, 1.1, true);
+  test(element, undefined, true);
+  test(element, NaN, true);
 }  
  
 </script>

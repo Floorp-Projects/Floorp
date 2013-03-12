@@ -741,6 +741,9 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
     case NS_TEXT_EVENT:
       return NS_NewDOMTextEvent(aDOMEvent, aOwner, aPresContext,
                                 static_cast<nsTextEvent*>(aEvent));
+    case NS_CLIPBOARD_EVENT:
+      return NS_NewDOMClipboardEvent(aDOMEvent, aOwner, aPresContext,
+                                     static_cast<nsClipboardEvent*>(aEvent));
     case NS_SVG_EVENT:
       return NS_NewDOMSVGEvent(aDOMEvent, aOwner, aPresContext,
                                aEvent);

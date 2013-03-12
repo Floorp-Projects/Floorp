@@ -4,12 +4,17 @@
   <title>Test for Clipboard Events</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>      
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <p id="display"></p>
 <div id="content" style="border: 3px solid black; padding: 3em;">CONTENT TEXT<input id="content-input" value="INPUT TEXT"></div>
+<button id="button">Button</button>
+
+<div id="syntheticSpot" oncut="compareSynthetic(event, 'cut')"
+                        oncopy="compareSynthetic(event, 'copy')"
+                        onpaste="compareSynthetic(event, 'paste')">Spot</div>
 
 <pre id="test">
 <script class="testbody" type="text/javascript;version=1.7">
@@ -30,6 +35,8 @@ is(getClipboardText(), cb_text, "set/get clipboard text failed");
 
 // Some test functions need to be run with delays.
 var delayedTests = [];
+
+var cachedCutData, cachedCopyData, cachedPasteData;
 
 // Ensure window focus before running tests, otherwise key events can
 // misfire.  We set the onfocus event handler here to actually begin
@@ -53,20 +60,35 @@ window.onfocus = function()
     test_input_oncopy_abort,
     test_input_oncut_abort,
     test_input_onpaste_abort,
+    test_input_cut_dataTransfer,
+    test_input_cut_abort_dataTransfer,
+    test_input_copy_dataTransfer,
+    test_input_paste_dataTransfer,
+    test_input_paste_abort_dataTransfer,
+    test_input_copypaste_dataTransfer_multiple,
+    test_input_copy_button_dataTransfer
     ];
-  
+
   // Run the main tests.  This will also populate the delayedTests array
   for (let i = 0; i < testFunctions.length; i++) {
     // Init clipboard
     setClipboardText(clipboardInitialValue);
-  
+
     // Reset value of contentInput.
     contentInput.value = "INPUT TEXT";
-    
+
     var func = testFunctions[i];
     func();
   }
-  
+
+  // Check if the cached clipboard data can be accessed or modified
+  // and whether it modifies the real clipboard
+  checkCachedDataTransfer(cachedCutData, "cut");
+  checkCachedDataTransfer(cachedCopyData, "copy");
+  checkCachedDataTransfer(cachedPasteData, "paste");
+
+  checkSyntheticEvents();
+
   SimpleTest.finish();
 }
 
@@ -86,7 +108,7 @@ function getClipboardText() {
   trans = trans.QueryInterface(Components.interfaces.nsITransferable);
   trans.init(getLoadContext());
   trans.addDataFlavor("text/unicode");
-  
+
   var clipboard = Components.classes["@mozilla.org/widget/clipboard;1"]
     .getService();
   clipboard = clipboard.QueryInterface(Components.interfaces.nsIClipboard);
@@ -94,7 +116,7 @@ function getClipboardText() {
 
   var str = new Object();
   var strLen = new Object();
-    
+
   try {
     trans.getTransferData("text/unicode", str, strLen);
   } catch(e) {
@@ -108,15 +130,15 @@ function getClipboardText() {
       throw e;
     }
   }
-    
+
   if (!str) return null;
 
   str = str.value.QueryInterface(Components.interfaces.nsISupportsString);
   if (!str) return null;
- 
+
   str = str.data.substring(0, strLen.value / 2);
   if (!str) return null;
- 
+
   return str;
 }
 
@@ -144,6 +166,7 @@ function test_dom_oncopy() {
   // handler was called, and the clipboard contents have set to CONTENT TEXT.
   // Test firing oncopy event on ctrl-c:
   selectContentDiv();
+  
   var oncopy_fired = false;
   content.oncopy = function() { oncopy_fired = true; };
   try {
@@ -209,15 +232,18 @@ function test_dom_oncopy_abort() {
 
 function test_input_oncopy() {
   // Setup an oncopy event handler, fire copy.  Ensure that the event
-  // handler was called, and the clipboard contents have set to INPUT TEXT.
-  // Test firing oncopy event on ctrl-c:
+  // handler was called, and the clipboard contents have been set to 'PUT TE',
+  // which is the part that is selected below.
   selectContentInput();
+  contentInput.focus();
+  contentInput.setSelectionRange(2, 8);
+
   var oncopy_fired = false;
   contentInput.oncopy = function() { oncopy_fired = true; };
   try {
     synthesizeKey("c", {accelKey: 1});
     ok(oncopy_fired, "copy event firing on plaintext editor");
-    is(getClipboardText(), "INPUT TEXT",
+    is(getClipboardText(), "PUT TE",
       "copy on plaintext editor set clipboard correctly");
   } finally {
     contentInput.oncopy = null;
@@ -320,6 +346,335 @@ function test_input_onpaste_abort() {
   } finally {
     contentInput.onpaste = null;
   }
+}
+
+
+function test_input_cut_dataTransfer() {
+  // Cut using event.dataTransfer. The event is not cancelled so the default
+  // cut should occur
+  selectContentInput();
+  contentInput.oncut = function(event) {
+    ok(event instanceof ClipboardEvent, "cut event is a ClipboardEvent");
+    ok(event.clipboardData instanceof DataTransfer, "cut event dataTransfer is a DataTransfer");
+    is(event.target, contentInput, "cut event target");
+    is(event.clipboardData.mozItemCount, 0, "cut event mozItemCount");
+    is(event.clipboardData.getData("text/plain"), "", "cut event getData");
+    event.clipboardData.setData("text/plain", "This is some dataTransfer text");
+    cachedCutData = event.clipboardData;
+  };
+  try {
+    synthesizeKey("x", {accelKey: 1});
+    is(getClipboardText(), "INPUT TEXT",
+      "cut using dataTransfer on plaintext editor set clipboard correctly");
+    is(contentInput.value, "",
+      "cut using dataTransfer on plaintext editor cleared input");
+  } finally {
+    contentInput.oncut = null;
+  }
+}
+
+
+function test_input_cut_abort_dataTransfer() {
+  // Cut using event.dataTransfer but cancel the event. The data should be
+  // put on the clipboard but since we don't modify the input value, the input
+  // should have the same value.
+  selectContentInput();
+  contentInput.oncut = function(event) {
+    event.clipboardData.setData("text/plain", "Cut dataTransfer text");
+    return false;
+  };
+  try {
+    synthesizeKey("x", {accelKey: 1});
+    is(getClipboardText(), "Cut dataTransfer text",
+      "aborted cut using dataTransfer on plaintext editor set clipboard correctly");
+    is(contentInput.value, "INPUT TEXT",
+      "aborted cut using dataTransfer on plaintext editor did not modify input");
+  } finally {
+    contentInput.oncut = null;
+  }
+}
+
+
+function test_input_copy_dataTransfer() {
+  // Copy using event.dataTransfer
+  selectContentInput();
+  contentInput.oncopy = function(event) {
+    ok(event instanceof ClipboardEvent, "copy event is a ClipboardEvent");
+    ok(event.clipboardData instanceof DataTransfer, "copy event dataTransfer is a DataTransfer");
+    is(event.target, contentInput, "copy event target");
+    is(event.clipboardData.mozItemCount, 0, "copy event mozItemCount");
+    is(event.clipboardData.getData("text/plain"), "", "copy event getData");
+    event.clipboardData.setData("text/plain", "Copied dataTransfer text");
+    cachedCopyData = event.clipboardData;
+  };
+  try {
+    synthesizeKey("c", {accelKey: 1});
+    is(getClipboardText(), "INPUT TEXT",
+      "copy using dataTransfer on plaintext editor set clipboard correctly");
+    is(contentInput.value, "INPUT TEXT",
+      "copy using dataTransfer on plaintext editor did not modify input");
+  } finally {
+    contentInput.oncopy = null;
+  }
+}
+
+
+function test_input_copy_abort_dataTransfer() {
+  // Copy using event.dataTransfer but cancel the event.
+  selectContentInput();
+  contentInput.oncopy = function(event) {
+    event.clipboardData.setData("text/plain", "Copy dataTransfer text");
+    return false;
+  };
+  try {
+    synthesizeKey("x", {accelKey: 1});
+    is(getClipboardText(), "Copy dataTransfer text",
+      "aborted copy using dataTransfer on plaintext editor set clipboard correctly");
+    is(contentInput.value, "INPUT TEXT",
+      "aborted copy using dataTransfer on plaintext editor did not modify input");
+  } finally {
+    contentInput.oncopy = null;
+  }
+}
+
+
+function test_input_paste_dataTransfer() {
+  // Paste using event.dataTransfer
+  selectContentInput();
+  contentInput.onpaste = function(event) {
+    ok(event instanceof ClipboardEvent, "paste event is an ClipboardEvent");
+    ok(event.clipboardData instanceof DataTransfer, "paste event dataTransfer is a DataTransfer");
+    is(event.target, contentInput, "paste event target");
+    is(event.clipboardData.mozItemCount, 1, "paste event mozItemCount");
+    is(event.clipboardData.getData("text/plain"), clipboardInitialValue, "paste event getData");
+    cachedPasteData = event.clipboardData;
+  };
+  try {
+    synthesizeKey("v", {accelKey: 1});
+    is(getClipboardText(), clipboardInitialValue,
+      "paste using dataTransfer on plaintext editor did not modify clipboard contents");
+    is(contentInput.value, clipboardInitialValue,
+      "paste using dataTransfer on plaintext editor modified input");
+  } finally {
+    contentInput.onpaste = null;
+  }
+}
+
+
+function test_input_paste_abort_dataTransfer() {
+  // Paste using event.dataTransfer but cancel the event
+  selectContentInput();
+  contentInput.onpaste = function(event) {
+    is(event.clipboardData.getData("text/plain"), clipboardInitialValue, "get data on aborted paste");
+    contentInput.value = "Alternate Paste";
+    return false;
+  };
+  try {
+    synthesizeKey("v", {accelKey: 1});
+    is(getClipboardText(), clipboardInitialValue,
+      "aborted paste using dataTransfer on plaintext editor did not modify clipboard contents");
+    is(contentInput.value, "Alternate Paste",
+      "aborted paste using dataTransfer on plaintext editor modified input");
+  } finally {
+    contentInput.onpaste = null;
+  }
+}
+
+function test_input_copypaste_dataTransfer_multiple() {
+  // Cut several types of data and paste it again
+  contentInput.value = "This is a line of text";
+  contentInput.oncopy = function(event) {
+    var cd = event.clipboardData;
+    cd.setData("text/plain", "would be a phrase");
+
+    var exh = false;
+    try { cd.mozSetDataAt("text/plain", "Text", 1); } catch (ex) { exh = true; }
+    ok(exh, "exception occured mozSetDataAt 1");
+    exh = false;
+    try { cd.mozTypesAt(1); } catch (ex) { exh = true; }
+    ok(exh, "exception occured mozTypesAt 1");
+    exh = false;
+    try { cd.mozGetDataAt("text/plain", 1); } catch (ex) { exh = true; }
+    ok(exh, "exception occured mozGetDataAt 1");
+    exh = false;
+    try { cd.mozClearDataAt("text/plain", 1); } catch (ex) { exh = true; }
+    ok(exh, "exception occured mozClearDataAt 1");
+
+    cd.setData("text/x-moz-url", "http://www.mozilla.org");
+    cd.mozSetDataAt("text/x-custom", "Custom Text", 0);
+    is(cd.mozItemCount, 1, "mozItemCount after set multiple types");
+    return false;
+  };
+
+  try {
+    selectContentInput();
+    synthesizeKey("c", {accelKey: 1});
+  }
+  finally {
+    contentInput.oncopy = null;
+  }
+
+  is(getClipboardText(), "would be a phrase", "copy multiple types text");
+
+  contentInput.setSelectionRange(5, 14);
+
+  contentInput.onpaste = function(event) {
+    var cd = event.clipboardData;
+    is(cd.mozItemCount, 1, "paste after copy multiple types mozItemCount");
+    is(cd.getData("text/plain"), "would be a phrase", "paste text/plain multiple types");
+
+    // Firefox for Android's clipboard code doesn't handle x-moz-url. Therefore
+    // disabling the following test. Enable this once bug #840101 is fixed.
+    if (navigator.appVersion.indexOf("Android") == -1) {
+      is(cd.getData("text/x-moz-url"), "http://www.mozilla.org", "paste text/x-moz-url multiple types");
+    }
+    // this is empty because only the built-in types are supported at the moment
+    is(cd.getData("text/x-custom"), "", "paste text/custom multiple types");
+
+    exh = false;
+    try { cd.setData("text/plain", "Text on Paste"); } catch (ex) { exh = true; }
+    ok(exh, "exception occured setData on paste");
+
+    is(cd.getData("text/plain"), "would be a phrase", "text/plain data unchanged");
+  };
+  try {
+    synthesizeKey("v", {accelKey: 1});
+    is(contentInput.value, "This would be a phrase of text",
+      "default paste after copy multiple types");
+  } finally {
+    contentInput.onpaste = null;
+  }
+}
+
+function test_input_copy_button_dataTransfer() {
+  // Copy using event.dataTransfer when a button is focused.
+  var button = document.getElementById("button");
+  button.focus();
+  button.oncopy = function(event) {
+    ok(false, "should not be firing copy event on button");
+    return false;
+  };
+  try {
+    // copy should not occur here because buttons don't have any controller
+    // for the copy command
+    synthesizeKey("c", {accelKey: 1});
+    is(getClipboardText(), clipboardInitialValue,
+      "copy using dataTransfer on plaintext editor set clipboard correctly for button");
+
+    selectContentDiv();
+    synthesizeKey("c", {accelKey: 1});
+    is(getClipboardText(), "CONTENT TEXT",
+      "copy using dataTransfer with selection on plaintext editor set clipboard correctly for button");
+
+  } finally {
+    document.documentElement.oncopy = null;
+  }
+}
+
+let expectedData = [];
+
+// Check to make that synthetic events do not change the clipboard
+function checkSyntheticEvents()
+{
+  let syntheticSpot = document.getElementById("syntheticSpot");
+  setClipboardText(clipboardInitialValue);
+
+  // No dataType specified
+  let event = new ClipboardEvent("cut", { data: "something" });
+  expectedData = { type: "cut", data: null }
+  compareSynthetic(event, "before");
+  syntheticSpot.dispatchEvent(event);
+  ok(expectedData.eventFired, "cut event fired");
+  compareSynthetic(event, "after");
+
+  event = new ClipboardEvent("cut", { dataType: "text/plain", data: "something" });
+  expectedData = { type: "cut", dataType: "text/plain", data: "something" }
+  compareSynthetic(event, "before");
+  syntheticSpot.dispatchEvent(event);
+  ok(expectedData.eventFired, "cut event fired");
+  compareSynthetic(event, "after");
+
+  event = new ClipboardEvent("copy", { dataType: "text/plain", data: "something" });
+  expectedData = { type: "copy", dataType: "text/plain", data: "something" }
+  compareSynthetic(event, "before");
+  syntheticSpot.dispatchEvent(event);
+  ok(expectedData.eventFired, "copy event fired");
+  compareSynthetic(event, "after");
+
+  event = new ClipboardEvent("copy", { dataType: "text/plain" });
+  expectedData = { type: "copy", dataType: "text/plain", data: "" }
+  compareSynthetic(event, "before");
+  syntheticSpot.dispatchEvent(event);
+  ok(expectedData.eventFired, "copy event fired");
+  compareSynthetic(event, "after");
+
+  event = new ClipboardEvent("paste", { dataType: "text/plain", data: "something" });
+  expectedData = { type: "paste", dataType: "text/plain", data: "something" }
+  compareSynthetic(event, "before");
+  syntheticSpot.dispatchEvent(event);
+  ok(expectedData.eventFired, "paste event fired");
+  compareSynthetic(event, "after");
+
+  event = new ClipboardEvent("paste", { dataType: "application/unknown", data: "unknown" });
+  expectedData = { type: "paste", dataType: "application/unknown", data: "unknown" }
+  compareSynthetic(event, "before");
+  syntheticSpot.dispatchEvent(event);
+  ok(expectedData.eventFired, "paste event fired");
+  compareSynthetic(event, "after");
+}
+
+function compareSynthetic(event, eventtype)
+{
+  let step = (eventtype == "cut" || eventtype == "copy" || eventtype == "paste") ? "during" : eventtype;
+  if (step == "during") {
+    is(eventtype, expectedData.type, "synthetic " + eventtype + " event fired");
+  }
+
+  ok(event.clipboardData instanceof DataTransfer, "clipboardData is assigned");
+
+  is(event.type, expectedData.type, "synthetic " + eventtype + " event type");
+  if (expectedData.data === null) {
+    is(event.clipboardData.mozItemCount, 0, "synthetic " + eventtype + " empty data");
+  }
+  else {
+    is(event.clipboardData.mozItemCount, 1, "synthetic " + eventtype + " item count");
+    is(event.clipboardData.types.length, 1, "synthetic " + eventtype + " types length");
+    is(event.clipboardData.getData(expectedData.dataType), expectedData.data,
+       "synthetic " + eventtype + " data");
+  }
+
+  is(getClipboardText(), "empty", "event does not change the clipboard " + step + " dispatch");
+
+  if (step == "during") {
+    expectedData.eventFired = true;
+  }
+}
+
+function checkCachedDataTransfer(cd, eventtype)
+{
+  var testprefix = "cached " + eventtype + " dataTransfer";
+
+  setClipboardText("Some Clipboard Text");
+
+  var oldtext = cd.getData("text/plain");
+  ok(oldtext != "Some Clipboard Text", "clipboard get using " + testprefix);
+
+  var exh = false;
+  try { cd.mozSetDataAt("text/plain", "Test Cache Data", 0); } catch (ex) { exh = true; }
+  ok(eventtype == "paste" ? exh : !exh, "exception occured setting " + testprefix);
+
+  var newtext = (eventtype == "paste") ? cd.getData("text/plain") :
+                                         cd.mozGetDataAt("text/plain", 0);
+  is(newtext, (eventtype == "paste") ? "" : "Test Cache Data",
+     " clipboardData not changed using " + testprefix);
+
+  is(getClipboardText(), "Some Clipboard Text", "clipboard not changed using " + testprefix);
+
+  var exh = false;
+  try { cd.mozClearDataAt("text/plain", 0); } catch (ex) { exh = true; }
+  ok(eventtype == "paste" ? exh : !exh, "exception occured clearing " + testprefix);
+
+  is(getClipboardText(), "Some Clipboard Text", "clipboard not changed using " + testprefix);
 }
 
 </script>

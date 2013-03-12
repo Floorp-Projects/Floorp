@@ -253,7 +253,7 @@ InspectorPanel.prototype = {
       }
 
       if (!self.selection.node) {
-        self.selection.setNode(newWindow.document.documentElement);
+        self.selection.setNode(newWindow.document.documentElement, "navigateaway");
       }
       self._initMarkup();
     }
@@ -626,6 +626,7 @@ InspectorPanel.prototype = {
       }
     }
     this.selection.emit("pseudoclass");
+    this.breadcrumbs.scroll();
   },
 
   /**

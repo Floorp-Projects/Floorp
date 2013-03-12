@@ -79,27 +79,10 @@ protected:
 private:
   void CancelAllListeners();
 
-  // A private structure used for storing the arguments to
-  // imgStatusTracker::OnStopRequest until we're ready to call it.
-  struct StopRequest
-  {
-    StopRequest(bool aLastPart = true, nsresult aStatus = NS_OK)
-      : lastPart(aLastPart)
-      , status(aStatus)
-    { }
-
-    bool lastPart;
-    nsresult status;
-  };
-
   nsRefPtr<SVGDocumentWrapper>       mSVGDocumentWrapper;
   nsRefPtr<SVGRootRenderingObserver> mRenderingObserver;
   nsRefPtr<SVGLoadEventListener>     mLoadEventListener;
   nsRefPtr<SVGParseCompleteListener> mParseCompleteListener;
-
-  // If we need to fire OnStopRequest, this stores the parameters we got when
-  // OnImageDataComplete was called.
-  Maybe<StopRequest> mStopRequest;       
 
   nsIntRect      mRestrictedRegion;       // If we were created by
                                           // ExtractFrame, this is the region

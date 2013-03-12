@@ -659,35 +659,6 @@ ThreadActor.prototype = {
     }
   },
 
-  /**
-   * Handle a protocol request to return the list of loaded scripts.
-   */
-  onScripts: function TA_onScripts(aRequest) {
-    this._discoverScriptsAndSources();
-
-    let scripts = [];
-    for (let url in this._scripts) {
-      for (let i = 0; i < this._scripts[url].length; i++) {
-        if (!this._scripts[url][i]) {
-          continue;
-        }
-
-        let script = {
-          url: url,
-          startLine: i,
-          lineCount: this._scripts[url][i].lineCount,
-          source: this._getSource(url).form()
-        };
-        scripts.push(script);
-      }
-    }
-
-    return {
-      from: this.actorID,
-      scripts: scripts
-    };
-  },
-
   onSources: function TA_onSources(aRequest) {
     this._discoverScriptsAndSources();
     let urls = Object.getOwnPropertyNames(this._sources);
@@ -1183,17 +1154,7 @@ ThreadActor.prototype = {
    *        A Debugger.Object instance whose referent is the global object.
    */
   onNewScript: function TA_onNewScript(aScript, aGlobal) {
-    if (this._addScript(aScript)) {
-      // Notify the client.
-      this.conn.send({
-        from: this.actorID,
-        type: "newScript",
-        url: aScript.url,
-        startLine: aScript.startLine,
-        lineCount: aScript.lineCount,
-        source: this._getSource(aScript.url).form()
-      });
-    }
+    this._addScript(aScript);
   },
 
   /**
@@ -1357,7 +1318,6 @@ ThreadActor.prototype.requestTypes = {
   "interrupt": ThreadActor.prototype.onInterrupt,
   "releaseMany": ThreadActor.prototype.onReleaseMany,
   "setBreakpoint": ThreadActor.prototype.onSetBreakpoint,
-  "scripts": ThreadActor.prototype.onScripts,
   "sources": ThreadActor.prototype.onSources,
   "threadGrips": ThreadActor.prototype.onThreadGrips
 };

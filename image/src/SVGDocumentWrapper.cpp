@@ -203,6 +203,22 @@ SVGDocumentWrapper::ResetAnimation()
   svgElem->SetCurrentTime(0.0f);
 }
 
+float
+SVGDocumentWrapper::GetCurrentTime()
+{
+  SVGSVGElement* svgElem = GetRootSVGElem();
+  return svgElem ? svgElem->GetCurrentTime()
+                 : 0.0f;
+}
+
+void
+SVGDocumentWrapper::SetCurrentTime(float aTime)
+{
+  SVGSVGElement* svgElem = GetRootSVGElem();
+  if (svgElem && svgElem->GetCurrentTime() != aTime) {
+    svgElem->SetCurrentTime(aTime);
+  }
+}
 
 /** nsIStreamListener methods **/
 

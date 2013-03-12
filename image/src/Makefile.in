@@ -27,8 +27,10 @@ EXPORTS		=  imgLoader.h \
 CPPSRCS		= \
 			Image.cpp \
 			ImageFactory.cpp \
+			ImageWrapper.cpp \
 			Decoder.cpp \
 			DiscardTracker.cpp \
+			FrozenImage.cpp \
 			RasterImage.cpp \
 			ScriptedNotificationObserver.cpp \
 			SVGDocumentWrapper.cpp \

@@ -908,13 +908,6 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
                 win->RedrawAll();
             }
             break;
-
-        case AndroidGeckoEvent::GECKO_EVENT_SYNC:
-            AndroidBridge::Bridge()->AcknowledgeEventSync();
-            break;
-
-        default:
-            break;
     }
 }
 

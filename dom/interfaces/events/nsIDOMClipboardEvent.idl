@@ -1,0 +1,28 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+#include "nsIDOMEvent.idl"
+
+interface nsIDOMDataTransfer;
+
+[scriptable, builtinclass, uuid(8D92944A-F2E5-41F4-9CF3-D85043B90CAC)]
+interface nsIDOMClipboardEvent : nsIDOMEvent
+{
+  readonly attribute nsIDOMDataTransfer clipboardData;
+
+  // The constructor must be used from script to initialize
+  // clipboard events.
+  [noscript] void initClipboardEvent(in DOMString typeArg,
+                                     in boolean canBubbleArg,
+                                     in boolean cancelableArg,
+                                     in nsIDOMDataTransfer clipboardData);
+};
+
+dictionary ClipboardEventInit : EventInit
+{
+  DOMString data;
+  DOMString dataType;
+};

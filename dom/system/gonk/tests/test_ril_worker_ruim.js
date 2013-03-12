@@ -113,3 +113,120 @@ add_test(function test_read_cdmahome() {
 
   run_next_test();
 });
+
+/**
+ * Verify reading CDMA EF_SPN
+ */
+add_test(function test_read_cdmaspn() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+  let buf    = worker.Buf;
+  let io     = worker.ICCIOHelper;
+
+  function testReadSpn(file, expectedSpn, expectedDisplayCondition) {
+    io.loadTransparentEF = function fakeLoadTransparentEF(options)  {
+      // Write data size
+      buf.writeUint32(file.length * 2);
+
+      // Write file.
+      for (let i = 0; i < file.length; i++) {
+        helper.writeHexOctet(file[i]);
+      }
+
+      // Write string delimiter
+      buf.writeStringDelimiter(file.length * 2);
+
+      if (options.callback) {
+        options.callback(options);
+      }
+    };
+
+    worker.RuimRecordHelper.readSPN();
+    do_check_eq(worker.RIL.iccInfo.spn, expectedSpn);
+    do_check_eq(worker.RIL.iccInfoPrivate.SPN.spnDisplayCondition,
+                expectedDisplayCondition);
+  }
+
+  testReadSpn([0x01, 0x04, 0x06, 0x4e, 0x9e, 0x59, 0x2a, 0x96,
+               0xfb, 0x4f, 0xe1, 0xff, 0xff, 0xff, 0xff, 0xff,
+               0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+               0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+               0xff, 0xff, 0xff],
+              String.fromCharCode(0x4e9e) +
+              String.fromCharCode(0x592a) +
+              String.fromCharCode(0x96fb) +
+              String.fromCharCode(0x4fe1),
+              true);
+
+  // Test when there's no tailing 0xff in spn string.
+  testReadSpn([0x01, 0x04, 0x06, 0x4e, 0x9e, 0x59, 0x2a, 0x96,
+               0xfb, 0x4f, 0xe1],
+              String.fromCharCode(0x4e9e) +
+              String.fromCharCode(0x592a) +
+              String.fromCharCode(0x96fb) +
+              String.fromCharCode(0x4fe1),
+              true);
+
+  run_next_test();
+});
+
+/**
+ * Verify display condition for CDMA.
+ */
+add_test(function test_cdma_spn_display_condition() {
+  let worker = newWorker({
+    postRILMessage: function fakePostRILMessage(data) {
+      // Do nothing
+    },
+    postMessage: function fakePostMessage(message) {
+      // Do nothing
+    }
+  });
+  let RIL = worker.RIL;
+  let ICCUtilsHelper = worker.ICCUtilsHelper;
+
+  // Set cdma.
+  RIL._isCdma = true;
+
+  // Test updateDisplayCondition runs before any of SIM file is ready.
+  do_check_eq(ICCUtilsHelper.updateDisplayCondition(), true);
+  do_check_eq(RIL.iccInfo.isDisplayNetworkNameRequired, true);
+  do_check_eq(RIL.iccInfo.isDisplaySpnRequired, false);
+
+  // Test with value.
+  function testDisplayCondition(ruimDisplayCondition,
+                                homeSystemIds, homeNetworkIds,
+                                currentSystemId, currentNetworkId,
+                                expectUpdateDisplayCondition,
+                                expectIsDisplaySPNRequired) {
+    RIL.iccInfoPrivate.SPN = {
+      spnDisplayCondition: ruimDisplayCondition
+    };
+    RIL.cdmaHome = {
+      systemId: homeSystemIds,
+      networkId: homeNetworkIds
+    };
+    RIL.cdmaSubscription = {
+      systemId: currentSystemId,
+      networkId: currentNetworkId
+    };
+
+    do_check_eq(ICCUtilsHelper.updateDisplayCondition(), expectUpdateDisplayCondition);
+    do_check_eq(RIL.iccInfo.isDisplayNetworkNameRequired, false);
+    do_check_eq(RIL.iccInfo.isDisplaySpnRequired, expectIsDisplaySPNRequired);
+  };
+
+  // SPN is not required when ruimDisplayCondition is false.
+  testDisplayCondition(false, [123], [345], 123, 345, true, false);
+
+  // System id and network id are all match.
+  testDisplayCondition(true, [123], [345], 123, 345, true, true);
+
+  // Network is 65535, we should only need to match system id.
+  testDisplayCondition(true, [123], [65535], 123, 345, false, true);
+
+  // Not match.
+  testDisplayCondition(true, [123], [456], 123, 345, true, false);
+
+  run_next_test();
+});
