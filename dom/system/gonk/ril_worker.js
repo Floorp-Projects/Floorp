@@ -2858,7 +2858,7 @@ let RIL = {
         newCardState = GECKO_CARDSTATE_PUK_REQUIRED;
         break;
       case CARD_APPSTATE_SUBSCRIPTION_PERSO:
-        newCardState = GECKO_CARDSTATE_NETWORK_LOCKED;
+        newCardState = PERSONSUBSTATE[app.perso_substate];
         break;
       case CARD_APPSTATE_READY:
         newCardState = GECKO_CARDSTATE_READY;
