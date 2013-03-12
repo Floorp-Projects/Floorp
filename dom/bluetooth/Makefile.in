@@ -62,15 +62,6 @@ ifdef MOZ_B2G_RIL
 CPPSRCS += BluetoothTelephonyListener.cpp
 endif
 
-XPIDLSRCS = \
-  nsIDOMNavigatorBluetooth.idl \
-  nsIDOMBluetoothManager.idl \
-  nsIDOMBluetoothAdapter.idl \
-  nsIDOMBluetoothDevice.idl \
-  nsIDOMBluetoothDeviceEvent.idl \
-  nsIDOMBluetoothDeviceAddressEvent.idl \
-  $(NULL)
-
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 VPATH += \
   $(srcdir)/linux \

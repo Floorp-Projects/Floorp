@@ -8,3 +8,8 @@ XPIDL_SOURCES += [
     'nsIControllers.idl',
 ]
 
+if CONFIG['MOZ_XUL']:
+    XPIDL_SOURCES += [
+        'nsIXULOverlayProvider.idl',
+    ]
+

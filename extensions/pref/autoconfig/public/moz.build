@@ -8,3 +8,8 @@ XPIDL_SOURCES += [
     'nsIReadConfig.idl',
 ]
 
+if CONFIG['MOZ_LDAP_XPCOM']:
+    XPIDL_SOURCES += [
+        'nsILDAPSyncQuery.idl',
+    ]
+

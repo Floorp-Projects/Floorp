@@ -18,21 +18,6 @@ EXPORT_LIBRARY = 1
 MODULE_NAME = nsPlacesModule
 IS_COMPONENT = 1
 
-XPIDLSRCS += \
-  mozIAsyncHistory.idl \
-  mozIAsyncFavicons.idl \
-  mozIAsyncLivemarks.idl \
-  mozIPlacesAutoComplete.idl \
-  mozIColorAnalyzer.idl \
-  nsIAnnotationService.idl \
-  nsIBrowserHistory.idl \
-  nsIFaviconService.idl \
-  nsINavBookmarksService.idl \
-  nsITaggingService.idl  \
-  nsPIPlacesDatabase.idl \
-  nsPIPlacesHistoryListenersNotifier.idl \
-  $(NULL)
-
 EXPORTS_NAMESPACES = mozilla/places
 
 EXPORTS_mozilla/places = \

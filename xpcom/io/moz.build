@@ -37,3 +37,12 @@ XPIDL_SOURCES += [
     'nsIUnicharOutputStream.idl',
 ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
+    XPIDL_SOURCES += [
+        'nsILocalFileOS2.idl',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    XPIDL_SOURCES += [
+        'nsILocalFileMac.idl',
+    ]
+
