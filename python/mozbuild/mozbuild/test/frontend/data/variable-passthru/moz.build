@@ -2,4 +2,4 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 
 XPIDL_SOURCES += ['foo.idl', 'bar.idl', 'biz.idl']
-
+XPIDL_MODULE = 'module_name'
