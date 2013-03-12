@@ -941,7 +941,7 @@ let RIL = {
     Buf.simpleRequest(REQUEST_GET_SIM_STATUS);
   },
 
-   /**
+  /**
    * Helper function for unlocking ICC locks.
    */
   iccUnlockCardLock: function iccUnlockCardLock(options) {
@@ -960,6 +960,14 @@ let RIL = {
         break;
       case "nck":
         options.type = CARD_PERSOSUBSTATE_SIM_NETWORK;
+        this.enterDepersonalization(options);
+        break;
+      case "cck":
+        options.type = CARD_PERSOSUBSTATE_SIM_CORPORATE;
+        this.enterDepersonalization(options);
+        break;
+      case "spck":
+        options.type = CARD_PERSOSUBSTATE_SIM_SERVICE_PROVIDER;
         this.enterDepersonalization(options);
         break;
       default:
