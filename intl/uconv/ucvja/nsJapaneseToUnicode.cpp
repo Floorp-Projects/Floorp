@@ -482,7 +482,11 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
               mLastLegalState = mState;
               mState = mState_ESC;
             } else if(*src & 0x80) {
-              goto error2;
+              if (mErrBehavior == kOnError_Signal)
+                goto error3;
+              if (CHECK_OVERRUN(dest, destEnd, 1))
+                goto error1;
+              *dest++ = UNICODE_REPLACEMENT_CHARACTER;
             } else {
               if (CHECK_OVERRUN(dest, destEnd, 1))
                 goto error1;
@@ -905,7 +909,11 @@ error1:
    *aSrcLen = src - (const unsigned char*)aSrc;
    return NS_OK_UDEC_MOREOUTPUT;
 error2:
-   *aSrcLen = src - (const unsigned char*)aSrc;
    *aDestLen = dest - aDest;
+   *aSrcLen = src - (const unsigned char*)aSrc;
    return NS_ERROR_UNEXPECTED;
+error3:
+   *aDestLen = dest - aDest;
+   *aSrcLen = src - (const unsigned char*)aSrc;
+   return NS_ERROR_ILLEGAL_INPUT;
 }
