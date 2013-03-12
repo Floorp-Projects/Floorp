@@ -14,10 +14,6 @@ MODULE		= dom
 XPIDL_MODULE	= dom_xbl
 GRE_MODULE	= 1
 
-XPIDLSRCS =                                     \
-	nsIDOMDocumentXBL.idl			\
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 XPIDL_FLAGS += \

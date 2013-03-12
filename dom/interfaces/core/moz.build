@@ -3,3 +3,27 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'nsIDOMAttr.idl',
+    'nsIDOMCDATASection.idl',
+    'nsIDOMCharacterData.idl',
+    'nsIDOMComment.idl',
+    'nsIDOMDOMException.idl',
+    'nsIDOMDOMStringList.idl',
+    'nsIDOMDocument.idl',
+    'nsIDOMDocumentFragment.idl',
+    'nsIDOMDocumentType.idl',
+    'nsIDOMElement.idl',
+    'nsIDOMMozNamedAttrMap.idl',
+    'nsIDOMNSEditableElement.idl',
+    'nsIDOMNode.idl',
+    'nsIDOMNodeList.idl',
+    'nsIDOMNodeSelector.idl',
+    'nsIDOMProcessingInstruction.idl',
+    'nsIDOMText.idl',
+    'nsIDOMUserDataHandler.idl',
+    'nsIDOMXMLDocument.idl',
+    'nsIDocumentRegister.idl',
+    'nsIInlineEventHandlers.idl',
+]
+

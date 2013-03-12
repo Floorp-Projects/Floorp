@@ -11,16 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = loginmgr
 
-XPIDLSRCS = \
-  nsILoginInfo.idl \
-  nsILoginManager.idl \
-  nsILoginManagerCrypto.idl \
-  nsILoginManagerIEMigrationHelper.idl \
-  nsILoginManagerPrompter.idl \
-  nsILoginManagerStorage.idl \
-  nsILoginMetaInfo.idl \
-  $(NULL)
-
 EXTRA_COMPONENTS = \
   crypto-SDR.js \
   nsLoginInfo.js \

@@ -22,11 +22,6 @@ CPPSRCS += \
   nsFMRadioSettings.cpp \
   $(NULL)
 
-XPIDLSRCS = \
-  nsIDOMFMRadio.idl \
-  nsIFMRadio.idl \
-  $(NULL)
-
 EXTRA_COMPONENTS =      \
   DOMFMRadioChild.js       \
   DOMFMRadio.manifest \

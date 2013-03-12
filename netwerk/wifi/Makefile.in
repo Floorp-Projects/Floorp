@@ -22,12 +22,6 @@ ifneq ($(OS_ARCH),Darwin)
 FAIL_ON_WARNINGS := 1
 endif
 
-XPIDLSRCS = \
-  nsIWifiAccessPoint.idl \
-  nsIWifiListener.idl \
-  nsIWifiMonitor.idl \
-  $(NULL)
-
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += nsWifiMonitorGonk.cpp
 else

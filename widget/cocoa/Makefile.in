@@ -71,10 +71,6 @@ ifeq (x86_64,$(TARGET_CPU))
 CMMSRCS += ComplexTextInputPanel.mm
 endif
 
-XPIDLSRCS	+= \
-		nsPIWidgetCocoa.idl \
-		$(NULL)
-
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
 include $(topsrcdir)/config/rules.mk

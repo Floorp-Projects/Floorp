@@ -21,10 +21,6 @@ FORCE_STATIC_LIB = 1
 
 EXPORTS = ftpCore.h
 
-XPIDLSRCS = \
-  nsIFTPChannel.idl \
-  $(NULL)
-
 EXPORTS_NAMESPACES = mozilla/net
 
 EXPORTS_mozilla/net += \

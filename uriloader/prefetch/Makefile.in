@@ -31,11 +31,6 @@ CPPSRCS = \
 		OfflineCacheUpdateParent.cpp \
 		$(NULL)
 
-XPIDLSRCS =	\
-		nsIPrefetchService.idl \
-		nsIOfflineCacheUpdate.idl \
-		$(NULL)
-
 EXPORTS = \
 		nsCPrefetchService.h \
 		$(NULL)

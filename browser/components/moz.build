@@ -25,3 +25,9 @@ if CONFIG['MOZ_SAFE_BROWSING']:
 
 TEST_DIRS += ['test']
 DIRS += ['build']
+
+XPIDL_SOURCES += [
+    'nsIBrowserGlue.idl',
+    'nsIBrowserHandler.idl',
+]
+

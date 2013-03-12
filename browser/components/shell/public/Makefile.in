@@ -12,8 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = shellservice
 
-XPIDLSRCS = nsIShellService.idl
-
 ifeq ($(OS_ARCH),WINNT)
 XPIDLSRCS += nsIWindowsShellService.idl
 endif

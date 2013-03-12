@@ -31,11 +31,6 @@ EXTRA_JS_MODULES = \
   AlarmService.jsm \
   $(NULL)
 
-XPIDLSRCS =               \
-  nsIDOMAlarmsManager.idl \
-  nsIAlarmHalService.idl  \
-  $(NULL)
-
 EXPORTS_mozilla/dom/alarm = \
   AlarmHalService.h         \
   $(NULL)

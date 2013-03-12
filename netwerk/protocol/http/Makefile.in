@@ -20,23 +20,6 @@ FAIL_ON_WARNINGS := 1
 
 EXPORTS_NAMESPACES = mozilla/net
 
-SDK_XPIDLSRCS = \
-  nsIHttpChannel.idl \
-  nsIHttpHeaderVisitor.idl \
-  $(NULL)
-
-XPIDLSRCS = \
-  nsIHttpActivityObserver.idl \
-  nsIHttpAuthManager.idl \
-  nsIHttpAuthenticator.idl \
-  nsIHttpChannelInternal.idl \
-  nsIHttpEventSink.idl \
-  nsIHttpProtocolHandler.idl \
-  nsIHttpChannelAuthProvider.idl \
-  nsIHttpAuthenticableChannel.idl \
-  nsIHttpChannelChild.idl \
-  $(NULL)
-
 EXPORTS_mozilla/net = \
   HttpBaseChannel.h \
   $(NULL)

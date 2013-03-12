@@ -5,3 +5,28 @@
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     DIRS += ['msaa', 'ia2']
+
+XPIDL_SOURCES += [
+    'nsIAccessible.idl',
+    'nsIAccessibleApplication.idl',
+    'nsIAccessibleCursorable.idl',
+    'nsIAccessibleDocument.idl',
+    'nsIAccessibleEditableText.idl',
+    'nsIAccessibleEvent.idl',
+    'nsIAccessibleHyperLink.idl',
+    'nsIAccessibleHyperText.idl',
+    'nsIAccessibleImage.idl',
+    'nsIAccessiblePivot.idl',
+    'nsIAccessibleProvider.idl',
+    'nsIAccessibleRelation.idl',
+    'nsIAccessibleRetrieval.idl',
+    'nsIAccessibleRole.idl',
+    'nsIAccessibleSelectable.idl',
+    'nsIAccessibleStates.idl',
+    'nsIAccessibleTable.idl',
+    'nsIAccessibleText.idl',
+    'nsIAccessibleTypes.idl',
+    'nsIAccessibleValue.idl',
+    'nsIXBLAccessible.idl',
+]
+

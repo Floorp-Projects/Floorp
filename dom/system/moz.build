@@ -16,3 +16,8 @@ if CONFIG['MOZ_B2G_RIL']:
     DIRS += ['gonk']
 
 TEST_DIRS += ['tests']
+
+XPIDL_SOURCES += [
+    'nsIOSFileConstantsService.idl',
+]
+

@@ -60,13 +60,6 @@ EXPORTS_mozilla/dom/file = \
   ArchiveRequest.h \
   $(NULL)
 
-XPIDLSRCS = \
-  nsIDOMFileHandle.idl \
-  nsIDOMFileRequest.idl \
-  nsIDOMLockedFile.idl \
-  nsIDOMArchiveRequest.idl \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 XPIDL_FLAGS += \

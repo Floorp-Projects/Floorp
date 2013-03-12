@@ -18,10 +18,6 @@ FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
 XPIDL_MODULE   = necko_ipc
 
-XPIDLSRCS = \
-  nsIRemoteOpenFileListener.idl \
-  $(NULL)
-
 EXPORTS_NAMESPACES = mozilla/net
 
 EXPORTS_mozilla/net = \
