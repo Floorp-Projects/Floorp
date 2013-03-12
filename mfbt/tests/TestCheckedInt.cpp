@@ -8,8 +8,8 @@
 #include <iostream>
 #include <climits>
 
-#ifndef MOZ_CHECKEDINT_ENABLE_MOZ_ASSERTS
-#  error MOZ_CHECKEDINT_ENABLE_MOZ_ASSERTS should be defined by CheckedInt.h
+#ifndef MOZ_CHECKEDINT_USE_MFBT
+#  error "MOZ_CHECKEDINT_USE_MFBT should be defined by CheckedInt.h"
 #endif
 
 using namespace mozilla;
