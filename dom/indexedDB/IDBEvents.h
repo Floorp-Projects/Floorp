@@ -51,11 +51,9 @@ public:
   NS_FORWARD_TO_NSDOMEVENT
   NS_DECL_NSIIDBVERSIONCHANGEEVENT
 
-  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope,
-                               bool* aTriedToWrap)
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope)
   {
-    return mozilla::dom::IDBVersionChangeEventBinding::Wrap(aCx, aScope, this,
-                                                            aTriedToWrap);
+    return mozilla::dom::IDBVersionChangeEventBinding::Wrap(aCx, aScope, this);
   }
 
   uint64_t OldVersion()
