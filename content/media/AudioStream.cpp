@@ -178,6 +178,31 @@ static sa_stream_type_t ConvertChannelToSAType(dom::AudioChannelType aType)
   }
 }
 
+#if defined(MOZ_CUBEB) && (__ANDROID__)
+static cubeb_stream_type ConvertChannelToCubebType(dom::AudioChannelType aType)
+{
+  switch(aType) {
+    case dom::AUDIO_CHANNEL_NORMAL:
+      return CUBEB_STREAM_TYPE_SYSTEM;
+    case dom::AUDIO_CHANNEL_CONTENT:
+      return CUBEB_STREAM_TYPE_MUSIC;
+    case dom::AUDIO_CHANNEL_NOTIFICATION:
+      return CUBEB_STREAM_TYPE_NOTIFICATION;
+    case dom::AUDIO_CHANNEL_ALARM:
+      return CUBEB_STREAM_TYPE_ALARM;
+    case dom::AUDIO_CHANNEL_TELEPHONY:
+      return CUBEB_STREAM_TYPE_VOICE_CALL;
+    case dom::AUDIO_CHANNEL_RINGER:
+      return CUBEB_STREAM_TYPE_RING;
+    // Currently Android openSLES library doesn't support FORCE_AUDIBLE yet.
+    case dom::AUDIO_CHANNEL_PUBLICNOTIFICATION:
+    default:
+      NS_ERROR("The value of AudioChannelType is invalid");
+      return CUBEB_STREAM_TYPE_MAX;
+  }
+}
+#endif
+
 AudioStream::AudioStream()
 : mInRate(0),
   mOutRate(0),
@@ -760,6 +785,13 @@ BufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate,
   cubeb_stream_params params;
   params.rate = aRate;
   params.channels = aNumChannels;
+#if defined(__ANDROID__)
+  params.stream_type = ConvertChannelToCubebType(aAudioChannelType);
+
+  if (params.stream_type == CUBEB_STREAM_TYPE_MAX) {
+    return NS_ERROR_INVALID_ARG;
+  }
+#endif
   if (AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_S16) {
     params.format = CUBEB_SAMPLE_S16NE;
   } else {

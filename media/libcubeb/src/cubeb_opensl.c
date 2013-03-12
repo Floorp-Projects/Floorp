@@ -9,6 +9,9 @@
 #include <dlfcn.h>
 #include <stdlib.h>
 #include <SLES/OpenSLES.h>
+#if defined(__ANDROID__)
+#include <SLES/OpenSLES_Android.h>
+#endif
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
 
@@ -19,11 +22,15 @@ struct cubeb {
   void * lib;
   SLInterfaceID SL_IID_BUFFERQUEUE;
   SLInterfaceID SL_IID_PLAY;
+#if defined(__ANDROID__)
+  SLInterfaceID SL_IID_ANDROIDCONFIGURATION;
+#endif
   SLObjectItf engObj;
   SLEngineItf eng;
   SLObjectItf outmixObj;
 };
 
+#define NELEMS(A) (sizeof(A) / sizeof A[0])
 #define NBUFS 4
 
 struct cubeb_stream {
@@ -80,6 +87,30 @@ bufferqueue_callback(SLBufferQueueItf caller, struct cubeb_stream *stm)
   }
 }
 
+#if defined(__ANDROID__)
+static SLuint32
+convert_stream_type_to_sl_stream(cubeb_stream_type stream_type)
+{
+  switch(stream_type) {
+    case CUBEB_STREAM_TYPE_SYSTEM:
+      return SL_ANDROID_STREAM_SYSTEM;
+    case CUBEB_STREAM_TYPE_MUSIC:
+      return SL_ANDROID_STREAM_MEDIA;
+    case CUBEB_STREAM_TYPE_NOTIFICATION:
+      return SL_ANDROID_STREAM_NOTIFICATION;
+    case CUBEB_STREAM_TYPE_ALARM:
+      return SL_ANDROID_STREAM_ALARM;
+    case CUBEB_STREAM_TYPE_VOICE_CALL:
+      return SL_ANDROID_STREAM_VOICE;
+    case CUBEB_STREAM_TYPE_RING:
+      return SL_ANDROID_STREAM_RING;
+    case CUBEB_STREAM_TYPE_ENFORCED_AUDIBLE:
+    default:
+      return 0xFFFFFFFF;
+  }
+}
+#endif
+
 static void opensl_destroy(cubeb * ctx);
 
 /*static*/ int
@@ -109,11 +140,17 @@ opensl_init(cubeb ** context, char const * context_name)
   SLInterfaceID SL_IID_ENGINE = *(SLInterfaceID *)dlsym(ctx->lib, "SL_IID_ENGINE");
   SLInterfaceID SL_IID_OUTPUTMIX = *(SLInterfaceID *)dlsym(ctx->lib, "SL_IID_OUTPUTMIX");
   ctx->SL_IID_BUFFERQUEUE = *(SLInterfaceID *)dlsym(ctx->lib, "SL_IID_BUFFERQUEUE");
+#if defined(__ANDROID__)
+  ctx->SL_IID_ANDROIDCONFIGURATION = *(SLInterfaceID *)dlsym(ctx->lib, "SL_IID_ANDROIDCONFIGURATION");
+#endif
   ctx->SL_IID_PLAY = *(SLInterfaceID *)dlsym(ctx->lib, "SL_IID_PLAY");
   if (!f_slCreateEngine ||
       !SL_IID_ENGINE ||
       !SL_IID_OUTPUTMIX ||
       !ctx->SL_IID_BUFFERQUEUE ||
+#if defined(__ANDROID__)
+      !ctx->SL_IID_ANDROIDCONFIGURATION ||
+#endif
       !ctx->SL_IID_PLAY) {
     opensl_destroy(ctx);
     return CUBEB_ERROR;
@@ -252,14 +289,35 @@ opensl_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name
   sink.pLocator = &loc_outmix;
   sink.pFormat = NULL;
 
+#if defined(__ANDROID__)
+  const SLInterfaceID ids[] = {ctx->SL_IID_BUFFERQUEUE, ctx->SL_IID_ANDROIDCONFIGURATION};
+  const SLboolean req[] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
+#else
   const SLInterfaceID ids[] = {ctx->SL_IID_BUFFERQUEUE};
   const SLboolean req[] = {SL_BOOLEAN_TRUE};
+#endif
+  assert(NELEMS(ids) == NELEMS(req));
   SLresult res = (*ctx->eng)->CreateAudioPlayer(ctx->eng, &stm->playerObj,
-                                                &source, &sink, 1, ids, req);
+                                                &source, &sink, NELEMS(ids), ids, req);
   if (res != SL_RESULT_SUCCESS) {
     opensl_stream_destroy(stm);
     return CUBEB_ERROR;
   }
+
+#if defined(__ANDROID__)
+  SLuint32 stream_type = convert_stream_type_to_sl_stream(stream_params.stream_type);
+  if (stream_type != 0xFFFFFFFF) {
+    SLAndroidConfigurationItf playerConfig;
+    res = (*stm->playerObj)->GetInterface(stm->playerObj,
+          ctx->SL_IID_ANDROIDCONFIGURATION, &playerConfig);
+    res = (*playerConfig)->SetConfiguration(playerConfig,
+          SL_ANDROID_KEY_STREAM_TYPE, &stream_type, sizeof(SLint32));
+    if (res != SL_RESULT_SUCCESS) {
+      opensl_stream_destroy(stm);
+      return CUBEB_ERROR;
+    }
+  }
+#endif
 
   res = (*stm->playerObj)->Realize(stm->playerObj, SL_BOOLEAN_FALSE);
   if (res != SL_RESULT_SUCCESS) {
