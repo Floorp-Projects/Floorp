@@ -55,10 +55,6 @@ NOT_THERE_YET_CPPSRCS = \
 	nsSound.cpp \
 	$(NULL)
 
-XPIDLSRCS	= \
-	nsIAndroidBridge.idl \
-	$(NULL)
-
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
 EXPORTS = AndroidBridge.h AndroidJavaWrappers.h

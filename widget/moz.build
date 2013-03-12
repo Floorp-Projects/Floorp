@@ -26,3 +26,32 @@ if CONFIG['MOZ_ENABLE_GTK2']:
 
     if CONFIG['MOZ_X11']:
         DIRS += ['gtkxtbin']
+
+XPIDL_SOURCES += [
+    'nsIAppShell.idl',
+    'nsIBaseWindow.idl',
+    'nsIBidiKeyboard.idl',
+    'nsIClipboard.idl',
+    'nsIClipboardDragDropHookList.idl',
+    'nsIClipboardDragDropHooks.idl',
+    'nsIClipboardHelper.idl',
+    'nsIClipboardOwner.idl',
+    'nsIDragService.idl',
+    'nsIDragSession.idl',
+    'nsIFilePicker.idl',
+    'nsIFormatConverter.idl',
+    'nsIGfxInfo.idl',
+    'nsIGfxInfoDebug.idl',
+    'nsIIMEPicker.idl',
+    'nsIIdleService.idl',
+    'nsIIdleServiceInternal.idl',
+    'nsIPrintOptions.idl',
+    'nsIPrintSession.idl',
+    'nsIPrintSettings.idl',
+    'nsIPrintSettingsService.idl',
+    'nsIScreen.idl',
+    'nsIScreenManager.idl',
+    'nsISound.idl',
+    'nsITransferable.idl',
+]
+

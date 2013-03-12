@@ -13,10 +13,5 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= intl
 GRE_MODULE	= 1
 
-XPIDLSRCS	= \
-			nsIStringBundle.idl \
-			nsIStringBundleOverride.idl \
-			$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

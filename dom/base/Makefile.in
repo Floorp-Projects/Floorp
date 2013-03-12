@@ -33,15 +33,6 @@ EXTRA_JS_MODULES += \
   ObjectWrapper.jsm \
   $(NULL)
 
-XPIDLSRCS = \
-  nsIDOMDOMError.idl \
-  nsIDOMDOMRequest.idl \
-  nsIDOMDOMCursor.idl \
-  nsIEntropyCollector.idl \
-  nsIScriptChannel.idl \
-  nsISiteSpecificUserAgent.idl \
-  $(NULL)
-
 EXPORTS = \
   nsDOMCID.h \
   nsDOMClassInfoClasses.h \

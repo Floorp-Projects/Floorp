@@ -99,16 +99,6 @@ endif
 
 endif #if OS_ARCH == WINNT
 
-SDK_XPIDLSRCS   = \
-		nsIDebug.idl               \
-		nsIInterfaceRequestor.idl  \
-		nsIMemory.idl		   \
-		nsIProgrammingLanguage.idl \
-		nsISupports.idl		   \
-		nsITraceRefcnt.idl         \
-		nsIWeakReference.idl	   \
-		nsrootidl.idl
-
 SDK_HEADERS     = \
 		nsAutoPtr.h \
 		nsError.h \
@@ -126,24 +116,6 @@ SDK_HEADERS += \
 		nsWindowsHelpers.h \
 		$(NULL)
 endif
-
-XPIDLSRCS	= \
-		nsIConsoleListener.idl \
-		nsIConsoleMessage.idl \
-		nsIConsoleService.idl \
-		nsICycleCollectorListener.idl \
-		nsIDebug2.idl \
-		nsIErrorService.idl \
-		nsIException.idl \
-		nsIExceptionService.idl \
-		nsIVersionComparator.idl \
-		nsIUUIDGenerator.idl \
-		nsIMutable.idl \
-		nsIMemoryInfoDumper.idl \
-		nsIMemoryReporter.idl \
-		nsIGZFileWriter.idl \
-		nsIMessageLoop.idl \
-		$(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 XPIDLSRCS	+= nsIMacUtils.idl

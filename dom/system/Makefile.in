@@ -17,10 +17,6 @@ FAIL_ON_WARNINGS := 1
 
 DEFINES += -DDLL_PREFIX=\"$(DLL_PREFIX)\" -DDLL_SUFFIX=\"$(DLL_SUFFIX)\"
 
-XPIDLSRCS = \
-  nsIOSFileConstantsService.idl \
-  $(NULL)
-
 CPPSRCS     = \
   nsDeviceSensors.cpp \
   OSFileConstants.cpp \

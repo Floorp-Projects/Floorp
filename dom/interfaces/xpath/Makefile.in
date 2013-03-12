@@ -12,15 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= dom
 XPIDL_MODULE	= dom_xpath
 
-XPIDLSRCS =                                     \
-	nsIDOMXPathEvaluator.idl			\
-	nsIDOMXPathExpression.idl			\
-	nsIDOMXPathNamespace.idl			\
-	nsIDOMXPathNSResolver.idl			\
-	nsIDOMXPathResult.idl			\
-	nsIDOMNSXPathExpression.idl			\
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 XPIDL_FLAGS += \

@@ -16,12 +16,6 @@ LIBRARY_NAME = profile_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 
-XPIDLSRCS = \
-  nsIProfileMigrator.idl \
-  nsIToolkitProfile.idl \
-  nsIToolkitProfileService.idl \
-  $(NULL)
-
 CPPSRCS = \
   nsProfileLock.cpp \
   nsToolkitProfileService.cpp \

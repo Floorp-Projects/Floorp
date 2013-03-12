@@ -17,15 +17,6 @@ XPIDL_MODULE   = necko_dns
 GRE_MODULE     = 1
 FAIL_ON_WARNINGS := 1
 
-XPIDLSRCS = \
-  nsIDNSListener.idl \
-  nsIDNSRecord.idl \
-  nsIDNSService.idl \
-  nsIEffectiveTLDService.idl \
-  nsIIDNService.idl \
-  nsPIDNSService.idl \
-  $(NULL)
-
 CPPSRCS = \
   DNS.cpp \
   nsIDNService.cpp \

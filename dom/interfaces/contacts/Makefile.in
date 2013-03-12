@@ -13,12 +13,6 @@ MODULE         = dom
 XPIDL_MODULE   = dom_contacts
 GRE_MODULE     = 1
 
-XPIDLSRCS =                             \
-            nsIDOMContactProperties.idl \
-            nsIDOMContactManager.idl    \
-            nsIDOMMozContactChangeEvent.idl \
-            $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 XPIDL_FLAGS += \

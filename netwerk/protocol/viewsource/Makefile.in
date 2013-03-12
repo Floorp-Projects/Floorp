@@ -19,10 +19,6 @@ GRE_MODULE     = 1
 
 FORCE_STATIC_LIB = 1
 
-XPIDLSRCS = \
-  nsIViewSourceChannel.idl \
-  $(NULL)
-
 CPPSRCS = \
   nsViewSourceHandler.cpp \
   nsViewSourceChannel.cpp \

@@ -8,3 +8,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     TOOL_DIRS += ['mac/growl', 'mac']
 
 TEST_DIRS += ['test']
+
+XPIDL_SOURCES += [
+    'nsIAlertsService.idl',
+]
+

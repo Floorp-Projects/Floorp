@@ -18,19 +18,6 @@ EXPORTS =                                      \
        nsPIDOMStorage.h                        \
        $(NULL)
 
-XPIDLSRCS =                                    \
-       nsIDOMToString.idl                      \
-       nsIDOMStorageManager.idl                \
-       $(NULL)
-
-SDK_XPIDLSRCS =                      \
-        nsIDOMStorage.idl        \
-        nsIDOMStorageObsolete.idl\
-        nsIDOMStorageEvent.idl   \
-        nsIDOMStorageItem.idl    \
-        nsIDOMStorageIndexedDB.idl \
-       $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 XPIDL_FLAGS += \

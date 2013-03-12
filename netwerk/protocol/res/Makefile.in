@@ -19,10 +19,6 @@ FAIL_ON_WARNINGS = 1
 
 FORCE_STATIC_LIB = 1
 
-XPIDLSRCS = \
-  nsIResProtocolHandler.idl \
-  $(NULL)
-
 CPPSRCS = \
   nsResProtocolHandler.cpp \
   $(NULL)

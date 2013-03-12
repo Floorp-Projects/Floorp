@@ -13,20 +13,6 @@ XPIDL_MODULE = dom_mobilemessage
 
 include $(topsrcdir)/dom/dom-config.mk
 
-XPIDLSRCS = \
-  nsIMobileMessageDatabaseService.idl \
-  nsIDOMNavigatorSms.idl \
-  nsIDOMSmsManager.idl \
-  nsIDOMMozSmsMessage.idl \
-  nsIDOMMozSmsEvent.idl \
-  nsIDOMSmsRequest.idl \
-  nsIDOMSmsFilter.idl \
-  nsIDOMSmsCursor.idl \
-  nsIDOMSmsSegmentInfo.idl \
-  nsISmsRequest.idl \
-  nsISmsService.idl \
-  $(NULL)
-
 ifdef MOZ_B2G_RIL
 XPIDLSRCS += \
   nsIRilMobileMessageDatabaseService.idl \

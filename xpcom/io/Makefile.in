@@ -99,34 +99,6 @@ EXPORTS_mozilla = \
     Base64.h \
     $(NULL)
 
-XPIDLSRCS	= \
-		nsIBinaryInputStream.idl \
-		nsIBinaryOutputStream.idl  \
-		nsIDirectoryEnumerator.idl \
-		nsIInputStreamTee.idl \
-		nsILocalFileWin.idl \
-		nsILineInputStream.idl \
-		nsIUnicharLineInputStream.idl \
-		nsISimpleUnicharStreamFactory.idl \
-		nsIMultiplexInputStream.idl \
-		nsIObjectInputStream.idl \
-		nsIObjectOutputStream.idl \
-		nsIPipe.idl \
-		nsISeekableStream.idl \
-		nsIStorageStream.idl \
-		nsIStringStream.idl \
-		nsIStreamBufferAccess.idl \
-		nsIAsyncInputStream.idl \
-		nsIAsyncOutputStream.idl \
-		nsIUnicharInputStream.idl \
-		nsIUnicharOutputStream.idl \
-		nsIConverterInputStream.idl \
-		nsIConverterOutputStream.idl \
-		nsIIOUtil.idl \
-		nsISafeOutputStream.idl \
-		nsIScriptableBase64Encoder.idl \
-		$(NULL)
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 XPIDLSRCS	+= nsILocalFileOS2.idl
 else
@@ -134,15 +106,6 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 XPIDLSRCS	+= nsILocalFileMac.idl
 endif # cocoa
 endif # os2
-
-SDK_XPIDLSRCS   = \
-		nsIDirectoryService.idl \
-		nsIFile.idl \
-		nsILocalFile.idl \
-		nsIInputStream.idl \
-		nsIOutputStream.idl \
-		nsIScriptableInputStream.idl \
-		$(NULL)
 
 SDK_HEADERS =  \
 		nsDirectoryServiceDefs.h \

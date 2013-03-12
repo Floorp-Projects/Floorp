@@ -36,10 +36,6 @@ EXPORTS_mozilla = \
   HalWakeLock.h \
   $(NULL)
 
-XPIDLSRCS = \
-  nsIRecoveryService.idl \
-  $(NULL)
-
 CPPSRCS = \
   Hal.cpp \
   SandboxHal.cpp \

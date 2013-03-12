@@ -21,3 +21,8 @@ if CONFIG['MOZ_UPDATER']:
 
     if CONFIG['MOZ_MAINTENANCE_SERVICE']:
         TEST_DIRS += ['test_svc']
+
+XPIDL_SOURCES += [
+    'nsIUpdateTimerManager.idl',
+]
+

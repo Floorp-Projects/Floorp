@@ -12,8 +12,4 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= lwbrk
 
-XPIDLSRCS	= \
-	nsISemanticUnitScanner.idl \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk

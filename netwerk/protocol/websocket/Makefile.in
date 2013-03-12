@@ -19,11 +19,6 @@ FAIL_ON_WARNINGS = 1
 
 EXPORTS_NAMESPACES = mozilla/net
 
-XPIDLSRCS = \
-  nsIWebSocketChannel.idl \
-  nsIWebSocketListener.idl \
-  $(NULL)
-
 CPPSRCS = \
   WebSocketChannel.cpp \
   WebSocketChannelParent.cpp \

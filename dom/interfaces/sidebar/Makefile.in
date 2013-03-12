@@ -14,9 +14,4 @@ MODULE          = dom
 XPIDL_MODULE    = dom_sidebar
 GRE_MODULE      = 1
 
-XPIDLSRCS =                                     \
-        nsISidebar.idl  \
-        nsIWebContentHandlerRegistrar.idl \
-        $(NULL)
-
 include $(topsrcdir)/config/rules.mk

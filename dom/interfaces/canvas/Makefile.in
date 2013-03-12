@@ -14,9 +14,4 @@ MODULE		= dom
 XPIDL_MODULE	= dom_canvas
 GRE_MODULE	= 1
 
-XPIDLSRCS = \
-	nsIDOMCanvasRenderingContext2D.idl \
-	nsIDOMWebGLRenderingContext.idl \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
