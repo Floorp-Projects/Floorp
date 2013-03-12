@@ -2201,8 +2201,8 @@ DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
 
     // This will not be a complex radial gradient brush.
     mRT->CreateRadialGradientBrush(
-      D2D1::RadialGradientBrushProperties(D2DPoint(pat->mCenter1),
-                                          D2D1::Point2F(),
+      D2D1::RadialGradientBrushProperties(D2DPoint(pat->mCenter2),
+                                          D2DPoint(pat->mCenter1 - pat->mCenter2),
                                           pat->mRadius2, pat->mRadius2),
       D2D1::BrushProperties(aAlpha, D2DMatrix(pat->mMatrix)),
       stops->mStopCollection,
