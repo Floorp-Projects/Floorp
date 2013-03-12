@@ -685,12 +685,20 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_b(label, cond);
     }
     void branch32(Condition cond, const Operand &lhs, Register rhs, Label *label) {
-        ma_ldr(lhs, ScratchRegister);
-        branch32(cond, ScratchRegister, rhs, label);
+        if (lhs.getTag() == Operand::OP2) {
+            branch32(cond, lhs.toReg(), rhs, label);
+        } else {
+            ma_ldr(lhs, ScratchRegister);
+            branch32(cond, ScratchRegister, rhs, label);
+        }
     }
     void branch32(Condition cond, const Operand &lhs, Imm32 rhs, Label *label) {
-        ma_ldr(lhs, ScratchRegister);
-        branch32(cond, ScratchRegister, rhs, label);
+        if (lhs.getTag() == Operand::OP2) {
+            branch32(cond, lhs.toReg(), rhs, label);
+        } else {
+            ma_ldr(lhs, ScratchRegister);
+            branch32(cond, ScratchRegister, rhs, label);
+        }
     }
     void branch32(Condition cond, const Address &lhs, Register rhs, Label *label) {
         load32(lhs, ScratchRegister);
