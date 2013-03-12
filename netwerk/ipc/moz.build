@@ -7,3 +7,5 @@ XPIDL_SOURCES += [
     'nsIRemoteOpenFileListener.idl',
 ]
 
+XPIDL_MODULE = 'necko_ipc'
+

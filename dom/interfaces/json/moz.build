@@ -7,3 +7,5 @@ XPIDL_SOURCES += [
     'nsIJSON.idl',
 ]
 
+XPIDL_MODULE = 'dom_json'
+

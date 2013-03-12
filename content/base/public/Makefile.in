@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= content
-XPIDL_MODULE	= content_base
 GRE_MODULE	= 1
 
 EXPORTS		= \

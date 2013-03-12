@@ -13,3 +13,5 @@ XPIDL_SOURCES += [
     'nsIDOMNavigatorActivities.idl',
 ]
 
+XPIDL_MODULE = 'dom_activities'
+

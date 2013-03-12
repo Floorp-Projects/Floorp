@@ -16,3 +16,5 @@ XPIDL_SOURCES += [
     'nsISAXXMLReader.idl',
 ]
 
+XPIDL_MODULE = 'saxparser'
+

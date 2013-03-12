@@ -13,7 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 
 # export required interfaces, even if --disable-cookies has been given
 MODULE       = necko
-XPIDL_MODULE = necko_cookie
 GRE_MODULE   = 1
 FAIL_ON_WARNINGS := 1
 

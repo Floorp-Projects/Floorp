@@ -10,3 +10,5 @@ XPIDL_SOURCES += [
     'nsIPaymentUIGlue.idl',
 ]
 
+XPIDL_MODULE = 'dom_payment'
+

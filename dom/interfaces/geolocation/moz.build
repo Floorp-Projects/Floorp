@@ -14,3 +14,5 @@ XPIDL_SOURCES += [
     'nsIGeolocation.idl',
 ]
 
+XPIDL_MODULE = 'dom_geolocation'
+

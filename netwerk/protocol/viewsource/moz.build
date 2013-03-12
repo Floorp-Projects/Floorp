@@ -7,3 +7,5 @@ XPIDL_SOURCES += [
     'nsIViewSourceChannel.idl',
 ]
 
+XPIDL_MODULE = 'necko_viewsource'
+

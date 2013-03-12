@@ -7,3 +7,5 @@ XPIDL_SOURCES += [
     'nsIDOMDocumentXBL.idl',
 ]
 
+XPIDL_MODULE = 'dom_xbl'
+

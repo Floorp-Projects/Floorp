@@ -9,3 +9,5 @@ XPIDL_SOURCES += [
     'nsISyncJPAKE.idl',
 ]
 
+XPIDL_MODULE = 'services-crypto-component'
+

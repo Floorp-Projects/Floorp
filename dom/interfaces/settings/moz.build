@@ -9,3 +9,5 @@ XPIDL_SOURCES += [
     'nsISettingsService.idl',
 ]
 
+XPIDL_MODULE = 'dom_settings'
+

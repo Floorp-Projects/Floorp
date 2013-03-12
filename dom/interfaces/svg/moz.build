@@ -24,3 +24,5 @@ XPIDL_SOURCES += [
     'nsIDOMSVGZoomEvent.idl',
 ]
 
+XPIDL_MODULE = 'dom_svg'
+

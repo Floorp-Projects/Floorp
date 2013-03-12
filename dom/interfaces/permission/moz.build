@@ -8,3 +8,5 @@ XPIDL_SOURCES += [
     'nsIPermissionPromptService.idl',
 ]
 
+XPIDL_MODULE = 'dom_permissionsettings'
+

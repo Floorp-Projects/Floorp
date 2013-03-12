@@ -17,3 +17,5 @@ XPIDL_SOURCES += [
     'nsIHttpProtocolHandler.idl',
 ]
 
+XPIDL_MODULE = 'necko_http'
+

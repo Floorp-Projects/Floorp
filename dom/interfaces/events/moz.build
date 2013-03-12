@@ -49,3 +49,5 @@ XPIDL_SOURCES += [
     'nsIDOMWheelEvent.idl',
 ]
 
+XPIDL_MODULE = 'dom_events'
+

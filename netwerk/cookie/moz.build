@@ -12,3 +12,5 @@ XPIDL_SOURCES += [
     'nsICookieService.idl',
 ]
 
+XPIDL_MODULE = 'necko_cookie'
+

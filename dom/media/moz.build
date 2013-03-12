@@ -15,3 +15,5 @@ XPIDL_SOURCES += [
     'nsIMediaManager.idl',
 ]
 
+XPIDL_MODULE = 'dom_media'
+

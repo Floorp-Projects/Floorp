@@ -28,3 +28,5 @@ XPIDL_SOURCES += [
     'nsIXMLHttpRequest.idl',
 ]
 
+XPIDL_MODULE = 'content_base'
+

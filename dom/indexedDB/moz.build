@@ -22,3 +22,5 @@ XPIDL_SOURCES += [
     'nsIIndexedDatabaseManager.idl',
 ]
 
+XPIDL_MODULE = 'dom_indexeddb'
+

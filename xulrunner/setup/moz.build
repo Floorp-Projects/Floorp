@@ -7,3 +7,5 @@ XPIDL_SOURCES += [
     'nsIXULAppInstall.idl',
 ]
 
+XPIDL_MODULE = 'xulapp_setup'
+

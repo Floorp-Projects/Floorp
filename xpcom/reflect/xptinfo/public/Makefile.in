@@ -12,8 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
 
-XPIDL_MODULE = xpcom_xpti
-
 GRE_MODULE	= 1
 
 EXPORTS		= \

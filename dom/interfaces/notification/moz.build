@@ -8,3 +8,5 @@ XPIDL_SOURCES += [
     'nsIDOMNavigatorDesktopNotification.idl',
 ]
 
+XPIDL_MODULE = 'dom_notification'
+

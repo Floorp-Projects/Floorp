@@ -11,3 +11,5 @@ XPIDL_SOURCES += [
     'nsIVoicemailProvider.idl',
 ]
 
+XPIDL_MODULE = 'dom_voicemail'
+
