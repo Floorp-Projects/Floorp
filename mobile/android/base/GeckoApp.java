@@ -50,7 +50,6 @@ import android.graphics.Rect;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
-import android.hardware.input.InputManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.net.Uri;
@@ -66,7 +65,6 @@ import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.Display;
 import android.view.Gravity;
-import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -190,7 +188,6 @@ abstract public class GeckoApp
 
     private static Boolean sIsLargeTablet = null;
     private static Boolean sIsSmallTablet = null;
-    private static Boolean sIsTouchDevice = null;
 
     abstract public int getLayout();
     abstract public boolean hasTabsSideBar();
@@ -1332,21 +1329,6 @@ abstract public class GeckoApp
         }
 
         return sIsSmallTablet;
-    }
-
-    public boolean isTouchDevice() {
-        if (sIsTouchDevice == null) {
-            sIsTouchDevice = false;
-            InputManager manager = (InputManager)getSystemService(Context.INPUT_SERVICE);
-            if (manager != null) {
-                for (int inputDeviceId : manager.getInputDeviceIds()) {
-                    if ((manager.getInputDevice(inputDeviceId).getSources() & InputDevice.SOURCE_TOUCHSCREEN) == InputDevice.SOURCE_TOUCHSCREEN) {
-                        sIsTouchDevice = true;
-                    }
-                }
-            }
-        }
-        return sIsTouchDevice;
     }
 
     /** Called when the activity is first created. */
