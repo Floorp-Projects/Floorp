@@ -78,6 +78,8 @@ class TreeMetadataEmitter(object):
             passthru.variables['XPIDLSRCS'] = sandbox['XPIDL_SOURCES']
         if sandbox['XPIDL_MODULE']:
             passthru.variables['XPIDL_MODULE'] = sandbox['XPIDL_MODULE']
+        if sandbox['XPIDL_FLAGS']:
+            passthru.variables['XPIDL_FLAGS'] = sandbox['XPIDL_FLAGS']
 
         if passthru.variables:
             yield passthru

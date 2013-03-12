@@ -129,7 +129,12 @@ class TestRecursiveMakeBackend(BackendTester):
             'XPIDLSRCS += bar.idl',
             'XPIDLSRCS += biz.idl',
         ])
-        self.assertEqual(lines[5], 'XPIDL_MODULE := module_name')
+        self.assertEqual(lines[5:8], [
+            'XPIDL_FLAGS += -Idir1',
+            'XPIDL_FLAGS += -Idir2',
+            'XPIDL_FLAGS += -Idir3',
+        ])
+        self.assertEqual(lines[8], 'XPIDL_MODULE := module_name')
 
 
 if __name__ == '__main__':

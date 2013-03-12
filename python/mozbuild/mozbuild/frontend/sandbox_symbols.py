@@ -157,6 +157,14 @@ VARIABLES = {
         XPIDL_SOURCES together. If unspecified, it defaults to be the same as
         MODULE.
         """),
+
+    'XPIDL_FLAGS': (list, [],
+        """XPCOM Interface Definition Module Flags.
+
+        This is a list of extra flags that are passed to the IDL compiler.
+        Typically this is a set of -I flags that denote extra include
+        directories to search for included .idl files.
+        """),
 }
 
 # The set of functions exposed to the sandbox.
