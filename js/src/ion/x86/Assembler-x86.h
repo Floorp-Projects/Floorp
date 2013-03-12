@@ -209,18 +209,6 @@ PatchJump(CodeLocationJump jump, CodeLocationLabel label)
     JSC::X86Assembler::setRel32(jump.raw(), label.raw());
 }
 
-static inline void
-PatchCall(CodeLocationCall call, CodeLocationLabel label)
-{
-#ifdef DEBUG
-    // Assert that we're overwriting a call instruction:
-    //   E8 <imm32>
-    unsigned char *x = (unsigned char *)call.raw() - 5;
-    JS_ASSERT(*x == 0xE8);
-#endif
-    JSC::X86Assembler::setRel32(call.raw(), label.raw());
-}
-
 // Return operand from a JS -> JS call.
 static const ValueOperand JSReturnOperand = ValueOperand(JSReturnReg_Type, JSReturnReg_Data);
 
