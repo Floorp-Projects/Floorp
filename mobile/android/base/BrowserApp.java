@@ -279,9 +279,10 @@ abstract public class BrowserApp extends GeckoApp
             } else if (action == MotionEvent.ACTION_UP ||
                        action == MotionEvent.ACTION_CANCEL) {
                 // Animate the toolbar to fully on or off, depending on how much
-                // of it is hidden.
-                mBrowserToolbar.animateVisibility(
-                    toolbarView.getScrollY() > toolbarHeight / 2 ? false : true, 0);
+                // of it is hidden and the current swipe velocity.
+                mBrowserToolbar.animateVisibilityWithVelocityBias(
+                    toolbarView.getScrollY() > toolbarHeight / 2 ? false : true,
+                    mLayerView.getPanZoomController().getVelocityVector().y);
             }
         }
 
