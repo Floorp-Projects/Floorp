@@ -149,6 +149,14 @@ VARIABLES = {
         Entries must be files that exist. Entries are almost certainly .idl
         files.
         """),
+
+    'XPIDL_MODULE': (unicode, "",
+        """XPCOM Interface Definition Module Name.
+
+        This is the name of the .xpt file that is created by linking
+        XPIDL_SOURCES together. If unspecified, it defaults to be the same as
+        MODULE.
+        """),
 }
 
 # The set of functions exposed to the sandbox.
