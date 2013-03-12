@@ -20,7 +20,7 @@ function test() {
         //ss.currentEngine = engine;
         break;
       case "engine-current":
-        ok(ss.currentEngine.name == ENGINE_NAME, "currentEngine set");
+        is(ss.currentEngine.name, ENGINE_NAME, "currentEngine set");
         startTest();
         break;
       case "engine-removed":
@@ -40,16 +40,16 @@ function test() {
     ok(contextMenu, "Got context menu XUL");
 
     doOnloadOnce(testContextMenu);
-    var tab = gBrowser.addTab("data:text/plain,test%20search");
+    var tab = gBrowser.addTab("data:text/plain;charset=utf8,test%20search");
     gBrowser.selectedTab = tab;
   }
 
   function testContextMenu() {
-    function rightClickOnDocument(){
+    function rightClickOnDocument() {
+      waitForBrowserContextMenu(checkContextMenu);
       var clickTarget = content.document.body;
       var eventDetails = { type: "contextmenu", button: 2 };
       EventUtils.synthesizeMouseAtCenter(clickTarget, eventDetails, content);
-      SimpleTest.executeSoon(checkContextMenu);
     }
 
     // check the search menu item and then perform a search
