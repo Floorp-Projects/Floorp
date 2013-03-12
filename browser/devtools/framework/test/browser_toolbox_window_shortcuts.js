@@ -11,6 +11,11 @@ let toolbox, toolIDs, idIndex;
 function test() {
   waitForExplicitFinish();
 
+  if (window.navigator.oscpu.match(/osx 10\.8/i) || window.navigator.oscpu.match(/windows nt 5\.1/i)) {
+    info("Skipping Mac OSX 10.8 and Windows xp, see bug 838069");
+    finish();
+    return;
+  }
   addTab("about:blank", function() {
     toolIDs = [];
     for (let [id, definition] of gDevTools._tools) {
