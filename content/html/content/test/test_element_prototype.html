@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=844127
+-->
+<head>
+  <title>Test for Bug 844127</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=844127">Mozilla Bug 844127</a>
+
+<script type="text/javascript">
+
+/** Test for Bug 844127 **/
+
+var a1 = document.createElement('bgsound');
+var a2 = document.createElement('image');
+var a3 = document.createElement('multicol');
+var a4 = document.createElement('spacer');
+var a5 = document.createElement('isindex');
+
+is(Object.getPrototypeOf(a1), HTMLUnknownElement.prototype, "Prototype for bgsound should be correct");
+is(Object.getPrototypeOf(a2), HTMLElement.prototype, "Prototype for image should be correct");
+is(Object.getPrototypeOf(a3), HTMLUnknownElement.prototype, "Prototype for multicol should be correct");
+is(Object.getPrototypeOf(a4), HTMLUnknownElement.prototype, "Prototype for spacer should be correct");
+is(Object.getPrototypeOf(a5), HTMLUnknownElement.prototype, "Prototype for isindex should be correct");
+
+</script>
+</body>
+</html>
