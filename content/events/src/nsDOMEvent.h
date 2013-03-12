@@ -176,6 +176,11 @@ public:
     return d;
   }
 
+  bool MultipleActionsPrevented()
+  {
+    return mEvent->mFlags.mMultipleActionsPrevented;
+  }
+
   bool IsTrusted()
   {
     bool i;
