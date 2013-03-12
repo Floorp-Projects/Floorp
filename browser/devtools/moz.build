@@ -15,6 +15,7 @@ DIRS += [
     'tilt',
     'scratchpad',
     'debugger',
+    'netmonitor',
     'layoutview',
     'shared',
     'responsivedesign',

@@ -1,0 +1,72 @@
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Network Monitor test page</title>
+    <style>
+      input {
+        display: block;
+        margin: 12px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <p>POST data test</p>
+    <form enctype="multipart/form-data" method="post" name="form-name">
+      <input type="text" name="text" placeholder="text" value="Some text..."/>
+      <input type="email" name="email" placeholder="email"/>
+      <input type="range" name="range" value="42"/>
+      <input type="button" value="Post me!" onclick="window.form()">
+    </form>
+
+    <script type="text/javascript">
+      function post(aAddress, aMessage, aCallback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", aAddress, true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        var data = "";
+        for (var i in aMessage) {
+          data += "&" + i + "=" + aMessage[i];
+        }
+
+        xhr.onreadystatechange = function() {
+          if (this.readyState == this.DONE) {
+            aCallback();
+          }
+        };
+        xhr.send(data);
+      }
+
+      function form(aAddress, aForm, aCallback) {
+        var formData = new FormData(document.forms.namedItem(aForm));
+        formData.append("Custom field", "Extra data");
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", aAddress, true);
+
+        xhr.onreadystatechange = function() {
+          if (this.readyState == this.DONE) {
+            aCallback();
+          }
+        };
+        xhr.send(formData);
+      }
+
+      function performRequests() {
+        var url = "sjs_simple-test-server.sjs";
+        var url1 = url + "?foo=bar&baz=42&type=urlencoded";
+        var url2 = url + "?foo=bar&baz=42&type=multipart";
+
+        post(url1, { foo: "bar", baz: 123 }, function() {
+          form(url2, "form-name", function() {
+            // Done.
+          });
+        });
+      }
+    </script>
+  </body>
+
+</html>

@@ -1077,6 +1077,12 @@ pref("devtools.debugger.ui.variables-searchbox-visible", false);
 // Enable the Profiler
 pref("devtools.profiler.enabled", true);
 
+// Enable the Network Monitor
+pref("devtools.netmonitor.enabled", true);
+
+// The default Network Monitor UI settings
+pref("devtools.netmonitor.panes-network-details-width", 450);
+
 // Enable the Tilt inspector
 pref("devtools.tilt.enabled", true);
 pref("devtools.tilt.intro_transition", true);

@@ -81,6 +81,7 @@ SideMenuWidget.prototype = {
    */
   insertItemAt: function SMW_insertItemAt(aIndex, aContents, aTooltip = "", aGroup = "") {
     this.ensureSelectionIsVisible(true, true); // Don't worry, it's delayed.
+
     let group = this._getGroupForName(aGroup);
     return group.insertItemAt(aIndex, aContents, aTooltip);
   },
@@ -126,7 +127,7 @@ SideMenuWidget.prototype = {
     }
     this._selectedItem = null;
 
-    this._groupsByName = new Map();
+    this._groupsByName.clear();
     this._orderedGroupElementsArray.length = 0;
     this._orderedMenuElementsArray.length = 0;
   },
@@ -404,6 +405,9 @@ SideMenuGroup.prototype = {
     let menuArray = this._menuElementsArray;
     let item = new SideMenuItem(this, aContents, aTooltip);
 
+    // Invalidate any notices set on the owner widget.
+    this.ownerView.removeAttribute("notice");
+
     if (aIndex >= 0) {
       list.insertBefore(item._container, list.childNodes[aIndex]);
       menuArray.splice(aIndex, 0, item._target);
@@ -411,6 +415,7 @@ SideMenuGroup.prototype = {
       list.appendChild(item._container);
       menuArray.push(item._target);
     }
+
     return item._target;
   },
 
