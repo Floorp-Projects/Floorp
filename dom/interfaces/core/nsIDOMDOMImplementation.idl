@@ -1,0 +1,42 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+
+/**
+ * The nsIDOMDOMImplementation interface provides a number of methods for 
+ * performing operations that are independent of any particular instance 
+ * of the document object model.
+ *
+ * For more information on this interface please see 
+ * http://www.w3.org/TR/DOM-Level-2-Core/
+ */
+
+[uuid(03a6f574-99ec-42f8-9e6c-812a4a9bcbf7)]
+interface nsIDOMDOMImplementation : nsISupports
+{
+  boolean                   hasFeature(in DOMString feature, 
+                                       in DOMString version);
+
+  nsIDOMDocumentType        createDocumentType(in DOMString qualifiedName,
+                                               in DOMString publicId,
+                                               in DOMString systemId)
+                                  raises(DOMException);
+
+  nsIDOMDocument            createDocument(in DOMString namespaceURI,
+                                           in DOMString qualifiedName,
+                                           in nsIDOMDocumentType doctype)
+                                  raises(DOMException);
+
+  /**
+   * Returns an HTML document with a basic DOM already constructed and with an
+   * appropriate title element.
+   *
+   * @param title the title of the Document
+   * @see <http://www.whatwg.org/html/#creating-documents>
+   */
+  nsIDOMDocument            createHTMLDocument([Null(Stringify)]
+                                               in DOMString title);
+};

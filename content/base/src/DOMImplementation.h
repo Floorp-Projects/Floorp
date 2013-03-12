@@ -5,6 +5,7 @@
 #ifndef mozilla_dom_DOMImplementation_h
 #define mozilla_dom_DOMImplementation_h
 
+#include "nsIDOMDOMImplementation.h"
 #include "nsWrapperCache.h"
 
 #include "mozilla/Attributes.h"
@@ -23,7 +24,7 @@ namespace mozilla {
 namespace dom {
 class DocumentType;
 
-class DOMImplementation MOZ_FINAL : public nsISupports
+class DOMImplementation MOZ_FINAL : public nsIDOMDOMImplementation
                                   , public nsWrapperCache
 {
 public:
@@ -53,6 +54,9 @@ public:
   }
 
   virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
+
+  // nsIDOMDOMImplementation
+  NS_DECL_NSIDOMDOMIMPLEMENTATION
 
   bool HasFeature(const nsAString& aFeature, const nsAString& aVersion);
 
