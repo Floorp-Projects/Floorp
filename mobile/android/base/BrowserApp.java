@@ -99,11 +99,14 @@ abstract public class BrowserApp extends GeckoApp
 
     // Variables used for scrolling the toolbar on/off the page.
     private static final int TOOLBAR_ONLOAD_HIDE_DELAY = 2000;
+    private static final float TOOLBAR_MOVEMENT_THRESHOLD = 0.3f;
     private boolean mDynamicToolbarEnabled = false;
     private View mToolbarSpacer = null;
+    private float mLastTouchX = 0.0f;
     private float mLastTouchY = 0.0f;
     private float mToolbarSubpixelAccumulation = 0.0f;
-    private boolean mToolbarLocked = true;
+    private boolean mToolbarLocked = false;
+    private boolean mToolbarThresholdPassed = false;
 
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
@@ -121,7 +124,6 @@ abstract public class BrowserApp extends GeckoApp
                         if (mDynamicToolbarEnabled) {
                             // Show the toolbar immediately.
                             mBrowserToolbar.animateVisibility(true, 0);
-                            mToolbarLocked = true;
                         }
                     } else {
                         hideAboutHome();
@@ -214,14 +216,12 @@ abstract public class BrowserApp extends GeckoApp
         if (action == MotionEvent.ACTION_DOWN ||
             action == MotionEvent.ACTION_POINTER_DOWN) {
             if (pointerCount == 1) {
-                mToolbarLocked = false;
+                mToolbarLocked = mToolbarThresholdPassed = false;
                 mToolbarSubpixelAccumulation = 0.0f;
+                mLastTouchX = event.getX();
                 mLastTouchY = event.getY();
                 return super.onInterceptTouchEvent(view, event);
             }
-            //
-            // Lock the toolbar until we're back down to one pointer.
-            mToolbarLocked = true;
 
             // Animate the toolbar to the fully on/off position.
             mBrowserToolbar.animateVisibility(
@@ -229,9 +229,10 @@ abstract public class BrowserApp extends GeckoApp
                     false : true, 0);
         }
 
-        // If more than one pointer has been tracked, let the event pass
-        // through and be handled by the PanZoomController for zooming.
-        if (pointerCount > 1) {
+        // If more than one pointer has been tracked, or we've locked the
+        // toolbar movement, let the event pass through and be handled by the
+        // PanZoomController for zooming.
+        if (pointerCount > 1 || mToolbarLocked) {
             return super.onInterceptTouchEvent(view, event);
         }
 
@@ -239,22 +240,47 @@ abstract public class BrowserApp extends GeckoApp
         // unlock the toolbar and track that remaining pointer.
         if (pointerCount == 1 && action == MotionEvent.ACTION_POINTER_UP) {
             mLastTouchY = event.getY(1 - event.getActionIndex());
-            mToolbarLocked = false;
             return super.onInterceptTouchEvent(view, event);
         }
 
         // Don't bother doing anything with the events if we're loading -
         // the toolbar will be permanently visible in this case.
+        float eventX = event.getX();
         float eventY = event.getY();
         if (Tabs.getInstance().getSelectedTab().getState() != Tab.STATE_LOADING) {
             int toolbarHeight = toolbarView.getHeight();
-            if (action == MotionEvent.ACTION_MOVE && !mToolbarLocked) {
+            float deltaX = mLastTouchX - eventX;
+            float deltaY = mLastTouchY - eventY;
+            int toolbarY = toolbarView.getScrollY();
+
+            // Check if we've passed the toolbar movement threshold
+            if (!mToolbarThresholdPassed) {
+                float threshold = toolbarHeight * TOOLBAR_MOVEMENT_THRESHOLD;
+                if (Math.abs(deltaY) > threshold) {
+                    mToolbarThresholdPassed = true;
+                    // If we're scrolling downwards and the toolbar was hidden
+                    // when we started scrolling, lock it.
+                    if (deltaY > 0 && toolbarY == toolbarHeight) {
+                        mToolbarLocked = true;
+                        return super.onInterceptTouchEvent(view, event);
+                    }
+                } else if (Math.abs(deltaX) > threshold) {
+                    // Any horizontal scrolling past the threshold should
+                    // initiate toolbar lock.
+                    mToolbarLocked = true;
+                    mToolbarThresholdPassed = true;
+                    return super.onInterceptTouchEvent(view, event);
+                } else {
+                    // The threshold hasn't been passed. We don't want to update
+                    // the stored last touch position, so return here.
+                    return super.onInterceptTouchEvent(view, event);
+                }
+            } else if (action == MotionEvent.ACTION_MOVE) {
                 // Cancel any ongoing animation before we start moving the toolbar.
                 mBrowserToolbar.cancelVisibilityAnimation();
 
                 // Move the toolbar by the amount the touch event has moved,
                 // clamping to fully visible or fully hidden.
-                float deltaY = mLastTouchY - eventY;
 
                 // Don't let the toolbar scroll off the top if it's just exposing
                 // overscroll area.
@@ -264,7 +290,6 @@ abstract public class BrowserApp extends GeckoApp
                     Math.max(0, toolbarHeight - (metrics.pageRectTop -
                                                  metrics.viewportRectTop)));
 
-                int toolbarY = toolbarView.getScrollY();
                 float newToolbarYf = Math.max(0, Math.min(toolbarMaxY,
                     toolbarY + deltaY + mToolbarSubpixelAccumulation));
                 int newToolbarY = Math.round(newToolbarYf);
@@ -281,12 +306,13 @@ abstract public class BrowserApp extends GeckoApp
                 // Animate the toolbar to fully on or off, depending on how much
                 // of it is hidden and the current swipe velocity.
                 mBrowserToolbar.animateVisibilityWithVelocityBias(
-                    toolbarView.getScrollY() > toolbarHeight / 2 ? false : true,
+                    toolbarY > toolbarHeight / 2 ? false : true,
                     mLayerView.getPanZoomController().getVelocityVector().y);
             }
         }
 
-        // Update the last recorded y position.
+        // Update the last recorded position.
+        mLastTouchX = eventX;
         mLastTouchY = eventY;
 
         return super.onInterceptTouchEvent(view, event);
@@ -303,7 +329,6 @@ abstract public class BrowserApp extends GeckoApp
         // Toggle/focus the address bar on gamepad-y button.
         if (keyCode == KeyEvent.KEYCODE_BUTTON_Y &&
             (event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
-            mToolbarLocked = true;
             if (mBrowserToolbar.isVisible()) {
                 if (mDynamicToolbarEnabled &&
                     Boolean.FALSE.equals(mAboutHomeShowing)) {
