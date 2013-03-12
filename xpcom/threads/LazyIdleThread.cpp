@@ -11,6 +11,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Services.h"
 
 #ifdef DEBUG
@@ -234,6 +235,17 @@ LazyIdleThread::ShutdownThread()
 
   nsresult rv;
 
+  // Do this up front so that when we spin the event loop to shutdown the
+  // thread the idle timer doesn't cause us to reenter.
+  if (mIdleTimer) {
+    DebugOnly<nsresult> rv =
+      mIdleTimer->Cancel();
+    // nsTimerImpl::Cancel is infallible.
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    mIdleTimer = nullptr;
+  }
+
   if (mThread) {
     if (mShutdownMethod == AutomaticShutdown && NS_IsMainThread()) {
       nsCOMPtr<nsIObserverService> obs =
@@ -260,7 +272,7 @@ LazyIdleThread::ShutdownThread()
 
     nsCOMPtr<nsIRunnable> runnable =
       NS_NewRunnableMethod(this, &LazyIdleThread::CleanupThread);
-    NS_ENSURE_TRUE(runnable, NS_ERROR_FAILURE);
+    MOZ_ASSERT(runnable);
 
     PreDispatch();
 
@@ -287,13 +299,6 @@ LazyIdleThread::ShutdownThread()
       MOZ_ASSERT(mThreadIsShuttingDown, "Huh?!");
       mThreadIsShuttingDown = false;
     }
-  }
-
-  if (mIdleTimer) {
-    rv = mIdleTimer->Cancel();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mIdleTimer = nullptr;
   }
 
   // If our temporary queue has any runnables then we need to dispatch them.
