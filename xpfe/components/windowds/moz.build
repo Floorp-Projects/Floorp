@@ -7,3 +7,5 @@ XPIDL_SOURCES += [
     'nsIWindowDataSource.idl',
 ]
 
+XPIDL_MODULE = 'windowds'
+

@@ -9,3 +9,5 @@ XPIDL_SOURCES += [
     'nsIWifi.idl',
 ]
 
+XPIDL_MODULE = 'dom_wifi'
+

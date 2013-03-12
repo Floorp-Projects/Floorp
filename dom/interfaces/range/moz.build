@@ -7,3 +7,5 @@ XPIDL_SOURCES += [
     'nsIDOMRange.idl',
 ]
 
+XPIDL_MODULE = 'dom_range'
+

@@ -13,3 +13,5 @@ XPIDL_SOURCES += [
     'txIXPathObject.idl',
 ]
 
+XPIDL_MODULE = 'content_xslt'
+

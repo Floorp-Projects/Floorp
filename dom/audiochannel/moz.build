@@ -9,3 +9,5 @@ XPIDL_SOURCES += [
     'nsIAudioChannelAgent.idl',
 ]
 
+XPIDL_MODULE = 'dom_audiochannel'
+

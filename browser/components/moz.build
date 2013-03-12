@@ -31,3 +31,5 @@ XPIDL_SOURCES += [
     'nsIBrowserHandler.idl',
 ]
 
+XPIDL_MODULE = 'browsercompsbase'
+

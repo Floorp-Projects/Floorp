@@ -7,3 +7,5 @@ XPIDL_SOURCES += [
     'nsIAndroidBridge.idl',
 ]
 
+XPIDL_MODULE = 'widget_android'
+

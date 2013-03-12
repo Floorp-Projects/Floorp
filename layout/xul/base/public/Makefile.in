@@ -11,7 +11,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
-XPIDL_MODULE	= layout_xul
 GRE_MODULE	= 1
 
 EXPORTS		= \

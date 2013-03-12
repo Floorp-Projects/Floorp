@@ -9,3 +9,5 @@ XPIDL_SOURCES += [
     'nsIWifiMonitor.idl',
 ]
 
+XPIDL_MODULE = 'necko_wifi'
+

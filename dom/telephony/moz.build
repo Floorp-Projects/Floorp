@@ -11,3 +11,5 @@ XPIDL_SOURCES += [
     'nsITelephonyProvider.idl',
 ]
 
+XPIDL_MODULE = 'dom_telephony'
+

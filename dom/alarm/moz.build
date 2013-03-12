@@ -10,3 +10,5 @@ XPIDL_SOURCES += [
     'nsIDOMAlarmsManager.idl',
 ]
 
+XPIDL_MODULE = 'dom_alarm'
+

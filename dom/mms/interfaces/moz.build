@@ -8,3 +8,5 @@ XPIDL_SOURCES += [
     'nsIWapPushApplication.idl',
 ]
 
+XPIDL_MODULE = 'dom_mms'
+

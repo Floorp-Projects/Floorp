@@ -10,3 +10,5 @@ XPIDL_SOURCES += [
     'nsIOpenWindowEventDetail.idl',
 ]
 
+XPIDL_MODULE = 'dom_browserelement'
+

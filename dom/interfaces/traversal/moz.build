@@ -9,3 +9,5 @@ XPIDL_SOURCES += [
     'nsIDOMTreeWalker.idl',
 ]
 
+XPIDL_MODULE = 'dom_traversal'
+

@@ -10,7 +10,6 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = toolkitcomps
-XPIDL_MODULE = commandlines
 LIBRARY_NAME = commandlines
 SHORT_LIBNAME = cmdlines
 EXPORT_LIBRARY = 1

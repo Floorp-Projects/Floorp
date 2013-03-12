@@ -9,8 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-XPIDL_MODULE = dom_activities
-
 include $(topsrcdir)/config/rules.mk
 
 XPIDL_FLAGS += \

@@ -7,3 +7,5 @@ XPIDL_SOURCES += [
     'nsIRemoteService.idl',
 ]
 
+XPIDL_MODULE = 'toolkitremote'
+

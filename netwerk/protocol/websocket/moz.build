@@ -8,3 +8,5 @@ XPIDL_SOURCES += [
     'nsIWebSocketListener.idl',
 ]
 
+XPIDL_MODULE = 'necko_websocket'
+

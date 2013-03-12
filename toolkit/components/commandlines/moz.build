@@ -12,3 +12,5 @@ XPIDL_SOURCES += [
     'nsICommandLineValidator.idl',
 ]
 
+XPIDL_MODULE = 'commandlines'
+

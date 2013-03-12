@@ -12,3 +12,5 @@ XPIDL_SOURCES += [
     'nsIDOMLockedFile.idl',
 ]
 
+XPIDL_MODULE = 'dom_file'
+

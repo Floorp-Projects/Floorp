@@ -46,3 +46,5 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'nsILocalFileMac.idl',
     ]
 
+XPIDL_MODULE = 'xpcom_io'
+

@@ -9,3 +9,5 @@ XPIDL_SOURCES += [
     'nsICapturePicker.idl',
 ]
 
+XPIDL_MODULE = 'layout_forms'
+

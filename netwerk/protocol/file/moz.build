@@ -8,3 +8,5 @@ XPIDL_SOURCES += [
     'nsIFileProtocolHandler.idl',
 ]
 
+XPIDL_MODULE = 'necko_file'
+

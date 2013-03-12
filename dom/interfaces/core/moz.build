@@ -27,3 +27,5 @@ XPIDL_SOURCES += [
     'nsIInlineEventHandlers.idl',
 ]
 
+XPIDL_MODULE = 'dom_core'
+
