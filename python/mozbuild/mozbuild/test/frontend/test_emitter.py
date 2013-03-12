@@ -121,10 +121,12 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertIsInstance(objs[1], VariablePassthru)
 
         variables = objs[1].variables
-        self.assertEqual(len(variables), 1)
+        self.assertEqual(len(variables), 2)
         self.assertIn('XPIDLSRCS', variables)
         self.assertEqual(variables['XPIDLSRCS'],
             ['foo.idl', 'bar.idl', 'biz.idl'])
+        self.assertIn('XPIDL_MODULE', variables)
+        self.assertEqual(variables['XPIDL_MODULE'], 'module_name')
 
 
 if __name__ == '__main__':
