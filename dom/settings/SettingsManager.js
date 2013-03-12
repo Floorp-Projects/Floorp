@@ -88,7 +88,10 @@ SettingsLock.prototype = {
                 if (DEBUG) debug("store1: " + JSON.stringify(obj));
                 setReq = store.put(obj);
               } else {
-                let obj = {settingName: key, defaultValue: defaultValue, userValue: userValue};
+                //Workaround for cloning issues
+                let defaultVal = JSON.parse(JSON.stringify(defaultValue));
+                let userVal = JSON.parse(JSON.stringify(userValue));
+                let obj = {settingName: key, defaultValue: defaultVal, userValue: userVal};
                 if (DEBUG) debug("store2: " + JSON.stringify(obj));
                 setReq = store.put(obj);
               }
@@ -111,7 +114,7 @@ SettingsLock.prototype = {
                   Services.DOMRequest.fireError(request, setReq.error.name)
                 }
               };
-            };
+            }
             checkKeyRequest.onerror = function(event) {
               if (!request.error) {
                 Services.DOMRequest.fireError(request, checkKeyRequest.error.name)
@@ -124,8 +127,8 @@ SettingsLock.prototype = {
                                            : store.mozGetAll(info.name);
 
           getReq.onsuccess = function(event) {
-            if (DEBUG) debug("Request for '" + info.name + "' successful. " +
-                             "Record count: " + event.target.result.length);
+            if (DEBUG) debug("Request for '" + info.name + "' successful. " + 
+                  "Record count: " + event.target.result.length);
 
             if (event.target.result.length == 0) {
               if (DEBUG) debug("MOZSETTINGS-GET-WARNING: " + info.name + " is not in the database.\n");
@@ -211,7 +214,8 @@ SettingsLock.prototype = {
     if (this._settingsManager.hasWritePrivileges) {
       let req = Services.DOMRequest.createRequest(this._settingsManager._window);
       if (DEBUG) debug("send: " + JSON.stringify(aSettings));
-      this._requests.enqueue({request: req, intent: "set", settings: aSettings});
+      let settings = JSON.parse(JSON.stringify(aSettings));
+      this._requests.enqueue({request: req, intent: "set", settings: settings});
       this.createTransactionAndProcess();
       return req;
     } else {
@@ -308,6 +312,7 @@ SettingsManager.prototype = {
 
     switch (aMessage.name) {
       case "Settings:Change:Return:OK":
+        if (DEBUG) debug("Settings:Change:Return:OK");
         if (this._onsettingchange || this._callbacks) {
           if (DEBUG) debug('data:' + msg.key + ':' + msg.value + '\n');
 
@@ -329,7 +334,7 @@ SettingsManager.prototype = {
           if (DEBUG) debug("no observers stored!");
         }
         break;
-      default:
+      default: 
         if (DEBUG) debug("Wrong message: " + aMessage.name);
     }
   },
