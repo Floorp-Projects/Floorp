@@ -476,10 +476,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         jump(label);
         return CodeOffsetJump(size());
     }
-    CodeOffsetCall callWithPatch(IonCode *code) {
-        call(code);
-        return CodeOffsetCall(size());
-    }
 
     template <typename S, typename T>
     CodeOffsetJump branchPtrWithPatch(Condition cond, S lhs, T ptr, RepatchLabel *label) {
@@ -864,15 +860,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         makeFrameDescriptor(dynStack, IonFrame_OptimizedJS);
         Push(dynStack);
         call(target);
-    }
-    void tailCallWithExitFrameFromBaseline(IonCode *target) {
-        movl(ebp, eax);
-        subl(esp, eax);
-        addl(Imm32(4), eax);
-        makeFrameDescriptor(eax, IonFrame_BaselineJS);
-        push(eax);
-        push(esi);
-        jmp(target);
     }
 
     void enterOsr(Register calleeToken, Register code) {

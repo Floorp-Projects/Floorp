@@ -375,37 +375,6 @@ class CodeOffsetJump
     void fixup(MacroAssembler *masm);
 };
 
-class CodeOffsetCall
-{
-    size_t offset_;
-
-#ifdef JS_SMALL_BRANCH
-    size_t jumpTableIndex_;
-#endif
-
-  public:
-
-#ifdef JS_SMALL_BRANCH
-    CodeOffsetCall(size_t offset, size_t jumpTableIndex)
-        : offset_(offset), jumpTableIndex_(jumpTableIndex)
-    {}
-    size_t jumpTableIndex() const {
-        return jumpTableIndex_;
-    }
-#else
-    CodeOffsetCall(size_t offset) : offset_(offset) {}
-#endif
-
-    CodeOffsetCall() {
-        PodZero(this);
-    }
-
-    size_t offset() const {
-        return offset_;
-    }
-    void fixup(MacroAssembler *masm);
-};
-
 class CodeOffsetLabel
 {
     size_t offset_;
@@ -477,49 +446,6 @@ class CodeLocationJump
     }
     uint8_t *offset() const {
         JS_ASSERT(!absolute_ && raw_ != (uint8_t *) 0xdeadc0de);
-        return raw_;
-    }
-
-#ifdef JS_SMALL_BRANCH
-    uint8_t *jumpTableEntry() {
-        JS_ASSERT(absolute_);
-        return jumpTableEntry_;
-    }
-#endif
-};
-
-class CodeLocationCall
-{
-    uint8_t *raw_;
-    mozilla::DebugOnly<bool> absolute_;
-
-#ifdef JS_SMALL_BRANCH
-    uint8_t *jumpTableEntry_;
-#endif
-
-  public:
-    CodeLocationCall() {}
-    CodeLocationCall(IonCode *code, CodeOffsetCall base) {
-        *this = base;
-        repoint(code);
-    }
-
-    void operator = (CodeOffsetCall base) {
-        raw_ = (uint8_t *) base.offset();
-        absolute_ = false;
-#ifdef JS_SMALL_BRANCH
-        jumpTableEntry_ = (uint8_t *) base.jumpTableIndex();
-#endif
-    }
-
-    void repoint(IonCode *code, MacroAssembler* masm = NULL);
-
-    uint8_t *raw() const {
-        JS_ASSERT(absolute_);
-        return raw_;
-    }
-    uint8_t *offset() const {
-        JS_ASSERT(!absolute_);
         return raw_;
     }
 

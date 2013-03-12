@@ -50,30 +50,6 @@ CodeLocationJump::repoint(IonCode *code, MacroAssembler *masm)
 }
 
 void
-CodeLocationCall::repoint(IonCode *code, MacroAssembler *masm)
-{
-    JS_ASSERT(!absolute_);
-    size_t new_off = (size_t)raw_;
-#ifdef JS_SMALL_BRANCH
-    size_t jumpTableEntryOffset = reinterpret_cast<size_t>(jumpTableEntry_);
-#endif
-    if (masm != NULL) {
-#ifdef JS_CPU_X64
-        JS_ASSERT((uint64_t)raw_ <= UINT32_MAX);
-#endif
-        new_off = masm->actualOffset((uintptr_t)raw_);
-#ifdef JS_SMALL_BRANCH
-        jumpTableEntryOffset = masm->actualIndex(jumpTableEntryOffset);
-#endif
-    }
-    raw_ = code->raw() + new_off;
-#ifdef JS_SMALL_BRANCH
-    jumpTableEntry_ = Assembler::PatchableJumpAddress(code, (size_t) jumpTableEntryOffset);
-#endif
-    absolute_ = true;
-}
-
-void
 CodeLocationLabel::repoint(IonCode *code, MacroAssembler *masm)
 {
      JS_ASSERT(!absolute_);
