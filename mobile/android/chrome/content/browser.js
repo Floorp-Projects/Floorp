@@ -169,6 +169,7 @@ var Strings = {};
 var BrowserApp = {
   _tabs: [],
   _selectedTab: null,
+  _prefObservers: [],
 
   get isTablet() {
     let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
@@ -200,6 +201,8 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Browser:Quit", false);
     Services.obs.addObserver(this, "Preferences:Get", false);
     Services.obs.addObserver(this, "Preferences:Set", false);
+    Services.obs.addObserver(this, "Preferences:Observe", false);
+    Services.obs.addObserver(this, "Preferences:RemoveObservers", false);
     Services.obs.addObserver(this, "ScrollTo:FocusedInput", false);
     Services.obs.addObserver(this, "Sanitize:ClearData", false);
     Services.obs.addObserver(this, "FullScreen:Exit", false);
@@ -883,15 +886,22 @@ var BrowserApp = {
     webBrowserPrint.print(printSettings, download);
   },
 
-  getPreferences: function getPreferences(aPrefNames) {
+  getPreferences: function getPreferences(aPrefsRequest, aListen) {
     try {
-      let json = JSON.parse(aPrefNames);
       let prefs = [];
 
-      for each (let prefName in json.preferences) {
+      for each (let prefName in aPrefsRequest.preferences) {
         let pref = {
           name: prefName
         };
+
+        if (aListen) {
+          if (this._prefObservers[prefName])
+            this._prefObservers[prefName].push(aPrefsRequest.requestId);
+          else
+            this._prefObservers[prefName] = [ aPrefsRequest.requestId ];
+          Services.prefs.addObserver(prefName, this, false);
+        }
 
         // The plugin pref is actually two separate prefs, so
         // we need to handle it differently
@@ -956,10 +966,33 @@ var BrowserApp = {
 
       sendMessageToJava({
         type: "Preferences:Data",
-        requestId: json.requestId,    // opaque request identifier, can be any string/int/whatever
+        requestId: aPrefsRequest.requestId,    // opaque request identifier, can be any string/int/whatever
         preferences: prefs
       });
-    } catch (e) {}
+
+    } catch (e) {
+      dump("Unhandled exception getting prefs: " + e);
+    }
+  },
+
+  removePreferenceObservers: function removePreferenceObservers(aRequestId) {
+    let newPrefObservers = [];
+    for (let prefName in this._prefObservers) {
+      let requestIds = this._prefObservers[prefName];
+      // Remove the requestID from the preference handlers
+      let i = requestIds.indexOf(aRequestId);
+      if (i >= 0) {
+        requestIds.splice(i, 1);
+      }
+
+      // If there are no more request IDs, remove the observer
+      if (requestIds.length == 0) {
+        Services.prefs.removeObserver(prefName, this);
+      } else {
+        newPrefObservers[prefName] = requestIds;
+      }
+    }
+    this._prefObservers = newPrefObservers;
   },
 
   setPreferences: function setPreferences(aPref) {
@@ -1185,11 +1218,19 @@ var BrowserApp = {
         break;
 
       case "Preferences:Get":
-        this.getPreferences(aData);
+        this.getPreferences(JSON.parse(aData));
         break;
 
       case "Preferences:Set":
         this.setPreferences(aData);
+        break;
+
+      case "Preferences:Observe":
+        this.getPreferences(JSON.parse(aData), true);
+        break;
+
+      case "Preferences:RemoveObservers":
+        this.removePreferenceObservers(aData);
         break;
 
       case "ScrollTo:FocusedInput":
@@ -1255,6 +1296,14 @@ var BrowserApp = {
 
       case "Viewport:FixedMarginsChanged":
         gViewportMargins = JSON.parse(aData);
+        break;
+
+      case "nsPref:changed":
+        for each (let requestId in this._prefObservers[aData]) {
+          let request = { requestId : requestId,
+                          preferences : [ aData ] };
+          this.getPreferences(request, false);
+        }
         break;
 
       default:
