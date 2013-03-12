@@ -197,6 +197,8 @@ void test()
 
   if (isTSigned) {
     VERIFY_IS_VALID(-max);
+    VERIFY_IS_INVALID(-min);
+    VERIFY(-max - min == one);
     VERIFY_IS_VALID(-max - one);
     VERIFY_IS_VALID(negOne);
     VERIFY_IS_VALID(-max + negOne);
@@ -206,6 +208,9 @@ void test()
     VERIFY_IS_VALID(negOne + negOne);
     VERIFY(negOne + negOne == negTwo);
   } else {
+    VERIFY_IS_INVALID(-max);
+    VERIFY_IS_VALID(-min);
+    VERIFY(min == zero);
     VERIFY_IS_INVALID(negOne);
   }
 
