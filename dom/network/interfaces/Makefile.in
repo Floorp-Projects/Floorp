@@ -13,16 +13,6 @@ XPIDL_MODULE = dom_network
 
 include $(topsrcdir)/dom/dom-config.mk
 
-XPIDLSRCS = \
-  nsIDOMNavigatorNetwork.idl \
-  nsIDOMConnection.idl \
-  nsIDOMUSSDReceivedEvent.idl \
-  nsIDOMTCPSocket.idl \
-  nsITCPSocketParent.idl \
-  nsITCPSocketChild.idl \
-  nsIDOMDataErrorEvent.idl \
-  $(NULL)
-
 ifdef MOZ_B2G_RIL
 XPIDLSRCS += \
   nsIDOMMobileConnection.idl \

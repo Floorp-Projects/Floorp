@@ -11,12 +11,5 @@ MODULE			= spellchecker
 
 include $(DEPTH)/config/autoconf.mk
 
-XPIDLSRCS =                 \
-		mozIPersonalDictionary.idl \
-		mozISpellCheckingEngine.idl \
-		mozISpellI18NUtil.idl \
-		mozISpellI18NManager.idl \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

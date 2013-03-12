@@ -21,10 +21,6 @@ endif # !_MSC_VER
 
 
 
-XPIDLSRCS	= \
-		nsIStyleSheetService.idl	\
-		$(NULL)
-
 EXPORTS_NAMESPACES = mozilla
 
 EXPORTS		= \

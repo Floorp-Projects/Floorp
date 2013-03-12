@@ -13,30 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE    = accessibility
 GRE_MODULE	= 1
 
-XPIDLSRCS = \
-      nsIAccessibleTypes.idl \
-      nsIAccessibleRetrieval.idl \
-      nsIAccessible.idl \
-      nsIAccessibleApplication.idl \
-      nsIAccessibleRelation.idl \
-      nsIAccessibleRole.idl \
-      nsIAccessibleStates.idl \
-      nsIAccessibleDocument.idl \
-      nsIAccessibleProvider.idl \
-      nsIAccessibleSelectable.idl \
-      nsIAccessibleCursorable.idl \
-      nsIAccessibleEvent.idl \
-      nsIAccessibleEditableText.idl \
-      nsIAccessibleHyperLink.idl \
-      nsIAccessibleHyperText.idl \
-      nsIAccessiblePivot.idl \
-      nsIAccessibleTable.idl \
-      nsIAccessibleText.idl \
-      nsIAccessibleValue.idl \
-      nsIAccessibleImage.idl \
-      nsIXBLAccessible.idl \
-      $(NULL)
-
 EXPORTS		= \
       nsIAccessibilityService.h \
       $(NULL)

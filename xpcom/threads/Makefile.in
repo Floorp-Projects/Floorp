@@ -43,20 +43,6 @@ EXPORTS_mozilla = \
   LazyIdleThread.h \
   $(NULL)
 
-XPIDLSRCS	= \
-		nsIEventTarget.idl \
-		nsIThread.idl \
-		nsIThreadInternal.idl \
-		nsIThreadManager.idl \
-		nsIThreadPool.idl \
-		nsITimer.idl \
-		nsIRunnable.idl \
-		nsICancelableRunnable.idl \
-		nsIEnvironment.idl \
-		nsIProcess.idl \
-		nsISupportsPriority.idl \
-		$(NULL)
-
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 LOCAL_INCLUDES	= -I$(srcdir)/../components

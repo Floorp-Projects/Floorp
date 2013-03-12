@@ -21,8 +21,6 @@ FORCE_STATIC_LIB = 1
 
 EXPORTS = nsAboutProtocolUtils.h
 
-XPIDLSRCS = nsIAboutModule.idl
-
 CPPSRCS = \
   nsAboutProtocolHandler.cpp \
   nsAboutBlank.cpp \

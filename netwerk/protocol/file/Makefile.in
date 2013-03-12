@@ -19,11 +19,6 @@ GRE_MODULE     = 1
 
 FORCE_STATIC_LIB = 1
 
-XPIDLSRCS = \
-  nsIFileChannel.idl \
-  nsIFileProtocolHandler.idl \
-  $(NULL)
-
 CPPSRCS = \
   nsFileProtocolHandler.cpp \
   nsFileChannel.cpp \

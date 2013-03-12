@@ -13,11 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE      = htmlparser
 GRE_MODULE	= 1
 
-XPIDLSRCS = \
-	nsIExpatSink.idl \
-	nsIExtendedExpatSink.idl \
-	$(NULL)
-
 EXPORTS = \
 		nsIContentSink.h            \
 		nsITokenizer.h              \

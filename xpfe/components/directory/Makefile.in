@@ -15,8 +15,6 @@ XPIDL_MODULE	= directory
 LIBRARY_NAME	= directory_s
 LIBXUL_LIBRARY	= 1
 
-XPIDLSRCS	= nsIHTTPIndex.idl
-
 CPPSRCS		= nsDirectoryViewer.cpp
 
 # we don't want the shared lib, but we want to force the creation of a

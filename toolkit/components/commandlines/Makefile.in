@@ -18,13 +18,6 @@ IS_COMPONENT = 1
 MODULE_NAME = CommandLineModule
 LIBXUL_LIBRARY = 1
 
-XPIDLSRCS = \
-  nsICommandLine.idl \
-  nsICommandLineHandler.idl \
-  nsICommandLineRunner.idl \
-  nsICommandLineValidator.idl \
-  $(NULL)
-
 CPPSRCS = \
   nsCommandLine.cpp \
   $(NULL)

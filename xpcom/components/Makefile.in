@@ -36,16 +36,6 @@ CPPSRCS		= \
 		nsNativeComponentLoader.cpp \
 		$(NULL)
 
-SDK_XPIDLSRCS	= \
-		nsIClassInfo.idl	      \
-		nsIComponentRegistrar.idl     \
-		nsIFactory.idl		      \
-		nsIModule.idl		      \
-		nsIServiceManager.idl	      \
-		nsIComponentManager.idl       \
-		nsICategoryManager.idl        \
-		$(NULL)
-
 LOCAL_INCLUDES	= \
 	-I$(srcdir)/../reflect/xptinfo/src \
 	-I$(srcdir)/../base \

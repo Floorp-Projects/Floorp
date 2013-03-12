@@ -29,8 +29,4 @@ EXPORTS_mozilla/ipc = \
 		DocumentRendererNativeIDParent.h \
 		$(NULL)
 
-XPIDLSRCS	= \
-		nsICanvasGLPrivate.idl \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk

@@ -23,14 +23,6 @@ CPPSRCS = \
   TelephonyCall.cpp \
   $(NULL)
 
-XPIDLSRCS = \
-  nsIDOMNavigatorTelephony.idl \
-  nsIDOMTelephony.idl \
-  nsIDOMTelephonyCall.idl \
-  nsIDOMCallEvent.idl \
-  nsITelephonyProvider.idl \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 XPIDL_FLAGS += \

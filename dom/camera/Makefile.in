@@ -53,11 +53,6 @@ CPPSRCS += \
   $(NULL)
 endif
 
-XPIDLSRCS = \
-  nsIDOMNavigatorCamera.idl \
-  nsIDOMCameraManager.idl \
-  $(NULL)
-
 EXPORTS = \
   CameraCommon.h \
   DOMCameraManager.h \
