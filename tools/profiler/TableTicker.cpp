@@ -31,7 +31,6 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
-#include "PlatformMacros.h"
 
 // JS
 #include "jsdbgapi.h"
@@ -83,7 +82,13 @@ using namespace mozilla;
 
 static const int DYNAMIC_MAX_STRING = 512;
 
-static mozilla::ThreadLocal<TableTicker *> tlsTicker;
+mozilla::ThreadLocal<ProfileStack *> tlsStack;
+mozilla::ThreadLocal<TableTicker *> tlsTicker;
+// We need to track whether we've been initialized otherwise
+// we end up using tlsStack without initializing it.
+// Because tlsStack is totally opaque to us we can't reuse
+// it as the flag itself.
+bool stack_key_initialized;
 
 TimeStamp sLastTracerEvent;
 int sFrameNumber = 0;
@@ -150,7 +155,7 @@ typedef void (*IterateTagsCallback)(const ProfileEntry& entry, const char* tagSt
 class ThreadProfile
 {
 public:
-  ThreadProfile(int aEntrySize, PseudoStack *aStack)
+  ThreadProfile(int aEntrySize, ProfileStack *aStack)
     : mWritePos(0)
     , mLastFlushPos(0)
     , mReadPos(0)
@@ -411,7 +416,7 @@ public:
     }
   }
 
-  PseudoStack* GetStack()
+  ProfileStack* GetStack()
   {
     return mStack;
   }
@@ -423,7 +428,7 @@ private:
   int mLastFlushPos; // points to the next entry since the last flush()
   int mReadPos;  // points to the next entry we will read to
   int mEntrySize;
-  PseudoStack *mStack;
+  ProfileStack *mStack;
 };
 
 class SaveProfileTask;
@@ -439,7 +444,7 @@ hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature)
 
 class TableTicker: public Sampler {
  public:
-  TableTicker(int aInterval, int aEntrySize, PseudoStack *aStack,
+  TableTicker(int aInterval, int aEntrySize, ProfileStack *aStack,
               const char** aFeatures, uint32_t aFeatureCount)
     : Sampler(aInterval, true)
     , mPrimaryThreadProfile(aEntrySize, aStack)
@@ -581,7 +586,7 @@ public:
       // being thread safe. Bug 750989.
       if (stream.is_open()) {
         JSAutoCompartment autoComp(cx, obj);
-        JSObject* profileObj = mozilla_sampler_get_profile_data1(cx);
+        JSObject* profileObj = mozilla_sampler_get_profile_data(cx);
         jsval val = OBJECT_TO_JSVAL(profileObj);
         JS_Stringify(cx, &val, nullptr, JSVAL_NULL, WriteCallback, &stream);
         stream.close();
@@ -724,7 +729,7 @@ void addDynamicTag(ThreadProfile &aProfile, char aTagName, const char *aStr)
 
 static
 void addProfileEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
-                     PseudoStack *stack, void *lastpc)
+                     ProfileStack *stack, void *lastpc)
 {
   int lineno = -1;
 
@@ -838,7 +843,7 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
   if (NS_SUCCEEDED(rv)) {
     aProfile.addTag(ProfileEntry('s', "(root)"));
 
-    PseudoStack* stack = aProfile.GetStack();
+    ProfileStack* stack = aProfile.GetStack();
     uint32_t pseudoStackPos = 0;
 
     /* We have two stacks, the native C stack we extracted from unwinding,
@@ -877,7 +882,7 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 #endif
 
 static
-void doSampleStackTrace(PseudoStack *aStack, ThreadProfile &aProfile, TickSample *sample)
+void doSampleStackTrace(ProfileStack *aStack, ThreadProfile &aProfile, TickSample *sample)
 {
   // Sample
   // 's' tag denotes the start of a sample block
@@ -911,7 +916,7 @@ unsigned int sCurrentEventGeneration = 0;
 void TableTicker::Tick(TickSample* sample)
 {
   // Marker(s) come before the sample
-  PseudoStack* stack = mPrimaryThreadProfile.GetStack();
+  ProfileStack* stack = mPrimaryThreadProfile.GetStack();
   for (int i = 0; stack->getMarker(i) != NULL; i++) {
     addDynamicTag(mPrimaryThreadProfile, 'm', stack->getMarker(i));
   }
@@ -997,61 +1002,19 @@ std::ostream& operator<<(std::ostream& stream, const ProfileEntry& entry)
   return stream;
 }
 
-bool sps_version2()
-{
-  static int version = 0; // Raced on, potentially
-
-  if (version == 0) {
-    bool allow2 = false; // Is v2 allowable on this platform?
-#   if defined(SPS_PLAT_amd64_linux) || defined(SPS_PLAT_arm_android) \
-       || defined(SPS_PLAT_x86_linux)
-    allow2 = true;
-#   elif defined(SPS_PLAT_amd64_darwin) || defined(SPS_PLAT_x86_darwin) \
-         || defined(SPS_PLAT_x86_windows) || defined(SPS_PLAT_x86_android)
-    allow2 = false;
-#   else
-#     error "Unknown platform"
-#   endif
-
-    bool req2 = PR_GetEnv("MOZ_PROFILER_NEW") != NULL; // Has v2 been requested?
-
-    bool elfhackd = false;
-#   if defined(USE_ELF_HACK)
-    bool elfhackd = true;
-#   endif
-
-    if (req2 && allow2) {
-      version = 2;
-      LOG("------------------- MOZ_PROFILER_NEW set -------------------");
-    } else if (req2 && !allow2) {
-      version = 1;
-      LOG("--------------- MOZ_PROFILER_NEW requested, ----------------");
-      LOG("---------- but is not available on this platform -----------");
-    } else if (req2 && elfhackd) {
-      version = 1;
-      LOG("--------------- MOZ_PROFILER_NEW requested, ----------------");
-      LOG("--- but this build was not done with --disable-elf-hack ----");
-    } else {
-      version = 1;
-      LOG("----------------- MOZ_PROFILER_NEW not set -----------------");
-    }
-  }
-  return version == 2;
-}
-
-void mozilla_sampler_init1()
+void mozilla_sampler_init()
 {
   if (stack_key_initialized)
     return;
 
-  if (!tlsPseudoStack.init() || !tlsTicker.init()) {
+  if (!tlsStack.init() || !tlsTicker.init()) {
     LOG("Failed to init.");
     return;
   }
   stack_key_initialized = true;
 
-  PseudoStack *stack = new PseudoStack();
-  tlsPseudoStack.set(stack);
+  ProfileStack *stack = new ProfileStack();
+  tlsStack.set(stack);
 
   // Allow the profiler to be started using signals
   OS::RegisterStartHandler();
@@ -1069,11 +1032,11 @@ void mozilla_sampler_init1()
                          , "stackwalk"
 #endif
                          };
-  mozilla_sampler_start1(PROFILE_DEFAULT_ENTRY, PROFILE_DEFAULT_INTERVAL,
-                         features, sizeof(features)/sizeof(const char*));
+  mozilla_sampler_start(PROFILE_DEFAULT_ENTRY, PROFILE_DEFAULT_INTERVAL,
+                        features, sizeof(features)/sizeof(const char*));
 }
 
-void mozilla_sampler_shutdown1()
+void mozilla_sampler_shutdown()
 {
   TableTicker *t = tlsTicker.get();
   if (t) {
@@ -1088,13 +1051,13 @@ void mozilla_sampler_shutdown1()
     }
   }
 
-  mozilla_sampler_stop1();
+  mozilla_sampler_stop();
   // We can't delete the Stack because we can be between a
   // sampler call_enter/call_exit point.
   // TODO Need to find a safe time to delete Stack
 }
 
-void mozilla_sampler_save1()
+void mozilla_sampler_save()
 {
   TableTicker *t = tlsTicker.get();
   if (!t) {
@@ -1107,7 +1070,7 @@ void mozilla_sampler_save1()
   t->HandleSaveRequest();
 }
 
-char* mozilla_sampler_get_profile1()
+char* mozilla_sampler_get_profile()
 {
   TableTicker *t = tlsTicker.get();
   if (!t) {
@@ -1125,7 +1088,7 @@ char* mozilla_sampler_get_profile1()
   return rtn;
 }
 
-JSObject *mozilla_sampler_get_profile_data1(JSContext *aCx)
+JSObject *mozilla_sampler_get_profile_data(JSContext *aCx)
 {
   TableTicker *t = tlsTicker.get();
   if (!t) {
@@ -1136,7 +1099,7 @@ JSObject *mozilla_sampler_get_profile_data1(JSContext *aCx)
 }
 
 
-const char** mozilla_sampler_get_features1()
+const char** mozilla_sampler_get_features()
 {
   static const char* features[] = {
 #if defined(MOZ_PROFILING) && (defined(USE_BACKTRACE) || defined(USE_NS_STACKWALK))
@@ -1154,19 +1117,19 @@ const char** mozilla_sampler_get_features1()
 }
 
 // Values are only honored on the first start
-void mozilla_sampler_start1(int aProfileEntries, int aInterval,
-                            const char** aFeatures, uint32_t aFeatureCount)
+void mozilla_sampler_start(int aProfileEntries, int aInterval,
+                           const char** aFeatures, uint32_t aFeatureCount)
 {
   if (!stack_key_initialized)
-    mozilla_sampler_init1();
+    mozilla_sampler_init();
 
-  PseudoStack *stack = tlsPseudoStack.get();
+  ProfileStack *stack = tlsStack.get();
   if (!stack) {
     ASSERT(false);
     return;
   }
 
-  mozilla_sampler_stop1();
+  mozilla_sampler_stop();
 
   TableTicker *t = new TableTicker(aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL,
                                    aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY,
@@ -1181,10 +1144,10 @@ void mozilla_sampler_start1(int aProfileEntries, int aInterval,
     os->NotifyObservers(nullptr, "profiler-started", nullptr);
 }
 
-void mozilla_sampler_stop1()
+void mozilla_sampler_stop()
 {
   if (!stack_key_initialized)
-    mozilla_sampler_init1();
+    mozilla_sampler_init();
 
   TableTicker *t = tlsTicker.get();
   if (!t) {
@@ -1196,7 +1159,7 @@ void mozilla_sampler_stop1()
   t->Stop();
   delete t;
   tlsTicker.set(NULL);
-  PseudoStack *stack = tlsPseudoStack.get();
+  ProfileStack *stack = tlsStack.get();
   ASSERT(stack != NULL);
 
   if (disableJS)
@@ -1207,10 +1170,10 @@ void mozilla_sampler_stop1()
     os->NotifyObservers(nullptr, "profiler-stopped", nullptr);
 }
 
-bool mozilla_sampler_is_active1()
+bool mozilla_sampler_is_active()
 {
   if (!stack_key_initialized)
-    mozilla_sampler_init1();
+    mozilla_sampler_init();
 
   TableTicker *t = tlsTicker.get();
   if (!t) {
@@ -1220,9 +1183,10 @@ bool mozilla_sampler_is_active1()
   return t->IsActive();
 }
 
-static double sResponsivenessTimes[100];
-static unsigned int sResponsivenessLoc = 0;
-void mozilla_sampler_responsiveness1(TimeStamp aTime)
+double sResponsivenessTimes[100];
+double sCurrResponsiveness = 0.f;
+unsigned int sResponsivenessLoc = 0;
+void mozilla_sampler_responsiveness(TimeStamp aTime)
 {
   if (!sLastTracerEvent.IsNull()) {
     if (sResponsivenessLoc == 100) {
@@ -1239,17 +1203,17 @@ void mozilla_sampler_responsiveness1(TimeStamp aTime)
   sLastTracerEvent = aTime;
 }
 
-const double* mozilla_sampler_get_responsiveness1()
+const double* mozilla_sampler_get_responsiveness()
 {
   return sResponsivenessTimes;
 }
 
-void mozilla_sampler_frame_number1(int frameNumber)
+void mozilla_sampler_frame_number(int frameNumber)
 {
   sFrameNumber = frameNumber;
 }
 
-static void print_callback(const ProfileEntry& entry, const char* tagStringData) {
+void print_callback(const ProfileEntry& entry, const char* tagStringData) {
   switch (entry.mTagName) {
     case 's':
     case 'c':
@@ -1257,12 +1221,12 @@ static void print_callback(const ProfileEntry& entry, const char* tagStringData)
   }
 }
 
-void mozilla_sampler_print_location1()
+void mozilla_sampler_print_location()
 {
   if (!stack_key_initialized)
-    mozilla_sampler_init1();
+    mozilla_sampler_init();
 
-  PseudoStack *stack = tlsPseudoStack.get();
+  ProfileStack *stack = tlsStack.get();
   if (!stack) {
     MOZ_ASSERT(false);
     return;
@@ -1277,15 +1241,15 @@ void mozilla_sampler_print_location1()
   threadProfile.IterateTags(print_callback);
 }
 
-void mozilla_sampler_lock1()
+void mozilla_sampler_lock()
 {
-  mozilla_sampler_stop1();
+  mozilla_sampler_stop();
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os)
     os->NotifyObservers(nullptr, "profiler-locked", nullptr);
 }
 
-void mozilla_sampler_unlock1()
+void mozilla_sampler_unlock()
 {
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os)
