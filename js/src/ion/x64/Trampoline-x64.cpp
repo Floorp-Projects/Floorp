@@ -143,11 +143,14 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     if (type == EnterJitBaseline) {
         // Handle OSR.
         GeneralRegisterSet regs(GeneralRegisterSet::All());
-        regs.take(JSReturnOperand);
         regs.takeUnchecked(OsrFrameReg);
         regs.take(rbp);
         regs.take(reg_code);
 
+        // Ensure that |scratch| does not end up being JSReturnOperand.
+        // Do takeUnchecked because on Win64/x64, reg_code (IntArgReg0) and JSReturnOperand are
+        // the same (rcx).  See bug 849398.
+        regs.takeUnchecked(JSReturnOperand);
         Register scratch = regs.takeAny();
 
         Label notOsr;
