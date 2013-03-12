@@ -235,6 +235,7 @@ HyperTextAccessible::GetPosAndText(int32_t& aStartOffset, int32_t& aEndOffset,
   }
 
   nsIFrame *startFrame = nullptr;
+ nsIFrame* endFrame = nullptr;
   if (aEndFrame) {
     *aEndFrame = nullptr;
   }
@@ -264,6 +265,7 @@ HyperTextAccessible::GetPosAndText(int32_t& aStartOffset, int32_t& aEndOffset,
       continue;
     }
     nsIFrame *primaryFrame = frame;
+    endFrame = frame;
     if (nsAccUtils::IsText(childAcc)) {
       // We only need info up to rendered offset -- that is what we're
       // converting to content offset
@@ -389,9 +391,9 @@ HyperTextAccessible::GetPosAndText(int32_t& aStartOffset, int32_t& aEndOffset,
     NS_IF_ADDREF(*aStartAcc = lastAccessible);
   }
   if (aEndFrame && !*aEndFrame) {
-    *aEndFrame = startFrame;
-    if (aStartAcc && aEndAcc)
-      NS_IF_ADDREF(*aEndAcc = *aStartAcc);
+    *aEndFrame = endFrame;
+    if (aEndAcc && !*aEndAcc)
+      NS_IF_ADDREF(*aEndAcc = lastAccessible);
   }
 
   return startFrame;
