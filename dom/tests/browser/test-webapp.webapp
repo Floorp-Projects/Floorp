@@ -9,7 +9,6 @@
     "alarms" : {
       "description": "alarm"
     },
-    "fmradio": {},
     "desktop-notification": {},
     "audio-channel-normal": {}
   }
