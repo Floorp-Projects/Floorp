@@ -10,7 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Likely.h"
 
-#include "gc/Root.h"
+#include "js/RootingAPI.h"
 
 #include "jsobjinlines.h"
 
