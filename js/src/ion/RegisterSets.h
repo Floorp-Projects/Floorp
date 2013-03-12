@@ -386,6 +386,16 @@ class TypedRegisterSet
 #error "Bad architecture"
 #endif
     }
+    void takeUnchecked(ValueOperand value) {
+#if defined(JS_NUNBOX32)
+        takeUnchecked(value.payloadReg());
+        takeUnchecked(value.typeReg());
+#elif defined(JS_PUNBOX64)
+        takeUnchecked(value.valueReg());
+#else
+#error "Bad architecture"
+#endif
+    }
     T getAny() const {
         JS_ASSERT(!empty());
         int ireg;
