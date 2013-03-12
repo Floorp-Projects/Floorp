@@ -18,6 +18,7 @@ interface nsIDOMAttr;
 interface nsIDOMCDATASection;
 interface nsIDOMCharacterData;
 interface nsIDOMComment;
+interface nsIDOMDOMImplementation;
 interface nsIDOMDocument;
 interface nsIDOMDocumentFragment;
 interface nsIDOMDocumentType;
