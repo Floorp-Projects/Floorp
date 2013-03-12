@@ -1453,6 +1453,10 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
                 }
 
                 break;
+
+            case TOUCH_MODE_OVERSCROLL:
+                mTouchMode = TOUCH_MODE_REST;
+                reportScrollStateChange(OnScrollListener.SCROLL_STATE_IDLE);
             }
 
             cancelCheckForTap();
