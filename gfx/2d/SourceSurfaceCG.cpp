@@ -79,59 +79,69 @@ AssignSurfaceParametersFromFormat(SurfaceFormat aFormat,
   }
 }
 
+static CGImageRef
+CreateCGImage(void *aInfo,
+              const void *aData,
+              const IntSize &aSize,
+              int32_t aStride,
+              SurfaceFormat aFormat)
+{
+  //XXX: we should avoid creating this colorspace everytime
+  CGColorSpaceRef colorSpace = nullptr;
+  CGBitmapInfo bitinfo = 0;
+  int bitsPerComponent = 0;
+  int bitsPerPixel = 0;
+
+  AssignSurfaceParametersFromFormat(aFormat, colorSpace, bitinfo,
+                                    bitsPerComponent, bitsPerPixel);
+
+  CGDataProviderRef dataProvider = CGDataProviderCreateWithData(aInfo,
+                                                                aData,
+                                                                aSize.height * aStride,
+                                                                releaseCallback);
+
+  CGImageRef image;
+  if (aFormat == FORMAT_A8) {
+    CGFloat decode[] = {1.0, 0.0};
+    image = CGImageMaskCreate (aSize.width, aSize.height,
+                               bitsPerComponent,
+                               bitsPerPixel,
+                               aStride,
+                               dataProvider,
+                               decode,
+                               true);
+  } else {
+    image = CGImageCreate (aSize.width, aSize.height,
+                           bitsPerComponent,
+                           bitsPerPixel,
+                           aStride,
+                           colorSpace,
+                           bitinfo,
+                           dataProvider,
+                           nullptr,
+                           true,
+                           kCGRenderingIntentDefault);
+  }
+
+  CGDataProviderRelease(dataProvider);
+  CGColorSpaceRelease(colorSpace);
+
+  return image;
+}
+
 bool
 SourceSurfaceCG::InitFromData(unsigned char *aData,
                                const IntSize &aSize,
                                int32_t aStride,
                                SurfaceFormat aFormat)
 {
-  //XXX: we should avoid creating this colorspace everytime
-  CGColorSpaceRef colorSpace = nullptr;
-  CGBitmapInfo bitinfo = 0;
-  CGDataProviderRef dataProvider = nullptr;
-  int bitsPerComponent = 0;
-  int bitsPerPixel = 0;
-
   assert(aSize.width >= 0 && aSize.height >= 0);
-
-  AssignSurfaceParametersFromFormat(aFormat, colorSpace, bitinfo,
-                                    bitsPerComponent, bitsPerPixel);
 
   void *data = malloc(aStride * aSize.height);
   memcpy(data, aData, aStride * aSize.height);
 
   mFormat = aFormat;
-
-  dataProvider = CGDataProviderCreateWithData (data,
-                                               data,
-					       aSize.height * aStride,
-					       releaseCallback);
-
-  if (aFormat == FORMAT_A8) {
-    CGFloat decode[] = {1.0, 0.0};
-    mImage = CGImageMaskCreate (aSize.width, aSize.height,
-				bitsPerComponent,
-				bitsPerPixel,
-				aStride,
-				dataProvider,
-				decode,
-				true);
-
-  } else {
-    mImage = CGImageCreate (aSize.width, aSize.height,
-			    bitsPerComponent,
-			    bitsPerPixel,
-			    aStride,
-			    colorSpace,
-			    bitinfo,
-			    dataProvider,
-			    nullptr,
-			    true,
-			    kCGRenderingIntentDefault);
-  }
-
-  CGDataProviderRelease(dataProvider);
-  CGColorSpaceRelease (colorSpace);
+  mImage = CreateCGImage(data, data, aSize, aStride, aFormat);
 
   return mImage != nullptr;
 }
@@ -158,51 +168,10 @@ DataSourceSurfaceCG::InitFromData(unsigned char *aData,
                                int32_t aStride,
                                SurfaceFormat aFormat)
 {
-  //XXX: we should avoid creating this colorspace everytime
-  CGColorSpaceRef colorSpace = nullptr;
-  CGBitmapInfo bitinfo = 0;
-  CGDataProviderRef dataProvider = nullptr;
-  int bitsPerComponent = 0;
-  int bitsPerPixel = 0;
-
-  AssignSurfaceParametersFromFormat(aFormat, colorSpace, bitinfo,
-                                    bitsPerComponent, bitsPerPixel);
-
   void *data = malloc(aStride * aSize.height);
   memcpy(data, aData, aStride * aSize.height);
 
-  //mFormat = aFormat;
-
-  dataProvider = CGDataProviderCreateWithData (data,
-                                               data,
-					       aSize.height * aStride,
-					       releaseCallback);
-
-  if (aFormat == FORMAT_A8) {
-    CGFloat decode[] = {1.0, 0.0};
-    mImage = CGImageMaskCreate (aSize.width, aSize.height,
-				bitsPerComponent,
-				bitsPerPixel,
-				aStride,
-				dataProvider,
-				decode,
-				true);
-
-  } else {
-    mImage = CGImageCreate (aSize.width, aSize.height,
-			    bitsPerComponent,
-			    bitsPerPixel,
-			    aStride,
-			    colorSpace,
-			    bitinfo,
-			    dataProvider,
-			    nullptr,
-			    true,
-			    kCGRenderingIntentDefault);
-  }
-
-  CGDataProviderRelease(dataProvider);
-  CGColorSpaceRelease (colorSpace);
+  mImage = CreateCGImage(data, data, aSize, aStride, aFormat);
 
   return mImage;
 }
@@ -305,48 +274,21 @@ void SourceSurfaceCGBitmapContext::EnsureImage() const
   // memcpy when the bitmap context is modified gives us more predictable
   // performance characteristics.
   if (!mImage) {
-      //XXX: we should avoid creating this colorspace everytime
-      CGColorSpaceRef colorSpace = nullptr;
-      CGBitmapInfo bitinfo = 0;
-      CGDataProviderRef dataProvider = nullptr;
-      int bitsPerComponent = 8;
-      int bitsPerPixel = 32;
+    void *info;
+    if (mCg) {
+      // if we have an mCg than it owns the data
+      // and we don't want to tranfer ownership
+      // to the CGDataProviderCreateWithData
+      info = nullptr;
+    } else {
+      // otherwise we transfer ownership to
+      // the dataProvider
+      info = mData;
+    }
 
-      colorSpace = CGColorSpaceCreateDeviceRGB();
-      bitinfo = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host;
+    if (!mData) abort();
 
-      void *info;
-      if (mCg) {
-          // if we have an mCg than it owns the data
-          // and we don't want to tranfer ownership
-          // to the CGDataProviderCreateWithData
-          info = nullptr;
-      } else {
-          // otherwise we transfer ownership to
-          // the dataProvider
-          info = mData;
-      }
-
-      if (!mData) abort();
-
-      dataProvider = CGDataProviderCreateWithData (info,
-                                                   mData,
-                                                   mSize.height * mStride,
-                                                   releaseCallback);
-
-      mImage = CGImageCreate (mSize.width, mSize.height,
-                              bitsPerComponent,
-                              bitsPerPixel,
-                              mStride,
-                              colorSpace,
-                              bitinfo,
-                              dataProvider,
-                              nullptr,
-                              true,
-                              kCGRenderingIntentDefault);
-
-      CGDataProviderRelease(dataProvider);
-      CGColorSpaceRelease (colorSpace);
+    mImage = CreateCGImage(info, mData, mSize, mStride, FORMAT_B8G8R8A8);
   }
 }
 
@@ -430,36 +372,7 @@ void SourceSurfaceCGIOSurfaceContext::EnsureImage() const
   // memcpy when the bitmap context is modified gives us more predictable
   // performance characteristics.
   if (!mImage) {
-      //XXX: we should avoid creating this colorspace everytime
-      CGColorSpaceRef colorSpace = nullptr;
-      CGBitmapInfo bitinfo = 0;
-      CGDataProviderRef dataProvider = nullptr;
-      int bitsPerComponent = 8;
-      int bitsPerPixel = 32;
-
-      colorSpace = CGColorSpaceCreateDeviceRGB();
-      bitinfo = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host;
-
-      void *info = mData;
-
-      dataProvider = CGDataProviderCreateWithData (info,
-                                                   mData,
-                                                   mSize.height * mStride,
-                                                   releaseCallback);
-
-      mImage = CGImageCreate (mSize.width, mSize.height,
-                              bitsPerComponent,
-                              bitsPerPixel,
-                              mStride,
-                              colorSpace,
-                              bitinfo,
-                              dataProvider,
-                              nullptr,
-                              true,
-                              kCGRenderingIntentDefault);
-
-      CGDataProviderRelease(dataProvider);
-      CGColorSpaceRelease (colorSpace);
+    mImage = CreateCGImage(mData, mData, mSize, mStride, FORMAT_B8G8R8A8);
   }
 
 }
