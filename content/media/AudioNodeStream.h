@@ -19,10 +19,6 @@
 
 namespace mozilla {
 
-namespace dom {
-struct ThreeDPoint;
-}
-
 class ThreadSharedFloatArrayBufferList;
 
 /**
@@ -58,7 +54,6 @@ public:
   void SetDoubleParameter(uint32_t aIndex, double aValue);
   void SetInt32Parameter(uint32_t aIndex, int32_t aValue);
   void SetTimelineParameter(uint32_t aIndex, const dom::AudioParamTimeline& aValue);
-  void SetThreeDPointParameter(uint32_t aIndex, const dom::ThreeDPoint& aValue);
   void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer);
 
   virtual AudioNodeStream* AsAudioNodeStream() { return this; }
