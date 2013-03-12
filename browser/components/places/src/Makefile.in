@@ -21,4 +21,3 @@ EXTRA_JS_MODULES = \
 
 include $(topsrcdir)/config/rules.mk
 
-XPIDL_FLAGS += -I$(topsrcdir)/browser/components

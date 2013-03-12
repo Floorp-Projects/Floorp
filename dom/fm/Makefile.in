@@ -33,7 +33,3 @@ EXTRA_JS_MODULES =   \
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
-XPIDL_FLAGS += \
-  -I$(topsrcdir)/dom/interfaces/events \
-  $(NULL)
-
