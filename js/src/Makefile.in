@@ -585,6 +585,14 @@ distclean clean::
 endif
 endif
 
+# ICU headers need to be available whether we build with the complete
+# Internationalization API or not - ICU stubs rely on them.
+
+LOCAL_INCLUDES += \
+    -I$(topsrcdir)/../../intl/icu/source/common \
+    -I$(topsrcdir)/../../intl/icu/source/i18n \
+    $(NULL)
+
 # The "find any vanilla new/new[] calls" script is tailored to Linux, so
 # only run it there.  That should be enough to catch any such calls that
 # creep in.
