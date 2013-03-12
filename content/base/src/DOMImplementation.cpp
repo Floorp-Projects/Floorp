@@ -16,6 +16,7 @@ namespace dom {
 // QueryInterface implementation for DOMImplementation
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMImplementation)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsIDOMDOMImplementation)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
@@ -34,7 +35,18 @@ bool
 DOMImplementation::HasFeature(const nsAString& aFeature,
                               const nsAString& aVersion)
 {
-  return nsContentUtils::InternalIsSupported(this, aFeature, aVersion);
+  return nsContentUtils::InternalIsSupported(
+           static_cast<nsIDOMDOMImplementation*>(this),
+           aFeature, aVersion);
+}
+
+NS_IMETHODIMP
+DOMImplementation::HasFeature(const nsAString& aFeature,
+                              const nsAString& aVersion,
+                              bool* aReturn)
+{
+  *aReturn = HasFeature(aFeature, aVersion);
+  return NS_OK;
 }
 
 already_AddRefed<DocumentType>
@@ -64,6 +76,17 @@ DOMImplementation::CreateDocumentType(const nsAString& aQualifiedName,
     NS_NewDOMDocumentType(mOwner->NodeInfoManager(), name, aPublicId,
                           aSystemId, NullString(), aRv);
   return docType.forget();
+}
+
+NS_IMETHODIMP
+DOMImplementation::CreateDocumentType(const nsAString& aQualifiedName,
+                                      const nsAString& aPublicId,
+                                      const nsAString& aSystemId,
+                                      nsIDOMDocumentType** aReturn)
+{
+  ErrorResult rv;
+  *aReturn = CreateDocumentType(aQualifiedName, aPublicId, aSystemId, rv).get();
+  return rv.ErrorCode();
 }
 
 nsresult
@@ -125,6 +148,17 @@ DOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
   aRv = CreateDocument(aNamespaceURI, aQualifiedName, aDoctype,
                        getter_AddRefs(document), getter_AddRefs(domDocument));
   return document.forget();
+}
+
+NS_IMETHODIMP
+DOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
+                                  const nsAString& aQualifiedName,
+                                  nsIDOMDocumentType* aDoctype,
+                                  nsIDOMDocument** aReturn)
+{
+  nsCOMPtr<nsIDocument> document;
+  return CreateDocument(aNamespaceURI, aQualifiedName, aDoctype,
+                        getter_AddRefs(document), aReturn);
 }
 
 nsresult
@@ -215,6 +249,14 @@ DOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
   aRv = CreateHTMLDocument(aTitle, getter_AddRefs(document),
                            getter_AddRefs(domDocument));
   return document.forget();
+}
+
+NS_IMETHODIMP
+DOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
+                                      nsIDOMDocument** aReturn)
+{
+  nsCOMPtr<nsIDocument> document;
+  return CreateHTMLDocument(aTitle, getter_AddRefs(document), aReturn);
 }
 
 } // namespace dom

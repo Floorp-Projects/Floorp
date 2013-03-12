@@ -31,8 +31,7 @@ interface nsIDOMLocation;
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
-  // DOMImplementation
-  readonly attribute nsISupports                implementation;
+  readonly attribute nsIDOMDOMImplementation    implementation;
   readonly attribute nsIDOMElement              documentElement;
   nsIDOMElement                 createElement([Null(Stringify)] in DOMString tagName)
                                   raises(DOMException);
