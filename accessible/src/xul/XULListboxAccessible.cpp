@@ -369,7 +369,7 @@ XULListboxAccessible::SelectedCells(nsTArray<Accessible*>* aCells)
     return;
 
   uint32_t selectedItemsCount = 0;
-  nsresult rv = selectedItems->GetLength(&selectedItemsCount);
+  DebugOnly<nsresult> rv = selectedItems->GetLength(&selectedItemsCount);
   NS_ASSERTION(NS_SUCCEEDED(rv), "GetLength() Shouldn't fail!");
 
   for (uint32_t index = 0; index < selectedItemsCount; index++) {
@@ -403,7 +403,7 @@ XULListboxAccessible::SelectedCellIndices(nsTArray<uint32_t>* aCells)
     return;
 
   uint32_t selectedItemsCount = 0;
-  nsresult rv = selectedItems->GetLength(&selectedItemsCount);
+  DebugOnly<nsresult> rv = selectedItems->GetLength(&selectedItemsCount);
   NS_ASSERTION(NS_SUCCEEDED(rv), "GetLength() Shouldn't fail!");
 
   uint32_t colCount = ColCount();
@@ -452,7 +452,7 @@ XULListboxAccessible::SelectedRowIndices(nsTArray<uint32_t>* aRows)
     return;
 
   uint32_t rowCount = 0;
-  nsresult rv = selectedItems->GetLength(&rowCount);
+  DebugOnly<nsresult> rv = selectedItems->GetLength(&rowCount);
   NS_ASSERTION(NS_SUCCEEDED(rv), "GetLength() Shouldn't fail!");
 
   if (!rowCount)
