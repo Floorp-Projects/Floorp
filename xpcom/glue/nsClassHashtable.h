@@ -52,31 +52,6 @@ public:
   void RemoveAndForget(KeyType aKey, nsAutoPtr<T> &aOut);
 };
 
-
-/**
- * Thread-safe version of nsClassHashtable
- * @param KeyClass a wrapper-class for the hashtable key, see nsHashKeys.h
- *   for a complete specification.
- * @param Class the class-type being wrapped
- * @see nsInterfaceHashtable, nsClassHashtable
- */
-template<class KeyClass,class T>
-class nsClassHashtableMT :
-  public nsBaseHashtableMT< KeyClass, nsAutoPtr<T>, T* >
-{
-public:
-  typedef typename KeyClass::KeyType KeyType;
-  typedef T* UserDataType;
-  typedef nsBaseHashtableMT< KeyClass, nsAutoPtr<T>, T* > base_type;
-
-  /**
-   * @copydoc nsBaseHashtable::Get
-   * @param pData if the key doesn't exist, pData will be set to nullptr.
-   */
-  bool Get(KeyType aKey, UserDataType* pData) const;
-};
-
-
 //
 // nsClassHashtable definitions
 //
@@ -128,37 +103,6 @@ nsClassHashtable<KeyClass,T>::RemoveAndForget(KeyType aKey, nsAutoPtr<T> &aOut)
   aOut = ent->mData;
 
   this->Remove(aKey);
-}
-
-
-//
-// nsClassHashtableMT definitions
-//
-
-template<class KeyClass,class T>
-bool
-nsClassHashtableMT<KeyClass,T>::Get(KeyType aKey, T** retVal) const
-{
-  PR_Lock(this->mLock);
-
-  typename base_type::EntryType* ent = this->GetEntry(aKey);
-
-  if (ent)
-  {
-    if (retVal)
-      *retVal = ent->mData;
-
-    PR_Unlock(this->mLock);
-
-    return true;
-  }
-
-  if (retVal)
-    *retVal = nullptr;
-
-  PR_Unlock(this->mLock);
-
-  return false;
 }
 
 #endif // nsClassHashtable_h__
