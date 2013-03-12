@@ -163,6 +163,9 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id)
       APPEND_DEVICE(0x010a); /* IntelSandyBridge_7 */
       APPEND_DEVICE(0x0080); /* IntelIvyBridge */
       break;
+    case IntelMobileHDGraphics:
+      APPEND_DEVICE(0x0046); /* IntelMobileHDGraphics */
+      break;
     case NvidiaBlockD3D9Layers:
       // Glitches whilst scrolling (see bugs 612007, 644787, 645872)
       APPEND_DEVICE(0x00f3); /* NV43 [GeForce 6200 (TM)] */

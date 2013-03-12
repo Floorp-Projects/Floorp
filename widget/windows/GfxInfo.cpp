@@ -881,6 +881,14 @@ GfxInfo::GetGfxDriverInfo()
       nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_DISCOURAGED,
       DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions );
 
+    /* Disable D2D on Win7 on Intel HD Graphics on driver <= 8.15.10.2302
+     * See bug 806786
+     */
+    APPEND_TO_DRIVER_BLOCKLIST2( DRIVER_OS_WINDOWS_7,
+        (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorIntel), (GfxDeviceFamily*) GfxDriverInfo::GetDeviceFamily(IntelMobileHDGraphics),
+      nsIGfxInfo::FEATURE_DIRECT2D, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
+      DRIVER_LESS_THAN_OR_EQUAL, V(8,15,10,2302) );
+
     /* Disable D3D9 layers on NVIDIA 6100/6150/6200 series due to glitches
      * whilst scrolling. See bugs: 612007, 644787 & 645872.
      */
