@@ -679,8 +679,8 @@ pref("memory.free_dirty_pages", true);
 
 pref("layout.imagevisibility.enabled", false);
 
-// Enable the dynamic toolbar
-pref("browser.chrome.dynamictoolbar", true);
+// Disable the dynamic toolbar
+pref("browser.chrome.dynamictoolbar", false);
 
 #ifdef MOZ_PKG_SPECIAL
 // Disable webgl on ARMv6 because running the reftests takes

@@ -424,7 +424,7 @@ abstract public class BrowserApp extends GeckoApp
             }
         }
 
-        // Listen to the dynamic toolbar pref
+        // Load the dynamic toolbar pref
         PrefsHelper.getPref(PREF_CHROME_DYNAMICTOOLBAR, new PrefsHelper.PrefHandlerBase() {
             @Override
             public void prefValue(String pref, boolean value) {
@@ -441,7 +441,6 @@ abstract public class BrowserApp extends GeckoApp
                         } else {
                             // Immediately show the toolbar when disabling the dynamic
                             // toolbar.
-                            mAboutHomeContent.setPadding(0, 0, 0, 0);
                             mBrowserToolbar.cancelVisibilityAnimation();
                             mBrowserToolbar.getLayout().scrollTo(0, 0);
                         }
@@ -451,13 +450,6 @@ abstract public class BrowserApp extends GeckoApp
                         ((BrowserToolbarLayout)mBrowserToolbar.getLayout()).refreshMargins();
                     }
                 });
-            }
-
-            @Override
-            public boolean isObserver() {
-                // We want to be notified of changes to be able to switch mode
-                // without restarting.
-                return true;
             }
         });
     }
