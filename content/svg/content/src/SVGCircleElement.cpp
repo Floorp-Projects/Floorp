@@ -6,7 +6,6 @@
 #include "mozilla/dom/SVGCircleElement.h"
 #include "nsGkAtoms.h"
 #include "gfxContext.h"
-#include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGCircleElementBinding.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Circle)
@@ -15,9 +14,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGCircleElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+SVGCircleElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return SVGCircleElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGCircleElementBinding::Wrap(aCx, aScope, this);
 }
 
 nsSVGElement::LengthInfo SVGCircleElement::sLengthInfo[3] =

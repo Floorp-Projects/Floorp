@@ -51,7 +51,7 @@ public:
     return GetOffsetNode();
   }
 
-  virtual JSObject* WrapObject(JSContext *aCx, JSObject *aScope, bool *aTried)
+  virtual JSObject* WrapObject(JSContext *aCx, JSObject *aScope)
     MOZ_OVERRIDE MOZ_FINAL;
 
 protected:

@@ -140,6 +140,12 @@ class DateTimeInfo
     int64_t oldOffsetMilliseconds;
     int64_t oldRangeStartSeconds, oldRangeEndSeconds; // UTC-based
 
+    /*
+     * Cached offset in seconds from the current UTC time to the current
+     * local standard time (i.e. not including any offset due to DST).
+     */
+    int32_t utcToLocalStandardOffsetSeconds;
+
     static const int64_t MaxUnixTimeT = 2145859200; /* time_t 12/31/2037 */
 
     static const int64_t RangeExpansionAmount = 30 * SecondsPerDay;

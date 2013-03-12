@@ -7,7 +7,6 @@
 
 #include "mozilla/dom/SVGAElement.h"
 #include "mozilla/dom/SVGAElementBinding.h"
-#include "nsIDOMSVGURIReference.h"
 #include "nsILink.h"
 #include "nsSVGString.h"
 #include "nsCOMPtr.h"
@@ -20,9 +19,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGAElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+SVGAElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return SVGAElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGAElementBinding::Wrap(aCx, aScope, this);
 }
 
 nsSVGElement::StringInfo SVGAElement::sStringInfo[2] =
@@ -35,11 +34,10 @@ nsSVGElement::StringInfo SVGAElement::sStringInfo[2] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ISUPPORTS_INHERITED6(SVGAElement, SVGAElementBase,
+NS_IMPL_ISUPPORTS_INHERITED5(SVGAElement, SVGAElementBase,
                              nsIDOMNode,
                              nsIDOMElement,
                              nsIDOMSVGElement,
-                             nsIDOMSVGURIReference,
                              nsILink,
                              Link)
 
@@ -52,17 +50,6 @@ SVGAElement::SVGAElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     Link(this)
 {
   SetIsDOMBinding();
-}
-
-//----------------------------------------------------------------------
-// nsIDOMSVGURIReference methods
-
-/* readonly attribute nsIDOMSVGAnimatedString href; */
-NS_IMETHODIMP
-SVGAElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
-{
-  *aHref = Href().get();
-  return NS_OK;
 }
 
 already_AddRefed<nsIDOMSVGAnimatedString>

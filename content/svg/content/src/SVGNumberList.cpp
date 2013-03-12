@@ -10,10 +10,8 @@
 #include "nsError.h"
 #include "nsMathUtils.h"
 #include "nsString.h"
-#include "nsSVGElement.h"
 #include "nsTextFormatter.h"
 #include "prdtoa.h"
-#include "SVGAnimatedNumberList.h"
 #include "SVGContentUtils.h"
 
 namespace mozilla {

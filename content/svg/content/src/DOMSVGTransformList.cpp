@@ -68,11 +68,9 @@ NS_INTERFACE_MAP_END
 // DOMSVGTransformList methods:
 
 JSObject*
-DOMSVGTransformList::WrapObject(JSContext *cx, JSObject *scope,
-                                bool *triedToWrap)
+DOMSVGTransformList::WrapObject(JSContext *cx, JSObject *scope)
 {
-  return mozilla::dom::SVGTransformListBinding::Wrap(cx, scope, this,
-                                                     triedToWrap);
+  return mozilla::dom::SVGTransformListBinding::Wrap(cx, scope, this);
 }
 
 void

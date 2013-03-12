@@ -18,6 +18,7 @@
 #include <printpreview.h>
 #include <D3D10.h>
 #include "MetroUIUtils.h"
+#include "nsIStringBundle.h"
 
 using namespace mozilla;
 using namespace ABI::Windows::Foundation;
@@ -316,7 +317,7 @@ FrameworkView::OnDataShareRequested(IDataTransferManager* aDTM,
     return E_FAIL;
   }
 
-  // Get the package to share and initialize it
+  // Get the package to share
   HRESULT hr;
   ComPtr<IDataRequest> request;
   AssertRetHRESULT(hr = aArg->get_Request(request.GetAddressOf()), hr);
@@ -324,9 +325,6 @@ FrameworkView::OnDataShareRequested(IDataTransferManager* aDTM,
   AssertRetHRESULT(hr = request->get_Data(dataPackage.GetAddressOf()), hr);
   ComPtr<IDataPackagePropertySet> props;
   AssertRetHRESULT(hr = dataPackage->get_Properties(props.GetAddressOf()), hr);
-  props->put_ApplicationName(HStringReference(L"Firefox").Get());
-  props->put_Title(HStringReference(title.BeginReading()).Get());
-  props->put_Description(HStringReference(url.BeginReading()).Get());
 
   // Only add a URI to the package when there is no selected content.
   // This is because most programs treat URIs as highest priority to generate
@@ -336,18 +334,30 @@ FrameworkView::OnDataShareRequested(IDataTransferManager* aDTM,
   if (!hasSelectedContent) {
     ComPtr<IUriRuntimeClass> uri;
     AssertRetHRESULT(hr = MetroUtils::CreateUri(HStringReference(url.BeginReading()).Get(), uri), hr);
+
+    // If there is no selection, then we don't support sharing for sites that
+    // are not HTTP, HTTPS, FTP, and FILE.
+    HString schemeHString;
+    uri->get_SchemeName(schemeHString.GetAddressOf());
+    unsigned int length;
+    LPCWSTR scheme = schemeHString.GetRawBuffer(&length);
+    if (!scheme || wcscmp(scheme, L"http") && wcscmp(scheme, L"https") &&
+        wcscmp(scheme, L"ftp") && wcscmp(scheme, L"file")) {
+      return S_OK;
+    }
+
     AssertRetHRESULT(hr = dataPackage->SetUri(uri.Get()), hr);
   }
 
   // Add whatever content metroUIUtils wants us to for the text sharing
   nsString shareText;
-  if (NS_SUCCEEDED(metroUIUtils->GetShareText(shareText))) {
+  if (NS_SUCCEEDED(metroUIUtils->GetShareText(shareText)) && shareText.Length()) {
     AssertRetHRESULT(hr = dataPackage->SetText(HStringReference(shareText.BeginReading()).Get()) ,hr);
   }
 
   // Add whatever content metroUIUtils wants us to for the HTML sharing
   nsString shareHTML;
-  if (NS_SUCCEEDED(metroUIUtils->GetShareHTML(shareHTML))) {
+  if (NS_SUCCEEDED(metroUIUtils->GetShareHTML(shareHTML)) && shareHTML.Length()) {
     // The sharing format needs some special headers, so pass it through Windows
     ComPtr<IHtmlFormatHelperStatics> htmlFormatHelper;
     hr = GetActivationFactory(HStringReference(RuntimeClass_Windows_ApplicationModel_DataTransfer_HtmlFormatHelper).Get(),
@@ -359,6 +369,31 @@ FrameworkView::OnDataShareRequested(IDataTransferManager* aDTM,
     // And now add the fixed HTML to the data package
     AssertRetHRESULT(hr = dataPackage->SetHtmlFormat(fixedHTML), hr);
   }
+
+  // Obtain the brand name
+  nsCOMPtr<nsIStringBundleService> bundleService = 
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+  NS_ENSURE_TRUE(bundleService, E_FAIL);
+  nsCOMPtr<nsIStringBundle> brandBundle;
+  nsString brandName;
+  bundleService->CreateBundle("chrome://branding/locale/brand.properties",
+    getter_AddRefs(brandBundle));
+  NS_ENSURE_TRUE(brandBundle, E_FAIL);
+  if(brandBundle) {
+    brandBundle->GetStringFromName(NS_LITERAL_STRING("brandFullName").get(),
+                                   getter_Copies(brandName));
+  }
+
+  // Set these properties at the end.  Otherwise users can get a
+  // "There was a problem with the data package" error when there
+  // is simply nothing to share.
+  props->put_ApplicationName(HStringReference(brandName.BeginReading()).Get());
+  if (title.Length()) {
+    props->put_Title(HStringReference(title.BeginReading()).Get());
+  } else {
+    props->put_Title(HStringReference(brandName.BeginReading()).Get());
+  }
+  props->put_Description(HStringReference(url.BeginReading()).Get());
 
   return S_OK;
 }

@@ -33,9 +33,9 @@ DOMMediaStream::~DOMMediaStream()
 }
 
 JSObject*
-DOMMediaStream::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+DOMMediaStream::WrapObject(JSContext* aCx, JSObject* aScope)
 {
-  return dom::MediaStreamBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return dom::MediaStreamBinding::Wrap(aCx, aScope, this);
 }
 
 double
@@ -99,9 +99,9 @@ DOMLocalMediaStream::~DOMLocalMediaStream()
 }
 
 JSObject*
-DOMLocalMediaStream::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+DOMLocalMediaStream::WrapObject(JSContext* aCx, JSObject* aScope)
 {
-  return dom::LocalMediaStreamBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return dom::LocalMediaStreamBinding::Wrap(aCx, aScope, this);
 }
 
 void

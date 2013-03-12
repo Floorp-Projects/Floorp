@@ -57,13 +57,14 @@ NS_IMPL_CYCLE_COLLECTION_5(nsFilteredContentIterator,
 nsresult
 nsFilteredContentIterator::Init(nsINode* aRoot)
 {
+  NS_ENSURE_ARG_POINTER(aRoot);
   NS_ENSURE_TRUE(mPreIterator, NS_ERROR_FAILURE);
   NS_ENSURE_TRUE(mIterator, NS_ERROR_FAILURE);
   mIsOutOfRange    = false;
   mDirection       = eForward;
   mCurrentIterator = mPreIterator;
 
-  mRange = new nsRange();
+  mRange = new nsRange(aRoot);
   nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(aRoot));
   if (domNode) {
     mRange->SelectNode(domNode);

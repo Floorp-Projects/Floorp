@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_SVGMPathElement_h
 #define mozilla_dom_SVGMPathElement_h
 
-#include "nsIDOMSVGURIReference.h"
 #include "nsSVGElement.h"
 #include "nsStubMutationObserver.h"
 #include "nsSVGString.h"
@@ -23,7 +22,6 @@ class SVGPathElement;
 
 class SVGMPathElement MOZ_FINAL : public SVGMPathElementBase,
                                   public nsIDOMSVGElement,
-                                  public nsIDOMSVGURIReference,
                                   public nsStubMutationObserver
 {
 protected:
@@ -32,12 +30,11 @@ protected:
   SVGMPathElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   ~SVGMPathElement();
 
-  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope) MOZ_OVERRIDE;
 
 public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGURIREFERENCE
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SVGMPathElement,
                                            SVGMPathElementBase)

@@ -11,14 +11,12 @@
 #include <math.h>
 
 #include "gfxMatrix.h"
-#include "nsCOMPtr.h"
 
 class nsIContent;
 class nsIDocument;
 class nsIFrame;
 class nsStyleContext;
 class nsSVGElement;
-class nsSVGLength2;
 
 namespace mozilla {
 class SVGAnimatedPreserveAspectRatio;

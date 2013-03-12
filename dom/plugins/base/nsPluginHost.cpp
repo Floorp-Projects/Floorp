@@ -89,8 +89,6 @@
 #include "nsCExternalHandlerService.h"
 #include "nsIFileChannel.h"
 
-#include "nsPluginSafety.h"
-
 #include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
 

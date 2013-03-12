@@ -567,18 +567,3 @@ hb_unicode_funcs_set_eastasian_width_func
 hb_unicode_funcs_set_general_category_func
 hb_unicode_funcs_set_mirroring_func
 hb_unicode_funcs_set_script_func
-#ifdef MOZ_ENABLE_SKIA
-#ifdef HAVE_64BIT_OS
-?insert@SkString@@QEAAX_KQEBD@Z
-??0SkString@@QEAA@XZ
-??1SkString@@QEAA@XZ
-?Create@GrContext@@SAPEAV1@W4GrEngine@@_J@Z
-??0GrGLInterface@@QEAA@XZ
-#else
-?insert@SkString@@QAEXIQBD@Z
-??0SkString@@QAE@XZ
-??1SkString@@QAE@XZ
-?Create@GrContext@@SAPAV1@W4GrEngine@@H@Z
-??0GrGLInterface@@QAE@XZ
-#endif
-#endif

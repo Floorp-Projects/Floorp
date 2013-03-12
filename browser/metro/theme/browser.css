@@ -644,11 +644,6 @@ flyoutpanel > settings:first-child {
   background-position: right bottom;
 }
 
-#about-flyoutpanel label.text-link {
-  text-decoration: none;
-  color: #1167bd;
-}
-
 #about-product-label {
  font-weight: bold;
 }

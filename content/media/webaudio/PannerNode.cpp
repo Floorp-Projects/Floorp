@@ -5,24 +5,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PannerNode.h"
-#include "mozilla/dom/PannerNodeBinding.h"
 
 namespace mozilla {
 namespace dom {
 
 PannerNode::PannerNode(AudioContext* aContext)
   : AudioNode(aContext)
-  , mPanningModel(PanningModelEnum::HRTF)
-  , mDistanceModel(DistanceModelEnum::INVERSE_DISTANCE)
+  , mPanningModel(PanningModelTypeValues::HRTF)
+  , mDistanceModel(DistanceModelTypeValues::Inverse)
   , mPosition()
-  , mOrientation(1.f, 0.f, 0.f)
+  , mOrientation(1., 0., 0.)
   , mVelocity()
-  , mRefDistance(1.f)
-  , mMaxDistance(10000.f)
-  , mRolloffFactor(1.f)
-  , mConeInnerAngle(360.f)
-  , mConeOuterAngle(360.f)
-  , mConeOuterGain(0.f)
+  , mRefDistance(1.)
+  , mMaxDistance(10000.)
+  , mRolloffFactor(1.)
+  , mConeInnerAngle(360.)
+  , mConeOuterAngle(360.)
+  , mConeOuterGain(0.)
 {
 }
 

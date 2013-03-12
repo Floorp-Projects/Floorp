@@ -34,6 +34,7 @@ relativesrcdir	= @relativesrcdir@
 
 MOCHITEST_FILES =	\
 		test_bug335816.html \
+		test_bug843434.html \
 		test_long_doc.html \
 		test_singlebyte_overconsumption.html \
 		test_unicode_noncharacterescapes.html \

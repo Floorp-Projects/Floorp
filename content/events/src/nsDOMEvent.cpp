@@ -760,13 +760,6 @@ nsDOMEvent::DuplicatePrivateData()
                                static_cast<nsUIEvent*>(mEvent)->detail);
       break;
     }
-    case NS_SVG_EVENT:
-    {
-      newEvent = new nsEvent(false, msg);
-      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
-      newEvent->eventStructType = NS_SVG_EVENT;
-      break;
-    }
     case NS_SVGZOOM_EVENT:
     {
       newEvent = new nsGUIEvent(false, msg, nullptr);
