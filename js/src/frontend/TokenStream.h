@@ -805,12 +805,11 @@ class TokenStream
     bool peekChars(int n, jschar *cp);
     bool getAtSourceMappingURL(bool isMultiline);
 
+    // |expect| cannot be an EOL char.
     bool matchChar(int32_t expect) {
-        int32_t c = getChar();
-        if (c == expect)
-            return true;
-        ungetChar(c);
-        return false;
+        MOZ_ASSERT(!TokenBuf::isRawEOLChar(expect));
+        return JS_LIKELY(userbuf.hasRawChars()) &&
+               userbuf.matchRawChar(expect);
     }
 
     void consumeKnownChar(int32_t expect) {
