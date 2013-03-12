@@ -128,7 +128,8 @@ nsAsyncInstantiateEvent::Run()
   nsObjectLoadingContent *objLC =
     static_cast<nsObjectLoadingContent *>(mContent.get());
 
-  // do nothing if we've been revoked
+  // If objLC is no longer tracking this event, we've been canceled or
+  // superceded
   if (objLC->mPendingInstantiateEvent != this) {
     return NS_OK;
   }
@@ -2369,27 +2370,25 @@ nsObjectLoadingContent::SyncStartPluginInstance()
 NS_IMETHODIMP
 nsObjectLoadingContent::AsyncStartPluginInstance()
 {
-  // OK to have an instance already.
-  if (mInstanceOwner) {
+  // OK to have an instance already or a pending spawn.
+  if (mInstanceOwner || mPendingInstantiateEvent) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  nsCOMPtr<nsIContent> thisContent =
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   nsIDocument* doc = thisContent->OwnerDoc();
   if (doc->IsStaticDocument() || doc->IsBeingUsedAsImage()) {
     return NS_OK;
   }
 
-  // We always start plugins on a runnable.
-  // We don't want a script blocker on the stack during instantiation.
   nsCOMPtr<nsIRunnable> event = new nsAsyncInstantiateEvent(this);
   if (!event) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   nsresult rv = NS_DispatchToCurrentThread(event);
   if (NS_SUCCEEDED(rv)) {
-    // Remember this event.  This is a weak reference that will be cleared
-    // when the event runs.
+    // Track pending events
     mPendingInstantiateEvent = event;
   }
 
