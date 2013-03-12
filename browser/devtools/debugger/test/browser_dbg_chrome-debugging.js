@@ -12,7 +12,7 @@ var gHomeTab = null;
 var gThreadClient = null;
 var gNewGlobal = false;
 var gAttached = false;
-var gChromeScript = false;
+var gChromeSource = false;
 
 const DEBUGGER_TAB_URL = EXAMPLE_URL + "browser_dbg_debuggerstatement.html";
 
@@ -27,7 +27,7 @@ function test()
         ok(dbg, "Found a chrome debugging actor.");
 
         gClient.addOneTimeListener("newGlobal", function() gNewGlobal = true);
-        gClient.addListener("newScript", onNewScript);
+        gClient.addListener("newSource", onNewSource);
 
         gClient.attachThread(dbg, function(aResponse, aThreadClient) {
           gThreadClient = aThreadClient;
@@ -44,26 +44,24 @@ function test()
   });
 }
 
-function onNewScript(aEvent, aScript)
+function onNewSource(aEvent, aPacket)
 {
-  if (aScript.url.startsWith("chrome:")) {
-    gChromeScript = true;
-  }
+  gChromeSource = aPacket.source.url.startsWith("chrome:");
   finish_test();
 }
 
 function finish_test()
 {
-  if (!gAttached || !gChromeScript) {
+  if (!gAttached || !gChromeSource) {
     return;
   }
-  gClient.removeListener("newScript", onNewScript);
+  gClient.removeListener("newSource", onNewSource);
   gThreadClient.resume(function(aResponse) {
     removeTab(gHomeTab);
     removeTab(gTab);
     gClient.close(function() {
       ok(gNewGlobal, "Received newGlobal event.");
-      ok(gChromeScript, "Received newScript event for a chrome: script.");
+      ok(gChromeSource, "Received newSource event for a chrome: script.");
       finish();
     });
   });
