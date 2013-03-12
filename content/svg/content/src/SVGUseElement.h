@@ -7,7 +7,6 @@
 #define mozilla_dom_SVGUseElement_h
 
 #include "mozilla/dom/FromParser.h"
-#include "nsIDOMSVGURIReference.h"
 #include "nsReferencedElement.h"
 #include "nsStubMutationObserver.h"
 #include "mozilla/dom/SVGGraphicsElement.h"
@@ -33,7 +32,6 @@ typedef SVGGraphicsElement SVGUseElementBase;
 
 class SVGUseElement MOZ_FINAL : public SVGUseElementBase,
                                 public nsIDOMSVGElement,
-                                public nsIDOMSVGURIReference,
                                 public nsStubMutationObserver
 {
   friend class ::nsSVGUseFrame;
@@ -42,14 +40,13 @@ protected:
                                          already_AddRefed<nsINodeInfo> aNodeInfo));
   SVGUseElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~SVGUseElement();
-  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
 
 public:
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SVGUseElement, SVGUseElementBase)
-  NS_DECL_NSIDOMSVGURIREFERENCE
 
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED

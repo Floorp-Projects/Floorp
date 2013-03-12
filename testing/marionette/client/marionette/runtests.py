@@ -66,7 +66,7 @@ class MarionetteTestResult(unittest._TextTestResult):
                     return
                 self.stream.writeln('START LOG:')
                 for line in testcase.loglines:
-                    self.stream.writeln(' '.join(line))
+                    self.stream.writeln(' '.join(line).encode('ascii', 'replace'))
                 self.stream.writeln('END LOG:')
 
     def getPerfData(self, test):

@@ -10,6 +10,7 @@
 
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
+#include "gc/StoreBuffer.h"
 
 #include "vm/ObjectImpl-inl.h"
 #include "vm/String-inl.h"
@@ -415,6 +416,19 @@ DenseRangeWriteBarrierPost(JSRuntime *rt, JSObject *obj, uint32_t start, uint32_
 #ifdef JSGC_GENERATIONAL
     if (count > 0)
         rt->gcStoreBuffer.putGeneric(DenseRangeRef(obj, start, start + count));
+#endif
+}
+
+/*
+ * This is a post barrier for HashTables whose key can be moved during a GC.
+ */
+template <class Map, class Key>
+inline void
+HashTableWriteBarrierPost(JSRuntime *rt, Map *map, const Key &key)
+{
+#ifdef JSGC_GENERATIONAL
+    if (key && IsInsideNursery(rt, key))
+        rt->gcStoreBuffer.putGeneric(gc::HashKeyRef<Map, Key>(map, key));
 #endif
 }
 

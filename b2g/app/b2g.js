@@ -396,7 +396,7 @@ pref("dom.mozAlarms.enabled", true);
 // NetworkStats
 #ifdef MOZ_B2G_RIL
 pref("dom.mozNetworkStats.enabled", true);
-pref("ril.lastKnownMcc", 724);
+pref("ril.lastKnownMcc", "724");
 #endif
 
 // WebSettings

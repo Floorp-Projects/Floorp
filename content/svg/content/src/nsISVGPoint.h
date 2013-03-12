@@ -140,9 +140,8 @@ public:
   virtual float Y() = 0;
   virtual void SetY(float aY, ErrorResult& rv) = 0;
   virtual already_AddRefed<nsISVGPoint> MatrixTransform(dom::SVGMatrix& matrix) = 0;
-  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
-                               bool *triedToWrap)
-    { return dom::SVGPointBinding::Wrap(cx, scope, this, triedToWrap); }
+  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope) MOZ_OVERRIDE
+    { return dom::SVGPointBinding::Wrap(cx, scope, this); }
 
   virtual nsISupports* GetParentObject() = 0;
 

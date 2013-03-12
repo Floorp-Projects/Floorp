@@ -6,12 +6,10 @@
 #include "DOMSVGPoint.h"
 #include "DOMSVGPointList.h"
 #include "SVGPoint.h"
-#include "SVGAnimatedPointList.h"
 #include "nsSVGElement.h"
 #include "nsError.h"
 #include "nsContentUtils.h" // NS_ENSURE_FINITE
 #include "mozilla/dom/SVGMatrix.h"
-#include "mozilla/dom/SVGPointBinding.h"
 
 // See the architecture comment in DOMSVGPointList.h.
 

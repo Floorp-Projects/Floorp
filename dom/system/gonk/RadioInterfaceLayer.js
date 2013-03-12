@@ -236,7 +236,7 @@ function RadioInterfaceLayer() {
                      emergencyCallsOnly: false,
                      roaming: false,
                      network: null,
-                     lastKnownMcc: 0,
+                     lastKnownMcc: null,
                      cell: null,
                      type: null,
                      signalStrength: null,
@@ -245,7 +245,7 @@ function RadioInterfaceLayer() {
                      emergencyCallsOnly: false,
                      roaming: false,
                      network: null,
-                     lastKnownMcc: 0,
+                     lastKnownMcc: null,
                      cell: null,
                      type: null,
                      signalStrength: null,
@@ -253,7 +253,7 @@ function RadioInterfaceLayer() {
   };
 
   try {
-    this.rilContext.voice.lastKnownMcc = Services.prefs.getIntPref("ril.lastKnownMcc");
+    this.rilContext.voice.lastKnownMcc = Services.prefs.getCharPref("ril.lastKnownMcc");
   } catch (e) {}
 
   this.voicemailInfo = {
@@ -1066,7 +1066,7 @@ RadioInterfaceLayer.prototype = {
         // !voice.network is in case voice.network is still null.
         if (!voice.network || voice.network.mcc != message.mcc) {
           try {
-            Services.prefs.setIntPref("ril.lastKnownMcc", message.mcc);
+            Services.prefs.setCharPref("ril.lastKnownMcc", message.mcc);
           } catch (e) {}
         }
       }
@@ -2058,26 +2058,40 @@ RadioInterfaceLayer.prototype = {
     this.worker.postMessage(message);
   },
 
+  _validateNumber: function _validateNumber(number) {
+    // note: isPlainPhoneNumber also accepts USSD and SS numbers
+    if (PhoneNumberUtils.isPlainPhoneNumber(number)) {
+      return true;
+    }
+
+    this.handleCallError({
+      callIndex: -1,
+      error: RIL.RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[RIL.CALL_FAIL_UNOBTAINABLE_NUMBER]
+    });
+    debug("Number '" + number + "' doesn't seem to be a viable number. Drop.");
+
+    return false;
+  },
+
   dial: function dial(number) {
     debug("Dialing " + number);
-    if (!PhoneNumberUtils.isViablePhoneNumber(number)) {
-      this.handleCallError({
-        callIndex: -1,
-        errorMsg: RIL.RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[RIL.CALL_FAIL_UNOBTAINABLE_NUMBER]
-      });
-      debug("Number '" + number + "' doesn't seem to be a viable number. Drop.");
-      return;
+    number = PhoneNumberUtils.normalize(number);
+    if (this._validateNumber(number)) {
+      this.worker.postMessage({rilMessageType: "dial",
+                              number: number,
+                              isDialEmergency: false});
     }
-    this.worker.postMessage({rilMessageType: "dial",
-                             number: number,
-                             isDialEmergency: false});
   },
 
   dialEmergency: function dialEmergency(number) {
     debug("Dialing emergency " + number);
-    this.worker.postMessage({rilMessageType: "dial",
-                             number: number,
-                             isDialEmergency: true});
+    // we don't try to be too clever here, as the phone is probably in the
+    // locked state. Let's just check if it's a number without normalizing
+    if (this._validateNumber(number)) {
+      this.worker.postMessage({rilMessageType: "dial",
+                              number: number,
+                              isDialEmergency: true});
+    }
   },
 
   hangUp: function hangUp(callIndex) {
