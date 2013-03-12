@@ -17,6 +17,7 @@
 #include "nsUnicharUtils.h"
 #include "nsUTF8Utils.h"
 #include "mozilla/SSE.h"
+#include "mozilla/AltiVec.h"
 #include "nsTextFragmentImpl.h"
 #include <algorithm>
 
@@ -158,6 +159,13 @@ namespace mozilla {
   }
 }
 #endif
+#ifdef MOZILLA_MAY_SUPPORT_ALTIVEC
+namespace mozilla {
+  namespace altivec {
+    PRInt32 FirstNon8Bit(const PRUnichar* str, const PRUnichar* end);
+  }
+}
+#endif
 
 /*
  * This function returns -1 if all characters in str are 8 bit characters.
@@ -172,6 +180,11 @@ FirstNon8Bit(const PRUnichar *str, const PRUnichar *end)
 #ifdef MOZILLA_MAY_SUPPORT_SSE2
   if (mozilla::supports_sse2()) {
     return mozilla::SSE2::FirstNon8Bit(str, end);
+  }
+#endif
+#ifdef MOZILLA_MAY_SUPPORT_ALTIVEC
+  if (mozilla::supports_altivec()) {
+    return mozilla::altivec::FirstNon8Bit(str, end);
   }
 #endif
 
