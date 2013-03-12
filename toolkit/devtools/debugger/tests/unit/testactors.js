@@ -36,7 +36,7 @@ function createRootActor()
         applicationType: "xpcshell-tests",
         testConnectionPrefix: this.conn.prefix,
         traits: {
-          sourcesAndNewSource: true
+          sources: true
         }
       };
     },

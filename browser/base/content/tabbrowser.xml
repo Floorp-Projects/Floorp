@@ -786,7 +786,7 @@
             // Strip out any null bytes in the content title, since the
             // underlying widget implementations of nsWindow::SetTitle pass
             // null-terminated strings to system APIs.
-            var docTitle = aBrowser.contentTitle.replace("\0", "");
+            var docTitle = aBrowser.contentTitle.replace("\0", "", "g");
 
             if (!docTitle)
               docTitle = docElement.getAttribute("titledefault");
@@ -1432,7 +1432,7 @@
             }
 
             if (animate) {
-              this.tabContainer._handleTabTelemetryStart(this.tabContainer, t, aURI);
+              this.tabContainer._handleTabTelemetryStart(t, aURI);
 
               // kick the animation off
               t.clientTop;
@@ -1575,7 +1575,7 @@
               return;
             }
 
-            this.tabContainer._handleTabTelemetryStart(this.tabContainer, aTab);
+            this.tabContainer._handleTabTelemetryStart(aTab);
 
             this._blurTab(aTab);
             aTab.removeAttribute("fadein");
@@ -3524,13 +3524,12 @@
       </method>
 
       <method name="_handleTabTelemetryStart">
-        <parameter name="aTabContainer"/>
         <parameter name="aTab"/>
         <parameter name="aURI"/>
         <body>
         <![CDATA[
           // Animation-smoothness telemetry/logging
-          if (Services.telemetry.canRecord || aTabContainer._tabAnimationLoggingEnabled) {
+          if (Services.telemetry.canRecord || this._tabAnimationLoggingEnabled) {
             if (aURI == "about:newtab" && (aTab._tPos == 1 || aTab._tPos == 2)) {
               // Indicate newtab page animation where other tabs are unaffected
               // (for which case, the 2nd or 3rd tabs are good representatives, even if not absolute)

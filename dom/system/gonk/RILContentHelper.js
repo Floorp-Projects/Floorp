@@ -1003,7 +1003,7 @@ RILContentHelper.prototype = {
       case "RIL:CallError":
         this._deliverEvent("_telephonyListeners",
                            "notifyError",
-                           [msg.json.callIndex, msg.json.error]);
+                           [msg.json.callIndex, msg.json.errorMsg]);
         break;
       case "RIL:VoicemailNotification":
         this.handleVoicemailNotification(msg.json);
@@ -1062,7 +1062,7 @@ RILContentHelper.prototype = {
       case "RIL:DataError":
         this.updateConnectionInfo(msg.json, this.rilContext.dataConnectionInfo);
         this._deliverEvent("_mobileConnectionListeners", "notifyDataError",
-                           [msg.json.error]);
+                           [msg.json.errorMsg]);
         break;
       case "RIL:GetCallForwardingOption":
         this.handleGetCallForwardingOption(msg.json);
@@ -1117,9 +1117,9 @@ RILContentHelper.prototype = {
       return;
     }
 
-    if (message.error) {
-      debug("Received error from getAvailableNetworks: " + message.error);
-      Services.DOMRequest.fireError(request, message.error);
+    if (message.errorMsg) {
+      debug("Received error from getAvailableNetworks: " + message.errorMsg);
+      Services.DOMRequest.fireError(request, message.errorMsg);
       return;
     }
 
@@ -1138,32 +1138,32 @@ RILContentHelper.prototype = {
     this._selectingNetwork = null;
     this.networkSelectionMode = mode;
 
-    if (message.error) {
-      this.fireRequestError(message.requestId, message.error);
+    if (message.errorMsg) {
+      this.fireRequestError(message.requestId, message.errorMsg);
     } else {
       this.fireRequestSuccess(message.requestId, null);
     }
   },
 
   handleIccOpenChannel: function handleIccOpenChannel(message) {
-    if (message.error) {
-      this.fireRequestError(message.requestId, message.error);
+    if (message.errorMsg) {
+      this.fireRequestError(message.requestId, message.errorMsg);
     } else {
       this.fireRequestSuccess(message.requestId, message.channel);
     }
   },
 
   handleIccCloseChannel: function handleIccCloseChannel(message) {
-    if (message.error) {
-      this.fireRequestError(message.requestId, message.error);
+    if (message.errorMsg) {
+      this.fireRequestError(message.requestId, message.errorMsg);
     } else {
       this.fireRequestSuccess(message.requestId, null);
     }
   },
 
   handleIccExchangeAPDU: function handleIccExchangeAPDU(message) {
-    if (message.error) {
-      this.fireRequestError(message.requestId, message.error);
+    if (message.errorMsg) {
+      this.fireRequestError(message.requestId, message.errorMsg);
     } else {
       var result = [message.sw1, message.sw2, message.simResponse];
       this.fireRequestSuccess(message.requestId, result);

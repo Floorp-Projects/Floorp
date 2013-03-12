@@ -2708,15 +2708,14 @@ nsXPCComponents_Utils::LookupMethod(const JS::Value& object,
     JSString *methodName = name.toString();
     jsid methodId = INTERNED_STRING_TO_JSID(cx, JS_InternJSString(cx, methodName));
 
-    // If |obj| is a cross-compartment wrapper, try to puncture it. If this fails,
-    // we don't have full access to the other compartment, in which case we throw.
-    // Otherwise, enter the compartment.
-    if (js::IsCrossCompartmentWrapper(obj)) {
-        obj = js::UnwrapOneChecked(obj);
-        if (!obj)
-            return NS_ERROR_XPC_BAD_CONVERT_JS;
+    // If |obj| is a security wrapper, try to unwrap it. If this fails, we
+    // don't have full acccess to the object, in which case we throw.
+    // Otherwise, enter a compartment, since we may have just unwrapped a CCW.
+    obj = js::UnwrapObjectChecked(obj);
+    if (!obj) {
+        JS_ReportError(cx, "Permission denied to unwrap object");
+        return NS_ERROR_XPC_BAD_CONVERT_JS;
     }
-
     {
         // Enter the target compartment.
         JSAutoCompartment ac(cx, obj);

@@ -22,14 +22,15 @@ function test() {
 function testNonEnumProperties() {
   gDebugger.DebuggerController.activeThread.addOneTimeListener("framesadded", function() {
     Services.tm.currentThread.dispatch({ run: function() {
+
       let testScope = gDebugger.DebuggerView.Variables.addScope("test-scope");
       let testVar = testScope.addVar("foo");
+
       testVar.addProperties({
         foo: {
           value: "bar",
           enumerable: true
         },
-
         bar: {
           value: "foo",
           enumerable: false

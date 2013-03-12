@@ -16,48 +16,58 @@ ifeq ($(OS_TARGET),WINNT)
 VISIBILITY_FLAGS =
 endif
 
-ifeq ($(OS_TARGET),WINNT)
 CSRCS           = \
+                cubeb.c \
+                $(NULL)
+
+ifeq ($(OS_TARGET),WINNT)
+CSRCS           += \
                 cubeb_winmm.c \
                 $(NULL)
+DEFINES         += -DUSE_WINMM
 endif
 
 ifeq ($(OS_TARGET),Android)
 ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
-CSRCS         = \
-              cubeb_opensl.c \
-              $(NULL)
+CSRCS           += \
+                cubeb_opensl.c \
+                $(NULL)
+DEFINES         += -DUSE_OPENSL
 endif
 # No Android implementation of libcubeb yet.
 endif
 
 ifeq ($(OS_TARGET),Darwin)
-CSRCS           = \
+CSRCS           += \
                 cubeb_audiounit.c \
                 $(NULL)
+DEFINES         += -DUSE_AUDIOUNIT
 endif
 
 ifeq ($(OS_ARCH),OpenBSD)
-CSRCS           = \
+CSRCS           += \
                 cubeb_sndio.c \
                 $(NULL)
+DEFINES         += -DUSE_SNDIO
 endif
 
 ifdef MOZ_ALSA
-CSRCS         = \
-              cubeb_alsa.c \
-              $(NULL)
+CSRCS           += \
+                cubeb_alsa.c \
+                $(NULL)
+DEFINES         += -DUSE_ALSA
 endif
 
 ifdef MOZ_PULSEAUDIO
-CSRCS		= \
-		cubeb_pulse.c \
-		$(NULL)
+CSRCS           += \
+                cubeb_pulse.c \
+                $(NULL)
+DEFINES         += -DUSE_PULSE
 endif
 
 include $(topsrcdir)/config/rules.mk
 
 CFLAGS += \
-	$(MOZ_ALSA_CFLAGS) \
-	$(MOZ_PULSEAUDIO_CFLAGS) \
-	$(NULL)
+        $(MOZ_ALSA_CFLAGS) \
+        $(MOZ_PULSEAUDIO_CFLAGS) \
+        $(NULL)

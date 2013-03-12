@@ -191,6 +191,7 @@ browser.jar:
   skin/classic/browser/tabview/tabview.png                  (tabview/tabview.png)
   skin/classic/browser/tabview/tabview.css                  (tabview/tabview.css)
 * skin/classic/browser/devtools/common.css                  (devtools/common.css)
+  skin/classic/browser/devtools/widgets.css                 (devtools/widgets.css)
   skin/classic/browser/devtools/arrows.png                  (devtools/arrows.png)
   skin/classic/browser/devtools/commandline.png             (devtools/commandline.png)
   skin/classic/browser/devtools/command-responsivemode.png  (devtools/command-responsivemode.png)

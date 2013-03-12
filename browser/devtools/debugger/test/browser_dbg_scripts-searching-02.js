@@ -13,9 +13,8 @@ var gTab = null;
 var gDebuggee = null;
 var gDebugger = null;
 var gEditor = null;
-var gScripts = null;
+var gSources = null;
 var gSearchBox = null;
-var gMenulist = null;
 
 function test()
 {
@@ -27,6 +26,7 @@ function test()
     gDebuggee = aDebuggee;
     gPane = aPane;
     gDebugger = gPane.panelWin;
+    gDebugger.SourceResults.prototype.alwaysExpand = false;
 
     gDebugger.addEventListener("Debugger:SourceShown", function _onEvent(aEvent) {
       let url = aEvent.detail.url;
@@ -56,9 +56,8 @@ function test()
 function testScriptSearching() {
   gDebugger.DebuggerController.activeThread.resume(function() {
     gEditor = gDebugger.DebuggerView.editor;
-    gScripts = gDebugger.DebuggerView.Sources;
+    gSources = gDebugger.DebuggerView.Sources;
     gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
-    gMenulist = gScripts._container;
 
     firstSearch();
   });
@@ -78,11 +77,13 @@ function firstSearch() {
         ok(gEditor.getCaretPosition().line == 4 &&
            gEditor.getCaretPosition().col == 0,
           "The editor didn't jump to the correct line. (1)");
-        is(gScripts.visibleItems.length, 1,
+        is(gSources.visibleItems.length, 1,
           "Not all the correct scripts are shown after the search. (1)");
 
         secondSearch();
       });
+    } else {
+      ok(false, "Get off my lawn.");
     }
   });
   write(".*-01\.js:5");
@@ -106,14 +107,16 @@ function secondSearch() {
         ok(gEditor.getCaretPosition().line == 5 &&
            gEditor.getCaretPosition().col == 8 + token.length,
           "The editor didn't jump to the correct line. (2)");
-        is(gScripts.visibleItems.length, 1,
+        is(gSources.visibleItems.length, 1,
           "Not all the correct scripts are shown after the search. (2)");
 
         waitForFirstScript();
       });
+    } else {
+      ok(false, "Get off my lawn.");
     }
   });
-  gScripts.selectedIndex = 1;
+  gSources.selectedIndex = 1;
 }
 
 function waitForFirstScript() {
@@ -130,7 +133,7 @@ function waitForFirstScript() {
       });
     }
   });
-  gScripts.selectedIndex = 0;
+  gSources.selectedIndex = 0;
 }
 
 function thirdSearch() {
@@ -149,11 +152,13 @@ function thirdSearch() {
         ok(gEditor.getCaretPosition().line == 5 &&
            gEditor.getCaretPosition().col == 8 + token.length,
           "The editor didn't jump to the correct line. (3)");
-        is(gScripts.visibleItems.length, 1,
+        is(gSources.visibleItems.length, 1,
           "Not all the correct scripts are shown after the search. (3)");
 
         fourthSearch(0, "ugger;", token);
       });
+    } else {
+      ok(false, "Get off my lawn.");
     }
   });
   write(".*-02\.js#" + token);
@@ -178,55 +183,55 @@ function fourthSearch(i, string, token) {
     "The editor didn't remain at the correct token. (5)");
 
   executeSoon(function() {
-    let noMatchingScripts = gDebugger.L10N.getStr("noMatchingScriptsText");
+    let noMatchingSources = gDebugger.L10N.getStr("noMatchingSourcesText");
 
-    is(gScripts.visibleItems.length, 2,
+    is(gSources.visibleItems.length, 2,
       "Not all the scripts are shown after the searchbox was emptied.");
-    is(gMenulist.selectedIndex, 1,
-      "The menulist should have retained its selected index after the searchbox was emptied.");
+    is(gSources.selectedIndex, 1,
+      "The scripts container should have retained its selected index after the searchbox was emptied.");
 
     write("BOGUS");
     ok(gEditor.getCaretPosition().line == 5 &&
        gEditor.getCaretPosition().col == 8 + token.length + i,
       "The editor didn't remain at the correct token. (6)");
 
-    is(gMenulist.getAttribute("label"), noMatchingScripts,
-      "The menulist should display a notice that no scripts match the searched token.");
-    is(gScripts.visibleItems.length, 0,
-      "No scripts should be displayed in the menulist after a bogus search.");
-    is(gMenulist.selectedIndex, 1,
-      "The menulist should retain its selected index after a bogus search.");
+    is(gSources._container.getAttribute("label"), noMatchingSources,
+      "The scripts container should display a notice that no scripts match the searched token.");
+    is(gSources.visibleItems.length, 0,
+      "No scripts should be displayed in the scripts container after a bogus search.");
+    is(gSources.selectedIndex, 1,
+      "The scripts container should retain its selected index after a bogus search.");
 
     clear();
     ok(gEditor.getCaretPosition().line == 5 &&
        gEditor.getCaretPosition().col == 8 + token.length + i,
       "The editor didn't remain at the correct token. (7)");
 
-    isnot(gMenulist.getAttribute("label"), noMatchingScripts,
-      "The menulist should not display a notice after the searchbox was emptied.");
-    is(gScripts.visibleItems.length, 2,
+    isnot(gSources._container.getAttribute("label"), noMatchingSources,
+      "The scripts container should not display a notice after the searchbox was emptied.");
+    is(gSources.visibleItems.length, 2,
       "Not all the scripts are shown after the searchbox was emptied.");
-    is(gMenulist.selectedIndex, 1,
-      "The menulist should have retained its selected index after the searchbox was emptied of a bogus search.");
+    is(gSources.selectedIndex, 1,
+      "The scripts container should have retained its selected index after the searchbox was emptied of a bogus search.");
 
-    noMatchingScriptsSingleCharCheck(token, i);
+    noMatchingSourcesSingleCharCheck(token, i);
   });
 }
 
-function noMatchingScriptsSingleCharCheck(token, i) {
-  let noMatchingScripts = gDebugger.L10N.getStr("noMatchingScriptsText");
+function noMatchingSourcesSingleCharCheck(token, i) {
+  let noMatchingSources = gDebugger.L10N.getStr("noMatchingSourcesText");
 
   write("x");
   ok(gEditor.getCaretPosition().line == 5 &&
      gEditor.getCaretPosition().col == 8 + token.length + i,
     "The editor didn't remain at the correct token. (8)");
 
-  is(gMenulist.getAttribute("label"), noMatchingScripts,
-    "The menulist should display a notice after no matches are found.");
-  is(gScripts.visibleItems.length, 0,
+  is(gSources._container.getAttribute("label"), noMatchingSources,
+    "The scripts container should display a notice after no matches are found.");
+  is(gSources.visibleItems.length, 0,
     "No scripts should be shown after no matches are found.");
-  is(gMenulist.selectedIndex, 1,
-    "The menulist should have retained its selected index after no matches are found.");
+  is(gSources.selectedIndex, 1,
+    "The scripts container should have retained its selected index after no matches are found.");
 
   closeDebuggerAndFinish();
 }
@@ -257,7 +262,6 @@ registerCleanupFunction(function() {
   gDebuggee = null;
   gDebugger = null;
   gEditor = null;
-  gScripts = null;
+  gSources = null;
   gSearchBox = null;
-  gMenulist = null;
 });

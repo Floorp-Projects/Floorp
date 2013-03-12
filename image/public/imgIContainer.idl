@@ -192,7 +192,7 @@ interface imgIContainer : nsISupports
                                         in uint32_t aFlags);
 
   /**
-   * Draw the current frame on to the context specified.
+   * Draw a frame onto the context specified.
    *
    * @param aContext The Thebes context to draw the image to.
    * @param aFilter The filter to be used if we're scaling the image.
@@ -214,6 +214,7 @@ interface imgIContainer : nsISupports
    * @param aSVGContext If non-null, SVG-related rendering context such as
    *                    overridden attributes on the image document's root <svg>
    *                    node. Ignored for raster images.
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
    * @param aFlags Flags of the FLAG_* variety
    */
   [noscript] void draw(in gfxContext aContext,
@@ -223,6 +224,7 @@ interface imgIContainer : nsISupports
                        [const] in nsIntRect aSubimage,
                        [const] in nsIntSize aViewportSize,
                        [const] in SVGImageContext aSVGContext,
+                       in uint32_t aWhichFrame,
                        in uint32_t aFlags);
 
   /*

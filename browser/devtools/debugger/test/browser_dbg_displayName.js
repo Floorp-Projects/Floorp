@@ -36,7 +36,7 @@ function testAnonCall() {
       is(frames.querySelectorAll(".dbg-stackframe").length, 3,
         "Should have three frames.");
 
-      is(frames.querySelector("#stackframe-0 .dbg-stackframe-name").getAttribute("value"),
+      is(frames.querySelector("#stackframe-0 .dbg-stackframe-title").getAttribute("value"),
         "anonFunc", "Frame name should be anonFunc");
 
       testInferredName();
@@ -58,7 +58,7 @@ function testInferredName() {
       is(frames.querySelectorAll(".dbg-stackframe").length, 3,
         "Should have three frames.");
 
-      is(frames.querySelector("#stackframe-0 .dbg-stackframe-name").getAttribute("value"),
+      is(frames.querySelector("#stackframe-0 .dbg-stackframe-title").getAttribute("value"),
         "a/<", "Frame name should be a/<");
 
       resumeAndFinish();
