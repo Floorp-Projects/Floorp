@@ -6,11 +6,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsinfer.h"
-#include "jsinferinlines.h"
-#include "IonMacroAssembler.h"
-#include "gc/Root.h"
-#include "Bailouts.h"
+
+#include "ion/Bailouts.h"
+#include "ion/IonMacroAssembler.h"
+#include "js/RootingAPI.h"
 #include "vm/ForkJoin.h"
+
+#include "jsinferinlines.h"
 
 using namespace js;
 using namespace js::ion;

@@ -15,9 +15,9 @@
 #include "jspropertytree.h"
 #include "jstypes.h"
 
-#include "js/HashTable.h"
 #include "gc/Heap.h"
-#include "gc/Root.h"
+#include "js/HashTable.h"
+#include "js/RootingAPI.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)

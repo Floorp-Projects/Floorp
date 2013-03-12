@@ -12,7 +12,7 @@
 #include "jscompartment.h"
 #include "jslock.h"
 
-#include "gc/Root.h"
+#include "js/RootingAPI.h"
 #include "js/TemplateLib.h"
 #include "vm/Shape.h"
 

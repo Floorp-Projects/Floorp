@@ -7,7 +7,7 @@
 #ifndef Intl_h___
 #define Intl_h___
 
-#include "gc/Root.h"
+#include "js/RootingAPI.h"
 
 struct JSContext;
 class JSObject;
