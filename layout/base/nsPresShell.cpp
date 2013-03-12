@@ -6954,6 +6954,10 @@ PresShell::DispatchTouchEvent(nsEvent *aEvent,
       preventDefault = true;
     }
 
+    if (newEvent.mFlags.mMultipleActionsPrevented) {
+      touchEvent->mFlags.mMultipleActionsPrevented = true;
+    }
+
     if (contentPresShell) {
       contentPresShell->PopCurrentEventInfo();
     }
