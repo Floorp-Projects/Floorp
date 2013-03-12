@@ -25,7 +25,6 @@
 #include "nsPluginInstanceOwner.h"
 
 #include "nsPluginsDir.h"
-#include "nsPluginSafety.h"
 #include "nsPluginLogging.h"
 
 #include "nsIJSContextStack.h"
