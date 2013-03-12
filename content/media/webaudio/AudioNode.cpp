@@ -176,6 +176,30 @@ AudioNode::Connect(AudioNode& aDestination, uint32_t aOutput,
 }
 
 void
+AudioNode::SendDoubleParameterToStream(uint32_t aIndex, double aValue)
+{
+  AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
+  MOZ_ASSERT(ns, "How come we don't have a stream here?");
+  ns->SetDoubleParameter(aIndex, aValue);
+}
+
+void
+AudioNode::SendInt32ParameterToStream(uint32_t aIndex, int32_t aValue)
+{
+  AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
+  MOZ_ASSERT(ns, "How come we don't have a stream here?");
+  ns->SetInt32Parameter(aIndex, aValue);
+}
+
+void
+AudioNode::SendThreeDPointParameterToStream(uint32_t aIndex, const ThreeDPoint& aValue)
+{
+  AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
+  MOZ_ASSERT(ns, "How come we don't have a stream here?");
+  ns->SetThreeDPointParameter(aIndex, aValue);
+}
+
+void
 AudioNode::Disconnect(uint32_t aOutput, ErrorResult& aRv)
 {
   if (aOutput >= NumberOfOutputs()) {
