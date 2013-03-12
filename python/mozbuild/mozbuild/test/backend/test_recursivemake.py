@@ -118,6 +118,18 @@ class TestRecursiveMakeBackend(BackendTester):
             'TEST = foo',
         ])
 
+    def test_variable_passthru(self):
+        """Ensure variable passthru is written out correctly."""
+        env = self._consume('variable_passthru', RecursiveMakeBackend)
+
+        backend_path = os.path.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:-1]]
+        self.assertEqual(lines[2:5], [
+            'XPIDLSRCS += foo.idl',
+            'XPIDLSRCS += bar.idl',
+            'XPIDLSRCS += biz.idl',
+        ])
+
 
 if __name__ == '__main__':
     main()
