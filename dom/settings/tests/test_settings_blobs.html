@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=821630
+-->
+<head>
+  <title>Test for Bug 821630 Settings API</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=821630">Mozilla Bug 821630</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.8">
+
+"use strict";
+
+var comp = SpecialPowers.wrap(SpecialPowers.Components);
+comp.utils.import("resource://gre/modules/SettingsChangeNotifier.jsm");
+SpecialPowers.setBoolPref("dom.mozSettings.enabled", true);
+SpecialPowers.addPermission("settings-read", true, document);
+SpecialPowers.addPermission("settings-write", true, document);
+
+function onUnwantedSuccess() {
+  ok(false, "onUnwantedSuccess: shouldn't get here");
+}
+
+function onFailure() {
+  return function(s) {
+    if (s) {
+      ok(false, "in on Failure! - " + s);
+    } else {
+      ok(false, "in on Failure!");
+    }
+  }
+}
+
+let mozSettings = window.navigator.mozSettings;
+let req;
+
+let pageParts = ['<a id="a"><b id="b">hey!</b></a>'];
+let storedBlob = new Blob(pageParts, {"type": "text/xml"});
+
+function checkBlob(blob) {
+  try {
+    let url = URL.createObjectURL(blob);
+    ok(true, "Result is a blob");
+  } catch (e) {
+    ok(false, "Result is a blob");
+  }
+}
+
+let steps = [
+  function() {
+    let lock = mozSettings.createLock();
+    req = lock.clear();
+    req.onsuccess = next;
+    req.onerror = onFailure("Deleting database");
+  },
+  function() {
+    mozSettings.addObserver("test1", function(e) {
+      checkBlob(e.settingValue);
+      next();
+    });
+    next();
+  },
+  function() {
+    let lock = mozSettings.createLock();
+    // next is called by the observer above
+    req = lock.set({"test1": storedBlob});
+    req.onerror = onFailure("Saving blob");
+  },
+  function() {
+    let lock = mozSettings.createLock();
+    req = lock.get("test1");
+    req.onsuccess = function(event) {
+      checkBlob(event.target.result["test1"]);
+      next();
+    };
+    req.onerror = onFailure("Getting blob");
+  },
+  function() {
+    let lock = mozSettings.createLock();
+    req = lock.clear();
+    req.onsuccess = function() {
+      next();
+    };
+    req.onerror = onFailure("Deleting database");
+  },
+  function () {
+    ok(true, "all done!\n");
+    SimpleTest.finish();
+  }
+];
+
+function next() {
+  try {
+    let step = steps.shift();
+    if (step) {
+      step();
+    }
+  } catch(ex) {
+    ok(false, "Caught exception", ex);
+  }
+}
+
+function permissionTest() {
+  if (gSettingsEnabled) {
+    next();
+  } else {
+    is(mozSettings, null, "mozSettings is null when not enabled.");
+    SimpleTest.finish();
+  }
+}
+
+let gSettingsEnabled = SpecialPowers.getBoolPref("dom.mozSettings.enabled");
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(permissionTest);
+</script>
+</pre>
+</body>
+</html>
