@@ -74,6 +74,7 @@ class Loop
 
     // Utility methods for invariance testing and instruction hoisting.
     bool isInLoop(MDefinition *ins);
+    bool isBeforeLoop(MDefinition *ins);
     bool isLoopInvariant(MInstruction *ins);
     bool isLoopInvariant(MDefinition *ins);
 
