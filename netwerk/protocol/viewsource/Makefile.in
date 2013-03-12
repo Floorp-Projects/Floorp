@@ -29,4 +29,3 @@ LOCAL_INCLUDES = \
 
 include $(topsrcdir)/config/rules.mk
 
-XPIDL_FLAGS += -I$(topsrcdir)/netwerk/base/public

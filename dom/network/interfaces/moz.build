@@ -25,3 +25,8 @@ if CONFIG['MOZ_B2G_RIL']:
 
 XPIDL_MODULE = 'dom_network'
 
+XPIDL_FLAGS += [
+    '-I$(topsrcdir)/dom/interfaces/base',
+    '-I$(topsrcdir)/dom/interfaces/events',
+]
+
