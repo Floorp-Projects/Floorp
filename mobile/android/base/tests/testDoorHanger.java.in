@@ -25,73 +25,87 @@ public class testDoorHanger extends BaseTest {
         String OFFLINE_STORAGE_URL = getAbsoluteUrl("/robocop/robocop_offline_storage.html");
         String LOGIN_URL = getAbsoluteUrl("/robocop/robocop_login.html");
 
+        // Strings used in doorhanger messages and buttons
+        String GEO_MESSAGE = "Share your location with";
+        String GEO_ALLOW = "Share";
+        String GEO_DENY = "Don't share";
+
+        String OFFLINE_MESSAGE = "to store data on your device for offline use";
+        String OFFLINE_ALLOW = "Allow";
+        String OFFLINE_DENY = "Don't allow";
+
+        String LOGIN_MESSAGE = "Save password";
+        String LOGIN_ALLOW = "Save";
+        String LOGIN_DENY = "Don't save";
+
         blockForGeckoReady();
 
         // Test geolocation notification
         loadUrl(GEO_URL);
-        waitForText("wants your location");
-        mAsserter.is(mSolo.searchText("wants your location"), true, "Geolocation doorhanger has been displayed");
+        waitForText(GEO_MESSAGE);
+        mAsserter.is(mSolo.searchText(GEO_MESSAGE), true, "Geolocation doorhanger has been displayed");
 
         // Test "Share" button hides the notification
         mSolo.clickOnCheckBox(0);
-        mSolo.clickOnText("Share");
-        mAsserter.is(mSolo.searchText("wants your location"), false, "Geolocation doorhanger has been hidden");
+        mSolo.clickOnButton(GEO_ALLOW);
+        mAsserter.is(mSolo.searchText(GEO_MESSAGE), false, "Geolocation doorhanger has been hidden");
 
         // Re-trigger geolocation notification
         loadUrl(GEO_URL);
-        waitForText("wants your location");
+        waitForText(GEO_MESSAGE);
 
         // Test "Don't share" button hides the notification
         mSolo.clickOnCheckBox(0);
-        mSolo.clickOnText("Don't share");
-        mAsserter.is(mSolo.searchText("wants your location"), false, "Geolocation doorhanger has been hidden");
+        mSolo.clickOnButton(GEO_DENY);
+        mAsserter.is(mSolo.searchText(GEO_MESSAGE), false, "Geolocation doorhanger has been hidden");
 
         // Re-trigger geolocation notification
         loadUrl(GEO_URL);
-        waitForText("wants your location");
+        waitForText(GEO_MESSAGE);
 
         // Add a new tab
         addTab(BLANK_URL);
 
         // Make sure doorhanger is hidden
-        mAsserter.is(mSolo.searchText("wants your location"), false, "Doorhanger notification is hidden");
+        mAsserter.is(mSolo.searchText(GEO_MESSAGE), false, "Doorhanger notification is hidden");
 
         // Load offline storage page
         loadUrl(OFFLINE_STORAGE_URL);
-        waitForText("wants to store data on your device for offline use");
+        waitForText(OFFLINE_MESSAGE);
 
-        // Test doorhanger dismissed when tapping "Not Now"
-        mSolo.clickOnText("Not Now");
-        mAsserter.is(mSolo.searchText("wants to store data on your device for offline use"), false, "Doorhanger notification is hidden");
+        // Test doorhanger dismissed when tapping "Don't share"
+        mSolo.clickOnCheckBox(0);
+        mSolo.clickOnButton(OFFLINE_DENY);
+        mAsserter.is(mSolo.searchText(OFFLINE_MESSAGE), false, "Doorhanger notification is hidden");
 
         // Load offline storage page
         loadUrl(OFFLINE_STORAGE_URL);
-        waitForText("wants to store data on your device for offline use");
+        waitForText(OFFLINE_MESSAGE);
 
         // Test doorhanger dismissed when tapping "Allow" and is not displayed again
-        mSolo.clickOnText("Allow");
-        mAsserter.is(mSolo.searchText("wants to store data on your device for offline use"), false, "Doorhanger notification is hidden");
+        mSolo.clickOnButton(OFFLINE_ALLOW);
+        mAsserter.is(mSolo.searchText(OFFLINE_MESSAGE), false, "Doorhanger notification is hidden");
         loadUrl(OFFLINE_STORAGE_URL);
-        mAsserter.is(mSolo.searchText("wants to store data on your device for offline use"), false, "Doorhanger is no longer triggered");
+        mAsserter.is(mSolo.searchText(OFFLINE_MESSAGE), false, "Doorhanger is no longer triggered");
 
         // Load login page
         loadUrl(LOGIN_URL);
-        waitForText("to remember password for");
+        waitForText(LOGIN_MESSAGE);
 
-        // Test doorhanger is dismissed when tapping "Not Now"
-        mSolo.clickOnText("Not Now");
-        mAsserter.is(mSolo.searchText("to remember password for"), false, "Doorhanger notification is hidden");
+        // Test doorhanger is dismissed when tapping "Don't save"
+        mSolo.clickOnButton(LOGIN_DENY);
+        mAsserter.is(mSolo.searchText(LOGIN_MESSAGE), false, "Doorhanger notification is hidden");
 
         // Load login page
         loadUrl(LOGIN_URL);
-        waitForText("prevented this site from opening");
+        waitForText(LOGIN_MESSAGE);
 
-        // Test doorhanger is dismissed when tapping "Never show" and is no longer triggered
-        mSolo.clickOnText("Remember");
-        mAsserter.is(mSolo.searchText("to remember password for"), false, "Doorhanger notification is hidden");
+        // Test doorhanger is dismissed when tapping "Save" and is no longer triggered
+        mSolo.clickOnButton(LOGIN_ALLOW);
+        mAsserter.is(mSolo.searchText(LOGIN_MESSAGE), false, "Doorhanger notification is hidden");
 
         // Reload the page and check that there is no doorhanger displayed
         loadUrl(LOGIN_URL);
-        mAsserter.is(mSolo.searchText("to remember password for"), false, "Doorhanger notification is hidden");
+        mAsserter.is(mSolo.searchText(LOGIN_MESSAGE), false, "Doorhanger notification is hidden");
     }
 }
