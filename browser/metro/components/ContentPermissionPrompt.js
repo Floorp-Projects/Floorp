@@ -41,7 +41,7 @@ ContentPermissionPrompt.prototype = {
 
   getChromeWindowForRequest: function getChromeWindowForRequest(aRequest) {
     if (aRequest.window)
-      return this.getChromeWindow(aRequest.window.top).wrappedJSObject :
+      return this.getChromeWindow(aRequest.window.top).wrappedJSObject;
     return aRequest.element.ownerDocument.defaultView;
   },
 
