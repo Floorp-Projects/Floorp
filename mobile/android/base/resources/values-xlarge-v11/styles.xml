@@ -10,12 +10,6 @@
         Please refer to values/styles.xml for default styles.
     -->
 
-    <!-- Lists in AwesomeBar -->
-    <style name="AwesomeBarList" parent="@style/GeckoList">
-        <item name="android:paddingLeft">52dp</item>
-        <item name="android:paddingRight">52dp</item>
-    </style>
-
     <!-- AwesomeBar Tab Indicator Curve Left -->
     <style name="AwesomeBarTabIndicatorCurve.Left">
          <item name="android:layout_width">86dp</item>
