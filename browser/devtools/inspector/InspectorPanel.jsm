@@ -52,9 +52,7 @@ InspectorPanel.prototype = {
   open: function InspectorPanel_open() {
     let deferred = Promise.defer();
 
-    this.preventNavigateAway = this.preventNavigateAway.bind(this);
     this.onNavigatedAway = this.onNavigatedAway.bind(this);
-    this.target.on("will-navigate", this.preventNavigateAway);
     this.target.on("navigate", this.onNavigatedAway);
 
     this.nodemenu = this.panelDoc.getElementById("inspector-node-popup");
@@ -278,77 +276,6 @@ InspectorPanel.prototype = {
   },
 
   /**
-   * Show a message if the inspector is dirty.
-   */
-  preventNavigateAway: function InspectorPanel_preventNavigateAway(event, request) {
-    if (!this.isDirty) {
-      return;
-    }
-
-    request.suspend();
-
-    let notificationBox = null;
-    if (this.target.isLocalTab) {
-      let gBrowser = this.target.tab.ownerDocument.defaultView.gBrowser;
-      notificationBox = gBrowser.getNotificationBox();
-    }
-    else {
-      notificationBox = this._toolbox.getNotificationBox();
-    }
-
-    let notification = notificationBox.
-      getNotificationWithValue("inspector-page-navigation");
-
-    if (notification) {
-      notificationBox.removeNotification(notification, true);
-    }
-
-    let cancelRequest = function onCancelRequest() {
-      if (request) {
-        request.cancel(Cr.NS_BINDING_ABORTED);
-        request.resume(); // needed to allow the connection to be cancelled.
-        request = null;
-      }
-    };
-
-    let eventCallback = function onNotificationCallback(event) {
-      if (event == "removed") {
-        cancelRequest();
-      }
-    };
-
-    let buttons = [
-      {
-        id: "inspector.confirmNavigationAway.buttonLeave",
-        label: this.strings.GetStringFromName("confirmNavigationAway.buttonLeave"),
-        accessKey: this.strings.GetStringFromName("confirmNavigationAway.buttonLeaveAccesskey"),
-        callback: function onButtonLeave() {
-          if (request) {
-            request.resume();
-            request = null;
-          }
-        }.bind(this),
-      },
-      {
-        id: "inspector.confirmNavigationAway.buttonStay",
-        label: this.strings.GetStringFromName("confirmNavigationAway.buttonStay"),
-        accessKey: this.strings.GetStringFromName("confirmNavigationAway.buttonStayAccesskey"),
-        callback: cancelRequest
-      },
-    ];
-
-    let message = this.strings.GetStringFromName("confirmNavigationAway.message2");
-
-    notification = notificationBox.appendNotification(message,
-      "inspector-page-navigation", "chrome://browser/skin/Info.png",
-      notificationBox.PRIORITY_WARNING_HIGH, buttons, eventCallback);
-
-    // Make sure this not a transient notification, to avoid the automatic
-    // transient notification removal.
-    notification.persistence = -1;
-  },
-
-  /**
    * When a new node is selected.
    */
   onNewSelection: function InspectorPanel_onNewSelection() {
@@ -391,7 +318,6 @@ InspectorPanel.prototype = {
       this.browser = null;
     }
 
-    this.target.off("will-navigate", this.preventNavigateAway);
     this.target.off("navigate", this.onNavigatedAway);
 
     if (this.highlighter) {
