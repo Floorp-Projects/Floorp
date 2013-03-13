@@ -8,6 +8,8 @@
 #include "nsDebug.h"
 #include "nsThreadUtils.h"
 #include "nsString.h"
+#include "nsPoint.h"
+#include "nsRect.h"
 
 #include "mozwrlbase.h"
 
@@ -76,8 +78,19 @@ class MetroUtils
   typedef ABI::Windows::Foundation::IUriRuntimeClass IUriRuntimeClass;
   typedef Microsoft::WRL::Wrappers::HString HString;
   typedef ABI::Windows::UI::ViewManagement::ApplicationViewState ApplicationViewState;
+  typedef ABI::Windows::Foundation::Point Point;
+  typedef ABI::Windows::Foundation::Rect Rect;
 
 public:
+  // Functions to convert between logical pixels as used by most Windows APIs
+  // and physical (device) pixels.
+  // See MSDN documentation about DIPs (device independent pixels) for details.
+  static int32_t LogToPhys(FLOAT aValue);
+  static nsIntPoint LogToPhys(const Point& aPt);
+  static nsIntRect LogToPhys(const Rect& aRect);
+  static FLOAT PhysToLog(int32_t aValue);
+  static Point PhysToLog(const nsIntPoint& aPt);
+
   static nsresult FireObserver(const char* aMessage, const PRUnichar* aData = nullptr);
 
   static HRESULT CreateUri(HSTRING aUriStr, Microsoft::WRL::ComPtr<IUriRuntimeClass>& aUriOut);

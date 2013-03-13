@@ -24,6 +24,7 @@
 
 #include <wrl/wrappers/corewrappers.h>
 #include <windows.ui.applicationsettings.h>
+#include <windows.graphics.display.h>
 
 using namespace ABI::Windows::UI::ApplicationSettings;
 
@@ -33,12 +34,37 @@ using namespace ABI::Windows::Foundation;
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
 using namespace ABI::Windows::UI::ViewManagement;
+using namespace ABI::Windows::Graphics::Display;
 
 // File-scoped statics (unnamed namespace)
 namespace {
 #ifdef PR_LOGGING
   PRLogModuleInfo* metroWidgetLog = PR_NewLogModule("MetroWidget");
 #endif
+
+  FLOAT LogToPhysFactor() {
+    ComPtr<IDisplayPropertiesStatics> dispProps;
+    if (SUCCEEDED(GetActivationFactory(HStringReference(RuntimeClass_Windows_Graphics_Display_DisplayProperties).Get(),
+                                       dispProps.GetAddressOf()))) {
+      FLOAT dpi;
+      if (SUCCEEDED(dispProps->get_LogicalDpi(&dpi))) {
+        return dpi / 96.0f;
+      }
+    }
+    return 1.0f;
+  }
+
+  FLOAT PhysToLogFactor() {
+    ComPtr<IDisplayPropertiesStatics> dispProps;
+    if (SUCCEEDED(GetActivationFactory(HStringReference(RuntimeClass_Windows_Graphics_Display_DisplayProperties).Get(),
+                                       dispProps.GetAddressOf()))) {
+      FLOAT dpi;
+      if (SUCCEEDED(dispProps->get_LogicalDpi(&dpi))) {
+        return 96.0f / dpi;
+      }
+    }
+    return 1.0f;
+  }
 };
 
 void Log(const wchar_t *fmt, ...)
@@ -75,6 +101,44 @@ void Log(const wchar_t *fmt, ...)
     delete[] utf8;
   }
 #endif
+}
+
+// Conversion between logical and physical coordinates
+int32_t
+MetroUtils::LogToPhys(FLOAT aValue)
+{
+  return int32_t(NS_round(aValue * LogToPhysFactor()));
+}
+
+nsIntPoint
+MetroUtils::LogToPhys(const Point& aPt)
+{
+  FLOAT factor = LogToPhysFactor();
+  return nsIntPoint(int32_t(NS_round(aPt.X * factor)), int32_t(NS_round(aPt.Y * factor)));
+}
+
+nsIntRect
+MetroUtils::LogToPhys(const Rect& aRect)
+{
+  FLOAT factor = LogToPhysFactor();
+  return nsIntRect(int32_t(NS_round(aRect.X * factor)),
+                   int32_t(NS_round(aRect.Y * factor)),
+                   int32_t(NS_round(aRect.Width * factor)),
+                   int32_t(NS_round(aRect.Height * factor)));
+}
+
+FLOAT
+MetroUtils::PhysToLog(int32_t aValue)
+{
+  return FLOAT(aValue) * PhysToLogFactor();
+}
+
+Point
+MetroUtils::PhysToLog(const nsIntPoint& aPt)
+{
+  FLOAT factor = PhysToLogFactor();
+  Point p = { FLOAT(aPt.x) * factor, FLOAT(aPt.y) * factor };
+  return p;
 }
 
 nsresult
