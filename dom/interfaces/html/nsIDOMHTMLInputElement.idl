@@ -43,7 +43,7 @@ interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
            attribute unsigned long height;
            attribute boolean               indeterminate;
 
-           attribute DOMString             inputmode;
+           attribute DOMString             inputMode;
 
   readonly attribute nsIDOMHTMLElement     list;
            attribute DOMString             max;
