@@ -5657,10 +5657,7 @@ fi
 if test -n "$MOZ_CUBEB"; then
     case "$target" in
     *-android*|*-linuxandroid*)
-        if test -n "$gonkdir"; then
-            AC_DEFINE(MOZ_CUBEB)
-        fi
-        dnl No Android implementation of libcubeb yet.
+        AC_DEFINE(MOZ_CUBEB)
         ;;
     *-linux*)
         AC_DEFINE(MOZ_CUBEB)

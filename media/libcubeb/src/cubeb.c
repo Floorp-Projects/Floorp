@@ -5,7 +5,7 @@
  * accompanying file LICENSE for details.
  */
 #include <stddef.h>
-#ifdef HAVE_CONFIG_H
+#if defined(HAVE_CONFIG_H)
 #include "config.h"
 #endif
 #include "cubeb/cubeb.h"
@@ -21,29 +21,32 @@ struct cubeb_stream {
   struct cubeb * context;
 };
 
-#ifdef USE_PULSE
+#if defined(USE_PULSE)
 int pulse_init(cubeb ** context, char const * context_name);
 #endif
-#ifdef USE_ALSA
+#if defined(USE_ALSA)
 int alsa_init(cubeb ** context, char const * context_name);
 #endif
-#ifdef USE_AUDIOQUEUE
+#if defined(USE_AUDIOQUEUE)
 int audioqueue_init(cubeb ** context, char const * context_name);
 #endif
-#ifdef USE_AUDIOUNIT
+#if defined(USE_AUDIOUNIT)
 int audiounit_init(cubeb ** context, char const * context_name);
 #endif
-#ifdef USE_DIRECTSOUND
+#if defined(USE_DIRECTSOUND)
 int directsound_init(cubeb ** context, char const * context_name);
 #endif
-#ifdef USE_WINMM
+#if defined(USE_WINMM)
 int winmm_init(cubeb ** context, char const * context_name);
 #endif
-#ifdef USE_SNDIO
+#if defined(USE_SNDIO)
 int sndio_init(cubeb ** context, char const * context_name);
 #endif
-#ifdef USE_OPENSL
+#if defined(USE_OPENSL)
 int opensl_init(cubeb ** context, char const * context_name);
+#endif
+#if defined(USE_AUDIOTRACK)
+int audiotrack_init(cubeb ** context, char const * context_name);
 #endif
 
 int
@@ -78,29 +81,32 @@ int
 cubeb_init(cubeb ** context, char const * context_name)
 {
   int (* init[])(cubeb **, char const *) = {
-#ifdef USE_PULSE
+#if defined(USE_PULSE)
     pulse_init,
 #endif
-#ifdef USE_ALSA
+#if defined(USE_ALSA)
     alsa_init,
 #endif
-#ifdef USE_AUDIOUNIT
+#if defined(USE_AUDIOUNIT)
     audiounit_init,
 #endif
-#ifdef USE_AUDIOQUEUE
+#if defined(USE_AUDIOQUEUE)
     audioqueue_init,
 #endif
-#ifdef USE_WINMM
+#if defined(USE_WINMM)
     winmm_init,
 #endif
-#ifdef USE_DIRECTSOUND
+#if defined(USE_DIRECTSOUND)
     directsound_init,
 #endif
-#ifdef USE_SNDIO
+#if defined(USE_SNDIO)
     sndio_init,
 #endif
-#ifdef USE_OPENSL
+#if defined(USE_OPENSL)
     opensl_init,
+#endif
+#if defined(USE_AUDIOTRACK)
+    audiotrack_init,
 #endif
   };
   int i;
