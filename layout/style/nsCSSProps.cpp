@@ -83,14 +83,10 @@ enum {
   eCSSAliasCount = eCSSProperty_COUNT_with_aliases - eCSSProperty_COUNT
 };
 
-struct CSSPropertyAlias {
-  const nsCSSProperty id;
-};
-
 // The names are in kCSSRawProperties.
-static CSSPropertyAlias gAliases[eCSSAliasCount != 0 ? eCSSAliasCount : 1] = {
+static nsCSSProperty gAliases[eCSSAliasCount != 0 ? eCSSAliasCount : 1] = {
 #define CSS_PROP_ALIAS(aliasname_, propid_, aliasmethod_, pref_)  \
-  { eCSSProperty_##propid_ },
+  eCSSProperty_##propid_ ,
 #include "nsCSSPropAliasList.h"
 #undef CSS_PROP_ALIAS
 };
@@ -362,9 +358,10 @@ nsCSSProps::LookupProperty(const nsACString& aProperty,
   if (eCSSAliasCount != 0 && res >= eCSSProperty_COUNT) {
     MOZ_STATIC_ASSERT(eCSSProperty_UNKNOWN < eCSSProperty_COUNT,
                       "assuming eCSSProperty_UNKNOWN doesn't hit this code");
-    const CSSPropertyAlias &alias = gAliases[res - eCSSProperty_COUNT];
     if (IsEnabled(res) || aEnabled == eAny) {
-      res = alias.id;
+      res = gAliases[res - eCSSProperty_COUNT];
+      NS_ABORT_IF_FALSE(0 <= res && res < eCSSProperty_COUNT,
+                        "aliases must not point to other aliases");
     } else {
       res = eCSSProperty_UNKNOWN;
     }
@@ -388,9 +385,10 @@ nsCSSProps::LookupProperty(const nsAString& aProperty, EnabledState aEnabled)
   if (eCSSAliasCount != 0 && res >= eCSSProperty_COUNT) {
     MOZ_STATIC_ASSERT(eCSSProperty_UNKNOWN < eCSSProperty_COUNT,
                       "assuming eCSSProperty_UNKNOWN doesn't hit this code");
-    const CSSPropertyAlias &alias = gAliases[res - eCSSProperty_COUNT];
     if (IsEnabled(res) || aEnabled == eAny) {
-      res = alias.id;
+      res = gAliases[res - eCSSProperty_COUNT];
+      NS_ABORT_IF_FALSE(0 <= res && res < eCSSProperty_COUNT,
+                        "aliases must not point to other aliases");
     } else {
       res = eCSSProperty_UNKNOWN;
     }
