@@ -375,7 +375,7 @@ MConstant::printOpcode(FILE *fp)
             if (fun->hasScript()) {
                 RawScript script = fun->nonLazyScript();
                 fprintf(fp, " (%s:%u)",
-                        script->filename ? script->filename : "", script->lineno);
+                        script->filename() ? script->filename() : "", script->lineno);
             }
             fprintf(fp, " at %p", (void *) fun);
             break;

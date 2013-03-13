@@ -3,3 +3,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'nsIDOMMozWifiConnectionInfoEvent.idl',
+    'nsIDOMMozWifiStatusChangeEvent.idl',
+    'nsIWifi.idl',
+]
+
+XPIDL_MODULE = 'dom_wifi'
+
+XPIDL_FLAGS += [
+    '-I$(topsrcdir)/dom/base',
+    '-I$(topsrcdir)/dom/interfaces/base',
+    '-I$(topsrcdir)/dom/interfaces/events',
+    '-I$(topsrcdir)/dom/system/gonk',
+]
+

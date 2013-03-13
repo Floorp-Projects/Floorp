@@ -502,9 +502,6 @@ var SelectionHelperUI = {
   },
 
   _onSelectionCopied: function _onSelectionCopied(json) {
-    if (json.succeeded) {
-      this.showToast(Strings.browser.GetStringFromName("selectionHelper.textCopied"));
-    }
     this.closeEditSessionAndClear();
   },
 
@@ -686,12 +683,5 @@ var SelectionHelperUI = {
     let json = this._getMarkerBaseMessage();
     json.change = aMarker.tag;
     this._sendAsyncMessage("Browser:SelectionMove", json);
-  },
-
-  showToast: function showToast(aString) {
-    let toaster =
-      Cc["@mozilla.org/toaster-alerts-service;1"]
-        .getService(Ci.nsIAlertsService);
-    toaster.showAlertNotification(null, aString, "", false, "", null);
   },
 };

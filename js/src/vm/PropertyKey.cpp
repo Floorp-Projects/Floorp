@@ -8,8 +8,8 @@
 
 #include "mozilla/Assertions.h"
 
-#include "gc/Root.h"
 #include "js/PropertyKey.h"
+#include "js/RootingAPI.h"
 #include "js/Value.h"
 #include "vm/String.h"
 

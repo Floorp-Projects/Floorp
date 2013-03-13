@@ -15,7 +15,6 @@ LIBRARY_NAME	= widget_mac
 EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsWidgetMacModule
-XPIDL_MODULE	= widget_cocoa
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
@@ -70,10 +69,6 @@ CMMSRCS = \
 ifeq (x86_64,$(TARGET_CPU))
 CMMSRCS += ComplexTextInputPanel.mm
 endif
-
-XPIDLSRCS	+= \
-		nsPIWidgetCocoa.idl \
-		$(NULL)
 
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 

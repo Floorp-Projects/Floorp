@@ -169,6 +169,7 @@ var Strings = {};
 var BrowserApp = {
   _tabs: [],
   _selectedTab: null,
+  _prefObservers: [],
 
   get isTablet() {
     let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
@@ -200,6 +201,8 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Browser:Quit", false);
     Services.obs.addObserver(this, "Preferences:Get", false);
     Services.obs.addObserver(this, "Preferences:Set", false);
+    Services.obs.addObserver(this, "Preferences:Observe", false);
+    Services.obs.addObserver(this, "Preferences:RemoveObservers", false);
     Services.obs.addObserver(this, "ScrollTo:FocusedInput", false);
     Services.obs.addObserver(this, "Sanitize:ClearData", false);
     Services.obs.addObserver(this, "FullScreen:Exit", false);
@@ -883,15 +886,22 @@ var BrowserApp = {
     webBrowserPrint.print(printSettings, download);
   },
 
-  getPreferences: function getPreferences(aPrefNames) {
+  getPreferences: function getPreferences(aPrefsRequest, aListen) {
     try {
-      let json = JSON.parse(aPrefNames);
       let prefs = [];
 
-      for each (let prefName in json.preferences) {
+      for each (let prefName in aPrefsRequest.preferences) {
         let pref = {
           name: prefName
         };
+
+        if (aListen) {
+          if (this._prefObservers[prefName])
+            this._prefObservers[prefName].push(aPrefsRequest.requestId);
+          else
+            this._prefObservers[prefName] = [ aPrefsRequest.requestId ];
+          Services.prefs.addObserver(prefName, this, false);
+        }
 
         // The plugin pref is actually two separate prefs, so
         // we need to handle it differently
@@ -956,10 +966,33 @@ var BrowserApp = {
 
       sendMessageToJava({
         type: "Preferences:Data",
-        requestId: json.requestId,    // opaque request identifier, can be any string/int/whatever
+        requestId: aPrefsRequest.requestId,    // opaque request identifier, can be any string/int/whatever
         preferences: prefs
       });
-    } catch (e) {}
+
+    } catch (e) {
+      dump("Unhandled exception getting prefs: " + e);
+    }
+  },
+
+  removePreferenceObservers: function removePreferenceObservers(aRequestId) {
+    let newPrefObservers = [];
+    for (let prefName in this._prefObservers) {
+      let requestIds = this._prefObservers[prefName];
+      // Remove the requestID from the preference handlers
+      let i = requestIds.indexOf(aRequestId);
+      if (i >= 0) {
+        requestIds.splice(i, 1);
+      }
+
+      // If there are no more request IDs, remove the observer
+      if (requestIds.length == 0) {
+        Services.prefs.removeObserver(prefName, this);
+      } else {
+        newPrefObservers[prefName] = requestIds;
+      }
+    }
+    this._prefObservers = newPrefObservers;
   },
 
   setPreferences: function setPreferences(aPref) {
@@ -1185,11 +1218,19 @@ var BrowserApp = {
         break;
 
       case "Preferences:Get":
-        this.getPreferences(aData);
+        this.getPreferences(JSON.parse(aData));
         break;
 
       case "Preferences:Set":
         this.setPreferences(aData);
+        break;
+
+      case "Preferences:Observe":
+        this.getPreferences(JSON.parse(aData), true);
+        break;
+
+      case "Preferences:RemoveObservers":
+        this.removePreferenceObservers(aData);
         break;
 
       case "ScrollTo:FocusedInput":
@@ -1255,6 +1296,14 @@ var BrowserApp = {
 
       case "Viewport:FixedMarginsChanged":
         gViewportMargins = JSON.parse(aData);
+        break;
+
+      case "nsPref:changed":
+        for each (let requestId in this._prefObservers[aData]) {
+          let request = { requestId : requestId,
+                          preferences : [ aData ] };
+          this.getPreferences(request, false);
+        }
         break;
 
       default:
@@ -5709,30 +5758,32 @@ var PopupBlockerObserver = {
 
         let strings = Strings.browser;
         if (popupCount > 1)
-          message = strings.formatStringFromName("popupWarningMultiple", [brandShortName, popupCount], 2);
+          message = strings.formatStringFromName("popup.warningMultiple", [brandShortName, popupCount], 2);
         else
-          message = strings.formatStringFromName("popupWarning", [brandShortName], 1);
+          message = strings.formatStringFromName("popup.warning", [brandShortName], 1);
 
         let buttons = [
           {
-            label: strings.GetStringFromName("popupButtonAllowOnce"),
-            callback: function() { PopupBlockerObserver.showPopupsForSite(); }
-          },
-          {
-            label: strings.GetStringFromName("popupButtonAlwaysAllow2"),
-            callback: function() {
+            label: strings.GetStringFromName("popup.show"),
+            callback: function(aChecked) {
               // Set permission before opening popup windows
-              PopupBlockerObserver.allowPopupsForSite(true);
+              if (aChecked)
+                PopupBlockerObserver.allowPopupsForSite(true);
+
               PopupBlockerObserver.showPopupsForSite();
             }
           },
           {
-            label: strings.GetStringFromName("popupButtonNeverWarn2"),
-            callback: function() { PopupBlockerObserver.allowPopupsForSite(false); }
+            label: strings.GetStringFromName("popup.dontShow"),
+            callback: function(aChecked) {
+              if (aChecked)
+                PopupBlockerObserver.allowPopupsForSite(false);
+            }
           }
         ];
 
-        NativeWindow.doorhanger.show(message, "popup-blocked", buttons);
+        let options = { checkbox: Strings.browser.GetStringFromName("popup.dontAskAgain") };
+        NativeWindow.doorhanger.show(message, "popup-blocked", buttons, null, options);
       }
       // Record the fact that we've reported this blocked popup, so we don't
       // show it again.
@@ -5819,18 +5870,16 @@ var OfflineApps = {
       }
     },
     {
-      label: strings.GetStringFromName("offlineApps.never"),
-      callback: function() {
-        OfflineApps.disallowSite(aContentWindow.document);
+      label: strings.GetStringFromName("offlineApps.dontAllow2"),
+      callback: function(aChecked) {
+        if (aChecked)
+          OfflineApps.disallowSite(aContentWindow.document);
       }
-    },
-    {
-      label: strings.GetStringFromName("offlineApps.notNow"),
-      callback: function() { /* noop */ }
     }];
 
-    let message = strings.formatStringFromName("offlineApps.available2", [host], 1);
-    NativeWindow.doorhanger.show(message, notificationID, buttons, tab.id);
+    let message = strings.formatStringFromName("offlineApps.ask", [host], 1);
+    let options = { checkbox: Strings.browser.GetStringFromName("offlineApps.dontAskAgain") };
+    NativeWindow.doorhanger.show(message, notificationID, buttons, tab.id, options);
   },
 
   allowSite: function(aDocument) {
@@ -5901,7 +5950,7 @@ var IndexedDB = {
 
     let message, responseTopic;
     if (topic == this._permissionsPrompt) {
-      message = strings.formatStringFromName("offlineApps.available2", [host], 1);
+      message = strings.formatStringFromName("offlineApps.ask", [host], 1);
       responseTopic = this._permissionsResponse;
     } else if (topic == this._quotaPrompt) {
       message = strings.formatStringFromName("indexedDBQuota.wantsTo", [ host, data ], 2);
@@ -5949,21 +5998,16 @@ var IndexedDB = {
       }
     },
     {
-      label: strings.GetStringFromName("offlineApps.never"),
-      callback: function() {
+      label: strings.GetStringFromName("offlineApps.dontAllow2"),
+      callback: function(aChecked) {
         clearTimeout(timeoutId);
-        observer.observe(null, responseTopic, Ci.nsIPermissionManager.DENY_ACTION);
-      }
-    },
-    {
-      label: strings.GetStringFromName("offlineApps.notNow"),
-      callback: function() {
-        clearTimeout(timeoutId);
-        observer.observe(null, responseTopic, Ci.nsIPermissionManager.UNKNOWN_ACTION);
+        let action = aChecked ? Ci.nsIPermissionManager.DENY_ACTION : Ci.nsIPermissionManager.UNKNOWN_ACTION;
+        observer.observe(null, responseTopic, action);
       }
     }];
 
-    NativeWindow.doorhanger.show(message, notificationID, buttons, tab.id);
+    let options = { checkbox: Strings.browser.GetStringFromName("offlineApps.dontAskAgain") };
+    NativeWindow.doorhanger.show(message, notificationID, buttons, tab.id, options);
 
     // Set the timeoutId after the popup has been created, and use the long
     // timeout value. If the user doesn't notice the popup after this amount of
@@ -6230,11 +6274,11 @@ var PluginHelper = {
       return;
     }
 
-    let message = Strings.browser.formatStringFromName("clickToPlayPlugins.message1",
+    let message = Strings.browser.formatStringFromName("clickToPlayPlugins.message2",
                                                        [uri.host], 1);
     let buttons = [
       {
-        label: Strings.browser.GetStringFromName("clickToPlayPlugins.yes"),
+        label: Strings.browser.GetStringFromName("clickToPlayPlugins.activate"),
         callback: function(aChecked) {
           // If the user checked "Don't ask again", make a permanent exception
           if (aChecked)
@@ -6244,7 +6288,7 @@ var PluginHelper = {
         }
       },
       {
-        label: Strings.browser.GetStringFromName("clickToPlayPlugins.no"),
+        label: Strings.browser.GetStringFromName("clickToPlayPlugins.dontActivate"),
         callback: function(aChecked) {
           // If the user checked "Don't ask again", make a permanent exception
           if (aChecked)
@@ -6494,29 +6538,29 @@ var PermissionsHelper = {
                     "offline-app", "desktop-notification", "plugins", "native-intent"],
   _permissionStrings: {
     "password": {
-      label: "password.rememberPassword",
-      allowed: "password.remember",
-      denied: "password.never"
+      label: "password.savePassword",
+      allowed: "password.save",
+      denied: "password.dontSave"
     },
     "geolocation": {
       label: "geolocation.shareLocation",
-      allowed: "geolocation.alwaysAllow",
-      denied: "geolocation.neverAllow"
+      allowed: "geolocation.allow",
+      denied: "geolocation.dontAllow"
     },
     "popup": {
       label: "blockPopups.label",
-      allowed: "popupButtonAlwaysAllow2",
-      denied: "popupButtonNeverWarn2"
+      allowed: "popup.show",
+      denied: "popup.dontShow"
     },
     "indexedDB": {
       label: "offlineApps.storeOfflineData",
       allowed: "offlineApps.allow",
-      denied: "offlineApps.never"
+      denied: "offlineApps.dontAllow2"
     },
     "offline-app": {
       label: "offlineApps.storeOfflineData",
       allowed: "offlineApps.allow",
-      denied: "offlineApps.never"
+      denied: "offlineApps.dontAllow2"
     },
     "desktop-notification": {
       label: "desktopNotification.useNotifications",
@@ -6524,9 +6568,9 @@ var PermissionsHelper = {
       denied: "desktopNotification.dontAllow"
     },
     "plugins": {
-      label: "clickToPlayPlugins.playPlugins",
-      allowed: "clickToPlayPlugins.yes",
-      denied: "clickToPlayPlugins.no"
+      label: "clickToPlayPlugins.activatePlugins",
+      allowed: "clickToPlayPlugins.activate",
+      denied: "clickToPlayPlugins.dontActivate"
     },
     "native-intent": {
       label: "helperapps.openWithList2",
@@ -7675,14 +7719,14 @@ var Telemetry = {
                                                   [serverOwner, brandShortName], 2);
     buttons = [
       {
-        label: Strings.browser.GetStringFromName("telemetry.optin.yes"),
+        label: Strings.browser.GetStringFromName("telemetry.optin.send"),
         callback: function () {
           Services.prefs.setIntPref(self._PREF_TELEMETRY_DISPLAYED, self._TELEMETRY_DISPLAY_REV);
           Services.prefs.setBoolPref(self._PREF_TELEMETRY_ENABLED, true);
         }
       },
       {
-        label: Strings.browser.GetStringFromName("telemetry.optin.no"),
+        label: Strings.browser.GetStringFromName("telemetry.optin.dontSend"),
         callback: function () {
           Services.prefs.setIntPref(self._PREF_TELEMETRY_DISPLAYED, self._TELEMETRY_DISPLAY_REV);
           Services.prefs.setBoolPref(self._PREF_TELEMETRY_REJECTED, true);

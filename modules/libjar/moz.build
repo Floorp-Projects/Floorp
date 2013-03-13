@@ -7,3 +7,8 @@ if CONFIG['MOZ_ZIPWRITER']:
     DIRS += ['zipwriter']
 
 TEST_TOOL_DIRS += ['test']
+
+XPIDL_SOURCES += [
+    '$(MODULES_LIBJAR_LXPIDLSRCS)',
+]
+

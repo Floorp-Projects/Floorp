@@ -12,14 +12,4 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = pipboot
 GRE_MODULE	= 1
 
-SDK_XPIDLSRCS = \
-    nsISecurityWarningDialogs.idl \
-    $(NULL)
-
-XPIDLSRCS = \
-    nsISSLStatusProvider.idl \
-    nsIBufEntropyCollector.idl \
-    nsISecurityUITelemetry.idl \
-    $(NULL)
-
 include $(topsrcdir)/config/rules.mk

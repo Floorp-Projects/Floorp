@@ -11,6 +11,4 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE        = fuel
 
-XPIDLSRCS = fuelIApplication.idl
-
 include $(topsrcdir)/config/rules.mk

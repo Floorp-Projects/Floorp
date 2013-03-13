@@ -12,9 +12,5 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= profile
 
-XPIDLSRCS	= \
-	        nsIProfileUnlocker.idl \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

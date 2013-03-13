@@ -11,7 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = dom
 LIBRARY_NAME = dom_indexeddb_s
-XPIDL_MODULE = dom_indexeddb
 LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 ifndef _MSC_VER
@@ -79,27 +78,7 @@ DEFINES += -D_IMPL_NS_LAYOUT
 
 # Make sure to quickstub as much as possible here! See
 # js/xpconnect/src/dom_quickstubs.qsconf.
-XPIDLSRCS = \
-  nsIIDBCursor.idl \
-  nsIIDBCursorWithValue.idl \
-  nsIIDBDatabase.idl \
-  nsIIDBFactory.idl \
-  nsIIDBFileHandle.idl \
-  nsIIDBIndex.idl \
-  nsIIDBKeyRange.idl \
-  nsIIDBObjectStore.idl \
-  nsIIDBRequest.idl \
-  nsIIDBTransaction.idl \
-  nsIIDBVersionChangeEvent.idl \
-  nsIIDBOpenDBRequest.idl \
-  nsIIndexedDatabaseManager.idl \
-  $(NULL)
-
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
-XPIDL_FLAGS += \
-  -I$(topsrcdir)/dom/interfaces/base \
-  -I$(topsrcdir)/dom/interfaces/events \
-  $(NULL)

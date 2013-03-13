@@ -21,7 +21,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE           = dom
 LIBRARY_NAME     = domaudiochannel_s
-XPIDL_MODULE     = dom_audiochannel
 LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
@@ -43,11 +42,6 @@ CPPSRCS += \
   AudioChannelServiceChild.cpp \
   AudioChannelAgent.cpp \
   $(NULL)
-
-XPIDLSRCS = \
-  nsIAudioChannelAgent.idl \
-  $(NULL)
-
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

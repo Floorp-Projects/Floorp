@@ -13,3 +13,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+XPIDL_SOURCES += [
+    'nsIAudioManager.idl',
+    'nsINavigatorAudioChannelManager.idl',
+    'nsINetworkManager.idl',
+    'nsIRadioInterfaceLayer.idl',
+    'nsISystemWorkerManager.idl',
+    'nsIVolume.idl',
+    'nsIVolumeMountLock.idl',
+    'nsIVolumeService.idl',
+    'nsIVolumeStat.idl',
+    'nsIWorkerHolder.idl',
+]
+
+XPIDL_MODULE = 'dom_system_gonk'
+
+XPIDL_FLAGS += [
+    '-I$(topsrcdir)/dom/network/interfaces',
+]
+

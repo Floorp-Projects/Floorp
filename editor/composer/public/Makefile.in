@@ -12,9 +12,5 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= composer
 
-XPIDLSRCS	= \
-		nsIEditingSession.idl \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

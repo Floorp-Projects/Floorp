@@ -3,3 +3,30 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'nsIContentPolicy.idl',
+    'nsIContentSecurityPolicy.idl',
+    'nsIDOMDataChannel.idl',
+    'nsIDOMFile.idl',
+    'nsIDOMFileList.idl',
+    'nsIDOMFileReader.idl',
+    'nsIDOMFormData.idl',
+    'nsIDOMParser.idl',
+    'nsIDOMSerializer.idl',
+    'nsIDocumentEncoder.idl',
+    'nsIDroppedLinkHandler.idl',
+    'nsIFrameLoader.idl',
+    'nsIImageLoadingContent.idl',
+    'nsIMessageManager.idl',
+    'nsIObjectLoadingContent.idl',
+    'nsIScriptLoaderObserver.idl',
+    'nsISelection.idl',
+    'nsISelectionController.idl',
+    'nsISelectionDisplay.idl',
+    'nsISelectionListener.idl',
+    'nsISelectionPrivate.idl',
+    'nsIXMLHttpRequest.idl',
+]
+
+XPIDL_MODULE = 'content_base'
+

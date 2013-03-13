@@ -3,3 +3,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'nsIDOMMozSettingsEvent.idl',
+    'nsIDOMSettingsManager.idl',
+    'nsISettingsService.idl',
+]
+
+XPIDL_MODULE = 'dom_settings'
+
+XPIDL_FLAGS += [
+    '-I$(topsrcdir)/dom/interfaces/base',
+    '-I$(topsrcdir)/dom/interfaces/events',
+]
+
