@@ -3,111 +3,111 @@
 
 // Tests that the calllog commands works as they should
 
-let imported = {};
-Components.utils.import("resource:///modules/HUDService.jsm", imported);
+let HUDService = (Cu.import("resource:///modules/HUDService.jsm", {})).HUDService;
 
 const TEST_URI = "data:text/html;charset=utf-8,cmd-calllog-chrome";
 
+let tests = {};
+
 function test() {
-  DeveloperToolbarTest.test(TEST_URI, function CLCTest(browser, tab) {
-    testCallLogStatus();
-    testCallLogExec();
-  });
+  helpers.addTabWithToolbar(TEST_URI, function(options) {
+    return helpers.runTests(options, tests);
+  }).then(finish);
 }
 
-function testCallLogStatus() {
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "calllog",
-    status: "ERROR",
-    emptyParameters: [ " " ]
-  });
+tests.testCallLogStatus = function(options) {
+  return helpers.audit(options, [
+    {
+      setup: "calllog",
+      check: {
+        status: "ERROR",
+        emptyParameters: [ " " ]
+      }
+    },
+    {
+      setup: "calllog chromestop",
+      check: {
+        status: "VALID",
+        emptyParameters: [ " " ]
+      }
+    },
+    {
+      setup: "calllog chromestart content-variable window",
+      check: {
+        status: "VALID",
+        emptyParameters: [ " " ]
+      }
+    },
+    {
+      setup: "calllog chromestart javascript \"({a1: function() {this.a2()},a2: function() {}});\"",
+      check: {
+        status: "VALID",
+        emptyParameters: [ " " ]
+      }
+    },
+  ]);
+};
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "calllog chromestart content-variable window",
-    status: "VALID",
-    emptyParameters: [ " " ]
-  });
+tests.testCallLogExec = function(options) {
+  let deferred = Promise.defer();
 
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "calllog chromestop",
-    status: "VALID",
-    emptyParameters: [ " " ]
-  });
-
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "calllog chromestart chrome-variable window",
-    status: "VALID",
-    emptyParameters: [ " " ]
-  });
-
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "calllog chromestop",
-    status: "VALID",
-    emptyParameters: [ " " ]
-  });
-
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "calllog chromestart javascript \"({a1: function() {this.a2()}," +
-           "a2: function() {}});\"",
-    status: "VALID",
-    emptyParameters: [ " " ]
-  });
-
-  DeveloperToolbarTest.checkInputStatus({
-    typed: "calllog chromestop",
-    status: "VALID",
-    emptyParameters: [ " " ]
-  });
-}
-
-function testCallLogExec() {
-  DeveloperToolbarTest.exec({
-    typed: "calllog chromestop",
-    args: { },
-    outputMatch: /No call logging/,
-  });
-
-  function onWebConsoleOpen(aSubject) {
+  function onWebConsoleOpen(subject) {
     Services.obs.removeObserver(onWebConsoleOpen, "web-console-created");
 
-    aSubject.QueryInterface(Ci.nsISupportsString);
-    let hud = imported.HUDService.getHudReferenceById(aSubject.data);
-    ok(hud.hudId in imported.HUDService.hudReferences, "console open");
+    subject.QueryInterface(Ci.nsISupportsString);
+    let hud = HUDService.getHudReferenceById(subject.data);
+    ok(hud.hudId in HUDService.hudReferences, "console open");
 
-    DeveloperToolbarTest.exec({
-      typed: "calllog chromestop",
-      args: { },
-      outputMatch: /Stopped call logging/,
+    helpers.audit(options, [
+      {
+        setup: "calllog chromestop",
+        exec: {
+          output: /Stopped call logging/,
+        }
+      },
+      {
+        setup: "calllog chromestart javascript XXX",
+        exec: {
+          output: /following exception/,
+        }
+      },
+      {
+        setup: "console clear",
+        exec: {
+          output: '',
+        },
+        post: function() {
+          let labels = hud.jsterm.outputNode.querySelectorAll(".webconsole-msg-output");
+          is(labels.length, 0, "no output in console");
+        }
+      },
+      {
+        setup: "console close",
+        exec: {
+          output: '',
+          completed: false,
+        },
+      },
+    ]).then(function() {
+      deferred.resolve();
     });
-
-    DeveloperToolbarTest.exec({
-      typed: "calllog chromestart javascript XXX",
-      outputMatch: /following exception/,
-    });
-
-    DeveloperToolbarTest.exec({
-      typed: "console clear",
-      args: {},
-      blankOutput: true,
-    });
-
-    let labels = hud.jsterm.outputNode.querySelectorAll(".webconsole-msg-output");
-    is(labels.length, 0, "no output in console");
-
-    DeveloperToolbarTest.exec({
-      typed: "console close",
-      args: {},
-      blankOutput: true,
-      completed: false,
-    });
-
-    executeSoon(finish);
   }
   Services.obs.addObserver(onWebConsoleOpen, "web-console-created", false);
 
-  DeveloperToolbarTest.exec({
-    typed: "calllog chromestart javascript \"({a1: function() {this.a2()},a2: function() {}});\"",
-    outputMatch: /Call logging started/,
-    completed: false,
-  });
-}
+  helpers.audit(options, [
+    {
+      setup: "calllog chromestop",
+      exec: {
+        output: /No call logging/
+      }
+    },
+    {
+      setup: "calllog chromestart javascript \"({a1: function() {this.a2()},a2: function() {}});\"",
+      exec: {
+        output: /Call logging started/,
+      }
+    },
+  ]);
+
+  return deferred.promise;
+};

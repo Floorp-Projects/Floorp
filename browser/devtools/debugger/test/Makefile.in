@@ -11,6 +11,8 @@ relativesrcdir  = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_BROWSER_TESTS = \
+	$(browser_dbg_cmd_break.js disabled until bug 722727 is fixed) \
+	browser_dbg_cmd.js \
 	browser_dbg_aaa_run_first_leaktest.js \
 	browser_dbg_clean-exit.js \
 	browser_dbg_createChrome.js \
@@ -95,9 +97,12 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_progress-listener-bug.js \
 	browser_dbg_chrome-debugging.js \
 	head.js \
+	helpers.js \
 	$(NULL)
 
 MOCHITEST_BROWSER_PAGES = \
+	browser_dbg_cmd_break.html \
+	browser_dbg_cmd.html \
 	testactors.js \
 	browser_dbg_tab1.html \
 	browser_dbg_tab2.html \
