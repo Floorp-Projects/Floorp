@@ -26,506 +26,1298 @@ var exports = {};
 const TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testCli.js</p>";
 
 function test() {
-  var tests = Object.keys(exports);
-  // Push setup to the top and shutdown to the bottom
-  tests.sort(function(t1, t2) {
-    if (t1 == "setup" || t2 == "shutdown") return -1;
-    if (t2 == "setup" || t1 == "shutdown") return 1;
-    return 0;
-  });
-  info("Running tests: " + tests.join(", "))
-  tests = tests.map(function(test) { return exports[test]; });
-  DeveloperToolbarTest.test(TEST_URI, tests, true);
+  helpers.addTabWithToolbar(TEST_URI, function(options) {
+    return helpers.runTests(options, exports);
+  }).then(finish);
 }
 
 // <INJECTED SOURCE:END>
 
+'use strict';
 
-var Requisition = require('gcli/cli').Requisition;
-var Status = require('gcli/types').Status;
+// var helpers = require('gclitest/helpers');
 // var mockCommands = require('gclitest/mockCommands');
 
 // var assert = require('test/assert');
 
-exports.setup = function() {
+exports.setup = function(options) {
   mockCommands.setup();
 };
 
-exports.shutdown = function() {
+exports.shutdown = function(options) {
   mockCommands.shutdown();
 };
 
+exports.testBlank = function(options) {
+  var requisition = options.display.requisition;
 
-var assign1;
-var assign2;
-var assignC;
-var requ;
-var debug = false;
-var status;
-var statuses;
-
-function update(input) {
-  if (!requ) {
-    requ = new Requisition();
-  }
-  requ.update(input.typed);
-
-  if (debug) {
-    console.log('####### TEST: typed="' + input.typed +
-        '" cur=' + input.cursor.start +
-        ' cli=', requ);
-  }
-
-  status = requ.getStatus();
-  assignC = requ.getAssignmentAt(input.cursor.start);
-  statuses = requ.getInputStatusMarkup(input.cursor.start).map(function(s) {
-    return Array(s.string.length + 1).join(s.status.toString()[0]);
-  }).join('');
-
-  if (requ.commandAssignment.value) {
-    assign1 = requ.getAssignment(0);
-    assign2 = requ.getAssignment(1);
-  }
-  else {
-    assign1 = undefined;
-    assign2 = undefined;
-  }
-}
-
-function verifyPredictionsContains(name, predictions) {
-  return predictions.every(function(prediction) {
-    return name === prediction.name;
-  }, this);
-}
-
-
-exports.testBlank = function() {
-  update({ typed: '', cursor: { start: 0, end: 0 } });
-  assert.is(        '', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is(-1, assignC.paramIndex);
-  assert.is(undefined, requ.commandAssignment.value);
-
-  update({ typed: ' ', cursor: { start: 1, end: 1 } });
-  assert.is(        'V', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is(-1, assignC.paramIndex);
-  assert.is(undefined, requ.commandAssignment.value);
-
-  update({ typed: ' ', cursor: { start: 0, end: 0 } });
-  assert.is(        'V', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is(-1, assignC.paramIndex);
-  assert.is(undefined, requ.commandAssignment.value);
+  return helpers.audit(options, [
+    {
+      setup:    '',
+      check: {
+        input:  '',
+        hints:  '',
+        markup: '',
+        cursor: 0,
+        current: '__command',
+        status: 'ERROR'
+      },
+      post: function() {
+        assert.is(undefined, requisition.commandAssignment.value);
+      }
+    },
+    {
+      setup:    ' ',
+      check: {
+        input:  ' ',
+        hints:   '',
+        markup: 'V',
+        cursor: 1,
+        current: '__command',
+        status: 'ERROR'
+      },
+      post: function() {
+        assert.is(undefined, requisition.commandAssignment.value);
+      }
+    },
+    {
+      name: '| ',
+      setup: function() {
+        helpers.setInput(options, ' ', 0);
+      },
+      check: {
+        input:  ' ',
+        hints:   '',
+        markup: 'V',
+        cursor: 0,
+        current: '__command',
+        status: 'ERROR'
+      },
+      post: function() {
+        assert.is(undefined, requisition.commandAssignment.value);
+      }
+    }
+  ]);
 };
 
-exports.testIncompleteMultiMatch = function() {
-  update({ typed: 't', cursor: { start: 1, end: 1 } });
-  assert.is(        'I', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is(-1, assignC.paramIndex);
-  assert.ok(assignC.getPredictions().length > 0);
-  verifyPredictionsContains('tsv', assignC.getPredictions());
-  verifyPredictionsContains('tsr', assignC.getPredictions());
-  assert.is(undefined, requ.commandAssignment.value);
+exports.testIncompleteMultiMatch = function(options) {
+  return helpers.audit(options, [
+    {
+      setup:    't',
+      skipIf: options.isFirefox, // 't' hints at 'tilt' in firefox
+      check: {
+        input:  't',
+        hints:   'est',
+        markup: 'I',
+        cursor: 1,
+        current: '__command',
+        status: 'ERROR',
+        predictionsContains: [ 'tsb' ]
+      }
+    },
+    {
+      setup:    'tsn ex',
+      check: {
+        input:  'tsn ex',
+        hints:        't',
+        markup: 'IIIVII',
+        cursor: 6,
+        current: '__command',
+        status: 'ERROR',
+        predictionsContains: [
+          'tsn ext', 'tsn exte', 'tsn exten', 'tsn extend'
+        ]
+      }
+    }
+  ]);
 };
 
-exports.testIncompleteSingleMatch = function() {
-  update({ typed: 'tselar', cursor: { start: 6, end: 6 } });
-  assert.is(        'IIIIII', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is(-1, assignC.paramIndex);
-  assert.is(1, assignC.getPredictions().length);
-  assert.is('tselarr', assignC.getPredictions()[0].name);
-  assert.is(undefined, requ.commandAssignment.value);
+exports.testIncompleteSingleMatch = function(options) {
+  return helpers.audit(options, [
+    {
+      setup:    'tselar',
+      check: {
+        input:  'tselar',
+        hints:        'r',
+        markup: 'IIIIII',
+        cursor: 6,
+        current: '__command',
+        status: 'ERROR',
+        predictions: [ 'tselarr' ],
+        unassigned: [ ]
+      }
+    }
+  ]);
 };
 
-exports.testTsv = function() {
-  update({ typed: 'tsv', cursor: { start: 3, end: 3 } });
-  assert.is(        'VVV', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is(-1, assignC.paramIndex);
-  assert.is('tsv', requ.commandAssignment.value.name);
-
-  update({ typed: 'tsv ', cursor: { start: 4, end: 4 } });
-  assert.is(        'VVVV', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is(0, assignC.paramIndex);
-  assert.is('tsv', requ.commandAssignment.value.name);
-
-  update({ typed: 'tsv ', cursor: { start: 2, end: 2 } });
-  assert.is(        'VVVV', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is(-1, assignC.paramIndex);
-  assert.is('tsv', requ.commandAssignment.value.name);
-
-  update({ typed: 'tsv o', cursor: { start: 5, end: 5 } });
-  assert.is(        'VVVVI', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is(0, assignC.paramIndex);
-  assert.ok(assignC.getPredictions().length >= 2);
-  assert.is(mockCommands.option1, assignC.getPredictions()[0].value);
-  assert.is(mockCommands.option2, assignC.getPredictions()[1].value);
-  assert.is('tsv', requ.commandAssignment.value.name);
-  assert.is('o', assign1.arg.text);
-  assert.is(undefined, assign1.value);
-
-  update({ typed: 'tsv option', cursor: { start: 10, end: 10 } });
-  assert.is(        'VVVVIIIIII', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is(0, assignC.paramIndex);
-  assert.ok(assignC.getPredictions().length >= 2);
-  assert.is(mockCommands.option1, assignC.getPredictions()[0].value);
-  assert.is(mockCommands.option2, assignC.getPredictions()[1].value);
-  assert.is('tsv', requ.commandAssignment.value.name);
-  assert.is('option', assign1.arg.text);
-  assert.is(undefined, assign1.value);
-
-  update({ typed: 'tsv option', cursor: { start: 1, end: 1 } });
-  assert.is(        'VVVVEEEEEE', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is(-1, assignC.paramIndex);
-  assert.is('tsv', requ.commandAssignment.value.name);
-  assert.is('option', assign1.arg.text);
-  assert.is(undefined, assign1.value);
-
-  update({ typed: 'tsv option ', cursor: { start: 11, end: 11 } });
-  assert.is(        'VVVVEEEEEEV', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is(1, assignC.paramIndex);
-  assert.is(0, assignC.getPredictions().length);
-  assert.is('tsv', requ.commandAssignment.value.name);
-  assert.is('option', assign1.arg.text);
-  assert.is(undefined, assign1.value);
-
-  update({ typed: 'tsv option1', cursor: { start: 11, end: 11 } });
-  assert.is(        'VVVVVVVVVVV', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tsv', requ.commandAssignment.value.name);
-  assert.is('option1', assign1.arg.text);
-  assert.is(mockCommands.option1, assign1.value);
-  assert.is(0, assignC.paramIndex);
-
-  update({ typed: 'tsv option1 ', cursor: { start: 12, end: 12 } });
-  assert.is(        'VVVVVVVVVVVV', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tsv', requ.commandAssignment.value.name);
-  assert.is('option1', assign1.arg.text);
-  assert.is(mockCommands.option1, assign1.value);
-  assert.is(1, assignC.paramIndex);
-
-  update({ typed: 'tsv option1 6', cursor: { start: 13, end: 13 } });
-  assert.is(        'VVVVVVVVVVVVV', statuses);
-  assert.is(Status.VALID, status);
-  assert.is('tsv', requ.commandAssignment.value.name);
-  assert.is('option1', assign1.arg.text);
-  assert.is(mockCommands.option1, assign1.value);
-  assert.is('6', assign2.arg.text);
-  assert.is('6', assign2.value);
-  assert.is('string', typeof assign2.value);
-  assert.is(1, assignC.paramIndex);
-
-  update({ typed: 'tsv option2 6', cursor: { start: 13, end: 13 } });
-  assert.is(        'VVVVVVVVVVVVV', statuses);
-  assert.is(Status.VALID, status);
-  assert.is('tsv', requ.commandAssignment.value.name);
-  assert.is('option2', assign1.arg.text);
-  assert.is(mockCommands.option2, assign1.value);
-  assert.is('6', assign2.arg.text);
-  assert.is(6, assign2.value);
-  assert.is('number', typeof assign2.value);
-  assert.is(1, assignC.paramIndex);
+exports.testTsv = function(options) {
+  return helpers.audit(options, [
+    {
+      setup:    'tsv',
+      check: {
+        input:  'tsv',
+        hints:     ' <optionType> <optionValue>',
+        markup: 'VVV',
+        cursor: 3,
+        current: '__command',
+        status: 'ERROR',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsv' },
+          optionType: { arg: '', status: 'INCOMPLETE', message: '' },
+          optionValue: { arg: '', status: 'INCOMPLETE', message: '' }
+        }
+      }
+    },
+    {
+      setup:    'tsv ',
+      check: {
+        input:  'tsv ',
+        hints:      'option1 <optionValue>',
+        markup: 'VVVV',
+        cursor: 4,
+        current: 'optionType',
+        status: 'ERROR',
+        predictions: [ 'option1', 'option2' ],
+        unassigned: [ ],
+        tooltipState: 'true:importantFieldFlag',
+        args: {
+          command: { name: 'tsv' },
+          optionType: { arg: '', status: 'INCOMPLETE', message: '' },
+          optionValue: { arg: '', status: 'INCOMPLETE', message: '' }
+        }
+      }
+    },
+    {
+      name: 'ts|v',
+      setup: function() {
+        helpers.setInput(options, 'tsv ', 2);
+      },
+      check: {
+        input:  'tsv ',
+        hints:      '<optionType> <optionValue>',
+        markup: 'VVVV',
+        cursor: 2,
+        current: '__command',
+        status: 'ERROR',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsv' },
+          optionType: { arg: '', status: 'INCOMPLETE', message: '' },
+          optionValue: { arg: '', status: 'INCOMPLETE', message: '' }
+        }
+      }
+    },
+    {
+      setup:    'tsv o',
+      check: {
+        input:  'tsv o',
+        hints:       'ption1 <optionValue>',
+        markup: 'VVVVI',
+        cursor: 5,
+        current: 'optionType',
+        status: 'ERROR',
+        predictions: [ 'option1', 'option2' ],
+        unassigned: [ ],
+        tooltipState: 'true:importantFieldFlag',
+        args: {
+          command: { name: 'tsv' },
+          optionType: {
+            value: undefined,
+            arg: ' o',
+            status: 'INCOMPLETE',
+            message: ''
+          },
+          optionValue: {
+            value: undefined,
+            arg: '',
+            status: 'INCOMPLETE',
+            message: ''
+          }
+        }
+      }
+    },
+    {
+      setup:    'tsv option',
+      check: {
+        input:  'tsv option',
+        hints:            '1 <optionValue>',
+        markup: 'VVVVIIIIII',
+        cursor: 10,
+        current: 'optionType',
+        status: 'ERROR',
+        predictions: [ 'option1', 'option2' ],
+        unassigned: [ ],
+        tooltipState: 'true:importantFieldFlag',
+        args: {
+          command: { name: 'tsv' },
+          optionType: {
+            value: undefined,
+            arg: ' option',
+            status: 'INCOMPLETE',
+            message: ''
+          },
+          optionValue: {
+            value: undefined,
+            arg: '',
+            status: 'INCOMPLETE',
+            message: ''
+          }
+        }
+      }
+    },
+    {
+      name: '|tsv option',
+      setup: function() {
+        return helpers.setInput(options, 'tsv option', 0);
+      },
+      check: {
+        input:  'tsv option',
+        hints:            ' <optionValue>',
+        markup: 'VVVVEEEEEE',
+        cursor: 0,
+        current: '__command',
+        status: 'ERROR',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsv' },
+          optionType: {
+            value: undefined,
+            arg: ' option',
+            status: 'INCOMPLETE',
+            message: ''
+          },
+          optionValue: {
+            value: undefined,
+            arg: '',
+            status: 'INCOMPLETE',
+            message: ''
+          }
+        }
+      }
+    },
+    {
+      setup:    'tsv option ',
+      check: {
+        input:  'tsv option ',
+        hints:             '<optionValue>',
+        markup: 'VVVVEEEEEEV',
+        cursor: 11,
+        current: 'optionValue',
+        status: 'ERROR',
+        predictions: [ ],
+        unassigned: [ ],
+        tooltipState: 'true:isError',
+        args: {
+          command: { name: 'tsv' },
+          optionType: {
+            value: undefined,
+            arg: ' option ',
+            status: 'ERROR',
+            message: 'Can\'t use \'option\'.'
+          },
+          optionValue: {
+            value: undefined,
+            arg: '',
+            status: 'INCOMPLETE',
+            message: ''
+          }
+        }
+      }
+    },
+    {
+      setup:    'tsv option1',
+      check: {
+        input:  'tsv option1',
+        hints:             ' <optionValue>',
+        markup: 'VVVVVVVVVVV',
+        cursor: 11,
+        current: 'optionType',
+        status: 'ERROR',
+        predictions: [ 'option1' ],
+        unassigned: [ ],
+        tooltipState: 'true:importantFieldFlag',
+        args: {
+          command: { name: 'tsv' },
+          optionType: {
+            value: mockCommands.option1,
+            arg: ' option1',
+            status: 'VALID',
+            message: ''
+          },
+          optionValue: {
+            value: undefined,
+            arg: '',
+            status: 'INCOMPLETE',
+            message: ''
+          }
+        }
+      }
+    },
+    {
+      setup:    'tsv option1 ',
+      check: {
+        input:  'tsv option1 ',
+        hints:              '<optionValue>',
+        markup: 'VVVVVVVVVVVV',
+        cursor: 12,
+        current: 'optionValue',
+        status: 'ERROR',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsv' },
+          optionType: {
+            value: mockCommands.option1,
+            arg: ' option1 ',
+            status: 'VALID',
+            message: ''
+          },
+          optionValue: {
+            value: undefined,
+            arg: '',
+            status: 'INCOMPLETE',
+            message: ''
+          }
+        }
+      }
+    },
+    {
+      setup:    'tsv option2',
+      check: {
+        input:  'tsv option2',
+        hints:             ' <optionValue>',
+        markup: 'VVVVVVVVVVV',
+        cursor: 11,
+        current: 'optionType',
+        status: 'ERROR',
+        predictions: [ 'option2' ],
+        unassigned: [ ],
+        tooltipState: 'true:importantFieldFlag',
+        args: {
+          command: { name: 'tsv' },
+          optionType: {
+            value: mockCommands.option2,
+            arg: ' option2',
+            status: 'VALID',
+            message: ''
+          },
+          optionValue: {
+            value: undefined,
+            arg: '',
+            status: 'INCOMPLETE',
+            message: ''
+          }
+        }
+      }
+    },
+    {
+      setup:    'tsv option1 6',
+      check: {
+        input:  'tsv option1 6',
+        hints:               '',
+        markup: 'VVVVVVVVVVVVV',
+        cursor: 13,
+        current: 'optionValue',
+        status: 'VALID',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsv' },
+          optionType: {
+            value: mockCommands.option1,
+            arg: ' option1',
+            status: 'VALID',
+            message: ''
+          },
+          optionValue: {
+            value: '6',
+            arg: ' 6',
+            status: 'VALID',
+            message: ''
+          }
+        }
+      }
+    },
+    {
+      setup:    'tsv option2 6',
+      check: {
+        input:  'tsv option2 6',
+        hints:               '',
+        markup: 'VVVVVVVVVVVVV',
+        cursor: 13,
+        current: 'optionValue',
+        status: 'VALID',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsv' },
+          optionType: {
+            value: mockCommands.option2,
+            arg: ' option2',
+            status: 'VALID',
+            message: ''
+          },
+          optionValue: {
+            value: 6,
+            arg: ' 6',
+            status: 'VALID',
+            message: ''
+          }
+        }
+      }
+    }
+  ]);
 };
 
-exports.testInvalid = function() {
-  update({ typed: 'zxjq', cursor: { start: 4, end: 4 } });
-  assert.is(        'EEEE', statuses);
-  assert.is('zxjq', requ.commandAssignment.arg.text);
-  assert.is(0, requ._unassigned.length);
-  assert.is(-1, assignC.paramIndex);
-
-  update({ typed: 'zxjq ', cursor: { start: 5, end: 5 } });
-  assert.is(        'EEEEV', statuses);
-  assert.is('zxjq', requ.commandAssignment.arg.text);
-  assert.is(0, requ._unassigned.length);
-  assert.is(-1, assignC.paramIndex);
-
-  update({ typed: 'zxjq one', cursor: { start: 8, end: 8 } });
-  assert.is(        'EEEEVEEE', statuses);
-  assert.is('zxjq', requ.commandAssignment.arg.text);
-  assert.is(1, requ._unassigned.length);
-  assert.is('one', requ._unassigned[0].arg.text);
+exports.testInvalid = function(options) {
+  return helpers.audit(options, [
+    {
+      setup:    'zxjq',
+      check: {
+        input:  'zxjq',
+        hints:      '',
+        markup: 'EEEE',
+        cursor: 4,
+        current: '__command',
+        status: 'ERROR',
+        predictions: [ ],
+        unassigned: [ ],
+        tooltipState: 'true:isError'
+      }
+    },
+    {
+      setup:    'zxjq ',
+      check: {
+        input:  'zxjq ',
+        hints:       '',
+        markup: 'EEEEV',
+        cursor: 5,
+        current: '__command',
+        status: 'ERROR',
+        predictions: [ ],
+        unassigned: [ ],
+        tooltipState: 'true:isError'
+      }
+    },
+    {
+      setup:    'zxjq one',
+      check: {
+        input:  'zxjq one',
+        hints:          '',
+        markup: 'EEEEVEEE',
+        cursor: 8,
+        current: '__unassigned',
+        status: 'ERROR',
+        predictions: [ ],
+        unassigned: [ ' one' ],
+        tooltipState: 'true:isError'
+      }
+    }
+  ]);
 };
 
-exports.testSingleString = function() {
-  update({ typed: 'tsr', cursor: { start: 3, end: 3 } });
-  assert.is(        'VVV', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tsr', requ.commandAssignment.value.name);
-  assert.ok(assign1.arg.type === 'BlankArgument');
-  assert.is(undefined, assign1.value);
-  assert.is(undefined, assign2);
-
-  update({ typed: 'tsr ', cursor: { start: 4, end: 4 } });
-  assert.is(        'VVVV', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tsr', requ.commandAssignment.value.name);
-  assert.ok(assign1.arg.type === 'BlankArgument');
-  assert.is(undefined, assign1.value);
-  assert.is(undefined, assign2);
-
-  update({ typed: 'tsr h', cursor: { start: 5, end: 5 } });
-  assert.is(        'VVVVV', statuses);
-  assert.is(Status.VALID, status);
-  assert.is('tsr', requ.commandAssignment.value.name);
-  assert.is('h', assign1.arg.text);
-  assert.is('h', assign1.value);
-
-  update({ typed: 'tsr "h h"', cursor: { start: 9, end: 9 } });
-  assert.is(        'VVVVVVVVV', statuses);
-  assert.is(Status.VALID, status);
-  assert.is('tsr', requ.commandAssignment.value.name);
-  assert.is('h h', assign1.arg.text);
-  assert.is('h h', assign1.value);
-
-  update({ typed: 'tsr h h h', cursor: { start: 9, end: 9 } });
-  assert.is(        'VVVVVVVVV', statuses);
-  assert.is('tsr', requ.commandAssignment.value.name);
-  assert.is('h h h', assign1.arg.text);
-  assert.is('h h h', assign1.value);
+exports.testSingleString = function(options) {
+  return helpers.audit(options, [
+    {
+      setup:    'tsr',
+      check: {
+        input:  'tsr',
+        hints:     ' <text>',
+        markup: 'VVV',
+        cursor: 3,
+        current: '__command',
+        status: 'ERROR',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsr' },
+          text: {
+            value: undefined,
+            arg: '',
+            status: 'INCOMPLETE',
+            message: ''
+          }
+        }
+      }
+    },
+    {
+      setup:    'tsr ',
+      check: {
+        input:  'tsr ',
+        hints:      '<text>',
+        markup: 'VVVV',
+        cursor: 4,
+        current: 'text',
+        status: 'ERROR',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsr' },
+          text: {
+            value: undefined,
+            arg: '',
+            status: 'INCOMPLETE',
+            message: ''
+          }
+        }
+      }
+    },
+    {
+      setup:    'tsr h',
+      check: {
+        input:  'tsr h',
+        hints:       '',
+        markup: 'VVVVV',
+        cursor: 5,
+        current: 'text',
+        status: 'VALID',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsr' },
+          text: {
+            value: 'h',
+            arg: ' h',
+            status: 'VALID',
+            message: ''
+          }
+        }
+      }
+    },
+    {
+      setup:    'tsr "h h"',
+      check: {
+        input:  'tsr "h h"',
+        hints:           '',
+        markup: 'VVVVVVVVV',
+        cursor: 9,
+        current: 'text',
+        status: 'VALID',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsr' },
+          text: {
+            value: 'h h',
+            arg: ' "h h"',
+            status: 'VALID',
+            message: ''
+          }
+        }
+      }
+    },
+    {
+      setup:    'tsr h h h',
+      check: {
+        input:  'tsr h h h',
+        hints:           '',
+        markup: 'VVVVVVVVV',
+        cursor: 9,
+        current: 'text',
+        status: 'VALID',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsr' },
+          text: {
+            value: 'h h h',
+            arg: ' h h h',
+            status: 'VALID',
+            message: ''
+          }
+        }
+      }
+    }
+  ]);
 };
 
-exports.testSingleNumber = function() {
-  update({ typed: 'tsu', cursor: { start: 3, end: 3 } });
-  assert.is(        'VVV', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tsu', requ.commandAssignment.value.name);
-  assert.is('', assign1.arg.text);
-  assert.is(undefined, assign1.value);
-
-  update({ typed: 'tsu ', cursor: { start: 4, end: 4 } });
-  assert.is(        'VVVV', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tsu', requ.commandAssignment.value.name);
-  assert.is('', assign1.arg.text);
-  assert.is(undefined, assign1.value);
-
-  update({ typed: 'tsu 1', cursor: { start: 5, end: 5 } });
-  assert.is(        'VVVVV', statuses);
-  assert.is(Status.VALID, status);
-  assert.is('tsu', requ.commandAssignment.value.name);
-  assert.is('1', assign1.arg.text);
-  assert.is(1, assign1.value);
-  assert.is('number', typeof assign1.value);
-
-  update({ typed: 'tsu x', cursor: { start: 5, end: 5 } });
-  assert.is(        'VVVVE', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tsu', requ.commandAssignment.value.name);
-  assert.is('x', assign1.arg.text);
-  assert.is(undefined, assign1.value);
-
-  update({ typed: 'tsu 1.5', cursor: { start: 7, end: 7 } });
-  assert.is(        'VVVVEEE', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tsu', requ.commandAssignment.value.name);
-  assert.is('1.5', assign1.arg.text);
-  assert.is(undefined, assign1.value);
+exports.testSingleNumber = function(options) {
+  return helpers.audit(options, [
+    {
+      setup:    'tsu',
+      check: {
+        input:  'tsu',
+        hints:     ' <num>',
+        markup: 'VVV',
+        cursor: 3,
+        current: '__command',
+        status: 'ERROR',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsu' },
+          num: {
+            value: undefined,
+            arg: '',
+            status: 'INCOMPLETE',
+            message: ''
+          }
+        }
+      }
+    },
+    {
+      setup:    'tsu ',
+      check: {
+        input:  'tsu ',
+        hints:      '<num>',
+        markup: 'VVVV',
+        cursor: 4,
+        current: 'num',
+        status: 'ERROR',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsu' },
+          num: {
+            value: undefined,
+            arg: '',
+            status: 'INCOMPLETE',
+            message: ''
+          }
+        }
+      }
+    },
+    {
+      setup:    'tsu 1',
+      check: {
+        input:  'tsu 1',
+        hints:       '',
+        markup: 'VVVVV',
+        cursor: 5,
+        current: 'num',
+        status: 'VALID',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsu' },
+          num: { value: 1, arg: ' 1', status: 'VALID', message: '' }
+        }
+      }
+    },
+    {
+      setup:    'tsu x',
+      check: {
+        input:  'tsu x',
+        hints:       '',
+        markup: 'VVVVE',
+        cursor: 5,
+        current: 'num',
+        status: 'ERROR',
+        predictions: [ ],
+        unassigned: [ ],
+        tooltipState: 'true:isError',
+        args: {
+          command: { name: 'tsu' },
+          num: {
+            value: undefined,
+            arg: ' x',
+            status: 'ERROR',
+            message: 'Can\'t convert "x" to a number.'
+          }
+        }
+      }
+    },
+    {
+      setup:    'tsu 1.5',
+      check: {
+        input:  'tsu 1.5',
+        hints:       '',
+        markup: 'VVVVEEE',
+        cursor: 7,
+        current: 'num',
+        status: 'ERROR',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsu' },
+          num: {
+            value: undefined,
+            arg: ' 1.5',
+            status: 'ERROR',
+            message: 'Can\'t convert "1.5" to an integer.'
+          }
+        }
+      }
+    }
+  ]);
 };
 
-exports.testSingleFloat = function() {
-  update({ typed: 'tsf', cursor: { start: 3, end: 3 } });
-  assert.is(        'VVV', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tsf', requ.commandAssignment.value.name);
-  assert.is('', assign1.arg.text);
-  assert.is(undefined, assign1.value);
+exports.testSingleFloat = function(options) {
+  return helpers.audit(options, [
+    {
+      setup:    'tsf',
+      check: {
+        input:  'tsf',
+        hints:     ' <num>',
+        markup: 'VVV',
+        cursor: 3,
+        current: '__command',
+        status: 'ERROR',
+        error: '',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsf' },
+          num: {
+            value: undefined,
+            arg: '',
+            status: 'INCOMPLETE',
+            message: ''
+          }
+        }
+      }
+    },
+    {
+      setup:    'tsf 1',
+      check: {
+        input:  'tsf 1',
+        hints:       '',
+        markup: 'VVVVV',
+        cursor: 5,
+        current: 'num',
+        status: 'VALID',
+        error: '',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsf' },
+          num: { value: 1, arg: ' 1', status: 'VALID', message: '' }
+        }
+      }
+    },
+    {
+      setup:    'tsf 1.',
+      check: {
+        input:  'tsf 1.',
+        hints:        '',
+        markup: 'VVVVVV',
+        cursor: 6,
+        current: 'num',
+        status: 'VALID',
+        error: '',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsf' },
+          num: { value: 1, arg: ' 1.', status: 'VALID', message: '' }
+        }
+      }
+    },
+    {
+      setup:    'tsf 1.5',
+      check: {
+        input:  'tsf 1.5',
+        hints:         '',
+        markup: 'VVVVVVV',
+        cursor: 7,
+        current: 'num',
+        status: 'VALID',
+        error: '',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsf' },
+          num: { value: 1.5, arg: ' 1.5', status: 'VALID', message: '' }
+        }
+      }
+    },
+    {
+      setup:    'tsf 1.5x',
+      check: {
+        input:  'tsf 1.5x',
+        hints:          '',
+        markup: 'VVVVVVVV',
+        cursor: 8,
+        current: 'num',
+        status: 'VALID',
+        error: '',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsf' },
+          num: { value: 1.5, arg: ' 1.5x', status: 'VALID', message: '' }
+        }
+      }
+    },
+    {
+      name: 'tsf x (cursor=4)',
+      setup: function() {
+        return helpers.setInput(options, 'tsf x', 4);
+      },
+      check: {
+        input:  'tsf x',
+        hints:       '',
+        markup: 'VVVVE',
+        cursor: 4,
+        current: 'num',
+        status: 'ERROR',
+        error: 'Can\'t convert "x" to a number.',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsf' },
+          num: {
+            value: undefined,
+            arg: ' x',
+            status: 'ERROR',
+            message: 'Can\'t convert "x" to a number.'
+          }
+        }
+      }
+    }
+  ]);
+};
 
-  update({ typed: 'tsf ', cursor: { start: 4, end: 4 } });
-  assert.is(        'VVVV', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tsf', requ.commandAssignment.value.name);
-  assert.is('', assign1.arg.text);
-  assert.is(undefined, assign1.value);
+exports.testElementDom = function(options) {
+  return helpers.audit(options, [
+    {
+      skipIf: options.isJsdom,
+      setup:    'tse :root',
+      check: {
+        input:  'tse :root',
+        hints:           ' [options]',
+        markup: 'VVVVVVVVV',
+        cursor: 9,
+        current: 'node',
+        status: 'VALID',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tse' },
+          node: {
+            value: options.window.document.documentElement,
+            arg: ' :root',
+            status: 'VALID',
+            message: ''
+          },
+          nodes: { arg: '', status: 'VALID', message: '' },
+          nodes2: { arg: '', status: 'VALID', message: '' },
+        }
+      }
+    }
+  ]);
+};
 
-  update({ typed: 'tsf 1', cursor: { start: 5, end: 5 } });
-  assert.is(        'VVVVV', statuses);
-  assert.is(Status.VALID, status);
-  assert.is('tsf', requ.commandAssignment.value.name);
-  assert.is('1', assign1.arg.text);
-  assert.is(1, assign1.value);
-  assert.is('number', typeof assign1.value);
+exports.testElementWeb = function(options) {
+  var inputElement = options.window.document.getElementById('gcli-input');
 
-  update({ typed: 'tsf x', cursor: { start: 5, end: 5 } });
-  assert.is(        'VVVVE', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tsf', requ.commandAssignment.value.name);
-  assert.is('x', assign1.arg.text);
-  assert.is(undefined, assign1.value);
-
-  update({ typed: 'tsf 1.5', cursor: { start: 7, end: 7 } });
-  assert.is(        'VVVVVVV', statuses);
-  assert.is(Status.VALID, status);
-  assert.is('tsf', requ.commandAssignment.value.name);
-  assert.is('1.5', assign1.arg.text);
-  assert.is(1.5, assign1.value);
-  assert.is('number', typeof assign1.value);
+  return helpers.audit(options, [
+    {
+      skipIf: function gcliInputElementExists() {
+        return inputElement == null || options.isJsdom;
+      },
+      setup:    'tse #gcli-input',
+      check: {
+        input:  'tse #gcli-input',
+        hints:                 ' [options]',
+        markup: 'VVVVVVVVVVVVVVV',
+        cursor: 15,
+        current: 'node',
+        status: 'VALID',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tse' },
+          node: {
+            value: inputElement,
+            arg: ' #gcli-input',
+            status: 'VALID',
+            message: ''
+          },
+          nodes: { arg: '', status: 'VALID', message: '' },
+          nodes2: { arg: '', status: 'VALID', message: '' },
+        }
+      }
+    }
+  ]);
 };
 
 exports.testElement = function(options) {
-  update({ typed: 'tse', cursor: { start: 3, end: 3 } });
-  assert.is(        'VVV', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tse', requ.commandAssignment.value.name);
-  assert.ok(assign1.arg.type === 'BlankArgument');
-  assert.is(undefined, assign1.value);
-
-  if (!options.isJsdom) {
-    update({ typed: 'tse :root', cursor: { start: 9, end: 9 } });
-    assert.is(        'VVVVVVVVV', statuses);
-    assert.is(Status.VALID, status);
-    assert.is('tse', requ.commandAssignment.value.name);
-    assert.is(':root', assign1.arg.text);
-    assert.is(options.window.document.documentElement, assign1.value);
-
-    var inputElement = options.window.document.getElementById('gcli-input');
-    if (inputElement) {
-      update({ typed: 'tse #gcli-input', cursor: { start: 15, end: 15 } });
-      assert.is(        'VVVVVVVVVVVVVVV', statuses);
-      assert.is(Status.VALID, status);
-      assert.is('tse', requ.commandAssignment.value.name);
-      assert.is('#gcli-input', assign1.arg.text);
-      assert.is(inputElement, assign1.value);
+  return helpers.audit(options, [
+    {
+      setup:    'tse',
+      check: {
+        input:  'tse',
+        hints:     ' <node> [options]',
+        markup: 'VVV',
+        cursor: 3,
+        current: '__command',
+        status: 'ERROR',
+        predictions: [ 'tse', 'tselarr' ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tse' },
+          node: { value: undefined, arg: '', status: 'INCOMPLETE', message: '' },
+          nodes: { arg: '', status: 'VALID', message: '' },
+          nodes2: { arg: '', status: 'VALID', message: '' },
+        }
+      }
+    },
+    {
+      skipIf: options.isJsdom,
+      setup:    'tse #gcli-nomatch',
+      check: {
+        input:  'tse #gcli-nomatch',
+        hints:                   ' [options]',
+        markup: 'VVVVIIIIIIIIIIIII',
+        cursor: 17,
+        current: 'node',
+        status: 'ERROR',
+        predictions: [ ],
+        unassigned: [ ],
+        outputState: 'false:default',
+        tooltipState: 'true:isError',
+        args: {
+          command: { name: 'tse' },
+          node: {
+            value: undefined,
+            arg: ' #gcli-nomatch',
+            // This is somewhat debatable because this input can't be corrected
+            // simply by typing so it's and error rather than incomplete,
+            // however without digging into the CSS engine we can't tell that
+            // so we default to incomplete
+            status: 'INCOMPLETE',
+            message: 'No matches'
+          },
+          nodes: { arg: '', status: 'VALID', message: '' },
+          nodes2: { arg: '', status: 'VALID', message: '' },
+        }
+      }
+    },
+    {
+      setup:    'tse #',
+      check: {
+        input:  'tse #',
+        hints:       ' [options]',
+        markup: 'VVVVE',
+        cursor: 5,
+        current: 'node',
+        status: 'ERROR',
+        predictions: [ ],
+        unassigned: [ ],
+        tooltipState: 'true:isError',
+        args: {
+          command: { name: 'tse' },
+          node: {
+            value: undefined,
+            arg: ' #',
+            status: 'ERROR',
+            message: 'Syntax error in CSS query'
+          },
+          nodes: { arg: '', status: 'VALID', message: '' },
+          nodes2: { arg: '', status: 'VALID', message: '' },
+        }
+      }
+    },
+    {
+      setup:    'tse .',
+      check: {
+        input:  'tse .',
+        hints:       ' [options]',
+        markup: 'VVVVE',
+        cursor: 5,
+        current: 'node',
+        status: 'ERROR',
+        predictions: [ ],
+        unassigned: [ ],
+        tooltipState: 'true:isError',
+        args: {
+          command: { name: 'tse' },
+          node: {
+            value: undefined,
+            arg: ' .',
+            status: 'ERROR',
+            message: 'Syntax error in CSS query'
+          },
+          nodes: { arg: '', status: 'VALID', message: '' },
+          nodes2: { arg: '', status: 'VALID', message: '' },
+        }
+      }
+    },
+    {
+      skipIf: options.isJsdom,
+      setup:    'tse *',
+      check: {
+        input:  'tse *',
+        hints:       ' [options]',
+        markup: 'VVVVE',
+        cursor: 5,
+        current: 'node',
+        status: 'ERROR',
+        predictions: [ ],
+        unassigned: [ ],
+        tooltipState: 'true:isError',
+        args: {
+          command: { name: 'tse' },
+          node: {
+            value: undefined,
+            arg: ' *',
+            status: 'ERROR',
+            message: /^Too many matches \([0-9]*\)/
+          },
+          nodes: { arg: '', status: 'VALID', message: '' },
+          nodes2: { arg: '', status: 'VALID', message: '' },
+        }
+      }
     }
-    else {
-      assert.log('Skipping test that assumes gcli on the web');
-    }
-
-    update({ typed: 'tse #gcli-nomatch', cursor: { start: 17, end: 17 } });
-    // This is somewhat debatable because this input can't be corrected simply
-    // by typing so it's and error rather than incomplete, however without
-    // digging into the CSS engine we can't tell that so we default to incomplete
-    assert.is(        'VVVVIIIIIIIIIIIII', statuses);
-    assert.is(Status.ERROR, status);
-    assert.is('tse', requ.commandAssignment.value.name);
-    assert.is('#gcli-nomatch', assign1.arg.text);
-    assert.is(undefined, assign1.value);
-  }
-  else {
-    assert.log('Skipping :root test due to jsdom');
-  }
-
-  update({ typed: 'tse #', cursor: { start: 5, end: 5 } });
-  assert.is(        'VVVVE', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tse', requ.commandAssignment.value.name);
-  assert.is('#', assign1.arg.text);
-  assert.is(undefined, assign1.value);
-
-  update({ typed: 'tse .', cursor: { start: 5, end: 5 } });
-  assert.is(        'VVVVE', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tse', requ.commandAssignment.value.name);
-  assert.is('.', assign1.arg.text);
-  assert.is(undefined, assign1.value);
-
-  update({ typed: 'tse *', cursor: { start: 5, end: 5 } });
-  assert.is(        'VVVVE', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tse', requ.commandAssignment.value.name);
-  assert.is('*', assign1.arg.text);
-  assert.is(undefined, assign1.value);
+  ]);
 };
 
-exports.testNestedCommand = function() {
-  update({ typed: 'tsn', cursor: { start: 3, end: 3 } });
-  assert.is(        'III', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tsn', requ.commandAssignment.arg.text);
-  assert.is(undefined, assign1);
-
-  update({ typed: 'tsn ', cursor: { start: 4, end: 4 } });
-  assert.is(        'IIIV', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tsn', requ.commandAssignment.arg.text);
-  assert.is(undefined, assign1);
-
-  update({ typed: 'tsn x', cursor: { start: 5, end: 5 } });
-  // Commented out while we try out fuzzy matching
-  // test.is(        'EEEVE', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tsn x', requ.commandAssignment.arg.text);
-  assert.is(undefined, assign1);
-
-  update({ typed: 'tsn dif', cursor: { start: 7, end: 7 } });
-  assert.is(        'VVVVVVV', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tsn dif', requ.commandAssignment.value.name);
-  assert.is('', assign1.arg.text);
-  assert.is(undefined, assign1.value);
-
-  update({ typed: 'tsn dif ', cursor: { start: 8, end: 8 } });
-  assert.is(        'VVVVVVVV', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tsn dif', requ.commandAssignment.value.name);
-  assert.is('', assign1.arg.text);
-  assert.is(undefined, assign1.value);
-
-  update({ typed: 'tsn dif x', cursor: { start: 9, end: 9 } });
-  assert.is(        'VVVVVVVVV', statuses);
-  assert.is(Status.VALID, status);
-  assert.is('tsn dif', requ.commandAssignment.value.name);
-  assert.is('x', assign1.arg.text);
-  assert.is('x', assign1.value);
-
-  update({ typed: 'tsn ext', cursor: { start: 7, end: 7 } });
-  assert.is(        'VVVVVVV', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tsn ext', requ.commandAssignment.value.name);
-  assert.is('', assign1.arg.text);
-  assert.is(undefined, assign1.value);
-
-  update({ typed: 'tsn exte', cursor: { start: 8, end: 8 } });
-  assert.is(        'VVVVVVVV', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tsn exte', requ.commandAssignment.value.name);
-  assert.is('', assign1.arg.text);
-  assert.is(undefined, assign1.value);
-
-  update({ typed: 'tsn exten', cursor: { start: 9, end: 9 } });
-  assert.is(        'VVVVVVVVV', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tsn exten', requ.commandAssignment.value.name);
-  assert.is('', assign1.arg.text);
-  assert.is(undefined, assign1.value);
-
-  update({ typed: 'tsn extend', cursor: { start: 10, end: 10 } });
-  assert.is(        'VVVVVVVVVV', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tsn extend', requ.commandAssignment.value.name);
-  assert.is('', assign1.arg.text);
-  assert.is(undefined, assign1.value);
-
-  update({ typed: 'ts ', cursor: { start: 3, end: 3 } });
-  assert.is(        'EEV', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('ts', requ.commandAssignment.arg.text);
-  assert.is(undefined, assign1);
+exports.testNestedCommand = function(options) {
+  return helpers.audit(options, [
+    {
+      setup:    'tsn',
+      check: {
+        input:  'tsn',
+        hints:     '',
+        markup: 'III',
+        cursor: 3,
+        current: '__command',
+        status: 'ERROR',
+        predictionsInclude: [
+          'tsn deep', 'tsn deep down', 'tsn deep down nested',
+          'tsn deep down nested cmd', 'tsn dif'
+        ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsn' }
+        }
+      }
+    },
+    {
+      setup:    'tsn ',
+      check: {
+        input:  'tsn ',
+        hints:      '',
+        markup: 'IIIV',
+        cursor: 4,
+        current: '__command',
+        status: 'ERROR',
+        unassigned: [ ]
+      }
+    },
+    {
+      skipIf: options.isPhantomjs,
+      setup:    'tsn x',
+      check: {
+        input:  'tsn x',
+        hints:       ' -> tsn ext',
+        markup: 'IIIVI',
+        cursor: 5,
+        current: '__command',
+        status: 'ERROR',
+        predictions: [ 'tsn ext' ],
+        unassigned: [ ]
+      }
+    },
+    {
+      setup:    'tsn dif',
+      check: {
+        input:  'tsn dif',
+        hints:         ' <text>',
+        markup: 'VVVVVVV',
+        cursor: 7,
+        current: '__command',
+        status: 'ERROR',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsn dif' },
+          text: {
+            value: undefined,
+            arg: '',
+            status: 'INCOMPLETE',
+            message: ''
+          }
+        }
+      }
+    },
+    {
+      setup:    'tsn dif ',
+      check: {
+        input:  'tsn dif ',
+        hints:          '<text>',
+        markup: 'VVVVVVVV',
+        cursor: 8,
+        current: 'text',
+        status: 'ERROR',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsn dif' },
+          text: {
+            value: undefined,
+            arg: '',
+            status: 'INCOMPLETE',
+            message: ''
+          }
+        }
+      }
+    },
+    {
+      setup:    'tsn dif x',
+      check: {
+        input:  'tsn dif x',
+        hints:           '',
+        markup: 'VVVVVVVVV',
+        cursor: 9,
+        current: 'text',
+        status: 'VALID',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsn dif' },
+          text: { value: 'x', arg: ' x', status: 'VALID', message: '' }
+        }
+      }
+    },
+    {
+      setup:    'tsn ext',
+      check: {
+        input:  'tsn ext',
+        hints:         ' <text>',
+        markup: 'VVVVVVV',
+        cursor: 7,
+        current: '__command',
+        status: 'ERROR',
+        predictions: [ 'tsn ext', 'tsn exte', 'tsn exten', 'tsn extend' ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsn ext' },
+          text: {
+            value: undefined,
+            arg: '',
+            status: 'INCOMPLETE',
+            message: ''
+          }
+        }
+      }
+    },
+    {
+      setup:    'tsn exte',
+      check: {
+        input:  'tsn exte',
+        hints:          ' <text>',
+        markup: 'VVVVVVVV',
+        cursor: 8,
+        current: '__command',
+        status: 'ERROR',
+        predictions: [ 'tsn exte', 'tsn exten', 'tsn extend' ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsn exte' },
+          text: {
+            value: undefined,
+            arg: '',
+            status: 'INCOMPLETE',
+            message: ''
+          }
+        }
+      }
+    },
+    {
+      setup:    'tsn exten',
+      check: {
+        input:  'tsn exten',
+        hints:           ' <text>',
+        markup: 'VVVVVVVVV',
+        cursor: 9,
+        current: '__command',
+        status: 'ERROR',
+        predictions: [ 'tsn exten', 'tsn extend' ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsn exten' },
+          text: {
+            value: undefined,
+            arg: '',
+            status: 'INCOMPLETE',
+            message: ''
+          }
+        }
+      }
+    },
+    {
+      setup:    'tsn extend',
+      check: {
+        input:  'tsn extend',
+        hints:            ' <text>',
+        markup: 'VVVVVVVVVV',
+        cursor: 10,
+        current: '__command',
+        status: 'ERROR',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsn extend' },
+          text: {
+            value: undefined,
+            arg: '',
+            status: 'INCOMPLETE',
+            message: ''
+          }
+        }
+      }
+    },
+    {
+      setup:    'ts ',
+      check: {
+        input:  'ts ',
+        hints:     '',
+        markup: 'EEV',
+        cursor: 3,
+        current: '__command',
+        status: 'ERROR',
+        predictions: [ ],
+        unassigned: [ ],
+        tooltipState: 'true:isError'
+      }
+    },
+  ]);
 };
 
 // From Bug 664203
-exports.testDeeplyNested = function() {
-  update({ typed: 'tsn deep down nested cmd', cursor: { start: 24, end: 24 } });
-  assert.is(        'VVVVVVVVVVVVVVVVVVVVVVVV', statuses);
-  assert.is(Status.VALID, status);
-  assert.is('tsn deep down nested cmd', requ.commandAssignment.value.name);
-  assert.is(undefined, assign1);
-
-  update({ typed: 'tsn deep down nested', cursor: { start: 20, end: 20 } });
-  assert.is(        'IIIVIIIIVIIIIVIIIIII', statuses);
-  assert.is(Status.ERROR, status);
-  assert.is('tsn deep down nested', requ.commandAssignment.value.name);
-  assert.is(undefined, assign1);
+exports.testDeeplyNested = function(options) {
+  return helpers.audit(options, [
+    {
+      setup:    'tsn deep down nested',
+      check: {
+        input:  'tsn deep down nested',
+        hints:                      '',
+        markup: 'IIIVIIIIVIIIIVIIIIII',
+        cursor: 20,
+        current: '__command',
+        status: 'ERROR',
+        predictions: [ 'tsn deep down nested', 'tsn deep down nested cmd' ],
+        unassigned: [ ],
+        outputState: 'false:default',
+        tooltipState: 'false:default',
+        args: {
+          command: { name: 'tsn deep down nested' },
+        }
+      }
+    },
+    {
+      setup:    'tsn deep down nested cmd',
+      check: {
+        input:  'tsn deep down nested cmd',
+        hints:                          '',
+        markup: 'VVVVVVVVVVVVVVVVVVVVVVVV',
+        cursor: 24,
+        current: '__command',
+        status: 'VALID',
+        predictions: [ ],
+        unassigned: [ ],
+        args: {
+          command: { name: 'tsn deep down nested cmd' },
+        }
+      }
+    }
+  ]);
 };
 
 

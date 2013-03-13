@@ -3,106 +3,134 @@
 
 // Tests that the addon commands works as they should
 
-let imported = {};
-Components.utils.import("resource:///modules/devtools/BuiltinCommands.jsm", imported);
+let CmdAddonFlags = (Cu.import("resource:///modules/devtools/BuiltinCommands.jsm", {})).CmdAddonFlags;
+
+let tests = {};
 
 function test() {
-  DeveloperToolbarTest.test("about:blank", [ GAT_test ]);
+  helpers.addTabWithToolbar("about:blank", function(options) {
+    return helpers.runTests(options, tests);
+  }).then(finish);
 }
 
-function GAT_test() {
-  var GAT_ready = DeveloperToolbarTest.checkCalled(function() {
-    Services.obs.removeObserver(GAT_ready, "gcli_addon_commands_ready", false);
+tests.gatTest = function(options) {
+  let deferred = Promise.defer();
+
+  // hack to reduce stack size as a result of bug 842347
+  let onGatReadyInterjection = function() {
+    executeSoon(onGatReady);
+  };
+
+  let onGatReady = function() {
+    Services.obs.removeObserver(onGatReadyInterjection, "gcli_addon_commands_ready", false);
     info("gcli_addon_commands_ready notification received, running tests");
 
-    helpers.setInput('addon list dictionary');
-    helpers.check({
-      input:  'addon list dictionary',
-      hints:                       '',
-      markup: 'VVVVVVVVVVVVVVVVVVVVV',
-      status: 'VALID'
-    });
-
-    helpers.setInput('addon list extension');
-    helpers.check({
-      input:  'addon list extension',
-      hints:                      '',
-      markup: 'VVVVVVVVVVVVVVVVVVVV',
-      status: 'VALID'
-    });
-
-    helpers.setInput('addon list locale');
-    helpers.check({
-      input:  'addon list locale',
-      hints:                   '',
-      markup: 'VVVVVVVVVVVVVVVVV',
-      status: 'VALID'
-    });
-
-    helpers.setInput('addon list plugin');
-    helpers.check({
-      input:  'addon list plugin',
-      hints:                   '',
-      markup: 'VVVVVVVVVVVVVVVVV',
-      status: 'VALID'
-    });
-
-    helpers.setInput('addon list theme');
-    helpers.check({
-      input:  'addon list theme',
-      hints:                  '',
-      markup: 'VVVVVVVVVVVVVVVV',
-      status: 'VALID'
-    });
-
-    helpers.setInput('addon list all');
-    helpers.check({
-      input:  'addon list all',
-      hints:                '',
-      markup: 'VVVVVVVVVVVVVV',
-      status: 'VALID'
-    });
-
-    helpers.setInput('addon disable Test_Plug-in_1.0.0.0');
-    helpers.check({
-      input:  'addon disable Test_Plug-in_1.0.0.0',
-      hints:                                    '',
-      markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
-      status: 'VALID'
-    });
-
-    helpers.setInput('addon disable WRONG');
-    helpers.check({
-      input:  'addon disable WRONG',
-      hints:                     '',
-      markup: 'VVVVVVVVVVVVVVEEEEE',
-      status: 'ERROR'
-    });
-
-    helpers.setInput('addon enable Test_Plug-in_1.0.0.0');
-    helpers.check({
-      input:  'addon enable Test_Plug-in_1.0.0.0',
-      hints:                                   '',
-      markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
-      status: 'VALID',
-      args: {
-        command: { name: 'addon enable' },
-        name: { value: 'Test Plug-in', status: 'VALID' },
+    let auditDone = helpers.audit(options, [
+      {
+        setup: 'addon list dictionary',
+        check: {
+          input:  'addon list dictionary',
+          hints:                       '',
+          markup: 'VVVVVVVVVVVVVVVVVVVVV',
+          status: 'VALID'
+        }
+      },
+      {
+        setup: 'addon list extension',
+        check: {
+          input:  'addon list extension',
+          hints:                      '',
+          markup: 'VVVVVVVVVVVVVVVVVVVV',
+          status: 'VALID'
+        }
+      },
+      {
+        setup: 'addon list locale',
+        check: {
+          input:  'addon list locale',
+          hints:                   '',
+          markup: 'VVVVVVVVVVVVVVVVV',
+          status: 'VALID'
+        }
+      },
+      {
+        setup: 'addon list plugin',
+        check: {
+          input:  'addon list plugin',
+          hints:                   '',
+          markup: 'VVVVVVVVVVVVVVVVV',
+          status: 'VALID'
+        }
+      },
+      {
+        setup: 'addon list theme',
+        check: {
+          input:  'addon list theme',
+          hints:                  '',
+          markup: 'VVVVVVVVVVVVVVVV',
+          status: 'VALID'
+        }
+      },
+      {
+        setup: 'addon list all',
+        check: {
+          input:  'addon list all',
+          hints:                '',
+          markup: 'VVVVVVVVVVVVVV',
+          status: 'VALID'
+        }
+      },
+      {
+        setup: 'addon disable Test_Plug-in_1.0.0.0',
+        check: {
+          input:  'addon disable Test_Plug-in_1.0.0.0',
+          hints:                                    '',
+          markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
+          status: 'VALID'
+        }
+      },
+      {
+        setup: 'addon disable WRONG',
+        check: {
+          input:  'addon disable WRONG',
+          hints:                     '',
+          markup: 'VVVVVVVVVVVVVVEEEEE',
+          status: 'ERROR'
+        }
+      },
+      {
+        setup: 'addon enable Test_Plug-in_1.0.0.0',
+        check: {
+          input:  'addon enable Test_Plug-in_1.0.0.0',
+          hints:                                   '',
+          markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
+          status: 'VALID',
+          args: {
+            command: { name: 'addon enable' },
+            name: { value: 'Test Plug-in', status: 'VALID' },
+          }
+        },
+        exec: {
+          completed: false
+        }
       }
+    ]);
+
+    auditDone.then(function() {
+      deferred.resolve();
     });
+  };
 
-    DeveloperToolbarTest.exec({ completed: false });
-  });
+  Services.obs.addObserver(onGatReadyInterjection, "gcli_addon_commands_ready", false);
 
-  Services.obs.addObserver(GAT_ready, "gcli_addon_commands_ready", false);
-
-  if (imported.CmdAddonFlags.addonsLoaded) {
-    info("The getAllAddons command has already completed and we have missed ");
-    info("the notification. Let's send the gcli_addon_commands_ready ");
-    info("notification ourselves.");
+  if (CmdAddonFlags.addonsLoaded) {
+    info("The call to AddonManager.getAllAddons in BuiltinCommands.jsm is done.");
+    info("Send the gcli_addon_commands_ready notification ourselves.");
 
     Services.obs.notifyObservers(null, "gcli_addon_commands_ready", null);
   } else {
-    info("gcli_addon_commands_ready notification has not yet been received.");
+    info("Waiting for gcli_addon_commands_ready notification.");
   }
-}
+
+  return deferred.promise;
+};

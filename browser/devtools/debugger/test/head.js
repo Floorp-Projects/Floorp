@@ -21,6 +21,10 @@ let DebuggerClient = tempScope.DebuggerClient;
 let gDevTools = tempScope.gDevTools;
 let TargetFactory = tempScope.TargetFactory;
 
+// Import the GCLI test helper
+let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
+Services.scriptloader.loadSubScript(testDir + "/helpers.js", this);
+
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/debugger/test/";
 const TAB1_URL = EXAMPLE_URL + "browser_dbg_tab1.html";
 const TAB2_URL = EXAMPLE_URL + "browser_dbg_tab2.html";
