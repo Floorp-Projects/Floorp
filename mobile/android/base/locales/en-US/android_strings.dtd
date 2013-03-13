@@ -114,7 +114,7 @@ size. -->
 <!ENTITY pref_private_data_passwords "Saved passwords">
 <!ENTITY pref_private_data_cache "Cache">
 <!ENTITY pref_private_data_offlineApps "Offline website data">
-<!ENTITY pref_private_data_siteSettings "Site preferences">
+<!ENTITY pref_private_data_siteSettings2 "Site settings">
 <!ENTITY pref_private_data_downloadFiles "Downloaded files">
 
 <!ENTITY pref_update_autodownload "Automatic updates">
