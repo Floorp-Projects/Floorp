@@ -1705,10 +1705,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
     description: gcli.lookup('paintflashingOnDesc'),
     manual: gcli.lookup('paintflashingManual'),
     params: [{
-      type: "boolean",
-      name: "chrome",
-      get hidden() gcli.hiddenByChromePref(),
-      description: gcli.lookup("paintflashingChromeDesc"),
+      group: "options",
+      params: [
+        {
+          type: "boolean",
+          name: "chrome",
+          get hidden() gcli.hiddenByChromePref(),
+          description: gcli.lookup("paintflashingChromeDesc"),
+        }
+      ]
     }],
     exec: function(args, context) {
       var window;
@@ -1729,10 +1734,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
     description: gcli.lookup('paintflashingOffDesc'),
     manual: gcli.lookup('paintflashingManual'),
     params: [{
-      type: "boolean",
-      name: "chrome",
-      get hidden() gcli.hiddenByChromePref(),
-      description: gcli.lookup("paintflashingChromeDesc"),
+      group: "options",
+      params: [
+        {
+          type: "boolean",
+          name: "chrome",
+          get hidden() gcli.hiddenByChromePref(),
+          description: gcli.lookup("paintflashingChromeDesc"),
+        }
+      ]
     }],
     exec: function(args, context) {
       if (args.chrome) {
