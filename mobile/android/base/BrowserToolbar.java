@@ -234,6 +234,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             // accessibility.
             mTabsCount.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
             mTabsCount.setAccessibilityDelegate(new View.AccessibilityDelegate() {
+                    @Override
                     public void onInitializeAccessibilityNodeInfo(View host, AccessibilityNodeInfo info) {}
                 });
         }
@@ -527,6 +528,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                                    show ? 0 : mLayout.getHeight());
         if (delay > 0) {
             mDelayedVisibilityTask = new TimerTask() {
+                @Override
                 public void run() {
                     startVisibilityAnimation();
                     mDelayedVisibilityTask = null;

@@ -1,26 +1,19 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@.tests;
 
-import android.app.Activity;
 import android.view.View;
 import android.widget.ListView;
-import android.widget.ExpandableListView;
-import android.widget.LinearLayout;
 import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.ImageView;
 import android.widget.TabWidget;
 import android.text.TextUtils;
 
-import android.content.ContentValues;
 import android.content.ContentResolver;
-import android.database.Cursor;
 import android.net.Uri;
 
 import java.util.Arrays;
 import java.util.ArrayList;
-import java.io.File;
-
 import @ANDROID_PACKAGE_NAME@.*;
 
 /* Tests opening the all pages tab, that items look correct, clicking on an item

@@ -16,7 +16,6 @@ import org.mozilla.gecko.util.GeckoBackgroundThread;
 import org.mozilla.gecko.util.GeckoEventListener;
 
 import android.app.ActivityManager;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
@@ -53,7 +52,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.MessageQueue;
-import android.os.StatFs;
 import android.os.SystemClock;
 import android.os.Vibrator;
 import android.provider.Settings;
