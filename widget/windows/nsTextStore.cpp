@@ -1374,7 +1374,7 @@ nsTextStore::RestartCompositionIfNecessary(ITfRange* aRangeNew)
     // a new one. OnEndComposition followed by OnStartComposition
     // will accomplish this automagically.
     OnEndComposition(pComposition);
-    OnStartCompositionInternal(pComposition, composingRange, true);
+    RecordCompositionStartAction(pComposition, composingRange, true);
   }
 
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
@@ -2611,12 +2611,12 @@ nsTextStore::InsertEmbeddedAtSelection(DWORD dwFlags,
 }
 
 HRESULT
-nsTextStore::OnStartCompositionInternal(ITfCompositionView* pComposition,
-                                        ITfRange* aRange,
-                                        bool aPreserveSelection)
+nsTextStore::RecordCompositionStartAction(ITfCompositionView* pComposition,
+                                          ITfRange* aRange,
+                                          bool aPreserveSelection)
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-         ("TSF: 0x%p   nsTextStore::OnStartCompositionInternal("
+         ("TSF: 0x%p   nsTextStore::RecordCompositionStartAction("
           "pComposition=0x%p, aRange=0x%p, aPreserveSelection=%s), "
           "mComposition.mView=0x%p",
           this, pComposition, aRange, GetBoolName(aPreserveSelection),
@@ -2626,16 +2626,16 @@ nsTextStore::OnStartCompositionInternal(ITfCompositionView* pComposition,
   HRESULT hr = GetRangeExtent(aRange, &start, &length);
   if (FAILED(hr)) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-           ("TSF: 0x%p   nsTextStore::OnStartCompositionInternal() FAILED due "
-            "to GetRangeExtent() failure", this));
+           ("TSF: 0x%p   nsTextStore::RecordCompositionStartAction() FAILED "
+            "due to GetRangeExtent() failure", this));
     return hr;
   }
 
   Content& currentContent = CurrentContent();
   if (!currentContent.IsInitialized()) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-           ("TSF: 0x%p   nsTextStore::OnStartCompositionInternal() FAILED due "
-            "to CurrentContent() failure", this));
+           ("TSF: 0x%p   nsTextStore::RecordCompositionStartAction() FAILED "
+            "due to CurrentContent() failure", this));
     return E_FAIL;
   }
 
@@ -2647,7 +2647,7 @@ nsTextStore::OnStartCompositionInternal(ITfCompositionView* pComposition,
   currentContent.StartComposition(pComposition, *action, aPreserveSelection);
 
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-         ("TSF: 0x%p   nsTextStore::OnStartCompositionInternal() succeeded: "
+         ("TSF: 0x%p   nsTextStore::RecordCompositionStartAction() succeeded: "
           "mComposition={ mStart=%ld, mString.Length()=%ld, "
           "mSelection={ acpStart=%ld, acpEnd=%ld, style.ase=%s, "
           "style.fInterimChar=%s } }",
@@ -2687,11 +2687,11 @@ nsTextStore::OnStartComposition(ITfCompositionView* pComposition,
             "pComposition->GetRange() failure", this));
     return hr;
   }
-  hr = OnStartCompositionInternal(pComposition, range, false);
+  hr = RecordCompositionStartAction(pComposition, range, false);
   if (FAILED(hr)) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::OnStartComposition() FAILED due to "
-            "OnStartCompositionInternal() failure", this));
+            "RecordCompositionStartAction() failure", this));
     return hr;
   }
 
