@@ -153,9 +153,9 @@ ScriptFilename(const RawScript script)
 {
     if (!script)
         return Probes::nullName;
-    if (!script->filename)
+    if (!script->filename())
         return Probes::anonymousName;
-    return script->filename;
+    return script->filename();
 }
 
 static const char *
