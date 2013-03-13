@@ -229,7 +229,7 @@ protected:
   HRESULT  GetDisplayAttribute(ITfProperty* aProperty,
                                ITfRange* aRange,
                                TF_DISPLAYATTRIBUTE* aResult);
-  HRESULT  UpdateCompositionExtent(ITfRange* pRangeNew);
+  HRESULT  RestartCompositionIfNecessary(ITfRange* pRangeNew = nullptr);
 
   HRESULT  RecordCompositionUpdateAction();
   void     FlushPendingActions();
