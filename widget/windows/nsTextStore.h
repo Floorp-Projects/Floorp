@@ -179,7 +179,7 @@ public:
 
   static bool     IsComposing()
   {
-    return (sTsfTextStore && sTsfTextStore->mComposition.mView != nullptr);
+    return (sTsfTextStore && sTsfTextStore->mComposition.IsComposing());
   }
 
   static bool     IsComposingOn(nsWindowBase* aWidget)
@@ -287,13 +287,47 @@ protected:
     LONG mStart;
     LONG mLength;
 
-    void StartLayoutChangeTimer(nsTextStore* aTextStore);
+    bool IsComposing() const
+    {
+      return (mView != nullptr);
+    }
+
+    bool IsSelectionCollapsed() const
+    {
+      return (mSelection.acpStart == mSelection.acpEnd);
+    }
+
+    LONG MinSelectionOffset() const
+    {
+      return std::min(mSelection.acpStart, mSelection.acpEnd);
+    }
+
+    LONG MaxSelectionOffset() const
+    {
+      return std::max(mSelection.acpStart, mSelection.acpEnd);
+    }
+
+    LONG StringEndOffset() const
+    {
+      return mStart + static_cast<LONG>(mString.Length());
+    }
+
+    LONG EndOffset() const
+    {
+      return mStart + mLength;
+    }
+
+    void Start(nsTextStore* aTextStore);
+    void End();
+
     void EnsureLayoutChangeTimerStopped();
 
   private:
     // Timer for calling ITextStoreACPSink::OnLayoutChange(). This is only used
     // during composing.
     nsCOMPtr<nsITimer> mLayoutChangeTimer;
+
+    void StartLayoutChangeTimer(nsTextStore* aTextStore);
 
     static void TimerCallback(nsITimer* aTimer, void *aClosure);
     static uint32_t GetLayoutChangeIntervalTime();
