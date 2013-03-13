@@ -201,6 +201,35 @@ AbstractHealthReporter.prototype = Object.freeze({
     this._initialized = true;
     Services.obs.addObserver(this, "idle-daily", false);
 
+    // If upload is not enabled, ensure daily collection works. If upload
+    // is enabled, this will be performed as part of upload.
+    //
+    // This is important because it ensures about:healthreport contains
+    // longitudinal data even if upload is disabled. Having about:healthreport
+    // provide useful info even if upload is disabled was a core launch
+    // requirement.
+    //
+    // We do not catch changes to the backing pref. So, if the session lasts
+    // many days, we may fail to collect. However, most sessions are short and
+    // this code will likely be refactored as part of splitting up policy to
+    // serve Android. So, meh.
+    if (!this._policy.healthReportUploadEnabled) {
+      this._log.info("Upload not enabled. Scheduling daily collection.");
+      // Since the timer manager is a singleton and there could be multiple
+      // HealthReporter instances, we need to encode a unique identifier in
+      // the timer ID.
+      try {
+        let timerName = this._branch.replace(".", "-", "g") + "lastDailyCollection";
+        let tm = Cc["@mozilla.org/updates/timer-manager;1"]
+                   .getService(Ci.nsIUpdateTimerManager);
+        tm.registerTimer(timerName, this.collectMeasurements.bind(this),
+                         24 * 60 * 60);
+      } catch (ex) {
+        this._log.error("Error registering collection timer: " +
+                        CommonUtils.exceptionStr(ex));
+      }
+    }
+
     // Clean up caches and reduce memory usage.
     this._storage.compact();
     this._initializedDeferred.resolve(this);

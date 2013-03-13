@@ -34,7 +34,7 @@ function defineNow(policy, now) {
 }
 
 function getJustReporter(name, uri=SERVER_URI, inspected=false) {
-  let branch = "healthreport.testing. " + name + ".";
+  let branch = "healthreport.testing." + name + ".";
 
   let prefs = new Preferences(branch + "healthreport.");
   prefs.set("documentServerURI", uri);
@@ -585,3 +585,23 @@ add_task(function test_error_message_scrubbing() {
   }
 });
 
+// Ensure collection occurs if upload is disabled.
+add_task(function test_collect_when_upload_disabled() {
+  let reporter = getJustReporter("collect_when_upload_disabled");
+  reporter._policy.recordHealthReportUploadEnabled(false, "testing-collect");
+  do_check_false(reporter._policy.healthReportUploadEnabled);
+
+  let name = "healthreport-testing-collect_when_upload_disabled-healthreport-lastDailyCollection";
+  let pref = "app.update.lastUpdateTime." + name;
+  do_check_false(Services.prefs.prefHasUserValue(pref));
+
+  try {
+    yield reporter.onInit();
+    do_check_true(Services.prefs.prefHasUserValue(pref));
+
+    // We would ideally ensure the timer fires and does the right thing.
+    // However, testing the update timer manager is quite involved.
+  } finally {
+    reporter._shutdown();
+  }
+});
