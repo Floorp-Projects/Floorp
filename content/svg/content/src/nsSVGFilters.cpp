@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* a*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -40,6 +40,7 @@
 #include "mozilla/dom/SVGFEFuncBElementBinding.h"
 #include "mozilla/dom/SVGFEFuncGElementBinding.h"
 #include "mozilla/dom/SVGFEFuncRElementBinding.h"
+#include "mozilla/dom/SVGFEPointLightElement.h"
 
 #if defined(XP_WIN) 
 // Prevent Windows redefining LoadImage
@@ -4084,7 +4085,7 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMSVGFEDistantLightElement> distantLight;
-  nsCOMPtr<nsIDOMSVGFEPointLightElement> pointLight;
+  SVGFEPointLightElement* pointLight;
   nsCOMPtr<nsIDOMSVGFESpotLightElement> spotLight;
 
   nsIFrame* frame = GetPrimaryFrame();
@@ -4093,12 +4094,13 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
 
   nscolor lightColor = style->StyleSVGReset()->mLightingColor;
 
-  // find specified light  
+  // find specified light
   for (nsCOMPtr<nsIContent> child = nsINode::GetFirstChild();
        child;
        child = child->GetNextSibling()) {
     distantLight = do_QueryInterface(child);
-    pointLight = do_QueryInterface(child);
+    pointLight = child->IsSVG(nsGkAtoms::fePointLight) ?
+                   static_cast<SVGFEPointLightElement*>(child.get()) : nullptr;
     spotLight = do_QueryInterface(child);
     if (distantLight || pointLight || spotLight)
       break;
@@ -4123,11 +4125,10 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
   float lightPos[3], pointsAt[3], specularExponent;
   float cosConeAngle = 0;
   if (pointLight) {
-    static_cast<nsSVGFEPointLightElement*>
-      (pointLight.get())->GetAnimatedNumberValues(lightPos,
-                                                  lightPos + 1,
-                                                  lightPos + 2,
-                                                  nullptr);
+    pointLight->GetAnimatedNumberValues(lightPos,
+                                        lightPos + 1,
+                                        lightPos + 2,
+                                        nullptr);
     instance->ConvertLocation(lightPos);
   }
   if (spotLight) {
