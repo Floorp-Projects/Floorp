@@ -229,17 +229,6 @@ public:
    */
   static int32_t DefaultInterval();
 
-  /**
-   * Enable/disable paint flashing.
-   */
-  void SetPaintFlashing(bool aPaintFlashing) {
-    mPaintFlashing = aPaintFlashing;
-  }
-
-  bool GetPaintFlashing() {
-    return mPaintFlashing;
-  }
-
 private:
   typedef nsTObserverArray<nsARefreshObserver*> ObserverArray;
   typedef nsTHashtable<nsISupportsHashKey> RequestTable;
@@ -276,7 +265,6 @@ private:
   bool mTestControllingRefreshes;
   bool mViewManagerFlushIsPending;
   bool mRequestedHighPrecision;
-  bool mPaintFlashing;
 
   int64_t mMostRecentRefreshEpochTime;
   mozilla::TimeStamp mMostRecentRefresh;
