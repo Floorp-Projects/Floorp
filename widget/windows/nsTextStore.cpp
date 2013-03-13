@@ -1375,8 +1375,6 @@ nsTextStore::UpdateCompositionExtent(ITfRange* aRangeNew)
     // will accomplish this automagically.
     OnEndComposition(pComposition);
     OnStartCompositionInternal(pComposition, composingRange, true);
-  } else {
-    mComposition.mLength = compLength;
   }
 
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
@@ -1623,7 +1621,7 @@ nsTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
       }
     }
     if (pSelection->acpStart < mComposition.mStart ||
-        pSelection->acpEnd > mComposition.StringEndOffset()) {
+        pSelection->acpEnd > mComposition.EndOffset()) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
          ("TSF: 0x%p   nsTextStore::SetSelectionInternal() FAILED due to "
           "the selection being out of the composition string", this));
@@ -1708,11 +1706,11 @@ nsTextStore::GetText(LONG acpStart,
     ("TSF: 0x%p nsTextStore::GetText(acpStart=%ld, acpEnd=%ld, pchPlain=0x%p, "
      "cchPlainReq=%lu, pcchPlainOut=0x%p, prgRunInfo=0x%p, ulRunInfoReq=%lu, "
      "pulRunInfoOut=0x%p, pacpNext=0x%p), mComposition={ mStart=%ld, "
-     "mLength=%ld, mString.Length()=%lu IsComposing()=%s }",
+     "mString.Length()=%lu IsComposing()=%s }",
      this, acpStart, acpEnd, pchPlain, cchPlainReq, pcchPlainOut,
      prgRunInfo, ulRunInfoReq, pulRunInfoOut, pacpNext,
-     mComposition.mStart, mComposition.mLength,
-     mComposition.mString.Length(), GetBoolName(mComposition.IsComposing())));
+     mComposition.mStart, mComposition.mString.Length(),
+     GetBoolName(mComposition.IsComposing())));
 
   if (!IsReadLocked()) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
@@ -2649,10 +2647,10 @@ nsTextStore::OnStartCompositionInternal(ITfCompositionView* pComposition,
 
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::OnStartCompositionInternal() succeeded: "
-          "mComposition={ mStart=%ld, mLength=%ld, "
+          "mComposition={ mStart=%ld, mString.Length()=%ld, "
           "mSelection={ acpStart=%ld, acpEnd=%ld, style.ase=%s, "
           "style.fInterimChar=%s } }",
-          this, mComposition.mStart, mComposition.mLength,
+          this, mComposition.mStart, mComposition.mString.Length(),
           mSelection.StartOffset(), mSelection.EndOffset(),
           GetActiveSelEndName(mSelection.ActiveSelEnd()),
           GetBoolName(mSelection.IsInterimChar())));
@@ -2767,9 +2765,9 @@ nsTextStore::OnUpdateComposition(ITfCompositionView* pComposition,
     }
     PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
            ("TSF: 0x%p   nsTextStore::OnUpdateComposition() succeeded: "
-            "mComposition={ mStart=%ld, mLength=%ld, mString=\"%s\" }, "
+            "mComposition={ mStart=%ld, mString=\"%s\" }, "
             "CurrentSelection()={ acpStart=%ld, acpEnd=%ld, style.ase=%s }",
-            this, mComposition.mStart, mComposition.mLength,
+            this, mComposition.mStart,
             NS_ConvertUTF16toUTF8(mComposition.mString).get(),
             currentSel.StartOffset(), currentSel.EndOffset(),
             GetActiveSelEndName(currentSel.ActiveSelEnd())));
@@ -2977,11 +2975,12 @@ nsTextStore::CommitCompositionInternal(bool aDiscard)
           NS_ConvertUTF16toUTF8(mComposition.mString).get()));
 
   if (mComposition.IsComposing() && aDiscard) {
+    LONG endOffset = mComposition.EndOffset();
     mComposition.mString.Truncate(0);
     if (mSink && !mLock) {
       TS_TEXTCHANGE textChange;
       textChange.acpStart = mComposition.mStart;
-      textChange.acpOldEnd = mComposition.EndOffset();
+      textChange.acpOldEnd = endOffset;
       textChange.acpNewEnd = mComposition.mStart;
       PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
              ("TSF: 0x%p   nsTextStore::CommitCompositionInternal(), calling"
@@ -3227,7 +3226,6 @@ nsTextStore::Composition::Start(ITfCompositionView* aCompositionView,
   mView = aCompositionView;
   mString = aCompositionString;
   mStart = aCompositionStartOffset;
-  mLength = mString.Length();
 }
 
 void
