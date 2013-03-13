@@ -303,14 +303,7 @@ void SetCurrentProcessPrivileges(ChildPrivileges privs) {
     uid += getpid();
   }
   if (privs == PRIVILEGES_CAMERA) {
-    gid_t groups[] = { AID_AUDIO, AID_CAMERA, AID_SDCARD_RW };
-    if (setgroups(sizeof(groups) / sizeof(groups[0]), groups) != 0) {
-      DLOG(ERROR) << "FAILED TO setgroups() CHILD PROCESS";
-      _exit(127);
-    }
-  }
-  else if (privs == PRIVILEGES_VIDEO) {
-    gid_t groups[] = { AID_AUDIO, AID_MEDIA };
+    gid_t groups[] = { AID_SDCARD_RW };
     if (setgroups(sizeof(groups) / sizeof(groups[0]), groups) != 0) {
       DLOG(ERROR) << "FAILED TO setgroups() CHILD PROCESS";
       _exit(127);
