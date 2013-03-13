@@ -177,7 +177,7 @@ private:
 
 private:
   nsRefPtr<gfxD2DSurface> mD2DWindowSurface;
-  Rect mWindowBounds;
+  nsIntRect mWindowBounds; // in device-pixel coordinates
   float mDPI;
   bool mShuttingDown;
   bool mPainting;

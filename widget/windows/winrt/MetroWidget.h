@@ -110,6 +110,7 @@ public:
                                                     uint32_t aModifierFlags,
                                                     uint32_t aAdditionalFlags);
   virtual bool  HasPendingInputEvent();
+  virtual double GetDefaultScaleInternal();
   float         GetDPI();
   virtual bool  IsVisible() const;
   virtual bool  IsEnabled() const;
