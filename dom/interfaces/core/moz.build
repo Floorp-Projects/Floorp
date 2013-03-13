@@ -9,6 +9,7 @@ XPIDL_SOURCES += [
     'nsIDOMCharacterData.idl',
     'nsIDOMComment.idl',
     'nsIDOMDOMException.idl',
+    'nsIDOMDOMImplementation.idl',
     'nsIDOMDOMStringList.idl',
     'nsIDOMDocument.idl',
     'nsIDOMDocumentFragment.idl',

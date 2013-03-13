@@ -86,6 +86,7 @@ abstract class Axis {
 
     static final float MS_PER_FRAME = 1000.0f / 60.0f;
     private static final float FRAMERATE_MULTIPLIER = (1000f/60f) / MS_PER_FRAME;
+    private static final int FLING_VELOCITY_POINTS = 8;
 
     //  The values we use for friction are based on a 16.6ms frame, adjust them to MS_PER_FRAME:
     //  FRICTION^1 = FRICTION_ADJUSTED^(16/MS_PER_FRAME)
@@ -131,6 +132,8 @@ abstract class Axis {
     private float mTouchPos;                /* Position of the most recent touch event on the current drag. */
     private float mLastTouchPos;            /* Position of the touch event before touchPos. */
     private float mVelocity;                /* Velocity in this direction; pixels per animation frame. */
+    private float[] mRecentVelocities;      /* Circular buffer of recent velocities since last touch start. */
+    private int mRecentVelocityCount;       /* Number of values put into mRecentVelocities (unbounded). */
     private boolean mScrollingDisabled;     /* Whether movement on this axis is locked. */
     private boolean mDisableSnap;           /* Whether overscroll snapping is disabled. */
     private float mDisplacement;
@@ -145,6 +148,7 @@ abstract class Axis {
     Axis(SubdocumentScrollHelper subscroller) {
         mSubscroller = subscroller;
         mOverscrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS;
+        mRecentVelocities = new float[FLING_VELOCITY_POINTS];
     }
 
     public void setOverScrollMode(int overscrollMode) {
@@ -167,6 +171,7 @@ abstract class Axis {
         mVelocity = 0.0f;
         mScrollingDisabled = false;
         mFirstTouchPos = mTouchPos = mLastTouchPos = pos;
+        mRecentVelocityCount = 0;
     }
 
     float panDistance(float currentPos) {
@@ -183,6 +188,9 @@ abstract class Axis {
 
     void updateWithTouchAt(float pos, float timeDelta) {
         float newVelocity = (mTouchPos - pos) / timeDelta * MS_PER_FRAME;
+
+        mRecentVelocities[mRecentVelocityCount % FLING_VELOCITY_POINTS] = newVelocity;
+        mRecentVelocityCount++;
 
         // If there's a direction change, or current velocity is very low,
         // allow setting of the velocity outright. Otherwise, use the current
@@ -273,12 +281,25 @@ abstract class Axis {
         mFlingState = FlingStates.PANNING;
     }
 
+    private float calculateFlingVelocity() {
+        int usablePoints = Math.min(mRecentVelocityCount, FLING_VELOCITY_POINTS);
+        if (usablePoints <= 1) {
+            return mVelocity;
+        }
+        float average = 0;
+        for (int i = 0; i < usablePoints; i++) {
+            average += mRecentVelocities[i];
+        }
+        return average / usablePoints;
+    }
+
     void startFling(boolean stopped) {
         mDisableSnap = mSubscroller.scrolling();
 
         if (stopped) {
             mFlingState = FlingStates.STOPPED;
         } else {
+            mVelocity = calculateFlingVelocity();
             mFlingState = FlingStates.FLINGING;
         }
     }
