@@ -16,9 +16,6 @@ TARGET_CPU="${target_cpu}"
 TARGET_VENDOR="${target_vendor}"
 TARGET_OS="${target_os}"
 
-MOZ_DEB_TIMESTAMP=`date +"%a, %d  %b %Y %T %z"   2>&1`
-AC_SUBST(MOZ_DEB_TIMESTAMP)
-
 dnl ========================================================
 dnl =
 dnl = Don't change the following two lines.  Doing so breaks:
