@@ -3959,7 +3959,7 @@ MOZ_ARG_WITH_BOOL(system-nss,
     _USE_SYSTEM_NSS=1 )
 
 if test -n "$_USE_SYSTEM_NSS"; then
-    AM_PATH_NSS(3.14.2, [MOZ_NATIVE_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
+    AM_PATH_NSS(3.14.3, [MOZ_NATIVE_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
 fi
 
 if test -n "$MOZ_NATIVE_NSS"; then
@@ -8279,6 +8279,9 @@ if test "$MOZ_ENABLE_SKIA"; then
   AC_DEFINE(USE_SKIA)
   if test "${MOZ_WIDGET_TOOLKIT}" = "android" -o x"$MOZ_WIDGET_TOOLKIT" = x"gonk"; then
     AC_DEFINE(SK_BUILD_FOR_ANDROID_NDK)
+  elif test "$OS_ARCH" = "WINNT"; then
+    AC_DEFINE(SKIA_DLL)
+    AC_DEFINE(GR_DLL)
   fi
 else
   MOZ_SKIA_LIBS=

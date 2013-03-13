@@ -27,7 +27,6 @@
     <dimen name="browser_toolbar_icon_width">36dp</dimen>
     <dimen name="browser_toolbar_lock_width">20dp</dimen>
     <dimen name="browser_toolbar_favicon_size">29.33dip</dimen>
-    <dimen name="doorhanger_arrow_width">44dp</dimen>
     <dimen name="flow_layout_spacing">6dp</dimen>
     <dimen name="menu_item_icon">21dp</dimen>
     <dimen name="menu_item_state_icon">18dp</dimen>

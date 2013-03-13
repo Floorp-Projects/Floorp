@@ -39,17 +39,20 @@ ContentPermissionPrompt.prototype = {
      return chromeWin;
   },
 
+  getChromeWindowForRequest: function getChromeWindowForRequest(aRequest) {
+    if (aRequest.window)
+      return this.getChromeWindow(aRequest.window.top).wrappedJSObject;
+    return aRequest.element.ownerDocument.defaultView;
+  },
+
   getNotificationBoxForRequest: function getNotificationBoxForRequest(request) {
-    let notificationBox = null;
+    let chromeWin = this.getChromeWindowForRequest(request);
     if (request.window) {
       let requestingWindow = request.window.top;
-      let chromeWin = this.getChromeWindow(requestingWindow).wrappedJSObject;
       let windowID = request.window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
       let browser = chromeWin.Browser.getBrowserForWindowId(windowID);
       return chromeWin.getNotificationBox(browser);
     }
-
-    let chromeWin = request.element.ownerDocument.defaultView;
     return chromeWin.Browser.getNotificationBox(request.element);
   },
 
@@ -113,6 +116,20 @@ ContentPermissionPrompt.prototype = {
                                                     icon,
                                                     notificationBox.PRIORITY_WARNING_MEDIUM,
                                                     buttons);
+
+    if (request.type == "geolocation") {
+      // Add the "learn more" link.
+      let link = newBar.ownerDocument.createElement("label");
+      link.setAttribute("value", browserBundle.GetStringFromName("geolocation.learnMore"));
+      link.setAttribute("class", "text-link notification-link");
+      newBar.insertBefore(link, newBar.firstChild);
+
+      let win = this.getChromeWindowForRequest(request);
+      link.addEventListener("click", function() {
+        let url = Services.urlFormatter.formatURLPref("browser.geolocation.warning.infoURL");
+        win.BrowserUI.newTab(url, win.Browser.selectedTab);
+      });
+    }
   }
 };
 

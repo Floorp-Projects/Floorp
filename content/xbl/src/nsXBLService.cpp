@@ -107,18 +107,6 @@ public:
   nsCOMPtr<nsIURI> mBindingURI;
   nsCOMPtr<nsIContent> mBoundElement;
 
-  static nsXBLBindingRequest*
-  Create(nsFixedSizeAllocator& aPool, nsIURI* aURI, nsIContent* aBoundElement) {
-    void* place = aPool.Alloc(sizeof(nsXBLBindingRequest));
-    return place ? ::new (place) nsXBLBindingRequest(aURI, aBoundElement) : nullptr;
-  }
-
-  static void
-  Destroy(nsFixedSizeAllocator& aPool, nsXBLBindingRequest* aRequest) {
-    aRequest->~nsXBLBindingRequest();
-    aPool.Free(aRequest, sizeof(*aRequest));
-  }
-
   void DocumentLoaded(nsIDocument* aBindingDoc)
   {
     // We only need the document here to cause frame construction, so
@@ -157,27 +145,12 @@ public:
     }
   }
 
-protected:
   nsXBLBindingRequest(nsIURI* aURI, nsIContent* aBoundElement)
     : mBindingURI(aURI),
       mBoundElement(aBoundElement)
   {
   }
-
-private:
-  // Hide so that only Create() and Destroy() can be used to
-  // allocate and deallocate from the heap
-  static void* operator new(size_t) CPP_THROW_NEW { return 0; }
-  static void operator delete(void*, size_t) {}
 };
-
-static const size_t kBucketSizes[] = {
-  sizeof(nsXBLBindingRequest)
-};
-
-static const int32_t kNumBuckets = sizeof(kBucketSizes)/sizeof(size_t);
-static const int32_t kNumElements = 64;
-static const int32_t kInitialSize = sizeof(nsXBLBindingRequest) * kNumElements;
 
 // nsXBLStreamListener, a helper class used for 
 // asynchronous parsing of URLs
@@ -227,13 +200,13 @@ nsXBLStreamListener::~nsXBLStreamListener()
 {
   for (uint32_t i = 0; i < mBindingRequests.Length(); i++) {
     nsXBLBindingRequest* req = mBindingRequests.ElementAt(i);
-    nsXBLBindingRequest::Destroy(nsXBLService::GetInstance()->mPool, req);
+    delete req;
   }
 }
 
 NS_IMETHODIMP
 nsXBLStreamListener::OnDataAvailable(nsIRequest *request, nsISupports* aCtxt,
-                                     nsIInputStream* aInStr, 
+                                     nsIInputStream* aInStr,
                                      uint64_t aSourceOffset, uint32_t aCount)
 {
   if (mInner)
@@ -419,8 +392,6 @@ nsXBLService::Init()
 // Constructors/Destructors
 nsXBLService::nsXBLService(void)
 {
-  mPool.Init("XBL Binding Requests", kBucketSizes, kNumBuckets, kInitialSize);
-
   gClassTable = new nsHashtable();
 
   Preferences::AddBoolVarCache(&gAllowDataURIs, "layout.debug.enable_data_xbl");
@@ -970,7 +941,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
           static_cast<nsXBLStreamListener*>(listener.get());
         // Create a new load observer.
         if (!xblListener->HasRequest(aBindingURI, aBoundElement)) {
-          nsXBLBindingRequest* req = nsXBLBindingRequest::Create(mPool, aBindingURI, aBoundElement);
+          nsXBLBindingRequest* req = new nsXBLBindingRequest(aBindingURI, aBoundElement);
           xblListener->AddRequest(req);
         }
         return NS_OK;
@@ -1094,9 +1065,8 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
       bindingManager->PutLoadingDocListener(aDocumentURI, xblListener);
 
     // Add our request.
-    nsXBLBindingRequest* req = nsXBLBindingRequest::Create(mPool,
-                                                           aBindingURI,
-                                                           aBoundElement);
+    nsXBLBindingRequest* req = new nsXBLBindingRequest(aBindingURI,
+                                                       aBoundElement);
     xblListener->AddRequest(req);
 
     // Now kick off the async read.

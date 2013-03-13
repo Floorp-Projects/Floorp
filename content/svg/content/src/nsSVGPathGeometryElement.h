@@ -6,9 +6,10 @@
 #ifndef __NS_SVGPATHGEOMETRYELEMENT_H__
 #define __NS_SVGPATHGEOMETRYELEMENT_H__
 
-#include "gfxMatrix.h"
 #include "SVGGraphicsElement.h"
-#include "nsTArray.h"
+
+struct gfxMatrix;
+template <class E> class nsTArray;
 
 struct nsSVGMark {
   float x, y, angle;

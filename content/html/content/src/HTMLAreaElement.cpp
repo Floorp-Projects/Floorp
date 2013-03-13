@@ -244,9 +244,9 @@ HTMLAreaElement::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 }
 
 JSObject*
-HTMLAreaElement::WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+HTMLAreaElement::WrapNode(JSContext* aCx, JSObject* aScope)
 {
-  return HTMLAreaElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return HTMLAreaElementBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace dom

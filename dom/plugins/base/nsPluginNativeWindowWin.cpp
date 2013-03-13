@@ -19,7 +19,6 @@
 
 #include "nsGUIEvent.h"
 #include "nsWindowsDllInterceptor.h"
-#include "nsPluginSafety.h"
 #include "nsPluginNativeWindow.h"
 #include "nsThreadUtils.h"
 #include "nsAutoPtr.h"

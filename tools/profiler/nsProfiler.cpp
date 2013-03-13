@@ -60,11 +60,11 @@ nsProfiler::Observe(nsISupports *aSubject,
     nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(parentWebNav);
     if (loadContext && loadContext->UsePrivateBrowsing() && !mLockedForPrivateBrowsing) {
       mLockedForPrivateBrowsing = true;
-      SAMPLER_LOCK();
+      mozilla_sampler_lock();
     }
   } else if (strcmp(aTopic, "last-pb-context-exited") == 0) {
     mLockedForPrivateBrowsing = false;
-    SAMPLER_UNLOCK();
+    mozilla_sampler_unlock();
   }
   return NS_OK;
 }

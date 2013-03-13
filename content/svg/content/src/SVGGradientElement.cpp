@@ -6,15 +6,12 @@
 #include "mozilla/dom/SVGGradientElement.h"
 
 #include "DOMSVGAnimatedTransformList.h"
-#include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGRadialGradientElementBinding.h"
 #include "mozilla/dom/SVGLinearGradientElementBinding.h"
 #include "mozilla/Util.h"
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMMutationEvent.h"
 #include "nsIDOMSVGAnimatedEnum.h"
-#include "nsIDOMSVGURIReference.h"
 #include "nsSVGElement.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(LinearGradient)
@@ -56,7 +53,6 @@ NS_IMPL_ADDREF_INHERITED(SVGGradientElement, SVGGradientElementBase)
 NS_IMPL_RELEASE_INHERITED(SVGGradientElement, SVGGradientElementBase)
 
 NS_INTERFACE_MAP_BEGIN(SVGGradientElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGURIReference)
 NS_INTERFACE_MAP_END_INHERITING(SVGGradientElementBase)
 
 //----------------------------------------------------------------------
@@ -107,21 +103,10 @@ SVGGradientElement::SpreadMethod()
   return mEnumAttributes[SPREADMETHOD].ToDOMAnimatedEnum(this);
 }
 
-//----------------------------------------------------------------------
-// nsIDOMSVGURIReference methods:
-
-/* readonly attribute nsIDOMSVGAnimatedString href; */
 already_AddRefed<nsIDOMSVGAnimatedString>
 SVGGradientElement::Href()
 {
   return mStringAttributes[HREF].ToDOMAnimatedString(this);
-}
-
-NS_IMETHODIMP
-SVGGradientElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
-{
-  *aHref = Href().get();
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -134,7 +119,7 @@ SVGGradientElement::IsAttributeMapped(const nsIAtom* name) const
     sColorMap,
     sGradientStopMap
   };
-  
+
   return FindAttributeDependence(name, map) ||
     SVGGradientElementBase::IsAttributeMapped(name);
 }
@@ -142,10 +127,9 @@ SVGGradientElement::IsAttributeMapped(const nsIAtom* name) const
 //---------------------Linear Gradients------------------------
 
 JSObject*
-SVGLinearGradientElement::WrapNode(JSContext* aCx, JSObject* aScope,
-                                   bool* aTriedToWrap)
+SVGLinearGradientElement::WrapNode(JSContext* aCx, JSObject* aScope)
 {
-  return SVGLinearGradientElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGLinearGradientElementBinding::Wrap(aCx, aScope, this);
 }
 
 nsSVGElement::LengthInfo SVGLinearGradientElement::sLengthInfo[4] =
@@ -224,10 +208,9 @@ SVGLinearGradientElement::GetLengthInfo()
 //-------------------------- Radial Gradients ----------------------------
 
 JSObject*
-SVGRadialGradientElement::WrapNode(JSContext* aCx, JSObject* aScope,
-                                   bool* aTriedToWrap)
+SVGRadialGradientElement::WrapNode(JSContext* aCx, JSObject* aScope)
 {
-  return SVGRadialGradientElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGRadialGradientElementBinding::Wrap(aCx, aScope, this);
 }
 
 nsSVGElement::LengthInfo SVGRadialGradientElement::sLengthInfo[5] =

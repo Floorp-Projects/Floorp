@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGLineElement.h"
 #include "mozilla/dom/SVGLineElementBinding.h"
 #include "gfxContext.h"
@@ -14,9 +13,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGLineElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+SVGLineElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return SVGLineElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGLineElementBinding::Wrap(aCx, aScope, this);
 }
 
 nsSVGElement::LengthInfo SVGLineElement::sLengthInfo[4] =

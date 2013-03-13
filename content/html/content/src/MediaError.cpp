@@ -37,10 +37,9 @@ NS_IMETHODIMP MediaError::GetCode(uint16_t* aCode)
 }
 
 JSObject*
-MediaError::WrapObject(JSContext* aCx, JSObject* aScope,
-                       bool* aTriedToWrap)
+MediaError::WrapObject(JSContext* aCx, JSObject* aScope)
 {
-  return MediaErrorBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return MediaErrorBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace dom

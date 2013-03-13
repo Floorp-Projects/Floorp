@@ -22,7 +22,7 @@ class SVGLineElement MOZ_FINAL : public SVGLineElementBase,
 {
 protected:
   SVGLineElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
   friend nsresult (::NS_NewSVGLineElement(nsIContent **aResult,
                                           already_AddRefed<nsINodeInfo> aNodeInfo));
 

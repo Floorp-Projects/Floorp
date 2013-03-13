@@ -211,7 +211,7 @@ nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations
                 ((mContainer == eDontCare) && (mEmpty == empty)))
             {
                 Element* element =
-                    nsRDFConInstanceTestNode::Element::Create(valueres, container, empty);
+                    new nsRDFConInstanceTestNode::Element(valueres, container, empty);
 
                 if (! element)
                     return NS_ERROR_OUT_OF_MEMORY;

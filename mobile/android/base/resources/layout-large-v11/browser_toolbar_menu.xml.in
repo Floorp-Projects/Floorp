@@ -55,7 +55,8 @@
                       android:layout_width="wrap_content"
                       android:layout_height="fill_parent"
                       android:orientation="horizontal"
-                      android:layout_toLeftOf="@id/menu"/>
+                      android:layout_toLeftOf="@id/menu"
+                      android:layout_alignWithParentIfMissing="true"/>
 
         <RelativeLayout style="@style/AddressBar.Button"
                         android:layout_toRightOf="@id/tabs"

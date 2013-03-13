@@ -6,6 +6,7 @@
 #include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGAnimatedLengthBinding.h"
 #include "nsContentUtils.h"
+#include "nsSVGLength2.h"
 
 namespace mozilla {
 namespace dom {
@@ -22,9 +23,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGAnimatedLength)
 NS_INTERFACE_MAP_END
 
 JSObject*
-SVGAnimatedLength::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+SVGAnimatedLength::WrapObject(JSContext* aCx, JSObject* aScope)
 {
-  return SVGAnimatedLengthBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGAnimatedLengthBinding::Wrap(aCx, aScope, this);
 }
 
 already_AddRefed<nsIDOMSVGLength>

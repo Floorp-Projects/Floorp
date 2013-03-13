@@ -25,13 +25,11 @@ XPIDLSRCS	= \
 		nsIDOMSVGAnimatedString.idl \
 		nsIDOMSVGDocument.idl \
 		nsIDOMSVGElement.idl \
-		nsIDOMSVGEvent.idl \
 		nsIDOMSVGFilters.idl \
 		nsIDOMSVGLength.idl \
 		nsIDOMSVGNumber.idl \
 		nsIDOMSVGRect.idl \
 		nsIDOMSVGStringList.idl \
-		nsIDOMSVGURIReference.idl \
 		nsIDOMSVGUnitTypes.idl \
 		nsIDOMSVGZoomEvent.idl \
 		$(NULL)

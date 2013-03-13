@@ -16,10 +16,8 @@
 #include "nsIPresShell.h"
 #include "nsContentUtils.h"
 #include "nsIDocument.h"
-#include "nsPresContext.h"
 #include "mozilla/dom/SVGMatrix.h"
 #include "DOMSVGPoint.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIFrame.h"
 #include "nsISVGSVGFrame.h" //XXX
 #include "nsSVGRect.h"
@@ -37,9 +35,7 @@
 #include "nsSMILTimeContainer.h"
 #include "nsSMILAnimationController.h"
 #include "nsSMILTypes.h"
-#include "nsIContentIterator.h"
 #include "SVGAngle.h"
-#include "mozilla/dom/SVGAnimatedLength.h"
 #include <algorithm>
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT_CHECK_PARSER(SVG)
@@ -47,10 +43,12 @@ NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT_CHECK_PARSER(SVG)
 namespace mozilla {
 namespace dom {
 
+class SVGAnimatedLength;
+
 JSObject*
-SVGSVGElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+SVGSVGElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return SVGSVGElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGSVGElementBinding::Wrap(aCx, aScope, this);
 }
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DOMSVGTranslatePoint,
@@ -526,7 +524,7 @@ SVGSVGElement::SetCurrentScaleTranslate(float s, float x, float y)
       bool scaling = (mPreviousScale != mCurrentScale);
       nsEventStatus status = nsEventStatus_eIgnore;
       nsGUIEvent event(true, scaling ? NS_SVG_ZOOM : NS_SVG_SCROLL, 0);
-      event.eventStructType = scaling ? NS_SVGZOOM_EVENT : NS_SVG_EVENT;
+      event.eventStructType = scaling ? NS_SVGZOOM_EVENT : NS_EVENT;
       presShell->HandleDOMEventWithTarget(this, &event, &status);
       InvalidateTransformNotifyFrame();
     }

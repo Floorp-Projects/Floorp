@@ -1284,7 +1284,12 @@ nsWindow::DispatchMultitouchEvent(nsTouchEvent &event, AndroidGeckoEvent *ae)
 
     nsEventStatus status;
     DispatchEvent(&event, status);
-    return (status == nsEventStatus_eConsumeNoDefault);
+    // We check mMultipleActionsPrevented because that's what <input type=range>
+    // sets when someone starts dragging the thumb. It doesn't set the status
+    // because it doesn't want to prevent the code that gives the input focus
+    // from running.
+    return (status == nsEventStatus_eConsumeNoDefault ||
+            event.mFlags.mMultipleActionsPrevented);
 }
 
 void

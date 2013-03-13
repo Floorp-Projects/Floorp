@@ -273,6 +273,11 @@
             android:process="@MANGLED_ANDROID_PACKAGE_NAME@.UpdateService">
         </service>
 
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.NotificationService">
+        </service>
+
 
 #include ../services/manifests/AnnouncementsAndroidManifest_services.xml.in
 #include ../services/manifests/SyncAndroidManifest_services.xml.in
