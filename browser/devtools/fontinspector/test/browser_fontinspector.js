@@ -5,6 +5,8 @@ let tempScope = {};
 Cu.import("resource:///modules/devtools/Target.jsm", tempScope);
 let TargetFactory = tempScope.TargetFactory;
 
+let DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
+
 function test() {
   waitForExplicitFinish();
 
@@ -23,10 +25,20 @@ function test() {
   content.location = "http://mochi.test:8888/browser/browser/devtools/fontinspector/test/browser_fontinspector.html";
 
   function setupTest() {
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
-      openFontInspector(toolbox.getCurrentPanel());
-    });
+    let rng = doc.createRange();
+    rng.selectNode(doc.body);
+    let fonts = DOMUtils.getUsedFontFaces(rng);
+    if (fonts.length != 2) {
+      // Fonts are not loaded yet.
+      // Let try again in a couple of milliseconds (hacky, but
+      // there's not better way to do it. See bug 835247).
+      setTimeout(setupTest, 500);
+    } else {
+      let target = TargetFactory.forTab(gBrowser.selectedTab);
+      gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
+        openFontInspector(toolbox.getCurrentPanel());
+      });
+    }
   }
 
   function openFontInspector(aInspector) {

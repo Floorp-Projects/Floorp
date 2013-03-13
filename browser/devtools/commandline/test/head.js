@@ -5,71 +5,17 @@
 const TEST_BASE_HTTP = "http://example.com/browser/browser/devtools/commandline/test/";
 const TEST_BASE_HTTPS = "https://example.com/browser/browser/devtools/commandline/test/";
 
-let console = (function() {
-  let tempScope = {};
-  Components.utils.import("resource://gre/modules/devtools/Console.jsm", tempScope);
-  return tempScope.console;
-})();
-
-let TargetFactory = (function() {
-  let tempScope = {};
-  Components.utils.import("resource:///modules/devtools/Target.jsm", tempScope);
-  return tempScope.TargetFactory;
-})();
-
-let Promise = (function() {
-  let tempScope = {};
-  Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js", tempScope);
-  return tempScope.Promise;
-})();
-
 // Import the GCLI test helper
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
-
 Services.scriptloader.loadSubScript(testDir + "/helpers.js", this);
 Services.scriptloader.loadSubScript(testDir + "/mockCommands.js", this);
-Services.scriptloader.loadSubScript(testDir + "/helpers_perwindowpb.js", this);
 
 /**
- * Open a new tab at a URL and call a callback on load
+ * Force GC on shutdown, because it seems that GCLI can outrun the garbage
+ * collector in some situations, which causes test failures in later tests
+ * Bug 774619 is an example.
  */
-function addTab(aURL, aCallback)
-{
-  waitForExplicitFinish();
-
-  gBrowser.selectedTab = gBrowser.addTab();
-  if (aURL != null) {
-    content.location = aURL;
-  }
-
-  let deferred = Promise.defer();
-
-  let tab = gBrowser.selectedTab;
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let browser = gBrowser.getBrowserForTab(tab);
-
-  function onTabLoad() {
-    browser.removeEventListener("load", onTabLoad, true);
-
-    if (aCallback != null) {
-      aCallback(browser, tab, browser.contentDocument);
-    }
-
-    deferred.resolve({ browser: browser, tab: tab, target: target });
-  }
-
-  browser.addEventListener("load", onTabLoad, true);
-  return deferred.promise;
-}
-
 registerCleanupFunction(function tearDown() {
-  while (gBrowser.tabs.length > 1) {
-    gBrowser.removeCurrentTab();
-  }
-
-  // Force GC, because it seems that GCLI can outrun the garbage collector
-  // in some situations, which causes test failures in later tests
-  // Bug 774619 is an example.
   window.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindowUtils)
       .garbageCollect();

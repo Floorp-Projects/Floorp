@@ -26,28 +26,24 @@ var exports = {};
 const TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testResource.js</p>";
 
 function test() {
-  var tests = Object.keys(exports);
-  // Push setup to the top and shutdown to the bottom
-  tests.sort(function(t1, t2) {
-    if (t1 == "setup" || t2 == "shutdown") return -1;
-    if (t2 == "setup" || t1 == "shutdown") return 1;
-    return 0;
-  });
-  info("Running tests: " + tests.join(", "))
-  tests = tests.map(function(test) { return exports[test]; });
-  DeveloperToolbarTest.test(TEST_URI, tests, true);
+  helpers.addTabWithToolbar(TEST_URI, function(options) {
+    return helpers.runTests(options, exports);
+  }).then(finish);
 }
 
 // <INJECTED SOURCE:END>
 
+'use strict';
+
+// var assert = require('test/assert');
+var util = require('util/util');
 
 var resource = require('gcli/types/resource');
 var types = require('gcli/types');
 var Status = require('gcli/types').Status;
 
-// var assert = require('test/assert');
 
-var tempDocument;
+var tempDocument = undefined;
 
 exports.setup = function(options) {
   tempDocument = resource.getDocument();
@@ -59,71 +55,104 @@ exports.shutdown = function(options) {
   tempDocument = undefined;
 };
 
-exports.testPredictions = function(options) {
+exports.testAllPredictions1 = function(options) {
+  if (options.isFirefox || options.isJsdom) {
+    assert.log('Skipping checks due to jsdom/firefox document.stylsheets support.');
+    return;
+  }
+
+  var resource = types.getType('resource');
+  return resource.getLookup().then(function(opts) {
+    assert.ok(opts.length > 1, 'have all resources');
+
+    return util.promiseEach(opts, function(prediction) {
+      return checkPrediction(resource, prediction);
+    });
+  });
+};
+
+exports.testScriptPredictions = function(options) {
+  if (options.isFirefox || options.isJsdom) {
+    assert.log('Skipping checks due to jsdom/firefox document.stylsheets support.');
+    return;
+  }
+
+  var resource = types.getType({ name: 'resource', include: 'text/javascript' });
+  return resource.getLookup().then(function(opts) {
+    assert.ok(opts.length > 1, 'have js resources');
+
+    return util.promiseEach(opts, function(prediction) {
+      return checkPrediction(resource, prediction);
+    });
+  });
+};
+
+exports.testStylePredictions = function(options) {
+  if (options.isFirefox || options.isJsdom) {
+    assert.log('Skipping checks due to jsdom/firefox document.stylsheets support.');
+    return;
+  }
+
+  var resource = types.getType({ name: 'resource', include: 'text/css' });
+  return resource.getLookup().then(function(opts) {
+    assert.ok(opts.length >= 1, 'have css resources');
+
+    return util.promiseEach(opts, function(prediction) {
+      return checkPrediction(resource, prediction);
+    });
+  });
+};
+
+exports.testAllPredictions2 = function(options) {
   if (options.isJsdom) {
     assert.log('Skipping checks due to jsdom document.stylsheets support.');
     return;
   }
 
-  var resource1 = types.getType('resource');
-  var options1 = resource1.getLookup();
-  // firefox doesn't support digging into scripts/stylesheets
-  if (!options.isFirefox) {
-    assert.ok(options1.length > 1, 'have all resources');
-  }
-  else {
-    assert.log('Skipping checks due to firefox document.stylsheets support.');
-  }
-  options1.forEach(function(prediction) {
-    checkPrediction(resource1, prediction);
+  var scriptRes = types.getType({ name: 'resource', include: 'text/javascript' });
+  return scriptRes.getLookup().then(function(scriptOptions) {
+    var styleRes = types.getType({ name: 'resource', include: 'text/css' });
+    return styleRes.getLookup().then(function(styleOptions) {
+      var allRes = types.getType({ name: 'resource' });
+      return allRes.getLookup().then(function(allOptions) {
+        assert.is(scriptOptions.length + styleOptions.length,
+                  allOptions.length,
+                  'split');
+      });
+    });
   });
+};
 
-  var resource2 = types.getType({ name: 'resource', include: 'text/javascript' });
-  var options2 = resource2.getLookup();
-  // firefox doesn't support digging into scripts
-  if (!options.isFirefox) {
-    assert.ok(options2.length > 1, 'have js resources');
+exports.testAllPredictions3 = function(options) {
+  if (options.isJsdom) {
+    assert.log('Skipping checks due to jsdom document.stylsheets support.');
+    return;
   }
-  else {
-    assert.log('Skipping checks due to firefox document.stylsheets support.');
-  }
-  options2.forEach(function(prediction) {
-    checkPrediction(resource2, prediction);
+
+  var res1 = types.getType({ name: 'resource' });
+  return res1.getLookup().then(function(options1) {
+    var res2 = types.getType('resource');
+    return res2.getLookup().then(function(options2) {
+      assert.is(options1.length, options2.length, 'type spec');
+    });
   });
-
-  var resource3 = types.getType({ name: 'resource', include: 'text/css' });
-  var options3 = resource3.getLookup();
-  // jsdom/firefox don't support digging into stylesheets
-  if (!options.isJsdom && !options.isFirefox) {
-    assert.ok(options3.length >= 1, 'have css resources');
-  }
-  else {
-    assert.log('Skipping checks due to firefox document.stylsheets support.');
-  }
-  options3.forEach(function(prediction) {
-    checkPrediction(resource3, prediction);
-  });
-
-  var resource4 = types.getType({ name: 'resource' });
-  var options4 = resource4.getLookup();
-
-  assert.is(options1.length, options4.length, 'type spec');
-  assert.is(options2.length + options3.length, options4.length, 'split');
 };
 
 function checkPrediction(res, prediction) {
   var name = prediction.name;
   var value = prediction.value;
 
-  var conversion = res.parseString(name);
-  assert.is(conversion.getStatus(), Status.VALID, 'status VALID for ' + name);
-  assert.is(conversion.value, value, 'value for ' + name);
+  return res.parseString(name).then(function(conversion) {
+    assert.is(conversion.getStatus(), Status.VALID, 'status VALID for ' + name);
+    assert.is(conversion.value, value, 'value for ' + name);
 
-  var strung = res.stringify(value);
-  assert.is(strung, name, 'stringify for ' + name);
+    var strung = res.stringify(value);
+    assert.is(strung, name, 'stringify for ' + name);
 
-  assert.is(typeof value.loadContents, 'function', 'resource for ' + name);
-  assert.is(typeof value.element, 'object', 'resource for ' + name);
+    assert.is(typeof value.loadContents, 'function', 'resource for ' + name);
+    assert.is(typeof value.element, 'object', 'resource for ' + name);
+  });
 }
+
 
 // });

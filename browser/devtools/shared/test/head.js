@@ -2,21 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let console = (function() {
-  let tempScope = {};
-  Components.utils.import("resource://gre/modules/devtools/Console.jsm", tempScope);
-  return tempScope.console;
-})();
-
-let TargetFactory = (function() {
-  let tempScope = {};
-  Components.utils.import("resource:///modules/devtools/Target.jsm", tempScope);
-  return tempScope.TargetFactory;
-})();
-
-// Import the GCLI test helper
-let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
-Services.scriptloader.loadSubScript(testDir + "/helpers.js", this);
+let TargetFactory = (Cu.import("resource:///modules/devtools/Target.jsm", {})).TargetFactory;
 
 /**
  * Open a new tab at a URL and call a callback on load
@@ -123,4 +109,12 @@ function waitForValue(aOptions)
   }
 
   wait(aOptions.validator, aOptions.success, aOptions.failure);
+}
+
+function oneTimeObserve(name, callback) {
+  var func = function() {
+    Services.obs.removeObserver(func, name);
+    callback();
+  };
+  Services.obs.addObserver(func, name, false);
 }

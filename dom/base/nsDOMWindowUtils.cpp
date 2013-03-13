@@ -3211,6 +3211,35 @@ nsDOMWindowUtils::IsNodeDisabledForEvents(nsIDOMNode* aNode, bool* aRetVal)
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SetPaintFlashing(bool aPaintFlashing)
+{
+  nsPresContext* presContext = GetPresContext();
+  if (presContext) {
+    presContext->RefreshDriver()->SetPaintFlashing(aPaintFlashing);
+    // Clear paint flashing colors
+    nsIPresShell* presShell = GetPresShell();
+    if (!aPaintFlashing && presShell) {
+      nsIFrame* rootFrame = presShell->GetRootFrame();
+      if (rootFrame) {
+        rootFrame->InvalidateFrameSubtree();
+      }
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetPaintFlashing(bool* aRetVal)
+{
+  *aRetVal = false;
+  nsPresContext* presContext = GetPresContext();
+  if (presContext) {
+    *aRetVal = presContext->RefreshDriver()->GetPaintFlashing();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::DispatchEventToChromeOnly(nsIDOMEventTarget* aTarget,
                                             nsIDOMEvent* aEvent,
                                             bool* aRetVal)
