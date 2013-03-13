@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_SVGDefsElement_h
 #define mozilla_dom_SVGDefsElement_h
 
-#include "mozilla/Util.h"
 #include "SVGGraphicsElement.h"
 
 nsresult NS_NewSVGDefsElement(nsIContent **aResult,
@@ -22,7 +21,7 @@ protected:
   friend nsresult (::NS_NewSVGDefsElement(nsIContent **aResult,
                                           already_AddRefed<nsINodeInfo> aNodeInfo));
   SVGDefsElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
 
 public:
   // interfaces:

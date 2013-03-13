@@ -33,7 +33,7 @@ XPIDLSRCS = \
   nsIMediaManager.idl \
   $(NULL)
 
-EXPORTS_NAMESPACE = mozilla
+EXPORTS_NAMESPACES = mozilla
 
 EXPORTS_mozilla = \
   MediaManager.h \

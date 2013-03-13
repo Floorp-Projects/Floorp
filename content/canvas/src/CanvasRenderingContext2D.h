@@ -139,8 +139,7 @@ public:
   CanvasRenderingContext2D();
   virtual ~CanvasRenderingContext2D();
 
-  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
-                               bool *triedToWrap);
+  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
 
   HTMLCanvasElement* GetCanvas() const
   {

@@ -375,7 +375,8 @@ this.SocialService = {
     let installOrigin = principal.origin;
 
     let id = getAddonIDFromOrigin(installOrigin);
-    if (bs.getAddonBlocklistState(id, data.version || "0") == Ci.nsIBlocklistService.STATE_BLOCKED)
+    let version = data && data.version ? data.version : "0";
+    if (bs.getAddonBlocklistState(id, version) == Ci.nsIBlocklistService.STATE_BLOCKED)
       throw new Error("installProvider: provider with origin [" +
                       installOrigin + "] is blocklisted");
 

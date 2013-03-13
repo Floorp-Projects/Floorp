@@ -19,7 +19,6 @@
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginStreamListener.h"
 #include "nsPluginHost.h"
-#include "nsPluginSafety.h"
 #include "nsPluginLogging.h"
 #include "nsContentUtils.h"
 #include "nsPluginInstanceOwner.h"

@@ -25,7 +25,7 @@ interface nsIURI;
  * interface to mirror this interface when changing it.
  */
 
-[scriptable, uuid(e9102696-4bb4-4a98-a31f-be9da5a3d18e)]
+[scriptable, uuid(b6c5ae8a-5e30-41f1-975a-be73cd6f71db)]
 interface nsIObjectLoadingContent : nsISupports
 {
   /**
@@ -164,6 +164,12 @@ interface nsIObjectLoadingContent : nsISupports
   readonly attribute nsIURI srcURI;
 
   readonly attribute unsigned long pluginFallbackType;
+
+  /**
+   * If this object currently owns a running plugin, regardless of whether or
+   * not one is pending spawn/despawn.
+   */
+  readonly attribute bool hasRunningPlugin;
 
   /**
    * This method will disable the play-preview plugin state.

@@ -21,11 +21,21 @@
               android:textColor="@color/doorhanger_text"
               android:visibility="gone"/>
 
+    <View android:id="@+id/divider_choices"
+          android:layout_width="fill_parent"
+          android:layout_height="1dp"
+          android:background="#FFD1D5DA"
+          android:visibility="gone"/>
+
     <LinearLayout android:id="@+id/doorhanger_choices"
-                  style="@android:style/ButtonBar"
                   android:layout_width="fill_parent"
                   android:layout_height="wrap_content"
                   android:orientation="horizontal"
                   android:visibility="gone"/>
+
+    <View android:id="@+id/divider_doorhanger"
+          android:layout_width="fill_parent"
+          android:layout_height="1dp"
+          android:background="#FFFF9500"/>
 
 </merge>

@@ -82,7 +82,7 @@ public:
     return nullptr;
   }
 
-  virtual JSObject *WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap);
+  virtual JSObject *WrapObject(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
 
 private:
   uint16_t mType;

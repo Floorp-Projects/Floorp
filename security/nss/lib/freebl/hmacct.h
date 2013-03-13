@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _ALGHMACCT_H_
-#define _ALGHMACCT_H_
+#ifndef _HMACCT_H_
+#define _HMACCT_H_
 
 SEC_BEGIN_PROTOS
 

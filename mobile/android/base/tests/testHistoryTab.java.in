@@ -104,6 +104,12 @@ public class testHistoryTab extends PixelTest {
         String loadUrl = "";
         for (int i = count - 1; i >= 0; i--) {
             View child = listview.getChildAt(i);
+            if (child == null) {
+                // this may simply indicate that the item is not visible
+                Object item = listview.getAdapter().getItem(i);
+                mAsserter.ok(item != null, "adapter item is set", item != null ? item.toString() : "null!");
+                continue;
+            }
             ArrayList<View> views = mSolo.getViews(child);
             ArrayList<ImageView> imageViews = new ArrayList<ImageView>();
             int expectedImages = 1;
@@ -192,6 +198,7 @@ public class testHistoryTab extends PixelTest {
             mActions.sendSpecialKey(Actions.SpecialKey.BACK);
 
             View child = listview.getChildAt(0);
+            mAsserter.ok(child != null, "first list item can be retrieved", child != null ? child.toString() : "null!");
             mSolo.clickLongOnView(child);
             mAsserter.is(false, mSolo.waitForText("Open in New Tab"), "Header rows should not show a context menu");
 
@@ -206,6 +213,7 @@ public class testHistoryTab extends PixelTest {
         waitForText(url);
 
         View child = listview.getChildAt(0);
+        mAsserter.ok(child != null, "first list item can be retrieved", child != null ? child.toString() : "null!");
         mSolo.clickOnView(child);
         // nothing should happen
 
