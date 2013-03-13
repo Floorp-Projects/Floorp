@@ -14,12 +14,10 @@
 #include "jscntxt.h"
 #include "jsstr.h"
 
-namespace js {
-
 /*
- * NB: This class must only be used on the stack.
+ * NB: This class must only be used on the stack as it contains a js::Value.
  */
-class JSONParser : private AutoGCRooter
+class JSONParser
 {
   public:
     enum ErrorHandling { RaiseError, NoError };
@@ -29,10 +27,10 @@ class JSONParser : private AutoGCRooter
     /* Data members */
 
     JSContext * const cx;
-    StableCharPtr current;
-    const StableCharPtr end;
+    JS::StableCharPtr current;
+    const JS::StableCharPtr end;
 
-    Value v;
+    js::Value v;
 
     const ParsingMode parsingMode;
     const ErrorHandling errorHandling;
@@ -42,70 +40,6 @@ class JSONParser : private AutoGCRooter
                  ObjectOpen, ObjectClose,
                  Colon, Comma,
                  OOM, Error };
-
-    // State related to the parser's current position. At all points in the
-    // parse this keeps track of the stack of arrays and objects which have
-    // been started but not finished yet. The actual JS object is not
-    // allocated until the literal is closed, so that the result can be sized
-    // according to its contents and have its type and shape filled in using
-    // caches.
-
-    // State for an array that is currently being parsed. This includes all
-    // elements that have been seen so far.
-    typedef Vector<Value, 20> ElementVector;
-
-    // State for an object that is currently being parsed. This includes all
-    // the key/value pairs that have been seen so far.
-    typedef Vector<IdValuePair, 10> PropertyVector;
-
-    // Possible states the parser can be in between values.
-    enum ParserState {
-        // An array element has just being parsed.
-        FinishArrayElement,
-
-        // An object property has just been parsed.
-        FinishObjectMember,
-
-        // At the start of the parse, before any values have been processed.
-        JSONValue
-    };
-
-    // Stack element for an in progress array or object.
-    struct StackEntry {
-        ElementVector &elements() {
-            JS_ASSERT(state == FinishArrayElement);
-            return * static_cast<ElementVector *>(vector);
-        }
-
-        PropertyVector &properties() {
-            JS_ASSERT(state == FinishObjectMember);
-            return * static_cast<PropertyVector *>(vector);
-        }
-
-        StackEntry(ElementVector *elements)
-          : state(FinishArrayElement), vector(elements)
-        {}
-
-        StackEntry(PropertyVector *properties)
-          : state(FinishObjectMember), vector(properties)
-        {}
-
-        ParserState state;
-
-      private:
-        void *vector;
-    };
-
-    // All in progress arrays and objects being parsed, in order from outermost
-    // to innermost.
-    Vector<StackEntry, 10> stack;
-
-    // Unused element and property vectors for previous in progress arrays and
-    // objects. These vectors are not freed until the end of the parse to avoid
-    // unnecessary freeing and allocation.
-    Vector<ElementVector*, 5> freeElements;
-    Vector<PropertyVector*, 5> freeProperties;
-
 #ifdef DEBUG
     Token lastToken;
 #endif
@@ -124,23 +58,17 @@ class JSONParser : private AutoGCRooter
     JSONParser(JSContext *cx, JS::StableCharPtr data, size_t length,
                ParsingMode parsingMode = StrictJSON,
                ErrorHandling errorHandling = RaiseError)
-      : AutoGCRooter(cx, JSONPARSER),
-        cx(cx),
+      : cx(cx),
         current(data),
         end((data + length).get(), data.get(), length),
         parsingMode(parsingMode),
-        errorHandling(errorHandling),
-        stack(cx),
-        freeElements(cx),
-        freeProperties(cx)
+        errorHandling(errorHandling)
 #ifdef DEBUG
       , lastToken(Error)
 #endif
     {
         JS_ASSERT(current <= end);
     }
-
-    ~JSONParser();
 
     /*
      * Parse the JSON data specified at construction time.  If it parses
@@ -167,9 +95,10 @@ class JSONParser : private AutoGCRooter
         return v;
     }
 
-    JSAtom *atomValue() const {
+    js::Value atomValue() const {
         js::Value strval = stringValue();
-        return &strval.toString()->asAtom();
+        JS_ASSERT(strval.toString()->isAtom());
+        return strval;
     }
 
     Token token(Token t) {
@@ -212,18 +141,9 @@ class JSONParser : private AutoGCRooter
     void error(const char *msg);
     bool errorReturn();
 
-    JSObject *createFinishedObject(PropertyVector &properties);
-    bool finishObject(MutableHandleValue vp, PropertyVector &properties);
-    bool finishArray(MutableHandleValue vp, ElementVector &elements);
-
-    friend void AutoGCRooter::trace(JSTracer *trc);
-    void trace(JSTracer *trc);
-
   private:
     JSONParser(const JSONParser &other) MOZ_DELETE;
     void operator=(const JSONParser &other) MOZ_DELETE;
 };
-
-} /* namespace js */
 
 #endif /* jsonparser_h___ */
