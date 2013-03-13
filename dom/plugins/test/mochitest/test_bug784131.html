@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+<head>
+  <title>Test for Bug 784131</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <base href="chrome://browser/content/">
+</head>
+<body>
+
+<embed id="body" type="application/x-test">
+<div>
+  <embed id="nested" type="application/x-test">
+</div>
+<script type="application/javascript">
+  function getObjectValue(obj) {
+    try {
+      return obj.getObjectValue();
+    } catch (e) {
+      return null;
+    }
+  }
+  SimpleTest.waitForExplicitFinish();
+
+  var body_embed = document.querySelector("embed#body");
+  var nested_embed = document.querySelector("embed#nested");
+  var nested_parent = nested_embed.parentNode;
+  // Ensure plugins are spawned
+  var body_obj = getObjectValue(body_embed);
+  var nested_obj = getObjectValue(nested_embed);
+  isnot(body_obj, null, "body plugin spawned");
+  isnot(nested_obj, null, "nested plugin spawned");
+  // Display:none the plugin and the nested plugin's parent
+  body_embed.style.display = "none";
+  nested_parent.style.display = "none";
+  body_embed.clientTop;
+  nested_embed.clientTop;
+
+  // Plugins should still be running the same instance
+  ok(body_embed.checkObjectValue(body_obj), "body plugin still running");
+  ok(nested_embed.checkObjectValue(nested_obj), "nested plugin still running");
+  // Spin event loop
+  SimpleTest.executeSoon(function() {
+    // Plugins should be stopped
+    is(getObjectValue(body_embed), null, "body plugin gone");
+    is(getObjectValue(nested_embed), null, "nested plugin gone");
+
+    // Restart plugins...
+    body_embed.style.display = "inherit";
+    nested_parent.style.display = "inherit";
+
+    // Ensure plugins are spawned
+    var body_obj = getObjectValue(body_embed);
+    var nested_obj = getObjectValue(nested_embed);
+    isnot(body_obj, null, "body plugin spawned");
+    isnot(nested_obj, null, "nested plugin spawned");
+
+    // Take away frames again, flush layout, restore frames
+    body_embed.style.display = "none";
+    nested_parent.style.display = "none";
+    body_embed.clientTop;
+    nested_embed.clientTop;
+    body_embed.style.display = "inherit";
+    nested_parent.style.display = "inherit";
+    body_embed.clientTop;
+    nested_embed.clientTop;
+
+    // Spin event loop, ensure plugin remains running
+    SimpleTest.executeSoon(function() {
+      ok(body_embed.checkObjectValue(body_obj), "body plugin still running");
+      ok(nested_embed.checkObjectValue(nested_obj), "nested plugin still running");
+      SimpleTest.finish();
+    });
+  });
+</script>
+</body>
+</html>
