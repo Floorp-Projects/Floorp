@@ -433,13 +433,15 @@ protected:
     bool mDirty;
   };
   // Don't access mSelection directly except at calling MarkDirty().
-  // Use CurrentSelection() instead.
+  // Use CurrentSelection() instead.  This is marked as dirty when the
+  // selection or content is changed without document lock.
   Selection mSelection;
 
   // Get "current selection" while the document is locked.  The selection is
   // NOT modified immediately during document lock.  The pending changes will
   // be flushed at unlocking the document.  The "current selection" is the
-  // modified selection during document lock.
+  // modified selection during document lock.  This is also called
+  // CurrentContent() too.
   Selection& CurrentSelection();
 
   struct PendingAction MOZ_FINAL
@@ -486,11 +488,11 @@ protected:
 
   // When On*Composition() is called without document lock, we need to flush
   // the recorded actions at quitting the method.
-  // AutoPendingActionFlusher class is usedful for it.  
-  class NS_STACK_CLASS AutoPendingActionFlusher MOZ_FINAL
+  // AutoPendingActionAndContentFlusher class is usedful for it.  
+  class NS_STACK_CLASS AutoPendingActionAndContentFlusher MOZ_FINAL
   {
   public:
-    AutoPendingActionFlusher(nsTextStore* aTextStore)
+    AutoPendingActionAndContentFlusher(nsTextStore* aTextStore)
       : mTextStore(aTextStore)
     {
       MOZ_ASSERT(!mTextStore->mIsRecordingActionsWithoutLock);
@@ -499,7 +501,7 @@ protected:
       }
     }
 
-    ~AutoPendingActionFlusher()
+    ~AutoPendingActionAndContentFlusher()
     {
       if (!mTextStore->mIsRecordingActionsWithoutLock) {
         return;
@@ -509,10 +511,104 @@ protected:
     }
 
   private:
-    AutoPendingActionFlusher() {}
+    AutoPendingActionAndContentFlusher() {}
 
     nsRefPtr<nsTextStore> mTextStore;
   };
+
+  class Content MOZ_FINAL
+  {
+  public:
+    Content(nsTextStore::Composition& aComposition,
+            nsTextStore::Selection& aSelection) :
+      mComposition(aComposition), mSelection(aSelection)
+    {
+      Clear();
+    }
+
+    void Clear()
+    {
+      mText.Truncate();
+      mInitialized = false;
+    }
+
+    bool IsInitialized() const { return mInitialized; }
+
+    void Init(const nsAString& aText)
+    {
+      mText = aText;
+      mMinTextModifiedOffset = NOT_MODIFIED;
+      mInitialized = true;
+      mNotifyTSFOfLayoutChange = false;
+    }
+
+    const nsDependentSubstring GetSelectedText() const;
+    const nsDependentSubstring GetSubstring(uint32_t aStart,
+                                            uint32_t aLength) const;
+    void ReplaceSelectedTextWith(const nsAString& aString);
+    void ReplaceTextWith(LONG aStart, LONG aLength, const nsAString& aString);
+
+    void StartComposition(ITfCompositionView* aCompositionView,
+                          const PendingAction& aCompStart,
+                          bool aPreserveSelection);
+    void EndComposition(const PendingAction& aCompEnd);
+
+    const nsString& Text() const
+    {
+      MOZ_ASSERT(mInitialized);
+      return mText;
+    }
+
+    // Returns true if layout of the character at the aOffset has not been
+    // calculated.
+    bool IsLayoutChangedAfter(uint32_t aOffset) const
+    {
+      return mInitialized && (mMinTextModifiedOffset < aOffset);
+    }
+    // Returns true if layout of the content has been changed, i.e., the new
+    // layout has not been calculated.
+    bool IsLayoutChanged() const
+    {
+      return mInitialized && (mMinTextModifiedOffset != NOT_MODIFIED);
+    }
+
+    void NeedsToNotifyTSFOfLayoutChange()
+    {
+      mNotifyTSFOfLayoutChange = true;
+    }
+
+    bool NeedToNotifyTSFOfLayoutChange() const
+    {
+      return mInitialized && mNotifyTSFOfLayoutChange;
+    }
+
+    nsTextStore::Composition& Composition() { return mComposition; }
+    nsTextStore::Selection& Selection() { return mSelection; }
+
+  private:
+    nsString mText;
+    nsTextStore::Composition& mComposition;
+    nsTextStore::Selection& mSelection;
+
+    // The minimum offset of modified part of the text.
+    enum MOZ_ENUM_TYPE(uint32_t)
+    {
+      NOT_MODIFIED = UINT32_MAX
+    };
+    uint32_t mMinTextModifiedOffset;
+
+    bool mInitialized;
+    bool mNotifyTSFOfLayoutChange;
+  };
+  // mContent caches "current content" of the document ONLY while the document
+  // is locked.  I.e., the content is cleared at unlocking the document since
+  // we need to reduce the memory usage.  This is initialized by
+  // CurrentContent() automatically, so, don't access this member directly
+  // except at calling Clear(), IsInitialized(), IsLayoutChangedAfter() or
+  // IsLayoutChanged().
+  Content mContent;
+
+  Content& CurrentContent();
 
   // The input scopes for this context, defaults to IS_DEFAULT.
   nsTArray<InputScope>         mInputScopes;
