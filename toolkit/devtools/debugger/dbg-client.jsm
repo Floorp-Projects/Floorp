@@ -503,7 +503,11 @@ DebuggerClient.prototype = {
           let resumption = { from: this.activeThread._actor, type: "resumed" };
           this.activeThread._onThreadState(resumption);
         }
-        this.notify(aPacket.type, aPacket);
+        // Only try to notify listeners on events, not responses to requests
+        // that lack a packet type.
+        if (aPacket.type) {
+          this.notify(aPacket.type, aPacket);
+        }
 
         if (onResponse) {
           onResponse(aPacket);
