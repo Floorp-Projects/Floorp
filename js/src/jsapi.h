@@ -2472,7 +2472,8 @@ typedef void
 
 enum WeakMapTraceKind {
     DoNotTraceWeakMaps = 0,
-    TraceWeakMapValues = 1
+    TraceWeakMapValues = 1,
+    TraceWeakMapKeysValues = 2
 };
 
 struct JSTracer {
