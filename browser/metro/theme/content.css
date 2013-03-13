@@ -8,11 +8,6 @@
 @namespace url("http://www.w3.org/1999/xhtml");
 @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* make clicking on links stand out a bit (bug 532206) */
-* > *:not(embed):focus, * > *:focus > font {
-  outline: 1px solid #8db8d8 !important;
-}
-
 *:-moz-any-link:focus {
   outline-offset: -2px;
 }
@@ -103,24 +98,13 @@ select[size="1"] xul|scrollbarbutton {
   min-width: 16px;
 }
 
-/* Override inverse OS themes */
-select,
-button,
-xul|button,
-* > input:not([type="image"]) {
-  /* -moz-appearance: none !important;  See bug 598421 for fixing the platform */
-  /*border-radius: 3px;*/
-}
-
 select[size],
 select[multiple],
 select[size][multiple],
 * > input:not([type="image"]) {
-
   border-style: solid;
   border-color: #7d7d7d;
   color: #414141;
-  /*background: white -moz-linear-gradient(top, rgba(115,115,115,0.5) 0, rgba(215,215,215,0.5) 3px, rgba(255,255,255,0.2) 16px);*/
 }
 
 /* For both mouse and touch, single-selects are handled by the SelectHelper popup.
@@ -144,7 +128,6 @@ button {
   border-style: solid;
   border-color: #7d7d7d;
   color: #414141;
-  /*background: white -moz-linear-gradient(top, rgba(255,255,255,0.2) 0, rgba(215,215,215,0.5) 18px, rgba(115,115,115,0.5) 100%);*/
 }
 
 input[type="checkbox"] {
@@ -171,13 +154,6 @@ select[size="1"] {
   padding: 1px;
 }
 
-textarea {
-  /*
-  resize: none;
-  border-width: 1px;
-  padding: 2px 1px 2px 1px;*/
-}
-
 input[type="button"],
 input[type="submit"],
 input[type="reset"],
@@ -200,42 +176,8 @@ select > button {
   padding: 0px !important;
   border-radius: 0;
   color: #414141;
-  /*
-  background-size: 100% 90%;
-  background-color: transparent;
-  background-image: -moz-radial-gradient(bottom left, #bbbbbb 40%, #f5f5f5) !important;
-  background-position: -15px center !important;
-  background-repeat: no-repeat !important;
-  */
-  /* Use to position an svg arrow on <select> element
-  -moz-binding: url("chrome://browser/content/bindings/bindings.xml#select-button");*/
   position: relative !important;
   font-size: inherit;
-}
-
-select[size]:focus,
-select[multiple]:focus,
-select[size][multiple]:focus,
-input[type="file"]:focus > input[type="text"],
-* > input:not([type="image"]):focus {
-/*
-  outline: 0px !important;
-  border-style: solid;
-  border-color: rgb(94,128,153);
-  background: white -moz-linear-gradient(top, rgba(27,113,177,0.5) 0, rgba(198,225,246,0.2) 3px, rgba(255,255,255,0.2) 16px); */
-}
-
-select:not([size]):not([multiple]):focus,
-select[size="0"]:focus,
-select[size="1"]:focus,
-input[type="button"]:focus,
-input[type="submit"]:focus,
-input[type="reset"]:focus,
-button:focus {
-/*outline: 0px !important;
-  border-style: solid;
-  border-color: rgb(94,128,153);
-  background: white -moz-linear-gradient(top, rgba(255,255,255,0.2) 0, rgba(198,225,256,0.2) 18px, rgba(27,113,177,0.5) 100%); */
 }
 
 input[type="checkbox"]:focus,
@@ -301,16 +243,6 @@ select[disabled] > button {
 video > xul|videocontrols,
 audio > xul|videocontrols {
   -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#touchControls");
-}
-
-*:-moz-any-link:active,
-*[role=button]:active,
-button:active,
-input:active,
-option:active,
-select:active,
-label:active {
-  background-color: rgba(141, 184, 216, 0.5) !important;
 }
 
 /*
