@@ -46,9 +46,9 @@ nsSVGElement::EnumInfo SVGMaskElement::sEnumInfo[2] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ISUPPORTS_INHERITED3(SVGMaskElement, SVGMaskElementBase,
+NS_IMPL_ISUPPORTS_INHERITED4(SVGMaskElement, SVGMaskElementBase,
                              nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement)
+                             nsIDOMSVGElement, nsIDOMSVGUnitTypes)
 
 //----------------------------------------------------------------------
 // Implementation
