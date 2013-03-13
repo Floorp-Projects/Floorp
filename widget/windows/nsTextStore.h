@@ -220,7 +220,6 @@ protected:
                                 bool aDispatchTextEvent = false);
   bool     InsertTextAtSelectionInternal(const nsAString &aInsertStr,
                                          TS_TEXTCHANGE* aTextChange);
-  HRESULT  OnStartCompositionInternal(ITfCompositionView*, ITfRange*, bool);
   void     CommitCompositionInternal(bool);
   void     SetInputContextInternal(IMEState::Enabled aState);
   nsresult OnTextChangeInternal(uint32_t, uint32_t, uint32_t);
@@ -231,7 +230,15 @@ protected:
                                TF_DISPLAYATTRIBUTE* aResult);
   HRESULT  RestartCompositionIfNecessary(ITfRange* pRangeNew = nullptr);
 
+  // Following methods record composing action(s) to mPendingActions.
+  // They will be flushed FlushPendingActions().
+  HRESULT  RecordCompositionStartAction(ITfCompositionView* aCompositionView,
+                                        ITfRange* aRange,
+                                        bool aPreserveSelection);
   HRESULT  RecordCompositionUpdateAction();
+
+  // FlushPendingActions() performs pending actions recorded in mPendingActions
+  // and clear it.
   void     FlushPendingActions();
 
   nsresult OnLayoutChange();
