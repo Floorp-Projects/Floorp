@@ -11,7 +11,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
-XPIDL_MODULE	= xpcom_threads
 LIBRARY_NAME	= xpcomthreads_s
 GRE_MODULE	= 1
 MOZILLA_INTERNAL_API = 1
@@ -42,20 +41,6 @@ EXPORTS_mozilla = \
   HangMonitor.h \
   LazyIdleThread.h \
   $(NULL)
-
-XPIDLSRCS	= \
-		nsIEventTarget.idl \
-		nsIThread.idl \
-		nsIThreadInternal.idl \
-		nsIThreadManager.idl \
-		nsIThreadPool.idl \
-		nsITimer.idl \
-		nsIRunnable.idl \
-		nsICancelableRunnable.idl \
-		nsIEnvironment.idl \
-		nsIProcess.idl \
-		nsISupportsPriority.idl \
-		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 

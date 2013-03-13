@@ -1181,6 +1181,8 @@ struct nsTextRange
   uint32_t mRangeType;
 
   nsTextRangeStyle mRangeStyle;
+
+  uint32_t Length() const { return mEndOffset - mStartOffset; }
 };
 
 typedef nsTextRange* nsTextRangeArray;

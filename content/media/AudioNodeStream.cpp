@@ -7,6 +7,7 @@
 
 #include "MediaStreamGraphImpl.h"
 #include "AudioNodeEngine.h"
+#include "ThreeDPoint.h"
 
 using namespace mozilla::dom;
 
@@ -115,6 +116,26 @@ AudioNodeStream::SetTimelineParameter(uint32_t aIndex,
     AudioEventTimeline<ErrorResult> mValue;
     uint32_t mIndex;
   };
+  GraphImpl()->AppendMessage(new Message(this, aIndex, aValue));
+}
+
+void
+AudioNodeStream::SetThreeDPointParameter(uint32_t aIndex, const ThreeDPoint& aValue)
+{
+  class Message : public ControlMessage {
+  public:
+    Message(AudioNodeStream* aStream, uint32_t aIndex, const ThreeDPoint& aValue)
+      : ControlMessage(aStream), mValue(aValue), mIndex(aIndex) {}
+    virtual void Run()
+    {
+      static_cast<AudioNodeStream*>(mStream)->Engine()->
+          SetThreeDPointParameter(mIndex, mValue);
+    }
+    ThreeDPoint mValue;
+    uint32_t mIndex;
+  };
+
+  MOZ_ASSERT(this);
   GraphImpl()->AppendMessage(new Message(this, aIndex, aValue));
 }
 

@@ -11,10 +11,4 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xul
 
-ifdef MOZ_XUL
-XPIDLSRCS	= \
-		nsIXULContextMenuBuilder.idl \
-		$(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk

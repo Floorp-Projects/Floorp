@@ -13,16 +13,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xuldoc
 GRE_MODULE	= 1
 
-XPIDLSRCS	= \
-		nsIController.idl \
-		nsIControllers.idl \
-		$(NULL)
-
 ifdef MOZ_XUL
-XPIDLSRCS += \
-		nsIXULOverlayProvider.idl \
-		$(NULL)
-
 EXPORTS		= \
 		nsIXULDocument.h \
 		$(NULL)

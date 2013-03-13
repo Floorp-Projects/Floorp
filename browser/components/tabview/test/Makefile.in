@@ -46,7 +46,6 @@ _BROWSER_FILES = \
                  browser_tabview_bug599626.js \
                  browser_tabview_bug600645.js \
                  browser_tabview_bug600812.js \
-                 browser_tabview_bug602432.js \
                  browser_tabview_bug604098.js \
                  browser_tabview_bug606657.js \
                  browser_tabview_bug606905.js \
@@ -57,7 +56,6 @@ _BROWSER_FILES = \
                  browser_tabview_bug608184.js \
                  browser_tabview_bug608405.js \
                  browser_tabview_bug610208.js \
-                 browser_tabview_bug610242.js \
                  browser_tabview_bug612470.js \
                  browser_tabview_bug613541.js \
                  browser_tabview_bug616729.js \
@@ -103,7 +101,6 @@ _BROWSER_FILES = \
                  browser_tabview_bug642793.js \
                  browser_tabview_bug643392.js \
                  browser_tabview_bug644097.js \
-                 browser_tabview_bug648882.js \
                  browser_tabview_bug649006.js \
                  browser_tabview_bug649307.js \
                  browser_tabview_bug649319.js \
@@ -112,7 +109,6 @@ _BROWSER_FILES = \
                  browser_tabview_bug651311.js \
                  browser_tabview_bug654295.js \
                  browser_tabview_bug654721.js \
-                 browser_tabview_bug654941.js \
                  browser_tabview_bug655269.js \
                  browser_tabview_bug656778.js \
                  browser_tabview_bug656913.js \
@@ -122,13 +118,10 @@ _BROWSER_FILES = \
                  browser_tabview_bug665502.js \
                  browser_tabview_bug669694.js \
                  browser_tabview_bug673196.js \
-                 browser_tabview_bug673729.js \
-                 $(filter disabled-temporarily--bug-795265, browser_tabview_bug678374.js) \
                  browser_tabview_bug681599.js \
                  browser_tabview_bug685476.js \
                  browser_tabview_bug685692.js \
                  browser_tabview_bug686654.js \
-                 browser_tabview_bug696602.js \
                  browser_tabview_bug697390.js \
                  browser_tabview_bug705621.js \
                  browser_tabview_bug706430.js \
@@ -167,6 +160,13 @@ _BROWSER_FILES = \
 
 
 # browser_tabview_bug597980.js is disabled for leaking, see bug 711907
+# browser_tabview_bug678374.js disabled for intermittent failures (bug 795265)
+# browser_tabview_bug602432.js disabled for intermittent failures (bug 704417)
+# browser_tabview_bug610242.js disabled for intermittent failures (bug 736036)
+# browser_tabview_bug648882.js disabled for intermittent failures (bug 752862)
+# browser_tabview_bug654941.js disabled for intermittent failures (bug 754222)
+# browser_tabview_bug673729.js disabled for intermittent failures (bug 749980)
+# browser_tabview_bug696602.js disabled for intermittent failures (bug 736425)
 
 libs::	$(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

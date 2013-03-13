@@ -28,8 +28,8 @@
 #include "builtin/Iterator-inl.h"
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
-#include "gc/Root.h"
 #include "js/MemoryMetrics.h"
+#include "js/RootingAPI.h"
 #include "js/TemplateLib.h"
 #include "vm/BooleanObject.h"
 #include "vm/GlobalObject.h"
@@ -740,9 +740,8 @@ JSObject::setDateUTCTime(const js::Value &time)
 /* static */ inline bool
 JSObject::setSingletonType(JSContext *cx, js::HandleObject obj)
 {
-#if defined(JSGC_GENERATIONAL)
-    JS_ASSERT(!obj->runtime()->gcNursery.isInside(obj.get()));
-#endif
+    JS_ASSERT(!IsInsideNursery(cx->runtime, obj.get()));
+
     if (!cx->typeInferenceEnabled())
         return true;
 

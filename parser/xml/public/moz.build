@@ -3,3 +3,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'nsIMozSAXXMLDeclarationHandler.idl',
+    'nsISAXAttributes.idl',
+    'nsISAXContentHandler.idl',
+    'nsISAXDTDHandler.idl',
+    'nsISAXErrorHandler.idl',
+    'nsISAXLexicalHandler.idl',
+    'nsISAXLocator.idl',
+    'nsISAXMutableAttributes.idl',
+    'nsISAXXMLFilter.idl',
+    'nsISAXXMLReader.idl',
+]
+
+XPIDL_MODULE = 'saxparser'
+

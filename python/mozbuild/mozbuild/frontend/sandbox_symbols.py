@@ -140,6 +140,31 @@ VARIABLES = {
         like @foo@ will be substituted with the values of the AC_SUBST
         variables declared during configure.
         """),
+
+    # IDL Generation.
+    'XPIDL_SOURCES': (list, [],
+        """XPCOM Interface Definition Files (xpidl).
+
+        This is a list of files that define XPCOM interface definitions.
+        Entries must be files that exist. Entries are almost certainly .idl
+        files.
+        """),
+
+    'XPIDL_MODULE': (unicode, "",
+        """XPCOM Interface Definition Module Name.
+
+        This is the name of the .xpt file that is created by linking
+        XPIDL_SOURCES together. If unspecified, it defaults to be the same as
+        MODULE.
+        """),
+
+    'XPIDL_FLAGS': (list, [],
+        """XPCOM Interface Definition Module Flags.
+
+        This is a list of extra flags that are passed to the IDL compiler.
+        Typically this is a set of -I flags that denote extra include
+        directories to search for included .idl files.
+        """),
 }
 
 # The set of functions exposed to the sandbox.

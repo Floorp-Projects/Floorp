@@ -2356,14 +2356,10 @@ struct StringRange
 };
 
 static inline JSShortString *
-FlattenSubstrings(JSContext *cx, Handle<JSStableString*> stableStr,
+FlattenSubstrings(JSContext *cx, const jschar *chars,
                   const StringRange *ranges, size_t rangesLen, size_t outputLen)
 {
     JS_ASSERT(JSShortString::lengthFits(outputLen));
-
-    const jschar *chars = stableStr->getChars(cx);
-    if (!chars)
-        return NULL;
 
     JSShortString *str = js_NewGCShortString<CanGC>(cx);
     if (!str)
@@ -2391,6 +2387,10 @@ AppendSubstrings(JSContext *cx, Handle<JSStableString*> stableStr,
     if (rangesLen == 1)
         return js_NewDependentString(cx, stableStr, ranges[0].start, ranges[0].length);
 
+    const jschar *chars = stableStr->getChars(cx);
+    if (!chars)
+        return NULL;
+
     /* Collect substrings into a rope */
     size_t i = 0;
     RopeBuilder rope(cx);
@@ -2412,7 +2412,7 @@ AppendSubstrings(JSContext *cx, Handle<JSStableString*> stableStr,
             part = js_NewDependentString(cx, stableStr, sr.start, sr.length);
         } else {
             /* Copy the ranges (linearly) into a JSShortString */
-            part = FlattenSubstrings(cx, stableStr, ranges + i, end - i, substrLen);
+            part = FlattenSubstrings(cx, chars, ranges + i, end - i, substrLen);
             i = end;
         }
 
@@ -2513,8 +2513,8 @@ str_replace_regexp(JSContext *cx, CallArgs args, ReplaceData &rdata)
     RegExpShared &re = rdata.g.regExp();
 
     /* Optimize removal. */
-    if (rdata.repstr && rdata.repstr->length() == 0 && !rdata.dollar) {
-        JS_ASSERT(!rdata.lambda && !rdata.elembase);
+    if (rdata.repstr && rdata.repstr->length() == 0) {
+        JS_ASSERT(!rdata.lambda && !rdata.elembase && !rdata.dollar);
         return str_replace_regexp_remove(cx, args, rdata.str, re);
     }
 

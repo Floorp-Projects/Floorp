@@ -112,7 +112,7 @@ HTML_TAG("aside", "");
 HTML_TAG("b", "");
 HTML_TAG("base", "Base");
 HTML_TAG("bdo", "");
-HTML_TAG("bgsound", "Span");
+HTML_TAG("bgsound", "Unknown");
 HTML_TAG("big", "");
 HTML_TAG("blink", "");
 HTML_TAG("blockquote", "Quote");
@@ -159,7 +159,7 @@ HTML_TAG("html", "Html");
 HTML_TAG("i", "");
 HTML_TAG("iframe", "IFrame", [ "nsIDOMGetSVGDocument", "nsIDOMMozBrowserFrame" ],
                              [ "nsIFrameLoaderOwner" ]);
-HTML_TAG("image", "Span");
+HTML_TAG("image", "");
 HTML_TAG("img", "Image", [ "nsIImageLoadingContent" ], []);
 HTML_TAG("input", "Input", [], [ "imgINotificationObserver",
                                  "nsIImageLoadingContent",
@@ -179,7 +179,7 @@ HTML_TAG("marquee", "Div");
 HTML_TAG("menu", "Menu");
 HTML_TAG("meta", "Meta");
 HTML_TAG("meter", "Meter");
-HTML_TAG("multicol", "Span");
+HTML_TAG("multicol", "Unknown");
 HTML_TAG("nav", "")
 HTML_TAG("nobr", "");
 HTML_TAG("noembed", "");
@@ -244,10 +244,18 @@ for (var tag of allTags) {
      "Unexpected classname for " + tagName(tag));
   is(node instanceof window[classInfoString], true,
      tagName(tag) + " not an instance of " + classInfos[tag]);
-  is(node instanceof HTMLUnknownElement, false,
-     tagName(tag) + " is an instance of HTMLUnknownElement");
-  is(node instanceof SpecialPowers.Ci.nsIDOMHTMLUnknownElement, false,
-     tagName(tag) + " is an instance of nsIDOMHTMLUnknownElement");
+
+  if (classInfoString != 'HTMLUnknownElement') {
+    is(node instanceof HTMLUnknownElement, false,
+       tagName(tag) + " is an instance of HTMLUnknownElement");
+    is(node instanceof SpecialPowers.Ci.nsIDOMHTMLUnknownElement, false,
+       tagName(tag) + " is an instance of nsIDOMHTMLUnknownElement");
+  } else {
+    is(node instanceof HTMLUnknownElement, true,
+       tagName(tag) + " is an instance of HTMLUnknownElement");
+    is(node instanceof SpecialPowers.Ci.nsIDOMHTMLUnknownElement, true,
+       tagName(tag) + " is an instance of nsIDOMHTMLUnknownElement");
+  }
 
   // Check that each node QIs to all the things we expect it to QI to
   for (var iface of interfaces[tag].concat(interfacesNonClassinfo[tag])) {

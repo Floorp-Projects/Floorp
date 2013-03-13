@@ -13,11 +13,5 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= caps
 GRE_MODULE	= 1
 
-XPIDLSRCS	= \
-		nsIScriptSecurityManager.idl \
-		nsIPrincipal.idl \
-		nsISecurityCheckedComponent.idl \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

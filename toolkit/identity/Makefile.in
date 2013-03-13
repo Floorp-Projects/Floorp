@@ -20,10 +20,6 @@ IS_COMPONENT = 1
 GRE_MODULE = 1
 EXPORT_LIBRARY = 1
 
-XPIDLSRCS = \
-  nsIIdentityCryptoService.idl \
-  $(NULL)
-
 CPPSRCS = \
   IdentityCryptoService.cpp \
   $(NULL)

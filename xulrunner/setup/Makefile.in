@@ -10,12 +10,6 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = xulrunner
-XPIDL_MODULE = xulapp_setup
-
-XPIDLSRCS = \
-	nsIXULAppInstall.idl \
-	$(NULL)
-
 EXTRA_COMPONENTS = nsXULAppInstall.manifest
 EXTRA_PP_COMPONENTS = nsXULAppInstall.js
 

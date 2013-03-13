@@ -13,12 +13,5 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= locale
 GRE_MODULE	= 1
 
-XPIDLSRCS	= \
-		nsILocale.idl \
-		nsILocaleService.idl \
-		nsIScriptableDateFormat.idl \
-		nsICollation.idl \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

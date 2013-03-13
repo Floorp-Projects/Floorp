@@ -6,3 +6,14 @@
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     DIRS += ['android']
 
+XPIDL_SOURCES += [
+    'nsIHTTPHeaderListener.idl',
+    'nsIPluginDocument.idl',
+    'nsIPluginHost.idl',
+    'nsIPluginInputStream.idl',
+    'nsIPluginInstanceOwner.idl',
+    'nsIPluginTag.idl',
+    'nsIPluginTagInfo.idl',
+    'nspluginroot.idl',
+]
+
