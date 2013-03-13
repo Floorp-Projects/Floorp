@@ -10,19 +10,23 @@
         Please refer to values/styles.xml for default styles.
     -->
 
-    <!-- Lists in AwesomeBar -->
-    <style name="GeckoList" parent="android:style/Widget.Holo.ListView">
-        <item name="android:layout_width">fill_parent</item>
-        <item name="android:layout_height">fill_parent</item>
-        <item name="android:layout_weight">1</item>
-        <item name="android:background">#EEF1F5</item>
-        <item name="android:divider">#D1D5DA</item>
-        <item name="android:dividerHeight">1dp</item>
-        <item name="android:cacheColorHint">#EEF1F5</item>
-        <item name="android:listSelector">@drawable/action_bar_button</item>
-    </style>
+    <!--
+        Base application styles. This could be overridden in other res/values-XXX/themes.xml.
+    -->
+    <style name="Widget.BaseButton" parent="android:style/Widget.Holo.Light.Button"/>
 
-    <style name="GeckoList.ListItem">
+    <style name="Widget.BaseEditText" parent="android:style/Widget.Holo.Light.EditText"/>
+
+    <style name="Widget.BaseListView" parent="android:style/Widget.Holo.ListView"/>
+
+    <style name="Widget.BaseTextView" parent="android:style/Widget.Holo.Light.TextView"/>
+
+
+    <!--
+        Application styles. All customizations that are not specific
+        to a particular API level can go here.
+    -->
+    <style name="Widget.ListItem">
         <item name="android:textColor">@color/select_item_multichoice</item>
         <item name="android:minHeight">?android:attr/listPreferredItemHeight</item>
         <item name="android:textAppearance">?android:attr/textAppearanceLarge</item>
@@ -39,9 +43,6 @@
         <item name="android:layout_height">@dimen/browser_toolbar_height</item>
         <item name="android:orientation">horizontal</item>
     </style>
-
-    <!-- Lists in AwesomeBar -->
-    <style name="AwesomeBarList" parent="@style/GeckoList"/>
  
     <!-- ActionBar -->
     <style name="ActionBar" parent="android:style/Widget.Holo.ActionBar" />
