@@ -1136,7 +1136,7 @@ public class BrowserProvider extends ContentProvider {
             } catch (java.lang.IllegalAccessException ex) {
                 Log.e(LOGTAG, "[Path] Can't create favicon " + name, ex);
             } catch (java.lang.NoSuchFieldException ex) {
-                Log.e(LOGTAG, "[Path] Can't create favicon " + name, ex);
+                // If the field does not exist, that means we intend to load via a drawable
             }
             return null;
         }
@@ -1154,7 +1154,7 @@ public class BrowserProvider extends ContentProvider {
             } catch (java.lang.IllegalAccessException ex) {
                 Log.e(LOGTAG, "[Drawable] Can't create favicon " + name, ex);
             } catch (java.lang.NoSuchFieldException ex) {
-                Log.e(LOGTAG, "[Drawable] Can't create favicon " + name, ex);
+                // If the field does not exist, that means we intend to load via a file path
             }
             return null;
         }
