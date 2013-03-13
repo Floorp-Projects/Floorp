@@ -47,6 +47,7 @@
     var gQueue = null;
     function doTest()
     {
+      disableLogging(); // from test_focusedChild
       gQueue = new eventQueue();
 
       gQueue.push(new takeFocusInvoker("aria-link"));
