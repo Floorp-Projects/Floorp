@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Main header first:
-#include "nsSVGTextFrame.h"
+#include "nsSVGTextFrame2.h"
 
 // Keep others in (case-insensitive) order:
 #include "DOMSVGPoint.h"
@@ -30,7 +30,7 @@
 #include "nsSVGPaintServerFrame.h"
 #include "nsSVGRect.h"
 #include "nsSVGIntegrationUtils.h"
-#include "nsSVGTextFrame2.h"
+#include "nsSVGTextFrame.h"
 #include "nsSVGTextPathFrame.h"
 #include "nsSVGUtils.h"
 #include "nsTArray.h"
