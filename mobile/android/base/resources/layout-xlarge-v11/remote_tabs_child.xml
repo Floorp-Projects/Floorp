@@ -8,7 +8,7 @@
               android:layout_height="@dimen/remote_tab_child_row_height"
               android:gravity="center_vertical"
               android:orientation="vertical"
-              android:background="@drawable/action_bar_button"
+              android:background="@drawable/action_bar_button_inverse"
               android:paddingLeft="2dp"
               android:paddingRight="2dp">
 
