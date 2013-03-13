@@ -4,13 +4,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/SVGFEPointLightElement.h"
+#include "mozilla/dom/SVGFEPointLightElementBinding.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEPointLight)
 
 namespace mozilla {
 namespace dom {
 
-nsSVGElement::NumberInfo nsSVGFEPointLightElement::sNumberInfo[3] =
+JSObject*
+SVGFEPointLightElement::WrapNode(JSContext *aCx, JSObject *aScope)
+{
+  return SVGFEPointLightElementBinding::Wrap(aCx, aScope, this);
+}
+
+nsSVGElement::NumberInfo SVGFEPointLightElement::sNumberInfo[3] =
 {
   { &nsGkAtoms::x, 0, false },
   { &nsGkAtoms::y, 0, false },
@@ -20,27 +27,25 @@ nsSVGElement::NumberInfo nsSVGFEPointLightElement::sNumberInfo[3] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGFEPointLightElement,nsSVGFEPointLightElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGFEPointLightElement,nsSVGFEPointLightElementBase)
+NS_IMPL_ADDREF_INHERITED(SVGFEPointLightElement,SVGFEPointLightElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGFEPointLightElement,SVGFEPointLightElementBase)
 
-NS_INTERFACE_TABLE_HEAD(nsSVGFEPointLightElement)
-  NS_NODE_INTERFACE_TABLE4(nsSVGFEPointLightElement, nsIDOMNode,
-                           nsIDOMElement, nsIDOMSVGElement,
-                           nsIDOMSVGFEPointLightElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEPointLightElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGFEPointLightElementBase)
+NS_INTERFACE_TABLE_HEAD(SVGFEPointLightElement)
+  NS_NODE_INTERFACE_TABLE3(SVGFEPointLightElement, nsIDOMNode,
+                           nsIDOMElement, nsIDOMSVGElement)
+NS_INTERFACE_MAP_END_INHERITING(SVGFEPointLightElementBase)
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEPointLightElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEPointLightElement)
 
 //----------------------------------------------------------------------
 // nsFEUnstyledElement methods
 
 bool
-nsSVGFEPointLightElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                    nsIAtom* aAttribute) const
+SVGFEPointLightElement::AttributeAffectsRendering(int32_t aNameSpaceID,
+                                                  nsIAtom* aAttribute) const
 {
   return aNameSpaceID == kNameSpaceID_None &&
          (aAttribute == nsGkAtoms::x ||
@@ -49,31 +54,30 @@ nsSVGFEPointLightElement::AttributeAffectsRendering(int32_t aNameSpaceID,
 }
 
 //----------------------------------------------------------------------
-// nsIDOMSVGFEPointLightElement methods
 
-NS_IMETHODIMP
-nsSVGFEPointLightElement::GetX(nsIDOMSVGAnimatedNumber **aX)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFEPointLightElement::X()
 {
-  return mNumberAttributes[X].ToDOMAnimatedNumber(aX, this);
+  return mNumberAttributes[ATTR_X].ToDOMAnimatedNumber(this);
 }
 
-NS_IMETHODIMP
-nsSVGFEPointLightElement::GetY(nsIDOMSVGAnimatedNumber **aY)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFEPointLightElement::Y()
 {
-  return mNumberAttributes[Y].ToDOMAnimatedNumber(aY, this);
+  return mNumberAttributes[ATTR_Y].ToDOMAnimatedNumber(this);
 }
 
-NS_IMETHODIMP
-nsSVGFEPointLightElement::GetZ(nsIDOMSVGAnimatedNumber **aZ)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFEPointLightElement::Z()
 {
-  return mNumberAttributes[Z].ToDOMAnimatedNumber(aZ, this);
+  return mNumberAttributes[ATTR_Z].ToDOMAnimatedNumber(this);
 }
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
 nsSVGElement::NumberAttributesInfo
-nsSVGFEPointLightElement::GetNumberInfo()
+SVGFEPointLightElement::GetNumberInfo()
 {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               ArrayLength(sNumberInfo));

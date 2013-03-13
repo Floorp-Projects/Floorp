@@ -212,13 +212,6 @@ interface nsIDOMSVGFEDistantLightElement : nsIDOMSVGElement {
   readonly attribute nsIDOMSVGAnimatedNumber elevation;
 };
 
-[scriptable, uuid(0fd668af-52de-463f-ac07-22a8a44c3b3a)]
-interface nsIDOMSVGFEPointLightElement : nsIDOMSVGElement { 
-  readonly attribute nsIDOMSVGAnimatedNumber x;
-  readonly attribute nsIDOMSVGAnimatedNumber y;
-  readonly attribute nsIDOMSVGAnimatedNumber z;
-};
-
 [scriptable, uuid(e9bd8308-dc52-438b-a315-a0d545dfeda3)]
 interface nsIDOMSVGFESpotLightElement : nsIDOMSVGElement { 
   readonly attribute nsIDOMSVGAnimatedNumber x;
