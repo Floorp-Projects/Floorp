@@ -36,8 +36,8 @@ C1Spewer::beginFunction(MIRGraph *graph, HandleScript script)
     this->script = script;
 
     fprintf(spewout_, "begin_compilation\n");
-    fprintf(spewout_, "  name \"%s:%d\"\n", script->filename, script->lineno);
-    fprintf(spewout_, "  method \"%s:%d\"\n", script->filename, script->lineno);
+    fprintf(spewout_, "  name \"%s:%d\"\n", script->filename(), script->lineno);
+    fprintf(spewout_, "  method \"%s:%d\"\n", script->filename(), script->lineno);
     fprintf(spewout_, "  date %d\n", (int)time(NULL));
     fprintf(spewout_, "end_compilation\n");
 }

@@ -224,7 +224,7 @@ unsigned JSScript::id() {
     if (!id_) {
         id_ = ++compartment()->types.scriptCount;
         InferSpew(ISpewOps, "script #%u: %p %s:%d",
-                  id_, this, filename ? filename : "<null>", lineno);
+                  id_, this, filename() ? filename() : "<null>", lineno);
     }
     return id_;
 }
@@ -5475,7 +5475,7 @@ ScriptAnalysis::printTypes(JSContext *cx)
         printf("Eval");
     else
         printf("Main");
-    printf(" #%u %s (line %d):\n", script_->id(), script_->filename, script_->lineno);
+    printf(" #%u %s (line %d):\n", script_->id(), script_->filename(), script_->lineno);
 
     printf("locals:");
     printf("\n    return:");

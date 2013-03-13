@@ -65,7 +65,7 @@ class CompileInfo
     }
 
     const char *filename() const {
-        return script_->filename;
+        return script_->filename();
     }
     unsigned lineno() const {
         return script_->lineno;
