@@ -19,7 +19,7 @@
 #include "cubeb-internal.h"
 
 /* This is missing from the MinGW headers. Use a safe fallback. */
-#ifndef MEMORY_ALLOCATION_ALIGNMENT
+#if !defined(MEMORY_ALLOCATION_ALIGNMENT)
 #define MEMORY_ALLOCATION_ALIGNMENT 16
 #endif
 

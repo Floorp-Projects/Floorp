@@ -12,7 +12,7 @@
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
 
-#ifdef CUBEB_SNDIO_DEBUG
+#if defined(CUBEB_SNDIO_DEBUG)
 #define DPR(...) fprintf(stderr, __VA_ARGS__);
 #else
 #define DPR(...) do {} while(0)
