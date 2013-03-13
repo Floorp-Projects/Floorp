@@ -92,6 +92,8 @@ BasicTiledLayerBuffer::PaintThebes(BasicTiledThebesLayer* aLayer,
   NS_ASSERTION(!aPaintRegion.GetBounds().IsEmpty(), "Empty paint region\n");
 
   bool useSinglePaintBuffer = UseSinglePaintBuffer();
+  // XXX The single-tile case doesn't work at the moment, see bug 850396
+  /*
   if (useSinglePaintBuffer) {
     // Check if the paint only spans a single tile. If that's
     // the case there's no point in using a single paint buffer.
@@ -101,6 +103,7 @@ BasicTiledLayerBuffer::PaintThebes(BasicTiledThebesLayer* aLayer,
                            GetTileStart(paintBounds.y) !=
                            GetTileStart(paintBounds.YMost() - 1);
   }
+  */
 
   if (useSinglePaintBuffer) {
     const nsIntRect bounds = aPaintRegion.GetBounds();
