@@ -353,9 +353,8 @@ enum TokenStreamFlags
     TSF_UNEXPECTED_EOF = 0x10,  /* unexpected end of input, i.e. TOK_EOF not at top-level. */
     TSF_KEYWORD_IS_NAME = 0x20, /* Ignore keywords and return TOK_NAME instead to the parser. */
     TSF_DIRTYLINE = 0x40,       /* non-whitespace since start of line */
-    TSF_OWNFILENAME = 0x80,     /* ts->filename is malloc'd */
-    TSF_OCTAL_CHAR = 0x100,     /* observed a octal character escape */
-    TSF_HAD_ERROR = 0x200,      /* returned TOK_ERROR from getToken */
+    TSF_OCTAL_CHAR = 0x80,      /* observed a octal character escape */
+    TSF_HAD_ERROR = 0x100,      /* returned TOK_ERROR from getToken */
 
     /*
      * To handle the hard case of contiguous HTML comments, we want to clear the
@@ -376,7 +375,7 @@ enum TokenStreamFlags
      * It does not cope with malformed comment hiding hacks where --> is hidden
      * by C-style comments, or on a dirty line.  Such cases are already broken.
      */
-    TSF_IN_HTML_COMMENT = 0x2000
+    TSF_IN_HTML_COMMENT = 0x200
 };
 
 struct CompileError {
@@ -768,7 +767,6 @@ class TokenStream
     bool matchUnicodeEscapeIdStart(int32_t *c);
     bool matchUnicodeEscapeIdent(int32_t *c);
     bool peekChars(int n, jschar *cp);
-    bool getAtLine();
     bool getAtSourceMappingURL();
 
     bool matchChar(int32_t expect) {

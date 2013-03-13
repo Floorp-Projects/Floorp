@@ -28,7 +28,7 @@ class SVGAnimatedBoolean MOZ_FINAL : public nsISupports,
 
  // WebIDL
   nsSVGElement* GetParentObject() const { return mSVGElement; }
-  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap);
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
   bool BaseVal() const { return mVal->GetBaseValue(); }
   void SetBaseVal(bool aValue) { mVal->SetBaseValue(aValue, mSVGElement); }
   bool AnimVal() const { mSVGElement->FlushAnimations(); return mVal->GetAnimValue(); }

@@ -105,7 +105,7 @@ public:
                                                      nsGenericHTMLElement)
 
 protected:
-  JSObject* WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap);
+  JSObject* WrapNode(JSContext *aCx, JSObject *aScope) MOZ_OVERRIDE;
 
   already_AddRefed<nsIDOMHTMLTableSectionElement> GetSection() const;
   HTMLTableElement* GetTable() const;

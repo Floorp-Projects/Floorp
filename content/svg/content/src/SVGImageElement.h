@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_SVGImageElement_h
 #define mozilla_dom_SVGImageElement_h
 
-#include "nsIDOMSVGURIReference.h"
 #include "nsImageLoadingContent.h"
 #include "nsSVGLength2.h"
 #include "nsSVGPathGeometryElement.h"
@@ -26,7 +25,6 @@ class DOMSVGAnimatedPreserveAspectRatio;
 
 class SVGImageElement : public SVGImageElementBase,
                         public nsIDOMSVGElement,
-                        public nsIDOMSVGURIReference,
                         public nsImageLoadingContent
 {
   friend class ::nsSVGImageFrame;
@@ -34,7 +32,7 @@ class SVGImageElement : public SVGImageElementBase,
 protected:
   SVGImageElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~SVGImageElement();
-  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope) MOZ_OVERRIDE;
   friend nsresult (::NS_NewSVGImageElement(nsIContent **aResult,
                                            already_AddRefed<nsINodeInfo> aNodeInfo));
 
@@ -42,7 +40,6 @@ public:
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGURIREFERENCE
 
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE_TO_NSINODE

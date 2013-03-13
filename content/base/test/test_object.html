@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Plugin instantiation</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="/tests/SimpleTest/SpecialPowers.js"></script>
+    <meta charset="utf-8">
+  <body onload="onLoad()">
+    <script class="testbody" type="text/javascript;version=1.8">
+
+      "use strict";
+      SimpleTest.waitForExplicitFinish();
+
+      // This can go away once embed also is on WebIDL
+      let OBJLC = Components.interfaces.nsIObjectLoadingContent;
+
+      // Use string modes in this test to make the test easier to read/debug.
+      // nsIObjectLoadingContent refers to this as "type", but I am using "mode"
+      // in the test to avoid confusing with content-type.
+      let prettyModes = {};
+      prettyModes[OBJLC.TYPE_LOADING] = "loading";
+      prettyModes[OBJLC.TYPE_IMAGE] = "image";
+      prettyModes[OBJLC.TYPE_PLUGIN] = "plugin";
+      prettyModes[OBJLC.TYPE_DOCUMENT] = "document";
+      prettyModes[OBJLC.TYPE_NULL] = "none";
+
+      let body = document.body;
+      // A single-pixel white png
+      let testPNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3AoIFiETNqbNRQAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAAACklEQVQIHWP4DwABAQEANl9ngAAAAABJRU5ErkJggg==';
+      // An empty, but valid, SVG
+      let testSVG = 'data:image/svg+xml,<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>';
+      // executeSoon wrapper to count pending callbacks
+      let pendingCalls = 0;
+      let afterPendingCalls = false;
+
+      function runWhenDone(func) {
+        if (!pendingCalls)
+          func();
+        else
+          afterPendingCalls = func;
+      }
+      function runSoon(func) {
+        pendingCalls++;
+        SimpleTest.executeSoon(function() {
+          func();
+          if (--pendingCalls < 1 && afterPendingCalls)
+            afterPendingCalls();
+        });
+      }
+      function src(obj, state, uri) {
+        // If we have a running plugin, src changing should always throw it out,
+        // even if it causes us to load the same plugin again.
+        if (uri && runningPlugin(obj, state)) {
+          if (!state.oldPlugins)
+            state.oldPlugins = [];
+          try {
+            state.oldPlugins.push(obj.getObjectValue());
+          } catch (e) {
+            ok(false, "Running plugin but cannot call getObjectValue?");
+          }
+        }
+
+        var srcattr;
+        if (state.tagName == "object")
+          srcattr = "data";
+        else if (state.tagName == "embed")
+          srcattr = "src";
+        else
+          ok(false, "Internal test fail: Why are we setting the src of an applet");
+
+        // Plugins should always go away immediately on src/data change
+        state.initialPlugin = false;
+        if (uri === null) {
+          removeAttr(obj, srcattr);
+          // TODO Bug 767631 - we don't trigger loadObject on UnsetAttr :(
+          forceReload(obj, state);
+        } else {
+          setAttr(obj, srcattr, uri);
+        }
+      }
+      // We have to be careful not to reach past the nsObjectLoadingContent
+      // prototype to touch generic element attributes, as this will try to
+      // spawn the plugin, breaking our ability to test for that.
+      function getAttr(obj, attr) {
+        return document.body.constructor.prototype.getAttribute.call(obj, attr);
+      }
+      function setAttr(obj, attr, val) {
+        return document.body.constructor.prototype.setAttribute.call(obj, attr, val);
+      }
+      function hasAttr(obj, attr) {
+        return document.body.constructor.prototype.hasAttribute.call(obj, attr);
+      }
+      function removeAttr(obj, attr) {
+        return document.body.constructor.prototype.removeAttribute.call(obj, attr);
+      }
+      function setDisplay(obj, val) {
+        if (val)
+          removeAttr(obj, 'style');
+        else
+          setAttr(obj, 'style', "display none;");
+      }
+      function displayed(obj) {
+        // Hacky, but that's all we use style for.
+        return !hasAttr(obj, 'style');
+      }
+      function actualType(obj, state) {
+        return state.getActualType.call(obj);
+      }
+      function getMode(obj, state) {
+        return prettyModes[state.getDisplayedType.call(obj)];
+      }
+      function runningPlugin(obj, state) {
+        return state.getHasRunningPlugin.call(obj);
+      }
+
+      // TODO this is hacky and might hide some failures, but is needed until
+      // Bug 767635 lands -- which itself will probably mean tweaking this test.
+      function forceReload(obj, state) {
+        let attr;
+        if (state.tagName == "object")
+          attr = "data";
+        else if (state.tagName == "embed")
+          attr = "src";
+
+        if (attr && hasAttr(obj, attr)) {
+          src(obj, state, getAttr(obj, attr));
+        } else if (body.contains(obj)) {
+          body.appendChild(obj);
+        } else {
+          // Out of document nodes without data attributes simply can't be
+          // reloaded currently. Bug 767635
+        }
+      };
+
+      // Make a list of combinations of sub-lists, e.g.:
+      // [ [a, b], [c, d] ]
+      // ->
+      // [ [a, c], [a, d], [b, c], [b, d] ]
+      function eachList() {
+        let all = [];
+        if (!arguments.length)
+          return all;
+        let list = Array.prototype.slice.call(arguments, 0);
+        for (let c of list[0]) {
+          if (list.length > 1) {
+            for (let x of eachList.apply(this,list.slice(1))) {
+              all.push((c.length ? [c] : []).concat(x));
+            }
+          } else if (c.length) {
+            all.push([c]);
+          }
+        }
+        return all;
+      }
+
+      let states = {
+        svg: function(obj, state) {
+          removeAttr(obj, "type");
+          src(obj, state, testSVG);
+          state.noChannel = false;
+          state.expectedType = "image/svg";
+          // SVGs are actually image-like subdocuments
+          state.expectedMode = "document";
+        },
+        image: function(obj, state) {
+          removeAttr(obj, "type");
+          src(obj, state, testPNG);
+          state.noChannel = false;
+          state.expectedMode = "image";
+          state.expectedType = "image/png";
+        },
+        plugin: function(obj, state) {
+          removeAttr(obj, "type");
+          src(obj, state, "data:application/x-test,foo");
+          state.noChannel = false;
+          state.expectedType = "application/x-test";
+          state.expectedMode = "plugin";
+        },
+        pluginExtension: function(obj, state) {
+          src(obj, state, "./fake_plugin.tst");
+          state.expectedMode = "plugin";
+          state.pluginExtension = true;
+          state.noChannel = false;
+        },
+        document: function(obj, state) {
+          removeAttr(obj, "type");
+          src(obj, state, "data:text/plain,I am a document");
+          state.noChannel = false;
+          state.expectedType = "text/plain";
+          state.expectedMode = "document";
+        },
+        fallback: function(obj, state) {
+          removeAttr(obj, "type");
+          state.expectedType = "application/x-unknown";
+          state.expectedMode = "none";
+          state.noChannel = true;
+          src(obj, state, null);
+        },
+        addToDoc: function(obj, state) {
+          body.appendChild(obj);
+        },
+        removeFromDoc: function(obj, state) {
+          if (body.contains(obj))
+            body.removeChild(obj);
+        },
+        // Set the proper type
+        setType: function(obj, state) {
+          if (state.expectedType) {
+            state.badType = false;
+            setAttr(obj, 'type', state.expectedType);
+            forceReload(obj, state);
+          }
+        },
+        // Set an improper type
+        setWrongType: function(obj, state) {
+          // This should break no-channel-plugins but nothing else
+          state.badType = true;
+          setAttr(obj, 'type', "application/x-unknown");
+          forceReload(obj, state);
+        },
+        // Set a plugin type
+        setPluginType: function(obj, state) {
+          // If an object/embed has a type set to a plugin type, it should not
+          // use the channel type.
+          state.badType = false;
+          setAttr(obj, 'type', 'application/x-test');
+          state.expectedType = "application/x-test";
+          state.expectedMode = "plugin";
+          forceReload(obj, state);
+        },
+        noChannel: function(obj, state) {
+          src(obj, state, null);
+          state.noChannel = true;
+          state.pluginExtension = false;
+        },
+        displayNone: function(obj, state) {
+          setDisplay(obj, "none");
+        },
+        displayInherit: function(obj, state) {
+          setDisplay(obj, "inherit");
+        }
+      };
+
+
+      function testObject(obj, state) {
+        // If our test combination both sets noChannel but no explicit type
+        // it shouldn't load ever.
+        let expectedMode = state.expectedMode;
+        let actualMode = getMode(obj, state);
+
+        if (state.noChannel && !getAttr(obj, 'type')) {
+          // Some combinations of test both set no type and no channel. This is
+          // worth testing with the various combinations, but shouldn't load.
+          expectedMode = "none";
+        }
+
+        // Embed tags should always try to load a plugin by type or extension
+        // before falling back to opening a channel. See bug 803159
+        if (state.tagName == "embed" &&
+            (getAttr(obj, 'type') == "application/x-test" || state.pluginExtension)) {
+          state.noChannel = true;
+        }
+
+        // with state.loading, unless we're loading with no channel, these types
+        // should still be in loading state pending a channel.
+        if (state.loading && (expectedMode == "image" || expectedMode == "document" ||
+                             (expectedMode == "plugin" && !state.initialPlugin && !state.noChannel))) {
+          expectedMode = "loading";
+        }
+
+        // With the exception of plugins with a proper type, nothing should
+        // load without a channel
+        if (state.noChannel && (expectedMode != "plugin" || state.badType) &&
+            body.contains(obj)) {
+          expectedMode = "none";
+        }
+
+        // embed tags should reject documents, except for SVG images which
+        // render as such
+        if (state.tagName == "embed" && expectedMode == "document" &&
+            actualType(obj, state) != "image/svg+xml") {
+          expectedMode = "none";
+        }
+
+        // Embeds with a plugin type should skip opening a channel prior to
+        // loading, taking only type into account.
+        if (state.tagName == 'embed' && getAttr(obj, 'type') == 'application/x-test' &&
+            body.contains(obj)) {
+          expectedMode = "plugin";
+        }
+
+        if (!body.contains(obj)
+            && (!state.loading || expectedMode != "image")
+            && (!state.initialPlugin || expectedMode != "plugin")) {
+          // Images are handled by nsIImageLoadingContent so we dont track
+          // their state change as they're detached and reattached. All other
+          // types switch to state "loading", and are completely unloaded
+          expectedMode = "loading";
+        }
+
+        is(actualMode, expectedMode, "check loaded mode");
+
+        // If we're a plugin, check that we spawned successfully
+        // Except for _loading...
+        let shouldSpawn = expectedMode == "plugin" && (!state.loading || state.initialPlugin);
+        let didSpawn = runningPlugin(obj, state);
+        is(didSpawn, !!shouldSpawn, "check plugin spawned is " + !!shouldSpawn);
+
+        // If we are a plugin, scripting should work. If we're not spawned we
+        // should spawn synchronously.
+        if (expectedMode == "plugin") {
+          let scripted = false;
+          try {
+            let x = obj.getObjectValue();
+            scripted = true;
+          } catch(e) {}
+          ok(scripted, "check plugin scriptability");
+        }
+
+        // If this tag previously had other spawned plugins, make sure it
+        // respawned between then and now
+        if (state.oldPlugins && didSpawn) {
+          let didRespawn = false;
+          for (let oldp of state.oldPlugins) {
+            // If this returns false or throws, it's not the same plugin
+            try {
+              didRespawn = !obj.checkObjectValue(oldp);
+            } catch (e) {
+              didRespawn = true;
+            }
+          }
+          is(didRespawn, true, "Plugin should have re-spawned since old state ("+state.oldPlugins.length+")");
+        }
+      }
+
+      let total = 0;
+      let test_modes = {
+        // Just apply from_state then to_state
+        "immediate": function(obj, from_state, to_state, state) {
+          for (let from of from_state)
+            states[from](obj, state);
+          for (let to of to_state)
+            states[to](obj, state);
+
+          // We don't spin the event loop between applying to_state and
+          // running tests, so some types are still loading
+          state.loading = true;
+          info("["+(++total)+"] Testing [ " + from_state + " ] -> [ " + to_state + " ] / " + state.tagName + " / immediate");
+          testObject(obj, state);
+
+          if (body.contains(obj))
+            body.removeChild(obj);
+
+        },
+        // Apply states, spin event loop, run tests.
+        "cycle": function(obj, from_state, to_state, state) {
+          for (let from of from_state)
+            states[from](obj, state);
+          for (let to of to_state)
+            states[to](obj, state);
+          // Because re-appending to the document creates a script blocker, but
+          // plugins spawn asynchronously, we need to return to the event loop
+          // twice to ensure the plugin has been given a chance to lazily spawn.
+          runSoon(function() { runSoon(function() {
+            info("["+(++total)+"] Testing [ " + from_state + " ] -> [ " + to_state + " ] / " + state.tagName + " / cycle");
+            testObject(obj, state);
+
+            if (body.contains(obj))
+              body.removeChild(obj);
+          }); });
+        },
+        // Apply initial state, spin event loop, apply final state, spin event
+        // loop again.
+        "cycleboth": function(obj, from_state, to_state, state) {
+          for (let from of from_state) {
+            states[from](obj, state);
+          }
+          runSoon(function() {
+            for (let to of to_state) {
+              states[to](obj, state);
+            }
+            // Because re-appending to the document creates a script blocker,
+            // but plugins spawn asynchronously, we need to return to the event
+            // loop twice to ensure the plugin has been given a chance to lazily
+            // spawn.
+            runSoon(function() { runSoon(function() {
+              info("["+(++total)+"] Testing [ " + from_state + " ] -> [ " + to_state + " ] / " + state.tagName + " / cycleboth");
+              testObject(obj, state);
+
+              if (body.contains(obj))
+                body.removeChild(obj);
+            }); });
+          });
+        },
+        // Apply initial state, spin event loop, apply later state, test
+        // immediately
+        "cyclefirst": function(obj, from_state, to_state, state) {
+          for (let from of from_state) {
+            states[from](obj, state);
+          }
+          runSoon(function() {
+            state.initialPlugin = runningPlugin(obj, state);
+            for (let to of to_state) {
+              states[to](obj, state);
+            }
+            info("["+(++total)+"] Testing [ " + from_state + " ] -> [ " + to_state + " ] / " + state.tagName + " / cyclefirst");
+            // We don't spin the event loop between applying to_state and
+            // running tests, so some types are still loading
+            state.loading = true;
+            testObject(obj, state);
+
+            if (body.contains(obj))
+              body.removeChild(obj);
+          });
+        },
+      };
+
+      function test(testdat) {
+        for (let from_state of testdat['from_states']) {
+          for (let to_state of testdat['to_states']) {
+            for (let mode of testdat['test_modes']) {
+              for (let type of testdat['tag_types']) {
+                runSoon(function () {
+                  let obj = document.createElement(type);
+                  obj.width = 1; obj.height = 1;
+                  let state = {};
+                  state.noChannel = true;
+                  state.tagName = type;
+                  // Part of the test checks whether a plugin spawned or not,
+                  // but touching the object prototype will attempt to
+                  // synchronously spawn a plugin!  We use this terrible hack to
+                  // get a privileged getter for the attributes we want to touch
+                  // prior to applying any attributes.
+                  // TODO when embed goes away we wont need to check for
+                  //      QueryInterface any longer.
+                  var lookup_on = obj.QueryInterface ? obj.QueryInterface(OBJLC): obj;
+                  state.getDisplayedType = SpecialPowers.do_lookupGetter(lookup_on, 'displayedType');
+                  state.getHasRunningPlugin = SpecialPowers.do_lookupGetter(lookup_on, 'hasRunningPlugin');
+                  state.getActualType = SpecialPowers.do_lookupGetter(lookup_on, 'actualType');
+                  test_modes[mode](obj, from_state, to_state, state);
+                });
+              }
+            }
+          }
+        }
+      }
+
+      function onLoad() {
+        // Generic tests
+        test({
+          'tag_types': [ 'embed', 'object' ],
+          // In all three modes
+          'test_modes': [ 'immediate', 'cycle', 'cyclefirst', 'cycleboth' ],
+          // Starting from a blank tag in and out of the document, a loading
+          // plugin, and no-channel plugin (initial types only really have
+          // odd cases with plugins)
+          'from_states': [
+            [ 'addToDoc' ],
+            [ 'plugin' ],
+            [ 'plugin', 'addToDoc' ],
+            [ 'plugin', 'noChannel', 'setType', 'addToDoc' ],
+            [],
+          ],
+          // To various combinations of loaded objects
+          'to_states': eachList(
+            [ 'svg', 'image', 'plugin', 'document', '' ],
+            [ 'setType', 'setWrongType', 'setPluginType', '' ],
+            [ 'noChannel', '' ],
+            [ 'displayNone', 'displayInherit', '' ]
+          )});
+        // Special case test for embed tags with plugin-by-extension
+        // TODO object tags should be tested here too -- they have slightly
+        //      different behavior, but waiting on a file load requires a loaded
+        //      event handler and wont work with just our event loop spinning.
+        test({
+          'tag_types': [ 'embed' ],
+          'test_modes': [ 'immediate', 'cyclefirst', 'cycle', 'cycleboth' ],
+          'from_states': eachList(
+            [ 'svg', 'plugin', 'image', 'document' ],
+            [ 'addToDoc' ]
+          ),
+          // Set extension along with valid ty
+          'to_states': [
+            [ 'pluginExtension' ]
+          ]});
+        // Test plugin add/remove from document with adding/removing frame, with
+        // and without a channel.
+        test({
+          'tag_types': [ 'embed', 'object' ], // Ideally we'd test object too, but this gets exponentially long.
+          'test_modes': [ 'immediate', 'cyclefirst', 'cycle' ],
+          'from_states': [ [ 'displayNone', 'plugin', 'addToDoc' ],
+                           [ 'displayNone', 'plugin', 'noChannel', 'addToDoc' ],
+                           [ 'plugin', 'noChannel', 'addToDoc' ],
+                           [ 'plugin', 'noChannel' ] ],
+          'to_states': eachList(
+            [ 'displayNone', '' ],
+            [ 'removeFromDoc' ],
+            [ 'image', 'displayNone', '' ],
+            [ 'image', 'displayNone', '' ],
+            [ 'addToDoc' ],
+            [ 'displayInherit' ]
+          )});
+        runWhenDone(function() SimpleTest.finish());
+      }
+    </script>

@@ -77,10 +77,9 @@ HTMLSourceElement::BindToTree(nsIDocument *aDocument,
 }
 
 JSObject*
-HTMLSourceElement::WrapNode(JSContext* aCx, JSObject* aScope,
-                            bool* aTriedToWrap)
+HTMLSourceElement::WrapNode(JSContext* aCx, JSObject* aScope)
 {
-  return HTMLSourceElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return HTMLSourceElementBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace dom

@@ -6,7 +6,6 @@
 #ifndef __NS_SVGGRADIENTELEMENT_H__
 #define __NS_SVGGRADIENTELEMENT_H__
 
-#include "nsIDOMSVGURIReference.h"
 #include "nsSVGElement.h"
 #include "nsSVGLength2.h"
 #include "nsSVGEnum.h"
@@ -40,21 +39,17 @@ namespace dom {
 typedef nsSVGElement SVGGradientElementBase;
 
 class SVGGradientElement : public SVGGradientElementBase
-                         , public nsIDOMSVGURIReference
 {
   friend class ::nsSVGGradientFrame;
 
 protected:
   SVGGradientElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual JSObject*
-  WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap) MOZ_OVERRIDE = 0;
+  WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE = 0;
 
 public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
-
-  // URI Reference
-  NS_DECL_NSIDOMSVGURIREFERENCE
 
   // nsIContent
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
@@ -103,7 +98,7 @@ class SVGLinearGradientElement : public SVGLinearGradientElementBase
 protected:
   SVGLinearGradientElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual JSObject*
-  WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap) MOZ_OVERRIDE;
+  WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
 public:
   // interfaces:
@@ -149,7 +144,7 @@ class SVGRadialGradientElement : public SVGRadialGradientElementBase
 protected:
   SVGRadialGradientElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual JSObject*
-  WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap) MOZ_OVERRIDE;
+  WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
 public:
   // interfaces:

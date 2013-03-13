@@ -538,12 +538,6 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
       }
 
-      case SHAPERANGE: {
-        Shape::Range::AutoRooter *rooter = static_cast<Shape::Range::AutoRooter *>(this);
-        rooter->trace(trc);
-        return;
-      }
-
       case STACKSHAPE: {
         StackShape::AutoRooter *rooter = static_cast<StackShape::AutoRooter *>(this);
         if (rooter->shape->base)
@@ -647,13 +641,6 @@ AutoGCRooter::traceAllWrappers(JSTracer *trc)
         if (gcr->tag_ == WRAPVECTOR || gcr->tag_ == WRAPPER)
             gcr->trace(trc);
     }
-}
-
-void
-Shape::Range::AutoRooter::trace(JSTracer *trc)
-{
-    if (r->cursor)
-        MarkShapeRoot(trc, const_cast<Shape**>(&r->cursor), "Shape::Range::AutoRooter");
 }
 
 void

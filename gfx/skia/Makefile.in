@@ -507,6 +507,7 @@ CPPSRCS += \
 	SkFontHost_sandbox_none.cpp \
 	SkTime_win.cpp \
 	$(NULL)
+DEFINES += -DSKIA_IMPLEMENTATION=1 -DGR_IMPLEMENTATION=1
 endif
 
 ifneq (,$(INTEL_ARCHITECTURE))

@@ -7,21 +7,21 @@
 #include "mozilla/dom/SVGTextPathElementBinding.h"
 #include "nsSVGElement.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMSVGURIReference.h"
 #include "nsIFrame.h"
 #include "nsError.h"
 #include "nsContentUtils.h"
-#include "mozilla/dom/SVGAnimatedLength.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(TextPath)
 
 namespace mozilla {
 namespace dom {
 
+class SVGAnimatedLength;
+
 JSObject*
-SVGTextPathElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+SVGTextPathElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return SVGTextPathElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGTextPathElementBinding::Wrap(aCx, aScope, this);
 }
 
 nsSVGElement::LengthInfo SVGTextPathElement::sLengthInfo[1] =
@@ -78,16 +78,6 @@ SVGTextPathElement::SVGTextPathElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 // nsIDOMNode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGTextPathElement)
-
-//----------------------------------------------------------------------
-// nsIDOMSVGURIReference methods
-
-/* readonly attribute nsIDOMSVGAnimatedString href; */
-NS_IMETHODIMP SVGTextPathElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
-{
-  *aHref = Href().get();
-  return NS_OK;
-}
 
 already_AddRefed<nsIDOMSVGAnimatedString>
 SVGTextPathElement::Href()
