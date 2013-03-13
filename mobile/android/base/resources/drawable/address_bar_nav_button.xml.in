@@ -8,7 +8,7 @@
           xmlns:gecko="http://schemas.android.com/apk/res/@ANDROID_PACKAGE_NAME@">
 
     <!-- pressed state -->
-    <item android:state_pressed="true" android:drawable="@drawable/highlight"/>
+    <item android:state_pressed="true" android:drawable="@color/highlight"/>
 
     <!-- private browsing mode -->
     <item gecko:state_private="true" android:drawable="@color/background_private"/>

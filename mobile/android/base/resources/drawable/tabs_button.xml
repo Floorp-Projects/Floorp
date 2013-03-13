@@ -10,7 +10,7 @@
         <selector>
 
             <item android:state_pressed="true"
-                  android:drawable="@drawable/highlight"/>
+                  android:drawable="@color/highlight_dark"/>
 
             <item android:drawable="@color/background_tabs_light"/>
 
