@@ -136,7 +136,7 @@ ifdef MOZ_ANDROID_OMTC
 DEFINES += -DMOZ_ANDROID_OMTC
 endif
 
-ifdef MOZ_ENABLE_SKIA
+ifdef MOZ_ENABLE_SKIA_GPU
 CPPSRCS += GLContextSkia.cpp
 EXPORTS += GLContextSkia.h
 endif

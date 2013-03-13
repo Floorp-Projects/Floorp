@@ -96,7 +96,7 @@
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 
-#ifdef USE_SKIA
+#ifdef USE_SKIA_GPU
 #include "GLContext.h"
 #include "GLContextProvider.h"
 #include "SurfaceTypes.h"
@@ -467,7 +467,7 @@ public:
     }
   }
 
-#ifdef USE_SKIA
+#ifdef USE_SKIA_GPU
   static void PreTransactionCallback(void* aData)
   {
     CanvasRenderingContext2DUserData* self =
@@ -799,7 +799,7 @@ CanvasRenderingContext2D::EnsureTarget()
     }
 
      if (layerManager) {
-#ifdef USE_SKIA
+#ifdef USE_SKIA_GPU
        if (gfxPlatform::GetPlatform()->UseAcceleratedSkiaCanvas()) {
          mGLContext = mozilla::gl::GLContextProvider::CreateOffscreen(gfxIntSize(size.width,
                                                                                  size.height),
@@ -3786,7 +3786,7 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
   canvasLayer->SetUserData(&g2DContextLayerUserData, userData);
 
   CanvasLayer::Data data;
-#ifdef USE_SKIA
+#ifdef USE_SKIA_GPU
   if (mGLContext) {
     canvasLayer->SetPreTransactionCallback(
             CanvasRenderingContext2DUserData::PreTransactionCallback, userData);

@@ -8324,6 +8324,12 @@ if test "$MOZ_ENABLE_SKIA"; then
     AC_DEFINE(SKIA_DLL)
     AC_DEFINE(GR_DLL)
   fi
+
+  if test "${CPU_ARCH}" != "ppc" -a "${CPU_ARCH}" != "ppc64"; then
+    MOZ_ENABLE_SKIA_GPU=1
+    AC_DEFINE(USE_SKIA_GPU)
+    AC_SUBST(MOZ_ENABLE_SKIA_GPU)
+  fi
 else
   MOZ_SKIA_LIBS=
 fi
