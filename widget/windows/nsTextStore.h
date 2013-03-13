@@ -236,6 +236,7 @@ protected:
                                         ITfRange* aRange,
                                         bool aPreserveSelection);
   HRESULT  RecordCompositionUpdateAction();
+  HRESULT  RecordCompositionEndAction();
 
   // FlushPendingActions() performs pending actions recorded in mPendingActions
   // and clear it.

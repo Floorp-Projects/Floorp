@@ -1371,9 +1371,9 @@ nsTextStore::RestartCompositionIfNecessary(ITfRange* aRangeNew)
     // of our composition string, OnUpdateComposition is being called
     // because a part of the original composition was committed.
     // Reflect that by committing existing composition and starting
-    // a new one. OnEndComposition followed by OnStartComposition
-    // will accomplish this automagically.
-    OnEndComposition(pComposition);
+    // a new one. RecordCompositionEndAction() followed by
+    // RecordCompositionStartAction() will accomplish this automagically.
+    RecordCompositionEndAction();
     RecordCompositionStartAction(pComposition, composingRange, true);
   }
 
@@ -2658,6 +2658,36 @@ nsTextStore::RecordCompositionStartAction(ITfCompositionView* pComposition,
   return S_OK;
 }
 
+HRESULT
+nsTextStore::RecordCompositionEndAction()
+{
+  PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+         ("TSF: 0x%p nsTextStore::RecordCompositionEndAction(), "
+          "mComposition={ mView=0x%p, mString=\"%s\" }",
+          this, mComposition.mView.get(),
+          NS_ConvertUTF16toUTF8(mComposition.mString).get()));
+
+  MOZ_ASSERT(mComposition.IsComposing());
+
+  PendingAction* action = mPendingActions.AppendElement();
+  action->mType = PendingAction::COMPOSITION_END;
+  action->mData = mComposition.mString;
+
+  Content& currentContent = CurrentContent();
+  if (!currentContent.IsInitialized()) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::RecordCompositionEndAction() FAILED due "
+            "to CurrentContent() failure", this));
+    return E_FAIL;
+  }
+  currentContent.EndComposition(*action);
+
+  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+         ("TSF: 0x%p   nsTextStore::RecordCompositionEndAction(), succeeded",
+          this));
+  return S_OK;
+}
+
 STDMETHODIMP
 nsTextStore::OnStartComposition(ITfCompositionView* pComposition,
                                 BOOL* pfOk)
@@ -2802,18 +2832,13 @@ nsTextStore::OnEndComposition(ITfCompositionView* pComposition)
     return E_UNEXPECTED;
   }
 
-  PendingAction* action = mPendingActions.AppendElement();
-  action->mType = PendingAction::COMPOSITION_END;
-  action->mData = mComposition.mString;
-
-  Content& currentContent = CurrentContent();
-  if (!currentContent.IsInitialized()) {
+  HRESULT hr = RecordCompositionEndAction();
+  if (FAILED(hr)) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::OnEndComposition() FAILED due to "
-            "CurrentContent() failure", this));
-    return E_FAIL;
+            "RecordCompositionEndAction() failure", this));
+    return hr;
   }
-  currentContent.EndComposition(*action);
 
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
          ("TSF: 0x%p   nsTextStore::OnEndComposition(), succeeded", this));
