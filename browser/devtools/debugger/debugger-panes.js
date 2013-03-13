@@ -1706,7 +1706,11 @@ create({ constructor: GlobalSearchView, proto: MenuContainer.prototype }, {
    * @param string aContents
    *        The text contents of the source.
    */
-  _onFetchSourceFinished: function DVGS__onFetchSourceFinished(aLocation, aContents) {
+  _onFetchSourceFinished: function DVGS__onFetchSourceFinished(aLocation, aContents, aError) {
+    if (aError) {
+      return;
+    }
+
     // Remember the source in a cache so we don't have to fetch it again.
     this._cache.set(aLocation, aContents);
 
