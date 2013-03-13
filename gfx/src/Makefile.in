@@ -21,11 +21,6 @@ ifndef _MSC_VER
 FAIL_ON_WARNINGS = 1
 endif # !_MSC_VER
 
-XPIDLSRCS = \
-	nsIFontEnumerator.idl \
-	nsIScriptableRegion.idl \
-	$(NULL)
-
 EXPORTS	= \
 	gfxCore.h \
 	gfxCrashReporterUtils.h \

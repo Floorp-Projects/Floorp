@@ -11,15 +11,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dom
-XPIDL_MODULE	= dom_xbl
 GRE_MODULE	= 1
-
-XPIDLSRCS =                                     \
-	nsIDOMDocumentXBL.idl			\
-	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-XPIDL_FLAGS += \
-  -I$(topsrcdir)/dom/interfaces/base \
-  $(NULL)

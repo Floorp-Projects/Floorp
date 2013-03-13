@@ -10,8 +10,6 @@ VPATH = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = alerts
-XPIDLSRCS = nsIAlertsService.idl
-
 LIBRARY_NAME = alerts_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
@@ -19,10 +17,6 @@ CPPSRCS = \
   nsAlertsService.cpp \
   $(NULL)
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/components/build/
-
-ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
-XPIDLSRCS += nsINotificationsList.idl
-endif
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

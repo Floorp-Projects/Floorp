@@ -3,3 +3,36 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'nsIDOMCSSCharsetRule.idl',
+    'nsIDOMCSSConditionRule.idl',
+    'nsIDOMCSSFontFaceRule.idl',
+    'nsIDOMCSSGroupingRule.idl',
+    'nsIDOMCSSImportRule.idl',
+    'nsIDOMCSSMediaRule.idl',
+    'nsIDOMCSSMozDocumentRule.idl',
+    'nsIDOMCSSPageRule.idl',
+    'nsIDOMCSSPrimitiveValue.idl',
+    'nsIDOMCSSRule.idl',
+    'nsIDOMCSSRuleList.idl',
+    'nsIDOMCSSStyleDeclaration.idl',
+    'nsIDOMCSSStyleRule.idl',
+    'nsIDOMCSSStyleSheet.idl',
+    'nsIDOMCSSSupportsRule.idl',
+    'nsIDOMCSSUnknownRule.idl',
+    'nsIDOMCSSValue.idl',
+    'nsIDOMCSSValueList.idl',
+    'nsIDOMCounter.idl',
+    'nsIDOMElementCSSInlineStyle.idl',
+    'nsIDOMMozCSSKeyframeRule.idl',
+    'nsIDOMMozCSSKeyframesRule.idl',
+    'nsIDOMRect.idl',
+]
+
+XPIDL_MODULE = 'dom_css'
+
+XPIDL_FLAGS += [
+    '-I$(topsrcdir)/dom/interfaces/base',
+    '-I$(topsrcdir)/dom/interfaces/stylesheets',
+]
+

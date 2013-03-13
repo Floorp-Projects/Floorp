@@ -15,18 +15,5 @@ GRE_MODULE	= 1
 
 EXPORTS		= ImageLogging.h
 
-XPIDLSRCS	= \
-		imgICache.idl             \
-		imgIContainer.idl         \
-		imgIContainerDebug.idl    \
-		imgIEncoder.idl           \
-		imgILoader.idl            \
-		imgINotificationObserver.idl \
-		imgIOnloadBlocker.idl     \
-		imgIRequest.idl           \
-		imgIScriptedNotificationObserver.idl \
-		imgITools.idl             \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

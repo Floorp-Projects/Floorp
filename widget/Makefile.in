@@ -68,67 +68,6 @@ EXPORTS		+= \
 		$(NULL)
 endif
 
-XPIDLSRCS	= \
-		nsIAppShell.idl \
-		nsIFilePicker.idl \
-		nsISound.idl \
-		nsITransferable.idl \
-		nsIClipboardDragDropHooks.idl \
-		nsIClipboardDragDropHookList.idl \
-		nsIDragSession.idl \
-		nsIDragService.idl \
-		nsIFormatConverter.idl \
-		nsIClipboard.idl \
-		nsIClipboardHelper.idl \
-		nsIClipboardOwner.idl \
-		nsIBaseWindow.idl \
-		nsIBidiKeyboard.idl \
-		nsIScreen.idl \
-		nsIScreenManager.idl \
-		nsIPrintSession.idl \
-		nsIPrintSettings.idl \
-		nsIPrintSettingsService.idl \
-		nsIPrintOptions.idl \
-		nsIIdleService.idl \
-		nsIIdleServiceInternal.idl \
-		nsIGfxInfo.idl \
-                nsIGfxInfoDebug.idl \
-		nsIIMEPicker.idl \
-		$(NULL)
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-XPIDLSRCS	+= nsIPrintSettingsWin.idl \
-		nsIWinTaskbar.idl	\
-		nsITaskbarPreview.idl	\
-		nsITaskbarTabPreview.idl \
-		nsITaskbarWindowPreview.idl \
-		nsITaskbarPreviewController.idl \
-		nsITaskbarPreviewButton.idl \
-		nsITaskbarProgress.idl \
-		nsITaskbarOverlayIconController.idl \
-		nsIJumpListBuilder.idl \
-		nsIJumpListItem.idl \
-		$(NULL)
-endif
-
-ifdef MOZ_METRO
-XPIDLSRCS += nsIWinMetroUtils.idl \
-		MetroUIUtils.idl \
-		$(NULL)
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-XPIDLSRCS +=	nsIMacDockSupport.idl \
-		nsIStandaloneNativeMenu.idl \
-		nsIMacWebAppUtils.idl \
-		nsITaskbarProgress.idl \
-		$(NULL)
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-XPIDLSRCS	+= nsIRwsService.idl
-endif
-
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk

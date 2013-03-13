@@ -15,9 +15,18 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
 
 TEST_DIRS += ['test_timermanager']
 
+XPIDL_SOURCES += [
+    'nsIUpdateTimerManager.idl',
+]
+
 # Update tests require the updater binary
 if CONFIG['MOZ_UPDATER']:
     TEST_DIRS += ['test']
 
     if CONFIG['MOZ_MAINTENANCE_SERVICE']:
         TEST_DIRS += ['test_svc']
+
+    XPIDL_SOURCES += [
+        'nsIUpdateService.idl',
+    ]
+

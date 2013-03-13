@@ -9,15 +9,4 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-XPIDL_MODULE = dom_payment
-
-XPIDLSRCS = nsIDOMNavigatorPayment.idl \
-            nsIDOMPaymentRequestInfo.idl \
-            nsIPaymentFlowInfo.idl \
-            nsIPaymentUIGlue.idl \
-            $(NULL)
-
 include $(topsrcdir)/config/rules.mk
-XPIDL_FLAGS += \
-  -I$(topsrcdir)/dom/interfaces/base \
-  $(NULL)

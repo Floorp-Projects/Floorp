@@ -4,3 +4,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TEST_DIRS += ['test']
+
+XPIDL_SOURCES += [
+    'nsIDOMArchiveRequest.idl',
+    'nsIDOMFileHandle.idl',
+    'nsIDOMFileRequest.idl',
+    'nsIDOMLockedFile.idl',
+]
+
+XPIDL_MODULE = 'dom_file'
+
+XPIDL_FLAGS += [
+    '-I$(topsrcdir)/dom/base',
+    '-I$(topsrcdir)/dom/interfaces/base',
+    '-I$(topsrcdir)/dom/interfaces/events',
+]
+

@@ -11,10 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = MobileComponents
 
-XPIDLSRCS = \
-        SessionStore.idl \
-        $(NULL)
-
 EXTRA_PP_COMPONENTS = \
         MobileComponents.manifest \
         AboutRedirector.js \

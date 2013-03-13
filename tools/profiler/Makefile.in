@@ -54,10 +54,6 @@ CPPSRCS		= \
   JSCustomObjectBuilder.cpp \
   $(NULL)
 
-XPIDLSRCS = \
-  nsIProfiler.idl \
-  $(NULL)
-
 EXTRA_JS_MODULES = \
   Profiler.jsm \
   $(NULL)

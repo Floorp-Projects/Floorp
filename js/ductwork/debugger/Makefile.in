@@ -32,10 +32,6 @@ EXTRA_JS_MODULES = \
   jsdebugger.jsm \
   $(NULL)
 
-XPIDLSRCS = \
-  IJSDebugger.idl \
-  $(NULL)
-
 XPCSHELL_TESTS = tests
 
 include $(topsrcdir)/config/rules.mk

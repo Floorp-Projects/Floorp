@@ -13,30 +13,5 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= rdf
 GRE_MODULE	= 1
 
-XPIDLSRCS	= \
-		rdfIDataSource.idl \
-		rdfITripleVisitor.idl \
-		rdfISerializer.idl \
-		nsIRDFCompositeDataSource.idl \
-		nsIRDFContainer.idl \
-		nsIRDFContainerUtils.idl \
-		nsIRDFDelegateFactory.idl \
-		nsIRDFDataSource.idl \
-		nsIRDFLiteral.idl \
-		nsIRDFNode.idl \
-		nsIRDFObserver.idl \
-		nsIRDFInMemoryDataSource.idl \
-		nsIRDFPropagatableDataSource.idl \
-		nsIRDFPurgeableDataSource.idl \
-		nsIRDFRemoteDataSource.idl \
-		nsIRDFResource.idl \
-		nsIRDFService.idl \
-		nsIRDFXMLParser.idl \
-		nsIRDFXMLSerializer.idl \
-		nsIRDFXMLSink.idl \
-		nsIRDFXMLSource.idl \
-		nsIRDFInferDataSource.idl \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

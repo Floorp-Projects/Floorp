@@ -4,3 +4,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TEST_DIRS += ['test']
+
+XPIDL_SOURCES += [
+    'nsILoginInfo.idl',
+    'nsILoginManager.idl',
+    'nsILoginManagerCrypto.idl',
+    'nsILoginManagerIEMigrationHelper.idl',
+    'nsILoginManagerPrompter.idl',
+    'nsILoginManagerStorage.idl',
+    'nsILoginMetaInfo.idl',
+]
+

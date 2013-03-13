@@ -20,11 +20,6 @@ GRE_MODULE	= 1
 FAIL_ON_WARNINGS = 1
 
 
-XPIDLSRCS	= \
-		nsILayoutRegressionTester.idl \
-		nsILayoutDebuggingTools.idl \
-		$(NULL)
-
 EXPORTS		= \
 		nsLayoutDebugCIID.h \
 		$(NULL)

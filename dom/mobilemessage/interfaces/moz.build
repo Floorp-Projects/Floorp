@@ -3,3 +3,30 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'nsIDOMMozSmsEvent.idl',
+    'nsIDOMMozSmsMessage.idl',
+    'nsIDOMNavigatorSms.idl',
+    'nsIDOMSmsCursor.idl',
+    'nsIDOMSmsFilter.idl',
+    'nsIDOMSmsManager.idl',
+    'nsIDOMSmsRequest.idl',
+    'nsIDOMSmsSegmentInfo.idl',
+    'nsIMobileMessageDatabaseService.idl',
+    'nsISmsRequest.idl',
+    'nsISmsService.idl',
+]
+
+if CONFIG['MOZ_B2G_RIL']:
+    XPIDL_SOURCES += [
+        'nsIRilMobileMessageDatabaseService.idl',
+    ]
+
+XPIDL_MODULE = 'dom_mobilemessage'
+
+XPIDL_FLAGS += [
+    '-I$(topsrcdir)/dom/base',
+    '-I$(topsrcdir)/dom/interfaces/base',
+    '-I$(topsrcdir)/dom/interfaces/events',
+]
+

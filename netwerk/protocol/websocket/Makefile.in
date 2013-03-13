@@ -12,17 +12,11 @@ include $(DEPTH)/config/autoconf.mk
 MODULE         = necko
 LIBRARY_NAME   = nkwebsocket_s
 LIBXUL_LIBRARY = 1
-XPIDL_MODULE   = necko_websocket
 GRE_MODULE     = 1
 FORCE_STATIC_LIB = 1
 FAIL_ON_WARNINGS = 1
 
 EXPORTS_NAMESPACES = mozilla/net
-
-XPIDLSRCS = \
-  nsIWebSocketChannel.idl \
-  nsIWebSocketListener.idl \
-  $(NULL)
 
 CPPSRCS = \
   WebSocketChannel.cpp \

@@ -11,38 +11,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dom
-XPIDL_MODULE	= dom_core
 GRE_MODULE	= 1
-
-SDK_XPIDLSRCS =                                 \
-	nsIDOMAttr.idl				\
-	nsIDOMCDATASection.idl			\
-	nsIDOMCharacterData.idl			\
-	nsIDOMComment.idl			\
-	nsIDOMDOMException.idl			\
-	nsIDOMDOMImplementation.idl		\
-	nsIDOMDocument.idl			\
-	nsIDOMDocumentFragment.idl		\
-	nsIDOMDocumentType.idl			\
-	nsIDOMElement.idl			\
-	nsIDOMMozNamedAttrMap.idl		\
-	nsIDOMNode.idl				\
-	nsIDOMNodeList.idl			\
-	nsIDOMProcessingInstruction.idl		\
-	nsIDOMText.idl				\
-	nsIDocumentRegister.idl		\
-	$(NULL)
-XPIDLSRCS =                                     \
-	nsIDOMDOMStringList.idl			\
-	nsIDOMXMLDocument.idl			\
-	nsIDOMUserDataHandler.idl		\
-	nsIDOMNSEditableElement.idl		\
-	nsIDOMNodeSelector.idl			\
-	nsIInlineEventHandlers.idl              \
-	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-XPIDL_FLAGS += \
-  -I$(topsrcdir)/dom/interfaces/base \
-  $(NULL)

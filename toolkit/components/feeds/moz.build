@@ -4,3 +4,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TEST_DIRS += ['test']
+
+XPIDL_SOURCES += [
+    'nsIFeed.idl',
+    'nsIFeedContainer.idl',
+    'nsIFeedElementBase.idl',
+    'nsIFeedEntry.idl',
+    'nsIFeedGenerator.idl',
+    'nsIFeedListener.idl',
+    'nsIFeedPerson.idl',
+    'nsIFeedProcessor.idl',
+    'nsIFeedResult.idl',
+    'nsIFeedTextConstruct.idl',
+]
+

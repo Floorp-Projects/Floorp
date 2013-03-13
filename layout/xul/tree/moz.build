@@ -3,3 +3,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'nsITreeBoxObject.idl',
+    'nsITreeColumns.idl',
+    'nsITreeContentView.idl',
+    'nsITreeSelection.idl',
+    'nsITreeView.idl',
+]
+
+XPIDL_MODULE = 'layout_xul_tree'
+

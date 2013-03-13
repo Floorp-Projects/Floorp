@@ -5,3 +5,24 @@
 
 if CONFIG['MOZ_PLACES']:
     TEST_DIRS += ['tests']
+
+XPIDL_SOURCES += [
+    'nsINavHistoryService.idl',
+]
+
+if CONFIG['MOZ_PLACES']:
+    XPIDL_SOURCES += [
+        'mozIAsyncHistory.idl',
+        'mozIAsyncFavicons.idl',
+        'mozIAsyncLivemarks.idl',
+        'mozIPlacesAutoComplete.idl',
+        'mozIColorAnalyzer.idl',
+        'nsIAnnotationService.idl',
+        'nsIBrowserHistory.idl',
+        'nsIFaviconService.idl',
+        'nsINavBookmarksService.idl',
+        'nsITaggingService.idl ',
+        'nsPIPlacesDatabase.idl',
+        'nsPIPlacesHistoryListenersNotifier.idl',
+    ]
+

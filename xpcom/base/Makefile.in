@@ -11,7 +11,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
-XPIDL_MODULE	= xpcom_base
 LIBRARY_NAME	= xpcombase_s
 GRE_MODULE	= 1
 MOZILLA_INTERNAL_API =1
@@ -99,16 +98,6 @@ endif
 
 endif #if OS_ARCH == WINNT
 
-SDK_XPIDLSRCS   = \
-		nsIDebug.idl               \
-		nsIInterfaceRequestor.idl  \
-		nsIMemory.idl		   \
-		nsIProgrammingLanguage.idl \
-		nsISupports.idl		   \
-		nsITraceRefcnt.idl         \
-		nsIWeakReference.idl	   \
-		nsrootidl.idl
-
 SDK_HEADERS     = \
 		nsAutoPtr.h \
 		nsError.h \
@@ -125,28 +114,6 @@ ifeq ($(OS_ARCH),WINNT)
 SDK_HEADERS += \
 		nsWindowsHelpers.h \
 		$(NULL)
-endif
-
-XPIDLSRCS	= \
-		nsIConsoleListener.idl \
-		nsIConsoleMessage.idl \
-		nsIConsoleService.idl \
-		nsICycleCollectorListener.idl \
-		nsIDebug2.idl \
-		nsIErrorService.idl \
-		nsIException.idl \
-		nsIExceptionService.idl \
-		nsIVersionComparator.idl \
-		nsIUUIDGenerator.idl \
-		nsIMutable.idl \
-		nsIMemoryInfoDumper.idl \
-		nsIMemoryReporter.idl \
-		nsIGZFileWriter.idl \
-		nsIMessageLoop.idl \
-		$(NULL)
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-XPIDLSRCS	+= nsIMacUtils.idl
 endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

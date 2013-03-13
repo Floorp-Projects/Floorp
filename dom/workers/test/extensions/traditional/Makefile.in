@@ -10,12 +10,6 @@ VPATH            = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 XPI_NAME = worker
-XPIDL_MODULE = WorkerTest
-
-XPIDLSRCS = \
-  nsIWorkerTest.idl \
-  $(NULL)
-
 EXTRA_COMPONENTS = \
   WorkerTest.js \
   WorkerTest.manifest \

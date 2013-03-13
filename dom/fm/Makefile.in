@@ -11,7 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE           = dom
 LIBRARY_NAME     = domfm_s
-XPIDL_MODULE     = dom_fm
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 
@@ -20,11 +19,6 @@ include $(topsrcdir)/dom/dom-config.mk
 CPPSRCS += \
   FMRadio.cpp \
   nsFMRadioSettings.cpp \
-  $(NULL)
-
-XPIDLSRCS = \
-  nsIDOMFMRadio.idl \
-  nsIFMRadio.idl \
   $(NULL)
 
 EXTRA_COMPONENTS =      \
@@ -38,8 +32,4 @@ EXTRA_JS_MODULES =   \
 
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
-
-XPIDL_FLAGS += \
-  -I$(topsrcdir)/dom/interfaces/events \
-  $(NULL)
 

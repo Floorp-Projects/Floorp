@@ -9,34 +9,7 @@ VPATH            = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-XPIDL_MODULE = dom_mobilemessage
-
 include $(topsrcdir)/dom/dom-config.mk
-
-XPIDLSRCS = \
-  nsIMobileMessageDatabaseService.idl \
-  nsIDOMNavigatorSms.idl \
-  nsIDOMSmsManager.idl \
-  nsIDOMMozSmsMessage.idl \
-  nsIDOMMozSmsEvent.idl \
-  nsIDOMSmsRequest.idl \
-  nsIDOMSmsFilter.idl \
-  nsIDOMSmsCursor.idl \
-  nsIDOMSmsSegmentInfo.idl \
-  nsISmsRequest.idl \
-  nsISmsService.idl \
-  $(NULL)
-
-ifdef MOZ_B2G_RIL
-XPIDLSRCS += \
-  nsIRilMobileMessageDatabaseService.idl \
-  $(NULL)
-endif
 
 include $(topsrcdir)/config/rules.mk
 
-XPIDL_FLAGS += \
-  -I$(topsrcdir)/dom/base \
-  -I$(topsrcdir)/dom/interfaces/base \
-  -I$(topsrcdir)/dom/interfaces/events \
-  $(NULL)

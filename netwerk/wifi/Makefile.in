@@ -12,7 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE         = necko
 LIBRARY_NAME   = neckowifi_s
 LIBXUL_LIBRARY = 1
-XPIDL_MODULE   = necko_wifi
 GRE_MODULE     = 1
 
 FORCE_STATIC_LIB = 1
@@ -21,12 +20,6 @@ ifneq ($(OS_ARCH),Darwin)
 # osx_corewlan.mm has warnings I don't understand.
 FAIL_ON_WARNINGS := 1
 endif
-
-XPIDLSRCS = \
-  nsIWifiAccessPoint.idl \
-  nsIWifiListener.idl \
-  nsIWifiMonitor.idl \
-  $(NULL)
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += nsWifiMonitorGonk.cpp
