@@ -4322,6 +4322,15 @@ if test "$ACCESSIBILITY" -a "$MOZ_ENABLE_GTK2" ; then
     AC_DEFINE_UNQUOTED(ATK_REV_VERSION, $ATK_REV_VERSION)
 fi
 
+
+dnl ECMAScript Internationalization API Support (uses ICU)
+dnl ========================================================
+
+dnl Source files that use ICU should have control over which parts of the ICU
+dnl namespace they want to use.
+AC_DEFINE(U_USING_ICU_NAMESPACE,0)
+
+
 dnl ========================================================
 dnl JavaScript shell
 dnl ========================================================

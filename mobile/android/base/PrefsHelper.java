@@ -26,21 +26,21 @@ public final class PrefsHelper {
     private static final Map<Integer, PrefHandler> sCallbacks = new HashMap<Integer, PrefHandler>();
     private static int sUniqueRequestId = 1;
 
-    public static void getPref(String prefName, PrefHandler callback) {
+    public static int getPref(String prefName, PrefHandler callback) {
         JSONArray prefs = new JSONArray();
         prefs.put(prefName);
-        getPrefs(prefs, callback);
+        return getPrefs(prefs, callback);
     }
 
-    public static void getPrefs(String[] prefNames, PrefHandler callback) {
+    public static int getPrefs(String[] prefNames, PrefHandler callback) {
         JSONArray prefs = new JSONArray();
         for (String p : prefNames) {
             prefs.put(p);
         }
-        getPrefs(prefs, callback);
+        return getPrefs(prefs, callback);
     }
 
-    public static void getPrefs(JSONArray prefNames, PrefHandler callback) {
+    public static int getPrefs(JSONArray prefNames, PrefHandler callback) {
         int requestId;
         synchronized (PrefsHelper.class) {
             ensureRegistered();
@@ -52,19 +52,25 @@ public final class PrefsHelper {
         GeckoEvent event;
         try {
             JSONObject message = new JSONObject();
-            message.put("requestId", requestId);
+            message.put("requestId", Integer.toString(requestId));
             message.put("preferences", prefNames);
-            event = GeckoEvent.createBroadcastEvent("Preferences:Get", message.toString());
+            event = GeckoEvent.createBroadcastEvent(callback.isObserver() ?
+                "Preferences:Observe" : "Preferences:Get", message.toString());
             GeckoAppShell.sendEventToGecko(event);
         } catch (Exception e) {
-            Log.e(LOGTAG, "Error while composing Preferences:Get message", e);
+            Log.e(LOGTAG, "Error while composing Preferences:" +
+                  (callback.isObserver() ? "Observe" : "Get") + " message", e);
 
             // if we failed to send the message, drop our reference to the callback because
             // otherwise it will leak since we will never get the response
             synchronized (PrefsHelper.class) {
                 sCallbacks.remove(requestId);
             }
+
+            return -1;
         }
+
+        return requestId;
     }
 
     private static void ensureRegistered() {
@@ -78,7 +84,11 @@ public final class PrefsHelper {
                     PrefHandler callback;
                     synchronized (PrefsHelper.class) {
                         try {
-                            callback = sCallbacks.remove(message.getInt("requestId"));
+                            int requestId = message.getInt("requestId");
+                            callback = sCallbacks.get(requestId);
+                            if (callback != null && !callback.isObserver()) {
+                                sCallbacks.remove(requestId);
+                            }
                         } catch (Exception e) {
                             callback = null;
                         }
@@ -142,10 +152,29 @@ public final class PrefsHelper {
         }
     }
 
+    public static void removeObserver(int requestId) {
+        if (requestId < 0) {
+            throw new IllegalArgumentException("Invalid request ID");
+        }
+
+        synchronized (PrefsHelper.class) {
+            PrefHandler callback = sCallbacks.remove(requestId);
+            if (callback == null) {
+                Log.e(LOGTAG, "Unknown request ID " + requestId);
+                return;
+            }
+        }
+
+        GeckoEvent event = GeckoEvent.createBroadcastEvent("Preferences:RemoveObserver",
+                                                           Integer.toString(requestId));
+        GeckoAppShell.sendEventToGecko(event);
+    }
+
     public interface PrefHandler {
         void prefValue(String pref, boolean value);
         void prefValue(String pref, int value);
         void prefValue(String pref, String value);
+        boolean isObserver();
         void finish();
     }
 
@@ -167,6 +196,11 @@ public final class PrefsHelper {
 
         @Override
         public void finish() {
+        }
+
+        @Override
+        public boolean isObserver() {
+            return false;
         }
     }
 }

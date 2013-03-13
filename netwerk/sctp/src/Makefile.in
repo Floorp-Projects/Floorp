@@ -22,9 +22,6 @@ FORCE_STATIC_LIB = 1
 
 EXPORTS_NAMESPACES = mozilla/net
 
-XPIDLSRCS = \
-  $(NULL)
-
 ifeq ($(OS_TARGET),Android)
 CPPSRCS = \
   ifaddrs_android.cpp \

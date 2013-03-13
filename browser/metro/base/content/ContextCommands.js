@@ -34,24 +34,46 @@ var ContextCommands = {
 
   // Text specific
 
+  cut: function cc_cut() {
+    let target = ContextMenuUI.popupState.target;
+
+    if (!target)
+      return;
+
+    if (target.localName === "browser") {
+      // content
+      if (ContextMenuUI.popupState.string) {
+        this.sendCommand("cut");
+
+        SelectionHelperUI.closeEditSessionAndClear();
+      }
+    } else {
+      // chrome
+      target.editor.cut();
+    }
+
+    target.focus();
+  },
+
   copy: function cc_copy() {
     let target = ContextMenuUI.popupState.target;
+
+    if (!target)
+      return;
+
     if (target.localName == "browser") {
       // content
-      if (ContextMenuUI.popupState.string != "undefined") {
-        this.clipboard.copyString(ContextMenuUI.popupState.string,
-                                  this.docRef);
-        this.showToast(Strings.browser.GetStringFromName("selectionHelper.textCopied"));
+      if (ContextMenuUI.popupState.string) {
+        this.sendCommand("copy");
+
         SelectionHelperUI.closeEditSessionAndClear();
       }
     } else {
       // chrome
       target.editor.copy();
-      this.showToast(Strings.browser.GetStringFromName("selectionHelper.textCopied"));
     }
 
-    if (target)
-      target.focus();
+    target.focus();
   },
 
   paste: function cc_paste() {
@@ -149,7 +171,6 @@ var ContextCommands = {
   copyLink: function cc_copyLink() {
     this.clipboard.copyString(ContextMenuUI.popupState.linkURL,
                               this.docRef);
-    this.showToast(Strings.browser.GetStringFromName("selectionHelper.linkCopied"));
   },
 
   bookmarkLink: function cc_bookmarkLink() {
@@ -162,8 +183,6 @@ var ContextCommands = {
     } catch (e) {
       return;
     }
-
-    this.showToast(Strings.browser.GetStringFromName("alertLinkBookmarked"));
   },
 
   // Image specific
@@ -180,7 +199,6 @@ var ContextCommands = {
   copyImageSrc: function cc_copyImageSrc() {
     this.clipboard.copyString(ContextMenuUI.popupState.mediaURL,
                               this.docRef);
-    this.showToast(Strings.browser.GetStringFromName("selectionHelper.linkCopied"));
   },
 
   openImageInNewTab: function cc_openImageInNewTab() {
@@ -196,7 +214,6 @@ var ContextCommands = {
   copyVideoSrc: function cc_copyVideoSrc() {
     this.clipboard.copyString(ContextMenuUI.popupState.mediaURL,
                               this.docRef);
-    this.showToast(Strings.browser.GetStringFromName("selectionHelper.linkCopied"));
   },
 
   openVideoInNewTab: function cc_openVideoInNewTab() {
@@ -269,12 +286,7 @@ var ContextCommands = {
     });
   },
 
-  showToast: function showToast(aString) {
-    let toaster = Cc["@mozilla.org/toaster-alerts-service;1"].getService(Ci.nsIAlertsService);
-    toaster.showAlertNotification(null, aString, "", false, "", null);
-  },
-
-  sendCommand: function cc_playVideo(aCommand) {
+  sendCommand: function sendCommand(aCommand) {
     // Send via message manager over to ContextMenuHandler
     let browser = ContextMenuUI.popupState.target;
     browser.messageManager.sendAsyncMessage("Browser:ContextCommand", { command: aCommand });

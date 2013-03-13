@@ -23,6 +23,12 @@ public interface Actions {
         /** Blocks until the event has been received and returns data associated with the event. */
         public String blockForEventData();
 
+        /**
+         * Blocks until the event has been received, or until the timeout has been exceeded.
+         * Returns the data associated with the event, if applicable.
+         */
+        public String blockForEventDataWithTimeout(long millis);
+
         /** Polls to see if the event has been received. Once this returns true, subsequent calls will also return true. */
         public boolean eventReceived();
     }

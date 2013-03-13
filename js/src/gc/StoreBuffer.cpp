@@ -44,10 +44,11 @@ StoreBuffer::SlotEdge::location() const
     return (void *)slotLocation();
 }
 
+template <typename NurseryType>
 JS_ALWAYS_INLINE bool
-StoreBuffer::SlotEdge::inRememberedSet(Nursery *n) const
+StoreBuffer::SlotEdge::inRememberedSet(NurseryType *nursery) const
 {
-    return !n->isInside(object) && n->isInside(deref());
+    return !nursery->isInside(object) && nursery->isInside(deref());
 }
 
 JS_ALWAYS_INLINE bool
@@ -76,8 +77,9 @@ StoreBuffer::MonoTypeBuffer<T>::disable()
 }
 
 template <typename T>
+template <typename NurseryType>
 void
-StoreBuffer::MonoTypeBuffer<T>::compactNotInSet()
+StoreBuffer::MonoTypeBuffer<T>::compactNotInSet(NurseryType *nursery)
 {
     T *insert = base;
     for (T *v = base; v != pos; ++v) {
@@ -91,7 +93,10 @@ template <typename T>
 void
 StoreBuffer::MonoTypeBuffer<T>::compact()
 {
-    compactNotInSet();
+#ifdef JS_GC_ZEAL
+    if (owner->runtime->gcVerifyPostData)
+        compactNotInSet(&owner->runtime->gcVerifierNursery);
+#endif
 }
 
 template <typename T>

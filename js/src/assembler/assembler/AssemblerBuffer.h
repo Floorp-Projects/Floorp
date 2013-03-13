@@ -43,9 +43,9 @@
 #include "jsfriendapi.h"
 #include "jsopcode.h"
 
-#include "gc/Root.h"
-#include "methodjit/Logging.h"
 #include "ion/IonSpewer.h"
+#include "js/RootingAPI.h"
+#include "methodjit/Logging.h"
 
 #define PRETTY_PRINT_OFFSET(os) (((os)<0)?"-":""), (((os)<0)?-(os):(os))
 

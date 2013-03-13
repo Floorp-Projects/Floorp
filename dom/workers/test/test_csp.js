@@ -1,5 +1,9 @@
+/**
+ * Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
 msg = null;
-var errors = 6;
+var errors = 5;
 
 onerror = function(event) {
   ok(true, msg);
@@ -35,7 +39,12 @@ worker.onmessage = function(event) {
 }
 
 msg = "Loading data:something";
-worker = new Worker("data:application/javascript;base64,ZHVtcCgnaGVsbG8gd29ybGQnKQo=");
-worker = new Worker("javascript:dump(123);");
+try {
+  worker = new Worker("data:application/javascript;base64,ZHVtcCgnaGVsbG8gd29ybGQnKQo=");
+  ok(false, "Should have thrown!");
+} catch (e) {
+  ok(true, "Threw as expected.");
+}
 
+worker = new Worker("javascript:dump(123);");
 SimpleTest.waitForExplicitFinish();

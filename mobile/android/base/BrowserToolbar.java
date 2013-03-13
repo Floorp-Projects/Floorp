@@ -532,6 +532,27 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         }
     }
 
+    /**
+     * Animate the visibility of the toolbar, but take into account the
+     * velocity of what's moving underneath the toolbar. If that velocity
+     * is greater than the default animation velocity, it will determine
+     * the direction of the toolbar animation. Velocity is specified in
+     * pixels per 1/60 seconds (a 60Hz frame).
+     */
+    public void animateVisibilityWithVelocityBias(boolean show, float velocity) {
+        // Work out the default animation velocity. This assumes a linear
+        // animation which is incorrect, but the animation is short enough that
+        // there's very little difference.
+        float defaultVelocity =
+            mLayout.getHeight() / ((VISIBILITY_ANIMATION_DURATION / 1000.0f) * 60);
+
+        if (Math.abs(velocity) > defaultVelocity) {
+            show = (velocity > 0) ? false : true;
+        }
+
+        animateVisibility(show, 0);
+    }
+
     public void cancelVisibilityAnimation() {
         mVisibility = ToolbarVisibility.INCONSISTENT;
         if (mDelayedVisibilityTask != null) {

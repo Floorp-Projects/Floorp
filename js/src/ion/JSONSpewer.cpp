@@ -184,7 +184,7 @@ JSONSpewer::beginFunction(RawScript script)
         endFunction();
 
     beginObject();
-    stringProperty("name", "%s:%d", script->filename, script->lineno);
+    stringProperty("name", "%s:%d", script->filename(), script->lineno);
     beginListProperty("passes");
 
     inFunction_ = true;

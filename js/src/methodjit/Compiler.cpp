@@ -524,12 +524,12 @@ mjit::Compiler::performCompilation()
 {
     JaegerSpew(JSpew_Scripts,
                "compiling script (file \"%s\") (line \"%d\") (length \"%d\") (chunk \"%d\") (usecount \"%d\")\n",
-               outerScript->filename, outerScript->lineno, outerScript->length, chunkIndex, (int) outerScript->getUseCount());
+               outerScript->filename(), outerScript->lineno, outerScript->length, chunkIndex, (int) outerScript->getUseCount());
 
     if (inlining()) {
         JaegerSpew(JSpew_Inlining,
                    "inlining calls in script (file \"%s\") (line \"%d\")\n",
-                   outerScript->filename, outerScript->lineno);
+                   outerScript->filename(), outerScript->lineno);
     }
 
 #ifdef JS_METHODJIT_SPEW
@@ -4736,7 +4736,7 @@ mjit::Compiler::inlineScriptedFunction(uint32_t argc, bool callingNew)
         a->exitState = exitState;
 
         JaegerSpew(JSpew_Inlining, "inlining call to script (file \"%s\") (line \"%d\")\n",
-                   script->filename, script->lineno);
+                   script->filename(), script->lineno);
 
         if (calleePrevious.isSet()) {
             calleePrevious.get().linkTo(masm.label(), &masm);
@@ -4821,7 +4821,7 @@ mjit::Compiler::inlineScriptedFunction(uint32_t argc, bool callingNew)
     }
 
     JaegerSpew(JSpew_Inlining, "finished inlining call to script (file \"%s\") (line \"%d\")\n",
-               script_->filename, script_->lineno);
+               script_->filename(), script_->lineno);
 
     if (sps.enabled()) {
         RegisterID reg = frame.allocReg();
