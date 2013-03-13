@@ -1282,9 +1282,8 @@ nsTextStore::UpdateCompositionExtent(ITfRange* aRangeNew)
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::UpdateCompositionExtent(aRangeNew=0x%p), "
-          "mComposition.mView=0x%p, mLock=%s",
-          this, aRangeNew, mComposition.mView.get(),
-          GetLockFlagNameStr(mLock).get()));
+          "mComposition.mView=0x%p",
+          this, aRangeNew, mComposition.mView.get()));
 
   if (!mComposition.IsComposing()) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
@@ -2597,9 +2596,9 @@ nsTextStore::OnStartCompositionInternal(ITfCompositionView* pComposition,
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::OnStartCompositionInternal("
           "pComposition=0x%p, aRange=0x%p, aPreserveSelection=%s), "
-          "mComposition.mView=0x%p, mLock=%s",
+          "mComposition.mView=0x%p",
           this, pComposition, aRange, GetBoolName(aPreserveSelection),
-          mComposition.mView.get(), GetLockFlagNameStr(mLock).get()));
+          mComposition.mView.get()));
 
   LONG start = 0, length = 0;
   HRESULT hr = GetRangeExtent(aRange, &start, &length);
@@ -2848,11 +2847,11 @@ nsTextStore::OnTextChangeInternal(uint32_t aStart,
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p nsTextStore::OnTextChangeInternal(aStart=%lu, "
-          "aOldEnd=%lu, aNewEnd=%lu), mLock=%s, mSink=0x%p, mSinkMask=%s, "
+          "aOldEnd=%lu, aNewEnd=%lu), mSink=0x%p, mSinkMask=%s, "
           "mTextChange={ acpStart=%ld, acpOldEnd=%ld, acpNewEnd=%ld }",
-          this, aStart, aOldEnd, aNewEnd, GetLockFlagNameStr(mLock).get(),
-          mSink.get(), GetSinkMaskNameStr(mSinkMask).get(),
-          mTextChange.acpStart, mTextChange.acpOldEnd, mTextChange.acpNewEnd));
+          this, aStart, aOldEnd, aNewEnd, mSink.get(),
+          GetSinkMaskNameStr(mSinkMask).get(), mTextChange.acpStart,
+          mTextChange.acpOldEnd, mTextChange.acpNewEnd));
 
   if (!mLock && mSink && 0 != (mSinkMask & TS_AS_TEXT_CHANGE)) {
     mTextChange.acpStart = std::min(mTextChange.acpStart, LONG(aStart));
@@ -2868,10 +2867,10 @@ void
 nsTextStore::OnTextChangeMsgInternal(void)
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-         ("TSF: 0x%p nsTextStore::OnTextChangeMsgInternal(), mLock=%s, "
+         ("TSF: 0x%p nsTextStore::OnTextChangeMsgInternal(), "
           "mSink=0x%p, mSinkMask=%s, mTextChange={ acpStart=%ld, "
           "acpOldEnd=%ld, acpNewEnd=%ld }",
-          this, GetLockFlagNameStr(mLock).get(), mSink.get(),
+          this, mSink.get(),
           GetSinkMaskNameStr(mSinkMask).get(), mTextChange.acpStart,
           mTextChange.acpOldEnd, mTextChange.acpNewEnd));
 
@@ -2892,10 +2891,9 @@ nsresult
 nsTextStore::OnSelectionChangeInternal(void)
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-         ("TSF: 0x%p nsTextStore::OnSelectionChangeInternal(), mLock=%s, "
+         ("TSF: 0x%p nsTextStore::OnSelectionChangeInternal(), "
           "mSink=0x%p, mSinkMask=%s, mIsRecordingActionsWithoutLock=%s",
-          this, GetLockFlagNameStr(mLock).get(), mSink.get(),
-          GetSinkMaskNameStr(mSinkMask).get(),
+          this, mSink.get(), GetSinkMaskNameStr(mSinkMask).get(),
           GetBoolName(mIsRecordingActionsWithoutLock)));
 
   if (!mLock && mSink && 0 != (mSinkMask & TS_AS_SEL_CHANGE)) {
@@ -2935,10 +2933,10 @@ nsTextStore::CommitCompositionInternal(bool aDiscard)
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p nsTextStore::CommitCompositionInternal(aDiscard=%s), "
-          "mLock=%s, mSink=0x%p, mContext=0x%p, mComposition.mView=0x%p, "
+          "mSink=0x%p, mContext=0x%p, mComposition.mView=0x%p, "
           "mComposition.mString=\"%s\"",
-          this, GetBoolName(aDiscard), GetLockFlagNameStr(mLock).get(),
-          mSink.get(), mContext.get(), mComposition.mView.get(),
+          this, GetBoolName(aDiscard), mSink.get(), mContext.get(),
+          mComposition.mView.get(),
           NS_ConvertUTF16toUTF8(mComposition.mString).get()));
 
   if (mComposition.IsComposing() && aDiscard) {
