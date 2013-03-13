@@ -6,7 +6,7 @@
 #define _PKCS11N_H_
 
 #ifdef DEBUG
-static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.31 $ $Date: 2013/02/07 01:29:19 $";
+static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.32 $ $Date: 2013/02/12 22:33:53 $";
 #endif /* DEBUG */
 
 /*
@@ -195,6 +195,20 @@ static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.31 $
 #define CKM_NSS_JPAKE_FINAL_SHA384  (CKM_NSS + 17)
 #define CKM_NSS_JPAKE_FINAL_SHA512  (CKM_NSS + 18)
 
+/* Constant-time MAC mechanisms:
+ *
+ * These operations verify a padded, MAC-then-encrypt block of data in
+ * constant-time. Because of the order of operations, the padding bytes are not
+ * protected by the MAC. However, disclosing the value of the padding bytes
+ * gives an attacker the ability to decrypt ciphertexts. Such disclosure can be
+ * as subtle as taking slightly less time to perform the MAC when the padding
+ * is one byte longer. See https://www.isg.rhul.ac.uk/tls/
+ *
+ * CKM_NSS_HMAC_CONSTANT_TIME: performs an HMAC authentication.
+ * CKM_NSS_SSL3_MAC_CONSTANT_TIME: performs an authentication with SSLv3 MAC.
+ *
+ * Parameter type: CK_NSS_MAC_CONSTANT_TIME_PARAMS
+ */
 #define CKM_NSS_HMAC_CONSTANT_TIME      (CKM_NSS + 19)
 #define CKM_NSS_SSL3_MAC_CONSTANT_TIME  (CKM_NSS + 20)
 
@@ -243,7 +257,15 @@ typedef struct CK_NSS_JPAKEFinalParams {
     CK_NSS_JPAKEPublicValue B; /* in */
 } CK_NSS_JPAKEFinalParams;
 
-/* NOTE: the softoken's implementation of CKM_NSS_HMAC_CONSTANT_TIME and
+/* macAlg: the MAC algorithm to use. This determines the hash function used in
+ *     the HMAC/SSLv3 MAC calculations.
+ * ulBodyTotalLen: the total length of the data, including padding bytes and
+ *     padding length.
+ * pHeader: points to a block of data that contains additional data to
+ *     authenticate. For TLS this includes the sequence number etc. For SSLv3,
+ *     this also includes the initial padding bytes.
+ *
+ * NOTE: the softoken's implementation of CKM_NSS_HMAC_CONSTANT_TIME and
  * CKM_NSS_SSL3_MAC_CONSTANT_TIME requires that the sum of ulBodyTotalLen
  * and ulHeaderLen be much smaller than 2^32 / 8 bytes because it uses an
  * unsigned int variable to represent the length in bits. This should not
