@@ -194,6 +194,7 @@ browser.jar:
   skin/classic/browser/devtools/widgets.css                 (devtools/widgets.css)
   skin/classic/browser/devtools/arrows.png                  (devtools/arrows.png)
   skin/classic/browser/devtools/commandline.png             (devtools/commandline.png)
+  skin/classic/browser/devtools/command-paintflashing.png   (devtools/command-paintflashing.png)
   skin/classic/browser/devtools/command-responsivemode.png  (devtools/command-responsivemode.png)
   skin/classic/browser/devtools/command-scratchpad.png      (devtools/command-scratchpad.png)
   skin/classic/browser/devtools/command-tilt.png            (devtools/command-tilt.png)

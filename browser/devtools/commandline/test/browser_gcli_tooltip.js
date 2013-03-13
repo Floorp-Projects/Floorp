@@ -26,66 +26,26 @@ var exports = {};
 const TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testTooltip.js</p>";
 
 function test() {
-  var tests = Object.keys(exports);
-  // Push setup to the top and shutdown to the bottom
-  tests.sort(function(t1, t2) {
-    if (t1 == "setup" || t2 == "shutdown") return -1;
-    if (t2 == "setup" || t1 == "shutdown") return 1;
-    return 0;
-  });
-  info("Running tests: " + tests.join(", "))
-  tests = tests.map(function(test) { return exports[test]; });
-  DeveloperToolbarTest.test(TEST_URI, tests, true);
+  helpers.addTabWithToolbar(TEST_URI, function(options) {
+    return helpers.runTests(options, exports);
+  }).then(finish);
 }
 
 // <INJECTED SOURCE:END>
 
+'use strict';
 
 // var assert = require('test/assert');
+// var helpers = require('gclitest/helpers');
 // var mockCommands = require('gclitest/mockCommands');
 
-
-exports.setup = function() {
+exports.setup = function(options) {
   mockCommands.setup();
 };
 
-exports.shutdown = function() {
+exports.shutdown = function(options) {
   mockCommands.shutdown();
 };
-
-
-function type(typed, tests, options) {
-  var inputter = options.display.inputter;
-  var tooltip = options.display.tooltip;
-
-  inputter.setInput(typed);
-  if (tests.cursor) {
-    inputter.setCursor({ start: tests.cursor, end: tests.cursor });
-  }
-
-  if (!options.isJsdom) {
-    if (tests.important) {
-      assert.ok(tooltip.field.isImportant, 'Important for ' + typed);
-    }
-    else {
-      assert.ok(!tooltip.field.isImportant, 'Not important for ' + typed);
-    }
-
-    if (tests.options) {
-      var names = tooltip.field.menu.items.map(function(item) {
-        return item.name.textContent ? item.name.textContent : item.name;
-      });
-      assert.is(tests.options.join('|'), names.join('|'), 'Options for ' + typed);
-    }
-
-    if (tests.error) {
-      assert.is(tests.error, tooltip.errorEle.textContent, 'Error for ' + typed);
-    }
-    else {
-      assert.is('', tooltip.errorEle.textContent, 'No error for ' + typed);
-    }
-  }
-}
 
 exports.testActivate = function(options) {
   if (!options.display) {
@@ -97,31 +57,106 @@ exports.testActivate = function(options) {
     assert.log('Reduced checks due to JSDom.textContent');
   }
 
-  type(' ', { }, options);
-
-  type('tsb ', {
-    important: true,
-    options: [ 'false', 'true' ]
-  }, options);
-
-  type('tsb t', {
-    important: true,
-    options: [ 'true' ]
-  }, options);
-
-  type('tsb tt', {
-    important: true,
-    options: [ 'true' ]
-  }, options);
-
-  type('wxqy', {
-    important: false,
-    options: [ ],
-    error: 'Can\'t use \'wxqy\'.'
-  }, options);
-
-  type('', { }, options);
+  return helpers.audit(options, [
+    {
+      setup:    ' ',
+      check: {
+        input:  ' ',
+        hints:   '',
+        markup: 'V',
+        cursor: 1,
+        current: '__command',
+        status: 'ERROR',
+        message:  '',
+        unassigned: [ ],
+        outputState: 'false:default',
+        tooltipState: 'false:default'
+      }
+    },
+    {
+      setup:    'tsb ',
+      check: {
+        input:  'tsb ',
+        hints:      'false',
+        markup: 'VVVV',
+        cursor: 4,
+        current: 'toggle',
+        status: 'VALID',
+        options: [ 'false', 'true' ],
+        message:  '',
+        predictions: [ 'false', 'true' ],
+        unassigned: [ ],
+        outputState: 'false:default',
+        tooltipState: 'true:importantFieldFlag'
+      }
+    },
+    {
+      setup:    'tsb t',
+      check: {
+        input:  'tsb t',
+        hints:       'rue',
+        markup: 'VVVVI',
+        cursor: 5,
+        current: 'toggle',
+        status: 'ERROR',
+        options: [ 'true' ],
+        message:  '',
+        predictions: [ 'true' ],
+        unassigned: [ ],
+        outputState: 'false:default',
+        tooltipState: 'true:importantFieldFlag'
+      }
+    },
+    {
+      setup:    'tsb tt',
+      check: {
+        input:  'tsb tt',
+        hints:        ' -> true',
+        markup: 'VVVVII',
+        cursor: 6,
+        current: 'toggle',
+        status: 'ERROR',
+        options: [ 'true' ],
+        message: '',
+        predictions: [ 'true' ],
+        unassigned: [ ],
+        outputState: 'false:default',
+        tooltipState: 'true:importantFieldFlag'
+      }
+    },
+    {
+      setup:    'wxqy',
+      check: {
+        input:  'wxqy',
+        hints:      '',
+        markup: 'EEEE',
+        cursor: 4,
+        current: '__command',
+        status: 'ERROR',
+        options: [ ],
+        message:  'Can\'t use \'wxqy\'.',
+        predictions: [ ],
+        unassigned: [ ],
+        outputState: 'false:default',
+        tooltipState: 'true:isError'
+      }
+    },
+    {
+      setup:    '',
+      check: {
+        input:  '',
+        hints:  '',
+        markup: '',
+        cursor: 0,
+        current: '__command',
+        status: 'ERROR',
+        message: '',
+        unassigned: [ ],
+        outputState: 'false:default',
+        tooltipState: 'false:default'
+      }
+    }
+  ]);
 };
-
 
 // });
