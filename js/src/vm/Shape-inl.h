@@ -106,15 +106,17 @@ BaseShape::operator=(const BaseShape &other)
         getterObj = other.getterObj;
         GetterSetterWriteBarrierPost(runtime(), &getterObj);
     } else {
+        if (rawGetter)
+            GetterSetterWriteBarrierPostRemove(runtime(), &getterObj);
         rawGetter = other.rawGetter;
-        GetterSetterWriteBarrierPostRemove(runtime(), &getterObj);
     }
     if (flags & HAS_SETTER_OBJECT) {
         setterObj = other.setterObj;
         GetterSetterWriteBarrierPost(runtime(), &setterObj);
     } else {
+        if (rawSetter)
+            GetterSetterWriteBarrierPostRemove(runtime(), &setterObj);
         rawSetter = other.rawSetter;
-        GetterSetterWriteBarrierPostRemove(runtime(), &setterObj);
     }
     compartment_ = other.compartment_;
     return *this;
