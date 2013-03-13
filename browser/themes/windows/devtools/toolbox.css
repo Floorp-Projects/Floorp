@@ -74,6 +74,20 @@
   background-color: hsla(206,37%,4%,.4);
 }
 
+#command-button-paintflashing {
+  list-style-image: url("chrome://browser/skin/devtools/command-paintflashing.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+#command-button-paintflashing:hover {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+#command-button-paintflashing:hover:active {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+#command-button-paintflashing[checked=true] {
+  -moz-image-region: rect(0px, 64px, 16px, 48px);
+}
+
 #command-button-responsive {
   list-style-image: url("chrome://browser/skin/devtools/command-responsivemode.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
