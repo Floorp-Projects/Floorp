@@ -7,7 +7,7 @@
 
     <item android:maxLevel="1">
         <selector>
-            <item android:state_pressed="true" android:drawable="@drawable/highlight"/>
+            <item android:state_pressed="true" android:drawable="@color/highlight_dark"/>
             <item android:drawable="@android:color/black"/>
         </selector>
     </item>
