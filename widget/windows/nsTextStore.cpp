@@ -1322,17 +1322,17 @@ nsTextStore::GetDisplayAttribute(ITfProperty* aAttrProperty,
 }
 
 HRESULT
-nsTextStore::UpdateCompositionExtent(ITfRange* aRangeNew)
+nsTextStore::RestartCompositionIfNecessary(ITfRange* aRangeNew)
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-         ("TSF: 0x%p   nsTextStore::UpdateCompositionExtent(aRangeNew=0x%p), "
-          "mComposition.mView=0x%p",
+         ("TSF: 0x%p   nsTextStore::RestartCompositionIfNecessary("
+          "aRangeNew=0x%p), mComposition.mView=0x%p",
           this, aRangeNew, mComposition.mView.get()));
 
   if (!mComposition.IsComposing()) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-           ("TSF: 0x%p   nsTextStore::UpdateCompositionExtent() FAILED due to "
-            "no composition view", this));
+           ("TSF: 0x%p   nsTextStore::RestartCompositionIfNecessary() FAILED "
+            "due to no composition view", this));
     return E_FAIL;
   }
 
@@ -1343,8 +1343,8 @@ nsTextStore::UpdateCompositionExtent(ITfRange* aRangeNew)
     hr = pComposition->GetRange(getter_AddRefs(composingRange));
     if (FAILED(hr)) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-             ("TSF: 0x%p   nsTextStore::UpdateCompositionExtent() FAILED due to "
-              "pComposition->GetRange() failure", this));
+             ("TSF: 0x%p   nsTextStore::RestartCompositionIfNecessary() FAILED "
+              "due to pComposition->GetRange() failure", this));
       return hr;
     }
   }
@@ -1354,14 +1354,14 @@ nsTextStore::UpdateCompositionExtent(ITfRange* aRangeNew)
   hr = GetRangeExtent(composingRange, &compStart, &compLength);
   if (FAILED(hr)) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-           ("TSF: 0x%p   nsTextStore::UpdateCompositionExtent() FAILED due to "
-            "GetRangeExtent() failure", this));
+           ("TSF: 0x%p   nsTextStore::RestartCompositionIfNecessary() FAILED "
+            "due to GetRangeExtent() failure", this));
     return hr;
   }
 
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-         ("TSF: 0x%p   nsTextStore::UpdateCompositionExtent(), range=%ld-%ld, "
-          "mComposition={ mStart=%ld, mString.Length()=%lu }",
+         ("TSF: 0x%p   nsTextStore::RestartCompositionIfNecessary(), "
+          "range=%ld-%ld, mComposition={ mStart=%ld, mString.Length()=%lu }",
           this, compStart, compStart + compLength, mComposition.mStart,
           mComposition.mString.Length()));
 
@@ -1378,7 +1378,8 @@ nsTextStore::UpdateCompositionExtent(ITfRange* aRangeNew)
   }
 
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-         ("TSF: 0x%p   nsTextStore::UpdateCompositionExtent() succeeded", this));
+         ("TSF: 0x%p   nsTextStore::RestartCompositionIfNecessary() succeeded",
+          this));
   return S_OK;
 }
 
@@ -1612,11 +1613,11 @@ nsTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
 
   if (mComposition.IsComposing()) {
     if (aDispatchTextEvent) {
-      HRESULT hr = UpdateCompositionExtent(nullptr);
+      HRESULT hr = RestartCompositionIfNecessary();
       if (FAILED(hr)) {
         PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::SetSelectionInternal() FAILED due to "
-            "UpdateCompositionExtent() failure", this));
+            "RestartCompositionIfNecessary() failure", this));
         return hr;
       }
     }
@@ -2738,11 +2739,11 @@ nsTextStore::OnUpdateComposition(ITfCompositionView* pComposition,
     return S_OK;
   }
 
-  HRESULT hr = UpdateCompositionExtent(pRangeNew);
+  HRESULT hr = RestartCompositionIfNecessary(pRangeNew);
   if (FAILED(hr)) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::OnUpdateComposition() FAILED due to "
-            "UpdateCompositionExtent() failure", this));
+            "RestartCompositionIfNecessary() failure", this));
     return hr;
   }
 
