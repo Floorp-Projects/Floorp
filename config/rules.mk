@@ -20,12 +20,21 @@ _MOZBUILD_EXTERNAL_VARIABLES := \
   TEST_DIRS \
   TIERS \
   TOOL_DIRS \
+  XPIDL_MODULE \
   $(NULL)
 
 ifndef EXTERNALLY_MANAGED_MAKE_FILE
+# Using $(firstword) may not be perfect. But it should be good enough for most
+# scenarios.
+_current_makefile = $(CURDIR)/$(firstword $(MAKEFILE_LIST))
+
 $(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES),$(if $($(var)),\
-    $(error Variable $(var) is defined in Makefile. It should only be defined in moz.build files),\
+    $(error Variable $(var) is defined in $(_current_makefile). It should only be defined in moz.build files),\
     ))
+
+ifneq (,$(XPIDLSRCS)$(SDK_XPIDLSRCS))
+    $(error XPIDLSRCS and SDK_XPIDLSRCS have been merged and moved to moz.build files as the XPIDL_SOURCES variable. You must move these variables out of $(_current_makefile))
+endif
 
 # Import the automatically generated backend file. If this file doesn't exist,
 # the backend hasn't been properly configured. We want this to be a fatal
@@ -56,10 +65,6 @@ endif
 USE_AUTOTARGETS_MK = 1
 include $(topsrcdir)/config/makefiles/makeutils.mk
 
-ifdef SDK_XPIDLSRCS
-_EXTRA_XPIDLSRCS := $(filter-out $(XPIDLSRCS),$(SDK_XPIDLSRCS))
-XPIDLSRCS += $(_EXTRA_XPIDLSRCS)
-endif
 ifdef SDK_HEADERS
 _EXTRA_EXPORTS := $(filter-out $(EXPORTS),$(SDK_HEADERS))
 EXPORTS += $(_EXTRA_EXPORTS)

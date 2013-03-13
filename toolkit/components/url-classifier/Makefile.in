@@ -16,15 +16,6 @@ LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 FAIL_ON_WARNINGS = 1
 
-XPIDLSRCS = \
-  nsIUrlClassifierDBService.idl \
-  nsIUrlClassifierHashCompleter.idl \
-  nsIUrlClassifierStreamUpdater.idl \
-  nsIUrlClassifierPrefixSet.idl \
-  nsIUrlClassifierUtils.idl \
-  nsIUrlListManager.idl \
-  $(NULL)
-
 CPPSRCS = \
   ChunkSet.cpp \
   Classifier.cpp \

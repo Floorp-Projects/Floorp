@@ -13,11 +13,6 @@ include $(topsrcdir)/config/config.mk
 # metro/components.manifest
 MODULE = components
 
-XPIDLSRCS = \
-        SessionStore.idl \
-        LoginManagerPrompter.idl \
-        $(NULL)
-
 EXTRA_PP_COMPONENTS = \
         components.manifest \
         AboutRedirector.js \

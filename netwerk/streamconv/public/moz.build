@@ -3,3 +3,23 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'mozITXTToHTMLConv.idl',
+    'nsIDirIndex.idl',
+    'nsIDirIndexListener.idl',
+    'nsIStreamConverter.idl',
+    'nsIStreamConverterService.idl',
+    'nsITXTToHTMLConv.idl',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    XPIDL_SOURCES += [
+        'nsIAppleFileDecoder.idl',
+    ]
+
+XPIDL_MODULE = 'necko_strconv'
+
+XPIDL_FLAGS += [
+    '-I$(topsrcdir)/netwerk/base/public',
+]
+

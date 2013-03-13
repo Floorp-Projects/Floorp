@@ -11,41 +11,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dom
-XPIDL_MODULE	= dom_css
 GRE_MODULE	= 1
-
-SDK_XPIDLSRCS = 				\
-	nsIDOMCSSPrimitiveValue.idl		\
-	nsIDOMCSSRule.idl			\
-	nsIDOMCSSRuleList.idl			\
-	nsIDOMCSSStyleDeclaration.idl		\
-	nsIDOMCSSStyleSheet.idl			\
-	nsIDOMCSSValue.idl			\
-	nsIDOMCSSValueList.idl			\
-	nsIDOMElementCSSInlineStyle.idl		\
-	$(NULL)
-
-XPIDLSRCS =					\
-	nsIDOMCSSCharsetRule.idl		\
-	nsIDOMCSSConditionRule.idl		\
-	nsIDOMCSSFontFaceRule.idl		\
-	nsIDOMCSSGroupingRule.idl		\
-	nsIDOMCSSImportRule.idl			\
-	nsIDOMCSSMediaRule.idl			\
-	nsIDOMCSSMozDocumentRule.idl		\
-	nsIDOMCSSSupportsRule.idl		\
-	nsIDOMMozCSSKeyframeRule.idl		\
-	nsIDOMMozCSSKeyframesRule.idl		\
-	nsIDOMCSSPageRule.idl			\
-	nsIDOMCSSStyleRule.idl			\
-	nsIDOMCSSUnknownRule.idl		\
-	nsIDOMCounter.idl			\
-	nsIDOMRect.idl				\
-	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-XPIDL_FLAGS += \
-  -I$(topsrcdir)/dom/interfaces/base \
-  -I$(topsrcdir)/dom/interfaces/stylesheets \
-  $(NULL)

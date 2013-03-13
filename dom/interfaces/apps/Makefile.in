@@ -11,21 +11,7 @@ VPATH          = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE         = dom
-XPIDL_MODULE   = dom_apps
 GRE_MODULE     = 1
-
-XPIDLSRCS =                               \
-            mozIApplication.idl \
-            mozIApplicationClearPrivateDataParams.idl \
-            nsIDOMApplicationRegistry.idl \
-            nsIDOMApplicationRegistry2.idl \
-            nsIAppsService.idl \
-            nsIDOMMozApplicationEvent.idl \
-            $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-XPIDL_FLAGS += \
-  -I$(topsrcdir)/dom/interfaces/base \
-  -I$(topsrcdir)/dom/interfaces/events \
-  $(NULL)

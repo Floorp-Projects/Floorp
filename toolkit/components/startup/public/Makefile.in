@@ -12,11 +12,4 @@ include $(DEPTH)/config/autoconf.mk
 # note: everything depends on appcomps, so to avoid confusion these IDL files are
 # exported there, not toolkitcomps, which would be more logical
 MODULE       = appcomps
-XPIDL_MODULE = appstartup
-
-XPIDLSRCS = \
-  nsIAppStartup.idl \
-  nsIUserInfo.idl \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk

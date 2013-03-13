@@ -15,10 +15,6 @@ GRE_MODULE = 1
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 
-XPIDLSRCS = \
-  nsITypeAheadFind.idl \
-  $(NULL)
-
 CPPSRCS = \
   nsTypeAheadFind.cpp \
   $(NULL)

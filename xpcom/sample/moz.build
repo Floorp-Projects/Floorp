@@ -4,3 +4,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += ['program']
+
+# XPIDL_SOURCES specifies IDL files. The build system runs the xpidl tool
+# on these files to generate C++ headers and .xpt typelib files.
+XPIDL_SOURCES += ['nsISample.idl']
+

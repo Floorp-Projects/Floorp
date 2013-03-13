@@ -13,21 +13,8 @@ include $(DEPTH)/config/autoconf.mk
 
 # export required interfaces, even if --disable-cookies has been given
 MODULE       = necko
-XPIDL_MODULE = necko_cookie
 GRE_MODULE   = 1
 FAIL_ON_WARNINGS := 1
-
-SDK_XPIDLSRCS = \
-  nsICookie.idl \
-  nsICookieManager.idl \
-  $(NULL)
-
-XPIDLSRCS = \
-  nsICookie2.idl \
-  nsICookieManager2.idl \
-  nsICookiePermission.idl \
-  nsICookieService.idl \
-  $(NULL)
 
 ifdef NECKO_COOKIES
 LIBRARY_NAME     = neckocookie_s

@@ -11,7 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE           = dom
 LIBRARY_NAME     = domtelephony_s
-XPIDL_MODULE     = dom_telephony
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 FAIL_ON_WARNINGS := 1
@@ -23,18 +22,5 @@ CPPSRCS = \
   TelephonyCall.cpp \
   $(NULL)
 
-XPIDLSRCS = \
-  nsIDOMNavigatorTelephony.idl \
-  nsIDOMTelephony.idl \
-  nsIDOMTelephonyCall.idl \
-  nsIDOMCallEvent.idl \
-  nsITelephonyProvider.idl \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
-XPIDL_FLAGS += \
-  -I$(topsrcdir)/dom/base \
-  -I$(topsrcdir)/dom/interfaces/base \
-  -I$(topsrcdir)/dom/interfaces/events \
-  $(NULL)

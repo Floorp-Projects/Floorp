@@ -12,12 +12,5 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = txmgr
 
-XPIDLSRCS =                               \
-            nsITransaction.idl            \
-            nsITransactionList.idl        \
-            nsITransactionListener.idl    \
-            nsITransactionManager.idl     \
-            $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

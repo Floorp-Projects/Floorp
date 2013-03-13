@@ -13,9 +13,4 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = pippki
 GRE_MODULE	= 1
 
-XPIDLSRCS = \
-    nsIPKIParamBlock.idl \
-    nsIASN1Tree.idl \
-    $(NULL)
-
 include $(topsrcdir)/config/rules.mk

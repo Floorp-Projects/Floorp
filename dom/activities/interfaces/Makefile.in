@@ -9,21 +9,5 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-XPIDL_MODULE = dom_activities
-
-XPIDLSRCS = nsIDOMActivity.idl \
-            nsIDOMActivityOptions.idl \
-            nsIDOMActivityHandlerDescription.idl \
-            nsIDOMActivityRequestHandler.idl \
-            nsIDOMNavigatorActivities.idl \
-            nsIActivityProxy.idl \
-            nsIActivityUIGlue.idl \
-            $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
-XPIDL_FLAGS += \
-  -I$(topsrcdir)/dom/base \
-  -I$(topsrcdir)/dom/interfaces/base \
-  -I$(topsrcdir)/dom/interfaces/events \
-  $(NULL)

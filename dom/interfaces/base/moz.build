@@ -3,3 +3,63 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'domstubs.idl',
+    'nsIBrowserDOMWindow.idl',
+    'nsIContentPermissionPrompt.idl',
+    'nsIContentPrefService.idl',
+    'nsIContentPrefService2.idl',
+    'nsIContentURIGrouper.idl',
+    'nsIDOMBarProp.idl',
+    'nsIDOMCRMFObject.idl',
+    'nsIDOMChromeWindow.idl',
+    'nsIDOMClientInformation.idl',
+    'nsIDOMClientRect.idl',
+    'nsIDOMClientRectList.idl',
+    'nsIDOMConstructor.idl',
+    'nsIDOMGlobalObjectConstructor.idl',
+    'nsIDOMGlobalPropertyInitializer.idl',
+    'nsIDOMHistory.idl',
+    'nsIDOMJSWindow.idl',
+    'nsIDOMLocation.idl',
+    'nsIDOMMediaQueryList.idl',
+    'nsIDOMMimeType.idl',
+    'nsIDOMMimeTypeArray.idl',
+    'nsIDOMModalContentWindow.idl',
+    'nsIDOMNavigator.idl',
+    'nsIDOMPkcs11.idl',
+    'nsIDOMPlugin.idl',
+    'nsIDOMPluginArray.idl',
+    'nsIDOMScreen.idl',
+    'nsIDOMWindow.idl',
+    'nsIDOMWindowCollection.idl',
+    'nsIDOMWindowUtils.idl',
+    'nsIFocusManager.idl',
+    'nsIFrameRequestCallback.idl',
+    'nsIIdleObserver.idl',
+    'nsIQueryContentEventResult.idl',
+    'nsIStructuredCloneContainer.idl',
+    'nsITabChild.idl',
+    'nsITabParent.idl',
+]
+
+if CONFIG['MOZ_DISABLE_CRYPTOLEGACY']:
+    XPIDL_SOURCES += [
+        'nsIDOMCrypto.idl',
+    ]
+else:
+    XPIDL_SOURCES += [
+        'nsIDOMCryptoLegacy.idl',
+    ]
+
+if CONFIG['MOZ_B2G']:
+    XPIDL_SOURCES += [
+        'nsIDOMWindowB2G.idl',
+    ]
+
+XPIDL_MODULE = 'dom_base'
+
+XPIDL_FLAGS += [
+    '-I$(topsrcdir)/dom/interfaces/events',
+]
+

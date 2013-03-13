@@ -3,3 +3,23 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'nsIBlocklistService.idl',
+    'nsIDeviceSensors.idl',
+    'nsIGConfService.idl',
+    'nsIGIOService.idl',
+    'nsIGSettingsService.idl',
+    'nsIGeolocationProvider.idl',
+    'nsIGnomeVFSService.idl',
+    'nsIHapticFeedback.idl',
+    'nsIXULAppInfo.idl',
+    'nsIXULRuntime.idl',
+]
+
+if CONFIG['MOZ_CRASHREPORTER']:
+    XPIDL_SOURCES += [
+        'nsICrashReporter.idl',
+    ]
+
+XPIDL_MODULE = 'xpcom_system'
+

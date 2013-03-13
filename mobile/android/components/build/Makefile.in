@@ -20,8 +20,6 @@ EXPORT_LIBRARY  = 1
 EXPORTS = nsBrowserComponents.h
 
 
-XPIDLSRCS = nsIShellService.idl
-
 CPPSRCS = \
 	nsBrowserModule.cpp \
 	nsShellService.cpp \

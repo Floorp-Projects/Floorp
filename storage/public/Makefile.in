@@ -15,30 +15,6 @@ GRE_MODULE   = 1
 
 # NOTE When adding something to this list, you probably need to add it to the
 #      storage.h file too.
-XPIDLSRCS = \
-	mozIStorageService.idl \
-	mozIStorageConnection.idl \
-	mozIStorageAggregateFunction.idl \
-	mozIStorageFunction.idl \
-	mozIStorageProgressHandler.idl \
-	mozIStorageStatement.idl \
-	mozIStorageValueArray.idl \
-	mozIStorageResultSet.idl \
-	mozIStorageRow.idl \
-  mozIStorageError.idl \
-  mozIStorageStatementParams.idl \
-  mozIStorageStatementRow.idl \
-  mozIStorageStatementCallback.idl \
-  mozIStoragePendingStatement.idl \
-  mozIStorageBindingParamsArray.idl \
-  mozIStorageBindingParams.idl \
-  mozIStorageCompletionCallback.idl \
-  mozIStorageBaseStatement.idl \
-  mozIStorageAsyncStatement.idl \
-  mozIStorageVacuumParticipant.idl \
-	$(NULL)
-# SEE ABOVE NOTE!
-
 EXPORTS_NAMESPACES = mozilla mozilla/storage
 
 EXPORTS = \

@@ -16,19 +16,6 @@ MOZILLA_INTERNAL_API = 1
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 
-XPIDLSRCS = \
-  nsIFeed.idl \
-  nsIFeedContainer.idl \
-  nsIFeedElementBase.idl \
-  nsIFeedEntry.idl \
-  nsIFeedGenerator.idl \
-  nsIFeedListener.idl \
-  nsIFeedPerson.idl \
-  nsIFeedProcessor.idl \
-  nsIFeedResult.idl \
-  nsIFeedTextConstruct.idl \
-  $(NULL)
-
 EXTRA_COMPONENTS = FeedProcessor.js FeedProcessor.manifest
 
 include $(topsrcdir)/config/rules.mk

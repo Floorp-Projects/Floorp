@@ -3,3 +3,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'nsIDOMStorage.idl',
+    'nsIDOMStorageEvent.idl',
+    'nsIDOMStorageIndexedDB.idl',
+    'nsIDOMStorageItem.idl',
+    'nsIDOMStorageManager.idl',
+    'nsIDOMStorageObsolete.idl',
+    'nsIDOMToString.idl',
+]
+
+XPIDL_MODULE = 'dom_storage'
+
+XPIDL_FLAGS += [
+    '-I$(topsrcdir)/dom/interfaces/base',
+    '-I$(topsrcdir)/dom/interfaces/events',
+]
+

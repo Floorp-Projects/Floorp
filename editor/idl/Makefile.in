@@ -13,26 +13,5 @@ include $(DEPTH)/config/autoconf.mk
 MODULE          := editor
 GRE_MODULE      := 1
 
-XPIDLSRCS       := \
-                nsIDocumentStateListener.idl \
-                nsIEditActionListener.idl \
-                nsIEditor.idl \
-                nsIEditorIMESupport.idl \
-                nsIEditorMailSupport.idl \
-                nsIEditorObserver.idl \
-                nsIEditorSpellCheck.idl \
-                nsIEditorStyleSheets.idl \
-                nsIHTMLEditor.idl \
-                nsIHTMLObjectResizer.idl \
-                nsIHTMLAbsPosEditor.idl \
-                nsIHTMLObjectResizeListener.idl \
-                nsIHTMLInlineTableEditor.idl \
-                nsIPlaintextEditor.idl \
-                nsITableEditor.idl \
-                nsIURIRefObject.idl \
-                nsIContentFilter.idl \
-                nsPIEditorTransaction.idl \
-                $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

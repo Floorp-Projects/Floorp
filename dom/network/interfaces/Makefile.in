@@ -9,34 +9,7 @@ VPATH            = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-XPIDL_MODULE = dom_network
-
 include $(topsrcdir)/dom/dom-config.mk
-
-XPIDLSRCS = \
-  nsIDOMNavigatorNetwork.idl \
-  nsIDOMConnection.idl \
-  nsIDOMUSSDReceivedEvent.idl \
-  nsIDOMTCPSocket.idl \
-  nsITCPSocketParent.idl \
-  nsITCPSocketChild.idl \
-  nsIDOMDataErrorEvent.idl \
-  $(NULL)
-
-ifdef MOZ_B2G_RIL
-XPIDLSRCS += \
-  nsIDOMMobileConnection.idl \
-  nsIMobileConnectionProvider.idl \
-  nsINavigatorMobileConnection.idl \
-  nsIDOMNetworkStatsManager.idl \
-  nsIDOMNetworkStats.idl \
-  nsIDOMCFStateChangeEvent.idl \
-  $(NULL)
-endif
 
 include $(topsrcdir)/config/rules.mk
 
-XPIDL_FLAGS += \
-  -I$(topsrcdir)/dom/interfaces/base \
-  -I$(topsrcdir)/dom/interfaces/events \
-  $(NULL)

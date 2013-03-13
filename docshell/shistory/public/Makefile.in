@@ -13,19 +13,5 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= shistory
 GRE_MODULE	= 1
 
-SDK_XPIDLSRCS   = \
-                  nsIHistoryEntry.idl \
-                  nsISHistory.idl       \
-                  nsISHistoryListener.idl   \
-                  $(NULL)
-
-XPIDLSRCS	= \
-		  nsISHEntry.idl        \
-                  nsISHContainer.idl    \
-                  nsISHTransaction.idl  \
-                  nsISHistoryInternal.idl \
-		  nsIBFCacheEntry.idl \
-                  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

@@ -11,7 +11,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= webbrwsr
-XPIDL_MODULE	= webBrowser_core
 LIBRARY_NAME	= nsWebBrowser_s
 GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
@@ -27,27 +26,6 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../../content/svg/content/src \
 		$(NULL)
 		
-SDK_XPIDLSRCS   = \
-		nsIContextMenuListener.idl  \
-		nsIEmbeddingSiteWindow.idl  \
-		nsITooltipListener.idl	    \
-		nsITooltipTextProvider.idl  \
-		nsIWebBrowser.idl	    \
-		nsIWebBrowserChrome.idl	    \
-		nsIWebBrowserChromeFocus.idl \
-		nsIWebBrowserFocus.idl	    \
-		nsIWebBrowserSetup.idl	    \
-		nsIWebBrowserStream.idl	    \
-                $(NULL)
-
-XPIDLSRCS	= \
-		nsCWebBrowser.idl			\
-		nsICommandHandler.idl			\
-		nsIContextMenuListener2.idl \
-		nsIWebBrowserChrome2.idl	    \
-		nsIWebBrowserChrome3.idl	    \
-		$(NULL)
-
 CPPSRCS		= \
 		nsDocShellTreeOwner.cpp		\
 		nsWebBrowser.cpp		\
@@ -56,11 +34,6 @@ CPPSRCS		= \
 		nsContextMenuInfo.cpp		\
 		nsEmbedStream.cpp		\
 		$(NULL)
-
-ifdef NS_PRINTING
-SDK_XPIDLSRCS += nsIWebBrowserPrint.idl
-XPIDLSRCS     += nsIPrintingPrompt.idl nsIPrintingPromptService.idl
-endif
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.

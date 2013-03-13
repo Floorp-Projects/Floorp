@@ -18,11 +18,6 @@ MODULE_NAME	= javascript__protocol
 GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
-
-XPIDLSRCS	= \
-		$(NULL)
-
-
 CPPSRCS		= nsJSProtocolHandler.cpp
 
 EXPORTS		= $(srcdir)/nsJSProtocolHandler.h

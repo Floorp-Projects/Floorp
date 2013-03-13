@@ -11,10 +11,4 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= jsdebug
-XPIDL_MODULE = jsdservice
-
-XPIDLSRCS	= \
-		jsdIDebuggerService.idl \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk

@@ -17,14 +17,5 @@ EXPORTS		= \
 		nsAppShellCID.h \
 		$(NULL)
 
-XPIDLSRCS	= \
-		nsIAppShellService.idl \
-		nsIWindowMediator.idl \
-		nsIWindowMediatorListener.idl \
-		nsIXULWindow.idl \
-		nsIPopupWindowManager.idl \
-		nsIXULBrowserWindow.idl \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
