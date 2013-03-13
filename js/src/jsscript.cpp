@@ -401,8 +401,6 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         FunHasAnyAliasedFormal,
         ArgumentsHasVarBinding,
         NeedsArgsObj,
-        OwnFilename,
-        ParentFilename,
         IsGenerator,
         IsGeneratorExp,
         OwnSource,
@@ -484,11 +482,6 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             scriptBits |= (1 << ArgumentsHasVarBinding);
         if (script->analyzedArgsUsage() && script->needsArgsObj())
             scriptBits |= (1 << NeedsArgsObj);
-        if (script->filename) {
-            scriptBits |= (enclosingScript && enclosingScript->filename == script->filename)
-                          ? (1 << ParentFilename)
-                          : (1 << OwnFilename);
-        }
         if (!enclosingScript || enclosingScript->scriptSource() != script->scriptSource())
             scriptBits |= (1 << OwnSource);
         if (script->isGenerator)
@@ -593,24 +586,6 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
 
     JS_STATIC_ASSERT(sizeof(jsbytecode) == 1);
     JS_STATIC_ASSERT(sizeof(jssrcnote) == 1);
-
-
-    if (scriptBits & (1 << OwnFilename)) {
-        const char *filename;
-        if (mode == XDR_ENCODE)
-            filename = script->filename;
-        if (!xdr->codeCString(&filename))
-            return false;
-        if (mode == XDR_DECODE) {
-            script->filename = SaveScriptFilename(cx, filename);
-            if (!script->filename)
-                return false;
-        }
-    } else if (scriptBits & (1 << ParentFilename)) {
-        JS_ASSERT(enclosingScript);
-        if (mode == XDR_DECODE)
-            script->filename = enclosingScript->filename;
-    }
 
     if (scriptBits & (1 << OwnSource)) {
         if (!script->scriptSource()->performXDR<mode>(xdr))
@@ -1311,6 +1286,7 @@ ScriptSource::destroy()
 {
     JS_ASSERT(ready());
     adjustDataSize(0);
+    js_free(filename_);
     js_free(sourceMap_);
     ready_ = false;
     js_free(this);
@@ -1398,9 +1374,35 @@ ScriptSource::performXDR(XDRState<mode> *xdr)
         sourceMap_[sourceMapLen] = '\0';
     }
 
+    uint8_t haveFilename = !!filename_;
+    if (!xdr->codeUint8(&haveFilename))
+        return false;
+
+    if (haveFilename) {
+        const char *fn = filename();
+        if (!xdr->codeCString(&fn))
+            return false;
+        if (mode == XDR_DECODE && !setFilename(xdr->cx(), fn))
+            return false;
+    }
+
     if (mode == XDR_DECODE)
         ready_ = true;
 
+    return true;
+}
+
+bool
+ScriptSource::setFilename(JSContext *cx, const char *filename)
+{
+    JS_ASSERT(!filename_);
+    size_t len = strlen(filename) + 1;
+    if (len == 1)
+        return true;
+    filename_ = cx->pod_malloc<char>(len);
+    if (!filename_)
+        return false;
+    js_memcpy(filename_, filename, len);
     return true;
 }
 
@@ -1424,78 +1426,6 @@ ScriptSource::sourceMap()
 {
     JS_ASSERT(hasSourceMap());
     return sourceMap_;
-}
-
-/*
- * Shared script filename management.
- */
-
-const char *
-js::SaveScriptFilename(JSContext *cx, const char *filename)
-{
-    if (!filename)
-        return NULL;
-
-    JSRuntime *rt = cx->runtime;
-
-    ScriptFilenameTable::AddPtr p = rt->scriptFilenameTable.lookupForAdd(filename);
-    if (!p) {
-        size_t size = offsetof(ScriptFilenameEntry, filename) + strlen(filename) + 1;
-        ScriptFilenameEntry *entry = (ScriptFilenameEntry *) cx->malloc_(size);
-        if (!entry)
-            return NULL;
-        entry->marked = false;
-        strcpy(entry->filename, filename);
-
-        if (!rt->scriptFilenameTable.add(p, entry)) {
-            js_free(entry);
-            JS_ReportOutOfMemory(cx);
-            return NULL;
-        }
-    }
-
-    ScriptFilenameEntry *sfe = *p;
-#ifdef JSGC_INCREMENTAL
-    /*
-     * During the IGC we need to ensure that filename is marked whenever it is
-     * accessed even if the name was already in the table: at this point old
-     * scripts or exceptions pointing to the filename may no longer be
-     * reachable. This is effectively a read barrier.
-     */
-    if (IsIncrementalGCInProgress(rt) && rt->gcIsFull)
-        sfe->marked = true;
-#endif
-
-    return sfe->filename;
-}
-
-void
-js::SweepScriptFilenames(JSRuntime *rt)
-{
-    JS_ASSERT(rt->gcIsFull);
-    ScriptFilenameTable &table = rt->scriptFilenameTable;
-    for (ScriptFilenameTable::Enum e(table); !e.empty(); e.popFront()) {
-        ScriptFilenameEntry *entry = e.front();
-        if (entry->marked) {
-            entry->marked = false;
-        } else if (!rt->gcKeepAtoms) {
-            js_free(entry);
-            e.removeFront();
-        }
-    }
-}
-
-void
-js::FreeScriptFilenames(JSRuntime *rt)
-{
-    ScriptFilenameTable &table = rt->scriptFilenameTable;
-    if (!table.initialized())
-        return;
-
-    for (ScriptFilenameTable::Enum e(table); !e.empty(); e.popFront())
-        js_free(e.front());
-
-    table.clear();
 }
 
 /*
@@ -1859,12 +1789,6 @@ JSScript::fullyInitFromEmitter(JSContext *cx, Handle<JSScript*> script, Bytecode
     JS_ASSERT(script->mainOffset == 0);
     script->mainOffset = prologLength;
 
-    const char *filename = bce->parser->tokenStream.getFilename();
-    if (filename) {
-        script->filename = SaveScriptFilename(cx, filename);
-        if (!script->filename)
-            return false;
-    }
     script->lineno = bce->firstLine;
 
     script->length = prologLength + mainLength;
@@ -2021,7 +1945,7 @@ js::CallNewScriptHook(JSContext *cx, HandleScript script, HandleFunction fun)
     JS_ASSERT(!script->isActiveEval);
     if (JSNewScriptHook hook = cx->runtime->debugHooks.newScriptHook) {
         AutoKeepAtoms keep(cx->runtime);
-        hook(cx, script->filename, script->lineno, script, fun,
+        hook(cx, script->filename(), script->lineno, script, fun,
              cx->runtime->debugHooks.newScriptHookData);
     }
 }
@@ -2283,7 +2207,7 @@ js::CurrentScriptFileLineOriginSlow(JSContext *cx, const char **file, unsigned *
     }
 
     RawScript script = iter.script();
-    *file = script->filename;
+    *file = script->filename();
     *linenop = PCToLineNumber(iter.script(), iter.pc());
     *origin = script->originPrincipals;
 }
@@ -2402,7 +2326,6 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     memcpy(data, src->data, size);
 
     /* Script filenames, bytecodes and atoms are runtime-wide. */
-    dst->filename = src->filename;
     dst->code = src->code;
     dst->atoms = src->atoms;
 
@@ -2755,8 +2678,6 @@ JSScript::markChildren(JSTracer *trc)
         MarkObject(trc, &enclosingScopeOrOriginalFunction_, "enclosing");
 
     if (IS_GC_MARKING_TRACER(trc)) {
-        if (filename)
-            MarkScriptFilename(trc->runtime, filename);
         if (code)
             MarkScriptBytecode(trc->runtime, code);
     }

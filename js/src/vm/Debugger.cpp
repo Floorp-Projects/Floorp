@@ -2483,7 +2483,7 @@ class Debugger::ScriptQuery {
         if (!compartments.has(compartment))
             return;
         if (urlCString.ptr()) {
-            if (!script->filename || strcmp(script->filename, urlCString.ptr()) != 0)
+            if (!script->filename() || strcmp(script->filename(), urlCString.ptr()) != 0)
                 return;
         }
         if (hasLine) {
@@ -2768,8 +2768,8 @@ DebuggerScript_getUrl(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get url)", args, obj, script);
 
-    if (script->filename) {
-        JSString *str = js_NewStringCopyZ<CanGC>(cx, script->filename);
+    if (script->filename()) {
+        JSString *str = js_NewStringCopyZ<CanGC>(cx, script->filename());
         if (!str)
             return false;
         args.rval().setString(str);
