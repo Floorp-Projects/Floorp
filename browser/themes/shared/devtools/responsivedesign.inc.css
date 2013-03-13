@@ -20,9 +20,7 @@
   margin: 10px 0;
   padding: 0;
   box-shadow: none;
-%ifdef XP_WIN
   border-bottom-width: 0;
-%endif
 }
 
 .devtools-responsiveui-toolbar > menulist,
