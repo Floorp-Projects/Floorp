@@ -496,10 +496,7 @@ nsTextStore::~nsTextStore()
      "mWidget=0x%p, mDocumentMgr=0x%p, mContext=0x%p",
      this, mWidget.get(), mDocumentMgr.get(), mContext.get()));
 
-  if (mCompositionTimer) {
-    mCompositionTimer->Cancel();
-    mCompositionTimer = nullptr;
-  }
+  mComposition.EnsureLayoutChangeTimerStopped();
   SaveTextEvent(nullptr);
 }
 
@@ -886,13 +883,13 @@ nsTextStore::GetSelection(ULONG ulIndex,
 bool
 nsTextStore::GetSelectionInternal(TS_SELECTION_ACP &aSelectionACP)
 {
-  if (mCompositionView) {
+  if (mComposition.mView) {
     PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
            ("TSF: 0x%p   nsTextStore::GetSelectionInternal(), "
             "there is no composition view", this));
 
     // Emulate selection during compositions
-    aSelectionACP = mCompositionSelection;
+    aSelectionACP = mComposition.mSelection;
   } else {
     PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
            ("TSF: 0x%p   nsTextStore::GetSelectionInternal(), "
@@ -980,7 +977,8 @@ nsTextStore::GetDisplayAttribute(ITfProperty* aAttrProperty,
     PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
            ("TSF: 0x%p   nsTextStore::GetDisplayAttribute(): "
             "GetDisplayAttribute range=%ld-%ld (hr=%s)",
-            this, start - mCompositionStart, start - mCompositionStart + length,
+            this, start - mComposition.mStart,
+            start - mComposition.mStart + length,
             GetCommonReturnValueName(hr)));
   }
 #endif
@@ -1094,9 +1092,9 @@ nsTextStore::UpdateCompositionExtent(ITfRange* aRangeNew)
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::UpdateCompositionExtent(aRangeNew=0x%p), "
-          "mCompositionView=0x%p", this, aRangeNew, mCompositionView.get()));
+          "mComposition.mView=0x%p", this, aRangeNew, mComposition.mView.get()));
 
-  if (!mCompositionView) {
+  if (!mComposition.mView) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::UpdateCompositionExtent() FAILED due to "
             "no composition view", this));
@@ -1104,7 +1102,7 @@ nsTextStore::UpdateCompositionExtent(ITfRange* aRangeNew)
   }
 
   HRESULT hr;
-  nsRefPtr<ITfCompositionView> pComposition(mCompositionView);
+  nsRefPtr<ITfCompositionView> pComposition(mComposition.mView);
   nsRefPtr<ITfRange> composingRange(aRangeNew);
   if (!composingRange) {
     hr = pComposition->GetRange(getter_AddRefs(composingRange));
@@ -1128,12 +1126,12 @@ nsTextStore::UpdateCompositionExtent(ITfRange* aRangeNew)
 
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::UpdateCompositionExtent(), range=%ld-%ld, "
-          "mCompositionStart=%ld, mCompositionString.Length()=%lu",
-          this, compStart, compStart + compLength, mCompositionStart,
-          mCompositionString.Length()));
+          "mComposition={ mStart=%ld, mString.Length()=%lu }",
+          this, compStart, compStart + compLength, mComposition.mStart,
+          mComposition.mString.Length()));
 
-  if (mCompositionStart != compStart ||
-      mCompositionString.Length() != (ULONG)compLength) {
+  if (mComposition.mStart != compStart ||
+      mComposition.mString.Length() != (ULONG)compLength) {
     // If the queried composition length is different from the length
     // of our composition string, OnUpdateComposition is being called
     // because a part of the original composition was committed.
@@ -1143,7 +1141,7 @@ nsTextStore::UpdateCompositionExtent(ITfRange* aRangeNew)
     OnEndComposition(pComposition);
     OnStartCompositionInternal(pComposition, composingRange, true);
   } else {
-    mCompositionLength = compLength;
+    mComposition.mLength = compLength;
   }
 
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
@@ -1200,11 +1198,11 @@ nsTextStore::SendTextEventForCompositionString()
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::SendTextEventForCompositionString(), "
-          "mCompositionView=0x%p, mCompositionString=\"%s\"",
-          this, mCompositionView.get(),
-          NS_ConvertUTF16toUTF8(mCompositionString).get()));
+          "mComposition={ mView=0x%p, mString=\"%s\" }",
+          this, mComposition.mView.get(),
+          NS_ConvertUTF16toUTF8(mComposition.mString).get()));
 
-  if (!mCompositionView) {
+  if (!mComposition.mView) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::SendTextEventForCompositionString() FAILED "
             "due to no composition view", this));
@@ -1234,11 +1232,11 @@ nsTextStore::SendTextEventForCompositionString()
   mWidget->InitEvent(event);
 
   nsRefPtr<ITfRange> composingRange;
-  hr = mCompositionView->GetRange(getter_AddRefs(composingRange));
+  hr = mComposition.mView->GetRange(getter_AddRefs(composingRange));
   if (FAILED(hr)) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::SendTextEventForCompositionString() FAILED "
-            "due to mCompositionView->GetRange() failure", this));
+            "due to mComposition.mView->GetRange() failure", this));
     return hr;
   }
 
@@ -1257,7 +1255,7 @@ nsTextStore::SendTextEventForCompositionString()
   // No matter if we have display attribute info or not,
   // we always pass in at least one range to NS_TEXT_TEXT
   newRange.mStartOffset = 0;
-  newRange.mEndOffset = mCompositionString.Length();
+  newRange.mEndOffset = mComposition.mString.Length();
   newRange.mRangeType = NS_TEXTRANGE_RAWINPUT;
   textRanges.AppendElement(newRange);
 
@@ -1269,10 +1267,10 @@ nsTextStore::SendTextEventForCompositionString()
       continue;
 
     nsTextRange newRange;
-    newRange.mStartOffset = uint32_t(start - mCompositionStart);
+    newRange.mStartOffset = uint32_t(start - mComposition.mStart);
     // The end of the last range in the array is
     // always kept at the end of composition
-    newRange.mEndOffset = mCompositionString.Length();
+    newRange.mEndOffset = mComposition.mString.Length();
 
     TF_DISPLAYATTRIBUTE attr;
     hr = GetDisplayAttribute(attrPropetry, range, &attr);
@@ -1313,20 +1311,21 @@ nsTextStore::SendTextEventForCompositionString()
   // We need to hack for Korean Input System which is Korean standard TIP.
   // It sets no change style to IME selection (the selection is always only
   // one).  So, the composition string looks like normal (or committed) string.
-  // At this time, mCompositionSelection range is same as the composition
-  // string range.  Other applications set a wide caret which covers the
-  // composition string, however, Gecko doesn't support the wide caret drawing
-  // now (Gecko doesn't support XOR drawing), unfortunately.  For now, we should
-  // change the range style to undefined.
-  if (mCompositionSelection.acpStart != mCompositionSelection.acpEnd &&
+  // At this time, mComposition.mSelection range is same as the
+  // composition string range.  Other applications set a wide caret which covers
+  // the composition string, however, Gecko doesn't support the wide caret
+  // drawing now (Gecko doesn't support XOR drawing), unfortunately.  For now,
+  // we should change the range style to undefined.
+  if (mComposition.mSelection.acpStart !=
+        mComposition.mSelection.acpEnd &&
       textRanges.Length() == 1) {
     nsTextRange& range = textRanges[0];
-    LONG start = std::min(mCompositionSelection.acpStart,
-                        mCompositionSelection.acpEnd);
-    LONG end = std::max(mCompositionSelection.acpStart,
-                      mCompositionSelection.acpEnd);
-    if ((LONG)range.mStartOffset == start - mCompositionStart &&
-        (LONG)range.mEndOffset == end - mCompositionStart &&
+    LONG start = std::min(mComposition.mSelection.acpStart,
+                          mComposition.mSelection.acpEnd);
+    LONG end = std::max(mComposition.mSelection.acpStart,
+                        mComposition.mSelection.acpEnd);
+    if ((LONG)range.mStartOffset == start - mComposition.mStart &&
+        (LONG)range.mEndOffset == end - mComposition.mStart &&
         range.mRangeStyle.IsNoChangeStyle()) {
       range.mRangeStyle.Clear();
       // The looks of selected type is better than others.
@@ -1335,15 +1334,15 @@ nsTextStore::SendTextEventForCompositionString()
   }
 
   // The caret position has to be collapsed.
-  LONG caretPosition = std::max(mCompositionSelection.acpStart,
-                              mCompositionSelection.acpEnd);
-  caretPosition -= mCompositionStart;
+  LONG caretPosition = std::max(mComposition.mSelection.acpStart,
+                                mComposition.mSelection.acpEnd);
+  caretPosition -= mComposition.mStart;
   nsTextRange caretRange;
   caretRange.mStartOffset = caretRange.mEndOffset = uint32_t(caretPosition);
   caretRange.mRangeType = NS_TEXTRANGE_CARETPOSITION;
   textRanges.AppendElement(caretRange);
 
-  event.theText = mCompositionString;
+  event.theText = mComposition.mString;
   event.rangeArray = textRanges.Elements();
   event.rangeCount = textRanges.Length();
 
@@ -1356,15 +1355,15 @@ nsTextStore::SendTextEventForCompositionString()
     return S_OK;
   }
 
-  if (mCompositionString != mLastDispatchedCompositionString) {
+  if (mComposition.mString != mComposition.mLastData) {
     PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
            ("TSF: 0x%p   nsTextStore::SendTextEventForCompositionString() "
             "dispatching compositionupdate event...", this));
     nsCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
                                          mWidget);
     mWidget->InitEvent(compositionUpdate);
-    compositionUpdate.data = mCompositionString;
-    mLastDispatchedCompositionString = mCompositionString;
+    compositionUpdate.data = mComposition.mString;
+    mComposition.mLastData = mComposition.mString;
     mWidget->DispatchWindowEvent(&compositionUpdate);
   }
 
@@ -1391,10 +1390,10 @@ nsTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
           "aDispatchTextEvent=%s), %s",
           this, pSelection->acpStart, pSelection->acpEnd,
           GetBoolName(aDispatchTextEvent),
-          mCompositionView ? "there is composition view" :
-                             "there is no composition view"));
+          mComposition.mView ? "there is composition view" :
+                               "there is no composition view"));
 
-  if (mCompositionView) {
+  if (mComposition.mView) {
     if (aDispatchTextEvent) {
       HRESULT hr = UpdateCompositionExtent(nullptr);
       if (FAILED(hr)) {
@@ -1404,16 +1403,17 @@ nsTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
         return hr;
       }
     }
-    if (pSelection->acpStart < mCompositionStart ||
+    if (pSelection->acpStart < mComposition.mStart ||
         pSelection->acpEnd >
-          mCompositionStart + static_cast<LONG>(mCompositionString.Length())) {
+          mComposition.mStart +
+            static_cast<LONG>(mComposition.mString.Length())) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
          ("TSF: 0x%p   nsTextStore::SetSelectionInternal() FAILED due to "
           "the selection being out of the composition string", this));
       return TS_E_INVALIDPOS;
     }
     // Emulate selection during compositions
-    mCompositionSelection = *pSelection;
+    mComposition.mSelection = *pSelection;
     if (aDispatchTextEvent) {
       HRESULT hr = SendTextEventForCompositionString();
       if (FAILED(hr)) {
@@ -1492,16 +1492,16 @@ nsTextStore::GetText(LONG acpStart,
                      LONG *pacpNext)
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-         ("TSF: 0x%p nsTextStore::GetText(acpStart=%ld, acpEnd=%ld, pchPlain=0x%p, "
-          "cchPlainReq=%lu, pcchPlainOut=0x%p, prgRunInfo=0x%p, ulRunInfoReq=%lu, "
-          "pulRunInfoOut=0x%p, pacpNext=0x%p), %s, mCompositionStart=%ld, "
-          "mCompositionLength=%ld, mCompositionString.Length()=%lu",
-          this, acpStart, acpEnd, pchPlain, cchPlainReq, pcchPlainOut,
-          prgRunInfo, ulRunInfoReq, pulRunInfoOut, pacpNext,
-          mCompositionView ? "there is composition view" :
-                             "there is no composition view",
-          mCompositionStart, mCompositionLength,
-          mCompositionString.Length()));
+    ("TSF: 0x%p nsTextStore::GetText(acpStart=%ld, acpEnd=%ld, pchPlain=0x%p, "
+     "cchPlainReq=%lu, pcchPlainOut=0x%p, prgRunInfo=0x%p, ulRunInfoReq=%lu, "
+     "pulRunInfoOut=0x%p, pacpNext=0x%p), %s, mComposition={ mStart=%ld, "
+     "mLength=%ld, mString.Length()=%lu }",
+     this, acpStart, acpEnd, pchPlain, cchPlainReq, pcchPlainOut,
+     prgRunInfo, ulRunInfoReq, pulRunInfoOut, pacpNext,
+     mComposition.mView ? "there is composition view" :
+                          "there is no composition view",
+     mComposition.mStart, mComposition.mLength,
+     mComposition.mString.Length()));
 
   if (!IsReadLocked()) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
@@ -1540,20 +1540,22 @@ nsTextStore::GetText(LONG acpStart,
   }
   if (length) {
     LONG compNewStart = 0, compOldEnd = 0, compNewEnd = 0;
-    if (mCompositionView) {
+    if (mComposition.mView) {
       // Sometimes GetText gets called between InsertTextAtSelection and
       // OnUpdateComposition. In this case the returned text would
       // be out of sync because we haven't sent NS_TEXT_TEXT in
       // OnUpdateComposition yet. Manually resync here.
       compOldEnd = std::min(LONG(length) + acpStart,
-                       mCompositionLength + mCompositionStart);
+                            mComposition.mLength + mComposition.mStart);
       compNewEnd = std::min(LONG(length) + acpStart,
-                       LONG(mCompositionString.Length()) + mCompositionStart);
-      compNewStart = std::max(acpStart, mCompositionStart);
+                            LONG(mComposition.mString.Length()) +
+                              mComposition.mStart);
+      compNewStart = std::max(acpStart, mComposition.mStart);
       // Check if the range is affected
       if (compOldEnd > compNewStart || compNewEnd > compNewStart) {
-        NS_ASSERTION(compOldEnd >= mCompositionStart &&
-            compNewEnd >= mCompositionStart, "Range end is less than start\n");
+        NS_ASSERTION(compOldEnd >= mComposition.mStart &&
+                     compNewEnd >= mComposition.mStart,
+                     "Range end is less than start\n");
         length = uint32_t(LONG(length) + compOldEnd - compNewEnd);
       }
     }
@@ -1571,11 +1573,12 @@ nsTextStore::GetText(LONG acpStart,
 
     if (compOldEnd > compNewStart || compNewEnd > compNewStart) {
       // Resync composition string
-      const PRUnichar* compStrStart = mCompositionString.BeginReading() +
-          std::max<LONG>(compNewStart - mCompositionStart, 0);
+      const PRUnichar* compStrStart =
+        mComposition.mString.BeginReading() +
+          std::max<LONG>(compNewStart - mComposition.mStart, 0);
       event.mReply.mString.Replace(compNewStart - acpStart,
-          compOldEnd - mCompositionStart, compStrStart,
-          compNewEnd - mCompositionStart);
+        compOldEnd - mComposition.mStart, compStrStart,
+        compNewEnd - mComposition.mStart);
       length = uint32_t(LONG(length) - compOldEnd + compNewEnd);
     }
     if (-1 != acpEnd && event.mReply.mString.Length() != length) {
@@ -1627,8 +1630,8 @@ nsTextStore::SetText(DWORD dwFlags,
           pchText && cch ?
             NS_ConvertUTF16toUTF8(pchText, cch).get() : "",
           cch, pChange,
-          mCompositionView ? "there is composition view" :
-                             "there is no composition view"));
+          mComposition.mView ? "there is composition view" :
+                               "there is no composition view"));
 
   // Per SDK documentation, and since we don't have better
   // ways to do this, this method acts as a helper to
@@ -2263,8 +2266,8 @@ nsTextStore::InsertTextAtSelection(DWORD dwFlags,
           pchText,
           pchText && cch ? NS_ConvertUTF16toUTF8(pchText, cch).get() : "",
           cch, pacpStart, pacpEnd, pChange,
-          mCompositionView ? "there is composition view" :
-                             "there is no composition view"));
+          mComposition.mView ? "there is composition view" :
+                               "there is no composition view"));
 
   if (cch && !pchText) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
@@ -2358,34 +2361,35 @@ nsTextStore::InsertTextAtSelectionInternal(const nsAString &aInsertStr,
          ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal("
           "aInsertStr=\"%s\", aTextChange=0x%p), %s",
           this, NS_ConvertUTF16toUTF8(aInsertStr).get(), aTextChange,
-          mCompositionView ? "there is composition view" :
-                             "there is no composition view"));
+          mComposition.mView ? "there is composition view" :
+                               "there is no composition view"));
 
   TS_SELECTION_ACP oldSelection;
   oldSelection.acpStart = 0;
   oldSelection.acpEnd = 0;
 
-  if (mCompositionView) {
-    oldSelection = mCompositionSelection;
+  if (mComposition.mView) {
+    oldSelection = mComposition.mSelection;
     // Emulate text insertion during compositions, because during a
     // composition, editor expects the whole composition string to
     // be sent in NS_TEXT_TEXT, not just the inserted part.
     // The actual NS_TEXT_TEXT will be sent in SetSelection or
     // OnUpdateComposition.
-    mCompositionString.Replace(
-      static_cast<uint32_t>(oldSelection.acpStart) - mCompositionStart,
+    mComposition.mString.Replace(
+      static_cast<uint32_t>(oldSelection.acpStart) - mComposition.mStart,
       static_cast<uint32_t>(oldSelection.acpEnd - oldSelection.acpStart),
       aInsertStr);
 
-    mCompositionSelection.acpStart += aInsertStr.Length();
-    mCompositionSelection.acpEnd = mCompositionSelection.acpStart;
-    mCompositionSelection.style.ase = TS_AE_END;
+    mComposition.mSelection.acpStart += aInsertStr.Length();
+    mComposition.mSelection.acpEnd =
+      mComposition.mSelection.acpStart;
+    mComposition.mSelection.style.ase = TS_AE_END;
     PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
            ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() replaced "
             "a part of (%lu-%lu) the composition string, waiting "
             "SetSelection() or OnUpdateComposition()...", this,
-            oldSelection.acpStart - mCompositionStart,
-            oldSelection.acpEnd - mCompositionStart));
+            oldSelection.acpStart - mComposition.mStart,
+            oldSelection.acpEnd - mComposition.mStart));
   } else {
     // Use actual selection if it's not composing.
     if (aTextChange && !GetSelectionInternal(oldSelection)) {
@@ -2508,12 +2512,13 @@ nsTextStore::OnStartCompositionInternal(ITfCompositionView* pComposition,
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::OnStartCompositionInternal("
           "pComposition=0x%p, aRange=0x%p, aPreserveSelection=%s), "
-          "mCompositionView=0x%p",
+          "mComposition.mView=0x%p",
           this, pComposition, aRange, GetBoolName(aPreserveSelection),
-          mCompositionView.get()));
+          mComposition.mView.get()));
 
-  mCompositionView = pComposition;
-  HRESULT hr = GetRangeExtent(aRange, &mCompositionStart, &mCompositionLength);
+  mComposition.mView = pComposition;
+  HRESULT hr = GetRangeExtent(aRange, &mComposition.mStart,
+                              &mComposition.mLength);
   if (FAILED(hr)) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::OnStartCompositionInternal() FAILED due "
@@ -2523,8 +2528,8 @@ nsTextStore::OnStartCompositionInternal(ITfCompositionView* pComposition,
 
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::OnStartCompositionInternal(), "
-          "mCompositionStart=%ld, mCompositionLength=%ld",
-          this, mCompositionStart, mCompositionLength));
+          "mComposition={ mStart=%ld, mLength=%ld }",
+          this, mComposition.mStart, mComposition.mLength));
 
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::OnStartCompositionInternal(), "
@@ -2533,8 +2538,8 @@ nsTextStore::OnStartCompositionInternal(ITfCompositionView* pComposition,
   // Select composition range so the new composition replaces the range
   nsSelectionEvent selEvent(true, NS_SELECTION_SET, mWidget);
   mWidget->InitEvent(selEvent);
-  selEvent.mOffset = uint32_t(mCompositionStart);
-  selEvent.mLength = uint32_t(mCompositionLength);
+  selEvent.mOffset = uint32_t(mComposition.mStart);
+  selEvent.mLength = uint32_t(mComposition.mLength);
   selEvent.mReversed = false;
   mWidget->DispatchWindowEvent(&selEvent);
   if (!selEvent.mSucceeded) {
@@ -2559,12 +2564,13 @@ nsTextStore::OnStartCompositionInternal(ITfCompositionView* pComposition,
          ("TSF: 0x%p   nsTextStore::OnStartCompositionInternal(), "
           "dispatching compositionstart event..."));
 
-  mCompositionString = queryEvent.mReply.mString;
+  mComposition.mString = queryEvent.mReply.mString;
   if (!aPreserveSelection) {
-    mCompositionSelection.acpStart = mCompositionStart;
-    mCompositionSelection.acpEnd = mCompositionStart + mCompositionLength;
-    mCompositionSelection.style.ase = TS_AE_END;
-    mCompositionSelection.style.fInterimChar = FALSE;
+    mComposition.mSelection.acpStart = mComposition.mStart;
+    mComposition.mSelection.acpEnd =
+      mComposition.mStart + mComposition.mLength;
+    mComposition.mSelection.style.ase = TS_AE_END;
+    mComposition.mSelection.style.fInterimChar = FALSE;
   }
   nsCompositionEvent event(true, NS_COMPOSITION_START, mWidget);
   mWidget->InitEvent(event);
@@ -2572,26 +2578,15 @@ nsTextStore::OnStartCompositionInternal(ITfCompositionView* pComposition,
 
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::OnStartCompositionInternal() succeeded: "
-          "mCompositionStart=%ld, mCompositionLength=%ld, "
-          "mCompositionSelection={ acpStart=%ld, acpEnd=%ld, style.ase=%s, "
-          "style.iInterimChar=%s }",
-          this, mCompositionStart, mCompositionLength,
-          mCompositionSelection.acpStart, mCompositionSelection.acpEnd,
-          GetActiveSelEndName(mCompositionSelection.style.ase),
-          GetBoolName(mCompositionSelection.style.fInterimChar)));
+          "mComposition={ mStart=%ld, mLength=%ld, "
+          "mSelection={ acpStart=%ld, acpEnd=%ld, style.ase=%s, "
+          "style.iInterimChar=%s } }",
+          this, mComposition.mStart, mComposition.mLength,
+          mComposition.mSelection.acpStart,
+          mComposition.mSelection.acpEnd,
+          GetActiveSelEndName(mComposition.mSelection.style.ase),
+          GetBoolName(mComposition.mSelection.style.fInterimChar)));
   return S_OK;
-}
-
-static uint32_t
-GetLayoutChangeIntervalTime()
-{
-  static int32_t sTime = -1;
-  if (sTime > 0)
-    return uint32_t(sTime);
-
-  sTime = std::max(10,
-    Preferences::GetInt("intl.tsf.on_layout_change_interval", 100));
-  return uint32_t(sTime);
 }
 
 STDMETHODIMP
@@ -2600,13 +2595,13 @@ nsTextStore::OnStartComposition(ITfCompositionView* pComposition,
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
          ("TSF: 0x%p nsTextStore::OnStartComposition(pComposition=0x%p, "
-          "pfOk=0x%p), mCompositionView=0x%p",
-          this, pComposition, pfOk, mCompositionView.get()));
+          "pfOk=0x%p), mComposition.mView=0x%p",
+          this, pComposition, pfOk, mComposition.mView.get()));
 
   *pfOk = FALSE;
 
   // Only one composition at a time
-  if (mCompositionView) {
+  if (mComposition.mView) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::OnStartComposition() FAILED due to "
             "there is another composition already (but returns S_OK)", this));
@@ -2629,13 +2624,8 @@ nsTextStore::OnStartComposition(ITfCompositionView* pComposition,
     return hr;
   }
 
-  NS_ASSERTION(!mCompositionTimer, "The timer is alive!");
-  mCompositionTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-  if (mCompositionTimer) {
-    mCompositionTimer->InitWithFuncCallback(CompositionTimerCallbackFunc, this,
-                                            GetLayoutChangeIntervalTime(),
-                                            nsITimer::TYPE_REPEATING_SLACK);
-  }
+  mComposition.StartLayoutChangeTimer(this);
+
   *pfOk = TRUE;
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
          ("TSF: 0x%p   nsTextStore::OnStartComposition() succeeded", this));
@@ -2648,8 +2638,8 @@ nsTextStore::OnUpdateComposition(ITfCompositionView* pComposition,
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
          ("TSF: 0x%p nsTextStore::OnUpdateComposition(pComposition=0x%p, "
-          "pRangeNew=0x%p), mCompositionView=0x%p",
-          this, pComposition, pRangeNew, mCompositionView.get()));
+          "pRangeNew=0x%p), mComposition.mView=0x%p",
+          this, pComposition, pRangeNew, mComposition.mView.get()));
 
   if (!mDocumentMgr || !mContext) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
@@ -2657,13 +2647,13 @@ nsTextStore::OnUpdateComposition(ITfCompositionView* pComposition,
             "not ready for the composition", this));
     return E_UNEXPECTED;
   }
-  if (!mCompositionView) {
+  if (!mComposition.mView) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::OnUpdateComposition() FAILED due to "
             "no active composition", this));
     return E_UNEXPECTED;
   }
-  if (mCompositionView != pComposition) {
+  if (mComposition.mView != pComposition) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::OnUpdateComposition() FAILED due to "
             "different composition view specified", this));
@@ -2696,14 +2686,15 @@ nsTextStore::OnUpdateComposition(ITfCompositionView* pComposition,
 
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
          ("TSF: 0x%p   nsTextStore::OnUpdateComposition() succeeded: "
-          "mCompositionStart=%ld, mCompositionLength=%ld, "
-          "mCompositionSelection={ acpStart=%ld, acpEnd=%ld, style.ase=%s, "
-          "style.iInterimChar=%s }, mCompositionString=\"%s\"",
-          this, mCompositionStart, mCompositionLength,
-          mCompositionSelection.acpStart, mCompositionSelection.acpEnd,
-          GetActiveSelEndName(mCompositionSelection.style.ase),
-          GetBoolName(mCompositionSelection.style.fInterimChar),
-          NS_ConvertUTF16toUTF8(mCompositionString).get()));
+          "mComposition={ mStart=%ld, mLength=%ld, "
+          "mSelection={ acpStart=%ld, acpEnd=%ld, style.ase=%s, "
+          "style.iInterimChar=%s }, mString=\"%s\" }",
+          this, mComposition.mStart, mComposition.mLength,
+          mComposition.mSelection.acpStart,
+          mComposition.mSelection.acpEnd,
+          GetActiveSelEndName(mComposition.mSelection.style.ase),
+          GetBoolName(mComposition.mSelection.style.fInterimChar),
+          NS_ConvertUTF16toUTF8(mComposition.mString).get()));
   return S_OK;
 }
 
@@ -2712,18 +2703,18 @@ nsTextStore::OnEndComposition(ITfCompositionView* pComposition)
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
          ("TSF: 0x%p nsTextStore::OnEndComposition(pComposition=0x%p), "
-          "mCompositionView=0x%p, mCompositionString=\"%s\"",
-          this, pComposition, mCompositionView.get(),
-          NS_ConvertUTF16toUTF8(mCompositionString).get()));
+          "mComposition={ mView=0x%p, mString=\"%s\" }",
+          this, pComposition, mComposition.mView.get(),
+          NS_ConvertUTF16toUTF8(mComposition.mString).get()));
 
-  if (!mCompositionView) {
+  if (!mComposition.mView) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::OnEndComposition() FAILED due to "
             "no active composition", this));
     return E_UNEXPECTED;
   }
 
-  if (mCompositionView != pComposition) {
+  if (mComposition.mView != pComposition) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::OnEndComposition() FAILED due to "
             "different composition view specified", this));
@@ -2733,20 +2724,17 @@ nsTextStore::OnEndComposition(ITfCompositionView* pComposition)
   // Clear the saved text event
   SaveTextEvent(nullptr);
 
-  if (mCompositionTimer) {
-    mCompositionTimer->Cancel();
-    mCompositionTimer = nullptr;
-  }
+  mComposition.EnsureLayoutChangeTimerStopped();
 
-  if (mCompositionString != mLastDispatchedCompositionString) {
+  if (mComposition.mString != mComposition.mLastData) {
     PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
            ("TSF: 0x%p   nsTextStore::OnEndComposition(), "
             "dispatching compositionupdate event...", this));
     nsCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
                                          mWidget);
     mWidget->InitEvent(compositionUpdate);
-    compositionUpdate.data = mCompositionString;
-    mLastDispatchedCompositionString = mCompositionString;
+    compositionUpdate.data = mComposition.mString;
+    mComposition.mLastData = mComposition.mString;
     mWidget->DispatchWindowEvent(&compositionUpdate);
     if (!mWidget || mWidget->Destroyed()) {
       PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
@@ -2763,7 +2751,7 @@ nsTextStore::OnEndComposition(ITfCompositionView* pComposition)
   // Use NS_TEXT_TEXT to commit composition string
   nsTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
   mWidget->InitEvent(textEvent);
-  textEvent.theText = mCompositionString;
+  textEvent.theText = mComposition.mString;
   textEvent.theText.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
                                      NS_LITERAL_STRING("\n"));
   mWidget->DispatchWindowEvent(&textEvent);
@@ -2780,7 +2768,7 @@ nsTextStore::OnEndComposition(ITfCompositionView* pComposition)
           "dispatching compositionend event...", this));
 
   nsCompositionEvent event(true, NS_COMPOSITION_END, mWidget);
-  event.data = mLastDispatchedCompositionString;
+  event.data = mComposition.mLastData;
   mWidget->InitEvent(event);
   mWidget->DispatchWindowEvent(&event);
 
@@ -2791,12 +2779,12 @@ nsTextStore::OnEndComposition(ITfCompositionView* pComposition)
     return S_OK;
   }
 
-  mCompositionView = NULL;
-  mCompositionString.Truncate(0);
-  mLastDispatchedCompositionString.Truncate();
+  mComposition.mView = NULL;
+  mComposition.mString.Truncate(0);
+  mComposition.mLastData.Truncate();
 
   // Maintain selection
-  SetSelectionInternal(&mCompositionSelection);
+  SetSelectionInternal(&mComposition.mSelection);
 
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
          ("TSF: 0x%p   nsTextStore::OnEndComposition(), succeeded", this));
@@ -2910,7 +2898,7 @@ nsTextStore::OnSelectionChangeInternal(void)
 }
 
 nsresult
-nsTextStore::OnCompositionTimer()
+nsTextStore::OnLayoutChange()
 {
   NS_ENSURE_TRUE(mContext, NS_ERROR_FAILURE);
   NS_ENSURE_TRUE(mSink, NS_ERROR_FAILURE);
@@ -2920,7 +2908,7 @@ nsTextStore::OnCompositionTimer()
   // this only when the composition string screen position is changed by window
   // moving, resizing. And also reflowing and scrolling the contents.
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-         ("TSF: 0x%p   nsTextStore::OnCompositionTimer(), calling "
+         ("TSF: 0x%p   nsTextStore::OnLayoutChange(), calling "
           "mSink->OnLayoutChange()...", this));
   HRESULT hr = mSink->OnLayoutChange(TS_LC_CHANGE, TEXTSTORE_DEFAULT_VIEW);
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
@@ -2933,19 +2921,20 @@ nsTextStore::CommitCompositionInternal(bool aDiscard)
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p nsTextStore::CommitCompositionInternal(aDiscard=%s), "
-          "mLock=%s, mSink=0x%p, mContext=0x%p, mCompositionView=0x%p, "
-          "mCompositionString=\"%s\"",
+          "mLock=%s, mSink=0x%p, mContext=0x%p, mComposition.mView=0x%p, "
+          "mComposition.mString=\"%s\"",
           this, GetBoolName(aDiscard), GetLockFlagNameStr(mLock).get(),
-          mSink.get(), mContext.get(), mCompositionView.get(),
-          NS_ConvertUTF16toUTF8(mCompositionString).get()));
+          mSink.get(), mContext.get(), mComposition.mView.get(),
+          NS_ConvertUTF16toUTF8(mComposition.mString).get()));
 
-  if (mCompositionView && aDiscard) {
-    mCompositionString.Truncate(0);
+  if (mComposition.mView && aDiscard) {
+    mComposition.mString.Truncate(0);
     if (mSink && !mLock) {
       TS_TEXTCHANGE textChange;
-      textChange.acpStart = mCompositionStart;
-      textChange.acpOldEnd = mCompositionStart + mCompositionLength;
-      textChange.acpNewEnd = mCompositionStart;
+      textChange.acpStart = mComposition.mStart;
+      textChange.acpOldEnd =
+        mComposition.mStart + mComposition.mLength;
+      textChange.acpNewEnd = mComposition.mStart;
       PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
              ("TSF: 0x%p   nsTextStore::CommitCompositionInternal(), calling"
               "mSink->OnTextChange(0, { acpStart=%ld, acpOldEnd=%ld, "
@@ -3176,6 +3165,51 @@ nsTextStore::Terminate(void)
     sTsfThreadMgr->Deactivate();
     NS_RELEASE(sTsfThreadMgr);
   }
+}
+
+/******************************************************************/
+/* nsTextStore::Composition                                       */
+/******************************************************************/
+
+void
+nsTextStore::Composition::StartLayoutChangeTimer(nsTextStore* aTextStore)
+{
+  MOZ_ASSERT(!mLayoutChangeTimer);
+  mLayoutChangeTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  mLayoutChangeTimer->InitWithFuncCallback(TimerCallback, aTextStore,
+    GetLayoutChangeIntervalTime(), nsITimer::TYPE_REPEATING_SLACK);
+}
+
+void
+nsTextStore::Composition::EnsureLayoutChangeTimerStopped()
+{
+  if (!mLayoutChangeTimer) {
+    return;
+  }
+  mLayoutChangeTimer->Cancel();
+  mLayoutChangeTimer = nullptr;
+}
+
+// static
+void
+nsTextStore::Composition::TimerCallback(nsITimer* aTimer, void* aClosure)
+{
+  nsTextStore *ts = static_cast<nsTextStore*>(aClosure);
+  ts->OnLayoutChange();
+}
+
+// static
+uint32_t
+nsTextStore::Composition::GetLayoutChangeIntervalTime()
+{
+  static int32_t sTime = -1;
+  if (sTime > 0) {
+    return static_cast<uint32_t>(sTime);
+  }
+
+  sTime = std::max(10,
+    Preferences::GetInt("intl.tsf.on_layout_change_interval", 100));
+  return static_cast<uint32_t>(sTime);
 }
 
 #ifdef DEBUG
