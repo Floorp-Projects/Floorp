@@ -30,6 +30,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageErrorListener",
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "TargetFactory",
+                                  "resource:///modules/devtools/Target.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "prefBranch", function() {
   let prefService = Components.classes["@mozilla.org/preferences-service;1"]
           .getService(Components.interfaces.nsIPrefService);
@@ -44,7 +47,7 @@ XPCOMUtils.defineLazyGetter(this, "toolboxStrings", function () {
 /**
  * A collection of utilities to help working with commands
  */
-this.CommandUtils = {
+let CommandUtils = {
   /**
    * Read a toolbarSpec from preferences
    * @param aPref The name of the preference to read
@@ -136,8 +139,34 @@ this.CommandUtils = {
     requisition.update('');
 
     return reply;
-  }
+  },
+
+  /**
+   * A helper function to create the environment object that is passed to
+   * GCLI commands.
+   */
+  createEnvironment: function(chromeDocument, contentDocument) {
+    let environment = {
+      chromeDocument: chromeDocument,
+      contentDocument: contentDocument, // Use of contentDocument is deprecated
+
+      document: contentDocument,
+      window: contentDocument.defaultView
+    };
+
+    Object.defineProperty(environment, "target", {
+      get: function() {
+        let tab = chromeDocument.defaultView.getBrowser().selectedTab;
+        return TargetFactory.forTab(tab);
+      },
+      enumerable: true
+    });
+
+    return environment;
+  },
 };
+
+this.CommandUtils = CommandUtils;
 
 /**
  * Due to a number of panel bugs we need a way to check if we are running on
@@ -326,18 +355,12 @@ DeveloperToolbar.prototype._onload = function DT_onload(aFocus)
     contentDocument: contentDocument,
     chromeDocument: this._doc,
     chromeWindow: this._chromeWindow,
-
     hintElement: this.tooltipPanel.hintElement,
     inputElement: this._input,
     completeElement: this._doc.querySelector(".gclitoolbar-complete-node"),
     backgroundElement: this._doc.querySelector(".gclitoolbar-stack-node"),
     outputDocument: this.outputPanel.document,
-
-    environment: {
-      chromeDocument: this._doc,
-      contentDocument: contentDocument
-    },
-
+    environment: CommandUtils.createEnvironment(this._doc, contentDocument),
     tooltipClass: 'gcliterm-tooltip',
     eval: null,
     scratchpad: null
@@ -530,10 +553,7 @@ DeveloperToolbar.prototype.handleEvent = function DT_handleEvent(aEvent)
       this.display.reattach({
         contentDocument: contentDocument,
         chromeWindow: this._chromeWindow,
-        environment: {
-          chromeDocument: this._doc,
-          contentDocument: contentDocument
-        },
+        environment: CommandUtils.createEnvironment(this._doc, contentDocument),
       });
 
       if (aEvent.type == "TabSelect") {

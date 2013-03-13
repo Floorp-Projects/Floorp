@@ -13,13 +13,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_BROWSER_FILES = \
   browser_cmd_addon.js \
-  browser_cmd_calllog.js \
-  browser_cmd_calllog_chrome.js \
-  browser_dbg_cmd_break.html \
-  browser_dbg_cmd_break.js \
+  $(browser_cmd_calllog.js disabled until bug 845831 is fixed) \
+  $(browser_cmd_calllog_chrome.js disabled until bug 845831 is fixed) \
   browser_cmd_commands.js \
   browser_cmd_cookie.js \
-  browser_cmd_integrate.js \
   browser_cmd_jsb.js \
   browser_cmd_jsb_script.jsi \
   browser_cmd_pagemod_export.html \
@@ -27,7 +24,7 @@ MOCHITEST_BROWSER_FILES = \
   browser_cmd_pref.js \
   browser_cmd_restart.js \
   browser_cmd_screenshot.html \
-  browser_cmd_screenshot_perwindowpb.js \
+  browser_cmd_screenshot.js \
   browser_cmd_settings.js \
   browser_gcli_canon.js \
   browser_gcli_cli.js \
@@ -52,17 +49,7 @@ MOCHITEST_BROWSER_FILES = \
   browser_gcli_util.js \
   head.js \
   helpers.js \
-  helpers_perwindowpb.js \
   mockCommands.js \
   $(NULL)
-
-ifneq ($(OS_ARCH),WINNT)
-MOCHITEST_BROWSER_FILES += \
-  browser_dbg_cmd.html \
-  browser_dbg_cmd.js \
-  $(NULL)
-else
-$(filter disabled-temporarily--bug-820221, browser_dbg_cmd.js)
-endif
 
 include $(topsrcdir)/config/rules.mk
