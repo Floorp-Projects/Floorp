@@ -1025,7 +1025,7 @@ SourceScripts.prototype = {
   connect: function SS_connect() {
     dumpn("SourceScripts is connecting...");
     this.debuggerClient.addListener("newGlobal", this._onNewGlobal);
-    this.activeThread.addListener("newSource", this._onNewSource);
+    this.debuggerClient.addListener("newSource", this._onNewSource);
     this._handleTabNavigation();
   },
 
@@ -1039,7 +1039,7 @@ SourceScripts.prototype = {
     dumpn("SourceScripts is disconnecting...");
     window.clearTimeout(this._newSourceTimeout);
     this.debuggerClient.removeListener("newGlobal", this._onNewGlobal);
-    this.activeThread.removeListener("newSource", this._onNewSource);
+    this.debuggerClient.removeListener("newSource", this._onNewSource);
   },
 
   /**
@@ -1110,7 +1110,7 @@ SourceScripts.prototype = {
    */
   _onSourcesAdded: function SS__onSourcesAdded(aResponse) {
     if (aResponse.error) {
-      Cu.reportError("Error getting sources: " + aResponse.error);
+      Cu.reportError("Error getting sources: " + aResponse.message);
       return;
     }
 
@@ -1175,8 +1175,8 @@ SourceScripts.prototype = {
       window.clearTimeout(fetchTimeout);
 
       if (aResponse.error) {
-        Cu.reportError("Error loading: " + aSource.url + "\n" + aResponse.error);
-        return void aCallback(aSource.url, "");
+        Cu.reportError("Error loading: " + aSource.url + "\n" + aResponse.message);
+        return void aCallback(aSource.url, "", aResponse.error);
       }
       aSource.loaded = true;
       aSource.text = aResponse.source;
