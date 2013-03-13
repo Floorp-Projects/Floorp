@@ -484,9 +484,12 @@ nsTextStore::nsTextStore()
   mLockQueued = 0;
   mTextChange.acpStart = INT32_MAX;
   mTextChange.acpOldEnd = mTextChange.acpNewEnd = 0;
-  mLastDispatchedTextEvent = nullptr;
   mInputScopeDetected = false;
   mInputScopeRequested = false;
+  mIsRecordingActionsWithoutLock = false;
+  mNotifySelectionChange = false;
+  // We hope that 5 or more actions don't occur at once.
+  mPendingActions.SetCapacity(5);
 }
 
 nsTextStore::~nsTextStore()
@@ -497,7 +500,6 @@ nsTextStore::~nsTextStore()
      this, mWidget.get(), mDocumentMgr.get(), mContext.get()));
 
   mComposition.EnsureLayoutChangeTimerStopped();
-  SaveTextEvent(nullptr);
 }
 
 bool
@@ -738,17 +740,36 @@ nsTextStore::RequestLock(DWORD dwLockFlags,
     // put on lock
     mLock = dwLockFlags & (~TS_LF_SYNC);
     PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-      ("TSF: 0x%p   nsTextStore::RequestLock() notifying OnLockGranted()...",
-       this));
+      ("TSF: 0x%p   Locking (%s) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+       ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+       ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",
+       this, GetLockFlagNameStr(mLock).get()));
     *phrSession = mSink->OnLockGranted(mLock);
+    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+      ("TSF: 0x%p   Unlocked (%s) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+       "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+       "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<",
+       this, GetLockFlagNameStr(mLock).get()));
+    if (IsReadWriteLocked()) {
+      FlushPendingActions();
+    }
     while (mLockQueued) {
       mLock = mLockQueued;
       mLockQueued = 0;
-      PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-        ("TSF: 0x%p   nsTextStore::RequestLock() notifying OnLockGranted() "
-         "with mLockQueued (%s)...",
+      PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+        ("TSF: 0x%p   Locking for the request in the queue (%s) >>>>>>>>>>>>>>"
+         ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+         ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",
          this, GetLockFlagNameStr(mLock).get()));
       mSink->OnLockGranted(mLock);
+      PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+        ("TSF: 0x%p   Unlocked (%s) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+         "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+         "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<",
+         this, GetLockFlagNameStr(mLock).get()));
+      if (IsReadWriteLocked()) {
+        FlushPendingActions();
+      }
     }
     mLock = 0;
     PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
@@ -776,6 +797,226 @@ nsTextStore::RequestLock(DWORD dwLockFlags,
      "*phrSession=TS_E_SYNCHRONOUS", this));
   *phrSession = TS_E_SYNCHRONOUS;
   return E_FAIL;
+}
+
+void
+nsTextStore::FlushPendingActions()
+{
+  if (!mWidget || mWidget->Destroyed()) {
+    mPendingActions.Clear();
+    mNotifySelectionChange = false;
+    return;
+  }
+
+  nsRefPtr<nsWindowBase> kungFuDeathGrip(mWidget);
+  for (uint32_t i = 0; i < mPendingActions.Length(); i++) {
+    PendingAction& action = mPendingActions[i];
+    switch (action.mType) {
+      case PendingAction::COMPOSITION_START: {
+        PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+               ("TSF: 0x%p   nsTextStore::FlushPendingActions() "
+                "flushing COMPOSITION_START={ mSelectionStart=%d, "
+                "mSelectionLength=%d }",
+                this, action.mSelectionStart, action.mSelectionLength));
+
+        MOZ_ASSERT(mComposition.mLastData.IsEmpty());
+
+        // Select composition range so the new composition replaces the range
+        nsSelectionEvent selectionSet(true, NS_SELECTION_SET, mWidget);
+        mWidget->InitEvent(selectionSet);
+        selectionSet.mOffset = static_cast<uint32_t>(action.mSelectionStart);
+        selectionSet.mLength = static_cast<uint32_t>(action.mSelectionLength);
+        selectionSet.mReversed = false;
+        mWidget->DispatchWindowEvent(&selectionSet);
+        if (!selectionSet.mSucceeded) {
+          PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+                 ("TSF: 0x%p   nsTextStore::FlushPendingActions() "
+                  "FAILED due to NS_SELECTION_SET failure", this));
+          break;
+        }
+        PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+               ("TSF: 0x%p   nsTextStore::FlushPendingActions() "
+                "dispatching compositionstart event...", this));
+        nsCompositionEvent compositionStart(true, NS_COMPOSITION_START,
+                                            mWidget);
+        mWidget->InitEvent(compositionStart);
+        mWidget->DispatchWindowEvent(&compositionStart);
+        if (!mWidget || mWidget->Destroyed()) {
+          break;
+        }
+        mComposition.StartLayoutChangeTimer(this);
+        break;
+      }
+      case PendingAction::COMPOSITION_UPDATE: {
+        PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+               ("TSF: 0x%p   nsTextStore::FlushPendingActions() "
+                "flushing COMPOSITION_UPDATE={ mData=\"%s\", "
+                "mRanges.Length()=%d }",
+                this, NS_ConvertUTF16toUTF8(action.mData).get(),
+                action.mRanges.Length()));
+
+        if (action.mRanges.IsEmpty()) {
+          nsTextRange wholeRange;
+          wholeRange.mStartOffset = 0;
+          wholeRange.mEndOffset = action.mData.Length();
+          wholeRange.mRangeType = NS_TEXTRANGE_RAWINPUT;
+          action.mRanges.AppendElement(wholeRange);
+        } else {
+          // Adjust offsets in the ranges for XP linefeed character (only \n).
+          // XXX Following code is the safest approach.  However, it wastes
+          //     a little performance.  For ensuring the clauses do not
+          //     overlap each other, we should redesign nsTextRange later.
+          for (uint32_t i = 0; i < action.mRanges.Length(); ++i) {
+            nsTextRange& range = action.mRanges[i];
+            nsTextRange nativeRange = range;
+            if (nativeRange.mStartOffset > 0) {
+              nsAutoString preText(
+                Substring(action.mData, 0, nativeRange.mStartOffset));
+              preText.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
+                                       NS_LITERAL_STRING("\n"));
+              range.mStartOffset = preText.Length();
+            }
+            if (nativeRange.Length() == 0) {
+              range.mEndOffset = range.mStartOffset;
+            } else {
+              nsAutoString clause(
+                Substring(action.mData,
+                          nativeRange.mStartOffset, nativeRange.Length()));
+              clause.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
+                                      NS_LITERAL_STRING("\n"));
+              range.mEndOffset = range.mStartOffset + clause.Length();
+            }
+          }
+        }
+
+        action.mData.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
+                                      NS_LITERAL_STRING("\n"));
+
+        if (action.mData != mComposition.mLastData) {
+          PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+                 ("TSF: 0x%p   nsTextStore::FlushPendingActions(), "
+                  "dispatching compositionupdate event...", this));
+          nsCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
+                                               mWidget);
+          mWidget->InitEvent(compositionUpdate);
+          compositionUpdate.data = action.mData;
+          mComposition.mLastData = compositionUpdate.data;
+          mWidget->DispatchWindowEvent(&compositionUpdate);
+          if (!mWidget || mWidget->Destroyed()) {
+            break;
+          }
+        }
+
+        MOZ_ASSERT(action.mData == mComposition.mLastData);
+
+        PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+               ("TSF: 0x%p   nsTextStore::FlushPendingActions(), "
+                "dispatching text event...", this));
+        nsTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
+        mWidget->InitEvent(textEvent);
+        textEvent.theText = mComposition.mLastData;
+        if (action.mRanges.IsEmpty()) {
+          nsTextRange wholeRange;
+          wholeRange.mStartOffset = 0;
+          wholeRange.mEndOffset = textEvent.theText.Length();
+          wholeRange.mRangeType = NS_TEXTRANGE_RAWINPUT;
+          action.mRanges.AppendElement(wholeRange);
+        }
+        textEvent.rangeArray = action.mRanges.Elements();
+        textEvent.rangeCount = action.mRanges.Length();
+        mWidget->DispatchWindowEvent(&textEvent);
+        // Be aware, the mWidget might already have been destroyed.
+        break;
+      }
+      case PendingAction::COMPOSITION_END: {
+        PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+               ("TSF: 0x%p   nsTextStore::FlushPendingActions() "
+                "flushing COMPOSITION_END={ mData=\"%s\" }",
+                this, NS_ConvertUTF16toUTF8(action.mData).get()));
+
+        mComposition.EnsureLayoutChangeTimerStopped();
+
+        action.mData.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
+                                      NS_LITERAL_STRING("\n"));
+        if (action.mData != mComposition.mLastData) {
+          PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+                 ("TSF: 0x%p   nsTextStore::FlushPendingActions(), "
+                  "dispatching compositionupdate event...", this));
+          nsCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
+                                               mWidget);
+          mWidget->InitEvent(compositionUpdate);
+          compositionUpdate.data = action.mData;
+          mComposition.mLastData = compositionUpdate.data;
+          mWidget->DispatchWindowEvent(&compositionUpdate);
+          if (!mWidget || mWidget->Destroyed()) {
+            break;
+          }
+        }
+
+        MOZ_ASSERT(action.mData == mComposition.mLastData);
+
+        PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+               ("TSF: 0x%p   nsTextStore::FlushPendingActions(), "
+                "dispatching text event...", this));
+        nsTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
+        mWidget->InitEvent(textEvent);
+        textEvent.theText = mComposition.mLastData;
+        mWidget->DispatchWindowEvent(&textEvent);
+        if (!mWidget || mWidget->Destroyed()) {
+          break;
+        }
+
+        PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+               ("TSF: 0x%p   nsTextStore::FlushPendingActions(), "
+                "dispatching compositionend event...", this));
+        nsCompositionEvent compositionEnd(true, NS_COMPOSITION_END, mWidget);
+        compositionEnd.data = mComposition.mLastData;
+        mWidget->InitEvent(compositionEnd);
+        mWidget->DispatchWindowEvent(&compositionEnd);
+        if (!mWidget || mWidget->Destroyed()) {
+          break;
+        }
+        mComposition.mLastData.Truncate();
+        break;
+      }
+      case PendingAction::SELECTION_SET: {
+        PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+               ("TSF: 0x%p   nsTextStore::FlushPendingActions() "
+                "flushing SELECTION_SET={ mSelectionStart=%d, "
+                "mSelectionLength=%d, mSelectionReversed=%s }",
+                this, action.mSelectionStart, action.mSelectionLength,
+                GetBoolName(action.mSelectionReversed)));
+
+        nsSelectionEvent selectionSet(true, NS_SELECTION_SET, mWidget);
+        selectionSet.mOffset = 
+          static_cast<uint32_t>(action.mSelectionStart);
+        selectionSet.mLength =
+          static_cast<uint32_t>(action.mSelectionLength);
+        selectionSet.mReversed = action.mSelectionReversed;
+        break;
+      }
+      default:
+        MOZ_NOT_REACHED("unexpected action type");
+        break;
+    }
+
+    if (mWidget && !mWidget->Destroyed()) {
+      continue;
+    }
+
+    mComposition.EnsureLayoutChangeTimerStopped();
+
+    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+           ("TSF: 0x%p   nsTextStore::FlushPendingActions(), "
+            "qutting since the mWidget has gone", this));
+    break;
+  }
+  mPendingActions.Clear();
+
+  if (mNotifySelectionChange && mSink && mWidget && !mWidget->Destroyed()) {
+    mSink->OnSelectionChange();
+  }
+  mNotifySelectionChange = false;
 }
 
 STDMETHODIMP
@@ -1037,63 +1278,13 @@ nsTextStore::GetDisplayAttribute(ITfProperty* aAttrProperty,
 }
 
 HRESULT
-nsTextStore::SaveTextEvent(const nsTextEvent* aEvent)
-{
-  if (mLastDispatchedTextEvent) {
-    if (mLastDispatchedTextEvent->rangeArray)
-      delete [] mLastDispatchedTextEvent->rangeArray;
-    delete mLastDispatchedTextEvent;
-    mLastDispatchedTextEvent = nullptr;
-  }
-  if (!aEvent)
-    return S_OK;
-
-  mLastDispatchedTextEvent = new nsTextEvent(true, NS_TEXT_TEXT, nullptr);
-  if (!mLastDispatchedTextEvent)
-    return E_OUTOFMEMORY;
-  mLastDispatchedTextEvent->rangeCount = aEvent->rangeCount;
-  mLastDispatchedTextEvent->theText = aEvent->theText;
-  mLastDispatchedTextEvent->rangeArray = nullptr;
-
-  if (aEvent->rangeCount == 0)
-    return S_OK;
-
-  NS_ENSURE_TRUE(aEvent->rangeArray, E_FAIL);
-
-  mLastDispatchedTextEvent->rangeArray = new nsTextRange[aEvent->rangeCount];
-  if (!mLastDispatchedTextEvent->rangeArray) {
-    delete mLastDispatchedTextEvent;
-    mLastDispatchedTextEvent = nullptr;
-    return E_OUTOFMEMORY;
-  }
-  memcpy(mLastDispatchedTextEvent->rangeArray, aEvent->rangeArray,
-         sizeof(nsTextRange) * aEvent->rangeCount);
-  return S_OK;
-}
-
-static bool
-IsSameTextEvent(const nsTextEvent* aEvent1, const nsTextEvent* aEvent2)
-{
-  NS_PRECONDITION(aEvent1 || aEvent2, "both events are null");
-  NS_PRECONDITION(aEvent2 && (aEvent1 != aEvent2),
-                  "both events are same instance");
-
-  return (aEvent1 && aEvent2 &&
-          aEvent1->rangeCount == aEvent2->rangeCount &&
-          aEvent1->theText == aEvent2->theText &&
-          (aEvent1->rangeCount == 0 ||
-           ((aEvent1->rangeArray && aEvent2->rangeArray) &&
-           !memcmp(aEvent1->rangeArray, aEvent2->rangeArray,
-                   sizeof(nsTextRange) * aEvent1->rangeCount))));
-}
-
-HRESULT
 nsTextStore::UpdateCompositionExtent(ITfRange* aRangeNew)
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::UpdateCompositionExtent(aRangeNew=0x%p), "
-          "mComposition.mView=0x%p",
-          this, aRangeNew, mComposition.mView.get()));
+          "mComposition.mView=0x%p, mLock=%s",
+          this, aRangeNew, mComposition.mView.get(),
+          GetLockFlagNameStr(mLock).get()));
 
   if (!mComposition.IsComposing()) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
@@ -1195,17 +1386,17 @@ GetLineStyle(TF_DA_LINESTYLE aTSFLineStyle, uint8_t &aTextRangeLineStyle)
 }
 
 HRESULT
-nsTextStore::SendTextEventForCompositionString()
+nsTextStore::RecordCompositionUpdateAction()
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-         ("TSF: 0x%p   nsTextStore::SendTextEventForCompositionString(), "
+         ("TSF: 0x%p   nsTextStore::RecordCompositionUpdateAction(), "
           "mComposition={ mView=0x%p, mString=\"%s\" }",
           this, mComposition.mView.get(),
           NS_ConvertUTF16toUTF8(mComposition.mString).get()));
 
   if (!mComposition.IsComposing()) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-           ("TSF: 0x%p   nsTextStore::SendTextEventForCompositionString() FAILED "
+           ("TSF: 0x%p   nsTextStore::RecordCompositionUpdateAction() FAILED "
             "due to no composition view", this));
     return E_FAIL;
   }
@@ -1223,20 +1414,16 @@ nsTextStore::SendTextEventForCompositionString()
                                      getter_AddRefs(attrPropetry));
   if (FAILED(hr) || !attrPropetry) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-           ("TSF: 0x%p   nsTextStore::SendTextEventForCompositionString() FAILED "
+           ("TSF: 0x%p   nsTextStore::RecordCompositionUpdateAction() FAILED "
             "due to mContext->GetProperty() failure", this));
     return FAILED(hr) ? hr : E_FAIL;
   }
-
-  // Use NS_TEXT_TEXT to set composition string
-  nsTextEvent event(true, NS_TEXT_TEXT, mWidget);
-  mWidget->InitEvent(event);
 
   nsRefPtr<ITfRange> composingRange;
   hr = mComposition.mView->GetRange(getter_AddRefs(composingRange));
   if (FAILED(hr)) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-           ("TSF: 0x%p   nsTextStore::SendTextEventForCompositionString() "
+           ("TSF: 0x%p   nsTextStore::RecordCompositionUpdateAction() "
             "FAILED due to mComposition.mView->GetRange() failure", this));
     return hr;
   }
@@ -1246,17 +1433,24 @@ nsTextStore::SendTextEventForCompositionString()
                                 getter_AddRefs(enumRanges), composingRange);
   if (FAILED(hr) || !enumRanges) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-           ("TSF: 0x%p   nsTextStore::SendTextEventForCompositionString() FAILED "
+           ("TSF: 0x%p   nsTextStore::RecordCompositionUpdateAction() FAILED "
             "due to attrPropetry->EnumRanges() failure", this));
     return FAILED(hr) ? hr : E_FAIL;
   }
 
-  nsAutoTArray<nsTextRange, 4> textRanges;
+  PendingAction* action = GetPendingCompositionUpdate();
+  action->mData = mComposition.mString;
+  nsTArray<nsTextRange>& textRanges = action->mRanges;
+  // The ranges might already have been initialized already, however, if this
+  // is called again, that means we need to overwrite the ranges with current
+  // information.
+  textRanges.Clear();
+
   nsTextRange newRange;
   // No matter if we have display attribute info or not,
   // we always pass in at least one range to NS_TEXT_TEXT
   newRange.mStartOffset = 0;
-  newRange.mEndOffset = mComposition.mString.Length();
+  newRange.mEndOffset = action->mData.Length();
   newRange.mRangeType = NS_TEXTRANGE_RAWINPUT;
   textRanges.AppendElement(newRange);
 
@@ -1338,43 +1532,11 @@ nsTextStore::SendTextEventForCompositionString()
   caretRange.mRangeType = NS_TEXTRANGE_CARETPOSITION;
   textRanges.AppendElement(caretRange);
 
-  event.theText = mComposition.mString;
-  event.rangeArray = textRanges.Elements();
-  event.rangeCount = textRanges.Length();
-
-  // If we are already send same text event, we should not resend it.  Because
-  // it can be a cause of flickering.
-  if (IsSameTextEvent(mLastDispatchedTextEvent, &event)) {
-    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-           ("TSF: 0x%p   nsTextStore::SendTextEventForCompositionString() "
-            "succeeded but any DOM events are not dispatched", this));
-    return S_OK;
-  }
-
-  if (mComposition.mString != mComposition.mLastData) {
-    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-           ("TSF: 0x%p   nsTextStore::SendTextEventForCompositionString() "
-            "dispatching compositionupdate event...", this));
-    nsCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
-                                         mWidget);
-    mWidget->InitEvent(compositionUpdate);
-    compositionUpdate.data = mComposition.mString;
-    mComposition.mLastData = mComposition.mString;
-    mWidget->DispatchWindowEvent(&compositionUpdate);
-  }
-
-  if (mWidget && !mWidget->Destroyed()) {
-    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-           ("TSF: 0x%p   nsTextStore::SendTextEventForCompositionString() "
-            "dispatching text event...", this));
-    mWidget->DispatchWindowEvent(&event);
-  }
-
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-         ("TSF: 0x%p   nsTextStore::SendTextEventForCompositionString() "
+         ("TSF: 0x%p   nsTextStore::RecordCompositionUpdateAction() "
           "succeeded", this));
 
-  return SaveTextEvent(&event);
+  return S_OK;
 }
 
 HRESULT
@@ -1387,6 +1549,8 @@ nsTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
           this, pSelection->acpStart, pSelection->acpEnd,
           GetBoolName(aDispatchTextEvent),
           GetBoolName(mComposition.IsComposing())));
+
+  MOZ_ASSERT(IsReadWriteLocked());
 
   if (mComposition.IsComposing()) {
     if (aDispatchTextEvent) {
@@ -1408,29 +1572,25 @@ nsTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
     // Emulate selection during compositions
     mComposition.mSelection = *pSelection;
     if (aDispatchTextEvent) {
-      HRESULT hr = SendTextEventForCompositionString();
+      HRESULT hr = RecordCompositionUpdateAction();
       if (FAILED(hr)) {
         PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::SetSelectionInternal() FAILED due to "
-            "SendTextEventForCompositionString() failure", this));
+            "RecordCompositionUpdateAction() failure", this));
         return hr;
       }
     }
     return S_OK;
-  } else {
-    nsSelectionEvent event(true, NS_SELECTION_SET, mWidget);
-    event.mOffset = pSelection->acpStart;
-    event.mLength = uint32_t(pSelection->acpEnd - pSelection->acpStart);
-    event.mReversed = pSelection->style.ase == TS_AE_START;
-    mWidget->InitEvent(event);
-    mWidget->DispatchWindowEvent(&event);
-    if (!event.mSucceeded) {
-      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-         ("TSF: 0x%p   nsTextStore::SetSelectionInternal() FAILED due to "
-          "NS_SELECTION_SET failure", this));
-      return E_FAIL;
-    }
   }
+
+  PendingAction* action = mPendingActions.AppendElement();
+  action->mType = PendingAction::SELECTION_SET;
+  action->mSelectionStart = pSelection->acpStart;
+  action->mSelectionLength = pSelection->acpEnd - pSelection->acpStart;
+  action->mSelectionReversed = (pSelection->style.ase == TS_AE_START);
+
+  // TODO: Need to store the selection for next action.
+
   return S_OK;
 }
 
@@ -2385,81 +2545,21 @@ nsTextStore::InsertTextAtSelectionInternal(const nsAString &aInsertStr,
     }
 
     // Use a temporary composition to contain the text
-    PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-           ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() "
-            "dispatching a compositionstart event...", this));
-    nsCompositionEvent compStartEvent(true, NS_COMPOSITION_START,
-                                      mWidget);
-    mWidget->InitEvent(compStartEvent);
-    mWidget->DispatchWindowEvent(&compStartEvent);
-    if (!mWidget || mWidget->Destroyed()) {
-      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-             ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() FAILED "
-              "due to the widget destroyed by compositionstart event", this));
-      return false;
-    }
+    PendingAction* compositionStart = mPendingActions.AppendElement();
+    compositionStart->mType = PendingAction::COMPOSITION_START;
+    compositionStart->mSelectionStart = oldSelection.acpStart;
+    compositionStart->mSelectionLength =
+      oldSelection.acpEnd - oldSelection.acpStart;
 
-    if (!aInsertStr.IsEmpty()) {
-    PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-           ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() "
-            "dispatching a compositionupdate event...", this));
-      nsCompositionEvent compUpdateEvent(true, NS_COMPOSITION_UPDATE,
-                                         mWidget);
-      compUpdateEvent.data = aInsertStr;
-      mWidget->DispatchWindowEvent(&compUpdateEvent);
-      if (!mWidget || mWidget->Destroyed()) {
-        PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-               ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() "
-                "FAILED due to the widget destroyed by compositionupdate event",
-                this));
-        return false;
-      }
-    }
-
-    PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-           ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() "
-            "dispatching a text event...", this));
-    nsTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
-    mWidget->InitEvent(textEvent);
-    textEvent.theText = aInsertStr;
-    textEvent.theText.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
-                                       NS_LITERAL_STRING("\n"));
-    mWidget->DispatchWindowEvent(&textEvent);
-    if (!mWidget || mWidget->Destroyed()) {
-      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-             ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() FAILED "
-              "due to the widget destroyed by text event", this));
-      return false;
-    }
-
-    PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-           ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() "
-            "dispatching a compositionend event...", this));
-    nsCompositionEvent compEndEvent(true, NS_COMPOSITION_END, mWidget);
-    compEndEvent.data = aInsertStr;
-    mWidget->DispatchWindowEvent(&compEndEvent);
-    if (!mWidget || mWidget->Destroyed()) {
-      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-             ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() FAILED "
-              "due to the widget destroyed by compositionend event", this));
-      return false;
-    }
+    PendingAction* compositionEnd = mPendingActions.AppendElement();
+    compositionEnd->mType = PendingAction::COMPOSITION_END;
+    compositionEnd->mData = aInsertStr;
   }
 
   if (aTextChange) {
     aTextChange->acpStart = oldSelection.acpStart;
     aTextChange->acpOldEnd = oldSelection.acpEnd;
-
-    // Get new selection
-    TS_SELECTION_ACP newSelection;
-    if (!GetSelectionInternal(newSelection)) {
-      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-             ("TSF: 0x%p   nsTextStore::InsertTextAtSelectionInternal() FAILED "
-              "due to GetSelectionInternal() failure after inserted the text",
-              this));
-      return false;
-    }
-    aTextChange->acpNewEnd = newSelection.acpEnd;
+    aTextChange->acpNewEnd = oldSelection.acpStart + aInsertStr.Length();
   }
 
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
@@ -2497,13 +2597,12 @@ nsTextStore::OnStartCompositionInternal(ITfCompositionView* pComposition,
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::OnStartCompositionInternal("
           "pComposition=0x%p, aRange=0x%p, aPreserveSelection=%s), "
-          "mComposition.mView=0x%p",
+          "mComposition.mView=0x%p, mLock=%s",
           this, pComposition, aRange, GetBoolName(aPreserveSelection),
-          mComposition.mView.get()));
+          mComposition.mView.get(), GetLockFlagNameStr(mLock).get()));
 
-  mComposition.mView = pComposition;
-  HRESULT hr = GetRangeExtent(aRange, &mComposition.mStart,
-                              &mComposition.mLength);
+  LONG start = 0, length = 0;
+  HRESULT hr = GetRangeExtent(aRange, &start, &length);
   if (FAILED(hr)) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::OnStartCompositionInternal() FAILED due "
@@ -2516,51 +2615,30 @@ nsTextStore::OnStartCompositionInternal(ITfCompositionView* pComposition,
           "mComposition={ mStart=%ld, mLength=%ld }",
           this, mComposition.mStart, mComposition.mLength));
 
-  PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-         ("TSF: 0x%p   nsTextStore::OnStartCompositionInternal(), "
-          "dispatching selectionset event..."));
-
-  // Select composition range so the new composition replaces the range
-  nsSelectionEvent selEvent(true, NS_SELECTION_SET, mWidget);
-  mWidget->InitEvent(selEvent);
-  selEvent.mOffset = uint32_t(mComposition.mStart);
-  selEvent.mLength = uint32_t(mComposition.mLength);
-  selEvent.mReversed = false;
-  mWidget->DispatchWindowEvent(&selEvent);
-  if (!selEvent.mSucceeded) {
+  nsQueryContentEvent queryText(true, NS_QUERY_TEXT_CONTENT, mWidget);
+  queryText.InitForQueryTextContent(start, length);
+  mWidget->InitEvent(queryText);
+  mWidget->DispatchWindowEvent(&queryText);
+  if (!queryText.mSucceeded) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::OnStartCompositionInternal() FAILED due "
-            "to NS_SELECTION_SET failure", this));
+            "to NS_QUERY_TEXT_CONTENT failure", this));
     return E_FAIL;
   }
 
-  // Set up composition
-  nsQueryContentEvent queryEvent(true, NS_QUERY_SELECTED_TEXT, mWidget);
-  mWidget->InitEvent(queryEvent);
-  mWidget->DispatchWindowEvent(&queryEvent);
-  if (!queryEvent.mSucceeded) {
-    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-           ("TSF: 0x%p   nsTextStore::OnStartCompositionInternal() FAILED due "
-            "to NS_QUERY_SELECTED_TEXT failure", this));
-    return E_FAIL;
-  }
+  mComposition.Start(pComposition, start, queryText.mReply.mString);
 
-  PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-         ("TSF: 0x%p   nsTextStore::OnStartCompositionInternal(), "
-          "dispatching compositionstart event..."));
+  PendingAction* action = mPendingActions.AppendElement();
+  action->mType = PendingAction::COMPOSITION_START;
+  action->mSelectionStart = mComposition.mStart;
+  action->mSelectionLength = mComposition.mLength;
 
-  mComposition.mString = queryEvent.mReply.mString;
   if (!aPreserveSelection) {
     mComposition.mSelection.acpStart = mComposition.mStart;
     mComposition.mSelection.acpEnd = mComposition.EndOffset();
     mComposition.mSelection.style.ase = TS_AE_END;
     mComposition.mSelection.style.fInterimChar = FALSE;
   }
-  nsCompositionEvent event(true, NS_COMPOSITION_START, mWidget);
-  mWidget->InitEvent(event);
-  mWidget->DispatchWindowEvent(&event);
-
-  mComposition.Start(this);
 
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::OnStartCompositionInternal() succeeded: "
@@ -2583,6 +2661,8 @@ nsTextStore::OnStartComposition(ITfCompositionView* pComposition,
          ("TSF: 0x%p nsTextStore::OnStartComposition(pComposition=0x%p, "
           "pfOk=0x%p), mComposition.mView=0x%p",
           this, pComposition, pfOk, mComposition.mView.get()));
+
+  AutoPendingActionFlusher flusher(this);
 
   *pfOk = FALSE;
 
@@ -2625,6 +2705,8 @@ nsTextStore::OnUpdateComposition(ITfCompositionView* pComposition,
           "pRangeNew=0x%p), mComposition.mView=0x%p",
           this, pComposition, pRangeNew, mComposition.mView.get()));
 
+  AutoPendingActionFlusher flusher(this);
+
   if (!mDocumentMgr || !mContext) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::OnUpdateComposition() FAILED due to "
@@ -2660,11 +2742,11 @@ nsTextStore::OnUpdateComposition(ITfCompositionView* pComposition,
     return hr;
   }
 
-  hr = SendTextEventForCompositionString();
+  hr = RecordCompositionUpdateAction();
   if (FAILED(hr)) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::OnUpdateComposition() FAILED due to "
-            "SendTextEventForCompositionString() failure", this));
+            "RecordCompositionUpdateAction() failure", this));
     return hr;
   }
 
@@ -2691,6 +2773,8 @@ nsTextStore::OnEndComposition(ITfCompositionView* pComposition)
           this, pComposition, mComposition.mView.get(),
           NS_ConvertUTF16toUTF8(mComposition.mString).get()));
 
+  AutoPendingActionFlusher flusher(this);
+
   if (!mComposition.IsComposing()) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::OnEndComposition() FAILED due to "
@@ -2705,68 +2789,11 @@ nsTextStore::OnEndComposition(ITfCompositionView* pComposition)
     return E_UNEXPECTED;
   }
 
-  // Clear the saved text event
-  SaveTextEvent(nullptr);
-
-  mComposition.EnsureLayoutChangeTimerStopped();
-
-  if (mComposition.mString != mComposition.mLastData) {
-    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-           ("TSF: 0x%p   nsTextStore::OnEndComposition(), "
-            "dispatching compositionupdate event...", this));
-    nsCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
-                                         mWidget);
-    mWidget->InitEvent(compositionUpdate);
-    compositionUpdate.data = mComposition.mString;
-    mComposition.mLastData = mComposition.mString;
-    mWidget->DispatchWindowEvent(&compositionUpdate);
-    if (!mWidget || mWidget->Destroyed()) {
-      PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-             ("TSF: 0x%p   nsTextStore::OnEndComposition(), "
-              "succeeded, but the widget has gone", this));
-      return S_OK;
-    }
-  }
-
-  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-         ("TSF: 0x%p   nsTextStore::OnEndComposition(), "
-          "dispatching text event...", this));
-
-  // Use NS_TEXT_TEXT to commit composition string
-  nsTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
-  mWidget->InitEvent(textEvent);
-  textEvent.theText = mComposition.mString;
-  textEvent.theText.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
-                                     NS_LITERAL_STRING("\n"));
-  mWidget->DispatchWindowEvent(&textEvent);
-
-  if (!mWidget || mWidget->Destroyed()) {
-    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-           ("TSF: 0x%p   nsTextStore::OnEndComposition(), "
-            "succeeded, but the widget has gone", this));
-    return S_OK;
-  }
-
-  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-         ("TSF: 0x%p   nsTextStore::OnEndComposition(), "
-          "dispatching compositionend event...", this));
-
-  nsCompositionEvent event(true, NS_COMPOSITION_END, mWidget);
-  event.data = mComposition.mLastData;
-  mWidget->InitEvent(event);
-  mWidget->DispatchWindowEvent(&event);
-
-  if (!mWidget || mWidget->Destroyed()) {
-    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-           ("TSF: 0x%p   nsTextStore::OnEndComposition(), "
-            "succeeded, but the widget has gone", this));
-    return S_OK;
-  }
+  PendingAction* action = mPendingActions.AppendElement();
+  action->mType = PendingAction::COMPOSITION_END;
+  action->mData = mComposition.mString;
 
   mComposition.End();
-
-  // Maintain selection
-  SetSelectionInternal(&mComposition.mSelection);
 
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
          ("TSF: 0x%p   nsTextStore::OnEndComposition(), succeeded", this));
@@ -2866,15 +2893,20 @@ nsTextStore::OnSelectionChangeInternal(void)
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p nsTextStore::OnSelectionChangeInternal(), mLock=%s, "
-          "mSink=0x%p, mSinkMask=%s",
+          "mSink=0x%p, mSinkMask=%s, mIsRecordingActionsWithoutLock=%s",
           this, GetLockFlagNameStr(mLock).get(), mSink.get(),
-          GetSinkMaskNameStr(mSinkMask).get()));
+          GetSinkMaskNameStr(mSinkMask).get(),
+          GetBoolName(mIsRecordingActionsWithoutLock)));
 
   if (!mLock && mSink && 0 != (mSinkMask & TS_AS_SEL_CHANGE)) {
     PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
            ("TSF: 0x%p   nsTextStore::OnSelectionChangeInternal(), calling "
             "mSink->OnSelectionChange()...", this));
-    mSink->OnSelectionChange();
+    if (!mIsRecordingActionsWithoutLock) {
+      mSink->OnSelectionChange();
+    } else {
+      mNotifySelectionChange = true;
+    }
   }
   return NS_OK;
 }
@@ -3153,11 +3185,14 @@ nsTextStore::Terminate(void)
 /******************************************************************/
 
 void
-nsTextStore::Composition::Start(nsTextStore* aTextStore)
+nsTextStore::Composition::Start(ITfCompositionView* aCompositionView,
+                                LONG aCompositionStartOffset,
+                                const nsAString& aCompositionString)
 {
-  if (mLayoutChangeTimer) {
-    StartLayoutChangeTimer(aTextStore);
-  }
+  mView = aCompositionView;
+  mString = aCompositionString;
+  mStart = aCompositionStartOffset;
+  mLength = mString.Length();
 }
 
 void
@@ -3165,7 +3200,6 @@ nsTextStore::Composition::End()
 {
   mView = nullptr;
   mString.Truncate();
-  mLastData.Truncate();
 }
 
 void
