@@ -226,6 +226,7 @@ webidl_files = \
   TextEncoder.webidl \
   TimeRanges.webidl \
   TreeWalker.webidl \
+  UIEvent.webidl \
   URL.webidl \
   ValidityState.webidl \
   WebComponents.webidl \
