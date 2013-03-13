@@ -323,7 +323,7 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
   [implicit_jscontext] attribute jsval oncfstatechange;
 };
 
-[scriptable, uuid(21a20166-a9b4-4386-b151-49e6cfb9401b)]
+[scriptable, uuid(c9d9ff61-a2f0-41cd-b478-9cefa7b31f31)]
 interface nsIDOMMozMobileConnectionInfo : nsISupports
 {
   /**
@@ -361,7 +361,7 @@ interface nsIDOMMozMobileConnectionInfo : nsISupports
   /**
    * Mobile Country Code (MCC) of last known network operator.
    */
-  readonly attribute unsigned short lastKnownMcc;
+  readonly attribute DOMString lastKnownMcc;
 
   /**
    * Type of connection.
@@ -389,7 +389,7 @@ interface nsIDOMMozMobileConnectionInfo : nsISupports
 
 };
 
-[scriptable, uuid(3bd866c7-98a5-4ef4-a464-c22d8cc6b992)]
+[scriptable, uuid(40018fc7-4c42-47b6-8de6-3591a9c622bc)]
 interface nsIDOMMozMobileNetworkInfo: nsISupports
 {
   /**
@@ -405,12 +405,12 @@ interface nsIDOMMozMobileNetworkInfo: nsISupports
   /**
    * Mobile Country Code (MCC) of the network operator
    */
-  readonly attribute unsigned short mcc;
+  readonly attribute DOMString mcc;
 
   /**
    * Mobile Network Code (MNC) of the network operator
    */
-  readonly attribute unsigned short mnc;
+  readonly attribute DOMString mnc;
 
   /**
    * State of this network operator.
@@ -434,7 +434,7 @@ interface nsIDOMMozMobileCellInfo: nsISupports
   readonly attribute unsigned long gsmCellId;
 };
 
-[scriptable, uuid(b794bfcd-4ba4-46f2-8bf3-b4ed1b8d2b40)]
+[scriptable, uuid(10d5c5a2-d43f-4f94-8657-cf7ccabbab6e)]
 interface nsIDOMMozMobileICCInfo : nsISupports
 {
    /**
@@ -445,12 +445,12 @@ interface nsIDOMMozMobileICCInfo : nsISupports
   /**
    * Mobile Country Code (MCC) of the subscriber's home network.
    */
-  readonly attribute unsigned short mcc;
+  readonly attribute DOMString mcc;
 
   /**
    * Mobile Network Code (MNC) of the subscriber's home network.
    */
-  readonly attribute unsigned short mnc;
+  readonly attribute DOMString mnc;
 
   /**
    * Service Provider Name (SPN) of the subscriber's home network.

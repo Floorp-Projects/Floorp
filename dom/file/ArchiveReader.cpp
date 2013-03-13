@@ -62,9 +62,9 @@ ArchiveReader::~ArchiveReader()
 }
 
 /* virtual */ JSObject*
-ArchiveReader::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+ArchiveReader::WrapObject(JSContext* aCx, JSObject* aScope)
 {
-  return ArchiveReaderBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return ArchiveReaderBinding::Wrap(aCx, aScope, this);
 }
 
 /* static */ bool

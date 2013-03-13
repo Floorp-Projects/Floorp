@@ -13,13 +13,11 @@ void nsTemplateMatch::operator=(const nsTemplateMatch& aMatch) {}
 
 // static
 void
-nsTemplateMatch::Destroy(nsFixedSizeAllocator& aPool,
-                         nsTemplateMatch*& aMatch,
-                         bool aRemoveResult) {
+nsTemplateMatch::Destroy(nsTemplateMatch*& aMatch, bool aRemoveResult)
+{
     if (aRemoveResult && aMatch->mResult)
         aMatch->mResult->HasBeenRemoved();
-    aMatch->~nsTemplateMatch();
-    aPool.Free(aMatch, sizeof(*aMatch));
+    ::delete aMatch;
     aMatch = nullptr;
 }
 

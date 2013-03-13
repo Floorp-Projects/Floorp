@@ -18,15 +18,15 @@ let telkilaNetwork = null;
 function isAndroidNetwork(network) {
   is(network.longName, "Android");
   is(network.shortName, "Android");
-  is(network.mcc, 310);
-  is(network.mnc, 260);
+  is(network.mcc, "310");
+  is(network.mnc, "260");
 }
 
 function isTelkilaNetwork(network) {
   is(network.longName, "TelKila");
   is(network.shortName, "TelKila");
-  is(network.mcc, 310);
-  is(network.mnc, 295);
+  is(network.mcc, "310");
+  is(network.mnc, "295");
 }
 
 function testConnectionInfo() {
@@ -36,7 +36,7 @@ function testConnectionInfo() {
   is(voice.emergencyCallsOnly, false);
   is(voice.roaming, false);
   isAndroidNetwork(voice.network);
-  is(voice.lastKnownMcc, 310);
+  is(voice.lastKnownMcc, "310");
 
   let data = connection.data;
   // data.connected = true means there's an active data call which we
@@ -45,7 +45,7 @@ function testConnectionInfo() {
   is(data.emergencyCallsOnly, false);
   is(data.roaming, false);
   isAndroidNetwork(data.network);
-  is(data.lastKnownMcc, 0);
+  is(data.lastKnownMcc, null);
 
   testGetNetworks();
 }

@@ -49,11 +49,9 @@ public:
     return mOwner;
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope,
-                               bool* aTriedToWrap) MOZ_OVERRIDE
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE
   {
-    return mozilla::dom::XMLSerializerBinding::Wrap(aCx, aScope, this,
-                                                    aTriedToWrap);
+    return mozilla::dom::XMLSerializerBinding::Wrap(aCx, aScope, this);
   }
 
 private:

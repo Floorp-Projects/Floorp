@@ -741,10 +741,9 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMFileList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMFileList)
 
 JSObject*
-nsDOMFileList::WrapObject(JSContext *cx, JSObject *scope,
-                          bool *triedToWrap)
+nsDOMFileList::WrapObject(JSContext *cx, JSObject *scope)
 {
-  return FileListBinding::Wrap(cx, scope, this, triedToWrap);
+  return FileListBinding::Wrap(cx, scope, this);
 }
 
 NS_IMETHODIMP

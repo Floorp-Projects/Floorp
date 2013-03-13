@@ -548,10 +548,9 @@ HTMLButtonElement::IntrinsicState() const
 }
 
 JSObject*
-HTMLButtonElement::WrapNode(JSContext* aCx, JSObject* aScope,
-                            bool* aTriedToWrap)
+HTMLButtonElement::WrapNode(JSContext* aCx, JSObject* aScope)
 {
-  return HTMLButtonElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return HTMLButtonElementBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace dom

@@ -21,10 +21,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-HTMLTableRowElement::WrapNode(JSContext *aCx, JSObject *aScope,
-                              bool *aTriedToWrap)
+HTMLTableRowElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return HTMLTableRowElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return HTMLTableRowElementBinding::Wrap(aCx, aScope, this);
 }
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLTableRowElement,

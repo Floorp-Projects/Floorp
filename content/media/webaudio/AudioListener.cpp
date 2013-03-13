@@ -21,21 +21,20 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AudioListener, Release)
 AudioListener::AudioListener(AudioContext* aContext)
   : mContext(aContext)
   , mPosition()
-  , mOrientation(0.f, 0.f, -1.f)
-  , mUpVector(0.f, 1.f, 0.f)
+  , mOrientation(0., 0., -1.)
+  , mUpVector(0., 1., 0.)
   , mVelocity()
-  , mDopplerFactor(1.f)
-  , mSpeedOfSound(343.3f) // meters/second
+  , mDopplerFactor(1.)
+  , mSpeedOfSound(343.3) // meters/second
 {
   MOZ_ASSERT(aContext);
   SetIsDOMBinding();
 }
 
 JSObject*
-AudioListener::WrapObject(JSContext* aCx, JSObject* aScope,
-                          bool* aTriedToWrap)
+AudioListener::WrapObject(JSContext* aCx, JSObject* aScope)
 {
-  return AudioListenerBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return AudioListenerBinding::Wrap(aCx, aScope, this);
 }
 
 }

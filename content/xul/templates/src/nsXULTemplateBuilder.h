@@ -18,7 +18,6 @@
 #include "nsIRDFService.h"
 #include "nsIXULTemplateBuilder.h"
 
-#include "nsFixedSizeAllocator.h"
 #include "nsCOMArray.h"
 #include "nsTArray.h"
 #include "nsDataHashtable.h"
@@ -382,16 +381,6 @@ protected:
      */
     nsDataHashtable<nsISupportsHashKey, nsTemplateMatch*> mMatchMap;
 
-    /**
-     * Fixed size allocator used to allocate matches
-     */
-    nsFixedSizeAllocator mPool;
-
-public:
-
-    nsFixedSizeAllocator& GetPool() { return mPool; }
-
-protected:
     // pseudo-constants
     static nsrefcnt gRefCnt;
     static nsIRDFService*            gRDFService;

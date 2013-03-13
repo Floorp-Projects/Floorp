@@ -72,6 +72,7 @@ FENNEC_JAVA_FILES = \
   db/LocalBrowserDB.java \
   db/DBUtils.java \
   Distribution.java \
+  Divider.java \
   DoorHanger.java \
   DoorHangerPopup.java \
   Favicons.java \
@@ -117,6 +118,8 @@ FENNEC_JAVA_FILES = \
   MenuPanel.java \
   MenuPopup.java \
   MultiChoicePreference.java \
+  NotificationService.java \
+  NotificationServiceClient.java \
   NSSBridge.java \
   CustomEditText.java \
   OnInterceptTouchListener.java \
@@ -411,6 +414,7 @@ RES_LAYOUT = \
   res/layout/datetime_picker.xml \
   res/layout/doorhangerpopup.xml \
   res/layout/doorhanger.xml \
+  res/layout/doorhanger_button.xml \
   res/layout/find_in_page_content.xml \
   res/layout/font_size_preference.xml \
   res/layout/gecko_appwidget.xml \
@@ -595,9 +599,6 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/address_bar_url_default_pb.9.png \
   res/drawable-mdpi/address_bar_url_pressed.9.png \
   res/drawable-mdpi/address_bar_url_pressed_pb.9.png \
-  res/drawable-mdpi/doorhanger_arrow.png \
-  res/drawable-mdpi/doorhanger_bg.9.png \
-  res/drawable-mdpi/doorhanger_shadow_bg.9.png \
   res/drawable-mdpi/doorhanger_popup_bg.9.png \
   res/drawable-mdpi/find_close.png \
   res/drawable-mdpi/find_next.png \
@@ -697,9 +698,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/address_bar_url_default_pb.9.png \
   res/drawable-hdpi/address_bar_url_pressed.9.png \
   res/drawable-hdpi/address_bar_url_pressed_pb.9.png \
-  res/drawable-hdpi/doorhanger_arrow.png \
-  res/drawable-hdpi/doorhanger_bg.9.png \
-  res/drawable-hdpi/doorhanger_shadow_bg.9.png \
   res/drawable-hdpi/doorhanger_popup_bg.9.png \
   res/drawable-hdpi/find_close.png \
   res/drawable-hdpi/find_next.png \
@@ -784,9 +782,6 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/tab_thumbnail_default.png \
   res/drawable-xhdpi/tab_thumbnail_shadow.png \
   res/drawable-xhdpi/tabs_carat.png \
-  res/drawable-xhdpi/doorhanger_arrow.png \
-  res/drawable-xhdpi/doorhanger_bg.9.png \
-  res/drawable-xhdpi/doorhanger_shadow_bg.9.png \
   res/drawable-xhdpi/doorhanger_popup_bg.9.png \
   res/drawable-xhdpi/find_close.png \
   res/drawable-xhdpi/find_next.png \
@@ -915,6 +910,7 @@ RES_DRAWABLE_LARGE_LAND_V11 = \
   $(NULL)
 
 RES_DRAWABLE_LARGE_MDPI_V11 = \
+  res/drawable-large-mdpi-v11/doorhanger_popup_bg.9.png \
   res/drawable-large-mdpi-v11/ic_menu_reload.png \
   res/drawable-large-mdpi-v11/ic_menu_forward.png \
   res/drawable-large-mdpi-v11/menu.png \
@@ -924,6 +920,7 @@ RES_DRAWABLE_LARGE_MDPI_V11 = \
   $(NULL)
 
 RES_DRAWABLE_LARGE_HDPI_V11 = \
+  res/drawable-large-hdpi-v11/doorhanger_popup_bg.9.png \
   res/drawable-large-hdpi-v11/ic_menu_reload.png \
   res/drawable-large-hdpi-v11/ic_menu_forward.png \
   res/drawable-large-hdpi-v11/menu.png \
@@ -933,6 +930,7 @@ RES_DRAWABLE_LARGE_HDPI_V11 = \
   $(NULL)
 
 RES_DRAWABLE_LARGE_XHDPI_V11 = \
+  res/drawable-large-xhdpi-v11/doorhanger_popup_bg.9.png \
   res/drawable-large-xhdpi-v11/ic_menu_reload.png \
   res/drawable-large-xhdpi-v11/ic_menu_forward.png \
   res/drawable-large-xhdpi-v11/menu.png \

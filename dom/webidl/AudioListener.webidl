@@ -14,15 +14,15 @@
 interface AudioListener {
 
     // same as OpenAL (default 1) 
-    attribute float dopplerFactor;
+    attribute double dopplerFactor;
 
     // in meters / second (default 343.3) 
-    attribute float speedOfSound;
+    attribute double speedOfSound;
 
     // Uses a 3D cartesian coordinate system 
-    void setPosition(float x, float y, float z);
-    void setOrientation(float x, float y, float z, float xUp, float yUp, float zUp);
-    void setVelocity(float x, float y, float z);
+    void setPosition(double x, double y, double z);
+    void setOrientation(double x, double y, double z, double xUp, double yUp, double zUp);
+    void setVelocity(double x, double y, double z);
 
 };
 

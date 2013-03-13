@@ -66,6 +66,9 @@ var gPermissionManager = {
     case nsIPermissionManager.DENY_ACTION:
       stringKey = "cannot";
       break;
+    case nsICookiePermission.ACCESS_ALLOW_FIRST_PARTY_ONLY:
+      stringKey = "canAccessFirstParty";
+      break;
     case nsICookiePermission.ACCESS_SESSION:
       stringKey = "canSession";
       break;
