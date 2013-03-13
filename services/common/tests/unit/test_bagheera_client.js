@@ -77,7 +77,7 @@ add_test(function test_post_json_delete_obsolete() {
   server.createNamespace("foo");
   server.setDocument("foo", "obsolete", "Old payload");
 
-  let promise = client.uploadJSON("foo", "new", {foo: "bar"}, "obsolete");
+  let promise = client.uploadJSON("foo", "new", {foo: "bar"}, {deleteID: "obsolete"});
   promise.then(function onSuccess(result) {
     do_check_true(result.transportSuccess);
     do_check_true(result.serverSuccess);

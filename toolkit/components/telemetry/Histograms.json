@@ -2938,6 +2938,12 @@
     "n_buckets": 202,
     "description": "Size (in bytes) of the raw Health Report payload."
   },
+  "HEALTHREPORT_PAYLOAD_COMPRESSED_BYTES": {
+    "kind": "linear",
+    "high": "2000000",
+    "n_buckets": 202,
+    "description": "Size (in bytes) of the compressed Health Report payload. This is what is sent over the wire."
+  },
   "HEALTHREPORT_UPLOAD_MS": {
     "kind": "exponential",
     "high": "60000",
