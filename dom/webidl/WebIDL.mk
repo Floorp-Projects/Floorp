@@ -27,6 +27,7 @@ webidl_files = \
   CFStateChangeEvent.webidl \
   CharacterData.webidl \
   ClientRectList.webidl \
+  CommandEvent.webidl \
   Comment.webidl \
   CSS.webidl \
   CSSPrimitiveValue.webidl \
