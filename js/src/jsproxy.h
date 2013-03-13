@@ -357,12 +357,7 @@ class JS_FRIEND_API(AutoEnterPolicy)
         allow = handler->hasPolicy() ? handler->enter(cx, wrapper, id, act, &rv)
                                      : true;
         recordEnter(cx, wrapper, id);
-        // We want to throw an exception if all of the following are true:
-        // * The policy disallowed access.
-        // * The policy set rv to false, indicating that we should throw.
-        // * The caller did not instruct us to ignore exceptions.
-        // * The policy did not throw itself.
-        if (!allow && !rv && mayThrow && !cx->isExceptionPending())
+        if (!allow && !rv && mayThrow)
             reportError(cx, id);
     }
 
