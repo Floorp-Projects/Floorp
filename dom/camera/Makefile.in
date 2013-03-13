@@ -11,7 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE           = dom
 LIBRARY_NAME     = domcamera_s
-XPIDL_MODULE     = dom_camera
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 FAIL_ON_WARNINGS := 1
@@ -53,11 +52,6 @@ CPPSRCS += \
   $(NULL)
 endif
 
-XPIDLSRCS = \
-  nsIDOMNavigatorCamera.idl \
-  nsIDOMCameraManager.idl \
-  $(NULL)
-
 EXPORTS = \
   CameraCommon.h \
   DOMCameraManager.h \
@@ -68,9 +62,3 @@ EXPORTS = \
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
-XPIDL_FLAGS += \
-  -I$(topsrcdir)/dom/base \
-  -I$(topsrcdir)/dom/interfaces/base \
-  -I$(topsrcdir)/dom/interfaces/events \
-  -I$(topsrcdir)/dom/media \
-  $(NULL)

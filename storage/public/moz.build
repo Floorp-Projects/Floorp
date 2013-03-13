@@ -3,3 +3,26 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'mozIStorageAggregateFunction.idl',
+    'mozIStorageAsyncStatement.idl',
+    'mozIStorageBaseStatement.idl',
+    'mozIStorageBindingParams.idl',
+    'mozIStorageBindingParamsArray.idl',
+    'mozIStorageCompletionCallback.idl',
+    'mozIStorageConnection.idl',
+    'mozIStorageError.idl',
+    'mozIStorageFunction.idl',
+    'mozIStoragePendingStatement.idl',
+    'mozIStorageProgressHandler.idl',
+    'mozIStorageResultSet.idl',
+    'mozIStorageRow.idl',
+    'mozIStorageService.idl',
+    'mozIStorageStatement.idl',
+    'mozIStorageStatementCallback.idl',
+    'mozIStorageStatementParams.idl',
+    'mozIStorageStatementRow.idl',
+    'mozIStorageVacuumParticipant.idl',
+    'mozIStorageValueArray.idl',
+]
+

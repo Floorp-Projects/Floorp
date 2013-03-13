@@ -12,9 +12,4 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = sessionstore
 
-XPIDLSRCS = \
-	nsISessionStartup.idl \
-	nsISessionStore.idl \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk

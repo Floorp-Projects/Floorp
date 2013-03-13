@@ -526,7 +526,7 @@ endif
 # Default location of include files
 IDL_DIR		= $(DIST)/idl
 
-XPIDL_FLAGS = -I$(srcdir) -I$(IDL_DIR)
+XPIDL_FLAGS += -I$(srcdir) -I$(IDL_DIR)
 ifdef LIBXUL_SDK
 XPIDL_FLAGS += -I$(LIBXUL_SDK)/idl
 endif

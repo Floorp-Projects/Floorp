@@ -3,3 +3,34 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'nsIDOMXULButtonElement.idl',
+    'nsIDOMXULCheckboxElement.idl',
+    'nsIDOMXULCommandDispatcher.idl',
+    'nsIDOMXULCommandEvent.idl',
+    'nsIDOMXULContainerElement.idl',
+    'nsIDOMXULControlElement.idl',
+    'nsIDOMXULDescriptionElement.idl',
+    'nsIDOMXULDocument.idl',
+    'nsIDOMXULElement.idl',
+    'nsIDOMXULImageElement.idl',
+    'nsIDOMXULLabelElement.idl',
+    'nsIDOMXULLabeledControlEl.idl',
+    'nsIDOMXULMenuListElement.idl',
+    'nsIDOMXULMultSelectCntrlEl.idl',
+    'nsIDOMXULPopupElement.idl',
+    'nsIDOMXULRelatedElement.idl',
+    'nsIDOMXULSelectCntrlEl.idl',
+    'nsIDOMXULSelectCntrlItemEl.idl',
+    'nsIDOMXULTextboxElement.idl',
+    'nsIDOMXULTreeElement.idl',
+]
+
+XPIDL_MODULE = 'dom_xul'
+
+XPIDL_FLAGS += [
+    '-I$(topsrcdir)/dom/interfaces/base',
+    '-I$(topsrcdir)/dom/interfaces/core',
+    '-I$(topsrcdir)/dom/interfaces/events',
+]
+

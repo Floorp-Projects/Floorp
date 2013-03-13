@@ -3,3 +3,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'nsIBoxObject.idl',
+    'nsIBrowserBoxObject.idl',
+    'nsIContainerBoxObject.idl',
+    'nsIEditorBoxObject.idl',
+    'nsIIFrameBoxObject.idl',
+    'nsIListBoxObject.idl',
+    'nsIMenuBoxObject.idl',
+    'nsIPopupBoxObject.idl',
+    'nsIScrollBoxObject.idl',
+    'nsISliderListener.idl',
+]
+
+XPIDL_MODULE = 'layout_xul'
+

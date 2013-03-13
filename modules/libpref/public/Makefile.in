@@ -15,18 +15,6 @@ GRE_MODULE	= 1
 
 EXPORTS_NAMESPACES = mozilla
 
-SDK_XPIDLSRCS   = \
-              nsIPrefService.idl \
-              nsIPrefBranch.idl \
-              nsIPrefBranch2.idl \
-              nsIPrefLocalizedString.idl \
-              $(NULL)
-
-XPIDLSRCS	= \
-              nsIPrefBranchInternal.idl \
-              nsIRelativeFilePref.idl \
-              $(NULL)
-
 EXPORTS_mozilla = \
               Preferences.h \
               $(NULL)

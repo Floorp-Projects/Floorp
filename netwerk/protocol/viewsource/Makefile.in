@@ -14,14 +14,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE         = necko
 LIBRARY_NAME   = nkviewsource_s
 LIBXUL_LIBRARY = 1
-XPIDL_MODULE   = necko_viewsource
 GRE_MODULE     = 1
 
 FORCE_STATIC_LIB = 1
-
-XPIDLSRCS = \
-  nsIViewSourceChannel.idl \
-  $(NULL)
 
 CPPSRCS = \
   nsViewSourceHandler.cpp \
@@ -34,4 +29,3 @@ LOCAL_INCLUDES = \
 
 include $(topsrcdir)/config/rules.mk
 
-XPIDL_FLAGS += -I$(topsrcdir)/netwerk/base/public

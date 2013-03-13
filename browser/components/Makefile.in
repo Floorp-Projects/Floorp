@@ -10,13 +10,6 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = browsercomps
-XPIDL_MODULE = browsercompsbase
-
-XPIDLSRCS = \
-  nsIBrowserGlue.idl \
-  nsIBrowserHandler.idl \
-  $(NULL)
-
 EXTRA_COMPONENTS = \
   BrowserComponents.manifest \
   $(NULL)

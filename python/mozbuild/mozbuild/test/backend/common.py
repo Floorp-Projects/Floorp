@@ -53,6 +53,11 @@ CONFIGS = {
             ('MOZ_BAR', 'bar'),
         ],
     },
+    'variable_passthru': {
+        'defines': [],
+        'non_global_defines': [],
+        'substs': [],
+    },
 }
 
 

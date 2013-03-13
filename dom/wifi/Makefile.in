@@ -11,17 +11,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE           = dom
 LIBRARY_NAME     = domwifi_s
-XPIDL_MODULE     = dom_wifi
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/dom/dom-config.mk
-
-XPIDLSRCS = \
-  nsIWifi.idl \
-  nsIDOMMozWifiStatusChangeEvent.idl \
-  nsIDOMMozWifiConnectionInfoEvent.idl \
-  $(NULL)
 
 EXTRA_COMPONENTS = \
   WifiWorker.js \
@@ -38,9 +31,3 @@ EXTRA_JS_MODULES = \
 include $(topsrcdir)/config/rules.mk
 
 
-XPIDL_FLAGS += \
-  -I$(topsrcdir)/dom/base \
-  -I$(topsrcdir)/dom/interfaces/base \
-  -I$(topsrcdir)/dom/interfaces/events \
-  -I$(topsrcdir)/dom/system/gonk \
-  $(NULL)

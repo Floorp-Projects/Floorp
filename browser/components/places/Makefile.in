@@ -12,4 +12,3 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
 
-XPIDL_FLAGS += -I$(topsrcdir)/browser/components/

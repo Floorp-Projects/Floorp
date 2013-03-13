@@ -12,7 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE         = dom
 LIBRARY_NAME   = jsdompermissionsettings_s
 
-XPIDL_MODULE   = dom_permissionsettings
 GRE_MODULE     = 1
 
 EXTRA_COMPONENTS =        \

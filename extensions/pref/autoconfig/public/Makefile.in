@@ -11,14 +11,5 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE       = autoconfig
 
-XPIDLSRCS    = \
-               nsIAutoConfig.idl \
-               nsIReadConfig.idl \
-               $(NULL)
-
-ifdef MOZ_LDAP_XPCOM
-XPIDLSRCS += nsILDAPSyncQuery.idl
-endif
-
 include $(topsrcdir)/config/rules.mk
 

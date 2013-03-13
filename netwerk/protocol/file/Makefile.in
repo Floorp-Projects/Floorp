@@ -14,15 +14,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE         = necko
 LIBRARY_NAME   = nkfile_s
 LIBXUL_LIBRARY = 1
-XPIDL_MODULE   = necko_file
 GRE_MODULE     = 1
 
 FORCE_STATIC_LIB = 1
-
-XPIDLSRCS = \
-  nsIFileChannel.idl \
-  nsIFileProtocolHandler.idl \
-  $(NULL)
 
 CPPSRCS = \
   nsFileProtocolHandler.cpp \
@@ -38,4 +32,3 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DIMPL_NS_NET
 
-XPIDL_FLAGS += -I$(topsrcdir)/netwerk/base/public

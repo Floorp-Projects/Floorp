@@ -22,21 +22,6 @@ CPPSRCS = 							\
 				nsDocLoader.cpp			\
 				$(NULL)
 
-SDK_XPIDLSRCS = 						\
-				nsIURIContentListener.idl 	\
-				nsIWebProgress.idl 	\
-				nsIWebProgressListener.idl 	\
-				$(NULL)
-
-XPIDLSRCS = 							\
-				nsIContentHandler.idl 		\
-				nsIURILoader.idl	 	\
-				nsCURILoader.idl		\
-				nsITransfer.idl \
-				nsIDocumentLoader.idl		\
-				nsIWebProgressListener2.idl \
-				$(NULL)
-
 EXPORTS = 							\
 				nsURILoader.h	 		\
 				nsDocLoader.h			\

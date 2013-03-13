@@ -3,3 +3,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'nsIShellService.idl',
+]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    XPIDL_SOURCES += [
+        'nsIWindowsShellService.idl',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    XPIDL_SOURCES += [
+        'nsIMacShellService.idl',
+    ]
+

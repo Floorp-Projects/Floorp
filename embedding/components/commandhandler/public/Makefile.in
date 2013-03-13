@@ -12,14 +12,5 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= commandhandler
 
-XPIDLSRCS	= \
-        nsICommandManager.idl \
-        nsICommandParams.idl \
-        nsIControllerCommand.idl \
-        nsIControllerContext.idl \
-        nsIControllerCommandTable.idl \
-        nsPICommandUpdater.idl \
-        $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

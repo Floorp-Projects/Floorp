@@ -11,60 +11,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dom
-XPIDL_MODULE	= dom_events
 GRE_MODULE	= 1
-
-SDK_XPIDLSRCS =                                 \
-	nsIDOMEvent.idl				\
-	nsIDOMEventTarget.idl			\
-	nsIDOMEventListener.idl			\
-	nsIDOMMouseEvent.idl			\
-	nsIDOMMouseScrollEvent.idl      \
-	nsIDOMUIEvent.idl			\
-	nsIDOMProgressEvent.idl			\
-	$(NULL)
-
-XPIDLSRCS =					\
-	nsIDOMNSEvent.idl			\
-	nsIDOMDataContainerEvent.idl	\
-	nsIDOMKeyEvent.idl			\
-	nsIDOMMutationEvent.idl			\
-	nsIDOMDragEvent.idl  			\
-	nsIDOMDataTransfer.idl  			\
-	nsIDOMDOMTransactionEvent.idl  			\
-	nsIDOMPopupBlockedEvent.idl		\
-	nsIDOMBeforeUnloadEvent.idl		\
-	nsIDOMSmartCardEvent.idl                \
-	nsIDOMPageTransitionEvent.idl		\
-	nsIDOMCommandEvent.idl			\
-	nsIDOMMessageEvent.idl			\
-	nsIDOMNotifyPaintEvent.idl              \
-	nsIDOMNotifyAudioAvailableEvent.idl     \
-	nsIDOMPaintRequest.idl			\
-	nsIDOMPaintRequestList.idl		\
-	nsIDOMSimpleGestureEvent.idl		\
-	nsIDOMDeviceLightEvent.idl              \
-	nsIDOMDeviceProximityEvent.idl          \
-	nsIDOMUserProximityEvent.idl            \
-	nsIDOMDeviceOrientationEvent.idl        \
-	nsIDOMDeviceMotionEvent.idl		\
-	nsIDOMElementReplaceEvent.idl		\
-	nsIDOMScrollAreaEvent.idl		\
-	nsIDOMTransitionEvent.idl		\
-	nsIDOMAnimationEvent.idl		\
-	nsIDOMPopStateEvent.idl			\
-	nsIDOMCloseEvent.idl			\
-	nsIDOMTouchEvent.idl			\
-	nsIDOMHashChangeEvent.idl		\
-	nsIDOMCustomEvent.idl			\
-	nsIDOMCompositionEvent.idl		\
-	nsIDOMWheelEvent.idl			\
-	nsIDOMBlobEvent.idl			\
-	nsIDOMClipboardEvent.idl  		\
-	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-XPIDL_FLAGS += \
-  -I$(topsrcdir)/dom/interfaces/base \
-  $(NULL)
