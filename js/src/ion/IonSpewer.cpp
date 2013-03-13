@@ -10,6 +10,8 @@
 #include "Ion.h"
 #include "IonSpewer.h"
 
+#include "jsscriptinlines.h"
+
 #ifndef ION_SPEW_DIR
 # if defined(_WIN32)
 #  define ION_SPEW_DIR ""
@@ -132,7 +134,7 @@ IonSpewer::beginFunction(MIRGraph *graph, HandleScript function)
     if (!inited_)
         return;
 
-    if (!FilterContainsLocation(function->filename, function->lineno)) {
+    if (!FilterContainsLocation(function->filename(), function->lineno)) {
         JS_ASSERT(!this->graph);
         // filter out logs during the compilation.
         filteredOutCompilations++;

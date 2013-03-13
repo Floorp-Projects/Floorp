@@ -11,8 +11,8 @@
 #include "jsapi.h"
 
 #include "gc/Heap.h"
-#include "gc/Root.h"
 #include "js/HashTable.h"
+#include "js/RootingAPI.h"
 
 /*
  * A write barrier is a mechanism used by incremental or generation GCs to

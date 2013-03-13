@@ -475,65 +475,6 @@ main(void) {
   printf("OK\n");
 
   //
-  // now check a thread-safe data-hashtable
-  //
-
-  nsDataHashtableMT<nsUint32HashKey,const char*> UniToEntityL;
-
-  printf("Initializing nsDataHashtableMT...");
-  UniToEntityL.Init(ENTITY_COUNT);
-  printf("OK\n");
-
-  printf("Filling hash with %u entries.\n", ENTITY_COUNT);
-
-  for (i = 0; i < ENTITY_COUNT; ++i) {
-    printf("  Putting entry %u...", gEntities[i].mUnicode);
-    UniToEntityL.Put(gEntities[i].mUnicode, gEntities[i].mStr);
-    printf("OK...\n");
-  }
-
-  printf("Testing Get:\n");
-
-  for (i = 0; i < ENTITY_COUNT; ++i) {
-    printf("  Getting entry %u...", gEntities[i].mUnicode);
-    if (!UniToEntityL.Get(gEntities[i].mUnicode, &str)) {
-      printf("FAILED\n");
-      exit (12);
-    }
-
-    printf("Found %s\n", str);
-  }
-
-  printf("Testing nonexistent entries...");
-  if (UniToEntityL.Get(99446, &str)) {
-    printf("FOUND! BAD!\n");
-    exit (13);
-  }
-      
-  printf("not found; good.\n");
-      
-  printf("Enumerating:\n");
-  
-  count = UniToEntityL.EnumerateRead(nsDEnumRead, nullptr);
-  if (count != ENTITY_COUNT) {
-    printf("  Bad count!\n");
-    exit (14);
-  }
-  
-  printf("Clearing...");
-  UniToEntityL.Clear();
-  printf("OK\n");
-
-  printf("Checking count...");
-  count = UniToEntityL.Enumerate(nsDEnum, nullptr);
-  if (count) {
-    printf("  Clear did not remove all entries.\n");
-    exit (15);
-  }
-
-  printf("OK\n");
-
-  //
   // now check a class-hashtable
   //
 
@@ -588,67 +529,6 @@ main(void) {
 
   printf("Checking count...");
   count = EntToUniClass.Enumerate(nsCEnum, nullptr);
-  if (count) {
-    printf("  Clear did not remove all entries.\n");
-    exit (21);
-  }
-
-  printf("OK\n");
-
-  //
-  // now check a thread-safe class-hashtable
-  //
-
-  nsClassHashtableMT<nsCStringHashKey,TestUniChar> EntToUniClassL;
-
-  printf("Initializing nsClassHashtableMT...");
-  EntToUniClassL.Init(ENTITY_COUNT);
-  printf("OK\n");
-
-  printf("Filling hash with %u entries.\n", ENTITY_COUNT);
-
-  for (i = 0; i < ENTITY_COUNT; ++i) {
-    printf("  Putting entry %u...", gEntities[i].mUnicode);
-    TestUniChar* temp = new TestUniChar(gEntities[i].mUnicode);
-
-    EntToUniClassL.Put(nsDependentCString(gEntities[i].mStr), temp);
-    printf("OK...\n");
-  }
-
-  printf("Testing Get:\n");
-
-  for (i = 0; i < ENTITY_COUNT; ++i) {
-    printf("  Getting entry %s...", gEntities[i].mStr);
-    if (!EntToUniClassL.Get(nsDependentCString(gEntities[i].mStr), &myChar)) {
-      printf("FAILED\n");
-      exit (18);
-    }
-
-    printf("Found %c\n", myChar->GetChar());
-  }
-
-  printf("Testing nonexistent entries...");
-  if (EntToUniClassL.Get(NS_LITERAL_CSTRING("xxxx"), &myChar)) {
-    printf("FOUND! BAD!\n");
-    exit (19);
-  }
-      
-  printf("not found; good.\n");
-      
-  printf("Enumerating:\n");
-  
-  count = EntToUniClassL.EnumerateRead(nsCEnumRead, nullptr);
-  if (count != ENTITY_COUNT) {
-    printf("  Bad count!\n");
-    exit (20);
-  }
-  
-  printf("Clearing...\n");
-  EntToUniClassL.Clear();
-  printf("  Clearing OK\n");
-
-  printf("Checking count...");
-  count = EntToUniClassL.Enumerate(nsCEnum, nullptr);
   if (count) {
     printf("  Clear did not remove all entries.\n");
     exit (21);

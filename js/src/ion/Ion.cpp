@@ -1386,13 +1386,13 @@ Compile(JSContext *cx, HandleScript script, HandleFunction fun, jsbytecode *osrP
     }
 
     if (!CheckScript(script)) {
-        IonSpew(IonSpew_Abort, "Aborted compilation of %s:%d", script->filename, script->lineno);
+        IonSpew(IonSpew_Abort, "Aborted compilation of %s:%d", script->filename(), script->lineno);
         return Method_CantCompile;
     }
 
     MethodStatus status = compileContext.checkScriptSize(cx, script);
     if (status != Method_Compiled) {
-        IonSpew(IonSpew_Abort, "Aborted compilation of %s:%d", script->filename, script->lineno);
+        IonSpew(IonSpew_Abort, "Aborted compilation of %s:%d", script->filename(), script->lineno);
         return status;
     }
 
@@ -1581,7 +1581,7 @@ ParallelCompileContext::compileTransitively()
                     invalidFun = invalid->function();
                     parallel::Spew(parallel::SpewCompile,
                                    "Adding previously invalidated function %p:%s:%u",
-                                   fun.get(), invalid->filename, invalid->lineno);
+                                   fun.get(), invalid->filename(), invalid->lineno);
                     appendToWorklist(invalidFun);
                 }
             }
@@ -1606,7 +1606,7 @@ ParallelCompileContext::compileTransitively()
         if (!script->hasParallelIonScript()) {
             parallel::Spew(parallel::SpewCompile,
                            "Function %p:%s:%u was garbage-collected or invalidated",
-                           fun.get(), script->filename, script->lineno);
+                           fun.get(), script->filename(), script->lineno);
             return SpewEndCompile(Method_Skipped);
         }
 
@@ -1908,7 +1908,7 @@ InvalidateActivation(FreeOp *fop, uint8_t *ionTop, bool invalidateAll)
           {
             JS_ASSERT(it.isScripted());
             IonSpew(IonSpew_Invalidate, "#%d JS frame @ %p, %s:%d (fun: %p, script: %p, pc %p)",
-                    frameno, it.fp(), it.script()->filename, it.script()->lineno,
+                    frameno, it.fp(), it.script()->filename(), it.script()->lineno,
                     it.maybeCallee(), (RawScript)it.script(), it.returnAddressToFp());
             break;
           }
@@ -2048,7 +2048,7 @@ ion::Invalidate(types::TypeCompartment &types, FreeOp *fop,
           case types::CompilerOutput::ParallelIon:
             JS_ASSERT(co.isValid());
             IonSpew(IonSpew_Invalidate, " Invalidate %s:%u, IonScript %p",
-                    co.script->filename, co.script->lineno, co.ion());
+                    co.script->filename(), co.script->lineno, co.ion());
 
             // Keep the ion script alive during the invalidation and flag this
             // ionScript as being invalidated.  This increment is removed by the
@@ -2189,7 +2189,7 @@ void
 ion::ForbidCompilation(JSContext *cx, RawScript script, ExecutionMode mode)
 {
     IonSpew(IonSpew_Abort, "Disabling Ion mode %d compilation of script %s:%d",
-            mode, script->filename, script->lineno);
+            mode, script->filename(), script->lineno);
 
     CancelOffThreadIonCompile(cx->compartment, script);
 

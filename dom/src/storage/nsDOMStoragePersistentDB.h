@@ -177,6 +177,12 @@ private:
   SetJournalMode(bool aIsWal);
 
   /**
+   * Sets the threshold for auto-checkpointing the WAL.
+   */
+  nsresult
+  ConfigureWalBehavior();
+
+  /**
    * Ensures that the scope's keys are cached.
    */
   nsresult
@@ -235,8 +241,10 @@ private:
    */
   nsTArray<nsCOMPtr<mozIStorageStatement> > mFlushStatements;
   nsTArray<nsCOMPtr<mozIStorageBindingParamsArray> > mFlushStatementParams;
-  StatementCache mStatements;
-  nsCOMPtr<mozIStorageConnection> mConnection;
+  StatementCache mReadStatements;
+  StatementCache mWriteStatements;
+  nsCOMPtr<mozIStorageConnection> mReadConnection;
+  nsCOMPtr<mozIStorageConnection> mWriteConnection;
 
   /**
    * Cache state data

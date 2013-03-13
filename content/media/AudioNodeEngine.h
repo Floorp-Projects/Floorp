@@ -11,6 +11,10 @@
 
 namespace mozilla {
 
+namespace dom {
+struct ThreeDPoint;
+}
+
 class AudioNodeStream;
 
 // We ensure that the graph advances in steps that are multiples of the Web
@@ -132,6 +136,11 @@ public:
                                     const dom::AudioParamTimeline& aValue)
   {
     NS_ERROR("Invalid SetTimelineParameter index");
+  }
+  virtual void SetThreeDPointParameter(uint32_t aIndex,
+                                       const dom::ThreeDPoint& aValue)
+  {
+    NS_ERROR("Invalid SetThreeDPointParameter index");
   }
   virtual void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer)
   {
