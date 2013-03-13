@@ -1183,13 +1183,15 @@ JSFlatString *
 ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
 {
     const jschar *chars;
-#if USE_ZLIB
+#ifdef USE_ZLIB
     Rooted<JSStableString *> cached(cx, NULL);
+#endif
 #ifdef JS_THREADSAFE
     if (!ready()) {
         chars = cx->runtime->sourceCompressorThread.currentChars();
     } else
 #endif
+#ifdef USE_ZLIB
     if (compressed()) {
         cached = cx->runtime->sourceDataCache.lookup(this);
         if (!cached) {
