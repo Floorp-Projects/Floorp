@@ -716,7 +716,7 @@ protected:
   static const uint32_t kCanvasMaxInvalidateCount = 100;
 
 
-#ifdef USE_SKIA
+#ifdef USE_SKIA_GPU
   nsRefPtr<gl::GLContext> mGLContext;
 #endif
 
