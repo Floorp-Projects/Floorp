@@ -34,9 +34,9 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 NS_IMPL_ELEMENT_CLONE(HTMLDataElement)
 
 JSObject*
-HTMLDataElement::WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+HTMLDataElement::WrapNode(JSContext* aCx, JSObject* aScope)
 {
-  return HTMLDataElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return HTMLDataElementBinding::Wrap(aCx, aScope, this);
 }
 
 void

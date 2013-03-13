@@ -78,6 +78,7 @@ partial interface Event {
 
   readonly attribute EventTarget? originalTarget;
   readonly attribute EventTarget? explicitOriginalTarget;
+  [ChromeOnly] readonly attribute boolean multipleActionsPrevented;
 
   void preventBubble();
   void preventCapture();

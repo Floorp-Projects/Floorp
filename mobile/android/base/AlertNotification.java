@@ -28,26 +28,50 @@ public class AlertNotification
     private final String mText;
     private final NotificationManager mNotificationManager;
 
-    private boolean mProgressStyle; // = false
+    private boolean mProgressStyle;
     private double mPrevPercent  = -1;
     private String mPrevAlertText = "";
 
     private static final double UPDATE_THRESHOLD = .01;
+    private Context mContext;
 
     public AlertNotification(Context aContext, int aNotificationId, int aIcon,
-                             String aTitle, String aText, long aWhen) {
+                             String aTitle, String aText, long aWhen, Uri aIconUri) {
         super(aIcon, (aText.length() > 0) ? aText : aTitle, aWhen);
 
         mIcon = aIcon;
         mTitle = aTitle;
         mText = aText;
         mId = aNotificationId;
+        mContext = aContext;
 
-        mNotificationManager = (NotificationManager)
-            aContext.getSystemService(Context.NOTIFICATION_SERVICE);
+        mNotificationManager = (NotificationManager) aContext.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        if (aIconUri == null || aIconUri.getScheme() == null)
+            return;
+
+        // Custom view
+        int layout = R.layout.notification_icon_text;
+        RemoteViews view = new RemoteViews(mContext.getPackageName(), layout);
+        try {
+            URL url = new URL(aIconUri.toString());
+            Bitmap bm = BitmapFactory.decodeStream(url.openStream());
+            view.setImageViewBitmap(R.id.notification_image, bm);
+            view.setTextViewText(R.id.notification_title, mTitle);
+            if (mText.length() > 0) {
+                view.setTextViewText(R.id.notification_text, mText);
+            }
+            contentView = view;
+        } catch (Exception e) {
+            Log.e(LOGTAG, "failed to create bitmap", e);
+        }
     }
 
-    public boolean isProgressStyle() {
+    public int getId() {
+        return mId;
+    }
+
+    public synchronized boolean isProgressStyle() {
         return mProgressStyle;
     }
 
@@ -59,34 +83,12 @@ public class AlertNotification
         mNotificationManager.cancel(mId);
     }
 
-    public void setCustomIcon(Uri aIconUri) {
-        if (aIconUri == null || aIconUri.getScheme() == null)
-            return;
-
-        // Custom view
-        int layout = R.layout.notification_icon_text;
-        RemoteViews view = new RemoteViews(GeckoApp.mAppContext.getPackageName(), layout);
-        try {
-            URL url = new URL(aIconUri.toString());
-            Bitmap bm = BitmapFactory.decodeStream(url.openStream());
-            view.setImageViewBitmap(R.id.notification_image, bm);
-            view.setTextViewText(R.id.notification_title, mTitle);
-            if (mText.length() > 0) {
-                view.setTextViewText(R.id.notification_text, mText);
-            }
-            contentView = view;
-            mNotificationManager.notify(mId, this); 
-        } catch(Exception ex) {
-            Log.e(LOGTAG, "failed to create bitmap", ex);
-        }
-    }
-
-    public void updateProgress(String aAlertText, long aProgress, long aProgressMax) {
+    public synchronized void updateProgress(String aAlertText, long aProgress, long aProgressMax) {
         if (!mProgressStyle) {
             // Custom view
             int layout =  aAlertText.length() > 0 ? R.layout.notification_progress_text : R.layout.notification_progress;
 
-            RemoteViews view = new RemoteViews(GeckoApp.mAppContext.getPackageName(), layout);
+            RemoteViews view = new RemoteViews(mContext.getPackageName(), layout);
             view.setImageViewResource(R.id.notification_image, mIcon);
             view.setTextViewText(R.id.notification_title, mTitle);
             contentView = view;

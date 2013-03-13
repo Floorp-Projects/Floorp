@@ -13,9 +13,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGTSpanElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+SVGTSpanElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return SVGTSpanElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGTSpanElementBinding::Wrap(aCx, aScope, this);
 }
 
 

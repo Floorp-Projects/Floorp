@@ -409,9 +409,9 @@ nsScreen::SlowMozUnlockOrientation()
 
 /* virtual */
 JSObject*
-nsScreen::WrapObject(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap)
+nsScreen::WrapObject(JSContext* aCx, JSObject* aScope)
 {
-  return ScreenBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return ScreenBinding::Wrap(aCx, aScope, this);
 }
 
 NS_IMPL_ISUPPORTS1(nsScreen::FullScreenEventListener, nsIDOMEventListener)

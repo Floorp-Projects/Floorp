@@ -62,7 +62,7 @@ ShapeTable::init(JSRuntime *rt, RawShape lastProp)
         return false;
 
     hashShift = HASH_BITS - sizeLog2;
-    for (Shape::Range r = lastProp->all(); !r.empty(); r.popFront()) {
+    for (Shape::Range<NoGC> r(lastProp); !r.empty(); r.popFront()) {
         Shape &shape = r.front();
         Shape **spp = search(shape.propid(), true);
 

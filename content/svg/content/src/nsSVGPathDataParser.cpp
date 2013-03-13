@@ -5,8 +5,8 @@
 
 #include "nsSVGPathDataParser.h"
 #include "nsSVGDataParser.h"
-#include "prdtoa.h"
-#include "DOMSVGPathSeg.h"
+#include "SVGPathData.h"
+#include "SVGPathSegUtils.h"
 #include <stdlib.h>
 #include <math.h>
 

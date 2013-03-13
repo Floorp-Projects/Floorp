@@ -9,7 +9,7 @@
 #include "nsCOMPtr.h"
 #include "mozilla/dom/SVGFilterElement.h"
 #include "mozilla/dom/SVGFilterElementBinding.h"
-#include "nsSVGEffects.h"
+#include "nsSVGUtils.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Filter)
 
@@ -17,9 +17,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGFilterElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+SVGFilterElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return SVGFilterElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGFilterElementBinding::Wrap(aCx, aScope, this);
 }
 
 nsSVGElement::LengthInfo SVGFilterElement::sLengthInfo[4] =
@@ -55,9 +55,9 @@ nsSVGElement::StringInfo SVGFilterElement::sStringInfo[1] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ISUPPORTS_INHERITED4(SVGFilterElement, SVGFilterElementBase,
+NS_IMPL_ISUPPORTS_INHERITED3(SVGFilterElement, SVGFilterElementBase,
                              nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement, nsIDOMSVGURIReference)
+                             nsIDOMSVGElement)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -131,16 +131,6 @@ void
 SVGFilterElement::SetFilterRes(uint32_t filterResX, uint32_t filterResY)
 {
   mIntegerPairAttributes[FILTERRES].SetBaseValues(filterResX, filterResY, this);
-}
-
-//----------------------------------------------------------------------
-// nsIDOMSVGURIReference methods
-
-NS_IMETHODIMP
-SVGFilterElement::GetHref(nsIDOMSVGAnimatedString** aHref)
-{
-  *aHref = Href().get();
-  return NS_OK;
 }
 
 already_AddRefed<nsIDOMSVGAnimatedString>
