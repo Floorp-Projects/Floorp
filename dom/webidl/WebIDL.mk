@@ -122,6 +122,7 @@ webidl_files = \
   LocalMediaStream.webidl \
   Location.webidl \
   MediaStream.webidl \
+  MessageEvent.webidl \
   MutationObserver.webidl \
   Node.webidl \
   NodeFilter.webidl \
