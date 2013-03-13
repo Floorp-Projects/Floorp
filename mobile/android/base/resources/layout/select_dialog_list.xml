@@ -4,11 +4,10 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!-- This is used for select lists for multiple selection enabled -->
-<view xmlns:android="http://schemas.android.com/apk/res/android"
-      class="android.widget.ListView"
-      android:id="@+id/select_list"
-      android:layout_width="fill_parent"
-      android:layout_height="fill_parent"
-      android:cacheColorHint="@null"
-      android:scrollbars="vertical"
-      android:overScrollMode="ifContentScrolls" />
+<ListView xmlns:android="http://schemas.android.com/apk/res/android"
+          android:id="@+id/select_list"
+          android:layout_width="fill_parent"
+          android:layout_height="fill_parent"
+          android:cacheColorHint="@null"
+          android:scrollbars="vertical"
+          android:overScrollMode="ifContentScrolls" />

@@ -45,7 +45,10 @@
         <item name="android:windowBackground">@color/background_normal</item>
     </style>
 
-    <style name="Gecko.AwesomeBar" parent="GeckoAwesomeBarBase"/>
+    <style name="Gecko.AwesomeBar" parent="GeckoAwesomeBarBase">
+        <item name="android:listViewStyle">@style/Widget.ListView</item>
+        <item name="android:expandableListViewStyle">@style/Widget.ExpandableListView</item>
+    </style>
 
     <style name="Gecko.Preferences" parent="GeckoPreferencesBase"/>
 
