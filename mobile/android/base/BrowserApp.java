@@ -326,25 +326,36 @@ abstract public class BrowserApp extends GeckoApp
             return false;
         }
 
-        // Toggle/focus the address bar on gamepad-y button.
-        if (keyCode == KeyEvent.KEYCODE_BUTTON_Y &&
+        // Gamepad support only exists in API-level >= 9
+        if (Build.VERSION.SDK_INT >= 9 &&
             (event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
-            if (mBrowserToolbar.isVisible()) {
-                if (mDynamicToolbarEnabled &&
-                    Boolean.FALSE.equals(mAboutHomeShowing)) {
-                    mBrowserToolbar.animateVisibility(false, 0);
-                    mLayerView.requestFocus();
-                } else {
-                    // Just focus the address bar when about:home is visible
-                    // or when the dynamic toolbar isn't enabled.
-                    mBrowserToolbar.requestFocusFromTouch();
-                }
-            } else {
-                mBrowserToolbar.animateVisibility(true, 0);
-                mBrowserToolbar.requestFocusFromTouch();
+            switch (keyCode) {
+                case KeyEvent.KEYCODE_BUTTON_Y:
+                    // Toggle/focus the address bar on gamepad-y button.
+                    if (mBrowserToolbar.isVisible()) {
+                        if (mDynamicToolbarEnabled &&
+                            Boolean.FALSE.equals(mAboutHomeShowing)) {
+                            mBrowserToolbar.animateVisibility(false, 0);
+                            mLayerView.requestFocus();
+                        } else {
+                            // Just focus the address bar when about:home is visible
+                            // or when the dynamic toolbar isn't enabled.
+                            mBrowserToolbar.requestFocusFromTouch();
+                        }
+                    } else {
+                        mBrowserToolbar.animateVisibility(true, 0);
+                        mBrowserToolbar.requestFocusFromTouch();
+                    }
+                    return true;
+                case KeyEvent.KEYCODE_BUTTON_L1:
+                    // Go back on L1
+                    Tabs.getInstance().getSelectedTab().doBack();
+                    return true;
+                case KeyEvent.KEYCODE_BUTTON_R1:
+                    // Go forward on R1
+                    Tabs.getInstance().getSelectedTab().doForward();
+                    return true;
             }
-
-            return true;
         }
 
         return false;
