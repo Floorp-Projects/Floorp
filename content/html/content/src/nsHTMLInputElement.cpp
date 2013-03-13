@@ -2599,9 +2599,11 @@ nsHTMLInputElement::SetValueOfRangeForUserEvent(double aValue)
   nsAutoString val;
   ConvertNumberToString(aValue, val);
   SetValueInternal(val, true, true);
-  nsRangeFrame* frame = do_QueryFrame(GetPrimaryFrame());
+  nsIFrame* frame = GetPrimaryFrame();
   if (frame) {
-    frame->UpdateThumbPositionForValueChange();
+    // Trigger reflow to update the position of the thumb:
+    frame->PresContext()->GetPresShell()->
+      FrameNeedsReflow(frame, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
   }
 }
 
