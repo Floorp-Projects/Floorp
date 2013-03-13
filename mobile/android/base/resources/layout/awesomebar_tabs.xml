@@ -39,7 +39,10 @@
         <android.support.v4.view.ViewPager
                         android:id="@+id/tabviewpager"
                         android:layout_width="fill_parent"
-                        android:layout_height="fill_parent"/>
+                        android:layout_height="fill_parent"
+                        android:background="#EEF1F5"
+                        android:paddingLeft="@dimen/awesomebar_list_padding"
+                        android:paddingRight="@dimen/awesomebar_list_padding"/>
 
     </LinearLayout>
 

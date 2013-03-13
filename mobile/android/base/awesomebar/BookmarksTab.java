@@ -59,7 +59,7 @@ public class BookmarksTab extends AwesomeBarTab {
     @Override
     public View getView() {
         if (mView == null) {
-            mView = (LayoutInflater.from(mContext).inflate(R.layout.awesomebar_list, null));
+            mView = new ListView(mContext, null);
             ((Activity)mContext).registerForContextMenu(mView);
             mView.setTag(TAG);
             mView.setOnTouchListener(mListListener);

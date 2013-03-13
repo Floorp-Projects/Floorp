@@ -8,7 +8,8 @@
               android:layout_height="fill_parent"
               android:orientation="vertical">
 
-    <include layout="@layout/awesomebar_list"
-             android:id="@+id/awesomebar_list"/>
+    <ListView android:id="@+id/awesomebar_list"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"/>
 
 </LinearLayout>
