@@ -212,7 +212,6 @@ protected:
   bool     IsReadWriteLocked() const { return IsReadWriteLock(mLock); }
 
   bool     GetScreenExtInternal(RECT &aScreenExt);
-  bool     GetSelectionInternal(TS_SELECTION_ACP &aSelectionACP);
   // If aDispatchTextEvent is true, this method will dispatch text event if
   // this is called during IME composing.  aDispatchTextEvent should be true
   // only when this is called from SetSelection.  Because otherwise, the text
@@ -278,13 +277,6 @@ protected:
     // event.
     nsString mLastData;
 
-    // "Current selection" during a composition, in ACP offsets.
-    // We use a fake selection during a composition because editor code doesn't
-    // like us accessing the actual selection during a composition. So we leave
-    // the actual selection alone and get/set mSelection instead
-    // during GetSelection/SetSelection calls.
-    TS_SELECTION_ACP mSelection;
-
     // The start and length of the current active composition, in ACP offsets
     LONG mStart;
     LONG mLength;
@@ -292,21 +284,6 @@ protected:
     bool IsComposing() const
     {
       return (mView != nullptr);
-    }
-
-    bool IsSelectionCollapsed() const
-    {
-      return (mSelection.acpStart == mSelection.acpEnd);
-    }
-
-    LONG MinSelectionOffset() const
-    {
-      return std::min(mSelection.acpStart, mSelection.acpEnd);
-    }
-
-    LONG MaxSelectionOffset() const
-    {
-      return std::max(mSelection.acpStart, mSelection.acpEnd);
     }
 
     LONG StringEndOffset() const
@@ -345,6 +322,125 @@ protected:
   // locked.  With mComposition, query methods can returns the text content
   // information.
   Composition mComposition;
+
+  class Selection
+  {
+  public:
+    Selection() : mDirty(true) {}
+
+    bool IsDirty() const { return mDirty; };
+    void MarkDirty() { mDirty = true; }
+
+    TS_SELECTION_ACP& ACP()
+    {
+      MOZ_ASSERT(!mDirty);
+      return mACP;
+    }
+
+    void SetSelection(const TS_SELECTION_ACP& aSelection)
+    {
+      mDirty = false;
+      mACP = aSelection;
+      // Selection end must be active in our editor.
+      if (mACP.style.ase != TS_AE_START) {
+        mACP.style.ase = TS_AE_END;
+      }
+      // We're not support interim char selection for now.
+      // XXX Probably, this is necessary for supporting South Asian languages.
+      mACP.style.fInterimChar = FALSE;
+    }
+
+    void SetSelection(uint32_t aStart, uint32_t aLength, bool aReversed)
+    {
+      mDirty = false;
+      mACP.acpStart = static_cast<LONG>(aStart);
+      mACP.acpEnd = static_cast<LONG>(aStart + aLength);
+      mACP.style.ase = aReversed ? TS_AE_START : TS_AE_END;
+      mACP.style.fInterimChar = FALSE;
+    }
+
+    bool IsCollapsed() const
+    {
+      MOZ_ASSERT(!mDirty);
+      return (mACP.acpStart == mACP.acpEnd);
+    }
+
+    void CollapseAt(uint32_t aOffset)
+    {
+      mDirty = false;
+      mACP.acpStart = mACP.acpEnd = static_cast<LONG>(aOffset);
+      mACP.style.ase = TS_AE_END;
+      mACP.style.fInterimChar = FALSE;
+    }
+
+    LONG MinOffset() const
+    {
+      MOZ_ASSERT(!mDirty);
+      LONG min = std::min(mACP.acpStart, mACP.acpEnd);
+      MOZ_ASSERT(min >= 0);
+      return min;
+    }
+
+    LONG MaxOffset() const
+    {
+      MOZ_ASSERT(!mDirty);
+      LONG max = std::max(mACP.acpStart, mACP.acpEnd);
+      MOZ_ASSERT(max >= 0);
+      return max;
+    }
+
+    LONG StartOffset() const
+    {
+      MOZ_ASSERT(!mDirty);
+      MOZ_ASSERT(mACP.acpStart >= 0);
+      return mACP.acpStart;
+    }
+
+    LONG EndOffset() const
+    {
+      MOZ_ASSERT(!mDirty);
+      MOZ_ASSERT(mACP.acpEnd >= 0);
+      return mACP.acpEnd;
+    }
+
+    LONG Length() const
+    {
+      MOZ_ASSERT(!mDirty);
+      MOZ_ASSERT(mACP.acpEnd >= mACP.acpStart);
+      return std::abs(mACP.acpEnd - mACP.acpStart);
+    }
+
+    bool IsReversed() const
+    {
+      MOZ_ASSERT(!mDirty);
+      return (mACP.style.ase == TS_AE_START);
+    }
+
+    TsActiveSelEnd ActiveSelEnd() const
+    {
+      MOZ_ASSERT(!mDirty);
+      return mACP.style.ase;
+    }
+
+    bool IsInterimChar() const
+    {
+      MOZ_ASSERT(!mDirty);
+      return (mACP.style.fInterimChar != FALSE);
+    }
+
+  private:
+    TS_SELECTION_ACP mACP;
+    bool mDirty;
+  };
+  // Don't access mSelection directly except at calling MarkDirty().
+  // Use CurrentSelection() instead.
+  Selection mSelection;
+
+  // Get "current selection" while the document is locked.  The selection is
+  // NOT modified immediately during document lock.  The pending changes will
+  // be flushed at unlocking the document.  The "current selection" is the
+  // modified selection during document lock.
+  Selection& CurrentSelection();
 
   struct PendingAction MOZ_FINAL
   {
