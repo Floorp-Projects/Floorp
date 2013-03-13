@@ -203,7 +203,7 @@ namespace {
 class NS_STACK_CLASS MutexLock
 {
 public:
-    MutexLock(Mutex& aMutex)
+    MutexLock(SafeMutex& aMutex)
         : mMutex(aMutex)
         , mLocked(false)
     {
@@ -231,7 +231,7 @@ public:
     }
 
 private:
-    Mutex& mMutex;
+    SafeMutex& mMutex;
     bool mLocked;
 };
 
@@ -852,7 +852,7 @@ nsFactoryEntry *
 nsComponentManagerImpl::GetFactoryEntry(const char *aContractID,
                                         uint32_t aContractIDLen)
 {
-    MutexAutoLock lock(mLock);
+    SafeMutexAutoLock lock(mLock);
     return mContractIDs.Get(nsDependentCString(aContractID, aContractIDLen));
 }
 
@@ -860,7 +860,7 @@ nsComponentManagerImpl::GetFactoryEntry(const char *aContractID,
 nsFactoryEntry *
 nsComponentManagerImpl::GetFactoryEntry(const nsCID &aClass)
 {
-    MutexAutoLock lock(mLock);
+    SafeMutexAutoLock lock(mLock);
     return mFactories.Get(aClass);
 }
 
@@ -1220,7 +1220,7 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
         }
 
 
-        MutexAutoUnlock unlockPending(mLock);
+        SafeMutexAutoUnlock unlockPending(mLock);
 
         if (!currentThread) {
             currentThread = NS_GetCurrentThread();
@@ -1253,7 +1253,7 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
 
     nsresult rv;
     {
-        MutexAutoUnlock unlock(mLock);
+        SafeMutexAutoUnlock unlock(mLock);
         rv = CreateInstance(aClass, nullptr, aIID, getter_AddRefs(service));
     }
     if (NS_SUCCEEDED(rv) && !service) {
@@ -1310,7 +1310,7 @@ nsComponentManagerImpl::IsServiceInstantiated(const nsCID & aClass,
     nsFactoryEntry* entry;
 
     {
-        MutexAutoLock lock(mLock);
+        SafeMutexAutoLock lock(mLock);
         entry = mFactories.Get(aClass);
     }
 
@@ -1347,7 +1347,7 @@ NS_IMETHODIMP nsComponentManagerImpl::IsServiceInstantiatedByContractID(const ch
     nsresult rv = NS_ERROR_SERVICE_NOT_AVAILABLE;
     nsFactoryEntry *entry;
     {
-        MutexAutoLock lock(mLock);
+        SafeMutexAutoLock lock(mLock);
         entry = mContractIDs.Get(nsDependentCString(aContractID));
     }
 
@@ -1412,7 +1412,7 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
             return NS_ERROR_NOT_AVAILABLE;
         }
 
-        MutexAutoUnlock unlockPending(mLock);
+        SafeMutexAutoUnlock unlockPending(mLock);
 
         if (!currentThread) {
             currentThread = NS_GetCurrentThread();
@@ -1445,7 +1445,7 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
 
     nsresult rv;
     {
-        MutexAutoUnlock unlock(mLock);
+        SafeMutexAutoUnlock unlock(mLock);
         rv = CreateInstanceByContractID(aContractID, nullptr, aIID,
                                         getter_AddRefs(service));
     }
@@ -1505,7 +1505,7 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass,
         if (!aContractID)
             return NS_ERROR_INVALID_ARG;
 
-        MutexAutoLock lock(mLock);
+        SafeMutexAutoLock lock(mLock);
         nsFactoryEntry* oldf = mFactories.Get(aClass);
         if (!oldf)
             return NS_ERROR_FACTORY_NOT_REGISTERED;
@@ -1516,7 +1516,7 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass,
 
     nsAutoPtr<nsFactoryEntry> f(new nsFactoryEntry(aClass, aFactory));
 
-    MutexAutoLock lock(mLock);
+    SafeMutexAutoLock lock(mLock);
     nsFactoryEntry* oldf = mFactories.Get(aClass);
     if (oldf)
         return NS_ERROR_FACTORY_EXISTS;
@@ -1539,7 +1539,7 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID& aClass,
     nsCOMPtr<nsISupports> dyingServiceObject;
 
     {
-        MutexAutoLock lock(mLock);
+        SafeMutexAutoLock lock(mLock);
         nsFactoryEntry* f = mFactories.Get(aClass);
         if (!f || f->mFactory != aFactory)
             return NS_ERROR_FACTORY_NOT_REGISTERED;
@@ -1666,7 +1666,7 @@ nsComponentManagerImpl::ContractIDToCID(const char *aContractID,
                                         nsCID * *_retval)
 {
     {
-        MutexAutoLock lock(mLock);
+        SafeMutexAutoLock lock(mLock);
         nsFactoryEntry* entry = mContractIDs.Get(nsDependentCString(aContractID));
         if (entry) {
             *_retval = (nsCID*) NS_Alloc(sizeof(nsCID));
@@ -1792,7 +1792,7 @@ nsFactoryEntry::GetFactory()
         if (!factory)
             return NULL;
 
-        MutexAutoLock lock(nsComponentManagerImpl::gComponentManager->mLock);
+        SafeMutexAutoLock lock(nsComponentManagerImpl::gComponentManager->mLock);
         // Threads can race to set mFactory
         if (!mFactory) {
             factory.swap(mFactory);
