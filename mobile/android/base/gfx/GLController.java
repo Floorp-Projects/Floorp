@@ -119,6 +119,7 @@ public class GLController {
         // doing its thing.
 
         mView.post(new Runnable() {
+            @Override
             public void run() {
                 // If we haven't yet created the compositor, and the GfxInfoThread
                 // isn't done it's data gathering activities, then postpone creating

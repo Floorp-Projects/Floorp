@@ -1,18 +1,9 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@.tests;
 
-import @ANDROID_PACKAGE_NAME@.*;
-import android.app.Activity;
-import android.content.Context;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.Bitmap;
 import java.lang.ClassLoader;
-import java.util.ArrayList;
-import java.io.Writer;
 import java.io.InputStream;
-import java.io.ByteArrayInputStream;
 import java.lang.reflect.Method;
-import java.io.StringWriter;
 
 /**
  * A basic jar reader test. Tests reading a png from fennec's apk, as well
