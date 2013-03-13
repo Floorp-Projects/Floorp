@@ -852,6 +852,10 @@ abstract public class GeckoApp
                 handleClearHistory();
             } else if (event.equals("Update:Check")) {
                 startService(new Intent(UpdateServiceHelper.ACTION_CHECK_FOR_UPDATE, null, this, UpdateService.class));
+            } else if (event.equals("Update:Download")) {
+                startService(new Intent(UpdateServiceHelper.ACTION_DOWNLOAD_UPDATE, null, this, UpdateService.class));
+            } else if (event.equals("Update:Install")) {
+                startService(new Intent(UpdateServiceHelper.ACTION_APPLY_UPDATE, null, this, UpdateService.class));
             } else if (event.equals("PrivateBrowsing:Data")) {
                 // null strings return "null" (http://code.google.com/p/android/issues/detail?id=13830)
                 if (message.isNull("session")) {
@@ -1676,6 +1680,8 @@ abstract public class GeckoApp
         registerEventListener("Wallpaper:Set");
         registerEventListener("Sanitize:ClearHistory");
         registerEventListener("Update:Check");
+        registerEventListener("Update:Download");
+        registerEventListener("Update:Install");
         registerEventListener("PrivateBrowsing:Data");
 
         if (SmsManager.getInstance() != null) {
@@ -2066,6 +2072,8 @@ abstract public class GeckoApp
         unregisterEventListener("Wallpaper:Set");
         unregisterEventListener("Sanitize:ClearHistory");
         unregisterEventListener("Update:Check");
+        unregisterEventListener("Update:Download");
+        unregisterEventListener("Update:Install");
         unregisterEventListener("PrivateBrowsing:Data");
 
         deleteTempFiles();
@@ -2440,8 +2448,8 @@ abstract public class GeckoApp
         }
     }
 
-    public void notifyCheckUpdateResult(boolean result) {
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Update:CheckResult", result ? "true" : "false"));
+    public void notifyCheckUpdateResult(String result) {
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Update:CheckResult", result));
     }
 
     protected void connectGeckoLayerClient() {
