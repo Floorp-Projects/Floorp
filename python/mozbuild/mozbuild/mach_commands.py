@@ -234,6 +234,13 @@ class Package(MachCommandBase):
     def package(self):
         return self._run_make(directory=".", target='package', ensure_exit_code=False)
 
+@CommandProvider
+class Buildsymbols(MachCommandBase):
+    """Produce a package of debug symbols suitable for use with Breakpad."""
+
+    @Command('buildsymbols', help='Produce a package of Breakpad-format symbols.')
+    def buildsymbols(self):
+        return self._run_make(directory=".", target='buildsymbols', ensure_exit_code=False)
 
 @CommandProvider
 class Makefiles(MachCommandBase):
