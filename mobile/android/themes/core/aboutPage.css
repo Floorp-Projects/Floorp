@@ -59,7 +59,9 @@ body {
 
 #update-message-checking,
 #update-message-none,
-#update-message-found {
+#update-message-found,
+#update-message-downloading,
+#update-message-downloaded {
   display: none;
 }
 
