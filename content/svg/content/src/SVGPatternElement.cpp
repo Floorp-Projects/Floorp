@@ -52,9 +52,9 @@ nsSVGElement::StringInfo SVGPatternElement::sStringInfo[1] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ISUPPORTS_INHERITED3(SVGPatternElement, SVGPatternElementBase,
+NS_IMPL_ISUPPORTS_INHERITED4(SVGPatternElement, SVGPatternElementBase,
                              nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement)
+                             nsIDOMSVGElement, nsIDOMSVGUnitTypes)
 
 //----------------------------------------------------------------------
 // Implementation

@@ -55,9 +55,9 @@ nsSVGElement::StringInfo SVGFilterElement::sStringInfo[1] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ISUPPORTS_INHERITED3(SVGFilterElement, SVGFilterElementBase,
+NS_IMPL_ISUPPORTS_INHERITED4(SVGFilterElement, SVGFilterElementBase,
                              nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement)
+                             nsIDOMSVGElement, nsIDOMSVGUnitTypes)
 
 //----------------------------------------------------------------------
 // Implementation
