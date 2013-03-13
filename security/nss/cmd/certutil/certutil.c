@@ -313,7 +313,7 @@ CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
 		PRUint32 trailerLen = PL_strlen(trailer);
 		SECITEM_AllocItem(NULL, result,
 				  headerLen + obufLen + trailerLen);
-		if (!result->data) {
+		if (result->data) {
 		    PORT_Memcpy(result->data, header, headerLen);
 		    PORT_Memcpy(result->data + headerLen, obuf, obufLen);
 		    PORT_Memcpy(result->data + headerLen + obufLen,
