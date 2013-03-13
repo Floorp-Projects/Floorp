@@ -745,7 +745,7 @@ class Mochitest(object):
     # then again to actually run mochitest
     if options.timeout:
       timeout = options.timeout + 30
-    elif not options.autorun:
+    elif options.debugger or not options.autorun:
       timeout = None
     else:
       timeout = 330.0 # default JS harness timeout is 300 seconds
