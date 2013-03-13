@@ -280,6 +280,12 @@ Mark(JSTracer *trc, HeapPtr<ion::IonCode> *code, const char *name)
     MarkIonCode(trc, code, name);
 }
 
+inline void
+Mark(JSTracer *trc, JSObject **objp, const char *name)
+{
+    MarkObjectUnbarriered(trc, objp, name);
+}
+
 bool
 IsCellMarked(Cell **thingp);
 
