@@ -116,7 +116,7 @@ class PICStubCompiler : public BaseCompiler
     void spew(const char *event, const char *op) {
 #ifdef JS_METHODJIT_SPEW
         JaegerSpew(JSpew_PICs, "%s %s: %s (%s: %d)\n",
-                   type, event, op, f.script()->filename, CurrentLine(cx));
+                   type, event, op, f.script()->filename(), CurrentLine(cx));
 #endif
     }
 };
@@ -2164,7 +2164,7 @@ BaseIC::spew(VMFrame &f, const char *event, const char *message)
 #ifdef JS_METHODJIT_SPEW
     JaegerSpew(JSpew_PICs, "%s %s: %s (%s: %d)\n",
                js_CodeName[JSOp(*f.pc())], event, message,
-               f.cx->fp()->script()->filename, CurrentLine(f.cx));
+               f.cx->fp()->script()->filename(), CurrentLine(f.cx));
 #endif
 }
 
@@ -2406,7 +2406,7 @@ GetElementIC::attachGetProp(VMFrame &f, HandleObject obj, HandleValue v, HandleP
     Latin1CharsZ latin1 = LossyTwoByteCharsToNewLatin1CharsZ(cx, v.toString()->ensureLinear(cx)->range());
     JaegerSpew(JSpew_PICs, "generated %s stub at %p for atom %p (\"%s\") shape %p (%s: %d)\n",
                js_CodeName[JSOp(*f.pc())], cs.executableAddress(), (void*)name, latin1.get(),
-               (void*)holder->lastProperty(), cx->fp()->script()->filename,
+               (void*)holder->lastProperty(), cx->fp()->script()->filename(),
                CurrentLine(cx));
     JS_free(latin1);
 #endif

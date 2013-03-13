@@ -3,3 +3,36 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'nsIConsoleListener.idl',
+    'nsIConsoleMessage.idl',
+    'nsIConsoleService.idl',
+    'nsICycleCollectorListener.idl',
+    'nsIDebug.idl',
+    'nsIDebug2.idl',
+    'nsIErrorService.idl',
+    'nsIException.idl',
+    'nsIExceptionService.idl',
+    'nsIGZFileWriter.idl',
+    'nsIInterfaceRequestor.idl',
+    'nsIMemory.idl',
+    'nsIMemoryInfoDumper.idl',
+    'nsIMemoryReporter.idl',
+    'nsIMessageLoop.idl',
+    'nsIMutable.idl',
+    'nsIProgrammingLanguage.idl',
+    'nsISupports.idl',
+    'nsITraceRefcnt.idl',
+    'nsIUUIDGenerator.idl',
+    'nsIVersionComparator.idl',
+    'nsIWeakReference.idl',
+    'nsrootidl.idl',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    XPIDL_SOURCES += [
+        'nsIMacUtils.idl',
+    ]
+
+XPIDL_MODULE = 'xpcom_base'
+

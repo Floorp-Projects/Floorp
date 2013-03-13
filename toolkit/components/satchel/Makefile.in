@@ -16,13 +16,6 @@ IS_COMPONENT = 1
 LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 
-XPIDLSRCS = \
-  nsIFormAutoComplete.idl \
-  nsIFormFillController.idl \
-  nsIFormHistory.idl \
-  nsIInputListAutoComplete.idl \
-  $(NULL)
-
 LOCAL_INCLUDES = \
   -I$(srcdir)/../build \
   $(NULL)

@@ -11,13 +11,5 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= appcomps
-XPIDL_MODULE	= xpautocomplete
-
-XPIDLSRCS	= \
-		nsIAutoCompleteListener.idl \
-		nsIAutoCompleteResults.idl \
-		nsIAutoCompleteSession.idl \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

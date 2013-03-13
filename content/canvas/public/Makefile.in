@@ -11,8 +11,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= content
-XPIDL_MODULE = content_canvas
-
 EXPORTS_NAMESPACES = mozilla/ipc
 
 EXPORTS		= \
@@ -27,10 +25,6 @@ EXPORTS_mozilla/ipc = \
 		DocumentRendererShmemParent.h \
 		DocumentRendererNativeIDChild.h \
 		DocumentRendererNativeIDParent.h \
-		$(NULL)
-
-XPIDLSRCS	= \
-		nsICanvasGLPrivate.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

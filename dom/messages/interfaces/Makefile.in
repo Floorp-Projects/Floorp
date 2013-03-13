@@ -9,17 +9,7 @@ VPATH            = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-XPIDL_MODULE = dom_messages
-
 include $(topsrcdir)/dom/dom-config.mk
-
-XPIDLSRCS = \
-  nsIDOMNavigatorSystemMessages.idl \
-  nsISystemMessagesInternal.idl \
-  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-XPIDL_FLAGS += \
-  -I$(topsrcdir)/dom/interfaces/base \
-  $(NULL)

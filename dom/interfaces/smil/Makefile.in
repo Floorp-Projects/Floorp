@@ -12,17 +12,5 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dom
-XPIDL_MODULE	= dom_smil
-
-XPIDLSRCS	= \
-		nsIDOMTimeEvent.idl \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
-XPIDL_FLAGS += \
-  -I$(topsrcdir)/dom/interfaces/base \
-  -I$(topsrcdir)/dom/interfaces/core \
-  -I$(topsrcdir)/dom/interfaces/events \
-  -I$(topsrcdir)/dom/interfaces/svg \
-  $(NULL)

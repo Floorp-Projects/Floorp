@@ -17,15 +17,4 @@ SDK_HEADERS         = \
                 nsEmbedCID.h \
                 $(NULL)
 
-SDK_XPIDLSRCS   = \
-                nsIWindowCreator.idl \
-                $(NULL)
-
-
-XPIDLSRCS	    = \
-                nsIWindowCreator2.idl \
-                nsIWindowProvider.idl \
-                nsIDialogCreator.idl \
-                $(NULL)
-
 include $(topsrcdir)/config/rules.mk

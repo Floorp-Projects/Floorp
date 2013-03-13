@@ -15,13 +15,6 @@ LIBRARY_NAME = download_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
 
-XPIDLSRCS = \
-  nsIDownload.idl \
-  nsIDownloadManager.idl \
-  nsIDownloadManagerUI.idl \
-  nsIDownloadProgressListener.idl \
-  $(NULL)
-
 CPPSRCS = \
   nsDownloadManager.cpp \
   SQLFunctions.cpp \

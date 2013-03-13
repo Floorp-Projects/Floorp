@@ -97,17 +97,6 @@ EXPORTS += \
 		nsExternalHelperAppService.h \
 		$(NULL)
 
-XPIDLSRCS = \
-	nsCExternalHandlerService.idl	\
-	nsIExternalProtocolService.idl \
-	nsIExternalHelperAppService.idl	\
-	nsIHelperAppLauncherDialog.idl \
-	nsIContentDispatchChooser.idl \
-	nsIHandlerService.idl	\
-	nsIExternalSharingAppService.idl \
-	nsIExternalURLHandlerService.idl \
-	$(NULL)
-
 CPPSRCS	= \
 	nsExternalHelperAppService.cpp	\
 	nsExternalProtocolHandler.cpp \

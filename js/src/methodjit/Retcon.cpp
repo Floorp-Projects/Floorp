@@ -401,7 +401,7 @@ Recompiler::clearStackReferences(FreeOp *fop, JSScript *script)
     JS_ASSERT(script->hasMJITInfo());
 
     JaegerSpew(JSpew_Recompile, "recompiling script (file \"%s\") (line \"%d\") (length \"%d\") (usecount=\"%d\")\n",
-               script->filename, script->lineno, script->length, (int) script->getUseCount());
+               script->filename(), script->lineno, script->length, (int) script->getUseCount());
 
     JSCompartment *comp = script->compartment();
     types::AutoEnterAnalysis enter(fop, comp);

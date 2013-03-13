@@ -11,8 +11,4 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE                = zipwriter
 
-XPIDLSRCS = \
-  nsIZipWriter.idl \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk

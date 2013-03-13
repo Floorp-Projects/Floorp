@@ -375,6 +375,7 @@
 
           let json = { types: ["input-text"], string: "" };
           if (selectionStart != selectionEnd) {
+            json.types.push("cut");
             json.types.push("copy");
             json.string = aTextbox.value.slice(selectionStart, selectionEnd);
           } else if (aTextbox.value) {

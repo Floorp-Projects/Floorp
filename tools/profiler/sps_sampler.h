@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef TOOLS_SPS_SAMPLER_H_
+#define TOOLS_SPS_SAMPLER_H_
+
 #include <stdlib.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -26,12 +29,11 @@
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
 
-struct ProfileStack;
+struct PseudoStack;
 class TableTicker;
 class JSCustomObject;
 
-extern mozilla::ThreadLocal<ProfileStack *> tlsStack;
-extern mozilla::ThreadLocal<TableTicker *> tlsTicker;
+extern mozilla::ThreadLocal<PseudoStack *> tlsPseudoStack;
 extern bool stack_key_initialized;
 
 #ifndef SAMPLE_FUNCTION_NAME
@@ -44,18 +46,73 @@ extern bool stack_key_initialized;
 # endif
 #endif
 
-#define SAMPLER_INIT() mozilla_sampler_init()
-#define SAMPLER_SHUTDOWN() mozilla_sampler_shutdown()
-#define SAMPLER_START(entries, interval, features, featureCount) mozilla_sampler_start(entries, interval, features, featureCount)
-#define SAMPLER_STOP() mozilla_sampler_stop()
-#define SAMPLER_IS_ACTIVE() mozilla_sampler_is_active()
-#define SAMPLER_RESPONSIVENESS(time) mozilla_sampler_responsiveness(time)
-#define SAMPLER_GET_RESPONSIVENESS() mozilla_sampler_get_responsiveness()
-#define SAMPLER_FRAME_NUMBER(frameNumber) mozilla_sampler_frame_number(frameNumber)
-#define SAMPLER_SAVE() mozilla_sampler_save()
-#define SAMPLER_GET_PROFILE() mozilla_sampler_get_profile()
-#define SAMPLER_GET_PROFILE_DATA(ctx) mozilla_sampler_get_profile_data(ctx)
-#define SAMPLER_GET_FEATURES() mozilla_sampler_get_features()
+/* Returns true if env var SPS_NEW is set to anything, else false. */
+extern bool sps_version2();
+
+#define SAMPLER_INIT() \
+  do { \
+    if (!sps_version2()) mozilla_sampler_init1(); \
+                    else mozilla_sampler_init2(); \
+  } while (0)
+
+#define SAMPLER_SHUTDOWN() \
+  do { \
+    if (!sps_version2()) mozilla_sampler_shutdown1(); \
+                    else mozilla_sampler_shutdown2(); \
+  } while (0)
+
+#define SAMPLER_START(entries, interval, features, featureCount) \
+  do { \
+    if (!sps_version2()) \
+      mozilla_sampler_start1(entries, interval, features, featureCount); \
+    else \
+      mozilla_sampler_start2(entries, interval, features, featureCount); \
+  } while (0)
+
+#define SAMPLER_STOP() \
+  do { \
+    if (!sps_version2()) mozilla_sampler_stop1(); \
+                    else mozilla_sampler_stop2(); \
+  } while (0)
+
+#define SAMPLER_IS_ACTIVE() \
+    (!sps_version2() ? mozilla_sampler_is_active1() \
+                     : mozilla_sampler_is_active2() )
+
+#define SAMPLER_RESPONSIVENESS(time) \
+  do { \
+    if (!sps_version2()) mozilla_sampler_responsiveness1(time); \
+                    else mozilla_sampler_responsiveness2(time); \
+  } while (0)
+
+#define SAMPLER_GET_RESPONSIVENESS() \
+    (!sps_version2() ? mozilla_sampler_get_responsiveness1() \
+                     : mozilla_sampler_get_responsiveness2() )
+
+#define SAMPLER_FRAME_NUMBER(frameNumber) \
+  do { \
+    if (!sps_version2()) mozilla_sampler_frame_number1(frameNumber); \
+                    else mozilla_sampler_frame_number2(frameNumber); \
+  } while (0)
+
+#define SAMPLER_SAVE() \
+  do { \
+    if (!sps_version2()) mozilla_sampler_save1(); \
+                    else mozilla_sampler_save2(); \
+  } while (0)
+
+#define SAMPLER_GET_PROFILE() \
+   (!sps_version2() ? mozilla_sampler_get_profile1() \
+                    : mozilla_sampler_get_profile2() )
+
+#define SAMPLER_GET_PROFILE_DATA(ctx) \
+   (!sps_version2() ? mozilla_sampler_get_profile_data1(ctx) \
+                    : mozilla_sampler_get_profile_data2(ctx) )
+
+#define SAMPLER_GET_FEATURES() \
+   (!sps_version2() ? mozilla_sampler_get_features1() \
+                    : mozilla_sampler_get_features2() )
+
 // we want the class and function name but can't easily get that using preprocessor macros
 // __func__ doesn't have the class name and __PRETTY_FUNCTION__ has the parameters
 
@@ -70,7 +127,23 @@ extern bool stack_key_initialized;
 #define SAMPLE_MAIN_THREAD_LABEL_PRINTF(name_space, info, ...)  MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread"); mozilla::SamplerStackFramePrintfRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__, __VA_ARGS__)
 #define SAMPLE_MAIN_THREAD_MARKER(info)  MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread"); mozilla_sampler_add_marker(info)
 
-#define SAMPLER_PRINT_LOCATION() mozilla_sampler_print_location()
+#define SAMPLER_PRINT_LOCATION() \
+    do { \
+      if (!sps_version2()) mozilla_sampler_print_location1(); \
+                      else mozilla_sampler_print_location2(); \
+    } while (0)
+
+#define SAMPLER_LOCK() \
+    do { \
+      if (!sps_version2()) mozilla_sampler_lock1(); \
+                      else mozilla_sampler_lock2(); \
+    } while (0)
+
+#define SAMPLER_UNLOCK() \
+    do { \
+      if (!sps_version2()) mozilla_sampler_unlock1(); \
+                      else mozilla_sampler_unlock2(); \
+    } while (0)
 
 /* we duplicate this code here to avoid header dependencies
  * which make it more difficult to include in other places */
@@ -165,31 +238,63 @@ LinuxKernelMemoryBarrierFunc pLinuxKernelMemoryBarrier __attribute__((weak)) =
 # error "Memory clobber not supported for your platform."
 #endif
 
-// Returns a handdle to pass on exit. This can check that we are popping the
+// Returns a handle to pass on exit. This can check that we are popping the
 // correct callstack.
-inline void* mozilla_sampler_call_enter(const char *aInfo, void *aFrameAddress = NULL, bool aCopy = false, uint32_t line = 0);
+inline void* mozilla_sampler_call_enter(const char *aInfo, void *aFrameAddress = NULL,
+                                        bool aCopy = false, uint32_t line = 0);
 inline void  mozilla_sampler_call_exit(void* handle);
 inline void  mozilla_sampler_add_marker(const char *aInfo);
 
-void mozilla_sampler_start(int aEntries, int aInterval, const char** aFeatures, uint32_t aFeatureCount);
-void mozilla_sampler_stop();
-bool mozilla_sampler_is_active();
-void mozilla_sampler_responsiveness(TimeStamp time);
-void mozilla_sampler_frame_number(int frameNumber);
-const double* mozilla_sampler_get_responsiveness();
-void mozilla_sampler_save();
-char* mozilla_sampler_get_profile();
-JSObject *mozilla_sampler_get_profile_data(JSContext *aCx);
-const char** mozilla_sampler_get_features();
-void mozilla_sampler_init();
-void mozilla_sampler_shutdown();
-void mozilla_sampler_print_location();
+void mozilla_sampler_start1(int aEntries, int aInterval, const char** aFeatures,
+                            uint32_t aFeatureCount);
+void mozilla_sampler_start2(int aEntries, int aInterval, const char** aFeatures,
+                            uint32_t aFeatureCount);
+
+void mozilla_sampler_stop1();
+void mozilla_sampler_stop2();
+
+bool mozilla_sampler_is_active1();
+bool mozilla_sampler_is_active2();
+
+void mozilla_sampler_responsiveness1(TimeStamp time);
+void mozilla_sampler_responsiveness2(TimeStamp time);
+
+void mozilla_sampler_frame_number1(int frameNumber);
+void mozilla_sampler_frame_number2(int frameNumber);
+
+const double* mozilla_sampler_get_responsiveness1();
+const double* mozilla_sampler_get_responsiveness2();
+
+void mozilla_sampler_save1();
+void mozilla_sampler_save2();
+
+char* mozilla_sampler_get_profile1();
+char* mozilla_sampler_get_profile2();
+
+JSObject *mozilla_sampler_get_profile_data1(JSContext *aCx);
+JSObject *mozilla_sampler_get_profile_data2(JSContext *aCx);
+
+const char** mozilla_sampler_get_features1();
+const char** mozilla_sampler_get_features2();
+
+void mozilla_sampler_init1();
+void mozilla_sampler_init2();
+
+void mozilla_sampler_shutdown1();
+void mozilla_sampler_shutdown2();
+
+void mozilla_sampler_print_location1();
+void mozilla_sampler_print_location2();
+
 // Lock the profiler. When locked the profiler is (1) stopped,
 // (2) profile data is cleared, (3) profiler-locked is fired.
 // This is used to lock down the profiler during private browsing
-void mozilla_sampler_lock();
+void mozilla_sampler_lock1();
+void mozilla_sampler_lock2();
+
 // Unlock the profiler, leaving it stopped and fires profiler-unlocked.
-void mozilla_sampler_unlock();
+void mozilla_sampler_unlock1();
+void mozilla_sampler_unlock2();
 
 namespace mozilla {
 
@@ -211,7 +316,7 @@ class NS_STACK_CLASS SamplerStackFramePrintfRAII {
 public:
   // we only copy the strings at save time, so to take multiple parameters we'd need to copy them then.
   SamplerStackFramePrintfRAII(const char *aDefault, uint32_t line, const char *aFormat, ...) {
-    if (mozilla_sampler_is_active()) {
+    if (SAMPLER_IS_ACTIVE()) {
       va_list args;
       va_start(args, aFormat);
       char buff[SAMPLER_MAX_STRING];
@@ -273,13 +378,14 @@ public:
   }
 };
 
-// the SamplerStack members are read by signal
+// the PseudoStack members are read by signal
 // handlers, so the mutation of them needs to be signal-safe.
-struct ProfileStack
+struct PseudoStack
 {
 public:
-  ProfileStack()
+  PseudoStack()
     : mStackPointer(0)
+    , mSignalLock(false)
     , mMarkerPointer(0)
     , mQueueClearMarker(false)
     , mRuntime(NULL)
@@ -420,11 +526,11 @@ public:
   bool mStartJSSampling;
 };
 
-inline ProfileStack* mozilla_profile_stack(void)
+inline PseudoStack* mozilla_get_pseudo_stack(void)
 {
   if (!stack_key_initialized)
     return NULL;
-  return tlsStack.get();
+  return tlsPseudoStack.get();
 }
 
 inline void* mozilla_sampler_call_enter(const char *aInfo, void *aFrameAddress,
@@ -435,7 +541,7 @@ inline void* mozilla_sampler_call_enter(const char *aInfo, void *aFrameAddress,
   if (!stack_key_initialized)
     return NULL;
 
-  ProfileStack *stack = tlsStack.get();
+  PseudoStack *stack = tlsPseudoStack.get();
   // we can't infer whether 'stack' has been initialized
   // based on the value of stack_key_intiailized because
   // 'stack' is only intialized when a thread is being
@@ -458,7 +564,7 @@ inline void mozilla_sampler_call_exit(void *aHandle)
   if (!aHandle)
     return;
 
-  ProfileStack *stack = (ProfileStack*)aHandle;
+  PseudoStack *stack = (PseudoStack*)aHandle;
   stack->pop();
 }
 
@@ -469,14 +575,15 @@ inline void mozilla_sampler_add_marker(const char *aMarker)
 
   // Don't insert a marker if we're not profiling to avoid
   // the heap copy (malloc).
-  if (!mozilla_sampler_is_active()) {
+  if (!SAMPLER_IS_ACTIVE()) {
     return;
   }
 
-  ProfileStack *stack = tlsStack.get();
+  PseudoStack *stack = tlsPseudoStack.get();
   if (!stack) {
     return;
   }
   stack->addMarker(aMarker);
 }
 
+#endif /* ndef TOOLS_SPS_SAMPLER_H_ */

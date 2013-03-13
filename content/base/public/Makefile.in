@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= content
-XPIDL_MODULE	= content_base
 GRE_MODULE	= 1
 
 EXPORTS		= \
@@ -57,34 +56,6 @@ EXPORTS_mozilla/dom = \
 
 EXPORTS_mozilla = \
 		CORSMode.h \
-		$(NULL)
-
-SDK_XPIDLSRCS   = \
-		nsISelection.idl  \
-		$(NULL)
-
-XPIDLSRCS	= \
-		nsIContentPolicy.idl        \
-		nsIDocumentEncoder.idl      \
-	        nsIDOMDataChannel.idl \
-		nsIDOMFile.idl \
-		nsIDOMFileReader.idl \
-		nsIDOMFileList.idl \
-		nsIDOMFormData.idl \
-		nsIDOMParser.idl \
-		nsIDOMSerializer.idl \
-		nsISelectionController.idl  \
-		nsISelectionDisplay.idl  \
-		nsISelectionListener.idl  \
-		nsISelectionPrivate.idl  \
-		nsIScriptLoaderObserver.idl  \
-		nsIDroppedLinkHandler.idl \
-		nsIImageLoadingContent.idl \
-		nsIObjectLoadingContent.idl \
-		nsIFrameLoader.idl \
-		nsIXMLHttpRequest.idl \
-		nsIContentSecurityPolicy.idl \
-		nsIMessageManager.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
