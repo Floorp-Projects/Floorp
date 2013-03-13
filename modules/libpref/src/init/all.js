@@ -2468,10 +2468,6 @@ pref("ui.window_class_override", "");
 // page back/forward actions, or if pinch-to-zoom does not work.
 pref("ui.elantech_gesture_hacks.enabled", -1);
 
-// Disable auto-configuration of devPixelsPerPx until we're ready to turn
-// it on.
-pref("layout.css.devPixelsPerPx", "1.0");
-
 # WINNT
 #endif
 
