@@ -34,7 +34,9 @@
       <a id="updateLink" href="" onclick="checkForUpdates();">&aboutPage.checkForUpdates.link;</a>
       <span id="update-message-checking">&aboutPage.checkForUpdates.checking;</span>
       <span id="update-message-none">&aboutPage.checkForUpdates.none;</span>
-      <span id="update-message-found">&aboutPage.checkForUpdates.found;</span>
+      <span id="update-message-found" onclick="downloadUpdate()">&aboutPage.checkForUpdates.found;</span>
+      <span id="update-message-downloading">&aboutPage.checkForUpdates.downloading;</span>
+      <span id="update-message-downloaded" onclick="installUpdate()">&aboutPage.checkForUpdates.downloaded;</span>
     </div>
 #endif
 
@@ -125,7 +127,6 @@
 
 #ifdef MOZ_UPDATER
       let Updater = {
-        isChecking: false,
         update: null,
 
         init: function() {
@@ -134,7 +135,7 @@
 
         observe: function(aSubject, aTopic, aData) {
           if (aTopic == "Update:CheckResult") {
-            showUpdateMessage(aData == "true");
+            showUpdateMessage(aData);
           }
         },
       };
@@ -142,42 +143,73 @@
       Updater.init();
 
       function checkForUpdates() {
-        Updater.isChecking = true;
         showCheckingMessage();
 
         let bridge = Cc["@mozilla.org/android/bridge;1"].getService(Ci.nsIAndroidBridge);
         bridge.handleGeckoMessage(JSON.stringify({ type: "Update:Check" }));
       }
 
+      function downloadUpdate() {
+        let bridge = Cc["@mozilla.org/android/bridge;1"].getService(Ci.nsIAndroidBridge);
+        bridge.handleGeckoMessage(JSON.stringify({ type: "Update:Download" }));
+      }
+
+      function installUpdate() {
+        showCheckAction();
+
+        let bridge = Cc["@mozilla.org/android/bridge;1"].getService(Ci.nsIAndroidBridge);
+        bridge.handleGeckoMessage(JSON.stringify({ type: "Update:Install" }));
+      }
+
       let updateLink = document.getElementById("updateLink");
       let checkingSpan = document.getElementById("update-message-checking");
       let noneSpan = document.getElementById("update-message-none");
       let foundSpan = document.getElementById("update-message-found");
+      let downloadingSpan = document.getElementById("update-message-downloading");
+      let downloadedSpan = document.getElementById("update-message-downloaded");
+
+      function showCheckAction() {
+        checkingSpan.style.display = "none";
+        noneSpan.style.display = "none";
+        foundSpan.style.display = "none";
+        downloadingSpan.style.display = "none";
+        downloadedSpan.style.display = "none";
+        updateLink.style.display = "block";
+      }
 
       function showCheckingMessage() {
         updateLink.style.display = "none";
         noneSpan.style.display = "none";
         foundSpan.style.display = "none";
+        downloadingSpan.style.display = "none";
+        downloadedSpan.style.display = "none";
         checkingSpan.style.display = "block";
       }
 
-      function showUpdateMessage(aHasUpdate) {
+      function showUpdateMessage(aResult) {
         updateLink.style.display = "none";
         checkingSpan.style.display = "none";
-        if (aHasUpdate) {
-          noneSpan.style.display = "none";
-          foundSpan.style.display = "block";
-        } else {
-          foundSpan.style.display = "none";
-          noneSpan.style.display = "block";
-        }
+        noneSpan.style.display = "none";
+        foundSpan.style.display = "none";
+        downloadingSpan.style.display = "none";
+        downloadedSpan.style.display = "none";
 
-        setTimeout(function() {
-          noneSpan.style.display = "none";
-          foundSpan.style.display = "none";
-          checkingSpan.style.display = "none";
-          updateLink.style.display = "block";
-        }, 2000);
+        // the aResult values come from mobile/android/base/UpdateServiceHelper.java
+        switch (aResult) {
+        case "NOT_AVAILABLE":
+          noneSpan.style.display = "block";
+          setTimeout(showCheckAction, 2000);
+          break;
+        case "AVAILABLE":
+          foundSpan.style.display = "block";
+          break;
+        case "DOWNLOADING":
+          downloadingSpan.style.display = "block";
+          break;
+        case "DOWNLOADED":
+          downloadedSpan.style.display = "block";
+          break;
+        }
       }
 #endif
     ]]></script>

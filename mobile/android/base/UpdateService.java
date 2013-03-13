@@ -62,6 +62,7 @@ public class UpdateService extends IntentService {
     private static final String KEY_LAST_BUILDID = "UpdateService.lastBuildID";
     private static final String KEY_LAST_HASH_FUNCTION = "UpdateService.lastHashFunction";
     private static final String KEY_LAST_HASH_VALUE = "UpdateService.lastHashValue";
+    private static final String KEY_LAST_FILE_NAME = "UpdateService.lastFileName";
     private static final String KEY_LAST_ATTEMPT_DATE = "UpdateService.lastAttemptDate";
     private static final String KEY_AUTODOWNLOAD_POLICY = "UpdateService.autoDownloadPolicy";
 
@@ -126,9 +127,9 @@ public class UpdateService extends IntentService {
         return (flags & flag) == flag;
     }
 
-    private void sendCheckUpdateResult(boolean result) {
+    private void sendCheckUpdateResult(UpdateServiceHelper.CheckUpdateResult result) {
         Intent resultIntent = new Intent(UpdateServiceHelper.ACTION_CHECK_UPDATE_RESULT);
-        resultIntent.putExtra("result", result);
+        resultIntent.putExtra("result", result.toString());
         sendBroadcast(resultIntent);
     }
 
@@ -180,7 +181,7 @@ public class UpdateService extends IntentService {
         if (netInfo == null || !netInfo.isConnected()) {
             Log.i(LOGTAG, "not connected to the network");
             registerForUpdates(true);
-            sendCheckUpdateResult(false);
+            sendCheckUpdateResult(UpdateServiceHelper.CheckUpdateResult.NOT_AVAILABLE);
             return;
         }
 
@@ -188,10 +189,10 @@ public class UpdateService extends IntentService {
 
         UpdateInfo info = findUpdate(hasFlag(flags, UpdateServiceHelper.FLAG_REINSTALL));
         boolean haveUpdate = (info != null);
-        sendCheckUpdateResult(haveUpdate);
 
         if (!haveUpdate) {
             Log.i(LOGTAG, "no update available");
+            sendCheckUpdateResult(UpdateServiceHelper.CheckUpdateResult.NOT_AVAILABLE);
             return;
         }
 
@@ -215,6 +216,7 @@ public class UpdateService extends IntentService {
 
         if (!shouldStartDownload) {
             Log.i(LOGTAG, "not initiating automatic update download due to policy " + autoDownloadPolicy);
+            sendCheckUpdateResult(UpdateServiceHelper.CheckUpdateResult.AVAILABLE);
 
             // We aren't autodownloading here, so prompt to start the update
             Notification notification = new Notification(R.drawable.ic_status_logo, null, System.currentTimeMillis());
@@ -235,12 +237,15 @@ public class UpdateService extends IntentService {
         }
 
         File pkg = downloadUpdatePackage(info, hasFlag(flags, UpdateServiceHelper.FLAG_OVERWRITE_EXISTING));
-        if (pkg == null)
+        if (pkg == null) {
+            sendCheckUpdateResult(UpdateServiceHelper.CheckUpdateResult.NOT_AVAILABLE);
             return;
+        }
 
         Log.i(LOGTAG, "have update package at " + pkg);
 
-        saveUpdateInfo(info);
+        saveUpdateInfo(info, pkg);
+        sendCheckUpdateResult(UpdateServiceHelper.CheckUpdateResult.DOWNLOADED);
 
         if (mApplyImmediately) {
             applyUpdate(pkg);
@@ -409,6 +414,7 @@ public class UpdateService extends IntentService {
         }
 
         Log.i(LOGTAG, "downloading update package");
+        sendCheckUpdateResult(UpdateServiceHelper.CheckUpdateResult.DOWNLOADING);
 
         OutputStream output = null;
         InputStream input = null;
@@ -495,6 +501,9 @@ public class UpdateService extends IntentService {
     }
 
     private void applyUpdate(String updatePath) {
+        if (updatePath == null) {
+            updatePath = mPrefs.getString(KEY_LAST_FILE_NAME, null);
+        }
         applyUpdate(new File(updatePath));
     }
 
@@ -555,11 +564,12 @@ public class UpdateService extends IntentService {
         editor.commit();
     }
 
-    private void saveUpdateInfo(UpdateInfo info) {
+    private void saveUpdateInfo(UpdateInfo info, File downloaded) {
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putString(KEY_LAST_BUILDID, info.buildID);
         editor.putString(KEY_LAST_HASH_FUNCTION, info.hashFunction);
         editor.putString(KEY_LAST_HASH_VALUE, info.hashValue);
+        editor.putString(KEY_LAST_FILE_NAME, downloaded.toString());
         editor.commit();
     }
 
