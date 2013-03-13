@@ -7,8 +7,9 @@
 #define mozilla_dom_SVGFEPointLightElement_h
 
 #include "nsSVGFilters.h"
+#include "nsSVGNumber2.h"
 
-typedef SVGFEUnstyledElement nsSVGFEPointLightElementBase;
+typedef SVGFEUnstyledElement SVGFEPointLightElementBase;
 
 nsresult NS_NewSVGFEPointLightElement(nsIContent **aResult,
                                       already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -16,23 +17,24 @@ nsresult NS_NewSVGFEPointLightElement(nsIContent **aResult,
 namespace mozilla {
 namespace dom {
 
-class nsSVGFEPointLightElement : public nsSVGFEPointLightElementBase,
-                                 public nsIDOMSVGFEPointLightElement
+class SVGFEPointLightElement : public SVGFEPointLightElementBase,
+                               public nsIDOMSVGElement
 {
   friend nsresult (::NS_NewSVGFEPointLightElement(nsIContent **aResult,
                                                   already_AddRefed<nsINodeInfo> aNodeInfo));
 protected:
-  nsSVGFEPointLightElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsSVGFEPointLightElementBase(aNodeInfo) {}
+  SVGFEPointLightElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+    : SVGFEPointLightElementBase(aNodeInfo)
+  {
+    SetIsDOMBinding();
+  }
+  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
 
 public:
   // interfaces:
-  NS_DECL_ISUPPORTS_INHERITEDpublic:
-  // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGFEPOINTLIGHTELEMENT
 
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEPointLightElementBase::)
+  NS_FORWARD_NSIDOMSVGELEMENT(SVGFEPointLightElementBase::)
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
@@ -41,13 +43,17 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL
+  already_AddRefed<nsIDOMSVGAnimatedNumber> X();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> Y();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> Z();
+
 protected:
   virtual NumberAttributesInfo GetNumberInfo();
 
-  enum { X, Y, Z };
+  enum { ATTR_X, ATTR_Y, ATTR_Z };
   nsSVGNumber2 mNumberAttributes[3];
   static NumberInfo sNumberInfo[3];
 };
