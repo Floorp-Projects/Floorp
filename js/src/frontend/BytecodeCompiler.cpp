@@ -41,7 +41,7 @@ static bool
 SetSourceMap(JSContext *cx, TokenStream &tokenStream, ScriptSource *ss, RawScript script)
 {
     if (tokenStream.hasSourceMap()) {
-        if (!ss->setSourceMap(cx, tokenStream.releaseSourceMap(), script->filename))
+        if (!ss->setSourceMap(cx, tokenStream.releaseSourceMap(), script->filename()))
             return false;
     }
     return true;
@@ -104,6 +104,8 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain,
     JS_ASSERT_IF(staticLevel != 0, options.sourcePolicy != CompileOptions::LAZY_SOURCE);
     ScriptSource *ss = cx->new_<ScriptSource>();
     if (!ss)
+        return NULL;
+    if (options.filename && !ss->setFilename(cx, options.filename))
         return NULL;
     ScriptSourceHolder ssh(ss);
     SourceCompressionToken mysct(cx);
@@ -323,6 +325,8 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun, CompileOptions 
         return false;
     ScriptSource *ss = cx->new_<ScriptSource>();
     if (!ss)
+        return false;
+    if (options.filename && !ss->setFilename(cx, options.filename))
         return false;
     ScriptSourceHolder ssh(ss);
     SourceCompressionToken sct(cx);

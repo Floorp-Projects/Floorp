@@ -1167,7 +1167,6 @@ struct JSRuntime : js::RuntimeFriendFields,
     JSPreWrapCallback                      preWrapObjectCallback;
     js::PreserveWrapperCallback            preserveWrapperCallback;
 
-    js::ScriptFilenameTable scriptFilenameTable;
     js::ScriptDataTable scriptDataTable;
 
 #ifdef DEBUG

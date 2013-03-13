@@ -927,9 +927,6 @@ JSRuntime::init(uint32_t maxbytes)
     if (!stackSpace.init())
         return false;
 
-    if (!scriptFilenameTable.init())
-        return false;
-
     if (!scriptDataTable.init())
         return false;
 
@@ -958,7 +955,6 @@ JSRuntime::~JSRuntime()
      * Even though all objects in the compartment are dead, we may have keep
      * some filenames around because of gcKeepAtoms.
      */
-    FreeScriptFilenames(this);
     FreeScriptData(this);
 
 #ifdef JS_THREADSAFE
@@ -2542,7 +2538,7 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
           case JSTRACE_SCRIPT:
           {
             JSScript *script = static_cast<JSScript *>(thing);
-            JS_snprintf(buf, bufsize, " %s:%u", script->filename, unsigned(script->lineno));
+            JS_snprintf(buf, bufsize, " %s:%u", script->filename(), unsigned(script->lineno));
             break;
           }
 
