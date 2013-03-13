@@ -64,6 +64,59 @@ extern const char staticComponentType[];
 
 extern const mozilla::Module kXPCOMModule;
 
+/**
+ * This is a wrapper around mozilla::Mutex which provides runtime
+ * checking for a deadlock where the same thread tries to lock a mutex while
+ * it is already locked. This checking is present in both debug and release
+ * builds.
+ */
+class SafeMutex
+{
+public:
+    SafeMutex(const char* name)
+        : mMutex(name)
+        , mOwnerThread(nullptr)
+    { }
+    ~SafeMutex()
+    { }
+
+    void Lock()
+    {
+        AssertNotCurrentThreadOwns();
+        mMutex.Lock();
+        MOZ_ASSERT(mOwnerThread == nullptr);
+        mOwnerThread = PR_GetCurrentThread();
+    }
+
+    void Unlock()
+    {
+        MOZ_ASSERT(mOwnerThread == PR_GetCurrentThread());
+        mOwnerThread = nullptr;
+        mMutex.Unlock();
+    }
+
+    void AssertCurrentThreadOwns() const
+    {
+        // This method is a debug-only check
+        MOZ_ASSERT(mOwnerThread == PR_GetCurrentThread());
+    }
+
+    MOZ_NEVER_INLINE void AssertNotCurrentThreadOwns() const
+    {
+        // This method is a release-mode check
+        if (PR_GetCurrentThread() == mOwnerThread) {
+            MOZ_CRASH();
+        }
+    }
+
+private:
+    mozilla::Mutex mMutex;
+    volatile PRThread* mOwnerThread;
+};
+
+typedef mozilla::BaseAutoLock<SafeMutex> SafeMutexAutoLock;
+typedef mozilla::BaseAutoUnlock<SafeMutex> SafeMutexAutoUnlock;
+
 class nsComponentManagerImpl MOZ_FINAL
     : public nsIComponentManager
     , public nsIServiceManager
@@ -112,7 +165,7 @@ public:
     nsDataHashtable<nsIDHashKey, nsFactoryEntry*> mFactories;
     nsDataHashtable<nsCStringHashKey, nsFactoryEntry*> mContractIDs;
 
-    mozilla::Mutex mLock;
+    SafeMutex mLock;
 
     static void InitializeStaticModules();
     static void InitializeModuleLocations();
