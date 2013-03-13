@@ -139,12 +139,6 @@ public:
 
   static nsIMEUpdatePreference GetIMEUpdatePreference();
 
-  static void CompositionTimerCallbackFunc(nsITimer *aTimer, void *aClosure)
-  {
-    nsTextStore *ts = static_cast<nsTextStore*>(aClosure);
-    ts->OnCompositionTimer();
-  }
-
   static bool CanOptimizeKeyAndIMEMessages()
   {
     // TODO: We need to implement this for ATOK.
@@ -185,7 +179,7 @@ public:
 
   static bool     IsComposing()
   {
-    return (sTsfTextStore && sTsfTextStore->mCompositionView != nullptr);
+    return (sTsfTextStore && sTsfTextStore->mComposition.mView != nullptr);
   }
 
   static bool     IsComposingOn(nsWindowBase* aWidget)
@@ -239,7 +233,7 @@ protected:
   HRESULT  UpdateCompositionExtent(ITfRange* pRangeNew);
   HRESULT  SendTextEventForCompositionString();
   HRESULT  SaveTextEvent(const nsTextEvent* aEvent);
-  nsresult OnCompositionTimer();
+  nsresult OnLayoutChange();
   HRESULT  ProcessScopeRequest(DWORD dwFlags,
                                ULONG cFilterAttrs,
                                const TS_ATTRID *paFilterAttrs);
@@ -263,32 +257,53 @@ protected:
   DWORD                        mLockQueued;
   // Cumulative text change offsets since the last notification
   TS_TEXTCHANGE                mTextChange;
-  // NULL if no composition is active, otherwise the current composition
-  nsRefPtr<ITfCompositionView> mCompositionView;
-  // Current copy of the active composition string. Only mCompositionString is
-  // changed during a InsertTextAtSelection call if we have a composition.
-  // mCompositionString acts as a buffer until OnUpdateComposition is called
-  // and mCompositionString is flushed to editor through NS_TEXT_TEXT. This
-  // way all changes are updated in batches to avoid inconsistencies/artifacts.
-  nsString                     mCompositionString;
-  // "Current selection" during a composition, in ACP offsets.
-  // We use a fake selection during a composition because editor code doesn't
-  // like us accessing the actual selection during a composition. So we leave
-  // the actual selection alone and get/set mCompositionSelection instead
-  // during GetSelection/SetSelection calls.
-  TS_SELECTION_ACP             mCompositionSelection;
-  // The start and length of the current active composition, in ACP offsets
-  LONG                         mCompositionStart;
-  LONG                         mCompositionLength;
+
+  class Composition MOZ_FINAL
+  {
+  public:
+    // NULL if no composition is active, otherwise the current composition
+    nsRefPtr<ITfCompositionView> mView;
+
+    // Current copy of the active composition string. Only mString is
+    // changed during a InsertTextAtSelection call if we have a composition.
+    // mString acts as a buffer until OnUpdateComposition is called
+    // and mString is flushed to editor through NS_TEXT_TEXT. This
+    // way all changes are updated in batches to avoid
+    // inconsistencies/artifacts.
+    nsString mString;
+
+    // The latest composition string which was dispatched by composition update
+    // event.
+    nsString mLastData;
+
+    // "Current selection" during a composition, in ACP offsets.
+    // We use a fake selection during a composition because editor code doesn't
+    // like us accessing the actual selection during a composition. So we leave
+    // the actual selection alone and get/set mSelection instead
+    // during GetSelection/SetSelection calls.
+    TS_SELECTION_ACP mSelection;
+
+    // The start and length of the current active composition, in ACP offsets
+    LONG mStart;
+    LONG mLength;
+
+    void StartLayoutChangeTimer(nsTextStore* aTextStore);
+    void EnsureLayoutChangeTimerStopped();
+
+  private:
+    // Timer for calling ITextStoreACPSink::OnLayoutChange(). This is only used
+    // during composing.
+    nsCOMPtr<nsITimer> mLayoutChangeTimer;
+
+    static void TimerCallback(nsITimer* aTimer, void *aClosure);
+    static uint32_t GetLayoutChangeIntervalTime();
+  };
+  // Storing current composition.
+  Composition mComposition;
+
   // The latest text event which was dispatched for composition string
   // of the current composing transaction.
   nsTextEvent*                 mLastDispatchedTextEvent;
-  // The latest composition string which was dispatched by composition update
-  // event.
-  nsString                     mLastDispatchedCompositionString;
-  // Timer for calling ITextStoreACPSink::OnLayoutChange. This is only used
-  // during composing.
-  nsCOMPtr<nsITimer>           mCompositionTimer;
   // The input scopes for this context, defaults to IS_DEFAULT.
   nsTArray<InputScope>         mInputScopes;
   bool                         mInputScopeDetected;
