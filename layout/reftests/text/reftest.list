@@ -1,6 +1,6 @@
 fails-if(Android||B2G) == fallback-01.xhtml fallback-01-ref.xhtml
 == font-selection-by-lang-01.html font-selection-by-lang-01-ref.html
-skip-if(B2G) == font-selection-fallback-1.html font-selection-fallback-1-ref.html
+skip-if(B2G) HTTP(..) == font-selection-fallback-1.html font-selection-fallback-1-ref.html
 skip-if(B2G) HTTP(..) == font-selection-generic-1.html font-selection-generic-1-ref.html # bug 773482
 fails-if(Android||B2G) != font-size-adjust-01.html font-size-adjust-01-ref.html
 # The following test passes consistently only on Mac OS X;
@@ -16,7 +16,7 @@ random-if(!cocoaWidget) == font-size-adjust-02.html font-size-adjust-02-ref.html
 == justification-2b.html justification-2-ref.html
 == justification-2c.html justification-2-ref.html
 != justification-2d.html justification-2-ref.html
-load ligature-with-space-1.html
+HTTP(..) load ligature-with-space-1.html
 == line-editing-1a.html line-editing-1-ref.html
 == line-editing-1b.html line-editing-1-ref.html
 == line-editing-1c.html line-editing-1-ref.html
@@ -53,7 +53,7 @@ skip-if(B2G) HTTP(..) == subpixel-glyphs-x-3a.html subpixel-glyphs-x-3b.html
 fuzzy-if(Android,231,603) == subpixel-lineheight-1a.html subpixel-lineheight-1b.html
 == swash-1.html swash-1-ref.html
 HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
-== synthetic-bold-papyrus-01.html synthetic-bold-papyrus-01-ref.html
+HTTP(..) == synthetic-bold-papyrus-01.html synthetic-bold-papyrus-01-ref.html
 # Tests for text-align-last
 == text-align-last-start.html text-align-last-start-ref.html
 == text-align-last-end.html text-align-last-end-ref.html
@@ -99,7 +99,7 @@ HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
 != text-align-justify-last-end.html text-align-justify-last-justify.html
 != text-align-justify-last-center.html text-align-justify-last-justify.html
 == text-align-left-in-rtl-block.html text-align-left-in-rtl-block-ref.html
-== variation-selector-unsupported-1.html variation-selector-unsupported-1-ref.html
+HTTP(..) == variation-selector-unsupported-1.html variation-selector-unsupported-1-ref.html
 == white-space-1a.html white-space-1-ref.html
 == white-space-1b.html white-space-1-ref.html
 == white-space-2.html white-space-2-ref.html
