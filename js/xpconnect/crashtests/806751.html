@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+
+function boom()
+{
+  var frame = document.getElementById("frame");
+  var frameWin = frame.contentWindow;
+  var frameWinner = Object.create(frameWin);
+  var v = frameWinner.captureEvents.bind(frameWinner);
+  frame.src = "local-file-not-found";
+  setTimeout(function() { setTimeout(finish); v(0); });
+}
+
+function finish() {
+  document.documentElement.removeAttribute('class');
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+<iframe id="frame" src="data:text/html,1"></iframe>
+</body>
+</html>

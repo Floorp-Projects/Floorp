@@ -2070,7 +2070,10 @@ nsTextServicesDocument::CreateDocumentContentRange(nsIDOMRange **aRange)
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
 
-  nsRefPtr<nsRange> range = new nsRange();
+  nsCOMPtr<nsINode> nativeNode = do_QueryInterface(node);
+  NS_ENSURE_STATE(nativeNode);
+
+  nsRefPtr<nsRange> range = new nsRange(nativeNode);
 
   rv = range->SelectNodeContents(node);
   NS_ENSURE_SUCCESS(rv, rv);

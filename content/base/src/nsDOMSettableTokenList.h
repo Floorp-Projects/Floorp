@@ -22,8 +22,7 @@ public:
   nsDOMSettableTokenList(mozilla::dom::Element* aElement, nsIAtom* aAttrAtom)
     : nsDOMTokenList(aElement, aAttrAtom) {}
 
-  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
-                               bool *triedToWrap);
+  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
 
   // WebIDL
   void GetValue(nsAString& aResult) { Stringify(aResult); }

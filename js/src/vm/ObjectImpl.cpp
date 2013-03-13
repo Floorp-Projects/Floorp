@@ -232,7 +232,7 @@ js::ObjectImpl::checkShapeConsistency()
             if (shape->hasTable()) {
                 ShapeTable &table = shape->table();
                 MOZ_ASSERT(shape->parent);
-                for (Shape::Range r(shape); !r.empty(); r.popFront()) {
+                for (Shape::Range<NoGC> r(shape); !r.empty(); r.popFront()) {
                     Shape **spp = table.search(r.front().propid(), false);
                     MOZ_ASSERT(SHAPE_FETCH(spp) == &r.front());
                 }

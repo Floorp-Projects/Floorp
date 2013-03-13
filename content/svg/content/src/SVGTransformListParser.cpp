@@ -8,12 +8,10 @@
 
 #include "SVGTransformListParser.h"
 #include "SVGTransform.h"
-#include "prdtoa.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "nsCRT.h"
-#include "nsDOMClassInfoID.h"
 #include "nsIAtom.h"
+#include "plstr.h"
 
 using namespace mozilla;
 

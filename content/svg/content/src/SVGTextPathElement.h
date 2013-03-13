@@ -6,10 +6,7 @@
 #ifndef mozilla_dom_SVGTextPathElement_h
 #define mozilla_dom_SVGTextPathElement_h
 
-#include "nsIDOMElement.h"
-#include "nsIDOMNode.h"
 #include "nsIDOMSVGElement.h"
-#include "nsIDOMSVGURIReference.h"
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
 #include "nsSVGString.h"
@@ -17,9 +14,7 @@
 
 class nsIAtom;
 class nsIContent;
-class nsINode;
 class nsINodeInfo;
-class nsXPCClassInfo;
 class nsSVGTextPathFrame;
 
 nsresult NS_NewSVGTextPathElement(nsIContent **aResult,
@@ -40,8 +35,7 @@ static const unsigned short TEXTPATH_SPACINGTYPE_EXACT   = 2;
 typedef SVGTextContentElement SVGTextPathElementBase;
 
 class SVGTextPathElement MOZ_FINAL : public SVGTextPathElementBase,
-                                     public nsIDOMSVGElement,
-                                     public nsIDOMSVGURIReference
+                                     public nsIDOMSVGElement
 {
 friend class ::nsSVGTextPathFrame;
 friend class ::nsSVGTextFrame2;
@@ -50,13 +44,12 @@ protected:
   friend nsresult (::NS_NewSVGTextPathElement(nsIContent **aResult,
                                               already_AddRefed<nsINodeInfo> aNodeInfo));
   SVGTextPathElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope, bool *triedToWrap) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
 
 public:
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGURIREFERENCE
 
   // xxx If xpcom allowed virtual inheritance we wouldn't need to
   // forward here :-(

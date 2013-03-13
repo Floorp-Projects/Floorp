@@ -86,9 +86,15 @@ this.PhoneNumberUtils = {
     return PhoneNumber.Parse(aNumber, countryName);
   },
 
-  isViablePhoneNumber: function IsViablePhoneNumber(aNumber) {
-    let viable = PhoneNumber.IsViable(aNumber);
-    if (DEBUG) debug("IsViable(" + aNumber + "): " + viable);
-    return viable;
+  isPlainPhoneNumber: function isPlainPhoneNumber(aNumber) {
+    var isPlain = PhoneNumber.IsPlain(aNumber);
+    if (DEBUG) debug("isPlain(" + aNumber + ") " + isPlain);
+    return isPlain;
+  },
+
+  normalize: function Normalize(aNumber) {
+    var normalized = PhoneNumber.Normalize(aNumber);
+    if (DEBUG) debug("normalize(" + aNumber + "): " + normalized);
+    return normalized;
   }
 };

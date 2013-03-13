@@ -52,7 +52,7 @@ public:
   nsIHTMLCollection* Areas();
 
   virtual JSObject*
-  WrapNode(JSContext* aCx, JSObject* aScope, bool* aTriedToWrap) MOZ_OVERRIDE;
+  WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
 protected:
   nsRefPtr<nsContentList> mAreas;

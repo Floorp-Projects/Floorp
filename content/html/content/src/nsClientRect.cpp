@@ -95,10 +95,9 @@ nsClientRectList::Item(uint32_t aIndex, nsIDOMClientRect** aReturn)
 }
 
 JSObject*
-nsClientRectList::WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap)
+nsClientRectList::WrapObject(JSContext *cx, JSObject *scope)
 {
-  return mozilla::dom::ClientRectListBinding::Wrap(cx, scope, this,
-                                                   triedToWrap);
+  return mozilla::dom::ClientRectListBinding::Wrap(cx, scope, this);
 }
 
 static double

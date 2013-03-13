@@ -245,8 +245,7 @@ private:
   virtual void GetItemValueText(nsAString& text);
   virtual void SetItemValueText(const nsAString& text);
 
-  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope,
-                             bool *aTriedToWrap) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope) MOZ_OVERRIDE;
   virtual JSObject* GetCanonicalPrototype(JSContext* aCx,
                                           JSObject* aGlobal) MOZ_OVERRIDE;
 

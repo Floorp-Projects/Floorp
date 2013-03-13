@@ -1,2 +1,2 @@
-skip-if(!winWidget) HTTP == bug415761.sjs bug415761.ico
-skip-if(!winWidget) HTTP == bug415761cleanup.sjs about:blank
+skip-if(!winWidget) skip-if(/^Windows\x20NT\x206\.2/.test(http.oscpu)) HTTP == bug415761.sjs bug415761.ico
+skip-if(!winWidget) skip-if(/^Windows\x20NT\x206\.2/.test(http.oscpu)) HTTP == bug415761cleanup.sjs about:blank

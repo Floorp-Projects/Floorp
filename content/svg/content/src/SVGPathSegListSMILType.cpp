@@ -3,10 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <math.h>
-
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Util.h"
 
 #include "SVGPathSegListSMILType.h"
 #include "nsSMILValue.h"

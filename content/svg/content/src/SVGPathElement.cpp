@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
-
 #include "nsGkAtoms.h"
 #include "DOMSVGPathSeg.h"
 #include "DOMSVGPathSegList.h"
@@ -12,9 +10,10 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/SVGPathElement.h"
 #include "DOMSVGPoint.h"
-#include "gfxContext.h"
 #include <algorithm>
 #include "mozilla/dom/SVGPathElementBinding.h"
+
+class gfxContext;
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Path)
 
@@ -22,9 +21,9 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGPathElement::WrapNode(JSContext *aCx, JSObject *aScope, bool *aTriedToWrap)
+SVGPathElement::WrapNode(JSContext *aCx, JSObject *aScope)
 {
-  return SVGPathElementBinding::Wrap(aCx, aScope, this, aTriedToWrap);
+  return SVGPathElementBinding::Wrap(aCx, aScope, this);
 }
 
 nsSVGElement::NumberInfo SVGPathElement::sNumberInfo = 
