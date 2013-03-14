@@ -37,6 +37,8 @@ from mozbuild.util import (
     ReadOnlyDict,
 )
 
+from mozbuild.backend.configenvironment import ConfigEnvironment
+
 from .sandbox import (
     SandboxError,
     SandboxExecutionError,
@@ -143,6 +145,13 @@ class MozbuildSandbox(Sandbox):
                 # subdirectory of its topobjdir. Therefore, the topobjdir of
                 # the external source directory is the parent of our topobjdir.
                 topobjdir = os.path.dirname(topobjdir)
+
+                # This is suboptimal because we load the config.status multiple
+                # times. We should consider caching it, possibly by moving this
+                # code up to the reader.
+                config = ConfigEnvironment.from_config_status(
+                    os.path.join(topobjdir, 'config.status'))
+                self.config = config
                 break
 
         self.topsrcdir = topsrcdir
