@@ -89,7 +89,7 @@ skip-if(B2G) != scrollbars-02.svg scrollbars-01-anti-ref.svg
 == standalone--auto-auto--0-pct.svg     pass-empty.svg
 == standalone--auto-auto--0-px.svg      pass-empty.svg
 == standalone--auto-auto--pct-0.svg     pass-empty.svg
-== standalone--auto-auto--pct-pct.svg   pass-pct-pct.xhtml
+fuzzy-if(d2d,1,400) == standalone--auto-auto--pct-pct.svg   pass-pct-pct.xhtml
 == standalone--auto-auto--pct-px.svg    pass-pct-px.xhtml
 == standalone--auto-auto--px-0.svg      pass-empty.svg
 == standalone--auto-auto--px-pct.svg    pass-px-pct.xhtml
@@ -98,12 +98,12 @@ skip-if(B2G) != scrollbars-02.svg scrollbars-01-anti-ref.svg
 == standalone--auto-pct--0-0.svg        pass-empty.svg
 == standalone--auto-pct--0-pct.svg      pass-empty.svg
 == standalone--auto-pct--0-px.svg       pass-empty.svg
-== standalone--auto-pct--pct-0.svg      pass-pct-pct.xhtml
-== standalone--auto-pct--pct-pct.svg    pass-pct-pct.xhtml
-== standalone--auto-pct--pct-px.svg     pass-pct-pct.xhtml
+fuzzy-if(d2d,1,400) == standalone--auto-pct--pct-0.svg      pass-pct-pct.xhtml
+fuzzy-if(d2d,1,400) == standalone--auto-pct--pct-pct.svg    pass-pct-pct.xhtml
+fuzzy-if(d2d,1,400) == standalone--auto-pct--pct-px.svg     pass-pct-pct.xhtml
 == standalone--auto-pct--px-0.svg       pass-px-pct.xhtml
 == standalone--auto-pct--px-pct.svg     pass-px-pct.xhtml
-== standalone--auto-pct--px-px.svg      pass-pct-height-square.xhtml # intrinsic ratio!
+fuzzy-if(d2d,1,1000) == standalone--auto-pct--px-px.svg      pass-pct-height-square.xhtml # intrinsic ratio!
 
 == standalone--auto-px--0-0.svg         pass-empty.svg
 == standalone--auto-px--0-pct.svg       pass-empty.svg
@@ -126,24 +126,24 @@ skip-if(B2G) != scrollbars-02.svg scrollbars-01-anti-ref.svg
 == standalone--pct-0--px-px.svg         pass-empty.svg
 
 == standalone--pct-auto--0-0.svg        pass-empty.svg
-== standalone--pct-auto--0-pct.svg      pass-pct-pct.xhtml
+fuzzy-if(d2d,1,400) == standalone--pct-auto--0-pct.svg      pass-pct-pct.xhtml
 == standalone--pct-auto--0-px.svg       pass-pct-px.xhtml
 == standalone--pct-auto--pct-0.svg      pass-empty.svg
-== standalone--pct-auto--pct-pct.svg    pass-pct-pct.xhtml
+fuzzy-if(d2d,1,400) == standalone--pct-auto--pct-pct.svg    pass-pct-pct.xhtml
 == standalone--pct-auto--pct-px.svg     pass-pct-px.xhtml
 == standalone--pct-auto--px-0.svg       pass-empty.svg
-== standalone--pct-auto--px-pct.svg     pass-pct-pct.xhtml
+fuzzy-if(d2d,1,400) == standalone--pct-auto--px-pct.svg     pass-pct-pct.xhtml
 == standalone--pct-auto--px-px.svg      pass-pct-width-square.xhtml # intrinsic ratio!
 
-== standalone--pct-pct--0-0.svg         pass-pct-pct.xhtml
-== standalone--pct-pct--0-pct.svg       pass-pct-pct.xhtml
-== standalone--pct-pct--0-px.svg        pass-pct-pct.xhtml
-== standalone--pct-pct--pct-0.svg       pass-pct-pct.xhtml
-== standalone--pct-pct--pct-pct.svg     pass-pct-pct.xhtml
-== standalone--pct-pct--pct-px.svg      pass-pct-pct.xhtml
-== standalone--pct-pct--px-0.svg        pass-pct-pct.xhtml
-== standalone--pct-pct--px-pct.svg      pass-pct-pct.xhtml
-== standalone--pct-pct--px-px.svg       pass-pct-pct.xhtml
+fuzzy-if(d2d,1,400) == standalone--pct-pct--0-0.svg         pass-pct-pct.xhtml
+fuzzy-if(d2d,1,400) == standalone--pct-pct--0-pct.svg       pass-pct-pct.xhtml
+fuzzy-if(d2d,1,400) == standalone--pct-pct--0-px.svg        pass-pct-pct.xhtml
+fuzzy-if(d2d,1,400) == standalone--pct-pct--pct-0.svg       pass-pct-pct.xhtml
+fuzzy-if(d2d,1,400) == standalone--pct-pct--pct-pct.svg     pass-pct-pct.xhtml
+fuzzy-if(d2d,1,400) == standalone--pct-pct--pct-px.svg      pass-pct-pct.xhtml
+fuzzy-if(d2d,1,400) == standalone--pct-pct--px-0.svg        pass-pct-pct.xhtml
+fuzzy-if(d2d,1,400) == standalone--pct-pct--px-pct.svg      pass-pct-pct.xhtml
+fuzzy-if(d2d,1,400) == standalone--pct-pct--px-px.svg       pass-pct-pct.xhtml
 
 == standalone--pct-px--0-0.svg          pass-pct-px.xhtml
 == standalone--pct-px--0-pct.svg        pass-pct-px.xhtml
