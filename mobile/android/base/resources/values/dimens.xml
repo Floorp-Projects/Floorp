@@ -30,7 +30,7 @@
     <dimen name="awesomebar_tab_transparency_height">38dp</dimen>
     <dimen name="browser_toolbar_height">48dp</dimen>
     <dimen name="browser_toolbar_button_padding">12dp</dimen>
-    <dimen name="browser_toolbar_icon_width">36dp</dimen>
+    <dimen name="browser_toolbar_icon_width">48dp</dimen>
     <dimen name="browser_toolbar_lock_width">20dp</dimen>
     <dimen name="browser_toolbar_favicon_size">29.33dip</dimen>
 
