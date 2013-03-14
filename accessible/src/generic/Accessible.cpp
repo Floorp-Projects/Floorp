@@ -2671,7 +2671,7 @@ Accessible::InsertChildAt(uint32_t aIndex, Accessible* aChild)
     mChildren[idx]->mIndexInParent = idx;
   }
 
-  if (nsAccUtils::IsText(aChild))
+  if (!nsAccUtils::IsEmbeddedObject(aChild))
     SetChildrenFlag(eMixedChildren);
 
   mEmbeddedObjCollector = nullptr;
