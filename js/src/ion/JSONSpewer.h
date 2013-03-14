@@ -10,8 +10,9 @@
 
 #include <stdio.h>
 
-#include "gc/Root.h"
 #include "jsscript.h"
+
+#include "js/RootingAPI.h"
 
 class JSScript;
 

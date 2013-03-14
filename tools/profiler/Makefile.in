@@ -25,6 +25,7 @@ EXPORTS += \
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/mozglue/linker \
   -I$(topsrcdir)/ipc/chromium/src \
+  -I$(topsrcdir)/toolkit/crashreporter/google-breakpad/src \
   $(NULL)
 
 ifneq (,$(filter armeabi,$(ANDROID_CPU_ARCH)))
@@ -45,12 +46,12 @@ CPPSRCS		= \
   nsProfilerFactory.cpp \
   nsProfiler.cpp \
   TableTicker.cpp \
+  TableTicker2.cpp \
+  UnwinderThread2.cpp \
+  ProfileEntry2.cpp \
+  local_debug_info_symbolizer.cc \
   JSObjectBuilder.cpp \
   JSCustomObjectBuilder.cpp \
-  $(NULL)
-
-XPIDLSRCS = \
-  nsIProfiler.idl \
   $(NULL)
 
 EXTRA_JS_MODULES = \
@@ -69,6 +70,8 @@ CPPSRCS += \
   shared-libraries-macos.cc \
   platform-macos.cc \
   $(NULL)
+CMMSRCS += \
+  shim_mac_dump_syms.mm
 endif
 
 ifeq ($(OS_TARGET),WINNT)

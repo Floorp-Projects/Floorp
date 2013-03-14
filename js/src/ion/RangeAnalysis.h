@@ -344,8 +344,7 @@ class Range : public TempObject {
             return;
         }
 
-        uint32_t max = Max(mozilla::Abs<int64_t>(lower()),
-                           mozilla::Abs<int64_t>(upper()));
+        uint32_t max = Max(mozilla::Abs<int64_t>(lower()), mozilla::Abs<int64_t>(upper()));
         JS_ASSERT_IF(lower() == JSVAL_INT_MIN, max == (uint32_t) JSVAL_INT_MIN);
         JS_ASSERT(max <= (uint32_t) JSVAL_INT_MIN);
         // The number of bits needed to encode |max| is the power of 2 plus one.

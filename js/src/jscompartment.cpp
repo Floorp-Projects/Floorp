@@ -22,13 +22,13 @@
 #endif
 #include "assembler/wtf/Platform.h"
 #include "gc/Marking.h"
-#include "gc/Root.h"
 #ifdef JS_ION
 #include "ion/BaselineJIT.h"
 #include "ion/IonCompartment.h"
 #include "ion/Ion.h"
 #endif
 #include "js/MemoryMetrics.h"
+#include "js/RootingAPI.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/PolyIC.h"
 #include "methodjit/MonoIC.h"
@@ -330,7 +330,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
     if (WrapperMap::Ptr p = crossCompartmentWrappers.lookup(key)) {
         vp.set(p->value);
         if (vp.isObject()) {
-            RawObject obj = &vp.toObject();
+            DebugOnly<RawObject> obj = &vp.toObject();
             JS_ASSERT(obj->isCrossCompartmentWrapper());
             JS_ASSERT(obj->getParent() == global);
         }

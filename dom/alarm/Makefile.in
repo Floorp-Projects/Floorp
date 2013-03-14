@@ -10,7 +10,6 @@ VPATH       = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE              = dom
-XPIDL_MODULE        = dom_alarm
 LIBRARY_NAME        = domalarm_s
 LIBXUL_LIBRARY      = 1
 FORCE_STATIC_LIB    = 1
@@ -31,11 +30,6 @@ EXTRA_JS_MODULES = \
   AlarmService.jsm \
   $(NULL)
 
-XPIDLSRCS =               \
-  nsIDOMAlarmsManager.idl \
-  nsIAlarmHalService.idl  \
-  $(NULL)
-
 EXPORTS_mozilla/dom/alarm = \
   AlarmHalService.h         \
   $(NULL)
@@ -48,6 +42,3 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
-XPIDL_FLAGS += \
-  -I$(topsrcdir)/dom/interfaces/base \
-  $(NULL)

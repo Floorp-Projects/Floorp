@@ -28,10 +28,6 @@ EXTRA_COMPONENTS += \
                    $(NULL)
 endif
 
-XPIDLSRCS       = \
-                  nsIHttpServer.idl \
-                  $(NULL)
-
 XPCSHELL_TESTS = test
 
 TESTING_JS_MODULES = httpd.js

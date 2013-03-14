@@ -491,11 +491,12 @@ public:
                     newDisjunction->m_parent = disjunction->m_parent;
                 }
                 PatternAlternative* newAlternative = newDisjunction->addNewAlternative();
+                newAlternative->m_terms.reserve(alternative->m_terms.size());
                 for (unsigned i = 0; i < alternative->m_terms.size(); ++i)
                     newAlternative->m_terms.append(copyTerm(alternative->m_terms[i], filterStartsWithBOL));
             }
         }
-        
+
         if (newDisjunction)
             m_pattern.m_disjunctions.append(newDisjunction);
         return newDisjunction;

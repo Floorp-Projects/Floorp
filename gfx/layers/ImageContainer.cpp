@@ -454,7 +454,7 @@ PlanarYCbCrImage::CopyData(const Data& aData)
                 mData.mYStride * mData.mYSize.height;
 
   // get new buffer
-  mBuffer = AllocateBuffer(mBufferSize); 
+  mBuffer = AllocateBuffer(mBufferSize);
   if (!mBuffer)
     return;
 
@@ -484,6 +484,24 @@ PlanarYCbCrImage::GetOffscreenFormat()
   return mOffscreenFormat != gfxASurface::ImageFormatUnknown ?
     gfxPlatform::GetPlatform()->GetOffscreenFormat() :
     mOffscreenFormat;
+}
+
+void
+PlanarYCbCrImage::SetDataNoCopy(const Data &aData)
+{
+  mData = aData;
+  mSize = aData.mPicSize;
+}
+
+uint8_t*
+PlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
+{
+  // update buffer size
+  mBufferSize = aSize;
+
+  // get new buffer
+  mBuffer = AllocateBuffer(mBufferSize); 
+  return mBuffer;
 }
 
 already_AddRefed<gfxASurface>

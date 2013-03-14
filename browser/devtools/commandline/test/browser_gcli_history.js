@@ -26,30 +26,19 @@ var exports = {};
 const TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testHistory.js</p>";
 
 function test() {
-  var tests = Object.keys(exports);
-  // Push setup to the top and shutdown to the bottom
-  tests.sort(function(t1, t2) {
-    if (t1 == "setup" || t2 == "shutdown") return -1;
-    if (t2 == "setup" || t1 == "shutdown") return 1;
-    return 0;
-  });
-  info("Running tests: " + tests.join(", "))
-  tests = tests.map(function(test) { return exports[test]; });
-  DeveloperToolbarTest.test(TEST_URI, tests, true);
+  helpers.addTabWithToolbar(TEST_URI, function(options) {
+    return helpers.runTests(options, exports);
+  }).then(finish);
 }
 
 // <INJECTED SOURCE:END>
 
+'use strict';
+
 // var assert = require('test/assert');
 var History = require('gcli/history').History;
 
-exports.setup = function() {
-};
-
-exports.shutdown = function() {
-};
-
-exports.testSimpleHistory = function () {
+exports.testSimpleHistory = function (options) {
   var history = new History({});
   history.add('foo');
   history.add('bar');
@@ -63,7 +52,7 @@ exports.testSimpleHistory = function () {
   assert.is('foo', history.backward());
 };
 
-exports.testBackwardsPastIndex = function () {
+exports.testBackwardsPastIndex = function (options) {
   var history = new History({});
   history.add('foo');
   history.add('bar');
@@ -75,7 +64,7 @@ exports.testBackwardsPastIndex = function () {
   assert.is('foo', history.backward());
 };
 
-exports.testForwardsPastIndex = function () {
+exports.testForwardsPastIndex = function (options) {
   var history = new History({});
   history.add('foo');
   history.add('bar');

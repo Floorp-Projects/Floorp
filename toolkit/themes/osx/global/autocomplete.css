@@ -114,6 +114,12 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   -moz-margin-end: 5px;
 }
 
+@media (min-resolution: 2dppx) {
+  image.ac-site-icon {
+    image-rendering: -moz-crisp-edges;
+  }
+}
+
 .ac-type-icon {
   width: 16px;
   height: 16px;

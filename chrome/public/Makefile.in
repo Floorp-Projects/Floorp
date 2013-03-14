@@ -11,9 +11,4 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = chrome
 
-XPIDLSRCS = \
-  nsIChromeRegistry.idl \
-  nsIToolkitChromeRegistry.idl \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk

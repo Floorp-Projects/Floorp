@@ -70,7 +70,7 @@ IonBuilder::abort(const char *message, ...)
     va_start(ap, message);
     abortFmt(message, ap);
     va_end(ap);
-    IonSpew(IonSpew_Abort, "aborted @ %s:%d", script()->filename, PCToLineNumber(script(), pc));
+    IonSpew(IonSpew_Abort, "aborted @ %s:%d", script()->filename(), PCToLineNumber(script(), pc));
 #endif
     return false;
 }
@@ -80,7 +80,7 @@ IonBuilder::spew(const char *message)
 {
     // Don't call PCToLineNumber in release builds.
 #ifdef DEBUG
-    IonSpew(IonSpew_MIR, "%s @ %s:%d", message, script()->filename, PCToLineNumber(script(), pc));
+    IonSpew(IonSpew_MIR, "%s @ %s:%d", message, script()->filename(), PCToLineNumber(script(), pc));
 #endif
 }
 
@@ -278,7 +278,7 @@ IonBuilder::build()
         return false;
 
     IonSpew(IonSpew_Scripts, "Analyzing script %s:%d (%p) (usecount=%d) (maxloopcount=%d)",
-            script()->filename, script()->lineno, (void *)script(), (int)script()->getUseCount(),
+            script()->filename(), script()->lineno, (void *)script(), (int)script()->getUseCount(),
             (int)script()->getMaxLoopCount());
 
     if (!graph().addScript(script()))
@@ -405,7 +405,7 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
                         CallInfo &callInfo)
 {
     IonSpew(IonSpew_Scripts, "Inlining script %s:%d (%p)",
-            script()->filename, script()->lineno, (void *)script());
+            script()->filename(), script()->lineno, (void *)script());
 
     if (!graph().addScript(script()))
         return false;
@@ -6917,9 +6917,23 @@ IonBuilder::jsop_regexp(RegExpObject *reobj)
     if (!prototype)
         return false;
 
-    MRegExp *ins = MRegExp::New(reobj, prototype, MRegExp::MustClone);
-    current->add(ins);
-    current->push(ins);
+    MRegExp *regexp = MRegExp::New(reobj, prototype);
+    current->add(regexp);
+    current->push(regexp);
+
+    regexp->setMovable();
+
+    // The MRegExp is set to be movable.
+    // That would be incorrect for global/sticky, because lastIndex could be wrong.
+    // Therefore setting the lastIndex to 0. That is faster than removing the movable flag.
+    if (reobj->sticky() || reobj->global()) {
+        MConstant *zero = MConstant::New(Int32Value(0));
+        current->add(zero);
+
+        MStoreFixedSlot *lastIndex =
+            MStoreFixedSlot::New(regexp, RegExpObject::lastIndexSlot(), zero);
+        current->add(lastIndex);
+    }
 
     return true;
 }

@@ -35,7 +35,6 @@ ifneq (,$(MOZ_B2G_BT))
 
 MODULE           = dom
 LIBRARY_NAME     = dombluetooth_s
-XPIDL_MODULE     = dom_bluetooth
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 
@@ -61,15 +60,6 @@ CPPSRCS += \
 ifdef MOZ_B2G_RIL
 CPPSRCS += BluetoothTelephonyListener.cpp
 endif
-
-XPIDLSRCS = \
-  nsIDOMNavigatorBluetooth.idl \
-  nsIDOMBluetoothManager.idl \
-  nsIDOMBluetoothAdapter.idl \
-  nsIDOMBluetoothDevice.idl \
-  nsIDOMBluetoothDeviceEvent.idl \
-  nsIDOMBluetoothDeviceAddressEvent.idl \
-  $(NULL)
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 VPATH += \

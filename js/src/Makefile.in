@@ -176,14 +176,10 @@ INSTALLED_HEADERS = \
 # BEGIN exported headers that are only exported
 #       because of inclusion by an INSTALLED_HEADER
 #
-EXPORTS_NAMESPACES += ds gc
+EXPORTS_NAMESPACES += ds
 
 EXPORTS_ds = \
 		BitArray.h \
-		$(NULL)
-
-EXPORTS_gc = \
-		Root.h \
 		$(NULL)
 
 ######################################################
@@ -204,6 +200,7 @@ EXPORTS_NAMESPACES += js
 # LegacyIntTypes.h below is deliberately exempted from this requirement.
 EXPORTS_js = \
 		Anchor.h \
+		CallArgs.h \
 		CharacterEncoding.h \
 		GCAPI.h \
 		HashTable.h \
@@ -212,6 +209,7 @@ EXPORTS_js = \
 		MemoryMetrics.h \
 		PropertyKey.h \
 		RequiredDefines.h \
+		RootingAPI.h \
 		TemplateLib.h \
 		Utility.h \
 		Value.h \
@@ -600,6 +598,14 @@ distclean clean::
 		$(call SUBMAKE,$@,ctypes/libffi)
 endif
 endif
+
+# ICU headers need to be available whether we build with the complete
+# Internationalization API or not - ICU stubs rely on them.
+
+LOCAL_INCLUDES += \
+    -I$(topsrcdir)/../../intl/icu/source/common \
+    -I$(topsrcdir)/../../intl/icu/source/i18n \
+    $(NULL)
 
 # The "find any vanilla new/new[] calls" script is tailored to Linux, so
 # only run it there.  That should be enough to catch any such calls that

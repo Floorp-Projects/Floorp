@@ -27,12 +27,6 @@ endif
 
 MODULE = extensions
 
-XPIDLSRCS = \
-  amIInstallTrigger.idl \
-  amIWebInstallListener.idl \
-  amIWebInstaller.idl \
-  $(NULL)
-
 EXTRA_PP_COMPONENTS = \
   nsBlocklistService.js \
   extensions.manifest \

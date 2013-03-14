@@ -3,3 +3,30 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'nsIDOMGetSVGDocument.idl',
+    'nsIDOMSVGAnimatedEnum.idl',
+    'nsIDOMSVGAnimatedInteger.idl',
+    'nsIDOMSVGAnimatedLength.idl',
+    'nsIDOMSVGAnimatedNumber.idl',
+    'nsIDOMSVGAnimatedRect.idl',
+    'nsIDOMSVGAnimatedString.idl',
+    'nsIDOMSVGDocument.idl',
+    'nsIDOMSVGElement.idl',
+    'nsIDOMSVGFilters.idl',
+    'nsIDOMSVGLength.idl',
+    'nsIDOMSVGNumber.idl',
+    'nsIDOMSVGRect.idl',
+    'nsIDOMSVGStringList.idl',
+    'nsIDOMSVGUnitTypes.idl',
+    'nsIDOMSVGZoomEvent.idl',
+]
+
+XPIDL_MODULE = 'dom_svg'
+
+XPIDL_FLAGS += [
+    '-I$(topsrcdir)/dom/interfaces/base',
+    '-I$(topsrcdir)/dom/interfaces/core',
+    '-I$(topsrcdir)/dom/interfaces/events',
+]
+

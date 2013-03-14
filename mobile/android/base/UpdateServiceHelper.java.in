@@ -61,6 +61,14 @@ public class UpdateServiceHelper {
     private static final String UPDATE_URL = "https://aus2.mozilla.org/update/4/@MOZ_APP_BASENAME@/@MOZ_APP_VERSION@/%BUILDID%/Android_@MOZ_APP_ABI@/%LOCALE%/@MOZ_UPDATE_CHANNEL@/%OS_VERSION%/default/default/@MOZ_APP_VERSION@/update.xml";  
 #endif
     
+    public enum CheckUpdateResult {
+        // Keep these in sync with mobile/android/chrome/content/about.xhtml
+        NOT_AVAILABLE,
+        AVAILABLE,
+        DOWNLOADING,
+        DOWNLOADED
+    }
+
     public static URL getUpdateUrl(Context context, boolean force) {
         PackageManager pm = context.getPackageManager();
 

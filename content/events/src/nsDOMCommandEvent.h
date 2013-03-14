@@ -8,6 +8,7 @@
 
 #include "nsIDOMCommandEvent.h"
 #include "nsDOMEvent.h"
+#include "mozilla/dom/CommandEventBinding.h"
 
 class nsDOMCommandEvent : public nsDOMEvent,
                           public nsIDOMCommandEvent
@@ -24,6 +25,20 @@ public:
 
   // Forward to base class
   NS_FORWARD_TO_NSDOMEVENT
+
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope)
+  {
+    return mozilla::dom::CommandEventBinding::Wrap(aCx, aScope, this);
+  }
+
+  void InitCommandEvent(const nsAString& aType,
+                        bool aCanBubble,
+                        bool aCancelable,
+                        const nsAString& aCommand,
+                        mozilla::ErrorResult& aRv)
+  {
+    aRv = InitCommandEvent(aType, aCanBubble, aCancelable, aCommand);
+  }
 };
 
 #endif // nsDOMCommandEvent_h__

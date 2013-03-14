@@ -30,11 +30,6 @@ EXPORTS_mozilla = \
   TelemetryHistogramEnums.h \
   $(NULL)
 
-XPIDLSRCS = \
-  nsITelemetry.idl \
-  nsITelemetryPing.idl \
-  $(NULL)
-
 EXTRA_PP_COMPONENTS = \
   TelemetryPing.js \
   $(NULL)

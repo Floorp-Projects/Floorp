@@ -66,9 +66,8 @@ gfxPlatformMac::gfxPlatformMac()
 {
     mOSXVersion = 0;
     OSXVersion();
-    if (mOSXVersion >= MAC_OS_X_VERSION_10_6_HEX) {
-        DisableFontActivation();
-    }
+
+    DisableFontActivation();
     mFontAntiAliasingThreshold = ReadAntiAliasingThreshold();
 
     uint32_t canvasMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA) | (1 << BACKEND_COREGRAPHICS);

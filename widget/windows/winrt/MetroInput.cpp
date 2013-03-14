@@ -284,6 +284,20 @@ MetroInput::MetroInput(MetroWidget* aWidget,
   NS_ASSERTION(aWidget, "Attempted to create MetroInput for null widget!");
   NS_ASSERTION(aWindow, "Attempted to create MetroInput for null window!");
 
+  mTokenPointerPressed.value = 0;
+  mTokenPointerReleased.value = 0;
+  mTokenPointerMoved.value = 0;
+  mTokenPointerEntered.value = 0;
+  mTokenPointerExited.value = 0;
+  mTokenPointerWheelChanged.value = 0;
+  mTokenAcceleratorKeyActivated.value = 0;
+  mTokenEdgeGesture.value = 0;
+  mTokenManipulationStarted.value = 0;
+  mTokenManipulationUpdated.value = 0;
+  mTokenManipulationCompleted.value = 0;
+  mTokenTapped.value = 0;
+  mTokenRightTapped.value = 0;
+
   mTouches.Init();
 
   // Note that this is not thread-safe.
@@ -1335,19 +1349,22 @@ void
 MetroInput::UnregisterInputEvents() {
   // Unregister ourselves for the edge swipe event
   WRL::ComPtr<UI::Input::IEdgeGestureStatics> edgeStatics;
-  Foundation::GetActivationFactory(
+  if (SUCCEEDED(Foundation::GetActivationFactory(
         WRL::Wrappers::HStringReference(
               RuntimeClass_Windows_UI_Input_EdgeGesture).Get(),
-      edgeStatics.GetAddressOf());
-  WRL::ComPtr<UI::Input::IEdgeGesture> edge;
-  edgeStatics->GetForCurrentView(edge.GetAddressOf());
-  edge->remove_Completed(mTokenEdgeGesture);
+      edgeStatics.GetAddressOf()))) {
+    WRL::ComPtr<UI::Input::IEdgeGesture> edge;
+    if (SUCCEEDED(edgeStatics->GetForCurrentView(edge.GetAddressOf()))) {
+      edge->remove_Completed(mTokenEdgeGesture);
+    }
+  }
 
   // Unregister ourselves from the AcceleratorKeyActivated event
   WRL::ComPtr<ICoreAcceleratorKeys> coreAcceleratorKeys;
-  mDispatcher.As<ICoreAcceleratorKeys>(&coreAcceleratorKeys);
-  coreAcceleratorKeys->remove_AcceleratorKeyActivated(
-                          mTokenAcceleratorKeyActivated);
+  if (SUCCEEDED(mDispatcher.As<ICoreAcceleratorKeys>(&coreAcceleratorKeys))) {
+    coreAcceleratorKeys->remove_AcceleratorKeyActivated(
+                            mTokenAcceleratorKeyActivated);
+  }
 
   // Unregister ourselves from the window events. This is extremely important;
   // once this object is destroyed we don't want Windows to try to send events

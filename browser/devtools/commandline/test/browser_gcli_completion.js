@@ -26,433 +26,511 @@ var exports = {};
 const TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testCompletion.js</p>";
 
 function test() {
-  var tests = Object.keys(exports);
-  // Push setup to the top and shutdown to the bottom
-  tests.sort(function(t1, t2) {
-    if (t1 == "setup" || t2 == "shutdown") return -1;
-    if (t2 == "setup" || t1 == "shutdown") return 1;
-    return 0;
-  });
-  info("Running tests: " + tests.join(", "))
-  tests = tests.map(function(test) { return exports[test]; });
-  DeveloperToolbarTest.test(TEST_URI, tests, true);
+  helpers.addTabWithToolbar(TEST_URI, function(options) {
+    return helpers.runTests(options, exports);
+  }).then(finish);
 }
 
 // <INJECTED SOURCE:END>
 
+'use strict';
 
-// var test = require('test/assert');
 // var helpers = require('gclitest/helpers');
 // var mockCommands = require('gclitest/mockCommands');
 
-
 exports.setup = function(options) {
   mockCommands.setup();
-  helpers.setup(options);
 };
 
 exports.shutdown = function(options) {
   mockCommands.shutdown();
-  helpers.shutdown(options);
 };
 
 exports.testActivate = function(options) {
-  if (!options.display) {
-    test.log('No display. Skipping activate tests');
-    return;
-  }
-
-  helpers.setInput('');
-  helpers.check({
-    hints: ''
-  });
-
-  helpers.setInput(' ');
-  helpers.check({
-    hints: ''
-  });
-
-  helpers.setInput('tsr');
-  helpers.check({
-    hints: ' <text>'
-  });
-
-  helpers.setInput('tsr ');
-  helpers.check({
-    hints: '<text>'
-  });
-
-  helpers.setInput('tsr b');
-  helpers.check({
-    hints: ''
-  });
-
-  helpers.setInput('tsb');
-  helpers.check({
-    hints: ' [toggle]'
-  });
-
-  helpers.setInput('tsm');
-  helpers.check({
-    hints: ' <abc> <txt> <num>'
-  });
-
-  helpers.setInput('tsm ');
-  helpers.check({
-    hints: 'a <txt> <num>'
-  });
-
-  helpers.setInput('tsm a');
-  helpers.check({
-    hints: ' <txt> <num>'
-  });
-
-  helpers.setInput('tsm a ');
-  helpers.check({
-    hints: '<txt> <num>'
-  });
-
-  helpers.setInput('tsm a  ');
-  helpers.check({
-    hints: '<txt> <num>'
-  });
-
-  helpers.setInput('tsm a  d');
-  helpers.check({
-    hints: ' <num>'
-  });
-
-  helpers.setInput('tsm a "d d"');
-  helpers.check({
-    hints: ' <num>'
-  });
-
-  helpers.setInput('tsm a "d ');
-  helpers.check({
-    hints: ' <num>'
-  });
-
-  helpers.setInput('tsm a "d d" ');
-  helpers.check({
-    hints: '<num>'
-  });
-
-  helpers.setInput('tsm a "d d ');
-  helpers.check({
-    hints: ' <num>'
-  });
-
-  helpers.setInput('tsm d r');
-  helpers.check({
-    hints: ' <num>'
-  });
-
-  helpers.setInput('tsm a d ');
-  helpers.check({
-    hints: '<num>'
-  });
-
-  helpers.setInput('tsm a d 4');
-  helpers.check({
-    hints: ''
-  });
-
-  helpers.setInput('tsg');
-  helpers.check({
-    hints: ' <solo> [options]'
-  });
-
-  helpers.setInput('tsg ');
-  helpers.check({
-    hints: 'aaa [options]'
-  });
-
-  helpers.setInput('tsg a');
-  helpers.check({
-    hints: 'aa [options]'
-  });
-
-  helpers.setInput('tsg b');
-  helpers.check({
-    hints: 'bb [options]'
-  });
-
-  helpers.setInput('tsg d');
-  helpers.check({
-    hints: ' [options] -> ccc'
-  });
-
-  helpers.setInput('tsg aa');
-  helpers.check({
-    hints: 'a [options]'
-  });
-
-  helpers.setInput('tsg aaa');
-  helpers.check({
-    hints: ' [options]'
-  });
-
-  helpers.setInput('tsg aaa ');
-  helpers.check({
-    hints: '[options]'
-  });
-
-  helpers.setInput('tsg aaa d');
-  helpers.check({
-    hints: ' [options]'
-  });
-
-  helpers.setInput('tsg aaa dddddd');
-  helpers.check({
-    hints: ' [options]'
-  });
-
-  helpers.setInput('tsg aaa dddddd ');
-  helpers.check({
-    hints: '[options]'
-  });
-
-  helpers.setInput('tsg aaa "d');
-  helpers.check({
-    hints: ' [options]'
-  });
-
-  helpers.setInput('tsg aaa "d d');
-  helpers.check({
-    hints: ' [options]'
-  });
-
-  helpers.setInput('tsg aaa "d d"');
-  helpers.check({
-    hints: ' [options]'
-  });
-
-  helpers.setInput('tsn ex ');
-  helpers.check({
-    hints: ''
-  });
-
-  helpers.setInput('selarr');
-  helpers.check({
-    hints: ' -> tselarr'
-  });
-
-  helpers.setInput('tselar 1');
-  helpers.check({
-    hints: ''
-  });
-
-  helpers.setInput('tselar 1', 7);
-  helpers.check({
-    hints: ''
-  });
-
-  helpers.setInput('tselar 1', 6);
-  helpers.check({
-    hints: ' -> tselarr'
-  });
-
-  helpers.setInput('tselar 1', 5);
-  helpers.check({
-    hints: ' -> tselarr'
-  });
+  return helpers.audit(options, [
+    {
+      setup: '',
+      check: {
+        hints: ''
+      }
+    },
+    {
+      setup: ' ',
+      check: {
+        hints: ''
+      }
+    },
+    {
+      setup: 'tsr',
+      check: {
+        hints: ' <text>'
+      }
+    },
+    {
+      setup: 'tsr ',
+      check: {
+        hints: '<text>'
+      }
+    },
+    {
+      setup: 'tsr b',
+      check: {
+        hints: ''
+      }
+    },
+    {
+      setup: 'tsb',
+      check: {
+        hints: ' [toggle]'
+      }
+    },
+    {
+      setup: 'tsm',
+      check: {
+        hints: ' <abc> <txt> <num>'
+      }
+    },
+    {
+      setup: 'tsm ',
+      check: {
+        hints: 'a <txt> <num>'
+      }
+    },
+    {
+      setup: 'tsm a',
+      check: {
+        hints: ' <txt> <num>'
+      }
+    },
+    {
+      setup: 'tsm a ',
+      check: {
+        hints: '<txt> <num>'
+      }
+    },
+    {
+      setup: 'tsm a  ',
+      check: {
+        hints: '<txt> <num>'
+      }
+    },
+    {
+      setup: 'tsm a  d',
+      check: {
+        hints: ' <num>'
+      }
+    },
+    {
+      setup: 'tsm a "d d"',
+      check: {
+        hints: ' <num>'
+      }
+    },
+    {
+      setup: 'tsm a "d ',
+      check: {
+        hints: ' <num>'
+      }
+    },
+    {
+      setup: 'tsm a "d d" ',
+      check: {
+        hints: '<num>'
+      }
+    },
+    {
+      setup: 'tsm a "d d ',
+      check: {
+        hints: ' <num>'
+      }
+    },
+    {
+      setup: 'tsm d r',
+      check: {
+        hints: ' <num>'
+      }
+    },
+    {
+      setup: 'tsm a d ',
+      check: {
+        hints: '<num>'
+      }
+    },
+    {
+      setup: 'tsm a d 4',
+      check: {
+        hints: ''
+      }
+    },
+    {
+      setup: 'tsg',
+      check: {
+        hints: ' <solo> [options]'
+      }
+    },
+    {
+      setup: 'tsg ',
+      check: {
+        hints: 'aaa [options]'
+      }
+    },
+    {
+      setup: 'tsg a',
+      check: {
+        hints: 'aa [options]'
+      }
+    },
+    {
+      setup: 'tsg b',
+      check: {
+        hints: 'bb [options]'
+      }
+    },
+    {
+      skipIf: options.isPhantomjs,
+      setup: 'tsg d',
+      check: {
+        hints: ' [options] -> ccc'
+      }
+    },
+    {
+      setup: 'tsg aa',
+      check: {
+        hints: 'a [options]'
+      }
+    },
+    {
+      setup: 'tsg aaa',
+      check: {
+        hints: ' [options]'
+      }
+    },
+    {
+      setup: 'tsg aaa ',
+      check: {
+        hints: '[options]'
+      }
+    },
+    {
+      setup: 'tsg aaa d',
+      check: {
+        hints: ' [options]'
+      }
+    },
+    {
+      setup: 'tsg aaa dddddd',
+      check: {
+        hints: ' [options]'
+      }
+    },
+    {
+      setup: 'tsg aaa dddddd ',
+      check: {
+        hints: '[options]'
+      }
+    },
+    {
+      setup: 'tsg aaa "d',
+      check: {
+        hints: ' [options]'
+      }
+    },
+    {
+      setup: 'tsg aaa "d d',
+      check: {
+        hints: ' [options]'
+      }
+    },
+    {
+      setup: 'tsg aaa "d d"',
+      check: {
+        hints: ' [options]'
+      }
+    },
+    {
+      setup: 'tsn ex ',
+      check: {
+        hints: ''
+      }
+    },
+    {
+      setup: 'selarr',
+      check: {
+        hints: ' -> tselarr'
+      }
+    },
+    {
+      setup: 'tselar 1',
+      check: {
+        hints: ''
+      }
+    },
+    {
+      name: 'tselar |1',
+      setup: function() {
+        helpers.setInput(options, 'tselar 1', 7);
+      },
+      check: {
+        hints: ''
+      }
+    },
+    {
+      name: 'tselar| 1',
+      setup: function() {
+        helpers.setInput(options, 'tselar 1', 6);
+      },
+      check: {
+        hints: ' -> tselarr'
+      }
+    },
+    {
+      name: 'tsela|r 1',
+      setup: function() {
+        helpers.setInput(options, 'tselar 1', 5);
+      },
+      check: {
+        hints: ' -> tselarr'
+      }
+    },
+  ]);
 };
 
 exports.testLong = function(options) {
-  helpers.setInput('tslong --sel');
-  helpers.check({
-    input:  'tslong --sel',
-    hints:              ' <selection> <msg> [options]',
-    markup: 'VVVVVVVIIIII'
-  });
-
-  helpers.pressTab();
-  helpers.check({
-    input:  'tslong --sel ',
-    hints:               'space <msg> [options]',
-    markup: 'VVVVVVVIIIIIV'
-  });
-
-  helpers.setInput('tslong --sel ');
-  helpers.check({
-    input:  'tslong --sel ',
-    hints:               'space <msg> [options]',
-    markup: 'VVVVVVVIIIIIV'
-  });
-
-  helpers.setInput('tslong --sel s');
-  helpers.check({
-    input:  'tslong --sel s',
-    hints:                'pace <msg> [options]',
-    markup: 'VVVVVVVIIIIIVI'
-  });
-
-  helpers.setInput('tslong --num ');
-  helpers.check({
-    input:  'tslong --num ',
-    hints:               '<number> <msg> [options]',
-    markup: 'VVVVVVVIIIIIV'
-  });
-
-  helpers.setInput('tslong --num 42');
-  helpers.check({
-    input:  'tslong --num 42',
-    hints:                 ' <msg> [options]',
-    markup: 'VVVVVVVVVVVVVVV'
-  });
-
-  helpers.setInput('tslong --num 42 ');
-  helpers.check({
-    input:  'tslong --num 42 ',
-    hints:                  '<msg> [options]',
-    markup: 'VVVVVVVVVVVVVVVV'
-  });
-
-  helpers.setInput('tslong --num 42 --se');
-  helpers.check({
-    input:  'tslong --num 42 --se',
-    hints:                      'l <msg> [options]',
-    markup: 'VVVVVVVVVVVVVVVVIIII'
-  });
-
-  helpers.pressTab();
-  helpers.check({
-    input:  'tslong --num 42 --sel ',
-    hints:                        'space <msg> [options]',
-    markup: 'VVVVVVVVVVVVVVVVIIIIIV'
-  });
-
-  helpers.pressTab();
-  helpers.check({
-    input:  'tslong --num 42 --sel space ',
-    hints:                              '<msg> [options]',
-    markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVV'
-  });
-
-  helpers.setInput('tslong --num 42 --sel ');
-  helpers.check({
-    input:  'tslong --num 42 --sel ',
-    hints:                        'space <msg> [options]',
-    markup: 'VVVVVVVVVVVVVVVVIIIIIV'
-  });
-
-  helpers.setInput('tslong --num 42 --sel space ');
-  helpers.check({
-    input:  'tslong --num 42 --sel space ',
-    hints:                              '<msg> [options]',
-    markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVV'
-  });
+  return helpers.audit(options, [
+    {
+      setup:    'tslong --sel',
+      check: {
+        input:  'tslong --sel',
+        hints:              ' <selection> <msg> [options]',
+        markup: 'VVVVVVVIIIII'
+      }
+    },
+    {
+      setup:    'tslong --sel<TAB>',
+      check: {
+        input:  'tslong --sel ',
+        hints:               'space <msg> [options]',
+        markup: 'VVVVVVVIIIIIV'
+      }
+    },
+    {
+      setup:    'tslong --sel ',
+      check: {
+        input:  'tslong --sel ',
+        hints:               'space <msg> [options]',
+        markup: 'VVVVVVVIIIIIV'
+      }
+    },
+    {
+      setup:    'tslong --sel s',
+      check: {
+        input:  'tslong --sel s',
+        hints:                'pace <msg> [options]',
+        markup: 'VVVVVVVIIIIIVI'
+      }
+    },
+    {
+      setup:    'tslong --num ',
+      check: {
+        input:  'tslong --num ',
+        hints:               '<number> <msg> [options]',
+        markup: 'VVVVVVVIIIIIV'
+      }
+    },
+    {
+      setup:    'tslong --num 42',
+      check: {
+        input:  'tslong --num 42',
+        hints:                 ' <msg> [options]',
+        markup: 'VVVVVVVVVVVVVVV'
+      }
+    },
+    {
+      setup:    'tslong --num 42 ',
+      check: {
+        input:  'tslong --num 42 ',
+        hints:                  '<msg> [options]',
+        markup: 'VVVVVVVVVVVVVVVV'
+      }
+    },
+    {
+      setup:    'tslong --num 42 --se',
+      check: {
+        input:  'tslong --num 42 --se',
+        hints:                      'l <msg> [options]',
+        markup: 'VVVVVVVVVVVVVVVVIIII'
+      }
+    },
+    {
+      skipIf: options.isJsdom,
+      setup:    'tslong --num 42 --se<TAB>',
+      check: {
+        input:  'tslong --num 42 --sel ',
+        hints:                        'space <msg> [options]',
+        markup: 'VVVVVVVVVVVVVVVVIIIIIV'
+      }
+    },
+    {
+      skipIf: options.isJsdom,
+      setup:    'tslong --num 42 --se<TAB><TAB>',
+      check: {
+        input:  'tslong --num 42 --sel space ',
+        hints:                              '<msg> [options]',
+        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVV'
+      }
+    },
+    {
+      setup:    'tslong --num 42 --sel ',
+      check: {
+        input:  'tslong --num 42 --sel ',
+        hints:                        'space <msg> [options]',
+        markup: 'VVVVVVVVVVVVVVVVIIIIIV'
+      }
+    },
+    {
+      setup:    'tslong --num 42 --sel space ',
+      check: {
+        input:  'tslong --num 42 --sel space ',
+        hints:                              '<msg> [options]',
+        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVV'
+      }
+    }
+  ]);
 };
 
 exports.testNoTab = function(options) {
-  helpers.setInput('tss');
-  helpers.pressTab();
-  helpers.check({
-    input:  'tss ',
-    markup: 'VVVV',
-    hints: ''
-  });
-
-  helpers.pressTab();
-  helpers.check({
-    input:  'tss ',
-    markup: 'VVVV',
-    hints: ''
-  });
-
-  helpers.setInput('xxxx');
-  helpers.check({
-    input:  'xxxx',
-    markup: 'EEEE',
-    hints: ''
-  });
-
-  helpers.pressTab();
-  helpers.check({
-    input:  'xxxx',
-    markup: 'EEEE',
-    hints: ''
-  });
+  return helpers.audit(options, [
+    {
+      setup:    'tss<TAB>',
+      check: {
+        input:  'tss ',
+        markup: 'VVVV',
+        hints: ''
+      }
+    },
+    {
+      setup:    'tss<TAB><TAB>',
+      check: {
+        input:  'tss ',
+        markup: 'VVVV',
+        hints: ''
+      }
+    },
+    {
+      setup:    'xxxx',
+      check: {
+        input:  'xxxx',
+        markup: 'EEEE',
+        hints: ''
+      }
+    },
+    {
+      name: '<TAB>',
+      setup: function() {
+        // Doing it this way avoids clearing the input buffer
+        return helpers.pressTab(options);
+      },
+      check: {
+        input:  'xxxx',
+        markup: 'EEEE',
+        hints: ''
+      }
+    }
+  ]);
 };
 
 exports.testOutstanding = function(options) {
   // See bug 779800
   /*
-  helpers.setInput('tsg --txt1 ddd ');
-  helpers.check({
-    input:  'tsg --txt1 ddd ',
-    hints:                 'aaa [options]',
-    markup: 'VVVVVVVVVVVVVVV'
-  });
+  return helpers.audit(options, [
+    {
+      setup:    'tsg --txt1 ddd ',
+      check: {
+        input:  'tsg --txt1 ddd ',
+        hints:                 'aaa [options]',
+        markup: 'VVVVVVVVVVVVVVV'
+      }
+    },
+  ]);
   */
 };
 
 exports.testCompleteIntoOptional = function(options) {
   // From bug 779816
-  helpers.setInput('tso ');
-  helpers.check({
-    typed:  'tso ',
-    hints:      '[text]',
-    markup: 'VVVV',
-    status: 'VALID'
-  });
-
-  helpers.setInput('tso');
-  helpers.pressTab();
-  helpers.check({
-    typed:  'tso ',
-    hints:      '[text]',
-    markup: 'VVVV',
-    status: 'VALID'
-  });
-};
-
-exports.testSpaceComplete = function(options) {
-  helpers.setInput('tslong --sel2 wit');
-  helpers.check({
-    input:  'tslong --sel2 wit',
-    hints:                   'h space <msg> [options]',
-    markup: 'VVVVVVVIIIIIIVIII',
-    cursor: 17,
-    current: 'sel2',
-    status: 'ERROR',
-    tooltipState: 'true:importantFieldFlag',
-    args: {
-      command: { name: 'tslong' },
-      msg: { status: 'INCOMPLETE', message: '' },
-      num: { status: 'VALID' },
-      sel: { status: 'VALID' },
-      bool: { value: false, status: 'VALID' },
-      num2: { status: 'VALID' },
-      bool2: { value: false, status: 'VALID' },
-      sel2: { arg: ' --sel2 wit', status: 'INCOMPLETE' }
-    }
-  });
-
-  helpers.pressTab();
-  helpers.check({
-    input:  'tslong --sel2 \'with space\' ',
-    hints:                             '<msg> [options]',
-    markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVV',
-    cursor: 27,
-    current: 'sel2',
-    status: 'ERROR',
-    tooltipState: 'true:importantFieldFlag',
-    args: {
-      command: { name: 'tslong' },
-      msg: { status: 'INCOMPLETE', message: '' },
-      num: { status: 'VALID' },
-      sel: { status: 'VALID' },
-      bool: { value: false,status: 'VALID' },
-      num2: { status: 'VALID' },
-      bool2: { value: false,status: 'VALID' },
-      sel2: {
-        value: 'with space',
-        arg: ' --sel2 \'with space\' ',
+  return helpers.audit(options, [
+    {
+      setup:    'tso ',
+      check: {
+        typed:  'tso ',
+        hints:      '[text]',
+        markup: 'VVVV',
+        status: 'VALID'
+      }
+    },
+    {
+      setup:    'tso<TAB>',
+      check: {
+        typed:  'tso ',
+        hints:      '[text]',
+        markup: 'VVVV',
         status: 'VALID'
       }
     }
-  });
+  ]);
+};
+
+exports.testSpaceComplete = function(options) {
+  return helpers.audit(options, [
+    {
+      setup:    'tslong --sel2 wit',
+      check: {
+        input:  'tslong --sel2 wit',
+        hints:                   'h space <msg> [options]',
+        markup: 'VVVVVVVIIIIIIVIII',
+        cursor: 17,
+        current: 'sel2',
+        status: 'ERROR',
+        tooltipState: 'true:importantFieldFlag',
+        args: {
+          command: { name: 'tslong' },
+          msg: { status: 'INCOMPLETE', message: '' },
+          num: { status: 'VALID' },
+          sel: { status: 'VALID' },
+          bool: { value: false, status: 'VALID' },
+          num2: { status: 'VALID' },
+          bool2: { value: false, status: 'VALID' },
+          sel2: { arg: ' --sel2 wit', status: 'INCOMPLETE' }
+        }
+      }
+    },
+    {
+      skipIf: options.isJsdom,
+      setup:    'tslong --sel2 wit<TAB>',
+      check: {
+        input:  'tslong --sel2 \'with space\' ',
+        hints:                             '<msg> [options]',
+        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVV',
+        cursor: 27,
+        current: 'sel2',
+        status: 'ERROR',
+        tooltipState: 'true:importantFieldFlag',
+        args: {
+          command: { name: 'tslong' },
+          msg: { status: 'INCOMPLETE', message: '' },
+          num: { status: 'VALID' },
+          sel: { status: 'VALID' },
+          bool: { value: false,status: 'VALID' },
+          num2: { status: 'VALID' },
+          bool2: { value: false,status: 'VALID' },
+          sel2: {
+            value: 'with space',
+            arg: ' --sel2 \'with space\' ',
+            status: 'VALID'
+          }
+        }
+      }
+    }
+  ]);
 };
 
 

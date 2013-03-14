@@ -12,6 +12,4 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = browser-feeds
 
-XPIDLSRCS = nsIFeedResultService.idl nsIWebContentConverterRegistrar.idl nsIFeedWriter.idl
-
 include $(topsrcdir)/config/rules.mk

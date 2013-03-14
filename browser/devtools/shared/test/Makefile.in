@@ -23,7 +23,6 @@ MOCHITEST_BROWSER_FILES = \
   browser_layoutHelpers.js \
   browser_eventemitter_basic.js \
   head.js \
-  helpers.js \
   leakhunt.js \
   $(NULL)
 

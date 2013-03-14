@@ -2,7 +2,6 @@
 package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
-import android.app.Activity;
 import android.util.DisplayMetrics;
 
 /* Test the context menu on web content: Long click on a link,

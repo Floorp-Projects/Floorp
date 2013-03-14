@@ -178,11 +178,11 @@ class ParallelSpewer
                 NonBuiltinScriptFrameIter iter(cx);
                 if (iter.done()) {
                     spew(SpewOps, "%sBEGIN %s%s (%s:%u)", bold(), name, reset(),
-                         script->filename, PCToLineNumber(script, pc));
+                         script->filename(), PCToLineNumber(script, pc));
                 } else {
                     spew(SpewOps, "%sBEGIN %s%s (%s:%u -> %s:%u)", bold(), name, reset(),
-                         iter.script()->filename, PCToLineNumber(iter.script(), iter.pc()),
-                         script->filename, PCToLineNumber(script, pc));
+                         iter.script()->filename(), PCToLineNumber(iter.script(), iter.pc()),
+                         script->filename(), PCToLineNumber(script, pc));
                 }
             } else {
                 spew(SpewOps, "%sBEGIN %s%s", bold(), name, reset());
@@ -233,7 +233,7 @@ class ParallelSpewer
             return;
 
         spew(SpewCompile, "COMPILE %p:%s:%u",
-             fun.get(), fun->nonLazyScript()->filename, fun->nonLazyScript()->lineno);
+             fun.get(), fun->nonLazyScript()->filename(), fun->nonLazyScript()->lineno);
         depth++;
     }
 
@@ -273,7 +273,7 @@ class ParallelSpewer
 
         JSScript *script = mir->block()->info().script();
         spew(SpewCompile, "%s%s%s: %s (%s:%u)", cyan(), mir->opName(), reset(), buf,
-             script->filename, PCToLineNumber(script, mir->trackedPc()));
+             script->filename(), PCToLineNumber(script, mir->trackedPc()));
     }
 
     void spewBailoutIR(uint32_t bblockId, uint32_t lirId,
@@ -288,7 +288,7 @@ class ParallelSpewer
             spew(SpewBailouts, "%sBailout%s: %s / %s%s%s (block %d lir %d) (%s:%u)", yellow(), reset(),
                  lir, cyan(), mir, reset(),
                  bblockId, lirId,
-                 script->filename, PCToLineNumber(script, pc));
+                 script->filename(), PCToLineNumber(script, pc));
         }
     }
 };

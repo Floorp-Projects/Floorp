@@ -119,6 +119,6 @@ public class BrowserToolbarBackground extends GeckoLinearLayout
             return;
 
         mSide = side;
-        invalidate();
+        requestLayout();
     }
 }

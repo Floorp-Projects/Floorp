@@ -15,7 +15,7 @@
 #include "nsIFile.h"
 #include "mozilla/Module.h"
 #include "mozilla/ModuleLoader.h"
-#include "mozilla/ReentrantMonitor.h"
+#include "mozilla/Mutex.h"
 #include "nsXULAppAPI.h"
 #include "nsNativeComponentLoader.h"
 #include "nsIFactory.h"
@@ -63,6 +63,59 @@ extern const char staticComponentType[];
 ////////////////////////////////////////////////////////////////////////////////
 
 extern const mozilla::Module kXPCOMModule;
+
+/**
+ * This is a wrapper around mozilla::Mutex which provides runtime
+ * checking for a deadlock where the same thread tries to lock a mutex while
+ * it is already locked. This checking is present in both debug and release
+ * builds.
+ */
+class SafeMutex
+{
+public:
+    SafeMutex(const char* name)
+        : mMutex(name)
+        , mOwnerThread(nullptr)
+    { }
+    ~SafeMutex()
+    { }
+
+    void Lock()
+    {
+        AssertNotCurrentThreadOwns();
+        mMutex.Lock();
+        MOZ_ASSERT(mOwnerThread == nullptr);
+        mOwnerThread = PR_GetCurrentThread();
+    }
+
+    void Unlock()
+    {
+        MOZ_ASSERT(mOwnerThread == PR_GetCurrentThread());
+        mOwnerThread = nullptr;
+        mMutex.Unlock();
+    }
+
+    void AssertCurrentThreadOwns() const
+    {
+        // This method is a debug-only check
+        MOZ_ASSERT(mOwnerThread == PR_GetCurrentThread());
+    }
+
+    MOZ_NEVER_INLINE void AssertNotCurrentThreadOwns() const
+    {
+        // This method is a release-mode check
+        if (PR_GetCurrentThread() == mOwnerThread) {
+            MOZ_CRASH();
+        }
+    }
+
+private:
+    mozilla::Mutex mMutex;
+    volatile PRThread* mOwnerThread;
+};
+
+typedef mozilla::BaseAutoLock<SafeMutex> SafeMutexAutoLock;
+typedef mozilla::BaseAutoUnlock<SafeMutex> SafeMutexAutoUnlock;
 
 class nsComponentManagerImpl MOZ_FINAL
     : public nsIComponentManager
@@ -112,7 +165,7 @@ public:
     nsDataHashtable<nsIDHashKey, nsFactoryEntry*> mFactories;
     nsDataHashtable<nsCStringHashKey, nsFactoryEntry*> mContractIDs;
 
-    mozilla::ReentrantMonitor mMon;
+    SafeMutex mLock;
 
     static void InitializeStaticModules();
     static void InitializeModuleLocations();
@@ -198,12 +251,17 @@ public:
     // The key is the URI string of the module
     nsClassHashtable<nsCStringHashKey, KnownModule> mKnownModules;
 
+    // Mutex not held
     void RegisterModule(const mozilla::Module* aModule,
                         mozilla::FileLocation* aFile);
-    void RegisterCIDEntry(const mozilla::Module::CIDEntry* aEntry,
-                          KnownModule* aModule);
-    void RegisterContractID(const mozilla::Module::ContractIDEntry* aEntry);
 
+
+    // Mutex held
+    void RegisterCIDEntryLocked(const mozilla::Module::CIDEntry* aEntry,
+                          KnownModule* aModule);
+    void RegisterContractIDLocked(const mozilla::Module::ContractIDEntry* aEntry);
+
+    // Mutex not held
     void RegisterManifest(NSLocationType aType, mozilla::FileLocation &aFile,
                           bool aChromeOnly);
 

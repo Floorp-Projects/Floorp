@@ -1270,7 +1270,7 @@ void nsXULWindow::StaggerPosition(int32_t &aRequestedX, int32_t &aRequestedY,
                                   int32_t aSpecWidth, int32_t aSpecHeight)
 {
   const int32_t kOffset = 22;
-  const int32_t kSlop   = 4;
+  const uint32_t kSlop  = 4;
 
   nsresult rv;
   bool     keepTrying;

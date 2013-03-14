@@ -13,6 +13,7 @@ from mozbuild.frontend.data import (
     ConfigFileSubstitution,
     DirectoryTraversal,
     ReaderSummary,
+    VariablePassthru,
 )
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import BuildReader
@@ -110,6 +111,25 @@ class TestEmitterBasic(unittest.TestCase):
             os.path.normpath(os.path.join(topobjdir, 'foo')))
         self.assertEqual(os.path.normpath(objs[2].output_path),
             os.path.normpath(os.path.join(topobjdir, 'bar')))
+
+    def test_variable_passthru(self):
+        reader = self.reader('variable-passthru')
+        objs = self.read_topsrcdir(reader)
+
+        self.assertEqual(len(objs), 2)
+        self.assertIsInstance(objs[0], DirectoryTraversal)
+        self.assertIsInstance(objs[1], VariablePassthru)
+
+        variables = objs[1].variables
+        self.assertEqual(len(variables), 3)
+        self.assertIn('XPIDLSRCS', variables)
+        self.assertEqual(variables['XPIDLSRCS'],
+            ['foo.idl', 'bar.idl', 'biz.idl'])
+        self.assertIn('XPIDL_MODULE', variables)
+        self.assertEqual(variables['XPIDL_MODULE'], 'module_name')
+        self.assertIn('XPIDL_FLAGS', variables)
+        self.assertEqual(variables['XPIDL_FLAGS'],
+            ['-Idir1', '-Idir2', '-Idir3'])
 
 
 if __name__ == '__main__':

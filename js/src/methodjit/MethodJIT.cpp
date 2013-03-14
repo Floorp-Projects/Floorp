@@ -1020,7 +1020,7 @@ mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimi
 {
 #ifdef JS_METHODJIT_SPEW
     JaegerSpew(JSpew_Prof, "%s jaeger script, line %d\n",
-               fp->script()->filename, fp->script()->lineno);
+               fp->script()->filename(), fp->script()->lineno);
     Profiler prof;
     prof.start();
 #endif
