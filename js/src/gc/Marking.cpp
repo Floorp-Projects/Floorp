@@ -10,6 +10,7 @@
 #include "jsstr.h"
 
 #include "gc/Marking.h"
+#include "gc/Nursery-inl.h"
 #include "methodjit/MethodJIT.h"
 #include "vm/Shape.h"
 
@@ -105,10 +106,22 @@ IsThingPoisoned(T *thing)
 }
 #endif
 
+static GCMarker *
+AsGCMarker(JSTracer *trc)
+{
+    JS_ASSERT(IS_GC_MARKING_TRACER(trc));
+    return static_cast<GCMarker *>(trc);
+}
+
 template<typename T>
 static inline void
 CheckMarkedThing(JSTracer *trc, T *thing)
 {
+#ifdef DEBUG
+    /* This function uses data that's not available in the nursery. */
+    if (IsInsideNursery(trc->runtime, thing))
+        return;
+
     JS_ASSERT(trc);
     JS_ASSERT(thing);
     JS_ASSERT(thing->zone());
@@ -120,21 +133,20 @@ CheckMarkedThing(JSTracer *trc, T *thing)
     JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc) && rt->gcManipulatingDeadZones,
                  !thing->zone()->scheduledForDestruction);
 
-#ifdef DEBUG
     rt->assertValidThread();
-#endif
 
-    JS_ASSERT_IF(thing->zone()->requireGCTracer(), IS_GC_MARKING_TRACER(trc));
+    JS_ASSERT_IF(thing->zone()->requireGCTracer(),
+                 IS_GC_MARKING_TRACER(trc));
 
     JS_ASSERT(thing->isAligned());
 
-    JS_ASSERT_IF(thing->isTenured(), MapTypeToTraceKind<T>::kind == GetGCThingTraceKind(thing));
+    JS_ASSERT(MapTypeToTraceKind<T>::kind == GetGCThingTraceKind(thing));
 
     JS_ASSERT_IF(rt->gcStrictCompartmentChecking,
                  thing->zone()->isCollecting() ||
                  thing->zone() == rt->atomsCompartment->zone());
 
-    JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc) && ((GCMarker *)trc)->getMarkColor() == GRAY,
+    JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc) && AsGCMarker(trc)->getMarkColor() == GRAY,
                  thing->zone()->isGCMarkingGray() ||
                  thing->zone() == rt->atomsCompartment->zone());
 
@@ -146,13 +158,7 @@ CheckMarkedThing(JSTracer *trc, T *thing)
      */
     JS_ASSERT_IF(IsThingPoisoned(thing) && rt->isHeapBusy(),
                  !InFreeList(thing->arenaHeader(), thing));
-}
-
-static GCMarker *
-AsGCMarker(JSTracer *trc)
-{
-    JS_ASSERT(IS_GC_MARKING_TRACER(trc));
-    return static_cast<GCMarker *>(trc);
+#endif
 }
 
 template<typename T>
@@ -164,15 +170,25 @@ MarkInternal(JSTracer *trc, T **thingp)
 
     CheckMarkedThing(trc, thing);
 
-    /*
-     * Don't mark things outside a compartment if we are in a per-compartment
-     * GC.
-     */
     if (!trc->callback) {
-        if (thing->zone()->isGCMarking()) {
-            PushMarkStack(AsGCMarker(trc), thing);
-            thing->zone()->maybeAlive = true;
-        }
+        /*
+         * We may mark a Nursery thing outside the context of the
+         * MinorCollectionTracer because of a pre-barrier. The pre-barrier is
+         * not needed in this case because we perform a minor collection before
+         * each incremental slice.
+         */
+        if (IsInsideNursery(trc->runtime, thing))
+            return;
+
+        /*
+         * Don't mark things outside a compartment if we are in a
+         * per-compartment GC.
+         */
+        if (!thing->zone()->isGCMarking())
+            return;
+
+        PushMarkStack(AsGCMarker(trc), thing);
+        thing->zone()->maybeAlive = true;
     } else {
         trc->callback(trc, (void **)thingp, MapTypeToTraceKind<T>::kind);
         JS_UNSET_TRACING_LOCATION(trc);
@@ -252,6 +268,11 @@ IsMarked(T **thingp)
 {
     JS_ASSERT(thingp);
     JS_ASSERT(*thingp);
+#ifdef JSGC_GENERATIONAL
+    Nursery &nursery = (*thingp)->runtime()->gcNursery;
+    if (nursery.isInside(*thingp))
+        return nursery.getForwardedPointer(thingp);
+#endif
     Zone *zone = (*thingp)->tenuredZone();
     if (!zone->isCollecting() || zone->isGCFinished())
         return true;
@@ -264,6 +285,11 @@ IsAboutToBeFinalized(T **thingp)
 {
     JS_ASSERT(thingp);
     JS_ASSERT(*thingp);
+#ifdef JSGC_GENERATIONAL
+    Nursery &nursery = (*thingp)->runtime()->gcNursery;
+    if (nursery.isInside(*thingp))
+        return !nursery.getForwardedPointer(thingp);
+#endif
     if (!(*thingp)->tenuredZone()->isGCSweeping())
         return false;
     return !(*thingp)->isMarked();
@@ -328,12 +354,12 @@ DeclMarkerImpl(BaseShape, BaseShape)
 DeclMarkerImpl(BaseShape, UnownedBaseShape)
 DeclMarkerImpl(IonCode, ion::IonCode)
 DeclMarkerImpl(Object, ArgumentsObject)
+DeclMarkerImpl(Object, ArrayBufferObject)
 DeclMarkerImpl(Object, DebugScopeObject)
 DeclMarkerImpl(Object, GlobalObject)
 DeclMarkerImpl(Object, JSObject)
 DeclMarkerImpl(Object, JSFunction)
 DeclMarkerImpl(Object, ScopeObject)
-DeclMarkerImpl(Object, ArrayBufferObject)
 DeclMarkerImpl(Script, JSScript)
 DeclMarkerImpl(Shape, Shape)
 DeclMarkerImpl(String, JSAtom)
@@ -353,7 +379,8 @@ gc::MarkKind(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
     JS_ASSERT(thingp);
     JS_ASSERT(*thingp);
-    JS_ASSERT(kind == GetGCThingTraceKind(*thingp));
+    DebugOnly<Cell *> cell = static_cast<Cell *>(*thingp);
+    JS_ASSERT_IF(cell->isTenured(), kind == MapAllocToTraceKind(cell->tenuredGetAllocKind()));
     switch (kind) {
       case JSTRACE_OBJECT:
         MarkInternal(trc, reinterpret_cast<RawObject *>(thingp));
@@ -725,6 +752,7 @@ static void
 PushMarkStack(GCMarker *gcmarker, JSObject *thing)
 {
     JS_COMPARTMENT_ASSERT(gcmarker->runtime, thing);
+    JS_ASSERT(!IsInsideNursery(thing->runtime(), thing));
 
     if (thing->markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushObject(thing);
@@ -734,6 +762,7 @@ static void
 PushMarkStack(GCMarker *gcmarker, JSFunction *thing)
 {
     JS_COMPARTMENT_ASSERT(gcmarker->runtime, thing);
+    JS_ASSERT(!IsInsideNursery(thing->runtime(), thing));
 
     if (thing->markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushObject(thing);
@@ -743,6 +772,7 @@ static void
 PushMarkStack(GCMarker *gcmarker, types::TypeObject *thing)
 {
     JS_COMPARTMENT_ASSERT(gcmarker->runtime, thing);
+    JS_ASSERT(!IsInsideNursery(thing->runtime(), thing));
 
     if (thing->markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushType(thing);
@@ -752,6 +782,7 @@ static void
 PushMarkStack(GCMarker *gcmarker, RawScript thing)
 {
     JS_COMPARTMENT_ASSERT(gcmarker->runtime, thing);
+    JS_ASSERT(!IsInsideNursery(thing->runtime(), thing));
 
     /*
      * We mark scripts directly rather than pushing on the stack as they can
@@ -769,6 +800,7 @@ static void
 PushMarkStack(GCMarker *gcmarker, RawShape thing)
 {
     JS_COMPARTMENT_ASSERT(gcmarker->runtime, thing);
+    JS_ASSERT(!IsInsideNursery(thing->runtime(), thing));
 
     /* We mark shapes directly rather than pushing on the stack. */
     if (thing->markIfUnmarked(gcmarker->getMarkColor()))
@@ -779,6 +811,7 @@ static void
 PushMarkStack(GCMarker *gcmarker, ion::IonCode *thing)
 {
     JS_COMPARTMENT_ASSERT(gcmarker->runtime, thing);
+    JS_ASSERT(!IsInsideNursery(thing->runtime(), thing));
 
     if (thing->markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushIonCode(thing);
@@ -791,6 +824,7 @@ static void
 PushMarkStack(GCMarker *gcmarker, RawBaseShape thing)
 {
     JS_COMPARTMENT_ASSERT(gcmarker->runtime, thing);
+    JS_ASSERT(!IsInsideNursery(thing->runtime(), thing));
 
     /* We mark base shapes directly rather than pushing on the stack. */
     if (thing->markIfUnmarked(gcmarker->getMarkColor()))

@@ -39,6 +39,7 @@ class BaseProxyHandler;
 class CallObject;
 struct GCMarker;
 struct NativeIterator;
+class Nursery;
 ForwardDeclare(Shape);
 struct StackShape;
 
@@ -281,6 +282,7 @@ class JSObject : public js::ObjectImpl
     friend class js::Shape;
     friend struct js::GCMarker;
     friend class  js::NewObjectCache;
+    friend class js::Nursery;
 
     /* Make the type object to use for LAZY_TYPE objects. */
     static js::types::TypeObject *makeLazyType(JSContext *cx, js::HandleObject obj);
@@ -561,9 +563,16 @@ class JSObject : public js::ObjectImpl
 
     /* Accessors for elements. */
 
+    struct MaybeContext {
+        js::Allocator *allocator;
+        JSContext *context;
+
+        MaybeContext(JSContext *cx) : allocator(NULL), context(cx) {}
+        MaybeContext(js::Allocator *alloc) : allocator(alloc), context(NULL) {}
+    };
+
     inline bool ensureElements(JSContext *cx, unsigned cap);
-    bool growElements(JSContext *cx, unsigned cap);
-    bool growElements(js::Allocator *alloc, unsigned cap);
+    bool growElements(MaybeContext cx, unsigned newcap);
     void shrinkElements(JSContext *cx, unsigned cap);
     inline void setDynamicElements(js::ObjectElements *header);
 
@@ -601,8 +610,9 @@ class JSObject : public js::ObjectImpl
     inline EnsureDenseResult ensureDenseElements(JSContext *cx, unsigned index, unsigned extra);
     inline EnsureDenseResult parExtendDenseElements(js::Allocator *alloc, js::Value *v,
                                                     uint32_t extra);
-    template<typename CONTEXT>
-    inline EnsureDenseResult extendDenseElements(CONTEXT *cx, unsigned requiredCapacity, unsigned extra);
+    template<typename MallocProviderType>
+    inline EnsureDenseResult extendDenseElements(MallocProviderType *cx,
+                                                 unsigned requiredCapacity, unsigned extra);
 
     /* Convert a single dense element to a sparse property. */
     static bool sparsifyDenseElement(JSContext *cx, js::HandleObject obj, unsigned index);

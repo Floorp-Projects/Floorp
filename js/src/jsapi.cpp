@@ -241,7 +241,7 @@ AssertHeapIsIdle(JSContext *cx)
 static void
 AssertHeapIsIdleOrIterating(JSRuntime *rt)
 {
-    JS_ASSERT(rt->heapState != js::Collecting);
+    JS_ASSERT(!rt->isHeapCollecting());
 }
 
 static void
@@ -843,6 +843,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
 # ifdef JS_GC_ZEAL
     gcVerifierNursery(),
 # endif
+    gcNursery(thisFromCtor()),
     gcStoreBuffer(thisFromCtor()),
 #endif
 #ifdef JS_GC_ZEAL
@@ -1074,6 +1075,11 @@ JSRuntime::~JSRuntime()
 
     if (ionPcScriptCache)
         js_delete(ionPcScriptCache);
+
+#ifdef JSGC_GENERATIONAL
+    gcStoreBuffer.disable();
+    gcNursery.disable();
+#endif
 }
 
 #ifdef JS_THREADSAFE
