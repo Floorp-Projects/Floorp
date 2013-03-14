@@ -92,7 +92,7 @@ addMessageListener("Payment:LoadShim", function receiveMessage(aMessage) {
   requestId = aMessage.json.requestId;
 });
 
-addEventListener("DOMContentLoaded", function(e) {
+addEventListener("DOMWindowCreated", function(e) {
   content.wrappedJSObject.paymentSuccess = paymentSuccess;
   content.wrappedJSObject.paymentFailed = paymentFailed;
 });

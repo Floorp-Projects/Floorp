@@ -51,10 +51,38 @@ public:
     mBuffer = aBuffer;
   }
 
+  bool Loop() const
+  {
+    return mLoop;
+  }
+  void SetLoop(bool aLoop)
+  {
+    mLoop = aLoop;
+  }
+  double LoopStart() const
+  {
+    return mLoopStart;
+  }
+  void SetLoopStart(double aStart)
+  {
+    mLoopStart = aStart;
+  }
+  double LoopEnd() const
+  {
+    return mLoopEnd;
+  }
+  void SetLoopEnd(double aEnd)
+  {
+    mLoopEnd = aEnd;
+  }
+
   virtual void NotifyMainThreadStateChanged() MOZ_OVERRIDE;
 
 private:
   nsRefPtr<AudioBuffer> mBuffer;
+  double mLoopStart;
+  double mLoopEnd;
+  bool mLoop;
   bool mStartCalled;
 };
 

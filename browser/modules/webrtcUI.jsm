@@ -75,7 +75,7 @@ function handleRequest(aSubject, aTopic, aData) {
 
   browser.ownerDocument.defaultView.navigator.mozGetUserMediaDevices(
     function (devices) {
-      prompt(browser, callID, params.audio, params.video, devices);
+      prompt(browser, callID, params.audio, params.video || params.picture, devices);
     },
     function (error) {
       // bug 827146 -- In the future, the UI should catch NO_DEVICES_FOUND

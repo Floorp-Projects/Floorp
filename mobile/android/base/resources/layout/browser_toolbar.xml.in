@@ -22,7 +22,7 @@
         <org.mozilla.gecko.BrowserToolbarBackground android:id="@+id/address_bar_bg"
                                                     android:layout_width="fill_parent"
                                                     android:layout_height="fill_parent"
-                                                    android:layout_marginRight="19dip"
+                                                    android:layout_marginRight="18dip"
                                                     android:layout_alignParentTop="true"
                                                     android:layout_alignParentRight="true"
                                                     android:background="@drawable/address_bar_bg"/>

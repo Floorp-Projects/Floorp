@@ -226,13 +226,6 @@ void OnTerminateCall()
 //network\source\dns_utils.c
 //====================================================================================================
 
-int32_t
-cprShowMessageQueueStats (int32_t argc, const char *argv[])
-{
-    debugif_printf("CPR Message Queues\n");
-    return 0;
-}
-
 
 int32_t
 cpr_debug_memory_cli (int32_t argc, const char *argv[])

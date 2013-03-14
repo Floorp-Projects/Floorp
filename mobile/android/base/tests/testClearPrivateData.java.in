@@ -2,14 +2,7 @@
 package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
-import android.app.Activity;
 import android.widget.ListView;
-import android.view.ViewGroup;
-import android.view.View;
-import android.widget.ExpandableListView;
-import android.widget.TabHost;
-
-import java.util.ArrayList;
 
 public class testClearPrivateData extends PixelTest  {
 

@@ -142,7 +142,10 @@ skip-if(B2G) == use-01-extref.svg pass.svg
 == filter-basic-03.svg pass.svg
 == filter-bounds-01.svg pass.svg
 == filter-bounds-02.svg pass.svg
-fails-if(Android||B2G) == filter-extref-differentOrigin-01.svg pass.svg # Bug 695385
+# This pref is normally on by default, but we turn it off in reftest runs to
+# disable an unnecessary security-check. This reftest is actually testing that
+# the security check works, though, so it needs the pref to be turned on:
+fails-if(Android||B2G) pref(security.fileuri.strict_origin_policy,true) == filter-extref-differentOrigin-01.svg pass.svg # Bug 695385
 == filter-foreignObject-01.svg pass.svg
 == filter-in-mask-01.svg pass.svg
 skip-if(B2G) == filter-invalidation-01.svg pass.svg

@@ -68,6 +68,7 @@ MOCHITEST_FILES = \
 		test_SVGStringList.xhtml \
 		test_SVGTransformList.xhtml \
 		test_SVGTransformListAddition.xhtml \
+		test_SVGUnitTypes.html \
 		test_SVGxxxList.xhtml \
 		test_SVGxxxListIndexing.xhtml \
 		test_switch.xhtml \

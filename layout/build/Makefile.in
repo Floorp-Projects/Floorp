@@ -322,6 +322,10 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(topsrcdir)/netwerk/cookie \
 		   $(NULL)
 
+ifdef MOZ_GSTREAMER
+LOCAL_INCLUDES	+= $(GSTREAMER_CFLAGS)
+endif
+
 ifdef MOZ_B2G_RIL #{
 LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/system/gonk
 endif #}

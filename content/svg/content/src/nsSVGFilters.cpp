@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* a*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -40,6 +40,7 @@
 #include "mozilla/dom/SVGFEFuncBElementBinding.h"
 #include "mozilla/dom/SVGFEFuncGElementBinding.h"
 #include "mozilla/dom/SVGFEFuncRElementBinding.h"
+#include "mozilla/dom/SVGFEPointLightElement.h"
 
 #if defined(XP_WIN) 
 // Prevent Windows redefining LoadImage
@@ -3669,117 +3670,6 @@ nsSVGFEDistantLightElement::GetNumberInfo()
                               ArrayLength(sNumberInfo));
 }
 
-//---------------------PointLight------------------------
-
-typedef SVGFEUnstyledElement nsSVGFEPointLightElementBase;
-
-class nsSVGFEPointLightElement : public nsSVGFEPointLightElementBase,
-                                 public nsIDOMSVGFEPointLightElement
-{
-  friend nsresult NS_NewSVGFEPointLightElement(nsIContent **aResult,
-                                                 already_AddRefed<nsINodeInfo> aNodeInfo);
-protected:
-  nsSVGFEPointLightElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsSVGFEPointLightElementBase(aNodeInfo) {}
-
-public:
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGFEPOINTLIGHTELEMENT
-
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEPointLightElementBase::)
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  virtual bool AttributeAffectsRendering(
-          int32_t aNameSpaceID, nsIAtom* aAttribute) const;
-
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  virtual nsXPCClassInfo* GetClassInfo();
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-protected:
-  virtual NumberAttributesInfo GetNumberInfo();
-
-  enum { X, Y, Z };
-  nsSVGNumber2 mNumberAttributes[3];
-  static NumberInfo sNumberInfo[3];
-};
-
-NS_IMPL_NS_NEW_SVG_ELEMENT(FEPointLight)
-
-nsSVGElement::NumberInfo nsSVGFEPointLightElement::sNumberInfo[3] =
-{
-  { &nsGkAtoms::x, 0, false },
-  { &nsGkAtoms::y, 0, false },
-  { &nsGkAtoms::z, 0, false }
-};
-
-//----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ADDREF_INHERITED(nsSVGFEPointLightElement,nsSVGFEPointLightElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGFEPointLightElement,nsSVGFEPointLightElementBase)
-
-DOMCI_NODE_DATA(SVGFEPointLightElement, nsSVGFEPointLightElement)
-
-NS_INTERFACE_TABLE_HEAD(nsSVGFEPointLightElement)
-  NS_NODE_INTERFACE_TABLE4(nsSVGFEPointLightElement, nsIDOMNode,
-                           nsIDOMElement, nsIDOMSVGElement,
-                           nsIDOMSVGFEPointLightElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEPointLightElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGFEPointLightElementBase)
-
-//----------------------------------------------------------------------
-// nsIDOMNode methods
-
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEPointLightElement)
-
-//----------------------------------------------------------------------
-// nsFEUnstyledElement methods
-
-bool
-nsSVGFEPointLightElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                    nsIAtom* aAttribute) const
-{
-  return aNameSpaceID == kNameSpaceID_None &&
-         (aAttribute == nsGkAtoms::x ||
-          aAttribute == nsGkAtoms::y ||
-          aAttribute == nsGkAtoms::z);
-}
-
-//----------------------------------------------------------------------
-// nsIDOMSVGFEPointLightElement methods
-
-NS_IMETHODIMP
-nsSVGFEPointLightElement::GetX(nsIDOMSVGAnimatedNumber **aX)
-{
-  return mNumberAttributes[X].ToDOMAnimatedNumber(aX, this);
-}
-
-NS_IMETHODIMP
-nsSVGFEPointLightElement::GetY(nsIDOMSVGAnimatedNumber **aY)
-{
-  return mNumberAttributes[Y].ToDOMAnimatedNumber(aY, this);
-}
-
-NS_IMETHODIMP
-nsSVGFEPointLightElement::GetZ(nsIDOMSVGAnimatedNumber **aZ)
-{
-  return mNumberAttributes[Z].ToDOMAnimatedNumber(aZ, this);
-}
-
-//----------------------------------------------------------------------
-// nsSVGElement methods
-
-nsSVGElement::NumberAttributesInfo
-nsSVGFEPointLightElement::GetNumberInfo()
-{
-  return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
-                              ArrayLength(sNumberInfo));
-}
-
 //---------------------SpotLight------------------------
 
 typedef SVGFEUnstyledElement nsSVGFESpotLightElementBase;
@@ -4195,7 +4085,7 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMSVGFEDistantLightElement> distantLight;
-  nsCOMPtr<nsIDOMSVGFEPointLightElement> pointLight;
+  SVGFEPointLightElement* pointLight;
   nsCOMPtr<nsIDOMSVGFESpotLightElement> spotLight;
 
   nsIFrame* frame = GetPrimaryFrame();
@@ -4204,12 +4094,13 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
 
   nscolor lightColor = style->StyleSVGReset()->mLightingColor;
 
-  // find specified light  
+  // find specified light
   for (nsCOMPtr<nsIContent> child = nsINode::GetFirstChild();
        child;
        child = child->GetNextSibling()) {
     distantLight = do_QueryInterface(child);
-    pointLight = do_QueryInterface(child);
+    pointLight = child->IsSVG(nsGkAtoms::fePointLight) ?
+                   static_cast<SVGFEPointLightElement*>(child.get()) : nullptr;
     spotLight = do_QueryInterface(child);
     if (distantLight || pointLight || spotLight)
       break;
@@ -4234,11 +4125,10 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
   float lightPos[3], pointsAt[3], specularExponent;
   float cosConeAngle = 0;
   if (pointLight) {
-    static_cast<nsSVGFEPointLightElement*>
-      (pointLight.get())->GetAnimatedNumberValues(lightPos,
-                                                  lightPos + 1,
-                                                  lightPos + 2,
-                                                  nullptr);
+    pointLight->GetAnimatedNumberValues(lightPos,
+                                        lightPos + 1,
+                                        lightPos + 2,
+                                        nullptr);
     instance->ConvertLocation(lightPos);
   }
   if (spotLight) {

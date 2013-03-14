@@ -76,7 +76,8 @@ public class ForwardButton extends ShapedButton {
         Resources resources = getContext().getResources();
         StateListDrawable stateList = new StateListDrawable();
 
-        stateList.addState(new int[] { android.R.attr.state_pressed }, resources.getDrawable(R.drawable.highlight));
+        stateList.addState(new int[] { android.R.attr.state_pressed }, new ColorDrawable(resources.getColor(R.color.highlight)));
+        stateList.addState(new int[] { android.R.attr.state_focused }, new ColorDrawable(resources.getColor(R.color.highlight_focused)));
         stateList.addState(new int[] { R.attr.state_private }, new ColorDrawable(resources.getColor(R.color.background_private)));
         stateList.addState(new int[] {}, drawable);
 
