@@ -56,6 +56,7 @@
     macro(fix, fix, "fix") \
     macro(format, format, "format") \
     macro(get, get, "get") \
+    macro(getInternals, getInternals, "getInternals") \
     macro(getOwnPropertyDescriptor, getOwnPropertyDescriptor, "getOwnPropertyDescriptor") \
     macro(getOwnPropertyNames, getOwnPropertyNames, "getOwnPropertyNames") \
     macro(getPropertyDescriptor, getPropertyDescriptor, "getPropertyDescriptor") \
