@@ -5005,6 +5005,11 @@ IonBuilder::insertRecompileCheck()
     if (!oracle->canInlineCalls())
         return;
 
+    // Baseline does not handle recompile-check bailouts. We can end up here if
+    // TI reset the use count during compilation.
+    if (ion::IsBaselineEnabled(cx))
+        return;
+
     uint32_t minUses = UsesBeforeIonRecompile(script(), pc);
     MRecompileCheck *check = MRecompileCheck::New(minUses);
     current->add(check);
