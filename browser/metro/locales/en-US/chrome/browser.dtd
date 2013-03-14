@@ -7,10 +7,8 @@
 
 <!ENTITY back.label            "Back">
 <!ENTITY forward.label         "Forward">
-<!ENTITY showTabs.label        "Show Tabs">
 <!ENTITY newtab.label          "New Tab">
 <!ENTITY closetab.label        "Close Tab">
-<!ENTITY undoclosetab.label    "Undo Close Tab">
 
 <!ENTITY appbarFindInPage2.label    "Find in page">
 <!ENTITY appbarViewOnDesktop2.label "View on desktop">
