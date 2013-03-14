@@ -11,7 +11,8 @@ let toolbox, toolIDs, idIndex;
 function test() {
   waitForExplicitFinish();
 
-  if (window.navigator.oscpu.match(/osx 10\.8/i) || window.navigator.oscpu.match(/windows nt 5\.1/i)) {
+  if (window.navigator.userAgent.indexOf("Mac OS X 10.8") != -1 ||
+      window.navigator.userAgent.indexOf("Windows NT 5.1") != -1) {
     info("Skipping Mac OSX 10.8 and Windows xp, see bug 838069");
     finish();
     return;
