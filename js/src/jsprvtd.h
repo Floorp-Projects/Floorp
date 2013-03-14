@@ -211,6 +211,17 @@ class XDRState;
 
 class FreeOp;
 
+struct IdValuePair
+{
+    jsid id;
+    Value value;
+
+    IdValuePair() {}
+    IdValuePair(jsid idArg)
+      : id(idArg)
+    {}
+};
+
 } /* namespace js */
 
 namespace JSC {
