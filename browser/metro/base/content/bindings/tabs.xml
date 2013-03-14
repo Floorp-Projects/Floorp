@@ -3,6 +3,10 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
+<!DOCTYPE bindings [
+<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+%browserDTD;
+]>
 
 <bindings
     xmlns="http://www.mozilla.org/xbl"
@@ -21,7 +25,8 @@
         <xul:box anonid="selection" class="documenttab-crop"/>
         <xul:box anonid="selection" class="documenttab-selection"/>
         <xul:button anonid="close" class="documenttab-close" observes="bcast_urlbarState" end="0" top="0"
-                    onclick="event.stopPropagation(); document.getBindingParent(this)._onClose()"/>
+                    onclick="event.stopPropagation(); document.getBindingParent(this)._onClose()"
+                    label="&closetab.label;"/>
       </xul:stack>
     </content>
 
