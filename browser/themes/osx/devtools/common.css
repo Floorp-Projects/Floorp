@@ -383,3 +383,5 @@
 .devtools-theme-attrvalue {
   color: hsl(24,85%,39%); /* orange */
 }
+
+%include ../../shared/devtools/common.inc.css

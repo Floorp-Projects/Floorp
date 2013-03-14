@@ -24,6 +24,7 @@ this.EXPORTED_SYMBOLS = ["AutocompletePopup"];
  *        - panelId {String} The id for the popup panel.
  *        - listBoxId {String} The id for the richlistbox inside the panel.
  *        - position {String} The position for the popup panel.
+ *        - theme {String} String related to the theme of the popup.
  *        - autoSelect {Boolean} Boolean to allow the first entry of the popup
  *                     panel to be automatically selected when the popup shows.
  *        - fixedWidth {Boolean} Boolean to control dynamic width of the popup.
@@ -33,30 +34,27 @@ this.EXPORTED_SYMBOLS = ["AutocompletePopup"];
  *        - onKeypress {String} The keypress event handler for the richlistitems.
  */
 this.AutocompletePopup =
-function AutocompletePopup(aDocument,
-                           aOptions = {fixedWidth: false,
-                                       autoSelect: false,
-                                       position: "after_start",
-                                       panelId: "devtools_autoCompletePopup"})
+function AutocompletePopup(aDocument, aOptions = {})
 {
   this._document = aDocument;
 
-  this.fixedWidth = aOptions.fixedWidth;
-  this.autoSelect = aOptions.autoSelect;
-  this.position = aOptions.position;
-  this.direction = aOptions.direction;
+  this.fixedWidth = aOptions.fixedWidth || false;
+  this.autoSelect = aOptions.autoSelect || false;
+  this.position = aOptions.position || "after_start";
+  this.direction = aOptions.direction || "ltr";
 
   this.onSelect = aOptions.onSelect;
   this.onClick = aOptions.onClick;
   this.onKeypress = aOptions.onKeypress;
 
-  let id = aOptions.panelId;
+  let id = aOptions.panelId || "devtools_autoCompletePopup";
+  let theme = aOptions.theme || "dark";
   // Reuse the existing popup elements.
   this._panel = this._document.getElementById(id);
   if (!this._panel) {
     this._panel = this._document.createElementNS(XUL_NS, "panel");
     this._panel.setAttribute("id", id);
-    this._panel.setAttribute("class", "devtools-autocomplete-popup");
+    this._panel.className = "devtools-autocomplete-popup " + theme + "-theme";
 
     this._panel.setAttribute("noautofocus", "true");
     this._panel.setAttribute("level", "top");
@@ -92,8 +90,7 @@ function AutocompletePopup(aDocument,
   if (aOptions.listBoxId) {
     this._list.setAttribute("id", aOptions.listBoxId);
   }
-  this._list.setAttribute("class", "devtools-autocomplete-listbox");
-
+  this._list.className = "devtools-autocomplete-listbox " + theme + "-theme";
 
   if (this.onSelect) {
     this._list.addEventListener("select", this.onSelect, false);
