@@ -437,6 +437,20 @@ inDOMUtils::ColorNameToRGB(const nsAString& aColorName, JSContext* aCx,
 }
 
 NS_IMETHODIMP
+inDOMUtils::RgbToColorName(uint8_t aR, uint8_t aG, uint8_t aB,
+                           nsAString& aColorName)
+{
+  const char* color = NS_RGBToColorName(NS_RGB(aR, aG, aB));
+  if (!color) {
+    aColorName.Truncate();
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  aColorName.AssignASCII(color);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 inDOMUtils::GetBindingURLs(nsIDOMElement *aElement, nsIArray **_retval)
 {
   NS_ENSURE_ARG_POINTER(aElement);
