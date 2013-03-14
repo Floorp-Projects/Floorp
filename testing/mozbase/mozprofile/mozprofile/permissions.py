@@ -23,7 +23,7 @@ import urlparse
 
 
 class LocationError(Exception):
-    "Signifies an improperly formed location."
+    """Signifies an improperly formed location."""
 
     def __str__(self):
         s = "Bad location"
@@ -33,35 +33,35 @@ class LocationError(Exception):
 
 
 class MissingPrimaryLocationError(LocationError):
-    "No primary location defined in locations file."
+    """No primary location defined in locations file."""
 
     def __init__(self):
         LocationError.__init__(self, "missing primary location")
 
 
 class MultiplePrimaryLocationsError(LocationError):
-    "More than one primary location defined."
+    """More than one primary location defined."""
 
     def __init__(self):
         LocationError.__init__(self, "multiple primary locations")
 
 
 class DuplicateLocationError(LocationError):
-    "Same location defined twice."
+    """Same location defined twice."""
 
     def __init__(self, url):
         LocationError.__init__(self, "duplicate location: %s" % url)
 
 
 class BadPortLocationError(LocationError):
-    "Location has invalid port value."
+    """Location has invalid port value."""
 
     def __init__(self, given_port):
         LocationError.__init__(self, "bad value for port: %s" % given_port)
         
 
 class LocationsSyntaxError(Exception):
-    "Signifies a syntax error on a particular line in server-locations.txt."
+    """Signifies a syntax error on a particular line in server-locations.txt."""
 
     def __init__(self, lineno, err=None):
         self.err = err
@@ -77,7 +77,7 @@ class LocationsSyntaxError(Exception):
 
 
 class Location(object):
-    "Represents a location line in server-locations.txt."
+    """Represents a location line in server-locations.txt."""
 
     attrs = ('scheme', 'host', 'port')
 
@@ -91,7 +91,7 @@ class Location(object):
             raise BadPortLocationError(self.port)
 
     def isEqual(self, location):
-        "compare scheme://host:port, but ignore options"
+        """compare scheme://host:port, but ignore options"""
         return len([i for i in self.attrs if getattr(self, i) == getattr(location, i)]) == len(self.attrs)
 
     __eq__ = isEqual
@@ -140,14 +140,13 @@ class ServerLocations(object):
 
     def read(self, filename, check_for_primary=True):
         """
-        Reads the file (in the format of server-locations.txt) and add all
-        valid locations to the self._locations array.
+        Reads the file and adds all valid locations to the ``self._locations`` array.
 
-        If check_for_primary is True, a MissingPrimaryLocationError
-        exception is raised if no primary is found.
+        :param filename: in the format of server-locations.txt_
+        :param check_for_primary: if True, a ``MissingPrimaryLocationError`` exception is raised if no primary is found
 
-        This format:
-        http://mxr.mozilla.org/mozilla-central/source/build/pgo/server-locations.txt
+        .. _server-locations.txt: http://mxr.mozilla.org/mozilla-central/source/build/pgo/server-locations.txt
+
         The only exception is that the port, if not defined, defaults to 80 or 443.
 
         FIXME: Shouldn't this default to the protocol-appropriate port?  Is
@@ -207,6 +206,8 @@ class ServerLocations(object):
 
 
 class Permissions(object):
+    """Allows handling of permissions for ``mozprofile``"""
+
     _num_permissions = 0
 
     def __init__(self, profileDir, locations=None):
@@ -231,6 +232,7 @@ class Permissions(object):
         # Open database and create table
         permDB = sqlite3.connect(os.path.join(self._profileDir, "permissions.sqlite"))
         cursor = permDB.cursor();
+        cursor.execute("PRAGMA schema_version = 3;")
         # SQL copied from
         # http://mxr.mozilla.org/mozilla-central/source/extensions/cookie/nsPermissionManager.cpp
         cursor.execute("""CREATE TABLE IF NOT EXISTS moz_hosts (
