@@ -5084,7 +5084,8 @@ Parser<ParseHandler>::unaryExpr()
       case TOK_DEC:
       {
         uint32_t begin = tokenStream.currentToken().pos.begin;
-        pn2 = memberExpr(true);
+        TokenKind tt2 = tokenStream.getToken(TSF_OPERAND);
+        pn2 = memberExpr(tt2, true);
         if (!pn2)
             return null();
         pn = handler.newUnary((tt == TOK_INC) ? PNK_PREINCREMENT : PNK_PREDECREMENT, pn2);
@@ -5116,8 +5117,7 @@ Parser<ParseHandler>::unaryExpr()
         return null();
 
       default:
-        tokenStream.ungetToken();
-        pn = memberExpr(true);
+        pn = memberExpr(tt, true);
         if (!pn)
             return null();
 
@@ -5977,20 +5977,22 @@ Parser<SyntaxParseHandler>::foldPropertyByValue(Node pn)
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::memberExpr(bool allowCallSyntax)
+Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax)
 {
+    JS_ASSERT(tokenStream.isCurrentTokenType(tt));
+
     Node lhs;
 
     JS_CHECK_RECURSION(context, return null());
 
     /* Check for new expression first. */
-    TokenKind tt = tokenStream.getToken(TSF_OPERAND);
     if (tt == TOK_NEW) {
         lhs = handler.newList(PNK_NEW, null(), JSOP_NEW);
         if (!lhs)
             return null();
 
-        Node ctorExpr = memberExpr(false);
+        tt = tokenStream.getToken(TSF_OPERAND);
+        Node ctorExpr = memberExpr(tt, false);
         if (!ctorExpr)
             return null();
 
