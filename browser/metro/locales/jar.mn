@@ -17,14 +17,13 @@
   locale/browser/checkbox.dtd             (%chrome/checkbox.dtd)
   locale/browser/sync.dtd                 (%chrome/sync.dtd)
   locale/browser/sync.properties          (%chrome/sync.properties)
+  locale/browser/passwordmgr.properties   (%chrome/passwordmgr.properties)
   locale/browser/prompt.dtd               (%chrome/prompt.dtd)
   locale/browser/phishing.dtd             (%chrome/phishing.dtd)
 
 @AB_CD@.jar:
 % locale browser @AB_CD@ %locale/browser/
   locale/browser/bookmarks.json           (bookmarks.json)
-  locale/browser/passwordmgr.properties   (%overrides/passwordmgr.properties)
-% override chrome://passwordmgr/locale/passwordmgr.properties chrome://browser/locale/passwordmgr.properties
 
 #
 # Browser jar resources
