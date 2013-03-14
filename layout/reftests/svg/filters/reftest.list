@@ -7,14 +7,14 @@ skip-if(B2G) == dynamic-filtered-foreignObject-01.svg pass.svg # bug 773482
 == feBlend-1.svg feBlend-1-ref.svg
 == feBlend-2.svg feBlend-2-ref.svg
 
-== feColorMatrix-1.svg feColorMatrix-1-ref.svg
-== feColorMatrix-2.svg feColorMatrix-2-ref.svg
+fuzzy-if(d2d,1,6400) == feColorMatrix-1.svg feColorMatrix-1-ref.svg
+fuzzy-if(d2d,1,10000) == feColorMatrix-2.svg feColorMatrix-2-ref.svg
 
 == feComponentTransfer-1.svg feComponentTransfer-1-ref.svg
 == feComponentTransfer-2.svg feComponentTransfer-2-ref.svg
 
-== feComposite-1.svg feComposite-1-ref.svg
-== feComposite-2.svg feComposite-2-ref.svg
+fuzzy-if(d2d,1,9600) == feComposite-1.svg feComposite-1-ref.svg
+fuzzy-if(d2d,1,10000) == feComposite-2.svg feComposite-2-ref.svg
 
 == feConvolveMatrix-1.svg feConvolveMatrix-1-ref.svg
 == feConvolveMatrix-2.svg feConvolveMatrix-2-ref.svg
@@ -22,10 +22,10 @@ skip-if(B2G) == dynamic-filtered-foreignObject-01.svg pass.svg # bug 773482
 == feDisplacementMap-1.svg feDisplacementMap-1-ref.svg
 == feDisplacementMap-2.svg feDisplacementMap-2-ref.svg
 
-== feFlood-1.svg feFlood-1-ref.svg
-== feFlood-2.svg feFlood-2-ref.svg
+fuzzy-if(d2d,1,6400) == feFlood-1.svg feFlood-1-ref.svg
+skip-if(d2d) == feFlood-2.svg feFlood-2-ref.svg
 
-== feGaussianBlur-1.svg feGaussianBlur-1-ref.svg
+fuzzy-if(d2d,1,6400) == feGaussianBlur-1.svg feGaussianBlur-1-ref.svg
 == feGaussianBlur-2.svg feGaussianBlur-2-ref.svg
 # != feGaussianBlur-3.svg feGaussianBlur-3-ref.svg
 == feGaussianBlur-4.svg feGaussianBlur-4-ref.svg
