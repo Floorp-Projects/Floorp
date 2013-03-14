@@ -46,6 +46,8 @@ public:
   explicit GainNodeEngine(AudioDestinationNode* aDestination)
     : mSource(nullptr)
     , mDestination(static_cast<AudioNodeStream*> (aDestination->Stream()))
+    // Keep the default value in sync with the default value in GainNode::GainNode.
+    , mGain(1.f)
   {
   }
 
