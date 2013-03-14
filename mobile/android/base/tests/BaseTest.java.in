@@ -190,7 +190,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
      */
     protected final Activity clickOnAwesomeBar() {
         Activity activity = null;
-        Element awesomebar = mDriver.findElement(mActivity, "awesome_bar");
+        Element awesomebar = mDriver.findElement(mActivity, "browser_toolbar");
         if (awesomebar != null) {
             activity = getActivityFromClick(awesomebar);
             if (activity == null) {

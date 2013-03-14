@@ -3,11 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<resources>
-
-    <dimen name="browser_toolbar_height">56dp</dimen>
-    <dimen name="browser_toolbar_button_padding">16dp</dimen>
-    <dimen name="menu_popup_arrow_margin">8dip</dimen>
-    <dimen name="tabs_counter_size">26sp</dimen>
-
-</resources>
+<clip xmlns:android="http://schemas.android.com/apk/res/android"
+      android:drawable="@drawable/address_bar_url"
+      android:clipOrientation="horizontal"
+      android:gravity="right"/>
