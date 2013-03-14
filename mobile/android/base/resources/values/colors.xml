@@ -8,24 +8,17 @@
   <color name="awesomebar_header_row_focused">#FFA2AAB2</color>
   <color name="background_normal">#FFCED7DE</color>
   <color name="background_private">#FF292C29</color>
-  <color name="background_tabs_dark">#FF363B40</color>
-  <color name="background_tabs_light">#FF43484E</color>
+  <color name="background_tabs">#FF363B40</color>
   <color name="highlight">#33000000</color>
   <color name="highlight_focused">#1A000000</color>
   <color name="highlight_dark">#33FFFFFF</color>
   <color name="highlight_dark_focused">#1AFFFFFF</color>
 
-  <!-- highlight on tabs button: 20% white over background_tabs_dark -->
-  <color name="highlight_tabs">#FF696D71</color>
+  <!-- highlight on shaped button: 20% white over background_tabs -->
+  <color name="highlight_shaped">#FF696D71</color>
 
-  <!-- highlight-focused on tabs button: 10% white over background_tabs_dark -->
-  <color name="highlight_tabs_focused">#FF565B60</color>
-
-  <!-- highlight on menu button: 20% white over black -->
-  <color name="highlight_menu">#FF333333</color>
-
-  <!-- highlight-focused on menu button: 10% white over black -->
-  <color name="highlight_menu_focused">#FF1A1A1A</color>
+  <!-- highlight-focused on shaped button: 10% white over background_tabs -->
+  <color name="highlight_shaped_focused">#FF565B60</color>
 
   <!-- highlight on nav button: 20% black over background_normal -->
   <color name="highlight_nav">#FFA5ACB2</color>

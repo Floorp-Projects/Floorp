@@ -18,6 +18,7 @@ import android.graphics.drawable.StateListDrawable;
 import android.util.AttributeSet;
 
 public class BackButton extends ShapedButton { 
+    private Path mPath;
     private Path mBorderPath;
     private Paint mBorderPaint;
     private Paint mBorderPrivatePaint;
