@@ -329,7 +329,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
     if (WrapperMap::Ptr p = crossCompartmentWrappers.lookup(key)) {
         vp.set(p->value);
         if (vp.isObject()) {
-            RawObject obj = &vp.toObject();
+            DebugOnly<RawObject> obj = &vp.toObject();
             JS_ASSERT(obj->isCrossCompartmentWrapper());
             JS_ASSERT(obj->getParent() == global);
         }
