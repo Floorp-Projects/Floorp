@@ -63,7 +63,7 @@ IDPProvisioningContext.prototype = {
 
   doError: function(msg) {
     log("Provisioning ERROR: " + msg);
-  },
+  }
 };
 
 function IDPAuthenticationContext(aID, aOrigin, aTargetMM) {
@@ -85,7 +85,7 @@ IDPAuthenticationContext.prototype = {
 
   doError: function IDPAC_doError(msg) {
     log("Authentication ERROR: " + msg);
-  },
+  }
 };
 
 function RPWatchContext(aOptions, aTargetMM) {
@@ -152,11 +152,14 @@ this.DOMIdentity = {
       case "Identity:RP:Watch":
         this._watch(msg, targetMM);
         break;
+      case "Identity:RP:Unwatch":
+        this._unwatch(msg, targetMM);
+        break;
       case "Identity:RP:Request":
-        this._request(msg);
+        this._request(msg, targetMM);
         break;
       case "Identity:RP:Logout":
-        this._logout(msg);
+        this._logout(msg, targetMM);
         break;
       // IDP
       case "Identity:IDP:BeginProvisioning":
@@ -180,6 +183,12 @@ this.DOMIdentity = {
       case "Identity:IDP:AuthenticationFailure":
         this._authenticationFailure(msg);
         break;
+      case "child-process-shutdown":
+        // we receive child-process-shutdown if the appliction crashes,
+        // including if it is crashed by the OS (killed for out-of-memory,
+        // for example)
+        this._childProcessShutdown(targetMM);
+        break;
     }
   },
 
@@ -199,7 +208,9 @@ this.DOMIdentity = {
              "Identity:IDP:RegisterCertificate", "Identity:IDP:GenKeyPair",
              "Identity:IDP:BeginAuthentication",
              "Identity:IDP:CompleteAuthentication",
-             "Identity:IDP:AuthenticationFailure"],
+             "Identity:IDP:AuthenticationFailure",
+             "Identity:RP:Unwatch",
+             "child-process-shutdown"],
 
   // Private.
   _init: function DOMIdentity__init() {
@@ -239,12 +250,20 @@ this.DOMIdentity = {
     IdentityService.RP.watch(context);
   },
 
+  _unwatch: function DOMIdentity_unwatch(message, targetMM) {
+    IdentityService.RP.unwatch(message.id, targetMM);
+  },
+
   _request: function DOMIdentity__request(message) {
     IdentityService.RP.request(message.id, message);
   },
 
   _logout: function DOMIdentity__logout(message) {
     IdentityService.RP.logout(message.id, message.origin, message);
+  },
+
+  _childProcessShutdown: function DOMIdentity__childProcessShutdown(targetMM) {
+    IdentityService.RP.childProcessShutdown(targetMM);
   },
 
   _beginProvisioning: function DOMIdentity__beginProvisioning(message, targetMM) {
@@ -277,7 +296,7 @@ this.DOMIdentity = {
 
   _authenticationFailure: function DOMIdentity__authenticationFailure(message) {
     IdentityService.IDP.cancelAuthentication(message.id);
-  },
+  }
 };
 
 // Object is initialized by nsIDService.js
