@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Main header first:
-#include "nsSVGTextFrame.h"
+#include "nsSVGTextFrame2.h"
 
 // Keep others in (case-insensitive) order:
 #include "DOMSVGPoint.h"
@@ -30,7 +30,7 @@
 #include "nsSVGPaintServerFrame.h"
 #include "nsSVGRect.h"
 #include "nsSVGIntegrationUtils.h"
-#include "nsSVGTextFrame2.h"
+#include "nsSVGTextFrame.h"
 #include "nsSVGTextPathFrame.h"
 #include "nsSVGUtils.h"
 #include "nsTArray.h"
@@ -3618,11 +3618,6 @@ nsSVGTextFrame2::GetComputedTextLength(nsIContent* aContent)
 {
   UpdateGlyphPositioning(false);
 
-  nsIFrame* kid = GetFirstPrincipalChild();
-  if (!kid) {
-    return 0.0f;
-  }
-
   float cssPxPerDevPx = PresContext()->
     AppUnitsToFloatCSSPixels(PresContext()->AppUnitsPerDevPixel());
 
@@ -3647,18 +3642,13 @@ nsSVGTextFrame2::GetSubStringLength(nsIContent* aContent,
 {
   UpdateGlyphPositioning(false);
 
-  nsIFrame* kid = GetFirstPrincipalChild();
-  if (!kid) {
-    return 0.0f;
-  }
-
   // Convert charnum/nchars from addressable characters relative to
   // aContent to global character indices.
   CharIterator chit(this, CharIterator::eAddressable, aContent);
   if (!chit.AdvanceToSubtree() ||
+      chit.AtEnd() ||
       !chit.Next(charnum) ||
-      chit.IsAfterSubtree() ||
-      chit.AtEnd()) {
+      chit.IsAfterSubtree()) {
     return 0.0f;
   }
   charnum = chit.TextElementCharIndex();
@@ -3717,11 +3707,6 @@ nsSVGTextFrame2::GetCharNumAtPosition(nsIContent* aContent,
 {
   UpdateGlyphPositioning(false);
 
-  nsIFrame* kid = GetFirstPrincipalChild();
-  if (!kid) {
-    return 0.0f;
-  }
-
   nsPresContext* context = PresContext();
 
   gfxPoint p(aPoint->X(), aPoint->Y());
@@ -3757,8 +3742,8 @@ nsSVGTextFrame2::GetStartPositionOfChar(nsIContent* aContent,
 
   CharIterator it(this, CharIterator::eAddressable, aContent);
   if (!it.AdvanceToSubtree() ||
-      !it.Next(aCharNum) ||
-      it.AtEnd()) {
+      it.AtEnd() ||
+      !it.Next(aCharNum)) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
@@ -3782,8 +3767,8 @@ nsSVGTextFrame2::GetEndPositionOfChar(nsIContent* aContent,
 
   CharIterator it(this, CharIterator::eAddressable, aContent);
   if (!it.AdvanceToSubtree() ||
-      !it.Next(aCharNum) ||
-      it.AtEnd()) {
+      it.AtEnd() ||
+      !it.Next(aCharNum)) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
@@ -3820,8 +3805,8 @@ nsSVGTextFrame2::GetExtentOfChar(nsIContent* aContent,
 
   CharIterator it(this, CharIterator::eAddressable, aContent);
   if (!it.AdvanceToSubtree() ||
-      !it.Next(aCharNum) ||
-      it.AtEnd()) {
+      it.AtEnd() ||
+      !it.Next(aCharNum)) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
@@ -3872,8 +3857,8 @@ nsSVGTextFrame2::GetRotationOfChar(nsIContent* aContent,
 
   CharIterator it(this, CharIterator::eAddressable, aContent);
   if (!it.AdvanceToSubtree() ||
-      !it.Next(aCharNum) ||
-      it.AtEnd()) {
+      it.AtEnd() ||
+      !it.Next(aCharNum)) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 

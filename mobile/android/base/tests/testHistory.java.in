@@ -5,10 +5,8 @@ import @ANDROID_PACKAGE_NAME@.*;
 import android.widget.ListView;
 import android.app.Activity;
 import java.util.ArrayList;
-import android.widget.TabHost;
 import android.view.View;
 import android.view.ViewGroup;
-import android.util.Log;
 
 public class testHistory extends PixelTest {
     private View mFirstChild;

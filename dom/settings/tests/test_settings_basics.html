@@ -308,7 +308,7 @@ var steps = [
       is(req2.result["screen.brightness"], 0.7, "same Value");
     }
     req2.onerror = onFailure;
-    
+
     var lock2 = mozSettings.createLock();
     req5 = lock2.get("screen.brightness");
     req5.onsuccess = function () {
@@ -465,7 +465,7 @@ var steps = [
       }.bind({testObj: testObj, request: req5});
       req5.onerror = onFailure;
     }
-    
+
     var lock5 = mozSettings.createLock();
     req6 = lock5.clear();
     req6.onsuccess = function () {
@@ -495,14 +495,14 @@ var steps = [
   function () {
     ok(true, "Test locking result");
     var lock = mozSettings.createLock();
-    
+
     req = lock.get("wifi.enabled");
     req.onsuccess = function() {
       check(req.result, wifiEnabled);
       ok(true, "Test2 locking result done");
     }
     req.onerror = onFailure;
-    
+
     req2 = lock.clear();
     req2.onsuccess = function () {
       ok(true, "Deleted the database");
@@ -515,7 +515,7 @@ var steps = [
       next();
     }
     req3.onerror = onFailure;
-    
+
   },
   function () {
     ok(true, "Get all settings");
@@ -723,6 +723,32 @@ var steps = [
       }
     }
     SimpleTest.executeSoon(cb);
+  },
+  function() {
+    ok(true, "Clear DB");
+    var lock = mozSettings.createLock();
+    req = lock.clear();
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "Set object value");
+    var lock = mozSettings.createLock();
+    req = lock.set({"setting-obj": {foo: {bar: 23}}});
+    req.onsuccess = function() {
+      req2 = lock.get("setting-obj");
+      req2.onsuccess = function(event) {
+        var result = event.target.result["setting-obj"];
+        ok(result, "Got valid result");
+        ok(typeof result == "object", "Result is object");
+        ok("foo" in result && "bar" in result.foo, "Result has properties");
+        ok(result.foo.bar == 23, "Result properties are set");
+        next();
+      };
+    };
   },
   function() {
     ok(true, "Clear DB");

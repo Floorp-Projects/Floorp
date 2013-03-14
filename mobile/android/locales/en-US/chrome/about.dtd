@@ -9,7 +9,9 @@
 <!ENTITY aboutPage.checkForUpdates.link         "Check for Updates »">
 <!ENTITY aboutPage.checkForUpdates.checking     "Looking for updates…">
 <!ENTITY aboutPage.checkForUpdates.none         "No updates available">
-<!ENTITY aboutPage.checkForUpdates.found        "Update available">
+<!ENTITY aboutPage.checkForUpdates.found        "Update available; click to download">
+<!ENTITY aboutPage.checkForUpdates.downloading  "Downloading update…">
+<!ENTITY aboutPage.checkForUpdates.downloaded   "Update downloaded; click to install">
 <!ENTITY aboutPage.faq.label                    "FAQ">
 <!ENTITY aboutPage.support.label                "Support">
 <!ENTITY aboutPage.privacyPolicy.label          "Privacy Policy">

@@ -16,8 +16,4 @@
 [scriptable, uuid(154b572f-3d0b-49c0-8b5d-8864d05bd3d1)]
 interface nsIDOMSVGUnitTypes : nsISupports
 {
-  // Unit Types
-  const unsigned short SVG_UNIT_TYPE_UNKNOWN           = 0;
-  const unsigned short SVG_UNIT_TYPE_USERSPACEONUSE    = 1;
-  const unsigned short SVG_UNIT_TYPE_OBJECTBOUNDINGBOX = 2;
 };

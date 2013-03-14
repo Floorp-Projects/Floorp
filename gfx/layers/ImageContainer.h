@@ -689,6 +689,20 @@ public:
   virtual void SetData(const Data& aData);
 
   /**
+   * This doesn't make a copy of the data buffers. Can be used when mBuffer is
+   * pre allocated with AllocateAndGetNewBuffer(size) and then SetDataNoCopy is
+   * called to only update the picture size, planes etc. fields in mData.
+   * The GStreamer media backend uses this to decode into PlanarYCbCrImage(s)
+   * directly.
+   */
+  virtual void SetDataNoCopy(const Data &aData);
+
+  /**
+   * This allocates and returns a new buffer
+   */
+  virtual uint8_t* AllocateAndGetNewBuffer(uint32_t aSize);
+
+  /**
    * Ask this Image to not convert YUV to RGB during SetData, and make
    * the original data available through GetData. This is optional,
    * and not all PlanarYCbCrImages will support it.

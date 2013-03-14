@@ -13,13 +13,15 @@
 #include "mozilla/TypedEnum.h"
 #include "mozilla/dom/PannerNodeBinding.h"
 #include "ThreeDPoint.h"
+#include "mozilla/WeakPtr.h"
 
 namespace mozilla {
 namespace dom {
 
 class AudioContext;
 
-class PannerNode : public AudioNode
+class PannerNode : public AudioNode,
+                   public SupportsWeakPtr<PannerNode>
 {
 public:
   explicit PannerNode(AudioContext* aContext);
