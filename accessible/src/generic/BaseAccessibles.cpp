@@ -44,13 +44,6 @@ LeafAccessible::ChildAtPoint(int32_t aX, int32_t aY,
 }
 
 bool
-LeafAccessible::AppendChild(Accessible* aChild)
-{
-  NS_NOTREACHED("AppendChild called on leaf accessible!");
-  return false;
-}
-
-bool
 LeafAccessible::InsertChildAt(uint32_t aIndex, Accessible* aChild)
 {
   NS_NOTREACHED("InsertChildAt called on leaf accessible!");
