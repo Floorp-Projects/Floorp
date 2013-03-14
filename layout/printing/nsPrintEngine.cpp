@@ -530,6 +530,12 @@ nsPrintEngine::DoCommonPrint(bool                    aIsPrintPreview,
   NS_ENSURE_SUCCESS(rv, rv);
 
   {
+    nsCOMPtr<nsIContentViewer> viewer;
+    webContainer->GetContentViewer(getter_AddRefs(viewer));
+    if (viewer && viewer->GetDocument() && viewer->GetDocument()->IsShowing()) {
+      viewer->GetDocument()->OnPageHide(false, nullptr);
+    }
+
     nsAutoScriptBlocker scriptBlocker;
     mPrt->mPrintObject = new nsPrintObject();
     NS_ENSURE_TRUE(mPrt->mPrintObject, NS_ERROR_OUT_OF_MEMORY);
