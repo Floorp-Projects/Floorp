@@ -24,6 +24,7 @@ nsDOMTransitionEvent::nsDOMTransitionEvent(mozilla::dom::EventTarget* aOwner,
     mEventIsInternal = true;
     mEvent->time = PR_Now();
   }
+  SetIsDOMBinding();
 }
 
 nsDOMTransitionEvent::~nsDOMTransitionEvent()
@@ -54,7 +55,7 @@ nsDOMTransitionEvent::GetPropertyName(nsAString & aPropertyName)
 NS_IMETHODIMP
 nsDOMTransitionEvent::GetElapsedTime(float *aElapsedTime)
 {
-  *aElapsedTime = TransitionEvent()->elapsedTime;
+  *aElapsedTime = ElapsedTime();
   return NS_OK;
 }
 
