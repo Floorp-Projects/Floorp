@@ -247,7 +247,7 @@ MSG_DEF(JSMSG_BAD_FOR_EACH_LOOP,      193, 0, JSEXN_SYNTAXERR, "invalid for each
 MSG_DEF(JSMSG_UNUSED194,              194, 0, JSEXN_NONE, "")
 MSG_DEF(JSMSG_UNUSED195,              195, 0, JSEXN_NONE, "")
 MSG_DEF(JSMSG_UNUSED196,              196, 0, JSEXN_NONE, "")
-MSG_DEF(JSMSG_UNUSED197,              197, 0, JSEXN_NONE, "")
+MSG_DEF(JSMSG_INTERNAL_INTL_ERROR,    197, 0, JSEXN_ERR, "internal error while computing Intl data")
 MSG_DEF(JSMSG_DEFAULT_LOCALE_ERROR,   198, 0, JSEXN_ERR, "internal error getting the default locale")
 MSG_DEF(JSMSG_TOO_MANY_LOCALS,        199, 0, JSEXN_SYNTAXERR, "too many local variables")
 MSG_DEF(JSMSG_ARRAY_INIT_TOO_BIG,     200, 0, JSEXN_INTERNALERR, "array initialiser too large")
