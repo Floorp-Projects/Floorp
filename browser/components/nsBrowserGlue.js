@@ -57,7 +57,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "KeywordURLResetPrompter",
                                   "resource:///modules/KeywordURLResetPrompter.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
-                                  "resource:///modules/RecentWindow.jsm");
+                                  "resource://gre/modules/RecentWindow.jsm");
 
 const PREF_PLUGINS_NOTIFYUSER = "plugins.update.notifyUser";
 const PREF_PLUGINS_UPDATEURL  = "plugins.update.url";
