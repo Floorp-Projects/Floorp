@@ -2,14 +2,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
 from setuptools import setup
 
-PACKAGE_VERSION = '0.9'
+PACKAGE_VERSION = '0.8'
+
+# take description from README
+here = os.path.dirname(os.path.abspath(__file__))
+try:
+    description = file(os.path.join(here, 'README.md')).read()
+except (OSError, IOError):
+    description = ''
 
 setup(name='mozprocess',
       version=PACKAGE_VERSION,
       description="Mozilla-authored process handling",
-      long_description='see http://mozbase.readthedocs.org/',
+      long_description=description,
       classifiers=['Environment :: Console',
                    'Intended Audience :: Developers',
                    'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
