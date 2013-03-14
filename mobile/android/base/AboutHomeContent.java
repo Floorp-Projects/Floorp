@@ -9,7 +9,6 @@ import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
-import org.mozilla.gecko.db.BrowserDB.PinnedSite;
 import org.mozilla.gecko.db.BrowserDB.TopSitesCursorWrapper;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.util.ActivityResultHandler;
@@ -62,7 +61,6 @@ import java.util.HashMap;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -787,6 +785,7 @@ public class AboutHomeContent extends ScrollView
             super(context, attrs);
         }
 
+        @Override
         public int getColumnWidth() {
             return getColumnWidth(getWidth());
         }

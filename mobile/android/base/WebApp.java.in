@@ -11,7 +11,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.MenuItem;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.RelativeLayout;
 import android.content.Context;
@@ -24,20 +23,16 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.Animation;
 import android.widget.ImageView;
 import android.view.Display;
-import android.graphics.Point;
-
 import java.net.URL;
 import java.io.File;
 
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.WebAppAllocator;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.R;
-import org.json.JSONObject;
 
 public class WebApp extends GeckoApp {
     private static final String LOGTAG = "WebApp";

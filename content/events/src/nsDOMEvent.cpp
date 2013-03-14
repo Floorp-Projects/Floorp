@@ -343,6 +343,24 @@ nsDOMEvent::InitFromCtor(const nsAString& aType,
   return InitEvent(aType, d.bubbles, d.cancelable);
 }
 
+bool
+nsDOMEvent::Init(mozilla::dom::EventTarget* aGlobal)
+{
+  bool trusted = false;
+  nsCOMPtr<nsPIDOMWindow> w = do_QueryInterface(aGlobal);
+  if (w) {
+    nsCOMPtr<nsIDocument> d = do_QueryInterface(w->GetExtantDocument());
+    if (d) {
+      trusted = nsContentUtils::IsChromeDoc(d);
+      nsIPresShell* s = d->GetShell();
+      if (s) {
+        InitPresContextData(s->GetPresContext());
+      }
+    }
+  }
+  return trusted;
+}
+
 //static
 already_AddRefed<nsDOMEvent>
 nsDOMEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
@@ -352,19 +370,7 @@ nsDOMEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
 {
   nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.Get());
   nsRefPtr<nsDOMEvent> e = nsDOMEvent::CreateEvent(t, nullptr, nullptr);
-
-  bool trusted = false;
-  nsCOMPtr<nsPIDOMWindow> w = do_QueryInterface(t);
-  if (w) {
-    nsCOMPtr<nsIDocument> d = do_QueryInterface(w->GetExtantDocument());
-    if (d) {
-      trusted = nsContentUtils::IsChromeDoc(d);
-      nsIPresShell* s = d->GetShell();
-      if (s) {
-        e->InitPresContextData(s->GetPresContext());
-      }
-    }
-  }
+  bool trusted = e->Init(t);
   aRv = e->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
   e->SetTrusted(trusted);
   return e.forget();

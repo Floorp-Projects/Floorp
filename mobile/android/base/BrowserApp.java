@@ -1369,7 +1369,7 @@ abstract public class BrowserApp extends GeckoApp
 
         // Only show the "Quit" menu item on pre-ICS. In ICS+, it's easy to
         // kill an app through the task switcher.
-        aMenu.findItem(R.id.quit).setVisible(Build.VERSION.SDK_INT < 14);
+        aMenu.findItem(R.id.quit).setVisible(Build.VERSION.SDK_INT < 14 || !isTouchDevice());
 
         if (tab == null || tab.getURL() == null) {
             bookmark.setEnabled(false);

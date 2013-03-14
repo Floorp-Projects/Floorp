@@ -37,6 +37,9 @@ class ChromeObjectWrapper : public ChromeObjectWrapperBase
     virtual bool get(JSContext *cx, JSObject *wrapper, JSObject *receiver,
                      jsid id, js::Value *vp) MOZ_OVERRIDE;
 
+    virtual bool objectClassIs(JSObject *obj, js::ESClassValue classValue,
+                               JSContext *cx) MOZ_OVERRIDE;
+
     virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id,
                        js::Wrapper::Action act, bool *bp) MOZ_OVERRIDE;
 

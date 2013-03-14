@@ -2,16 +2,9 @@
 package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
-import android.app.Activity;
-import android.view.MenuItem;
-import android.widget.TextView;
-import android.widget.TabHost;
-import android.content.ContentResolver;
-import android.app.Instrumentation;
 import android.util.DisplayMetrics;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 public class testAddonManager extends PixelTest  {

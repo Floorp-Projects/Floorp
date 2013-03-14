@@ -19,8 +19,6 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.LinearLayout.LayoutParams;
-
 import java.util.ArrayList;
 import java.util.List;
 

@@ -142,6 +142,7 @@ VideoData::~VideoData()
 
 VideoData* VideoData::Create(VideoInfo& aInfo,
                              ImageContainer* aContainer,
+                             Image* aImage,
                              int64_t aOffset,
                              int64_t aTime,
                              int64_t aEndTime,
@@ -150,7 +151,7 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
                              int64_t aTimecode,
                              nsIntRect aPicture)
 {
-  if (!aContainer) {
+  if (!aImage && !aContainer) {
     // Create a dummy VideoData with no image. This gives us something to
     // send to media streams if necessary.
     nsAutoPtr<VideoData> v(new VideoData(aOffset,
@@ -204,14 +205,19 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
   const YCbCrBuffer::Plane &Cb = aBuffer.mPlanes[1];
   const YCbCrBuffer::Plane &Cr = aBuffer.mPlanes[2];
 
-  // Currently our decoder only knows how to output to PLANAR_YCBCR
-  // format.
-  ImageFormat format[2] = {PLANAR_YCBCR, GRALLOC_PLANAR_YCBCR};
-  if (IsYV12Format(Y, Cb, Cr)) {
-    v->mImage = aContainer->CreateImage(format, 2);
+  if (!aImage) {
+    // Currently our decoder only knows how to output to PLANAR_YCBCR
+    // format.
+    ImageFormat format[2] = {PLANAR_YCBCR, GRALLOC_PLANAR_YCBCR};
+    if (IsYV12Format(Y, Cb, Cr)) {
+      v->mImage = aContainer->CreateImage(format, 2);
+    } else {
+      v->mImage = aContainer->CreateImage(format, 1);
+    }
   } else {
-    v->mImage = aContainer->CreateImage(format, 1);
+    v->mImage = aImage;
   }
+
   if (!v->mImage) {
     return nullptr;
   }
@@ -237,8 +243,41 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
   data.mStereoMode = aInfo.mStereoMode;
 
   videoImage->SetDelayedConversion(true);
-  videoImage->SetData(data);
+  if (!aImage) {
+    videoImage->SetData(data);
+  } else {
+    videoImage->SetDataNoCopy(data);
+  }
+
   return v.forget();
+}
+
+VideoData* VideoData::Create(VideoInfo& aInfo,
+                             ImageContainer* aContainer,
+                             int64_t aOffset,
+                             int64_t aTime,
+                             int64_t aEndTime,
+                             const YCbCrBuffer& aBuffer,
+                             bool aKeyframe,
+                             int64_t aTimecode,
+                             nsIntRect aPicture)
+{
+  return Create(aInfo, aContainer, nullptr, aOffset, aTime, aEndTime, aBuffer,
+                aKeyframe, aTimecode, aPicture);
+}
+
+VideoData* VideoData::Create(VideoInfo& aInfo,
+                             Image* aImage,
+                             int64_t aOffset,
+                             int64_t aTime,
+                             int64_t aEndTime,
+                             const YCbCrBuffer& aBuffer,
+                             bool aKeyframe,
+                             int64_t aTimecode,
+                             nsIntRect aPicture)
+{
+  return Create(aInfo, nullptr, aImage, aOffset, aTime, aEndTime, aBuffer,
+                aKeyframe, aTimecode, aPicture);
 }
 
 VideoData* VideoData::CreateFromImage(VideoInfo& aInfo,
@@ -267,7 +306,7 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
                              int64_t aOffset,
                              int64_t aTime,
                              int64_t aEndTime,
-                             mozilla::layers::GraphicBufferLocked *aBuffer,
+                             mozilla::layers::GraphicBufferLocked* aBuffer,
                              bool aKeyframe,
                              int64_t aTimecode,
                              nsIntRect aPicture)

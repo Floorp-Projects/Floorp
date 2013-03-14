@@ -1936,7 +1936,7 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
       res = nsWSRunObject::PrepareToDeleteRange(mHTMLEditor, address_of(visNode), &so, address_of(visNode), &eo);
       NS_ENSURE_SUCCESS(res, res);
       nsCOMPtr<nsIDOMCharacterData> nodeAsText(do_QueryInterface(visNode));
-      res = mHTMLEditor->DeleteText(nodeAsText, std::min(so, eo), Abs(eo - so));
+      res = mHTMLEditor->DeleteText(nodeAsText, std::min(so, eo), DeprecatedAbs(eo - so));
       *aHandled = true;
       NS_ENSURE_SUCCESS(res, res);    
       res = InsertBRIfNeeded(aSelection);
@@ -4396,7 +4396,7 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection,
     if (relFontSize) {
       // dir indicated bigger versus smaller.  1 = bigger, -1 = smaller
       int32_t dir = relFontSize > 0 ? 1 : -1;
-      for (int32_t j = 0; j < Abs(relFontSize); j++) {
+      for (int32_t j = 0; j < DeprecatedAbs(relFontSize); j++) {
         res = mHTMLEditor->RelativeFontChangeOnTextNode(dir, nodeAsText,
                                                         0, -1);
         NS_ENSURE_SUCCESS(res, res);

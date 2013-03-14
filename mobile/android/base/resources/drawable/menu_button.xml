@@ -6,10 +6,20 @@
 <level-list xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:maxLevel="1">
+
         <selector>
-            <item android:state_pressed="true" android:drawable="@drawable/highlight"/>
+
+            <item android:state_pressed="true"
+                  android:drawable="@color/highlight_dark"/>
+
+            <item android:state_focused="true"
+                  android:state_pressed="false"
+                  android:drawable="@color/highlight_dark_focused"/>
+
             <item android:drawable="@android:color/black"/>
+
         </selector>
+
     </item>
 
     <item android:maxLevel="2" android:drawable="@android:color/transparent"/>

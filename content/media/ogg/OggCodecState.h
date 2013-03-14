@@ -93,7 +93,9 @@ public:
   
   virtual CodecType GetType() { return TYPE_UNKNOWN; }
 
-  // Reads a header packet. Returns true when last header has been read.
+  // Reads a header packet. Returns false if an error was encountered
+  // while reading header packets. Callers should check DoneReadingHeaders()
+  // to determine if the last header has been read.
   // This function takes ownership of the packet and is responsible for
   // releasing it or queuing it for later processing.
   virtual bool DecodeHeader(ogg_packet* aPacket) {
