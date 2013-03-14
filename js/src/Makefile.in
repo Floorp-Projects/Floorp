@@ -135,6 +135,7 @@ CPPSRCS		= \
 		Memory.cpp \
 		Statistics.cpp \
 		StoreBuffer.cpp \
+		Nursery.cpp \
 		Iteration.cpp \
 		Zone.cpp \
 		Verifier.cpp \
