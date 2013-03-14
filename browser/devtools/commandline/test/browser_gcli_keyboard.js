@@ -26,218 +26,490 @@ var exports = {};
 const TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testKeyboard.js</p>";
 
 function test() {
-  var tests = Object.keys(exports);
-  // Push setup to the top and shutdown to the bottom
-  tests.sort(function(t1, t2) {
-    if (t1 == "setup" || t2 == "shutdown") return -1;
-    if (t2 == "setup" || t1 == "shutdown") return 1;
-    return 0;
-  });
-  info("Running tests: " + tests.join(", "))
-  tests = tests.map(function(test) { return exports[test]; });
-  DeveloperToolbarTest.test(TEST_URI, tests, true);
+  helpers.addTabWithToolbar(TEST_URI, function(options) {
+    return helpers.runTests(options, exports);
+  }).then(finish);
 }
 
 // <INJECTED SOURCE:END>
 
+'use strict';
 
-var Requisition = require('gcli/cli').Requisition;
-var canon = require('gcli/canon');
-// var mockCommands = require('gclitest/mockCommands');
 var javascript = require('gcli/types/javascript');
+// var helpers = require('gclitest/helpers');
+// var mockCommands = require('gclitest/mockCommands');
+var canon = require('gcli/canon');
 
-// var assert = require('test/assert');
-
-var tempWindow;
-var inputter;
+var tempWindow = undefined;
 
 exports.setup = function(options) {
+  mockCommands.setup();
+
   tempWindow = javascript.getGlobalObject();
   javascript.setGlobalObject(options.window);
-
-  if (options.display) {
-    inputter = options.display.inputter;
-  }
-
-  mockCommands.setup();
 };
 
 exports.shutdown = function(options) {
-  mockCommands.shutdown();
-
-  inputter = undefined;
   javascript.setGlobalObject(tempWindow);
   tempWindow = undefined;
+
+  mockCommands.shutdown();
 };
 
-var COMPLETES_TO = 'complete';
-var KEY_UPS_TO = 'keyup';
-var KEY_DOWNS_TO = 'keydown';
+// Bug 664377: Add tests for internal completion. i.e. "tsela<TAB> 1"
 
-function check(initial, action, after, choice, cursor, expectedCursor) {
-  var requisition;
-  if (inputter) {
-    requisition = inputter.requisition;
-    inputter.setInput(initial);
-  }
-  else {
-    requisition = new Requisition();
-    requisition.update(initial);
-  }
-
-  if (cursor == null) {
-    cursor = initial.length;
-  }
-  var assignment = requisition.getAssignmentAt(cursor);
-  switch (action) {
-    case COMPLETES_TO:
-      requisition.complete({ start: cursor, end: cursor }, choice);
-      break;
-
-    case KEY_UPS_TO:
-      requisition.increment(assignment);
-      break;
-
-    case KEY_DOWNS_TO:
-      requisition.decrement(assignment);
-      break;
-  }
-
-  assert.is(after, requisition.toString(),
-          initial + ' + ' + action + ' -> ' + after);
-
-  if (expectedCursor != null) {
-    if (inputter) {
-      assert.is(expectedCursor, inputter.getInputState().cursor.start,
-              'Ending cursor position for \'' + initial + '\'');
+exports.testSimple = function(options) {
+  return helpers.audit(options, [
+    {
+      setup: 'tsela<TAB>',
+      check: { input: 'tselarr ', cursor: 8 }
+    },
+    {
+      setup: 'tsn di<TAB>',
+      check: { input: 'tsn dif ', cursor: 8 }
+    },
+    {
+      setup: 'tsg a<TAB>',
+      check: { input: 'tsg aaa ', cursor: 8 }
     }
-  }
-}
+  ]);
+};
 
 exports.testComplete = function(options) {
-  if (!inputter) {
-    assert.log('Missing display, reduced checks');
-  }
-
-  check('tsela', COMPLETES_TO, 'tselarr ', 0);
-  check('tsn di', COMPLETES_TO, 'tsn dif ', 0);
-  check('tsg a', COMPLETES_TO, 'tsg aaa ', 0);
-
-  check('tsn e', COMPLETES_TO, 'tsn extend ', -5);
-  check('tsn e', COMPLETES_TO, 'tsn ext ', -4);
-  check('tsn e', COMPLETES_TO, 'tsn exte ', -3);
-  check('tsn e', COMPLETES_TO, 'tsn exten ', -2);
-  check('tsn e', COMPLETES_TO, 'tsn extend ', -1);
-  check('tsn e', COMPLETES_TO, 'tsn ext ', 0);
-  check('tsn e', COMPLETES_TO, 'tsn exte ', 1);
-  check('tsn e', COMPLETES_TO, 'tsn exten ', 2);
-  check('tsn e', COMPLETES_TO, 'tsn extend ', 3);
-  check('tsn e', COMPLETES_TO, 'tsn ext ', 4);
-  check('tsn e', COMPLETES_TO, 'tsn exte ', 5);
-  check('tsn e', COMPLETES_TO, 'tsn exten ', 6);
-  check('tsn e', COMPLETES_TO, 'tsn extend ', 7);
-  check('tsn e', COMPLETES_TO, 'tsn ext ', 8);
-
-  if (!canon.getCommand('{')) {
-    assert.log('Skipping exec tests because { is not registered');
-  }
-  else {
-    check('{ wind', COMPLETES_TO, '{ window', 0);
-    check('{ window.docum', COMPLETES_TO, '{ window.document', 0);
-
-    // Bug 717228: This fails under jsdom
-    if (!options.isJsdom) {
-      check('{ window.document.titl', COMPLETES_TO, '{ window.document.title ', 0);
+  return helpers.audit(options, [
+    {
+      setup: 'tsn e<DOWN><DOWN><DOWN><DOWN><DOWN><TAB>',
+      check: { input: 'tsn exte ' }
+    },
+    {
+      setup: 'tsn e<DOWN><DOWN><DOWN><DOWN><TAB>',
+      check: { input: 'tsn ext ' }
+    },
+    {
+      setup: 'tsn e<DOWN><DOWN><DOWN><TAB>',
+      check: { input: 'tsn extend ' }
+    },
+    {
+      setup: 'tsn e<DOWN><DOWN><TAB>',
+      check: { input: 'tsn exten ' }
+    },
+    {
+      setup: 'tsn e<DOWN><TAB>',
+      check: { input: 'tsn exte ' }
+    },
+    {
+      setup: 'tsn e<TAB>',
+      check: { input: 'tsn ext ' }
+    },
+    {
+      setup: 'tsn e<UP><TAB>',
+      check: { input: 'tsn extend ' }
+    },
+    {
+      setup: 'tsn e<UP><UP><TAB>',
+      check: { input: 'tsn exten ' }
+    },
+    {
+      setup: 'tsn e<UP><UP><UP><TAB>',
+      check: { input: 'tsn exte ' }
+    },
+    {
+      setup: 'tsn e<UP><UP><UP><UP><TAB>',
+      check: { input: 'tsn ext ' }
+    },
+    {
+      setup: 'tsn e<UP><UP><UP><UP><UP><TAB>',
+      check: { input: 'tsn extend ' }
+    },
+    {
+      setup: 'tsn e<UP><UP><UP><UP><UP><UP><TAB>',
+      check: { input: 'tsn exten ' }
+    },
+    {
+      setup: 'tsn e<UP><UP><UP><UP><UP><UP><UP><TAB>',
+      check: { input: 'tsn exte ' }
+    },
+    {
+      setup: 'tsn e<UP><UP><UP><UP><UP><UP><UP><UP><TAB>',
+      check: { input: 'tsn ext ' }
     }
-    else {
-      assert.log('Skipping tests due to jsdom and bug 717228.');
-    }
-  }
+  ]);
 };
 
-exports.testInternalComplete = function(options) {
-  // Bug 664377
-  // check('tsela 1', COMPLETES_TO, 'tselarr 1', 0, 3, 8);
+exports.testScript = function(options) {
+  return helpers.audit(options, [
+    {
+      skipIf: function commandJsMissing() {
+        return canon.getCommand('{') == null;
+      },
+      setup: '{ wind<TAB>',
+      check: { input: '{ window' }
+    },
+    {
+      skipIf: function commandJsMissing() {
+        return canon.getCommand('{') == null;
+      },
+      setup: '{ window.docum<TAB>',
+      check: { input: '{ window.document' }
+    }
+  ]);
 };
 
-exports.testIncrDecr = function() {
-  check('tsu -70', KEY_UPS_TO, 'tsu -5');
-  check('tsu -7', KEY_UPS_TO, 'tsu -5');
-  check('tsu -6', KEY_UPS_TO, 'tsu -5');
-  check('tsu -5', KEY_UPS_TO, 'tsu -3');
-  check('tsu -4', KEY_UPS_TO, 'tsu -3');
-  check('tsu -3', KEY_UPS_TO, 'tsu 0');
-  check('tsu -2', KEY_UPS_TO, 'tsu 0');
-  check('tsu -1', KEY_UPS_TO, 'tsu 0');
-  check('tsu 0', KEY_UPS_TO, 'tsu 3');
-  check('tsu 1', KEY_UPS_TO, 'tsu 3');
-  check('tsu 2', KEY_UPS_TO, 'tsu 3');
-  check('tsu 3', KEY_UPS_TO, 'tsu 6');
-  check('tsu 4', KEY_UPS_TO, 'tsu 6');
-  check('tsu 5', KEY_UPS_TO, 'tsu 6');
-  check('tsu 6', KEY_UPS_TO, 'tsu 9');
-  check('tsu 7', KEY_UPS_TO, 'tsu 9');
-  check('tsu 8', KEY_UPS_TO, 'tsu 9');
-  check('tsu 9', KEY_UPS_TO, 'tsu 10');
-  check('tsu 10', KEY_UPS_TO, 'tsu 10');
-  check('tsu 100', KEY_UPS_TO, 'tsu -5');
+exports.testJsdom = function(options) {
+  return helpers.audit(options, [
+    {
+      skipIf: function jsDomOrCommandJsMissing() {
+        return options.isJsdom || canon.getCommand('{') == null;
+      },
+      setup: '{ window.document.titl<TAB>',
+      check: { input: '{ window.document.title ' }
+    }
+  ]);
+};
 
-  check('tsu -70', KEY_DOWNS_TO, 'tsu 10');
-  check('tsu -7', KEY_DOWNS_TO, 'tsu 10');
-  check('tsu -6', KEY_DOWNS_TO, 'tsu 10');
-  check('tsu -5', KEY_DOWNS_TO, 'tsu -5');
-  check('tsu -4', KEY_DOWNS_TO, 'tsu -5');
-  check('tsu -3', KEY_DOWNS_TO, 'tsu -5');
-  check('tsu -2', KEY_DOWNS_TO, 'tsu -3');
-  check('tsu -1', KEY_DOWNS_TO, 'tsu -3');
-  check('tsu 0', KEY_DOWNS_TO, 'tsu -3');
-  check('tsu 1', KEY_DOWNS_TO, 'tsu 0');
-  check('tsu 2', KEY_DOWNS_TO, 'tsu 0');
-  check('tsu 3', KEY_DOWNS_TO, 'tsu 0');
-  check('tsu 4', KEY_DOWNS_TO, 'tsu 3');
-  check('tsu 5', KEY_DOWNS_TO, 'tsu 3');
-  check('tsu 6', KEY_DOWNS_TO, 'tsu 3');
-  check('tsu 7', KEY_DOWNS_TO, 'tsu 6');
-  check('tsu 8', KEY_DOWNS_TO, 'tsu 6');
-  check('tsu 9', KEY_DOWNS_TO, 'tsu 6');
-  check('tsu 10', KEY_DOWNS_TO, 'tsu 9');
-  check('tsu 100', KEY_DOWNS_TO, 'tsu 10');
+exports.testIncr = function(options) {
+  return helpers.audit(options, [
+    /*
+    // We currently refuse to increment/decrement things with a non-valid
+    // status which makes sense for many cases, and is a decent default.
+    // However in theory we could do better, these tests are there for then
+    {
+      setup: 'tsu -70<UP>',
+      check: { input: 'tsu -5' }
+    },
+    {
+      setup: 'tsu -7<UP>',
+      check: { input: 'tsu -5' }
+    },
+    {
+      setup: 'tsu -6<UP>',
+      check: { input: 'tsu -5' }
+    },
+    */
+    {
+      setup: 'tsu -5<UP>',
+      check: { input: 'tsu -3' }
+    },
+    {
+      setup: 'tsu -4<UP>',
+      check: { input: 'tsu -3' }
+    },
+    {
+      setup: 'tsu -3<UP>',
+      check: { input: 'tsu 0' }
+    },
+    {
+      setup: 'tsu -2<UP>',
+      check: { input: 'tsu 0' }
+    },
+    {
+      setup: 'tsu -1<UP>',
+      check: { input: 'tsu 0' }
+    },
+    {
+      setup: 'tsu 0<UP>',
+      check: { input: 'tsu 3' }
+    },
+    {
+      setup: 'tsu 1<UP>',
+      check: { input: 'tsu 3' }
+    },
+    {
+      setup: 'tsu 2<UP>',
+      check: { input: 'tsu 3' }
+    },
+    {
+      setup: 'tsu 3<UP>',
+      check: { input: 'tsu 6' }
+    },
+    {
+      setup: 'tsu 4<UP>',
+      check: { input: 'tsu 6' }
+    },
+    {
+      setup: 'tsu 5<UP>',
+      check: { input: 'tsu 6' }
+    },
+    {
+      setup: 'tsu 6<UP>',
+      check: { input: 'tsu 9' }
+    },
+    {
+      setup: 'tsu 7<UP>',
+      check: { input: 'tsu 9' }
+    },
+    {
+      setup: 'tsu 8<UP>',
+      check: { input: 'tsu 9' }
+    },
+    {
+      setup: 'tsu 9<UP>',
+      check: { input: 'tsu 10' }
+    },
+    {
+      setup: 'tsu 10<UP>',
+      check: { input: 'tsu 10' }
+    }
+    /*
+    // See notes above
+    {
+      setup: 'tsu 100<UP>',
+      check: { input: 'tsu 10' }
+    }
+    */
+  ]);
+};
 
-  check('tsf -70', KEY_UPS_TO, 'tsf -6.5');
-  check('tsf -6.5', KEY_UPS_TO, 'tsf -6');
-  check('tsf -6', KEY_UPS_TO, 'tsf -4.5');
-  check('tsf -4.5', KEY_UPS_TO, 'tsf -3');
-  check('tsf -4', KEY_UPS_TO, 'tsf -3');
-  check('tsf -3', KEY_UPS_TO, 'tsf -1.5');
-  check('tsf -1.5', KEY_UPS_TO, 'tsf 0');
-  check('tsf 0', KEY_UPS_TO, 'tsf 1.5');
-  check('tsf 1.5', KEY_UPS_TO, 'tsf 3');
-  check('tsf 2', KEY_UPS_TO, 'tsf 3');
-  check('tsf 3', KEY_UPS_TO, 'tsf 4.5');
-  check('tsf 5', KEY_UPS_TO, 'tsf 6');
-  check('tsf 100', KEY_UPS_TO, 'tsf -6.5');
+exports.testDecr = function(options) {
+  return helpers.audit(options, [
+    /*
+    // See notes at top of testIncr
+    {
+      setup: 'tsu -70<DOWN>',
+      check: { input: 'tsu -5' }
+    },
+    {
+      setup: 'tsu -7<DOWN>',
+      check: { input: 'tsu -5' }
+    },
+    {
+      setup: 'tsu -6<DOWN>',
+      check: { input: 'tsu -5' }
+    },
+    */
+    {
+      setup: 'tsu -5<DOWN>',
+      check: { input: 'tsu -5' }
+    },
+    {
+      setup: 'tsu -4<DOWN>',
+      check: { input: 'tsu -5' }
+    },
+    {
+      setup: 'tsu -3<DOWN>',
+      check: { input: 'tsu -5' }
+    },
+    {
+      setup: 'tsu -2<DOWN>',
+      check: { input: 'tsu -3' }
+    },
+    {
+      setup: 'tsu -1<DOWN>',
+      check: { input: 'tsu -3' }
+    },
+    {
+      setup: 'tsu 0<DOWN>',
+      check: { input: 'tsu -3' }
+    },
+    {
+      setup: 'tsu 1<DOWN>',
+      check: { input: 'tsu 0' }
+    },
+    {
+      setup: 'tsu 2<DOWN>',
+      check: { input: 'tsu 0' }
+    },
+    {
+      setup: 'tsu 3<DOWN>',
+      check: { input: 'tsu 0' }
+    },
+    {
+      setup: 'tsu 4<DOWN>',
+      check: { input: 'tsu 3' }
+    },
+    {
+      setup: 'tsu 5<DOWN>',
+      check: { input: 'tsu 3' }
+    },
+    {
+      setup: 'tsu 6<DOWN>',
+      check: { input: 'tsu 3' }
+    },
+    {
+      setup: 'tsu 7<DOWN>',
+      check: { input: 'tsu 6' }
+    },
+    {
+      setup: 'tsu 8<DOWN>',
+      check: { input: 'tsu 6' }
+    },
+    {
+      setup: 'tsu 9<DOWN>',
+      check: { input: 'tsu 6' }
+    },
+    {
+      setup: 'tsu 10<DOWN>',
+      check: { input: 'tsu 9' }
+    }
+    /*
+    // See notes at top of testIncr
+    {
+      setup: 'tsu 100<DOWN>',
+      check: { input: 'tsu 9' }
+    }
+    */
+  ]);
+};
 
-  check('tsf -70', KEY_DOWNS_TO, 'tsf 11.5');
-  check('tsf -6.5', KEY_DOWNS_TO, 'tsf -6.5');
-  check('tsf -6', KEY_DOWNS_TO, 'tsf -6.5');
-  check('tsf -4.5', KEY_DOWNS_TO, 'tsf -6');
-  check('tsf -4', KEY_DOWNS_TO, 'tsf -4.5');
-  check('tsf -3', KEY_DOWNS_TO, 'tsf -4.5');
-  check('tsf -1.5', KEY_DOWNS_TO, 'tsf -3');
-  check('tsf 0', KEY_DOWNS_TO, 'tsf -1.5');
-  check('tsf 1.5', KEY_DOWNS_TO, 'tsf 0');
-  check('tsf 2', KEY_DOWNS_TO, 'tsf 1.5');
-  check('tsf 3', KEY_DOWNS_TO, 'tsf 1.5');
-  check('tsf 5', KEY_DOWNS_TO, 'tsf 4.5');
-  check('tsf 100', KEY_DOWNS_TO, 'tsf 11.5');
+exports.testIncrFloat = function(options) {
+  return helpers.audit(options, [
+    /*
+    // See notes at top of testIncr
+    {
+      setup: 'tsf -70<UP>',
+      check: { input: 'tsf -6.5' }
+    },
+    */
+    {
+      setup: 'tsf -6.5<UP>',
+      check: { input: 'tsf -6' }
+    },
+    {
+      setup: 'tsf -6<UP>',
+      check: { input: 'tsf -4.5' }
+    },
+    {
+      setup: 'tsf -4.5<UP>',
+      check: { input: 'tsf -3' }
+    },
+    {
+      setup: 'tsf -4<UP>',
+      check: { input: 'tsf -3' }
+    },
+    {
+      setup: 'tsf -3<UP>',
+      check: { input: 'tsf -1.5' }
+    },
+    {
+      setup: 'tsf -1.5<UP>',
+      check: { input: 'tsf 0' }
+    },
+    {
+      setup: 'tsf 0<UP>',
+      check: { input: 'tsf 1.5' }
+    },
+    {
+      setup: 'tsf 1.5<UP>',
+      check: { input: 'tsf 3' }
+    },
+    {
+      setup: 'tsf 2<UP>',
+      check: { input: 'tsf 3' }
+    },
+    {
+      setup: 'tsf 3<UP>',
+      check: { input: 'tsf 4.5' }
+    },
+    {
+      setup: 'tsf 5<UP>',
+      check: { input: 'tsf 6' }
+    }
+    /*
+    // See notes at top of testIncr
+    {
+      setup: 'tsf 100<UP>',
+      check: { input: 'tsf -6.5' }
+    }
+    */
+  ]);
+};
 
-  // Bug 707007 - GCLI increment and decrement operations cycle through
-  // selection options in the wrong order
-  check('tselarr 1', KEY_DOWNS_TO, 'tselarr 2');
-  check('tselarr 2', KEY_DOWNS_TO, 'tselarr 3');
-  check('tselarr 3', KEY_DOWNS_TO, 'tselarr 1');
+exports.testDecrFloat = function(options) {
+  return helpers.audit(options, [
+    /*
+    // See notes at top of testIncr
+    {
+      setup: 'tsf -70<DOWN>',
+      check: { input: 'tsf 11.5' }
+    },
+    */
+    {
+      setup: 'tsf -6.5<DOWN>',
+      check: { input: 'tsf -6.5' }
+    },
+    {
+      setup: 'tsf -6<DOWN>',
+      check: { input: 'tsf -6.5' }
+    },
+    {
+      setup: 'tsf -4.5<DOWN>',
+      check: { input: 'tsf -6' }
+    },
+    {
+      setup: 'tsf -4<DOWN>',
+      check: { input: 'tsf -4.5' }
+    },
+    {
+      setup: 'tsf -3<DOWN>',
+      check: { input: 'tsf -4.5' }
+    },
+    {
+      setup: 'tsf -1.5<DOWN>',
+      check: { input: 'tsf -3' }
+    },
+    {
+      setup: 'tsf 0<DOWN>',
+      check: { input: 'tsf -1.5' }
+    },
+    {
+      setup: 'tsf 1.5<DOWN>',
+      check: { input: 'tsf 0' }
+    },
+    {
+      setup: 'tsf 2<DOWN>',
+      check: { input: 'tsf 1.5' }
+    },
+    {
+      setup: 'tsf 3<DOWN>',
+      check: { input: 'tsf 1.5' }
+    },
+    {
+      setup: 'tsf 5<DOWN>',
+      check: { input: 'tsf 4.5' }
+    }
+    /*
+    // See notes at top of testIncr
+    {
+      setup: 'tsf 100<DOWN>',
+      check: { input: 'tsf 11.5' }
+    }
+    */
+  ]);
+};
 
-  check('tselarr 3', KEY_UPS_TO, 'tselarr 2');
+exports.testIncrSelection = function(options) {
+  /*
+  // Bug 829516:  GCLI up/down navigation over selection is sometimes bizarre
+  return helpers.audit(options, [
+    {
+      setup: 'tselarr <DOWN>',
+      check: { hints: '2' },
+      exec: {}
+    },
+    {
+      setup: 'tselarr <DOWN><DOWN>',
+      check: { hints: '3' },
+      exec: {}
+    },
+    {
+      setup: 'tselarr <DOWN><DOWN><DOWN>',
+      check: { hints: '1' },
+      exec: {}
+    }
+  ]);
+  */
+};
+
+exports.testDecrSelection = function(options) {
+  /*
+  // Bug 829516:  GCLI up/down navigation over selection is sometimes bizarre
+  return helpers.audit(options, [
+    {
+      setup: 'tselarr <UP>',
+      check: { hints: '3' }
+    }
+  ]);
+  */
 };
 
 // });

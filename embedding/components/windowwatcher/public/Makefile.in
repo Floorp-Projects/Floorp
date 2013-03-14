@@ -14,17 +14,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= windowwatcher
 GRE_MODULE	= 1
 
-SDK_XPIDLSRCS   = nsIWindowWatcher.idl \
-		  nsIPromptService.idl \
-		  $(NULL)
-
-XPIDLSRCS	= nsIDialogParamBlock.idl \
-                  nsIPromptService2.idl \
-                  nsPIPromptService.idl \
-                  nsPIWindowWatcher.idl \
-                  nsIPromptFactory.idl \
-                  $(NULL)
-
 EXPORTS		= nsPromptUtils.h \
                   $(NULL)
 

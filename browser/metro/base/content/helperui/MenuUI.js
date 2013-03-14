@@ -454,8 +454,11 @@ MenuPopup.prototype = {
       }
     }
 
-    if (aX < 0)
+    if (aX < 0) {
       aX = 0;
+    } else if (aX + width + kPositionPadding > screenWidth){
+      aX = screenWidth - width - kPositionPadding;
+    }
 
     if (aY < 0 && aPositionOptions.moveBelowToFit) {
       // show context menu below when it doesn't fit.

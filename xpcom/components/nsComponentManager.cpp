@@ -194,6 +194,49 @@ ArenaStrdup(const char *s, PLArenaPool *arena)
     return ArenaStrndup(s, strlen(s), arena);
 }
 
+// GetService and a few other functions need to exit their mutex mid-function
+// without reentering it later in the block. This class supports that
+// style of early-exit that MutexAutoUnlock doesn't.
+
+namespace {
+
+class NS_STACK_CLASS MutexLock
+{
+public:
+    MutexLock(SafeMutex& aMutex)
+        : mMutex(aMutex)
+        , mLocked(false)
+    {
+        Lock();
+    }
+
+    ~MutexLock()
+    {
+        if (mLocked)
+            Unlock();
+    }
+
+    void Lock()
+    {
+        NS_ASSERTION(!mLocked, "Re-entering a mutex");
+        mMutex.Lock();
+        mLocked = true;
+    }
+
+    void Unlock()
+    {
+        NS_ASSERTION(mLocked, "Exiting a mutex that isn't held!");
+        mMutex.Unlock();
+        mLocked = false;
+    }
+
+private:
+    SafeMutex& mMutex;
+    bool mLocked;
+};
+
+} // anonymous namespace
+
 // this is safe to call during InitXPCOM
 static already_AddRefed<nsIFile>
 GetLocationFromDirectoryService(const char* prop)
@@ -262,7 +305,7 @@ nsComponentManagerImpl::Create(nsISupports* aOuter, REFNSIID aIID, void** aResul
 }
 
 nsComponentManagerImpl::nsComponentManagerImpl()
-    : mMon("nsComponentManagerImpl.mMon")
+    : mLock("nsComponentManagerImpl.mLock")
     , mStatus(NOT_INITIALIZED)
 {
 }
@@ -383,35 +426,41 @@ void
 nsComponentManagerImpl::RegisterModule(const mozilla::Module* aModule,
                                        FileLocation* aFile)
 {
-    ReentrantMonitorAutoEnter mon(mMon);
+    mLock.AssertNotCurrentThreadOwns();
 
-    KnownModule* m;
-    if (aFile) {
-        nsCString uri;
-        aFile->GetURIString(uri);
-        NS_ASSERTION(!mKnownModules.Get(uri),
-                     "Must not register a binary module twice.");
+    {
+        // Scope the monitor so that we don't hold it while calling into the
+        // category manager.
+        MutexLock lock(mLock);
 
-        m = new KnownModule(aModule, *aFile);
-        mKnownModules.Put(uri, m);
-    } else {
-        m = new KnownModule(aModule);
-        mKnownStaticModules.AppendElement(m);
+        KnownModule* m;
+        if (aFile) {
+            nsCString uri;
+            aFile->GetURIString(uri);
+            NS_ASSERTION(!mKnownModules.Get(uri),
+                         "Must not register a binary module twice.");
+
+            m = new KnownModule(aModule, *aFile);
+            mKnownModules.Put(uri, m);
+        } else {
+            m = new KnownModule(aModule);
+            mKnownStaticModules.AppendElement(m);
+        }
+
+        if (aModule->mCIDs) {
+            const mozilla::Module::CIDEntry* entry;
+            for (entry = aModule->mCIDs; entry->cid; ++entry)
+                RegisterCIDEntryLocked(entry, m);
+        }
+
+        if (aModule->mContractIDs) {
+            const mozilla::Module::ContractIDEntry* entry;
+            for (entry = aModule->mContractIDs; entry->contractid; ++entry)
+                RegisterContractIDLocked(entry);
+            MOZ_ASSERT(!entry->cid, "Incorrectly terminated contract list");
+        }
     }
 
-    if (aModule->mCIDs) {
-        const mozilla::Module::CIDEntry* entry;
-        for (entry = aModule->mCIDs; entry->cid; ++entry)
-            RegisterCIDEntry(entry, m);
-    }
-
-    if (aModule->mContractIDs) {
-        const mozilla::Module::ContractIDEntry* entry;
-        for (entry = aModule->mContractIDs; entry->contractid; ++entry)
-            RegisterContractID(entry);
-        MOZ_ASSERT(!entry->cid, "Incorrectly terminated contract list");
-    }
-            
     if (aModule->mCategoryEntries) {
         const mozilla::Module::CategoryEntry* entry;
         for (entry = aModule->mCategoryEntries; entry->category; ++entry)
@@ -423,10 +472,11 @@ nsComponentManagerImpl::RegisterModule(const mozilla::Module* aModule,
 }
 
 void
-nsComponentManagerImpl::RegisterCIDEntry(const mozilla::Module::CIDEntry* aEntry,
-                                         KnownModule* aModule)
+nsComponentManagerImpl::RegisterCIDEntryLocked(
+    const mozilla::Module::CIDEntry* aEntry,
+    KnownModule* aModule)
 {
-    mMon.AssertCurrentThreadIn();
+    mLock.AssertCurrentThreadOwns();
 
     nsFactoryEntry* f = mFactories.Get(*aEntry->cid);
     if (f) {
@@ -453,9 +503,10 @@ nsComponentManagerImpl::RegisterCIDEntry(const mozilla::Module::CIDEntry* aEntry
 }
 
 void
-nsComponentManagerImpl::RegisterContractID(const mozilla::Module::ContractIDEntry* aEntry)
+nsComponentManagerImpl::RegisterContractIDLocked(
+    const mozilla::Module::ContractIDEntry* aEntry)
 {
-    mMon.AssertCurrentThreadIn();
+    mLock.AssertCurrentThreadOwns();
 
     nsFactoryEntry* f = mFactories.Get(*aEntry->cid);
     if (!f) {
@@ -575,6 +626,8 @@ nsComponentManagerImpl::ManifestXPT(ManifestProcessingContext& cx, int lineno, c
 void
 nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& cx, int lineno, char *const * argv)
 {
+    mLock.AssertNotCurrentThreadOwns();
+
     char* id = argv[0];
     char* file = argv[1];
 
@@ -585,7 +638,12 @@ nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& cx, int lin
         return;
     }
 
-    ReentrantMonitorAutoEnter mon(mMon);
+    // Precompute the hash/file data outside of the lock
+    FileLocation fl(cx.mFile, file);
+    nsCString hash;
+    fl.GetURIString(hash);
+
+    MutexLock lock(mLock);
     nsFactoryEntry* f = mFactories.Get(cid);
     if (f) {
         char idstr[NSID_LENGTH];
@@ -597,6 +655,8 @@ nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& cx, int lin
         else
             existing = "<unknown module>";
 
+        lock.Unlock();
+
         LogMessageWithContext(cx.mFile, lineno,
                               "Trying to re-register CID '%s' already registered by %s.",
                               idstr,
@@ -605,10 +665,7 @@ nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& cx, int lin
     }
 
     KnownModule* km;
-    FileLocation fl(cx.mFile, file);
 
-    nsCString hash;
-    fl.GetURIString(hash);
     km = mKnownModules.Get(hash);
     if (!km) {
         km = new KnownModule(fl);
@@ -632,6 +689,8 @@ nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& cx, int lin
 void
 nsComponentManagerImpl::ManifestContract(ManifestProcessingContext& cx, int lineno, char *const * argv)
 {
+    mLock.AssertNotCurrentThreadOwns();
+
     char* contract = argv[0];
     char* id = argv[1];
 
@@ -642,9 +701,10 @@ nsComponentManagerImpl::ManifestContract(ManifestProcessingContext& cx, int line
         return;
     }
 
-    ReentrantMonitorAutoEnter mon(mMon);
+    MutexLock lock(mLock);
     nsFactoryEntry* f = mFactories.Get(cid);
     if (!f) {
+        lock.Unlock();
         LogMessageWithContext(cx.mFile, lineno,
                               "Could not map contract ID '%s' to CID %s because no implementation of the CID is registered.",
                               contract, id);
@@ -792,7 +852,7 @@ nsFactoryEntry *
 nsComponentManagerImpl::GetFactoryEntry(const char *aContractID,
                                         uint32_t aContractIDLen)
 {
-    ReentrantMonitorAutoEnter mon(mMon);
+    SafeMutexAutoLock lock(mLock);
     return mContractIDs.Get(nsDependentCString(aContractID, aContractIDLen));
 }
 
@@ -800,7 +860,7 @@ nsComponentManagerImpl::GetFactoryEntry(const char *aContractID,
 nsFactoryEntry *
 nsComponentManagerImpl::GetFactoryEntry(const nsCID &aClass)
 {
-    ReentrantMonitorAutoEnter mon(mMon);
+    SafeMutexAutoLock lock(mLock);
     return mFactories.Get(aClass);
 }
 
@@ -1112,47 +1172,6 @@ nsComponentManagerImpl::GetPendingServiceThread(const nsCID& aServiceCID) const
   return nullptr;
 }
 
-// GetService() wants to manually Exit()/Enter() a monitor which is
-// wrapped in ReentrantMonitorAutoEnter, which nsAutoReentrantMonitor used to allow.
-// One use is block-scoped Exit()/Enter(), which could be supported
-// with something like a MonitoAutoExit, but that's not a well-defined
-// operation in general so that helper doesn't exist.  The other use
-// is early-Exit() for perf reasons.  This code is probably hot enough
-// to warrant special considerations.
-//
-// We could use bare mozilla::ReentrantMonitor, but that's error prone.
-// Instead, we just add a hacky wrapper here that acts like the old
-// nsAutoReentrantMonitor.
-struct NS_STACK_CLASS AutoReentrantMonitor
-{
-    AutoReentrantMonitor(ReentrantMonitor& aReentrantMonitor) : mReentrantMonitor(&aReentrantMonitor), mEnterCount(0)
-    {
-        Enter();
-    }
-
-    ~AutoReentrantMonitor()
-    {
-        if (mEnterCount) {
-            Exit();
-        }
-    }
-
-    void Enter()
-    {
-        mReentrantMonitor->Enter();
-        ++mEnterCount;
-    }
-
-    void Exit()
-    {
-        --mEnterCount;
-        mReentrantMonitor->Exit();
-    }
-
-    ReentrantMonitor* mReentrantMonitor;
-    int32_t mEnterCount;
-};
-
 NS_IMETHODIMP
 nsComponentManagerImpl::GetService(const nsCID& aClass,
                                    const nsIID& aIID,
@@ -1173,16 +1192,18 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
         return NS_ERROR_UNEXPECTED;
     }
 
-    AutoReentrantMonitor mon(mMon);
+    // `service` must be released after the lock is released, so it must be
+    // declared before the lock in this C++ block.
+    nsCOMPtr<nsISupports> service;
+    MutexLock lock(mLock);
 
     nsFactoryEntry* entry = mFactories.Get(aClass);
     if (!entry)
         return NS_ERROR_FACTORY_NOT_REGISTERED;
 
     if (entry->mServiceObject) {
-        nsCOMPtr<nsISupports> supports = entry->mServiceObject;
-        mon.Exit();
-        return supports->QueryInterface(aIID, result);
+        lock.Unlock();
+        return entry->mServiceObject->QueryInterface(aIID, result);
     }
 
     PRThread* currentPRThread = PR_GetCurrentThread();
@@ -1198,7 +1219,8 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
             return NS_ERROR_NOT_AVAILABLE;
         }
 
-        mon.Exit();
+
+        SafeMutexAutoUnlock unlockPending(mLock);
 
         if (!currentThread) {
             currentThread = NS_GetCurrentThread();
@@ -1210,16 +1232,13 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
         if (!NS_ProcessNextEvent(currentThread, false)) {
             PR_Sleep(PR_INTERVAL_NO_WAIT);
         }
-
-        mon.Enter();
     }
 
     // It's still possible that the other thread failed to create the
     // service so we're not guaranteed to have an entry or service yet.
     if (entry->mServiceObject) {
-        nsCOMPtr<nsISupports> supports = entry->mServiceObject;
-        mon.Exit();
-        return supports->QueryInterface(aIID, result);
+        lock.Unlock();
+        return entry->mServiceObject->QueryInterface(aIID, result);
     }
 
 #ifdef DEBUG
@@ -1228,15 +1247,19 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
     AddPendingService(aClass, currentPRThread);
     NS_ASSERTION(newInfo, "Failed to add info to the array!");
 
-    nsCOMPtr<nsISupports> service;
-    // We need to not be holding the service manager's monitor while calling
+    // We need to not be holding the service manager's lock while calling
     // CreateInstance, because it invokes user code which could try to re-enter
     // the service manager:
-    mon.Exit();
 
-    nsresult rv = CreateInstance(aClass, nullptr, aIID, getter_AddRefs(service));
-
-    mon.Enter();
+    nsresult rv;
+    {
+        SafeMutexAutoUnlock unlock(mLock);
+        rv = CreateInstance(aClass, nullptr, aIID, getter_AddRefs(service));
+    }
+    if (NS_SUCCEEDED(rv) && !service) {
+        NS_ERROR("Factory did not return an object but returned success");
+        return NS_ERROR_SERVICE_NOT_FOUND;
+    }
 
 #ifdef DEBUG
     pendingPRThread = GetPendingServiceThread(aClass);
@@ -1250,14 +1273,14 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
 
     NS_ASSERTION(!entry->mServiceObject, "Created two instances of a service!");
 
-    entry->mServiceObject = service;
-    *result = service.get();
-    if (!*result) {
-        NS_ERROR("Factory did not return an object but returned success!");
-        return NS_ERROR_SERVICE_NOT_FOUND;
-    }
-    NS_ADDREF(static_cast<nsISupports*>((*result)));
-    return rv;
+    entry->mServiceObject = service.forget();
+
+    lock.Unlock();
+    nsISupports** sresult = reinterpret_cast<nsISupports**>(result);
+    *sresult = entry->mServiceObject;
+    (*sresult)->AddRef();
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1287,7 +1310,7 @@ nsComponentManagerImpl::IsServiceInstantiated(const nsCID & aClass,
     nsFactoryEntry* entry;
 
     {
-        ReentrantMonitorAutoEnter mon(mMon);
+        SafeMutexAutoLock lock(mLock);
         entry = mFactories.Get(aClass);
     }
 
@@ -1324,7 +1347,7 @@ NS_IMETHODIMP nsComponentManagerImpl::IsServiceInstantiatedByContractID(const ch
     nsresult rv = NS_ERROR_SERVICE_NOT_AVAILABLE;
     nsFactoryEntry *entry;
     {
-        ReentrantMonitorAutoEnter mon(mMon);
+        SafeMutexAutoLock lock(mLock);
         entry = mContractIDs.Get(nsDependentCString(aContractID));
     }
 
@@ -1356,21 +1379,24 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
         return NS_ERROR_UNEXPECTED;
     }
 
-    AutoReentrantMonitor mon(mMon);
+    // `service` must be released after the lock is released, so it must be
+    // declared before the lock in this C++ block.
+    nsCOMPtr<nsISupports> service;
+    MutexLock lock(mLock);
 
     nsFactoryEntry *entry = mContractIDs.Get(nsDependentCString(aContractID));
     if (!entry)
         return NS_ERROR_FACTORY_NOT_REGISTERED;
 
     if (entry->mServiceObject) {
-        nsCOMPtr<nsISupports> serviceObject = entry->mServiceObject;
-
         // We need to not be holding the service manager's monitor while calling
         // QueryInterface, because it invokes user code which could try to re-enter
         // the service manager, or try to grab some other lock/monitor/condvar
         // and deadlock, e.g. bug 282743.
-        mon.Exit();
-        return serviceObject->QueryInterface(aIID, result);
+        // `entry` is valid until XPCOM shutdown, so we can safely use it after
+        // exiting the lock.
+        lock.Unlock();
+        return entry->mServiceObject->QueryInterface(aIID, result);
     }
 
     PRThread* currentPRThread = PR_GetCurrentThread();
@@ -1386,7 +1412,7 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
             return NS_ERROR_NOT_AVAILABLE;
         }
 
-        mon.Exit();
+        SafeMutexAutoUnlock unlockPending(mLock);
 
         if (!currentThread) {
             currentThread = NS_GetCurrentThread();
@@ -1398,16 +1424,13 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
         if (!NS_ProcessNextEvent(currentThread, false)) {
             PR_Sleep(PR_INTERVAL_NO_WAIT);
         }
-
-        mon.Enter();
     }
 
     if (currentThread && entry->mServiceObject) {
         // If we have a currentThread then we must have waited on another thread
         // to create the service. Grab it now if that succeeded.
-        nsCOMPtr<nsISupports> serviceObject = entry->mServiceObject;
-        mon.Exit();
-        return serviceObject->QueryInterface(aIID, result);
+        lock.Unlock();
+        return entry->mServiceObject->QueryInterface(aIID, result);
     }
 
 #ifdef DEBUG
@@ -1416,16 +1439,20 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
     AddPendingService(*entry->mCIDEntry->cid, currentPRThread);
     NS_ASSERTION(newInfo, "Failed to add info to the array!");
 
-    nsCOMPtr<nsISupports> service;
-    // We need to not be holding the service manager's monitor while calling
+    // We need to not be holding the service manager's lock while calling
     // CreateInstance, because it invokes user code which could try to re-enter
     // the service manager:
-    mon.Exit();
 
-    nsresult rv = CreateInstanceByContractID(aContractID, nullptr, aIID,
-                                             getter_AddRefs(service));
-
-    mon.Enter();
+    nsresult rv;
+    {
+        SafeMutexAutoUnlock unlock(mLock);
+        rv = CreateInstanceByContractID(aContractID, nullptr, aIID,
+                                        getter_AddRefs(service));
+    }
+    if (NS_SUCCEEDED(rv) && !service) {
+        NS_ERROR("Factory did not return an object but returned success");
+        return NS_ERROR_SERVICE_NOT_FOUND;
+    }
 
 #ifdef DEBUG
     pendingPRThread = GetPendingServiceThread(*entry->mCIDEntry->cid);
@@ -1439,10 +1466,15 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
 
     NS_ASSERTION(!entry->mServiceObject, "Created two instances of a service!");
 
-    entry->mServiceObject = service;
-    *result = service.get();
-    NS_ADDREF(static_cast<nsISupports*>(*result));
-    return rv;
+    entry->mServiceObject = service.forget();
+
+    lock.Unlock();
+
+    nsISupports** sresult = reinterpret_cast<nsISupports**>(result);
+    *sresult = entry->mServiceObject;
+    (*sresult)->AddRef();
+
+    return NS_OK;
 }
 
 already_AddRefed<mozilla::ModuleLoader>
@@ -1473,7 +1505,7 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass,
         if (!aContractID)
             return NS_ERROR_INVALID_ARG;
 
-        ReentrantMonitorAutoEnter mon(mMon);
+        SafeMutexAutoLock lock(mLock);
         nsFactoryEntry* oldf = mFactories.Get(aClass);
         if (!oldf)
             return NS_ERROR_FACTORY_NOT_REGISTERED;
@@ -1484,7 +1516,7 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass,
 
     nsAutoPtr<nsFactoryEntry> f(new nsFactoryEntry(aClass, aFactory));
 
-    ReentrantMonitorAutoEnter mon(mMon);
+    SafeMutexAutoLock lock(mLock);
     nsFactoryEntry* oldf = mFactories.Get(aClass);
     if (oldf)
         return NS_ERROR_FACTORY_EXISTS;
@@ -1507,7 +1539,7 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID& aClass,
     nsCOMPtr<nsISupports> dyingServiceObject;
 
     {
-        ReentrantMonitorAutoEnter mon(mMon);
+        SafeMutexAutoLock lock(mLock);
         nsFactoryEntry* f = mFactories.Get(aClass);
         if (!f || f->mFactory != aFactory)
             return NS_ERROR_FACTORY_NOT_REGISTERED;
@@ -1634,7 +1666,7 @@ nsComponentManagerImpl::ContractIDToCID(const char *aContractID,
                                         nsCID * *_retval)
 {
     {
-        ReentrantMonitorAutoEnter mon(mMon);
+        SafeMutexAutoLock lock(mLock);
         nsFactoryEntry* entry = mContractIDs.Get(nsDependentCString(aContractID));
         if (entry) {
             *_retval = (nsCID*) NS_Alloc(sizeof(nsCID));
@@ -1732,6 +1764,8 @@ nsFactoryEntry::~nsFactoryEntry()
 already_AddRefed<nsIFactory>
 nsFactoryEntry::GetFactory()
 {
+    nsComponentManagerImpl::gComponentManager->mLock.AssertNotCurrentThreadOwns();
+
     if (!mFactory) {
         // RegisterFactory then UnregisterFactory can leave an entry in mContractIDs
         // pointing to an unusable nsFactoryEntry.
@@ -1741,22 +1775,31 @@ nsFactoryEntry::GetFactory()
         if (!mModule->Load())
             return NULL;
 
+        // Don't set mFactory directly, it needs to be locked
+        nsCOMPtr<nsIFactory> factory;
+
         if (mModule->Module()->getFactoryProc) {
-            mFactory = mModule->Module()->getFactoryProc(*mModule->Module(),
-                                                         *mCIDEntry);
+            factory = mModule->Module()->getFactoryProc(*mModule->Module(),
+                                                        *mCIDEntry);
         }
         else if (mCIDEntry->getFactoryProc) {
-            mFactory = mCIDEntry->getFactoryProc(*mModule->Module(), *mCIDEntry);
+            factory = mCIDEntry->getFactoryProc(*mModule->Module(), *mCIDEntry);
         }
         else {
             NS_ASSERTION(mCIDEntry->constructorProc, "no getfactory or constructor");
-            mFactory = new mozilla::GenericFactory(mCIDEntry->constructorProc);
+            factory = new mozilla::GenericFactory(mCIDEntry->constructorProc);
         }
-        if (!mFactory)
+        if (!factory)
             return NULL;
+
+        SafeMutexAutoLock lock(nsComponentManagerImpl::gComponentManager->mLock);
+        // Threads can race to set mFactory
+        if (!mFactory) {
+            factory.swap(mFactory);
+        }
     }
-    nsIFactory* factory = mFactory.get();
-    NS_ADDREF(factory);
+    nsIFactory* factory = mFactory;
+    factory->AddRef();
     return factory;
 }
 

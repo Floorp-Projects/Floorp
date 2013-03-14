@@ -53,6 +53,7 @@ NS_IMPL_ADDREF_INHERITED(SVGGradientElement, SVGGradientElementBase)
 NS_IMPL_RELEASE_INHERITED(SVGGradientElement, SVGGradientElementBase)
 
 NS_INTERFACE_MAP_BEGIN(SVGGradientElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGUnitTypes)
 NS_INTERFACE_MAP_END_INHERITING(SVGGradientElementBase)
 
 //----------------------------------------------------------------------

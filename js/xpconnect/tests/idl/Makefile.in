@@ -12,12 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = xpctest
 
-XPIDLSRCS = \
-  xpctest_attributes.idl \
-  xpctest_interfaces.idl \
-  xpctest_params.idl \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 componentdir = js/xpconnect/tests/components

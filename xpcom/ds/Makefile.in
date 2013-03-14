@@ -11,7 +11,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
-XPIDL_MODULE	= xpcom_ds
 LIBRARY_NAME	= xpcomds_s
 GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
@@ -90,39 +89,8 @@ EXPORTS		= \
 		nsCharSeparatedTokenizer.h \
 		$(NULL)			
 
-XPIDLSRCS	= \
-		nsIAtom.idl \
-		nsIAtomService.idl \
-		nsICollection.idl \
-		nsIEnumerator.idl \
-		nsIINIParser.idl \
-		nsIPersistentProperties2.idl \
-		nsIProperty.idl \
-		nsIPropertyBag.idl \
-		nsIPropertyBag2.idl \
-		nsIWritablePropertyBag.idl \
-		nsIWritablePropertyBag2.idl \
-		nsIVariant.idl \
-		nsISerializable.idl \
-		nsIStringEnumerator.idl \
-		nsISupportsArray.idl \
-		nsISupportsIterators.idl \
-		$(NULL)
-
-SDK_XPIDLSRCS   = \
-		nsIArray.idl               \
-		nsIHashable.idl            \
-		nsIMutableArray.idl        \
-		nsIObserverService.idl	   \
-		nsIObserver.idl		   \
-		nsIProperties.idl          \
-		nsISimpleEnumerator.idl	   \
-		nsISupportsPrimitives.idl  \
-		$(NULL)
-
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS += nsWindowsRegKey.cpp
-XPIDLSRCS += nsIWindowsRegKey.idl
 EXPORTS += nsWindowsRegKey.h
 endif
 

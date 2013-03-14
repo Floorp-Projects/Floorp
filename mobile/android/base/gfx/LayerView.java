@@ -465,21 +465,25 @@ public class LayerView extends FrameLayout {
     }
 
     private class SurfaceTextureListener implements TextureView.SurfaceTextureListener {
+        @Override
         public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
             // We don't do this for surfaceCreated above because it is always followed by a surfaceChanged,
             // but that is not the case here.
             onSizeChanged(width, height);
         }
 
+        @Override
         public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
             onDestroyed();
             return true; // allow Android to call release() on the SurfaceTexture, we are done drawing to it
         }
 
+        @Override
         public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
             onSizeChanged(width, height);
         }
 
+        @Override
         public void onSurfaceTextureUpdated(SurfaceTexture surface) {
 
         }

@@ -3,3 +3,23 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'nsIHttpActivityObserver.idl',
+    'nsIHttpAuthManager.idl',
+    'nsIHttpAuthenticableChannel.idl',
+    'nsIHttpAuthenticator.idl',
+    'nsIHttpChannel.idl',
+    'nsIHttpChannelAuthProvider.idl',
+    'nsIHttpChannelChild.idl',
+    'nsIHttpChannelInternal.idl',
+    'nsIHttpEventSink.idl',
+    'nsIHttpHeaderVisitor.idl',
+    'nsIHttpProtocolHandler.idl',
+]
+
+XPIDL_MODULE = 'necko_http'
+
+XPIDL_FLAGS += [
+    '-I$(topsrcdir)/netwerk/base/public',
+]
+

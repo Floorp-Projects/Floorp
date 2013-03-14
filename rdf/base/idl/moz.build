@@ -3,3 +3,28 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'nsIRDFCompositeDataSource.idl',
+    'nsIRDFContainer.idl',
+    'nsIRDFContainerUtils.idl',
+    'nsIRDFDataSource.idl',
+    'nsIRDFDelegateFactory.idl',
+    'nsIRDFInMemoryDataSource.idl',
+    'nsIRDFInferDataSource.idl',
+    'nsIRDFLiteral.idl',
+    'nsIRDFNode.idl',
+    'nsIRDFObserver.idl',
+    'nsIRDFPropagatableDataSource.idl',
+    'nsIRDFPurgeableDataSource.idl',
+    'nsIRDFRemoteDataSource.idl',
+    'nsIRDFResource.idl',
+    'nsIRDFService.idl',
+    'nsIRDFXMLParser.idl',
+    'nsIRDFXMLSerializer.idl',
+    'nsIRDFXMLSink.idl',
+    'nsIRDFXMLSource.idl',
+    'rdfIDataSource.idl',
+    'rdfISerializer.idl',
+    'rdfITripleVisitor.idl',
+]
+

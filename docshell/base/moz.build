@@ -3,3 +3,32 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'nsCDefaultURIFixup.idl',
+    'nsIClipboardCommands.idl',
+    'nsIContentViewer.idl',
+    'nsIContentViewerContainer.idl',
+    'nsIContentViewerEdit.idl',
+    'nsIContentViewerFile.idl',
+    'nsIDocCharset.idl',
+    'nsIDocShell.idl',
+    'nsIDocShellHistory.idl',
+    'nsIDocShellLoadInfo.idl',
+    'nsIDocShellTreeItem.idl',
+    'nsIDocShellTreeNode.idl',
+    'nsIDocShellTreeOwner.idl',
+    'nsIDocumentLoaderFactory.idl',
+    'nsIDownloadHistory.idl',
+    'nsIGlobalHistory2.idl',
+    'nsILoadContext.idl',
+    'nsIMarkupDocumentViewer.idl',
+    'nsIPrivacyTransitionObserver.idl',
+    'nsIRefreshURI.idl',
+    'nsIScrollable.idl',
+    'nsITextScroll.idl',
+    'nsIURIFixup.idl',
+    'nsIWebNavigation.idl',
+    'nsIWebNavigationInfo.idl',
+    'nsIWebPageDescriptor.idl',
+]
+

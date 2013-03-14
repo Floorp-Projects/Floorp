@@ -46,7 +46,7 @@ MethodStatus
 BaselineCompiler::compile()
 {
     IonSpew(IonSpew_BaselineScripts, "Baseline compiling script %s:%d (%p)",
-            script->filename, script->lineno, script.get());
+            script->filename(), script->lineno, script.get());
 
     if (!script->ensureRanAnalysis(cx))
         return Method_Error;
@@ -126,7 +126,7 @@ BaselineCompiler::compile()
 
     IonSpew(IonSpew_BaselineScripts, "Created BaselineScript %p (raw %p) for %s:%d",
             (void *) script->baseline, (void *) code->raw(),
-            script->filename, script->lineno);
+            script->filename(), script->lineno);
 
     script->baseline->setMethod(code);
 

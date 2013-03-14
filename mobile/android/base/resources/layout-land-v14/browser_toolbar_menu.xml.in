@@ -135,13 +135,13 @@
 
         <org.mozilla.gecko.MenuButton android:id="@+id/menu"
                                       style="@style/AddressBar.ImageButton"
-                                      android:layout_width="65dip"
+                                      android:layout_width="60dip"
                                       android:layout_alignParentRight="true"
                                       android:gravity="center_vertical"
                                       android:src="@drawable/menu_level"
                                       android:contentDescription="@string/menu"
                                       android:background="@drawable/menu_button"
-                                      android:paddingLeft="35dip"
+                                      android:paddingLeft="30dip"
                                       android:paddingRight="10dip"/>
 
         <org.mozilla.gecko.TabsButton android:id="@+id/tabs"

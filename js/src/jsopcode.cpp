@@ -334,7 +334,7 @@ js_DisassembleAtPC(JSContext *cx, JSScript *scriptArg, JSBool lines,
     unsigned len;
 
     if (showAll)
-        Sprint(sp, "%s:%u\n", script->filename, script->lineno);
+        Sprint(sp, "%s:%u\n", script->filename(), script->lineno);
 
     if (pc != NULL)
         sp->put("    ");
@@ -2146,7 +2146,7 @@ js::GetPCCountScriptSummary(JSContext *cx, size_t index)
     buf.append('{');
 
     AppendJSONProperty(buf, "file", NO_COMMA);
-    JSString *str = JS_NewStringCopyZ(cx, script->filename);
+    JSString *str = JS_NewStringCopyZ(cx, script->filename());
     if (!str || !(str = ValueToSource(cx, StringValue(str))))
         return NULL;
     buf.append(str);

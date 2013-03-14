@@ -364,7 +364,7 @@ terminate_req (int request_id)
 void
 pres_terminate_req_all (void)
 {
-    char dummy;
+    int dummy = 0;
 
     (void) app_send_message(&dummy, sizeof(dummy), CC_SRC_MISC_APP,
                             SUB_MSG_PRESENCE_TERM_REQ_ALL);
@@ -380,7 +380,7 @@ pres_terminate_req_all (void)
 void
 pres_sub_handler_initialized (void)
 {
-    char dummy;
+    int dummy = 0;
 
     (void) app_send_message(&dummy, sizeof(dummy), CC_SRC_MISC_APP,
                             SUB_HANDLER_INITIALIZED);

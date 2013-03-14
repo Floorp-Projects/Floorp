@@ -3,3 +3,37 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'nsIArray.idl',
+    'nsIAtom.idl',
+    'nsIAtomService.idl',
+    'nsICollection.idl',
+    'nsIEnumerator.idl',
+    'nsIHashable.idl',
+    'nsIINIParser.idl',
+    'nsIMutableArray.idl',
+    'nsIObserver.idl',
+    'nsIObserverService.idl',
+    'nsIPersistentProperties2.idl',
+    'nsIProperties.idl',
+    'nsIProperty.idl',
+    'nsIPropertyBag.idl',
+    'nsIPropertyBag2.idl',
+    'nsISerializable.idl',
+    'nsISimpleEnumerator.idl',
+    'nsIStringEnumerator.idl',
+    'nsISupportsArray.idl',
+    'nsISupportsIterators.idl',
+    'nsISupportsPrimitives.idl',
+    'nsIVariant.idl',
+    'nsIWritablePropertyBag.idl',
+    'nsIWritablePropertyBag2.idl',
+]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    XPIDL_SOURCES += [
+        'nsIWindowsRegKey.idl',
+    ]
+
+XPIDL_MODULE = 'xpcom_ds'
+

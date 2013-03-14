@@ -875,8 +875,8 @@ nsHTMLEditor::MouseMove(nsIDOMEvent* aMouseEvent)
     int32_t yThreshold =
       LookAndFeel::GetInt(LookAndFeel::eIntID_DragThresholdY, 1);
 
-    if (Abs(clientX - mOriginalX) * 2 >= xThreshold ||
-        Abs(clientY - mOriginalY) * 2 >= yThreshold) {
+    if (DeprecatedAbs(clientX - mOriginalX) * 2 >= xThreshold ||
+        DeprecatedAbs(clientY - mOriginalY) * 2 >= yThreshold) {
       mGrabberClicked = false;
       StartMoving(nullptr);
     }

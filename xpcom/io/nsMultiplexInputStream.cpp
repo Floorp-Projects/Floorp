@@ -24,7 +24,7 @@
 
 using namespace mozilla::ipc;
 
-using mozilla::Abs;
+using mozilla::DeprecatedAbs;
 
 class nsMultiplexInputStream MOZ_FINAL : public nsIMultiplexInputStream,
                                          public nsISeekableStream,
@@ -515,7 +515,7 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset)
             }
 
             // See if we have enough data in the current stream.
-            if (Abs(remaining) < streamPos) {
+            if (DeprecatedAbs(remaining) < streamPos) {
                 rv = stream->Seek(NS_SEEK_END, remaining);
                 NS_ENSURE_SUCCESS(rv, rv);
 
@@ -523,7 +523,7 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset)
                 mStartedReadingCurrent = true;
 
                 remaining = 0;
-            } else if (Abs(remaining) > streamPos) {
+            } else if (DeprecatedAbs(remaining) > streamPos) {
                 if (i > oldCurrentStream ||
                     (i == oldCurrentStream && !oldStartedReadingCurrent)) {
                     // We're already at start so no need to seek this stream
@@ -533,7 +533,7 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset)
                     rv = stream->Tell(&avail);
                     NS_ENSURE_SUCCESS(rv, rv);
 
-                    int64_t newPos = streamPos + XPCOM_MIN(avail, Abs(remaining));
+                    int64_t newPos = streamPos + XPCOM_MIN(avail, DeprecatedAbs(remaining));
 
                     rv = stream->Seek(NS_SEEK_END, -newPos);
                     NS_ENSURE_SUCCESS(rv, rv);

@@ -144,6 +144,16 @@ XULContentSinkImpl::ContextStack::Clear()
   mDepth = 0;
 }
 
+void
+XULContentSinkImpl::ContextStack::Traverse(nsCycleCollectionTraversalCallback& aCb)
+{
+  nsCycleCollectionTraversalCallback& cb = aCb;
+  for (ContextStack::Entry* tmp = mTop; tmp; tmp = tmp->mNext) {
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNode)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildren)
+  }
+}
+
 //----------------------------------------------------------------------
 
 
@@ -177,10 +187,29 @@ XULContentSinkImpl::~XULContentSinkImpl()
 //----------------------------------------------------------------------
 // nsISupports interface
 
-NS_IMPL_ISUPPORTS3(XULContentSinkImpl,
-                   nsIXMLContentSink,
-                   nsIContentSink,
-                   nsIExpatSink)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(XULContentSinkImpl)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mNodeInfoManager)
+  tmp->mContextStack.Clear();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPrototype)
+  NS_IF_RELEASE(tmp->mParser);
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(XULContentSinkImpl)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNodeInfoManager)
+  tmp->mContextStack.Traverse(cb);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrototype)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mParser)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(XULContentSinkImpl)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXMLContentSink)
+  NS_INTERFACE_MAP_ENTRY(nsIXMLContentSink)
+  NS_INTERFACE_MAP_ENTRY(nsIExpatSink)
+  NS_INTERFACE_MAP_ENTRY(nsIContentSink)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(XULContentSinkImpl)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(XULContentSinkImpl)
 
 //----------------------------------------------------------------------
 // nsIContentSink interface

@@ -13,6 +13,31 @@ if toolkit in ('os2', 'cocoa', 'qt', 'android', 'gonk'):
 if toolkit == 'windows':
     DIRS += ['windows']
 
+    XPIDL_SOURCES += [
+        'nsIJumpListBuilder.idl',
+        'nsIJumpListItem.idl',
+        'nsIPrintSettingsWin.idl',
+        'nsITaskbarPreview.idl',
+        'nsITaskbarTabPreview.idl',
+        'nsITaskbarWindowPreview.idl',
+        'nsITaskbarPreviewController.idl',
+        'nsITaskbarPreviewButton.idl',
+        'nsITaskbarProgress.idl',
+        'nsITaskbarOverlayIconController.idl',
+        'nsIWinTaskbar.idl',
+    ]
+elif toolkit == 'cocoa':
+    XPIDL_SOURCES += [
+        'nsIMacDockSupport.idl',
+        'nsIMacWebAppUtils.idl',
+        'nsIStandaloneNativeMenu.idl',
+        'nsITaskbarProgress.idl',
+    ]
+elif toolkit == 'os2':
+    XPIDL_SOURCES += [
+        'nsIRwsService.idl',
+    ]
+
 TEST_TOOL_DIRS += ['tests']
 
 # Don't build the DSO under the 'build' directory as windows does.
@@ -26,3 +51,38 @@ if CONFIG['MOZ_ENABLE_GTK2']:
 
     if CONFIG['MOZ_X11']:
         DIRS += ['gtkxtbin']
+
+XPIDL_SOURCES += [
+    'nsIAppShell.idl',
+    'nsIBaseWindow.idl',
+    'nsIBidiKeyboard.idl',
+    'nsIClipboard.idl',
+    'nsIClipboardDragDropHookList.idl',
+    'nsIClipboardDragDropHooks.idl',
+    'nsIClipboardHelper.idl',
+    'nsIClipboardOwner.idl',
+    'nsIDragService.idl',
+    'nsIDragSession.idl',
+    'nsIFilePicker.idl',
+    'nsIFormatConverter.idl',
+    'nsIGfxInfo.idl',
+    'nsIGfxInfoDebug.idl',
+    'nsIIMEPicker.idl',
+    'nsIIdleService.idl',
+    'nsIIdleServiceInternal.idl',
+    'nsIPrintOptions.idl',
+    'nsIPrintSession.idl',
+    'nsIPrintSettings.idl',
+    'nsIPrintSettingsService.idl',
+    'nsIScreen.idl',
+    'nsIScreenManager.idl',
+    'nsISound.idl',
+    'nsITransferable.idl',
+]
+
+if CONFIG['MOZ_METRO']:
+    XPIDL_SOURCES += [
+        'MetroUIUtils.idl',
+        'nsIWinMetroUtils.idl',
+    ]
+

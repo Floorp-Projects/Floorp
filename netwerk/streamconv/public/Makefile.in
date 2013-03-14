@@ -12,26 +12,9 @@ FAIL_ON_WARNINGS := 1
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= necko
-XPIDL_MODULE	= necko_strconv
 GRE_MODULE	= 1
-
-XPIDLSRCS	= \
-		nsIStreamConverter.idl \
-		nsIStreamConverterService.idl \
-		mozITXTToHTMLConv.idl \
-		nsITXTToHTMLConv.idl \
-		nsIDirIndex.idl \
-		nsIDirIndexListener.idl \
-		$(NULL)
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-XPIDLSRCS += \
-		nsIAppleFileDecoder.idl \
-		$(NULL)
-endif
 
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DIMPL_NS_NET
 
-XPIDL_FLAGS += -I$(topsrcdir)/netwerk/base/public

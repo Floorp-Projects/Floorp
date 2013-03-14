@@ -22,6 +22,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=575946
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
+const isOSXMtnLion = navigator.userAgent.indexOf("Mac OS X 10.8") != -1;
+
+if (isOSXMtnLion) {
+  todo(false, "Mountain Lion doesn't like this test (bug 788999)");
+} else {
 var fileNum = 1;
 SimpleTest.waitForExplicitFinish();
 
@@ -131,7 +136,7 @@ var img = new Image;
 img.src = URL.createObjectURL(imgfile.slice(testBinaryData.length, testBinaryData.length + size + 1000));
 img.onload = imageLoadHandler;
 expectedTestCount++;
-
+}
 </script>
 </pre>
 </body> </html>

@@ -1,15 +1,11 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@.tests;
 
-import @ANDROID_PACKAGE_NAME@.*;
-
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.SystemClock;
-import android.util.Log;
-
 import java.lang.reflect.Method;
 import java.util.UUID;
 import java.util.Random;

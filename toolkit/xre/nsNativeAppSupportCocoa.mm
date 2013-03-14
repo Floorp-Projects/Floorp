@@ -67,7 +67,6 @@ public:
 
 private:
   bool mCanShowUI;
-
 };
 
 NS_IMETHODIMP
@@ -76,6 +75,8 @@ nsNativeAppSupportCocoa::Enable()
   mCanShowUI = true;
   return NS_OK;
 }
+
+#define MAC_OS_X_VERSION_10_6_HEX 0x00001060
 
 NS_IMETHODIMP nsNativeAppSupportCocoa::Start(bool *_retval)
 {
@@ -90,12 +91,7 @@ NS_IMETHODIMP nsNativeAppSupportCocoa::Start(bool *_retval)
   // alert here.  But the alert's message and buttons would require custom
   // localization.  So (for now at least) we just log an English message
   // to the console before quitting.
-#ifdef __LP64__
-  SInt32 minimumOS = 0x00001060;
-#else
-  SInt32 minimumOS = 0x00001050;
-#endif
-  if ((err != noErr) || response < minimumOS) {
+  if ((err != noErr) || response < MAC_OS_X_VERSION_10_6_HEX) {
     NSLog(@"Minimum OS version requirement not met!");
     return NS_OK;
   }

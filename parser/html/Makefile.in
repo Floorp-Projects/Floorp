@@ -13,11 +13,6 @@ MODULE		= html5
 LIBRARY_NAME	= html5p_s
 LIBXUL_LIBRARY	= 1
 
-XPIDLSRCS = \
-  nsIParserUtils.idl \
-  nsIScriptableUnescapeHTML.idl \
-  $(NULL)
-
 EXPORTS		= \
 		jArray.h \
 		nsAHtml5TreeBuilderState.h \

@@ -3,13 +3,9 @@ package @ANDROID_PACKAGE_NAME@.tests;
 
 import com.jayway.android.robotium.solo.Solo;
 
-import android.app.Activity;
-import android.view.View;
 import android.widget.ListView;
 import android.widget.TabWidget;
 import android.support.v4.view.ViewPager;
-
-import java.util.ArrayList;
 
 import @ANDROID_PACKAGE_NAME@.*;
 

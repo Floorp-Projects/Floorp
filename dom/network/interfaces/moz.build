@@ -3,3 +3,30 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'nsIDOMConnection.idl',
+    'nsIDOMDataErrorEvent.idl',
+    'nsIDOMNavigatorNetwork.idl',
+    'nsIDOMTCPSocket.idl',
+    'nsIDOMUSSDReceivedEvent.idl',
+    'nsITCPSocketChild.idl',
+    'nsITCPSocketParent.idl',
+]
+
+if CONFIG['MOZ_B2G_RIL']:
+    XPIDL_SOURCES += [
+        'nsIDOMMobileConnection.idl',
+        'nsIMobileConnectionProvider.idl',
+        'nsINavigatorMobileConnection.idl',
+        'nsIDOMNetworkStatsManager.idl',
+        'nsIDOMNetworkStats.idl',
+        'nsIDOMCFStateChangeEvent.idl',
+    ]
+
+XPIDL_MODULE = 'dom_network'
+
+XPIDL_FLAGS += [
+    '-I$(topsrcdir)/dom/interfaces/base',
+    '-I$(topsrcdir)/dom/interfaces/events',
+]
+

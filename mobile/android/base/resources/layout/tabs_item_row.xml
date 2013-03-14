@@ -45,7 +45,7 @@
                  android:nextFocusLeft="@+id/info"
                  android:layout_width="34dip"
                  android:layout_height="fill_parent"
-                 android:background="@drawable/action_bar_button"
+                 android:background="@drawable/action_bar_button_inverse"
                  android:scaleType="center"
                  android:contentDescription="@string/close_tab"
                  android:src="@drawable/tab_close"/>

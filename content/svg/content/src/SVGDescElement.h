@@ -24,7 +24,7 @@ protected:
                                           already_AddRefed<nsINodeInfo> aNodeInfo));
   SVGDescElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
-  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
 public:
   // interfaces:

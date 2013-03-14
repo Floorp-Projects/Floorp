@@ -50,7 +50,7 @@ CurrentScriptFileLineOrigin(JSContext *cx, const char **file, unsigned *linenop,
         types::TypeScript::GetPcScript(cx, &script, &pc);
         JS_ASSERT(JSOp(*pc) == JSOP_EVAL);
         JS_ASSERT(*(pc + JSOP_EVAL_LENGTH) == JSOP_LINENO);
-        *file = script->filename;
+        *file = script->filename();
         *linenop = GET_UINT16(pc + JSOP_EVAL_LENGTH);
         *origin = script->originPrincipals;
         return;
@@ -64,18 +64,6 @@ ScriptCounts::destroy(FreeOp *fop)
 {
     fop->free_(pcCountsVector);
     fop->delete_(ionCounts);
-}
-
-inline void
-MarkScriptFilename(JSRuntime *rt, const char *filename)
-{
-    /*
-     * As an invariant, a ScriptFilenameEntry should not be 'marked' outside of
-     * a GC. Since SweepScriptFilenames is only called during a full gc,
-     * to preserve this invariant, only mark during a full gc.
-     */
-    if (rt->gcIsFull)
-        ScriptFilenameEntry::fromFilename(filename)->marked = true;
 }
 
 inline void
@@ -95,6 +83,13 @@ SetFrameArgumentsObject(JSContext *cx, AbstractFramePtr frame,
                         HandleScript script, JSObject *argsobj);
 
 } // namespace js
+
+inline const char *
+JSScript::filename() const
+{
+    JS_ASSERT(scriptSource_);
+    return scriptSource()->filename();
+}
 
 inline void
 JSScript::setFunction(JSFunction *fun)

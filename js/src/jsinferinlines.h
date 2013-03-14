@@ -12,11 +12,11 @@
 #include "jsinfer.h"
 #include "jsprf.h"
 
-#include "gc/Root.h"
-#include "vm/GlobalObject.h"
 #ifdef JS_ION
 #include "ion/IonFrames.h"
 #endif
+#include "js/RootingAPI.h"
+#include "vm/GlobalObject.h"
 
 #include "vm/Stack-inl.h"
 
