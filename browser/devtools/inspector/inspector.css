@@ -7,19 +7,7 @@
   min-width: 250px;
 }
 
-#inspector-searchbox-panel {
-  -moz-appearance: none !important;
-  border: 1px solid hsl(210,24%,10%);
-  box-shadow: 0 1px 0 hsla(209,29%,72%,.25) inset;
-  background-color: transparent;
-  background-image: linear-gradient(to bottom, hsla(209,18%,18%,0.9), hsl(210,24%,16%));
-  border-radius: 3px;
-}
-
 #searchbox-panel-listbox {
-  -moz-appearance: none !important;
-  background-color: rgba(0,0,0,0);
-  border-width: 0px !important;
   width: 250px;
   max-width: 250px;
   overflow-x: hidden;
@@ -28,36 +16,13 @@
 #searchbox-panel-listbox > richlistitem,
 #searchbox-panel-listbox > richlistitem[selected] {
   overflow-x: hidden;
-  width: 100%;
-  background-color: rgba(0,0,0,0);
-  border-radius: 4px;
-}
-
-#searchbox-panel-listbox:focus > richlistitem[selected],
-#searchbox-panel-listbox > richlistitem:hover {
-  background-color: rgba(0,0,0,0.2);
-}
-
-#searchbox-panel-listbox > richlistitem[selected] > .autocomplete-value {
-  color: hsl(200,100%,60%);
-}
-
-#searchbox-panel-listbox > richlistitem > label {
-  color: #ddd;
 }
 
 #searchbox-panel-listbox > richlistitem > .initial-value {
   max-width: 130px;
   margin-left: 15px;
-  margin-right: 0;
 }
 
 #searchbox-panel-listbox > richlistitem > .autocomplete-value {
   max-width: 150px;
-  margin: 0;
-  padding: 1px 0;
-}
-
-#searchbox-panel-listbox > richlistitem > .autocomplete-count {
-  text-align: right;
 }
