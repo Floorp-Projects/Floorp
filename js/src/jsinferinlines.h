@@ -173,6 +173,8 @@ CompilerOutput::isValid() const
 inline CompilerOutput*
 RecompileInfo::compilerOutput(TypeCompartment &types) const
 {
+    if (!types.constrainedOutputs || outputIndex >= types.constrainedOutputs->length())
+        return NULL;
     return &(*types.constrainedOutputs)[outputIndex];
 }
 
