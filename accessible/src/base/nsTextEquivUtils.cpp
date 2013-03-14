@@ -265,7 +265,7 @@ nsTextEquivUtils::AppendFromValue(Accessible* aAccessible,
   }
 
   //XXX: is it necessary to care the accessible is not a document?
-  if (aAccessible->IsDocumentNode())
+  if (aAccessible->IsDoc())
     return NS_ERROR_UNEXPECTED;
 
   nsIContent *content = aAccessible->GetContent();
