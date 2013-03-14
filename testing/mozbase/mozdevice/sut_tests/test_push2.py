@@ -7,11 +7,10 @@ import posixpath
 
 from dmunit import DeviceManagerTestCase
 
-
 class Push2TestCase(DeviceManagerTestCase):
 
     def runTest(self):
-        """ This tests copying a directory structure with files to the device
+        """This tests copying a directory structure with files to the device.
         """
         testroot = posixpath.join(self.dm.getDeviceRoot(), 'infratest')
         self.dm.removeDir(testroot)
@@ -23,17 +22,17 @@ class Push2TestCase(DeviceManagerTestCase):
         # though it's kind of cheesy, we'll use the validate file to compare
         # hashes - we use the client side hashing when testing the cat command
         # specifically, so that makes this a little less cheesy, I guess.
-        self.assert_(
+        self.assertTrue(
             self.dm.dirExists(posixpath.join(testroot, 'push2', 'sub1')))
-        self.assert_(self.dm.validateFile(
+        self.assertTrue(self.dm.validateFile(
             posixpath.join(testroot, 'push2', 'sub1', 'file1.txt'),
             os.path.join('test-files', 'push2', 'sub1', 'file1.txt')))
-        self.assert_(self.dm.validateFile(
+        self.assertTrue(self.dm.validateFile(
             posixpath.join(testroot, 'push2', 'sub1', 'sub1.1', 'file2.txt'),
             os.path.join('test-files', 'push2', 'sub1', 'sub1.1', 'file2.txt')))
-        self.assert_(self.dm.validateFile(
+        self.assertTrue(self.dm.validateFile(
             posixpath.join(testroot, 'push2', 'sub2', 'file3.txt'),
             os.path.join('test-files', 'push2', 'sub2', 'file3.txt')))
-        self.assert_(self.dm.validateFile(
+        self.assertTrue(self.dm.validateFile(
             posixpath.join(testroot, 'push2', 'file4.bin'),
             os.path.join('test-files', 'push2', 'file4.bin')))
