@@ -12,12 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 FAIL_ON_WARNINGS := 1
 
 MODULE := services-crypto
-XPIDL_MODULE := services-crypto-component
-
-XPIDLSRCS := \
-  nsISyncJPAKE.idl \
-  $(NULL)
-
 LIBRARY_NAME := services-crypto
 EXPORT_LIBRARY := 1
 IS_COMPONENT := 1

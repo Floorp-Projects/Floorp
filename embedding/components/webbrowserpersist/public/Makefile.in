@@ -13,9 +13,5 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= webbrowserpersist
 GRE_MODULE	= 1
 
-XPIDLSRCS	= nsIWebBrowserPersist.idl \
-                  nsCWebBrowserPersist.idl \
-                  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

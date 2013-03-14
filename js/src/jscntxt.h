@@ -933,7 +933,9 @@ struct JSRuntime : js::RuntimeFriendFields,
     bool isHeapCollecting() { return heapState == js::Collecting; }
 
 #ifdef JSGC_GENERATIONAL
-    js::gc::Nursery              gcNursery;
+# ifdef JS_GC_ZEAL
+    js::gc::VerifierNursery      gcVerifierNursery;
+# endif
     js::gc::StoreBuffer          gcStoreBuffer;
 #endif
 
@@ -1165,7 +1167,6 @@ struct JSRuntime : js::RuntimeFriendFields,
     JSPreWrapCallback                      preWrapObjectCallback;
     js::PreserveWrapperCallback            preserveWrapperCallback;
 
-    js::ScriptFilenameTable scriptFilenameTable;
     js::ScriptDataTable scriptDataTable;
 
 #ifdef DEBUG

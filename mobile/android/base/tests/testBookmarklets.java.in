@@ -2,12 +2,9 @@
 package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
-import android.app.Activity;
 import android.database.Cursor;
 
-import android.view.View;
 import android.widget.ListView;
-import java.util.ArrayList;
 
 
 public class testBookmarklets extends PixelTest {

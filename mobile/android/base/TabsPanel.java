@@ -7,18 +7,11 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.widget.IconTabWidget;
 
-import org.mozilla.gecko.widget.TwoWayView;
-
 import android.content.Context;
 import android.content.res.Resources;
-import android.content.res.TypedArray;
-import android.graphics.Color;
 import android.graphics.Rect;
-import android.graphics.drawable.ColorDrawable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;

@@ -2,7 +2,6 @@
 package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
-import android.app.Instrumentation;
 
 public class test_bug720538 extends PixelTest {
     @Override

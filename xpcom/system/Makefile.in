@@ -10,23 +10,4 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE          = xpcom
-XPIDL_MODULE    = xpcom_system
-
-XPIDLSRCS = \
-        nsIXULAppInfo.idl \
-        nsIXULRuntime.idl \
-        nsIGConfService.idl \
-        nsIGnomeVFSService.idl \
-        nsIBlocklistService.idl \
-        nsIGIOService.idl \
-        nsIGSettingsService.idl \
-        nsIDeviceSensors.idl \
-        nsIGeolocationProvider.idl \
-        nsIHapticFeedback.idl \
-        $(NULL)
-
-ifdef MOZ_CRASHREPORTER
-XPIDLSRCS += nsICrashReporter.idl
-endif
-
 include $(topsrcdir)/config/rules.mk

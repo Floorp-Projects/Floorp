@@ -4,3 +4,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TEST_DIRS += ['tests']
+
+XPIDL_SOURCES += [
+    'nsIStyleSheetService.idl',
+]
+
+if not CONFIG['MOZ_XUL']:
+    XPIDL_SOURCES += [
+        'nsIBoxObject.idl',
+    ]
+
+XPIDL_MODULE = 'layout_base'
+

@@ -126,7 +126,7 @@ class BaselineCompilerShared
         entry.addIndexEntry = addIndexEntry;
 
         IonSpew(IonSpew_BaselineScripts, "PCMapping (%s:%u): %u => %u (%u:%u:%u)!",
-                        script->filename, script->lineno,
+                        script->filename(), script->lineno,
                         entry.pcOffset, entry.nativeOffset,
                         (entry.slotInfo.toByte() & 0x3),
                         ((entry.slotInfo.toByte() >> 2) & 0x3),

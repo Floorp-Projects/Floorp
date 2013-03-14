@@ -9,11 +9,4 @@ VPATH            = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-XPIDL_MODULE = dom_mms
-
-XPIDLSRCS = \
-  nsIMmsService.idl \
-  nsIWapPushApplication.idl \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk

@@ -27,6 +27,7 @@ webidl_files = \
   CFStateChangeEvent.webidl \
   CharacterData.webidl \
   ClientRectList.webidl \
+  CommandEvent.webidl \
   Comment.webidl \
   CSS.webidl \
   CSSPrimitiveValue.webidl \
@@ -116,11 +117,13 @@ webidl_files = \
   HTMLTimeElement.webidl \
   HTMLTitleElement.webidl \
   HTMLUListElement.webidl \
+  IDBVersionChangeEvent.webidl \
   ImageData.webidl \
   LinkStyle.webidl \
   LocalMediaStream.webidl \
   Location.webidl \
   MediaStream.webidl \
+  MessageEvent.webidl \
   MutationObserver.webidl \
   Node.webidl \
   NodeFilter.webidl \
@@ -172,6 +175,7 @@ webidl_files = \
   SVGFEImageElement.webidl \
   SVGFEMergeElement.webidl \
   SVGFEMergeNodeElement.webidl \
+  SVGFEPointLightElement.webidl \
   SVGFETileElement.webidl \
   SVGFitToViewBox.webidl \
   SVGForeignObjectElement.webidl \
@@ -225,6 +229,7 @@ webidl_files = \
   TextEncoder.webidl \
   TimeRanges.webidl \
   TreeWalker.webidl \
+  UIEvent.webidl \
   URL.webidl \
   ValidityState.webidl \
   WebComponents.webidl \

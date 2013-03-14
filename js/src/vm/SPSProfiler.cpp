@@ -195,8 +195,8 @@ SPSProfiler::allocProfileString(JSContext *cx, RawScript script, RawFunction may
         if (!buf.append(" ("))
             return NULL;
     }
-    if (script->filename) {
-        if (!buf.appendInflated(script->filename, strlen(script->filename)))
+    if (script->filename()) {
+        if (!buf.appendInflated(script->filename(), strlen(script->filename())))
             return NULL;
     } else if (!buf.append("<unknown>")) {
         return NULL;

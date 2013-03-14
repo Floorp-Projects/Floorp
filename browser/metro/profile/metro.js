@@ -436,14 +436,15 @@ pref("app.update.showInstalledUI", false);
 pref("app.update.incompatible.mode", 0);
 pref("app.update.download.backgroundInterval", 0);
 
+// %APP% resolves to metrofirefox, which won't work until bug 845983 is fixed
 #ifdef MOZ_OFFICIAL_BRANDING
 pref("app.update.interval", 86400);
-pref("app.update.url.manual", "http://www.mozilla.com/%LOCALE%/m/");
-pref("app.update.url.details", "http://www.mozilla.com/%LOCALE%/mobile/releases/");
+pref("app.update.url.manual", "https://www.mozilla.org/%LOCALE%/firefox/update/");
+pref("app.update.url.details", "https://www.mozilla.org/%LOCALE%/firefox/releases/");
 #else
 pref("app.update.interval", 28800);
-pref("app.update.url.manual", "http://www.mozilla.com/%LOCALE%/mobile/");
-pref("app.update.url.details", "http://www.mozilla.com/%LOCALE%/mobile/");
+pref("app.update.url.manual", "https://www.mozilla.org/%LOCALE%/firefox/");
+pref("app.update.url.details", "https://www.mozilla.org/%LOCALE%/firefox/");
 #endif
 #endif
 

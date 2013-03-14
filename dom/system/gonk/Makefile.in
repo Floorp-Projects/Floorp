@@ -23,7 +23,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE           = dom
 LIBRARY_NAME     = domsystemgonk_s
-XPIDL_MODULE     = dom_system_gonk
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 FAIL_ON_WARNINGS := 1
@@ -32,19 +31,6 @@ include $(topsrcdir)/dom/dom-config.mk
 
 CPPSRCS = \
   SystemWorkerManager.cpp \
-  $(NULL)
-
-XPIDLSRCS = \
-  nsIAudioManager.idl \
-  nsINetworkManager.idl \
-  nsIRadioInterfaceLayer.idl \
-  nsIVolume.idl \
-  nsIVolumeMountLock.idl \
-  nsIVolumeService.idl \
-  nsIVolumeStat.idl \
-  nsIWorkerHolder.idl \
-  nsINavigatorAudioChannelManager.idl \
-  nsISystemWorkerManager.idl \
   $(NULL)
 
 LOCAL_INCLUDES = \
@@ -104,6 +90,3 @@ endif
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
-XPIDL_FLAGS += \
-  -I$(topsrcdir)/dom/network/interfaces \
-  $(NULL)

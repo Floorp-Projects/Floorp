@@ -20,9 +20,6 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
 MODULE_NAME = nsFileViewModule
 LIBXUL_LIBRARY = 1
-XPIDLSRCS = \
-  nsIFileView.idl \
-  $(NULL)
 CPPSRCS = \
   nsFileView.cpp \
   $(NULL)

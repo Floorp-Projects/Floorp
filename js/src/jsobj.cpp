@@ -4789,7 +4789,7 @@ dumpValue(const Value &v)
         if (fun->hasScript()) {
             RawScript script = fun->nonLazyScript();
             fprintf(stderr, " (%s:%u)",
-                    script->filename ? script->filename : "", script->lineno);
+                    script->filename() ? script->filename() : "", script->lineno);
         }
         fprintf(stderr, " at %p>", (void *) fun);
     } else if (v.isObject()) {
@@ -5009,7 +5009,7 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
         fputc('\n', stderr);
 
         fprintf(stderr, "file %s line %u\n",
-                i.script()->filename, (unsigned) i.script()->lineno);
+                i.script()->filename(), (unsigned) i.script()->lineno);
 
         if (jsbytecode *pc = i.pc()) {
             fprintf(stderr, "  pc = %p\n", pc);

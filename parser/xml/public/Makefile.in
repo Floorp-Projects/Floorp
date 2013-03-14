@@ -10,19 +10,4 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = xml
-XPIDL_MODULE = saxparser
-
-XPIDLSRCS	= \
-                nsISAXAttributes.idl \
-                nsISAXMutableAttributes.idl \
-                nsISAXContentHandler.idl \
-                nsISAXDTDHandler.idl \
-                nsISAXErrorHandler.idl \
-                nsISAXLexicalHandler.idl \
-                nsISAXLocator.idl \
-                nsISAXXMLReader.idl \
-                nsISAXXMLFilter.idl \
-                nsIMozSAXXMLDeclarationHandler.idl \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk

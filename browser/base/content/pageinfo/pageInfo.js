@@ -814,21 +814,21 @@ function saveMedia()
           internalSave(aURIString, null, null, null, null, false, "SaveImageTitle",
                        aChosenData, aBaseURI, gDocument);
         };
-      
+
         for (var i = 0; i < rowArray.length; i++) {
           var v = rowArray[i];
           var dir = aDirectory.clone();
           var item = gImageView.data[v][COL_IMAGE_NODE];
           var uriString = gImageView.data[v][COL_IMAGE_ADDRESS];
           var uri = makeURI(uriString);
-  
+
           try {
             uri.QueryInterface(Components.interfaces.nsIURL);
             dir.append(decodeURIComponent(uri.fileName));
           } catch(ex) {
             /* data: uris */
           }
-  
+
           if (i == 0) {
             saveAnImage(uriString, new AutoChosen(dir, uri), makeURI(item.baseURI));
           } else {
@@ -938,7 +938,7 @@ function makePreview(row)
           numFrames = image.numFrames;
       }
     }
-    
+
     if (!mimeType)
       mimeType = getContentTypeFromHeaders(cacheEntry);
 
@@ -985,7 +985,7 @@ function makePreview(row)
     if ((item instanceof HTMLLinkElement || item instanceof HTMLInputElement ||
          item instanceof HTMLImageElement ||
          item instanceof SVGImageElement ||
-         (item instanceof HTMLObjectElement && mimeType.startsWith("image/")) || isBG) && isProtocolAllowed) {
+         (item instanceof HTMLObjectElement && mimeType && mimeType.startsWith("image/")) || isBG) && isProtocolAllowed) {
       newImage.setAttribute("src", url);
       physWidth = newImage.width || 0;
       physHeight = newImage.height || 0;

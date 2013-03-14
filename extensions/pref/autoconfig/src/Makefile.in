@@ -26,11 +26,6 @@ CPPSRCS          = nsReadConfig.cpp    \
                    nsJSConfigTriggers.cpp \
                    $(NULL)
 
-ifdef MOZ_LDAP_XPCOM
-DEFINES          += -DMOZ_LDAP_XPCOM
-CPPSRCS          += nsLDAPSyncQuery.cpp
-endif
-
 AUTOCFG_JS_EXPORTS = \
 		$(srcdir)/prefcalls.js \
 		$(NULL)

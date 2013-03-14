@@ -182,15 +182,32 @@ public class Tabs implements GeckoEventListener {
         return tab;
     }
 
-    public int getIndexOf(Tab tab) {
+    private int getIndexOf(Tab tab) {
         return mOrder.lastIndexOf(tab);
     }
 
-    public Tab getTabAt(int index) {
-        if (index >= 0 && index < mOrder.size())
-            return mOrder.get(index);
-        else
-            return null;
+    private Tab getNextTabFrom(Tab tab, boolean getPrivate) {
+        int numTabs = mOrder.size();
+        int index = getIndexOf(tab);
+        for (int i = index + 1; i < numTabs; i++) {
+            Tab next = mOrder.get(i);
+            if (next.isPrivate() == getPrivate) {
+                return next;
+            }
+        }
+        return null;
+    }
+
+    private Tab getPreviousTabFrom(Tab tab, boolean getPrivate) {
+        int numTabs = mOrder.size();
+        int index = getIndexOf(tab);
+        for (int i = index - 1; i >= 0; i--) {
+            Tab prev = mOrder.get(i);
+            if (prev.isPrivate() == getPrivate) {
+                return prev;
+            }
+        }
+        return null;
     }
 
     /**
@@ -252,10 +269,15 @@ public class Tabs implements GeckoEventListener {
         if (selectedTab != tab)
             return selectedTab;
 
-        int index = getIndexOf(tab);
-        Tab nextTab = getTabAt(index + 1);
+        boolean getPrivate = tab.isPrivate();
+        Tab nextTab = getNextTabFrom(tab, getPrivate);
         if (nextTab == null)
-            nextTab = getTabAt(index - 1);
+            nextTab = getPreviousTabFrom(tab, getPrivate);
+        if (nextTab == null && getPrivate) {
+            // If there are no private tabs remaining, get the last normal tab
+            Tab lastTab = mOrder.get(mOrder.size() - 1);
+            nextTab = getPreviousTabFrom(lastTab, false);
+        }
 
         Tab parent = getTab(tab.getParentId());
         if (parent != null) {

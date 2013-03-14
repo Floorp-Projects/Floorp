@@ -228,7 +228,7 @@ static uint32_t
 ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
 {
     IonSpew(IonSpew_Bailouts, "Bailing out %s:%u, IonScript %p",
-            it.script()->filename, it.script()->lineno, (void *) it.ionScript());
+            it.script()->filename(), it.script()->lineno, (void *) it.ionScript());
     IonSpew(IonSpew_Bailouts, " reading from snapshot offset %u size %u",
             it.snapshotOffset(), it.ionScript()->snapshotsSize());
 #ifdef DEBUG
@@ -498,7 +498,7 @@ ion::ReflowTypeInfo(uint32_t bailoutResult)
 
     JS_ASSERT(js_CodeSpec[*pc].format & JOF_TYPESET);
 
-    IonSpew(IonSpew_Bailouts, "reflowing type info at %s:%d pcoff %d", script->filename,
+    IonSpew(IonSpew_Bailouts, "reflowing type info at %s:%d pcoff %d", script->filename(),
             script->lineno, pc - script->code);
 
     types::AutoEnterAnalysis enter(cx);
@@ -520,7 +520,7 @@ ion::RecompileForInlining()
     JSContext *cx = GetIonContext()->cx;
     RawScript script = cx->fp()->script();
 
-    IonSpew(IonSpew_Inlining, "Recompiling script to inline calls %s:%d", script->filename,
+    IonSpew(IonSpew_Inlining, "Recompiling script to inline calls %s:%d", script->filename(),
             script->lineno);
 
     // Invalidate the script to force a recompile.
@@ -552,7 +552,7 @@ ion::BoundsCheckFailure()
     JSContext *cx = GetIonContext()->cx;
     RawScript script = GetBailedJSScript(cx);
 
-    IonSpew(IonSpew_Bailouts, "Bounds check failure %s:%d", script->filename,
+    IonSpew(IonSpew_Bailouts, "Bounds check failure %s:%d", script->filename(),
             script->lineno);
 
     if (!script->failedBoundsCheck) {
@@ -678,7 +678,7 @@ ion::ThunkToInterpreter(Value *vp)
         JS_NOT_REACHED("invalid");
 
         IonSpew(IonSpew_Bailouts, "Performing inline OSR %s:%d",
-                cx->fp()->script()->filename,
+                cx->fp()->script()->filename(),
                 PCToLineNumber(cx->fp()->script(), cx->regs().pc));
 
         // We want to OSR again. We need to avoid the problem where frequent

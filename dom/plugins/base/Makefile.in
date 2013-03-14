@@ -20,17 +20,6 @@ LIBXUL_LIBRARY = 1
 
 EXPORTS_NAMESPACES = mozilla
 
-XPIDLSRCS = \
-  nsIHTTPHeaderListener.idl \
-  nsIPluginDocument.idl \
-  nsIPluginHost.idl \
-  nsIPluginInputStream.idl \
-  nsIPluginInstanceOwner.idl \
-  nsIPluginTag.idl \
-  nsIPluginTagInfo.idl \
-  nspluginroot.idl \
-  $(NULL)
-
 EXPORTS = \
   npapi.h \
   npfunctions.h \

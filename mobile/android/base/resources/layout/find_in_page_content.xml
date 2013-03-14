@@ -26,20 +26,20 @@
                  android:contentDescription="@string/find_prev"
                  android:src="@drawable/find_prev"
                  android:layout_toLeftOf="@+id/find_next"
-                 android:background="@drawable/action_bar_button"/>
+                 android:background="@drawable/action_bar_button_inverse"/>
 
     <ImageButton android:id="@+id/find_next"
                  style="@style/FindBar.ImageButton"
                  android:contentDescription="@string/find_next"
                  android:src="@drawable/find_next"
                  android:layout_toLeftOf="@+id/find_close"
-                 android:background="@drawable/action_bar_button"/>
+                 android:background="@drawable/action_bar_button_inverse"/>
 
     <ImageButton android:id="@+id/find_close"
                  style="@style/FindBar.ImageButton"
                  android:contentDescription="@string/find_close"
                  android:src="@drawable/find_close"
                  android:layout_alignParentRight="true"
-                 android:background="@drawable/action_bar_button"/>
+                 android:background="@drawable/action_bar_button_inverse"/>
 
 </merge>

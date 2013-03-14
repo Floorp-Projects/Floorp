@@ -3,3 +3,48 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'nsIAsyncInputStream.idl',
+    'nsIAsyncOutputStream.idl',
+    'nsIBinaryInputStream.idl',
+    'nsIBinaryOutputStream.idl',
+    'nsIConverterInputStream.idl',
+    'nsIConverterOutputStream.idl',
+    'nsIDirectoryEnumerator.idl',
+    'nsIDirectoryService.idl',
+    'nsIFile.idl',
+    'nsIIOUtil.idl',
+    'nsIInputStream.idl',
+    'nsIInputStreamTee.idl',
+    'nsILineInputStream.idl',
+    'nsILocalFile.idl',
+    'nsILocalFileWin.idl',
+    'nsIMultiplexInputStream.idl',
+    'nsIObjectInputStream.idl',
+    'nsIObjectOutputStream.idl',
+    'nsIOutputStream.idl',
+    'nsIPipe.idl',
+    'nsISafeOutputStream.idl',
+    'nsIScriptableBase64Encoder.idl',
+    'nsIScriptableInputStream.idl',
+    'nsISeekableStream.idl',
+    'nsISimpleUnicharStreamFactory.idl',
+    'nsIStorageStream.idl',
+    'nsIStreamBufferAccess.idl',
+    'nsIStringStream.idl',
+    'nsIUnicharInputStream.idl',
+    'nsIUnicharLineInputStream.idl',
+    'nsIUnicharOutputStream.idl',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
+    XPIDL_SOURCES += [
+        'nsILocalFileOS2.idl',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    XPIDL_SOURCES += [
+        'nsILocalFileMac.idl',
+    ]
+
+XPIDL_MODULE = 'xpcom_io'
+

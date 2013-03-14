@@ -474,7 +474,7 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
     // |  ReturnAddr   | <-- return into main jitcode after IC
     // +===============+
 
-    IonSpew(IonSpew_BaselineBailouts, "      Unpacking %s:%d", script->filename, script->lineno);
+    IonSpew(IonSpew_BaselineBailouts, "      Unpacking %s:%d", script->filename(), script->lineno);
     IonSpew(IonSpew_BaselineBailouts, "      [BASELINE-JS FRAME]");
 
     // Calculate and write the previous frame pointer value.
@@ -633,7 +633,7 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
 
     IonSpew(IonSpew_BaselineBailouts, "      Resuming %s pc offset %d (op %s) (line %d) of %s:%d",
                 resumeAfter ? "after" : "at", (int) pcOff, js_CodeName[op],
-                PCToLineNumber(script, pc), script->filename, (int) script->lineno);
+                PCToLineNumber(script, pc), script->filename(), (int) script->lineno);
     IonSpew(IonSpew_BaselineBailouts, "      Bailout kind: %s",
             BailoutKindString(iter.bailoutKind()));
 
@@ -977,7 +977,7 @@ ion::BailoutIonToBaseline(JSContext *cx, IonActivation *activation, IonBailoutIt
     //      +---------------+
 
     IonSpew(IonSpew_BaselineBailouts, "Bailing to baseline %s:%u (IonScript=%p) (FrameType=%d)",
-            iter.script()->filename, iter.script()->lineno, (void *) iter.ionScript(),
+            iter.script()->filename(), iter.script()->lineno, (void *) iter.ionScript(),
             (int) prevFrameType);
     IonSpew(IonSpew_BaselineBailouts, "  Reading from snapshot offset %u size %u",
             iter.snapshotOffset(), iter.ionScript()->snapshotsSize());
@@ -994,7 +994,7 @@ ion::BailoutIonToBaseline(JSContext *cx, IonActivation *activation, IonBailoutIt
     RootedFunction callee(cx, iter.maybeCallee());
     if (callee) {
         IonSpew(IonSpew_BaselineBailouts, "  Callee function (%s:%u)",
-                callee->nonLazyScript()->filename, callee->nonLazyScript()->lineno);
+                callee->nonLazyScript()->filename(), callee->nonLazyScript()->lineno);
     } else {
         IonSpew(IonSpew_BaselineBailouts, "  No callee!");
     }
@@ -1049,8 +1049,8 @@ static bool
 HandleBoundsCheckFailure(JSContext *cx, HandleScript outerScript, HandleScript innerScript)
 {
     IonSpew(IonSpew_Bailouts, "Bounds check failure %s:%d, inlined into %s:%d",
-            innerScript->filename, innerScript->lineno,
-            outerScript->filename, outerScript->lineno);
+            innerScript->filename(), innerScript->lineno,
+            outerScript->filename(), outerScript->lineno);
 
     JS_ASSERT(outerScript->hasIonScript());
     JS_ASSERT(!outerScript->ion->invalidated());
@@ -1069,8 +1069,8 @@ static bool
 HandleShapeGuardFailure(JSContext *cx, HandleScript outerScript, HandleScript innerScript)
 {
     IonSpew(IonSpew_Bailouts, "Shape guard failure %s:%d, inlined into %s:%d",
-            innerScript->filename, innerScript->lineno,
-            outerScript->filename, outerScript->lineno);
+            innerScript->filename(), innerScript->lineno,
+            outerScript->filename(), outerScript->lineno);
 
     JS_ASSERT(outerScript->hasIonScript());
     JS_ASSERT(!outerScript->ion->invalidated());
@@ -1087,8 +1087,8 @@ static bool
 HandleCachedShapeGuardFailure(JSContext *cx, HandleScript outerScript, HandleScript innerScript)
 {
     IonSpew(IonSpew_Bailouts, "Cached shape guard failure %s:%d, inlined into %s:%d",
-            innerScript->filename, innerScript->lineno,
-            outerScript->filename, outerScript->lineno);
+            innerScript->filename(), innerScript->lineno,
+            outerScript->filename(), outerScript->lineno);
 
     JS_ASSERT(outerScript->hasIonScript());
     JS_ASSERT(!outerScript->ion->invalidated());
@@ -1171,8 +1171,8 @@ ion::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
     JS_ASSERT(outerScript);
     IonSpew(IonSpew_BaselineBailouts,
             "  Restored outerScript=(%s:%u,%u) innerScript=(%s:%u,%u) (bailoutKind=%u)",
-            outerScript->filename, outerScript->lineno, outerScript->getUseCount(),
-            innerScript->filename, innerScript->lineno, innerScript->getUseCount(),
+            outerScript->filename(), outerScript->lineno, outerScript->getUseCount(),
+            innerScript->filename(), innerScript->lineno, innerScript->getUseCount(),
             (unsigned) bailoutKind);
 
     switch (bailoutKind) {

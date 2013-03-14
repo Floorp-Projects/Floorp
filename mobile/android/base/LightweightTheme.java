@@ -13,8 +13,10 @@ import org.json.JSONObject;
 import android.app.Application;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Shader;
 import android.os.Build;
@@ -90,6 +92,7 @@ public class LightweightTheme implements GeckoEventListener {
                     final Bitmap bitmap = BitmapFactory.decodeStream(stream);
                     stream.close();
                     mHandler.post(new Runnable() {
+                        @Override
                         public void run() {
                             setLightweightTheme(bitmap);
                         }
@@ -99,6 +102,7 @@ public class LightweightTheme implements GeckoEventListener {
                 }
             } else if (event.equals("LightweightTheme:Disable")) {
                 mHandler.post(new Runnable() {
+                    @Override
                     public void run() {
                         resetLightweightTheme();
                     }
@@ -117,8 +121,7 @@ public class LightweightTheme implements GeckoEventListener {
      * @param bitmap The bitmap used for the lightweight theme.
      */
     private void setLightweightTheme(Bitmap bitmap) {
-        mBitmap = bitmap;
-        if (mBitmap == null || mBitmap.getWidth() == 0 || mBitmap.getHeight() == 0) {
+        if (bitmap == null || bitmap.getWidth() == 0 || bitmap.getHeight() == 0) {
             mBitmap = null;
             return;
         }
@@ -126,16 +129,56 @@ public class LightweightTheme implements GeckoEventListener {
         // To find the dominant color only once, take the bottom 25% of pixels.
         DisplayMetrics dm = mApplication.getResources().getDisplayMetrics();
         int maxWidth = Math.max(dm.widthPixels, dm.heightPixels);
-        int height = (int) (mBitmap.getHeight() * 0.25);
-        Bitmap cropped = Bitmap.createBitmap(mBitmap, mBitmap.getWidth() - maxWidth,
-                                                      mBitmap.getHeight() - height, 
-                                                      maxWidth, height);
+        int height = (int) (bitmap.getHeight() * 0.25);
+
+        // The lightweight theme image's width and height.
+        int bitmapWidth = bitmap.getWidth();
+        int bitmapHeight = bitmap.getHeight();
+
+        // A cropped bitmap of the bottom 25% of pixels.
+        Bitmap cropped = Bitmap.createBitmap(bitmap,
+                                             bitmapWidth > maxWidth ? bitmapWidth - maxWidth : 0,
+                                             bitmapHeight - height, 
+                                             bitmapWidth > maxWidth ? maxWidth : bitmapWidth,
+                                             height);
+
+        // Dominant color based on the cropped bitmap.
         mColor = BitmapUtils.getDominantColor(cropped, false);
 
+        // Calculate the luminance to determine if it's a light or a dark theme.
         double luminance = (0.2125 * ((mColor & 0x00FF0000) >> 16)) + 
                            (0.7154 * ((mColor & 0x0000FF00) >> 8)) + 
                            (0.0721 * (mColor &0x000000FF));
         mIsLight = (luminance > 110) ? true : false;
+
+        // The bitmap image might be smaller than the device's width.
+        // If it's smaller, fill the extra space on the left with the dominant color.
+        if (bitmap.getWidth() >= maxWidth) {
+            mBitmap = bitmap;
+        } else {
+            Paint paint = new Paint();
+            paint.setAntiAlias(true);
+
+            // Create a bigger image that can fill the device width.
+            // By creating a canvas for the bitmap, anything drawn on the canvas
+            // will be drawn on the bitmap.
+            mBitmap = Bitmap.createBitmap(maxWidth, bitmapHeight, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(mBitmap);
+
+            // Fill the canvas with dominant color.
+            canvas.drawColor(mColor);
+
+            // The image should be top-right aligned.
+            Rect rect = new Rect();
+            Gravity.apply(Gravity.TOP | Gravity.RIGHT,
+                          bitmapWidth,
+                          bitmapHeight,
+                          new Rect(0, 0, maxWidth, bitmapHeight),
+                          rect);
+
+            // Draw the bitmap.
+            canvas.drawBitmap(bitmap, null, rect, paint);
+        }
 
         for (OnChangeListener listener : mListeners)
             listener.onLightweightThemeChanged();

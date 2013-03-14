@@ -309,6 +309,13 @@ toolbarbutton.bookmark-item > menupopup {
   opacity: 0.7;
 }
 
+@media (min-resolution: 2dppx) {
+  .bookmark-item > .toolbarbutton-icon,
+  .bookmark-item > .menu-iconic-left > .menu-iconic-icon {
+    image-rendering: -moz-crisp-edges;
+  }
+}
+
 #wrapper-personal-bookmarks[place="palette"] > .toolbarpaletteitem-box {
   background: url("chrome://browser/skin/places/bookmarksToolbar.png") no-repeat center;
 }

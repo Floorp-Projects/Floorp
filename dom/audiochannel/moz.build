@@ -4,3 +4,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TEST_TOOL_DIRS += ['tests']
+
+XPIDL_SOURCES += [
+    'nsIAudioChannelAgent.idl',
+]
+
+XPIDL_MODULE = 'dom_audiochannel'
+

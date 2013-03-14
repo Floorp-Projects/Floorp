@@ -837,8 +837,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGFEOffsetElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGFEPointLightElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGFESpecularLightingElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGFESpotLightElement, nsElementSH,
@@ -2322,11 +2320,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(SVGFEPointLightElement, nsIDOMSVGFEPointLightElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFEPointLightElement)
-    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(SVGFESpecularLightingElement, nsIDOMSVGFESpecularLightingElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFESpecularLightingElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
@@ -2882,37 +2875,29 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 #endif
 
+  MOZ_STATIC_ASSERT(MOZ_ARRAY_LENGTH(sClassInfoData) == eDOMClassInfoIDCount,
+                    "The number of items in sClassInfoData doesn't match the "
+                    "number of nsIDOMClassInfo ID's, this is bad! Fix it!");
+
 #ifdef DEBUG
-  {
-    uint32_t i = ArrayLength(sClassInfoData);
-
-    if (i != eDOMClassInfoIDCount) {
-      MOZ_NOT_REACHED("The number of items in sClassInfoData doesn't match the "
-                      "number of nsIDOMClassInfo ID's, this is bad! Fix it!");
-
+  for (size_t i = 0; i < eDOMClassInfoIDCount; i++) {
+    if (!sClassInfoData[i].u.mConstructorFptr ||
+        sClassInfoData[i].mDebugID != i) {
+      MOZ_NOT_REACHED("Class info data out of sync, you forgot to update "
+                      "nsDOMClassInfo.h and nsDOMClassInfo.cpp! Fix this, "
+                      "mozilla will not work without this fixed!");
       return NS_ERROR_NOT_INITIALIZED;
     }
-
-    for (i = 0; i < eDOMClassInfoIDCount; i++) {
-      if (!sClassInfoData[i].u.mConstructorFptr ||
-          sClassInfoData[i].mDebugID != i) {
-        MOZ_NOT_REACHED("Class info data out of sync, you forgot to update "
-                        "nsDOMClassInfo.h and nsDOMClassInfo.cpp! Fix this, "
-                        "mozilla will not work without this fixed!");
-
-        return NS_ERROR_NOT_INITIALIZED;
-      }
-    }
-
-    for (i = 0; i < eDOMClassInfoIDCount; i++) {
-      if (!sClassInfoData[i].mInterfaces) {
-        MOZ_NOT_REACHED("Class info data without an interface list! Fix this, "
-                        "mozilla will not work without this fixed!");
-
-        return NS_ERROR_NOT_INITIALIZED;
-      }
-    }
   }
+
+  for (size_t i = 0; i < eDOMClassInfoIDCount; i++) {
+    if (!sClassInfoData[i].mInterfaces) {
+      MOZ_NOT_REACHED("Class info data without an interface list! Fix this, "
+                      "mozilla will not work without this fixed!");
+
+      return NS_ERROR_NOT_INITIALIZED;
+     }
+   }
 #endif
 
   // Initialize static JSString's

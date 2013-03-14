@@ -1551,7 +1551,7 @@ bool SkeletonState::DecodeHeader(ogg_packet* aPacket)
     mDoneReadingHeaders = true;
     return true;
   }
-  return false;
+  return true;
 }
 
 

@@ -10,20 +10,12 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = toolkitcomps
-XPIDL_MODULE = commandlines
 LIBRARY_NAME = commandlines
 SHORT_LIBNAME = cmdlines
 EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
 MODULE_NAME = CommandLineModule
 LIBXUL_LIBRARY = 1
-
-XPIDLSRCS = \
-  nsICommandLine.idl \
-  nsICommandLineHandler.idl \
-  nsICommandLineRunner.idl \
-  nsICommandLineValidator.idl \
-  $(NULL)
 
 CPPSRCS = \
   nsCommandLine.cpp \

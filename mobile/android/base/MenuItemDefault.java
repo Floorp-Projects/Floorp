@@ -10,9 +10,6 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.View;
-import android.widget.AbsListView;
-import android.widget.CheckBox;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 public class MenuItemDefault extends TextView
