@@ -1,8 +1,6 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@.tests;
 
-import @ANDROID_PACKAGE_NAME@.*;
-
 public class testAwesomebar extends BaseTest {
     @Override
     protected int getTestType() {

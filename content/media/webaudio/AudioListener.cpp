@@ -40,7 +40,7 @@ AudioListener::WrapObject(JSContext* aCx, JSObject* aScope)
 void
 AudioListener::RegisterPannerNode(PannerNode* aPannerNode)
 {
-  mPanners.AppendElement(aPannerNode);
+  mPanners.AppendElement(aPannerNode->asWeakPtr());
 
   // Let the panner node know about our parameters
   aPannerNode->SendThreeDPointParameterToStream(PannerNode::LISTENER_POSITION, mPosition);
@@ -55,7 +55,9 @@ void
 AudioListener::SendDoubleParameterToStream(uint32_t aIndex, double aValue)
 {
   for (uint32_t i = 0; i < mPanners.Length(); ++i) {
-    mPanners[i]->SendDoubleParameterToStream(aIndex, aValue);
+    if (mPanners[i]) {
+      mPanners[i]->SendDoubleParameterToStream(aIndex, aValue);
+    }
   }
 }
 
@@ -63,7 +65,9 @@ void
 AudioListener::SendThreeDPointParameterToStream(uint32_t aIndex, const ThreeDPoint& aValue)
 {
   for (uint32_t i = 0; i < mPanners.Length(); ++i) {
-    mPanners[i]->SendThreeDPointParameterToStream(aIndex, aValue);
+    if (mPanners[i]) {
+      mPanners[i]->SendThreeDPointParameterToStream(aIndex, aValue);
+    }
   }
 }
 

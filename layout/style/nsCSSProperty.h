@@ -34,9 +34,20 @@ enum nsCSSProperty {
   #undef CSS_PROP_SHORTHAND
 
   eCSSProperty_COUNT,
+  // Make the count continue where it left off:
+  eCSSProperty_COUNT_DUMMY2 = eCSSProperty_COUNT - 1,
 
-  // Some of the values below could probably overlap with each other and
-  // with eCSSProperty_COUNT if we had a need for them to do so.
+  #define CSS_PROP_ALIAS(aliasname_, id_, method_, pref_) \
+    eCSSPropertyAlias_##method_,
+  #include "nsCSSPropAliasList.h"
+  #undef CSS_PROP_ALIAS
+
+  eCSSProperty_COUNT_with_aliases,
+  // Make the count continue where it left off:
+  eCSSProperty_COUNT_DUMMY3 = eCSSProperty_COUNT_with_aliases - 1,
+
+  // Some of the values below could probably overlap with each other
+  // if we had a need for them to do so.
 
   // Extra values for use in the values of the 'transition-property'
   // property.

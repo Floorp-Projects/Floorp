@@ -11,7 +11,7 @@
                  android:padding="14dip"
                  android:src="@drawable/tab_new_level"
                  android:contentDescription="@string/new_tab"
-                 android:background="@drawable/action_bar_button"
+                 android:background="@drawable/action_bar_button_inverse"
                  android:gravity="center"/>
 
 </merge>

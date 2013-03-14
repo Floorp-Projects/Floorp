@@ -1015,7 +1015,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     else:
       logsource = proc.stdout
 
-      if self.IS_DEBUG_BUILD and (self.IS_MAC or self.IS_LINUX) and symbolsPath and os.path.exists(symbolsPath):
+      if self.IS_DEBUG_BUILD and symbolsPath and os.path.exists(symbolsPath):
         # Run each line through a function in fix_stack_using_bpsyms.py (uses breakpad symbol files)
         # This method is preferred for Tinderbox builds, since native symbols may have been stripped.
         sys.path.insert(0, utilityPath)

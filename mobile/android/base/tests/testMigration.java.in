@@ -1,27 +1,20 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@.tests;
 
-import @ANDROID_PACKAGE_NAME@.*;
-import android.app.Activity;
-import android.content.ContentValues;
 import android.content.ContentResolver;
 import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.content.Context;
 import android.net.Uri;
-import android.provider.Browser;
 import android.util.Log;
 import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.ClassLoader;
 import java.lang.reflect.Method;
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 

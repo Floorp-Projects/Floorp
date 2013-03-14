@@ -119,6 +119,14 @@ int main()
       TestHook("ntdll.dll", "NtFlushBuffersFile") &&
       TestHook("ntdll.dll", "NtWriteFile") &&
       TestHook("ntdll.dll", "NtWriteFileGather") &&
+      // Bug 733892: toolkit/crashreporter/nsExceptionHandler.cpp
+      TestHook("kernel32.dll", "SetUnhandledExceptionFilter") &&
+#ifdef _M_IX86
+      // Bug 670967: xpcom/base/AvailableMemoryTracker.cpp
+      TestHook("kernel32.dll", "VirtualAlloc") &&
+      TestHook("kernel32.dll", "MapViewOfFile") &&
+      TestHook("gdi32.dll", "CreateDIBSection") &&
+#endif
       TestHook("ntdll.dll", "LdrLoadDll")) {
     printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
     return 0;

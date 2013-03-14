@@ -1,10 +1,6 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@.tests;
 
-import @ANDROID_PACKAGE_NAME@.*;
-import android.app.Activity;
-import android.content.ContentResolver;
-
 /* This test will test if doorhangers are displayed and dismissed
    The test will test:
    * geolocation doorhangers - sharing and not sharing the location dismisses the doorhanger

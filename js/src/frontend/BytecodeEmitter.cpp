@@ -3958,7 +3958,7 @@ EmitLet(JSContext *cx, BytecodeEmitter *bce, ParseNode *pnLet)
     StmtInfoBCE stmtInfo(cx);
     PushBlockScopeBCE(bce, &stmtInfo, *blockObj, bce->offset());
 
-    ptrdiff_t bodyBegin = bce->offset();
+    DebugOnly<ptrdiff_t> bodyBegin = bce->offset();
     if (!EmitEnterBlock(cx, bce, letBody, JSOP_ENTERLET0))
         return false;
 
@@ -3969,7 +3969,7 @@ EmitLet(JSContext *cx, BytecodeEmitter *bce, ParseNode *pnLet)
     JS_ASSERT(leaveOp == JSOP_LEAVEBLOCK || leaveOp == JSOP_LEAVEBLOCKEXPR);
     EMIT_UINT16_IMM_OP(leaveOp, blockObj->slotCount());
 
-    ptrdiff_t bodyEnd = bce->offset();
+    DebugOnly<ptrdiff_t> bodyEnd = bce->offset();
     JS_ASSERT(bodyEnd > bodyBegin);
 
     return PopStatementBCE(cx, bce);

@@ -147,6 +147,16 @@ ChromeObjectWrapper::get(JSContext *cx, JSObject *wrapper, JSObject *receiver,
     return js::GetGeneric(cx, wrapperProto, receiver, id, vp);
 }
 
+// SecurityWrapper categorically returns false for objectClassIs, but the
+// contacts API depends on Array.isArray returning true for COW-implemented
+// contacts. This isn't really ideal, but make it work for now.
+bool
+ChromeObjectWrapper::objectClassIs(JSObject *obj, js::ESClassValue classValue,
+                                   JSContext *cx)
+{
+  return CrossCompartmentWrapper::objectClassIs(obj, classValue, cx);
+}
+
 // This mechanism isn't ideal because we end up calling enter() on the base class
 // twice (once during enter() here and once during the trap itself), and policy
 // enforcement or COWs isn't cheap. But it results in the cleanest code, and this

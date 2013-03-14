@@ -2,8 +2,6 @@
 package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
-import android.app.Activity;
-import android.util.Log;
 
 /* Tests related to the about: page:
  *  - check that about: loads from the awesome bar

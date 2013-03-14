@@ -356,7 +356,7 @@ ARIAGridAccessible::SelectRow(uint32_t aRowIdx)
 
   Accessible* row = nullptr;
   for (int32_t rowIdx = 0; (row = rowIter.Next()); rowIdx++) {
-    nsresult rv = SetARIASelected(row, rowIdx == aRowIdx);
+    DebugOnly<nsresult> rv = SetARIASelected(row, rowIdx == aRowIdx);
     NS_ASSERTION(NS_SUCCEEDED(rv), "SetARIASelected() Shouldn't fail!");
   }
 }
@@ -369,7 +369,7 @@ ARIAGridAccessible::SelectCol(uint32_t aColIdx)
   Accessible* row = nullptr;
   while ((row = rowIter.Next())) {
     // Unselect all cells in the row.
-    nsresult rv = SetARIASelected(row, false);
+    DebugOnly<nsresult> rv = SetARIASelected(row, false);
     NS_ASSERTION(NS_SUCCEEDED(rv), "SetARIASelected() Shouldn't fail!");
 
     // Select cell at the column index.

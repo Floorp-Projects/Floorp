@@ -132,6 +132,7 @@ public class DoCommand {
         POWER ("power"),
         PROCESS ("process"),
         SUTUSERINFO ("sutuserinfo"),
+        TEMPERATURE ("temperature"),
         GETAPPROOT ("getapproot"),
         TESTROOT ("testroot"),
         ALRT ("alrt"),
@@ -435,6 +436,8 @@ public class DoCommand {
                     strReturn += "\n";
                     strReturn += GetPowerInfo();
                     strReturn += "\n";
+                    strReturn += GetTemperatureInfo();
+                    strReturn += "\n";
                     strReturn += GetProcessInfo();
                     strReturn += "\n";
                     strReturn += GetSutUserInfo();
@@ -486,6 +489,10 @@ public class DoCommand {
 
                         case SUTUSERINFO:
                             strReturn += GetSutUserInfo();
+                            break;
+
+                        case TEMPERATURE:
+                            strReturn += GetTemperatureInfo();
                             break;
 
                         default:
@@ -2634,6 +2641,33 @@ private void CancelNotification()
         }
 
         return sRet;
+        }
+
+    public String GetTemperatureInfo()
+        {
+        String sTempVal = "unknown";
+        String sDeviceFile = "/sys/bus/platform/devices/temp_sensor_hwmon.0/temp1_input";
+        try {
+            pProc = Runtime.getRuntime().exec(this.getSuArgs("cat " + sDeviceFile));
+            RedirOutputThread outThrd = new RedirOutputThread(pProc, null);
+            outThrd.start();
+            outThrd.joinAndStopRedirect(5000);
+            String output = outThrd.strOutput;
+            // this only works on pandas (with the temperature sensors turned
+            // on), other platforms we just get a file not found error... we'll
+            // just return "unknown" for that case
+            try {
+                sTempVal = String.valueOf(Integer.parseInt(output.trim()) / 1000.0);
+            } catch (NumberFormatException e) {
+                // not parsed! probably not a panda
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        return "Temperature: " + sTempVal;
         }
 
     // todo

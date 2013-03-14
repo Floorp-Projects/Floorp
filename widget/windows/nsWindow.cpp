@@ -3434,7 +3434,7 @@ nsWindow::OverrideSystemMouseScrollSpeed(int32_t aOriginalDelta,
   // on the document of SystemParametersInfo in MSDN.
   const uint32_t kSystemDefaultScrollingSpeed = 3;
 
-  int32_t absOriginDelta = Abs(aOriginalDelta);
+  int32_t absOriginDelta = DeprecatedAbs(aOriginalDelta);
 
   // Compute the simple overridden speed.
   int32_t absComputedOverriddenDelta;
@@ -3862,8 +3862,8 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
     sLastMouseMovePoint.y = mpScreen.y;
   }
 
-  bool insideMovementThreshold = (Abs(sLastMousePoint.x - eventPoint.x) < (short)::GetSystemMetrics(SM_CXDOUBLECLK)) &&
-                                   (Abs(sLastMousePoint.y - eventPoint.y) < (short)::GetSystemMetrics(SM_CYDOUBLECLK));
+  bool insideMovementThreshold = (DeprecatedAbs(sLastMousePoint.x - eventPoint.x) < (short)::GetSystemMetrics(SM_CXDOUBLECLK)) &&
+                                   (DeprecatedAbs(sLastMousePoint.y - eventPoint.y) < (short)::GetSystemMetrics(SM_CYDOUBLECLK));
 
   BYTE eventButton;
   switch (aButton) {
@@ -6393,10 +6393,10 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam)
 
     if (mDisplayPanFeedback) {
       mGesture.UpdatePanFeedbackX(mWnd,
-                                  Abs(RoundDown(wheelEvent.overflowDeltaX)),
+                                  DeprecatedAbs(RoundDown(wheelEvent.overflowDeltaX)),
                                   endFeedback);
       mGesture.UpdatePanFeedbackY(mWnd,
-                                  Abs(RoundDown(wheelEvent.overflowDeltaY)),
+                                  DeprecatedAbs(RoundDown(wheelEvent.overflowDeltaY)),
                                   endFeedback);
       mGesture.PanFeedbackFinalize(mWnd, endFeedback);
     }
