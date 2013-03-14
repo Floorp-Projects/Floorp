@@ -9,7 +9,6 @@ generated_webidl_files = \
   $(NULL)
 
 webidl_files = \
-  AnimationEvent.webidl \
   ArchiveReader.webidl \
   AudioBuffer.webidl \
   AudioBufferSourceNode.webidl \
