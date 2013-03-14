@@ -515,7 +515,7 @@ let WeaveGlue = {
         message = message.replace("#1", brandName);
         message = message.replace("#2", Services.appinfo.version);
         let title = this._bundle.GetStringFromName("sync.update.title")
-        let button = this._bundle.GetStringFromName("sync.update.button")
+        let button = this._bundle.GetStringFromName("sync.update.learnmore")
         let close = this._bundle.GetStringFromName("sync.update.close")
 
         let flags = Services.prompt.BUTTON_POS_0 * Services.prompt.BUTTON_TITLE_IS_STRING +
