@@ -341,7 +341,7 @@ public:
 struct BytecodePattern {
     WTF_MAKE_FAST_ALLOCATED;
 public:
-    BytecodePattern(PassOwnPtr<ByteDisjunction> body, Vector<ByteDisjunction*> &allParenthesesInfo, YarrPattern& pattern, BumpPointerAllocator* allocator)
+    BytecodePattern(PassOwnPtr<ByteDisjunction> body, const Vector<ByteDisjunction*> &allParenthesesInfo, YarrPattern& pattern, BumpPointerAllocator* allocator)
         : m_body(body)
         , m_ignoreCase(pattern.m_ignoreCase)
         , m_multiline(pattern.m_multiline)
@@ -350,17 +350,12 @@ public:
         newlineCharacterClass = pattern.newlineCharacterClass();
         wordcharCharacterClass = pattern.wordcharCharacterClass();
 
-        // Trick: 'Steal' the YarrPattern's ParenthesesInfo!
-        // The input vector isn't used afterwards anymore,
-        // that way we don't have to copy the input.
-        JS_ASSERT(m_allParenthesesInfo.size() == 0);
-        m_allParenthesesInfo.swap(allParenthesesInfo);
-
-        // Trick: 'Steal' the YarrPattern's CharacterClasses!
-        // The input vector isn't used afterwards anymore,
-        // that way we don't have to copy the input.
-        JS_ASSERT(m_userCharacterClasses.size() == 0);
-        m_userCharacterClasses.swap(pattern.m_userCharacterClasses);
+        m_allParenthesesInfo.append(allParenthesesInfo);
+        m_userCharacterClasses.append(pattern.m_userCharacterClasses);
+        // 'Steal' the YarrPattern's CharacterClasses!  We clear its
+        // array, so that it won't delete them on destruction.  We'll
+        // take responsibility for that.
+        pattern.m_userCharacterClasses.clear();
     }
 
     ~BytecodePattern()
