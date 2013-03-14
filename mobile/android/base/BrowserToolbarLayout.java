@@ -8,9 +8,9 @@ package org.mozilla.gecko;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
-import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
-public class BrowserToolbarLayout extends LinearLayout {
+public class BrowserToolbarLayout extends GeckoRelativeLayout {
     private static final String LOGTAG = "GeckoToolbarLayout";
 
     public BrowserToolbarLayout(Context context, AttributeSet attrs) {
