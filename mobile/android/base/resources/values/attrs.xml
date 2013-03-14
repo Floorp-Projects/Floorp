@@ -11,6 +11,15 @@
         <attr name="more_text" format="string"/>
     </declare-styleable>
 
+    <!-- DoorHangers -->
+    <declare-styleable name="DoorHanger">
+        <attr name="doorhangerWidth" format="dimension">
+             <enum name="fill_parent" value="-1" />
+             <enum name="match_parent" value="-1" />
+             <enum name="wrap_content" value="-2" />
+        </attr>
+    </declare-styleable>
+
     <declare-styleable name="MenuItem">
         <attr name="android:id"/>
         <attr name="android:orderInCategory"/>
