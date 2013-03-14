@@ -198,14 +198,13 @@ AccessibleWrap::InvalidateChildren()
 }
 
 bool
-AccessibleWrap::AppendChild(Accessible* aAccessible)
+AccessibleWrap::InsertChildAt(uint32_t aIdx, Accessible* aAccessible)
 {
-  bool appended = Accessible::AppendChild(aAccessible);
-  
-  if (appended && mNativeObject)
+  bool inserted = Accessible::InsertChildAt(aIdx, aAccessible);
+  if (inserted && mNativeObject)
     [mNativeObject appendChild:aAccessible];
 
-  return appended;
+  return inserted;
 }
 
 bool
