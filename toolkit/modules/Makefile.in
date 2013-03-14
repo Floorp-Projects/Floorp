@@ -16,4 +16,8 @@ EXTRA_JS_MODULES := \
   Timer.jsm \
   $(NULL)
 
+EXTRA_PP_JS_MODULES = \
+  RecentWindow.jsm \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
