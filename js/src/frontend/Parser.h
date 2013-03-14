@@ -415,7 +415,7 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
     Node condExpr1();
     Node orExpr1();
     Node unaryExpr();
-    Node memberExpr(bool allowCallSyntax);
+    Node memberExpr(TokenKind tt, bool allowCallSyntax);
     Node primaryExpr(TokenKind tt);
     Node parenExpr(bool *genexp = NULL);
 
