@@ -327,13 +327,11 @@
 
     <style name="AboutHome.TextAppearance" />
 
-    <style name="AboutHome.TextAppearance.Title">
-        <item name="android:textSize">16sp</item>
+    <style name="AboutHome.TextAppearance.Title" parent="TextAppearance">
         <item name="android:textColor">@color/abouthome_section_title</item>
     </style>
 
-    <style name="AboutHome.TextAppearance.SubTitle">
-        <item name="android:textSize">12sp</item>
+    <style name="AboutHome.TextAppearance.SubTitle" parent="TextAppearance.Micro">
         <item name="android:textColor">@color/abouthome_section_subtitle</item>
     </style>
 
