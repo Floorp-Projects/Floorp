@@ -3038,7 +3038,7 @@ Accessible::ContainerWidget() const
       }
 
       // Don't cross DOM document boundaries.
-      if (parent->IsDocumentNode())
+      if (parent->IsDoc())
         break;
     }
   }
