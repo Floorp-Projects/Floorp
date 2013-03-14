@@ -66,7 +66,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     private int mTitlePadding;
     private boolean mSiteSecurityVisible;
     private boolean mAnimateSiteSecurity;
-    private TabsButton mTabs;
+    private ShapedButton mTabs;
     private int mTabsPaneWidth;
     private ImageButton mBack;
     private ImageButton mForward;
@@ -217,7 +217,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             }
         });
 
-        mTabs = (TabsButton) mLayout.findViewById(R.id.tabs);
+        mTabs = (ShapedButton) mLayout.findViewById(R.id.tabs);
         mTabs.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -906,21 +906,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                                     mActivity.getString(R.string.num_tabs, count) :
                                     mActivity.getString(R.string.one_tab));
         mCount = count;
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                GeckoTextView view = (GeckoTextView) mTabsCount.getCurrentView();
-                view.setSelected(true);
-            }
-        }, mDuration);
-
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                GeckoTextView view = (GeckoTextView) mTabsCount.getCurrentView();
-                view.setSelected(false);
-            }
-        }, 2 * mDuration);
     }
 
     public void updateTabCount(int count) {
@@ -1005,27 +990,10 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     }
 
     public void updateTabs(boolean areTabsShown) {
-        if (areTabsShown) {
-            mTabs.getBackground().setLevel(TABS_EXPANDED);
-
-            if (!mActivity.hasTabsSideBar()) {
-                mTabs.setImageLevel(0);
-                mTabsCount.setVisibility(View.GONE);
-                mMenu.setImageLevel(TABS_EXPANDED);
-                mMenu.getBackground().setLevel(TABS_EXPANDED);
-            } else {
-                mTabs.setImageLevel(TABS_EXPANDED);
-            }
-        } else {
+        if (areTabsShown)
+            mTabs.setImageLevel(TABS_EXPANDED);
+        else
             mTabs.setImageLevel(TABS_CONTRACTED);
-            mTabs.getBackground().setLevel(TABS_CONTRACTED);
-
-            if (!mActivity.hasTabsSideBar()) {
-                mTabsCount.setVisibility(View.VISIBLE);
-                mMenu.setImageLevel(TABS_CONTRACTED);
-                mMenu.getBackground().setLevel(TABS_CONTRACTED);
-            }
-        }
 
         // A level change will not trigger onMeasure() for the tabs, where the path is created.
         // Manually requesting a layout to re-calculate the path.
@@ -1033,11 +1001,9 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     }
 
     public void setIsSideBar(boolean isSideBar) {
-        mTabs.setIsSideBar(isSideBar);
-
         Resources resources = mActivity.getResources();
         mTabs.setImageDrawable(resources.getDrawable(R.drawable.tabs_level));
-        mTabs.setBackgroundDrawable(resources.getDrawable(R.drawable.tabs_button));
+        mTabs.setBackgroundDrawable(resources.getDrawable(R.drawable.shaped_button));
     }
 
     public void setProgressVisibility(boolean visible) {

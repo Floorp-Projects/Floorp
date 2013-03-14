@@ -10,7 +10,7 @@
     <org.mozilla.gecko.TabsPanel android:id="@+id/tabs_panel"
                                  android:layout_width="fill_parent"
                                  android:layout_height="fill_parent"
-                                 android:background="@color/background_tabs_light"
+                                 android:background="@color/background_tabs"
                                  android:visibility="invisible"/>
 
    <view class="org.mozilla.gecko.GeckoApp$MainLayout"
