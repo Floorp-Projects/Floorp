@@ -47,7 +47,7 @@ fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,10) == clipping-4-overflow-
 == clipping-5-canvas.html clipping-5-refc.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-5-image.html clipping-5-refi.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-5-overflow-hidden.html clipping-5-ref.html
-fuzzy-if(Android,5,21) == clipping-5-refi.html clipping-5-ref.html
+fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(Android,5,21) == clipping-5-refi.html clipping-5-ref.html
 fuzzy-if(true,1,7) fuzzy-if(cocoaWidget,1,99) fuzzy-if(Android&&browserIsRemote,7,89) fuzzy-if(Android&&!browserIsRemote,99,107) == clipping-5-refc.html clipping-5-ref.html # bug 732535
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-and-zindex-1.html clipping-and-zindex-1-ref.html
 fuzzy-if(cocoaWidget,1,4) == intersecting-clipping-1-canvas.html intersecting-clipping-1-refc.html
@@ -74,7 +74,7 @@ skip-if(B2G) fails-if(Android) == scrollbar-clamping-2.html scrollbar-clamping-2
 fuzzy-if(true,1,1) == corner-joins-1.xhtml corner-joins-1-ref.xhtml
 skip-if(B2G) random-if(winWidget) HTTP(..) == corner-joins-2.xhtml corner-joins-2-ref.xhtml
 
-skip-if(B2G) fuzzy-if(Android&&browserIsRemote,7,146) fuzzy-if(Android&&!browserIsRemote,166,248) == scroll-1.html scroll-1-ref.html # see bug 732535
+skip-if(B2G) fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,20) fuzzy-if(Android&&browserIsRemote,7,146) fuzzy-if(Android&&!browserIsRemote,166,248) == scroll-1.html scroll-1-ref.html # see bug 732535
 
 == zero-radius-clip-1.html zero-radius-clip-ref.html
 
