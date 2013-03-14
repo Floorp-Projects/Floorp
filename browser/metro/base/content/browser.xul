@@ -621,10 +621,10 @@
 
           <!-- App bar: 'more' button context menu -->
           <richlistitem id="context-findinpage" type="find-in-page" onclick="ContextCommands.findInPage();">
-          <label value="&appbarFindInPage.label;"/>
+          <label value="&appbarFindInPage2.label;"/>
           </richlistitem>
           <richlistitem id="context-viewondesktop" type="view-on-desktop" onclick="ContextCommands.viewOnDesktop();">
-          <label value="&appbarViewOnDesktop.label;"/>
+          <label value="&appbarViewOnDesktop2.label;"/>
           </richlistitem>
         </richlistbox>
       </vbox>
