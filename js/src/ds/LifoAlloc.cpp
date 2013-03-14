@@ -21,11 +21,9 @@ BumpChunk::new_(size_t chunkSize)
         return NULL;
     BumpChunk *result = new (mem) BumpChunk(chunkSize - sizeof(BumpChunk));
 
-    /*
-     * We assume that the alignment of sAlign is less than that of
-     * the underlying memory allocator -- creating a new BumpChunk should
-     * always satisfy the sAlign alignment constraint.
-     */
+    // We assume that the alignment of sAlign is less than that of
+    // the underlying memory allocator -- creating a new BumpChunk should
+    // always satisfy the sAlign alignment constraint.
     JS_ASSERT(AlignPtr(result->bump) == result->bump);
     return result;
 }
@@ -51,8 +49,8 @@ BumpChunk::canAlloc(size_t n)
     return bumped <= limit && bumped > headerBase();
 }
 
-} /* namespace detail */
-} /* namespace js */
+} // namespace detail
+} // namespace js
 
 void
 LifoAlloc::freeAll()
@@ -65,10 +63,8 @@ LifoAlloc::freeAll()
     }
     first = latest = last = NULL;
 
-    /*
-     * Nb: maintaining curSize_ correctly isn't easy.  Fortunately, this is an
-     * excellent sanity check.
-     */
+    // Nb: maintaining curSize_ correctly isn't easy.  Fortunately, this is an
+    // excellent sanity check.
     JS_ASSERT(curSize_ == 0);
 }
 
@@ -76,10 +72,10 @@ LifoAlloc::BumpChunk *
 LifoAlloc::getOrCreateChunk(size_t n)
 {
     if (first) {
-        /* Look for existing, unused BumpChunks to satisfy the request. */
+        // Look for existing, unused BumpChunks to satisfy the request.
         while (latest->next()) {
             latest = latest->next();
-            latest->resetBump(); /* This was an unused BumpChunk on the chain. */
+            latest->resetBump();    // This was an unused BumpChunk on the chain.
             if (latest->canAlloc(n))
                 return latest;
         }
@@ -90,7 +86,7 @@ LifoAlloc::getOrCreateChunk(size_t n)
     if (n > defaultChunkFreeSpace) {
         size_t allocSizeWithHeader = n + sizeof(BumpChunk);
 
-        /* Guard for overflow. */
+        // Guard for overflow.
         if (allocSizeWithHeader < n ||
             (allocSizeWithHeader & (size_t(1) << (tl::BitSize<size_t>::result - 1)))) {
             return NULL;
@@ -101,7 +97,7 @@ LifoAlloc::getOrCreateChunk(size_t n)
         chunkSize = defaultChunkSize_;
     }
 
-    /* If we get here, we couldn't find an existing BumpChunk to fill the request. */
+    // If we get here, we couldn't find an existing BumpChunk to fill the request.
     BumpChunk *newChunk = BumpChunk::new_(chunkSize);
     if (!newChunk)
         return NULL;
