@@ -40,8 +40,9 @@ function consoleOpened(HUD) {
       return aItem === items[aIndex];
     }), true, "getItems returns back the same items");
 
-    is(popup.selectedIndex, -1, "no index is selected");
-    ok(!popup.selectedItem, "no item is selected");
+    is(popup.selectedIndex, 2,
+       "Index of the first item from bottom is selected.");
+    is(popup.selectedItem, items[2], "First item from bottom is selected");
 
     popup.selectedIndex = 1;
 

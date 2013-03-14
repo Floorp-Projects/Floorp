@@ -2736,7 +2736,10 @@ JSTerm.prototype = {
       onClick: this.acceptProposedCompletion.bind(this),
       panelId: "webConsole_autocompletePopup",
       listBoxId: "webConsole_autocompletePopupListBox",
-      position: "before_start"
+      position: "before_start",
+      theme: "light",
+      direction: "ltr",
+      autoSelect: true
     };
     this.autocompletePopup = new AutocompletePopup(chromeDocument,
                                                    autocompleteOptions);
@@ -3485,13 +3488,14 @@ JSTerm.prototype = {
     }
 
     let matches = aMessage.matches;
+    let lastPart = aMessage.matchProp;
     if (!matches.length) {
       this.clearCompletion();
       return;
     }
 
-    let items = matches.map(function(aMatch) {
-      return { label: aMatch };
+    let items = matches.reverse().map(function(aMatch) {
+      return { preLabel: lastPart, label: aMatch };
     });
 
     let popup = this.autocompletePopup;
@@ -3500,7 +3504,7 @@ JSTerm.prototype = {
     let completionType = this.lastCompletion.completionType;
     this.lastCompletion = {
       value: inputValue,
-      matchProp: aMessage.matchProp,
+      matchProp: lastPart,
     };
 
     if (items.length > 1 && !popup.isOpen) {
