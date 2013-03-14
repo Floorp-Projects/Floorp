@@ -15,7 +15,6 @@
     -->
     <style name="Widget.BaseListView" parent="android:style/Widget.Holo.ListView"/>
 
-
     <!--
         Application styles. All customizations that are not specific
         to a particular API level can go here.
