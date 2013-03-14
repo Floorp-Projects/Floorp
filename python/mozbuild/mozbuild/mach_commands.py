@@ -69,8 +69,10 @@ class Build(MachCommandBase):
                 return 1
 
             for target in what:
+                path_arg = self._wrap_path_argument(target)
+
                 make_dir, make_target = resolve_target_to_make(self.topobjdir,
-                    target)
+                    path_arg.relpath())
 
                 if make_dir is None and make_target is None:
                     return 1
