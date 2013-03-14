@@ -659,3 +659,6 @@ pref("dom.disable_input_file", true);
 pref("general.useragent.enable_overrides", true);
 
 pref("b2g.version", @MOZ_B2G_VERSION@);
+
+// Disable console buffering to save memory.
+pref("consoleservice.buffered", false);
