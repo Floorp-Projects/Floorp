@@ -8,7 +8,6 @@
 #include "nsDOMEvent.h"
 #include "nsIDOMTransitionEvent.h"
 #include "nsString.h"
-#include "mozilla/dom/TransitionEventBinding.h"
 
 class nsTransitionEvent;
 
@@ -25,29 +24,6 @@ public:
   NS_FORWARD_TO_NSDOMEVENT
   NS_DECL_NSIDOMTRANSITIONEVENT
 
-  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope)
-  {
-    return mozilla::dom::TransitionEventBinding::Wrap(aCx, aScope, this);
-  }
-
-  // xpidl implementation
-  // GetPropertyName(nsAString& aPropertyName)
-
-  float ElapsedTime()
-  {
-    return TransitionEvent()->elapsedTime;
-  }
-
-  void InitTransitionEvent(const nsAString& aType,
-                           bool aCanBubble,
-                           bool aCancelable,
-                           const nsAString& aPropertyName,
-                           float aElapsedTime,
-                           mozilla::ErrorResult& aRv)
-  {
-    aRv = InitTransitionEvent(aType, aCanBubble, aCancelable, aPropertyName,
-                              aElapsedTime);
-  }
 private:
   nsTransitionEvent* TransitionEvent() {
     NS_ABORT_IF_FALSE(mEvent->eventStructType == NS_TRANSITION_EVENT,
