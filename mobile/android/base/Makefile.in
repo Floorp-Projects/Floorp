@@ -447,8 +447,6 @@ RES_LAYOUT_LAND_V14 = \
 RES_LAYOUT_LARGE_V11 = \
   res/layout-large-v11/awesomebar_search.xml \
   res/layout-large-v11/browser_toolbar_menu.xml \
-  res/layout-large-v11/doorhangerpopup.xml \
-  res/layout-large-v11/site_identity_popup.xml \
   $(NULL)
 
 RES_LAYOUT_LARGE_LAND_V11 = \
@@ -499,6 +497,7 @@ RES_VALUES_LARGE_V11 = \
   res/values-large-v11/dimens.xml \
   res/values-large-v11/layout.xml \
   res/values-large-v11/styles.xml \
+  res/values-large-v11/themes.xml \
   $(NULL)
 
 RES_VALUES_LARGE_LAND_V11 = \
