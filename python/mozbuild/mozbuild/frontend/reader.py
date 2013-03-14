@@ -118,6 +118,8 @@ class MozbuildSandbox(Sandbox):
         """
         Sandbox.__init__(self, allowed_variables=VARIABLES)
 
+        self._log = logging.getLogger(__name__)
+
         self.config = config
 
         topobjdir = os.path.abspath(config.topobjdir)
@@ -172,7 +174,14 @@ class MozbuildSandbox(Sandbox):
             substs = {}
             for k, v in config.substs.items():
                 if not isinstance(v, text_type):
-                    v = v.decode('utf-8', 'strict')
+                    try:
+                        v = v.decode('utf-8')
+                    except UnicodeDecodeError:
+                        log(self._log, logging.INFO, 'lossy_encoding',
+                            {'variable': k},
+                            'Lossy Unicode encoding for {variable}. See bug 844509.')
+
+                        v = v.decode('utf-8', 'replace')
 
                 substs[k] = v
 
