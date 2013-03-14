@@ -8,7 +8,6 @@
 #include "nsDOMEvent.h"
 #include "nsIDOMAnimationEvent.h"
 #include "nsString.h"
-#include "mozilla/dom/AnimationEventBinding.h"
 
 class nsAnimationEvent;
 
@@ -25,29 +24,6 @@ public:
   NS_FORWARD_TO_NSDOMEVENT
   NS_DECL_NSIDOMANIMATIONEVENT
 
-  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope)
-  {
-    return mozilla::dom::AnimationEventBinding::Wrap(aCx, aScope, this);
-  }
-
-  // xpidl implementation
-  // GetAnimationName(nsAString& aAnimationName);
-
-  float ElapsedTime()
-  {
-    return AnimationEvent()->elapsedTime;
-  }
-
-  void InitAnimationEvent(const nsAString& aType,
-                          bool aCanBubble,
-                          bool aCancelable,
-                          const nsAString& aAnimationName,
-                          float aElapsedTime,
-                          mozilla::ErrorResult& aRv)
-  {
-    aRv = InitAnimationEvent(aType, aCanBubble, aCancelable, aAnimationName,
-                             aElapsedTime);
-  }
 private:
   nsAnimationEvent* AnimationEvent() {
     NS_ABORT_IF_FALSE(mEvent->eventStructType == NS_ANIMATION_EVENT,

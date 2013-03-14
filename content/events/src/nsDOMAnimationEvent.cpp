@@ -24,7 +24,6 @@ nsDOMAnimationEvent::nsDOMAnimationEvent(mozilla::dom::EventTarget* aOwner,
     mEventIsInternal = true;
     mEvent->time = PR_Now();
   }
-  SetIsDOMBinding();
 }
 
 nsDOMAnimationEvent::~nsDOMAnimationEvent()
@@ -55,7 +54,7 @@ nsDOMAnimationEvent::GetAnimationName(nsAString & aAnimationName)
 NS_IMETHODIMP
 nsDOMAnimationEvent::GetElapsedTime(float *aElapsedTime)
 {
-  *aElapsedTime = ElapsedTime();
+  *aElapsedTime = AnimationEvent()->elapsedTime;
   return NS_OK;
 }
 
