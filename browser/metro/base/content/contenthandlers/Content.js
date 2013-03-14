@@ -438,22 +438,7 @@ let Content = {
     }
 
     this.formAssistant.focusSync = true;
-
-    // The form manager handles focus related changes on form elements.
-    // If it returns false, it didn't find anything to act on. If the
-    // target element doesn't match the current focus element, clear
-    // focus. This allows users to remove focus from form elements by
-    // taping on white space content.
-    if (!this.formAssistant.open(element, aEvent)) {
-      if (gFocusManager.focusedElement &&
-          gFocusManager.focusedElement != element) {
-        gFocusManager.focusedElement.blur();
-      }
-      // This may not have any effect if element is unfocusable.
-      gFocusManager.setFocus(element, Ci.nsIFocusManager.FLAG_NOSCROLL);
-      sendAsyncMessage("FindAssist:Hide", { });
-    }
-
+    this.formAssistant.open(element, aEvent);
     this._cancelTapHighlight();
     this.formAssistant.focusSync = false;
   },
