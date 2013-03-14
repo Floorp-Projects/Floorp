@@ -9,6 +9,8 @@
  * ECMAScript Internationalization API Specification.
  */
 
+#include <string.h>
+
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
@@ -19,11 +21,27 @@
 #include "vm/GlobalObject.h"
 #include "vm/Stack.h"
 
-#include "jsobjinlines.h"
-
+#if ENABLE_INTL_API
+#include "unicode/locid.h"
+#include "unicode/numsys.h"
+#include "unicode/ucal.h"
+#include "unicode/ucol.h"
+#include "unicode/udat.h"
+#include "unicode/udatpg.h"
+#include "unicode/uenum.h"
+#include "unicode/unum.h"
+#include "unicode/ustring.h"
+#endif
 #include "unicode/utypes.h"
 
+#include "jsobjinlines.h"
+
 using namespace js;
+
+#if ENABLE_INTL_API
+using icu::Locale;
+using icu::NumberingSystem;
+#endif
 
 
 /******************** ICU stubs ********************/
@@ -423,6 +441,130 @@ IntlInitialize(JSContext *cx, HandleObject obj, Handle<PropertyName*> initialize
 
     return Invoke(cx, args);
 }
+
+// CountAvailable and GetAvailable describe the signatures used for ICU API
+// to determine available locales for various functionality.
+typedef int32_t
+(* CountAvailable)(void);
+
+typedef const char *
+(* GetAvailable)(int32_t localeIndex);
+
+SUPPRESS_UNUSED_WARNING static bool
+intl_availableLocales(JSContext *cx, CountAvailable countAvailable,
+                      GetAvailable getAvailable, MutableHandleValue result)
+{
+    RootedObject locales(cx, NewObjectWithGivenProto(cx, &ObjectClass, NULL, NULL));
+    if (!locales)
+        return false;
+
+#if ENABLE_INTL_API
+    uint32_t count = countAvailable();
+    RootedValue t(cx, BooleanValue(true));
+    for (uint32_t i = 0; i < count; i++) {
+        const char *locale = getAvailable(i);
+        ScopedJSFreePtr<char> lang(JS_strdup(cx, locale));
+        if (!lang)
+            return false;
+        char *p;
+        while ((p = strchr(lang, '_')))
+            *p = '-';
+        RootedAtom a(cx, Atomize(cx, lang, strlen(lang)));
+        if (!a)
+            return false;
+        if (!JSObject::defineProperty(cx, locales, a->asPropertyName(), t,
+                                      JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE))
+        {
+            return false;
+        }
+    }
+#endif
+    result.setObject(*locales);
+    return true;
+}
+
+/**
+ * Returns the object holding the internal properties for obj.
+ */
+SUPPRESS_UNUSED_WARNING static bool
+GetInternals(JSContext *cx, HandleObject obj, MutableHandleObject internals)
+{
+    RootedValue getInternalsValue(cx);
+    if (!cx->global()->getIntrinsicValue(cx, cx->names().getInternals, &getInternalsValue))
+        return false;
+    JS_ASSERT(getInternalsValue.isObject());
+    JS_ASSERT(getInternalsValue.toObject().isFunction());
+
+    InvokeArgsGuard args;
+    if (!cx->stack.pushInvokeArgs(cx, 1, &args))
+        return false;
+
+    args.setCallee(getInternalsValue);
+    args.setThis(NullValue());
+    args[0] = ObjectValue(*obj);
+
+    if (!Invoke(cx, args))
+        return false;
+    internals.set(&args.rval().toObject());
+    return true;
+}
+
+static bool
+equal(const char *s1, const char *s2)
+{
+    return !strcmp(s1, s2);
+}
+
+SUPPRESS_UNUSED_WARNING static bool
+equal(JSAutoByteString &s1, const char *s2)
+{
+    return !strcmp(s1.ptr(), s2);
+}
+
+SUPPRESS_UNUSED_WARNING static const char *
+icuLocale(const char *locale)
+{
+    if (equal(locale, "und"))
+        return ""; // ICU root locale
+    return locale;
+}
+
+// Simple RAII for ICU objects. MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE
+// unfortunately doesn't work because of namespace incompatibilities
+// (TypeSpecificDelete cannot be in icu and mozilla at the same time)
+// and because ICU declares both UNumberFormat and UDateTimePatternGenerator
+// as void*.
+template <typename T>
+class ScopedICUObject
+{
+    T *ptr_;
+    void (* deleter_)(T*);
+
+  public:
+    ScopedICUObject(T *ptr, void (*deleter)(T*))
+      : ptr_(ptr),
+        deleter_(deleter)
+    {}
+
+    ~ScopedICUObject() {
+        if (ptr_)
+            deleter_(ptr_);
+    }
+
+    // In cases where an object should be deleted on abnormal exits,
+    // but returned to the caller if everything goes well, call forget()
+    // to transfer the object just before returning.
+    T *forget() {
+        T *tmp = ptr_;
+        ptr_ = NULL;
+        return tmp;
+    }
+};
+
+static const size_t STACK_STRING_SIZE = 50;
+
+static const uint32_t ICU_OBJECT_SLOT = 0;
+
 
 /******************** Collator ********************/
 
