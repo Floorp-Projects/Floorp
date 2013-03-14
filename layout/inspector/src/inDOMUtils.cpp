@@ -31,6 +31,7 @@
 #include "nsRuleWalker.h"
 #include "nsRuleProcessorData.h"
 #include "nsCSSRuleProcessor.h"
+#include "mozilla/dom/InspectorUtilsBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -410,6 +411,27 @@ inDOMUtils::GetCSSPropertyNames(uint32_t aFlags, uint32_t* aCount,
 
   *aCount = propCount;
   *aProps = props;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inDOMUtils::ColorNameToRGB(const nsAString& aColorName, JSContext* aCx,
+                           JS::Value* aValue)
+{
+  nscolor color;
+  if (!NS_ColorNameToRGB(aColorName, &color)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  InspectorRGBTriple triple;
+  triple.mR = NS_GET_R(color);
+  triple.mG = NS_GET_G(color);
+  triple.mB = NS_GET_B(color);
+
+  if (!triple.ToObject(aCx, nullptr, aValue)) {
+    return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
