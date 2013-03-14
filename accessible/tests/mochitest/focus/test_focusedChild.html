@@ -57,10 +57,12 @@
 
     function doTest()
     {
+      enableLogging("focus");
       gQueue = new eventQueue();
 
       gQueue.push(new openWnd());
 
+      gQueue.onFinish = function() { disableLogging(); }
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 

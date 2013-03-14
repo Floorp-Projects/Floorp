@@ -8,6 +8,10 @@
   <color name="background_private">#FF292C29</color>
   <color name="background_tabs_dark">#FF363B40</color>
   <color name="background_tabs_light">#FF43484E</color>
+  <color name="highlight">#33000000</color>
+  <color name="highlight_focused">#1A000000</color>
+  <color name="highlight_dark">#33FFFFFF</color>
+  <color name="highlight_dark_focused">#1AFFFFFF</color>
   <color name="autocomplete_listitem_text">#000000</color>
   <color name="splash_background">#000000</color>
   <color name="splash_msgfont">#ffffff</color>
@@ -24,8 +28,6 @@
   <color name="suggestion_pressed">#bbbbbb</color>
   <color name="abouthome_thumbnail_bg">#5FFF</color>
   <color name="abouthome_topsite_shadow">#1000</color>
-  <color name="tab_indicator_unselected">@android:color/transparent</color>
-  <color name="tab_indicator_unselected_focused">#34FF9500</color>
   <color name="tab_row_pressed">#4D000000</color>
   <color name="abouthome_topsite_pin">#55000000</color>
   <color name="dialogtitle_textcolor">#ffffff</color>

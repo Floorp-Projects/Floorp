@@ -1,8 +1,6 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@.tests;
 
-import @ANDROID_PACKAGE_NAME@.*;
-
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;

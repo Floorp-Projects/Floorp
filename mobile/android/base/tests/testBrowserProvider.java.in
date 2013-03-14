@@ -1,21 +1,16 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@.tests;
 
-import @ANDROID_PACKAGE_NAME@.*;
-
 import android.content.ContentValues;
 import android.content.ContentUris;
 import android.content.ContentProviderResult;
 import android.content.ContentProviderOperation;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
 
-import java.io.File;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Random;
 

@@ -1166,11 +1166,13 @@ if test "$GNU_CC"; then
     # -Werror=return-type - catches missing returns, zero false positives
     # -Wtype-limits - catches overflow bugs, few false positives
     # -Wempty-body - catches bugs, e.g. "if (c); foo();", few false positives
+    # -Wsign-compare - catches comparison of signed and unsigned types
     #
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -Wpointer-arith -Wdeclaration-after-statement"
     MOZ_C_SUPPORTS_WARNING(-W, error=return-type, ac_c_has_werror_return_type)
     MOZ_C_SUPPORTS_WARNING(-W, type-limits, ac_c_has_wtype_limits)
     MOZ_C_SUPPORTS_WARNING(-W, empty-body, ac_c_has_wempty_body)
+    MOZ_C_SUPPORTS_WARNING(-W, sign-compare, ac_c_has_sign_compare)
 
     # Turn off the following warnings that -Wall turns on:
     # -Wno-unused - lots of violations in third-party code
@@ -1225,12 +1227,14 @@ if test "$GNU_CXX"; then
     # -Wtype-limits - catches overflow bugs, few false positives
     # -Wempty-body - catches bugs, e.g. "if (c); foo();", few false positives
     # -Werror=conversion-null - catches conversions between NULL and non-pointer types
+    # -Wsign-compare - catches comparison of signed and unsigned types
     #
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wpointer-arith -Woverloaded-virtual"
     MOZ_CXX_SUPPORTS_WARNING(-W, error=return-type, ac_cxx_has_werror_return_type)
     MOZ_CXX_SUPPORTS_WARNING(-W, type-limits, ac_cxx_has_wtype_limits)
     MOZ_CXX_SUPPORTS_WARNING(-W, empty-body, ac_cxx_has_wempty_body)
     MOZ_CXX_SUPPORTS_WARNING(-W, error=conversion-null, ac_cxx_has_werror_conversion_null)
+    MOZ_CXX_SUPPORTS_WARNING(-W, sign-compare, ac_c_has_sign_compare)
 
     # Turn off the following warnings that -Wall turns on:
     # -Wno-invalid-offsetof - we use offsetof on non-POD types frequently

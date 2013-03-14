@@ -40,12 +40,13 @@ int
 MediaEngineWebRTCVideoSource::DeliverFrame(
    unsigned char* buffer, int size, uint32_t time_stamp, int64_t render_time)
 {
+  // mInSnapshotMode can only be set before the camera is turned on and
+  // the renderer is started, so this amounts to a 1-shot
   if (mInSnapshotMode) {
     // Set the condition variable to false and notify Snapshot().
-    PR_Lock(mSnapshotLock);
+    MonitorAutoLock lock(mMonitor);
     mInSnapshotMode = false;
-    PR_NotifyCondVar(mSnapshotCondVar);
-    PR_Unlock(mSnapshotLock);
+    lock.Notify();
     return 0;
   }
 
@@ -94,7 +95,7 @@ MediaEngineWebRTCVideoSource::DeliverFrame(
 
   // we don't touch anything in 'this' until here (except for snapshot,
   // which has it's own lock)
-  ReentrantMonitorAutoEnter enter(mMonitor);
+  MonitorAutoLock lock(mMonitor);
 
   // implicitly releases last image
   mImage = image.forget();
@@ -114,7 +115,7 @@ MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
 {
   VideoSegment segment;
 
-  ReentrantMonitorAutoEnter enter(mMonitor);
+  MonitorAutoLock lock(mMonitor);
   if (mState != kStarted)
     return;
 
@@ -328,7 +329,7 @@ MediaEngineWebRTCVideoSource::Stop(SourceMediaStream *aSource, TrackID aID)
   }
 
   {
-    ReentrantMonitorAutoEnter enter(mMonitor);
+    MonitorAutoLock lock(mMonitor);
     mState = kStopped;
     aSource->EndTrack(aID);
     // Drop any cached image so we don't start with a stale image on next
@@ -367,11 +368,10 @@ MediaEngineWebRTCVideoSource::Snapshot(uint32_t aDuration, nsIDOMFile** aFile)
     return NS_ERROR_FAILURE;
   }
 
-  mSnapshotLock = PR_NewLock();
-  mSnapshotCondVar = PR_NewCondVar(mSnapshotLock);
-
-  PR_Lock(mSnapshotLock);
-  mInSnapshotMode = true;
+  {
+    MonitorAutoLock lock(mMonitor);
+    mInSnapshotMode = true;
+  }
 
   // Start the rendering (equivalent to calling Start(), but without a track).
   int error = 0;
@@ -387,18 +387,23 @@ MediaEngineWebRTCVideoSource::Snapshot(uint32_t aDuration, nsIDOMFile** aFile)
     return NS_ERROR_FAILURE;
   }
 
+  if (mViECapture->StartCapture(mCaptureIndex, mCapability) < 0) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Wait for the condition variable, will be set in DeliverFrame.
-  // We use a while loop, because even if PR_WaitCondVar returns, it's not
+  // We use a while loop, because even if Wait() returns, it's not
   // guaranteed that the condition variable changed.
-  while (mInSnapshotMode) {
-    PR_WaitCondVar(mSnapshotCondVar, PR_INTERVAL_NO_TIMEOUT);
+  // FIX: we need need a way to cancel this and to bail if it appears to not be working
+  // Perhaps a maximum time, though some cameras can take seconds to start.  10 seconds?
+  {
+    MonitorAutoLock lock(mMonitor);
+    while (mInSnapshotMode) {
+      lock.Wait();
+    }
   }
 
   // If we get here, DeliverFrame received at least one frame.
-  PR_Unlock(mSnapshotLock);
-  PR_DestroyCondVar(mSnapshotCondVar);
-  PR_DestroyLock(mSnapshotLock);
-
   webrtc::ViEFile* vieFile = webrtc::ViEFile::GetInterface(mVideoEngine);
   if (!vieFile) {
     return NS_ERROR_FAILURE;

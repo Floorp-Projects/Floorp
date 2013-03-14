@@ -133,14 +133,14 @@
 
         <org.mozilla.gecko.MenuButton android:id="@+id/menu"
                                       style="@style/AddressBar.ImageButton"
-                                      android:layout_width="78dip"
+                                      android:layout_width="76dip"
                                       android:layout_alignParentRight="true"
                                       gecko:curveTowards="right"
                                       android:gravity="center_vertical"
                                       android:src="@drawable/menu_level"
                                       android:contentDescription="@string/menu"
                                       android:background="@drawable/menu_button"
-                                      android:paddingLeft="42dip"
+                                      android:paddingLeft="40dip"
                                       android:paddingRight="12dip"
                                       android:visibility="gone"/>
 

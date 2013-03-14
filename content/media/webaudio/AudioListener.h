@@ -90,10 +90,6 @@ public:
   }
 
   void RegisterPannerNode(PannerNode* aPannerNode);
-  void UnregisterPannerNode(PannerNode* aPannerNode)
-  {
-    mPanners.RemoveElement(aPannerNode);
-  }
 
 private:
   void SendDoubleParameterToStream(uint32_t aIndex, double aValue);
@@ -107,7 +103,7 @@ private:
   ThreeDPoint mVelocity;
   double mDopplerFactor;
   double mSpeedOfSound;
-  nsTArray<PannerNode*> mPanners;
+  nsTArray<WeakPtr<PannerNode> > mPanners;
 };
 
 }

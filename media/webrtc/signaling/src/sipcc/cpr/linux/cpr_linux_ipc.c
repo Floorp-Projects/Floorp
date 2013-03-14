@@ -87,7 +87,6 @@ typedef struct cpr_msg_queue_s
     const char *name;
     pthread_t thread;
     int32_t queueId;
-    uint16_t maxCount;
     uint16_t currentCount;
     uint32_t totalCount;
     uint32_t sendErrors;
@@ -731,9 +730,6 @@ cprPegSendMessageStats (cpr_msg_queue_t *msgq, uint16_t numAttempts)
      * Collect statistics
      */
     msgq->totalCount++;
-    if (msgq->currentCount > msgq->maxCount) {
-        msgq->maxCount = msgq->currentCount;
-    }
 
     if (numAttempts > msgq->highAttempts) {
         msgq->highAttempts = numAttempts;
