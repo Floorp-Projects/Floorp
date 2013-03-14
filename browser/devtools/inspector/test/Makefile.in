@@ -28,7 +28,6 @@ _BROWSER_FILES = \
 		browser_inspector_destroyselection.js \
 		browser_inspector_bug_699308_iframe_navigation.js \
 		browser_inspector_bug_672902_keyboard_shortcuts.js \
-		browser_inspector_bug_566084_location_changed.js \
 		browser_inspector_sidebarstate.js \
 		browser_inspector_pseudoclass_lock.js \
 		browser_inspector_cmd_inspect.js \
@@ -39,6 +38,10 @@ _BROWSER_FILES = \
 		browser_inspector_bug_817558_delete_node.js \
 		browser_inspector_bug_650804_search.js \
 		browser_inspector_bug_650804_search.html \
+		browser_inspector_bug_831693_input_suggestion.js \
+		browser_inspector_bug_831693_searchbox_panel_navigation.js \
+		browser_inspector_bug_831693_combinator_suggestions.js \
+		browser_inspector_bug_831693_search_suggestions.html \
 		browser_inspector_bug_835722_infobar_reappears.js \
 		browser_inspector_bug_840156_destroy_after_navigation.js \
 		head.js \
