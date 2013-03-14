@@ -5,9 +5,10 @@
 import os
 import tarfile
 import tempfile
+import urlparse
 import zipfile
 
-__all__ = ['extract_tarball', 'extract_zip', 'extract', 'rmtree', 'NamedTemporaryFile']
+__all__ = ['extract_tarball', 'extract_zip', 'extract', 'is_url', 'rmtree', 'NamedTemporaryFile']
 
 
 ### utilities for extracting archives
@@ -27,7 +28,15 @@ def extract_tarball(src, dest):
 def extract_zip(src, dest):
     """extract a zip file"""
 
-    bundle = zipfile.ZipFile(src)
+    if isinstance(src, zipfile.ZipFile):
+        bundle = src
+    else:
+        try:
+            bundle = zipfile.ZipFile(src)
+        except Exception, e:
+            print "src: %s" % src
+            raise
+
     namelist = bundle.namelist()
 
     for name in namelist:
@@ -178,3 +187,15 @@ class NamedTemporaryFile(object):
 
         self.file.__exit__(None, None, None)
         os.unlink(self.__dict__['_path'])
+
+
+def is_url(thing):
+    """
+    Return True if thing looks like a URL.
+    """
+
+    parsed = urlparse.urlparse(thing)
+    if 'scheme' in parsed:
+        return len(parsed.scheme) >= 2
+    else:
+        return len(parsed[0]) >= 2
