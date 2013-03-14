@@ -12,8 +12,8 @@
 #include "mozilla/StandardInteger.h"
 #include "mozilla/TypeTraits.h"
 
+#include <cmath>
 #include <limits.h>
-#include <math.h>
 
 namespace mozilla {
 
@@ -131,21 +131,21 @@ template<>
 inline float
 Abs<float>(const float f)
 {
-  return fabsf(f);
+  return std::fabs(f);
 }
 
 template<>
 inline double
 Abs<double>(const double d)
 {
-  return fabs(d);
+  return std::fabs(d);
 }
 
 template<>
 inline long double
 Abs<long double>(const long double d)
 {
-  return fabsl(d);
+  return std::fabs(d);
 }
 
 } /* namespace mozilla */
