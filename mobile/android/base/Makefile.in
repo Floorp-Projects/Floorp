@@ -112,7 +112,6 @@ FENNEC_JAVA_FILES = \
   LightweightThemeDrawable.java \
   LinkPreference.java \
   MemoryMonitor.java \
-  MenuButton.java \
   MenuItemActionBar.java \
   MenuItemDefault.java \
   MenuPanel.java \
@@ -146,7 +145,6 @@ FENNEC_JAVA_FILES = \
   SurfaceBits.java \
   Tab.java \
   Tabs.java \
-  TabsButton.java \
   TabsPanel.java \
   TabsTray.java \
   TabsAccessor.java \
@@ -917,7 +915,6 @@ RES_DRAWABLE_LAND_XHDPI_V14 = \
   $(NULL)
 
 RES_DRAWABLE_LARGE_LAND_V11 = \
-  res/drawable-large-land-v11/tabs_button.xml \
   res/drawable-large-land-v11/tabs_level.xml \
   $(NULL)
 
@@ -1027,18 +1024,17 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/ic_menu_desktop_mode_off.xml           \
   mobile/android/base/resources/drawable/ic_menu_desktop_mode_on.xml            \
   mobile/android/base/resources/drawable/ic_menu_quit.xml                       \
-  mobile/android/base/resources/drawable/menu_button.xml                        \
   mobile/android/base/resources/drawable/menu_item_state.xml                    \
   mobile/android/base/resources/drawable/menu_level.xml                         \
   mobile/android/base/resources/drawable/progress_spinner.xml                   \
   mobile/android/base/resources/drawable/remote_tabs_child_divider.xml          \
+  mobile/android/base/resources/drawable/shaped_button.xml                      \
   mobile/android/base/resources/drawable/site_security_level.xml                \
   mobile/android/base/resources/drawable/spinner.xml                            \
   mobile/android/base/resources/drawable/suggestion_selector.xml                \
   mobile/android/base/resources/drawable/tab_new_level.xml                      \
   mobile/android/base/resources/drawable/tab_row.xml                            \
   mobile/android/base/resources/drawable/tab_thumbnail.xml                      \
-  mobile/android/base/resources/drawable/tabs_button.xml                        \
   mobile/android/base/resources/drawable/tabs_level.xml                         \
   mobile/android/base/resources/drawable/tabs_panel_indicator.xml               \
   mobile/android/base/resources/drawable/webapp_titlebar_bg.xml                 \
