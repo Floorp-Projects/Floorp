@@ -518,13 +518,10 @@ protected:
   uint8_t FindTrailingClear();
 
   /**
-   * Remove a float from our float list.
-   */
+    * Remove a float from our float list and also the float cache
+    * for the line its placeholder is on.
+    */
   void RemoveFloat(nsIFrame* aFloat);
-  /**
-   * Remove a float from the float cache for the line its placeholder is on.
-   */
-  void RemoveFloatFromFloatCache(nsIFrame* aFloat);
 
   void CollectFloats(nsIFrame* aFrame, nsFrameList& aList,
                      bool aCollectFromSiblings) {
