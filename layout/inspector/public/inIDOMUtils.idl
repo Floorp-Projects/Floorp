@@ -16,7 +16,7 @@ interface nsIDOMFontFaceList;
 interface nsIDOMRange;
 interface nsIDOMCSSStyleSheet;
 
-[scriptable, uuid(ea7e58ad-da38-4d1e-b0fc-fd7fb5c560c9)]
+[scriptable, uuid(1d9c29dc-230a-441e-bba9-49104ffa185e)]
 interface inIDOMUtils : nsISupports
 {
   // CSS utilities
@@ -53,6 +53,10 @@ interface inIDOMUtils : nsISupports
   void getCSSPropertyNames([optional] in unsigned long aFlags,
 			   [optional] out unsigned long aCount,
 			   [retval, array, size_is(aCount)] out wstring aProps);
+
+  // Utilities for working with CSS colors
+  [implicit_jscontext]
+  jsval colorNameToRGB(in DOMString aColorName);
 
   // DOM Node utilities
   boolean isIgnorableWhitespace(in nsIDOMCharacterData aDataNode);

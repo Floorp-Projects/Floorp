@@ -119,6 +119,7 @@ webidl_files = \
   HTMLUListElement.webidl \
   IDBVersionChangeEvent.webidl \
   ImageData.webidl \
+  InspectorUtils.webidl \
   LinkStyle.webidl \
   LocalMediaStream.webidl \
   Location.webidl \
