@@ -23,12 +23,15 @@ const PAYLOAD_VERSION = 1;
 // submitted ping data with its histogram definition (bug 832007)
 #expand const HISTOGRAMS_FILE_VERSION = "__HISTOGRAMS_FILE_VERSION__";
 
-const PREF_SERVER = "toolkit.telemetry.server";
+const PREF_BRANCH = "toolkit.telemetry.";
+const PREF_SERVER = PREF_BRANCH + "server";
 #ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
-const PREF_ENABLED = "toolkit.telemetry.enabledPreRelease";
+const PREF_ENABLED = PREF_BRANCH + "enabledPreRelease";
 #else
-const PREF_ENABLED = "toolkit.telemetry.enabled";
+const PREF_ENABLED = PREF_BRANCH + "enabled";
 #endif
+const PREF_PREVIOUS_BUILDID = PREF_BRANCH + "previousBuildID";
+
 // Do not gather data more than once a minute
 const TELEMETRY_INTERVAL = 60000;
 // Delay before intializing telemetry (ms)
@@ -238,6 +241,9 @@ TelemetryPing.prototype = {
   _pingsLoaded: 0,
   // The number of those requests that have actually completed.
   _pingLoadsCompleted: 0,
+  // The previous build ID, if this is the first run with a new build.
+  // Undefined if this is not the first run, or the previous build ID is unknown.
+  _previousBuildID: undefined,
 
   /**
    * When reflecting a histogram into JS, Telemetry hands us an object
@@ -366,6 +372,9 @@ TelemetryPing.prototype = {
       revision: HISTOGRAMS_FILE_VERSION,
       locale: getLocale()
     };
+    if (this._previousBuildID) {
+      ret.previousBuildID = this._previousBuildID;
+    }
 
     // sysinfo fields are not always available, get what we can.
     let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
@@ -744,9 +753,11 @@ TelemetryPing.prototype = {
     }
 #endif
     let enabled = false; 
+    let previousBuildID = undefined;
     try {
       enabled = Services.prefs.getBoolPref(PREF_ENABLED);
       this._server = Services.prefs.getCharPref(PREF_SERVER);
+      previousBuildID = Services.prefs.getCharPref(PREF_PREVIOUS_BUILDID);
     } catch (e) {
       // Prerequesite prefs aren't set
     }
@@ -756,6 +767,15 @@ TelemetryPing.prototype = {
       Telemetry.canRecord = false;
       return;
     }
+    // Record old value and update build ID preference if this is the first run with a new ID.
+    // If there is no previousBuildID preference, this.previousBuildID remains undefined
+    // so no value is sent in the telemetry metadata.
+    let thisBuildID = Services.appinfo.appBuildID;
+    if (previousBuildID != thisBuildID) {
+      this._previousBuildID = previousBuildID;
+      Services.prefs.setCharPref(PREF_PREVIOUS_BUILDID, thisBuildID);
+    }
+
     Services.obs.addObserver(this, "profile-before-change", false);
     Services.obs.addObserver(this, "sessionstore-windows-restored", false);
     Services.obs.addObserver(this, "quit-application-granted", false);
