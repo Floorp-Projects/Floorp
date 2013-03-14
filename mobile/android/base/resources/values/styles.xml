@@ -22,11 +22,17 @@
         Application styles. All customizations that are not specific
         to a particular API level can go here.
     -->
-    <style name="Widget.Button" parent="Widget.BaseButton"/>
+    <style name="Widget.Button" parent="Widget.BaseButton">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.Button</item>
+    </style>
 
-    <style name="Widget.EditText" parent="Widget.BaseEditText"/>
+    <style name="Widget.EditText" parent="Widget.BaseEditText">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.EditText</item>
+    </style>
 
-    <style name="Widget.TextView" parent="Widget.BaseTextView"/>
+    <style name="Widget.TextView" parent="Widget.BaseTextView">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.TextView</item>
+    </style>
 
     <style name="Widget.ListView" parent="Widget.BaseListView">
         <item name="android:divider">#D1D5DA</item>
@@ -48,6 +54,90 @@
         <item name="android:paddingRight">7dip</item>
         <item name="android:checkMark">?android:attr/listChoiceIndicatorMultiple</item>
         <item name="android:ellipsize">marquee</item>
+    </style>
+
+    <!--
+        TextAppearance
+        Note: Gecko uses light theme as default, while Android uses dark.
+        If Android convention has to be followd, the list of colors specified 
+        in themes.xml would be inverse, and things would get confusing.
+        Hence, Gecko's TextAppearance is based on text over light theme and
+        TextAppearance.Inverse is based on text over dark theme.
+    -->
+    <style name="TextAppearance">
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+        <item name="android:textColorHighlight">@color/text_color_highlight</item>
+        <item name="android:textColorHint">?android:attr/textColorHint</item>
+        <item name="android:textColorLink">?android:attr/textColorLink</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
+    <style name="TextAppearance.Inverse">
+        <item name="android:textColor">?android:attr/textColorPrimaryInverse</item>
+        <item name="android:textColorHint">?android:attr/textColorHintInverse</item>
+        <item name="android:textColorHighlight">@color/text_color_highlight_inverse</item>
+        <item name="android:textColorLink">?android:attr/textColorLinkInverse</item>
+    </style>
+
+    <style name="TextAppearance.Large">
+        <item name="android:textSize">22sp</item>
+    </style>
+
+    <style name="TextAppearance.Large.Inverse">
+        <item name="android:textColor">?android:attr/textColorPrimaryInverse</item>
+        <item name="android:textColorHint">?android:attr/textColorHintInverse</item>
+        <item name="android:textColorHighlight">@color/text_color_highlight_inverse</item>
+        <item name="android:textColorLink">?android:attr/textColorLinkInverse</item>
+    </style>
+
+    <style name="TextAppearance.Medium">
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <style name="TextAppearance.Medium.Inverse">
+        <item name="android:textColor">?android:attr/textColorPrimaryInverse</item>
+        <item name="android:textColorHint">?android:attr/textColorHintInverse</item>
+        <item name="android:textColorHighlight">@color/text_color_highlight_inverse</item>
+        <item name="android:textColorLink">?android:attr/textColorLinkInverse</item>
+    </style>
+
+    <style name="TextAppearance.Small">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+    </style>
+
+    <style name="TextAppearance.Small.Inverse">
+        <item name="android:textColor">?android:attr/textColorSecondaryInverse</item>
+        <item name="android:textColorHint">?android:attr/textColorHintInverse</item>
+        <item name="android:textColorHighlight">@color/text_color_highlight_inverse</item>
+        <item name="android:textColorLink">?android:attr/textColorLinkInverse</item>
+    </style>
+
+    <style name="TextAppearance.Micro">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">?android:attr/textColorTertiary</item>
+    </style>
+
+    <style name="TextAppearance.Micro.Inverse">
+        <item name="android:textColor">?android:attr/textColorTertiaryInverse</item>
+        <item name="android:textColorHint">?android:attr/textColorHintInverse</item>
+        <item name="android:textColorHighlight">@color/text_color_highlight_inverse</item>
+        <item name="android:textColorLink">?android:attr/textColorLinkInverse</item>
+    </style>
+
+    <style name="TextAppearance.Widget" />
+
+    <style name="TextAppearance.Widget.Button" parent="TextAppearance.Small">
+        <item name="android:textColor">@color/primary_text</item>
+    </style>
+
+    <style name="TextAppearance.Widget.EditText">
+        <item name="android:textColor">@color/primary_text</item>
+    </style>
+
+    <style name="TextAppearance.Widget.TextView">
+        <item name="android:textColor">@color/primary_text</item>
     </style>
 
     <!-- BrowserToolbar -->
@@ -277,13 +367,11 @@
 
     <style name="AboutHome.TextAppearance" />
 
-    <style name="AboutHome.TextAppearance.Title">
-        <item name="android:textSize">15sp</item>
+    <style name="AboutHome.TextAppearance.Title" parent="TextAppearance">
         <item name="android:textColor">@color/abouthome_section_title</item>
     </style>
 
-    <style name="AboutHome.TextAppearance.SubTitle">
-        <item name="android:textSize">12sp</item>
+    <style name="AboutHome.TextAppearance.SubTitle" parent="TextAppearance.Micro">
         <item name="android:textColor">@color/abouthome_section_subtitle</item>
     </style>
 
