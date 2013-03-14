@@ -25,7 +25,10 @@ class AudioBufferSourceNodeEngine : public AudioNodeEngine
 {
 public:
   AudioBufferSourceNodeEngine() :
-    mStart(0), mStop(TRACK_TICKS_MAX), mOffset(0), mDuration(0) {}
+    mStart(0), mStop(TRACK_TICKS_MAX),
+    mOffset(0), mDuration(0),
+    mLoop(false), mLoopStart(0), mLoopEnd(0)
+  {}
 
   // START, OFFSET and DURATION are always set by start() (along with setting
   // mBuffer to something non-null).
@@ -34,7 +37,10 @@ public:
     START,
     STOP,
     OFFSET,
-    DURATION
+    DURATION,
+    LOOP,
+    LOOPSTART,
+    LOOPEND
   };
   virtual void SetStreamTimeParameter(uint32_t aIndex, TrackTicks aParam)
   {
@@ -50,6 +56,9 @@ public:
     switch (aIndex) {
     case OFFSET: mOffset = aParam; break;
     case DURATION: mDuration = aParam; break;
+    case LOOP: mLoop = !!aParam; break;
+    case LOOPSTART: mLoopStart = aParam; break;
+    case LOOPEND: mLoopEnd = aParam; break;
     default:
       NS_ERROR("Bad AudioBufferSourceNodeEngine Int32Parameter");
     }
@@ -59,6 +68,96 @@ public:
     mBuffer = aBuffer;
   }
 
+  // Borrow a full buffer of size WEBAUDIO_BLOCK_SIZE from the source buffer
+  // at offset aSourceOffset.  This avoids copying memory.
+  void BorrowFromInputBuffer(AudioChunk* aOutput,
+                             uint32_t aChannels,
+                             uintptr_t aSourceOffset)
+  {
+    aOutput->mDuration = WEBAUDIO_BLOCK_SIZE;
+    aOutput->mBuffer = mBuffer;
+    aOutput->mChannelData.SetLength(aChannels);
+    for (uint32_t i = 0; i < aChannels; ++i) {
+      aOutput->mChannelData[i] = mBuffer->GetData(i) + aSourceOffset;
+    }
+    aOutput->mVolume = 1.0f;
+    aOutput->mBufferFormat = AUDIO_FORMAT_FLOAT32;
+  }
+
+  // Copy aNumberOfFrames frames from the source buffer at offset aSourceOffset
+  // and put it at offset aBufferOffset in the destination buffer.
+  void CopyFromInputBuffer(AudioChunk* aOutput,
+                           uint32_t aChannels,
+                           uintptr_t aSourceOffset,
+                           uintptr_t aBufferOffset,
+                           uint32_t aNumberOfFrames) {
+    for (uint32_t i = 0; i < aChannels; ++i) {
+      float* baseChannelData = static_cast<float*>(const_cast<void*>(aOutput->mChannelData[i]));
+      memcpy(baseChannelData + aBufferOffset,
+             mBuffer->GetData(i) + aSourceOffset,
+             aNumberOfFrames * sizeof(float));
+    }
+  }
+
+  /**
+   * Fill aOutput with as many zero frames as we can, and advance
+   * aOffsetWithinBlock and aCurrentPosition based on how many frames we write.
+   * This will never advance aOffsetWithinBlock past WEBAUDIO_BLOCK_SIZE or
+   * aCurrentPosition past aMaxPos.  This function knows when it needs to
+   * allocate the output buffer, and also optimizes the case where it can avoid
+   * memory allocations.
+   */
+  void FillWithZeroes(AudioChunk* aOutput,
+                      uint32_t aChannels,
+                      uint32_t* aOffsetWithinBlock,
+                      TrackTicks* aCurrentPosition,
+                      TrackTicks aMaxPos)
+  {
+    uint32_t numFrames = std::min(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
+                                  uint32_t(aMaxPos - *aCurrentPosition));
+    if (numFrames == WEBAUDIO_BLOCK_SIZE) {
+      aOutput->SetNull(numFrames);
+    } else {
+      if (aOutput->IsNull()) {
+        AllocateAudioBlock(aChannels, aOutput);
+      }
+      WriteZeroesToAudioBlock(aOutput, *aOffsetWithinBlock, numFrames);
+    }
+    *aOffsetWithinBlock += numFrames;
+    *aCurrentPosition += numFrames;
+  }
+
+  /**
+   * Copy as many frames as possible from the source buffer to aOutput, and
+   * advance aOffsetWithinBlock and aCurrentPosition based on how many frames
+   * we copy.  This will never advance aOffsetWithinBlock past
+   * WEBAUDIO_BLOCK_SIZE, or aCurrentPosition past mStop.  It takes data from
+   * the buffer at aBufferOffset, and never takes more data than aBufferMax.
+   * This function knows when it needs to allocate the output buffer, and also
+   * optimizes the case where it can avoid memory allocations.
+   */
+  void CopyFromBuffer(AudioChunk* aOutput,
+                      uint32_t aChannels,
+                      uint32_t* aOffsetWithinBlock,
+                      TrackTicks* aCurrentPosition,
+                      uint32_t aBufferOffset,
+                      uint32_t aBufferMax)
+  {
+    uint32_t numFrames = std::min(std::min(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
+                                           aBufferMax - aBufferOffset),
+                                  uint32_t(mStop - *aCurrentPosition));
+    if (numFrames == WEBAUDIO_BLOCK_SIZE) {
+      BorrowFromInputBuffer(aOutput, aChannels, aBufferOffset);
+    } else {
+      if (aOutput->IsNull()) {
+        AllocateAudioBlock(aChannels, aOutput);
+      }
+      CopyFromInputBuffer(aOutput, aChannels, aBufferOffset, *aOffsetWithinBlock, numFrames);
+    }
+    *aOffsetWithinBlock += numFrames;
+    *aCurrentPosition += numFrames;
+  }
+
   virtual void ProduceAudioBlock(AudioNodeStream* aStream,
                                  const AudioChunk& aInput,
                                  AudioChunk* aOutput,
@@ -66,21 +165,6 @@ public:
   {
     if (!mBuffer)
       return;
-    TrackTicks currentPosition = aStream->GetCurrentPosition();
-    if (currentPosition + WEBAUDIO_BLOCK_SIZE <= mStart) {
-      aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
-      return;
-    }
-    TrackTicks endTime = std::min(mStart + mDuration, mStop);
-    // Don't set *aFinished just because we passed mStop. Maybe someone
-    // will call stop() again with a different value.
-    if (currentPosition + WEBAUDIO_BLOCK_SIZE >= mStart + mDuration) {
-      *aFinished = true;
-    }
-    if (currentPosition >= endTime || mStart >= endTime) {
-      aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
-      return;
-    }
 
     uint32_t channels = mBuffer->GetChannels();
     if (!channels) {
@@ -88,34 +172,41 @@ public:
       return;
     }
 
-    if (currentPosition >= mStart &&
-        currentPosition + WEBAUDIO_BLOCK_SIZE <= endTime) {
-      // Data is entirely within the buffer. Avoid copying it.
-      aOutput->mDuration = WEBAUDIO_BLOCK_SIZE;
-      aOutput->mBuffer = mBuffer;
-      aOutput->mChannelData.SetLength(channels);
-      for (uint32_t i = 0; i < channels; ++i) {
-        aOutput->mChannelData[i] =
-          mBuffer->GetData(i) + uintptr_t(currentPosition - mStart + mOffset);
+    uint32_t written = 0;
+    TrackTicks currentPosition = aStream->GetCurrentPosition();
+    while (written < WEBAUDIO_BLOCK_SIZE) {
+      if (mStop != TRACK_TICKS_MAX &&
+          currentPosition >= mStop) {
+        FillWithZeroes(aOutput, channels, &written, &currentPosition, TRACK_TICKS_MAX);
+        continue;
       }
-      aOutput->mVolume = 1.0f;
-      aOutput->mBufferFormat = AUDIO_FORMAT_FLOAT32;
-      return;
+      if (currentPosition < mStart) {
+        FillWithZeroes(aOutput, channels, &written, &currentPosition, mStart);
+        continue;
+      }
+      TrackTicks t = currentPosition - mStart;
+      if (mLoop) {
+        if (mOffset + t < mLoopEnd) {
+          CopyFromBuffer(aOutput, channels, &written, &currentPosition, mOffset + t, mLoopEnd);
+        } else {
+          uint32_t offsetInLoop = (mOffset + t - mLoopEnd) % (mLoopEnd - mLoopStart);
+          CopyFromBuffer(aOutput, channels, &written, &currentPosition, mLoopStart + offsetInLoop, mLoopEnd);
+        }
+      } else {
+        if (mOffset + t < mDuration) {
+          CopyFromBuffer(aOutput, channels, &written, &currentPosition, mOffset + t, mDuration);
+        } else {
+          FillWithZeroes(aOutput, channels, &written, &currentPosition, TRACK_TICKS_MAX);
+        }
+      }
     }
 
-    AllocateAudioBlock(channels, aOutput);
-    TrackTicks start = std::max(currentPosition, mStart);
-    TrackTicks end = std::min(currentPosition + WEBAUDIO_BLOCK_SIZE, endTime);
-    WriteZeroesToAudioBlock(aOutput, 0, uint32_t(start - currentPosition));
-    for (uint32_t i = 0; i < channels; ++i) {
-      memcpy(static_cast<float*>(const_cast<void*>(aOutput->mChannelData[i])) +
-             uint32_t(start - currentPosition),
-             mBuffer->GetData(i) +
-             uintptr_t(start - mStart + mOffset),
-             uint32_t(end - start) * sizeof(float));
+    // We've finished if we've gone past mStop, or if we're past mDuration when
+    // looping is disabled.
+    if (currentPosition >= mStop ||
+        (!mLoop && currentPosition - mStart + mOffset > mDuration)) {
+      *aFinished = true;
     }
-    uint32_t endOffset = uint32_t(end - currentPosition);
-    WriteZeroesToAudioBlock(aOutput, endOffset, WEBAUDIO_BLOCK_SIZE - endOffset);
   }
 
   TrackTicks mStart;
@@ -123,10 +214,16 @@ public:
   nsRefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
   int32_t mOffset;
   int32_t mDuration;
+  bool mLoop;
+  int32_t mLoopStart;
+  int32_t mLoopEnd;
 };
 
 AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
   : AudioSourceNode(aContext)
+  , mLoopStart(0.0)
+  , mLoopEnd(0.0)
+  , mLoop(false)
   , mStartCalled(false)
 {
   SetProduceOwnOutput(true);
@@ -171,6 +268,25 @@ AudioBufferSourceNode::Start(JSContext* aCx, double aWhen, double aOffset,
       std::min(aOffset + aDuration.Value(), length) : length;
   if (offset >= endOffset) {
     return;
+  }
+
+  // Don't compute and set the loop parameters unnecessarily
+  if (mLoop) {
+    double actualLoopStart, actualLoopEnd;
+    if (((mLoopStart != 0.0) || (mLoopEnd != 0.0)) &&
+        mLoopStart >= 0.0 && mLoopEnd > 0.0 &&
+        mLoopStart < mLoopEnd) {
+      actualLoopStart = (mLoopStart > length) ? 0.0 : mLoopStart;
+      actualLoopEnd = std::min(mLoopEnd, length);
+    } else {
+      actualLoopStart = 0.0;
+      actualLoopEnd = length;
+    }
+    int32_t loopStartTicks = NS_lround(actualLoopStart * rate);
+    int32_t loopEndTicks = NS_lround(actualLoopEnd * rate);
+    ns->SetInt32Parameter(AudioBufferSourceNodeEngine::LOOP, 1);
+    ns->SetInt32Parameter(AudioBufferSourceNodeEngine::LOOPSTART, loopStartTicks);
+    ns->SetInt32Parameter(AudioBufferSourceNodeEngine::LOOPEND, loopEndTicks);
   }
 
   ns->SetBuffer(data.forget());

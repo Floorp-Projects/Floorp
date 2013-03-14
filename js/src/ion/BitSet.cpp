@@ -8,6 +8,8 @@
 #include "jsutil.h"
 #include "BitSet.h"
 
+#include "jsscriptinlines.h"
+
 using namespace js;
 using namespace js::ion;
 

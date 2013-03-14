@@ -92,6 +92,13 @@ public:
 
   double GetValueAtEventPoint(nsGUIEvent* aEvent);
 
+  /**
+   * Helper to reposition the thumb and schedule a repaint when the value of
+   * the range changes. (This does not reflow, since the position and size of
+   * the thumb do not affect the position or size of any other frames.)
+   */
+  void UpdateThumbPositionForValueChange();
+
 private:
 
   // Helper function which reflows the anonymous div frames.

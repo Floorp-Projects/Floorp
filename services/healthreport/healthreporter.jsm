@@ -43,7 +43,8 @@ const TELEMETRY_DB_OPEN = "HEALTHREPORT_DB_OPEN_MS";
 const TELEMETRY_DB_OPEN_FIRSTRUN = "HEALTHREPORT_DB_OPEN_FIRSTRUN_MS";
 const TELEMETRY_GENERATE_PAYLOAD = "HEALTHREPORT_GENERATE_JSON_PAYLOAD_MS";
 const TELEMETRY_JSON_PAYLOAD_SERIALIZE = "HEALTHREPORT_JSON_PAYLOAD_SERIALIZE_MS";
-const TELEMETRY_PAYLOAD_SIZE = "HEALTHREPORT_PAYLOAD_UNCOMPRESSED_BYTES";
+const TELEMETRY_PAYLOAD_SIZE_UNCOMPRESSED = "HEALTHREPORT_PAYLOAD_UNCOMPRESSED_BYTES";
+const TELEMETRY_PAYLOAD_SIZE_COMPRESSED = "HEALTHREPORT_PAYLOAD_COMPRESSED_BYTES";
 const TELEMETRY_SAVE_LAST_PAYLOAD = "HEALTHREPORT_SAVE_LAST_PAYLOAD_MS";
 const TELEMETRY_UPLOAD = "HEALTHREPORT_UPLOAD_MS";
 const TELEMETRY_SHUTDOWN_DELAY = "HEALTHREPORT_SHUTDOWN_DELAY_MS";
@@ -200,6 +201,35 @@ AbstractHealthReporter.prototype = Object.freeze({
     this._log.info("HealthReporter started.");
     this._initialized = true;
     Services.obs.addObserver(this, "idle-daily", false);
+
+    // If upload is not enabled, ensure daily collection works. If upload
+    // is enabled, this will be performed as part of upload.
+    //
+    // This is important because it ensures about:healthreport contains
+    // longitudinal data even if upload is disabled. Having about:healthreport
+    // provide useful info even if upload is disabled was a core launch
+    // requirement.
+    //
+    // We do not catch changes to the backing pref. So, if the session lasts
+    // many days, we may fail to collect. However, most sessions are short and
+    // this code will likely be refactored as part of splitting up policy to
+    // serve Android. So, meh.
+    if (!this._policy.healthReportUploadEnabled) {
+      this._log.info("Upload not enabled. Scheduling daily collection.");
+      // Since the timer manager is a singleton and there could be multiple
+      // HealthReporter instances, we need to encode a unique identifier in
+      // the timer ID.
+      try {
+        let timerName = this._branch.replace(".", "-", "g") + "lastDailyCollection";
+        let tm = Cc["@mozilla.org/updates/timer-manager;1"]
+                   .getService(Ci.nsIUpdateTimerManager);
+        tm.registerTimer(timerName, this.collectMeasurements.bind(this),
+                         24 * 60 * 60);
+      } catch (ex) {
+        this._log.error("Error registering collection timer: " +
+                        CommonUtils.exceptionStr(ex));
+      }
+    }
 
     // Clean up caches and reduce memory usage.
     this._storage.compact();
@@ -1013,7 +1043,7 @@ HealthReporter.prototype = Object.freeze({
     return Task.spawn(function doUpload() {
       let payload = yield this.getJSONPayload();
 
-      let histogram = Services.telemetry.getHistogramById(TELEMETRY_PAYLOAD_SIZE);
+      let histogram = Services.telemetry.getHistogramById(TELEMETRY_PAYLOAD_SIZE_UNCOMPRESSED);
       histogram.add(payload.length);
 
       TelemetryStopwatch.start(TELEMETRY_SAVE_LAST_PAYLOAD, this);
@@ -1028,8 +1058,12 @@ HealthReporter.prototype = Object.freeze({
       TelemetryStopwatch.start(TELEMETRY_UPLOAD, this);
       let result;
       try {
+        let options = {
+          deleteID: this.lastSubmitID,
+          telemetryCompressed: TELEMETRY_PAYLOAD_SIZE_COMPRESSED,
+        };
         result = yield client.uploadJSON(this.serverNamespace, id, payload,
-                                         this.lastSubmitID);
+                                         options);
         TelemetryStopwatch.finish(TELEMETRY_UPLOAD, this);
       } catch (ex) {
         TelemetryStopwatch.cancel(TELEMETRY_UPLOAD, this);

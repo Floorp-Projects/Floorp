@@ -102,6 +102,11 @@ nsFontFaceLoader::LoadTimerCallback(nsITimer *aTimer, void *aClosure)
 {
   nsFontFaceLoader *loader = static_cast<nsFontFaceLoader*>(aClosure);
 
+  if (!loader->mFontSet) {
+    // We've been canceled
+    return;
+  }
+
   gfxProxyFontEntry *pe = loader->mFontEntry.get();
   bool updateUserFontSet = true;
 
@@ -136,10 +141,10 @@ nsFontFaceLoader::LoadTimerCallback(nsITimer *aTimer, void *aClosure)
   // font will be used in the meantime, and tell the context to refresh.
   if (updateUserFontSet) {
     pe->mLoadingState = gfxProxyFontEntry::LOADING_SLOWLY;
+    gfxUserFontSet *fontSet = loader->mFontSet;
     nsPresContext *ctx = loader->mFontSet->GetPresContext();
-    NS_ASSERTION(ctx, "fontSet doesn't have a presContext?");
-    gfxUserFontSet *fontSet;
-    if (ctx && (fontSet = ctx->GetUserFontSet()) != nullptr) {
+    NS_ASSERTION(ctx, "userfontset doesn't have a presContext?");
+    if (ctx) {
       fontSet->IncrementGeneration();
       ctx->UserFontSetUpdated();
       LOG(("fontdownloader (%p) timeout reflow\n", loader));
@@ -181,12 +186,6 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   NS_ASSERTION(ctx && !ctx->PresShell()->IsDestroying(),
                "We should have been canceled already");
 
-  // whether an error occurred or not, notify the user font set of the completion
-  gfxUserFontSet *userFontSet = ctx->GetUserFontSet();
-  if (!userFontSet) {
-    return aStatus;
-  }
-
   if (NS_SUCCEEDED(aStatus)) {
     // for HTTP requests, check whether the request _actually_ succeeded;
     // the "request status" in aStatus does not necessarily indicate this,
@@ -212,10 +211,8 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   // This is called even in the case of a failed download (HTTP 404, etc),
   // as there may still be data to be freed (e.g. an error page),
   // and we need the fontSet to initiate loading the next source.
-  bool fontUpdate = userFontSet->OnLoadComplete(mFontFamily,
-                                                mFontEntry,
-                                                aString, aStringLen,
-                                                aStatus);
+  bool fontUpdate = mFontSet->OnLoadComplete(mFontFamily, mFontEntry, aString,
+                                             aStringLen, aStatus);
 
   // when new font loaded, need to reflow
   if (fontUpdate) {
@@ -223,6 +220,13 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     // asynchronous, reflows will coalesce.
     ctx->UserFontSetUpdated();
     LOG(("fontdownloader (%p) reflow\n", this));
+  }
+
+  // done with font set
+  mFontSet = nullptr;
+  if (mLoadTimer) {
+    mLoadTimer->Cancel();
+    mLoadTimer = nullptr;
   }
 
   return NS_SUCCESS_ADOPTED_DATA;

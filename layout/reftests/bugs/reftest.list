@@ -1748,3 +1748,4 @@ skip-if(B2G) == 818276-1.html 818276-1-ref.html
 == 848421-1.html 848421-1-ref.html
 == 847850-1.html 847850-1-ref.html
 == 846144-1.html 846144-1-ref.html
+test-pref(layout.css.flexbox.enabled,true) == 849407-1.html 849407-1-ref.html

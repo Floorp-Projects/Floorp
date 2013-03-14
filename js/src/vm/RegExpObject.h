@@ -313,6 +313,8 @@ class RegExpObject : public JSObject
 
     /* Accessors. */
 
+    static unsigned lastIndexSlot() { return LAST_INDEX_SLOT; }
+
     const Value &getLastIndex() const { return getSlot(LAST_INDEX_SLOT); }
     inline void setLastIndex(double d);
     inline void zeroLastIndex();

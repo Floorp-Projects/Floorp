@@ -170,12 +170,14 @@ public class TabsButton extends ShapedButton {
 
         Resources resources = this.getContext().getResources();
         StateListDrawable stateList1 = new StateListDrawable();
-        stateList1.addState(new int[] { android.R.attr.state_pressed }, resources.getDrawable(R.drawable.highlight));
+        stateList1.addState(new int[] { android.R.attr.state_pressed }, new ColorDrawable(resources.getColor(R.color.highlight_dark)));
+        stateList1.addState(new int[] { android.R.attr.state_focused }, new ColorDrawable(resources.getColor(R.color.highlight_dark_focused)));
         stateList1.addState(new int[] { R.attr.state_private }, new ColorDrawable(resources.getColor(R.color.background_tabs_light)));
         stateList1.addState(new int[] {}, lightWeight1);
 
         StateListDrawable stateList2 = new StateListDrawable();
-        stateList2.addState(new int[] { android.R.attr.state_pressed }, resources.getDrawable(R.drawable.highlight));
+        stateList2.addState(new int[] { android.R.attr.state_pressed }, new ColorDrawable(resources.getColor(R.color.highlight_dark)));
+        stateList2.addState(new int[] { android.R.attr.state_focused }, new ColorDrawable(resources.getColor(R.color.highlight_dark_focused)));
         stateList2.addState(new int[] { R.attr.state_private }, new ColorDrawable(resources.getColor(R.color.background_tabs_dark)));
         stateList2.addState(new int[] {}, lightWeight2);
 

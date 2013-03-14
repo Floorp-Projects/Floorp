@@ -746,9 +746,9 @@ IsSizeOK(nsPresContext* aPresContext, nscoord a, nscoord b, uint32_t aHint)
   // win, especially in the context of <mfenced> without tall elements
   // or in sloppy markups without protective <mrow></mrow>
   bool isNormal =
-    (aHint & NS_STRETCH_NORMAL)
-    && bool(float(Abs(a - b))
-              < (1.0f - NS_MATHML_DELIMITER_FACTOR) * float(b));
+    (aHint & NS_STRETCH_NORMAL) &&
+    Abs<float>(a - b) < (1.0f - NS_MATHML_DELIMITER_FACTOR) * float(b);
+
   // Nearer: True if 'a' is around max{ +/-10% of 'b' , 'b' - 5pt },
   // as documented in The TeXbook, Ch.17, p.152.
   // i.e. within 10% and within 5pt
@@ -757,19 +757,22 @@ IsSizeOK(nsPresContext* aPresContext, nscoord a, nscoord b, uint32_t aHint)
     float c = std::max(float(b) * NS_MATHML_DELIMITER_FACTOR,
                      float(b) - nsPresContext::
                      CSSPointsToAppUnits(NS_MATHML_DELIMITER_SHORTFALL_POINTS));
-    isNearer = bool(float(Abs(b - a)) <= (float(b) - c));
+    isNearer = Abs<float>(b - a) <= float(b) - c;
   }
+
   // Smaller: Mainly for transitory use, to compare two candidate
   // choices
   bool isSmaller =
-    (aHint & NS_STRETCH_SMALLER)
-    && bool((float(a) >= (NS_MATHML_DELIMITER_FACTOR * float(b)))
-              && (a <= b));
+    (aHint & NS_STRETCH_SMALLER) &&
+    float(a) >= NS_MATHML_DELIMITER_FACTOR * float(b) &&
+    a <= b;
+
   // Larger: Critical to the sqrt code to ensure that the radical
   // size is tall enough
   bool isLarger =
-    (aHint & (NS_STRETCH_LARGER | NS_STRETCH_LARGEOP))
-    && bool(a >= b);
+    (aHint & (NS_STRETCH_LARGER | NS_STRETCH_LARGEOP)) &&
+    a >= b;
+
   return (isNormal || isSmaller || isNearer || isLarger);
 }
 

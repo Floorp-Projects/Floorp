@@ -31,9 +31,9 @@ nsSVGElement::EnumInfo SVGClipPathElement::sEnumInfo[1] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ISUPPORTS_INHERITED3(SVGClipPathElement, SVGClipPathElementBase,
+NS_IMPL_ISUPPORTS_INHERITED4(SVGClipPathElement, SVGClipPathElementBase,
                              nsIDOMNode, nsIDOMElement,
-                             nsIDOMSVGElement)
+                             nsIDOMSVGElement, nsIDOMSVGUnitTypes)
 
 //----------------------------------------------------------------------
 // Implementation

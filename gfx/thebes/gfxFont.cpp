@@ -790,7 +790,7 @@ CalcStyleMatch(gfxFontEntry *aFontEntry, const gfxFontStyle *aStyle)
          }
 
         // measure of closeness of weight to the desired value
-        rank += 9 - Abs(aFontEntry->Weight() / 100 - aStyle->ComputeWeight());
+        rank += 9 - DeprecatedAbs(aFontEntry->Weight() / 100 - aStyle->ComputeWeight());
     } else {
         // if no font to match, prefer non-bold, non-italic fonts
         if (!aFontEntry->IsItalic()) {

@@ -73,6 +73,7 @@ fails == flexbox-basic-video-vert-2.xhtml flexbox-basic-video-vert-2-ref.xhtml #
 == flexbox-dyn-changeFrameWidth-1.xhtml flexbox-dyn-changeFrameWidth-1-ref.xhtml
 == flexbox-dyn-changeFrameWidth-2.xhtml flexbox-dyn-changeFrameWidth-2-ref.xhtml
 == flexbox-dyn-changeFrameWidth-3.xhtml flexbox-dyn-changeFrameWidth-3-ref.xhtml
+== flexbox-dyn-changeFrameWidth-4.xhtml flexbox-dyn-changeFrameWidth-4-ref.xhtml
 == flexbox-dyn-changePadding-1a.xhtml flexbox-dyn-changePadding-1-ref.xhtml
 == flexbox-dyn-changePadding-1b.xhtml flexbox-dyn-changePadding-1-ref.xhtml
 
