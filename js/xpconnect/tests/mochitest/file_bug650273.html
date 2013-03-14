@@ -10,8 +10,8 @@ function a() {
                 l();
                 return "a";
         };
-        var f = SpecialPowers.Components.lookupMethod(document, "title");
-        setTimeout(f, 0, o);
+        var f = Object.getOwnPropertyDescriptor(Document.prototype, "title").set;
+        setTimeout(f.bind(document), 0, o);
 }
 
 function l() {
