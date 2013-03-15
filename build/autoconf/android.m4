@@ -26,19 +26,11 @@ MOZ_ARG_ENABLE_BOOL(android-libstdcxx,
     MOZ_ANDROID_LIBSTDCXX=1,
     MOZ_ANDROID_LIBSTDCXX= )
 
-dnl default android_version is different per target cpu
-case "$target_cpu" in
-arm)
-    android_version=5
-    ;;
-i?86|mipsel)
-    android_version=9
-    ;;
-esac
+android_version=9
 
 MOZ_ARG_WITH_STRING(android-version,
 [  --with-android-version=VER
-                          android platform version, default 5 for arm, 9 for x86/mips],
+                          android platform version, default 9],
     android_version=$withval)
 
 MOZ_ARG_WITH_STRING(android-platform,
