@@ -751,11 +751,11 @@ Assembler::trace(JSTracer *trc)
 }
 
 void
-Assembler::processCodeLabels(IonCode *code)
+Assembler::processCodeLabels(uint8_t *rawCode)
 {
     for (size_t i = 0; i < codeLabels_.length(); i++) {
         CodeLabel label = codeLabels_[i];
-        Bind(code, label.dest(), code->raw() + actualOffset(label.src()->offset()));
+        Bind(rawCode, label.dest(), rawCode + actualOffset(label.src()->offset()));
     }
 }
 
@@ -774,12 +774,11 @@ Assembler::writeCodePointer(AbsoluteLabel *absoluteLabel) {
 }
 
 void
-Assembler::Bind(IonCode *code, AbsoluteLabel *label, const void *address)
+Assembler::Bind(uint8_t *rawCode, AbsoluteLabel *label, const void *address)
 {
     // See writeCodePointer comment.
-    uint8_t *raw = code->raw();
     uint32_t off = actualOffset(label->offset());
-    *reinterpret_cast<const void **>(raw + off) = address;
+    *reinterpret_cast<const void **>(rawCode + off) = address;
 }
 
 Assembler::Condition

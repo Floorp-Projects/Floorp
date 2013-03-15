@@ -72,6 +72,7 @@ static const Register JSReturnReg_Data = JSReturnReg;
 
 static const Register ReturnReg = rax;
 static const Register ScratchReg = r11;
+static const Register HeapReg = r15;
 static const FloatRegister ReturnFloatReg = xmm0;
 static const FloatRegister ScratchFloatReg = xmm15;
 
@@ -128,6 +129,29 @@ static const uint32_t NumFloatArgRegs = 8;
 static const FloatRegister FloatArgRegs[NumFloatArgRegs] = { xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7 };
 #endif
 
+class ABIArgGenerator
+{
+#if defined(XP_WIN)
+    unsigned regIndex_;
+#else
+    unsigned intRegIndex_;
+    unsigned floatRegIndex_;
+#endif
+    uint32_t stackOffset_;
+    ABIArg current_;
+
+  public:
+    ABIArgGenerator();
+    ABIArg next(MIRType argType);
+    ABIArg &current() { return current_; }
+    uint32_t stackBytesConsumedSoFar() const { return stackOffset_; }
+
+    // Note: these registers are all guaranteed to be different
+    static const Register NonArgReturnVolatileReg1;
+    static const Register NonArgReturnVolatileReg2;
+    static const Register NonVolatileReg;
+};
+
 static const Register OsrFrameReg = IntArgReg3;
 
 static const Register PreBarrierReg = rdx;
@@ -136,6 +160,8 @@ static const Register PreBarrierReg = rdx;
 // jitted code.
 static const uint32_t StackAlignment = 16;
 static const bool StackKeptAligned = false;
+static const uint32_t NativeFrameSize = sizeof(void*);
+static const uint32_t AlignmentAtPrologue = sizeof(void*);
 
 static const Scale ScalePointer = TimesEight;
 
@@ -365,6 +391,21 @@ class Assembler : public AssemblerX86Shared
             JS_NOT_REACHED("unexpected operand kind");
         }
     }
+    void movq(Imm32 imm32, const Operand &dest) {
+        switch (dest.kind()) {
+          case Operand::REG:
+            masm.movl_i32r(imm32.value, dest.reg());
+            break;
+          case Operand::REG_DISP:
+            masm.movq_i32m(imm32.value, dest.disp(), dest.base());
+            break;
+          case Operand::SCALE:
+            masm.movq_i32m(imm32.value, dest.disp(), dest.base(), dest.index(), dest.scale());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
     void movqsd(const Register &src, const FloatRegister &dest) {
         masm.movq_rr(src.code(), dest.code());
     }
@@ -474,6 +515,9 @@ class Assembler : public AssemblerX86Shared
     void mov(const Register &src, const Operand &dest) {
         movq(src, dest);
     }
+    void mov(const Imm32 &imm32, const Operand &dest) {
+        movq(imm32, dest);
+    }
     void mov(const Register &src, const Register &dest) {
         movq(src, dest);
     }
@@ -495,6 +539,25 @@ class Assembler : public AssemblerX86Shared
           default:
             JS_NOT_REACHED("unexepcted operand kind");
         }
+    }
+
+    CodeOffsetLabel loadRipRelativeInt32(const Register &dest) {
+        return CodeOffsetLabel(masm.movl_ripr(dest.code()).offset());
+    }
+    CodeOffsetLabel loadRipRelativeInt64(const Register &dest) {
+        return CodeOffsetLabel(masm.movq_ripr(dest.code()).offset());
+    }
+    CodeOffsetLabel loadRipRelativeDouble(const FloatRegister &dest) {
+        return CodeOffsetLabel(masm.movsd_ripr(dest.code()).offset());
+    }
+    CodeOffsetLabel storeRipRelativeInt32(const Register &dest) {
+        return CodeOffsetLabel(masm.movl_rrip(dest.code()).offset());
+    }
+    CodeOffsetLabel storeRipRelativeDouble(const FloatRegister &dest) {
+        return CodeOffsetLabel(masm.movsd_rrip(dest.code()).offset());
+    }
+    CodeOffsetLabel leaRipRelative(const Register &dest) {
+        return CodeOffsetLabel(masm.leaq_rip(dest.code()).offset());
     }
 
     // The below cmpq methods switch the lhs and rhs when it invokes the

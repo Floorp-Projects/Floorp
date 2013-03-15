@@ -974,6 +974,7 @@ static const char js_memnotify_option_str[]   = JS_OPTIONS_DOT_STR "mem.notify";
 static const char js_disable_explicit_compartment_gc[] =
   JS_OPTIONS_DOT_STR "mem.disable_explicit_compartment_gc";
 static const char js_ion_content_str[]        = JS_OPTIONS_DOT_STR "ion.content";
+static const char js_asmjs_content_str[]      = JS_OPTIONS_DOT_STR "experimental_asmjs";
 static const char js_ion_parallel_compilation_str[] = JS_OPTIONS_DOT_STR "ion.parallel_compilation";
 
 int
@@ -1014,6 +1015,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   bool useTypeInference = !chromeWindow && contentWindow && Preferences::GetBool(js_typeinfer_str);
   bool useHardening = Preferences::GetBool(js_jit_hardening_str);
   bool useIon = Preferences::GetBool(js_ion_content_str);
+  bool useAsmJS = Preferences::GetBool(js_asmjs_content_str);
   bool parallelIonCompilation = Preferences::GetBool(js_ion_parallel_compilation_str);
   nsCOMPtr<nsIXULRuntime> xr = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
   if (xr) {
@@ -1026,6 +1028,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
       useMethodJITAlways = true;
       useHardening = false;
       useIon = false;
+      useAsmJS = false;
     }
   }
 
@@ -1053,6 +1056,11 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     newDefaultJSOptions |= JSOPTION_ION;
   else
     newDefaultJSOptions &= ~JSOPTION_ION;
+
+  if (useAsmJS)
+    newDefaultJSOptions |= JSOPTION_ASMJS;
+  else
+    newDefaultJSOptions &= ~JSOPTION_ASMJS;
 
 #ifdef DEBUG
   // In debug builds, warnings are enabled in chrome context if

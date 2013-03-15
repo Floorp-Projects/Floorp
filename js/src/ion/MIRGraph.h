@@ -51,10 +51,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // Does this block do something that forces it to terminate early?
     bool earlyAbort_;
 
-
-    // Sets a slot, taking care to rewrite copies.
-    void setSlot(uint32_t slot, MDefinition *ins);
-
     // Pushes a copy of a local variable or argument.
     void pushVariable(uint32_t slot);
 
@@ -126,6 +122,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void setLocal(uint32_t local);
     void setArg(uint32_t arg);
     void setSlot(uint32_t slot);
+    void setSlot(uint32_t slot, MDefinition *ins);
 
     // Rewrites a slot directly, bypassing the stack transition. This should
     // not be used under most circumstances.

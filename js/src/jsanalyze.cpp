@@ -341,6 +341,10 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             isJaegerInlineable = isIonInlineable = false;
             break;
 
+          case JSOP_LINKASMJS:
+            isJaegerCompileable = isIonInlineable = false;
+            break;
+
           case JSOP_ENTERLET0:
           case JSOP_ENTERLET1:
           case JSOP_ENTERBLOCK:

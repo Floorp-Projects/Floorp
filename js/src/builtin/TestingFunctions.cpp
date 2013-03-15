@@ -1040,6 +1040,11 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
 "  inferred name based on where the function was defined. This can be\n"
 "  different from the 'name' property on the function."),
 
+    JS_FN_HELP("isAsmJSCompilationAvailable", IsAsmJSCompilationAvailable, 0, 0,
+"isAsmJSCompilationAvailable",
+"  Returns whether asm.js compilation is currently available or whether it is disabled\n"
+"  (e.g., by the debugger)."),
+
     JS_FN_HELP("inParallelSection", testingFunc_inParallelSection, 0, 0,
 "inParallelSection()",
 "  True if this code is executing within a parallel section."),

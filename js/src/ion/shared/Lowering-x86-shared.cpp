@@ -106,6 +106,34 @@ LIRGeneratorX86Shared::lowerModI(MMod *mod)
 }
 
 bool
+LIRGeneratorX86Shared::visitAsmJSNeg(MAsmJSNeg *ins)
+{
+    if (ins->type() == MIRType_Int32)
+        return defineReuseInput(new LNegI(useRegisterAtStart(ins->input())), ins, 0);
+
+    JS_ASSERT(ins->type() == MIRType_Double);
+    return defineReuseInput(new LNegD(useRegisterAtStart(ins->input())), ins, 0);
+}
+
+bool
+LIRGeneratorX86Shared::visitAsmJSUDiv(MAsmJSUDiv *div)
+{
+    LAsmJSDivOrMod *lir = new LAsmJSDivOrMod(useFixed(div->lhs(), eax),
+                                             useRegister(div->rhs()),
+                                             tempFixed(edx));
+    return defineFixed(lir, div, LAllocation(AnyRegister(eax)));
+}
+
+bool
+LIRGeneratorX86Shared::visitAsmJSUMod(MAsmJSUMod *mod)
+{
+    LAsmJSDivOrMod *lir = new LAsmJSDivOrMod(useFixed(mod->lhs(), eax),
+                                             useRegister(mod->rhs()),
+                                             tempFixed(edx));
+    return defineFixed(lir, mod, LAllocation(AnyRegister(edx)));
+}
+
+bool
 LIRGeneratorX86Shared::lowerUrshD(MUrsh *mir)
 {
     MDefinition *lhs = mir->lhs();

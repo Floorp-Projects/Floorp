@@ -612,6 +612,15 @@ TokenStream::reportStrictWarningErrorNumberVA(const TokenPos &pos, unsigned erro
     return reportCompileErrorNumberVA(pos, JSREPORT_STRICT | JSREPORT_WARNING, errorNumber, args);
 }
 
+void
+TokenStream::reportAsmJSError(ParseNode *pn, unsigned errorNumber, ...)
+{
+    va_list args;
+    va_start(args, errorNumber);
+    reportCompileErrorNumberVA(pn->pn_pos, JSREPORT_WARNING, errorNumber, args);
+    va_end(args);
+}
+
 /*
  * We have encountered a '\': check for a Unicode escape sequence after it.
  * Return 'true' and the character code value (by value) if we found a

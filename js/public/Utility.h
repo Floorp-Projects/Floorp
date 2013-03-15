@@ -563,6 +563,13 @@ struct ScopedDeletePtrTraits : public ScopedFreePtrTraits<T>
 };
 SCOPED_TEMPLATE(ScopedJSDeletePtr, ScopedDeletePtrTraits)
 
+template <typename T>
+struct ScopedReleasePtrTraits : public ScopedFreePtrTraits<T>
+{
+    static void release(T *ptr) { if (ptr) ptr->release(); }
+};
+SCOPED_TEMPLATE(ScopedReleasePtr, ScopedReleasePtrTraits)
+
 } /* namespace js */
 
 namespace js {
