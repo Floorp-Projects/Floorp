@@ -23,6 +23,9 @@
 // Only applies to ReflowChild: if true, invalidate the child if it's
 // being moved
 #define NS_FRAME_INVALIDATE_ON_MOVE   0x0010 
+// Only applies to ReflowChild; if true, don't delete the next-in-flow, even
+// if the reflow is fully complete.
+#define NS_FRAME_NO_DELETE_NEXT_IN_FLOW_CHILD 0x0020
 
 class nsOverflowContinuationTracker;
 namespace mozilla {
