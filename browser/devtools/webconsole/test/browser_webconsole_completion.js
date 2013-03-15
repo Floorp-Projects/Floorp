@@ -66,21 +66,21 @@ function testCompletion(hud) {
   yield;
 
   is(input.value, "document.getElem", "'document.getElem' completion");
-  is(jsterm.completeNode.value, "                entById", "'document.getElem' completion");
+  is(jsterm.completeNode.value, "", "'document.getElem' completion");
 
   // Test pressing tab another time.
   jsterm.complete(jsterm.COMPLETE_FORWARD, testNext);
   yield;
 
   is(input.value, "document.getElem", "'document.getElem' completion");
-  is(jsterm.completeNode.value, "                entsByClassName", "'document.getElem' another tab completion");
+  is(jsterm.completeNode.value, "                entsByTagNameNS", "'document.getElem' another tab completion");
 
   // Test pressing shift_tab.
   jsterm.complete(jsterm.COMPLETE_BACKWARD, testNext);
   yield;
 
   is(input.value, "document.getElem", "'document.getElem' untab completion");
-  is(jsterm.completeNode.value, "                entById", "'document.getElem' completion");
+  is(jsterm.completeNode.value, "", "'document.getElem' completion");
 
   jsterm.clearOutput();
 

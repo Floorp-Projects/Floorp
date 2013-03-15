@@ -233,6 +233,10 @@
 
 /* In-tools sidebar */
 
+.devtools-toolbox-side-iframe {
+  min-width: 465px;
+}
+
 .devtools-sidebar-tabs {
   -moz-appearance: none;
   margin: 0;
@@ -379,3 +383,5 @@
 .devtools-theme-attrvalue {
   color: hsl(24,85%,39%); /* orange */
 }
+
+%include ../../shared/devtools/common.inc.css
