@@ -1218,11 +1218,10 @@ nsContainerFrame::DisplayOverflowContainers(nsDisplayListBuilder*   aBuilder,
 
 static bool
 TryRemoveFrame(nsIFrame* aFrame, FramePropertyTable* aPropTable,
-               const FramePropertyDescriptor* aProp, nsIFrame* aChildToRemove,
-               bool (nsFrameList::*aRemoveMethod)(nsIFrame* aFrame))
+               const FramePropertyDescriptor* aProp, nsIFrame* aChildToRemove)
 {
   nsFrameList* list = static_cast<nsFrameList*>(aPropTable->Get(aFrame, aProp));
-  if (list && (list->*aRemoveMethod)(aChildToRemove)) {
+  if (list && list->StartRemoveFrame(aChildToRemove)) {
     // aChildToRemove *may* have been removed from this list.
     if (list->IsEmpty()) {
       aPropTable->Remove(aFrame, aProp);
@@ -1261,12 +1260,12 @@ nsContainerFrame::StealFrame(nsPresContext* aPresContext,
     FramePropertyTable* propTable = aPresContext->PropertyTable();
     // Try removing from the overflow container list.
     removed = ::TryRemoveFrame(this, propTable, OverflowContainersProperty(),
-                               aChild, &nsFrameList::StartRemoveFrame);
+                               aChild);
     if (!removed) {
       // It must be in the excess overflow container list.
       removed = ::TryRemoveFrame(this, propTable,
                                  ExcessOverflowContainersProperty(),
-                                 aChild, &nsFrameList::ContinueRemoveFrame);
+                                 aChild);
     }
   } else {
     removed = mFrames.StartRemoveFrame(aChild);
