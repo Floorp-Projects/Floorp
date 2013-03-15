@@ -46,72 +46,197 @@ extern bool stack_key_initialized;
 # endif
 #endif
 
+// Returns a handle to pass on exit. This can check that we are popping the
+// correct callstack.
+inline void* mozilla_sampler_call_enter(const char *aInfo, void *aFrameAddress = NULL,
+                                        bool aCopy = false, uint32_t line = 0);
+inline void  mozilla_sampler_call_exit(void* handle);
+inline void  mozilla_sampler_add_marker(const char *aInfo);
+
+void mozilla_sampler_start1(int aEntries, int aInterval, const char** aFeatures,
+                            uint32_t aFeatureCount);
+void mozilla_sampler_start2(int aEntries, int aInterval, const char** aFeatures,
+                            uint32_t aFeatureCount);
+
+void mozilla_sampler_stop1();
+void mozilla_sampler_stop2();
+
+bool mozilla_sampler_is_active1();
+bool mozilla_sampler_is_active2();
+
+void mozilla_sampler_responsiveness1(TimeStamp time);
+void mozilla_sampler_responsiveness2(TimeStamp time);
+
+void mozilla_sampler_frame_number1(int frameNumber);
+void mozilla_sampler_frame_number2(int frameNumber);
+
+const double* mozilla_sampler_get_responsiveness1();
+const double* mozilla_sampler_get_responsiveness2();
+
+void mozilla_sampler_save1();
+void mozilla_sampler_save2();
+
+char* mozilla_sampler_get_profile1();
+char* mozilla_sampler_get_profile2();
+
+JSObject *mozilla_sampler_get_profile_data1(JSContext *aCx);
+JSObject *mozilla_sampler_get_profile_data2(JSContext *aCx);
+
+const char** mozilla_sampler_get_features1();
+const char** mozilla_sampler_get_features2();
+
+void mozilla_sampler_init1();
+void mozilla_sampler_init2();
+
+void mozilla_sampler_shutdown1();
+void mozilla_sampler_shutdown2();
+
+void mozilla_sampler_print_location1();
+void mozilla_sampler_print_location2();
+
+// Lock the profiler. When locked the profiler is (1) stopped,
+// (2) profile data is cleared, (3) profiler-locked is fired.
+// This is used to lock down the profiler during private browsing
+void mozilla_sampler_lock1();
+void mozilla_sampler_lock2();
+
+// Unlock the profiler, leaving it stopped and fires profiler-unlocked.
+void mozilla_sampler_unlock1();
+void mozilla_sampler_unlock2();
+
 /* Returns true if env var SPS_NEW is set to anything, else false. */
 extern bool sps_version2();
 
-#define SAMPLER_INIT() \
-  do { \
-    if (!sps_version2()) mozilla_sampler_init1(); \
-                    else mozilla_sampler_init2(); \
-  } while (0)
+static inline
+void profiler_init()
+{
+  if (!sps_version2()) {
+    mozilla_sampler_init1();
+  } else {
+    mozilla_sampler_init2();
+  }
+}
 
-#define SAMPLER_SHUTDOWN() \
-  do { \
-    if (!sps_version2()) mozilla_sampler_shutdown1(); \
-                    else mozilla_sampler_shutdown2(); \
-  } while (0)
+static inline
+void profiler_shutdown()
+{
+  if (!sps_version2()) {
+    mozilla_sampler_shutdown1();
+  } else {
+    mozilla_sampler_shutdown2();
+  }
+}
 
-#define SAMPLER_START(entries, interval, features, featureCount) \
-  do { \
-    if (!sps_version2()) \
-      mozilla_sampler_start1(entries, interval, features, featureCount); \
-    else \
-      mozilla_sampler_start2(entries, interval, features, featureCount); \
-  } while (0)
+static inline
+void profiler_start(int aProfileEntries, int aInterval,
+                       const char** aFeatures, uint32_t aFeatureCount)
+{
+  if (!sps_version2()) {
+    mozilla_sampler_start1(aProfileEntries, aInterval, aFeatures, aFeatureCount);
+  } else {
+    mozilla_sampler_start2(aProfileEntries, aInterval, aFeatures, aFeatureCount);
+  }
+}
 
-#define SAMPLER_STOP() \
-  do { \
-    if (!sps_version2()) mozilla_sampler_stop1(); \
-                    else mozilla_sampler_stop2(); \
-  } while (0)
+static inline
+void profiler_stop()
+{
+  if (!sps_version2()) {
+    mozilla_sampler_stop1();
+  } else {
+    mozilla_sampler_stop2();
+  }
+}
 
-#define SAMPLER_IS_ACTIVE() \
-    (!sps_version2() ? mozilla_sampler_is_active1() \
-                     : mozilla_sampler_is_active2() )
+static inline
+bool profiler_is_active()
+{
+  if (!sps_version2()) {
+    return mozilla_sampler_is_active1();
+  } else {
+    return mozilla_sampler_is_active2();
+  }
+}
 
-#define SAMPLER_RESPONSIVENESS(time) \
-  do { \
-    if (!sps_version2()) mozilla_sampler_responsiveness1(time); \
-                    else mozilla_sampler_responsiveness2(time); \
-  } while (0)
+static inline
+void profiler_responsiveness(const TimeStamp& aTime)
+{
+  if (!sps_version2()) {
+    mozilla_sampler_responsiveness1(aTime);
+  } else {
+    mozilla_sampler_responsiveness2(aTime);
+  }
+}
 
-#define SAMPLER_GET_RESPONSIVENESS() \
-    (!sps_version2() ? mozilla_sampler_get_responsiveness1() \
-                     : mozilla_sampler_get_responsiveness2() )
+static inline
+const double* profiler_get_responsiveness()
+{
+  if (!sps_version2()) {
+    return mozilla_sampler_get_responsiveness1();
+  } else {
+    return mozilla_sampler_get_responsiveness2();
+  }
+}
 
-#define SAMPLER_FRAME_NUMBER(frameNumber) \
-  do { \
-    if (!sps_version2()) mozilla_sampler_frame_number1(frameNumber); \
-                    else mozilla_sampler_frame_number2(frameNumber); \
-  } while (0)
+static inline
+void profiler_set_frame_number(int frameNumber)
+{
+  if (!sps_version2()) {
+    return mozilla_sampler_frame_number1(frameNumber);
+  } else {
+    return mozilla_sampler_frame_number2(frameNumber);
+  }
+}
 
-#define SAMPLER_SAVE() \
-  do { \
-    if (!sps_version2()) mozilla_sampler_save1(); \
-                    else mozilla_sampler_save2(); \
-  } while (0)
+static inline
+char* profiler_get_profile()
+{
+  if (!sps_version2()) {
+    return mozilla_sampler_get_profile1();
+  } else {
+    return mozilla_sampler_get_profile2();
+  }
+}
 
-#define SAMPLER_GET_PROFILE() \
-   (!sps_version2() ? mozilla_sampler_get_profile1() \
-                    : mozilla_sampler_get_profile2() )
+static inline
+const char** profiler_get_features()
+{
+  if (!sps_version2()) {
+    return mozilla_sampler_get_features1();
+  } else {
+    return mozilla_sampler_get_features2();
+  }
+}
 
-#define SAMPLER_GET_PROFILE_DATA(ctx) \
-   (!sps_version2() ? mozilla_sampler_get_profile_data1(ctx) \
-                    : mozilla_sampler_get_profile_data2(ctx) )
+static inline
+void profiler_print_location()
+{
+  if (!sps_version2()) {
+    return mozilla_sampler_print_location1();
+  } else {
+    return mozilla_sampler_print_location2();
+  }
+}
 
-#define SAMPLER_GET_FEATURES() \
-   (!sps_version2() ? mozilla_sampler_get_features1() \
-                    : mozilla_sampler_get_features2() )
+static inline
+void profiler_lock()
+{
+  if (!sps_version2()) {
+    return mozilla_sampler_lock1();
+  } else {
+    return mozilla_sampler_lock2();
+  }
+}
+
+static inline
+void profiler_unlock()
+{
+  if (!sps_version2()) {
+    return mozilla_sampler_unlock1();
+  } else {
+    return mozilla_sampler_unlock2();
+  }
+}
 
 // we want the class and function name but can't easily get that using preprocessor macros
 // __func__ doesn't have the class name and __PRETTY_FUNCTION__ has the parameters
@@ -120,30 +245,12 @@ extern bool sps_version2();
 #define SAMPLER_APPEND_LINE_NUMBER_EXPAND(id, line) SAMPLER_APPEND_LINE_NUMBER_PASTE(id, line)
 #define SAMPLER_APPEND_LINE_NUMBER(id) SAMPLER_APPEND_LINE_NUMBER_EXPAND(id, __LINE__)
 
-#define SAMPLE_LABEL(name_space, info) mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__)
-#define SAMPLE_LABEL_PRINTF(name_space, info, ...) mozilla::SamplerStackFramePrintfRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__, __VA_ARGS__)
-#define SAMPLE_MARKER(info) mozilla_sampler_add_marker(info)
-#define SAMPLE_MAIN_THREAD_LABEL(name_space, info)  MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread"); mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__)
-#define SAMPLE_MAIN_THREAD_LABEL_PRINTF(name_space, info, ...)  MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread"); mozilla::SamplerStackFramePrintfRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__, __VA_ARGS__)
-#define SAMPLE_MAIN_THREAD_MARKER(info)  MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread"); mozilla_sampler_add_marker(info)
-
-#define SAMPLER_PRINT_LOCATION() \
-    do { \
-      if (!sps_version2()) mozilla_sampler_print_location1(); \
-                      else mozilla_sampler_print_location2(); \
-    } while (0)
-
-#define SAMPLER_LOCK() \
-    do { \
-      if (!sps_version2()) mozilla_sampler_lock1(); \
-                      else mozilla_sampler_lock2(); \
-    } while (0)
-
-#define SAMPLER_UNLOCK() \
-    do { \
-      if (!sps_version2()) mozilla_sampler_unlock1(); \
-                      else mozilla_sampler_unlock2(); \
-    } while (0)
+#define PROFILER_LABEL(name_space, info) mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__)
+#define PROFILER_LABEL_PRINTF(name_space, info, ...) mozilla::SamplerStackFramePrintfRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__, __VA_ARGS__)
+#define PROFILER_MARKER(info) mozilla_sampler_add_marker(info)
+#define PROFILER_MAIN_THREAD_LABEL(name_space, info)  MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread"); mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__)
+#define PROFILER_MAIN_THREAD_LABEL_PRINTF(name_space, info, ...)  MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread"); mozilla::SamplerStackFramePrintfRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__, __VA_ARGS__)
+#define PROFILER_MAIN_THREAD_MARKER(info)  MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread"); mozilla_sampler_add_marker(info)
 
 /* we duplicate this code here to avoid header dependencies
  * which make it more difficult to include in other places */
@@ -238,64 +345,6 @@ LinuxKernelMemoryBarrierFunc pLinuxKernelMemoryBarrier __attribute__((weak)) =
 # error "Memory clobber not supported for your platform."
 #endif
 
-// Returns a handle to pass on exit. This can check that we are popping the
-// correct callstack.
-inline void* mozilla_sampler_call_enter(const char *aInfo, void *aFrameAddress = NULL,
-                                        bool aCopy = false, uint32_t line = 0);
-inline void  mozilla_sampler_call_exit(void* handle);
-inline void  mozilla_sampler_add_marker(const char *aInfo);
-
-void mozilla_sampler_start1(int aEntries, int aInterval, const char** aFeatures,
-                            uint32_t aFeatureCount);
-void mozilla_sampler_start2(int aEntries, int aInterval, const char** aFeatures,
-                            uint32_t aFeatureCount);
-
-void mozilla_sampler_stop1();
-void mozilla_sampler_stop2();
-
-bool mozilla_sampler_is_active1();
-bool mozilla_sampler_is_active2();
-
-void mozilla_sampler_responsiveness1(TimeStamp time);
-void mozilla_sampler_responsiveness2(TimeStamp time);
-
-void mozilla_sampler_frame_number1(int frameNumber);
-void mozilla_sampler_frame_number2(int frameNumber);
-
-const double* mozilla_sampler_get_responsiveness1();
-const double* mozilla_sampler_get_responsiveness2();
-
-void mozilla_sampler_save1();
-void mozilla_sampler_save2();
-
-char* mozilla_sampler_get_profile1();
-char* mozilla_sampler_get_profile2();
-
-JSObject *mozilla_sampler_get_profile_data1(JSContext *aCx);
-JSObject *mozilla_sampler_get_profile_data2(JSContext *aCx);
-
-const char** mozilla_sampler_get_features1();
-const char** mozilla_sampler_get_features2();
-
-void mozilla_sampler_init1();
-void mozilla_sampler_init2();
-
-void mozilla_sampler_shutdown1();
-void mozilla_sampler_shutdown2();
-
-void mozilla_sampler_print_location1();
-void mozilla_sampler_print_location2();
-
-// Lock the profiler. When locked the profiler is (1) stopped,
-// (2) profile data is cleared, (3) profiler-locked is fired.
-// This is used to lock down the profiler during private browsing
-void mozilla_sampler_lock1();
-void mozilla_sampler_lock2();
-
-// Unlock the profiler, leaving it stopped and fires profiler-unlocked.
-void mozilla_sampler_unlock1();
-void mozilla_sampler_unlock2();
-
 namespace mozilla {
 
 class NS_STACK_CLASS SamplerStackFrameRAII {
@@ -316,7 +365,7 @@ class NS_STACK_CLASS SamplerStackFramePrintfRAII {
 public:
   // we only copy the strings at save time, so to take multiple parameters we'd need to copy them then.
   SamplerStackFramePrintfRAII(const char *aDefault, uint32_t line, const char *aFormat, ...) {
-    if (SAMPLER_IS_ACTIVE()) {
+    if (profiler_is_active()) {
       va_list args;
       va_start(args, aFormat);
       char buff[SAMPLER_MAX_STRING];
@@ -575,7 +624,7 @@ inline void mozilla_sampler_add_marker(const char *aMarker)
 
   // Don't insert a marker if we're not profiling to avoid
   // the heap copy (malloc).
-  if (!SAMPLER_IS_ACTIVE()) {
+  if (!profiler_is_active()) {
     return;
   }
 
