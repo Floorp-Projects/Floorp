@@ -815,6 +815,223 @@ js::intl_availableCollations(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+/**
+ * Returns a new UCollator with the locale and collation options
+ * of the given Collator.
+ */
+static UCollator *
+NewUCollator(JSContext *cx, HandleObject collator)
+{
+    RootedValue value(cx);
+
+    RootedObject internals(cx);
+    if (!GetInternals(cx, collator, &internals))
+        return NULL;
+
+    if (!JSObject::getProperty(cx, internals, internals, cx->names().locale, &value))
+        return NULL;
+    JSAutoByteString locale(cx, value.toString());
+    if (!locale)
+        return NULL;
+
+    // UCollator options with default values.
+    UColAttributeValue uStrength = UCOL_DEFAULT;
+    UColAttributeValue uCaseLevel = UCOL_OFF;
+    UColAttributeValue uAlternate = UCOL_DEFAULT;
+    UColAttributeValue uNumeric = UCOL_OFF;
+    // Normalization is always on to meet the canonical equivalence requirement.
+    UColAttributeValue uNormalization = UCOL_ON;
+    UColAttributeValue uCaseFirst = UCOL_DEFAULT;
+
+    if (!JSObject::getProperty(cx, internals, internals, cx->names().usage, &value))
+        return NULL;
+    JSAutoByteString usage(cx, value.toString());
+    if (!usage)
+        return NULL;
+    if (equal(usage, "search")) {
+        // ICU expects search as a Unicode locale extension on locale.
+        // Unicode locale extensions must occur before private use extensions.
+        const char *oldLocale = locale.ptr();
+        const char *p;
+        size_t index;
+        size_t localeLen = strlen(oldLocale);
+        if ((p = strstr(oldLocale, "-x-")))
+            index = p - oldLocale;
+        else
+            index = localeLen;
+
+        const char *insert;
+        if ((p = strstr(oldLocale, "-u-")) && static_cast<size_t>(p - oldLocale) < index) {
+            index = p - oldLocale + 2;
+            insert = "-co-search";
+        } else {
+            insert = "-u-co-search";
+        }
+        size_t insertLen = strlen(insert);
+        char *newLocale = cx->pod_malloc<char>(localeLen + insertLen + 1);
+        if (!newLocale)
+            return NULL;
+        memcpy(newLocale, oldLocale, index);
+        memcpy(newLocale + index, insert, insertLen);
+        memcpy(newLocale + index + insertLen, oldLocale + index, localeLen - index + 1); // '\0'
+        locale.clear();
+        locale.initBytes(newLocale);
+    }
+
+    // We don't need to look at the collation property - it can only be set
+    // via the Unicode locale extension and is therefore already set on
+    // locale.
+
+    if (!JSObject::getProperty(cx, internals, internals, cx->names().sensitivity, &value))
+        return NULL;
+    JSAutoByteString sensitivity(cx, value.toString());
+    if (!sensitivity)
+        return NULL;
+    if (equal(sensitivity, "base")) {
+        uStrength = UCOL_PRIMARY;
+    } else if (equal(sensitivity, "accent")) {
+        uStrength = UCOL_SECONDARY;
+    } else if (equal(sensitivity, "case")) {
+        uStrength = UCOL_PRIMARY;
+        uCaseLevel = UCOL_ON;
+    } else {
+        JS_ASSERT(equal(sensitivity, "variant"));
+        uStrength = UCOL_TERTIARY;
+    }
+
+    if (!JSObject::getProperty(cx, internals, internals, cx->names().ignorePunctuation, &value))
+        return NULL;
+    // According to the ICU team, UCOL_SHIFTED causes punctuation to be
+    // ignored. Looking at Unicode Technical Report 35, Unicode Locale Data
+    // Markup Language, "shifted" causes whitespace and punctuation to be
+    // ignored - that's a bit more than asked for, but there's no way to get
+    // less.
+    if (value.toBoolean())
+        uAlternate = UCOL_SHIFTED;
+
+    if (!JSObject::getProperty(cx, internals, internals, cx->names().numeric, &value))
+        return NULL;
+    if (!value.isUndefined() && value.toBoolean())
+        uNumeric = UCOL_ON;
+
+    if (!JSObject::getProperty(cx, internals, internals, cx->names().caseFirst, &value))
+        return NULL;
+    if (!value.isUndefined()) {
+        JSAutoByteString caseFirst(cx, value.toString());
+        if (!caseFirst)
+            return NULL;
+        if (equal(caseFirst, "upper"))
+            uCaseFirst = UCOL_UPPER_FIRST;
+        else if (equal(caseFirst, "lower"))
+            uCaseFirst = UCOL_LOWER_FIRST;
+        else
+            JS_ASSERT(equal(caseFirst, "false"));
+    }
+
+    UErrorCode status = U_ZERO_ERROR;
+    UCollator *coll = ucol_open(icuLocale(locale.ptr()), &status);
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INTERNAL_INTL_ERROR);
+        return NULL;
+    }
+
+    // According to http://userguide.icu-project.org/design#TOC-Error-Handling
+    // we don't have to check the error code after each function call.
+    ucol_setAttribute(coll, UCOL_STRENGTH, uStrength, &status);
+    ucol_setAttribute(coll, UCOL_CASE_LEVEL, uCaseLevel, &status);
+    ucol_setAttribute(coll, UCOL_ALTERNATE_HANDLING, uAlternate, &status);
+    ucol_setAttribute(coll, UCOL_NUMERIC_COLLATION, uNumeric, &status);
+    ucol_setAttribute(coll, UCOL_NORMALIZATION_MODE, uNormalization, &status);
+    ucol_setAttribute(coll, UCOL_CASE_FIRST, uCaseFirst, &status);
+    if (U_FAILURE(status)) {
+        ucol_close(coll);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INTERNAL_INTL_ERROR);
+        return NULL;
+    }
+
+    return coll;
+}
+
+static bool
+intl_CompareStrings(JSContext *cx, UCollator *coll, HandleString str1, HandleString str2, MutableHandleValue result)
+{
+    JS_ASSERT(str1);
+    JS_ASSERT(str2);
+
+    if (str1 == str2) {
+        result.setInt32(0);
+        return true;
+    }
+
+    size_t length1 = str1->length();
+    const jschar *chars1 = str1->getChars(cx);
+    if (!chars1)
+        return false;
+    size_t length2 = str2->length();
+    const jschar *chars2 = str2->getChars(cx);
+    if (!chars2)
+        return false;
+
+    UCollationResult uresult = ucol_strcoll(coll, chars1, length1, chars2, length2);
+
+    int32_t res;
+    switch (uresult) {
+        case UCOL_LESS: res = -1; break;
+        case UCOL_EQUAL: res = 0; break;
+        case UCOL_GREATER: res = 1; break;
+    }
+    result.setInt32(res);
+    return true;
+}
+
+JSBool
+js::intl_CompareStrings(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 3);
+    JS_ASSERT(args[0].isObject());
+    JS_ASSERT(args[1].isString());
+    JS_ASSERT(args[2].isString());
+
+    RootedObject collator(cx, &args[0].toObject());
+
+    // Obtain a UCollator object, cached if possible.
+    // XXX Does this handle Collator instances from other globals correctly?
+    bool isCollatorInstance = collator->getClass() == &CollatorClass;
+    UCollator *coll;
+    if (isCollatorInstance) {
+        coll = (UCollator *) collator->getReservedSlot(UCOLLATOR_SLOT).toPrivate();
+        if (!coll) {
+            coll = NewUCollator(cx, collator);
+            if (!coll)
+                return false;
+            collator->setReservedSlot(UCOLLATOR_SLOT, PrivateValue(coll));
+        }
+    } else {
+        // There's no good place to cache the ICU collator for an object
+        // that has been initialized as a Collator but is not a Collator
+        // instance. One possibility might be to add a Collator instance as an
+        // internal property to each such object.
+        coll = NewUCollator(cx, collator);
+        if (!coll)
+            return false;
+    }
+
+    // Use the UCollator to actually compare the strings.
+    RootedString str1(cx, args[1].toString());
+    RootedString str2(cx, args[2].toString());
+    RootedValue result(cx);
+    bool success = intl_CompareStrings(cx, coll, str1, str2, &result);
+
+    if (!isCollatorInstance)
+        ucol_close(coll);
+    if (!success)
+        return false;
+    args.rval().set(result);
+    return true;
+}
+
+
 /******************** NumberFormat ********************/
 
 static Class NumberFormatClass = {
