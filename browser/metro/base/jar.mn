@@ -91,7 +91,7 @@ chrome.jar:
   content/LoginManagerChild.js                 (content/LoginManagerChild.js)
   content/video.js                             (content/video.js)
 #ifdef MOZ_SERVICES_SYNC
-  content/sync.js                              (content/sync.js)
+* content/sync.js                              (content/sync.js)
   content/RemoteTabs.js                        (content/RemoteTabs.js)
 #endif
 
