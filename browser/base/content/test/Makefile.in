@@ -335,6 +335,12 @@ _BROWSER_FILES += \
 # 		browser_maconly_carbon_mismatch_plugin.js
 endif
 
+ifdef MOZ_DATA_REPORTING
+_BROWSER_FILES += \
+  browser_datareporting_notification.js \
+  $(NULL)
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 libs::	$(_BROWSER_FILES)
