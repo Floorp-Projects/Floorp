@@ -706,6 +706,10 @@ SimpleTest.finish = function () {
 
     SimpleTest._alreadyFinished = true;
 
+    if (SpecialPowers.DOMWindowUtils.isTestControllingRefreshes) {
+        SimpleTest.ok(false, "test left refresh driver under test control");
+        SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+    }
     if (SimpleTest._expectingUncaughtException) {
         SimpleTest.ok(false, "expectUncaughtException was called but no uncaught exception was detected!");
     }

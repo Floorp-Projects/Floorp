@@ -41,7 +41,7 @@ interface nsIDOMClientRect;
 interface nsIURI;
 interface nsIDOMEventTarget;
 
-[scriptable, uuid(69b7d908-c8e4-4416-94cf-4fdbe7a80441)]
+[scriptable, uuid(ab9e9c45-1910-458c-a043-79cbbfc89f4d)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1136,6 +1136,12 @@ interface nsIDOMWindowUtils : nsISupports {
    * Undoes the effects of advanceTimeAndRefresh.
    */
   void restoreNormalRefresh();
+
+  /**
+   * Reports whether the current state is test-controlled refreshes
+   * (see advanceTimeAndRefresh and restoreNormalRefresh above).
+   */
+  readonly attribute bool isTestControllingRefreshes;
 
   /**
    * Method for testing nsStyleAnimation::ComputeDistance.
