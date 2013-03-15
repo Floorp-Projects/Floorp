@@ -26,18 +26,18 @@ MOZGLUE_PP_JAVA_FILES := \
   $(NULL)
 
 UTIL_JAVA_FILES := \
-  ActivityResultHandler.java \
-  ActivityResultHandlerMap.java \
-  UiAsyncTask.java \
-  GeckoBackgroundThread.java \
-  GeckoEventListener.java \
-  GeckoEventResponder.java \
-  GeckoJarReader.java \
-  INIParser.java \
-  INISection.java \
+  util/ActivityResultHandler.java \
+  util/ActivityResultHandlerMap.java \
   util/EventDispatcher.java \
   util/FloatUtils.java \
+  util/GeckoBackgroundThread.java \
+  util/GeckoEventListener.java \
+  util/GeckoEventResponder.java \
+  util/GeckoJarReader.java \
+  util/INIParser.java \
+  util/INISection.java \
   util/StringUtils.java \
+  util/UiAsyncTask.java \
   $(NULL)
 
 FENNEC_JAVA_FILES = \
