@@ -3677,8 +3677,6 @@ fi
 dnl Using the custom linker on ARMv6 requires 16k alignment of ELF segments.
 if test -n "$MOZ_LINKER"; then
   if test "$CPU_ARCH" = arm; then
-    dnl Determine the target ARM architecture (5 for ARMv5, v5T, v5E, etc.; 6 for ARMv6, v6K, etc.)
-    ARM_ARCH=`${CC-cc} ${CFLAGS} -dM -E - < /dev/null | sed -n 's/.*__ARM_ARCH_\([[0-9]]*\).*/\1/p'`
     dnl When building for < ARMv7, we need to ensure 16k alignment of ELF segments
     if test -n "$ARM_ARCH" && test "$ARM_ARCH" -lt 7; then
       LDFLAGS="$LDFLAGS -Wl,-z,max-page-size=0x4000 -Wl,-z,common-page-size=0x4000"
@@ -9040,11 +9038,20 @@ if test "${OS_TARGET}" = "WINNT"; then
 
 elif test "${OS_TARGET}" = "Android"; then
    EXTRA_GYP_DEFINES="-D gtest_target_type=executable -D android_toolchain=${android_toolchain} -G os=android "
-   if test -n "$ARM_ARCH" && test "$ARM_ARCH" -lt 7; then
-      EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D armv7=0 "
-   else
-      EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D armv7=1 "
-   fi
+fi
+
+if test -n "$ARM_ARCH"; then
+    if test "$ARM_ARCH" -lt 7; then
+        EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D armv7=0 "
+    else
+        if test "${OS_TARGET}" = "Android"; then
+            EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D armv7=1 "
+        else
+            dnl CPU detection for ARM works on Android only.  armv7 always uses CPU detection, so
+            dnl we have to set armv7=0 for non-Android target
+            EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D armv7=0 "
+        fi
+    fi
 fi
 
 # Don't try to compile sse4.1 code if toolchain doesn't support
