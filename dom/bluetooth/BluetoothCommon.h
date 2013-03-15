@@ -46,8 +46,10 @@ extern bool gBluetoothDebugFlag;
 #define USING_BLUETOOTH_NAMESPACE \
   using namespace mozilla::dom::bluetooth;
 
-#define LOCAL_AGENT_PATH  "/B2G/bluetooth/agent"
-#define REMOTE_AGENT_PATH "/B2G/bluetooth/remote_device_agent"
+#define KEY_LOCAL_AGENT  "/B2G/bluetooth/agent"
+#define KEY_REMOTE_AGENT "/B2G/bluetooth/remote_device_agent"
+#define KEY_MANAGER      "/B2G/bluetooth/manager"
+#define KEY_ADAPTER      "/B2G/bluetooth/adapter"
 
 // Bluetooth address format: xx:xx:xx:xx:xx:xx (or xx_xx_xx_xx_xx_xx)
 #define BLUETOOTH_ADDRESS_LENGTH 17
