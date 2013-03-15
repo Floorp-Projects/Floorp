@@ -18,7 +18,6 @@ interface AudioContext {
 
     readonly attribute AudioDestinationNode destination;
     readonly attribute float sampleRate;
-    readonly attribute double currentTime;
     readonly attribute AudioListener listener;
 
     [Creator, Throws]
