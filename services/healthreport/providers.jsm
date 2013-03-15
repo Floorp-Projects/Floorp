@@ -54,6 +54,13 @@ const DAILY_DISCRETE_NUMERIC_FIELD = {type: Metrics.Storage.FIELD_DAILY_DISCRETE
 const DAILY_LAST_NUMERIC_FIELD = {type: Metrics.Storage.FIELD_DAILY_LAST_NUMERIC};
 const DAILY_COUNTER_FIELD = {type: Metrics.Storage.FIELD_DAILY_COUNTER};
 
+// Preprocess to use the correct telemetry pref.
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+const TELEMETRY_PREF = "toolkit.telemetry.enabledPreRelease";
+#else
+const TELEMETRY_PREF = "toolkit.telemetry.enabled";
+#endif
+
 /**
  * Represents basic application state.
  *
@@ -68,7 +75,7 @@ AppInfoMeasurement.prototype = Object.freeze({
   __proto__: Metrics.Measurement.prototype,
 
   name: "appinfo",
-  version: 1,
+  version: 2,
 
   fields: {
     vendor: LAST_TEXT_FIELD,
@@ -85,6 +92,28 @@ AppInfoMeasurement.prototype = Object.freeze({
     distributionVersion: LAST_TEXT_FIELD,
     hotfixVersion: LAST_TEXT_FIELD,
     locale: LAST_TEXT_FIELD,
+    isDefaultBrowser: {type: Metrics.Storage.FIELD_DAILY_LAST_NUMERIC},
+    isTelemetryEnabled: {type: Metrics.Storage.FIELD_DAILY_LAST_NUMERIC},
+  },
+});
+
+/**
+ * Legacy version of app info before Telemetry was added.
+ *
+ * The "last" fields have all been removed. We only report the longitudinal
+ * field.
+ */
+function AppInfoMeasurement1() {
+  Metrics.Measurement.call(this);
+}
+
+AppInfoMeasurement1.prototype = Object.freeze({
+  __proto__: Metrics.Measurement.prototype,
+
+  name: "appinfo",
+  version: 1,
+
+  fields: {
     isDefaultBrowser: {type: Metrics.Storage.FIELD_DAILY_LAST_NUMERIC},
   },
 });
@@ -117,7 +146,11 @@ AppInfoProvider.prototype = Object.freeze({
 
   name: "org.mozilla.appInfo",
 
-  measurementTypes: [AppInfoMeasurement, AppVersionMeasurement],
+  measurementTypes: [
+    AppInfoMeasurement,
+    AppInfoMeasurement1,
+    AppVersionMeasurement,
+  ],
 
   pullOnly: true,
 
@@ -230,7 +263,14 @@ AppInfoProvider.prototype = Object.freeze({
     }
 
     // FUTURE this should be retrieved periodically or at upload time.
+    yield this._recordIsTelemetryEnabled(m);
     yield this._recordDefaultBrowser(m);
+  },
+
+  _recordIsTelemetryEnabled: function (m) {
+    let enabled = TELEMETRY_PREF && this._prefs.get(TELEMETRY_PREF, false);
+    this._log.debug("Recording telemetry enabled (" + TELEMETRY_PREF + "): " + enabled);
+    yield m.setDailyLastNumeric("isTelemetryEnabled", enabled ? 1 : 0);
   },
 
   _recordDefaultBrowser: function (m) {
