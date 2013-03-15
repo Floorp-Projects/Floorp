@@ -1,0 +1,128 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+
+<script>
+
+function init() {
+  window.addEventListener("message", function process(e) {doTest(e)}, false);
+  doTest();
+}
+
+function checkSubmissionValue(payload, expectedValue) {
+  return payload.enabled == expectedValue;
+}
+
+function validatePayload(payload) {
+  payload = JSON.parse(payload);
+
+  // xxxmpc - this is some pretty low-bar validation, but we have plenty of tests of that API elsewhere
+  if (!payload.thisPingDate)
+    return false;
+
+  return true;
+}
+
+var tests = [
+{
+  info: "Checking initial value is enabled",
+  event: "RequestCurrentPrefs",
+  payloadType: "prefs",
+  validateResponse: function(payload) {
+    return checkSubmissionValue(payload, true);
+  },
+},
+{
+  info: "Verifying disabling works",
+  event: "DisableDataSubmission",
+  payloadType: "prefs",
+  validateResponse: function(payload) {
+    return checkSubmissionValue(payload, false);
+  },
+},
+{
+  info: "Verifying we're still disabled",
+  event: "RequestCurrentPrefs",
+  payloadType: "prefs",
+  validateResponse: function(payload) {
+    return checkSubmissionValue(payload, false);
+  },
+},
+{
+  info: "Verifying we can get a payload while submission is disabled",
+  event: "RequestCurrentPayload",
+  payloadType: "payload",
+  validateResponse: function(payload) {
+    return validatePayload(payload);
+  },
+},
+{
+  info: "Verifying enabling works",
+  event: "EnableDataSubmission",
+  payloadType: "prefs",
+  validateResponse: function(payload) {
+    return checkSubmissionValue(payload, true);
+  },
+},
+{
+  info: "Verifying we're still re-enabled",
+  event: "RequestCurrentPrefs",
+  payloadType: "prefs",
+  validateResponse: function(payload) {
+    return checkSubmissionValue(payload, true);
+  },
+},
+{
+  info: "Verifying we can get a payload after re-enabling",
+  event: "RequestCurrentPayload",
+  payloadType: "payload",
+  validateResponse: function(payload) {
+    return validatePayload(payload);
+  },
+},
+];
+
+var currentTest = -1;
+function doTest(evt) {
+  if (evt) {
+    if (currentTest < 0 || !evt.data.content)
+      return; // not yet testing
+
+    var test = tests[currentTest];
+    if (evt.data.type != test.payloadType)
+      return; // skip unrequested events
+
+    var error = JSON.stringify(evt.data.content);
+    var pass = false;
+    try {
+      pass = test.validateResponse(evt.data.content)
+    } catch (e) {}
+    reportResult(test.info, pass, error);
+  }
+  // start the next test if there are any left
+  if (tests[++currentTest])
+    sendToBrowser(tests[currentTest].event);
+  else
+    reportFinished();
+}
+
+function reportResult(info, pass, error) {
+  var data = {type: "testResult", info: info, pass: pass, error: error};
+  window.parent.postMessage(data, "*");
+}
+
+function reportFinished(cmd) {
+  var data = {type: "testsComplete", count: tests.length};
+  window.parent.postMessage(data, "*");
+}
+
+function sendToBrowser(type) {
+  var event = new CustomEvent("RemoteHealthReportCommand", {detail: {command: type}, bubbles: true});
+  document.dispatchEvent(event);
+}
+
+</script>
+  </head>
+  <body onload="init()">
+  </body>
+</html>
