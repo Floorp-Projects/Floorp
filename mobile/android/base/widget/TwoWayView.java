@@ -213,6 +213,8 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
     private OnScrollListener mOnScrollListener;
     private int mLastScrollState;
 
+    private View mEmptyView;
+
     public interface OnScrollListener {
 
         /**
@@ -776,6 +778,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             checkSelectionChanged();
         }
 
+        updateEmptyStatus();
         requestLayout();
     }
 
@@ -4612,6 +4615,38 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         }
     }
 
+    @Override
+    public void setEmptyView(View emptyView) {
+        super.setEmptyView(emptyView);
+        mEmptyView = emptyView;
+        updateEmptyStatus();
+    }
+
+    private void updateEmptyStatus() {
+        boolean isEmpty = mAdapter == null || mAdapter.isEmpty();
+        if (isEmpty) {
+            if (mEmptyView != null) {
+                mEmptyView.setVisibility(View.VISIBLE);
+                setVisibility(View.GONE);
+            } else {
+                // If the caller just removed our empty view, make sure the list
+                // view is visible
+                setVisibility(View.VISIBLE);
+            }
+
+            // We are now GONE, so pending layouts will not be dispatched.
+            // Force one here to make sure that the state of the list matches
+            // the state of the adapter.
+            if (mDataChanged) {
+                this.onLayout(false, getLeft(), getTop(), getRight(), getBottom());
+            }
+        } else {
+            if (mEmptyView != null)
+                mEmptyView.setVisibility(View.GONE);
+            setVisibility(View.VISIBLE);
+        }
+    }
+
     private class AdapterDataSetObserver extends DataSetObserver {
         private Parcelable mInstanceState = null;
 
@@ -4630,7 +4665,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             } else {
                 rememberSyncState();
             }
-
+            updateEmptyStatus();
             requestLayout();
         }
 
@@ -4656,6 +4691,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
             mNeedSync = false;
 
+            updateEmptyStatus();
             requestLayout();
         }
     }
