@@ -18,7 +18,7 @@ interface nsIDOMUserDataHandler;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(d34c0ab9-21e7-42eb-bb58-9db8ccb66268)]
+[scriptable, uuid(a8cae9dc-bd35-4a99-a8e9-4170f8a38566)]
 interface nsIDOMNode : nsISupports
 {
   const unsigned short      ELEMENT_NODE       = 1;
@@ -64,9 +64,6 @@ interface nsIDOMNode : nsISupports
   [optional_argc] nsIDOMNode                cloneNode([optional] in boolean deep);
   // Modified in DOM Level 2:
   void                      normalize();
-  // Introduced in DOM Level 2:
-  boolean                   isSupported(in DOMString feature, 
-                                        in DOMString version);
   // Introduced in DOM Level 2:
   readonly attribute DOMString        namespaceURI;
   // Modified in DOM Core

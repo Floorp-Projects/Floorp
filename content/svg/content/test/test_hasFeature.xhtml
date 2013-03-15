@@ -3,7 +3,7 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=519107
 -->
 <head>
-  <title>Test for availability of svgElement::isSupported</title>
+  <title>Test for availability of svgElement::hasFeature</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
@@ -135,19 +135,18 @@ var features = [
   ["org.w3c.dom.svg.dynamic", "1.0", false]
 ];
 
-function testIsSupported(elem) {
+function testHasFeature() {
   for (var [feature, version, accepted_result] of features) {
     if (accepted_result) {
-      ok(elem.isSupported(feature, version), "isSupported(" + feature + ", " + version + ") returned wrong value, Was it changed to unsupported feature?");
+      ok(document.implementation.hasFeature(feature, version), "hasFeature(" + feature + ", " + version + ") returned wrong value, Was it changed to unsupported feature?");
     } else {
-      todo(elem.isSupported(feature, version), "isSupported(" + feature + ", " + version + ") is unsupported feature string");
+      todo(document.implementation.hasFeature(feature, version), "hasFeature(" + feature + ", " + version + ") is unsupported feature string");
     }
   }
 }
 
 function main() {
-  var svg = document.getElementById("svg");
-  testIsSupported(svg);
+  testHasFeature();
   SimpleTest.finish();
 }
 

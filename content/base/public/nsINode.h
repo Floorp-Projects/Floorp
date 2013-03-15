@@ -1559,7 +1559,6 @@ public:
   nsINode* RemoveChild(nsINode& aChild, mozilla::ErrorResult& aError);
   already_AddRefed<nsINode> CloneNode(bool aDeep, mozilla::ErrorResult& aError);
   bool IsEqualNode(nsINode* aNode);
-  bool IsSupported(const nsAString& aFeature, const nsAString& aVersion);
   void GetNamespaceURI(nsAString& aNamespaceURI) const
   {
     mNodeInfo->GetNamespaceURI(aNamespaceURI);
@@ -2001,11 +2000,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsINode, NS_INODE_IID)
   NS_IMETHOD Normalize() __VA_ARGS__ \
   { \
     nsINode::Normalize(); \
-    return NS_OK; \
-  } \
-  NS_IMETHOD IsSupported(const nsAString& aFeature, const nsAString& aVersion, bool* aResult) __VA_ARGS__ \
-  { \
-    *aResult = nsINode::IsSupported(aFeature, aVersion); \
     return NS_OK; \
   } \
   NS_IMETHOD GetNamespaceURI(nsAString& aNamespaceURI) __VA_ARGS__ \
