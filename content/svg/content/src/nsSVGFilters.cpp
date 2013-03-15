@@ -36,6 +36,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGComponentTransferFunctionElement.h"
+#include "mozilla/dom/SVGFEDistantLightElement.h"
 #include "mozilla/dom/SVGFEFuncAElementBinding.h"
 #include "mozilla/dom/SVGFEFuncBElementBinding.h"
 #include "mozilla/dom/SVGFEFuncGElementBinding.h"
@@ -3979,7 +3980,7 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
   if (!info.mTarget)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMSVGFEDistantLightElement> distantLight;
+  SVGFEDistantLightElement* distantLight;
   SVGFEPointLightElement* pointLight;
   nsCOMPtr<nsIDOMSVGFESpotLightElement> spotLight;
 
@@ -3993,7 +3994,8 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
   for (nsCOMPtr<nsIContent> child = nsINode::GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    distantLight = do_QueryInterface(child);
+    distantLight = child->IsSVG(nsGkAtoms::feDistantLight) ?
+                     static_cast<SVGFEDistantLightElement*>(child.get()) : nullptr;
     pointLight = child->IsSVG(nsGkAtoms::fePointLight) ?
                    static_cast<SVGFEPointLightElement*>(child.get()) : nullptr;
     spotLight = do_QueryInterface(child);
@@ -4009,10 +4011,9 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
   float L[3];
   if (distantLight) {
     float azimuth, elevation;
-    static_cast<nsSVGFEDistantLightElement*>
-      (distantLight.get())->GetAnimatedNumberValues(&azimuth,
-                                                    &elevation,
-                                                    nullptr);
+    distantLight->GetAnimatedNumberValues(&azimuth,
+                                          &elevation,
+                                          nullptr);
     L[0] = cos(azimuth * radPerDeg) * cos(elevation * radPerDeg);
     L[1] = sin(azimuth * radPerDeg) * cos(elevation * radPerDeg);
     L[2] = sin(elevation * radPerDeg);
