@@ -37,6 +37,7 @@ UTIL_JAVA_FILES := \
   util/INIParser.java \
   util/INISection.java \
   util/StringUtils.java \
+  util/ThreadUtils.java \
   util/UiAsyncTask.java \
   $(NULL)
 

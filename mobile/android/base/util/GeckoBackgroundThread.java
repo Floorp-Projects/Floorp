@@ -35,11 +35,12 @@ public final class GeckoBackgroundThread extends Thread {
     // Get a Handler for a looper thread, or create one if it doesn't yet exist.
     public static synchronized Handler getHandler() {
         if (sHandler == null) {
-          GeckoBackgroundThread lt = new GeckoBackgroundThread();
-          lt.start();
-          try {
-              sHandler = lt.mHandlerQueue.take();
-          } catch (InterruptedException ie) {}
+            GeckoBackgroundThread lt = new GeckoBackgroundThread();
+            ThreadUtils.setBackgroundThread(lt);
+            lt.start();
+            try {
+                sHandler = lt.mHandlerQueue.take();
+            } catch (InterruptedException ie) {}
         }
         return sHandler;
     }
