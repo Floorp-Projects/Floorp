@@ -15,7 +15,6 @@ import org.mozilla.gecko.gfx.PluginLayer;
 import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.updater.UpdateService;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
-import org.mozilla.gecko.util.GeckoBackgroundThread;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.GeckoEventResponder;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -626,7 +625,7 @@ abstract public class GeckoApp
     }
 
     void handleFaviconRequest(final String url) {
-        (new UiAsyncTask<Void, Void, String>(GeckoAppShell.getHandler()) {
+        (new UiAsyncTask<Void, Void, String>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public String doInBackground(Void... params) {
                 return Favicons.getInstance().getFaviconUrlForPageUrl(url);
@@ -802,7 +801,7 @@ abstract public class GeckoApp
                     @Override
                     public void run() {
                         Toast.makeText(GeckoApp.mAppContext, R.string.bookmark_added, Toast.LENGTH_SHORT).show();
-                        GeckoAppShell.getHandler().post(new Runnable() {
+                        ThreadUtils.postToBackgroundThread(new Runnable() {
                             @Override
                             public void run() {
                                 BrowserDB.addBookmark(GeckoApp.mAppContext.getContentResolver(), title, url);
@@ -1104,7 +1103,7 @@ abstract public class GeckoApp
         notification.setLatestEventInfo(mAppContext, fileName, progText, emptyIntent );
         notification.flags |= Notification.FLAG_ONGOING_EVENT;
         notification.show();
-        new UiAsyncTask<Void, Void, Boolean>(GeckoAppShell.getHandler()){
+        new UiAsyncTask<Void, Void, Boolean>(ThreadUtils.getBackgroundHandler()) {
 
             @Override
             protected Boolean doInBackground(Void... params) {
@@ -1440,7 +1439,7 @@ abstract public class GeckoApp
             mPrivateBrowsingSession = savedInstanceState.getString(SAVED_STATE_PRIVATE_SESSION);
         }
 
-        GeckoBackgroundThread.getHandler().post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 SharedPreferences prefs =
@@ -1545,7 +1544,7 @@ abstract public class GeckoApp
         Uri data = intent.getData();
         if (data != null && "http".equals(data.getScheme())) {
             startupAction = StartupAction.PREFETCH;
-            GeckoAppShell.getHandler().post(new PrefetchRunnable(data.toString()));
+            ThreadUtils.postToBackgroundThread(new PrefetchRunnable(data.toString()));
         }
 
         Tabs.registerOnTabsChangedListener(this);
@@ -1706,7 +1705,7 @@ abstract public class GeckoApp
         // End of the startup of our Java App
         mJavaUiStartupTimer.stop();
 
-        GeckoAppShell.getHandler().postDelayed(new Runnable() {
+        ThreadUtils.getBackgroundHandler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 // Sync settings need Gecko to be loaded, so
@@ -1949,7 +1948,7 @@ abstract public class GeckoApp
         // User may have enabled/disabled accessibility.
         GeckoAccessibility.updateAccessibilitySettings();
 
-        GeckoBackgroundThread.getHandler().post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 SharedPreferences prefs =
@@ -1995,7 +1994,7 @@ abstract public class GeckoApp
         // In some way it's sad that Android will trigger StrictMode warnings
         // here as the whole point is to save to disk while the activity is not
         // interacting with the user.
-        GeckoBackgroundThread.getHandler().post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 SharedPreferences prefs =
@@ -2017,7 +2016,7 @@ abstract public class GeckoApp
     @Override
     public void onRestart()
     {
-        GeckoBackgroundThread.getHandler().post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 SharedPreferences prefs =
@@ -2213,7 +2212,7 @@ abstract public class GeckoApp
         if (profileDir != null) {
             final GeckoApp app = GeckoApp.mAppContext;
 
-            GeckoAppShell.getHandler().post(new Runnable() {
+            ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
                     ProfileMigrator profileMigrator = new ProfileMigrator(app);

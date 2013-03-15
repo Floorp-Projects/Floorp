@@ -9,7 +9,7 @@ import android.os.Looper;
 
 import java.util.concurrent.SynchronousQueue;
 
-public final class GeckoBackgroundThread extends Thread {
+final class GeckoBackgroundThread extends Thread {
     private static final String LOOPER_NAME = "GeckoBackgroundThread";
 
     // Guarded by 'this'.
@@ -33,7 +33,7 @@ public final class GeckoBackgroundThread extends Thread {
     }
 
     // Get a Handler for a looper thread, or create one if it doesn't yet exist.
-    public static synchronized Handler getHandler() {
+    /*package*/ static synchronized Handler getHandler() {
         if (sHandler == null) {
             GeckoBackgroundThread lt = new GeckoBackgroundThread();
             ThreadUtils.setBackgroundThread(lt);
@@ -45,7 +45,7 @@ public final class GeckoBackgroundThread extends Thread {
         return sHandler;
     }
 
-    public static void post(Runnable runnable) {
+    /*package*/ static void post(Runnable runnable) {
         Handler handler = getHandler();
         if (handler == null) {
             throw new IllegalStateException("No handler! Must have been interrupted. Not posting.");

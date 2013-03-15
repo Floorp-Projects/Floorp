@@ -47,6 +47,14 @@ public final class ThreadUtils {
         return sBackgroundThread;
     }
 
+    public static Handler getBackgroundHandler() {
+        return GeckoBackgroundThread.getHandler();
+    }
+
+    public static void postToBackgroundThread(Runnable runnable) {
+        GeckoBackgroundThread.post(runnable);
+    }
+
     public static void assertOnUiThread() {
         assertOnThread(getUiThread());
     }

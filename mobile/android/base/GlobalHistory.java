@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.database.Cursor;
 import android.net.Uri;
@@ -39,7 +40,7 @@ class GlobalHistory {
     private boolean mProcessing; // = false             // whether or not the runnable is queued/working
 
     private GlobalHistory() {
-        mHandler = GeckoAppShell.getHandler();
+        mHandler = ThreadUtils.getBackgroundHandler();
         mPendingUris = new LinkedList<String>();
         mVisitedCache = new SoftReference<Set<String>>(null);
         mNotifierRunnable = new Runnable() {
