@@ -148,7 +148,7 @@ static JSBool
 CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject *npobj,
                      jsid id, NPVariant* getPropertyResult, jsval *vp);
 
-static JSClass sNPObjectJSWrapperClass =
+JSClass sNPObjectJSWrapperClass =
   {
     NPRUNTIME_JSCLASS_NAME,
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE,
@@ -1987,76 +1987,6 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
     NppAndCx nppcx = { npp, cx };
     PL_DHashTableEnumerate(&sNPObjWrappers,
                            NPObjWrapperPluginDestroyedCallback, &nppcx);
-  }
-
-  // If this plugin was scripted from a webpage, the plugin's
-  // scriptable object will be on the DOM element's prototype
-  // chain. Now that the plugin is being destroyed we need to pull the
-  // plugin's scriptable object out of that prototype chain.
-  if (!npp) {
-    return;
-  }
-
-  // Find the plugin instance so that we can (eventually) get to the
-  // DOM element
-  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)npp->ndata;
-  if (!inst)
-    return;
-
-  nsCOMPtr<nsIDOMElement> element;
-  inst->GetDOMElement(getter_AddRefs(element));
-  if (!element)
-    return;
-
-  // Get the DOM element's JS object.
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
-  if (!xpc)
-    return;
-
-  // OK.  Now we have to get our hands on the right scope object, since
-  // GetWrappedNativeOfNativeObject doesn't call PreCreate and hence won't get
-  // the right scope if we pass in something bogus.  The right scope lives on
-  // the script global of the element's document.
-  // XXXbz we MUST have a better way of doing this... perhaps
-  // GetWrappedNativeOfNativeObject _should_ call preCreate?
-  nsCOMPtr<nsIContent> content(do_QueryInterface(element));
-  if (!content) {
-    return;
-  }
-
-  JSObject *obj = content->GetWrapper();
-  JSObject *proto;
-
-  Maybe<JSAutoCompartment> ac;
-  if (obj) {
-    ac.construct(cx, obj);
-  }
-
-  // Loop over the DOM element's JS object prototype chain and remove
-  // all JS objects of the class sNPObjectJSWrapperClass (there should
-  // be only one, but remove all instances found in case the page put
-  // more than one of the plugin's scriptable objects on the prototype
-  // chain).
-  while (obj) {
-    if (!::JS_GetPrototype(cx, obj, &proto)) {
-      return;
-    }
-    if (!proto) {
-      break;
-    }
-    // Unwrap while checking the jsclass - if the prototype is a wrapper for
-    // an NP object, that counts too.
-    if (JS_GetClass(js::UnwrapObject(proto)) == &sNPObjectJSWrapperClass) {
-      // We found an NPObject on the proto chain, get its prototype...
-      if (!::JS_GetPrototype(cx, proto, &proto)) {
-        return;
-      }
-
-      // ... and pull it out of the chain.
-      ::JS_SetPrototype(cx, obj, proto);
-    }
-
-    obj = proto;
   }
 }
 
