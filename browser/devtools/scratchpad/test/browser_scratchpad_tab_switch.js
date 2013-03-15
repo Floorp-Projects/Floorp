@@ -58,13 +58,13 @@ function runTests()
   ok(!content.wrappedJSObject.foosbug653108,
      "no content.foosbug653108");
 
-  sp.run();
+  sp.run().then(function() {
+    is(content.wrappedJSObject.foosbug653108, "aloha",
+       "content.foosbug653108 has been set");
 
-  is(content.wrappedJSObject.foosbug653108, "aloha",
-     "content.foosbug653108 has been set");
-
-  gBrowser.tabContainer.addEventListener("TabSelect", runTests2, true);
-  gBrowser.selectedTab = tab1;
+    gBrowser.tabContainer.addEventListener("TabSelect", runTests2, true);
+    gBrowser.selectedTab = tab1;
+  });
 }
 
 function runTests2() {
@@ -73,18 +73,18 @@ function runTests2() {
   ok(!window.foosbug653108, "no window.foosbug653108");
 
   sp.setText("window.foosbug653108");
-  let result = sp.run();
+  sp.run().then(function([, , result]) {
+    isnot(result, "aloha", "window.foosbug653108 is not aloha");
 
-  isnot(result, "aloha", "window.foosbug653108 is not aloha");
+    sp.setText("window.foosbug653108 = 'ahoyhoy';");
+    sp.run().then(function() {
+      is(content.wrappedJSObject.foosbug653108, "ahoyhoy",
+         "content.foosbug653108 has been set 2");
 
-  sp.setText("window.foosbug653108 = 'ahoyhoy';");
-  sp.run();
-
-  is(content.wrappedJSObject.foosbug653108, "ahoyhoy",
-     "content.foosbug653108 has been set 2");
-
-  gBrowser.selectedBrowser.addEventListener("load", runTests3, true);
-  content.location = "data:text/html,test context switch in Scratchpad location 2";
+      gBrowser.selectedBrowser.addEventListener("load", runTests3, true);
+      content.location = "data:text/html,test context switch in Scratchpad location 2";
+    });
+  });
 }
 
 function runTests3() {
@@ -92,10 +92,12 @@ function runTests3() {
   // Check that the sandbox is not cached.
 
   sp.setText("typeof foosbug653108;");
-  is(sp.run()[2], "undefined", "global variable does not exist");
+  sp.run().then(function([, , result]) {
+    is(result, "undefined", "global variable does not exist");
 
-  tab1 = null;
-  tab2 = null;
-  sp = null;
-  finish();
+    tab1 = null;
+    tab2 = null;
+    sp = null;
+    finish();
+  });
 }
