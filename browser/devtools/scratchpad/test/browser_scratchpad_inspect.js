@@ -22,33 +22,37 @@ function runTests()
 
   sp.setText("document");
 
-  sp.inspect();
+  sp.inspect().then(function() {
 
-  let propPanel = document.querySelector(".scratchpad_propertyPanel");
-  ok(propPanel, "property panel is open");
+    let propPanel = document.querySelector(".scratchpad_propertyPanel");
+    ok(propPanel, "property panel is open");
 
-  propPanel.addEventListener("popupshown", function onPopupShown() {
-    propPanel.removeEventListener("popupshown", onPopupShown, false);
+    propPanel.addEventListener("popupshown", function onPopupShown() {
+      propPanel.removeEventListener("popupshown", onPopupShown, false);
 
-    let tree = propPanel.querySelector("tree");
-    ok(tree, "property panel tree found");
+      let tree = propPanel.querySelector("tree");
+      ok(tree, "property panel tree found");
 
-    let column = tree.columns[0];
-    let found = false;
+      let column = tree.columns[0];
+      let found = false;
 
-    for (let i = 0; i < tree.view.rowCount; i++) {
-      let cell = tree.view.getCellText(i, column);
-      if (cell == 'title: "foobarBug636725"') {
-        found = true;
-        break;
+      for (let i = 0; i < tree.view.rowCount; i++) {
+        let cell = tree.view.getCellText(i, column);
+        if (cell == 'title: "foobarBug636725"') {
+          found = true;
+          break;
+        }
       }
-    }
-    ok(found, "found the document.title property");
+      ok(found, "found the document.title property");
 
-    executeSoon(function() {
-      propPanel.hidePopup();
+      executeSoon(function() {
+        propPanel.hidePopup();
 
-      finish();
-    });
-  }, false);
+        finish();
+      });
+    }, false);
+  }, function() {
+    notok(true, "document not found");
+    finish();
+  });
 }

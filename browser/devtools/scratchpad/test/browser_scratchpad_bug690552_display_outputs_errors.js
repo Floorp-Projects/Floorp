@@ -18,38 +18,39 @@ function test()
 
 function runTests()
 {
-  var scratchpad = gScratchpadWindow.Scratchpad;
+  let scratchpad = gScratchpadWindow.Scratchpad;
 
-  var message = "\"Hello World!\""
-  var openComment = "\n/*\n";
-  var closeComment = "\n*/";
-  var error = "throw new Error(\"Ouch!\")";
-  let messageArray = {};
-  let count = {};
+  let message = "\"Hello World!\""
+  let openComment = "\n/*\n";
+  let closeComment = "\n*/";
+  let error = "throw new Error(\"Ouch!\")";
 
-  scratchpad.setText(message);
-  scratchpad.display();
-  is(scratchpad.getText(),
-      message + openComment + "Hello World!" + closeComment,
-      "message display output");
+  let tests = [{
+    method: "display",
+    code: message,
+    result: message + openComment + "Hello World!" + closeComment,
+    label: "message display output"
+  },
+  {
+    method: "display",
+    code: error,
+    result: error + openComment + "Exception: Ouch!\n@" +
+            scratchpad.uniqueName + ":1" + closeComment,
+    label: "error display output",
+  },
+  {
+    method: "run",
+    code: message,
+    result: message,
+    label: "message run output",
+  },
+  {
+    method: "run",
+    code: error,
+    result: error + openComment + "Exception: Ouch!\n@" +
+            scratchpad.uniqueName + ":1" + closeComment,
+    label: "error run output",
+  }];
 
-  scratchpad.setText(error);
-  scratchpad.display();
-  is(scratchpad.getText(), 
-      error + openComment +
-      "Exception: Ouch!\n@" + scratchpad.uniqueName + ":1" + closeComment,
-      "error display output");
-
-  scratchpad.setText(message);
-  scratchpad.run();
-  is(scratchpad.getText(), message, "message run output");
-
-  scratchpad.setText(error);
-  scratchpad.run();
-  is(scratchpad.getText(), 
-      error + openComment +
-      "Exception: Ouch!\n@" + scratchpad.uniqueName + ":1" + closeComment,
-      "error display output");
-
-  finish();
+  runAsyncTests(scratchpad, tests).then(finish);
 }
