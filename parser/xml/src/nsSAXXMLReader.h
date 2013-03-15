@@ -21,7 +21,6 @@
 #include "mozilla/Attributes.h"
 
 #define NS_SAXXMLREADER_CONTRACTID "@mozilla.org/saxparser/xmlreader;1"
-#define NS_SAXXMLREADER_CLASSNAME "SAX XML Reader"
 #define NS_SAXXMLREADER_CID  \
 { 0xab1da296, 0x6125, 0x40ba, \
 { 0x96, 0xd0, 0x47, 0xa8, 0x28, 0x2a, 0xe3, 0xdb} }

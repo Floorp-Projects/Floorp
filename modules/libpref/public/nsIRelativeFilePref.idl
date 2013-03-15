@@ -48,7 +48,6 @@ interface nsIRelativeFilePref : nsISupports
   }
 
 #define NS_RELATIVEFILEPREF_CONTRACTID "@mozilla.org/pref-relativefile;1"
-#define NS_RELATIVEFILEPREF_CLASSNAME "Relative File Pref"
 
 #include "nsComponentManagerUtils.h"
 

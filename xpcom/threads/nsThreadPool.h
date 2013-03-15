@@ -45,7 +45,6 @@ private:
   nsThreadPoolNaming    mThreadNaming;
 };
 
-#define NS_THREADPOOL_CLASSNAME "nsThreadPool"
 #define NS_THREADPOOL_CID                          \
 { /* 547ec2a8-315e-4ec4-888e-6e4264fe90eb */       \
   0x547ec2a8,                                      \

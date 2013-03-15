@@ -12,8 +12,6 @@
  */
 
 // service implementing nsIIOService and nsIIOService2.
-#define NS_IOSERVICE_CLASSNAME \
-    "nsIOService"
 #define NS_IOSERVICE_CONTRACTID \
     "@mozilla.org/network/io-service;1"
 #define NS_IOSERVICE_CID                             \
@@ -29,8 +27,6 @@
     "@mozilla.org/network/util;1"
 
 // serialization scriptable helper
-#define NS_SERIALIZATION_HELPER_CLASSNAME \
-  "nsSerializationHelper"
 #define NS_SERIALIZATION_HELPER_CONTRACTID \
   "@mozilla.org/network/serialization-helper;1"
 #define NS_SERIALIZATION_HELPER_CID                  \
@@ -42,8 +38,6 @@
 }
 
 // service implementing nsIProtocolProxyService and nsPIProtocolProxyService.
-#define NS_PROTOCOLPROXYSERVICE_CLASSNAME \
-    "nsProtocolProxyService"
 #define NS_PROTOCOLPROXYSERVICE_CONTRACTID \
     "@mozilla.org/network/protocol-proxy-service;1"
 #define NS_PROTOCOLPROXYSERVICE_CID                  \
@@ -55,8 +49,6 @@
 }
 
 // service implementing nsIProxyAutoConfig.
-#define NS_PROXYAUTOCONFIG_CLASSNAME \
-    "nsProxyAutoConfig"
 #define NS_PROXYAUTOCONFIG_CONTRACTID \
     "@mozilla.org/network/proxy-auto-config;1" 
 #define NS_PROXYAUTOCONFIG_CID                       \
@@ -68,8 +60,6 @@
 }
 
 // component implementing nsILoadGroup.
-#define NS_LOADGROUP_CLASSNAME \
-    "nsLoadGroup"
 #define NS_LOADGROUP_CONTRACTID \
     "@mozilla.org/network/load-group;1"
 #define NS_LOADGROUP_CID                             \
@@ -81,8 +71,6 @@
 }
 
 // component implementing nsIURI, nsISerializable, and nsIClassInfo.
-#define NS_SIMPLEURI_CLASSNAME \
-    "nsSimpleURI"
 #define NS_SIMPLEURI_CONTRACTID \
     "@mozilla.org/network/simple-uri;1"
 #define NS_SIMPLEURI_CID                              \
@@ -115,8 +103,6 @@
 
 // component implementing nsIStandardURL, nsIURI, nsIURL, nsISerializable,
 // and nsIClassInfo.
-#define NS_STANDARDURL_CLASSNAME \
-    "nsStandardURL"
 #define NS_STANDARDURL_CONTRACTID \
     "@mozilla.org/network/standard-url;1"
 #define NS_STANDARDURL_CID                           \
@@ -129,8 +115,6 @@
 
 // service implementing nsIURLParser that assumes the URL will NOT contain an
 // authority section.
-#define NS_NOAUTHURLPARSER_CLASSNAME \
-    "nsNoAuthURLParser"
 #define NS_NOAUTHURLPARSER_CONTRACTID \
     "@mozilla.org/network/url-parser;1?auth=no"
 #define NS_NOAUTHURLPARSER_CID                       \
@@ -143,8 +127,6 @@
 
 // service implementing nsIURLParser that assumes the URL will contain an
 // authority section.
-#define NS_AUTHURLPARSER_CLASSNAME \
-    "nsAuthURLParser"
 #define NS_AUTHURLPARSER_CONTRACTID \
     "@mozilla.org/network/url-parser;1?auth=yes"
 #define NS_AUTHURLPARSER_CID                         \
@@ -157,8 +139,6 @@
 
 // service implementing nsIURLParser that does not make any assumptions about
 // whether or not the URL contains an authority section.
-#define NS_STDURLPARSER_CLASSNAME \
-    "nsStdURLParser"
 #define NS_STDURLPARSER_CONTRACTID \
     "@mozilla.org/network/url-parser;1?auth=maybe"
 #define NS_STDURLPARSER_CID                          \
@@ -170,8 +150,6 @@
 }
 
 // component implementing nsIRequestObserverProxy.
-#define NS_REQUESTOBSERVERPROXY_CLASSNAME \
-    "nsRequestObserverProxy"
 #define NS_REQUESTOBSERVERPROXY_CONTRACTID \
     "@mozilla.org/network/request-observer-proxy;1"
 #define NS_REQUESTOBSERVERPROXY_CID                  \
@@ -183,8 +161,6 @@
 }
 
 // component implementing nsISimpleStreamListener.
-#define NS_SIMPLESTREAMLISTENER_CLASSNAME \
-    "nsSimpleStreamListener"
 #define NS_SIMPLESTREAMLISTENER_CONTRACTID \
     "@mozilla.org/network/simple-stream-listener;1"
 #define NS_SIMPLESTREAMLISTENER_CID                  \
@@ -196,8 +172,6 @@
 }
 
 // component implementing nsIStreamListenerTee.
-#define NS_STREAMLISTENERTEE_CLASSNAME \
-    "nsStreamListenerTee"
 #define NS_STREAMLISTENERTEE_CONTRACTID \
     "@mozilla.org/network/stream-listener-tee;1"
 #define NS_STREAMLISTENERTEE_CID                     \
@@ -209,8 +183,6 @@
 }
 
 // component implementing nsIAsyncStreamCopier.
-#define NS_ASYNCSTREAMCOPIER_CLASSNAME \
-    "nsAsyncStreamCopier"
 #define NS_ASYNCSTREAMCOPIER_CONTRACTID \
     "@mozilla.org/network/async-stream-copier;1"
 #define NS_ASYNCSTREAMCOPIER_CID                     \
@@ -222,8 +194,6 @@
 }
 
 // component implementing nsIInputStreamPump.
-#define NS_INPUTSTREAMPUMP_CLASSNAME \
-    "nsInputStreamPump"
 #define NS_INPUTSTREAMPUMP_CONTRACTID \
     "@mozilla.org/network/input-stream-pump;1"
 #define NS_INPUTSTREAMPUMP_CID                       \
@@ -235,8 +205,6 @@
 }
 
 // component implementing nsIInputStreamChannel.
-#define NS_INPUTSTREAMCHANNEL_CLASSNAME \
-    "nsInputStreamChannel"
 #define NS_INPUTSTREAMCHANNEL_CONTRACTID \
     "@mozilla.org/network/input-stream-channel;1"
 #define NS_INPUTSTREAMCHANNEL_CID                    \
@@ -248,8 +216,6 @@
 }
 
 // component implementing nsIStreamLoader.
-#define NS_STREAMLOADER_CLASSNAME \
-    "nsStreamLoader"
 #define NS_STREAMLOADER_CONTRACTID \
     "@mozilla.org/network/stream-loader;1"
 #define NS_STREAMLOADER_CID \
@@ -261,8 +227,6 @@
 }
 
 // component implementing nsIUnicharStreamLoader.
-#define NS_UNICHARSTREAMLOADER_CLASSNAME \
-    "nsUnicharStreamLoader"
 #define NS_UNICHARSTREAMLOADER_CONTRACTID \
     "@mozilla.org/network/unichar-stream-loader;1"
 #define NS_UNICHARSTREAMLOADER_CID \
@@ -274,8 +238,6 @@
 }
 
 // component implementing nsIDownloader.
-#define NS_DOWNLOADER_CLASSNAME \
-    "nsDownloader"
 #define NS_DOWNLOADER_CONTRACTID \
     "@mozilla.org/network/downloader;1"
 #define NS_DOWNLOADER_CID \
@@ -288,8 +250,6 @@
 
 // component implementing nsIBackgroundFileSaver and
 // nsIOutputStream.
-#define NS_BACKGROUNDFILESAVEROUTPUTSTREAM_CLASSNAME \
-    "BackgroundFileSaverOutputStream"
 #define NS_BACKGROUNDFILESAVEROUTPUTSTREAM_CONTRACTID \
     "@mozilla.org/network/background-file-saver;1?mode=outputstream"
 #define NS_BACKGROUNDFILESAVEROUTPUTSTREAM_CID \
@@ -302,8 +262,6 @@
 
 // component implementing nsIBackgroundFileSaver and
 // nsIStreamListener.
-#define NS_BACKGROUNDFILESAVERSTREAMLISTENER_CLASSNAME \
-    "BackgroundFileSaverStreamListener"
 #define NS_BACKGROUNDFILESAVERSTREAMLISTENER_CONTRACTID \
     "@mozilla.org/network/background-file-saver;1?mode=streamlistener"
 #define NS_BACKGROUNDFILESAVERSTREAMLISTENER_CID \
@@ -315,8 +273,6 @@
 }
 
 // component implementing nsISyncStreamListener.
-#define NS_SYNCSTREAMLISTENER_CLASSNAME \
-    "nsSyncStreamListener"
 #define NS_SYNCSTREAMLISTENER_CONTRACTID \
     "@mozilla.org/network/sync-stream-listener;1"
 #define NS_SYNCSTREAMLISTENER_CID \
@@ -328,8 +284,6 @@
 }
 
 // component implementing nsIURIChecker.
-#define NS_URICHECKER_CLASSNAME \
-    "nsURIChecker"
 #define NS_URICHECKER_CONTRACT_ID \
     "@mozilla.org/network/urichecker;1"
 #define NS_URICHECKER_CID \
@@ -349,8 +303,6 @@
     "@mozilla.org/system-proxy-settings;1"
 
 // service implementing nsIStreamTransportService
-#define NS_STREAMTRANSPORTSERVICE_CLASSNAME \
-    "nsStreamTransportService"
 #define NS_STREAMTRANSPORTSERVICE_CONTRACTID \
     "@mozilla.org/network/stream-transport-service;1"
 #define NS_STREAMTRANSPORTSERVICE_CID \
@@ -362,8 +314,6 @@
 }
 
 // service implementing nsISocketTransportService
-#define NS_SOCKETTRANSPORTSERVICE_CLASSNAME \
-    "nsSocketTransportService"
 #define NS_SOCKETTRANSPORTSERVICE_CONTRACTID \
     "@mozilla.org/network/socket-transport-service;1"
 #define NS_SOCKETTRANSPORTSERVICE_CID                \
@@ -375,8 +325,6 @@
 }
 
 // component implementing nsIServerSocket
-#define NS_SERVERSOCKET_CLASSNAME \
-    "nsServerSocket"
 #define NS_SERVERSOCKET_CONTRACTID \
     "@mozilla.org/network/server-socket;1"
 #define NS_SERVERSOCKET_CID                          \
@@ -388,8 +336,6 @@
 }
 
 // component implementing nsIUDPServerSocket
-#define NS_UDPSERVERSOCKET_CLASSNAME \
-    "nsUDPServerSocket"
 #define NS_UDPSERVERSOCKET_CONTRACTID \
     "@mozilla.org/network/server-socket-udp;1"
 #define NS_UDPSERVERSOCKET_CID                       \
@@ -400,8 +346,6 @@
     {0xbb, 0x4a, 0x03, 0xc0, 0xd3, 0x02, 0x1b, 0xd6} \
 }
 
-#define NS_LOCALFILEINPUTSTREAM_CLASSNAME \
-    "nsFileInputStream"
 #define NS_LOCALFILEINPUTSTREAM_CONTRACTID \
     "@mozilla.org/network/file-input-stream;1"
 #define NS_LOCALFILEINPUTSTREAM_CID                  \
@@ -412,8 +356,6 @@
     {0x8c, 0xda, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
-#define NS_LOCALFILEOUTPUTSTREAM_CLASSNAME \
-    "nsFileOutputStream"
 #define NS_LOCALFILEOUTPUTSTREAM_CONTRACTID \
     "@mozilla.org/network/file-output-stream;1"
 #define NS_LOCALFILEOUTPUTSTREAM_CID                 \
@@ -424,8 +366,6 @@
     {0x8c, 0xda, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
-#define NS_PARTIALLOCALFILEINPUTSTREAM_CLASSNAME \
-    "nsPartialFileInputStream"
 #define NS_PARTIALLOCALFILEINPUTSTREAM_CONTRACTID \
     "@mozilla.org/network/partial-file-input-stream;1"
 #define NS_PARTIALLOCALFILEINPUTSTREAM_CID           \
@@ -436,8 +376,6 @@
     {0xa9, 0x9b, 0x75, 0xb3, 0xa6, 0xb1, 0x0a, 0x56} \
 }
 
-#define NS_BUFFEREDINPUTSTREAM_CLASSNAME \
-    "nsBufferedInputStream"
 #define NS_BUFFEREDINPUTSTREAM_CONTRACTID \
     "@mozilla.org/network/buffered-input-stream;1"
 #define NS_BUFFEREDINPUTSTREAM_CID                   \
@@ -448,8 +386,6 @@
     {0x8c, 0xda, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
-#define NS_BUFFEREDOUTPUTSTREAM_CLASSNAME \
-    "nsBufferedOutputStream"
 #define NS_BUFFEREDOUTPUTSTREAM_CONTRACTID \
     "@mozilla.org/network/buffered-output-stream;1"
 #define NS_BUFFEREDOUTPUTSTREAM_CID                  \
@@ -461,8 +397,6 @@
 }
 
 // component implementing nsISafeOutputStream
-#define NS_SAFELOCALFILEOUTPUTSTREAM_CLASSNAME \
-    "nsSafeFileOutputStream"
 #define NS_SAFELOCALFILEOUTPUTSTREAM_CONTRACTID \
     "@mozilla.org/network/safe-file-output-stream;1"
 #define NS_SAFELOCALFILEOUTPUTSTREAM_CID             \
@@ -474,8 +408,6 @@
 }
 
 // component implementing nsIFileStream
-#define NS_LOCALFILESTREAM_CLASSNAME \
-    "nsFileStream"
 #define NS_LOCALFILESTREAM_CONTRACTID \
     "@mozilla.org/network/file-stream;1"
 #define NS_LOCALFILESTREAM_CID                       \
@@ -509,8 +441,6 @@
  */
 
 // service implementing nsICacheService.
-#define NS_CACHESERVICE_CLASSNAME \
-    "nsCacheService"
 #define NS_CACHESERVICE_CONTRACTID \
     "@mozilla.org/network/cache-service;1"
 #define NS_CACHESERVICE_CID                          \
@@ -522,8 +452,6 @@
 }
 
 // service implementing nsIApplicationCacheService.
-#define NS_APPLICATIONCACHESERVICE_CLASSNAME \
-    "nsApplicationCacheService"
 #define NS_APPLICATIONCACHESERVICE_CONTRACTID \
     "@mozilla.org/network/application-cache-service;1"
 #define NS_APPLICATIONCACHESERVICE_CID               \
@@ -534,8 +462,6 @@
     {0xa5, 0x0c, 0x2c, 0xbb, 0x08, 0x5a, 0xb7, 0xa5} \
 }
 
-#define NS_APPLICATIONCACHENAMESPACE_CLASSNAME \
-    "nsApplicationCacheNamespace"
 #define NS_APPLICATIONCACHENAMESPACE_CONTRACTID \
     "@mozilla.org/network/application-cache-namespace;1"
 #define NS_APPLICATIONCACHENAMESPACE_CID             \
@@ -546,8 +472,6 @@
    {0x8e, 0x1c, 0xd1, 0xaf, 0x79, 0xdf, 0xd1, 0x2f}  \
 }
 
-#define NS_APPLICATIONCACHE_CLASSNAME \
-    "nsApplicationCache"
 #define NS_APPLICATIONCACHE_CONTRACTID \
     "@mozilla.org/network/application-cache;1"
 
@@ -603,8 +527,6 @@
     {0xb5, 0x3e, 0xe6, 0x1e, 0x74, 0xc2, 0x45, 0x1a} \
 }
 
-#define NS_HTTPAUTHMANAGER_CLASSNAME \
-    "nsHttpAuthManager"
 #define NS_HTTPAUTHMANAGER_CONTRACTID \
     "@mozilla.org/network/http-auth-manager;1"
 #define NS_HTTPAUTHMANAGER_CID \
@@ -615,8 +537,6 @@
     {0x9f, 0xd4, 0xe0, 0x65, 0xe8, 0x55, 0x68, 0xf4} \
 }
 
-#define NS_HTTPCHANNELAUTHPROVIDER_CLASSNAME \
-    "nsHttpChannelAuthProvider"
 #define NS_HTTPCHANNELAUTHPROVIDER_CONTRACTID \
     "@mozilla.org/network/http-channel-auth-provider;1"
 #define NS_HTTPCHANNELAUTHPROVIDER_CID \
@@ -627,8 +547,6 @@
     {0xb5, 0x27, 0x8a, 0x64, 0x30, 0x56, 0xab, 0xbd} \
 }
 
-#define NS_HTTPACTIVITYDISTRIBUTOR_CLASSNAME \
-    "nsHttpActivityDistributor"
 #define NS_HTTPACTIVITYDISTRIBUTOR_CONTRACTID \
     "@mozilla.org/network/http-activity-distributor;1"
 #define NS_HTTPACTIVITYDISTRIBUTOR_CID \
@@ -643,8 +561,6 @@
  * netwerk/protocol/ftp/ classes
  */
 
-#define NS_FTPPROTOCOLHANDLER_CLASSNAME \
-    "nsFtpProtocolHandler"
 #define NS_FTPPROTOCOLHANDLER_CID \
 { /* 25029490-F132-11d2-9588-00805F369F95 */         \
     0x25029490,                                      \
@@ -657,8 +573,6 @@
  * netwerk/protocol/res/ classes
  */
 
-#define NS_RESPROTOCOLHANDLER_CLASSNAME \
-    "nsResProtocolHandler"
 #define NS_RESPROTOCOLHANDLER_CID                    \
 { /* e64f152a-9f07-11d3-8cda-0060b0fc14a3 */         \
     0xe64f152a,                                      \
@@ -667,8 +581,6 @@
     {0x8c, 0xda, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
-#define NS_RESURL_CLASSNAME \
-    "nsResURL"
 #define NS_RESURL_CID                    \
 { /* ff8fe7ec-2f74-4408-b742-6b7a546029a8 */         \
     0xff8fe7ec,                                      \
@@ -682,8 +594,6 @@
  * netwerk/protocol/file/ classes
  */
 
-#define NS_FILEPROTOCOLHANDLER_CLASSNAME \
-    "nsFileProtocolHandler"
 #define NS_FILEPROTOCOLHANDLER_CID                   \
 { /* fbc81170-1f69-11d3-9344-00104ba0fd40 */         \
     0xfbc81170,                                      \
@@ -696,8 +606,6 @@
  * netwerk/protocol/data/ classes
  */
 
-#define NS_DATAPROTOCOLHANDLER_CLASSNAME \
-    "nsDataProtocolHandler"
 #define NS_DATAPROTOCOLHANDLER_CID                   \
 { /* {B6ED3030-6183-11d3-A178-0050041CAF44} */       \
     0xb6ed3030,                                      \
@@ -709,8 +617,6 @@
 /******************************************************************************
  * netwerk/protocol/device classes
  */
-#define NS_DEVICEPROTOCOLHANDLER_CLASSNAME \
-    "nsDeviceProtocolHandler"
 #define NS_DEVICEPROTOCOLHANDLER_CID                 \
 { /* 6b0ffe9e-d114-486b-aeb7-da62e7273ed5 */         \
     0x60ffe9e,                                       \
@@ -768,8 +674,6 @@
  * netwerk/protocol/about/ classes
  */
 
-#define NS_ABOUTPROTOCOLHANDLER_CLASSNAME \
-    "About Protocol Handler"
 #define NS_ABOUTPROTOCOLHANDLER_CID                  \
 { /* 9e3b6c90-2f75-11d3-8cd0-0060b0fc14a3 */         \
     0x9e3b6c90,                                      \
@@ -778,8 +682,6 @@
     {0x8c, 0xd0, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
-#define NS_SAFEABOUTPROTOCOLHANDLER_CLASSNAME \
-    "Safe About Protocol Handler"
 #define NS_SAFEABOUTPROTOCOLHANDLER_CID              \
 { /* 1423e739-782c-4081-b5d8-fe6fba68c0ef */         \
     0x1423e739,                                      \
@@ -792,8 +694,6 @@
  * netwerk/dns/ classes
  */
 
-#define NS_DNSSERVICE_CLASSNAME \
-    "nsDNSService"
 #define NS_DNSSERVICE_CONTRACTID \
     "@mozilla.org/network/dns-service;1"
 #define NS_DNSSERVICE_CID \
@@ -804,8 +704,6 @@
     {0xa0, 0x92, 0x83, 0xc1, 0xb8, 0x8f, 0x6b, 0xe9} \
 }
 
-#define NS_IDNSERVICE_CLASSNAME \
-    "nsIDNService"
 /* ContractID of the XPCOM package that implements nsIIDNService */
 #define NS_IDNSERVICE_CONTRACTID \
     "@mozilla.org/network/idn-service;1"
@@ -817,8 +715,6 @@
     {0x8c, 0x31, 0x28, 0x65, 0xfb, 0xb6, 0x8c, 0x91} \
 }
 
-#define NS_EFFECTIVETLDSERVICE_CLASSNAME \
-    "nsEffectiveTLDService"
 #define NS_EFFECTIVETLDSERVICE_CONTRACTID \
     "@mozilla.org/network/effective-tld-service;1"
 #define NS_EFFECTIVETLDSERVICE_CID \
@@ -834,8 +730,6 @@
  * netwerk/mime classes
  */
 
-#define NS_MIMEHEADERPARAM_CLASSNAME \
-    "nsMIMEHeaderParamImpl"
 // {1F4DBCF7-245C-4c8c-943D-8A1DA0495E8A} 
 #define NS_MIMEHEADERPARAM_CID                         \
 {   0x1f4dbcf7,                                        \
@@ -851,8 +745,6 @@
  * netwerk/socket classes
  */
 
-#define NS_SOCKETPROVIDERSERVICE_CLASSNAME \
-    "nsSocketProviderService"
 #define NS_SOCKETPROVIDERSERVICE_CONTRACTID \
     "@mozilla.org/network/socket-provider-service;1"
 #define NS_SOCKETPROVIDERSERVICE_CID                   \
@@ -897,8 +789,6 @@
     NS_NETWORK_SOCKET_CONTRACTID_PREFIX "starttls"
 
 
-#define NS_DASHBOARD_CLASSNAME \
-    "Dashboard"
 #define NS_DASHBOARD_CONTRACTID \
     "@mozilla.org/network/dashboard;1"
 #define NS_DASHBOARD_CID                               \
@@ -915,8 +805,6 @@
  */
 
 // service implementing nsICookieManager and nsICookieManager2.
-#define NS_COOKIEMANAGER_CLASSNAME \
-    "CookieManager"
 #define NS_COOKIEMANAGER_CONTRACTID \
     "@mozilla.org/cookiemanager;1"
 #define NS_COOKIEMANAGER_CID                           \
@@ -928,8 +816,6 @@
 }
 
 // service implementing nsICookieService.
-#define NS_COOKIESERVICE_CLASSNAME \
-    "CookieService"
 #define NS_COOKIESERVICE_CONTRACTID \
     "@mozilla.org/cookieService;1"
 #define NS_COOKIESERVICE_CID                           \
@@ -944,7 +830,6 @@
  * netwerk/wifi classes
  */
 #ifdef NECKO_WIFI
-#define NS_WIFI_MONITOR_CLASSNAME  "WIFI_MONITOR"
 #define NS_WIFI_MONITOR_CONTRACTID "@mozilla.org/wifi/monitor;1"
 
 #define NS_WIFI_MONITOR_COMPONENT_CID                  \
@@ -991,7 +876,6 @@
  */
 
 // service implementing nsINetworkLinkService
-#define NS_NETWORK_LINK_SERVICE_CLASSNAME "Network Link Status"
 #define NS_NETWORK_LINK_SERVICE_CID    \
   { 0x75a500a2,                                        \
     0x0030,                                            \

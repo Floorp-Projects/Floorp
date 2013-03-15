@@ -12,5 +12,4 @@ interface nsICryptoFIPSInfo : nsISupports
 
 %{C++
 #define NS_CRYPTO_FIPSINFO_SERVICE_CONTRACTID "@mozilla.org/crypto/fips-info-service;1"
-#define NS_CRYPTO_FIPSINFO_SERVICE_CLASSNAME "Mozilla Crypto FIPS Info Service"
 %}

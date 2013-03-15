@@ -39,9 +39,6 @@ interface nsIInterfaceInfoSuperManager : nsIInterfaceInfoManager
 };
 
 %{C++
-#define NS_INTERFACEINFOMANAGER_SERVICE_CLASSNAME  \
-   "Interface Information Manager Service"
-
 #define NS_INTERFACEINFOMANAGER_SERVICE_CID            \
  { /* 13bef784-f8e0-4f96-85c1-09f9ef4f9a19 */          \
   0x13bef784, 0xf8e0, 0x4f96,                          \

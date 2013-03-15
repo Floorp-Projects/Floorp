@@ -8,8 +8,6 @@
 
 
 %{C++
-#define NS_APPLEFILEDECODER_CLASSNAME    "Apple Single/Double File decoder"
-
 #define NS_APPLEFILEDECODER_CID                      \
 { /* 3a2bb281-64b8-11d5-9daa-bb433143c53c */         \
     0x3a2bb281,                                      \

@@ -410,7 +410,6 @@ interface nsIPrefBranch : nsISupports
 %{C++
 
 #define NS_PREFBRANCH_CONTRACTID "@mozilla.org/preferencesbranch;1"
-#define NS_PREFBRANCH_CLASSNAME "Preferences Branch"
 /**
  * Notification sent when a preference changes.
  */
