@@ -191,5 +191,11 @@ AudioContext::DestinationStream() const
   return Destination()->Stream();
 }
 
+double
+AudioContext::CurrentTime() const
+{
+  return MediaTimeToSeconds(Destination()->Stream()->GetCurrentTime());
+}
+
 }
 }
