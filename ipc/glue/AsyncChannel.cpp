@@ -210,6 +210,25 @@ AsyncChannel::ThreadLink::ThreadLink(AsyncChannel *aChan,
 
 AsyncChannel::ThreadLink::~ThreadLink()
 {
+    MonitorAutoLock lock(*mChan->mMonitor);
+    // Bug 848949: We need to prevent the other side
+    // from sending us any more messages to avoid Use-After-Free.
+    // The setup here is as shown:
+    //
+    //          (Us)         (Them)
+    //       AsyncChannel  AsyncChannel
+    //         |  ^     \ /     ^ |
+    //         |  |      X      | |
+    //         v  |     / \     | v
+    //        ThreadLink   ThreadLink
+    //
+    // We want to null out the diagonal link from their ThreadLink
+    // to our AsyncChannel.  Note that we must hold the monitor so
+    // that we do this atomically with respect to them trying to send
+    // us a message.
+    if (mTargetChan) {
+        static_cast<ThreadLink*>(mTargetChan->mLink)->mTargetChan = 0;
+    }
     mTargetChan = 0;
 }
 
@@ -229,7 +248,8 @@ AsyncChannel::ThreadLink::SendMessage(Message *msg)
     mChan->AssertWorkerThread();
     mChan->mMonitor->AssertCurrentThreadOwns();
 
-    mTargetChan->OnMessageReceivedFromLink(*msg);
+    if (mTargetChan)
+        mTargetChan->OnMessageReceivedFromLink(*msg);
     delete msg;
 }
 
@@ -246,7 +266,8 @@ AsyncChannel::ThreadLink::SendClose()
     // The I/O thread would then invoke OnChannelErrorFromLink().
     // As usual, we skip that process and just invoke the
     // OnChannelErrorFromLink() method directly.
-    mTargetChan->OnChannelErrorFromLink();
+    if (mTargetChan)
+        mTargetChan->OnChannelErrorFromLink();
 }
 
 AsyncChannel::AsyncChannel(AsyncListener* aListener)
