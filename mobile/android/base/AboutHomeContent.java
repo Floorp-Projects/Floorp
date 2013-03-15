@@ -12,6 +12,7 @@ import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.db.BrowserDB.TopSitesCursorWrapper;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.util.ActivityResultHandler;
+import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 
 import org.json.JSONArray;
@@ -143,7 +144,7 @@ public class AboutHomeContent extends ScrollView
         // Because the tabs URI is coarse grained, this updates the
         // remote tabs component on *every* tab change
         // The observer will run on the background thread (see constructor argument)
-        mTabsContentObserver = new ContentObserver(GeckoAppShell.getHandler()) {
+        mTabsContentObserver = new ContentObserver(ThreadUtils.getBackgroundHandler()) {
             @Override
             public void onChange(boolean selfChange) {
                 update(EnumSet.of(AboutHomeContent.UpdateFlags.REMOTE_TABS));
@@ -426,7 +427,7 @@ public class AboutHomeContent extends ScrollView
         if (urls.size() == 0)
             return;
 
-        (new UiAsyncTask<Void, Void, Cursor>(GeckoAppShell.getHandler()) {
+        (new UiAsyncTask<Void, Void, Cursor>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public Cursor doInBackground(Void... params) {
                 return BrowserDB.getThumbnailsForUrls(cr, urls);
@@ -440,7 +441,7 @@ public class AboutHomeContent extends ScrollView
     }
 
     void update(final EnumSet<UpdateFlags> flags) {
-        GeckoAppShell.getHandler().post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 if (flags.contains(UpdateFlags.TOP_SITES))
@@ -990,7 +991,7 @@ public class AboutHomeContent extends ScrollView
         final String url = holder.getUrl();
         // Quickly update the view so that there isn't as much lag between the request and response
         clearThumbnail(holder);
-        (new UiAsyncTask<Void, Void, Void>(GeckoAppShell.getHandler()) {
+        (new UiAsyncTask<Void, Void, Void>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public Void doInBackground(Void... params) {
                 final ContentResolver resolver = mActivity.getContentResolver();
@@ -1011,7 +1012,7 @@ public class AboutHomeContent extends ScrollView
         holder.setPinned(true);
 
         // update the database on a background thread
-        (new UiAsyncTask<Void, Void, Void>(GeckoAppShell.getHandler()) {
+        (new UiAsyncTask<Void, Void, Void>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public Void doInBackground(Void... params) {
                 final ContentResolver resolver = mActivity.getContentResolver();
@@ -1056,7 +1057,7 @@ public class AboutHomeContent extends ScrollView
                 holder.setPinned(true);
 
                 // update the database on a background thread
-                (new UiAsyncTask<Void, Void, Bitmap>(GeckoAppShell.getHandler()) {
+                (new UiAsyncTask<Void, Void, Bitmap>(ThreadUtils.getBackgroundHandler()) {
                     @Override
                     public Bitmap doInBackground(Void... params) {
                         final ContentResolver resolver = mActivity.getContentResolver();

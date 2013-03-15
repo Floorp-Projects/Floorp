@@ -177,7 +177,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
      * Query for suggestions, but don't show them yet.
      */
     private void primeSuggestions() {
-        GeckoAppShell.getHandler().post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 mSuggestClient.query(mSearchTerm);
@@ -844,7 +844,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         if (urls.size() == 0)
             return;
 
-        (new UiAsyncTask<Void, Void, Cursor>(GeckoAppShell.getHandler()) {
+        (new UiAsyncTask<Void, Void, Cursor>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public Cursor doInBackground(Void... params) {
                 return BrowserDB.getFaviconsForUrls(getContentResolver(), urls);

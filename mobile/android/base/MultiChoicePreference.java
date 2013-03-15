@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.util.ThreadUtils;
+
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.content.Context;
@@ -184,7 +186,7 @@ class MultiChoicePreference extends DialogPreference {
             mPrevValues = mValues.clone();
         }
 
-        GeckoAppShell.getHandler().post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 for (int i = 0; i < mEntryKeys.length; i++) {
@@ -233,7 +235,7 @@ class MultiChoicePreference extends DialogPreference {
         }
 
         mValues = new boolean[entryCount];
-        GeckoAppShell.getHandler().post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 for (int i = 0; i < entryCount; i++) {

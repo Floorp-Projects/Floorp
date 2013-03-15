@@ -112,7 +112,7 @@ public class Favicons {
             return -1;
         }
 
-        LoadFaviconTask task = new LoadFaviconTask(GeckoAppShell.getHandler(), pageUrl, faviconUrl, persist, listener);
+        LoadFaviconTask task = new LoadFaviconTask(ThreadUtils.getBackgroundHandler(), pageUrl, faviconUrl, persist, listener);
 
         long taskId = task.getId();
         mLoadTasks.put(taskId, task);

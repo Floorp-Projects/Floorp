@@ -12,7 +12,6 @@ import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.util.EventDispatcher;
-import org.mozilla.gecko.util.GeckoBackgroundThread;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -49,7 +48,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.MessageQueue;
@@ -254,10 +252,6 @@ public class GeckoAppShell
                 mScanner = null;
             }
         }
-    }
-
-    public static Handler getHandler() {
-        return GeckoBackgroundThread.getHandler();
     }
 
     public static void runGecko(String apkPath, String args, String url, String type) {
@@ -608,7 +602,7 @@ public class GeckoAppShell
     public static void createShortcut(final String aTitle, final String aURI, final String aUniqueURI,
                                       final Bitmap aIcon, final String aType)
     {
-        getHandler().post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 // the intent to be launched by the shortcut
@@ -645,7 +639,7 @@ public class GeckoAppShell
     }
 
     public static void removeShortcut(final String aTitle, final String aURI, final String aUniqueURI, final String aType) {
-        getHandler().post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 // the intent to be launched by the shortcut
@@ -680,7 +674,7 @@ public class GeckoAppShell
         // On uninstall, we need to do a couple of things:
         //   1. nuke the running app process.
         //   2. nuke the profile that was assigned to that webapp
-        getHandler().post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 int index = WebAppAllocator.getInstance(GeckoApp.mAppContext).releaseIndexForApp(uniqueURI);
@@ -1117,7 +1111,7 @@ public class GeckoAppShell
     // Note: the main looper won't work because it may be blocked on the
     // gecko thread, which is most likely this thread
     static String getClipboardText() {
-        getHandler().post(new Runnable() { 
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             @SuppressWarnings("deprecation")
             public void run() {
@@ -1151,7 +1145,7 @@ public class GeckoAppShell
     }
 
     static void setClipboardText(final String text) {
-        getHandler().post(new Runnable() { 
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             @SuppressWarnings("deprecation")
             public void run() {
@@ -1852,7 +1846,7 @@ public class GeckoAppShell
     }
 
     static void markUriVisited(final String uri) {    // invoked from native JNI code
-        getHandler().post(new Runnable() { 
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 GlobalHistory.getInstance().add(uri);
@@ -1861,7 +1855,7 @@ public class GeckoAppShell
     }
 
     static void setUriTitle(final String uri, final String title) {    // invoked from native JNI code
-        getHandler().post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 GlobalHistory.getInstance().update(uri, title);
