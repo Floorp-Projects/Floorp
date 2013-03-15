@@ -24,6 +24,8 @@
 #include "nsIObjectFrame.h"
 #include "nsIPermissionManager.h"
 #include "nsPluginHost.h"
+#include "nsJSNPRuntime.h"
+#include "nsIJSContextStack.h"
 #include "nsIPresShell.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
@@ -2274,6 +2276,7 @@ nsObjectLoadingContent::PluginCrashed(nsIPluginTag* aPluginTag,
   NS_ASSERTION(mType == eType_Plugin, "PluginCrashed at non-plugin type");
 
   // Instance is dead, clean up
+  TeardownProtoChain();
   mInstanceOwner = nullptr;
   CloseChannel();
 
@@ -2508,6 +2511,7 @@ nsObjectLoadingContent::DoStopPlugin(nsPluginInstanceOwner* aInstanceOwner,
     NS_ASSERTION(pluginHost, "No plugin host?");
     pluginHost->StopPluginInstance(inst);
   }
+  TeardownProtoChain();
 
   aInstanceOwner->Destroy();
   mIsStopping = false;
@@ -2874,6 +2878,51 @@ nsObjectLoadingContent::SetupProtoChain(JSContext* aCx, JSObject* aObject)
                                                           scriptContext,
                                                           this);
     nsContentUtils::AddScriptRunner(runner);
+  }
+}
+
+void
+nsObjectLoadingContent::TeardownProtoChain()
+{
+  nsCOMPtr<nsIContent> thisContent =
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+
+  // Use the safe JSContext here as we're not always able to find the
+  // JSContext associated with the NPP any more.
+  JSContext *cx = nsContentUtils::GetSafeJSContext();
+  JSObject *obj = thisContent->GetWrapper();
+  NS_ENSURE_TRUE(obj, /* void */);
+
+  JSObject *proto;
+  JSAutoRequest ar(cx);
+  JSAutoCompartment ac(cx, obj);
+
+  // Loop over the DOM element's JS object prototype chain and remove
+  // all JS objects of the class sNPObjectJSWrapperClass
+  bool removed = false;
+  while (obj) {
+    if (!::JS_GetPrototype(cx, obj, &proto)) {
+      return;
+    }
+    if (!proto) {
+      break;
+    }
+    // Unwrap while checking the jsclass - if the prototype is a wrapper for
+    // an NP object, that counts too.
+    if (JS_GetClass(js::UnwrapObject(proto)) == &sNPObjectJSWrapperClass) {
+      // We found an NPObject on the proto chain, get its prototype...
+      if (!::JS_GetPrototype(cx, proto, &proto)) {
+        return;
+      }
+
+      MOZ_ASSERT(!removed, "more than one NPObject in prototype chain");
+      removed = true;
+
+      // ... and pull it out of the chain.
+      ::JS_SetPrototype(cx, obj, proto);
+    }
+
+    obj = proto;
   }
 }
 

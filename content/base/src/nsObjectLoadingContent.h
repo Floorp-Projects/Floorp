@@ -163,6 +163,9 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // Helper for WebIDL node wrapping
     void SetupProtoChain(JSContext* aCx, JSObject* aObject);
 
+    // Remove plugin from protochain
+    void TeardownProtoChain();
+
     // Helper for WebIDL newResolve
     bool DoNewResolve(JSContext* aCx, JSHandleObject aObject, JSHandleId aId,
                       unsigned aFlags, JSMutableHandleObject aObjp);
