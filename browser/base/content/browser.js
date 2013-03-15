@@ -1137,9 +1137,6 @@ var gBrowserInit = {
     gBrowser.addEventListener("PluginOutdated",        gPluginHandler, true);
 
     gBrowser.addEventListener("NewPluginInstalled", gPluginHandler.newPluginInstalled, true);
-#ifdef XP_MACOSX
-    gBrowser.addEventListener("npapi-carbon-event-model-failure", gPluginHandler, true);
-#endif
 
     Services.obs.addObserver(gPluginHandler.pluginCrashed, "plugin-crashed", false);
 
