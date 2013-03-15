@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test AudioContext.currentTime</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  SpecialPowers.setBoolPref("media.webaudio.enabled", true);
+  var ac = new AudioContext();
+  is(ac.currentTime, 0, "AudioContext.currentTime should be 0 initially");
+  setTimeout(function() {
+    ok(ac.currentTime > 0, "AudioContext.currentTime should have increased by now");
+    SpecialPowers.clearUserPref("media.webaudio.enabled");
+    SimpleTest.finish();
+  }, 100);
+});
+
+</script>
+</pre>
+</body>
+</html>
