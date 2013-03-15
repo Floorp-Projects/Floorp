@@ -92,8 +92,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0x48568C1E, 0xAF56, 0x4F73, \
-    { 0x94, 0x6D, 0xAA, 0x43, 0xD8, 0x96, 0x78, 0x6B } }
+  { 0xdaac8d94, 0x14f3, 0x4bc4, \
+    { 0xa8, 0xc, 0xf0, 0xe6, 0x46, 0x1e, 0xad, 0x40 } }
 
 /*
  * Window shadow styles
@@ -1553,16 +1553,19 @@ class nsIWidget : public nsISupports {
      * actions.  And also this isn't called when the user doesn't use the
      * system wheel speed settings.
      *
-     * @param aOriginalDelta   The delta value of the current mouse wheel
-     *                         scrolling event.
-     * @param aIsHorizontal    If TRUE, the scrolling direction is horizontal.
-     *                         Otherwise, it's vertical.
-     * @param aOverriddenDelta The overridden mouse scrolling speed.  This value
-     *                         may be same as aOriginalDelta.
+     * @param aOriginalDeltaX   The X delta value of the current mouse wheel
+     *                          scrolling event.
+     * @param aOriginalDeltaX   The Y delta value of the current mouse wheel
+     *                          scrolling event.
+     * @param aOverriddenDeltaX The overridden mouse scrolling speed along X
+     *                          axis. This value may be same as aOriginalDeltaX.
+     * @param aOverriddenDeltaY The overridden mouse scrolling speed along Y
+     *                          axis. This value may be same as aOriginalDeltaY.
      */
-    NS_IMETHOD OverrideSystemMouseScrollSpeed(int32_t aOriginalDelta,
-                                              bool aIsHorizontal,
-                                              int32_t &aOverriddenDelta) = 0;
+    NS_IMETHOD OverrideSystemMouseScrollSpeed(double aOriginalDeltaX,
+                                              double aOriginalDeltaY,
+                                              double& aOverriddenDeltaX,
+                                              double& aOverriddenDeltaY) = 0;
 
     /**
      * Return true if this process shouldn't use platform widgets, and
