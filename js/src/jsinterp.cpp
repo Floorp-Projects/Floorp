@@ -41,6 +41,7 @@
 
 #include "builtin/Eval.h"
 #include "gc/Marking.h"
+#include "ion/AsmJS.h"
 #include "vm/Debugger.h"
 #include "vm/Shape.h"
 
@@ -1311,9 +1312,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 /* No-ops for ease of decompilation. */
 ADD_EMPTY_CASE(JSOP_NOP)
 ADD_EMPTY_CASE(JSOP_UNUSED71)
-ADD_EMPTY_CASE(JSOP_UNUSED107)
 ADD_EMPTY_CASE(JSOP_UNUSED132)
-ADD_EMPTY_CASE(JSOP_UNUSED147)
 ADD_EMPTY_CASE(JSOP_UNUSED148)
 ADD_EMPTY_CASE(JSOP_UNUSED161)
 ADD_EMPTY_CASE(JSOP_UNUSED162)
@@ -1438,6 +1437,43 @@ BEGIN_CASE(JSOP_LOOPENTRY)
 #endif /* JS_ION */
 
 END_CASE(JSOP_LOOPENTRY)
+
+BEGIN_CASE(JSOP_LINKASMJS)
+#ifdef JS_ASMJS
+{
+    RootedValue &rval = rootValue0;
+
+    /*
+     * The callee specified "use asm" and the entire body type-checked
+     * according to the asm.js type system. However, there are still a set of
+     * dynamic checks required to validate the input parameters which are
+     * performed by LinkAsmJS.
+     */
+    rval = NullValue();
+    if (!LinkAsmJS(cx, regs.fp(), &rval))
+        goto error;
+
+    /*
+     * If the linking step succeeded, then 'rval' contains the result of
+     * executing the "use asm" function (i.e., the exported functions) so we
+     * can just return.
+     */
+    if (rval.isObject()) {
+        regs.fp()->setReturnValue(rval);
+        regs.setToEndOfScript();
+        interpReturnOK = true;
+        if (entryFrame != regs.fp())
+            goto inline_return;
+        goto exit;
+    }
+
+    /*
+     * Otherwise, linking failed. This will emit a warning, but is not
+     * otherwise a JS semantic error so we keep executing as normal.
+     */
+}
+#endif
+END_CASE(JSOP_LINKASMJS)
 
 BEGIN_CASE(JSOP_NOTEARG)
 END_CASE(JSOP_NOTEARG)

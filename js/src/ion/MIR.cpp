@@ -472,6 +472,18 @@ MCompare::New(MDefinition *left, MDefinition *right, JSOp op)
     return new MCompare(left, right, op);
 }
 
+MCompare *
+MCompare::NewAsmJS(MDefinition *left, MDefinition *right, JSOp op, CompareType compareType)
+{
+    JS_ASSERT(compareType == Compare_Int32 || compareType == Compare_UInt32 ||
+              compareType == Compare_Double);
+    MCompare *comp = new MCompare(left, right, op);
+    comp->compareType_ = compareType;
+    comp->operandMightEmulateUndefined_ = false;
+    comp->setResultType(MIRType_Int32);
+    return comp;
+}
+
 MTableSwitch *
 MTableSwitch::New(MDefinition *ins, int32_t low, int32_t high)
 {
@@ -709,6 +721,14 @@ MBinaryBitwiseInstruction::infer(const TypeOracle::BinaryTypes &b)
 }
 
 void
+MBinaryBitwiseInstruction::specializeForAsmJS()
+{
+    specialization_ = MIRType_Int32;
+    JS_ASSERT(type() == MIRType_Int32);
+    setCommutative();
+}
+
+void
 MShiftInstruction::infer(const TypeOracle::BinaryTypes &b)
 {
     if (b.lhsTypes->maybeObject() || b.rhsTypes->maybeObject())
@@ -872,7 +892,7 @@ MBinaryArithInstruction::foldsTo(bool useValueNumbers)
 bool
 MAbs::fallible() const
 {
-    return !range() || !range()->isInt32();
+    return !implicitTruncate_ && (!range() || !range()->isInt32());
 }
 
 MDefinition *
@@ -1193,6 +1213,7 @@ MCompare::inputType()
         return MIRType_Null;
       case Compare_Boolean:
         return MIRType_Boolean;
+      case Compare_UInt32:
       case Compare_Int32:
         return MIRType_Int32;
       case Compare_Double:
@@ -1329,6 +1350,15 @@ MBitNot::New(MDefinition *input)
     return new MBitNot(input);
 }
 
+MBitNot *
+MBitNot::NewAsmJS(MDefinition *input)
+{
+    MBitNot *ins = new MBitNot(input);
+    ins->specialization_ = MIRType_Int32;
+    JS_ASSERT(ins->type() == MIRType_Int32);
+    return ins;
+}
+
 MDefinition *
 MBitNot::foldsTo(bool useValueNumbers)
 {
@@ -1390,10 +1420,26 @@ MBitAnd::New(MDefinition *left, MDefinition *right)
     return new MBitAnd(left, right);
 }
 
+MBitAnd *
+MBitAnd::NewAsmJS(MDefinition *left, MDefinition *right)
+{
+    MBitAnd *ins = new MBitAnd(left, right);
+    ins->specializeForAsmJS();
+    return ins;
+}
+
 MBitOr *
 MBitOr::New(MDefinition *left, MDefinition *right)
 {
     return new MBitOr(left, right);
+}
+
+MBitOr *
+MBitOr::NewAsmJS(MDefinition *left, MDefinition *right)
+{
+    MBitOr *ins = new MBitOr(left, right);
+    ins->specializeForAsmJS();
+    return ins;
 }
 
 MBitXor *
@@ -1402,10 +1448,26 @@ MBitXor::New(MDefinition *left, MDefinition *right)
     return new MBitXor(left, right);
 }
 
+MBitXor *
+MBitXor::NewAsmJS(MDefinition *left, MDefinition *right)
+{
+    MBitXor *ins = new MBitXor(left, right);
+    ins->specializeForAsmJS();
+    return ins;
+}
+
 MLsh *
 MLsh::New(MDefinition *left, MDefinition *right)
 {
     return new MLsh(left, right);
+}
+
+MLsh *
+MLsh::NewAsmJS(MDefinition *left, MDefinition *right)
+{
+    MLsh *ins = new MLsh(left, right);
+    ins->specializeForAsmJS();
+    return ins;
 }
 
 MRsh *
@@ -1414,10 +1476,27 @@ MRsh::New(MDefinition *left, MDefinition *right)
     return new MRsh(left, right);
 }
 
+MRsh *
+MRsh::NewAsmJS(MDefinition *left, MDefinition *right)
+{
+    MRsh *ins = new MRsh(left, right);
+    ins->specializeForAsmJS();
+    return ins;
+}
+
 MUrsh *
 MUrsh::New(MDefinition *left, MDefinition *right)
 {
     return new MUrsh(left, right);
+}
+
+MUrsh *
+MUrsh::NewAsmJS(MDefinition *left, MDefinition *right)
+{
+    MUrsh *ins = new MUrsh(left, right);
+    ins->specializeForAsmJS();
+    ins->canOverflow_ = false;
+    return ins;
 }
 
 MResumePoint *
@@ -1619,7 +1698,7 @@ MCompare::tryFold(bool *result)
 bool
 MCompare::evaluateConstantOperands(bool *result)
 {
-    if (type() != MIRType_Boolean)
+    if (type() != MIRType_Boolean && type() != MIRType_Int32)
         return false;
 
     MDefinition *left = getOperand(0);
@@ -1668,6 +1747,37 @@ MCompare::evaluateConstantOperands(bool *result)
         return true;
     }
 
+    if (compareType_ == Compare_UInt32) {
+        uint32_t lhsUint = uint32_t(lhs.toInt32());
+        uint32_t rhsUint = uint32_t(rhs.toInt32());
+
+        switch (jsop_) {
+          case JSOP_LT:
+            *result = (lhsUint < rhsUint);
+            break;
+          case JSOP_LE:
+            *result = (lhsUint <= rhsUint);
+            break;
+          case JSOP_GT:
+            *result = (lhsUint > rhsUint);
+            break;
+          case JSOP_GE:
+            *result = (lhsUint >= rhsUint);
+            break;
+          case JSOP_EQ:
+            *result = (lhsUint == rhsUint);
+            break;
+          case JSOP_NE:
+            *result = (lhsUint != rhsUint);
+            break;
+          default:
+            JS_NOT_REACHED("Unexpected op.");
+            return false;
+        }
+
+        return true;
+    }
+
     if (!lhs.isNumber() || !rhs.isNumber())
         return false;
 
@@ -1702,10 +1812,13 @@ MCompare::foldsTo(bool useValueNumbers)
 {
     bool result;
 
-    if (tryFold(&result))
+    if (tryFold(&result) || evaluateConstantOperands(&result)) {
+        if (type() == MIRType_Int32)
+            return MConstant::New(Int32Value(result));
+
+        JS_ASSERT(type() == MIRType_Boolean);
         return MConstant::New(BooleanValue(result));
-    else if (evaluateConstantOperands(&result))
-        return MConstant::New(BooleanValue(result));
+    }
 
     return this;
 }
@@ -1727,7 +1840,10 @@ MNot::foldsTo(bool useValueNumbers)
 {
     // Fold if the input is constant
     if (operand()->isConstant()) {
-       const Value &v = operand()->toConstant()->value();
+        const Value &v = operand()->toConstant()->value();
+        if (type() == MIRType_Int32)
+            return MConstant::New(Int32Value(!ToBoolean(v)));
+
         // ToBoolean can cause no side effects, so this is safe.
         return MConstant::New(BooleanValue(!ToBoolean(v)));
     }
@@ -1845,3 +1961,43 @@ InlinePropertyTable::trimToAndMaybePatchTargets(AutoObjectVector &targets,
     IonSpew(IonSpew_Inlining, "%d inlineable cases left after trimming to %d targets",
             (int)numEntries(), (int)targets.length());
 }
+
+MDefinition *
+MAsmJSUnsignedToDouble::foldsTo(bool useValueNumbers)
+{
+    if (input()->isConstant()) {
+        const Value &v = input()->toConstant()->value();
+        if (v.isInt32())
+            return MConstant::New(DoubleValue(uint32_t(v.toInt32())));
+    }
+
+    return this;
+}
+
+MAsmJSCall *
+MAsmJSCall::New(Callee callee, const Args &args, MIRType resultType, size_t spIncrement)
+{
+    MAsmJSCall *call = new MAsmJSCall;
+    call->spIncrement_ = spIncrement;
+    call->callee_ = callee;
+    call->setResultType(resultType);
+
+    call->numArgs_ = args.length();
+    call->argRegs_ = (AnyRegister *)GetIonContext()->temp->allocate(call->numArgs_ * sizeof(AnyRegister));
+    if (!call->argRegs_)
+        return NULL;
+    for (size_t i = 0; i < call->numArgs_; i++)
+        call->argRegs_[i] = args[i].reg;
+
+    call->numOperands_ = call->numArgs_ + (callee.which() == Callee::Dynamic ? 1 : 0);
+    call->operands_ = (MUse *)GetIonContext()->temp->allocate(call->numOperands_ * sizeof(MUse));
+    if (!call->operands_)
+        return NULL;
+    for (size_t i = 0; i < call->numArgs_; i++)
+        call->setOperand(i, args[i].def);
+    if (callee.which() == Callee::Dynamic)
+        call->setOperand(call->numArgs_, callee.dynamic());
+
+    return call;
+}
+

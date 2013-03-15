@@ -91,11 +91,11 @@ AssemblerX86Shared::executableCopy(void *buffer)
 }
 
 void
-AssemblerX86Shared::processCodeLabels(IonCode *code)
+AssemblerX86Shared::processCodeLabels(uint8_t *rawCode)
 {
     for (size_t i = 0; i < codeLabels_.length(); i++) {
         CodeLabel label = codeLabels_[i];
-        Bind(code, label.dest(), code->raw() + label.src()->offset());
+        Bind(rawCode, label.dest(), rawCode + label.src()->offset());
     }
 }
 

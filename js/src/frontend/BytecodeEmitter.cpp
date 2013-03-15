@@ -34,6 +34,7 @@
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
+#include "ion/AsmJS.h"
 #include "vm/Debugger.h"
 #include "vm/RegExpObject.h"
 #include "vm/Shape.h"
@@ -2499,6 +2500,17 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
         bce->switchToMain();
     }
 
+    if (bce->script->asmJS) {
+        /* asm.js means no funny stuff. */
+        JS_ASSERT(!funbox->argumentsHasLocalBinding());
+        JS_ASSERT(!funbox->isGenerator());
+
+        bce->switchToProlog();
+        if (Emit1(cx, bce, JSOP_LINKASMJS) < 0)
+            return false;
+        bce->switchToMain();
+    }
+
     if (!EmitTree(cx, bce, body))
         return false;
 
@@ -4379,6 +4391,13 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
 
         script->bindings = funbox->bindings;
+
+        // Do asm.js compilation at the beginning of emitting to avoid
+        // compiling twice when JS_BufferIsCompilableUnit and to know whether
+        // to emit JSOP_LINKASMJS. Don't fold constants as this will
+        // misrepresent the source JS as written to the type checker.
+        if (funbox->useAsm && !CompileAsmJS(cx, *bce->tokenStream(), pn, script))
+            return false;
 
         BytecodeEmitter bce2(bce, bce->parser, funbox, script, bce->evalCaller,
                              bce->hasGlobalScope, pn->pn_pos.begin.lineno, bce->selfHostingMode);

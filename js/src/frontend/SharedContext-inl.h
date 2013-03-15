@@ -42,13 +42,6 @@ SharedContext::asModuleBox()
     return static_cast<ModuleBox*>(this);
 }
 
-inline FunctionBox *
-SharedContext::asFunctionBox()
-{
-    JS_ASSERT(isFunctionBox());
-    return static_cast<FunctionBox*>(this);
-}
-
 GlobalSharedContext::GlobalSharedContext(JSContext *cx, JSObject *scopeChain, bool strict)
   : SharedContext(cx, strict),
     scopeChain_(cx, scopeChain)

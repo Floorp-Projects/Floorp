@@ -590,7 +590,8 @@ struct ParseNode {
      */
     static ParseNode *
     newBinaryOrAppend(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right,
-                      FullParseHandler *handler, bool foldConstants);
+                      FullParseHandler *handler, ParseContext<FullParseHandler> *pc,
+                      bool foldConstants);
 
     inline PropertyName *name() const;
     inline JSAtom *atom() const;

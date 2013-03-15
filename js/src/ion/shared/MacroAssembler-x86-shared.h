@@ -72,6 +72,9 @@ class MacroAssemblerX86Shared : public Assembler
         else
             movl(imm, dest);
     }
+    void move32(const Imm32 &imm, const Operand &dest) {
+        movl(imm, dest);
+    }
     void and32(const Imm32 &imm, const Register &dest) {
         andl(imm, dest);
     }
@@ -236,6 +239,9 @@ class MacroAssemblerX86Shared : public Assembler
     void load32(const BaseIndex &src, Register dest) {
         movl(Operand(src), dest);
     }
+    void load32(const Operand &src, Register dest) {
+        movl(src, dest);
+    }
     template <typename S, typename T>
     void store32(const S &src, const T &dest) {
         movl(src, Operand(dest));
@@ -246,11 +252,17 @@ class MacroAssemblerX86Shared : public Assembler
     void loadDouble(const BaseIndex &src, FloatRegister dest) {
         movsd(Operand(src), dest);
     }
+    void loadDouble(const Operand &src, FloatRegister dest) {
+        movsd(src, dest);
+    }
     void storeDouble(FloatRegister src, const Address &dest) {
         movsd(src, Operand(dest));
     }
     void storeDouble(FloatRegister src, const BaseIndex &dest) {
         movsd(src, Operand(dest));
+    }
+    void storeDouble(FloatRegister src, const Operand &dest) {
+        movsd(src, dest);
     }
     void zeroDouble(FloatRegister reg) {
         xorpd(reg, reg);
@@ -279,6 +291,10 @@ class MacroAssemblerX86Shared : public Assembler
     }
     void loadFloatAsDouble(const BaseIndex &src, FloatRegister dest) {
         movss(Operand(src), dest);
+        cvtss2sd(dest, dest);
+    }
+    void loadFloatAsDouble(const Operand &src, FloatRegister dest) {
+        movss(src, dest);
         cvtss2sd(dest, dest);
     }
     void storeFloat(FloatRegister src, const Address &dest) {

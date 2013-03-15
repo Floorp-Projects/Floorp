@@ -27,8 +27,8 @@ using namespace js;
 using namespace js::ion;
 
 // shared
-CodeGeneratorARM::CodeGeneratorARM(MIRGenerator *gen, LIRGraph *graph)
-  : CodeGeneratorShared(gen, graph),
+CodeGeneratorARM::CodeGeneratorARM(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm)
+  : CodeGeneratorShared(gen, graph, masm),
     deoptLabel_(NULL)
 {
 }
@@ -106,6 +106,7 @@ CodeGeneratorARM::visitTestIAndBranch(LTestIAndBranch *test)
 bool
 CodeGeneratorARM::visitCompare(LCompare *comp)
 {
+    Assembler::Condition cond = JSOpToCondition(comp->mir()->compareType(), comp->jsop());
     const LAllocation *left = comp->getOperand(0);
     const LAllocation *right = comp->getOperand(1);
     const LDefinition *def = comp->getDef(0);
@@ -115,14 +116,14 @@ CodeGeneratorARM::visitCompare(LCompare *comp)
     else
         masm.ma_cmp(ToRegister(left), ToOperand(right));
     masm.ma_mov(Imm32(0), ToRegister(def));
-    masm.ma_mov(Imm32(1), ToRegister(def), NoSetCond, JSOpToCondition(comp->jsop()));
+    masm.ma_mov(Imm32(1), ToRegister(def), NoSetCond, cond);
     return true;
 }
 
 bool
 CodeGeneratorARM::visitCompareAndBranch(LCompareAndBranch *comp)
 {
-    Assembler::Condition cond = JSOpToCondition(comp->jsop());
+    Assembler::Condition cond = JSOpToCondition(comp->mir()->compareType(), comp->jsop());
     if (comp->right()->isConstant())
         masm.ma_cmp(ToRegister(comp->left()), Imm32(ToInt32(comp->right())));
     else
@@ -1243,7 +1244,7 @@ CodeGeneratorARM::visitCompareB(LCompareB *lir)
             masm.cmp32(lhs.payloadReg(), Imm32(rhs->toConstant()->toBoolean()));
         else
             masm.cmp32(lhs.payloadReg(), ToRegister(rhs));
-        masm.emitSet(JSOpToCondition(mir->jsop()), output);
+        masm.emitSet(JSOpToCondition(mir->compareType(), mir->jsop()), output);
         masm.jump(&done);
     }
 
@@ -1274,7 +1275,7 @@ CodeGeneratorARM::visitCompareBAndBranch(LCompareBAndBranch *lir)
         masm.cmp32(lhs.payloadReg(), Imm32(rhs->toConstant()->toBoolean()));
     else
         masm.cmp32(lhs.payloadReg(), ToRegister(rhs));
-    emitBranch(JSOpToCondition(mir->jsop()), lir->ifTrue(), lir->ifFalse());
+    emitBranch(JSOpToCondition(mir->compareType(), mir->jsop()), lir->ifTrue(), lir->ifFalse());
     return true;
 }
 
@@ -1282,7 +1283,7 @@ bool
 CodeGeneratorARM::visitCompareV(LCompareV *lir)
 {
     MCompare *mir = lir->mir();
-    Assembler::Condition cond = JSOpToCondition(mir->jsop());
+    Assembler::Condition cond = JSOpToCondition(mir->compareType(), mir->jsop());
     const ValueOperand lhs = ToValue(lir, LCompareV::LhsInput);
     const ValueOperand rhs = ToValue(lir, LCompareV::RhsInput);
     const Register output = ToRegister(lir->output());
@@ -1311,7 +1312,7 @@ bool
 CodeGeneratorARM::visitCompareVAndBranch(LCompareVAndBranch *lir)
 {
     MCompare *mir = lir->mir();
-    Assembler::Condition cond = JSOpToCondition(mir->jsop());
+    Assembler::Condition cond = JSOpToCondition(mir->compareType(), mir->jsop());
     const ValueOperand lhs = ToValue(lir, LCompareVAndBranch::LhsInput);
     const ValueOperand rhs = ToValue(lir, LCompareVAndBranch::RhsInput);
 
@@ -1331,6 +1332,14 @@ CodeGeneratorARM::visitCompareVAndBranch(LCompareVAndBranch *lir)
 
     return true;
 }
+
+bool
+CodeGeneratorARM::visitUInt32ToDouble(LUInt32ToDouble *lir)
+{
+    masm.convertUInt32ToDouble(ToRegister(lir->input()), ToFloatRegister(lir->output()));
+    return true;
+}
+
 bool
 CodeGeneratorARM::visitNotI(LNotI *ins)
 {

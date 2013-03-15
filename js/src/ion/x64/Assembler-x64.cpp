@@ -7,11 +7,79 @@
 
 #include "Assembler-x64.h"
 #include "gc/Marking.h"
+#include "ion/LIR.h"
 
 #include "jsscriptinlines.h"
 
 using namespace js;
 using namespace js::ion;
+
+ABIArgGenerator::ABIArgGenerator()
+  :
+#if defined(XP_WIN)
+    regIndex_(0),
+    stackOffset_(ShadowStackSpace),
+#else
+    intRegIndex_(0),
+    floatRegIndex_(0),
+    stackOffset_(0),
+#endif
+    current_()
+{}
+
+ABIArg
+ABIArgGenerator::next(MIRType type)
+{
+#if defined(XP_WIN)
+    JS_STATIC_ASSERT(NumIntArgRegs == NumFloatArgRegs);
+    if (regIndex_ == NumIntArgRegs) {
+        current_ = ABIArg(stackOffset_);
+        stackOffset_ += sizeof(uint64_t);
+        return current_;
+    }
+    switch (type) {
+      case MIRType_Int32:
+      case MIRType_Pointer:
+        current_ = ABIArg(IntArgRegs[regIndex_++]);
+        break;
+      case MIRType_Double:
+        current_ = ABIArg(FloatArgRegs[regIndex_++]);
+        break;
+      default:
+        JS_NOT_REACHED("Unexpected argument type");
+    }
+    return current_;
+#elif defined(XP_MACOSX) || defined(__linux__)
+    switch (type) {
+      case MIRType_Int32:
+      case MIRType_Pointer:
+        if (intRegIndex_ == NumIntArgRegs) {
+            current_ = ABIArg(stackOffset_);
+            stackOffset_ += sizeof(uint64_t);
+            break;
+        }
+        current_ = ABIArg(IntArgRegs[intRegIndex_++]);
+        break;
+      case MIRType_Double:
+        if (floatRegIndex_ == NumFloatArgRegs) {
+            current_ = ABIArg(stackOffset_);
+            stackOffset_ += sizeof(uint64_t);
+            break;
+        }
+        current_ = ABIArg(FloatArgRegs[floatRegIndex_++]);
+        break;
+      default:
+        JS_NOT_REACHED("Unexpected argument type");
+    }
+    return current_;
+#else
+# error "Missing ABI"
+#endif
+}
+
+const Register ABIArgGenerator::NonArgReturnVolatileReg1 = r10;
+const Register ABIArgGenerator::NonArgReturnVolatileReg2 = r11;
+const Register ABIArgGenerator::NonVolatileReg = r12;
 
 void
 Assembler::writeRelocation(JmpSrc src, Relocation::Kind reloc)
