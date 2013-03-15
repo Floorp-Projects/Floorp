@@ -63,6 +63,5 @@ interface nsIPrefLocalizedString : nsISupports
   }
 
 #define NS_PREFLOCALIZEDSTRING_CONTRACTID "@mozilla.org/pref-localizedstring;1"
-#define NS_PREFLOCALIZEDSTRING_CLASSNAME "Pref LocalizedString"
 
 %}

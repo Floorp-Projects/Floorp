@@ -7,7 +7,6 @@
 #include "nsIMacWebAppUtils.h"
 
 #define NS_MACWEBAPPUTILS_CONTRACTID "@mozilla.org/widget/mac-web-app-utils;1"
-#define NS_MACWEBAPPUTILS_COMPONENT_CLASSNAME "Mac Web Application Utils"
 
 class nsMacWebAppUtils : public nsIMacWebAppUtils {
 public:

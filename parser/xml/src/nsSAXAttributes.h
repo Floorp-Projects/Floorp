@@ -14,7 +14,6 @@
 #include "mozilla/Attributes.h"
 
 #define NS_SAXATTRIBUTES_CONTRACTID "@mozilla.org/saxparser/attributes;1"
-#define NS_SAXATTRIBUTES_CLASSNAME "SAX Attributes"
 #define NS_SAXATTRIBUTES_CID  \
 {/* {7bb40992-77eb-43db-9a4e-39d3bcc483ae}*/ \
 0x7bb40992, 0x77eb, 0x43db, \

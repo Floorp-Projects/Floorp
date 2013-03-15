@@ -14,7 +14,6 @@
 // nsCMSManager - implementation of nsICMSManager
 // ===============================================
 
-#define NS_CMSSECUREMESSAGE_CLASSNAME "CMS Secure Message"
 #define NS_CMSSECUREMESSAGE_CID \
   { 0x5fb907e0, 0x1dd2, 0x11b2, { 0xa7, 0xc0, 0xf1, 0x4c, 0x41, 0x6a, 0x62, 0xa1 } }
 

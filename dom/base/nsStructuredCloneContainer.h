@@ -12,7 +12,6 @@
 #include "jsapi.h"
 #include "mozilla/Attributes.h"
 
-#define NS_STRUCTUREDCLONECONTAINER_CLASSNAME "nsStructuredCloneContainer"
 #define NS_STRUCTUREDCLONECONTAINER_CONTRACTID \
   "@mozilla.org/docshell/structured-clone-container;1"
 #define NS_STRUCTUREDCLONECONTAINER_CID \

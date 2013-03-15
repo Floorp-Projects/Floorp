@@ -12,7 +12,6 @@
 #include "zlib.h"
 #include "mozilla/Attributes.h"
 
-#define DEFLATECONVERTER_CLASSNAME "Deflate converter"
 #define DEFLATECONVERTER_CID { 0x461cd5dd, 0x73c6, 0x47a4, \
            { 0x8c, 0xc3, 0x60, 0x3b, 0x37, 0xd8, 0x4a, 0x61 } }
 

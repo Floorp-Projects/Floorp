@@ -13,7 +13,6 @@
 
 #include "nsIMultiplexInputStream.h"
 
-#define NS_MULTIPLEXINPUTSTREAM_CLASSNAME  "nsMultiplexInputStream"
 #define NS_MULTIPLEXINPUTSTREAM_CONTRACTID "@mozilla.org/io/multiplex-input-stream;1"
 #define NS_MULTIPLEXINPUTSTREAM_CID                  \
 { /* 565e3a2c-1dd2-11b2-8da1-b4cef17e568d */         \

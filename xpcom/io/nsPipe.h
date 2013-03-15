@@ -7,8 +7,6 @@
 #ifndef nsPipe_h__
 #define nsPipe_h__
 
-#define NS_PIPE_CLASSNAME \
-  "nsPipe"
 #define NS_PIPE_CONTRACTID \
   "@mozilla.org/pipe;1"
 #define NS_PIPE_CID \

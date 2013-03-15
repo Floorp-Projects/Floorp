@@ -81,7 +81,6 @@ interface nsIStrictTransportSecurityService : nsISupports
 
 %{C++
 #define NS_STSSERVICE_CONTRACTID "@mozilla.org/stsservice;1"
-#define NS_STSSERVICE_CLASSNAME "stsservice"
 
 #define STS_PERMISSION "sts/use"
 #define STS_SUBDOMAIN_PERMISSION "sts/subd"

@@ -26,7 +26,6 @@ public:
 
 
 #define NS_DEBUG_CONTRACTID "@mozilla.org/xpcom/debug;1"
-#define NS_DEBUG_CLASSNAME  "nsDebug Interface"
 #define NS_DEBUG_CID                                 \
 { /* a80b1fb3-aaf6-4852-b678-c27eb7a518af */         \
   0xa80b1fb3,                                        \

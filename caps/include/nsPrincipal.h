@@ -166,13 +166,11 @@ private:
   nsTArray< nsCOMPtr<nsIPrincipal> > mPrincipals;
 };
 
-#define NS_PRINCIPAL_CLASSNAME  "principal"
 #define NS_PRINCIPAL_CONTRACTID "@mozilla.org/principal;1"
 #define NS_PRINCIPAL_CID \
   { 0x09b7e598, 0x490d, 0x423f, \
     { 0xa8, 0xa6, 0x2e, 0x6c, 0x4e, 0xc8, 0x77, 0x50 }}
 
-#define NS_EXPANDEDPRINCIPAL_CLASSNAME  "expandedprincipal"
 #define NS_EXPANDEDPRINCIPAL_CONTRACTID "@mozilla.org/expandedprincipal;1"
 #define NS_EXPANDEDPRINCIPAL_CID \
   { 0xb33a3807, 0xb76c, 0x44e5, \

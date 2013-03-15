@@ -11,7 +11,6 @@
 #include "mozilla/Attributes.h"
 
 #define NS_SAXLOCATOR_CONTRACTID "@mozilla.org/saxparser/locator;1"
-#define NS_SAXLOCATOR_CLASSNAME "SAX Locator"
 #define NS_SAXLOCATOR_CID  \
 {/* {c1cd4045-846b-43bb-a95e-745a3d7b40e0}*/ \
 0xc1cd4045, 0x846b, 0x43bb, \
