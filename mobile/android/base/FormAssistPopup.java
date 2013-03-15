@@ -8,6 +8,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -101,7 +102,7 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
     private void handleAutoCompleteMessage(JSONObject message) throws JSONException  {
         final JSONArray suggestions = message.getJSONArray("suggestions");
         final JSONObject rect = message.getJSONObject("rect");
-        GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 showAutoCompleteSuggestions(suggestions, rect);
@@ -112,16 +113,16 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
     private void handleValidationMessage(JSONObject message) throws JSONException {
         final String validationMessage = message.getString("validationMessage");
         final JSONObject rect = message.getJSONObject("rect");
-        GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 showValidationMessage(validationMessage, rect);
             }
         });
     }
-    
+
     private void handleHideMessage(JSONObject message) {
-        GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 hide();

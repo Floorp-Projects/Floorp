@@ -14,6 +14,7 @@ import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.GeckoBackgroundThread;
 import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.ActivityManager;
 import android.app.PendingIntent;
@@ -147,8 +148,6 @@ public class GeckoAppShell
 
     private static boolean mLocationHighAccuracy = false;
 
-    private static Handler sGeckoHandler;
-
     static ActivityHandlerHelper sActivityHelper = new ActivityHandlerHelper();
     static NotificationServiceClient sNotificationClient;
 
@@ -257,22 +256,12 @@ public class GeckoAppShell
         }
     }
 
-    // Get a Handler for the main java thread
-    public static Handler getMainHandler() {
-        return GeckoApp.mAppContext.mMainHandler;
-    }
-
-    public static Handler getGeckoHandler() {
-        return sGeckoHandler;
-    }
-
     public static Handler getHandler() {
         return GeckoBackgroundThread.getHandler();
     }
 
     public static void runGecko(String apkPath, String args, String url, String type) {
         Looper.prepare();
-        sGeckoHandler = new Handler();
 
         // run gecko -- it will spawn its own thread
         GeckoAppShell.nativeInit();
@@ -409,7 +398,7 @@ public class GeckoAppShell
     }
 
     public static void enableLocation(final boolean enable) {
-        getMainHandler().post(new Runnable() { 
+        ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
                     LocationManager lm = (LocationManager)
@@ -1346,7 +1335,7 @@ public class GeckoAppShell
     }
 
     public static void notifyDefaultPrevented(final boolean defaultPrevented) {
-        getMainHandler().post(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 LayerView view = GeckoApp.mAppContext.getLayerView();
@@ -1701,7 +1690,7 @@ public class GeckoAppShell
     static byte[] sCameraBuffer = null;
 
     static int[] initCamera(String aContentType, int aCamera, int aWidth, int aHeight) {
-        getMainHandler().post(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -1793,7 +1782,7 @@ public class GeckoAppShell
     }
 
     static synchronized void closeCamera() {
-        getMainHandler().post(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
                     try {

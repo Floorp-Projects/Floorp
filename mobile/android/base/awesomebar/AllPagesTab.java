@@ -13,6 +13,7 @@ import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.StringUtils;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -718,7 +719,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     @Override
     public void handleMessage(String event, final JSONObject message) {
         if (event.equals("SearchEngines:Data")) {
-            GeckoAppShell.getMainHandler().post(new Runnable() {
+            ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
                     setSearchEngines(message);

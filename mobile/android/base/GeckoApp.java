@@ -157,7 +157,6 @@ abstract public class GeckoApp
     protected MenuPanel mMenuPanel;
     protected Menu mMenu;
     private static GeckoThread sGeckoThread;
-    public Handler mMainHandler;
     private GeckoProfile mProfile;
     public static int mOrientation;
     protected boolean mIsRestoringActivity;
@@ -799,7 +798,7 @@ abstract public class GeckoApp
             } else if (event.equals("Bookmark:Insert")) {
                 final String url = message.getString("url");
                 final String title = message.getString("title");
-                mMainHandler.post(new Runnable() {
+                ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
                         Toast.makeText(GeckoApp.mAppContext, R.string.bookmark_added, Toast.LENGTH_SHORT).show();
@@ -949,7 +948,7 @@ abstract public class GeckoApp
             }
         });
 
-        mMainHandler.post(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 Dialog dialog = builder.create();
@@ -967,7 +966,7 @@ abstract public class GeckoApp
     }
 
     public void showToast(final int resId, final int duration) {
-        mMainHandler.post(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 Toast.makeText(mAppContext, resId, duration).show();
@@ -976,7 +975,7 @@ abstract public class GeckoApp
     }
 
     void handleShowToast(final String message, final String duration) {
-        mMainHandler.post(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 Toast toast;
@@ -1018,7 +1017,7 @@ abstract public class GeckoApp
     }
 
     void addPluginView(final View view, final Rect rect, final boolean isFullScreen) {
-        mMainHandler.post(new Runnable() { 
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 Tabs tabs = Tabs.getInstance();
@@ -1058,7 +1057,7 @@ abstract public class GeckoApp
 
         // We need do do this on the next iteration in order to avoid
         // a deadlock, see comment below in FullScreenHolder
-        mMainHandler.post(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 mLayerView.show();
@@ -1075,7 +1074,7 @@ abstract public class GeckoApp
     }
 
     void removePluginView(final View view, final boolean isFullScreen) {
-        mMainHandler.post(new Runnable() { 
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 Tabs tabs = Tabs.getInstance();
@@ -1299,7 +1298,7 @@ abstract public class GeckoApp
     }
 
     public void setFullScreen(final boolean fullscreen) {
-        mMainHandler.post(new Runnable() { 
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 // Hide/show the system notification bar
@@ -1373,7 +1372,7 @@ abstract public class GeckoApp
         ((GeckoApplication)getApplication()).initialize();
 
         mAppContext = this;
-        ThreadUtils.setUiThread(Thread.currentThread());
+        ThreadUtils.setUiThread(Thread.currentThread(), new Handler());
 
         Tabs.getInstance().attachToActivity(this);
         Favicons.getInstance().attachToContext(this);
@@ -1392,8 +1391,6 @@ abstract public class GeckoApp
             mIsRestoringActivity = true;
             Telemetry.HistogramAdd("FENNEC_RESTORING_ACTIVITY", 1);
         }
-
-        mMainHandler = new Handler();
 
         // Fix for bug 830557 on Tegra boards running Froyo.
         // This fix must be done before doing layout.
@@ -1642,7 +1639,7 @@ abstract public class GeckoApp
             sGeckoThread.start();
         } else if (ACTION_DEBUG.equals(action) &&
             GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching, GeckoThread.LaunchState.WaitForDebugger)) {
-            mMainHandler.postDelayed(new Runnable() {
+            ThreadUtils.getUiHandler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     GeckoThread.setLaunchState(GeckoThread.LaunchState.Launching);
@@ -2547,7 +2544,7 @@ abstract public class GeckoApp
              */
             super.addView(view, index);
 
-            mMainHandler.post(new Runnable() { 
+            ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
                     mLayerView.hide();
