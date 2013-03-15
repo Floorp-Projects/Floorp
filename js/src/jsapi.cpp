@@ -684,7 +684,7 @@ JS_FRIEND_API(bool) JS::NeedRelaxedRootChecks() { return false; }
 
 static const JSSecurityCallbacks NullSecurityCallbacks = { };
 
-js::PerThreadData::PerThreadData(JSRuntime *runtime)
+PerThreadData::PerThreadData(JSRuntime *runtime)
   : PerThreadDataFriendFields(),
     runtime_(runtime),
 #ifdef DEBUG
@@ -694,8 +694,31 @@ js::PerThreadData::PerThreadData(JSRuntime *runtime)
     ionJSContext(NULL),
     ionStackLimit(0),
     ionActivation(NULL),
+    asmJSActivationStack_(NULL),
+# ifdef JS_THREADSAFE
+    asmJSActivationStackLock_(NULL),
+# endif
     suppressGC(0)
 {}
+
+bool
+PerThreadData::init()
+{
+#ifdef JS_THREADSAFE
+    asmJSActivationStackLock_ = PR_NewLock();
+    if (!asmJSActivationStackLock_)
+        return false;
+#endif
+    return true;
+}
+
+PerThreadData::~PerThreadData()
+{
+#ifdef JS_THREADSAFE
+    if (asmJSActivationStackLock_)
+        PR_DestroyLock(asmJSActivationStackLock_);
+#endif
+}
 
 JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
   : mainThread(this),
@@ -884,6 +907,9 @@ JSRuntime::init(uint32_t maxbytes)
 #ifdef JS_THREADSAFE
     ownerThread_ = PR_GetCurrentThread();
 #endif
+
+    if (!mainThread.init())
+        return false;
 
     js::TlsPerThreadData.set(&mainThread);
 
@@ -4797,6 +4823,11 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobjArg, JSRawObject parentArg
     }
 
     if (fun->isBoundFunction()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CLONE_OBJECT);
+        return NULL;
+    }
+
+    if (fun->hasScript() && fun->nonLazyScript()->asmJS) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CLONE_OBJECT);
         return NULL;
     }

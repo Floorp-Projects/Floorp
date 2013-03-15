@@ -209,6 +209,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void movePtr(const Register &src, const Register &dest) {
         movl(src, dest);
     }
+    void movePtr(const Register &src, const Operand &dest) {
+        movl(src, dest);
+    }
 
     // Returns the register containing the type tag.
     Register splitTagForTest(const ValueOperand &value) {
@@ -461,6 +464,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         testl(lhs, rhs);
         j(cond, label);
     }
+    void branchTestPtr(Condition cond, Register lhs, Imm32 imm, Label *label) {
+        testl(lhs, imm);
+        j(cond, label);
+    }
     void decBranchPtr(Condition cond, const Register &lhs, Imm32 imm, Label *label) {
         subPtr(imm, lhs);
         j(cond, label);
@@ -474,6 +481,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     void loadPtr(const Address &address, Register dest) {
         movl(Operand(address), dest);
+    }
+    void loadPtr(const Operand &src, Register dest) {
+        movl(src, dest);
     }
     void loadPtr(const BaseIndex &src, Register dest) {
         movl(Operand(src), dest);
@@ -492,6 +502,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     void storePtr(Register src, const Address &address) {
         movl(src, Operand(address));
+    }
+    void storePtr(Register src, const Operand &dest) {
+        movl(src, dest);
     }
     void storePtr(Register src, const AbsoluteAddress &address) {
         movl(src, Operand(address));
@@ -799,6 +812,16 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         push(Imm32(MakeFrameDescriptor(0, IonFrame_Osr)));
         call(code);
         addl(Imm32(sizeof(uintptr_t) * 2), esp);
+    }
+
+    // See CodeGeneratorX86 calls to noteAsmJSGlobalAccess.
+    void patchAsmJSGlobalAccess(unsigned offset, uint8_t *code, unsigned codeBytes,
+                                unsigned globalDataOffset)
+    {
+        uint8_t *nextInsn = code + offset;
+        JS_ASSERT(nextInsn <= code + codeBytes);
+        uint8_t *target = code + codeBytes + globalDataOffset;
+        ((int32_t *)nextInsn)[-1] = uintptr_t(target);
     }
 };
 

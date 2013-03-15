@@ -18,8 +18,8 @@
 using namespace js;
 using namespace js::ion;
 
-CodeGeneratorX64::CodeGeneratorX64(MIRGenerator *gen, LIRGraph *graph)
-  : CodeGeneratorX86Shared(gen, graph)
+CodeGeneratorX64::CodeGeneratorX64(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm)
+  : CodeGeneratorX86Shared(gen, graph, masm)
 {
 }
 
@@ -339,7 +339,7 @@ CodeGeneratorX64::visitCompareB(LCompareB *lir)
 
     // Perform the comparison.
     masm.cmpq(lhs.valueReg(), ScratchReg);
-    masm.emitSet(JSOpToCondition(mir->jsop()), output);
+    masm.emitSet(JSOpToCondition(mir->compareType(), mir->jsop()), output);
     return true;
 }
 
@@ -361,7 +361,7 @@ CodeGeneratorX64::visitCompareBAndBranch(LCompareBAndBranch *lir)
 
     // Perform the comparison.
     masm.cmpq(lhs.valueReg(), ScratchReg);
-    emitBranch(JSOpToCondition(mir->jsop()), lir->ifTrue(), lir->ifFalse());
+    emitBranch(JSOpToCondition(mir->compareType(), mir->jsop()), lir->ifTrue(), lir->ifFalse());
     return true;
 }
 bool
@@ -375,7 +375,7 @@ CodeGeneratorX64::visitCompareV(LCompareV *lir)
     JS_ASSERT(IsEqualityOp(mir->jsop()));
 
     masm.cmpq(lhs.valueReg(), rhs.valueReg());
-    masm.emitSet(JSOpToCondition(mir->jsop()), output);
+    masm.emitSet(JSOpToCondition(mir->compareType(), mir->jsop()), output);
     return true;
 }
 
@@ -391,6 +391,145 @@ CodeGeneratorX64::visitCompareVAndBranch(LCompareVAndBranch *lir)
               mir->jsop() == JSOP_NE || mir->jsop() == JSOP_STRICTNE);
 
     masm.cmpq(lhs.valueReg(), rhs.valueReg());
-    emitBranch(JSOpToCondition(mir->jsop()), lir->ifTrue(), lir->ifFalse());
+    emitBranch(JSOpToCondition(mir->compareType(), mir->jsop()), lir->ifTrue(), lir->ifFalse());
     return true;
 }
+
+bool
+CodeGeneratorX64::visitUInt32ToDouble(LUInt32ToDouble *lir)
+{
+    masm.convertUInt32ToDouble(ToRegister(lir->input()), ToFloatRegister(lir->output()));
+    return true;
+}
+
+bool
+CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
+{
+    MAsmJSLoadHeap *mir = ins->mir();
+    ArrayBufferView::ViewType vt = mir->viewType();
+
+    Operand srcAddr(HeapReg, ToRegister(ins->ptr()), TimesOne);
+
+    if (vt == ArrayBufferView::TYPE_FLOAT32) {
+        FloatRegister dest = ToFloatRegister(ins->output());
+        uint32_t before = masm.size();
+        masm.movss(srcAddr, dest);
+        uint32_t after = masm.size();
+        masm.cvtss2sd(dest, dest);
+        return gen->noteHeapAccess(AsmJSHeapAccess(before, after, vt, ToAnyRegister(ins->output())));
+    }
+
+    uint32_t before = masm.size();
+    switch (vt) {
+      case ArrayBufferView::TYPE_INT8:    masm.movxbl(srcAddr, ToRegister(ins->output())); break;
+      case ArrayBufferView::TYPE_UINT8:   masm.movzbl(srcAddr, ToRegister(ins->output())); break;
+      case ArrayBufferView::TYPE_INT16:   masm.movxwl(srcAddr, ToRegister(ins->output())); break;
+      case ArrayBufferView::TYPE_UINT16:  masm.movzwl(srcAddr, ToRegister(ins->output())); break;
+      case ArrayBufferView::TYPE_INT32:   masm.movl(srcAddr, ToRegister(ins->output())); break;
+      case ArrayBufferView::TYPE_UINT32:  masm.movl(srcAddr, ToRegister(ins->output())); break;
+      case ArrayBufferView::TYPE_FLOAT64: masm.movsd(srcAddr, ToFloatRegister(ins->output())); break;
+      default: JS_NOT_REACHED("unexpected array type");
+    }
+    uint32_t after = masm.size();
+    return gen->noteHeapAccess(AsmJSHeapAccess(before, after, vt, ToAnyRegister(ins->output())));
+}
+
+bool
+CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
+{
+    MAsmJSStoreHeap *mir = ins->mir();
+    ArrayBufferView::ViewType vt = mir->viewType();
+
+    Operand dstAddr(HeapReg, ToRegister(ins->ptr()), TimesOne);
+
+    if (vt == ArrayBufferView::TYPE_FLOAT32) {
+        masm.convertDoubleToFloat(ToFloatRegister(ins->value()), ScratchFloatReg);
+        uint32_t before = masm.size();
+        masm.movss(ScratchFloatReg, dstAddr);
+        uint32_t after = masm.size();
+        return gen->noteHeapAccess(AsmJSHeapAccess(before, after));
+    }
+
+    uint32_t before = masm.size();
+    if (ins->value()->isConstant()) {
+        switch (vt) {
+          case ArrayBufferView::TYPE_INT8:    masm.movb(Imm32(ToInt32(ins->value())), dstAddr); break;
+          case ArrayBufferView::TYPE_UINT8:   masm.movb(Imm32(ToInt32(ins->value())), dstAddr); break;
+          case ArrayBufferView::TYPE_INT16:   masm.movw(Imm32(ToInt32(ins->value())), dstAddr); break;
+          case ArrayBufferView::TYPE_UINT16:  masm.movw(Imm32(ToInt32(ins->value())), dstAddr); break;
+          case ArrayBufferView::TYPE_INT32:   masm.movl(Imm32(ToInt32(ins->value())), dstAddr); break;
+          case ArrayBufferView::TYPE_UINT32:  masm.movl(Imm32(ToInt32(ins->value())), dstAddr); break;
+          default: JS_NOT_REACHED("unexpected array type");
+        }
+    } else {
+        switch (vt) {
+          case ArrayBufferView::TYPE_INT8:    masm.movb(ToRegister(ins->value()), dstAddr); break;
+          case ArrayBufferView::TYPE_UINT8:   masm.movb(ToRegister(ins->value()), dstAddr); break;
+          case ArrayBufferView::TYPE_INT16:   masm.movw(ToRegister(ins->value()), dstAddr); break;
+          case ArrayBufferView::TYPE_UINT16:  masm.movw(ToRegister(ins->value()), dstAddr); break;
+          case ArrayBufferView::TYPE_INT32:   masm.movl(ToRegister(ins->value()), dstAddr); break;
+          case ArrayBufferView::TYPE_UINT32:  masm.movl(ToRegister(ins->value()), dstAddr); break;
+          case ArrayBufferView::TYPE_FLOAT64: masm.movsd(ToFloatRegister(ins->value()), dstAddr); break;
+          default: JS_NOT_REACHED("unexpected array type");
+        }
+    }
+    uint32_t after = masm.size();
+    return gen->noteHeapAccess(AsmJSHeapAccess(before, after));
+}
+
+bool
+CodeGeneratorX64::visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar *ins)
+{
+    MAsmJSLoadGlobalVar *mir = ins->mir();
+
+    CodeOffsetLabel label;
+    if (mir->type() == MIRType_Int32)
+        label = masm.loadRipRelativeInt32(ToRegister(ins->output()));
+    else
+        label = masm.loadRipRelativeDouble(ToFloatRegister(ins->output()));
+
+    return gen->noteGlobalAccess(label.offset(), mir->globalDataOffset());
+}
+
+bool
+CodeGeneratorX64::visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar *ins)
+{
+    MAsmJSStoreGlobalVar *mir = ins->mir();
+
+    MIRType type = mir->value()->type();
+    JS_ASSERT(type == MIRType_Int32 || type == MIRType_Double);
+
+    CodeOffsetLabel label;
+    if (type == MIRType_Int32)
+        label = masm.storeRipRelativeInt32(ToRegister(ins->value()));
+    else
+        label = masm.storeRipRelativeDouble(ToFloatRegister(ins->value()));
+
+    return gen->noteGlobalAccess(label.offset(), mir->globalDataOffset());
+}
+
+bool
+CodeGeneratorX64::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr *ins)
+{
+    MAsmJSLoadFuncPtr *mir = ins->mir();
+
+    Register index = ToRegister(ins->index());
+    Register tmp = ToRegister(ins->temp());
+    Register out = ToRegister(ins->output());
+
+    CodeOffsetLabel label = masm.leaRipRelative(tmp);
+    masm.loadPtr(Operand(tmp, index, TimesEight, 0), out);
+
+    return gen->noteGlobalAccess(label.offset(), mir->globalDataOffset());
+}
+
+bool
+CodeGeneratorX64::visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc *ins)
+{
+    MAsmJSLoadFFIFunc *mir = ins->mir();
+
+    CodeOffsetLabel label = masm.loadRipRelativeInt64(ToRegister(ins->output()));
+
+    return gen->noteGlobalAccess(label.offset(), mir->globalDataOffset());
+}
+

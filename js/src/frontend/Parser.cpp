@@ -432,6 +432,8 @@ FunctionBox::FunctionBox(JSContext *cx, ObjectBox* traceListHead, JSFunction *fu
     ndefaults(0),
     inWith(false),                  // initialized below
     inGenexpLambda(false),
+    useAsm(false),
+    insideUseAsm(outerpc && outerpc->useAsmOrInsideUseAsm()),
     funCxFlags()
 {
     if (!outerpc) {
@@ -1285,6 +1287,14 @@ Parser<FullParseHandler>::leaveFunction(ParseNode *fn, HandlePropertyName funNam
                 continue;
             }
 
+            /*
+             * If there are no uses of this placeholder (e.g., it was created
+             * for an identifierName that turned out to be a label), there is
+             * nothing left to do.
+             */
+            if (!dn->dn_uses)
+                continue;
+
             Definition *outer_dn = pc->decls().lookupFirst(atom);
 
             /*
@@ -2111,6 +2121,13 @@ Parser<ParseHandler>::maybeParseDirective(Node pn, bool *cont)
                     }
                     pc->sc->strict = true;
                 }
+            }
+        } else if (directive == context->names().useAsm) {
+            if (pc->sc->isFunctionBox()) {
+                pc->sc->asFunctionBox()->useAsm = true;
+            } else {
+                if (!report(ParseWarning, false, pn, JSMSG_USE_ASM_DIRECTIVE_FAIL))
+                    return false;
             }
         }
     }
@@ -4486,7 +4503,7 @@ Parser<ParseHandler>::variables(ParseNodeKind kind, bool *psimple,
             if (!init)
                 return null();
 
-            pn2 = handler.newBinaryOrAppend(PNK_ASSIGN, pn2, init);
+            pn2 = handler.newBinaryOrAppend(PNK_ASSIGN, pn2, init, pc);
             if (!pn2)
                 return null();
             handler.addList(pn, pn2);
@@ -4609,7 +4626,7 @@ BEGIN_EXPR_PARSER(mulExpr1)
                              ? PNK_DIV
                              : PNK_MOD;
         JSOp op = tokenStream.currentToken().t_op;
-        pn = handler.newBinaryOrAppend(kind, pn, unaryExpr(), op);
+        pn = handler.newBinaryOrAppend(kind, pn, unaryExpr(), pc, op);
     }
     return pn;
 }
@@ -4622,7 +4639,7 @@ BEGIN_EXPR_PARSER(addExpr1)
         TokenKind tt = tokenStream.currentToken().type;
         JSOp op = (tt == TOK_PLUS) ? JSOP_ADD : JSOP_SUB;
         ParseNodeKind kind = (tt == TOK_PLUS) ? PNK_ADD : PNK_SUB;
-        pn = handler.newBinaryOrAppend(kind, pn, mulExpr1n(), op);
+        pn = handler.newBinaryOrAppend(kind, pn, mulExpr1n(), pc, op);
     }
     return pn;
 }
@@ -4697,7 +4714,7 @@ BEGIN_EXPR_PARSER(relExpr1)
             tokenStream.isCurrentTokenType(TOK_INSTANCEOF))) {
         ParseNodeKind kind = RelationalTokenToParseNodeKind(tokenStream.currentToken());
         JSOp op = tokenStream.currentToken().t_op;
-        pn = handler.newBinaryOrAppend(kind, pn, shiftExpr1n(), op);
+        pn = handler.newBinaryOrAppend(kind, pn, shiftExpr1n(), pc, op);
     }
     /* Restore previous state of parsingForInit flag. */
     pc->parsingForInit |= oldParsingForInit;
@@ -4741,7 +4758,7 @@ BEGIN_EXPR_PARSER(bitAndExpr1)
 {
     Node pn = eqExpr1i();
     while (pn && tokenStream.isCurrentTokenType(TOK_BITAND))
-        pn = handler.newBinaryOrAppend(PNK_BITAND, pn, eqExpr1n(), JSOP_BITAND);
+        pn = handler.newBinaryOrAppend(PNK_BITAND, pn, eqExpr1n(), pc, JSOP_BITAND);
     return pn;
 }
 END_EXPR_PARSER(bitAndExpr1)
@@ -4750,7 +4767,7 @@ BEGIN_EXPR_PARSER(bitXorExpr1)
 {
     Node pn = bitAndExpr1i();
     while (pn && tokenStream.isCurrentTokenType(TOK_BITXOR))
-        pn = handler.newBinaryOrAppend(PNK_BITXOR, pn, bitAndExpr1n(), JSOP_BITXOR);
+        pn = handler.newBinaryOrAppend(PNK_BITXOR, pn, bitAndExpr1n(), pc, JSOP_BITXOR);
     return pn;
 }
 END_EXPR_PARSER(bitXorExpr1)
@@ -4759,7 +4776,7 @@ BEGIN_EXPR_PARSER(bitOrExpr1)
 {
     Node pn = bitXorExpr1i();
     while (pn && tokenStream.isCurrentTokenType(TOK_BITOR))
-        pn = handler.newBinaryOrAppend(PNK_BITOR, pn, bitXorExpr1n(), JSOP_BITOR);
+        pn = handler.newBinaryOrAppend(PNK_BITOR, pn, bitXorExpr1n(), pc, JSOP_BITOR);
     return pn;
 }
 END_EXPR_PARSER(bitOrExpr1)
@@ -4768,7 +4785,7 @@ BEGIN_EXPR_PARSER(andExpr1)
 {
     Node pn = bitOrExpr1i();
     while (pn && tokenStream.isCurrentTokenType(TOK_AND))
-        pn = handler.newBinaryOrAppend(PNK_AND, pn, bitOrExpr1n(), JSOP_AND);
+        pn = handler.newBinaryOrAppend(PNK_AND, pn, bitOrExpr1n(), pc, JSOP_AND);
     return pn;
 }
 END_EXPR_PARSER(andExpr1)
@@ -4779,7 +4796,7 @@ Parser<ParseHandler>::orExpr1()
 {
     Node pn = andExpr1i();
     while (pn && tokenStream.isCurrentTokenType(TOK_OR))
-        pn = handler.newBinaryOrAppend(PNK_OR, pn, andExpr1n(), JSOP_OR);
+        pn = handler.newBinaryOrAppend(PNK_OR, pn, andExpr1n(), pc, JSOP_OR);
     return pn;
 }
 
@@ -4907,7 +4924,7 @@ Parser<ParseHandler>::assignExpr()
     if (!rhs)
         return null();
 
-    return handler.newBinaryOrAppend(kind, lhs, rhs, op);
+    return handler.newBinaryOrAppend(kind, lhs, rhs, pc, op);
 }
 
 template <> bool

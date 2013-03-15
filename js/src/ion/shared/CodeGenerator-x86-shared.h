@@ -73,7 +73,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     bool emitTableSwitchDispatch(MTableSwitch *mir, const Register &index, const Register &base);
 
   public:
-    CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph *graph);
+    CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm);
 
   public:
     // Instruction visitors.
@@ -107,6 +107,9 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitGuardShape(LGuardShape *guard);
     virtual bool visitGuardClass(LGuardClass *guard);
     virtual bool visitTruncateDToInt32(LTruncateDToInt32 *ins);
+    virtual bool visitEffectiveAddress(LEffectiveAddress *ins);
+    virtual bool visitAsmJSDivOrMod(LAsmJSDivOrMod *ins);
+    virtual bool visitAsmJSPassStackArg(LAsmJSPassStackArg *ins);
 
     // Out of line visitors.
     bool visitOutOfLineBailout(OutOfLineBailout *ool);

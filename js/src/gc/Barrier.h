@@ -331,6 +331,7 @@ typedef RelocatablePtr<JSScript> RelocatablePtrScript;
 typedef HeapPtr<JSObject> HeapPtrObject;
 typedef HeapPtr<JSFunction> HeapPtrFunction;
 typedef HeapPtr<JSString> HeapPtrString;
+typedef HeapPtr<PropertyName> HeapPtrPropertyName;
 typedef HeapPtr<JSScript> HeapPtrScript;
 typedef HeapPtr<Shape> HeapPtrShape;
 typedef HeapPtr<BaseShape> HeapPtrBaseShape;

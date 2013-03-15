@@ -10,6 +10,8 @@
 
 #include "frontend/Parser.h"
 
+#include "frontend/SharedContext-inl.h"
+
 namespace js {
 namespace frontend {
 

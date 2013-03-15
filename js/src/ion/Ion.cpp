@@ -28,6 +28,7 @@
 #include "BacktrackingAllocator.h"
 #include "StupidAllocator.h"
 #include "UnreachableCodeElimination.h"
+#include "EffectiveAddressAnalysis.h"
 
 #if defined(JS_CPU_X86)
 # include "x86/Lowering-x86.h"
@@ -356,7 +357,7 @@ IonCode::copyFrom(MacroAssembler &masm)
     preBarrierTableBytes_ = masm.preBarrierTableBytes();
     masm.copyPreBarrierTable(code_ + preBarrierTableOffset());
 
-    masm.processCodeLabels(this);
+    masm.processCodeLabels(code_);
 }
 
 void
@@ -946,6 +947,17 @@ OptimizeMIR(MIRGenerator *mir)
             return false;
     }
 
+    if (js_IonOptions.eaa) {
+        EffectiveAddressAnalysis eaa(graph);
+        if (!eaa.analyze())
+            return false;
+        IonSpewPass("Effective Address Analysis");
+        AssertExtendedGraphCoherency(graph);
+
+        if (mir->shouldCancel("Effective Address Analysis"))
+            return false;
+    }
+
     if (!EliminateDeadCode(mir, graph))
         return false;
     IonSpewPass("DCE");
@@ -981,7 +993,7 @@ OptimizeMIR(MIRGenerator *mir)
 }
 
 CodeGenerator *
-GenerateLIR(MIRGenerator *mir)
+GenerateLIR(MIRGenerator *mir, MacroAssembler *maybeMasm = NULL)
 {
     MIRGraph &graph = mir->graph();
 
@@ -1055,21 +1067,33 @@ GenerateLIR(MIRGenerator *mir)
     if (mir->shouldCancel("Allocate Registers"))
         return NULL;
 
-    CodeGenerator *codegen = js_new<CodeGenerator>(mir, lir);
-    if (!codegen || !codegen->generate()) {
+    CodeGenerator *codegen = js_new<CodeGenerator>(mir, lir, maybeMasm);
+    if (!codegen) {
         js_delete(codegen);
         return NULL;
+    }
+
+    if (mir->compilingAsmJS()) {
+        if (!codegen->generateAsmJS()) {
+            js_delete(codegen);
+            return NULL;
+        }
+    } else {
+        if (!codegen->generate()) {
+            js_delete(codegen);
+            return NULL;
+        }
     }
 
     return codegen;
 }
 
 CodeGenerator *
-CompileBackEnd(MIRGenerator *mir)
+CompileBackEnd(MIRGenerator *mir, MacroAssembler *maybeMasm)
 {
     if (!OptimizeMIR(mir))
         return NULL;
-    return GenerateLIR(mir);
+    return GenerateLIR(mir, maybeMasm);
 }
 
 class SequentialCompileContext {

@@ -25,10 +25,20 @@ using mozilla::DebugOnly;
 namespace js {
 namespace ion {
 
-CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph)
+MacroAssembler &
+CodeGeneratorShared::ensureMasm(MacroAssembler *masmArg)
+{
+    if (masmArg)
+        return *masmArg;
+    maybeMasm_.construct();
+    return maybeMasm_.ref();
+}
+
+CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masmArg)
   : oolIns(NULL),
     oolParallelAbort_(NULL),
-    masm(&sps_),
+    maybeMasm_(),
+    masm(ensureMasm(masmArg)),
     gen(gen),
     graph(*graph),
     current(NULL),
@@ -42,7 +52,31 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph)
     frameDepth_(graph->localSlotCount() * sizeof(STACK_SLOT_SIZE) +
                 graph->argumentSlotCount() * sizeof(Value))
 {
-    frameClass_ = FrameSizeClass::FromDepth(frameDepth_);
+    if (!gen->compilingAsmJS())
+        masm.setInstrumentation(&sps_);
+
+    // Since asm.js uses the system ABI which does not necessarily use a
+    // regular array where all slots are sizeof(Value), it maintains the max
+    // argument stack depth separately.
+    if (gen->compilingAsmJS()) {
+        JS_ASSERT(graph->argumentSlotCount() == 0);
+        frameDepth_ += gen->maxAsmJSStackArgBytes();
+
+        // An MAsmJSCall does not align the stack pointer at calls sites but instead
+        // relies on the a priori stack adjustment (in the prologue) on platforms
+        // (like x64) which require the stack to be aligned.
+        if (gen->performsAsmJSCall()) {
+            unsigned alignmentAtCall = AlignmentAtPrologue + frameDepth_;
+            if (unsigned rem = alignmentAtCall % StackAlignment)
+                frameDepth_ += StackAlignment - rem;
+        }
+
+        // FrameSizeClass is only used for bailing, which cannot happen in
+        // asm.js code.
+        frameClass_ = FrameSizeClass::None();
+    } else {
+        frameClass_ = FrameSizeClass::FromDepth(frameDepth_);
+    }
 }
 
 bool

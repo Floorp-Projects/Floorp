@@ -72,7 +72,8 @@ class SyntaxParseHandler
     Node newBinary(ParseNodeKind kind, Node left, Node right, JSOp op = JSOP_NOP) {
         return NodeGeneric;
     }
-    Node newBinaryOrAppend(ParseNodeKind kind, Node left, Node right, JSOp op = JSOP_NOP) {
+    Node newBinaryOrAppend(ParseNodeKind kind, Node left, Node right,
+                           ParseContext<SyntaxParseHandler> *pc, JSOp op = JSOP_NOP) {
         return NodeGeneric;
     }
     void setBinaryRHS(Node pn, Node rhs) {}

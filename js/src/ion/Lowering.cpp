@@ -37,14 +37,14 @@ LIRGenerator::visitParameter(MParameter *param)
     offset *= sizeof(Value);
 #if defined(JS_NUNBOX32)
 # if defined(IS_BIG_ENDIAN)
-    ins->getDef(0)->setOutput(LArgument(offset));
-    ins->getDef(1)->setOutput(LArgument(offset + 4));
+    ins->getDef(0)->setOutput(LArgument(LAllocation::INT_ARGUMENT, offset));
+    ins->getDef(1)->setOutput(LArgument(LAllocation::INT_ARGUMENT, offset + 4));
 # else
-    ins->getDef(0)->setOutput(LArgument(offset + 4));
-    ins->getDef(1)->setOutput(LArgument(offset));
+    ins->getDef(0)->setOutput(LArgument(LAllocation::INT_ARGUMENT, offset + 4));
+    ins->getDef(1)->setOutput(LArgument(LAllocation::INT_ARGUMENT, offset));
 # endif
 #elif defined(JS_PUNBOX64)
-    ins->getDef(0)->setOutput(LArgument(offset));
+    ins->getDef(0)->setOutput(LArgument(LAllocation::INT_ARGUMENT, offset));
 #endif
 
     return true;
@@ -602,15 +602,19 @@ LIRGenerator::visitTest(MTest *test)
 
         // Compare and branch Int32 or Object pointers.
         if (comp->compareType() == MCompare::Compare_Int32 ||
+            comp->compareType() == MCompare::Compare_UInt32 ||
             comp->compareType() == MCompare::Compare_Object)
         {
             JSOp op = ReorderComparison(comp->jsop(), &left, &right);
             LAllocation lhs = useRegister(left);
             LAllocation rhs;
-            if (comp->compareType() == MCompare::Compare_Int32)
+            if (comp->compareType() == MCompare::Compare_Int32 ||
+                comp->compareType() == MCompare::Compare_UInt32)
+            {
                 rhs = useAnyOrConstant(right);
-            else
+            } else {
                 rhs = useRegister(right);
+            }
             LCompareAndBranch *lir = new LCompareAndBranch(op, lhs, rhs, ifTrue, ifFalse);
             return add(lir, comp);
         }
@@ -775,15 +779,19 @@ LIRGenerator::visitCompare(MCompare *comp)
 
     // Compare Int32 or Object pointers.
     if (comp->compareType() == MCompare::Compare_Int32 ||
+        comp->compareType() == MCompare::Compare_UInt32 ||
         comp->compareType() == MCompare::Compare_Object)
     {
         JSOp op = ReorderComparison(comp->jsop(), &left, &right);
         LAllocation lhs = useRegister(left);
         LAllocation rhs;
-        if (comp->compareType() == MCompare::Compare_Int32)
+        if (comp->compareType() == MCompare::Compare_Int32 ||
+            comp->compareType() == MCompare::Compare_UInt32)
+        {
             rhs = useAnyOrConstant(right);
-        else
+        } else {
             rhs = useRegister(right);
+        }
         return define(new LCompare(op, lhs, rhs), comp);
     }
 
@@ -1914,6 +1922,12 @@ LIRGenerator::visitStoreElementHole(MStoreElementHole *ins)
 }
 
 bool
+LIRGenerator::visitEffectiveAddress(MEffectiveAddress *ins)
+{
+    return define(new LEffectiveAddress(useRegister(ins->base()), useRegister(ins->index())), ins);
+}
+
+bool
 LIRGenerator::visitArrayPopShift(MArrayPopShift *ins)
 {
     LUse object = useRegister(ins->object());
@@ -2388,6 +2402,105 @@ LIRGenerator::visitFunctionBoundary(MFunctionBoundary *ins)
 }
 
 bool
+LIRGenerator::visitAsmJSLoadHeap(MAsmJSLoadHeap *ins)
+{
+    LAsmJSLoadHeap *lir = new LAsmJSLoadHeap(useRegisterAtStart(ins->ptr()));
+    return define(lir, ins);
+}
+
+bool
+LIRGenerator::visitAsmJSLoadGlobalVar(MAsmJSLoadGlobalVar *ins)
+{
+    return define(new LAsmJSLoadGlobalVar, ins);
+}
+
+bool
+LIRGenerator::visitAsmJSStoreGlobalVar(MAsmJSStoreGlobalVar *ins)
+{
+    return add(new LAsmJSStoreGlobalVar(useRegisterAtStart(ins->value())), ins);
+}
+
+bool
+LIRGenerator::visitAsmJSLoadFFIFunc(MAsmJSLoadFFIFunc *ins)
+{
+    return define(new LAsmJSLoadFFIFunc, ins);
+}
+
+bool
+LIRGenerator::visitAsmJSParameter(MAsmJSParameter *ins)
+{
+    ABIArg abi = ins->abi();
+    if (abi.argInRegister())
+        return defineFixed(new LAsmJSParameter, ins, LAllocation(abi.reg()));
+
+    JS_ASSERT(ins->type() == MIRType_Int32 || ins->type() == MIRType_Double);
+    LAllocation::Kind argKind = ins->type() == MIRType_Int32
+                                ? LAllocation::INT_ARGUMENT
+                                : LAllocation::DOUBLE_ARGUMENT;
+    return defineFixed(new LAsmJSParameter, ins, LArgument(argKind, abi.offsetFromArgBase()));
+}
+
+bool
+LIRGenerator::visitAsmJSReturn(MAsmJSReturn *ins)
+{
+    MDefinition *rval = ins->getOperand(0);
+    LAsmJSReturn *lir = new LAsmJSReturn;
+    if (rval->type() == MIRType_Double)
+        lir->setOperand(0, useFixed(rval, ReturnFloatReg));
+    else if (rval->type() == MIRType_Int32)
+        lir->setOperand(0, useFixed(rval, ReturnReg));
+    else
+        JS_NOT_REACHED("Unexpected asm.js return type");
+    return add(lir);
+}
+
+bool
+LIRGenerator::visitAsmJSVoidReturn(MAsmJSVoidReturn *ins)
+{
+    return add(new LAsmJSVoidReturn);
+}
+
+bool
+LIRGenerator::visitAsmJSPassStackArg(MAsmJSPassStackArg *ins)
+{
+    if (ins->arg()->type() == MIRType_Double) {
+        JS_ASSERT(!ins->arg()->isEmittedAtUses());
+        return add(new LAsmJSPassStackArg(useRegisterAtStart(ins->arg())), ins);
+    }
+
+    return add(new LAsmJSPassStackArg(useRegisterOrConstantAtStart(ins->arg())), ins);
+}
+
+bool
+LIRGenerator::visitAsmJSCall(MAsmJSCall *ins)
+{
+    gen->setPerformsAsmJSCall();
+
+    LAllocation *args = gen->allocate<LAllocation>(ins->numOperands());
+    if (!args)
+        return false;
+
+    for (unsigned i = 0; i < ins->numArgs(); i++)
+        args[i] = useFixed(ins->getOperand(i), ins->registerForArg(i));
+
+    if (ins->callee().which() == MAsmJSCall::Callee::Dynamic)
+        args[ins->dynamicCalleeOperandIndex()] = useFixed(ins->callee().dynamic(), CallTempReg0);
+
+    LInstruction *lir = new LAsmJSCall(args, ins->numOperands());
+    if (ins->type() == MIRType_None) {
+        lir->setMir(ins);
+        return add(lir);
+    }
+    return defineReturn(lir, ins);
+}
+
+bool
+LIRGenerator::visitAsmJSCheckOverRecursed(MAsmJSCheckOverRecursed *ins)
+{
+    return add(new LAsmJSCheckOverRecursed(), ins);
+}
+
+bool
 LIRGenerator::visitSetDOMProperty(MSetDOMProperty *ins)
 {
     MDefinition *val = ins->value();
@@ -2430,7 +2543,6 @@ LIRGenerator::visitGetDOMProperty(MGetDOMProperty *ins)
 
     return defineReturn(lir, ins) && assignSafepoint(lir, ins);
 }
-
 
 static void
 SpewResumePoint(MBasicBlock *block, MInstruction *ins, MResumePoint *resumePoint)

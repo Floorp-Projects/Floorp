@@ -304,10 +304,18 @@ ParseNode::append(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right
 
 ParseNode *
 ParseNode::newBinaryOrAppend(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right,
-                             FullParseHandler *handler, bool foldConstants)
+                             FullParseHandler *handler, ParseContext<FullParseHandler> *pc,
+                             bool foldConstants)
 {
     if (!left || !right)
         return NULL;
+
+    /*
+     * Ensure that the parse tree is faithful to the source when "use asm" (for
+     * the purpose of type checking).
+     */
+    if (pc->useAsmOrInsideUseAsm())
+        return handler->new_<BinaryNode>(kind, op, left, right);
 
     /*
      * Flatten a left-associative (left-heavy) tree of a given operator into

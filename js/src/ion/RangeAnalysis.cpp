@@ -141,6 +141,10 @@ RangeAnalysis::addBetaNobes()
 
         MCompare *compare = test->getOperand(0)->toCompare();
 
+        // TODO: support unsigned comparisons
+        if (compare->compareType() == MCompare::Compare_UInt32)
+            continue;
+
         MDefinition *left = compare->getOperand(0);
         MDefinition *right = compare->getOperand(1);
         int32_t bound;
@@ -703,7 +707,7 @@ MSub::computeRange()
 void
 MMul::computeRange()
 {
-    if (specialization() != MIRType_Int32 && specialization() != MIRType_Double)
+    if ((specialization() != MIRType_Int32 && specialization() != MIRType_Double) || isTruncated())
         return;
     Range left(getOperand(0));
     Range right(getOperand(1));

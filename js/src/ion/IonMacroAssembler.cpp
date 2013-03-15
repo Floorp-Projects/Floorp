@@ -9,6 +9,7 @@
 
 #include "ion/Bailouts.h"
 #include "ion/IonMacroAssembler.h"
+#include "ion/MIR.h"
 #include "js/RootingAPI.h"
 #include "vm/ForkJoin.h"
 
@@ -241,21 +242,12 @@ MacroAssembler::loadFromTypedArray(int arrayType, const T &src, AnyRegister dest
         break;
       case TypedArray::TYPE_FLOAT32:
       case TypedArray::TYPE_FLOAT64:
-      {
         if (arrayType == js::TypedArray::TYPE_FLOAT32)
             loadFloatAsDouble(src, dest.fpu());
         else
             loadDouble(src, dest.fpu());
-
-        // Make sure NaN gets canonicalized.
-        Label notNaN;
-        branchDouble(DoubleOrdered, dest.fpu(), dest.fpu(), &notNaN);
-        {
-            loadStaticDouble(&js_NaN, dest.fpu());
-        }
-        bind(&notNaN);
+        canonicalizeDouble(dest.fpu());
         break;
-      }
       default:
         JS_NOT_REACHED("Invalid typed array type");
         break;
@@ -556,7 +548,7 @@ MacroAssembler::compareStrings(JSOp op, Register left, Register right, Register 
     branchTest32(Assembler::Zero, temp, atomBit, &notAtom);
 
     cmpPtr(left, right);
-    emitSet(JSOpToCondition(op), result);
+    emitSet(JSOpToCondition(MCompare::Compare_String, op), result);
     jump(&done);
 
     bind(&notAtom);
@@ -833,3 +825,24 @@ MacroAssembler::printf(const char *output, Register value)
 
     PopRegsInMask(RegisterSet::Volatile());
 }
+
+#ifdef JS_ASMJS
+ABIArgIter::ABIArgIter(const MIRTypeVector &types)
+  : gen_(),
+    types_(types),
+    i_(0)
+{
+    if (!done())
+        gen_.next(types_[i_]);
+}
+
+void
+ABIArgIter::operator++(int)
+{
+    JS_ASSERT(!done());
+    i_++;
+    if (!done())
+        gen_.next(types_[i_]);
+}
+#endif
+

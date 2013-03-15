@@ -654,6 +654,92 @@ class AnyRegisterIterator
     }
 };
 
+class ABIArg
+{
+  public:
+    enum Kind { GPR, FPU, Stack };
+
+  private:
+    Kind kind_;
+    union {
+        Registers::Code gpr_;
+        FloatRegisters::Code fpu_;
+        uint32_t offset_;
+    } u;
+
+  public:
+    ABIArg() : kind_(Kind(-1)) { u.offset_ = -1; }
+    ABIArg(Register gpr) : kind_(GPR) { u.gpr_ = gpr.code(); }
+    ABIArg(FloatRegister fpu) : kind_(FPU) { u.fpu_ = fpu.code(); }
+    ABIArg(uint32_t offset) : kind_(Stack) { u.offset_ = offset; }
+
+    Kind kind() const { return kind_; }
+    Register gpr() const { JS_ASSERT(kind() == GPR); return Register::FromCode(u.gpr_); }
+    FloatRegister fpu() const { JS_ASSERT(kind() == FPU); return FloatRegister::FromCode(u.fpu_); }
+    uint32_t offsetFromArgBase() const { JS_ASSERT(kind() == Stack); return u.offset_; }
+
+    bool argInRegister() const { return kind() != Stack; }
+    AnyRegister reg() const { return kind_ == GPR ? AnyRegister(gpr()) : AnyRegister(fpu()); }
+};
+
+class AsmJSHeapAccess
+{
+    uint32_t offset_;
+    uint8_t opLength_;
+#if defined(JS_CPU_X86)
+    uint8_t cmpDelta_;
+#endif
+    uint8_t isFloat32Load_;
+    ion::AnyRegister::Code loadedReg_ : 8;
+
+    JS_STATIC_ASSERT(ion::AnyRegister::Total < UINT8_MAX);
+
+  public:
+#if defined(JS_CPU_X86)
+    AsmJSHeapAccess(uint32_t cmp, uint32_t offset, uint32_t after, ArrayBufferView::ViewType vt,
+                    AnyRegister loadedReg)
+      : offset_(offset),
+        opLength_(after - offset),
+        cmpDelta_(offset - cmp),
+        isFloat32Load_(vt == ArrayBufferView::TYPE_FLOAT32),
+        loadedReg_(loadedReg.code())
+    {}
+    AsmJSHeapAccess(uint32_t cmp, uint32_t offset, uint8_t after)
+      : offset_(offset),
+        opLength_(after - offset),
+        cmpDelta_(offset - cmp),
+        isFloat32Load_(false),
+        loadedReg_(UINT8_MAX)
+    {}
+#else
+    AsmJSHeapAccess(uint32_t offset, uint32_t after, ArrayBufferView::ViewType vt,
+                    AnyRegister loadedReg)
+      : offset_(offset),
+        opLength_(after - offset),
+        isFloat32Load_(vt == ArrayBufferView::TYPE_FLOAT32),
+        loadedReg_(loadedReg.code())
+    {}
+    AsmJSHeapAccess(uint32_t offset, uint8_t after)
+      : offset_(offset),
+        opLength_(after - offset),
+        isFloat32Load_(false),
+        loadedReg_(UINT8_MAX)
+    {}
+#endif
+
+    uint32_t offset() const { return offset_; }
+    unsigned opLength() const { return opLength_; }
+    bool isLoad() const { return loadedReg_ != UINT8_MAX; }
+    bool isFloat32Load() const { return isFloat32Load_; }
+    ion::AnyRegister loadedReg() const { return ion::AnyRegister::FromCode(loadedReg_); }
+
+#if defined(JS_CPU_X86)
+    void *patchLengthAt(uint8_t *code) const { return code + (offset_ - cmpDelta_); }
+    void *patchOffsetAt(uint8_t *code) const { return code + (offset_ + opLength_); }
+#endif
+    void updateOffset(uint32_t offset) { offset_ = offset; }
+};
+
 } // namespace ion
 } // namespace js
 
