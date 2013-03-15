@@ -283,6 +283,7 @@ this.DOMApplicationRegistry = {
     }
 
     app.origin = "app://" + aId;
+    app.removable = true;
 
     // Extract the manifest.webapp file from application.zip.
     let zipFile = baseDir.clone();
@@ -860,7 +861,12 @@ this.DOMApplicationRegistry = {
   },
 
   getAppInfo: function getAppInfo(aAppId) {
-    return AppsUtils.getAppInfo(this.webapps, aAppId);
+    if (!this.webapps[aAppId]) {
+      debug("No webapp for " + aAppId);
+      return null;
+    }
+    return { "basePath":  this.webapps[aAppId].basePath + "/",
+             "isCoreApp": !this.webapps[aAppId].removable };
   },
 
   // Some messages can be listened by several content processes:
@@ -2021,8 +2027,7 @@ this.DOMApplicationRegistry = {
     }
 
     // the manifest file used to be named manifest.json, so fallback on this.
-    let baseDir = this.webapps[id].basePath == this.getCoreAppsBasePath()
-                    ? "coreAppsDir" : DIRECTORY_NAME;
+    let baseDir = (this.webapps[id].removable ? DIRECTORY_NAME : "coreAppsDir");
     let file = FileUtils.getFile(baseDir, ["webapps", id, "manifest.webapp"], true);
     if (!file.exists()) {
       file = FileUtils.getFile(baseDir, ["webapps", id, "update.webapp"], true);
@@ -2656,7 +2661,7 @@ this.DOMApplicationRegistry = {
   },
 
   getCoreAppsBasePath: function() {
-    return AppsUtils.getCoreAppsBasePath();
+    return FileUtils.getDir("coreAppsDir", ["webapps"], false).path;
   },
 
   getWebAppsBasePath: function getWebAppsBasePath() {
