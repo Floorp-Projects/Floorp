@@ -1071,16 +1071,6 @@ nsSVGElement::sMaskMap[] = {
 };
 
 //----------------------------------------------------------------------
-// nsIDOMNode methods
-
-NS_IMETHODIMP
-nsSVGElement::IsSupported(const nsAString& aFeature, const nsAString& aVersion, bool* aReturn)
-{
-  *aReturn = Element::IsSupported(aFeature, aVersion);
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
 // nsIDOMElement methods
 
 // forwarded to Element implementations
