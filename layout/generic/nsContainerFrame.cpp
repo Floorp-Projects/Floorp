@@ -1240,14 +1240,17 @@ nsContainerFrame::StealFrame(nsPresContext* aPresContext,
 {
 #ifdef DEBUG
   if (!mFrames.ContainsFrame(aChild)) {
-    FramePropertyTable* propTable = aPresContext->PropertyTable();
-    nsFrameList* list = static_cast<nsFrameList*>(
-                          propTable->Get(this, OverflowContainersProperty()));
+    nsFrameList* list = GetOverflowFrames();
     if (!list || !list->ContainsFrame(aChild)) {
+      FramePropertyTable* propTable = aPresContext->PropertyTable();
       list = static_cast<nsFrameList*>(
-               propTable->Get(this, ExcessOverflowContainersProperty()));
-      MOZ_ASSERT(list && list->ContainsFrame(aChild), "aChild is not our child "
-                 "or on a frame list not supported by StealFrame");
+               propTable->Get(this, OverflowContainersProperty()));
+      if (!list || !list->ContainsFrame(aChild)) {
+        list = static_cast<nsFrameList*>(
+                 propTable->Get(this, ExcessOverflowContainersProperty()));
+        MOZ_ASSERT(list && list->ContainsFrame(aChild), "aChild isn't our child"
+                   " or on a frame list not supported by StealFrame");
+      }
     }
   }
 #endif
