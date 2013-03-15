@@ -56,6 +56,19 @@ intl_Collator_availableLocales(JSContext *cx, unsigned argc, Value *vp);
 extern JSBool
 intl_availableCollations(JSContext *cx, unsigned argc, Value *vp);
 
+/**
+ * Compares x and y (which must be String values), and returns a number less
+ * than 0 if x < y, 0 if x = y, or a number greater than 0 if x > y according
+ * to the sort order for the locale and collation options of the given
+ * Collator.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 10.3.2.
+ *
+ * Usage: result = intl_CompareStrings(collator, x, y)
+ */
+extern JSBool
+intl_CompareStrings(JSContext *cx, unsigned argc, Value *vp);
+
 } // namespace js
 
 #endif /* Intl_h___ */
