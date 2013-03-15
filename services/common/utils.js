@@ -13,6 +13,9 @@ Cu.import("resource://services-common/log4moz.js");
 
 this.CommonUtils = {
   exceptionStr: function exceptionStr(e) {
+    if (!e) {
+      return "" + e;
+    }
     let message = e.message ? e.message : e;
     return message + " " + CommonUtils.stackTrace(e);
   },
