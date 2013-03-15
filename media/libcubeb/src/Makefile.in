@@ -28,16 +28,13 @@ DEFINES         += -DUSE_WINMM
 endif
 
 ifeq ($(OS_TARGET),Android)
-ifneq ($(MOZ_WIDGET_TOOLKIT),gonk)
-CSRCS           += \
-                cubeb_audiotrack.c \
-                $(NULL)
-DEFINES         += -DUSE_AUDIOTRACK
-endif
+ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
 CSRCS           += \
                 cubeb_opensl.c \
                 $(NULL)
 DEFINES         += -DUSE_OPENSL
+endif
+# No Android implementation of libcubeb yet.
 endif
 
 ifeq ($(OS_TARGET),Darwin)
