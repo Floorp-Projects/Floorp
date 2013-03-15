@@ -7,8 +7,8 @@ function test()
   requestLongerTimeout(2);
 
   let inspector, searchBox, state, panel;
-  let panelOpeningStates = [0, 3, 14, 17];
-  let panelClosingStates = [2, 13, 16];
+  let panelOpeningStates = [0, 3, 9, 14, 17];
+  let panelClosingStates = [2, 8, 13, 16];
 
   // The various states of the inspector: [key, query]
   // [
