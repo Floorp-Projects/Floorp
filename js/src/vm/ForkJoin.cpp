@@ -20,7 +20,10 @@
 
 using namespace js;
 
-#ifdef JS_THREADSAFE
+#if defined(JS_THREADSAFE) && defined(JS_ION)
+
+unsigned ForkJoinSlice::ThreadPrivateIndex;
+bool ForkJoinSlice::TLSInitialized;
 
 class js::ForkJoinShared : public TaskExecutor, public Monitor
 {
@@ -143,9 +146,6 @@ class js::AutoRendezvous
         threadCx.shared->endRendezvous(threadCx);
     }
 };
-
-unsigned ForkJoinSlice::ThreadPrivateIndex;
-bool ForkJoinSlice::TLSInitialized;
 
 class js::AutoSetForkJoinSlice
 {
@@ -475,8 +475,6 @@ ForkJoinShared::requestZoneGC(JS::Zone *zone, gcreason::Reason reason)
     }
 }
 
-#endif // JS_THREADSAFE
-
 /////////////////////////////////////////////////////////////////////////////
 // ForkJoinSlice
 //
@@ -495,70 +493,49 @@ ForkJoinSlice::ForkJoinSlice(PerThreadData *perThreadData,
 bool
 ForkJoinSlice::isMainThread()
 {
-#ifdef JS_THREADSAFE
     return perThreadData == &shared->runtime()->mainThread;
-#else
-    return true;
-#endif
 }
 
 JSRuntime *
 ForkJoinSlice::runtime()
 {
-#ifdef JS_THREADSAFE
     return shared->runtime();
-#else
-    return NULL;
-#endif
 }
 
 bool
 ForkJoinSlice::check()
 {
-#ifdef JS_THREADSAFE
     if (runtime()->interrupt)
         return shared->check(*this);
     else
         return true;
-#else
-    return false;
-#endif
 }
 
 bool
 ForkJoinSlice::InitializeTLS()
 {
-#ifdef JS_THREADSAFE
     if (!TLSInitialized) {
         TLSInitialized = true;
         PRStatus status = PR_NewThreadPrivateIndex(&ThreadPrivateIndex, NULL);
         return status == PR_SUCCESS;
     }
     return true;
-#else
-    return true;
-#endif
 }
 
 void
 ForkJoinSlice::requestGC(gcreason::Reason reason)
 {
-#ifdef JS_THREADSAFE
     shared->requestGC(reason);
     triggerAbort();
-#endif
 }
 
 void
 ForkJoinSlice::requestZoneGC(JS::Zone *zone, gcreason::Reason reason)
 {
-#ifdef JS_THREADSAFE
     shared->requestZoneGC(zone, reason);
     triggerAbort();
-#endif
 }
 
-#ifdef JS_THREADSAFE
 void
 ForkJoinSlice::triggerAbort()
 {
@@ -574,7 +551,6 @@ ForkJoinSlice::triggerAbort()
     // are not on a central list so that's not possible.
     perThreadData->ionStackLimit = -1;
 }
-#endif
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -612,18 +588,13 @@ class AutoEnterParallelSection
 uint32_t
 js::ForkJoinSlices(JSContext *cx)
 {
-#ifndef JS_THREADSAFE
-    return 1;
-#else
     // Parallel workers plus this main thread.
     return cx->runtime->threadPool.numWorkers() + 1;
-#endif
 }
 
 ParallelResult
 js::ExecuteForkJoinOp(JSContext *cx, ForkJoinOp &op)
 {
-#ifdef JS_THREADSAFE
     // Recursive use of the ThreadPool is not supported.
     JS_ASSERT(!InParallelSection());
 
@@ -637,7 +608,57 @@ js::ExecuteForkJoinOp(JSContext *cx, ForkJoinOp &op)
         return TP_RETRY_SEQUENTIALLY;
 
     return shared.execute();
-#else
-    return TP_RETRY_SEQUENTIALLY;
-#endif
 }
+
+#else
+
+bool
+ForkJoinSlice::isMainThread()
+{
+    return true;
+}
+
+JSRuntime *
+ForkJoinSlice::runtime()
+{
+    return NULL;
+}
+
+bool
+ForkJoinSlice::check()
+{
+    return false;
+}
+
+bool
+ForkJoinSlice::InitializeTLS()
+{
+    return true;
+}
+
+void
+ForkJoinSlice::requestGC(gcreason::Reason reason)
+{
+    JS_NOT_REACHED("No threadsafe, no ion");
+}
+
+void
+ForkJoinSlice::requestZoneGC(JS::Zone *zone, gcreason::Reason reason)
+{
+    JS_NOT_REACHED("No threadsafe, no ion");
+}
+
+uint32_t
+js::ForkJoinSlices(JSContext *cx)
+{
+    return 1;
+}
+
+ParallelResult
+js::ExecuteForkJoinOp(JSContext *cx, ForkJoinOp &op)
+{
+    return TP_RETRY_SEQUENTIALLY;
+}
+
+#endif // defined(JS_THREADSAFE) && defined(JS_ION)
+
