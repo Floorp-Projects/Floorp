@@ -1,11 +1,10 @@
-#filter substitution
 <?xml version="1.0" encoding="utf-8"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <org.mozilla.gecko.BrowserToolbarLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:gecko="http://schemas.android.com/apk/res/@ANDROID_PACKAGE_NAME@"
+              xmlns:gecko="http://schemas.android.com/apk/res-auto"
               android:id="@+id/browser_toolbar"
               style="@style/BrowserToolbar">
 
@@ -22,11 +21,11 @@
         <org.mozilla.gecko.BrowserToolbarBackground android:id="@+id/address_bar_bg"
                                                     android:layout_width="fill_parent"
                                                     android:layout_height="fill_parent"
-                                                    android:layout_marginRight="50dip"
+                                                    android:layout_marginRight="66dip"
                                                     android:layout_alignParentTop="true"
                                                     android:layout_alignParentRight="true"
                                                     android:background="@drawable/address_bar_bg"/>
-        
+
         <FrameLayout style="@style/AddressBar.Button.Container"
                      android:id="@+id/addressbar">
 
@@ -39,9 +38,9 @@
                 <ImageView android:id="@+id/awesome_bar_entry"
                            style="@style/AddressBar.Button"
                            android:duplicateParentState="true"
-                           android:layout_marginTop="4dp"
-                           android:layout_marginBottom="4dp"
-                           android:layout_marginRight="80dp"
+                           android:layout_marginTop="5dp"
+                           android:layout_marginBottom="5dp"
+                           android:layout_marginRight="100dp"
                            android:clickable="false"
                            android:focusable="false"
                            android:background="@drawable/address_bar_url"/>
@@ -51,11 +50,11 @@
                       style="@style/AddressBar.ImageButton"
                       android:layout_width="50dp"
                       android:layout_height="fill_parent"
-                      android:paddingTop="4dp"
-                      android:paddingBottom="4dp"
+                      android:paddingTop="5dp"
+                      android:paddingBottom="5dp"
                       android:layout_centerVertical="true"
                       android:layout_alignParentRight="true"
-                      android:layout_marginRight="55dp"
+                      android:layout_marginRight="75dp"
                       android:duplicateParentState="true"
                       android:visibility="invisible"
                       android:background="@drawable/address_bar_bg">
@@ -74,7 +73,7 @@
             </Gecko.RelativeLayout>
 
             <LinearLayout style="@style/AddressBar.Button"
-                          android:paddingRight="80dp"
+                          android:paddingRight="100dp"
                           android:orientation="horizontal">
 
                 <ImageButton android:id="@+id/favicon"
@@ -92,14 +91,12 @@
                              android:layout_width="@dimen/browser_toolbar_lock_width"
                              android:scaleType="fitCenter"
                              android:layout_marginLeft="-4dip"
-                             android:paddingLeft="1dp"
-                             android:paddingRight="1dp"
                              android:src="@drawable/site_security_level"
                              android:contentDescription="@string/site_security"
                              android:visibility="gone"/>
 
                 <Gecko.TextView android:id="@+id/awesome_bar_title"
-                                style="@style/AddressBar.ImageButton"
+                                style="@style/AddressBar.Button"
                                 android:layout_width="fill_parent"
                                 android:layout_height="fill_parent"
                                 android:layout_weight="1.0"
@@ -135,41 +132,42 @@
 
         <org.mozilla.gecko.MenuButton android:id="@+id/menu"
                                       style="@style/AddressBar.ImageButton"
-                                      android:layout_width="60dip"
+                                      android:layout_width="76dip"
                                       android:layout_alignParentRight="true"
+                                      gecko:curveTowards="right"
                                       android:gravity="center_vertical"
                                       android:src="@drawable/menu_level"
                                       android:contentDescription="@string/menu"
                                       android:background="@drawable/menu_button"
-                                      android:paddingLeft="30dip"
-                                      android:paddingRight="10dip"/>
+                                      android:paddingLeft="40dip"
+                                      android:paddingRight="12dip"
+                                      android:visibility="gone"/>
 
         <org.mozilla.gecko.TabsButton android:id="@+id/tabs"
                                       style="@style/AddressBar.ImageButton"
-                                      android:layout_width="80dip"
-                                      android:layout_marginRight="15dip"
+                                      android:layout_width="98dip"
+                                      android:layout_marginRight="22dip"
                                       android:layout_alignParentRight="true"
-                                      gecko:curveTowards="right"
                                       android:background="@drawable/tabs_button"
                                       android:gravity="center_vertical"
                                       android:src="@drawable/tabs_level"
-                                      android:paddingLeft="30dip"
-                                      android:paddingRight="30dip"/>
+                                      android:paddingLeft="37dip"
+                                      android:paddingRight="37dip"/>
 
         <Gecko.TextSwitcher android:id="@+id/tabs_count"
                             style="@style/AddressBar.ImageButton"
-                            android:layout_width="80dip"
+                            android:layout_width="98dip"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4.5dp"
+                            android:layout_marginTop="5dp"
                             android:layout_alignRight="@id/tabs"
                             android:gravity="center_horizontal"/>
 
-         <ImageView android:id="@+id/shadow"
-                    android:layout_width="fill_parent"
-                    android:layout_height="2dp"
-                    android:layout_alignParentBottom="true"
-                    android:background="@drawable/address_bar_bg_shadow_repeat"
-                    android:visibility="gone"/>
+        <ImageView android:id="@+id/shadow"
+                   android:layout_width="fill_parent"
+                   android:layout_height="2dp"
+                   android:layout_alignParentBottom="true"
+                   android:background="@drawable/address_bar_bg_shadow_repeat"
+                   android:visibility="gone"/>
 
     </RelativeLayout>
 
