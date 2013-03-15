@@ -106,6 +106,9 @@ private:
                                   nsHTMLReflowMetrics&     aDesiredSize,
                                   const nsHTMLReflowState& aReflowState);
 
+  void DoUpdateThumbPosition(nsIFrame* aThumbFrame,
+                             const nsSize& aRangeSize);
+
   /**
    * Returns the input element's value as a fraction of the difference between
    * the input's minimum and its maximum (i.e. returns 0.0 when the value is
