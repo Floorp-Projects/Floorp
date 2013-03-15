@@ -719,7 +719,7 @@ pref("dom.xbl_scopes", true);
 pref("dom.experimental_forms", false);
 
 // Don't enable <input type=range> yet:
-pref("dom.experimental_forms_range", false);
+pref("dom.experimental_forms_range", true);
 
 // Allocation Threshold for Workers
 pref("dom.workers.mem.gc_allocation_threshold_mb", 30);
