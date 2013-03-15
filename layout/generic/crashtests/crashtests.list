@@ -452,3 +452,4 @@ test-pref(layout.css.flexbox.enabled,true) load 844529-1.html
 load 847130.xhtml
 load 847208.html
 asserts(4) load 847209.html # bug 847368
+load 849603.html
