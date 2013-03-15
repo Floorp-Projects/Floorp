@@ -579,6 +579,20 @@ ICStackCheck_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 //
 // UseCount_Fallback
 //
+static bool
+IsTopFrameConstructing(JSContext *cx)
+{
+    IonFrameIterator iter(cx);
+    JS_ASSERT(iter.type() == IonFrame_Exit);
+
+    ++iter;
+    JS_ASSERT(iter.type() == IonFrame_BaselineStub);
+
+    ++iter;
+    JS_ASSERT(iter.isBaselineJS());
+
+    return iter.isConstructing();
+}
 
 static bool
 EnsureCanEnterIon(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *frame,
@@ -589,7 +603,7 @@ EnsureCanEnterIon(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *frame
 
     bool isLoopEntry = (JSOp(*pc) == JSOP_LOOPENTRY);
 
-    bool isConstructing = ScriptFrameIter(cx).isConstructing();
+    bool isConstructing = IsTopFrameConstructing(cx);
     MethodStatus stat;
     if (isLoopEntry) {
         IonSpew(IonSpew_BaselineOSR, "  Compile at loop entry!");
