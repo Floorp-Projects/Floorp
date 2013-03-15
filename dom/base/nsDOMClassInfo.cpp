@@ -5486,18 +5486,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   if (!ObjectIsNativeWrapper(cx, obj) ||
       xpc::WrapperFactory::XrayWrapperNotShadowing(obj, id)) {
     if (win->GetLength() > 0) {
-      const jschar *chars = ::JS_GetInternedStringChars(JSID_TO_STRING(id));
-
-      nsCOMPtr<nsIDocShellTreeNode> dsn(do_QueryInterface(win->GetDocShell()));
-      MOZ_ASSERT(dsn);
-
-      nsCOMPtr<nsIDocShellTreeItem> child;
-      dsn->FindChildWithName(reinterpret_cast<const PRUnichar*>(chars),
-                             false, true, nullptr, nullptr,
-                             getter_AddRefs(child));
-
-      nsCOMPtr<nsIDOMWindow> child_win(do_GetInterface(child));
-
+      nsCOMPtr<nsIDOMWindow> child_win = win->GetChildWindow(id);
       if (child_win) {
         // We found a subframe of the right name, define the property
         // on the wrapper so that ::NewResolve() doesn't get called
