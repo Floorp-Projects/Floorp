@@ -851,8 +851,19 @@ nsTableOuterFrame::OuterDoReflowChild(nsPresContext*             aPresContext,
 
   // use the current position as a best guess for placement
   nsPoint childPt = aChildFrame->GetPosition();
+  uint32_t flags = NS_FRAME_NO_MOVE_FRAME;
+
+  // We don't want to delete our next-in-flow's child if it's an inner table
+  // frame, because outer table frames always assume that their inner table
+  // frames don't go away. If an outer table frame is removed because it is
+  // a next-in-flow of an already complete outer table frame, then it will
+  // take care of removing it's inner table frame.
+  if (aChildFrame == InnerTableFrame()) {
+    flags |= NS_FRAME_NO_DELETE_NEXT_IN_FLOW_CHILD;
+  }
+
   return ReflowChild(aChildFrame, aPresContext, aMetrics, aChildRS,
-                     childPt.x, childPt.y, NS_FRAME_NO_MOVE_FRAME, aStatus);
+                     childPt.x, childPt.y, flags, aStatus);
 }
 
 void 
@@ -1047,6 +1058,13 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   UpdateReflowMetrics(captionSide, aDesiredSize, innerMargin, captionMargin);
+
+  if (GetPrevInFlow()) {
+    ReflowOverflowContainerChildren(aPresContext, aOuterRS,
+                                    aDesiredSize.mOverflowAreas, 0,
+                                    aStatus);
+  }
+
   FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize, aOuterRS, aStatus);
 
   // Return our desired rect
