@@ -11,6 +11,7 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
   return Cc["@mozilla.org/network/util;1"]
@@ -174,6 +175,34 @@ this.AppsUtils = {
     }
 
     return null;
+  },
+
+  getCoreAppsBasePath: function getCoreAppsBasePath() {
+    debug("getCoreAppsBasePath()");
+    try {
+      return FileUtils.getDir("coreAppsDir", ["webapps"], false).path;
+    } catch(e) {
+      return null;
+    }
+  },
+
+  getAppInfo: function getAppInfo(aApps, aAppId) {
+    if (!aApps[aAppId]) {
+      debug("No webapp for " + aAppId);
+      return null;
+    }
+
+    // We can have 3rd party apps that are non-removable,
+    // so we can't use the 'removable' property for isCoreApp
+    // Instead, we check if the app is installed under /system/b2g
+    let isCoreApp = false;
+    let app = aApps[aAppId];
+#ifdef MOZ_WIDGET_GONK
+    isCoreApp = app.basePath == this.getCoreAppsBasePath();
+#endif
+    debug(app.name + " isCoreApp: " + isCoreApp);
+    return { "basePath":  app.basePath + "/",
+             "isCoreApp": isCoreApp };
   },
 
   /**
