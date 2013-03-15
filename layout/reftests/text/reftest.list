@@ -137,7 +137,7 @@ HTTP(..) == zwnj-02.xhtml zwnj-02-ref.xhtml # HTTP(..) for ../filters.svg
 == 449555-1.html 449555-1-ref.html
 == 467722.html 467722-ref.html
 skip-if(B2G) HTTP(..) == 475092-sub.html 475092-ref.html
-fails-if(!winWidget) random-if(gtk2Widget) skip-if(B2G) HTTP(..) == 475092-pos.html 475092-sub.html # bug 482596
+fails-if(!winWidget&&!gtk2Widget) skip-if(B2G) HTTP(..) == 475092-pos.html 475092-sub.html # bug 482596
 == 476378-soft-hyphen-fallback.html 476378-soft-hyphen-fallback-ref.html
 # Test for bug 484954
 == rgba-text.html rgba-text-ref.html
