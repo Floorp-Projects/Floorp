@@ -2383,12 +2383,6 @@ nsINode::WrapObject(JSContext *aCx, JSObject *aScope)
   return obj;
 }
 
-bool
-nsINode::IsSupported(const nsAString& aFeature, const nsAString& aVersion)
-{
-  return nsContentUtils::InternalIsSupported(this, aFeature, aVersion);
-}
-
 already_AddRefed<nsINode>
 nsINode::CloneNode(bool aDeep, ErrorResult& aError)
 {

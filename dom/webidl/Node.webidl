@@ -98,9 +98,6 @@ interface Node : EventTarget {
   [Constant]
   readonly attribute DOMString? localName;
 
-  // This has been removed from the spec.
-  boolean isSupported(DOMString feature, DOMString version);
-
   boolean hasAttributes();
   [Throws, Func="nsINode::ShouldExposeUserData"]
   any setUserData(DOMString key, any data, UserDataHandler? handler);

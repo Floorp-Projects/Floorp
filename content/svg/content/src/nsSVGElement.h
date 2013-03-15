@@ -117,10 +117,6 @@ public:
   static const MappedAttributeEntry sLightingEffectsMap[];
   static const MappedAttributeEntry sMaskMap[];
 
-  // nsIDOMNode
-  NS_IMETHOD IsSupported(const nsAString& aFeature, const nsAString& aVersion,
-                         bool* aReturn);
-  
   // nsIDOMSVGElement
   NS_IMETHOD GetId(nsAString & aId);
   NS_IMETHOD SetId(const nsAString & aId);
