@@ -21,6 +21,7 @@ class nsXPCClassInfo;
 #undef GetCurrentTime
 #endif
 // X11 has a #define for CurrentTime. Unbelievable :-(.
+// See content/media/webaudio/AudioContext.h for more fun!
 #ifdef CurrentTime
 #undef CurrentTime
 #endif
