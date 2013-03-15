@@ -199,10 +199,11 @@ static const ScriptRange sComplexScripts[] = {
     { 0x0F00, 0x0FFF, { TRUETYPE_TAG('t','i','b','t'), 0, 0 } },
     { 0x1000, 0x109f, { TRUETYPE_TAG('m','y','m','r'),
                         TRUETYPE_TAG('m','y','m','2'), 0 } },
+    { 0x1780, 0x17ff, { TRUETYPE_TAG('k','h','m','r'), 0, 0 } },
+    // Khmer Symbols (19e0..19ff) don't seem to need any special shaping
     { 0xaa60, 0xaa7f, { TRUETYPE_TAG('m','y','m','r'),
                         TRUETYPE_TAG('m','y','m','2'), 0 } },
     // Thai seems to be "renderable" without AAT morphing tables
-    // xxx - Khmer?
 };
 
 static void
