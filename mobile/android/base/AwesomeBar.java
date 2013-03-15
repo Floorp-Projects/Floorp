@@ -7,8 +7,9 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserContract.Combined;
-import org.mozilla.gecko.util.UiAsyncTask;
 import org.mozilla.gecko.util.StringUtils;
+import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.UiAsyncTask;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -100,7 +101,7 @@ public class AwesomeBar extends GeckoActivity {
 
             @Override
             public void onEditSuggestion(final String text) {
-                GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+                ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
                         mText.setText(text);

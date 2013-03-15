@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.LayerView;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.view.accessibility.*;
 import android.view.View;
@@ -161,7 +162,7 @@ public class GeckoAccessibility {
 
             // Store the JSON message and use it to populate the event later in the code path.
             sEventMessage = message;
-            GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+            ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
                         // If this is an accessibility focus, a lot of internal voodoo happens so we perform an
