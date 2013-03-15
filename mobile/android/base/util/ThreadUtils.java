@@ -79,4 +79,12 @@ public final class ThreadUtils {
                                                   + " (\"" + currentThread.getName() + ")");
         }
     }
+
+    public static boolean isOnUiThread() {
+        return isOnThread(getUiThread());
+    }
+
+    public static boolean isOnThread(Thread thread) {
+        return (Thread.currentThread().getId() == thread.getId());
+    }
 }
