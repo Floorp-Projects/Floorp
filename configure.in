@@ -5657,7 +5657,10 @@ fi
 if test -n "$MOZ_CUBEB"; then
     case "$target" in
     *-android*|*-linuxandroid*)
-        AC_DEFINE(MOZ_CUBEB)
+        if test -n "$gonkdir"; then
+            AC_DEFINE(MOZ_CUBEB)
+        fi
+        dnl No Android implementation of libcubeb yet.
         ;;
     *-linux*)
         AC_DEFINE(MOZ_CUBEB)
@@ -9265,7 +9268,7 @@ if test -n "$_WRAP_MALLOC"; then
 fi
 
 if test -z "$MOZ_NATIVE_NSPR"; then
-    ac_configure_args="$_SUBDIR_CONFIG_ARGS --with-dist-prefix=$MOZ_BUILD_ROOT/dist --with-mozilla --with-android-version=$ANDROID_VERSION"
+    ac_configure_args="$_SUBDIR_CONFIG_ARGS --with-dist-prefix=$MOZ_BUILD_ROOT/dist --with-mozilla"
     if test -z "$MOZ_DEBUG"; then
         ac_configure_args="$ac_configure_args --disable-debug"
     else
