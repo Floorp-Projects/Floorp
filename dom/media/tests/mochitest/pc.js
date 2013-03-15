@@ -11,11 +11,13 @@
  * @param {object} framework
  *        A back reference to the framework which makes use of the class. It's
  *        getting passed in as parameter to each command callback.
+ * @param {Array[]} [commandList=[]]
+ *        Default commands to set during initialization
  */
-function CommandChain(framework) {
+function CommandChain(framework, commandList) {
   this._framework = framework;
 
-  this._commands = [ ];
+  this._commands = commandList || [ ];
   this._current = 0;
 
   this.onFinished = null;
@@ -225,119 +227,14 @@ CommandChain.prototype = {
   }
 };
 
-
-/**
- * Default list of commands to execute for a PeerConnection test.
- */
-var commandsPeerConnection = [
-  [
-    'PC_LOCAL_GUM',
-    function (test) {
-      test.pcLocal.getAllUserMedia(function () {
-        test.next();
-      });
-    }
-  ],
-  [
-    'PC_REMOTE_GUM',
-    function (test) {
-      test.pcRemote.getAllUserMedia(function () {
-        test.next();
-      });
-    }
-  ],
-  [
-    'PC_CHECK_INITIAL_SIGNALINGSTATE',
-    function (test) {
-      is(test.pcLocal.signalingState, "stable",
-         "Initial local signalingState is 'stable'");
-      is(test.pcRemote.signalingState, "stable",
-         "Initial remote signalingState is 'stable'");
-      test.next();
-    }
-  ],
-  [
-    'PC_LOCAL_CREATE_OFFER',
-    function (test) {
-      test.createOffer(test.pcLocal, function () {
-        is(test.pcLocal.signalingState, "stable",
-           "Local create offer does not change signaling state");
-        test.next();
-      });
-    }
-  ],
-  [
-    'PC_LOCAL_SET_LOCAL_DESCRIPTION',
-    function (test) {
-      test.setLocalDescription(test.pcLocal, test.pcLocal._last_offer, function () {
-        is(test.pcLocal.signalingState, "have-local-offer",
-           "signalingState after local setLocalDescription is 'have-local-offer'");
-        test.next();
-      });
-    }
-  ],
-  [
-    'PC_REMOTE_SET_REMOTE_DESCRIPTION',
-    function (test) {
-      test.setRemoteDescription(test.pcRemote, test.pcLocal._last_offer, function () {
-        is(test.pcRemote.signalingState, "have-remote-offer",
-           "signalingState after remote setRemoteDescription is 'have-remote-offer'");
-        test.next();
-      });
-    }
-  ],
-  [
-    'PC_REMOTE_CREATE_ANSWER',
-    function (test) {
-      test.createAnswer(test.pcRemote, function () {
-        is(test.pcRemote.signalingState, "have-remote-offer",
-           "Remote createAnswer does not change signaling state");
-        test.next();
-      });
-    }
-  ],
-  [
-    'PC_LOCAL_SET_REMOTE_DESCRIPTION',
-    function (test) {
-      test.setRemoteDescription(test.pcLocal, test.pcRemote._last_answer, function () {
-        is(test.pcLocal.signalingState, "stable",
-           "signalingState after local setRemoteDescription is 'stable'");
-        test.next();
-      });
-    }
-  ],
-  [
-    'PC_REMOTE_SET_LOCAL_DESCRIPTION',
-    function (test) {
-      test.setLocalDescription(test.pcRemote, test.pcRemote._last_answer, function () {
-        is(test.pcRemote.signalingState, "stable",
-           "signalingState after remote setLocalDescription is 'stable'");
-        test.next();
-      });
-    }
-  ],
-  [
-    'PC_LOCAL_CHECK_MEDIA',
-    function (test) {
-      test.pcLocal.checkMedia(test.pcRemote.constraints);
-      test.next();
-    }
-  ],
-  [
-    'PC_REMOTE_CHECK_MEDIA',
-    function (test) {
-      test.pcRemote.checkMedia(test.pcLocal.constraints);
-      test.next();
-    }
-  ]
-];
-
 /**
  * This class handles tests for peer connections.
  *
  * @constructor
  * @param {object} [options={}]
  *        Optional options for the peer connection test
+ * @param {object} [options.commands=commandsPeerConnection]
+ *        Commands to run for the test
  * @param {object} [options.config_pc1=undefined]
  *        Configuration for the local peer connection instance
  * @param {object} [options.config_pc2=undefined]
@@ -347,19 +244,39 @@ var commandsPeerConnection = [
 function PeerConnectionTest(options) {
   // If no options are specified make it an empty object
   options = options || { };
+  options.commands = options.commands || commandsPeerConnection;
 
   this.pcLocal = new PeerConnectionWrapper('pcLocal', options.config_pc1);
   this.pcRemote = new PeerConnectionWrapper('pcRemote', options.config_pc2 || options.config_pc1);
 
+  this.connected = false;
+
   // Create command chain instance and assign default commands
-  this.chain = new CommandChain(this);
-  this.chain.commands = commandsPeerConnection;
+  this.chain = new CommandChain(this, options.commands);
 
   var self = this;
   this.chain.onFinished = function () {
     self.teardown();
   }
 }
+
+/**
+ * Closes the peer connection if it is active
+ *
+ * @param {Function} onSuccess
+ *        Callback to execute when the peer connection has been closed successfully
+ */
+PeerConnectionTest.prototype.close = function PCT_close(onSuccess) {
+  info("Closing peer connections. Connection state=" + this.connected);
+
+  // There is no onclose event for the remote peer existent yet. So close it
+  // side-by-side with the local peer.
+  this.pcLocal.close();
+  this.pcRemote.close();
+  this.connected = false;
+
+  onSuccess();
+};
 
 /**
  * Executes the next command.
@@ -504,23 +421,368 @@ PeerConnectionTest.prototype.run = function PCT_run() {
  * Clean up the objects used by the test
  */
 PeerConnectionTest.prototype.teardown = function PCT_teardown() {
-  if (this.pcLocal) {
-    this.pcLocal.close();
-    this.pcLocal = null;
-  }
+  this.close(function () {
+    info("Test finished");
+    SimpleTest.finish();
+  });
+};
 
-  if (this.pcRemote) {
-    this.pcRemote.close();
-    this.pcRemote = null;
-  }
+/**
+ * This class handles tests for data channels.
+ *
+ * @constructor
+ * @param {object} [options={}]
+ *        Optional options for the peer connection test
+ * @param {object} [options.commands=commandsDataChannel]
+ *        Commands to run for the test
+ * @param {object} [options.config_pc1=undefined]
+ *        Configuration for the local peer connection instance
+ * @param {object} [options.config_pc2=undefined]
+ *        Configuration for the remote peer connection instance. If not defined
+ *        the configuration from the local instance will be used
+ */
+function DataChannelTest(options) {
+  options = options || { };
+  options.commands = options.commands || commandsDataChannel;
 
-  info("Test finished");
-  SimpleTest.finish();
+  PeerConnectionTest.call(this, options);
+}
+
+DataChannelTest.prototype = Object.create(PeerConnectionTest.prototype, {
+  close : {
+    /**
+     * Close the open data channels, followed by the underlying peer connection
+     *
+     * @param {Function} onSuccess
+     *        Callback to execute when the connection has been closed
+     */
+    value : function DCT_close(onSuccess) {
+      var self = this;
+
+      function _closeChannels() {
+        var length = self.pcLocal.dataChannels.length;
+
+        if (length > 0) {
+          self.closeDataChannel(length - 1, function () {
+            _closeChannels();
+          });
+        }
+        else {
+          PeerConnectionTest.prototype.close.call(self, onSuccess);
+        }
+      }
+
+      _closeChannels();
+    }
+  },
+
+  closeDataChannel : {
+    /**
+     * Close the specified data channel
+     *
+     * @param {Number} index
+     *        Index of the data channel to close on both sides
+     * @param {Function} onSuccess
+     *        Callback to execute when the data channel has been closed
+     */
+    value : function DCT_closeDataChannel(index, onSuccess) {
+      var localChannel = this.pcLocal.dataChannels[index];
+      var remoteChannel = this.pcRemote.dataChannels[index];
+
+      var self = this;
+
+      // Register handler for remote channel, cause we have to wait until
+      // the current close operation has been finished.
+      remoteChannel.onclose = function () {
+        self.pcRemote.dataChannels.splice(index, 1);
+
+        onSuccess(remoteChannel);
+      };
+
+      localChannel.close();
+      this.pcLocal.dataChannels.splice(index, 1);
+    }
+  },
+
+  createDataChannel : {
+    /**
+     * Create a data channel
+     *
+     * @param {Dict} options
+     *        Options for the data channel (see nsIPeerConnection)
+     * @param {Function} onSuccess
+     *        Callback when the creation was successful
+     */
+    value : function DCT_createDataChannel(options, onSuccess) {
+      var localChannel = null;
+      var remoteChannel = null;
+      var self = this;
+
+      // Method to synchronize all asynchronous events.
+      function check_next_test() {
+        if (self.connected && localChannel && remoteChannel) {
+          onSuccess(localChannel, remoteChannel);
+        }
+      }
+
+      // Register handlers for the remote peer
+      this.pcRemote.registerDataChannelOpenEvents(function (channel) {
+        remoteChannel = channel;
+        check_next_test();
+      });
+
+      // Creat the datachannel and handle the local 'onopen' event
+      this.pcLocal.createDataChannel(options, function (channel) {
+        localChannel = channel;
+        check_next_test();
+      });
+    }
+  },
+
+  send : {
+    /**
+     * Send data (message or blob) to the other peer
+     *
+     * @param {String|Blob} data
+     *        Data to send to the other peer. For Blobs the MIME type will be lost.
+     * @param {Function} onSuccess
+     *        Callback to execute when data has been sent
+     * @param {Object} [options={ }]
+     *        Options to specify the data channels to be used
+     * @param {DataChannelWrapper} [options.sourceChannel=pcLocal.dataChannels[length - 1]]
+     *        Data channel to use for sending the message
+     * @param {DataChannelWrapper} [options.targetChannel=pcRemote.dataChannels[length - 1]]
+     *        Data channel to use for receiving the message
+     */
+    value : function DCT_send(data, onSuccess, options) {
+      options = options || { };
+      source = options.sourceChannel ||
+               this.pcLocal.dataChannels[this.pcLocal.dataChannels.length - 1];
+      target = options.targetChannel ||
+               this.pcRemote.dataChannels[this.pcRemote.dataChannels.length - 1];
+
+      // Register event handler for the target channel
+      target.onmessage = function (recv_data) {
+        onSuccess(target, recv_data);
+      };
+
+      source.send(data);
+    }
+  },
+
+  setLocalDescription : {
+    /**
+     * Sets the local description for the specified peer connection instance
+     * and automatically handles the failure case. In case for the final call
+     * it will setup the requested datachannel.
+     *
+     * @param {PeerConnectionWrapper} peer
+              The peer connection wrapper to run the command on
+     * @param {mozRTCSessionDescription} desc
+     *        Session description for the local description request
+     * @param {function} onSuccess
+     *        Callback to execute if the local description was set successfully
+     */
+    value : function DCT_setLocalDescription(peer, desc, onSuccess) {
+      // If the peer has a remote offer we are in the final call, and have
+      // to wait for the datachannel connection to be open. It will also set
+      // the local description internally.
+      if (peer.signalingState === 'have-remote-offer') {
+        this.waitForInitialDataChannel(peer, desc, onSuccess);
+      }
+      else {
+        PeerConnectionTest.prototype.setLocalDescription.call(this, peer,
+                                                              desc, onSuccess);
+      }
+
+    }
+  },
+
+  waitForInitialDataChannel : {
+    /**
+     * Create an initial data channel before the peer connection has been connected
+     *
+     * @param {PeerConnectionWrapper} peer
+              The peer connection wrapper to run the command on
+     * @param {mozRTCSessionDescription} desc
+     *        Session description for the local description request
+     * @param {Function} onSuccess
+     *        Callback when the creation was successful
+     */
+    value : function DCT_waitForInitialDataChannel(peer, desc, onSuccess) {
+      var self = this;
+
+      var targetPeer = peer;
+      var targetChannel = null;
+
+      var sourcePeer = (peer == this.pcLocal) ? this.pcRemote : this.pcLocal;
+      var sourceChannel = null;
+
+      // Method to synchronize all asynchronous events which current happen
+      // due to a non-predictable flow. With bug 875346 fixed we will be able
+      // to simplify this code.
+      function check_next_test() {
+        if (self.connected && sourceChannel && targetChannel) {
+          onSuccess(sourceChannel, targetChannel);
+        }
+      }
+
+      // Register 'onopen' handler for the first local data channel
+      sourcePeer.dataChannels[0].onopen = function (channel) {
+        sourceChannel = channel;
+        check_next_test();
+      };
+
+      // Register handlers for the target peer
+      targetPeer.registerDataChannelOpenEvents(function (channel) {
+        targetChannel = channel;
+        check_next_test();
+      });
+
+      PeerConnectionTest.prototype.setLocalDescription.call(this, targetPeer, desc,
+        function () {
+          self.connected = true;
+          check_next_test();
+        }
+      );
+    }
+  }
+});
+
+/**
+ * This class acts as a wrapper around a DataChannel instance.
+ *
+ * @param dataChannel
+ * @param peerConnectionWrapper
+ * @constructor
+ */
+function DataChannelWrapper(dataChannel, peerConnectionWrapper) {
+  this._channel = dataChannel;
+  this._pc = peerConnectionWrapper;
+
+  info("Creating " + this);
+
+  /**
+   * Setup appropriate callbacks
+   */
+
+  this.onclose = unexpectedEventAndFinish(this, 'onclose');
+  this.onerror = unexpectedEventAndFinish(this, 'onerror');
+  this.onmessage = unexpectedEventAndFinish(this, 'onmessage');
+  this.onopen = unexpectedEventAndFinish(this, 'onopen');
+
+  var self = this;
+
+  /**
+   * Callback for native data channel 'onclose' events. If no custom handler
+   * has been specified via 'this.onclose', a failure will be raised if an
+   * event of this type gets caught.
+   */
+  this._channel.onclose = function () {
+    info(self + ": 'onclose' event fired");
+
+    self.onclose(self);
+    self.onclose = unexpectedEventAndFinish(self, 'onclose');
+  };
+
+  /**
+   * Callback for native data channel 'onmessage' events. If no custom handler
+   * has been specified via 'this.onmessage', a failure will be raised if an
+   * event of this type gets caught.
+   *
+   * @param {Object} event
+   *        Event data which includes the sent message
+   */
+  this._channel.onmessage = function (event) {
+    info(self + ": 'onmessage' event fired for '" + event.data + "'");
+
+    self.onmessage(event.data);
+    self.onmessage = unexpectedEventAndFinish(self, 'onmessage');
+  };
+
+  /**
+   * Callback for native data channel 'onopen' events. If no custom handler
+   * has been specified via 'this.onopen', a failure will be raised if an
+   * event of this type gets caught.
+   */
+  this._channel.onopen = function () {
+    info(self + ": 'onopen' event fired");
+
+    self.onopen(self);
+    self.onopen = unexpectedEventAndFinish(self, 'onopen');
+  };
+}
+
+DataChannelWrapper.prototype = {
+  /**
+   * Returns the binary type of the channel
+   *
+   * @returns {String} The binary type
+   */
+  get binaryType() {
+    return this._channel.binaryType;
+  },
+
+  /**
+   * Sets the binary type of the channel
+   *
+   * @param {String} type
+   *        The new binary type of the channel
+   */
+  set binaryType(type) {
+    this._channel.binaryType = type;
+  },
+
+  /**
+   * Returns the label of the underlying data channel
+   *
+   * @returns {String} The label
+   */
+  get label() {
+    return this._channel.label;
+  },
+
+  /**
+   * Returns the readyState bit of the data channel
+   *
+   * @returns {String} The state of the channel
+   */
+  get readyState() {
+    return this._channel.readyState;
+  },
+
+  /**
+   * Close the data channel
+   */
+  close : function () {
+    info(this + ": Closing channel");
+    this._channel.close();
+  },
+
+  /**
+   * Send data through the data channel
+   *
+   * @param {String|Object} data
+   *        Data which has to be sent through the data channel
+   */
+  send: function DCW_send(data) {
+    info(this + ": Sending data '" + data + "'");
+    this._channel.send(data);
+  },
+
+  /**
+   * Returns the string representation of the class
+   *
+   * @returns {String} The string representation
+   */
+  toString: function DCW_toString() {
+    return "DataChannelWrapper (" + this._pc.label + '_' + this._channel.label + ")";
+  }
 };
 
 
 /**
- * This class handles acts as a wrapper around a PeerConnection instance.
+ * This class acts as a wrapper around a PeerConnection instance.
  *
  * @constructor
  * @param {string} label
@@ -536,21 +798,46 @@ function PeerConnectionWrapper(label, configuration) {
   this.offerConstraints = {};
   this.streams = [ ];
 
-  info("Creating new PeerConnectionWrapper: " + this);
+  this.dataChannels = [ ];
+
+  info("Creating " + this);
   this._pc = new mozRTCPeerConnection(this.configuration);
 
   /**
    * Setup callback handlers
    */
 
+  this.ondatachannel = unexpectedEventAndFinish(this, 'ondatachannel');
   this.onsignalingstatechange = unexpectedEventAndFinish(this, 'onsignalingstatechange');
 
-
+  /**
+   * Callback for native peer connection 'onaddstream' events.
+   *
+   * @param {Object} event
+   *        Event data which includes the stream to be added
+   */
   var self = this;
   this._pc.onaddstream = function (event) {
-    // Bug 834835: Assume type is video until we get get{Audio,Video}Tracks.
+    info(self + ": 'onaddstream' event fired for " + event.stream);
+
+    // TODO: Bug 834835 - Assume type is video until we get get{Audio,Video}Tracks.
     self.attachMedia(event.stream, 'video', 'remote');
-  };
+   };
+
+  /**
+   * Callback for native peer connection 'ondatachannel' events. If no custom handler
+   * has been specified via 'this.ondatachannel', a failure will be raised if an
+   * event of this type gets caught.
+   *
+   * @param {Object} event
+   *        Event data which includes the newly created data channel
+   */
+  this._pc.ondatachannel = function (event) {
+    info(self + ": 'ondatachannel' event fired for " + event.channel.label);
+
+    self.ondatachannel(new DataChannelWrapper(event.channel, self));
+    self.ondatachannel = unexpectedEventAndFinish(self, 'ondatachannel');
+  }
 
   /**
    * Callback for native peer connection 'onsignalingstatechange' events. If no
@@ -587,6 +874,15 @@ PeerConnectionWrapper.prototype = {
    */
   set localDescription(desc) {
     this._pc.localDescription = desc;
+  },
+
+  /**
+   * Returns the readyState.
+   *
+   * @returns {string}
+   */
+  get readyState() {
+    return this._pc.readyState;
   },
 
   /**
@@ -676,6 +972,32 @@ PeerConnectionWrapper.prototype = {
 
     info("Get " + this.constraints.length + " local streams");
     _getAllUserMedia(this.constraints, 0);
+  },
+
+  /**
+   * Create a new data channel instance
+   *
+   * @param {Object} options
+   *        Options which get forwarded to nsIPeerConnection.createDataChannel
+   * @param {function} [onCreation=undefined]
+   *        Callback to execute when the local data channel has been created
+   * @returns {DataChannelWrapper} The created data channel
+   */
+  createDataChannel : function PCW_createDataChannel(options, onCreation) {
+    var label = 'channel_' + this.dataChannels.length;
+    info(this + ": Create data channel '" + label);
+
+    var channel = this._pc.createDataChannel(label, options);
+    var wrapper = new DataChannelWrapper(channel, this);
+
+    if (onCreation) {
+      wrapper.onopen = function () {
+        onCreation(wrapper);
+      }
+    }
+
+    this.dataChannels.push(wrapper);
+    return wrapper;
   },
 
   /**
@@ -827,7 +1149,7 @@ PeerConnectionWrapper.prototype = {
     is(this._pc.localStreams.length, this.constraints.length,
        this + ' has ' + this.constraints.length + ' local streams');
 
-    // TODO: change this when multiple incoming streams are allowed.
+    // TODO: change this when multiple incoming streams are supported (bug 834835)
     is(this._pc.remoteStreams.length, 1,
        this + ' has ' + 1 + ' remote streams');
   },
@@ -841,13 +1163,34 @@ PeerConnectionWrapper.prototype = {
     try {
       this._pc.close();
       info(this + ": Closed connection.");
-    } catch (e) {
+    }
+    catch (e) {
       info(this + ": Failure in closing connection - " + e.message);
     }
   },
 
   /**
-   * Returns the string representation of the object
+   * Register all events during the setup of the data channel
+   *
+   * @param {Function} onDataChannelOpened
+   *        Callback to execute when the data channel has been opened
+   */
+  registerDataChannelOpenEvents : function (onDataChannelOpened) {
+    info(this + ": Register callbacks for 'ondatachannel' and 'onopen'");
+
+    this.ondatachannel = function (targetChannel) {
+      targetChannel.onopen = function (targetChannel) {
+        onDataChannelOpened(targetChannel);
+      };
+
+      this.dataChannels.push(targetChannel);
+    }
+  },
+
+  /**
+   * Returns the string representation of the class
+   *
+   * @returns {String} The string representation
    */
   toString : function PCW_toString() {
     return "PeerConnectionWrapper (" + this.label + ")";
