@@ -18,39 +18,39 @@ function setWindowName()
   var typeFlag = gParams.GetString(0);
   var numberOfCerts = gParams.GetInt(0);
   
-  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+  var bundle = document.getElementById("pippki_bundle");
   var title;
   var confirm;
   var impact;
   
   if(typeFlag == "mine_tab")
   {
-     title = bundle.GetStringFromName("deleteUserCertTitle");
-     confirm = bundle.GetStringFromName("deleteUserCertConfirm");
-     impact = bundle.GetStringFromName("deleteUserCertImpact");
+     title = bundle.getString("deleteUserCertTitle");
+     confirm = bundle.getString("deleteUserCertConfirm");
+     impact = bundle.getString("deleteUserCertImpact");
   }
   else if(typeFlag == "websites_tab")
   {
-     title = bundle.GetStringFromName("deleteSslCertTitle3");
-     confirm = bundle.GetStringFromName("deleteSslCertConfirm3");
-     impact = bundle.GetStringFromName("deleteSslCertImpact3");
+     title = bundle.getString("deleteSslCertTitle3");
+     confirm = bundle.getString("deleteSslCertConfirm3");
+     impact = bundle.getString("deleteSslCertImpact3");
   }
   else if(typeFlag == "ca_tab")
   {
-     title = bundle.GetStringFromName("deleteCaCertTitle2");
-     confirm = bundle.GetStringFromName("deleteCaCertConfirm2");
-     impact = bundle.GetStringFromName("deleteCaCertImpactX2");
+     title = bundle.getString("deleteCaCertTitle2");
+     confirm = bundle.getString("deleteCaCertConfirm2");
+     impact = bundle.getString("deleteCaCertImpactX2");
   }
   else if(typeFlag == "others_tab")
   {
-     title = bundle.GetStringFromName("deleteEmailCertTitle");
-     confirm = bundle.GetStringFromName("deleteEmailCertConfirm");
-     impact = bundle.GetStringFromName("deleteEmailCertImpactDesc");
+     title = bundle.getString("deleteEmailCertTitle");
+     confirm = bundle.getString("deleteEmailCertConfirm");
+     impact = bundle.getString("deleteEmailCertImpactDesc");
   }
   else if(typeFlag == "orphan_tab")
   {
-     title = bundle.GetStringFromName("deleteOrphanCertTitle");
-     confirm = bundle.GetStringFromName("deleteOrphanCertConfirm");
+     title = bundle.getString("deleteOrphanCertTitle");
+     confirm = bundle.getString("deleteOrphanCertConfirm");
      impact = "";
   }
   else

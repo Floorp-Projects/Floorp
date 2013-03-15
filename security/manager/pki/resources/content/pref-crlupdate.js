@@ -50,7 +50,7 @@ function onLoad()
   autoupdateErrCntString    = autoupdateErrCntString + crl.nameInDb;
   autoupdateErrDetailString = autoupdateErrDetailString + crl.nameInDb;
 
-  bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+  bundle = document.getElementById("pippki_bundle");
   prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(nsIPrefService);
   prefBranch = prefService.getBranch(null);
 
@@ -172,7 +172,7 @@ function initializeSelection()
     errorCountText.setAttribute("value",cnt);
     errorDetailsText.setAttribute("value",txt);
   } else {
-    errorCountText.setAttribute("value",bundle.GetStringFromName("NoUpdateFailure"));
+    errorCountText.setAttribute("value", bundle.getString("NoUpdateFailure"));
     var reasonBox = document.getElementById("reasonbox");
     reasonBox.hidden = true;
   }
@@ -228,13 +228,13 @@ function validatePrefs()
 
    var tmp = parseFloat(dayCnt);
    if(!(tmp > 0.0)){
-     doPrompt(bundle.GetStringFromName("crlAutoUpdateDayCntError"));
+     doPrompt(bundle.getString("crlAutoUpdateDayCntError"));
      return false;
    }
    
    tmp = parseFloat(freqCnt);
    if(!(tmp > 0.0)){
-     doPrompt(bundle.GetStringFromName("crlAutoUpdtaeFreqCntError"));
+     doPrompt(bundle.getString("crlAutoUpdtaeFreqCntError"));
      return false;
    }
    

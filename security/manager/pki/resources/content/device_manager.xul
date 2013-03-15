@@ -21,7 +21,11 @@
         onload="LoadModules();"
         buttons="accept">
 
-<script type="application/javascript" src="chrome://global/content/strres.js"/>
+<stringbundleset id="stringbundleset">
+  <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
+  <stringbundle id="pipnss_bundle" src="chrome://pipnss/locale/pipnss.properties"/>
+</stringbundleset>
+
 <script type="application/javascript" src="chrome://pippki/content/device_manager.js"/>
 
 <grid flex="1" style="margin:5px">
