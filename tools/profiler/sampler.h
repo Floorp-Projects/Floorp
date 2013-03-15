@@ -49,42 +49,95 @@
 #ifndef SAMPLER_H
 #define SAMPLER_H
 
-// Redefine the macros for platforms where SPS is supported.
-#ifdef MOZ_ENABLE_PROFILER_SPS
+#include "jsfriendapi.h"
+#include "mozilla/NullPtr.h"
+#include "mozilla/TimeStamp.h"
 
-#include "sps_sampler.h"
+#ifndef MOZ_ENABLE_PROFILER_SPS
+
+// Insert a RAII in this scope to active a pseudo label. Any samples collected
+// in this scope will contain this annotation. For dynamic strings use
+// PROFILER_LABEL_PRINTF. Arguments must be string literals.
+#define PROFILER_LABEL(name_space, info) do {} while (0)
+
+// Format a dynamic string as a pseudo label. These labels will a considerable
+// storage size in the circular buffer compared to regular labels. This function
+// can be used to annotate custom information such as URL for the resource being
+// decoded or the size of the paint.
+#define PROFILER_LABEL_PRINTF(name_space, info, format, ...) do {} while (0)
+
+// Insert a marker in the profile timeline. This is useful to delimit something
+// important happening such as the first paint. Unlike profiler_label that are
+// only recorded if a sample is collected while it is active, marker will always
+// be collected.
+#define PROFILER_MARKER(info) do {} while (0)
+
+// Main thread specilization to avoid TLS lookup for performance critical use.
+#define PROFILER_MAIN_THREAD_LABEL(name_space, info) do {} while (0)
+#define PROFILER_MAIN_THREAD_LABEL_PRINTF(name_space, info, format, ...) do {} while (0)
+
+// Initilize the profiler TLS, signal handlers on linux. If MOZ_PROFILER_STARTUP
+// is set the profiler will be started. This call must happen before any other
+// sampler calls. Particularly sampler_label/sampler_marker.
+static inline void profiler_init() {};
+
+// Clean up the profiler module, stopping it if required. This function may
+// also save a shutdown profile if requested. No profiler calls should happen
+// after this point and all pseudo labels should have been popped.
+static inline void profiler_shutdown() {};
+
+// Start the profiler with the selected options. The samples will be
+// recorded in a circular buffer.
+//   "aProfileEntries" is an abstract size indication of how big
+//       the profile's circular buffer should be. Multiply by 4
+//       words to get the cost.
+//   "aInterval" the sampling interval. The profiler will do its
+//       best to sample at this interval. The profiler visualization
+//       should represent the actual sampling accuracy.
+static inline void profiler_start(int aProfileEntries, int aInterval,
+                              const char** aFeatures, uint32_t aFeatureCount) {}
+
+// Stop the profiler and discard the profile. Call 'profiler_save' before this
+// to retrieve the profile.
+static inline void profiler_stop() {}
+
+static inline bool profiler_is_active() { return false; }
+
+// Internal-only. Used by the event tracer.
+static inline void profiler_responsinveness(const TimeStamp& aTime) {}
+
+// Internal-only. Used by the event tracer.
+static inline double* profiler_get_responsiveness() { return nullptr; }
+
+// Internal-only.
+static inline void profile_set_frame_number(int frameNumber) {}
+
+// Get the profile encoded as a JSON string.
+static inline char* profiler_get_profile() { return nullptr; }
+
+// Get the profile encoded as a JSON object.
+static inline JSObject* profiler_get_profile_object() { return nullptr; }
+
+// Get the features supported by the profiler that are accepted by profiler_init.
+// Returns a null terminated char* array.
+static inline char** profiler_get_features() { return nullptr; }
+
+// Print the current location to the console. This functill will do it best effort
+// to show the profiler's combined js/c++ if the profiler is running. Note that
+// printing the location require symbolicating which is very slow.
+static inline void profiler_print_location() {}
+
+// Discard the profile, throw away the profile and notify 'profiler-locked'.
+// This function is to be used when entering private browsing to prevent
+// the profiler from collecting sensitive data.
+static inline void profiler_lock() {}
+
+// Re-enable the profiler and notify 'profiler-unlocked'.
+static inline void profiler_unlock() {}
 
 #else
 
-// Initialize the sampler. Any other calls will be silently discarded
-// before the sampler has been initialized (i.e. early start-up code)
-#define SAMPLER_INIT()
-#define SAMPLER_SHUTDOWN()
-#define SAMPLER_START(entries, interval, features, featureCount)
-#define SAMPLER_STOP()
-#define SAMPLER_IS_ACTIVE() false
-#define SAMPLER_SAVE()
-// Returned string must be free'ed
-#define SAMPLER_GET_PROFILE() NULL
-#define SAMPLER_GET_PROFILE_DATA(ctx) NULL
-#define SAMPLER_RESPONSIVENESS(time) NULL
-#define SAMPLER_FRAME_NUMBER(frameNumber)
-#define SAMPLER_GET_RESPONSIVENESS() NULL
-#define SAMPLER_GET_FEATURES() NULL
-#define SAMPLE_LABEL(name_space, info)
-// Provide a default literal string to use if profiling is disabled
-// and a printf argument to be computed if profiling is enabled.
-// NOTE: This will store the formated string on the stack and consume
-//       over 128 bytes on the stack.
-#define SAMPLE_LABEL_PRINTF(name_space, info, format, ...)
-#define SAMPLE_LABEL_FN(name_space, info)
-#define SAMPLE_MARKER(info)
-#define SAMPLE_MAIN_THREAD_LABEL_PRINTF(name_space, info, format, ...)
-#define SAMPLE_MAIN_THREAD_LABEL_FN(name_space, info)
-#define SAMPLE_MAIN_THREAD_MARKER(info)
-
-// Tracing features
-#define SAMPLER_PRINT_LOCATION()
+#include "sps_sampler.h"
 
 #endif
 
