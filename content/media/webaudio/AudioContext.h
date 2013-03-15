@@ -78,8 +78,6 @@ public:
     return float(IdealAudioRate());
   }
 
-  double CurrentTime() const;
-
   AudioListener* Listener();
 
   already_AddRefed<AudioBufferSourceNode> CreateBufferSource();
