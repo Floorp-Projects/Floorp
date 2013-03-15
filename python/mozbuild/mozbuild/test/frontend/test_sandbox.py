@@ -300,6 +300,17 @@ add_tier_dir('t1', 'bat', static=True)
             'test.py')
         self.assertEqual(sandbox['CONFIGURE_SUBST_FILES'], ['foo', 'bar'])
 
+    def test_invalid_utf8_substs(self):
+        """Ensure invalid UTF-8 in substs is converted with an error."""
+
+        config = MockConfig()
+        # This is really mbcs. It's a bunch of invalid UTF-8.
+        config.substs['BAD_UTF8'] = b'\x83\x81\x83\x82\x3A'
+
+        sandbox = MozbuildSandbox(config, '/foo/moz.build')
+
+        self.assertEqual(sandbox['CONFIG']['BAD_UTF8'],
+            u'\ufffd\ufffd\ufffd\ufffd:')
 
 if __name__ == '__main__':
     main()

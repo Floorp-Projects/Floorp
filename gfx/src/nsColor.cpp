@@ -288,3 +288,15 @@ NS_HSL2RGB(float h, float s, float l)
   b = uint8_t(255 * HSL_HueToRGB(m1, m2, h - 1.0f/3.0f));
   return NS_RGB(r, g, b);  
 }
+
+NS_GFX_(const char*)
+NS_RGBToColorName(nscolor aColor)
+{
+  for (size_t idx = 0; idx < ArrayLength(kColors); ++idx) {
+    if (kColors[idx] == aColor) {
+      return kColorNames[idx];
+    }
+  }
+
+  return nullptr;
+}

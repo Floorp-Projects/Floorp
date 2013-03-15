@@ -91,9 +91,10 @@ class MochitestRunner(MozbuildObject):
             raise Exception('None or unrecognized mochitest suite type.')
 
         if test_file:
-            if not os.path.exists(test_file):
-                raise Exception('No manifest file was found at %s.' % test_file)
-            env = {'TEST_PATH': test_file}
+            path_arg = self._wrap_path_argument(test_file)
+            if not os.path.exists(path_arg.srcdir_path()):
+                raise Exception('No test file was found at %s.' % test_file)
+            env = {'TEST_PATH': path_arg.relpath()}
         else:
             env = {}
 

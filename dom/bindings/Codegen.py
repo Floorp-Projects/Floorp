@@ -507,6 +507,7 @@ class CGHeaders(CGWrapper):
         # Now find all the things we'll need as arguments because we
         # need to wrap or unwrap them.
         bindingHeaders = set()
+        declareIncludes = set(declareIncludes)
         def addHeadersForType(t, descriptor=None, dictionary=None):
             """
             Add the relevant headers for this type.  We use descriptor and
@@ -529,7 +530,19 @@ class CGHeaders(CGWrapper):
                             typeDesc = p.getDescriptor(unrolled.inner.identifier.name)
                         except NoSuchDescriptorError:
                             continue
-                        implementationIncludes.add(typeDesc.headerFile)
+                        if dictionary:
+                            # Dictionaries with interface members rely on the
+                            # actual class definition of that interface member
+                            # being visible in the binding header, because they
+                            # store them in nsRefPtr and have inline
+                            # constructors/destructors.
+                            #
+                            # XXXbz maybe dictionaries with interface members
+                            # should just have out-of-line constructors and
+                            # destructors?
+                            declareIncludes.add(typeDesc.headerFile)
+                        else:
+                            implementationIncludes.add(typeDesc.headerFile)
                         bindingHeaders.add(self.getDeclarationFilename(typeDesc.interface))
             elif unrolled.isDictionary():
                 bindingHeaders.add(self.getDeclarationFilename(unrolled.inner))
@@ -556,7 +569,6 @@ class CGHeaders(CGWrapper):
                     # Strip out the function name and convert "::" to "/"
                     bindingHeaders.add("/".join(func.split("::")[:-1]) + ".h")
 
-        declareIncludes = set(declareIncludes)
         for d in dictionaries:
             if d.parent:
                 declareIncludes.add(self.getDeclarationFilename(d.parent))

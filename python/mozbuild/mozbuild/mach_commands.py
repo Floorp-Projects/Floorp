@@ -7,6 +7,8 @@ from __future__ import print_function, unicode_literals
 import logging
 import operator
 import os
+import sys
+import time
 
 from mach.decorators import (
     CommandArgument,
@@ -21,6 +23,20 @@ BUILD_WHAT_HELP = '''
 What to build. Can be a top-level make target or a relative directory. If
 multiple options are provided, they will be built serially. BUILDING ONLY PARTS
 OF THE TREE CAN RESULT IN BAD TREE STATE. USE AT YOUR OWN RISK.
+'''.strip()
+
+FINDER_SLOW_MESSAGE = '''
+===================
+PERFORMANCE WARNING
+
+The OS X Finder application (file indexing used by Spotlight) used a lot of CPU
+during the build - an average of %f%% (100%% is 1 core). This made your build
+slower.
+
+Consider adding ".noindex" to the end of your object directory name to have
+Finder ignore it. Or, add an indexing exclusion through the Spotlight System
+Preferences.
+===================
 '''.strip()
 
 
@@ -61,6 +77,9 @@ class Build(MachCommandBase):
 
             self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
 
+        finder_start_cpu = self._get_finder_cpu_usage()
+        time_start = time.time()
+
         if what:
             top_make = os.path.join(self.topobjdir, 'Makefile')
             if not os.path.exists(top_make):
@@ -69,8 +88,10 @@ class Build(MachCommandBase):
                 return 1
 
             for target in what:
+                path_arg = self._wrap_path_argument(target)
+
                 make_dir, make_target = resolve_target_to_make(self.topobjdir,
-                    target)
+                    path_arg.relpath())
 
                 if make_dir is None and make_target is None:
                     return 1
@@ -93,9 +114,64 @@ class Build(MachCommandBase):
         warnings_database.prune()
         warnings_database.save_to_file(warnings_path)
 
+        time_end = time.time()
+        self._handle_finder_cpu_usage(time_end - time_start, finder_start_cpu)
+
         print('Finished building. Built files are in %s' % self.topobjdir)
 
         return status
+
+    def _get_finder_cpu_usage(self):
+        """Obtain the CPU usage of the Finder app on OS X.
+
+        This is used to detect high CPU usage.
+        """
+        if not sys.platform.startswith('darwin'):
+            return None
+
+        try:
+            import psutil
+        except ImportError:
+            return None
+
+        for proc in psutil.process_iter():
+            if proc.name != 'Finder':
+                continue
+
+            # Try to isolate system finder as opposed to other "Finder"
+            # processes.
+            if not proc.exe.endswith('CoreServices/Finder.app/Contents/MacOS/Finder'):
+                continue
+
+            return proc.get_cpu_times()
+
+        return None
+
+    def _handle_finder_cpu_usage(self, elapsed, start):
+        if not start:
+            return
+
+        # We only measure if the measured range is sufficiently long.
+        if elapsed < 15:
+            return
+
+        end = self._get_finder_cpu_usage()
+        if not end:
+            return
+
+        start_total = start.user + start.system
+        end_total = end.user + end.system
+
+        cpu_seconds = end_total - start_total
+
+        # If Finder used more than 25% of 1 core during the build, report an
+        # error.
+        finder_percent = cpu_seconds / elapsed * 100
+        if finder_percent < 25:
+            return
+
+        print(FINDER_SLOW_MESSAGE % finder_percent)
+
 
     @Command('clobber', help='Clobber the tree (delete the object directory).')
     def clobber(self):

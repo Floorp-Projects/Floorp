@@ -28,9 +28,9 @@
         <hbox id="toolbox-dock-buttons"/>
       </hbox>
 #endif
-      <radiogroup id="toolbox-tabs" orient="horizontal">
-      </radiogroup>
-      <hbox id="toolbox-buttons" flex="1" pack="end"/>
+      <hbox id="toolbox-tabs" flex="1">
+      </hbox>
+      <hbox id="toolbox-buttons" pack="end"/>
 #ifndef XP_MACOSX
       <vbox id="toolbox-controls-separator"/>
       <hbox id="toolbox-controls">

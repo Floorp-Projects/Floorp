@@ -21,6 +21,12 @@
 #include "MediaStreamGraph.h"
 #include "nsIDOMWindow.h"
 
+// X11 has a #define for CurrentTime. Unbelievable :-(.
+// See content/media/DOMMediaStream.h for more fun!
+#ifdef CurrentTime
+#undef CurrentTime
+#endif
+
 struct JSContext;
 class JSObject;
 class nsIDOMWindow;
@@ -77,6 +83,8 @@ public:
   {
     return float(IdealAudioRate());
   }
+
+  double CurrentTime() const;
 
   AudioListener* Listener();
 

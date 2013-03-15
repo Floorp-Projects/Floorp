@@ -70,12 +70,10 @@ namespace {
     props->get_ContactRect(&contactRect);
     props->get_Pressure(&pressure);
 
-    nsIntPoint touchPoint;
-    touchPoint.x = static_cast<int32_t>(position.X);
-    touchPoint.y = static_cast<int32_t>(position.Y);
+    nsIntPoint touchPoint = MetroUtils::LogToPhys(position);
     nsIntPoint touchRadius;
-    touchRadius.x = static_cast<int32_t>(contactRect.Width) / 2;
-    touchRadius.y = static_cast<int32_t>(contactRect.Height) / 2;
+    touchRadius.x = MetroUtils::LogToPhys(contactRect.Width) / 2;
+    touchRadius.y = MetroUtils::LogToPhys(contactRect.Height) / 2;
     return new nsDOMTouch(pointerId,
                           touchPoint,
                           // Rotation radius and angle.
@@ -261,9 +259,10 @@ namespace {
       aWParam |= MK_SHIFT;
     }
 
+    Foundation::Point logPoint = MetroUtils::PhysToLog(aEvent.refPoint);
     LParamForMouseEvents lParam;
-    lParam.parts.x = static_cast<uint16_t>(aEvent.refPoint.x);
-    lParam.parts.y = static_cast<uint16_t>(aEvent.refPoint.y);
+    lParam.parts.x = static_cast<uint16_t>(NS_round(logPoint.X));
+    lParam.parts.y = static_cast<uint16_t>(NS_round(logPoint.Y));
     aLParam = lParam.lParam;
   }
 }
@@ -428,8 +427,7 @@ MetroInput::OnPointerWheelChanged(UI::Core::ICoreWindow* aSender,
   WheelEvent wheelEvent(true, NS_WHEEL_WHEEL, mWidget.Get());
   mModifierKeyState.Update();
   mModifierKeyState.InitInputEvent(wheelEvent);
-  wheelEvent.refPoint.x = POINT_CEIL_X(position);
-  wheelEvent.refPoint.y = POINT_CEIL_Y(position);
+  wheelEvent.refPoint = MetroUtils::LogToPhys(position);
   wheelEvent.time = timestamp;
   wheelEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_MOUSE;
   wheelEvent.pressure = pressure;
@@ -933,8 +931,7 @@ MetroInput::InitGeckoMouseEventFromPointerPoint(
 
   mModifierKeyState.Update();
   mModifierKeyState.InitInputEvent(aEvent);
-  aEvent.refPoint.x = POINT_CEIL_X(position);
-  aEvent.refPoint.y = POINT_CEIL_Y(position);
+  aEvent.refPoint = MetroUtils::LogToPhys(position);
   aEvent.time = timestamp;
 
   if (!canBeDoubleTap) {
@@ -1050,8 +1047,7 @@ MetroInput::ProcessManipulationDelta(
   mModifierKeyState.InitInputEvent(magEvent);
   magEvent.time = ::GetMessageTime();
   magEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-  magEvent.refPoint.x = POINT_CEIL_X(aPosition);
-  magEvent.refPoint.y = POINT_CEIL_Y(aPosition);
+  magEvent.refPoint = MetroUtils::LogToPhys(aPosition);
   DispatchEventIgnoreStatus(&magEvent);
 
   // Send a gecko event indicating the rotation since the last update.
@@ -1063,8 +1059,7 @@ MetroInput::ProcessManipulationDelta(
   mModifierKeyState.InitInputEvent(rotEvent);
   rotEvent.time = ::GetMessageTime();
   rotEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-  rotEvent.refPoint.x = POINT_CEIL_X(aPosition);
-  rotEvent.refPoint.y = POINT_CEIL_Y(aPosition);
+  rotEvent.refPoint = MetroUtils::LogToPhys(aPosition);
   if (rotEvent.delta >= 0) {
     rotEvent.direction = nsIDOMSimpleGestureEvent::ROTATION_COUNTERCLOCKWISE;
   } else {
@@ -1200,8 +1195,7 @@ MetroInput::OnManipulationCompleted(
     mModifierKeyState.InitInputEvent(swipeEvent);
     swipeEvent.time = ::GetMessageTime();
     swipeEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-    swipeEvent.refPoint.x = POINT_CEIL_X(position);
-    swipeEvent.refPoint.y = POINT_CEIL_Y(position);
+    swipeEvent.refPoint = MetroUtils::LogToPhys(position);
     DispatchEventIgnoreStatus(&swipeEvent);
   }
 
@@ -1216,8 +1210,7 @@ MetroInput::OnManipulationCompleted(
     mModifierKeyState.InitInputEvent(swipeEvent);
     swipeEvent.time = ::GetMessageTime();
     swipeEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-    swipeEvent.refPoint.x = POINT_CEIL_X(position);
-    swipeEvent.refPoint.y = POINT_CEIL_Y(position);
+    swipeEvent.refPoint = MetroUtils::LogToPhys(position);
     DispatchEventIgnoreStatus(&swipeEvent);
   }
 
@@ -1256,8 +1249,7 @@ MetroInput::OnTapped(UI::Input::IGestureRecognizer* aSender,
                             nsMouseEvent::eNormal);
     mModifierKeyState.Update();
     mModifierKeyState.InitInputEvent(mouseEvent);
-    mouseEvent.refPoint.x = POINT_CEIL_X(position);
-    mouseEvent.refPoint.y = POINT_CEIL_Y(position);
+    mouseEvent.refPoint = MetroUtils::LogToPhys(position);
     mouseEvent.time = ::GetMessageTime();
     aArgs->get_TapCount(&mouseEvent.clickCount);
     mouseEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
@@ -1303,8 +1295,7 @@ MetroInput::OnRightTapped(UI::Input::IGestureRecognizer* aSender,
                            nsMouseEvent::eNormal);
   mModifierKeyState.Update();
   mModifierKeyState.InitInputEvent(contextMenu);
-  contextMenu.refPoint.x = POINT_CEIL_X(position);
-  contextMenu.refPoint.y = POINT_CEIL_Y(position);
+  contextMenu.refPoint = MetroUtils::LogToPhys(position);
   contextMenu.time = ::GetMessageTime();
   MozInputSourceFromDeviceType(deviceType, contextMenu.inputSource);
   DispatchEventIgnoreStatus(&contextMenu);
