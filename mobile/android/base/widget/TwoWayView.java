@@ -4374,6 +4374,10 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             }
         }
 
+        public boolean shouldRecycleViewType(int viewType) {
+            return viewType >= 0;
+        }
+
         void clear() {
             if (mViewTypeCount == 1) {
                 final ArrayList<View> scrap = mCurrentScrap;
@@ -4473,10 +4477,26 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
             lp.scrappedFromPosition = position;
 
+            final int viewType = lp.viewType;
+            final boolean scrapHasTransientState = ViewCompat.hasTransientState(scrap);
+
+            // Don't put views that should be ignored into the scrap heap
+            if (!shouldRecycleViewType(viewType) || scrapHasTransientState) {
+                if (scrapHasTransientState) {
+                    if (mTransientStateViews == null) {
+                        mTransientStateViews = new SparseArrayCompat<View>();
+                    }
+
+                    mTransientStateViews.put(position, scrap);
+                }
+
+                return;
+            }
+
             if (mViewTypeCount == 1) {
                 mCurrentScrap.add(scrap);
             } else {
-                mScrapViews[lp.viewType].add(scrap);
+                mScrapViews[viewType].add(scrap);
             }
 
             if (mRecyclerListener != null) {
@@ -4500,7 +4520,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
                     activeViews[i] = null;
 
                     final boolean scrapHasTransientState = ViewCompat.hasTransientState(victim);
-                    if (scrapHasTransientState) {
+                    if (!shouldRecycleViewType(whichScrap) || scrapHasTransientState) {
                         if (scrapHasTransientState) {
                             removeDetachedView(victim, false);
 
