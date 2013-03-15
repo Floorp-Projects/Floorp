@@ -172,6 +172,7 @@ ForkJoinShared::ForkJoinShared(JSContext *cx,
     threadPool_(threadPool),
     op_(op),
     numSlices_(numSlices),
+    rendezvousEnd_(NULL),
     allocators_(cx),
     uncompleted_(uncompleted),
     blocked_(0),
@@ -220,7 +221,8 @@ ForkJoinShared::init()
 
 ForkJoinShared::~ForkJoinShared()
 {
-    PR_DestroyCondVar(rendezvousEnd_);
+    if (rendezvousEnd_)
+        PR_DestroyCondVar(rendezvousEnd_);
 
     while (allocators_.length() > 0)
         js_delete(allocators_.popCopy());
