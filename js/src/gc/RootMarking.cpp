@@ -12,6 +12,7 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsgc.h"
+#include "jsonparser.h"
 #include "jsprf.h"
 #include "jswatchpoint.h"
 
@@ -620,6 +621,10 @@ AutoGCRooter::trace(JSTracer *trc)
             MarkValueUnbarriered(trc, &p->get(), "js::AutoWrapperVector.vector");
         return;
       }
+
+      case JSONPARSER:
+        static_cast<js::JSONParser *>(this)->trace(trc);
+        return;
     }
 
     JS_ASSERT(tag_ >= 0);

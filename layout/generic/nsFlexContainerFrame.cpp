@@ -2070,10 +2070,16 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   // We (and our children) can only depend on our ancestor's height if we have
-  // a percent-height.  (There are actually other cases, too -- e.g. if our
-  // parent is itself a vertical flex container and we're flexible -- but we'll
-  // let our ancestors handle those sorts of cases.)
-  if (StylePosition()->mHeight.HasPercent()) {
+  // a percent-height, or if we're positioned and we have "top" and "bottom"
+  // set and have height:auto.  (There are actually other cases, too -- e.g. if
+  // our parent is itself a vertical flex container and we're flexible -- but
+  // we'll let our ancestors handle those sorts of cases.)
+  const nsStylePosition* stylePos = StylePosition();
+  if (stylePos->mHeight.HasPercent() ||
+      (StyleDisplay()->IsAbsolutelyPositionedStyle() &&
+       eStyleUnit_Auto == stylePos->mHeight.GetUnit() &&
+       eStyleUnit_Auto != stylePos->mOffset.GetTopUnit() &&
+       eStyleUnit_Auto != stylePos->mOffset.GetBottomUnit())) {
     AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
   }
 

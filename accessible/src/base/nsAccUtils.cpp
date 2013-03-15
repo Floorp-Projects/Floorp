@@ -409,7 +409,7 @@ nsAccUtils::IsTextInterfaceSupportCorrect(Accessible* aAccessible)
   uint32_t childCount = aAccessible->ChildCount();
   for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
     Accessible* child = aAccessible->GetChildAt(childIdx);
-    if (IsText(child)) {
+    if (!IsEmbeddedObject(child)) {
       foundText = true;
       break;
     }
@@ -429,7 +429,7 @@ nsAccUtils::IsTextInterfaceSupportCorrect(Accessible* aAccessible)
 uint32_t
 nsAccUtils::TextLength(Accessible* aAccessible)
 {
-  if (!IsText(aAccessible))
+  if (IsEmbeddedObject(aAccessible))
     return 1;
 
   TextLeafAccessible* textLeaf = aAccessible->AsTextLeaf();

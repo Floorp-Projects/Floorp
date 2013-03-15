@@ -7,18 +7,9 @@ const Cu = Components.utils;
 
 // The XUL and XHTML namespace.
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-const XHTML_NS = "http://www.w3.org/1999/xhtml";
-
-const HUD_STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
-
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "stringBundle", function () {
-  return Services.strings.createBundle(HUD_STRINGS_URI);
-});
-
 
 this.EXPORTED_SYMBOLS = ["AutocompletePopup"];
 
@@ -28,21 +19,48 @@ this.EXPORTED_SYMBOLS = ["AutocompletePopup"];
  * @constructor
  * @param nsIDOMDocument aDocument
  *        The document you want the popup attached to.
+ * @param Object aOptions
+ *        An object consiting any of the following options:
+ *        - panelId {String} The id for the popup panel.
+ *        - listBoxId {String} The id for the richlistbox inside the panel.
+ *        - position {String} The position for the popup panel.
+ *        - theme {String} String related to the theme of the popup.
+ *        - autoSelect {Boolean} Boolean to allow the first entry of the popup
+ *                     panel to be automatically selected when the popup shows.
+ *        - fixedWidth {Boolean} Boolean to control dynamic width of the popup.
+ *        - direction {String} The direction of the text in the panel. rtl or ltr
+ *        - onSelect {String} The select event handler for the richlistbox
+ *        - onClick {String} The click event handler for the richlistbox.
+ *        - onKeypress {String} The keypress event handler for the richlistitems.
  */
-this.AutocompletePopup = function AutocompletePopup(aDocument)
+this.AutocompletePopup =
+function AutocompletePopup(aDocument, aOptions = {})
 {
   this._document = aDocument;
 
+  this.fixedWidth = aOptions.fixedWidth || false;
+  this.autoSelect = aOptions.autoSelect || false;
+  this.position = aOptions.position || "after_start";
+  this.direction = aOptions.direction || "ltr";
+
+  this.onSelect = aOptions.onSelect;
+  this.onClick = aOptions.onClick;
+  this.onKeypress = aOptions.onKeypress;
+
+  let id = aOptions.panelId || "devtools_autoCompletePopup";
+  let theme = aOptions.theme || "dark";
   // Reuse the existing popup elements.
-  this._panel = this._document.getElementById("webConsole_autocompletePopup");
+  this._panel = this._document.getElementById(id);
   if (!this._panel) {
     this._panel = this._document.createElementNS(XUL_NS, "panel");
-    this._panel.setAttribute("id", "webConsole_autocompletePopup");
-    this._panel.setAttribute("label",
-      stringBundle.GetStringFromName("Autocomplete.label"));
+    this._panel.setAttribute("id", id);
+    this._panel.className = "devtools-autocomplete-popup " + theme + "-theme";
+
     this._panel.setAttribute("noautofocus", "true");
-    this._panel.setAttribute("ignorekeys", "true");
     this._panel.setAttribute("level", "top");
+    if (!aOptions.onKeypress) {
+      this._panel.setAttribute("ignorekeys", "true");
+    }
 
     let mainPopupSet = this._document.getElementById("mainPopupSet");
     if (mainPopupSet) {
@@ -51,21 +69,39 @@ this.AutocompletePopup = function AutocompletePopup(aDocument)
     else {
       this._document.documentElement.appendChild(this._panel);
     }
-
-    this._list = this._document.createElementNS(XUL_NS, "richlistbox");
-    this._list.flex = 1;
-    this._panel.appendChild(this._list);
-
-    // Open and hide the panel, so we initialize the API of the richlistbox.
-    this._panel.width = 1;
-    this._panel.height = 1;
-    this._panel.openPopup(null, "overlap", 0, 0, false, false);
-    this._panel.hidePopup();
-    this._panel.width = "";
-    this._panel.height = "";
+    this._list = null;
   }
   else {
     this._list = this._panel.firstChild;
+  }
+
+  if (!this._list) {
+    this._list = this._document.createElementNS(XUL_NS, "richlistbox");
+    this._panel.appendChild(this._list);
+
+    // Open and hide the panel, so we initialize the API of the richlistbox.
+    this._panel.openPopup(null, this.popup, 0, 0);
+    this._panel.hidePopup();
+  }
+
+  this._list.flex = 1;
+  this._list.setAttribute("seltype", "single");
+
+  if (aOptions.listBoxId) {
+    this._list.setAttribute("id", aOptions.listBoxId);
+  }
+  this._list.className = "devtools-autocomplete-listbox " + theme + "-theme";
+
+  if (this.onSelect) {
+    this._list.addEventListener("select", this.onSelect, false);
+  }
+
+  if (this.onClick) {
+    this._list.addEventListener("click", this.onClick, false);
+  }
+
+  if (this.onKeypress) {
+    this._list.addEventListener("keypress", this.onKeypress, false);
   }
 }
 
@@ -73,6 +109,11 @@ AutocompletePopup.prototype = {
   _document: null,
   _panel: null,
   _list: null,
+
+  // Event handlers.
+  onSelect: null,
+  onClick: null,
+  onKeypress: null,
 
   /**
    * Open the autocomplete popup panel.
@@ -82,17 +123,14 @@ AutocompletePopup.prototype = {
    */
   openPopup: function AP_openPopup(aAnchor)
   {
-    this._panel.openPopup(aAnchor, "after_start", 0, 0, false, false);
+    this._panel.openPopup(aAnchor, this.position, 0, 0);
 
-    if (this.onSelect) {
-      this._list.addEventListener("select", this.onSelect, false);
+    if (this.autoSelect) {
+      this.selectFirstItem();
     }
-
-    if (this.onClick) {
-      this._list.addEventListener("click", this.onClick, false);
+    if (!this.fixedWidth) {
+      this._updateSize();
     }
-
-    this._updateSize();
   },
 
   /**
@@ -101,14 +139,6 @@ AutocompletePopup.prototype = {
   hidePopup: function AP_hidePopup()
   {
     this._panel.hidePopup();
-
-    if (this.onSelect) {
-      this._list.removeEventListener("select", this.onSelect, false);
-    }
-
-    if (this.onClick) {
-      this._list.removeEventListener("click", this.onClick, false);
-    }
   },
 
   /**
@@ -131,9 +161,33 @@ AutocompletePopup.prototype = {
     }
     this.clearItems();
 
+    if (this.onSelect) {
+      this._list.removeEventListener("select", this.onSelect, false);
+    }
+
+    if (this.onClick) {
+      this._list.removeEventListener("click", this.onClick, false);
+    }
+
+    if (this.onKeypress) {
+      this._list.removeEventListener("keypress", this.onKeypress, false);
+    }
+
     this._document = null;
     this._list = null;
     this._panel = null;
+  },
+
+  /**
+   * Get the autocomplete items array.
+   *
+   * @param Number aIndex The index of the item what is wanted.
+   *
+   * @return The autocomplete item at index aIndex.
+   */
+  getItemAtIndex: function AP_getItemAtIndex(aIndex)
+  {
+    return this._list.getItemAtIndex(aIndex)._autocompleteItem;
   },
 
   /**
@@ -166,9 +220,27 @@ AutocompletePopup.prototype = {
 
     // Make sure that the new content is properly fitted by the XUL richlistbox.
     if (this.isOpen) {
-      // We need the timeout to allow the content to reflow. Attempting to
-      // update the richlistbox size too early does not work.
-      this._document.defaultView.setTimeout(this._updateSize.bind(this), 1);
+      if (this.autoSelect) {
+        this.selectFirstItem();
+      }
+      if (!this.fixedWidth) {
+        this._updateSize();
+      }
+    }
+  },
+
+  /**
+   * Selects the first item of the richlistbox. Note that first item here is the
+   * item closes to the input element, which means that 0th index if position is
+   * below, and last index if position is above.
+   */
+  selectFirstItem: function AP_selectFirstItem()
+  {
+    if (this.position.contains("before")) {
+      this.selectedIndex = this.itemCount - 1;
+    }
+    else {
+      this.selectedIndex = 0;
     }
   },
 
@@ -179,11 +251,23 @@ AutocompletePopup.prototype = {
    */
   _updateSize: function AP__updateSize()
   {
-    if (!this._panel) {
-      return;
-    }
-    this._list.width = this._panel.clientWidth +
-                       this._scrollbarWidth;
+    // We need the timeout to allow the content to reflow. Attempting to
+    // update the richlistbox size too early does not work.
+    this._document.defaultView.setTimeout(function() {
+      if (!this._panel) {
+        return;
+      }
+      this._list.width = this._panel.clientWidth +
+                         this._scrollbarWidth;
+      // Height change is required, otherwise the panel is drawn at an offset
+      // the first time.
+      this._list.height = this._panel.clientHeight;
+      // This brings the panel back at right position.
+      this._list.top = 0;
+      // Changing panel height might make the selected item out of view, so
+      // bring it back to view.
+      this._list.ensureIndexIsVisible(this._list.selectedIndex);
+    }.bind(this), 5);
   },
 
   /**
@@ -198,14 +282,16 @@ AutocompletePopup.prototype = {
       this._list.removeChild(this._list.firstChild);
     }
 
-    // Reset the panel and list dimensions. New dimensions are calculated when a
-    // new set of items is added to the autocomplete popup.
-    this._list.width = "";
-    this._list.height = "";
-    this._panel.width = "";
-    this._panel.height = "";
-    this._panel.top = "";
-    this._panel.left = "";
+    if (!this.fixedWidth) {
+      // Reset the panel and list dimensions. New dimensions are calculated when
+      // a new set of items is added to the autocomplete popup.
+      this._list.width = "";
+      this._list.height = "";
+      this._panel.width = "";
+      this._panel.height = "";
+      this._panel.top = "";
+      this._panel.left = "";
+    }
   },
 
   /**
@@ -225,7 +311,7 @@ AutocompletePopup.prototype = {
    */
   set selectedIndex(aIndex) {
     this._list.selectedIndex = aIndex;
-    if (this._list.ensureIndexIsVisible) {
+    if (this.isOpen && this._list.ensureIndexIsVisible) {
       this._list.ensureIndexIsVisible(this._list.selectedIndex);
     }
   },
@@ -247,23 +333,51 @@ AutocompletePopup.prototype = {
    */
   set selectedItem(aItem) {
     this._list.selectedItem = this._findListItem(aItem);
-    this._list.ensureIndexIsVisible(this._list.selectedIndex);
+    if (this.isOpen) {
+      this._list.ensureIndexIsVisible(this._list.selectedIndex);
+    }
   },
 
   /**
    * Append an item into the autocomplete list.
    *
    * @param object aItem
-   *        The item you want appended to the list. The object must have a
-   *        "label" property which is used as the displayed value.
+   *        The item you want appended to the list.
+   *        The item object can have the following properties:
+   *        - label {String} Property which is used as the displayed value.
+   *        - preLabel {String} [Optional] The String that will be displayed
+   *                   before the label indicating that this is the already
+   *                   present text in the input box, and label is the text
+   *                   that will be auto completed. When this property is
+   *                   present, |preLabel.length| starting characters will be
+   *                   removed from label.
+   *        - count {Number} [Optional] The number to represent the count of
+   *                autocompleted label.
    */
   appendItem: function AP_appendItem(aItem)
   {
-    let description = this._document.createElementNS(XUL_NS, "description");
-    description.textContent = aItem.label;
-
     let listItem = this._document.createElementNS(XUL_NS, "richlistitem");
-    listItem.appendChild(description);
+    if (this.direction) {
+      listItem.setAttribute("dir", this.direction);
+    }
+    let label = this._document.createElementNS(XUL_NS, "label");
+    label.setAttribute("value", aItem.label);
+    label.setAttribute("class", "autocomplete-value");
+    if (aItem.preLabel) {
+      let preDesc = this._document.createElementNS(XUL_NS, "label");
+      preDesc.setAttribute("value", aItem.preLabel);
+      preDesc.setAttribute("class", "initial-value");
+      listItem.appendChild(preDesc);
+      label.setAttribute("value", aItem.label.slice(aItem.preLabel.length));
+    }
+    listItem.appendChild(label);
+    if (aItem.count && aItem.count > 1) {
+      let countDesc = this._document.createElementNS(XUL_NS, "label");
+      countDesc.setAttribute("value", aItem.count);
+      countDesc.setAttribute("flex", "1");
+      countDesc.setAttribute("class", "autocomplete-count");
+      listItem.appendChild(countDesc);
+    }
     listItem._autocompleteItem = aItem;
 
     this._list.appendChild(listItem);
@@ -349,6 +463,14 @@ AutocompletePopup.prototype = {
     }
 
     return this.selectedItem;
+  },
+
+  /**
+   * Focuses the richlistbox.
+   */
+  focus: function AP_focus()
+  {
+    this._list.focus();
   },
 
   /**

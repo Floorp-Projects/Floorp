@@ -148,6 +148,24 @@ public class FennecMochitestAssert implements Assert {
     }
 
     public void ispixel(int actual, int r, int g, int b, String name) {
+        int aAlpha = ((actual >> 24) & 0xFF);
+        int aR = ((actual >> 16) & 0xFF);
+        int aG = ((actual >> 8) & 0xFF);
+        int aB = (actual & 0xFF);
+        boolean pass = checkPixel(actual, r, g, b);
+        ok(pass, name, "Color rgba(" + aR + "," + aG + "," + aB + "," + aAlpha + ")" + (pass ? " " : " not") + " close enough to expected rgb(" + r + "," + g + "," + b + ")");
+    }
+
+    public void isnotpixel(int actual, int r, int g, int b, String name) {
+        int aAlpha = ((actual >> 24) & 0xFF);
+        int aR = ((actual >> 16) & 0xFF);
+        int aG = ((actual >> 8) & 0xFF);
+        int aB = (actual & 0xFF);
+        boolean pass = checkPixel(actual, r, g, b);
+        ok(!pass, name, "Color rgba(" + aR + "," + aG + "," + aB + "," + aAlpha + ")" + (!pass ? " is" : " is not") + " different enough from rgb(" + r + "," + g + "," + b + ")");
+    }
+
+    private boolean checkPixel(int actual, int r, int g, int b) {
         // When we read GL pixels the GPU has already processed them and they
         // are usually off by a little bit. For example a CSS-color pixel of color #64FFF5
         // was turned into #63FFF7 when it came out of glReadPixels. So in order to compare
@@ -160,10 +178,14 @@ public class FennecMochitestAssert implements Assert {
         int aG = ((actual >> 8) & 0xFF);
         int aB = (actual & 0xFF);
         boolean pass = (aAlpha == 0xFF) /* alpha */
-                                && (Math.abs(aR - r) <= 8) /* red */
-                                && (Math.abs(aG - g) <= 8) /* green */
-                                && (Math.abs(aB - b) <= 8); /* blue */
-        ok(pass, name, "Color rgba(" + aR + "," + aG + "," + aB + "," + aAlpha + ")" + (pass ? " " : " not") + " close enough to expected rgb(" + r + "," + g + "," + b + ")");
+                           && (Math.abs(aR - r) <= 8) /* red */
+                           && (Math.abs(aG - g) <= 8) /* green */
+                           && (Math.abs(aB - b) <= 8); /* blue */
+        if (pass) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public void todo(boolean condition, String name, String diag) {
