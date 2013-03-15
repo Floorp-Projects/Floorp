@@ -3648,6 +3648,33 @@ nsWindowSH::GlobalScopePolluterGetProperty(JSContext *cx, JSHandleObject obj,
   return JS_TRUE;
 }
 
+// Gets a subframe.
+static JSBool
+ChildWindowGetter(JSContext *cx, JSHandleObject obj, JSHandleId id,
+                  JSMutableHandleValue vp)
+{
+  // Grab the native DOM window.
+  vp.setUndefined();
+  nsCOMPtr<nsISupports> winSupports =
+    do_QueryInterface(nsDOMClassInfo::XPConnect()->GetNativeOfWrapper(cx, obj));
+  if (!winSupports)
+    return true;
+  nsGlobalWindow *win = nsGlobalWindow::FromSupports(winSupports);
+
+  // Find the child, if it exists.
+  nsCOMPtr<nsIDOMWindow> child = win->GetChildWindow(id);
+  if (!child)
+    return true;
+
+  // Wrap the child for JS.
+  jsval v;
+  nsresult rv = WrapNative(cx, JS_GetGlobalForScopeChain(cx), child,
+                           /* aAllowWrapping = */ true, &v);
+  NS_ENSURE_SUCCESS(rv, false);
+  vp.set(v);
+  return true;
+}
+
 static nsHTMLDocument*
 GetDocument(JSObject *obj)
 {
@@ -3672,6 +3699,27 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
     // If we don't have a document, return early.
 
     return JS_TRUE;
+  }
+
+  nsGlobalWindow* win = static_cast<nsGlobalWindow*>(document->GetWindow());
+  MOZ_ASSERT(win);
+  if (win->GetLength() > 0) {
+    nsCOMPtr<nsIDOMWindow> child_win = win->GetChildWindow(id);
+    if (child_win) {
+      // We found a subframe of the right name, so define the property
+      // on the GSP. This property is a read-only accessor. Shadowing via
+      // |var foo| in global scope is still allowed, since |var| only looks
+      // up |own| properties. But unqualified shadowing will fail, per-spec.
+      if (!JS_DefinePropertyById(cx, obj, id, JS::UndefinedValue(),
+                                 ChildWindowGetter, JS_StrictPropertyStub,
+                                 JSPROP_SHARED | JSPROP_ENUMERATE))
+      {
+        return false;
+      }
+
+      objp.set(obj);
+      return true;
+    }
   }
 
   JSObject *proto;
@@ -5477,44 +5525,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     *objp = obj;
 
     return NS_OK;
-  }
-
-  // Hmm, we do an awful lot of QIs here; maybe we should add a
-  // method on an interface that would let us just call into the
-  // window code directly...
-
-  if (!ObjectIsNativeWrapper(cx, obj) ||
-      xpc::WrapperFactory::XrayWrapperNotShadowing(obj, id)) {
-    if (win->GetLength() > 0) {
-      nsCOMPtr<nsIDOMWindow> child_win = win->GetChildWindow(id);
-      if (child_win) {
-        // We found a subframe of the right name, define the property
-        // on the wrapper so that ::NewResolve() doesn't get called
-        // again for this property name.
-
-        JSObject *wrapperObj;
-        wrapper->GetJSObject(&wrapperObj);
-
-        jsval v;
-        nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-        nsresult rv = WrapNative(cx, wrapperObj, child_win,
-                                 &NS_GET_IID(nsIDOMWindow), true, &v,
-                                 getter_AddRefs(holder));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        JSAutoRequest ar(cx);
-
-        bool ok = JS_WrapValue(cx, &v) &&
-                    JS_DefinePropertyById(cx, obj, id, v, nullptr, nullptr, 0);
-        if (!ok) {
-          return NS_ERROR_FAILURE;
-        }
-
-        *objp = obj;
-
-        return NS_OK;
-      }
-    }
   }
 
   // Handle resolving if id refers to a name resolved by DOM worker code.
