@@ -2402,7 +2402,6 @@ js::CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction c
 
     RootedScript script(cx, clone->nonLazyScript());
     JS_ASSERT(script);
-    JS_ASSERT(!script->asmJS);
     JS_ASSERT(script->compartment() == original->compartment());
     JS_ASSERT_IF(script->compartment() != cx->compartment,
                  !script->enclosingStaticScope());
@@ -2716,8 +2715,6 @@ JSScript::markChildren(JSTracer *trc)
 
 #ifdef JS_ION
     ion::TraceIonScripts(trc, this);
-    if (asmJS)
-        MarkObject(trc, &asmJS, "asmJS");
 #endif
 }
 

@@ -4108,7 +4108,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferen
       case JSOP_TABLESWITCH:
       case JSOP_TRY:
       case JSOP_LABEL:
-      case JSOP_LINKASMJS:
         break;
 
         /* Bytecodes pushing values of known type. */
