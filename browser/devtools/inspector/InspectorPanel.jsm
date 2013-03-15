@@ -24,6 +24,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Highlighter",
   "resource:///modules/devtools/Highlighter.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ToolSidebar",
   "resource:///modules/devtools/Sidebar.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "SelectorSearch",
+  "resource:///modules/devtools/SelectorSearch.jsm");
 
 const LAYOUT_CHANGE_TIMER = 250;
 
@@ -50,9 +52,7 @@ InspectorPanel.prototype = {
   open: function InspectorPanel_open() {
     let deferred = Promise.defer();
 
-    this.preventNavigateAway = this.preventNavigateAway.bind(this);
     this.onNavigatedAway = this.onNavigatedAway.bind(this);
-    this.target.on("will-navigate", this.preventNavigateAway);
     this.target.on("navigate", this.onNavigatedAway);
 
     this.nodemenu = this.panelDoc.getElementById("inspector-node-popup");
@@ -61,16 +61,6 @@ InspectorPanel.prototype = {
     this._resetNodeMenu = this._resetNodeMenu.bind(this);
     this.nodemenu.addEventListener("popupshowing", this._setupNodeMenu, true);
     this.nodemenu.addEventListener("popuphiding", this._resetNodeMenu, true);
-
-    // Initialize the search related items
-    this.searchBox = this.panelDoc.getElementById("inspector-searchbox");
-    this._lastSearched = null;
-    this._searchResults = null;
-    this._searchIndex = 0;
-    this._onHTMLSearch = this._onHTMLSearch.bind(this);
-    this._onSearchKeypress = this._onSearchKeypress.bind(this);
-    this.searchBox.addEventListener("command", this._onHTMLSearch, true);
-    this.searchBox.addEventListener("keypress", this._onSearchKeypress, true);
 
     // Create an empty selection
     this._selection = new Selection();
@@ -153,6 +143,7 @@ InspectorPanel.prototype = {
       deferred.resolve(this);
     }.bind(this));
 
+    this.setupSearchBox();
     this.setupSidebar();
 
     return deferred.promise;
@@ -193,6 +184,24 @@ InspectorPanel.prototype = {
    */
   markDirty: function InspectorPanel_markDirty() {
     this.isDirty = true;
+  },
+
+  /**
+   * Hooks the searchbar to show result and auto completion suggestions.
+   */
+  setupSearchBox: function InspectorPanel_setupSearchBox() {
+    // Initiate the selectors search object.
+    let setNodeFunction = function(node) {
+      this.selection.setNode(node, "selectorsearch");
+    }.bind(this);
+    if (this.searchSuggestions) {
+      this.searchSuggestions.destroy();
+      this.searchSuggestions = null;
+    }
+    this.searchBox = this.panelDoc.getElementById("inspector-searchbox");
+    this.searchSuggestions = new SelectorSearch(this.browser.contentDocument,
+                                                this.searchBox,
+                                                setNodeFunction);
   },
 
   /**
@@ -256,6 +265,7 @@ InspectorPanel.prototype = {
         self.selection.setNode(newWindow.document.documentElement, "navigateaway");
       }
       self._initMarkup();
+      self.setupSearchBox();
     }
 
     if (newWindow.document.readyState == "loading") {
@@ -263,77 +273,6 @@ InspectorPanel.prototype = {
     } else {
       onDOMReady();
     }
-  },
-
-  /**
-   * Show a message if the inspector is dirty.
-   */
-  preventNavigateAway: function InspectorPanel_preventNavigateAway(event, request) {
-    if (!this.isDirty) {
-      return;
-    }
-
-    request.suspend();
-
-    let notificationBox = null;
-    if (this.target.isLocalTab) {
-      let gBrowser = this.target.tab.ownerDocument.defaultView.gBrowser;
-      notificationBox = gBrowser.getNotificationBox();
-    }
-    else {
-      notificationBox = this._toolbox.getNotificationBox();
-    }
-
-    let notification = notificationBox.
-      getNotificationWithValue("inspector-page-navigation");
-
-    if (notification) {
-      notificationBox.removeNotification(notification, true);
-    }
-
-    let cancelRequest = function onCancelRequest() {
-      if (request) {
-        request.cancel(Cr.NS_BINDING_ABORTED);
-        request.resume(); // needed to allow the connection to be cancelled.
-        request = null;
-      }
-    };
-
-    let eventCallback = function onNotificationCallback(event) {
-      if (event == "removed") {
-        cancelRequest();
-      }
-    };
-
-    let buttons = [
-      {
-        id: "inspector.confirmNavigationAway.buttonLeave",
-        label: this.strings.GetStringFromName("confirmNavigationAway.buttonLeave"),
-        accessKey: this.strings.GetStringFromName("confirmNavigationAway.buttonLeaveAccesskey"),
-        callback: function onButtonLeave() {
-          if (request) {
-            request.resume();
-            request = null;
-          }
-        }.bind(this),
-      },
-      {
-        id: "inspector.confirmNavigationAway.buttonStay",
-        label: this.strings.GetStringFromName("confirmNavigationAway.buttonStay"),
-        accessKey: this.strings.GetStringFromName("confirmNavigationAway.buttonStayAccesskey"),
-        callback: cancelRequest
-      },
-    ];
-
-    let message = this.strings.GetStringFromName("confirmNavigationAway.message2");
-
-    notification = notificationBox.appendNotification(message,
-      "inspector-page-navigation", "chrome://browser/skin/Info.png",
-      notificationBox.PRIORITY_WARNING_HIGH, buttons, eventCallback);
-
-    // Make sure this not a transient notification, to avoid the automatic
-    // transient notification removal.
-    notification.persistence = -1;
   },
 
   /**
@@ -379,7 +318,6 @@ InspectorPanel.prototype = {
       this.browser = null;
     }
 
-    this.target.off("will-navigate", this.preventNavigateAway);
     this.target.off("navigate", this.onNavigatedAway);
 
     if (this.highlighter) {
@@ -400,9 +338,8 @@ InspectorPanel.prototype = {
 
     this.nodemenu.removeEventListener("popupshowing", this._setupNodeMenu, true);
     this.nodemenu.removeEventListener("popuphiding", this._resetNodeMenu, true);
-    this.searchBox.removeEventListener("command", this._onHTMLSearch, true);
-    this.searchBox.removeEventListener("keypress", this._onSearchKeypress, true);
     this.breadcrumbs.destroy();
+    this.searchSuggestions.destroy();
     this.selection.off("new-node", this.onNewSelection);
     this.selection.off("before-new-node", this.onBeforeNewSelection);
     this.selection.off("detached", this.onDetached);
@@ -414,80 +351,12 @@ InspectorPanel.prototype = {
     this.panelDoc = null;
     this.panelWin = null;
     this.breadcrumbs = null;
+    this.searchSuggestions = null;
     this.lastNodemenuItem = null;
     this.nodemenu = null;
-    this.searchBox = null;
     this.highlighter = null;
-    this._searchResults = null;
 
     return Promise.resolve(null);
-  },
-
-  /**
-   * The command callback for the HTML search box. This function is
-   * automatically invoked as the user is typing.
-   */
-  _onHTMLSearch: function InspectorPanel__onHTMLSearch() {
-    let query = this.searchBox.value;
-    if (query == this._lastSearched) {
-      return;
-    }
-    this._lastSearched = query;
-    this._searchIndex = 0;
-
-    if (query.length == 0) {
-      this.searchBox.removeAttribute("filled");
-      this.searchBox.classList.remove("devtools-no-search-result");
-      return;
-    }
-
-    this.searchBox.setAttribute("filled", true);
-    this._searchResults = this.browser.contentDocument.querySelectorAll(query);
-    if (this._searchResults.length > 0) {
-      this.searchBox.classList.remove("devtools-no-search-result");
-      this.cancelLayoutChange();
-      this.selection.setNode(this._searchResults[0]);
-    } else {
-      this.searchBox.classList.add("devtools-no-search-result");
-    }
-  },
-
-  /**
-   * Search for the search box value as a query selector.
-   */
-  _onSearchKeypress: function InspectorPanel__onSearchKeypress(aEvent) {
-    let query = this.searchBox.value;
-    switch(aEvent.keyCode) {
-      case aEvent.DOM_VK_ENTER:
-      case aEvent.DOM_VK_RETURN:
-        if (query == this._lastSearched) {
-          this._searchIndex = (this._searchIndex + 1) % this._searchResults.length;
-        } else {
-          this._onHTMLSearch();
-          return;
-        }
-        break;
-
-      case aEvent.DOM_VK_UP:
-        if (--this._searchIndex < 0) {
-          this._searchIndex = this._searchResults.length - 1;
-        }
-        break;
-
-      case aEvent.DOM_VK_DOWN:
-        this._searchIndex = (this._searchIndex + 1) % this._searchResults.length;
-        break;
-
-      default:
-        return;
-    }
-
-    aEvent.preventDefault();
-    aEvent.stopPropagation();
-    this.cancelLayoutChange();
-    if (this._searchResults.length > 0) {
-      this.selection.setNode(this._searchResults[this._searchIndex]);
-    }
   },
 
   /**

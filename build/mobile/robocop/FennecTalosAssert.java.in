@@ -53,6 +53,10 @@ public class FennecTalosAssert implements Assert {
         throw new UnsupportedOperationException();
     }
 
+    public void isnotpixel(int actual, int r, int g, int b, String name) {
+        throw new UnsupportedOperationException();
+    }
+
     public void todo(boolean condition, String name, String diag) {
         throw new UnsupportedOperationException();
     }

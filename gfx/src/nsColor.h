@@ -70,4 +70,11 @@ NS_GFX_(bool) NS_ColorNameToRGB(const nsAString& aBuf, nscolor* aResult);
 // the float parameters are all expected to be in the range 0-1
 NS_GFX_(nscolor) NS_HSL2RGB(float h, float s, float l);
 
+// Return a color name for the given nscolor.  If there is no color
+// name for it, returns null.  If there are multiple possible color
+// names for the given color, the first one in nsColorNameList.h
+// (which is generally the first one in alphabetical order) will be
+// returned.
+NS_GFX_(const char*) NS_RGBToColorName(nscolor aColor);
+
 #endif /* nsColor_h___ */

@@ -811,7 +811,7 @@ class CallCompiler : public BaseCompiler
 
         if (!linker.verifyRange(f.chunk())) {
             disable();
-            return false;
+            return true;
         }
 
         linker.link(noIonCode, ic.icCall());

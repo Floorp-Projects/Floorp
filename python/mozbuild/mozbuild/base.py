@@ -5,6 +5,7 @@
 from __future__ import print_function, unicode_literals
 
 import logging
+import mozpack.path
 import multiprocessing
 import os
 import subprocess
@@ -123,13 +124,8 @@ class MozbuildObject(ProcessExecutionMixin):
 
         return os.path.join(path, filename)
 
-    def _get_srcdir_path(self, path):
-        """Convert a relative path in the source directory to a full path."""
-        return os.path.join(self.topsrcdir, path)
-
-    def _get_objdir_path(self, path):
-        """Convert a relative path in the object directory to a full path."""
-        return os.path.join(self.topobjdir, path)
+    def _wrap_path_argument(self, arg):
+        return PathArgument(arg, self.topsrcdir, self.topobjdir)
 
     def _run_make(self, directory=None, filename=None, target=None, log=True,
             srcdir=False, allow_parallel=True, line_handler=None,
@@ -280,3 +276,35 @@ class MachCommandBase(MozbuildObject):
 
             sys.exit(1)
 
+
+class PathArgument(object):
+    """Parse a filesystem path argument and transform it in various ways."""
+
+    def __init__(self, arg, topsrcdir, topobjdir, cwd=None):
+        self.arg = arg
+        self.topsrcdir = topsrcdir
+        self.topobjdir = topobjdir
+        self.cwd = os.getcwd() if cwd is None else cwd
+
+    def relpath(self):
+        """Return a path relative to the topsrcdir or topobjdir.
+
+        If the argument is a path to a location in one of the base directories
+        (topsrcdir or topobjdir), then strip off the base directory part and
+        just return the path within the base directory."""
+
+        abspath = os.path.abspath(os.path.join(self.cwd, self.arg))
+
+        # If that path is within topsrcdir or topobjdir, return an equivalent
+        # path relative to that base directory.
+        for base_dir in [self.topobjdir, self.topsrcdir]:
+            if abspath.startswith(os.path.abspath(base_dir)):
+                return mozpack.path.relpath(abspath, base_dir)
+
+        return mozpack.path.normsep(self.arg)
+
+    def srcdir_path(self):
+        return mozpack.path.join(self.topsrcdir, self.relpath())
+
+    def objdir_path(self):
+        return mozpack.path.join(self.topobjdir, self.relpath())

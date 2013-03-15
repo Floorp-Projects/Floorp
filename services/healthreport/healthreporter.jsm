@@ -28,6 +28,8 @@ Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/TelemetryStopwatch.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
+                                  "resource://gre/modules/UpdateChannel.jsm");
 
 // Oldest year to allow in date preferences. This module was implemented in
 // 2012 and no dates older than that should be encountered.
@@ -611,8 +613,9 @@ AbstractHealthReporter.prototype = Object.freeze({
     this._log.info("Producing JSON payload for " + pingDateString);
 
     let o = {
-      version: 1,
+      version: 2,
       thisPingDate: pingDateString,
+      geckoAppInfo: this.obtainAppInfo(this._log),
       data: {last: {}, days: {}},
     };
 
@@ -783,6 +786,52 @@ AbstractHealthReporter.prototype = Object.freeze({
 
   _now: function _now() {
     return new Date();
+  },
+
+  // These are stolen from AppInfoProvider.
+  appInfoVersion: 1,
+  appInfoFields: {
+    // From nsIXULAppInfo.
+    vendor: "vendor",
+    name: "name",
+    id: "ID",
+    version: "version",
+    appBuildID: "appBuildID",
+    platformVersion: "platformVersion",
+    platformBuildID: "platformBuildID",
+
+    // From nsIXULRuntime.
+    os: "OS",
+    xpcomabi: "XPCOMABI",
+  },
+
+  /**
+   * Statically return a bundle of app info data, a subset of that produced by
+   * AppInfoProvider._populateConstants. This allows us to more usefully handle
+   * payloads that, due to error, contain no data.
+   *
+   * Returns a very sparse object if Services.appinfo is unavailable.
+   */
+  obtainAppInfo: function () {
+    let out = {"_v": this.appInfoVersion};
+    try {
+      let ai = Services.appinfo;
+      for (let [k, v] in Iterator(this.appInfoFields)) {
+        out[k] = ai[v];
+      }
+    } catch (ex) {
+      this._log.warn("Could not obtain Services.appinfo: " +
+                     CommonUtils.exceptionStr(ex));
+    }
+
+    try {
+      out["updateChannel"] = UpdateChannel.get();
+    } catch (ex) {
+      this._log.warn("Could not obtain update channel: " +
+                     CommonUtils.exceptionStr(ex));
+    }
+
+    return out;
   },
 });
 

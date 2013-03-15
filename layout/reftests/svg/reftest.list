@@ -32,7 +32,7 @@ include svg-integration/reftest.list
 == clip-02a.svg clip-02-ref.svg
 == clip-02b.svg clip-02-ref.svg
 == clipPath-advanced-01.svg pass.svg
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),1,2) == clipPath-and-shape-rendering-01.svg clipPath-and-shape-rendering-01-ref.svg # bug 614840
+fuzzy-if(/^Windows\x20NT\x206\.[12]/.test(http.oscpu),1,2) == clipPath-and-shape-rendering-01.svg clipPath-and-shape-rendering-01-ref.svg # bug 614840
 == clipPath-and-transform-01.svg pass.svg
 == clipPath-basic-01.svg pass.svg
 == clipPath-basic-02.svg pass.svg
@@ -78,8 +78,8 @@ fuzzy-if(Android,4,44) skip-if(B2G) == dynamic-clipPath-01.svg pass.svg
 == dynamic-feFlood-01.svg pass.svg
 == dynamic-feImage-01.svg pass.svg
 == dynamic-fill-01.svg dynamic-fill-01-ref.svg
-skip-if(B2G) == dynamic-filter-contents-01a.svg dynamic-filter-contents-01-ref.svg
-skip-if(B2G) == dynamic-filter-contents-01b.svg dynamic-filter-contents-01-ref.svg
+skip-if(B2G) fuzzy-if(d2d,1,10000) == dynamic-filter-contents-01a.svg dynamic-filter-contents-01-ref.svg
+skip-if(B2G) fuzzy-if(d2d,1,10000) == dynamic-filter-contents-01b.svg dynamic-filter-contents-01-ref.svg
 skip-if(B2G) == dynamic-gradient-contents-01.svg pass.svg
 skip-if(B2G) == dynamic-gradient-contents-02.svg pass.svg
 skip-if(B2G) == dynamic-inner-svg-01.svg pass.svg
@@ -191,10 +191,10 @@ fuzzy-if(Android,9,980) == gradient-live-01d.svg gradient-live-01-ref.svg
 == mask-containing-masked-content-01.svg pass.svg
 == mask-transformed-01.svg mask-transformed-01-ref.svg
 == mask-transformed-02.svg pass.svg
-pref(layout.css.masking.enabled,true) == mask-type-01.svg mask-type-01-ref.svg
-pref(layout.css.masking.enabled,true) == mask-type-02.svg mask-type-01-ref.svg
-pref(layout.css.masking.enabled,true) == mask-type-03.svg mask-type-01-ref.svg
-pref(layout.css.masking.enabled,true) == mask-type-04.svg mask-type-01-ref.svg
+pref(layout.css.masking.enabled,true) fuzzy-if(d2d,1,6400) == mask-type-01.svg mask-type-01-ref.svg
+pref(layout.css.masking.enabled,true) fuzzy-if(d2d,1,6400) == mask-type-02.svg mask-type-01-ref.svg
+pref(layout.css.masking.enabled,true) fuzzy-if(d2d,1,6400) == mask-type-03.svg mask-type-01-ref.svg
+pref(layout.css.masking.enabled,true) fuzzy-if(d2d,1,6400) == mask-type-04.svg mask-type-01-ref.svg
 == nested-viewBox-01.svg pass.svg
 == nesting-invalid-01.svg nesting-invalid-01-ref.svg
 == non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg 
@@ -211,7 +211,7 @@ random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-02.svg objectBoundin
 == objectBoundingBox-and-pattern-02.svg pass.svg
 == objectBoundingBox-and-pattern-03.svg objectBoundingBox-and-pattern-03-ref.svg
 == opacity-and-gradient-01.svg pass.svg
-== opacity-and-gradient-02.svg opacity-and-gradient-02-ref.svg
+skip-if(d2d) == opacity-and-gradient-02.svg opacity-and-gradient-02-ref.svg
 == opacity-and-pattern-01.svg pass.svg
 == opacity-and-transform-01.svg opacity-and-transform-01-ref.svg
 == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg 

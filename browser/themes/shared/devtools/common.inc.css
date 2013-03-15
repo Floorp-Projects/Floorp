@@ -1,0 +1,85 @@
+%if 0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+
+/* Autocomplete Popup */
+/* Dark and light theme */
+
+.devtools-autocomplete-popup {
+  -moz-appearance: none !important;
+  border: 1px solid hsl(210,11%,10%);
+  box-shadow: 0 1px 0 hsla(209,29%,72%,.25) inset;
+  background-color: transparent;
+  background-image: linear-gradient(to bottom, hsla(209,18%,18%,0.9), hsl(210,11%,16%));
+  border-radius: 3px;
+%ifdef XP_LINUX
+  max-height: 32rem;
+%else
+  max-height: 40rem;
+%endif
+}
+
+.devtools-autocomplete-listbox {
+  -moz-appearance: none !important;
+  background-color: transparent;
+  border-width: 0px !important;
+}
+
+.devtools-autocomplete-listbox > richlistitem,
+.devtools-autocomplete-listbox > richlistitem[selected] {
+  width: 100%;
+  background-color: transparent;
+  border-radius: 4px;
+}
+
+.devtools-autocomplete-listbox.dark-theme > richlistitem[selected],
+.devtools-autocomplete-listbox.dark-theme > richlistitem:hover {
+  background-color: rgba(0,0,0,0.5);
+}
+
+.devtools-autocomplete-listbox.dark-theme > richlistitem[selected] > .autocomplete-value,
+.devtools-autocomplete-listbox:focus.dark-theme > richlistitem[selected] > .initial-value {
+  color: hsl(208,100%,60%);
+}
+
+.devtools-autocomplete-listbox.dark-theme > richlistitem[selected] > label {
+  color: #eee;
+}
+
+.devtools-autocomplete-listbox.dark-theme > richlistitem > label {
+  color: #ccc;
+}
+
+.devtools-autocomplete-listbox > richlistitem > .initial-value,
+.devtools-autocomplete-listbox > richlistitem > .autocomplete-value {
+  margin: 0;
+  padding: 1px 0;
+}
+
+.devtools-autocomplete-listbox > richlistitem > .autocomplete-count {
+  text-align: right;
+}
+
+/* Rest of the light theme */
+
+.devtools-autocomplete-popup.light-theme {
+  border: 1px solid hsl(210,24%,90%);
+  box-shadow: 0 1px 0 hsla(209,29%,90%,.25) inset;
+  background-image: linear-gradient(to bottom, hsla(209,18%,100%,0.9), hsl(210,24%,95%));
+}
+
+.devtools-autocomplete-listbox.light-theme > richlistitem[selected],
+.devtools-autocomplete-listbox.light-theme > richlistitem:hover {
+  background-color: rgba(128,128,128,0.3);
+}
+
+.devtools-autocomplete-listbox.light-theme > richlistitem[selected] > .autocomplete-value,
+.devtools-autocomplete-listbox:focus.light-theme > richlistitem[selected] > .initial-value {
+  color: #222;
+}
+
+.devtools-autocomplete-listbox.light-theme > richlistitem > label {
+  color: #666;
+}
