@@ -26,11 +26,7 @@ this.AccessFu = {
    * mode is started.
    */
   attach: function attach(aWindow) {
-    if (this.chromeWin)
-      // XXX: only supports attaching to one window now.
-      throw new Error('Only one window could be attached to AccessFu');
-
-    this.chromeWin = aWindow;
+    Utils.init(aWindow);
 
     this.prefsBranch = Cc['@mozilla.org/preferences-service;1']
       .getService(Ci.nsIPrefService).getBranch('accessibility.accessfu.');
@@ -77,26 +73,26 @@ this.AccessFu = {
 
     Logger.info('enable');
 
-    for each (let mm in Utils.getAllMessageManagers(this.chromeWin))
+    for each (let mm in Utils.AllMessageManagers)
       this._loadFrameScript(mm);
 
     // Add stylesheet
     let stylesheetURL = 'chrome://global/content/accessibility/AccessFu.css';
-    this.stylesheet = this.chromeWin.document.createProcessingInstruction(
+    let stylesheet = Utils.win.document.createProcessingInstruction(
       'xml-stylesheet', 'href="' + stylesheetURL + '" type="text/css"');
-    this.chromeWin.document.insertBefore(this.stylesheet,
-                                         this.chromeWin.document.firstChild);
+    Utils.win.document.insertBefore(stylesheet, Utils.win.document.firstChild);
+    this.stylesheet = Cu.getWeakReference(stylesheet);
 
-    Input.attach(this.chromeWin);
-    Output.attach(this.chromeWin);
-    TouchAdapter.attach(this.chromeWin);
+    Input.start();
+    Output.start();
+    TouchAdapter.start();
 
     Services.obs.addObserver(this, 'remote-browser-frame-shown', false);
     Services.obs.addObserver(this, 'Accessibility:NextObject', false);
     Services.obs.addObserver(this, 'Accessibility:PreviousObject', false);
     Services.obs.addObserver(this, 'Accessibility:Focus', false);
-    this.chromeWin.addEventListener('TabOpen', this);
-    this.chromeWin.addEventListener('TabSelect', this);
+    Utils.win.addEventListener('TabOpen', this);
+    Utils.win.addEventListener('TabSelect', this);
   },
 
   /**
@@ -110,15 +106,17 @@ this.AccessFu = {
 
     Logger.info('disable');
 
-    this.chromeWin.document.removeChild(this.stylesheet);
-    for each (let mm in Utils.getAllMessageManagers(this.chromeWin))
+    Utils.win.document.removeChild(this.stylesheet.get());
+
+    for each (let mm in Utils.AllMessageManagers)
       mm.sendAsyncMessage('AccessFu:Stop');
 
-    Input.detach();
-    TouchAdapter.detach(this.chromeWin);
+    Input.stop();
+    Output.stop();
+    TouchAdapter.stop();
 
-    this.chromeWin.removeEventListener('TabOpen', this);
-    this.chromeWin.removeEventListener('TabSelect', this);
+    Utils.win.removeEventListener('TabOpen', this);
+    Utils.win.removeEventListener('TabSelect', this);
 
     Services.obs.removeObserver(this, 'remote-browser-frame-shown');
     Services.obs.removeObserver(this, 'Accessibility:NextObject');
@@ -194,7 +192,7 @@ this.AccessFu = {
       case 'Accessibility:Focus':
         this._focused = JSON.parse(aData);
         if (this._focused) {
-          let mm = Utils.getMessageManager(Utils.getCurrentBrowser(this.chromeWin));
+          let mm = Utils.getMessageManager(Utils.CurrentBrowser);
           mm.sendAsyncMessage('AccessFu:VirtualCursor',
                               {action: 'whereIsIt', move: true});
         }
@@ -234,11 +232,11 @@ this.AccessFu = {
       case 'TabSelect':
       {
         if (this._focused) {
-          let mm = Utils.getMessageManager(Utils.getCurrentBrowser(this.chromeWin));
+          let mm = Utils.getMessageManager(Utils.CurrentBrowser);
           // We delay this for half a second so the awesomebar could close,
           // and we could use the current coordinates for the content item.
           // XXX TODO figure out how to avoid magic wait here.
-          this.chromeWin.setTimeout(
+          Utils.win.setTimeout(
             function () {
               mm.sendAsyncMessage('AccessFu:VirtualCursor', {action: 'whereIsIt'});
             }, 500);
@@ -250,7 +248,7 @@ this.AccessFu = {
 
   announce: function announce(aAnnouncement) {
     this._output(Presentation.announce(aAnnouncement),
-                 Utils.getCurrentBrowser(this.chromeWin));
+                 Utils.CurrentBrowser);
   },
 
   // So we don't enable/disable twice
@@ -261,9 +259,20 @@ this.AccessFu = {
 };
 
 var Output = {
-  attach: function attach(aWindow) {
-    this.chromeWin = aWindow;
+  start: function start() {
     Cu.import('resource://gre/modules/Geometry.jsm');
+  },
+
+  stop: function stop() {
+    if (this.highlightBox) {
+      Utils.win.document.documentElement.removeChild(this.highlightBox.get());
+      delete this.highlightBox;
+    }
+
+    if (this.announceBox) {
+      Utils.win.document.documentElement.removeChild(this.announceBox.get());
+      delete this.announceBox;
+    }
   },
 
   Speech: function Speech(aDetails, aBrowser) {
@@ -275,66 +284,75 @@ var Output = {
     switch (aDetails.method) {
       case 'showBounds':
       {
+        let highlightBox = null;
         if (!this.highlightBox) {
           // Add highlight box
-          this.highlightBox = this.chromeWin.document.
+          highlightBox = Utils.win.document.
             createElementNS('http://www.w3.org/1999/xhtml', 'div');
-          this.chromeWin.document.documentElement.appendChild(this.highlightBox);
-          this.highlightBox.id = 'virtual-cursor-box';
+          Utils.win.document.documentElement.appendChild(highlightBox);
+          highlightBox.id = 'virtual-cursor-box';
 
           // Add highlight inset for inner shadow
-          let inset = this.chromeWin.document.
+          let inset = Utils.win.document.
             createElementNS('http://www.w3.org/1999/xhtml', 'div');
           inset.id = 'virtual-cursor-inset';
 
-          this.highlightBox.appendChild(inset);
+          highlightBox.appendChild(inset);
+          this.highlightBox = Cu.getWeakReference(highlightBox);
+        } else {
+          highlightBox = this.highlightBox.get();
         }
 
         let padding = aDetails.padding;
         let r = this._adjustBounds(aDetails.bounds, aBrowser);
 
         // First hide it to avoid flickering when changing the style.
-        this.highlightBox.style.display = 'none';
-        this.highlightBox.style.top = (r.top - padding) + 'px';
-        this.highlightBox.style.left = (r.left - padding) + 'px';
-        this.highlightBox.style.width = (r.width + padding*2) + 'px';
-        this.highlightBox.style.height = (r.height + padding*2) + 'px';
-        this.highlightBox.style.display = 'block';
+        highlightBox.style.display = 'none';
+        highlightBox.style.top = (r.top - padding) + 'px';
+        highlightBox.style.left = (r.left - padding) + 'px';
+        highlightBox.style.width = (r.width + padding*2) + 'px';
+        highlightBox.style.height = (r.height + padding*2) + 'px';
+        highlightBox.style.display = 'block';
 
         break;
       }
       case 'hideBounds':
       {
-        if (this.highlightBox)
-          this.highlightBox.style.display = 'none';
+        let highlightBox = this.highlightBox ? this.highlightBox.get() : null;
+        if (highlightBox)
+          highlightBox.get().style.display = 'none';
         break;
       }
       case 'showAnnouncement':
       {
-        if (!this.announceBox) {
-          this.announceBox = this.chromeWin.document.
+        let announceBox = this.announceBox ? this.announceBox.get() : null;
+        if (!announceBox) {
+          announceBox = Utils.win.document.
             createElementNS('http://www.w3.org/1999/xhtml', 'div');
-          this.announceBox.id = 'announce-box';
-          this.chromeWin.document.documentElement.appendChild(this.announceBox);
+          announceBox.id = 'announce-box';
+          Utils.win.document.documentElement.appendChild(announceBox);
+          this.announceBox = Cu.getWeakReference(announceBox);
         }
 
-        this.announceBox.innerHTML = '<div>' + aDetails.text + '</div>';
-        this.announceBox.classList.add('showing');
+        announceBox.innerHTML = '<div>' + aDetails.text + '</div>';
+        announceBox.classList.add('showing');
 
         if (this._announceHideTimeout)
-          this.chromeWin.clearTimeout(this._announceHideTimeout);
+          Utils.win.clearTimeout(this._announceHideTimeout);
 
         if (aDetails.duration > 0)
-          this._announceHideTimeout = this.chromeWin.setTimeout(
+          this._announceHideTimeout = Utils.win.setTimeout(
             function () {
-              this.announceBox.classList.remove('showing');
+              announceBox.classList.remove('showing');
               this._announceHideTimeout = 0;
             }.bind(this), aDetails.duration);
         break;
       }
       case 'hideAnnouncement':
       {
-        this.announceBox.classList.remove('showing');
+        let announceBox = this.announceBox ? this.announceBox.get() : null;
+        if (announceBox)
+          announceBox.classList.remove('showing');
         break;
       }
     }
@@ -353,14 +371,14 @@ var Output = {
   },
 
   Haptic: function Haptic(aDetails, aBrowser) {
-    this.chromeWin.navigator.vibrate(aDetails.pattern);
+    Utils.win.navigator.vibrate(aDetails.pattern);
   },
 
   _adjustBounds: function(aJsonBounds, aBrowser) {
     let bounds = new Rect(aJsonBounds.left, aJsonBounds.top,
                           aJsonBounds.right - aJsonBounds.left,
                           aJsonBounds.bottom - aJsonBounds.top);
-    let vp = Utils.getViewport(this.chromeWin) || { zoom: 1.0, offsetY: 0 };
+    let vp = Utils.getViewport(Utils.win) || { zoom: 1.0, offsetY: 0 };
     let browserOffset = aBrowser.getBoundingClientRect();
 
     return bounds.translate(browserOffset.left, browserOffset.top).
@@ -371,15 +389,14 @@ var Output = {
 var Input = {
   editState: {},
 
-  attach: function attach(aWindow) {
-    this.chromeWin = aWindow;
-    this.chromeWin.document.addEventListener('keypress', this, true);
-    this.chromeWin.addEventListener('mozAccessFuGesture', this, true);
+  start: function start() {
+    Utils.win.document.addEventListener('keypress', this, true);
+    Utils.win.addEventListener('mozAccessFuGesture', this, true);
   },
 
-  detach: function detach() {
-    this.chromeWin.document.removeEventListener('keypress', this, true);
-    this.chromeWin.removeEventListener('mozAccessFuGesture', this, true);
+  stop: function stop() {
+    Utils.win.document.removeEventListener('keypress', this, true);
+    Utils.win.removeEventListener('mozAccessFuGesture', this, true);
   },
 
   handleEvent: function Input_handleEvent(aEvent) {
@@ -430,7 +447,7 @@ var Input = {
         this.scroll(1);
         break;
       case 'explore2':
-        Utils.getCurrentBrowser(this.chromeWin).contentWindow.scrollBy(
+        Utils.CurrentBrowser.contentWindow.scrollBy(
           -aGesture.deltaX, -aGesture.deltaY);
         break;
       case 'swiperight3':
@@ -525,7 +542,7 @@ var Input = {
   },
 
   moveCursor: function moveCursor(aAction, aRule, aInputType, aX, aY) {
-    let mm = Utils.getMessageManager(Utils.getCurrentBrowser(this.chromeWin));
+    let mm = Utils.getMessageManager(Utils.CurrentBrowser);
     mm.sendAsyncMessage('AccessFu:VirtualCursor',
                         {action: aAction, rule: aRule,
                          x: aX, y: aY, origin: 'top',
@@ -533,7 +550,7 @@ var Input = {
   },
 
   activateCurrent: function activateCurrent() {
-    let mm = Utils.getMessageManager(Utils.getCurrentBrowser(this.chromeWin));
+    let mm = Utils.getMessageManager(Utils.CurrentBrowser);
     mm.sendAsyncMessage('AccessFu:Activate', {});
   },
 
@@ -542,7 +559,7 @@ var Input = {
   },
 
   scroll: function scroll(aPage, aHorizontal) {
-    let mm = Utils.getMessageManager(Utils.getCurrentBrowser(this.chromeWin));
+    let mm = Utils.getMessageManager(Utils.CurrentBrowser);
     mm.sendAsyncMessage('AccessFu:Scroll', {page: aPage, horizontal: aHorizontal, origin: 'top'});
   },
 
