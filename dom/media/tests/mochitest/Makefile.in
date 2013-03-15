@@ -11,6 +11,11 @@ relativesrcdir = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \
+  test_dataChannel_basicAudio.html \
+  test_dataChannel_basicAudioVideo.html \
+  test_dataChannel_basicAudioVideoCombined.html \
+  test_dataChannel_basicDataOnly.html \
+  test_dataChannel_basicVideo.html \
   test_dataChannel_noOffer.html \
   test_getUserMedia_exceptions.html \
   test_getUserMedia_basicAudio.html \
@@ -50,6 +55,7 @@ MOCHITEST_FILES = \
   head.js \
   mediaStreamPlayback.js \
   pc.js \
+  templates.js \
   $(NULL)
 
 # The following tests are leaking and cannot be run by default yet

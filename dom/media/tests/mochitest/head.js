@@ -166,6 +166,29 @@ function checkMediaStreamTracks(constraints, mediaStream) {
 }
 
 /**
+ * Utility methods
+ */
+
+/**
+ * Returns the contents of a blob as text
+ *
+ * @param {Blob} blob
+          The blob to retrieve the contents from
+ * @param {Function} onSuccess
+          Callback with the blobs content as parameter
+ */
+function getBlobContent(blob, onSuccess) {
+  var reader = new FileReader();
+
+  // Listen for 'onloadend' which will always be called after a success or failure
+  reader.onloadend = function (event) {
+    onSuccess(event.target.result);
+  };
+
+  reader.readAsText(blob);
+}
+
+/**
  * Generates a callback function fired only under unexpected circumstances
  * while running the tests. The generated function kills off the test as well
  * gracefully.
