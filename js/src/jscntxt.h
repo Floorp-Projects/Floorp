@@ -506,9 +506,9 @@ class PerThreadData : public js::PerThreadDataFriendFields
     }
 
     class AsmJSActivationStackLock {
+# ifdef JS_THREADSAFE
         PerThreadData &data_;
       public:
-# ifdef JS_THREADSAFE
         AsmJSActivationStackLock(PerThreadData &data) : data_(data) {
             PR_Lock(data_.asmJSActivationStackLock_);
         }
@@ -516,8 +516,8 @@ class PerThreadData : public js::PerThreadDataFriendFields
             PR_Unlock(data_.asmJSActivationStackLock_);
         }
 # else
-        AsmJSActivationStackLock(PerThreadData &data) : data_(data) {}
-        ~AsmJSActivationStackLock() {}
+      public:
+        AsmJSActivationStackLock(PerThreadData &) {}
 # endif
     };
 
