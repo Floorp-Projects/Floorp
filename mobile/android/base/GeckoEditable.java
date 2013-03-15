@@ -297,7 +297,7 @@ final class GeckoEditable
         LayerView v = GeckoApp.mAppContext.getLayerView();
         mListener = GeckoInputConnection.create(v, this);
 
-        mIcRunHandler = mIcPostHandler = GeckoApp.mAppContext.mMainHandler;
+        mIcRunHandler = mIcPostHandler = ThreadUtils.getUiHandler();
     }
 
     private boolean onIcThread() {

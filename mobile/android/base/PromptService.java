@@ -273,7 +273,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
     @Override
     public void handleMessage(String event, final JSONObject message) {
         // The dialog must be created on the UI thread.
-        GeckoAppShell.getMainHandler().post(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 processMessage(message);

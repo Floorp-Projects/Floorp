@@ -5,13 +5,18 @@
 
 package org.mozilla.gecko.util;
 
+import android.os.Handler;
+
 public final class ThreadUtils {
     private static Thread sUiThread;
     private static Thread sGeckoThread;
     private static Thread sBackgroundThread;
 
-    public static void setUiThread(Thread thread) {
+    private static Handler sUiHandler;
+
+    public static void setUiThread(Thread thread, Handler handler) {
         sUiThread = thread;
+        sUiHandler = handler;
     }
 
     public static void setGeckoThread(Thread thread) {
@@ -24,6 +29,14 @@ public final class ThreadUtils {
 
     public static Thread getUiThread() {
         return sUiThread;
+    }
+
+    public static Handler getUiHandler() {
+        return sUiHandler;
+    }
+
+    public static void postToUiThread(Runnable runnable) {
+        sUiHandler.post(runnable);
     }
 
     public static Thread getGeckoThread() {
