@@ -579,7 +579,7 @@ public class AwesomeBar extends GeckoActivity {
                 editPrompt.setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int whichButton) {
-                        (new UiAsyncTask<Void, Void, Void>(GeckoAppShell.getHandler()) {
+                        (new UiAsyncTask<Void, Void, Void>(ThreadUtils.getBackgroundHandler()) {
                             @Override
                             public Void doInBackground(Void... params) {
                                 String newUrl = locationText.getText().toString().trim();
@@ -629,7 +629,7 @@ public class AwesomeBar extends GeckoActivity {
                 break;
             }
             case R.id.remove_bookmark: {
-                (new UiAsyncTask<Void, Void, Void>(GeckoAppShell.getHandler()) {
+                (new UiAsyncTask<Void, Void, Void>(ThreadUtils.getBackgroundHandler()) {
                     private boolean mInReadingList;
 
                     @Override
@@ -659,7 +659,7 @@ public class AwesomeBar extends GeckoActivity {
                 break;
             }
             case R.id.remove_history: {
-                (new UiAsyncTask<Void, Void, Void>(GeckoAppShell.getHandler()) {
+                (new UiAsyncTask<Void, Void, Void>(ThreadUtils.getBackgroundHandler()) {
                     @Override
                     public Void doInBackground(Void... params) {
                         BrowserDB.removeHistoryEntry(getContentResolver(), id);

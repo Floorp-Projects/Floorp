@@ -38,8 +38,8 @@ import org.mozilla.gecko.db.DBUtils;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.ProfileMigrator;
 import org.mozilla.gecko.sync.Utils;
-import org.mozilla.gecko.util.GeckoBackgroundThread;
 import org.mozilla.gecko.util.GeckoJarReader;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.SearchManager;
 import android.content.ContentProvider;
@@ -1026,7 +1026,7 @@ public class BrowserProvider extends ContentProvider {
                     }
 
                     // create icons in a separate thread to avoid blocking about:home on startup
-                    GeckoBackgroundThread.getHandler().post(new Runnable() {
+                    ThreadUtils.postToBackgroundThread(new Runnable() {
                         @Override
                         public void run() {
                             try {
@@ -1069,7 +1069,7 @@ public class BrowserProvider extends ContentProvider {
                     createBookmark(db, title, url, pos);
 
                     // create icons in a separate thread to avoid blocking about:home on startup
-                    GeckoBackgroundThread.getHandler().post(new Runnable() {
+                    ThreadUtils.postToBackgroundThread(new Runnable() {
                         @Override
                         public void run() {
                             Bitmap icon = getDefaultFaviconFromPath(name);
@@ -1993,7 +1993,7 @@ public class BrowserProvider extends ContentProvider {
     public boolean onCreate() {
         debug("Creating BrowserProvider");
 
-        GeckoBackgroundThread.post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 // Kick this off early. It is synchronized so that other callers will wait

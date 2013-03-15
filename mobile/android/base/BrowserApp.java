@@ -10,7 +10,6 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.util.UiAsyncTask;
-import org.mozilla.gecko.util.GeckoBackgroundThread;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONArray;
@@ -377,7 +376,7 @@ abstract public class BrowserApp extends GeckoApp
             return;
         }
 
-        GeckoAppShell.getHandler().post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 BrowserDB.addReadingListItem(getContentResolver(), title, url);
@@ -387,7 +386,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     void handleReaderRemoved(final String url) {
-        GeckoAppShell.getHandler().post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 BrowserDB.removeReadingListItemWithURL(getContentResolver(), url);
@@ -1198,7 +1197,7 @@ abstract public class BrowserApp extends GeckoApp
                 item.setIcon(drawable);
             }
             else if (info.icon.startsWith("jar:") || info.icon.startsWith("file://")) {
-                GeckoAppShell.getHandler().post(new Runnable() {
+                ThreadUtils.postToBackgroundThread(new Runnable() {
                     @Override
                     public void run() {
                         try {
@@ -1548,7 +1547,7 @@ abstract public class BrowserApp extends GeckoApp
             return;
         }
 
-        (new UiAsyncTask<Void, Void, Boolean>(GeckoAppShell.getHandler()) {
+        (new UiAsyncTask<Void, Void, Boolean>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public synchronized Boolean doInBackground(Void... params) {
                 // Check to see how many times the app has been launched.
@@ -1575,7 +1574,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void resetFeedbackLaunchCount() {
-        GeckoBackgroundThread.post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public synchronized void run() {
                 SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
@@ -1585,7 +1584,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void getLastUrl() {
-        (new UiAsyncTask<Void, Void, String>(GeckoAppShell.getHandler()) {
+        (new UiAsyncTask<Void, Void, String>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public synchronized String doInBackground(Void... params) {
                 // Get the most recent URL stored in browser history.
