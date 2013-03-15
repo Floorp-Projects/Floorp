@@ -1480,7 +1480,7 @@ SourceActor.prototype = {
   _loadSource: function SA__loadSource() {
     let deferred = defer();
     let scheme;
-    let url = this._url;
+    let url = this._url.split(" -> ").pop();
 
     try {
       scheme = Services.io.extractScheme(url);
