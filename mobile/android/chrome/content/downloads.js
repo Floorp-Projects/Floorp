@@ -3,12 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+function dump(a) {
+  Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(a);
+}
+
 const URI_GENERIC_ICON_DOWNLOAD = "drawable://alert_download";
 
 var Downloads = {
   _initialized: false,
   _dlmgr: null,
   _progressAlert: null,
+  _privateDownloads: [],
 
   _getLocalFile: function dl__getLocalFile(aFileURI) {
     // if this is a URL, get the file from that
@@ -27,6 +32,7 @@ var Downloads = {
     this._progressAlert = new AlertDownloadProgressListener();
     this._dlmgr.addPrivacyAwareListener(this._progressAlert);
     Services.obs.addObserver(this, "xpcom-shutdown", true);
+    Services.obs.addObserver(this, "last-pb-context-exited", true);
   },
 
   openDownload: function dl_openDownload(aFileURI) {
@@ -80,13 +86,28 @@ var Downloads = {
     if (!aIcon)
       aIcon = URI_GENERIC_ICON_DOWNLOAD;
 
+    if (aDownload.isPrivate) {
+      this._privateDownloads.push(aDownload);
+    }
+
     var notifier = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
     notifier.showAlertNotification(aIcon, aTitle, aMessage, true, "", observer,
                                    aDownload.target.spec.replace("file:", "download:"));
   },
 
+  // observer for last-pb-context-exited
   observe: function dl_observe(aSubject, aTopic, aData) {
-    this._dlmgr.removeListener(this._progressAlert);
+    let alertsService = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+    let progressListener = alertsService.QueryInterface(Ci.nsIAlertsProgressListener);
+    let download;
+    while (download = this._privateDownloads.pop()) {
+      try {
+        let notificationName = download.target.spec.replace("file:", "download:");
+        progressListener.onCancel(notificationName);
+      } catch (e) {
+        dump("Error removing private download: " + e);
+      }
+    }
   },
 
   QueryInterface: function (aIID) {
@@ -146,6 +167,13 @@ AlertDownloadProgressListener.prototype = {
         let progressListener = alertsService.QueryInterface(Ci.nsIAlertsProgressListener);
         let notificationName = aDownload.target.spec.replace("file:", "download:");
         progressListener.onCancel(notificationName);
+
+        if (aDownload.isPrivate) {
+          let index = this._privateDownloads.indexOf(aDownload);
+          if (index != -1) {
+            this._privateDownloads.splice(index, 1);
+          }
+        }
 
         if (state == Ci.nsIDownloadManager.DOWNLOAD_FINISHED) {
           Downloads.showAlert(aDownload, Strings.browser.GetStringFromName("alertDownloadsDone2"),
