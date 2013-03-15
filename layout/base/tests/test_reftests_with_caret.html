@@ -137,10 +137,13 @@ if (!isWindows) {
   tests.push([ 'bug746993-1.html' , 'bug746993-1-ref.html' ]); // bug 746993
 }
 
+// Disabled on all platforms for too many intermittent failures
+/*
 if (!isWindows && !isOSXMtnLion) {
   tests.push([ 'bug106855-1.html' , 'bug106855-1-ref.html' ]); // bug 682837
   tests.push([ 'bug106855-2.html' , 'bug106855-1-ref.html?' ]); // bug 681138
 }
+*/
 
 tests.push(function() {SpecialPowers.setBoolPref("bidi.browser.ui", true);});
 
