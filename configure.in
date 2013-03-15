@@ -9268,7 +9268,7 @@ if test -n "$_WRAP_MALLOC"; then
 fi
 
 if test -z "$MOZ_NATIVE_NSPR"; then
-    ac_configure_args="$_SUBDIR_CONFIG_ARGS --with-dist-prefix=$MOZ_BUILD_ROOT/dist --with-mozilla"
+    ac_configure_args="$_SUBDIR_CONFIG_ARGS --with-dist-prefix=$MOZ_BUILD_ROOT/dist --with-mozilla --with-android-version=$ANDROID_VERSION"
     if test -z "$MOZ_DEBUG"; then
         ac_configure_args="$ac_configure_args --disable-debug"
     else
