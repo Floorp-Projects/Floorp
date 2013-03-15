@@ -73,7 +73,7 @@ u_strlen(const UChar *s)
 
 struct UEnumeration;
 
-SUPPRESS_UNUSED_WARNING static int32_t
+static int32_t
 uenum_count(UEnumeration *en, UErrorCode *status)
 {
     MOZ_NOT_REACHED("uenum_count: Intl API disabled");
@@ -81,7 +81,7 @@ uenum_count(UEnumeration *en, UErrorCode *status)
     return 0;
 }
 
-SUPPRESS_UNUSED_WARNING static const char *
+static const char *
 uenum_next(UEnumeration *en, int32_t *resultLength, UErrorCode *status)
 {
     MOZ_NOT_REACHED("uenum_next: Intl API disabled");
@@ -89,7 +89,7 @@ uenum_next(UEnumeration *en, int32_t *resultLength, UErrorCode *status)
     return NULL;
 }
 
-SUPPRESS_UNUSED_WARNING static void
+static void
 uenum_close(UEnumeration *en)
 {
     MOZ_NOT_REACHED("uenum_close: Intl API disabled");
@@ -124,21 +124,21 @@ enum UCollationResult {
   UCOL_LESS = -1
 };
 
-SUPPRESS_UNUSED_WARNING static int32_t
+static int32_t
 ucol_countAvailable(void)
 {
     MOZ_NOT_REACHED("ucol_countAvailable: Intl API disabled");
     return 0;
 }
 
-SUPPRESS_UNUSED_WARNING static const char *
+static const char *
 ucol_getAvailable(int32_t localeIndex)
 {
     MOZ_NOT_REACHED("ucol_getAvailable: Intl API disabled");
     return NULL;
 }
 
-SUPPRESS_UNUSED_WARNING static UCollator *
+static UCollator *
 ucol_open(const char *loc, UErrorCode *status)
 {
     MOZ_NOT_REACHED("ucol_open: Intl API disabled");
@@ -146,14 +146,14 @@ ucol_open(const char *loc, UErrorCode *status)
     return NULL;
 }
 
-SUPPRESS_UNUSED_WARNING static void
+static void
 ucol_setAttribute(UCollator *coll, UColAttribute attr, UColAttributeValue value, UErrorCode *status)
 {
     MOZ_NOT_REACHED("ucol_setAttribute: Intl API disabled");
     *status = U_UNSUPPORTED_ERROR;
 }
 
-SUPPRESS_UNUSED_WARNING static UCollationResult
+static UCollationResult
 ucol_strcoll(const UCollator *coll, const UChar *source, int32_t sourceLength,
              const UChar *target, int32_t targetLength)
 {
@@ -161,13 +161,13 @@ ucol_strcoll(const UCollator *coll, const UChar *source, int32_t sourceLength,
     return (UCollationResult) 0;
 }
 
-SUPPRESS_UNUSED_WARNING static void
+static void
 ucol_close(UCollator *coll)
 {
     MOZ_NOT_REACHED("ucol_close: Intl API disabled");
 }
 
-SUPPRESS_UNUSED_WARNING static UEnumeration *
+static UEnumeration *
 ucol_getKeywordValuesForLocale(const char *key, const char *locale, UBool commonlyUsed,
                                UErrorCode *status)
 {
