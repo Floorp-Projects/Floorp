@@ -63,10 +63,10 @@ function setWindowName()
   //  Get the cert from the cert database
   var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
   var myName = self.name;
-  bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+  bundle = document.getElementById("pippki_bundle");
   var cert;
 
-  var certDetails = bundle.GetStringFromName('certDetails');
+  var certDetails = bundle.getString('certDetails');
   if (myName != "") {
     document.title = certDetails + '"' + myName + '"'; // XXX l10n?
     //  Get the token
@@ -154,7 +154,7 @@ function addAttributeFromCert(nodeName, value)
 {
   var node = document.getElementById(nodeName);
   if (!value) {
-    value = bundle.GetStringFromName('notPresent');  
+    value = bundle.getString('notPresent');
   }
   node.setAttribute('value',value)
 }
@@ -203,23 +203,23 @@ function DisplayVerificationData(cert, result)
   var count = o2.value;
   var usageList = o3.value;
   if (verifystate == cert.VERIFIED_OK) {
-    verifystr = bundle.GetStringFromName('certVerified');
+    verifystr = bundle.getString('certVerified');
   } else if (verifystate == cert.CERT_REVOKED) {
-    verifystr = bundle.GetStringFromName('certNotVerified_CertRevoked');
+    verifystr = bundle.getString('certNotVerified_CertRevoked');
   } else if (verifystate == cert.CERT_EXPIRED) {
-    verifystr = bundle.GetStringFromName('certNotVerified_CertExpired');
+    verifystr = bundle.getString('certNotVerified_CertExpired');
   } else if (verifystate == cert.CERT_NOT_TRUSTED) {
-    verifystr = bundle.GetStringFromName('certNotVerified_CertNotTrusted');
+    verifystr = bundle.getString('certNotVerified_CertNotTrusted');
   } else if (verifystate == cert.ISSUER_NOT_TRUSTED) {
-    verifystr = bundle.GetStringFromName('certNotVerified_IssuerNotTrusted');
+    verifystr = bundle.getString('certNotVerified_IssuerNotTrusted');
   } else if (verifystate == cert.ISSUER_UNKNOWN) {
-    verifystr = bundle.GetStringFromName('certNotVerified_IssuerUnknown');
+    verifystr = bundle.getString('certNotVerified_IssuerUnknown');
   } else if (verifystate == cert.INVALID_CA) {
-    verifystr = bundle.GetStringFromName('certNotVerified_CAInvalid');
+    verifystr = bundle.getString('certNotVerified_CAInvalid');
   } else if (verifystate == cert.SIGNATURE_ALGORITHM_DISABLED) {
-    verifystr = bundle.GetStringFromName('certNotVerified_AlgorithmDisabled');
+    verifystr = bundle.getString('certNotVerified_AlgorithmDisabled');
   } else { /* if (verifystate == cert.NOT_VERIFIED_UNKNOWN || == USAGE_NOT_ALLOWED) */
-    verifystr = bundle.GetStringFromName('certNotVerified_Unknown');
+    verifystr = bundle.getString('certNotVerified_Unknown');
   }
   var verified=document.getElementById('verified');
   verified.textContent = verifystr;
