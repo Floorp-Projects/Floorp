@@ -4547,7 +4547,15 @@ RIL[REQUEST_OPERATOR] = function REQUEST_OPERATOR(length, options) {
   if (DEBUG) debug("Operator: " + operatorData);
   this._processOperator(operatorData);
 };
-RIL[REQUEST_RADIO_POWER] = null;
+RIL[REQUEST_RADIO_POWER] = function REQUEST_RADIO_POWER(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
+  if (this._isInitialRadioState) {
+    this._isInitialRadioState = false;
+  }
+};
 RIL[REQUEST_DTMF] = null;
 RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS(length, options) {
   this._processSmsSendResult(length, options);
@@ -5069,11 +5077,10 @@ RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RA
 
   // Ensure radio state at boot time.
   if (this._isInitialRadioState) {
-    this._isInitialRadioState = false;
-    if (radioState != RADIO_STATE_OFF) {
-      this.setRadioPower({on: false});
-      return;
-    }
+    // Even radioState is RADIO_STATE_OFF, we still have to maually turn radio off,
+    // otherwise REQUEST_GET_SIM_STATUS will still report CARD_STATE_PRESENT.
+    this.setRadioPower({on: false});
+    return;
   }
 
   let newState;
