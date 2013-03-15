@@ -136,6 +136,8 @@ public:
     return mRawPtr;
   }
 
+  bool operator==(const nsMainThreadPtrHolder<T>& aOther) const { return mRawPtr == aOther.mRawPtr; }
+
   NS_IMETHOD_(nsrefcnt) Release();
   NS_IMETHOD_(nsrefcnt) AddRef();
 
@@ -163,6 +165,7 @@ class nsMainThreadPtrHandle
   nsRefPtr<nsMainThreadPtrHolder<T> > mPtr;
 
   public:
+  nsMainThreadPtrHandle() : mPtr(NULL) {}
   nsMainThreadPtrHandle(nsMainThreadPtrHolder<T> *aHolder) : mPtr(aHolder) {}
   nsMainThreadPtrHandle(const nsMainThreadPtrHandle& aOther) : mPtr(aOther.mPtr) {}
   nsMainThreadPtrHandle& operator=(const nsMainThreadPtrHandle& aOther) {
@@ -183,8 +186,25 @@ class nsMainThreadPtrHandle
     }
     return nullptr;
   }
+  const T* get() const
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (mPtr) {
+      return mPtr.get()->get();
+    }
+    return nullptr;
+  }
+
   operator T*() { return get(); }
   T* operator->() { return get(); }
+
+  // These are safe to call on other threads with appropriate external locking.
+  bool operator==(const nsMainThreadPtrHandle<T>& aOther) const {
+    if (!mPtr || !aOther.mPtr)
+      return mPtr == aOther.mPtr;
+    return *mPtr == *aOther.mPtr;
+  }
+  bool operator!() { return !mPtr; }
 };
 
 #endif
