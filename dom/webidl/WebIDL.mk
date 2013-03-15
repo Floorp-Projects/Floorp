@@ -168,6 +168,7 @@ webidl_files = \
   SVGFilterElement.webidl \
   SVGFilterPrimitiveStandardAttributes.webidl \
   SVGFEBlendElement.webidl \
+  SVGFEDistantLightElement.webidl \
   SVGFEFloodElement.webidl \
   SVGFEFuncAElement.webidl \
   SVGFEFuncBElement.webidl \

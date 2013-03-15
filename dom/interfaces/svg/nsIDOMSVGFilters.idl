@@ -206,12 +206,6 @@ interface nsIDOMSVGFESpecularLightingElement : nsIDOMSVGFilterPrimitiveStandardA
   readonly attribute nsIDOMSVGAnimatedNumber kernelUnitLengthY;
 };
 
-[scriptable, uuid(3265edba-d5b0-4c24-ad89-d6b6c85655bf)]
-interface nsIDOMSVGFEDistantLightElement : nsIDOMSVGElement { 
-  readonly attribute nsIDOMSVGAnimatedNumber azimuth;
-  readonly attribute nsIDOMSVGAnimatedNumber elevation;
-};
-
 [scriptable, uuid(e9bd8308-dc52-438b-a315-a0d545dfeda3)]
 interface nsIDOMSVGFESpotLightElement : nsIDOMSVGElement { 
   readonly attribute nsIDOMSVGAnimatedNumber x;
