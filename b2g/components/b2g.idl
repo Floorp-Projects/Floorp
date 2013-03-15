@@ -40,4 +40,25 @@ interface nsIB2GKeyboard : nsISupports
   void removeFocus();
 
   attribute nsIDOMEventListener onfocuschange;
+
+  // Fires when user moves the cursor, changes the selection, or alters the
+  // composing text length
+  attribute nsIDOMEventListener onselectionchange;
+
+  // The start position of the selection.
+  readonly attribute long selectionStart;
+
+  // The stop position of the selection.
+  readonly attribute long selectionEnd;
+
+  /*
+   * Set the selection range of the the editable text.
+   *
+   * @param start The beginning of the selected text.
+   * @param end The end of the selected text.
+   *
+   * Note that the start position should be less or equal to the end position.
+   * To move the cursor, set the start and end position to the same value.
+   */
+  void setSelectionRange(in long start, in long end);
 };
