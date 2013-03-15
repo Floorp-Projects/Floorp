@@ -352,7 +352,7 @@ public class GeckoAppShell
         e.setAckNeeded(true);
 
         long time = SystemClock.uptimeMillis();
-        boolean isMainThread = (GeckoApp.mAppContext.getMainLooper().getThread() == Thread.currentThread());
+        boolean isUiThread = ThreadUtils.isOnUiThread();
 
         synchronized (sEventAckLock) {
             if (sWaitingForEventAck) {
@@ -374,7 +374,7 @@ public class GeckoAppShell
                 }
                 long waited = SystemClock.uptimeMillis() - time;
                 Log.d(LOGTAG, "Gecko event sync taking too long: " + waited + "ms");
-                if (isMainThread && waited >= 4000) {
+                if (isUiThread && waited >= 4000) {
                     Log.w(LOGTAG, "Gecko event sync took too long, aborting!", new Exception());
                     sWaitingForEventAck = false;
                     break;
