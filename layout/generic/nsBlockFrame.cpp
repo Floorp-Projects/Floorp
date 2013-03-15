@@ -5615,19 +5615,8 @@ nsBlockFrame::StealFrame(nsPresContext* aPresContext,
 
   if ((aChild->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
       aChild->IsFloating()) {
-    MOZ_ASSERT(mFloats.ContainsFrame(aChild) ||
-               (GetPushedFloats() && GetPushedFloats()->ContainsFrame(aChild)),
-               "aChild is not our child");
-    bool removed = mFloats.StartRemoveFrame(aChild);
-    if (!removed) {
-      nsFrameList* list = GetPushedFloats();
-      if (list) {
-        removed = list->ContinueRemoveFrame(aChild);
-        // XXXmats delete the property if the list is now empty?
-      }
-    }
-    MOZ_ASSERT(removed, "StealFrame failed to remove the float");
-    return removed ? NS_OK : NS_ERROR_UNEXPECTED;
+    RemoveFloat(aChild);
+    return NS_OK;
   }
 
   if ((aChild->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)
@@ -6885,28 +6874,7 @@ nsBlockFrame::DoCollectFloats(nsIFrame* aFrame, nsFrameList& aList,
         aFrame->GetType() == nsGkAtoms::placeholderFrame ?
           nsLayoutUtils::GetFloatFromPlaceholder(aFrame) : nullptr;
       if (outOfFlowFrame && outOfFlowFrame->GetParent() == this) {
-        // Floats live in mFloats, or in the PushedFloat or OverflowOutOfFlows
-        // frame list properties.
-#ifdef DEBUG
-        if (!mFloats.ContainsFrame(outOfFlowFrame)) {
-          nsFrameList* list = GetPushedFloats();
-          if (!list || !list->ContainsFrame(outOfFlowFrame)) {
-            list = GetOverflowOutOfFlows();
-            MOZ_ASSERT(list && list->ContainsFrame(outOfFlowFrame),
-                       "the float is not our child");
-          }
-        }
-#endif
-        bool removed = mFloats.StartRemoveFrame(outOfFlowFrame);
-        if (!removed) {
-          nsFrameList* list = GetPushedFloats();
-          removed = list && list->ContinueRemoveFrame(outOfFlowFrame);
-          if (!removed) {
-            nsAutoOOFFrameList oofs(this);
-            removed = oofs.mList.ContinueRemoveFrame(outOfFlowFrame);
-          }
-        }
-        MOZ_ASSERT(removed, "misplaced float child");
+        RemoveFloat(outOfFlowFrame);
         aList.AppendFrame(nullptr, outOfFlowFrame);
         // FIXME: By not pulling floats whose parent is one of our
         // later siblings, are we risking the pushed floats getting
