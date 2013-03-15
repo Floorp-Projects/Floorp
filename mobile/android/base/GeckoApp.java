@@ -18,6 +18,7 @@ import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.GeckoBackgroundThread;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.GeckoEventResponder;
+import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 
 import org.json.JSONArray;
@@ -1372,6 +1373,8 @@ abstract public class GeckoApp
         ((GeckoApplication)getApplication()).initialize();
 
         mAppContext = this;
+        ThreadUtils.setUiThread(Thread.currentThread());
+
         Tabs.getInstance().attachToActivity(this);
         Favicons.getInstance().attachToContext(this);
 
@@ -1632,6 +1635,7 @@ abstract public class GeckoApp
 
         if (!mIsRestoringActivity) {
             sGeckoThread = new GeckoThread(intent, passedUri);
+            ThreadUtils.setGeckoThread(sGeckoThread);
         }
         if (!ACTION_DEBUG.equals(action) &&
             GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching, GeckoThread.LaunchState.Launched)) {
@@ -2637,27 +2641,5 @@ abstract public class GeckoApp
             }
         }
         return false;
-    }
-
-    public static void assertOnUiThread() {
-        Thread uiThread = mAppContext.getMainLooper().getThread();
-        assertOnThread(uiThread);
-    }
-
-    public static void assertOnGeckoThread() {
-        assertOnThread(sGeckoThread);
-    }
-
-    public static void assertOnThread(Thread expectedThread) {
-        Thread currentThread = Thread.currentThread();
-        long currentThreadId = currentThread.getId();
-        long expectedThreadId = expectedThread.getId();
-
-        if (currentThreadId != expectedThreadId) {
-            throw new IllegalThreadStateException("Expected thread " + expectedThreadId + " (\""
-                                                  + expectedThread.getName()
-                                                  + "\"), but running on thread " + currentThreadId
-                                                  + " (\"" + currentThread.getName() + ")");
-        }
     }
 }
