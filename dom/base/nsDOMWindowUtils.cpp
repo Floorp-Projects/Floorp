@@ -2335,6 +2335,19 @@ nsDOMWindowUtils::RestoreNormalRefresh()
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::GetIsTestControllingRefreshes(bool *aResult)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  *aResult =
+    GetPresContext()->RefreshDriver()->IsTestControllingRefreshesEnabled();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::ComputeAnimationDistance(nsIDOMElement* aElement,
                                            const nsAString& aProperty,
                                            const nsAString& aValue1,

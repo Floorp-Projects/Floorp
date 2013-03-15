@@ -254,6 +254,13 @@ Tester.prototype = {
         }
       };
 
+      let winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+      if (winUtils.isTestControllingRefreshes) {
+        this.currentTest.addResult(new testResult(false, "test left refresh driver under test control", "", false));
+        winUtils.restoreNormalRefresh();
+      }
+
       if (this.SimpleTest.isExpectingUncaughtException()) {
         this.currentTest.addResult(new testResult(false, "expectUncaughtException was called but no uncaught exception was detected!", "", false));
       }
