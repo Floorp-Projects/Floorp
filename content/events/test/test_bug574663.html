@@ -59,6 +59,7 @@ function runTest() {
     function nextTest() {
       netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
       if (!outstandingTests.length) {
+        winUtils.restoreNormalRefresh();
         win.close();
         clearPrefs();
         SimpleTest.finish();
