@@ -29,7 +29,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetworkPanel",
                                   "resource:///modules/NetworkPanel.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AutocompletePopup",
-                                  "resource:///modules/AutocompletePopup.jsm");
+                                  "resource:///modules/devtools/AutocompletePopup.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
                                   "resource://gre/modules/devtools/WebConsoleUtils.jsm");
@@ -2731,9 +2731,18 @@ JSTerm.prototype = {
   init: function JST_init()
   {
     let chromeDocument = this.hud.owner.chromeDocument;
-    this.autocompletePopup = new AutocompletePopup(chromeDocument);
-    this.autocompletePopup.onSelect = this.onAutocompleteSelect.bind(this);
-    this.autocompletePopup.onClick = this.acceptProposedCompletion.bind(this);
+    let autocompleteOptions = {
+      onSelect: this.onAutocompleteSelect.bind(this),
+      onClick: this.acceptProposedCompletion.bind(this),
+      panelId: "webConsole_autocompletePopup",
+      listBoxId: "webConsole_autocompletePopupListBox",
+      position: "before_start",
+      theme: "light",
+      direction: "ltr",
+      autoSelect: true
+    };
+    this.autocompletePopup = new AutocompletePopup(chromeDocument,
+                                                   autocompleteOptions);
 
     let doc = this.hud.document;
     this.completeNode = doc.querySelector(".jsterm-complete-node");
@@ -3479,13 +3488,14 @@ JSTerm.prototype = {
     }
 
     let matches = aMessage.matches;
+    let lastPart = aMessage.matchProp;
     if (!matches.length) {
       this.clearCompletion();
       return;
     }
 
-    let items = matches.map(function(aMatch) {
-      return { label: aMatch };
+    let items = matches.reverse().map(function(aMatch) {
+      return { preLabel: lastPart, label: aMatch };
     });
 
     let popup = this.autocompletePopup;
@@ -3494,7 +3504,7 @@ JSTerm.prototype = {
     let completionType = this.lastCompletion.completionType;
     this.lastCompletion = {
       value: inputValue,
-      matchProp: aMessage.matchProp,
+      matchProp: lastPart,
     };
 
     if (items.length > 1 && !popup.isOpen) {

@@ -402,23 +402,32 @@ Toolbox.prototype = {
     let id = toolDefinition.id;
 
     let radio = this.doc.createElement("radio");
-    radio.setAttribute("label", toolDefinition.label);
     radio.className = "toolbox-tab devtools-tab";
     radio.id = "toolbox-tab-" + id;
+    radio.setAttribute("flex", "1");
     radio.setAttribute("toolid", id);
     radio.setAttribute("tooltiptext", toolDefinition.tooltip);
-    if (toolDefinition.icon) {
-      radio.setAttribute("src", toolDefinition.icon);
-    }
 
     radio.addEventListener("command", function(id) {
       this.selectTool(id);
     }.bind(this, id));
 
+    if (toolDefinition.icon) {
+      let image = this.doc.createElement("image");
+      image.setAttribute("src", toolDefinition.icon);
+      radio.appendChild(image);
+    }
+
+    let label = this.doc.createElement("label");
+    label.setAttribute("value", toolDefinition.label)
+    label.setAttribute("crop", "end");
+    label.setAttribute("flex", "1");
+
     let vbox = this.doc.createElement("vbox");
     vbox.className = "toolbox-panel";
     vbox.id = "toolbox-panel-" + id;
 
+    radio.appendChild(label);
     tabs.appendChild(radio);
     deck.appendChild(vbox);
 
@@ -433,6 +442,13 @@ Toolbox.prototype = {
    */
   selectTool: function TBOX_selectTool(id) {
     let deferred = Promise.defer();
+
+    let selected = this.doc.querySelector(".devtools-tab[selected]");
+    if (selected) {
+      selected.removeAttribute("selected");
+    }
+    let tab = this.doc.getElementById("toolbox-tab-" + id);
+    tab.setAttribute("selected", "true");
 
     if (this._currentToolId == id) {
       // Return the existing panel in order to have a consistent return value.
