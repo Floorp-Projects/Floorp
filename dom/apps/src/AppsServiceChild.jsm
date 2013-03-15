@@ -103,7 +103,6 @@ this.DOMApplicationRegistry = {
     debug("getAppFromObserverMessage " + aMessage);
     return AppsUtils.getAppFromObserverMessage(this.webapps. aMessage);
   },
-
   getCoreAppsBasePath: function getCoreAppsBasePath() {
     debug("getCoreAppsBasePath() not yet supported on child!");
     return null;
@@ -115,8 +114,13 @@ this.DOMApplicationRegistry = {
   },
 
   getAppInfo: function getAppInfo(aAppId) {
-    return AppsUtils.getAppInfo(this.webapps, aAppId);
-  }
+    if (!this.webapps[aAppId]) {
+      debug("No webapp for " + aAppId);
+      return null;
+    }
+    return { "basePath":  this.webapps[aAppId].basePath + "/",
+             "isCoreApp": !this.webapps[aAppId].removable };
+  },
 }
 
 DOMApplicationRegistry.init();
