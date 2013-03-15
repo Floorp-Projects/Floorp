@@ -256,6 +256,8 @@ AsmJSActivation::AsmJSActivation(JSContext *cx, const AsmJSModule &module, unsig
 
     PerThreadData::AsmJSActivationStackLock lock(cx_->runtime->mainThread);
     cx_->runtime->mainThread.asmJSActivationStack_ = this;
+
+    (void) errorRejoinSP_;  // squelch GCC warning
 }
 
 AsmJSActivation::~AsmJSActivation()
