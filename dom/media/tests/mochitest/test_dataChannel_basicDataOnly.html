@@ -4,26 +4,28 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="head.js"></script>
-  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
   <script type="application/javascript" src="pc.js"></script>
   <script type="application/javascript" src="templates.js"></script>
 </head>
 <body>
 <pre id="test">
 <script type="application/javascript">
-
   createHTML({
-    bug: "796890",
-    title: "Basic audio/video (separate) peer connection"
+    bug: "796894",
+    title: "Basic datachannel only connection"
   });
 
   var test;
   runTest(function () {
-    test = new PeerConnectionTest();
-    test.setMediaConstraints([{audio: true}, {video: true}],
-                             [{audio: true}, {video: true}]);
+    test = new DataChannelTest();
+
+    // TODO: Add back once bug 873049 has been fixed
+    test.chain.remove("PC_LOCAL_CHECK_MEDIA");
+    test.chain.remove("PC_REMOTE_CHECK_MEDIA");
+
     test.run();
-  });
+  }, true);
+
 </script>
 </pre>
 </body>
