@@ -12,7 +12,7 @@
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
 
-#if defined(CUBEB_SNDIO_DEBUG)
+#ifdef CUBEB_SNDIO_DEBUG
 #define DPR(...) fprintf(stderr, __VA_ARGS__);
 #else
 #define DPR(...) do {} while(0)
@@ -217,7 +217,7 @@ sndio_stream_init(cubeb *context,
     DPR("sndio_stream_init() unsupported params\n");
     return CUBEB_ERROR_INVALID_FORMAT;
   }
-  sio_onmove(s->hdl, sndio_onmove, s);
+  sio_onmove(s->hdl, cubeb_onmove, s);
   s->active = 0;
   s->nfr = rpar.round;
   s->bpf = rpar.bps * rpar.pchan;
@@ -262,7 +262,7 @@ sndio_stream_start(cubeb_stream *s)
 
   DPR("sndio_stream_start()\n");
   s->active = 1;
-  err = pthread_create(&s->th, NULL, sndio_mainloop, s);
+  err = pthread_create(&s->th, NULL, cubeb_mainloop, s);
   if (err) {
     s->active = 0;
     return CUBEB_ERROR;
