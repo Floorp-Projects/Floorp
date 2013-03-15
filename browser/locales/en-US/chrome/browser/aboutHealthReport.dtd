@@ -2,30 +2,5 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!-- metrics.locale-direction instead of the usual local.dir entity, so RTL can skip translating page. -->
-<!ENTITY abouthealth.locale-direction "ltr">
-
 <!-- LOCALIZATION NOTE (abouthealth.pagetitle): Firefox Health Report is a proper noun in en-US, please keep this in mind. -->
 <!ENTITY abouthealth.pagetitle "&brandShortName; Health Report">
-<!ENTITY abouthealth.header "&brandFullName; Health Report">
-
-<!ENTITY abouthealth.intro.title "What is &brandShortName; Health Report?">
-
-<!ENTITY abouthealth.intro-enabled "&brandFullName; collects some data about your computer and usage in order to provide you with a better browser experience.">
-<!ENTITY abouthealth.intro-disabled "You are currently not submitting usage data to &vendorShortName;. You can help us make &brandShortName; better by clicking the &quot;&abouthealth.optin;&quot; button.">
-
-<!ENTITY abouthealth.optin "Help make &brandShortName; better">
-<!ENTITY abouthealth.optout "Turn Off Reporting">
-
-<!ENTITY abouthealth.optout.confirmationPrompt.title "Stop data submission?">
-<!ENTITY abouthealth.optout.confirmationPrompt.message "Are you sure you want to opt out and delete all your anonymous product data stored on &vendorShortName; servers?">
-
-<!ENTITY abouthealth.show-raw-data "Show Details">
-<!ENTITY abouthealth.hide-raw-data "Hide Details">
-
-<!ENTITY abouthealth.show-report "Show &brandShortName; Report">
-
-<!ENTITY abouthealth.details.description-start "This is the data &brandFullName; is submitting in order for &brandShortName; Health Report to function.   You can ">
-<!ENTITY abouthealth.details-link "learn more">
-<!ENTITY abouthealth.details.description-end " about what we collect and submit.">
-<!ENTITY abouthealth.no-data-available "There is no previous submission to display. Please check back later.">
