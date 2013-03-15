@@ -10,7 +10,6 @@
 #include "nsIMemory.h"
 
 #define NS_MEMORY_CONTRACTID "@mozilla.org/xpcom/memory-service;1"
-#define NS_MEMORY_CLASSNAME  "Global Memory Service"
 #define NS_MEMORY_CID                                \
 { /* 30a04e40-38e7-11d4-8cf5-0060b0fc14a3 */         \
     0x30a04e40,                                      \

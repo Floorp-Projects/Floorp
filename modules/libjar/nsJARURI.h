@@ -23,8 +23,6 @@
     {0xb7, 0x5b, 0xfa, 0x7d, 0x95, 0x70, 0xa6, 0x91} \
 }
 
-#define NS_JARURI_CLASSNAME \
-    "nsJARURI"
 #define NS_JARURI_CID                                \
 { /* 245abae2-b947-4ded-a46d-9829d3cca462 */         \
     0x245abae2,                                      \

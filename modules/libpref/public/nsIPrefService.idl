@@ -138,7 +138,6 @@ interface nsIPrefService : nsISupports
   }
 
 #define NS_PREFSERVICE_CONTRACTID "@mozilla.org/preferences-service;1"
-#define NS_PREFSERVICE_CLASSNAME "Preferences Server"
 
 /**
  * Notification sent before reading the default user preferences files.

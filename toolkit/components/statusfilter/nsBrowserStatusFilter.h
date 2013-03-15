@@ -65,8 +65,6 @@ private:
     bool                             mDelayedProgress;
 };
 
-#define NS_BROWSERSTATUSFILTER_CLASSNAME \
-    "nsBrowserStatusFilter"
 #define NS_BROWSERSTATUSFILTER_CONTRACTID \
     "@mozilla.org/appshell/component/browser-status-filter;1"
 #define NS_BROWSERSTATUSFILTER_CID                   \

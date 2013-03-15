@@ -18,8 +18,6 @@
 #define NS_AUTOCONFIG_CONTRACTID \
   "@mozilla.org/autoconfiguration;1" 
 
-#define NS_AUTOCONFIG_CLASSNAME "AutoConfig Module"
-
 %}
 
 [uuid (80DB54AE-13F2-11d5-BE44-00108335A220)]

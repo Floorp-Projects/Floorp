@@ -20,5 +20,4 @@ interface nsIUserCertPicker : nsISupports {
 
 %{C++
 #define NS_CERT_PICKER_CONTRACTID "@mozilla.org/user_cert_picker;1"
-#define NS_CERT_PICKER_CLASSNAME "Cert Picker Object"
 %}

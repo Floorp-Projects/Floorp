@@ -17,7 +17,6 @@
  *   nsISeekableStream
  *   nsISupportsCString
  */
-#define NS_STRINGINPUTSTREAM_CLASSNAME  "nsStringInputStream"
 #define NS_STRINGINPUTSTREAM_CONTRACTID "@mozilla.org/io/string-input-stream;1"
 #define NS_STRINGINPUTSTREAM_CID                     \
 { /* 0abb0835-5000-4790-af28-61b3ba17c295 */         \
