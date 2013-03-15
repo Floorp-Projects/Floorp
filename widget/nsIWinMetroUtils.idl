@@ -12,7 +12,7 @@
  * implementation of this interface for non-Windows systems, for testing and
  * development purposes only.
  */
-[scriptable, uuid(774a4b83-27c3-4F62-8509-efa0dc923a03)]
+[scriptable, uuid(ac813696-3b0a-4259-bce1-1d078021ebbe)]
 interface nsIWinMetroUtils : nsISupports
 {
   /* Fullscreen landscape orientation */
@@ -43,6 +43,11 @@ interface nsIWinMetroUtils : nsISupports
    * Determine if the user prefers left handed or right handed input.
    */
   readonly attribute long handPreference;
+
+  /**
+   * Determine the activation URI
+   */
+  readonly attribute AString activationURI;
 
   /**
    * Attempts to unsnap the application from snapped state to filled state
