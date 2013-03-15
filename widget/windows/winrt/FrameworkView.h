@@ -89,6 +89,7 @@ public:
   void SetWidget(MetroWidget* aWidget);
   MetroWidget* GetWidget() { return mWidget.Get(); }
   void GetBounds(nsIntRect &aRect);
+  void GetActivationURI(nsAString &aActivationURI) { aActivationURI = mActivationURI; }
   void SetCursor(ABI::Windows::UI::Core::CoreCursorType aCursorType, DWORD aCustomId = 0);
   void ClearCursor();
   bool IsEnabled() const;
@@ -138,18 +139,19 @@ protected:
 protected:
   void SetDpi(float aDpi);
   void UpdateWidgetSizeAndPosition();
-  void PerformURILoad(Microsoft::WRL::ComPtr<ABI::Windows::Foundation::IUriRuntimeClass>& aURI);
+  void PerformURILoad(Microsoft::WRL::Wrappers::HString& aString);
   void PerformSearch(Microsoft::WRL::Wrappers::HString& aQuery);
   void PerformURILoadOrSearch(Microsoft::WRL::Wrappers::HString& aString);
   bool EnsureAutomationProviderCreated();
-  void SearchActivated(Microsoft::WRL::ComPtr<ISearchActivatedEventArgs>& aArgs);
-  void FileActivated(Microsoft::WRL::ComPtr<IFileActivatedEventArgs>& aArgs);
-  void LaunchActivated(Microsoft::WRL::ComPtr<ILaunchActivatedEventArgs>& aArgs);
-  void RunStartupArgs(IActivatedEventArgs* aArgs);
+  void SearchActivated(Microsoft::WRL::ComPtr<ISearchActivatedEventArgs>& aArgs, bool aStartup);
+  void FileActivated(Microsoft::WRL::ComPtr<IFileActivatedEventArgs>& aArgs, bool aStartup);
+  void LaunchActivated(Microsoft::WRL::ComPtr<ILaunchActivatedEventArgs>& aArgs, bool aStartup);
+  void ProcessActivationArgs(IActivatedEventArgs* aArgs, bool aStartup);
   void UpdateForWindowSizeChange();
   void SendActivationEvent();
   void UpdateLogicalDPI();
   void FireViewStateObservers();
+  void ProcessLaunchArguments();
 
   // Printing and preview
   void CreatePrintControl(IPrintDocumentPackageTarget* aDocPackageTarget, 
@@ -181,8 +183,9 @@ private:
   float mDPI;
   bool mShuttingDown;
   bool mPainting;
+  nsAutoString mActivationURI;
+  nsAutoString mActivationCommandLine;
   Microsoft::WRL::ComPtr<IInspectable> mAutomationProvider;
-  Microsoft::WRL::ComPtr<IActivatedEventArgs> mDeferredActivationEventArgs;
   //Microsoft::WRL::ComPtr<ID2D1PrintControl> mD2DPrintControl;
   // Private critical section protects D2D device context for on-screen
   // rendering from that for print/preview in the different thread.

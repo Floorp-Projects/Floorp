@@ -410,6 +410,13 @@ nsWinMetroUtils::GetHandPreference(int32_t *aHandPreference)
 }
 
 NS_IMETHODIMP
+nsWinMetroUtils::GetActivationURI(nsAString &aActivationURI)
+{
+  MetroApp::GetView()->GetActivationURI(aActivationURI);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsWinMetroUtils::GetKeyboardVisible(bool *aImersive)
 {
   *aImersive = mozilla::widget::winrt::FrameworkView::IsKeyboardVisible();
@@ -445,7 +452,7 @@ nsWinMetroUtils::GetKeyboardHeight(uint32_t *aHeight)
 }
 
 NS_IMETHODIMP
-nsWinMetroUtils::AddSettingsPanelEntry(const nsAString& aLabel, uint32_t *aId)
+nsWinMetroUtils::AddSettingsPanelEntry(const nsAString &aLabel, uint32_t *aId)
 {
   NS_ENSURE_ARG_POINTER(aId);
   if (!sSettingsArray)
