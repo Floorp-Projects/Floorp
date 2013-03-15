@@ -399,7 +399,15 @@ public class Tab {
         if (!mReaderEnabled)
             return;
 
-        GeckoEvent e = GeckoEvent.createBroadcastEvent("Reader:Add", String.valueOf(getId()));
+        JSONObject json = new JSONObject();
+        try {
+            json.put("tabID", String.valueOf(getId()));
+        } catch (JSONException e) {
+            Log.e(LOGTAG, "JSON error - failing to add to reading list", e);
+            return;
+        }
+
+        GeckoEvent e = GeckoEvent.createBroadcastEvent("Reader:Add", json.toString());
         GeckoAppShell.sendEventToGecko(e);
     }
 
