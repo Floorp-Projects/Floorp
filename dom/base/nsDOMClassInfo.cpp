@@ -409,8 +409,7 @@ static const char kDOMStringBundleURL[] =
 //       are defined in nsIDOMClassInfo.h.
 
 #define WINDOW_SCRIPTABLE_FLAGS                                               \
- (nsIXPCScriptable::WANT_GETPROPERTY |                                        \
-  nsIXPCScriptable::WANT_PRECREATE |                                          \
+ (nsIXPCScriptable::WANT_PRECREATE |                                          \
   nsIXPCScriptable::WANT_FINALIZE |                                           \
   nsIXPCScriptable::WANT_ENUMERATE |                                          \
   nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE |                               \
@@ -3857,77 +3856,6 @@ nsWindowSH::InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
   // The global scope polluter will release doc on destruction (or
   // invalidation).
   NS_ADDREF(doc);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                        JSObject *obj, jsid id, jsval *vp, bool *_retval)
-{
-  DebugOnly<nsGlobalWindow*> win = nsGlobalWindow::FromWrapper(wrapper);
-
-  JSAutoRequest ar(cx);
-
-#ifdef DEBUG_SH_FORWARDING
-  {
-    JSString *jsstr = ::JS_ValueToString(cx, id);
-    if (jsstr) {
-      nsDependentJSString str(jsstr);
-
-      if (win->IsInnerWindow()) {
-#ifdef DEBUG_PRINT_INNER
-        printf("Property '%s' get on inner window %p\n",
-              NS_ConvertUTF16toUTF8(str).get(), (void *)win);
-#endif
-      } else {
-        printf("Property '%s' get on outer window %p\n",
-              NS_ConvertUTF16toUTF8(str).get(), (void *)win);
-      }
-    }
-  }
-#endif
-
-  // The order in which things are done in this method are a bit
-  // whacky, that's because this method is *extremely* performace
-  // critical. Don't touch this unless you know what you're doing.
-
-  if (JSID_IS_STRING(id) && !JSVAL_IS_PRIMITIVE(*vp) &&
-      ::JS_TypeOfValue(cx, *vp) != JSTYPE_FUNCTION) {
-    // A named property accessed which could have been resolved to a
-    // child frame in nsWindowSH::NewResolve() (*vp will tell us if
-    // that's the case). If *vp is a window object (i.e. a child
-    // frame), return without doing a security check.
-    //
-    // Calling GetWrappedNativeOfJSObject() is not all that cheap, so
-    // only do that if the JSClass name is one that is likely to be a
-    // window object.
-
-    const char *name = JS_GetClass(JSVAL_TO_OBJECT(*vp))->name;
-
-    // The list of Window class names here need to be kept in sync
-    // with the actual class names! The class name
-    // XPCCrossOriginWrapper needs to be handled here too as XOWs
-    // define child frame names with a XOW as the value, and thus
-    // we'll need to get through here with XOWs class name too.
-    if ((*name == 'W' && strcmp(name, "Window") == 0) ||
-        (*name == 'C' && strcmp(name, "ChromeWindow") == 0) ||
-        (*name == 'M' && strcmp(name, "ModalContentWindow") == 0) ||
-        (*name == 'I' &&
-         (strcmp(name, "InnerWindow") == 0 ||
-          strcmp(name, "InnerChromeWindow") == 0 ||
-          strcmp(name, "InnerModalContentWindow") == 0)) ||
-        (*name == 'X' && strcmp(name, "XPCCrossOriginWrapper") == 0)) {
-      nsCOMPtr<nsIDOMWindow> window = do_QueryWrapper(cx, JSVAL_TO_OBJECT(*vp));
-
-      if (window) {
-        // Yup, *vp is a window object, return early (*vp is already
-        // the window, so no need to wrap it again).
-
-        return NS_SUCCESS_I_DID_SOMETHING;
-      }
-    }
-  }
 
   return NS_OK;
 }
