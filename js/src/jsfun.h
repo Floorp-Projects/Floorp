@@ -346,7 +346,7 @@ DefineFunction(JSContext *cx, HandleObject obj, HandleId id, JSNative native,
 
 /*
  * Function extended with reserved slots for use by various kinds of functions.
- * Most functions do not have these extensions, but enough are that efficient
+ * Most functions do not have these extensions, but enough do that efficient
  * storage is required (no malloc'ed reserved slots).
  */
 class FunctionExtended : public JSFunction

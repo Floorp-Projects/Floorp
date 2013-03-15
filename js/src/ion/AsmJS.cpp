@@ -246,6 +246,14 @@ FunctionArgsList(ParseNode *fn, unsigned *numFormals)
     return ListHead(argsBody);
 }
 
+static inline unsigned
+FunctionNumFormals(ParseNode *fn)
+{
+    unsigned numFormals;
+    FunctionArgsList(fn, &numFormals);
+    return numFormals;
+}
+
 static inline bool
 FunctionHasStatementList(ParseNode *fn)
 {
@@ -1037,9 +1045,6 @@ class ModuleCompiler
     ScopedJSDeletePtr<AsmJSModule> module_;
 
     PropertyName *                 moduleFunctionName_;
-    PropertyName *                 globalArgumentName_;
-    PropertyName *                 importArgumentName_;
-    PropertyName *                 bufferArgumentName_;
 
     GlobalMap                      globals_;
     FuncVector                     functions_;
@@ -1071,9 +1076,6 @@ class ModuleCompiler
         ictx_(cx->runtime),
         masm_(cx),
         moduleFunctionName_(NULL),
-        globalArgumentName_(NULL),
-        importArgumentName_(NULL),
-        bufferArgumentName_(NULL),
         globals_(cx),
         functions_(cx),
         funcPtrTables_(cx),
@@ -1125,7 +1127,7 @@ class ModuleCompiler
             return false;
         }
 
-        module_ = cx_->new_<AsmJSModule>();
+        module_ = cx_->new_<AsmJSModule>(cx_);
         if (!module_)
             return false;
 
@@ -1152,9 +1154,6 @@ class ModuleCompiler
     const AsmJSModule &module() const { return *module_.get(); }
 
     PropertyName *moduleFunctionName() const { return moduleFunctionName_; }
-    PropertyName *globalArgumentName() const { return globalArgumentName_; }
-    PropertyName *importArgumentName() const { return importArgumentName_; }
-    PropertyName *bufferArgumentName() const { return bufferArgumentName_; }
 
     const Global *lookupGlobal(PropertyName *name) const {
         if (GlobalMap::Ptr p = globals_.lookup(name))
@@ -1195,9 +1194,10 @@ class ModuleCompiler
     /***************************************************** Mutable interface */
 
     void initModuleFunctionName(PropertyName *n) { moduleFunctionName_ = n; }
-    void initGlobalArgumentName(PropertyName *n) { globalArgumentName_ = n; }
-    void initImportArgumentName(PropertyName *n) { importArgumentName_ = n; }
-    void initBufferArgumentName(PropertyName *n) { bufferArgumentName_ = n; }
+
+    void initGlobalArgumentName(PropertyName *n) { module_->initGlobalArgumentName(n); }
+    void initImportArgumentName(PropertyName *n) { module_->initImportArgumentName(n); }
+    void initBufferArgumentName(PropertyName *n) { module_->initBufferArgumentName(n); }
 
     bool addGlobalVarInitConstant(PropertyName *varName, VarType type, const Value &v) {
         JS_ASSERT(currentPass_ == 1);
@@ -2291,6 +2291,20 @@ js::AsmJSModuleObjectToModule(JSObject *obj)
     return *(AsmJSModule *)obj->getReservedSlot(ASM_CODE_RESERVED_SLOT).toPrivate();
 }
 
+static const unsigned ASM_MODULE_FUNCTION_MODULE_OBJECT_SLOT = 0;
+
+JSObject &
+js::AsmJSModuleObject(JSFunction *moduleFun)
+{
+    return moduleFun->getExtendedSlot(ASM_MODULE_FUNCTION_MODULE_OBJECT_SLOT).toObject();
+}
+
+void
+js::SetAsmJSModuleObject(JSFunction *moduleFun, JSObject *moduleObj)
+{
+    moduleFun->setExtendedSlot(ASM_MODULE_FUNCTION_MODULE_OBJECT_SLOT, OBJECT_TO_JSVAL(moduleObj));
+}
+
 static void
 AsmJSModuleObject_finalize(FreeOp *fop, RawObject obj)
 {
@@ -2332,9 +2346,9 @@ CheckModuleLevelName(ModuleCompiler &m, PropertyName *name, ParseNode *nameNode)
         return false;
 
     if (name == m.moduleFunctionName() ||
-        name == m.globalArgumentName() ||
-        name == m.importArgumentName() ||
-        name == m.bufferArgumentName() ||
+        name == m.module().globalArgumentName() ||
+        name == m.module().importArgumentName() ||
+        name == m.module().bufferArgumentName() ||
         m.lookupGlobal(name))
     {
         return m.fail("Duplicate names not allowed", nameNode);
@@ -2497,7 +2511,7 @@ CheckGlobalVariableInitImport(ModuleCompiler &m, PropertyName *varName, ParseNod
     ParseNode *base = DotBase(coercedExpr);
     PropertyName *field = DotMember(coercedExpr);
 
-    if (!IsUseOfName(base, m.importArgumentName()))
+    if (!IsUseOfName(base, m.module().importArgumentName()))
         return m.fail("Expecting c.y where c is the import parameter", coercedExpr);
 
     return m.addGlobalVarImport(varName, field, coercion);
@@ -2513,7 +2527,7 @@ CheckNewArrayView(ModuleCompiler &m, PropertyName *varName, ParseNode *newExpr, 
     ParseNode *base = DotBase(ctorExpr);
     PropertyName *field = DotMember(ctorExpr);
 
-    if (!IsUseOfName(base, m.globalArgumentName()))
+    if (!IsUseOfName(base, m.module().globalArgumentName()))
         return m.fail("Expecting global.y", base);
 
     ParseNode *bufArg = NextNode(ctorExpr);
@@ -2523,7 +2537,7 @@ CheckNewArrayView(ModuleCompiler &m, PropertyName *varName, ParseNode *newExpr, 
     if (NextNode(bufArg) != NULL)
         return m.fail("Only one argument may be passed to a typed array constructor", bufArg);
 
-    if (!IsUseOfName(bufArg, m.bufferArgumentName()))
+    if (!IsUseOfName(bufArg, m.module().bufferArgumentName()))
         return m.fail("Argument to typed array constructor must be ArrayBuffer name", bufArg);
 
     JSAtomState &names = m.cx()->names();
@@ -2559,7 +2573,7 @@ CheckGlobalDotImport(ModuleCompiler &m, PropertyName *varName, ParseNode *initNo
     if (base->isKind(PNK_DOT)) {
         ParseNode *global = DotBase(base);
         PropertyName *math = DotMember(base);
-        if (!IsUseOfName(global, m.globalArgumentName()) || math != m.cx()->names().Math)
+        if (!IsUseOfName(global, m.module().globalArgumentName()) || math != m.cx()->names().Math)
             return m.fail("Expecting global.Math", base);
 
         AsmJSMathBuiltin mathBuiltin;
@@ -2569,7 +2583,7 @@ CheckGlobalDotImport(ModuleCompiler &m, PropertyName *varName, ParseNode *initNo
         return m.addMathBuiltin(varName, mathBuiltin, field);
     }
 
-    if (IsUseOfName(base, m.globalArgumentName())) {
+    if (IsUseOfName(base, m.module().globalArgumentName())) {
         if (field == m.cx()->names().NaN)
             return m.addGlobalConstant(varName, js_NaN, field);
         if (field == m.cx()->names().Infinity)
@@ -2577,7 +2591,7 @@ CheckGlobalDotImport(ModuleCompiler &m, PropertyName *varName, ParseNode *initNo
         return m.fail("Does not match a standard global constant", initNode);
     }
 
-    if (IsUseOfName(base, m.importArgumentName()))
+    if (IsUseOfName(base, m.module().importArgumentName()))
         return m.addFFI(varName, field);
 
     return m.fail("Expecting c.y where c is either the global or import parameter", initNode);
@@ -5185,7 +5199,9 @@ extern bool
 EnsureAsmJSSignalHandlersInstalled(JSRuntime *rt);
 
 bool
-js::CompileAsmJS(JSContext *cx, TokenStream &ts, ParseNode *fn, HandleScript script)
+js::CompileAsmJS(JSContext *cx, TokenStream &ts, ParseNode *fn, const CompileOptions &options,
+                 ScriptSource *scriptSource, uint32_t bufStart, uint32_t bufEnd,
+                 MutableHandleFunction moduleFun)
 {
     if (!JSC::MacroAssembler().supportsFloatingPoint())
         return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by lack of floating point support");
@@ -5210,12 +5226,25 @@ js::CompileAsmJS(JSContext *cx, TokenStream &ts, ParseNode *fn, HandleScript scr
     if (!CheckModule(cx, ts, fn, &module))
         return !cx->isExceptionPending();
 
+    module->initPostLinkFailureInfo(options, scriptSource, bufStart, bufEnd);
+
     RootedObject moduleObj(cx, NewAsmJSModuleObject(cx, &module));
     if (!moduleObj)
         return false;
 
-    JS_ASSERT(!script->asmJS);
-    script->asmJS.init(moduleObj);
+    // Replace the existing interpreted function representing the asm.js module
+    // with a native function call to LinkAsmJS.  The native holds, in an
+    // extended slot, a reference to the module object, which holds enough
+    // information that we can recompile the function normally if linking
+    // fails.
+    RootedPropertyName name(cx, FunctionName(fn));
+    moduleFun.set(NewFunction(cx, NullPtr(), LinkAsmJS, FunctionNumFormals(fn),
+                              JSFunction::NATIVE_FUN, NullPtr(), name,
+                              JSFunction::ExtendedFinalizeKind));
+    if (!moduleFun)
+        return false;
+
+    SetAsmJSModuleObject(moduleFun, moduleObj);
 
     return Warn(cx, JSMSG_USE_ASM_TYPE_OK);
 #else
