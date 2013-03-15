@@ -981,7 +981,7 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
     }
 
     // Disconnect any existing frame
-    DisconnectFrame();
+    mInstanceOwner->SetFrame(nullptr);
 
     // Set up relationship between instance owner and frame.
     nsObjectFrame *objFrame = static_cast<nsObjectFrame*>(aFrame);
@@ -990,15 +990,6 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
     // Set up new frame to draw.
     objFrame->FixupWindow(objFrame->GetContentRectRelativeToSelf().Size());
     objFrame->InvalidateFrame();
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsObjectLoadingContent::DisconnectFrame()
-{
-  if (mInstanceOwner) {
-    mInstanceOwner->SetFrame(nullptr);
   }
   return NS_OK;
 }
@@ -2273,7 +2264,8 @@ nsObjectLoadingContent::PluginDestroyed()
   // plugins in plugin host. Invalidate instance owner / prototype but otherwise
   // don't take any action.
   TeardownProtoChain();
-  CloseChannel();
+  mInstanceOwner->SetFrame(nullptr);
+  mInstanceOwner->Destroy();
   mInstanceOwner = nullptr;
   return NS_OK;
 }
@@ -2521,8 +2513,8 @@ nsObjectLoadingContent::DoStopPlugin(nsPluginInstanceOwner* aInstanceOwner,
     pluginHost->StopPluginInstance(inst);
   }
   TeardownProtoChain();
-
   aInstanceOwner->Destroy();
+
   mIsStopping = false;
 }
 
@@ -2546,7 +2538,7 @@ nsObjectLoadingContent::StopPluginInstance()
     CloseChannel();
   }
 
-  DisconnectFrame();
+  mInstanceOwner->SetFrame(nullptr);
 
   bool delayedStop = false;
 #ifdef XP_WIN
@@ -2563,9 +2555,11 @@ nsObjectLoadingContent::StopPluginInstance()
   }
 #endif
 
-  DoStopPlugin(mInstanceOwner, delayedStop);
-
+  nsRefPtr<nsPluginInstanceOwner> ownerGrip(mInstanceOwner);
   mInstanceOwner = nullptr;
+
+  // This can/will re-enter
+  DoStopPlugin(ownerGrip, delayedStop);
 
   return NS_OK;
 }
