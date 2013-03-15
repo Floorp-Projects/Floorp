@@ -6531,9 +6531,26 @@ let Reader = {
   observe: function(aMessage, aTopic, aData) {
     switch(aTopic) {
       case "Reader:Add": {
-        let tab = BrowserApp.getTabForId(aData);
-        let currentURI = tab.browser.currentURI;
-        let url = currentURI.spec;
+        let args = JSON.parse(aData);
+
+        let tabID = null;
+        let url, urlWithoutRef;
+
+        if ('tabID' in args) {
+          tabID = args.tabID;
+
+          let tab = BrowserApp.getTabForId(tabID);
+          let currentURI = tab.browser.currentURI;
+
+          url = currentURI.spec;
+          urlWithoutRef = currentURI.specIgnoringRef;
+        } else if ('url' in args) {
+          let uri = Services.io.newURI(args.url, null, null);
+          url = uri.spec;
+          urlWithoutRef = uri.specIgnoringRef;
+        } else {
+          throw new Error("Reader:Add requires a tabID or an URL as argument");
+        }
 
         let sendResult = function(result, title) {
           this.log("Reader:Add success=" + result + ", url=" + url + ", title=" + title);
@@ -6546,25 +6563,30 @@ let Reader = {
           });
         }.bind(this);
 
-        this.getArticleFromCache(currentURI.specIgnoringRef, function (article) {
+        let handleArticle = function(article) {
+          if (!article) {
+            sendResult(this.READER_ADD_FAILED, "");
+            return;
+          }
+
+          this.storeArticleInCache(article, function(success) {
+            let result = (success ? this.READER_ADD_SUCCESS : this.READER_ADD_FAILED);
+            sendResult(result, article.title);
+          }.bind(this));
+        }.bind(this);
+
+        this.getArticleFromCache(urlWithoutRef, function (article) {
           // If the article is already in reading list, bail
           if (article) {
             sendResult(this.READER_ADD_DUPLICATE, "");
             return;
           }
 
-          this.getArticleForTab(aData, currentURI.specIgnoringRef, function (article) {
-            if (!article) {
-              sendResult(this.READER_ADD_FAILED, "");
-              return;
-            }
-
-            this.storeArticleInCache(article, function(success) {
-              let result = (success ? this.READER_ADD_SUCCESS :
-                  this.READER_ADD_FAILED);
-              sendResult(result, article.title);
-            }.bind(this));
-          }.bind(this));
+          if (tabID != null) {
+            this.getArticleForTab(tabID, urlWithoutRef, handleArticle);
+          } else {
+            this.parseDocumentFromURL(urlWithoutRef, handleArticle);
+          }
         }.bind(this));
         break;
       }
