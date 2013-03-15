@@ -292,6 +292,11 @@ void FrameworkView::SetDpi(float aDpi)
 
     // convert to physical (device) pixels
     mWindowBounds = MetroUtils::LogToPhys(logicalBounds);
+
+    // notify the widget that dpi has changed
+    if (mWidget) {
+      mWidget->ChangedDPI();
+    }
   }
 }
 
