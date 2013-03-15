@@ -105,11 +105,15 @@ template<class T>
 class nsMainThreadPtrHolder MOZ_FINAL
 {
 public:
-  // We can only acquire a pointer on the main thread.
-  nsMainThreadPtrHolder(T* ptr) : mRawPtr(NULL) {
+  // We can only acquire a pointer on the main thread. We to fail fast for
+  // threading bugs, so by default we assert if our pointer is used or acquired
+  // off-main-thread. But some consumers need to use the same pointer for
+  // multiple classes, some of which are main-thread-only and some of which
+  // aren't. So we allow them to explicitly disable this strict checking.
+  nsMainThreadPtrHolder(T* ptr, bool strict = true) : mRawPtr(NULL), mStrict(strict) {
     // We can only AddRef our pointer on the main thread, which means that the
     // holder must be constructed on the main thread.
-    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(!mStrict || NS_IsMainThread());
     NS_IF_ADDREF(mRawPtr = ptr);
   }
 
@@ -129,7 +133,7 @@ public:
 
   T* get() {
     // Nobody should be touching the raw pointer off-main-thread.
-    if (MOZ_UNLIKELY(!NS_IsMainThread())) {
+    if (mStrict && MOZ_UNLIKELY(!NS_IsMainThread())) {
       NS_ERROR("Can't dereference nsMainThreadPtrHolder off main thread");
       MOZ_CRASH();
     }
@@ -147,6 +151,9 @@ private:
 
   // Our wrapped pointer.
   T* mRawPtr;
+
+  // Whether to strictly enforce thread invariants in this class.
+  bool mStrict;
 
   // Copy constructor and operator= not implemented. Once constructed, the
   // holder is immutable.
@@ -180,7 +187,6 @@ class nsMainThreadPtrHandle
   // these handles as opaque.
   T* get()
   {
-    MOZ_ASSERT(NS_IsMainThread());
     if (mPtr) {
       return mPtr.get()->get();
     }
@@ -188,7 +194,6 @@ class nsMainThreadPtrHandle
   }
   const T* get() const
   {
-    MOZ_ASSERT(NS_IsMainThread());
     if (mPtr) {
       return mPtr.get()->get();
     }
