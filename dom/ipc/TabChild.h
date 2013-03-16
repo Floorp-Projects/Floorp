@@ -7,9 +7,7 @@
 #ifndef mozilla_dom_TabChild_h
 #define mozilla_dom_TabChild_h
 
-#ifndef _IMPL_NS_LAYOUT
 #include "mozilla/dom/PBrowserChild.h"
-#endif
 #ifdef DEBUG
 #include "PCOMContentPermissionRequestChild.h"
 #endif /* DEBUG */
