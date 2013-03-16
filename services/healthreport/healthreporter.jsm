@@ -499,6 +499,10 @@ AbstractHealthReporter.prototype = Object.freeze({
    * Collect all measurements for all registered providers.
    */
   collectMeasurements: function () {
+    if (!this._initialized) {
+      return Promise.reject(new Error("Not initialized."));
+    }
+
     return Task.spawn(function doCollection() {
       try {
         TelemetryStopwatch.start(TELEMETRY_COLLECT_CONSTANT, this);
@@ -548,6 +552,10 @@ AbstractHealthReporter.prototype = Object.freeze({
    * @return Promise<Object | string>
    */
   collectAndObtainJSONPayload: function (asObject=false) {
+    if (!this._initialized) {
+      return Promise.reject(new Error("Not initialized."));
+    }
+
     return Task.spawn(function collectAndObtain() {
       yield this._providerManager.ensurePullOnlyProvidersRegistered();
 
@@ -591,6 +599,10 @@ AbstractHealthReporter.prototype = Object.freeze({
    * @return Promise<string|object>
    */
   getJSONPayload: function (asObject=false) {
+    if (!this._initialized) {
+      return Promise.reject(new Error("Not initialized."));
+    }
+
     TelemetryStopwatch.start(TELEMETRY_GENERATE_PAYLOAD, this);
     let deferred = Promise.defer();
 
@@ -1011,6 +1023,10 @@ HealthReporter.prototype = Object.freeze({
    * The passed argument is a `DataSubmissionRequest` from policy.jsm.
    */
   requestDataUpload: function (request) {
+    if (!this._initialized) {
+      return Promise.reject(new Error("Not initialized."));
+    }
+
     return Task.spawn(function doUpload() {
       yield this._providerManager.ensurePullOnlyProvidersRegistered();
       try {
