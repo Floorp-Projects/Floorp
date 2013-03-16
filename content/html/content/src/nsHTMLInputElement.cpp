@@ -1218,7 +1218,7 @@ nsHTMLInputElement::SetValue(const nsAString& aValue)
     }
   }
   else {
-    if (IsSingleLineTextControl(false)) {
+    if (MayFireChangeOnBlur()) {
       // If the value has been set by a script, we basically want to keep the
       // current change event state. If the element is ready to fire a change
       // event, we should keep it that way. Otherwise, we should make sure the
@@ -1948,7 +1948,7 @@ nsHTMLInputElement::FireChangeEventIfNeeded()
   nsString value;
   GetValueInternal(value);
 
-  if (!IsSingleLineTextControl(false) || mFocusedValue.Equals(value)) {
+  if (!MayFireChangeOnBlur() || mFocusedValue.Equals(value)) {
     return;
   }
 
@@ -2577,6 +2577,7 @@ nsHTMLInputElement::FinishRangeThumbDrag(nsGUIEvent* aEvent)
     SetValueOfRangeForUserEvent(rangeFrame->GetValueAtEventPoint(aEvent));
   }
   mIsDraggingRange = false;
+  FireChangeEventIfNeeded();
 }
 
 void
@@ -2603,6 +2604,10 @@ nsHTMLInputElement::SetValueOfRangeForUserEvent(double aValue)
   if (frame) {
     frame->UpdateThumbPositionForValueChange();
   }
+  nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
+                                       static_cast<nsIDOMHTMLInputElement*>(this),
+                                       NS_LITERAL_STRING("input"), true,
+                                       false);
 }
 
 static bool
@@ -2644,7 +2649,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   if (aVisitor.mEvent->message == NS_FOCUS_CONTENT ||
       aVisitor.mEvent->message == NS_BLUR_CONTENT) {
     if (aVisitor.mEvent->message == NS_FOCUS_CONTENT && 
-        IsSingleLineTextControl(false)) {
+        MayFireChangeOnBlur()) {
       GetValueInternal(mFocusedValue);
     }
 
@@ -3303,12 +3308,11 @@ nsHTMLInputElement::HandleTypeChange(uint8_t aNewType)
   }
 
   // Updating mFocusedValue in consequence:
-  // If the new type is a single line text control but the previous wasn't, we
-  // should set mFocusedValue to the current value.
-  // Otherwise, if the new type isn't a text control but the previous was, we
-  // should clear out mFocusedValue.
-  if (IsSingleLineTextControl(mType, false) &&
-      !IsSingleLineTextControl(oldType, false)) {
+  // If the new type fires a change event on blur, but the previous type
+  // doesn't, we should set mFocusedValue to the current value.
+  // Otherwise, if the new type doesn't fire a change event on blur, but the
+  // previous type does, we should clear out mFocusedValue.
+  if (MayFireChangeOnBlur(mType) && !MayFireChangeOnBlur(oldType)) {
     GetValueInternal(mFocusedValue);
   } else if (!IsSingleLineTextControl(mType, false) &&
              IsSingleLineTextControl(oldType, false)) {
