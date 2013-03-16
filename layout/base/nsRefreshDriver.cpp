@@ -828,7 +828,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     return;
   }
 
-  SAMPLE_LABEL("nsRefreshDriver", "Tick");
+  PROFILER_LABEL("nsRefreshDriver", "Tick");
 
   // We're either frozen or we were disconnected (likely in the middle
   // of a tick iteration).  Just do nothing here, since our

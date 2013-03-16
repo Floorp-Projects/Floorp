@@ -494,7 +494,7 @@ void nsTimerImpl::Fire()
   if (mCanceled)
     return;
 
-  SAMPLE_LABEL("Timer", "Fire");
+  PROFILER_LABEL("Timer", "Fire");
 
   TimeStamp now = TimeStamp::Now();
 #ifdef DEBUG_TIMERS

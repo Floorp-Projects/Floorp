@@ -2889,7 +2889,7 @@ nsCycleCollector_shutdown()
     MOZ_ASSERT(!sCollectorThread, "Should have finished before!");
 
     if (sCollector) {
-        SAMPLE_LABEL("CC", "nsCycleCollector_shutdown");
+        PROFILER_LABEL("CC", "nsCycleCollector_shutdown");
         sCollector->Shutdown();
         delete sCollector;
         sCollector = nullptr;

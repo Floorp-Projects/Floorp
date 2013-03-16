@@ -162,7 +162,7 @@ public:
 
     bool SwapBuffers()
     {
-      SAMPLE_LABEL("GLContext", "SwapBuffers");
+      PROFILER_LABEL("GLContext", "SwapBuffers");
       [mContext flushBuffer];
       return true;
     }
