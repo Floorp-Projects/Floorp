@@ -25,14 +25,25 @@
 #include "IDBTransaction.h"
 #include "DOMError.h"
 
+namespace {
+
+#ifdef MOZ_ENABLE_PROFILER_SPS
+uint64_t gNextSerialNumber = 1;
+#endif
+
+} // anonymous namespace
+
 USING_INDEXEDDB_NAMESPACE
 
 IDBRequest::IDBRequest()
 : mResultVal(JSVAL_VOID),
   mActorParent(nullptr),
+#ifdef MOZ_ENABLE_PROFILER_SPS
+  mSerialNumber(gNextSerialNumber++),
+#endif
   mErrorCode(NS_OK),
-  mHaveResultOrErrorCode(false),
-  mLineNo(0)
+  mLineNo(0),
+  mHaveResultOrErrorCode(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }

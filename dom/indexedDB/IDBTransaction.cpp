@@ -30,6 +30,7 @@
 #include "IDBFactory.h"
 #include "IDBObjectStore.h"
 #include "IndexedDatabaseManager.h"
+#include "ProfilerHelpers.h"
 #include "TransactionThreadPool.h"
 
 #include "ipc/IndexedDBChild.h"
@@ -42,6 +43,10 @@ using mozilla::dom::quota::QuotaManager;
 namespace {
 
 NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+
+#ifdef MOZ_ENABLE_PROFILER_SPS
+uint64_t gNextSerialNumber = 1;
+#endif
 
 PLDHashOperator
 DoomCachedStatements(const nsACString& aQuery,
@@ -165,6 +170,9 @@ IDBTransaction::IDBTransaction()
   mActorChild(nullptr),
   mActorParent(nullptr),
   mAbortCode(NS_OK),
+#ifdef MOZ_ENABLE_PROFILER_SPS
+  mSerialNumber(gNextSerialNumber++),
+#endif
   mCreating(false)
 #ifdef DEBUG
   , mFiredCompleteOrAbort(false)
@@ -345,8 +353,10 @@ IDBTransaction::RollbackSavepoint()
 nsresult
 IDBTransaction::GetOrCreateConnection(mozIStorageConnection** aResult)
 {
-  NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
+
+  PROFILER_LABEL("IndexedDB", "IDBTransaction::GetOrCreateConnection");
 
   if (mDatabase->IsInvalidated()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -816,6 +826,8 @@ NS_IMETHODIMP
 CommitHelper::Run()
 {
   if (NS_IsMainThread()) {
+    PROFILER_MAIN_THREAD_LABEL("IndexedDB", "CommitHelper::Run");
+
     NS_ASSERTION(mDoomedObjects.IsEmpty(), "Didn't release doomed objects!");
 
     mTransaction->mReadyState = IDBTransaction::DONE;
@@ -860,6 +872,10 @@ CommitHelper::Run()
       mListener->NotifyTransactionPreComplete(mTransaction);
     }
 
+    IDB_PROFILER_MARK("IndexedDB Transaction %llu: Complete (rv = %lu)",
+                      "IDBTransaction[%llu] MT Complete",
+                      mTransaction->GetSerialNumber(), mAbortCode);
+
     bool dummy;
     if (NS_FAILED(mTransaction->DispatchEvent(event, &dummy))) {
       NS_WARNING("Dispatch failed!");
@@ -877,6 +893,8 @@ CommitHelper::Run()
 
     return NS_OK;
   }
+
+  PROFILER_LABEL("IndexedDB", "CommitHelper::Run");
 
   IDBDatabase* database = mTransaction->Database();
   if (database->IsInvalidated()) {
