@@ -9,13 +9,16 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <stdarg.h>
+#include <algorithm>
 #include "mozilla/ThreadLocal.h"
-#include "nscore.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Util.h"
 #include "nsAlgorithm.h"
-#include <algorithm>
+#include "nscore.h"
+#include "jsfriendapi.h"
+#include "GeckoProfilerFunc.h"
+#include "PseudoStack.h"
 
 
 /* QT has a #define for the word "slots" and jsfriendapi.h has a struct with
@@ -24,15 +27,11 @@
 #ifdef MOZ_WIDGET_QT
 #undef slots
 #endif
-#include "jsfriendapi.h"
 
 // Make sure that we can use std::min here without the Windows headers messing with us.
 #ifdef min
 #undef min
 #endif
-
-using mozilla::TimeStamp;
-using mozilla::TimeDuration;
 
 struct PseudoStack;
 class TableTicker;
@@ -50,67 +49,6 @@ extern bool stack_key_initialized;
 #  define SAMPLE_FUNCTION_NAME __func__  // defined in C99, supported in various C++ compilers. Just raw function name.
 # endif
 #endif
-
-// Returns a handle to pass on exit. This can check that we are popping the
-// correct callstack.
-inline void* mozilla_sampler_call_enter(const char *aInfo, void *aFrameAddress = NULL,
-                                        bool aCopy = false, uint32_t line = 0);
-inline void  mozilla_sampler_call_exit(void* handle);
-inline void  mozilla_sampler_add_marker(const char *aInfo);
-
-void mozilla_sampler_start1(int aEntries, int aInterval, const char** aFeatures,
-                            uint32_t aFeatureCount);
-void mozilla_sampler_start2(int aEntries, int aInterval, const char** aFeatures,
-                            uint32_t aFeatureCount);
-
-void mozilla_sampler_stop1();
-void mozilla_sampler_stop2();
-
-bool mozilla_sampler_is_active1();
-bool mozilla_sampler_is_active2();
-
-void mozilla_sampler_responsiveness1(const TimeStamp& time);
-void mozilla_sampler_responsiveness2(const TimeStamp& time);
-
-void mozilla_sampler_frame_number1(int frameNumber);
-void mozilla_sampler_frame_number2(int frameNumber);
-
-const double* mozilla_sampler_get_responsiveness1();
-const double* mozilla_sampler_get_responsiveness2();
-
-void mozilla_sampler_save1();
-void mozilla_sampler_save2();
-
-char* mozilla_sampler_get_profile1();
-char* mozilla_sampler_get_profile2();
-
-JSObject *mozilla_sampler_get_profile_data1(JSContext *aCx);
-JSObject *mozilla_sampler_get_profile_data2(JSContext *aCx);
-
-const char** mozilla_sampler_get_features1();
-const char** mozilla_sampler_get_features2();
-
-void mozilla_sampler_init1();
-void mozilla_sampler_init2();
-
-void mozilla_sampler_shutdown1();
-void mozilla_sampler_shutdown2();
-
-void mozilla_sampler_print_location1();
-void mozilla_sampler_print_location2();
-
-// Lock the profiler. When locked the profiler is (1) stopped,
-// (2) profile data is cleared, (3) profiler-locked is fired.
-// This is used to lock down the profiler during private browsing
-void mozilla_sampler_lock1();
-void mozilla_sampler_lock2();
-
-// Unlock the profiler, leaving it stopped and fires profiler-unlocked.
-void mozilla_sampler_unlock1();
-void mozilla_sampler_unlock2();
-
-/* Returns true if env var SPS_NEW is set to anything, else false. */
-extern bool sps_version2();
 
 static inline
 void profiler_init()
@@ -267,18 +205,6 @@ void profiler_unlock()
 #define PROFILER_MAIN_THREAD_LABEL_PRINTF(name_space, info, ...)  MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread"); mozilla::SamplerStackFramePrintfRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__, __VA_ARGS__)
 #define PROFILER_MAIN_THREAD_MARKER(info)  MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread"); mozilla_sampler_add_marker(info)
 
-/* we duplicate this code here to avoid header dependencies
- * which make it more difficult to include in other places */
-#if defined(_M_X64) || defined(__x86_64__)
-#define V8_HOST_ARCH_X64 1
-#elif defined(_M_IX86) || defined(__i386__) || defined(__i386)
-#define V8_HOST_ARCH_IA32 1
-#elif defined(__ARMEL__)
-#define V8_HOST_ARCH_ARM 1
-#else
-#warning Please add support for your architecture in chromium_types.h
-#endif
-
 /* FIXME/bug 789667: memory constraints wouldn't much of a problem for
  * this small a sample buffer size, except that serializing the
  * profile data is extremely, unnecessarily memory intensive. */
@@ -315,50 +241,6 @@ void profiler_unlock()
 #endif
 #define PROFILE_DEFAULT_FEATURES NULL
 #define PROFILE_DEFAULT_FEATURE_COUNT 0
-
-// STORE_SEQUENCER: Because signals can interrupt our profile modification
-//                  we need to make stores are not re-ordered by the compiler
-//                  or hardware to make sure the profile is consistent at
-//                  every point the signal can fire.
-#ifdef V8_HOST_ARCH_ARM
-// TODO Is there something cheaper that will prevent
-//      memory stores from being reordered
-
-typedef void (*LinuxKernelMemoryBarrierFunc)(void);
-LinuxKernelMemoryBarrierFunc pLinuxKernelMemoryBarrier __attribute__((weak)) =
-    (LinuxKernelMemoryBarrierFunc) 0xffff0fa0;
-
-# define STORE_SEQUENCER() pLinuxKernelMemoryBarrier()
-#elif defined(V8_HOST_ARCH_IA32) || defined(V8_HOST_ARCH_X64)
-# if defined(_MSC_VER)
-#if _MSC_VER > 1400
-#  include <intrin.h>
-#else // _MSC_VER > 1400
-    // MSVC2005 has a name collision bug caused when both <intrin.h> and <winnt.h> are included together.
-#ifdef _WINNT_
-#  define _interlockedbittestandreset _interlockedbittestandreset_NAME_CHANGED_TO_AVOID_MSVS2005_ERROR
-#  define _interlockedbittestandset _interlockedbittestandset_NAME_CHANGED_TO_AVOID_MSVS2005_ERROR
-#  include <intrin.h>
-#else
-#  include <intrin.h>
-#  define _interlockedbittestandreset _interlockedbittestandreset_NAME_CHANGED_TO_AVOID_MSVS2005_ERROR
-#  define _interlockedbittestandset _interlockedbittestandset_NAME_CHANGED_TO_AVOID_MSVS2005_ERROR
-#endif
-   // Even though MSVC2005 has the intrinsic _ReadWriteBarrier, it fails to link to it when it's
-   // not explicitly declared.
-#  pragma intrinsic(_ReadWriteBarrier)
-#endif // _MSC_VER > 1400
-#  define STORE_SEQUENCER() _ReadWriteBarrier();
-# elif defined(__INTEL_COMPILER)
-#  define STORE_SEQUENCER() __memory_barrier();
-# elif __GNUC__
-#  define STORE_SEQUENCER() asm volatile("" ::: "memory");
-# else
-#  error "Memory clobber not supported for your compiler."
-# endif
-#else
-# error "Memory clobber not supported for your platform."
-#endif
 
 namespace mozilla {
 
@@ -409,186 +291,6 @@ private:
 };
 
 } //mozilla
-
-// A stack entry exists to allow the JS engine to inform SPS of the current
-// backtrace, but also to instrument particular points in C++ in case stack
-// walking is not available on the platform we are running on.
-//
-// Each entry has a descriptive string, a relevant stack address, and some extra
-// information the JS engine might want to inform SPS of. This class inherits
-// from the JS engine's version of the entry to ensure that the size and layout
-// of the two representations are consistent.
-class StackEntry : public js::ProfileEntry
-{
-public:
-
-  bool isCopyLabel() volatile {
-    return !((uintptr_t)stackAddress() & 0x1);
-  }
-
-  void setStackAddressCopy(void *sparg, bool copy) volatile {
-    // Tagged pointer. Less significant bit used to track if mLabel needs a
-    // copy. Note that we don't need the last bit of the stack address for
-    // proper ordering. This is optimized for encoding within the JS engine's
-    // instrumentation, so we do the extra work here of encoding a bit.
-    // Last bit 1 = Don't copy, Last bit 0 = Copy.
-    if (copy) {
-      setStackAddress(reinterpret_cast<void*>(
-                        reinterpret_cast<uintptr_t>(sparg) & ~0x1));
-    } else {
-      setStackAddress(reinterpret_cast<void*>(
-                        reinterpret_cast<uintptr_t>(sparg) | 0x1));
-    }
-  }
-};
-
-// the PseudoStack members are read by signal
-// handlers, so the mutation of them needs to be signal-safe.
-struct PseudoStack
-{
-public:
-  PseudoStack()
-    : mStackPointer(0)
-    , mSignalLock(false)
-    , mMarkerPointer(0)
-    , mQueueClearMarker(false)
-    , mRuntime(NULL)
-    , mStartJSSampling(false)
-  { }
-
-  void addMarker(const char *aMarker)
-  {
-    char* markerCopy = strdup(aMarker);
-    mSignalLock = true;
-    STORE_SEQUENCER();
-
-    if (mQueueClearMarker) {
-      clearMarkers();
-    }
-    if (!aMarker) {
-      return; //discard
-    }
-    if (size_t(mMarkerPointer) == mozilla::ArrayLength(mMarkers)) {
-      return; //array full, silently drop
-    }
-    mMarkers[mMarkerPointer] = markerCopy;
-    mMarkerPointer++;
-
-    mSignalLock = false;
-    STORE_SEQUENCER();
-  }
-
-  // called within signal. Function must be reentrant
-  const char* getMarker(int aMarkerId)
-  {
-    // if mSignalLock then the stack is inconsistent because it's being
-    // modified by the profiled thread. Post pone these markers
-    // for the next sample. The odds of a livelock are nearly impossible
-    // and would show up in a profile as many sample in 'addMarker' thus
-    // we ignore this scenario.
-    // if mQueueClearMarker then we've the sampler thread has already
-    // thread the markers then they are pending deletion.
-    if (mSignalLock || mQueueClearMarker || aMarkerId < 0 ||
-      static_cast<mozilla::sig_safe_t>(aMarkerId) >= mMarkerPointer) {
-      return NULL;
-    }
-    return mMarkers[aMarkerId];
-  }
-
-  // called within signal. Function must be reentrant
-  void clearMarkers()
-  {
-    for (mozilla::sig_safe_t i = 0; i < mMarkerPointer; i++) {
-      free(mMarkers[i]);
-    }
-    mMarkerPointer = 0;
-    mQueueClearMarker = false;
-  }
-
-  void push(const char *aName, uint32_t line)
-  {
-    push(aName, NULL, false, line);
-  }
-
-  void push(const char *aName, void *aStackAddress, bool aCopy, uint32_t line)
-  {
-    if (size_t(mStackPointer) >= mozilla::ArrayLength(mStack)) {
-      mStackPointer++;
-      return;
-    }
-
-    // Make sure we increment the pointer after the name has
-    // been written such that mStack is always consistent.
-    mStack[mStackPointer].setLabel(aName);
-    mStack[mStackPointer].setStackAddressCopy(aStackAddress, aCopy);
-    mStack[mStackPointer].setLine(line);
-
-    // Prevent the optimizer from re-ordering these instructions
-    STORE_SEQUENCER();
-    mStackPointer++;
-  }
-  void pop()
-  {
-    mStackPointer--;
-  }
-  bool isEmpty()
-  {
-    return mStackPointer == 0;
-  }
-  uint32_t stackSize() const
-  {
-    return std::min<uint32_t>(mStackPointer, mozilla::ArrayLength(mStack));
-  }
-
-  void sampleRuntime(JSRuntime *runtime) {
-    mRuntime = runtime;
-    if (!runtime) {
-      // JS shut down
-      return;
-    }
-
-    JS_STATIC_ASSERT(sizeof(mStack[0]) == sizeof(js::ProfileEntry));
-    js::SetRuntimeProfilingStack(runtime,
-                                 (js::ProfileEntry*) mStack,
-                                 (uint32_t*) &mStackPointer,
-                                 mozilla::ArrayLength(mStack));
-    if (mStartJSSampling)
-      enableJSSampling();
-  }
-  void enableJSSampling() {
-    if (mRuntime) {
-      js::EnableRuntimeProfilingStack(mRuntime, true);
-      mStartJSSampling = false;
-    } else {
-      mStartJSSampling = true;
-    }
-  }
-  void disableJSSampling() {
-    mStartJSSampling = false;
-    if (mRuntime)
-      js::EnableRuntimeProfilingStack(mRuntime, false);
-  }
-
-  // Keep a list of active checkpoints
-  StackEntry volatile mStack[1024];
-  // Keep a list of active markers to be applied to the next sample taken
-  char* mMarkers[1024];
- private:
-  // This may exceed the length of mStack, so instead use the stackSize() method
-  // to determine the number of valid samples in mStack
-  mozilla::sig_safe_t mStackPointer;
-  // If this is set then it's not safe to read mStackPointer from the signal handler
-  volatile bool mSignalLock;
- public:
-  volatile mozilla::sig_safe_t mMarkerPointer;
-  // We don't want to modify _markers from within the signal so we allow
-  // it to queue a clear operation.
-  volatile mozilla::sig_safe_t mQueueClearMarker;
-  // The runtime which is being sampled
-  JSRuntime *mRuntime;
-  // Start JS Profiling when possible
-  bool mStartJSSampling;
-};
 
 inline PseudoStack* mozilla_get_pseudo_stack(void)
 {

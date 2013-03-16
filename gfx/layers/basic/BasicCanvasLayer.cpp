@@ -12,7 +12,7 @@
 #include "SurfaceStream.h"
 #include "SharedSurfaceGL.h"
 #include "SharedSurfaceEGL.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 #include "BasicLayersImpl.h"
 #include "nsXULAppAPI.h"
@@ -412,7 +412,7 @@ BasicShadowableCanvasLayer::Initialize(const Data& aData)
 void
 BasicShadowableCanvasLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
 {
-  SAMPLE_LABEL("BasicShadowableCanvasLayer", "Paint");
+  PROFILER_LABEL("BasicShadowableCanvasLayer", "Paint");
   if (!HasShadow()) {
     BasicCanvasLayer::Paint(aContext, aMaskLayer);
     return;
