@@ -429,7 +429,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
                             nsDispatchingCallback* aCallback,
                             nsCOMArray<nsIDOMEventTarget>* aTargets)
 {
-  SAMPLE_LABEL("nsEventDispatcher", "Dispatch");
+  PROFILER_LABEL("nsEventDispatcher", "Dispatch");
   NS_ASSERTION(aEvent, "Trying to dispatch without nsEvent!");
   NS_ENSURE_TRUE(!aEvent->mFlags.mIsBeingDispatched,
                  NS_ERROR_ILLEGAL_VALUE);

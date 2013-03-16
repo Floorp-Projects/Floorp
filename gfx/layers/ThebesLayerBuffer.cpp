@@ -105,7 +105,7 @@ ThebesLayerBuffer::DrawBufferWithRotation(gfxContext* aTarget, float aOpacity,
                                           gfxASurface* aMask,
                                           const gfxMatrix* aMaskTransform)
 {
-  SAMPLE_LABEL("ThebesLayerBuffer", "DrawBufferWithRotation");
+  PROFILER_LABEL("ThebesLayerBuffer", "DrawBufferWithRotation");
   // Draw four quadrants. We could use REPEAT_, but it's probably better
   // not to, to be performance-safe.
   DrawBufferQuadrant(aTarget, LEFT, TOP, aOpacity, aMask, aMaskTransform);

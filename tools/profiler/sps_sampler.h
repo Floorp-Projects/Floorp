@@ -199,6 +199,16 @@ char* profiler_get_profile()
 }
 
 static inline
+JSObject* profiler_get_profile_jsobject(JSContext* aCx)
+{
+  if (!sps_version2()) {
+    return mozilla_sampler_get_profile_data1(aCx);
+  } else {
+    return mozilla_sampler_get_profile_data2(aCx);
+  }
+}
+
+static inline
 const char** profiler_get_features()
 {
   if (!sps_version2()) {

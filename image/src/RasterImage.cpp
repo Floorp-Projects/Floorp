@@ -2847,7 +2847,7 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
   // large images will decode a bit and post themselves to the event loop
   // to finish decoding.
   if (!mDecoded && !mInDecoder && mHasSourceData && aDecodeType == SOMEWHAT_SYNCHRONOUS) {
-    SAMPLE_LABEL_PRINTF("RasterImage", "DecodeABitOf", "%s", GetURIString().get());
+    PROFILER_LABEL_PRINTF("RasterImage", "DecodeABitOf", "%s", GetURIString().get());
     DecodeWorker::Singleton()->DecodeABitOf(this);
     return NS_OK;
   }
@@ -2866,7 +2866,7 @@ RasterImage::SyncDecode()
 {
   nsresult rv;
 
-  SAMPLE_LABEL_PRINTF("RasterImage", "SyncDecode", "%s", GetURIString().get());;
+  PROFILER_LABEL_PRINTF("RasterImage", "SyncDecode", "%s", GetURIString().get());;
 
   // If we're decoded already, no worries
   if (mDecoded)

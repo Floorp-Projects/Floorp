@@ -910,7 +910,7 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
                       RuleProcessorData* aData, Element* aElement,
                       nsRuleWalker* aRuleWalker)
 {
-  SAMPLE_LABEL("nsStyleSet", "FileRules");
+  PROFILER_LABEL("nsStyleSet", "FileRules");
 
   // Cascading order:
   // [least important]
