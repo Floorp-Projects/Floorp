@@ -89,10 +89,10 @@ public:
 
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
-                        uint32_t aArgc, jsval* aArgv);
+                        uint32_t aArgc, JS::Value* aArgv);
 
   virtual nsresult InitFromCtor(const nsAString& aType,
-                                JSContext* aCx, jsval* aVal);
+                                JSContext* aCx, JS::Value* aVal);
 
   void InitPresContextData(nsPresContext* aPresContext);
 

@@ -31,7 +31,7 @@ public:
   NS_FORWARD_TO_NSDOMMOUSEEVENT
 
   virtual nsresult InitFromCtor(const nsAString& aType,
-                                JSContext* aCx, jsval* aVal);
+                                JSContext* aCx, JS::Value* aVal);
 };
 
 } // namespace dom
