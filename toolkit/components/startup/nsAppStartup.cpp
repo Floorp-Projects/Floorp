@@ -373,7 +373,7 @@ nsAppStartup::Quit(uint32_t aMode)
       }
     }
 
-    SAMPLE_MARKER("Shutdown start");
+    PROFILER_MARKER("Shutdown start");
     mozilla::RecordShutdownStartTimeStamp();
     mShuttingDown = true;
     if (!mRestart) {

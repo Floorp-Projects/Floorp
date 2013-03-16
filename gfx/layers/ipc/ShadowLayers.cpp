@@ -300,7 +300,7 @@ ShadowLayerForwarder::PaintedCanvas(ShadowableLayer* aCanvas,
 bool
 ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
 {
-  SAMPLE_LABEL("ShadowLayerForwarder", "EndTranscation");
+  PROFILER_LABEL("ShadowLayerForwarder", "EndTranscation");
   RenderTraceScope rendertrace("Foward Transaction", "000091");
   NS_ABORT_IF_FALSE(HasShadowManager(), "no manager to forward to");
   NS_ABORT_IF_FALSE(!mTxn->Finished(), "forgot BeginTransaction?");

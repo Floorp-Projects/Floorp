@@ -1536,7 +1536,7 @@ struct GlyphBuffer {
                 FlushStroke(aCR, aObjectPaint, aGlobalMatrix);
             }
             if (aDrawMode & gfxFont::GLYPH_FILL) {
-                SAMPLE_LABEL("GlyphBuffer", "cairo_show_glyphs");
+                PROFILER_LABEL("GlyphBuffer", "cairo_show_glyphs");
                 nsRefPtr<gfxPattern> pattern;
                 if (aObjectPaint &&
                     !!(pattern = aObjectPaint->GetFillPattern(aGlobalMatrix))) {
