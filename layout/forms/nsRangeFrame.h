@@ -85,6 +85,10 @@ public:
    */
   bool IsHorizontal(const nsSize *aFrameSizeOverride = nullptr) const;
 
+  double GetMin() const;
+  double GetMax() const;
+  double GetValue() const;
+
   /**
    * Returns whether the frame and its child should use the native style.
    */
