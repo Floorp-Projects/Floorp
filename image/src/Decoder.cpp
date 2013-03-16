@@ -87,7 +87,7 @@ Decoder::InitSharedDecoder(uint8_t* imageData, uint32_t imageDataLength,
 void
 Decoder::Write(const char* aBuffer, uint32_t aCount)
 {
-  SAMPLE_LABEL("ImageDecoder", "Write");
+  PROFILER_LABEL("ImageDecoder", "Write");
 
   // We're strict about decoder errors
   NS_ABORT_IF_FALSE(!HasDecoderError(),
