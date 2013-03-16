@@ -20,6 +20,7 @@
 #include "nsHTMLInputElement.h"
 #include "nsPresContext.h"
 #include "nsNodeInfoManager.h"
+#include "nsRenderingContext.h"
 #include "mozilla/dom/Element.h"
 #include "prtypes.h"
 
@@ -329,9 +330,25 @@ nsRangeFrame::GetValueAtEventPoint(nsGUIEvent* aEvent)
 
   nsRect rangeContentRect = GetContentRectRelativeToSelf();
   nsSize thumbSize;
-  nsIFrame* thumbFrame = mThumbDiv->GetPrimaryFrame();
-  if (thumbFrame) { // diplay:none?
-    thumbSize = thumbFrame->GetSize();
+
+  if (IsThemed()) {
+    // We need to get the size of the thumb from the theme.
+    nsPresContext *presContext = PresContext();
+    nsRefPtr<nsRenderingContext> tmpCtx =
+      presContext->PresShell()->GetReferenceRenderingContext();
+    bool notUsedCanOverride;
+    nsIntSize size;
+    presContext->GetTheme()->
+      GetMinimumWidgetSize(tmpCtx.get(), this, NS_THEME_RANGE_THUMB, &size,
+                           &notUsedCanOverride);
+    thumbSize.width = presContext->DevPixelsToAppUnits(size.width);
+    thumbSize.height = presContext->DevPixelsToAppUnits(size.height);
+    MOZ_ASSERT(thumbSize.width > 0 && thumbSize.height > 0);
+  } else {
+    nsIFrame* thumbFrame = mThumbDiv->GetPrimaryFrame();
+    if (thumbFrame) { // diplay:none?
+      thumbSize = thumbFrame->GetSize();
+    }
   }
 
   double fraction;
@@ -375,6 +392,11 @@ nsRangeFrame::UpdateThumbPositionForValueChange()
     return; // diplay:none?
   }
   DoUpdateThumbPosition(thumbFrame, GetSize());
+  if (IsThemed()) {
+    // We don't know the exact dimensions or location of the thumb when native
+    // theming is applied, so we just repaint the entire range.
+    InvalidateFrame();
+  }
   SchedulePaint();
 }
 
@@ -535,14 +557,43 @@ nsRangeFrame::IsHorizontal(const nsSize *aFrameSizeOverride) const
   return true; // until we decide how to support vertical range (bug 840820)
 }
 
+double
+nsRangeFrame::GetMin() const
+{
+  return static_cast<nsHTMLInputElement*>(mContent)->GetMinimum();
+}
+
+double
+nsRangeFrame::GetMax() const
+{
+  return static_cast<nsHTMLInputElement*>(mContent)->GetMaximum();
+}
+
+double
+nsRangeFrame::GetValue() const
+{
+  return static_cast<nsHTMLInputElement*>(mContent)->GetValueAsDouble();
+}
+
 nsIAtom*
 nsRangeFrame::GetType() const
 {
   return nsGkAtoms::rangeFrame;
 }
 
+#define STYLES_DISABLING_NATIVE_THEMING \
+  NS_AUTHOR_SPECIFIED_BACKGROUND | \
+  NS_AUTHOR_SPECIFIED_PADDING | \
+  NS_AUTHOR_SPECIFIED_BORDER
+
 bool
 nsRangeFrame::ShouldUseNativeStyle() const
 {
-  return false; // TODO
+  return (StyleDisplay()->mAppearance == NS_THEME_RANGE) &&
+         !PresContext()->HasAuthorSpecifiedRules(const_cast<nsRangeFrame*>(this),
+                                                 STYLES_DISABLING_NATIVE_THEMING) &&
+         !PresContext()->HasAuthorSpecifiedRules(mTrackDiv->GetPrimaryFrame(),
+                                                 STYLES_DISABLING_NATIVE_THEMING) &&
+         !PresContext()->HasAuthorSpecifiedRules(mThumbDiv->GetPrimaryFrame(),
+                                                 STYLES_DISABLING_NATIVE_THEMING);
 }
