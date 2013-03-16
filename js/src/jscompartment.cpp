@@ -726,6 +726,9 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
             rt->freeLifoAlloc.transferFrom(&analysisLifoAlloc);
             rt->freeLifoAlloc.transferFrom(&oldAlloc);
         }
+    } else {
+        gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_DISCARD_ANALYSIS);
+        types.sweepShapes(fop);
     }
 
     NativeIterator *ni = enumerators->next();
