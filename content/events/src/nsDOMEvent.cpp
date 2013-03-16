@@ -294,7 +294,7 @@ nsDOMEvent::SetTrusted(bool aTrusted)
 
 NS_IMETHODIMP
 nsDOMEvent::Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
-                       uint32_t aArgc, jsval* aArgv)
+                       uint32_t aArgc, JS::Value* aArgv)
 {
   NS_ENSURE_TRUE(aArgc >= 1, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
 
@@ -335,7 +335,7 @@ nsDOMEvent::Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
 
 nsresult
 nsDOMEvent::InitFromCtor(const nsAString& aType,
-                         JSContext* aCx, jsval* aVal)
+                         JSContext* aCx, JS::Value* aVal)
 {
   mozilla::idl::EventInit d;
   nsresult rv = d.Init(aCx, aVal);
