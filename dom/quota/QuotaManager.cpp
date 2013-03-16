@@ -22,6 +22,7 @@
 #include "nsIUsageCallback.h"
 
 #include <algorithm>
+#include "GeckoProfiler.h"
 #include "mozilla/dom/file/FileService.h"
 #include "mozilla/dom/indexedDB/Client.h"
 #include "mozilla/LazyIdleThread.h"
@@ -1885,6 +1886,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(OriginClearRunnable, nsIRunnable)
 NS_IMETHODIMP
 OriginClearRunnable::Run()
 {
+  PROFILER_LABEL("Quota", "OriginClearRunnable::Run");
+
   QuotaManager* quotaManager = QuotaManager::Get();
   NS_ASSERTION(quotaManager, "This should never fail!");
 
@@ -2127,6 +2130,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(AsyncUsageRunnable,
 NS_IMETHODIMP
 AsyncUsageRunnable::Run()
 {
+  PROFILER_LABEL("Quota", "AsyncUsageRunnable::Run");
+
   nsresult rv = RunInternal();
 
   if (!NS_IsMainThread()) {
