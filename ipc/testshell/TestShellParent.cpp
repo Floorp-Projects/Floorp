@@ -73,7 +73,7 @@ TestShellParent::GetGlobalJSObject(JSContext* cx, JSObject** globalp)
 
 JSBool
 TestShellCommandParent::SetCallback(JSContext* aCx,
-                                    jsval aCallback)
+                                    JS::Value aCallback)
 {
   if (!mCallback.Hold(aCx)) {
     return JS_FALSE;
@@ -100,10 +100,10 @@ TestShellCommandParent::RunCallback(const nsString& aResponse)
   JSString* str = JS_NewUCStringCopyN(mCx, aResponse.get(), aResponse.Length());
   NS_ENSURE_TRUE(str, JS_FALSE);
 
-  jsval argv[] = { STRING_TO_JSVAL(str) };
+  JS::Value argv[] = { STRING_TO_JSVAL(str) };
   unsigned argc = ArrayLength(argv);
 
-  jsval rval;
+  JS::Value rval;
   JSBool ok = JS_CallFunctionValue(mCx, global, mCallback, argc, argv, &rval);
   NS_ENSURE_TRUE(ok, JS_FALSE);
 

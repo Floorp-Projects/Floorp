@@ -909,7 +909,7 @@ cryptojs_generateOneKeyPair(JSContext *cx, nsKeyPairInfo *keyPairInfo,
 
 static nsresult
 cryptojs_ReadArgsAndGenerateKey(JSContext *cx,
-                                jsval *argv,
+                                JS::Value *argv,
                                 nsKeyPairInfo *keyGenType,
                                 nsIInterfaceRequestor *uiCxt,
                                 PK11SlotInfo **slot, bool willEscrow)
@@ -1846,7 +1846,7 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
 
   ncc->GetArgc(&argc);
 
-  jsval *argv = nullptr;
+  JS::Value *argv = nullptr;
 
   nrv = ncc->GetArgvPtr(&argv);
   NS_ENSURE_SUCCESS(nrv, nrv);
@@ -2537,7 +2537,7 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
 
   uint32_t numCAs = argc - 2;
   if (numCAs > 0) {
-    jsval *argv = nullptr;
+    JS::Value *argv = nullptr;
     ncc->GetArgvPtr(&argv);
 
     nsAutoArrayPtr<JSAutoByteString> caNameBytes(new JSAutoByteString[numCAs]);
@@ -2857,7 +2857,8 @@ nsCrypto::DisableRightClick()
 }
 
 NS_IMETHODIMP
-nsCrypto::GetRandomValues(const jsval& aData, JSContext *cx, jsval* _retval)
+nsCrypto::GetRandomValues(const JS::Value& aData, JSContext *cx,
+                          JS::Value* _retval)
 {
   return mozilla::dom::Crypto::GetRandomValues(aData, cx, _retval);
 }
