@@ -100,7 +100,22 @@ public:
 
   bool IsFloat() const
   {
-    return !mBuffer.IsVoid() && mBuffer.First() == eFloat;
+    return !IsUnset() && mBuffer.First() == eFloat;
+  }
+
+  bool IsDate() const
+  {
+    return !IsUnset() && mBuffer.First() == eDate;
+  }
+
+  bool IsString() const
+  {
+    return !IsUnset() && mBuffer.First() == eString;
+  }
+
+  bool IsArray() const
+  {
+    return !IsUnset() && mBuffer.First() >= eArray;
   }
 
   double ToFloat() const
@@ -110,6 +125,23 @@ public:
     double res = DecodeNumber(pos, BufferEnd());
     NS_ASSERTION(pos >= BufferEnd(), "Should consume whole buffer");
     return res;
+  }
+
+  double ToDateMsec() const
+  {
+    NS_ASSERTION(IsDate(), "Why'd you call this?");
+    const unsigned char* pos = BufferStart();
+    double res = DecodeNumber(pos, BufferEnd());
+    NS_ASSERTION(pos >= BufferEnd(), "Should consume whole buffer");
+    return res;
+  }
+
+  void ToString(nsString& aString) const
+  {
+    NS_ASSERTION(IsString(), "Why'd you call this?");
+    const unsigned char* pos = BufferStart();
+    DecodeString(pos, BufferEnd(), aString);
+    NS_ASSERTION(pos >= BufferEnd(), "Should consume whole buffer");
   }
 
   void SetFromString(const nsAString& aString)
