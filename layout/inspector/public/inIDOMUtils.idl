@@ -16,7 +16,7 @@ interface nsIDOMFontFaceList;
 interface nsIDOMRange;
 interface nsIDOMCSSStyleSheet;
 
-[scriptable, uuid(dd8a9dfd-336f-4cce-8ec1-0365ede9a3a8)]
+[scriptable, uuid(1d9c29dc-230a-441e-bba9-49104ffa185e)]
 interface inIDOMUtils : nsISupports
 {
   // CSS utilities
@@ -41,8 +41,23 @@ interface inIDOMUtils : nsISupports
                               in nsIDOMCSSStyleRule aRule,
                               in unsigned long aSelectorIndex);
 
+  // Utilities for working with CSS properties
+  //
   // Returns true if the string names a property that is inherited by default.
   bool isInheritedProperty(in AString aPropertyName);
+
+  // Get a list of all our supported property names.  Optionally
+  // shorthands can be excluded or property aliases included.
+  const unsigned long EXCLUDE_SHORTHANDS = (1<<0);
+  const unsigned long INCLUDE_ALIASES = (1<<1);
+  void getCSSPropertyNames([optional] in unsigned long aFlags,
+			   [optional] out unsigned long aCount,
+			   [retval, array, size_is(aCount)] out wstring aProps);
+
+  // Utilities for working with CSS colors
+  [implicit_jscontext]
+  jsval colorNameToRGB(in DOMString aColorName);
+  AString rgbToColorName(in octet aR, in octet aG, in octet aB);
 
   // DOM Node utilities
   boolean isIgnorableWhitespace(in nsIDOMCharacterData aDataNode);

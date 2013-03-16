@@ -599,32 +599,6 @@ function completeTest20(request, data, ctx)
 {
   do_check_eq(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
 
-  run_test_number(21);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// FAIL if multiple Access-Control-Allow-Origin headers provided
-
-test_flags[21] = CL_EXPECT_FAILURE;
-
-function handler21(metadata, response)
-{
-  var body = "012345678901234567890123456789";
-  response.seizePower();
-  response.write("HTTP/1.0 200 OK\r\n");
-  response.write("Content-Type: text/plain\r\n");
-  response.write("Content-Length: 30\r\n");
-  response.write("Access-Control-Allow-Origin: www.mozilla.org\r\n");
-  response.write("Access-Control-Allow-Origin: www.evil.net\r\n");
-  response.write("\r\n");
-  response.write(body);
-  response.finish();
-}
-
-function completeTest21(request, data, ctx)
-{
-  do_check_eq(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
-
   endTests();
 }
 

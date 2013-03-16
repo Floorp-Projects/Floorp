@@ -248,7 +248,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 };
 
-class MainThreadEventTarget : public StackBasedEventTarget
+class ImmediateRunEventTarget : public StackBasedEventTarget
 {
 public:
   NS_DECL_NSIEVENTTARGET

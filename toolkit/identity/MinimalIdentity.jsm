@@ -60,8 +60,10 @@ function makeMessageObject(aRpCaller) {
     }
   });
 
-  if (! (options.id && options.origin)) {
-    let err = "id and origin required in relying-party message";
+  // check validity of message structure
+  if ((typeof options.id === 'undefined') ||
+      (typeof options.origin === 'undefined')) {
+    let err = "id and origin required in relying-party message: " + JSON.stringify(options);
     reportError(err);
     throw new Error(err);
   }
@@ -137,6 +139,21 @@ IDService.prototype = {
     Services.obs.notifyObservers({wrappedJSObject: options},"identity-controller-watch", null);
   },
 
+  /*
+   * The RP has gone away; remove handles to the hidden iframe.
+   * It's probable that the frame will already have been cleaned up.
+   */
+  unwatch: function unwatch(aRpId, aTargetMM) {
+    let rp = this._rpFlows[aRpId];
+    let options = makeMessageObject({
+      id: aRpId,
+      origin: rp.origin,
+      messageManager: aTargetMM
+    });
+    log("sending identity-controller-unwatch for id", options.id, options.origin);
+    Services.obs.notifyObservers({wrappedJSObject: options}, "identity-controller-unwatch", null);
+  },
+
   /**
    * Initiate a login with user interaction as a result of a call to
    * navigator.id.request().
@@ -170,6 +187,17 @@ IDService.prototype = {
 
     let options = makeMessageObject(rp);
     Services.obs.notifyObservers({wrappedJSObject: options}, "identity-controller-logout", null);
+  },
+
+  childProcessShutdown: function childProcessShutdown(messageManager) {
+    let options = makeMessageObject({messageManager: messageManager, id: null, origin: null});
+    Services.obs.notifyObservers({wrappedJSObject: options}, "identity-child-process-shutdown", null);
+    Object.keys(this._rpFlows).forEach(function(key) {
+      if (this._rpFlows[key]._mm === messageManager) {
+        log("child process shutdown for rp", key, "- deleting flow");
+        delete this._rpFlows[key];
+      }
+    }, this);
   },
 
   /*

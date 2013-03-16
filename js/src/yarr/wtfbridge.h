@@ -204,10 +204,6 @@ class Vector {
         for (T *p = impl.begin(); p != impl.end(); ++p)
             js_delete(*p);
     }
-
-    bool reserve(size_t capacity) {
-        return impl.reserve(capacity);
-    }
 };
 
 template<typename T>
@@ -234,11 +230,6 @@ class Vector<OwnPtr<T> > {
         for (T **p = impl.begin(); p != impl.end(); ++p)
             delete_(*p);
         return impl.clear();
-    }
-
-    void reserve(size_t capacity) {
-        // XXX yarr-oom
-        (void) impl.reserve(capacity);
     }
 };
 

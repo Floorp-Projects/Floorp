@@ -3196,7 +3196,7 @@ struct types::ArrayTableKey
 };
 
 void
-TypeCompartment::fixArrayType(JSContext *cx, HandleObject obj)
+TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
 {
     AutoEnterAnalysis enter(cx);
 
@@ -3279,31 +3279,32 @@ TypeCompartment::fixArrayType(JSContext *cx, HandleObject obj)
  */
 struct types::ObjectTableKey
 {
-    jsid *ids;
-    uint32_t nslots;
+    jsid *properties;
+    uint32_t nproperties;
     uint32_t nfixed;
-    TaggedProto proto;
 
-    typedef JSObject * Lookup;
+    struct Lookup {
+        IdValuePair *properties;
+        uint32_t nproperties;
+        uint32_t nfixed;
 
-    static inline uint32_t hash(JSObject *obj) {
-        return (uint32_t) (JSID_BITS(obj->lastProperty()->propid().get()) ^
-                         obj->slotSpan() ^ obj->numFixedSlots() ^
-                         ((uint32_t)obj->getTaggedProto().toWord() >> 2));
+        Lookup(IdValuePair *properties, uint32_t nproperties, uint32_t nfixed)
+          : properties(properties), nproperties(nproperties), nfixed(nfixed)
+        {}
+    };
+
+    static inline HashNumber hash(const Lookup &lookup) {
+        return (HashNumber) (JSID_BITS(lookup.properties[lookup.nproperties - 1].id) ^
+                             lookup.nproperties ^
+                             lookup.nfixed);
     }
 
-    static inline bool match(const ObjectTableKey &v, RawObject obj) {
-        if (obj->slotSpan() != v.nslots ||
-            obj->numFixedSlots() != v.nfixed ||
-            obj->getTaggedProto() != v.proto) {
+    static inline bool match(const ObjectTableKey &v, const Lookup &lookup) {
+        if (lookup.nproperties != v.nproperties || lookup.nfixed != v.nfixed)
             return false;
-        }
-        RawShape shape = obj->lastProperty();
-        obj = NULL;
-        while (!shape->isEmptyShape()) {
-            if (shape->propid() != v.ids[shape->slot()])
+        for (size_t i = 0; i < lookup.nproperties; i++) {
+            if (lookup.properties[i].id != v.properties[i])
                 return false;
-            shape = shape->previous();
         }
         return true;
     }
@@ -3312,11 +3313,37 @@ struct types::ObjectTableKey
 struct types::ObjectTableEntry
 {
     ReadBarriered<TypeObject> object;
+    ReadBarriered<Shape> shape;
     Type *types;
 };
 
+static inline void
+UpdateObjectTableEntryTypes(JSContext *cx, ObjectTableEntry &entry,
+                            IdValuePair *properties, size_t nproperties)
+{
+    for (size_t i = 0; i < nproperties; i++) {
+        Type type = entry.types[i];
+        Type ntype = GetValueTypeForTable(cx, properties[i].value);
+        if (ntype == type)
+            continue;
+        if (ntype.isPrimitive(JSVAL_TYPE_INT32) &&
+            type.isPrimitive(JSVAL_TYPE_DOUBLE))
+        {
+            /* The property types already reflect 'int32'. */
+        } else {
+            if (ntype.isPrimitive(JSVAL_TYPE_DOUBLE) &&
+                type.isPrimitive(JSVAL_TYPE_INT32))
+            {
+                /* Include 'double' in the property types to avoid the update below later. */
+                entry.types[i] = Type::DoubleType();
+            }
+            entry.object->addPropertyType(cx, IdToTypeId(properties[i].id), ntype);
+        }
+    }
+}
+
 void
-TypeCompartment::fixObjectType(JSContext *cx, HandleObject obj)
+TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
 {
     AutoEnterAnalysis enter(cx);
 
@@ -3330,102 +3357,150 @@ TypeCompartment::fixObjectType(JSContext *cx, HandleObject obj)
     }
 
     /*
-     * Use the same type object for all singleton/JSON arrays with the same
-     * base shape, i.e. the same fields written in the same order. If there
-     * is a type mismatch with previous objects of the same shape, use the
-     * generic unknown type.
+     * Use the same type object for all singleton/JSON objects with the same
+     * base shape, i.e. the same fields written in the same order.
      */
     JS_ASSERT(obj->isObject());
 
     if (obj->slotSpan() == 0 || obj->inDictionaryMode() || !obj->hasEmptyElements())
         return;
 
-    ObjectTypeTable::AddPtr p = objectTypeTable->lookupForAdd(obj.get());
-    RootedShape baseShape(cx, obj->lastProperty());
+    Vector<IdValuePair> properties(cx);
+    if (!properties.resize(obj->slotSpan())) {
+        cx->compartment->types.setPendingNukeTypes(cx);
+        return;
+    }
+
+    Shape *shape = obj->lastProperty();
+    while (!shape->isEmptyShape()) {
+        IdValuePair &entry = properties[shape->slot()];
+        entry.id = shape->propid();
+        entry.value = obj->getSlot(shape->slot());
+        shape = shape->previous();
+    }
+
+    ObjectTableKey::Lookup lookup(properties.begin(), properties.length(), obj->numFixedSlots());
+    ObjectTypeTable::AddPtr p = objectTypeTable->lookupForAdd(lookup);
 
     if (p) {
-        /* The lookup ensures the shape matches, now check that the types match. */
-        Type *types = p->value.types;
-        for (unsigned i = 0; i < obj->slotSpan(); i++) {
-            Type ntype = GetValueTypeForTable(cx, obj->getSlot(i));
-            if (ntype != types[i]) {
-                if (ntype.isPrimitive(JSVAL_TYPE_INT32) &&
-                    types[i].isPrimitive(JSVAL_TYPE_DOUBLE))
-                {
-                    /* The property types already reflect 'int32'. */
-                } else {
-                    if (ntype.isPrimitive(JSVAL_TYPE_DOUBLE) &&
-                        types[i].isPrimitive(JSVAL_TYPE_INT32))
-                    {
-                        /* Include 'double' in the property types to avoid the walk below later. */
-                        types[i] = Type::DoubleType();
-                    }
-                    Shape *shape = baseShape;
-                    while (!shape->isEmptyShape()) {
-                        if (shape->slot() == i) {
-                            if (!p->value.object->unknownProperties())
-                                p->value.object->addPropertyType(cx, IdToTypeId(shape->propid()), ntype);
-                            break;
-                        }
-                        shape = shape->previous();
-                    }
-                }
-            }
-        }
+        JS_ASSERT(obj->getProto() == p->value.object->proto);
+        JS_ASSERT(obj->lastProperty() == p->value.shape);
 
+        UpdateObjectTableEntryTypes(cx, p->value, properties.begin(), properties.length());
         obj->setType(p->value.object);
-    } else {
-        /* Make a new type to use for the object and similar future ones. */
-        Rooted<TaggedProto> objProto(cx, obj->getTaggedProto());
-        TypeObject *objType = newTypeObject(cx, &ObjectClass, objProto);
-        if (!objType || !objType->addDefiniteProperties(cx, obj)) {
-            cx->compartment->types.setPendingNukeTypes(cx);
-            return;
-        }
-
-        if (obj->isIndexed())
-            objType->setFlags(cx, OBJECT_FLAG_SPARSE_INDEXES);
-
-        jsid *ids = cx->pod_calloc<jsid>(obj->slotSpan());
-        if (!ids) {
-            cx->compartment->types.setPendingNukeTypes(cx);
-            return;
-        }
-
-        Type *types = cx->pod_calloc<Type>(obj->slotSpan());
-        if (!types) {
-            cx->compartment->types.setPendingNukeTypes(cx);
-            return;
-        }
-
-        RootedShape shape(cx, baseShape);
-        while (!shape->isEmptyShape()) {
-            ids[shape->slot()] = shape->propid();
-            types[shape->slot()] = GetValueTypeForTable(cx, obj->getSlot(shape->slot()));
-            if (!objType->unknownProperties())
-                objType->addPropertyType(cx, IdToTypeId(shape->propid()), types[shape->slot()]);
-            shape = shape->previous();
-        }
-
-        ObjectTableKey key;
-        key.ids = ids;
-        key.nslots = obj->slotSpan();
-        key.nfixed = obj->numFixedSlots();
-        key.proto = obj->getTaggedProto();
-        JS_ASSERT(ObjectTableKey::match(key, obj.get()));
-
-        ObjectTableEntry entry;
-        entry.object = objType;
-        entry.types = types;
-
-        p = objectTypeTable->lookupForAdd(obj.get());
-        if (!objectTypeTable->add(p, key, entry)) {
-            cx->compartment->types.setPendingNukeTypes(cx);
-            return;
-        }
-
-        obj->setType(objType);
+        return;
     }
+
+    /* Make a new type to use for the object and similar future ones. */
+    Rooted<TaggedProto> objProto(cx, obj->getTaggedProto());
+    TypeObject *objType = newTypeObject(cx, &ObjectClass, objProto);
+    if (!objType || !objType->addDefiniteProperties(cx, obj)) {
+        cx->compartment->types.setPendingNukeTypes(cx);
+        return;
+    }
+
+    if (obj->isIndexed())
+        objType->setFlags(cx, OBJECT_FLAG_SPARSE_INDEXES);
+
+    jsid *ids = cx->pod_calloc<jsid>(properties.length());
+    if (!ids) {
+        cx->compartment->types.setPendingNukeTypes(cx);
+        return;
+    }
+
+    Type *types = cx->pod_calloc<Type>(properties.length());
+    if (!types) {
+        cx->compartment->types.setPendingNukeTypes(cx);
+        return;
+    }
+
+    for (size_t i = 0; i < properties.length(); i++) {
+        ids[i] = properties[i].id;
+        types[i] = GetValueTypeForTable(cx, obj->getSlot(i));
+        if (!objType->unknownProperties())
+            objType->addPropertyType(cx, IdToTypeId(ids[i]), types[i]);
+    }
+
+    ObjectTableKey key;
+    key.properties = ids;
+    key.nproperties = properties.length();
+    key.nfixed = obj->numFixedSlots();
+    JS_ASSERT(ObjectTableKey::match(key, lookup));
+
+    ObjectTableEntry entry;
+    entry.object = objType;
+    entry.shape = obj->lastProperty();
+    entry.types = types;
+
+    p = objectTypeTable->lookupForAdd(lookup);
+    if (!objectTypeTable->add(p, key, entry)) {
+        cx->compartment->types.setPendingNukeTypes(cx);
+        return;
+    }
+
+    obj->setType(objType);
+}
+
+JSObject *
+TypeCompartment::newTypedObject(JSContext *cx, IdValuePair *properties, size_t nproperties)
+{
+    AutoEnterAnalysis enter(cx);
+
+    if (!objectTypeTable) {
+        objectTypeTable = cx->new_<ObjectTypeTable>();
+        if (!objectTypeTable || !objectTypeTable->init()) {
+            objectTypeTable = NULL;
+            cx->compartment->types.setPendingNukeTypes(cx);
+            return NULL;
+        }
+    }
+
+    /*
+     * Use the object type table to allocate an object with the specified
+     * properties, filling in its final type and shape and failing if no cache
+     * entry could be found for the properties.
+     */
+
+    /*
+     * Filter out a few cases where we don't want to use the object type table.
+     * Note that if the properties contain any duplicates or dense indexes,
+     * the lookup below will fail as such arrays of properties cannot be stored
+     * in the object type table --- fixObjectType populates the table with
+     * properties read off its input object, which cannot be duplicates, and
+     * ignores objects with dense indexes.
+     */
+    if (!nproperties || nproperties >= PropertyTree::MAX_HEIGHT)
+        return NULL;
+
+    gc::AllocKind allocKind = gc::GetGCObjectKind(nproperties);
+    size_t nfixed = gc::GetGCKindSlots(allocKind, &ObjectClass);
+
+    ObjectTableKey::Lookup lookup(properties, nproperties, nfixed);
+    ObjectTypeTable::AddPtr p = objectTypeTable->lookupForAdd(lookup);
+
+    if (!p)
+        return NULL;
+
+    RootedObject obj(cx, NewBuiltinClassInstance(cx, &ObjectClass, allocKind));
+    if (!obj) {
+        cx->clearPendingException();
+        return NULL;
+    }
+    JS_ASSERT(obj->getProto() == p->value.object->proto);
+
+    RootedShape shape(cx, p->value.shape);
+    if (!JSObject::setLastProperty(cx, obj, shape)) {
+        cx->clearPendingException();
+        return NULL;
+    }
+
+    UpdateObjectTableEntryTypes(cx, p->value, properties, nproperties);
+
+    for (size_t i = 0; i < nproperties; i++)
+        obj->setSlot(i, properties[i].value);
+
+    obj->setType(p->value.object);
+    return obj;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -3551,7 +3626,7 @@ TypeObject::addProperty(JSContext *cx, RawId id, Property **pprop)
 }
 
 bool
-TypeObject::addDefiniteProperties(JSContext *cx, HandleObject obj)
+TypeObject::addDefiniteProperties(JSContext *cx, JSObject *obj)
 {
     if (unknownProperties())
         return true;
@@ -6465,17 +6540,18 @@ TypeCompartment::sweep(FreeOp *fop)
         for (ObjectTypeTable::Enum e(*objectTypeTable); !e.empty(); e.popFront()) {
             const ObjectTableKey &key = e.front().key;
             ObjectTableEntry &entry = e.front().value;
-            JS_ASSERT(uintptr_t(entry.object->proto.get()) == key.proto.toWord());
 
             bool remove = false;
             if (IsTypeObjectAboutToBeFinalized(entry.object.unsafeGet()))
                 remove = true;
-            for (unsigned i = 0; !remove && i < key.nslots; i++) {
-                if (JSID_IS_STRING(key.ids[i])) {
-                    JSString *str = JSID_TO_STRING(key.ids[i]);
+            if (IsShapeAboutToBeFinalized(entry.shape.unsafeGet()))
+                remove = true;
+            for (unsigned i = 0; !remove && i < key.nproperties; i++) {
+                if (JSID_IS_STRING(key.properties[i])) {
+                    JSString *str = JSID_TO_STRING(key.properties[i]);
                     if (IsStringAboutToBeFinalized(&str))
                         remove = true;
-                    JS_ASSERT(AtomToId((JSAtom *)str) == key.ids[i]);
+                    JS_ASSERT(AtomToId((JSAtom *)str) == key.properties[i]);
                 }
                 JS_ASSERT(!entry.types[i].isSingleObject());
                 TypeObject *typeObject = NULL;
@@ -6489,7 +6565,7 @@ TypeCompartment::sweep(FreeOp *fop)
             }
 
             if (remove) {
-                js_free(key.ids);
+                js_free(key.properties);
                 js_free(entry.types);
                 e.removeFront();
             }
@@ -6819,7 +6895,7 @@ JSCompartment::sizeOfTypeInferenceData(TypeInferenceSizes *sizes, JSMallocSizeOf
             const ObjectTableEntry &value = e.front().value;
 
             /* key.ids and values.types have the same length. */
-            sizes->objectTypeTables += mallocSizeOf(key.ids) + mallocSizeOf(value.types);
+            sizes->objectTypeTables += mallocSizeOf(key.properties) + mallocSizeOf(value.types);
         }
     }
 }

@@ -677,7 +677,7 @@ std::ostream& operator<<(std::ostream& stream, const ProfileEntry2& entry)
   return stream;
 }
 
-static const char* name_UnwMode(UnwMode m)
+static inline const char* name_UnwMode(UnwMode m)
 {
   switch (m) {
     case UnwINVALID:  return "invalid";
