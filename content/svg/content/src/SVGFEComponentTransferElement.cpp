@@ -3,16 +3,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/SVGComponentTransferFunctionElement.h"
 #include "mozilla/dom/SVGFEComponentTransferElement.h"
-
-DOMCI_NODE_DATA(SVGFEComponentTransferElement, nsSVGFEComponentTransferElement)
+#include "mozilla/dom/SVGFEComponentTransferElementBinding.h"
+#include "nsSVGUtils.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEComponentTransfer)
 
 namespace mozilla {
 namespace dom {
 
-nsSVGElement::StringInfo nsSVGFEComponentTransferElement::sStringInfo[2] =
+JSObject*
+SVGFEComponentTransferElement::WrapNode(JSContext* aCx, JSObject* aScope)
+{
+  return SVGFEComponentTransferElementBinding::Wrap(aCx, aScope, this);
+}
+
+nsSVGElement::StringInfo SVGFEComponentTransferElement::sStringInfo[2] =
 {
   { &nsGkAtoms::result, kNameSpaceID_None, true },
   { &nsGkAtoms::in, kNameSpaceID_None, true }
@@ -21,37 +28,30 @@ nsSVGElement::StringInfo nsSVGFEComponentTransferElement::sStringInfo[2] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGFEComponentTransferElement,nsSVGFEComponentTransferElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGFEComponentTransferElement,nsSVGFEComponentTransferElementBase)
+NS_IMPL_ADDREF_INHERITED(SVGFEComponentTransferElement,SVGFEComponentTransferElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGFEComponentTransferElement,SVGFEComponentTransferElementBase)
 
-NS_INTERFACE_TABLE_HEAD(nsSVGFEComponentTransferElement)
-  NS_NODE_INTERFACE_TABLE5(nsSVGFEComponentTransferElement, nsIDOMNode,
-                           nsIDOMElement, nsIDOMSVGElement,
-                           nsIDOMSVGFilterPrimitiveStandardAttributes,
-                           nsIDOMSVGFEComponentTransferElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEComponentTransferElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGFEComponentTransferElementBase)
+NS_INTERFACE_TABLE_HEAD(SVGFEComponentTransferElement)
+  NS_NODE_INTERFACE_TABLE3(SVGFEComponentTransferElement, nsIDOMNode,
+                           nsIDOMElement, nsIDOMSVGElement)
+NS_INTERFACE_MAP_END_INHERITING(SVGFEComponentTransferElementBase)
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEComponentTransferElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEComponentTransferElement)
 
-//----------------------------------------------------------------------
-// nsIDOMSVGFEComponentTransferElement methods
-
-/* readonly attribute nsIDOMSVGAnimatedString in1; */
-NS_IMETHODIMP
-nsSVGFEComponentTransferElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
+already_AddRefed<nsIDOMSVGAnimatedString>
+SVGFEComponentTransferElement::In1()
 {
-  return mStringAttributes[IN1].ToDOMAnimatedString(aIn, this);
+  return mStringAttributes[IN1].ToDOMAnimatedString(this);
 }
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
 nsSVGElement::StringAttributesInfo
-nsSVGFEComponentTransferElement::GetStringInfo()
+SVGFEComponentTransferElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
@@ -60,10 +60,10 @@ nsSVGFEComponentTransferElement::GetStringInfo()
 //--------------------------------------------
 
 nsresult
-nsSVGFEComponentTransferElement::Filter(nsSVGFilterInstance *instance,
-                                        const nsTArray<const Image*>& aSources,
-                                        const Image* aTarget,
-                                        const nsIntRect& rect)
+SVGFEComponentTransferElement::Filter(nsSVGFilterInstance *instance,
+                                      const nsTArray<const Image*>& aSources,
+                                      const Image* aTarget,
+                                      const nsIntRect& rect)
 {
   uint8_t* sourceData = aSources[0]->mImage->Data();
   uint8_t* targetData = aTarget->mImage->Data();
@@ -104,16 +104,16 @@ nsSVGFEComponentTransferElement::Filter(nsSVGFilterInstance *instance,
 }
 
 bool
-nsSVGFEComponentTransferElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                           nsIAtom* aAttribute) const
+SVGFEComponentTransferElement::AttributeAffectsRendering(int32_t aNameSpaceID,
+                                                         nsIAtom* aAttribute) const
 {
-  return nsSVGFEComponentTransferElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
+  return SVGFEComponentTransferElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&
           aAttribute == nsGkAtoms::in);
 }
 
 void
-nsSVGFEComponentTransferElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
+SVGFEComponentTransferElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 {
   aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
 }
