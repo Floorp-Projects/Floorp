@@ -19,6 +19,8 @@ EXPORTS = GeckoProfiler.h
 ifdef MOZ_ENABLE_PROFILER_SPS
 EXPORTS += \
   GeckoProfilerImpl.h \
+  GeckoProfilerFunc.h \
+  PseudoStack.h \
   shared-libraries.h \
   $(NULL)
 

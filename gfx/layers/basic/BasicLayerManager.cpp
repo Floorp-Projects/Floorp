@@ -871,7 +871,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
                               void* aCallbackData,
                               ReadbackProcessor* aReadback)
 {
-  SAMPLE_LABEL("BasicLayerManager", "PaintLayer");
+  PROFILER_LABEL("BasicLayerManager", "PaintLayer");
   PaintContext paintContext(aTarget, aLayer, aCallback, aCallbackData, aReadback);
 
   // Don't attempt to paint layers with a singular transform, cairo will
