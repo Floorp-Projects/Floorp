@@ -35,7 +35,6 @@
 #include "BluetoothUnixSocketConnector.h"
 #include "nsThreadUtils.h"
 
-using namespace mozilla::ipc;
 USING_BLUETOOTH_NAMESPACE
 
 static const int RFCOMM_SO_SNDBUF = 70 * 1024; // 70 KB send buffer
@@ -140,10 +139,10 @@ BluetoothUnixSocketConnector::Create()
   return fd;
 }
 
-bool
+void
 BluetoothUnixSocketConnector::CreateAddr(bool aIsServer,
                                          socklen_t& aAddrSize,
-                                         sockaddr_any& aAddr,
+                                         struct sockaddr* aAddr,
                                          const char* aAddress)
 {
   // Set to BDADDR_ANY, if it's not a server, we'll reset.
@@ -152,7 +151,7 @@ BluetoothUnixSocketConnector::CreateAddr(bool aIsServer,
   if (!aIsServer && aAddress && strlen(aAddress) > 0) {
     if (get_bdaddr(aAddress, &bd_address_obj)) {
       NS_WARNING("Can't get bluetooth address!");
-      return false;
+      return;
     }
   }
 
@@ -160,37 +159,31 @@ BluetoothUnixSocketConnector::CreateAddr(bool aIsServer,
   case BluetoothSocketType::RFCOMM:
     struct sockaddr_rc addr_rc;
     aAddrSize = sizeof(addr_rc);
-    aAddr.rc.rc_family = AF_BLUETOOTH;
-    aAddr.rc.rc_channel = mChannel;
-    memcpy(&aAddr.rc.rc_bdaddr, &bd_address_obj, sizeof(bd_address_obj));
+    memset(aAddr, 0, aAddrSize);
+    addr_rc.rc_family = AF_BLUETOOTH;
+    addr_rc.rc_channel = mChannel;
+    memcpy(&addr_rc.rc_bdaddr, &bd_address_obj, sizeof(bdaddr_t));
+    memcpy(aAddr, &addr_rc, sizeof(addr_rc));
     break;
   case BluetoothSocketType::SCO:
     struct sockaddr_sco addr_sco;
     aAddrSize = sizeof(addr_sco);
-    aAddr.sco.sco_family = AF_BLUETOOTH;
-    memcpy(&aAddr.sco.sco_bdaddr, &bd_address_obj, sizeof(bd_address_obj));
+
+    memset(aAddr, 0, aAddrSize);
+    addr_sco.sco_family = AF_BLUETOOTH;
+    memcpy(&addr_sco.sco_bdaddr, &bd_address_obj, sizeof(bdaddr_t));
+    memcpy(aAddr, &addr_sco, sizeof(addr_sco));
     break;
   default:
     NS_WARNING("Socket type unknown!");
-    return false;
   }
-  return true;
 }
 
 void
-BluetoothUnixSocketConnector::GetSocketAddr(const sockaddr_any& aAddr,
+BluetoothUnixSocketConnector::GetSocketAddr(const sockaddr& aAddr,
                                             nsAString& aAddrStr)
 {
   char addr[18];
-  switch (mType) {
-  case BluetoothSocketType::RFCOMM:
-    get_bdaddr_as_string((bdaddr_t*)(&aAddr.rc.rc_bdaddr), addr);
-    break;
-  case BluetoothSocketType::SCO:
-    get_bdaddr_as_string((bdaddr_t*)(&aAddr.sco.sco_bdaddr), addr);
-    break;
-  default:
-    MOZ_NOT_REACHED("Socket should be either RFCOMM or SCO!");
-  }
+  get_bdaddr_as_string((bdaddr_t*)aAddr.sa_data, addr);
   aAddrStr.AssignASCII(addr);
 }
