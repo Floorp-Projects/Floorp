@@ -1551,6 +1551,13 @@ public:
    * OnPageHide having been called and OnPageShow not yet having been called)
    */
   bool IsVisible() const { return mVisible; }
+
+  /**
+   * Return whether the document and all its ancestors are visible in the sense of
+   * pageshow / hide.
+   */
+  bool IsVisibleConsideringAncestors() const;
+
   /**
    * Return true when this document is active, i.e., the active document
    * in a content viewer.
