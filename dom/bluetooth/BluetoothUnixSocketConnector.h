@@ -21,12 +21,12 @@ public:
   virtual ~BluetoothUnixSocketConnector()
   {}
   virtual int Create() MOZ_OVERRIDE;
-  virtual void CreateAddr(bool aIsServer,
+  virtual bool CreateAddr(bool aIsServer,
                           socklen_t& aAddrSize,
-                          struct sockaddr* aAddr,
+                          mozilla::ipc::sockaddr_any& aAddr,
                           const char* aAddress) MOZ_OVERRIDE;
   virtual bool SetUp(int aFd) MOZ_OVERRIDE;
-  virtual void GetSocketAddr(const sockaddr& aAddr,
+  virtual void GetSocketAddr(const mozilla::ipc::sockaddr_any& aAddr,
                              nsAString& aAddrStr) MOZ_OVERRIDE;
 
 private:
