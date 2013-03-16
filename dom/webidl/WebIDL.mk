@@ -282,6 +282,7 @@ test_webidl_files := \
   TestCodeGen.webidl \
   TestDictionary.webidl \
   TestExampleGen.webidl \
+  TestJSImplGen.webidl \
   TestTypedef.webidl \
   $(NULL)
 else
