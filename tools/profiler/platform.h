@@ -29,6 +29,9 @@
 #ifndef TOOLS_PLATFORM_H_
 #define TOOLS_PLATFORM_H_
 
+// Uncomment this line to force desktop logging
+//#define SPS_FORCE_LOG
+
 #ifdef ANDROID
 #include <android/log.h>
 #else
@@ -49,9 +52,12 @@
 #endif
 #define LOG(text) __android_log_write(ANDROID_LOG_ERROR, "Profiler", text)
 #define LOGF(format, ...) __android_log_print(ANDROID_LOG_ERROR, "Profiler", format, __VA_ARGS__)
-#else
+#elif defined(SPS_FORCE_LOG)
 #define LOG(text) fprintf(stderr, "Profiler: %s\n", text)
 #define LOGF(format, ...) fprintf(stderr, "Profiler: " format "\n", __VA_ARGS__)
+#else
+#define LOG(TEXT) do {} while(0)
+#define LOGF(format, ...) do {} while(0)
 #endif
 
 #if defined(XP_MACOSX) || defined(XP_WIN)

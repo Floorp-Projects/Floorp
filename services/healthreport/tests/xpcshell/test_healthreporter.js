@@ -251,7 +251,7 @@ add_task(function test_json_payload_simple() {
     do_check_eq(typeof payload, "string");
     let original = JSON.parse(payload);
 
-    do_check_eq(original.version, 1);
+    do_check_eq(original.version, 2);
     do_check_eq(original.thisPingDate, reporter._formatDate(now));
     do_check_eq(Object.keys(original.data.last).length, 0);
     do_check_eq(Object.keys(original.data.days).length, 0);
@@ -585,6 +585,32 @@ add_task(function test_error_message_scrubbing() {
   }
 });
 
+add_task(function test_basic_appinfo() {
+  function verify(d) {
+    do_check_eq(d["_v"], 1);
+    do_check_eq(d._v, 1);
+    do_check_eq(d.vendor, "Mozilla");
+    do_check_eq(d.name, "xpcshell");
+    do_check_eq(d.id, "xpcshell@tests.mozilla.org");
+    do_check_eq(d.version, "1");
+    do_check_eq(d.appBuildID, "20121107");
+    do_check_eq(d.platformVersion, "p-ver");
+    do_check_eq(d.platformBuildID, "20121106");
+    do_check_eq(d.os, "XPCShell");
+    do_check_eq(d.xpcomabi, "noarch-spidermonkey");
+    do_check_true("updateChannel" in d);
+  }
+  let reporter = yield getReporter("basic_appinfo");
+  try {
+    verify(reporter.obtainAppInfo());
+    let payload = yield reporter.collectAndObtainJSONPayload(true);
+    do_check_eq(payload["version"], 2);
+    verify(payload["geckoAppInfo"]);
+  } finally {
+    reporter._shutdown();
+  }
+});
+
 // Ensure collection occurs if upload is disabled.
 add_task(function test_collect_when_upload_disabled() {
   let reporter = getJustReporter("collect_when_upload_disabled");
@@ -594,7 +620,6 @@ add_task(function test_collect_when_upload_disabled() {
   let name = "healthreport-testing-collect_when_upload_disabled-healthreport-lastDailyCollection";
   let pref = "app.update.lastUpdateTime." + name;
   do_check_false(Services.prefs.prefHasUserValue(pref));
-
   try {
     yield reporter.onInit();
     do_check_true(Services.prefs.prefHasUserValue(pref));
