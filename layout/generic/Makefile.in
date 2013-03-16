@@ -55,4 +55,3 @@ libs::
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(RESOURCES_HTML) $(DESTDIR)$(mozappdir)/res/html
 
-DEFINES += -D_IMPL_NS_LAYOUT

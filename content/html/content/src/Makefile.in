@@ -38,7 +38,3 @@ INCLUDES	+= \
 		-I$(topsrcdir)/xpcom/ds \
 		-I$(topsrcdir)/content/media/ \
 		$(NULL)
-
-DEFINES		+= \
-		-D_IMPL_NS_LAYOUT \
-		$(NULL)
