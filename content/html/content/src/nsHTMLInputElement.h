@@ -125,7 +125,7 @@ public:
   void PostHandleEventForRangeThumb(nsEventChainPostVisitor& aVisitor);
   void StartRangeThumbDrag(nsGUIEvent* aEvent);
   void FinishRangeThumbDrag(nsGUIEvent* aEvent = nullptr);
-  void CancelRangeThumbDrag();
+  void CancelRangeThumbDrag(bool aIsForUserEvent = true);
   void SetValueOfRangeForUserEvent(double aValue);
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -819,6 +819,20 @@ protected:
   bool                     mIsDraggingRange     : 1;
 
 private:
+
+  /**
+   * Returns true if this input's type will fire a DOM "change" event when it
+   * loses focus if its value has changed since it gained focus.
+   */
+  bool MayFireChangeOnBlur() const {
+    return MayFireChangeOnBlur(mType);
+  }
+
+  static bool MayFireChangeOnBlur(uint8_t aType) {
+    return IsSingleLineTextControl(false, aType) ||
+           aType == NS_FORM_INPUT_RANGE;
+  }
+
   struct nsFilePickerFilter {
     nsFilePickerFilter()
       : mFilterMask(0), mIsTrusted(false) {}
