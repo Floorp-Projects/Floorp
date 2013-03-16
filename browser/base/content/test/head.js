@@ -261,3 +261,107 @@ function promiseHistoryClearedState(aURIs, aShouldBeCleared) {
 
   return deferred.promise;
 }
+
+let FullZoomHelper = {
+
+  selectTabAndWaitForLocationChange: function selectTabAndWaitForLocationChange(tab) {
+    let deferred = Promise.defer();
+    if (tab && gBrowser.selectedTab == tab) {
+      deferred.resolve();
+      return deferred.promise;
+    }
+    if (tab)
+      gBrowser.selectedTab = tab;
+    Services.obs.addObserver(function obs() {
+      Services.obs.removeObserver(obs, "browser-fullZoom:locationChange");
+      deferred.resolve();
+    }, "browser-fullZoom:locationChange", false);
+    return deferred.promise;
+  },
+
+  load: function load(tab, url) {
+    let deferred = Promise.defer();
+    let didLoad = false;
+    let didZoom = false;
+
+    tab.linkedBrowser.addEventListener("load", function (event) {
+      event.currentTarget.removeEventListener("load", arguments.callee, true);
+      didLoad = true;
+      if (didZoom)
+        deferred.resolve();
+    }, true);
+
+    // Don't select background tabs.  That way tests can use this method on
+    // background tabs without having them automatically be selected.  Just wait
+    // for the zoom to change on the current tab if it's `tab`.
+    if (tab == gBrowser.selectedTab) {
+      this.selectTabAndWaitForLocationChange(null).then(function () {
+        didZoom = true;
+        if (didLoad)
+          deferred.resolve();
+      });
+    }
+    else
+      didZoom = true;
+
+    tab.linkedBrowser.loadURI(url);
+
+    return deferred.promise;
+  },
+
+  zoomTest: function zoomTest(tab, val, msg) {
+    is(ZoomManager.getZoomForBrowser(tab.linkedBrowser), val, msg);
+  },
+
+  enlarge: function enlarge() {
+    let deferred = Promise.defer();
+    FullZoom.enlarge(function () deferred.resolve());
+    return deferred.promise;
+  },
+
+  reduce: function reduce() {
+    let deferred = Promise.defer();
+    FullZoom.reduce(function () deferred.resolve());
+    return deferred.promise;
+  },
+
+  reset: function reset() {
+    let deferred = Promise.defer();
+    FullZoom.reset(function () deferred.resolve());
+    return deferred.promise;
+  },
+
+  BACK: 0,
+  FORWARD: 1,
+  navigate: function navigate(direction) {
+    let deferred = Promise.defer();
+    let didPs = false;
+    let didZoom = false;
+
+    gBrowser.addEventListener("pageshow", function (event) {
+      gBrowser.removeEventListener("pageshow", arguments.callee, true);
+      didPs = true;
+      if (didZoom)
+        deferred.resolve();
+    }, true);
+
+    if (direction == this.BACK)
+      gBrowser.goBack();
+    else if (direction == this.FORWARD)
+      gBrowser.goForward();
+
+    this.selectTabAndWaitForLocationChange(null).then(function () {
+      didZoom = true;
+      if (didPs)
+        deferred.resolve();
+    });
+    return deferred.promise;
+  },
+
+  failAndContinue: function failAndContinue(func) {
+    return function (err) {
+      ok(false, err);
+      func();
+    };
+  },
+};

@@ -63,7 +63,7 @@ interface nsIContentPref;
  * nsIContentPrefCallback2 below for more information about callbacks.
  */
 
-[scriptable, uuid(51e1d34a-5e9d-4b77-b14c-0f8346e264ca)]
+[scriptable, uuid(133608c7-f812-41ca-bc1c-62a4eb95e52a)]
 interface nsIContentPrefService2 : nsISupports
 {
   /**
@@ -318,6 +318,17 @@ interface nsIContentPrefService2 : nsISupports
    */
   void removeObserverForName(in AString name,
                              in nsIContentPrefObserver observer);
+
+  /**
+   * Extracts and returns the domain from the given string representation of a
+   * URI.  This is how the API extracts domains from URIs passed to it.
+   *
+   * @param str  The string representation of a URI, like
+   *             "http://example.com/foo/bar".
+   * @return     If the given string is a valid URI, the domain of that URI is
+   *             returned.  Otherwise, the string itself is returned.
+   */
+  AString extractDomain(in AString str);
 };
 
 /**
@@ -336,7 +347,7 @@ interface nsIContentPrefCallback2 : nsISupports
 
   /**
    * Called when an error occurs.  This may be called multiple times before
-   * onComplete is called.
+   * handleCompletion is called.
    *
    * @param error  A number in Components.results describing the error.
    */
