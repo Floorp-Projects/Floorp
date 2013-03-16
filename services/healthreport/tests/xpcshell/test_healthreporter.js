@@ -255,6 +255,7 @@ add_task(function test_json_payload_simple() {
     do_check_eq(original.thisPingDate, reporter._formatDate(now));
     do_check_eq(Object.keys(original.data.last).length, 0);
     do_check_eq(Object.keys(original.data.days).length, 0);
+    do_check_false("notInitialized" in original);
 
     reporter.lastPingDate = new Date(now.getTime() - 24 * 60 * 60 * 1000 - 10);
 
@@ -655,4 +656,59 @@ add_task(function test_failure_if_not_initialized() {
     do_check_true(error);
     error = false;
   }
+
+  // getJSONPayload always works (to facilitate error upload).
+  yield reporter.getJSONPayload();
 });
+
+add_task(function test_upload_on_init_failure() {
+  let reporter = yield getJustReporter("upload_on_init_failure", SERVER_URI, true);
+  let server = new BagheeraServer(SERVER_URI);
+  server.createNamespace(reporter.serverNamespace);
+  server.start(SERVER_PORT);
+
+  reporter.onInitializeProviderManagerFinished = function () {
+    throw new Error("Fake error during provider manager initialization.");
+  };
+
+  let deferred = Promise.defer();
+
+  let oldOnResult = reporter._onBagheeraResult;
+  Object.defineProperty(reporter, "_onBagheeraResult", {
+    value: function (request, isDelete, result) {
+      do_check_false(isDelete);
+      do_check_true(result.transportSuccess);
+      do_check_true(result.serverSuccess);
+
+      oldOnResult.call(reporter, request, isDelete, result);
+      deferred.resolve();
+    },
+  });
+
+  reporter._policy.recordUserAcceptance();
+  let error = false;
+  try {
+    yield reporter.onInit();
+  } catch (ex) {
+    error = true;
+  } finally {
+    do_check_true(error);
+  }
+
+  // At this point the emergency upload should have been initiated. We
+  // wait for our monkeypatched response handler to signal request
+  // completion.
+  yield deferred.promise;
+
+  do_check_true(server.hasDocument(reporter.serverNamespace, reporter.lastSubmitID));
+  let doc = server.getDocument(reporter.serverNamespace, reporter.lastSubmitID);
+  do_check_true("notInitialized" in doc);
+  do_check_eq(doc.notInitialized, 1);
+  do_check_true("errors" in doc);
+  do_check_eq(doc.errors.length, 1);
+  do_check_true(doc.errors[0].contains("Fake error during provider manager initialization"));
+
+  reporter._shutdown();
+  yield shutdownServer(server);
+});
+
