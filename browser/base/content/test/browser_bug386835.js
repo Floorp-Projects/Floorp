@@ -8,136 +8,82 @@ const FORWARD = 1;
 function test() {
   waitForExplicitFinish();
 
-  gTab1 = gBrowser.addTab(gTestPage);
-  gTab2 = gBrowser.addTab();
-  gTab3 = gBrowser.addTab();
-  gBrowser.selectedTab = gTab1;
+  Task.spawn(function () {
+    gTab1 = gBrowser.addTab(gTestPage);
+    gTab2 = gBrowser.addTab();
+    gTab3 = gBrowser.addTab();
 
-  load(gTab1, gTestPage, function () {
-    load(gTab2, gTestPage, secondPageLoaded);
-  });
+    yield FullZoomHelper.selectTabAndWaitForLocationChange(gTab1);
+    yield FullZoomHelper.load(gTab1, gTestPage);
+    yield FullZoomHelper.load(gTab2, gTestPage);
+  }).then(secondPageLoaded, FullZoomHelper.failAndContinue(finish));
 }
 
 function secondPageLoaded() {
-  zoomTest(gTab1, 1, "Initial zoom of tab 1 should be 1");
-  zoomTest(gTab2, 1, "Initial zoom of tab 2 should be 1");
-  zoomTest(gTab3, 1, "Initial zoom of tab 3 should be 1");
+  Task.spawn(function () {
+    FullZoomHelper.zoomTest(gTab1, 1, "Initial zoom of tab 1 should be 1");
+    FullZoomHelper.zoomTest(gTab2, 1, "Initial zoom of tab 2 should be 1");
+    FullZoomHelper.zoomTest(gTab3, 1, "Initial zoom of tab 3 should be 1");
 
-  // Now have three tabs, two with the test page, one blank. Tab 1 is selected
-  // Zoom tab 1
-  FullZoom.enlarge();
-  gLevel = ZoomManager.getZoomForBrowser(gBrowser.getBrowserForTab(gTab1));
+    // Now have three tabs, two with the test page, one blank. Tab 1 is selected
+    // Zoom tab 1
+    yield FullZoomHelper.enlarge();
+    gLevel = ZoomManager.getZoomForBrowser(gBrowser.getBrowserForTab(gTab1));
 
-  ok(gLevel > 1, "New zoom for tab 1 should be greater than 1");
-  zoomTest(gTab2, 1, "Zooming tab 1 should not affect tab 2");
-  zoomTest(gTab3, 1, "Zooming tab 1 should not affect tab 3");
+    ok(gLevel > 1, "New zoom for tab 1 should be greater than 1");
+    FullZoomHelper.zoomTest(gTab2, 1, "Zooming tab 1 should not affect tab 2");
+    FullZoomHelper.zoomTest(gTab3, 1, "Zooming tab 1 should not affect tab 3");
 
-  load(gTab3, gTestPage, thirdPageLoaded);
+    yield FullZoomHelper.load(gTab3, gTestPage);
+  }).then(thirdPageLoaded, FullZoomHelper.failAndContinue(finish));
 }
 
 function thirdPageLoaded() {
-  zoomTest(gTab1, gLevel, "Tab 1 should still be zoomed");
-  zoomTest(gTab2, 1, "Tab 2 should still not be affected");
-  zoomTest(gTab3, gLevel, "Tab 3 should have zoomed as it was loading in the background");
+  Task.spawn(function () {
+    FullZoomHelper.zoomTest(gTab1, gLevel, "Tab 1 should still be zoomed");
+    FullZoomHelper.zoomTest(gTab2, 1, "Tab 2 should still not be affected");
+    FullZoomHelper.zoomTest(gTab3, gLevel, "Tab 3 should have zoomed as it was loading in the background");
 
-  // Switching to tab 2 should update its zoom setting.
-  afterZoom(function() {
-    zoomTest(gTab1, gLevel, "Tab 1 should still be zoomed");
-    zoomTest(gTab2, gLevel, "Tab 2 should be zoomed now");
-    zoomTest(gTab3, gLevel, "Tab 3 should still be zoomed");
+    // Switching to tab 2 should update its zoom setting.
+    yield FullZoomHelper.selectTabAndWaitForLocationChange(gTab2);
+    FullZoomHelper.zoomTest(gTab1, gLevel, "Tab 1 should still be zoomed");
+    FullZoomHelper.zoomTest(gTab2, gLevel, "Tab 2 should be zoomed now");
+    FullZoomHelper.zoomTest(gTab3, gLevel, "Tab 3 should still be zoomed");
 
-    load(gTab1, gTestImage, imageLoaded);
-  });
-
-  gBrowser.selectedTab = gTab2;
+    yield FullZoomHelper.load(gTab1, gTestImage);
+  }).then(imageLoaded, FullZoomHelper.failAndContinue(finish));
 }
 
 function imageLoaded() {
-  zoomTest(gTab1, 1, "Zoom should be 1 when image was loaded in the background");
-  gBrowser.selectedTab = gTab1;
-  zoomTest(gTab1, 1, "Zoom should still be 1 when tab with image is selected");
-
-  executeSoon(imageZoomSwitch);
+  Task.spawn(function () {
+    FullZoomHelper.zoomTest(gTab1, 1, "Zoom should be 1 when image was loaded in the background");
+    yield FullZoomHelper.selectTabAndWaitForLocationChange(gTab1);
+    FullZoomHelper.zoomTest(gTab1, 1, "Zoom should still be 1 when tab with image is selected");
+  }).then(imageZoomSwitch, FullZoomHelper.failAndContinue(finish));
 }
 
 function imageZoomSwitch() {
-  navigate(BACK, function () {
-    navigate(FORWARD, function () {
-      zoomTest(gTab1, 1, "Tab 1 should not be zoomed when an image loads");
+  Task.spawn(function () {
+    yield FullZoomHelper.navigate(BACK);
+    yield FullZoomHelper.navigate(FORWARD);
+    FullZoomHelper.zoomTest(gTab1, 1, "Tab 1 should not be zoomed when an image loads");
 
-      afterZoom(function() {
-        zoomTest(gTab1, 1, "Tab 1 should still not be zoomed when deselected");
-        finishTest();
-      });
-      gBrowser.selectedTab = gTab2;
-    });
-  });
+    yield FullZoomHelper.selectTabAndWaitForLocationChange(gTab2);
+    FullZoomHelper.zoomTest(gTab1, 1, "Tab 1 should still not be zoomed when deselected");
+  }).then(finishTest, FullZoomHelper.failAndContinue(finish));
 }
 
 var finishTestStarted  = false;
 function finishTest() {
-  ok(!finishTestStarted, "finishTest called more than once");
-  finishTestStarted = true;
-  gBrowser.selectedTab = gTab1;
-  FullZoom.reset();
-  gBrowser.removeTab(gTab1);
-  FullZoom.reset();
-  gBrowser.removeTab(gTab2);
-  FullZoom.reset();
-  gBrowser.removeTab(gTab3);
-  finish();
-}
-
-function zoomTest(tab, val, msg) {
-  is(ZoomManager.getZoomForBrowser(tab.linkedBrowser), val, msg);
-}
-
-function load(tab, url, cb) {
-  let didLoad = false;
-  let didZoom = false;
-  tab.linkedBrowser.addEventListener("load", function (event) {
-    event.currentTarget.removeEventListener("load", arguments.callee, true);
-    didLoad = true;
-    if (didZoom)
-      executeSoon(cb);
-  }, true);
-
-  afterZoom(function() {
-    didZoom = true;
-    if (didLoad)
-      executeSoon(cb);
-  });
-
-  tab.linkedBrowser.loadURI(url);
-}
-
-function navigate(direction, cb) {
-  let didPs = false;
-  let didZoom = false;
-  gBrowser.addEventListener("pageshow", function (event) {
-    gBrowser.removeEventListener("pageshow", arguments.callee, true);
-    didPs = true;
-    if (didZoom)
-      executeSoon(cb);
-  }, true);
-
-  afterZoom(function() {
-    didZoom = true;
-    if (didPs)
-      executeSoon(cb);
-  });
-
-  if (direction == BACK)
-    gBrowser.goBack();
-  else if (direction == FORWARD)
-    gBrowser.goForward();
-}
-
-function afterZoom(cb) {
-  let oldSZFB = ZoomManager.setZoomForBrowser;
-  ZoomManager.setZoomForBrowser = function(browser, value) {
-    oldSZFB.call(ZoomManager, browser, value);
-    ZoomManager.setZoomForBrowser = oldSZFB;
-    executeSoon(cb);
-  };
+  Task.spawn(function () {
+    ok(!finishTestStarted, "finishTest called more than once");
+    finishTestStarted = true;
+    yield FullZoomHelper.selectTabAndWaitForLocationChange(gTab1);
+    yield FullZoomHelper.reset();
+    gBrowser.removeTab(gTab1);
+    yield FullZoomHelper.reset();
+    gBrowser.removeTab(gTab2);
+    yield FullZoomHelper.reset();
+    gBrowser.removeTab(gTab3);
+  }).then(finish, FullZoomHelper.failAndContinue(finish));
 }
