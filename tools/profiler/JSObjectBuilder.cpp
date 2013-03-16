@@ -86,7 +86,7 @@ JSObjectBuilder::ArrayPush(JSCustomArray *aArray, int value)
   if (!mOk)
     return;
 
-  jsval objval = INT_TO_JSVAL(value);
+  JS::Value objval = INT_TO_JSVAL(value);
   uint32_t length;
   mOk = JS_GetArrayLength(mCx, (JSObject*)aArray, &length);
 
@@ -108,7 +108,7 @@ JSObjectBuilder::ArrayPush(JSCustomArray *aArray, const char *value)
     return;
   }
 
-  jsval objval = STRING_TO_JSVAL(string);
+  JS::Value objval = STRING_TO_JSVAL(string);
   uint32_t length;
   mOk = JS_GetArrayLength(mCx, (JSObject*)aArray, &length);
 
@@ -124,7 +124,7 @@ JSObjectBuilder::ArrayPush(JSCustomArray *aArray, JSCustomObject *aObject)
   if (!mOk)
     return;
 
-  jsval objval = OBJECT_TO_JSVAL((JSObject*)aObject); uint32_t length;
+  JS::Value objval = OBJECT_TO_JSVAL((JSObject*)aObject); uint32_t length;
   mOk = JS_GetArrayLength(mCx, (JSObject*)aArray, &length);
 
   if (!mOk)

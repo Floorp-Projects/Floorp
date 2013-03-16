@@ -582,7 +582,7 @@ public:
       if (stream.is_open()) {
         JSAutoCompartment autoComp(cx, obj);
         JSObject* profileObj = mozilla_sampler_get_profile_data1(cx);
-        jsval val = OBJECT_TO_JSVAL(profileObj);
+        JS::Value val = OBJECT_TO_JSVAL(profileObj);
         JS_Stringify(cx, &val, nullptr, JSVAL_NULL, WriteCallback, &stream);
         stream.close();
         LOGF("Saved to %s", tmpPath.get());
