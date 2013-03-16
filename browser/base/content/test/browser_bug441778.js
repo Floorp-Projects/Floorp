@@ -13,19 +13,22 @@ function test() {
   const TEST_PAGE_URL = 'data:text/html,<body><iframe src=""></iframe></body>';
   const TEST_IFRAME_URL = "http://test2.example.org/";
 
-  // Prepare the test tab
-  gBrowser.selectedTab = gBrowser.addTab();
-  let testBrowser = gBrowser.selectedBrowser;
+  Task.spawn(function () {
+    // Prepare the test tab
+    let tab = gBrowser.addTab();
+    yield FullZoomHelper.selectTabAndWaitForLocationChange(tab);
 
-  testBrowser.addEventListener("load", function () {
-    testBrowser.removeEventListener("load", arguments.callee, true);
+    let testBrowser = tab.linkedBrowser;
+
+    yield FullZoomHelper.load(tab, TEST_PAGE_URL);
 
     // Change the zoom level and then save it so we can compare it to the level
     // after loading the sub-document.
-    FullZoom.enlarge();
+    yield FullZoomHelper.enlarge();
     var zoomLevel = ZoomManager.zoom;
 
     // Start the sub-document load.
+    let deferred = Promise.defer();
     executeSoon(function () {
       testBrowser.addEventListener("load", function (e) {
         testBrowser.removeEventListener("load", arguments.callee, true);
@@ -34,11 +37,10 @@ function test() {
         is(ZoomManager.zoom, zoomLevel, "zoom is retained after sub-document load");
 
         gBrowser.removeCurrentTab();
-        finish();
+        deferred.resolve();
       }, true);
       content.document.querySelector("iframe").src = TEST_IFRAME_URL;
     });
-  }, true);
-
-  content.location = TEST_PAGE_URL;
+    yield deferred.promise;
+  }).then(finish, FullZoomHelper.failAndContinue(finish));
 }
