@@ -142,8 +142,7 @@ class JS_PUBLIC_API(AutoGCRooter) {
         WRAPPER =     -31, /* js::AutoWrapperRooter */
         OBJOBJHASHMAP=-32, /* js::AutoObjectObjectHashMap */
         OBJU32HASHMAP=-33, /* js::AutoObjectUnsigned32HashMap */
-        OBJHASHSET =  -34, /* js::AutoObjectHashSet */
-        JSONPARSER =  -35  /* js::JSONParser */
+        OBJHASHSET =  -34  /* js::AutoObjectHashSet */
     };
 
   private:
