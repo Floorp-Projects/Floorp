@@ -37,12 +37,6 @@ interface nsIDOMSVGFEColorMatrixElement : nsIDOMSVGFilterPrimitiveStandardAttrib
     readonly attribute nsISupports  values;
 };
 
-[scriptable, uuid(338e96e3-ad22-4d79-a9a8-51602862f3ac)]
-interface nsIDOMSVGFEComponentTransferElement : nsIDOMSVGFilterPrimitiveStandardAttributes
-{
-    readonly attribute nsIDOMSVGAnimatedString in1;
-};
-
 [scriptable, uuid(87e1d0d5-6ee4-4287-a268-cb87e75ed092)]
 interface nsIDOMSVGComponentTransferFunctionElement : nsIDOMSVGElement
 {
