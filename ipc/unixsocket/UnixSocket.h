@@ -7,15 +7,7 @@
 #ifndef mozilla_ipc_UnixSocket_h
 #define mozilla_ipc_UnixSocket_h
 
-
 #include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/un.h>
-#ifdef MOZ_B2G_BT
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/sco.h>
-#include <bluetooth/rfcomm.h>
-#endif
 #include <stdlib.h>
 #include "nsString.h"
 #include "nsAutoPtr.h"
@@ -23,18 +15,6 @@
 
 namespace mozilla {
 namespace ipc {
-
-union sockaddr_any {
-  sockaddr_storage storage; // address-family only
-  sockaddr_un un;
-  sockaddr_in in;
-  sockaddr_in6 in6;
-#ifdef MOZ_B2G_BT
-  sockaddr_sco sco;
-  sockaddr_rc rc;
-#endif
-  // ... others
-};
 
 class UnixSocketRawData
 {
@@ -98,12 +78,10 @@ public:
    * @param aAddrSize Size of the struct 
    * @param aAddr Struct to fill
    * @param aAddress If aIsServer is false, Address to connect to. nullptr otherwise.
-   *
-   * @return True if address is filled correctly, false otherwise
    */
-  virtual bool CreateAddr(bool aIsServer,
+  virtual void CreateAddr(bool aIsServer,
                           socklen_t& aAddrSize,
-                          sockaddr_any& aAddr,
+                          struct sockaddr *aAddr,
                           const char* aAddress) = 0;
 
   /** 
@@ -122,7 +100,7 @@ public:
    * @param aAddr Address struct
    * @param aAddrStr String to store address to
    */
-  virtual void GetSocketAddr(const sockaddr_any& aAddr,
+  virtual void GetSocketAddr(const sockaddr& aAddr,
                              nsAString& aAddrStr) = 0;
 
 };
