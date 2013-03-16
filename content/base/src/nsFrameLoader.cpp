@@ -410,7 +410,7 @@ nsFrameLoader::ReallyStartLoadingInternal()
 {
   NS_ENSURE_STATE(mURIToLoad && mOwnerContent && mOwnerContent->IsInDoc());
 
-  SAMPLE_LABEL("nsFrameLoader", "ReallyStartLoading");
+  PROFILER_LABEL("nsFrameLoader", "ReallyStartLoading");
 
   nsresult rv = MaybeCreateDocShell();
   if (NS_FAILED(rv)) {
@@ -2024,7 +2024,7 @@ nsFrameLoader::TryRemoteBrowser()
     return false;
   }
 
-  SAMPLE_LABEL("nsFrameLoader", "CreateRemoteBrowser");
+  PROFILER_LABEL("nsFrameLoader", "CreateRemoteBrowser");
 
   MutableTabContext context;
   nsCOMPtr<mozIApplication> ownApp = GetOwnApp();

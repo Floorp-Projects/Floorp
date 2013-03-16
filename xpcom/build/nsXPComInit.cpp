@@ -318,7 +318,7 @@ NS_InitXPCOM2(nsIServiceManager* *result,
               nsIFile* binDirectory,
               nsIDirectoryServiceProvider* appFileLocationProvider)
 {
-    SAMPLER_INIT();
+    profiler_init();
     nsresult rv = NS_OK;
 
      // We are not shutting down
@@ -648,7 +648,7 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
         moduleLoaders = nullptr;
     }
 
-    SAMPLE_MARKER("Shutdown xpcom");
+    PROFILER_MARKER("Shutdown xpcom");
     // If we are doing any shutdown checks, poison writes.
     if (gShutdownChecks != SCM_NOTHING) {
         mozilla::PoisonWrite();

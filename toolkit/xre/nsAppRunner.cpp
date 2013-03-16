@@ -1115,7 +1115,7 @@ ScopedXPCOMStartup::~ScopedXPCOMStartup()
       appStartup->DestroyHiddenWindow();
 
     gDirServiceProvider->DoShutdown();
-    SAMPLE_MARKER("Shutdown early");
+    PROFILER_MARKER("Shutdown early");
 
     WriteConsoleLog();
 
@@ -3871,7 +3871,7 @@ XREMain::XRE_mainRun()
   }
 
 #ifdef MOZ_INSTRUMENT_EVENT_LOOP
-  if (PR_GetEnv("MOZ_INSTRUMENT_EVENT_LOOP") || SAMPLER_IS_ACTIVE()) {
+  if (PR_GetEnv("MOZ_INSTRUMENT_EVENT_LOOP") || profiler_is_active()) {
     mozilla::InitEventTracing();
   }
 #endif /* MOZ_INSTRUMENT_EVENT_LOOP */
@@ -3893,8 +3893,8 @@ XREMain::XRE_mainRun()
 int
 XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 {
-  SAMPLER_INIT();
-  SAMPLE_LABEL("Startup", "XRE_Main");
+  profiler_init();
+  PROFILER_LABEL("Startup", "XRE_Main");
 
   nsresult rv = NS_OK;
 
@@ -3994,7 +3994,7 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     MOZ_gdk_display_close(mGdkDisplay);
 #endif
 
-    SAMPLER_SHUTDOWN();
+    profiler_shutdown();
     rv = LaunchChild(mNativeApp, true);
 
 #ifdef MOZ_CRASHREPORTER
@@ -4017,7 +4017,7 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   XRE_DeinitCommandLine();
 
-  SAMPLER_SHUTDOWN();
+  profiler_shutdown();
 
   return NS_FAILED(rv) ? 1 : 0;
 }
@@ -4091,8 +4091,8 @@ public:
 int
 XRE_mainMetro(int argc, char* argv[], const nsXREAppData* aAppData)
 {
-  SAMPLER_INIT();
-  SAMPLE_LABEL("Startup", "XRE_Main");
+  profiler_init();
+  PROFILER_LABEL("Startup", "XRE_Main");
 
   nsresult rv = NS_OK;
 
@@ -4132,7 +4132,7 @@ XRE_mainMetro(int argc, char* argv[], const nsXREAppData* aAppData)
   // thread that called XRE_metroStartup.
   NS_ASSERTION(!xreMainPtr->mScopedXPCom,
                "XPCOM Shutdown hasn't occured, and we are exiting.");
-  SAMPLER_SHUTDOWN();
+  profiler_shutdown();
   return 0;
 }
 
