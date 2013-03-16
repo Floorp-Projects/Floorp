@@ -9,43 +9,40 @@ function run_test() {
 let tests = [
 
   function observerForName_set() {
-    let args = on("Set", ["foo", null, "bar"]);
-
     yield set("a.com", "foo", 1);
+    let args = yield on("Set", ["foo", null, "bar"]);
     observerArgsOK(args.foo, [["a.com", "foo", 1]]);
     observerArgsOK(args.null, [["a.com", "foo", 1]]);
     observerArgsOK(args.bar, []);
-    args.reset();
 
     yield setGlobal("foo", 2);
+    args = yield on("Set", ["foo", null, "bar"]);
     observerArgsOK(args.foo, [[null, "foo", 2]]);
     observerArgsOK(args.null, [[null, "foo", 2]]);
     observerArgsOK(args.bar, []);
-    args.reset();
   },
 
   function observerForName_remove() {
     yield set("a.com", "foo", 1);
     yield setGlobal("foo", 2);
 
-    let args = on("Removed", ["foo", null, "bar"]);
     yield cps.removeByDomainAndName("a.com", "bogus", null, makeCallback());
+    let args = yield on("Removed", ["foo", null, "bar"]);
     observerArgsOK(args.foo, []);
     observerArgsOK(args.null, []);
     observerArgsOK(args.bar, []);
-    args.reset();
 
     yield cps.removeByDomainAndName("a.com", "foo", null, makeCallback());
+    args = yield on("Removed", ["foo", null, "bar"]);
     observerArgsOK(args.foo, [["a.com", "foo"]]);
     observerArgsOK(args.null, [["a.com", "foo"]]);
     observerArgsOK(args.bar, []);
-    args.reset();
 
     yield cps.removeGlobal("foo", null, makeCallback());
+    args = yield on("Removed", ["foo", null, "bar"]);
     observerArgsOK(args.foo, [[null, "foo"]]);
     observerArgsOK(args.null, [[null, "foo"]]);
     observerArgsOK(args.bar, []);
-    args.reset();
   },
 
   function observerForName_removeByDomain() {
@@ -53,24 +50,23 @@ let tests = [
     yield set("b.a.com", "bar", 2);
     yield setGlobal("foo", 3);
 
-    let args = on("Removed", ["foo", null, "bar"]);
     yield cps.removeByDomain("bogus", null, makeCallback());
+    let args = yield on("Removed", ["foo", null, "bar"]);
     observerArgsOK(args.foo, []);
     observerArgsOK(args.null, []);
     observerArgsOK(args.bar, []);
-    args.reset();
 
     yield cps.removeBySubdomain("a.com", null, makeCallback());
+    args = yield on("Removed", ["foo", null, "bar"]);
     observerArgsOK(args.foo, [["a.com", "foo"]]);
     observerArgsOK(args.null, [["a.com", "foo"], ["b.a.com", "bar"]]);
     observerArgsOK(args.bar, [["b.a.com", "bar"]]);
-    args.reset();
 
     yield cps.removeAllGlobals(null, makeCallback());
+    args = yield on("Removed", ["foo", null, "bar"]);
     observerArgsOK(args.foo, [[null, "foo"]]);
     observerArgsOK(args.null, [[null, "foo"]]);
     observerArgsOK(args.bar, []);
-    args.reset();
   },
 
   function observerForName_removeAllDomains() {
@@ -78,12 +74,11 @@ let tests = [
     yield setGlobal("foo", 2);
     yield set("b.com", "bar", 3);
 
-    let args = on("Removed", ["foo", null, "bar"]);
     yield cps.removeAllDomains(null, makeCallback());
+    let args = yield on("Removed", ["foo", null, "bar"]);
     observerArgsOK(args.foo, [["a.com", "foo"]]);
     observerArgsOK(args.null, [["a.com", "foo"], ["b.com", "bar"]]);
     observerArgsOK(args.bar, [["b.com", "bar"]]);
-    args.reset();
   },
 
   function observerForName_removeByName() {
@@ -91,25 +86,25 @@ let tests = [
     yield set("a.com", "bar", 2);
     yield setGlobal("foo", 3);
 
-    let args = on("Removed", ["foo", null, "bar"]);
     yield cps.removeByName("bogus", null, makeCallback());
+    let args = yield on("Removed", ["foo", null, "bar"]);
     observerArgsOK(args.foo, []);
     observerArgsOK(args.null, []);
     observerArgsOK(args.bar, []);
-    args.reset();
 
     yield cps.removeByName("foo", null, makeCallback());
+    args = yield on("Removed", ["foo", null, "bar"]);
     observerArgsOK(args.foo, [["a.com", "foo"], [null, "foo"]]);
     observerArgsOK(args.null, [["a.com", "foo"], [null, "foo"]]);
     observerArgsOK(args.bar, []);
-    args.reset();
   },
 
   function removeObserverForName() {
-    let args = on("Set", ["foo", null, "bar"]);
+    let args = yield on("Set", ["foo", null, "bar"], true);
 
     cps.removeObserverForName("foo", args.foo.observer);
     yield set("a.com", "foo", 1);
+    yield wait();
     observerArgsOK(args.foo, []);
     observerArgsOK(args.null, [["a.com", "foo", 1]]);
     observerArgsOK(args.bar, []);
@@ -117,6 +112,7 @@ let tests = [
 
     cps.removeObserverForName(null, args.null.observer);
     yield set("a.com", "foo", 2);
+    yield wait();
     observerArgsOK(args.foo, []);
     observerArgsOK(args.null, []);
     observerArgsOK(args.bar, []);
