@@ -1054,7 +1054,7 @@ struct TypeObject : gc::Cell
     /* Helpers */
 
     bool addProperty(JSContext *cx, RawId id, Property **pprop);
-    bool addDefiniteProperties(JSContext *cx, HandleObject obj);
+    bool addDefiniteProperties(JSContext *cx, JSObject *obj);
     bool matchDefiniteProperties(HandleObject obj);
     void addPrototype(JSContext *cx, TypeObject *proto);
     void addPropertyType(JSContext *cx, jsid id, Type type);
@@ -1382,8 +1382,10 @@ struct TypeCompartment
     ArrayTypeTable *arrayTypeTable;
     ObjectTypeTable *objectTypeTable;
 
-    void fixArrayType(JSContext *cx, HandleObject obj);
-    void fixObjectType(JSContext *cx, HandleObject obj);
+    void fixArrayType(JSContext *cx, JSObject *obj);
+    void fixObjectType(JSContext *cx, JSObject *obj);
+
+    JSObject *newTypedObject(JSContext *cx, IdValuePair *properties, size_t nproperties);
 
     /* Logging fields */
 
@@ -1438,6 +1440,7 @@ struct TypeCompartment
     void markSetsUnknown(JSContext *cx, TypeObject *obj);
 
     void sweep(FreeOp *fop);
+    void sweepShapes(FreeOp *fop);
     void sweepCompilerOutputs(FreeOp *fop, bool discardConstraints);
 
     void maybePurgeAnalysis(JSContext *cx, bool force = false);
