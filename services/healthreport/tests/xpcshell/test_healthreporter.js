@@ -630,3 +630,29 @@ add_task(function test_collect_when_upload_disabled() {
     reporter._shutdown();
   }
 });
+
+add_task(function test_failure_if_not_initialized() {
+  let reporter = yield getReporter("failure_if_not_initialized");
+  reporter._shutdown();
+
+  let error = false;
+  try {
+    yield reporter.requestDataUpload();
+  } catch (ex) {
+    error = true;
+    do_check_true(ex.message.contains("Not initialized."));
+  } finally {
+    do_check_true(error);
+    error = false;
+  }
+
+  try {
+    yield reporter.collectMeasurements();
+  } catch (ex) {
+    error = true;
+    do_check_true(ex.message.contains("Not initialized."));
+  } finally {
+    do_check_true(error);
+    error = false;
+  }
+});
