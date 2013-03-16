@@ -3932,7 +3932,7 @@ nsEventStateManager::DispatchMouseEvent(nsGUIEvent* aEvent, uint32_t aMessage,
     return mPresContext->GetPrimaryFrameFor(content);
   }
 
-  SAMPLE_LABEL("Input", "DispatchMouseEvent");
+  PROFILER_LABEL("Input", "DispatchMouseEvent");
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event(aEvent->mFlags.mIsTrusted, aMessage, aEvent->widget,
                      nsMouseEvent::eReal);

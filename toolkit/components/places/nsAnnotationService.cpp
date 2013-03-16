@@ -262,7 +262,7 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
                                        int32_t aFlags,
                                        uint16_t aExpiration)
 {
-  SAMPLE_LABEL("AnnotationService", "SetItemAnnotation");
+  PROFILER_LABEL("AnnotationService", "SetItemAnnotation");
   NS_ENSURE_ARG_MIN(aItemId, 1);
   NS_ENSURE_ARG(aValue);
 
