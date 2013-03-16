@@ -11,14 +11,6 @@
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
-  ok(!window.AudioContext, "AudioContext should be hidden behind a pref");
-  var accessThrows = false;
-  try {
-    new AudioContext();
-  } catch (e) {
-    accessThrows = true;
-  }
-  ok(accessThrows, "AudioContext should be hidden behind a pref");
   SpecialPowers.setBoolPref("media.webaudio.enabled", true);
   var ac = new AudioContext();
   ok(ac, "Create a AudioContext object");
