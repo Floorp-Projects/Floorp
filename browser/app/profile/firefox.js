@@ -1221,3 +1221,9 @@ pref("dom.identity.enabled", false);
 
 // Override the Gecko-default value of false for Firefox.
 pref("plain_text.wrap_long_lines", true);
+
+#ifndef RELEASE_BUILD
+// Enable Web Audio for Firefox Desktop in Nightly and Aurora
+pref("media.webaudio.enabled", true);
+#endif
+
