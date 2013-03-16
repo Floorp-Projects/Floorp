@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -30,6 +31,7 @@
 #include "nsRuleWalker.h"
 #include "nsRuleProcessorData.h"
 #include "nsCSSRuleProcessor.h"
+#include "mozilla/dom/InspectorUtilsBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -343,6 +345,108 @@ inDOMUtils::IsInheritedProperty(const nsAString &aPropertyName, bool *_retval)
 
   nsStyleStructID sid = nsCSSProps::kSIDTable[prop];
   *_retval = !nsCachedStyleData::IsReset(sid);
+  return NS_OK;
+}
+
+extern const char* const kCSSRawProperties[];
+
+NS_IMETHODIMP
+inDOMUtils::GetCSSPropertyNames(uint32_t aFlags, uint32_t* aCount,
+                                PRUnichar*** aProps)
+{
+  // maxCount is the largest number of properties we could have; our actual
+  // number might be smaller because properties might be disabled.
+  uint32_t maxCount;
+  if (aFlags & EXCLUDE_SHORTHANDS) {
+    maxCount = eCSSProperty_COUNT_no_shorthands;
+  } else {
+    maxCount = eCSSProperty_COUNT;
+  }
+
+  if (aFlags & INCLUDE_ALIASES) {
+    maxCount += (eCSSProperty_COUNT_with_aliases - eCSSProperty_COUNT);
+  }
+
+  PRUnichar** props =
+    static_cast<PRUnichar**>(nsMemory::Alloc(maxCount * sizeof(PRUnichar*)));
+
+#define DO_PROP(_prop)                                                  \
+  PR_BEGIN_MACRO                                                        \
+    nsCSSProperty cssProp = nsCSSProperty(_prop);                       \
+    if (nsCSSProps::IsEnabled(cssProp)) {                               \
+      props[propCount] =                                                \
+        ToNewUnicode(nsDependentCString(kCSSRawProperties[_prop]));     \
+      ++propCount;                                                      \
+    }                                                                   \
+  PR_END_MACRO
+
+  // prop is the property id we're considering; propCount is how many properties
+  // we've put into props so far.
+  uint32_t prop = 0, propCount = 0;
+  for ( ; prop < eCSSProperty_COUNT_no_shorthands; ++prop) {
+    if (!nsCSSProps::PropHasFlags(nsCSSProperty(prop),
+                                  CSS_PROPERTY_PARSE_INACCESSIBLE)) {
+      DO_PROP(prop);
+    }
+  }
+
+  if (!(aFlags & EXCLUDE_SHORTHANDS)) {
+    for ( ; prop < eCSSProperty_COUNT; ++prop) {
+      // Some shorthands are also aliases
+      if ((aFlags & INCLUDE_ALIASES) ||
+          !nsCSSProps::PropHasFlags(nsCSSProperty(prop),
+                                    CSS_PROPERTY_IS_ALIAS)) {
+        DO_PROP(prop);
+      }
+    }
+  }
+
+  if (aFlags & INCLUDE_ALIASES) {
+    for (prop = eCSSProperty_COUNT; prop < eCSSProperty_COUNT_with_aliases; ++prop) {
+      DO_PROP(prop);
+    }
+  }
+
+#undef DO_PROP
+
+  *aCount = propCount;
+  *aProps = props;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inDOMUtils::ColorNameToRGB(const nsAString& aColorName, JSContext* aCx,
+                           JS::Value* aValue)
+{
+  nscolor color;
+  if (!NS_ColorNameToRGB(aColorName, &color)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  InspectorRGBTriple triple;
+  triple.mR = NS_GET_R(color);
+  triple.mG = NS_GET_G(color);
+  triple.mB = NS_GET_B(color);
+
+  if (!triple.ToObject(aCx, nullptr, aValue)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inDOMUtils::RgbToColorName(uint8_t aR, uint8_t aG, uint8_t aB,
+                           nsAString& aColorName)
+{
+  const char* color = NS_RGBToColorName(NS_RGB(aR, aG, aB));
+  if (!color) {
+    aColorName.Truncate();
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  aColorName.AssignASCII(color);
   return NS_OK;
 }
 

@@ -25,7 +25,7 @@
  *
  * In order for navigator.id.request() to maintain state in a single
  * cookie jar, we cause all Persona interactions to take place in a
- * gaia context that is launched by the system application, with the
+ * content context that is launched by the system application, with the
  * result that Persona has a single cookie jar that all Relying
  * Parties can use.  Since of course those Relying Parties cannot
  * reach into the system cookie jar, the Controller in this module
@@ -43,10 +43,10 @@
  * requesting Persona functions (doWatch, doReady, doLogout).
  *
  * The Identity service sends these observer messages to the
- * Controller in this module, which in turn triggers gaia to open a
+ * Controller in this module, which in turn triggers content to open a
  * window to host the Persona js.  If user interaction is required,
- * gaia will open the trusty UI.  If user interaction is not required,
- * and we only need to get to Persona functions, gaia will open a
+ * content will open the trusty UI.  If user interaction is not required,
+ * and we only need to get to Persona functions, content will open a
  * hidden iframe.  In either case, a window is opened into which the
  * controller causes the script identity.js to be injected.  This
  * script provides the glue between the in-page javascript and the
@@ -89,11 +89,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "Logger",
 const kIdentityShimFile = "chrome://browser/content/identity.js";
 
 // Type of MozChromeEvents to handle id dialogs.
-const kOpenIdentityDialog = "open-id-dialog";
-const kCloseIdentityDialog = "close-id-dialog";
+const kOpenIdentityDialog = "id-dialog-open";
+const kDoneIdentityDialog = "id-dialog-done";
+const kCloseIdentityDialog = "id-dialog-close-iframe";
 
 // Observer messages to communicate to shim
-const kReceivedIdentityAssertion = "received-id-assertion";
 const kIdentityDelegateWatch = "identity-delegate-watch";
 const kIdentityDelegateRequest = "identity-delegate-request";
 const kIdentityDelegateLogout = "identity-delegate-logout";
@@ -107,12 +107,12 @@ function log(...aMessageArgs) {
 }
 
 /*
- * GaiaInterface encapsulates the our gaia functions.  There are only two:
+ * ContentInterface encapsulates the our content functions.  There are only two:
  *
  * getContent       - return the current content window
  * sendChromeEvent  - send a chromeEvent from the browser shell
  */
-let GaiaInterface = {
+let ContentInterface = {
   _getBrowser: function SignInToWebsiteController__getBrowser() {
     return Services.wm.getMostRecentWindow("navigator:browser");
   },
@@ -126,40 +126,100 @@ let GaiaInterface = {
   }
 };
 
-/*
- * The Pipe abstracts the communcation channel between the Controller
- * and the identity.js code running in the browser window.
- */
-let Pipe = {
+function Pipe() {
+  this._watchers = [];
+}
 
-  /*
-   * communicate - launch a gaia window with certain options and
-   * provide a callback for handling messages.
-   *
-   * @param aRpOptions        options describing the Relying Party's
-   *        (dictionary)      call, such as origin and loggedInUser.
-   *
-   * @param aGaiaOptions      showUI:   boolean
-   *        (dictionary)      message:  name of the message to emit
-   *                                    (request, logout, watch)
-   *
-   * @param aMessageCallback  function to call on receipt of a
-   *        (function)        do-method message.  These messages name
-   *                          a method ('login', 'logout', etc.) and
-   *                          carry optional parameters.  The Pipe does
-   *                          not know what the messages mean; it is
-   *                          up to the caller to interpret them and
-   *                          act on them.
-   */
-  communicate: function(aRpOptions, aGaiaOptions, aMessageCallback) {
-    log("open gaia dialog with options:", aGaiaOptions);
+Pipe.prototype = {
+  init: function pipe_init() {
+    Services.obs.addObserver(this, "identity-child-process-shutdown", false);
+    Services.obs.addObserver(this, "identity-controller-unwatch", false);
+  },
+
+  uninit: function pipe_init() {
+    Services.obs.removeObserver(this, "identity-child-process-shutdown");
+    Services.obs.removeObserver(this, "identity-controller-unwatch");
+  },
+
+  observe: function Pipe_observe(aSubject, aTopic, aData) {
+    let options = {};
+    if (aSubject) {
+      options = aSubject.wrappedJSObject;
+    }
+    switch (aTopic) {
+      case "identity-child-process-shutdown":
+        log("pipe removing watchers by message manager");
+        this._removeWatchers(null, options.messageManager);
+        break;
+
+      case "identity-controller-unwatch":
+        log("unwatching", options.id);
+        this._removeWatchers(options.id, options.messageManager);
+        break;
+    }
+  },
+
+  _addWatcher: function Pipe__addWatcher(aId, aMm) {
+    log("Adding watcher with id", aId);
+    for (let i = 0; i < this._watchers.length; ++i) {
+      let watcher = this._watchers[i];
+      if (this._watcher.id === aId) {
+        watcher.count++;
+        return;
+      }
+    }
+    this._watchers.push({id: aId, count: 1, mm: aMm});
+  },
+
+  _removeWatchers: function Pipe__removeWatcher(aId, aMm) {
+    let checkId = aId !== null;
+    let index = -1;
+    for (let i = 0; i < this._watchers.length; ++i) {
+      let watcher = this._watchers[i];
+      if (watcher.mm === aMm &&
+          (!checkId || (checkId && watcher.id === aId))) {
+        index = i;
+        break;
+      }
+    }
+
+    if (index !== -1) {
+      if (checkId) {
+        if (--(this._watchers[index].count) === 0) {
+          this._watchers.splice(index, 1);
+        }
+      } else {
+        this._watchers.splice(index, 1);
+      }
+    }
+
+    if (this._watchers.length === 0) {
+      log("No more watchers; clean up persona host iframe");
+      let detail = {
+        type: kCloseIdentityDialog
+      };
+      log('telling content to close the dialog');
+      // tell content to close the dialog
+      ContentInterface.sendChromeEvent(detail);
+    }
+  },
+
+  communicate: function(aRpOptions, aContentOptions, aMessageCallback) {
+    let rpID = aRpOptions.id;
+    let rpMM = aRpOptions.mm;
+    if (rpMM) {
+      this._addWatcher(rpID, rpMM);
+    }
+
+    log("RP options:", aRpOptions, "\n  content options:", aContentOptions);
 
     // This content variable is injected into the scope of
     // kIdentityShimFile, where it is used to access the BrowserID object
     // and its internal API.
-    let content = GaiaInterface.getContent();
+    let content = ContentInterface.getContent();
     let mm = null;
     let uuid = getRandomId();
+    let self = this;
 
     if (!content) {
       log("ERROR: what the what? no content window?");
@@ -178,14 +238,14 @@ let Pipe = {
       removeMessageListeners();
 
       let detail = {
-        type: kReceivedIdentityAssertion,
-        showUI: aGaiaOptions.showUI || false,
-        id: kReceivedIdentityAssertion + "-" + uuid,
-        requestId: aRpOptions.id 
+        type: kDoneIdentityDialog,
+        showUI: aContentOptions.showUI || false,
+        id: kDoneIdentityDialog + "-" + uuid,
+        requestId: aRpOptions.id
       };
-      log('telling gaia to close the dialog');
-      // tell gaia to close the dialog
-      GaiaInterface.sendChromeEvent(detail);
+      log('received delegate finished; telling content to close the dialog');
+      ContentInterface.sendChromeEvent(detail);
+      self._removeWatchers(rpID, rpMM);
     }
 
     content.addEventListener("mozContentEvent", function getAssertion(evt) {
@@ -224,11 +284,11 @@ let Pipe = {
             mm.addMessageListener(kIdentityControllerDoMethod, aMessageCallback);
             mm.addMessageListener(kIdentityDelegateFinished, identityDelegateFinished);
 
-            mm.sendAsyncMessage(aGaiaOptions.message, aRpOptions);
+            mm.sendAsyncMessage(aContentOptions.message, aRpOptions);
           }
           break;
 
-        case kReceivedIdentityAssertion + '-' + uuid:
+        case kDoneIdentityDialog + '-' + uuid:
           // Received our assertion.  The message manager callbacks will handle
           // communicating back to the IDService.  All we have to do is remove
           // this listener.
@@ -242,27 +302,27 @@ let Pipe = {
 
     });
 
-    // Tell gaia to open the identity iframe or trusty popup. The parameter
-    // showUI signals whether user interaction is needed.  If it is, gaia will
+    // Tell content to open the identity iframe or trusty popup. The parameter
+    // showUI signals whether user interaction is needed.  If it is, content will
     // open a dialog; if not, a hidden iframe.  In each case, BrowserID is
     // available in the context.
     let detail = {
       type: kOpenIdentityDialog,
-      showUI: aGaiaOptions.showUI || false,
+      showUI: aContentOptions.showUI || false,
       id: kOpenIdentityDialog + "-" + uuid,
       requestId: aRpOptions.id
     };
 
-    GaiaInterface.sendChromeEvent(detail);
+    ContentInterface.sendChromeEvent(detail);
   }
 
 };
 
 /*
  * The controller sits between the IdentityService used by DOMIdentity
- * and a gaia process launches an (invisible) iframe or (visible)
+ * and a content process launches an (invisible) iframe or (visible)
  * trusty UI.  Using an injected js script (identity.js), the
- * controller enables the gaia window to access the persona identity
+ * controller enables the content window to access the persona identity
  * storage in the system cookie jar and send events back via the
  * controller into IdentityService and DOM, and ultimately up to the
  * Relying Party, which is open in a different window context.
@@ -270,12 +330,12 @@ let Pipe = {
 this.SignInToWebsiteController = {
 
   /*
-   * Initialize the controller.  To use a different gaia communication pipe,
+   * Initialize the controller.  To use a different content communication pipe,
    * such as when mocking it in tests, pass aOptions.pipe.
    */
   init: function SignInToWebsiteController_init(aOptions) {
     aOptions = aOptions || {};
-    this.pipe = aOptions.pipe || Pipe;
+    this.pipe = aOptions.pipe || new Pipe();
     Services.obs.addObserver(this, "identity-controller-watch", false);
     Services.obs.addObserver(this, "identity-controller-request", false);
     Services.obs.addObserver(this, "identity-controller-logout", false);
@@ -293,7 +353,7 @@ this.SignInToWebsiteController = {
     if (aSubject) {
       options = aSubject.wrappedJSObject;
     }
-    switch(aTopic) {
+    switch (aTopic) {
       case "identity-controller-watch":
         this.doWatch(options);
         break;
@@ -320,7 +380,7 @@ this.SignInToWebsiteController = {
         message = JSON.parse(message);
       }
 
-      switch(message.method) {
+      switch (message.method) {
         case "ready":
           IdentityService.doReady(aRpId);
           break;
@@ -350,11 +410,12 @@ this.SignInToWebsiteController = {
 
   doWatch: function SignInToWebsiteController_doWatch(aRpOptions) {
     // dom prevents watch from  being called twice
-    var gaiaOptions = {
+    let contentOptions = {
       message: kIdentityDelegateWatch,
       showUI: false
     };
-    this.pipe.communicate(aRpOptions, gaiaOptions, this._makeDoMethodCallback(aRpOptions.id));
+    this.pipe.communicate(aRpOptions, contentOptions,
+        this._makeDoMethodCallback(aRpOptions.id));
   },
 
   /**
@@ -362,12 +423,12 @@ this.SignInToWebsiteController = {
    */
   doRequest: function SignInToWebsiteController_doRequest(aRpOptions) {
     log("doRequest", aRpOptions);
-    // tell gaia to open the identity popup
-    var gaiaOptions = {
+    let contentOptions = {
       message: kIdentityDelegateRequest,
       showUI: true
     };
-    this.pipe.communicate(aRpOptions, gaiaOptions, this._makeDoMethodCallback(aRpOptions.id));
+    this.pipe.communicate(aRpOptions, contentOptions,
+        this._makeDoMethodCallback(aRpOptions.id));
   },
 
   /*
@@ -375,11 +436,12 @@ this.SignInToWebsiteController = {
    */
   doLogout: function SignInToWebsiteController_doLogout(aRpOptions) {
     log("doLogout", aRpOptions);
-    var gaiaOptions = {
+    let contentOptions = {
       message: kIdentityDelegateLogout,
       showUI: false
     };
-    this.pipe.communicate(aRpOptions, gaiaOptions, this._makeDoMethodCallback(aRpOptions.id));
+    this.pipe.communicate(aRpOptions, contentOptions,
+        this._makeDoMethodCallback(aRpOptions.id));
   }
 
 };

@@ -386,7 +386,7 @@ IndexedDBDatabaseChild::RecvSuccess(
     openHelper = new IPCOpenDatabaseHelper(mDatabase, request);
   }
 
-  MainThreadEventTarget target;
+  ImmediateRunEventTarget target;
   if (NS_FAILED(openHelper->Dispatch(&target))) {
     NS_WARNING("Dispatch of IPCOpenDatabaseHelper failed!");
     return false;
@@ -418,7 +418,7 @@ IndexedDBDatabaseChild::RecvError(const nsresult& aRv)
 
   openHelper->SetError(aRv);
 
-  MainThreadEventTarget target;
+  ImmediateRunEventTarget target;
   if (NS_FAILED(openHelper->Dispatch(&target))) {
     NS_WARNING("Dispatch of IPCOpenDatabaseHelper failed!");
     return false;
@@ -436,7 +436,7 @@ IndexedDBDatabaseChild::RecvBlocked(const uint64_t& aOldVersion)
   nsCOMPtr<nsIRunnable> runnable =
     IDBVersionChangeEvent::CreateBlockedRunnable(mRequest, aOldVersion, mVersion);
 
-  MainThreadEventTarget target;
+  ImmediateRunEventTarget target;
   if (NS_FAILED(target.Dispatch(runnable, NS_DISPATCH_NORMAL))) {
     NS_WARNING("Dispatch of blocked event failed!");
   }
@@ -453,7 +453,7 @@ IndexedDBDatabaseChild::RecvVersionChange(const uint64_t& aOldVersion,
   nsCOMPtr<nsIRunnable> runnable =
     new VersionChangeRunnable(mDatabase, aOldVersion, aNewVersion);
 
-  MainThreadEventTarget target;
+  ImmediateRunEventTarget target;
   if (NS_FAILED(target.Dispatch(runnable, NS_DISPATCH_NORMAL))) {
     NS_WARNING("Dispatch of versionchange event failed!");
   }
@@ -521,13 +521,13 @@ IndexedDBDatabaseChild::RecvPIndexedDBTransactionConstructor(
   mDatabase->EnterSetVersionTransaction();
   mDatabase->mPreviousDatabaseInfo->version = oldVersion;
 
-  MainThreadEventTarget target;
+  actor->SetTransaction(transaction);
+
+  ImmediateRunEventTarget target;
   if (NS_FAILED(versionHelper->Dispatch(&target))) {
     NS_WARNING("Dispatch of IPCSetVersionHelper failed!");
     return false;
   }
-
-  actor->SetTransaction(transaction);
 
   mOpenHelper = helper.forget();
   return true;
@@ -604,7 +604,7 @@ IndexedDBTransactionChild::FireCompleteEvent(nsresult aRv)
 
   nsRefPtr<CommitHelper> helper = new CommitHelper(transaction, aRv);
 
-  MainThreadEventTarget target;
+  ImmediateRunEventTarget target;
   if (NS_FAILED(target.Dispatch(helper, NS_DISPATCH_NORMAL))) {
     NS_WARNING("Dispatch of CommitHelper failed!");
   }
@@ -1240,7 +1240,7 @@ IndexedDBDeleteDatabaseRequestChild::Recv__delete__(const nsresult& aRv)
     helper->SetError(aRv);
   }
 
-  MainThreadEventTarget target;
+  ImmediateRunEventTarget target;
   if (NS_FAILED(helper->Dispatch(&target))) {
     NS_WARNING("Dispatch of IPCSetVersionHelper failed!");
     return false;
@@ -1259,7 +1259,7 @@ IndexedDBDeleteDatabaseRequestChild::RecvBlocked(
     IDBVersionChangeEvent::CreateBlockedRunnable(mOpenRequest,
                                                  aCurrentVersion, 0);
 
-  MainThreadEventTarget target;
+  ImmediateRunEventTarget target;
   if (NS_FAILED(target.Dispatch(runnable, NS_DISPATCH_NORMAL))) {
     NS_WARNING("Dispatch of blocked event failed!");
   }

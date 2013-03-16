@@ -404,10 +404,10 @@
         <button label="&sync.connect;" oncommand="WeaveGlue.tryConnect();" />
       </setting>
       <setting id="sync-connected" class="setting-group" title="&sync.connected;" type="control" collapsed="true">
-        <button id="sync-pairdevice" label="&sync.pair.title;" oncommand="SyncPairDevice.open();" />
+        <button id="sync-pairdevice" label="&sync.pair.button;" oncommand="SyncPairDevice.open();" />
       </setting>
       <setting id="sync-sync" class="setting-subgroup" type="control" collapsed="true">
-        <button id="sync-syncButton" label="&sync.syncNow;" oncommand="WeaveGlue.sync();"/>
+        <button id="sync-syncButton" label="&sync.syncNow2;" oncommand="WeaveGlue.sync();"/>
       </setting>
       <setting id="sync-device" class="setting-subgroup" type="string" title="&sync.deviceName;" onchange="WeaveGlue.changeName(this);" collapsed="true"/>
       <setting id="sync-disconnect" class="setting-subgroup" type="control" collapsed="true">
@@ -457,7 +457,7 @@
           </hbox>
           <vbox id="syncsetup-simple" class="syncsetup-page" flex="1">
             <scrollbox id="sync-message" class="prompt-message" orient="vertical" flex="1">
-              <description class="syncsetup-desc" flex="1">&sync.setup.pair;</description>
+              <description class="syncsetup-desc" flex="1">&sync.setup.pair2;</description>
               <description class="link" flex="1" onclick="WeaveGlue.openTutorial();">&sync.setup.tutorial;</description>
               <separator/>
               <vbox flex="1" pack="center" align="start">
@@ -514,7 +514,7 @@
           </hbox>
           <vbox id="syncpair-simple" class="syncsetup-page" flex="1">
             <scrollbox id="sync-message" class="prompt-message" orient="vertical" flex="1">
-              <description class="syncsetup-desc" flex="1">&sync.pair.description;</description>
+              <description class="syncsetup-desc" flex="1">&sync.pair.description2;</description>
               <description class="link" flex="1" onclick="SyncPairDevice.close(); WeaveGlue.openTutorial();">&sync.setup.tutorial;</description>
               <separator/>
               <vbox align="center" flex="1">
@@ -621,10 +621,10 @@
 
           <!-- App bar: 'more' button context menu -->
           <richlistitem id="context-findinpage" type="find-in-page" onclick="ContextCommands.findInPage();">
-          <label value="&appbarFindInPage.label;"/>
+          <label value="&appbarFindInPage2.label;"/>
           </richlistitem>
           <richlistitem id="context-viewondesktop" type="view-on-desktop" onclick="ContextCommands.viewOnDesktop();">
-          <label value="&appbarViewOnDesktop.label;"/>
+          <label value="&appbarViewOnDesktop2.label;"/>
           </richlistitem>
         </richlistbox>
       </vbox>

@@ -1082,6 +1082,10 @@ class IDLDictionary(IDLObjectWithScope):
             return (False, None)
 
         for member in self.members:
+            if member.type.isDictionary() and member.type.nullable():
+                raise WebIDLError("Dictionary %s has member with nullable "
+                                  "dictionary type" % self.identifier.name,
+                                  [member.location])
             (contains, locations) = typeContainsDictionary(member.type, self)
             if contains:
                 raise WebIDLError("Dictionary %s has member with itself as type." %

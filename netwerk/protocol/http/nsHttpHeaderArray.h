@@ -162,7 +162,6 @@ nsHttpHeaderArray::IsSingletonHeader(nsHttpAtom header)
            header == nsHttp::If_Unmodified_Since ||
            header == nsHttp::From                ||
            header == nsHttp::Location            ||
-           header == nsHttp::Access_Control_Allow_Origin ||
            header == nsHttp::Max_Forwards;
 }
 
@@ -202,11 +201,10 @@ nsHttpHeaderArray::IsSuspectDuplicateHeader(nsHttpAtom header)
 {
     bool retval =  header == nsHttp::Content_Length         ||
                      header == nsHttp::Content_Disposition    ||
-                     header == nsHttp::Access_Control_Allow_Origin ||
                      header == nsHttp::Location;
 
-    MOZ_ASSERT(!retval || IsSingletonHeader(header),
-               "Only non-mergeable headers should be in this list\n");
+    NS_ASSERTION(!retval || IsSingletonHeader(header),
+                 "Only non-mergeable headers should be in this list\n");
 
     return retval;
 }

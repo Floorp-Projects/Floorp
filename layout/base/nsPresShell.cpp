@@ -5518,12 +5518,6 @@ PresShell::Paint(nsView*        aViewToPaint,
     aViewToPaint->GetWidget()->GetLayerManager(&isRetainingManager);
   NS_ASSERTION(layerManager, "Must be in paint event");
 
-  if (!layerManager) {
-    // Crash so we get a good stack on how this code is getting triggered.
-    // See bug 847002 for details.
-    MOZ_CRASH();
-  }
-
   // Whether or not we should set first paint when painting is
   // suppressed is debatable. For now we'll do it because
   // B2G relies on first paint to configure the viewport and

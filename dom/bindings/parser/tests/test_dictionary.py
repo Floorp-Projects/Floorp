@@ -425,3 +425,20 @@ def WebIDLTest(parser, harness):
     harness.ok(threw, "Member type must not be a Dictionary, one of whose "
                       "members or inherited members has a type that includes "
                       "its Dictionary.")
+
+    parser = parser.reset();
+    threw = False
+    try:
+        parser.parse("""
+            dictionary Foo {
+            };
+
+            dictionary Bar {
+              Foo? d;
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Member type must not be a nullable dictionary")
