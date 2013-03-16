@@ -27,4 +27,3 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../editor/txmgr/src \
 		$(NULL)
 
-DEFINES += -D_IMPL_NS_LAYOUT

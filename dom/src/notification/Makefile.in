@@ -24,5 +24,3 @@ LOCAL_INCLUDES = \
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
-
-DEFINES += -D_IMPL_NS_LAYOUT
