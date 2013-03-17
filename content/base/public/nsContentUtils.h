@@ -24,7 +24,7 @@
 #include "mozilla/TimeStamp.h"
 #include "nsAString.h"
 #include "nsCharSeparatedTokenizer.h"
-#include "nsContentList.h"
+#include "nsContentListDeclarations.h"
 #include "nsContentSink.h"
 #include "nsDataHashtable.h"
 #include "nsIContent.h"
