@@ -1441,7 +1441,7 @@ XPC_WN_GetterSetter(JSContext *cx, unsigned argc, jsval *vp)
     if (IS_SLIM_WRAPPER(obj) && !MorphSlimWrapper(cx, obj))
         return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
 
-    XPCCallContext ccx(JS_CALLER, cx, obj, funobj);
+    XPCCallContext ccx(JS_CALLER, cx, obj, funobj, JSID_VOID, argc, JS_ARGV(cx, vp), vp);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
 
@@ -1451,7 +1451,6 @@ XPC_WN_GetterSetter(JSContext *cx, unsigned argc, jsval *vp)
     if (!XPCNativeMember::GetCallInfo(funobj, &iface, &member))
         return Throw(NS_ERROR_XPC_CANT_GET_METHOD_INFO, cx);
 
-    ccx.SetArgsAndResultPtr(argc, JS_ARGV(cx, vp), vp);
     if (argc && member->IsWritableAttribute()) {
         ccx.SetCallInfo(iface, member, true);
         JSBool retval = XPCWrappedNative::SetAttribute(ccx);
