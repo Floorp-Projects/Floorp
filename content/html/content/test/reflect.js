@@ -21,6 +21,7 @@
  *     OR
  *    attribute         Object    object containing two attributes, 'content' and 'idl'
  *  - otherValues       Array     [optional] other values to test in addition of the default ones
+ *  - extendedAttributes Object   object which can have 'TreatNullAs': "EmptyString"
  */
 function reflectString(aParameters)
 {
@@ -31,11 +32,13 @@ function reflectString(aParameters)
                   ? aParameters.attribute : aParameters.attribute.idl;
   var otherValues = aParameters.otherValues !== undefined
                       ? aParameters.otherValues : [];
+  var treatNullAs = aParameters.extendedAttributes ?
+        aParameters.extendedAttributes.TreatNullAs : null;
 
   ok(idlAttr in element,
      idlAttr + " should be an IDL attribute of this element");
   is(typeof element[idlAttr], "string",
-     idlAttr + " IDL attribute should be a string");
+     "'" + idlAttr + "' IDL attribute should be a string");
 
   // Tests when the attribute isn't set.
   is(element.getAttribute(contentAttr), null,
@@ -49,9 +52,9 @@ function reflectString(aParameters)
    */
   element.setAttribute(contentAttr, null);
   is(element.getAttribute(contentAttr), "null",
-     "null should have been stringified to 'null'");
+     "null should have been stringified to 'null' for '" + contentAttr + "'");
   is(element[idlAttr], "null",
-     "null should have been stringified to 'null'");
+      "null should have been stringified to 'null' for '" + idlAttr + "'");
   element.removeAttribute(contentAttr);
 
   element[idlAttr] = null;
@@ -61,15 +64,23 @@ function reflectString(aParameters)
     input: [ "accept", "alt", "formTarget", "max", "min", "name", "pattern", "placeholder", "step", "defaultValue" ]
   };
   if (!(element.localName in todoAttrs) || todoAttrs[element.localName].indexOf(idlAttr) == -1) {
-    is(element.getAttribute(contentAttr), "null",
-       "null should have been stringified to 'null'");
-    is(element[idlAttr], "null", "null should have been stringified to 'null'");
+    if (treatNullAs == "EmptyString") {
+      is(element.getAttribute(contentAttr), "",
+         "null should have been stringified to '' for '" + contentAttr + "'");
+      is(element[idlAttr], "",
+         "null should have been stringified to '' for '" + idlAttr + "'");
+    } else {
+      is(element.getAttribute(contentAttr), "null",
+         "null should have been stringified to 'null' for '" + contentAttr + "'");
+      is(element[idlAttr], "null",
+         "null should have been stringified to 'null' for '" + contentAttr + "'");
+    }
     element.removeAttribute(contentAttr);
   } else {
     todo_is(element.getAttribute(contentAttr), "null",
-       "null should have been stringified to 'null'");
+       "null should have been stringified to 'null' for '" + contentAttr + "'");
     todo_is(element[idlAttr], "null",
-       "null should have been stringified to 'null'");
+       "null should have been stringified to 'null' for '" + contentAttr + "'");
     element.removeAttribute(contentAttr);
   }
 
@@ -106,16 +117,16 @@ function reflectString(aParameters)
   stringsToTest.forEach(function([v, r]) {
     element.setAttribute(contentAttr, v);
     is(element[idlAttr], r,
-       "IDL attribute should return the value it has been set to.");
+       "IDL attribute '" + idlAttr + "' should return the value it has been set to.");
     is(element.getAttribute(contentAttr), r,
-       "Content attribute should return the value it has been set to.");
+       "Content attribute '" + contentAttr + "'should return the value it has been set to.");
     element.removeAttribute(contentAttr);
 
     element[idlAttr] = v;
     is(element[idlAttr], r,
-       "IDL attribute should return the value it has been set to.");
+       "IDL attribute '" + idlAttr + "' should return the value it has been set to.");
     is(element.getAttribute(contentAttr), r,
-       "Content attribute should return the value it has been set to.");
+       "Content attribute '" + contentAttr + "' should return the value it has been set to.");
     element.removeAttribute(contentAttr);
   });
 
@@ -270,7 +281,7 @@ function reflectLimitedEnumerated(aParameters)
                             ? aParameters.unsupportedValues : [];
 
   ok(idlAttr in element, idlAttr + " should be an IDL attribute of this element");
-  is(typeof element[idlAttr], "string", idlAttr + " IDL attribute should be a string");
+  is(typeof element[idlAttr], "string", "'" + idlAttr + "' IDL attribute should be a string");
 
   // Explicitly check the default value.
   element.removeAttribute(contentAttr);
@@ -598,7 +609,7 @@ function reflectURL(aParameters)
 {
   var element = aParameters.element;
   var contentAttr = typeof aParameters.attribute === "string"
-	              ? aParameters.attribute : aParameters.attribute.content;
+                      ? aParameters.attribute : aParameters.attribute.content;
   var idlAttr = typeof aParameters.attribute === "string"
                   ? aParameters.attribute : aParameters.attribute.idl;
 
