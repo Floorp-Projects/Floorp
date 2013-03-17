@@ -10,6 +10,7 @@
 
 #include "mozilla/dom/TreeWalker.h"
 
+#include "nsIContent.h"
 #include "nsIDOMNode.h"
 #include "nsError.h"
 #include "nsINode.h"
