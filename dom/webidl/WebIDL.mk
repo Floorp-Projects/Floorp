@@ -66,6 +66,7 @@ webidl_files = \
   Function.webidl \
   GainNode.webidl \
   HTMLAnchorElement.webidl \
+  HTMLAppletElement.webidl \
   HTMLAreaElement.webidl \
   HTMLBaseElement.webidl \
   HTMLBodyElement.webidl \
@@ -79,6 +80,7 @@ webidl_files = \
   HTMLDListElement.webidl \
   HTMLDocument.webidl \
   HTMLElement.webidl \
+  HTMLEmbedElement.webidl \
   HTMLFieldSetElement.webidl \
   HTMLFontElement.webidl \
   HTMLFrameElement.webidl \
