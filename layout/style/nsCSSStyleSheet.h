@@ -23,6 +23,7 @@
 #include "nsString.h"
 #include "mozilla/CORSMode.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsWrapperCache.h"
 
 class nsXMLNameSpaceMap;
 class nsCSSRuleProcessor;
@@ -104,14 +105,15 @@ class CSSRuleListImpl;
 
 class nsCSSStyleSheet MOZ_FINAL : public nsIStyleSheet,
                                   public nsIDOMCSSStyleSheet,
-                                  public nsICSSLoaderObserver
+                                  public nsICSSLoaderObserver,
+                                  public nsWrapperCache
 {
 public:
   nsCSSStyleSheet(mozilla::CORSMode aCORSMode);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsCSSStyleSheet,
-                                           nsIStyleSheet)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsCSSStyleSheet,
+                                                         nsIStyleSheet)
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CSS_STYLE_SHEET_IMPL_CID)
 
