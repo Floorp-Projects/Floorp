@@ -290,7 +290,7 @@ if test -n "$CROSS_COMPILE" -a "$target" != "$host"; then
     _SAVE_LDFLAGS="$LDFLAGS"
 
     AC_MSG_CHECKING([for host c compiler])
-    AC_CHECK_PROGS(HOST_CC, $HOST_CC gcc cc /usr/ucb/cc cl icc, "")
+    AC_CHECK_PROGS(HOST_CC, $HOST_CC cc gcc /usr/ucb/cc cl icc, "")
     if test -z "$HOST_CC"; then
         AC_MSG_ERROR([no acceptable c compiler found in \$PATH])
     fi
