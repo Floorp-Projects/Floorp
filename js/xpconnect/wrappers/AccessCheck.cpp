@@ -166,7 +166,10 @@ IsPermitted(const char *name, JSFlatString *prop, bool set)
 static bool
 IsFrameId(JSContext *cx, JSObject *obj, jsid id)
 {
-    XPCWrappedNative *wn = XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
+    obj = JS_ObjectToInnerObject(cx, obj);
+    MOZ_ASSERT(!js::IsWrapper(obj));
+    XPCWrappedNative *wn = IS_WN_WRAPPER(obj) ? XPCWrappedNative::Get(obj)
+                                              : nullptr;
     if (!wn) {
         return false;
     }
