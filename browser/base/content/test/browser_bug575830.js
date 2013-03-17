@@ -13,22 +13,25 @@ function test() {
     gBrowser.removeTab(tab2);
   });
 
-  Task.spawn(function () {
-    tab1 = gBrowser.addTab();
-    tab2 = gBrowser.addTab();
-    yield FullZoomHelper.selectTabAndWaitForLocationChange(tab1);
-    yield FullZoomHelper.load(tab1, TEST_IMAGE);
+  tab1 = gBrowser.addTab(TEST_IMAGE);
+  tab2 = gBrowser.addTab();
+  gBrowser.selectedTab = tab1;
 
+  tab1.linkedBrowser.addEventListener("load", function onload() {
+    tab1.linkedBrowser.removeEventListener("load", onload, true);
     is(ZoomManager.zoom, 1, "initial zoom level for first should be 1");
 
-    yield FullZoomHelper.enlarge();
+    FullZoom.enlarge();
     let zoom = ZoomManager.zoom;
     isnot(zoom, 1, "zoom level should have changed");
 
-    yield FullZoomHelper.selectTabAndWaitForLocationChange(tab2);
+    gBrowser.selectedTab = tab2;
     is(ZoomManager.zoom, 1, "initial zoom level for second tab should be 1");
 
-    yield FullZoomHelper.selectTabAndWaitForLocationChange(tab1);
+    gBrowser.selectedTab = tab1;
     is(ZoomManager.zoom, zoom, "zoom level for first tab should not have changed");
-  }).then(finish, FullZoomHelper.failAndContinue(finish));
+
+    finish();
+  }, true);
 }
+

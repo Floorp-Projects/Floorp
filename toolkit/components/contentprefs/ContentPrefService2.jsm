@@ -682,10 +682,6 @@ ContentPrefService2.prototype = {
     this._cps.removeObserver(name, observer);
   },
 
-  extractDomain: function CPS2_extractDomain(str) {
-    return this._parseGroup(str);
-  },
-
   /**
    * Tests use this as a backchannel by calling it directly.
    *

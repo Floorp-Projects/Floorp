@@ -1,42 +1,62 @@
 var tabElm, zoomLevel;
 function start_test_prefNotSet() {
-  Task.spawn(function () {
-    is(ZoomManager.zoom, 1, "initial zoom level should be 1");
-    yield FullZoomHelper.enlarge();
+  is(ZoomManager.zoom, 1, "initial zoom level should be 1");
+  FullZoom.enlarge();
 
-    //capture the zoom level to test later
-    zoomLevel = ZoomManager.zoom;
-    isnot(zoomLevel, 1, "zoom level should have changed");
+  //capture the zoom level to test later
+  zoomLevel = ZoomManager.zoom;
+  isnot(zoomLevel, 1, "zoom level should have changed");
 
-    yield FullZoomHelper.load(gBrowser.selectedTab, "http://mochi.test:8888/browser/browser/base/content/test/moz.png");
-  }).then(continue_test_prefNotSet, FullZoomHelper.failAndContinue(finish));
+  afterZoomAndLoad(continue_test_prefNotSet);
+  content.location = 
+    "http://mochi.test:8888/browser/browser/base/content/test/moz.png";
 }
 
 function continue_test_prefNotSet () {
-  Task.spawn(function () {
-    is(ZoomManager.zoom, 1, "zoom level pref should not apply to an image");
-    yield FullZoomHelper.reset();
+  is(ZoomManager.zoom, 1, "zoom level pref should not apply to an image");
+  FullZoom.reset();
 
-    yield FullZoomHelper.load(gBrowser.selectedTab, "http://mochi.test:8888/browser/browser/base/content/test/zoom_test.html");
-  }).then(end_test_prefNotSet, FullZoomHelper.failAndContinue(finish));
+  afterZoomAndLoad(end_test_prefNotSet);
+  content.location = 
+    "http://mochi.test:8888/browser/browser/base/content/test/zoom_test.html";
 }
 
 function end_test_prefNotSet() {
-  Task.spawn(function () {
-    is(ZoomManager.zoom, zoomLevel, "the zoom level should have persisted");
+  is(ZoomManager.zoom, zoomLevel, "the zoom level should have persisted");
 
-    // Reset the zoom so that other tests have a fresh zoom level
-    yield FullZoomHelper.reset();
-    gBrowser.removeCurrentTab();
-  }).then(finish, FullZoomHelper.failAndContinue(finish));
+  // Reset the zoom so that other tests have a fresh zoom level
+  FullZoom.reset();
+  gBrowser.removeCurrentTab();
+  finish();
 }
+
 
 function test() {
   waitForExplicitFinish();
 
-  Task.spawn(function () {
-    tabElm = gBrowser.addTab();
-    yield FullZoomHelper.selectTabAndWaitForLocationChange(tabElm);
-    yield FullZoomHelper.load(tabElm, "http://mochi.test:8888/browser/browser/base/content/test/zoom_test.html");
-  }).then(start_test_prefNotSet, FullZoomHelper.failAndContinue(finish));
+  tabElm = gBrowser.addTab();
+  gBrowser.selectedTab = tabElm;
+
+  afterZoomAndLoad(start_test_prefNotSet);
+  content.location = 
+    "http://mochi.test:8888/browser/browser/base/content/test/zoom_test.html";
+}
+
+function afterZoomAndLoad(cb) {
+  let didLoad = false;
+  let didZoom = false;
+  tabElm.linkedBrowser.addEventListener("load", function() {
+    tabElm.linkedBrowser.removeEventListener("load", arguments.callee, true);
+    didLoad = true;
+    if (didZoom)
+      executeSoon(cb);
+  }, true);
+  let oldSZFB = ZoomManager.setZoomForBrowser;
+  ZoomManager.setZoomForBrowser = function(browser, value) {
+    oldSZFB.call(ZoomManager, browser, value);
+    ZoomManager.setZoomForBrowser = oldSZFB;
+    didZoom = true;
+    if (didLoad)
+      executeSoon(cb);
+  };
 }
