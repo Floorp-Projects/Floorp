@@ -30,6 +30,6 @@ hacked-certdata.txt : $(srcdir)/../nss/lib/ckfw/builtins/certdata.txt
 combined-certdata.txt : hacked-certdata.txt $(srcdir)/b2g-certdata.txt
 	cat $^ > $@
 
-libs-nss/lib: combined-certdata.txt
+libs-nss/lib libs-nss/lib/ckfw: combined-certdata.txt
 
 DEFAULT_GMAKE_FLAGS += NSS_CERTDATA_TXT='$(CURDIR)/combined-certdata.txt'

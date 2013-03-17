@@ -70,18 +70,22 @@ class ExpandArgsMore(ExpandArgs):
             if os.path.splitext(arg)[1] == conf.LIB_SUFFIX:
                 if os.path.exists(arg + conf.LIBS_DESC_SUFFIX):
                     newlist += self._extract(self._expand_desc(arg))
-                elif os.path.exists(arg) and len(ar_extract):
+                    continue
+                elif os.path.exists(arg) and (len(ar_extract) or conf.AR == 'lib'):
                     tmp = tempfile.mkdtemp(dir=os.curdir)
                     self.tmp.append(tmp)
-                    subprocess.call(ar_extract + [os.path.abspath(arg)], cwd=tmp)
+                    if conf.AR == 'lib':
+                        out = subprocess.check_output([conf.AR, '-NOLOGO', '-LIST', arg])
+                        for l in out.splitlines():
+                            subprocess.call([conf.AR, '-NOLOGO', '-EXTRACT:%s' % l, os.path.abspath(arg)], cwd=tmp)
+                    else:
+                        subprocess.call(ar_extract + [os.path.abspath(arg)], cwd=tmp)
                     objs = []
                     for root, dirs, files in os.walk(tmp):
                         objs += [relativize(os.path.join(root, f)) for f in files if isObject(f)]
-                    newlist += objs
-                else:
-                    newlist += [arg]
-            else:
-                newlist += [arg]
+                    newlist += sorted(objs)
+                    continue
+            newlist += [arg]
         return newlist
 
     def makelist(self):
@@ -325,6 +329,9 @@ def main():
     with open(options.depend, 'w') as depfile:
         depfile.write("%s : %s\n" % (options.target, ' '.join(dep for dep in deps if os.path.isfile(dep) and dep != options.target)))
 
+        for dep in deps:
+            if os.path.isfile(dep) and dep != options.target:
+                depfile.write("%s :\n" % dep)
 
 if __name__ == '__main__':
     main()

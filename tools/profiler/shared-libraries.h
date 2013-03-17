@@ -21,9 +21,9 @@
 class SharedLibrary {
 public:
 
-  SharedLibrary(unsigned long aStart,
-                unsigned long aEnd,
-                unsigned long aOffset,
+  SharedLibrary(uintptr_t aStart,
+                uintptr_t aEnd,
+                uintptr_t aOffset,
                 const std::string& aBreakpadId,
                 const std::string& aName)
     : mStart(aStart)
