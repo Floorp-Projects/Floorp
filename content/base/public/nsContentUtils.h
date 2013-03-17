@@ -19,7 +19,6 @@
 #endif
 
 #include "js/RootingAPI.h"
-#include "js/Value.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/GuardObjects.h"
@@ -109,6 +108,10 @@ template<class E> class nsCOMArray;
 template<class E> class nsTArray;
 template<class K, class V> class nsDataHashtable;
 template<class K, class V> class nsRefPtrHashtable;
+
+namespace JS {
+class Value;
+} // namespace JS
 
 namespace mozilla {
 class ErrorResult;
@@ -1661,8 +1664,9 @@ public:
   static bool CanAccessNativeAnon();
 
   static nsresult WrapNative(JSContext *cx, JSObject *scope,
-                             nsISupports *native, const nsIID* aIID, jsval *vp,
-                             // If non-null aHolder will keep the jsval alive
+                             nsISupports *native, const nsIID* aIID,
+                             JS::Value *vp,
+                             // If non-null aHolder will keep the Value alive
                              // while there's a ref to it
                              nsIXPConnectJSObjectHolder** aHolder = nullptr,
                              bool aAllowWrapping = false)
@@ -1673,8 +1677,8 @@ public:
 
   // Same as the WrapNative above, but use this one if aIID is nsISupports' IID.
   static nsresult WrapNative(JSContext *cx, JSObject *scope,
-                             nsISupports *native, jsval *vp,
-                             // If non-null aHolder will keep the jsval alive
+                             nsISupports *native, JS::Value *vp,
+                             // If non-null aHolder will keep the Value alive
                              // while there's a ref to it
                              nsIXPConnectJSObjectHolder** aHolder = nullptr,
                              bool aAllowWrapping = false)
@@ -1684,8 +1688,8 @@ public:
   }
   static nsresult WrapNative(JSContext *cx, JSObject *scope,
                              nsISupports *native, nsWrapperCache *cache,
-                             jsval *vp,
-                             // If non-null aHolder will keep the jsval alive
+                             JS::Value *vp,
+                             // If non-null aHolder will keep the Value alive
                              // while there's a ref to it
                              nsIXPConnectJSObjectHolder** aHolder = nullptr,
                              bool aAllowWrapping = false)
@@ -1702,7 +1706,7 @@ public:
 
   static nsresult CreateBlobBuffer(JSContext* aCx,
                                    const nsACString& aData,
-                                   jsval& aBlob);
+                                   JS::Value& aBlob);
 
   static void StripNullChars(const nsAString& aInStr, nsAString& aOutStr);
 
@@ -2110,7 +2114,7 @@ private:
 
   static nsresult WrapNative(JSContext *cx, JSObject *scope,
                              nsISupports *native, nsWrapperCache *cache,
-                             const nsIID* aIID, jsval *vp,
+                             const nsIID* aIID, JS::Value *vp,
                              nsIXPConnectJSObjectHolder** aHolder,
                              bool aAllowWrapping);
                             
