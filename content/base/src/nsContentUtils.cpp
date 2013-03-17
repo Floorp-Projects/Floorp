@@ -1971,6 +1971,16 @@ nsContentUtils::GetCommonAncestor(nsINode* aNode1,
 }
 
 /* static */
+bool
+nsContentUtils::PositionIsBefore(nsINode* aNode1, nsINode* aNode2)
+{
+  return (aNode2->CompareDocumentPosition(*aNode1) &
+    (nsIDOMNode::DOCUMENT_POSITION_PRECEDING |
+     nsIDOMNode::DOCUMENT_POSITION_DISCONNECTED)) ==
+    nsIDOMNode::DOCUMENT_POSITION_PRECEDING;
+}
+
+/* static */
 int32_t
 nsContentUtils::ComparePoints(nsINode* aParent1, int32_t aOffset1,
                               nsINode* aParent2, int32_t aOffset2,

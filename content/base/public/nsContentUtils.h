@@ -239,13 +239,7 @@ public:
    * Returns true if aNode1 is before aNode2 in the same connected
    * tree.
    */
-  static bool PositionIsBefore(nsINode* aNode1, nsINode* aNode2)
-  {
-    return (aNode2->CompareDocumentPosition(*aNode1) &
-      (nsIDOMNode::DOCUMENT_POSITION_PRECEDING |
-       nsIDOMNode::DOCUMENT_POSITION_DISCONNECTED)) ==
-      nsIDOMNode::DOCUMENT_POSITION_PRECEDING;
-  }
+  static bool PositionIsBefore(nsINode* aNode1, nsINode* aNode2);
 
   /**
    *  Utility routine to compare two "points", where a point is a
