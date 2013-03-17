@@ -1453,11 +1453,17 @@ sdp_result_e sdp_free_description (sdp_t *sdp_p)
  * Send SDP parsing errors to log and up to peerconnection
  */
 void sdp_parse_error(const char *peerconnection, const char *format, ...) {
+    flex_string fs;
     va_list ap;
 
-    /* TODO - report error up to PeerConnection here */
+    flex_string_init(&fs);
 
     va_start(ap, format);
-    CSFLogErrorV("SDP Parse", format, ap);
+    flex_string_vsprintf(&fs, format, ap);
     va_end(ap);
+
+    CSFLogError("SDP Parse", "SDP Parse Error %s, pc %s", fs.buffer, peerconnection);
+    vcmOnSdpParseError(peerconnection, fs.buffer);
+
+    flex_string_free(&fs);
 }

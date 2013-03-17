@@ -160,18 +160,30 @@ public:
         break;
 
       case SETLOCALDESC:
+        // TODO: The SDP Parse error list should be copied out and sent up
+        // to the Javascript layer before being cleared here.
+        mPC->ClearSdpParseErrorMessages();
         mObserver->OnSetLocalDescriptionSuccess(mCode);
         break;
 
       case SETREMOTEDESC:
+        // TODO: The SDP Parse error list should be copied out and sent up
+        // to the Javascript layer before being cleared here.
+        mPC->ClearSdpParseErrorMessages();
         mObserver->OnSetRemoteDescriptionSuccess(mCode);
         break;
 
       case SETLOCALDESCERROR:
+        // TODO: The SDP Parse error list should be copied out and sent up
+        // to the Javascript layer before being cleared here.
+        mPC->ClearSdpParseErrorMessages();
         mObserver->OnSetLocalDescriptionError(mCode);
         break;
 
       case SETREMOTEDESCERROR:
+        // TODO: The SDP Parse error list should be copied out and sent up
+        // to the Javascript layer before being cleared here.
+        mPC->ClearSdpParseErrorMessages();
         mObserver->OnSetRemoteDescriptionError(mCode);
         break;
 
@@ -1386,6 +1398,18 @@ PeerConnectionImpl::IceStreamReady(NrIceMediaStream *aStream)
   MOZ_ASSERT(aStream);
 
   CSFLogDebug(logTag, "%s: %s", __FUNCTION__, aStream->name().c_str());
+}
+
+void
+PeerConnectionImpl::OnSdpParseError(const char *message) {
+  CSFLogError(logTag, "%s SDP Parse Error: %s", __FUNCTION__, message);
+  // Save the parsing errors in the PC to be delivered with OnSuccess or OnError
+  mSDPParseErrorMessages.push_back(message);
+}
+
+void
+PeerConnectionImpl::ClearSdpParseErrorMessages() {
+  mSDPParseErrorMessages.clear();
 }
 
 

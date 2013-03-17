@@ -1,0 +1,117 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for HTMLObjectElement attributes reflection</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="reflect.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for HTMLObjectElement attributes reflection **/
+
+// .data (URL)
+reflectURL({
+  element: document.createElement("object"),
+  attribute: "data",
+});
+
+// .type (String)
+reflectString({
+  element: document.createElement("object"),
+  attribute: "type",
+});
+
+// .name (String)
+reflectString({
+  element: document.createElement("object"),
+  attribute: "name",
+});
+
+// .useMap (String)
+reflectString({
+  element: document.createElement("object"),
+  attribute: "useMap",
+});
+
+// .width (String)
+reflectString({
+  element: document.createElement("object"),
+  attribute: "width",
+});
+
+// .height (String)
+reflectString({
+  element: document.createElement("object"),
+  attribute: "height",
+});
+
+// .align (String)
+reflectString({
+  element: document.createElement("object"),
+  attribute: "align",
+});
+
+// .archive (String)
+reflectString({
+  element: document.createElement("object"),
+  attribute: "archive",
+});
+
+// .code (URL)
+reflectURL({
+  element: document.createElement("object"),
+  attribute: "code",
+});
+
+// .declare (String)
+reflectBoolean({
+  element: document.createElement("object"),
+  attribute: "declare",
+});
+
+// .hspace (unsigned int)
+reflectUnsignedInt({
+  element: document.createElement("object"),
+  attribute: "hspace",
+});
+
+// .standby (String)
+reflectString({
+  element: document.createElement("object"),
+  attribute: "standby",
+});
+
+// .vspace (unsigned int)
+reflectUnsignedInt({
+  element: document.createElement("object"),
+  attribute: "vspace",
+});
+
+// .codeBase (URL)
+reflectURL({
+  element: document.createElement("object"),
+  attribute: "codeBase",
+});
+
+// .codeType (String)
+reflectString({
+  element: document.createElement("object"),
+  attribute: "codeType",
+});
+
+// .border (String)
+reflectString({
+  element: document.createElement("object"),
+  attribute: "border",
+  extendedAttributes: { TreatNullAs: "EmptyString" },
+});
+</script>
+</pre>
+</body>
+</html>

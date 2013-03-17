@@ -35,6 +35,7 @@ webidl_files = \
   CSS.webidl \
   CSSPrimitiveValue.webidl \
   CSSStyleDeclaration.webidl \
+  CSSStyleSheet.webidl \
   CSSValue.webidl \
   CSSValueList.webidl \
   DelayNode.webidl \
@@ -66,6 +67,7 @@ webidl_files = \
   Function.webidl \
   GainNode.webidl \
   HTMLAnchorElement.webidl \
+  HTMLAppletElement.webidl \
   HTMLAreaElement.webidl \
   HTMLBaseElement.webidl \
   HTMLBodyElement.webidl \
@@ -79,6 +81,7 @@ webidl_files = \
   HTMLDListElement.webidl \
   HTMLDocument.webidl \
   HTMLElement.webidl \
+  HTMLEmbedElement.webidl \
   HTMLFieldSetElement.webidl \
   HTMLFontElement.webidl \
   HTMLFrameElement.webidl \
@@ -150,6 +153,7 @@ webidl_files = \
   RGBColor.webidl \
   RTCConfiguration.webidl \
   Screen.webidl \
+  StyleSheet.webidl \
   SVGAElement.webidl \
   SVGAltGlyphElement.webidl \
   SVGAngle.webidl \
@@ -288,6 +292,7 @@ test_webidl_files := \
   TestCodeGen.webidl \
   TestDictionary.webidl \
   TestExampleGen.webidl \
+  TestJSImplGen.webidl \
   TestTypedef.webidl \
   $(NULL)
 else
