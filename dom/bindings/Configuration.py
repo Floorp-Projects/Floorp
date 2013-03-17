@@ -376,8 +376,11 @@ class Descriptor(DescriptorProvider):
                 else:
                     add('all', [config], attribute)
 
-        for attribute in ['implicitJSContext', 'resultNotAddRefed']:
-            addExtendedAttribute(attribute, desc.get(attribute, {}))
+        if self.interface.isJSImplemented():
+            addExtendedAttribute('implicitJSContext', ['constructor'])
+        else:
+            for attribute in ['implicitJSContext', 'resultNotAddRefed']:
+                addExtendedAttribute(attribute, desc.get(attribute, {}))
 
         self.binaryNames = desc.get('binaryNames', {})
         if '__legacycaller' not in self.binaryNames:
@@ -420,9 +423,9 @@ class Descriptor(DescriptorProvider):
                 attrs.append("infallible")
 
         name = member.identifier.name
+        throws = self.interface.isJSImplemented() or member.getExtendedAttribute("Throws")
         if member.isMethod():
             attrs = self.extendedAttributes['all'].get(name, [])
-            throws = member.getExtendedAttribute("Throws")
             maybeAppendInfallibleToAttrs(attrs, throws)
             return attrs
 
@@ -430,7 +433,6 @@ class Descriptor(DescriptorProvider):
         assert bool(getter) != bool(setter)
         key = 'getterOnly' if getter else 'setterOnly'
         attrs = self.extendedAttributes['all'].get(name, []) + self.extendedAttributes[key].get(name, [])
-        throws = member.getExtendedAttribute("Throws")
         if throws is None:
             throwsAttr = "GetterThrows" if getter else "SetterThrows"
             throws = member.getExtendedAttribute(throwsAttr)
