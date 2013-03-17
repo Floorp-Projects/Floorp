@@ -334,11 +334,16 @@ endif
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 # Bug 766546.
-_BROWSER_FILES += \
-  browser_bug561636.js \
-  $(NULL)
+BROWSER_FILES += \
+    browser_bug561636.js \
+		$(NULL)
 endif
 
+ifdef MOZ_DATA_REPORTING
+_BROWSER_FILES += \
+  browser_datareporting_notification.js \
+  $(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk
 
