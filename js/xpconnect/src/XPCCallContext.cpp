@@ -26,7 +26,10 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mJSContext(cx),
         mContextPopRequired(false),
         mDestroyJSContextInDestructor(false),
-        mCallerLanguage(callerLanguage)
+        mCallerLanguage(callerLanguage),
+        mFlattenedJSObject(nullptr),
+        mWrapper(nullptr),
+        mTearOff(nullptr)
 {
     Init(callerLanguage, callerLanguage == NATIVE_CALLER, obj, funobj,
          INIT_SHOULD_LOOKUP_WRAPPER, name, argc, argv, rval);
