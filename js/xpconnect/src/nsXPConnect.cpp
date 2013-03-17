@@ -1332,18 +1332,15 @@ nsXPConnect::GetNativeOfWrapper(JSContext * aJSContext,
         return nullptr;
     }
 
-    aJSObj = js::UnwrapObjectChecked(aJSObj, /* stopAtOuter = */ false);
-    if (!aJSObj) {
-        JS_ReportError(aJSContext, "Permission denied to get native of security wrapper");
-        return nullptr;
-    }
-    if (IS_WRAPPER_CLASS(js::GetObjectClass(aJSObj))) {
-        if (IS_SLIM_WRAPPER_OBJECT(aJSObj))
-            return (nsISupports*)xpc_GetJSPrivate(aJSObj);
-        else if (XPCWrappedNative *wn = XPCWrappedNative::Get(aJSObj))
-            return wn->Native();
-        return nullptr;
-    }
+    JSObject* obj2 = nullptr;
+    nsIXPConnectWrappedNative* wrapper =
+        XPCWrappedNative::GetWrappedNativeOfJSObject(aJSContext, aJSObj, nullptr,
+                                                     &obj2);
+    if (wrapper)
+        return wrapper->Native();
+
+    if (obj2)
+        return (nsISupports*)xpc_GetJSPrivate(obj2);
 
     JSObject* unsafeObj =
         XPCWrapper::Unwrap(aJSContext, aJSObj, /* stopAtOuter = */ false);
