@@ -99,6 +99,7 @@ class nsDOMDeviceStorageCursor MOZ_FINAL
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSICONTENTPERMISSIONREQUEST
+  NS_FORWARD_NSIDOMDOMCURSOR(mozilla::dom::DOMCursor::)
 
   // DOMCursor
   virtual void Continue(mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
