@@ -13,17 +13,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=802557
   /** Test for Bug 802557 **/
   SimpleTest.waitForExplicitFinish();
 
-  // In the case of apply()ing on a Location object that's script access only,
-  // we just throw a very bland XPConnect message. In other cases though, we want
-  // to check the message to make sure we're throwing a security exception and not
-  // something else.
-  function checkThrows(fun, desc, skipMessageCheck) {
+  function checkThrows(fun, desc) {
     try {
       fun();
       ok(false, "Didn't throw when " + desc);
     } catch(e) {
       ok(true, "Threw when " + desc + " " + e);
-      (skipMessageCheck ? todo : ok)(/denied|insecure/.exec(e), "Should be security exception");
+      ok(/denied|insecure/.exec(e), "Should be security exception");
     }
   }
 
@@ -59,8 +55,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=802557
     else if (loadCount == 2) {
       gGetters.forEach(function(item) {
         checkThrows(function() { item[0].call(gLoc); },
-                    'call()ing ' + item[1] + ' after navigation cross-origin',
-                    /* skipMessageCheck = */ false);
+                    'call()ing ' + item[1] + ' after navigation cross-origin');
       });
       ifr.src = 'http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_bug802557.html';
     }
@@ -74,7 +69,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=802557
     else if (loadCount == 4) {
       for (fun in gTestFunctions) {
         var f = gTestFunctions[fun];
-        checkThrows(f, "calling " + fun, f.skipMessageCheck);
+        checkThrows(f, "calling " + fun);
       }
       SimpleTest.finish();
     }
