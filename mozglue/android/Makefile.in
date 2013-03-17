@@ -19,6 +19,10 @@ DEFINES += \
   -DANDROID_PACKAGE_NAME='"$(ANDROID_PACKAGE_NAME)"' \
   $(NULL)
 
+ifdef MOZ_FOLD_LIBS
+DEFINES += -DMOZ_FOLD_LIBS
+endif
+
 CPPSRCS = \
   nsGeckoUtils.cpp \
   APKOpen.cpp \

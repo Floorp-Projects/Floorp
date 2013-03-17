@@ -986,17 +986,19 @@ define MAKE_DEPS_AUTO_CC
 if test -d $(@D); then \
 	echo "Building deps for $< using Sun Studio cc"; \
 	$(CC) $(COMPILE_CFLAGS) -xM  $< >$(_MDDEPFILE) ; \
+	$(PYTHON) $(topsrcdir)/build/unix/add_phony_targets.py $(_MDDEPFILE) ; \
 fi
 endef
 define MAKE_DEPS_AUTO_CXX
 if test -d $(@D); then \
 	echo "Building deps for $< using Sun Studio CC"; \
 	$(CXX) $(COMPILE_CXXFLAGS) -xM $< >$(_MDDEPFILE) ; \
+	$(PYTHON) $(topsrcdir)/build/unix/add_phony_targets.py $(_MDDEPFILE) ; \
 fi
 endef
 endif # Sun Studio on Solaris
 
-$(OBJS) $(HOST_OBJS): $(GLOBAL_DEPS)
+$(OBJS) $(HOST_OBJS) $(PROGOBJS) $(HOST_PROGOBJS): $(GLOBAL_DEPS)
 
 # Rules for building native targets must come first because of the host_ prefix
 $(HOST_COBJS): host_%.$(OBJ_SUFFIX): %.c
@@ -1613,14 +1615,7 @@ ifneq (,$(filter-out all chrome default export realchrome tools clean clobber cl
 MDDEPEND_FILES		:= $(strip $(wildcard $(foreach file,$(OBJS) $(PROGOBJS) $(HOST_OBJS) $(HOST_PROGOBJS) $(TARGETS) $(XPIDLSRCS:.idl=.h) $(XPIDLSRCS:.idl=.xpt),$(MDDEPDIR)/$(notdir $(file)).pp) $(addprefix $(MDDEPDIR)/,$(EXTRA_MDDEPEND_FILES))))
 
 ifneq (,$(MDDEPEND_FILES))
-# The script mddepend.pl checks the dependencies and writes to stdout
-# one rule to force out-of-date objects. For example,
-#   foo.o boo.o: FORCE
-# The script has an advantage over including the *.pp files directly
-# because it handles the case when header files are removed from the build.
-# 'make' would complain that there is no way to build missing headers.
-ALL_PP_RESULTS = $(shell $(PERL) $(BUILD_TOOLS)/mddepend.pl - $(MDDEPEND_FILES))
-$(eval $(ALL_PP_RESULTS))
+include $(MDDEPEND_FILES)
 endif
 
 endif
