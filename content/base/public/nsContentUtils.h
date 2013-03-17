@@ -33,7 +33,6 @@
 #include "nsINode.h"
 #include "nsIXPCScriptable.h"
 #include "nsMathUtils.h"
-#include "nsNodeInfoManager.h"
 #include "nsReadableUtils.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
@@ -86,6 +85,7 @@ class nsIWidget;
 class nsIWordBreaker;
 class nsIXPConnect;
 class nsIXPConnectJSObjectHolder;
+class nsNodeInfoManager;
 class nsPIDOMWindow;
 class nsPresContext;
 class nsTextFragment;
