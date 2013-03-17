@@ -7506,7 +7506,7 @@ nsHTMLSelectElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext 
     nsHTMLSelectElement *s =
       nsHTMLSelectElement::FromSupports(GetNative(wrapper, obj));
 
-    nsHTMLOptionCollection *options = s->GetOptions();
+    HTMLOptionsCollection *options = s->GetOptions();
     if (options) {
       nsISupports *node = options->GetElementAt(n);
       if (node) {
@@ -7534,7 +7534,7 @@ nsHTMLSelectElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
     nsHTMLSelectElement *s =
       nsHTMLSelectElement::FromSupports(GetNative(wrapper, obj));
 
-    nsHTMLOptionCollection *options = s->GetOptions();
+    HTMLOptionsCollection *options = s->GetOptions();
 
     if (options) {
       nsISupports *node = options->GetElementAt(n);
