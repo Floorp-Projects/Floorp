@@ -11,6 +11,7 @@ generated_webidl_files = \
 webidl_files = \
   AnimationEvent.webidl \
   ArchiveReader.webidl \
+  ArchiveRequest.webidl \
   AudioBuffer.webidl \
   AudioBufferSourceNode.webidl \
   AudioContext.webidl \
@@ -27,6 +28,7 @@ webidl_files = \
   CDATASection.webidl \
   CFStateChangeEvent.webidl \
   CharacterData.webidl \
+  ClientRect.webidl \
   ClientRectList.webidl \
   CommandEvent.webidl \
   Comment.webidl \
@@ -39,8 +41,10 @@ webidl_files = \
   Document.webidl \
   DocumentFragment.webidl \
   DocumentType.webidl \
+  DOMCursor.webidl \
   DOMImplementation.webidl \
   DOMParser.webidl \
+  DOMRequest.webidl \
   DOMSettableTokenList.webidl \
   DOMStringMap.webidl \
   DOMTokenList.webidl \
@@ -57,6 +61,7 @@ webidl_files = \
   FileHandle.webidl \
   FileList.webidl \
   FileReaderSync.webidl \
+  FileRequest.webidl \
   FormData.webidl \
   Function.webidl \
   GainNode.webidl \
@@ -126,6 +131,7 @@ webidl_files = \
   Location.webidl \
   MediaStream.webidl \
   MessageEvent.webidl \
+  MozActivity.webidl \
   MutationEvent.webidl \
   MutationObserver.webidl \
   Node.webidl \

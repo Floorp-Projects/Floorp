@@ -12,22 +12,22 @@
 #include "nsAutoPtr.h"
 #include "nsIThreadPool.h"
 #include "nsString.h"
+#include "nsTArray.h"
 #include "mozilla/dom/TypedArray.h"
 #include <utility>
 
-namespace mozilla
-{
+namespace mozilla {
 
 class MediaDecoderReader;
-namespace dom
-{
+namespace dom {
 class AudioBuffer;
 class AudioContext;
 class DecodeErrorCallback;
 class DecodeSuccessCallback;
 }
 
-struct WebAudioDecodeJob {
+struct WebAudioDecodeJob
+{
   WebAudioDecodeJob(const nsACString& aContentType,
                     const dom::ArrayBuffer& aBuffer,
                     dom::AudioContext* aContext,

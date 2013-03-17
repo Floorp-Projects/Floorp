@@ -178,16 +178,6 @@ INSTALLED_HEADERS = \
 		$(NULL)
 
 ######################################################
-# BEGIN exported headers that are only exported
-#       because of inclusion by an INSTALLED_HEADER
-#
-EXPORTS_NAMESPACES += ds
-
-EXPORTS_ds = \
-		BitArray.h \
-		$(NULL)
-
-######################################################
 # BEGIN include exported headers from the JS engine
 #
 #       Ultimately, after cleansing INSTALLED_HEADERS,

@@ -61,6 +61,26 @@ var createEntityRef = ["documentinvalidcharacterexceptioncreateentref",
                        "hc_attrgetvalue2", "hc_nodevalue03"];
 var createProcessingInstructionHTML = ["documentinvalidcharacterexceptioncreatepi",
                                        "documentinvalidcharacterexceptioncreatepi1"];
+// These tests expect Node.attributes to exist.
+var attributesOnNode = [
+  "hc_commentgetcomment",
+  "hc_documentgetdoctype",
+  "hc_nodeattributenodeattribute",
+  "hc_nodecommentnodeattributes",
+  "hc_nodecommentnodeattributes",
+  "hc_nodedocumentfragmentnodevalue",
+  "hc_nodedocumentnodeattribute",
+  "hc_nodetextnodeattribute",
+  "nodeattributenodeattribute",
+  "nodecommentnodeattributes",
+  "nodecommentnodeattributes",
+  "nodedocumentfragmentnodevalue",
+  "nodedocumentnodeattribute",
+  "nodeprocessinginstructionnodeattributes",
+  "nodetextnodeattribute",
+  "nodecdatasectionnodeattribute",
+  "nodedocumenttypenodevalue"
+]
 
 var todoTests = {};
 function concat(lst/*...*/) {
@@ -73,5 +93,5 @@ function concat(lst/*...*/) {
   }
   return f;
 }
-var exclusions = concat(dtdTests, indexErrTests, attributeModTests, modTests, createEntityRef, createProcessingInstructionHTML);
+var exclusions = concat(dtdTests, indexErrTests, attributeModTests, modTests, createEntityRef, createProcessingInstructionHTML, attributesOnNode);
 for (var excludedTestName in exclusions) { todoTests[exclusions[excludedTestName]] = true; }

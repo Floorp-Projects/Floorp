@@ -8,6 +8,7 @@
 #include "prprf.h"
 #include "nsString.h"
 #include "nsStreamUtils.h"
+#include "nsTArray.h"
 #include "nsAutoPtr.h"
 
 using namespace mozilla;
