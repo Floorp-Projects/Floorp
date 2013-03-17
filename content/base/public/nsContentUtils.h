@@ -26,7 +26,6 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentListDeclarations.h"
 #include "nsDataHashtable.h"
-#include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNode.h"
