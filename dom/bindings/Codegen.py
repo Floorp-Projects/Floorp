@@ -7665,6 +7665,7 @@ class CGBindingImplClass(CGClass):
         getters and setters.
         """
         self.descriptor = descriptor
+        self._deps = descriptor.interface.getDeps()
 
         iface = descriptor.interface
 
@@ -7779,6 +7780,10 @@ class CGBindingImplClass(CGClass):
 
     def getGetParentObjectBody(self):
         return None
+
+    def deps(self):
+        return self._deps
+
 
 class CGExampleClass(CGBindingImplClass):
     """
