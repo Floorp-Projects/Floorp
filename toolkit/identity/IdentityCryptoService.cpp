@@ -13,6 +13,7 @@
 #include "nsCOMPtr.h"
 #include "nsStringGlue.h"
 #include "mozilla/Base64.h"
+#include "mozilla/Util.h" // ArrayLength
 #include "ScopedNSSTypes.h"
 
 #include "nss.h"
