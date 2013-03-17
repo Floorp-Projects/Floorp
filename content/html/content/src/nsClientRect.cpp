@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9,66 +9,45 @@
 
 #include "nsPresContext.h"
 #include "mozilla/dom/ClientRectListBinding.h"
+#include "mozilla/dom/ClientRectBinding.h"
 
-DOMCI_DATA(ClientRect, nsClientRect)
+using namespace mozilla;
+using namespace mozilla::dom;
 
-NS_INTERFACE_TABLE_HEAD(nsClientRect)
-  NS_INTERFACE_TABLE1(nsClientRect, nsIDOMClientRect)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ClientRect)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsClientRect, mParent)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsClientRect)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsClientRect)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsClientRect)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsIDOMClientRect)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsClientRect)
-NS_IMPL_RELEASE(nsClientRect)
+#define FORWARD_GETTER(_name)                                                   \
+  NS_IMETHODIMP                                                                 \
+  nsClientRect::Get ## _name(float* aResult)                                    \
+  {                                                                             \
+    *aResult = _name();                                                         \
+    return NS_OK;                                                               \
+  }
 
-nsClientRect::nsClientRect()
-  : mX(0.0), mY(0.0), mWidth(0.0), mHeight(0.0)
+FORWARD_GETTER(Left)
+FORWARD_GETTER(Top)
+FORWARD_GETTER(Right)
+FORWARD_GETTER(Bottom)
+FORWARD_GETTER(Width)
+FORWARD_GETTER(Height)
+
+JSObject*
+nsClientRect::WrapObject(JSContext* aCx, JSObject* aScope)
 {
+  MOZ_ASSERT(mParent);
+  return ClientRectBinding::Wrap(aCx, aScope, this);
 }
 
-NS_IMETHODIMP
-nsClientRect::GetLeft(float* aResult)
-{
-  *aResult = mX;
-  return NS_OK;
-}
+// -----------------------------------------------------------------------------
 
-NS_IMETHODIMP
-nsClientRect::GetTop(float* aResult)
-{
-  *aResult = mY;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsClientRect::GetRight(float* aResult)
-{
-  *aResult = mX + mWidth;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsClientRect::GetBottom(float* aResult)
-{
-  *aResult = mY + mHeight;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsClientRect::GetWidth(float* aResult)
-{
-  *aResult = mWidth;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsClientRect::GetHeight(float* aResult)
-{
-  *aResult = mHeight;
-  return NS_OK;
-}
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsClientRectList, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(nsClientRectList, mParent, mArray)
 
 NS_INTERFACE_TABLE_HEAD(nsClientRectList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY

@@ -3,24 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Activity.h"
-#include "nsDOMClassInfo.h"
+
+#include "mozilla/dom/MozActivityBinding.h"
 #include "nsContentUtils.h"
-#include "nsIDOMActivityOptions.h"
-#include "nsIDocShell.h"
+#include "nsDOMClassInfo.h"
 #include "nsIConsoleService.h"
+#include "nsIDocShell.h"
+#include "nsIDocument.h"
 
 using namespace mozilla::dom;
 
-#ifdef MOZ_SYS_MSG
-DOMCI_DATA(MozActivity, Activity)
-#endif
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(Activity)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMozActivity)
-  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
-#ifdef MOZ_SYS_MSG
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozActivity)
-#endif
 NS_INTERFACE_MAP_END_INHERITING(DOMRequest)
 
 NS_IMPL_ADDREF_INHERITED(Activity, DOMRequest)
@@ -32,19 +25,24 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED_1(Activity, DOMRequest,
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(Activity, DOMRequest)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMETHODIMP
-Activity::Initialize(nsISupports* aOwner,
-                     JSContext* aContext,
-                     JSObject* aObject,
-                     uint32_t aArgc,
-                     JS::Value* aArgv)
+/* virtual */ JSObject*
+Activity::WrapObject(JSContext* aCx, JSObject* aScope)
 {
+  return MozActivityBinding::Wrap(aCx, aScope, this);
+}
+
+nsresult
+Activity::Initialize(nsISupports* aOwner,
+                     nsIDOMMozActivityOptions* aOptions)
+{
+  MOZ_ASSERT(aOptions);
+
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aOwner);
   NS_ENSURE_TRUE(window, NS_ERROR_UNEXPECTED);
 
   Init(window);
 
-  nsCOMPtr<nsIDocument> document = do_QueryInterface(window->GetExtantDoc());
+  nsCOMPtr<nsIDocument> document = window->GetExtantDoc();
 
   bool isActive;
   window->GetDocShell()->GetIsActive(&isActive);
@@ -67,27 +65,13 @@ Activity::Initialize(nsISupports* aOwner,
     return NS_OK;
   }
 
-  // We expect a single argument, which is a nsIDOMMozActivityOptions.
-  if (aArgc != 1 || !aArgv[0].isObject()) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsCOMPtr<nsISupports> tmp;
-  nsContentUtils::XPConnect()->WrapJS(aContext, aArgv[0].toObjectOrNull(),
-                                      NS_GET_IID(nsIDOMMozActivityOptions),
-                                      getter_AddRefs(tmp));
-  nsCOMPtr<nsIDOMMozActivityOptions> options = do_QueryInterface(tmp);
-  if (!options) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   // Instantiate a JS proxy that will do the child <-> parent communication
   // with the JS implementation of the backend.
   nsresult rv;
   mProxy = do_CreateInstance("@mozilla.org/dom/activities/proxy;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mProxy->StartActivity(this, options, window);
+  mProxy->StartActivity(static_cast<nsIDOMDOMRequest*>(this), aOptions, window);
   return NS_OK;
 }
 
@@ -104,5 +88,6 @@ Activity::Activity()
   // Unfortunately we must explicitly declare the default constructor in order
   // to prevent an implicitly deleted constructor in DOMRequest compile error
   // in GCC 4.6.
+  MOZ_ASSERT(IsDOMBinding());
 }
 
