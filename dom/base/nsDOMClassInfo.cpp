@@ -5243,8 +5243,10 @@ static nsresult
 LocationSetterGuts(JSContext *cx, JSObject *obj, jsval *vp)
 {
   // This function duplicates some of the logic in XPC_WN_HelperSetProperty
-  XPCWrappedNative *wrapper =
-    XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
+  obj = js::UnwrapObjectChecked(obj, /* stopAtOuter = */ false);
+  if (!IS_WN_WRAPPER(obj))
+      return NS_ERROR_XPC_BAD_CONVERT_JS;
+  XPCWrappedNative *wrapper = XPCWrappedNative::Get(obj);
 
   // The error checks duplicate code in THROW_AND_RETURN_IF_BAD_WRAPPER
   NS_ENSURE_TRUE(!wrapper || wrapper->IsValid(), NS_ERROR_XPC_HAS_BEEN_SHUTDOWN);
