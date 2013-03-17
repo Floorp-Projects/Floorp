@@ -1578,6 +1578,7 @@
             this.tabContainer._handleTabTelemetryStart(aTab);
 
             this._blurTab(aTab);
+            aTab.style.maxWidth = ""; // ensure that fade-out transition happens
             aTab.removeAttribute("fadein");
 
             setTimeout(function (tab, tabbrowser) {
@@ -1774,6 +1775,10 @@
 
               // update tab close buttons state
               this.tabContainer.adjustTabstrip();
+
+              setTimeout(function(tabs) {
+                tabs._lastTabClosedByMouse = false;
+              }, 0, this.tabContainer);
             }
 
             // update first-tab/last-tab/beforeselected/afterselected attributes
@@ -2845,14 +2850,15 @@
           return; // Ignore vertical events
 
         var tabs = document.getBindingParent(this);
+        tabs.removeAttribute("overflow");
+
+        if (tabs._lastTabClosedByMouse)
+          tabs._expandSpacerBy(this._scrollButtonDown.clientWidth);
 
         tabs.tabbrowser._removingTabs.forEach(tabs.tabbrowser.removeTab,
                                               tabs.tabbrowser);
 
-        if (!tabs.hasAttribute("dontresize") && !tabs._closingTabsSpacer.style.minWidth) {
-          tabs.removeAttribute("overflow");
-          tabs._positionPinnedTabs();
-        }
+        tabs._positionPinnedTabs();
       ]]></handler>
       <handler event="overflow"><![CDATA[
         if (event.detail == 0)
@@ -2892,7 +2898,8 @@
                            command="cmd_newNavigatorTab"
                            onclick="checkForMiddleClick(this, event);"
                            tooltiptext="&newTabButton.tooltip;"/>
-        <xul:spacer class="closing-tabs-spacer" anonid="closing-tabs-spacer"/>
+        <xul:spacer class="closing-tabs-spacer" anonid="closing-tabs-spacer"
+                    style="width: 0;"/>
       </xul:arrowscrollbox>
     </content>
 
@@ -3089,16 +3096,9 @@
         document.getAnonymousElementByAttribute(this, "anonid", "closing-tabs-spacer");
       </field>
 
-      <field name="_delayResizingRule" readonly="true"><![CDATA[
-        const href = "chrome://browser/content/browser.css";
-        const selector = ".tabbrowser-tabs[dontresize] > .tabbrowser-tab[fadein]:not([pinned])";
-
-        // XXX: document.styleSheets is not iterable (see bug 738196)
-        for (let sheet of Array.slice(document.styleSheets))
-          if (sheet.href == href)
-            for (let rule of Array.slice(sheet.cssRules))
-              if (rule.selectorText == selector) { rule; break; }
-      ]]></field>
+      <field name="_tabDefaultMaxWidth">NaN</field>
+      <field name="_lastTabClosedByMouse">false</field>
+      <field name="_hasTabTempMaxWidth">false</field>
 
       <!-- Try to keep the active tab's close button under the mouse cursor -->
       <method name="_lockTabSizing">
@@ -3108,52 +3108,67 @@
           if (!tabs.length)
             return;
 
-          this.tabbrowser.addEventListener("mousemove", this, false);
-          window.addEventListener("mouseout", this, false);
+          var isEndTab = (aTab._tPos > tabs[tabs.length-1]._tPos);
+          var tabWidth = aTab.getBoundingClientRect().width;
 
-          let isEndTab = (aTab._tPos > tabs[tabs.length-1]._tPos);
-          if (isEndTab) {
-            let spacer = this._closingTabsSpacer;
-            if (!spacer.style.minWidth)
-              spacer.style.minWidth = 0;
+          if (!this._tabDefaultMaxWidth)
+            this._tabDefaultMaxWidth =
+              parseFloat(window.getComputedStyle(aTab).maxWidth);
+          this._lastTabClosedByMouse = true;
 
-            // Locking is neither in effect nor needed, so let tabs expand normally
-            if (!this.hasAttribute("dontresize"))
+          if (this.getAttribute("overflow") == "true") {
+            // Don't need to do anything if we're in overflow mode and aren't scrolled
+            // all the way to the right, or if we're closing the last tab.
+            if (isEndTab || !this.mTabstrip._scrollButtonDown.disabled)
               return;
 
-            spacer.style.MozBoxFlex = 1;
-            spacer.style.minWidth = getComputedStyle(spacer).width;
-            spacer.style.MozBoxFlex = "";
+            // If the tab has an owner that will become the active tab, the owner will
+            // be to the left of it, so we actually want the left tab to slide over.
+            // This can't be done as easily in non-overflow mode, so we don't bother.
+            if (aTab.owner)
+              return;
 
-            this.setAttribute("dontanimate", "true");
-            this.removeAttribute("dontresize");
-            this.clientTop;
-            this.removeAttribute("dontanimate");
-            return;
-          }
+            this._expandSpacerBy(tabWidth);
+          } else { // non-overflow mode
+            // Locking is neither in effect nor needed, so let tabs expand normally.
+            if (isEndTab && !this._hasTabTempMaxWidth)
+              return;
 
-          if (!this.hasAttribute("dontresize")) {
-            let tabWidth = aTab.getBoundingClientRect().width;
-            this._delayResizingRule.style.setProperty("max-width", tabWidth + "px", "important");
-            this.setAttribute("dontanimate", "true");
-            this.setAttribute("dontresize", "true");
-            this.clientTop; // flush styles to skip animation; see bug 649247
-            this.removeAttribute("dontanimate");
-          }
-
-          if (!this.mTabstrip._scrollButtonUp.disabled) {
-            let spacer = this._closingTabsSpacer;
-            let width = parseFloat(spacer.style.minWidth) || 0;
-            width += aTab.getBoundingClientRect().width;
-
-            if (!this.mTabstrip._scrollButtonDown.disabled) {
-              let scrollbox = this.mTabstrip._scrollbox;
-              width -= scrollbox.scrollLeftMax - scrollbox.scrollLeft;
+            let numPinned = this.tabbrowser._numPinnedTabs;
+            // Force tabs to stay the same width, unless we're closing the last tab,
+            // which case we need to let them expand just enough so that the overall
+            // tabbar width is the same.
+            if (isEndTab) {
+              let numNormalTabs = tabs.length - numPinned;
+              tabWidth = tabWidth * (numNormalTabs + 1) / numNormalTabs;
+              if (tabWidth > this._tabDefaultMaxWidth)
+                tabWidth = this._tabDefaultMaxWidth;
             }
-
-            if (width >= 0)
-              spacer.style.minWidth = width + "px";
+            tabWidth += "px";
+            for (let i = numPinned; i < tabs.length; i++) {
+              let tab = tabs[i];
+              tab.style.setProperty("max-width", tabWidth, "important");
+              if (!isEndTab) { // keep tabs the same width
+                tab.style.transition = "none";
+                tab.clientTop; // flush styles to skip animation; see bug 649247
+                tab.style.transition = "";
+              }
+            }
+            this._hasTabTempMaxWidth = true;
+            this.tabbrowser.addEventListener("mousemove", this, false);
+            window.addEventListener("mouseout", this, false);
           }
+        ]]></body>
+      </method>
+
+      <method name="_expandSpacerBy">
+        <parameter name="pixels"/>
+        <body><![CDATA[
+          let spacer = this._closingTabsSpacer;
+          spacer.style.width = parseFloat(spacer.style.width) + pixels + "px";
+          this.setAttribute("using-closing-tabs-spacer", "true");
+          this.tabbrowser.addEventListener("mousemove", this, false);
+          window.addEventListener("mouseout", this, false);
         ]]></body>
       </method>
 
@@ -3162,13 +3177,16 @@
           this.tabbrowser.removeEventListener("mousemove", this, false);
           window.removeEventListener("mouseout", this, false);
 
-          this._closingTabsSpacer.style.minWidth = "";
-          this.removeAttribute("dontresize");
+          if (this._hasTabTempMaxWidth) {
+            this._hasTabTempMaxWidth = false;
+            let tabs = this.tabbrowser.visibleTabs;
+            for (let i = 0; i < tabs.length; i++)
+              tabs[i].style.maxWidth = "";
+          }
 
-          if (this.hasAttribute("overflow") &&
-              this.mTabstrip._scrollbox.scrollWidth <= this.mTabstrip._scrollbox.clientWidth) {
-            this.removeAttribute("overflow");
-            this._positionPinnedTabs();
+          if (this.hasAttribute("using-closing-tabs-spacer")) {
+            this.removeAttribute("using-closing-tabs-spacer");
+            this._closingTabsSpacer.style.width = 0;
           }
         ]]></body>
       </method>
