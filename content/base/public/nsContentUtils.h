@@ -30,7 +30,6 @@
 #include "nsMathUtils.h"
 #include "nsReadableUtils.h"
 #include "nsTArray.h"
-#include "nsThreadUtils.h"
 #include "nsWrapperCache.h"
 
 class imgICache;
