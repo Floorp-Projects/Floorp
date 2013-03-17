@@ -22,7 +22,6 @@
 #define nsHashtable_h__
 
 #include "pldhash.h"
-#include "prlock.h"
 #include "nscore.h"
 #include "nsString.h"
 #include "nsISupportsBase.h"
@@ -33,6 +32,7 @@ class nsIObjectOutputStream;
 
 class nsHashtable;
 class nsStringKey;
+struct PRLock;
 
 class nsHashKey {
   protected:
