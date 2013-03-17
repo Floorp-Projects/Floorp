@@ -56,8 +56,10 @@ nsClipboardPrivacyHandler::PrepareDataForClipboard(nsITransferable * aTransferab
       rv = data->SetData(true);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = aTransferable->AddDataFlavor(NS_MOZ_DATA_FROM_PRIVATEBROWSING);
-      NS_ENSURE_SUCCESS(rv, rv);
+      // Ignore the error code of AddDataFlavor, since we might have added
+      // this flavor before.  If this call really fails, so will the next
+      // one (SetTransferData).
+      aTransferable->AddDataFlavor(NS_MOZ_DATA_FROM_PRIVATEBROWSING);
 
       rv = aTransferable->SetTransferData(NS_MOZ_DATA_FROM_PRIVATEBROWSING, data, sizeof(bool));
       NS_ENSURE_SUCCESS(rv, rv);
