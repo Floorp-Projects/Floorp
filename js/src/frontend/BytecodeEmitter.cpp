@@ -124,14 +124,14 @@ BytecodeEmitter::init()
     return atomIndices.ensureMap(sc->context);
 }
 
-BytecodeEmitter::~BytecodeEmitter()
-{
-}
-
 static ptrdiff_t
 EmitCheck(JSContext *cx, BytecodeEmitter *bce, ptrdiff_t delta)
 {
     ptrdiff_t offset = bce->code().length();
+
+    // Start it off moderately large to avoid repeated resizings early on.
+    if (bce->code().capacity() == 0 && !bce->code().reserve(1024))
+        return -1;
 
     jsbytecode dummy = 0;
     if (!bce->code().appendN(dummy, delta)) {
@@ -5897,6 +5897,10 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 static int
 AllocSrcNote(JSContext *cx, SrcNotesVector &notes)
 {
+    // Start it off moderately large to avoid repeated resizings early on.
+    if (notes.capacity() == 0 && !notes.reserve(1024))
+        return -1;
+
     jssrcnote dummy = 0;
     if (!notes.append(dummy)) {
         js_ReportOutOfMemory(cx);
