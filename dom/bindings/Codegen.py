@@ -7621,7 +7621,7 @@ class CGNativeMember(ClassMethod):
 
 
 class CGExampleMethod(CGNativeMember):
-    def __init__(self, descriptor, method, signature, breakAfter=True):
+    def __init__(self, descriptor, method, signature, isConstructor, breakAfter=True):
         CGNativeMember.__init__(self, descriptor, method,
                                 CGSpecializedMethod.makeNativeName(descriptor,
                                                                    method),
@@ -7670,19 +7670,21 @@ class CGBindingImplClass(CGClass):
         iface = descriptor.interface
 
         self.methodDecls = []
-        def appendMethod(m):
+        def appendMethod(m, isConstructor=False):
             sigs = m.signatures()
             for s in sigs[:-1]:
                 # Don't put an empty line after overloads, until we
                 # get to the last one.
                 self.methodDecls.append(cgMethod(descriptor, m, s,
+                                                 isConstructor,
                                                  breakAfter=False))
-            self.methodDecls.append(cgMethod(descriptor, m, sigs[-1]))
+            self.methodDecls.append(cgMethod(descriptor, m, sigs[-1],
+                                             isConstructor))
 
         if iface.ctor():
-            appendMethod(iface.ctor())
+            appendMethod(iface.ctor(), isConstructor=True)
         for n in iface.namedConstructors:
-            appendMethod(n)
+            appendMethod(n, isConstructor=True)
         for m in iface.members:
             if m.isMethod():
                 if m.isIdentifierLess():
@@ -7898,8 +7900,11 @@ class CGExampleRoot(CGThing):
         return self.root.define()
 
 
+def jsImplName(name):
+    return name + "JSImpl"
+
 class CGJSImplMethod(CGNativeMember):
-    def __init__(self, descriptor, method, signature, breakAfter=True):
+    def __init__(self, descriptor, method, signature, isConstructor, breakAfter=True):
         CGNativeMember.__init__(self, descriptor, method,
                                 CGSpecializedMethod.makeNativeName(descriptor,
                                                                    method),
@@ -7907,8 +7912,68 @@ class CGJSImplMethod(CGNativeMember):
                                 descriptor.getExtendedAttributes(method),
                                 breakAfter=breakAfter,
                                 variadicIsSequence=True)
-    def define(self, cgClass):
-        return ''
+        self.signature = signature
+        if isConstructor:
+            self.body = self.getConstructorImpl()
+        else:
+            self.body = self.getImpl()
+
+    def getImpl(self):
+        callbackArgs = [arg.name for arg in self.getArgs(self.signature[0], self.signature[1])]
+        return 'return mImpl->%s(%s);' % (self.name, ", ".join(callbackArgs))
+
+    def getConstructorImpl(self):
+        assert self.descriptor.interface.isJSImplemented()
+        if self.name != 'Constructor':
+            raise TypeError("Named constructors are not supported for JS implemented WebIDL. See bug 851287.")
+        if len(self.signature[1]) != 0:
+            raise TypeError("Constructors with arguments are unsupported. See bug 851178.")
+
+        return string.Template(
+"""  // Get the window to use as a parent.
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global.Get());
+  if (!window) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+  // Get the JS implementation for the WebIDL interface.
+  nsCOMPtr<nsISupports> implISupports = do_CreateInstance("${contractId}");
+  MOZ_ASSERT(implISupports, "Failed to get JS implementation instance from contract ID.");
+  if (!implISupports) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+  nsCOMPtr<nsIXPConnectWrappedJS> implWrapped = do_QueryInterface(implISupports);
+  MOZ_ASSERT(implWrapped, "Failed to get wrapped JS from XPCOM component.");
+  if (!implWrapped) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+  JSObject* jsImplObj;
+  if (NS_FAILED(implWrapped->GetJSObject(&jsImplObj))) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+  // Construct the callback interface object.
+  bool initOk;
+  nsRefPtr<${callbackClass}> cbImpl = new ${callbackClass}(cx, nullptr, jsImplObj, &initOk);
+  if (!initOk) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+  // Build the actual implementation.
+  nsRefPtr<${implClass}> impl = new ${implClass}(cbImpl, window);
+  return impl.forget();""").substitute({"implClass" : self.descriptor.name,
+                 "callbackClass" : jsImplName(self.descriptor.name),
+                 "contractId" : self.descriptor.interface.getJSImplementation()
+                 })
+
+# We're always fallible
+def callbackGetterName(attr):
+    return "Get" + MakeNativeName(attr.identifier.name)
+
+def callbackSetterName(attr):
+    return "Set" + MakeNativeName(attr.identifier.name)
 
 class CGJSImplGetter(CGNativeMember):
     def __init__(self, descriptor, attr):
@@ -7918,8 +7983,11 @@ class CGJSImplGetter(CGNativeMember):
                                 (attr.type, []),
                                 descriptor.getExtendedAttributes(attr,
                                                                  getter=True))
-    def define(self, cgClass):
-        return ''
+        self.body = self.getImpl()
+
+    def getImpl(self):
+        callbackArgs = [arg.name for arg in self.getArgs(self.member.type, [])]
+        return 'return mImpl->%s(%s);' % (callbackGetterName(self.member), ", ".join(callbackArgs))
 
 class CGJSImplSetter(CGNativeMember):
     def __init__(self, descriptor, attr):
@@ -7930,8 +7998,12 @@ class CGJSImplSetter(CGNativeMember):
                                  [FakeArgument(attr.type, attr)]),
                                 descriptor.getExtendedAttributes(attr,
                                                                  setter=True))
-    def define(self, cgClass):
-        return ''
+        self.body = self.getImpl()
+
+    def getImpl(self):
+        callbackArgs = [arg.name for arg in self.getArgs(BuiltinTypes[IDLBuiltinType.Types.void],
+                                                         [FakeArgument(self.member.type, self.member)])]
+        return 'mImpl->%s(%s);' % (callbackSetterName(self.member), ", ".join(callbackArgs))
 
 class CGJSImplClass(CGBindingImplClass):
     def __init__(self, descriptor):
@@ -7941,18 +8013,43 @@ class CGJSImplClass(CGBindingImplClass):
             "public:\n"
             "  NS_DECL_CYCLE_COLLECTING_ISUPPORTS\n"
             "  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(%s)\n"
-            "\n" % descriptor.name)
+            "\n"
+            "private:\n"
+            "  nsRefPtr<%s> mImpl;\n"
+            "  nsCOMPtr<nsISupports> mParent;\n"
+            "\n" % (descriptor.name, jsImplName(descriptor.name)))
+
+        extradefinitions= string.Template(
+            "NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(${ifaceName}, mImpl, mParent)\n"
+            "NS_IMPL_CYCLE_COLLECTING_ADDREF(${ifaceName})\n"
+            "NS_IMPL_CYCLE_COLLECTING_RELEASE(${ifaceName})\n"
+            "NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(${ifaceName})\n"
+            "  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY\n"
+            "  NS_INTERFACE_MAP_ENTRY(nsISupports)\n"
+            "NS_INTERFACE_MAP_END\n").substitute({ "ifaceName": self.descriptor.name })
 
         CGClass.__init__(self, descriptor.name,
-                         bases=[ClassBase("nsISupports /* Change nativeOwnership in the binding configuration if you don't want this */"),
-                                ClassBase("nsWrapperCache /* Change wrapperCache in the binding configuration if you don't want this */")],
-                         constructors=[ClassConstructor([],
-                                                        visibility="public")],
-                         destructor=ClassDestructor(visibility="public"),
+                         bases=[ClassBase("nsISupports"),
+                                ClassBase("nsWrapperCache")],
+                         constructors=[ClassConstructor([Argument(jsImplName(descriptor.name) + "*", "aImpl"),
+                                                         Argument("nsISupports*", "aParent")],
+                                                        visibility="public",
+                                                        baseConstructors=["mImpl(aImpl)",
+                                                                          "mParent(aParent)"],
+                                                        body="SetIsDOMBinding();")],
                          methods=self.methodDecls,
                          decorators="MOZ_FINAL",
-                         extradeclarations=extradeclarations)
+                         extradeclarations=extradeclarations,
+                         extradefinitions=extradefinitions)
 
+    def getWrapObjectBody(self):
+        return "return %sBinding::Wrap(aCx, aScope, this);" % self.descriptor.name
+
+    def getGetParentObjectReturnType(self):
+        return "nsISupports*"
+
+    def getGetParentObjectBody(self):
+        return "return mParent;"
 
 class CGCallback(CGClass):
     def __init__(self, idlObject, descriptorProvider, baseName, methods,
@@ -8124,7 +8221,7 @@ class CallbackMember(CGNativeMember):
         # will handle generating public versions that handle the "this" stuff.
         visibility = "private" if needThisHandling else "public"
         # We don't care, for callback codegen, whether our original member was
-        # a method or attribure or whatnot.  Just always pass FakeMember()
+        # a method or attribute or whatnot.  Just always pass FakeMember()
         # here.
         CGNativeMember.__init__(self, descriptorProvider, FakeMember(),
                                 name, (self.retvalType, args),
@@ -8394,8 +8491,7 @@ class CallbackGetter(CallbackMember):
         self.attrName = attr.identifier.name
         CallbackMember.__init__(self,
                                 (attr.type, []),
-                                # We're always fallible
-                                "Get" + MakeNativeName(attr.identifier.name),
+                                callbackGetterName(attr),
                                 descriptor,
                                 needThisHandling=False)
 
@@ -8420,7 +8516,7 @@ class CallbackSetter(CallbackMember):
         CallbackMember.__init__(self,
                                 (BuiltinTypes[IDLBuiltinType.Types.void],
                                  [FakeArgument(attr.type, attr)]),
-                                "Set" + MakeNativeName(attr.identifier.name),
+                                callbackSetterName(attr),
                                 descriptor,
                                 needThisHandling=False)
 
