@@ -50,6 +50,7 @@
 #include "nsCPrefetchService.h"
 #include "nsCRT.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsDataHashtable.h"
 #include "nsDocShellCID.h"
 #include "nsDOMCID.h"
 #include "nsDOMDataTransfer.h"

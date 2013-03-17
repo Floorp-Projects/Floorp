@@ -27,7 +27,6 @@
 #include "nsAString.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentListDeclarations.h"
-#include "nsDataHashtable.h"
 #include "nsMathUtils.h"
 #include "nsReadableUtils.h"
 #include "nsTArray.h"
@@ -86,6 +85,7 @@ class nsIScriptGlobalObject;
 class nsIScriptSecurityManager;
 class nsIStringBundle;
 class nsIStringBundleService;
+class nsISupportsHashKey;
 class nsIThreadJSContextStack;
 class nsIURI;
 class nsIWidget;
@@ -97,6 +97,7 @@ class nsNodeInfoManager;
 class nsPIDOMWindow;
 class nsPresContext;
 class nsScriptObjectTracer;
+class nsStringHashKey;
 class nsTextFragment;
 class nsViewportInfo;
 
@@ -107,6 +108,7 @@ struct nsIntMargin;
 struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
 
 template<class E> class nsCOMArray;
+template<class K, class V> class nsDataHashtable;
 template<class K, class V> class nsRefPtrHashtable;
 
 namespace mozilla {
