@@ -1468,13 +1468,6 @@ Element::GetExistingAttrNameFromQName(const nsAString& aStr) const
   return nodeInfo;
 }
 
-NS_IMETHODIMP
-Element::GetAttributes(nsIDOMMozNamedAttrMap** aAttributes)
-{
-  NS_ADDREF(*aAttributes = Attributes());
-  return NS_OK;
-}
-
 // static
 bool
 Element::ShouldBlur(nsIContent *aContent)
