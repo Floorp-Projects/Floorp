@@ -142,12 +142,7 @@ public:
     return et.forget();
   }
 
-  uint16_t EventPhase()
-  {
-    uint16_t p;
-    GetEventPhase(&p);
-    return p;
-  }
+  uint16_t EventPhase() const;
 
   // xpidl implementation
   // void StopPropagation();
@@ -155,47 +150,37 @@ public:
   // xpidl implementation
   // void StopImmediatePropagation();
 
-  bool Bubbles()
+  bool Bubbles() const
   {
-    bool b;
-    GetBubbles(&b);
-    return b;
+    return mEvent->mFlags.mBubbles;
   }
 
-  bool Cancelable()
+  bool Cancelable() const
   {
-    bool c;
-    GetCancelable(&c);
-    return c;
+    return mEvent->mFlags.mCancelable;
   }
 
   // xpidl implementation
   // void PreventDefault();
 
-  bool DefaultPrevented()
+  bool DefaultPrevented() const
   {
-    bool d;
-    GetDefaultPrevented(&d);
-    return d;
+    return mEvent && mEvent->mFlags.mDefaultPrevented;
   }
 
-  bool MultipleActionsPrevented()
+  bool MultipleActionsPrevented() const
   {
     return mEvent->mFlags.mMultipleActionsPrevented;
   }
 
-  bool IsTrusted()
+  bool IsTrusted() const
   {
-    bool i;
-    GetIsTrusted(&i);
-    return i;
+    return mEvent->mFlags.mIsTrusted;
   }
 
-  uint64_t TimeStamp()
+  uint64_t TimeStamp() const
   {
-    uint64_t t;
-    GetTimeStamp(&t);
-    return t;
+    return mEvent->time;
   }
 
   void InitEvent(const nsAString& aType, bool aBubbles, bool aCancelable,
@@ -220,11 +205,9 @@ public:
     return et.forget();
   }
 
-  bool GetPreventDefault()
+  bool GetPreventDefault() const
   {
-    bool d;
-    GetDefaultPrevented(&d);
-    return d;
+    return DefaultPrevented();
   }
 
 protected:
