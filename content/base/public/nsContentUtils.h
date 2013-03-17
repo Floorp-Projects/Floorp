@@ -25,7 +25,6 @@
 #include "nsAString.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentListDeclarations.h"
-#include "nsContentSink.h"
 #include "nsDataHashtable.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
