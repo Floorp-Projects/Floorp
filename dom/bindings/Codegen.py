@@ -7655,24 +7655,28 @@ class CGExampleSetter(CGNativeMember):
     def define(self, cgClass):
         return ''
 
-class CGExampleClass(CGClass):
+class CGBindingImplClass(CGClass):
     """
-    Codegen for the actual example class implemenation for this descriptor
+    Common codegen for generating a C++ implementation of a WebIDL interface
     """
-    def __init__(self, descriptor):
+    def __init__(self, descriptor, cgMethod, cgGetter, cgSetter):
+        """
+        cgMethod, cgGetter and cgSetter are classes used to codegen methods,
+        getters and setters.
+        """
         self.descriptor = descriptor
 
         iface = descriptor.interface
 
-        methodDecls = []
+        self.methodDecls = []
         def appendMethod(m):
             sigs = m.signatures()
             for s in sigs[:-1]:
                 # Don't put an empty line after overloads, until we
                 # get to the last one.
-                methodDecls.append(CGExampleMethod(descriptor, m, s,
-                                                   breakAfter=False))
-            methodDecls.append(CGExampleMethod(descriptor, m, sigs[-1]))
+                self.methodDecls.append(cgMethod(descriptor, m, s,
+                                                 breakAfter=False))
+            self.methodDecls.append(cgMethod(descriptor, m, sigs[-1]))
 
         if iface.ctor():
             appendMethod(iface.ctor())
@@ -7684,9 +7688,9 @@ class CGExampleClass(CGClass):
                     continue
                 appendMethod(m)
             elif m.isAttr():
-                methodDecls.append(CGExampleGetter(descriptor, m))
+                self.methodDecls.append(cgGetter(descriptor, m))
                 if not m.readonly:
-                    methodDecls.append(CGExampleSetter(descriptor, m))
+                    self.methodDecls.append(cgSetter(descriptor, m))
 
         # Now do the special operations
         def appendSpecialOperation(name, op):
@@ -7719,7 +7723,7 @@ class CGExampleClass(CGClass):
                 else:
                     # We already added this method
                     return
-            methodDecls.append(
+            self.methodDecls.append(
                 CGNativeMember(descriptor, op,
                                name,
                                (returnType, args),
@@ -7732,7 +7736,7 @@ class CGExampleClass(CGClass):
         # If we support indexed properties, then we need a Length()
         # method so we know which indices are supported.
         if descriptor.supportsIndexedProperties():
-            methodDecls.append(
+            self.methodDecls.append(
                 CGNativeMember(descriptor, FakeMember(),
                                "Length",
                                (BuiltinTypes[IDLBuiltinType.Types.unsigned_long],
@@ -7741,7 +7745,7 @@ class CGExampleClass(CGClass):
         # And if we support named properties we need to be able to
         # enumerate the supported names.
         if descriptor.supportsNamedProperties():
-            methodDecls.append(
+            self.methodDecls.append(
                 CGNativeMember(
                     descriptor, FakeMember(),
                     "GetSupportedNames",
@@ -7752,18 +7756,37 @@ class CGExampleClass(CGClass):
 
         wrapArgs = [Argument('JSContext*', 'aCx'),
                     Argument('JSObject*', 'aScope')]
-        methodDecls.insert(0,
-                           ClassMethod("WrapObject", "JSObject*",
-                                       wrapArgs, virtual=descriptor.wrapperCache,
-                                       breakAfterReturnDecl=" "))
-        getParentObjectReturnType = (
-            "// TODO: return something sensible here, and change the return type\n"
-            "%s*" % descriptor.name)
-        methodDecls.insert(0,
-                           ClassMethod("GetParentObject",
-                                       getParentObjectReturnType,
-                                       [], const=True,
-                                       breakAfterReturnDecl=" "))
+        self.methodDecls.insert(0,
+                                ClassMethod("WrapObject", "JSObject*",
+                                            wrapArgs, virtual=descriptor.wrapperCache,
+                                            breakAfterReturnDecl=" ",
+                                            body=self.getWrapObjectBody()))
+        self.methodDecls.insert(0,
+                                ClassMethod("GetParentObject",
+                                            self.getGetParentObjectReturnType(),
+                                            [], const=True,
+                                            breakAfterReturnDecl=" ",
+                                            body=self.getGetParentObjectBody()))
+
+        # Invoke  CGClass.__init__ in any subclasses afterwards to do the actual codegen.
+
+    def getWrapObjectBody(self):
+        return None
+
+    def getGetParentObjectReturnType(self):
+        return ("// TODO: return something sensible here, and change the return type\n"
+                "%s*" % self.descriptor.name)
+
+    def getGetParentObjectBody(self):
+        return None
+
+class CGExampleClass(CGBindingImplClass):
+    """
+    Codegen for the actual example class implementation for this descriptor
+    """
+    def __init__(self, descriptor):
+        CGBindingImplClass.__init__(self, descriptor, CGExampleMethod, CGExampleGetter, CGExampleSetter)
+
         extradeclarations=(
             "public:\n"
             "  NS_DECL_CYCLE_COLLECTING_ISUPPORTS\n"
@@ -7776,7 +7799,7 @@ class CGExampleClass(CGClass):
                          constructors=[ClassConstructor([],
                                                         visibility="public")],
                          destructor=ClassDestructor(visibility="public"),
-                         methods=methodDecls,
+                         methods=self.methodDecls,
                          decorators="MOZ_FINAL",
                          extradeclarations=extradeclarations)
 
