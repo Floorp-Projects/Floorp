@@ -148,7 +148,6 @@ interface Element : Node {
 
 // http://dev.w3.org/csswg/cssom-view/#extensions-to-the-element-interface
 partial interface Element {
-  [Throws]
   ClientRectList getClientRects();
   ClientRect getBoundingClientRect();
 

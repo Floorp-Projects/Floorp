@@ -2958,16 +2958,16 @@ nsRange::GetBoundingClientRect()
 NS_IMETHODIMP
 nsRange::GetClientRects(nsIDOMClientRectList** aResult)
 {
-  ErrorResult rv;
-  *aResult = GetClientRects(rv).get();
-  return rv.ErrorCode();
+  *aResult = GetClientRects().get();
+  return NS_OK;
 }
 
 already_AddRefed<nsClientRectList>
-nsRange::GetClientRects(ErrorResult& rv)
+nsRange::GetClientRects()
 {
-  if (!mStartParent)
+  if (!mStartParent) {
     return nullptr;
+  }
 
   nsRefPtr<nsClientRectList> rectList =
     new nsClientRectList(static_cast<nsIDOMRange*>(this));
@@ -2976,11 +2976,6 @@ nsRange::GetClientRects(ErrorResult& rv)
 
   CollectClientRects(&builder, this, mStartParent, mStartOffset, 
     mEndParent, mEndOffset);
-
-  if (NS_FAILED(builder.mRV)) {
-    rv.Throw(builder.mRV);
-    return nullptr;
-  }
   return rectList.forget();
 }
 
