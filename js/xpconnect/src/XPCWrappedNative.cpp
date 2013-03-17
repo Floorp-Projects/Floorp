@@ -1769,113 +1769,27 @@ XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
 
     // *pTeaorOff must be null if pTearOff is given
     NS_PRECONDITION(!pTearOff || !*pTearOff, "bad param");
-
-    JSObject* cur;
-
-    XPCWrappedNativeProto* proto = nullptr;
-    nsIClassInfo* protoClassInfo = nullptr;
-
-    // When an object is unwrapped (near the bottom of this function), we need
-    // to enter its compartment. Unfortunately, given the crazy usage of gotos,
-    // scoped JSAutoCompartments are pretty much impossible. So instead, we use
-    // a single Maybe<JSAutoCompartment>, and let anyone who wants to enter a
-    // compartment destroy and then reconstruct it.
-    Maybe<JSAutoCompartment> mac;
-    if (cx)
-        mac.construct(cx, obj);
-
-    // If we were passed a function object then we need to find the correct
-    // wrapper out of those that might be in the callee obj's proto chain.
-
-    if (funobj) {
-        JSObject* funObjParent = js::UnwrapObject(js::GetObjectParent(funobj));
-        funObjParent = JS_ObjectToInnerObject(cx, funObjParent);
-        NS_ASSERTION(funObjParent, "funobj has no parent");
-
-        js::Class* funObjParentClass = js::GetObjectClass(funObjParent);
-
-        if (IS_PROTO_CLASS(funObjParentClass)) {
-            NS_ASSERTION(js::GetObjectParent(funObjParent), "funobj's parent (proto) is global");
-            proto = (XPCWrappedNativeProto*) js::GetObjectPrivate(funObjParent);
-            if (proto)
-                protoClassInfo = proto->GetClassInfo();
-        } else if (IS_WRAPPER_CLASS(funObjParentClass)) {
-            cur = funObjParent;
-            goto return_wrapper;
-        } else if (IS_TEAROFF_CLASS(funObjParentClass)) {
-            NS_ASSERTION(js::GetObjectParent(funObjParent), "funobj's parent (tearoff) is global");
-            cur = funObjParent;
-            goto return_tearoff;
-        } else {
-            NS_ERROR("function object has parent of unknown class!");
-            return nullptr;
-        }
-    }
-
-  restart:
-    if (cx) {
-        mac.destroy();
-        mac.construct(cx, obj);
-    }
-    for (cur = obj; cur; ) {
-        // this is on two lines to make the compiler happy given the goto.
-        js::Class* clazz;
-        clazz = js::GetObjectClass(cur);
-
-        if (IS_WRAPPER_CLASS(clazz)) {
-return_wrapper:
-            JSBool isWN = IS_WN_WRAPPER_OBJECT(cur);
-            XPCWrappedNative* wrapper =
-                isWN ? (XPCWrappedNative*) js::GetObjectPrivate(cur) : nullptr;
-            if (proto) {
-                XPCWrappedNativeProto* wrapper_proto =
-                    isWN ? wrapper->GetProto() : GetSlimWrapperProto(cur);
-                if (proto != wrapper_proto &&
-                    (!protoClassInfo || !wrapper_proto ||
-                     protoClassInfo != wrapper_proto->GetClassInfo()))
-                    goto next;
-            }
-            if (pobj2)
-                *pobj2 = isWN ? nullptr : cur;
-            return wrapper;
-        }
-
-        if (IS_TEAROFF_CLASS(clazz)) {
-return_tearoff:
-            XPCWrappedNative* wrapper =
-                (XPCWrappedNative*) js::GetObjectPrivate(js::GetObjectParent(cur));
-            if (proto && proto != wrapper->GetProto() &&
-                (proto->GetScope() != wrapper->GetScope() ||
-                 !protoClassInfo || !wrapper->GetProto() ||
-                 protoClassInfo != wrapper->GetProto()->GetClassInfo()))
-                goto next;
-            if (pobj2)
-                *pobj2 = nullptr;
-            XPCWrappedNativeTearOff* to = (XPCWrappedNativeTearOff*) js::GetObjectPrivate(cur);
-            if (!to)
-                return nullptr;
-            if (pTearOff)
-                *pTearOff = to;
-            return wrapper;
-        }
-
-        // Unwrap any wrapper wrappers.
-        JSObject *unsafeObj;
-        unsafeObj = cx
-                  ? XPCWrapper::Unwrap(cx, cur, /* stopAtOuter = */ false)
-                  : js::UnwrapObject(cur, /* stopAtOuter = */ false);
-        if (unsafeObj) {
-            obj = unsafeObj;
-            goto restart;
-        }
-
-      next:
-        if (!js::GetObjectProto(cx, cur, &cur))
-            return nullptr;
-    }
-
     if (pobj2)
         *pobj2 = nullptr;
+
+    obj = js::UnwrapObjectChecked(obj, /* stopAtOuter = */ false);
+    if (!obj)
+        return nullptr;
+    js::Class *clasp = js::GetObjectClass(obj);
+    if (IS_WRAPPER_CLASS(clasp)) {
+        if (IS_WN_WRAPPER_OBJECT(obj)) {
+            return (XPCWrappedNative*)js::GetObjectPrivate(obj);
+        } else {
+            MOZ_ASSERT(IS_SLIM_WRAPPER_OBJECT(obj));
+            if (pobj2)
+                *pobj2 = obj;
+            return nullptr;
+        }
+    } else if (IS_TEAROFF_CLASS(clasp)) {
+        if (pTearOff)
+            *pTearOff = (XPCWrappedNativeTearOff*)js::GetObjectPrivate(obj);
+        return (XPCWrappedNative*)js::GetObjectPrivate(js::GetObjectParent(obj));
+    }
     return nullptr;
 }
 
