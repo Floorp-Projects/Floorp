@@ -3968,7 +3968,7 @@ else
    if test -z "$IMPORT_LIB_SUFFIX"; then
        DLL_LINK_SUFFIX='$(DLL_SUFFIX)'
    else
-       DLL_LINK_SUFFIX='$(IMPORT_LIB_SUFFIX)'
+       DLL_LINK_SUFFIX='.$(IMPORT_LIB_SUFFIX)'
    fi
    NSS_DEP_LIBS="\
         \$(LIBXUL_DIST)/lib/\$(LIB_PREFIX)crmf.\$(LIB_SUFFIX) \
