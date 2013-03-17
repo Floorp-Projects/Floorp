@@ -87,6 +87,8 @@
 
 #include "nsWebBrowserPersist.h"
 
+#include "nsIContent.h"
+
 using namespace mozilla;
 
 // Buffer file writes in 32kb chunks
