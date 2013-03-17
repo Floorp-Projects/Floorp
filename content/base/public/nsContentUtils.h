@@ -18,6 +18,8 @@
 #include <ieeefp.h>
 #endif
 
+#include "js/RootingAPI.h"
+#include "js/Value.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/GuardObjects.h"
@@ -27,12 +29,11 @@
 #include "nsContentListDeclarations.h"
 #include "nsDataHashtable.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMNode.h"
-#include "nsINode.h"
 #include "nsMathUtils.h"
 #include "nsReadableUtils.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
+#include "nsWrapperCache.h"
 
 class imgICache;
 class imgIContainer;
@@ -57,6 +58,7 @@ class nsIDOMHTMLInputElement;
 class nsIDOMKeyEvent;
 class nsIDOMScriptObjectFactory;
 class nsIDragSession;
+class nsIEditor;
 class nsIFragmentContentSink;
 class nsIImageLoadingContent;
 class nsIInterfaceRequestor;
@@ -71,6 +73,7 @@ class nsIObserver;
 class nsIParser;
 class nsIParserService;
 class nsIPresShell;
+class nsIPrincipal;
 class nsIRunnable;
 class nsIScriptContext;
 class nsIScriptGlobalObject;
@@ -86,9 +89,12 @@ class nsIXPConnectJSObjectHolder;
 class nsNodeInfoManager;
 class nsPIDOMWindow;
 class nsPresContext;
+class nsScriptObjectTracer;
 class nsTextFragment;
 class nsViewportInfo;
 
+struct JSContext;
+struct JSPropertyDescriptor;
 struct JSRuntime;
 struct nsIntMargin;
 struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
@@ -97,7 +103,7 @@ template<class E> class nsCOMArray;
 template<class K, class V> class nsRefPtrHashtable;
 
 namespace mozilla {
-
+class ErrorResult;
 class Selection;
 
 namespace dom {
