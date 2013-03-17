@@ -113,8 +113,6 @@ class Configuration:
                 getter = lambda x: x.interface.isCallback()
             elif key == 'isExternal':
                 getter = lambda x: x.interface.isExternal()
-            elif key == 'isJSImplemented':
-                getter = lambda x: x.interface.isJSImplemented()
             else:
                 getter = lambda x: getattr(x, key)
             curr = filter(lambda x: getter(x) == val, curr)
@@ -215,7 +213,7 @@ class Descriptor(DescriptorProvider):
         # Do something sane for JSObject
         if self.nativeType == "JSObject":
             headerDefault = "jsapi.h"
-        elif self.interface.isCallback() or self.interface.isJSImplemented():
+        elif self.interface.isCallback():
             # A copy of CGHeaders.getDeclarationFilename; we can't
             # import it here, sadly.
             # Use our local version of the header, not the exported one, so that
@@ -378,11 +376,8 @@ class Descriptor(DescriptorProvider):
                 else:
                     add('all', [config], attribute)
 
-        if self.interface.isJSImplemented():
-            addExtendedAttribute('implicitJSContext', ['constructor'])
-        else:
-            for attribute in ['implicitJSContext', 'resultNotAddRefed']:
-                addExtendedAttribute(attribute, desc.get(attribute, {}))
+        for attribute in ['implicitJSContext', 'resultNotAddRefed']:
+            addExtendedAttribute(attribute, desc.get(attribute, {}))
 
         self.binaryNames = desc.get('binaryNames', {})
         if '__legacycaller' not in self.binaryNames:
@@ -425,9 +420,9 @@ class Descriptor(DescriptorProvider):
                 attrs.append("infallible")
 
         name = member.identifier.name
-        throws = self.interface.isJSImplemented() or member.getExtendedAttribute("Throws")
         if member.isMethod():
             attrs = self.extendedAttributes['all'].get(name, [])
+            throws = member.getExtendedAttribute("Throws")
             maybeAppendInfallibleToAttrs(attrs, throws)
             return attrs
 
@@ -435,6 +430,7 @@ class Descriptor(DescriptorProvider):
         assert bool(getter) != bool(setter)
         key = 'getterOnly' if getter else 'setterOnly'
         attrs = self.extendedAttributes['all'].get(name, []) + self.extendedAttributes[key].get(name, [])
+        throws = member.getExtendedAttribute("Throws")
         if throws is None:
             throwsAttr = "GetterThrows" if getter else "SetterThrows"
             throws = member.getExtendedAttribute(throwsAttr)
