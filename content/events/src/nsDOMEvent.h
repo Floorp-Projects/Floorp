@@ -126,21 +126,8 @@ public:
   // Implemented as xpidl method
   // void GetType(nsString& aRetval) {}
 
-  already_AddRefed<mozilla::dom::EventTarget> GetTarget()
-  {
-    nsCOMPtr<nsIDOMEventTarget> t;
-    GetTarget(getter_AddRefs(t));
-    nsCOMPtr<mozilla::dom::EventTarget> et = do_QueryInterface(t);
-    return et.forget();
-  }
-
-  already_AddRefed<mozilla::dom::EventTarget> GetCurrentTarget()
-  {
-    nsCOMPtr<nsIDOMEventTarget> t;
-    GetCurrentTarget(getter_AddRefs(t));
-    nsCOMPtr<mozilla::dom::EventTarget> et = do_QueryInterface(t);
-    return et.forget();
-  }
+  mozilla::dom::EventTarget* GetTarget() const;
+  mozilla::dom::EventTarget* GetCurrentTarget() const;
 
   uint16_t EventPhase() const;
 
@@ -189,21 +176,8 @@ public:
     aRv = InitEvent(aType, aBubbles, aCancelable);
   }
 
-  already_AddRefed<mozilla::dom::EventTarget> GetOriginalTarget()
-  {
-    nsCOMPtr<nsIDOMEventTarget> t;
-    GetOriginalTarget(getter_AddRefs(t));
-    nsCOMPtr<mozilla::dom::EventTarget> et = do_QueryInterface(t);
-    return et.forget();
-  }
-
-  already_AddRefed<mozilla::dom::EventTarget> GetExplicitOriginalTarget()
-  {
-    nsCOMPtr<nsIDOMEventTarget> t;
-    GetExplicitOriginalTarget(getter_AddRefs(t));
-    nsCOMPtr<mozilla::dom::EventTarget> et = do_QueryInterface(t);
-    return et.forget();
-  }
+  mozilla::dom::EventTarget* GetOriginalTarget() const;
+  mozilla::dom::EventTarget* GetExplicitOriginalTarget() const;
 
   bool GetPreventDefault() const
   {
@@ -218,7 +192,7 @@ protected:
 
   nsEvent*                    mEvent;
   nsRefPtr<nsPresContext>     mPresContext;
-  nsCOMPtr<nsIDOMEventTarget> mExplicitOriginalTarget;
+  nsCOMPtr<mozilla::dom::EventTarget> mExplicitOriginalTarget;
   nsCOMPtr<nsPIDOMWindow>     mOwner; // nsPIDOMWindow for now.
   nsString                    mCachedType;
   bool                        mEventIsInternal;

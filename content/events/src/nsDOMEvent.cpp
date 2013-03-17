@@ -36,6 +36,7 @@
 #include "nsPIWindowRoot.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 static char *sPopupAllowedEvents;
 
@@ -92,7 +93,7 @@ nsDOMEvent::InitPresContextData(nsPresContext* aPresContext)
   // Get the explicit original target (if it's anonymous make it null)
   {
     nsCOMPtr<nsIContent> content = GetTargetFromFrame();
-    mExplicitOriginalTarget = do_QueryInterface(content);
+    mExplicitOriginalTarget = content;
     if (content && content->IsInAnonymousSubtree()) {
       mExplicitOriginalTarget = nullptr;
     }
@@ -222,28 +223,36 @@ NS_METHOD nsDOMEvent::GetType(nsAString& aType)
   return NS_OK;
 }
 
-static nsresult
-GetDOMEventTarget(nsIDOMEventTarget* aTarget,
-                  nsIDOMEventTarget** aDOMTarget)
+static EventTarget*
+GetDOMEventTarget(nsIDOMEventTarget* aTarget)
 {
-  nsIDOMEventTarget* realTarget =
-    aTarget ? aTarget->GetTargetForDOMEvent() : aTarget;
+  return aTarget ? aTarget->GetTargetForDOMEvent() : nullptr;
+}
 
-  NS_IF_ADDREF(*aDOMTarget = realTarget);
-
-  return NS_OK;
+EventTarget*
+nsDOMEvent::GetTarget() const
+{
+  return GetDOMEventTarget(mEvent->target);
 }
 
 NS_METHOD
 nsDOMEvent::GetTarget(nsIDOMEventTarget** aTarget)
 {
-  return GetDOMEventTarget(mEvent->target, aTarget);
+  NS_IF_ADDREF(*aTarget = GetTarget());
+  return NS_OK;
+}
+
+EventTarget*
+nsDOMEvent::GetCurrentTarget() const
+{
+  return GetDOMEventTarget(mEvent->currentTarget);
 }
 
 NS_IMETHODIMP
 nsDOMEvent::GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)
 {
-  return GetDOMEventTarget(mEvent->currentTarget, aCurrentTarget);
+  NS_IF_ADDREF(*aCurrentTarget = GetCurrentTarget());
+  return NS_OK;
 }
 
 //
@@ -264,26 +273,37 @@ nsDOMEvent::GetTargetFromFrame()
   return realEventContent.forget();
 }
 
+EventTarget*
+nsDOMEvent::GetExplicitOriginalTarget() const
+{
+  if (mExplicitOriginalTarget) {
+    return mExplicitOriginalTarget;
+  }
+  return GetTarget();
+}
+
 NS_IMETHODIMP
 nsDOMEvent::GetExplicitOriginalTarget(nsIDOMEventTarget** aRealEventTarget)
 {
-  if (mExplicitOriginalTarget) {
-    *aRealEventTarget = mExplicitOriginalTarget;
-    NS_ADDREF(*aRealEventTarget);
-    return NS_OK;
+  NS_IF_ADDREF(*aRealEventTarget = GetExplicitOriginalTarget());
+  return NS_OK;
+}
+
+EventTarget*
+nsDOMEvent::GetOriginalTarget() const
+{
+  if (mEvent->originalTarget) {
+    return GetDOMEventTarget(mEvent->originalTarget);
   }
 
-  return GetTarget(aRealEventTarget);
+  return GetTarget();
 }
 
 NS_IMETHODIMP
 nsDOMEvent::GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget)
 {
-  if (mEvent->originalTarget) {
-    return GetDOMEventTarget(mEvent->originalTarget, aOriginalTarget);
-  }
-
-  return GetTarget(aOriginalTarget);
+  NS_IF_ADDREF(*aOriginalTarget = GetOriginalTarget());
+  return NS_OK;
 }
 
 NS_IMETHODIMP_(void)

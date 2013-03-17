@@ -2441,13 +2441,13 @@ nsDOMDeviceStorage::DispatchEvent(nsIDOMEvent *aEvt,
   return nsDOMEventTargetHelper::DispatchEvent(aEvt, aRetval);
 }
 
-nsIDOMEventTarget *
+EventTarget*
 nsDOMDeviceStorage::GetTargetForDOMEvent()
 {
   return nsDOMEventTargetHelper::GetTargetForDOMEvent();
 }
 
-nsIDOMEventTarget *
+EventTarget *
 nsDOMDeviceStorage::GetTargetForEventTargetChain()
 {
   return nsDOMEventTargetHelper::GetTargetForEventTargetChain();
