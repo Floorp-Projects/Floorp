@@ -297,6 +297,7 @@ public:
     return mozilla::dom::ParentObject(static_cast<nsIStyleSheet*>(mParent),
                                       mParent);
   }
+  virtual JSObject* WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
 private:
   nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,

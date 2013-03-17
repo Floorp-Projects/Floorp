@@ -35,6 +35,7 @@ webidl_files = \
   CSS.webidl \
   CSSPrimitiveValue.webidl \
   CSSStyleDeclaration.webidl \
+  CSSStyleSheet.webidl \
   CSSValue.webidl \
   CSSValueList.webidl \
   DelayNode.webidl \
@@ -152,6 +153,7 @@ webidl_files = \
   RGBColor.webidl \
   RTCConfiguration.webidl \
   Screen.webidl \
+  StyleSheet.webidl \
   SVGAElement.webidl \
   SVGAltGlyphElement.webidl \
   SVGAngle.webidl \

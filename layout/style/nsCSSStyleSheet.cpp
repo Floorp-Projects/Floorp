@@ -38,6 +38,7 @@
 #include "nsMediaFeatures.h"
 #include "nsDOMClassInfoID.h"
 #include "mozilla/Likely.h"
+#include "mozilla/dom/CSSStyleSheetBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1031,8 +1032,9 @@ nsCSSStyleSheet::nsCSSStyleSheet(CORSMode aCORSMode)
     mScopeElement(nullptr),
     mRuleProcessors(nullptr)
 {
-
   mInner = new nsCSSStyleSheetInner(this, aCORSMode);
+
+  SetIsDOMBinding();
 }
 
 nsCSSStyleSheet::nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
@@ -1065,6 +1067,8 @@ nsCSSStyleSheet::nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
     // sheets in sync!
     aCopy.mMedia->Clone(getter_AddRefs(mMedia));
   }
+
+  SetIsDOMBinding();
 }
 
 nsCSSStyleSheet::~nsCSSStyleSheet()
@@ -2261,4 +2265,11 @@ nsCSSStyleSheet::ParseSheet(const nsAString& aInput)
 nsCSSStyleSheet::GetOriginalURI() const
 {
   return mInner->mOriginalSheetURI;
+}
+
+/* virtual */
+JSObject*
+nsCSSStyleSheet::WrapObject(JSContext* aCx, JSObject* aScope)
+{
+  return CSSStyleSheetBinding::Wrap(aCx, aScope, this);
 }
