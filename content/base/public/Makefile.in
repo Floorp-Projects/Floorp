@@ -19,6 +19,7 @@ nsIAttribute.h \
 nsIContentIterator.h \
 nsContentPolicyUtils.h \
 nsContentUtils.h \
+nsDocElementCreatedNotificationRunner.h \
 nsIDocument.h \
 nsIDocumentInlines.h \
 nsDeprecatedOperationList.h \
