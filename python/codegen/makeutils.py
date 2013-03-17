@@ -18,4 +18,6 @@ def writeMakeDependOutput(filename):
             f.write('\n\n')
             for filename in targets[1:]:
                 f.write('%s: %s\n' % (makeQuote(filename), makeQuote(targets[0])))
+            for filename in dependencies:
+                f.write('%s:\n' % filename)
 
