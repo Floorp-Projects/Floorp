@@ -818,6 +818,8 @@ ScanBaseShape(GCMarker *gcmarker, RawBaseShape base)
 {
     base->assertConsistency();
 
+    base->compartment()->mark();
+
     if (base->hasGetterObject())
         PushMarkStack(gcmarker, base->getterObject());
 
