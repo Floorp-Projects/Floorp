@@ -376,43 +376,50 @@ nsDOMEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
   return e.forget();
 }
 
-NS_IMETHODIMP
-nsDOMEvent::GetEventPhase(uint16_t* aEventPhase)
+uint16_t
+nsDOMEvent::EventPhase() const
 {
   // Note, remember to check that this works also
   // if or when Bug 235441 is fixed.
   if ((mEvent->currentTarget &&
        mEvent->currentTarget == mEvent->target) ||
        mEvent->mFlags.InTargetPhase()) {
-    *aEventPhase = nsIDOMEvent::AT_TARGET;
-  } else if (mEvent->mFlags.mInCapturePhase) {
-    *aEventPhase = nsIDOMEvent::CAPTURING_PHASE;
-  } else if (mEvent->mFlags.mInBubblingPhase) {
-    *aEventPhase = nsIDOMEvent::BUBBLING_PHASE;
-  } else {
-    *aEventPhase = nsIDOMEvent::NONE;
+    return nsIDOMEvent::AT_TARGET;
   }
+  if (mEvent->mFlags.mInCapturePhase) {
+    return nsIDOMEvent::CAPTURING_PHASE;
+  }
+  if (mEvent->mFlags.mInBubblingPhase) {
+    return nsIDOMEvent::BUBBLING_PHASE;
+  }
+  return nsIDOMEvent::NONE;
+}
+
+NS_IMETHODIMP
+nsDOMEvent::GetEventPhase(uint16_t* aEventPhase)
+{
+  *aEventPhase = EventPhase();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMEvent::GetBubbles(bool* aBubbles)
 {
-  *aBubbles = mEvent->mFlags.mBubbles;
+  *aBubbles = Bubbles();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMEvent::GetCancelable(bool* aCancelable)
 {
-  *aCancelable = mEvent->mFlags.mCancelable;
+  *aCancelable = Cancelable();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMEvent::GetTimeStamp(uint64_t* aTimeStamp)
 {
-  *aTimeStamp = mEvent->time;
+  *aTimeStamp = TimeStamp();
   return NS_OK;
 }
 
@@ -478,7 +485,7 @@ nsDOMEvent::PreventCapture()
 NS_IMETHODIMP
 nsDOMEvent::GetIsTrusted(bool *aIsTrusted)
 {
-  *aIsTrusted = mEvent->mFlags.mIsTrusted;
+  *aIsTrusted = IsTrusted();
   return NS_OK;
 }
 
@@ -489,7 +496,7 @@ nsDOMEvent::PreventDefault()
     mEvent->mFlags.mDefaultPrevented = true;
 
     // Need to set an extra flag for drag events.
-    if (mEvent->eventStructType == NS_DRAG_EVENT && mEvent->mFlags.mIsTrusted) {
+    if (mEvent->eventStructType == NS_DRAG_EVENT && IsTrusted()) {
       nsCOMPtr<nsINode> node = do_QueryInterface(mEvent->currentTarget);
       if (!node) {
         nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mEvent->currentTarget);
@@ -520,7 +527,7 @@ nsDOMEvent::InitEvent(const nsAString& aEventTypeArg, bool aCanBubbleArg, bool a
   // Make sure this event isn't already being dispatched.
   NS_ENSURE_TRUE(!mEvent->mFlags.mIsBeingDispatched, NS_OK);
 
-  if (mEvent->mFlags.mIsTrusted) {
+  if (IsTrusted()) {
     // Ensure the caller is permitted to dispatch trusted DOM events.
     if (!nsContentUtils::IsCallerChrome()) {
       SetTrusted(false);
@@ -1207,14 +1214,16 @@ NS_IMETHODIMP
 nsDOMEvent::GetPreventDefault(bool* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = mEvent && mEvent->mFlags.mDefaultPrevented;
+  *aReturn = GetPreventDefault();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMEvent::GetDefaultPrevented(bool* aReturn)
 {
-  return GetPreventDefault(aReturn);
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = DefaultPrevented();
+  return NS_OK;
 }
 
 NS_IMETHODIMP_(void)
@@ -1228,17 +1237,9 @@ nsDOMEvent::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
   GetType(type);
   IPC::WriteParam(aMsg, type);
 
-  bool bubbles = false;
-  GetBubbles(&bubbles);
-  IPC::WriteParam(aMsg, bubbles);
-
-  bool cancelable = false;
-  GetCancelable(&cancelable);
-  IPC::WriteParam(aMsg, cancelable);
-
-  bool trusted = false;
-  GetIsTrusted(&trusted);
-  IPC::WriteParam(aMsg, trusted);
+  IPC::WriteParam(aMsg, Bubbles());
+  IPC::WriteParam(aMsg, Cancelable());
+  IPC::WriteParam(aMsg, IsTrusted());
 
   // No timestamp serialization for now!
 }
