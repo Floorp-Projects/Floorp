@@ -38,6 +38,7 @@
 #include "nsMediaFeatures.h"
 #include "nsDOMClassInfoID.h"
 #include "mozilla/Likely.h"
+#include "mozilla/dom/CSSStyleSheetBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -554,12 +555,7 @@ nsMediaList::SetText(const nsAString& aMediaText)
 {
   nsCSSParser parser;
 
-  bool htmlMode = false;
-  if (mStyleSheet) {
-    nsCOMPtr<nsIDOMNode> node;
-    mStyleSheet->GetOwnerNode(getter_AddRefs(node));
-    htmlMode = !!node;
-  }
+  bool htmlMode = mStyleSheet && mStyleSheet->GetOwnerNode();
 
   return parser.ParseMediaList(aMediaText, nullptr, 0,
                                this, htmlMode);
@@ -1036,15 +1032,16 @@ nsCSSStyleSheet::nsCSSStyleSheet(CORSMode aCORSMode)
     mScopeElement(nullptr),
     mRuleProcessors(nullptr)
 {
-
   mInner = new nsCSSStyleSheetInner(this, aCORSMode);
+
+  SetIsDOMBinding();
 }
 
 nsCSSStyleSheet::nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
                                  nsCSSStyleSheet* aParentToUse,
                                  css::ImportRule* aOwnerRuleToUse,
                                  nsIDocument* aDocumentToUse,
-                                 nsIDOMNode* aOwningNodeToUse)
+                                 nsINode* aOwningNodeToUse)
   : mTitle(aCopy.mTitle),
     mParent(aParentToUse),
     mOwnerRule(aOwnerRuleToUse),
@@ -1070,6 +1067,8 @@ nsCSSStyleSheet::nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
     // sheets in sync!
     aCopy.mMedia->Clone(getter_AddRefs(mMedia));
   }
+
+  SetIsDOMBinding();
 }
 
 nsCSSStyleSheet::~nsCSSStyleSheet()
@@ -1175,6 +1174,7 @@ DOMCI_DATA(CSSStyleSheet, nsCSSStyleSheet)
 
 // QueryInterface implementation for nsCSSStyleSheet
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCSSStyleSheet)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIStyleSheet)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStyleSheet)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleSheet)
@@ -1199,6 +1199,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCSSStyleSheet)
   tmp->DropRuleCollection();
   tmp->UnlinkInner();
   tmp->mScopeElement = nullptr;
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCSSStyleSheet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMedia)
@@ -1207,8 +1208,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCSSStyleSheet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRuleCollection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScopeElement)
   tmp->TraverseInner(cb);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(nsCSSStyleSheet)
 
 nsresult
 nsCSSStyleSheet::AddRuleProcessor(nsCSSRuleProcessor* aProcessor)
@@ -1380,8 +1382,7 @@ nsCSSStyleSheet::FindOwningWindowInnerID() const
   }
 
   if (windowID == 0 && mOwningNode) {
-    nsCOMPtr<nsINode> node = do_QueryInterface(mOwningNode);
-    windowID = node->OwnerDoc()->InnerWindowID();
+    windowID = mOwningNode->OwnerDoc()->InnerWindowID();
   }
 
   if (windowID == 0 && mOwnerRule) {
@@ -1579,7 +1580,7 @@ already_AddRefed<nsCSSStyleSheet>
 nsCSSStyleSheet::Clone(nsCSSStyleSheet* aCloneParent,
                        css::ImportRule* aCloneOwnerRule,
                        nsIDocument* aCloneDocument,
-                       nsIDOMNode* aCloneOwningNode) const
+                       nsINode* aCloneOwningNode) const
 {
   nsCSSStyleSheet* clone = new nsCSSStyleSheet(*this,
                                                aCloneParent,
@@ -1754,7 +1755,7 @@ nsCSSStyleSheet::GetType(nsAString& aType)
 NS_IMETHODIMP    
 nsCSSStyleSheet::GetDisabled(bool* aDisabled)
 {
-  *aDisabled = mDisabled;
+  *aDisabled = Disabled();
   return NS_OK;
 }
 
@@ -1770,8 +1771,8 @@ nsCSSStyleSheet::SetDisabled(bool aDisabled)
 NS_IMETHODIMP
 nsCSSStyleSheet::GetOwnerNode(nsIDOMNode** aOwnerNode)
 {
-  *aOwnerNode = mOwningNode;
-  NS_IF_ADDREF(*aOwnerNode);
+  nsCOMPtr<nsIDOMNode> ownerNode = do_QueryInterface(GetOwnerNode());
+  ownerNode.forget(aOwnerNode);
   return NS_OK;
 }
 
@@ -1815,53 +1816,66 @@ nsCSSStyleSheet::GetTitle(nsAString& aTitle)
 NS_IMETHODIMP
 nsCSSStyleSheet::GetMedia(nsIDOMMediaList** aMedia)
 {
-  NS_ENSURE_ARG_POINTER(aMedia);
-  *aMedia = nullptr;
+  NS_ADDREF(*aMedia = Media());
+  return NS_OK;
+}
 
+nsIDOMMediaList*
+nsCSSStyleSheet::Media()
+{
   if (!mMedia) {
     mMedia = new nsMediaList();
-    NS_ENSURE_TRUE(mMedia, NS_ERROR_OUT_OF_MEMORY);
     mMedia->SetStyleSheet(this);
   }
 
-  *aMedia = mMedia;
-  NS_ADDREF(*aMedia);
-
-  return NS_OK;
+  return mMedia;
 }
 
 NS_IMETHODIMP    
 nsCSSStyleSheet::GetOwnerRule(nsIDOMCSSRule** aOwnerRule)
 {
-  if (mOwnerRule) {
-    NS_IF_ADDREF(*aOwnerRule = mOwnerRule->GetDOMRule());
-  } else {
-    *aOwnerRule = nullptr;
-  }
+  NS_IF_ADDREF(*aOwnerRule = GetOwnerRule());
   return NS_OK;
+}
+
+nsIDOMCSSRule*
+nsCSSStyleSheet::GetDOMOwnerRule() const
+{
+  return mOwnerRule ? mOwnerRule->GetDOMRule() : nullptr;
 }
 
 NS_IMETHODIMP    
 nsCSSStyleSheet::GetCssRules(nsIDOMCSSRuleList** aCssRules)
 {
+  ErrorResult rv;
+  nsCOMPtr<nsIDOMCSSRuleList> rules = GetCssRules(rv);
+  rules.forget(aCssRules);
+  return rv.ErrorCode();
+}
+
+nsIDOMCSSRuleList*
+nsCSSStyleSheet::GetCssRules(ErrorResult& aRv)
+{
   // No doing this on incomplete sheets!
   if (!mInner->mComplete) {
-    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return nullptr;
   }
   
   //-- Security check: Only scripts whose principal subsumes that of the
   //   style sheet can access rule collections.
   nsresult rv = SubjectSubsumesInnerPrincipal();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
 
   // OK, security check passed, so get the rule collection
-  if (nullptr == mRuleCollection) {
+  if (!mRuleCollection) {
     mRuleCollection = new CSSRuleListImpl(this);
   }
 
-  NS_ADDREF(*aCssRules = mRuleCollection);
-
-  return NS_OK;
+  return mRuleCollection;
 }
 
 NS_IMETHODIMP    
@@ -2251,4 +2265,11 @@ nsCSSStyleSheet::ParseSheet(const nsAString& aInput)
 nsCSSStyleSheet::GetOriginalURI() const
 {
   return mInner->mOriginalSheetURI;
+}
+
+/* virtual */
+JSObject*
+nsCSSStyleSheet::WrapObject(JSContext* aCx, JSObject* aScope)
+{
+  return CSSStyleSheetBinding::Wrap(aCx, aScope, this);
 }

@@ -19,6 +19,7 @@
 [scriptable, uuid(5e6c9cac-5594-4006-ae3f-ad82fb28cee9)]
 interface nsIDOMHTMLStyleElement : nsIDOMHTMLElement
 {
+           [binaryname(MozDisabled)]
            attribute boolean          disabled;
            attribute DOMString        media;
            attribute DOMString        type;

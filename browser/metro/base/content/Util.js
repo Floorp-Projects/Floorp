@@ -152,6 +152,29 @@ let Util = {
       return null;
   },
 
+  isTextInput: function isTextInput(aElement) {
+    return ((aElement instanceof Ci.nsIDOMHTMLInputElement &&
+             aElement.mozIsTextField(false)) ||
+            aElement instanceof Ci.nsIDOMHTMLTextAreaElement);
+  },
+
+  isLink: function isLink(aElement) {
+    return ((aElement instanceof Ci.nsIDOMHTMLAnchorElement && aElement.href) ||
+            (aElement instanceof Ci.nsIDOMHTMLAreaElement && aElement.href) ||
+            aElement instanceof Ci.nsIDOMHTMLLinkElement ||
+            aElement.getAttributeNS(kXLinkNamespace, "type") == "simple");
+  },
+
+  isText: function isText(aElement) {
+    return (aElement instanceof Ci.nsIDOMHTMLParagraphElement ||
+            aElement instanceof Ci.nsIDOMHTMLDivElement ||
+            aElement instanceof Ci.nsIDOMHTMLLIElement ||
+            aElement instanceof Ci.nsIDOMHTMLPreElement ||
+            aElement instanceof Ci.nsIDOMHTMLHeadingElement ||
+            aElement instanceof Ci.nsIDOMHTMLTableCellElement ||
+            aElement instanceof Ci.nsIDOMHTMLBodyElement);
+  },
+
   /*
    * Rect and nsIDOMRect utilities
    */
