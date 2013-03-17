@@ -5,10 +5,10 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoThread;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.util.Log;
 
@@ -75,7 +75,7 @@ public class GLController {
     }
 
     synchronized void surfaceDestroyed() {
-        GeckoApp.assertOnUiThread();
+        ThreadUtils.assertOnUiThread();
 
         mSurfaceValid = false;
         mEGLSurface = null;
@@ -94,7 +94,7 @@ public class GLController {
     }
 
     synchronized void surfaceChanged(int newWidth, int newHeight) {
-        GeckoApp.assertOnUiThread();
+        ThreadUtils.assertOnUiThread();
 
         mWidth = newWidth;
         mHeight = newHeight;
@@ -161,7 +161,7 @@ public class GLController {
     }
 
     void createCompositor() {
-        GeckoApp.assertOnUiThread();
+        ThreadUtils.assertOnUiThread();
 
         if (mCompositorCreated) {
             // If the compositor has already been created, just resume it instead. We don't need

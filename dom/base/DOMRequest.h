@@ -11,6 +11,7 @@
 #include "nsIDOMDOMError.h"
 #include "nsDOMEventTargetHelper.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/DOMRequestBinding.h"
 
 #include "nsCOMPtr.h"
 
@@ -33,6 +34,40 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(DOMRequest,
                                                          nsDOMEventTargetHelper)
+
+  // WrapperCache
+  nsPIDOMWindow* GetParentObject() const
+  {
+    return GetOwner();
+  }
+
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
+
+  // WebIDL Interface
+  DOMRequestReadyState ReadyState() const
+  {
+    return mDone ? DOMRequestReadyStateValues::Done
+                 : DOMRequestReadyStateValues::Pending;
+  }
+
+  JS::Value Result(JSContext* = nullptr) const
+  {
+    NS_ASSERTION(mDone || mResult == JSVAL_VOID,
+               "Result should be undefined when pending");
+    return mResult;
+  }
+
+  nsIDOMDOMError* GetError() const
+  {
+    NS_ASSERTION(mDone || !mError,
+                 "Error should be null when pending");
+    return mError;
+  }
+
+  IMPL_EVENT_HANDLER(success)
+  IMPL_EVENT_HANDLER(error)
+
 
   void FireSuccess(jsval aResult);
   void FireError(const nsAString& aError);

@@ -24,4 +24,51 @@ class JSObject;
 extern JSObject *
 js_InitIntlClass(JSContext *cx, js::HandleObject obj);
 
+
+namespace js {
+
+/*
+ * The following functions are for use by self-hosted code.
+ */
+
+
+/******************** Collator ********************/
+
+/**
+ * Returns an object indicating the supported locales for collation
+ * by having a true-valued property for each such locale with the
+ * canonicalized language tag as the property name. The object has no
+ * prototype.
+ *
+ * Usage: availableLocales = intl_Collator_availableLocales()
+ */
+extern JSBool
+intl_Collator_availableLocales(JSContext *cx, unsigned argc, Value *vp);
+
+/**
+ * Returns an array with the collation type identifiers per Unicode
+ * Technical Standard 35, Unicode Locale Data Markup Language, for the
+ * collations supported for the given locale. "standard" and "search" are
+ * excluded.
+ *
+ * Usage: collations = intl_availableCollations(locale)
+ */
+extern JSBool
+intl_availableCollations(JSContext *cx, unsigned argc, Value *vp);
+
+/**
+ * Compares x and y (which must be String values), and returns a number less
+ * than 0 if x < y, 0 if x = y, or a number greater than 0 if x > y according
+ * to the sort order for the locale and collation options of the given
+ * Collator.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 10.3.2.
+ *
+ * Usage: result = intl_CompareStrings(collator, x, y)
+ */
+extern JSBool
+intl_CompareStrings(JSContext *cx, unsigned argc, Value *vp);
+
+} // namespace js
+
 #endif /* Intl_h___ */

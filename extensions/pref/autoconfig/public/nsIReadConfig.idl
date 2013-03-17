@@ -17,8 +17,6 @@
 #define NS_READCONFIG_CONTRACTID \
   "@mozilla.org/readconfig;1" 
 
-#define NS_READCONFIG_CLASSNAME "ReadConfig Module"
-
 %}
 
 [uuid (ba5bc4c6-1dd1-11b2-bb89-b844c6ec0339)]

@@ -188,16 +188,6 @@ MOCHITEST_FILES_D	= \
 		test_importNode16.html \
 		test_importNode17.html \
 		test_internalSubset01.html \
-		test_isSupported04.html \
-		test_isSupported05.html \
-		test_isSupported06.html \
-		test_isSupported07.html \
-		test_isSupported09.html \
-		test_isSupported10.html \
-		test_isSupported11.html \
-		test_isSupported12.html \
-		test_isSupported13.html \
-		test_isSupported14.html \
 		$(NULL)
 
 MOCHITEST_FILES_E	= \
@@ -244,9 +234,6 @@ MOCHITEST_FILES_E	= \
 		test_nodehasattributes02.html \
 		test_nodehasattributes03.html \
 		test_nodehasattributes04.html \
-		test_nodeissupported01.html \
-		test_nodeissupported02.html \
-		test_nodeissupported04.html \
 		$(NULL)
 
 MOCHITEST_FILES_F	= \

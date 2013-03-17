@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=850517
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 850517</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for live updating of named child resolution. **/
+  SimpleTest.waitForExplicitFinish();
+
+  function go() {
+    var ifrA = $('a');
+    var ifrB = $('b');
+    var sb = new SpecialPowers.Cu.Sandbox('http://www.example.com');
+    sb.win = window;
+    sb.childA = ifrA.contentWindow;
+    sb.childB = ifrB.contentWindow;
+    sb.is = is;
+    sb.ok = ok;
+    is(window.theoneandonly.frameElement, ifrA, "Named child resolution works");
+    SpecialPowers.Cu.evalInSandbox('is(win.theoneandonly, childA, "Named child resolution works via Xray");', sb);
+    ifrA.removeAttribute('name');
+    is(typeof window.theoneandonly, 'undefined', "Revocation works");
+    SpecialPowers.Cu.evalInSandbox('try { win.theoneandonly; ok(false, "Should have thrown"); } ' +
+                                   'catch (e) {ok(!!/denied/.exec(e) && !!/theoneandonly/.exec(e), "Revocation works via Xray");};', sb);
+    ifrB.setAttribute('name', 'theoneandonly');
+    is(window.theoneandonly.frameElement, ifrB, "Another mule kicking in the same old stall");
+    SpecialPowers.Cu.evalInSandbox('is(win.theoneandonly, childB, "Another mule via Xray");', sb);
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body onload="go();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=850517">Mozilla Bug 850517</a>
+<p id="display"></p>
+<iframe id="a" name="theoneandonly"></iframe>
+<iframe id="b"></iframe>
+<pre id="test">
+</pre>
+</body>
+</html>

@@ -719,7 +719,7 @@ pref("dom.xbl_scopes", true);
 pref("dom.experimental_forms", false);
 
 // Don't enable <input type=range> yet:
-pref("dom.experimental_forms_range", false);
+pref("dom.experimental_forms_range", true);
 
 // Allocation Threshold for Workers
 pref("dom.workers.mem.gc_allocation_threshold_mb", 30);
@@ -752,6 +752,11 @@ pref("javascript.options.strict.debug",     true);
 pref("javascript.options.methodjit.content", true);
 pref("javascript.options.methodjit.chrome",  true);
 pref("javascript.options.ion.content",      true);
+#ifdef RELEASE_BUILD
+pref("javascript.options.experimental_asmjs", false);
+#else
+pref("javascript.options.experimental_asmjs", true);
+#endif
 pref("javascript.options.ion.parallel_compilation", true);
 pref("javascript.options.pccounts.content", false);
 pref("javascript.options.pccounts.chrome",  false);

@@ -18,105 +18,119 @@
 #include <ieeefp.h>
 #endif
 
-#include "nsAString.h"
-#include "nsNodeInfoManager.h"
-#include "nsIXPCScriptable.h"
-#include "nsDataHashtable.h"
-#include "nsIDOMEvent.h"
-#include "nsTArray.h"
-#include "nsReadableUtils.h"
-#include "nsINode.h"
-#include "nsIDOMNode.h"
-#include "nsHtml5StringParser.h"
-#include "nsIDocument.h"
-#include "nsContentSink.h"
-#include "nsMathUtils.h"
-#include "nsThreadUtils.h"
-#include "nsIContent.h"
-#include "nsCharSeparatedTokenizer.h"
-#include "nsContentList.h"
-
+#include "js/RootingAPI.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Assertions.h"
+#include "nsAString.h"
+#include "nsCharSeparatedTokenizer.h"
+#include "nsContentListDeclarations.h"
+#include "nsMathUtils.h"
+#include "nsReadableUtils.h"
+#include "nsWrapperCache.h"
 
-struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
-
-class nsIDOMScriptObjectFactory;
-class nsIXPConnect;
-class nsIContent;
-class nsIDOMKeyEvent;
-class nsIDocument;
-class nsIDocumentObserver;
-class nsIDocShell;
-class nsINameSpaceManager;
-class nsIFragmentContentSink;
-class nsIScriptGlobalObject;
-class nsIScriptSecurityManager;
-class nsTextFragment;
-class nsIJSContextStack;
-class nsIThreadJSContextStack;
-class nsIParser;
-class nsIParserService;
-class nsIIOService;
-class nsIURI;
+class imgICache;
 class imgIContainer;
 class imgINotificationObserver;
-class imgRequestProxy;
+class imgIRequest;
 class imgLoader;
-class imgICache;
-class nsIImageLoadingContent;
-class nsIDOMHTMLFormElement;
-class nsIDOMDocument;
-class nsIConsoleService;
-class nsIStringBundleService;
-class nsIStringBundle;
-class nsIContentPolicy;
-class nsILineBreaker;
-class nsIWordBreaker;
-class nsIJSRuntimeService;
-class nsEventListenerManager;
-class nsIScriptContext;
-class nsIRunnable;
-class nsIInterfaceRequestor;
-class nsINodeInfo;
-template<class E> class nsCOMArray;
-template<class K, class V> class nsRefPtrHashtable;
-struct JSRuntime;
-class nsIWidget;
-class nsIDragSession;
-class nsIPresShell;
-class nsIXPConnectJSObjectHolder;
-#ifdef IBMBIDI
-class nsIBidiKeyboard;
-#endif
-class nsIMIMEHeaderParam;
-class nsIObserver;
-class nsPresContext;
-class nsIChannel;
+class imgRequestProxy;
 class nsAutoScriptBlockerSuppressNodeRemoved;
-struct nsIntMargin;
-class nsPIDOMWindow;
+class nsDragEvent;
+class nsEvent;
+class nsEventListenerManager;
+class nsHtml5StringParser;
+class nsIChannel;
+class nsIConsoleService;
+class nsIContent;
+class nsIContentPolicy;
+class nsIDocShell;
+class nsIDocument;
 class nsIDocumentLoaderFactory;
+class nsIDocumentObserver;
+class nsIDOMDocument;
+class nsIDOMDocumentFragment;
+class nsIDOMEvent;
+class nsIDOMEventTarget;
+class nsIDOMHTMLFormElement;
 class nsIDOMHTMLInputElement;
-
+class nsIDOMKeyEvent;
+class nsIDOMNode;
+class nsIDOMScriptObjectFactory;
+class nsIDOMWindow;
+class nsIDragSession;
+class nsIEditor;
+class nsIFragmentContentSink;
+class nsIImageLoadingContent;
+class nsIInterfaceRequestor;
+class nsIIOService;
+class nsIJSContextStack;
+class nsIJSRuntimeService;
+class nsILineBreaker;
+class nsIMIMEHeaderParam;
+class nsINameSpaceManager;
+class nsINodeInfo;
+class nsIObserver;
+class nsIParser;
+class nsIParserService;
+class nsIPresShell;
+class nsIPrincipal;
+class nsIRunnable;
+class nsIScriptContext;
+class nsIScriptGlobalObject;
+class nsIScriptSecurityManager;
+class nsIStringBundle;
+class nsIStringBundleService;
+class nsISupportsHashKey;
+class nsIThreadJSContextStack;
+class nsIURI;
+class nsIWidget;
+class nsIWordBreaker;
+class nsIXPConnect;
+class nsIXPConnectJSObjectHolder;
+class nsKeyEvent;
+class nsNodeInfoManager;
+class nsPIDOMWindow;
+class nsPresContext;
+class nsScriptObjectTracer;
+class nsStringHashKey;
+class nsTextFragment;
 class nsViewportInfo;
 
+struct JSContext;
+struct JSPropertyDescriptor;
+struct JSRuntime;
+struct nsIntMargin;
+struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
+
+template<class E> class nsCOMArray;
+template<class E> class nsTArray;
+template<class K, class V> class nsDataHashtable;
+template<class K, class V> class nsRefPtrHashtable;
+
+namespace JS {
+class Value;
+} // namespace JS
+
 namespace mozilla {
-
+class ErrorResult;
 class Selection;
-
-namespace layers {
-  class LayerManager;
-} // namespace layers
 
 namespace dom {
 class DocumentFragment;
 class Element;
 } // namespace dom
 
+namespace layers {
+class LayerManager;
+} // namespace layers
+
 } // namespace mozilla
+
+#ifdef IBMBIDI
+class nsIBidiKeyboard;
+#endif
 
 extern const char kLoadAsData[];
 
@@ -242,13 +256,7 @@ public:
    * Returns true if aNode1 is before aNode2 in the same connected
    * tree.
    */
-  static bool PositionIsBefore(nsINode* aNode1, nsINode* aNode2)
-  {
-    return (aNode2->CompareDocumentPosition(*aNode1) &
-      (nsIDOMNode::DOCUMENT_POSITION_PRECEDING |
-       nsIDOMNode::DOCUMENT_POSITION_DISCONNECTED)) ==
-      nsIDOMNode::DOCUMENT_POSITION_PRECEDING;
-  }
+  static bool PositionIsBefore(nsINode* aNode1, nsINode* aNode2);
 
   /**
    *  Utility routine to compare two "points", where a point is a
@@ -678,17 +686,8 @@ public:
    * Convenience method to create a new nodeinfo that differs only by name
    * from aNodeInfo.
    */
-  static nsresult NameChanged(nsINodeInfo *aNodeInfo, nsIAtom *aName,
-                              nsINodeInfo** aResult)
-  {
-    nsNodeInfoManager *niMgr = aNodeInfo->NodeInfoManager();
-
-    *aResult = niMgr->GetNodeInfo(aName, aNodeInfo->GetPrefixAtom(),
-                                  aNodeInfo->NamespaceID(),
-                                  aNodeInfo->NodeType(),
-                                  aNodeInfo->GetExtraName()).get();
-    return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-  }
+  static nsresult NameChanged(nsINodeInfo* aNodeInfo, nsIAtom* aName,
+                              nsINodeInfo** aResult);
 
   /**
    * Returns the appropriate event argument names for the specified
@@ -1665,8 +1664,9 @@ public:
   static bool CanAccessNativeAnon();
 
   static nsresult WrapNative(JSContext *cx, JSObject *scope,
-                             nsISupports *native, const nsIID* aIID, jsval *vp,
-                             // If non-null aHolder will keep the jsval alive
+                             nsISupports *native, const nsIID* aIID,
+                             JS::Value *vp,
+                             // If non-null aHolder will keep the Value alive
                              // while there's a ref to it
                              nsIXPConnectJSObjectHolder** aHolder = nullptr,
                              bool aAllowWrapping = false)
@@ -1677,8 +1677,8 @@ public:
 
   // Same as the WrapNative above, but use this one if aIID is nsISupports' IID.
   static nsresult WrapNative(JSContext *cx, JSObject *scope,
-                             nsISupports *native, jsval *vp,
-                             // If non-null aHolder will keep the jsval alive
+                             nsISupports *native, JS::Value *vp,
+                             // If non-null aHolder will keep the Value alive
                              // while there's a ref to it
                              nsIXPConnectJSObjectHolder** aHolder = nullptr,
                              bool aAllowWrapping = false)
@@ -1688,8 +1688,8 @@ public:
   }
   static nsresult WrapNative(JSContext *cx, JSObject *scope,
                              nsISupports *native, nsWrapperCache *cache,
-                             jsval *vp,
-                             // If non-null aHolder will keep the jsval alive
+                             JS::Value *vp,
+                             // If non-null aHolder will keep the Value alive
                              // while there's a ref to it
                              nsIXPConnectJSObjectHolder** aHolder = nullptr,
                              bool aAllowWrapping = false)
@@ -1706,7 +1706,7 @@ public:
 
   static nsresult CreateBlobBuffer(JSContext* aCx,
                                    const nsACString& aData,
-                                   jsval& aBlob);
+                                   JS::Value& aBlob);
 
   static void StripNullChars(const nsAString& aInStr, nsAString& aOutStr);
 
@@ -2114,7 +2114,7 @@ private:
 
   static nsresult WrapNative(JSContext *cx, JSObject *scope,
                              nsISupports *native, nsWrapperCache *cache,
-                             const nsIID* aIID, jsval *vp,
+                             const nsIID* aIID, JS::Value *vp,
                              nsIXPConnectJSObjectHolder** aHolder,
                              bool aAllowWrapping);
                             
@@ -2432,23 +2432,6 @@ public:
 private:
   NS_ConvertUTF16toUTF8 mString;
   nsIMIMEHeaderParam*   mService;
-};
-
-class nsDocElementCreatedNotificationRunner : public nsRunnable
-{
-public:
-    nsDocElementCreatedNotificationRunner(nsIDocument* aDoc)
-        : mDoc(aDoc)
-    {
-    }
-
-    NS_IMETHOD Run()
-    {
-        nsContentSink::NotifyDocElementCreated(mDoc);
-        return NS_OK;
-    }
-
-    nsCOMPtr<nsIDocument> mDoc;
 };
 
 #endif /* nsContentUtils_h___ */

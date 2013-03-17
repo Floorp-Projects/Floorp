@@ -168,7 +168,7 @@ HTMLOptionElement::GetIndex(int32_t* aIndex)
     return NS_OK;
   }
 
-  nsHTMLOptionCollection* options = selectElement->GetOptions();
+  HTMLOptionsCollection* options = selectElement->GetOptions();
   if (!options) {
     return NS_OK;
   }

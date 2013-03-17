@@ -8,11 +8,13 @@
 #include "nsXULAppAPI.h"
 #include "FrameworkView.h"
 #include "MetroApp.h"
+#include "nsIWindowsRegKey.h"
 
 #include <shldisp.h>
 #include <shellapi.h>
 #include <windows.ui.viewmanagement.h>
 #include <windows.ui.startscreen.h>
+#include <Wincrypt.h>
 
 using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::UI::StartScreen;
@@ -31,6 +33,11 @@ extern nsTArray<nsString>* sSettingsArray;
 namespace mozilla {
 namespace widget {
 
+static LPCWSTR sSyncEmailField = L"sync-e";
+static LPCWSTR sSyncPasswordField = L"sync-p";
+static LPCWSTR sSyncKeyField = L"sync-k";
+static LPCSTR sRegPath = "Software\\Mozilla\\Firefox";
+
 NS_IMPL_ISUPPORTS1(nsWinMetroUtils, nsIWinMetroUtils)
 
 nsWinMetroUtils::nsWinMetroUtils()
@@ -43,11 +50,11 @@ nsWinMetroUtils::~nsWinMetroUtils()
 
 /**
  * Pins a new tile to the Windows 8 start screen.
- * 
+ *
  * @param aTileID         An ID which can later be used to remove the tile
  * @param aShortName      A short name for the tile
  * @param aDiplayName     The name that will be displayed on the tile
- * @param aActivationArgs The arguments to pass to the browser upon 
+ * @param aActivationArgs The arguments to pass to the browser upon
  *                        activation of the tile
  * @param aTileImage An image for the normal tile view
  * @param aSmallTileImage An image for the small tile view
@@ -107,7 +114,7 @@ nsWinMetroUtils::PinTileAsync(const nsAString &aTileID,
 
 /**
  * Unpins a tile from the Windows 8 start screen.
- * 
+ *
  * @param aTileID An existing ID which was previously pinned
  */
 NS_IMETHODIMP
@@ -140,7 +147,7 @@ nsWinMetroUtils::UnpinTileAsync(const nsAString &aTileID)
 
 /**
  * Determines if a tile is pinned to the Windows 8 start screen.
- * 
+ *
  * @param aTileID   An ID which may have been pinned with pinTileAsync
  * @param aIsPinned Out parameter for determining if the tile is pinned or not
  */
@@ -168,6 +175,147 @@ nsWinMetroUtils::IsTilePinned(const nsAString &aTileID, bool *aIsPinned)
 }
 
 /**
+  * Stores the sync info securely in Windows
+  *
+  * @param aEmail The sync account email
+  * @param aPassword The sync account password
+  * @param aKey The sync account key
+  */
+NS_IMETHODIMP
+nsWinMetroUtils::StoreSyncInfo(const nsAString &aEmail,
+                               const nsAString &aPassword,
+                               const nsAString &aKey)
+{
+  DATA_BLOB emailIn = {
+    (aEmail.Length() + 1) * 2,
+    (BYTE *)aEmail.BeginReading()},
+  passwordIn = {
+    (aPassword.Length() + 1) * 2,
+    (BYTE *)aPassword.BeginReading()},
+  keyIn = {
+    (aKey.Length() + 1) * 2,
+    (BYTE *)aKey.BeginReading()};
+  DATA_BLOB emailOut = { 0, nullptr }, passwordOut = {0, nullptr }, keyOut = { 0, nullptr };
+  bool succeeded = CryptProtectData(&emailIn, nullptr, nullptr, nullptr,
+                                    nullptr, 0, &emailOut) &&
+                   CryptProtectData(&passwordIn, nullptr, nullptr, nullptr,
+                                    nullptr, 0, &passwordOut) &&
+                   CryptProtectData(&keyIn, nullptr, nullptr, nullptr,
+                                    nullptr, 0, &keyOut);
+
+  if (succeeded) {
+    nsresult rv;
+    nsCOMPtr<nsIWindowsRegKey> regKey
+      (do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    regKey->Create(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
+                  NS_ConvertUTF8toUTF16(sRegPath),
+                  nsIWindowsRegKey::ACCESS_SET_VALUE);
+
+    if (NS_FAILED(regKey->WriteBinaryValue(nsDependentString(sSyncEmailField),
+                                           nsAutoCString((const char *)emailOut.pbData,
+                                                         emailOut.cbData)))) {
+      succeeded = false;
+    }
+
+    if (succeeded &&
+        NS_FAILED(regKey->WriteBinaryValue(nsDependentString(sSyncPasswordField),
+                                           nsAutoCString((const char *)passwordOut.pbData,
+                                                         passwordOut.cbData)))) {
+      succeeded = false;
+    }
+
+    if (succeeded &&
+        NS_FAILED(regKey->WriteBinaryValue(nsDependentString(sSyncKeyField),
+                                           nsAutoCString((const char *)keyOut.pbData,
+                                                         keyOut.cbData)))) {
+      succeeded = false;
+    }
+    regKey->Close();
+  }
+
+  LocalFree(emailOut.pbData);
+  LocalFree(passwordOut.pbData);
+  LocalFree(keyOut.pbData);
+
+  return succeeded ? NS_OK : NS_ERROR_FAILURE;
+}
+
+/**
+  * Loads the sync info securely in Windows
+  *
+  * @param aEmail The sync account email
+  * @param aPassword The sync account password
+  * @param aKey The sync account key
+  */
+NS_IMETHODIMP
+nsWinMetroUtils::LoadSyncInfo(nsAString &aEmail, nsAString &aPassword,
+                              nsAString &aKey)
+{
+  nsresult rv;
+  nsCOMPtr<nsIWindowsRegKey> regKey
+    (do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  regKey->Create(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
+                 NS_ConvertUTF8toUTF16(sRegPath),
+                 nsIWindowsRegKey::ACCESS_QUERY_VALUE);
+
+  nsAutoCString email, password, key;
+  if (NS_FAILED(regKey->ReadBinaryValue(nsDependentString(sSyncEmailField), email)) ||
+      NS_FAILED(regKey->ReadBinaryValue(nsDependentString(sSyncPasswordField), password)) ||
+      NS_FAILED(regKey->ReadBinaryValue(nsDependentString(sSyncKeyField), key))) {
+    return NS_ERROR_FAILURE;
+  }
+  regKey->Close();
+
+  DATA_BLOB emailIn = { email.Length(), (BYTE*)email.BeginReading() },
+            passwordIn = { password.Length(), (BYTE*)password.BeginReading() },
+            keyIn = { key.Length(), (BYTE*)key.BeginReading() };
+  DATA_BLOB emailOut = { 0, nullptr }, passwordOut = { 0, nullptr }, keyOut = { 0, nullptr };
+  bool succeeded = CryptUnprotectData(&emailIn, nullptr, nullptr, nullptr,
+                                      nullptr, 0, &emailOut) &&
+                   CryptUnprotectData(&passwordIn, nullptr, nullptr, nullptr,
+                                      nullptr, 0, &passwordOut) &&
+                   CryptUnprotectData(&keyIn, nullptr, nullptr, nullptr,
+                                      nullptr, 0, &keyOut);
+  if (succeeded) {
+    aEmail = reinterpret_cast<wchar_t*>(emailOut.pbData);
+    aPassword = reinterpret_cast<wchar_t*>(passwordOut.pbData);
+    aKey = reinterpret_cast<wchar_t*>(keyOut.pbData);
+  }
+
+  LocalFree(emailOut.pbData);
+  LocalFree(passwordOut.pbData);
+  LocalFree(keyOut.pbData);
+
+  return succeeded ? NS_OK : NS_ERROR_FAILURE;
+}
+
+/**
+  * Clears the stored sync info if any.
+  */
+NS_IMETHODIMP
+nsWinMetroUtils::ClearSyncInfo()
+{
+  nsresult rv;
+  nsCOMPtr<nsIWindowsRegKey> regKey
+    (do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  regKey->Create(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
+                 NS_ConvertUTF8toUTF16(sRegPath),
+                 nsIWindowsRegKey::ACCESS_WRITE);
+  nsresult rv1 = regKey->RemoveValue(nsDependentString(sSyncEmailField));
+  nsresult rv2 = regKey->RemoveValue(nsDependentString(sSyncPasswordField));
+  nsresult rv3 = regKey->RemoveValue(nsDependentString(sSyncKeyField));
+  regKey->Close();
+
+  if (NS_FAILED(rv1) || NS_FAILED(rv2) || NS_FAILED(rv3)) {
+      return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+/**
  * Launches the specified application with the specified arguments and
  * switches to Desktop mode if in metro mode.
 */
@@ -178,7 +326,7 @@ nsWinMetroUtils::LaunchInDesktop(const nsAString &aPath, const nsAString &aArgum
   memset(&sinfo, 0, sizeof(SHELLEXECUTEINFOW));
   sinfo.cbSize       = sizeof(SHELLEXECUTEINFOW);
   // Per the Metro style enabled desktop browser, for some reason,
-  // SEE_MASK_FLAG_LOG_USAGE is needed to change from immersive mode 
+  // SEE_MASK_FLAG_LOG_USAGE is needed to change from immersive mode
   // to desktop.
   sinfo.fMask        = SEE_MASK_FLAG_LOG_USAGE;
   sinfo.hwnd         = NULL;
@@ -235,7 +383,7 @@ nsWinMetroUtils::ShowSettingsFlyout()
 NS_IMETHODIMP
 nsWinMetroUtils::GetImmersive(bool *aImersive)
 {
-  *aImersive = 
+  *aImersive =
     XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Metro;
   return NS_OK;
 }
@@ -253,11 +401,18 @@ nsWinMetroUtils::GetHandPreference(int32_t *aHandPreference)
 
   HandPreference value;
   uiSettings->get_HandPreference(&value);
-  if (value == HandPreference::HandPreference_LeftHanded) 
+  if (value == HandPreference::HandPreference_LeftHanded)
     *aHandPreference = nsIWinMetroUtils::handPreferenceLeft;
   else
     *aHandPreference = nsIWinMetroUtils::handPreferenceRight;
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWinMetroUtils::GetActivationURI(nsAString &aActivationURI)
+{
+  MetroApp::GetView()->GetActivationURI(aActivationURI);
   return NS_OK;
 }
 
@@ -297,7 +452,7 @@ nsWinMetroUtils::GetKeyboardHeight(uint32_t *aHeight)
 }
 
 NS_IMETHODIMP
-nsWinMetroUtils::AddSettingsPanelEntry(const nsAString& aLabel, uint32_t *aId)
+nsWinMetroUtils::AddSettingsPanelEntry(const nsAString &aLabel, uint32_t *aId)
 {
   NS_ENSURE_ARG_POINTER(aId);
   if (!sSettingsArray)

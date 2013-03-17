@@ -1054,7 +1054,7 @@ struct TypeObject : gc::Cell
     /* Helpers */
 
     bool addProperty(JSContext *cx, RawId id, Property **pprop);
-    bool addDefiniteProperties(JSContext *cx, JSObject *obj);
+    bool addDefiniteProperties(JSContext *cx, HandleObject obj);
     bool matchDefiniteProperties(HandleObject obj);
     void addPrototype(JSContext *cx, TypeObject *proto);
     void addPropertyType(JSContext *cx, jsid id, Type type);
@@ -1382,10 +1382,8 @@ struct TypeCompartment
     ArrayTypeTable *arrayTypeTable;
     ObjectTypeTable *objectTypeTable;
 
-    void fixArrayType(JSContext *cx, JSObject *obj);
-    void fixObjectType(JSContext *cx, JSObject *obj);
-
-    JSObject *newTypedObject(JSContext *cx, IdValuePair *properties, size_t nproperties);
+    void fixArrayType(JSContext *cx, HandleObject obj);
+    void fixObjectType(JSContext *cx, HandleObject obj);
 
     /* Logging fields */
 

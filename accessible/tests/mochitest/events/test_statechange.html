@@ -44,9 +44,9 @@
 
         if (!event) { return; }
 
-        ok(event.isExtraState(), "Extra state change was expected");
+        ok(event.isExtraState, "Extra state change was expected");
         is(event.state, EXT_STATE_EDITABLE, "Wrong state of statechange event");
-        ok(event.isEnabled(), "Expected editable state to be enabled");
+        ok(event.isEnabled, "Expected editable state to be enabled");
       }
 
       this.getID = function editabledoc_getID() {

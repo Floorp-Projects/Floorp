@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.background.announcements.AnnouncementsConstants;
 import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -110,7 +111,7 @@ public class GeckoPreferences
                 boolean success = message.getBoolean("success");
                 final int stringRes = success ? R.string.private_data_success : R.string.private_data_fail;
                 final Context context = this;
-                GeckoAppShell.getMainHandler().post(new Runnable () {
+                ThreadUtils.postToUiThread(new Runnable () {
                     @Override
                     public void run() {
                         Toast.makeText(context, stringRes, Toast.LENGTH_SHORT).show();
@@ -423,7 +424,7 @@ public class GeckoPreferences
             @Override public void prefValue(String prefName, final boolean value) {
                 final Preference pref = getField(prefName);
                 if (pref instanceof CheckBoxPreference) {
-                    GeckoAppShell.getMainHandler().post(new Runnable() {
+                    ThreadUtils.postToUiThread(new Runnable() {
                         @Override
                         public void run() {
                             if (((CheckBoxPreference)pref).isChecked() != value)
@@ -436,14 +437,14 @@ public class GeckoPreferences
             @Override public void prefValue(String prefName, final String value) {
                 final Preference pref = getField(prefName);
                 if (pref instanceof EditTextPreference) {
-                    GeckoAppShell.getMainHandler().post(new Runnable() {
+                    ThreadUtils.postToUiThread(new Runnable() {
                         @Override
                         public void run() {
                             ((EditTextPreference)pref).setText(value);
                         }
                     });
                 } else if (pref instanceof ListPreference) {
-                    GeckoAppShell.getMainHandler().post(new Runnable() {
+                    ThreadUtils.postToUiThread(new Runnable() {
                         @Override
                         public void run() {
                             ((ListPreference)pref).setValue(value);
@@ -456,7 +457,7 @@ public class GeckoPreferences
                     final FontSizePreference fontSizePref = (FontSizePreference) pref;
                     fontSizePref.setSavedFontSize(value);
                     final String fontSizeName = fontSizePref.getSavedFontSizeName();
-                    GeckoAppShell.getMainHandler().post(new Runnable() {
+                    ThreadUtils.postToUiThread(new Runnable() {
                         @Override
                         public void run() {
                             fontSizePref.setSummary(fontSizeName); // Ex: "Small".
@@ -467,7 +468,7 @@ public class GeckoPreferences
 
             @Override public void finish() {
                 // enable all preferences once we have them from gecko
-                GeckoAppShell.getMainHandler().post(new Runnable() {
+                ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
                         mPreferenceScreen.setEnabled(true);

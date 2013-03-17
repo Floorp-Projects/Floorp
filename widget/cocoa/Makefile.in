@@ -103,6 +103,9 @@ LOCAL_INCLUDES	= \
 	$(TK_CFLAGS) \
 	-I$(srcdir)/../xpwidgets \
 	-I$(srcdir)/../shared \
+	-I$(topsrcdir)/layout/forms \
+	-I$(topsrcdir)/layout/generic \
+	-I$(topsrcdir)/layout/xul/base/src \
 	$(NULL)
 
 LDFLAGS	+= \

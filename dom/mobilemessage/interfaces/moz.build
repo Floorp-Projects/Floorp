@@ -4,16 +4,21 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
+    'nsIDOMMobileMessageManager.idl',
+    'nsIDOMMozMmsEvent.idl',
+    'nsIDOMMozMmsMessage.idl',
     'nsIDOMMozSmsEvent.idl',
     'nsIDOMMozSmsMessage.idl',
+    'nsIDOMNavigatorMobileMessage.idl',
     'nsIDOMNavigatorSms.idl',
     'nsIDOMSmsCursor.idl',
     'nsIDOMSmsFilter.idl',
     'nsIDOMSmsManager.idl',
     'nsIDOMSmsRequest.idl',
     'nsIDOMSmsSegmentInfo.idl',
+    'nsIMobileMessageCallback.idl',
     'nsIMobileMessageDatabaseService.idl',
-    'nsISmsRequest.idl',
+    'nsIMobileMessageService.idl',
     'nsISmsService.idl',
 ]
 

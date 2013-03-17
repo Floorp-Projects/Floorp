@@ -5,6 +5,10 @@
 #ifndef mozilla_net_DashboardTypes_h_
 #define mozilla_net_DashboardTypes_h_
 
+#include "mozilla/StandardInteger.h"
+#include "nsStringGlue.h"
+#include "nsTArray.h"
+
 namespace mozilla {
 namespace net {
 

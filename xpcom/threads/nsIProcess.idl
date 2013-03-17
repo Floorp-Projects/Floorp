@@ -96,5 +96,4 @@ interface nsIProcess : nsISupports
 %{C++
 
 #define NS_PROCESS_CONTRACTID "@mozilla.org/process/util;1"
-#define NS_PROCESS_CLASSNAME "Process Specification"
 %}

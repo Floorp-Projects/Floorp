@@ -20,6 +20,18 @@ this.Utils = {
     '{a23983c0-fd0e-11dc-95ff-0800200c9a66}': 'mobile/xul'
   },
 
+  init: function Utils_init(aWindow) {
+    if (this._win)
+      // XXX: only supports attaching to one window now.
+      throw new Error('Only one top-level window could used with AccessFu');
+
+    this._win = Cu.getWeakReference(aWindow);
+  },
+
+  get win() {
+    return this._win.get();
+  },
+
   get AccRetrieval() {
     if (!this._AccRetrieval) {
       this._AccRetrieval = Cc['@mozilla.org/accessibleRetrieval;1'].
@@ -69,28 +81,46 @@ this.Utils = {
     this._AndroidSdkVersion = value;
   },
 
-  getBrowserApp: function getBrowserApp(aWindow) {
+  get BrowserApp() {
     switch (this.MozBuildApp) {
       case 'mobile/android':
-        return aWindow.BrowserApp;
+        return this.win.BrowserApp;
       case 'browser':
-        return aWindow.gBrowser;
+        return this.win.gBrowser;
       case 'b2g':
-        return aWindow.shell;
+        return this.win.shell;
       default:
         return null;
     }
   },
 
-  getCurrentBrowser: function getCurrentBrowser(aWindow) {
+  get CurrentBrowser() {
     if (this.MozBuildApp == 'b2g')
-      return this.getBrowserApp(aWindow).contentBrowser;
-    return this.getBrowserApp(aWindow).selectedBrowser;
+      return this.BrowserApp.contentBrowser;
+    return this.BrowserApp.selectedBrowser;
   },
 
-  getCurrentContentDoc: function getCurrentContentDoc(aWindow) {
-    let browser = this.getCurrentBrowser(aWindow);
+  get CurrentContentDoc() {
+    let browser = this.CurrentBrowser;
     return browser ? browser.contentDocument : null;
+  },
+
+  get AllMessageManagers() {
+    let messageManagers = [];
+
+    for (let i = 0; i < this.win.messageManager.childCount; i++)
+      messageManagers.push(this.win.messageManager.getChildAt(i));
+
+    let document = this.CurrentContentDoc;
+
+    if (document) {
+      let remoteframes = document.querySelectorAll('iframe[remote=true]');
+
+      for (let i = 0; i < remoteframes.length; ++i)
+        messageManagers.push(this.getMessageManager(remoteframes[i]));
+    }
+
+    return messageManagers;
   },
 
   getMessageManager: function getMessageManager(aBrowser) {
@@ -101,24 +131,6 @@ this.Utils = {
       Logger.logException(x);
       return null;
     }
-  },
-
-  getAllMessageManagers: function getAllMessageManagers(aWindow) {
-    let messageManagers = [];
-
-    for (let i = 0; i < aWindow.messageManager.childCount; i++)
-      messageManagers.push(aWindow.messageManager.getChildAt(i));
-
-    let document = this.getCurrentContentDoc(aWindow);
-
-    if (document) {
-      let remoteframes = document.querySelectorAll('iframe[remote=true]');
-
-      for (let i = 0; i < remoteframes.length; ++i)
-        messageManagers.push(this.getMessageManager(remoteframes[i]));
-    }
-
-    return messageManagers;
   },
 
   getViewport: function getViewport(aWindow) {
@@ -219,7 +231,7 @@ this.Logger = {
     let str = Utils.AccRetrieval.getStringEventType(aEvent.eventType);
     if (aEvent.eventType == Ci.nsIAccessibleEvent.EVENT_STATE_CHANGE) {
       let event = aEvent.QueryInterface(Ci.nsIAccessibleStateChangeEvent);
-      let stateStrings = (event.isExtraState()) ?
+      let stateStrings = event.isExtraState ?
         Utils.AccRetrieval.getStringStates(0, event.state) :
         Utils.AccRetrieval.getStringStates(event.state, 0);
       str += ' (' + stateStrings.item(0) + ')';

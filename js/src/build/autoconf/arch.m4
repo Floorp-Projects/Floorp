@@ -213,6 +213,11 @@ if test "$CPU_ARCH" = "arm"; then
       AC_DEFINE(HAVE_ARM_NEON)
       HAVE_ARM_NEON=1
   fi
+
+  AC_MSG_CHECKING(ARM version support in compiler)
+  dnl Determine the target ARM architecture (5 for ARMv5, v5T, v5E, etc.; 6 for ARMv6, v6K, etc.)
+  ARM_ARCH=`${CC-cc} ${CFLAGS} -dM -E - < /dev/null | sed -n 's/.*__ARM_ARCH_\([[0-9]]*\).*/\1/p'`
+  AC_MSG_RESULT("$ARM_ARCH")
 fi # CPU_ARCH = arm
 
 AC_SUBST(HAVE_ARM_SIMD)

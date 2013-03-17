@@ -1889,6 +1889,10 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                   "Memory used by the IonMonkey JIT to hold the runtime's "
                   "generated code.");
 
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/asm.js-code"),
+                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.asmJSCode,
+                  "Memory used by AOT-compiled asm.js code.");
+
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/regexp-code"),
                   nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.regexpCode,
                   "Memory used by the regexp JIT to hold generated code.");

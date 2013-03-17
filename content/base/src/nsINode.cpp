@@ -2383,12 +2383,6 @@ nsINode::WrapObject(JSContext *aCx, JSObject *aScope)
   return obj;
 }
 
-bool
-nsINode::IsSupported(const nsAString& aFeature, const nsAString& aVersion)
-{
-  return nsContentUtils::InternalIsSupported(this, aFeature, aVersion);
-}
-
 already_AddRefed<nsINode>
 nsINode::CloneNode(bool aDeep, ErrorResult& aError)
 {
@@ -2408,14 +2402,6 @@ nsINode::GetAttributes()
     return nullptr;
   }
   return AsElement()->Attributes();
-}
-
-nsresult
-nsINode::GetAttributes(nsIDOMMozNamedAttrMap** aAttributes)
-{
-  nsRefPtr<nsDOMAttributeMap> map = GetAttributes();
-  map.forget(aAttributes);
-  return NS_OK;
 }
 
 bool

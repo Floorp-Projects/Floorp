@@ -57,6 +57,14 @@ using namespace android;
  */
 #define FORCE_PREVIEW_FORMAT_YUV420SP   1
 
+#define RETURN_IF_NO_CAMERA_HW()                                          \
+  do {                                                                    \
+    if (!mCameraHw.get()) {                                               \
+      DOM_CAMERA_LOGE("%s:%d : mCameraHw is null\n", __func__, __LINE__); \
+      return NS_ERROR_NOT_AVAILABLE;                                      \
+    }                                                                     \
+  } while(0)
+
 static const char* getKeyText(uint32_t aKey)
 {
   switch (aKey) {
@@ -229,6 +237,11 @@ nsresult
 nsGonkCameraControl::Init()
 {
   mCameraHw = GonkCameraHardware::Connect(this, mCameraId);
+  if (!mCameraHw.get()) {
+    DOM_CAMERA_LOGE("Failed to connect to camera %d (this=%p)\n", mCameraId, this);
+    return NS_ERROR_FAILURE;
+  }
+
   DOM_CAMERA_LOGI("Initializing camera %d (this=%p, mCameraHw=%p)\n", mCameraId, this, mCameraHw.get());
 
   // Initialize our camera configuration database.
@@ -280,7 +293,7 @@ nsGonkCameraControl::Init()
   DOM_CAMERA_LOGI(" - maximum metering areas:        %d\n", mMaxMeteringAreas);
   DOM_CAMERA_LOGI(" - maximum focus areas:           %d\n", mMaxFocusAreas);
 
-  return mCameraHw.get() != nullptr ? NS_OK : NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 nsGonkCameraControl::~nsGonkCameraControl()
@@ -651,6 +664,8 @@ nsGonkCameraControl::StartPreviewImpl(StartPreviewTask* aStartPreview)
   }
 
   DOM_CAMERA_LOGI("%s: starting preview (mDOMPreview=%p)\n", __func__, mDOMPreview);
+
+  RETURN_IF_NO_CAMERA_HW();
   if (mCameraHw->StartPreview() != OK) {
     DOM_CAMERA_LOGE("%s: failed to start preview\n", __func__);
     return NS_ERROR_FAILURE;
@@ -670,7 +685,9 @@ nsGonkCameraControl::StopPreviewInternal(bool aForced)
   // StopPreview() is a synchronous call--it doesn't return
   // until the camera preview thread exits.
   if (mDOMPreview) {
-    mCameraHw->StopPreview();
+    if (mCameraHw.get()) {
+      mCameraHw->StopPreview();
+    }
     mDOMPreview->Stopped(aForced);
     mDOMPreview = nullptr;
   }
@@ -688,12 +705,15 @@ nsresult
 nsGonkCameraControl::AutoFocusImpl(AutoFocusTask* aAutoFocus)
 {
   if (aAutoFocus->mCancel) {
-    mCameraHw->CancelAutoFocus();
+    if (mCameraHw.get()) {
+      mCameraHw->CancelAutoFocus();
+    }
   }
 
   mAutoFocusOnSuccessCb = aAutoFocus->mOnSuccessCb;
   mAutoFocusOnErrorCb = aAutoFocus->mOnErrorCb;
 
+  RETURN_IF_NO_CAMERA_HW();
   if (mCameraHw->AutoFocus() != OK) {
     return NS_ERROR_FAILURE;
   }
@@ -743,11 +763,15 @@ nsresult
 nsGonkCameraControl::TakePictureImpl(TakePictureTask* aTakePicture)
 {
   if (aTakePicture->mCancel) {
-    mCameraHw->CancelTakePicture();
+    if (mCameraHw.get()) {
+      mCameraHw->CancelTakePicture();
+    }
   }
 
   mTakePictureOnSuccessCb = aTakePicture->mOnSuccessCb;
   mTakePictureOnErrorCb = aTakePicture->mOnErrorCb;
+
+  RETURN_IF_NO_CAMERA_HW();
 
   // batch-update camera configuration
   mDeferConfigUpdate = true;
@@ -844,6 +868,8 @@ nsresult
 nsGonkCameraControl::PushParametersImpl()
 {
   DOM_CAMERA_LOGI("Pushing camera parameters\n");
+  RETURN_IF_NO_CAMERA_HW();
+
   RwAutoLockRead lock(mRwLock);
   if (mCameraHw->PushParameters(mParams) != OK) {
     return NS_ERROR_FAILURE;
@@ -856,6 +882,8 @@ nsresult
 nsGonkCameraControl::PullParametersImpl()
 {
   DOM_CAMERA_LOGI("Pulling camera parameters\n");
+  RETURN_IF_NO_CAMERA_HW();
+
   RwAutoLockWrite lock(mRwLock);
   mCameraHw->PullParameters(mParams);
   return NS_OK;
@@ -1244,6 +1272,8 @@ nsGonkCameraControl::HandleRecorderEvent(int msg, int ext1, int ext2)
 nsresult
 nsGonkCameraControl::SetupRecording(int aFd, int aRotation, int64_t aMaxFileSizeBytes, int64_t aMaxVideoLengthMs)
 {
+  RETURN_IF_NO_CAMERA_HW();
+
   // choosing a size big enough to hold the params
   const size_t SIZE = 256;
   char buffer[SIZE];

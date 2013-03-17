@@ -11,6 +11,7 @@
 #include "nsIJSContextStack.h"
 #include "nsIScriptContext.h"
 #include "nsIVariant.h"
+#include "nsIXPConnect.h"
 #include "nsServiceManagerUtils.h"
 #include "nsContentUtils.h"
 
