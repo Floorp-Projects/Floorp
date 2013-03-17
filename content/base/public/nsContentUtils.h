@@ -28,7 +28,6 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentListDeclarations.h"
 #include "nsDataHashtable.h"
-#include "nsIDOMEvent.h"
 #include "nsMathUtils.h"
 #include "nsReadableUtils.h"
 #include "nsTArray.h"
@@ -42,6 +41,8 @@ class imgIRequest;
 class imgLoader;
 class imgRequestProxy;
 class nsAutoScriptBlockerSuppressNodeRemoved;
+class nsDragEvent;
+class nsEvent;
 class nsEventListenerManager;
 class nsHtml5StringParser;
 class nsIChannel;
@@ -53,10 +54,15 @@ class nsIDocument;
 class nsIDocumentLoaderFactory;
 class nsIDocumentObserver;
 class nsIDOMDocument;
+class nsIDOMDocumentFragment;
+class nsIDOMEvent;
+class nsIDOMEventTarget;
 class nsIDOMHTMLFormElement;
 class nsIDOMHTMLInputElement;
 class nsIDOMKeyEvent;
+class nsIDOMNode;
 class nsIDOMScriptObjectFactory;
+class nsIDOMWindow;
 class nsIDragSession;
 class nsIEditor;
 class nsIFragmentContentSink;
@@ -86,6 +92,7 @@ class nsIWidget;
 class nsIWordBreaker;
 class nsIXPConnect;
 class nsIXPConnectJSObjectHolder;
+class nsKeyEvent;
 class nsNodeInfoManager;
 class nsPIDOMWindow;
 class nsPresContext;
