@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDOMSerializer.h"
+
+#include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentCID.h"

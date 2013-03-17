@@ -3,11 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Activity.h"
-#include "nsDOMClassInfo.h"
+
 #include "nsContentUtils.h"
-#include "nsIDOMActivityOptions.h"
-#include "nsIDocShell.h"
+#include "nsDOMClassInfo.h"
 #include "nsIConsoleService.h"
+#include "nsIDocShell.h"
+#include "nsIDocument.h"
+#include "nsIDOMActivityOptions.h"
 
 using namespace mozilla::dom;
 
