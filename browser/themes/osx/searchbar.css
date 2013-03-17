@@ -48,6 +48,11 @@
 }
 
 @media (min-resolution: 2dppx) {
+  .searchbar-engine-image,
+  .searchbar-engine-menuitem > .menu-iconic-left > .menu-iconic-icon {
+    image-rendering: -moz-crisp-edges;
+  }
+
   .searchbar-engine-image {
     list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
   }

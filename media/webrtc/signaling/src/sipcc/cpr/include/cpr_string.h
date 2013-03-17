@@ -5,6 +5,8 @@
 #ifndef _CPR_STRING_H_
 #define _CPR_STRING_H_
 
+#include <stdarg.h>
+
 #include "cpr_types.h"
 #include "cpr_strings.h"
 
@@ -103,6 +105,13 @@ void flex_string_check_alloc(flex_string *fs, size_t new_min_length);
  * Not thread-safe
  */
 void flex_string_append(flex_string *fs, const char *more);
+
+/*
+ * flex_string_sprintf
+ *
+ * Not thread-safe
+ */
+void flex_string_vsprintf(flex_string *fs, const char *format, va_list original_ap);
 
 /*
  * flex_string_sprintf

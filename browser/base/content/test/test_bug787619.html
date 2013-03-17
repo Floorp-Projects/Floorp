@@ -24,7 +24,7 @@
   function test1() {
     let plugin = document.getElementById('plugin');
     ok(plugin, 'got plugin element');
-    let objLC = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    let objLC = SpecialPowers.wrap(plugin);
     ok(!objLC.activated, 'plugin should not be activated');
 
     synthesizeMouseAtCenter(plugin, {});
