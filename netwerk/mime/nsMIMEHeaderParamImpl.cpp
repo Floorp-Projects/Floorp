@@ -12,6 +12,7 @@
 #include "plbase64.h"
 #include "nsCRT.h"
 #include "nsMemory.h"
+#include "nsTArray.h"
 #include "nsCOMPtr.h"
 #include "nsEscape.h"
 #include "nsIUTF8ConverterService.h"

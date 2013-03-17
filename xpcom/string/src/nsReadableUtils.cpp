@@ -4,8 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsReadableUtils.h"
+
 #include "nsMemory.h"
 #include "nsString.h"
+#include "nsTArray.h"
 #include "nsUTF8Utils.h"
 
 void
