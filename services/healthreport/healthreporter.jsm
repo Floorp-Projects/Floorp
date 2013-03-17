@@ -499,6 +499,10 @@ AbstractHealthReporter.prototype = Object.freeze({
    * Collect all measurements for all registered providers.
    */
   collectMeasurements: function () {
+    if (!this._initialized) {
+      return Promise.reject(new Error("Not initialized."));
+    }
+
     return Task.spawn(function doCollection() {
       try {
         TelemetryStopwatch.start(TELEMETRY_COLLECT_CONSTANT, this);
@@ -548,6 +552,10 @@ AbstractHealthReporter.prototype = Object.freeze({
    * @return Promise<Object | string>
    */
   collectAndObtainJSONPayload: function (asObject=false) {
+    if (!this._initialized) {
+      return Promise.reject(new Error("Not initialized."));
+    }
+
     return Task.spawn(function collectAndObtain() {
       yield this._providerManager.ensurePullOnlyProvidersRegistered();
 
@@ -627,78 +635,87 @@ AbstractHealthReporter.prototype = Object.freeze({
       o.lastPingDate = this._formatDate(lastPingDate);
     }
 
-    for (let provider of this._providerManager.providers) {
-      let providerName = provider.name;
+    // We can still generate a payload even if we're not initialized.
+    // This is to facilitate error upload on init failure.
+    if (this._initialized) {
+      for (let provider of this._providerManager.providers) {
+        let providerName = provider.name;
 
-      let providerEntry = {
-        measurements: {},
-      };
+        let providerEntry = {
+          measurements: {},
+        };
 
-      for (let [measurementKey, measurement] of provider.measurements) {
-        let name = providerName + "." + measurement.name;
+        for (let [measurementKey, measurement] of provider.measurements) {
+          let name = providerName + "." + measurement.name;
 
-        let serializer;
-        try {
-          // The measurement is responsible for returning a serializer which
-          // is aware of the measurement version.
-          serializer = measurement.serializer(measurement.SERIALIZE_JSON);
-        } catch (ex) {
-          this._recordError("Error obtaining serializer for measurement: " +
-                            name, ex);
-          continue;
-        }
-
-        let data;
-        try {
-          data = yield measurement.getValues();
-        } catch (ex) {
-          this._recordError("Error obtaining data for measurement: " + name,
-                            ex);
-          continue;
-        }
-
-        if (data.singular.size) {
+          let serializer;
           try {
-            o.data.last[name] = serializer.singular(data.singular);
+            // The measurement is responsible for returning a serializer which
+            // is aware of the measurement version.
+            serializer = measurement.serializer(measurement.SERIALIZE_JSON);
           } catch (ex) {
-            this._recordError("Error serializing singular data: " + name,
+            this._recordError("Error obtaining serializer for measurement: " +
+                              name, ex);
+            continue;
+          }
+
+          let data;
+          try {
+            data = yield measurement.getValues();
+          } catch (ex) {
+            this._recordError("Error obtaining data for measurement: " + name,
                               ex);
             continue;
           }
-        }
 
-        let dataDays = data.days;
-        for (let i = 0; i < DAYS_IN_PAYLOAD; i++) {
-          let date = new Date(now.getTime() - i * MILLISECONDS_PER_DAY);
-          if (!dataDays.hasDay(date)) {
-            continue;
-          }
-          let dateFormatted = this._formatDate(date);
-
-          try {
-            let serialized = serializer.daily(dataDays.getDay(date));
-            if (!serialized) {
+          if (data.singular.size) {
+            try {
+              o.data.last[name] = serializer.singular(data.singular);
+            } catch (ex) {
+              this._recordError("Error serializing singular data: " + name,
+                                ex);
               continue;
             }
+          }
 
-            if (!(dateFormatted in outputDataDays)) {
-              outputDataDays[dateFormatted] = {};
+          let dataDays = data.days;
+          for (let i = 0; i < DAYS_IN_PAYLOAD; i++) {
+            let date = new Date(now.getTime() - i * MILLISECONDS_PER_DAY);
+            if (!dataDays.hasDay(date)) {
+              continue;
             }
+            let dateFormatted = this._formatDate(date);
 
-            outputDataDays[dateFormatted][name] = serialized;
-          } catch (ex) {
-            this._recordError("Error populating data for day: " + name, ex);
-            continue;
+            try {
+              let serialized = serializer.daily(dataDays.getDay(date));
+              if (!serialized) {
+                continue;
+              }
+
+              if (!(dateFormatted in outputDataDays)) {
+                outputDataDays[dateFormatted] = {};
+              }
+
+              outputDataDays[dateFormatted][name] = serialized;
+            } catch (ex) {
+              this._recordError("Error populating data for day: " + name, ex);
+              continue;
+            }
           }
         }
       }
+    } else {
+      o.notInitialized = 1;
+      this._log.warn("Not initialized. Sending report with only error info.");
     }
 
     if (this._errors.length) {
       o.errors = this._errors.slice(0, 20);
     }
 
-    this._storage.compact();
+    if (this._initialized) {
+      this._storage.compact();
+    }
 
     if (!asObject) {
       TelemetryStopwatch.start(TELEMETRY_JSON_PAYLOAD_SERIALIZE, this);
@@ -1011,6 +1028,10 @@ HealthReporter.prototype = Object.freeze({
    * The passed argument is a `DataSubmissionRequest` from policy.jsm.
    */
   requestDataUpload: function (request) {
+    if (!this._initialized) {
+      return Promise.reject(new Error("Not initialized."));
+    }
+
     return Task.spawn(function doUpload() {
       yield this._providerManager.ensurePullOnlyProvidersRegistered();
       try {
@@ -1042,6 +1063,44 @@ HealthReporter.prototype = Object.freeze({
     return this._policy.deleteRemoteData(reason);
   },
 
+  /**
+   * Override default handler to incur an upload describing the error.
+   */
+  _onInitError: function (error) {
+    // Need to capture this before we call the parent else it's always
+    // set.
+    let inShutdown = this._shutdownRequested;
+
+    let result;
+    try {
+      result = AbstractHealthReporter.prototype._onInitError.call(this, error);
+    } catch (ex) {
+      this._log.error("Error when calling _onInitError: " +
+                      CommonUtils.exceptionStr(ex));
+    }
+
+    // This bypasses a lot of the checks in policy, such as respect for
+    // backoff. We should arguably not do this. However, reporting
+    // startup errors is important. And, they should not occur with much
+    // frequency in the wild. So, it shouldn't be too big of a deal.
+    if (!inShutdown &&
+        this._policy.ensureNotifyResponse(new Date()) &&
+        this._policy.healthReportUploadEnabled) {
+      // We don't care about what happens to this request. It's best
+      // effort.
+      let request = {
+        onNoDataAvailable: function () {},
+        onSubmissionSuccess: function () {},
+        onSubmissionFailureSoft: function () {},
+        onSubmissionFailureHard: function () {},
+      };
+
+      this._uploadData(request);
+    }
+
+    return result;
+  },
+
   _onBagheeraResult: function (request, isDelete, result) {
     this._log.debug("Received Bagheera result.");
 
@@ -1068,6 +1127,16 @@ HealthReporter.prototype = Object.freeze({
 
     request.onSubmissionSuccess(now);
 
+#ifdef PRERELEASE_BUILD
+    // Intended to be temporary until we a) assess the impact b) bug 846133
+    // deploys more robust storage for state.
+    try {
+      Services.prefs.savePrefFile(null);
+    } catch (ex) {
+      this._log.warn("Error forcing prefs save: " + CommonUtils.exceptionStr(ex));
+    }
+#endif
+
     return promise;
   },
 
@@ -1080,7 +1149,6 @@ HealthReporter.prototype = Object.freeze({
     // Why, oh, why doesn't JS have a strftime() equivalent?
     return date.toISOString().substr(0, 10);
   },
-
 
   _uploadData: function (request) {
     let id = CommonUtils.generateUUID();
