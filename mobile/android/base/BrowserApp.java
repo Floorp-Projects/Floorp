@@ -97,15 +97,38 @@ abstract public class BrowserApp extends GeckoApp
     // We'll ask for feedback after the user launches the app this many times.
     private static final int FEEDBACK_LAUNCH_COUNT = 15;
 
-    // Variables used for scrolling the toolbar on/off the page.
+    // Variables used for scrolling the toolbar on/off the page;
+
+    // A drag has to move this amount multiplied by the height of the toolbar
+    // before the toolbar will appear or disappear.
     private static final float TOOLBAR_MOVEMENT_THRESHOLD = 0.3f;
+
+    // Whether the dynamic toolbar pref is enabled.
     private boolean mDynamicToolbarEnabled = false;
+
+    // The widget used to push the LayerView below the address bar when the
+    // toolbar is disabled.
     private View mToolbarSpacer = null;
+
+    // The last recorded touch event from onInterceptTouchEvent. These are
+    // not updated until the movement threshold has been exceeded.
     private float mLastTouchX = 0.0f;
     private float mLastTouchY = 0.0f;
+
+    // Because we can only scroll by integer amounts, we store the fractional
+    // amounts to be applied here.
     private float mToolbarSubpixelAccumulation = 0.0f;
+
+    // Used by onInterceptTouchEvent to lock the toolbar into an off or on
+    // position.
     private boolean mToolbarLocked = false;
+
+    // Whether the toolbar movement threshold has been passed by the current
+    // drag.
     private boolean mToolbarThresholdPassed = false;
+
+    // Toggled when the tabs tray is made visible to disable toolbar movement.
+    private boolean mToolbarPinned = false;
 
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
@@ -186,7 +209,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public boolean onInterceptTouchEvent(View view, MotionEvent event) {
-        if (!mDynamicToolbarEnabled) {
+        if (!mDynamicToolbarEnabled || mToolbarPinned) {
             return super.onInterceptTouchEvent(view, event);
         }
 
@@ -936,6 +959,15 @@ abstract public class BrowserApp extends GeckoApp
             mMainLayoutAnimator.attach(mMainLayout,
                                        PropertyAnimator.Property.SCROLL_Y,
                                        -height);
+        }
+
+        // If the tabs layout is animating onto the screen, pin the dynamic
+        // toolbar.
+        if (width > 0 && height > 0) {
+            mToolbarPinned = true;
+            mBrowserToolbar.animateVisibility(true);
+        } else {
+            mToolbarPinned = false;
         }
 
         mMainLayoutAnimator.start();
