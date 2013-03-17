@@ -27,7 +27,6 @@
 #include "nsContentList.h"
 #include "nsContentSink.h"
 #include "nsDataHashtable.h"
-#include "nsHtml5StringParser.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMEvent.h"
@@ -47,6 +46,7 @@ class imgLoader;
 class imgRequestProxy;
 class nsAutoScriptBlockerSuppressNodeRemoved;
 class nsEventListenerManager;
+class nsHtml5StringParser;
 class nsIChannel;
 class nsIConsoleService;
 class nsIContent;
