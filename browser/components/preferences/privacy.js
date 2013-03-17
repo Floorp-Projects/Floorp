@@ -280,6 +280,7 @@ var gPrivacyPane = {
         shouldProceed = !cancelQuit.data;
 
         if (shouldProceed) {
+          pref.value = autoStart.hasAttribute('checked');
           document.documentElement.acceptDialog();
           let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
                              .getService(Ci.nsIAppStartup);
