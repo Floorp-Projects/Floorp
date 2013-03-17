@@ -8,7 +8,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
-                                  "resource://gre/modules/RecentWindow.jsm");
+                                  "resource:///modules/RecentWindow.jsm");
 
 const nsISupports            = Components.interfaces.nsISupports;
 
