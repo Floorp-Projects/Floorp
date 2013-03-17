@@ -1410,7 +1410,7 @@ MTypeOf::foldsTo(bool useValueNumbers)
         return this;
     }
 
-    JSRuntime *rt = GetIonContext()->compartment->rt;
+    JSRuntime *rt = GetIonContext()->runtime;
     return MConstant::New(StringValue(TypeName(type, rt)));
 }
 

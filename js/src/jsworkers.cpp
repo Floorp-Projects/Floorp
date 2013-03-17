@@ -316,7 +316,7 @@ WorkerThread::threadLoop()
         state.unlock();
 
         {
-            ion::IonContext ictx(NULL, ionBuilder->script()->compartment(), &ionBuilder->temp());
+            ion::IonContext ictx(ionBuilder->script()->compartment(), &ionBuilder->temp());
             ionBuilder->setBackgroundCodegen(ion::CompileBackEnd(ionBuilder));
         }
 

@@ -343,7 +343,7 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
      * jitcode discarding / frame expansion.
      */
     if (f.regs.inlined() && newfun->isHeavyweight()) {
-        ExpandInlineFrames(cx->compartment);
+        ExpandInlineFrames(cx->zone());
         JS_ASSERT(!f.regs.inlined());
     }
 
@@ -386,7 +386,7 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
      * triggered while interpreting.
      */
     if (f.regs.inlined()) {
-        ExpandInlineFrames(cx->compartment);
+        ExpandInlineFrames(cx->zone());
         JS_ASSERT(!f.regs.inlined());
         regs.fp()->resetInlinePrev(f.fp(), f.regs.pc);
     }
@@ -540,7 +540,7 @@ js_InternalThrow(VMFrame &f)
 {
     JSContext *cx = f.cx;
 
-    ExpandInlineFrames(cx->compartment);
+    ExpandInlineFrames(cx->zone());
 
     // The current frame may have an associated orphaned native, if the native
     // or SplatApplyArgs threw an exception.
@@ -734,7 +734,7 @@ stubs::CrossChunkShim(VMFrame &f, void *edge_)
 {
     DebugOnly<CrossChunkEdge*> edge = (CrossChunkEdge *) edge_;
 
-    mjit::ExpandInlineFrames(f.cx->compartment);
+    mjit::ExpandInlineFrames(f.cx->zone());
 
     RootedScript script(f.cx, f.script());
     JS_ASSERT(edge->target < script->length);

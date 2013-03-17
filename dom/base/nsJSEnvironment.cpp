@@ -2648,7 +2648,7 @@ AnyGrayGlobalParent()
     if (JSObject *global = JS_GetGlobalObject(cx)) {
       if (JSObject *parent = js::GetObjectParent(global)) {
         if (JS::GCThingIsMarkedGray(parent) &&
-            !js::IsSystemCompartment(js::GetGCThingCompartment(parent))) {
+            !js::IsSystemCompartment(js::GetObjectCompartment(parent))) {
           return true;
         }
       }

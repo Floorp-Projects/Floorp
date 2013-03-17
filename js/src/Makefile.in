@@ -139,6 +139,7 @@ CPPSRCS		= \
 		Statistics.cpp \
 		StoreBuffer.cpp \
 		Iteration.cpp \
+		Zone.cpp \
 		Verifier.cpp \
 		StringBuffer.cpp \
 		Unicode.cpp \

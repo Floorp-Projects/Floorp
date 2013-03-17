@@ -997,7 +997,7 @@ js::RemapAllWrappersForObject(JSContext *cx, JSObject *oldTargetArg,
     RootedObject newTarget(cx, newTargetArg);
 
     AutoWrapperVector toTransplant(cx);
-    if (!toTransplant.reserve(cx->runtime->compartments.length()))
+    if (!toTransplant.reserve(cx->runtime->numCompartments))
         return false;
 
     for (CompartmentsIter c(cx->runtime); !c.done(); c.next()) {
@@ -1038,7 +1038,7 @@ js::RecomputeWrappers(JSContext *cx, const CompartmentFilter &sourceFilter,
                 continue;
 
             // Filter by target compartment.
-            if (!targetFilter.match(k.wrapped->compartment()))
+            if (!targetFilter.match(static_cast<JSObject *>(k.wrapped)->compartment()))
                 continue;
 
             // Add it to the list.

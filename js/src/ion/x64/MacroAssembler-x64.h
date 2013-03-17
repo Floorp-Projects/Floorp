@@ -913,7 +913,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // Save an exit frame (which must be aligned to the stack pointer) to
     // ThreadData::ionTop.
     void linkExitFrame() {
-        mov(ImmWord(GetIonContext()->compartment->rt), ScratchReg);
+        mov(ImmWord(GetIonContext()->runtime), ScratchReg);
         mov(StackPointer, Operand(ScratchReg, offsetof(JSRuntime, mainThread.ionTop)));
     }
 
