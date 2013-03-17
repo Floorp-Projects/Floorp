@@ -5,7 +5,6 @@
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
-Components.utils.import("resource://gre/modules/RecentWindow.jsm");
 
 var ContentAreaUtils = {
 
@@ -1073,9 +1072,7 @@ function openURL(aURL)
     protocolSvc.loadUrl(uri);
   }
   else {
-    let isPrivate = PrivateBrowsingUtils.isWindowPrivate(window);
-    var recentWindow = RecentWindow.getMostRecentWindow({type: "navigator:browser",
-                                                         private: isPrivate});
+    var recentWindow = Services.wm.getMostRecentWindow("navigator:browser");
     if (recentWindow) {
       var win = recentWindow.browserDOMWindow.openURI(uri, null,
                                                       recentWindow.browserDOMWindow.OPEN_DEFAULTWINDOW,
