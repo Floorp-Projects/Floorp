@@ -26,7 +26,6 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentListDeclarations.h"
 #include "nsDataHashtable.h"
-#include "nsIDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNode.h"
 #include "nsINode.h"
@@ -38,6 +37,7 @@
 class imgICache;
 class imgIContainer;
 class imgINotificationObserver;
+class imgIRequest;
 class imgLoader;
 class imgRequestProxy;
 class nsAutoScriptBlockerSuppressNodeRemoved;
