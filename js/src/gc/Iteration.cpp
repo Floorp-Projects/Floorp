@@ -28,51 +28,31 @@ js::TraceRuntime(JSTracer *trc)
     MarkRuntime(trc);
 }
 
-struct IterateArenaCallbackOp
-{
-    JSRuntime *rt;
-    void *data;
-    IterateArenaCallback callback;
-    JSGCTraceKind traceKind;
-    size_t thingSize;
-    IterateArenaCallbackOp(JSRuntime *rt, void *data, IterateArenaCallback callback,
-                           JSGCTraceKind traceKind, size_t thingSize)
-        : rt(rt), data(data), callback(callback), traceKind(traceKind), thingSize(thingSize)
-    {}
-    void operator()(Arena *arena) { (*callback)(rt, data, arena, traceKind, thingSize); }
-};
-
-struct IterateCellCallbackOp
-{
-    JSRuntime *rt;
-    void *data;
-    IterateCellCallback callback;
-    JSGCTraceKind traceKind;
-    size_t thingSize;
-    IterateCellCallbackOp(JSRuntime *rt, void *data, IterateCellCallback callback,
-                          JSGCTraceKind traceKind, size_t thingSize)
-        : rt(rt), data(data), callback(callback), traceKind(traceKind), thingSize(thingSize)
-    {}
-    void operator()(Cell *cell) { (*callback)(rt, data, cell, traceKind, thingSize); }
-};
-
 void
-js::IterateCompartmentsArenasCells(JSRuntime *rt, void *data,
-                                   JSIterateCompartmentCallback compartmentCallback,
-                                   IterateArenaCallback arenaCallback,
-                                   IterateCellCallback cellCallback)
+js::IterateZonesCompartmentsArenasCells(JSRuntime *rt, void *data,
+                                        IterateZoneCallback zoneCallback,
+                                        JSIterateCompartmentCallback compartmentCallback,
+                                        IterateArenaCallback arenaCallback,
+                                        IterateCellCallback cellCallback)
 {
     AutoPrepareForTracing prop(rt);
 
-    for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        (*compartmentCallback)(rt, data, c);
+    for (ZonesIter zone(rt); !zone.done(); zone.next()) {
+        (*zoneCallback)(rt, data, zone);
+
+        for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
+            (*compartmentCallback)(rt, data, comp);
 
         for (size_t thingKind = 0; thingKind != FINALIZE_LIMIT; thingKind++) {
             JSGCTraceKind traceKind = MapAllocToTraceKind(AllocKind(thingKind));
             size_t thingSize = Arena::thingSize(AllocKind(thingKind));
-            IterateArenaCallbackOp arenaOp(rt, data, arenaCallback, traceKind, thingSize);
-            IterateCellCallbackOp cellOp(rt, data, cellCallback, traceKind, thingSize);
-            ForEachArenaAndCell(c, AllocKind(thingKind), arenaOp, cellOp);
+
+            for (ArenaIter aiter(zone, AllocKind(thingKind)); !aiter.done(); aiter.next()) {
+                ArenaHeader *aheader = aiter.get();
+                (*arenaCallback)(rt, data, aheader->getArena(), traceKind, thingSize);
+                for (CellIterUnderGC iter(aheader); !iter.done(); iter.next())
+                    (*cellCallback)(rt, data, iter.getCell(), traceKind, thingSize);
+            }
         }
     }
 }
@@ -87,36 +67,35 @@ js::IterateChunks(JSRuntime *rt, void *data, IterateChunkCallback chunkCallback)
 }
 
 void
-js::IterateCells(JSRuntime *rt, JSCompartment *compartment, AllocKind thingKind,
-                 void *data, IterateCellCallback cellCallback)
+js::IterateScripts(JSRuntime *rt, JSCompartment *compartment,
+                   void *data, IterateScriptCallback scriptCallback)
 {
     AutoPrepareForTracing prep(rt);
 
-    JSGCTraceKind traceKind = MapAllocToTraceKind(thingKind);
-    size_t thingSize = Arena::thingSize(thingKind);
-
     if (compartment) {
-        for (CellIterUnderGC i(compartment, thingKind); !i.done(); i.next())
-            cellCallback(rt, data, i.getCell(), traceKind, thingSize);
+        for (CellIterUnderGC i(compartment->zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+            JSScript *script = i.get<JSScript>();
+            if (script->compartment() == compartment)
+                scriptCallback(rt, data, script);
+        }
     } else {
-        for (CompartmentsIter c(rt); !c.done(); c.next()) {
-            for (CellIterUnderGC i(c, thingKind); !i.done(); i.next())
-                cellCallback(rt, data, i.getCell(), traceKind, thingSize);
+        for (ZonesIter zone(rt); !zone.done(); zone.next()) {
+            for (CellIterUnderGC i(zone, gc::FINALIZE_SCRIPT); !i.done(); i.next())
+                scriptCallback(rt, data, i.get<JSScript>());
         }
     }
 }
 
 void
-js::IterateGrayObjects(JSCompartment *compartment, GCThingCallback cellCallback, void *data)
+js::IterateGrayObjects(Zone *zone, GCThingCallback cellCallback, void *data)
 {
-    JS_ASSERT(compartment);
-    AutoPrepareForTracing prep(compartment->rt);
+    AutoPrepareForTracing prep(zone->rt);
 
     for (size_t finalizeKind = 0; finalizeKind <= FINALIZE_OBJECT_LAST; finalizeKind++) {
-        for (CellIterUnderGC i(compartment, AllocKind(finalizeKind)); !i.done(); i.next()) {
-            Cell *cell = i.getCell();
-            if (cell->isMarked(GRAY))
-                cellCallback(data, cell);
+        for (CellIterUnderGC i(zone, AllocKind(finalizeKind)); !i.done(); i.next()) {
+            JSObject *obj = i.get<JSObject>();
+            if (obj->isMarked(GRAY))
+                cellCallback(data, obj);
         }
     }
 }

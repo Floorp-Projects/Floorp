@@ -618,7 +618,11 @@ struct MallocProvider
 namespace gc {
 class MarkingValidator;
 } // namespace gc
+
 class JS_FRIEND_API(AutoEnterPolicy);
+
+typedef Vector<JS::Zone *, 1, SystemAllocPolicy> ZoneVector;
+
 } // namespace js
 
 struct JSRuntime : js::RuntimeFriendFields,
@@ -639,8 +643,14 @@ struct JSRuntime : js::RuntimeFriendFields,
     /* Default compartment. */
     JSCompartment       *atomsCompartment;
 
-    /* List of compartments (protected by the GC lock). */
-    js::CompartmentVector compartments;
+    /* Embedders can use this zone however they wish. */
+    JS::Zone            *systemZone;
+
+    /* List of compartments and zones (protected by the GC lock). */
+    js::ZoneVector      zones;
+
+    /* How many compartments there are across all zones. */
+    size_t              numCompartments;
 
     /* Locale-specific callbacks for string conversion. */
     JSLocaleCallbacks *localeCallbacks;
@@ -729,6 +739,12 @@ struct JSRuntime : js::RuntimeFriendFields,
 #endif
     js::ion::IonRuntime *getIonRuntime(JSContext *cx) {
         return ionRuntime_ ? ionRuntime_ : createIonRuntime(cx);
+    }
+    js::ion::IonRuntime *ionRuntime() {
+        return ionRuntime_;
+    }
+    bool hasIonRuntime() const {
+        return !!ionRuntime_;
     }
 
     //-------------------------------------------------------------------------
@@ -1352,11 +1368,12 @@ struct JSRuntime : js::RuntimeFriendFields,
         return 0;
 #endif
     }
+
 #ifdef DEBUG
   public:
     js::AutoEnterPolicy *enteredPolicy;
-
 #endif
+
   private:
     /*
      * Used to ensure that compartments created at the same time get different
@@ -1438,7 +1455,7 @@ struct JSContext : js::ContextFriendFields,
     JSContext *thisDuringConstruction() { return this; }
     ~JSContext();
 
-    inline JS::Zone *zone();
+    inline JS::Zone *zone() const;
     js::PerThreadData &mainThread() { return runtime->mainThread; }
 
   private:
@@ -1462,7 +1479,7 @@ struct JSContext : js::ContextFriendFields,
     /* True if generating an error, to prevent runaway recursion. */
     bool                generatingError;
 
-    inline void setCompartment(JSCompartment *c) { compartment = c; }
+    inline void setCompartment(JSCompartment *comp);
 
     /*
      * "Entering" a compartment changes cx->compartment (which changes
@@ -2062,7 +2079,7 @@ namespace js {
 
 #ifdef JS_METHODJIT
 namespace mjit {
-    void ExpandInlineFrames(JSCompartment *compartment);
+void ExpandInlineFrames(JS::Zone *zone);
 }
 #endif
 

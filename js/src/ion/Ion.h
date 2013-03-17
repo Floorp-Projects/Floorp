@@ -241,9 +241,12 @@ enum AbortReason {
 class IonContext
 {
   public:
-    IonContext(JSContext *cx, JSCompartment *compartment, TempAllocator *temp);
+    IonContext(JSContext *cx, TempAllocator *temp);
+    IonContext(JSCompartment *comp, TempAllocator *temp);
+    IonContext(JSRuntime *rt);
     ~IonContext();
 
+    JSRuntime *runtime;
     JSContext *cx;
     JSCompartment *compartment;
     TempAllocator *temp;
@@ -310,7 +313,7 @@ bool Invalidate(JSContext *cx, RawScript script, bool resetUses = true);
 void MarkValueFromIon(JSRuntime *rt, Value *vp);
 void MarkShapeFromIon(JSRuntime *rt, Shape **shapep);
 
-void ToggleBarriers(JSCompartment *comp, bool needs);
+void ToggleBarriers(JS::Zone *zone, bool needs);
 
 class IonBuilder;
 class MIRGenerator;
@@ -329,7 +332,7 @@ void ForbidCompilation(JSContext *cx, RawScript script);
 void ForbidCompilation(JSContext *cx, RawScript script, ExecutionMode mode);
 uint32_t UsesBeforeIonRecompile(RawScript script, jsbytecode *pc);
 
-void PurgeCaches(RawScript script, JSCompartment *c);
+void PurgeCaches(RawScript script, JS::Zone *zone);
 size_t MemoryUsed(RawScript script, JSMallocSizeOfFun mallocSizeOf);
 void DestroyIonScripts(FreeOp *fop, RawScript script);
 void TraceIonScripts(JSTracer* trc, RawScript script);

@@ -1569,9 +1569,9 @@ Debugger::sweepAll(FreeOp *fop)
         }
     }
 
-    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++) {
+    for (CompartmentsIter comp(rt); !comp.done(); comp.next()) {
         /* For each debuggee being GC'd, detach it from all its debuggers. */
-        GlobalObjectSet &debuggees = (*c)->getDebuggees();
+        GlobalObjectSet &debuggees = comp->getDebuggees();
         for (GlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
             GlobalObject *global = e.front();
             if (IsObjectAboutToBeFinalized(&global))
@@ -2353,12 +2353,10 @@ class Debugger::ScriptQuery {
         /* Search each compartment for debuggee scripts. */
         vector = v;
         oom = false;
-        for (CompartmentSet::Range r = compartments.all(); !r.empty(); r.popFront()) {
-            IterateCells(cx->runtime, r.front(), gc::FINALIZE_SCRIPT, this, considerCell);
-            if (oom) {
-                js_ReportOutOfMemory(cx);
-                return false;
-            }
+        IterateScripts(cx->runtime, NULL, this, considerScript);
+        if (oom) {
+            js_ReportOutOfMemory(cx);
+            return false;
         }
 
         /*
@@ -2465,10 +2463,9 @@ class Debugger::ScriptQuery {
         return true;
     }
 
-    static void considerCell(JSRuntime *rt, void *data, void *thing,
-                             JSGCTraceKind traceKind, size_t thingSize) {
+    static void considerScript(JSRuntime *rt, void *data, JSScript *script) {
         ScriptQuery *self = static_cast<ScriptQuery *>(data);
-        self->consider(static_cast<JSScript *>(thing));
+        self->consider(script);
     }
 
     /*

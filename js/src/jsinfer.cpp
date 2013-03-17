@@ -51,6 +51,7 @@
 #endif
 
 using namespace js;
+using namespace js::gc;
 using namespace js::types;
 using namespace js::analyze;
 
@@ -2382,13 +2383,15 @@ TypeInferenceSupported()
     return true;
 }
 
-void
-TypeCompartment::init(JSContext *cx)
+TypeCompartment::TypeCompartment()
 {
     PodZero(this);
-
     compiledInfo.outputIndex = RecompileInfo::NoCompilerRunning;
+}
 
+void
+TypeZone::init(JSContext *cx)
+{
     if (!cx ||
         !cx->hasOption(JSOPTION_TYPE_INFERENCE) ||
         !TypeInferenceSupported())
@@ -2720,7 +2723,7 @@ TypeCompartment::processPendingRecompiles(FreeOp *fop)
 
 #ifdef JS_METHODJIT
 
-    mjit::ExpandInlineFrames(compartment());
+    mjit::ExpandInlineFrames(compartment()->zone());
 
     for (unsigned i = 0; i < pending->length(); i++) {
         CompilerOutput &co = *(*pending)[i].compilerOutput(*this);
@@ -2748,23 +2751,22 @@ TypeCompartment::processPendingRecompiles(FreeOp *fop)
 void
 TypeCompartment::setPendingNukeTypes(JSContext *cx)
 {
-    if (!pendingNukeTypes) {
+    TypeZone *zone = &compartment()->zone()->types;
+    if (!zone->pendingNukeTypes) {
         if (cx->compartment)
             js_ReportOutOfMemory(cx);
-        pendingNukeTypes = true;
+        zone->pendingNukeTypes = true;
     }
 }
 
 void
-TypeCompartment::setPendingNukeTypesNoReport()
+TypeZone::setPendingNukeTypes()
 {
-    JS_ASSERT(compartment()->activeAnalysis);
-    if (!pendingNukeTypes)
-        pendingNukeTypes = true;
+    pendingNukeTypes = true;
 }
 
 void
-TypeCompartment::nukeTypes(FreeOp *fop)
+TypeZone::nukeTypes(FreeOp *fop)
 {
     /*
      * This is the usual response if we encounter an OOM while adding a type
@@ -2778,28 +2780,26 @@ TypeCompartment::nukeTypes(FreeOp *fop)
      * inconsistent state.
      */
     JS_ASSERT(pendingNukeTypes);
-    if (pendingRecompiles) {
-        fop->free_(pendingRecompiles);
-        pendingRecompiles = NULL;
+
+    for (CompartmentsInZoneIter comp(zone()); !comp.done(); comp.next()) {
+        if (comp->types.pendingRecompiles) {
+            fop->free_(comp->types.pendingRecompiles);
+            comp->types.pendingRecompiles = NULL;
+        }
     }
 
     inferenceEnabled = false;
 
-    /* Update the cached inferenceEnabled bit in all contexts. */
-    for (ContextIter acx(fop->runtime()); !acx.done(); acx.next())
-        acx->setCompartment(acx->compartment);
-
 #ifdef JS_METHODJIT
-    JSCompartment *compartment = this->compartment();
-    mjit::ExpandInlineFrames(compartment);
-    mjit::ClearAllFrames(compartment);
+    mjit::ExpandInlineFrames(zone());
+    mjit::ClearAllFrames(zone());
 # ifdef JS_ION
-    ion::InvalidateAll(fop, compartment);
+    ion::InvalidateAll(fop, zone());
 # endif
 
     /* Throw away all JIT code in the compartment, but leave everything else alone. */
 
-    for (gc::CellIter i(compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::CellIter i(zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         RawScript script = i.get<JSScript>();
         mjit::ReleaseScriptCode(fop, script);
 # ifdef JS_ION
@@ -2959,9 +2959,8 @@ TypeCompartment::markSetsUnknown(JSContext *cx, TypeObject *target)
      * new type objects as well or trigger GC.
      */
     Vector<TypeSet *> pending(cx);
-    for (gc::CellIter i(cx->compartment, gc::FINALIZE_TYPE_OBJECT); !i.done(); i.next()) {
+    for (gc::CellIter i(cx->zone(), gc::FINALIZE_TYPE_OBJECT); !i.done(); i.next()) {
         TypeObject *object = i.get<TypeObject>();
-
         unsigned count = object->getPropertyCount();
         for (unsigned i = 0; i < count; i++) {
             Property *prop = object->getProperty(i);
@@ -2975,7 +2974,7 @@ TypeCompartment::markSetsUnknown(JSContext *cx, TypeObject *target)
     for (unsigned i = 0; i < pending.length(); i++)
         pending[i]->addType(cx, Type::AnyObjectType());
 
-    for (gc::CellIter i(cx->compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::CellIter i(cx->zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         RootedScript script(cx, i.get<JSScript>());
         if (script->types) {
             unsigned count = TypeScript::NumTypeSets(script);
@@ -3115,14 +3114,14 @@ TypeCompartment::print(JSContext *cx, bool force)
     if (!force && !InferSpewActive(ISpewResult))
         return;
 
-    for (gc::CellIter i(compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::CellIter i(compartment->zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         RootedScript script(cx, i.get<JSScript>());
         if (script->hasAnalysis() && script->analysis()->ranInference())
             script->analysis()->printTypes(cx);
     }
 
 #ifdef DEBUG
-    for (gc::CellIter i(compartment, gc::FINALIZE_TYPE_OBJECT); !i.done(); i.next()) {
+    for (gc::CellIter i(compartment->zone(), gc::FINALIZE_TYPE_OBJECT); !i.done(); i.next()) {
         TypeObject *object = i.get<TypeObject>();
         object->print();
     }
@@ -6335,15 +6334,14 @@ JSCompartment::getLazyType(JSContext *cx, Class *clasp, TaggedProto proto)
 /////////////////////////////////////////////////////////////////////
 
 void
-TypeSet::sweep(JSCompartment *compartment)
+TypeSet::sweep(Zone *zone)
 {
     JS_ASSERT(!purged());
-    JS_ASSERT(compartment->zone()->isGCSweeping());
 
     /*
      * Purge references to type objects that are no longer live. Type sets hold
      * only weak references. For type sets containing more than one object,
-     * live entries in the object hash need to be copied to the compartment's
+     * live entries in the object hash need to be copied to the zone's
      * new arena.
      */
     unsigned objectCount = baseObjectCount();
@@ -6358,11 +6356,11 @@ TypeSet::sweep(JSCompartment *compartment)
             if (object && !IsAboutToBeFinalized(object)) {
                 TypeObjectKey **pentry =
                     HashSetInsert<TypeObjectKey *,TypeObjectKey,TypeObjectKey>
-                        (compartment->typeLifoAlloc, objectSet, objectCount, object);
+                        (zone->types.typeLifoAlloc, objectSet, objectCount, object);
                 if (pentry)
                     *pentry = object;
                 else
-                    compartment->types.setPendingNukeTypesNoReport();
+                    zone->types.setPendingNukeTypes();
             }
         }
         setBaseObjectCount(objectCount);
@@ -6417,14 +6415,13 @@ TypeObject::sweep(FreeOp *fop)
         return;
     }
 
-    JSCompartment *compartment = this->compartment();
-    JS_ASSERT(compartment->zone()->isGCSweeping());
-
     if (!isMarked()) {
         if (newScript)
             fop->free_(newScript);
         return;
     }
+
+    js::LifoAlloc &typeLifoAlloc = zone()->types.typeLifoAlloc;
 
     /*
      * Properties were allocated from the old arena, and need to be copied over
@@ -6442,19 +6439,19 @@ TypeObject::sweep(FreeOp *fop)
         for (unsigned i = 0; i < oldCapacity; i++) {
             Property *prop = oldArray[i];
             if (prop && prop->types.ownProperty(false)) {
-                Property *newProp = compartment->typeLifoAlloc.new_<Property>(*prop);
+                Property *newProp = typeLifoAlloc.new_<Property>(*prop);
                 if (newProp) {
                     Property **pentry =
                         HashSetInsert<jsid,Property,Property>
-                            (compartment->typeLifoAlloc, propertySet, propertyCount, prop->id);
+                            (typeLifoAlloc, propertySet, propertyCount, prop->id);
                     if (pentry) {
                         *pentry = newProp;
-                        newProp->types.sweep(compartment);
+                        newProp->types.sweep(zone());
                     } else {
-                        compartment->types.setPendingNukeTypesNoReport();
+                        zone()->types.setPendingNukeTypes();
                     }
                 } else {
-                    compartment->types.setPendingNukeTypesNoReport();
+                    zone()->types.setPendingNukeTypes();
                 }
             }
         }
@@ -6462,12 +6459,12 @@ TypeObject::sweep(FreeOp *fop)
     } else if (propertyCount == 1) {
         Property *prop = (Property *) propertySet;
         if (prop->types.ownProperty(false)) {
-            Property *newProp = compartment->typeLifoAlloc.new_<Property>(*prop);
+            Property *newProp = typeLifoAlloc.new_<Property>(*prop);
             if (newProp) {
                 propertySet = (Property **) newProp;
-                newProp->types.sweep(compartment);
+                newProp->types.sweep(zone());
             } else {
-                compartment->types.setPendingNukeTypesNoReport();
+                zone()->types.setPendingNukeTypes();
             }
         } else {
             propertySet = NULL;
@@ -6490,23 +6487,8 @@ TypeObject::sweep(FreeOp *fop)
 }
 
 void
-SweepTypeObjects(FreeOp *fop, JSCompartment *compartment)
-{
-    JS_ASSERT(compartment->zone()->isGCSweeping());
-    for (gc::CellIterUnderGC iter(compartment, gc::FINALIZE_TYPE_OBJECT); !iter.done(); iter.next()) {
-        TypeObject *object = iter.get<TypeObject>();
-        object->sweep(fop);
-    }
-}
-
-void
 TypeCompartment::sweep(FreeOp *fop)
 {
-    JSCompartment *compartment = this->compartment();
-    JS_ASSERT(compartment->zone()->isGCSweeping());
-
-    SweepTypeObjects(fop, compartment);
-
     /*
      * Iterate through the array/object type tables and remove all entries
      * referencing collected data. These tables only hold weak references.
@@ -6694,14 +6676,14 @@ TypeScript::Sweep(FreeOp *fop, RawScript script)
 {
     JSCompartment *compartment = script->compartment();
     JS_ASSERT(compartment->zone()->isGCSweeping());
-    JS_ASSERT(compartment->types.inferenceEnabled);
+    JS_ASSERT(compartment->zone()->types.inferenceEnabled);
 
     unsigned num = NumTypeSets(script);
     TypeSet *typeArray = script->types->typeArray();
 
     /* Remove constraints and references to dead objects from the persistent type sets. */
     for (unsigned i = 0; i < num; i++)
-        typeArray[i].sweep(compartment);
+        typeArray[i].sweep(compartment->zone());
 
     TypeResult **presult = &script->types->dynamicList;
     while (*presult) {
@@ -6836,16 +6818,17 @@ TypeCompartment::maybePurgeAnalysis(JSContext *cx, bool force)
 
     uint64_t start = PRMJ_Now();
 
-    for (gc::CellIter i(cx->compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::CellIter i(cx->zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         RootedScript script(cx, i.get<JSScript>());
-        TypeScript::Purge(cx, script);
+        if (script->compartment() == cx->compartment)
+            TypeScript::Purge(cx, script);
     }
 
     uint64_t done = PRMJ_Now();
 
     if (cx->runtime->analysisPurgeCallback) {
         size_t afterUsed = cx->compartment->analysisLifoAlloc.used();
-        size_t typeUsed = cx->compartment->typeLifoAlloc.used();
+        size_t typeUsed = cx->typeLifoAlloc().used();
 
         char buf[1000];
         JS_snprintf(buf, sizeof(buf),
@@ -6873,7 +6856,7 @@ SizeOfScriptTypeInferenceData(RawScript script, TypeInferenceSizes *sizes,
         return;
 
     /* If TI is disabled, a single TypeScript is still present. */
-    if (!script->compartment()->types.inferenceEnabled) {
+    if (!script->compartment()->zone()->types.inferenceEnabled) {
         sizes->typeScripts += mallocSizeOf(typeScript);
         return;
     }
@@ -6888,10 +6871,15 @@ SizeOfScriptTypeInferenceData(RawScript script, TypeInferenceSizes *sizes,
 }
 
 void
+Zone::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *typePool)
+{
+    *typePool += types.typeLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
+}
+
+void
 JSCompartment::sizeOfTypeInferenceData(TypeInferenceSizes *sizes, JSMallocSizeOfFun mallocSizeOf)
 {
     sizes->analysisPool += analysisLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
-    sizes->typePool += typeLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
 
     /* Pending arrays are cleared on GC along with the analysis pool. */
     sizes->pendingArrays += mallocSizeOf(types.pendingArray);
@@ -6899,8 +6887,11 @@ JSCompartment::sizeOfTypeInferenceData(TypeInferenceSizes *sizes, JSMallocSizeOf
     /* TypeCompartment::pendingRecompiles is non-NULL only while inference code is running. */
     JS_ASSERT(!types.pendingRecompiles);
 
-    for (gc::CellIter i(this, gc::FINALIZE_SCRIPT); !i.done(); i.next())
-        SizeOfScriptTypeInferenceData(i.get<JSScript>(), sizes, mallocSizeOf);
+    for (gc::CellIter i(zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+        JSScript *script = i.get<JSScript>();
+        if (script->compartment() == this)
+            SizeOfScriptTypeInferenceData(script, sizes, mallocSizeOf);
+    }
 
     if (types.allocationSiteTable)
         sizes->allocationSiteTables += types.allocationSiteTable->sizeOfIncludingThis(mallocSizeOf);
@@ -6938,4 +6929,80 @@ TypeObject::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf)
     }
 
     return mallocSizeOf(newScript);
+}
+
+TypeZone::TypeZone(Zone *zone)
+  : zone_(zone),
+    typeLifoAlloc(TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
+    pendingNukeTypes(false),
+    inferenceEnabled(false)
+{
+}
+
+TypeZone::~TypeZone()
+{
+}
+
+void
+TypeZone::sweep(FreeOp *fop, bool releaseTypes)
+{
+    JS_ASSERT(zone()->isGCSweeping());
+
+    JSRuntime *rt = zone()->rt;
+
+    /*
+     * Clear the analysis pool, but don't release its data yet. While
+     * sweeping types any live data will be allocated into the pool.
+     */
+    LifoAlloc oldAlloc(typeLifoAlloc.defaultChunkSize());
+    oldAlloc.steal(&typeLifoAlloc);
+
+    /*
+     * Sweep analysis information and everything depending on it from the
+     * compartment, including all remaining mjit code if inference is
+     * enabled in the compartment.
+     */
+    if (inferenceEnabled) {
+        gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_DISCARD_TI);
+
+        for (CellIterUnderGC i(zone(), FINALIZE_SCRIPT); !i.done(); i.next()) {
+            RawScript script = i.get<JSScript>();
+            if (script->types) {
+                types::TypeScript::Sweep(fop, script);
+
+                if (releaseTypes) {
+                    script->types->destroy();
+                    script->types = NULL;
+                }
+            }
+        }
+    }
+
+    {
+        gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_SWEEP_TYPES);
+
+        for (gc::CellIterUnderGC iter(zone(), gc::FINALIZE_TYPE_OBJECT);
+             !iter.done(); iter.next())
+        {
+            TypeObject *object = iter.get<TypeObject>();
+            object->sweep(fop);
+        }
+
+        for (CompartmentsInZoneIter comp(zone()); !comp.done(); comp.next())
+            comp->types.sweep(fop);
+    }
+
+    {
+        gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_CLEAR_SCRIPT_ANALYSIS);
+        for (CellIterUnderGC i(zone(), FINALIZE_SCRIPT); !i.done(); i.next()) {
+            JSScript *script = i.get<JSScript>();
+            script->clearAnalysis();
+            script->clearPropertyReadTypes();
+        }
+    }
+
+    {
+        gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_FREE_TI_ARENA);
+        rt->freeLifoAlloc.transferFrom(&oldAlloc);
+    }
 }

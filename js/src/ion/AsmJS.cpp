@@ -1072,7 +1072,7 @@ class ModuleCompiler
       : cx_(cx),
         lifo_(LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
         alloc_(&lifo_),
-        ionContext_(cx, cx->compartment, &alloc_),
+        ionContext_(cx, &alloc_),
         masm_(),
         moduleFunctionName_(NULL),
         globalArgumentName_(NULL),

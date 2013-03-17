@@ -1154,7 +1154,7 @@ class FastInvokeGuard
 #ifdef JS_ION
         if (useIon_ && fun_) {
             if (ictx_.empty())
-                ictx_.construct(cx, cx->compartment, (js::ion::TempAllocator *)NULL);
+                ictx_.construct(cx, (js::ion::TempAllocator *)NULL);
             JS_ASSERT(fun_->nonLazyScript() == script_);
 
             ion::MethodStatus status = ion::CanEnterUsingFastInvoke(cx, script_, args_.length());

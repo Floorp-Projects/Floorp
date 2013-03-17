@@ -483,7 +483,7 @@ StackFrame::mark(JSTracer *trc)
         gc::MarkScriptUnbarriered(trc, &exec.script, "script");
     }
     if (IS_GC_MARKING_TRACER(trc))
-        script()->compartment()->active = true;
+        script()->compartment()->zone()->active = true;
     gc::MarkValueUnbarriered(trc, &returnValue(), "rval");
 }
 
@@ -1470,9 +1470,8 @@ StackIter::StackIter(JSContext *cx, SavedOption savedOption)
 #endif
 {
 #ifdef JS_METHODJIT
-    CompartmentVector &v = cx->runtime->compartments;
-    for (size_t i = 0; i < v.length(); i++)
-        mjit::ExpandInlineFrames(v[i]);
+    for (ZonesIter zone(cx->runtime); !zone.done(); zone.next())
+        mjit::ExpandInlineFrames(zone);
 #endif
 
     if (StackSegment *seg = cx->stack.seg_) {
@@ -1490,9 +1489,8 @@ StackIter::StackIter(JSRuntime *rt, StackSegment &seg)
 #endif
 {
 #ifdef JS_METHODJIT
-    CompartmentVector &v = rt->compartments;
-    for (size_t i = 0; i < v.length(); i++)
-        mjit::ExpandInlineFrames(v[i]);
+    for (ZonesIter zone(rt); !zone.done(); zone.next())
+        mjit::ExpandInlineFrames(zone);
 #endif
     startOnSegment(&seg);
     settleOnNewState();

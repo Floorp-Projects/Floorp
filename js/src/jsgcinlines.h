@@ -298,9 +298,9 @@ class CellIterImpl
         aiter.init();
     }
 
-    void init(JSCompartment *comp, AllocKind kind) {
-        initSpan(comp->zone(), kind);
-        aiter.init(comp->zone(), kind);
+    void init(JS::Zone *zone, AllocKind kind) {
+        initSpan(zone, kind);
+        aiter.init(zone, kind);
         next();
     }
 
@@ -346,9 +346,9 @@ class CellIterImpl
 class CellIterUnderGC : public CellIterImpl
 {
   public:
-    CellIterUnderGC(JSCompartment *comp, AllocKind kind) {
-        JS_ASSERT(comp->rt->isHeapBusy());
-        init(comp, kind);
+    CellIterUnderGC(JS::Zone *zone, AllocKind kind) {
+        JS_ASSERT(zone->rt->isHeapBusy());
+        init(zone, kind);
     }
 
     CellIterUnderGC(ArenaHeader *aheader) {
@@ -365,11 +365,10 @@ class CellIter : public CellIterImpl
     size_t *counter;
 #endif
   public:
-    CellIter(JSCompartment *comp, AllocKind kind)
-      : lists(&comp->zone()->allocator.arenas),
+    CellIter(JS::Zone *zone, AllocKind kind)
+      : lists(&zone->allocator.arenas),
         kind(kind)
     {
-
         /*
          * We have a single-threaded runtime, so there's no need to protect
          * against other threads iterating or allocating. However, we do have
@@ -377,21 +376,21 @@ class CellIter : public CellIterImpl
          * currently active.
          */
         if (IsBackgroundFinalized(kind) &&
-            comp->zone()->allocator.arenas.needBackgroundFinalizeWait(kind))
+            zone->allocator.arenas.needBackgroundFinalizeWait(kind))
         {
-            gc::FinishBackgroundFinalize(comp->rt);
+            gc::FinishBackgroundFinalize(zone->rt);
         }
         if (lists->isSynchronizedFreeList(kind)) {
             lists = NULL;
         } else {
-            JS_ASSERT(!comp->rt->isHeapBusy());
+            JS_ASSERT(!zone->rt->isHeapBusy());
             lists->copyFreeListToArena(kind);
         }
 #ifdef DEBUG
-        counter = &comp->rt->noGCOrAllocationCheck;
+        counter = &zone->rt->noGCOrAllocationCheck;
         ++*counter;
 #endif
-        init(comp, kind);
+        init(zone, kind);
     }
 
     ~CellIter() {
@@ -404,68 +403,44 @@ class CellIter : public CellIterImpl
     }
 };
 
-/*
- * Invoke ArenaOp and CellOp on every arena and cell in a compartment which
- * have the specified thing kind.
- */
-template <class ArenaOp, class CellOp>
-void
-ForEachArenaAndCell(JSCompartment *compartment, AllocKind thingKind,
-                    ArenaOp arenaOp, CellOp cellOp)
+class GCZonesIter
 {
-    for (ArenaIter aiter(compartment, thingKind); !aiter.done(); aiter.next()) {
-        ArenaHeader *aheader = aiter.get();
-        arenaOp(aheader->getArena());
-        for (CellIterUnderGC iter(aheader); !iter.done(); iter.next())
-            cellOp(iter.getCell());
-    }
-}
-
-/* Signatures for ArenaOp and CellOp above. */
-
-inline void EmptyArenaOp(Arena *arena) {}
-inline void EmptyCellOp(Cell *t) {}
-
-class GCCompartmentsIter {
   private:
-    JSCompartment **it, **end;
+    ZonesIter zone;
 
   public:
-    GCCompartmentsIter(JSRuntime *rt) {
-        JS_ASSERT(rt->isHeapBusy());
-        it = rt->compartments.begin();
-        end = rt->compartments.end();
-        if (!(*it)->isCollecting())
+    GCZonesIter(JSRuntime *rt) : zone(rt) {
+        if (!zone->isCollecting())
             next();
     }
 
-    bool done() const { return it == end; }
+    bool done() const { return zone.done(); }
 
     void next() {
         JS_ASSERT(!done());
         do {
-            it++;
-        } while (it != end && !(*it)->isCollecting());
+            zone.next();
+        } while (!zone.done() && !zone->isCollecting());
     }
 
-    JSCompartment *get() const {
+    JS::Zone *get() const {
         JS_ASSERT(!done());
-        return *it;
+        return zone;
     }
 
-    operator JSCompartment *() const { return get(); }
-    JSCompartment *operator->() const { return get(); }
+    operator JS::Zone *() const { return get(); }
+    JS::Zone *operator->() const { return get(); }
 };
 
-typedef GCCompartmentsIter GCZonesIter;
+typedef CompartmentsIterT<GCZonesIter> GCCompartmentsIter;
 
-/* Iterates over all compartments in the current compartment group. */
-class GCCompartmentGroupIter {
+/* Iterates over all zones in the current zone group. */
+class GCZoneGroupIter {
   private:
-    JSCompartment *current;
+    JS::Zone *current;
 
   public:
-    GCCompartmentGroupIter(JSRuntime *rt) {
+    GCZoneGroupIter(JSRuntime *rt) {
         JS_ASSERT(rt->isHeapBusy());
         current = rt->gcCurrentZoneGroup;
     }
@@ -477,16 +452,16 @@ class GCCompartmentGroupIter {
         current = current->nextNodeInGroup();
     }
 
-    JSCompartment *get() const {
+    JS::Zone *get() const {
         JS_ASSERT(!done());
         return current;
     }
 
-    operator JSCompartment *() const { return get(); }
-    JSCompartment *operator->() const { return get(); }
+    operator JS::Zone *() const { return get(); }
+    JS::Zone *operator->() const { return get(); }
 };
 
-typedef GCCompartmentGroupIter GCZoneGroupIter;
+typedef CompartmentsIterT<GCZoneGroupIter> GCCompartmentGroupIter;
 
 /*
  * Allocates a new GC thing. After a successful allocation the caller must

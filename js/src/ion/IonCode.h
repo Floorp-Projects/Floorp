@@ -425,7 +425,7 @@ struct IonScript
         return runtimeSize_;
     }
     void toggleBarriers(bool enabled);
-    void purgeCaches(JSCompartment *c);
+    void purgeCaches(JS::Zone *zone);
     void copySnapshots(const SnapshotWriter *writer);
     void copyBailoutTable(const SnapshotOffset *table);
     void copyConstants(const HeapValue *vp);
@@ -616,21 +616,22 @@ struct IonScriptCounts
 struct VMFunction;
 
 class IonCompartment;
+class IonRuntime;
 
-struct AutoFlushCache {
-
+struct AutoFlushCache
+{
   private:
     uintptr_t start_;
     uintptr_t stop_;
     const char *name_;
-    IonCompartment *myCompartment_;
+    IonRuntime *runtime_;
     bool used_;
 
   public:
     void update(uintptr_t p, size_t len);
     static void updateTop(uintptr_t p, size_t len);
     ~AutoFlushCache();
-    AutoFlushCache(const char * nonce, IonCompartment *comp = NULL);
+    AutoFlushCache(const char *nonce, IonRuntime *rt = NULL);
     void flushAnyway();
 };
 

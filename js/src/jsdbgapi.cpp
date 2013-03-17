@@ -966,11 +966,8 @@ namespace {
 typedef Vector<JSScript *, 0, SystemAllocPolicy> ScriptsToDump;
 
 static void
-DumpBytecodeScriptCallback(JSRuntime *rt, void *data, void *thing,
-                           JSGCTraceKind traceKind, size_t thingSize)
+DumpBytecodeScriptCallback(JSRuntime *rt, void *data, JSScript *script)
 {
-    JS_ASSERT(traceKind == JSTRACE_SCRIPT);
-    JSScript *script = static_cast<JSScript *>(thing);
     static_cast<ScriptsToDump *>(data)->append(script);
 }
 
@@ -980,7 +977,7 @@ JS_PUBLIC_API(void)
 JS_DumpCompartmentBytecode(JSContext *cx)
 {
     ScriptsToDump scripts;
-    IterateCells(cx->runtime, cx->compartment, gc::FINALIZE_SCRIPT, &scripts, DumpBytecodeScriptCallback);
+    IterateScripts(cx->runtime, cx->compartment, &scripts, DumpBytecodeScriptCallback);
 
     for (size_t i = 0; i < scripts.length(); i++) {
         if (scripts[i]->enclosingScriptsCompiledSuccessfully())
@@ -991,8 +988,11 @@ JS_DumpCompartmentBytecode(JSContext *cx)
 JS_PUBLIC_API(void)
 JS_DumpCompartmentPCCounts(JSContext *cx)
 {
-    for (CellIter i(cx->compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (CellIter i(cx->zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
+        if (script->compartment() != cx->compartment)
+            continue;
+
         if (script->hasScriptCounts && script->enclosingScriptsCompiledSuccessfully())
             JS_DumpPCCounts(cx, script);
     }

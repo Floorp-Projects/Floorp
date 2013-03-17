@@ -723,6 +723,8 @@ PerThreadData::~PerThreadData()
 JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
   : mainThread(this),
     atomsCompartment(NULL),
+    systemZone(NULL),
+    numCompartments(0),
     localeCallbacks(NULL),
     defaultLocale(NULL),
 #ifdef JS_THREADSAFE
@@ -927,16 +929,23 @@ JSRuntime::init(uint32_t maxbytes)
     if (size)
         SetMarkStackLimit(this, atoi(size));
 
-    if (!(atomsCompartment = this->new_<JSCompartment>(this)) ||
-        !atomsCompartment->init(NULL) ||
-        !compartments.append(atomsCompartment))
-    {
-        js_delete(atomsCompartment);
+    ScopedJSDeletePtr<Zone> atomsZone(new_<Zone>(this));
+    if (!atomsZone)
         return false;
-    }
 
-    atomsCompartment->zone()->isSystem = true;
-    atomsCompartment->zone()->setGCLastBytes(8192, GC_NORMAL);
+    ScopedJSDeletePtr<JSCompartment> atomsCompartment(new_<JSCompartment>(atomsZone.get()));
+    if (!atomsCompartment || !atomsCompartment->init(NULL))
+        return false;
+
+    zones.append(atomsZone.get());
+    atomsZone->compartments.append(atomsCompartment.get());
+
+    atomsCompartment->isSystem = true;
+    atomsZone->isSystem = true;
+    atomsZone->setGCLastBytes(8192, GC_NORMAL);
+
+    atomsZone.forget();
+    this->atomsCompartment = atomsCompartment.forget();
 
     if (!InitAtoms(this))
         return false;
@@ -1477,14 +1486,6 @@ JSAutoCompartment::JSAutoCompartment(JSContext *cx, JSRawObject target)
 }
 
 JSAutoCompartment::JSAutoCompartment(JSContext *cx, JSScript *target)
-  : cx_(cx),
-    oldCompartment_(cx->compartment)
-{
-    AssertHeapIsIdleOrIterating(cx_);
-    cx_->enterCompartment(target->compartment());
-}
-
-JSAutoCompartment::JSAutoCompartment(JSContext *cx, JSString *target)
   : cx_(cx),
     oldCompartment_(cx->compartment)
 {
@@ -3284,17 +3285,18 @@ JS_GetObjectId(JSContext *cx, JSRawObject obj, jsid *idp)
     return JS_TRUE;
 }
 
-class AutoHoldCompartment {
+class AutoHoldZone
+{
   public:
-    explicit AutoHoldCompartment(JSCompartment *compartment
-                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : holdp(&compartment->hold)
+    explicit AutoHoldZone(Zone *zone
+                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : holdp(&zone->hold)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         *holdp = true;
     }
 
-    ~AutoHoldCompartment() {
+    ~AutoHoldZone() {
         *holdp = false;
     }
 
@@ -3304,17 +3306,32 @@ class AutoHoldCompartment {
 };
 
 JS_PUBLIC_API(JSObject *)
-JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals)
+JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals, ZoneSpecifier zoneSpec)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
 
-    JSCompartment *compartment = NewCompartment(cx, principals);
+    JSRuntime *rt = cx->runtime;
+
+    Zone *zone;
+    if (zoneSpec == SystemZone)
+        zone = rt->systemZone;
+    else if (zoneSpec == FreshZone)
+        zone = NULL;
+    else
+        zone = ((JSObject *)zoneSpec)->zone();
+
+    JSCompartment *compartment = NewCompartment(cx, zone, principals);
     if (!compartment)
         return NULL;
 
-    AutoHoldCompartment hold(compartment);
+    if (zoneSpec == SystemZone) {
+        rt->systemZone = compartment->zone();
+        rt->systemZone->isSystem = true;
+    }
+
+    AutoHoldZone hold(compartment->zone());
 
     JSCompartment *saved = cx->compartment;
     cx->setCompartment(compartment);
@@ -5985,10 +6002,13 @@ JS_GetStringCharsZ(JSContext *cx, JSString *str)
 JS_PUBLIC_API(const jschar *)
 JS_GetStringCharsZAndLength(JSContext *cx, JSString *str, size_t *plength)
 {
+    /*
+     * Don't require |cx->compartment| to be |str|'s compartment. We don't need
+     * it, and it's annoying for callers.
+     */
     JS_ASSERT(plength);
     AssertHeapIsIdleOrStringIsFlat(cx, str);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, str);
     JSFlatString *flat = str->ensureFlat(cx);
     if (!flat)
         return NULL;
