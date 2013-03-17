@@ -31,7 +31,6 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMNode.h"
 #include "nsINode.h"
-#include "nsIXPCScriptable.h"
 #include "nsMathUtils.h"
 #include "nsReadableUtils.h"
 #include "nsTArray.h"
