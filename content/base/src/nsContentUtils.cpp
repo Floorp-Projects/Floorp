@@ -21,6 +21,7 @@
 #include "jsapi.h"
 #include "jsdbgapi.h"
 #include "jsfriendapi.h"
+#include "js/Value.h"
 #include "Layers.h"
 #include "MediaDecoder.h"
 #include "mozAutoDocUpdate.h"
