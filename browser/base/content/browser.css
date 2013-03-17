@@ -25,9 +25,8 @@ tabbrowser {
   visibility: collapse;
 }
 
-#tabbrowser-tabs[overflow=true] > .tabbrowser-arrowscrollbox > .scrollbutton-up[collapsed=true],
-#tabbrowser-tabs[overflow=true] > .tabbrowser-arrowscrollbox > .scrollbutton-down[collapsed=true] {
-  visibility: visible; /* keep a tab's close button under the cursor while it's closing tabs */
+#tabbrowser-tabs:not([overflow="true"])[using-closing-tabs-spacer] ~ #alltabs-button {
+  visibility: hidden; /* temporary space to keep a tab's close button under the cursor */
 }
 
 .tabbrowser-tab {
@@ -51,14 +50,6 @@ tabbrowser {
   transition: min-width 200ms ease-out,
               max-width 250ms ease-out,
               opacity 50ms ease-out 180ms /* hide the tab for the last 20ms of the max-width transition */;
-}
-
-.tabbrowser-tabs[dontresize] > .tabbrowser-tab[fadein]:not([pinned]) {
-  /* controlled in tabbrowser.xml */
-}
-
-.tabbrowser-tabs[dontanimate] > .tabbrowser-tab {
-  transition: none !important;
 }
 
 .tab-throbber:not([fadein]):not([pinned]),
