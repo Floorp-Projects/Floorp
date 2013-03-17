@@ -2,19 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Attributes.h"
-#include "mozilla/DebugOnly.h"
-
-#include "base/basictypes.h"
-
 #include "nsDeviceStorage.h"
 
+#include "mozilla/Attributes.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/DeviceStorageCursorBinding.h"
 #include "mozilla/dom/devicestorage/PDeviceStorageRequestChild.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/dom/PBrowserChild.h"
 #include "mozilla/dom/PContentPermissionRequestChild.h"
+#include "mozilla/dom/PermissionMessageUtils.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
 
 #include "nsAutoPtr.h"
 #include "nsDOMEvent.h"
@@ -28,20 +29,16 @@
 #include "nsNetUtil.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIPrincipal.h"
-#include "mozilla/Preferences.h"
 #include "nsJSUtils.h"
 #include "DictionaryHelpers.h"
-#include "mozilla/Attributes.h"
 #include "nsContentUtils.h"
 #include "nsXULAppAPI.h"
 #include "TabChild.h"
 #include "DeviceStorageRequestChild.h"
 #include "nsIDOMDeviceStorageChangeEvent.h"
 #include "nsCRT.h"
-#include "mozilla/Services.h"
 #include "nsIObserverService.h"
 #include "GeneratedEvents.h"
-#include "mozilla/dom/PermissionMessageUtils.h"
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIPermissionManager.h"
@@ -1072,12 +1069,8 @@ private:
   nsRefPtr<DOMRequest> mRequest;
 };
 
-DOMCI_DATA(DeviceStorageCursor, nsDOMDeviceStorageCursor)
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMDeviceStorageCursor)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDOMCursor)
   NS_INTERFACE_MAP_ENTRY(nsIContentPermissionRequest)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DeviceStorageCursor)
 NS_INTERFACE_MAP_END_INHERITING(DOMCursor)
 
 NS_IMPL_ADDREF_INHERITED(nsDOMDeviceStorageCursor, DOMCursor)
@@ -1180,11 +1173,18 @@ nsDOMDeviceStorageCursor::Allow()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMDeviceStorageCursor::Continue()
+/* virtual */ JSObject*
+nsDOMDeviceStorageCursor::WrapObject(JSContext* aCx, JSObject* aScope)
+{
+  return DeviceStorageCursorBinding::Wrap(aCx, aScope, this);
+}
+
+void
+nsDOMDeviceStorageCursor::Continue(ErrorResult& aRv)
 {
   if (!mOkToCallContinue) {
-    return NS_ERROR_UNEXPECTED;
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
   }
 
   if (mRooted) {
@@ -1200,7 +1200,6 @@ nsDOMDeviceStorageCursor::Continue()
   event->Continue();
 
   mOkToCallContinue = false;
-  return NS_OK;
 }
 
 bool

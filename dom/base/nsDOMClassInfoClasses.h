@@ -177,7 +177,6 @@ DOMCI_CLASS(OfflineResourceList)
 DOMCI_CLASS(Blob)
 DOMCI_CLASS(File)
 DOMCI_CLASS(FileReader)
-DOMCI_CLASS(ArchiveRequest)
 
 // DOM modal content window class, almost identical to Window
 DOMCI_CLASS(ModalContentWindow)
@@ -190,7 +189,6 @@ DOMCI_CLASS(DataContainerEvent)
 DOMCI_CLASS(MessageEvent)
 
 DOMCI_CLASS(DeviceStorage)
-DOMCI_CLASS(DeviceStorageCursor)
 
 // Geolocation
 DOMCI_CLASS(GeoGeolocation)
@@ -303,12 +301,7 @@ DOMCI_CLASS(DOMCursor)
 DOMCI_CLASS(OpenWindowEventDetail)
 DOMCI_CLASS(AsyncScrollEventDetail)
 
-DOMCI_CLASS(FileRequest)
 DOMCI_CLASS(LockedFile)
-
-#ifdef MOZ_SYS_MSG
-DOMCI_CLASS(MozActivity)
-#endif
 
 #ifdef MOZ_TIME_MANAGER
 DOMCI_CLASS(MozTimeManager)
