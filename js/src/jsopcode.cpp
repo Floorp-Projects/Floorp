@@ -1650,7 +1650,7 @@ DecompileArgumentFromStack(JSContext *cx, int formalIndex, char **res)
         return true;
 
     /* Don't handle getters, setters or calls from fun.call/fun.apply. */
-    if (JSOp(*current) != JSOP_CALL || formalIndex >= GET_ARGC(current))
+    if (JSOp(*current) != JSOP_CALL || static_cast<unsigned>(formalIndex) >= GET_ARGC(current))
         return true;
 
     PCStack pcStack;
