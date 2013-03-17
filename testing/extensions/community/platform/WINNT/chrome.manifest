@@ -1,2 +1,0 @@
-skin qa-win classic/1.0 chrome/skin/
-override chrome://qa/skin/platform.css chrome/skin/platform.css
