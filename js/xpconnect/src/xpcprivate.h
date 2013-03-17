@@ -2687,6 +2687,11 @@ public:
     void
     SetSet(XPCNativeSet* set) {XPCAutoLock al(GetLock()); mSet = set;}
 
+    static XPCWrappedNative* Get(JSObject *obj) {
+        MOZ_ASSERT(IS_WN_WRAPPER(obj));
+        return (XPCWrappedNative*)js::GetObjectPrivate(obj);
+    }
+
 private:
     inline void
     ExpireWrapper()
