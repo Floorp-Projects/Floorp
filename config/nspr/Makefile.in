@@ -22,8 +22,21 @@ endif
 # Copy NSPR to the SDK
 ABS_DIST = $(call core_abspath,$(DIST))
 
+ifdef MOZ_FOLD_LIBS
+# Trick the nspr build system into not building shared libraries.
+# bug #851869.
+EXTRA_MAKE_FLAGS := SHARED_LIBRARY= IMPORT_LIBRARY= SHARED_LIB_PDB=
+
+# Work around libVersionPoint conflict between all three libraries.
+# See bug #838566.
+EXTRA_MAKE_FLAGS += XP_DEFINE=-DlibVersionPoint='libVersionPoint$$(LIBRARY_NAME)'
+endif
+
+libs export clean distclean::
+	$(MAKE) -C $(DEPTH)/nsprpub $@ $(EXTRA_MAKE_FLAGS)
+
 libs::
-	$(MAKE) -C $(DEPTH)/nsprpub install prefix=$(ABS_DIST)/sdk exec_prefix=$(ABS_DIST)/sdk bindir=$(ABS_DIST)/sdk/dummy includedir=$(ABS_DIST)/include/nspr libdir=$(ABS_DIST)/sdk/lib datadir=$(ABS_DIST)/sdk/dummy DESTDIR=
+	$(MAKE) -C $(DEPTH)/nsprpub install prefix=$(ABS_DIST)/sdk exec_prefix=$(ABS_DIST)/sdk bindir=$(ABS_DIST)/sdk/dummy includedir=$(ABS_DIST)/include/nspr libdir=$(ABS_DIST)/sdk/lib datadir=$(ABS_DIST)/sdk/dummy DESTDIR= $(EXTRA_MAKE_FLAGS)
 	$(INSTALL) $(DEPTH)/nsprpub/config/nspr-config $(DIST)/sdk/bin
 	$(RM) -rf $(DIST)/sdk/dummy
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH))) # {

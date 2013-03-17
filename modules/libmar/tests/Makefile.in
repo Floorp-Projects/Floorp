@@ -28,9 +28,11 @@ ifndef MOZ_PROFILE_GENERATE
 libs::
 	$(INSTALL) ../tool/signmar$(BIN_SUFFIX) $(TESTROOT)/unit
 	$(INSTALL) $(DEPTH)/dist/bin/$(DLL_PREFIX)nss3$(DLL_SUFFIX) $(TESTROOT)/unit
+ifndef MOZ_FOLD_LIBS
 	$(INSTALL) $(DEPTH)/dist/bin/$(DLL_PREFIX)nssutil3$(DLL_SUFFIX) $(TESTROOT)/unit
 	$(INSTALL) $(DEPTH)/dist/bin/$(DLL_PREFIX)plc4$(DLL_SUFFIX) $(TESTROOT)/unit
 	$(INSTALL) $(DEPTH)/dist/bin/$(DLL_PREFIX)nspr4$(DLL_SUFFIX) $(TESTROOT)/unit
 	$(INSTALL) $(DEPTH)/dist/bin/$(DLL_PREFIX)plds4$(DLL_SUFFIX) $(TESTROOT)/unit
+endif
 endif
 endif # Not Android
