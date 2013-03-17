@@ -14,6 +14,7 @@
  */
 
 interface Attr;
+interface MozNamedAttrMap;
 
 interface Element : Node {
 /*
@@ -37,7 +38,8 @@ interface Element : Node {
   [Constant]
   readonly attribute DOMTokenList? classList;
 
-  //readonly attribute Attr[] attributes;
+  [Constant]
+  readonly attribute MozNamedAttrMap attributes;
   DOMString? getAttribute(DOMString name);
   DOMString? getAttributeNS(DOMString? namespace, DOMString localName);
   [Throws]

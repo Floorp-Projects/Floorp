@@ -650,7 +650,6 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
   nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
   
   // get the dom attribute node, if there is any
-  nsCOMPtr<nsIDOMNode> content(do_QueryInterface(aElement));
   nsCOMPtr<nsIDOMElement> el(do_QueryInterface(aElement));
   nsCOMPtr<nsIDOMAttr> domAttr;
   nsDependentAtomString attrStr(aAttribute);
@@ -685,20 +684,20 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
     }
     // get the number of attributes on this content node
     nsCOMPtr<nsIDOMMozNamedAttrMap> attrs;
-    content->GetAttributes(getter_AddRefs(attrs));
+    el->GetAttributes(getter_AddRefs(attrs));
     uint32_t attrCount;
     attrs->GetLength(&attrCount);
 
     inDOMViewNode* contentNode = nullptr;
     int32_t contentRow;
     int32_t attrRow;
-    if (mRootNode == content &&
+    if (mRootNode == el &&
         !(mWhatToShow & nsIDOMNodeFilter::SHOW_ELEMENT)) {
       // if this view has a root node but is not displaying it,
       // it is ok to act as if the changed attribute is on the root.
       attrRow = attrCount - 1;
     } else {
-      if (NS_FAILED(NodeToRow(content, &contentRow))) {
+      if (NS_FAILED(NodeToRow(el, &contentRow))) {
         return;
       }
       RowToNode(contentRow, &contentNode);
@@ -730,11 +729,11 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
     inDOMViewNode* contentNode = nullptr;
     int32_t contentRow;
     int32_t baseLevel;
-    if (NS_SUCCEEDED(NodeToRow(content, &contentRow))) {
+    if (NS_SUCCEEDED(NodeToRow(el, &contentRow))) {
       RowToNode(contentRow, &contentNode);
       baseLevel = contentNode->level;
     } else {
-      if (mRootNode == content) {
+      if (mRootNode == el) {
         contentRow = -1;
         baseLevel = -1;
       } else
@@ -1180,10 +1179,13 @@ inDOMView::GetChildNodesFor(nsIDOMNode* aNode, nsCOMArray<nsIDOMNode>& aResult)
   NS_ENSURE_ARG(aNode);
   // attribute nodes
   if (mWhatToShow & nsIDOMNodeFilter::SHOW_ATTRIBUTE) {
-    nsCOMPtr<nsIDOMMozNamedAttrMap> attrs;
-    aNode->GetAttributes(getter_AddRefs(attrs));
-    if (attrs) {
-      AppendAttrsToArray(attrs, aResult);
+    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
+    if (element) {
+      nsCOMPtr<nsIDOMMozNamedAttrMap> attrs;
+      element->GetAttributes(getter_AddRefs(attrs));
+      if (attrs) {
+        AppendAttrsToArray(attrs, aResult);
+      }
     }
   }
 
