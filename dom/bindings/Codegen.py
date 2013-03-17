@@ -7897,6 +7897,63 @@ class CGExampleRoot(CGThing):
     def define(self):
         return self.root.define()
 
+
+class CGJSImplMethod(CGNativeMember):
+    def __init__(self, descriptor, method, signature, breakAfter=True):
+        CGNativeMember.__init__(self, descriptor, method,
+                                CGSpecializedMethod.makeNativeName(descriptor,
+                                                                   method),
+                                signature,
+                                descriptor.getExtendedAttributes(method),
+                                breakAfter=breakAfter,
+                                variadicIsSequence=True)
+    def define(self, cgClass):
+        return ''
+
+class CGJSImplGetter(CGNativeMember):
+    def __init__(self, descriptor, attr):
+        CGNativeMember.__init__(self, descriptor, attr,
+                                CGSpecializedGetter.makeNativeName(descriptor,
+                                                                   attr),
+                                (attr.type, []),
+                                descriptor.getExtendedAttributes(attr,
+                                                                 getter=True))
+    def define(self, cgClass):
+        return ''
+
+class CGJSImplSetter(CGNativeMember):
+    def __init__(self, descriptor, attr):
+        CGNativeMember.__init__(self, descriptor, attr,
+                                CGSpecializedSetter.makeNativeName(descriptor,
+                                                                   attr),
+                                (BuiltinTypes[IDLBuiltinType.Types.void],
+                                 [FakeArgument(attr.type, attr)]),
+                                descriptor.getExtendedAttributes(attr,
+                                                                 setter=True))
+    def define(self, cgClass):
+        return ''
+
+class CGJSImplClass(CGBindingImplClass):
+    def __init__(self, descriptor):
+        CGBindingImplClass.__init__(self, descriptor, CGJSImplMethod, CGJSImplGetter, CGJSImplSetter)
+
+        extradeclarations=(
+            "public:\n"
+            "  NS_DECL_CYCLE_COLLECTING_ISUPPORTS\n"
+            "  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(%s)\n"
+            "\n" % descriptor.name)
+
+        CGClass.__init__(self, descriptor.name,
+                         bases=[ClassBase("nsISupports /* Change nativeOwnership in the binding configuration if you don't want this */"),
+                                ClassBase("nsWrapperCache /* Change wrapperCache in the binding configuration if you don't want this */")],
+                         constructors=[ClassConstructor([],
+                                                        visibility="public")],
+                         destructor=ClassDestructor(visibility="public"),
+                         methods=self.methodDecls,
+                         decorators="MOZ_FINAL",
+                         extradeclarations=extradeclarations)
+
+
 class CGCallback(CGClass):
     def __init__(self, idlObject, descriptorProvider, baseName, methods,
                  getters=[], setters=[]):
