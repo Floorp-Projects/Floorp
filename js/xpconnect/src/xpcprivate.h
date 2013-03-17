@@ -2763,18 +2763,16 @@ public:
     static XPCWrappedNative*
     GetAndMorphWrappedNativeOfJSObject(JSContext* cx, JSObject* obj)
     {
-        JSObject *obj2 = nullptr;
-        XPCWrappedNative* wrapper =
-            GetWrappedNativeOfJSObject(cx, obj, nullptr, &obj2);
-        if (wrapper || !obj2)
-            return wrapper;
+        obj = js::UnwrapObjectChecked(obj, /* stopAtOuter = */ false);
+        if (!obj)
+            return nullptr;
+        if (!IS_WRAPPER_CLASS(js::GetObjectClass(obj)))
+            return nullptr;
 
-        NS_ASSERTION(IS_SLIM_WRAPPER(obj2),
-                     "Hmm, someone changed GetWrappedNativeOfJSObject?");
-        SLIM_LOG_WILL_MORPH(cx, obj2);
-        return MorphSlimWrapper(cx, obj2) ?
-               (XPCWrappedNative*)xpc_GetJSPrivate(obj2) :
-               nullptr;
+        if (IS_SLIM_WRAPPER_OBJECT(obj) && !MorphSlimWrapper(cx, obj))
+            return nullptr;
+        MOZ_ASSERT(IS_WN_WRAPPER(obj));
+        return XPCWrappedNative::Get(obj);
     }
 
     static nsresult
