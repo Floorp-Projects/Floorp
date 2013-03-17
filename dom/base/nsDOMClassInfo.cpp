@@ -285,8 +285,6 @@
 
 #include "nsDOMFile.h"
 #include "nsDOMFileReader.h"
-#include "ArchiveReader.h"
-#include "ArchiveRequest.h"
 
 #include "nsIDOMDesktopNotification.h"
 #include "nsIDOMNavigatorDesktopNotification.h"
@@ -376,17 +374,12 @@ using mozilla::dom::workers::ResolveWorkerClasses;
 #include "nsIAsyncScrollEventDetail.h"
 #include "nsIDOMGlobalObjectConstructor.h"
 #include "nsIDOMCanvasRenderingContext2D.h"
-#include "FileRequest.h"
 #include "LockedFile.h"
 #include "GeneratedEvents.h"
 #include "nsDebug.h"
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Likely.h"
-
-#ifdef MOZ_SYS_MSG
-#include "mozilla/dom/Activity.h"
-#endif
 
 #ifdef MOZ_TIME_MANAGER
 #include "TimeManager.h"
@@ -921,8 +914,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(FileReader, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(ArchiveRequest, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(ModalContentWindow, nsWindowSH,
                            DEFAULT_SCRIPTABLE_FLAGS |
@@ -936,9 +927,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(DeviceStorage, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(DeviceStorageCursor, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(GeoGeolocation, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1134,14 +1122,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(AsyncScrollEventDetail, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(FileRequest, nsEventTargetSH,
-                           EVENTTARGET_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(LockedFile, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
-#ifdef MOZ_SYS_MSG
-  NS_DEFINE_CLASSINFO_DATA(MozActivity, nsEventTargetSH,
-                           EVENTTARGET_SCRIPTABLE_FLAGS)
-#endif
 
 #ifdef MOZ_TIME_MANAGER
   NS_DEFINE_CLASSINFO_DATA(MozTimeManager, nsDOMGenericSH,
@@ -1169,9 +1151,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 NS_DEFINE_CONTRACT_CTOR(FileReader, NS_FILEREADER_CONTRACTID)
 NS_DEFINE_CONTRACT_CTOR(XSLTProcessor,
                         "@mozilla.org/document-transformer;1?type=xslt")
-#ifdef MOZ_SYS_MSG
-NS_DEFINE_CONTRACT_CTOR(MozActivity, NS_DOMACTIVITY_CONTRACTID)
-#endif
 
 #undef NS_DEFINE_CONTRACT_CTOR
 
@@ -1228,9 +1207,6 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MozSmsFilter, SmsFilter::NewSmsFilter)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(FileReader, FileReaderCtor)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(XSLTProcessor, XSLTProcessorCtor)
-#ifdef MOZ_SYS_MSG
-  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MozActivity, MozActivityCtor)
-#endif
 };
 #undef NS_DEFINE_CONSTRUCTOR_FUNC_DATA
 #undef NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA
@@ -2452,11 +2428,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIInterfaceRequestor)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(ArchiveRequest, nsIDOMArchiveRequest)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMArchiveRequest)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMRequest)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ModalContentWindow, nsIDOMWindow)
     DOM_CLASSINFO_WINDOW_MAP_ENTRIES(nsGlobalWindow::HasIndexedDBSupport())
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMModalContentWindow)
@@ -2475,12 +2446,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(DeviceStorage, nsIDOMDeviceStorage)
      DOM_CLASSINFO_MAP_ENTRY(nsIDOMDeviceStorage)
      DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(DeviceStorageCursor, nsIDOMDOMCursor)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMCursor)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMRequest)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(GeoGeolocation, nsIDOMGeoGeolocation)
@@ -2832,23 +2797,9 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIAsyncScrollEventDetail)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(FileRequest, nsIDOMFileRequest)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMFileRequest)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMRequest)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(LockedFile, nsIDOMLockedFile)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMLockedFile)
   DOM_CLASSINFO_MAP_END
-
-#ifdef MOZ_SYS_MSG
-  DOM_CLASSINFO_MAP_BEGIN(MozActivity, nsIDOMMozActivity)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozActivity)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMRequest)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
-#endif
 
 #ifdef MOZ_TIME_MANAGER
   DOM_CLASSINFO_MAP_BEGIN(MozTimeManager, nsIDOMMozTimeManager)
@@ -4916,13 +4867,6 @@ ConstructorEnabled(const nsGlobalNameStruct *aStruct, nsGlobalWindow *aWin)
   // Don't expose CSSSupportsRule unless @supports processing is enabled.
   if (aStruct->mDOMClassInfoID == eDOMClassInfo_CSSSupportsRule_id) {
     if (!CSSSupportsRule::PrefEnabled()) {
-      return false;
-    }
-  }
-
-  // Don't expose ArchiveRequest unless user has explicitly enabled it
-  if (aStruct->mDOMClassInfoID == eDOMClassInfo_ArchiveRequest_id) {
-    if (!dom::file::ArchiveReader::PrefEnabled()) {
       return false;
     }
   }
