@@ -29,6 +29,13 @@ FilteringWrapper<Base, Policy>::~FilteringWrapper()
 {
 }
 
+template <typename Base, typename Policy>
+bool
+FilteringWrapper<Base, Policy>::isSafeToUnwrap()
+{
+    return Policy::isSafeToUnwrap();
+}
+
 template <typename Policy>
 static bool
 Filter(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
