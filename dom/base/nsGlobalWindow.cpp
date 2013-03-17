@@ -2668,17 +2668,16 @@ nsGlobalWindow::GetIsTabModalPromptAllowed()
   return allowTabModal;
 }
 
-nsIDOMEventTarget*
+EventTarget*
 nsGlobalWindow::GetTargetForDOMEvent()
 {
-  return static_cast<nsIDOMEventTarget*>(GetOuterWindowInternal());
+  return GetOuterWindowInternal();
 }
 
-nsIDOMEventTarget*
+EventTarget*
 nsGlobalWindow::GetTargetForEventTargetChain()
 {
-  return IsInnerWindow() ?
-    this : static_cast<nsIDOMEventTarget*>(GetCurrentInnerWindowInternal());
+  return IsInnerWindow() ? this : GetCurrentInnerWindowInternal();
 }
 
 nsresult

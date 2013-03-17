@@ -178,10 +178,10 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsDOMEventTargetHelper,
   NS_IMETHOD DispatchEvent(nsIDOMEvent *evt, bool *_retval) { \
     return _to DispatchEvent(evt, _retval); \
   } \
-  virtual nsIDOMEventTarget * GetTargetForDOMEvent(void) { \
+  virtual mozilla::dom::EventTarget* GetTargetForDOMEvent() { \
     return _to GetTargetForDOMEvent(); \
   } \
-  virtual nsIDOMEventTarget * GetTargetForEventTargetChain(void) { \
+  virtual mozilla::dom::EventTarget* GetTargetForEventTargetChain() { \
     return _to GetTargetForEventTargetChain(); \
   } \
   virtual nsresult WillHandleEvent(nsEventChainPostVisitor & aVisitor) { \
