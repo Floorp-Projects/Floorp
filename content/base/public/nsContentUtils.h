@@ -18,105 +18,105 @@
 #include <ieeefp.h>
 #endif
 
-#include "nsAString.h"
-#include "nsNodeInfoManager.h"
-#include "nsIXPCScriptable.h"
-#include "nsDataHashtable.h"
-#include "nsIDOMEvent.h"
-#include "nsTArray.h"
-#include "nsReadableUtils.h"
-#include "nsINode.h"
-#include "nsIDOMNode.h"
-#include "nsHtml5StringParser.h"
-#include "nsIDocument.h"
-#include "nsContentSink.h"
-#include "nsMathUtils.h"
-#include "nsThreadUtils.h"
-#include "nsIContent.h"
-#include "nsCharSeparatedTokenizer.h"
-#include "nsContentList.h"
-
+#include "mozilla/Assertions.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Assertions.h"
+#include "nsAString.h"
+#include "nsCharSeparatedTokenizer.h"
+#include "nsContentList.h"
+#include "nsContentSink.h"
+#include "nsDataHashtable.h"
+#include "nsHtml5StringParser.h"
+#include "nsIContent.h"
+#include "nsIDocument.h"
+#include "nsIDOMEvent.h"
+#include "nsIDOMNode.h"
+#include "nsINode.h"
+#include "nsIXPCScriptable.h"
+#include "nsMathUtils.h"
+#include "nsNodeInfoManager.h"
+#include "nsReadableUtils.h"
+#include "nsTArray.h"
+#include "nsThreadUtils.h"
 
-struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
-
-class nsIDOMScriptObjectFactory;
-class nsIXPConnect;
-class nsIContent;
-class nsIDOMKeyEvent;
-class nsIDocument;
-class nsIDocumentObserver;
-class nsIDocShell;
-class nsINameSpaceManager;
-class nsIFragmentContentSink;
-class nsIScriptGlobalObject;
-class nsIScriptSecurityManager;
-class nsTextFragment;
-class nsIJSContextStack;
-class nsIThreadJSContextStack;
-class nsIParser;
-class nsIParserService;
-class nsIIOService;
-class nsIURI;
+class imgICache;
 class imgIContainer;
 class imgINotificationObserver;
-class imgRequestProxy;
 class imgLoader;
-class imgICache;
-class nsIImageLoadingContent;
-class nsIDOMHTMLFormElement;
-class nsIDOMDocument;
-class nsIConsoleService;
-class nsIStringBundleService;
-class nsIStringBundle;
-class nsIContentPolicy;
-class nsILineBreaker;
-class nsIWordBreaker;
-class nsIJSRuntimeService;
+class imgRequestProxy;
+class nsAutoScriptBlockerSuppressNodeRemoved;
 class nsEventListenerManager;
-class nsIScriptContext;
-class nsIRunnable;
+class nsIChannel;
+class nsIConsoleService;
+class nsIContent;
+class nsIContentPolicy;
+class nsIDocShell;
+class nsIDocument;
+class nsIDocumentLoaderFactory;
+class nsIDocumentObserver;
+class nsIDOMDocument;
+class nsIDOMHTMLFormElement;
+class nsIDOMHTMLInputElement;
+class nsIDOMKeyEvent;
+class nsIDOMScriptObjectFactory;
+class nsIDragSession;
+class nsIFragmentContentSink;
+class nsIImageLoadingContent;
 class nsIInterfaceRequestor;
+class nsIIOService;
+class nsIJSContextStack;
+class nsIJSRuntimeService;
+class nsILineBreaker;
+class nsIMIMEHeaderParam;
+class nsINameSpaceManager;
 class nsINodeInfo;
+class nsIObserver;
+class nsIParser;
+class nsIParserService;
+class nsIPresShell;
+class nsIRunnable;
+class nsIScriptContext;
+class nsIScriptGlobalObject;
+class nsIScriptSecurityManager;
+class nsIStringBundle;
+class nsIStringBundleService;
+class nsIThreadJSContextStack;
+class nsIURI;
+class nsIWidget;
+class nsIWordBreaker;
+class nsIXPConnect;
+class nsIXPConnectJSObjectHolder;
+class nsPIDOMWindow;
+class nsPresContext;
+class nsTextFragment;
+class nsViewportInfo;
+
+struct JSRuntime;
+struct nsIntMargin;
+struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
+
 template<class E> class nsCOMArray;
 template<class K, class V> class nsRefPtrHashtable;
-struct JSRuntime;
-class nsIWidget;
-class nsIDragSession;
-class nsIPresShell;
-class nsIXPConnectJSObjectHolder;
-#ifdef IBMBIDI
-class nsIBidiKeyboard;
-#endif
-class nsIMIMEHeaderParam;
-class nsIObserver;
-class nsPresContext;
-class nsIChannel;
-class nsAutoScriptBlockerSuppressNodeRemoved;
-struct nsIntMargin;
-class nsPIDOMWindow;
-class nsIDocumentLoaderFactory;
-class nsIDOMHTMLInputElement;
-
-class nsViewportInfo;
 
 namespace mozilla {
 
 class Selection;
-
-namespace layers {
-  class LayerManager;
-} // namespace layers
 
 namespace dom {
 class DocumentFragment;
 class Element;
 } // namespace dom
 
+namespace layers {
+class LayerManager;
+} // namespace layers
+
 } // namespace mozilla
+
+#ifdef IBMBIDI
+class nsIBidiKeyboard;
+#endif
 
 extern const char kLoadAsData[];
 
