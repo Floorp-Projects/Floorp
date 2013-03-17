@@ -98,7 +98,6 @@ abstract public class BrowserApp extends GeckoApp
     private static final int FEEDBACK_LAUNCH_COUNT = 15;
 
     // Variables used for scrolling the toolbar on/off the page.
-    private static final int TOOLBAR_ONLOAD_HIDE_DELAY = 2000;
     private static final float TOOLBAR_MOVEMENT_THRESHOLD = 0.3f;
     private boolean mDynamicToolbarEnabled = false;
     private View mToolbarSpacer = null;
@@ -122,8 +121,8 @@ abstract public class BrowserApp extends GeckoApp
                         showAboutHome();
 
                         if (mDynamicToolbarEnabled) {
-                            // Show the toolbar immediately.
-                            mBrowserToolbar.animateVisibility(true, 0);
+                            // Show the toolbar.
+                            mBrowserToolbar.animateVisibility(true);
                         }
                     } else {
                         hideAboutHome();
@@ -152,21 +151,12 @@ abstract public class BrowserApp extends GeckoApp
 
                     if (mDynamicToolbarEnabled) {
                         // Show the toolbar.
-                        mBrowserToolbar.animateVisibility(true, 0);
+                        mBrowserToolbar.animateVisibility(true);
                     }
                 }
                 break;
             case LOAD_ERROR:
             case STOP:
-                if (Tabs.getInstance().isSelectedTab(tab)) {
-                    if (!mAboutHomeShowing) {
-                        if (mDynamicToolbarEnabled) {
-                            // Hide the toolbar after a delay.
-                            mBrowserToolbar.animateVisibility(false, TOOLBAR_ONLOAD_HIDE_DELAY);
-                        }
-                    }
-                }
-                // fall through
             case MENU_UPDATED:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     invalidateOptionsMenu();
@@ -226,7 +216,7 @@ abstract public class BrowserApp extends GeckoApp
             // Animate the toolbar to the fully on/off position.
             mBrowserToolbar.animateVisibility(
                 toolbarView.getScrollY() > toolbarView.getHeight() / 2 ?
-                    false : true, 0);
+                    false : true);
         }
 
         // If more than one pointer has been tracked, or we've locked the
@@ -243,72 +233,69 @@ abstract public class BrowserApp extends GeckoApp
             return super.onInterceptTouchEvent(view, event);
         }
 
-        // Don't bother doing anything with the events if we're loading -
-        // the toolbar will be permanently visible in this case.
+        // Handle scrolling the toolbar
         float eventX = event.getX();
         float eventY = event.getY();
-        if (Tabs.getInstance().getSelectedTab().getState() != Tab.STATE_LOADING) {
-            int toolbarHeight = toolbarView.getHeight();
-            float deltaX = mLastTouchX - eventX;
-            float deltaY = mLastTouchY - eventY;
-            int toolbarY = toolbarView.getScrollY();
+        float deltaX = mLastTouchX - eventX;
+        float deltaY = mLastTouchY - eventY;
+        int toolbarY = toolbarView.getScrollY();
+        int toolbarHeight = toolbarView.getHeight();
 
-            // Check if we've passed the toolbar movement threshold
-            if (!mToolbarThresholdPassed) {
-                float threshold = toolbarHeight * TOOLBAR_MOVEMENT_THRESHOLD;
-                if (Math.abs(deltaY) > threshold) {
-                    mToolbarThresholdPassed = true;
-                    // If we're scrolling downwards and the toolbar was hidden
-                    // when we started scrolling, lock it.
-                    if (deltaY > 0 && toolbarY == toolbarHeight) {
-                        mToolbarLocked = true;
-                        return super.onInterceptTouchEvent(view, event);
-                    }
-                } else if (Math.abs(deltaX) > threshold) {
-                    // Any horizontal scrolling past the threshold should
-                    // initiate toolbar lock.
+        // Check if we've passed the toolbar movement threshold
+        if (!mToolbarThresholdPassed) {
+            float threshold = toolbarHeight * TOOLBAR_MOVEMENT_THRESHOLD;
+            if (Math.abs(deltaY) > threshold) {
+                mToolbarThresholdPassed = true;
+                // If we're scrolling downwards and the toolbar was hidden
+                // when we started scrolling, lock it.
+                if (deltaY > 0 && toolbarY == toolbarHeight) {
                     mToolbarLocked = true;
-                    mToolbarThresholdPassed = true;
-                    return super.onInterceptTouchEvent(view, event);
-                } else {
-                    // The threshold hasn't been passed. We don't want to update
-                    // the stored last touch position, so return here.
                     return super.onInterceptTouchEvent(view, event);
                 }
-            } else if (action == MotionEvent.ACTION_MOVE) {
-                // Cancel any ongoing animation before we start moving the toolbar.
-                mBrowserToolbar.cancelVisibilityAnimation();
-
-                // Move the toolbar by the amount the touch event has moved,
-                // clamping to fully visible or fully hidden.
-
-                // Don't let the toolbar scroll off the top if it's just exposing
-                // overscroll area.
-                ImmutableViewportMetrics metrics =
-                    mLayerView.getLayerClient().getViewportMetrics();
-                float toolbarMaxY = Math.min(toolbarHeight,
-                    Math.max(0, toolbarHeight - (metrics.pageRectTop -
-                                                 metrics.viewportRectTop)));
-
-                float newToolbarYf = Math.max(0, Math.min(toolbarMaxY,
-                    toolbarY + deltaY + mToolbarSubpixelAccumulation));
-                int newToolbarY = Math.round(newToolbarYf);
-                mToolbarSubpixelAccumulation = (newToolbarYf - newToolbarY);
-
-                toolbarView.scrollTo(0, newToolbarY);
-
-                // Reset tracking when the toolbar is fully visible or hidden.
-                if (newToolbarY == 0 || newToolbarY == toolbarHeight) {
-                    mLastTouchY = eventY;
-                }
-            } else if (action == MotionEvent.ACTION_UP ||
-                       action == MotionEvent.ACTION_CANCEL) {
-                // Animate the toolbar to fully on or off, depending on how much
-                // of it is hidden and the current swipe velocity.
-                mBrowserToolbar.animateVisibilityWithVelocityBias(
-                    toolbarY > toolbarHeight / 2 ? false : true,
-                    mLayerView.getPanZoomController().getVelocityVector().y);
+            } else if (Math.abs(deltaX) > threshold) {
+                // Any horizontal scrolling past the threshold should
+                // initiate toolbar lock.
+                mToolbarLocked = true;
+                mToolbarThresholdPassed = true;
+                return super.onInterceptTouchEvent(view, event);
+            } else {
+                // The threshold hasn't been passed. We don't want to update
+                // the stored last touch position, so return here.
+                return super.onInterceptTouchEvent(view, event);
             }
+        } else if (action == MotionEvent.ACTION_MOVE) {
+            // Cancel any ongoing animation before we start moving the toolbar.
+            mBrowserToolbar.cancelVisibilityAnimation();
+
+            // Move the toolbar by the amount the touch event has moved,
+            // clamping to fully visible or fully hidden.
+
+            // Don't let the toolbar scroll off the top if it's just exposing
+            // overscroll area.
+            ImmutableViewportMetrics metrics =
+                mLayerView.getLayerClient().getViewportMetrics();
+            float toolbarMaxY = Math.min(toolbarHeight,
+                Math.max(0, toolbarHeight - (metrics.pageRectTop -
+                                             metrics.viewportRectTop)));
+
+            float newToolbarYf = Math.max(0, Math.min(toolbarMaxY,
+                toolbarY + deltaY + mToolbarSubpixelAccumulation));
+            int newToolbarY = Math.round(newToolbarYf);
+            mToolbarSubpixelAccumulation = (newToolbarYf - newToolbarY);
+
+            toolbarView.scrollTo(0, newToolbarY);
+
+            // Reset tracking when the toolbar is fully visible or hidden.
+            if (newToolbarY == 0 || newToolbarY == toolbarHeight) {
+                mLastTouchY = eventY;
+            }
+        } else if (action == MotionEvent.ACTION_UP ||
+                   action == MotionEvent.ACTION_CANCEL) {
+            // Animate the toolbar to fully on or off, depending on how much
+            // of it is hidden and the current swipe velocity.
+            mBrowserToolbar.animateVisibilityWithVelocityBias(
+                toolbarY > toolbarHeight / 2 ? false : true,
+                mLayerView.getPanZoomController().getVelocityVector().y);
         }
 
         // Update the last recorded position.
@@ -335,7 +322,7 @@ abstract public class BrowserApp extends GeckoApp
                     if (mBrowserToolbar.isVisible()) {
                         if (mDynamicToolbarEnabled &&
                             Boolean.FALSE.equals(mAboutHomeShowing)) {
-                            mBrowserToolbar.animateVisibility(false, 0);
+                            mBrowserToolbar.animateVisibility(false);
                             mLayerView.requestFocus();
                         } else {
                             // Just focus the address bar when about:home is visible
@@ -343,7 +330,7 @@ abstract public class BrowserApp extends GeckoApp
                             mBrowserToolbar.requestFocusFromTouch();
                         }
                     } else {
-                        mBrowserToolbar.animateVisibility(true, 0);
+                        mBrowserToolbar.animateVisibility(true);
                         mBrowserToolbar.requestFocusFromTouch();
                     }
                     return true;
