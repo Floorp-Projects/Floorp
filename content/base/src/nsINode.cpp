@@ -2404,14 +2404,6 @@ nsINode::GetAttributes()
   return AsElement()->Attributes();
 }
 
-nsresult
-nsINode::GetAttributes(nsIDOMMozNamedAttrMap** aAttributes)
-{
-  nsRefPtr<nsDOMAttributeMap> map = GetAttributes();
-  map.forget(aAttributes);
-  return NS_OK;
-}
-
 bool
 EventTarget::DispatchEvent(nsDOMEvent& aEvent,
                            ErrorResult& aRv)

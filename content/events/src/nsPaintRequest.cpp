@@ -33,7 +33,7 @@ nsPaintRequest::WrapObject(JSContext* aCx, JSObject* aScope)
 already_AddRefed<nsClientRect>
 nsPaintRequest::ClientRect()
 {
-  nsRefPtr<nsClientRect> clientRect = new nsClientRect();
+  nsRefPtr<nsClientRect> clientRect = new nsClientRect(this);
   clientRect->SetLayoutRect(mRequest.mRect);
   return clientRect.forget();
 }

@@ -268,7 +268,7 @@ protected:
 
   static void DocumentWriteTerminationFunc(nsISupports *aRef);
 
-  void GetDomainURI(nsIURI **uri);
+  already_AddRefed<nsIURI> GetDomainURI();
 
   nsresult WriteCommon(JSContext *cx, const nsAString& aText,
                        bool aNewlineTerminate);
