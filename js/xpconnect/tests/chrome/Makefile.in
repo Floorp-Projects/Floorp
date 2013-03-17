@@ -29,6 +29,7 @@ MOCHITEST_CHROME_FILES = \
 		file_bug618176.xul \
 		test_bug654370.xul \
 		test_bug658560.xul \
+		test_bug658909.xul \
 		test_bug664689.xul \
 		test_bug679861.xul \
 		test_bug706301.xul \
