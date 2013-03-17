@@ -39,6 +39,8 @@ class WrapperFactory {
         return !js::UnwrapObjectChecked(obj);
     }
 
+    static bool IsCOW(JSObject *wrapper);
+
     static JSObject *GetXrayWaiver(JSObject *obj);
     static JSObject *CreateXrayWaiver(JSContext *cx, JSObject *obj);
     static JSObject *WaiveXray(JSContext *cx, JSObject *obj);
