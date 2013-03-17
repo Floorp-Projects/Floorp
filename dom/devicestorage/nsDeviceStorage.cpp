@@ -8,7 +8,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/DeviceStorageCursorBinding.h"
 #include "mozilla/dom/devicestorage/PDeviceStorageRequestChild.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/dom/PBrowserChild.h"
@@ -1171,12 +1170,6 @@ nsDOMDeviceStorageCursor::Allow()
   nsCOMPtr<InitCursorEvent> event = new InitCursorEvent(this, mFile);
   target->Dispatch(event, NS_DISPATCH_NORMAL);
   return NS_OK;
-}
-
-/* virtual */ JSObject*
-nsDOMDeviceStorageCursor::WrapObject(JSContext* aCx, JSObject* aScope)
-{
-  return DeviceStorageCursorBinding::Wrap(aCx, aScope, this);
 }
 
 void
