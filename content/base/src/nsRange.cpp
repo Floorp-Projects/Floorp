@@ -2938,12 +2938,13 @@ nsRange::GetBoundingClientRect(nsIDOMClientRect** aResult)
   return NS_OK;
 }
 
-already_AddRefed<nsIDOMClientRect>
+already_AddRefed<nsClientRect>
 nsRange::GetBoundingClientRect()
 {
-  nsRefPtr<nsClientRect> rect = new nsClientRect();
-  if (!mStartParent)
+  nsRefPtr<nsClientRect> rect = new nsClientRect(ToSupports(this));
+  if (!mStartParent) {
     return rect.forget();
+  }
 
   nsLayoutUtils::RectAccumulator accumulator;
   CollectClientRects(&accumulator, this, mStartParent, mStartOffset, 

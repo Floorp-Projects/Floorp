@@ -27,6 +27,7 @@ webidl_files = \
   CDATASection.webidl \
   CFStateChangeEvent.webidl \
   CharacterData.webidl \
+  ClientRect.webidl \
   ClientRectList.webidl \
   CommandEvent.webidl \
   Comment.webidl \
