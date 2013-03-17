@@ -664,19 +664,17 @@ MarkWrappedNative(JSTracer *trc, JSObject *obj)
     if (clazz->flags & JSCLASS_DOM_GLOBAL) {
         mozilla::dom::TraceProtoAndIfaceCache(trc, obj);
     }
+    MOZ_ASSERT(IS_WRAPPER_CLASS(clazz));
 
-    JSObject *obj2;
-
-    // Pass null for the first JSContext* parameter  to skip any security
-    // checks and to avoid potential state change there.
-    XPCWrappedNative* wrapper =
-        XPCWrappedNative::GetWrappedNativeOfJSObject(nullptr, obj, nullptr, &obj2);
-
-    if (wrapper) {
-        if (wrapper->IsValid())
-            wrapper->TraceInside(trc);
-    } else if (obj2) {
-        TraceInsideSlimWrapper(trc, obj2);
+    if (IS_WN_WRAPPER_OBJECT(obj)) {
+        XPCWrappedNative *wrapper = XPCWrappedNative::Get(obj);
+        if (wrapper) {
+            if (wrapper->IsValid())
+                wrapper->TraceInside(trc);
+        }
+    } else {
+        MOZ_ASSERT(IS_SLIM_WRAPPER_OBJECT(obj));
+        TraceInsideSlimWrapper(trc, obj);
     }
 }
 
