@@ -27,6 +27,10 @@
     if (navigator.platform.startsWith("Linux")) {
       SimpleTest.expectAssertions(1);
     }
+    if (navigator.oscpu.startsWith("Windows NT 6.1") || navigator.oscpu.startsWith("Windows NT 6.2")) {
+      todo(false, "don't leak");
+      return;
+    }
     ////////////////////////////////////////////////////////////////////////////
     // Helpers
 
