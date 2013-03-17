@@ -13,6 +13,7 @@
 #include "nsPoint.h"
 #include "nsRect.h"
 #include "nsString.h"
+#include "nsTArray.h"
 #include "mozilla/gfx/Rect.h"
 
 //#define FORCE_ALOG 1

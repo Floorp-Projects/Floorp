@@ -13,6 +13,7 @@
 #include "nsIMutableArray.h"
 #include "nsIUrlClassifierPrefixSet.h"
 #include "nsIMemoryReporter.h"
+#include "nsTArray.h"
 #include "nsToolkitCompsCID.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
