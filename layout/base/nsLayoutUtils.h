@@ -776,10 +776,9 @@ public:
 
   struct RectListBuilder : public RectCallback {
     nsClientRectList* mRectList;
-    nsresult          mRV;
 
     RectListBuilder(nsClientRectList* aList);
-     virtual void AddRect(const nsRect& aRect);
+    virtual void AddRect(const nsRect& aRect);
   };
 
   static nsIFrame* GetContainingBlockForClientRect(nsIFrame* aFrame);
