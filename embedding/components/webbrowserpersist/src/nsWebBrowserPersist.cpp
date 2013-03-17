@@ -58,6 +58,7 @@
 #include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLAreaElement.h"
+#include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLScriptElement.h"
 #include "nsIDOMHTMLLinkElement.h"
