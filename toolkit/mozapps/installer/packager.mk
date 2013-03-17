@@ -70,7 +70,6 @@ JSSHELL_BINS  = \
   $(DIST)/bin/$(DLL_PREFIX)mozglue$(DLL_SUFFIX) \
   $(NULL)
 ifndef MOZ_NATIVE_NSPR
-JSSHELL_BINS += $(DIST)/bin/$(DLL_PREFIX)nspr4$(DLL_SUFFIX)
 ifeq ($(OS_ARCH),WINNT)
 ifeq ($(_MSC_VER),1400)
 JSSHELL_BINS += $(DIST)/bin/Microsoft.VC80.CRT.manifest
@@ -87,10 +86,15 @@ ifeq ($(_MSC_VER),1700)
 JSSHELL_BINS += $(DIST)/bin/msvcr110.dll
 endif
 else
+ifdef MOZ_FOLD_LIBS
+JSSHELL_BINS += $(DIST)/bin/$(DLL_PREFIX)nss3$(DLL_SUFFIX)
+else
 JSSHELL_BINS += \
+  $(DIST)/bin/$(DLL_PREFIX)nspr4$(DLL_SUFFIX) \
   $(DIST)/bin/$(DLL_PREFIX)plds4$(DLL_SUFFIX) \
   $(DIST)/bin/$(DLL_PREFIX)plc4$(DLL_SUFFIX) \
   $(NULL)
+endif # MOZ_FOLD_LIBS
 endif
 endif # MOZ_NATIVE_NSPR
 MAKE_JSSHELL  = $(ZIP) -9j $(PKG_JSSHELL) $(JSSHELL_BINS)
@@ -514,6 +518,10 @@ libs:: make-package
 endif
 
 DEFINES += -DDLL_PREFIX=$(DLL_PREFIX) -DDLL_SUFFIX=$(DLL_SUFFIX) -DBIN_SUFFIX=$(BIN_SUFFIX)
+
+ifdef MOZ_FOLD_LIBS
+DEFINES += -DMOZ_FOLD_LIBS=1
+endif
 
 GARBAGE		+= $(DIST)/$(PACKAGE) $(PACKAGE)
 
