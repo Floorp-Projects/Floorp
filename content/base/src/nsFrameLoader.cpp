@@ -448,30 +448,27 @@ nsFrameLoader::ReallyStartLoadingInternal()
   mDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
   NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
-  // Is this an <iframe> with a sandbox attribute or a parent which is
-  // sandboxed ?
-  HTMLIFrameElement* iframe =
-    HTMLIFrameElement::FromContent(mOwnerContent);
-
+  // Does this frame have a parent which is already sandboxed or is this
+  // an <iframe> with a sandbox attribute?
   uint32_t sandboxFlags = 0;
+  uint32_t parentSandboxFlags = mOwnerContent->OwnerDoc()->GetSandboxFlags();
+
+  HTMLIFrameElement* iframe = HTMLIFrameElement::FromContent(mOwnerContent);
 
   if (iframe) {
     sandboxFlags = iframe->GetSandboxFlags();
-
-    uint32_t parentSandboxFlags = iframe->OwnerDoc()->GetSandboxFlags();
-
-    if (sandboxFlags || parentSandboxFlags) {
-      // The child can only add restrictions, not remove them.
-      sandboxFlags |= parentSandboxFlags;
-
-      mDocShell->SetSandboxFlags(sandboxFlags);
-    }
   }
 
-  // If this is an <iframe> and it's sandboxed with respect to origin
-  // we will set it up with a null principal later in nsDocShell::DoURILoad.
+  if (sandboxFlags || parentSandboxFlags) {
+    // The child can only add restrictions, never remove them.
+    sandboxFlags |= parentSandboxFlags;
+    mDocShell->SetSandboxFlags(sandboxFlags);
+  }
+
+  // If this frame is sandboxed with respect to origin we will set it up with
+  // a null principal later in nsDocShell::DoURILoad.
   // We do it there to correctly sandbox content that was loaded into
-  // the iframe via other methods than the src attribute.
+  // the frame via other methods than the src attribute.
   // We'll use our principal, not that of the document loaded inside us.  This
   // is very important; needed to prevent XSS attacks on documents loaded in
   // subframes!

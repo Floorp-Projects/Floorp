@@ -175,6 +175,4 @@ protected:
     0x11d5,                                  \
     {0x90, 0xef, 0x0, 0x10, 0xa4, 0xe7, 0x3d, 0x9a}}
 
-#define NS_VARIANT_CLASSNAME "Variant"
-
 #endif // nsVariant_h

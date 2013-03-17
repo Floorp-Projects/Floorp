@@ -18,6 +18,10 @@ const RIL_MMSSERVICE_CID = Components.ID("{217ddd76-75db-4210-955d-8806cd8d87f9}
 
 const DEBUG = false;
 
+const kMmsSendingObserverTopic           = "mms-sending";
+const kMmsSentObserverTopic              = "mms-sent";
+const kMmsFailedObserverTopic            = "mms-failed";
+
 const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
 const kXpcomShutdownObserverTopic        = "xpcom-shutdown";
 const kPrefenceChangedObserverTopic      = "nsPref:changed";
@@ -65,6 +69,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gRIL",
 XPCOMUtils.defineLazyServiceGetter(this, "gMobileMessageDatabaseService",
                                    "@mozilla.org/mobilemessage/rilmobilemessagedatabaseservice;1",
                                    "nsIRilMobileMessageDatabaseService");
+
+XPCOMUtils.defineLazyServiceGetter(this, "gMobileMessageService",
+                                   "@mozilla.org/mobilemessage/mobilemessageservice;1",
+                                   "nsIMobileMessageService");
 
 XPCOMUtils.defineLazyGetter(this, "MMS", function () {
   let MMS = {};
@@ -1094,15 +1102,174 @@ MmsService.prototype = {
    *        The MMS message object.
    */
   handleDeliveryIndication: function handleDeliveryIndication(msg) {
-    // TODO: bug 811252 - implement MMS database
+    // TODO Bug 850140 Two things we need to do in the future:
+    //
+    // 1. Use gMobileMessageDatabaseService.setMessageDelivery() to reset
+    // the delivery status to "success" or "error" for a specific receiver.
+    //
+    // 2. Fire "mms-delivery-success" or "mms-delivery-error" observer
+    // topics to MobileMessageManager.
     let messageId = msg.headers["message-id"];
     debug("handleDeliveryIndication: got delivery report for " + messageId);
   },
 
+  createSavableFromParams: function createSavableFromParams(aParams) {
+    debug("createSavableFromParams: aParams: " + JSON.stringify(aParams));
+    let message = {};
+
+    // |message.headers|
+    let headers = message["headers"] = {};
+    let receivers = aParams.receivers;
+    if (receivers.length != 0) {
+      let headersTo = headers["to"] = [];
+      for (let i = 0; i < receivers.length; i++) {
+        headersTo.push({"address": receivers[i], "type": "PLMN"});
+      }
+    }
+    if (aParams.subject) {
+      headers["subject"] = aParams.subject;
+    }
+
+    // |message.parts|
+    let attachments = aParams.attachments;
+    if (attachments.length != 0 || aParams.smil) {
+      let parts = message["parts"] = [];
+
+      // Set the SMIL part if needed.
+      if (aParams.smil) {
+        let part = {
+          "headers": {
+            "content-type": {
+              "media": "application/smil",
+            },
+          },
+          "content": aParams.smil
+        };
+        parts.push(part);
+      }
+
+      // Set other parts for attachments if needed.
+      for (let i = 0; i < attachments.length; i++) {
+        let attachment = attachments[i];
+        let content = attachment.content;
+        let part = {
+          "headers": {
+            "content-type": {
+              "media": content.type
+            },
+            "content-length": content.size,
+            "content-location": attachment.location,
+            "content-id": attachment.id
+          },
+          "content": content
+        };
+        parts.push(part);
+      }
+    }
+
+    // The following attributes are needed for saving message into DB.
+    message["type"] = "mms";
+    message["deliveryStatusRequested"] = true;
+    message["timestamp"] = Date.now();
+    message["receivers"] = receivers;
+
+    debug("createSavableFromParams: message: " + JSON.stringify(message));
+    return message;
+  },
+
+  createMmsMessageFromRecord: function createMmsMessageFromRecord(aRecord) {
+    debug("createMmsMessageFromRecord: aRecord: " + JSON.stringify(aRecord));
+
+    let headers = aRecord["headers"];
+    let subject = headers["subject"];
+    if (subject == undefined) {
+      subject = "";
+    }
+    let smil = "";
+    let attachments = [];
+    let parts = aRecord.parts;
+    if (parts) {
+      for (let i = 0; i < parts.length; i++) {
+        let part = parts[i];
+        let partHeaders = part["headers"];
+        let partContent = part["content"];
+        // Don't need to make the SMIL part if it's present.
+        if (partHeaders["content-type"]["media"] == "application/smil") {
+          smil = part.content;
+          continue;
+        }
+        attachments.push({
+          "id": partHeaders["content-id"],
+          "location": partHeaders["content-location"],
+          "content": partContent
+        });
+      }
+    }
+
+    debug("createMmsMessageFromRecord: attachments: " + JSON.stringify(attachments));
+    return gMobileMessageService.createMmsMessage(aRecord.id,
+                                                  aRecord.delivery,
+                                                  aRecord.deliveryStatus,
+                                                  aRecord.sender,
+                                                  aRecord.receivers,
+                                                  aRecord.timestamp,
+                                                  aRecord.read,
+                                                  subject,
+                                                  smil,
+                                                  attachments);
+  },
+
   // nsIMmsService
 
-  hasSupport: function hasSupport() {
-    return true;
+  send: function send(aParams, aRequest) {
+    debug("send: aParams: " + JSON.stringify(aParams));
+    if (aParams.receivers.length == 0) {
+      aRequest.notifySendMmsMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+      return;
+    }
+
+    let self = this;
+
+    let sendTransactionCb = function sendTransactionCb(aIsSentSuccess, aMmsMessage) {
+      debug("sendTransactionCb: aIsSentSuccess: " + aIsSentSuccess);
+      gMobileMessageDatabaseService
+        .setMessageDelivery(aMmsMessage.id,
+                            null,
+                            aIsSentSuccess ? "sent" : "error",
+                            aIsSentSuccess ? null : "error",
+                            function notifySetDeliveryResult(setDeliveryRv, record) {
+        debug("Marking the delivery state/staus is done. Notify sent or failed.");
+        if (!aIsSentSuccess) {
+          aRequest.notifySendMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+          Services.obs.notifyObservers(aMmsMessage, kMmsFailedObserverTopic, null);
+          return;
+        }
+        aRequest.notifyMessageSent(aMmsMessage);
+        Services.obs.notifyObservers(aMmsMessage, kMmsSentObserverTopic, null);
+      });
+    };
+
+    let savableMessage = this.createSavableFromParams(aParams);
+    gMobileMessageDatabaseService
+      .saveSendingMessage(savableMessage,
+                          function notifySendingResult(sendingRv, sendingRecord) {
+      debug("Saving sending message is done. Start to send.");
+      let mmsMessage = self.createMmsMessageFromRecord(sendingRecord);
+      Services.obs.notifyObservers(mmsMessage, kMmsSendingObserverTopic, null);
+      let sendTransaction;
+      try {
+        sendTransaction = new SendTransaction(sendingRecord);
+      } catch (e) {
+        debug("Fail to create a SendTransaction instance.");
+        sendTransactionCb(false, mmsMessage);
+        return;
+      }
+      sendTransaction.run(function callback(aMmsStatus, aMsg) {
+        let isSentSuccess = (aMmsStatus == MMS.MMS_PDU_ERROR_OK);
+        debug("The returned status of sendTransaction.run(): " + aMmsStatus);
+        sendTransactionCb(isSentSuccess, mmsMessage);
+      });
+    });
   },
 
   // nsIWapPushApplication

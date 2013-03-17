@@ -30,6 +30,39 @@ let WeaveGlue = {
     }
   },
 
+#ifdef XP_WIN
+  _securelySetupFromMetro: function() {
+    let metroUtils = Cc["@mozilla.org/windows-metroutils;1"].
+                     createInstance(Ci.nsIWinMetroUtils);
+    var email = {}, password = {}, key = {};
+    try {
+      metroUtils.loadSyncInfo(email, password, key);
+    } catch (ex) {
+        return false;
+    }
+
+    let server = Weave.Service.serverURL;
+    let defaultPrefs = Services.prefs.getDefaultBranch(null);
+    if (server == defaultPrefs.getCharPref("services.sync.serverURL"))
+      server = "";
+
+    this.setupData = {
+      account: email.value,
+      password: password.value,
+      synckey: key.value,
+      serverURL: server
+    };
+
+    try {
+      metroUtils.clearSyncInfo();
+    } catch (ex) {
+    }
+
+    this.connect();
+    return true;
+  },
+#endif
+
   _init: function () {
     this._bundle = Services.strings.createBundle("chrome://browser/locale/sync.properties");
     this._msg = document.getElementById("prefs-messages");
@@ -49,9 +82,16 @@ let WeaveGlue = {
     } else if (Weave.Status.login != Weave.LOGIN_FAILED_NO_USERNAME) {
       this.loadSetupData();
     }
+
     this._boundOnEngineSync = this.onEngineSync.bind(this);
     this._boundOnServiceSync = this.onServiceSync.bind(this);
     this._progressBar = document.getElementById("syncsetup-progressbar");
+
+#ifdef XP_WIN
+    if (Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED) {
+      this._securelySetupFromMetro();
+    }
+#endif
   },
 
   abortEasySetup: function abortEasySetup() {

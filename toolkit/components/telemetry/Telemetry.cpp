@@ -2095,6 +2095,7 @@ RecordShutdownStartTimeStamp() {
   // we just keep the last timestamp, the assert is commented for now.
   static bool recorded = false;
   //  MOZ_ASSERT(!recorded);
+  (void)recorded; // Silence unused-var warnings (remove when assert re-enabled)
   recorded = true;
 #endif
 

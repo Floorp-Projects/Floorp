@@ -19,6 +19,7 @@ EXPORTS		= \
 		nsAtomListUtils.h \
 		nsAttrName.h \
 		nsContentList.h \
+		nsContentListDeclarations.h \
 		nsContentSink.h \
 		nsGkAtomList.h \
 		nsGkAtoms.h \

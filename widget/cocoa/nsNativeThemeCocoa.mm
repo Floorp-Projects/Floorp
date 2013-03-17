@@ -5,6 +5,7 @@
 
 #include "nsNativeThemeCocoa.h"
 #include "nsObjCExceptions.h"
+#include "nsRangeFrame.h"
 #include "nsRenderingContext.h"
 #include "nsRect.h"
 #include "nsSize.h"
@@ -2263,6 +2264,34 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       // do nothing, drawn by scale
       break;
 
+    case NS_THEME_RANGE: {
+      nsRangeFrame *rangeFrame = do_QueryFrame(aFrame);
+      if (!rangeFrame) {
+        break;
+      }
+      int32_t value = rangeFrame->GetValue();
+      int32_t min = rangeFrame->GetMin();
+      int32_t max = rangeFrame->GetMax();
+      if (max < min) {
+        // The spec says that the only valid value is the minimum. For the
+        // purposes of drawing the range, we need to have a max that's greater
+        // than min though (it doesn't really matter what the value is, as long
+        // as the thumb is painted at the min.
+        max = min + 1;
+        value = min;
+      }
+      MOZ_ASSERT(MOZ_DOUBLE_IS_FINITE(value) &&
+                 MOZ_DOUBLE_IS_FINITE(min) &&
+                 MOZ_DOUBLE_IS_FINITE(max) &&
+                 value >= min && value <= max);
+      bool reverseDir =
+        rangeFrame->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+      bool isVertical = !IsRangeHorizontal(aFrame);
+      DrawScale(cgContext, macRect, eventState, isVertical, reverseDir,
+                value, min, max, aFrame);
+      break;
+    }
+
     case NS_THEME_SCROLLBAR_SMALL:
     case NS_THEME_SCROLLBAR: {
       DrawScrollbar(cgContext, macRect, aFrame);
@@ -2663,6 +2692,35 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsRenderingContext* aContext,
       break;
     }
 
+    case NS_THEME_RANGE:
+    {
+      // The Mac Appearance Manager API (the old API we're currently using)
+      // doesn't define constants to obtain a minimum size for sliders. We use
+      // the "thickness" of a slider that has default dimensions for both the
+      // minimum width and height to get something sane and so that paint
+      // invalidation works.
+      SInt32 size = 0;
+      if (IsRangeHorizontal(aFrame)) {
+        ::GetThemeMetric(kThemeMetricHSliderHeight, &size);
+      } else {
+        ::GetThemeMetric(kThemeMetricVSliderWidth, &size);
+      }
+      aResult->SizeTo(size, size);
+      *aIsOverridable = true;
+      break;
+    }
+
+    case NS_THEME_RANGE_THUMB:
+    {
+      SInt32 width = 0;
+      SInt32 height = 0;
+      ::GetThemeMetric(kThemeMetricSliderMinThumbWidth, &width);
+      ::GetThemeMetric(kThemeMetricSliderMinThumbHeight, &height);
+      aResult->SizeTo(width, height);
+      *aIsOverridable = false;
+      break;
+    }
+
     case NS_THEME_SCALE_HORIZONTAL:
     {
       SInt32 scaleHeight = 0;
@@ -2903,6 +2961,8 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_TREEVIEW_TREEITEM:
     case NS_THEME_TREEVIEW_LINE:
 
+    case NS_THEME_RANGE:
+
     case NS_THEME_SCALE_HORIZONTAL:
     case NS_THEME_SCALE_THUMB_HORIZONTAL:
     case NS_THEME_SCALE_VERTICAL:
@@ -2956,6 +3016,7 @@ nsNativeThemeCocoa::WidgetIsContainer(uint8_t aWidgetType)
    case NS_THEME_CHECKBOX:
    case NS_THEME_PROGRESSBAR:
    case NS_THEME_METERBAR:
+   case NS_THEME_RANGE:
     return false;
     break;
   }

@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.BroadcastReceiver;
 import android.content.ComponentCallbacks2;
@@ -105,7 +106,7 @@ class MemoryMonitor extends BroadcastReceiver {
         if (Intent.ACTION_DEVICE_STORAGE_LOW.equals(intent.getAction())) {
             Log.d(LOGTAG, "Device storage is low");
             mStoragePressure = true;
-            GeckoAppShell.getHandler().post(new StorageReducer(context));
+            ThreadUtils.postToBackgroundThread(new StorageReducer(context));
         } else if (Intent.ACTION_DEVICE_STORAGE_OK.equals(intent.getAction())) {
             Log.d(LOGTAG, "Device storage is ok");
             mStoragePressure = false;
@@ -178,9 +179,9 @@ class MemoryMonitor extends BroadcastReceiver {
         synchronized void start() {
             if (mPosted) {
                 // cancel the old one before scheduling a new one
-                GeckoAppShell.getHandler().removeCallbacks(this);
+                ThreadUtils.getBackgroundHandler().removeCallbacks(this);
             }
-            GeckoAppShell.getHandler().postDelayed(this, DECREMENT_DELAY);
+            ThreadUtils.getBackgroundHandler().postDelayed(this, DECREMENT_DELAY);
             mPosted = true;
         }
 
@@ -193,7 +194,7 @@ class MemoryMonitor extends BroadcastReceiver {
             }
 
             // need to keep decrementing
-            GeckoAppShell.getHandler().postDelayed(this, DECREMENT_DELAY);
+            ThreadUtils.getBackgroundHandler().postDelayed(this, DECREMENT_DELAY);
         }
     }
 
@@ -207,7 +208,7 @@ class MemoryMonitor extends BroadcastReceiver {
         public void run() {
             // this might get run right on startup, if so wait 10 seconds and try again
             if (!GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
-                GeckoAppShell.getHandler().postDelayed(this, 10000);
+                ThreadUtils.getBackgroundHandler().postDelayed(this, 10000);
                 return;
             }
 

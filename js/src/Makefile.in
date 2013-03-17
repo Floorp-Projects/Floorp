@@ -46,6 +46,7 @@ VPATH		+= \
 		$(srcdir)/ds \
 		$(srcdir)/frontend \
 		$(srcdir)/gc \
+		$(srcdir)/ion \
 		$(srcdir)/vm \
 		$(NULL)
 
@@ -143,6 +144,9 @@ CPPSRCS		= \
 		Unicode.cpp \
 		Xdr.cpp \
 		Module.cpp \
+		AsmJS.cpp \
+		AsmJSLink.cpp \
+		AsmJSSignalHandlers.cpp \
 		$(NULL)
 
 # Changes to internal header files, used externally, massively slow down
@@ -170,16 +174,6 @@ INSTALLED_HEADERS = \
 		jsutil.h \
 		jsversion.h \
 		jswrapper.h \
-		$(NULL)
-
-######################################################
-# BEGIN exported headers that are only exported
-#       because of inclusion by an INSTALLED_HEADER
-#
-EXPORTS_NAMESPACES += ds
-
-EXPORTS_ds = \
-		BitArray.h \
 		$(NULL)
 
 ######################################################
@@ -299,6 +293,7 @@ CPPSRCS +=	MIR.cpp \
 		AliasAnalysis.cpp \
 		ParallelArrayAnalysis.cpp \
 		UnreachableCodeElimination.cpp \
+		EffectiveAddressAnalysis.cpp \
 		$(NULL)
 endif #ENABLE_ION
 ifeq (86, $(findstring 86,$(TARGET_CPU)))

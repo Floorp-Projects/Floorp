@@ -21,6 +21,11 @@ ToInt32(const LAllocation *a)
     JS_NOT_REACHED("this is not a constant!");
     return -1;
 }
+static inline double
+ToDouble(const LAllocation *a)
+{
+    return a->toConstant()->toNumber();
+}
 
 static inline Register
 ToRegister(const LAllocation &a)

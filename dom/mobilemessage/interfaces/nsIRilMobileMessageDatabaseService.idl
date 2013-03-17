@@ -15,7 +15,7 @@ interface nsIRilMobileMessageDatabaseCallback : nsISupports
   void notify(in nsresult aRv, in jsval aRecord);
 };
 
-[scriptable, uuid(3592525a-71d6-11e2-82ca-f75ae6e08ee2)]
+[scriptable, uuid(a31b1716-8631-11e2-afaa-2fbd087f426e)]
 interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
 {
   /**
@@ -31,14 +31,23 @@ interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
   /**
    * |aMessage| Object: should contain the following properties for internal use:
    *   - |type| DOMString: "sms" or "mms"
-   *   - |receiver| DOMString: the phone number of receiver
+   *   - |receiver| DOMString: the phone number of receiver (needed if type = "sms")
+   *   - |receivers| DOMString: the phone numbers of receivers (needed if type = "mms")
    *   - |timestamp| Number: the timestamp of sending message
-   *   - |deliveryStatus| DOMString: the delivery status of sending message
+   *   - |deliveryStatusRequested| Bool: true when the delivery report is requested.
    */
   long saveSendingMessage(in jsval aMessage,
                [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
 
+  /**
+   * |aMessageId| Number: the message's DB record ID.
+   * |aReceiver| DOMString: the phone number of receiver (for MMS; can be null).
+   * |aDelivery| DOMString: the new delivery value to update (can be null).
+   * |aDeliveryStatus| DOMString: the new delivery status to update (can be null).
+   * |aCallback| nsIRilMobileMessageDatabaseCallback: an optional callback.
+   */
   void setMessageDelivery(in long aMessageId,
+                          in DOMString aReceiver,
                           in DOMString aDelivery,
                           in DOMString aDeliveryStatus,
                [optional] in nsIRilMobileMessageDatabaseCallback aCallback);

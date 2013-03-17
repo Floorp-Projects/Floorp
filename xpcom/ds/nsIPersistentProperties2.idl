@@ -65,7 +65,6 @@ interface nsIPersistentProperties : nsIProperties
   { 0x9b, 0x8b, 0x0, 0x80, 0x5f, 0x8a, 0x16, 0xd9 } }
 
 #define NS_PERSISTENTPROPERTIES_CONTRACTID "@mozilla.org/persistent-properties;1"
-#define NS_PERSISTENTPROPERTIES_CLASSNAME "Persistent Properties"
 
 %}
 

@@ -44,17 +44,15 @@ badCertListener.prototype = {
 function initExceptionDialog() {
   gNeedReset = false;
   gDialog = document.documentElement;
-  gBundleBrand = srGetStrBundle("chrome://branding/locale/brand.properties");
-  gPKIBundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+  gBundleBrand = document.getElementById("brand_bundle");
+  gPKIBundle = document.getElementById("pippki_bundle");
   gSecHistogram = Components.classes["@mozilla.org/base/telemetry;1"].
                     getService(Components.interfaces.nsITelemetry).
                     getHistogramById("SECURITY_UI");
   gNsISecTel = Components.interfaces.nsISecurityUITelemetry;
 
-  var brandName = gBundleBrand.GetStringFromName("brandShortName");
-  
-  setText("warningText", gPKIBundle.formatStringFromName("addExceptionBrandedWarning2",
-                                                         [brandName], 1));
+  var brandName = gBundleBrand.getString("brandShortName");
+  setText("warningText", gPKIBundle.getFormattedString("addExceptionBrandedWarning2", [brandName]));
   gDialog.getButton("extra1").disabled = true;
   
   var args = window.arguments;
@@ -274,7 +272,7 @@ function updateCertStatus() {
       pe.disabled = inPrivateBrowsing;
       pe.checked = !inPrivateBrowsing;
 
-      setText("headerDescription", gPKIBundle.GetStringFromName("addExceptionInvalidHeader"));
+      setText("headerDescription", gPKIBundle.getString("addExceptionInvalidHeader"));
     }
     else {
       shortDesc = "addExceptionValidShort";
@@ -313,17 +311,17 @@ function updateCertStatus() {
     document.getElementById("permanent").disabled = true;
   }
   
-  setText("statusDescription", gPKIBundle.GetStringFromName(shortDesc));
-  setText("statusLongDescription", gPKIBundle.GetStringFromName(longDesc));
+  setText("statusDescription", gPKIBundle.getString(shortDesc));
+  setText("statusLongDescription", gPKIBundle.getString(longDesc));
 
   if (use2) {
-    setText("status2Description", gPKIBundle.GetStringFromName(shortDesc2));
-    setText("status2LongDescription", gPKIBundle.GetStringFromName(longDesc2));
+    setText("status2Description", gPKIBundle.getString(shortDesc2));
+    setText("status2LongDescription", gPKIBundle.getString(longDesc2));
   }
 
   if (use3) {
-    setText("status3Description", gPKIBundle.GetStringFromName(shortDesc3));
-    setText("status3LongDescription", gPKIBundle.GetStringFromName(longDesc3));
+    setText("status3Description", gPKIBundle.getString(shortDesc3));
+    setText("status3LongDescription", gPKIBundle.getString(longDesc3));
   }
 
   gNeedReset = true;

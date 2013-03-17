@@ -1198,36 +1198,45 @@ NS_METHOD nsBaseWidget::UnregisterTouchWindow()
 }
 
 NS_IMETHODIMP
-nsBaseWidget::OverrideSystemMouseScrollSpeed(int32_t aOriginalDelta,
-                                             bool aIsHorizontal,
-                                             int32_t &aOverriddenDelta)
+nsBaseWidget::OverrideSystemMouseScrollSpeed(double aOriginalDeltaX,
+                                             double aOriginalDeltaY,
+                                             double& aOverriddenDeltaX,
+                                             double& aOverriddenDeltaY)
 {
-  aOverriddenDelta = aOriginalDelta;
+  aOverriddenDeltaX = aOriginalDeltaX;
+  aOverriddenDeltaY = aOriginalDeltaY;
 
-  const char* kPrefNameOverrideEnabled =
-    "mousewheel.system_scroll_override_on_root_content.enabled";
-  bool isOverrideEnabled =
-    Preferences::GetBool(kPrefNameOverrideEnabled, false);
-  if (!isOverrideEnabled) {
+  static bool sInitialized = false;
+  static bool sIsOverrideEnabled = false;
+  static int32_t sIntFactorX = 0;
+  static int32_t sIntFactorY = 0;
+
+  if (!sInitialized) {
+    Preferences::AddBoolVarCache(&sIsOverrideEnabled,
+      "mousewheel.system_scroll_override_on_root_content.enabled", false);
+    Preferences::AddIntVarCache(&sIntFactorX,
+      "mousewheel.system_scroll_override_on_root_content.horizontal.factor", 0);
+    Preferences::AddIntVarCache(&sIntFactorY,
+      "mousewheel.system_scroll_override_on_root_content.vertical.factor", 0);
+    sIntFactorX = std::max(sIntFactorX, 0);
+    sIntFactorY = std::max(sIntFactorY, 0);
+    sInitialized = true;
+  }
+
+  if (!sIsOverrideEnabled) {
     return NS_OK;
   }
 
-  nsAutoCString factorPrefName(
-    "mousewheel.system_scroll_override_on_root_content.");
-  if (aIsHorizontal) {
-    factorPrefName.AppendLiteral("horizontal.");
-  } else {
-    factorPrefName.AppendLiteral("vertical.");
-  }
-  factorPrefName.AppendLiteral("factor");
-  int32_t iFactor = Preferences::GetInt(factorPrefName.get(), 0);
   // The pref value must be larger than 100, otherwise, we don't override the
   // delta value.
-  if (iFactor <= 100) {
-    return NS_OK;
+  if (sIntFactorX > 100) {
+    double factor = static_cast<double>(sIntFactorX) / 100;
+    aOverriddenDeltaX *= factor;
   }
-  double factor = (double)iFactor / 100;
-  aOverriddenDelta = int32_t(NS_round((double)aOriginalDelta * factor));
+  if (sIntFactorY > 100) {
+    double factor = static_cast<double>(sIntFactorY) / 100;
+    aOverriddenDeltaY *= factor;
+  }
 
   return NS_OK;
 }

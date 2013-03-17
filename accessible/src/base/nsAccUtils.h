@@ -233,16 +233,6 @@ public:
 #endif
 
   /**
-   * Return true if the given accessible has text role.
-   */
-  static bool IsText(nsIAccessible *aAcc)
-  {
-    uint32_t role = Role(aAcc);
-    return role == nsIAccessibleRole::ROLE_TEXT_LEAF ||
-           role == nsIAccessibleRole::ROLE_STATICTEXT;
-  }
-
-  /**
    * Return text length of the given accessible, return 0 on failure.
    */
   static uint32_t TextLength(Accessible* aAccessible);
@@ -276,6 +266,13 @@ public:
     *aState1 = aState64 & 0x7fffffff;
     if (aState2)
       *aState2 = static_cast<uint32_t>(aState64 >> 31);
+  }
+
+  static uint32_t To32States(uint64_t aState, bool* aIsExtra)
+  {
+    uint32_t extraState = aState >> 31;
+    *aIsExtra = !!extraState;
+    return aState | extraState;
   }
 
   /**

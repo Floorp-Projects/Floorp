@@ -197,6 +197,10 @@
 // The ticks for a slider.
 #define NS_THEME_SCALE_TICK                               117
 
+// nsRangeFrame and its subparts
+#define NS_THEME_RANGE                                    120
+#define NS_THEME_RANGE_THUMB                              121
+
 // A groupbox
 #define NS_THEME_GROUPBOX                                  149
 

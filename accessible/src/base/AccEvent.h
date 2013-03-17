@@ -15,8 +15,6 @@ namespace a11y {
 
 class DocAccessible;
 
-class nsAccEvent;
-
 // Constants used to point whether the event is from user input.
 enum EIsFromUserInput
 {
@@ -84,11 +82,6 @@ public:
   DocAccessible* GetDocAccessible() const { return mAccessible->Document(); }
 
   /**
-   * Create and return an XPCOM object for accessible event object.
-   */
-  virtual already_AddRefed<nsAccEvent> CreateXPCOMObject();
-
-  /**
    * Down casting.
    */
   enum EventGroup {
@@ -147,8 +140,6 @@ public:
     { mIsEnabled = (mAccessible->State() & mState) != 0; }
 
   // AccEvent
-  virtual already_AddRefed<nsAccEvent> CreateXPCOMObject();
-
   static const EventGroup kEventGroup = eStateChangeEvent;
   virtual unsigned int GetEventGroups() const
   {
@@ -178,8 +169,6 @@ public:
                      EIsFromUserInput aIsFromUserInput = eAutoDetect);
 
   // AccEvent
-  virtual already_AddRefed<nsAccEvent> CreateXPCOMObject();
-
   static const EventGroup kEventGroup = eTextChangeEvent;
   virtual unsigned int GetEventGroups() const
   {
@@ -248,8 +237,6 @@ public:
   AccHideEvent(Accessible* aTarget, nsINode* aTargetNode);
 
   // Event
-  virtual already_AddRefed<nsAccEvent> CreateXPCOMObject();
-
   static const EventGroup kEventGroup = eHideEvent;
   virtual unsigned int GetEventGroups() const
   {
@@ -349,8 +336,6 @@ public:
   virtual ~AccCaretMoveEvent() { }
 
   // AccEvent
-  virtual already_AddRefed<nsAccEvent> CreateXPCOMObject();
-
   static const EventGroup kEventGroup = eCaretMoveEvent;
   virtual unsigned int GetEventGroups() const
   {
@@ -414,8 +399,6 @@ public:
                       int32_t aRowOrColIndex, int32_t aNumRowsOrCols);
 
   // AccEvent
-  virtual already_AddRefed<nsAccEvent> CreateXPCOMObject();
-
   static const EventGroup kEventGroup = eTableChangeEvent;
   virtual unsigned int GetEventGroups() const
   {
@@ -445,8 +428,6 @@ public:
   virtual ~AccVCChangeEvent() { }
 
   // AccEvent
-  virtual already_AddRefed<nsAccEvent> CreateXPCOMObject();
-
   static const EventGroup kEventGroup = eVirtualCursorChangeEvent;
   virtual unsigned int GetEventGroups() const
   {
@@ -486,6 +467,12 @@ public:
 private:
   AccEvent* mRawPtr;
 };
+
+/**
+ * Return a new xpcom accessible event for the given internal one.
+ */
+already_AddRefed<nsIAccessibleEvent>
+MakeXPCEvent(AccEvent* aEvent);
 
 } // namespace a11y
 } // namespace mozilla

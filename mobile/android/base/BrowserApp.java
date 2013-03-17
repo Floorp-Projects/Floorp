@@ -10,7 +10,7 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.util.UiAsyncTask;
-import org.mozilla.gecko.util.GeckoBackgroundThread;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -137,7 +137,7 @@ abstract public class BrowserApp extends GeckoApp
                                                 : TabsPanel.Panel.NORMAL_TABS;
                     // Delay calling showTabs so that it does not modify the mTabsChangedListeners
                     // array while we are still iterating through the array.
-                    mMainHandler.post(new Runnable() {
+                    ThreadUtils.postToUiThread(new Runnable() {
                         @Override
                         public void run() {
                             if (areTabsShown() && mTabsPanel.getCurrentPanel() != panel)
@@ -376,7 +376,7 @@ abstract public class BrowserApp extends GeckoApp
             return;
         }
 
-        GeckoAppShell.getHandler().post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 BrowserDB.addReadingListItem(getContentResolver(), title, url);
@@ -386,7 +386,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     void handleReaderRemoved(final String url) {
-        GeckoAppShell.getHandler().post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 BrowserDB.removeReadingListItemWithURL(getContentResolver(), url);
@@ -397,7 +397,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     void onStatePurged() {
-        mMainHandler.post(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 if (mAboutHomeContent != null)
@@ -469,7 +469,7 @@ abstract public class BrowserApp extends GeckoApp
                 }
                 mDynamicToolbarEnabled = value;
 
-                mMainHandler.post(new Runnable() {
+                ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
                         if (mDynamicToolbarEnabled) {
@@ -603,7 +603,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     void toggleChrome(final boolean aShow) {
-        mMainHandler.post(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 if (aShow) {
@@ -622,7 +622,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     void focusChrome() {
-        mMainHandler.post(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 mBrowserToolbar.show();
@@ -751,7 +751,7 @@ abstract public class BrowserApp extends GeckoApp
                     info.parent = message.getInt("parent") + ADDON_MENU_OFFSET;
                 } catch (Exception ex) { }
                 final MenuItemInfo menuItemInfo = info;
-                mMainHandler.post(new Runnable() {
+                ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
                         addAddonMenuItem(menuItemInfo);
@@ -759,7 +759,7 @@ abstract public class BrowserApp extends GeckoApp
                 });
             } else if (event.equals("Menu:Remove")) {
                 final int id = message.getInt("id") + ADDON_MENU_OFFSET;
-                mMainHandler.post(new Runnable() {
+                ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
                         removeAddonMenuItem(id);
@@ -768,7 +768,7 @@ abstract public class BrowserApp extends GeckoApp
             } else if (event.equals("Menu:Update")) {
                 final int id = message.getInt("id") + ADDON_MENU_OFFSET;
                 final JSONObject options = message.getJSONObject("options");
-                mMainHandler.post(new Runnable() {
+                ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
                         updateAddonMenuItem(id, options);
@@ -804,7 +804,7 @@ abstract public class BrowserApp extends GeckoApp
                         dialog.dismiss();
                     }
                 });
-                mMainHandler.post(new Runnable() {
+                ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
                         dialogBuilder.show();
@@ -814,7 +814,7 @@ abstract public class BrowserApp extends GeckoApp
                 final boolean visible = message.getString("visible").equals("true");
                 GeckoPreferences.setCharEncodingState(visible);
                 final Menu menu = mMenu;
-                mMainHandler.post(new Runnable() {
+                ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
                         if (menu != null)
@@ -834,7 +834,7 @@ abstract public class BrowserApp extends GeckoApp
                 // menuitem, which is specific to BrowserApp.
                 super.handleMessage(event, message);
                 final Menu menu = mMenu;
-                mMainHandler.post(new Runnable() {
+                ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
                         if (menu != null)
@@ -1054,7 +1054,7 @@ abstract public class BrowserApp extends GeckoApp
 
         mAboutHomeShowing = true;
         Runnable r = new AboutHomeRunnable(true);
-        mMainHandler.postAtFrontOfQueue(r);
+        ThreadUtils.getUiHandler().postAtFrontOfQueue(r);
     }
 
     private void hideAboutHome() {
@@ -1066,7 +1066,7 @@ abstract public class BrowserApp extends GeckoApp
         mBrowserToolbar.setShadowVisibility(true);
         mAboutHomeShowing = false;
         Runnable r = new AboutHomeRunnable(false);
-        mMainHandler.postAtFrontOfQueue(r);
+        ThreadUtils.getUiHandler().postAtFrontOfQueue(r);
     }
 
     private class AboutHomeRunnable implements Runnable {
@@ -1197,7 +1197,7 @@ abstract public class BrowserApp extends GeckoApp
                 item.setIcon(drawable);
             }
             else if (info.icon.startsWith("jar:") || info.icon.startsWith("file://")) {
-                GeckoAppShell.getHandler().post(new Runnable() {
+                ThreadUtils.postToBackgroundThread(new Runnable() {
                     @Override
                     public void run() {
                         try {
@@ -1339,7 +1339,7 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void setFullScreen(final boolean fullscreen) {
         super.setFullScreen(fullscreen);
-        mMainHandler.post(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 if (fullscreen)
@@ -1547,7 +1547,7 @@ abstract public class BrowserApp extends GeckoApp
             return;
         }
 
-        (new UiAsyncTask<Void, Void, Boolean>(GeckoAppShell.getHandler()) {
+        (new UiAsyncTask<Void, Void, Boolean>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public synchronized Boolean doInBackground(Void... params) {
                 // Check to see how many times the app has been launched.
@@ -1574,7 +1574,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void resetFeedbackLaunchCount() {
-        GeckoBackgroundThread.post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public synchronized void run() {
                 SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
@@ -1584,7 +1584,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void getLastUrl() {
-        (new UiAsyncTask<Void, Void, String>(GeckoAppShell.getHandler()) {
+        (new UiAsyncTask<Void, Void, String>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public synchronized String doInBackground(Void... params) {
                 // Get the most recent URL stored in browser history.

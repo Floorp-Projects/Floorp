@@ -13,6 +13,7 @@ import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.StringUtils;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -176,7 +177,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
      * Query for suggestions, but don't show them yet.
      */
     private void primeSuggestions() {
-        GeckoAppShell.getHandler().post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 mSuggestClient.query(mSearchTerm);
@@ -718,7 +719,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
     @Override
     public void handleMessage(String event, final JSONObject message) {
         if (event.equals("SearchEngines:Data")) {
-            GeckoAppShell.getMainHandler().post(new Runnable() {
+            ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
                     setSearchEngines(message);
@@ -843,7 +844,7 @@ public class AllPagesTab extends AwesomeBarTab implements GeckoEventListener {
         if (urls.size() == 0)
             return;
 
-        (new UiAsyncTask<Void, Void, Cursor>(GeckoAppShell.getHandler()) {
+        (new UiAsyncTask<Void, Void, Cursor>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public Cursor doInBackground(Void... params) {
                 return BrowserDB.getFaviconsForUrls(getContentResolver(), urls);

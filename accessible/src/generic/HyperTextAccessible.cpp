@@ -266,7 +266,7 @@ HyperTextAccessible::GetPosAndText(int32_t& aStartOffset, int32_t& aEndOffset,
     }
     nsIFrame *primaryFrame = frame;
     endFrame = frame;
-    if (nsAccUtils::IsText(childAcc)) {
+    if (!nsAccUtils::IsEmbeddedObject(childAcc)) {
       // We only need info up to rendered offset -- that is what we're
       // converting to content offset
       int32_t substringEndOffset = -1;
@@ -708,14 +708,12 @@ HyperTextAccessible::GetRelativeOffset(nsIPresShell* aPresShell,
 
   nsresult rv;
   int32_t contentOffset = aFromOffset;
-  if (nsAccUtils::IsText(aFromAccessible)) {
-    nsIFrame *frame = aFromAccessible->GetFrame();
-    NS_ENSURE_TRUE(frame, -1);
+  nsIFrame *frame = aFromAccessible->GetFrame();
+  NS_ENSURE_TRUE(frame, -1);
 
-    if (frame->GetType() == nsGkAtoms::textFrame) {
-      rv = RenderedToContentOffset(frame, aFromOffset, &contentOffset);
-      NS_ENSURE_SUCCESS(rv, -1);
-    }
+  if (frame->GetType() == nsGkAtoms::textFrame) {
+    rv = RenderedToContentOffset(frame, aFromOffset, &contentOffset);
+    NS_ENSURE_SUCCESS(rv, -1);
   }
 
   nsPeekOffsetStruct pos(aAmount, aDirection, contentOffset,

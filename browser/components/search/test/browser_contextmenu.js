@@ -41,8 +41,7 @@ function test() {
     ok(contextMenu, "Got context menu XUL");
 
     doOnloadOnce(testContextMenu);
-    var tab = gBrowser.addTab("data:text/plain;charset=utf8,test%20search");
-    gBrowser.selectedTab = tab;
+    gBrowser.selectedTab = gBrowser.addTab("data:text/plain;charset=utf8,test%20search");
   }
 
   function testContextMenu() {
@@ -84,11 +83,15 @@ function test() {
       }
     };
 
-    // add a listener to know when the selection takes effect
-    content.window.getSelection().QueryInterface(Ci.nsISelectionPrivate).
-                                  addSelectionListener(selectionListener);
-    // select the text on the page
-    goDoCommand('cmd_selectAll');
+    // Delay the select all to avoid intermittent selection failures.
+    setTimeout(function delaySelectAll() {
+      info("delaySelectAll: " + content.window.location.toString());
+      // add a listener to know when the selection takes effect
+      content.window.getSelection().QueryInterface(Ci.nsISelectionPrivate).
+                                    addSelectionListener(selectionListener);
+      // select the text on the page
+      goDoCommand('cmd_selectAll');
+    }, 500);
   }
 
   function finalize() {

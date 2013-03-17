@@ -12,6 +12,7 @@
 #include "LayersTypes.h" // for LayersBackend
 #include "mozilla/TimeStamp.h"
 #include "ImageTypes.h"
+#include "nsTArray.h"
 
 #ifdef XP_WIN
 struct ID3D10Texture2D;

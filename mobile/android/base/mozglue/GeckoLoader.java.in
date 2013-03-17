@@ -119,7 +119,20 @@ public final class GeckoLoader {
         return tmpDir;
     }
 
-    public static void setupGeckoEnvironment(Context context, String[] pluginDirs, String profilePath) {
+    public static void setupGeckoEnvironment(Activity context, String[] pluginDirs, String profilePath) {
+        // if we have an intent (we're being launched by an activity)
+        // read in any environmental variables from it here
+        Intent intent = context.getIntent();
+        if (intent != null) {
+            String env = intent.getStringExtra("env0");
+            Log.d(LOGTAG, "Gecko environment env0: " + env);
+            for (int c = 1; env != null; c++) {
+                putenv(env);
+                env = intent.getStringExtra("env" + c);
+                Log.d(LOGTAG, "env" + c + ": " + env);
+            }
+        }
+
         setupPluginEnvironment(context, pluginDirs);
         setupDownloadEnvironment(context);
 
@@ -167,7 +180,7 @@ public final class GeckoLoader {
             Log.d(LOGTAG, "Unable to set the user serial number", e);
         }
 
-        putLocaleEnv();
+        setupLocaleEnvironment();
     }
 
     private static void loadLibsSetup(Context context) {
@@ -240,24 +253,6 @@ public final class GeckoLoader {
         }
 
         System.loadLibrary("mozglue");
-
-        // When running TestPasswordProvider, we're being called with
-        // a GeckoApplication, which is not an Activity
-        if (!(context instanceof Activity))
-            return;
-
-        Intent i = null;
-        i = ((Activity)context).getIntent();
-
-        // if we have an intent (we're being launched by an activity)
-        // read in any environmental variables from it here
-        String env = i.getStringExtra("env0");
-        Log.d(LOGTAG, "Gecko environment env0: "+ env);
-        for (int c = 1; env != null; c++) {
-            putenv(env);
-            env = i.getStringExtra("env" + c);
-            Log.d(LOGTAG, "env" + c + ": " + env);
-        }
     }
 
     public static void loadGeckoLibs(Context context, String apkName) {
@@ -265,7 +260,7 @@ public final class GeckoLoader {
         loadGeckoLibsNative(apkName);
     }
 
-    private static void putLocaleEnv() {
+    private static void setupLocaleEnvironment() {
         putenv("LANG=" + Locale.getDefault().toString());
         NumberFormat nf = NumberFormat.getInstance();
         if (nf instanceof DecimalFormat) {

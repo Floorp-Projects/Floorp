@@ -55,10 +55,10 @@ BluetoothPropertyContainer::SetProperty(nsIDOMWindow* aOwner,
   }
 
   nsRefPtr<BluetoothReplyRunnable> task = new BluetoothVoidReplyRunnable(req);
-  
-  rv = bs->SetProperty(mObjectType, mPath, aProperty, task);
+
+  rv = bs->SetProperty(mObjectType, aProperty, task);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   req.forget(aRequest);
   return NS_OK;
 }

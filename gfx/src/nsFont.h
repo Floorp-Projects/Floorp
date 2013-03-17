@@ -9,6 +9,7 @@
 #include "gfxCore.h"
 #include "nsCoord.h"
 #include "nsStringGlue.h"
+#include "nsTArray.h"
 #include "gfxFontConstants.h"
 #include "gfxFontFeatures.h"
 

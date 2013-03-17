@@ -18,7 +18,11 @@
   ondialogcancel="return doCancel();"
   onload="onLoad();">
 
-<script type="application/javascript" src="chrome://global/content/strres.js"/>
+<stringbundleset id="stringbundleset">
+  <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
+  <stringbundle id="caps_bundle" src="chrome://global/locale/security/caps.properties"/>
+</stringbundleset>
+
 <script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
 <script type="application/javascript" src="chrome://pippki/content/clientauthask.js"/>
 
