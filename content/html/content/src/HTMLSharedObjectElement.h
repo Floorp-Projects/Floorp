@@ -104,6 +104,114 @@ public:
   {
     return static_cast<nsIDOMHTMLAppletElement*>(this);
   }
+
+  // WebIDL API for <applet>
+  void GetAlign(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::align, aValue);
+  }
+  void SetAlign(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::align, aValue, aRv);
+  }
+  void GetAlt(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::alt, aValue);
+  }
+  void SetAlt(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::alt, aValue, aRv);
+  }
+  void GetArchive(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::archive, aValue);
+  }
+  void SetArchive(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::archive, aValue, aRv);
+  }
+  void GetCode(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::code, aValue);
+  }
+  void SetCode(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::code, aValue, aRv);
+  }
+  // XPCOM GetCodebase is ok; note that it's a URI attribute
+  void SetCodeBase(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::codebase, aValue, aRv);
+  }
+  void GetHeight(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::height, aValue);
+  }
+  void SetHeight(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::height, aValue, aRv);
+  }
+  uint32_t Hspace()
+  {
+    return GetHTMLUnsignedIntAttr(nsGkAtoms::hspace, 0);
+  }
+  void SetHspace(uint32_t aValue, ErrorResult& aRv)
+  {
+    SetHTMLUnsignedIntAttr(nsGkAtoms::hspace, aValue, aRv);
+  }
+  void GetName(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::name, aValue);
+  }
+  void SetName(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::name, aValue, aRv);
+  }
+  // XPCOM GetObject is ok; note that it's a URI attribute with a weird base URI
+  void SetObject(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::object, aValue, aRv);
+  }
+    uint32_t Vspace()
+  {
+    return GetHTMLUnsignedIntAttr(nsGkAtoms::vspace, 0);
+  }
+  void SetVspace(uint32_t aValue, ErrorResult& aRv)
+  {
+    SetHTMLUnsignedIntAttr(nsGkAtoms::vspace, aValue, aRv);
+  }
+  void GetWidth(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::width, aValue);
+  }
+  void SetWidth(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::width, aValue, aRv);
+  }
+
+  // WebIDL <embed> api
+  // XPCOM GetSrc is ok; note that it's a URI attribute
+  void SetSrc(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::src, aValue, aRv);
+  }
+  void GetType(DOMString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::type, aValue);
+  }
+  void SetType(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::type, aValue, aRv);
+  }
+  // width covered by <applet>
+  // height covered by <applet>
+  // align covered by <applet>
+  // name covered by <applet>
+  nsIDocument* GetSVGDocument()
+  {
+    return GetContentDocument();
+  }
+
 private:
   /**
    * Calls LoadObject with the correct arguments to start the plugin load.
