@@ -657,7 +657,7 @@ public:
   already_AddRefed<nsIDOMAttr> SetAttributeNodeNS(nsIDOMAttr* aNewAttr,
                                                   ErrorResult& aError);
 
-  already_AddRefed<nsClientRectList> GetClientRects(ErrorResult& aError);
+  already_AddRefed<nsClientRectList> GetClientRects();
   already_AddRefed<nsClientRect> GetBoundingClientRect();
   void ScrollIntoView(bool aTop);
   int32_t ScrollTop()
@@ -1507,9 +1507,8 @@ NS_IMETHOD SetOnmouseleave(JSContext* cx,                                     \
 }                                                                             \
 NS_IMETHOD GetClientRects(nsIDOMClientRectList** _retval) MOZ_FINAL           \
 {                                                                             \
-  mozilla::ErrorResult rv;                                                    \
-  *_retval = Element::GetClientRects(rv).get();                               \
-  return rv.ErrorCode();                                                      \
+  *_retval = Element::GetClientRects().get();                                 \
+  return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetBoundingClientRect(nsIDOMClientRect** _retval) MOZ_FINAL        \
 {                                                                             \

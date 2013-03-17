@@ -670,7 +670,7 @@ Element::GetBoundingClientRect()
 }
 
 already_AddRefed<nsClientRectList>
-Element::GetClientRects(ErrorResult& aError)
+Element::GetClientRects()
 {
   nsRefPtr<nsClientRectList> rectList = new nsClientRectList(this);
 
@@ -684,10 +684,6 @@ Element::GetClientRects(ErrorResult& aError)
   nsLayoutUtils::GetAllInFlowRects(frame,
           nsLayoutUtils::GetContainingBlockForClientRect(frame), &builder,
           nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
-  if (NS_FAILED(builder.mRV)) {
-    aError.Throw(builder.mRV);
-    return nullptr;
-  }
   return rectList.forget();
 }
 
