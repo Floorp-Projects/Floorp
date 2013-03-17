@@ -113,6 +113,8 @@ class Configuration:
                 getter = lambda x: x.interface.isCallback()
             elif key == 'isExternal':
                 getter = lambda x: x.interface.isExternal()
+            elif key == 'isJSImplemented':
+                getter = lambda x: x.interface.isJSImplemented()
             else:
                 getter = lambda x: getattr(x, key)
             curr = filter(lambda x: getter(x) == val, curr)
@@ -213,7 +215,7 @@ class Descriptor(DescriptorProvider):
         # Do something sane for JSObject
         if self.nativeType == "JSObject":
             headerDefault = "jsapi.h"
-        elif self.interface.isCallback():
+        elif self.interface.isCallback() or self.interface.isJSImplemented():
             # A copy of CGHeaders.getDeclarationFilename; we can't
             # import it here, sadly.
             # Use our local version of the header, not the exported one, so that
