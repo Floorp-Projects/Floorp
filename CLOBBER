@@ -15,4 +15,4 @@
 #
 # Note: The description below will be part of the error message shown to users.
 #
-Bug 838652 requires a clobber
+Bug 648407 - Fold NSPR, NSS and SQLite libraries all together on B2G, Android, OSX and Windows
