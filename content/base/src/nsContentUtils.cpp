@@ -111,6 +111,7 @@
 #include "nsIMEStateManager.h"
 #include "nsIMIMEService.h"
 #include "nsINativeKeyBindings.h"
+#include "nsINode.h"
 #include "nsINodeInfo.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsIObserver.h"
