@@ -2424,7 +2424,7 @@ CountSheetMemory(URIPrincipalAndCORSModeHashKey* /* unused */,
   // have to worry about it here.
   // Likewise, if aSheet has an owning node, then the document that
   // node is in will report it.
-  if (aSheet->GetOwningNode() || aSheet->GetParentSheet()) {
+  if (aSheet->GetOwnerNode() || aSheet->GetParentSheet()) {
     return 0;
   }
   return aSheet->SizeOfIncludingThis(aMallocSizeOf);

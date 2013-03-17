@@ -16,7 +16,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMLinkStyle.h"
 #include "nsIStyleSheetLinkingElement.h"
-#include "nsIStyleSheet.h"
+#include "nsCSSStyleSheet.h"
 #include "nsIURI.h"
 #include "nsTArray.h"
 #include "mozilla/CORSMode.h"
@@ -41,10 +41,10 @@ public:
   // nsIDOMLinkStyle
   NS_DECL_NSIDOMLINKSTYLE
 
-  nsIStyleSheet* GetSheet() { return mStyleSheet; }
+  nsCSSStyleSheet* GetSheet() const { return mStyleSheet; }
 
   // nsIStyleSheetLinkingElement  
-  NS_IMETHOD SetStyleSheet(nsIStyleSheet* aStyleSheet);
+  NS_IMETHOD SetStyleSheet(nsCSSStyleSheet* aStyleSheet);
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aStyleSheet);
   NS_IMETHOD InitStyleLinkElement(bool aDontLoadStyle);
   NS_IMETHOD UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
@@ -105,7 +105,7 @@ private:
                               bool* aIsAlternate,
                               bool aForceUpdate);
 
-  nsCOMPtr<nsIStyleSheet> mStyleSheet;
+  nsRefPtr<nsCSSStyleSheet> mStyleSheet;
 protected:
   bool mDontLoadStyle;
   bool mUpdatesEnabled;

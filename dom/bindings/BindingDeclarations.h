@@ -21,6 +21,12 @@
 #include "nsStringBuffer.h"
 #include "nsTArray.h"
 
+class nsWrapperCache;
+
+// nsGlobalWindow implements nsWrapperCache, but doesn't always use it. Don't
+// try to use it without fixing that first.
+class nsGlobalWindow;
+
 namespace mozilla {
 namespace dom {
 
@@ -377,6 +383,52 @@ private:
 
   JS::Value mValue;
   JSContext* mCx;
+};
+
+inline nsWrapperCache*
+GetWrapperCache(nsWrapperCache* cache)
+{
+  return cache;
+}
+
+inline nsWrapperCache*
+GetWrapperCache(nsGlobalWindow* not_allowed);
+
+inline nsWrapperCache*
+GetWrapperCache(void* p)
+{
+  return NULL;
+}
+
+// Helper template for smart pointers to resolve ambiguity between
+// GetWrappeCache(void*) and GetWrapperCache(const ParentObject&).
+template <template <typename> class SmartPtr, typename T>
+inline nsWrapperCache*
+GetWrapperCache(const SmartPtr<T>& aObject)
+{
+  return GetWrapperCache(aObject.get());
+}
+
+struct ParentObject {
+  template<class T>
+  ParentObject(T* aObject) :
+    mObject(aObject),
+    mWrapperCache(GetWrapperCache(aObject))
+  {}
+
+  template<class T, template<typename> class SmartPtr>
+  ParentObject(const SmartPtr<T>& aObject) :
+    mObject(aObject.get()),
+    mWrapperCache(GetWrapperCache(aObject.get()))
+  {}
+
+  ParentObject(nsISupports* aObject, nsWrapperCache* aCache) :
+    mObject(aObject),
+    mWrapperCache(aCache)
+  {}
+
+  nsISupports* const mObject;
+  nsWrapperCache* const mWrapperCache;
 };
 
 } // namespace dom
