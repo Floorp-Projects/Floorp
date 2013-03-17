@@ -120,8 +120,8 @@ class FullParseHandler
         return new_<BinaryNode>(kind, op, pos, left, right);
     }
     ParseNode *newBinaryOrAppend(ParseNodeKind kind, ParseNode *left, ParseNode *right,
-                                 JSOp op = JSOP_NOP) {
-        return ParseNode::newBinaryOrAppend(kind, op, left, right, this, foldConstants);
+                                 ParseContext<FullParseHandler> *pc, JSOp op = JSOP_NOP) {
+        return ParseNode::newBinaryOrAppend(kind, op, left, right, this, pc, foldConstants);
     }
     void setBinaryRHS(ParseNode *pn, ParseNode *rhs) {
         JS_ASSERT(pn->isArity(PN_BINARY));

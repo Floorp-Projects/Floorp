@@ -66,7 +66,8 @@ window.onfocus = function()
     test_input_paste_dataTransfer,
     test_input_paste_abort_dataTransfer,
     test_input_copypaste_dataTransfer_multiple,
-    test_input_copy_button_dataTransfer
+    test_input_copy_button_dataTransfer,
+    test_eventspref_disabled
     ];
 
   // Run the main tests.  This will also populate the delayedTests array
@@ -569,6 +570,42 @@ function test_input_copy_button_dataTransfer() {
   } finally {
     document.documentElement.oncopy = null;
   }
+}
+
+function test_eventspref_disabled() {
+  // Disable clipboard events
+  SpecialPowers.setBoolPref("dom.event.clipboardevents.enabled", false);
+
+  var event_fired = false;
+  contentInput.oncut = function() { event_fired = true; };
+  contentInput.oncopy = function() { event_fired = true; };
+  contentInput.onpaste = function() { event_fired = true; };
+  try {
+    selectContentInput();
+    contentInput.setSelectionRange(1, 4);
+    synthesizeKey("x", {accelKey: 1});
+    is(contentInput.value, "IT TEXT", "cut changed text when preference is disabled");
+    is(getClipboardText(), "NPU", "cut changed clipboard when preference is disabled");
+    ok(!event_fired, "cut event did not fire when preference is disabled")
+
+    event_fired = false;
+    contentInput.setSelectionRange(3, 6);
+    synthesizeKey("c", {accelKey: 1});
+    is(getClipboardText(), "TEX", "copy changed clipboard when preference is disabled");
+    ok(!event_fired, "copy event did not fire when preference is disabled")
+
+    event_fired = false;
+    contentInput.setSelectionRange(0, 2);
+    synthesizeKey("v", {accelKey: 1});
+    is(contentInput.value, "TEX TEXT", "paste changed text when preference is disabled");
+    ok(!event_fired, "paste event did not fire when preference is disabled")
+  } finally {
+    contentInput.oncut = null;
+    contentInput.oncopy = null;
+    contentInput.onpaste = null;
+  }
+
+  SpecialPowers.clearUserPref("dom.event.clipboardevents.enabled");
 }
 
 let expectedData = [];

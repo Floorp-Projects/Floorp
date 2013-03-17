@@ -171,6 +171,8 @@ class nsNativeTheme : public nsITimerCallback
   nsIFrame* GetAdjacentSiblingFrameWithSameAppearance(nsIFrame* aFrame,
                                                       bool aNextSibling);
 
+  bool IsRangeHorizontal(nsIFrame* aFrame);
+
  private:
   uint32_t mAnimatedContentTimeout;
   nsCOMPtr<nsITimer> mAnimatedContentTimer;

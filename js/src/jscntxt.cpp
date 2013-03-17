@@ -125,11 +125,12 @@ JSRuntime::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, RuntimeSizes *rtS
     rtSizes->temporary = tempLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
 
     if (execAlloc_) {
-        execAlloc_->sizeOfCode(&rtSizes->jaegerCode, &rtSizes->ionCode, &rtSizes->regexpCode,
-                               &rtSizes->unusedCode);
+        execAlloc_->sizeOfCode(&rtSizes->jaegerCode, &rtSizes->ionCode, &rtSizes->asmJSCode,
+                               &rtSizes->regexpCode, &rtSizes->unusedCode);
     } else {
         rtSizes->jaegerCode = 0;
         rtSizes->ionCode    = 0;
+        rtSizes->asmJSCode  = 0;
         rtSizes->regexpCode = 0;
         rtSizes->unusedCode = 0;
     }
@@ -153,9 +154,9 @@ JSRuntime::sizeOfExplicitNonHeap()
     size_t n = stackSpace.sizeOf();
 
     if (execAlloc_) {
-        size_t jaegerCode, ionCode, regexpCode, unusedCode;
-        execAlloc_->sizeOfCode(&jaegerCode, &ionCode, &regexpCode, &unusedCode);
-        n += jaegerCode + ionCode + regexpCode + unusedCode;
+        size_t jaegerCode, ionCode, asmJSCode, regexpCode, unusedCode;
+        execAlloc_->sizeOfCode(&jaegerCode, &ionCode, &asmJSCode, &regexpCode, &unusedCode);
+        n += jaegerCode + ionCode + asmJSCode + regexpCode + unusedCode;
     }
 
     if (bumpAlloc_)
@@ -180,6 +181,11 @@ JSRuntime::triggerOperationCallback()
      * immediately visible to other processors polling the flag.
      */
     JS_ATOMIC_SET(&interrupt, 1);
+
+#ifdef JS_ION
+    /* asm.js code uses a separate mechanism to halt running code. */
+    TriggerOperationCallbackForAsmJSCode(this);
+#endif
 }
 
 void

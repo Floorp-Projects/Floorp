@@ -14,8 +14,10 @@ MODULE = accessibility
 LIBRARY_NAME = accessibility_xpcom_s
 LIBXUL_LIBRARY = 1
 
+EXPORTS := xpcAccEvents.h
+
 CPPSRCS = \
-  nsAccEvent.cpp \
+  xpcAccEvents.cpp \
   nsAccessibleRelation.cpp \
   xpcAccessibleTable.cpp \
   xpcAccessibleTableCell.cpp \
@@ -23,6 +25,8 @@ CPPSRCS = \
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
+
+EXTRA_MDDEPEND_FILES = xpcAccEvents.pp
 
 include $(topsrcdir)/config/rules.mk
 
@@ -56,3 +60,34 @@ endif
 ifneq ($(A11Y_LOG),0)
   DEFINES += -DA11Y_LOG
 endif
+
+xpcAccEvents.h: $(srcdir)/AccEvents.conf \
+                   $(srcdir)/AccEventGen.py \
+                   $(LIBXUL_DIST)/sdk/bin/header.py \
+                   $(LIBXUL_DIST)/sdk/bin/xpidl.py \
+                   $(DEPTH)/js/src/js-confdefs.h
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
+	  -I$(LIBXUL_DIST)/sdk/bin \
+	  $(srcdir)/AccEventGen.py \
+	  -I $(DEPTH)/dist/idl \
+	  --header-output xpcAccEvents.h \
+	  $(srcdir)/AccEvents.conf
+
+xpcAccEvents.cpp: $(srcdir)/AccEvents.conf \
+                     $(srcdir)/AccEventGen.py \
+                     $(LIBXUL_DIST)/sdk/bin/header.py \
+                     $(LIBXUL_DIST)/sdk/bin/xpidl.py \
+                     $(DEPTH)/js/src/js-confdefs.h
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
+	  -I$(LIBXUL_DIST)/sdk/bin \
+	  $(srcdir)/AccEventGen.py \
+	  -I $(DEPTH)/dist/idl \
+	  --header-output xpcAccEvents.h \
+	  --stub-output xpcAccEvents.cpp \
+	  --makedepend-output $(MDDEPDIR)/xpcAccEvents.pp \
+	  $(srcdir)/AccEvents.conf
+
+GARBAGE += \
+  xpcAccEvents.cpp \
+  xpcAccEvents.h \
+  $(null)

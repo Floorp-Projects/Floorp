@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.util.GeckoEventResponder;
+import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.DateTimePicker;
 
 import org.json.JSONArray;
@@ -272,7 +273,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
     @Override
     public void handleMessage(String event, final JSONObject message) {
         // The dialog must be created on the UI thread.
-        GeckoAppShell.getMainHandler().post(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 processMessage(message);
@@ -298,7 +299,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
     }
 
     public void show(String aTitle, String aText, PromptListItem[] aMenuList, boolean aMultipleSelection) {
-        GeckoApp.assertOnUiThread();
+        ThreadUtils.assertOnUiThread();
 
         // treat actions that show a dialog as if preventDefault by content to prevent panning
         GeckoApp.mAppContext.getLayerView().abortPanning();
@@ -394,7 +395,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
 
     @Override
     public void onClick(DialogInterface aDialog, int aWhich) {
-        GeckoApp.assertOnUiThread();
+        ThreadUtils.assertOnUiThread();
         JSONObject ret = new JSONObject();
         try {
             int button = -1;
@@ -436,13 +437,13 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        GeckoApp.assertOnUiThread();
+        ThreadUtils.assertOnUiThread();
         mSelected[position] = !mSelected[position];
     }
 
     @Override
     public void onCancel(DialogInterface aDialog) {
-        GeckoApp.assertOnUiThread();
+        ThreadUtils.assertOnUiThread();
         JSONObject ret = new JSONObject();
         try {
             ret.put("button", -1);

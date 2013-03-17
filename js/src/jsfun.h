@@ -161,6 +161,7 @@ class JSFunction : public JSObject
     }
 
     JSAtom *atom() const { return hasGuessedAtom() ? NULL : atom_.get(); }
+    js::PropertyName *name() const { return hasGuessedAtom() ? NULL : atom_->asPropertyName(); }
     inline void initAtom(JSAtom *atom);
     JSAtom *displayAtom() const { return atom_; }
 

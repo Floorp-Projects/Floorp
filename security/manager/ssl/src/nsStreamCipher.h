@@ -10,7 +10,6 @@
 #include "pk11func.h"
 #include "mozilla/Attributes.h"
 
-#define NS_STREAMCIPHER_CLASSNAME  "Stream Cipher Component"
 /* dbfcbe4a-10f7-4d6f-a481-68e6d6b71d21 */
 #define NS_STREAMCIPHER_CID   \
 { 0xdbfcbe4a, 0x10f7, 0x4d6f, {0xa4, 0x81, 0x68, 0xe6, 0xd6, 0xb7, 0x1d, 0x21}}

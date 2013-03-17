@@ -48,7 +48,7 @@ namespace winrt {
 extern nsTArray<nsString>* sSettingsArray;
 
 void
-FrameworkView::SearchActivated(ComPtr<ISearchActivatedEventArgs>& aArgs)
+FrameworkView::SearchActivated(ComPtr<ISearchActivatedEventArgs>& aArgs, bool aStartup)
 {
   if (!aArgs)
     return;
@@ -60,11 +60,15 @@ FrameworkView::SearchActivated(ComPtr<ISearchActivatedEventArgs>& aArgs)
 
   unsigned int length;
   Log(L"SearchActivated text=", data.GetRawBuffer(&length));
-  PerformURILoadOrSearch(data);
+  if (aStartup) {
+    mActivationURI = data.GetRawBuffer(&length);
+  } else {
+    PerformURILoadOrSearch(data);
+  }
 }
 
 void
-FrameworkView::FileActivated(ComPtr<IFileActivatedEventArgs>& aArgs)
+FrameworkView::FileActivated(ComPtr<IFileActivatedEventArgs>& aArgs, bool aStartup)
 {
   if (!aArgs)
     return;
@@ -76,13 +80,16 @@ FrameworkView::FileActivated(ComPtr<IFileActivatedEventArgs>& aArgs)
   HString filePath;
   AssertHRESULT(item->get_Path(filePath.GetAddressOf()));
 
-  ComPtr<IUriRuntimeClass> uri;
-  AssertHRESULT(MetroUtils::CreateUri(filePath, uri));
-  PerformURILoad(uri);
+  if (aStartup) {
+    unsigned int length;
+    mActivationURI = filePath.GetRawBuffer(&length);
+  } else {
+    PerformURILoad(filePath);
+  }
 }
 
 void
-FrameworkView::LaunchActivated(ComPtr<ILaunchActivatedEventArgs>& aArgs)
+FrameworkView::LaunchActivated(ComPtr<ILaunchActivatedEventArgs>& aArgs, bool aStartup)
 {
   if (!aArgs)
     return;
@@ -91,9 +98,32 @@ FrameworkView::LaunchActivated(ComPtr<ILaunchActivatedEventArgs>& aArgs)
   if (WindowsIsStringEmpty(data.Get()))
     return;
 
+  // If we're being launched from a secondary tile then we have a 2nd command line param of -url
+  // and a third of the secondary tile.  We want it in mActivationURI so that browser.js will
+  // load it in without showing the start UI.
   int argc;
   unsigned int length;
   LPWSTR* argv = CommandLineToArgvW(data.GetRawBuffer(&length), &argc);
+  if (aStartup && argc == 3 && !wcsicmp(argv[1], L"-url")) {
+    mActivationURI = argv[2];
+  } else {
+    // Some other command line or this is not a startup.
+    // If it is startup we process it later when XPCOM is initialilzed.
+    mActivationCommandLine = data.GetRawBuffer(&length);
+    if (!aStartup) {
+      ProcessLaunchArguments();
+    }
+  }
+}
+
+void
+FrameworkView::ProcessLaunchArguments()
+{
+  if (!mActivationCommandLine.Length())
+    return;
+
+  int argc;
+  LPWSTR* argv = CommandLineToArgvW(mActivationCommandLine.BeginReading(), &argc);
   nsCOMPtr<nsICommandLineRunner> cmdLine =
     (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
   if (!cmdLine) {
@@ -126,7 +156,7 @@ FrameworkView::LaunchActivated(ComPtr<ILaunchActivatedEventArgs>& aArgs)
 }
 
 void
-FrameworkView::RunStartupArgs(IActivatedEventArgs* aArgs)
+FrameworkView::ProcessActivationArgs(IActivatedEventArgs* aArgs, bool aStartup)
 {
   ActivationKind kind;
   if (!aArgs || FAILED(aArgs->get_Kind(&kind)))
@@ -138,22 +168,35 @@ FrameworkView::RunStartupArgs(IActivatedEventArgs* aArgs)
     AssertHRESULT(args.As(&protoArgs));
     ComPtr<IUriRuntimeClass> uri;
     AssertHRESULT(protoArgs->get_Uri(uri.GetAddressOf()));
-    PerformURILoad(uri);
+    if (!uri)
+      return;
+
+    HString data;
+    AssertHRESULT(uri->get_AbsoluteUri(data.GetAddressOf()));
+    if (WindowsIsStringEmpty(data.Get()))
+      return;
+
+    if (aStartup) {
+      unsigned int length;
+      mActivationURI = data.GetRawBuffer(&length);
+    } else {
+      PerformURILoad(data);
+    }
   } else if (kind == ActivationKind::ActivationKind_Search) {
     Log(L"Activation argument kind: Search");
     ComPtr<ISearchActivatedEventArgs> searchArgs;
     args.As(&searchArgs);
-    SearchActivated(searchArgs);
+    SearchActivated(searchArgs, aStartup);
   } else if (kind == ActivationKind::ActivationKind_File) {
     Log(L"Activation argument kind: File");
     ComPtr<IFileActivatedEventArgs> fileArgs;
     args.As(&fileArgs);
-    FileActivated(fileArgs);
+    FileActivated(fileArgs, aStartup);
   } else if (kind == ActivationKind::ActivationKind_Launch) {
     Log(L"Activation argument kind: Launch");
     ComPtr<ILaunchActivatedEventArgs> launchArgs;
     args.As(&launchArgs);
-    LaunchActivated(launchArgs);
+    LaunchActivated(launchArgs, aStartup);
   }
 }
 
@@ -215,19 +258,12 @@ FrameworkView::SetupContracts()
 }
 
 void
-FrameworkView::PerformURILoad(ComPtr<IUriRuntimeClass>& aURI)
+FrameworkView::PerformURILoad(HString& aURI)
 {
   LogFunction();
-  if (!aURI)
-    return;
-
-  HString data;
-  AssertHRESULT(aURI->get_AbsoluteUri(data.GetAddressOf()));
-  if (WindowsIsStringEmpty(data.Get()))
-    return;
 
   unsigned int length;
-  Log(L"PerformURILoad uri=%s", data.GetRawBuffer(&length));
+  Log(L"PerformURILoad uri=%s", aURI.GetRawBuffer(&length));
 
   nsCOMPtr<nsICommandLineRunner> cmdLine =
     (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
@@ -236,7 +272,7 @@ FrameworkView::PerformURILoad(ComPtr<IUriRuntimeClass>& aURI)
     return;
   }
 
-  nsAutoCString utf8data(NS_ConvertUTF16toUTF8(data.GetRawBuffer(&length)));
+  nsAutoCString utf8data(NS_ConvertUTF16toUTF8(aURI.GetRawBuffer(&length)));
   const char *argv[] = { "metrobrowser",
                          "-url",
                          utf8data.BeginReading() };
@@ -295,7 +331,7 @@ FrameworkView::PerformURILoadOrSearch(HString& aString)
   ComPtr<IUriRuntimeClass> uri;
   MetroUtils::CreateUri(aString.Get(), uri);
   if (uri) {
-    PerformURILoad(uri);
+    PerformURILoad(aString);
   } else {
     PerformSearch(aString);
   }

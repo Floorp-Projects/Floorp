@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=851485
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 851485</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 851485 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function delayedVerifyScroll(win) {
+  ok(win.scrollY > 3000);
+  SimpleTest.finish();
+}
+
+function verifyScroll(event) {
+  var win = event.target.defaultView;
+  win.onscroll = "";
+  setTimeout(function(){delayedVerifyScroll(win)},500)
+}
+
+function clickLink(link,win) {
+  win.document.body.offsetHeight;
+  synthesizeMouseAtCenter(link, {type: "mousedown"}, win);
+  synthesizeMouseAtCenter(link, {type: "mouseup"}, win);
+  sendMouseEvent({type: "click"}, link, win);
+}
+
+function verifyAfterLoad() {
+  var e = document.getElementsByTagName('iframe')[0];
+  var win = e.contentWindow;
+  if (win.location.hash != '') {
+    is(win.scrollY,500);
+    var link = win.document.getElementsByTagName('a')[0];
+    win.onscroll = verifyScroll;
+    clickLink(link,win);
+    return;
+  }
+}
+
+function runTest() {
+  var e = document.getElementsByTagName('iframe')[0];
+  var win = e.contentWindow;
+  if (win.location.hash != '') {
+    return;
+  }
+  win.location.hash='#anchor'
+  win.scrollTo(0,500);
+  e.setAttribute("onload","verifyAfterLoad()");
+  win.location.reload()
+}
+
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=851485">Mozilla Bug 851485</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+<iframe src="file_bug842853.html"></iframe>
+<script>
+
+</script>
+</body>
+</html>

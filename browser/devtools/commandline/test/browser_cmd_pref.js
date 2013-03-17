@@ -223,7 +223,7 @@ let tests = {
         },
         exec: {
           completed: true,
-          output: new RegExp("^" + tiltEnabledOrig + "$"),
+          output: new RegExp("^devtools\.tilt\.enabled: " + tiltEnabledOrig + "$"),
         },
       },
       {
@@ -252,7 +252,7 @@ let tests = {
         },
         exec: {
           completed: true,
-          output: new RegExp("^true$"),
+          output: new RegExp("^devtools\.tilt\.enabled: true$"),
         },
       },
       {
@@ -277,7 +277,7 @@ let tests = {
         },
         exec: {
           completed: true,
-          output: new RegExp("^false$"),
+          output: new RegExp("^devtools\.tilt\.enabled: false$"),
         },
         post: function() {
           is(prefBranch.getBoolPref("devtools.tilt.enabled"), false,
@@ -298,7 +298,7 @@ let tests = {
         },
         exec: {
           completed: true,
-          output: new RegExp("^10$"),
+          output: new RegExp("^devtools\.editor\.tabsize: 10$"),
         },
       },
       {
@@ -323,7 +323,7 @@ let tests = {
         },
         exec: {
           completed: true,
-          output: new RegExp("^20$"),
+          output: new RegExp("^devtools\.editor\.tabsize: 20$"),
         },
         post: function() {
           is(prefBranch.getIntPref("devtools.editor.tabsize"), 20,
@@ -352,7 +352,7 @@ let tests = {
         },
         exec: {
           completed: true,
-          output: new RegExp("^1$"),
+          output: new RegExp("^devtools\.editor\.tabsize: 1$"),
         },
         post: function() {
           is(prefBranch.getIntPref("devtools.editor.tabsize"), 1,
@@ -373,7 +373,7 @@ let tests = {
         },
         exec: {
           completed: true,
-          output: new RegExp("^" + remoteHostOrig + "$"),
+          output: new RegExp("^devtools\.debugger\.remote-host: " + remoteHostOrig + "$"),
         },
       },
       {
@@ -398,7 +398,7 @@ let tests = {
         },
         exec: {
           completed: true,
-          output: new RegExp("^e.com$"),
+          output: new RegExp("^devtools\.debugger\.remote-host: e.com$"),
         },
         post: function() {
           var ecom = prefBranch.getComplexValue("devtools.debugger.remote-host",
@@ -428,7 +428,7 @@ let tests = {
         },
         exec: {
           completed: true,
-          output: new RegExp("^moz.foo$"),
+          output: new RegExp("^devtools\.debugger\.remote-host: moz.foo$"),
         },
         post: function() {
           var mozfoo = prefBranch.getComplexValue("devtools.debugger.remote-host",

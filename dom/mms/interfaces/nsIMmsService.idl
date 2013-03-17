@@ -3,9 +3,16 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+interface nsIMobileMessageCallback;
+interface nsIDOMBlob;
 
-[scriptable, uuid(217ddd76-75db-4210-955d-8806cd8d87f9)]
+%{C++
+#define RIL_MMSSERVICE_CONTRACTID "@mozilla.org/mms/rilmmsservice;1"
+%}
+
+[scriptable, uuid(3ec33286-8559-11e2-9f38-e76b58650568)]
 interface nsIMmsService : nsISupports
 {
-  boolean        hasSupport();
+  void send(in jsval parameters /* MmsParameters */,
+            in nsIMobileMessageCallback request);
 };

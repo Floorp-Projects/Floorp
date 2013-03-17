@@ -122,6 +122,7 @@ static bool enableMethodJit = true;
 static bool enableTypeInference = true;
 static bool enableDisassemblyDumps = false;
 static bool enableIon = true;
+static bool enableAsmJS = true;
 
 static bool printTiming = false;
 
@@ -4720,6 +4721,8 @@ NewContext(JSRuntime *rt)
         JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
     if (enableIon)
         JS_ToggleOptions(cx, JSOPTION_ION);
+    if (enableAsmJS)
+        JS_ToggleOptions(cx, JSOPTION_ASMJS);
     return cx;
 }
 
@@ -4885,6 +4888,10 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
     if (op->getBoolOption("no-ion")) {
         enableIon = false;
         JS_ToggleOptions(cx, JSOPTION_ION);
+    }
+    if (op->getBoolOption("no-asmjs")) {
+        enableAsmJS = false;
+        JS_ToggleOptions(cx, JSOPTION_ASMJS);
     }
 
     if (const char *str = op->getStringOption("ion-gvn")) {
@@ -5179,6 +5186,7 @@ main(int argc, char **argv, char **envp)
 #endif
         || !op.addBoolOption('\0', "ion", "Enable IonMonkey (default)")
         || !op.addBoolOption('\0', "no-ion", "Disable IonMonkey")
+        || !op.addBoolOption('\0', "no-asmjs", "Disable asm.js compilation")
         || !op.addStringOption('\0', "ion-gvn", "[mode]",
                                "Specify Ion global value numbering:\n"
                                "  off: disable GVN\n"

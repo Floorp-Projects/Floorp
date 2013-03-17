@@ -133,12 +133,30 @@ var Browser = {
     if (window.arguments && window.arguments[0])
       commandURL = window.arguments[0];
 
+    // Activation URIs come from protocol activations, secondary tiles, and file activations
+    let activationURI = this.getShortcutOrURI(MetroUtils.activationURI);
+
+    let self = this;
+    function loadStartupURI() {
+      let uri = activationURI || commandURL || Browser.getHomePage();
+      if (StartUI.isStartURI(uri)) {
+        self.addTab(uri, true);
+        StartUI.show(); // This makes about:start load a lot faster
+      } else if (activationURI) {
+        self.addTab(uri, true, null, { flags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP });
+      } else {
+        self.addTab(uri, true);
+      }
+    }
+
     // Should we restore the previous session (crash or some other event)
     let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
     if (ss.shouldRestore() || Services.prefs.getBoolPref("browser.startup.sessionRestore")) {
       let bringFront = false;
       // First open any commandline URLs, except the homepage
-      if (commandURL && commandURL != this.getHomePage()) {
+      if (activationURI && !StartUI.isStartURI(activationURI)) {
+        this.addTab(activationURI, true, null, { flags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP });
+      } else if (commandURL && !StartUI.isStartURI(commandURL)) {
         this.addTab(commandURL, true);
       } else {
         bringFront = true;
@@ -150,7 +168,7 @@ var Browser = {
           observe: function(aSubject, aTopic, aData) {
             Services.obs.removeObserver(dummyCleanup, "sessionstore-windows-restored");
             if (aData == "fail")
-              Browser.addTab(commandURL || Browser.getHomePage(), true);
+              loadStartupURI();
             dummy.chromeTab.ignoreUndo = true;
             Browser.closeTab(dummy, { forceClose: true });
           }
@@ -159,7 +177,7 @@ var Browser = {
       }
       ss.restoreLastSession(bringFront);
     } else {
-      this.addTab(commandURL || this.getHomePage(), true);
+      loadStartupURI();
     }
 
     messageManager.addMessageListener("DOMLinkAdded", this);
@@ -333,6 +351,9 @@ var Browser = {
    * @returns the expanded shortcut, or the original URL if not a shortcut
    */
   getShortcutOrURI: function getShortcutOrURI(aURL, aPostDataRef) {
+    if (!aURL)
+      return aURL;
+
     let shortcutURL = null;
     let keyword = aURL;
     let param = "";

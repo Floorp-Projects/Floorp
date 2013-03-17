@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 341604</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script>
+function doStuff() {
+  try {
+    window.parent.parent.parent.ok_wrapper(false, "a frame inside a frame inside a sandboxed iframe should NOT be same origin with the iframe's parent");
+  }
+  catch (e) {
+    dump("caught some e if12\n");
+    window.parent.parent.parent.postMessage({ok: true, desc: "a frame inside a frame inside a sandboxed iframe is not same origin with the iframe's parent"}, "*");
+  }
+}
+</script>
+<body onload='doStuff()'>
+  I'm a &lt;frame&gt; inside a &lt;frame&gt; inside an iframe which is sandboxed with 'allow-scripts'
+</body>
+</html>
+

@@ -282,6 +282,9 @@ MOCHITEST_FILES = \
 		file_iframe_sandbox_a_if7.html \
 		file_iframe_sandbox_a_if8.html \
 		file_iframe_sandbox_a_if9.html \
+		file_iframe_sandbox_a_if10.html \
+		file_iframe_sandbox_a_if11.html \
+		file_iframe_sandbox_a_if12.html \
 		test_iframe_sandbox_same_origin.html \
 		file_iframe_sandbox_b_if1.html \
 		file_iframe_sandbox_b_if2.html \

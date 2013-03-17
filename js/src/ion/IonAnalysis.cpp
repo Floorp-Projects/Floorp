@@ -1105,6 +1105,7 @@ ion::ExtractLinearInequality(MTest *test, BranchDirection direction,
     MDefinition *lhs = compare->getOperand(0);
     MDefinition *rhs = compare->getOperand(1);
 
+    // TODO: optimize Compare_UInt32
     if (compare->compareType() != MCompare::Compare_Int32)
         return false;
 

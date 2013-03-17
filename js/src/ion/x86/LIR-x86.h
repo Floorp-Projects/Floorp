@@ -70,6 +70,36 @@ class LUnboxDouble : public LInstructionHelper<1, 2, 0>
     }
 };
 
+// Convert a 32-bit unsigned integer to a double.
+class LUInt32ToDouble : public LInstructionHelper<1, 1, 1>
+{
+  public:
+    LIR_HEADER(UInt32ToDouble)
+
+    LUInt32ToDouble(const LAllocation &input, const LDefinition &temp) {
+        setOperand(0, input);
+        setTemp(0, temp);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+};
+
+class LAsmJSLoadFuncPtr : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(AsmJSLoadFuncPtr);
+    LAsmJSLoadFuncPtr(const LAllocation &index) {
+        setOperand(0, index);
+    }
+    MAsmJSLoadFuncPtr *mir() const {
+        return mir_->toAsmJSLoadFuncPtr();
+    }
+    const LAllocation *index() {
+        return getOperand(0);
+    }
+};
+
 } // namespace ion
 } // namespace js
 

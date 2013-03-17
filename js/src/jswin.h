@@ -14,4 +14,5 @@
 # undef STRICT
 # undef LEGACY
 # undef THIS
+# undef PASSTHROUGH
 #endif

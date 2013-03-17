@@ -14,6 +14,7 @@
 
 #include "nspr.h"
 #include "pldhash.h"
+#include "nsAutoPtr.h"
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"

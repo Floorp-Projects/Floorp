@@ -1,0 +1,28 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIAccessibleEvent.idl"
+
+/**
+ * Fired when a accessible and its subtree are removed from the tree.
+ */
+[scriptable, builtinclass, uuid(a2bd2eca-3afa-489b-afb2-f93ef32ad99c)]
+interface nsIAccessibleHideEvent: nsIAccessibleEvent
+{
+  /**
+   * Return an accessible that was a parent of the target.
+   */
+  readonly attribute nsIAccessible targetParent;
+
+  /**
+   * Return an accessible that was a next sibling of the target
+   */
+  readonly attribute nsIAccessible targetNextSibling;
+
+  /**
+   * Return an accessible that was a parent of the target
+   */
+  readonly attribute nsIAccessible targetPrevSibling;
+};

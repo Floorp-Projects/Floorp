@@ -451,12 +451,19 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         testq(lhs, rhs);
         j(cond, label);
     }
+    void branchTestPtr(Condition cond, Register lhs, Imm32 imm, Label *label) {
+        testq(lhs, imm);
+        j(cond, label);
+    }
     void decBranchPtr(Condition cond, const Register &lhs, Imm32 imm, Label *label) {
         subPtr(imm, lhs);
         j(cond, label);
     }
 
     void movePtr(const Register &src, const Register &dest) {
+        movq(src, dest);
+    }
+    void movePtr(const Register &src, const Operand &dest) {
         movq(src, dest);
     }
     void movePtr(ImmWord imm, Register dest) {
@@ -471,6 +478,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void loadPtr(const Address &address, Register dest) {
         movq(Operand(address), dest);
+    }
+    void loadPtr(const Operand &src, Register dest) {
+        movq(src, dest);
     }
     void loadPtr(const BaseIndex &src, Register dest) {
         movq(Operand(src), dest);
@@ -489,6 +499,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void storePtr(Register src, const Address &address) {
         movq(src, Operand(address));
+    }
+    void storePtr(Register src, const Operand &dest) {
+        movq(src, dest);
     }
     void storePtr(const Register &src, const AbsoluteAddress &address) {
         movq(ImmWord(address.addr), ScratchReg);
@@ -709,6 +722,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         lea(src, ScratchReg);
         movqsd(ScratchReg, dest);
     }
+    void unboxDouble(const Address &src, const FloatRegister &dest) {
+        unboxDouble(Operand(src), dest);
+    }
     void unboxPrivate(const ValueOperand &src, const Register dest) {
         movq(src.valueReg(), dest);
         shlq(Imm32(1), dest);
@@ -914,6 +930,16 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         push(Imm32(MakeFrameDescriptor(0, IonFrame_Osr)));
         call(code);
         addq(Imm32(sizeof(uintptr_t) * 2), rsp);
+    }
+
+    // See CodeGeneratorX64 calls to noteAsmJSGlobalAccess.
+    void patchAsmJSGlobalAccess(unsigned offset, uint8_t *code, unsigned codeBytes,
+                                unsigned globalDataOffset)
+    {
+        uint8_t *nextInsn = code + offset;
+        JS_ASSERT(nextInsn <= code + codeBytes);
+        uint8_t *target = code + codeBytes + globalDataOffset;
+        ((int32_t *)nextInsn)[-1] = target - nextInsn;
     }
 };
 

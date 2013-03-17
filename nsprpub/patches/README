@@ -1,5 +1,0 @@
-This directory contains patches that were added locally
-on top of the NSPR release.
-
-* linux-setpriority.patch: Bug 841651 - Implement PR_SetThreadPriority()
-  on Linux-based platforms using per-thread nice values.

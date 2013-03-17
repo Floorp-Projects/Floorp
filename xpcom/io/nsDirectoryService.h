@@ -11,6 +11,7 @@
 #include "nsIFile.h"
 #include "nsISupportsArray.h"
 #include "nsIAtom.h"
+#include "nsTArray.h"
 #include "mozilla/Attributes.h"
 
 #define NS_XPCOM_INIT_CURRENT_PROCESS_DIR       "MozBinD"   // Can be used to set NS_XPCOM_CURRENT_PROCESS_DIR

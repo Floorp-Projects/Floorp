@@ -106,10 +106,7 @@ FrameworkView::Run()
   // XPCOM is initialized here. mWidget is also created.
   mMetroApp->Initialize();
 
-  if (mDeferredActivationEventArgs) {
-    RunStartupArgs(mDeferredActivationEventArgs.Get());
-    mDeferredActivationEventArgs = nullptr;
-  }
+  ProcessLaunchArguments();
 
   // Activate the window
   mWindow->Activate();
@@ -295,6 +292,11 @@ void FrameworkView::SetDpi(float aDpi)
 
     // convert to physical (device) pixels
     mWindowBounds = MetroUtils::LogToPhys(logicalBounds);
+
+    // notify the widget that dpi has changed
+    if (mWidget) {
+      mWidget->ChangedDPI();
+    }
   }
 }
 
@@ -344,13 +346,10 @@ FrameworkView::OnActivated(ICoreApplicationView* aApplicationView,
 
   ApplicationExecutionState state;
   aArgs->get_PreviousExecutionState(&state);
-  if (state != ApplicationExecutionState::ApplicationExecutionState_Terminated &&
-      state != ApplicationExecutionState::ApplicationExecutionState_ClosedByUser &&
-      state != ApplicationExecutionState::ApplicationExecutionState_NotRunning) {
-    RunStartupArgs(aArgs);
-  } else {
-    mDeferredActivationEventArgs = aArgs;
-  }
+  bool startup = state == ApplicationExecutionState::ApplicationExecutionState_Terminated ||
+                 state == ApplicationExecutionState::ApplicationExecutionState_ClosedByUser ||
+                 state == ApplicationExecutionState::ApplicationExecutionState_NotRunning;
+  ProcessActivationArgs(aArgs, startup);
   return S_OK;
 }
 

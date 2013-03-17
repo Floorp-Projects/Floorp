@@ -17,40 +17,6 @@ using namespace js;
 
 using mozilla::RangedPtr;
 
-JSONParser::~JSONParser()
-{
-    for (size_t i = 0; i < stack.length(); i++) {
-        if (stack[i].state == FinishArrayElement)
-            js_delete(&stack[i].elements());
-        else
-            js_delete(&stack[i].properties());
-    }
-
-    for (size_t i = 0; i < freeElements.length(); i++)
-        js_delete(freeElements[i]);
-
-    for (size_t i = 0; i < freeProperties.length(); i++)
-        js_delete(freeProperties[i]);
-}
-
-void
-JSONParser::trace(JSTracer *trc)
-{
-    for (size_t i = 0; i < stack.length(); i++) {
-        if (stack[i].state == FinishArrayElement) {
-            ElementVector &elements = stack[i].elements();
-            for (size_t j = 0; j < elements.length(); j++)
-                gc::MarkValueRoot(trc, &elements[j], "JSONParser element");
-        } else {
-            PropertyVector &properties = stack[i].properties();
-            for (size_t j = 0; j < properties.length(); j++) {
-                gc::MarkValueRoot(trc, &properties[j].value, "JSONParser property value");
-                gc::MarkIdRoot(trc, &properties[j].id, "JSONParser property id");
-            }
-        }
-    }
-}
-
 void
 JSONParser::error(const char *msg)
 {
@@ -517,95 +483,17 @@ JSONParser::advanceAfterProperty()
     return token(Error);
 }
 
-JSObject *
-JSONParser::createFinishedObject(PropertyVector &properties)
-{
-    /*
-     * Look for an existing cached type and shape for objects with this set of
-     * properties.
-     */
-    if (cx->typeInferenceEnabled()) {
-        JSObject *obj = cx->compartment->types.newTypedObject(cx, properties.begin(),
-                                                              properties.length());
-        if (obj)
-            return obj;
-    }
-
-    /*
-     * Make a new object sized for the given number of properties and fill its
-     * shape in manually.
-     */
-    gc::AllocKind allocKind = gc::GetGCObjectKind(properties.length());
-    RootedObject obj(cx, NewBuiltinClassInstance(cx, &ObjectClass, allocKind));
-    if (!obj)
-        return NULL;
-
-    RootedId propid(cx);
-    RootedValue value(cx);
-
-    for (size_t i = 0; i < properties.length(); i++) {
-        propid = properties[i].id;
-        value = properties[i].value;
-        if (!DefineNativeProperty(cx, obj, propid, value,
-                                  JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE,
-                                  0, 0))
-        {
-            return NULL;
-        }
-    }
-
-    /*
-     * Try to assign a new type to the object with type information for its
-     * properties, and update the initializer type object cache with this
-     * object's final shape.
-     */
-    if (cx->typeInferenceEnabled())
-        cx->compartment->types.fixObjectType(cx, obj);
-
-    return obj;
-}
-
-inline bool
-JSONParser::finishObject(MutableHandleValue vp, PropertyVector &properties)
-{
-    JS_ASSERT(&properties == &stack.back().properties());
-
-    JSObject *obj = createFinishedObject(properties);
-    if (!obj)
-        return false;
-
-    vp.setObject(*obj);
-    if (!freeProperties.append(&properties))
-        return false;
-    stack.popBack();
-    return true;
-}
-
-inline bool
-JSONParser::finishArray(MutableHandleValue vp, ElementVector &elements)
-{
-    JS_ASSERT(&elements == &stack.back().elements());
-
-    JSObject *obj = NewDenseCopiedArray(cx, elements.length(), elements.begin());
-    if (!obj)
-        return false;
-
-    /* Try to assign a new type to the array according to its elements. */
-    if (cx->typeInferenceEnabled())
-        cx->compartment->types.fixArrayType(cx, obj);
-
-    vp.setObject(*obj);
-    if (!freeElements.append(&elements))
-        return false;
-    stack.popBack();
-    return true;
-}
+/*
+ * This enum is local to JSONParser::parse, below, but ISO C++98 doesn't allow
+ * templates to depend on local types.  Boo-urns!
+ */
+enum ParserState { FinishArrayElement, FinishObjectMember, JSONValue };
 
 bool
 JSONParser::parse(MutableHandleValue vp)
 {
-    RootedValue value(cx);
-    JS_ASSERT(stack.empty());
+    Vector<ParserState> stateStack(cx);
+    AutoValueVector valueStack(cx);
 
     vp.setUndefined();
 
@@ -614,15 +502,18 @@ JSONParser::parse(MutableHandleValue vp)
     while (true) {
         switch (state) {
           case FinishObjectMember: {
-            PropertyVector &properties = stack.back().properties();
-            properties.back().value = value;
-
-            token = advanceAfterProperty();
-            if (token == ObjectClose) {
-                if (!finishObject(&value, properties))
-                    return false;
-                break;
+            RootedValue v(cx, valueStack.popCopy());
+            RootedId propid(cx, AtomToId(&valueStack.popCopy().toString()->asAtom()));
+            RootedObject obj(cx, &valueStack.back().toObject());
+            if (!DefineNativeProperty(cx, obj, propid, v,
+                                      JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE,
+                                      0, 0))
+            {
+                return false;
             }
+            token = advanceAfterProperty();
+            if (token == ObjectClose)
+                break;
             if (token != Comma) {
                 if (token == OOM)
                     return false;
@@ -636,22 +527,20 @@ JSONParser::parse(MutableHandleValue vp)
 
           JSONMember:
             if (token == String) {
-                jsid id = AtomToId(atomValue());
-                PropertyVector &properties = stack.back().properties();
-                if (!properties.append(IdValuePair(id)))
+                if (!valueStack.append(atomValue()))
                     return false;
                 token = advancePropertyColon();
                 if (token != Colon) {
                     JS_ASSERT(token == Error);
                     return errorReturn();
                 }
+                if (!stateStack.append(FinishObjectMember))
+                    return false;
                 goto JSONValue;
             }
             if (token == ObjectClose) {
                 JS_ASSERT(state == FinishObjectMember);
                 JS_ASSERT(parsingMode == LegacyJSON);
-                if (!finishObject(&value, stack.back().properties()))
-                    return false;
                 break;
             }
             if (token == OOM)
@@ -661,17 +550,18 @@ JSONParser::parse(MutableHandleValue vp)
             return errorReturn();
 
           case FinishArrayElement: {
-            ElementVector &elements = stack.back().elements();
-            if (!elements.append(value.get()))
+            Value v = valueStack.popCopy();
+            Rooted<JSObject*> obj(cx, &valueStack.back().toObject());
+            if (!js_NewbornArrayPush(cx, obj, v))
                 return false;
             token = advanceAfterArrayElement();
-            if (token == Comma)
-                goto JSONValue;
-            if (token == ArrayClose) {
-                if (!finishArray(&value, elements))
+            if (token == Comma) {
+                if (!stateStack.append(FinishArrayElement))
                     return false;
-                break;
+                goto JSONValue;
             }
+            if (token == ArrayClose)
+                break;
             JS_ASSERT(token == Error);
             return errorReturn();
           }
@@ -682,69 +572,49 @@ JSONParser::parse(MutableHandleValue vp)
           JSONValueSwitch:
             switch (token) {
               case String:
-                value = stringValue();
-                break;
               case Number:
-                value = numberValue();
+                if (!valueStack.append(token == String ? stringValue() : numberValue()))
+                    return false;
                 break;
               case True:
-                value = BooleanValue(true);
+                if (!valueStack.append(BooleanValue(true)))
+                    return false;
                 break;
               case False:
-                value = BooleanValue(false);
+                if (!valueStack.append(BooleanValue(false)))
+                    return false;
                 break;
               case Null:
-                value = NullValue();
+                if (!valueStack.append(NullValue()))
+                    return false;
                 break;
 
               case ArrayOpen: {
-                ElementVector *elements;
-                if (!freeElements.empty()) {
-                    elements = freeElements.popCopy();
-                    elements->clear();
-                } else {
-                    elements = cx->new_<ElementVector>(cx);
-                    if (!elements)
-                        return false;
-                }
-                if (!stack.append(elements))
+                JSObject *obj = NewDenseEmptyArray(cx);
+                if (!obj || !valueStack.append(ObjectValue(*obj)))
                     return false;
-
                 token = advance();
-                if (token == ArrayClose) {
-                    if (!finishArray(&value, *elements))
-                        return false;
+                if (token == ArrayClose)
                     break;
-                }
+                if (!stateStack.append(FinishArrayElement))
+                    return false;
                 goto JSONValueSwitch;
               }
 
               case ObjectOpen: {
-                PropertyVector *properties;
-                if (!freeProperties.empty()) {
-                    properties = freeProperties.popCopy();
-                    properties->clear();
-                } else {
-                    properties = cx->new_<PropertyVector>(cx);
-                    if (!properties)
-                        return false;
-                }
-                if (!stack.append(properties))
+                JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass);
+                if (!obj || !valueStack.append(ObjectValue(*obj)))
                     return false;
-
                 token = advanceAfterObjectOpen();
-                if (token == ObjectClose) {
-                    if (!finishObject(&value, *properties))
-                        return false;
+                if (token == ObjectClose)
                     break;
-                }
                 goto JSONMember;
               }
 
               case ArrayClose:
                 if (parsingMode == LegacyJSON &&
-                    !stack.empty() &&
-                    stack.back().state == FinishArrayElement) {
+                    !stateStack.empty() &&
+                    stateStack.back() == FinishArrayElement) {
                     /*
                      * Previous JSON parsing accepted trailing commas in
                      * non-empty array syntax, and some users depend on this.
@@ -754,8 +624,7 @@ JSONParser::parse(MutableHandleValue vp)
                      * such trailing commas only when specifically
                      * instructed to do so.
                      */
-                    if (!finishArray(&value, stack.back().elements()))
-                        return false;
+                    stateStack.popBack();
                     break;
                 }
                 /* FALL THROUGH */
@@ -775,9 +644,9 @@ JSONParser::parse(MutableHandleValue vp)
             break;
         }
 
-        if (stack.empty())
+        if (stateStack.empty())
             break;
-        state = stack.back().state;
+        state = stateStack.popCopy();
     }
 
     for (; current < end; current++) {
@@ -788,8 +657,7 @@ JSONParser::parse(MutableHandleValue vp)
     }
 
     JS_ASSERT(end == current);
-    JS_ASSERT(stack.empty());
-
-    vp.set(value);
+    JS_ASSERT(valueStack.length() == 1);
+    vp.set(valueStack[0]);
     return true;
 }
