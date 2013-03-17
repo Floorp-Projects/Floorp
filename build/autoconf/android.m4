@@ -254,7 +254,7 @@ if test "$OS_TARGET" = "Android" -a -z "$gonkdir"; then
             fi
             STLPORT_SOURCES="$android_ndk/sources/cxx-stl/stlport"
             STLPORT_CPPFLAGS="-I$_objdir/build/stlport -I$android_ndk/sources/cxx-stl/stlport/stlport"
-            STLPORT_LIBS="-lstlport_static"
+            STLPORT_LIBS="-lstlport_static -static-libstdc++"
         elif test "$target" != "arm-android-eabi"; then
             dnl fail if we're not building with NDKr4
             AC_MSG_ERROR([Couldn't find path to stlport in the android ndk])
