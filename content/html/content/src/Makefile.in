@@ -65,6 +65,7 @@ EXPORTS_mozilla/dom = \
 		HTMLScriptElement.h \
 		HTMLSharedElement.h \
 		HTMLSharedListElement.h \
+		HTMLSharedObjectElement.h \
 		HTMLSpanElement.h \
 		HTMLStyleElement.h \
 		HTMLTableCaptionElement.h \
@@ -121,7 +122,7 @@ CPPSRCS		= \
 		HTMLMeterElement.cpp \
 		HTMLModElement.cpp \
 		HTMLObjectElement.cpp \
-		nsHTMLSharedObjectElement.cpp \
+		HTMLSharedObjectElement.cpp \
 		HTMLOptionElement.cpp \
 		HTMLOptionsCollection.cpp \
 		HTMLOptGroupElement.cpp \
