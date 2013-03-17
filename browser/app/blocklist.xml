@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1362608091000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1363293518000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -606,13 +606,13 @@
                   <match name="filename" exp="npctrl\.dll" />                      <versionRange  minVersion="0" maxVersion="4.1.10328.0" severity="0" vulnerabilitystatus="1"></versionRange>
                   </pluginItem>
       <pluginItem  blockID="p154">
-                  <match name="filename" exp="npctrl\.dll" />                      <versionRange  minVersion="5.0" maxVersion="5.1.10410.0" severity="0" vulnerabilitystatus="1"></versionRange>
+                  <match name="filename" exp="npctrl\.dll" />                      <versionRange  minVersion="5.0" maxVersion="5.1.20124.9999" severity="0" vulnerabilitystatus="1"></versionRange>
                   </pluginItem>
       <pluginItem  blockID="p156">
                   <match name="filename" exp="nppdf32\.dll" />                      <versionRange  minVersion="0" maxVersion="9.5.1" severity="0" vulnerabilitystatus="1"></versionRange>
                   </pluginItem>
       <pluginItem  blockID="p158">
-                  <match name="filename" exp="nppdf32\.dll" />                      <versionRange  minVersion="10.0" maxVersion="10.1.3" severity="0" vulnerabilitystatus="1"></versionRange>
+                  <match name="filename" exp="nppdf32\.dll" />                      <versionRange  minVersion="10.0" maxVersion="10.1.5.9999" severity="0" vulnerabilitystatus="1"></versionRange>
                   </pluginItem>
       <pluginItem  blockID="p160">
                   <match name="filename" exp="NPSWF32\.dll" />                                    <versionRange  minVersion="0" maxVersion="10.2.9999" severity="0" vulnerabilitystatus="1">
