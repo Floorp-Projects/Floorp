@@ -778,7 +778,10 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             checkSelectionChanged();
         }
 
-        updateEmptyStatus();
+        if (mEmptyView != null) {
+            updateEmptyStatus();
+        }
+
         requestLayout();
     }
 
@@ -4623,7 +4626,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
     }
 
     private void updateEmptyStatus() {
-        boolean isEmpty = mAdapter == null || mAdapter.isEmpty();
+        final boolean isEmpty = (mAdapter == null || mAdapter.isEmpty());
         if (isEmpty) {
             if (mEmptyView != null) {
                 mEmptyView.setVisibility(View.VISIBLE);
@@ -4641,8 +4644,10 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
                 this.onLayout(false, getLeft(), getTop(), getRight(), getBottom());
             }
         } else {
-            if (mEmptyView != null)
+            if (mEmptyView != null) {
                 mEmptyView.setVisibility(View.GONE);
+            }
+
             setVisibility(View.VISIBLE);
         }
     }
@@ -4665,7 +4670,11 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
             } else {
                 rememberSyncState();
             }
-            updateEmptyStatus();
+
+            if (mEmptyView != null) {
+                updateEmptyStatus();
+            }
+
             requestLayout();
         }
 
@@ -4691,7 +4700,10 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
 
             mNeedSync = false;
 
-            updateEmptyStatus();
+            if (mEmptyView != null) {
+                updateEmptyStatus();
+            }
+
             requestLayout();
         }
     }
