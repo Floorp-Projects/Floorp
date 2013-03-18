@@ -1,0 +1,155 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test respectTimezone Parameter for Alarm API</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+  <script type="application/javascript">
+
+  "use strict";
+
+  // Verify passing `honorTimezone` doesn't fail
+  function testHonorTimezone(tomorrow) {
+    var domRequest;
+    try {
+      domRequest = navigator.mozAlarms.add(tomorrow, "honorTimezone", {});
+    } catch (e) {
+      ok(false,
+         "Unexpected exception trying to add alarm for tomorrow with `honorTimezone`.");
+      return testIgnoreTimezone(tomorrow);
+    }
+    domRequest.onsuccess = function(e) {
+      navigator.mozAlarms.remove(e.target.result);
+
+      ok(true, "Passing `honorTimezone` for repectTimezone argument.");
+      testIgnoreTimezone(tomorrow);
+    };
+    domRequest.onerror = function(e) {
+      ok(false, "Unable to add alarm for tomorrow with `honorTimezone`.");
+      testIgnoreTimezone(tomorrow);
+    };
+
+  }
+
+  // Verify passing `ignoreTimezone` doesn't fail
+  function testIgnoreTimezone(tomorrow) {
+    var domRequest;
+    try {
+      domRequest = navigator.mozAlarms.add(tomorrow, "ignoreTimezone", {});
+    } catch (e) {
+      ok(false,
+         "Unexpected exception trying to add alarm for tomorrow with `ignoreTimezone`.");
+      return testBadInput(tomorrow);
+    }
+    domRequest.onsuccess = function(e) {
+      navigator.mozAlarms.remove(e.target.result);
+
+      ok(true, "Passing `ignoreTimezone` for respectTimezone argument.");
+      testBadInput(tomorrow);
+    };
+    domRequest.onerror = function(e) {
+      ok(false, "Unable to add alarm for tomorrow with `ignoreTimezone`.");
+      testBadInput(tomorrow);
+    }
+  }
+
+  // Verify passing a string that's not `honorTimezone` or `ignoreTimezone`
+  // does fail
+  function testBadInput(tomorrow) {
+    var domRequest;
+    try {
+      domRequest = navigator.mozAlarms.add(tomorrow, "badinput", {});
+    } catch (e) {
+      ok(true, "Bad input for repectTimezone does indeed fail.");
+
+      // Errors, as it should. On to the next test.
+      return testNull(tomorrow);
+    }
+    domRequest.onsuccess = function(e) {
+      // Welp, this shouldn't happen
+      ok(false, "Malformed input accepted for `respectTimezone` param.");
+      testNull(tomorrow);
+    };
+  }
+
+  // Verify passing null does indeed fail
+  function testNull(tomorrow) {
+    var domRequest;
+    try {
+      domRequest = navigator.mozAlarms.add(tomorrow, null, {});
+    } catch(e) {
+      ok(true, "Passing null for respectTimezone does indeed fail.");
+
+      // Exception thrown, on to the next test
+      return testMisspelt(tomorrow);
+    }
+    domRequest.onsuccess = function(e) {
+      // Null should not be valid
+      ok(false, "Null should not be accepted as input for `respectTimezone` param.");
+      testMisspelt(tomorrow);
+    };
+  }
+
+  // Verify that misspelling does indeed fail
+  function testMisspelt(tomorrow) {
+    var domRequest;
+    try {
+      // Missing the e in `ignoreTimezone`
+      domRequest = navigator.mozAlarms.add(tomorrow, "ignoreTimzone", {});
+    } catch (e) {
+      ok(true, "Misspelling `ignoreTimezone` does indeed fail.");
+
+      // Exception thrown, all is right in the world.
+      // All done with tests now.
+      return SimpleTest.finish();
+    }
+    domRequest.onsuccess = function(e) {
+      // The misspelled word should not be valid
+      ok(false, "Misspelt parameter should fail.");
+      SimpleTest.finish();
+    };
+  }
+
+  function startTests() {
+
+    SpecialPowers.pushPrefEnv({"set": [["dom.mozAlarms.enabled", true]]}, function() {
+
+      // Currently applicable only on FxOS
+      if (navigator.userAgent.indexOf("Mobile") != -1 &&
+          navigator.appVersion.indexOf("Android") == -1) {
+
+        // Arbitrary date to use for tests
+        var tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        // Kick off the tests
+        testHonorTimezone(tomorrow);
+
+      } else {
+        ok(true, "mozAlarms on Firefox OS only.");
+        SimpleTest.finish();
+      }
+
+    });
+  }
+
+  SimpleTest.expectAssertions(0, 9);
+  SimpleTest.waitForExplicitFinish();
+  if (SpecialPowers.hasPermission("alarms", document)) {
+    startTests();
+  } else {
+    // Add the permission and reload the page so it propogates
+    SpecialPowers.addPermission("alarms", true, document);
+    window.location.reload();
+  }
+
+  </script>
+</pre>
+</body>
+</html>
