@@ -1132,11 +1132,12 @@ MobileMessageDatabaseService.prototype = {
    */
 
   saveReceivedMessage: function saveReceivedMessage(aMessage, aCallback) {
-    if (aMessage.type === undefined ||
-        aMessage.sender === undefined ||
-        (aMessage.type == "sms" && aMessage.messageClass === undefined) ||
-        (aMessage.type == "mms" && aMessage.delivery === undefined) ||
-        aMessage.timestamp === undefined) {
+    if (aMessage.type == undefined ||
+        aMessage.sender == undefined ||
+        (aMessage.type == "sms" && aMessage.messageClass == undefined) ||
+        (aMessage.type == "mms" && aMessage.delivery == undefined) ||
+        (aMessage.type == "mms" && aMessage.deliveryStatus == undefined) ||
+        aMessage.timestamp == undefined) {
       if (aCallback) {
         aCallback.notify(Cr.NS_ERROR_FAILURE, null);
       }
@@ -1167,10 +1168,12 @@ MobileMessageDatabaseService.prototype = {
     // threadIdIndex & participantIdsIndex are filled in saveRecord().
     aMessage.deliveryIndex = [DELIVERY_RECEIVED, timestamp];
     aMessage.readIndex = [FILTER_READ_UNREAD, timestamp];
+
     if (aMessage.type == "sms") {
+      aMessage.deliveryStatus = DELIVERY_STATUS_SUCCESS;
       aMessage.delivery = DELIVERY_RECEIVED;
     }
-    aMessage.deliveryStatus = DELIVERY_STATUS_SUCCESS;
+
     aMessage.read = FILTER_READ_UNREAD;
 
     return this.saveRecord(aMessage, threadParticipants, aCallback);
