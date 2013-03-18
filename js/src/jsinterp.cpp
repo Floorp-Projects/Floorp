@@ -2775,10 +2775,9 @@ BEGIN_CASE(JSOP_LAMBDA)
     RootedFunction &fun = rootFunction0;
     fun = script->getFunction(GET_UINT32_INDEX(regs.pc));
 
-    JSFunction *obj = CloneFunctionObjectIfNotSingleton(cx, fun, regs.fp()->scopeChain());
+    JSObject *obj = Lambda(cx, fun, regs.fp()->scopeChain());
     if (!obj)
         goto error;
-
     JS_ASSERT(obj->getProto());
     PUSH_OBJECT(*obj);
 }
@@ -3460,6 +3459,20 @@ js::Lambda(JSContext *cx, HandleFunction fun, HandleObject parent)
     RootedObject clone(cx, CloneFunctionObjectIfNotSingleton(cx, fun, parent));
     if (!clone)
         return NULL;
+
+    if (fun->isArrow()) {
+        StackFrame *fp = cx->fp();
+
+        // Note that this will assert if called from Ion code. Ion can't yet
+        // emit code for a bound arrow function (bug 851913).
+        if (!ComputeThis(cx, fp))
+            return NULL;
+
+        RootedValue thisval(cx, fp->thisValue());
+        clone = js_fun_bind(cx, clone, thisval, NULL, 0);
+        if (!clone)
+            return NULL;
+    }
 
     JS_ASSERT(clone->global() == clone->global());
     return clone;
