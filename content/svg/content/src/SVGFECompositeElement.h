@@ -6,28 +6,43 @@
 #ifndef mozilla_dom_SVGFECompositeElement_h
 #define mozilla_dom_SVGFECompositeElement_h
 
+#include "nsSVGEnum.h"
 #include "nsSVGFilters.h"
+#include "nsSVGNumber2.h"
+
+nsresult NS_NewSVGFECompositeElement(nsIContent **aResult,
+                                     already_AddRefed<nsINodeInfo> aNodeInfo);
 
 namespace mozilla {
 namespace dom {
 
-typedef nsSVGFE nsSVGFECompositeElementBase;
+// Composite Operators
+static const unsigned short SVG_FECOMPOSITE_OPERATOR_UNKNOWN = 0;
+static const unsigned short SVG_FECOMPOSITE_OPERATOR_OVER = 1;
+static const unsigned short SVG_FECOMPOSITE_OPERATOR_IN = 2;
+static const unsigned short SVG_FECOMPOSITE_OPERATOR_OUT = 3;
+static const unsigned short SVG_FECOMPOSITE_OPERATOR_ATOP = 4;
+static const unsigned short SVG_FECOMPOSITE_OPERATOR_XOR = 5;
+static const unsigned short SVG_FECOMPOSITE_OPERATOR_ARITHMETIC = 6;
 
-class nsSVGFECompositeElement : public nsSVGFECompositeElementBase,
-                                public nsIDOMSVGFECompositeElement
+typedef nsSVGFE SVGFECompositeElementBase;
+
+class SVGFECompositeElement : public SVGFECompositeElementBase,
+                              public nsIDOMSVGElement
 {
-  friend nsresult NS_NewSVGFECompositeElement(nsIContent **aResult,
-                                              already_AddRefed<nsINodeInfo> aNodeInfo);
+  friend nsresult (::NS_NewSVGFECompositeElement(nsIContent **aResult,
+                                                 already_AddRefed<nsINodeInfo> aNodeInfo));
 protected:
-  nsSVGFECompositeElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsSVGFECompositeElementBase(aNodeInfo) {}
+  SVGFECompositeElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+    : SVGFECompositeElementBase(aNodeInfo)
+  {
+    SetIsDOMBinding();
+  }
+  virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
 public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
-
-  // FE Base
-  NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFECompositeElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance* aInstance,
                           const nsTArray<const Image*>& aSources,
@@ -40,25 +55,31 @@ public:
   virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
 
-  // Composite
-  NS_DECL_NSIDOMSVGFECOMPOSITEELEMENT
-
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFECompositeElementBase::)
+  NS_FORWARD_NSIDOMSVGELEMENT(SVGFECompositeElementBase::)
 
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL
+  already_AddRefed<nsIDOMSVGAnimatedString> In1();
+  already_AddRefed<nsIDOMSVGAnimatedString> In2();
+  already_AddRefed<nsIDOMSVGAnimatedEnumeration> Operator();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> K1();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> K2();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> K3();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> K4();
+  void SetK(float k1, float k2, float k3, float k4);
+
 protected:
   virtual NumberAttributesInfo GetNumberInfo();
   virtual EnumAttributesInfo GetEnumInfo();
   virtual StringAttributesInfo GetStringInfo();
 
-  enum { K1, K2, K3, K4 };
+  enum { ATTR_K1, ATTR_K2, ATTR_K3, ATTR_K4 };
   nsSVGNumber2 mNumberAttributes[4];
   static NumberInfo sNumberInfo[4];
 

@@ -21,30 +21,6 @@ interface nsIDOMSVGFilterPrimitiveStandardAttributes : nsIDOMSVGElement
     readonly attribute nsIDOMSVGAnimatedString      result;
 };
 
-[scriptable, uuid(f264fd1f-b272-4796-99b5-68c90cbd030c)]
-interface nsIDOMSVGFECompositeElement : nsIDOMSVGFilterPrimitiveStandardAttributes
-{
-    // Operator Types
-    const unsigned short SVG_OPERATOR_UNKNOWN    = 0;
-    const unsigned short SVG_OPERATOR_OVER       = 1;
-    const unsigned short SVG_OPERATOR_IN         = 2;
-    const unsigned short SVG_OPERATOR_OUT        = 3;
-    const unsigned short SVG_OPERATOR_ATOP       = 4;
-    const unsigned short SVG_OPERATOR_XOR        = 5;
-    const unsigned short SVG_OPERATOR_ARITHMETIC = 6;
-
-    readonly attribute nsIDOMSVGAnimatedString  in1;
-    readonly attribute nsIDOMSVGAnimatedString  in2;
-    readonly attribute nsIDOMSVGAnimatedNumber  k1;
-    readonly attribute nsIDOMSVGAnimatedNumber  k2;
-    readonly attribute nsIDOMSVGAnimatedNumber  k3;
-    readonly attribute nsIDOMSVGAnimatedNumber  k4;
-    readonly attribute nsIDOMSVGAnimatedEnumeration operator;
-    
-    void setK ( in float k1, in float k2, in float k3, in float k4 );
-
-};
-
 [scriptable, uuid(08f2d7e5-b79f-405c-8140-7faa72c53ead)]
 interface nsIDOMSVGFEGaussianBlurElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 { 
