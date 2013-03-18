@@ -3,6 +3,11 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
+<!DOCTYPE window [
+<!ENTITY % alertDTD SYSTEM "chrome://alerts/locale/alert.dtd">
+%alertDTD;
+]>
+
 <?xml-stylesheet href="chrome://global/content/alerts/alert.css" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin/alerts/alert.css" type="text/css"?>
 
@@ -12,22 +17,30 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml"
         xhtml:role="alert"
         pack="start"
-        onload="onAlertLoad()"
-        onclick="onAlertClick();">
+        onload="onAlertLoad();"
+        onclick="onAlertClick();"
+        onbeforeunload="onAlertBeforeUnload();">
 
   <script type="application/javascript" src="chrome://global/content/alerts/alert.js"/>
 
   <box id="alertBox" class="alertBox">
-    
-    <hbox id="alertImageBox" class="alertImageBox" align="center" pack="center">
-      <image id="alertImage"/>
-    </hbox>
+    <box>
+      <hbox id="alertImageBox" class="alertImageBox" align="center" pack="center">
+        <image id="alertImage"/>
+      </hbox>
 
-    <vbox id="alertTextBox" class="alertTextBox">
-      <label id="alertTitleLabel" class="alertTitle plain"/>
-      <label id="alertTextLabel" class="alertText plain"/>
+      <vbox id="alertTextBox" class="alertTextBox">
+        <label id="alertTitleLabel" class="alertTitle plain"/>
+        <label id="alertTextLabel" class="alertText plain"/>
+      </vbox>
+    </box>
+
+    <vbox class="alertCloseBox">
+      <toolbarbutton class="alertCloseButton"
+                     tooltiptext="&closeAlert.tooltip;"
+                     onclick="event.stopPropagation();"
+                     oncommand="close();"/>
     </vbox>
-
   </box>
 
   <!-- This method is called inline because we want to make sure we establish the width

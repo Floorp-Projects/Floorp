@@ -78,11 +78,12 @@ label {
 }
 
 .alertCloseButton {
-  list-style-image: url("chrome://global/skin/icons/close.png");
   -moz-appearance: none;
+  padding: 0;
+  margin: 0 2px;
+  list-style-image: url("chrome://global/skin/icons/close.png");
+  border: none;
   -moz-image-region: rect(0, 16px, 16px, 0);
-  padding: 4px 2px;
-  border: none !important;
 }
 
 .alertCloseButton > .toolbarbutton-text {
