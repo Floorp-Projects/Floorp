@@ -203,8 +203,14 @@ public final class ANRReporter extends BroadcastReceiver
     // Return true if the traces file corresponds to a Gecko ANR
     private static boolean isGeckoTraces(String pkgName, File tracesFile) {
         try {
+            final String END_OF_PACKAGE_NAME = "([^a-zA-Z0-9_]|$)";
             // Regex for finding our package name in the traces file
-            Pattern pkgPattern = Pattern.compile(Pattern.quote(pkgName) + "([^a-zA-Z0-9_]|$)");
+            Pattern pkgPattern = Pattern.compile(Pattern.quote(pkgName) + END_OF_PACKAGE_NAME);
+            Pattern mangledPattern = null;
+            if (!GeckoAppInfo.getMangledPackageName().equals(pkgName)) {
+                mangledPattern = Pattern.compile(Pattern.quote(
+                    GeckoAppInfo.getMangledPackageName()) + END_OF_PACKAGE_NAME);
+            }
             if (DEBUG) {
                 Log.d(LOGTAG, "trying to match package: " + pkgName);
             }
@@ -218,6 +224,10 @@ public final class ANRReporter extends BroadcastReceiver
                     }
                     if (pkgPattern.matcher(line).find()) {
                         // traces.txt file contains our package
+                        return true;
+                    }
+                    if (mangledPattern != null && mangledPattern.matcher(line).find()) {
+                        // traces.txt file contains our alternate package
                         return true;
                     }
                 }
