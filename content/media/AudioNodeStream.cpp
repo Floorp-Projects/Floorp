@@ -184,8 +184,8 @@ AudioNodeStream::ObtainInputBlock(AudioChunk* aTmpChunk)
   nsAutoTArray<AudioChunk*,250> inputChunks;
   for (uint32_t i = 0; i < inputCount; ++i) {
     MediaStream* s = mInputs[i]->GetSource();
-    AudioNodeStream* a = s->AsAudioNodeStream();
-    MOZ_ASSERT(a);
+    AudioNodeStream* a = static_cast<AudioNodeStream*>(s);
+    MOZ_ASSERT(a == s->AsAudioNodeStream());
     if (a->IsFinishedOnGraphThread()) {
       continue;
     }
