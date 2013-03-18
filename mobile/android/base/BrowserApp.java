@@ -135,6 +135,8 @@ abstract public class BrowserApp extends GeckoApp
     // Stored value of the toolbar height, so we know when it's changed.
     private int mToolbarHeight = 0;
 
+    private Integer mPrefObserverId;
+
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
         switch(msg) {
@@ -476,7 +478,7 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         // Listen to the dynamic toolbar pref
-        PrefsHelper.getPref(PREF_CHROME_DYNAMICTOOLBAR, new PrefsHelper.PrefHandlerBase() {
+        mPrefObserverId = PrefsHelper.getPref(PREF_CHROME_DYNAMICTOOLBAR, new PrefsHelper.PrefHandlerBase() {
             @Override
             public void prefValue(String pref, boolean value) {
                 if (value == mDynamicToolbarEnabled) {
@@ -516,6 +518,10 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (mPrefObserverId != null) {
+            PrefsHelper.removeObserver(mPrefObserverId);
+            mPrefObserverId = null;
+        }
         if (mAboutHomeContent != null)
             mAboutHomeContent.onDestroy();
         if (mBrowserToolbar != null)
