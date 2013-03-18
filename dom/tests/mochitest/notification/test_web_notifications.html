@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=782211
+-->
+<head>
+  <title>Bug 782211</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="notification_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=782211">Bug 782211</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+<script type="text/javascript">
+  if (window.Notification) {
+    SimpleTest.waitForExplicitFinish();
+
+    function showNotifications() {
+      // Make sure callback is called.
+      Notification.requestPermission(function(perm) {
+        is(perm, "granted", "Permission should be granted.");
+        is(Notification.permission, "granted", "Permission should be granted.");
+        callbackCalled();
+      });
+
+      // Make sure nothing bad happens when requestPermission is called without a callback.
+      Notification.requestPermission();
+
+      try {
+        Notification.requestPermission({});
+        ok(false, "Non callable arugment to request permission should throw exception.");
+      } catch (ex) {
+        ok(true, "Non callable arugment to request permission should throw exception.");
+      }
+
+      var notification = new Notification("This is a title", {
+          dir: "auto",
+          lang: "",
+          body: "This is a notification body",
+          tag: "sometag",
+        });
+
+      notification.onclose = function() {
+        ok(true, "Notification should be closed.");
+        callbackCalled();
+      };
+
+      notification.onshow = function() {
+        ok(true, "Notification should be shown.");
+        notification.close();
+        callbackCalled();
+      };
+
+      notification.onerror = function() {
+        ok(false, "Failed to show notification.");
+        reset_notifications();
+        SimpleTest.finish();
+      };
+
+      var numCallbacksCalled = 0;
+
+      function callbackCalled() {
+        numCallbacksCalled++;
+        if (numCallbacksCalled == 3) {
+          reset_notifications();
+          SimpleTest.finish();
+        }
+      }
+    }
+
+    setup_notifications(true, true, showNotifications);
+  } else {
+    ok(true, "Notifications are not enabled on the platform.");
+  }
+</script>
+</body>
+</html>

@@ -22,7 +22,6 @@ endif
 MOCHITEST_FILES = \
 		test_bug123696.html \
 		bug123696-subframe.html \
-		test_bug344861.html \
 		test_bug369814.html \
 		bug369814.zip \
 		bug369814.jar \

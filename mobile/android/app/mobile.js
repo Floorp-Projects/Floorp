@@ -534,6 +534,7 @@ pref("layers.low-precision-buffer", true);
 pref("layers.low-precision-resolution", 250);
 
 pref("notification.feature.enabled", true);
+pref("dom.webnotifications.enabled", true);
 
 // prevent tooltips from showing up
 pref("browser.chrome.toolbar_tips", false);

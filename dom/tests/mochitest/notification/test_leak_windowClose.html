@@ -6,24 +6,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=605309
 <head>
   <title>Test for leak when window closes</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="notification_common.js"></script>
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
 <script>
-if (is_feature_enabled() == false) {
-  SimpleTest.finish();
-}
-else
-{
+if (is_feature_enabled()) {
+    SimpleTest.waitForExplicitFinish();
+
     function boom()
     {
         document.documentElement.focus();
         var x = navigator.mozNotification;
         document.documentElement.addEventListener('', function(){x}, false);
+        ok(true, "load callback called");
         SimpleTest.finish();
     }
 
-    SimpleTest.waitForExplicitFinish();
     window.addEventListener("load", boom, false);
+} else {
+    ok(true, "Desktop notifications not enabled.");
 }
 </script>
 </head>
