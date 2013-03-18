@@ -4,20 +4,11 @@
 
 // The Y combinator, applied to the factorial function
 
-function factorial(proc) {
-    return function (n) {
-        return (n <= 1) ? 1 : n * proc(n-1);
-    }
-}
+// Return the function that is the fixed point of f.
+var Y = f => (x => f(v => x(x)(v)))
+             (x => f(v => x(x)(v)));
 
-function Y(outer) {
-    function inner(proc) {
-        function apply(arg) {
-            return proc(proc)(arg);
-        }
-        return outer(apply);
-    }
-    return inner(inner);
-}
+// The factorial function is the fixed point of this:
+var f = fac => n => (n <= 1) ? 1 : n * fac(n - 1);
 
-print("5! is " + Y(factorial)(5));
+print("5! is " + Y(f)(5));
