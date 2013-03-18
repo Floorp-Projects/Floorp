@@ -334,18 +334,16 @@ def processSingleLeakFile(leakLogFileName, PID, processType, leakThreshold):
     size = int(matches.group("size"))
     bytesLeaked = int(matches.group("bytesLeaked"))
     numLeaked = int(matches.group("numLeaked"))
+    if name == "TOTAL":
+      totalBytesLeaked = bytesLeaked
     if size < 0 or bytesLeaked < 0 or numLeaked < 0:
       log.info("TEST-UNEXPECTED-FAIL %s| leakcheck | negative leaks caught!" %
                processString)
-      if name == "TOTAL":
-        totalBytesLeaked = bytesLeaked
-    elif name == "TOTAL":
-      totalBytesLeaked = bytesLeaked
-    else:
-      if numLeaked != 0:
-        leakedObjectNames.append(name)
-        log.info("TEST-INFO %s| leakcheck | leaked %d %s (%s bytes)"
-                 % (processString, numLeaked, name, bytesLeaked))
+      continue
+    if name != "TOTAL" and numLeaked != 0:
+      leakedObjectNames.append(name)
+      log.info("TEST-INFO %s| leakcheck | leaked %d %s (%s bytes)"
+               % (processString, numLeaked, name, bytesLeaked))
 
   if totalBytesLeaked is None:
     # We didn't see a line with name 'TOTAL'
@@ -376,9 +374,6 @@ def processSingleLeakFile(leakLogFileName, PID, processType, leakThreshold):
         leakedObjectSummary += ', ...'
       log.info("%s %s| leakcheck | %d bytes leaked (%s)"
                % (prefix, processString, totalBytesLeaked, leakedObjectSummary))
-    # Remind the threshold if it is not 0, which is the default/goal.
-    if leakThreshold != 0:
-      log.info("TEST-INFO | leakcheck | threshold set at %d bytes" % leakThreshold)
   leaks.close()
 
 def processLeakLog(leakLogFile, leakThreshold = 0):
@@ -392,6 +387,9 @@ def processLeakLog(leakLogFile, leakThreshold = 0):
   if not os.path.exists(leakLogFile):
     log.info("WARNING | leakcheck | refcount logging is off, so leaks can't be detected!")
     return
+
+  if leakThreshold != 0:
+    log.info("TEST-INFO | leakcheck | threshold set at %d bytes" % leakThreshold)
 
   (leakLogFileDir, leakFileBase) = os.path.split(leakLogFile)
   pidRegExp = re.compile(r".*?_([a-z]*)_pid(\d*)$")
