@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test date Paramter for Alarm API</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+  <script type="application/javascript">
+
+  "use strict";
+
+  // Verify passing a Date in the future doesn't fail
+  function testFutureDate() {
+    var tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    var domRequest;
+    try {
+      domRequest = navigator.mozAlarms.add(tomorrow, "honorTimezone", {});
+    } catch (e) {
+      ok(false,
+         "Unexpected exception trying to add alarm for tomorrow.");
+      return testPastDate();
+    }
+    domRequest.onsuccess = function(e) {
+      navigator.mozAlarms.remove(e.target.result);
+      ok(true, "Add alarm for future date.");
+
+      // Awesome, no error so proceed to next test
+      testPastDate();
+    };
+    domRequest.onerror = function(e) {
+      ok(false, "Unable to add alarm for tomorrow`.");
+      testPastDate();
+    };
+
+  }
+
+  // Verify passing a Date that's already past fails
+  function testPastDate() {
+    var yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    var domRequest;
+    try {
+      domRequest = navigator.mozAlarms.add(yesterday, "honorTimezone", {});
+    } catch (e) {
+      ok(false,
+         "Unexpected exception trying to add alarm for yesterday.");
+      return testNull();
+    }
+    domRequest.onsuccess = function(e) {
+      navigator.mozAlarms.remove(e.target.result);
+
+      ok(false, "Should not be able to add alarm for already past date.");
+      testNull();
+    };
+    domRequest.onerror = function(e) {
+      ok(true, "Can't use past date when adding new alarm.");
+
+      // Errors as it should, on to the next test
+      testNull();
+    }
+  }
+
+  // Verify passing null does indeed fail
+  function testNull() {
+    var domRequest;
+    try {
+      domRequest = navigator.mozAlarms.add(null, "honorTimezone", {});
+    } catch(e) {
+      ok(false, "Unexpected exception thrown while testing null case.");
+
+      // Exception thrown
+      return SimpleTest.finish();
+    }
+    domRequest.onsuccess = function(e) {
+      // Null should not be valid
+      ok(false, "Null should not be accepted as input for `respectTimezone` param.");
+      SimpleTest.finish();
+    };
+    domRequest.onerror = function(e) {
+      // Null should not be valid
+      ok(true, "Passing null for date value causes failure.");
+
+      SimpleTest.finish();
+    };
+  }
+
+  function startTests() {
+
+    SpecialPowers.pushPrefEnv({"set": [["dom.mozAlarms.enabled", true]]}, function() {
+
+      // Currently applicable only on FxOS
+      if (navigator.userAgent.indexOf("Mobile") != -1 &&
+          navigator.appVersion.indexOf("Android") == -1) {
+
+        testFutureDate();
+
+      } else {
+        ok(true, "mozAlarms on Firefox OS only.");
+        SimpleTest.finish();
+      }
+
+    });
+  }
+
+  SimpleTest.expectAssertions(0, 9);
+  SimpleTest.waitForExplicitFinish();
+  if (SpecialPowers.hasPermission("alarms", document)) {
+    startTests();
+  } else {
+    // Add the permissions and reload so they propogate
+    SpecialPowers.addPermission("alarms", true, document);
+    window.location.reload();
+  }
+
+  </script>
+</pre>
+</body>
+</html>
