@@ -294,9 +294,8 @@ def dumpLeakLog(leakLogFile, filter = False):
   # Simply copy the log.
   log.info(leakReport.rstrip("\n"))
 
-def processSingleLeakFile(leakLogFileName, PID, processType, leakThreshold):
-  """Process a single leak log, corresponding to the specified
-  process PID and type.
+def processSingleLeakFile(leakLogFileName, processType, leakThreshold):
+  """Process a single leak log.
   """
 
   #                  Per-Inst  Leaked      Total  Rem ...
@@ -307,8 +306,9 @@ def processSingleLeakFile(leakLogFileName, PID, processType, leakThreshold):
                       r"-?\d+\s+(?P<numLeaked>-?\d+)")
 
   processString = ""
-  if PID and processType:
-    processString = "| %s process %s " % (processType, PID)
+  if processType:
+    # eg 'plugin'
+    processString = " %s process:" % processType
 
   crashedOnPurpose = False
   totalBytesLeaked = None
@@ -335,28 +335,29 @@ def processSingleLeakFile(leakLogFileName, PID, processType, leakThreshold):
       if name == "TOTAL":
         totalBytesLeaked = bytesLeaked
       if size < 0 or bytesLeaked < 0 or numLeaked < 0:
-        leakAnalysis.append("TEST-UNEXPECTED-FAIL %s| leakcheck | negative leaks caught!"
+        leakAnalysis.append("TEST-UNEXPECTED-FAIL | leakcheck |%s negative leaks caught!"
                             % processString)
         continue
       if name != "TOTAL" and numLeaked != 0:
         leakedObjectNames.append(name)
-        leakAnalysis.append("TEST-INFO %s| leakcheck | leaked %d %s (%s bytes)"
+        leakAnalysis.append("TEST-INFO | leakcheck |%s leaked %d %s (%s bytes)"
                             % (processString, numLeaked, name, bytesLeaked))
   log.info('\n'.join(leakAnalysis))
 
   if totalBytesLeaked is None:
     # We didn't see a line with name 'TOTAL'
     if crashedOnPurpose:
-      log.info("TEST-INFO | leakcheck | process %s was " \
-               "deliberately crashed and thus has no leak log" % PID)
+      log.info("TEST-INFO | leakcheck |%s deliberate crash and thus no leak log"
+               % processString)
     else:
       # TODO: This should be a TEST-UNEXPECTED-FAIL, but was changed to a warning
       # due to too many intermittent failures (see bug 831223).
-      log.info("WARNING | leakcheck | missing output line for total leaks!")
+      log.info("WARNING | leakcheck |%s missing output line for total leaks!"
+               % processString)
     return
 
   if totalBytesLeaked == 0:
-    log.info("TEST-PASS %s| leakcheck | no leaks detected!" % processString)
+    log.info("TEST-PASS | leakcheck |%s no leaks detected!" % processString)
     return
 
   # totalBytesLeaked was seen and is non-zero.
@@ -372,7 +373,7 @@ def processSingleLeakFile(leakLogFileName, PID, processType, leakThreshold):
   leakedObjectSummary = ', '.join(leakedObjectNames[:maxSummaryObjects])
   if len(leakedObjectNames) > maxSummaryObjects:
     leakedObjectSummary += ', ...'
-  log.info("%s %s| leakcheck | %d bytes leaked (%s)"
+  log.info("%s | leakcheck |%s %d bytes leaked (%s)"
            % (prefix, processString, totalBytesLeaked, leakedObjectSummary))
 
 def processLeakLog(leakLogFile, leakThreshold = 0):
@@ -391,21 +392,19 @@ def processLeakLog(leakLogFile, leakThreshold = 0):
     log.info("TEST-INFO | leakcheck | threshold set at %d bytes" % leakThreshold)
 
   (leakLogFileDir, leakFileBase) = os.path.split(leakLogFile)
-  pidRegExp = re.compile(r".*?_([a-z]*)_pid(\d*)$")
+  fileNameRegExp = re.compile(r".*?_([a-z]*)_pid\d*$")
   if leakFileBase[-4:] == ".log":
     leakFileBase = leakFileBase[:-4]
-    pidRegExp = re.compile(r".*?_([a-z]*)_pid(\d*).log$")
+    fileNameRegExp = re.compile(r".*?_([a-z]*)_pid\d*.log$")
 
   for fileName in os.listdir(leakLogFileDir):
     if fileName.find(leakFileBase) != -1:
       thisFile = os.path.join(leakLogFileDir, fileName)
-      processPID = 0
       processType = None
-      m = pidRegExp.search(fileName)
+      m = fileNameRegExp.search(fileName)
       if m:
         processType = m.group(1)
-        processPID = m.group(2)
-      processSingleLeakFile(thisFile, processPID, processType, leakThreshold)
+      processSingleLeakFile(thisFile, processType, leakThreshold)
 
 def replaceBackSlashes(input):
   return input.replace('\\', '/')
