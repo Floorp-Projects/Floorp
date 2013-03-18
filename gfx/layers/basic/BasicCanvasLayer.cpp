@@ -12,6 +12,7 @@
 #include "SurfaceStream.h"
 #include "SharedSurfaceGL.h"
 #include "SharedSurfaceEGL.h"
+#include "sampler.h"
 
 #include "BasicLayersImpl.h"
 #include "nsXULAppAPI.h"
@@ -411,6 +412,7 @@ BasicShadowableCanvasLayer::Initialize(const Data& aData)
 void
 BasicShadowableCanvasLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
 {
+  SAMPLE_LABEL("BasicShadowableCanvasLayer", "Paint");
   if (!HasShadow()) {
     BasicCanvasLayer::Paint(aContext, aMaskLayer);
     return;
@@ -436,9 +438,9 @@ BasicShadowableCanvasLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
       // Call Painted() to reset our dirty 'bit'.
       Painted();
       FireDidTransactionCallback();
-      BasicManager()->PaintedCanvas(BasicManager()->Hold(this),
-                                    mNeedsYFlip,
-                                    mBackBuffer);
+      BasicManager()->PaintedCanvasNoSwap(BasicManager()->Hold(this),
+                                          mNeedsYFlip,
+                                          mBackBuffer);
       // Move SharedTextureHandle ownership to ShadowLayer
       mBackBuffer = SurfaceDescriptor();
       return;
