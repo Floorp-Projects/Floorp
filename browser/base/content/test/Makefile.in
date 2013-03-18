@@ -183,6 +183,7 @@ _BROWSER_FILES = \
                  browser_pluginnotification.js \
                  browser_plugins_added_dynamically.js \
                  browser_CTPScriptPlugin.js \
+                 browser_CTP_drag_drop.js \
                  browser_pluginplaypreview.js \
                  browser_pluginplaypreview2.js \
                  browser_private_browsing_window.js \
