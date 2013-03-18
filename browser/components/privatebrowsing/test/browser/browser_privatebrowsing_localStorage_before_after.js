@@ -15,7 +15,7 @@ function test() {
   waitForExplicitFinish();
   let windowsToClose = [];
   let testURI = "about:blank";
-  let prefix = 'http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/perwindow/';
+  let prefix = 'http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/';
 
   function doTest(aIsPrivateMode, aWindow, aCallback) {
     aWindow.gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
