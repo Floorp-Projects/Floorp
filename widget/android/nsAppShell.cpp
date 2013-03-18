@@ -39,7 +39,7 @@
 
 #include "mozilla/dom/ScreenOrientation.h"
 
-#include "GeckoProfiler.h"
+#include "sampler.h"
 #ifdef MOZ_ANDROID_HISTORY
 #include "nsNetUtil.h"
 #include "IHistory.h"

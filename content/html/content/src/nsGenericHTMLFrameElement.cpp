@@ -14,7 +14,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIDOMApplicationRegistry.h"
 #include "nsIPermissionManager.h"
-#include "GeckoProfiler.h"
+#include "sampler.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

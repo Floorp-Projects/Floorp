@@ -22,7 +22,7 @@
 #include "nsPresContext.h"
 #include "nsEventStateManager.h"
 #include "mozilla/StartupTimeline.h"
-#include "GeckoProfiler.h"
+#include "sampler.h"
 #include "nsRefreshDriver.h"
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"

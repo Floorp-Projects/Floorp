@@ -10,7 +10,7 @@
 #include "nsThreadManager.h"
 #include "nsThreadUtils.h"
 #include "plarena.h"
-#include "GeckoProfiler.h"
+#include "sampler.h"
 
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;

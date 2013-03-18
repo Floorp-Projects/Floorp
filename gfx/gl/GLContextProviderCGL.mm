@@ -16,7 +16,7 @@
 #include "gfxFailure.h"
 #include "prenv.h"
 #include "mozilla/Preferences.h"
-#include "GeckoProfiler.h"
+#include "sampler.h"
 
 using namespace mozilla::gfx;
 

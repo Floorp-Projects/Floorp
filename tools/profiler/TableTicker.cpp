@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <fstream>
 #include <sstream>
-#include "GeckoProfilerImpl.h"
+#include "sps_sampler.h"
 #include "platform.h"
 #include "nsXULAppAPI.h"
 #include "nsThreadUtils.h"

@@ -8,7 +8,7 @@
 #include "nsIServiceManager.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
-#include "GeckoProfiler.h"
+#include "sampler.h"
 
 namespace mozilla {
 namespace image {

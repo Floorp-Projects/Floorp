@@ -38,7 +38,7 @@
 #include "PluginHangUIParent.h"
 #include "mozilla/widget/AudioSession.h"
 #endif
-#include "GeckoProfiler.h"
+#include "sampler.h"
 
 using base::KillProcess;
 

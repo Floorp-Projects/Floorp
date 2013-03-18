@@ -48,7 +48,7 @@
  * it took for the event to be serviced.
  */
 
-#include "GeckoProfiler.h"
+#include "sampler.h"
 
 #include "EventTracer.h"
 
@@ -121,7 +121,7 @@ void TracerThread(void *arg)
 
   while (!sExit) {
     TimeStamp start(TimeStamp::Now());
-    profiler_responsiveness(start);
+    SAMPLER_RESPONSIVENESS(start);
     PRIntervalTime next_sleep = interval;
 
     //TODO: only wait up to a maximum of interval; return

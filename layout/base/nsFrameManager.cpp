@@ -63,7 +63,7 @@
 
 #include "nsFrameManager.h"
 #include "nsRuleProcessorData.h"
-#include "GeckoProfiler.h"
+#include "sampler.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"

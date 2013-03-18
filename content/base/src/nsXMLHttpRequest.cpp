@@ -69,7 +69,7 @@
 #include "nsIFileChannel.h"
 #include "mozilla/Telemetry.h"
 #include "jsfriendapi.h"
-#include "GeckoProfiler.h"
+#include "sampler.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "nsIDOMFormData.h"

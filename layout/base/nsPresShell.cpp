@@ -175,7 +175,7 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
-#include "GeckoProfiler.h"
+#include "sampler.h"
 #include "mozilla/css/ImageLoader.h"
 
 #include "Layers.h"

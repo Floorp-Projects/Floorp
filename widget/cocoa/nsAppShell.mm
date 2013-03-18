@@ -32,7 +32,7 @@
 #include "nsToolkit.h"
 #include "TextInputHandler.h"
 #include "mozilla/HangMonitor.h"
-#include "GeckoProfiler.h"
+#include "sampler.h"
 
 #include "npapi.h"
 

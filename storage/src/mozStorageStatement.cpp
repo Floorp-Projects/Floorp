@@ -23,7 +23,7 @@
 #include "mozStorageStatementParams.h"
 #include "mozStorageStatementRow.h"
 #include "mozStorageStatement.h"
-#include "GeckoProfiler.h"
+#include "sampler.h"
 
 #include "prlog.h"
 
