@@ -4,13 +4,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/SVGFECompositeElement.h"
+#include "mozilla/dom/SVGFECompositeElementBinding.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEComposite)
 
 namespace mozilla {
 namespace dom {
 
-nsSVGElement::NumberInfo nsSVGFECompositeElement::sNumberInfo[4] =
+JSObject*
+SVGFECompositeElement::WrapNode(JSContext* aCx, JSObject* aScope)
+{
+  return SVGFECompositeElementBinding::Wrap(aCx, aScope, this);
+}
+
+nsSVGElement::NumberInfo SVGFECompositeElement::sNumberInfo[4] =
 {
   { &nsGkAtoms::k1, 0, false },
   { &nsGkAtoms::k2, 0, false },
@@ -18,25 +25,25 @@ nsSVGElement::NumberInfo nsSVGFECompositeElement::sNumberInfo[4] =
   { &nsGkAtoms::k4, 0, false }
 };
 
-nsSVGEnumMapping nsSVGFECompositeElement::sOperatorMap[] = {
-  {&nsGkAtoms::over, nsSVGFECompositeElement::SVG_OPERATOR_OVER},
-  {&nsGkAtoms::in, nsSVGFECompositeElement::SVG_OPERATOR_IN},
-  {&nsGkAtoms::out, nsSVGFECompositeElement::SVG_OPERATOR_OUT},
-  {&nsGkAtoms::atop, nsSVGFECompositeElement::SVG_OPERATOR_ATOP},
-  {&nsGkAtoms::xor_, nsSVGFECompositeElement::SVG_OPERATOR_XOR},
-  {&nsGkAtoms::arithmetic, nsSVGFECompositeElement::SVG_OPERATOR_ARITHMETIC},
+nsSVGEnumMapping SVGFECompositeElement::sOperatorMap[] = {
+  {&nsGkAtoms::over, SVG_FECOMPOSITE_OPERATOR_OVER},
+  {&nsGkAtoms::in, SVG_FECOMPOSITE_OPERATOR_IN},
+  {&nsGkAtoms::out, SVG_FECOMPOSITE_OPERATOR_OUT},
+  {&nsGkAtoms::atop, SVG_FECOMPOSITE_OPERATOR_ATOP},
+  {&nsGkAtoms::xor_, SVG_FECOMPOSITE_OPERATOR_XOR},
+  {&nsGkAtoms::arithmetic, SVG_FECOMPOSITE_OPERATOR_ARITHMETIC},
   {nullptr, 0}
 };
 
-nsSVGElement::EnumInfo nsSVGFECompositeElement::sEnumInfo[1] =
+nsSVGElement::EnumInfo SVGFECompositeElement::sEnumInfo[1] =
 {
   { &nsGkAtoms::_operator,
     sOperatorMap,
-    nsIDOMSVGFECompositeElement::SVG_OPERATOR_OVER
+    SVG_FECOMPOSITE_OPERATOR_OVER
   }
 };
 
-nsSVGElement::StringInfo nsSVGFECompositeElement::sStringInfo[3] =
+nsSVGElement::StringInfo SVGFECompositeElement::sStringInfo[3] =
 {
   { &nsGkAtoms::result, kNameSpaceID_None, true },
   { &nsGkAtoms::in, kNameSpaceID_None, true },
@@ -46,91 +53,83 @@ nsSVGElement::StringInfo nsSVGFECompositeElement::sStringInfo[3] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGFECompositeElement,nsSVGFECompositeElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGFECompositeElement,nsSVGFECompositeElementBase)
+NS_IMPL_ADDREF_INHERITED(SVGFECompositeElement,SVGFECompositeElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGFECompositeElement,SVGFECompositeElementBase)
 
-DOMCI_NODE_DATA(SVGFECompositeElement, nsSVGFECompositeElement)
-
-NS_INTERFACE_TABLE_HEAD(nsSVGFECompositeElement)
-  NS_NODE_INTERFACE_TABLE5(nsSVGFECompositeElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement,
-                           nsIDOMSVGFilterPrimitiveStandardAttributes,
-                           nsIDOMSVGFECompositeElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFECompositeElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGFECompositeElementBase)
+NS_INTERFACE_TABLE_HEAD(SVGFECompositeElement)
+  NS_NODE_INTERFACE_TABLE3(SVGFECompositeElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement)
+NS_INTERFACE_MAP_END_INHERITING(SVGFECompositeElementBase)
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFECompositeElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFECompositeElement)
 
 //----------------------------------------------------------------------
-// nsSVGFECompositeElement methods
+// SVGFECompositeElement methods
 
-/* readonly attribute nsIDOMSVGAnimatedString in1; */
-NS_IMETHODIMP nsSVGFECompositeElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
+already_AddRefed<nsIDOMSVGAnimatedString>
+SVGFECompositeElement::In1()
 {
-  return mStringAttributes[IN1].ToDOMAnimatedString(aIn, this);
+  return mStringAttributes[IN1].ToDOMAnimatedString(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedString in2; */
-NS_IMETHODIMP nsSVGFECompositeElement::GetIn2(nsIDOMSVGAnimatedString * *aIn)
+already_AddRefed<nsIDOMSVGAnimatedString>
+SVGFECompositeElement::In2()
 {
-  return mStringAttributes[IN2].ToDOMAnimatedString(aIn, this);
+  return mStringAttributes[IN2].ToDOMAnimatedString(this);
 }
 
-
-/* readonly attribute nsIDOMSVGAnimatedEnumeration operator; */
-NS_IMETHODIMP nsSVGFECompositeElement::GetOperator(nsIDOMSVGAnimatedEnumeration * *aOperator)
+already_AddRefed<nsIDOMSVGAnimatedEnumeration>
+SVGFECompositeElement::Operator()
 {
-  return mEnumAttributes[OPERATOR].ToDOMAnimatedEnum(aOperator, this);
+  return mEnumAttributes[OPERATOR].ToDOMAnimatedEnum(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedNumber K1; */
-NS_IMETHODIMP nsSVGFECompositeElement::GetK1(nsIDOMSVGAnimatedNumber * *aK1)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFECompositeElement::K1()
 {
-  return mNumberAttributes[K1].ToDOMAnimatedNumber(aK1, this);
+  return mNumberAttributes[ATTR_K1].ToDOMAnimatedNumber(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedNumber K2; */
-NS_IMETHODIMP nsSVGFECompositeElement::GetK2(nsIDOMSVGAnimatedNumber * *aK2)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFECompositeElement::K2()
 {
-  return mNumberAttributes[K2].ToDOMAnimatedNumber(aK2, this);
+  return mNumberAttributes[ATTR_K2].ToDOMAnimatedNumber(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedNumber K3; */
-NS_IMETHODIMP nsSVGFECompositeElement::GetK3(nsIDOMSVGAnimatedNumber * *aK3)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFECompositeElement::K3()
 {
-  return mNumberAttributes[K3].ToDOMAnimatedNumber(aK3, this);
+  return mNumberAttributes[ATTR_K3].ToDOMAnimatedNumber(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedNumber K4; */
-NS_IMETHODIMP nsSVGFECompositeElement::GetK4(nsIDOMSVGAnimatedNumber * *aK4)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFECompositeElement::K4()
 {
-  return mNumberAttributes[K4].ToDOMAnimatedNumber(aK4, this);
+  return mNumberAttributes[ATTR_K4].ToDOMAnimatedNumber(this);
 }
 
-NS_IMETHODIMP
-nsSVGFECompositeElement::SetK(float k1, float k2, float k3, float k4)
+void
+SVGFECompositeElement::SetK(float k1, float k2, float k3, float k4)
 {
-  NS_ENSURE_FINITE4(k1, k2, k3, k4, NS_ERROR_ILLEGAL_VALUE);
-  mNumberAttributes[K1].SetBaseValue(k1, this);
-  mNumberAttributes[K2].SetBaseValue(k2, this);
-  mNumberAttributes[K3].SetBaseValue(k3, this);
-  mNumberAttributes[K4].SetBaseValue(k4, this);
-  return NS_OK;
+  mNumberAttributes[ATTR_K1].SetBaseValue(k1, this);
+  mNumberAttributes[ATTR_K2].SetBaseValue(k2, this);
+  mNumberAttributes[ATTR_K3].SetBaseValue(k3, this);
+  mNumberAttributes[ATTR_K4].SetBaseValue(k4, this);
 }
 
 nsresult
-nsSVGFECompositeElement::Filter(nsSVGFilterInstance *instance,
-                                const nsTArray<const Image*>& aSources,
-                                const Image* aTarget,
-                                const nsIntRect& rect)
+SVGFECompositeElement::Filter(nsSVGFilterInstance* instance,
+                              const nsTArray<const Image*>& aSources,
+                              const Image* aTarget,
+                              const nsIntRect& rect)
 {
   uint16_t op = mEnumAttributes[OPERATOR].GetAnimValue();
 
   // Cairo does not support arithmetic operator
-  if (op == nsSVGFECompositeElement::SVG_OPERATOR_ARITHMETIC) {
+  if (op == SVG_FECOMPOSITE_OPERATOR_ARITHMETIC) {
     float k1, k2, k3, k4;
     GetAnimatedNumberValues(&k1, &k2, &k3, &k4, nullptr);
 
@@ -168,7 +167,7 @@ nsSVGFECompositeElement::Filter(nsSVGFilterInstance *instance,
   ctx.Clip(aTarget->mFilterPrimitiveSubregion);
   ctx.Paint();
 
-  if (op < SVG_OPERATOR_OVER || op > SVG_OPERATOR_XOR) {
+  if (op < SVG_FECOMPOSITE_OPERATOR_OVER || op > SVG_FECOMPOSITE_OPERATOR_XOR) {
     return NS_ERROR_FAILURE;
   }
   static const gfxContext::GraphicsOperator opMap[] = {
@@ -185,10 +184,10 @@ nsSVGFECompositeElement::Filter(nsSVGFilterInstance *instance,
 }
 
 bool
-nsSVGFECompositeElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                   nsIAtom* aAttribute) const
+SVGFECompositeElement::AttributeAffectsRendering(int32_t aNameSpaceID,
+                                                 nsIAtom* aAttribute) const
 {
-  return nsSVGFECompositeElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
+  return SVGFECompositeElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&
           (aAttribute == nsGkAtoms::in ||
            aAttribute == nsGkAtoms::in2 ||
@@ -200,19 +199,19 @@ nsSVGFECompositeElement::AttributeAffectsRendering(int32_t aNameSpaceID,
 }
 
 void
-nsSVGFECompositeElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
+SVGFECompositeElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 {
   aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
   aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN2], this));
 }
 
 nsIntRect
-nsSVGFECompositeElement::ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
+SVGFECompositeElement::ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
         const nsSVGFilterInstance& aInstance)
 {
   uint16_t op = mEnumAttributes[OPERATOR].GetAnimValue();
 
-  if (op == nsSVGFECompositeElement::SVG_OPERATOR_ARITHMETIC) {
+  if (op == SVG_FECOMPOSITE_OPERATOR_ARITHMETIC) {
     // "arithmetic" operator can produce non-zero alpha values even where
     // all input alphas are zero, so we can actually render outside the
     // union of the source bboxes.
@@ -221,8 +220,8 @@ nsSVGFECompositeElement::ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBo
     return GetMaxRect();
   }
 
-  if (op == nsSVGFECompositeElement::SVG_OPERATOR_IN ||
-      op == nsSVGFECompositeElement::SVG_OPERATOR_ATOP) {
+  if (op == SVG_FECOMPOSITE_OPERATOR_IN ||
+      op == SVG_FECOMPOSITE_OPERATOR_ATOP) {
     // We will only draw where in2 has nonzero alpha, so it's a good
     // bounding box for us
     return aSourceBBoxes[1];
@@ -231,28 +230,28 @@ nsSVGFECompositeElement::ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBo
   // The regular Porter-Duff operators always compute zero alpha values
   // where all sources have zero alpha, so the union of their bounding
   // boxes is also a bounding box for our rendering
-  return nsSVGFECompositeElementBase::ComputeTargetBBox(aSourceBBoxes, aInstance);
+  return SVGFECompositeElementBase::ComputeTargetBBox(aSourceBBoxes, aInstance);
 }
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
 nsSVGElement::NumberAttributesInfo
-nsSVGFECompositeElement::GetNumberInfo()
+SVGFECompositeElement::GetNumberInfo()
 {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               ArrayLength(sNumberInfo));
 }
 
 nsSVGElement::EnumAttributesInfo
-nsSVGFECompositeElement::GetEnumInfo()
+SVGFECompositeElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
                             ArrayLength(sEnumInfo));
 }
 
 nsSVGElement::StringAttributesInfo
-nsSVGFECompositeElement::GetStringInfo()
+SVGFECompositeElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
