@@ -300,11 +300,6 @@ MOCHITEST_FILES += \
 		file_audio_event_adopt_iframe.html \
 		test_audio_event_adopt.html \
 		test_referer.html \
-		test_bug726904.html \
-		$(NULL)
-
-# Bug 759221
-MOCHITEST_FILES += \
 		test_bug686137.html \
 		test_contentDuration1.html \
 		test_contentDuration2.html \
@@ -324,6 +319,12 @@ MOCHITEST_FILES += \
 		test_seekable2.html \
 		test_chaining.html \
 		$(NULL)
+# Temporarily disabled on OS X for bug 754860
+ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+MOCHITEST_FILES += \
+		test_bug726904.html \
+		$(NULL)
+endif
 else
 MOCHITEST_FILES += \
 		test_can_play_type_no_ogg.html \
