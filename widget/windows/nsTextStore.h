@@ -96,6 +96,9 @@ protected:
 public:
   static void     Initialize(void);
   static void     Terminate(void);
+
+  static bool     ProcessRawKeyMessage(const MSG& aMsg);
+
   static void     SetIMEOpenState(bool);
   static bool     GetIMEOpenState(void);
 
@@ -160,6 +163,11 @@ public:
       default:
         return nullptr;
     }
+  }
+
+  static ITfMessagePump* GetMessagePump()
+  {
+    return sMessagePump;
   }
 
   static void*    GetTextStore()
@@ -630,6 +638,10 @@ protected:
 
   // TSF thread manager object for the current application
   static ITfThreadMgr*  sTsfThreadMgr;
+  // sMessagePump is QI'ed from sTsfThreadMgr
+  static ITfMessagePump* sMessagePump;
+  // sKeystrokeMgr is QI'ed from sTsfThreadMgr
+  static ITfKeystrokeMgr* sKeystrokeMgr;
   // TSF display attribute manager
   static ITfDisplayAttributeMgr* sDisplayAttrMgr;
   // TSF category manager
