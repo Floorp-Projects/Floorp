@@ -321,9 +321,8 @@ def processSingleLeakFile(leakLogFileName, PID, processType, leakThreshold):
   leaks.close()
 
   leaks = open(leakLogFileName, "r")
-  seenTotal = False
   crashedOnPurpose = False
-  prefix = "TEST-PASS"
+  totalBytesLeaked = None
   numObjects = 0
   for line in leaks:
     if line.find("purposefully crash") > -1:
@@ -339,25 +338,9 @@ def processSingleLeakFile(leakLogFileName, PID, processType, leakThreshold):
       log.info("TEST-UNEXPECTED-FAIL %s| leakcheck | negative leaks caught!" %
                processString)
       if name == "TOTAL":
-        seenTotal = True
+        totalBytesLeaked = bytesLeaked
     elif name == "TOTAL":
-      seenTotal = True
-      # Check for leaks.
-      if bytesLeaked < 0 or bytesLeaked > leakThreshold:
-        prefix = "TEST-UNEXPECTED-FAIL"
-        leakLog = "TEST-UNEXPECTED-FAIL %s| leakcheck | leaked" \
-                  " %d bytes during test execution" % (processString, bytesLeaked)
-      elif bytesLeaked > 0:
-        leakLog = "TEST-PASS %s| leakcheck | WARNING leaked" \
-                  " %d bytes during test execution" % (processString, bytesLeaked)
-      else:
-        leakLog = "TEST-PASS %s| leakcheck | no leaks detected!" \
-                  % processString
-      # Remind the threshold if it is not 0, which is the default/goal.
-      if leakThreshold != 0:
-        leakLog += " (threshold set at %d bytes)" % leakThreshold
-      # Log the information.
-      log.info(leakLog)
+      totalBytesLeaked = bytesLeaked
     else:
       if numLeaked != 0:
         if numLeaked > 1:
@@ -370,6 +353,8 @@ def processSingleLeakFile(leakLogFileName, PID, processType, leakThreshold):
         if numObjects > 5:
           # don't spam brief tinderbox logs with tons of leak output
           prefix = "TEST-INFO"
+        else:
+          prefix = "TEST-UNEXPECTED-FAIL"
         log.info("%(prefix)s %(process)s| leakcheck | leaked %(numLeaked)d %(instance)s of %(name)s "
                  "with size %(size)s bytes%(rest)s" %
                  { "prefix": prefix,
@@ -379,12 +364,29 @@ def processSingleLeakFile(leakLogFileName, PID, processType, leakThreshold):
                    "name": name,
                    "size": matches.group("size"),
                    "rest": rest })
-  if not seenTotal:
+  if totalBytesLeaked is None:
+    # We didn't see a line with name 'TOTAL'
     if crashedOnPurpose:
       log.info("INFO | leakcheck | process %s was " \
                "deliberately crashed and thus has no leak log" % PID)
     else:
       log.info("WARNING | leakcheck | missing output line for total leaks!")
+  else:
+    # Check for leaks.
+    if totalBytesLeaked < 0 or totalBytesLeaked > leakThreshold:
+      leakLog = "TEST-UNEXPECTED-FAIL %s| leakcheck | leaked" \
+                " %d bytes during test execution" % (processString, totalBytesLeaked)
+    elif totalBytesLeaked > 0:
+      leakLog = "TEST-PASS %s| leakcheck | WARNING leaked" \
+                " %d bytes during test execution" % (processString, totalBytesLeaked)
+    else:
+      leakLog = "TEST-PASS %s| leakcheck | no leaks detected!" \
+                % processString
+    # Remind the threshold if it is not 0, which is the default/goal.
+    if leakThreshold != 0:
+      leakLog += " (threshold set at %d bytes)" % leakThreshold
+    # Log the information.
+    log.info(leakLog)
   leaks.close()
 
 
