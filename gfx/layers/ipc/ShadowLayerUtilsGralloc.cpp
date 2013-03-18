@@ -21,7 +21,7 @@
 #include "gfxImageSurface.h"
 #include "gfxPlatform.h"
 
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 using namespace android;
 using namespace base;

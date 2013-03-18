@@ -15,7 +15,7 @@
 #include "nsThreadUtils.h"
 #include "nsCOMPtr.h"
 #include "prlog.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 #include <algorithm>
 
 static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);

@@ -21,7 +21,7 @@
 #include "nsPresContext.h"
 #include "nsEventStateManager.h"
 #include "mozilla/StartupTimeline.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 #include "nsRefreshDriver.h"
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
