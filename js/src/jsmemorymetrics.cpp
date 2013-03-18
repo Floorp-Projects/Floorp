@@ -392,10 +392,3 @@ JS::UserCompartmentCount(JSRuntime *rt)
     }
     return n;
 }
-
-JS_PUBLIC_API(size_t)
-JS::PeakSizeOfTemporary(const JSRuntime *rt)
-{
-    return rt->tempLifoAlloc.peakSizeOfExcludingThis();
-}
-
