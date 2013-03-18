@@ -422,12 +422,16 @@ parent:
     sync SyncMessage(nsString aMessage, ClonedMessageData aData)
       returns (nsString[] retval);
 
-    ShowAlertNotification(nsString imageUrl, 
-                          nsString title, 
-                          nsString text, 
+    ShowAlertNotification(nsString imageUrl,
+                          nsString title,
+                          nsString text,
                           bool textClickable,
                           nsString cookie,
-                          nsString name);
+                          nsString name,
+                          nsString bidi,
+                          nsString lang);
+
+    CloseAlert(nsString name);
 
     PExternalHelperApp(OptionalURIParams uri, nsCString aMimeContentType,
                        nsCString aContentDisposition, bool aForceSave,
