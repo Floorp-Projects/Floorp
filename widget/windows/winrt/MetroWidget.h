@@ -133,6 +133,7 @@ public:
   NS_IMETHOD    NotifyIMEOfTextChange(uint32_t aStart,
                                       uint32_t aOldEnd,
                                       uint32_t aNewEnd) MOZ_OVERRIDE;
+  virtual nsIMEUpdatePreference GetIMEUpdatePreference() MOZ_OVERRIDE;
 
   // FrameworkView helpers
   void SizeModeChanged();
