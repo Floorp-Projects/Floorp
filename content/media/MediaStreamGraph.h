@@ -883,11 +883,16 @@ public:
    * particular tracks of each input stream.
    */
   ProcessedMediaStream* CreateTrackUnionStream(DOMMediaStream* aWrapper);
+  // Internal AudioNodeStreams can only pass their output to another
+  // AudioNode, whereas external AudioNodeStreams can pass their output
+  // to an nsAudioStream for playback.
+  enum AudioNodeStreamKind { INTERNAL_STREAM, EXTERNAL_STREAM };
   /**
    * Create a stream that will process audio for an AudioNode.
    * Takes ownership of aEngine.
    */
-  AudioNodeStream* CreateAudioNodeStream(AudioNodeEngine* aEngine);
+  AudioNodeStream* CreateAudioNodeStream(AudioNodeEngine* aEngine,
+                                         AudioNodeStreamKind aKind);
   /**
    * Returns the number of graph updates sent. This can be used to track
    * whether a given update has been processed by the graph thread and reflected
