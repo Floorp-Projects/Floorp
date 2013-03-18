@@ -31,7 +31,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gBrowserGlue",
                                    "@mozilla.org/browser/browserglue;1",
                                    "nsIBrowserGlue");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
-                                  "resource://gre/modules/RecentWindow.jsm");
+                                  "resource:///modules/RecentWindow.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
