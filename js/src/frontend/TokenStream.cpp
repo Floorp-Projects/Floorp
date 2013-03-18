@@ -383,13 +383,15 @@ TokenStream::TokenBuf::findEOLMax(const jschar *p, size_t max)
 void
 TokenStream::tell(Position *pos)
 {
-    // We don't support saving and restoring state when lookahead is present.
-    JS_ASSERT(lookahead == 0);
     pos->buf = userbuf.addressOfNextRawChar();
     pos->flags = flags;
     pos->lineno = lineno;
     pos->linebase = linebase;
     pos->prevLinebase = prevLinebase;
+    pos->lookahead = lookahead;
+    pos->currentToken = currentToken();
+    for (unsigned i = 0; i < lookahead; i++)
+        pos->lookaheadTokens[i] = tokens[(cursor + 1 + i) & ntokensMask];
 }
 
 void
@@ -400,17 +402,11 @@ TokenStream::seek(const Position &pos)
     lineno = pos.lineno;
     linebase = pos.linebase;
     prevLinebase = pos.prevLinebase;
-    lookahead = 0;
+    lookahead = pos.lookahead;
 
-    // Make the last token look like it it came from here. The parser looks at
-    // the position of currentToken() to calculate line numbers.
-    Token *cur = &tokens[cursor];
-    cur->pos.begin.lineno = lineno;
-    cur->pos.begin.index = pos.buf - linebase;
-
-    // Poison other members.
-    cur->type = TOK_ERROR;
-    cur->ptr = NULL;
+    tokens[cursor] = pos.currentToken;
+    for (unsigned i = 0; i < lookahead; i++)
+        tokens[(cursor + 1 + i) & ntokensMask] = pos.lookaheadTokens[i];
 }
 
 void
@@ -1085,6 +1081,8 @@ TokenStream::getTokenInternal()
                 tp->t_op = JSOP_EQ;
                 tt = TOK_EQ;
             }
+        } else if (matchChar('>')) {
+            tt = TOK_ARROW;
         } else {
             tp->t_op = JSOP_NOP;
             tt = TOK_ASSIGN;
@@ -1686,6 +1684,7 @@ TokenKindToString(TokenKind tt)
       case TOK_RC:              return "TOK_RC";
       case TOK_LP:              return "TOK_LP";
       case TOK_RP:              return "TOK_RP";
+      case TOK_ARROW:           return "TOK_ARROW";
       case TOK_NAME:            return "TOK_NAME";
       case TOK_NUMBER:          return "TOK_NUMBER";
       case TOK_STRING:          return "TOK_STRING";
