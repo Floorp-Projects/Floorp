@@ -131,7 +131,7 @@ EnterBaseline(JSContext *cx, StackFrame *fp, void *jitcode, bool osr)
     RootedValue result(cx, Int32Value(numActualArgs));
     {
         AssertCompartmentUnchanged pcc(cx);
-        IonContext ictx(cx, cx->compartment, NULL);
+        IonContext ictx(cx, NULL);
         IonActivation activation(cx, fp);
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 
@@ -205,13 +205,13 @@ BaselineCompile(JSContext *cx, HandleScript script, StackFrame *fp)
     if (!temp)
         return Method_Error;
 
-    IonContext ictx(cx, cx->compartment, temp);
+    IonContext ictx(cx, temp);
 
     BaselineCompiler compiler(cx, script);
     if (!compiler.init())
         return Method_Error;
 
-    AutoFlushCache afc("BaselineJIT", cx->compartment->ionCompartment());
+    AutoFlushCache afc("BaselineJIT", cx->runtime->ionRuntime());
     MethodStatus status = compiler.compile();
 
     JS_ASSERT_IF(status == Method_Compiled, script->baseline);
@@ -563,7 +563,7 @@ BaselineScript::toggleDebugTraps(RawScript script, jsbytecode *pc)
 
     SrcNoteLineScanner scanner(script->notes(), script->lineno);
 
-    IonContext ictx(NULL, script->compartment(), NULL);
+    IonContext ictx(script->compartment(), NULL);
     AutoFlushCache afc("DebugTraps");
 
     for (uint32_t i = 0; i < numPCMappingIndexEntries(); i++) {

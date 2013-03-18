@@ -34,9 +34,11 @@
 #include "PeerConnectionImpl.h"
 #include "nsPIDOMWindow.h"
 #include "nsDOMDataChannel.h"
+
 #ifdef MOZILLA_INTERNAL_API
 #include "nsContentUtils.h"
 #include "nsDOMJSUtils.h"
+#include "nsIDocument.h"
 #include "nsIScriptError.h"
 #include "nsPrintfCString.h"
 #include "nsURLHelper.h"

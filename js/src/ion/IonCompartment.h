@@ -136,6 +136,9 @@ class IonRuntime
     // (after returning from JIT code).
     uint8_t *osrTempData_;
 
+    // Keep track of memoryregions that are going to be flushed.
+    AutoFlushCache *flusher_;
+
   private:
     IonCode *generateEnterJIT(JSContext *cx, EnterJitType type);
     IonCode *generateArgumentsRectifier(JSContext *cx, void **returnAddrOut);
@@ -146,15 +149,7 @@ class IonRuntime
     IonCode *generateDebugTrapHandler(JSContext *cx);
     IonCode *generateVMWrapper(JSContext *cx, const VMFunction &f);
 
-    IonCode *debugTrapHandler(JSContext *cx) {
-        if (!debugTrapHandler_) {
-            // IonRuntime code stubs are shared across compartments and have to
-            // be allocated in the atoms compartment.
-            AutoEnterAtomsCompartment ac(cx);
-            debugTrapHandler_ = generateDebugTrapHandler(cx);
-        }
-        return debugTrapHandler_;
-    }
+    IonCode *debugTrapHandler(JSContext *cx);
 
   public:
     IonRuntime();
@@ -165,6 +160,14 @@ class IonRuntime
     void freeOsrTempData();
 
     static void Mark(JSTracer *trc);
+
+    AutoFlushCache *flusher() {
+        return flusher_;
+    }
+    void setFlusher(AutoFlushCache *fl) {
+        if (!flusher_ || !fl)
+            flusher_ = fl;
+    }
 };
 
 class IonCompartment
@@ -179,9 +182,6 @@ class IonCompartment
     // will eventually appear in this list asynchronously. Protected by the
     // runtime's analysis lock.
     OffThreadCompilationVector finishedOffThreadCompilations_;
-
-    // Keep track of memoryregions that are going to be flushed.
-    AutoFlushCache *flusher_;
 
     // Map ICStub keys to ICStub shared code objects.
     typedef WeakValueCache<uint32_t, ReadBarriered<IonCode> > ICStubCodeMap;
@@ -278,11 +278,10 @@ class IonCompartment
     }
 
     AutoFlushCache *flusher() {
-        return flusher_;
+        return rt->flusher();
     }
     void setFlusher(AutoFlushCache *fl) {
-        if (!flusher_ || !fl)
-            flusher_ = fl;
+        rt->setFlusher(fl);
     }
     OptimizedICStubSpace *optimizedStubSpace() {
         return &optimizedStubSpace_;
@@ -367,7 +366,7 @@ class IonActivation
 };
 
 // Called from JSCompartment::discardJitCode().
-void InvalidateAll(FreeOp *fop, JSCompartment *comp);
+void InvalidateAll(FreeOp *fop, JS::Zone *zone);
 void FinishInvalidation(FreeOp *fop, RawScript script);
 
 } // namespace ion

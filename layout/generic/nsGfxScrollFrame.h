@@ -537,6 +537,9 @@ public:
   virtual bool DidHistoryRestore() MOZ_OVERRIDE {
     return mInner.mDidHistoryRestore;
   }
+  virtual void ClearDidHistoryRestore() MOZ_OVERRIDE {
+    mInner.mDidHistoryRestore = false;
+  }
 
   // nsIStatefulFrame
   NS_IMETHOD SaveState(nsPresState** aState) MOZ_OVERRIDE {
@@ -789,6 +792,9 @@ public:
   }
   virtual bool DidHistoryRestore() MOZ_OVERRIDE {
     return mInner.mDidHistoryRestore;
+  }
+  virtual void ClearDidHistoryRestore() MOZ_OVERRIDE {
+    mInner.mDidHistoryRestore = false;
   }
 
   // nsIStatefulFrame

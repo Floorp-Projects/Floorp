@@ -22,7 +22,9 @@ typedef nsDataHashtable<nsUint64HashKey, nsCString> WindowPaths;
 class JSMemoryMultiReporter
 {
 public:
-    static nsresult CollectReports(WindowPaths *windowPaths, nsIMemoryMultiReporterCallback *cb,
+    static nsresult CollectReports(WindowPaths *windowPaths,
+                                   WindowPaths *topWindowPaths,
+                                   nsIMemoryMultiReporterCallback *cb,
                                    nsISupports *closure);
 
     static nsresult GetExplicitNonHeap(int64_t *n);

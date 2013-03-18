@@ -6,7 +6,7 @@
 #include "nsIDOMXULElement.idl"
 interface nsIDOMXULContainerElement;
 
-[scriptable, uuid(1711387a-a43c-4d41-887a-0fb7fe5de421)]
+[scriptable, uuid(0cedc92f-a0ab-4c4c-83e9-582607b8d7e2)]
 interface nsIDOMXULContainerItemElement : nsIDOMXULElement
 {
   /**
@@ -15,7 +15,7 @@ interface nsIDOMXULContainerItemElement : nsIDOMXULElement
   readonly attribute nsIDOMXULContainerElement parentContainer;
 };
 
-[scriptable, uuid(1d8ba880-a4b3-4a01-b541-4628ca16ef63)]
+[scriptable, uuid(c0b1bfdd-6199-412d-af79-8d6524865a5b)]
 interface nsIDOMXULContainerElement : nsIDOMXULContainerItemElement
 {
   /**

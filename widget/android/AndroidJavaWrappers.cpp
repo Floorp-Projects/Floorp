@@ -487,6 +487,7 @@ void
 AndroidGeckoEvent::Init(int aType, nsIntRect const& aRect)
 {
     mType = aType;
+    mAckNeeded = false;
     mRect = aRect;
 }
 
@@ -641,20 +642,15 @@ void
 AndroidGeckoEvent::Init(int aType)
 {
     mType = aType;
+    mAckNeeded = false;
 }
 
 void
 AndroidGeckoEvent::Init(int aType, int aAction)
 {
     mType = aType;
+    mAckNeeded = false;
     mAction = aAction;
-}
-
-void
-AndroidGeckoEvent::Init(int x1, int y1, int x2, int y2)
-{
-    mType = DRAW;
-    mRect.SetEmpty();
 }
 
 void
@@ -663,6 +659,7 @@ AndroidGeckoEvent::Init(AndroidGeckoEvent *aResizeEvent)
     NS_ASSERTION(aResizeEvent->Type() == SIZE_CHANGED, "Init called on non-SIZE_CHANGED event");
 
     mType = FORCED_RESIZE;
+    mAckNeeded = false;
     mTime = aResizeEvent->mTime;
     mPoints = aResizeEvent->mPoints; // x,y coordinates
 }

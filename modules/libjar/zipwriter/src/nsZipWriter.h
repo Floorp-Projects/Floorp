@@ -18,7 +18,6 @@
 #include "mozilla/Attributes.h"
 
 #define ZIPWRITER_CONTRACTID "@mozilla.org/zipwriter;1"
-#define ZIPWRITER_CLASSNAME "Zip Writer"
 #define ZIPWRITER_CID { 0x430d416c, 0xa722, 0x4ad1, \
            { 0xbe, 0x98, 0xd9, 0xa4, 0x45, 0xf8, 0x5e, 0x3f } }
 

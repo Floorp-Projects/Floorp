@@ -153,7 +153,7 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString& aType,
 
 nsresult
 nsDOMMouseEvent::InitFromCtor(const nsAString& aType,
-                              JSContext* aCx, jsval* aVal)
+                              JSContext* aCx, JS::Value* aVal)
 {
   mozilla::idl::MouseEventInit d;
   nsresult rv = d.Init(aCx, aVal);

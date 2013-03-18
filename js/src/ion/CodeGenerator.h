@@ -41,10 +41,11 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool generateBody();
 
   public:
-    CodeGenerator(MIRGenerator *gen, LIRGraph *graph);
+    CodeGenerator(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm = NULL);
 
   public:
     bool generate();
+    bool generateAsmJS();
     bool link();
 
     bool visitLabel(LLabel *lir);
@@ -135,6 +136,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitAbsI(LAbsI *lir);
     bool visitPowI(LPowI *lir);
     bool visitPowD(LPowD *lir);
+    bool visitNegI(LNegI *lir);
     bool visitNegD(LNegD *lir);
     bool visitRandom(LRandom *lir);
     bool visitMathFunctionD(LMathFunctionD *ins);
@@ -210,9 +212,14 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitSetDOMProperty(LSetDOMProperty *lir);
     bool visitCallDOMNative(LCallDOMNative *lir);
     bool visitCallGetIntrinsicValue(LCallGetIntrinsicValue *lir);
+    bool visitAsmJSCall(LAsmJSCall *lir);
+    bool visitAsmJSParameter(LAsmJSParameter *lir);
+    bool visitAsmJSReturn(LAsmJSReturn *ret);
+    bool visitAsmJSVoidReturn(LAsmJSVoidReturn *ret);
 
     bool visitCheckOverRecursed(LCheckOverRecursed *lir);
     bool visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool);
+    bool visitAsmJSCheckOverRecursed(LAsmJSCheckOverRecursed *lir);
 
     bool visitParCheckOverRecursed(LParCheckOverRecursed *lir);
     bool visitParCheckOverRecursedFailure(ParCheckOverRecursedFailure *ool);

@@ -1031,13 +1031,19 @@ function waitForEvents(event)
   }
 }
 
-SpecialPowers.setBoolPref("plugins.click_to_play", true);
+const isOSXMtnLion = navigator.userAgent.indexOf("Mac OS X 10.8") != -1;
 
-var subwindow = window.open("./subtst_contextmenu.html", "contextmenu-subtext", "width=600,height=800");
-subwindow.addEventListener("MozAfterPaint", waitForEvents, false);
-subwindow.onload = waitForEvents;
+if (isOSXMtnLion) {
+  todo(false, "Mountain Lion doesn't like this test (bug 792304)");
+} else {
+  SpecialPowers.setBoolPref("plugins.click_to_play", true);
 
-SimpleTest.waitForExplicitFinish();
+  var subwindow = window.open("./subtst_contextmenu.html", "contextmenu-subtext", "width=600,height=800");
+  subwindow.addEventListener("MozAfterPaint", waitForEvents, false);
+  subwindow.onload = waitForEvents;
+
+  SimpleTest.waitForExplicitFinish();
+}
 </script>
 </pre>
 </body>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+
+    .container {
+      height: 24pt;
+      position: relative;
+    }
+    #colset {
+      height: 2in;
+      -moz-column-count: 3;
+    }
+    .c1 {
+      position: absolute;
+      height: 3in;
+    }
+    .c2 {
+      position: absolute;
+      height: 1in;
+    }
+    .c3 {
+      position: absolute;
+      height: 3in;
+    }
+    .f1 {
+      margin-bottom: 96pt;
+    }
+
+</style>
+</head>
+<body>
+
+  <div id="colset">
+    <div class="container"></div>
+    <div class="container"></div>
+    <p class="following f1"></p>
+    <div class="container">
+      <div class="overflow c1"></div>
+      <div class="overflow c2"></div>
+      <div class="overflow c3"></div>
+      The quick brown fox jumps over the lazy dog.
+    </div>
+  </div>
+
+</body>
+</html>

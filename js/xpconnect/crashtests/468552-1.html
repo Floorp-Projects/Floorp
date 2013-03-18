@@ -7,7 +7,7 @@ function boom()
   var dp = document.__proto__;
   dp.__proto__ = new XPCNativeWrapper(new XMLSerializer);
   try {
-    dp.isSupported();
+    dp.replaceChild();
   } catch(e) { }
 }
 

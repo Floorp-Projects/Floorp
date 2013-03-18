@@ -905,6 +905,7 @@ function actions(finger, touchId, command_id, i){
     i = 0;
   }
   if (i == finger.length) {
+    sendOk(command_id);
     return;
   }
   let pack = finger[i];
@@ -986,7 +987,6 @@ function actionChain(msg) {
     let touchId = nextTouchId++;
     // loop the action array [ ['press', id], ['move', id], ['release', id] ]
     actions(commandArray, touchId, command_id);
-    sendOk(msg.json.command_id);
   }
   catch (e) {
     sendError(e.message, e.code, e.stack, msg.json.command_id);

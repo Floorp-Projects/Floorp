@@ -18,6 +18,7 @@
 #include "nsCharsetSource.h" // kCharsetFrom* macro definition
 #include "nsNodeInfoManager.h"
 #include "nsContentUtils.h"
+#include "nsDocElementCreatedNotificationRunner.h"
 
 namespace mozilla {
 namespace dom {

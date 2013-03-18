@@ -240,5 +240,4 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
 
 %{C++
 #define NS_SCRIPTSECURITYMANAGER_CONTRACTID "@mozilla.org/scriptsecuritymanager;1"
-#define NS_SCRIPTSECURITYMANAGER_CLASSNAME "scriptsecuritymanager"
 %}

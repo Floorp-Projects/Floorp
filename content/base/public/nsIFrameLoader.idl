@@ -250,6 +250,10 @@ interface nsIFrameLoader : nsISupports
   readonly attribute nsIDOMElement ownerElement;
 };
 
+%{C++
+class nsFrameLoader;
+%}
+
 native alreadyAddRefed_nsFrameLoader(already_AddRefed<nsFrameLoader>);
 
 [scriptable, uuid(5879040e-83e9-40e3-b2bb-5ddf43b76e47)]

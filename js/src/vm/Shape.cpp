@@ -1251,7 +1251,7 @@ EmptyShape::getInitialShape(JSContext *cx, Class *clasp, TaggedProto proto, JSOb
     Rooted<TaggedProto> protoRoot(cx, lookup.proto);
     RootedObject parentRoot(cx, lookup.parent);
 
-    StackBaseShape base(clasp, parent, objectFlags);
+    StackBaseShape base(cx->compartment, clasp, parent, objectFlags);
     Rooted<UnownedBaseShape*> nbase(cx, BaseShape::getUnowned(cx, base));
     if (!nbase)
         return NULL;

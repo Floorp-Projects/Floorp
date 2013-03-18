@@ -976,6 +976,7 @@ static const char js_disable_explicit_compartment_gc[] =
 static const char js_baselinejit_content_str[] = JS_OPTIONS_DOT_STR "baselinejit.content";
 static const char js_baselinejit_chrome_str[]  = JS_OPTIONS_DOT_STR "baselinejit.chrome";
 static const char js_ion_content_str[]        = JS_OPTIONS_DOT_STR "ion.content";
+static const char js_asmjs_content_str[]      = JS_OPTIONS_DOT_STR "experimental_asmjs";
 static const char js_ion_parallel_compilation_str[] = JS_OPTIONS_DOT_STR "ion.parallel_compilation";
 
 int
@@ -1019,6 +1020,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
                                                js_baselinejit_chrome_str :
                                                js_baselinejit_content_str);
   bool useIon = Preferences::GetBool(js_ion_content_str);
+  bool useAsmJS = Preferences::GetBool(js_asmjs_content_str);
   bool parallelIonCompilation = Preferences::GetBool(js_ion_parallel_compilation_str);
   nsCOMPtr<nsIXULRuntime> xr = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
   if (xr) {
@@ -1032,6 +1034,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
       useHardening = false;
       useBaselineJIT = false;
       useIon = false;
+      useAsmJS = false;
     }
   }
 
@@ -1064,6 +1067,11 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     newDefaultJSOptions |= JSOPTION_ION;
   else
     newDefaultJSOptions &= ~JSOPTION_ION;
+
+  if (useAsmJS)
+    newDefaultJSOptions |= JSOPTION_ASMJS;
+  else
+    newDefaultJSOptions &= ~JSOPTION_ASMJS;
 
 #ifdef DEBUG
   // In debug builds, warnings are enabled in chrome context if
@@ -2651,7 +2659,7 @@ AnyGrayGlobalParent()
     if (JSObject *global = JS_GetGlobalObject(cx)) {
       if (JSObject *parent = js::GetObjectParent(global)) {
         if (JS::GCThingIsMarkedGray(parent) &&
-            !js::IsSystemCompartment(js::GetGCThingCompartment(parent))) {
+            !js::IsSystemCompartment(js::GetObjectCompartment(parent))) {
           return true;
         }
       }

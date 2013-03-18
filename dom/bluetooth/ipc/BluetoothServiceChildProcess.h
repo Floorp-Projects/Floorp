@@ -52,16 +52,13 @@ public:
                                     MOZ_OVERRIDE;
 
   virtual nsresult
-  StopDiscoveryInternal(const nsAString& aAdapterPath,
-                        BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  StopDiscoveryInternal(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
   virtual nsresult
-  StartDiscoveryInternal(const nsAString& aAdapterPath,
-                         BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  StartDiscoveryInternal(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
   virtual nsresult
   SetProperty(BluetoothObjectType aType,
-              const nsAString& aPath,
               const BluetoothNamedValue& aValue,
               BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
@@ -71,14 +68,12 @@ public:
                 nsAString& aDevicePath) MOZ_OVERRIDE;
 
   virtual nsresult
-  CreatePairedDeviceInternal(const nsAString& aAdapterPath,
-                             const nsAString& aAddress,
+  CreatePairedDeviceInternal(const nsAString& aAddress,
                              int aTimeout,
                              BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
   virtual nsresult
-  RemoveDeviceInternal(const nsAString& aAdapterPath,
-                       const nsAString& aObjectPath,
+  RemoveDeviceInternal(const nsAString& aObjectPath,
                        BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
   virtual nsresult
@@ -126,7 +121,6 @@ public:
 
   virtual void
   Connect(const nsAString& aDeviceAddress,
-          const nsAString& aAdapterPath,
           const uint16_t aProfileId,
           BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
@@ -182,7 +176,7 @@ private:
 
   // This method should never be called from the child.
   virtual nsresult
-  PrepareAdapterInternal(const nsAString& aPath) MOZ_OVERRIDE;
+  PrepareAdapterInternal() MOZ_OVERRIDE;
 };
 
 END_BLUETOOTH_NAMESPACE

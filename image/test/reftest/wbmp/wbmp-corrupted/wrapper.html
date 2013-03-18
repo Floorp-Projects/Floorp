@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<title>Image reftest wrapper</title>
+<style type="text/css">
+  #image1 { background-color: rgb(10, 100, 250); }
+</style>
+<script>
+  // The image is loaded async after the page loads
+  // wait for it to finish loading
+  function onImageLoad() {
+    document.documentElement.removeAttribute("class");
+  };
+</script>
+</head>
+<body>
+<img id="image1">
+<script>
+  // Use as "wrapper.html?image.png"
+  var imgURL = document.location.search.substr(1);
+  document.images[0].onload = onImageLoad;
+  document.images[0].onerror = onImageLoad;
+  document.images[0].src = imgURL;
+</script>
+</body>
+</html>
+

@@ -124,8 +124,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(RedirectChannelRegistrar)
 extern nsresult
 net_NewIncrementalDownload(nsISupports *, const nsIID &, void **);
 
-#define NS_INCREMENTALDOWNLOAD_CLASSNAME \
-    "nsIncrementalDownload"
 #define NS_INCREMENTALDOWNLOAD_CID \
 { /* a62af1ba-79b3-4896-8aaf-b148bfce4280 */         \
     0xa62af1ba,                                      \

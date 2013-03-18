@@ -211,12 +211,12 @@ ContextCallback(JSContext *cx,
 static JSBool
 Print(JSContext *cx,
       unsigned argc,
-      jsval *vp)
+      JS::Value *vp)
 {
     unsigned i, n;
     JSString *str;
 
-    jsval *argv = JS_ARGV(cx, vp);
+    JS::Value *argv = JS_ARGV(cx, vp);
     for (i = n = 0; i < argc; i++) {
         str = JS_ValueToString(cx, argv[i]);
         if (!str)
@@ -251,7 +251,7 @@ GetLine(char *bufp,
 static JSBool
 Dump(JSContext *cx,
      unsigned argc,
-     jsval *vp)
+     JS::Value *vp)
 {
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
 
@@ -274,15 +274,15 @@ Dump(JSContext *cx,
 static JSBool
 Load(JSContext *cx,
      unsigned argc,
-     jsval *vp)
+     JS::Value *vp)
 {
-    jsval result;
+    JS::Value result;
 
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
         return JS_FALSE;
 
-    jsval *argv = JS_ARGV(cx, vp);
+    JS::Value *argv = JS_ARGV(cx, vp);
     for (unsigned i = 0; i < argc; i++) {
         JSString *str = JS_ValueToString(cx, argv[i]);
         if (!str)
@@ -318,9 +318,9 @@ Load(JSContext *cx,
 static JSBool
 Version(JSContext *cx,
         unsigned argc,
-        jsval *vp)
+        JS::Value *vp)
 {
-    jsval *argv = JS_ARGV(cx, vp);
+    JS::Value *argv = JS_ARGV(cx, vp);
     if (argc > 0 && JSVAL_IS_INT(argv[0]))
         JS_SET_RVAL(cx, vp, INT_TO_JSVAL(JS_SetVersion(cx, JSVersion(JSVAL_TO_INT(argv[0])))));
     else
@@ -329,7 +329,7 @@ Version(JSContext *cx,
 }
 
 static JSBool
-BuildDate(JSContext *cx, unsigned argc, jsval *vp)
+BuildDate(JSContext *cx, unsigned argc, JS::Value *vp)
 {
     fprintf(stdout, "built on %s at %s\n", __DATE__, __TIME__);
     return JS_TRUE;
@@ -338,7 +338,7 @@ BuildDate(JSContext *cx, unsigned argc, jsval *vp)
 static JSBool
 Quit(JSContext *cx,
      unsigned argc,
-     jsval *vp)
+     JS::Value *vp)
 {
     int exitCode = 0;
     JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "/ i", &exitCode);
@@ -353,7 +353,7 @@ Quit(JSContext *cx,
 static JSBool
 DumpXPC(JSContext *cx,
         unsigned argc,
-        jsval *vp)
+        JS::Value *vp)
 {
     int32_t depth = 2;
 
@@ -372,7 +372,7 @@ DumpXPC(JSContext *cx,
 static JSBool
 GC(JSContext *cx,
    unsigned argc,
-   jsval *vp)
+   JS::Value *vp)
 {
     JSRuntime *rt = JS_GetRuntime(cx);
     JS_GC(rt);
@@ -387,9 +387,9 @@ GC(JSContext *cx,
 static JSBool
 GCZeal(JSContext *cx, 
        unsigned argc,
-       jsval *vp)
+       JS::Value *vp)
 {
-  jsval* argv = JS_ARGV(cx, vp);
+  JS::Value* argv = JS_ARGV(cx, vp);
 
   uint32_t zeal;
   if (!JS_ValueToECMAUint32(cx, argv[0], &zeal))
@@ -405,7 +405,7 @@ GCZeal(JSContext *cx,
 static JSBool
 DumpHeap(JSContext *cx,
          unsigned argc,
-         jsval *vp)
+         JS::Value *vp)
 {
     JSAutoByteString fileName;
     void* startThing = NULL;
@@ -416,7 +416,7 @@ DumpHeap(JSContext *cx,
     FILE *dumpFile;
     JSBool ok;
 
-    jsval *argv = JS_ARGV(cx, vp);
+    JS::Value *argv = JS_ARGV(cx, vp);
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
 
     vp = argv + 0;
@@ -530,7 +530,7 @@ ProcessFile(JSContext *cx,
     XPCShellEnvironment::AutoContextPusher pusher(env);
 
     JSScript *script;
-    jsval result;
+    JS::Value result;
     int lineno, startline;
     JSBool ok, hitEOF;
     char *bufp, buffer[4096];
@@ -1045,6 +1045,7 @@ XPCShellEnvironment::Init()
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = xpc->InitClassesWithNewWrappedGlobal(cx, backstagePass,
                                               principal, 0,
+                                              JS::SystemZone,
                                               getter_AddRefs(holder));
     if (NS_FAILED(rv)) {
         NS_ERROR("InitClassesWithNewWrappedGlobal failed!");
@@ -1110,7 +1111,7 @@ XPCShellEnvironment::EvaluateString(const nsString& aString,
           aResult->Truncate();
       }
 
-      jsval result;
+      JS::Value result;
       JSBool ok = JS_ExecuteScript(mCx, global, script, &result);
       if (ok && result != JSVAL_VOID) {
           JSErrorReporter old = JS_SetErrorReporter(mCx, NULL);

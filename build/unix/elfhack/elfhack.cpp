@@ -411,7 +411,17 @@ void maybe_split_segment(Elf *elf, ElfSegment *segment, bool fill)
             // PT_LOAD.
             if (!fill)
                 break;
+            // Insert dummy segment to normalize the entire Elf with the header
+            // sizes adjusted, before inserting a filler segment.
+            {
+              memset(&phdr, 0, sizeof(phdr));
+              ElfSegment dummySegment(&phdr);
+              elf->insertSegmentAfter(segment, &dummySegment);
+              elf->normalize();
+              elf->removeSegment(&dummySegment);
+            }
             ElfSection *previous = section->getPrevious();
+            phdr.p_type = PT_LOAD;
             phdr.p_vaddr = (previous->getAddr() + previous->getSize() + segment->getAlign() - 1) & ~(segment->getAlign() - 1);
             phdr.p_paddr = phdr.p_vaddr + segment->getVPDiff();
             phdr.p_flags = 0;
@@ -422,6 +432,8 @@ void maybe_split_segment(Elf *elf, ElfSegment *segment, bool fill)
                 newSegment = new ElfSegment(&phdr);
                 assert(newSegment->isElfHackFillerSegment());
                 elf->insertSegmentAfter(segment, newSegment);
+            } else {
+                elf->normalize();
             }
             break;
         }

@@ -12,6 +12,7 @@
 
 #include "nsAutoPtr.h"
 #include "nsString.h"
+#include "nsTArray.h"
 #include "GLContextTypes.h"
 #include "gfx3DMatrix.h"
 #include "gfxColor.h"

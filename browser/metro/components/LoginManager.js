@@ -110,14 +110,14 @@ LoginManager.prototype = {
      */
     observe : function (subject, topic, data) {
         if (topic == "nsPref:changed") {
-            this._pwmgr._debug    = Services.prefs.getBoolPref("signon.debug");
-            this._pwmgr._remember = Services.prefs.getBoolPref("signon.rememberSignons");
+            this._debug    = Services.prefs.getBoolPref("signon.debug");
+            this._remember = Services.prefs.getBoolPref("signon.rememberSignons");
         } else if (topic == "xpcom-shutdown") {
             // Circular reference forms when we mark an input field as managed
             // by the password manager
             this._formFillService = null;
         } else {
-            this._pwmgr.log("Oops! Unexpected notification: " + topic);
+            this.log("Oops! Unexpected notification: " + topic);
         }
     },
 

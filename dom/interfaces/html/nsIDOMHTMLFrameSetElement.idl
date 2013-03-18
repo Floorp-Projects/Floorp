@@ -20,7 +20,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(6373db9d-ba4f-401a-9d27-8f3242e74304)]
+[scriptable, uuid(e62b41c0-eaec-49bc-bf0c-be3a50b175d1)]
 interface nsIDOMHTMLFrameSetElement : nsIDOMHTMLElement
 {
            attribute DOMString        cols;

@@ -266,7 +266,7 @@ SmsRequestParent::DoRequest(const SendMessageRequest& aRequest)
   NS_ENSURE_TRUE(smsService, true);
 
   mSmsRequest = SmsRequest::Create(this);
-  nsCOMPtr<nsISmsRequest> forwarder = new SmsRequestForwarder(mSmsRequest);
+  nsCOMPtr<nsIMobileMessageCallback> forwarder = new SmsRequestForwarder(mSmsRequest);
   nsresult rv = smsService->Send(aRequest.number(), aRequest.message(), forwarder);
   NS_ENSURE_SUCCESS(rv, false);
 
@@ -281,7 +281,7 @@ SmsRequestParent::DoRequest(const GetMessageRequest& aRequest)
   NS_ENSURE_TRUE(mobileMessageDBService, true);
 
   mSmsRequest = SmsRequest::Create(this);
-  nsCOMPtr<nsISmsRequest> forwarder = new SmsRequestForwarder(mSmsRequest);
+  nsCOMPtr<nsIMobileMessageCallback> forwarder = new SmsRequestForwarder(mSmsRequest);
   nsresult rv = mobileMessageDBService->GetMessageMoz(aRequest.messageId(), forwarder);
   NS_ENSURE_SUCCESS(rv, false);
 
@@ -296,7 +296,7 @@ SmsRequestParent::DoRequest(const DeleteMessageRequest& aRequest)
   NS_ENSURE_TRUE(mobileMessageDBService, true);
 
   mSmsRequest = SmsRequest::Create(this);
-  nsCOMPtr<nsISmsRequest> forwarder = new SmsRequestForwarder(mSmsRequest);
+  nsCOMPtr<nsIMobileMessageCallback> forwarder = new SmsRequestForwarder(mSmsRequest);
   nsresult rv = mobileMessageDBService->DeleteMessage(aRequest.messageId(), forwarder);
   NS_ENSURE_SUCCESS(rv, false);
 
@@ -311,7 +311,7 @@ SmsRequestParent::DoRequest(const CreateMessageListRequest& aRequest)
 
   NS_ENSURE_TRUE(mobileMessageDBService, true);
   mSmsRequest = SmsRequest::Create(this);
-  nsCOMPtr<nsISmsRequest> forwarder = new SmsRequestForwarder(mSmsRequest);
+  nsCOMPtr<nsIMobileMessageCallback> forwarder = new SmsRequestForwarder(mSmsRequest);
   SmsFilter *filter = new SmsFilter(aRequest.filter());
   nsresult rv = mobileMessageDBService->CreateMessageList(filter, aRequest.reverse(), forwarder);
   NS_ENSURE_SUCCESS(rv, false);
@@ -327,7 +327,7 @@ SmsRequestParent::DoRequest(const GetNextMessageInListRequest& aRequest)
 
   NS_ENSURE_TRUE(mobileMessageDBService, true);
   mSmsRequest = SmsRequest::Create(this);
-  nsCOMPtr<nsISmsRequest> forwarder = new SmsRequestForwarder(mSmsRequest);
+  nsCOMPtr<nsIMobileMessageCallback> forwarder = new SmsRequestForwarder(mSmsRequest);
   nsresult rv = mobileMessageDBService->GetNextMessageInList(aRequest.aListId(), forwarder);
   NS_ENSURE_SUCCESS(rv, false);
 
@@ -342,7 +342,7 @@ SmsRequestParent::DoRequest(const MarkMessageReadRequest& aRequest)
 
   NS_ENSURE_TRUE(mobileMessageDBService, true);
   mSmsRequest = SmsRequest::Create(this);
-  nsCOMPtr<nsISmsRequest> forwarder = new SmsRequestForwarder(mSmsRequest);
+  nsCOMPtr<nsIMobileMessageCallback> forwarder = new SmsRequestForwarder(mSmsRequest);
   nsresult rv = mobileMessageDBService->MarkMessageRead(aRequest.messageId(), aRequest.value(), forwarder);
   NS_ENSURE_SUCCESS(rv, false);
 
@@ -357,7 +357,7 @@ SmsRequestParent::DoRequest(const GetThreadListRequest& aRequest)
 
   NS_ENSURE_TRUE(mobileMessageDBService, true);
   mSmsRequest = SmsRequest::Create(this);
-  nsCOMPtr<nsISmsRequest> forwarder = new SmsRequestForwarder(mSmsRequest);
+  nsCOMPtr<nsIMobileMessageCallback> forwarder = new SmsRequestForwarder(mSmsRequest);
   nsresult rv = mobileMessageDBService->GetThreadList(forwarder);
   NS_ENSURE_SUCCESS(rv, false);
 

@@ -15,7 +15,7 @@ import org.mozilla.gecko.db.BrowserContract.Clients;
 import org.mozilla.gecko.db.BrowserContract.Tabs;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.DBUtils;
-import org.mozilla.gecko.util.GeckoBackgroundThread;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -289,7 +289,7 @@ public class TabsProvider extends ContentProvider {
     public boolean onCreate() {
         debug("Creating TabsProvider");
 
-        GeckoBackgroundThread.post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 // Kick this off early. It is synchronized so that other callers will wait

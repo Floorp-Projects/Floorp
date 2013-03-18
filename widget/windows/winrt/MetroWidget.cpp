@@ -15,6 +15,7 @@
 #include "nsIAppStartup.h"
 #include "../resource.h"
 #include "nsIWidgetListener.h"
+#include "nsIPresShell.h"
 #include "nsPrintfCString.h"
 #include "nsWindowDefs.h"
 #include "FrameworkView.h"
@@ -1041,6 +1042,16 @@ float MetroWidget::GetDPI()
     return 96.0;
   }
   return mView->GetDPI();
+}
+
+void MetroWidget::ChangedDPI()
+{
+  if (mWidgetListener) {
+    nsIPresShell* presShell = mWidgetListener->GetPresShell();
+    if (presShell) {
+      presShell->BackingScaleFactorChanged();
+    }
+  }
 }
 
 NS_IMETHODIMP

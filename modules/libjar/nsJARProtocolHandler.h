@@ -18,6 +18,7 @@
 
 class nsIHashable;
 class nsIRemoteOpenFileListener;
+template<class E, uint32_t N> class nsAutoTArray;
 
 class nsJARProtocolHandler : public nsIJARProtocolHandler
                            , public nsSupportsWeakReference
@@ -62,8 +63,6 @@ protected:
 
 extern nsJARProtocolHandler *gJarHandler;
 
-#define NS_JARPROTOCOLHANDLER_CLASSNAME \
-    "nsJarProtocolHandler"
 #define NS_JARPROTOCOLHANDLER_CID                    \
 { /* 0xc7e410d4-0x85f2-11d3-9f63-006008a6efe9 */     \
     0xc7e410d4,                                      \

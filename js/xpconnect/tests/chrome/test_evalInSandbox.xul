@@ -121,7 +121,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
       SimpleTest.waitForExplicitFinish();
 
       try {
-        var sandbox = new Cu.Sandbox(win, { sandboxPrototype: undefined } );
+        var sandbox = new Cu.Sandbox(this, { sandboxPrototype: undefined } );
         ok(false, "undefined is not a valid prototype");
       }
       catch (e) {
@@ -129,7 +129,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
       }
 
       try {
-        var sandbox = new Cu.Sandbox(win, { wantXrays: undefined } );
+        var sandbox = new Cu.Sandbox(this, { wantXrays: undefined } );
         ok(false, "undefined is not a valid value for wantXrays");
       }
       catch (e) {
@@ -141,6 +141,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
         Components.utils.evalInSandbox('', null);
       } catch (e) {
         ok(true, "didn't crash on a null sandbox object");
+      }
+
+      try {
+        var sandbox = new Cu.Sandbox(this, { sameZoneAs: this } );
+        ok(true, "sameZoneAs works");
+      }
+      catch (e) {
+        ok(false, "sameZoneAs works");
       }
   ]]></script>
 </window>

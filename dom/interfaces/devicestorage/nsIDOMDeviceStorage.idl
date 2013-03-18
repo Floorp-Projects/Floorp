@@ -6,7 +6,7 @@
 #include "nsIDOMEventTarget.idl"
 interface nsIDOMBlob;
 interface nsIDOMDOMRequest;
-interface nsIDOMDeviceStorageCursor;
+interface nsIDOMDOMCursor;
 interface nsIDOMDeviceStorageChangeEvent;
 interface nsIDOMEventListener;
 interface nsIFile;
@@ -16,7 +16,7 @@ dictionary DeviceStorageEnumerationParameters
   jsval since;
 };
 
-[scriptable, uuid(c611b701-ddfc-456d-893a-3b3fcb30d9fd), builtinclass]
+[scriptable, uuid(d0df738b-1c42-4b1a-84d0-9a089d830974), builtinclass]
 interface nsIDOMDeviceStorage : nsIDOMEventTarget
 {
     [implicit_jscontext] attribute jsval onchange;
@@ -33,10 +33,10 @@ interface nsIDOMDeviceStorage : nsIDOMEventTarget
     nsIDOMDOMRequest delete(in jsval aName);
 
     [optional_argc, implicit_jscontext]
-    nsIDOMDeviceStorageCursor enumerate([optional] in jsval aName, /* DeviceStorageEnumerationParameters */ [optional] in jsval options);
+    nsIDOMDOMCursor enumerate([optional] in jsval aName, /* DeviceStorageEnumerationParameters */ [optional] in jsval options);
 
     [optional_argc, implicit_jscontext]
-    nsIDOMDeviceStorageCursor enumerateEditable([optional] in jsval aName, /* DeviceStorageEnumerationParameters */ [optional] in jsval options);
+    nsIDOMDOMCursor enumerateEditable([optional] in jsval aName, /* DeviceStorageEnumerationParameters */ [optional] in jsval options);
 
     nsIDOMDOMRequest freeSpace();
 

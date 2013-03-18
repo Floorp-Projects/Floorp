@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:gecko="http://schemas.android.com/apk/res-auto">
+
+    <!-- private browsing mode -->
+    <item gecko:state_private="true"
+          android:state_focused="true"
+          android:drawable="@drawable/address_bar_url_pressed_pb"/>
+
+    <item gecko:state_private="true"
+          android:state_pressed="true"
+          android:drawable="@drawable/address_bar_url_pressed_pb"/>
+
+    <item gecko:state_private="true"
+          android:state_selected="true"
+          android:drawable="@drawable/address_bar_url_pressed_pb"/>
+
+    <item gecko:state_private="true"
+          android:drawable="@drawable/address_bar_url_default_pb"/>
+ 
+    <!-- normal modes -->
+    <item android:state_focused="true"
+          android:drawable="@drawable/address_bar_url_pressed"/>
+
+    <item android:state_pressed="true"
+          android:drawable="@drawable/address_bar_url_pressed"/>
+
+    <item android:state_selected="true"
+          android:drawable="@drawable/address_bar_url_pressed"/>
+
+    <item android:drawable="@drawable/address_bar_url_default"/>
+
+</selector>

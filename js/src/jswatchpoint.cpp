@@ -237,8 +237,8 @@ void
 WatchpointMap::traceAll(WeakMapTracer *trc)
 {
     JSRuntime *rt = trc->runtime;
-    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
-        if (WatchpointMap *wpmap = (*c)->watchpointMap)
+    for (CompartmentsIter comp(rt); !comp.done(); comp.next()) {
+        if (WatchpointMap *wpmap = comp->watchpointMap)
             wpmap->trace(trc);
     }
 }
