@@ -493,16 +493,21 @@ class BindNameIC : public IonCache
 class NameIC : public IonCache
 {
   protected:
+    // Registers live after the cache, excluding output registers. The initial
+    // value of these registers must be preserved by the cache.
+    RegisterSet liveRegs_;
+
     bool typeOf_;
     Register scopeChain_;
     PropertyName *name_;
     TypedOrValueRegister output_;
 
   public:
-    NameIC(bool typeOf,
+    NameIC(RegisterSet liveRegs, bool typeOf,
            Register scopeChain, PropertyName *name,
            TypedOrValueRegister output)
-      : typeOf_(typeOf),
+      : liveRegs_(liveRegs),
+        typeOf_(typeOf),
         scopeChain_(scopeChain),
         name_(name),
         output_(output)
@@ -524,8 +529,11 @@ class NameIC : public IonCache
         return typeOf_;
     }
 
-    bool attach(JSContext *cx, IonScript *ion, HandleObject scopeChain, HandleObject obj,
-                HandleShape shape);
+    bool attachReadSlot(JSContext *cx, IonScript *ion, HandleObject scopeChain, HandleObject obj,
+                        HandleShape shape);
+    bool attachCallGetter(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
+                          HandleShape shape, const SafepointIndex *safepointIndex,
+                          void *returnAddr);
 
     static bool
     update(JSContext *cx, size_t cacheIndex, HandleObject scopeChain, MutableHandleValue vp);

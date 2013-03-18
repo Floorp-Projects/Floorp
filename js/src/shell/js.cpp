@@ -4780,6 +4780,12 @@ NewGlobalObject(JSContext *cx)
                                its_setter, JSPROP_READONLY))
             return NULL;
 
+        if (!JS_DefineProperty(cx, glob, "customNative", UndefinedValue(),
+                               (JSPropertyOp)its_get_customNative,
+                               (JSStrictPropertyOp)its_set_customNative,
+                               JSPROP_READONLY | JSPROP_NATIVE_ACCESSORS))
+            return NULL;
+
         /* Initialize FakeDOMObject. */
         static js::DOMCallbacks DOMcallbacks = {
             InstanceClassHasProtoAtDepth
