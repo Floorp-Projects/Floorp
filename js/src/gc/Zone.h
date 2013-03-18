@@ -57,6 +57,52 @@ typedef Vector<JSCompartment *, 1, SystemAllocPolicy> CompartmentVector;
 
 namespace JS {
 
+/*
+ * A zone is a collection of compartments. Every compartment belongs to exactly
+ * one zone. In Firefox, there is roughly one zone per tab along with a system
+ * zone for everything else. Zones mainly serve as boundaries for garbage
+ * collection. Unlike compartments, they have no special security properties.
+ *
+ * Every GC thing belongs to exactly one zone. GC things from the same zone but
+ * different compartments can share an arena (4k page). GC things from different
+ * zones cannot be stored in the same arena. The garbage collector is capable of
+ * collecting one zone at a time; it cannot collect at the granularity of
+ * compartments.
+ *
+ * GC things are tied to zones and compartments as follows:
+ *
+ * - JSObjects belong to a compartment and cannot be shared between
+ *   compartments. If an object needs to point to a JSObject in a different
+ *   compartment, regardless of zone, it must go through a cross-compartment
+ *   wrapper. Each compartment keeps track of its outgoing wrappers in a table.
+ *
+ * - JSStrings do not belong to any particular compartment, but they do belong
+ *   to a zone. Thus, two different compartments in the same zone can point to a
+ *   JSString. When a string needs to be wrapped, we copy it if it's in a
+ *   different zone and do nothing if it's in the same zone. Thus, transferring
+ *   strings within a zone is very efficient.
+ *
+ * - Shapes and base shapes belong to a compartment and cannot be shared between
+ *   compartments. A base shape holds a pointer to its compartment. Shapes find
+ *   their compartment via their base shape. JSObjects find their compartment
+ *   via their shape.
+ *
+ * - Scripts are also compartment-local and cannot be shared. A script points to
+ *   its compartment.
+ *
+ * - Type objects and IonCode objects belong to a compartment and cannot be
+ *   shared. However, there is no mechanism to obtain their compartments.
+ *
+ * A zone remains alive as long as any GC things in the zone are alive. A
+ * compartment remains alive as long as any JSObjects, scripts, shapes, or base
+ * shapes within it are alive.
+ *
+ * We always guarantee that a zone has at least one live compartment by refusing
+ * to delete the last compartment in a live zone. (This could happen, for
+ * example, if the conservative scanner marks a string in an otherwise dead
+ * zone.)
+ */
+
 struct Zone : private JS::shadow::Zone, public js::gc::GraphNodeBase<JS::Zone>
 {
     JSRuntime                    *rt;
