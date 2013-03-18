@@ -1,0 +1,233 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test data Paramter for Alarm API</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+  <script type="application/javascript">
+
+  "use strict";
+
+  // Verify passing {} for the data paramter
+  function testEmptyObject() {
+    var tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    var data = {};
+
+    var domRequest;
+    try {
+      domRequest = navigator.mozAlarms.add(tomorrow, "honorTimezone", data);
+    } catch (e) {
+      ok(false,
+         "Unexpected exception trying to add alarm for tomorrow for empty object test.");
+
+      return testEmptyList();
+    }
+    domRequest.onsuccess = function(e) {
+      var alarmId = e.target.result;
+
+      // Confirm the alarm added has the data we requested
+      var allReq;
+      try {
+        allReq = navigator.mozAlarms.getAll();
+      } catch (e) {
+        ok(false,
+          "Unexpected exception trying to get all alarms for empty object test.");
+
+        return testEmptyList();
+      }
+      allReq.onsuccess = function(ev) {
+        navigator.mozAlarms.remove(alarmId);
+
+        var found = false;
+        ev.target.result.forEach(function(alarm, i, arr) {
+          if (alarm.id == alarmId) {
+            // Found the one we added
+            ok(Object.keys(alarm.data).length === 0,
+               "Empty object passed for data parameter for new alarm.");
+
+            found = true;
+          }
+        });
+
+        if (!found) {
+          ok(false, "Couldn't find alarm that was added for empty object test.");
+        }
+
+        testEmptyList();
+      }
+      allReq.onerror = function(e) {
+        ok(false, "Unable to get all alarms for empty object test.");
+
+        testEmptyList();
+      }
+    };
+    domRequest.onerror = function(e) {
+      ok(false, "Unable to add alarm for tomorrow for empty object test.");
+
+      testEmptyList();
+    };
+
+  }
+
+  // Verify passing [] for the data paramter
+  function testEmptyList() {
+    var tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    var data = [];
+
+    var domRequest;
+    try {
+      domRequest = navigator.mozAlarms.add(tomorrow, "honorTimezone", data);
+    } catch (e) {
+      ok(false,
+         "Unexpected exception trying to add alarm for tomorrow for empty list test.");
+
+      return testNull();
+    }
+    domRequest.onsuccess = function(e) {
+      var alarmId = e.target.result;
+
+      // Confirm the alarm added has the data we requested
+      var allReq;
+      try {
+        allReq = navigator.mozAlarms.getAll();
+      } catch (e) {
+        ok(false,
+          "Unexpected exception trying to get all alarms for empty list test.");
+
+        return testNull();
+      }
+      allReq.onsuccess = function(ev) {
+        navigator.mozAlarms.remove(alarmId);
+
+        var found = false;
+        ev.target.result.forEach(function(alarm, i, arr) {
+          if (alarm.id == alarmId) {
+            // Found the one we added
+            ok(alarm.data.length === 0,
+               "Empty list passed for data parameter for new alarm.");
+
+            found = true;
+          }
+        });
+
+        if (!found) {
+          ok(false, "Couldn't find alarm that was added for empty list test.");
+        }
+
+        testNull();
+      }
+      allReq.onerror = function(e) {
+        ok(false, "Unable to get all alarms for empty list test.");
+
+        testNull();
+      }
+    };
+    domRequest.onerror = function(e) {
+      ok(false, "Unable to add alarm for tomorrow for empty list test.");
+
+      testNull();
+    };
+
+  }
+
+  // Verify passing null for the data paramter
+  function testNull() {
+    var tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    var data = null;
+
+    var domRequest;
+    try {
+      domRequest = navigator.mozAlarms.add(tomorrow, "honorTimezone", data);
+    } catch (e) {
+      ok(false,
+         "Unexpected exception trying to add alarm for tomorrow for null test.");
+      return SimpleTest.finish();
+    }
+    domRequest.onsuccess = function(e) {
+      var alarmId = e.target.result;
+
+      // Confirm the alarm added has the data we requested
+      var allReq;
+      try {
+        allReq = navigator.mozAlarms.getAll();
+      } catch (e) {
+        ok(false,
+          "Unexpected exception trying to get all alarms for null test.");
+        return SimpleTest.finish();
+      }
+      allReq.onsuccess = function(ev) {
+        navigator.mozAlarms.remove(alarmId);
+
+        var found = false;
+        ev.target.result.forEach(function(alarm, i, arr) {
+          if (alarm.id == alarmId) {
+            // Found the one we added
+            ok(alarm.data === null,
+               "Null passed for data parameter for new alarm.");
+
+            found = true;
+          }
+        });
+
+        if (!found) {
+          ok(false, "Couldn't find alarm that was added for null test.");
+        }
+        SimpleTest.finish();
+      }
+      allReq.onerror = function(e) {
+        ok(false, "Unable to get all alarms for null test.");
+        SimpleTest.finish();
+      }
+    };
+    domRequest.onerror = function(e) {
+      ok(false, "Unable to add alarm for tomorrow for null test.");
+      SimpleTest.finish();
+    };
+
+  }
+
+  function startTests() {
+
+    SpecialPowers.pushPrefEnv({"set": [["dom.mozAlarms.enabled", true]]}, function() {
+
+      // Currently applicable only on FxOS
+      if (navigator.userAgent.indexOf("Mobile") != -1 &&
+          navigator.appVersion.indexOf("Android") == -1) {
+
+        testEmptyObject();
+
+      } else {
+        ok(true, "mozAlarms on Firefox OS only.");
+        SimpleTest.finish();
+      }
+
+    });
+
+  }
+
+  SimpleTest.expectAssertions(0, 9);
+  SimpleTest.waitForExplicitFinish();
+  if (SpecialPowers.hasPermission("alarms", document)) {
+    startTests();
+  } else {
+    // Add the permission and reload the page so it propogates
+    SpecialPowers.addPermission("alarms", true, document);
+    window.location.reload();
+  }
+
+  </script>
+</pre>
+</body>
+</html>
