@@ -457,7 +457,7 @@ AbstractHealthReporter.prototype = Object.freeze({
     let logMessage = message;
 
     if (ex) {
-      recordMessage += ": " + ex.message;
+      recordMessage += ": " + CommonUtils.exceptionStr(ex);
       logMessage += ": " + CommonUtils.exceptionStr(ex);
     }
 
