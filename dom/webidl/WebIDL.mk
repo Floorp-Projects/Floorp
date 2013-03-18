@@ -182,6 +182,7 @@ webidl_files = \
   SVGFilterElement.webidl \
   SVGFilterPrimitiveStandardAttributes.webidl \
   SVGFEBlendElement.webidl \
+  SVGFEColorMatrixElement.webidl \
   SVGFEComponentTransferElement.webidl \
   SVGFEDistantLightElement.webidl \
   SVGFEFloodElement.webidl \
