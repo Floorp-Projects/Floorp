@@ -2582,7 +2582,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return;
   }
 
-  PROFILER_LABEL("widget", "ChildView::drawRect");
+  SAMPLE_LABEL("widget", "ChildView::drawRect");
 
   nsIntRegion region;
   nsIntRect boundingRect = mGeckoChild->CocoaPointsToDevPixels(aRect);
@@ -2687,7 +2687,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (void)drawUsingOpenGL
 {
-  PROFILER_LABEL("widget", "ChildView::drawUsingOpenGL");
+  SAMPLE_LABEL("widget", "ChildView::drawUsingOpenGL");
 
   if (![self isUsingOpenGL] || !mGeckoChild->IsVisible())
     return;

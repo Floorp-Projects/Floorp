@@ -664,7 +664,7 @@ void nsViewManager::DidPaintWindow()
 void
 nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsView* aView, nsEventStatus* aStatus)
 {
-  PROFILER_LABEL("event", "nsViewManager::DispatchEvent");
+  SAMPLE_LABEL("event", "nsViewManager::DispatchEvent");
 
   if ((NS_IS_MOUSE_EVENT(aEvent) &&
        // Ignore mouse events that we synthesize.

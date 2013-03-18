@@ -583,7 +583,7 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
                             nsStyleContext* aStyleContext,
                             int aSkipSides)
 {
-  PROFILER_LABEL("nsCSSRendering", "PaintBorder");
+  SAMPLE_LABEL("nsCSSRendering", "PaintBorder");
   nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
   const nsStyleBorder *styleBorder = aStyleContext->StyleBorder();
   // Don't check RelevantLinkVisited here, since we want to take the
@@ -1541,7 +1541,7 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
                                 nsRect* aBGClipRect,
                                 int32_t aLayer)
 {
-  PROFILER_LABEL("nsCSSRendering", "PaintBackground");
+  SAMPLE_LABEL("nsCSSRendering", "PaintBackground");
   NS_PRECONDITION(aForFrame,
                   "Frame is expected to be provided to PaintBackground");
 
@@ -1578,7 +1578,7 @@ nsCSSRendering::PaintBackgroundColor(nsPresContext* aPresContext,
                                      const nsRect& aBorderArea,
                                      uint32_t aFlags)
 {
-  PROFILER_LABEL("nsCSSRendering", "PaintBackgroundColor");
+  SAMPLE_LABEL("nsCSSRendering", "PaintBackgroundColor");
   NS_PRECONDITION(aForFrame,
                   "Frame is expected to be provided to PaintBackground");
 
@@ -2086,7 +2086,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
                               const nsRect& aOneCellArea,
                               const nsRect& aFillArea)
 {
-  PROFILER_LABEL("nsCSSRendering", "PaintGradient");
+  SAMPLE_LABEL("nsCSSRendering", "PaintGradient");
   Telemetry::AutoTimer<Telemetry::GRADIENT_DURATION, Telemetry::Microsecond> gradientTimer;
   if (aOneCellArea.IsEmpty())
     return;
