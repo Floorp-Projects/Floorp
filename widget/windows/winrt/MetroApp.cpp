@@ -50,7 +50,6 @@ MetroApp::CreateView(ABI::Windows::ApplicationModel::Core::IFrameworkView **aVie
 
   LogFunction();
 
-  sFrameworkView = Make<FrameworkView>(this);
   *aViewProvider = sFrameworkView.Get();
   return !sFrameworkView ? E_FAIL : S_OK;
 }
@@ -219,6 +218,7 @@ XRE_MetroCoreApplicationRun()
     return false;
   }
 
+  sFrameworkView = Make<FrameworkView>(sMetroApp.Get());
   sCoreApp->Run(sMetroApp.Get());
 
   Log(L"Exiting CoreApplication::Run");
