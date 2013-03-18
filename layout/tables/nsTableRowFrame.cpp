@@ -881,7 +881,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
 
         nsReflowStatus status;
         rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState,
-                         x, 0, NS_FRAME_INVALIDATE_ON_MOVE, status);
+                         x, 0, 0, status);
 
         // allow the table to determine if/how the table needs to be rebalanced
         // If any of the cells are not complete, then we're not complete

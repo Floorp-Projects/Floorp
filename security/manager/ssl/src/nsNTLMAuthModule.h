@@ -27,8 +27,6 @@ private:
   nsString mPassword;
 };
 
-#define NS_NTLMAUTHMODULE_CLASSNAME \
-  "nsNTLMAuthModule"
 #define NS_NTLMAUTHMODULE_CONTRACTID \
   NS_AUTH_MODULE_CONTRACTID_PREFIX "ntlm"
 #define NS_NTLMAUTHMODULE_CID \

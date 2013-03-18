@@ -780,6 +780,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void branchTestPtr(Condition cond, const Register &lhs, const Register &rhs, Label *label) {
         branchTest32(cond, lhs, rhs, label);
     }
+    void branchTestPtr(Condition cond, const Register &lhs, Imm32 imm, Label *label) {
+        branchTest32(cond, lhs, imm, label);
+    }
     void branchPtr(Condition cond, Register lhs, Register rhs, Label *label) {
         branch32(cond, lhs, rhs, label);
     }

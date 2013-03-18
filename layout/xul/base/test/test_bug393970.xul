@@ -50,6 +50,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=393970
   <script type="application/javascript"><![CDATA[
     /** Test for Bug 393970 **/
 
+    if (navigator.platform.startsWith("Linux")) {
+      SimpleTest.expectAssertions(0, 24);
+    }
+
     var tests = [
       'overflow-x: hidden; overflow-y: hidden;',
       'overflow-x: scroll; overflow-y: hidden;',

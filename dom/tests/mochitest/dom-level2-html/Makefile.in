@@ -65,12 +65,6 @@ MOCHITEST_FILES_A	= \
 		test_HTMLBodyElement04.html \
 		test_HTMLBodyElement05.html \
 		test_HTMLBodyElement06.html \
-		test_HTMLBodyElement07.html \
-		test_HTMLBodyElement08.html \
-		test_HTMLBodyElement09.html \
-		test_HTMLBodyElement10.html \
-		test_HTMLBodyElement11.html \
-		test_HTMLBodyElement12.html \
 		test_HTMLBRElement01.html \
 		test_HTMLButtonElement01.html \
 		test_HTMLButtonElement02.html \
@@ -120,12 +114,6 @@ MOCHITEST_FILES_B	= \
 		test_HTMLDocument19.html \
 		test_HTMLDocument20.html \
 		test_HTMLDocument21.html \
-		test_HTMLDocument22.html \
-		test_HTMLDocument23.html \
-		test_HTMLDocument24.html \
-		test_HTMLDocument25.html \
-		test_HTMLDocument26.html \
-		test_HTMLDocument27.html \
 		test_HTMLElement01.html \
 		test_HTMLElement02.html \
 		test_HTMLElement03.html \

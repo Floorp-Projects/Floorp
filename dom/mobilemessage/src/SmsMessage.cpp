@@ -136,6 +136,13 @@ SmsMessage::GetData() const
 }
 
 NS_IMETHODIMP
+SmsMessage::GetType(nsAString& aType)
+{
+  aType = NS_LITERAL_STRING("sms");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 SmsMessage::GetId(int32_t* aId)
 {
   *aId = mData.id();

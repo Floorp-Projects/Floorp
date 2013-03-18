@@ -1,0 +1,33 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIAccessibleEvent.idl"
+
+/**
+ * Fired when an accessible's text changes.
+ */
+[scriptable, builtinclass, uuid(21e0f8bd-5638-4964-870b-3c8e944ac4c4)]
+interface nsIAccessibleTextChangeEvent : nsIAccessibleEvent
+{
+  /**
+   * Returns offset of changed text in accessible.
+   */
+  readonly attribute long start;
+
+  /**
+   * Returns length of changed text.
+   */
+  readonly attribute unsigned long length;
+
+  /**
+   * Returns true if text was inserted, otherwise false.
+   */
+  readonly attribute boolean isInserted;
+
+  /**
+   * The inserted or removed text
+   */
+  readonly attribute DOMString modifiedText;
+};

@@ -2506,6 +2506,7 @@ Proxy::getElementIfPresent(JSContext *cx, HandleObject proxy, HandleObject recei
         return GetProxyHandler(proxy)->get(cx, proxy, receiver, id, vp.address());
     }
 
+    *present = false;
     INVOKE_ON_PROTOTYPE(cx, handler, proxy,
                         JSObject::getElementIfPresent(cx, proto, receiver, index, vp, present));
 }

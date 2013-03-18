@@ -17,6 +17,7 @@
 #include "IonAllocPolicy.h"
 #include "IonCompartment.h"
 #include "CompileInfo.h"
+#include "RegisterSets.h"
 
 namespace js {
 namespace ion {
@@ -24,6 +25,16 @@ namespace ion {
 class MBasicBlock;
 class MIRGraph;
 class MStart;
+
+struct AsmJSGlobalAccess
+{
+    unsigned offset;
+    unsigned globalDataOffset;
+
+    AsmJSGlobalAccess(unsigned offset, unsigned globalDataOffset)
+      : offset(offset), globalDataOffset(globalDataOffset)
+    {}
+};
 
 class MIRGenerator
 {
@@ -72,6 +83,45 @@ class MIRGenerator
         cancelBuild_ = 1;
     }
 
+    bool compilingAsmJS() const {
+        return info_->script() == NULL;
+    }
+
+    uint32_t maxAsmJSStackArgBytes() const {
+        JS_ASSERT(compilingAsmJS());
+        return maxAsmJSStackArgBytes_;
+    }
+    uint32_t resetAsmJSMaxStackArgBytes() {
+        JS_ASSERT(compilingAsmJS());
+        uint32_t old = maxAsmJSStackArgBytes_;
+        maxAsmJSStackArgBytes_ = 0;
+        return old;
+    }
+    void setAsmJSMaxStackArgBytes(uint32_t n) {
+        JS_ASSERT(compilingAsmJS());
+        maxAsmJSStackArgBytes_ = n;
+    }
+    void setPerformsAsmJSCall() {
+        JS_ASSERT(compilingAsmJS());
+        performsAsmJSCall_ = true;
+    }
+    bool performsAsmJSCall() const {
+        JS_ASSERT(compilingAsmJS());
+        return performsAsmJSCall_;
+    }
+    bool noteHeapAccess(AsmJSHeapAccess heapAccess) {
+        return asmJSHeapAccesses_.append(heapAccess);
+    }
+    const Vector<AsmJSHeapAccess> &heapAccesses() const {
+        return asmJSHeapAccesses_;
+    }
+    bool noteGlobalAccess(unsigned offset, unsigned globalDataOffset) {
+        return asmJSGlobalAccesses_.append(AsmJSGlobalAccess(offset, globalDataOffset));
+    }
+    const Vector<AsmJSGlobalAccess> &globalAccesses() const {
+        return asmJSGlobalAccesses_;
+    }
+
   public:
     JSCompartment *compartment;
 
@@ -83,6 +133,11 @@ class MIRGenerator
     MIRGraph *graph_;
     bool error_;
     size_t cancelBuild_;
+
+    uint32_t maxAsmJSStackArgBytes_;
+    bool performsAsmJSCall_;
+    Vector<AsmJSHeapAccess> asmJSHeapAccesses_;
+    Vector<AsmJSGlobalAccess> asmJSGlobalAccesses_;
 };
 
 } // namespace ion

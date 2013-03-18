@@ -66,7 +66,6 @@ private:
   bool                mInitialized;
 };
 
-#define NS_THREADMANAGER_CLASSNAME "nsThreadManager"
 #define NS_THREADMANAGER_CID                       \
 { /* 7a4204c6-e45a-4c37-8ebb-6709a22c917c */       \
   0x7a4204c6,                                      \

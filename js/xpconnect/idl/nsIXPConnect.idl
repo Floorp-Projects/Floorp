@@ -44,6 +44,7 @@ class nsWrapperCache;
 [ref] native nsCCTraversalCallbackRef(nsCycleCollectionTraversalCallback);
 [ptr] native nsAXPCNativeCallContextPtr(nsAXPCNativeCallContext);
 [ptr] native nsWrapperCachePtr(nsWrapperCache);
+      native ZoneSpecifier(uintptr_t);
 
 /***************************************************************************/
 
@@ -289,7 +290,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(19e869b4-23cc-417d-b877-f3d46b8bc2d2)]
+[uuid(7dc3a740-7ba9-11e2-b92a-0800200c9a66)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -322,7 +323,8 @@ interface nsIXPConnect : nsISupports
                   in JSContextPtr aJSContext,
                   in nsISupports  aCOMObj,
                   in nsIPrincipal aPrincipal,
-                  in uint32_t     aFlags);
+                  in uint32_t     aFlags,
+                  in ZoneSpecifier aZoneSpec);
 
     const uint32_t INIT_JS_STANDARD_CLASSES  = 1 << 0;
     // Free bit here!

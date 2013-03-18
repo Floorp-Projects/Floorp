@@ -469,7 +469,7 @@ ICStubCompiler::getStubCode()
     masm.setSecondScratchReg(BaselineSecondScratchReg);
 #endif
 
-    AutoFlushCache afc("ICStubCompiler::getStubCode", ion);
+    AutoFlushCache afc("ICStubCompiler::getStubCode", cx->runtime->ionRuntime());
     if (!generateStubCode(masm))
         return NULL;
     Linker linker(masm);
@@ -1714,7 +1714,7 @@ ICCompare_Boolean::Compiler::generateStubCode(MacroAssembler &masm)
     Register right = masm.extractInt32(R1, ExtractTemp1);
 
     // Compare payload regs of R0 and R1.
-    Assembler::Condition cond = JSOpToCondition(op);
+    Assembler::Condition cond = JSOpToCondition(op, /* signed = */true);
     masm.cmp32(left, right);
     masm.emitSet(cond, left);
 
@@ -1777,7 +1777,7 @@ ICCompare_Object::Compiler::generateStubCode(MacroAssembler &masm)
     Register right = masm.extractObject(R1, ExtractTemp1);
 
     Label ifTrue;
-    masm.branchPtr(JSOpToCondition(op), left, right, &ifTrue);
+    masm.branchPtr(JSOpToCondition(op, /* signed = */true), left, right, &ifTrue);
 
     masm.moveValue(BooleanValue(false), R0);
     EmitReturnFromIC(masm);
@@ -1886,7 +1886,7 @@ ICCompare_Int32WithBoolean::Compiler::generateStubCode(MacroAssembler &masm)
         Register int32Reg = masm.extractInt32(int32Val, ExtractTemp1);
 
         // Compare payload regs of R0 and R1.
-        Assembler::Condition cond = JSOpToCondition(op_);
+        Assembler::Condition cond = JSOpToCondition(op_, /* signed = */true);
         masm.cmp32(lhsIsInt32_ ? int32Reg : boolReg,
                    lhsIsInt32_ ? boolReg : int32Reg);
         masm.emitSet(cond, R0.scratchReg());

@@ -6,6 +6,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.ActivityResultHandlerMap;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -152,7 +153,7 @@ class ActivityHandlerHelper {
         }
 
         Runnable filePicker = new FilePickerPromptRunnable(getFilePickerTitle(context, aMimeType), items);
-        GeckoAppShell.getMainHandler().post(filePicker);
+        ThreadUtils.postToUiThread(filePicker);
 
         String promptServiceResult = "";
         try {

@@ -98,6 +98,8 @@ static const FloatRegister d15 = {FloatRegisters::d15};
 // function boundaries.  I'm trying to make sure this is always true.
 static const uint32_t StackAlignment = 8;
 static const bool StackKeptAligned = true;
+static const uint32_t NativeFrameSize = sizeof(void*);
+static const uint32_t AlignmentAtPrologue = sizeof(void*);
 
 static const Scale ScalePointer = TimesFour;
 
@@ -1299,7 +1301,7 @@ class Assembler
   public:
     void finish();
     void executableCopy(void *buffer);
-    void processCodeLabels(IonCode *code);
+    void processCodeLabels(uint8_t *rawCode);
     void copyJumpRelocationTable(uint8_t *dest);
     void copyDataRelocationTable(uint8_t *dest);
     void copyPreBarrierTable(uint8_t *dest);
@@ -1545,7 +1547,7 @@ class Assembler
     void retarget(Label *label, Label *target);
     // I'm going to pretend this doesn't exist for now.
     void retarget(Label *label, void *target, Relocation::Kind reloc);
-    void Bind(IonCode *code, AbsoluteLabel *label, const void *address);
+    void Bind(uint8_t *rawCode, AbsoluteLabel *label, const void *address);
 
     void call(Label *label);
     void call(void *target);

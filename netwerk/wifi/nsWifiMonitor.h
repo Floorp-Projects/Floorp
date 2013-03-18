@@ -8,6 +8,7 @@
 #include "nsIWifiMonitor.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
+#include "nsProxyRelease.h"
 #include "nsIThread.h"
 #include "nsIRunnable.h"
 #include "nsCOMArray.h"
@@ -31,14 +32,14 @@ class nsWifiListener
 {
  public:
 
-  nsWifiListener(nsIWifiListener* aListener)
+  nsWifiListener(nsMainThreadPtrHolder<nsIWifiListener>* aListener)
   {
     mListener = aListener;
     mHasSentData = false;
   }
   ~nsWifiListener() {}
 
-  nsCOMPtr<nsIWifiListener> mListener;
+  nsMainThreadPtrHandle<nsIWifiListener> mListener;
   bool mHasSentData;
 };
 

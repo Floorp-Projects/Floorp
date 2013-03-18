@@ -520,17 +520,15 @@ nsFSMultipartFormData::AddNameFilePair(const nsAString& aName,
        + NS_LITERAL_CSTRING("Content-Type: ")
        + contentType + NS_LITERAL_CSTRING(CRLF CRLF);
 
-  // Add the file to the stream
-  if (fileStream) {
+  // We should not try to append an invalid stream. That will happen for example
+  // if we try to update a file that actually do not exist.
+  uint64_t size;
+  if (fileStream && NS_SUCCEEDED(aBlob->GetSize(&size))) {
     // We need to dump the data up to this point into the POST data stream here,
     // since we're about to add the file input stream
     AddPostDataStream();
 
     mPostDataStream->AppendStream(fileStream);
-
-    uint64_t size;
-    nsresult rv = aBlob->GetSize(&size);
-    NS_ENSURE_SUCCESS(rv, rv);
     mTotalLength += size;
   }
 

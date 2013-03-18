@@ -17,7 +17,7 @@
 
 interface nsIDOMHTMLCollection;
 
-[scriptable, uuid(b6da7948-b636-4469-b7ca-29f4f86a5051)]
+[scriptable, uuid(87ea361b-fe0f-486b-a891-7686dadd6372)]
 interface nsIDOMHTMLDataListElement : nsIDOMHTMLElement
 {
   readonly attribute nsIDOMHTMLCollection options;

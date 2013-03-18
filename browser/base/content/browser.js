@@ -1137,9 +1137,6 @@ var gBrowserInit = {
     gBrowser.addEventListener("PluginOutdated",        gPluginHandler, true);
 
     gBrowser.addEventListener("NewPluginInstalled", gPluginHandler.newPluginInstalled, true);
-#ifdef XP_MACOSX
-    gBrowser.addEventListener("npapi-carbon-event-model-failure", gPluginHandler, true);
-#endif
 
     Services.obs.addObserver(gPluginHandler.pluginCrashed, "plugin-crashed", false);
 
@@ -1338,6 +1335,14 @@ var gBrowserInit = {
 
     var isLoadingBlank = isBlankPageURL(uriToLoad);
 
+    // This pageshow listener needs to be registered before we may call
+    // swapBrowsersAndCloseOther() to receive pageshow events fired by that.
+    gBrowser.addEventListener("pageshow", function(event) {
+      // Filter out events that are not about the document load we are interested in
+      if (content && event.target == content.document)
+        setTimeout(pageShowEventHandlers, 0, event);
+    }, true);
+
     if (uriToLoad && uriToLoad != "about:blank") {
       if (uriToLoad instanceof Ci.nsISupportsArray) {
         let count = uriToLoad.Count();
@@ -1395,12 +1400,6 @@ var gBrowserInit = {
     SocialUI.init();
     AddonManager.addAddonListener(AddonsMgrListener);
     WebrtcIndicator.init();
-
-    gBrowser.addEventListener("pageshow", function(event) {
-      // Filter out events that are not about the document load we are interested in
-      if (content && event.target == content.document)
-        setTimeout(pageShowEventHandlers, 0, event.persisted);
-    }, true);
 
     // Ensure login manager is up and running.
     Services.logins;

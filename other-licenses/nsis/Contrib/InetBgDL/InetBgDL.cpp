@@ -136,10 +136,14 @@ void __stdcall InetStatusCallback(HINTERNET hInternet, DWORD_PTR dwContext,
                                   DWORD dwStatusInformationLength)
 {
   if (dwInternetStatus == INTERNET_STATUS_NAME_RESOLVED) {
-    // The documentation states the IP address is a PCTSTR but it is actually a
-    // PCSTR.
+    // The documentation states the IP address is a PCTSTR but it is usually a
+    // PCSTR and only sometimes a PCTSTR.
     StatsLock_AcquireExclusive();
     wsprintf(g_ServerIP, _T("%S"), lpvStatusInformation);
+    if (wcslen(g_ServerIP) == 1)
+    {
+      wsprintf(g_ServerIP, _T("%s"), lpvStatusInformation);
+    }
     StatsLock_ReleaseExclusive();
   }
 

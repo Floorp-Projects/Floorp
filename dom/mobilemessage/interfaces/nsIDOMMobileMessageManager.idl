@@ -1,0 +1,53 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEventTarget.idl"
+
+interface nsIDOMEventListener;
+interface nsIDOMMozSmsRequest;
+interface nsIDOMMozSmsFilter;
+interface nsIDOMMozSmsSegmentInfo;
+interface nsIDOMDOMRequest;
+interface nsIDOMBlob;
+
+dictionary MmsParameters
+{
+  jsval      receivers; // DOMString[]
+  DOMString? subject;
+  DOMString? smil;
+  jsval      attachments; // MmsAttachment[]
+};
+
+[scriptable, builtinclass, uuid(e4db3360-8e9d-11e2-8ca6-0ba19c435073)]
+interface nsIDOMMozMobileMessageManager : nsIDOMEventTarget
+{
+  nsIDOMMozSmsSegmentInfo getSegmentInfoForText(in DOMString text);
+
+  // The first parameter can be either a DOMString (only one number) or an array
+  // of DOMStrings.
+  // The method returns a SmsRequest object if one number has been passed.
+  // An array of SmsRequest objects otherwise.
+  jsval send(in jsval number, in DOMString message);
+
+  nsIDOMDOMRequest sendMMS(in jsval parameters /* MmsParameters */);
+
+  [binaryname(GetMessageMoz)]
+  nsIDOMDOMRequest getMessage(in long id);
+
+  // The parameter can be either a message id or a nsIDOMMoz{Mms,Sms}Message.
+  nsIDOMDOMRequest delete(in jsval param);
+
+  nsIDOMMozSmsRequest getMessages(in nsIDOMMozSmsFilter filter, in boolean reverse);
+
+  nsIDOMDOMRequest markMessageRead(in long id, in boolean aValue);
+
+  nsIDOMMozSmsRequest getThreadList();
+
+  [implicit_jscontext] attribute jsval onreceived;
+  [implicit_jscontext] attribute jsval onsending;
+  [implicit_jscontext] attribute jsval onsent;
+  [implicit_jscontext] attribute jsval onfailed;
+  [implicit_jscontext] attribute jsval ondeliverysuccess;
+  [implicit_jscontext] attribute jsval ondeliveryerror;
+};

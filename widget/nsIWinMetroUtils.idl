@@ -12,7 +12,7 @@
  * implementation of this interface for non-Windows systems, for testing and
  * development purposes only.
  */
-[scriptable, uuid(b2452440-71c6-41a7-8eda-48004d725001)]
+[scriptable, uuid(ac813696-3b0a-4259-bce1-1d078021ebbe)]
 interface nsIWinMetroUtils : nsISupports
 {
   /* Fullscreen landscape orientation */
@@ -43,6 +43,11 @@ interface nsIWinMetroUtils : nsISupports
    * Determine if the user prefers left handed or right handed input.
    */
   readonly attribute long handPreference;
+
+  /**
+   * Determine the activation URI
+   */
+  readonly attribute AString activationURI;
 
   /**
    * Attempts to unsnap the application from snapped state to filled state
@@ -99,6 +104,29 @@ interface nsIWinMetroUtils : nsISupports
    * @return true if the tile is pinned
    */
   bool isTilePinned(in AString aTileID);
+
+  /**
+   * Stores the sync info securely
+   *
+   * @param aEmail The sync account email
+   * @param aPassword The sync account password
+   * @param aKey The sync account key
+   */
+  void storeSyncInfo(in AString aEmail, in AString aPassword, in AString aKey);
+
+  /**
+   * Loads the sync info
+   *
+   * @param aEmail The sync account email
+   * @param aPassword The sync account password
+   * @param aKey The sync account key
+   */
+  void loadSyncInfo(out AString aEmail, out AString aPassword, out AString aKey);
+
+  /**
+   * Clears the stored sync info if any.
+   */
+  void clearSyncInfo();
 
   /**
    * Soft keyboard attributes. Used in unison with shown/hidden observer

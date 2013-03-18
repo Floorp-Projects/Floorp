@@ -589,7 +589,7 @@ class ParallelDo : public ForkJoinOp
 
         // Make a new IonContext for the slice, which is needed if we need to
         // re-enter the VM.
-        IonContext icx(cx_, cx_->compartment, NULL);
+        IonContext icx(cx_, NULL);
 
         JS_ASSERT(pendingInvalidations[slice.sliceId] == NULL);
 

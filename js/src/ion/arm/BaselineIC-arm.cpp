@@ -28,7 +28,7 @@ ICCompare_Int32::Compiler::generateStubCode(MacroAssembler &masm)
     masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
 
     // Compare payload regs of R0 and R1.
-    Assembler::Condition cond = JSOpToCondition(op);
+    Assembler::Condition cond = JSOpToCondition(op, /* signed = */true);
     masm.cmp32(R0.payloadReg(), R1.payloadReg());
     masm.ma_mov(Imm32(1), R0.payloadReg(), NoSetCond, cond);
     masm.ma_mov(Imm32(0), R0.payloadReg(), NoSetCond, Assembler::InvertCondition(cond));

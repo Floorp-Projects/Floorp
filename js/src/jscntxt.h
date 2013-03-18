@@ -33,6 +33,7 @@
 #include "gc/StoreBuffer.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
+#include "ion/AsmJS.h"
 #include "vm/DateTime.h"
 #include "vm/SPSProfiler.h"
 #include "vm/Stack.h"
@@ -481,6 +482,53 @@ class PerThreadData : public js::PerThreadDataFriendFields
     js::ion::IonActivation  *ionActivation;
 
     /*
+     * asm.js maintains a stack of AsmJSModule activations (see AsmJS.h). This
+     * stack is used by JSRuntime::triggerOperationCallback to stop long-
+     * running asm.js without requiring dynamic polling operations in the
+     * generated code. Since triggerOperationCallback may run on a separate
+     * thread than the JSRuntime's owner thread all reads/writes must be
+     * synchronized (by asmJSActivationStackLock_).
+     */
+  private:
+    friend class js::AsmJSActivation;
+
+    /* See AsmJSActivation comment. */
+    js::AsmJSActivation *asmJSActivationStack_;
+
+# ifdef JS_THREADSAFE
+    /* Synchronizes pushing/popping with triggerOperationCallback. */
+    PRLock *asmJSActivationStackLock_;
+# endif
+
+  public:
+    static unsigned offsetOfAsmJSActivationStackReadOnly() {
+        return offsetof(PerThreadData, asmJSActivationStack_);
+    }
+
+    class AsmJSActivationStackLock {
+# ifdef JS_THREADSAFE
+        PerThreadData &data_;
+      public:
+        AsmJSActivationStackLock(PerThreadData &data) : data_(data) {
+            PR_Lock(data_.asmJSActivationStackLock_);
+        }
+        ~AsmJSActivationStackLock() {
+            PR_Unlock(data_.asmJSActivationStackLock_);
+        }
+# else
+      public:
+        AsmJSActivationStackLock(PerThreadData &) {}
+# endif
+    };
+
+    js::AsmJSActivation *asmJSActivationStackFromAnyThread() const {
+        return asmJSActivationStack_;
+    }
+    js::AsmJSActivation *asmJSActivationStackFromOwnerThread() const {
+        return asmJSActivationStack_;
+    }
+
+    /*
      * When this flag is non-zero, any attempt to GC will be skipped. It is used
      * to suppress GC when reporting an OOM (see js_ReportOutOfMemory) and in
      * debugging facilities that cannot tolerate a GC and would rather OOM
@@ -491,6 +539,8 @@ class PerThreadData : public js::PerThreadDataFriendFields
     int32_t             suppressGC;
 
     PerThreadData(JSRuntime *runtime);
+    ~PerThreadData();
+    bool init();
 
     bool associatedWith(const JSRuntime *rt) { return runtime_ == rt; }
 };
@@ -568,7 +618,11 @@ struct MallocProvider
 namespace gc {
 class MarkingValidator;
 } // namespace gc
+
 class JS_FRIEND_API(AutoEnterPolicy);
+
+typedef Vector<JS::Zone *, 1, SystemAllocPolicy> ZoneVector;
+
 } // namespace js
 
 struct JSRuntime : js::RuntimeFriendFields,
@@ -589,8 +643,14 @@ struct JSRuntime : js::RuntimeFriendFields,
     /* Default compartment. */
     JSCompartment       *atomsCompartment;
 
-    /* List of compartments (protected by the GC lock). */
-    js::CompartmentVector compartments;
+    /* Embedders can use this zone however they wish. */
+    JS::Zone            *systemZone;
+
+    /* List of compartments and zones (protected by the GC lock). */
+    js::ZoneVector      zones;
+
+    /* How many compartments there are across all zones. */
+    size_t              numCompartments;
 
     /* Locale-specific callbacks for string conversion. */
     JSLocaleCallbacks *localeCallbacks;
@@ -679,6 +739,12 @@ struct JSRuntime : js::RuntimeFriendFields,
 #endif
     js::ion::IonRuntime *getIonRuntime(JSContext *cx) {
         return ionRuntime_ ? ionRuntime_ : createIonRuntime(cx);
+    }
+    js::ion::IonRuntime *ionRuntime() {
+        return ionRuntime_;
+    }
+    bool hasIonRuntime() const {
+        return !!ionRuntime_;
     }
 
     //-------------------------------------------------------------------------
@@ -1302,11 +1368,12 @@ struct JSRuntime : js::RuntimeFriendFields,
         return 0;
 #endif
     }
+
 #ifdef DEBUG
   public:
     js::AutoEnterPolicy *enteredPolicy;
-
 #endif
+
   private:
     /*
      * Used to ensure that compartments created at the same time get different
@@ -1388,7 +1455,7 @@ struct JSContext : js::ContextFriendFields,
     JSContext *thisDuringConstruction() { return this; }
     ~JSContext();
 
-    inline JS::Zone *zone();
+    inline JS::Zone *zone() const;
     js::PerThreadData &mainThread() { return runtime->mainThread; }
 
   private:
@@ -1412,7 +1479,7 @@ struct JSContext : js::ContextFriendFields,
     /* True if generating an error, to prevent runaway recursion. */
     bool                generatingError;
 
-    inline void setCompartment(JSCompartment *c) { compartment = c; }
+    inline void setCompartment(JSCompartment *comp);
 
     /*
      * "Entering" a compartment changes cx->compartment (which changes
@@ -2009,7 +2076,7 @@ namespace js {
 
 #ifdef JS_METHODJIT
 namespace mjit {
-    void ExpandInlineFrames(JSCompartment *compartment);
+void ExpandInlineFrames(JS::Zone *zone);
 }
 #endif
 

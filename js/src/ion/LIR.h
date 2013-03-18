@@ -39,7 +39,6 @@ class MTableSwitch;
 class MIRGenerator;
 class MSnapshot;
 
-static const uint32_t MAX_VIRTUAL_REGISTERS = (1 << 21) - 1;
 static const uint32_t VREG_INCREMENT = 1;
 
 static const uint32_t THIS_FRAME_SLOT = 0;
@@ -66,7 +65,7 @@ class LAllocation : public TempObject
     static const uintptr_t TAG_BIT = 1;
     static const uintptr_t TAG_SHIFT = 0;
     static const uintptr_t TAG_MASK = 1 << TAG_SHIFT;
-    static const uintptr_t KIND_BITS = 3;
+    static const uintptr_t KIND_BITS = 4;
     static const uintptr_t KIND_SHIFT = TAG_SHIFT + TAG_BIT;
     static const uintptr_t KIND_MASK = (1 << KIND_BITS) - 1;
     static const uintptr_t DATA_BITS = (sizeof(uint32_t) * 8) - KIND_BITS - TAG_BIT;
@@ -82,7 +81,8 @@ class LAllocation : public TempObject
         FPU,            // Floating-point register.
         STACK_SLOT,     // 32-bit stack slot.
         DOUBLE_SLOT,    // 64-bit stack slot.
-        ARGUMENT        // Argument slot.
+        INT_ARGUMENT,   // Argument slot that gets loaded into a GPR.
+        DOUBLE_ARGUMENT // Argument slot to be loaded into an FPR
     };
 
   protected:
@@ -161,7 +161,7 @@ class LAllocation : public TempObject
         return kind() == STACK_SLOT || kind() == DOUBLE_SLOT;
     }
     bool isArgument() const {
-        return kind() == ARGUMENT;
+        return kind() == INT_ARGUMENT || kind() == DOUBLE_ARGUMENT;
     }
     bool isRegister() const {
         return isGeneralReg() || isFloatReg();
@@ -170,7 +170,7 @@ class LAllocation : public TempObject
         return isStackSlot() || isArgument();
     }
     bool isDouble() const {
-        return kind() == DOUBLE_SLOT || kind() == FPU;
+        return kind() == DOUBLE_SLOT || kind() == FPU || kind() == DOUBLE_ARGUMENT;
     }
     inline LUse *toUse();
     inline const LUse *toUse() const;
@@ -219,12 +219,12 @@ class LUse : public LAllocation
     static const uint32_t USED_AT_START_SHIFT = REG_SHIFT + REG_BITS;
     static const uint32_t USED_AT_START_MASK = (1 << USED_AT_START_BITS) - 1;
 
+  public:
     // Virtual registers get the remaining 20 bits.
     static const uint32_t VREG_BITS = DATA_BITS - (USED_AT_START_SHIFT + USED_AT_START_BITS);
     static const uint32_t VREG_SHIFT = USED_AT_START_SHIFT + USED_AT_START_BITS;
     static const uint32_t VREG_MASK = (1 << VREG_BITS) - 1;
 
-  public:
     enum Policy {
         // Input should be in a read-only register or stack slot.
         ANY,
@@ -278,7 +278,6 @@ class LUse : public LAllocation
     }
 
     void setVirtualRegister(uint32_t index) {
-        JS_STATIC_ASSERT(VREG_MASK <= MAX_VIRTUAL_REGISTERS);
         JS_ASSERT(index < VREG_MASK);
 
         uint32_t old = data() & ~(VREG_MASK << VREG_SHIFT);
@@ -304,6 +303,8 @@ class LUse : public LAllocation
         return !!((data() >> USED_AT_START_SHIFT) & USED_AT_START_MASK);
     }
 };
+
+static const uint32_t MAX_VIRTUAL_REGISTERS = LUse::VREG_MASK;
 
 class LGeneralReg : public LAllocation
 {
@@ -375,9 +376,11 @@ class LStackSlot : public LAllocation
 class LArgument : public LAllocation
 {
   public:
-    explicit LArgument(int32_t index)
-      : LAllocation(ARGUMENT, index)
-    { }
+    explicit LArgument(LAllocation::Kind kind, int32_t index)
+      : LAllocation(kind, index)
+    {
+        JS_ASSERT(kind == INT_ARGUMENT || kind == DOUBLE_ARGUMENT);
+    }
 
     int32_t index() const {
         return data();
@@ -544,7 +547,7 @@ class LDefinition
             // When we begin allocating slots vectors from the GC, this will
             // need to change to ::OBJECT.
             return LDefinition::GENERAL;
-          case MIRType_StackFrame:
+          case MIRType_Pointer:
             return LDefinition::GENERAL;
           case MIRType_ForkJoinSlice:
             return LDefinition::GENERAL;
@@ -694,10 +697,8 @@ class LInstructionVisitor
   public:
     void setInstruction(LInstruction *ins) {
         ins_ = ins;
-        if (ins->mirRaw()) {
+        if (ins->mirRaw())
             lastPC_ = ins->mirRaw()->trackedPc();
-            JS_ASSERT(lastPC_ != NULL);
-        }
     }
 
     LInstructionVisitor()

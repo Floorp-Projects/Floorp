@@ -56,7 +56,7 @@ DispatchRILEvent::RunTask(JSContext *aCx)
     }
 
     memcpy(JS_GetArrayBufferViewData(array), mMessage->mData, mMessage->mSize);
-    jsval argv[] = { OBJECT_TO_JSVAL(array) };
+    JS::Value argv[] = { OBJECT_TO_JSVAL(array) };
     return JS_CallFunctionName(aCx, obj, "onRILMessage", NS_ARRAY_LENGTH(argv),
                                argv, argv);
 }

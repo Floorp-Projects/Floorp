@@ -762,14 +762,6 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 
             if (ae->Type() == AndroidGeckoEvent::FORCED_RESIZE || nw != gAndroidBounds.width ||
                 nh != gAndroidBounds.height) {
-
-                if (sCompositorParent != 0 && gAndroidBounds.width == 0) {
-                    // Propagate size change to compositor. This is sometimes essential
-                    // on startup, because the window size may not have been available
-                    // when the compositor was created.
-                    ScheduleResumeComposition(nw, nh);
-                }
-
                 gAndroidBounds.width = nw;
                 gAndroidBounds.height = nh;
 
@@ -2260,15 +2252,9 @@ nsWindow::SetCompositor(mozilla::layers::LayerManager* aLayerManager,
                         mozilla::layers::CompositorParent* aCompositorParent,
                         mozilla::layers::CompositorChild* aCompositorChild)
 {
-    bool sizeChangeNeeded = (aCompositorParent && !sCompositorParent && gAndroidBounds.width != 0);
-
     sLayerManager = aLayerManager;
     sCompositorParent = aCompositorParent;
     sCompositorChild = aCompositorChild;
-
-    if (sizeChangeNeeded) {
-        ScheduleResumeComposition(gAndroidBounds.width, gAndroidBounds.height);
-    }
 }
 
 void

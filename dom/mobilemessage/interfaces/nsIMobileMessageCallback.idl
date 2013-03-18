@@ -1,0 +1,59 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+dictionary SmsThreadListItem
+{
+  DOMString senderOrReceiver;
+  unsigned long long timestamp;
+  DOMString body;
+  unsigned long long unreadCount;
+};
+
+[scriptable, builtinclass, uuid(edb1de12-8d58-11e2-b382-7bf132b20cb2)]
+interface nsIMobileMessageCallback : nsISupports
+{
+  /**
+   * All SMS related errors that could apply to SmsRequest objects.
+   * Make sure to keep this list in sync with the list in:
+   * embedding/android/GeckoSmsManager.java
+   */
+  const unsigned short SUCCESS_NO_ERROR = 0;
+  const unsigned short NO_SIGNAL_ERROR  = 1;
+  const unsigned short NOT_FOUND_ERROR  = 2;
+  const unsigned short UNKNOWN_ERROR    = 3;
+  const unsigned short INTERNAL_ERROR   = 4;
+
+  /**
+   * |message| can be nsIDOMMoz{Mms,Sms}Message.
+   */
+  void notifyMessageSent(in nsISupports message);
+  void notifySendMessageFailed(in long error);
+
+  /**
+   * |message| can be nsIDOMMoz{Mms,Sms}Message.
+   */
+  void notifyMessageGot(in nsISupports message);
+  void notifyGetMessageFailed(in long error);
+
+  void notifyMessageDeleted(in boolean deleted);
+  void notifyDeleteMessageFailed(in long error);
+
+  /**
+   * |message| can be nsIDOMMoz{Mms,Sms}Message.
+   */
+  void notifyMessageListCreated(in long listId,
+                                in nsISupports message);
+  void notifyReadMessageListFailed(in long error);
+  void notifyNextMessageInListGot(in nsISupports message);
+  void notifyNoMessageInList();
+
+  void notifyMessageMarkedRead(in boolean read);
+  void notifyMarkMessageReadFailed(in long error);
+
+  [implicit_jscontext]
+  void notifyThreadList(in jsval threadList);
+  void notifyThreadListFailed(in long error);
+};

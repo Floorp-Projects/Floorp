@@ -608,10 +608,6 @@ pref("pfs.datasource.url", "https://pfs.mozilla.org/plugins/PluginFinderService.
 pref("plugins.hide_infobar_for_missing_plugin", false);
 pref("plugins.hide_infobar_for_outdated_plugin", false);
 
-#ifdef XP_MACOSX
-pref("plugins.hide_infobar_for_carbon_failure_plugin", false);
-#endif
-
 pref("plugins.update.url", "https://www.mozilla.org/%LOCALE%/plugincheck/");
 pref("plugins.update.notifyUser", false);
 
@@ -1225,3 +1221,9 @@ pref("dom.identity.enabled", false);
 
 // Override the Gecko-default value of false for Firefox.
 pref("plain_text.wrap_long_lines", true);
+
+#ifndef RELEASE_BUILD
+// Enable Web Audio for Firefox Desktop in Nightly and Aurora
+pref("media.webaudio.enabled", true);
+#endif
+

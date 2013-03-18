@@ -10,7 +10,7 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.util.UiAsyncTask;
-import org.mozilla.gecko.util.GeckoBackgroundThread;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -97,16 +97,38 @@ abstract public class BrowserApp extends GeckoApp
     // We'll ask for feedback after the user launches the app this many times.
     private static final int FEEDBACK_LAUNCH_COUNT = 15;
 
-    // Variables used for scrolling the toolbar on/off the page.
-    private static final int TOOLBAR_ONLOAD_HIDE_DELAY = 2000;
+    // Variables used for scrolling the toolbar on/off the page;
+
+    // A drag has to move this amount multiplied by the height of the toolbar
+    // before the toolbar will appear or disappear.
     private static final float TOOLBAR_MOVEMENT_THRESHOLD = 0.3f;
+
+    // Whether the dynamic toolbar pref is enabled.
     private boolean mDynamicToolbarEnabled = false;
+
+    // The widget used to push the LayerView below the address bar when the
+    // toolbar is disabled.
     private View mToolbarSpacer = null;
+
+    // The last recorded touch event from onInterceptTouchEvent. These are
+    // not updated until the movement threshold has been exceeded.
     private float mLastTouchX = 0.0f;
     private float mLastTouchY = 0.0f;
+
+    // Because we can only scroll by integer amounts, we store the fractional
+    // amounts to be applied here.
     private float mToolbarSubpixelAccumulation = 0.0f;
+
+    // Used by onInterceptTouchEvent to lock the toolbar into an off or on
+    // position.
     private boolean mToolbarLocked = false;
+
+    // Whether the toolbar movement threshold has been passed by the current
+    // drag.
     private boolean mToolbarThresholdPassed = false;
+
+    // Toggled when the tabs tray is made visible to disable toolbar movement.
+    private boolean mToolbarPinned = false;
 
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
@@ -122,8 +144,8 @@ abstract public class BrowserApp extends GeckoApp
                         showAboutHome();
 
                         if (mDynamicToolbarEnabled) {
-                            // Show the toolbar immediately.
-                            mBrowserToolbar.animateVisibility(true, 0);
+                            // Show the toolbar.
+                            mBrowserToolbar.animateVisibility(true);
                         }
                     } else {
                         hideAboutHome();
@@ -137,7 +159,7 @@ abstract public class BrowserApp extends GeckoApp
                                                 : TabsPanel.Panel.NORMAL_TABS;
                     // Delay calling showTabs so that it does not modify the mTabsChangedListeners
                     // array while we are still iterating through the array.
-                    mMainHandler.post(new Runnable() {
+                    ThreadUtils.postToUiThread(new Runnable() {
                         @Override
                         public void run() {
                             if (areTabsShown() && mTabsPanel.getCurrentPanel() != panel)
@@ -152,21 +174,12 @@ abstract public class BrowserApp extends GeckoApp
 
                     if (mDynamicToolbarEnabled) {
                         // Show the toolbar.
-                        mBrowserToolbar.animateVisibility(true, 0);
+                        mBrowserToolbar.animateVisibility(true);
                     }
                 }
                 break;
             case LOAD_ERROR:
             case STOP:
-                if (Tabs.getInstance().isSelectedTab(tab)) {
-                    if (!mAboutHomeShowing) {
-                        if (mDynamicToolbarEnabled) {
-                            // Hide the toolbar after a delay.
-                            mBrowserToolbar.animateVisibility(false, TOOLBAR_ONLOAD_HIDE_DELAY);
-                        }
-                    }
-                }
-                // fall through
             case MENU_UPDATED:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     invalidateOptionsMenu();
@@ -196,7 +209,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public boolean onInterceptTouchEvent(View view, MotionEvent event) {
-        if (!mDynamicToolbarEnabled) {
+        if (!mDynamicToolbarEnabled || mToolbarPinned) {
             return super.onInterceptTouchEvent(view, event);
         }
 
@@ -226,7 +239,7 @@ abstract public class BrowserApp extends GeckoApp
             // Animate the toolbar to the fully on/off position.
             mBrowserToolbar.animateVisibility(
                 toolbarView.getScrollY() > toolbarView.getHeight() / 2 ?
-                    false : true, 0);
+                    false : true);
         }
 
         // If more than one pointer has been tracked, or we've locked the
@@ -243,72 +256,69 @@ abstract public class BrowserApp extends GeckoApp
             return super.onInterceptTouchEvent(view, event);
         }
 
-        // Don't bother doing anything with the events if we're loading -
-        // the toolbar will be permanently visible in this case.
+        // Handle scrolling the toolbar
         float eventX = event.getX();
         float eventY = event.getY();
-        if (Tabs.getInstance().getSelectedTab().getState() != Tab.STATE_LOADING) {
-            int toolbarHeight = toolbarView.getHeight();
-            float deltaX = mLastTouchX - eventX;
-            float deltaY = mLastTouchY - eventY;
-            int toolbarY = toolbarView.getScrollY();
+        float deltaX = mLastTouchX - eventX;
+        float deltaY = mLastTouchY - eventY;
+        int toolbarY = toolbarView.getScrollY();
+        int toolbarHeight = toolbarView.getHeight();
 
-            // Check if we've passed the toolbar movement threshold
-            if (!mToolbarThresholdPassed) {
-                float threshold = toolbarHeight * TOOLBAR_MOVEMENT_THRESHOLD;
-                if (Math.abs(deltaY) > threshold) {
-                    mToolbarThresholdPassed = true;
-                    // If we're scrolling downwards and the toolbar was hidden
-                    // when we started scrolling, lock it.
-                    if (deltaY > 0 && toolbarY == toolbarHeight) {
-                        mToolbarLocked = true;
-                        return super.onInterceptTouchEvent(view, event);
-                    }
-                } else if (Math.abs(deltaX) > threshold) {
-                    // Any horizontal scrolling past the threshold should
-                    // initiate toolbar lock.
+        // Check if we've passed the toolbar movement threshold
+        if (!mToolbarThresholdPassed) {
+            float threshold = toolbarHeight * TOOLBAR_MOVEMENT_THRESHOLD;
+            if (Math.abs(deltaY) > threshold) {
+                mToolbarThresholdPassed = true;
+                // If we're scrolling downwards and the toolbar was hidden
+                // when we started scrolling, lock it.
+                if (deltaY > 0 && toolbarY == toolbarHeight) {
                     mToolbarLocked = true;
-                    mToolbarThresholdPassed = true;
-                    return super.onInterceptTouchEvent(view, event);
-                } else {
-                    // The threshold hasn't been passed. We don't want to update
-                    // the stored last touch position, so return here.
                     return super.onInterceptTouchEvent(view, event);
                 }
-            } else if (action == MotionEvent.ACTION_MOVE) {
-                // Cancel any ongoing animation before we start moving the toolbar.
-                mBrowserToolbar.cancelVisibilityAnimation();
-
-                // Move the toolbar by the amount the touch event has moved,
-                // clamping to fully visible or fully hidden.
-
-                // Don't let the toolbar scroll off the top if it's just exposing
-                // overscroll area.
-                ImmutableViewportMetrics metrics =
-                    mLayerView.getLayerClient().getViewportMetrics();
-                float toolbarMaxY = Math.min(toolbarHeight,
-                    Math.max(0, toolbarHeight - (metrics.pageRectTop -
-                                                 metrics.viewportRectTop)));
-
-                float newToolbarYf = Math.max(0, Math.min(toolbarMaxY,
-                    toolbarY + deltaY + mToolbarSubpixelAccumulation));
-                int newToolbarY = Math.round(newToolbarYf);
-                mToolbarSubpixelAccumulation = (newToolbarYf - newToolbarY);
-
-                toolbarView.scrollTo(0, newToolbarY);
-
-                // Reset tracking when the toolbar is fully visible or hidden.
-                if (newToolbarY == 0 || newToolbarY == toolbarHeight) {
-                    mLastTouchY = eventY;
-                }
-            } else if (action == MotionEvent.ACTION_UP ||
-                       action == MotionEvent.ACTION_CANCEL) {
-                // Animate the toolbar to fully on or off, depending on how much
-                // of it is hidden and the current swipe velocity.
-                mBrowserToolbar.animateVisibilityWithVelocityBias(
-                    toolbarY > toolbarHeight / 2 ? false : true,
-                    mLayerView.getPanZoomController().getVelocityVector().y);
+            } else if (Math.abs(deltaX) > threshold) {
+                // Any horizontal scrolling past the threshold should
+                // initiate toolbar lock.
+                mToolbarLocked = true;
+                mToolbarThresholdPassed = true;
+                return super.onInterceptTouchEvent(view, event);
+            } else {
+                // The threshold hasn't been passed. We don't want to update
+                // the stored last touch position, so return here.
+                return super.onInterceptTouchEvent(view, event);
             }
+        } else if (action == MotionEvent.ACTION_MOVE) {
+            // Cancel any ongoing animation before we start moving the toolbar.
+            mBrowserToolbar.cancelVisibilityAnimation();
+
+            // Move the toolbar by the amount the touch event has moved,
+            // clamping to fully visible or fully hidden.
+
+            // Don't let the toolbar scroll off the top if it's just exposing
+            // overscroll area.
+            ImmutableViewportMetrics metrics =
+                mLayerView.getLayerClient().getViewportMetrics();
+            float toolbarMaxY = Math.min(toolbarHeight,
+                Math.max(0, toolbarHeight - (metrics.pageRectTop -
+                                             metrics.viewportRectTop)));
+
+            float newToolbarYf = Math.max(0, Math.min(toolbarMaxY,
+                toolbarY + deltaY + mToolbarSubpixelAccumulation));
+            int newToolbarY = Math.round(newToolbarYf);
+            mToolbarSubpixelAccumulation = (newToolbarYf - newToolbarY);
+
+            toolbarView.scrollTo(0, newToolbarY);
+
+            // Reset tracking when the toolbar is fully visible or hidden.
+            if (newToolbarY == 0 || newToolbarY == toolbarHeight) {
+                mLastTouchY = eventY;
+            }
+        } else if (action == MotionEvent.ACTION_UP ||
+                   action == MotionEvent.ACTION_CANCEL) {
+            // Animate the toolbar to fully on or off, depending on how much
+            // of it is hidden and the current swipe velocity.
+            mBrowserToolbar.animateVisibilityWithVelocityBias(
+                toolbarY > toolbarHeight / 2 ? false : true,
+                mLayerView.getPanZoomController().getVelocityVector().y);
         }
 
         // Update the last recorded position.
@@ -335,7 +345,7 @@ abstract public class BrowserApp extends GeckoApp
                     if (mBrowserToolbar.isVisible()) {
                         if (mDynamicToolbarEnabled &&
                             Boolean.FALSE.equals(mAboutHomeShowing)) {
-                            mBrowserToolbar.animateVisibility(false, 0);
+                            mBrowserToolbar.animateVisibility(false);
                             mLayerView.requestFocus();
                         } else {
                             // Just focus the address bar when about:home is visible
@@ -343,7 +353,7 @@ abstract public class BrowserApp extends GeckoApp
                             mBrowserToolbar.requestFocusFromTouch();
                         }
                     } else {
-                        mBrowserToolbar.animateVisibility(true, 0);
+                        mBrowserToolbar.animateVisibility(true);
                         mBrowserToolbar.requestFocusFromTouch();
                     }
                     return true;
@@ -376,7 +386,7 @@ abstract public class BrowserApp extends GeckoApp
             return;
         }
 
-        GeckoAppShell.getHandler().post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 BrowserDB.addReadingListItem(getContentResolver(), title, url);
@@ -386,7 +396,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     void handleReaderRemoved(final String url) {
-        GeckoAppShell.getHandler().post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 BrowserDB.removeReadingListItemWithURL(getContentResolver(), url);
@@ -397,7 +407,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     void onStatePurged() {
-        mMainHandler.post(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 if (mAboutHomeContent != null)
@@ -469,7 +479,7 @@ abstract public class BrowserApp extends GeckoApp
                 }
                 mDynamicToolbarEnabled = value;
 
-                mMainHandler.post(new Runnable() {
+                ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
                         if (mDynamicToolbarEnabled) {
@@ -603,7 +613,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     void toggleChrome(final boolean aShow) {
-        mMainHandler.post(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 if (aShow) {
@@ -622,7 +632,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     void focusChrome() {
-        mMainHandler.post(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 mBrowserToolbar.show();
@@ -751,7 +761,7 @@ abstract public class BrowserApp extends GeckoApp
                     info.parent = message.getInt("parent") + ADDON_MENU_OFFSET;
                 } catch (Exception ex) { }
                 final MenuItemInfo menuItemInfo = info;
-                mMainHandler.post(new Runnable() {
+                ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
                         addAddonMenuItem(menuItemInfo);
@@ -759,7 +769,7 @@ abstract public class BrowserApp extends GeckoApp
                 });
             } else if (event.equals("Menu:Remove")) {
                 final int id = message.getInt("id") + ADDON_MENU_OFFSET;
-                mMainHandler.post(new Runnable() {
+                ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
                         removeAddonMenuItem(id);
@@ -768,7 +778,7 @@ abstract public class BrowserApp extends GeckoApp
             } else if (event.equals("Menu:Update")) {
                 final int id = message.getInt("id") + ADDON_MENU_OFFSET;
                 final JSONObject options = message.getJSONObject("options");
-                mMainHandler.post(new Runnable() {
+                ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
                         updateAddonMenuItem(id, options);
@@ -804,7 +814,7 @@ abstract public class BrowserApp extends GeckoApp
                         dialog.dismiss();
                     }
                 });
-                mMainHandler.post(new Runnable() {
+                ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
                         dialogBuilder.show();
@@ -814,7 +824,7 @@ abstract public class BrowserApp extends GeckoApp
                 final boolean visible = message.getString("visible").equals("true");
                 GeckoPreferences.setCharEncodingState(visible);
                 final Menu menu = mMenu;
-                mMainHandler.post(new Runnable() {
+                ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
                         if (menu != null)
@@ -834,7 +844,7 @@ abstract public class BrowserApp extends GeckoApp
                 // menuitem, which is specific to BrowserApp.
                 super.handleMessage(event, message);
                 final Menu menu = mMenu;
-                mMainHandler.post(new Runnable() {
+                ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
                         if (menu != null)
@@ -951,6 +961,15 @@ abstract public class BrowserApp extends GeckoApp
                                        -height);
         }
 
+        // If the tabs layout is animating onto the screen, pin the dynamic
+        // toolbar.
+        if (width > 0 && height > 0) {
+            mToolbarPinned = true;
+            mBrowserToolbar.animateVisibility(true);
+        } else {
+            mToolbarPinned = false;
+        }
+
         mMainLayoutAnimator.start();
     }
 
@@ -1054,7 +1073,7 @@ abstract public class BrowserApp extends GeckoApp
 
         mAboutHomeShowing = true;
         Runnable r = new AboutHomeRunnable(true);
-        mMainHandler.postAtFrontOfQueue(r);
+        ThreadUtils.getUiHandler().postAtFrontOfQueue(r);
     }
 
     private void hideAboutHome() {
@@ -1066,7 +1085,7 @@ abstract public class BrowserApp extends GeckoApp
         mBrowserToolbar.setShadowVisibility(true);
         mAboutHomeShowing = false;
         Runnable r = new AboutHomeRunnable(false);
-        mMainHandler.postAtFrontOfQueue(r);
+        ThreadUtils.getUiHandler().postAtFrontOfQueue(r);
     }
 
     private class AboutHomeRunnable implements Runnable {
@@ -1197,7 +1216,7 @@ abstract public class BrowserApp extends GeckoApp
                 item.setIcon(drawable);
             }
             else if (info.icon.startsWith("jar:") || info.icon.startsWith("file://")) {
-                GeckoAppShell.getHandler().post(new Runnable() {
+                ThreadUtils.postToBackgroundThread(new Runnable() {
                     @Override
                     public void run() {
                         try {
@@ -1339,7 +1358,7 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void setFullScreen(final boolean fullscreen) {
         super.setFullScreen(fullscreen);
-        mMainHandler.post(new Runnable() {
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 if (fullscreen)
@@ -1547,7 +1566,7 @@ abstract public class BrowserApp extends GeckoApp
             return;
         }
 
-        (new UiAsyncTask<Void, Void, Boolean>(GeckoAppShell.getHandler()) {
+        (new UiAsyncTask<Void, Void, Boolean>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public synchronized Boolean doInBackground(Void... params) {
                 // Check to see how many times the app has been launched.
@@ -1574,7 +1593,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void resetFeedbackLaunchCount() {
-        GeckoBackgroundThread.post(new Runnable() {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public synchronized void run() {
                 SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
@@ -1584,7 +1603,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void getLastUrl() {
-        (new UiAsyncTask<Void, Void, String>(GeckoAppShell.getHandler()) {
+        (new UiAsyncTask<Void, Void, String>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public synchronized String doInBackground(Void... params) {
                 // Get the most recent URL stored in browser history.

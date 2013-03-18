@@ -377,8 +377,8 @@ StringFromMIRType(MIRType type)
       return "Slots";
     case MIRType_Elements:
       return "Elements";
-    case MIRType_StackFrame:
-      return "StackFrame";
+    case MIRType_Pointer:
+      return "Pointer";
     case MIRType_ForkJoinSlice:
       return "ForkJoinSlice";
     default:

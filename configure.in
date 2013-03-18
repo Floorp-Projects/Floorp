@@ -290,7 +290,7 @@ if test -n "$CROSS_COMPILE" -a "$target" != "$host"; then
     _SAVE_LDFLAGS="$LDFLAGS"
 
     AC_MSG_CHECKING([for host c compiler])
-    AC_CHECK_PROGS(HOST_CC, $HOST_CC gcc cc /usr/ucb/cc cl icc, "")
+    AC_CHECK_PROGS(HOST_CC, $HOST_CC cc gcc /usr/ucb/cc cl icc, "")
     if test -z "$HOST_CC"; then
         AC_MSG_ERROR([no acceptable c compiler found in \$PATH])
     fi
@@ -3677,8 +3677,6 @@ fi
 dnl Using the custom linker on ARMv6 requires 16k alignment of ELF segments.
 if test -n "$MOZ_LINKER"; then
   if test "$CPU_ARCH" = arm; then
-    dnl Determine the target ARM architecture (5 for ARMv5, v5T, v5E, etc.; 6 for ARMv6, v6K, etc.)
-    ARM_ARCH=`${CC-cc} ${CFLAGS} -dM -E - < /dev/null | sed -n 's/.*__ARM_ARCH_\([[0-9]]*\).*/\1/p'`
     dnl When building for < ARMv7, we need to ensure 16k alignment of ELF segments
     if test -n "$ARM_ARCH" && test "$ARM_ARCH" -lt 7; then
       LDFLAGS="$LDFLAGS -Wl,-z,max-page-size=0x4000 -Wl,-z,common-page-size=0x4000"
@@ -3967,12 +3965,17 @@ if test -n "$MOZ_NATIVE_NSS"; then
    NSS_LIBS="$NSS_LIBS -lcrmf"
 else
    NSS_CFLAGS='-I$(LIBXUL_DIST)/include/nss'
+   if test -z "$IMPORT_LIB_SUFFIX"; then
+       DLL_LINK_SUFFIX='$(DLL_SUFFIX)'
+   else
+       DLL_LINK_SUFFIX='.$(IMPORT_LIB_SUFFIX)'
+   fi
    NSS_DEP_LIBS="\
         \$(LIBXUL_DIST)/lib/\$(LIB_PREFIX)crmf.\$(LIB_SUFFIX) \
-        \$(LIBXUL_DIST)/lib/\$(DLL_PREFIX)smime$NSS_VERSION\$(DLL_SUFFIX) \
-        \$(LIBXUL_DIST)/lib/\$(DLL_PREFIX)ssl$NSS_VERSION\$(DLL_SUFFIX) \
-        \$(LIBXUL_DIST)/lib/\$(DLL_PREFIX)nss$NSS_VERSION\$(DLL_SUFFIX) \
-        \$(LIBXUL_DIST)/lib/\$(DLL_PREFIX)nssutil$NSS_VERSION\$(DLL_SUFFIX)"
+        \$(LIBXUL_DIST)/lib/\$(DLL_PREFIX)smime$NSS_VERSION${DLL_LINK_SUFFIX} \
+        \$(LIBXUL_DIST)/lib/\$(DLL_PREFIX)ssl$NSS_VERSION${DLL_LINK_SUFFIX} \
+        \$(LIBXUL_DIST)/lib/\$(DLL_PREFIX)nss$NSS_VERSION${DLL_LINK_SUFFIX} \
+        \$(LIBXUL_DIST)/lib/\$(DLL_PREFIX)nssutil$NSS_VERSION${DLL_LINK_SUFFIX}"
 
    if test -z "$GNU_CC" -a "$OS_ARCH" = "WINNT" -o "$OS_ARCH" = "OS2"; then
        NSS_LIBS="\
@@ -5657,10 +5660,7 @@ fi
 if test -n "$MOZ_CUBEB"; then
     case "$target" in
     *-android*|*-linuxandroid*)
-        if test -n "$gonkdir"; then
-            AC_DEFINE(MOZ_CUBEB)
-        fi
-        dnl No Android implementation of libcubeb yet.
+        AC_DEFINE(MOZ_CUBEB)
         ;;
     *-linux*)
         AC_DEFINE(MOZ_CUBEB)
@@ -7935,7 +7935,7 @@ dnl ========================================================
 MOZ_ARG_HEADER(Build dependencies)
 
 if test "$GNU_CC" -a "$GNU_CXX"; then
-  _DEPEND_CFLAGS='$(filter-out %/.pp,-MD -MF $(MDDEPDIR)/$(@F).pp)'
+  _DEPEND_CFLAGS='-MD -MP -MF $(MDDEPDIR)/$(@F).pp'
 dnl Sun Studio on Solaris use -xM instead of -MD, see config/rules.mk
 elif test "$SOLARIS_SUNPRO_CC"; then
   _DEPEND_CFLAGS=
@@ -8866,6 +8866,7 @@ AC_SUBST(LIBJPEG_TURBO_X64_ASM)
 AC_SUBST(LIBJPEG_TURBO_ARM_ASM)
 
 AC_SUBST(MOZ_PACKAGE_JSSHELL)
+AC_SUBST(MOZ_FOLD_LIBS)
 
 AC_MSG_CHECKING([for posix_fallocate])
 AC_TRY_LINK([#define _XOPEN_SOURCE 600
@@ -9043,11 +9044,20 @@ if test "${OS_TARGET}" = "WINNT"; then
 
 elif test "${OS_TARGET}" = "Android"; then
    EXTRA_GYP_DEFINES="-D gtest_target_type=executable -D android_toolchain=${android_toolchain} -G os=android "
-   if test -n "$ARM_ARCH" && test "$ARM_ARCH" -lt 7; then
-      EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D armv7=0 "
-   else
-      EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D armv7=1 "
-   fi
+fi
+
+if test -n "$ARM_ARCH"; then
+    if test "$ARM_ARCH" -lt 7; then
+        EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D armv7=0 "
+    else
+        if test "${OS_TARGET}" = "Android"; then
+            EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D armv7=1 "
+        else
+            dnl CPU detection for ARM works on Android only.  armv7 always uses CPU detection, so
+            dnl we have to set armv7=0 for non-Android target
+            EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D armv7=0 "
+        fi
+    fi
 fi
 
 # Don't try to compile sse4.1 code if toolchain doesn't support
@@ -9268,7 +9278,7 @@ if test -n "$_WRAP_MALLOC"; then
 fi
 
 if test -z "$MOZ_NATIVE_NSPR"; then
-    ac_configure_args="$_SUBDIR_CONFIG_ARGS --with-dist-prefix=$MOZ_BUILD_ROOT/dist --with-mozilla"
+    ac_configure_args="$_SUBDIR_CONFIG_ARGS --with-dist-prefix=$MOZ_BUILD_ROOT/dist --with-mozilla --with-android-version=$ANDROID_VERSION"
     if test -z "$MOZ_DEBUG"; then
         ac_configure_args="$ac_configure_args --disable-debug"
     else

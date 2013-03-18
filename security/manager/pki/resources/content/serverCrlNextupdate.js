@@ -20,17 +20,15 @@ function onLoad()
   var isupport = pkiParams.getISupportAtIndex(1);
   var cert = isupport.QueryInterface(nsIX509Cert);
   var connectURL = dialogParams.GetString(1); 
-  var gBundleBrand = srGetStrBundle("chrome://branding/locale/brand.properties");
-  var brandName = gBundleBrand.GetStringFromName("brandShortName");
+  var gBundleBrand = document.getElementById("brand_bundle");
+  var brandName = gBundleBrand.getString("brandShortName");
 
-  bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+  bundle = document.getElementById("pippki_bundle");
  
-  var message1 = bundle.formatStringFromName("crlNextUpdateMsg1", 
-                                             [ brandName, connectURL ],
-                                             2);
-  var message2 = bundle.formatStringFromName("crlNextUpdateMsg2", 
-                                             [ cert.issuerOrganization ],
-                                              1);
+  var message1 = bundle.getFormattedString("crlNextUpdateMsg1",
+                                           [brandName, connectURL]);
+  var message2 = bundle.getFormattedString("crlNextUpdateMsg2",
+                                           [cert.issuerOrganization]);
   setText("message1", message1);
   setText("message2", message2);
 }

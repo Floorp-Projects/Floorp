@@ -85,7 +85,7 @@ function onMenuChange()
 function process()
 {
    var secmoddb = Components.classes[nsPKCS11ModuleDB].getService(nsIPKCS11ModuleDB);
-   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+   var bundle = document.getElementById("pippki_bundle");
 
    // If the token is unitialized, don't use the old password box.
    // Otherwise, do.
@@ -99,7 +99,7 @@ function process()
          || status == nsIPKCS11Slot.SLOT_READY) {
       
        oldpwbox.setAttribute("hidden", "true");
-       msgBox.setAttribute("value", bundle.GetStringFromName("password_not_set")); 
+       msgBox.setAttribute("value", bundle.getString("password_not_set"));
        msgBox.setAttribute("hidden", "false");
 
        if (status == nsIPKCS11Slot.SLOT_READY) {
@@ -144,8 +144,8 @@ function setPassword()
 
   var oldpwbox = document.getElementById("oldpw");
   var initpw = oldpwbox.getAttribute("inited");
-  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
-  
+  var bundle = document.getElementById("pippki_bundle");
+
   var success = false;
   
   if (initpw == "false" || initpw == "empty") {
@@ -169,18 +169,18 @@ function setPassword()
             var secmoddb = Components.classes[nsPKCS11ModuleDB].getService(nsIPKCS11ModuleDB);
             if (secmoddb.isFIPSEnabled) {
               // empty passwords are not allowed in FIPS mode
-              doPrompt(bundle.GetStringFromName("pw_change2empty_in_fips_mode"));
+              doPrompt(bundle.getString("pw_change2empty_in_fips_mode"));
               passok = 0;
             }
           }
           if (passok) {
             token.changePassword(oldpw, pw1.value);
             if (pw1.value == "") {
-              doPrompt(bundle.GetStringFromName("pw_erased_ok")
+              doPrompt(bundle.getString("pw_erased_ok")
                     + " "
-                    + bundle.GetStringFromName("pw_empty_warning"));
+                    + bundle.getString("pw_empty_warning"));
             } else {
-              doPrompt(bundle.GetStringFromName("pw_change_ok")); 
+              doPrompt(bundle.getString("pw_change_ok"));
             }
             success = true;
           }
@@ -188,17 +188,17 @@ function setPassword()
       } else {
         oldpwbox.focus();
         oldpwbox.setAttribute("value", "");
-        doPrompt(bundle.GetStringFromName("incorrect_pw")); 
+        doPrompt(bundle.getString("incorrect_pw"));
       }
     } catch (e) {
-      doPrompt(bundle.GetStringFromName("failed_pw_change")); 
+      doPrompt(bundle.getString("failed_pw_change"));
     }
   } else {
     token.initPassword(pw1.value);
     if (pw1.value == "") {
-      doPrompt(bundle.GetStringFromName("pw_not_wanted")
+      doPrompt(bundle.getString("pw_not_wanted")
             + " " 
-            + bundle.GetStringFromName("pw_empty_warning"));
+            + bundle.getString("pw_empty_warning"));
     }
     success = true;
   }

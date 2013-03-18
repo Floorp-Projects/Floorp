@@ -10,7 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface MozNamedAttrMap;
 interface Principal;
 interface URI;
 interface UserDataHandler;
@@ -87,8 +86,6 @@ interface Node : EventTarget {
 
   // Mozilla-specific stuff
   // These have been moved to Element in the spec.
-  [Constant]
-  readonly attribute MozNamedAttrMap? attributes;
   // If we move namespaceURI, prefix and localName to Element they should return
   // a non-nullable type.
   [Constant]
@@ -97,9 +94,6 @@ interface Node : EventTarget {
   readonly attribute DOMString? prefix;
   [Constant]
   readonly attribute DOMString? localName;
-
-  // This has been removed from the spec.
-  boolean isSupported(DOMString feature, DOMString version);
 
   boolean hasAttributes();
   [Throws, Func="nsINode::ShouldExposeUserData"]

@@ -85,6 +85,10 @@ public:
    */
   bool IsHorizontal(const nsSize *aFrameSizeOverride = nullptr) const;
 
+  double GetMin() const;
+  double GetMax() const;
+  double GetValue() const;
+
   /**
    * Returns whether the frame and its child should use the native style.
    */
@@ -105,6 +109,9 @@ private:
   nsresult ReflowAnonymousContent(nsPresContext*           aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredSize,
                                   const nsHTMLReflowState& aReflowState);
+
+  void DoUpdateThumbPosition(nsIFrame* aThumbFrame,
+                             const nsSize& aRangeSize);
 
   /**
    * Returns the input element's value as a fraction of the difference between

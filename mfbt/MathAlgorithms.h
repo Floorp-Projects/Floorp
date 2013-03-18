@@ -52,20 +52,14 @@ namespace detail {
 template<typename T>
 struct AllowDeprecatedAbsFixed : FalseType {};
 
-template<> struct AllowDeprecatedAbsFixed<int8_t> : TrueType {};
-template<> struct AllowDeprecatedAbsFixed<int16_t> : TrueType {};
 template<> struct AllowDeprecatedAbsFixed<int32_t> : TrueType {};
 template<> struct AllowDeprecatedAbsFixed<int64_t> : TrueType {};
 
 template<typename T>
 struct AllowDeprecatedAbs : AllowDeprecatedAbsFixed<T> {};
 
-template<> struct AllowDeprecatedAbs<char> : IntegralConstant<bool, char(-1) < char(0)> {};
-template<> struct AllowDeprecatedAbs<signed char> : TrueType {};
-template<> struct AllowDeprecatedAbs<short> : TrueType {};
 template<> struct AllowDeprecatedAbs<int> : TrueType {};
 template<> struct AllowDeprecatedAbs<long> : TrueType {};
-template<> struct AllowDeprecatedAbs<long long> : TrueType {};
 
 } // namespace detail
 

@@ -38,9 +38,9 @@ function ok_wrapper(result, desc) {
   if (result) {
 	  passedTests++;
   } 
-     
-  if (completedTests == 4) {
-    is(passedTests, 4, "there should be 3 passed inheritance tests");
+
+  if (completedTests == 6) {
+    is(passedTests, 6, "there should be 6 passed inheritance tests");
     SimpleTest.finish();
   }
 }
@@ -91,7 +91,17 @@ function doTest() {
   // the sandboxing of subloads of content within that iframe
   var if_8 = document.getElementById('if_8');
   if_8.sandbox = 'allow-scripts';
-  if_8.contentWindow.doSubload(); 
+  if_8.contentWindow.doSubload();
+
+  // passes if good
+  // 10) a <frame> inside an <iframe> sandboxed with 'allow-scripts' should not be same
+  // origin with this document
+  // done by file_iframe_sandbox_a_if11.html which is contained with file_iframe_sandbox_a_if10.html
+
+  // passes if good
+  // 11) a <frame> inside a <frame> inside an <iframe> sandboxed with 'allow-scripts' should not be same
+  // origin with its parent frame or this document
+  // done by file_iframe_sandbox_a_if12.html which is contained with file_iframe_sandbox_a_if11.html
 }
 
 addLoadEvent(doTest);
@@ -104,4 +114,5 @@ addLoadEvent(doTest);
 <iframe sandbox="allow-scripts" id="if_3" src="file_iframe_sandbox_a_if3.html" height="10" width="10"></iframe>
 <iframe sandbox="allow-scripts allow-same-origin" id="if_5" src="file_iframe_sandbox_a_if5.html" height="10" width="10"></iframe>
 <iframe sandbox="allow-scripts allow-same-origin" id="if_8" src="file_iframe_sandbox_a_if8.html" height="10" width="10"></iframe>
+<iframe sandbox="allow-scripts" id="if_10" src="file_iframe_sandbox_a_if10.html" height="10" width="10"></iframe>
 </div>

@@ -1565,7 +1565,7 @@ function textChangeChecker(aID, aStart, aEnd, aTextOrFunc, aIsInserted, aFromUse
        "Wrong start offset for " + prettyName(aID));
     is(aEvent.length, modifiedTextLen, "Wrong length for " + prettyName(aID));
     var changeInfo = (aIsInserted ? "inserted" : "removed");
-    is(aEvent.isInserted(), aIsInserted,
+    is(aEvent.isInserted, aIsInserted,
        "Text was " + changeInfo + " for " + prettyName(aID));
     is(aEvent.modifiedText, modifiedText,
        "Wrong " + changeInfo + " text for " + prettyName(aID));
@@ -1613,11 +1613,11 @@ function stateChangeChecker(aState, aIsExtraState, aIsEnabled,
     if (!event)
       return;
 
-    is(event.isExtraState(), aIsExtraState,
+    is(event.isExtraState, aIsExtraState,
        "Wrong extra state bit of the statechange event.");
     isState(event.state, aState, aIsExtraState,
             "Wrong state of the statechange event.");
-    is(event.isEnabled(), aIsEnabled,
+    is(event.isEnabled, aIsEnabled,
       "Wrong state of statechange event state");
 
     if (aSkipCurrentStateCheck) {
@@ -1670,9 +1670,9 @@ function expandedStateChecker(aIsEnabled, aTargetOrFunc, aTargetFuncArg)
       return;
 
     is(event.state, STATE_EXPANDED, "Wrong state of the statechange event.");
-    is(event.isExtraState(), false,
+    is(event.isExtraState, false,
        "Wrong extra state bit of the statechange event.");
-    is(event.isEnabled(), aIsEnabled,
+    is(event.isEnabled, aIsEnabled,
       "Wrong state of statechange event state");
 
     testStates(event.accessible,
@@ -1730,7 +1730,7 @@ var gA11yEventObserver =
 
         if (event instanceof nsIAccessibleTextChangeEvent) {
           info += ", start: " + event.start + ", length: " + event.length +
-            ", " + (event.isInserted() ? "inserted" : "removed") +
+            ", " + (event.isInserted ? "inserted" : "removed") +
             " text: " + event.modifiedText;
         }
 

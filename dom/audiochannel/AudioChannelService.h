@@ -9,6 +9,7 @@
 
 #include "nsAutoPtr.h"
 #include "nsIObserver.h"
+#include "nsTArray.h"
 
 #include "AudioChannelCommon.h"
 #include "AudioChannelAgent.h"

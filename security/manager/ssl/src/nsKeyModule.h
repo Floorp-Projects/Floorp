@@ -9,13 +9,11 @@
 #include "pk11pub.h"
 #include "mozilla/Attributes.h"
 
-#define NS_KEYMODULEOBJECT_CLASSNAME "Key Object Component"
 /* eae599aa-ecef-49c6-a8af-6ddcc6feb484 */
 #define NS_KEYMODULEOBJECT_CID   \
 { 0xeae599aa, 0xecef, 0x49c6, {0xa8, 0xaf, 0x6d, 0xdc, 0xc6, 0xfe, 0xb4, 0x84} }
 #define NS_KEYMODULEOBJECT_CONTRACTID "@mozilla.org/security/keyobject;1"
 
-#define NS_KEYMODULEOBJECTFACTORY_CLASSNAME "Key Object Factory Component"
 /* a39e0e9d-e567-41e3-b12c-5df67f18174d */
 #define NS_KEYMODULEOBJECTFACTORY_CID   \
 { 0xa39e0e9d, 0xe567, 0x41e3, {0xb1, 0x2c, 0x5d, 0xf6, 0x7f, 0x18, 0x17, 0x4d} }

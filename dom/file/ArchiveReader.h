@@ -16,8 +16,6 @@
 #include "nsIDOMFile.h"
 #include "mozilla/Attributes.h"
 
-class nsIDOMArchiveRequest;
-
 namespace mozilla {
 namespace dom {
 class ArchiveReaderOptions;
@@ -53,9 +51,9 @@ public:
   virtual JSObject*
   WrapObject(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
-  already_AddRefed<nsIDOMArchiveRequest> GetFilenames();
-  already_AddRefed<nsIDOMArchiveRequest> GetFile(const nsAString& filename);
-  already_AddRefed<nsIDOMArchiveRequest> GetFiles();
+  already_AddRefed<ArchiveRequest> GetFilenames();
+  already_AddRefed<ArchiveRequest> GetFile(const nsAString& filename);
+  already_AddRefed<ArchiveRequest> GetFiles();
 
   nsresult GetInputStream(nsIInputStream** aInputStream);
   nsresult GetSize(uint64_t* aSize);

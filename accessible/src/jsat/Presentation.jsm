@@ -28,17 +28,6 @@ Presenter.prototype = {
   type: 'Base',
 
   /**
-   * Attach function for presenter.
-   * @param {ChromeWindow} aWindow Chrome window the presenter could use.
-   */
-  attach: function attach(aWindow) {},
-
-  /**
-   * Detach function.
-   */
-  detach: function detach() {},
-
-  /**
    * The virtual cursor's position changed.
    * @param {PresenterContext} aContext the context object for the new pivot
    *   position.
