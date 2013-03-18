@@ -29,7 +29,7 @@
 #include "mozilla/TimeStamp.h"
 #include "nsError.h"
 #include "nsAlgorithm.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 #include "nsIConsoleService.h"
 #include "base/compiler_specific.h"
 #include "NullHttpTransaction.h"

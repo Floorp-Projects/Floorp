@@ -12,7 +12,7 @@
 #include "gfxUtils.h"
 #include "ipc/AutoOpenSurface.h"
 #include "nsDeviceContext.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 #include <algorithm>
 
 namespace mozilla {

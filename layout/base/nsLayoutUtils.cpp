@@ -88,7 +88,7 @@
 #include "nsXULPopupManager.h"
 #endif
 
-#include "sampler.h"
+#include "GeckoProfiler.h"
 #include "nsAnimationManager.h"
 #include "nsTransitionManager.h"
 #include "nsViewportInfo.h"

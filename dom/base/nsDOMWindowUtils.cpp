@@ -63,7 +63,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/indexedDB/FileInfo.h"
 #include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 #include "nsDOMBlobBuilder.h"
 #include "nsIDOMFileHandle.h"
 #include "nsPrintfCString.h"
