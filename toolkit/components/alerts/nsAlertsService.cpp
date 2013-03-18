@@ -70,7 +70,9 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
                                                      const nsAString & aAlertText, bool aAlertTextClickable,
                                                      const nsAString & aAlertCookie,
                                                      nsIObserver * aAlertListener,
-                                                     const nsAString & aAlertName)
+                                                     const nsAString & aAlertName,
+                                                     const nsAString & aBidi,
+                                                     const nsAString & aLang)
 {
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     ContentChild* cpc = ContentChild::GetSingleton();
@@ -83,7 +85,9 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
                                    PromiseFlatString(aAlertText),
                                    aAlertTextClickable,
                                    PromiseFlatString(aAlertCookie),
-                                   PromiseFlatString(aAlertName));
+                                   PromiseFlatString(aAlertName),
+                                   PromiseFlatString(aBidi),
+                                   PromiseFlatString(aLang));
     return NS_OK;
   }
 
@@ -98,9 +102,9 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
   nsresult rv;
   if (sysAlerts) {
     rv = sysAlerts->ShowAlertNotification(aImageUrl, aAlertTitle, aAlertText, aAlertTextClickable,
-                                          aAlertCookie, aAlertListener, aAlertName);
-    if (NS_SUCCEEDED(rv))
-      return rv;
+                                          aAlertCookie, aAlertListener, aAlertName,
+                                          aBidi, aLang);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (!ShouldShowAlert()) {
@@ -185,6 +189,35 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
   return rv;
 #endif // !MOZ_WIDGET_ANDROID
 }
+
+NS_IMETHODIMP nsAlertsService::CloseAlert(const nsAString& aAlertName)
+{
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    ContentChild* cpc = ContentChild::GetSingleton();
+    cpc->SendCloseAlert(nsAutoString(aAlertName));
+    return NS_OK;
+  }
+
+#ifdef MOZ_WIDGET_ANDROID
+  mozilla::AndroidBridge::Bridge()->CloseNotification(aAlertName);
+  return NS_OK;
+#else
+
+#ifdef XP_MACOSX
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+
+  // Try the system notification service.
+  nsCOMPtr<nsIAlertsService> sysAlerts(do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID));
+  if (sysAlerts) {
+    nsresult rv = sysAlerts->CloseAlert(aAlertName);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif // !MOZ_WIDGET_ANDROID
+}
+
 
 NS_IMETHODIMP nsAlertsService::OnProgress(const nsAString & aAlertName,
                                           int64_t aProgress,

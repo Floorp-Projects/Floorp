@@ -60,6 +60,8 @@ nsDOMDesktopNotification::PostDesktopNotification()
                                        true,
                                        EmptyString(),
                                        mObserver,
+                                       EmptyString(),
+                                       NS_LITERAL_STRING("auto"),
                                        EmptyString());
 }
 
