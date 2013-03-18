@@ -475,6 +475,12 @@ class IDLExternalInterface(IDLObjectWithIdentifier):
     def resolve(self, parentScope):
         pass
 
+    def getJSImplementation(self):
+        return None
+
+    def isJSImplemented(self):
+        return False
+
     def _getDependentObjects(self):
         return set()
 
@@ -955,6 +961,17 @@ class IDLInterface(IDLObjectWithScope):
         self.parent = parent
         # Put the new members at the beginning
         self.members = members + self.members
+
+    def getJSImplementation(self):
+        classId = self.getExtendedAttribute("JSImplementation")
+        if not classId:
+            return classId
+        assert isinstance(classId, list)
+        assert len(classId) == 1
+        return classId[0]
+
+    def isJSImplemented(self):
+        return bool(self.getJSImplementation())
 
     def _getDependentObjects(self):
         deps = set(self.members)
