@@ -344,30 +344,21 @@ def processSingleLeakFile(leakLogFileName, PID, processType, leakThreshold):
     else:
       if numLeaked != 0:
         leakedObjectNames.append(name)
-        if numLeaked > 1:
-          instance = "instances"
-          rest = " each (%s bytes total)" % matches.group("bytesLeaked")
-        else:
-          instance = "instance"
-          rest = ""
-        log.info("TEST-INFO %(process)s| leakcheck | leaked %(numLeaked)d %(instance)s of %(name)s "
-                 "with size %(size)s bytes%(rest)s" %
-                 { "process": processString,
-                   "numLeaked": numLeaked,
-                   "instance": instance,
-                   "name": name,
-                   "size": matches.group("size"),
-                   "rest": rest })
+        log.info("TEST-INFO %s| leakcheck | leaked %d %s (%s bytes)"
+                 % (processString, numLeaked, name, bytesLeaked))
+
   if totalBytesLeaked is None:
     # We didn't see a line with name 'TOTAL'
     if crashedOnPurpose:
-      log.info("INFO | leakcheck | process %s was " \
+      log.info("TEST-INFO | leakcheck | process %s was " \
                "deliberately crashed and thus has no leak log" % PID)
     else:
+      # TODO: This should be a TEST-UNEXPECTED-FAIL, but was changed to a warning
+      # due to too many intermittent failures (see bug 831223).
       log.info("WARNING | leakcheck | missing output line for total leaks!")
   else:
     if totalBytesLeaked == 0:
-      leakLog = "TEST-PASS %s| leakcheck | no leaks detected!" % (processString)
+      log.info("TEST-PASS %s| leakcheck | no leaks detected!" % processString)
     else:
       # Only fail the run if we're over the threshold (which defaults to 0)
       if totalBytesLeaked > leakThreshold:
@@ -383,15 +374,12 @@ def processSingleLeakFile(leakLogFileName, PID, processType, leakThreshold):
       # add a continuation ellipsis to at least indicate there are others.
       if len(leakedObjectNames) > maxSummaryObjects:
         leakedObjectSummary += ', ...'
-      leakLog = "%s %s| leakcheck | %d bytes leaked (%s)" \
-                % (prefix, processString, totalBytesLeaked, leakedObjectSummary)
+      log.info("%s %s| leakcheck | %d bytes leaked (%s)"
+               % (prefix, processString, totalBytesLeaked, leakedObjectSummary))
     # Remind the threshold if it is not 0, which is the default/goal.
     if leakThreshold != 0:
-      leakLog += " (threshold set at %d bytes)" % leakThreshold
-    # Log the information.
-    log.info(leakLog)
+      log.info("TEST-INFO | leakcheck | threshold set at %d bytes" % leakThreshold)
   leaks.close()
-
 
 def processLeakLog(leakLogFile, leakThreshold = 0):
   """Process the leak log, including separate leak logs created
