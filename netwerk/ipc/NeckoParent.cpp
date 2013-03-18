@@ -98,13 +98,6 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
       if (tabParent->HasOwnApp()) {
         return "TabParent reports NECKO_NO_APP_ID but also is an app";
       }
-      if (UsingNeckoIPCSecurity() && tabParent->IsBrowserElement()) {
-        // <iframe mozbrowser> which doesn't have an <iframe mozapp> above it.
-        // This is not supported now, and we'll need to do a code audit to make
-        // sure we can handle it (i.e don't short-circuit using separate
-        // namespace if just appID==0)
-        return "TabParent reports appId=NECKO_NO_APP_ID but is a mozbrowser";
-      }
     }
   } else {
     // Only trust appId/inBrowser from child-side loadcontext if we're in
