@@ -141,6 +141,7 @@ webidl_files = \
   NodeFilter.webidl \
   NodeIterator.webidl \
   NodeList.webidl \
+  Notification.webidl \
   PaintRequest.webidl \
   PaintRequestList.webidl \
   PannerNode.webidl \
