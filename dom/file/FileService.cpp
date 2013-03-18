@@ -428,6 +428,14 @@ FileService::FileStorageInfo::GetLockedFileQueue(LockedFile* aLockedFile)
 void
 FileService::FileStorageInfo::RemoveLockedFileQueue(LockedFile* aLockedFile)
 {
+  for (uint32_t index = 0; index < mDelayedEnqueueInfos.Length(); index++) {
+    if (mDelayedEnqueueInfos[index].mLockedFile == aLockedFile) {
+      NS_ASSERTION(!mDelayedEnqueueInfos[index].mFileHelper, "Should be null!");
+      mDelayedEnqueueInfos.RemoveElementAt(index);
+      return;
+    }
+  }
+
   uint32_t lockedFileCount = mLockedFileQueues.Length();
 
   // We can't just remove entries from lock hash tables, we have to rebuild
