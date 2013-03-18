@@ -55,6 +55,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
   }
 
   // Test 3: for resource within a script tag
+  // Note: the script we load throws an exception, but the script element's
+  // onload listener is called after we successfully fetch the script,
+  // independently of whether it throws an exception.
   var resource_script=document.createElement("script");
   resource_script.src = "resource://gre/modules/XPCOMUtils.jsm";
   resource_script.name = "resource_protocol";
@@ -117,16 +120,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
   var mailto = false;
 
   // listen for a messages from a new window
+  var os = SpecialPowers.Cc["@mozilla.org/observer-service;1"].
+     getService(SpecialPowers.Components.interfaces.nsIObserverService);
   var observer = {
     observe: function(subject, topic, data) {
       if(topic == "content-document-global-created" && data =="http://example.com") {
          parent.postMessage({"test": "mailto", "msg": "resource with mailto protocol loaded"}, "http://mochi.test:8888");
+         os.removeObserver(observer, "content-document-global-created");
          mailto = true;
       }
     }
   }
-  var os = SpecialPowers.Cc["@mozilla.org/observer-service;1"].
-     getService(SpecialPowers.Components.interfaces.nsIObserverService);
   os.addObserver(observer, "content-document-global-created", false);
 
   function mailtoProtocolStatus() {
