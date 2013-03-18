@@ -17,7 +17,7 @@
 #include "FrameLayerBuilder.h"
 #include "nsSubDocumentFrame.h"
 #include "nsAbsoluteContainingBlock.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 using namespace mozilla;
 

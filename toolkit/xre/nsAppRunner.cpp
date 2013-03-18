@@ -2758,7 +2758,7 @@ static DWORD InitDwriteBG(LPVOID lpdwThreadParam)
 bool fire_glxtest_process();
 #endif
 
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 // Encapsulates startup and shutdown state for XRE_main
 class XREMain

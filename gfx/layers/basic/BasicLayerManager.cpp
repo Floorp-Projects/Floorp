@@ -15,7 +15,7 @@
 #include "gfxPlatform.h"
 #include "nsXULAppAPI.h"
 #include "RenderTrace.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 #define PIXMAN_DONT_DEFINE_STDINT
 #include "pixman.h"

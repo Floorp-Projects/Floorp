@@ -65,7 +65,7 @@
 #include "nsIChannelPolicy.h"
 #include "nsChannelPolicy.h"
 #include "mozilla/dom/Element.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 #include "nsObjectFrame.h"
 #include "nsDOMClassInfo.h"
 #include "nsWrapperCacheInlines.h"

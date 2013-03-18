@@ -25,7 +25,7 @@
 #include "nsAutoPtr.h"
 #include "nsStringGlue.h"
 #include "mozilla/Preferences.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 #include "prprf.h"
 #include "nsCRT.h"

@@ -40,7 +40,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
 #include "nsViewManager.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 #include "nsNPAPIPluginInstance.h"
 
 using mozilla::TimeStamp;
