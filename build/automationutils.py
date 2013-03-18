@@ -323,7 +323,6 @@ def processSingleLeakFile(leakLogFileName, PID, processType, leakThreshold):
   leaks = open(leakLogFileName, "r")
   crashedOnPurpose = False
   totalBytesLeaked = None
-  numObjects = 0
   for line in leaks:
     if line.find("purposefully crash") > -1:
       crashedOnPurpose = True
@@ -349,16 +348,9 @@ def processSingleLeakFile(leakLogFileName, PID, processType, leakThreshold):
         else:
           instance = "instance"
           rest = ""
-        numObjects += 1
-        if numObjects > 5:
-          # don't spam brief tinderbox logs with tons of leak output
-          prefix = "TEST-INFO"
-        else:
-          prefix = "TEST-UNEXPECTED-FAIL"
-        log.info("%(prefix)s %(process)s| leakcheck | leaked %(numLeaked)d %(instance)s of %(name)s "
+        log.info("TEST-INFO %(process)s| leakcheck | leaked %(numLeaked)d %(instance)s of %(name)s "
                  "with size %(size)s bytes%(rest)s" %
-                 { "prefix": prefix,
-                   "process": processString,
+                 { "process": processString,
                    "numLeaked": numLeaked,
                    "instance": instance,
                    "name": name,
