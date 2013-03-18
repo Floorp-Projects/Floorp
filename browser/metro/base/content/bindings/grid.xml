@@ -32,12 +32,12 @@
             // as richgrid is adopting multi-select behavior, but select/selected are already being
             // used to describe triggering the default action of a tile
             if (this._selectedItem){
-              this._selectedItem.selected = false;
+              this._selectedItem.removeAttribute("selected");
               this._selectedItem = null;
             }
 
             for (let childItem of this.selectedItems) {
-              childItem.selected = false;
+              childItem.removeAttribute("selected");
             }
             // reset context actions
             this._contextActions = null;
@@ -53,8 +53,12 @@
             if ("single" == this.getAttribute("seltype")) {
               this.clearSelection();
             }
-            anItem.selected = !wasSelected;
             this._selectedItem = wasSelected ? null : anItem;
+            if(anItem.selected) {
+              anItem.removeAttribute("selected");
+            } else {
+              anItem.setAttribute("selected", true);
+            }
             this._fireOnSelectionChange();
           ]]>
         </body>
@@ -506,8 +510,7 @@
                 onset="this._backgroundimage = val; this.setBackgroundImage();"
                 onget="return this._backgroundimage;" />
       <property name="selected"
-                onget="return this.getAttribute('selected') == 'true';"
-                onset="this.setAttribute('selected', val);"/>
+                onget="return this.getAttribute('selected') == 'true';" />
 
       <constructor>
         <![CDATA[
