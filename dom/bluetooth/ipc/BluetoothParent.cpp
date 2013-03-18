@@ -309,7 +309,7 @@ BluetoothRequestParent::DoRequest(const SetPropertyRequest& aRequest)
   MOZ_ASSERT(mRequestType == Request::TSetPropertyRequest);
 
   nsresult rv =
-    mService->SetProperty(aRequest.type(), aRequest.path(), aRequest.value(),
+    mService->SetProperty(aRequest.type(), aRequest.value(),
                           mReplyRunnable.get());
   NS_ENSURE_SUCCESS(rv, false);
 
@@ -323,7 +323,7 @@ BluetoothRequestParent::DoRequest(const StartDiscoveryRequest& aRequest)
   MOZ_ASSERT(mRequestType == Request::TStartDiscoveryRequest);
 
   nsresult rv =
-    mService->StartDiscoveryInternal(aRequest.path(), mReplyRunnable.get());
+    mService->StartDiscoveryInternal(mReplyRunnable.get());
   NS_ENSURE_SUCCESS(rv, false);
 
   return true;
@@ -336,7 +336,7 @@ BluetoothRequestParent::DoRequest(const StopDiscoveryRequest& aRequest)
   MOZ_ASSERT(mRequestType == Request::TStopDiscoveryRequest);
 
   nsresult rv =
-    mService->StopDiscoveryInternal(aRequest.path(), mReplyRunnable.get());
+    mService->StopDiscoveryInternal(mReplyRunnable.get());
   NS_ENSURE_SUCCESS(rv, false);
 
   return true;
@@ -349,7 +349,7 @@ BluetoothRequestParent::DoRequest(const PairRequest& aRequest)
   MOZ_ASSERT(mRequestType == Request::TPairRequest);
 
   nsresult rv =
-    mService->CreatePairedDeviceInternal(aRequest.path(), aRequest.address(),
+    mService->CreatePairedDeviceInternal(aRequest.address(),
                                          aRequest.timeoutMS(),
                                          mReplyRunnable.get());
   NS_ENSURE_SUCCESS(rv, false);
@@ -364,7 +364,7 @@ BluetoothRequestParent::DoRequest(const UnpairRequest& aRequest)
   MOZ_ASSERT(mRequestType == Request::TUnpairRequest);
 
   nsresult rv =
-    mService->RemoveDeviceInternal(aRequest.path(), aRequest.address(),
+    mService->RemoveDeviceInternal(aRequest.address(),
                                    mReplyRunnable.get());
   NS_ENSURE_SUCCESS(rv, false);
 
@@ -490,7 +490,6 @@ BluetoothRequestParent::DoRequest(const ConnectRequest& aRequest)
   MOZ_ASSERT(mRequestType == Request::TConnectRequest);
 
   mService->Connect(aRequest.address(),
-                    aRequest.adapterPath(),
                     aRequest.profileId(),
                     mReplyRunnable.get());
 

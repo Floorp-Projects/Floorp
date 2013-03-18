@@ -57,7 +57,7 @@ nsWifiMonitor::StartWatching(nsIWifiListener *aListener)
     return NS_ERROR_NULL_POINTER;
   }
 
-  mListeners.AppendElement(nsWifiListener(aListener));
+  mListeners.AppendElement(nsWifiListener(new nsMainThreadPtrHolder<nsIWifiListener>(aListener)));
 
   if (!mTimer) {
     mTimer = do_CreateInstance("@mozilla.org/timer;1");

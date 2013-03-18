@@ -7,6 +7,8 @@
 #ifndef jsmath_h___
 #define jsmath_h___
 
+#include "jsapi.h"
+
 namespace js {
 
 typedef double (*UnaryFunType)(double);
@@ -96,6 +98,9 @@ js_math_floor_impl(double x);
 namespace js {
 
 extern JSBool
+math_exp(JSContext *cx, unsigned argc, Value *vp);
+
+extern JSBool
 math_imul(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern JSBool
@@ -128,6 +133,21 @@ math_tan(JSContext *cx, unsigned argc, js::Value *vp);
 extern double
 math_tan_impl(MathCache *cache, double x);
 
+extern JSBool
+math_asin(JSContext *cx, unsigned argc, Value *vp);
+
+extern JSBool
+math_acos(JSContext *cx, unsigned argc, Value *vp);
+
+extern JSBool
+math_atan(JSContext *cx, unsigned argc, Value *vp);
+
+extern JSBool
+math_atan2(JSContext *cx, unsigned argc, Value *vp);
+
+extern double
+ecmaAtan2(double x, double y);
+
 extern double
 math_atan_impl(MathCache *cache, double x);
 
@@ -151,6 +171,9 @@ powi(double x, int y);
 
 extern double
 ecmaPow(double x, double y);
+
+extern JSBool
+math_imul(JSContext *cx, unsigned argc, Value *vp);
 
 } /* namespace js */
 

@@ -19,9 +19,9 @@ function onLoad()
   if (isupport) {
     crl = isupport.QueryInterface(nsICRLInfo);
   }
-  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
-  var yesButton = bundle.GetStringFromName("yesButton");
-  var noButton = bundle.GetStringFromName("noButton");
+  var bundle = document.getElementById("pippki_bundle");
+  var yesButton = bundle.getString("yesButton");
+  var noButton = bundle.getString("noButton");
   document.documentElement.getButton("accept").label = yesButton;
   document.documentElement.getButton("cancel").label = noButton;
   
@@ -32,7 +32,7 @@ function onLoad()
   if(crl != null) {    
     nextUpdateStr = crl.nextUpdateLocale;
     if( (nextUpdateStr == null) || (nextUpdateStr.length == 0) ){
-      nextUpdateStr = bundle.GetStringFromName("undefinedValStr");
+      nextUpdateStr = bundle.getString("undefinedValStr");
     }
     var nextUpdate = document.getElementById("nextUpdate");
     nextUpdate.setAttribute("value",nextUpdateStr);
@@ -58,11 +58,11 @@ function onLoad()
     var statement = document.getElementById("status");
     var question = document.getElementById("question");
     if(updateEnabled) {
-      statement.setAttribute("value",bundle.GetStringFromName("enabledStatement"));
-      question.setAttribute("value",bundle.GetStringFromName("crlAutoupdateQuestion2"));
+      statement.setAttribute("value", bundle.getString("enabledStatement"));
+      question.setAttribute("value", bundle.getString("crlAutoupdateQuestion2"));
     } else {
-      statement.setAttribute("value",bundle.GetStringFromName("disabledStatement"));
-      question.setAttribute("value",bundle.GetStringFromName("crlAutoupdateQuestion1"));
+      statement.setAttribute("value", bundle.getString("disabledStatement"));
+      question.setAttribute("value", bundle.getString("crlAutoupdateQuestion1"));
     }
   }  
 }

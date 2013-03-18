@@ -14,7 +14,6 @@
     {0x88, 0x18, 0x98, 0xf5, 0x47, 0x5a, 0x49, 0x0c} }
 
 #define NS_ATOMSERVICE_CONTRACTID "@mozilla.org/atom-service;1"
-#define NS_ATOMSERVICE_CLASSNAME "Atom Service"
 %}
 
 /*

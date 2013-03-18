@@ -105,7 +105,7 @@ private:
                              JSContext* aCx,
                              uint8_t aArgc,
                              bool aEditable,
-                             nsIDOMDeviceStorageCursor** aRetval);
+                             nsIDOMDOMCursor** aRetval);
 
   nsString mStorageType;
   nsCOMPtr<nsIFile> mRootDirectory;

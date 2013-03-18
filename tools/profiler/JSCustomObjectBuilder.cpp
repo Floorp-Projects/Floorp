@@ -4,8 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "JSCustomObjectBuilder.h"
-#include "nsStringGlue.h"
+
 #include "nsDataHashtable.h"
+#include "nsStringGlue.h"
+#include "nsTArray.h"
 #include "nsUTF8Utils.h"
 
 #if _MSC_VER

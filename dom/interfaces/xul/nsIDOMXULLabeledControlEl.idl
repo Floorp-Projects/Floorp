@@ -6,7 +6,7 @@
 #include "nsIDOMElement.idl"
 #include "nsIDOMXULControlElement.idl"
 
-[scriptable, uuid(8b08fe72-17d7-4ebf-8a08-587056e57cc1)]
+[scriptable, uuid(eecd5462-3ead-4caa-9651-0c2b88b39a65)]
 interface nsIDOMXULLabeledControlElement : nsIDOMXULControlElement {
   attribute DOMString crop;
   attribute DOMString image;

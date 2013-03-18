@@ -13,6 +13,7 @@
 #include "nsPoint.h"
 #include "nsRect.h"
 #include "nsString.h"
+#include "nsTArray.h"
 #include "mozilla/gfx/Rect.h"
 
 //#define FORCE_ALOG 1
@@ -593,15 +594,11 @@ class AndroidGeckoEvent : public WrappedJavaObject
 public:
     static void InitGeckoEventClass(JNIEnv *jEnv);
 
-    AndroidGeckoEvent() { }
     AndroidGeckoEvent(int aType) {
         Init(aType);
     }
     AndroidGeckoEvent(int aType, int aAction) {
         Init(aType, aAction);
-    }
-    AndroidGeckoEvent(int x1, int y1, int x2, int y2) {
-        Init(x1, y1, x2, y2);
     }
     AndroidGeckoEvent(int aType, const nsIntRect &aRect) {
         Init(aType, aRect);
@@ -616,7 +613,6 @@ public:
     void Init(JNIEnv *jenv, jobject jobj);
     void Init(int aType);
     void Init(int aType, int aAction);
-    void Init(int x1, int y1, int x2, int y2);
     void Init(int aType, const nsIntRect &aRect);
     void Init(AndroidGeckoEvent *aResizeEvent);
 

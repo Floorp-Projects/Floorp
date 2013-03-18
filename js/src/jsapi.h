@@ -1998,7 +1998,7 @@ JS_StringToVersion(const char *string);
 
 #define JSOPTION_METHODJIT      JS_BIT(14)      /* Whole-method JIT. */
 
-/* JS_BIT(15) is currently unused. */
+#define JSOPTION_BASELINE       JS_BIT(15)      /* Baseline compiler. */
 
 #define JSOPTION_METHODJIT_ALWAYS \
                                 JS_BIT(16)      /* Always whole-method JIT,
@@ -2013,7 +2013,7 @@ JS_StringToVersion(const char *string);
 
 #define JSOPTION_ION            JS_BIT(20)      /* IonMonkey */
 
-#define JSOPTION_BASELINE       JS_BIT(21)      /* Baseline compiler. */
+#define JSOPTION_ASMJS          JS_BIT(21)      /* optimizingasm.js compiler */
 
 #define JSOPTION_MASK           JS_BITMASK(22)
 
@@ -2114,7 +2114,6 @@ class JS_PUBLIC_API(JSAutoCompartment)
   public:
     JSAutoCompartment(JSContext *cx, JSRawObject target);
     JSAutoCompartment(JSContext *cx, JSScript *target);
-    JSAutoCompartment(JSContext *cx, JSString *target);
     ~JSAutoCompartment();
 };
 
@@ -3139,8 +3138,28 @@ JS_GetConstructor(JSContext *cx, JSObject *proto);
 extern JS_PUBLIC_API(JSBool)
 JS_GetObjectId(JSContext *cx, JSRawObject obj, jsid *idp);
 
+namespace JS {
+
+enum {
+    FreshZone,
+    SystemZone,
+    SpecificZones
+};
+
+typedef uintptr_t ZoneSpecifier;
+
+inline ZoneSpecifier
+SameZoneAs(JSObject *obj)
+{
+    JS_ASSERT(uintptr_t(obj) > SpecificZones);
+    return ZoneSpecifier(obj);
+}
+
+} /* namespace JS */
+
 extern JS_PUBLIC_API(JSObject *)
-JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals);
+JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals,
+                   JS::ZoneSpecifier zoneSpec = JS::FreshZone);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);

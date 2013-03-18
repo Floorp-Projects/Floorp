@@ -20,7 +20,6 @@
 #include "cms.h"
 #include "nsNSSShutDown.h"
 
-#define NS_CMSMESSAGE_CLASSNAME "CMS Message Object"
 #define NS_CMSMESSAGE_CID \
   { 0xa4557478, 0xae16, 0x11d5, { 0xba,0x4b,0x00,0x10,0x83,0x03,0xb1,0x17 } }
 
@@ -58,7 +57,6 @@ friend class nsSMimeVerificationJob;
 // nsCMSDecoder - implementation of nsICMSDecoder
 // ===============================================
 
-#define NS_CMSDECODER_CLASSNAME "CMS Decoder Object"
 #define NS_CMSDECODER_CID \
   { 0x9dcef3a4, 0xa3bc, 0x11d5, { 0xba, 0x47, 0x00, 0x10, 0x83, 0x03, 0xb1, 0x17 } }
 
@@ -83,7 +81,6 @@ private:
 // nsCMSEncoder - implementation of nsICMSEncoder
 // ===============================================
 
-#define NS_CMSENCODER_CLASSNAME "CMS Decoder Object"
 #define NS_CMSENCODER_CID \
   { 0xa15789aa, 0x8903, 0x462b, { 0x81, 0xe9, 0x4a, 0xa2, 0xcf, 0xf4, 0xd5, 0xcb } }
 class nsCMSEncoder : public nsICMSEncoder,

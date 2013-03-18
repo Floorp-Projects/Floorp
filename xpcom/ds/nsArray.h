@@ -12,9 +12,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
 
-#define NS_ARRAY_CLASSNAME \
-  "nsIArray implementation"
-
 // {35C66FD1-95E9-4e0a-80C5-C3BD2B375481}
 #define NS_ARRAY_CID \
 { 0x35c66fd1, 0x95e9, 0x4e0a, \

@@ -104,8 +104,8 @@ create({ constructor: SourcesView, proto: MenuContainer.prototype }, {
    */
   addSource: function DVS_addSource(aSource, aOptions = {}) {
     let url = aSource.url;
-    let label = SourceUtils.getSourceLabel(url);
-    let group = SourceUtils.getSourceGroup(url);
+    let label = SourceUtils.getSourceLabel(url.split(" -> ").pop());
+    let group = SourceUtils.getSourceGroup(url.split(" -> ").pop());
 
     // Append a source item to this container.
     let sourceItem = this.push([label, url, group], {

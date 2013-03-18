@@ -1,0 +1,159 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=519107
+-->
+<head>
+  <title>Test for availability of svgElement::hasFeature</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=519107">Mozilla Bug 519107</a>
+<p id="display"></p>
+<div id="content" style="display: none;">
+  <svg id="svg" xmlns="http://www.w3.org/2000/svg">
+  </svg>
+</div>
+<pre id="test">
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 519107 **/
+
+var features = [
+  // [feature, version, supported feature?]
+
+  // DOM Level 1
+  // http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-5CED94D7
+  ["HTML", "1.0", true],
+  ["XML",  "1.0", true],
+
+  // DOM Level 2
+  // http://www.w3.org/TR/DOM-Level-2-Core/introduction.html#ID-Conformance
+  ["Core", "2.0", true],
+  ["XML", "2.0", true],
+  ["HTML", "2.0", true],
+  ["XHTML", "2.0", true], // DOM Level 2 HTML
+  ["Views", "2.0", true],
+  ["StyleSheets", "2.0", true],
+  ["CSS", "2.0", true],
+  ["CSS2", "2.0", true],
+  ["Events", "2.0", true],
+  ["UIEvents", "2.0", true],
+  ["MouseEvents", "2.0", true],
+  ["MutationEvents", "2.0", true],
+  ["HTMLEvents", "2.0", true],
+  ["Range", "2.0", true],
+  ["Traversal", "2.0", true],
+
+  // DOM Level 3
+  // http://www.w3.org/TR/DOM-Level-3-Core/introduction.html#ID-Conformance
+  ["Core", "3.0", true],
+  ["XML", "3.0", true],
+  ["Events", "3.0", true],
+  ["UIEvents", "3.0", true],
+  ["MouseEvents", "3.0", true],
+  ["TextEvents", "3.0", true],
+  ["KeyboardEvents", "3.0", true],
+  ["MutationEvents", "3.0", true],
+  ["MutationNameEvents", "3.0", true],
+  ["HTMLEvents", "3.0", true],
+  ["LS", "3.0", true],
+  ["LS-Async", "3.0", true],
+  ["Validation", "3.0", true],
+  ["XPath", "3.0", "true"],
+
+  // current SVG feature string support status:
+  //   content/svg/content/src/nsSVGFeaturesList.h
+  // SVG 1.1
+  // Static festures
+  ["http://www.w3.org/TR/SVG11/feature#CoreAttribute", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#Structure", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#ContainerAttribute", "1.1", false],
+  ["http://www.w3.org/TR/SVG11/feature#ConditionalProcessing", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#Image", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#Style", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#ViewportAttribute", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#Shape", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#Text", "1.1", false],
+  ["http://www.w3.org/TR/SVG11/feature#PaintAttribute", "1.1", false],
+  ["http://www.w3.org/TR/SVG11/feature#OpacityAttribute", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#GraphicsAttribute", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#Marker", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#ColorProfile", "1.1", false],
+  ["http://www.w3.org/TR/SVG11/feature#Gradient", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#Pattern", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#Clip", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#Mask", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#Filter", "1.1", false],
+
+  // Basic features
+  ["http://www.w3.org/TR/SVG11/feature#BasicStructure", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#BasicText", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#BasicPaintAttribute", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#BasicGraphicsAttribute", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#BasicClip", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#BasicFilter", "1.1", false],
+
+  // Animation feature
+  ["http://www.w3.org/TR/SVG11/feature#Animation", "1.1", true],
+
+  // Dynamic features
+  ["http://www.w3.org/TR/SVG11/feature#DocumentEventsAttribute", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#GraphicalEventsAttribute", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#AnimationEventsAttribute", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#Cursor", "1.1", false],
+  ["http://www.w3.org/TR/SVG11/feature#Hyperlinking", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#XlinkAttribute", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#ExternalResourcesRequired", "1.1", false],
+  ["http://www.w3.org/TR/SVG11/feature#View", "1.1", false],
+  ["http://www.w3.org/TR/SVG11/feature#Script", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#Font", "1.1", false],
+  ["http://www.w3.org/TR/SVG11/feature#BasicFont", "1.1", false],
+  ["http://www.w3.org/TR/SVG11/feature#Extensibility", "1.1", true],
+
+  // Feature groups (SVG 1.1 style)
+  ["http://www.w3.org/TR/SVG11/feature#SVG", "1.1", false],
+  ["http://www.w3.org/TR/SVG11/feature#SVGDOM", "1.1", false],
+  ["http://www.w3.org/TR/SVG11/feature#SVG-static", "1.1", false],
+  ["http://www.w3.org/TR/SVG11/feature#SVGDOM-static", "1.1", false],
+  ["http://www.w3.org/TR/SVG11/feature#SVG-animation", "1.1", false],
+  ["http://www.w3.org/TR/SVG11/feature#SVGDOM-animation", "1.1", true],
+  ["http://www.w3.org/TR/SVG11/feature#SVG-dynamic", "1.1", false],
+  ["http://www.w3.org/TR/SVG11/feature#SVGDOM-dynamic", "1.1", false],
+
+  // Features (SVG 1.0 style)
+  ["org.w3c.svg", "1.0", false],
+  ["org.w3c.svg.all", "1.0", false],
+  ["org.w3c.svg.static", "1.0", false],
+  ["org.w3c.svg.animation", "1.0", false],
+  ["org.w3c.svg.dynamic", "1.0", false],
+  ["org.w3c.dom.svg", "1.0", false],
+  ["org.w3c.dom.svg.all", "1.0", false],
+  ["org.w3c.dom.svg.static", "1.0", false],
+  ["org.w3c.dom.svg.animation", "1.0", true],
+  ["org.w3c.dom.svg.dynamic", "1.0", false]
+];
+
+function testHasFeature() {
+  for (var [feature, version, accepted_result] of features) {
+    if (accepted_result) {
+      ok(document.implementation.hasFeature(feature, version), "hasFeature(" + feature + ", " + version + ") returned wrong value, Was it changed to unsupported feature?");
+    } else {
+      todo(document.implementation.hasFeature(feature, version), "hasFeature(" + feature + ", " + version + ") is unsupported feature string");
+    }
+  }
+}
+
+function main() {
+  testHasFeature();
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", main, false);
+SimpleTest.waitForExplicitFinish();
+]]>
+</script>
+</pre>
+</body>
+</html>

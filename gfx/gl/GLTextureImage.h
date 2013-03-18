@@ -8,6 +8,7 @@
 
 #include "nsAutoPtr.h"
 #include "nsRegion.h"
+#include "nsTArray.h"
 #include "gfxASurface.h"
 #include "GLContextTypes.h"
 #include "gfxPattern.h"

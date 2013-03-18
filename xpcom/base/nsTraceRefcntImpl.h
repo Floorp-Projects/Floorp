@@ -44,7 +44,6 @@ public:
 };
 
 #define NS_TRACE_REFCNT_CONTRACTID "@mozilla.org/xpcom/trace-refcnt;1"
-#define NS_TRACE_REFCNT_CLASSNAME  "nsTraceRefcnt Interface"
 #define NS_TRACE_REFCNT_CID                          \
 { /* e3e7511e-a395-4924-94b1-d527861cded4 */         \
     0xe3e7511e,                                      \

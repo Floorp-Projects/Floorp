@@ -332,6 +332,7 @@ DeclMarkerImpl(Object, GlobalObject)
 DeclMarkerImpl(Object, JSObject)
 DeclMarkerImpl(Object, JSFunction)
 DeclMarkerImpl(Object, ScopeObject)
+DeclMarkerImpl(Object, ArrayBufferObject)
 DeclMarkerImpl(Script, JSScript)
 DeclMarkerImpl(Shape, Shape)
 DeclMarkerImpl(String, JSAtom)
@@ -816,6 +817,8 @@ static inline void
 ScanBaseShape(GCMarker *gcmarker, RawBaseShape base)
 {
     base->assertConsistency();
+
+    base->compartment()->mark();
 
     if (base->hasGetterObject())
         PushMarkStack(gcmarker, base->getterObject());

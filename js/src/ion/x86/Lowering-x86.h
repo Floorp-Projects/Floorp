@@ -45,6 +45,9 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
     bool visitReturn(MReturn *ret);
     bool visitStoreTypedArrayElement(MStoreTypedArrayElement *ins);
     bool visitStoreTypedArrayElementHole(MStoreTypedArrayElementHole *ins);
+    bool visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble *ins);
+    bool visitAsmJSStoreHeap(MAsmJSStoreHeap *ins);
+    bool visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins);
     bool lowerPhi(MPhi *phi);
 
     static bool allowTypedElementHoleCheck() {

@@ -60,7 +60,6 @@
   "Element interface: attribute namespaceURI": true,
   "Element interface: attribute prefix": true,
   "Element interface: attribute localName": true,
-  "Element interface: attribute attributes": true,
   "Element interface: attribute className": true,
   "Element interface: operation remove()": true,
   "Element interface: element must inherit property \"className\" with the proper type (5)": true,

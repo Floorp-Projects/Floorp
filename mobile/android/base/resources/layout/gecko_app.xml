@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent">
+
+    <org.mozilla.gecko.TabsPanel android:id="@+id/tabs_panel"
+                                 android:layout_width="fill_parent"
+                                 android:layout_height="fill_parent"
+                                 android:background="@color/background_tabs_light"
+                                 android:visibility="invisible"/>
+
+   <view class="org.mozilla.gecko.GeckoApp$MainLayout"
+         android:id="@+id/main_layout"
+         style="@style/Screen.Transparent">
+
+        <!-- BrowserToolbar will be added dynamically -->
+
+        <FrameLayout android:id="@+id/toolbar_spacer"
+                     android:layout_width="fill_parent"
+                     android:layout_height="wrap_content"/>
+
+        <RelativeLayout android:id="@+id/gecko_layout"
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent"
+                        android:layout_below="@+id/toolbar_spacer"
+                        android:layout_above="@+id/find_in_page">
+
+            <include layout="@layout/shared_ui_components"/>
+
+            <org.mozilla.gecko.AboutHomeContent android:id="@+id/abouthome_content"
+                                                android:layout_width="fill_parent"
+                                                android:layout_height="fill_parent"
+                                                android:background="@color/background_normal"/>
+
+        </RelativeLayout>
+
+        <org.mozilla.gecko.FindInPageBar android:id="@+id/find_in_page"
+                                         android:layout_width="fill_parent"
+                                         android:layout_height="wrap_content"
+                                         android:layout_alignParentBottom="true"
+                                         style="@style/FindBar"
+                                         android:visibility="gone"/>
+
+    </view>
+
+</RelativeLayout>

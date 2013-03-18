@@ -244,10 +244,10 @@ class RecursiveMakeBackend(BuildBackend):
         if obj.test_dirs:
             fh.write('TEST_DIRS := %s\n' % ' '.join(obj.test_dirs))
 
-        if obj.test_tool_dirs:
-            fh.write('ifdef ENABLE_TESTS\n')
+        if obj.test_tool_dirs and \
+            self.environment.substs.get('ENABLE_TESTS', False):
+
             fh.write('TOOL_DIRS += %s\n' % ' '.join(obj.test_tool_dirs))
-            fh.write('endif\n')
 
         if len(obj.external_make_dirs):
             fh.write('DIRS += %s\n' % ' '.join(obj.external_make_dirs))

@@ -9,7 +9,7 @@
 #include "mozilla/dom/mobilemessage/PSmsChild.h"
 #include "mozilla/dom/mobilemessage/PSmsRequestChild.h"
 
-class nsISmsRequest;
+class nsIMobileMessageCallback;
 
 namespace mozilla {
 namespace dom {
@@ -55,10 +55,10 @@ class SmsRequestChild : public PSmsRequestChild
 {
   friend class SmsChild;
 
-  nsCOMPtr<nsISmsRequest> mReplyRequest;
+  nsCOMPtr<nsIMobileMessageCallback> mReplyRequest;
 
 public:
-  SmsRequestChild(nsISmsRequest* aReplyRequest);
+  SmsRequestChild(nsIMobileMessageCallback* aReplyRequest);
 
 protected:
   virtual ~SmsRequestChild();

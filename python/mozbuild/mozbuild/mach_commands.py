@@ -311,6 +311,14 @@ class Package(MachCommandBase):
         return self._run_make(directory=".", target='package', ensure_exit_code=False)
 
 @CommandProvider
+class Install(MachCommandBase):
+    """Install a package."""
+
+    @Command('install', help='Install the package on the machine, or on a device.')
+    def install(self):
+        return self._run_make(directory=".", target='install', ensure_exit_code=False)
+
+@CommandProvider
 class Buildsymbols(MachCommandBase):
     """Produce a package of debug symbols suitable for use with Breakpad."""
 

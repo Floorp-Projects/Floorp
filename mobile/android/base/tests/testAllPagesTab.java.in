@@ -109,7 +109,7 @@ public class testAllPagesTab extends BaseTest {
     }
 
     private void testContextMenu(String url) {
-        ListView list = getAllPagesList(bookmarks[0]);
+        ListView list = getAllPagesList(bookmarks[0], 5);
 
         View child = list.getChildAt(0);
         mAsserter.ok(child != null, "first list item can be retrieved", child != null ? child.toString() : "null!");
@@ -126,11 +126,21 @@ public class testAllPagesTab extends BaseTest {
     }
 
     private void testClick(String url) {
-        ListView list = getAllPagesList(bookmarks[0]);
+        ListView list = getAllPagesList(bookmarks[0], 5);
 
         Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
         View child = list.getChildAt(0);
         mAsserter.ok(child != null, "first list item can be retrieved", child != null ? child.toString() : "null!");
+        // dump text for this child, to be sure of which list item is clicked
+        ArrayList<View> views = mSolo.getViews(child);
+        for (int j = 0; j < views.size(); j++) {
+            View v = views.get(j);
+            if (v instanceof TextView) {
+                TextView t = (TextView)v;
+                String string = t.getText().toString();
+                mAsserter.dumpLog("first list item has text: " + string);
+            }
+        }
         mSolo.clickOnView(child);
         contentEventExpecter.blockForEvent();
         verifyUrl(url);

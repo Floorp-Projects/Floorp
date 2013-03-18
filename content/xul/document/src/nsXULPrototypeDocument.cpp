@@ -762,7 +762,8 @@ nsXULPDGlobalObject::EnsureScriptEnvironment()
     JSAutoRequest ar(cx);
 
     JSObject *newGlob = JS_NewGlobalObject(cx, &gSharedGlobalClass,
-                                           nsJSPrincipals::get(GetPrincipal()));
+                                           nsJSPrincipals::get(GetPrincipal()),
+                                           JS::SystemZone);
     if (!newGlob)
         return NS_OK;
 

@@ -76,7 +76,7 @@
     // Check the presence of some other notable reporters.
     } else if (aPath.search(/^explicit\/js-non-window\/.*compartment\(/) >= 0) {
       areJsNonWindowCompartmentsPresent = true;
-    } else if (aPath.search(/^explicit\/window-objects\/top\(.*\/js\/compartment\(/) >= 0) {
+    } else if (aPath.search(/^explicit\/window-objects\/top\(.*\/js-compartment\(/) >= 0) {
       areWindowObjectsJsCompartmentsPresent = true;
     } else if (aPath.search(/^explicit\/storage\/sqlite\/places.sqlite/) >= 0) {
       isPlacesPresent = true;

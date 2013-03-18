@@ -31,6 +31,7 @@
 #include "BacktrackingAllocator.h"
 #include "StupidAllocator.h"
 #include "UnreachableCodeElimination.h"
+#include "EffectiveAddressAnalysis.h"
 
 #if defined(JS_CPU_X86)
 # include "x86/Lowering-x86.h"
@@ -103,10 +104,33 @@ ion::GetIonContext()
     return CurrentIonContext();
 }
 
-IonContext::IonContext(JSContext *cx, JSCompartment *compartment, TempAllocator *temp)
-  : cx(cx),
-    compartment(compartment),
+IonContext::IonContext(JSContext *cx, TempAllocator *temp)
+  : runtime(cx->runtime),
+    cx(cx),
+    compartment(cx->compartment),
     temp(temp),
+    prev_(CurrentIonContext()),
+    assemblerCount_(0)
+{
+    SetIonContext(this);
+}
+
+IonContext::IonContext(JSCompartment *comp, TempAllocator *temp)
+  : runtime(comp->rt),
+    cx(NULL),
+    compartment(comp),
+    temp(temp),
+    prev_(CurrentIonContext()),
+    assemblerCount_(0)
+{
+    SetIonContext(this);
+}
+
+IonContext::IonContext(JSRuntime *rt)
+  : runtime(rt),
+    cx(NULL),
+    compartment(NULL),
+    temp(NULL),
     prev_(CurrentIonContext()),
     assemblerCount_(0)
 {
@@ -143,7 +167,8 @@ IonRuntime::IonRuntime()
     invalidator_(NULL),
     debugTrapHandler_(NULL),
     functionWrappers_(NULL),
-    osrTempData_(NULL)
+    osrTempData_(NULL),
+    flusher_(NULL)
 {
 }
 
@@ -161,7 +186,7 @@ IonRuntime::initialize(JSContext *cx)
     if (!cx->compartment->ensureIonCompartmentExists(cx))
         return false;
 
-    IonContext ictx(cx, cx->compartment, NULL);
+    IonContext ictx(cx, NULL);
     AutoFlushCache afc("IonRuntime::initialize");
 
     execAlloc_ = cx->runtime->getExecAlloc(cx);
@@ -221,6 +246,18 @@ IonRuntime::initialize(JSContext *cx)
     return true;
 }
 
+IonCode *
+IonRuntime::debugTrapHandler(JSContext *cx)
+{
+    if (!debugTrapHandler_) {
+        // IonRuntime code stubs are shared across compartments and have to
+        // be allocated in the atoms compartment.
+        AutoEnterAtomsCompartment ac(cx);
+        debugTrapHandler_ = generateDebugTrapHandler(cx);
+    }
+    return debugTrapHandler_;
+}
+
 uint8_t *
 IonRuntime::allocateOsrTempData(size_t size)
 {
@@ -237,7 +274,6 @@ IonRuntime::freeOsrTempData()
 
 IonCompartment::IonCompartment(IonRuntime *rt)
   : rt(rt),
-    flusher_(NULL),
     stubCodes_(NULL),
     baselineCallReturnAddr_(NULL)
 {
@@ -293,7 +329,8 @@ FinishAllOffThreadCompilations(IonCompartment *ion)
 /* static */ void
 IonRuntime::Mark(JSTracer *trc)
 {
-    for (gc::CellIterUnderGC i(trc->runtime->atomsCompartment, gc::FINALIZE_IONCODE); !i.done(); i.next()) {
+    Zone *zone = trc->runtime->atomsCompartment->zone();
+    for (gc::CellIterUnderGC i(zone, gc::FINALIZE_IONCODE); !i.done(); i.next()) {
         IonCode *code = i.get<IonCode>();
         MarkIonCodeRoot(trc, &code, "wrapper");
     }
@@ -400,7 +437,7 @@ IonCode::copyFrom(MacroAssembler &masm)
     preBarrierTableBytes_ = masm.preBarrierTableBytes();
     masm.copyPreBarrierTable(code_ + preBarrierTableOffset());
 
-    masm.processCodeLabels(this);
+    masm.processCodeLabels(code_);
 }
 
 void
@@ -805,7 +842,7 @@ IonScript::toggleBarriers(bool enabled)
 }
 
 void
-IonScript::purgeCaches(JSCompartment *c)
+IonScript::purgeCaches(Zone *zone)
 {
     // Don't reset any ICs if we're invalidated, otherwise, repointing the
     // inline jump could overwrite an invalidation marker. These ICs can
@@ -815,21 +852,21 @@ IonScript::purgeCaches(JSCompartment *c)
     if (invalidated())
         return;
 
-    // This is necessary because AutoFlushCache::updateTop()
-    // looks up the current flusher in the IonContext.  Without one
-    // it cannot work.
-    js::ion::IonContext ictx(NULL, c, NULL);
-    AutoFlushCache afc("purgeCaches");
+    IonContext ictx(zone->rt);
+    AutoFlushCache afc("purgeCaches", zone->rt->ionRuntime());
     for (size_t i = 0; i < numCaches(); i++)
         getCache(i).reset();
 }
 
 void
-ion::ToggleBarriers(JSCompartment *comp, bool needs)
+ion::ToggleBarriers(JS::Zone *zone, bool needs)
 {
-    IonContext ictx(NULL, comp, NULL);
-    AutoFlushCache afc("ToggleBarriers");
-    for (gc::CellIterUnderGC i(comp, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    IonContext ictx(zone->rt);
+    if (!zone->rt->hasIonRuntime())
+        return;
+
+    AutoFlushCache afc("ToggleBarriers", zone->rt->ionRuntime());
+    for (gc::CellIterUnderGC i(zone, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         RawScript script = i.get<JSScript>();
         if (script->hasIonScript())
             script->ion->toggleBarriers(needs);
@@ -837,8 +874,10 @@ ion::ToggleBarriers(JSCompartment *comp, bool needs)
             script->baseline->toggleBarriers(needs);
     }
 
-    if (comp->ionCompartment())
-        comp->ionCompartment()->toggleBaselineStubBarriers(needs);
+    for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
+        if (comp->ionCompartment())
+            comp->ionCompartment()->toggleBaselineStubBarriers(needs);
+    }
 }
 
 namespace js {
@@ -995,6 +1034,17 @@ OptimizeMIR(MIRGenerator *mir)
             return false;
     }
 
+    if (js_IonOptions.eaa) {
+        EffectiveAddressAnalysis eaa(graph);
+        if (!eaa.analyze())
+            return false;
+        IonSpewPass("Effective Address Analysis");
+        AssertExtendedGraphCoherency(graph);
+
+        if (mir->shouldCancel("Effective Address Analysis"))
+            return false;
+    }
+
     if (!EliminateDeadCode(mir, graph))
         return false;
     IonSpewPass("DCE");
@@ -1030,7 +1080,7 @@ OptimizeMIR(MIRGenerator *mir)
 }
 
 CodeGenerator *
-GenerateLIR(MIRGenerator *mir)
+GenerateLIR(MIRGenerator *mir, MacroAssembler *maybeMasm = NULL)
 {
     MIRGraph &graph = mir->graph();
 
@@ -1104,21 +1154,33 @@ GenerateLIR(MIRGenerator *mir)
     if (mir->shouldCancel("Allocate Registers"))
         return NULL;
 
-    CodeGenerator *codegen = js_new<CodeGenerator>(mir, lir);
-    if (!codegen || !codegen->generate()) {
+    CodeGenerator *codegen = js_new<CodeGenerator>(mir, lir, maybeMasm);
+    if (!codegen) {
         js_delete(codegen);
         return NULL;
+    }
+
+    if (mir->compilingAsmJS()) {
+        if (!codegen->generateAsmJS()) {
+            js_delete(codegen);
+            return NULL;
+        }
+    } else {
+        if (!codegen->generate()) {
+            js_delete(codegen);
+            return NULL;
+        }
     }
 
     return codegen;
 }
 
 CodeGenerator *
-CompileBackEnd(MIRGenerator *mir)
+CompileBackEnd(MIRGenerator *mir, MacroAssembler *maybeMasm)
 {
     if (!OptimizeMIR(mir))
         return NULL;
-    return GenerateLIR(mir);
+    return GenerateLIR(mir, maybeMasm);
 }
 
 class SequentialCompileContext {
@@ -1152,7 +1214,7 @@ AttachFinishedCompilations(JSContext *cx)
 
         if (CodeGenerator *codegen = builder->backgroundCodegen()) {
             RootedScript script(cx, builder->script());
-            IonContext ictx(cx, cx->compartment, &builder->temp());
+            IonContext ictx(cx, &builder->temp());
 
             // Root the assembler until the builder is finished below. As it
             // was constructed off thread, the assembler has not been rooted
@@ -1215,7 +1277,7 @@ IonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, 
     if (!temp)
         return AbortReason_Alloc;
 
-    IonContext ictx(cx, cx->compartment, temp);
+    IonContext ictx(cx, temp);
 
     types::AutoEnterAnalysis enter(cx);
 
@@ -1832,7 +1894,7 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
     RootedValue result(cx, Int32Value(numActualArgs));
     {
         AssertCompartmentUnchanged pcc(cx);
-        IonContext ictx(cx, cx->compartment, NULL);
+        IonContext ictx(cx, NULL);
         IonActivation activation(cx, fp);
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
         AutoFlushInhibitor afi(cx->compartment->ionCompartment());
@@ -2072,7 +2134,7 @@ InvalidateActivation(FreeOp *fop, uint8_t *ionTop, bool invalidateAll)
         // Purge ICs before we mark this script as invalidated. This will
         // prevent lastJump_ from appearing to be a bogus pointer, just
         // in case anyone tries to read it.
-        ionScript->purgeCaches(script->compartment());
+        ionScript->purgeCaches(script->zone());
 
         // This frame needs to be invalidated. We do the following:
         //
@@ -2133,18 +2195,19 @@ InvalidateActivation(FreeOp *fop, uint8_t *ionTop, bool invalidateAll)
 }
 
 void
-ion::InvalidateAll(FreeOp *fop, JSCompartment *c)
+ion::InvalidateAll(FreeOp *fop, Zone *zone)
 {
-    if (!c->ionCompartment())
-        return;
+    for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
+        if (!comp->ionCompartment())
+            continue;
+        CancelOffThreadIonCompile(comp, NULL);
+        FinishAllOffThreadCompilations(comp->ionCompartment());
+    }
 
-    CancelOffThreadIonCompile(c, NULL);
-
-    FinishAllOffThreadCompilations(c->ionCompartment());
     for (IonActivationIterator iter(fop->runtime()); iter.more(); ++iter) {
-        if (iter.activation()->compartment() == c) {
-            IonContext ictx(NULL, c, NULL);
-            AutoFlushCache afc ("InvalidateAll", c->ionCompartment());
+        if (iter.activation()->compartment()->zone() == zone) {
+            IonContext ictx(zone->rt);
+            AutoFlushCache afc("InvalidateAll", zone->rt->ionRuntime());
             IonSpew(IonSpew_Invalidate, "Invalidating all frames for GC");
             InvalidateActivation(fop, iter.top(), true);
         }
@@ -2367,33 +2430,36 @@ void
 AutoFlushCache::updateTop(uintptr_t p, size_t len)
 {
     IonContext *ictx = GetIonContext();
-    IonCompartment *icmp = ictx->compartment->ionCompartment();
-    AutoFlushCache *afc = icmp->flusher();
+    IonRuntime *irt = ictx->runtime->ionRuntime();
+    AutoFlushCache *afc = irt->flusher();
     afc->update(p, len);
 }
 
-AutoFlushCache::AutoFlushCache(const char *nonce, IonCompartment *comp)
+AutoFlushCache::AutoFlushCache(const char *nonce, IonRuntime *rt)
   : start_(0),
     stop_(0),
     name_(nonce),
     used_(false)
 {
     if (CurrentIonContext() != NULL)
-        comp = GetIonContext()->compartment->ionCompartment();
+        rt = GetIonContext()->runtime->ionRuntime();
+
     // If a compartment isn't available, then be a nop, nobody will ever see this flusher
-    if (comp) {
-        if (comp->flusher())
+    if (rt) {
+        if (rt->flusher())
             IonSpew(IonSpew_CacheFlush, "<%s ", nonce);
         else
             IonSpewCont(IonSpew_CacheFlush, "<%s ", nonce);
-        comp->setFlusher(this);
+        rt->setFlusher(this);
     } else {
         IonSpew(IonSpew_CacheFlush, "<%s DEAD>\n", nonce);
     }
-    myCompartment_ = comp;
+    runtime_ = rt;
 }
 
-AutoFlushInhibitor::AutoFlushInhibitor(IonCompartment *ic) : ic_(ic), afc(NULL)
+AutoFlushInhibitor::AutoFlushInhibitor(IonCompartment *ic)
+  : ic_(ic),
+    afc(NULL)
 {
     if (!ic)
         return;
@@ -2420,12 +2486,13 @@ AutoFlushInhibitor::~AutoFlushInhibitor()
 int js::ion::LabelBase::id_count = 0;
 
 void
-ion::PurgeCaches(RawScript script, JSCompartment *c) {
+ion::PurgeCaches(RawScript script, Zone *zone)
+{
     if (script->hasIonScript())
-        script->ion->purgeCaches(c);
+        script->ion->purgeCaches(zone);
 
     if (script->hasParallelIonScript())
-        script->parallelIon->purgeCaches(c);
+        script->parallelIon->purgeCaches(zone);
 }
 
 size_t

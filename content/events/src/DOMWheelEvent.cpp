@@ -124,7 +124,7 @@ DOMWheelEvent::GetDeltaMode(uint32_t* aDeltaMode)
 
 nsresult
 DOMWheelEvent::InitFromCtor(const nsAString& aType,
-                            JSContext* aCx, jsval* aVal)
+                            JSContext* aCx, JS::Value* aVal)
 {
   mozilla::idl::WheelEventInit d;
   nsresult rv = d.Init(aCx, aVal);

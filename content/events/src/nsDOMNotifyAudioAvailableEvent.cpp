@@ -64,7 +64,7 @@ nsDOMNotifyAudioAvailableEvent::~nsDOMNotifyAudioAvailableEvent()
 }
 
 NS_IMETHODIMP
-nsDOMNotifyAudioAvailableEvent::GetFrameBuffer(JSContext* aCx, jsval* aResult)
+nsDOMNotifyAudioAvailableEvent::GetFrameBuffer(JSContext* aCx, JS::Value* aResult)
 {
   if (!mAllowAudioData) {
     // Media is not same-origin, don't allow the data out.

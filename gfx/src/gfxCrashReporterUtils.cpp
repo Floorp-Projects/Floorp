@@ -12,6 +12,7 @@
 #ifdef MOZ_GFXFEATUREREPORTER
 #include "nsExceptionHandler.h"
 #include "nsString.h"
+#include "nsTArray.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "nsAutoPtr.h"

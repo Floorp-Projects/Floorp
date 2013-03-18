@@ -14,6 +14,10 @@ const char* kSmsFailedObserverTopic          = "sms-failed";
 const char* kSmsDeliverySuccessObserverTopic = "sms-delivery-success";
 const char* kSmsDeliveryErrorObserverTopic   = "sms-delivery-error";
 
+const char* kMmsSendingObserverTopic         = "mms-sending";
+const char* kMmsSentObserverTopic            = "mms-sent";
+const char* kMmsFailedObserverTopic          = "mms-failed";
+
 } // namespace mobilemessage
 } // namespace dom
 } // namespace mozilla

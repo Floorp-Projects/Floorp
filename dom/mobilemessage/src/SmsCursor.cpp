@@ -31,7 +31,7 @@ SmsCursor::SmsCursor()
 {
 }
 
-SmsCursor::SmsCursor(int32_t aListId, nsISmsRequest* aRequest)
+SmsCursor::SmsCursor(int32_t aListId, nsIMobileMessageCallback* aRequest)
   : mListId(aListId)
   , mRequest(aRequest)
 {
@@ -86,7 +86,7 @@ SmsCursor::Continue()
     do_GetService(MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(mobileMessageDBService, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsISmsRequest> forwarder = new SmsRequestForwarder(request);
+  nsCOMPtr<nsIMobileMessageCallback> forwarder = new SmsRequestForwarder(request);
   mobileMessageDBService->GetNextMessageInList(mListId, forwarder);
 
   // We intenionally increase the refcount. The release will be called

@@ -56,7 +56,6 @@ interface nsIExceptionService : nsIExceptionManager
 
 
 %{ C++
-#define NS_EXCEPTIONSERVICE_CLASSNAME "Exception Service"
 // {35A88F54-F267-4414-92A7-191F6454AB52}
 #define NS_EXCEPTIONSERVICE_CID \
 { 0x35a88f54, 0xf267, 0x4414, { 0x92, 0xa7, 0x19, 0x1f, 0x64, 0x54, 0xab, 0x52 } }
