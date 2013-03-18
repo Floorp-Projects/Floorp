@@ -1909,7 +1909,14 @@ CSPViolationReportListener.prototype = {
   function(request, context) { },
 
   onDataAvailable:
-  function(request, context, inputStream, offset, count) { },
+  function(request, context, inputStream, offset, count) {
+    // We MUST read equal to count from the inputStream to avoid an assertion.
+    var input = Components.classes['@mozilla.org/scriptableinputstream;1']
+                .createInstance(Ci.nsIScriptableInputStream);
+
+    input.init(inputStream);
+    input.read(count);
+  },
 
 };
 
