@@ -49,6 +49,7 @@
 #ifdef JS_ION
 #include "ion/Ion.h"
 #include "ion/IonFrames.h"
+#include "ion/AsmJSModule.h"
 #endif
 
 #ifdef JS_METHODJIT
@@ -1405,6 +1406,31 @@ JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
         js_ReportOutOfMemory(cx);
     return NULL;
 }
+
+#ifdef XP_MACOSX
+PRLock *JSRuntime::runtimeListLock_ = NULL;
+JSRuntime *JSRuntime::runtimeListHead_ = NULL;
+
+AsmJSActivation*
+JSRuntime::findAsmJSActivationForPC(void *pc)
+{
+    PR_Lock(runtimeListLock_);
+
+    AsmJSActivation *activation = NULL;
+
+    JSRuntime *r = runtimeListHead_;
+    while (r) {
+        activation = r->mainThread.asmJSActivationStackFromAnyThread();
+        if (activation && activation->module().pcIsInModule(pc))
+            break;
+        activation = NULL;
+        r = r->runtimeListNext_;
+    }
+
+    PR_Unlock(runtimeListLock_);
+    return activation;
+}
+#endif
 
 void
 JSContext::purge()
