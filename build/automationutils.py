@@ -310,38 +310,39 @@ def processSingleLeakFile(leakLogFileName, PID, processType, leakThreshold):
   if PID and processType:
     processString = "| %s process %s " % (processType, PID)
 
+  crashedOnPurpose = False
+  totalBytesLeaked = None
+  leakAnalysis = []
+  leakedObjectNames = []
   with open(leakLogFileName, "r") as leaks:
-    for line in leaks:
-      matches = lineRe.match(line)
-      if (matches and
-          int(matches.group("numLeaked")) == 0 and
-          matches.group("name") != "TOTAL"):
-        continue
-      log.info(line.rstrip())
-
-    crashedOnPurpose = False
-    totalBytesLeaked = None
-    leakedObjectNames = []
     for line in leaks:
       if line.find("purposefully crash") > -1:
         crashedOnPurpose = True
       matches = lineRe.match(line)
       if not matches:
+        # eg: the leak table header row
+        log.info(line.rstrip())
         continue
       name = matches.group("name")
       size = int(matches.group("size"))
       bytesLeaked = int(matches.group("bytesLeaked"))
       numLeaked = int(matches.group("numLeaked"))
+      # Output the raw line from the leak log table if it is the TOTAL row,
+      # or is for an object row that has been leaked.
+      if numLeaked != 0 or name == "TOTAL":
+        log.info(line.rstrip())
+      # Analyse the leak log, but output later or it will interrupt the leak table
       if name == "TOTAL":
         totalBytesLeaked = bytesLeaked
       if size < 0 or bytesLeaked < 0 or numLeaked < 0:
-        log.info("TEST-UNEXPECTED-FAIL %s| leakcheck | negative leaks caught!" %
-                 processString)
+        leakAnalysis.append("TEST-UNEXPECTED-FAIL %s| leakcheck | negative leaks caught!"
+                            % processString)
         continue
       if name != "TOTAL" and numLeaked != 0:
         leakedObjectNames.append(name)
-        log.info("TEST-INFO %s| leakcheck | leaked %d %s (%s bytes)"
-                 % (processString, numLeaked, name, bytesLeaked))
+        leakAnalysis.append("TEST-INFO %s| leakcheck | leaked %d %s (%s bytes)"
+                            % (processString, numLeaked, name, bytesLeaked))
+  log.info('\n'.join(leakAnalysis))
 
   if totalBytesLeaked is None:
     # We didn't see a line with name 'TOTAL'
