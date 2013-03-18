@@ -677,6 +677,18 @@ struct JSRuntime : js::RuntimeFriendFields,
     void assertValidThread() const {}
 #endif
 
+#ifdef XP_MACOSX
+    // On OSX, we need a way to find all the live runtimes from an arbitrary
+    // thread (specifically, the exception thread, for fixing up Odin
+    // accesses).
+  private:
+    static PRLock *runtimeListLock_;
+    static JSRuntime *runtimeListHead_;
+    JSRuntime *runtimeListNext_;
+  public:
+    static js::AsmJSActivation* findAsmJSActivationForPC(void *pc);
+#endif
+
     /* Keeper of the contiguous stack used by all contexts in this thread. */
     js::StackSpace stackSpace;
 

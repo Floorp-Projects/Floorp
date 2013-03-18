@@ -89,8 +89,9 @@
 #include "methodjit/Logging.h"
 #endif
 
-#ifdef JS_METHODJIT
+#ifdef JS_ION
 #include "ion/Ion.h"
+#include "ion/AsmJSModule.h"
 #endif
 
 using namespace js;
@@ -967,6 +968,19 @@ JSRuntime::init(uint32_t maxbytes)
         return false;
 
     nativeStackBase = GetNativeStackBase();
+
+#ifdef XP_MACOSX
+    if (!runtimeListLock_) {
+        runtimeListLock_ = PR_NewLock();
+        runtimeListHead_ = NULL;
+    }
+
+    PR_Lock(runtimeListLock_);
+    runtimeListNext_ = runtimeListHead_;
+    runtimeListHead_ = this;
+    PR_Unlock(runtimeListLock_);
+#endif
+
     return true;
 }
 
@@ -974,6 +988,27 @@ JSRuntime::~JSRuntime()
 {
 #ifdef JS_THREADSAFE
     clearOwnerThread();
+#endif
+
+#ifdef XP_MACOSX
+    {
+        PR_Lock(runtimeListLock_);
+        JSRuntime *r = runtimeListHead_;
+        // find ourselves to remove us from the list
+        if (r == this) {
+            runtimeListHead_ = runtimeListNext_;
+        } else {
+            // look for the node that has us in the next
+            // pointer
+            while (r && r->runtimeListNext_ != this)
+                r = r->runtimeListNext_;
+            JS_ASSERT(r);
+            r->runtimeListNext_ = runtimeListNext_;
+        }
+
+        runtimeListNext_ = NULL;
+        PR_Unlock(runtimeListLock_);
+    }
 #endif
 
     /*
