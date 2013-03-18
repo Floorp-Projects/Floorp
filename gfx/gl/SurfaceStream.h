@@ -8,7 +8,7 @@
 
 #include <stack>
 #include <set>
-#include "mozilla/Monitor.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/Attributes.h"
 #include "gfxPoint.h"
 #include "SurfaceTypes.h"
@@ -48,7 +48,7 @@ protected:
     SharedSurface* mProducer;
     std::set<SharedSurface*> mSurfaces;
     std::stack<SharedSurface*> mScraps;
-    mutable Monitor mMonitor;
+    mutable Mutex mMutex;
     bool mIsAlive;
 
     // |previous| can be null, indicating this is the first one.
@@ -56,7 +56,7 @@ protected:
     SurfaceStream(SurfaceStreamType type, SurfaceStream* prevStream)
         : mType(type)
         , mProducer(nullptr)
-        , mMonitor("SurfaceStream monitor")
+        , mMutex("SurfaceStream mutex")
         , mIsAlive(true)
     {
         MOZ_ASSERT(!prevStream || mType != prevStream->mType,
@@ -106,8 +106,6 @@ public:
      */
     virtual SharedSurface* SwapProducer(SurfaceFactory* factory,
                                         const gfxIntSize& size) = 0;
-
-    virtual SharedSurface* Resize(SurfaceFactory* factory, const gfxIntSize& size);
 
 protected:
     // SwapCons will return the same surface more than once,
@@ -171,9 +169,6 @@ protected:
     SharedSurface* mStaging;
     SharedSurface* mConsumer;
 
-    // Returns true if we were able to wait, false if not
-    virtual bool WaitForCompositor() { return false; }
-
 public:
     SurfaceStream_TripleBuffer(SurfaceStream* prevStream);
     virtual ~SurfaceStream_TripleBuffer();
@@ -185,17 +180,6 @@ public:
     virtual SharedSurface* SwapConsumer_NoWait();
 
     virtual void SurrenderSurfaces(SharedSurface*& producer, SharedSurface*& consumer);
-};
-
-class SurfaceStream_TripleBuffer_Async
-    : public SurfaceStream_TripleBuffer
-{
-protected:
-    virtual bool WaitForCompositor();
-
-public:
-    SurfaceStream_TripleBuffer_Async(SurfaceStream* prevStream);
-    virtual ~SurfaceStream_TripleBuffer_Async();
 };
 
 
