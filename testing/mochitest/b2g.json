@@ -259,6 +259,7 @@
 	"dom/imptests/webapps/DOMCore/tests/approved/test_Range-extractContents.html":"",
 	"dom/imptests/webapps/DOMCore/tests/approved/test_Range-insertNode.html":"",
 	"dom/imptests/webapps/DOMCore/tests/approved/test_Range-surroundContents.html":"",
+	"dom/imptests/webapps/DOMCore/tests/approved/test_Range-mutations.html":" Test timed out.",
 	"dom/indexedDB/": "",
 	"dom/mobilemessage/tests/test_sms_basics.html": "",
 	"dom/media/tests/mochitest/test_getUserMedia_exceptions.html":"",

@@ -329,9 +329,6 @@ def main():
     with open(options.depend, 'w') as depfile:
         depfile.write("%s : %s\n" % (options.target, ' '.join(dep for dep in deps if os.path.isfile(dep) and dep != options.target)))
 
-        for dep in deps:
-            if os.path.isfile(dep) and dep != options.target:
-                depfile.write("%s :\n" % dep)
 
 if __name__ == '__main__':
     main()

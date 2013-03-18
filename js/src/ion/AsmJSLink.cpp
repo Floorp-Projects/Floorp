@@ -17,6 +17,8 @@ using namespace js;
 using namespace js::ion;
 using namespace mozilla;
 
+#ifdef JS_ASMJS
+
 static bool
 LinkFail(JSContext *cx, const char *str)
 {
@@ -403,3 +405,5 @@ js::LinkAsmJS(JSContext *cx, StackFrame *fp, MutableHandleValue rval)
     rval.set(ObjectValue(*obj));
     return true;
 }
+
+#endif  // defined(JS_ASMJS)

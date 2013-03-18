@@ -38,7 +38,6 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_SVG_FE_COMPONENT_TRANSFER_FUNCTION_ELEMENT_CID)
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGCOMPONENTTRANSFERFUNCTIONELEMENT
 
   virtual bool AttributeAffectsRendering(
           int32_t aNameSpaceID, nsIAtom* aAttribute) const;
@@ -62,7 +61,6 @@ protected:
   virtual EnumAttributesInfo GetEnumInfo();
   virtual NumberListAttributesInfo GetNumberListInfo();
 
-  // nsIDOMSVGComponentTransferFunctionElement properties:
   enum { TABLEVALUES };
   SVGAnimatedNumberList mNumberListAttributes[1];
   static NumberListInfo sNumberListInfo[1];
@@ -87,24 +85,20 @@ namespace mozilla {
 namespace dom {
 
 class SVGFEFuncRElement : public SVGComponentTransferFunctionElement,
-                          public nsIDOMSVGFEFuncRElement
+                          public nsIDOMSVGElement
 {
   friend nsresult (::NS_NewSVGFEFuncRElement(
     nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo));
 protected:
-  SVGFEFuncRElement(already_AddRefed<nsINodeInfo> aNodeInfo) 
+  SVGFEFuncRElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : SVGComponentTransferFunctionElement(aNodeInfo) {}
 
 public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_FORWARD_NSIDOMSVGCOMPONENTTRANSFERFUNCTIONELEMENT(SVGComponentTransferFunctionElement::)
-
-  NS_DECL_NSIDOMSVGFEFUNCRELEMENT
-
   virtual int32_t GetChannel() { return 0; }
-  
+
   NS_FORWARD_NSIDOMSVGELEMENT(SVGComponentTransferFunctionElement::)
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
@@ -127,21 +121,17 @@ namespace mozilla {
 namespace dom {
 
 class SVGFEFuncGElement : public SVGComponentTransferFunctionElement,
-                          public nsIDOMSVGFEFuncGElement
+                          public nsIDOMSVGElement
 {
   friend nsresult (::NS_NewSVGFEFuncGElement(
     nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo));
 protected:
-  SVGFEFuncGElement(already_AddRefed<nsINodeInfo> aNodeInfo) 
+  SVGFEFuncGElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : SVGComponentTransferFunctionElement(aNodeInfo) {}
 
 public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
-
-  NS_FORWARD_NSIDOMSVGCOMPONENTTRANSFERFUNCTIONELEMENT(SVGComponentTransferFunctionElement::)
-
-  NS_DECL_NSIDOMSVGFEFUNCGELEMENT
 
   virtual int32_t GetChannel() { return 1; }
 
@@ -167,21 +157,17 @@ namespace mozilla {
 namespace dom {
 
 class SVGFEFuncBElement : public SVGComponentTransferFunctionElement,
-                          public nsIDOMSVGFEFuncBElement
+                          public nsIDOMSVGElement
 {
   friend nsresult (::NS_NewSVGFEFuncBElement(
     nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo));
 protected:
-  SVGFEFuncBElement(already_AddRefed<nsINodeInfo> aNodeInfo) 
+  SVGFEFuncBElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : SVGComponentTransferFunctionElement(aNodeInfo) {}
 
 public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
-
-  NS_FORWARD_NSIDOMSVGCOMPONENTTRANSFERFUNCTIONELEMENT(SVGComponentTransferFunctionElement::)
-
-  NS_DECL_NSIDOMSVGFEFUNCBELEMENT
 
   virtual int32_t GetChannel() { return 2; }
 
@@ -207,21 +193,17 @@ namespace mozilla {
 namespace dom {
 
 class SVGFEFuncAElement : public SVGComponentTransferFunctionElement,
-                          public nsIDOMSVGFEFuncAElement
+                          public nsIDOMSVGElement
 {
   friend nsresult (::NS_NewSVGFEFuncAElement(
     nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo));
 protected:
-  SVGFEFuncAElement(already_AddRefed<nsINodeInfo> aNodeInfo) 
+  SVGFEFuncAElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : SVGComponentTransferFunctionElement(aNodeInfo) {}
 
 public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
-
-  NS_FORWARD_NSIDOMSVGCOMPONENTTRANSFERFUNCTIONELEMENT(SVGComponentTransferFunctionElement::)
-
-  NS_DECL_NSIDOMSVGFEFUNCAELEMENT
 
   virtual int32_t GetChannel() { return 3; }
 
