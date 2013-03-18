@@ -2879,7 +2879,7 @@ GLContext::CreateScreenBufferImpl(const gfxIntSize& size, const SurfaceCaps& cap
     if (!newScreen)
         return false;
 
-    if (!newScreen->Resize(size)) {
+    if (!newScreen->PublishFrame(size)) {
         delete newScreen;
         return false;
     }
@@ -2901,7 +2901,7 @@ GLContext::ResizeScreenBuffer(const gfxIntSize& size)
     if (!IsOffscreenSizeAllowed(size))
         return false;
 
-    return mScreen->Resize(size);
+    return mScreen->PublishFrame(size);
 }
 
 
