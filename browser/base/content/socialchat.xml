@@ -16,6 +16,7 @@
       </xul:hbox>
       <xul:iframe anonid="iframe" class="chat-frame" flex="1"
                   context="contentAreaContextMenu"
+                  tooltip="aHTMLTooltip"
                   xbl:inherits="src,origin,collapsed=minimized" type="content"/>
     </content>
 

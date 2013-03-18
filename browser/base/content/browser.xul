@@ -1101,6 +1101,7 @@
                type="content"
                context="contentAreaContextMenu"
                disableglobalhistory="true"
+               tooltip="aHTMLTooltip"
                flex="1"
                style="min-width: 14em; width: 18em; max-width: 36em;"/>
     </vbox>
