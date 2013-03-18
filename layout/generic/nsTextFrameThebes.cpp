@@ -4593,7 +4593,7 @@ public:
 void
 nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) {
-  PROFILER_LABEL("nsDisplayText", "Paint");
+  SAMPLE_LABEL("nsDisplayText", "Paint");
   // Add 1 pixel of dirty area around mVisibleRect to allow us to paint
   // antialiased pixels beyond the measured text extents.
   // This is temporary until we do this in the actual calculation of text extents.
@@ -5390,7 +5390,7 @@ nsTextFrame::PaintOneShadow(uint32_t aOffset, uint32_t aLength,
                             const nsCharClipDisplayItem::ClipEdges& aClipEdges,
                             nscoord aLeftSideOffset, gfxRect& aBoundingBox)
 {
-  PROFILER_LABEL("nsTextFrame", "PaintOneShadow");
+  SAMPLE_LABEL("nsTextFrame", "PaintOneShadow");
   gfxPoint shadowOffset(aShadowDetails->mXOffset, aShadowDetails->mYOffset);
   nscoord blurRadius = std::max(aShadowDetails->mRadius, 0);
 

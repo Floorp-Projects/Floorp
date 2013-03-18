@@ -60,7 +60,7 @@ public:
   }
 
   static void Record(Event ev) {
-    PROFILER_MARKER(Describe(ev));
+    SAMPLE_MARKER(Describe(ev));
     Record(ev, PR_Now());
   }
 

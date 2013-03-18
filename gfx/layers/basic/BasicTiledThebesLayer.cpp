@@ -108,7 +108,7 @@ BasicTiledLayerBuffer::PaintThebes(BasicTiledThebesLayer* aLayer,
   if (useSinglePaintBuffer) {
     const nsIntRect bounds = aPaintRegion.GetBounds();
     {
-      PROFILER_LABEL("BasicTiledLayerBuffer", "PaintThebesSingleBufferAlloc");
+      SAMPLE_LABEL("BasicTiledLayerBuffer", "PaintThebesSingleBufferAlloc");
       mSinglePaintBuffer = new gfxImageSurface(
         gfxIntSize(ceilf(bounds.width * mResolution),
                    ceilf(bounds.height * mResolution)),
@@ -125,7 +125,7 @@ BasicTiledLayerBuffer::PaintThebes(BasicTiledThebesLayer* aLayer,
     }
     start = PR_IntervalNow();
 #endif
-    PROFILER_LABEL("BasicTiledLayerBuffer", "PaintThebesSingleBufferDraw");
+    SAMPLE_LABEL("BasicTiledLayerBuffer", "PaintThebesSingleBufferDraw");
 
     mCallback(mThebesLayer, ctxt, aPaintRegion, nsIntRegion(), mCallbackData);
   }
@@ -145,7 +145,7 @@ BasicTiledLayerBuffer::PaintThebes(BasicTiledThebesLayer* aLayer,
   start = PR_IntervalNow();
 #endif
 
-  PROFILER_LABEL("BasicTiledLayerBuffer", "PaintThebesUpdate");
+  SAMPLE_LABEL("BasicTiledLayerBuffer", "PaintThebesUpdate");
   Update(aNewValidRegion, aPaintRegion);
 
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
@@ -221,7 +221,7 @@ BasicTiledLayerBuffer::ValidateTile(BasicTiledLayerTile aTile,
                                     const nsIntRegion& aDirtyRegion)
 {
 
-  PROFILER_LABEL("BasicTiledLayerBuffer", "ValidateTile");
+  SAMPLE_LABEL("BasicTiledLayerBuffer", "ValidateTile");
 
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
   if (aDirtyRegion.IsComplex()) {
@@ -311,7 +311,7 @@ BasicTiledThebesLayer::ComputeProgressiveUpdateRegion(BasicTiledLayerBuffer& aTi
   if (BasicManager()->ProgressiveUpdateCallback(!staleRegion.Contains(aInvalidRegion),
                                                 viewport,
                                                 scaleX, scaleY, !drawingLowPrecision)) {
-    PROFILER_MARKER("Abort painting");
+    SAMPLE_MARKER("Abort painting");
     aRegionToPaint.SetEmpty();
     return aIsRepeated;
   }
