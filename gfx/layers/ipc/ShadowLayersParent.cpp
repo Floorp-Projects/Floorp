@@ -422,11 +422,14 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       RenderTraceInvalidateStart(canvas, "FF00FF", canvas->GetVisibleRegion().GetBounds());
 
       canvas->SetAllocator(this);
-      CanvasSurface newBack;
+      CanvasSurface newBack = CanvasSurface(null_t());
       canvas->Swap(op.newFrontBuffer(), op.needYFlip(), &newBack);
       canvas->Updated();
-      replyv.push_back(OpBufferSwap(shadow, NULL,
-                                    newBack));
+
+      if (newBack.type() != CanvasSurface::Tnull_t) {
+        replyv.push_back(OpBufferSwap(shadow, NULL,
+                                      newBack));
+      }
 
       RenderTraceInvalidateEnd(canvas, "FF00FF");
       break;
