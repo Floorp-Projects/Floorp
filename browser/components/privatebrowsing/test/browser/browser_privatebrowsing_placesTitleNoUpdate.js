@@ -10,7 +10,7 @@ Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
 function test() {
   waitForExplicitFinish();
-  const TEST_URL = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/perwindow/browser_privatebrowsing_placesTitleNoUpdate.html"
+  const TEST_URL = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/browser_privatebrowsing_placesTitleNoUpdate.html"
   const TEST_URI = Services.io.newURI(TEST_URL, null, null);
   const TITLE_1 = "Title 1";
   const TITLE_2 = "Title 2";

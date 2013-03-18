@@ -8,7 +8,7 @@
 function test() {
   // initialization
   const TEST_URL = "http://mochi.test:8888/browser/browser/components/" +
-                   "privatebrowsing/test/browser/perwindow/" +
+                   "privatebrowsing/test/browser/" +
                    "browser_privatebrowsing_cookieacceptdialog.html";
   const BLANK_URL = "http://mochi.test:8888/";
   let cp = Cc["@mozilla.org/embedcomp/cookieprompt-service;1"].

@@ -8,7 +8,7 @@ function test() {
   // initialization
   waitForExplicitFinish();
 
-  let testURI = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/perwindow/popup.html";
+  let testURI = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/popup.html";
   let windowsToClose = [];
   let oldPopupPolicy = gPrefService.getBoolPref("dom.disable_open_during_load");
   gPrefService.setBoolPref("dom.disable_open_during_load", true);
