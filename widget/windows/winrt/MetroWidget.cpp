@@ -1223,6 +1223,12 @@ MetroWidget::NotifyIMEOfTextChange(uint32_t aStart,
   return nsTextStore::OnTextChange(aStart, aOldEnd, aNewEnd);
 }
 
+nsIMEUpdatePreference
+MetroWidget::GetIMEUpdatePreference()
+{
+  return nsTextStore::GetIMEUpdatePreference();
+}
+
 NS_IMETHODIMP
 MetroWidget::ReparentNativeWidget(nsIWidget* aNewParent)
 {
