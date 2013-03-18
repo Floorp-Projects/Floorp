@@ -35,7 +35,7 @@
 #include "SQLCollations.h"
 #include "FileSystemModule.h"
 #include "mozStorageHelper.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 #include "prlog.h"
 #include "prprf.h"

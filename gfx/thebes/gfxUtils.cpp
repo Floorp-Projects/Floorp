@@ -10,7 +10,7 @@
 #include "nsRegion.h"
 #include "yuv_convert.h"
 #include "ycbcr_to_rgb565.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"

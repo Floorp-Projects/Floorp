@@ -20,7 +20,7 @@
 #include "nsRuleNode.h"
 #include "nsStyleContext.h"
 #include "nsStyleAnimation.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 #ifdef DEBUG
 // #define NOISY_DEBUG
