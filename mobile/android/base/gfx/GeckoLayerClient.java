@@ -370,14 +370,6 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
      */
     public void setFixedLayerMargins(float left, float top, float right, float bottom) {
         ImmutableViewportMetrics oldMetrics = getViewportMetrics();
-        if (oldMetrics.fixedLayerMarginLeft == left &&
-            oldMetrics.fixedLayerMarginTop == top &&
-            oldMetrics.fixedLayerMarginRight == right &&
-            oldMetrics.fixedLayerMarginBottom == bottom) {
-            // Do nothing if the margins haven't changed.
-            return;
-        }
-
         ImmutableViewportMetrics newMetrics = oldMetrics.setFixedLayerMargins(left, top, right, bottom);
 
         if (mClampOnMarginChange) {
@@ -415,8 +407,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
             }
         }
 
-        mForceRedraw = true;
-        setViewportMetrics(newMetrics, true, false);
+        setViewportMetrics(newMetrics, false, false);
     }
 
     public void setClampOnFixedLayerMarginsChange(boolean aClamp) {
