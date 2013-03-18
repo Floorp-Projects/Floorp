@@ -283,9 +283,8 @@ def dumpLeakLog(leakLogFile, filter = False):
   if not os.path.exists(leakLogFile):
     return
 
-  leaks = open(leakLogFile, "r")
-  leakReport = leaks.read()
-  leaks.close()
+  with open(leakLogFile, "r") as leaks:
+    leakReport = leaks.read()
 
   # Only |XPCOM_MEM_LEAK_LOG| reports can be actually filtered out.
   # Only check whether an actual leak was reported.
@@ -310,40 +309,39 @@ def processSingleLeakFile(leakLogFileName, PID, processType, leakThreshold):
   processString = ""
   if PID and processType:
     processString = "| %s process %s " % (processType, PID)
-  leaks = open(leakLogFileName, "r")
-  for line in leaks:
-    matches = lineRe.match(line)
-    if (matches and
-        int(matches.group("numLeaked")) == 0 and
-        matches.group("name") != "TOTAL"):
-      continue
-    log.info(line.rstrip())
-  leaks.close()
 
-  leaks = open(leakLogFileName, "r")
-  crashedOnPurpose = False
-  totalBytesLeaked = None
-  leakedObjectNames = []
-  for line in leaks:
-    if line.find("purposefully crash") > -1:
-      crashedOnPurpose = True
-    matches = lineRe.match(line)
-    if not matches:
-      continue
-    name = matches.group("name")
-    size = int(matches.group("size"))
-    bytesLeaked = int(matches.group("bytesLeaked"))
-    numLeaked = int(matches.group("numLeaked"))
-    if name == "TOTAL":
-      totalBytesLeaked = bytesLeaked
-    if size < 0 or bytesLeaked < 0 or numLeaked < 0:
-      log.info("TEST-UNEXPECTED-FAIL %s| leakcheck | negative leaks caught!" %
-               processString)
-      continue
-    if name != "TOTAL" and numLeaked != 0:
-      leakedObjectNames.append(name)
-      log.info("TEST-INFO %s| leakcheck | leaked %d %s (%s bytes)"
-               % (processString, numLeaked, name, bytesLeaked))
+  with open(leakLogFileName, "r") as leaks:
+    for line in leaks:
+      matches = lineRe.match(line)
+      if (matches and
+          int(matches.group("numLeaked")) == 0 and
+          matches.group("name") != "TOTAL"):
+        continue
+      log.info(line.rstrip())
+
+    crashedOnPurpose = False
+    totalBytesLeaked = None
+    leakedObjectNames = []
+    for line in leaks:
+      if line.find("purposefully crash") > -1:
+        crashedOnPurpose = True
+      matches = lineRe.match(line)
+      if not matches:
+        continue
+      name = matches.group("name")
+      size = int(matches.group("size"))
+      bytesLeaked = int(matches.group("bytesLeaked"))
+      numLeaked = int(matches.group("numLeaked"))
+      if name == "TOTAL":
+        totalBytesLeaked = bytesLeaked
+      if size < 0 or bytesLeaked < 0 or numLeaked < 0:
+        log.info("TEST-UNEXPECTED-FAIL %s| leakcheck | negative leaks caught!" %
+                 processString)
+        continue
+      if name != "TOTAL" and numLeaked != 0:
+        leakedObjectNames.append(name)
+        log.info("TEST-INFO %s| leakcheck | leaked %d %s (%s bytes)"
+                 % (processString, numLeaked, name, bytesLeaked))
 
   if totalBytesLeaked is None:
     # We didn't see a line with name 'TOTAL'
@@ -374,7 +372,6 @@ def processSingleLeakFile(leakLogFileName, PID, processType, leakThreshold):
         leakedObjectSummary += ', ...'
       log.info("%s %s| leakcheck | %d bytes leaked (%s)"
                % (prefix, processString, totalBytesLeaked, leakedObjectSummary))
-  leaks.close()
 
 def processLeakLog(leakLogFile, leakThreshold = 0):
   """Process the leak log, including separate leak logs created
