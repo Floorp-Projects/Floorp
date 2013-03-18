@@ -1855,7 +1855,7 @@ nsXMLHttpRequest::OnDataAvailable(nsIRequest *request,
 NS_IMETHODIMP
 nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
-  PROFILER_LABEL("nsXMLHttpRequest", "OnStartRequest");
+  SAMPLE_LABEL("nsXMLHttpRequest", "OnStartRequest");
   nsresult rv = NS_OK;
   if (!mFirstStartRequestSeen && mRequestObserver) {
     mFirstStartRequestSeen = true;
@@ -2041,7 +2041,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 NS_IMETHODIMP
 nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult status)
 {
-  PROFILER_LABEL("content", "nsXMLHttpRequest::OnStopRequest");
+  SAMPLE_LABEL("content", "nsXMLHttpRequest::OnStopRequest");
   if (request != mChannel) {
     // Can this still happen?
     return NS_OK;

@@ -523,7 +523,7 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
                                           void* aCallbackData,
                                           EndTransactionFlags aFlags)
 {
-  PROFILER_LABEL("BasicLayerManager", "EndTranscationInternal");
+  SAMPLE_LABEL("BasicLayerManager", "EndTranscationInternal");
 #ifdef MOZ_LAYERS_HAVE_LOG
   MOZ_LAYERS_LOG(("  ----- (beginning paint)"));
   Log();

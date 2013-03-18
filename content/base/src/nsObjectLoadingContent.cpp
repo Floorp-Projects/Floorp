@@ -822,7 +822,7 @@ NS_IMETHODIMP
 nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
                                        nsISupports *aContext)
 {
-  PROFILER_LABEL("nsObjectLoadingContent", "OnStartRequest");
+  SAMPLE_LABEL("nsObjectLoadingContent", "OnStartRequest");
 
   LOG(("OBJLC [%p]: Channel OnStartRequest", this));
 

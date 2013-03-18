@@ -860,7 +860,7 @@ nsDOMStoragePersistentDB::GetKeyValue(DOMStorageImpl* aStorage,
                                       bool* aSecure)
 {
   Telemetry::AutoTimer<Telemetry::LOCALDOMSTORAGE_GETVALUE_MS> timer;
-  PROFILER_LABEL("nsDOMStoragePersistentDB", "GetKeyValue");
+  SAMPLE_LABEL("nsDOMStoragePersistentDB", "GetKeyValue");
 
   nsresult rv = EnsureScopeLoaded(aStorage);
   NS_ENSURE_SUCCESS(rv, rv);

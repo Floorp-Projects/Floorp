@@ -8215,7 +8215,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
   if (!count)
     return NS_OK;
 
-  PROFILER_LABEL("CSS", "ProcessRestyledFrames");
+  SAMPLE_LABEL("CSS", "ProcessRestyledFrames");
 
   // Make sure to not rebuild quote or counter lists while we're
   // processing restyles

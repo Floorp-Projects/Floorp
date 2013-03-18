@@ -142,7 +142,7 @@ StorageChild::GetKey(bool aCallerSecure, uint32_t aIndex, nsAString& aKey)
 nsIDOMStorageItem*
 StorageChild::GetValue(bool aCallerSecure, const nsAString& aKey, nsresult* rv)
 {
-  PROFILER_LABEL("StorageChild", "GetValue");
+  SAMPLE_LABEL("StorageChild", "GetValue");
   nsresult rv2 = *rv = NS_OK;
   StorageItem storageItem;
   SendGetValue(aCallerSecure, mSessionOnly, nsString(aKey), &storageItem, &rv2);

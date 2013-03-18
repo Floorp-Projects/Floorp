@@ -579,7 +579,7 @@ nsDOMWindowUtils::SendMouseEventToWindow(const nsAString& aType,
                                          float aPressure,
                                          unsigned short aInputSourceArg)
 {
-  PROFILER_LABEL("nsDOMWindowUtils", "SendMouseEventToWindow");
+  SAMPLE_LABEL("nsDOMWindowUtils", "SendMouseEventToWindow");
   return SendMouseEventCommon(aType, aX, aY, aButton, aClickCount, aModifiers,
                               aIgnoreRootScrollFrame, aPressure,
                               aInputSourceArg, true, nullptr);
@@ -1139,7 +1139,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GarbageCollect(nsICycleCollectorListener *aListener,
                                  int32_t aExtraForgetSkippableCalls)
 {
-  PROFILER_LABEL("GC", "GarbageCollect");
+  SAMPLE_LABEL("GC", "GarbageCollect");
   // Always permit this in debug builds.
 #ifndef DEBUG
   if (!nsContentUtils::IsCallerChrome()) {

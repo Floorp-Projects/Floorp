@@ -552,7 +552,7 @@ Statement::Execute()
 NS_IMETHODIMP
 Statement::ExecuteStep(bool *_moreResults)
 {
-  PROFILER_LABEL("storage", "Statement::ExecuteStep");
+  SAMPLE_LABEL("storage", "Statement::ExecuteStep");
   if (!mDBStatement)
     return NS_ERROR_NOT_INITIALIZED;
 
