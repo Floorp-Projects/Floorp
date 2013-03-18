@@ -20,7 +20,7 @@
 #include "ShadowLayerChild.h"
 #include "gfxipc/ShadowLayerUtils.h"
 #include "RenderTrace.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 #include "nsXULAppAPI.h"
 
 using namespace mozilla::ipc;
