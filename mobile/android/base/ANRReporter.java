@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.util.ThreadUtils;
+
 import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -452,10 +454,10 @@ public final class ANRReporter extends BroadcastReceiver
             }
             return;
         }
-        if (GeckoApp.mAppContext != null && GeckoApp.mAppContext.mMainHandler != null) {
+        if (ThreadUtils.getUiHandler() != null) {
             mPendingANR = true;
             // detect when the main thread gets unstuck
-            GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+            ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
                     // okay to reset mPendingANR on main thread
