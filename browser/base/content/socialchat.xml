@@ -162,6 +162,7 @@
         this.cachedWidthOpen = 0;
         this.cachedWidthMinimized = 0;
         this.cachedWidthNub = 0;
+        this._selectedChat = null;
       </constructor>
 
       <field name="innerbox" readonly="true">
