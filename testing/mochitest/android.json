@@ -124,7 +124,7 @@
  "docshell/test/navigation/test_bug430723.html": "TIMED_OUT",
  "docshell/test/navigation/test_popup-navigates-children.html": "bug 783589",
  "docshell/test/navigation/test_sessionhistory.html": "RANDOM",
- "docshell/test/test_bug344861.html": "",
+ "docshell/test/navigation/test_bug344861.html": "",
  "docshell/test/test_bug94514.html": "TIMED_OUT",
  "docshell/test/test_bug413310.html": "",
  "docshell/test/test_bug590573.html": "bug 823022",
