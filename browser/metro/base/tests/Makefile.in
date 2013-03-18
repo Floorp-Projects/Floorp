@@ -15,6 +15,8 @@ BROWSER_TESTS = \
   browser_test.js \
   browser_canonizeURL.js \
   browser_context_ui.js \
+  browser_tiles.js \
+  browser_tilegrid.xul \
   browser_onscreen_keyboard.js \
   browser_onscreen_keyboard.html \
   browser_remotetabs.js \
