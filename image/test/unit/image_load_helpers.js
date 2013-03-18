@@ -15,7 +15,6 @@ const FRAME_UPDATE = 0x02;
 const FRAME_COMPLETE = 0x04;
 const LOAD_COMPLETE = 0x08;
 const DECODE_COMPLETE = 0x10;
-const ALL_BITS = SIZE_AVAILABLE | FRAME_COMPLETE | DECODE_COMPLETE | LOAD_COMPLETE;
 
 // An implementation of imgIScriptedNotificationObserver with the ability to
 // call specified functions on onStartRequest and onStopRequest.
