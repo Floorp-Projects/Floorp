@@ -114,10 +114,10 @@ public:
                                     nsWrapperCache **aCache,
                                     nsresult *aResult);
 
-  virtual nsresult ResolveName(const nsAString& aName,
-                               nsIContent *aForm,
-                               nsISupports **aResult,
-                               nsWrapperCache **aCache);
+  nsISupports* ResolveName(const nsAString& aName, nsWrapperCache **aCache);
+  virtual already_AddRefed<nsISupports> ResolveName(const nsAString& aName,
+                                                    nsIContent *aForm,
+                                                    nsWrapperCache **aCache);
 
   virtual void AddedForm();
   virtual void RemovedForm();
