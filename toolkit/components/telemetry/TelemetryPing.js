@@ -23,12 +23,15 @@ const PAYLOAD_VERSION = 1;
 // submitted ping data with its histogram definition (bug 832007)
 #expand const HISTOGRAMS_FILE_VERSION = "__HISTOGRAMS_FILE_VERSION__";
 
-const PREF_SERVER = "toolkit.telemetry.server";
+const PREF_BRANCH = "toolkit.telemetry.";
+const PREF_SERVER = PREF_BRANCH + "server";
 #ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
-const PREF_ENABLED = "toolkit.telemetry.enabledPreRelease";
+const PREF_ENABLED = PREF_BRANCH + "enabledPreRelease";
 #else
-const PREF_ENABLED = "toolkit.telemetry.enabled";
+const PREF_ENABLED = PREF_BRANCH + "enabled";
 #endif
+const PREF_PREVIOUS_BUILDID = PREF_BRANCH + "previousBuildID";
+
 // Do not gather data more than once a minute
 const TELEMETRY_INTERVAL = 60000;
 // Delay before intializing telemetry (ms)
@@ -182,6 +185,9 @@ TelemetryPing.prototype = {
   // handles retrieving histograms and writing the data to disk.
   _savedSimpleMeasurements: null,
   _savedInfo: null,
+  // The previous build ID, if this is the first run with a new build.
+  // Undefined if this is not the first run, or the previous build ID is unknown.
+  _previousBuildID: undefined,
 
   /**
    * Gets a series of simple measurements (counters). At the moment, this
@@ -385,6 +391,9 @@ TelemetryPing.prototype = {
       revision: HISTOGRAMS_FILE_VERSION,
       locale: getLocale()
     };
+    if (this._previousBuildID) {
+      ret.previousBuildID = this._previousBuildID;
+    }
 
     // sysinfo fields are not always available, get what we can.
     let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
@@ -753,6 +762,22 @@ TelemetryPing.prototype = {
    * Initializes telemetry within a timer. If there is no PREF_SERVER set, don't turn on telemetry.
    */
   setup: function setup() {
+    // Record old value and update build ID preference if this is the first
+    // run with a new build ID.
+    let previousBuildID = undefined;
+    try {
+      previousBuildID = Services.prefs.getCharPref(PREF_PREVIOUS_BUILDID);
+    } catch (e) {
+      // Preference was not set.
+    }
+    let thisBuildID = Services.appinfo.appBuildID;
+    // If there is no previousBuildID preference, this._previousBuildID remains
+    // undefined so no value is sent in the telemetry metadata.
+    if (previousBuildID != thisBuildID) {
+      this._previousBuildID = previousBuildID;
+      Services.prefs.setCharPref(PREF_PREVIOUS_BUILDID, thisBuildID);
+    }
+
 #ifdef MOZILLA_OFFICIAL
     if (!Telemetry.canSend) {
       // We can't send data; no point in initializing observers etc.
