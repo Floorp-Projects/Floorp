@@ -50,6 +50,16 @@ public:
   static WinVersion GetWindowsVersion();
 
   /**
+   * PeekMessage() and GetMessage() are wrapper methods for PeekMessageW(),
+   * GetMessageW(), ITfMessageMgr::PeekMessageW() and
+   * ITfMessageMgr::GetMessageW().
+   * Don't call the native APIs directly.  You MUST use these methods instead.
+   */
+  static bool PeekMessage(LPMSG aMsg, HWND aWnd, UINT aFirstMessage,
+                          UINT aLastMessage, UINT aOption);
+  static bool GetMessage(LPMSG aMsg, HWND aWnd, UINT aFirstMessage,
+                         UINT aLastMessage);
+  /**
    * Gets the value of a string-typed registry value.
    *
    * @param aRoot The registry root to search in.
