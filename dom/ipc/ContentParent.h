@@ -328,7 +328,10 @@ private:
 
     virtual bool RecvShowAlertNotification(const nsString& aImageUrl, const nsString& aTitle,
                                            const nsString& aText, const bool& aTextClickable,
-                                           const nsString& aCookie, const nsString& aName);
+                                           const nsString& aCookie, const nsString& aName,
+                                           const nsString& aBidi, const nsString& aLang);
+
+    virtual bool RecvCloseAlert(const nsString& aName);
 
     virtual bool RecvLoadURIExternal(const URIParams& uri);
 

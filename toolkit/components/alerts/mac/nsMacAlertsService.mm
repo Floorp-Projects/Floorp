@@ -276,7 +276,9 @@ nsMacAlertsService::ShowAlertNotification(const nsAString& aImageUrl,
                                             bool aAlertClickable,
                                             const nsAString& aAlertCookie,
                                             nsIObserver* aAlertListener,
-                                            const nsAString& aAlertName)
+                                            const nsAString& aAlertName,
+                                            const nsAString& aDir,
+                                            const nsAString& aLang)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -319,6 +321,12 @@ nsMacAlertsService::ShowAlertNotification(const nsAString& aImageUrl,
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+NS_IMETHODIMP
+nsMacAlertsService::CloseAlert(const nsAString& aName)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

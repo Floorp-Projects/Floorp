@@ -34,7 +34,9 @@ nsSystemAlertsService::ShowAlertNotification(const nsAString & aImageUrl,
                                              bool aAlertTextClickable,
                                              const nsAString & aAlertCookie,
                                              nsIObserver * aAlertListener,
-                                             const nsAString & aAlertName)
+                                             const nsAString & aAlertName,
+                                             const nsAString & aBidi,
+                                             const nsAString & aLang)
 {
   nsRefPtr<nsAlertsIconListener> alertListener = new nsAlertsIconListener();
   if (!alertListener)
@@ -43,3 +45,10 @@ nsSystemAlertsService::ShowAlertNotification(const nsAString & aImageUrl,
   return alertListener->InitAlertAsync(aImageUrl, aAlertTitle, aAlertText, aAlertTextClickable,
                                        aAlertCookie, aAlertListener);
 }
+
+NS_IMETHODIMP
+nsSystemAlertsService::CloseAlert(const nsAString & aAlertName)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
