@@ -919,7 +919,8 @@ def finalizeHook(descriptor, hookName, context):
     if descriptor.customFinalize:
         finalize = "self->%s(%s);" % (hookName, context)
     else:
-        finalize = "ClearWrapper(self, self);\n" if descriptor.wrapperCache else ""
+        finalize = "JSBindingFinalized<%s>::Finalized(self);\n" % descriptor.nativeType
+        finalize += "ClearWrapper(self, self);\n" if descriptor.wrapperCache else ""
         if descriptor.workers:
             finalize += "self->Release();"
         elif descriptor.nativeOwnership == 'nsisupports':

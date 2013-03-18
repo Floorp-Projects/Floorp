@@ -1667,6 +1667,25 @@ bool
 NativeToString(JSContext* cx, JSObject* wrapper, JSObject* obj, const char* pre,
                const char* post, JS::Value* v);
 
+HAS_MEMBER(JSBindingFinalized)
+
+template<class T, bool hasCallback=HasJSBindingFinalizedMember<T>::Value>
+struct JSBindingFinalized
+{
+  static void Finalized(T* self)
+  {
+  }
+};
+
+template<class T>
+struct JSBindingFinalized<T, true>
+{
+  static void Finalized(T* self)
+  {
+    self->JSBindingFinalized();
+  }
+};
+
 nsresult
 ReparentWrapper(JSContext* aCx, JSObject* aObj);
 
