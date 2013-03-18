@@ -4392,12 +4392,14 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
         script->bindings = funbox->bindings;
 
+#ifdef JS_ION
         // Do asm.js compilation at the beginning of emitting to avoid
         // compiling twice when JS_BufferIsCompilableUnit and to know whether
         // to emit JSOP_LINKASMJS. Don't fold constants as this will
         // misrepresent the source JS as written to the type checker.
         if (funbox->useAsm && !CompileAsmJS(cx, *bce->tokenStream(), pn, script))
             return false;
+#endif
 
         BytecodeEmitter bce2(bce, bce->parser, funbox, script, bce->evalCaller,
                              bce->hasGlobalScope, pn->pn_pos.begin.lineno, bce->selfHostingMode);
