@@ -227,7 +227,8 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
   , mStartCalled(false)
 {
   SetProduceOwnOutput(true);
-  mStream = aContext->Graph()->CreateAudioNodeStream(new AudioBufferSourceNodeEngine());
+  mStream = aContext->Graph()->CreateAudioNodeStream(new AudioBufferSourceNodeEngine(),
+                                                     MediaStreamGraph::INTERNAL_STREAM);
   mStream->AddMainThreadListener(this);
 }
 
