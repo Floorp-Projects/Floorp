@@ -520,105 +520,97 @@ ThreadActor.prototype = {
    *        The location of the breakpoint as specified in the protocol.
    */
   _setBreakpoint: function TA__setBreakpoint(aLocation) {
-    // Fetch the list of scripts in that url.
-    let scripts = this._scripts[aLocation.url];
-    // Fetch the outermost script in that list.
-    let script = null;
-    for (let i = 0; i <= aLocation.line; i++) {
-      // Stop when the first script that contains this location is found.
-      if (scripts[i]) {
-        // If that first script does not contain the line specified, it's no
-        // good. Note that |i === scripts[i].startLine| in this case, so the
-        // following check makes sure we are not considering a script that does
-        // not include |aLocation.line|.
-        if (i + scripts[i].lineCount < aLocation.line) {
-          continue;
+    let breakpoints = this._breakpointStore[aLocation.url];
+
+    let actor;
+    if (breakpoints[aLocation.line].actor) {
+      actor = breakpoints[aLocation.line].actor;
+    } else {
+      actor = breakpoints[aLocation.line].actor = new BreakpointActor(this, {
+        url: aLocation.url,
+        line: aLocation.line
+      });
+      this._hooks.addToParentPool(actor);
+    }
+
+    let scripts = this.dbg.findScripts(aLocation);
+    if (scripts.length == 0) {
+      return {
+        error: "noScript",
+        actor: actor.actorID
+      };
+    }
+
+    let found = false;
+    for (let script of scripts) {
+      let offsets = script.getLineOffsets(aLocation.line);
+      if (offsets.length > 0) {
+        for (let offset of offsets) {
+          script.setBreakpoint(offset, actor);
         }
-        script = scripts[i];
-        break;
+        actor.addScript(script, this);
+        found = true;
       }
     }
-
-    let location = { url: aLocation.url, line: aLocation.line };
-    // Get the list of cached breakpoints in this URL.
-    let scriptBreakpoints = this._breakpointStore[location.url];
-    let bpActor;
-    if (scriptBreakpoints &&
-        scriptBreakpoints[location.line] &&
-        scriptBreakpoints[location.line].actor) {
-      bpActor = scriptBreakpoints[location.line].actor;
-    }
-    if (!bpActor) {
-      bpActor = new BreakpointActor(this, location);
-      this._hooks.addToParentPool(bpActor);
-      if (scriptBreakpoints[location.line]) {
-        scriptBreakpoints[location.line].actor = bpActor;
-      }
+    if (found) {
+      return {
+        actor: actor.actorID
+      };
     }
 
-    if (!script) {
-      return { error: "noScript", actor: bpActor.actorID };
-    }
-
-    let inner, codeFound = false;
-    // We need to set the breakpoint in every script that has bytecode in the
-    // specified line.
-    for (let s of this._getContainers(script, aLocation.line)) {
-      // The first result of the iteration is the innermost script.
-      if (!inner) {
-        inner = s;
-      }
-
-      let offsets = s.getLineOffsets(aLocation.line);
-      if (offsets.length) {
-        bpActor.addScript(s, this);
-        for (let i = 0; i < offsets.length; i++) {
-          s.setBreakpoint(offsets[i], bpActor);
-          codeFound = true;
-        }
-      }
-    }
+    let scripts = this.dbg.findScripts({
+      url: aLocation.url,
+      line: aLocation.line,
+      innermost: true
+    });
 
     let actualLocation;
-    if (!codeFound) {
-      // No code at that line in any script, skipping forward in the innermost
-      // script.
-      let lines = inner.getAllOffsets();
-      let oldLine = aLocation.line;
-      for (let line = oldLine; line < lines.length; ++line) {
-        if (lines[line]) {
-          for (let i = 0; i < lines[line].length; i++) {
-            inner.setBreakpoint(lines[line][i], bpActor);
-            codeFound = true;
+    let found = false;
+    for (let script of scripts) {
+      let offsets = script.getAllOffsets();
+      for (let line = aLocation.line; line < offsets.length; ++line) {
+        if (offsets[line]) {
+          for (let offset of offsets[line]) {
+            script.setBreakpoint(offset, actor);
           }
-          bpActor.addScript(inner, this);
-          actualLocation = {
-            url: aLocation.url,
-            line: line,
-            column: aLocation.column
-          };
-          // If there wasn't already a breakpoint at that line, update the cache
-          // as well.
-          if (scriptBreakpoints[line] && scriptBreakpoints[line].actor) {
-            let existing = scriptBreakpoints[line].actor;
-            bpActor.onDelete();
-            delete scriptBreakpoints[oldLine];
-            return { actor: existing.actorID, actualLocation: actualLocation };
+          actor.addScript(script, this);
+          if (!actualLocation) {
+            actualLocation = {
+              url: aLocation.url,
+              line: line,
+              column: aLocation.column
+            };
           }
-          bpActor.location = actualLocation;
-          scriptBreakpoints[line] = scriptBreakpoints[oldLine];
-          scriptBreakpoints[line].line = line;
-          delete scriptBreakpoints[oldLine];
+          found = true;
           break;
         }
       }
     }
-
-    if (!codeFound) {
-      return  { error: "noCodeAtLineColumn", actor: bpActor.actorID };
+    if (found) {
+      if (breakpoints[actualLocation.line] &&
+          breakpoints[actualLocation.line].actor) {
+        actor.onDelete();
+        delete breakpoints[aLocation.line];
+        return {
+          actor: breakpoints[actualLocation.line].actor.actorID,
+          actualLocation: actualLocation
+        };
+      } else {
+        actor.location = actualLocation;
+        breakpoints[actualLocation.line] = breakpoints[aLocation.line];
+        breakpoints[actualLocation.line].line = actualLocation.line;
+        delete breakpoints[aLocation.line];
+        return {
+          actor: actor.actorID,
+          actualLocation: actualLocation
+        };
+      }
     }
 
-    return { actor: bpActor.actorID, actualLocation: actualLocation };
+    return {
+      error: "noCodeAtLineColumn",
+      actor: actor.actorID
+    };
   },
 
   /**
@@ -1488,7 +1480,7 @@ SourceActor.prototype = {
   _loadSource: function SA__loadSource() {
     let deferred = defer();
     let scheme;
-    let url = this._url;
+    let url = this._url.split(" -> ").pop();
 
     try {
       scheme = Services.io.extractScheme(url);
