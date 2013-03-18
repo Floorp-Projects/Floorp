@@ -74,6 +74,7 @@ let SocialUI = {
           this._updateActiveUI();
           this._updateMenuItems();
 
+          SocialFlyout.unload();
           SocialChatBar.update();
           SocialSidebar.update();
           SocialShareButton.update();
