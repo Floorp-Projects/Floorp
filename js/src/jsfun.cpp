@@ -623,6 +623,16 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
     StringBuffer out(cx);
     RootedScript script(cx);
 
+    // If the object is an automatically-bound arrow function, get the source
+    // of the pre-binding target.
+    if (fun->isBoundFunction()) {
+        JSObject *target = fun->getBoundFunctionTarget();
+        if (target->isFunction() && target->toFunction()->isArrow()) {
+            RootedFunction targetfun(cx, target->toFunction());
+            return FunctionToString(cx, targetfun, bodyOnly, lambdaParen);
+        }
+    }
+
     if (fun->hasScript()) {
         script = fun->nonLazyScript();
         if (script->isGeneratorExp) {

@@ -724,6 +724,9 @@ UseNewTypeForClone(JSFunction *fun)
     if (fun->nonLazyScript()->shouldCloneAtCallsite)
         return true;
 
+    if (fun->isArrow())
+        return true;
+
     if (fun->hasSingletonType())
         return false;
 
