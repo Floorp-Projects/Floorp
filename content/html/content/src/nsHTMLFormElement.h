@@ -14,15 +14,14 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIWebProgressListener.h"
 #include "nsIRadioGroupContainer.h"
-#include "nsIURI.h"
 #include "nsIWeakReferenceUtils.h"
-#include "nsPIDOMWindow.h"
 #include "nsThreadUtils.h"
 #include "nsInterfaceHashtable.h"
 #include "nsDataHashtable.h"
 
 class nsFormControlList;
 class nsIMutableArray;
+class nsIURI;
 
 class nsHTMLFormElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLFormElement,
