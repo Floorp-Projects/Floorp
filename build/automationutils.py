@@ -353,26 +353,28 @@ def processSingleLeakFile(leakLogFileName, PID, processType, leakThreshold):
       # TODO: This should be a TEST-UNEXPECTED-FAIL, but was changed to a warning
       # due to too many intermittent failures (see bug 831223).
       log.info("WARNING | leakcheck | missing output line for total leaks!")
+    return
+
+  if totalBytesLeaked == 0:
+    log.info("TEST-PASS %s| leakcheck | no leaks detected!" % processString)
+    return
+
+  # Only fail the run if we're over the threshold (which defaults to 0)
+  if totalBytesLeaked > leakThreshold:
+    prefix = "TEST-UNEXPECTED-FAIL"
   else:
-    if totalBytesLeaked == 0:
-      log.info("TEST-PASS %s| leakcheck | no leaks detected!" % processString)
-    else:
-      # Only fail the run if we're over the threshold (which defaults to 0)
-      if totalBytesLeaked > leakThreshold:
-        prefix = "TEST-UNEXPECTED-FAIL"
-      else:
-        prefix = "WARNING"
-      # Create a comma delimited string of the first N leaked objects found,
-      # to aid with bug summary matching in TBPL
-      maxSummaryObjects = 5
-      leakedObjectSummary = ', '.join(leakedObjectNames[:maxSummaryObjects])
-      # The leaked objects shown when above the maxSummaryObjects threshold has
-      # been exceeded, has no significance (they're sorted alphabetically), so we
-      # add a continuation ellipsis to at least indicate there are others.
-      if len(leakedObjectNames) > maxSummaryObjects:
-        leakedObjectSummary += ', ...'
-      log.info("%s %s| leakcheck | %d bytes leaked (%s)"
-               % (prefix, processString, totalBytesLeaked, leakedObjectSummary))
+    prefix = "WARNING"
+  # Create a comma delimited string of the first N leaked objects found,
+  # to aid with bug summary matching in TBPL
+  maxSummaryObjects = 5
+  leakedObjectSummary = ', '.join(leakedObjectNames[:maxSummaryObjects])
+  # The leaked objects shown when above the maxSummaryObjects threshold has
+  # been exceeded, has no significance (they're sorted alphabetically), so we
+  # add a continuation ellipsis to at least indicate there are others.
+  if len(leakedObjectNames) > maxSummaryObjects:
+    leakedObjectSummary += ', ...'
+  log.info("%s %s| leakcheck | %d bytes leaked (%s)"
+           % (prefix, processString, totalBytesLeaked, leakedObjectSummary))
 
 def processLeakLog(leakLogFile, leakThreshold = 0):
   """Process the leak log, including separate leak logs created
