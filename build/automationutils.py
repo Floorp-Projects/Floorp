@@ -359,18 +359,17 @@ def processSingleLeakFile(leakLogFileName, PID, processType, leakThreshold):
     log.info("TEST-PASS %s| leakcheck | no leaks detected!" % processString)
     return
 
-  # Only fail the run if we're over the threshold (which defaults to 0)
+  # totalBytesLeaked was seen and is non-zero.
   if totalBytesLeaked > leakThreshold:
+    # Fail the run if we're over the threshold (which defaults to 0)
     prefix = "TEST-UNEXPECTED-FAIL"
   else:
     prefix = "WARNING"
   # Create a comma delimited string of the first N leaked objects found,
-  # to aid with bug summary matching in TBPL
+  # to aid with bug summary matching in TBPL. Note: The order of the objects
+  # had no significance (they're sorted alphabetically).
   maxSummaryObjects = 5
   leakedObjectSummary = ', '.join(leakedObjectNames[:maxSummaryObjects])
-  # The leaked objects shown when above the maxSummaryObjects threshold has
-  # been exceeded, has no significance (they're sorted alphabetically), so we
-  # add a continuation ellipsis to at least indicate there are others.
   if len(leakedObjectNames) > maxSummaryObjects:
     leakedObjectSummary += ', ...'
   log.info("%s %s| leakcheck | %d bytes leaked (%s)"
