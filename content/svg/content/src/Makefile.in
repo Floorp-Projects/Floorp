@@ -81,6 +81,7 @@ CPPSRCS		= \
 		SVGFEBlendElement.cpp \
 		SVGFEColorMatrixElement.cpp \
 		SVGFEComponentTransferElement.cpp \
+		SVGFECompositeElement.cpp \
 		SVGFEDistantLightElement.cpp \
 		SVGFEFloodElement.cpp \
 		SVGFEImageElement.cpp \
@@ -182,6 +183,7 @@ EXPORTS_mozilla/dom = \
 	SVGFEBlendElement.h \
 	SVGFEColorMatrixElement.h \
 	SVGFEComponentTransferElement.h \
+	SVGFECompositeElement.h \
 	SVGFEDistantLightElement.h \
 	SVGFEFloodElement.h \
 	SVGFEImageElement.h \
