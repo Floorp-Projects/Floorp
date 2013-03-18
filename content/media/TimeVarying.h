@@ -32,7 +32,10 @@ protected:
  * a mathematical function of time.
  * Time is the type of time values, T is the value that changes over time.
  * There are a finite set of "change times"; at each change time, the function
- * instantly changes to a new value.
+ * instantly changes to a new value. ReservedChanges should be set to the
+ * expected number of change events that the object is likely to contain.
+ * This value should be 0 for all consumers unless you know that a higher value
+ * would be a benefit.
  * There is also a "current time" which must always advance (not go backward).
  * The function is constant for all times less than the current time.
  * When the current time is advanced, the value of the function at the new
@@ -42,7 +45,7 @@ protected:
  * and an array of "change times" (greater than the current time) and the
  * new value for each change time. This is a simple but dumb implementation.
  */
-template <typename Time, typename T>
+template <typename Time, typename T, uint32_t ReservedChanges>
 class TimeVarying : public TimeVaryingBase {
 public:
   TimeVarying(const T& aInitial) : mCurrent(aInitial) {}
@@ -214,7 +217,7 @@ private:
     Time mTime;
     T mValue;
   };
-  nsTArray<Entry> mChanges;
+  nsAutoTArray<Entry, ReservedChanges> mChanges;
   T mCurrent;
 };
 
