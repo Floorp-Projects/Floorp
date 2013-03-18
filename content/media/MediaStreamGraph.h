@@ -457,7 +457,7 @@ protected:
   VideoFrame mLastPlayedVideoFrame;
   // The number of times this stream has been explicitly blocked by the control
   // API, minus the number of times it has been explicitly unblocked.
-  TimeVarying<GraphTime,uint32_t> mExplicitBlockerCount;
+  TimeVarying<GraphTime,uint32_t,0> mExplicitBlockerCount;
   nsTArray<nsRefPtr<MediaStreamListener> > mListeners;
   nsTArray<MainThreadMediaStreamListener*> mMainThreadListeners;
 
@@ -467,9 +467,9 @@ protected:
   // not been blocked before mCurrentTime (its mBufferStartTime is increased
   // as necessary to account for that time instead) --- this avoids us having to
   // record the entire history of the stream's blocking-ness in mBlocked.
-  TimeVarying<GraphTime,bool> mBlocked;
+  TimeVarying<GraphTime,bool,5> mBlocked;
   // Maps graph time to the graph update that affected this stream at that time
-  TimeVarying<GraphTime,int64_t> mGraphUpdateIndices;
+  TimeVarying<GraphTime,int64_t,0> mGraphUpdateIndices;
 
   // MediaInputPorts to which this is connected
   nsTArray<MediaInputPort*> mConsumers;
