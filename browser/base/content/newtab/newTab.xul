@@ -31,7 +31,7 @@
                       label="&newtab.undo.restoreButton;"
                       class="newtab-undo-button" />
           <xul:toolbarbutton id="newtab-undo-close-button" tabindex="-1"
-                             title="&newtab.undo.closeTooltip;" />
+                             tooltiptext="&newtab.undo.closeTooltip;" />
         </div>
       </div>
 
