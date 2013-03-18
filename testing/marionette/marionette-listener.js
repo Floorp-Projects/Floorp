@@ -64,6 +64,8 @@ let touches = [];
 // For assigning unique ids to all touches
 let nextTouchId = 1000;
 let touchIds = {};
+// last touch for each fingerId
+let multiLast = {};
 // last touch for single finger
 let lastTouch = null;
 /**
@@ -109,6 +111,7 @@ function startListeners() {
   addMessageListenerId("Marionette:press", press);
   addMessageListenerId("Marionette:release", release);
   addMessageListenerId("Marionette:actionChain", actionChain);
+  addMessageListenerId("Marionette:multiAction", multiAction);
   addMessageListenerId("Marionette:setSearchTimeout", setSearchTimeout);
   addMessageListenerId("Marionette:goUrl", goUrl);
   addMessageListenerId("Marionette:getUrl", getUrl);
@@ -201,6 +204,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:press", press);
   removeMessageListenerId("Marionette:release", release);
   removeMessageListenerId("Marionette:actionChain", actionChain);
+  removeMessageListenerId("Marionette:multiAction", multiAction);
   removeMessageListenerId("Marionette:setSearchTimeout", setSearchTimeout);
   removeMessageListenerId("Marionette:goUrl", goUrl);
   removeMessageListenerId("Marionette:getTitle", getTitle);
@@ -987,6 +991,185 @@ function actionChain(msg) {
     let touchId = nextTouchId++;
     // loop the action array [ ['press', id], ['move', id], ['release', id] ]
     actions(commandArray, touchId, command_id);
+  }
+  catch (e) {
+    sendError(e.message, e.code, e.stack, msg.json.command_id);
+  }
+}
+
+/**
+ * Function to emit touch events which allow multi touch on the screen
+ * @param type represents the type of event, touch represents the current touch,touches are all pending touches
+ */
+function emitMultiEvents(type, touch, touches) {
+  let target = touch.target;
+  let doc = target.ownerDocument;
+  let win = doc.defaultView;
+  // touches that are in the same document
+  let documentTouches = doc.createTouchList(touches.filter(function(t) {
+    return t.target.ownerDocument === doc;
+  }));
+  // touches on the same target
+  let targetTouches = doc.createTouchList(touches.filter(function(t) {
+    return t.target === target;
+  }));
+  // Create changed touches
+  let changedTouches = doc.createTouchList(touch);
+  // Create the event object
+  let event = curWindow.document.createEvent('TouchEvent');
+  event.initTouchEvent(type,
+                       true,
+                       true,
+                       win,
+                       0,
+                       false, false, false, false,
+                       documentTouches,
+                       targetTouches,
+                       changedTouches);
+  target.dispatchEvent(event);
+}
+
+/**
+ * Function to dispatch one set of actions
+ * @param touches represents all pending touches, batchIndex represents the batch we are dispatching right now
+ */
+function setDispatch(batches, touches, command_id, batchIndex) {
+  if (typeof batchIndex === "undefined") {
+    batchIndex = 0;
+  }
+  // check if all the sets have been fired
+  if (batchIndex >= batches.length) {
+    multiLast = {};
+    sendOk(command_id);
+    return;
+  }
+  // a set of actions need to be done
+  let batch = batches[batchIndex];
+  // each action for some finger
+  let pack;
+  // the touch id for the finger (pack)
+  let touchId;
+  // command for the finger
+  let command;
+  // touch that will be created for the finger
+  let el;
+  let corx;
+  let cory;
+  let touch;
+  let lastTouch;
+  let touchIndex;
+  let waitTime = 0;
+  let maxTime = 0;
+  batchIndex++;
+  // loop through the batch
+  for (let i = 0; i < batch.length; i++) {
+    pack = batch[i];
+    touchId = pack[0];
+    command = pack[1];
+    switch (command) {
+      case 'press':
+        el = elementManager.getKnownElement(pack[2], curWindow);
+        // after this block, the element will be scrolled into view
+        if (!checkVisible(el, command_id)) {
+           sendError("Element is not currently visible and may not be manipulated", 11, null, command_id);
+           return;
+        }
+        corx = pack[3];
+        cory = pack[4];
+        touch = createATouch(el, corx, cory, touchId);
+        multiLast[touchId] = touch;
+        touches.push(touch);
+        emitMultiEvents('touchstart', touch, touches);
+        break;
+      case 'release':
+        touch = multiLast[touchId];
+        // the index of the previous touch for the finger may change in the touches array
+        touchIndex = touches.indexOf(touch);
+        touches.splice(touchIndex, 1);
+        emitMultiEvents('touchend', touch, touches);
+        break;
+      case 'move':
+        el = elementManager.getKnownElement(pack[2], curWindow);
+        lastTouch = multiLast[touchId];
+        let boxTarget = el.getBoundingClientRect();
+        let startTarget = lastTouch.target;
+        let boxStart = startTarget.getBoundingClientRect();
+        // note here corx and cory are relative to the target, not the viewport
+        // we always want to touch the center of the element if the element is specified
+        corx = boxTarget.left - boxStart.left + boxTarget.width * 0.5;
+        cory = boxTarget.top - boxStart.top + boxTarget.height * 0.5;
+        touch = createATouch(startTarget, corx, cory, touchId);
+        touchIndex = touches.indexOf(lastTouch);
+        touches[touchIndex] = touch;
+        multiLast[touchId] = touch;
+        emitMultiEvents('touchmove', touch, touches);
+        break;
+      case 'moveByOffset':
+        el = multiLast[touchId].target;
+        lastTouch = multiLast[touchId];
+        touchIndex = touches.indexOf(lastTouch);
+        let doc = el.ownerDocument;
+        let win = doc.defaultView;
+        // since x and y are relative to the last touch, therefore, it's relative to the position of the last touch
+        let clientX = lastTouch.clientX + pack[2],
+            clientY = lastTouch.clientY + pack[3];
+        let pageX = clientX + win.pageXOffset,
+            pageY = clientY + win.pageYOffset;
+        let screenX = clientX + win.mozInnerScreenX,
+            screenY = clientY + win.mozInnerScreenY;
+        touch = doc.createTouch(win, el, touchId, pageX, pageY, screenX, screenY, clientX, clientY);
+        touches[touchIndex] = touch;
+        multiLast[touchId] = touch;
+        emitMultiEvents('touchmove', touch, touches);
+        break;
+      case 'wait':
+        if (pack[2] != undefined ) {
+          waitTime = pack[2]*1000;
+          if (waitTime > maxTime) {
+            maxTime = waitTime;
+          }
+        }
+        break;
+    }//end of switch block
+  }//end of for loop
+  if (maxTime != 0) {
+    checkTimer.initWithCallback(function(){setDispatch(batches, touches, command_id, batchIndex);}, maxTime, Ci.nsITimer.TYPE_ONE_SHOT);
+  }
+  else {
+    setDispatch(batches, touches, command_id, batchIndex);
+  }
+}
+
+/**
+ * Function to start multi-action
+ */
+function multiAction(msg) {
+  let command_id = msg.json.command_id;
+  let args = msg.json.value;
+  // maxlen is the longest action chain for one finger
+  let maxlen = msg.json.maxlen;
+  try {
+    // unwrap the original nested array
+    let commandArray = elementManager.convertWrappedArguments(args, curWindow);
+    let concurrentEvent = [];
+    let temp;
+    for (let i = 0; i < maxlen; i++) {
+      let row = [];
+      for (let j = 0; j < commandArray.length; j++) {
+        if (commandArray[j][i] != undefined) {
+          // add finger id to the front of each action, i.e. [finger_id, action, element]
+          temp = commandArray[j][i];
+          temp.unshift(j);
+          row.push(temp);
+        }
+      }
+      concurrentEvent.push(row);
+    }
+    // now concurrent event is made of sets where each set contain a list of actions that need to be fired.
+    // note: each action belongs to a different finger
+    // pendingTouches keeps track of current touches that's on the screen
+    let pendingTouches = [];
+    setDispatch(concurrentEvent, pendingTouches, command_id);
   }
   catch (e) {
     sendError(e.message, e.code, e.stack, msg.json.command_id);

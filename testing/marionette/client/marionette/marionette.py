@@ -134,6 +134,21 @@ class Actions(object):
     def perform(self):
         return self.marionette._send_message('actionChain', 'ok', value=self.action_chain)
 
+class MultiActions(object):
+    def __init__(self, marionette):
+        self.multi_actions = []
+        self.max_length = 0
+        self.marionette = marionette
+
+    def add(self, action):
+        self.multi_actions.append(action.action_chain)
+        if len(action.action_chain) > self.max_length:
+          self.max_length = len(action.action_chain)
+        return self
+
+    def perform(self):
+        return self.marionette._send_message('multiAction', 'ok', value=self.multi_actions, max_length=self.max_length)
+
 class Marionette(object):
 
     CONTEXT_CHROME = 'chrome'
