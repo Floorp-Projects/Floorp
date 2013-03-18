@@ -46,7 +46,7 @@
 #include "harfbuzz/hb.h"
 
 #include "nsCRT.h"
-#include "GeckoProfiler.h"
+#include "sampler.h"
 
 #include <algorithm>
 

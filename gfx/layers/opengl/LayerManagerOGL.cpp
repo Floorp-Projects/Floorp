@@ -35,7 +35,7 @@
 
 #include "gfxCrashReporterUtils.h"
 
-#include "GeckoProfiler.h"
+#include "sampler.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include <android/log.h>

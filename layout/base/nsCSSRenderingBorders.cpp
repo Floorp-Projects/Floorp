@@ -25,7 +25,7 @@
 #include "nsLayoutUtils.h"
 #include "nsINameSpaceManager.h"
 #include "nsBlockFrame.h"
-#include "GeckoProfiler.h"
+#include "sampler.h"
 #include "nsExpirationTracker.h"
 #include "RoundedRect.h"
 

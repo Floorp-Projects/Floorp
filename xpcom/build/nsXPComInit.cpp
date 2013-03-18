@@ -122,7 +122,7 @@ extern nsresult nsStringInputStreamConstructor(nsISupports *, REFNSIID, void **)
 
 #include "mozilla/VisualEventTracer.h"
 
-#include "GeckoProfiler.h"
+#include "sampler.h"
 
 using base::AtExitManager;
 using mozilla::ipc::BrowserProcessSubThread;

@@ -64,7 +64,7 @@
 
 #include <ApplicationServices/ApplicationServices.h>
 
-#include "GeckoProfiler.h"
+#include "sampler.h"
 
 #include "nsIDOMWheelEvent.h"
 

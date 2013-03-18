@@ -36,7 +36,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/gfx/Scale.h"
 
-#include "GeckoProfiler.h"
+#include "sampler.h"
 #include <algorithm>
 
 using namespace mozilla;

@@ -6,7 +6,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "BasicTiledThebesLayer.h"
 #include "gfxImageSurface.h"
-#include "GeckoProfiler.h"
+#include "sampler.h"
 #include "gfxPlatform.h"
 
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY

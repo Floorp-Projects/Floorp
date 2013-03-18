@@ -24,7 +24,7 @@
 #include "mozilla/Telemetry.h"
 #include "nsThreadUtils.h"
 
-#include "GeckoProfiler.h"
+#include "sampler.h"
 
 using namespace mozilla;
 

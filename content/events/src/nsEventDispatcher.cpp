@@ -18,7 +18,7 @@
 #include "nsFrameLoader.h"
 #include "nsDOMTouchEvent.h"
 #include "nsDOMStorage.h"
-#include "GeckoProfiler.h"
+#include "sampler.h"
 #include "GeneratedEvents.h"
 
 using namespace mozilla;

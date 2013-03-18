@@ -7,7 +7,7 @@
 #include "gfxUtils.h"
 #include "nsIWidget.h"
 #include "RenderTrace.h"
-#include "GeckoProfiler.h"
+#include "sampler.h"
 
 #include "prprf.h"
 

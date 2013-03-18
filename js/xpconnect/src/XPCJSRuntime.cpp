@@ -33,7 +33,7 @@
 #include "mozilla/Attributes.h"
 #include "AccessCheck.h"
 
-#include "GeckoProfiler.h"
+#include "sampler.h"
 #include "nsJSPrincipals.h"
 #include <algorithm>
 

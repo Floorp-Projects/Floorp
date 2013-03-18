@@ -25,7 +25,7 @@
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 #include "nsPluginNativeWindow.h"
-#include "GeckoProfiler.h"
+#include "sampler.h"
 #include "nsPluginInstanceOwner.h"
 
 #define MAGIC_REQUEST_CONTEXT 0x01020304
