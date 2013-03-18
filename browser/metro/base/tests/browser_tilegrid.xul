@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://browser/skin/platform.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/browser.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
+
+<!DOCTYPE window []>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <vbox flex="1">
+    <hbox>
+      <richgrid id="grid1" seltype="single" flex="1">
+        <richgriditem value="about:blank" id="grid1_item1" label="First item"/>
+      </richgrid>
+    </hbox>
+    <hbox>
+      <richgrid id="emptygrid" seltype="single" flex="1"/>
+    </hbox>
+    <hbox>
+      <richgrid id="grid2" seltype="single" flex="1">
+        <richgriditem value="about:blank" id="grid2_item1" label="First item"/>
+        <richgriditem value="about:blank" id="grid2_item2" label="2nd item"/>
+      </richgrid>
+    </hbox>
+    <hbox>
+      <richgrid id="grid3" seltype="single" flex="1">
+        <richgriditem value="about:blank" id="grid3_item1" label="First item"/>
+        <richgriditem value="about:blank" id="grid3_item2" label="2nd item"/>
+      </richgrid>
+    </hbox>
+    <hbox>
+      <richgrid id="grid4" seltype="single" flex="1">
+        <richgriditem value="about:blank" id="grid4_item1" label="First item"/>
+        <richgriditem value="about:blank" id="grid4_item2" label="2nd item"/>
+      </richgrid>
+    </hbox>
+    <hbox>
+      <richgrid id="grid-select1" seltype="single" flex="1">
+        <richgriditem value="about:blank" id="grid-select1_item1" label="First item"/>
+        <richgriditem value="about:blank" id="grid-select1_item2" label="2nd item"/>
+      </richgrid>
+    </hbox>
+    <hbox>
+      <richgrid id="grid-select2" seltype="multiple" flex="1">
+        <richgriditem value="about:blank" id="grid-select2_item1" label="First item"/>
+        <richgriditem value="about:blank" id="grid-select2_item2" label="2nd item"/>
+      </richgrid>
+    </hbox>
+  </vbox>
+</window>
+
