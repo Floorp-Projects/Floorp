@@ -84,10 +84,6 @@
     var gQueue = null;
     function doTests()
     {
-      if (navigator.oscpu.startsWith("Windows NT 6.1") || navigator.oscpu.startsWith("Windows NT 6.2")) {
-        todo(false, "shouldn't cause a leak!");
-        return;
-      }
       gQueue = new eventQueue();
 
       var tabDocument = currentTabDocument();
