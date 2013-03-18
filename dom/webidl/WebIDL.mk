@@ -184,6 +184,7 @@ webidl_files = \
   SVGFEBlendElement.webidl \
   SVGFEColorMatrixElement.webidl \
   SVGFEComponentTransferElement.webidl \
+  SVGFECompositeElement.webidl \
   SVGFEDistantLightElement.webidl \
   SVGFEFloodElement.webidl \
   SVGFEFuncAElement.webidl \
