@@ -1,0 +1,237 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+import android.app.Activity;
+import android.provider.Browser;
+import android.content.ContentValues;
+import android.content.ContentResolver;
+import android.database.Cursor;
+import android.net.Uri;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+/**
+  * This test covers the Import from Android feature
+  * The test will save the existing bookmarks and history then will do an Import
+  * After the import it will check that the bookmarks and history items from Android are imported
+  * Then it will test that the old data from Firefox is not lost
+  * At the end will test that a second import will not duplicate information
+  */
+
+public class testImportFromAndroid extends PixelTest {
+    ArrayList<String> androidData = new ArrayList<String>();
+    ArrayList<String> firefoxHistory = new ArrayList<String>();
+
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
+    public void testImportFromAndroid() {
+        ArrayList<String> firefoxBookmarks = new ArrayList<String>();
+        ArrayList<String> oldFirefoxHistory = new ArrayList<String>();
+        ArrayList<String> oldFirefoxBookmarks = new ArrayList<String>();
+        blockForGeckoReady();
+
+        // Get the Android hostory
+        androidData = getAndroidUrls("history");
+
+        // Add some overlapping data from the Android Stock Browser to Firefox before import
+        addData();
+
+        // Get the initial bookmarks and history
+        oldFirefoxBookmarks = getFirefoxData("bookmarks");
+        oldFirefoxHistory = getFirefoxData("history");
+
+        // Import the bookmarks and history
+        importDataFromAndroid();
+
+        // Get the Android history and the Firefox bookmarks and history lists
+        firefoxHistory = getFirefoxData("history");
+        firefoxBookmarks = getFirefoxData("bookmarks");
+
+        /**
+         * Add a delay to make sure the imported items are added to the array lists 
+         * if there are a lot of history items in the Android Browser database
+         */
+        boolean success = waitForTest(new BooleanTest() {
+            @Override
+            public boolean test() {
+                if (androidData.size() <= firefoxHistory.size()) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }, MAX_WAIT_MS);
+
+        /**
+         * Verify the history and bookmarks are imported
+         * Android history also contains the android bookmarks so we don't need to get them separately here
+         */
+        for (String url:androidData) {
+            mAsserter.ok(firefoxHistory.contains(url)||firefoxBookmarks.contains(url), "Checking if Android" + (firefoxBookmarks.contains(url) ? " Bookmark" : " History item") + " is present", url + " was imported");
+        }
+
+        // Verify the original Firefox Bookmarks are not deleted
+        for (String url:oldFirefoxBookmarks) {
+             mAsserter.ok(firefoxBookmarks.contains(url), "Checking if original Firefox Bookmark is present", " Firefox Bookmark " + url + " was not removed");
+        }
+
+        // Verify the original Firefox History is not deleted
+        for (String url:oldFirefoxHistory) {
+             mAsserter.ok(firefoxHistory.contains(url), "Checking original Firefox History item is present", " Firefox History item " + url + " was not removed");
+        }
+
+        // Import data again and make sure bookmarks are not duplicated
+        importDataFromAndroid();
+
+        // Verify bookmarks are not duplicated
+        ArrayList<String> verifiedBookmarks = new ArrayList<String>();
+        firefoxBookmarks = getFirefoxData("bookmarks");
+        for (String url:firefoxBookmarks) {
+             if (verifiedBookmarks.contains(url)) {
+                 mAsserter.ok(false, "Bookmark " + url + " should not be duplicated", "Bookmark is duplicated");
+             } else {
+                 verifiedBookmarks.add(url);
+                 mAsserter.ok(true, "Bookmark " + url + " was not duplicated", "Bookmark is unique");
+             }
+        }
+
+        // Verify history count is not increased after the second import
+        mAsserter.ok(firefoxHistory.size() == getFirefoxData("history").size(), "The number of history entries was not increased", "None of the items were duplicated");
+    }
+
+    private void addData() {
+        ArrayList<String> androidBookmarks = getAndroidUrls("bookmarks");
+
+        // Add a few Bookmarks from Android to Firefox Mobile
+        for (String url:androidBookmarks) {
+            // Add every 3rd bookmark to Firefox Mobile
+            if ((androidBookmarks.indexOf(url) % 3) == 0) {
+                 addOrUpdateBookmark("Bookmar Number" + String.valueOf(androidBookmarks.indexOf(url)), url, true);
+            }
+        }
+
+        // Add a few history items in Firefox Mobile
+        ContentResolver resolver = getActivity().getContentResolver();
+        Uri uri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/history");
+        uri = uri.buildUpon().appendQueryParameter("profile", "default")
+                             .appendQueryParameter("sync", "true").build();
+        for (String url:androidData) {
+            // Add every 3rd website from Android History to Firefox Mobile
+            if ((androidData.indexOf(url) % 3) == 0) {
+                 ContentValues values = new ContentValues();
+                 values.put("title", "Page" + url);
+                 values.put("url", url);
+                 values.put("date", System.currentTimeMillis());
+                 values.put("visits", androidData.indexOf(url));
+                 resolver.insert(uri, values);
+            }
+        }
+    }
+
+    private void importDataFromAndroid() {
+        waitForText("Enter Search or Address");
+        selectMenuItem("Settings");
+        waitForText("General");
+        mSolo.clickOnText("Import from Android");
+
+        // Wait for the Import form Android popup to be opened. It has the same title as the option so waiting for the "Cancel" button
+        waitForText("Cancel");
+
+        // The Import button is the first on Gingerbread and the second in Honeycomb and newer
+        mSolo.clickOnButton("Import");
+
+        // Import has finished. Waiting to get back to the Settings Menu and looking for the Import&Export subsection
+        waitForText("Import & Export");
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK); // Exit Settings
+        waitForText("Enter Search or Address"); // Make sure we are not in the Settings Menu anymore
+    }
+
+    public ArrayList<String> getAndroidUrls(String data) {
+        // Return bookmarks or history depending on what the user asks for
+        ArrayList<String> urls = new ArrayList<String>();
+        ContentResolver resolver = getActivity().getContentResolver();
+        Browser mBrowser = new Browser();
+        Cursor cursor = null;
+        try {
+            if (data.equals("history")) {
+                cursor = mBrowser.getAllVisitedUrls(resolver);
+            } else if (data.equals("bookmarks")) {
+                cursor = mBrowser.getAllBookmarks(resolver);
+            }
+            if (cursor != null) {
+                cursor.moveToFirst();
+                for (int i = 0; i < cursor.getCount(); i++ ) {
+                     urls.add(cursor.getString(cursor.getColumnIndex("url")));
+                     if(!cursor.isLast()) {
+                        cursor.moveToNext();
+                     }
+                }
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return urls;
+    }
+
+    public ArrayList<String> getFirefoxData(String data) {
+        ArrayList<String> firefoxData = new ArrayList<String>();
+        ContentResolver resolver = getActivity().getContentResolver();
+        Cursor cursor = null;
+        Uri uri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/" + data);
+        uri = uri.buildUpon().appendQueryParameter("profile", "default")
+                             .appendQueryParameter("sync", "true").build();
+        try {
+            cursor = resolver.query(uri, null, null, null, null);
+            if (cursor != null) {
+                cursor.moveToFirst();
+                for (int i = 0; i < cursor.getCount(); i++ ) {
+                    /**
+                      * The url field may be null for folders in the structure of the Bookmarks table for Firefox
+                      * so we should eliminate thouse
+                      */
+                    if (cursor.getString(cursor.getColumnIndex("url")) != null) {
+                        firefoxData.add(cursor.getString(cursor.getColumnIndex("url")));
+                    }
+                    if(!cursor.isLast()) {
+                            cursor.moveToNext();
+                    }
+                }
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return firefoxData;
+    }
+
+    public void deleteImportedData() {
+        ContentResolver resolver = getActivity().getContentResolver();
+        // Bookmarks
+        Uri uri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/bookmarks");
+        uri = uri.buildUpon().appendQueryParameter("profile", "default")
+                             .appendQueryParameter("sync", "true").build();
+        ArrayList<String> androidBookmarks = getAndroidUrls("bookmarks");
+        for (String url:androidBookmarks) {
+             resolver.delete(uri, "url = ?", new String[] { url });
+        }
+        // History
+        uri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/history");
+        uri = uri.buildUpon().appendQueryParameter("profile", "default")
+                             .appendQueryParameter("sync", "true").build();
+        for (String url:androidData) {
+             resolver.delete(uri, "url = ?", new String[] { url });
+        }
+    }
+
+    public void tearDown() throws Exception {
+        deleteImportedData();
+        super.tearDown();
+    }
+}
