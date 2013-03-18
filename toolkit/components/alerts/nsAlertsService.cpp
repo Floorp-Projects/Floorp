@@ -108,10 +108,6 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
     return NS_OK;
   }
 
-#ifdef XP_MACOSX
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
-
   // Use XUL notifications as a fallback if above methods have failed.
   rv = mXULAlerts.ShowAlertNotification(aImageUrl, aAlertTitle, aAlertText, aAlertTextClickable,
                                         aAlertCookie, aAlertListener, aAlertName,
@@ -132,10 +128,6 @@ NS_IMETHODIMP nsAlertsService::CloseAlert(const nsAString& aAlertName)
   mozilla::AndroidBridge::Bridge()->CloseNotification(aAlertName);
   return NS_OK;
 #else
-
-#ifdef XP_MACOSX
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
 
   // Try the system notification service.
   nsCOMPtr<nsIAlertsService> sysAlerts(do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID));
