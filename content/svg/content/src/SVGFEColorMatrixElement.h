@@ -6,26 +6,40 @@
 #ifndef mozilla_dom_SVGFEColorMatrixElement_h
 #define mozilla_dom_SVGFEColorMatrixElement_h
 
-typedef nsSVGFE nsSVGFEColorMatrixElementBase;
+#include "nsSVGEnum.h"
+#include "nsSVGFilters.h"
+#include "SVGAnimatedNumberList.h"
+
+nsresult NS_NewSVGFEColorMatrixElement(nsIContent **aResult,
+                                       already_AddRefed<nsINodeInfo> aNodeInfo);
 
 namespace mozilla {
 namespace dom {
 
-class nsSVGFEColorMatrixElement : public nsSVGFEColorMatrixElementBase,
-                                  public nsIDOMSVGFEColorMatrixElement
+typedef nsSVGFE SVGFEColorMatrixElementBase;
+
+static const unsigned short SVG_FECOLORMATRIX_TYPE_UNKNOWN = 0;
+static const unsigned short SVG_FECOLORMATRIX_TYPE_MATRIX = 1;
+static const unsigned short SVG_FECOLORMATRIX_TYPE_SATURATE = 2;
+static const unsigned short SVG_FECOLORMATRIX_TYPE_HUE_ROTATE = 3;
+static const unsigned short SVG_FECOLORMATRIX_TYPE_LUMINANCE_TO_ALPHA = 4;
+
+class SVGFEColorMatrixElement : public SVGFEColorMatrixElementBase,
+                                public nsIDOMSVGElement
 {
-  friend nsresult NS_NewSVGFEColorMatrixElement(nsIContent **aResult,
-                                                already_AddRefed<nsINodeInfo> aNodeInfo);
+  friend nsresult (::NS_NewSVGFEColorMatrixElement(nsIContent **aResult,
+                                                   already_AddRefed<nsINodeInfo> aNodeInfo));
 protected:
-  nsSVGFEColorMatrixElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsSVGFEColorMatrixElementBase(aNodeInfo) {}
+  SVGFEColorMatrixElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+    : SVGFEColorMatrixElementBase(aNodeInfo)
+  {
+    SetIsDOMBinding();
+  }
+  virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
 public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
-
-  // FE Base
-  NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEColorMatrixElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance* aInstance,
                           const nsTArray<const Image*>& aSources,
@@ -36,20 +50,21 @@ public:
   virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
   virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources);
 
-  // Color Matrix
-  NS_DECL_NSIDOMSVGFECOLORMATRIXELEMENT
-
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEColorMatrixElementBase::)
+  NS_FORWARD_NSIDOMSVGELEMENT(SVGFEColorMatrixElementBase::)
 
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
-protected:
+
+  // WebIDL
+  already_AddRefed<nsIDOMSVGAnimatedString> In1();
+  already_AddRefed<nsIDOMSVGAnimatedEnumeration> Type();
+  already_AddRefed<DOMSVGAnimatedNumberList> Values();
+
+ protected:
   virtual bool OperatesOnPremultipledAlpha(int32_t) { return false; }
 
   virtual EnumAttributesInfo GetEnumInfo();

@@ -21,22 +21,6 @@ interface nsIDOMSVGFilterPrimitiveStandardAttributes : nsIDOMSVGElement
     readonly attribute nsIDOMSVGAnimatedString      result;
 };
 
-[scriptable, uuid(a73ab3fb-05fa-4153-95e7-b2194b90e57c)]
-interface nsIDOMSVGFEColorMatrixElement : nsIDOMSVGFilterPrimitiveStandardAttributes
-{
-    // Color Matrix Types
-    const unsigned short SVG_FECOLORMATRIX_TYPE_UNKNOWN            = 0;
-    const unsigned short SVG_FECOLORMATRIX_TYPE_MATRIX             = 1;
-    const unsigned short SVG_FECOLORMATRIX_TYPE_SATURATE           = 2;
-    const unsigned short SVG_FECOLORMATRIX_TYPE_HUE_ROTATE         = 3;
-    const unsigned short SVG_FECOLORMATRIX_TYPE_LUMINANCE_TO_ALPHA = 4;
-
-    readonly attribute nsIDOMSVGAnimatedString in1;
-    readonly attribute nsIDOMSVGAnimatedEnumeration type;
-    // SVGAnimatedNumberList
-    readonly attribute nsISupports  values;
-};
-
 [scriptable, uuid(f264fd1f-b272-4796-99b5-68c90cbd030c)]
 interface nsIDOMSVGFECompositeElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 {
