@@ -132,6 +132,8 @@ private:
 /******************************************************************/
 
 ITfThreadMgr*           nsTextStore::sTsfThreadMgr   = NULL;
+ITfMessagePump*         nsTextStore::sMessagePump    = NULL;
+ITfKeystrokeMgr*        nsTextStore::sKeystrokeMgr   = NULL;
 ITfDisplayAttributeMgr* nsTextStore::sDisplayAttrMgr = NULL;
 ITfCategoryMgr*         nsTextStore::sCategoryMgr    = NULL;
 DWORD         nsTextStore::sTsfClientId  = 0;
@@ -579,9 +581,9 @@ nsTextStore::Destroy(void)
     // But by that time the text store is already destroyed,
     // so try to get the message early
     MSG msg;
-    if (::PeekMessageW(&msg, mWidget->GetWindowHandle(),
-                       sFlushTIPInputMessage, sFlushTIPInputMessage,
-                       PM_REMOVE)) {
+    if (WinUtils::PeekMessage(&msg, mWidget->GetWindowHandle(),
+                              sFlushTIPInputMessage, sFlushTIPInputMessage,
+                              PM_REMOVE)) {
       ::DispatchMessageW(&msg);
     }
   }
@@ -3156,6 +3158,16 @@ nsTextStore::Initialize(void)
     if (SUCCEEDED(CoCreateInstance(CLSID_TF_ThreadMgr, NULL,
           CLSCTX_INPROC_SERVER, IID_ITfThreadMgr,
           reinterpret_cast<void**>(&sTsfThreadMgr)))) {
+      DebugOnly<HRESULT> hr =
+        sTsfThreadMgr->QueryInterface(IID_ITfMessagePump,
+                                      reinterpret_cast<void**>(&sMessagePump));
+      MOZ_ASSERT(SUCCEEDED(hr));
+      MOZ_ASSERT(sMessagePump);
+      hr =
+        sTsfThreadMgr->QueryInterface(IID_ITfKeystrokeMgr,
+                                      reinterpret_cast<void**>(&sKeystrokeMgr));
+      MOZ_ASSERT(SUCCEEDED(hr));
+      MOZ_ASSERT(sKeystrokeMgr);
       PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
         ("TSF:   nsTextStore::Initialize() succeeded to "
          "create the thread manager, activating..."));
@@ -3216,6 +3228,11 @@ nsTextStore::Initialize(void)
         NS_LITERAL_STRING("Flush TIP Input Message").get());
   }
 
+  if (!sTsfThreadMgr) {
+    NS_IF_RELEASE(sMessagePump);
+    NS_IF_RELEASE(sKeystrokeMgr);
+  }
+
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
     ("TSF:   nsTextStore::Initialize(), sTsfThreadMgr=0x%p, "
      "sTsfClientId=0x%08X, sTsfTextStore=0x%p, sDisplayAttrMgr=0x%p, "
@@ -3237,7 +3254,38 @@ nsTextStore::Terminate(void)
   if (sTsfThreadMgr) {
     sTsfThreadMgr->Deactivate();
     NS_RELEASE(sTsfThreadMgr);
+    NS_RELEASE(sMessagePump);
+    NS_RELEASE(sKeystrokeMgr);
   }
+}
+
+// static
+bool
+nsTextStore::ProcessRawKeyMessage(const MSG& aMsg)
+{
+  if (!sKeystrokeMgr) {
+    return false; // not in TSF mode
+  }
+
+  if (aMsg.message == WM_KEYDOWN) {
+    BOOL eaten;
+    HRESULT hr = sKeystrokeMgr->TestKeyDown(aMsg.wParam, aMsg.lParam, &eaten);
+    if (FAILED(hr) || !eaten) {
+      return false;
+    }
+    hr = sKeystrokeMgr->KeyDown(aMsg.wParam, aMsg.lParam, &eaten);
+    return SUCCEEDED(hr) && eaten;
+  }
+  if (aMsg.message == WM_KEYUP) {
+    BOOL eaten;
+    HRESULT hr = sKeystrokeMgr->TestKeyUp(aMsg.wParam, aMsg.lParam, &eaten);
+    if (FAILED(hr) || !eaten) {
+      return false;
+    }
+    hr = sKeystrokeMgr->KeyUp(aMsg.wParam, aMsg.lParam, &eaten);
+    return SUCCEEDED(hr) && eaten;
+  }
+  return false;
 }
 
 /******************************************************************/

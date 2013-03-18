@@ -526,9 +526,9 @@ nsIMM32Handler::OnIMEEndComposition(nsWindow* aWindow)
   // composition. Then, we should ignore the message and commit the composition
   // string at following WM_IME_COMPOSITION.
   MSG compositionMsg;
-  if (::PeekMessageW(&compositionMsg, aWindow->GetWindowHandle(),
-                     WM_IME_STARTCOMPOSITION, WM_IME_COMPOSITION,
-                     PM_NOREMOVE) &&
+  if (WinUtils::PeekMessage(&compositionMsg, aWindow->GetWindowHandle(),
+                            WM_IME_STARTCOMPOSITION, WM_IME_COMPOSITION,
+                            PM_NOREMOVE) &&
       compositionMsg.message == WM_IME_COMPOSITION &&
       IS_COMMITTING_LPARAM(compositionMsg.lParam)) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
@@ -1012,11 +1012,11 @@ nsIMM32Handler::HandleComposition(nsWindow* aWindow,
   if (!mIsComposing) {
     MSG msg1, msg2;
     HWND wnd = aWindow->GetWindowHandle();
-    if (::PeekMessageW(&msg1, wnd, WM_IME_STARTCOMPOSITION, WM_IME_COMPOSITION,
-                       PM_NOREMOVE) &&
+    if (WinUtils::PeekMessage(&msg1, wnd, WM_IME_STARTCOMPOSITION,
+                              WM_IME_COMPOSITION, PM_NOREMOVE) &&
         msg1.message == WM_IME_STARTCOMPOSITION &&
-        ::PeekMessageW(&msg2, wnd, WM_IME_ENDCOMPOSITION, WM_IME_COMPOSITION,
-                       PM_NOREMOVE) &&
+        WinUtils::PeekMessage(&msg2, wnd, WM_IME_ENDCOMPOSITION,
+                              WM_IME_COMPOSITION, PM_NOREMOVE) &&
         msg2.message == WM_IME_COMPOSITION) {
       PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
         ("IMM32: HandleComposition, Ignores due to find a WM_IME_STARTCOMPOSITION\n"));
