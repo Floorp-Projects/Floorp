@@ -24,7 +24,7 @@
 #include "nsSVGIntegrationUtils.h"
 
 #include "mozilla/Preferences.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 #include "mozilla/gfx/Tools.h"
 
 #include "nsAnimationManager.h"

@@ -18,7 +18,7 @@
 #include "mozilla/storage.h"
 #include "mozilla/Util.h"
 
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 #define BOOKMARKS_TO_KEYWORDS_INITIAL_CACHE_SIZE 64
 #define RECENT_BOOKMARKS_INITIAL_CACHE_SIZE 10

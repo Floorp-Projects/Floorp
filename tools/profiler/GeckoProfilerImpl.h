@@ -64,8 +64,8 @@ void mozilla_sampler_stop2();
 bool mozilla_sampler_is_active1();
 bool mozilla_sampler_is_active2();
 
-void mozilla_sampler_responsiveness1(TimeStamp time);
-void mozilla_sampler_responsiveness2(TimeStamp time);
+void mozilla_sampler_responsiveness1(const TimeStamp& time);
+void mozilla_sampler_responsiveness2(const TimeStamp& time);
 
 void mozilla_sampler_frame_number1(int frameNumber);
 void mozilla_sampler_frame_number2(int frameNumber);

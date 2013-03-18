@@ -7,7 +7,7 @@
 #include "nsIInputStream.h"
 #include "nsIChannel.h"
 #include "nsError.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 
 nsStreamLoader::nsStreamLoader()
   : mData(nullptr),

@@ -16,7 +16,7 @@
 
 // Profiler
 #include "PlatformMacros.h"
-#include "sps_sampler.h"
+#include "GeckoProfilerImpl.h"
 #include "platform.h"
 #include "nsXULAppAPI.h"
 #include "nsThreadUtils.h"
@@ -45,7 +45,7 @@
 // JS
 #include "jsdbgapi.h"
 
-// This file's exports are listed in sps_sampler.h.
+// This file's exports are listed in GeckoProfilerImpl.h.
 
 // Pseudo backtraces are available on all platforms.  Native
 // backtraces are available only on selected platforms.  Breakpad is
@@ -961,7 +961,7 @@ bool mozilla_sampler_is_active2()
 
 static double sResponsivenessTimes[100];
 static unsigned int sResponsivenessLoc = 0;
-void mozilla_sampler_responsiveness2(TimeStamp aTime)
+void mozilla_sampler_responsiveness2(const TimeStamp& aTime)
 {
   if (!sLastTracerEvent.IsNull()) {
     if (sResponsivenessLoc == 100) {

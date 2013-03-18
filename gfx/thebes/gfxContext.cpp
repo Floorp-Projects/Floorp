@@ -20,7 +20,7 @@
 #include "gfxPattern.h"
 #include "gfxPlatform.h"
 #include "gfxTeeSurface.h"
-#include "sampler.h"
+#include "GeckoProfiler.h"
 #include <algorithm>
 
 #if CAIRO_HAS_DWRITE_FONT
