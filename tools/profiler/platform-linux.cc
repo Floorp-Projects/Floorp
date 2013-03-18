@@ -59,7 +59,7 @@
 #include <errno.h>
 #include <stdarg.h>
 #include "platform.h"
-#include "GeckoProfilerImpl.h"
+#include "sps_sampler.h"
 
 #include <string.h>
 #include <stdio.h>

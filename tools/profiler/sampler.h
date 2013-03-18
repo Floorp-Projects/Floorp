@@ -137,7 +137,7 @@ static inline void profiler_unlock() {}
 
 #else
 
-#include "GeckoProfilerImpl.h"
+#include "sps_sampler.h"
 
 #endif
 

@@ -50,7 +50,7 @@
 #include "libui/InputReader.h"
 #include "libui/InputDispatcher.h"
 
-#include "GeckoProfiler.h"
+#include "sampler.h"
 
 #define LOG(args...)                                            \
     __android_log_print(ANDROID_LOG_INFO, "Gonk" , ## args)

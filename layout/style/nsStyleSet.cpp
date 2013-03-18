@@ -29,7 +29,7 @@
 #include "nsEventStates.h"
 #include "nsStyleSheetService.h"
 #include "mozilla/dom/Element.h"
-#include "GeckoProfiler.h"
+#include "sampler.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

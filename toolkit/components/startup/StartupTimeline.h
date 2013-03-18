@@ -23,7 +23,7 @@ mozilla_StartupTimeline_Event(FIRST_LOAD_URI, "firstLoadURI")
 
 #include "prtime.h"
 #include "nscore.h"
-#include "GeckoProfiler.h"
+#include "sampler.h"
 
 #ifdef MOZ_LINKER
 extern "C" {

@@ -8,7 +8,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "nsError.h"
 
-#include "GeckoProfiler.h"
+#include "sampler.h"
 
 namespace mozilla {
 namespace dom {

@@ -79,7 +79,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/LookAndFeel.h"
 
-#include "GeckoProfiler.h"
+#include "sampler.h"
 
 #ifdef DEBUG
 #undef NOISY_BLINK

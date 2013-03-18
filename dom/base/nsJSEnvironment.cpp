@@ -82,7 +82,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 
-#include "GeckoProfiler.h"
+#include "sampler.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
