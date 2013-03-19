@@ -6,7 +6,10 @@ DEPTH       = @DEPTH@
 topsrcdir   = @top_srcdir@
 srcdir      = @srcdir@
 VPATH       = @srcdir@
-TESTPATH    = $(topsrcdir)/mobile/android/base/tests
+
+mobile-tests := mobile/android/base/tests
+TESTPATH     := $(topsrcdir)/$(mobile-tests)
+dir-tests    := $(DEPTH)/$(mobile-tests)
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -16,6 +19,11 @@ ROBOTIUM_PATH = $(srcdir)/robotium-solo-3.6.jar
 
 JAVAFILES = \
   R.java \
+  $(NULL)
+
+RES_FILES = \
+  res/values/strings.xml \
+  $(NULL)
 
 _JAVA_HARNESS = \
   Actions.java \
@@ -32,36 +40,56 @@ _JAVA_HARNESS = \
   PaintedSurface.java \
   $(NULL)
 
-_JAVA_TESTS = $(patsubst $(TESTPATH)/%.in,%,$(wildcard $(TESTPATH)/*.java.in))
+# pre-process harness sources
+PP_TARGETS        += java-harness
+java-harness      := $(addprefix $(srcdir)/,$(addsuffix .in,$(_JAVA_HARNESS)))
+java-harness-dep  := $(addprefix $(CURDIR)/,$(_JAVA_HARNESS))
+java-harness_PATH := $(CURDIR)
 
-_TEST_FILES = \
+# pre-process test sources
+PP_TARGETS      += java-tests
+java-tests-src  := $(wildcard $(TESTPATH)/*.java.in)
+java-tests-dep  := $(patsubst $(TESTPATH)/%.java.in,$(dir-tests)/%.java,$(java-tests-src))
+java-tests      := $(java-tests-src)
+java-tests_PATH := $(dir-tests)
+
+PP_TARGETS        += manifest
+manifest          := $(srcdir)/AndroidManifest.xml.in
+manifest_TARGET   := AndroidManifest.xml
+
+
+# Install robocop configs and helper
+INSTALL_TARGETS += robocop
+robocop_TARGET  := libs
+robocop_DEST    := $(CURDIR)
+robocop_FILES   := \
+  $(TESTPATH)/robocop.ini \
+  $(TESTPATH)/robocop_autophone.ini \
+  $(srcdir)/parse_ids.py \
+  $(NULL)
+robocop-deps := $(notdir $(robocop_FILES))
+
+MOCHITEST_ROBOCOP_FILES := \
   $(wildcard $(TESTPATH)/*.html) \
   $(wildcard $(TESTPATH)/*.jpg) \
   $(wildcard $(TESTPATH)/*.sjs) \
   $(NULL)
 
-_ROBOCOP_TOOLS = \
-  $(TESTPATH)/robocop.ini \
-  $(TESTPATH)/robocop_autophone.ini \
-  parse_ids.py \
-  $(NULL)
-
 GARBAGE += \
   AndroidManifest.xml \
-  _JAVA_TESTS \
-  _JAVA_HARNESS \
+  $(java-tests-dep) \
+  $(_JAVA_HARNESS) \
   classes.dex \
   robocop.apk \
   robocop.ap_ \
   robocop-unsigned-unaligned.apk \
   robocop-unaligned.apk \
+  $(robocop-deps) \
   $(NULL)
 
 DEFINES += \
   -DANDROID_PACKAGE_NAME=$(ANDROID_PACKAGE_NAME) \
   $(NULL)
-
-GARBAGE_DIRS += res
 
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar:$(ROBOTIUM_PATH)
 
@@ -70,43 +98,22 @@ include $(topsrcdir)/config/rules.mk
 # Override rules.mk java flags with the android specific ones
 include $(topsrcdir)/config/android-common.mk
 
-$(_JAVA_HARNESS): % : %.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $< > $@
+GENERATED_DIRS_tools = classes $(dir-tests)
 
-AndroidManifest.xml: % : %.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $< > $@
-
-$(_JAVA_TESTS): % : $(TESTPATH)/%.in
-	$(NSINSTALL) -D $(DEPTH)/mobile/android/base/tests
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $< > $(DEPTH)/mobile/android/base/tests/$@
-
-$(_ROBOCOP_TOOLS):
-	cp $(TESTPATH)/robocop.ini robocop.ini
-	cp $(TESTPATH)/robocop_autophone.ini robocop_autophone.ini
-
-libs:: $(_TEST_FILES)
-	$(NSINSTALL) -D $(DEPTH)/_tests/testing/mochitest/tests/robocop
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/robocop/
-
-tools:: robocop.apk
+tools:: $(robocop-deps) robocop.apk
 
 classes.dex: robocop.ap_
-classes.dex: $(_ROBOCOP_TOOLS)
-classes.dex: $(_JAVA_HARNESS)
-classes.dex: $(_JAVA_TESTS)
-	$(NSINSTALL) -D classes
-	$(JAVAC) $(JAVAC_FLAGS) -d classes $(JAVAFILES) $(_JAVA_HARNESS) $(addprefix $(DEPTH)/mobile/android/base/tests/,$(_JAVA_TESTS))
+classes.dex: $(robocop-deps)
+classes.dex: $(java-harness-dep)
+classes.dex: $(java-tests-dep)
+	$(JAVAC) $(JAVAC_FLAGS) -d classes $(JAVAFILES) $(_JAVA_HARNESS) $(java-tests-dep)
 	$(DX) --dex --output=$@ classes $(ROBOTIUM_PATH) $(ANDROID_COMPT_LIB)
 
+robocop.apk: $(robocop-deps) robocop.ap_ classes.dex
 robocop.ap_: AndroidManifest.xml $(TESTPATH)/assets/*
-	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -I . -S res -A $(TESTPATH)/assets -F $@ -J ./
+	$(AAPT) package -f -M $< -I $(ANDROID_SDK)/android.jar -I . -S res -A $(TESTPATH)/assets -F $@ -J ./
 
-robocop.apk: robocop.ap_ classes.dex
-	cp $(TESTPATH)/robocop.ini robocop.ini
-	cp $(TESTPATH)/robocop_autophone.ini robocop_autophone.ini
-	cp $(srcdir)/parse_ids.py parse_ids.py
-
-export::
-	$(NSINSTALL) -D res
-	@(cd $(srcdir)/res && tar $(TAR_CREATE_FLAGS) - *) | (cd $(DEPTH)/build/mobile/robocop/res && tar -xf -)
-
+# PP_java-tests not fully usable here
+# Intermediate step toward a library rule.
+$(dir-tests)/%.java: $(TESTPATH)/%.java.in $(call mkdir_deps,$(dir-tests))
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $< > $@
