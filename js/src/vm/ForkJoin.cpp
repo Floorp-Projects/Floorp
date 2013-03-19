@@ -20,7 +20,10 @@
 
 using namespace js;
 
-#ifdef JS_THREADSAFE
+#if defined(JS_THREADSAFE) && defined(JS_ION)
+
+unsigned ForkJoinSlice::ThreadPrivateIndex;
+bool ForkJoinSlice::TLSInitialized;
 
 class js::ForkJoinShared : public TaskExecutor, public Monitor
 {
@@ -45,12 +48,12 @@ class js::ForkJoinShared : public TaskExecutor, public Monitor
     //
     // Only to be accessed while holding the lock.
 
-    uint32_t uncompleted_;         // Number of uncompleted worker threads
-    uint32_t blocked_;             // Number of threads that have joined rendezvous
-    uint32_t rendezvousIndex_;     // Number of rendezvous attempts
-    bool gcRequested_;             // True if a worker requested a GC
-    gcreason::Reason gcReason_;    // Reason given to request GC
-    Zone *gcZone_;                 // Zone for GC, or NULL for full
+    uint32_t uncompleted_;          // Number of uncompleted worker threads
+    uint32_t blocked_;              // Number of threads that have joined rendezvous
+    uint32_t rendezvousIndex_;      // Number of rendezvous attempts
+    bool gcRequested_;              // True if a worker requested a GC
+    JS::gcreason::Reason gcReason_; // Reason given to request GC
+    Zone *gcZone_;                  // Zone for GC, or NULL for full
 
     /////////////////////////////////////////////////////////////////////////
     // Asynchronous Flags
@@ -118,8 +121,8 @@ class js::ForkJoinShared : public TaskExecutor, public Monitor
     bool check(ForkJoinSlice &threadCx);
 
     // Requests a GC, either full or specific to a zone.
-    void requestGC(gcreason::Reason reason);
-    void requestZoneGC(JS::Zone *zone, gcreason::Reason reason);
+    void requestGC(JS::gcreason::Reason reason);
+    void requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason);
 
     // Requests that computation abort.
     void setAbortFlag(bool fatal);
@@ -143,9 +146,6 @@ class js::AutoRendezvous
         threadCx.shared->endRendezvous(threadCx);
     }
 };
-
-unsigned ForkJoinSlice::ThreadPrivateIndex;
-bool ForkJoinSlice::TLSInitialized;
 
 class js::AutoSetForkJoinSlice
 {
@@ -172,12 +172,13 @@ ForkJoinShared::ForkJoinShared(JSContext *cx,
     threadPool_(threadPool),
     op_(op),
     numSlices_(numSlices),
+    rendezvousEnd_(NULL),
     allocators_(cx),
     uncompleted_(uncompleted),
     blocked_(0),
     rendezvousIndex_(0),
     gcRequested_(false),
-    gcReason_(gcreason::NUM_REASONS),
+    gcReason_(JS::gcreason::NUM_REASONS),
     gcZone_(NULL),
     abort_(false),
     fatal_(false),
@@ -220,7 +221,8 @@ ForkJoinShared::init()
 
 ForkJoinShared::~ForkJoinShared()
 {
-    PR_DestroyCondVar(rendezvousEnd_);
+    if (rendezvousEnd_)
+        PR_DestroyCondVar(rendezvousEnd_);
 
     while (allocators_.length() > 0)
         js_delete(allocators_.popCopy());
@@ -445,7 +447,7 @@ ForkJoinShared::setAbortFlag(bool fatal)
 }
 
 void
-ForkJoinShared::requestGC(gcreason::Reason reason)
+ForkJoinShared::requestGC(JS::gcreason::Reason reason)
 {
     AutoLockMonitor lock(*this);
 
@@ -455,7 +457,7 @@ ForkJoinShared::requestGC(gcreason::Reason reason)
 }
 
 void
-ForkJoinShared::requestZoneGC(JS::Zone *zone, gcreason::Reason reason)
+ForkJoinShared::requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason)
 {
     AutoLockMonitor lock(*this);
 
@@ -472,8 +474,6 @@ ForkJoinShared::requestZoneGC(JS::Zone *zone, gcreason::Reason reason)
         gcRequested_ = true;
     }
 }
-
-#endif // JS_THREADSAFE
 
 /////////////////////////////////////////////////////////////////////////////
 // ForkJoinSlice
@@ -493,70 +493,49 @@ ForkJoinSlice::ForkJoinSlice(PerThreadData *perThreadData,
 bool
 ForkJoinSlice::isMainThread()
 {
-#ifdef JS_THREADSAFE
     return perThreadData == &shared->runtime()->mainThread;
-#else
-    return true;
-#endif
 }
 
 JSRuntime *
 ForkJoinSlice::runtime()
 {
-#ifdef JS_THREADSAFE
     return shared->runtime();
-#else
-    return NULL;
-#endif
 }
 
 bool
 ForkJoinSlice::check()
 {
-#ifdef JS_THREADSAFE
     if (runtime()->interrupt)
         return shared->check(*this);
     else
         return true;
-#else
-    return false;
-#endif
 }
 
 bool
 ForkJoinSlice::InitializeTLS()
 {
-#ifdef JS_THREADSAFE
     if (!TLSInitialized) {
         TLSInitialized = true;
         PRStatus status = PR_NewThreadPrivateIndex(&ThreadPrivateIndex, NULL);
         return status == PR_SUCCESS;
     }
     return true;
-#else
-    return true;
-#endif
 }
 
 void
-ForkJoinSlice::requestGC(gcreason::Reason reason)
+ForkJoinSlice::requestGC(JS::gcreason::Reason reason)
 {
-#ifdef JS_THREADSAFE
     shared->requestGC(reason);
     triggerAbort();
-#endif
 }
 
 void
-ForkJoinSlice::requestZoneGC(JS::Zone *zone, gcreason::Reason reason)
+ForkJoinSlice::requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason)
 {
-#ifdef JS_THREADSAFE
     shared->requestZoneGC(zone, reason);
     triggerAbort();
-#endif
 }
 
-#ifdef JS_THREADSAFE
 void
 ForkJoinSlice::triggerAbort()
 {
@@ -572,7 +551,6 @@ ForkJoinSlice::triggerAbort()
     // are not on a central list so that's not possible.
     perThreadData->ionStackLimit = -1;
 }
-#endif
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -593,9 +571,9 @@ class AutoEnterParallelSection
         // write barriers thread-safe.  Therefore, we guarantee
         // that there is no incremental GC in progress.
 
-        if (IsIncrementalGCInProgress(cx->runtime)) {
-            PrepareForIncrementalGC(cx->runtime);
-            FinishIncrementalGC(cx->runtime, gcreason::API);
+        if (JS::IsIncrementalGCInProgress(cx->runtime)) {
+            JS::PrepareForIncrementalGC(cx->runtime);
+            JS::FinishIncrementalGC(cx->runtime, JS::gcreason::API);
         }
 
         cx->runtime->gcHelperThread.waitBackgroundSweepEnd();
@@ -610,18 +588,13 @@ class AutoEnterParallelSection
 uint32_t
 js::ForkJoinSlices(JSContext *cx)
 {
-#ifndef JS_THREADSAFE
-    return 1;
-#else
     // Parallel workers plus this main thread.
     return cx->runtime->threadPool.numWorkers() + 1;
-#endif
 }
 
 ParallelResult
 js::ExecuteForkJoinOp(JSContext *cx, ForkJoinOp &op)
 {
-#ifdef JS_THREADSAFE
     // Recursive use of the ThreadPool is not supported.
     JS_ASSERT(!InParallelSection());
 
@@ -635,7 +608,57 @@ js::ExecuteForkJoinOp(JSContext *cx, ForkJoinOp &op)
         return TP_RETRY_SEQUENTIALLY;
 
     return shared.execute();
-#else
-    return TP_RETRY_SEQUENTIALLY;
-#endif
 }
+
+#else
+
+bool
+ForkJoinSlice::isMainThread()
+{
+    return true;
+}
+
+JSRuntime *
+ForkJoinSlice::runtime()
+{
+    return NULL;
+}
+
+bool
+ForkJoinSlice::check()
+{
+    return false;
+}
+
+bool
+ForkJoinSlice::InitializeTLS()
+{
+    return true;
+}
+
+void
+ForkJoinSlice::requestGC(JS::gcreason::Reason reason)
+{
+    JS_NOT_REACHED("No threadsafe, no ion");
+}
+
+void
+ForkJoinSlice::requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason)
+{
+    JS_NOT_REACHED("No threadsafe, no ion");
+}
+
+uint32_t
+js::ForkJoinSlices(JSContext *cx)
+{
+    return 1;
+}
+
+ParallelResult
+js::ExecuteForkJoinOp(JSContext *cx, ForkJoinOp &op)
+{
+    return TP_RETRY_SEQUENTIALLY;
+}
+
+#endif // defined(JS_THREADSAFE) && defined(JS_ION)
+

@@ -196,7 +196,7 @@ DASHReader::ReadMetadata(VideoInfo* aInfo,
   // Read metadata for all video streams.
   for (uint i = 0; i < mVideoReaders.Length(); i++) {
     // Use an nsAutoPtr here to ensure |tags| memory does not leak.
-    nsAutoPtr<nsHTMLMediaElement::MetadataTags> tags;
+    nsAutoPtr<HTMLMediaElement::MetadataTags> tags;
     rv = mVideoReaders[i]->ReadMetadata(&videoInfo, getter_Transfers(tags));
     NS_ENSURE_SUCCESS(rv, rv);
     // Use metadata from current video sub reader to populate aInfo.

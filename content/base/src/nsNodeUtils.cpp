@@ -25,7 +25,7 @@
 #include "nsBindingManager.h"
 #include "nsGenericHTMLElement.h"
 #ifdef MOZ_MEDIA
-#include "nsHTMLMediaElement.h"
+#include "mozilla/dom/HTMLMediaElement.h"
 #endif // MOZ_MEDIA
 #include "nsWrapperCacheInlines.h"
 #include "nsObjectLoadingContent.h"
@@ -508,7 +508,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
 #ifdef MOZ_MEDIA
       nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aNode));
       if (domMediaElem) {
-        nsHTMLMediaElement* mediaElem = static_cast<nsHTMLMediaElement*>(aNode);
+        HTMLMediaElement* mediaElem = static_cast<HTMLMediaElement*>(aNode);
         mediaElem->NotifyOwnerDocumentActivityChanged();
       }
 #endif

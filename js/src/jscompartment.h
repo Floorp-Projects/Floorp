@@ -393,7 +393,7 @@ class js::AutoDebugModeGC
         // The DEBUG_MODE_GC reason forces the collector to always throw
         // everything away, as required for debug mode transitions.
         if (needGC)
-            GC(rt, GC_NORMAL, gcreason::DEBUG_MODE_GC);
+            GC(rt, GC_NORMAL, JS::gcreason::DEBUG_MODE_GC);
     }
 
     void scheduleGC(Zone *zone) {

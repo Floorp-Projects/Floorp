@@ -152,6 +152,7 @@ _BROWSER_FILES = \
                  browser_bug749738.js \
                  browser_bug763468_perwindowpb.js \
                  browser_bug767836_perwindowpb.js \
+                 browser_bug771331.js \
                  browser_bug783614.js \
                  browser_bug797677.js \
                  browser_bug816527.js \

@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/TimeRanges.h"
 #include "mozilla/dom/TimeRangesBinding.h"
-#include "nsHTMLMediaElement.h"
+#include "mozilla/dom/HTMLMediaElement.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
 #include "nsError.h"

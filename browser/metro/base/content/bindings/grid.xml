@@ -514,11 +514,6 @@
 
       <constructor>
         <![CDATA[
-          // Bindings don't get bound until the item is displayed,
-          // so we have to reset the background color/image when we get
-          // created.
-          this.setColor();
-          this.setBackgroundImage();
         ]]>
       </constructor>
 
@@ -537,7 +532,7 @@
       <method name="setColor">
         <body>
           <![CDATA[
-            if (this.color != undefined) {
+            if (this._color != undefined) {
               this._box.parentNode.setAttribute("customColorPresent", "true");
               this._box.style.backgroundColor = this.color;
             } else {
@@ -550,7 +545,7 @@
       <method name="setBackgroundImage">
         <body>
           <![CDATA[
-            if (this.backgroundImage != undefined) {
+            if (this._backgroundImage != undefined) {
               this._box.parentNode.setAttribute("customImagePresent", "true");
               this._box.style.backgroundImage = this.backgroundImage;
             } else {

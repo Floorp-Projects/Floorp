@@ -53,8 +53,8 @@ private:
   bool GetNextChunk(uint32_t* aChunk, uint32_t* aChunkSize);
   bool LoadFormatChunk(uint32_t aChunkSize);
   bool FindDataOffset(uint32_t aChunkSize);
-  bool LoadListChunk(uint32_t aChunkSize, nsAutoPtr<nsHTMLMediaElement::MetadataTags> &aTags);
-  bool LoadAllChunks(nsAutoPtr<nsHTMLMediaElement::MetadataTags> &aTags);
+  bool LoadListChunk(uint32_t aChunkSize, nsAutoPtr<dom::HTMLMediaElement::MetadataTags> &aTags);
+  bool LoadAllChunks(nsAutoPtr<dom::HTMLMediaElement::MetadataTags> &aTags);
 
   // Returns the number of seconds that aBytes represents based on the
   // current audio parameters.  e.g.  176400 bytes is 1 second at 16-bit

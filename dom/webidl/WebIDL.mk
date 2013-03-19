@@ -69,6 +69,7 @@ webidl_files = \
   HTMLAnchorElement.webidl \
   HTMLAppletElement.webidl \
   HTMLAreaElement.webidl \
+  HTMLAudioElement.webidl \
   HTMLBaseElement.webidl \
   HTMLBodyElement.webidl \
   HTMLBRElement.webidl \
@@ -96,6 +97,7 @@ webidl_files = \
   HTMLLIElement.webidl \
   HTMLLinkElement.webidl \
   HTMLMapElement.webidl \
+  HTMLMediaElement.webidl \
   HTMLMenuElement.webidl \
   HTMLMenuItemElement.webidl \
   HTMLMetaElement.webidl \
@@ -126,6 +128,7 @@ webidl_files = \
   HTMLTimeElement.webidl \
   HTMLTitleElement.webidl \
   HTMLUListElement.webidl \
+  HTMLVideoElement.webidl \
   IDBVersionChangeEvent.webidl \
   ImageData.webidl \
   InspectorUtils.webidl \

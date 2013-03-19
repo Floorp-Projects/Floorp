@@ -516,7 +516,7 @@ MaybeWrapValue(JSContext* cx, JS::Value* vp)
 {
   if (vp->isString()) {
     JSString* str = vp->toString();
-    if (js::GetGCThingZone(str) != js::GetContextZone(cx)) {
+    if (JS::GetGCThingZone(str) != js::GetContextZone(cx)) {
       return JS_WrapValue(cx, vp);
     }
     return true;

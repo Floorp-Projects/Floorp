@@ -297,6 +297,10 @@ PluginHangUIParent::SendCancel()
 bool
 PluginHangUIParent::RecvUserResponse(const unsigned int& aResponse)
 {
+  if (!mIsShowing && !(aResponse & HANGUI_USER_RESPONSE_CANCEL)) {
+    // Don't process a user response if a cancellation is already pending
+    return true;
+  }
   mLastUserResponse = aResponse;
   mResponseTicks = GetTickCount();
   mIsShowing = false;
