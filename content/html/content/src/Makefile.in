@@ -161,7 +161,7 @@ EXPORTS_mozilla/dom += \
 
 CPPSRCS		+= \
 		nsHTMLAudioElement.cpp \
-		nsHTMLMediaElement.cpp \
+		HTMLMediaElement.cpp \
 		MediaError.cpp \
 		HTMLSourceElement.cpp \
 		TimeRanges.cpp \

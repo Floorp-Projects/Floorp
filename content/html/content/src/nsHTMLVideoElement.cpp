@@ -37,15 +37,15 @@ using namespace mozilla::dom;
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Video)
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLVideoElement, nsHTMLMediaElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLVideoElement, nsHTMLMediaElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLVideoElement, HTMLMediaElement)
+NS_IMPL_RELEASE_INHERITED(nsHTMLVideoElement, HTMLMediaElement)
 
 DOMCI_NODE_DATA(HTMLVideoElement, nsHTMLVideoElement)
 
 NS_INTERFACE_TABLE_HEAD(nsHTMLVideoElement)
   NS_HTML_CONTENT_INTERFACE_TABLE2(nsHTMLVideoElement, nsIDOMHTMLMediaElement, nsIDOMHTMLVideoElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLVideoElement,
-                                               nsHTMLMediaElement)
+                                               HTMLMediaElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLVideoElement)
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLVideoElement)
@@ -70,7 +70,7 @@ NS_IMETHODIMP nsHTMLVideoElement::GetVideoHeight(uint32_t *aVideoHeight)
 }
 
 nsHTMLVideoElement::nsHTMLVideoElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsHTMLMediaElement(aNodeInfo)
+  : HTMLMediaElement(aNodeInfo)
 {
 }
 
@@ -99,8 +99,8 @@ nsHTMLVideoElement::ParseAttribute(int32_t aNamespaceID,
      return aResult.ParseSpecialIntValue(aValue);
    }
 
-   return nsHTMLMediaElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
-                                             aResult);
+   return HTMLMediaElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                           aResult);
 }
 
 static void
@@ -180,7 +180,7 @@ NS_IMETHODIMP nsHTMLVideoElement::GetMozPresentedFrames(uint32_t *aMozPresentedF
 NS_IMETHODIMP nsHTMLVideoElement::GetMozPaintedFrames(uint32_t *aMozPaintedFrames)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  ImageContainer* container = GetImageContainer();
+  layers::ImageContainer* container = GetImageContainer();
   *aMozPaintedFrames = container ? container->GetPaintCount() : 0;
   return NS_OK;
 }
