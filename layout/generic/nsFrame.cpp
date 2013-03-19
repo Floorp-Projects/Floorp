@@ -2056,18 +2056,6 @@ IsRootScrollFrameActive(nsIPresShell* aPresShell)
   return sf && sf->IsScrollingActive();
 }
 
-static nsDisplayItem*
-WrapInWrapList(nsDisplayListBuilder* aBuilder,
-               nsIFrame* aFrame, nsDisplayList* aList)
-{
-  nsDisplayItem* item = aList->GetBottom();
-  if (!item || item->GetAbove() || item->GetUnderlyingFrame() != aFrame) {
-    return new (aBuilder) nsDisplayWrapList(aBuilder, aFrame, aList);
-  }
-  aList->RemoveBottom();
-  return item;
-}
-
 void
 nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
                                    nsIFrame*               aChild,
@@ -2302,7 +2290,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       if (buildFixedPositionItem) {
         item = new (aBuilder) nsDisplayFixedPosition(aBuilder, child, child, &list);
       } else {
-        item = WrapInWrapList(aBuilder, child, &list);
+        item = new (aBuilder) nsDisplayWrapList(aBuilder, child, &list);
       }
       if (isSVG) {
         aLists.Content()->AppendNewToTop(item);
@@ -2325,7 +2313,8 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     }
   } else if (!isSVG && disp->IsFloating(child)) {
     if (!list.IsEmpty()) {
-      aLists.Floats()->AppendNewToTop(WrapInWrapList(aBuilder, child, &list));
+      aLists.Floats()->AppendNewToTop(new (aBuilder)
+          nsDisplayWrapList(aBuilder, child, &list));
     }
   } else {
     aLists.Content()->AppendToTop(&list);
