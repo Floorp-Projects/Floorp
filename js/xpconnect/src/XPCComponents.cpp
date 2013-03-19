@@ -4017,8 +4017,8 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::ForceGC()
 {
     JSRuntime* rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
-    js::PrepareForFullGC(rt);
-    js::GCForReason(rt, js::gcreason::COMPONENT_UTILS);
+    JS::PrepareForFullGC(rt);
+    JS::GCForReason(rt, JS::gcreason::COMPONENT_UTILS);
     return NS_OK;
 }
 
@@ -4035,8 +4035,8 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::ForceShrinkingGC()
 {
     JSRuntime* rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
-    js::PrepareForFullGC(rt);
-    js::ShrinkingGC(rt, js::gcreason::COMPONENT_UTILS);
+    JS::PrepareForFullGC(rt);
+    JS::ShrinkingGC(rt, JS::gcreason::COMPONENT_UTILS);
     return NS_OK;
 }
 
@@ -4058,11 +4058,11 @@ class PreciseGCRunnable : public nsRunnable
             }
         }
 
-        js::PrepareForFullGC(rt);
+        JS::PrepareForFullGC(rt);
         if (mShrinking)
-            js::ShrinkingGC(rt, js::gcreason::COMPONENT_UTILS);
+            JS::ShrinkingGC(rt, JS::gcreason::COMPONENT_UTILS);
         else
-            js::GCForReason(rt, js::gcreason::COMPONENT_UTILS);
+            JS::GCForReason(rt, JS::gcreason::COMPONENT_UTILS);
 
         mCallback->Callback();
         return NS_OK;

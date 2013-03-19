@@ -1032,7 +1032,7 @@ js_CallContextDebugHandler(JSContext *cx)
     }
 }
 
-JS_PUBLIC_API(StackDescription *)
+JS_PUBLIC_API(JS::StackDescription *)
 JS::DescribeStack(JSContext *cx, unsigned maxFrames)
 {
     Vector<FrameDescription> frames(cx);
@@ -1050,7 +1050,7 @@ JS::DescribeStack(JSContext *cx, unsigned maxFrames)
             break;
     }
 
-    StackDescription *desc = js_new<StackDescription>();
+    JS::StackDescription *desc = js_new<JS::StackDescription>();
     if (!desc)
         return NULL;
 
@@ -1060,7 +1060,7 @@ JS::DescribeStack(JSContext *cx, unsigned maxFrames)
 }
 
 JS_PUBLIC_API(void)
-JS::FreeStackDescription(JSContext *cx, StackDescription *desc)
+JS::FreeStackDescription(JSContext *cx, JS::StackDescription *desc)
 {
     js_delete(desc->frames);
     js_delete(desc);

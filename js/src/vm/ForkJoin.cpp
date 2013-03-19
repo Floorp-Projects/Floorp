@@ -48,12 +48,12 @@ class js::ForkJoinShared : public TaskExecutor, public Monitor
     //
     // Only to be accessed while holding the lock.
 
-    uint32_t uncompleted_;         // Number of uncompleted worker threads
-    uint32_t blocked_;             // Number of threads that have joined rendezvous
-    uint32_t rendezvousIndex_;     // Number of rendezvous attempts
-    bool gcRequested_;             // True if a worker requested a GC
-    gcreason::Reason gcReason_;    // Reason given to request GC
-    Zone *gcZone_;                 // Zone for GC, or NULL for full
+    uint32_t uncompleted_;          // Number of uncompleted worker threads
+    uint32_t blocked_;              // Number of threads that have joined rendezvous
+    uint32_t rendezvousIndex_;      // Number of rendezvous attempts
+    bool gcRequested_;              // True if a worker requested a GC
+    JS::gcreason::Reason gcReason_; // Reason given to request GC
+    Zone *gcZone_;                  // Zone for GC, or NULL for full
 
     /////////////////////////////////////////////////////////////////////////
     // Asynchronous Flags
@@ -121,8 +121,8 @@ class js::ForkJoinShared : public TaskExecutor, public Monitor
     bool check(ForkJoinSlice &threadCx);
 
     // Requests a GC, either full or specific to a zone.
-    void requestGC(gcreason::Reason reason);
-    void requestZoneGC(JS::Zone *zone, gcreason::Reason reason);
+    void requestGC(JS::gcreason::Reason reason);
+    void requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason);
 
     // Requests that computation abort.
     void setAbortFlag(bool fatal);
@@ -178,7 +178,7 @@ ForkJoinShared::ForkJoinShared(JSContext *cx,
     blocked_(0),
     rendezvousIndex_(0),
     gcRequested_(false),
-    gcReason_(gcreason::NUM_REASONS),
+    gcReason_(JS::gcreason::NUM_REASONS),
     gcZone_(NULL),
     abort_(false),
     fatal_(false),
@@ -447,7 +447,7 @@ ForkJoinShared::setAbortFlag(bool fatal)
 }
 
 void
-ForkJoinShared::requestGC(gcreason::Reason reason)
+ForkJoinShared::requestGC(JS::gcreason::Reason reason)
 {
     AutoLockMonitor lock(*this);
 
@@ -457,7 +457,7 @@ ForkJoinShared::requestGC(gcreason::Reason reason)
 }
 
 void
-ForkJoinShared::requestZoneGC(JS::Zone *zone, gcreason::Reason reason)
+ForkJoinShared::requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason)
 {
     AutoLockMonitor lock(*this);
 
@@ -523,14 +523,14 @@ ForkJoinSlice::InitializeTLS()
 }
 
 void
-ForkJoinSlice::requestGC(gcreason::Reason reason)
+ForkJoinSlice::requestGC(JS::gcreason::Reason reason)
 {
     shared->requestGC(reason);
     triggerAbort();
 }
 
 void
-ForkJoinSlice::requestZoneGC(JS::Zone *zone, gcreason::Reason reason)
+ForkJoinSlice::requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason)
 {
     shared->requestZoneGC(zone, reason);
     triggerAbort();
@@ -571,9 +571,9 @@ class AutoEnterParallelSection
         // write barriers thread-safe.  Therefore, we guarantee
         // that there is no incremental GC in progress.
 
-        if (IsIncrementalGCInProgress(cx->runtime)) {
-            PrepareForIncrementalGC(cx->runtime);
-            FinishIncrementalGC(cx->runtime, gcreason::API);
+        if (JS::IsIncrementalGCInProgress(cx->runtime)) {
+            JS::PrepareForIncrementalGC(cx->runtime);
+            JS::FinishIncrementalGC(cx->runtime, JS::gcreason::API);
         }
 
         cx->runtime->gcHelperThread.waitBackgroundSweepEnd();
@@ -637,13 +637,13 @@ ForkJoinSlice::InitializeTLS()
 }
 
 void
-ForkJoinSlice::requestGC(gcreason::Reason reason)
+ForkJoinSlice::requestGC(JS::gcreason::Reason reason)
 {
     JS_NOT_REACHED("No threadsafe, no ion");
 }
 
 void
-ForkJoinSlice::requestZoneGC(JS::Zone *zone, gcreason::Reason reason)
+ForkJoinSlice::requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason)
 {
     JS_NOT_REACHED("No threadsafe, no ion");
 }

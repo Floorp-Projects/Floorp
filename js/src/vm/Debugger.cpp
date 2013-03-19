@@ -2596,7 +2596,7 @@ Debugger::findAllGlobals(JSContext *cx, unsigned argc, Value *vp)
              * marked gray by XPConnect. Since we're now exposing it to JS code,
              * we need to mark it black.
              */
-            ExposeGCThingToActiveJS(global, JSTRACE_OBJECT);
+            JS::ExposeGCThingToActiveJS(global, JSTRACE_OBJECT);
 
             RootedValue globalValue(cx, ObjectValue(*global));
             if (!dbg->wrapDebuggeeValue(cx, &globalValue))
