@@ -50,8 +50,8 @@ NS_NewHTMLAudioElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   return new nsHTMLAudioElement(nodeInfo.forget());
 }
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLAudioElement, nsHTMLMediaElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLAudioElement, nsHTMLMediaElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLAudioElement, HTMLMediaElement)
+NS_IMPL_RELEASE_INHERITED(nsHTMLAudioElement, HTMLMediaElement)
 
 DOMCI_NODE_DATA(HTMLAudioElement, nsHTMLAudioElement)
 
@@ -59,14 +59,14 @@ NS_INTERFACE_TABLE_HEAD(nsHTMLAudioElement)
 NS_HTML_CONTENT_INTERFACE_TABLE3(nsHTMLAudioElement, nsIDOMHTMLMediaElement,
                                  nsIDOMHTMLAudioElement, nsIJSNativeInitializer)
 NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLAudioElement,
-                                               nsHTMLMediaElement)
+                                             HTMLMediaElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLAudioElement)
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLAudioElement)
 
 
 nsHTMLAudioElement::nsHTMLAudioElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsHTMLMediaElement(aNodeInfo)
+  : HTMLMediaElement(aNodeInfo)
 {
 }
 

@@ -14,9 +14,11 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 
-class nsHTMLMediaElement;
-
 namespace mozilla {
+
+namespace dom {
+class HTMLMediaElement;
+}
 
 namespace layers {
 class Image;
@@ -34,12 +36,12 @@ class ImageContainer;
  */
 class VideoFrameContainer {
 public:
-  typedef mozilla::layers::ImageContainer ImageContainer;
-  typedef mozilla::layers::Image Image;
+  typedef layers::ImageContainer ImageContainer;
+  typedef layers::Image Image;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoFrameContainer)
 
-  VideoFrameContainer(nsHTMLMediaElement* aElement,
+  VideoFrameContainer(dom::HTMLMediaElement* aElement,
                       already_AddRefed<ImageContainer> aContainer);
   ~VideoFrameContainer();
 
@@ -61,7 +63,7 @@ public:
 protected:
   // Non-addreffed pointer to the element. The element calls ForgetElement
   // to clear this reference when the element is destroyed.
-  nsHTMLMediaElement* mElement;
+  dom::HTMLMediaElement* mElement;
   nsRefPtr<ImageContainer> mImageContainer;
 
   // mMutex protects all the fields below.
