@@ -37,9 +37,6 @@ enum BailoutKind
     // A bailout required to monitor the result of a VM call.
     Bailout_Monitor,
 
-    // A bailout to trigger recompilation to inline calls when the script is hot.
-    Bailout_RecompileCheck,
-
     // A bailout triggered by a bounds-check failure.
     Bailout_BoundsCheck,
 

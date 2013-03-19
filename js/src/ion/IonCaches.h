@@ -411,8 +411,13 @@ class GetElementIC : public IonCache
     Register object_;
     ConstantOrRegister index_;
     TypedOrValueRegister output_;
+
     bool monitoredResult_ : 1;
     bool hasDenseStub_ : 1;
+
+    size_t failedUpdates_;
+
+    static const size_t MAX_FAILED_UPDATES;
 
   public:
     GetElementIC(Register object, ConstantOrRegister index,
@@ -421,7 +426,8 @@ class GetElementIC : public IonCache
         index_(index),
         output_(output),
         monitoredResult_(monitoredResult),
-        hasDenseStub_(false)
+        hasDenseStub_(false),
+        failedUpdates_(0)
     {
     }
 
@@ -454,6 +460,17 @@ class GetElementIC : public IonCache
     static bool
     update(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue idval,
                 MutableHandleValue vp);
+
+    void incFailedUpdates() {
+        failedUpdates_++;
+    }
+    void resetFailedUpdates() {
+        failedUpdates_ = 0;
+    }
+    bool shouldDisable() const {
+        return !canAttachStub() ||
+               (stubCount_ == 0 && failedUpdates_ > MAX_FAILED_UPDATES);
+    }
 };
 
 class BindNameIC : public IonCache

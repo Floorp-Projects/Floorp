@@ -9,7 +9,6 @@
 #include "nsRequestObserverProxy.h"
 #include "nsIRequest.h"
 #include "nsIServiceManager.h"
-#include "nsProxyRelease.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
 #include "prlog.h"
@@ -26,10 +25,8 @@ static PRLogModuleInfo *gRequestObserverProxyLog;
 // nsARequestObserverEvent internal class...
 //-----------------------------------------------------------------------------
 
-nsARequestObserverEvent::nsARequestObserverEvent(nsIRequest *request,
-                                                 nsISupports *context)
+nsARequestObserverEvent::nsARequestObserverEvent(nsIRequest *request)
     : mRequest(request)
-    , mContext(context)
 {
     NS_PRECONDITION(mRequest, "null pointer");
 }
@@ -43,9 +40,8 @@ class nsOnStartRequestEvent : public nsARequestObserverEvent
     nsRefPtr<nsRequestObserverProxy> mProxy;
 public:
     nsOnStartRequestEvent(nsRequestObserverProxy *proxy,
-                          nsIRequest *request,
-                          nsISupports *context)
-        : nsARequestObserverEvent(request, context)
+                          nsIRequest *request)
+        : nsARequestObserverEvent(request)
         , mProxy(proxy)
     {
         NS_PRECONDITION(mProxy, "null pointer");
@@ -63,7 +59,7 @@ public:
         }
 
         LOG(("handle startevent=%p\n", this));
-        nsresult rv = mProxy->mObserver->OnStartRequest(mRequest, mContext);
+        nsresult rv = mProxy->mObserver->OnStartRequest(mRequest, mProxy->mContext);
         if (NS_FAILED(rv)) {
             LOG(("OnStartRequest failed [rv=%x] canceling request!\n", rv));
             rv = mRequest->Cancel(rv);
@@ -83,8 +79,8 @@ class nsOnStopRequestEvent : public nsARequestObserverEvent
     nsRefPtr<nsRequestObserverProxy> mProxy;
 public:
     nsOnStopRequestEvent(nsRequestObserverProxy *proxy,
-                         nsIRequest *request, nsISupports *context)
-        : nsARequestObserverEvent(request, context)
+                         nsIRequest *request)
+        : nsARequestObserverEvent(request)
         , mProxy(proxy)
     {
         NS_PRECONDITION(mProxy, "null pointer");
@@ -96,7 +92,7 @@ public:
     {
         LOG(("nsOnStopRequestEvent::HandleEvent [req=%x]\n", mRequest.get()));
 
-        nsCOMPtr<nsIRequestObserver> observer = mProxy->mObserver;
+        nsMainThreadPtrHandle<nsIRequestObserver> observer = mProxy->mObserver;
         if (!observer) {
             NS_NOTREACHED("already handled onStopRequest event (observer is null)");
             return NS_OK;
@@ -109,27 +105,11 @@ public:
         NS_ASSERTION(NS_SUCCEEDED(rv), "GetStatus failed for request!");
 
         LOG(("handle stopevent=%p\n", this));
-        (void) observer->OnStopRequest(mRequest, mContext, status);
+        (void) observer->OnStopRequest(mRequest, mProxy->mContext, status);
 
         return NS_OK;
     }
 };
-
-//-----------------------------------------------------------------------------
-// nsRequestObserverProxy <public>
-//-----------------------------------------------------------------------------
-
-nsRequestObserverProxy::~nsRequestObserverProxy()
-{
-    if (mObserver) {
-        // order is crucial here... we must be careful to clear mObserver
-        // before posting the proxy release event.  otherwise, we'd risk
-        // releasing the object on this thread.
-        nsIRequestObserver *obs = nullptr;
-        mObserver.swap(obs);
-        NS_ProxyRelease(mTarget, obs);
-    }
-}
 
 //-----------------------------------------------------------------------------
 // nsRequestObserverProxy::nsISupports implementation...
@@ -147,14 +127,15 @@ NS_IMETHODIMP
 nsRequestObserverProxy::OnStartRequest(nsIRequest *request,
                                        nsISupports *context)
 {
+    MOZ_ASSERT(!context || context == mContext);
     LOG(("nsRequestObserverProxy::OnStartRequest [this=%x req=%x]\n", this, request));
 
     nsOnStartRequestEvent *ev = 
-        new nsOnStartRequestEvent(this, request, context);
+        new nsOnStartRequestEvent(this, request);
     if (!ev)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    LOG(("post startevent=%p queue=%p\n", ev, mTarget.get()));
+    LOG(("post startevent=%p\n", ev));
     nsresult rv = FireEvent(ev);
     if (NS_FAILED(rv))
         delete ev;
@@ -166,6 +147,7 @@ nsRequestObserverProxy::OnStopRequest(nsIRequest *request,
                                       nsISupports *context,
                                       nsresult status)
 {
+    MOZ_ASSERT(!context || context == mContext);
     LOG(("nsRequestObserverProxy: OnStopRequest [this=%x req=%x status=%x]\n",
         this, request, status));
 
@@ -175,11 +157,11 @@ nsRequestObserverProxy::OnStopRequest(nsIRequest *request,
     // called when the OnStopRequestEvent is actually processed (see above).
 
     nsOnStopRequestEvent *ev = 
-        new nsOnStopRequestEvent(this, request, context);
+        new nsOnStopRequestEvent(this, request);
     if (!ev)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    LOG(("post stopevent=%p queue=%p\n", ev, mTarget.get()));
+    LOG(("post stopevent=%p\n", ev));
     nsresult rv = FireEvent(ev);
     if (NS_FAILED(rv))
         delete ev;
@@ -191,8 +173,7 @@ nsRequestObserverProxy::OnStopRequest(nsIRequest *request,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsRequestObserverProxy::Init(nsIRequestObserver *observer,
-                             nsIEventTarget *target)
+nsRequestObserverProxy::Init(nsIRequestObserver *observer, nsISupports *context)
 {
     NS_ENSURE_ARG_POINTER(observer);
 
@@ -201,10 +182,8 @@ nsRequestObserverProxy::Init(nsIRequestObserver *observer,
         gRequestObserverProxyLog = PR_NewLogModule("nsRequestObserverProxy");
 #endif
 
-    mObserver = observer;
-
-    SetTarget(target ? target : NS_GetCurrentThread());
-    NS_ENSURE_STATE(mTarget);
+    mObserver = new nsMainThreadPtrHolder<nsIRequestObserver>(observer);
+    mContext = new nsMainThreadPtrHolder<nsISupports>(context);
 
     return NS_OK;
 }
@@ -216,6 +195,6 @@ nsRequestObserverProxy::Init(nsIRequestObserver *observer,
 nsresult
 nsRequestObserverProxy::FireEvent(nsARequestObserverEvent *event)
 {
-    NS_ENSURE_TRUE(mTarget, NS_ERROR_NOT_INITIALIZED);
-    return mTarget->Dispatch(event, NS_DISPATCH_NORMAL);
+    nsCOMPtr<nsIEventTarget> mainThread(do_GetMainThread());
+    return mainThread->Dispatch(event, NS_DISPATCH_NORMAL);
 }

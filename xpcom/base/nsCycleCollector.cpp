@@ -1556,7 +1556,7 @@ private:
         if (!mMergeZones) {
             return nullptr;
         }
-        JS::Zone *zone = js::GetGCThingZone(gcthing);
+        JS::Zone *zone = JS::GetGCThingZone(gcthing);
         if (js::IsSystemZone(zone)) {
             return nullptr;
         }

@@ -366,7 +366,7 @@ function outputscripttag(src, properties)
     return;
   }
 
-  var s = '<script src="' +  src + '" ';
+  var s = '<script src="' +  src + '" charset="utf-8" ';
 
   if (properties.language != 'type')
   {

@@ -1065,6 +1065,27 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
 
   // Now reflow...
   rv = ReflowDirtyLines(state);
+
+  // If we have a next-in-flow, and that next-in-flow has pushed floats from
+  // this frame from a previous iteration of reflow, then we should not return
+  // a status of NS_FRAME_COMPLETE, since we actually have overflow, it's just
+  // already been handled.
+
+  // NOTE: This really shouldn't happen, since we _should_ pull back our floats
+  // and reflow them, but just in case it does, this is a safety precaution so
+  // we don't end up with a placeholder pointing to frames that have already
+  // been deleted as part of removing our next-in-flow.
+  if (NS_FRAME_IS_COMPLETE(state.mReflowStatus)) {
+    nsBlockFrame* nif = static_cast<nsBlockFrame*>(GetNextInFlow());
+    while (nif) {
+      if (nif->HasPushedFloatsFromPrevContinuation()) {
+        NS_MergeReflowStatusInto(&state.mReflowStatus, NS_FRAME_NOT_COMPLETE);
+      }
+
+      nif = static_cast<nsBlockFrame*>(nif->GetNextInFlow());
+    }
+  }
+
   NS_ASSERTION(NS_SUCCEEDED(rv), "reflow dirty lines failed");
   if (NS_FAILED(rv)) return rv;
 

@@ -464,8 +464,6 @@ class PerThreadData : public js::PerThreadDataFriendFields
         SavedGCRoot(void *thing, JSGCTraceKind kind) : thing(thing), kind(kind) {}
     };
     js::Vector<SavedGCRoot, 0, js::SystemAllocPolicy> gcSavedRoots;
-
-    bool                gcRelaxRootChecks;
 #endif
 
     /*
@@ -896,7 +894,7 @@ struct JSRuntime : js::RuntimeFriendFields,
     bool                gcIsFull;
 
     /* The reason that an interrupt-triggered GC should be called. */
-    js::gcreason::Reason gcTriggerReason;
+    JS::gcreason::Reason gcTriggerReason;
 
     /*
      * If this is true, all marked objects must belong to a compartment being
@@ -1062,7 +1060,7 @@ struct JSRuntime : js::RuntimeFriendFields,
     bool                gcFullCompartmentChecks;
 
     JSGCCallback        gcCallback;
-    js::GCSliceCallback gcSliceCallback;
+    JS::GCSliceCallback gcSliceCallback;
     JSFinalizeCallback  gcFinalizeCallback;
 
     js::AnalysisPurgeCallback analysisPurgeCallback;
