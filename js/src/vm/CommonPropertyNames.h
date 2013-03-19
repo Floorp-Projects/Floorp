@@ -35,6 +35,8 @@
     macro(configurable, configurable, "configurable") \
     macro(construct, construct, "construct") \
     macro(constructor, constructor, "constructor") \
+    macro(currency, currency, "currency") \
+    macro(currencyDisplay, currencyDisplay, "currencyDisplay") \
     macro(DateTimeFormat, DateTimeFormat, "DateTimeFormat") \
     macro(DateTimeFormatFormatGet, DateTimeFormatFormatGet, "Intl_DateTimeFormat_format_get") \
     macro(decodeURI, decodeURI, "decodeURI") \
@@ -90,7 +92,12 @@
     macro(locale, locale, "locale") \
     macro(lookupGetter, lookupGetter, "__lookupGetter__") \
     macro(lookupSetter, lookupSetter, "__lookupSetter__") \
+    macro(maximumFractionDigits, maximumFractionDigits, "maximumFractionDigits") \
+    macro(maximumSignificantDigits, maximumSignificantDigits, "maximumSignificantDigits") \
     macro(message, message, "message") \
+    macro(minimumFractionDigits, minimumFractionDigits, "minimumFractionDigits") \
+    macro(minimumIntegerDigits, minimumIntegerDigits, "minimumIntegerDigits") \
+    macro(minimumSignificantDigits, minimumSignificantDigits, "minimumSignificantDigits") \
     macro(module, module, "module") \
     macro(multiline, multiline, "multiline") \
     macro(name, name, "name") \
@@ -115,6 +122,7 @@
     macro(source, source, "source") \
     macro(stack, stack, "stack") \
     macro(sticky, sticky, "sticky") \
+    macro(style, style, "style") \
     macro(test, test, "test") \
     macro(throw, throw_, "throw") \
     macro(toGMTString, toGMTString, "toGMTString") \
@@ -130,6 +138,7 @@
     macro(unwatch, unwatch, "unwatch") \
     macro(url, url, "url") \
     macro(usage, usage, "usage") \
+    macro(useGrouping, useGrouping, "useGrouping") \
     macro(useAsm, useAsm, "use asm") \
     macro(useStrict, useStrict, "use strict") \
     macro(value, value, "value") \

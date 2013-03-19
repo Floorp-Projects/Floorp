@@ -93,6 +93,17 @@ intl_NumberFormat_availableLocales(JSContext *cx, unsigned argc, Value *vp);
 extern JSBool
 intl_numberingSystem(JSContext *cx, unsigned argc, Value *vp);
 
+/**
+ * Returns a string representing the number x according to the effective
+ * locale and the formatting options of the given NumberFormat.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 11.3.2.
+ *
+ * Usage: formatted = intl_FormatNumber(numberFormat, x)
+ */
+extern JSBool
+intl_FormatNumber(JSContext *cx, unsigned argc, Value *vp);
+
 } // namespace js
 
 #endif /* Intl_h___ */
