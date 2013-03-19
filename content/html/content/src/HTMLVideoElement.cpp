@@ -9,6 +9,7 @@
 #include "nsIDOMHTMLVideoElement.h"
 #include "nsIDOMHTMLSourceElement.h"
 #include "mozilla/dom/HTMLVideoElement.h"
+#include "mozilla/dom/HTMLVideoElementBinding.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsSize.h"
@@ -57,20 +58,21 @@ NS_IMPL_INT_ATTR(HTMLVideoElement, Height, height)
 /* readonly attribute unsigned long videoWidth; */
 NS_IMETHODIMP HTMLVideoElement::GetVideoWidth(uint32_t *aVideoWidth)
 {
-  *aVideoWidth = mMediaSize.width == -1 ? 0 : mMediaSize.width;
+  *aVideoWidth = VideoWidth();
   return NS_OK;
 }
 
 /* readonly attribute unsigned long videoHeight; */
 NS_IMETHODIMP HTMLVideoElement::GetVideoHeight(uint32_t *aVideoHeight)
 {
-  *aVideoHeight = mMediaSize.height == -1 ? 0 : mMediaSize.height;
+  *aVideoHeight = VideoHeight();
   return NS_OK;
 }
 
 HTMLVideoElement::HTMLVideoElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : HTMLMediaElement(aNodeInfo)
 {
+  SetIsDOMBinding();
 }
 
 HTMLVideoElement::~HTMLVideoElement()
@@ -155,48 +157,83 @@ nsresult HTMLVideoElement::SetAcceptHeader(nsIHttpChannel* aChannel)
 
 NS_IMPL_URI_ATTR(HTMLVideoElement, Poster, poster)
 
+uint32_t HTMLVideoElement::MozParsedFrames() const
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
+  return mDecoder ? mDecoder->GetFrameStatistics().GetParsedFrames() : 0;
+}
+
 NS_IMETHODIMP HTMLVideoElement::GetMozParsedFrames(uint32_t *aMozParsedFrames)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  *aMozParsedFrames = mDecoder ? mDecoder->GetFrameStatistics().GetParsedFrames() : 0;
+  *aMozParsedFrames = MozParsedFrames();
   return NS_OK;
+}
+
+uint32_t HTMLVideoElement::MozDecodedFrames() const
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
+  return mDecoder ? mDecoder->GetFrameStatistics().GetDecodedFrames() : 0;
 }
 
 NS_IMETHODIMP HTMLVideoElement::GetMozDecodedFrames(uint32_t *aMozDecodedFrames)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  *aMozDecodedFrames = mDecoder ? mDecoder->GetFrameStatistics().GetDecodedFrames() : 0;
+  *aMozDecodedFrames = MozDecodedFrames();
   return NS_OK;
+}
+
+uint32_t HTMLVideoElement::MozPresentedFrames() const
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
+  return mDecoder ? mDecoder->GetFrameStatistics().GetPresentedFrames() : 0;
 }
 
 NS_IMETHODIMP HTMLVideoElement::GetMozPresentedFrames(uint32_t *aMozPresentedFrames)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  *aMozPresentedFrames = mDecoder ? mDecoder->GetFrameStatistics().GetPresentedFrames() : 0;
+  *aMozPresentedFrames = MozPresentedFrames();
   return NS_OK;
+}
+
+uint32_t HTMLVideoElement::MozPaintedFrames()
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
+  layers::ImageContainer* container = GetImageContainer();
+  return container ? container->GetPaintCount() : 0;
 }
 
 NS_IMETHODIMP HTMLVideoElement::GetMozPaintedFrames(uint32_t *aMozPaintedFrames)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  layers::ImageContainer* container = GetImageContainer();
-  *aMozPaintedFrames = container ? container->GetPaintCount() : 0;
+  *aMozPaintedFrames = MozPaintedFrames();
   return NS_OK;
+}
+
+double HTMLVideoElement::MozFrameDelay()
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
+  VideoFrameContainer* container = GetVideoFrameContainer();
+  return container ?  container->GetFrameDelay() : 0;
 }
 
 NS_IMETHODIMP HTMLVideoElement::GetMozFrameDelay(double *aMozFrameDelay) {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  VideoFrameContainer* container = GetVideoFrameContainer();
-  *aMozFrameDelay = container ?  container->GetFrameDelay() : 0;
+  *aMozFrameDelay = MozFrameDelay();
   return NS_OK;
 }
 
-
 /* readonly attribute bool mozHasAudio */
+bool HTMLVideoElement::MozHasAudio() const
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
+  return mHasAudio;
+}
+
 NS_IMETHODIMP HTMLVideoElement::GetMozHasAudio(bool *aHasAudio) {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  *aHasAudio = mHasAudio;
+  *aHasAudio = MozHasAudio();
   return NS_OK;
+}
+
+JSObject*
+HTMLVideoElement::WrapNode(JSContext* aCx, JSObject* aScope)
+{
+  return HTMLVideoElementBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace dom
