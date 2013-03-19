@@ -23,6 +23,7 @@ EXPORTS = \
   AudioNodeStream.h \
   AudioSampleFormat.h \
   AudioSegment.h \
+  AudioStream.h \
   BufferMediaResource.h \
   DecoderTraits.h \
   DOMMediaStream.h \
@@ -51,6 +52,7 @@ CPPSRCS = \
   AudioNodeEngine.cpp \
   AudioNodeStream.cpp \
   AudioSegment.cpp \
+  AudioStream.cpp \
   DecoderTraits.cpp \
   DOMMediaStream.cpp \
   FileBlockCache.cpp \
@@ -66,15 +68,6 @@ CPPSRCS = \
   VideoSegment.cpp \
   VideoUtils.cpp \
   $(NULL)
-
-ifdef MOZ_SYDNEYAUDIO
-EXPORTS += \
-  AudioStream.h \
-  $(NULL)
-CPPSRCS += \
-  AudioStream.cpp \
-  $(NULL)
-endif
 
 FORCE_STATIC_LIB = 1
 

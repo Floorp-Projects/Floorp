@@ -10,7 +10,7 @@ Each video element for a media file has two threads:
      hardware. This is done in a separate thread to ensure that the
      audio hardware gets a constant stream of data without
      interruption due to decoding or display. At some point
-     libsydneyaudio will be refactored to have a callback interface
+     AudioStream will be refactored to have a callback interface
      where it asks for data and an extra thread will no longer be
      needed.
 
@@ -70,7 +70,7 @@ to shut down the decode thread in order to conserve resources.
 During playback the audio thread will be idle (via a Wait() on the
 monitor) if the audio queue is empty. Otherwise it constantly pops
 audio data off the queue and plays it with a blocking write to the audio
-hardware (via AudioStream and libsydneyaudio).
+hardware (via AudioStream).
 
 */
 #if !defined(MediaDecoderStateMachine_h__)
