@@ -194,6 +194,7 @@ webidl_files = \
   SVGFEFuncBElement.webidl \
   SVGFEFuncGElement.webidl \
   SVGFEFuncRElement.webidl \
+  SVGFEGaussianBlurElement.webidl \
   SVGFEImageElement.webidl \
   SVGFEMergeElement.webidl \
   SVGFEMergeNodeElement.webidl \

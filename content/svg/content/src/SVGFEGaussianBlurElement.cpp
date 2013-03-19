@@ -4,18 +4,27 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/SVGFEGaussianBlurElement.h"
+#include "mozilla/dom/SVGFEGaussianBlurElementBinding.h"
+#include "nsSVGFilterInstance.h"
+#include "nsSVGUtils.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEGaussianBlur)
 
 namespace mozilla {
 namespace dom {
 
-nsSVGElement::NumberPairInfo nsSVGFEGaussianBlurElement::sNumberPairInfo[1] =
+JSObject*
+SVGFEGaussianBlurElement::WrapNode(JSContext* aCx, JSObject* aScope)
+{
+  return SVGFEGaussianBlurElementBinding::Wrap(aCx, aScope, this);
+}
+
+nsSVGElement::NumberPairInfo SVGFEGaussianBlurElement::sNumberPairInfo[1] =
 {
   { &nsGkAtoms::stdDeviation, 0, 0 }
 };
 
-nsSVGElement::StringInfo nsSVGFEGaussianBlurElement::sStringInfo[2] =
+nsSVGElement::StringInfo SVGFEGaussianBlurElement::sStringInfo[2] =
 {
   { &nsGkAtoms::result, kNameSpaceID_None, true },
   { &nsGkAtoms::in, kNameSpaceID_None, true }
@@ -24,53 +33,45 @@ nsSVGElement::StringInfo nsSVGFEGaussianBlurElement::sStringInfo[2] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGFEGaussianBlurElement,nsSVGFEGaussianBlurElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGFEGaussianBlurElement,nsSVGFEGaussianBlurElementBase)
+NS_IMPL_ADDREF_INHERITED(SVGFEGaussianBlurElement,SVGFEGaussianBlurElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGFEGaussianBlurElement,SVGFEGaussianBlurElementBase)
 
-DOMCI_NODE_DATA(SVGFEGaussianBlurElement, nsSVGFEGaussianBlurElement)
-
-NS_INTERFACE_TABLE_HEAD(nsSVGFEGaussianBlurElement)
-  NS_NODE_INTERFACE_TABLE5(nsSVGFEGaussianBlurElement, nsIDOMNode,
-                           nsIDOMElement, nsIDOMSVGElement,
-                           nsIDOMSVGFilterPrimitiveStandardAttributes,
-                           nsIDOMSVGFEGaussianBlurElement)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGFEGaussianBlurElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGFEGaussianBlurElementBase)
+NS_INTERFACE_TABLE_HEAD(SVGFEGaussianBlurElement)
+  NS_NODE_INTERFACE_TABLE3(SVGFEGaussianBlurElement, nsIDOMNode,
+                           nsIDOMElement, nsIDOMSVGElement)
+NS_INTERFACE_MAP_END_INHERITING(SVGFEGaussianBlurElementBase)
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEGaussianBlurElement)
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEGaussianBlurElement)
 
 
 //----------------------------------------------------------------------
-// nsIDOMSVGFEGaussianBlurElement methods
 
-/* readonly attribute nsIDOMSVGAnimatedString in1; */
-NS_IMETHODIMP nsSVGFEGaussianBlurElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
+already_AddRefed<nsIDOMSVGAnimatedString>
+SVGFEGaussianBlurElement::In1()
 {
-  return mStringAttributes[IN1].ToDOMAnimatedString(aIn, this);
+  return mStringAttributes[IN1].ToDOMAnimatedString(this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedNumber stdDeviationX; */
-NS_IMETHODIMP nsSVGFEGaussianBlurElement::GetStdDeviationX(nsIDOMSVGAnimatedNumber * *aX)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFEGaussianBlurElement::StdDeviationX()
 {
-  return mNumberPairAttributes[STD_DEV].ToDOMAnimatedNumber(aX, nsSVGNumberPair::eFirst, this);
+  return mNumberPairAttributes[STD_DEV].ToDOMAnimatedNumber(nsSVGNumberPair::eFirst, this);
 }
 
-/* readonly attribute nsIDOMSVGAnimatedNumber stdDeviationY; */
-NS_IMETHODIMP nsSVGFEGaussianBlurElement::GetStdDeviationY(nsIDOMSVGAnimatedNumber * *aY)
+already_AddRefed<nsIDOMSVGAnimatedNumber>
+SVGFEGaussianBlurElement::StdDeviationY()
 {
-  return mNumberPairAttributes[STD_DEV].ToDOMAnimatedNumber(aY, nsSVGNumberPair::eSecond, this);
+  return mNumberPairAttributes[STD_DEV].ToDOMAnimatedNumber(nsSVGNumberPair::eSecond, this);
 }
 
-NS_IMETHODIMP
-nsSVGFEGaussianBlurElement::SetStdDeviation(float stdDeviationX, float stdDeviationY)
+void
+SVGFEGaussianBlurElement::SetStdDeviation(float stdDeviationX, float stdDeviationY)
 {
-  NS_ENSURE_FINITE2(stdDeviationX, stdDeviationY, NS_ERROR_ILLEGAL_VALUE);
   mNumberPairAttributes[STD_DEV].SetBaseValues(stdDeviationX, stdDeviationY, this);
-  return NS_OK;
 }
 
 /**
@@ -82,7 +83,7 @@ nsSVGFEGaussianBlurElement::SetStdDeviation(float stdDeviationX, float stdDeviat
  * division, 32-bit multiply). Dividing by 2^24 is a simple shift so it's
  * fast. The main problem is choosing a value for K; this function returns
  * K's value.
- * 
+ *
  * If the result is correct for the extrema, V=0 and V=255*N, then we'll
  * be in good shape since both the original function and our approximation
  * are linear. V=0 always gives 0 in both cases, no problem there.
@@ -90,7 +91,7 @@ nsSVGFEGaussianBlurElement::SetStdDeviation(float stdDeviationX, float stdDeviat
  * and ensure that it gives the right answer. The constraints are
  *     (1)   255*N*K < 2^32
  * and (2)   255*N*K >= 255*(2^24)
- * 
+ *
  * From (1) we find the best value of K is floor((2^32 - 1)/(255*N)).
  * (2) tells us when this will be valid:
  *    N*floor((2^32 - 1)/(255*N)) >= 2^24
@@ -98,11 +99,11 @@ nsSVGFEGaussianBlurElement::SetStdDeviation(float stdDeviationX, float stdDeviat
  *    N*((2^32 - 1)/(255*N) - 1) >= 2^24
  *         (2^32 - 1)/255 - 2^24 >= N
  *                             N <= 65793
- * 
+ *
  * If all that math confuses you, this should convince you:
  * > perl -e 'for($N=1;(255*$N*int(0xFFFFFFFF/(255*$N)))>>24==255;++$N){}print"$N\n"'
  * 66052
- * 
+ *
  * So this is fine for all reasonable values of N. For larger values of N
  * we may as well just use the same approximation and accept the fact that
  * the output channel values will be a little low.
@@ -111,7 +112,7 @@ static uint32_t ComputeScaledDivisor(uint32_t aDivisor)
 {
   return UINT32_MAX/(255*aDivisor);
 }
-  
+
 static void
 BoxBlur(const uint8_t *aInput, uint8_t *aOutput,
         int32_t aStrideMinor, int32_t aStartMinor, int32_t aEndMinor,
@@ -211,8 +212,8 @@ GetBlurBoxSize(double aStdDev)
 }
 
 nsresult
-nsSVGFEGaussianBlurElement::GetDXY(uint32_t *aDX, uint32_t *aDY,
-                                   const nsSVGFilterInstance& aInstance)
+SVGFEGaussianBlurElement::GetDXY(uint32_t *aDX, uint32_t *aDY,
+                                 const nsSVGFilterInstance& aInstance)
 {
   float stdX = aInstance.GetPrimitiveNumber(SVGContentUtils::X,
                                             &mNumberPairAttributes[STD_DEV],
@@ -240,10 +241,10 @@ AreAllColorChannelsZero(const nsSVGFE::Image* aTarget)
 }
 
 void
-nsSVGFEGaussianBlurElement::GaussianBlur(const Image *aSource,
-                                         const Image *aTarget,                                         
-                                         const nsIntRect& aDataRect,
-                                         uint32_t aDX, uint32_t aDY)
+SVGFEGaussianBlurElement::GaussianBlur(const Image* aSource,
+                                       const Image* aTarget,
+                                       const nsIntRect& aDataRect,
+                                       uint32_t aDX, uint32_t aDY)
 {
   NS_ASSERTION(nsIntRect(0, 0, aTarget->mImage->Width(), aTarget->mImage->Height()).Contains(aDataRect),
                "aDataRect out of bounds");
@@ -254,7 +255,7 @@ nsSVGFEGaussianBlurElement::GaussianBlur(const Image *aSource,
   memset(tmp, 0, aTarget->mImage->GetDataSize());
 
   bool alphaOnly = AreAllColorChannelsZero(aTarget);
-  
+
   const uint8_t* sourceData = aSource->mImage->Data();
   uint8_t* targetData = aTarget->mImage->Data();
   uint32_t stride = aTarget->mImage->Stride();
@@ -338,10 +339,10 @@ ClipComputationRectToSurface(nsSVGFilterInstance* aInstance,
 }
 
 nsresult
-nsSVGFEGaussianBlurElement::Filter(nsSVGFilterInstance* aInstance,
-                                   const nsTArray<const Image*>& aSources,
-                                   const Image* aTarget,
-                                   const nsIntRect& rect)
+SVGFEGaussianBlurElement::Filter(nsSVGFilterInstance* aInstance,
+                                 const nsTArray<const Image*>& aSources,
+                                 const Image* aTarget,
+                                 const nsIntRect& rect)
 {
   uint32_t dx, dy;
   nsresult rv = GetDXY(&dx, &dy, *aInstance);
@@ -357,24 +358,24 @@ nsSVGFEGaussianBlurElement::Filter(nsSVGFilterInstance* aInstance,
 }
 
 bool
-nsSVGFEGaussianBlurElement::AttributeAffectsRendering(int32_t aNameSpaceID,
-                                                      nsIAtom* aAttribute) const
+SVGFEGaussianBlurElement::AttributeAffectsRendering(int32_t aNameSpaceID,
+                                                    nsIAtom* aAttribute) const
 {
-  return nsSVGFEGaussianBlurElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
+  return SVGFEGaussianBlurElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&
           (aAttribute == nsGkAtoms::in ||
            aAttribute == nsGkAtoms::stdDeviation));
 }
 
 void
-nsSVGFEGaussianBlurElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
+SVGFEGaussianBlurElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 {
   aSources.AppendElement(nsSVGStringInfo(&mStringAttributes[IN1], this));
 }
 
 nsIntRect
-nsSVGFEGaussianBlurElement::InflateRectForBlur(const nsIntRect& aRect,
-                                               const nsSVGFilterInstance& aInstance)
+SVGFEGaussianBlurElement::InflateRectForBlur(const nsIntRect& aRect,
+                                             const nsSVGFilterInstance& aInstance)
 {
   uint32_t dX, dY;
   nsresult rv = GetDXY(&dX, &dY, aInstance);
@@ -386,22 +387,22 @@ nsSVGFEGaussianBlurElement::InflateRectForBlur(const nsIntRect& aRect,
 }
 
 nsIntRect
-nsSVGFEGaussianBlurElement::ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
+SVGFEGaussianBlurElement::ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
         const nsSVGFilterInstance& aInstance)
 {
   return InflateRectForBlur(aSourceBBoxes[0], aInstance);
 }
 
 void
-nsSVGFEGaussianBlurElement::ComputeNeededSourceBBoxes(const nsIntRect& aTargetBBox,
+SVGFEGaussianBlurElement::ComputeNeededSourceBBoxes(const nsIntRect& aTargetBBox,
           nsTArray<nsIntRect>& aSourceBBoxes, const nsSVGFilterInstance& aInstance)
 {
   aSourceBBoxes[0] = InflateRectForBlur(aTargetBBox, aInstance);
 }
 
 nsIntRect
-nsSVGFEGaussianBlurElement::ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChangeBoxes,
-                                              const nsSVGFilterInstance& aInstance)
+SVGFEGaussianBlurElement::ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChangeBoxes,
+                                            const nsSVGFilterInstance& aInstance)
 {
   return InflateRectForBlur(aSourceChangeBoxes[0], aInstance);
 }
@@ -410,14 +411,14 @@ nsSVGFEGaussianBlurElement::ComputeChangeBBox(const nsTArray<nsIntRect>& aSource
 // nsSVGElement methods
 
 nsSVGElement::NumberPairAttributesInfo
-nsSVGFEGaussianBlurElement::GetNumberPairInfo()
+SVGFEGaussianBlurElement::GetNumberPairInfo()
 {
   return NumberPairAttributesInfo(mNumberPairAttributes, sNumberPairInfo,
                                   ArrayLength(sNumberPairInfo));
 }
 
 nsSVGElement::StringAttributesInfo
-nsSVGFEGaussianBlurElement::GetStringInfo()
+SVGFEGaussianBlurElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
