@@ -2292,8 +2292,19 @@ this.PduHelper = {
         let octetArray = Octet.decodeMultiple(data, contentEnd);
         let content = null;
         if (octetArray) {
-          content = new Blob([octetArray],
-                             {type : headers["content-type"].media});
+          // If the content is a SMIL type, convert it to a string.
+          // We hope to save and expose the SMIL content as a string way.
+          if (headers["content-type"].media == "application/smil") {
+            let charset = headers["content-type"].params &&
+                          headers["content-type"].params.charset
+                        ? headers["content-type"].params.charset["charset"]
+                        : null;
+            content = this.decodeStringContent(octetArray, charset);
+          }
+          if (!content) {
+            content = new Blob([octetArray],
+                               {type : headers["content-type"].media});
+          }
         }
 
         parts[i] = {

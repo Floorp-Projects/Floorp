@@ -1058,6 +1058,7 @@ MmsService.prototype = {
                                                           mmsStatus,
                                                           reportAllowed);
           transaction.run();
+          return;
         }
 
         this.retrieveMessage(url, (function responseNotify(mmsStatus,
@@ -1082,6 +1083,7 @@ MmsService.prototype = {
                                             mmsStatus,
                                             reportAllowed);
             transaction.run();
+            return;
           }
 
           savableMessage = this.mergeRetrievalConfirmation(retrievedMessage,
@@ -1110,7 +1112,6 @@ MmsService.prototype = {
             }).bind(this)
           );
         }).bind(this));
-        return;
       }).bind(this)
     );
   },
