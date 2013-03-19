@@ -95,7 +95,7 @@ js::ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame)
     }
 
     RootedValue rval(cx);
-    JSTrapStatus status = Debugger::onEnterFrame(cx, &rval);
+    JSTrapStatus status = Debugger::onEnterFrame(cx, frame, &rval);
     switch (status) {
       case JSTRAP_CONTINUE:
         break;
@@ -130,7 +130,7 @@ js::ScriptDebugEpilogue(JSContext *cx, AbstractFramePtr frame, bool okArg)
         }
     }
 
-    return Debugger::onLeaveFrame(cx, ok);
+    return Debugger::onLeaveFrame(cx, frame, ok);
 }
 
 JSTrapStatus
