@@ -31,6 +31,7 @@ protected:
     virtual ~nsRequestObserverProxy();
 
     nsCOMPtr<nsIRequestObserver> mObserver;
+    nsCOMPtr<nsISupports>        mContext;
 
     friend class nsOnStartRequestEvent;
     friend class nsOnStopRequestEvent;
@@ -39,13 +40,12 @@ protected:
 class nsARequestObserverEvent : public nsRunnable
 {
 public:
-    nsARequestObserverEvent(nsIRequest *, nsISupports *);
+    nsARequestObserverEvent(nsIRequest *);
 
 protected:
     virtual ~nsARequestObserverEvent() {}
 
     nsCOMPtr<nsIRequest>  mRequest;
-    nsCOMPtr<nsISupports> mContext;
 };
 
 #endif // nsRequestObserverProxy_h__
