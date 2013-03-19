@@ -1211,7 +1211,6 @@ nsIXPConnect *nsDOMClassInfo::sXPConnect = nullptr;
 nsIScriptSecurityManager *nsDOMClassInfo::sSecMan = nullptr;
 bool nsDOMClassInfo::sIsInitialized = false;
 bool nsDOMClassInfo::sDisableDocumentAllSupport = false;
-bool nsDOMClassInfo::sDisableGlobalScopePollutionSupport = false;
 
 
 jsid nsDOMClassInfo::sParent_id          = JSID_VOID;
@@ -2847,9 +2846,6 @@ nsDOMClassInfo::Init()
   sDisableDocumentAllSupport =
     Preferences::GetBool("browser.dom.document.all.disabled");
 
-  sDisableGlobalScopePollutionSupport =
-    Preferences::GetBool("browser.dom.global_scope_pollution.disabled");
-
   // Register new DOM bindings
   mozilla::dom::Register(nameSpaceManager);
 
@@ -3738,12 +3734,6 @@ nsWindowSH::InvalidateGlobalScopePolluter(JSContext *cx, JSObject *obj)
 nsresult
 nsWindowSH::InstallGlobalScopePolluter(JSContext *cx, JSObject *obj)
 {
-  // If global scope pollution is disabled, or if our document is not
-  // a HTML document, do nothing
-  if (sDisableGlobalScopePollutionSupport) {
-    return NS_OK;
-  }
-
   JSAutoRequest ar(cx);
 
   JSObject *gsp = ::JS_NewObjectWithUniqueType(cx, &sGlobalScopePolluterClass, nullptr, obj);

@@ -191,7 +191,6 @@ protected:
 
   static bool sIsInitialized;
   static bool sDisableDocumentAllSupport;
-  static bool sDisableGlobalScopePollutionSupport;
 
 public:
   static jsid sParent_id;
