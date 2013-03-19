@@ -111,9 +111,9 @@ def build_one_stage_aux(stage_dir, is_stage_one):
                       "--enable-targets=x86,x86_64,arm",
                       "--disable-assertions",
                       "--prefix=%s" % inst_dir,
-                      "--with-gcc-toolchain=/tools/gcc-4.5-0moz3"]
+                      "--with-gcc-toolchain=/tools/gcc-4.7.2-0moz1"]
     build_package(llvm_source_dir, build_dir, configure_opts,
-                  ["CLANG_IS_PRODUCTION=1"])
+                  [])
 
 if isDarwin:
     os.environ['MACOSX_DEPLOYMENT_TARGET'] = '10.7'
