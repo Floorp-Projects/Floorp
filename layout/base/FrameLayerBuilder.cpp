@@ -2136,8 +2136,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       // Note that items without their own layers can't be skipped this
       // way, since their ThebesLayer may decide it wants to draw them
       // into its buffer even if they're currently covered.
-      if (itemVisibleRect.IsEmpty() &&
-          !item->ShouldBuildLayerEvenIfInvisible(mBuilder)) {
+      if (itemVisibleRect.IsEmpty() && layerState != LAYER_ACTIVE_EMPTY) {
         continue;
       }
 
@@ -2193,9 +2192,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         data->mDrawAboveRegion.SimplifyOutward(4);
       }
       itemVisibleRect.MoveBy(mParameters.mOffset);
-      if (!nsDisplayTransform::IsLayerPrerendered(ownLayer)) {
-        RestrictVisibleRegionForLayer(ownLayer, itemVisibleRect);
-      }
+      RestrictVisibleRegionForLayer(ownLayer, itemVisibleRect);
 
       // rounded rectangle clipping using mask layers
       // (must be done after visible rect is set on layer)

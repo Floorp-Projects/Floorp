@@ -130,6 +130,10 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
   }
 
   for (nsDisplayItem* i = aList.GetBottom(); i != nullptr; i = i->GetAbove()) {
+#ifdef DEBUG
+    if (aList.DidComputeVisibility() && i->GetVisibleRect().IsEmpty())
+      continue;
+#endif
     if (aDumpHtml) {
       fprintf(aOutput, "<li>");
     } else {
