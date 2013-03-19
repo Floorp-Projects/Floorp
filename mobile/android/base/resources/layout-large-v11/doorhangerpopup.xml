@@ -7,7 +7,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content">
 
-    <ScrollView android:layout_width="fill_parent"
+    <ScrollView android:layout_width="@dimen/popup_width"
                 android:layout_height="wrap_content"
                 android:layout_alignParentTop="true"
                 android:background="@drawable/doorhanger_popup_bg">

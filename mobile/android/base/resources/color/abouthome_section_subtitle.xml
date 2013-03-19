@@ -13,6 +13,6 @@
     <item gecko:state_light="true" android:color="#CC222222" />
 
     <!-- default -->
-    <item android:color="@color/text_color_secondary"/>
+    <item android:color="#FF666666"/>
 
 </selector>
