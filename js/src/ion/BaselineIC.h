@@ -269,8 +269,6 @@ class ICEntry
 
 // List of baseline IC stub kinds.
 #define IC_STUB_KIND_LIST(_)    \
-    _(StackCheck_Fallback)      \
-                                \
     _(UseCount_Fallback)        \
                                 \
     _(TypeMonitor_Fallback)     \
@@ -1048,40 +1046,6 @@ class ICMultiStubCompiler : public ICStubCompiler
 
     ICMultiStubCompiler(JSContext *cx, ICStub::Kind kind, JSOp op)
       : ICStubCompiler(cx, kind), op(op) {}
-};
-
-// StackCheck_Fallback
-
-// A StackCheck IC chain has only the fallback stub.
-class ICStackCheck_Fallback : public ICFallbackStub
-{
-    friend class ICStubSpace;
-
-    ICStackCheck_Fallback(IonCode *stubCode)
-      : ICFallbackStub(ICStub::StackCheck_Fallback, stubCode)
-    { }
-
-  public:
-    static inline ICStackCheck_Fallback *New(ICStubSpace *space, IonCode *code) {
-        if (!code)
-            return NULL;
-        return space->allocate<ICStackCheck_Fallback>(code);
-    }
-
-    // Compiler for this stub kind.
-    class Compiler : public ICStubCompiler {
-      protected:
-        bool generateStubCode(MacroAssembler &masm);
-
-      public:
-        Compiler(JSContext *cx)
-          : ICStubCompiler(cx, ICStub::StackCheck_Fallback)
-        { }
-
-        ICStackCheck_Fallback *getStub(ICStubSpace *space) {
-            return ICStackCheck_Fallback::New(space, getStubCode());
-        }
-    };
 };
 
 // UseCount_Fallback

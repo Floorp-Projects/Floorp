@@ -339,19 +339,23 @@ BaselineCompiler::initScopeChain()
     return true;
 }
 
+typedef bool (*ReportOverRecursedFn)(JSContext *);
+static const VMFunction CheckOverRecursedInfo =
+    FunctionInfo<ReportOverRecursedFn>(CheckOverRecursed);
+
 bool
 BaselineCompiler::emitStackCheck()
 {
-    Label skipIC;
+    Label skipCall;
     uintptr_t *limitAddr = &cx->runtime->mainThread.ionStackLimit;
     masm.loadPtr(AbsoluteAddress(limitAddr), R0.scratchReg());
-    masm.branchPtr(Assembler::AboveOrEqual, BaselineStackReg, R0.scratchReg(), &skipIC);
+    masm.branchPtr(Assembler::AboveOrEqual, BaselineStackReg, R0.scratchReg(), &skipCall);
 
-    ICStackCheck_Fallback::Compiler stubCompiler(cx);
-    if (!emitNonOpIC(stubCompiler.getStub(&stubSpace_)))
+    prepareVMCall();
+    if (!callVM(CheckOverRecursedInfo))
         return false;
 
-    masm.bind(&skipIC);
+    masm.bind(&skipCall);
     return true;
 }
 
