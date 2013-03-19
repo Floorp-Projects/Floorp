@@ -53,6 +53,23 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL
+
+  static already_AddRefed<HTMLAudioElement> Audio(const GlobalObject& global,
+                                                  ErrorResult& aRv);
+  static already_AddRefed<HTMLAudioElement> Audio(const GlobalObject& global,
+                                                  const nsAString& src,
+                                                  ErrorResult& aRv);
+
+  void MozSetup(uint32_t aChannels, uint32_t aRate, ErrorResult& aRv);
+
+  uint32_t MozWriteAudio(JSContext* aCx, JS::Value aData, ErrorResult& aRv);
+
+  uint64_t MozCurrentSampleOffset(ErrorResult& aRv);
+
+protected:
+  virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 };
 
 } // namespace dom
