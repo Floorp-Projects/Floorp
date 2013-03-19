@@ -701,6 +701,12 @@ NS_IMETHODIMP nsBaseWidget::MakeFullScreen(bool aFullScreen)
     if (!mOriginalBounds)
       mOriginalBounds = new nsIntRect();
     GetScreenBounds(*mOriginalBounds);
+    // convert dev pix to display pix for window manipulation 
+    double scale = GetDefaultScale();
+    mOriginalBounds->x = NSToIntRound(mOriginalBounds->x / scale);
+    mOriginalBounds->y = NSToIntRound(mOriginalBounds->y / scale);
+    mOriginalBounds->width = NSToIntRound(mOriginalBounds->width / scale);
+    mOriginalBounds->height = NSToIntRound(mOriginalBounds->height / scale);
 
     // Move to top-left corner of screen and size to the screen dimensions
     nsCOMPtr<nsIScreenManager> screenManager;
@@ -708,16 +714,14 @@ NS_IMETHODIMP nsBaseWidget::MakeFullScreen(bool aFullScreen)
     NS_ASSERTION(screenManager, "Unable to grab screenManager.");
     if (screenManager) {
       nsCOMPtr<nsIScreen> screen;
-      // convert dev pix to display/CSS pix for ScreenForRect
-      double scale = GetDefaultScale();
-      screenManager->ScreenForRect(mOriginalBounds->x / scale,
-                                   mOriginalBounds->y / scale,
-                                   mOriginalBounds->width / scale,
-                                   mOriginalBounds->height / scale,
+      screenManager->ScreenForRect(mOriginalBounds->x,
+                                   mOriginalBounds->y,
+                                   mOriginalBounds->width,
+                                   mOriginalBounds->height,
                                    getter_AddRefs(screen));
       if (screen) {
         int32_t left, top, width, height;
-        if (NS_SUCCEEDED(screen->GetRect(&left, &top, &width, &height))) {
+        if (NS_SUCCEEDED(screen->GetRectDisplayPix(&left, &top, &width, &height))) {
           Resize(left, top, width, height, true);
         }
       }
