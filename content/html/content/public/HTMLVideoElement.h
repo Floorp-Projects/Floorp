@@ -59,6 +59,59 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL
+
+  uint32_t Width() const
+  {
+    return GetIntAttr(nsGkAtoms::width, 0);
+  }
+
+  void SetWidth(uint32_t aValue, ErrorResult& aRv)
+  {
+    SetHTMLIntAttr(nsGkAtoms::width, aValue, aRv);
+  }
+
+  uint32_t Height() const
+  {
+    return GetIntAttr(nsGkAtoms::height, 0);
+  }
+
+  void SetHeight(uint32_t aValue, ErrorResult& aRv)
+  {
+    SetHTMLIntAttr(nsGkAtoms::height, aValue, aRv);
+  }
+
+  uint32_t VideoWidth() const
+  {
+    return mMediaSize.width == -1 ? 0 : mMediaSize.width;
+  }
+
+  uint32_t VideoHeight() const
+  {
+    return mMediaSize.height == -1 ? 0 : mMediaSize.height;
+  }
+
+  // XPCOM GetPoster is OK
+  void SetPoster(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::poster, aValue, aRv);
+  }
+
+  uint32_t MozParsedFrames() const;
+
+  uint32_t MozDecodedFrames() const;
+
+  uint32_t MozPresentedFrames() const;
+
+  uint32_t MozPaintedFrames();
+
+  double MozFrameDelay();
+
+  bool MozHasAudio() const;
+
+protected:
+  virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 };
 
 } // namespace dom
