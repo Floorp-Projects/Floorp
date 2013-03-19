@@ -1447,7 +1447,7 @@ CanvasRenderingContext2D::CreatePattern(const HTMLImageOrCanvasOrVideoElement& e
   } else if (element.IsHTMLImageElement()) {
     htmlElement = &element.GetAsHTMLImageElement();
   } else {
-    htmlElement = element.GetAsHTMLVideoElement();
+    htmlElement = &element.GetAsHTMLVideoElement();
   }
 
   // The canvas spec says that createPattern should use the first frame
@@ -2940,7 +2940,7 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
       HTMLImageElement* img = &image.GetAsHTMLImageElement();
       element = img;
     } else {
-      HTMLVideoElement* video = image.GetAsHTMLVideoElement();
+      HTMLVideoElement* video = &image.GetAsHTMLVideoElement();
       element = video;
     }
 
