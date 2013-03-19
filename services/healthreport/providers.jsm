@@ -94,6 +94,7 @@ AppInfoMeasurement.prototype = Object.freeze({
     locale: LAST_TEXT_FIELD,
     isDefaultBrowser: {type: Metrics.Storage.FIELD_DAILY_LAST_NUMERIC},
     isTelemetryEnabled: {type: Metrics.Storage.FIELD_DAILY_LAST_NUMERIC},
+    isBlocklistEnabled: {type: Metrics.Storage.FIELD_DAILY_LAST_NUMERIC},
   },
 });
 
@@ -264,6 +265,7 @@ AppInfoProvider.prototype = Object.freeze({
 
     // FUTURE this should be retrieved periodically or at upload time.
     yield this._recordIsTelemetryEnabled(m);
+    yield this._recordIsBlocklistEnabled(m);
     yield this._recordDefaultBrowser(m);
   },
 
@@ -271,6 +273,12 @@ AppInfoProvider.prototype = Object.freeze({
     let enabled = TELEMETRY_PREF && this._prefs.get(TELEMETRY_PREF, false);
     this._log.debug("Recording telemetry enabled (" + TELEMETRY_PREF + "): " + enabled);
     yield m.setDailyLastNumeric("isTelemetryEnabled", enabled ? 1 : 0);
+  },
+
+  _recordIsBlocklistEnabled: function (m) {
+    let enabled = this._prefs.get("extensions.blocklist.enabled", false);
+    this._log.debug("Recording blocklist enabled: " + enabled);
+    yield m.setDailyLastNumeric("isBlocklistEnabled", enabled ? 1 : 0);
   },
 
   _recordDefaultBrowser: function (m) {

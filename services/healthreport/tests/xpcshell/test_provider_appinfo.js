@@ -49,9 +49,10 @@ add_task(function test_collect_smoketest() {
   do_check_eq(data.days.size, 1);
   do_check_true(data.days.hasDay(now));
   let day = data.days.getDay(now);
-  do_check_eq(day.size, 2);
+  do_check_eq(day.size, 3);
   do_check_true(day.has("isDefaultBrowser"));
   do_check_true(day.has("isTelemetryEnabled"));
+  do_check_true(day.has("isBlocklistEnabled"));
 
   // TODO Bug 827189 Actually test this properly. On some local builds, this
   // is always -1 (the service throws). On buildbot, it seems to always be 0.
@@ -154,3 +155,34 @@ add_task(function test_record_telemetry() {
   yield storage.close();
 });
 
+add_task(function test_record_blocklist() {
+  let storage = yield Metrics.Storage("record_blocklist");
+
+  let now = new Date();
+
+  Services.prefs.setBoolPref("extensions.blocklist.enabled", true);
+  let provider = new AppInfoProvider();
+  yield provider.init(storage);
+  yield provider.onInit();
+  yield provider.collectConstantData();
+
+  let m = provider.getMeasurement("appinfo", 2);
+  let data = yield m.getValues();
+  let d = yield m.serializer(m.SERIALIZE_JSON).daily(data.days.getDay(now));
+  do_check_eq(d.isBlocklistEnabled, 1);
+  yield provider.shutdown();
+
+  Services.prefs.setBoolPref("extensions.blocklist.enabled", false);
+  provider = new AppInfoProvider();
+  yield provider.init(storage);
+  yield provider.onInit();
+  yield provider.collectConstantData();
+
+  m = provider.getMeasurement("appinfo", 2);
+  data = yield m.getValues();
+  d = yield m.serializer(m.SERIALIZE_JSON).daily(data.days.getDay(now));
+  do_check_eq(d.isBlocklistEnabled, 0);
+  yield provider.shutdown();
+
+  yield storage.close();
+});
