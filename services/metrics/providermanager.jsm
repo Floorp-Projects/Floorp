@@ -153,7 +153,7 @@ this.ProviderManager.prototype = Object.freeze({
     }
 
     if (this._providers.has(provider.name)) {
-      return Promise.resolve();
+      return CommonUtils.laterTickResolvingPromise();
     }
 
     let deferred = Promise.defer();
@@ -222,13 +222,13 @@ this.ProviderManager.prototype = Object.freeze({
    */
   ensurePullOnlyProvidersRegistered: function () {
     if (this._pullOnlyProvidersRegistered) {
-      return Promise.resolve();
+      return CommonUtils.laterTickResolvingPromise();
     }
 
     let onFinished = function () {
       this._pullOnlyProvidersRegistered = true;
 
-      return Promise.resolve();
+      return CommonUtils.laterTickResolvingPromise();
     }.bind(this);
 
     return Task.spawn(function registerPullProviders() {
@@ -245,13 +245,13 @@ this.ProviderManager.prototype = Object.freeze({
 
   ensurePullOnlyProvidersUnregistered: function () {
     if (!this._pullOnlyProvidersRegistered) {
-      return Promise.resolve();
+      return CommonUtils.laterTickResolvingPromise();
     }
 
     let onFinished = function () {
       this._pullOnlyProvidersRegistered = false;
 
-      return Promise.resolve();
+      return CommonUtils.laterTickResolvingPromise();
     }.bind(this);
 
     return Task.spawn(function unregisterPullProviders() {
@@ -373,7 +373,7 @@ this.ProviderManager.prototype = Object.freeze({
           }
         }
 
-        return Promise.resolve(result);
+        return CommonUtils.laterTickResolvingPromise(result);
       });
 
       promises.push([provider.name, promise]);

@@ -980,7 +980,8 @@ MetricsStorageSqliteBackend.prototype = Object.freeze({
    */
   registerMeasurement: function (provider, name, version) {
     if (this.hasMeasurement(provider, name, version)) {
-      return Promise.resolve(this.measurementID(provider, name, version));
+      return CommonUtils.laterTickResolvingPromise(
+        this.measurementID(provider, name, version));
     }
 
     // Registrations might not be safe to perform in parallel with provider
@@ -1067,7 +1068,8 @@ MetricsStorageSqliteBackend.prototype = Object.freeze({
         throw new Error("Field already defined with different type: " + existingType);
       }
 
-      return Promise.resolve(this.fieldIDFromMeasurement(measurementID, field));
+      return CommonUtils.laterTickResolvingPromise(
+        this.fieldIDFromMeasurement(measurementID, field));
     }
 
     let self = this;
