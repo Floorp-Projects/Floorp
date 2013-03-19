@@ -486,7 +486,7 @@ class AsmJSModule
         return pc >= code && pc < (code + functionBytes());
     }
 
-    bool addHeapAccesses(const Vector<ion::AsmJSHeapAccess> &accesses) {
+    bool addHeapAccesses(const ion::AsmJSHeapAccessVector &accesses) {
         if (!heapAccesses_.reserve(heapAccesses_.length() + accesses.length()))
             return false;
         for (size_t i = 0; i < accesses.length(); i++)
