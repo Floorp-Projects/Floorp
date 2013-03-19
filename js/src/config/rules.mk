@@ -1362,13 +1362,16 @@ $(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_DEPS) $(xpidl-preqs)
 
 # no need to link together if XPIDLSRCS contains only XPIDL_MODULE
 ifneq ($(XPIDL_MODULE).idl,$(strip $(XPIDLSRCS)))
-XPT_PY = $(filter %/xpt.py,$(XPIDL_LINK))
+XPT_PY ?= $(PYTHON) $(LIBXUL_DIST)/sdk/bin/xpt.py
+
+# Workaround race condition until deps fixed
+XPT_ARGS := --workaround-bug-754358
 
 xpidl-idl2xpt = $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS))
 xpidl-module-deps = $(xpidl-idl2xpt) $(GLOBAL_DEPS) $(XPT_PY)
 
 $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(xpidl-module-deps)
-	$(XPIDL_LINK) $@ $(xpidl-idl2xpt)
+	$(XPT_PY) $(XPT_ARGS) link $@ $(xpidl-idl2xpt)
 
 $(XPT_PY):
 	$(MAKE) -C $(DEPTH)/xpcom/typelib/xpt/tools libs
