@@ -76,6 +76,9 @@ function startup(reason, options) {
   // Inject globals ASAP in order to have console API working ASAP
   Object.defineProperties(options.loader.globals, descriptor(globals));
 
+  // NOTE: Module is intentionally required only now because it relies
+  // on existence of hidden window, which does not exists until startup.
+  let { ready } = require('../addon/window');
   // Load localization manifest and .properties files.
   // Run the addon even in case of error (best effort approach)
   require('../l10n/loader').
@@ -87,8 +90,10 @@ function startup(reason, options) {
       // Exports data to a pseudo module so that api-utils/l10n/core
       // can get access to it
       definePseudo(options.loader, '@l10n/data', data ? data : null);
+      return ready;
+    }).then(function() {
       run(options);
-    });
+    }).then(null, console.exception);
 }
 
 function run(options) {

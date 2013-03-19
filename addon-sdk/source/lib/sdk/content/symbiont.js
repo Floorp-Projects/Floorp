@@ -15,6 +15,7 @@ const hiddenFrames = require('../frame/hidden-frame');
 const observers = require('../deprecated/observer-service');
 const unload = require('../system/unload');
 const { getDocShell } = require("../frame/utils");
+const { ignoreWindow } = require('../private-browsing/utils');
 
 const assetsURI = require('../self').data.url();
 
@@ -107,6 +108,7 @@ const Symbiont = Worker.resolve({
       this._unregisterListener();
     
     this._frame = frame;
+
     getDocShell(frame).allowJavascript = this.allow.script;
     frame.setAttribute("src", this._contentURL);
 
@@ -142,8 +144,12 @@ const Symbiont = Worker.resolve({
       this._loadEvent = 'start';
       observers.add('document-element-inserted', 
         this._loadListener = function onStart(doc) {
-          
           let window = doc.defaultView;
+
+          if (ignoreWindow(window)) {
+            return;
+          }
+
           if (window && window == frame.contentWindow) {
             self._unregisterListener();
             self._onInit();
