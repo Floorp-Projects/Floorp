@@ -10,6 +10,7 @@
 
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothService.h"
+#include "BluetoothSocket.h"
 #include "BluetoothUtils.h"
 
 #include "mozilla/Services.h"
@@ -93,7 +94,7 @@ BluetoothScoManager::NotifyAudioManager(const nsAString& aAddress) {
 NS_IMPL_ISUPPORTS1(BluetoothScoManagerObserver, nsIObserver)
 
 namespace {
-StaticRefPtr<BluetoothScoManager> gBluetoothScoManager;
+StaticAutoPtr<BluetoothScoManager> gBluetoothScoManager;
 StaticRefPtr<BluetoothScoManagerObserver> sScoObserver;
 bool gInShutdown = false;
 } // anonymous namespace
@@ -119,7 +120,11 @@ BluetoothScoManager::BluetoothScoManager()
 bool
 BluetoothScoManager::Init()
 {
-  mSocketStatus = GetConnectionStatus();
+  mSocket = new BluetoothSocket(this,
+                                BluetoothSocketType::SCO,
+                                true,
+                                false);
+  mSocketStatus = mSocket->GetConnectionStatus();
 
   sScoObserver = new BluetoothScoManagerObserver();
   if (!sScoObserver->Init()) {
@@ -158,12 +163,9 @@ BluetoothScoManager::Get()
   }
 
   // Create new instance, register, return
-  nsRefPtr<BluetoothScoManager> manager = new BluetoothScoManager();
+  BluetoothScoManager* manager = new BluetoothScoManager();
   NS_ENSURE_TRUE(manager, nullptr);
-
-  if (!manager->Init()) {
-    return nullptr;
-  }
+  NS_ENSURE_TRUE(manager->Init(), nullptr);
 
   gBluetoothScoManager = manager;
   return gBluetoothScoManager;
@@ -182,7 +184,7 @@ BluetoothScoManager::HandleShutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
   gInShutdown = true;
-  CloseSocket();
+  mSocket->Disconnect();
   gBluetoothScoManager = nullptr;
   return NS_OK;
 }
@@ -197,12 +199,13 @@ BluetoothScoManager::Connect(const nsAString& aDeviceAddress)
     return false;
   }
 
-  if (GetConnectionStatus() == SocketConnectionStatus::SOCKET_CONNECTED) {
+  if (mSocket->GetConnectionStatus() ==
+      SocketConnectionStatus::SOCKET_CONNECTED) {
     NS_WARNING("Sco socket has been connected");
     return false;
   }
 
-  CloseSocket();
+  mSocket->Disconnect();
 
   BluetoothService* bs = BluetoothService::Get();
   if (!bs) {
@@ -213,7 +216,7 @@ BluetoothScoManager::Connect(const nsAString& aDeviceAddress)
   nsresult rv = bs->GetScoSocket(aDeviceAddress,
                                  true,
                                  false,
-                                 this);
+                                 mSocket);
 
   return NS_FAILED(rv) ? false : true;
 }
@@ -228,50 +231,44 @@ BluetoothScoManager::Listen()
     return false;
   }
 
-  CloseSocket();
+  if (mSocket->GetConnectionStatus() ==
+      SocketConnectionStatus::SOCKET_LISTENING) {
+    NS_WARNING("BluetoothScoManager has been already listening");
+    return true;
+  }
 
-  BluetoothService* bs = BluetoothService::Get();
-  if (!bs) {
-    NS_WARNING("BluetoothService not available!");
+  mSocket->Disconnect();
+
+  if (!mSocket->Listen(-1)) {
+    NS_WARNING("[SCO] Can't listen on socket!");
     return false;
   }
 
-  nsresult rv = bs->ListenSocketViaService(-1,
-                                           BluetoothSocketType::SCO,
-                                           true,
-                                           true,
-                                           this);
-
-  mSocketStatus = GetConnectionStatus();
-
-  return NS_FAILED(rv) ? false : true;
+  mSocketStatus = mSocket->GetConnectionStatus();
+  return true;
 }
 
 void
 BluetoothScoManager::Disconnect()
 {
-  if (GetConnectionStatus() == SocketConnectionStatus::SOCKET_DISCONNECTED) {
-    return;
-  }
-
-  CloseSocket();
+  mSocket->Disconnect();
 }
 
 void
 BluetoothScoManager::OnConnectSuccess()
 {
   nsString address;
-  GetSocketAddr(address);
+  mSocket->GetAddress(address);
   NotifyAudioManager(address);
 
-  mSocketStatus = GetConnectionStatus();
+  mSocketStatus = mSocket->GetConnectionStatus();
 }
 
 void
 BluetoothScoManager::OnConnectError()
 {
-  CloseSocket();
-  mSocketStatus = GetConnectionStatus();
+  mSocket->Disconnect();
+  mSocketStatus = mSocket->GetConnectionStatus();
   Listen();
 }
 
