@@ -8,6 +8,7 @@
 
 interface nsIFile;
 interface nsIURI;
+interface nsIDOMFile;
 interface nsIDOMWindow;
 interface nsISimpleEnumerator;
 
@@ -23,7 +24,7 @@ interface nsIFilePickerShownCallback : nsISupports
   void done(in short aResult);
 };
 
-[scriptable, uuid(60e2dfb6-3fc7-4A2C-8137-16bef44536fc)]
+[scriptable, uuid(a6a24df3-d20a-4b6a-96d4-4736b10a51b7)]
 interface nsIFilePicker : nsISupports
 {
   const short modeOpen        = 0;              // Load a file or directory
@@ -140,6 +141,21 @@ interface nsIFilePicker : nsISupports
   * @return Returns the files currently selected
   */
   readonly attribute nsISimpleEnumerator files;
+
+ /**
+  * Get the nsIDOMFile for the file.
+  *
+  * @return Returns the file currently selected as DOMFile
+  */
+  readonly attribute nsIDOMFile domfile;
+
+ /**
+  * Get the enumerator for the selected files
+  * only works in the modeOpenMultiple mode
+  *
+  * @return Returns the files currently selected as DOMFiles
+  */
+  readonly attribute nsISimpleEnumerator domfiles;
 
  /**
   * Controls whether the chosen file(s) should be added to the system's recent
