@@ -600,6 +600,14 @@ AbstractFramePtr::setHookData(void *data) const
     JS_NOT_REACHED("Invalid frame");
 }
 
+inline Value
+AbstractFramePtr::returnValue() const
+{
+    if (isStackFrame())
+        return asStackFrame()->returnValue();
+    JS_NOT_REACHED("Invalid frame");
+}
+
 inline void
 AbstractFramePtr::setReturnValue(const Value &rval) const
 {

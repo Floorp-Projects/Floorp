@@ -330,8 +330,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     JSObject *getHook(Hook hook) const;
     bool hasAnyLiveHooks() const;
 
-    static JSTrapStatus slowPathOnEnterFrame(JSContext *cx, MutableHandleValue vp);
-    static bool slowPathOnLeaveFrame(JSContext *cx, bool ok);
+    static JSTrapStatus slowPathOnEnterFrame(JSContext *cx, AbstractFramePtr frame,
+                                             MutableHandleValue vp);
+    static bool slowPathOnLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool ok);
     static void slowPathOnNewScript(JSContext *cx, HandleScript script,
                                     GlobalObject *compileAndGoGlobal);
     static bool slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global);
@@ -393,8 +394,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static bool isDebugWrapper(RawObject o);
     static void findCompartmentEdges(JS::Zone *v, gc::ComponentFinder<JS::Zone> &finder);
 
-    static inline JSTrapStatus onEnterFrame(JSContext *cx, MutableHandleValue vp);
-    static inline bool onLeaveFrame(JSContext *cx, bool ok);
+    static inline JSTrapStatus onEnterFrame(JSContext *cx, AbstractFramePtr frame,
+                                            MutableHandleValue vp);
+    static inline bool onLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool ok);
     static inline JSTrapStatus onDebuggerStatement(JSContext *cx, MutableHandleValue vp);
     static inline JSTrapStatus onExceptionUnwind(JSContext *cx, MutableHandleValue vp);
     static inline void onNewScript(JSContext *cx, HandleScript script,
@@ -645,21 +647,21 @@ Debugger::observesFrame(AbstractFramePtr frame) const
 }
 
 JSTrapStatus
-Debugger::onEnterFrame(JSContext *cx, MutableHandleValue vp)
+Debugger::onEnterFrame(JSContext *cx, AbstractFramePtr frame, MutableHandleValue vp)
 {
     if (cx->compartment->getDebuggees().empty())
         return JSTRAP_CONTINUE;
-    return slowPathOnEnterFrame(cx, vp);
+    return slowPathOnEnterFrame(cx, frame, vp);
 }
 
 bool
-Debugger::onLeaveFrame(JSContext *cx, bool ok)
+Debugger::onLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool ok)
 {
     /* Traps must be cleared from eval frames, see slowPathOnLeaveFrame. */
-    bool evalTraps = cx->fp()->isEvalFrame() &&
-                     cx->fp()->script()->hasAnyBreakpointsOrStepMode();
+    bool evalTraps = frame.isEvalFrame() &&
+                     frame.script()->hasAnyBreakpointsOrStepMode();
     if (!cx->compartment->getDebuggees().empty() || evalTraps)
-        ok = slowPathOnLeaveFrame(cx, ok);
+        ok = slowPathOnLeaveFrame(cx, frame, ok);
     return ok;
 }
 
