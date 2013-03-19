@@ -165,7 +165,7 @@ CPPSRCS		+= \
 		MediaError.cpp \
 		HTMLSourceElement.cpp \
 		TimeRanges.cpp \
-		nsHTMLVideoElement.cpp \
+		HTMLVideoElement.cpp \
 		$(NULL)
 endif
 

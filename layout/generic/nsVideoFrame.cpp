@@ -12,7 +12,7 @@
 #include "nsGkAtoms.h"
 
 #include "nsVideoFrame.h"
-#include "nsHTMLVideoElement.h"
+#include "mozilla/dom/HTMLVideoElement.h"
 #include "nsIDOMHTMLVideoElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLElement.h"
@@ -177,7 +177,7 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
                          const ContainerParameters& aContainerParameters)
 {
   nsRect area = GetContentRect() - GetPosition() + aItem->ToReferenceFrame();
-  nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
+  HTMLVideoElement* element = static_cast<HTMLVideoElement*>(GetContent());
   nsIntSize videoSize;
   if (NS_FAILED(element->GetVideoSize(&videoSize)) || area.IsEmpty()) {
     return nullptr;
@@ -516,7 +516,7 @@ bool nsVideoFrame::ShouldDisplayPoster()
   if (!HasVideoElement())
     return false;
 
-  nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
+  HTMLVideoElement* element = static_cast<HTMLVideoElement*>(GetContent());
   if (element->GetPlayedOrSeeked() && HasVideoData())
     return false;
 
@@ -558,7 +558,7 @@ nsVideoFrame::GetVideoIntrinsicSize(nsRenderingContext *aRenderingContext)
     return nsSize(nsPresContext::CSSPixelsToAppUnits(size.width), prefHeight);
   }
 
-  nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
+  HTMLVideoElement* element = static_cast<HTMLVideoElement*>(GetContent());
   if (NS_FAILED(element->GetVideoSize(&size)) && ShouldDisplayPoster()) {
     // Use the poster image frame's size.
     nsIFrame *child = mPosterImage->GetPrimaryFrame();
@@ -577,7 +577,7 @@ nsresult
 nsVideoFrame::UpdatePosterSource(bool aNotify)
 {
   NS_ASSERTION(HasVideoElement(), "Only call this on <video> elements.");
-  nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
+  HTMLVideoElement* element = static_cast<HTMLVideoElement*>(GetContent());
 
   nsAutoString posterStr;
   element->GetPoster(posterStr);
@@ -612,7 +612,7 @@ bool nsVideoFrame::HasVideoData()
 {
   if (!HasVideoElement())
     return false;
-  nsHTMLVideoElement* element = static_cast<nsHTMLVideoElement*>(GetContent());
+  HTMLVideoElement* element = static_cast<HTMLVideoElement*>(GetContent());
   nsIntSize size(0, 0);
   element->GetVideoSize(&size);
   return size != nsIntSize(0,0);

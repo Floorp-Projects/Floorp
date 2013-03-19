@@ -3,20 +3,24 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#if !defined(nsHTMLVideoElement_h__)
-#define nsHTMLVideoElement_h__
+
+#ifndef mozilla_dom_HTMLVideoElement_h
+#define mozilla_dom_HTMLVideoElement_h
 
 #include "nsIDOMHTMLVideoElement.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 
-class nsHTMLVideoElement : public mozilla::dom::HTMLMediaElement,
-                           public nsIDOMHTMLVideoElement
+namespace mozilla {
+namespace dom {
+
+class HTMLVideoElement : public HTMLMediaElement,
+                         public nsIDOMHTMLVideoElement
 {
 public:
-  nsHTMLVideoElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLVideoElement();
+  HTMLVideoElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  virtual ~HTMLVideoElement();
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(nsHTMLVideoElement, video)
+  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLVideoElement, video)
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -31,8 +35,8 @@ public:
   NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
   // nsIDOMHTMLMediaElement
-  using mozilla::dom::HTMLMediaElement::GetPaused;
-  NS_FORWARD_NSIDOMHTMLMEDIAELEMENT(mozilla::dom::HTMLMediaElement::)
+  using HTMLMediaElement::GetPaused;
+  NS_FORWARD_NSIDOMHTMLMEDIAELEMENT(HTMLMediaElement::)
 
   // nsIDOMHTMLVideoElement
   NS_DECL_NSIDOMHTMLVIDEOELEMENT
@@ -57,4 +61,7 @@ public:
   virtual nsIDOMNode* AsDOMNode() { return this; }
 };
 
-#endif
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_HTMLVideoElement_h
