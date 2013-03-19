@@ -344,7 +344,7 @@ public:
   // XPCOM GetCurrentSrc() is OK
 
   // XPCOM GetCrossorigin() is OK
-  void SetCrossorigin(const nsAString& aValue, ErrorResult& aRv)
+  void SetCrossOrigin(const nsAString& aValue, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::crossorigin, aValue, aRv);
   }
