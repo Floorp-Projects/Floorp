@@ -96,6 +96,7 @@ webidl_files = \
   HTMLLIElement.webidl \
   HTMLLinkElement.webidl \
   HTMLMapElement.webidl \
+  HTMLMediaElement.webidl \
   HTMLMenuElement.webidl \
   HTMLMenuItemElement.webidl \
   HTMLMetaElement.webidl \
