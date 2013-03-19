@@ -2094,29 +2094,8 @@ InvalidateActivation(FreeOp *fop, uint8_t *ionTop, bool invalidateAll)
         }
 #endif
 
-        if (invalidateAll && it.isBaselineJS())
-            it.script()->baseline->setActive();
-
         if (!it.isOptimizedJS())
             continue;
-
-        // If it's on the stack with an ion-compiled script, and it has a baseline script,
-        // then keep the baseline script around (by marking it active), since bailouts from
-        // the ion jitcode might need to re-enter into the baseline jitcode.
-        if (invalidateAll && it.script()->hasBaselineScript()) {
-            it.script()->baselineScript()->setActive();
-
-            // Mark baseline scripts for any inlined scripts as well.
-            JSContext *cx = GetIonContext()->cx;
-            InlineFrameIterator inlineIter(cx, &it);
-            for (;;) {
-                if (inlineIter.script()->hasBaselineScript())
-                    inlineIter.script()->baselineScript()->setActive();
-                if (!inlineIter.more())
-                    break;
-                ++inlineIter;
-            }
-        }
 
         // See if the frame has already been invalidated.
         if (it.checkInvalidation())
