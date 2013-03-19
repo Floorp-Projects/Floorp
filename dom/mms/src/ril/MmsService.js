@@ -39,21 +39,22 @@ const CONFIG_SEND_REPORT_ALWAYS      = 3;
 const TIME_TO_BUFFER_MMS_REQUESTS    = 30000;
 const TIME_TO_RELEASE_MMS_CONNECTION = 30000;
 
-const PREF_RETRIEVAL_MODE = 'dom.mms.retrieval_mode';
-const RETRIEVAL_MODE_MANUAL = "manual";
+const PREF_RETRIEVAL_MODE      = 'dom.mms.retrieval_mode';
+const RETRIEVAL_MODE_MANUAL    = "manual";
 const RETRIEVAL_MODE_AUTOMATIC = "automatic";
-const RETRIEVAL_MODE_NEVER = "never";
+const RETRIEVAL_MODE_NEVER     = "never";
 
 
 //Internal const values.
-const DELIVERY_RECEIVED = "received";
+const DELIVERY_RECEIVED       = "received";
 const DELIVERY_NOT_DOWNLOADED = "not-downloaded";
-const DELIVERY_SENDING = "sending";
-const DELIVERY_SENT = "sent";
-const DELIVERY_ERROR = "error";
+const DELIVERY_SENDING        = "sending";
+const DELIVERY_SENT           = "sent";
+const DELIVERY_ERROR          = "error";
 
 const DELIVERY_STATUS_SUCCESS = "success";
 const DELIVERY_STATUS_PENDING = "pending";
+const DELIVERY_STATUS_ERROR   = "error";
 
 
 const MAX_RETRY_COUNT = Services.prefs.getIntPref("dom.mms.retrievalRetryCount");
@@ -1137,6 +1138,7 @@ MmsService.prototype = {
   createSavableFromParams: function createSavableFromParams(aParams) {
     debug("createSavableFromParams: aParams: " + JSON.stringify(aParams));
     let message = {};
+    let smil = aParams.smil;
 
     // |message.headers|
     let headers = message["headers"] = {};
@@ -1153,18 +1155,24 @@ MmsService.prototype = {
 
     // |message.parts|
     let attachments = aParams.attachments;
-    if (attachments.length != 0 || aParams.smil) {
+    if (attachments.length != 0 || smil) {
       let parts = message["parts"] = [];
 
       // Set the SMIL part if needed.
-      if (aParams.smil) {
+      if (smil) {
         let part = {
           "headers": {
             "content-type": {
               "media": "application/smil",
+              "params": {
+                "name": "smil.xml"
+              }
             },
+            "content-length": smil.length,
+            "content-location": "smil.xml",
+            "content-id": "<smil>"
           },
-          "content": aParams.smil
+          "content": smil
         };
         parts.push(part);
       }
@@ -1214,8 +1222,8 @@ MmsService.prototype = {
       gMobileMessageDatabaseService
         .setMessageDelivery(aRecordId,
                             null,
-                            aIsSentSuccess ? "sent" : "error",
-                            aIsSentSuccess ? null : "error",
+                            aIsSentSuccess ? DELIVERY_SENT : DELIVERY_ERROR,
+                            aIsSentSuccess ? null : DELIVERY_STATUS_ERROR,
                             function notifySetDeliveryResult(aRv, aDomMessage) {
         debug("Marking the delivery state/staus is done. Notify sent or failed.");
         if (!aIsSentSuccess) {
