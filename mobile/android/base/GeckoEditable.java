@@ -52,14 +52,14 @@ interface GeckoEditableListener {
     // IME focus state for notifyIME(NOTIFY_IME_FOCUSCHANGE, ..)
     final int IME_FOCUS_STATE_FOCUS = 1;
     final int IME_FOCUS_STATE_BLUR = 0;
-    // IME enabled state for notifyIMEEnabled()
+    // IME enabled state for notifyIMEContext()
     final int IME_STATE_DISABLED = 0;
     final int IME_STATE_ENABLED = 1;
     final int IME_STATE_PASSWORD = 2;
     final int IME_STATE_PLUGIN = 3;
 
     void notifyIME(int type, int state);
-    void notifyIMEEnabled(int state, String typeHint,
+    void notifyIMEContext(int state, String typeHint,
                           String modeHint, String actionHint);
     void onSelectionChange(int start, int end);
     void onTextChange(String text, int start, int oldEnd, int newEnd);
@@ -697,12 +697,12 @@ final class GeckoEditable
     }
 
     @Override
-    public void notifyIMEEnabled(final int state, final String typeHint,
+    public void notifyIMEContext(final int state, final String typeHint,
                           final String modeHint, final String actionHint) {
         // Because we want to be able to bind GeckoEditable to the newest LayerView instance,
         // this can be called from the Java IC thread in addition to the Gecko thread.
         if (DEBUG) {
-            Log.d(LOGTAG, "notifyIMEEnabled(" +
+            Log.d(LOGTAG, "notifyIMEContext(" +
                           getConstantName(GeckoEditableListener.class, "IME_STATE_", state) +
                           ", \"" + typeHint + "\", \"" + modeHint + "\", \"" + actionHint + "\")");
         }
@@ -711,14 +711,14 @@ final class GeckoEditable
             public void run() {
                 // Make sure there are no other things going on
                 mActionQueue.syncWithGecko();
-                // Set InputConnectionHandler in notifyIMEEnabled because
-                // GeckoInputConnection.notifyIMEEnabled calls restartInput() which will invoke
+                // Set InputConnectionHandler in notifyIMEContext because
+                // GeckoInputConnection.notifyIMEContext calls restartInput() which will invoke
                 // InputConnectionHandler.onCreateInputConnection
                 LayerView v = GeckoApp.mAppContext.getLayerView();
                 if (v != null) {
                     mListener = GeckoInputConnection.create(v, GeckoEditable.this);
                     v.setInputConnectionHandler((InputConnectionHandler)mListener);
-                    mListener.notifyIMEEnabled(state, typeHint, modeHint, actionHint);
+                    mListener.notifyIMEContext(state, typeHint, modeHint, actionHint);
                 }
             }
         });

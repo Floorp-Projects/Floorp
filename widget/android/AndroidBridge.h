@@ -154,7 +154,7 @@ public:
     /* These are all implemented in Java */
     static void NotifyIME(int aType, int aState);
 
-    static void NotifyIMEEnabled(int aState, const nsAString& aTypeHint,
+    static void NotifyIMEContext(int aState, const nsAString& aTypeHint,
                                  const nsAString& aModeHint, const nsAString& aActionHint);
 
     static void NotifyIMEChange(const PRUnichar *aText, uint32_t aTextLen, int aStart, int aEnd, int aNewEnd);
@@ -405,7 +405,7 @@ protected:
 
     // other things
     jmethodID jNotifyIME;
-    jmethodID jNotifyIMEEnabled;
+    jmethodID jNotifyIMEContext;
     jmethodID jNotifyIMEChange;
     jmethodID jAcknowledgeEvent;
     jmethodID jEnableLocation;
