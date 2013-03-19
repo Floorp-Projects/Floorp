@@ -11,11 +11,14 @@
 #include "nsISMILAttr.h"
 
 class nsIContent;
-class nsISMILAnimationElement;
 class nsSMILValue;
 class nsSVGElement;
 
 namespace mozilla {
+
+namespace dom {
+class SVGAnimationElement;
+}
 
 /**
  * SVGMotionSMILAttr: Implements the nsISMILAttr interface for SMIL animations
@@ -32,7 +35,7 @@ public:
 
   // nsISMILAttr methods
   virtual nsresult ValueFromString(const nsAString& aStr,
-                                   const nsISMILAnimationElement* aSrcElement,
+                                   const dom::SVGAnimationElement* aSrcElement,
                                    nsSMILValue& aValue,
                                    bool& aPreventCachingOfSandwich) const;
   virtual nsSMILValue GetBaseValue() const;

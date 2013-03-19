@@ -45,7 +45,7 @@ public:
                         const nsAString& aValue,
                         nsAttrValue& aResult);
 
-  // nsISMILAnimationElement
+  // SVGAnimationElement
   virtual nsSMILAnimationFunction& AnimationFunction();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
