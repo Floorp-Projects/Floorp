@@ -984,7 +984,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
     public void adjustForTabsLayout(int width) {
         mTabsPaneWidth = width;
-        adjustTabsAnimation(false);
+        adjustTabsAnimation(true);
     }
 
     public void updateTabs(boolean areTabsShown) {
