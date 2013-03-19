@@ -74,6 +74,8 @@ class TreeMetadataEmitter(object):
         # them. We should aim to keep this set small because it violates the
         # desired abstraction of the build definition away from makefiles.
         passthru = VariablePassthru(sandbox)
+        if sandbox['MODULE']:
+            passthru.variables['MODULE'] = sandbox['MODULE']
         if sandbox['XPIDL_SOURCES']:
             passthru.variables['XPIDLSRCS'] = sandbox['XPIDL_SOURCES']
         if sandbox['XPIDL_MODULE']:
