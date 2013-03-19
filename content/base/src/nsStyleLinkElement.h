@@ -17,7 +17,6 @@
 #include "nsIDOMLinkStyle.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsCSSStyleSheet.h"
-#include "nsIURI.h"
 #include "nsTArray.h"
 #include "mozilla/CORSMode.h"
 
@@ -28,6 +27,7 @@
 #define ALTERNATE     0x00000010
 
 class nsIDocument;
+class nsIURI;
 
 class nsStyleLinkElement : public nsIDOMLinkStyle,
                            public nsIStyleSheetLinkingElement

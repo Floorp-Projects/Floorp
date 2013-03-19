@@ -278,22 +278,6 @@ class LGuardShape : public LInstructionHelper<0, 1, 1>
     }
 };
 
-class LRecompileCheck : public LInstructionHelper<0, 0, 1>
-{
-  public:
-    LIR_HEADER(RecompileCheck);
-
-    LRecompileCheck(const LDefinition &temp) {
-        setTemp(0, temp);
-    }
-    const LAllocation *tempInt() {
-        return getTemp(0)->output();
-    }
-    const MRecompileCheck *mir() const {
-        return mir_->toRecompileCheck();
-    }
-};
-
 class LInterruptCheck : public LInstructionHelper<0, 0, 0>
 {
   public:

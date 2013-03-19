@@ -131,7 +131,6 @@ class ParallelArrayVisitor : public MInstructionVisitor
     UNSAFE_OP(OsrScopeChain)
     UNSAFE_OP(ReturnFromCtor)
     CUSTOM_OP(CheckOverRecursed)
-    DROP_OP(RecompileCheck)
     UNSAFE_OP(DefVar)
     UNSAFE_OP(DefFun)
     UNSAFE_OP(CreateThis)

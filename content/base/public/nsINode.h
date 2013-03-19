@@ -284,7 +284,7 @@ public:
   // - HTMLFrameSetElement:   mRowSpecs, mColSpecs
   // - nsHTMLInputElement:    mInputData, mFiles, mFileList, mStaticDocfileList
   // - nsHTMLMapElement:      mAreas
-  // - nsHTMLMediaElement:    many!
+  // - HTMLMediaElement:      many!
   // - nsHTMLOutputElement:   mDefaultValue, mTokenList
   // - nsHTMLRowElement:      mCells
   // - nsHTMLSelectElement:   mOptions, mRestoreState
@@ -360,7 +360,7 @@ public:
     /** data nodes (comments, PIs, text). Nodes of this type always
      returns a non-null value for nsIContent::GetText() */
     eDATA_NODE           = 1 << 8,
-    /** nsHTMLMediaElement */
+    /** HTMLMediaElement */
     eMEDIA               = 1 << 9,
     /** animation elements */
     eANIMATION           = 1 << 10,

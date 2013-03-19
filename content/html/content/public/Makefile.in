@@ -21,9 +21,6 @@ EXPORTS = \
 		nsIRadioGroupContainer.h \
 		nsITextControlElement.h \
 		nsFormSubmission.h \
-		nsHTMLAudioElement.h \
-		nsHTMLMediaElement.h \
-		nsHTMLVideoElement.h \
 		nsIHTMLCollection.h \
 		$(NULL)
 
@@ -31,6 +28,9 @@ EXPORTS_NAMESPACES = mozilla/dom
 
 EXPORTS_mozilla/dom = \
 		HTMLCanvasElement.h \
+		HTMLMediaElement.h \
+		HTMLAudioElement.h \
+		HTMLVideoElement.h \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
