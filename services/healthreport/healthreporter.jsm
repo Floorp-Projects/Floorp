@@ -707,6 +707,12 @@ AbstractHealthReporter.prototype = Object.freeze({
 
               if (!(dateFormatted in outputDataDays)) {
                 outputDataDays[dateFormatted] = {};
+              }
+
+              // This needs to be separate because dayVersions is provider
+              // specific and gets blown away in a loop while outputDataDays
+              // is persistent.
+              if (!(dateFormatted in dayVersions)) {
                 dayVersions[dateFormatted] = {};
               }
 
