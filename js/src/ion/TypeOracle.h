@@ -144,9 +144,6 @@ class TypeOracle
     virtual MIRType elementWrite(RawScript script, jsbytecode *pc) {
         return MIRType_None;
     }
-    virtual bool canInlineCalls() {
-        return false;
-    }
 
     /* |pc| must be a |JSOP_CALL|. */
     virtual types::StackTypeSet *getCallTarget(RawScript caller, uint32_t argc, jsbytecode *pc) {
@@ -274,7 +271,6 @@ class TypeInferenceOracle : public TypeOracle
     bool propertyWriteNeedsBarrier(RawScript script, jsbytecode *pc, RawId id);
     bool elementWriteNeedsBarrier(RawScript script, jsbytecode *pc);
     MIRType elementWrite(RawScript script, jsbytecode *pc);
-    bool canInlineCalls();
     bool canInlineCall(HandleScript caller, jsbytecode *pc);
     types::TypeBarrier *callArgsBarrier(HandleScript caller, jsbytecode *pc);
     bool canEnterInlinedFunction(RawScript caller, jsbytecode *pc, RawFunction callee);
