@@ -548,35 +548,6 @@ ICStubCompiler::leaveStubFrame(MacroAssembler &masm, bool calledIntoIon)
 }
 
 //
-// StackCheck_Fallback
-//
-
-static bool
-DoStackCheckFallback(JSContext *cx, ICStackCheck_Fallback *stub)
-{
-    FallbackICSpew(cx, stub, "StackCheck");
-    JS_CHECK_RECURSION(cx, return false);
-    return true;
-}
-
-typedef bool (*DoStackCheckFallbackFn)(JSContext *, ICStackCheck_Fallback *);
-static const VMFunction DoStackCheckFallbackInfo =
-    FunctionInfo<DoStackCheckFallbackFn>(DoStackCheckFallback);
-
-bool
-ICStackCheck_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
-{
-    JS_ASSERT(R0 == JSReturnOperand);
-
-    // Restore the tail call register.
-    EmitRestoreTailCallReg(masm);
-
-    masm.push(BaselineStubReg);
-
-    return tailCallVM(DoStackCheckFallbackInfo, masm);
-}
-
-//
 // UseCount_Fallback
 //
 static bool
