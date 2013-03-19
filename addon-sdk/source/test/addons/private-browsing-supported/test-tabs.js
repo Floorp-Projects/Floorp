@@ -1,3 +1,5 @@
+'use strict';
+
 const tabs = require('sdk/tabs');
 const { is } = require('sdk/system/xul-app');
 const { isPrivate } = require('sdk/private-browsing');

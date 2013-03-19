@@ -98,8 +98,15 @@ const WindowTabTracker = Trait.compose({
       options.tab = tab;
       options.window = this._public;
 
-      // creating tab wrapper and adding listener to "ready" events.
-      let wrappedTab = Tab(options);
+      // Ignore zombie tabs on open that have already been removed
+      if (type == "open" && !tab.linkedBrowser)
+        return;
+
+      // Create a tab wrapper on open event, otherwise, just fetch existing
+      // tab object
+      let wrappedTab = Tab(options, type !== "open");
+      if (!wrappedTab)
+        return;
 
       // Setting up an event listener for ready events.
       if (type === "open")

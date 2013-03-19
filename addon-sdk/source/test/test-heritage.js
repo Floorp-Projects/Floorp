@@ -79,53 +79,6 @@ exports['test inheritance'] = function(assert) {
                'propreties inherited');
 };
 
-exports['test prototype immutability'] = function(assert) {
-  let Foo = Class({
-    name: 'hello',
-    rename: function rename(name) {
-      this.name = name;
-    }
-  });
-
-  /* Disable until release with Bug 674195 fix is shipped
-  assert.ok(Object.isFrozen(Foo), 'Foo is frozen');
-  assert.ok(Object.isFrozen(Foo.prototype), 'Foo prototype is frozen');
-  assert.ok(Object.isFrozen(Object.getPrototypeOf(Foo.prototype)),
-            'Class.prototype is frozen');
-  assert.equal(Object.getPrototypeOf(Object.getPrototypeOf(Foo.prototype)),
-               null, 'prototype of Class.prototype is null');
-  */
-
-  assert.throws(function() {
-    var override = function() {};
-    Foo.prototype.extend = override;
-    if (Foo.prototype.extend !== override)
-      throw Error('Property was not set');
-  }, 'Can not change prototype properties');
-
-  assert.throws(function() {
-    Foo.prototype.foo = 'bar';
-    if (Foo.prototype.foo !== 'bar')
-      throw Error('Property was not set');
-  }, 'Can not add prototype properties');
-
-  assert.throws(function() {
-    delete Foo.prototype.name;
-    if ('name' in Foo.prototype)
-      throw Error('Property was not deleted');
-  }, 'Can not remove prototype properties');
-
-  var Bar = Class({
-    extends: Foo,
-    rename: function rename() {
-      return this.name;
-    }
-  });
-
-  assert.equal(Bar().rename(), 'hello',
-               'properties may be overided on decedents');
-};
-
 exports['test immunity against __proto__'] = function(assert) {
   let Foo = Class({ name: 'foo', hacked: false });
 
@@ -142,35 +95,6 @@ exports['test immunity against __proto__'] = function(assert) {
     if (Bar() instanceof Foo && !Bar().hacked)
       throw Error('can not change prototype chain');
   }, 'prototype chain of decedants immune to __proto__ hacks');
-};
-
-exports['test instance mutability'] = function(assert) {
-  let Foo = Class({
-    name: 'foo',
-    initialize: function initialize(number) {
-      this.number = number;
-    }
-  });
-
-  let f1 = Foo();
-
-  assert.throws(function() {
-    f1.initialize = 'f1';
-    if (f1.name !== 'f1')
-      throw Error('Property was not set');
-  }, 'can not change prototype properties');
-
-  f1.alias = 'f1';
-  assert.equal(f1.alias, 'f1', 'instance is mutable');
-
-  delete f1.alias;
-  assert.ok(!('alias' in f1), 'own properties are deletable');
-
-  f1.initialize(1);
-  assert.equal(f1.number, 1, 'method can mutate instances own properties');
-
-  f1.name = 'bar';
-  assert.equal(f1.name, 'bar', 'data properties are mutable on instance');
 };
 
 exports['test super'] = function(assert) {

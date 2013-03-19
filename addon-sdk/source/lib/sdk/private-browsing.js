@@ -23,7 +23,7 @@ onStateChange('stop', function onStop() {
 });
 
 Object.defineProperty(exports, "isActive", {
-	get: deprecateFunction(getMode, 'require("private-browsing").isActive is deprecated.')
+  get: deprecateFunction(getMode, 'require("private-browsing").isActive is deprecated.')
 });
 
 exports.activate = function activate() setMode(true);
@@ -46,6 +46,17 @@ exports.isPrivate = function(thing) {
     // then return true
     if (isWindowPrivate(thing)) {
       return true;
+    }
+
+    // does the thing have an associated tab?
+    // page-mod instances do..
+    if (thing.tab) {
+      let tabWindow = getOwnerWindow(thing.tab);
+      if (tabWindow) {
+        let isThingPrivate = isWindowPrivate(tabWindow);
+        if (isThingPrivate)
+          return isThingPrivate;
+      }
     }
 
     // can we find an associated window?

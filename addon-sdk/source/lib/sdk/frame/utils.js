@@ -43,8 +43,9 @@ exports.getDocShell = getDocShell;
 function create(document, options) {
   options = options || {};
   let remote = options.remote || false;
-  let nodeName = options.nodeName || 'browser';
   let namespaceURI = options.namespaceURI || XUL;
+  let isXUL = namespaceURI === XUL;
+  let nodeName = isXUL && options.browser ? 'browser' : 'iframe';
 
   let frame = document.createElementNS(namespaceURI, nodeName);
   // Type="content" is mandatory to enable stuff here:
@@ -52,17 +53,25 @@ function create(document, options) {
   frame.setAttribute('type', options.type || 'content');
   frame.setAttribute('src', options.uri || 'about:blank');
 
+  document.documentElement.appendChild(frame);
+
   // Load in separate process if `options.remote` is `true`.
   // http://mxr.mozilla.org/mozilla-central/source/content/base/src/nsFrameLoader.cpp#1347
   if (remote) {
-    // We remove XBL binding to avoid execution of code that is not going to
-    // work because browser has no docShell attribute in remote mode
-    // (for example)
-    frame.setAttribute('style', '-moz-binding: none;');
-    frame.setAttribute('remote', 'true');
+    if (isXUL) {
+      // We remove XBL binding to avoid execution of code that is not going to
+      // work because browser has no docShell attribute in remote mode
+      // (for example)
+      frame.setAttribute('style', '-moz-binding: none;');
+      frame.setAttribute('remote', 'true');
+    }
+    else {
+      frame.QueryInterface(Ci.nsIMozBrowserFrame);
+      frame.createRemoteFrameLoader(null);
+    }
   }
 
-  document.documentElement.appendChild(frame);
+
 
   // If browser is remote it won't have a `docShell`.
   if (!remote) {
