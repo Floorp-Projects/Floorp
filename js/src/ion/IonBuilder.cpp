@@ -4469,7 +4469,10 @@ IonBuilder::jsop_eval(uint32_t argc)
         MInstruction *ins = MCallDirectEval::New(scopeChain, string, thisValue);
         current->add(ins);
         current->push(ins);
-        return resumeAfter(ins);
+
+        types::StackTypeSet *barrier;
+        types::StackTypeSet *types = oracle->returnTypeSet(script(), pc, &barrier);
+        return resumeAfter(ins) && pushTypeBarrier(ins, types, barrier);
     }
 
     return jsop_call(argc, /* constructing = */ false);
