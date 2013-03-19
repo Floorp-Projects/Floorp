@@ -136,7 +136,7 @@
             'trace_win.h',
           ],
         }],
-        ['OS=="android"', {
+        ['OS=="android" or moz_widget_toolkit_gonk==1', {
           'dependencies': [ 'cpu_features_android', ],
         }],
         ['OS=="linux"', {
@@ -188,7 +188,7 @@
     },
   ], # targets
   'conditions': [
-    ['OS=="android"', {
+    ['OS=="android" or moz_widget_toolkit_gonk==1', {
       'targets': [
         {
           'variables': {
