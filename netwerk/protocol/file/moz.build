@@ -14,3 +14,5 @@ XPIDL_FLAGS += [
     '-I$(topsrcdir)/netwerk/base/public',
 ]
 
+MODULE = 'necko'
+

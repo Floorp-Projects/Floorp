@@ -10,3 +10,5 @@ XPIDL_SOURCES += [
     'nsIWindowProvider.idl',
 ]
 
+MODULE = 'embed_base'
+

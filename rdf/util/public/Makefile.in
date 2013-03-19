@@ -10,8 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= rdfutil
-
 EXPORTS		= $(srcdir)/nsRDFResource.h
 
 include $(topsrcdir)/config/rules.mk

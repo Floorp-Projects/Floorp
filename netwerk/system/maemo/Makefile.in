@@ -10,7 +10,6 @@ FAIL_ON_WARNINGS := 1
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE	       = necko
 LIBRARY_NAME   = neckosystem_s
 LIBXUL_LIBRARY = 1
 

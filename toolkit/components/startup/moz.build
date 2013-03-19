@@ -7,3 +7,5 @@ DIRS += ['public']
 
 TEST_DIRS += ['tests/browser']
 
+MODULE = 'toolkitcomps'
+

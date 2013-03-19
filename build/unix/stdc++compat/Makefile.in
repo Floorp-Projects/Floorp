@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= build
 LIBRARY_NAME	= stdc++compat
 HOST_LIBRARY_NAME = host_stdc++compat
 FORCE_STATIC_LIB= 1

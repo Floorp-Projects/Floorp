@@ -10,7 +10,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE       = npsecondtest
 LIBRARY_NAME = npsecondtest
 MODULE_NAME  = SecondTestPlugin
 

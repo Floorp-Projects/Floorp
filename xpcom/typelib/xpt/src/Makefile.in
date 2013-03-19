@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xpcom
 LIBRARY_NAME	= xpt
 LIB_IS_C_ONLY	= 1
 DIST_INSTALL	= 1

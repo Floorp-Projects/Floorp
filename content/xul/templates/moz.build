@@ -5,3 +5,6 @@
 
 PARALLEL_DIRS += ['public', 'src']
 TEST_TOOL_DIRS += ['tests/chrome']
+
+MODULE = 'xultmpl'
+

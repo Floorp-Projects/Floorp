@@ -12,3 +12,5 @@ XPIDL_SOURCES += [
     'nsIInputListAutoComplete.idl',
 ]
 
+MODULE = 'satchel'
+

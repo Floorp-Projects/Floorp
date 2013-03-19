@@ -8,3 +8,5 @@ XPIDL_SOURCES += [
     'nsILayoutRegressionTester.idl',
 ]
 
+MODULE = 'layout_debug'
+

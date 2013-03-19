@@ -15,3 +15,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 
 if CONFIG['DEHYDRA_PATH']:
     DIRS += ['static-checker']
+
+MODULE = 'xpcom'
+

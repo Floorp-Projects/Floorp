@@ -10,3 +10,5 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'appstartup'
 
+MODULE = 'appcomps'
+

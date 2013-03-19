@@ -11,8 +11,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = test_dm
-
 XPCSHELL_TESTS = \
   unit \
   schema_migration \

@@ -12,3 +12,5 @@ elif toolkit == 'cocoa':
 else:
     DIRS += ['unix']
 
+MODULE = 'locale'
+

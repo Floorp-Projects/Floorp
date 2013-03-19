@@ -9,8 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = FfxCP
-
 JAVAFILES = \
   DirCursor.java \
   ffxcp.java \

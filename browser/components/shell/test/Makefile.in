@@ -10,7 +10,6 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= test_browser_shell
 XPCSHELL_TESTS	= unit
 
 

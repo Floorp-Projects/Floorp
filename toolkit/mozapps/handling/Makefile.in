@@ -9,8 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = contentDispatchChooser
-
 EXTRA_COMPONENTS = nsContentDispatchChooser.js nsContentDispatchChooser.manifest
 
 include $(topsrcdir)/config/rules.mk

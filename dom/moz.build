@@ -99,3 +99,5 @@ TEST_DIRS += [
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'cocoa', 'windows', 'android', 'qt', 'os2'):
     TEST_DIRS += ['plugins/test']
 
+MODULE = 'dom'
+

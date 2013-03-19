@@ -9,7 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE          = osxproxy
 LIBRARY_NAME    = osxproxy
 
 EXPORT_LIBRARY  = 1

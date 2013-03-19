@@ -19,3 +19,5 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'xpcom_threads'
 
+MODULE = 'xpcom'
+

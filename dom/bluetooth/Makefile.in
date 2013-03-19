@@ -33,7 +33,6 @@ EXPORTS_mozilla/dom/bluetooth/ipc = BluetoothMessageUtils.h
 
 ifneq (,$(MOZ_B2G_BT))
 
-MODULE           = dom
 LIBRARY_NAME     = dombluetooth_s
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1

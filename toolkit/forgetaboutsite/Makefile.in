@@ -9,8 +9,6 @@ VPATH   := @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE := forgetaboutsite
-
 EXTRA_JS_MODULES := \
   ForgetAboutSite.jsm \
   $(NULL)

@@ -9,3 +9,5 @@ XPIDL_SOURCES += [
     'nsIJSInspector.idl',
 ]
 
+MODULE = 'jsinspector'
+

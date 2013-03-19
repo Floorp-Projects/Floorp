@@ -39,9 +39,6 @@ XPI_NAME	= winembed
 PROGRAM		= winEmbed$(BIN_SUFFIX)
 RESFILE		= winEmbed.res
 
-MODULE		= winEmbed
-
-
 CPPSRCS		= \
 		winEmbed.cpp \
 		WebBrowserChrome.cpp \

@@ -20,9 +20,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# Note: set the test module's name to test_<yourmodule>
-MODULE		= test_testing_xpcshell_example
-
 # This is a list of directories containing tests to run, separated by spaces.
 # Most likely, tho, you won't use more than one directory here.
 XPCSHELL_TESTS = \

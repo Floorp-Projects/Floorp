@@ -7,3 +7,6 @@
 # a statically linked glue lib.
 if CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += ['staticruntime']
+
+MODULE = 'xpcom'
+

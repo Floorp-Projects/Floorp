@@ -9,7 +9,6 @@ VPATH                 = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE                = zipwriter
 LIBRARY_NAME          = zipwriter
 SHORT_LIBNAME         = zipwrite
 MODULE_NAME           = ZipWriterModule

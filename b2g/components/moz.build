@@ -9,3 +9,5 @@ XPIDL_SOURCES += [
     'b2g.idl',
 ]
 
+MODULE = 'B2GComponents'
+

@@ -7,6 +7,4 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-MODULE		= pippki
-
 include $(topsrcdir)/config/rules.mk

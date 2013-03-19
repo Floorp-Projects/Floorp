@@ -14,7 +14,6 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= jsdebug
 LIBRARY_NAME	= jsd
 CPPSRCS	 = \
 		jsd_xpc.cpp \

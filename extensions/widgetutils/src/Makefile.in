@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= widgetutils
 XPI_NAME	= widgetutils
 LIBRARY_NAME    = widgetutils
 SHORT_LIBNAME = widgetutils

@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= breakpad_mac_common
 LIBRARY_NAME	= breakpad_mac_common_s
 HOST_LIBRARY_NAME = host_breakpad_mac_common_s
 

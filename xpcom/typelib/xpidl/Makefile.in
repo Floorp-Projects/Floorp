@@ -10,8 +10,6 @@ VPATH		= @srcdir@
 
 include $(topsrcdir)/config/config.mk
 
-MODULE		= xpcom
-
 SDK_BINARY = \
   $(topsrcdir)/xpcom/idl-parser/xpidl.py \
   $(topsrcdir)/xpcom/idl-parser/header.py \

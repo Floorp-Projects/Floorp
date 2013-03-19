@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE           = appcomps
 LIBRARY_NAME     = windowds
 MODULE_NAME      = nsWindowDataSourceModule
 LIBXUL_LIBRARY   = 1

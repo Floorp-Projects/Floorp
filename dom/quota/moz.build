@@ -5,3 +5,5 @@
 
 XPIDL_MODULE = 'dom_quota'
 
+MODULE = 'dom'
+

@@ -7,3 +7,5 @@ XPIDL_SOURCES += [
     'SessionStore.idl',
 ]
 
+MODULE = 'MobileComponents'
+

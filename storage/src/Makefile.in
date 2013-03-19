@@ -10,7 +10,6 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE           = storage
 LIBRARY_NAME     = storage_s
 MODULE_NAME      = mozStorageModule
 FORCE_STATIC_LIB = 1

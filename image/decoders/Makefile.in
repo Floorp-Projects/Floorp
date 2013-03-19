@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = imgdecoders
 LIBRARY_NAME = imgdecoders_s
 FORCE_STATIC_LIB = 1
 MODULE_NAME = nsDecodersModule

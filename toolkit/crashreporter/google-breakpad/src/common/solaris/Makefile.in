@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= breakpad_solaris_common
 LIBRARY_NAME	= breakpad_solaris_common_s
 HOST_LIBRARY_NAME = host_breakpad_solaris_common_s
 

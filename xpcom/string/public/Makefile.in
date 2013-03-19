@@ -11,8 +11,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= string
-
 EXPORTS		=				\
 		nsAString.h			\
 		nsAlgorithm.h			\

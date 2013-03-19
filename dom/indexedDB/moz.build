@@ -29,3 +29,5 @@ XPIDL_FLAGS += [
     '-I$(topsrcdir)/dom/interfaces/events',
 ]
 
+MODULE = 'dom'
+

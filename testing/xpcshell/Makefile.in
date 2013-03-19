@@ -10,8 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= testing_xpcshell
-
 include $(topsrcdir)/config/rules.mk
 
 # Harness files from the srcdir

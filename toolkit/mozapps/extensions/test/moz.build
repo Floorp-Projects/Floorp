@@ -5,3 +5,6 @@
 
 if CONFIG['MOZ_BUILD_APP'] != 'mobile':
     DIRS += ['xpinstall', 'browser', 'mochitest']
+
+MODULE = 'test_extensionmanager'
+
