@@ -26,6 +26,13 @@
 static NS_DEFINE_CID(kSimpleURICID,     NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kNestedAboutURICID, NS_NESTEDABOUTURI_CID);
 
+static bool IsSafeForUntrustedContent(nsIAboutModule *aModule, nsIURI *aURI) {
+  uint32_t flags;
+  nsresult rv = aModule->GetURIFlags(aURI, &flags);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return (flags & nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT) != 0;
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMPL_ISUPPORTS1(nsAboutProtocolHandler, nsIProtocolHandler)
@@ -80,13 +87,7 @@ nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
     nsCOMPtr<nsIAboutModule> aboutMod;
     rv = NS_GetAboutModule(url, getter_AddRefs(aboutMod));
     if (NS_SUCCEEDED(rv)) {
-        // The standard return case
-        uint32_t flags;
-        rv = aboutMod->GetURIFlags(url, &flags);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        isSafe =
-            ((flags & nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT) != 0);
+        isSafe = IsSafeForUntrustedContent(aboutMod, url);
     }
 
     if (isSafe) {
@@ -133,6 +134,15 @@ nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
         // The standard return case:
         rv = aboutMod->NewChannel(uri, result);
         if (NS_SUCCEEDED(rv)) {
+            // If this URI is safe for untrusted content, enforce that its
+            // principal be based on the channel's originalURI by setting the
+            // owner to null.
+            // Note: this relies on aboutMod's newChannel implementation
+            // having set the proper originalURI, which probably isn't ideal.
+            if (IsSafeForUntrustedContent(aboutMod, uri)) {
+                (*result)->SetOwner(nullptr);
+            }
+
             nsRefPtr<nsNestedAboutURI> aboutURI;
             nsresult rv2 = uri->QueryInterface(kNestedAboutURICID,
                                                getter_AddRefs(aboutURI));
