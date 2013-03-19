@@ -1362,6 +1362,8 @@ $(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_DEPS) $(xpidl-preqs)
 
 # no need to link together if XPIDLSRCS contains only XPIDL_MODULE
 ifneq ($(XPIDL_MODULE).idl,$(strip $(XPIDLSRCS)))
+
+# based on $(XPIDL_LINK)
 XPT_PY ?= $(PYTHON) $(LIBXUL_DIST)/sdk/bin/xpt.py
 
 # Workaround race condition until deps fixed
