@@ -251,7 +251,7 @@ IsMarked(T **thingp)
 {
     JS_ASSERT(thingp);
     JS_ASSERT(*thingp);
-    Zone *zone = (*thingp)->tenuredZone();
+    Zone *zone = (*thingp)->zone();
     if (!zone->isCollecting() || zone->isGCFinished())
         return true;
     return (*thingp)->isMarked();
@@ -263,7 +263,7 @@ IsAboutToBeFinalized(T **thingp)
 {
     JS_ASSERT(thingp);
     JS_ASSERT(*thingp);
-    if (!(*thingp)->tenuredZone()->isGCSweeping())
+    if (!(*thingp)->zone()->isGCSweeping())
         return false;
     return !(*thingp)->isMarked();
 }
@@ -629,7 +629,7 @@ ShouldMarkCrossCompartment(JSTracer *trc, RawObject src, Cell *cell)
     if (!IS_GC_MARKING_TRACER(trc))
         return true;
 
-    JS::Zone *zone = cell->tenuredZone();
+    JS::Zone *zone = cell->zone();
     uint32_t color = AsGCMarker(trc)->getMarkColor();
 
     JS_ASSERT(color == BLACK || color == GRAY);
@@ -1619,7 +1619,7 @@ JS::UnmarkGrayGCThingRecursively(void *thing, JSGCTraceKind kind)
 
     UnmarkGrayGCThing(thing);
 
-    JSRuntime *rt = static_cast<Cell *>(thing)->runtime();
+    JSRuntime *rt = static_cast<Cell *>(thing)->zone()->rt;
     UnmarkGrayTracer trc(rt);
     JS_TraceChildren(&trc, thing, kind);
 }

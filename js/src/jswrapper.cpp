@@ -206,7 +206,7 @@ CrossCompartmentWrapper::~CrossCompartmentWrapper()
 {
 }
 
-bool CrossCompartmentWrapper::finalizeInBackground(Value priv)
+bool CrossCompartmentWrapper::finalizeInBackground(HandleValue priv)
 {
     if (!priv.isObject())
         return true;
@@ -215,9 +215,7 @@ bool CrossCompartmentWrapper::finalizeInBackground(Value priv)
      * Make the 'background-finalized-ness' of the wrapper the same as the
      * wrapped object, to allow transplanting between them.
      */
-    if (IsInsideNursery(priv.toObject().runtime(), &priv.toObject()))
-        return false;
-    return IsBackgroundFinalized(priv.toObject().tenuredGetAllocKind());
+    return IsBackgroundFinalized(priv.toObject().getAllocKind());
 }
 
 #define PIERCE(cx, wrapper, pre, op, post)                      \
@@ -849,8 +847,8 @@ NukeSlot(JSObject *wrapper, uint32_t slot, Value v)
 {
     Value old = wrapper->getSlot(slot);
     if (old.isMarkable()) {
-        Zone *zone = ZoneOfValue(old);
-        AutoMarkInDeadZone amd(zone);
+        Cell *cell = static_cast<Cell *>(old.toGCThing());
+        AutoMarkInDeadZone amd(cell->zone());
         wrapper->setReservedSlot(slot, v);
     } else {
         wrapper->setReservedSlot(slot, v);

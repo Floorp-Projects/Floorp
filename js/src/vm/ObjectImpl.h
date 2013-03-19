@@ -1094,7 +1094,6 @@ class ObjectImpl : public gc::Cell
     }
 
     JSObject * asObjectPtr() { return reinterpret_cast<JSObject *>(this); }
-    const JSObject * asObjectPtr() const { return reinterpret_cast<const JSObject *>(this); }
 
     friend inline Value ObjectValue(ObjectImpl &obj);
 
@@ -1371,8 +1370,6 @@ class ObjectImpl : public gc::Cell
     }
 
     /* GC support. */
-    JS_ALWAYS_INLINE Zone *zone() const;
-    gc::AllocKind getAllocKind() const;
     static inline ThingRootKind rootKind() { return THING_ROOT_OBJECT; }
     static inline void readBarrier(ObjectImpl *obj);
     static inline void writeBarrierPre(ObjectImpl *obj);

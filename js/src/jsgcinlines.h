@@ -203,7 +203,7 @@ GetGCThingTraceKind(const void *thing)
     if (IsInsideNursery(cell->runtime(), cell))
         return JSTRACE_OBJECT;
 #endif
-    return MapAllocToTraceKind(cell->tenuredGetAllocKind());
+    return MapAllocToTraceKind(cell->getAllocKind());
 }
 
 static inline void
