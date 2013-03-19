@@ -17,7 +17,6 @@
     </resources>
     <implementation>
 
-      <field name="_scrollAmount">6</field>
       <property name="scrollAmount">
         <getter>
           <![CDATA[
@@ -34,7 +33,6 @@
         </setter>
       </property>
 
-      <field name="_scrollDelay">85</field>
       <property name="scrollDelay">
         <getter>
           <![CDATA[
@@ -79,8 +77,6 @@
         </setter>
       </property>
 
-      <field name="_direction">"left"</field>
-
       <property name="behavior">
         <getter>
           return this._behavior;
@@ -90,7 +86,6 @@
         </setter>
       </property>
 
-      <field name="_behavior">"scroll"</field>
 
       <property name="loop">
         <getter>
@@ -108,7 +103,6 @@
         </setter>
       </property>
 
-      <field name="_loop">-1</field>
 
       <property name="onstart">
         <getter>
@@ -120,8 +114,6 @@
         </setter>
       </property>
 
-      <field name="_onstart"></field>
-
       <property name="onfinish">
         <getter>
           return this.getAttribute("onfinish");
@@ -132,8 +124,6 @@
         </setter>
       </property>
 
-      <field name="_onfinish"></field>
-
       <property name="onbounce">
         <getter>
           return this.getAttribute("onbounce");
@@ -143,17 +133,6 @@
           this.setAttribute("onbounce", val);
         </setter>
       </property>
-
-      <field name="_onbounce"></field>
-
-      <field name="dirsign">1</field>
-      <field name="startAt">0</field>
-      <field name="stopAt">0</field>
-      <field name="newPosition">0</field>
-      <field name="runId">0</field>
-
-      <field name="originalHeight">0</field>
-      <field name="startNewDirection">true</field>
 
       <property name="outerDiv"
         onget="return document.getAnonymousNodes(this)[0]"
@@ -510,6 +489,20 @@
 
       <constructor>
         <![CDATA[
+          // Set up state.
+          this._scrollAmount = 6;
+          this._scrollDelay = 85;
+          this._direction = "left";
+          this._behavior = "scroll";
+          this._loop = -1;
+          this.dirsign = 1;
+          this.startAt = 0;
+          this.stopAt = 0;
+          this.newPosition = 0;
+          this.runId = 0;
+          this.originalHeight = 0;
+          this.startNewDirection = true;
+
           // hack needed to fix js error, see bug 386470
           var myThis = this;
           var lambda = function myScopeFunction() { if (myThis.init) myThis.init(); }
