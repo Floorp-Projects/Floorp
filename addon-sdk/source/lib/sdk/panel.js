@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
 // The panel module currently supports only Firefox.
@@ -13,23 +12,25 @@ module.metadata = {
   }
 };
 
-const { Cc, Ci } = require("chrome");
-
+const { Ci } = require("chrome");
 const { validateOptions: valid } = require('./deprecated/api-utils');
 const { Symbiont } = require('./content/content');
 const { EventEmitter } = require('./deprecated/events');
-const timer = require('./timers');
+const { setTimeout } = require('./timers');
 const runtime = require('./system/runtime');
-const { getMostRecentBrowserWindow } = require('./window/utils');
 const { getDocShell } = require("./frame/utils");
-
-const windowMediator = Cc['@mozilla.org/appshell/window-mediator;1'].
-                       getService(Ci.nsIWindowMediator);
+const { getWindow } = require('./panel/window');
+const { isPrivateBrowsingSupported } = require('./self');
+const { isWindowPBSupported } = require('./private-browsing/utils');
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
       ON_SHOW = 'popupshown',
       ON_HIDE = 'popuphidden',
       validNumber = { is: ['number', 'undefined', 'null'] };
+
+if (isPrivateBrowsingSupported && isWindowPBSupported) {
+  throw Error('The panel module cannot be used with per-window private browsing at the moment, see Bug 816257');
+}
 
 /**
  * Emits show and hide events.
@@ -115,7 +116,15 @@ const Panel = Symbiont.resolve({
   /* Public API: Panel.show */
   show: function show(anchor) {
     anchor = anchor || null;
-    let document = getWindow(anchor).document;
+    let anchorWindow = getWindow(anchor);
+
+    // If there is no open window, or the anchor is in a private window
+    // then we will not be able to display the panel
+    if (!anchorWindow) {
+      return;
+    }
+
+    let document = anchorWindow.document;
     let xulPanel = this._xulPanel;
     if (!xulPanel) {
       xulPanel = this._xulPanel = document.createElementNS(XUL_NS, 'panel');
@@ -143,6 +152,7 @@ const Panel = Symbiont.resolve({
       frame.setAttribute('type', 'content');
       frame.setAttribute('flex', '1');
       frame.setAttribute('transparent', 'transparent');
+
       if (runtime.OS === "Darwin") {
         frame.style.borderRadius = "6px";
         frame.style.padding = "1px";
@@ -203,7 +213,7 @@ const Panel = Symbiont.resolve({
     // Wait for the XBL binding to be constructed
     function waitForBinding() {
       if (!xulPanel.openPopup) {
-        timer.setTimeout(waitForBinding, 50);
+        setTimeout(waitForBinding, 50);
         return;
       }
       xulPanel.openPopup(anchor, position, x, y);
@@ -363,40 +373,3 @@ const Panel = Symbiont.resolve({
 });
 exports.Panel = function(options) Panel(options)
 exports.Panel.prototype = Panel.prototype;
-
-function getWindow(anchor) {
-  let window;
-
-  if (anchor) {
-    let anchorWindow = anchor.ownerDocument.defaultView.top;
-    let anchorDocument = anchorWindow.document;
-
-    let enumerator = windowMediator.getEnumerator("navigator:browser");
-    while (enumerator.hasMoreElements()) {
-      let enumWindow = enumerator.getNext();
-
-      // Check if the anchor is in this browser window.
-      if (enumWindow == anchorWindow) {
-        window = anchorWindow;
-        break;
-      }
-
-      // Check if the anchor is in a browser tab in this browser window.
-      let browser = enumWindow.gBrowser.getBrowserForDocument(anchorDocument);
-      if (browser) {
-        window = enumWindow;
-        break;
-      }
-
-      // Look in other subdocuments (sidebar, etc.)?
-    }
-  }
-
-  // If we didn't find the anchor's window (or we have no anchor),
-  // return the most recent browser window.
-  if (!window)
-    window = getMostRecentBrowserWindow();
-
-  return window;
-}
-

@@ -12,7 +12,7 @@ exports.testIsPrivateOnTab = function(test) {
   test.assert(!pb.isPrivate(chromeWindow), 'the top level window is not private');
 
   let rawTab = openTab(chromeWindow, 'data:text/html,<h1>Hi!</h1>', {
-  	isPrivate: true
+    isPrivate: true
   });
 
   // test that the tab is private

@@ -25,6 +25,7 @@ const { isBrowser, getFrames } = require('./window/utils');
 const { getTabs, getTabContentWindow, getTabForContentWindow,
         getURI: getTabURI } = require('./tabs/utils');
 const { has, hasAny } = require('./util/array');
+const { ignoreWindow } = require('sdk/private-browsing/utils');
 
 const styleSheetService = Cc["@mozilla.org/content/style-sheet-service;1"].
                             getService(Ci.nsIStyleSheetService);
@@ -352,6 +353,12 @@ const PageModManager = Registry.resolve({
     // We apply only on documents in tabs of Firefox
     if (!getTabForContentWindow(window))
       return;
+
+    // When the tab is private, only addons with 'private-browsing' flag in
+    // their package.json can apply content script to private documents
+    if (ignoreWindow(window)) {
+      return;
+    }
 
     for (let rule in RULES)
       if (RULES[rule].test(document.URL))
