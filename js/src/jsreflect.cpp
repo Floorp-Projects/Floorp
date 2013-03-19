@@ -134,7 +134,6 @@ typedef AutoValueVector NodeVector;
 class NodeBuilder
 {
     JSContext   *cx;
-    TokenStream *tokenStream;
     bool        saveLoc;               /* save source location information?     */
     char const  *src;                  /* source filename or null               */
     RootedValue srcval;                /* source filename JS value or null      */
@@ -145,7 +144,7 @@ class NodeBuilder
 
   public:
     NodeBuilder(JSContext *c, bool l, char const *s)
-        : cx(c), tokenStream(NULL), saveLoc(l), src(s), srcval(c),
+        : cx(c), saveLoc(l), src(s), srcval(c),
           callbacksRoots(c, callbacks, AST_LIMIT), userv(c), undefinedVal(c, UndefinedValue())
     {
         MakeRangeGCSafe(callbacks, mozilla::ArrayLength(callbacks));
@@ -195,10 +194,6 @@ class NodeBuilder
         }
 
         return true;
-    }
-
-    void setTokenStream(TokenStream *ts) {
-        tokenStream = ts;
     }
 
   private:
@@ -681,20 +676,15 @@ NodeBuilder::newNodeLoc(TokenPos *pos, MutableHandleValue dst)
 
     dst.setObject(*loc);
 
-    uint32_t startLineNum, startColumnIndex;
-    uint32_t endLineNum, endColumnIndex;
-    tokenStream->srcCoords.lineNumAndColumnIndex(pos->begin, &startLineNum, &startColumnIndex);
-    tokenStream->srcCoords.lineNumAndColumnIndex(pos->end, &endLineNum, &endColumnIndex);
-
     if (!newObject(&to))
         return false;
     val.setObject(*to);
     if (!setProperty(loc, "start", val))
         return false;
-    val.setNumber(startLineNum);
+    val.setNumber(pos->begin.lineno);
     if (!setProperty(to, "line", val))
         return false;
-    val.setNumber(startColumnIndex);
+    val.setNumber(pos->begin.index);
     if (!setProperty(to, "column", val))
         return false;
 
@@ -703,10 +693,10 @@ NodeBuilder::newNodeLoc(TokenPos *pos, MutableHandleValue dst)
     val.setObject(*to);
     if (!setProperty(loc, "end", val))
         return false;
-    val.setNumber(endLineNum);
+    val.setNumber(pos->end.lineno);
     if (!setProperty(to, "line", val))
         return false;
-    val.setNumber(endColumnIndex);
+    val.setNumber(pos->end.index);
     if (!setProperty(to, "column", val))
         return false;
 
@@ -1563,7 +1553,6 @@ class ASTSerializer
 
     void setParser(Parser<FullParseHandler> *p) {
         parser = p;
-        builder.setTokenStream(&p->tokenStream);
     }
 
     bool program(ParseNode *pn, MutableHandleValue dst);
@@ -1730,7 +1719,7 @@ ASTSerializer::blockStatement(ParseNode *pn, MutableHandleValue dst)
 bool
 ASTSerializer::program(ParseNode *pn, MutableHandleValue dst)
 {
-    JS_ASSERT(parser->tokenStream.srcCoords.lineNum(pn->pn_pos.begin) == lineno);
+    JS_ASSERT(pn->pn_pos.begin.lineno == lineno);
 
     NodeVector stmts(cx);
     return statements(pn, stmts) &&
