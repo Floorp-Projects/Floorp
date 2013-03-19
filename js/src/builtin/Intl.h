@@ -104,6 +104,42 @@ intl_numberingSystem(JSContext *cx, unsigned argc, Value *vp);
 extern JSBool
 intl_FormatNumber(JSContext *cx, unsigned argc, Value *vp);
 
+
+/******************** DateTimeFormat ********************/
+
+/**
+ * Returns an object indicating the supported locales for date and time
+ * formatting by having a true-valued property for each such locale with the
+ * canonicalized language tag as the property name. The object has no
+ * prototype.
+ *
+ * Usage: availableLocales = intl_DateTimeFormat_availableLocales()
+ */
+extern JSBool
+intl_DateTimeFormat_availableLocales(JSContext *cx, unsigned argc, Value *vp);
+
+/**
+ * Returns an array with the calendar type identifiers per Unicode
+ * Technical Standard 35, Unicode Locale Data Markup Language, for the
+ * supported calendars for the given locale. The default calendar is
+ * element 0.
+ *
+ * Usage: calendars = intl_availableCalendars(locale)
+ */
+extern JSBool
+intl_availableCalendars(JSContext *cx, unsigned argc, Value *vp);
+
+/**
+ * Return a pattern in the date-time format pattern language of Unicode
+ * Technical Standard 35, Unicode Locale Data Markup Language, for the
+ * best-fit date-time format pattern corresponding to skeleton for the
+ * given locale.
+ *
+ * Usage: pattern = intl_patternForSkeleton(locale, skeleton)
+ */
+extern JSBool
+intl_patternForSkeleton(JSContext *cx, unsigned argc, Value *vp);
+
 } // namespace js
 
 #endif /* Intl_h___ */

@@ -1476,16 +1476,22 @@ js::intl_FormatNumber(JSContext *cx, unsigned argc, Value *vp)
 
 /******************** DateTimeFormat ********************/
 
+static void dateTimeFormat_finalize(FreeOp *fop, JSObject *obj);
+
+static const uint32_t UDATE_FORMAT_SLOT = 0;
+static const uint32_t DATE_TIME_FORMAT_SLOTS_COUNT = 1;
+
 static Class DateTimeFormatClass = {
     js_Object_str,
-    0,
+    JSCLASS_HAS_RESERVED_SLOTS(DATE_TIME_FORMAT_SLOTS_COUNT),
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
     JS_EnumerateStub,
     JS_ResolveStub,
-    JS_ConvertStub
+    JS_ConvertStub,
+    dateTimeFormat_finalize
 };
 
 #if JS_HAS_TOSOURCE
@@ -1533,6 +1539,7 @@ DateTimeFormat(JSContext *cx, unsigned argc, Value *vp)
             obj = ToObject(cx, self);
             if (!obj)
                 return false;
+
             // 12.1.2.1 step 5
             if (!obj->isExtensible())
                 return Throw(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE);
@@ -1549,11 +1556,14 @@ DateTimeFormat(JSContext *cx, unsigned argc, Value *vp)
         obj = NewObjectWithGivenProto(cx, &DateTimeFormatClass, proto, cx->global());
         if (!obj)
             return false;
+
+        obj->setReservedSlot(UDATE_FORMAT_SLOT, PrivateValue(NULL));
     }
 
     // 12.1.2.1 steps 1 and 2; 12.1.3.1 steps 1 and 2
     RootedValue locales(cx, args.length() > 0 ? args[0] : UndefinedValue());
     RootedValue options(cx, args.length() > 1 ? args[1] : UndefinedValue());
+
     // 12.1.2.1 step 6; 12.1.3.1 step 3
     if (!IntlInitialize(cx, obj, cx->names().InitializeDateTimeFormat, locales, options))
         return false;
@@ -1561,6 +1571,14 @@ DateTimeFormat(JSContext *cx, unsigned argc, Value *vp)
     // 12.1.2.1 steps 3.a and 7
     args.rval().setObject(*obj);
     return true;
+}
+
+static void
+dateTimeFormat_finalize(FreeOp *fop, JSObject *obj)
+{
+    UDateFormat *df = static_cast<UDateFormat*>(obj->getReservedSlot(UDATE_FORMAT_SLOT).toPrivate());
+    if (df)
+        udat_close(df);
 }
 
 static JSObject *
@@ -1595,7 +1613,8 @@ InitDateTimeFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> 
     RootedValue undefinedValue(cx, UndefinedValue());
     if (!JSObject::defineProperty(cx, proto, cx->names().format, undefinedValue,
                                   JS_DATA_TO_FUNC_PTR(JSPropertyOp, &getter.toObject()),
-                                  NULL, JSPROP_GETTER)) {
+                                  NULL, JSPROP_GETTER))
+    {
         return NULL;
     }
 
@@ -1608,7 +1627,8 @@ InitDateTimeFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> 
     // 8.1
     RootedValue ctorValue(cx, ObjectValue(*ctor));
     if (!JSObject::defineProperty(cx, Intl, cx->names().DateTimeFormat, ctorValue,
-                                  JS_PropertyStub, JS_StrictPropertyStub, 0)) {
+                                  JS_PropertyStub, JS_StrictPropertyStub, 0))
+    {
         return NULL;
     }
 
@@ -1621,7 +1641,149 @@ GlobalObject::initDateTimeFormatProto(JSContext *cx, Handle<GlobalObject*> globa
     RootedObject proto(cx, global->createBlankPrototype(cx, &DateTimeFormatClass));
     if (!proto)
         return false;
+    proto->setReservedSlot(UDATE_FORMAT_SLOT, PrivateValue(NULL));
     global->setReservedSlot(DATE_TIME_FORMAT_PROTO, ObjectValue(*proto));
+    return true;
+}
+
+JSBool
+js::intl_DateTimeFormat_availableLocales(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 0);
+
+    RootedValue result(cx);
+    if (!intl_availableLocales(cx, udat_countAvailable, udat_getAvailable, &result))
+        return false;
+    args.rval().set(result);
+    return true;
+}
+
+// ICU returns old-style keyword values; map them to BCP 47 equivalents
+// (see http://bugs.icu-project.org/trac/ticket/9620).
+static const char *
+bcp47CalendarName(const char *icuName)
+{
+    if (equal(icuName, "ethiopic-amete-alem"))
+        return "ethioaa";
+    if (equal(icuName, "gregorian"))
+        return "gregory";
+    if (equal(icuName, "islamic-civil"))
+        return "islamicc";
+    return icuName;
+}
+
+JSBool
+js::intl_availableCalendars(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 1);
+    JS_ASSERT(args[0].isString());
+
+    JSAutoByteString locale(cx, args[0].toString());
+    if (!locale)
+        return false;
+
+    RootedObject calendars(cx, NewDenseEmptyArray(cx));
+    if (!calendars)
+        return false;
+    uint32_t index = 0;
+
+    // We need the default calendar for the locale as the first result.
+    UErrorCode status = U_ZERO_ERROR;
+    UCalendar *cal = ucal_open(NULL, 0, locale.ptr(), UCAL_DEFAULT, &status);
+    const char *calendar = ucal_getType(cal, &status);
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
+    }
+    ucal_close(cal);
+    RootedString jscalendar(cx, JS_NewStringCopyZ(cx, bcp47CalendarName(calendar)));
+    if (!jscalendar)
+        return false;
+    RootedValue element(cx, StringValue(jscalendar));
+    if (!JSObject::defineElement(cx, calendars, index++, element))
+        return false;
+
+    // Now get the calendars that "would make a difference", i.e., not the default.
+    UEnumeration *values = ucal_getKeywordValuesForLocale("ca", locale.ptr(), false, &status);
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
+    }
+    ScopedICUObject<UEnumeration> toClose(values, uenum_close);
+
+    uint32_t count = uenum_count(values, &status);
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
+    }
+
+    for (; count > 0; count--) {
+        calendar = uenum_next(values, NULL, &status);
+        if (U_FAILURE(status)) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INTERNAL_INTL_ERROR);
+            return false;
+        }
+
+        jscalendar = JS_NewStringCopyZ(cx, bcp47CalendarName(calendar));
+        if (!jscalendar)
+            return false;
+        element = StringValue(jscalendar);
+        if (!JSObject::defineElement(cx, calendars, index++, element))
+            return false;
+    }
+
+    args.rval().setObject(*calendars);
+    return true;
+}
+
+JSBool
+js::intl_patternForSkeleton(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 2);
+    JS_ASSERT(args[0].isString());
+    JS_ASSERT(args[1].isString());
+
+    JSAutoByteString locale(cx, args[0].toString());
+    if (!locale)
+        return false;
+    RootedString jsskeleton(cx, args[1].toString());
+    const jschar *skeleton = JS_GetStringCharsZ(cx, jsskeleton);
+    if (!skeleton)
+        return false;
+    SkipRoot skip(cx, &skeleton);
+    uint32_t skeletonLen = u_strlen(skeleton);
+
+    UErrorCode status = U_ZERO_ERROR;
+    UDateTimePatternGenerator *gen = udatpg_open(icuLocale(locale.ptr()), &status);
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
+    }
+    ScopedICUObject<UDateTimePatternGenerator> toClose(gen, udatpg_close);
+
+    int32_t size = udatpg_getBestPattern(gen, skeleton, skeletonLen, NULL, 0, &status);
+    if (U_FAILURE(status) && status != U_BUFFER_OVERFLOW_ERROR) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
+    }
+    ScopedJSFreePtr<UChar> pattern(cx->pod_malloc<UChar>(size + 1));
+    if (!pattern)
+        return false;
+    pattern[size] = '\0';
+    status = U_ZERO_ERROR;
+    udatpg_getBestPattern(gen, skeleton, skeletonLen, pattern, size, &status);
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
+    }
+
+    RootedString str(cx, JS_NewUCStringCopyZ(cx, pattern));
+    if (!str)
+        return false;
+    args.rval().setString(str);
     return true;
 }
 
