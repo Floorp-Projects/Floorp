@@ -432,7 +432,6 @@ AbstractHealthReporter.prototype = Object.freeze({
   },
 
   _initProvider: function (provider) {
-    provider.initPreferences(this._branch + "provider.");
     provider.healthReporter = this;
   },
 
