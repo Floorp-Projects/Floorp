@@ -61,18 +61,6 @@ add_task(function test_init() {
   yield storage.close();
 });
 
-add_test(function test_prefs_integration() {
-  let branch = "testing.prefs_integration.";
-  let provider = new DummyProvider();
-  provider.initPreferences(branch);
-  let prefs = new Preferences(branch);
-
-  prefs.set("DummyProvider.foo", "bar");
-  do_check_eq(provider._prefs.get("foo"), "bar");
-
-  run_next_test();
-});
-
 add_task(function test_default_collectors() {
   let provider = new DummyProvider();
   let storage = yield Metrics.Storage("default_collectors");
