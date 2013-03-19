@@ -37,7 +37,6 @@ SVGAnimateMotionElement::SVGAnimateMotionElement(already_AddRefed<nsINodeInfo> a
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGAnimateMotionElement)
 
 //----------------------------------------------------------------------
-// nsISMILAnimationElement methods
 
 nsSMILAnimationFunction&
 SVGAnimateMotionElement::AnimationFunction()

@@ -39,7 +39,7 @@ public:
   // nsIDOMNode
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  // nsISMILAnimationElement
+  // SVGAnimationElement
   virtual nsSMILAnimationFunction& AnimationFunction();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }

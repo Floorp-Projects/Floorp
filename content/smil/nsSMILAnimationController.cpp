@@ -10,7 +10,7 @@
 #include "nsITimer.h"
 #include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
-#include "nsISMILAnimationElement.h"
+#include "mozilla/dom/SVGAnimationElement.h"
 #include "nsSMILTimedElement.h"
 #include <algorithm>
 #include "mozilla/AutoRestore.h"
@@ -163,7 +163,7 @@ nsSMILAnimationController::WillRefresh(mozilla::TimeStamp aTime)
 
 void
 nsSMILAnimationController::RegisterAnimationElement(
-                                  nsISMILAnimationElement* aAnimationElement)
+                                  SVGAnimationElement* aAnimationElement)
 {
   mAnimationElementTable.PutEntry(aAnimationElement);
   if (mDeferredStartSampling) {
@@ -181,7 +181,7 @@ nsSMILAnimationController::RegisterAnimationElement(
 
 void
 nsSMILAnimationController::UnregisterAnimationElement(
-                                  nsISMILAnimationElement* aAnimationElement)
+                                  SVGAnimationElement* aAnimationElement)
 {
   mAnimationElementTable.RemoveEntry(aAnimationElement);
 }
@@ -391,7 +391,7 @@ nsSMILAnimationController::DoSample(bool aSkipUnchangedContainers)
   //         (ii) Create a table of compositors
   //
   // (i) Here we sample the timed elements (fetched from the
-  // nsISMILAnimationElements) which determine from the active time if the
+  // SVGAnimationElements) which determine from the active time if the
   // element is active and what its simple time etc. is. This information is
   // then passed to its time client (nsSMILAnimationFunction).
   //
@@ -497,7 +497,7 @@ nsSMILAnimationController::RewindNeeded(TimeContainerPtrKey* aKey,
 nsSMILAnimationController::RewindAnimation(AnimationElementPtrKey* aKey,
                                            void* aData)
 {
-  nsISMILAnimationElement* animElem = aKey->GetKey();
+  SVGAnimationElement* animElem = aKey->GetKey();
   nsSMILTimeContainer* timeContainer = animElem->GetTimeContainer();
   if (timeContainer && timeContainer->NeedsRewind()) {
     animElem->TimedElement().Rewind();
@@ -566,7 +566,7 @@ nsSMILAnimationController::DoMilestoneSamples()
     sampleTime = std::max(nextMilestone.mTime, sampleTime);
 
     for (uint32_t i = 0; i < length; ++i) {
-      nsISMILAnimationElement* elem = params.mElements[i].get();
+      SVGAnimationElement* elem = params.mElements[i].get();
       NS_ABORT_IF_FALSE(elem, "NULL animation element in list");
       nsSMILTimeContainer* container = elem->GetTimeContainer();
       if (!container)
@@ -669,7 +669,7 @@ nsSMILAnimationController::SampleAnimation(AnimationElementPtrKey* aKey,
   NS_ENSURE_TRUE(aKey->GetKey(), PL_DHASH_NEXT);
   NS_ENSURE_TRUE(aData, PL_DHASH_NEXT);
 
-  nsISMILAnimationElement* animElem = aKey->GetKey();
+  SVGAnimationElement* animElem = aKey->GetKey();
   if (animElem->PassesConditionalProcessingTests()) {
     SampleAnimationParams* params = static_cast<SampleAnimationParams*>(aData);
 
@@ -682,7 +682,7 @@ nsSMILAnimationController::SampleAnimation(AnimationElementPtrKey* aKey,
 
 /*static*/ void
 nsSMILAnimationController::SampleTimedElement(
-  nsISMILAnimationElement* aElement, TimeContainerHashtable* aActiveContainers)
+  SVGAnimationElement* aElement, TimeContainerHashtable* aActiveContainers)
 {
   nsSMILTimeContainer* timeContainer = aElement->GetTimeContainer();
   if (!timeContainer)
@@ -709,7 +709,7 @@ nsSMILAnimationController::SampleTimedElement(
 
 /*static*/ void
 nsSMILAnimationController::AddAnimationToCompositorTable(
-  nsISMILAnimationElement* aElement, nsSMILCompositorTable* aCompositorTable)
+  SVGAnimationElement* aElement, nsSMILCompositorTable* aCompositorTable)
 {
   // Add a compositor to the hash table if there's not already one there
   nsSMILTargetIdentifier key;
@@ -753,12 +753,12 @@ IsTransformAttribute(int32_t aNamespaceID, nsIAtom *aAttributeName)
           aAttributeName == nsGkAtoms::gradientTransform);
 }
 
-// Helper function that, given a nsISMILAnimationElement, looks up its target
+// Helper function that, given a SVGAnimationElement, looks up its target
 // element & target attribute and populates a nsSMILTargetIdentifier
 // for this target.
 /*static*/ bool
 nsSMILAnimationController::GetTargetIdentifierForAnimation(
-    nsISMILAnimationElement* aAnimElem, nsSMILTargetIdentifier& aResult)
+    SVGAnimationElement* aAnimElem, nsSMILTargetIdentifier& aResult)
 {
   // Look up target (animated) element
   Element* targetElem = aAnimElem->GetTargetElementContent();
@@ -779,7 +779,7 @@ nsSMILAnimationController::GetTargetIdentifierForAnimation(
   // animateTransform can only animate transforms, conversely transforms
   // can only be animated by animateTransform
   if (IsTransformAttribute(attributeNamespaceID, attributeName) !=
-      aAnimElem->AsElement().IsSVG(nsGkAtoms::animateTransform))
+      (aAnimElem->Tag() == nsGkAtoms::animateTransform))
     return false;
 
   // Look up target (animated) attribute-type
