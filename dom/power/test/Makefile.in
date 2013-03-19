@@ -13,7 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \
   test_power_basics.html \
-  test_power_non_permitted_app.html \
   $(NULL)
 
 MOCHITEST_BROWSER_FILES = \
