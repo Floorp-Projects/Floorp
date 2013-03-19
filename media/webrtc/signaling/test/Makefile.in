@@ -9,8 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = test_signaling
-
 LIBS = \
   $(EXTRA_DSO_LIBS) \
   $(XPCOM_LIBS) \

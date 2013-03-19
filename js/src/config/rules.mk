@@ -16,6 +16,7 @@ endif
 # responsibility between Makefile.in and mozbuild files.
 _MOZBUILD_EXTERNAL_VARIABLES := \
   DIRS \
+  MODULE \
   PARALLEL_DIRS \
   TEST_DIRS \
   TIERS \

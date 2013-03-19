@@ -16,7 +16,6 @@ ifdef _MSC_VER
 STL_FLAGS	= -D_HAS_EXCEPTIONS=0
 endif
 
-MODULE		= mozalloc
 LIBRARY_NAME	= mozalloc
 DIST_INSTALL 	= 1
 

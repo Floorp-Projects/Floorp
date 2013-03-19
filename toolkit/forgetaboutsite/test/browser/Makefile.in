@@ -9,8 +9,6 @@ VPATH   := @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE := forgetaboutsite
-
 MOCHITEST_BROWSER_FILES := \
   browser_clearplugindata.js \
   browser_clearplugindata.html \

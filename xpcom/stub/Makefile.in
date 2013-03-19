@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xpcom
 LIBRARY_NAME	= xpcom
 
 # The XPCOM glue uses realpath() on libxpcom.so to resolve any symlinks. We

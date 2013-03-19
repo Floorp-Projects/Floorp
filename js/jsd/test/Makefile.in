@@ -11,9 +11,6 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = jsdebug
-
-
 MOCHITEST_FILES = 	test_bug507448.html bug507448.js \
 		test_bug617870-callhooks.html test-bug617870-callhooks.js jsd-test.js \
 		test_bug638178-execlines.html test-bug638178-execlines.js \

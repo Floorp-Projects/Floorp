@@ -19,7 +19,6 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = omxpluginhc
 MODULE_NAME = omxpluginhc
 LIBRARY_NAME = omxpluginhc
 FORCE_SHARED_LIB = 1

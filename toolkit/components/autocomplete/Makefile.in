@@ -9,7 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = autocomplete
 MODULE_NAME = tkAutoCompleteModule
 LIBRARY_NAME = tkautocomplete
 SHORT_LIBNAME = tkautoc

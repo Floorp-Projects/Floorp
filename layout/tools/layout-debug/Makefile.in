@@ -11,6 +11,4 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = layout_debug
-
 include $(topsrcdir)/config/rules.mk

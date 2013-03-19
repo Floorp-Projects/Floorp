@@ -10,7 +10,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xul
-
 include $(topsrcdir)/config/rules.mk
 

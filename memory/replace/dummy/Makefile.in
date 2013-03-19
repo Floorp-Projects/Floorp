@@ -9,7 +9,6 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = memory
 LIBRARY_NAME = replace_malloc
 FORCE_SHARED_LIB = 1
 NO_DIST_INSTALL = 1

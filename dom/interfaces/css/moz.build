@@ -36,3 +36,5 @@ XPIDL_FLAGS += [
     '-I$(topsrcdir)/dom/interfaces/stylesheets',
 ]
 
+MODULE = 'dom'
+

@@ -11,7 +11,6 @@ FAIL_ON_WARNINGS := 1
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE         = dom
 LIBRARY_NAME   = jsdomstorage_s
 LIBXUL_LIBRARY = 1
 

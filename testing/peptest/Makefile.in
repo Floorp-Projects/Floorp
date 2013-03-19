@@ -9,8 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = testing_peptest
-
 include $(topsrcdir)/config/rules.mk
 
 PEPTEST_HARNESS = \

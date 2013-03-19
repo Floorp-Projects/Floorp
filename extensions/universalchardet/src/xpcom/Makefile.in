@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= universalchardet
 LIBRARY_NAME	= universalchardet
 EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1

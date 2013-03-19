@@ -32,3 +32,5 @@ XPIDL_SOURCES += [
     'nsIWebPageDescriptor.idl',
 ]
 
+MODULE = 'docshell'
+

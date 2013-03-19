@@ -7,3 +7,6 @@ XPIDL_SOURCES += [
     'nsIAutoConfig.idl',
     'nsIReadConfig.idl',
 ]
+
+MODULE = 'autoconfig'
+

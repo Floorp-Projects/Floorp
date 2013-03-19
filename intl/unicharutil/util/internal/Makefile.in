@@ -14,7 +14,6 @@ include $(DEPTH)/config/autoconf.mk
 # internal linkage. Components that use frozen (external) linkage should use
 # unicharutil_external_s.
 
-MODULE=unicharutil
 LIBRARY_NAME=unicharutil_s
 DIST_INSTALL = 1
 EXPORT_LIBRARY = 1

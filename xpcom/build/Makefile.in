@@ -14,7 +14,6 @@ include $(srcdir)/../glue/objs.mk
 
 EXTRA_DEPS += $(srcdir)/../glue/objs.mk
 
-MODULE		= xpcom
 LIBRARY_NAME	= xpcom_core
 SHORT_LIBNAME	= xpcomcor
 LIBXUL_LIBRARY = 1

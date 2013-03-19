@@ -8,3 +8,6 @@ DIRS += [
     'directory',
     'build',
 ]
+
+MODULE = 'appcomps'
+

@@ -10,8 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= locale
-
 EXPORTS		= \
 		nsCollationCID.h \
 		nsDateTimeFormatCID.h \

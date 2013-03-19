@@ -11,7 +11,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE          = test_intl_uconv
 XPCSHELL_TESTS	= unit
 
 # Tests disabled because they dont work in libxul builds.

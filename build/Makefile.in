@@ -12,8 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 USE_RCS_MK := 1
 include $(topsrcdir)/config/makefiles/makeutils.mk
 
-MODULE = build
-
 ifdef MOZ_APP_BASENAME
 DIST_FILES = $(srcdir)/application.ini
 

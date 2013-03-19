@@ -9,8 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = fuel
-
 EXTRA_COMPONENTS = fuelApplication.manifest
 EXTRA_PP_COMPONENTS = fuelApplication.js
 

@@ -5,3 +5,5 @@
 
 DIRS += ['chrome', 'navigation', 'browser']
 
+MODULE = 'test_docshell'
+

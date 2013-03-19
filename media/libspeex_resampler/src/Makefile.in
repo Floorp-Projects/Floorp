@@ -9,7 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = speex_resampler
 LIBRARY_NAME = speex_resampler
 FORCE_STATIC_LIB = 1
 

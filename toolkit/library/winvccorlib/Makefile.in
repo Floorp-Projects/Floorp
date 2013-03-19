@@ -8,7 +8,6 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 LIBRARY_NAME	= dummyvccorlib
-MODULE    = dummyvccorlib
 GRE_MODULE   = 1
 
 include $(DEPTH)/config/autoconf.mk

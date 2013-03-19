@@ -8,3 +8,5 @@ XPIDL_SOURCES += [
     'nsIScriptableRegion.idl',
 ]
 
+MODULE = 'gfx'
+

@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= spellchecker
 LIBRARY_NAME	= spellchecker
 MODULE_NAME     = mozSpellCheckerModule
 SHORT_LIBNAME   = spellchk

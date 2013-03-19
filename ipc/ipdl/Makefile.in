@@ -12,7 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 GARBAGE_DIRS += _ipdlheaders
 GARBAGE += ipdl_lextab.py ipdl_yacctab.py $(wildcard *.pyc $(srcdir)/ipdl/*.pyc $(srcdir)/ipdl/cxx/*.pyc)
 
-MODULE = ipdlgen
 LIBRARY_NAME = mozipdlgen_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1

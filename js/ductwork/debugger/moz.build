@@ -7,3 +7,5 @@ XPIDL_SOURCES += [
     'IJSDebugger.idl',
 ]
 
+MODULE = 'jsdebugger'
+

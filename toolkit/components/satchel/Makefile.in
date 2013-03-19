@@ -9,7 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = satchel
 LIBRARY_NAME = satchel
 MODULE_NAME = satchel
 IS_COMPONENT = 1

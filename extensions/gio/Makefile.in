@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= nkgio
 LIBRARY_NAME	= nkgio
 SHORT_LIBNAME	= nkgio
 IS_COMPONENT	= 1

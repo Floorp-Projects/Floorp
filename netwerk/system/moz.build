@@ -17,3 +17,6 @@ if CONFIG['MOZ_ENABLE_QTNETWORK']:
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     DIRS += ['android']
+
+MODULE = 'necko'
+

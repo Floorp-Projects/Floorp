@@ -11,8 +11,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE       = embed
-
 ifdef ENABLE_TESTS
 XPCSHELL_TESTS = tests/unit
 endif

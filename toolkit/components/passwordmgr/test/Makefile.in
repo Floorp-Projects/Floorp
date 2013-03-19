@@ -12,7 +12,6 @@ relativesrcdir = @relativesrcdir@
 include $(topsrcdir)/config/config.mk
 
 # Module name for xpcshell tests.
-MODULE = test_passwordmgr
 XPCSHELL_TESTS = unit
 
 # Mochitest tests

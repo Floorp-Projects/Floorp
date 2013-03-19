@@ -9,3 +9,5 @@ XPIDL_SOURCES += [
     'nsIURLFormatter.idl',
 ]
 
+MODULE = 'urlformatter'
+

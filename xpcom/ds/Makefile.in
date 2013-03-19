@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xpcom
 LIBRARY_NAME	= xpcomds_s
 GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1

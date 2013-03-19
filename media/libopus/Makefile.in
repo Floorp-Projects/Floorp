@@ -9,7 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = opus
 LIBRARY_NAME = opus
 FORCE_STATIC_LIB= 1
 

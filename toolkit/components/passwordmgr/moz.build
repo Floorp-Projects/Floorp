@@ -15,3 +15,5 @@ XPIDL_SOURCES += [
     'nsILoginMetaInfo.idl',
 ]
 
+MODULE = 'loginmgr'
+

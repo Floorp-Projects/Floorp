@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= auth
 LIBRARY_NAME	= auth
 IS_COMPONENT	= 1
 EXPORT_LIBRARY	= 1

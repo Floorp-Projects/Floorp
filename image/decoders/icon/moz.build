@@ -7,3 +7,5 @@ XPIDL_SOURCES += [
     'nsIIconURI.idl',
 ]
 
+MODULE = 'imgicon'
+

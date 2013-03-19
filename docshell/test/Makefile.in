@@ -9,8 +9,6 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 relativesrcdir  = @relativesrcdir@
 
-MODULE = test_docshell
-
 include $(DEPTH)/config/autoconf.mk
 
 XPCSHELL_TESTS = unit

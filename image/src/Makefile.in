@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= imglib2
 LIBRARY_NAME	= imglib2_s
 FORCE_STATIC_LIB = 1
 MODULE_NAME	= nsImageLib2Module

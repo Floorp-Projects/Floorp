@@ -30,3 +30,5 @@ if CONFIG['MOZ_UPDATER']:
         'nsIUpdateService.idl',
     ]
 
+MODULE = 'update'
+

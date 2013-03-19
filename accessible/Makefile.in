@@ -10,7 +10,5 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE	= accessibility
-
 include $(topsrcdir)/config/rules.mk
 

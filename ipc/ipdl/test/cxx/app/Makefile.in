@@ -9,7 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = ipdlunittest
 PROGRAM = $(MODULE)$(BIN_SUFFIX)
 
 NSDISTMODE = copy
