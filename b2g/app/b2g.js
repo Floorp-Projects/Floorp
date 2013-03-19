@@ -270,12 +270,6 @@ pref("media.cache_size", 4096);    // 4MB media cache
 // MediaDecoderReader's mVideoQueue.
 pref("media.video-queue.default-size", 3);
 
-//  0: don't show fullscreen keyboard
-//  1: always show fullscreen keyboard
-// -1: show fullscreen keyboard based on threshold pref
-pref("widget.ime.android.landscape_fullscreen", -1);
-pref("widget.ime.android.fullscreen_threshold", 250); // in hundreths of inches
-
 // optimize images' memory usage
 pref("image.mem.decodeondraw", true);
 pref("content.image.allow_locking", true);
