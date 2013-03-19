@@ -111,6 +111,10 @@ interface nsIObjectLoadingContent : nsISupports
    */
   [noscript] nsIFrame getPrintFrame();
 
+  /*
+   * Notifications from pluginhost that our instance crashed or was destroyed.
+   */
+  [noscript] void pluginDestroyed();
   [noscript] void pluginCrashed(in nsIPluginTag pluginTag,
                                 in AString pluginDumpID,
                                 in AString browserDumpID,
