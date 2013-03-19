@@ -140,6 +140,18 @@ intl_availableCalendars(JSContext *cx, unsigned argc, Value *vp);
 extern JSBool
 intl_patternForSkeleton(JSContext *cx, unsigned argc, Value *vp);
 
+/**
+ * Returns a String value representing x (which must be a Number value)
+ * according to the effective locale and the formatting options of the
+ * given DateTimeFormat.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 12.3.2.
+ *
+ * Usage: formatted = intl_FormatDateTime(dateTimeFormat, x)
+ */
+extern JSBool
+intl_FormatDateTime(JSContext *cx, unsigned argc, Value *vp);
+
 } // namespace js
 
 #endif /* Intl_h___ */
