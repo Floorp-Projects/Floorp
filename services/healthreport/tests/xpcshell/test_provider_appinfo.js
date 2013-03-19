@@ -70,18 +70,37 @@ add_task(function test_record_version() {
   yield provider.init(storage);
 
   // The provider records information on startup.
-  let m = provider.getMeasurement("versions", 1);
+  let m = provider.getMeasurement("versions", 2);
   let data = yield m.getValues();
 
   do_check_true(data.days.hasDay(now));
   let day = data.days.getDay(now);
-  do_check_eq(day.size, 1);
-  do_check_true(day.has("version"));
-  let value = day.get("version");
+  do_check_eq(day.size, 4);
+  do_check_true(day.has("appVersion"));
+  do_check_true(day.has("platformVersion"));
+  do_check_true(day.has("appBuildID"));
+  do_check_true(day.has("platformBuildID"));
+
+  let value = day.get("appVersion");
   do_check_true(Array.isArray(value));
   do_check_eq(value.length, 1);
   let ai = getAppInfo();
-  do_check_eq(value, ai.version);
+  do_check_eq(value[0], ai.version);
+
+  value = day.get("platformVersion");
+  do_check_true(Array.isArray(value));
+  do_check_eq(value.length, 1);
+  do_check_eq(value[0], ai.platformVersion);
+
+  value = day.get("appBuildID");
+  do_check_true(Array.isArray(value));
+  do_check_eq(value.length, 1);
+  do_check_eq(value[0], ai.appBuildID);
+
+  value = day.get("platformBuildID");
+  do_check_true(Array.isArray(value));
+  do_check_eq(value.length, 1);
+  do_check_eq(value[0], ai.platformBuildID);
 
   yield provider.shutdown();
   yield storage.close();
@@ -96,21 +115,41 @@ add_task(function test_record_version_change() {
   yield provider.shutdown();
 
   let ai = getAppInfo();
-  ai.version = "2";
+  ai.version = "new app version";
+  ai.platformVersion = "new platform version";
+  ai.appBuildID = "new app id";
+  ai.platformBuildID = "new platform id";
   updateAppInfo(ai);
 
   provider = new AppInfoProvider();
   yield provider.init(storage);
 
   // There should be 2 records in the versions history.
-  let m = provider.getMeasurement("versions", 1);
+  let m = provider.getMeasurement("versions", 2);
   let data = yield m.getValues();
   do_check_true(data.days.hasDay(now));
   let day = data.days.getDay(now);
-  let value = day.get("version");
+
+  let value = day.get("appVersion");
   do_check_true(Array.isArray(value));
   do_check_eq(value.length, 2);
-  do_check_eq(value[1], "2");
+  do_check_eq(value[1], "new app version");
+
+  value = day.get("platformVersion");
+  do_check_true(Array.isArray(value));
+  do_check_eq(value.length, 2);
+  do_check_eq(value[1], "new platform version");
+
+  // There should be 2 records in the buildID history.
+  value = day.get("appBuildID");
+  do_check_true(Array.isArray(value));
+  do_check_eq(value.length, 2);
+  do_check_eq(value[1], "new app id");
+
+  value = day.get("platformBuildID");
+  do_check_true(Array.isArray(value));
+  do_check_eq(value.length, 2);
+  do_check_eq(value[1], "new platform id");
 
   yield provider.shutdown();
   yield storage.close();
