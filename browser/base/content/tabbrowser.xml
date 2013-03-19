@@ -3924,7 +3924,7 @@
 
           // Call updateCurrentBrowser to make sure the URL bar is up to date
           // for our new tab after we've done swapBrowsersAndCloseOther.
-          this.updateCurrentBrowser(true);
+          this.tabbrowser.updateCurrentBrowser(true);
         } else {
           // Pass true to disallow dropping javascript: or data: urls
           let url;
