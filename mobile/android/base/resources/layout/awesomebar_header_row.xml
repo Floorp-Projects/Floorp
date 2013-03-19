@@ -9,7 +9,7 @@
           android:layout_height="@dimen/awesomebar_header_row_height"
           android:background="#D2DAE2"
           android:textColor="#222222"
-          android:textSize="14sp"
+          android:textSize="13sp"
           android:textStyle="bold"
           android:gravity="center_vertical"
           android:paddingLeft="6dip"

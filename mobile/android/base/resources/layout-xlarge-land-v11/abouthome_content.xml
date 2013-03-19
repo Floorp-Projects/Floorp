@@ -51,7 +51,7 @@
                                                  android:drawablePadding="7dp"
                                                  android:gravity="center"
                                                  android:clickable="true"
-                                                 android:textSize="16sp"
+                                                 android:textSize="15sp"
                                                  android:textColor="#FFFFFF"
                                                  android:visibility="gone"/>
 

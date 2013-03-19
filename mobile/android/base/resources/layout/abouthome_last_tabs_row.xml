@@ -24,7 +24,7 @@
               android:layout_marginTop="2dip"
               android:layout_marginLeft="12dip"
               android:layout_marginRight="12dip"
-              android:textSize="16sp"
+              android:textSize="15sp"
               android:singleLine="true"
               android:textColor="@color/abouthome_section_title"
               android:duplicateParentState="true"/>
