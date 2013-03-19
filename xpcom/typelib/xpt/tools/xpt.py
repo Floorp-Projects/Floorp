@@ -100,7 +100,7 @@ class Type(object):
     """
     Data type of a method parameter or return value. Do not instantiate
     this class directly. Rather, use one of its subclasses.
-
+    
     """
     _prefixdescriptor = struct.Struct(">B")
     Tags = enum(
@@ -156,7 +156,7 @@ class Type(object):
         http://www.mozilla.org/scriptable/typelib_file.html#TypeDescriptor
         and return a dict of flagname: (True|False) suitable
         for passing to Type.__init__ as **kwargs.
-
+        
         """
         return {'pointer': bool(byte & 0x80),
                 'reference': bool(byte & 0x20),
@@ -181,7 +181,7 @@ class Type(object):
         data pool offset |data_pool|. Returns (Type, next offset),
         where |next offset| is an offset suitable for reading the data
         following this TypeDescriptor.
-
+        
         """
         start = data_pool + offset - 1
         (data,) = Type._prefixdescriptor.unpack(map[start:start + Type._prefixdescriptor.size])
@@ -233,7 +233,7 @@ class SimpleType(Type):
         Get a SimpleType object representing |data| (a TypeDescriptorPrefix).
         May return an already-created object. If no cached object is found,
         construct one with |tag| and |flags|.
-
+        
         """
         if data not in SimpleType._cache:
             SimpleType._cache[data] = SimpleType(tag, **flags)
@@ -280,7 +280,7 @@ class InterfaceType(Type):
         Returns (InterfaceType, next offset),
         where |next offset| is an offset suitable for reading the data
         following this InterfaceTypeDescriptor.
-
+        
         """
         if not flags['pointer']:
             return None, offset
@@ -313,7 +313,7 @@ class InterfaceIsType(Type):
     A type representing an interface described by one of the other
     arguments to the method. (InterfaceIsTypeDescriptor from the
     typelib specification.)
-
+    
     """
     _descriptor = struct.Struct(">B")
     _cache = {}
@@ -334,7 +334,7 @@ class InterfaceIsType(Type):
         where |next offset| is an offset suitable for reading the data
         following this InterfaceIsTypeDescriptor.
         May return a cached value.
-
+        
         """
         if not flags['pointer']:
             return None, offset
@@ -362,7 +362,7 @@ class ArrayType(Type):
     A type representing an Array of elements of another type, whose
     size and length are passed as separate parameters to a method.
     (ArrayTypeDescriptor from the typelib specification.)
-
+    
     """
     _descriptor = struct.Struct(">BB")
 
@@ -624,7 +624,7 @@ class Method(object):
     A method of an interface, defining its associated parameters
     and return value.
     (MethodDescriptor from the typelib specification.)
-
+    
     """
     _descriptorstart = struct.Struct(">BIB")
 
@@ -652,7 +652,7 @@ class Method(object):
         from the mmaped file |map| with data pool at the offset |data_pool|,
         starting at |offset| into self.params. Returns the offset
         suitable for reading the data following the ParamDescriptor array.
-
+        
         """
         for i in range(num_args):
             p, offset = Param.read(typelib, map, data_pool, offset)
@@ -665,7 +665,7 @@ class Method(object):
         from the mmaped file |map| with data pool at the offset |data_pool|,
         starting at |offset| into self.result. Returns the offset
         suitable for reading the data following the ParamDescriptor.
-
+        
         """
         self.result, offset = Param.read(typelib, map, data_pool, offset)
         return offset
@@ -678,7 +678,7 @@ class Method(object):
         http://www.mozilla.org/scriptable/typelib_file.html#MethodDescriptor
         and return a dict of flagname: (True|False) suitable
         for passing to Method.__init__ as **kwargs
-
+        
         """
         return {'getter': bool(byte & 0x80),
                 'setter': bool(byte & 0x40),
@@ -721,7 +721,7 @@ class Method(object):
         data pool offset |data_pool|. Returns (Method, next offset),
         where |next offset| is an offset suitable for reading the data
         following this MethodDescriptor.
-
+        
         """
         start = data_pool + offset - 1
         flags, name_offset, num_args = Method._descriptorstart.unpack(map[start:start + Method._descriptorstart.size])
@@ -789,7 +789,7 @@ class Constant(object):
         data pool offset |data_pool|. Returns (Constant, next offset),
         where |next offset| is an offset suitable for reading the data
         following this ConstDescriptor.
-
+        
         """
         start = data_pool + offset - 1
         (name_offset,) = Constant._descriptorstart.unpack(map[start:start + Constant._descriptorstart.size])
@@ -838,7 +838,7 @@ class Interface(object):
     An Interface represents an object, with its associated methods
     and constant values.
     (InterfaceDescriptor from the typelib specification.)
-
+    
     """
     _direntry = struct.Struct(">16sIII")
     _descriptorstart = struct.Struct(">HH")
@@ -1011,7 +1011,6 @@ class Typelib(object):
     or the static Typelib.read method may be called to read one from a file.
 
     """
-
     _header = struct.Struct(">16sBBHIII")
 
     def __init__(self, version=TYPELIB_VERSION, interfaces=[], annotations=[]):
@@ -1023,24 +1022,6 @@ class Typelib(object):
         self.interfaces = list(interfaces)
         self.annotations = list(annotations)
         self.filename = None
-
-    @staticmethod
-    def workaround_bug_754358(val=False, set=False):
-        """
-        get/set function to enable race condition workaround.
-        Static func helps avoid global var use.
-
-        """
-        if set:
-            Typelib._workaround_bug_754358 = val;
-
-        try:
-            flag = Typelib._workaround_bug_754358
-        except Exception as e:
-            Typelib._workaround_bug_754358 = False
-            flag = Typelib._workaround_bug_754358
-
-        return flag
 
     @staticmethod
     def iid_to_string(iid):
@@ -1084,67 +1065,22 @@ class Typelib(object):
         filename = ""
         data = None
         expected_size = None
-
-        if hasattr(input_file, 'tell'):
-            offset = input_file.tell()
+        if isinstance(input_file, basestring):
+            filename = input_file
+            with open(input_file, "rb") as f:
+                st = os.fstat(f.fileno())
+                data = f.read(st.st_size)
+                expected_size = st.st_size
         else:
-            offset = None
+            data = input_file.read()
 
-        # Correct race condition fallout ?
-        workaround_bug_754358 = Typelib.workaround_bug_754358();
-
-        for attempt in reversed(range(12)):
-
-            if isinstance(input_file, basestring):
-                filename = input_file
-                with open(input_file, "rb") as f:
-                    st = os.fstat(f.fileno())
-                    data = f.read(st.st_size)
-                    expected_size = st.st_size
-            else:
-                if offset:
-                    input_file.seek(offset)
-                data = input_file.read()
-
-            try:
-                (magic,
-                 major_ver,
-                 minor_ver,
-                 num_interfaces,
-                 file_length,
-                 interface_directory_offset,
-                 data_pool_offset) = Typelib._header.unpack(data[:Typelib._header.size])
-                break
-
-            #############################################################################
-            # --workaround-bug-754358:
-            # struct.error: unpack requires a string argument of length 32
-            # If a very specific error occured, retry on potential race condition
-            # file size is 0 - touch/exists at start of read but content not yet on disk.
-            #############################################################################
-            except struct.error as err:
-
-                if (workaround_bug_754358
-                    and attempt
-                    and len(sys.argv) > 1
-                    and sys.argv[1] == 'link'
-                    and len(err.args) > 0
-                    and err.args[0].startswith('unpack requires a string argument of length') 
-                   ):
-
-                    import time
-                    now = time.time()
-                    mtime = os.path.getmtime(input_file)
-                    delta = abs(now - mtime)
-
-                    # Only consider if recently modified
-                    if 10 > (delta / 60):
-                        time.sleep(5)
-                        continue
-
-                # re-raise the original error
-                raise Exception("%s (source: %s)" % (err, input_file))
-
+        (magic,
+         major_ver,
+         minor_ver,
+         num_interfaces,
+         file_length,
+         interface_directory_offset,
+         data_pool_offset) = Typelib._header.unpack(data[:Typelib._header.size])
         if magic != XPT_MAGIC:
             raise FileFormatError, "Bad magic: %s" % magic
         xpt = Typelib((major_ver, minor_ver))
@@ -1258,7 +1194,7 @@ class Typelib(object):
         """
         Print a human-readable listing of the contents of this typelib
         to |out|, in the format of xpt_dump.
-
+        
         """
         out.write("""Header:
    Major version:         %d
@@ -1346,7 +1282,7 @@ def xpt_link(inputs):
                   'NotEqual',  # Interfaces differ, keep both
                   'KeepFirst', # Replace second interface with first
                   'KeepSecond')# Replace first interface with second
-
+        
     def compare(i, j):
         """
         Compare two interfaces, determine if they're equal or
@@ -1397,7 +1333,7 @@ def xpt_link(inputs):
                                  j.iid, j.xpt_filename)
         raise DataError, "No idea what happened here: %s:%s (%s), %s:%s (%s)" % \
             (i.name, i.iid, i.xpt_filename, j.name, j.iid, j.xpt_filename)
-
+    
     # Compare interfaces pairwise to find duplicates that should be merged.
     i = 1
     while i < len(interfaces):
@@ -1413,7 +1349,7 @@ def xpt_link(inputs):
         elif res == Result.KeepSecond:
             merged_interfaces[interfaces[i-1]] = interfaces[i]
             del interfaces[i-1]
-
+    
     # Now fixup any merged interfaces
     def checkType(t):
         if isinstance(t, InterfaceType) and t.iface in merged_interfaces:
@@ -1436,81 +1372,12 @@ def xpt_link(inputs):
     interfaces.sort()
     return Typelib(interfaces=interfaces)
 
-
-def local_argparse():
-    """
-    Use argparse to parse & validate command line args.
-    A dictionary of values will be returned.
-
-    """
-    argv = {'dumpfile': False,
-            'linkfile': False,
-            'linkargs': [],
-           }
-
-    # Morph legacy args [dump|link] into [--dump|--link]
-    for i in range(1, len(sys.argv)):
-        if sys.argv[i].startswith('-'):
-            continue
-        elif sys.argv[i] in ['dump', 'link']:
-            sys.argv[i] = "--%s" % (sys.argv[i])
-        else:
-            break
-
-    import argparse
-    descr = "A module for working with XPCOM Type Libraries."
-    parser = argparse.ArgumentParser(description=descr)
-
-    parser.add_argument('--dump',
-                        action='store',
-                        dest='dumpfile',
-                        metavar='FILE',
-                        help='Display in a human-readable format.',
-                        )
-    parser.add_argument('--link',
-                        nargs='+',
-                        action='store',
-                        metavar='FILE',
-                        dest='linkfile',
-                        help='Link all xpt files into a single file',
-                        )
-    parser.add_argument('--workaround-bug-754358',
-                        action='store_true',
-                        dest='bug_754358',
-                        help='makefile deps broken, board up broken window',
-                        )
-    args = parser.parse_args()
-    argv = vars(args)
-
-    flag = True if argv['bug_754358'] else False
-    Typelib.workaround_bug_754358(set=True, val=flag)
-
-    # xpt.py [--]link @files
-    if argv['linkfile']:
-        if 2 > len(argv['linkfile']):
-            parser.print_help()
-            sys.exit(1)
-        tmp = argv['linkfile']
-        argv['linkfile'] = tmp[0]
-        argv['linkargs'] = tmp[1:]
-
-    # todo: iterate over linkargs: verify exisence and size>0.
-
-    # xpt.py [--]dump file
-    elif argv['dumpfile']:
-        pass
-
-    # Choose
-    else:
-        parser.print_help()
-        sys.exit(1)
-
-    return argv
-
-
 if __name__ == '__main__':
-    argv = local_argparse()
-    if argv['dumpfile']:
-        xpt_dump(argv['dumpfile'])
-    elif argv['linkfile']:
-        xpt_link(argv['linkargs']).write(argv['linkfile'])
+    if len(sys.argv) < 3:
+        print >>sys.stderr, "xpt <dump|link> <files>"
+        sys.exit(1)
+    if sys.argv[1] == 'dump':
+        xpt_dump(sys.argv[2])
+    elif sys.argv[1] == 'link':
+        xpt_link(sys.argv[3:]).write(sys.argv[2])
+        
