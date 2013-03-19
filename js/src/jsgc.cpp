@@ -792,7 +792,7 @@ Chunk::allocateArena(Zone *zone, AllocKind thingKind)
     rt->gcBytes += ArenaSize;
     zone->gcBytes += ArenaSize;
     if (zone->gcBytes >= zone->gcTriggerBytes)
-        TriggerZoneGC(zone, gcreason::ALLOC_TRIGGER);
+        TriggerZoneGC(zone, JS::gcreason::ALLOC_TRIGGER);
 
     return aheader;
 }
@@ -1501,7 +1501,7 @@ RunLastDitchGC(JSContext *cx, JS::Zone *zone, AllocKind thingKind)
 
     /* The last ditch GC preserves all atoms. */
     AutoKeepAtoms keep(rt);
-    GC(rt, GC_NORMAL, gcreason::LAST_DITCH);
+    GC(rt, GC_NORMAL, JS::gcreason::LAST_DITCH);
 
     /*
      * The JSGC_END callback can legitimately allocate new GC
@@ -1594,7 +1594,7 @@ js_LockThing(JSRuntime *rt, void *thing)
      * cases.
      */
     if (rt->gcIncrementalState != NO_INCREMENTAL)
-        IncrementalReferenceBarrier(thing, GetGCThingTraceKind(thing));
+        JS::IncrementalReferenceBarrier(thing, GetGCThingTraceKind(thing));
 
     if (GCLocks::Ptr p = rt->gcLocksHash.lookupWithDefault(thing, 0)) {
         p->value++;
@@ -1955,7 +1955,7 @@ js::MarkCompartmentActive(StackFrame *fp)
 }
 
 static void
-TriggerOperationCallback(JSRuntime *rt, gcreason::Reason reason)
+TriggerOperationCallback(JSRuntime *rt, JS::gcreason::Reason reason)
 {
     if (rt->gcIsNeeded)
         return;
@@ -1966,7 +1966,7 @@ TriggerOperationCallback(JSRuntime *rt, gcreason::Reason reason)
 }
 
 void
-js::TriggerGC(JSRuntime *rt, gcreason::Reason reason)
+js::TriggerGC(JSRuntime *rt, JS::gcreason::Reason reason)
 {
     /* Wait till end of parallel section to trigger GC. */
     if (ForkJoinSlice *slice = ForkJoinSlice::Current()) {
@@ -1979,12 +1979,12 @@ js::TriggerGC(JSRuntime *rt, gcreason::Reason reason)
     if (rt->isHeapBusy())
         return;
 
-    PrepareForFullGC(rt);
+    JS::PrepareForFullGC(rt);
     TriggerOperationCallback(rt, reason);
 }
 
 void
-js::TriggerZoneGC(Zone *zone, gcreason::Reason reason)
+js::TriggerZoneGC(Zone *zone, JS::gcreason::Reason reason)
 {
     /* Wait till end of parallel section to trigger GC. */
     if (ForkJoinSlice *slice = ForkJoinSlice::Current()) {
@@ -2020,13 +2020,13 @@ js::MaybeGC(JSContext *cx)
     rt->assertValidThread();
 
     if (rt->gcZeal() == ZealAllocValue || rt->gcZeal() == ZealPokeValue) {
-        PrepareForFullGC(rt);
-        GC(rt, GC_NORMAL, gcreason::MAYBEGC);
+        JS::PrepareForFullGC(rt);
+        GC(rt, GC_NORMAL, JS::gcreason::MAYBEGC);
         return;
     }
 
     if (rt->gcIsNeeded) {
-        GCSlice(rt, GC_NORMAL, gcreason::MAYBEGC);
+        GCSlice(rt, GC_NORMAL, JS::gcreason::MAYBEGC);
         return;
     }
 
@@ -2038,7 +2038,7 @@ js::MaybeGC(JSContext *cx)
         !rt->gcHelperThread.sweeping())
     {
         PrepareZoneForGC(zone);
-        GCSlice(rt, GC_NORMAL, gcreason::MAYBEGC);
+        GCSlice(rt, GC_NORMAL, JS::gcreason::MAYBEGC);
         return;
     }
 
@@ -2053,8 +2053,8 @@ js::MaybeGC(JSContext *cx)
         if (rt->gcChunkAllocationSinceLastGC ||
             rt->gcNumArenasFreeCommitted > FreeCommittedArenasThreshold)
         {
-            PrepareForFullGC(rt);
-            GCSlice(rt, GC_SHRINK, gcreason::MAYBEGC);
+            JS::PrepareForFullGC(rt);
+            GCSlice(rt, GC_SHRINK, JS::gcreason::MAYBEGC);
         } else {
             rt->gcNextFullGCTime = now + GC_IDLE_FULL_SPAN;
         }
@@ -4104,7 +4104,7 @@ AutoCopyFreeListToArenas::~AutoCopyFreeListToArenas()
 static void
 IncrementalCollectSlice(JSRuntime *rt,
                         int64_t budget,
-                        gcreason::Reason gcReason,
+                        JS::gcreason::Reason gcReason,
                         JSGCInvocationKind gcKind);
 
 static void
@@ -4147,7 +4147,7 @@ ResetIncrementalGC(JSRuntime *rt, const char *reason)
 
         /* Finish sweeping the current zone group, then abort. */
         rt->gcAbortSweepAfterCurrentGroup = true;
-        IncrementalCollectSlice(rt, SliceBudget::Unlimited, gcreason::RESET, GC_NORMAL);
+        IncrementalCollectSlice(rt, SliceBudget::Unlimited, JS::gcreason::RESET, GC_NORMAL);
 
         {
             gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_WAIT_BACKGROUND_THREAD);
@@ -4238,7 +4238,7 @@ PushZealSelectedObjects(JSRuntime *rt)
 static void
 IncrementalCollectSlice(JSRuntime *rt,
                         int64_t budget,
-                        gcreason::Reason reason,
+                        JS::gcreason::Reason reason,
                         JSGCInvocationKind gckind)
 {
     AutoCopyFreeListToArenas copy(rt);
@@ -4248,7 +4248,7 @@ IncrementalCollectSlice(JSRuntime *rt,
 
     int zeal = 0;
 #ifdef JS_GC_ZEAL
-    if (reason == gcreason::DEBUG_GC && budget != SliceBudget::Unlimited) {
+    if (reason == JS::gcreason::DEBUG_GC && budget != SliceBudget::Unlimited) {
         /*
          * Do the incremental collection type specified by zeal mode if the
          * collection was triggered by RunDebugGC() and incremental GC has not
@@ -4346,7 +4346,7 @@ IncrementalCollectSlice(JSRuntime *rt,
         if (!finished)
             break;
 
-        EndSweepPhase(rt, gckind, reason == gcreason::LAST_CONTEXT);
+        EndSweepPhase(rt, gckind, reason == JS::gcreason::LAST_CONTEXT);
 
         if (rt->gcSweepOnBackgroundThread)
             rt->gcHelperThread.startBackgroundSweep(gckind == GC_SHRINK);
@@ -4427,7 +4427,7 @@ BudgetIncrementalGC(JSRuntime *rt, int64_t *budget)
  * the marking implementation.
  */
 static JS_NEVER_INLINE void
-GCCycle(JSRuntime *rt, bool incremental, int64_t budget, JSGCInvocationKind gckind, gcreason::Reason reason)
+GCCycle(JSRuntime *rt, bool incremental, int64_t budget, JSGCInvocationKind gckind, JS::gcreason::Reason reason)
 {
     /* If we attempt to invoke the GC while we are running in the GC, assert. */
     JS_ASSERT(!rt->isHeapBusy());
@@ -4466,15 +4466,15 @@ GCCycle(JSRuntime *rt, bool incremental, int64_t budget, JSGCInvocationKind gcki
 
 #ifdef JS_GC_ZEAL
 static bool
-IsDeterministicGCReason(gcreason::Reason reason)
+IsDeterministicGCReason(JS::gcreason::Reason reason)
 {
-    if (reason > gcreason::DEBUG_GC &&
-        reason != gcreason::CC_FORCED && reason != gcreason::SHUTDOWN_CC)
+    if (reason > JS::gcreason::DEBUG_GC &&
+        reason != JS::gcreason::CC_FORCED && reason != JS::gcreason::SHUTDOWN_CC)
     {
         return false;
     }
 
-    if (reason == gcreason::MAYBEGC)
+    if (reason == JS::gcreason::MAYBEGC)
         return false;
 
     return true;
@@ -4482,7 +4482,7 @@ IsDeterministicGCReason(gcreason::Reason reason)
 #endif
 
 static bool
-ShouldCleanUpEverything(JSRuntime *rt, gcreason::Reason reason, JSGCInvocationKind gckind)
+ShouldCleanUpEverything(JSRuntime *rt, JS::gcreason::Reason reason, JSGCInvocationKind gckind)
 {
     // During shutdown, we must clean everything up, for the sake of leak
     // detection. When a runtime has no contexts, or we're doing a GC before a
@@ -4492,14 +4492,14 @@ ShouldCleanUpEverything(JSRuntime *rt, gcreason::Reason reason, JSGCInvocationKi
     // has changed; debug mode affects the results of bytecode analysis, so
     // we need to clear everything away.
     return !rt->hasContexts() ||
-           reason == gcreason::SHUTDOWN_CC ||
-           reason == gcreason::DEBUG_MODE_GC ||
+           reason == JS::gcreason::SHUTDOWN_CC ||
+           reason == JS::gcreason::DEBUG_MODE_GC ||
            gckind == GC_SHRINK;
 }
 
 static void
 Collect(JSRuntime *rt, bool incremental, int64_t budget,
-        JSGCInvocationKind gckind, gcreason::Reason reason)
+        JSGCInvocationKind gckind, JS::gcreason::Reason reason)
 {
     /* GC shouldn't be running in parallel execution mode */
     JS_ASSERT(!InParallelSection());
@@ -4527,7 +4527,7 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
     JS_ASSERT_IF(!incremental || budget != SliceBudget::Unlimited, JSGC_INCREMENTAL);
 
 #ifdef JS_GC_ZEAL
-    bool isShutdown = reason == gcreason::SHUTDOWN_CC || !rt->hasContexts();
+    bool isShutdown = reason == JS::gcreason::SHUTDOWN_CC || !rt->hasContexts();
     struct AutoVerifyBarriers {
         JSRuntime *runtime;
         bool restartPreVerifier;
@@ -4598,7 +4598,7 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
 
         /* Need to re-schedule all zones for GC. */
         if (rt->gcPoke && rt->gcShouldCleanUpEverything)
-            PrepareForFullGC(rt);
+            JS::PrepareForFullGC(rt);
 
         /*
          * On shutdown, iterate until finalizers or the JSGC_END callback
@@ -4608,13 +4608,13 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
 }
 
 void
-js::GC(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason)
+js::GC(JSRuntime *rt, JSGCInvocationKind gckind, JS::gcreason::Reason reason)
 {
     Collect(rt, false, SliceBudget::Unlimited, gckind, reason);
 }
 
 void
-js::GCSlice(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason, int64_t millis)
+js::GCSlice(JSRuntime *rt, JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64_t millis)
 {
     int64_t sliceBudget;
     if (millis)
@@ -4628,7 +4628,7 @@ js::GCSlice(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason, i
 }
 
 void
-js::GCFinalSlice(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason)
+js::GCFinalSlice(JSRuntime *rt, JSGCInvocationKind gckind, JS::gcreason::Reason reason)
 {
     Collect(rt, true, SliceBudget::Unlimited, gckind, reason);
 }
@@ -4648,12 +4648,12 @@ js::GCDebugSlice(JSRuntime *rt, bool limit, int64_t objCount)
 {
     int64_t budget = limit ? SliceBudget::WorkBudget(objCount) : SliceBudget::Unlimited;
     if (!ZonesSelected(rt)) {
-        if (IsIncrementalGCInProgress(rt))
-            PrepareForIncrementalGC(rt);
+        if (JS::IsIncrementalGCInProgress(rt))
+            JS::PrepareForIncrementalGC(rt);
         else
-            PrepareForFullGC(rt);
+            JS::PrepareForFullGC(rt);
     }
-    Collect(rt, true, budget, GC_NORMAL, gcreason::DEBUG_GC);
+    Collect(rt, true, budget, GC_NORMAL, JS::gcreason::DEBUG_GC);
 }
 
 /* Schedule a full GC unless a zone will already be collected. */
@@ -4661,7 +4661,7 @@ void
 js::PrepareForDebugGC(JSRuntime *rt)
 {
     if (!ZonesSelected(rt))
-        PrepareForFullGC(rt);
+        JS::PrepareForFullGC(rt);
 }
 
 JS_FRIEND_API(void)
@@ -4684,9 +4684,9 @@ js::gc::FinishBackgroundFinalize(JSRuntime *rt)
 
 AutoFinishGC::AutoFinishGC(JSRuntime *rt)
 {
-    if (IsIncrementalGCInProgress(rt)) {
-        PrepareForIncrementalGC(rt);
-        FinishIncrementalGC(rt, gcreason::API);
+    if (JS::IsIncrementalGCInProgress(rt)) {
+        JS::PrepareForIncrementalGC(rt);
+        JS::FinishIncrementalGC(rt, JS::gcreason::API);
     }
 
     gc::FinishBackgroundFinalize(rt);
@@ -4780,7 +4780,7 @@ gc::RunDebugGC(JSContext *cx)
             budget = SliceBudget::WorkBudget(1);
         }
 
-        Collect(rt, true, budget, GC_NORMAL, gcreason::DEBUG_GC);
+        Collect(rt, true, budget, GC_NORMAL, JS::gcreason::DEBUG_GC);
 
         /*
          * For multi-slice zeal, reset the slice size when we get to the sweep
@@ -4794,7 +4794,7 @@ gc::RunDebugGC(JSContext *cx)
     } else if (type == ZealPurgeAnalysisValue) {
         cx->compartment->types.maybePurgeAnalysis(cx, /* force = */ true);
     } else {
-        Collect(rt, false, SliceBudget::Unlimited, GC_NORMAL, gcreason::DEBUG_GC);
+        Collect(rt, false, SliceBudget::Unlimited, GC_NORMAL, JS::gcreason::DEBUG_GC);
     }
 
 #endif
@@ -5035,7 +5035,7 @@ ArenaLists::containsArena(JSRuntime *rt, ArenaHeader *needle)
 AutoMaybeTouchDeadZones::AutoMaybeTouchDeadZones(JSContext *cx)
   : runtime(cx->runtime),
     markCount(runtime->gcObjectsMarkedInDeadZones),
-    inIncremental(IsIncrementalGCInProgress(runtime)),
+    inIncremental(JS::IsIncrementalGCInProgress(runtime)),
     manipulatingDeadZones(runtime->gcManipulatingDeadZones)
 {
     runtime->gcManipulatingDeadZones = true;
@@ -5044,7 +5044,7 @@ AutoMaybeTouchDeadZones::AutoMaybeTouchDeadZones(JSContext *cx)
 AutoMaybeTouchDeadZones::AutoMaybeTouchDeadZones(JSObject *obj)
   : runtime(obj->compartment()->rt),
     markCount(runtime->gcObjectsMarkedInDeadZones),
-    inIncremental(IsIncrementalGCInProgress(runtime)),
+    inIncremental(JS::IsIncrementalGCInProgress(runtime)),
     manipulatingDeadZones(runtime->gcManipulatingDeadZones)
 {
     runtime->gcManipulatingDeadZones = true;
@@ -5053,8 +5053,8 @@ AutoMaybeTouchDeadZones::AutoMaybeTouchDeadZones(JSObject *obj)
 AutoMaybeTouchDeadZones::~AutoMaybeTouchDeadZones()
 {
     if (inIncremental && runtime->gcObjectsMarkedInDeadZones != markCount) {
-        PrepareForFullGC(runtime);
-        js::GC(runtime, GC_NORMAL, gcreason::TRANSPLANT);
+        JS::PrepareForFullGC(runtime);
+        js::GC(runtime, GC_NORMAL, JS::gcreason::TRANSPLANT);
     }
 
     runtime->gcManipulatingDeadZones = manipulatingDeadZones;

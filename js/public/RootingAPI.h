@@ -329,7 +329,7 @@ class InternalHandle<T*>
      * Create an InternalHandle to a field within a Rooted<>.
      */
     template<typename R>
-    InternalHandle(const Rooted<R> &root, T *field)
+    InternalHandle(const JS::Rooted<R> &root, T *field)
       : holder((void**)root.address()), offset(uintptr_t(field) - uintptr_t(root.get()))
     {}
 
@@ -388,7 +388,7 @@ struct RootMethods<T *>
 {
     static T *initial() { return NULL; }
     static ThingRootKind kind() { return RootKind<T *>::rootKind(); }
-    static bool poisoned(T *v) { return IsPoisonedPtr(v); }
+    static bool poisoned(T *v) { return JS::IsPoisonedPtr(v); }
 };
 
 } /* namespace js */
@@ -707,15 +707,15 @@ class MaybeRooted
 template <typename T> class MaybeRooted<T, CanGC>
 {
   public:
-    typedef Handle<T> HandleType;
-    typedef Rooted<T> RootType;
-    typedef MutableHandle<T> MutableHandleType;
+    typedef JS::Handle<T> HandleType;
+    typedef JS::Rooted<T> RootType;
+    typedef JS::MutableHandle<T> MutableHandleType;
 
-    static inline Handle<T> toHandle(HandleType v) {
+    static inline JS::Handle<T> toHandle(HandleType v) {
         return v;
     }
 
-    static inline MutableHandle<T> toMutableHandle(MutableHandleType v) {
+    static inline JS::MutableHandle<T> toMutableHandle(MutableHandleType v) {
         return v;
     }
 };
@@ -727,14 +727,14 @@ template <typename T> class MaybeRooted<T, NoGC>
     typedef FakeRooted<T> RootType;
     typedef FakeMutableHandle<T> MutableHandleType;
 
-    static inline Handle<T> toHandle(HandleType v) {
+    static inline JS::Handle<T> toHandle(HandleType v) {
         JS_NOT_REACHED("Bad conversion");
-        return Handle<T>::fromMarkedLocation(NULL);
+        return JS::Handle<T>::fromMarkedLocation(NULL);
     }
 
-    static inline MutableHandle<T> toMutableHandle(MutableHandleType v) {
+    static inline JS::MutableHandle<T> toMutableHandle(MutableHandleType v) {
         JS_NOT_REACHED("Bad conversion");
-        return MutableHandle<T>::fromMarkedLocation(NULL);
+        return JS::MutableHandle<T>::fromMarkedLocation(NULL);
     }
 };
 
@@ -778,9 +778,9 @@ namespace js {
 inline void MaybeCheckStackRoots(JSContext *cx, bool relax = true)
 {
 #if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
-    if (relax && NeedRelaxedRootChecks())
+    if (relax && JS::NeedRelaxedRootChecks())
         return;
-    CheckStackRoots(cx);
+    JS::CheckStackRoots(cx);
 #endif
 }
 

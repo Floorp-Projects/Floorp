@@ -49,7 +49,7 @@ class StringBuffer
     inline bool resize(size_t len) { return cb.resize(len); }
     inline bool append(const jschar c) { return cb.append(c); }
     inline bool append(const jschar *chars, size_t len) { return cb.append(chars, len); }
-    inline bool append(const CharPtr chars, size_t len) { return cb.append(chars.get(), len); }
+    inline bool append(const JS::CharPtr chars, size_t len) { return cb.append(chars.get(), len); }
     inline bool append(const jschar *begin, const jschar *end) { return cb.append(begin, end); }
     inline bool append(JSString *str);
     inline bool append(JSLinearString *str);
@@ -68,7 +68,7 @@ class StringBuffer
     void infallibleAppend(const jschar *chars, size_t len) {
         cb.infallibleAppend(chars, len);
     }
-    void infallibleAppend(const CharPtr chars, size_t len) {
+    void infallibleAppend(const JS::CharPtr chars, size_t len) {
         cb.infallibleAppend(chars.get(), len);
     }
     void infallibleAppend(const jschar *begin, const jschar *end) {

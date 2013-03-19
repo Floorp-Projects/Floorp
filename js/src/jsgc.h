@@ -589,11 +589,11 @@ TraceRuntime(JSTracer *trc);
 
 /* Must be called with GC lock taken. */
 extern void
-TriggerGC(JSRuntime *rt, js::gcreason::Reason reason);
+TriggerGC(JSRuntime *rt, JS::gcreason::Reason reason);
 
 /* Must be called with GC lock taken. */
 extern void
-TriggerZoneGC(Zone *zone, js::gcreason::Reason reason);
+TriggerZoneGC(Zone *zone, JS::gcreason::Reason reason);
 
 extern void
 MaybeGC(JSContext *cx);
@@ -613,13 +613,13 @@ typedef enum JSGCInvocationKind {
 } JSGCInvocationKind;
 
 extern void
-GC(JSRuntime *rt, JSGCInvocationKind gckind, js::gcreason::Reason reason);
+GC(JSRuntime *rt, JSGCInvocationKind gckind, JS::gcreason::Reason reason);
 
 extern void
-GCSlice(JSRuntime *rt, JSGCInvocationKind gckind, js::gcreason::Reason reason, int64_t millis = 0);
+GCSlice(JSRuntime *rt, JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64_t millis = 0);
 
 extern void
-GCFinalSlice(JSRuntime *rt, JSGCInvocationKind gckind, js::gcreason::Reason reason);
+GCFinalSlice(JSRuntime *rt, JSGCInvocationKind gckind, JS::gcreason::Reason reason);
 
 extern void
 GCDebugSlice(JSRuntime *rt, bool limit, int64_t objCount);
