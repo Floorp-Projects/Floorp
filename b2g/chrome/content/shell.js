@@ -308,6 +308,7 @@ var shell = {
     ppmm.addMessageListener("sms-handler", this);
     ppmm.addMessageListener("mail-handler", this);
     ppmm.addMessageListener("app-notification-send", AlertsHelper);
+    ppmm.addMessageListener("file-picker", this);
   },
 
   stop: function shell_stop() {
@@ -532,19 +533,34 @@ var shell = {
   },
 
   receiveMessage: function shell_receiveMessage(message) {
-    var names = { 'content-handler': 'view',
-                  'dial-handler'   : 'dial',
-                  'mail-handler'   : 'new',
-                  'sms-handler'    : 'new' }
+    var activities = { 'content-handler': { name: 'view', response: null },
+                       'dial-handler':    { name: 'dial', response: null },
+                       'mail-handler':    { name: 'new',  response: null },
+                       'sms-handler':     { name: 'new',  response: null },
+                       'file-picker':     { name: 'pick', response: 'file-picked' } };
 
-    if (!(message.name in names))
+    if (!(message.name in activities))
       return;
 
     let data = message.data;
-    new MozActivity({
-      name: names[message.name],
+    let activity = activities[message.name];
+
+    let a = new MozActivity({
+      name: activity.name,
       data: data
     });
+
+    if (activity.response) {
+      a.onsuccess = function() {
+        let sender = message.target.QueryInterface(Ci.nsIMessageSender);
+        sender.sendAsyncMessage(activity.response, { success: true,
+                                                     result:  a.result });
+      }
+      a.onerror = function() {
+        let sender = message.target.QueryInterface(Ci.nsIMessageSender);
+        sender.sendAsyncMessage(activity.response, { success: false });
+      }
+    }
   }
 };
 
