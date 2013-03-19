@@ -6,6 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsmath.h"
+#include "jsworkers.h"
+
 #include "frontend/ParseNode.h"
 #include "ion/AsmJS.h"
 #include "ion/AsmJSModule.h"
@@ -1029,7 +1031,7 @@ class ModuleCompiler
     typedef Vector<AsmJSGlobalAccess> GlobalAccessVector;
 
     JSContext *                    cx_;
-    IonContext                     ionContext_;
+    IonContext                     ictx_;
     MacroAssembler                 masm_;
 
     ScopedJSDeletePtr<AsmJSModule> module_;
@@ -1066,8 +1068,8 @@ class ModuleCompiler
   public:
     ModuleCompiler(JSContext *cx, TokenStream &ts)
       : cx_(cx),
-        ionContext_(cx->runtime), // TODO: This serves as a temp assertion.
-        masm_(),
+        ictx_(cx->runtime),
+        masm_(cx),
         moduleFunctionName_(NULL),
         globalArgumentName_(NULL),
         importArgumentName_(NULL),
@@ -4431,6 +4433,194 @@ CheckFunctionBodiesSequential(ModuleCompiler &m)
     return true;
 }
 
+#ifdef JS_PARALLEL_COMPILATION
+// State of compilation as tracked and updated by the main thread.
+struct ParallelGroupState
+{
+    WorkerThreadState &state;
+    Vector<AsmJSParallelTask> &tasks;
+    int32_t outstandingJobs; // Good work, jobs!
+    uint32_t compiledJobs;
+
+    ParallelGroupState(WorkerThreadState &state, Vector<AsmJSParallelTask> &tasks)
+      : state(state), tasks(tasks), outstandingJobs(0), compiledJobs(0)
+    { }
+};
+
+// Block until a worker-assigned LifoAlloc becomes finished.
+static AsmJSParallelTask *
+GetFinishedCompilation(ModuleCompiler &m, ParallelGroupState &group)
+{
+    AutoLockWorkerThreadState lock(m.cx()->runtime);
+
+    while (!group.state.asmJSWorkerFailed()) {
+        if (!group.state.asmJSFinishedList.empty()) {
+            group.outstandingJobs--;
+            return group.state.asmJSFinishedList.popCopy();
+        }
+        group.state.wait(WorkerThreadState::MAIN);
+    }
+
+    return NULL;
+}
+
+static bool
+GenerateCodeForFinishedJob(ModuleCompiler &m, ParallelGroupState &group, AsmJSParallelTask **outTask)
+{
+    // Block until a used LifoAlloc becomes available.
+    AsmJSParallelTask *task = GetFinishedCompilation(m, group);
+    if (!task)
+        return false;
+
+    // Perform code generation on the main thread.
+    if (!GenerateAsmJSCode(m, m.function(task->funcNum), *task->mir, *task->lir))
+        return false;
+    group.compiledJobs++;
+
+    // Clear the LifoAlloc for use by another worker.
+    TempAllocator &tempAlloc = task->mir->temp();
+    tempAlloc.TempAllocator::~TempAllocator();
+    task->lifo.releaseAll();
+
+    *outTask = task;
+    return true;
+}
+
+static inline bool
+GetUnusedTask(ParallelGroupState &group, uint32_t funcNum, AsmJSParallelTask **outTask)
+{
+    // Since functions are dispatched in order, if fewer than |numLifos| functions
+    // have been generated, then the |funcNum'th| LifoAlloc must never have been
+    // assigned to a worker thread.
+    if (funcNum >= group.tasks.length())
+        return false;
+    *outTask = &group.tasks[funcNum];
+    return true;
+}
+
+static bool
+CheckFunctionBodiesParallelImpl(ModuleCompiler &m, ParallelGroupState &group)
+{
+    JS_ASSERT(group.state.asmJSWorklist.empty());
+    JS_ASSERT(group.state.asmJSFinishedList.empty());
+    group.state.resetAsmJSFailureState();
+
+    // Dispatch work for each function.
+    for (uint32_t i = 0; i < m.numFunctions(); i++) {
+        ModuleCompiler::Func &func = m.function(i);
+
+        // Get exclusive access to an empty LifoAlloc from the thread group's pool.
+        AsmJSParallelTask *task = NULL;
+        if (!GetUnusedTask(group, i, &task) && !GenerateCodeForFinishedJob(m, group, &task))
+            return false;
+
+        // Generate MIR into the LifoAlloc on the main thread.
+        MIRGenerator *mir = CheckFunctionBody(m, func, task->lifo);
+        if (!mir)
+            return false;
+
+        // Perform optimizations and LIR generation on a worker thread.
+        task->init(i, mir);
+        if (!StartOffThreadAsmJSCompile(m.cx(), task))
+            return false;
+
+        group.outstandingJobs++;
+    }
+
+    // Block for all outstanding workers to complete.
+    while (group.outstandingJobs > 0) {
+        AsmJSParallelTask *ignored = NULL;
+        if (!GenerateCodeForFinishedJob(m, group, &ignored))
+            return false;
+    }
+
+    JS_ASSERT(group.outstandingJobs == 0);
+    JS_ASSERT(group.compiledJobs == m.numFunctions());
+    JS_ASSERT(group.state.asmJSWorklist.empty());
+    JS_ASSERT(group.state.asmJSFinishedList.empty());
+    JS_ASSERT(!group.state.asmJSWorkerFailed());
+
+    return true;
+}
+
+static void
+CancelOutstandingJobs(ModuleCompiler &m, ParallelGroupState &group)
+{
+    // This is failure-handling code, so it's not allowed to fail.
+    // The problem is that all memory for compilation is stored in LifoAllocs
+    // maintained in the scope of CheckFunctionBodiesParallel() -- so in order
+    // for that function to safely return, and thereby remove the LifoAllocs,
+    // none of that memory can be in use or reachable by workers.
+
+    JS_ASSERT(group.outstandingJobs >= 0);
+    if (!group.outstandingJobs)
+        return;
+
+    AutoLockWorkerThreadState lock(m.cx()->runtime);
+
+    // From the compiling tasks, eliminate those waiting for worker assignation.
+    group.outstandingJobs -= group.state.asmJSWorklist.length();
+    group.state.asmJSWorklist.clear();
+
+    // From the compiling tasks, eliminate those waiting for codegen.
+    group.outstandingJobs -= group.state.asmJSFinishedList.length();
+    group.state.asmJSFinishedList.clear();
+
+    // Eliminate tasks that failed without adding to the finished list.
+    group.outstandingJobs -= group.state.harvestFailedAsmJSJobs();
+
+    // Any remaining tasks are therefore undergoing active compilation.
+    JS_ASSERT(group.outstandingJobs >= 0);
+    while (group.outstandingJobs > 0) {
+        group.state.wait(WorkerThreadState::MAIN);
+
+        group.outstandingJobs -= group.state.harvestFailedAsmJSJobs();
+        group.outstandingJobs -= group.state.asmJSFinishedList.length();
+        group.state.asmJSFinishedList.clear();
+    }
+
+    JS_ASSERT(group.outstandingJobs == 0);
+    JS_ASSERT(group.state.asmJSWorklist.empty());
+    JS_ASSERT(group.state.asmJSFinishedList.empty());
+}
+
+static const size_t LIFO_ALLOC_PARALLEL_CHUNK_SIZE = 1 << 12;
+
+static bool
+CheckFunctionBodiesParallel(ModuleCompiler &m)
+{
+    // Saturate all worker threads plus the main thread.
+    WorkerThreadState &state = *m.cx()->runtime->workerThreadState;
+    size_t numParallelJobs = state.numThreads + 1;
+
+    // Allocate scoped AsmJSParallelTask objects. Each contains a unique
+    // LifoAlloc that provides all necessary memory for compilation.
+    Vector<AsmJSParallelTask, 0> tasks(m.cx());
+    if (!tasks.initCapacity(numParallelJobs))
+        return false;
+
+    for (size_t i = 0; i < numParallelJobs; i++)
+        tasks.infallibleAppend(LIFO_ALLOC_PARALLEL_CHUNK_SIZE);
+
+    // With compilation memory in-scope, dispatch worker threads.
+    ParallelGroupState group(state, tasks);
+    if (!CheckFunctionBodiesParallelImpl(m, group)) {
+        CancelOutstandingJobs(m, group);
+
+        // If failure was triggered by a worker thread, report error.
+        int32_t maybeFailureIndex = state.maybeGetAsmJSFailedFunctionIndex();
+        if (maybeFailureIndex >= 0) {
+            ParseNode *fn = m.function(maybeFailureIndex).fn();
+            return m.fail("Internal compiler failure (probably out of memory)", fn);
+        }
+
+        // Otherwise, the error occurred on the main thread and was already reported.
+        return false;
+    }
+    return true;
+}
+#endif // JS_PARALLEL_COMPILATION
+
 static RegisterSet AllRegs = RegisterSet(GeneralRegisterSet(Registers::AllMask),
                                          FloatRegisterSet(FloatRegisters::AllMask));
 static RegisterSet NonVolatileRegs = RegisterSet(GeneralRegisterSet(Registers::NonVolatileMask),
@@ -4958,8 +5148,18 @@ CheckModule(JSContext *cx, TokenStream &ts, ParseNode *fn, ScopedJSDeletePtr<Asm
 
     m.setFirstPassComplete();
 
+#ifdef JS_PARALLEL_COMPILATION
+    if (OffThreadCompilationEnabled(cx)) {
+        if (!CheckFunctionBodiesParallel(m))
+            return false;
+    } else {
+        if (!CheckFunctionBodiesSequential(m))
+            return false;
+    }
+#else
     if (!CheckFunctionBodiesSequential(m))
         return false;
+#endif
 
     m.setSecondPassComplete();
 
@@ -5000,6 +5200,11 @@ js::CompileAsmJS(JSContext *cx, TokenStream &ts, ParseNode *fn, HandleScript scr
 #ifdef JS_ASMJS
     if (!EnsureAsmJSSignalHandlersInstalled(cx->runtime))
         return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Platform missing signal handler support");
+
+# ifdef JS_PARALLEL_COMPILATION
+    if (!EnsureParallelCompilationInitialized(cx->runtime))
+        return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Failed initialization of compilation threads");
+# endif
 
     ScopedJSDeletePtr<AsmJSModule> module;
     if (!CheckModule(cx, ts, fn, &module))
