@@ -7,9 +7,9 @@
 #define nsHTMLVideoElement_h__
 
 #include "nsIDOMHTMLVideoElement.h"
-#include "nsHTMLMediaElement.h"
+#include "mozilla/dom/HTMLMediaElement.h"
 
-class nsHTMLVideoElement : public nsHTMLMediaElement,
+class nsHTMLVideoElement : public mozilla::dom::HTMLMediaElement,
                            public nsIDOMHTMLVideoElement
 {
 public:
@@ -31,8 +31,8 @@ public:
   NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
   // nsIDOMHTMLMediaElement
-  using nsHTMLMediaElement::GetPaused;
-  NS_FORWARD_NSIDOMHTMLMEDIAELEMENT(nsHTMLMediaElement::)
+  using mozilla::dom::HTMLMediaElement::GetPaused;
+  NS_FORWARD_NSIDOMHTMLMEDIAELEMENT(mozilla::dom::HTMLMediaElement::)
 
   // nsIDOMHTMLVideoElement
   NS_DECL_NSIDOMHTMLVIDEOELEMENT

@@ -8,12 +8,12 @@
 
 #include "nsIDOMHTMLAudioElement.h"
 #include "nsIJSNativeInitializer.h"
-#include "nsHTMLMediaElement.h"
+#include "mozilla/dom/HTMLMediaElement.h"
 
 typedef uint16_t nsMediaNetworkState;
 typedef uint16_t nsMediaReadyState;
 
-class nsHTMLAudioElement : public nsHTMLMediaElement,
+class nsHTMLAudioElement : public mozilla::dom::HTMLMediaElement,
                            public nsIDOMHTMLAudioElement,
                            public nsIJSNativeInitializer
 {
@@ -34,8 +34,8 @@ public:
   NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
   // nsIDOMHTMLMediaElement
-  using nsHTMLMediaElement::GetPaused;
-  NS_FORWARD_NSIDOMHTMLMEDIAELEMENT(nsHTMLMediaElement::)
+  using mozilla::dom::HTMLMediaElement::GetPaused;
+  NS_FORWARD_NSIDOMHTMLMEDIAELEMENT(mozilla::dom::HTMLMediaElement::)
 
   // nsIDOMHTMLAudioElement
   NS_DECL_NSIDOMHTMLAUDIOELEMENT

@@ -3,8 +3,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#if !defined(nsHTMLMediaElement_h__)
-#define nsHTMLMediaElement_h__
+#ifndef mozilla_dom_HTMLMediaElement_h
+#define mozilla_dom_HTMLMediaElement_h
 
 #include "nsIDOMHTMLMediaElement.h"
 #include "nsGenericHTMLElement.h"
@@ -39,10 +39,13 @@ class MediaResource;
 class MediaDecoder;
 }
 
-class nsHTMLMediaElement : public nsGenericHTMLElement,
-                           public nsIObserver,
-                           public mozilla::MediaDecoderOwner,
-                           public nsIAudioChannelAgentCallback
+namespace mozilla {
+namespace dom {
+
+class HTMLMediaElement : public nsGenericHTMLElement,
+                         public nsIObserver,
+                         public MediaDecoderOwner,
+                         public nsIAudioChannelAgentCallback
 {
 public:
   typedef mozilla::TimeStamp TimeStamp;
@@ -52,16 +55,13 @@ public:
   typedef mozilla::MediaResource MediaResource;
   typedef mozilla::MediaDecoderOwner MediaDecoderOwner;
   typedef mozilla::MetadataTags MetadataTags;
-  typedef mozilla::AudioStream AudioStream;
-  typedef mozilla::MediaDecoder MediaDecoder;
-  typedef mozilla::DOMMediaStream DOMMediaStream;
 
-  mozilla::CORSMode GetCORSMode() {
+  CORSMode GetCORSMode() {
     return mCORSMode;
   }
 
-  nsHTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLMediaElement();
+  HTMLMediaElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  virtual ~HTMLMediaElement();
 
   /**
    * This is used when the browser is constructing a video element to play
@@ -82,7 +82,7 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLMediaElement,
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLMediaElement,
                                            nsGenericHTMLElement)
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
@@ -194,7 +194,7 @@ public:
   // Called by the media decoder and the video frame to get the
   // ImageContainer containing the video data.
   virtual VideoFrameContainer* GetVideoFrameContainer() MOZ_FINAL MOZ_OVERRIDE;
-  ImageContainer* GetImageContainer();
+  layers::ImageContainer* GetImageContainer();
 
   // Called by the video frame to get the print surface, if this is
   // a static document and we're not actually playing video
@@ -255,7 +255,7 @@ public:
 
   // Returns the CanPlayStatus indicating if we can handle the
   // full MIME type including the optional codecs parameter.
-  static mozilla::CanPlayStatus GetCanPlay(const nsAString& aType);
+  static CanPlayStatus GetCanPlay(const nsAString& aType);
 
   /**
    * Called when a child source element is added to this media element. This
@@ -296,7 +296,7 @@ public:
    */
   bool GetPlayedOrSeeked() const { return mHasPlayedOrSeeked; }
 
-  nsresult CopyInnerTo(mozilla::dom::Element* aDest);
+  nsresult CopyInnerTo(Element* aDest);
 
   /**
    * Sets the Accept header on the HTTP channel to the required
@@ -334,13 +334,13 @@ protected:
   class WakeLockBoolWrapper {
   public:
     WakeLockBoolWrapper(bool val = false) : mValue(val), mOuter(NULL), mWakeLock(NULL) {}
-    void SetOuter(nsHTMLMediaElement* outer) { mOuter = outer; }
+    void SetOuter(HTMLMediaElement* outer) { mOuter = outer; }
     operator bool() { return mValue; }
     WakeLockBoolWrapper& operator=(bool val);
     bool operator !() const { return !mValue; }
   private:
     bool mValue;
-    nsHTMLMediaElement* mOuter;
+    HTMLMediaElement* mOuter;
     nsCOMPtr<nsIDOMMozWakeLock> mWakeLock;
   };
 
@@ -415,7 +415,7 @@ protected:
    * Call this to find a media element with the same NodePrincipal and mLoadingSrc
    * set to aURI, and with a decoder on which Load() has been called.
    */
-  nsHTMLMediaElement* LookupMediaElementURITable(nsIURI* aURI);
+  HTMLMediaElement* LookupMediaElementURITable(nsIURI* aURI);
 
   /**
    * Shutdown and clear mDecoder and maintain associated invariants.
@@ -595,9 +595,9 @@ protected:
    */
   void SuspendOrResumeElement(bool aPauseElement, bool aSuspendEvents);
 
-  // Get the nsHTMLMediaElement object if the decoder is being used from an
+  // Get the HTMLMediaElement object if the decoder is being used from an
   // HTML media element, and null otherwise.
-  virtual nsHTMLMediaElement* GetMediaElement() MOZ_FINAL MOZ_OVERRIDE
+  virtual HTMLMediaElement* GetMediaElement() MOZ_FINAL MOZ_OVERRIDE
   {
     return this;
   }
@@ -771,7 +771,7 @@ protected:
   nsAutoPtr<AudioStream> mAudioStream;
 
   // Range of time played.
-  mozilla::dom::TimeRanges mPlayed;
+  TimeRanges mPlayed;
 
   // Stores the time at the start of the current 'played' range.
   double mCurrentPlayRangeStart;
@@ -880,7 +880,7 @@ protected:
   bool mMediaSecurityVerified;
 
   // The CORS mode when loading the media element
-  mozilla::CORSMode mCORSMode;
+  CORSMode mCORSMode;
 
   // True if the media has an audio track
   bool mHasAudio;
@@ -889,7 +889,7 @@ protected:
   bool mDownloadSuspendedByCache;
 
   // Audio Channel Type.
-  mozilla::dom::AudioChannelType mAudioChannelType;
+  AudioChannelType mAudioChannelType;
 
   // The audiochannel has been suspended.
   bool mChannelSuspended;
@@ -901,4 +901,7 @@ protected:
   nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;
 };
 
-#endif
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_HTMLMediaElement_h
