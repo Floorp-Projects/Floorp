@@ -271,6 +271,9 @@
 @BINPATH@/components/necko.xpt
 @BINPATH@/components/loginmgr.xpt
 @BINPATH@/components/parentalcontrols.xpt
+#ifdef MOZ_WEBRTC
+@BINPATH@/components/peerconnection.xpt
+#endif
 @BINPATH@/components/places.xpt
 @BINPATH@/components/plugin.xpt
 @BINPATH@/components/pref.xpt
@@ -372,6 +375,10 @@
 @BINPATH@/components/nsLoginInfo.js
 @BINPATH@/components/nsLoginManager.js
 @BINPATH@/components/nsLoginManagerPrompter.js
+#ifdef MOZ_WEBRTC
+@BINPATH@/components/PeerConnection.js
+@BINPATH@/components/PeerConnection.manifest
+#endif
 @BINPATH@/components/SiteSpecificUserAgent.js
 @BINPATH@/components/SiteSpecificUserAgent.manifest
 @BINPATH@/components/storage-Legacy.js
