@@ -161,10 +161,6 @@ public:
   // Returns true when the audio stream is paused.
   virtual bool IsPaused() = 0;
 
-  // Returns the minimum number of audio frames which must be written before
-  // you can be sure that something will be played.
-  virtual int32_t GetMinWriteSize() = 0;
-
   int GetRate() { return mOutRate; }
   int GetChannels() { return mChannels; }
 
