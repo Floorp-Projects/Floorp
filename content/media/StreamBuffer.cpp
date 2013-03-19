@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "StreamBuffer.h"
+#include "prlog.h"
 #include <algorithm>
 
 namespace mozilla {
