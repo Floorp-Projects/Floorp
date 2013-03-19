@@ -394,6 +394,13 @@ Parser<ParseHandler>::~Parser()
     JSContext *cx = context;
     cx->tempLifoAlloc().release(tempPoolMark);
     cx->activeCompilations--;
+
+    /*
+     * The parser can allocate enormous amounts of memory for large functions.
+     * Eagerly free the memory now (which otherwise won't be freed until the
+     * next GC) to avoid unnecessary OOMs.
+     */
+    cx->tempLifoAlloc().freeAllIfHugeAndUnused();
 }
 
 template <typename ParseHandler>
