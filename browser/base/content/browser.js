@@ -1640,6 +1640,7 @@ var gBrowserInit = {
     }
 
     Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
+    setTimeout(function () { BrowserChromeTest.markAsReady(); }, 0);
     TelemetryTimestamps.add("delayedStartupFinished");
   },
 
@@ -7537,3 +7538,20 @@ function focusNextFrame(event) {
     focusAndSelectUrlBar();
 }
 
+let BrowserChromeTest = {
+  _cb: null,
+  _ready: false,
+  markAsReady: function () {
+    this._ready = true;
+    if (this._cb) {
+      this._cb();
+      this._cb = null;
+    }
+  },
+  runWhenReady: function (cb) {
+    if (this._ready)
+      cb();
+    else
+      this._cb = cb;
+  }
+};
