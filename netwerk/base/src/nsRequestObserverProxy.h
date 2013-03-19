@@ -26,14 +26,11 @@ public:
     nsIRequestObserver *Observer() { return mObserver; }
 
     nsresult FireEvent(nsARequestObserverEvent *);
-    nsIEventTarget *Target() { return mTarget; } // debugging aid
-    void SetTarget(nsIEventTarget *target) { mTarget = target; }
 
 protected:
     virtual ~nsRequestObserverProxy();
 
     nsCOMPtr<nsIRequestObserver> mObserver;
-    nsCOMPtr<nsIEventTarget>     mTarget;
 
     friend class nsOnStartRequestEvent;
     friend class nsOnStopRequestEvent;
