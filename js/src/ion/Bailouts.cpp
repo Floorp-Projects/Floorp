@@ -192,8 +192,7 @@ PushInlinedFrame(JSContext *cx, StackFrame *callerFrame)
     // which will not be the case when we inline getters (in which case it would be a
     // JSOP_GETPROP). That will have to be handled differently.
     FrameRegs &regs = cx->regs();
-    JS_ASSERT(JSOp(*regs.pc) == JSOP_CALL || JSOp(*regs.pc) == JSOP_NEW ||
-              JSOp(*regs.pc) == JSOP_FUNAPPLY);
+    JS_ASSERT(js_CodeSpec[*regs.pc].format & JOF_INVOKE);
     int callerArgc = GET_ARGC(regs.pc);
     if (JSOp(*regs.pc) == JSOP_FUNAPPLY)
         callerArgc = callerFrame->nactual();
