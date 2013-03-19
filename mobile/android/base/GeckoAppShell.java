@@ -321,9 +321,9 @@ public class GeckoAppShell
     /*
      *  The Gecko-side API: API methods that Gecko calls
      */
-    public static void notifyIME(int type, int state) {
+    public static void notifyIME(int type) {
         if (mEditableListener != null) {
-            mEditableListener.notifyIME(type, state);
+            mEditableListener.notifyIME(type);
         }
     }
 

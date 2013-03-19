@@ -44,21 +44,19 @@ interface GeckoEditableClient {
 /* interface for the Editable to listen to the Gecko thread
    and also for the IC thread to listen to the Editable */
 interface GeckoEditableListener {
-    // IME notification type for notifyIME()
-    final int NOTIFY_IME_RESETINPUTSTATE = 0;
-    final int NOTIFY_IME_REPLY_EVENT = 1;
-    final int NOTIFY_IME_CANCELCOMPOSITION = 2;
-    final int NOTIFY_IME_FOCUSCHANGE = 3;
-    // IME focus state for notifyIME(NOTIFY_IME_FOCUSCHANGE, ..)
-    final int IME_FOCUS_STATE_FOCUS = 1;
-    final int IME_FOCUS_STATE_BLUR = 0;
+    // IME notification type for notifyIME(), corresponding to NotificationToIME enum in Gecko
+    final int NOTIFY_IME_REPLY_EVENT = -1;
+    final int NOTIFY_IME_OF_FOCUS = 1;
+    final int NOTIFY_IME_OF_BLUR = 2;
+    final int NOTIFY_IME_TO_COMMIT_COMPOSITION = 4;
+    final int NOTIFY_IME_TO_CANCEL_COMPOSITION = 5;
     // IME enabled state for notifyIMEContext()
     final int IME_STATE_DISABLED = 0;
     final int IME_STATE_ENABLED = 1;
     final int IME_STATE_PASSWORD = 2;
     final int IME_STATE_PLUGIN = 3;
 
-    void notifyIME(int type, int state);
+    void notifyIME(int type);
     void notifyIMEContext(int state, String typeHint,
                           String modeHint, String actionHint);
     void onSelectionChange(int start, int end);
@@ -648,7 +646,7 @@ final class GeckoEditable
     }
 
     @Override
-    public void notifyIME(final int type, final int state) {
+    public void notifyIME(final int type) {
         if (DEBUG) {
             // GeckoEditableListener methods should all be called from the Gecko thread
             ThreadUtils.assertOnGeckoThread();
@@ -656,7 +654,7 @@ final class GeckoEditable
             if (type != NOTIFY_IME_REPLY_EVENT) {
                 Log.d(LOGTAG, "notifyIME(" +
                               getConstantName(GeckoEditableListener.class, "NOTIFY_IME_", type) +
-                              ", " + state + ")");
+                              ")");
             }
         }
         if (type == NOTIFY_IME_REPLY_EVENT) {
@@ -678,20 +676,18 @@ final class GeckoEditable
         geckoPostToIc(new Runnable() {
             @Override
             public void run() {
-                if (type == NOTIFY_IME_FOCUSCHANGE) {
-                    if (state == IME_FOCUS_STATE_BLUR) {
-                        mFocused = false;
-                    } else {
-                        mFocused = true;
-                        // Unmask events on the Gecko side
-                        mActionQueue.offer(new Action(Action.TYPE_ACKNOWLEDGE_FOCUS));
-                    }
+                if (type == NOTIFY_IME_OF_BLUR) {
+                    mFocused = false;
+                } else if (type == NOTIFY_IME_OF_FOCUS) {
+                    mFocused = true;
+                    // Unmask events on the Gecko side
+                    mActionQueue.offer(new Action(Action.TYPE_ACKNOWLEDGE_FOCUS));
                 }
                 // Make sure there are no other things going on. If we sent
                 // GeckoEvent.IME_ACKNOWLEDGE_FOCUS, this line also makes us
                 // wait for Gecko to update us on the newly focused content
                 mActionQueue.syncWithGecko();
-                mListener.notifyIME(type, state);
+                mListener.notifyIME(type);
             }
         });
     }
