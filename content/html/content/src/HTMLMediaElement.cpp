@@ -435,7 +435,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
 // nsIDOMHTMLMediaElement
 NS_IMPL_URI_ATTR(HTMLMediaElement, Src, src)
-NS_IMPL_STRING_ATTR(HTMLMediaElement, Crossorigin, crossorigin)
+NS_IMPL_STRING_ATTR(HTMLMediaElement, CrossOrigin, crossorigin)
 NS_IMPL_BOOL_ATTR(HTMLMediaElement, Controls, controls)
 NS_IMPL_BOOL_ATTR(HTMLMediaElement, Autoplay, autoplay)
 NS_IMPL_BOOL_ATTR(HTMLMediaElement, Loop, loop)

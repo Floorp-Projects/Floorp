@@ -21,9 +21,8 @@ interface HTMLMediaElement : HTMLElement {
            attribute DOMString src;
   readonly attribute DOMString currentSrc;
 
-  // Bug 847370 - crossOrigin vs crossorigin.
   [SetterThrows]
-           attribute DOMString crossorigin;
+           attribute DOMString crossOrigin;
   const unsigned short NETWORK_EMPTY = 0;
   const unsigned short NETWORK_IDLE = 1;
   const unsigned short NETWORK_LOADING = 2;
