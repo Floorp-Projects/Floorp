@@ -144,6 +144,7 @@ CPPSRCS		= \
 		Unicode.cpp \
 		Xdr.cpp \
 		Module.cpp \
+		Instruments.cpp \
 		$(NULL)
 
 # Changes to internal header files, used externally, massively slow down
