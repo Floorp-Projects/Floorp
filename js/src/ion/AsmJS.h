@@ -27,6 +27,7 @@ namespace js {
 class SPSProfiler;
 class AsmJSModule;
 namespace frontend { struct TokenStream; struct ParseNode; }
+namespace ion { class MIRGenerator; class LIRGraph; }
 
 // Return whether asm.js optimization is inhibitted by the platform or
 // dynamically disabled. (Exposed as JSNative for shell testing.)
@@ -124,6 +125,28 @@ class AsmJSMachExceptionHandler
     void setCurrentThread();
 };
 #endif
+
+// Struct type for passing parallel compilation data between the main thread
+// and compilation workers.
+struct AsmJSParallelTask
+{
+    LifoAlloc lifo;         // Provider of all heap memory used for compilation.
+
+    uint32_t funcNum;       // Index |i| of function in |Module.function(i)|.
+    ion::MIRGenerator *mir; // Passed from main thread to worker.
+    ion::LIRGraph *lir;     // Passed from worker to main thread.
+
+    AsmJSParallelTask(size_t defaultChunkSize)
+      : lifo(defaultChunkSize),
+        funcNum(0), mir(NULL), lir(NULL)
+    { }
+
+    void init(uint32_t newFuncNum, ion::MIRGenerator *newMir) {
+        funcNum = newFuncNum;
+        mir = newMir;
+        lir = NULL;
+    }
+};
 
 } // namespace js
 
