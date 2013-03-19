@@ -251,8 +251,6 @@ protected:
     static nsIRDFResource* kNC_attribute;
     static nsIRDFResource* kNC_value;
 
-    static nsXULPrototypeCache* gXULCache;
-
     static PRLogModuleInfo* gXULLog;
 
     nsresult
