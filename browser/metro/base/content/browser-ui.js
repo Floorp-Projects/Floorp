@@ -1609,7 +1609,7 @@ var DialogUI = {
 
     let currentNode;
     let nodeIterator = xhr.responseXML.createNodeIterator(xhr.responseXML, NodeFilter.SHOW_TEXT, null, false);
-    while (currentNode = nodeIterator.nextNode()) {
+    while (!!(currentNode = nodeIterator.nextNode())) {
       let trimmed = currentNode.nodeValue.replace(/^\s\s*/, "").replace(/\s\s*$/, "");
       if (!trimmed.length)
         currentNode.parentNode.removeChild(currentNode);

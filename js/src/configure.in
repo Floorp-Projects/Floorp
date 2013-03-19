@@ -3646,6 +3646,19 @@ if test -n "$MOZ_SHARK"; then
 fi
 
 dnl ========================================================
+dnl instruments
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(instruments,
+[  --enable-instruments    Enable instruments remote profiling. Implies --enable-profiling.],
+    MOZ_INSTRUMENTS=1,
+    MOZ_INSTRUMENTS= )
+if test -n "$MOZ_INSTRUMENTS"; then
+    MOZ_PROFILING=1
+    AC_DEFINE(MOZ_INSTRUMENTS)
+    LIBS="$LIBS -framework CoreFoundation"
+fi
+
+dnl ========================================================
 dnl callgrind
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(callgrind,
@@ -4123,6 +4136,7 @@ AC_SUBST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST(WARNINGS_AS_ERRORS)
 AC_SUBST(MOZ_JPROF)
 AC_SUBST(MOZ_SHARK)
+AC_SUBST(MOZ_INSTRUMENTS)
 AC_SUBST(MOZ_CALLGRIND)
 AC_SUBST(MOZ_VTUNE)
 AC_SUBST(MOZ_ETW)

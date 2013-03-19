@@ -14,7 +14,7 @@
 #include "ImageLayers.h"
 #include "AudioSampleFormat.h"
 #include "MediaResource.h"
-#include "nsHTMLMediaElement.h"
+#include "mozilla/dom/HTMLMediaElement.h"
 
 namespace mozilla {
 

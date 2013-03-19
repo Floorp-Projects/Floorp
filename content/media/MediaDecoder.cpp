@@ -10,7 +10,7 @@
 #include <limits>
 #include "nsNetUtil.h"
 #include "AudioStream.h"
-#include "nsHTMLVideoElement.h"
+#include "mozilla/dom/HTMLVideoElement.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsTArray.h"

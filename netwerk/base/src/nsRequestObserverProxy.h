@@ -11,10 +11,11 @@
 #include "nsIRequest.h"
 #include "nsThreadUtils.h"
 #include "nsCOMPtr.h"
+#include "nsProxyRelease.h"
 
 class nsARequestObserverEvent;
 
-class nsRequestObserverProxy : public nsIRequestObserverProxy
+class nsRequestObserverProxy MOZ_FINAL : public nsIRequestObserverProxy
 {
 public:
     NS_DECL_ISUPPORTS
@@ -26,14 +27,10 @@ public:
     nsIRequestObserver *Observer() { return mObserver; }
 
     nsresult FireEvent(nsARequestObserverEvent *);
-    nsIEventTarget *Target() { return mTarget; } // debugging aid
-    void SetTarget(nsIEventTarget *target) { mTarget = target; }
 
 protected:
-    virtual ~nsRequestObserverProxy();
-
-    nsCOMPtr<nsIRequestObserver> mObserver;
-    nsCOMPtr<nsIEventTarget>     mTarget;
+    nsMainThreadPtrHandle<nsIRequestObserver> mObserver;
+    nsMainThreadPtrHandle<nsISupports>        mContext;
 
     friend class nsOnStartRequestEvent;
     friend class nsOnStopRequestEvent;
@@ -42,13 +39,12 @@ protected:
 class nsARequestObserverEvent : public nsRunnable
 {
 public:
-    nsARequestObserverEvent(nsIRequest *, nsISupports *);
+    nsARequestObserverEvent(nsIRequest *);
 
 protected:
     virtual ~nsARequestObserverEvent() {}
 
     nsCOMPtr<nsIRequest>  mRequest;
-    nsCOMPtr<nsISupports> mContext;
 };
 
 #endif // nsRequestObserverProxy_h__

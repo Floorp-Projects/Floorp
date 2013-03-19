@@ -741,16 +741,16 @@ XPCJSRuntime::ReleaseIncrementally(nsTArray<nsISupports *> &array)
 
 /* static */ void
 XPCJSRuntime::GCSliceCallback(JSRuntime *rt,
-                              js::GCProgress progress,
-                              const js::GCDescription &desc)
+                              JS::GCProgress progress,
+                              const JS::GCDescription &desc)
 {
     XPCJSRuntime *self = nsXPConnect::GetRuntimeInstance();
     if (!self)
         return;
 
 #ifdef MOZ_CRASHREPORTER
-    CrashReporter::SetGarbageCollecting(progress == js::GC_CYCLE_BEGIN ||
-                                        progress == js::GC_SLICE_BEGIN);
+    CrashReporter::SetGarbageCollecting(progress == JS::GC_CYCLE_BEGIN ||
+                                        progress == JS::GC_SLICE_BEGIN);
 #endif
 
     if (self->mPrevGCSliceCallback)
@@ -789,7 +789,7 @@ XPCJSRuntime::GCCallback(JSRuntime *rt, JSGCStatus status)
                 self->mReleaseRunnable->ReleaseNow(false);
 
             // Do any deferred releases of native objects.
-            if (js::WasIncrementalGC(rt)) {
+            if (JS::WasIncrementalGC(rt)) {
                 self->ReleaseIncrementally(self->mNativesToReleaseArray);
             } else {
                 DoDeferredRelease(self->mNativesToReleaseArray);
@@ -1227,7 +1227,7 @@ XPCJSRuntime::~XPCJSRuntime()
 {
     MOZ_ASSERT(!mReleaseRunnable);
 
-    js::SetGCSliceCallback(mJSRuntime, mPrevGCSliceCallback);
+    JS::SetGCSliceCallback(mJSRuntime, mPrevGCSliceCallback);
 
     xpc_DelocalizeRuntime(mJSRuntime);
 
@@ -2653,7 +2653,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     JS_SetDestroyCompartmentCallback(mJSRuntime, CompartmentDestroyedCallback);
     JS_SetCompartmentNameCallback(mJSRuntime, CompartmentNameCallback);
     JS_SetGCCallback(mJSRuntime, GCCallback);
-    mPrevGCSliceCallback = js::SetGCSliceCallback(mJSRuntime, GCSliceCallback);
+    mPrevGCSliceCallback = JS::SetGCSliceCallback(mJSRuntime, GCSliceCallback);
     JS_SetFinalizeCallback(mJSRuntime, FinalizeCallback);
     JS_SetExtraGCRootsTracer(mJSRuntime, TraceBlackJS, this);
     JS_SetGrayGCRootsTracer(mJSRuntime, TraceGrayJS, this);
@@ -2927,7 +2927,7 @@ void
 XPCRootSetElem::RemoveFromRootSet(XPCLock *lock)
 {
     if (nsXPConnect *xpc = nsXPConnect::GetXPConnect())
-        js::PokeGC(xpc->GetRuntime()->GetJSRuntime());
+        JS::PokeGC(xpc->GetRuntime()->GetJSRuntime());
 
     NS_ASSERTION(mSelfp, "Must be linked");
 

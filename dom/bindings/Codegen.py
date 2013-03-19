@@ -7805,7 +7805,7 @@ class CGBindingImplClass(CGClass):
 
     def getGetParentObjectReturnType(self):
         return ("// TODO: return something sensible here, and change the return type\n"
-                "%s*" % self.descriptor.name)
+                "%s*" % self.descriptor.nativeType.split('::')[-1])
 
     def getGetParentObjectBody(self):
         return None
@@ -7825,9 +7825,9 @@ class CGExampleClass(CGBindingImplClass):
             "public:\n"
             "  NS_DECL_CYCLE_COLLECTING_ISUPPORTS\n"
             "  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(%s)\n"
-            "\n" % descriptor.name)
+            "\n" % descriptor.nativeType.split('::')[-1])
 
-        CGClass.__init__(self, descriptor.name,
+        CGClass.__init__(self, descriptor.nativeType.split('::')[-1],
                          bases=[ClassBase("nsISupports /* Change nativeOwnership in the binding configuration if you don't want this */"),
                                 ClassBase("nsWrapperCache /* Change wrapperCache in the binding configuration if you don't want this */")],
                          constructors=[ClassConstructor([],
@@ -7840,27 +7840,27 @@ class CGExampleClass(CGBindingImplClass):
     def define(self):
         # Just override CGClass and do our own thing
         classImpl = """
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(${ifaceName})
-NS_IMPL_CYCLE_COLLECTING_ADDREF(${ifaceName})
-NS_IMPL_CYCLE_COLLECTING_RELEASE(${ifaceName})
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(${ifaceName})
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(${nativeType})
+NS_IMPL_CYCLE_COLLECTING_ADDREF(${nativeType})
+NS_IMPL_CYCLE_COLLECTING_RELEASE(${nativeType})
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(${nativeType})
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-${ifaceName}::${ifaceName}()
+${nativeType}::${nativeType}()
 {
   SetIsDOMBinding();
 }
 
-${ifaceName}::~${ifaceName}()
+${nativeType}::~${nativeType}()
 {
 }
 """
         if self.descriptor.wrapperCache:
             classImpl += """
 JSObject*
-${ifaceName}::WrapObject(JSContext* aCx, JSObject* aScope)
+${nativeType}::WrapObject(JSContext* aCx, JSObject* aScope)
 {
   return ${ifaceName}Binding::Wrap(aCx, aScope, this);
 }
@@ -7869,14 +7869,16 @@ ${ifaceName}::WrapObject(JSContext* aCx, JSObject* aScope)
         else:
             classImpl += """
 JSObject*
-${ifaceName}::WrapObject(JSContext* aCx, JSObject* aScope)
+${nativeType}::WrapObject(JSContext* aCx, JSObject* aScope)
 {
   return ${ifaceName}Binding::Wrap(aCx, aScope, this);
 }
 
 """
+
         return string.Template(classImpl).substitute(
-            { "ifaceName": self.descriptor.name }
+            { "ifaceName": self.descriptor.name,
+              "nativeType": self.descriptor.nativeType.split('::')[-1] }
             )
 
 

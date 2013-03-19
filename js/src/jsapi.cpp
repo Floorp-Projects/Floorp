@@ -671,15 +671,8 @@ JS::isGCEnabled()
 {
     return !TlsPerThreadData.get()->suppressGC;
 }
-
-JS_FRIEND_API(bool)
-JS::NeedRelaxedRootChecks()
-{
-    return TlsPerThreadData.get()->gcRelaxRootChecks;
-}
 #else
 JS_FRIEND_API(bool) JS::isGCEnabled() { return true; }
-JS_FRIEND_API(bool) JS::NeedRelaxedRootChecks() { return false; }
 #endif
 
 static const JSSecurityCallbacks NullSecurityCallbacks = { };
@@ -687,9 +680,6 @@ static const JSSecurityCallbacks NullSecurityCallbacks = { };
 PerThreadData::PerThreadData(JSRuntime *runtime)
   : PerThreadDataFriendFields(),
     runtime_(runtime),
-#ifdef DEBUG
-    gcRelaxRootChecks(false),
-#endif
     ionTop(NULL),
     ionJSContext(NULL),
     ionStackLimit(0),
@@ -785,7 +775,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcNumber(0),
     gcStartNumber(0),
     gcIsFull(false),
-    gcTriggerReason(gcreason::NO_REASON),
+    gcTriggerReason(JS::gcreason::NO_REASON),
     gcStrictCompartmentChecking(false),
     gcDisableStrictProxyCheckingCount(0),
     gcIncrementalState(gc::NO_INCREMENTAL),
@@ -2835,8 +2825,8 @@ JS_PUBLIC_API(void)
 JS_GC(JSRuntime *rt)
 {
     AssertHeapIsIdle(rt);
-    PrepareForFullGC(rt);
-    GC(rt, GC_NORMAL, gcreason::API);
+    JS::PrepareForFullGC(rt);
+    GC(rt, GC_NORMAL, JS::gcreason::API);
 }
 
 JS_PUBLIC_API(void)
@@ -3306,7 +3296,7 @@ class AutoHoldZone
 };
 
 JS_PUBLIC_API(JSObject *)
-JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals, ZoneSpecifier zoneSpec)
+JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals, JS::ZoneSpecifier zoneSpec)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -3315,9 +3305,9 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals, Zone
     JSRuntime *rt = cx->runtime;
 
     Zone *zone;
-    if (zoneSpec == SystemZone)
+    if (zoneSpec == JS::SystemZone)
         zone = rt->systemZone;
-    else if (zoneSpec == FreshZone)
+    else if (zoneSpec == JS::FreshZone)
         zone = NULL;
     else
         zone = ((JSObject *)zoneSpec)->zone();
@@ -3326,7 +3316,7 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals, Zone
     if (!compartment)
         return NULL;
 
-    if (zoneSpec == SystemZone) {
+    if (zoneSpec == JS::SystemZone) {
         rt->systemZone = compartment->zone();
         rt->systemZone->isSystem = true;
     }
@@ -6248,7 +6238,7 @@ JS_ParseJSON(JSContext *cx, const jschar *chars, uint32_t len, jsval *vp)
     CHECK_REQUEST(cx);
 
     RootedValue reviver(cx, NullValue()), value(cx);
-    if (!ParseJSONWithReviver(cx, StableCharPtr(chars, len), len, reviver, &value))
+    if (!ParseJSONWithReviver(cx, JS::StableCharPtr(chars, len), len, reviver, &value))
         return false;
 
     *vp = value;
