@@ -3625,16 +3625,6 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
   MOZ_ASSERT(piWin);
   nsGlobalWindow* win = static_cast<nsGlobalWindow*>(piWin.get());
 
-  // Grab the HTML document.
-  // XXXbholley - We early-return for non-HTML documents so that this patch
-  // doesn't change behavior. We generalize this in the next patch to ease
-  // regression hunting.
-  nsCOMPtr<nsIDOMHTMLDocument> domDoc =
-    do_QueryInterface(win->GetExtantDocument());
-  if (!domDoc)
-    return true;
-  nsHTMLDocument *document = static_cast<nsHTMLDocument*>(domDoc.get());
-
   if (win->GetLength() > 0) {
     nsCOMPtr<nsIDOMWindow> child_win = win->GetChildWindow(id);
     if (child_win) {
@@ -3667,6 +3657,15 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
 
     return JS_TRUE;
   }
+
+  //
+  // The rest of this function is for HTML documents only.
+  //
+  nsCOMPtr<nsIHTMLDocument> htmlDoc =
+    do_QueryInterface(win->GetExtantDocument());
+  if (!htmlDoc)
+    return true;
+  nsHTMLDocument *document = static_cast<nsHTMLDocument*>(htmlDoc.get());
 
   nsDependentJSString str(id);
   nsCOMPtr<nsISupports> result;
