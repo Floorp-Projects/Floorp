@@ -105,6 +105,7 @@
 #include "nsSandboxFlags.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "nsCharsetSource.h"
+#include "nsIStringBundle.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -587,15 +588,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   bool html = contentType.EqualsLiteral(TEXT_HTML);
   bool xhtml = !html && contentType.EqualsLiteral(APPLICATION_XHTML_XML);
-  bool plainText = !html && !xhtml && (contentType.EqualsLiteral(TEXT_PLAIN) ||
-    contentType.EqualsLiteral(TEXT_CSS) ||
-    contentType.EqualsLiteral(TEXT_CACHE_MANIFEST) ||
-    contentType.EqualsLiteral(APPLICATION_JAVASCRIPT) ||
-    contentType.EqualsLiteral(APPLICATION_XJAVASCRIPT) ||
-    contentType.EqualsLiteral(TEXT_ECMASCRIPT) ||
-    contentType.EqualsLiteral(APPLICATION_ECMASCRIPT) ||
-    contentType.EqualsLiteral(TEXT_JAVASCRIPT) ||
-    contentType.EqualsLiteral(APPLICATION_JSON));
+  bool plainText = !html && !xhtml && nsContentUtils::IsPlainTextType(contentType);
   if (!(html || xhtml || plainText || viewSource)) {
     MOZ_ASSERT(false, "Channel with bad content type.");
     return NS_ERROR_INVALID_ARG;
@@ -866,6 +859,21 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                             docShell, aChannel);
       mParser->SetContentSink(htmlsink);
     }
+  }
+
+  if (plainText && !nsContentUtils::IsChildOfSameType(this) &&
+      Preferences::GetBool("plain_text.wrap_long_lines")) {
+    nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+    NS_ASSERTION(NS_SUCCEEDED(rv) && bundleService, "The bundle service could not be loaded");
+    nsCOMPtr<nsIStringBundle> bundle;
+    rv = bundleService->CreateBundle("chrome://global/locale/browser.properties",
+                                     getter_AddRefs(bundle));
+    NS_ASSERTION(NS_SUCCEEDED(rv) && bundle, "chrome://global/locale/browser.properties could not be loaded");
+    nsXPIDLString title;
+    if (bundle) {
+      bundle->GetStringFromName(NS_LITERAL_STRING("plainText.wordWrap").get(), getter_Copies(title));
+    }
+    SetSelectedStyleSheetSet(title);
   }
 
   // parser the content of the URI

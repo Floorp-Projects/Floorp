@@ -14,9 +14,7 @@ nsHtml5HtmlAttributes*
 nsHtml5PlainTextUtils::NewLinkAttributes()
 {
   nsHtml5HtmlAttributes* linkAttrs = new nsHtml5HtmlAttributes(0);
-  nsString* rel = mozilla::Preferences::GetBool("plain_text.wrap_long_lines") ?
-    new nsString(NS_LITERAL_STRING("stylesheet")) :
-    new nsString(NS_LITERAL_STRING("alternate stylesheet"));
+  nsString* rel = new nsString(NS_LITERAL_STRING("alternate stylesheet"));
   linkAttrs->addAttribute(nsHtml5AttributeName::ATTR_REL, rel);
   nsString* type = new nsString(NS_LITERAL_STRING("text/css"));
   linkAttrs->addAttribute(nsHtml5AttributeName::ATTR_TYPE, type);

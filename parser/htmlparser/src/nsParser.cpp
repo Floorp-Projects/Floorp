@@ -791,15 +791,7 @@ DetermineParseMode(const nsString& aBuffer, nsDTDMode& aParseMode,
 {
   if (aMimeType.EqualsLiteral(TEXT_HTML)) {
     DetermineHTMLParseMode(aBuffer, aParseMode, aDocType);
-  } else if (aMimeType.EqualsLiteral(TEXT_PLAIN) ||
-             aMimeType.EqualsLiteral(TEXT_CACHE_MANIFEST) ||
-             aMimeType.EqualsLiteral(TEXT_CSS) ||
-             aMimeType.EqualsLiteral(APPLICATION_JAVASCRIPT) ||
-             aMimeType.EqualsLiteral(APPLICATION_XJAVASCRIPT) ||
-             aMimeType.EqualsLiteral(APPLICATION_JSON) ||
-             aMimeType.EqualsLiteral(TEXT_ECMASCRIPT) ||
-             aMimeType.EqualsLiteral(APPLICATION_ECMASCRIPT) ||
-             aMimeType.EqualsLiteral(TEXT_JAVASCRIPT)) {
+  } else if (nsContentUtils::IsPlainTextType(aMimeType)) {
     aDocType = ePlainText;
     aParseMode = eDTDMode_quirks;
   } else { // Some form of XML
