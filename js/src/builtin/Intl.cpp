@@ -1856,7 +1856,7 @@ NewUDateFormat(JSContext *cx, HandleObject dateTimeFormat)
 
     // ECMAScript requires the Gregorian calendar to be used from the beginning
     // of ECMAScript time.
-    UCalendar *cal = (UCalendar *) udat_getCalendar(df);
+    UCalendar *cal = const_cast<UCalendar*>(udat_getCalendar(df));
     ucal_setGregorianChange(cal, StartOfTime, &status);
 
     // An error here means the calendar is not Gregorian, so we don't care.
