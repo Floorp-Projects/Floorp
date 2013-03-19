@@ -64,7 +64,6 @@ SVGAnimateTransformElement::ParseAttribute(int32_t aNamespaceID,
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGAnimateTransformElement)
 
 //----------------------------------------------------------------------
-// nsISMILAnimationElement methods
 
 nsSMILAnimationFunction&
 SVGAnimateTransformElement::AnimationFunction()

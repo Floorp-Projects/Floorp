@@ -4,12 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGMotionSMILAnimationFunction.h"
-#include "nsISMILAnimationElement.h"
 #include "nsSMILParserUtils.h"
 #include "nsSVGAngle.h"
 #include "SVGMotionSMILType.h"
 #include "SVGMotionSMILPathUtils.h"
 #include "nsSVGPathDataParser.h"
+#include "mozilla/dom/SVGAnimationElement.h"
 #include "mozilla/dom/SVGPathElement.h" // for nsSVGPathList
 #include "mozilla/dom/SVGMPathElement.h"
 #include "nsAttrValueInlines.h"
@@ -127,7 +127,7 @@ SVGMotionSMILAnimationFunction::GetCalcMode() const
  */
 
 static SVGMPathElement*
-GetFirstMpathChild(nsIContent* aElem)
+GetFirstMPathChild(nsIContent* aElem)
 {
   for (nsIContent* child = aElem->GetFirstChild();
        child;
@@ -272,8 +272,7 @@ SVGMotionSMILAnimationFunction::
 
   // Do we have a mpath child? if so, it trumps everything. Otherwise, we look
   // through our list of path-defining attributes, in order of priority.
-  SVGMPathElement* firstMpathChild =
-    GetFirstMpathChild(&mAnimationElement->AsElement());
+  SVGMPathElement* firstMpathChild = GetFirstMPathChild(mAnimationElement);
 
   if (firstMpathChild) {
     RebuildPathAndVerticesFromMpathElem(firstMpathChild);
@@ -361,7 +360,7 @@ SVGMotionSMILAnimationFunction::IsToAnimation() const
   // attribute, because they'll override any 'to' attr we might have.
   // NOTE: We can't rely on mPathSourceType, because it might not have been
   // set to a useful value yet (or it might be stale).
-  return !GetFirstMpathChild(&mAnimationElement->AsElement()) &&
+  return !GetFirstMPathChild(mAnimationElement) &&
     !HasAttr(nsGkAtoms::path) &&
     nsSMILAnimationFunction::IsToAnimation();
 }
