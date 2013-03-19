@@ -176,8 +176,8 @@ struct ForkJoinSlice
     // various preparations that are not thread-safe, and because the
     // full set of arenas is not available until the end of the
     // parallel section.
-    void requestGC(gcreason::Reason reason);
-    void requestZoneGC(JS::Zone *zone, gcreason::Reason reason);
+    void requestGC(JS::gcreason::Reason reason);
+    void requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason);
 
     // During the parallel phase, this method should be invoked
     // periodically, for example on every backedge, similar to the

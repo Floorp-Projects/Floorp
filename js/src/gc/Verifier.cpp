@@ -93,7 +93,7 @@ CheckStackRoot(JSRuntime *rt, uintptr_t *w, Rooter *begin, Rooter *end)
      * overwrite a now-dead GC thing pointer. In this case we want to avoid
      * damaging the smaller value.
      */
-    PoisonPtr(w);
+    JS::PoisonPtr(w);
 }
 
 static void

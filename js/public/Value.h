@@ -1397,16 +1397,16 @@ namespace js {
 
 template <> struct RootMethods<const JS::Value>
 {
-    static JS::Value initial() { return UndefinedValue(); }
+    static JS::Value initial() { return JS::UndefinedValue(); }
     static ThingRootKind kind() { return THING_ROOT_VALUE; }
-    static bool poisoned(const JS::Value &v) { return IsPoisonedValue(v); }
+    static bool poisoned(const JS::Value &v) { return JS::IsPoisonedValue(v); }
 };
 
 template <> struct RootMethods<JS::Value>
 {
-    static JS::Value initial() { return UndefinedValue(); }
+    static JS::Value initial() { return JS::UndefinedValue(); }
     static ThingRootKind kind() { return THING_ROOT_VALUE; }
-    static bool poisoned(const JS::Value &v) { return IsPoisonedValue(v); }
+    static bool poisoned(const JS::Value &v) { return JS::IsPoisonedValue(v); }
 };
 
 template <class Outer> class MutableValueOperations;
@@ -1488,11 +1488,11 @@ class MutableValueOperations : public ValueOperations<Outer>
  * and value-extracting operations.
  */
 template <>
-class HandleBase<JS::Value> : public ValueOperations<Handle<JS::Value> >
+class HandleBase<JS::Value> : public ValueOperations<JS::Handle<JS::Value> >
 {
-    friend class ValueOperations<Handle<JS::Value> >;
+    friend class ValueOperations<JS::Handle<JS::Value> >;
     const JS::Value * extract() const {
-        return static_cast<const Handle<JS::Value>*>(this)->address();
+        return static_cast<const JS::Handle<JS::Value>*>(this)->address();
     }
 };
 
@@ -1501,16 +1501,16 @@ class HandleBase<JS::Value> : public ValueOperations<Handle<JS::Value> >
  * type-querying, value-extracting, and mutating operations.
  */
 template <>
-class MutableHandleBase<JS::Value> : public MutableValueOperations<MutableHandle<JS::Value> >
+class MutableHandleBase<JS::Value> : public MutableValueOperations<JS::MutableHandle<JS::Value> >
 {
-    friend class ValueOperations<MutableHandle<JS::Value> >;
+    friend class ValueOperations<JS::MutableHandle<JS::Value> >;
     const JS::Value * extract() const {
-        return static_cast<const MutableHandle<JS::Value>*>(this)->address();
+        return static_cast<const JS::MutableHandle<JS::Value>*>(this)->address();
     }
 
-    friend class MutableValueOperations<MutableHandle<JS::Value> >;
+    friend class MutableValueOperations<JS::MutableHandle<JS::Value> >;
     JS::Value * extractMutable() {
-        return static_cast<MutableHandle<JS::Value>*>(this)->address();
+        return static_cast<JS::MutableHandle<JS::Value>*>(this)->address();
     }
 };
 
@@ -1519,16 +1519,16 @@ class MutableHandleBase<JS::Value> : public MutableValueOperations<MutableHandle
  * value-extracting, and mutating operations.
  */
 template <>
-class RootedBase<JS::Value> : public MutableValueOperations<Rooted<JS::Value> >
+class RootedBase<JS::Value> : public MutableValueOperations<JS::Rooted<JS::Value> >
 {
-    friend class ValueOperations<Rooted<JS::Value> >;
+    friend class ValueOperations<JS::Rooted<JS::Value> >;
     const JS::Value * extract() const {
-        return static_cast<const Rooted<JS::Value>*>(this)->address();
+        return static_cast<const JS::Rooted<JS::Value>*>(this)->address();
     }
 
-    friend class MutableValueOperations<Rooted<JS::Value> >;
+    friend class MutableValueOperations<JS::Rooted<JS::Value> >;
     JS::Value * extractMutable() {
-        return static_cast<Rooted<JS::Value>*>(this)->address();
+        return static_cast<JS::Rooted<JS::Value>*>(this)->address();
     }
 };
 
