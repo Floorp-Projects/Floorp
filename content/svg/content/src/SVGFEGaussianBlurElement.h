@@ -7,27 +7,33 @@
 #define mozilla_dom_SVGFEGaussianBlurElement_h
 
 #include "nsSVGFilters.h"
+#include "nsSVGNumberPair.h"
+#include "nsSVGString.h"
+
+nsresult NS_NewSVGFEGaussianBlurElement(nsIContent **aResult,
+                                        already_AddRefed<nsINodeInfo> aNodeInfo);
 
 namespace mozilla {
 namespace dom {
 
-typedef nsSVGFE nsSVGFEGaussianBlurElementBase;
+typedef nsSVGFE SVGFEGaussianBlurElementBase;
 
-class nsSVGFEGaussianBlurElement : public nsSVGFEGaussianBlurElementBase,
-                                   public nsIDOMSVGFEGaussianBlurElement
+class SVGFEGaussianBlurElement : public SVGFEGaussianBlurElementBase,
+                                 public nsIDOMSVGElement
 {
-  friend nsresult NS_NewSVGFEGaussianBlurElement(nsIContent **aResult,
-                                                 already_AddRefed<nsINodeInfo> aNodeInfo);
+  friend nsresult (::NS_NewSVGFEGaussianBlurElement(nsIContent **aResult,
+                                                    already_AddRefed<nsINodeInfo> aNodeInfo));
 protected:
-  nsSVGFEGaussianBlurElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsSVGFEGaussianBlurElementBase(aNodeInfo) {}
+  SVGFEGaussianBlurElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+    : SVGFEGaussianBlurElementBase(aNodeInfo)
+  {
+    SetIsDOMBinding();
+  }
+  virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
 public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
-
-  // FE Base
-  NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEGaussianBlurElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance* aInstance,
                           const nsTArray<const Image*>& aSources,
@@ -44,19 +50,21 @@ public:
   virtual nsIntRect ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChangeBoxes,
           const nsSVGFilterInstance& aInstance);
 
-  // Gaussian
-  NS_DECL_NSIDOMSVGFEGAUSSIANBLURELEMENT
-
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEGaussianBlurElementBase::)
+  NS_FORWARD_NSIDOMSVGELEMENT(SVGFEGaussianBlurElementBase::)
 
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL
+  already_AddRefed<nsIDOMSVGAnimatedString> In1();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> StdDeviationX();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> StdDeviationY();
+  void SetStdDeviation(float stdDeviationX, float stdDeviationY);
+
 protected:
   virtual NumberPairAttributesInfo GetNumberPairInfo();
   virtual StringAttributesInfo GetStringInfo();
