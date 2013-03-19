@@ -16,6 +16,7 @@ class nsIURI;
  { 0xb2, 0xe9, 0x63, 0x52, 0x8c, 0x87, 0x99, 0x7a } }
 
 class nsIStyleSheet;
+class nsCSSStyleSheet;
 
 class nsIStyleSheetLinkingElement : public nsISupports {
 public:
@@ -28,7 +29,7 @@ public:
    * @param aStyleSheet the style sheet associated with this
    *                    element.
    */
-  NS_IMETHOD SetStyleSheet(nsIStyleSheet* aStyleSheet) = 0;
+  NS_IMETHOD SetStyleSheet(nsCSSStyleSheet* aStyleSheet) = 0;
 
   /**
    * Used to obtain the style sheet linked in by this element.

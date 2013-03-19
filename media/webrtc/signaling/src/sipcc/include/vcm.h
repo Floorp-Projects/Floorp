@@ -1003,6 +1003,15 @@ int vcmDtmfBurst(int digit, int duration, int direction);
  */
 int vcmGetILBCMode();
 
+/**
+ * vcmOnSdpParseError
+ *
+ * This method is called for each parsing error of SDP.  It does not necessarily
+ * mean the SDP read was fatal and can be called many times for the same SDP.
+ *
+ */
+int vcmOnSdpParseError(const char *peercconnection, const char *message);
+
 //Using C++ for gips. This is the end of extern "C" above.
 #ifdef __cplusplus
 }

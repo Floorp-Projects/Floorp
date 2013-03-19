@@ -754,6 +754,11 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
 
   nsCOMPtr<nsPIDOMWindow> win; // Will end up non-null if mTarget is a window
 
+  nsCxPusher pusher;
+  if (aNeedsCxPush) {
+    pusher.Push(cx);
+  }
+
   if (aListenerStruct->mHandlerIsString) {
     // OK, we didn't find an existing compiled event handler.  Flag us
     // as not a string so we don't keep trying to compile strings
@@ -817,11 +822,6 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
       }
     }
 
-    nsCxPusher pusher;
-    if (aNeedsCxPush) {
-      pusher.Push(cx);
-    }
-
     uint32_t argCount;
     const char **argNames;
     // If no content, then just use kNameSpaceID_None for the
@@ -857,10 +857,9 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
                                       handler.get(), boundHandler);
     if (listener->EventName() == nsGkAtoms::onerror && win) {
       bool ok;
-      JSAutoRequest ar(context->GetNativeContext());
+      JSAutoRequest ar(cx);
       nsRefPtr<OnErrorEventHandlerNonNull> handlerCallback =
-        new OnErrorEventHandlerNonNull(context->GetNativeContext(),
-                                       listener->GetEventScope(),
+        new OnErrorEventHandlerNonNull(cx, listener->GetEventScope(),
                                        boundHandler.get(), &ok);
       if (!ok) {
         // JS_WrapObject failed, which means OOM allocating the JSObject.
@@ -869,10 +868,9 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
       listener->SetHandler(handlerCallback);
     } else if (listener->EventName() == nsGkAtoms::onbeforeunload && win) {
       bool ok;
-      JSAutoRequest ar(context->GetNativeContext());
+      JSAutoRequest ar(cx);
       nsRefPtr<BeforeUnloadEventHandlerNonNull> handlerCallback =
-        new BeforeUnloadEventHandlerNonNull(context->GetNativeContext(),
-                                            listener->GetEventScope(),
+        new BeforeUnloadEventHandlerNonNull(cx, listener->GetEventScope(),
                                             boundHandler.get(), &ok);
       if (!ok) {
         // JS_WrapObject failed, which means OOM allocating the JSObject.
@@ -881,10 +879,9 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
       listener->SetHandler(handlerCallback);
     } else {
       bool ok;
-      JSAutoRequest ar(context->GetNativeContext());
+      JSAutoRequest ar(cx);
       nsRefPtr<EventHandlerNonNull> handlerCallback =
-        new EventHandlerNonNull(context->GetNativeContext(),
-                                listener->GetEventScope(),
+        new EventHandlerNonNull(cx, listener->GetEventScope(),
                                 boundHandler.get(), &ok);
       if (!ok) {
         // JS_WrapObject failed, which means OOM allocating the JSObject.

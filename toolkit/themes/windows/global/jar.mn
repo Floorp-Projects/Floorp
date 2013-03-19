@@ -61,6 +61,7 @@ toolkit.jar:
         skin/classic/global/tree.css
         skin/classic/global/wizard.css
         skin/classic/global/alerts/alert.css                     (alerts/alert.css)
+        skin/classic/global/alerts/notification-48.png           (alerts/notification-48.png)
         skin/classic/global/arrow/arrow-dn.gif                   (arrow/arrow-dn.gif)
         skin/classic/global/arrow/arrow-dn-dis.gif               (arrow/arrow-dn-dis.gif)
         skin/classic/global/arrow/arrow-dn-hov.gif               (arrow/arrow-dn-hov.gif)
@@ -239,6 +240,7 @@ toolkit.jar:
 *       skin/classic/aero/global/tree.css                                (tree-aero.css)
         skin/classic/aero/global/wizard.css
         skin/classic/aero/global/alerts/alert.css                        (alerts/alert.css)
+        skin/classic/aero/global/alerts/notification-48.png              (alerts/notification-48.png)
         skin/classic/aero/global/arrow/arrow-dn.gif                      (arrow/arrow-dn.gif)
         skin/classic/aero/global/arrow/arrow-dn-dis.gif                  (arrow/arrow-dn-dis.gif)
         skin/classic/aero/global/arrow/arrow-dn-hov.gif                  (arrow/arrow-dn-hov.gif)

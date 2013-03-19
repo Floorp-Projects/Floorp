@@ -42,8 +42,11 @@ public:
   /**
    * Transfers ownership of aEngine to the new AudioNodeStream.
    */
-  explicit AudioNodeStream(AudioNodeEngine* aEngine)
-    : ProcessedMediaStream(nullptr), mEngine(aEngine), mLastChunk(nullptr)
+  AudioNodeStream(AudioNodeEngine* aEngine,
+                  MediaStreamGraph::AudioNodeStreamKind aKind)
+    : ProcessedMediaStream(nullptr),
+      mEngine(aEngine),
+      mKind(aKind)
   {
   }
   ~AudioNodeStream();
@@ -81,7 +84,9 @@ protected:
   // The engine that will generate output for this node.
   nsAutoPtr<AudioNodeEngine> mEngine;
   // The last block produced by this node.
-  AudioChunk* mLastChunk;
+  AudioChunk mLastChunk;
+  // Whether this is an internal or external stream
+  MediaStreamGraph::AudioNodeStreamKind mKind;
 };
 
 }

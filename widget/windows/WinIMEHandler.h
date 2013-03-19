@@ -49,6 +49,13 @@ public:
   static bool IsIMEEnabled(IMEState::Enabled aIMEState);
 
   /**
+   * ProcessRawKeyMessage() message is called before calling TranslateMessage()
+   * and DispatchMessage().  If this returns true, the message is consumed.
+   * Then, caller must not perform TranslateMessage() nor DispatchMessage().
+   */
+  static bool ProcessRawKeyMessage(const MSG& aMsg);
+
+  /**
    * When the message is not needed to handle anymore by the caller, this
    * returns true.  Otherwise, false.
    * Additionally, if aEatMessage is true, the caller shouldn't call next

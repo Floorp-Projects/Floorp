@@ -21,14 +21,18 @@
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
 var observer = {
+  alertShow: false,
   observe: function (aSubject, aTopic, aData) {
     if (aTopic == "alertclickcallback") { 
       todo(false, "Did someone click the notification while running mochitests? (Please don't.)");
+    } else if (aTopic == "alertshow") {
+      ok(!this.alertShow, "Alert should not be shown more than once");
+      this.alertShow = true;
     } else {
       is(aTopic, "alertfinished", "Checking the topic for a finished notification");
+      SimpleTest.finish();
     }
     is(aData, "foobarcookie", "Checking whether the alert cookie was passed correctly");
-    SimpleTest.finish();
   }
 };
 

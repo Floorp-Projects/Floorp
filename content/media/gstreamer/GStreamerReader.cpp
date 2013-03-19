@@ -173,8 +173,8 @@ nsresult GStreamerReader::Init(MediaDecoderReader* aCloneDonor)
                "audio-sink", mAudioSink,
                nullptr);
 
-  g_object_connect(mPlayBin, "signal::source-setup",
-                  GStreamerReader::PlayBinSourceSetupCb, this, nullptr);
+  g_signal_connect(G_OBJECT(mPlayBin), "notify::source",
+                   G_CALLBACK(GStreamerReader::PlayBinSourceSetupCb), this);
 
   return NS_OK;
 }

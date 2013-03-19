@@ -50,7 +50,7 @@ SetupConsole()
   FILE *fp;
   AllocConsole();
   sCon = GetStdHandle(STD_OUTPUT_HANDLE); 
-  int fd = _open_osfhandle(reinterpret_cast<long>(sCon), 0); 
+  int fd = _open_osfhandle(reinterpret_cast<intptr_t>(sCon), 0);
   fp = _fdopen(fd, "w");
   *stdout = *fp;
   setvbuf(stdout, NULL, _IONBF, 0);

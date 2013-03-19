@@ -18,8 +18,6 @@ FAIL_ON_WARNINGS = 1
 
 CPPSRCS = \
   nsGnomeModule.cpp \
-  nsSystemAlertsService.cpp \
-  nsAlertsIconListener.cpp \
   $(NULL)
 
 ifdef MOZ_ENABLE_GCONF

@@ -210,6 +210,11 @@
       testName("img_eq", "x^2 + y^2 + z^2")
       testName("txt_eq", "x^2 + y^2 + z^2")
 
+      ////////////////////////////////////////////////////////////////////////
+      // tests for duplicate announcement of content
+
+      testName("test_note", null);
+
       SimpleTest.finish();
     }
 
@@ -276,6 +281,11 @@
      title="ARIA combobox selected value is not a part of name computation">
     Bug 835666
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=833256"
+     title="role note shouldn't pick up the name from subtree">
+    Mozilla Bug 833256
+   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -601,6 +611,9 @@
   <p>Text: 
     <span id="txt_eq" role="math" title="x^2 + y^2 + z^2">x<sup>2</sup> + 
       y<sup>2</sup> + z<sup>2</sup></span>
+
+  <!-- duplicate announcement -->
+  <div id="test_note" role="note">subtree</div>
 
 </body>
 </html>

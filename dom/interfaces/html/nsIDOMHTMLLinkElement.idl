@@ -19,6 +19,7 @@
 [scriptable, uuid(ca856a0b-6786-4123-90fe-dc9c7600274e)]
 interface nsIDOMHTMLLinkElement : nsIDOMHTMLElement
 {
+           [binaryname(MozDisabled)]
            attribute boolean          disabled;
            attribute DOMString        charset;
            attribute DOMString        href;
