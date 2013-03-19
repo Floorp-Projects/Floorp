@@ -192,8 +192,7 @@ PushInlinedFrame(JSContext *cx, StackFrame *callerFrame)
     // which will not be the case when we inline getters (in which case it would be a
     // JSOP_GETPROP). That will have to be handled differently.
     FrameRegs &regs = cx->regs();
-    JS_ASSERT(JSOp(*regs.pc) == JSOP_CALL || JSOp(*regs.pc) == JSOP_NEW ||
-              JSOp(*regs.pc) == JSOP_FUNAPPLY);
+    JS_ASSERT(js_CodeSpec[*regs.pc].format & JOF_INVOKE);
     int callerArgc = GET_ARGC(regs.pc);
     if (JSOp(*regs.pc) == JSOP_FUNAPPLY)
         callerArgc = callerFrame->nactual();
@@ -315,8 +314,6 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
         return BAILOUT_RETURN_TYPE_BARRIER;
       case Bailout_Monitor:
         return BAILOUT_RETURN_MONITOR;
-      case Bailout_RecompileCheck:
-        return BAILOUT_RETURN_RECOMPILE_CHECK;
       case Bailout_BoundsCheck:
         return BAILOUT_RETURN_BOUNDS_CHECK;
       case Bailout_ShapeGuard:
@@ -467,25 +464,6 @@ ion::ReflowTypeInfo(uint32_t bailoutResult)
     // When a type barrier fails, the bad value is at the top of the stack.
     Value &result = cx->regs().sp[-1];
     types::TypeScript::Monitor(cx, script, pc, result);
-
-    return true;
-}
-
-uint32_t
-ion::RecompileForInlining()
-{
-    JSContext *cx = GetIonContext()->cx;
-    RawScript script = cx->fp()->script();
-
-    IonSpew(IonSpew_Inlining, "Recompiling script to inline calls %s:%d", script->filename(),
-            script->lineno);
-
-    // Invalidate the script to force a recompile.
-    if (!Invalidate(cx, script, /* resetUses */ false))
-        return BAILOUT_RETURN_FATAL_ERROR;
-
-    // Invalidation should not reset the use count.
-    JS_ASSERT(script->getUseCount() >= js_IonOptions.usesBeforeInlining());
 
     return true;
 }

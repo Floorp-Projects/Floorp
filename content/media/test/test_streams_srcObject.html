@@ -28,7 +28,7 @@ function doTest() {
     b.mozSrcObject = "invalid";
     ok(false, "Setting mozSrcObject to an invalid value should throw.");
   } catch (e) {
-    todo(e instanceof TypeError, "Exception should be a TypeError");
+    ok(e instanceof TypeError, "Exception should be a TypeError");
   }
   is(b.mozSrcObject, stream, "Stream not set to invalid value");
   is(b.src, newSrc, "src attribute not affected by setting srcObject");

@@ -655,7 +655,6 @@ MacroAssembler::generateBailoutTail(Register scratch)
     Label interpret;
     Label exception;
     Label osr;
-    Label recompile;
     Label boundscheck;
     Label overrecursed;
     Label invalidate;
@@ -666,17 +665,15 @@ MacroAssembler::generateBailoutTail(Register scratch)
     // - 0x2: reflow args
     // - 0x3: reflow barrier
     // - 0x4: monitor types
-    // - 0x5: recompile to inline calls
-    // - 0x6: bounds check failure
-    // - 0x7: force invalidation
-    // - 0x8: overrecursed
-    // - 0x9: cached shape guard failure
+    // - 0x5: bounds check failure
+    // - 0x6: force invalidation
+    // - 0x7: overrecursed
+    // - 0x8: cached shape guard failure
 
     branch32(LessThan, ReturnReg, Imm32(BAILOUT_RETURN_FATAL_ERROR), &interpret);
     branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_FATAL_ERROR), &exception);
 
-    branch32(LessThan, ReturnReg, Imm32(BAILOUT_RETURN_RECOMPILE_CHECK), &reflow);
-    branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_RECOMPILE_CHECK), &recompile);
+    branch32(LessThan, ReturnReg, Imm32(BAILOUT_RETURN_BOUNDS_CHECK), &reflow);
 
     branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_BOUNDS_CHECK), &boundscheck);
     branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_OVERRECURSED), &overrecursed);
@@ -706,16 +703,6 @@ MacroAssembler::generateBailoutTail(Register scratch)
     {
         setupUnalignedABICall(0, scratch);
         callWithABI(JS_FUNC_TO_DATA_PTR(void *, BoundsCheckFailure));
-
-        branchTest32(Zero, ReturnReg, ReturnReg, &exception);
-        jump(&interpret);
-    }
-
-    // Recompile to inline calls.
-    bind(&recompile);
-    {
-        setupUnalignedABICall(0, scratch);
-        callWithABI(JS_FUNC_TO_DATA_PTR(void *, RecompileForInlining));
 
         branchTest32(Zero, ReturnReg, ReturnReg, &exception);
         jump(&interpret);

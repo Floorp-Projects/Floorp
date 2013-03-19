@@ -192,6 +192,8 @@ nsIOService::Init()
         prefBranch->AddObserver(PORT_PREF_PREFIX, this, true);
         prefBranch->AddObserver(AUTODIAL_PREF, this, true);
         prefBranch->AddObserver(MANAGE_OFFLINE_STATUS_PREF, this, true);
+        prefBranch->AddObserver(NECKO_BUFFER_CACHE_COUNT_PREF, this, true);
+        prefBranch->AddObserver(NECKO_BUFFER_CACHE_SIZE_PREF, this, true);
         PrefsChanged(prefBranch);
     }
     

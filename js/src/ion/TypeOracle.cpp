@@ -529,12 +529,6 @@ TypeInferenceOracle::arrayResultShouldHaveDoubleConversion(RawScript script, jsb
 }
 
 bool
-TypeInferenceOracle::canInlineCalls()
-{
-    return script()->analysis()->hasFunctionCalls();
-}
-
-bool
 TypeInferenceOracle::propertyWriteCanSpecialize(RawScript script, jsbytecode *pc)
 {
     return !script->analysis()->getCode(pc).monitoredTypes;

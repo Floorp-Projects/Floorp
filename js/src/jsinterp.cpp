@@ -1562,8 +1562,7 @@ BEGIN_CASE(JSOP_STOP)
         cx->stack.popInlineFrame(regs);
         SET_SCRIPT(regs.fp()->script());
 
-        JS_ASSERT(*regs.pc == JSOP_NEW || *regs.pc == JSOP_CALL ||
-                  *regs.pc == JSOP_FUNCALL || *regs.pc == JSOP_FUNAPPLY);
+        JS_ASSERT(js_CodeSpec[*regs.pc].format & JOF_INVOKE);
 
         /* Resume execution in the calling frame. */
         if (JS_LIKELY(interpReturnOK)) {

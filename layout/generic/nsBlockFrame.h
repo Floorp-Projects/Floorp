@@ -470,6 +470,33 @@ public:
   static void RecoverFloatsFor(nsIFrame*       aFrame,
                                nsFloatManager& aFloatManager);
 
+  /**
+   * Determine if we have any pushed floats from a previous continuation.
+   *
+   * @returns true, if any of the floats at the beginning of our mFloats list
+   *          have the NS_FRAME_IS_PUSHED_FLOAT bit set; false otherwise.
+   */
+  bool HasPushedFloatsFromPrevContinuation() const {
+    if (!mFloats.IsEmpty()) {
+      // If we have pushed floats, then they should be at the beginning of our
+      // float list.
+      if (mFloats.FrameAt(0)->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT) {
+        return true;
+      }
+    }
+
+#ifdef DEBUG
+    // Double-check the above assertion that pushed floats should be at the
+    // beginning of our floats list.
+    for (int32_t i = 0; i < mFloats.GetLength(); i++) {
+      NS_ASSERTION(!(mFloats.FrameAt(i)->GetStateBits() &
+        NS_FRAME_IS_PUSHED_FLOAT),
+        "pushed floats must be at the beginning of the float list");
+    }
+#endif
+    return false;
+  }
+
 protected:
 
   /** grab overflow lines from this block's prevInFlow, and make them
