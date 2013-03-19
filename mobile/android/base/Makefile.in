@@ -238,7 +238,6 @@ FENNEC_PP_JAVA_FILES = \
   GeckoAppInfo.java \
   GeckoAppWidgetProvider.java \
   LauncherShortcuts.java \
-  NotificationHandler.java \
   Restarter.java \
   db/BrowserContract.java \
   db/BrowserProvider.java \

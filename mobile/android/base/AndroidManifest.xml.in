@@ -165,13 +165,6 @@
             android:targetActivity=".App"
             android:exported="true" />
 
-        <receiver android:name="NotificationHandler">
-            <intent-filter>
-                <action android:name="org.mozilla.gecko.ACTION_ALERT_CLICK" />
-                <action android:name="org.mozilla.gecko.ACTION_ALERT_CLEAR" />
-            </intent-filter>
-        </receiver>
-
         <receiver android:name="org.mozilla.gecko.GeckoUpdateReceiver">
             <intent-filter>
                 <action android:name="@ANDROID_PACKAGE_NAME@.CHECK_UPDATE_RESULT" />
