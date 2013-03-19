@@ -60,20 +60,24 @@ class XPCShellRunner(MozbuildObject):
         if os.path.isfile(test_obj_dir):
             test_obj_dir = mozpack.path.dirname(test_obj_dir)
 
-        xpcshell_ini_file = mozpack.path.join(test_obj_dir, 'xpcshell.ini')
-        if not os.path.exists(xpcshell_ini_file):
+        xpcshell_dirs = []
+        for base, dirs, files in os.walk(test_obj_dir):
+          if os.path.exists(mozpack.path.join(base, 'xpcshell.ini')):
+            xpcshell_dirs.append(base)
+
+        if not xpcshell_dirs:
             raise InvalidTestPathError('An xpcshell.ini could not be found '
                 'for the passed test path. Please select a path whose '
-                'directory contains an xpcshell.ini file. It is possible you '
-                'received this error because the tree is not built or tests '
-                'are not enabled.')
+                'directory or subdirectories contain an xpcshell.ini file. '
+                'It is possible you received this error because the tree is '
+                'not built or tests are not enabled.')
 
         args = {
             'debug': debug,
             'interactive': interactive,
             'keep_going': keep_going,
             'shuffle': shuffle,
-            'test_dirs': [test_obj_dir],
+            'test_dirs': xpcshell_dirs,
         }
 
         if os.path.isfile(path_arg.srcdir_path()):
