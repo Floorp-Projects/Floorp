@@ -93,7 +93,7 @@ public:
    * at aRate. Sets *aLength to the number of samples per channel.
    */
   ThreadSharedFloatArrayBufferList* GetThreadSharedChannelsForRate(JSContext* aContext,
-                                                                   uint32_t aRate,
+                                                                   uint32_t* aRate,
                                                                    uint32_t* aLength);
 
   // aContents should either come from JS_AllocateArrayBufferContents or
@@ -113,12 +113,6 @@ protected:
   // mSharedChannels aggregates the data from mJSChannels. This is non-null
   // if and only if the mJSChannels are neutered.
   nsRefPtr<ThreadSharedFloatArrayBufferList> mSharedChannels;
-
-  // One-element cache of resampled data. Can be non-null only if mSharedChannels
-  // is non-null.
-  nsRefPtr<ThreadSharedFloatArrayBufferList> mResampledChannels;
-  uint32_t mResampledChannelsRate;
-  uint32_t mResampledChannelsLength;
 
   uint32_t mLength;
   float mSampleRate;
