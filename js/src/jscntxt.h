@@ -836,7 +836,6 @@ struct JSRuntime : js::RuntimeFriendFields,
     js::gc::ChunkPool   gcChunkPool;
 
     js::RootedValueMap  gcRootsHash;
-    js::GCLocks         gcLocksHash;
     unsigned            gcKeepAtoms;
     volatile size_t     gcBytes;
     size_t              gcMaxBytes;

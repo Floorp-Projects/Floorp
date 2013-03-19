@@ -707,15 +707,6 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
             MarkValueRoot(trc, reinterpret_cast<Value *>(entry.key), name);
     }
 
-    for (GCLocks::Range r = rt->gcLocksHash.all(); !r.empty(); r.popFront()) {
-        const GCLocks::Entry &entry = r.front();
-        JS_ASSERT(entry.value >= 1);
-        JS_SET_TRACING_LOCATION(trc, (void *)&entry.key);
-        void *tmp = entry.key;
-        MarkGCThingRoot(trc, &tmp, "locked object");
-        JS_ASSERT(tmp == entry.key);
-    }
-
     if (rt->scriptAndCountsVector) {
         ScriptAndCountsVector &vec = *rt->scriptAndCountsVector;
         for (size_t i = 0; i < vec.length(); i++)
