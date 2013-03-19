@@ -59,8 +59,6 @@ CPPSRCS += \
   VolumeServiceIOThread.cpp \
   VolumeServiceTest.cpp \
   $(NULL)
-# for our local copy of AudioSystem.h
-LOCAL_INCLUDES += -I$(topsrcdir)/media/libsydneyaudio/src
 EXPORTS = \
   GonkGPSGeolocationProvider.h \
   nsVolume.h \

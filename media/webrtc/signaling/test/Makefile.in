@@ -24,7 +24,7 @@ LIBS = \
   $(DEPTH)/netwerk/srtp/src/$(LIB_PREFIX)nksrtp_s.$(LIB_SUFFIX) \
   $(NULL)
 
-ifneq (,$(MOZ_CUBEB)$(MOZ_SYDNEYAUDIO))
+ifdef MOZ_CUBEB
 ifdef MOZ_ALSA
 LIBS += \
   $(MOZ_ALSA_LIBS) \

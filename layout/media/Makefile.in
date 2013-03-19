@@ -71,12 +71,6 @@ SHARED_LIBRARY_LIBS 	+= \
 endif
 endif
 
-ifdef MOZ_SYDNEYAUDIO
-SHARED_LIBRARY_LIBS 	+= \
-	$(DEPTH)/media/libsydneyaudio/src/$(LIB_PREFIX)sydneyaudio.$(LIB_SUFFIX) \
-	$(NULL)
-endif
-
 ifdef MOZ_SPEEX_RESAMPLER
 SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/media/libspeex_resampler/src/$(LIB_PREFIX)speex_resampler.$(LIB_SUFFIX) \

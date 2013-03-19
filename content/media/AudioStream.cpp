@@ -13,9 +13,6 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
 #include <algorithm>
-extern "C" {
-#include "sydneyaudio/sydney_audio.h"
-}
 #include "mozilla/Preferences.h"
 
 #if defined(MOZ_CUBEB)
@@ -33,63 +30,15 @@ public:
 
 namespace mozilla {
 
-#if defined(XP_MACOSX)
-#define SA_PER_STREAM_VOLUME 1
-#endif
-
 #ifdef PR_LOGGING
 PRLogModuleInfo* gAudioStreamLog = nullptr;
 #endif
 
-static const uint32_t FAKE_BUFFER_SIZE = 176400;
-
-// Number of milliseconds per second.
-static const int64_t MS_PER_S = 1000;
-
-class NativeAudioStream : public AudioStream
-{
- public:
-  ~NativeAudioStream();
-  NativeAudioStream();
-
-  nsresult Init(int32_t aNumChannels, int32_t aRate,
-                const dom::AudioChannelType aAudioChannelType);
-  void Shutdown();
-  nsresult Write(const AudioDataValue* aBuf, uint32_t aFrames);
-  uint32_t Available();
-  void SetVolume(double aVolume);
-  void Drain();
-  void Start();
-  void Pause();
-  void Resume();
-  int64_t GetPosition();
-  int64_t GetPositionInFrames();
-  int64_t GetPositionInFramesInternal();
-  bool IsPaused();
-  int32_t GetMinWriteSize();
-
- private:
-  int32_t WriteToBackend(const float* aBuffer, uint32_t aFrames);
-  int32_t WriteToBackend(const short* aBuffer, uint32_t aFrames);
-
-  double mVolume;
-  void* mAudioHandle;
-
-  // True if this audio stream is paused.
-  bool mPaused;
-
-  // True if this stream has encountered an error.
-  bool mInError;
-
-};
-
 #define PREF_VOLUME_SCALE "media.volume_scale"
-#define PREF_USE_CUBEB "media.use_cubeb"
 #define PREF_CUBEB_LATENCY "media.cubeb_latency_ms"
 
 static Mutex* gAudioPrefsLock = nullptr;
 static double gVolumeScale;
-static bool gUseCubeb;
 static uint32_t gCubebLatency;
 
 static int PrefChanged(const char* aPref, void* aClosure)
@@ -103,10 +52,6 @@ static int PrefChanged(const char* aPref, void* aClosure)
       NS_ConvertUTF16toUTF8 utf8(value);
       gVolumeScale = std::max<double>(0, PR_strtod(utf8.get(), nullptr));
     }
-  } else if (strcmp(aPref, PREF_USE_CUBEB) == 0) {
-    bool value = Preferences::GetBool(aPref, true);
-    MutexAutoLock lock(*gAudioPrefsLock);
-    gUseCubeb = value;
   } else if (strcmp(aPref, PREF_CUBEB_LATENCY) == 0) {
     // Arbitrary default stream latency of 100ms.  The higher this
     // value, the longer stream volume changes will take to become
@@ -125,12 +70,6 @@ static double GetVolumeScale()
 }
 
 #if defined(MOZ_CUBEB)
-static bool GetUseCubeb()
-{
-  MutexAutoLock lock(*gAudioPrefsLock);
-  return gUseCubeb;
-}
-
 static cubeb* gCubebContext;
 
 static cubeb* GetCubebContext()
@@ -150,29 +89,6 @@ static uint32_t GetCubebLatency()
   return gCubebLatency;
 }
 #endif
-
-static sa_stream_type_t ConvertChannelToSAType(dom::AudioChannelType aType)
-{
-  switch(aType) {
-    case dom::AUDIO_CHANNEL_NORMAL:
-      return SA_STREAM_TYPE_SYSTEM;
-    case dom::AUDIO_CHANNEL_CONTENT:
-      return SA_STREAM_TYPE_MUSIC;
-    case dom::AUDIO_CHANNEL_NOTIFICATION:
-      return SA_STREAM_TYPE_NOTIFICATION;
-    case dom::AUDIO_CHANNEL_ALARM:
-      return SA_STREAM_TYPE_ALARM;
-    case dom::AUDIO_CHANNEL_TELEPHONY:
-      return SA_STREAM_TYPE_VOICE_CALL;
-    case dom::AUDIO_CHANNEL_RINGER:
-      return SA_STREAM_TYPE_RING;
-    case dom::AUDIO_CHANNEL_PUBLICNOTIFICATION:
-      return SA_STREAM_TYPE_ENFORCED_AUDIBLE;
-    default:
-      NS_ERROR("The value of AudioChannelType is invalid");
-      return SA_STREAM_TYPE_MAX;
-  }
-}
 
 #if defined(MOZ_CUBEB) && (__ANDROID__)
 static cubeb_stream_type ConvertChannelToCubebType(dom::AudioChannelType aType)
@@ -216,8 +132,6 @@ void AudioStream::InitLibrary()
   PrefChanged(PREF_VOLUME_SCALE, nullptr);
   Preferences::RegisterCallback(PrefChanged, PREF_VOLUME_SCALE);
 #if defined(MOZ_CUBEB)
-  PrefChanged(PREF_USE_CUBEB, nullptr);
-  Preferences::RegisterCallback(PrefChanged, PREF_USE_CUBEB);
   PrefChanged(PREF_CUBEB_LATENCY, nullptr);
   Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LATENCY);
 #endif
@@ -227,7 +141,7 @@ void AudioStream::ShutdownLibrary()
 {
   Preferences::UnregisterCallback(PrefChanged, PREF_VOLUME_SCALE);
 #if defined(MOZ_CUBEB)
-  Preferences::UnregisterCallback(PrefChanged, PREF_USE_CUBEB);
+  Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LATENCY);
 #endif
   delete gAudioPrefsLock;
   gAudioPrefsLock = nullptr;
@@ -313,258 +227,6 @@ nsresult AudioStream::SetPreservesPitch(bool aPreservesPitch)
 int64_t AudioStream::GetWritten()
 {
   return mWritten;
-}
-
-NativeAudioStream::NativeAudioStream() :
-  mVolume(1.0),
-  mAudioHandle(0),
-  mPaused(false),
-  mInError(false)
-{
-}
-
-NativeAudioStream::~NativeAudioStream()
-{
-  Shutdown();
-}
-
-nsresult NativeAudioStream::Init(int32_t aNumChannels, int32_t aRate,
-                                   const dom::AudioChannelType aAudioChannelType)
-{
-  mInRate = mOutRate = aRate;
-  mChannels = aNumChannels;
-
-  if (sa_stream_create_pcm(reinterpret_cast<sa_stream_t**>(&mAudioHandle),
-                           NULL,
-                           SA_MODE_WRONLY,
-                           SA_PCM_FORMAT_S16_NE,
-                           aRate,
-                           aNumChannels) != SA_SUCCESS) {
-    mAudioHandle = nullptr;
-    mInError = true;
-    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("NativeAudioStream: sa_stream_create_pcm error"));
-    return NS_ERROR_FAILURE;
-  }
-
-  int saError = sa_stream_set_stream_type(static_cast<sa_stream_t*>(mAudioHandle),
-                       ConvertChannelToSAType(aAudioChannelType));
-  if (saError != SA_SUCCESS && saError != SA_ERROR_NOT_SUPPORTED) {
-    mAudioHandle = nullptr;
-    mInError = true;
-    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("NativeAudioStream: sa_stream_set_stream_type error"));
-    return NS_ERROR_FAILURE;
-  }
-
-  if (sa_stream_open(static_cast<sa_stream_t*>(mAudioHandle)) != SA_SUCCESS) {
-    sa_stream_destroy(static_cast<sa_stream_t*>(mAudioHandle));
-    mAudioHandle = nullptr;
-    mInError = true;
-    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("NativeAudioStream: sa_stream_open error"));
-    return NS_ERROR_FAILURE;
-  }
-  mInError = false;
-
-  mAudioClock.Init();
-
-  return NS_OK;
-}
-
-void NativeAudioStream::Shutdown()
-{
-  if (!mAudioHandle)
-    return;
-
-  sa_stream_destroy(static_cast<sa_stream_t*>(mAudioHandle));
-  mAudioHandle = nullptr;
-  mInError = true;
-}
-
-int32_t NativeAudioStream::WriteToBackend(const AudioDataValue* aBuffer, uint32_t aSamples)
-{
-  double scaledVolume = GetVolumeScale() * mVolume;
-
-  nsAutoArrayPtr<short> outputBuffer(new short[aSamples]);
-  ConvertAudioSamplesWithScale(aBuffer, outputBuffer.get(), aSamples, scaledVolume);
-
-  if (sa_stream_write(static_cast<sa_stream_t*>(mAudioHandle),
-                      outputBuffer,
-                      aSamples * sizeof(short)) != SA_SUCCESS) {
-    return -1;
-  }
-  mAudioClock.UpdateWritePosition(aSamples / mChannels);
-  return aSamples;
-}
-
-nsresult NativeAudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames)
-{
-  NS_ASSERTION(!mPaused, "Don't write audio when paused, you'll block");
-
-  if (mInError)
-    return NS_ERROR_FAILURE;
-
-  uint32_t samples = aFrames * mChannels;
-  int32_t written = -1;
-
-  if (mInRate != mOutRate) {
-    if (EnsureTimeStretcherInitialized() != NS_OK) {
-      return NS_ERROR_FAILURE;
-    }
-    mTimeStretcher->putSamples(aBuf, aFrames);
-    uint32_t numFrames = mTimeStretcher->numSamples();
-    uint32_t arraySize = numFrames * mChannels * sizeof(AudioDataValue);
-    nsAutoArrayPtr<AudioDataValue> data(new AudioDataValue[arraySize]);
-    uint32_t framesAvailable = mTimeStretcher->receiveSamples(data, numFrames);
-    NS_ASSERTION(mTimeStretcher->numSamples() == 0,
-                 "We did not get all the data from the SoundTouch pipeline.");
-    // It is possible to have nothing to write: the data are in the processing
-    // pipeline, and will be written to the backend next time.
-    if (framesAvailable) {
-      written = WriteToBackend(data, framesAvailable * mChannels);
-    } else {
-      written = 0;
-    }
-  } else {
-    written = WriteToBackend(aBuf, samples);
-  }
-
-  mWritten += aFrames;
-
-  if (written == -1) {
-    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("NativeAudioStream: sa_stream_write error"));
-    mInError = true;
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
-}
-
-uint32_t NativeAudioStream::Available()
-{
-  // If the audio backend failed to open, lie and say we'll accept some
-  // data.
-  if (mInError)
-    return FAKE_BUFFER_SIZE;
-
-  size_t s = 0;
-  if (sa_stream_get_write_size(static_cast<sa_stream_t*>(mAudioHandle), &s) != SA_SUCCESS)
-    return 0;
-
-  return s / mChannels / sizeof(short);
-}
-
-void NativeAudioStream::SetVolume(double aVolume)
-{
-  NS_ASSERTION(aVolume >= 0.0 && aVolume <= 1.0, "Invalid volume");
-#if defined(SA_PER_STREAM_VOLUME)
-  if (sa_stream_set_volume_abs(static_cast<sa_stream_t*>(mAudioHandle), aVolume) != SA_SUCCESS) {
-    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("NativeAudioStream: sa_stream_set_volume_abs error"));
-    mInError = true;
-  }
-#else
-  mVolume = aVolume;
-#endif
-}
-
-void NativeAudioStream::Drain()
-{
-  NS_ASSERTION(!mPaused, "Don't drain audio when paused, it won't finish!");
-
-  // Write all the frames still in the time stretcher pipeline.
-  if (mTimeStretcher) {
-    uint32_t numFrames = mTimeStretcher->numSamples();
-    uint32_t arraySize = numFrames * mChannels * sizeof(AudioDataValue);
-    nsAutoArrayPtr<AudioDataValue> data(new AudioDataValue[arraySize]);
-    uint32_t framesAvailable = mTimeStretcher->receiveSamples(data, numFrames);
-    int32_t written = 0;
-    if (framesAvailable) {
-      written = WriteToBackend(data, framesAvailable * mChannels);
-    }
-
-    if (written == -1) {
-      PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("NativeAudioStream: sa_stream_write error"));
-      mInError = true;
-    }
-
-    NS_ASSERTION(mTimeStretcher->numSamples() == 0,
-                 "We did not get all the data from the SoundTouch pipeline.");
-  }
-
-  if (mInError)
-    return;
-
-  int r = sa_stream_drain(static_cast<sa_stream_t*>(mAudioHandle));
-  if (r != SA_SUCCESS && r != SA_ERROR_INVALID) {
-    PR_LOG(gAudioStreamLog, PR_LOG_ERROR, ("NativeAudioStream: sa_stream_drain error"));
-    mInError = true;
-  }
-}
-
-void NativeAudioStream::Start()
-{
-  // Since sydneyaudio is a push API, the playback is started when enough frames
-  // have been written. Hence, Start() is a noop.
-}
-
-void NativeAudioStream::Pause()
-{
-  if (mInError)
-    return;
-  mPaused = true;
-  sa_stream_pause(static_cast<sa_stream_t*>(mAudioHandle));
-}
-
-void NativeAudioStream::Resume()
-{
-  if (mInError)
-    return;
-  mPaused = false;
-  sa_stream_resume(static_cast<sa_stream_t*>(mAudioHandle));
-}
-
-int64_t NativeAudioStream::GetPosition()
-{
-  return mAudioClock.GetPosition();
-}
-
-int64_t NativeAudioStream::GetPositionInFrames()
-{
-  return mAudioClock.GetPositionInFrames();
-}
-
-int64_t NativeAudioStream::GetPositionInFramesInternal()
-{
-  if (mInError) {
-    return -1;
-  }
-
-  sa_position_t positionType = SA_POSITION_WRITE_SOFTWARE;
-#if defined(XP_WIN)
-  positionType = SA_POSITION_WRITE_HARDWARE;
-#endif
-  int64_t position = 0;
-  if (sa_stream_get_position(static_cast<sa_stream_t*>(mAudioHandle),
-                             positionType, &position) == SA_SUCCESS) {
-    return position / mChannels / sizeof(short);
-  }
-
-  return -1;
-}
-
-bool NativeAudioStream::IsPaused()
-{
-  return mPaused;
-}
-
-int32_t NativeAudioStream::GetMinWriteSize()
-{
-  size_t size;
-  int r = sa_stream_get_min_write(static_cast<sa_stream_t*>(mAudioHandle),
-                                  &size);
-  if (r == SA_ERROR_NOT_SUPPORTED)
-    return 1;
-  else if (r != SA_SUCCESS || size > INT32_MAX)
-    return -1;
-
-  return static_cast<int32_t>(size / mChannels / sizeof(short));
 }
 
 #if defined(MOZ_CUBEB)
@@ -653,7 +315,6 @@ class BufferedAudioStream : public AudioStream
   int64_t GetPositionInFrames();
   int64_t GetPositionInFramesInternal();
   bool IsPaused();
-  int32_t GetMinWriteSize();
   // This method acquires the monitor and forward the call to the base
   // class, to prevent a race on |mTimeStretcher|, in
   // |AudioStream::EnsureTimeStretcherInitialized|.
@@ -739,11 +400,9 @@ private:
 AudioStream* AudioStream::AllocateStream()
 {
 #if defined(MOZ_CUBEB)
-  if (GetUseCubeb()) {
-    return new BufferedAudioStream();
-  }
+  return new BufferedAudioStream();
 #endif
-  return new NativeAudioStream();
+  return nullptr;
 }
 
 #if defined(MOZ_CUBEB)
@@ -876,12 +535,6 @@ BufferedAudioStream::Available()
   MonitorAutoLock mon(mMonitor);
   NS_ABORT_IF_FALSE(mBuffer.Length() % mBytesPerFrame == 0, "Buffer invariant violated.");
   return BytesToFrames(mBuffer.Available());
-}
-
-int32_t
-BufferedAudioStream::GetMinWriteSize()
-{
-  return 1;
 }
 
 void

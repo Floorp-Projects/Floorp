@@ -83,19 +83,6 @@ vorbis_synthesis_pcmout
 vorbis_synthesis_read
 vorbis_synthesis_restart
 #endif
-#ifdef MOZ_SYDNEYAUDIO
-sa_stream_create_pcm
-sa_stream_destroy
-sa_stream_drain
-sa_stream_get_min_write
-sa_stream_get_position
-sa_stream_get_write_size
-sa_stream_open
-sa_stream_pause
-sa_stream_resume
-sa_stream_write
-sa_stream_set_stream_type
-#endif
 #ifdef MOZ_SPEEX_RESAMPLER
 speex_resampler_init
 speex_resampler_init_frac

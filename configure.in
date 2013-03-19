@@ -4211,7 +4211,6 @@ MOZ_JSDEBUGGER=1
 MOZ_AUTH_EXTENSION=1
 MOZ_OGG=1
 MOZ_RAW=
-MOZ_SYDNEYAUDIO=
 MOZ_SPEEX_RESAMPLER=1
 MOZ_SOUNDTOUCH=1
 MOZ_CUBEB=
@@ -5370,7 +5369,6 @@ MOZ_ARG_DISABLE_BOOL(ogg,
 
 if test -n "$MOZ_OGG"; then
     AC_DEFINE(MOZ_OGG)
-    MOZ_SYDNEYAUDIO=1
     MOZ_CUBEB=1
     MOZ_MEDIA=1
 
@@ -5453,7 +5451,6 @@ MOZ_ARG_DISABLE_BOOL(wmf,
 
 if test -n "$MOZ_WMF"; then
     AC_DEFINE(MOZ_WMF)
-    MOZ_SYDNEYAUDIO=1
     MOZ_CUBEB=1
     MOZ_MEDIA=1
 fi;
@@ -5550,7 +5547,6 @@ AC_SUBST(MOZ_LIBVPX_CFLAGS)
 AC_SUBST(MOZ_LIBVPX_LIBS)
 
 if test "$MOZ_WEBM"; then
-    MOZ_SYDNEYAUDIO=1
     MOZ_CUBEB=1
     MOZ_MEDIA=1
     if test "$MOZ_SAMPLE_TYPE_FLOAT32"; then
@@ -5654,18 +5650,13 @@ MOZ_ARG_DISABLE_BOOL(wave,
 
 if test -n "$MOZ_WAVE"; then
     AC_DEFINE(MOZ_WAVE)
-    MOZ_SYDNEYAUDIO=1
     MOZ_CUBEB=1
     MOZ_MEDIA=1
 fi
 
 dnl ========================================================
-dnl = Handle dependent SYDNEYAUDIO, CUBEB, and MEDIA defines
+dnl = Handle dependent CUBEB and MEDIA defines
 dnl ========================================================
-
-if test -n "$MOZ_SYDNEYAUDIO"; then
-    AC_DEFINE(MOZ_SYDNEYAUDIO)
-fi
 
 if test -n "$MOZ_SPEEX_RESAMPLER"; then
     AC_DEFINE(MOZ_SPEEX_RESAMPLER)
@@ -5676,26 +5667,7 @@ if test -n "$MOZ_SOUNDTOUCH"; then
 fi
 
 if test -n "$MOZ_CUBEB"; then
-    case "$target" in
-    *-android*|*-linuxandroid*)
-        AC_DEFINE(MOZ_CUBEB)
-        ;;
-    *-linux*)
-        AC_DEFINE(MOZ_CUBEB)
-        ;;
-    *-mingw*)
-        AC_DEFINE(MOZ_CUBEB)
-        ;;
-    *-darwin*)
-        AC_DEFINE(MOZ_CUBEB)
-        ;;
-    *-openbsd*)
-        AC_DEFINE(MOZ_CUBEB)
-        ;;
-    *)
-        dnl Other targets will be enabled soon.
-        ;;
-    esac
+    AC_DEFINE(MOZ_CUBEB)
 fi
 
 if test -n "$MOZ_MEDIA"; then
@@ -5727,7 +5699,7 @@ dnl = Check alsa availability on Linux if using sydneyaudio
 dnl ========================================================
 
 dnl If using sydneyaudio with Linux, ensure that the alsa library is available
-if test -n "$MOZ_SYDNEYAUDIO" -a "$OS_TARGET" = "Linux"; then
+if test -n "$MOZ_CUBEB" -a "$OS_TARGET" = "Linux"; then
     MOZ_ALSA=1
 fi
 
@@ -8851,7 +8823,6 @@ AC_SUBST(MOZ_APP_COMPONENT_LIBS)
 AC_SUBST(MOZ_APP_EXTRA_LIBS)
 
 AC_SUBST(MOZ_MEDIA)
-AC_SUBST(MOZ_SYDNEYAUDIO)
 AC_SUBST(MOZ_SPEEX_RESAMPLER)
 AC_SUBST(MOZ_SOUNDTOUCH)
 AC_SUBST(MOZ_CUBEB)
