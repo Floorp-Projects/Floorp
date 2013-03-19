@@ -45,8 +45,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0xf5af1c3c, 0xebad, 0x4d00, \
-  { 0xa2, 0xa4, 0x12, 0x2e, 0x27, 0x16, 0x59, 0x01 } }
+{ 0x739d69c1, 0x5248, 0x4386, \
+  { 0x82, 0xa6, 0x60, 0x28, 0xf7, 0x7f, 0xb8, 0x9c } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -278,15 +278,6 @@ public:
    * Tell the context we're done reinitializing it.
    */
   virtual void DidInitializeContext() = 0;
-
-  /* Memory managment for script objects.  Used by the implementation of
-   * nsScriptObjectHolder to manage the lifetimes of the held script objects.
-   *
-   * See also nsIScriptRuntime, which has identical methods and is useful
-   * in situations when you do not have an nsIScriptContext.
-   */
-  virtual nsresult DropScriptObject(void *object) = 0;
-  virtual nsresult HoldScriptObject(void *object) = 0;
 
   virtual void EnterModalState() = 0;
   virtual void LeaveModalState() = 0;
