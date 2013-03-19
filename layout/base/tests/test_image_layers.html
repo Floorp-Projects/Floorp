@@ -21,13 +21,15 @@ var image = document.getElementById("image");
 var lastPaintCount;
 
 function changeImage() {
-  lastPaintCount = window.mozPaintCount;
-  
   var utils = SpecialPowers.getDOMWindowUtils(window);
   utils.checkAndClearPaintedState(image);
 
   image.src = "./image_rrgg-256x256.png";
-  checkDone();
+  image.onload = function() {
+    lastPaintCount = window.mozPaintCount;
+    document.body.style.background = "black";
+    checkDone();
+  }
 }
 
 function checkDone() {
