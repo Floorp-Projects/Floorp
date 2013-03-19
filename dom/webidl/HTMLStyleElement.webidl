@@ -9,13 +9,13 @@
  */
 
 interface HTMLStyleElement : HTMLElement {
-           [SetterThrows]
+           [Pure]
            attribute boolean disabled;
-           [SetterThrows]
+           [SetterThrows, Pure]
            attribute DOMString media;
-           [SetterThrows]
+           [SetterThrows, Pure]
            attribute DOMString type;
-           [SetterThrows]
+           [SetterThrows, Pure]
            attribute boolean scoped;
 };
 HTMLStyleElement implements LinkStyle;

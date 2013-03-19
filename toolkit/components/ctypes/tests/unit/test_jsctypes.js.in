@@ -2628,6 +2628,15 @@ function run_single_closure_tests(library, abi, suffix)
   var fn_v_t = ctypes.FunctionType(ctypes.default_abi, ctypes.void_t, []).ptr;
   fn_v_t(function() {})(); // Don't crash
 
+  // Code evaluated in a sandbox uses (and pushes) a separate JSContext.
+  // Make sure that we don't run into an assertion caused by a cx stack
+  // mismatch with the cx stashed in the closure.
+  try {
+    var sb = Components.utils.Sandbox("http://www.example.com");
+    sb.fn = fn_v_t(function() {sb.foo = {};});
+    Components.utils.evalInSandbox("fn();", sb);
+  } catch (e) {} // Components not available in workers.
+
   // Make sure that a void callback can't return an error sentinel.
   var sentinelThrew = false;
   try {

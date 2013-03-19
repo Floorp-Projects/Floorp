@@ -18,7 +18,11 @@
 #include "nsAttrValue.h"
 #include "nsSMILTypes.h"
 
-class nsISMILAnimationElement;
+namespace mozilla {
+namespace dom {
+class SVGAnimationElement;
+}
+}
 
 //----------------------------------------------------------------------
 // nsSMILAnimationFunction
@@ -41,7 +45,7 @@ public:
    * Sets the owning animation element which this class uses to query attribute
    * values and compare document positions.
    */
-  void SetAnimationElement(nsISMILAnimationElement* aAnimationElement);
+  void SetAnimationElement(mozilla::dom::SVGAnimationElement* aAnimationElement);
 
   /*
    * Sets animation-specific attributes (or marks them dirty, in the case
@@ -413,7 +417,7 @@ protected:
   // position and for fetching attribute values stored in the element.
   // Raw pointer is OK here, because this nsSMILAnimationFunction can't outlive
   // its owning animation element.
-  nsISMILAnimationElement*      mAnimationElement;
+  mozilla::dom::SVGAnimationElement* mAnimationElement;
 
   // Which attributes have been set but have had errors. This is not used for
   // all attributes but only those which have specified error behaviour

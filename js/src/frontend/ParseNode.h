@@ -1343,7 +1343,7 @@ enum ParseReportKind {
     ParseStrictError
 };
 
-enum FunctionSyntaxKind { Expression, Statement };
+enum FunctionSyntaxKind { Expression, Statement, Arrow };
 
 } /* namespace frontend */
 } /* namespace js */

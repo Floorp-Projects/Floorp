@@ -23,6 +23,9 @@ import org.json.JSONObject;
  *   distribution/
  *     preferences.json
  *     bookmarks.json
+ *     searchplugins/
+ *       common/
+ *         engine.xml
  */
 public class testDistribution extends ContentProviderTest {
     private static final String MOCK_PACKAGE = "mock-package.zip";
@@ -46,6 +49,7 @@ public class testDistribution extends ContentProviderTest {
         initDistribution(mockPackagePath);
         checkPreferences();
         checkLocalizedPreferences("en-US");
+        checkSearchPlugin();
 
         // Pre-clear distribution pref, and run es-MX localized preferences Test
         clearDistributionPref();
@@ -127,6 +131,28 @@ public class testDistribution extends ContentProviderTest {
 
         } catch (JSONException e) {
             mAsserter.ok(false, "exception getting preferences", e.toString());
+        }
+    }
+
+    private void checkSearchPlugin() {
+        Actions.RepeatedEventExpecter eventExpecter = mActions.expectGeckoEvent("SearchEngines:Data");
+        mActions.sendGeckoEvent("SearchEngines:Get", null);
+
+        try {
+            JSONObject data = new JSONObject(eventExpecter.blockForEventData());
+            JSONArray searchEngines = data.getJSONArray("searchEngines");
+            boolean foundEngine = false;
+            for (int i = 0; i < searchEngines.length(); i++) {
+                JSONObject engine = (JSONObject) searchEngines.get(i);
+                String name = engine.getString("name");
+                if (name.equals("Test search engine")) {
+                    foundEngine = true;
+                    break;
+                }
+            }
+            mAsserter.ok(foundEngine, "check search plugin", "found test search plugin");
+        } catch (JSONException e) {
+            mAsserter.ok(false, "exception getting search plugins", e.toString());
         }
     }
 
@@ -265,6 +291,16 @@ public class testDistribution extends ContentProviderTest {
         super.setUp("@ANDROID_PACKAGE_NAME@.db.BrowserProvider", "AUTHORITY");
     }
 
+    private void delete(File file) throws Exception {
+      if (file.isDirectory()) {
+        File[] files = file.listFiles();
+        for (File f : files) {
+          delete(f);
+        }
+      }
+      mAsserter.ok(file.delete(), "clean up distribution files", "deleted " + file.getPath());
+    }
+
     @Override
     public void tearDown() throws Exception {
         File dataDir = new File(mActivity.getApplicationInfo().dataDir);
@@ -273,13 +309,9 @@ public class testDistribution extends ContentProviderTest {
         File mockPackage = new File(dataDir, MOCK_PACKAGE);
         mAsserter.ok(mockPackage.delete(), "clean up mock package", "deleted " + mockPackage.getPath());
 
-        // Delete distribution files that Distribution.init copied to data directory.
+        // Recursively delete distribution files that Distribution.init copied to data directory.
         File distDir = new File(dataDir, "distribution");
-        File[] files = distDir.listFiles();
-        for (File f : files) {
-            mAsserter.ok(f.delete(), "clean up distribution files", "deleted " + f.getPath());
-        }
-        mAsserter.ok(distDir.delete(), "clean up distribution directory", "deleted distribution directory");
+        delete(distDir);
 
         clearDistributionPref();
 

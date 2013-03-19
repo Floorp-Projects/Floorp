@@ -14,12 +14,12 @@
 #include "SVGPreserveAspectRatio.h"
 #include "mozilla/Attributes.h"
 
-class nsISMILAnimationElement;
 class nsSMILValue;
 
 namespace mozilla {
 namespace dom {
 class DOMSVGAnimatedPreserveAspectRatio;
+class SVGAnimationElement;
 }
 
 class SVGAnimatedPreserveAspectRatio MOZ_FINAL
@@ -102,7 +102,7 @@ public:
 
     // nsISMILAttr methods
     virtual nsresult ValueFromString(const nsAString& aStr,
-                                     const nsISMILAnimationElement* aSrcElement,
+                                     const dom::SVGAnimationElement* aSrcElement,
                                      nsSMILValue& aValue,
                                      bool& aPreventCachingOfSandwich) const;
     virtual nsSMILValue GetBaseValue() const;

@@ -61,7 +61,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLStyleElement)
 
 
 NS_IMETHODIMP
-HTMLStyleElement::GetDisabled(bool* aDisabled)
+HTMLStyleElement::GetMozDisabled(bool* aDisabled)
 {
   NS_ENSURE_ARG_POINTER(aDisabled);
 
@@ -72,36 +72,23 @@ HTMLStyleElement::GetDisabled(bool* aDisabled)
 bool
 HTMLStyleElement::Disabled()
 {
-  nsCOMPtr<nsIDOMStyleSheet> ss = do_QueryInterface(GetSheet());
-  if (!ss) {
-    return false;
-  }
-
-  bool disabled = false;
-  ss->GetDisabled(&disabled);
-
-  return disabled;
+  nsCSSStyleSheet* ss = GetSheet();
+  return ss && ss->Disabled();
 }
 
 NS_IMETHODIMP
-HTMLStyleElement::SetDisabled(bool aDisabled)
+HTMLStyleElement::SetMozDisabled(bool aDisabled)
 {
-  ErrorResult error;
-  SetDisabled(aDisabled, error);
-  return error.ErrorCode();
+  SetDisabled(aDisabled);
+  return NS_OK;
 }
 
 void
-HTMLStyleElement::SetDisabled(bool aDisabled, ErrorResult& aError)
+HTMLStyleElement::SetDisabled(bool aDisabled)
 {
-  nsCOMPtr<nsIDOMStyleSheet> ss = do_QueryInterface(GetSheet());
-  if (!ss) {
-    return;
-  }
-
-  nsresult result = ss->SetDisabled(aDisabled);
-  if (NS_FAILED(result)) {
-    aError.Throw(result);
+  nsCSSStyleSheet* ss = GetSheet();
+  if (ss) {
+    ss->SetDisabled(aDisabled);
   }
 }
 

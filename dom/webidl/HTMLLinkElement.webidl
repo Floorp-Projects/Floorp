@@ -13,7 +13,7 @@
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-link-element
 interface HTMLLinkElement : HTMLElement {
-  [Throws]
+  [Pure]
            attribute boolean disabled;
   [SetterThrows, Pure]
            attribute DOMString href;

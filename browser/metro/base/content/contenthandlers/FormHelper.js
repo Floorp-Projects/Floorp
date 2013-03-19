@@ -53,58 +53,51 @@ function FormAssistant() {
 };
 
 FormAssistant.prototype = {
+  _els: Cc["@mozilla.org/eventlistenerservice;1"].getService(Ci.nsIEventListenerService),
+  _open: false,
+  _focusSync: false,
   _debugEvents: false,
   _selectWrapper: null,
-  _currentIndex: -1,
-  _elements: [],
-
+  _currentElement: null,
   invalidSubmit: false,
 
+  get focusSync() {
+    return this._focusSync;
+  },
+
+  set focusSync(aVal) {
+    this._focusSync = aVal;
+  },
+
   get currentElement() {
-    return this._elements[this._currentIndex];
+    return this._currentElement;
   },
 
-  get currentIndex() {
-    return this._currentIndex;
-  },
-
-  set currentIndex(aIndex) {
-    let element = this._elements[aIndex];
-    if (!element)
-      return -1;
-
-    if (this._isVisibleElement(element)) {
-      this._currentIndex = aIndex;
-      gFocusManager.setFocus(element, Ci.nsIFocusManager.FLAG_NOSCROLL);
-
-      // To ensure we get the current caret positionning of the focused
-      // element we need to delayed a bit the event
-      this._executeDelayed(function(self) {
-        // Bug 640870
-        // Sometimes the element inner frame get destroyed while the element
-        // receive the focus because the display is turned to 'none' for
-        // example, in this "fun" case just do nothing if the element is hidden
-        if (self._isVisibleElement(gFocusManager.focusedElement))
-          sendAsyncMessage("FormAssist:Show", self._getJSON());
-      });
-    } else {
-      // Repopulate the list of elements in the page, some could have gone
-      // because of AJAX changes for example
-      this._elements = [];
-      let currentIndex = this._getAllElements(gFocusManager.focusedElement)
-
-      if (aIndex < this._currentIndex)
-        this.currentIndex = currentIndex - 1;
-      else if (aIndex > this._currentIndex)
-        this.currentIndex = currentIndex + 1;
-      else if (this._currentIndex != currentIndex)
-        this.currentIndex = currentIndex;
+  set currentElement(aElement) {
+    if (!aElement || !this._isVisibleElement(aElement)) {
+      return null;
     }
-    return element;
+
+    this._currentElement = aElement;
+    gFocusManager.setFocus(this._currentElement, Ci.nsIFocusManager.FLAG_NOSCROLL);
+
+    // To ensure we get the current caret positionning of the focused
+    // element we need to delayed a bit the event
+    this._executeDelayed(function(self) {
+      // Bug 640870
+      // Sometimes the element inner frame get destroyed while the element
+      // receive the focus because the display is turned to 'none' for
+      // example, in this "fun" case just do nothing if the element is hidden
+      if (self._isVisibleElement(gFocusManager.focusedElement))
+        sendAsyncMessage("FormAssist:Show", self._getJSON());
+    });
+    return this._currentElement;
   },
 
-  _open: false,
   open: function formHelperOpen(aElement, aEvent) {
+    this._enabled = Services.prefs.prefHasUserValue(kPrefFormHelperEnabled) ?
+                    Services.prefs.getBoolPref(kPrefFormHelperEnabled) : false;
+
     // If the click is on an option element we want to check if the parent
     // is a valid target.
     if (aElement instanceof HTMLOptionElement &&
@@ -113,8 +106,8 @@ FormAssistant.prototype = {
       aElement = aElement.parentNode;
     }
 
+    // Don't show the formhelper popup for multi-select boxes, except for touch.
     if (aElement instanceof HTMLSelectElement && aEvent) {
-      // Don't show the formhelper popup for multi-select boxes, except for touch.
       if ((aElement.multiple || aElement.size > 1) &&
           aEvent.mozInputSource != Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH) {
         return false;
@@ -133,70 +126,29 @@ FormAssistant.prototype = {
       if ((aElement instanceof HTMLInputElement || aElement instanceof HTMLButtonElement) &&
           passiveButtons[aElement.type] && !aElement.disabled)
         return false;
-
-      // Check for plugins element
-      if (aElement instanceof Ci.nsIDOMHTMLEmbedElement) {
-        let x = (aEvent && aEvent.clientX) || 0;
-        let y = (aEvent && aEvent.clientY) || 0;
-        this._executeDelayed(function(self) {
-          let utils = Util.getWindowUtils(aElement.ownerDocument.defaultView);
-          if (utils.IMEStatus == utils.IME_STATUS_PLUGIN) {
-            let jsvar = {
-              current: {
-                id: aElement.id,
-                name: aElement.name,
-                title: "plugin",
-                value: null,
-                maxLength: 0,
-                type: (aElement.getAttribute("type") || "").toLowerCase(),
-                choices: null,
-                isAutocomplete: false,
-                validationMessage: null,
-                list: null,
-                rect: getBoundingContentRect(aElement),
-                caretRect: new Rect(x, y, 1, 10),
-                editable: true
-              },
-              hasPrevious: false,
-              hasNext: false
-            };
-            sendAsyncMessage("FormAssist:Show", jsvar);
-          }
-        });
-        return false;
-      }
       return this.close();
     }
 
     // Look for a top editable element
-    if (this._isEditable(aElement))
+    if (this._isEditable(aElement)) {
       aElement = this._getTopLevelEditable(aElement);
+    }
 
-    // There are some cases where we still want data to be sent to FormHelperUI
-    // even if form assistant is disabled:
-    //  - the element is a choice list
-    //  - the element has autocomplete suggestions
-    this._enabled = Services.prefs.prefHasUserValue(kPrefFormHelperEnabled) ?
-                    Services.prefs.getBoolPref(kPrefFormHelperEnabled) : false;
-    if (!this._enabled && !this._isSelectElement(aElement) && !this._isAutocomplete(aElement)) {
+    // We only work with choice lists or elements with autocomplete suggestions
+    if (!this._enabled &&
+        !this._isSelectElement(aElement) &&
+        !this._isAutocomplete(aElement)) {
       return this.close();
     }
 
-    if (this._enabled) {
-      this._elements = [];
-      this.currentIndex = this._getAllElements(aElement);
-    } else {
-      this._elements = [aElement];
-      this.currentIndex = 0;
-    }
-
+    // Enable the assistant
+    this.currentElement = aElement;
     return this._open = true;
   },
 
   close: function close() {
     if (this._open) {
-      this._currentIndex = -1;
-      this._elements = [];
+      this._currentElement = null;
       sendAsyncMessage("FormAssist:Hide", { });
       this._open = false;
     }
@@ -206,20 +158,18 @@ FormAssistant.prototype = {
 
   receiveMessage: function receiveMessage(aMessage) {
     if (this._debugEvents) Util.dumpLn(aMessage.name);
+
     let currentElement = this.currentElement;
-    if ((!this._enabled && !this._isAutocomplete(currentElement) && !getWrapperForElement(currentElement)) || !currentElement)
+    if ((!this._enabled &&
+         !this._isAutocomplete(currentElement) &&
+         !getWrapperForElement(currentElement)) ||
+        !currentElement) {
       return;
+    }
 
     let json = aMessage.json;
+
     switch (aMessage.name) {
-      case "FormAssist:Previous":
-        this.currentIndex--;
-        break;
-
-      case "FormAssist:Next":
-        this.currentIndex++;
-        break;
-
       case "Content:SetWindowSize":
         // If the CSS viewport change just show the current element to the new
         // position
@@ -233,8 +183,8 @@ FormAssistant.prototype = {
       }
 
       case "FormAssist:ChoiceChange": {
-        // ChoiceChange could happened once we have move to an other element or
-        // to nothing, so we should keep the used wrapper in mind
+        // ChoiceChange could happened once we have move to another element or
+        // to nothing, so we should keep the used wrapper in mind.
         this._selectWrapper.fireOnChange();
 
         // New elements can be shown when a select is updated so we need to
@@ -245,9 +195,7 @@ FormAssistant.prototype = {
           let currentElement = self.currentElement;
           if (!currentElement)
             return;
-
-          self._elements = [];
-          self._currentIndex = self._getAllElements(currentElement);
+          self._currentElement = currentElement;
         });
         break;
       }
@@ -271,13 +219,11 @@ FormAssistant.prototype = {
 
       case "FormAssist:Closed":
         currentElement.blur();
-        this._currentIndex = null;
         this._open = false;
         break;
     }
   },
 
-  _els: Cc["@mozilla.org/eventlistenerservice;1"].getService(Ci.nsIEventListenerService),
   _hasKeyListener: function _hasKeyListener(aElement) {
     let els = this._els;
     let listeners = els.getListenerInfoFor(aElement, {});
@@ -291,7 +237,6 @@ FormAssistant.prototype = {
     return false;
   },
 
-  focusSync: false,
   handleEvent: function formHelperHandleEvent(aEvent) {
     if (this._debugEvents) Util.dumpLn(aEvent.type, this.currentElement);
     // focus changes should be taken into account only if the user has done a
@@ -318,7 +263,9 @@ FormAssistant.prototype = {
         break;
 
       case "focus":
-        let focusedElement = gFocusManager.getFocusedElementForWindow(content, true, {}) || aEvent.target;
+        let focusedElement =
+          gFocusManager.getFocusedElementForWindow(content, true, {}) ||
+          aEvent.target;
 
         // If a body element is editable and the body is the child of an
         // iframe we can assume this is an advanced HTML editor, so let's
@@ -344,9 +291,8 @@ FormAssistant.prototype = {
           return;
         }
 
-        let focusedIndex = this._getIndexForElement(focusedElement);
-        if (focusedIndex != -1 && this.currentIndex != focusedIndex)
-          this.currentIndex = focusedIndex;
+        if (this._currentElement != focusedElement)
+          this.currentElement = focusedElement;
         break;
 
       case "blur":
@@ -370,98 +316,18 @@ FormAssistant.prototype = {
           sendAsyncMessage("FormAssist:AutoComplete", this._getJSON());
         break;
 
-      // key processing inside a select element are done during the keypress
-      // handler, preventing this one to be fired cancel the selection change
-      case "keypress":
-        // There is no need to handle keys if there is not element currently
-        // used by the form assistant
-        if (!currentElement)
-          return;
-
-        let formExceptions = { button: true, checkbox: true, file: true, image: true, radio: true, reset: true, submit: true };
-        if (this._isSelectElement(currentElement) || formExceptions[currentElement.type] ||
-            currentElement instanceof HTMLButtonElement || (currentElement.getAttribute("role") == "button" && currentElement.hasAttribute("tabindex"))) {
-          switch (aEvent.keyCode) {
-            case aEvent.DOM_VK_RIGHT:
-              this._executeDelayed(function(self) {
-                self.currentIndex++;
-              });
-              aEvent.stopPropagation();
-              aEvent.preventDefault();
-              break;
-
-            case aEvent.DOM_VK_LEFT:
-              this._executeDelayed(function(self) {
-                self.currentIndex--;
-              });
-              aEvent.stopPropagation();
-              aEvent.preventDefault();
-              break;
-          }
-        }
-        break;
-
       case "keyup":
         // There is no need to handle keys if there is not element currently
         // used by the form assistant
         if (!currentElement)
           return;
 
-        switch (aEvent.keyCode) {
-          case aEvent.DOM_VK_DOWN:
-            if (currentElement instanceof HTMLInputElement && !this._isAutocomplete(currentElement)) {
-              if (this._hasKeyListener(currentElement))
-                return;
-            } else if (currentElement instanceof HTMLTextAreaElement) {
-              let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
-              let isEnd = (currentElement.textLength == currentElement.selectionEnd);
-              if (!isEnd || existSelection)
-                return;
-            } else if (getListForElement(currentElement)) {
-              this.currentIndex = this.currentIndex;
-              return;
-            }
+        if (this._isValidatable(aEvent.target)) {
+          sendAsyncMessage("FormAssist:ValidationMessage", this._getJSON());
+        }
 
-            this.currentIndex++;
-            break;
-
-          case aEvent.DOM_VK_UP:
-            if (currentElement instanceof HTMLInputElement && !this._isAutocomplete(currentElement)) {
-              if (this._hasKeyListener(currentElement))
-                return;
-            } else if (currentElement instanceof HTMLTextAreaElement) {
-              let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
-              let isStart = (currentElement.selectionEnd == 0);
-              if (!isStart || existSelection)
-                return;
-            } else if (this._isSelectElement(currentElement)) {
-              this.currentIndex = this.currentIndex;
-              return;
-            }
-
-            this.currentIndex--;
-            break;
-
-          case aEvent.DOM_VK_RETURN:
-            if (!this._isVisibleElement(currentElement))
-              this.close();
-            break;
-
-          case aEvent.DOM_VK_ESCAPE:
-          case aEvent.DOM_VK_TAB:
-            break;
-
-          default:
-            if (this._isValidatable(aEvent.target)) {
-              sendAsyncMessage("FormAssist:ValidationMessage", this._getJSON());
-            }
-
-            if (this._isAutocomplete(aEvent.target)) {
-              sendAsyncMessage("FormAssist:AutoComplete", this._getJSON());
-            } else if (currentElement && this._isSelectElement(currentElement)) {
-              this.currentIndex = this.currentIndex;
-            }
-            break;
+        if (this._isAutocomplete(aEvent.target)) {
+          sendAsyncMessage("FormAssist:AutoComplete", this._getJSON());
         }
 
         let caretRect = this._getCaretRect();
@@ -478,30 +344,14 @@ FormAssistant.prototype = {
     timer.once(0);
   },
 
-  _filterEditables: function formHelperFilterEditables(aNodes) {
-    let result = [];
-    for (let i = 0; i < aNodes.length; i++) {
-      let node = aNodes[i];
-
-      // Avoid checking the top level editable element of each node
-      if (this._isEditable(node)) {
-        let editableElement = this._getTopLevelEditable(node);
-        if (result.indexOf(editableElement) == -1)
-          result.push(editableElement);
-      }
-      else {
-        result.push(node);
-      }
-    }
-    return result;
-  },
-
   _isEditable: function formHelperIsEditable(aElement) {
     let canEdit = false;
 
     if (aElement.isContentEditable || aElement.designMode == "on") {
       canEdit = true;
-    } else if (aElement instanceof HTMLIFrameElement && (aElement.contentDocument.body.isContentEditable || aElement.contentDocument.designMode == "on")) {
+    } else if (aElement instanceof HTMLIFrameElement &&
+               (aElement.contentDocument.body.isContentEditable ||
+                aElement.contentDocument.designMode == "on")) {
       canEdit = true;
     } else {
       canEdit = aElement.ownerDocument && aElement.ownerDocument.designMode == "on";
@@ -694,57 +544,6 @@ FormAssistant.prototype = {
     return associatedLabels;
   },
 
-  _getAllElements: function getAllElements(aElement) {
-    // XXX good candidate for tracing if possible.
-    // The tough ones are lenght and isVisibleElement.
-    let document = aElement.ownerDocument;
-    if (!document)
-      return;
-
-    let documents = Util.getAllDocuments(document);
-
-    let elements = this._elements;
-    for (let i = 0; i < documents.length; i++) {
-      let selector = "input, button, select, textarea, [role=button], iframe, [contenteditable=true]";
-      let nodes = documents[i].querySelectorAll(selector);
-      nodes = this._filterRadioButtons(nodes);
-
-      for (let j = 0; j < nodes.length; j++) {
-        let node = nodes[j];
-        if (!this._isNavigableElement(node) || !this._isVisibleElement(node))
-          continue;
-
-        elements.push(node);
-      }
-    }
-    this._elements = this._filterEditables(elements);
-
-    function orderByTabIndex(a, b) {
-      // for an explanation on tabbing navigation see
-      // http://www.w3.org/TR/html401/interact/forms.html#h-17.11.1
-      // In resume tab index navigation order is 1, 2, 3, ..., 32767, 0
-      if (a.tabIndex == 0 || b.tabIndex == 0)
-        return b.tabIndex;
-
-      return a.tabIndex > b.tabIndex;
-    }
-    this._elements = this._elements.sort(orderByTabIndex);
-
-    // retrieve the correct index
-    let currentIndex = this._getIndexForElement(aElement);
-    return currentIndex;
-  },
-
-  _getIndexForElement: function(aElement) {
-    let currentIndex = -1;
-    let elements = this._elements;
-    for (let i = 0; i < elements.length; i++) {
-      if (elements[i] == aElement)
-        return i;
-    }
-    return -1;
-  },
-
   _getJSON: function() {
     let element = this.currentElement;
     let choices = getListForElement(element);
@@ -767,8 +566,8 @@ FormAssistant.prototype = {
         caretRect: this._getCaretRect(),
         editable: editable
       },
-      hasPrevious: !!this._elements[this._currentIndex - 1],
-      hasNext: !!this._elements[this._currentIndex + 1]
+      hasPrevious: false,
+      hasNext: false
     };
   },
 

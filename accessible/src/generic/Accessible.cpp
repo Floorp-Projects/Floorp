@@ -2640,39 +2640,29 @@ Accessible::InvalidateChildren()
 }
 
 bool
-Accessible::AppendChild(Accessible* aChild)
-{
-  if (!aChild)
-    return false;
-
-  if (!mChildren.AppendElement(aChild))
-    return false;
-
-  if (!nsAccUtils::IsEmbeddedObject(aChild))
-    SetChildrenFlag(eMixedChildren);
-
-  aChild->BindToParent(this, mChildren.Length() - 1);
-  return true;
-}
-
-bool
 Accessible::InsertChildAt(uint32_t aIndex, Accessible* aChild)
 {
   if (!aChild)
     return false;
 
-  if (!mChildren.InsertElementAt(aIndex, aChild))
-    return false;
+  if (aIndex == mChildren.Length()) {
+    if (!mChildren.AppendElement(aChild))
+      return false;
 
-  for (uint32_t idx = aIndex + 1; idx < mChildren.Length(); idx++) {
-    NS_ASSERTION(mChildren[idx]->mIndexInParent == idx - 1, "Accessible child index doesn't match");
-    mChildren[idx]->mIndexInParent = idx;
+  } else {
+    if (!mChildren.InsertElementAt(aIndex, aChild))
+      return false;
+
+    for (uint32_t idx = aIndex + 1; idx < mChildren.Length(); idx++) {
+      NS_ASSERTION(mChildren[idx]->mIndexInParent == idx - 1, "Accessible child index doesn't match");
+      mChildren[idx]->mIndexInParent = idx;
+    }
+
+    mEmbeddedObjCollector = nullptr;
   }
 
   if (!nsAccUtils::IsEmbeddedObject(aChild))
     SetChildrenFlag(eMixedChildren);
-
-  mEmbeddedObjCollector = nullptr;
 
   aChild->BindToParent(this, aIndex);
   return true;

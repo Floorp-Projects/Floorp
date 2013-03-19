@@ -16,13 +16,13 @@ using namespace js;
 using namespace js::frontend;
 using namespace mozilla;
 
-#ifdef JS_ASMJS
-
 #include "ion/CodeGenerator.h"
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
 
 using namespace js::ion;
+
+#ifdef JS_ASMJS
 
 /*****************************************************************************/
 // ParseNode utilities

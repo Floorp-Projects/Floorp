@@ -79,7 +79,9 @@ CPPSRCS		= \
 		SVGElementFactory.cpp \
 		SVGEllipseElement.cpp \
 		SVGFEBlendElement.cpp \
+		SVGFEColorMatrixElement.cpp \
 		SVGFEComponentTransferElement.cpp \
+		SVGFECompositeElement.cpp \
 		SVGFEDistantLightElement.cpp \
 		SVGFEFloodElement.cpp \
 		SVGFEImageElement.cpp \
@@ -154,9 +156,12 @@ include $(topsrcdir)/config/config.mk
 FORCE_STATIC_LIB = 1
 
 EXPORTS =  			\
+	nsSVGClass.h               \
+	nsSVGElement.h             \
 	nsSVGFeatures.h            \
 	nsSVGRect.h                \
 	SVGAttrValueWrapper.h      \
+	SVGStringList.h            \
 	$(NULL)
 
 EXPORTS_NAMESPACES = mozilla/dom
@@ -179,7 +184,9 @@ EXPORTS_mozilla/dom = \
 	SVGDescElement.h \
 	SVGEllipseElement.h \
 	SVGFEBlendElement.h \
+	SVGFEColorMatrixElement.h \
 	SVGFEComponentTransferElement.h \
+	SVGFECompositeElement.h \
 	SVGFEDistantLightElement.h \
 	SVGFEFloodElement.h \
 	SVGFEImageElement.h \

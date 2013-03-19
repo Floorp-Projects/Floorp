@@ -57,6 +57,8 @@ toolkit.jar:
 * skin/classic/global/tree.css
 * skin/classic/global/viewbuttons.css
   skin/classic/global/wizard.css
+  skin/classic/global/alerts/alert.css                               (alerts/alert.css)
+  skin/classic/global/alerts/notification-48.png                     (alerts/notification-48.png)
   skin/classic/global/arrow/arrow-dn-dis.gif                         (arrow/arrow-dn-dis.gif)
   skin/classic/global/arrow/arrow-dn-dis.png                         (arrow/arrow-dn-dis.png)
   skin/classic/global/arrow/arrow-dn-sharp.gif                       (arrow/arrow-dn-sharp.gif)

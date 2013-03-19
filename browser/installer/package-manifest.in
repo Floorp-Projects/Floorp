@@ -455,7 +455,6 @@
 #endif
 #ifdef XP_MACOSX
 @BINPATH@/browser/components/SafariProfileMigrator.js
-@BINPATH@/components/libalerts.dylib
 #endif
 #ifdef MOZ_ENABLE_DBUS
 @BINPATH@/components/@DLL_PREFIX@dbusservice@DLL_SUFFIX@
@@ -466,7 +465,7 @@
 #ifdef MOZ_ENABLE_GNOMEVFS
 @BINPATH@/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 #endif
-#if defined(XP_MACOSX) || defined(MOZ_ENABLE_DBUS) || defined(MOZ_ENABLE_GNOME_COMPONENT) || defined(MOZ_ENABLE_GNOMEVFS)
+#if defined(MOZ_ENABLE_DBUS) || defined(MOZ_ENABLE_GNOME_COMPONENT) || defined(MOZ_ENABLE_GNOMEVFS)
 @BINPATH@/components/components.manifest
 #endif
 @BINPATH@/components/nsINIProcessor.manifest
