@@ -493,8 +493,12 @@ CreateThis(JSContext *cx, HandleObject callee, MutableHandleValue rval)
 
     if (callee->isFunction()) {
         JSFunction *fun = callee->toFunction();
-        if (fun->isInterpreted())
+        if (fun->isInterpreted()) {
+            JSScript *script = fun->getOrCreateScript(cx);
+            if (!script || !script->ensureHasTypes(cx))
+                return false;
             rval.set(ObjectValue(*CreateThisForFunction(cx, callee, false)));
+        }
     }
 
     return true;
