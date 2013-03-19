@@ -20,12 +20,15 @@
   <button id="mozLinkEnd" style="position:absolute;left:140px;top:200px;" type="button" allowevents=true>Release</button>
   <!-- "mozLinkCopy2" listens for a touchdown and touchup. It shows the time when it's fired-->
   <button id="mozLinkCopy2" style="position:absolute;left:80px;top:455px;" type="button" allowevents=true>Button4</button>
+  <!-- "mozLinkCancel" listens for a touchdown and touchcancel -->
+  <button id="mozLinkCancel" style="position:absolute;left:0px;top:255px;" type="button" allowevents=true>Button5</button>
   <script type="text/javascript">
     window.ready = true;
     var press = document.getElementById("mozLink");
     var second = document.getElementById("mozLinkCopy");
     var third = document.getElementById("mozLinkStart");
     var fourth = document.getElementById("mozLinkCopy2");
+    var fifth = document.getElementById("mozLinkCancel");
     // touchmove and touchend must be performed on the same element as touchstart
     // here is press for vertical move
     press.addEventListener("touchstart", function(){changePressText("mozLink")}, false);
@@ -33,7 +36,7 @@
     press.addEventListener("touchend", changeReleaseText, false);
     // here is second for a tap
     second.addEventListener("touchstart", function(){changePressText("mozLinkCopy")}, false);
-    second.addEventListener("touchend", changeClickText, false);
+    second.addEventListener("touchend", function(){changeClickText("mozLinkCopy")}, false);
     // here is third for horizontal move
     third.addEventListener("touchstart", function(){changePressText("mozLinkStart")}, false);
     third.addEventListener("touchmove", changeHorizontalMove, false);
@@ -41,6 +44,9 @@
     // here is fourth for touch up and down with time shown
     fourth.addEventListener("touchstart", changeTimePress, false);
     fourth.addEventListener("touchend", changeTimeRelease, false);
+    // here is fifth for a cancel
+    fifth.addEventListener("touchstart", function(){changePressText("mozLinkCancel")}, false);
+    fifth.addEventListener("touchcancel", function(){changeClickText("mozLinkCancel")}, false);
     function changePressText(strId) {
       var press = document.getElementById(strId);
       press.innerHTML = "Start";
@@ -87,8 +93,8 @@
       }
     }
 
-    function changeClickText() {
-      var second = document.getElementById("mozLinkCopy");
+    function changeClickText(strId) {
+      var second = document.getElementById(strId);
       if (second.innerHTML == "Start") {
         second.innerHTML = "End";
       }
