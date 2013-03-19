@@ -2,7 +2,6 @@
 
 var obj = {
     f: function (s) {
-        dis();
         return a => eval(s);
     }
 };
