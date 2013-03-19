@@ -14,7 +14,6 @@
 #include "nsCOMPtr.h"
 #include "nsGUIEvent.h"
 #include "nsRegion.h"
-#include "nsHashtable.h"
 #include "nsCOMArray.h"
 #include "nsIPluginWidget.h"
 #include "nsXULPopupManager.h"

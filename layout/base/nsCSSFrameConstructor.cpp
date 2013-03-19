@@ -18,7 +18,6 @@
 #include "nsCRT.h"
 #include "nsIAtom.h"
 #include "nsIURL.h"
-#include "nsHashtable.h"
 #include "nsIHTMLDocument.h"
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"

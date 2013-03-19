@@ -49,7 +49,6 @@
 #include "prinrval.h"
 #include "nsTArray.h"
 #include "nsCOMArray.h"
-#include "nsHashtable.h"
 #include "nsContainerFrame.h"
 #include "nsDOMEvent.h"
 #include "nsHTMLParts.h"
