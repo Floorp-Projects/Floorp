@@ -23,12 +23,15 @@ const PAYLOAD_VERSION = 1;
 // submitted ping data with its histogram definition (bug 832007)
 #expand const HISTOGRAMS_FILE_VERSION = "__HISTOGRAMS_FILE_VERSION__";
 
-const PREF_SERVER = "toolkit.telemetry.server";
+const PREF_BRANCH = "toolkit.telemetry.";
+const PREF_SERVER = PREF_BRANCH + "server";
 #ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
-const PREF_ENABLED = "toolkit.telemetry.enabledPreRelease";
+const PREF_ENABLED = PREF_BRANCH + "enabledPreRelease";
 #else
-const PREF_ENABLED = "toolkit.telemetry.enabled";
+const PREF_ENABLED = PREF_BRANCH + "enabled";
 #endif
+const PREF_PREVIOUS_BUILDID = PREF_BRANCH + "previousBuildID";
+
 // Do not gather data more than once a minute
 const TELEMETRY_INTERVAL = 60000;
 // Delay before intializing telemetry (ms)
@@ -105,69 +108,6 @@ function generateUUID() {
 }
 
 /**
- * Gets a series of simple measurements (counters). At the moment, this
- * only returns startup data from nsIAppStartup.getStartupInfo().
- * 
- * @return simple measurements as a dictionary.
- */
-function getSimpleMeasurements() {
-  let si = Services.startup.getStartupInfo();
-
-  var ret = {
-    // uptime in minutes
-    uptime: Math.round((new Date() - si.process) / 60000)
-  }
-
-  // Look for app-specific timestamps
-  var appTimestamps = {};
-  try {
-    let o = {};
-    Cu.import("resource://gre/modules/TelemetryTimestamps.jsm", o);
-    appTimestamps = o.TelemetryTimestamps.get();
-  } catch (ex) {}
-  try {
-    let o = {};
-    Cu.import("resource://gre/modules/AddonManager.jsm", o);
-    ret.addonManager = o.AddonManagerPrivate.getSimpleMeasures();
-  } catch (ex) {}
-
-  if (si.process) {
-    for each (let field in Object.keys(si)) {
-      if (field == "process")
-        continue;
-      ret[field] = si[field] - si.process
-    }
-
-    for (let p in appTimestamps) {
-      if (!(p in ret) && appTimestamps[p])
-        ret[p] = appTimestamps[p] - si.process;
-    }
-  }
-
-  ret.startupInterrupted = new Number(Services.startup.interrupted);
-
-  // Update debuggerAttached flag
-  let debugService = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
-  let isDebuggerAttached = debugService.isDebuggerAttached;
-  gWasDebuggerAttached = gWasDebuggerAttached || isDebuggerAttached;
-  ret.debuggerAttached = new Number(gWasDebuggerAttached);
-
-  ret.js = Cc["@mozilla.org/js/xpc/XPConnect;1"]
-           .getService(Ci.nsIJSEngineTelemetryStats)
-           .telemetryValue;
-
-  let shutdownDuration = Telemetry.lastShutdownDuration;
-  if (shutdownDuration)
-    ret.shutdownDuration = shutdownDuration;
-
-  let failedProfileLockCount = Telemetry.failedProfileLockCount;
-  if (failedProfileLockCount)
-    ret.failedProfileLockCount = failedProfileLockCount;
-
-  return ret;
-}
-
-/**
  * Read current process I/O counters.
  */            
 let processInfo = {
@@ -238,6 +178,91 @@ TelemetryPing.prototype = {
   _pingsLoaded: 0,
   // The number of those requests that have actually completed.
   _pingLoadsCompleted: 0,
+  _savedProfileDirectory: null,
+  // Saving pings for later consumption is done in two parts: one part
+  // saves a minimal amount of information in these variables.  Said
+  // information will not be available later on.  The second part
+  // handles retrieving histograms and writing the data to disk.
+  _savedSimpleMeasurements: null,
+  _savedInfo: null,
+  // The previous build ID, if this is the first run with a new build.
+  // Undefined if this is not the first run, or the previous build ID is unknown.
+  _previousBuildID: undefined,
+
+  /**
+   * Gets a series of simple measurements (counters). At the moment, this
+   * only returns startup data from nsIAppStartup.getStartupInfo().
+   * 
+   * @return simple measurements as a dictionary.
+   */
+  getSimpleMeasurements: function getSimpleMeasurements(forSavedSession) {
+    let si = Services.startup.getStartupInfo();
+
+    var ret = {
+      // uptime in minutes
+      uptime: Math.round((new Date() - si.process) / 60000)
+    }
+
+    // Look for app-specific timestamps
+    var appTimestamps = {};
+    try {
+      let o = {};
+      Cu.import("resource://gre/modules/TelemetryTimestamps.jsm", o);
+      appTimestamps = o.TelemetryTimestamps.get();
+    } catch (ex) {}
+    try {
+      let o = {};
+      Cu.import("resource://gre/modules/AddonManager.jsm", o);
+      ret.addonManager = o.AddonManagerPrivate.getSimpleMeasures();
+    } catch (ex) {}
+
+    if (si.process) {
+      for each (let field in Object.keys(si)) {
+        if (field == "process")
+          continue;
+        ret[field] = si[field] - si.process
+      }
+
+      for (let p in appTimestamps) {
+        if (!(p in ret) && appTimestamps[p])
+          ret[p] = appTimestamps[p] - si.process;
+      }
+    }
+
+    ret.startupInterrupted = new Number(Services.startup.interrupted);
+
+    // Update debuggerAttached flag
+    let debugService = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
+    let isDebuggerAttached = debugService.isDebuggerAttached;
+    gWasDebuggerAttached = gWasDebuggerAttached || isDebuggerAttached;
+    ret.debuggerAttached = new Number(gWasDebuggerAttached);
+
+    ret.js = Cc["@mozilla.org/js/xpc/XPConnect;1"]
+      .getService(Ci.nsIJSEngineTelemetryStats)
+      .telemetryValue;
+
+    let shutdownDuration = Telemetry.lastShutdownDuration;
+    if (shutdownDuration)
+      ret.shutdownDuration = shutdownDuration;
+
+    let failedProfileLockCount = Telemetry.failedProfileLockCount;
+    if (failedProfileLockCount)
+      ret.failedProfileLockCount = failedProfileLockCount;
+
+    for (let ioCounter in this._startupIO)
+      ret[ioCounter] = this._startupIO[ioCounter];
+
+    let hasPingBeenSent = false;
+    try {
+      hasPingBeenSent = Telemetry.getHistogramById("TELEMETRY_SUCCESS").snapshot().sum > 0;
+    } catch(e) {
+    }
+    if (!forSavedSession || hasPingBeenSent) {
+      ret.savedPings = this._pingsLoaded;
+    }
+
+    return ret;
+  },
 
   /**
    * When reflecting a histogram into JS, Telemetry hands us an object
@@ -366,6 +391,9 @@ TelemetryPing.prototype = {
       revision: HISTOGRAMS_FILE_VERSION,
       locale: getLocale()
     };
+    if (this._previousBuildID) {
+      ret.previousBuildID = this._previousBuildID;
+    }
 
     // sysinfo fields are not always available, get what we can.
     let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
@@ -524,16 +552,22 @@ TelemetryPing.prototype = {
     }
   },
 
-  getCurrentSessionPayload: function getCurrentSessionPayload(reason) {
-    // use a deterministic url for testing.
+  /**
+   * Get the current session's payload using the provided
+   * simpleMeasurements and info, which are typically obtained by a call
+   * to |this.getSimpleMeasurements| and |this.getMetadata|,
+   * respectively.
+   */
+  assemblePayloadWithMeasurements: function assemblePayloadWithMeasurements(simpleMeasurements, info) {
     let payloadObj = {
       ver: PAYLOAD_VERSION,
-      simpleMeasurements: getSimpleMeasurements(),
+      simpleMeasurements: simpleMeasurements,
       histograms: this.getHistograms(Telemetry.histogramSnapshots),
       slowSQL: Telemetry.slowSQL,
       chromeHangs: Telemetry.chromeHangs,
       lateWrites: Telemetry.lateWrites,
-      addonHistograms: this.getAddonHistograms()
+      addonHistograms: this.getAddonHistograms(),
+      info: info
     };
 
     if (Object.keys(this._slowSQLStartup.mainThread).length
@@ -541,33 +575,27 @@ TelemetryPing.prototype = {
       payloadObj.slowSQLStartup = this._slowSQLStartup;
     }
     
-    for (let ioCounter in this._startupIO)
-      payloadObj.simpleMeasurements[ioCounter] = this._startupIO[ioCounter];
-
-    let hasPingBeenSent = false;
-    try {
-      hasPingBeenSent = Telemetry.getHistogramById("TELEMETRY_SUCCESS").snapshot().sum > 0;
-    } catch(e) {
-    }
-    if (reason != "saved-session" || hasPingBeenSent) {
-      payloadObj.simpleMeasurements.savedPings = this._pingsLoaded;
-    }
-
-    payloadObj.info = this.getMetadata(reason);
-
     return payloadObj;
   },
 
-  getCurrentSessionPayloadAndSlug: function getCurrentSessionPayloadAndSlug(reason) {
-    let isTestPing = (reason == "test-ping");
-    let payloadObj = this.getCurrentSessionPayload(reason);
+  getSessionPayload: function getSessionPayload(reason) {
+    let measurements = this.getSimpleMeasurements(reason == "saved-session");
+    let info = this.getMetadata(reason);
+    return this.assemblePayloadWithMeasurements(measurements, info);
+  },
+
+  assemblePing: function assemblePing(payloadObj, reason) {
     let slug = this._uuid;
     return { slug: slug, reason: reason, payload: JSON.stringify(payloadObj) };
   },
 
+  getSessionPayloadAndSlug: function getSessionPayloadAndSlug(reason) {
+    return this.assemblePing(this.getSessionPayload(reason), reason);
+  },
+
   getPayloads: function getPayloads(reason) {
     function payloadIter() {
-      yield this.getCurrentSessionPayloadAndSlug(reason);
+      yield this.getSessionPayloadAndSlug(reason);
 
       while (this._pendingPings.length > 0) {
         let data = this._pendingPings.pop();
@@ -734,6 +762,22 @@ TelemetryPing.prototype = {
    * Initializes telemetry within a timer. If there is no PREF_SERVER set, don't turn on telemetry.
    */
   setup: function setup() {
+    // Record old value and update build ID preference if this is the first
+    // run with a new build ID.
+    let previousBuildID = undefined;
+    try {
+      previousBuildID = Services.prefs.getCharPref(PREF_PREVIOUS_BUILDID);
+    } catch (e) {
+      // Preference was not set.
+    }
+    let thisBuildID = Services.appinfo.appBuildID;
+    // If there is no previousBuildID preference, this._previousBuildID remains
+    // undefined so no value is sent in the telemetry metadata.
+    if (previousBuildID != thisBuildID) {
+      this._previousBuildID = previousBuildID;
+      Services.prefs.setCharPref(PREF_PREVIOUS_BUILDID, thisBuildID);
+    }
+
 #ifdef MOZILLA_OFFICIAL
     if (!Telemetry.canSend) {
       // We can't send data; no point in initializing observers etc.
@@ -756,9 +800,9 @@ TelemetryPing.prototype = {
       Telemetry.canRecord = false;
       return;
     }
-    Services.obs.addObserver(this, "profile-before-change", false);
     Services.obs.addObserver(this, "sessionstore-windows-restored", false);
     Services.obs.addObserver(this, "quit-application-granted", false);
+    Services.obs.addObserver(this, "profile-before-change2", false);
     Services.obs.addObserver(this, "xul-window-visible", false);
     this._hasWindowRestoredObserver = true;
     this._hasXulWindowVisibleObserver = true;
@@ -928,8 +972,7 @@ TelemetryPing.prototype = {
   },
 
   ensurePingDirectory: function ensurePingDirectory() {
-    let profileDirectory = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
-    let directory = profileDirectory.clone();
+    let directory = this._savedProfileDirectory.clone();
     directory.append("saved-telemetry-pings");
     try {
       directory.create(Ci.nsIFile.DIRECTORY_TYPE, RWX_OWNER);
@@ -953,8 +996,6 @@ TelemetryPing.prototype = {
   },
 
   savePendingPings: function savePendingPings() {
-    let sessionPing = this.getCurrentSessionPayloadAndSlug("saved-session");
-    this.savePing(sessionPing, true);
     this._pendingPings.forEach(function sppcb(e, i, a) {
                                  this.savePing(e, false);
                                }, this);
@@ -962,7 +1003,7 @@ TelemetryPing.prototype = {
   },
 
   saveHistograms: function saveHistograms(file, sync) {
-    this.savePingToFile(this.getCurrentSessionPayloadAndSlug("saved-session"),
+    this.savePingToFile(this.getSessionPayloadAndSlug("saved-session"),
                         file, sync, true);
   },
 
@@ -979,8 +1020,8 @@ TelemetryPing.prototype = {
       Services.obs.removeObserver(this, "xul-window-visible");
       this._hasXulWindowVisibleObserver = false;
     }
-    Services.obs.removeObserver(this, "profile-before-change");
     Services.obs.removeObserver(this, "quit-application-granted");
+    Services.obs.removeObserver(this, "profile-before-change2");
   },
 
   getPayload: function getPayload() {
@@ -991,7 +1032,7 @@ TelemetryPing.prototype = {
       this._slowSQLStartup = Telemetry.slowSQL;
     }
     this.gatherMemory();
-    return this.getCurrentSessionPayload("gather-payload");
+    return this.getSessionPayload("gather-payload");
   },
 
   gatherStartup: function gatherStartup() {
@@ -1028,6 +1069,10 @@ TelemetryPing.prototype = {
     this.sendIdlePing(true, server);
   },
 
+  cacheProfileDirectory: function cacheProfileDirectory() {
+    this._savedProfileDirectory = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+  },
+
   /**
    * This observer drives telemetry.
    */
@@ -1035,9 +1080,7 @@ TelemetryPing.prototype = {
     switch (aTopic) {
     case "profile-after-change":
       this.setup();
-      break;
-    case "profile-before-change":
-      this.uninstall();
+      this.cacheProfileDirectory();
       break;
     case "cycle-collector-begin":
       let now = new Date();
@@ -1080,7 +1123,19 @@ TelemetryPing.prototype = {
       break;
     case "quit-application-granted":
       if (Telemetry.canSend) {
+        this._savedSimpleMeasurements = this.getSimpleMeasurements(/*forSavedSession=*/true);
+        this._savedInfo = this.getMetadata("saved-session");
         this.savePendingPings();
+      }
+      break;
+    case "profile-before-change2":
+      this.uninstall();
+      if (Telemetry.canSend) {
+        let payloadObj =
+          this.assemblePayloadWithMeasurements(this._savedSimpleMeasurements,
+                                               this._savedInfo);
+        let ping = this.assemblePing(payloadObj, "saved-session");
+        this.savePing(ping, true);
       }
       break;
     }

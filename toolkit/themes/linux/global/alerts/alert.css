@@ -26,6 +26,10 @@
   padding: 8px;
   -moz-padding-start: 16px;
   width: 255px;
+}
+
+.alertTextBox,
+.alertCloseBox {
   background-image: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.1));
 }
 
@@ -37,6 +41,7 @@
 #alertImage {
   max-width: 48px;
   max-height: 48px;
+  list-style-image: url(chrome://global/skin/alerts/notification-48.png);
 }
 
 #alertNotification[clickable="true"] {
@@ -54,4 +59,16 @@ label {
 
 .alertText[clickable="true"]:hover:active {
   color: -moz-activehyperlinktext;
+}
+
+.alertCloseButton {
+  list-style-image: url("moz-icon://stock/gtk-close?size=button");
+}
+
+.alertCloseButton > .toolbarbutton-icon {
+  margin: -4px;
+}
+
+.alertCloseButton > .toolbarbutton-text {
+  display: none;
 }

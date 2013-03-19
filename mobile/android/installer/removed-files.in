@@ -1,11 +1,3 @@
 update.locale
 README.txt
-components/nsTryToClose.js
-components/CapturePicker.js
 defaults/preferences/healthreport-prefs.js
-#if MOZ_UPDATE_CHANNEL != beta
-extensions/feedback@mobile.mozilla.org.xpi
-#endif
-@DLL_PREFIX@mozutils@DLL_SUFFIX@
-jssubloader/
-components/dom_sms.xpt

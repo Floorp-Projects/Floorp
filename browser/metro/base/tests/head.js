@@ -424,3 +424,17 @@ function runTests() {
     finish();
   });
 }
+
+function stubMethod(aObj, aMethod) {
+  let origFunc = aObj[aMethod];
+  let func = function() {
+    func.calledWith = Array.slice(arguments);
+    func.callCount++;
+  }
+  func.callCount = 0;
+  func.restore = function() {
+    return (aObj[aMethod] = origFunc);
+  };
+  aObj[aMethod] = func;
+  return func;
+}

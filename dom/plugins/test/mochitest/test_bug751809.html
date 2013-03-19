@@ -39,7 +39,7 @@
 
   function go() {
     var plugin = document.getElementById('plugin');
-    var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    var objLoadingContent = SpecialPowers.wrap(plugin);
     ok(!objLoadingContent.activated, "plugin should not be activated");
     
     SimpleTest.waitForFocus(afterWindowFocus);
@@ -55,7 +55,7 @@
     
   function afterPluginActivation() {
     var plugin = document.getElementById('plugin');
-    var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    var objLoadingContent = SpecialPowers.wrap(plugin);
     ok(objLoadingContent.activated, "plugin should be activated now");
 
     // Triggering a paint and waiting for it to be flushed makes sure

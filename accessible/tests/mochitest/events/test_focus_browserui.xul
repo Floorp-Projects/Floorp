@@ -118,8 +118,12 @@ if (!MAC) {
       gQueue.invoke();
     }
 
-    SimpleTest.waitForExplicitFinish();
-    openBrowserWindow(doTests, gInputDocURI);
+    if (navigator.oscpu.startsWith("Windows NT 6.1") || navigator.oscpu.startsWith("Windows NT 6.2")) {
+      todo(false, "fix the leak!");
+      } else {
+      SimpleTest.waitForExplicitFinish();
+      openBrowserWindow(doTests, gInputDocURI);
+    }
   ]]>
   </script>
 

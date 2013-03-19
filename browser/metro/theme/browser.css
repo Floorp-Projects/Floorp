@@ -179,6 +179,10 @@ documenttab[selected=true] .documenttab-selection {
   list-style-image: url("chrome://browser/skin/images/closetab-default.png");
 }
 
+.documenttab-close > .button-box > .button-text {
+  display: none;
+}
+
 #tray[tabsonly=true] {
   transform: none !important;
 }

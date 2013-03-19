@@ -9,6 +9,7 @@ import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
+import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -26,6 +27,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.nfc.NdefMessage;
@@ -129,6 +131,11 @@ abstract public class BrowserApp extends GeckoApp
 
     // Toggled when the tabs tray is made visible to disable toolbar movement.
     private boolean mToolbarPinned = false;
+
+    // Stored value of the toolbar height, so we know when it's changed.
+    private int mToolbarHeight = 0;
+
+    private Integer mPrefObserverId;
 
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
@@ -471,7 +478,7 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         // Listen to the dynamic toolbar pref
-        PrefsHelper.getPref(PREF_CHROME_DYNAMICTOOLBAR, new PrefsHelper.PrefHandlerBase() {
+        mPrefObserverId = PrefsHelper.getPref(PREF_CHROME_DYNAMICTOOLBAR, new PrefsHelper.PrefHandlerBase() {
             @Override
             public void prefValue(String pref, boolean value) {
                 if (value == mDynamicToolbarEnabled) {
@@ -511,6 +518,10 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (mPrefObserverId != null) {
+            PrefsHelper.removeObserver(mPrefObserverId);
+            mPrefObserverId = null;
+        }
         if (mAboutHomeContent != null)
             mAboutHomeContent.onDestroy();
         if (mBrowserToolbar != null)
@@ -599,15 +610,31 @@ abstract public class BrowserApp extends GeckoApp
             mToolbarSpacer.setPadding(0, 0, 0, 0);
         }
 
-        // In the current UI, this is the only place we have need of
-        // viewport margins (to stop the toolbar from obscuring fixed-pos
-        // content).
-        GeckoAppShell.sendEventToGecko(
-            GeckoEvent.createBroadcastEvent("Viewport:FixedMarginsChanged",
-                "{ \"top\" : " + aHeight + ", \"right\" : 0, \"bottom\" : 0, \"left\" : 0 }"));
+        // Update the Gecko-side global for fixed viewport margins.
+        if (aHeight != mToolbarHeight) {
+            mToolbarHeight = aHeight;
+
+            // In the current UI, this is the only place we have need of
+            // viewport margins (to stop the toolbar from obscuring fixed-pos
+            // content).
+            GeckoAppShell.sendEventToGecko(
+                GeckoEvent.createBroadcastEvent("Viewport:FixedMarginsChanged",
+                    "{ \"top\" : " + aHeight + ", \"right\" : 0, \"bottom\" : 0, \"left\" : 0 }"));
+        }
 
         if (mLayerView != null) {
             mLayerView.getLayerClient().setFixedLayerMargins(0, aVisibleHeight, 0, 0);
+
+            // Force a redraw when the view isn't moving and the toolbar is
+            // fully visible or fully hidden. This is to make sure that the
+            // Gecko-side fixed viewport margins are in sync when the view and
+            // bar aren't animating.
+            PointF velocityVector = mLayerView.getPanZoomController().getVelocityVector();
+            if ((aVisibleHeight == 0 || aVisibleHeight == aHeight) &&
+                FloatUtils.fuzzyEquals(velocityVector.x, 0.0f) &&
+                FloatUtils.fuzzyEquals(velocityVector.y, 0.0f)) {
+                mLayerView.getLayerClient().forceRedraw();
+            }
         }
     }
 

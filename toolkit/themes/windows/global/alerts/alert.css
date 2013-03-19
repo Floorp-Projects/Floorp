@@ -27,6 +27,10 @@
   padding: 8px;
   -moz-padding-start: 16px;
   width: 255px;
+}
+
+.alertTextBox,
+.alertCloseBox {
   background-image: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.1));
 }
 
@@ -38,6 +42,7 @@
 #alertImage {
   max-width: 48px;
   max-height: 48px;
+  list-style-image: url(chrome://global/skin/alerts/notification-48.png);
 }
 
 #alertNotification[clickable="true"] {
@@ -71,3 +76,24 @@ label {
     opacity: 0;
   }
 }
+
+.alertCloseButton {
+  list-style-image: url("chrome://global/skin/icons/close.png");
+  -moz-appearance: none;
+  -moz-image-region: rect(0, 16px, 16px, 0);
+  padding: 4px 2px;
+  border: none !important;
+}
+
+.alertCloseButton > .toolbarbutton-text {
+  display: none;
+}
+
+.alertCloseButton:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.alertCloseButton:hover:active {
+  -moz-image-region: rect(0, 48px, 16px, 32px);
+}
+

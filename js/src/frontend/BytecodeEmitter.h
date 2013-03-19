@@ -84,12 +84,7 @@ struct BytecodeEmitter
 
         EmitSection(JSContext *cx, unsigned lineno)
           : code(cx), notes(cx), lastNoteOffset(0), currentLine(lineno), lastColumn(0)
-        {
-            // Start them off moderately large, to avoid repeated resizings
-            // early on.
-            code.reserve(1024);
-            notes.reserve(1024);
-        }
+        {}
     };
     EmitSection prolog, main, *current;
 
@@ -148,8 +143,6 @@ struct BytecodeEmitter
                     HandleScript script, HandleScript evalCaller, bool hasGlobalScope,
                     unsigned lineno, bool selfHostingMode = false);
     bool init();
-
-    ~BytecodeEmitter();
 
     bool isAliasedName(ParseNode *pn);
 

@@ -41,6 +41,10 @@ browser.jar:
   skin/classic/browser/KUI-background.png
   skin/classic/browser/menu-back.png
   skin/classic/browser/menu-forward.png
+  skin/classic/browser/notification-16.png
+  skin/classic/browser/notification-16@2x.png
+  skin/classic/browser/notification-64.png
+  skin/classic/browser/notification-64@2x.png
   skin/classic/browser/mixed-content-blocked-16.png
   skin/classic/browser/mixed-content-blocked-16@2x.png
   skin/classic/browser/mixed-content-blocked-64.png

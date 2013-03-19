@@ -2225,6 +2225,10 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   list-style-image: url(chrome://mozapps/skin/plugins/pluginBlocked-64.png);
 }
 
+.popup-notification-icon[popupid="web-notifications"] {
+  list-style-image: url(chrome://browser/skin/notification-64.png);
+}
+
 .addon-progress-description {
   width: 350px;
   max-width: 350px;
@@ -2378,6 +2382,10 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #webRTC-sharingDevices-notification-icon {
   list-style-image: url(chrome://browser/skin/webRTC-sharingDevice-16.png);
+}
+
+#web-notifications-notification-icon {
+  list-style-image: url(chrome://browser/skin/notification-16.png);
 }
 
 #identity-popup-container {
