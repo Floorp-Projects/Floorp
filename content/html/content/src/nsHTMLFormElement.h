@@ -14,15 +14,15 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIWebProgressListener.h"
 #include "nsIRadioGroupContainer.h"
-#include "nsIURI.h"
 #include "nsIWeakReferenceUtils.h"
-#include "nsPIDOMWindow.h"
 #include "nsThreadUtils.h"
 #include "nsInterfaceHashtable.h"
 #include "nsDataHashtable.h"
+#include "nsAsyncDOMEvent.h"
 
 class nsFormControlList;
 class nsIMutableArray;
+class nsIURI;
 
 class nsHTMLFormElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLFormElement,
@@ -241,6 +241,26 @@ public:
   bool HasEverTriedInvalidSubmit() const { return mEverTriedInvalidSubmit; }
 
 protected:
+  void PostPasswordEvent();
+  void EventHandled() { mFormPasswordEvent = nullptr; }
+
+  class FormPasswordEvent : public nsAsyncDOMEvent
+  {
+  public:
+    FormPasswordEvent(nsHTMLFormElement* aEventNode,
+                      const nsAString& aEventType)
+      : nsAsyncDOMEvent(aEventNode, aEventType, true, true)
+    {}
+
+    NS_IMETHOD Run()
+    {
+      static_cast<nsHTMLFormElement*>(mEventNode.get())->EventHandled();
+      return nsAsyncDOMEvent::Run();
+    }
+  };
+
+  nsRefPtr<FormPasswordEvent> mFormPasswordEvent;
+
   class RemoveElementRunnable;
   friend class RemoveElementRunnable;
 

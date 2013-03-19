@@ -160,12 +160,12 @@ EXPORTS_mozilla/dom += \
 		$(NULL)
 
 CPPSRCS		+= \
-		nsHTMLAudioElement.cpp \
-		nsHTMLMediaElement.cpp \
+		HTMLAudioElement.cpp \
+		HTMLMediaElement.cpp \
 		MediaError.cpp \
 		HTMLSourceElement.cpp \
 		TimeRanges.cpp \
-		nsHTMLVideoElement.cpp \
+		HTMLVideoElement.cpp \
 		$(NULL)
 endif
 

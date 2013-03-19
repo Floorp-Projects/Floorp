@@ -1090,6 +1090,20 @@ AssertDocumentOrder(const nsTArray<nsGenericHTMLFormElement*>& aControls,
 }
 #endif
 
+void
+nsHTMLFormElement::PostPasswordEvent()
+{
+  // Don't fire another add event if we have a pending add event.
+  if (mFormPasswordEvent.get()) {
+    return;
+  }
+
+  nsRefPtr<FormPasswordEvent> event =
+    new FormPasswordEvent(this, NS_LITERAL_STRING("DOMFormHasPassword"));
+  mFormPasswordEvent = event;
+  event->PostDOMEvent();
+}
+
 nsresult
 nsHTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
                               bool aUpdateValidity, bool aNotify)
@@ -1157,12 +1171,14 @@ nsHTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
   // If it is a password control, and the password manager has not yet been
   // initialized, initialize the password manager
   //
-  if (!gPasswordManagerInitialized && type == NS_FORM_INPUT_PASSWORD) {
-    // Initialize the password manager category
-    gPasswordManagerInitialized = true;
-    NS_CreateServicesFromCategory(NS_PASSWORDMANAGER_CATEGORY,
-                                  nullptr,
-                                  NS_PASSWORDMANAGER_CATEGORY);
+  if (type == NS_FORM_INPUT_PASSWORD) {
+    if (!gPasswordManagerInitialized) {
+      gPasswordManagerInitialized = true;
+      NS_CreateServicesFromCategory(NS_PASSWORDMANAGER_CATEGORY,
+                                    nullptr,
+                                    NS_PASSWORDMANAGER_CATEGORY);
+    }
+    PostPasswordEvent();
   }
  
   // Default submit element handling

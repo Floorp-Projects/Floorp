@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for mozLoadFrom</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script>
+
+try {
+  document.createElement("video").mozLoadFrom({});
+  ok(false, "This should be throw an exception");
+} catch(e) {
+  ok(true, "This should be throw an exception");
+}
+</script>
+</body>
+</html>
