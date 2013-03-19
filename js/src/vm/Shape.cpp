@@ -1230,7 +1230,7 @@ InitialShapeEntry::match(const InitialShapeEntry &key, const Lookup &lookup)
 
 /* static */ Shape *
 EmptyShape::getInitialShape(JSContext *cx, Class *clasp, TaggedProto proto, JSObject *parent,
-                            AllocKind kind, uint32_t objectFlags)
+                            size_t nfixed, uint32_t objectFlags)
 {
     JS_ASSERT_IF(proto.isObject(), cx->compartment == proto.toObject()->compartment());
     JS_ASSERT_IF(parent, cx->compartment == parent->compartment());
@@ -1240,7 +1240,6 @@ EmptyShape::getInitialShape(JSContext *cx, Class *clasp, TaggedProto proto, JSOb
     if (!table.initialized() && !table.init())
         return NULL;
 
-    size_t nfixed = GetGCKindSlots(kind, clasp);
     InitialShapeEntry::Lookup lookup(clasp, proto, parent, nfixed, objectFlags);
 
     InitialShapeSet::AddPtr p = table.lookupForAdd(lookup);
@@ -1268,6 +1267,13 @@ EmptyShape::getInitialShape(JSContext *cx, Class *clasp, TaggedProto proto, JSOb
         return NULL;
 
     return shape;
+}
+
+/* static */ Shape *
+EmptyShape::getInitialShape(JSContext *cx, Class *clasp, TaggedProto proto, JSObject *parent,
+                            AllocKind kind, uint32_t objectFlags)
+{
+    return getInitialShape(cx, clasp, proto, parent, GetGCKindSlots(kind, clasp), objectFlags);
 }
 
 void
