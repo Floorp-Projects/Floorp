@@ -15,15 +15,13 @@ interface nsIEventTarget;
  * This interface only provides the initialization needed after construction.
  * Otherwise, these objects are used simply as nsIRequestObserver's.
  */
-[scriptable, uuid(7df8845f-938a-4437-9ea4-b11b850048f1)]
+[scriptable, uuid(fe743352-34db-4bd1-9694-fe58e4442d7b)]
 interface nsIRequestObserverProxy : nsIRequestObserver
 {
     /**
      * Initializes an nsIRequestObserverProxy.
      *
-     * @param observer - receives observer notifications on the other thread
-     * @param target - may be NULL indicating the calling thread's event target
+     * @param observer - receives observer notifications on the main thread
      */
-    void init(in nsIRequestObserver observer,
-              in nsIEventTarget target);
+    void init(in nsIRequestObserver observer);
 };

@@ -127,7 +127,8 @@ nsRequestObserverProxy::~nsRequestObserverProxy()
         // releasing the object on this thread.
         nsIRequestObserver *obs = nullptr;
         mObserver.swap(obs);
-        NS_ProxyRelease(mTarget, obs);
+        nsCOMPtr<nsIEventTarget> mainThread(do_GetMainThread());
+        NS_ProxyRelease(mainThread, obs);
     }
 }
 
@@ -154,7 +155,7 @@ nsRequestObserverProxy::OnStartRequest(nsIRequest *request,
     if (!ev)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    LOG(("post startevent=%p queue=%p\n", ev, mTarget.get()));
+    LOG(("post startevent=%p\n", ev));
     nsresult rv = FireEvent(ev);
     if (NS_FAILED(rv))
         delete ev;
@@ -179,7 +180,7 @@ nsRequestObserverProxy::OnStopRequest(nsIRequest *request,
     if (!ev)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    LOG(("post stopevent=%p queue=%p\n", ev, mTarget.get()));
+    LOG(("post stopevent=%p\n", ev));
     nsresult rv = FireEvent(ev);
     if (NS_FAILED(rv))
         delete ev;
@@ -191,8 +192,7 @@ nsRequestObserverProxy::OnStopRequest(nsIRequest *request,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsRequestObserverProxy::Init(nsIRequestObserver *observer,
-                             nsIEventTarget *target)
+nsRequestObserverProxy::Init(nsIRequestObserver *observer)
 {
     NS_ENSURE_ARG_POINTER(observer);
 
@@ -202,9 +202,6 @@ nsRequestObserverProxy::Init(nsIRequestObserver *observer,
 #endif
 
     mObserver = observer;
-
-    SetTarget(target ? target : NS_GetCurrentThread());
-    NS_ENSURE_STATE(mTarget);
 
     return NS_OK;
 }
@@ -216,6 +213,6 @@ nsRequestObserverProxy::Init(nsIRequestObserver *observer,
 nsresult
 nsRequestObserverProxy::FireEvent(nsARequestObserverEvent *event)
 {
-    NS_ENSURE_TRUE(mTarget, NS_ERROR_NOT_INITIALIZED);
-    return mTarget->Dispatch(event, NS_DISPATCH_NORMAL);
+    nsCOMPtr<nsIEventTarget> mainThread(do_GetMainThread());
+    return mainThread->Dispatch(event, NS_DISPATCH_NORMAL);
 }
