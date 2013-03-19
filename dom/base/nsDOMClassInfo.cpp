@@ -3536,11 +3536,9 @@ nsWindowSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   return SetParentToWindow(win, parentObj);
 }
 
-// This JS class piggybacks on nsHTMLDocumentSH::ReleaseDocument()...
-
 static JSClass sGlobalScopePolluterClass = {
   "Global Scope Polluter",
-  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_NEW_RESOLVE,
+  JSCLASS_NEW_RESOLVE,
   JS_PropertyStub,
   JS_PropertyStub,
   nsWindowSH::GlobalScopePolluterGetProperty,
@@ -3548,7 +3546,7 @@ static JSClass sGlobalScopePolluterClass = {
   JS_EnumerateStub,
   (JSResolveOp)nsWindowSH::GlobalScopePolluterNewResolve,
   JS_ConvertStub,
-  nsHTMLDocumentSH::ReleaseDocument
+  nullptr
 };
 
 
@@ -3620,16 +3618,23 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
     return JS_TRUE;
   }
 
-  nsHTMLDocument *document = GetDocument(obj);
+  // Grab the DOM window.
+  JSObject *global = JS_GetGlobalForObject(cx, obj);
+  nsISupports *globalNative = XPConnect()->GetNativeOfWrapper(cx, global);
+  nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(globalNative);
+  MOZ_ASSERT(piWin);
+  nsGlobalWindow* win = static_cast<nsGlobalWindow*>(piWin.get());
 
-  if (!document) {
-    // If we don't have a document, return early.
+  // Grab the HTML document.
+  // XXXbholley - We early-return for non-HTML documents so that this patch
+  // doesn't change behavior. We generalize this in the next patch to ease
+  // regression hunting.
+  nsCOMPtr<nsIDOMHTMLDocument> domDoc =
+    do_QueryInterface(win->GetExtantDocument());
+  if (!domDoc)
+    return true;
+  nsHTMLDocument *document = static_cast<nsHTMLDocument*>(domDoc.get());
 
-    return JS_TRUE;
-  }
-
-  nsGlobalWindow* win = static_cast<nsGlobalWindow*>(document->GetWindow());
-  NS_ENSURE_TRUE(win, JS_TRUE);
   if (win->GetLength() > 0) {
     nsCOMPtr<nsIDOMWindow> child_win = win->GetChildWindow(id);
     if (child_win) {
@@ -3711,11 +3716,6 @@ nsWindowSH::InvalidateGlobalScopePolluter(JSContext *cx, JSObject *obj)
     }
 
     if (JS_GetClass(proto) == &sGlobalScopePolluterClass) {
-      nsIHTMLDocument *doc = (nsIHTMLDocument *)::JS_GetPrivate(proto);
-
-      NS_IF_RELEASE(doc);
-
-      ::JS_SetPrivate(proto, nullptr);
 
       JSObject *proto_proto;
       if (!::JS_GetPrototype(cx, proto, &proto_proto)) {
@@ -3737,12 +3737,11 @@ nsWindowSH::InvalidateGlobalScopePolluter(JSContext *cx, JSObject *obj)
 
 // static
 nsresult
-nsWindowSH::InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
-                                       nsIHTMLDocument *doc)
+nsWindowSH::InstallGlobalScopePolluter(JSContext *cx, JSObject *obj)
 {
   // If global scope pollution is disabled, or if our document is not
   // a HTML document, do nothing
-  if (sDisableGlobalScopePollutionSupport || !doc) {
+  if (sDisableGlobalScopePollutionSupport) {
     return NS_OK;
   }
 
@@ -3778,12 +3777,6 @@ nsWindowSH::InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
   // And then set the prototype of the object whose prototype was
   // Object.prototype to be the global scope polluter.
   ::JS_SplicePrototype(cx, o, gsp);
-
-  ::JS_SetPrivate(gsp, doc);
-
-  // The global scope polluter will release doc on destruction (or
-  // invalidation).
-  NS_ADDREF(doc);
 
   return NS_OK;
 }
