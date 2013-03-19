@@ -338,9 +338,6 @@ IonBuilder::build()
             ins->setResumePoint(current->entryResumePoint());
     }
 
-    // Recompile to inline calls if this function is hot.
-    insertRecompileCheck();
-
     if (script()->argumentsHasVarBinding()) {
         lazyArguments_ = MConstant::New(MagicValue(JS_OPTIMIZED_ARGUMENTS));
         current->add(lazyArguments_);
@@ -763,12 +760,9 @@ IonBuilder::inspectOpcode(JSOp op)
         return true;
 
     switch (op) {
-      case JSOP_LOOPENTRY:
-        insertRecompileCheck();
-        return true;
-
       case JSOP_NOP:
       case JSOP_LINENO:
+      case JSOP_LOOPENTRY:
         return true;
 
       case JSOP_LABEL:
@@ -4973,29 +4967,6 @@ IonBuilder::maybeInsertResume()
     current->add(ins);
 
     return resumeAfter(ins);
-}
-
-void
-IonBuilder::insertRecompileCheck()
-{
-    if (!inliningEnabled())
-        return;
-
-    if (inliningDepth_ > 0)
-        return;
-
-    // Don't recompile if we are already inlining.
-    if (script()->getUseCount() >= js_IonOptions.usesBeforeInlining())
-        return;
-
-    // Don't recompile if the oracle cannot provide inlining information
-    // or if the script has no calls.
-    if (!oracle->canInlineCalls())
-        return;
-
-    uint32_t minUses = UsesBeforeIonRecompile(script(), pc);
-    MRecompileCheck *check = MRecompileCheck::New(minUses);
-    current->add(check);
 }
 
 static inline bool

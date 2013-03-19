@@ -285,23 +285,6 @@ CodeGeneratorX64::visitImplicitThis(LImplicitThis *lir)
     return true;
 }
 
-bool
-CodeGeneratorX64::visitRecompileCheck(LRecompileCheck *lir)
-{
-    // Bump the script's use count and bailout if the script is hot. Note that
-    // it's safe to bake in this pointer since scripts are never nursery
-    // allocated and jitcode will be purged before doing a compacting GC.
-    const uint32_t *useCount = gen->info().script()->addressOfUseCount();
-    masm.movq(ImmWord(useCount), ScratchReg);
-
-    Operand addr(ScratchReg, 0);
-    masm.addl(Imm32(1), addr);
-    masm.cmpl(addr, Imm32(lir->mir()->minUses()));
-    if (!bailoutIf(Assembler::AboveOrEqual, lir->snapshot()))
-        return false;
-    return true;
-}
-
 typedef bool (*InterruptCheckFn)(JSContext *);
 static const VMFunction InterruptCheckInfo = FunctionInfo<InterruptCheckFn>(InterruptCheck);
 

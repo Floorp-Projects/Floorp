@@ -317,13 +317,6 @@ LIRGeneratorARM::visitGuardShape(MGuardShape *ins)
 }
 
 bool
-LIRGeneratorARM::visitRecompileCheck(MRecompileCheck *ins)
-{
-    LRecompileCheck *lir = new LRecompileCheck(temp(LDefinition::GENERAL));
-    return assignSnapshot(lir, Bailout_RecompileCheck) && add(lir, ins);
-}
-
-bool
 LIRGeneratorARM::visitStoreTypedArrayElement(MStoreTypedArrayElement *ins)
 {
     JS_ASSERT(ins->elements()->type() == MIRType_Elements);
