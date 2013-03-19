@@ -185,6 +185,9 @@ Zone::discardJitCode(FreeOp *fop, bool discardConstraints)
         }
 #  endif
 
+        /* Mark baseline scripts on the stack as active. */
+        ion::MarkActiveBaselineScripts(this);
+
         /* Only mark OSI points if code is being discarded. */
         ion::InvalidateAll(fop, this);
 # endif

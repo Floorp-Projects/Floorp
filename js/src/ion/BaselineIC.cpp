@@ -756,8 +756,10 @@ static bool
 DoUseCountFallback(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *frame,
                    IonOsrTempData **infoPtr)
 {
-    // We should only ever get here if ion is enabled.
-    JS_ASSERT(ion::IsEnabled(cx));
+    // A TI OOM will disable TI and Ion.
+    if (!ion::IsEnabled(cx))
+        return true;
+
     JS_ASSERT(infoPtr);
     *infoPtr = NULL;
 
