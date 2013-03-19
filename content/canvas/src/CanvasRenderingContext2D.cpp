@@ -93,7 +93,7 @@
 #include "XPCQuickStubs.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/HTMLImageElement.h"
-#include "nsHTMLVideoElement.h"
+#include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 
 #ifdef USE_SKIA
@@ -2940,7 +2940,7 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
       HTMLImageElement* img = &image.GetAsHTMLImageElement();
       element = img;
     } else {
-      nsHTMLVideoElement* video = image.GetAsHTMLVideoElement();
+      HTMLVideoElement* video = image.GetAsHTMLVideoElement();
       element = video;
     }
 
