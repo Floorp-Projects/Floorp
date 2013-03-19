@@ -126,6 +126,9 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
+# edmorley is sick of clobbering everytime someone adds an interface
+$(CPPOBJS): PrototypeList.h
+
 # We need to create a separate target so we can ensure that the pickle is
 # done before generating headers.
 export:: ParserResults.pkl
