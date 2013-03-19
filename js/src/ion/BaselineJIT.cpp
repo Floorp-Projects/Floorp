@@ -697,3 +697,44 @@ ion::SizeOfBaselineData(JSScript *script, JSMallocSizeOfFun mallocSizeOf, size_t
     if (script->hasBaselineScript())
         script->baseline->sizeOfIncludingThis(mallocSizeOf, data, fallbackStubs);
 }
+
+static void
+MarkActiveBaselineScripts(JSContext *cx, const IonActivationIterator &activation)
+{
+    for (ion::IonFrameIterator iter(activation); !iter.done(); ++iter) {
+        switch (iter.type()) {
+          case IonFrame_BaselineJS:
+            iter.script()->baselineScript()->setActive();
+            break;
+          case IonFrame_OptimizedJS: {
+            // Keep the baseline script around, since bailouts from the ion
+            // jitcode might need to re-enter into the baseline jitcode.
+            iter.script()->baselineScript()->setActive();
+            for (InlineFrameIterator inlineIter(cx, &iter); inlineIter.more(); ++inlineIter)
+                inlineIter.script()->baselineScript()->setActive();
+            break;
+          }
+          default:;
+        }
+    }
+}
+
+void
+ion::MarkActiveBaselineScripts(Zone *zone)
+{
+    // First check if there is an IonActivation on the stack, so that there
+    // must be a valid IonContext.
+    IonActivationIterator iter(zone->rt);
+    if (!iter.more())
+        return;
+
+    // If baseline is disabled, there are no baseline scripts on the stack.
+    JSContext *cx = GetIonContext()->cx;
+    if (!ion::IsBaselineEnabled(cx))
+        return;
+
+    for (; iter.more(); ++iter) {
+        if (iter.activation()->compartment()->zone() == zone)
+            MarkActiveBaselineScripts(cx, iter);
+    }
+}

@@ -304,6 +304,11 @@ uint32_t
 BailoutIonToBaseline(JSContext *cx, IonActivation *activation, IonBailoutIterator &iter,
                      bool invalidate, BaselineBailoutInfo **bailoutInfo);
 
+// Mark baseline scripts on the stack as active, so that they are not discarded
+// during GC.
+void
+MarkActiveBaselineScripts(Zone *zone);
+
 } // namespace ion
 } // namespace js
 
