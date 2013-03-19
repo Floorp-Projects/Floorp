@@ -540,6 +540,9 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
         aResult = 0;
         res = NS_ERROR_NOT_IMPLEMENTED;
         break;
+    case eIntID_AlertNotificationOrigin:
+        aResult = NS_ALERT_TOP;
+        break;
     case eIntID_IMERawInputUnderlineStyle:
     case eIntID_IMEConvertedTextUnderlineStyle:
         aResult = NS_STYLE_TEXT_DECORATION_STYLE_SOLID;

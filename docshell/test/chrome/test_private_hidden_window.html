@@ -29,13 +29,7 @@ var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
 // We need to wait for the hidden window to load, but can't access
 // an event target for a regular event listener.
 var hidden = mainWindow.Services.appShell.hiddenPrivateDOMWindow;
-var tmp = setTimeout(function poll() {
-  if (hidden.location.href != "resource://gre-resources/hiddenWindow.html" ||
-      !hidden.document.body) {
-    setTimeout(poll, 100);
-    return;
-  }
-
+mainWindow.PrivateBrowsingUtils.whenHiddenPrivateWindowReady(function(hidden) {
   var iframe = hidden.document.createElement('iframe');
   iframe.src = 'generic.html';
   hidden.document.body.appendChild(iframe);
@@ -46,7 +40,7 @@ var tmp = setTimeout(function poll() {
     win.close();
     win = null;
   }, false);
-}, 100);
+});
 
 function observer(aSubject, aTopic, aData) {
   is(aTopic, "last-pb-context-exited", "Unexpected observer topic");

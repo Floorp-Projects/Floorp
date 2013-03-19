@@ -20,18 +20,21 @@ this.RecentWindow = {
    * Get the most recent browser window.
    *
    * @param aOptions an object accepting the arguments for the search.
-   *        Set the private property to true in order to restrict the
-   *        search to private windows only, or to false in order to
-   *        restrict the search to non-private windows only.  To search
-   *        in both groups, don't specify the private property.
+   *        * private: true to restrict the search to private windows
+   *            only, false to restrict the search to non-private only.
+   *            Omit the property to search in both groups.
+   *        * allowPopups: true if popup windows are permissable.
    */
   getMostRecentBrowserWindow: function RW_getMostRecentBrowserWindow(aOptions) {
     let checkPrivacy = typeof aOptions == "object" &&
                        "private" in aOptions;
 
+    let allowPopups = typeof aOptions == "object" && !!aOptions.allowPopups;
+
     function isSuitableBrowserWindow(win) {
       return (!win.closed &&
               win.toolbar.visible &&
+              (allowPopups || win.toolbar.visible) &&
               (!checkPrivacy ||
                PrivateBrowsingUtils.permanentPrivateBrowsing ||
                PrivateBrowsingUtils.isWindowPrivate(win) == aOptions.private));

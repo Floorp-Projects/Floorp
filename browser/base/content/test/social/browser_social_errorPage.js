@@ -153,12 +153,15 @@ var tests = {
       function() { // the "load" callback.
         executeSoon(function() {
           todo_is(panelCallbackCount, 0, "Bug 833207 - should be no callback when error page loads.");
-          ok(SocialChatBar.chatbar.selectedChat.iframe.contentDocument.location.href.indexOf("about:socialerror?")==0, "is on social error page");
-          SocialChatBar.chatbar.selectedChat.close();
-          next();
+          let iframe = SocialChatBar.chatbar.selectedChat.iframe;
+          waitForCondition(function() iframe.contentDocument.location.href.indexOf("about:socialerror?")==0,
+                           function() {
+                            SocialChatBar.chatbar.selectedChat.close();
+                            next();
+                            },
+                           "error page didn't appear");
         });
       }
     );
   }
 }
-

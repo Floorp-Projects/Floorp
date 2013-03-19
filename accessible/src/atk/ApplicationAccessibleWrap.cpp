@@ -128,9 +128,9 @@ gboolean fireRootAccessibleAddedCB(gpointer data)
 }
 
 bool
-ApplicationAccessibleWrap::AppendChild(Accessible* aChild)
+ApplicationAccessibleWrap::InsertChildAt(uint32_t aIdx, Accessible* aChild)
 {
-  if (!ApplicationAccessible::AppendChild(aChild))
+  if (!ApplicationAccessible::InsertChildAt(aIdx, aChild))
     return false;
 
   AtkObject* atkAccessible = AccessibleWrap::GetAtkObject(aChild);

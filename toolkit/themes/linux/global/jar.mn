@@ -34,6 +34,7 @@ toolkit.jar:
 +  skin/classic/global/toolbarbutton.css
 +  skin/classic/global/tree.css
 +  skin/classic/global/alerts/alert.css                        (alerts/alert.css)
++  skin/classic/global/alerts/notification-48.png              (alerts/notification-48.png)
 +  skin/classic/global/console/console.css                     (console/console.css)
 +  skin/classic/global/console/console.png                     (console/console.png)
 +  skin/classic/global/console/console-toolbar.png             (console/console-toolbar.png)

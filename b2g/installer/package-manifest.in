@@ -113,7 +113,9 @@
 @BINPATH@/application.ini
 @BINPATH@/platform.ini
 #ifndef XP_OS2
+#ifndef MOZ_FOLD_LIBS
 @BINPATH@/@DLL_PREFIX@mozsqlite3@DLL_SUFFIX@
+#endif
 #else
 @BINPATH@/mozsqlt3@DLL_SUFFIX@
 #endif
@@ -468,9 +470,6 @@
 #ifdef MOZ_B2G_FM
 @BINPATH@/components/DOMFMRadioChild.js
 @BINPATH@/components/DOMFMRadio.manifest
-#endif
-#ifdef XP_MACOSX
-@BINPATH@/components/libalerts.dylib
 #endif
 #ifdef MOZ_ENABLE_DBUS
 @BINPATH@/components/@DLL_PREFIX@dbusservice@DLL_SUFFIX@

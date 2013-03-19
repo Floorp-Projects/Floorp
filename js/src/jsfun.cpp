@@ -571,12 +571,15 @@ FindBody(JSContext *cx, HandleFunction fun, StableCharPtr chars, size_t length,
     options.setFileAndLine("internal-findBody", 0)
            .setVersion(fun->nonLazyScript()->getVersion());
     TokenStream ts(cx, options, chars.get(), length, NULL);
-    JS_ASSERT(chars[0] == '(');
     int nest = 0;
     bool onward = true;
     // Skip arguments list.
     do {
         switch (ts.getToken()) {
+          case TOK_NAME:
+            if (nest == 0)
+                onward = false;
+            break;
           case TOK_LP:
             nest++;
             break;
@@ -592,10 +595,12 @@ FindBody(JSContext *cx, HandleFunction fun, StableCharPtr chars, size_t length,
         }
     } while (onward);
     TokenKind tt = ts.getToken();
+    if (tt == TOK_ARROW)
+        tt = ts.getToken();
     if (tt == TOK_ERROR)
         return false;
     bool braced = tt == TOK_LC;
-    JS_ASSERT(fun->isExprClosure() == !braced);
+    JS_ASSERT_IF(fun->isExprClosure(), !braced);
     *bodyStart = ts.offsetOfToken(ts.currentToken());
     if (braced)
         *bodyStart += 1;
@@ -618,6 +623,16 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
     StringBuffer out(cx);
     RootedScript script(cx);
 
+    // If the object is an automatically-bound arrow function, get the source
+    // of the pre-binding target.
+    if (fun->isBoundFunction()) {
+        JSObject *target = fun->getBoundFunctionTarget();
+        if (target->isFunction() && target->toFunction()->isArrow()) {
+            RootedFunction targetfun(cx, target->toFunction());
+            return FunctionToString(cx, targetfun, bodyOnly, lambdaParen);
+        }
+    }
+
     if (fun->hasScript()) {
         script = fun->nonLazyScript();
         if (script->isGeneratorExp) {
@@ -632,12 +647,14 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
     }
     if (!bodyOnly) {
         // If we're not in pretty mode, put parentheses around lambda functions.
-        if (fun->isInterpreted() && !lambdaParen && fun->isLambda()) {
+        if (fun->isInterpreted() && !lambdaParen && fun->isLambda() && !fun->isArrow()) {
             if (!out.append("("))
                 return NULL;
         }
-        if (!out.append("function "))
-            return NULL;
+        if (!fun->isArrow()) {
+            if (!out.append("function "))
+                return NULL;
+        }
         if (fun->atom()) {
             if (!out.append(fun->atom()))
                 return NULL;
@@ -666,13 +683,13 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
         // Functions created with the constructor should not be using the
         // expression body extension.
         JS_ASSERT_IF(funCon, !exprBody);
-        JS_ASSERT_IF(!funCon, src->length() > 0 && chars[0] == '(');
+        JS_ASSERT_IF(!funCon && !fun->isArrow(), src->length() > 0 && chars[0] == '(');
 
         // If a function inherits strict mode by having scopes above it that
         // have "use strict", we insert "use strict" into the body of the
         // function. This ensures that if the result of toString is evaled, the
         // resulting function will have the same semantics.
-        bool addUseStrict = script->strict && !script->explicitUseStrict;
+        bool addUseStrict = script->strict && !script->explicitUseStrict && !fun->isArrow();
 
         bool buildBody = funCon && !bodyOnly;
         if (buildBody) {
@@ -746,7 +763,7 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
             // Slap a semicolon on the end of functions with an expression body.
             if (exprBody && !out.append(";"))
                 return NULL;
-        } else if (!lambdaParen && fun->isLambda()) {
+        } else if (!lambdaParen && fun->isLambda() && !fun->isArrow()) {
             if (!out.append(")"))
                 return NULL;
         }
@@ -755,7 +772,7 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
             !out.append("[sourceless code]") ||
             (!bodyOnly && !out.append("\n}")))
             return NULL;
-        if (!lambdaParen && fun->isLambda() && !out.append(")"))
+        if (!lambdaParen && fun->isLambda() && !fun->isArrow() && !out.append(")"))
             return NULL;
     } else {
         JS_ASSERT(!fun->isExprClosure());

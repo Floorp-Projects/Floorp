@@ -222,6 +222,15 @@ public:
   NS_IMETHODIMP CreateOffer(MediaConstraints& aConstraints);
   NS_IMETHODIMP CreateAnswer(MediaConstraints& aConstraints);
 
+  // Called whenever something is unrecognized by the parser
+  // May be called more than once and does not necessarily mean
+  // that parsing was stopped, only that something was unrecognized.
+  void OnSdpParseError(const char* errorMessage);
+
+  // Called when OnLocal/RemoteDescriptionSuccess/Error
+  // is called to start the list over.
+  void ClearSdpParseErrorMessages();
+
 private:
   PeerConnectionImpl(const PeerConnectionImpl&rhs);
   PeerConnectionImpl& operator=(PeerConnectionImpl);
@@ -312,6 +321,9 @@ private:
   // Bug 840728.
   int mNumAudioStreams;
   int mNumVideoStreams;
+
+  // Holder for error messages from parsing SDP
+  std::vector<std::string> mSDPParseErrorMessages;
 
 public:
   //these are temporary until the DataChannel Listen/Connect API is removed

@@ -49,6 +49,7 @@
     <command id="cmd_imageDef"      oncommand="onCheckboxClick('image');"/>
     <command id="cmd_popupDef"      oncommand="onCheckboxClick('popup');"/>
     <command id="cmd_cookieDef"     oncommand="onCheckboxClick('cookie');"/>
+    <command id="cmd_desktop-notificationDef" oncommand="onCheckboxClick('desktop-notification');"/>
     <command id="cmd_installDef"    oncommand="onCheckboxClick('install');"/>
     <command id="cmd_fullscreenDef" oncommand="onCheckboxClick('fullscreen');"/>
     <command id="cmd_geoDef"        oncommand="onCheckboxClick('geo');"/>
@@ -57,6 +58,7 @@
     <command id="cmd_imageToggle"   oncommand="onRadioClick('image');"/>
     <command id="cmd_popupToggle"   oncommand="onRadioClick('popup');"/>
     <command id="cmd_cookieToggle"  oncommand="onRadioClick('cookie');"/>
+    <command id="cmd_desktop-notificationToggle" oncommand="onRadioClick('desktop-notification');"/>
     <command id="cmd_installToggle" oncommand="onRadioClick('install');"/>
     <command id="cmd_fullscreenToggle" oncommand="onRadioClick('fullscreen');"/>
     <command id="cmd_geoToggle"     oncommand="onRadioClick('geo');"/>
@@ -324,6 +326,18 @@
               <radio id="cookie#1" command="cmd_cookieToggle" label="&permAllow;"/>
               <radio id="cookie#8" command="cmd_cookieToggle" label="&permAllowSession;"/>
               <radio id="cookie#2" command="cmd_cookieToggle" label="&permBlock;"/>
+            </radiogroup>
+          </hbox>
+        </vbox>
+        <vbox class="permission" id="permNotificationRow">
+          <label class="permissionLabel" id="permNotificationLabel"
+                 value="&permNotifications;" control="desktop-notificationRadioGroup"/>
+          <hbox role="group" aria-labelledby="permNotificationLabel">
+            <checkbox id="desktop-notificationDef" command="cmd_desktop-notificationDef" label="&permUseDefault;"/>
+            <spacer flex="1"/>
+            <radiogroup id="desktop-notificationRadioGroup" orient="horizontal">
+              <radio id="desktop-notification#1" command="cmd_desktop-notificationToggle" label="&permAllow;"/>
+              <radio id="desktop-notification#2" command="cmd_desktop-notificationToggle" label="&permBlock;"/>
             </radiogroup>
           </hbox>
         </vbox>

@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=823227
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 823227</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 823227 **/
+
+  SimpleTest.waitForExplicitFinish();
+  function doTest() {
+    is(frames[0].foo, frames[0][0],
+       "Should be able to look up frames by name in SVG documents");
+    is(frames[1].foo, frames[1][0],
+       "Should be able to look up frames by name in XML documents");
+    SimpleTest.finish();
+  }
+
+  addLoadEvent(doTest);
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=823227">Mozilla Bug 823227</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><foreignObject><iframe name='foo' id='foo' xmlns='http://www.w3.org/1999/xhtml'/></foreignObject></svg>"></iframe>
+<iframe src="data:text/xml,<root><iframe name='foo' id='foo' xmlns='http://www.w3.org/1999/xhtml'/></root>"></iframe>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

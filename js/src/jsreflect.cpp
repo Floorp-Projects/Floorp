@@ -2297,7 +2297,10 @@ ASTSerializer::expression(ParseNode *pn, MutableHandleValue dst)
     JS_CHECK_RECURSION(cx, return false);
     switch (pn->getKind()) {
       case PNK_FUNCTION:
-        return function(pn, AST_FUNC_EXPR, dst);
+      {
+        ASTType type = pn->pn_funbox->function()->isArrow() ? AST_ARROW_EXPR : AST_FUNC_EXPR;
+        return function(pn, type, dst);
+      }
 
       case PNK_COMMA:
       {

@@ -7,6 +7,7 @@
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+Components.utils.import("resource:///modules/RecentWindow.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "BROWSER_NEW_TAB_URL", function () {
   const PREF = "browser.newtab.url";
@@ -58,12 +59,9 @@ function getTopWin(skipPopups) {
       (!skipPopups || top.toolbar.visible))
     return top;
 
-  if (skipPopups) {
-    return Components.classes["@mozilla.org/browser/browserglue;1"]
-                     .getService(Components.interfaces.nsIBrowserGlue)
-                     .getMostRecentBrowserWindow();
-  }
-  return Services.wm.getMostRecentWindow("navigator:browser");
+  let isPrivate = PrivateBrowsingUtils.isWindowPrivate(window);
+  return RecentWindow.getMostRecentBrowserWindow({private: isPrivate,
+                                                  allowPopups: !skipPopups});
 }
 
 function openTopWin(url) {

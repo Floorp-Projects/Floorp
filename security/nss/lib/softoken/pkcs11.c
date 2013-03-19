@@ -1894,7 +1894,18 @@ sftk_mkPrivKey(SFTKObject *object, CK_KEY_TYPE key_type, CK_RV *crvp)
 	}
         rv = DER_SetUInteger(privKey->arena, &privKey->u.ec.version,
                           NSSLOWKEY_EC_PRIVATE_KEY_VERSION);
-	if (rv != SECSuccess) crv = CKR_HOST_MEMORY;
+	if (rv != SECSuccess) {
+	    crv = CKR_HOST_MEMORY;
+	    /* The following ifdef is needed for Linux arm distros and
+	     * Android as gcc 4.6 has a bug when targeting arm (but not
+	     * thumb). The bug has been fixed in gcc 4.7.
+	     * http://gcc.gnu.org/bugzilla/show_bug.cgi?id=56561
+	     */
+#if defined (__arm__) && !defined(__thumb__) && defined (__GNUC__)
+	    *crvp = CKR_HOST_MEMORY;
+	    break;
+#endif
+	}
 	break;
 #endif /* NSS_ENABLE_ECC */
 

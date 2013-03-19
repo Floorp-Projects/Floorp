@@ -9,9 +9,7 @@
 #include "nsDOMClassInfoID.h"
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMMessageEvent, nsDOMEvent)
-  if (tmp->mDataRooted) {
-    tmp->UnrootData();
-  }
+  tmp->mData = JSVAL_VOID;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSource)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -37,31 +35,13 @@ nsDOMMessageEvent::nsDOMMessageEvent(mozilla::dom::EventTarget* aOwner,
                                      nsPresContext* aPresContext,
                                      nsEvent* aEvent)
   : nsDOMEvent(aOwner, aPresContext, aEvent),
-    mData(JSVAL_VOID),
-    mDataRooted(false)
+    mData(JSVAL_VOID)
 {
   SetIsDOMBinding();
 }
 
 nsDOMMessageEvent::~nsDOMMessageEvent()
 {
-  if (mDataRooted)
-    UnrootData();
-}
-
-void
-nsDOMMessageEvent::RootData()
-{
-  NS_ASSERTION(!mDataRooted, "...");
-  NS_HOLD_JS_OBJECTS(this, nsDOMMessageEvent);
-  mDataRooted = true;
-}
-
-void
-nsDOMMessageEvent::UnrootData()
-{
-  NS_ASSERTION(mDataRooted, "...");
-  mDataRooted = false;
   mData = JSVAL_VOID;
   NS_DROP_JS_OBJECTS(this, nsDOMMessageEvent);
 }
@@ -108,12 +88,8 @@ nsDOMMessageEvent::InitMessageEvent(const nsAString& aType,
   nsresult rv = nsDOMEvent::InitEvent(aType, aCanBubble, aCancelable);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Allowing double-initialization seems a little silly, but we have a test
-  // for it so it might be important ...
-  if (mDataRooted)
-    UnrootData();
   mData = aData;
-  RootData();
+  NS_HOLD_JS_OBJECTS(this, nsDOMMessageEvent);
   mOrigin = aOrigin;
   mLastEventId = aLastEventId;
   mSource = aSource;

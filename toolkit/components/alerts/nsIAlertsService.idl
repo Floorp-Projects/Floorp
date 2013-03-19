@@ -7,12 +7,12 @@
 #include "nsISupports.idl"
 #include "nsIObserver.idl"
 
-[scriptable, uuid(e177399e-2e31-4019-aed3-cba63ce9fa99)]
+[scriptable, uuid(160e87e1-d57d-456b-b6ea-17826f6ea7a8)]
 interface nsIAlertsService : nsISupports
 {
    /**
     * Displays a sliding notification window.
-    *    
+    *
     * @param imageUrl       A URL identifying the image to put in the alert.
     * @param title          The title for the alert.
     * @param text           The contents of the alert.
@@ -27,8 +27,13 @@ interface nsIAlertsService : nsISupports
     *                       only used on OS X with Growl and Android.
     *                       On OS X with Growl, users can disable notifications
     *                       with a given name. On Android the name is hashed
-    *                       and used as a notification ID.
-    *
+    *                       and used as a notification ID. Notifications will
+    *                       replace previous notifications with the same name.
+    * @param dir            Bidi override for the title. Valid values are
+    *                       "auto", "ltr" or "rtl". Only available on supported
+    *                       platforms.
+    * @param lang           Language of title and text of the alert. Only available
+    *                       on supported platforms.
     * @throws NS_ERROR_NOT_AVAILABLE If the notification cannot be displayed.
     *
     * The following arguments will be passed to the alertListener's observe() 
@@ -36,6 +41,7 @@ interface nsIAlertsService : nsISupports
     *   subject - null
     *   topic   - "alertfinished" when the alert goes away
     *             "alertclickcallback" when the text is clicked
+    *             "alertshow" when the alert is shown
     *   data    - the value of the cookie parameter passed to showAlertNotification.
     *
     * @note Depending on current circumstances (if the user's in a fullscreen
@@ -43,14 +49,24 @@ interface nsIAlertsService : nsISupports
     *       In that case, if an alert listener is passed in it will receive the
     *       "alertfinished" notification immediately.
     */
-   void showAlertNotification(in AString  imageUrl, 
-                              in AString  title, 
-                              in AString  text, 
+   void showAlertNotification(in AString  imageUrl,
+                              in AString  title,
+                              in AString  text,
                               [optional] in boolean textClickable,
                               [optional] in AString cookie,
                               [optional] in nsIObserver alertListener,
-                              [optional] in AString name);
+                              [optional] in AString name,
+                              [optional] in AString dir,
+                              [optional] in AString lang);
 
+   /**
+    * Close alerts created by the service.
+    *
+    * @param name           The name of the notification to close. If no name
+    *                       is provided then only a notification created with
+    *                       no name (if any) will be closed.
+    */
+   void closeAlert([optional] in AString name);
 };
 
 [scriptable, uuid(df1bd4b0-3a8c-40e6-806a-203f38b0bd9f)]
@@ -82,3 +98,4 @@ interface nsIAlertsProgressListener : nsISupports
      */
     void onCancel(in AString name);
 };
+

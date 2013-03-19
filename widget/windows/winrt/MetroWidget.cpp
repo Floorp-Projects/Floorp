@@ -119,7 +119,10 @@ namespace {
     // processed.
     Log(L"  Inputs sent. Waiting for input messages to clear");
     MSG msg;
-    while (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+    while (WinUtils::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+      if (nsTextStore::ProcessRawKeyMessage(msg)) {
+        continue;  // the message is consumed by TSF
+      }
       ::TranslateMessage(&msg);
       ::DispatchMessage(&msg);
       Log(L"    Dispatched 0x%x 0x%x 0x%x", msg.message, msg.wParam, msg.lParam);
@@ -1218,6 +1221,12 @@ MetroWidget::NotifyIMEOfTextChange(uint32_t aStart,
                                    uint32_t aNewEnd)
 {
   return nsTextStore::OnTextChange(aStart, aOldEnd, aNewEnd);
+}
+
+nsIMEUpdatePreference
+MetroWidget::GetIMEUpdatePreference()
+{
+  return nsTextStore::GetIMEUpdatePreference();
 }
 
 NS_IMETHODIMP

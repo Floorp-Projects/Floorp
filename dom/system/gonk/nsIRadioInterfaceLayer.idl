@@ -69,21 +69,6 @@ interface nsIRILContactCallback : nsISupports
                            in jsval contacts);
 };
 
-[scriptable, function, uuid(ab954d56-12a1-4c6b-8753-14ad5664111d)]
-interface nsIRILContactUpdateCallback : nsISupports
-{
-  /**
-   * Called when an ICC contact is updated.
-   *
-   * @param errorMsg
-   *        Error message from RIL.
-   * @param contactType
-   *        Type of the contact, i.e. ADN, FDN.
-   */
-  void onUpdated(in DOMString errorMsg,
-                 in DOMString contactType);
-};
-
 [scriptable, uuid(c0c5cb9f-6372-4b5a-b74c-baacc2da5e4f)]
 interface nsIVoicemailInfo : nsISupports
 {
@@ -108,7 +93,7 @@ interface nsIRilContext : nsISupports
   readonly attribute nsIDOMMozMobileConnectionInfo data;
 };
 
-[scriptable, uuid(8b3a1bc8-86d2-11e2-ace0-33f0ed290b90)]
+[scriptable, uuid(9a914550-8f7a-11e2-9e96-0800200c9a66)]
 interface nsIRadioInterfaceLayer : nsISupports
 {
   /**
@@ -164,26 +149,4 @@ interface nsIRadioInterfaceLayer : nsISupports
    */
   void getICCContacts(in DOMString contactType,
                       in nsIRILContactCallback callback);
-
-  /**
-   * Update ICC Contact.
-   *
-   * This function allows two operations: update the existing contact or
-   *                                      insert a new contact.
-   * If the contact has 'recordId' property, the corresponding record will be
-   * updated. If not, the contact will be inserted.
-   *
-   * @param contactType One of the values below.
-   *                    "ADN" (Abbreviated Dialling Numbers)
-   *                    "FDN" (Fixed Dialling Numbers)
-   * @param contact     The contact will be updated.
-   *                    If has 'recordId' property, updates corresponding record.
-   *                    If not, finds a free record and updates it.
-   * @param pin2        PIN2 is required for updating FDN, otherwise should be "".
-   * @param callback    A nsIRILContactUpdateCallback object.
-   */
-  void updateICCContact(in DOMString contactType,
-                        in jsval contact,
-                        in DOMString pin2,
-                        in nsIRILContactUpdateCallback callback);
 };

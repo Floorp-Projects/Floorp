@@ -297,11 +297,15 @@ def check_output(out, err, rc, test):
     return True
 
 def print_tinderbox(label, test, message=None):
+    # Output test failures in a TBPL parsable format, eg:
+    # TEST-PASS | /foo/bar/baz.js | --no-jm
+    # TEST-UNEXPECTED-FAIL | /foo/bar/baz.js | --no-ion: Assertion failure: ...
+    # TEST-UNEXPECTED-FAIL | jit_test.py: Test execution interrupted by user
     if (test != None):
         jitflags = " ".join(test.jitflags)
-        result = "%s | jit_test.py %-15s| %s" % (label, jitflags, test.path)
+        result = "%s | %s | %s" % (label, test.path, jitflags)
     else:
-        result = "%s | jit_test.py " % label
+        result = "%s | jit_test.py" % label
 
     if message:
         result += ": " + message

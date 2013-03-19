@@ -1508,7 +1508,8 @@ ContentParent::Observe(nsISupports* aSubject,
     }
     // listening for alert notifications
     else if (!strcmp(aTopic, "alertfinished") ||
-             !strcmp(aTopic, "alertclickcallback") ) {
+             !strcmp(aTopic, "alertclickcallback") ||
+             !strcmp(aTopic, "alertshow") ) {
         if (!SendNotifyAlertsObserver(nsDependentCString(aTopic),
                                       nsDependentString(aData)))
             return NS_ERROR_NOT_AVAILABLE;
@@ -2242,7 +2243,8 @@ ContentParent::AfterProcessNextEvent(nsIThreadInternal *thread,
 bool
 ContentParent::RecvShowAlertNotification(const nsString& aImageUrl, const nsString& aTitle,
                                          const nsString& aText, const bool& aTextClickable,
-                                         const nsString& aCookie, const nsString& aName)
+                                         const nsString& aCookie, const nsString& aName,
+                                         const nsString& aBidi, const nsString& aLang)
 {
     if (!AssertAppProcessPermission(this, "desktop-notification")) {
         return false;
@@ -2250,8 +2252,39 @@ ContentParent::RecvShowAlertNotification(const nsString& aImageUrl, const nsStri
     nsCOMPtr<nsIAlertsService> sysAlerts(do_GetService(NS_ALERTSERVICE_CONTRACTID));
     if (sysAlerts) {
         sysAlerts->ShowAlertNotification(aImageUrl, aTitle, aText, aTextClickable,
-                                         aCookie, this, aName);
+                                         aCookie, this, aName, aBidi, aLang);
     }
+
+    return true;
+}
+
+bool
+ContentParent::RecvCloseAlert(const nsString& aName)
+{
+    if (!AssertAppProcessPermission(this, "desktop-notification")) {
+        return false;
+    }
+    nsCOMPtr<nsIAlertsService> sysAlerts(do_GetService(NS_ALERTSERVICE_CONTRACTID));
+    if (sysAlerts) {
+        sysAlerts->CloseAlert(aName);
+    }
+
+    return true;
+}
+
+bool
+ContentParent::RecvTestPermissionFromPrincipal(const IPC::Principal& aPrincipal,
+                                               const nsCString& aType,
+                                               uint32_t* permission)
+{
+    nsCOMPtr<nsIPermissionManager> permissionManager =
+        do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+    NS_ENSURE_TRUE(permissionManager, false);
+
+    nsresult rv = permissionManager->TestPermissionFromPrincipal(aPrincipal,
+                                                                 aType.get(),
+                                                                 permission);
+    NS_ENSURE_SUCCESS(rv, false);
 
     return true;
 }

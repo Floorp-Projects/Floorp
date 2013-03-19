@@ -173,6 +173,8 @@ CompilerOutput::isValid() const
 inline CompilerOutput*
 RecompileInfo::compilerOutput(TypeCompartment &types) const
 {
+    if (!types.constrainedOutputs || outputIndex >= types.constrainedOutputs->length())
+        return NULL;
     return &(*types.constrainedOutputs)[outputIndex];
 }
 
@@ -722,6 +724,9 @@ UseNewTypeForClone(JSFunction *fun)
         return false;
 
     if (fun->nonLazyScript()->shouldCloneAtCallsite)
+        return true;
+
+    if (fun->isArrow())
         return true;
 
     if (fun->hasSingletonType())

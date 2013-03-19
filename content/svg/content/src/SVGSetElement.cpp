@@ -38,7 +38,6 @@ SVGSetElement::SVGSetElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGSetElement)
 
 //----------------------------------------------------------------------
-// nsISMILAnimationElement methods
 
 nsSMILAnimationFunction&
 SVGSetElement::AnimationFunction()

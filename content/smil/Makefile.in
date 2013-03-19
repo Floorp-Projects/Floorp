@@ -18,7 +18,6 @@ FAIL_ON_WARNINGS = 1
 endif # !_MSC_VER
 
 EXPORTS	= \
-	nsISMILAnimationElement.h \
 	nsISMILAttr.h \
 	nsISMILType.h \
 	nsSMILAnimationController.h \

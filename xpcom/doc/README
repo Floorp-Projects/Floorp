@@ -1,8 +1,11 @@
-<HTML>
-<HEAD>
-   <TITLE>READ ME</TITLE>
-</HEAD>
-<BODY>
-
-<H4><P>
-XPCOM documentation can be found at <a href="http://www.mozilla.org/projects/xpcom>www.mozilla.org/projects/xpcom</a>
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>READ ME</title>
+  </head>
+  <body>
+    <h4>
+      XPCOM documentation can be found at <a href="https://developer.mozilla.org/en-US/docs/XPCOM">https://developer.mozilla.org/en-US/docs/XPCOM</a>
+    </h4>
+  </body>
+</html>
