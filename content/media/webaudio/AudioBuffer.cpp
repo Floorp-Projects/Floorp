@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioBuffer.h"
-#include <speex/speex_resampler.h>
 #include "mozilla/dom/AudioBufferBinding.h"
 #include "nsContentUtils.h"
 #include "AudioContext.h"
@@ -105,7 +104,6 @@ AudioBuffer::RestoreJSChannelData(JSContext* aJSContext)
     }
 
     mSharedChannels = nullptr;
-    mResampledChannels = nullptr;
   }
 }
 
@@ -160,74 +158,18 @@ StealJSArrayDataIntoThreadSharedFloatArrayBufferList(JSContext* aJSContext,
 }
 
 ThreadSharedFloatArrayBufferList*
-AudioBuffer::GetThreadSharedChannelsForRate(JSContext* aJSContext, uint32_t aRate,
+AudioBuffer::GetThreadSharedChannelsForRate(JSContext* aJSContext, uint32_t* aRate,
                                             uint32_t* aLength)
 {
-  if (mResampledChannels && mResampledChannelsRate == aRate) {
-    // return cached data
-    *aLength = mResampledChannelsLength;
-    return mResampledChannels;
-  }
-
   if (!mSharedChannels) {
     // Steal JS data
     mSharedChannels =
       StealJSArrayDataIntoThreadSharedFloatArrayBufferList(aJSContext, mJSChannels);
   }
 
-  if (mSampleRate == aRate) {
-    *aLength = mLength;
-    return mSharedChannels;
-  }
-
-  mResampledChannels = new ThreadSharedFloatArrayBufferList(NumberOfChannels());
-
-  double newLengthD = ceil(Duration()*aRate);
-  uint32_t newLength = uint32_t(newLengthD);
-  *aLength = newLength;
-  double size = sizeof(float)*NumberOfChannels()*newLengthD;
-  if (size != uint32_t(size)) {
-    return mResampledChannels;
-  }
-  float* outputData = static_cast<float*>(malloc(uint32_t(size)));
-  if (!outputData) {
-    nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(mContext->GetParentObject());
-    nsIDocument* doc = nullptr;
-    if (pWindow) {
-      doc = pWindow->GetExtantDoc();
-    }
-    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                    "Media",
-                                    doc,
-                                    nsContentUtils::eDOM_PROPERTIES,
-                                    "MediaBufferSourceNodeResampleOutOfMemory");
-    return mResampledChannels;
-  }
-
-  SpeexResamplerState* resampler = speex_resampler_init(NumberOfChannels(),
-                                                        mSampleRate,
-                                                        aRate,
-                                                        SPEEX_RESAMPLER_QUALITY_DEFAULT,
-                                                        nullptr);
-
-  for (uint32_t i = 0; i < NumberOfChannels(); ++i) {
-    const float* inputData = mSharedChannels->GetData(i);
-    uint32_t inSamples = mLength;
-    uint32_t outSamples = newLength;
-
-    speex_resampler_process_float(resampler, i,
-                                  inputData, &inSamples,
-                                  outputData, &outSamples);
-
-    mResampledChannels->SetData(i, i == 0 ? outputData : nullptr, outputData);
-    outputData += newLength;
-  }
-
-  speex_resampler_destroy(resampler);
-
-  mResampledChannelsRate = aRate;
-  mResampledChannelsLength = newLength;
-  return mResampledChannels;
+  *aLength = mLength;
+  *aRate = mSampleRate;
+  return mSharedChannels;
 }
 
 }
