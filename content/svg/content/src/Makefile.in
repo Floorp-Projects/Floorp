@@ -84,6 +84,7 @@ CPPSRCS		= \
 		SVGFECompositeElement.cpp \
 		SVGFEDistantLightElement.cpp \
 		SVGFEFloodElement.cpp \
+		SVGFEGaussianBlurElement.cpp \
 		SVGFEImageElement.cpp \
 		SVGFEMergeElement.cpp \
 		SVGFEMergeNodeElement.cpp \
@@ -189,6 +190,7 @@ EXPORTS_mozilla/dom = \
 	SVGFECompositeElement.h \
 	SVGFEDistantLightElement.h \
 	SVGFEFloodElement.h \
+	SVGFEGaussianBlurElement.h \
 	SVGFEImageElement.h \
 	SVGFEMergeElement.h \
 	SVGFEMergeNodeElement.h \
