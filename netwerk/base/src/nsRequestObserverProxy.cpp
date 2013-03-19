@@ -9,7 +9,6 @@
 #include "nsRequestObserverProxy.h"
 #include "nsIRequest.h"
 #include "nsIServiceManager.h"
-#include "nsProxyRelease.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
 #include "prlog.h"
@@ -93,7 +92,7 @@ public:
     {
         LOG(("nsOnStopRequestEvent::HandleEvent [req=%x]\n", mRequest.get()));
 
-        nsCOMPtr<nsIRequestObserver> observer = mProxy->mObserver;
+        nsMainThreadPtrHandle<nsIRequestObserver> observer = mProxy->mObserver;
         if (!observer) {
             NS_NOTREACHED("already handled onStopRequest event (observer is null)");
             return NS_OK;
@@ -111,23 +110,6 @@ public:
         return NS_OK;
     }
 };
-
-//-----------------------------------------------------------------------------
-// nsRequestObserverProxy <public>
-//-----------------------------------------------------------------------------
-
-nsRequestObserverProxy::~nsRequestObserverProxy()
-{
-    if (mObserver) {
-        // order is crucial here... we must be careful to clear mObserver
-        // before posting the proxy release event.  otherwise, we'd risk
-        // releasing the object on this thread.
-        nsIRequestObserver *obs = nullptr;
-        mObserver.swap(obs);
-        nsCOMPtr<nsIEventTarget> mainThread(do_GetMainThread());
-        NS_ProxyRelease(mainThread, obs);
-    }
-}
 
 //-----------------------------------------------------------------------------
 // nsRequestObserverProxy::nsISupports implementation...
@@ -200,8 +182,8 @@ nsRequestObserverProxy::Init(nsIRequestObserver *observer, nsISupports *context)
         gRequestObserverProxyLog = PR_NewLogModule("nsRequestObserverProxy");
 #endif
 
-    mObserver = observer;
-    mContext = context;
+    mObserver = new nsMainThreadPtrHolder<nsIRequestObserver>(observer);
+    mContext = new nsMainThreadPtrHolder<nsISupports>(context);
 
     return NS_OK;
 }
