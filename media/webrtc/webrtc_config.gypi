@@ -23,6 +23,16 @@
     'build_libjpeg': 0,
     'build_libvpx': 0,
 
+    #if "-D build_with_gonk=1", then set moz_widget_toolkit_gonk to 1
+    'moz_widget_toolkit_gonk': 0,
+    'variables': {
+      'build_with_gonk%': 0,
+    },
+    'conditions': [
+      ['build_with_gonk==1', {
+         'moz_widget_toolkit_gonk': 1,
+      }],
+    ],
 # (for vp8) chromium sets to 0 also
     'use_temporal_layers': 0,
 # Creates AEC internal sample dump files in current directory
