@@ -480,7 +480,7 @@ public:
     if (!mFloats.IsEmpty()) {
       // If we have pushed floats, then they should be at the beginning of our
       // float list.
-      if (mFloats.FrameAt(0)->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT) {
+      if (mFloats.FirstChild()->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT) {
         return true;
       }
     }
@@ -488,9 +488,9 @@ public:
 #ifdef DEBUG
     // Double-check the above assertion that pushed floats should be at the
     // beginning of our floats list.
-    for (int32_t i = 0; i < mFloats.GetLength(); i++) {
-      NS_ASSERTION(!(mFloats.FrameAt(i)->GetStateBits() &
-        NS_FRAME_IS_PUSHED_FLOAT),
+    for (nsFrameList::Enumerator e(mFloats); !e.AtEnd(); e.Next()) {
+      nsIFrame* f = e.get();
+      NS_ASSERTION(!(f->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT),
         "pushed floats must be at the beginning of the float list");
     }
 #endif
