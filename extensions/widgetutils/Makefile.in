@@ -10,7 +10,6 @@ VPATH=@srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE	= widgetutils
 XPI_NAME = widgetutils
 
 INSTALL_EXTENSION_ID = widgetutils@extensions.mozilla.org

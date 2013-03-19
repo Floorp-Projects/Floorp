@@ -9,7 +9,6 @@ VPATH  = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE  = tremor
 LIBRARY_NAME = tremor
 FORCE_STATIC_LIB= 1
 LOCAL_INCLUDES += -I$(topsrcdir)/media/libtremor/include/tremor

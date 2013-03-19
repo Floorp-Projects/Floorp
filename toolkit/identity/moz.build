@@ -9,3 +9,5 @@ XPIDL_SOURCES += [
     'nsIIdentityCryptoService.idl',
 ]
 
+MODULE = 'identity'
+

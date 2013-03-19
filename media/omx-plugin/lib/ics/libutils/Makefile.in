@@ -18,7 +18,6 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = libandroidutils
 MODULE_NAME = libandroidutils
 LIBRARY_NAME = utils
 FORCE_SHARED_LIB = 1

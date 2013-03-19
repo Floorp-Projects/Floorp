@@ -9,3 +9,5 @@ DIRS += ['program']
 # on these files to generate C++ headers and .xpt typelib files.
 XPIDL_SOURCES += ['nsISample.idl']
 
+MODULE = 'xpcomsample'
+

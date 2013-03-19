@@ -9,8 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = loginmgr
-
 EXTRA_COMPONENTS = \
   crypto-SDR.js \
   nsLoginInfo.js \

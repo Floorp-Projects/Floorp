@@ -10,7 +10,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= caps
-
 include $(topsrcdir)/config/rules.mk
 

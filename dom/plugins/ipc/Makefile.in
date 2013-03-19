@@ -9,7 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = dom
 FAIL_ON_WARNINGS := 1
 
 EXPORTS_NAMESPACES = mozilla
@@ -50,7 +49,6 @@ EXPORTS_mozilla/plugins = \
   StreamNotifyParent.h \
   $(NULL)
 
-MODULE           = dom
 LIBRARY_NAME     = domplugins_s
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1

@@ -9,8 +9,6 @@ topsrcdir       = @top_srcdir@
 srcdir          = @srcdir@
 VPATH           = @srcdir@
 
-MODULE          = embed_base
-
 include $(DEPTH)/config/autoconf.mk
 
 SDK_HEADERS         = \

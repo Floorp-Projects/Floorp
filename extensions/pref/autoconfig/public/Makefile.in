@@ -9,7 +9,5 @@ VPATH        = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE       = autoconfig
-
 include $(topsrcdir)/config/rules.mk
 

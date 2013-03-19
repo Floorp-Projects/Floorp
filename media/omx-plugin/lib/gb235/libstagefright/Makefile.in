@@ -18,7 +18,6 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = libandroidstagefrightgb234
 MODULE_NAME = libandroidstagefrightgb234
 LIBRARY_NAME = stagefright
 FORCE_SHARED_LIB = 1

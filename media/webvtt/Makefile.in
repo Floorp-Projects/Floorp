@@ -9,7 +9,6 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE            = webvtt
 LIBRARY_NAME      = webvtt
 
 EXPORTS_NAMESPACES = webvtt

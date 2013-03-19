@@ -7,7 +7,6 @@ topsrcdir        = @top_srcdir@
 srcdir           = @srcdir@
 VPATH            = @srcdir@
 
-MODULE           = dom
 LIBRARY_NAME     = dombindings_s
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1

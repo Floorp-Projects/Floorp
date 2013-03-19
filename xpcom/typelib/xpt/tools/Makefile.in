@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xpcom
 INTERNAL_TOOLS	= 1
 
 SDK_BINARY = \

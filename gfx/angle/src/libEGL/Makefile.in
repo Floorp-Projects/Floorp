@@ -9,7 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = libegl
 # On Windows, we don't automatically get "lib" prepended, but we need it.
 LIBRARY_NAME     = libEGL
 MODULE_NAME      = libegl

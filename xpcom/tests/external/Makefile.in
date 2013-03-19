@@ -9,9 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = xpcom
-
-
 CPPSRCS = \
 	TestMinStringAPI.cpp \
 	$(NULL)

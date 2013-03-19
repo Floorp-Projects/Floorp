@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= locale
 LIBRARY_NAME	= platlocale_s
 FORCE_STATIC_LIB	= 1
 LIBXUL_LIBRARY  = 1

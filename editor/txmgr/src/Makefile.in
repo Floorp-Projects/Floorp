@@ -11,7 +11,6 @@ FAIL_ON_WARNINGS = 1
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= txmgr
 LIBRARY_NAME	= txmgr
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1

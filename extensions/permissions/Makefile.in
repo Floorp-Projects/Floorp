@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= permissions
 LIBRARY_NAME	= permissions
 SHORT_LIBNAME	= perms
 EXPORT_LIBRARY	= 1

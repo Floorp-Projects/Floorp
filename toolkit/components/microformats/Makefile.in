@@ -9,8 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = microformats
-
 EXTRA_JS_MODULES = Microformats.js
 
 include $(topsrcdir)/config/rules.mk

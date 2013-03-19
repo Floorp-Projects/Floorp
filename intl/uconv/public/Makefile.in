@@ -10,8 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= uconv
-
 EXPORTS		= \
 		nsIUnicodeDecoder.h \
 		nsIUnicodeEncoder.h \

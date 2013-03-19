@@ -48,3 +48,5 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 
 XPIDL_MODULE = 'xpcom_io'
 
+MODULE = 'xpcom'
+

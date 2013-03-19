@@ -9,8 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = update
-
 EXTRA_COMPONENTS = \
   nsUpdateTimerManager.js \
   nsUpdateTimerManager.manifest \

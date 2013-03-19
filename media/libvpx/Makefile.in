@@ -12,7 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 DEFINES += -DHAVE_CONFIG_H=vpx_config.h
 
-MODULE = vpx
 LIBRARY_NAME = vpx
 FORCE_STATIC_LIB= 1
 ifeq (WINNT,$(OS_TARGET))

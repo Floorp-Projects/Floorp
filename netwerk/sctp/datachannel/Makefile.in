@@ -10,7 +10,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE         = necko
 LIBRARY_NAME   = nkdatachan_s
 LIBXUL_LIBRARY = 1
 GRE_MODULE     = 1

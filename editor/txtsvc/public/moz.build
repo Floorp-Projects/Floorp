@@ -8,3 +8,5 @@ XPIDL_SOURCES += [
     'nsITextServicesFilter.idl',
 ]
 
+MODULE = 'txtsvc'
+

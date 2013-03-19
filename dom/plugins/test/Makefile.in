@@ -11,8 +11,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = test_plugin
-
 XPCSHELL_TESTS = \
   unit \
   $(NULL)

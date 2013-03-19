@@ -9,7 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE         = dom
 LIBRARY_NAME   = jsdompermissionsettings_s
 
 GRE_MODULE     = 1

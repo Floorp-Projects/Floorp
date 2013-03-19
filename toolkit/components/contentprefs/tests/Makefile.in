@@ -11,8 +11,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= test_toolkit_contentprefs
-
 XPCSHELL_TESTS = unit unit_cps2
 
 # FIXME/bug 575918: out-of-process xpcshell is broken on OS X

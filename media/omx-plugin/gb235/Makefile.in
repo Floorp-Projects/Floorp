@@ -19,7 +19,6 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = omxplugingb235
 MODULE_NAME = omxplugingb235
 LIBRARY_NAME = omxplugingb235
 FORCE_SHARED_LIB = 1

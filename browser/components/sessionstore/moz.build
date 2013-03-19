@@ -11,3 +11,5 @@ XPIDL_SOURCES += [
     'nsISessionStore.idl',
 ]
 
+MODULE = 'sessionstore'
+

@@ -11,7 +11,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(srcdir)/objs.mk
 
-MODULE		= zlib
 LIBRARY_NAME	= mozz
 
 CSRCS		= $(MODULES_ZLIB_SRC_LCSRCS)

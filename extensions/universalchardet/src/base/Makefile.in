@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= universalchardet_s
 LIBRARY_NAME	= universalchardet_s
 
 CPPSRCS = \

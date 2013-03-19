@@ -10,8 +10,6 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = shellservice
-
 FORCE_STATIC_LIB = 1
 USE_STATIC_LIBS = 1
 

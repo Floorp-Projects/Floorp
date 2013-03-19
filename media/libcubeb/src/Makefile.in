@@ -9,7 +9,6 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE          = cubeb
 LIBRARY_NAME    = cubeb
 FORCE_STATIC_LIB= 1
 ifeq ($(OS_TARGET),WINNT)

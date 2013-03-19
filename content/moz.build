@@ -22,3 +22,5 @@ if CONFIG['MOZ_MEDIA']:
 
 TEST_TOOL_DIRS += ['test']
 
+MODULE = 'content'
+

@@ -15,3 +15,5 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'xpcom_components'
 
+MODULE = 'xpcom'
+

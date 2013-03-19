@@ -9,6 +9,4 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = soundtouch
-
 include $(topsrcdir)/config/rules.mk

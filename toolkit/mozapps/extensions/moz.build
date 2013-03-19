@@ -11,3 +11,5 @@ XPIDL_SOURCES += [
     'amIWebInstaller.idl',
 ]
 
+MODULE = 'extensions'
+

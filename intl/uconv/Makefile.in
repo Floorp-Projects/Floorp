@@ -22,7 +22,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= uconv
-
 include $(topsrcdir)/config/rules.mk
 

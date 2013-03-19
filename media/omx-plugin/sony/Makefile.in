@@ -19,7 +19,6 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = omxpluginsony
 MODULE_NAME = omxpluginsony
 LIBRARY_NAME = omxpluginsony
 FORCE_SHARED_LIB = 1

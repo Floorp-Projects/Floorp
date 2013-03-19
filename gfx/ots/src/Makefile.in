@@ -32,7 +32,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE         = ots
 LIBRARY_NAME   = mozots
 FORCE_STATIC_LIB = 1
 

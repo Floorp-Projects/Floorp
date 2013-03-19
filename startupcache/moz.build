@@ -9,3 +9,5 @@ XPIDL_SOURCES += [
     'nsIStartupCache.idl',
 ]
 
+MODULE = 'startupcache'
+

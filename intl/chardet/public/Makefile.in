@@ -10,8 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= chardet
-
 EXPORTS		= \
 		nsDetectionConfident.h \
 		nsICharsetDetectionObserver.h \

@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= imgjpege
 LIBRARY_NAME	= imgjpege_s
 FORCE_STATIC_LIB = 1
 MODULE_NAME	= imgEncoderJPEGModule

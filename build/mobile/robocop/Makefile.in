@@ -13,8 +13,6 @@ dir-tests    := $(DEPTH)/$(mobile-tests)
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = robocop
-
 ROBOTIUM_PATH = $(srcdir)/robotium-solo-3.6.jar
 
 JAVAFILES = \

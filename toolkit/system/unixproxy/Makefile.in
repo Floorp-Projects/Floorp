@@ -9,7 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE          = unixproxy
 LIBRARY_NAME    = unixproxy
 
 EXPORT_LIBRARY  = 1

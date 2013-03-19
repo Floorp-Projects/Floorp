@@ -8,8 +8,6 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 relativesrcdir  = @relativesrcdir@
 
-MODULE = test_socialapi
-
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_BROWSER_FILES = \

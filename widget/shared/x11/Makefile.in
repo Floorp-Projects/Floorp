@@ -10,7 +10,6 @@ VPATH      = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE     = widget
 LIBRARY_NAME   = widget_shared_x11
 LIBXUL_LIBRARY  = 1
 

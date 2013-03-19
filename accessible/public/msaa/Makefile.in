@@ -8,7 +8,6 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 LIBRARY_NAME	= AccessibleMarshal
-MODULE    = accessibility
 GRE_MODULE   = 1
 DEFFILE = $(win_srcdir)/AccessibleMarshal.def
 

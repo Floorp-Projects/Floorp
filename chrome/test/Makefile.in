@@ -10,8 +10,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = test_chrome
-
 XPCSHELL_TESTS = unit \
                  $(NULL)
 # FIXME/bug 575918: out-of-process xpcshell is broken on OS X

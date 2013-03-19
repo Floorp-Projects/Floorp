@@ -28,3 +28,5 @@ XPIDL_SOURCES += [
     'rdfITripleVisitor.idl',
 ]
 
+MODULE = 'rdf'
+

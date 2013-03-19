@@ -12,7 +12,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE          = test_necko
 NO_INTERFACES_MANIFEST = 1
 
 EXTRA_COMPONENTS = \

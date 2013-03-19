@@ -13,7 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 
 VPATH += $(srcdir)/fallback
 
-MODULE         = dom
 LIBRARY_NAME   = jsdomcontacts_s
 LIBXUL_LIBRARY = 1
 

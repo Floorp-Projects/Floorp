@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xpcom
 LIBRARY_NAME	= xptinfo
 MOZILLA_INTERNAL_API = 1
 
