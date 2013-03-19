@@ -71,12 +71,12 @@ public:
   {}
 
   virtual int Create();
-  virtual void CreateAddr(bool aIsServer,
+  virtual bool CreateAddr(bool aIsServer,
                           socklen_t& aAddrSize,
-                          struct sockaddr *aAddr,
+                          sockaddr_any& aAddr,
                           const char* aAddress);
   virtual bool SetUp(int aFd);
-  virtual void GetSocketAddr(const sockaddr& aAddr,
+  virtual void GetSocketAddr(const sockaddr_any& aAddr,
                              nsAString& aAddrStr);
 
 private:
@@ -93,12 +93,8 @@ RilConnector::Create()
 #if defined(MOZ_WIDGET_GONK)
     fd = socket(AF_LOCAL, SOCK_STREAM, 0);
 #else
-    struct hostent *hp;
-
-    hp = gethostbyname("localhost");
-    if (hp) {
-        fd = socket(hp->h_addrtype, SOCK_STREAM, 0);
-    }
+    // If we can't hit a local loopback, fail later in connect.
+    fd = socket(AF_INET, SOCK_STREAM, 0);
 #endif
 
     if (fd < 0) {
@@ -112,41 +108,41 @@ RilConnector::Create()
     return fd;
 }
 
-void
+bool
 RilConnector::CreateAddr(bool aIsServer,
                          socklen_t& aAddrSize,
-                         struct sockaddr *aAddr,
+                         sockaddr_any& aAddr,
                          const char* aAddress)
 {
     // We never open ril socket as server.
     MOZ_ASSERT(!aIsServer);
-
+    uint32_t af;
 #if defined(MOZ_WIDGET_GONK)
-    struct sockaddr_un addr_un;
-
-    memset(&addr_un, 0, sizeof(addr_un));
-    strcpy(addr_un.sun_path, aAddress);
-    addr_un.sun_family = AF_LOCAL;
-
-    aAddrSize = strlen(aAddress) + offsetof(struct sockaddr_un, sun_path) + 1;
-    memcpy(aAddr, &addr_un, aAddrSize);
+    af = AF_LOCAL;
 #else
-    struct hostent *hp;
-    struct sockaddr_in addr_in;
-
-    hp = gethostbyname("localhost");
-    if (!hp) {
-        return;
-    }
-
-    memset(&addr_in, 0, sizeof(addr_in));
-    addr_in.sin_family = hp->h_addrtype;
-    addr_in.sin_port = htons(RIL_TEST_PORT + mClientId);
-    memcpy(&addr_in.sin_addr, hp->h_addr, hp->h_length);
-
-    aAddrSize = sizeof(addr_in);
-    memcpy(aAddr, &addr_in, aAddrSize);
+    af = AF_INET;
 #endif
+    switch (af) {
+    case AF_LOCAL:
+        aAddr.un.sun_family = af;
+        if(strlen(aAddress) > sizeof(aAddr.un.sun_path)) {
+            NS_WARNING("Address too long for socket struct!");
+            return false;
+        }
+        strcpy((char*)&aAddr.un.sun_path, aAddress);
+        aAddrSize = strlen(aAddress) + offsetof(struct sockaddr_un, sun_path) + 1;
+        break;
+    case AF_INET:
+        aAddr.in.sin_family = af;
+        aAddr.in.sin_port = htons(RIL_TEST_PORT + mClientId);
+        aAddr.in.sin_addr.s_addr = htons(INADDR_LOOPBACK);
+        aAddrSize = sizeof(sockaddr_in);
+        break;
+    default:
+        NS_WARNING("Socket type not handled by connector!");
+        return false;
+    }
+    return true;
 }
 
 bool
@@ -157,7 +153,7 @@ RilConnector::SetUp(int aFd)
 }
 
 void
-RilConnector::GetSocketAddr(const sockaddr& aAddr,
+RilConnector::GetSocketAddr(const sockaddr_any& aAddr,
                             nsAString& aAddrStr)
 {
     // Unused.
