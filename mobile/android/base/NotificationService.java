@@ -56,7 +56,7 @@ public class NotificationService extends Service {
      * @param clearIntent    Intent used when the notification is removed
      */
     public void add(int notificationID, String aImageUrl, String aAlertTitle,
-                    String aAlertText, PendingIntent contentIntent, PendingIntent clearIntent) {
+                    String aAlertText, PendingIntent contentIntent) {
         // Remove the old notification with the same ID, if any
         remove(notificationID);
 
@@ -79,7 +79,6 @@ public class NotificationService extends Service {
                 icon, aAlertTitle, aAlertText, System.currentTimeMillis(), imageUri);
 
         notification.setLatestEventInfo(this, aAlertTitle, aAlertText, contentIntent);
-        notification.deleteIntent = clearIntent;
 
         notification.show();
         mAlertNotifications.put(notification.getId(), notification);
