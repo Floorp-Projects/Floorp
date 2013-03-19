@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsTreeStyleCache.h"
-#include "nsISupportsArray.h"
 #include "nsStyleSet.h"
 #include "mozilla/dom/Element.h"
 
@@ -15,10 +14,9 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
                                   nsIContent* aContent, 
                                   nsStyleContext* aContext,
                                   nsIAtom* aPseudoElement,
-                                  nsISupportsArray* aInputWord)
+                                  const AtomArray & aInputWord)
 {
-  uint32_t count;
-  aInputWord->Count(&count);
+  uint32_t count = aInputWord.Length();
   nsDFAState startState(0);
   nsDFAState* currState = &startState;
 
@@ -41,8 +39,7 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
   }
 
   for (uint32_t i = 0; i < count; i++) {
-    nsCOMPtr<nsIAtom> pseudo = do_QueryElementAt(aInputWord, i);
-    nsTransitionKey key(currState->GetStateID(), pseudo);
+    nsTransitionKey key(currState->GetStateID(), aInputWord[i]);
     currState = static_cast<nsDFAState*>(mTransitionTable->Get(&key));
 
     if (!currState) {
