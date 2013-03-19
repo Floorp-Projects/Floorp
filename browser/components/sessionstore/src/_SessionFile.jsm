@@ -42,6 +42,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
+  "@mozilla.org/base/telemetry;1", "nsITelemetry");
 
 // An encoder to UTF-8.
 XPCOMUtils.defineLazyGetter(this, "gEncoder", function () {
@@ -217,10 +219,15 @@ let SessionFileInternal = {
   },
 
   createBackupCopy: function ssfi_createBackupCopy() {
+    let backupCopyOptions = {
+      outExecutionDuration: null
+    };
     let self = this;
     return TaskUtils.spawn(function task() {
       try {
-        yield OS.File.copy(self.path, self.backupPath);
+        yield OS.File.copy(self.path, self.backupPath, backupCopyOptions);
+        Telemetry.getHistogramById("FX_SESSION_RESTORE_BACKUP_FILE_MS").add(
+          backupCopyOptions.outExecutionDuration);
       } catch (ex if self._isNoSuchFile(ex)) {
         // Ignore exceptions about non-existent files.
       } catch (ex) {
