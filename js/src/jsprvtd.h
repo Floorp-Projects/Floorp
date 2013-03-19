@@ -158,6 +158,7 @@ class FunctionBox;
 class ObjectBox;
 struct Token;
 struct TokenPos;
+struct TokenPtr;
 class TokenStream;
 class ParseMapPool;
 struct ParseNode;
