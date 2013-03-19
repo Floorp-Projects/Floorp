@@ -30,7 +30,7 @@ JS::Zone::Zone(JSRuntime *rt)
     hold(false),
 #ifdef JSGC_GENERATIONAL
     gcNursery(),
-    gcStoreBuffer(rt),
+    gcStoreBuffer(&gcNursery),
 #endif
     ionUsingBarriers_(false),
     active(false),

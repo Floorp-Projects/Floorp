@@ -235,7 +235,7 @@ JSObject::finalize(js::FreeOp *fop)
     js::Probes::finalizeObject(this);
 
 #ifdef DEBUG
-    if (isTenured() && !IsBackgroundFinalized(tenuredGetAllocKind())) {
+    if (!IsBackgroundFinalized(getAllocKind())) {
         /* Assert we're on the main thread. */
         fop->runtime()->assertValidThread();
     }
@@ -1085,7 +1085,7 @@ JSObject::hasShapeTable() const
 inline size_t
 JSObject::computedSizeOfThisSlotsElements() const
 {
-    size_t n = js::gc::Arena::thingSize(js::gc::GetGCObjectFixedSlotsKind(numFixedSlots()));
+    size_t n = sizeOfThis();
 
     if (hasDynamicSlots())
         n += numDynamicSlots() * sizeof(js::Value);
@@ -1721,7 +1721,7 @@ CopyInitializerObject(JSContext *cx, HandleObject baseobj, NewObjectKind newKind
 
     gc::AllocKind allocKind = gc::GetGCObjectFixedSlotsKind(baseobj->numFixedSlots());
     allocKind = gc::GetBackgroundAllocKind(allocKind);
-    JS_ASSERT_IF(baseobj->isTenured(), allocKind == baseobj->getAllocKind());
+    JS_ASSERT(allocKind == baseobj->getAllocKind());
     RootedObject obj(cx);
     obj = NewBuiltinClassInstance(cx, &ObjectClass, allocKind, newKind);
     if (!obj)

@@ -754,14 +754,15 @@ js::gc::EndVerifyPostBarriers(JSRuntime *rt)
         goto oom;
 
     /* Walk the heap. */
-    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
-        for (CompartmentsIter comp(rt); !comp.done(); comp.next()) {
-            if (comp->watchpointMap)
-                comp->watchpointMap->markAll(trc);
-        }
+    for (CompartmentsIter c(rt); !c.done(); c.next()) {
+        if (IsAtomsCompartment(c))
+            continue;
+
+        if (c->watchpointMap)
+            c->watchpointMap->markAll(trc);
 
         for (size_t kind = 0; kind < FINALIZE_LIMIT; ++kind) {
-            for (CellIterUnderGC cells(zone, AllocKind(kind)); !cells.done(); cells.next()) {
+            for (CellIterUnderGC cells(c, AllocKind(kind)); !cells.done(); cells.next()) {
                 Cell *src = cells.getCell();
                 if (!rt->gcVerifierNursery.isInside(src))
                     JS_TraceChildren(trc, src, MapAllocToTraceKind(AllocKind(kind)));
