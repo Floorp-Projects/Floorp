@@ -3,8 +3,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#if !defined(nsHTMLAudioElement_h__)
-#define nsHTMLAudioElement_h__
+#ifndef mozilla_dom_HTMLAudioElement_h
+#define mozilla_dom_HTMLAudioElement_h
 
 #include "nsIDOMHTMLAudioElement.h"
 #include "nsIJSNativeInitializer.h"
@@ -13,13 +13,16 @@
 typedef uint16_t nsMediaNetworkState;
 typedef uint16_t nsMediaReadyState;
 
-class nsHTMLAudioElement : public mozilla::dom::HTMLMediaElement,
-                           public nsIDOMHTMLAudioElement,
-                           public nsIJSNativeInitializer
+namespace mozilla {
+namespace dom {
+
+class HTMLAudioElement : public HTMLMediaElement,
+                         public nsIDOMHTMLAudioElement,
+                         public nsIJSNativeInitializer
 {
 public:
-  nsHTMLAudioElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  virtual ~nsHTMLAudioElement();
+  HTMLAudioElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  virtual ~HTMLAudioElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -34,8 +37,8 @@ public:
   NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
   // nsIDOMHTMLMediaElement
-  using mozilla::dom::HTMLMediaElement::GetPaused;
-  NS_FORWARD_NSIDOMHTMLMEDIAELEMENT(mozilla::dom::HTMLMediaElement::)
+  using HTMLMediaElement::GetPaused;
+  NS_FORWARD_NSIDOMHTMLMEDIAELEMENT(HTMLMediaElement::)
 
   // nsIDOMHTMLAudioElement
   NS_DECL_NSIDOMHTMLAUDIOELEMENT
@@ -52,4 +55,7 @@ public:
   virtual nsIDOMNode* AsDOMNode() { return this; }
 };
 
-#endif
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_HTMLAudioElement_h
