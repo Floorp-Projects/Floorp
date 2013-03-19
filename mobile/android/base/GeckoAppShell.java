@@ -327,15 +327,10 @@ public class GeckoAppShell
         }
     }
 
-    public static void notifyIMEEnabled(int state, String typeHint,
-                                        String modeHint, String actionHint,
-                                        boolean landscapeFS) {
-        // notifyIMEEnabled() still needs the landscapeFS parameter
-        // because it is called from JNI code that assumes it has the
-        // same signature as XUL Fennec's (which does use landscapeFS).
-        // Bug 807124 will eliminate the need for landscapeFS
+    public static void notifyIMEContext(int state, String typeHint,
+                                        String modeHint, String actionHint) {
         if (mEditableListener != null) {
-            mEditableListener.notifyIMEEnabled(state, typeHint,
+            mEditableListener.notifyIMEContext(state, typeHint,
                                                modeHint, actionHint);
         }
     }

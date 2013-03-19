@@ -1718,7 +1718,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
         AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT, 0);
         return;
     } else if (ae->Action() == AndroidGeckoEvent::IME_UPDATE_CONTEXT) {
-        AndroidBridge::NotifyIMEEnabled(mInputContext.mIMEState.mEnabled,
+        AndroidBridge::NotifyIMEContext(mInputContext.mIMEState.mEnabled,
                                         mInputContext.mHTMLInputType,
                                         mInputContext.mHTMLInputInputmode,
                                         mInputContext.mActionHint);
