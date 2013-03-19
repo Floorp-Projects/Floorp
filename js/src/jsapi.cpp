@@ -2427,19 +2427,6 @@ JS_AnchorPtr(void *p)
 {
 }
 
-JS_PUBLIC_API(JSBool)
-JS_LockGCThingRT(JSRuntime *rt, void *gcthing)
-{
-    return js_LockThing(rt, gcthing);
-}
-
-JS_PUBLIC_API(JSBool)
-JS_UnlockGCThingRT(JSRuntime *rt, void *gcthing)
-{
-    js_UnlockThing(rt, gcthing);
-    return true;
-}
-
 JS_PUBLIC_API(void)
 JS_SetExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 {

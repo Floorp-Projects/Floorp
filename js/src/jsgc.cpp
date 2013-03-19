@@ -954,9 +954,6 @@ js_InitGC(JSRuntime *rt, uint32_t maxbytes)
     if (!rt->gcRootsHash.init(256))
         return false;
 
-    if (!rt->gcLocksHash.init(256))
-        return false;
-
 #ifdef JS_THREADSAFE
     rt->gcLock = PR_NewLock();
     if (!rt->gcLock)
@@ -1035,7 +1032,6 @@ js_FinishGC(JSRuntime *rt)
     rt->gcChunkPool.expireAndFree(rt, true);
 
     rt->gcRootsHash.clear();
-    rt->gcLocksHash.clear();
 }
 
 template <typename T> struct BarrierOwner {};
@@ -1577,42 +1573,6 @@ JSGCTraceKind
 js_GetGCThingTraceKind(void *thing)
 {
     return GetGCThingTraceKind(thing);
-}
-
-JSBool
-js_LockThing(JSRuntime *rt, void *thing)
-{
-    if (!thing)
-        return true;
-
-    /*
-     * Sometimes Firefox will hold weak references to objects and then convert
-     * them to strong references by calling AddRoot (e.g., via PreserveWrapper,
-     * or ModifyBusyCount in workers). We need a read barrier to cover these
-     * cases.
-     */
-    if (rt->gcIncrementalState != NO_INCREMENTAL)
-        JS::IncrementalReferenceBarrier(thing, GetGCThingTraceKind(thing));
-
-    if (GCLocks::Ptr p = rt->gcLocksHash.lookupWithDefault(thing, 0)) {
-        p->value++;
-        return true;
-    }
-
-    return false;
-}
-
-void
-js_UnlockThing(JSRuntime *rt, void *thing)
-{
-    if (!thing)
-        return;
-
-    if (GCLocks::Ptr p = rt->gcLocksHash.lookup(thing)) {
-        rt->gcPoke = true;
-        if (--p->value == 0)
-            rt->gcLocksHash.remove(p);
-    }
 }
 
 void
