@@ -266,7 +266,9 @@ nsNavHistory::nsNavHistory()
 , mHistoryEnabled(true)
 , mNumVisitsForFrecency(10)
 , mTagsFolder(-1)
-, mHasHistoryEntries(-1)
+, mDaysOfHistory(-1)
+, mLastCachedStartOfDay(INT64_MAX)
+, mLastCachedEndOfDay(0)
 , mCanNotify(true)
 , mCacheObservers("history-observers")
 {
@@ -573,9 +575,6 @@ nsNavHistory::InternalAddVisit(int64_t aPageID, int64_t aReferringVisit,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Invalidate the cached value for whether there's history or not.
-  mHasHistoryEntries = -1;
-
   return NS_OK;
 }
 
@@ -715,11 +714,9 @@ nsNavHistory::GetNewSessionID()
   bool hasSession;
   if (NS_SUCCEEDED(selectSession->ExecuteStep(&hasSession)) && hasSession) {
     mLastSessionID = selectSession->AsInt64(0) + 1;
-    mHasHistoryEntries = 1;
   }
   else {
     mLastSessionID = 1;
-    mHasHistoryEntries = 0;
   }
 
   return mLastSessionID;
@@ -737,7 +734,16 @@ nsNavHistory::NotifyOnVisit(nsIURI* aURI,
                           bool aHidden)
 {
   MOZ_ASSERT(!aGUID.IsEmpty());
-  mHasHistoryEntries = 1;
+  // If there's no history, this visit will surely add a day.  If the visit is
+  // added before or after the last cached day, the day count may have changed.
+  // Otherwise adding multiple visits in the same day should not invalidate
+  // the cache.
+  if (mDaysOfHistory == 0) {
+    mDaysOfHistory = 1;
+  } else if (aTime > mLastCachedEndOfDay || aTime < mLastCachedStartOfDay) {
+    mDaysOfHistory = -1;
+  }
+
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavHistoryObserver,
                    OnVisit(aURI, aVisitID, aTime, aSessionID,
@@ -756,25 +762,40 @@ nsNavHistory::NotifyTitleChange(nsIURI* aURI,
 
 int32_t
 nsNavHistory::GetDaysOfHistory() {
+  MOZ_ASSERT(NS_IsMainThread(), "This can only be called on the main thread");
+
+  if (mDaysOfHistory != -1)
+    return mDaysOfHistory;
+
+  // SQLite doesn't have a CEIL() function, so we must do that later.
+  // We should also take into account timers resolution, that may be as bad as
+  // 16ms on Windows, so in some cases the difference may be 0, if the
+  // check is done near the visit.  Thus remember to check for NULL separately.
   nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-    "SELECT ROUND(( "
-      "strftime('%s','now','localtime','utc') - "
-      "( "
-        "SELECT visit_date FROM moz_historyvisits "
-        "ORDER BY visit_date ASC LIMIT 1 "
-      ")/1000000 "
-    ")/86400) AS daysOfHistory "
+    "SELECT CAST(( "
+        "strftime('%s','now','localtime','utc') - "
+        "(SELECT MIN(visit_date)/1000000 FROM moz_historyvisits) "
+      ") AS DOUBLE) "
+    "/86400, "
+    "strftime('%s','now','localtime','+1 day','start of day','utc') * 1000000"
   );
   NS_ENSURE_TRUE(stmt, 0);
   mozStorageStatementScoper scoper(stmt);
 
-  int32_t daysOfHistory = 0;
   bool hasResult;
   if (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
-    stmt->GetInt32(0, &daysOfHistory);
+    // If we get NULL, then there are no visits, otherwise there must always be
+    // at least 1 day of history.
+    bool hasNoVisits;
+    (void)stmt->GetIsNull(0, &hasNoVisits);
+    mDaysOfHistory = hasNoVisits ?
+      0 : std::max(1, static_cast<int32_t>(ceil(stmt->AsDouble(0))));
+    mLastCachedStartOfDay =
+      NormalizeTime(nsINavHistoryQuery::TIME_RELATIVE_TODAY, 0);
+    mLastCachedEndOfDay = stmt->AsInt64(1) - 1; // Start of tomorrow - 1.
   }
 
-  return daysOfHistory;
+  return mDaysOfHistory;
 }
 
 PRTime
@@ -1126,26 +1147,8 @@ nsNavHistory::DomainNameFromURI(nsIURI *aURI,
 NS_IMETHODIMP
 nsNavHistory::GetHasHistoryEntries(bool* aHasEntries)
 {
-  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   NS_ENSURE_ARG_POINTER(aHasEntries);
-
-  // Use cached value if it's been set
-  if (mHasHistoryEntries != -1) {
-    *aHasEntries = (mHasHistoryEntries == 1);
-    return NS_OK;
-  }
-
-  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-    "SELECT 1 FROM moz_historyvisits "
-  );
-  NS_ENSURE_STATE(stmt);
-  mozStorageStatementScoper scoper(stmt);
-
-  // Knowing if there's any entry is enough.
-  nsresult rv = stmt->ExecuteStep(aHasEntries);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mHasHistoryEntries = *aHasEntries ? 1 : 0;
+  *aHasEntries = GetDaysOfHistory() > 0;
   return NS_OK;
 }
 
@@ -2665,7 +2668,7 @@ nsNavHistory::RemovePagesInternal(const nsCString& aPlaceIdsQueryString)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Invalidate the cached value for whether there's history or not.
-  mHasHistoryEntries = -1;
+  mDaysOfHistory = -1;
 
   return transaction.Commit();
 }
@@ -3069,7 +3072,7 @@ nsNavHistory::RemoveVisitsByTimeframe(PRTime aBeginTime, PRTime aEndTime)
   clearEmbedVisits();
 
   // Invalidate the cached value for whether there's history or not.
-  mHasHistoryEntries = -1;
+  mDaysOfHistory = -1;
 
   return NS_OK;
 }
@@ -3093,7 +3096,7 @@ nsNavHistory::RemoveAllPages()
   clearEmbedVisits();
 
   // Update the cached value for whether there's history or not.
-  mHasHistoryEntries = 0;
+  mDaysOfHistory = 0;
 
   // Expiration will take care of orphans.
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
@@ -3620,7 +3623,7 @@ nsNavHistory::NotifyOnPageExpired(nsIURI *aURI, PRTime aVisitTime,
                                   uint16_t aReason, uint32_t aTransitionType)
 {
   // Invalidate the cached value for whether there's history or not.
-  mHasHistoryEntries = -1;
+  mDaysOfHistory = -1;
 
   MOZ_ASSERT(!aGUID.IsEmpty());
   if (aWholeEntry) {

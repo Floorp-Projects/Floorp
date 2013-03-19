@@ -1105,6 +1105,22 @@ XPCJSRuntime::ActivityCallback(void *arg, JSBool active)
     }
 }
 
+// static
+//
+// JS-CTypes creates and caches a JSContext that it uses when executing JS
+// callbacks. When we're notified that ctypes is about to call into some JS,
+// push the cx to maintain the integrity of the context stack.
+void
+XPCJSRuntime::CTypesActivityCallback(JSContext *cx, js::CTypesActivityType type)
+{
+  if (type == js::CTYPES_CALLBACK_BEGIN) {
+    if (!Get()->GetJSContextStack()->Push(cx))
+      MOZ_CRASH();
+  } else if (type == js::CTYPES_CALLBACK_END) {
+    Get()->GetJSContextStack()->Pop();
+  }
+}
+
 size_t
 XPCJSRuntime::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
 {
@@ -2651,6 +2667,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
 #endif
     JS_SetAccumulateTelemetryCallback(mJSRuntime, AccumulateTelemetryCallback);
     js::SetActivityCallback(mJSRuntime, ActivityCallback, this);
+    js::SetCTypesActivityCallback(mJSRuntime, CTypesActivityCallback);
 
     // The JS engine needs to keep the source code around in order to implement
     // Function.prototype.toSource(). It'd be nice to not have to do this for

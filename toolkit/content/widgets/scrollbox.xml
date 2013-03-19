@@ -454,7 +454,7 @@
             else
               disableUpButton = true;
           }
-          if (this.scrollClientSize + this.scrollPosition == this.scrollSize) {
+          else if (this.scrollClientSize + this.scrollPosition == this.scrollSize) {
             // In the RTL case, this means the _first_ element in the
             // scrollbox is visible
             if (this._isRTLScrollbox)

@@ -49,7 +49,12 @@
         <parameter name="anItem"/>
         <body>
           <![CDATA[
-            anItem.selected = !anItem.selected;
+            let wasSelected = anItem.selected;
+            if ("single" == this.getAttribute("seltype")) {
+              this.clearSelection();
+            }
+            anItem.selected = !wasSelected;
+            this._selectedItem = wasSelected ? null : anItem;
             this._fireOnSelectionChange();
           ]]>
         </body>
@@ -59,11 +64,20 @@
         <parameter name="anItem"/>
         <body>
           <![CDATA[
-            this.clearSelection();
+            let wasSelected = anItem.selected,
+                isSingleMode = ("single" == this.getAttribute("seltype"));
+            if (isSingleMode) {
+              this.clearSelection();
+            }
             this._selectedItem = anItem;
-            this._selectedItem.selected = true;
-
-            this._fireOnSelect();
+            anItem.selected = true;
+            if (isSingleMode) {
+              if (!wasSelected) {
+                this._fireOnSelect();
+              }
+            } else {
+              this._fireOnSelectionChange();
+            }
           ]]>
         </body>
       </method>

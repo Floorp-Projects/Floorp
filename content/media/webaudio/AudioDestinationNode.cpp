@@ -31,7 +31,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(AudioDestinationNode)
 AudioDestinationNode::AudioDestinationNode(AudioContext* aContext, MediaStreamGraph* aGraph)
   : AudioNode(aContext)
 {
-  mStream = aGraph->CreateAudioNodeStream(new AudioNodeEngine());
+  mStream = aGraph->CreateAudioNodeStream(new AudioNodeEngine(),
+                                          MediaStreamGraph::EXTERNAL_STREAM);
   SetIsDOMBinding();
 }
 

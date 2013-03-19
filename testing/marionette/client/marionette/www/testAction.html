@@ -15,20 +15,34 @@
   <button id="mozLinkPos" style="position:absolute;left:0px;top:355px;" type="button" allowevents=true>Button2</button>
   <!-- "mozLinkCopy" listens for a touchdown and touchup -->
   <button id="mozLinkCopy" style="position:absolute;left:0px;top:455px;" type="button" allowevents=true>Button3</button>
+  <!-- "mozLinkStart" and "mozLinkEnd" work together to perform touchdown on mozLinkStart, horizontal move and then touchup on mozLinkEnd -->  
+  <button id="mozLinkStart" style="position:absolute;left:10px;top:200px;" type="button" allowevents=true>Press</button>
+  <button id="mozLinkEnd" style="position:absolute;left:140px;top:200px;" type="button" allowevents=true>Release</button>
+  <!-- "mozLinkCopy2" listens for a touchdown and touchup. It shows the time when it's fired-->
+  <button id="mozLinkCopy2" style="position:absolute;left:80px;top:455px;" type="button" allowevents=true>Button4</button>
   <script type="text/javascript">
     window.ready = true;
     var press = document.getElementById("mozLink");
     var second = document.getElementById("mozLinkCopy");
+    var third = document.getElementById("mozLinkStart");
+    var fourth = document.getElementById("mozLinkCopy2");
     // touchmove and touchend must be performed on the same element as touchstart
     // here is press for vertical move
-    press.addEventListener("touchstart", changePressText, false);
+    press.addEventListener("touchstart", function(){changePressText("mozLink")}, false);
     press.addEventListener("touchmove", changeMoveText, false);
     press.addEventListener("touchend", changeReleaseText, false);
     // here is second for a tap
-    second.addEventListener("touchstart", changeCopyText, false);
+    second.addEventListener("touchstart", function(){changePressText("mozLinkCopy")}, false);
     second.addEventListener("touchend", changeClickText, false);
-    function changePressText() {
-      var press = document.getElementById("mozLink");
+    // here is third for horizontal move
+    third.addEventListener("touchstart", function(){changePressText("mozLinkStart")}, false);
+    third.addEventListener("touchmove", changeHorizontalMove, false);
+    third.addEventListener("touchend", changeHorizontalRelease, false);
+    // here is fourth for touch up and down with time shown
+    fourth.addEventListener("touchstart", changeTimePress, false);
+    fourth.addEventListener("touchend", changeTimeRelease, false);
+    function changePressText(strId) {
+      var press = document.getElementById(strId);
       press.innerHTML = "Start";
     }
 
@@ -37,23 +51,40 @@
       move.innerHTML = "Move";
     }
 
-    function changeReleaseText(event) {
+    function checkPosition(event, ele) {
       var touches = event.changedTouches;
       var clientX = touches[0].clientX;
       var clientY = touches[0].clientY;
-      var release = document.getElementById("mozLinkPos");
+      var release = document.getElementById(ele);
       var boxr = release.getBoundingClientRect();
-      if (clientY >= boxr.top &&
-          clientY <= boxr.bottom &&
-          clientX >= boxr.left &&
-          clientX <= boxr.right) {
-        release.innerHTML ="End";
+      return (clientY >= boxr.top &&
+              clientY <= boxr.bottom &&
+              clientX >= boxr.left &&
+              clientX <= boxr.right);
+    }
+
+    function changeReleaseText(event) {
+      if (checkPosition(event, "mozLinkPos")) {
+        document.getElementById("mozLinkPos").innerHTML = "End";
       }
     }
 
-    function changeCopyText() {
-      var second = document.getElementById("mozLinkCopy");
-      second.innerHTML = "Start";
+    function changeHorizontalMove() {
+      var press = document.getElementById("mozLinkStart");
+      if (press.innerHTML == "Start") {
+        var d = new Date();
+        press.innerHTML = d.getTime();
+      }
+    }
+
+    function changeHorizontalRelease(event) {
+      if (checkPosition(event, "mozLinkEnd")) {
+        var press = document.getElementById("mozLinkStart");
+        var d = new Date();
+        var timeDiff = d.getTime() - press.innerHTML;
+        document.getElementById("mozLinkEnd").innerHTML = timeDiff;
+        
+      }
     }
 
     function changeClickText() {
@@ -63,6 +94,24 @@
       }
       else {
         second.innerHTML = "Error";
+      }
+    }
+
+    function changeTimePress() {
+      var fourth = document.getElementById("mozLinkCopy2");
+      var d = new Date();
+      fourth.innerHTML = d.getTime();
+    }
+
+    function changeTimeRelease() {
+      var fourth = document.getElementById("mozLinkCopy2");
+      if (fourth.innerHTML != "Button4") {
+        var d = new Date();
+        var timeDiff = d.getTime() - fourth.innerHTML;
+        fourth.innerHTML = timeDiff;
+      }
+      else {
+        fourth.innerHTML = "Error";
       }
     }
   </script>

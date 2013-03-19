@@ -561,7 +561,6 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 #endif
 @BINPATH@/components/XPIDialogService.js
 @BINPATH@/components/browsercomps.xpt
-@BINPATH@/extensions/feedback@mobile.mozilla.org.xpi
 
 #ifdef ENABLE_MARIONETTE
 @BINPATH@/chrome/marionette@JAREXT@ 

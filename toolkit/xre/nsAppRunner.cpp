@@ -2543,13 +2543,13 @@ static void RestoreStateForAppInitiatedRestart()
 static void MakeOrSetMinidumpPath(nsIFile* profD)
 {
   nsCOMPtr<nsIFile> dumpD;
-  nsresult rv = profD->Clone(getter_AddRefs(dumpD));
+  profD->Clone(getter_AddRefs(dumpD));
   
   if(dumpD) {
     bool fileExists;
     //XXX: do some more error checking here
     dumpD->Append(NS_LITERAL_STRING("minidumps"));
-    rv = dumpD->Exists(&fileExists);
+    dumpD->Exists(&fileExists);
     if(!fileExists) {
       dumpD->Create(nsIFile::DIRECTORY_TYPE, 0700);
     }

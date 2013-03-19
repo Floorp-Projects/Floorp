@@ -31,11 +31,9 @@ class TestRecursiveMakeBackend(BackendTester):
         expected = ['', 'dir1', 'dir2']
 
         for d in expected:
-            in_path = os.path.join(env.topsrcdir, d, 'Makefile.in')
             out_makefile = os.path.join(env.topobjdir, d, 'Makefile')
             out_backend = os.path.join(env.topobjdir, d, 'backend.mk')
 
-            self.assertTrue(os.path.exists(in_path))
             self.assertTrue(os.path.exists(out_makefile))
             self.assertTrue(os.path.exists(out_backend))
 
@@ -57,6 +55,18 @@ class TestRecursiveMakeBackend(BackendTester):
             'include $(topsrcdir)/config/rules.mk'
         ])
 
+    def test_missing_makefile_in(self):
+        """Ensure missing Makefile.in results in Makefile creation."""
+        env = self._consume('stub0', RecursiveMakeBackend)
+
+        p = os.path.join(env.topobjdir, 'dir2', 'Makefile')
+        self.assertTrue(os.path.exists(p))
+
+        lines = [l.strip() for l in open(p, 'rt').readlines()]
+        self.assertEqual(len(lines), 9)
+
+        self.assertTrue(lines[0].startswith('# THIS FILE WAS AUTOMATICALLY'))
+
     def test_backend_mk(self):
         """Ensure backend.mk file is written out properly."""
         env = self._consume('stub0', RecursiveMakeBackend)
@@ -67,6 +77,7 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertEqual(lines, [
             'MOZBUILD_DERIVED := 1',
             'NO_MAKEFILE_RULE := 1',
+            'NO_SUBMAKEFILES_RULE := 1',
             'DIRS := dir1',
             'PARALLEL_DIRS := dir2',
             'TEST_DIRS := dir3',
@@ -100,6 +111,7 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertEqual(lines, [
             'MOZBUILD_DERIVED := 1',
             'NO_MAKEFILE_RULE := 1',
+            'NO_SUBMAKEFILES_RULE := 1',
             'DIRS := dir',
             'PARALLEL_DIRS := p_dir',
             'DIRS += external',
@@ -124,17 +136,17 @@ class TestRecursiveMakeBackend(BackendTester):
 
         backend_path = os.path.join(env.topobjdir, 'backend.mk')
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:-1]]
-        self.assertEqual(lines[2:5], [
+        self.assertEqual(lines[3:6], [
             'XPIDLSRCS += foo.idl',
             'XPIDLSRCS += bar.idl',
             'XPIDLSRCS += biz.idl',
         ])
-        self.assertEqual(lines[5:8], [
+        self.assertEqual(lines[6:9], [
             'XPIDL_FLAGS += -Idir1',
             'XPIDL_FLAGS += -Idir2',
             'XPIDL_FLAGS += -Idir3',
         ])
-        self.assertEqual(lines[8], 'XPIDL_MODULE := module_name')
+        self.assertEqual(lines[9], 'XPIDL_MODULE := module_name')
 
 
 if __name__ == '__main__':

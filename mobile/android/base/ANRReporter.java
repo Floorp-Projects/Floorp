@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.util.ThreadUtils;
+
 import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -201,8 +203,14 @@ public final class ANRReporter extends BroadcastReceiver
     // Return true if the traces file corresponds to a Gecko ANR
     private static boolean isGeckoTraces(String pkgName, File tracesFile) {
         try {
+            final String END_OF_PACKAGE_NAME = "([^a-zA-Z0-9_]|$)";
             // Regex for finding our package name in the traces file
-            Pattern pkgPattern = Pattern.compile(Pattern.quote(pkgName) + "([^a-zA-Z0-9_]|$)");
+            Pattern pkgPattern = Pattern.compile(Pattern.quote(pkgName) + END_OF_PACKAGE_NAME);
+            Pattern mangledPattern = null;
+            if (!GeckoAppInfo.getMangledPackageName().equals(pkgName)) {
+                mangledPattern = Pattern.compile(Pattern.quote(
+                    GeckoAppInfo.getMangledPackageName()) + END_OF_PACKAGE_NAME);
+            }
             if (DEBUG) {
                 Log.d(LOGTAG, "trying to match package: " + pkgName);
             }
@@ -216,6 +224,10 @@ public final class ANRReporter extends BroadcastReceiver
                     }
                     if (pkgPattern.matcher(line).find()) {
                         // traces.txt file contains our package
+                        return true;
+                    }
+                    if (mangledPattern != null && mangledPattern.matcher(line).find()) {
+                        // traces.txt file contains our alternate package
                         return true;
                     }
                 }
@@ -343,14 +355,76 @@ public final class ANRReporter extends BroadcastReceiver
         // We are at the start of ANR data
     }
 
-    private static int fillPingBlock(OutputStream ping, MessageDigest checksum, Reader reader)
+    // Block is a section of the larger input stream, and we want to find pattern within
+    // the stream. This is straightforward if the entire pattern is within one block;
+    // however, if the pattern spans across two blocks, we have to match both the start of
+    // the pattern in the first block and the end of the pattern in the second block.
+    // * If pattern is found in block, this method returns the index at the end of the
+    //   found pattern, which must always be > 0.
+    // * If pattern is not found, it returns 0.
+    // * If the start of the pattern matches the end of the block, it returns a number
+    //   < 0, which equals the negated value of how many characters in pattern are already
+    //   matched; when processing the next block, this number is passed in through
+    //   prevIndex, and the rest of the characters in pattern are matched against the
+    //   start of this second block. The method returns value > 0 if the rest of the
+    //   characters match, or 0 if they do not.
+    private static int getEndPatternIndex(String block, String pattern, int prevIndex) {
+        if (pattern == null || block.length() < pattern.length()) {
+            // Nothing to do
+            return 0;
+        }
+        if (prevIndex == 0) {
+            // Did not find pattern in last block; see if entire pattern is inside this block
+            int index = block.indexOf(pattern);
+            if (index >= 0) {
+                // Found pattern; return index at end of the pattern
+                return index + pattern.length();
+            }
+            // Block does not contain the entire pattern, but see if the end of the block
+            // contains the start of pattern. To do that, we see if block ends with the
+            // first 1 character of pattern, the first 2 characters of pattern, first 3,
+            // and so on.
+            for (index = block.length() - 1; index > block.length() - pattern.length(); index--) {
+                // Using index as a start, see if the rest of block contains the start of pattern
+                if (block.charAt(index) == pattern.charAt(0) &&
+                    block.endsWith(pattern.substring(0, block.length() - index))) {
+                    // Found partial match; return -(number of characters matched),
+                    // i.e. -1 for 1 character matched, -2 for 2 characters matched, etc.
+                    return index - block.length();
+                }
+            }
+        } else if (prevIndex < 0) {
+            // Last block ended with a partial start; now match start of block to rest of pattern
+            if (block.startsWith(pattern.substring(-prevIndex, pattern.length()))) {
+                // Rest of pattern matches; return index at end of pattern
+                return pattern.length() + prevIndex;
+            }
+        }
+        return 0;
+    }
+
+    // Copy the content of reader to ping and update checksum;
+    // copying stops when endPattern is found in the input stream
+    private static int fillPingBlock(OutputStream ping, MessageDigest checksum,
+                                     Reader reader, String endPattern)
             throws IOException {
 
         int total = 0;
+        int endIndex = 0;
         char [] block = new char[TRACES_BLOCK_SIZE];
         for (int size = reader.read(block); size >= 0; size = reader.read(block)) {
-            String quoted = JSONObject.quote(new String(block, 0, size));
+            String stringBlock = new String(block, 0, size);
+            endIndex = getEndPatternIndex(stringBlock, endPattern, endIndex);
+            if (endIndex > 0) {
+                // Found end pattern; clip the string
+                stringBlock = stringBlock.substring(0, endIndex);
+            }
+            String quoted = JSONObject.quote(stringBlock);
             total += writePingPayload(ping, checksum, quoted.substring(1, quoted.length() - 1));
+            if (endIndex > 0) {
+                // End pattern already found; return now
+                break;
+            }
         }
         return total;
     }
@@ -371,7 +445,7 @@ public final class ANRReporter extends BroadcastReceiver
                 .start();
             try {
                 Reader procOut = new InputStreamReader(proc.getInputStream(), TRACES_CHARSET);
-                int size = fillPingBlock(ping, checksum, procOut);
+                int size = fillPingBlock(ping, checksum, procOut, null);
                 if (DEBUG) {
                     Log.d(LOGTAG, "wrote logcat, size = " + String.valueOf(size));
                 }
@@ -406,7 +480,18 @@ public final class ANRReporter extends BroadcastReceiver
             try {
                 MessageDigest checksum = MessageDigest.getInstance("SHA-256");
                 fillPingHeader(ping, checksum, pingFile.getName());
-                int size = fillPingBlock(ping, checksum, traces);
+                // Traces file has the format
+                //    ----- pid xxx at xxx -----
+                //    Cmd line: org.mozilla.xxx
+                //    * stack trace *
+                //    ----- end xxx -----
+                //    ----- pid xxx at xxx -----
+                //    Cmd line: com.android.xxx
+                //    * stack trace *
+                //    ...
+                // If we end the stack dump at the first end marker,
+                // only Fennec stacks will be dumped
+                int size = fillPingBlock(ping, checksum, traces, "\n----- end");
                 if (DEBUG) {
                     Log.d(LOGTAG, "wrote traces, size = " + String.valueOf(size));
                 }
@@ -452,10 +537,10 @@ public final class ANRReporter extends BroadcastReceiver
             }
             return;
         }
-        if (GeckoApp.mAppContext != null && GeckoApp.mAppContext.mMainHandler != null) {
+        if (ThreadUtils.getUiHandler() != null) {
             mPendingANR = true;
             // detect when the main thread gets unstuck
-            GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+            ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
                     // okay to reset mPendingANR on main thread

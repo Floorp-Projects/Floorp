@@ -1,0 +1,100 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* ===== alert.css =====================================================
+  == Styles specific to the alerts dialog.
+  ======================================================================= */
+
+@import url("chrome://global/skin/");
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+.alertBox {
+  border: 1px solid threedshadow;
+  border-radius: 3px;
+  background-color: -moz-Dialog;
+}
+
+.alertImageBox {
+  padding: 8px 0;
+  width: 64px;
+  background-image: linear-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.6));
+  -moz-border-end: 1px solid rgba(0,0,0,.1);
+}
+
+.alertTextBox {
+  padding: 8px;
+  -moz-padding-start: 16px;
+  width: 255px;
+}
+
+.alertTextBox,
+.alertCloseBox {
+  background-image: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+}
+
+.alertTitle {
+  font-weight: bold;
+  font-size: 110%;
+}
+
+#alertImage {
+  max-width: 48px;
+  max-height: 48px;
+  list-style-image: url(chrome://global/skin/alerts/notification-48.png);
+}
+
+#alertNotification[clickable="true"] {
+  cursor: pointer;
+}
+
+label {
+  cursor: inherit;
+}
+
+.alertText[clickable="true"] {
+  color: -moz-nativehyperlinktext;
+  text-decoration: underline;
+}
+
+.alertText[clickable="true"]:hover:active {
+  color: -moz-activehyperlinktext;
+}
+
+@keyframes alert-animation {
+  from {
+    opacity: 0;
+  }
+  6.25% {
+    opacity: 1;
+  }
+  93.75% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.alertCloseButton {
+  -moz-appearance: none;
+  padding: 0;
+  margin: 0 2px;
+  list-style-image: url("chrome://global/skin/icons/close.png");
+  border: none;
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+.alertCloseButton > .toolbarbutton-text {
+  display: none;
+}
+
+.alertCloseButton:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.alertCloseButton:hover:active {
+  -moz-image-region: rect(0, 48px, 16px, 32px);
+}
+

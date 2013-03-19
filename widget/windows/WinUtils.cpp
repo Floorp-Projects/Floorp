@@ -27,6 +27,11 @@
 #include "nsIObserver.h"
 #include "imgIEncoder.h"
 
+#ifdef NS_ENABLE_TSF
+#include <textstor.h>
+#include "nsTextStore.h"
+#endif // #ifdef NS_ENABLE_TSF
+
 namespace mozilla {
 namespace widget {
 
@@ -66,6 +71,42 @@ WinUtils::GetWindowsVersion()
   version =
     (osInfo.dwMajorVersion & 0xff) << 8 | (osInfo.dwMinorVersion & 0xff);
   return static_cast<WinVersion>(version);
+}
+
+/* static */
+bool
+WinUtils::PeekMessage(LPMSG aMsg, HWND aWnd, UINT aFirstMessage,
+                      UINT aLastMessage, UINT aOption)
+{
+#ifdef NS_ENABLE_TSF
+  ITfMessagePump* msgPump = nsTextStore::GetMessagePump();
+  if (msgPump) {
+    BOOL ret = FALSE;
+    HRESULT hr = msgPump->PeekMessageW(aMsg, aWnd, aFirstMessage, aLastMessage,
+                                       aOption, &ret);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+    return ret;
+  }
+#endif // #ifdef NS_ENABLE_TSF
+  return ::PeekMessageW(aMsg, aWnd, aFirstMessage, aLastMessage, aOption);
+}
+
+/* static */
+bool
+WinUtils::GetMessage(LPMSG aMsg, HWND aWnd, UINT aFirstMessage,
+                     UINT aLastMessage)
+{
+#ifdef NS_ENABLE_TSF
+  ITfMessagePump* msgPump = nsTextStore::GetMessagePump();
+  if (msgPump) {
+    BOOL ret = FALSE;
+    HRESULT hr = msgPump->GetMessageW(aMsg, aWnd, aFirstMessage, aLastMessage,
+                                      &ret);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+    return ret;
+  }
+#endif // #ifdef NS_ENABLE_TSF
+  return ::GetMessageW(aMsg, aWnd, aFirstMessage, aLastMessage);
 }
 
 /* static */

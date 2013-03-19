@@ -334,13 +334,13 @@ let Content = {
 
       case "click":
         if (aEvent.eventPhase == aEvent.BUBBLING_PHASE)
-          this._onClick(aEvent);
+          this._onClickBubble(aEvent);
         else
-          this._genericMouseClick(aEvent);
+          this._onClickCapture(aEvent);
         break;
       
       case "DOMContentLoaded":
-        this._maybeNotifyErroPage();
+        this._maybeNotifyErrorPage();
         break;
 
       case "pagehide":
@@ -350,7 +350,7 @@ let Content = {
 
       case "touchstart":
         let touch = aEvent.changedTouches[0];
-        this._genericMouseDown(touch.clientX, touch.clientY);
+        this._onTouchStart(touch.clientX, touch.clientY);
         break;
     }
   },
@@ -400,13 +400,10 @@ let Content = {
   },
 
   /******************************************************
-   * generic input handlers
-   *
-   * regardless of whether the input was received via
-   * message manager or sent directly via dispatch.
+   * Event handlers
    */
 
-  _genericMouseDown: function _genericMouseDown(x, y) {
+  _onTouchStart: function _onTouchStart(x, y) {
     let { element } = elementFromPoint(x, y);
     if (!element)
       return;
@@ -421,7 +418,7 @@ let Content = {
     this._doTapHighlight(element);
   },
 
-  _genericMouseClick: function _genericMouseClick(aEvent) {
+  _onClickCapture: function _onClickCapture(aEvent) {
     ContextMenuHandler.reset();
 
     let { element: element } = elementFromPoint(aEvent.clientX, aEvent.clientY);
@@ -443,12 +440,8 @@ let Content = {
     this.formAssistant.focusSync = false;
   },
 
-  /******************************************************
-   * Event handlers
-   */
-
   // Checks clicks we care about - events bubbling up from about pages.
-  _onClick: function _onClick(aEvent) {
+  _onClickBubble: function _onClickBubble(aEvent) {
     // Don't trust synthetic events
     if (!aEvent.isTrusted)
       return;
@@ -531,7 +524,7 @@ let Content = {
     return result;
   },
 
-  _maybeNotifyErroPage: function _maybeNotifyErroPage() {
+  _maybeNotifyErrorPage: function _maybeNotifyErrorPage() {
     // Notify browser that an error page is being shown instead
     // of the target location. Necessary to get proper thumbnail
     // updates on chrome for error pages.

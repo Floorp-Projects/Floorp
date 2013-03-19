@@ -47,6 +47,7 @@ components/@DLL_PREFIX@myspell@DLL_SUFFIX@
 components/@DLL_PREFIX@spellchecker@DLL_SUFFIX@
 components/@DLL_PREFIX@spellchk@DLL_SUFFIX@
 #ifdef XP_MACOSX
+components/libalerts.dylib
 components/libalerts_s.dylib
 #endif
 components/aboutCertError.js

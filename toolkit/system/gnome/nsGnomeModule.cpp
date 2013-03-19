@@ -22,8 +22,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGnomeVFSService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsGIOService)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGSettingsService, Init)
 #endif
-#include "nsSystemAlertsService.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSystemAlertsService, Init)
 
 #ifdef MOZ_ENABLE_GCONF
 NS_DEFINE_NAMED_CID(NS_GCONFSERVICE_CID);
@@ -35,8 +33,6 @@ NS_DEFINE_NAMED_CID(NS_GNOMEVFSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_GIOSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_GSETTINGSSERVICE_CID);
 #endif
-NS_DEFINE_NAMED_CID(NS_SYSTEMALERTSSERVICE_CID);
-
 
 static const mozilla::Module::CIDEntry kGnomeCIDs[] = {
 #ifdef MOZ_ENABLE_GCONF
@@ -49,7 +45,6 @@ static const mozilla::Module::CIDEntry kGnomeCIDs[] = {
   { &kNS_GIOSERVICE_CID, false, NULL, nsGIOServiceConstructor },
   { &kNS_GSETTINGSSERVICE_CID, false, NULL, nsGSettingsServiceConstructor },
 #endif
-  { &kNS_SYSTEMALERTSSERVICE_CID, false, NULL, nsSystemAlertsServiceConstructor },
   { NULL }
 };
 
@@ -64,7 +59,6 @@ static const mozilla::Module::ContractIDEntry kGnomeContracts[] = {
   { NS_GIOSERVICE_CONTRACTID, &kNS_GIOSERVICE_CID },
   { NS_GSETTINGSSERVICE_CONTRACTID, &kNS_GSETTINGSSERVICE_CID },
 #endif
-  { NS_SYSTEMALERTSERVICE_CONTRACTID, &kNS_SYSTEMALERTSSERVICE_CID },
   { NULL }
 };
 

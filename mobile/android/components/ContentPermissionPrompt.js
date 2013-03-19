@@ -69,8 +69,14 @@ ContentPermissionPrompt.prototype = {
       label: browserBundle.GetStringFromName(entityName + ".allow"),
       callback: function(aChecked) {
         // If the user checked "Don't ask again", make a permanent exception
-        if (aChecked)
+        if (aChecked) {
           Services.perms.addFromPrincipal(request.principal, request.type, Ci.nsIPermissionManager.ALLOW_ACTION);
+        } else if (entityName == "desktopNotification") {
+          // For notifications, it doesn't make sense to grant permission once. So when the user clicks allow,
+          // we let the requestor create notifications for the session.
+          Services.perms.addFromPrincipal(request.principal, request.type, Ci.nsIPermissionManager.ALLOW_ACTION,
+                                          Ci.nsIPermissionManager.EXPIRE_SESSION);
+        }
 
         request.allow();
       }

@@ -66,8 +66,8 @@ stack_callback(void *pc, void *sp, void *closure)
   gCriticalAddress.mAddr = pc;
 }
 
+#ifdef DEBUG
 #define MAC_OS_X_VERSION_10_7_HEX 0x00001070
-#define MAC_OS_X_VERSION_10_6_HEX 0x00001060
 
 static int32_t OSXVersion()
 {
@@ -83,11 +83,7 @@ static bool OnLionOrLater()
 {
   return (OSXVersion() >= MAC_OS_X_VERSION_10_7_HEX);
 }
-
-static bool OnSnowLeopardOrLater()
-{
-  return (OSXVersion() >= MAC_OS_X_VERSION_10_6_HEX);
-}
+#endif
 
 static void
 my_malloc_logger(uint32_t type, uintptr_t arg1, uintptr_t arg2, uintptr_t arg3,
@@ -100,8 +96,7 @@ my_malloc_logger(uint32_t type, uintptr_t arg1, uintptr_t arg2, uintptr_t arg3,
 
   // On Leopard dladdr returns the wrong value for "new_sem_from_pool". The
   // stack shows up as having two pthread_cond_wait$UNIX2003 frames.
-  const char *name = OnSnowLeopardOrLater() ? "new_sem_from_pool" :
-    "pthread_cond_wait$UNIX2003";
+  const char *name = "new_sem_from_pool";
   NS_StackWalk(stack_callback, /* skipFrames */ 0, /* maxFrames */ 0,
                const_cast<char*>(name), 0, nullptr);
 }

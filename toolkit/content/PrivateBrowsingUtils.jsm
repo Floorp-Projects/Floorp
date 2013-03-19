@@ -42,6 +42,26 @@ this.PrivateBrowsingUtils = {
   },
   get isInTemporaryAutoStartMode() {
     return gTemporaryAutoStartMode;
+  },
+
+  whenHiddenPrivateWindowReady: function pbu_whenHiddenPrivateWindowReady(cb) {
+    Components.utils.import("resource://gre/modules/Timer.jsm");
+
+    let win = Services.appShell.hiddenPrivateDOMWindow;
+    function isNotLoaded() {
+      return ["complete", "interactive"].indexOf(win.document.readyState) == -1;
+    }
+    if (isNotLoaded()) {
+      setTimeout(function poll() {
+        if (isNotLoaded()) {
+          setTimeout(poll, 100);
+          return;
+        }
+        cb(Services.appShell.hiddenPrivateDOMWindow);
+      }, 4);
+    } else {
+      cb(Services.appShell.hiddenPrivateDOMWindow);
+    }
   }
 };
 

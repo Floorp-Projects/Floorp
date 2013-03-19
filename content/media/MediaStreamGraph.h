@@ -457,7 +457,7 @@ protected:
   VideoFrame mLastPlayedVideoFrame;
   // The number of times this stream has been explicitly blocked by the control
   // API, minus the number of times it has been explicitly unblocked.
-  TimeVarying<GraphTime,uint32_t> mExplicitBlockerCount;
+  TimeVarying<GraphTime,uint32_t,0> mExplicitBlockerCount;
   nsTArray<nsRefPtr<MediaStreamListener> > mListeners;
   nsTArray<MainThreadMediaStreamListener*> mMainThreadListeners;
 
@@ -467,9 +467,9 @@ protected:
   // not been blocked before mCurrentTime (its mBufferStartTime is increased
   // as necessary to account for that time instead) --- this avoids us having to
   // record the entire history of the stream's blocking-ness in mBlocked.
-  TimeVarying<GraphTime,bool> mBlocked;
+  TimeVarying<GraphTime,bool,5> mBlocked;
   // Maps graph time to the graph update that affected this stream at that time
-  TimeVarying<GraphTime,int64_t> mGraphUpdateIndices;
+  TimeVarying<GraphTime,int64_t,0> mGraphUpdateIndices;
 
   // MediaInputPorts to which this is connected
   nsTArray<MediaInputPort*> mConsumers;
@@ -883,11 +883,16 @@ public:
    * particular tracks of each input stream.
    */
   ProcessedMediaStream* CreateTrackUnionStream(DOMMediaStream* aWrapper);
+  // Internal AudioNodeStreams can only pass their output to another
+  // AudioNode, whereas external AudioNodeStreams can pass their output
+  // to an nsAudioStream for playback.
+  enum AudioNodeStreamKind { INTERNAL_STREAM, EXTERNAL_STREAM };
   /**
    * Create a stream that will process audio for an AudioNode.
    * Takes ownership of aEngine.
    */
-  AudioNodeStream* CreateAudioNodeStream(AudioNodeEngine* aEngine);
+  AudioNodeStream* CreateAudioNodeStream(AudioNodeEngine* aEngine,
+                                         AudioNodeStreamKind aKind);
   /**
    * Returns the number of graph updates sent. This can be used to track
    * whether a given update has been processed by the graph thread and reflected

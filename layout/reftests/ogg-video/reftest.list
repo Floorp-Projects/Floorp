@@ -26,8 +26,8 @@ skip-if(Android||B2G) == poster-5.html poster-ref-black140x100.html
 skip-if(Android||B2G) == poster-6.html poster-ref-black140x100.html
 skip-if(Android||B2G) == poster-7.html poster-ref-red140x100.html
 skip-if(Android||B2G) == poster-8.html poster-ref-black140x100.html
-skip-if(Android||B2G) == poster-10.html poster-ref-blue125x100.html
-skip-if(Android||B2G) == poster-11.html poster-ref-blue140x100.html
-skip-if(Android||B2G) == poster-12.html poster-ref-blue140x100.html
+random skip-if(Android||B2G) == poster-10.html poster-ref-blue125x100.html
+random skip-if(Android||B2G) == poster-11.html poster-ref-blue140x100.html
+random skip-if(Android||B2G) == poster-12.html poster-ref-blue140x100.html
 skip-if(Android||B2G) == poster-13.html poster-ref-blue400x300.html
 skip-if(Android||B2G) == poster-15.html poster-ref-green70x30.html

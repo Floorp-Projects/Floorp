@@ -14,6 +14,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \
 		test_bug13871.html \
+		test_bug344861.html \
 		test_bug278916.html \
 		test_bug279495.html \
 		test_bug386782.html \
