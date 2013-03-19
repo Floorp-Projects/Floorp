@@ -56,6 +56,10 @@ public class AlertNotification
         try {
             URL url = new URL(aIconUri.toString());
             Bitmap bm = BitmapFactory.decodeStream(url.openStream());
+            if (bm == null) {
+                Log.e(LOGTAG, "failed to decode icon");
+                return;
+            }
             view.setImageViewBitmap(R.id.notification_image, bm);
             view.setTextViewText(R.id.notification_title, mTitle);
             if (mText.length() > 0) {

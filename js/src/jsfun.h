@@ -33,8 +33,9 @@ class JSFunction : public JSObject
         EXPR_CLOSURE     = 0x0020,  /* expression closure: function(x) x*x */
         HAS_GUESSED_ATOM = 0x0040,  /* function had no explicit name, but a
                                        name was guessed for it anyway */
-        LAMBDA           = 0x0080,  /* function comes from a FunctionExpression or Function() call
-                                       (not a FunctionDeclaration or nonstandard function-statement) */
+        LAMBDA           = 0x0080,  /* function comes from a FunctionExpression, ArrowFunction, or
+                                       Function() call (not a FunctionDeclaration or nonstandard
+                                       function-statement) */
         SELF_HOSTED      = 0x0100,  /* function is self-hosted builtin and must not be
                                        decompilable nor constructible. */
         SELF_HOSTED_CTOR = 0x0200,  /* function is self-hosted builtin constructor and
@@ -42,10 +43,12 @@ class JSFunction : public JSObject
         HAS_REST         = 0x0400,  /* function has a rest (...) parameter */
         HAS_DEFAULTS     = 0x0800,  /* function has at least one default parameter */
         INTERPRETED_LAZY = 0x1000,  /* function is interpreted but doesn't have a script yet */
+        ARROW            = 0x2000,  /* ES6 '(args) => body' syntax */
 
         /* Derived Flags values for convenience: */
         NATIVE_FUN = 0,
-        INTERPRETED_LAMBDA = INTERPRETED | LAMBDA
+        INTERPRETED_LAMBDA = INTERPRETED | LAMBDA,
+        INTERPRETED_LAMBDA_ARROW = INTERPRETED | LAMBDA | ARROW
     };
 
     static void staticAsserts() {
@@ -97,6 +100,7 @@ class JSFunction : public JSObject
     bool isSelfHostedConstructor()  const { return flags & SELF_HOSTED_CTOR; }
     bool hasRest()                  const { return flags & HAS_REST; }
     bool hasDefaults()              const { return flags & HAS_DEFAULTS; }
+    bool isArrow()                  const { return flags & ARROW; }
 
     /* Compound attributes: */
     bool isBuiltin() const {

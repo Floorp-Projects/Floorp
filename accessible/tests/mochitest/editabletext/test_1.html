@@ -19,11 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452161
           src="editabletext.js"></script>
 
   <script type="application/javascript">
-    if (navigator.platform.startsWith("Mac")) {
-      SimpleTest.expectAssertions(0, 1);
-    } else {
-      SimpleTest.expectAssertions(1);
-    }
 
     function addTestEditable(aID, aTestRun, aTrailChar)
     {

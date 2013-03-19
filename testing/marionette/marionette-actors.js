@@ -1383,6 +1383,27 @@ MarionetteDriverActor.prototype = {
   },
 
   /**
+   * multiAction
+   *
+   * @param object aRequest
+   *        'value' represents a nested array: inner array represents each event;
+   *        middle array represents collection of events for each finger
+   *        outer array represents all the fingers
+   */
+
+  multiAction: function MDA_multiAction(aRequest) {
+    this.command_id = this.getCommandId();
+    if (this.context == "chrome") {
+       this.sendError("Not in Chrome", 500, null, this.command_id);
+    }
+    else {
+      this.sendAsync("multiAction", {value: aRequest.value,
+                                     maxlen: aRequest.max_length,
+                                     command_id: this.command_id});
+   }
+ },
+
+  /**
    * Find an element using the indicated search strategy.
    *
    * @param object aRequest
@@ -2127,6 +2148,7 @@ MarionetteDriverActor.prototype.requestTypes = {
   "press": MarionetteDriverActor.prototype.press,
   "release": MarionetteDriverActor.prototype.release,
   "actionChain": MarionetteDriverActor.prototype.actionChain,
+  "multiAction": MarionetteDriverActor.prototype.multiAction,
   "executeAsyncScript": MarionetteDriverActor.prototype.executeWithCallback,
   "executeJSScript": MarionetteDriverActor.prototype.executeJSScript,
   "setSearchTimeout": MarionetteDriverActor.prototype.setSearchTimeout,

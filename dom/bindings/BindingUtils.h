@@ -25,10 +25,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/CallbackObject.h"
 
-// nsGlobalWindow implements nsWrapperCache, but doesn't always use it. Don't
-// try to use it without fixing that first.
-class nsGlobalWindow;
-
 namespace mozilla {
 namespace dom {
 
@@ -682,30 +678,6 @@ NativeInterface2JSObjectAndThrowIfFailed(JSContext* aCx,
                                          const nsIID* aIID,
                                          bool aAllowNativeWrapper);
 
-inline nsWrapperCache*
-GetWrapperCache(nsWrapperCache* cache)
-{
-  return cache;
-}
-
-inline nsWrapperCache*
-GetWrapperCache(nsGlobalWindow* not_allowed);
-
-inline nsWrapperCache*
-GetWrapperCache(void* p)
-{
-  return NULL;
-}
-
-// Helper template for smart pointers to resolve ambiguity between
-// GetWrappeCache(void*) and GetWrapperCache(const ParentObject&).
-template <template <typename> class SmartPtr, typename T>
-inline nsWrapperCache*
-GetWrapperCache(const SmartPtr<T>& aObject)
-{
-  return GetWrapperCache(aObject.get());
-}
-
 /**
  * A method to handle new-binding wrap failure, by possibly falling back to
  * wrapping as a non-new-binding object.
@@ -826,28 +798,6 @@ FindEnumStringIndex(JSContext* cx, JS::Value v, const EnumEntry* values,
   *ok = EnumValueNotFound<InvalidValueFatal>(cx, chars, length, type);
   return -1;
 }
-
-struct ParentObject {
-  template<class T>
-  ParentObject(T* aObject) :
-    mObject(aObject),
-    mWrapperCache(GetWrapperCache(aObject))
-  {}
-
-  template<class T, template<typename> class SmartPtr>
-  ParentObject(const SmartPtr<T>& aObject) :
-    mObject(aObject.get()),
-    mWrapperCache(GetWrapperCache(aObject.get()))
-  {}
-
-  ParentObject(nsISupports* aObject, nsWrapperCache* aCache) :
-    mObject(aObject),
-    mWrapperCache(aCache)
-  {}
-
-  nsISupports* const mObject;
-  nsWrapperCache* const mWrapperCache;
-};
 
 inline nsWrapperCache*
 GetWrapperCache(const ParentObject& aParentObject)
@@ -1716,6 +1666,25 @@ void SetXrayExpandoChain(JSObject *obj, JSObject *chain);
 bool
 NativeToString(JSContext* cx, JSObject* wrapper, JSObject* obj, const char* pre,
                const char* post, JS::Value* v);
+
+HAS_MEMBER(JSBindingFinalized)
+
+template<class T, bool hasCallback=HasJSBindingFinalizedMember<T>::Value>
+struct JSBindingFinalized
+{
+  static void Finalized(T* self)
+  {
+  }
+};
+
+template<class T>
+struct JSBindingFinalized<T, true>
+{
+  static void Finalized(T* self)
+  {
+    self->JSBindingFinalized();
+  }
+};
 
 nsresult
 ReparentWrapper(JSContext* aCx, JSObject* aObj);

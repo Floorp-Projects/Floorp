@@ -206,7 +206,7 @@ nsSMILTimeContainer::SetParent(nsSMILTimeContainer* aParent)
 
 bool
 nsSMILTimeContainer::AddMilestone(const nsSMILMilestone& aMilestone,
-                                  nsISMILAnimationElement& aElement)
+                                  mozilla::dom::SVGAnimationElement& aElement)
 {
   // We record the milestone time and store it along with the element but this
   // time may change (e.g. if attributes are changed on the timed element in
@@ -275,7 +275,7 @@ nsSMILTimeContainer::Traverse(nsCycleCollectionTraversalCallback* aCallback)
   const MilestoneEntry* p = mMilestoneEntries.Elements();
   while (p < mMilestoneEntries.Elements() + mMilestoneEntries.Length()) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback, "mTimebase");
-    aCallback->NoteXPCOMChild(p->mTimebase.get());
+    aCallback->NoteXPCOMChild(static_cast<nsIContent*>(p->mTimebase.get()));
     ++p;
   }
 }
@@ -311,7 +311,7 @@ nsSMILTimeContainer::NotifyTimeChange()
   uint32_t queueLength = mMilestoneEntries.Length();
 #endif
   while (p < mMilestoneEntries.Elements() + mMilestoneEntries.Length()) {
-    nsISMILAnimationElement* elem = p->mTimebase.get();
+    mozilla::dom::SVGAnimationElement* elem = p->mTimebase.get();
     elem->TimedElement().HandleContainerTimeChange();
     NS_ABORT_IF_FALSE(queueLength == mMilestoneEntries.Length(),
         "Call to HandleContainerTimeChange resulted in a change to the "

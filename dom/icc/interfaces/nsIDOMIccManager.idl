@@ -7,8 +7,9 @@
 
 interface nsIDOMEventListener;
 interface nsIDOMDOMRequest;
+interface nsIDOMContact;
 
-[scriptable, builtinclass, uuid(9d898c66-3485-4cd5-ab8d-92ef2988887b)]
+[scriptable, builtinclass, uuid(487b1da5-f497-4eb0-8f84-bca7e0ac95cf)]
 interface nsIDOMMozIccManager : nsIDOMEventTarget
 {
   /**
@@ -273,6 +274,22 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
    * ICC.
    */
   [implicit_jscontext] attribute jsval onstksessionend;
+
+  /**
+   * Update ICC Phonebook contact.
+   *
+   * @param contactType
+   *        One of type as below,
+   *        - 'adn': Abbreviated Dialling Number
+   *        - 'fdn': Fixed Dialling Number
+   * @param contact
+   *        The contact will be updated in ICC
+   * @param [optional] pin2
+   *        PIN2 is only required for 'fdn'.
+   */
+  nsIDOMDOMRequest updateContact(in DOMString contactType,
+                                 in nsIDOMContact contact,
+                                 [optional] in DOMString pin2);
 
   // UICC Secure Element Interfaces
 

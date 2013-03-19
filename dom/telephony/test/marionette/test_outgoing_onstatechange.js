@@ -44,14 +44,17 @@ function dial() {
     log("Received 'onstatechange' call event.");
 
     is(outgoingCall, event.call);
-    is(outgoingCall.state, "alerting");
+    let expectedStates = ["dialing", "alerting"];
+    ok(expectedStates.indexOf(event.call.state) != -1);
 
-    runEmulatorCmd("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "outbound to  " + outNumber + " : ringing");
-      is(result[1], "OK");
-      answer();
-    });
+    if (event.call.state == "alerting") {
+      runEmulatorCmd("gsm list", function(result) {
+        log("Call list is now: " + result);
+        is(result[0], "outbound to  " + outNumber + " : ringing");
+        is(result[1], "OK");
+        answer();
+      });
+    }
   };
 }
 

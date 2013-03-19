@@ -4690,11 +4690,12 @@ CodeGenerator::visitCallsiteCloneIC(OutOfLineUpdateCache *ool, CallsiteCloneIC *
 bool
 CodeGenerator::visitGetNameCache(LGetNameCache *ins)
 {
+    RegisterSet liveRegs = ins->safepoint()->liveRegs();
     Register scopeChain = ToRegister(ins->scopeObj());
     TypedOrValueRegister output(GetValueOutput(ins));
     bool isTypeOf = ins->mir()->accessKind() != MGetNameCache::NAME;
 
-    NameIC cache(isTypeOf, scopeChain, ins->mir()->name(), output);
+    NameIC cache(liveRegs, isTypeOf, scopeChain, ins->mir()->name(), output);
     return addCache(ins, allocateCache(cache));
 }
 

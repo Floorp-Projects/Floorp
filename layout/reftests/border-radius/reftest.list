@@ -48,13 +48,13 @@ fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,10) == clipping-4-overflow-
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-5-image.html clipping-5-refi.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-5-overflow-hidden.html clipping-5-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(Android,5,21) == clipping-5-refi.html clipping-5-ref.html
-fuzzy-if(true,1,7) fuzzy-if(cocoaWidget,1,99) fuzzy-if(Android&&browserIsRemote,7,89) fuzzy-if(Android&&!browserIsRemote,99,107) == clipping-5-refc.html clipping-5-ref.html # bug 732535
+fuzzy-if(true,1,7) fuzzy-if(cocoaWidget,1,99) fuzzy-if(Android&&browserIsRemote,7,89) fuzzy-if(Android&&!browserIsRemote,99,115) == clipping-5-refc.html clipping-5-ref.html # bug 732535
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-and-zindex-1.html clipping-and-zindex-1-ref.html
 fuzzy-if(cocoaWidget,1,4) == intersecting-clipping-1-canvas.html intersecting-clipping-1-refc.html
 == intersecting-clipping-1-image.html intersecting-clipping-1-refi.html
 == intersecting-clipping-1-overflow-hidden.html intersecting-clipping-1-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,20) fuzzy-if(Android,5,105) == intersecting-clipping-1-refi.html intersecting-clipping-1-ref.html
-fuzzy-if(true,1,33) fuzzy-if(cocoaWidget,1,332) fuzzy-if(Android&&browserIsRemote,7,310) fuzzy-if(Android&&!browserIsRemote,124,429) == intersecting-clipping-1-refc.html intersecting-clipping-1-ref.html # bug 732535
+fuzzy-if(true,1,33) fuzzy-if(cocoaWidget,1,332) fuzzy-if(Android&&browserIsRemote,7,310) fuzzy-if(Android&&!browserIsRemote,124,440) == intersecting-clipping-1-refc.html intersecting-clipping-1-ref.html # bug 732535
 
 # Inheritance
 == inherit-1.html inherit-1-ref.html # border-radius shouldn't inherit

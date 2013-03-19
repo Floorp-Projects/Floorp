@@ -395,3 +395,5 @@ MSG_DEF(JSMSG_USE_ASM_DIRECTIVE_FAIL, 341, 0, JSEXN_SYNTAXERR, "'use asm' direct
 MSG_DEF(JSMSG_USE_ASM_TYPE_FAIL,      342, 1, JSEXN_TYPEERR, "asm.js type error: {0}")
 MSG_DEF(JSMSG_USE_ASM_LINK_FAIL,      343, 1, JSEXN_TYPEERR, "asm.js link error: {0}")
 MSG_DEF(JSMSG_USE_ASM_TYPE_OK,        344, 0, JSEXN_ERR,     "Successfully compiled asm.js code")
+MSG_DEF(JSMSG_BAD_ARROW_ARGS,         345, 0, JSEXN_SYNTAXERR, "invalid arrow-function arguments (parentheses around the arrow-function may help)")
+MSG_DEF(JSMSG_YIELD_IN_ARROW,         346, 0, JSEXN_SYNTAXERR, "arrow function may not contain yield")

@@ -81,6 +81,9 @@ assertEq(Object.keys(exp).join(), 'f,g1,h1');
 // can't test destructuring args with Function constructor
 function assertTypeFailInEval(str)
 {
+    if (!isAsmJSCompilationAvailable())
+        return;
+
     var caught = false;
     var oldOpts = options("werror");
     assertEq(oldOpts.indexOf("werror"), -1);

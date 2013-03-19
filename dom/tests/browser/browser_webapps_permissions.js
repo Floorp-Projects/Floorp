@@ -18,6 +18,9 @@ function log()
 let scope = {};
 Cu.import("resource://gre/modules/PermissionSettings.jsm", scope);
 
+var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"]
+                     .getService(Ci.nsIWindowMediator);
+
 const TEST_URL =
   "http://mochi.test:8888/browser/dom/tests/browser/test-webapps-permissions.html";
 const TEST_MANIFEST_URL =
@@ -57,6 +60,14 @@ function test() {
   registerCleanupFunction(function () {
     gWindow = null;
     gBrowser.removeTab(tab);
+
+    // The installation may have created a XUL alert window
+    // (see webappsUI.installationSuccessNotification).
+    // It need to be closed before the test finishes.
+    var browsers = windowMediator.getEnumerator('alert:alert');
+      while (browsers.hasMoreElements()) {
+      browsers.getNext().close();
+    }
   });
 
   browser.addEventListener("DOMContentLoaded", function onLoad(event) {
@@ -91,6 +102,7 @@ function test() {
         for (let permName in installedPermsToTest) {
           testPerm(permName, installedPermsToTest[permName]);
         }
+
         // uninstall checks
         uninstallApp();
       };

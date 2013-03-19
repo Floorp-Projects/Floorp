@@ -1,2 +1,6 @@
-mozprocess==0.8
-mozdevice==0.18
+mozprocess==0.9
+mozrunner==5.15
+mozdevice==0.21
+mozcrash==0.2.1
+mozfile==0.3
+mozlog==1.1

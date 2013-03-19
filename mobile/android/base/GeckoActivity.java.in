@@ -40,7 +40,7 @@ public class GeckoActivity extends Activity implements GeckoActivityStatus {
 
 #ifdef MOZ_ANDROID_ANR_REPORTER
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(android.os.Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ANRReporter.register(getApplicationContext());
     }

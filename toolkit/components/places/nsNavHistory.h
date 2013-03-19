@@ -600,7 +600,9 @@ protected:
 
   int64_t mTagsFolder;
 
-  int8_t mHasHistoryEntries;
+  int32_t mDaysOfHistory;
+  int64_t mLastCachedStartOfDay;
+  int64_t mLastCachedEndOfDay;
 
   // Used to enable and disable the observer notifications
   bool mCanNotify;

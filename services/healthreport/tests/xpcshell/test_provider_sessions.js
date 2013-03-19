@@ -27,7 +27,6 @@ add_test(function test_constructor() {
 add_task(function test_init() {
   let storage = yield Metrics.Storage("init");
   let provider = new SessionsProvider();
-  provider.initPreferences("testing.init.");
   yield provider.init(storage);
   yield provider.shutdown();
 
@@ -61,7 +60,6 @@ function getProvider(name, now=new Date(), init=true) {
   return Task.spawn(function () {
     let storage = yield Metrics.Storage(name);
     let provider = new SessionsProvider();
-    provider.initPreferences("testing." + name + ".healthreport.provider.");
 
     let recorder = new SessionRecorder("testing." + name + ".sessions.");
     monkeypatchStartupInfo(recorder, now);
