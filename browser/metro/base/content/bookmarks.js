@@ -225,6 +225,9 @@ BookmarksView.prototype = {
       aItem.color = color;
       return;
     }
+    if (!aIconUri) {
+      return;
+    }
     let url = Services.io.newURI(aIconUri.spec.replace("moz-anno:favicon:",""), "", null)
     let ca = Components.classes["@mozilla.org/places/colorAnalyzer;1"]
                        .getService(Components.interfaces.mozIColorAnalyzer);
