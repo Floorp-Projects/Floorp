@@ -34,9 +34,9 @@ function testCanvasDrawImage(v) {
 
   try {
     var data = ctx.getImageData(0, 0, 1, 1);
-    ok(true, "drawImage '" + v.src + "' then getImageData with crossorigin='" + v.crossorigin + "' worked");
+    ok(true, "drawImage '" + v.src + "' then getImageData with crossOrigin='" + v.crossOrigin + "' worked");
   } catch(error) {
-    ok(!v.crossorigin && error.name === "SecurityError", "drawImage '" + v.src + "' then getImageData with crossorigin='" + v.crossorigin + "' failed");
+    ok(!v.crossOrigin && error.name === "SecurityError", "drawImage '" + v.src + "' then getImageData with crossOrigin='" + v.crossOrigin + "' failed");
     v.tainted = true;
   }
 }
@@ -49,9 +49,9 @@ function testCanvasCreatePattern(v) {
 
   try {
     var data = ctx.getImageData(0, 0, 1, 1);
-    ok(true, "createPattern '" + v.src + "' then getImageData with crossorigin='" + v.crossorigin + "' worked");
+    ok(true, "createPattern '" + v.src + "' then getImageData with crossOrigin='" + v.crossOrigin + "' worked");
   } catch(error) {
-    ok(!v.crossorigin && error.name === "SecurityError", "createPattern '" + v.src + "' then getImageData with crossorigin='" + v.crossorigin + "' failed");
+    ok(!v.crossOrigin && error.name === "SecurityError", "createPattern '" + v.src + "' then getImageData with crossOrigin='" + v.crossOrigin + "' failed");
     v.tainted = true;
   }
 }
@@ -62,9 +62,9 @@ function testWebGL(v) {
 
   try {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, v);
-    ok(true, "createTexture from '" + v.src + "' with crossorigin='" + v.crossorigin + "' worked");
+    ok(true, "createTexture from '" + v.src + "' with crossOrigin='" + v.crossOrigin + "' worked");
   } catch (error) {
-    ok(!v.crossorigin && error.name === "SecurityError", "createTexture from '" + v.src + "' with crossorigin='" + v.crossorigin + "' failed");
+    ok(!v.crossOrigin && error.name === "SecurityError", "createTexture from '" + v.src + "' with crossOrigin='" + v.crossOrigin + "' failed");
     v.tainted = true;
   }
 }
@@ -78,12 +78,12 @@ function testTaintedCanvas(v) {
     var data = ctx.getImageData(0, 0, 1, 1);
     ok(false, "changing the CORS mode should not allow reading data from remote videos");
   } catch (error) {
-    ok(error.name === "SecurityError", "changing the CORS mode, drawImage '" + v.src + "' then getImageData with crossorigin='" + v.crossorigin + "' failed");
+    ok(error.name === "SecurityError", "changing the CORS mode, drawImage '" + v.src + "' then getImageData with crossOrigin='" + v.crossOrigin + "' failed");
   }
 }
 
 function vidDataSuccess(e) {
-  ok(!e.target.error, "Load '" + e.target.src + "' with crossorigin='" + e.target.crossorigin + "'");
+  ok(!e.target.error, "Load '" + e.target.src + "' with crossOrigin='" + e.target.crossOrigin + "'");
 
   testCanvasDrawImage(e.target);
   testCanvasCreatePattern(e.target);
@@ -92,7 +92,7 @@ function vidDataSuccess(e) {
   }
   // If we change the CORS mode after loading the file without CORS it should still throw a security error
   if (e.target.tainted) {
-    e.target.crossorigin = "anonymous";
+    e.target.crossOrigin = "anonymous";
     testTaintedCanvas(e.target);
   }
 
@@ -100,13 +100,13 @@ function vidDataSuccess(e) {
 }
 
 function vidLoadFailure(e) {
-  ok(false, "Load '" + e.target.src + "' with crossorigin='" + e.target.crossorigin + "'");
+  ok(false, "Load '" + e.target.src + "' with crossOrigin='" + e.target.crossOrigin + "'");
   doneTest(e);
 }
 
 function vidErrorSuccess(e) {
   ok(e.target.error.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED, 
-    "Load '" + e.target.src + "' with crossorigin='" + e.target.crossorigin + "'");
+    "Load '" + e.target.src + "' with crossOrigin='" + e.target.crossOrigin + "'");
   doneTest(e);
 }
 
@@ -114,10 +114,10 @@ function startTest(test, token) {
   var v = document.createElement('video');
   if (test.cors === "just-crossOrigin-without-value") {
     var div = document.createElement('div');
-    div.innerHTML="<video crossorigin>";
+    div.innerHTML="<video crossOrigin>";
     v = div.children[0];
   } else if (test.cors !== "missing-value-default") {
-    v.crossorigin = test.cors;
+    v.crossOrigin = test.cors;
   }
   v.token = token;
   manager.started(token);
