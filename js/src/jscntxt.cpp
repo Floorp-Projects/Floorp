@@ -264,7 +264,7 @@ JSCompartment::sweepCallsiteClones()
         for (CallsiteCloneTable::Enum e(callsiteClones); !e.empty(); e.popFront()) {
             CallsiteCloneKey key = e.front().key;
             JSFunction *fun = e.front().value;
-            if (!IsScriptMarked(&key.script) || !IsObjectMarked(&fun))
+            if (!key.script->isMarked() || !fun->isMarked())
                 e.removeFront();
         }
     }

@@ -325,33 +325,6 @@ js::ObjectImpl::markChildren(JSTracer *trc)
     }
 }
 
-gc::AllocKind
-js::ObjectImpl::getAllocKind() const
-{
-    gc::AllocKind allocKind;
-    if (asObjectPtr()->isArray()) {
-        JS_ASSERT(isTenured());
-        allocKind = tenuredGetAllocKind();
-    } else if (asObjectPtr()->isFunction()) {
-        allocKind = asObjectPtr()->toFunction()->getAllocKind();
-    } else if (asObjectPtr()->isProxy()) {
-        BaseProxyHandler *handler =
-            static_cast<BaseProxyHandler *>(getSlot(JSSLOT_PROXY_HANDLER).toPrivate());
-        Value priv = getSlot(JSSLOT_PROXY_PRIVATE);
-        allocKind = gc::GetGCObjectKind(getClass());
-        if (handler->finalizeInBackground(priv))
-            allocKind = GetBackgroundAllocKind(allocKind);
-    } else {
-        Class *clasp = getClass();
-        allocKind = gc::GetGCObjectFixedSlotsKind(numFixedSlots());
-        JS_ASSERT(!IsBackgroundFinalized(allocKind));
-        if (CanBeFinalizedInBackground(allocKind, clasp))
-            allocKind = GetBackgroundAllocKind(allocKind);
-    }
-    JS_ASSERT_IF(isTenured(), allocKind == tenuredGetAllocKind());
-    return allocKind;
-}
-
 bool
 DenseElementsHeader::getOwnElement(JSContext *cx, Handle<ObjectImpl*> obj, uint32_t index,
                                    unsigned resolveFlags, PropDesc *desc)

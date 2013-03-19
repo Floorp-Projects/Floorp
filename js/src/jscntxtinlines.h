@@ -73,7 +73,7 @@ NewObjectCache::fill(EntryIndex entry_, Class *clasp, gc::Cell *key, gc::AllocKi
     entry->key = key;
     entry->kind = kind;
 
-    entry->nbytes = gc::Arena::thingSize(kind);
+    entry->nbytes = obj->sizeOfThis();
     js_memcpy(&entry->templateObject, obj, entry->nbytes);
 }
 
