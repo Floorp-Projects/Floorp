@@ -3317,15 +3317,7 @@ private void CancelNotification()
 
         try
             {
-            // on android 4.2 and above, we want to pass the "-d" argument to pm so that version
-            // downgrades are allowed... (option unsupported in earlier versions)
-            String sPmCmd;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                sPmCmd = "pm install -r -d " + sApp + " Cleanup;exit";
-            } else {
-                sPmCmd = "pm install -r " + sApp + " Cleanup;exit";
-            }
-            pProc = Runtime.getRuntime().exec(this.getSuArgs(sPmCmd));
+            pProc = Runtime.getRuntime().exec(this.getSuArgs("pm install -r " + sApp + " Cleanup;exit"));
             RedirOutputThread outThrd3 = new RedirOutputThread(pProc, out);
             outThrd3.start();
             try {
