@@ -1075,7 +1075,7 @@ JSObject::sealOrFreeze(JSContext *cx, HandleObject obj, ImmutabilityType it)
         RootedShape last(cx, EmptyShape::getInitialShape(cx, obj->getClass(),
                                                          obj->getTaggedProto(),
                                                          obj->getParent(),
-                                                         obj->getAllocKind(),
+                                                         obj->numFixedSlots(),
                                                          obj->lastProperty()->getObjectFlags()));
         if (!last)
             return false;
@@ -1808,7 +1808,7 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *aArg, JSObject *bArg,
             return false;
     } else {
         reserved.newbshape = EmptyShape::getInitialShape(cx, aClass, aProto, a->getParent(),
-                                                         b->getAllocKind());
+                                                         b->numFixedSlots());
         if (!reserved.newbshape)
             return false;
     }
@@ -1817,7 +1817,7 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *aArg, JSObject *bArg,
             return false;
     } else {
         reserved.newashape = EmptyShape::getInitialShape(cx, bClass, bProto, b->getParent(),
-                                                         a->getAllocKind());
+                                                         a->numFixedSlots());
         if (!reserved.newashape)
             return false;
     }
