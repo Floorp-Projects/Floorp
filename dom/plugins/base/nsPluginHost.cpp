@@ -1049,7 +1049,14 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
   PR_LogFlush();
 #endif
 
+  nsRefPtr<nsNPAPIPlugin> plugin;
+  GetPlugin(aMimeType, getter_AddRefs(plugin));
+  if (!plugin) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsPluginTag* pluginTag = FindPluginForType(aMimeType, true);
+
   NS_ASSERTION(pluginTag, "Must have plugin tag here!");
 
 #if defined(MOZ_WIDGET_ANDROID) && defined(MOZ_CRASHREPORTER)
@@ -1057,12 +1064,6 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
     CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("FlashVersion"), pluginTag->mVersion);
   }
 #endif
-
-  nsRefPtr<nsNPAPIPlugin> plugin;
-  GetPlugin(aMimeType, getter_AddRefs(plugin));
-  if (!plugin) {
-    return NS_ERROR_FAILURE;
-  }
 
   nsRefPtr<nsNPAPIPluginInstance> instance = new nsNPAPIPluginInstance();
 
