@@ -197,7 +197,7 @@ IonRuntime::initialize(JSContext *cx)
         FrameSizeClass class_ = FrameSizeClass::FromClass(id);
         if (class_ == FrameSizeClass::ClassLimit())
             break;
-        bailoutTables_.infallibleAppend(NULL);
+        bailoutTables_.infallibleAppend((IonCode *)NULL);
         bailoutTables_[id] = generateBailoutTable(cx, id);
         if (!bailoutTables_[id])
             return false;
@@ -1259,14 +1259,6 @@ IonCompile(JSContext *cx, JSScript *script, JSFunction *fun, jsbytecode *osrPc, 
         IonSpew(IonSpew_Abort, "IM Compilation failed.");
 
     return abortReason;
-}
-
-static inline bool
-OffThreadCompilationEnabled(JSContext *cx)
-{
-    return js_IonOptions.parallelCompilation
-        && cx->runtime->useHelperThreads()
-        && cx->runtime->helperThreadCount() != 0;
 }
 
 static inline bool
