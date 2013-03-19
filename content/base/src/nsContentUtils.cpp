@@ -1201,6 +1201,13 @@ nsContentUtils::IsHTMLWhitespace(PRUnichar aChar)
 
 /* static */
 bool
+nsContentUtils::IsHTMLWhitespaceOrNBSP(PRUnichar aChar)
+{
+  return IsHTMLWhitespace(aChar) || aChar == PRUnichar(0xA0);
+}
+
+/* static */
+bool
 nsContentUtils::IsHTMLBlock(nsIAtom* aLocalName)
 {
   return
@@ -2158,6 +2165,9 @@ nsContentUtils::TrimWhitespace<nsCRT::IsAsciiSpace>(const nsAString&, bool);
 template
 const nsDependentSubstring
 nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(const nsAString&, bool);
+template
+const nsDependentSubstring
+nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespaceOrNBSP>(const nsAString&, bool);
 
 static inline void KeyAppendSep(nsACString& aKey)
 {

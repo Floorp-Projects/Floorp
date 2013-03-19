@@ -2472,28 +2472,32 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
         startIndex++;
       }
 
-      uint32_t i;
-      for (i = 0; i < numOptions; i++) {
+      for (uint32_t i = 0; i < numOptions; ++i) {
         uint32_t index = (i + startIndex) % numOptions;
-        nsCOMPtr<nsIDOMHTMLOptionElement> optionElement =
-          GetOption(options, index);
-        if (optionElement) {
-          nsAutoString text;
-          if (NS_OK == optionElement->GetText(text)) {
-            if (StringBeginsWith(text, incrementalString,
-                                 nsCaseInsensitiveStringComparator())) {
-              bool wasChanged = PerformSelection(index, isShift, isControl);
-              if (wasChanged) {
-                // dispatch event, update combobox, etc.
-                if (!UpdateSelection()) {
-                  return NS_OK;
-                }
-              }
-              break;
-            }
-          }
+        nsCOMPtr<nsIDOMHTMLOptionElement> optionElement = GetOption(options, index);
+        if (!optionElement) {
+          continue;
         }
-      } // for
+
+        nsAutoString text;
+        if (NS_FAILED(optionElement->GetText(text)) ||
+            !StringBeginsWith(nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespaceOrNBSP>(text, false),
+                              incrementalString,
+                              nsCaseInsensitiveStringComparator())) {
+          continue;
+        }
+
+        if (!PerformSelection(index, isShift, isControl)) {
+          break;
+        }
+
+        // If UpdateSelection() returns false, that means the frame is no longer
+        // alive. We should stop doing anything.
+        if (!UpdateSelection()) {
+          return NS_OK;
+        }
+        break;
+      }
 
     } break;//case
   } // switch
