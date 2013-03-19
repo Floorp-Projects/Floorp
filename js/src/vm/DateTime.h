@@ -37,12 +37,16 @@ const double msPerDay = msPerHour * HoursPerDay;
 const unsigned SecondsPerHour = 60 * 60;
 const unsigned SecondsPerDay = SecondsPerHour * 24;
 
+const double StartOfTime = -8.64e15;
+const double EndOfTime = 8.64e15;
+const double MaxTimeMagnitude = 8.64e15;
+
 /* ES5 15.9.1.14. */
 inline double
 TimeClip(double time)
 {
     /* Steps 1-2. */
-    if (!MOZ_DOUBLE_IS_FINITE(time) || mozilla::Abs(time) > 8.64e15)
+    if (!MOZ_DOUBLE_IS_FINITE(time) || mozilla::Abs(time) > MaxTimeMagnitude)
         return js_NaN;
 
     /* Step 3. */
