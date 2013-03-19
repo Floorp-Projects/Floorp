@@ -8,6 +8,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-common/preferences.js");
 Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://gre/modules/services/healthreport/healthreporter.jsm");
 Cu.import("resource://gre/modules/services/datareporting/policy.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -391,6 +392,83 @@ add_task(function test_json_payload_multiple_days() {
     do_check_eq(Object.keys(o.data.days).length, 180);
     let today = reporter._formatDate(now);
     do_check_true(today in o.data.days);
+  } finally {
+    reporter._shutdown();
+  }
+});
+
+add_task(function test_json_payload_newer_version_overwrites() {
+  let reporter = yield getReporter("json_payload_newer_version_overwrites");
+
+  try {
+    let now = new Date();
+    // Instead of hacking up the internals to ensure consistent order in Map
+    // iteration (which would be difficult), we instead opt to generate a lot
+    // of measurements of different versions and verify their iterable order
+    // is not increasing.
+    let versions = [1, 6, 3, 9, 2, 3, 7, 4, 10, 8];
+    let protos = [];
+    for (let version of versions) {
+      let m = function () {
+        Metrics.Measurement.call(this);
+      };
+      m.prototype = {
+        __proto__: DummyMeasurement.prototype,
+        name: "DummyMeasurement",
+        version: version,
+      };
+
+      protos.push(m);
+    }
+
+    let ctor = function () {
+      Metrics.Provider.call(this);
+    };
+    ctor.prototype = {
+      __proto__: DummyProvider.prototype,
+
+      name: "MultiMeasurementProvider",
+      measurementTypes: protos,
+    };
+
+    let provider = new ctor();
+
+    yield reporter._providerManager.registerProvider(provider);
+
+    let haveUnordered = false;
+    let last = -1;
+    let highestVersion = -1;
+    for (let [key, measurement] of provider.measurements) {
+      yield measurement.setDailyLastNumeric("daily-last-numeric",
+                                            measurement.version, now);
+      yield measurement.setLastNumeric("last-numeric",
+                                       measurement.version, now);
+
+      if (measurement.version > highestVersion) {
+        highestVersion = measurement.version;
+      }
+
+      if (measurement.version < last) {
+        haveUnordered = true;
+      }
+
+      last = measurement.version;
+    }
+
+    // Ensure Map traversal isn't ordered. If this ever fails, then we'll need
+    // to monkeypatch.
+    do_check_true(haveUnordered);
+
+    let payload = yield reporter.getJSONPayload();
+    let o = JSON.parse(payload);
+    do_check_true("MultiMeasurementProvider.DummyMeasurement" in o.data.last);
+    do_check_eq(o.data.last["MultiMeasurementProvider.DummyMeasurement"]._v, highestVersion);
+
+    let day = reporter._formatDate(now);
+    do_check_true(day in o.data.days);
+    do_check_true("MultiMeasurementProvider.DummyMeasurement" in o.data.days[day]);
+    do_check_eq(o.data.days[day]["MultiMeasurementProvider.DummyMeasurement"]._v, highestVersion);
+
   } finally {
     reporter._shutdown();
   }
