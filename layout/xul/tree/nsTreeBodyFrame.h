@@ -544,7 +544,7 @@ protected: // Data Members
   nsDataHashtable<nsStringHashKey, nsTreeImageCacheEntry> mImageCache;
 
   // A scratch array used when looking up cached style contexts.
-  nsCOMPtr<nsISupportsArray> mScratchArray;
+  AtomArray mScratchArray;
 
   // The index of the first visible row and the # of rows visible onscreen.  
   // The tree only examines onscreen rows, starting from
