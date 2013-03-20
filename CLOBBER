@@ -19,4 +19,4 @@
 #  If changing this file you must manually clobber immediately before landing,
 #  (due to bug 837323), using: https://secure.pub.build.mozilla.org/clobberer/
 #
-Bug 851908 - The WebIDL build system still has some problems.
+Bug 844654 changed all the Makefiles.
