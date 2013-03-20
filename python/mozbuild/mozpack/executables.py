@@ -20,9 +20,42 @@ MACHO_SIGNATURES = [
 
 FAT_SIGNATURE = 0xcafebabe  # mach-o FAT binary
 
-EXECUTABLE_SIGNATURES = [
-    0x7f454c46,  # Elf
-] + MACHO_SIGNATURES
+ELF_SIGNATURE = 0x7f454c46  # Elf binary
+
+UNKNOWN = 0
+MACHO = 1
+ELF = 2
+
+def get_type(path):
+    '''
+    Check the signature of the give file and returns what kind of executable
+    matches.
+    '''
+    with open(path, 'rb') as f:
+        signature = f.read(4)
+        if len(signature) < 4:
+            return UNKNOWN
+        signature = struct.unpack('>L', signature)[0]
+        if signature == ELF_SIGNATURE:
+            return ELF
+        if signature in MACHO_SIGNATURES:
+            return MACHO
+        if signature != FAT_SIGNATURE:
+            return UNKNOWN
+        # We have to sanity check the second four bytes, because Java class
+        # files use the same magic number as Mach-O fat binaries.
+        # This logic is adapted from file(1), which says that Mach-O uses
+        # these bytes to count the number of architectures within, while
+        # Java uses it for a version number. Conveniently, there are only
+        # 18 labelled Mach-O architectures, and Java's first released
+        # class format used the version 43.0.
+        num = f.read(4)
+        if len(num) < 4:
+            return UNKNOWN
+        num = struct.unpack('>L', num)[0]
+        if num < 20:
+            return MACHO
+        return UNKNOWN
 
 
 def is_executable(path):
@@ -45,27 +78,7 @@ def is_executable(path):
         return path.lower().endswith((substs['DLL_SUFFIX'],
                                       substs['BIN_SUFFIX']))
 
-    with open(path, 'rb') as f:
-        signature = f.read(4)
-        if len(signature) < 4:
-            return False
-        signature = struct.unpack('>L', signature)[0]
-        if signature in EXECUTABLE_SIGNATURES:
-            return True
-        if signature != FAT_SIGNATURE:
-            return False
-        # We have to sanity check the second four bytes, because Java class
-        # files use the same magic number as Mach-O fat binaries.
-        # This logic is adapted from file(1), which says that Mach-O uses
-        # these bytes to count the number of architectures within, while
-        # Java uses it for a version number. Conveniently, there are only
-        # 18 labelled Mach-O architectures, and Java's first released
-        # class format used the version 43.0.
-        num = f.read(4)
-        if len(num) < 4:
-            return False
-        num = struct.unpack('>L', num)[0]
-        return num < 20
+    return get_type(path) != UNKNOWN
 
 
 def may_strip(path):
