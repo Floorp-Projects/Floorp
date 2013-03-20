@@ -263,7 +263,7 @@ struct JSCompartment
     /* Mark cross-compartment wrappers. */
     void markCrossCompartmentWrappers(JSTracer *trc);
 
-    bool wrap(JSContext *cx, JS::MutableHandleValue vp, JS::HandleObject existing = JS::NullPtr());
+    bool wrap(JSContext *cx, JS::MutableHandleValue vp, JS::HandleObject existing = js::NullPtr());
     bool wrap(JSContext *cx, JSString **strp);
     bool wrap(JSContext *cx, js::HeapPtrString *strp);
     bool wrap(JSContext *cx, JSObject **objp, JSObject *existing = NULL);
