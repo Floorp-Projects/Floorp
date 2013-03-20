@@ -8,9 +8,6 @@ ac_add_options --enable-signmar
 # Nightlies only since this has a cost in performance
 ac_add_options --enable-js-diagnostics
 
-# IonMonkey disabled in bug 789373
-ac_add_options --disable-ion
-
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1
 
