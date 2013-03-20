@@ -7,11 +7,11 @@
 #define __NS_SVGGRADIENTELEMENT_H__
 
 #include "nsIDOMSVGUnitTypes.h"
+#include "nsSVGAnimatedTransformList.h"
 #include "nsSVGElement.h"
 #include "nsSVGLength2.h"
 #include "nsSVGEnum.h"
 #include "nsSVGString.h"
-#include "SVGAnimatedTransformList.h"
 
 static const unsigned short SVG_SPREADMETHOD_UNKNOWN = 0;
 static const unsigned short SVG_SPREADMETHOD_PAD     = 1;
@@ -30,10 +30,9 @@ NS_NewSVGRadialGradientElement(nsIContent** aResult,
                                already_AddRefed<nsINodeInfo> aNodeInfo);
 
 namespace mozilla {
-
-class DOMSVGAnimatedTransformList;
-
 namespace dom {
+
+class SVGAnimatedTransformList;
 
 //--------------------- Gradients------------------------
 
@@ -56,7 +55,7 @@ public:
   // nsIContent
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
-  virtual SVGAnimatedTransformList*
+  virtual nsSVGAnimatedTransformList*
     GetAnimatedTransformList(uint32_t aFlags = 0);
   virtual nsIAtom* GetTransformListAttrName() const {
     return nsGkAtoms::gradientTransform;
@@ -64,7 +63,7 @@ public:
 
   // WebIDL
   already_AddRefed<nsIDOMSVGAnimatedEnumeration> GradientUnits();
-  already_AddRefed<DOMSVGAnimatedTransformList> GradientTransform();
+  already_AddRefed<SVGAnimatedTransformList> GradientTransform();
   already_AddRefed<nsIDOMSVGAnimatedEnumeration> SpreadMethod();
   already_AddRefed<nsIDOMSVGAnimatedString> Href();
 
@@ -82,7 +81,7 @@ protected:
   static StringInfo sStringInfo[1];
 
   // SVGGradientElement values
-  nsAutoPtr<SVGAnimatedTransformList> mGradientTransform;
+  nsAutoPtr<nsSVGAnimatedTransformList> mGradientTransform;
 };
 
 //---------------------Linear Gradients------------------------

@@ -19,7 +19,6 @@ endif # !_MSC_VER
 CPPSRCS		= \
 		DOMSVGAnimatedLengthList.cpp \
 		DOMSVGAnimatedNumberList.cpp \
-		DOMSVGAnimatedTransformList.cpp \
 		DOMSVGLength.cpp \
 		DOMSVGLengthList.cpp \
 		DOMSVGNumber.cpp \
@@ -34,6 +33,7 @@ CPPSRCS		= \
 		nsDOMSVGZoomEvent.cpp \
 		nsISVGPoint.cpp \
 		nsSVGAngle.cpp \
+		nsSVGAnimatedTransformList.cpp \
 		nsSVGBoolean.cpp \
 		nsSVGClass.cpp \
 		nsSVGDataParser.cpp \
@@ -156,6 +156,7 @@ include $(topsrcdir)/config/config.mk
 FORCE_STATIC_LIB = 1
 
 EXPORTS =  			\
+	nsSVGAnimatedTransformList.h \
 	nsSVGClass.h               \
 	nsSVGElement.h             \
 	nsSVGFeatures.h            \
@@ -173,6 +174,7 @@ EXPORTS_mozilla/dom = \
 	SVGAnimatedAngle.h \
 	SVGAnimatedBoolean.h \
 	SVGAnimatedLength.h \
+	SVGAnimatedTransformList.h \
 	SVGAnimateElement.h \
 	SVGAnimateTransformElement.h \
 	SVGAnimateMotionElement.h \
