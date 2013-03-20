@@ -653,6 +653,28 @@ JSPropertyDescriptor::trace(JSTracer *trc)
     }
 }
 
+static inline void
+MarkGlobalForMinorGC(JSTracer *trc, JSCompartment *compartment)
+{
+    /*
+     * Named properties of globals which have had Ion activity are treated as
+     * roots during minor GCs. This allows writes to globals to occur without
+     * needing a write barrier.
+     */
+    JS_ASSERT(trc->runtime->isHeapMinorCollecting());
+
+    if (!compartment->ionCompartment())
+        return;
+
+    GlobalObject *global = compartment->maybeGlobal();
+    if (!global)
+        return;
+
+    /* Global reserved slots never hold nursery things. */
+    for (size_t i = JSCLASS_RESERVED_SLOTS(global->getClass()); i < global->slotSpan(); ++i)
+        MarkValueRoot(trc, global->nativeGetSlotRef(i).unsafeGet(), "MinorGlobalRoot");
+}
+
 void
 js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
 {
@@ -740,6 +762,9 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         if (IS_GC_MARKING_TRACER(trc) && !c->zone()->isCollecting())
             continue;
+
+        if (trc->runtime->isHeapMinorCollecting())
+            MarkGlobalForMinorGC(trc, c);
 
         /* During a GC, these are treated as weak pointers. */
         if (!IS_GC_MARKING_TRACER(trc)) {
