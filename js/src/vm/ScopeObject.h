@@ -190,7 +190,7 @@ class CallObject : public ScopeObject
     create(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot *slots);
 
     static CallObject *
-    createTemplateObject(JSContext *cx, HandleScript script);
+    createTemplateObject(JSContext *cx, HandleScript script, gc::InitialHeap heap);
 
     static const uint32_t RESERVED_SLOTS = 2;
 
@@ -229,7 +229,7 @@ class DeclEnvObject : public ScopeObject
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT2;
 
     static DeclEnvObject *
-    createTemplateObject(JSContext *cx, HandleFunction fun);
+    createTemplateObject(JSContext *cx, HandleFunction fun, gc::InitialHeap heap);
 
     static DeclEnvObject *create(JSContext *cx, HandleObject enclosing, HandleFunction callee);
 
