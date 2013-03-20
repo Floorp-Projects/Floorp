@@ -1595,16 +1595,16 @@ private:
   // were in-flow
   // @param aPendingBinding the pending binding  from this block's frame
   // construction item.
-  nsresult ConstructBlock(nsFrameConstructorState& aState,
-                          const nsStyleDisplay*    aDisplay,
-                          nsIContent*              aContent,
-                          nsIFrame*                aParentFrame,
-                          nsIFrame*                aContentParentFrame,
-                          nsStyleContext*          aStyleContext,
-                          nsIFrame**               aNewFrame,
-                          nsFrameItems&            aFrameItems,
-                          bool                     aAbsPosContainer,
-                          PendingBinding*          aPendingBinding);
+  void ConstructBlock(nsFrameConstructorState& aState,
+                      const nsStyleDisplay*    aDisplay,
+                      nsIContent*              aContent,
+                      nsIFrame*                aParentFrame,
+                      nsIFrame*                aContentParentFrame,
+                      nsStyleContext*          aStyleContext,
+                      nsIFrame**               aNewFrame,
+                      nsFrameItems&            aFrameItems,
+                      bool                     aAbsPosContainer,
+                      PendingBinding*          aPendingBinding);
 
   nsresult ConstructInline(nsFrameConstructorState& aState,
                            FrameConstructionItem&   aItem,
