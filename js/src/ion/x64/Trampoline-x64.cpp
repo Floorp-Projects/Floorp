@@ -176,7 +176,7 @@ IonRuntime::generateEnterJIT(JSContext *cx)
     masm.ret();
 
     Linker linker(masm);
-    return linker.newCode(cx);
+    return linker.newCode(cx, JSC::OTHER_CODE);
 }
 
 IonCode *
@@ -218,7 +218,7 @@ IonRuntime::generateInvalidator(JSContext *cx)
     masm.generateBailoutTail(rdx);
 
     Linker linker(masm);
-    return linker.newCode(cx);
+    return linker.newCode(cx, JSC::OTHER_CODE);
 }
 
 IonCode *
@@ -304,7 +304,7 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx)
     masm.ret();
 
     Linker linker(masm);
-    return linker.newCode(cx);
+    return linker.newCode(cx, JSC::OTHER_CODE);
 }
 
 static void
@@ -359,7 +359,7 @@ IonRuntime::generateBailoutHandler(JSContext *cx)
     GenerateBailoutThunk(cx, masm, NO_FRAME_SIZE_CLASS_ID);
 
     Linker linker(masm);
-    return linker.newCode(cx);
+    return linker.newCode(cx, JSC::OTHER_CODE);
 }
 
 IonCode *
@@ -504,7 +504,7 @@ IonRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
     masm.handleException();
 
     Linker linker(masm);
-    IonCode *wrapper = linker.newCode(cx);
+    IonCode *wrapper = linker.newCode(cx, JSC::OTHER_CODE);
     if (!wrapper)
         return NULL;
 
@@ -542,6 +542,6 @@ IonRuntime::generatePreBarrier(JSContext *cx, MIRType type)
     masm.ret();
 
     Linker linker(masm);
-    return linker.newCode(cx);
+    return linker.newCode(cx, JSC::OTHER_CODE);
 }
 
