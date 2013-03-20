@@ -401,12 +401,12 @@ private:
                       RestyleTracker& aRestyleTracker,
                       bool            aRestyleDescendants);
 
-  nsresult InitAndRestoreFrame (const nsFrameConstructorState& aState,
-                                nsIContent*                    aContent,
-                                nsIFrame*                      aParentFrame,
-                                nsIFrame*                      aPrevInFlow,
-                                nsIFrame*                      aNewFrame,
-                                bool                           aAllowCounters = true);
+  void InitAndRestoreFrame (const nsFrameConstructorState& aState,
+                            nsIContent*                    aContent,
+                            nsIFrame*                      aParentFrame,
+                            nsIFrame*                      aPrevInFlow,
+                            nsIFrame*                      aNewFrame,
+                            bool                           aAllowCounters = true);
 
   // aState can be null if not available; it's used as an optimization.
   // XXXbz IsValidSibling is the only caller that doesn't pass a state here!
