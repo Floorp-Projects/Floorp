@@ -9242,6 +9242,17 @@ FindNextNonWhitespaceSibling(nsIFrame* aFrame)
   return f;
 }
 
+static nsIFrame*
+FindPreviousNonWhitespaceSibling(nsIFrame* aFrame)
+{
+  nsIFrame* f = aFrame;
+  do {
+    f = f->GetPrevSibling();
+  } while (f && f->GetType() == nsGkAtoms::textFrame &&
+           f->GetContent()->TextIsOnlyWhitespace());
+  return f;
+}
+
 bool
 nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
                                                              nsresult* aResult)
@@ -9280,7 +9291,9 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
   nsIFrame* inFlowFrame =
     (aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) ?
       GetPlaceholderFrameFor(aFrame) : aFrame;
-  NS_ASSERTION(inFlowFrame, "How did that happen?");
+  MOZ_ASSERT(inFlowFrame, "How did that happen?");
+  MOZ_ASSERT(inFlowFrame == inFlowFrame->GetFirstContinuation(),
+             "placeholder for primary frame has previous continuations?");
   nsIFrame* parent = inFlowFrame->GetParent();
   if (IsTablePseudo(parent)) {
     if (FindFirstNonWhitespaceChild(parent) == inFlowFrame ||
@@ -9301,25 +9314,27 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
 
   // Might need to reconstruct things if this frame's nextSibling is a table
   // pseudo, since removal of this frame might mean that this pseudo needs to
-  // get merged with the frame's prevSibling.
-  // XXXbz it would be really nice if we had the prevSibling here too, to check
-  // whether this is in fact the case...
+  // get merged with the frame's prevSibling if that's also a table pseudo.
   nsIFrame* nextSibling =
     FindNextNonWhitespaceSibling(inFlowFrame->GetLastContinuation());
   NS_ASSERTION(!IsTablePseudo(inFlowFrame), "Shouldn't happen here");
   if (nextSibling && IsTablePseudo(nextSibling)) {
+    nsIFrame* prevSibling = FindPreviousNonWhitespaceSibling(inFlowFrame);
+    if (prevSibling && IsTablePseudo(prevSibling)) {
 #ifdef DEBUG
-    if (gNoisyContentUpdates) {
-      printf("nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval: "
-             "frame=");
-      nsFrame::ListTag(stdout, aFrame);
-      printf(" has a table pseudo next sibling of different type\n");
-    }
+      if (gNoisyContentUpdates) {
+        printf("nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval: "
+                 "frame=");
+        nsFrame::ListTag(stdout, aFrame);
+        printf(" has a table pseudo next sibling of different type and a "
+                 "table pseudo prevsibling\n");
+      }
 #endif
-    // Good enough to recreate frames for aFrame's parent's content; even if
-    // aFrame's parent is a table pseudo, that'll be the right content node.
-    *aResult = RecreateFramesForContent(parent->GetContent(), true);
-    return true;
+      // Good enough to recreate frames for aFrame's parent's content; even if
+      // aFrame's parent is a table pseudo, that'll be the right content node.
+      *aResult = RecreateFramesForContent(parent->GetContent(), true);
+      return true;
+    }
   }
 
 #ifdef MOZ_FLEXBOX
