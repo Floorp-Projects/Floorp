@@ -26,7 +26,7 @@ interface nsIDOMMozMmsMessage : nsISupports
   /**
    * Should be "not-downloaded", "received", "sending", "sent" or "error".
    */
-  readonly attribute DOMString state;
+  readonly attribute DOMString delivery;
 
   [implicit_jscontext]
   readonly attribute jsval     deliveryStatus; // DOMString[]

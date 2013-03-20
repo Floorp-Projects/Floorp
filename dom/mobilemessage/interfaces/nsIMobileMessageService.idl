@@ -29,7 +29,7 @@ interface nsIMobileMessageService : nsISupports
 
   [implicit_jscontext]
   nsIDOMMozMmsMessage createMmsMessage(in long      id,
-                                       in DOMString state,
+                                       in DOMString delivery,
                                        in jsval     deliveryStatus,
                                        in DOMString sender,
                                        in jsval     receivers,
