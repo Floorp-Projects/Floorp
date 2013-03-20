@@ -528,7 +528,7 @@ nsSVGFilterFrame::GetPostFilterBounds(nsIFrame *aFilteredFrame,
 }
 
 #ifdef DEBUG
-NS_IMETHODIMP
+void
 nsSVGFilterFrame::Init(nsIContent* aContent,
                        nsIFrame* aParent,
                        nsIFrame* aPrevInFlow)
@@ -536,7 +536,7 @@ nsSVGFilterFrame::Init(nsIContent* aContent,
   NS_ASSERTION(aContent->IsSVG(nsGkAtoms::filter),
                "Content is not an SVG filter");
 
-  return nsSVGFilterFrameBase::Init(aContent, aParent, aPrevInFlow);
+  nsSVGFilterFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
 

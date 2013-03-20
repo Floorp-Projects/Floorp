@@ -163,7 +163,7 @@ nsTableFrame::nsTableFrame(nsStyleContext* aContext)
 NS_QUERYFRAME_HEAD(nsTableFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
-NS_IMETHODIMP
+void
 nsTableFrame::Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIFrame*        aPrevInFlow)
@@ -174,7 +174,7 @@ nsTableFrame::Init(nsIContent*      aContent,
                   "prev-in-flow must be of same type");
 
   // Let the base class do its processing
-  nsresult rv = nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
+  nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
   // see if border collapse is on, if so set it
   const nsStyleTableBorder* tableStyle = StyleTableBorder();
@@ -184,8 +184,6 @@ nsTableFrame::Init(nsIContent*      aContent,
   // Create the cell map if this frame is the first-in-flow.
   if (!aPrevInFlow) {
     mCellMap = new nsTableCellMap(*this, borderCollapse);
-    if (!mCellMap)
-      return NS_ERROR_OUT_OF_MEMORY;
   }
 
   if (aPrevInFlow) {
@@ -200,11 +198,7 @@ nsTableFrame::Init(nsIContent*      aContent,
       mTableLayoutStrategy = new BasicTableLayoutStrategy(this);
     else
       mTableLayoutStrategy = new FixedTableLayoutStrategy(this);
-    if (!mTableLayoutStrategy)
-      return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  return rv;
 }
 
 nsTableFrame::~nsTableFrame()

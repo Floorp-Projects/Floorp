@@ -149,9 +149,9 @@ public:
   void AttachedDismissalListener();
 
   // Overridden methods
-  NS_IMETHOD Init(nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*      aContent,
+                    nsIFrame*        aParent,
+                    nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
 
   NS_IMETHOD AttributeChanged(int32_t aNameSpaceID,
                               nsIAtom* aAttribute,
@@ -372,7 +372,7 @@ protected:
 
   // Create a popup view for this frame. The view is added a child of the root
   // view, and is initially hidden.
-  nsresult CreatePopupView();
+  void CreatePopupView();
 
   nsString     mIncrementalString;  // for incremental typing navigation
 

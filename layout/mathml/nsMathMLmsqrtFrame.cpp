@@ -35,16 +35,14 @@ nsMathMLmsqrtFrame::~nsMathMLmsqrtFrame()
 {
 }
 
-NS_IMETHODIMP
+void
 nsMathMLmsqrtFrame::Init(nsIContent*      aContent,
                          nsIFrame*        aParent,
                          nsIFrame*        aPrevInFlow)
 {
-  nsresult rv = nsMathMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
+  nsMathMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
   AllocateMathMLChar(NOTATION_RADICAL);
   mNotationsToDraw |= NOTATION_RADICAL;
-
-  return rv;
 }
 
 NS_IMETHODIMP

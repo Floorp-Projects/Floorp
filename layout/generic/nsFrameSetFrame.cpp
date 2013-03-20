@@ -249,14 +249,13 @@ nsHTMLFramesetFrame::FrameResizePrefCallback(const char* aPref, void* aClosure)
   return 0;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLFramesetFrame::Init(nsIContent*      aContent,
                           nsIFrame*        aParent,
                           nsIFrame*        aPrevInFlow)
 {
   nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
   // find the highest ancestor that is a frameset
-  nsresult rv = NS_OK;
   nsIFrame* parentFrame = GetParent();
   mTopLevelFrameset = this;
   while (parentFrame) {
@@ -281,17 +280,15 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
   NS_ASSERTION(ourContent, "Someone gave us a broken frameset element!");
   const nsFramesetSpec* rowSpecs = nullptr;
   const nsFramesetSpec* colSpecs = nullptr;
-  nsresult result = ourContent->GetRowSpec(&mNumRows, &rowSpecs);
-  NS_ENSURE_SUCCESS(result, result);
-  result = ourContent->GetColSpec(&mNumCols, &colSpecs);
-  NS_ENSURE_SUCCESS(result, result);
+  // GetRowSpec and GetColSpec can fail, but when they do they set
+  // mNumRows and mNumCols respectively to 0, so we deal with it fine.
+  ourContent->GetRowSpec(&mNumRows, &rowSpecs);
+  ourContent->GetColSpec(&mNumCols, &colSpecs);
 
   // Maximum value of mNumRows and mNumCols is NS_MAX_FRAMESET_SPEC_COUNT
   PR_STATIC_ASSERT(NS_MAX_FRAMESET_SPEC_COUNT < UINT_MAX / sizeof(nscoord));
   mRowSizes  = new nscoord[mNumRows];
   mColSizes  = new nscoord[mNumCols];
-  if (!mRowSizes || !mColSizes)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   // Ensure we can't overflow numCells
   PR_STATIC_ASSERT(NS_MAX_FRAMESET_SPEC_COUNT < INT32_MAX / NS_MAX_FRAMESET_SPEC_COUNT);
@@ -299,15 +296,11 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
 
   PR_STATIC_ASSERT(NS_MAX_FRAMESET_SPEC_COUNT < UINT_MAX / sizeof(nsHTMLFramesetBorderFrame*));
   mVerBorders    = new nsHTMLFramesetBorderFrame*[mNumCols];  // 1 more than number of ver borders
-  if (!mVerBorders)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   for (int verX  = 0; verX < mNumCols; verX++)
     mVerBorders[verX]    = nullptr;
 
   mHorBorders    = new nsHTMLFramesetBorderFrame*[mNumRows];  // 1 more than number of hor borders
-  if (!mHorBorders)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   for (int horX = 0; horX < mNumRows; horX++)
     mHorBorders[horX]    = nullptr;
@@ -320,8 +313,6 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
                    < UINT_MAX / sizeof(nsBorderColor) / NS_MAX_FRAMESET_SPEC_COUNT);
   mChildFrameborder  = new nsFrameborder[numCells];
   mChildBorderColors  = new nsBorderColor[numCells];
-  if (!mChildFrameborder || !mChildBorderColors)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   // create the children frames; skip content which isn't <frameset> or <frame>
   mChildCount = 0; // number of <frame> or <frameset> children
@@ -359,44 +350,28 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
     nsIAtom *tag = child->Tag();
     if (tag == nsGkAtoms::frameset || tag == nsGkAtoms::frame) {
       nsRefPtr<nsStyleContext> kidSC;
-      nsresult result;
 
       kidSC = shell->StyleSet()->ResolveStyleFor(child->AsElement(),
                                                  mStyleContext);
       if (tag == nsGkAtoms::frameset) {
         frame = NS_NewHTMLFramesetFrame(shell, kidSC);
-        if (MOZ_UNLIKELY(!frame))
-          return NS_ERROR_OUT_OF_MEMORY;
 
         nsHTMLFramesetFrame* childFrame = (nsHTMLFramesetFrame*)frame;
         childFrame->SetParentFrameborder(frameborder);
         childFrame->SetParentBorderWidth(borderWidth);
         childFrame->SetParentBorderColor(borderColor);
-        result = frame->Init(child, this, nullptr);
-        if (NS_FAILED(result)) {
-          frame->Destroy();
-          return result;
-        }
+        frame->Init(child, this, nullptr);
 
         mChildBorderColors[mChildCount].Set(childFrame->GetBorderColor());
       } else { // frame
         frame = NS_NewSubDocumentFrame(shell, kidSC);
-        if (MOZ_UNLIKELY(!frame))
-          return NS_ERROR_OUT_OF_MEMORY;
 
-        result = frame->Init(child, this, nullptr);
-        if (NS_FAILED(result)) {
-          frame->Destroy();
-          return result;
-        }
+        frame->Init(child, this, nullptr);
 
         mChildFrameborder[mChildCount] = GetFrameBorder(child);
         mChildBorderColors[mChildCount].Set(GetBorderColor(child));
       }
       child->SetPrimaryFrame(frame);
-
-      if (NS_FAILED(result))
-        return result;
 
       mFrames.AppendFrame(nullptr, frame);
 
@@ -410,19 +385,12 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
     nsRefPtr<nsStyleContext> pseudoStyleContext;
     pseudoStyleContext = shell->StyleSet()->
       ResolveAnonymousBoxStyle(nsCSSAnonBoxes::framesetBlank, mStyleContext);
-    if (!pseudoStyleContext) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
 
     // XXX the blank frame is using the content of its parent - at some point it
     // should just have null content, if we support that
     nsHTMLFramesetBlankFrame* blankFrame = new (shell) nsHTMLFramesetBlankFrame(pseudoStyleContext);
 
-    result = blankFrame->Init(mContent, this, nullptr);
-    if (NS_FAILED(result)) {
-      blankFrame->Destroy();
-      return result;
-    }
+    blankFrame->Init(mContent, this, nullptr);
 
     mFrames.AppendFrame(nullptr, blankFrame);
 
@@ -431,7 +399,6 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
   }
 
   mNonBorderChildCount = mChildCount;
-  return rv;
 }
 
 NS_IMETHODIMP

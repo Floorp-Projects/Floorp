@@ -26,10 +26,10 @@ public:
   virtual nsStyleContext*
   GetAdditionalStyleContext(int32_t aIndex) const;
 
-  NS_IMETHOD
+  virtual void
   Init(nsIContent*      aContent,
        nsIFrame*        aParent,
-       nsIFrame*        aPrevInFlow);
+       nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
 
   NS_IMETHOD
   TransmitAutomaticData() MOZ_OVERRIDE;

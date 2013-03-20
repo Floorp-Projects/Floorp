@@ -984,23 +984,18 @@ nsListControlFrame::GetSizeAttribute(uint32_t *aSize) {
 
 
 //---------------------------------------------------------
-NS_IMETHODIMP  
+void
 nsListControlFrame::Init(nsIContent*     aContent,
                          nsIFrame*       aParent,
                          nsIFrame*       aPrevInFlow)
 {
-  nsresult result = nsHTMLScrollFrame::Init(aContent, aParent, aPrevInFlow);
-
-  // get the receiver interface from the browser button's content node
-  NS_ENSURE_STATE(mContent);
+  nsHTMLScrollFrame::Init(aContent, aParent, aPrevInFlow);
 
   // we shouldn't have to unregister this listener because when
   // our frame goes away all these content node go away as well
   // because our frame is the only one who references them.
   // we need to hook up our listeners before the editor is initialized
   mEventListener = new nsListEventListener(this);
-  if (!mEventListener) 
-    return NS_ERROR_OUT_OF_MEMORY;
 
   mContent->AddEventListener(NS_LITERAL_STRING("keypress"), mEventListener,
                              false, false);
@@ -1019,8 +1014,6 @@ nsListControlFrame::Init(nsIContent*     aContent,
   if (IsInDropDownMode()) {
     AddStateBits(NS_FRAME_IN_POPUP);
   }
-
-  return result;
 }
 
 already_AddRefed<nsIContent> 
