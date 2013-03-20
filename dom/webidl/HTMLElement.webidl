@@ -74,7 +74,7 @@ interface HTMLElement : Element {
   //readonly attribute boolean? commandChecked;
 
   // styling
-  [Constant]
+  [PutForwards=cssText, Constant]
   readonly attribute CSSStyleDeclaration style;
 
   // Mozilla specific stuff
