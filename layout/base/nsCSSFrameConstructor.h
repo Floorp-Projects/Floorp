@@ -1450,15 +1450,15 @@ private:
    *        test and the anonymous content creation.  If null, aFrame will be
    *        used.
    */
-  nsresult ProcessChildren(nsFrameConstructorState& aState,
-                           nsIContent*              aContent,
-                           nsStyleContext*          aStyleContext,
-                           nsIFrame*                aFrame,
-                           const bool               aCanHaveGeneratedContent,
-                           nsFrameItems&            aFrameItems,
-                           const bool               aAllowBlockStyles,
-                           PendingBinding*          aPendingBinding,
-                           nsIFrame*                aPossiblyLeafFrame = nullptr);
+  void ProcessChildren(nsFrameConstructorState& aState,
+                       nsIContent*              aContent,
+                       nsStyleContext*          aStyleContext,
+                       nsIFrame*                aFrame,
+                       const bool               aCanHaveGeneratedContent,
+                       nsFrameItems&            aFrameItems,
+                       const bool               aAllowBlockStyles,
+                       PendingBinding*          aPendingBinding,
+                       nsIFrame*                aPossiblyLeafFrame = nullptr);
 
   nsIFrame* GetFrameFor(nsIContent* aContent);
 
