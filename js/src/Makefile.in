@@ -143,8 +143,13 @@ CPPSRCS		= \
 		Unicode.cpp \
 		Xdr.cpp \
 		Module.cpp \
+		$(NULL)
+
+ifdef MOZ_INSTRUMENTS
+CPPSRCS		+= \
 		Instruments.cpp \
 		$(NULL)
+endif
 
 # Changes to internal header files, used externally, massively slow down
 # browser builds.  Don't add new files here unless you know what you're
