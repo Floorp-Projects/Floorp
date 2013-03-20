@@ -6,8 +6,6 @@ let tempScope = {}
 Cu.import("resource:///modules/devtools/CssRuleView.jsm", tempScope);
 let CssRuleView = tempScope.CssRuleView;
 let _ElementStyle = tempScope._ElementStyle;
-let _editableField = tempScope._editableField;
-let inplaceEditor = tempScope._getInplaceEditorForSpan;
 
 let doc = content.document;
 
@@ -40,7 +38,7 @@ function testReturnCommit()
 {
   clearBody();
   let span = createSpan();
-  _editableField({
+  editableField({
     element: span,
     initial: "explicit initial",
     start: function() {
@@ -57,7 +55,7 @@ function testBlurCommit()
 {
   clearBody();
   let span = createSpan();
-  _editableField({
+  editableField({
     element: span,
     start: function() {
       is(inplaceEditor(span).input.value, "Edit Me!", "textContent of the span used.");
@@ -73,7 +71,7 @@ function testAdvanceCharCommit()
 {
   clearBody();
   let span = createSpan();
-  _editableField({
+  editableField({
     element: span,
     advanceChars: ":",
     start: function() {
@@ -91,7 +89,7 @@ function testEscapeCancel()
 {
   clearBody();
   let span = createSpan();
-  _editableField({
+  editableField({
     element: span,
     initial: "initial text",
     start: function() {
