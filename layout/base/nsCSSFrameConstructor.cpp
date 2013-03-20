@@ -827,21 +827,17 @@ public:
    *        floated
    * @param aIsOutOfFlowPopup pass true if the frame is an out-of-flow popup
    *        (XUL-only)
-   * @throws NS_ERROR_OUT_OF_MEMORY if it happens.
-   * @note If this method throws, that means that aNewFrame was not inserted
-   *       into any frame lists.  Furthermore, this method will handle cleanup
-   *       of aNewFrame (via calling Destroy() on it).
    */
-  nsresult AddChild(nsIFrame* aNewFrame,
-                    nsFrameItems& aFrameItems,
-                    nsIContent* aContent,
-                    nsStyleContext* aStyleContext,
-                    nsIFrame* aParentFrame,
-                    bool aCanBePositioned = true,
-                    bool aCanBeFloated = true,
-                    bool aIsOutOfFlowPopup = false,
-                    bool aInsertAfter = false,
-                    nsIFrame* aInsertAfterFrame = nullptr);
+  void AddChild(nsIFrame* aNewFrame,
+                nsFrameItems& aFrameItems,
+                nsIContent* aContent,
+                nsStyleContext* aStyleContext,
+                nsIFrame* aParentFrame,
+                bool aCanBePositioned = true,
+                bool aCanBeFloated = true,
+                bool aIsOutOfFlowPopup = false,
+                bool aInsertAfter = false,
+                nsIFrame* aInsertAfterFrame = nullptr);
 
   /**
    * Function to return the fixed-pos element list.  Normally this will just hand back the
@@ -1121,7 +1117,7 @@ nsFrameConstructorState::GetGeometricParent(const nsStyleDisplay* aStyleDisplay,
   return aContentParentFrame;
 }
 
-nsresult
+void
 nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
                                   nsFrameItems& aFrameItems,
                                   nsIContent* aContent,
@@ -1209,8 +1205,6 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
   } else {
     frameItems->AddChild(aNewFrame);
   }
-  
-  return NS_OK;
 }
 
 void
@@ -1949,11 +1943,7 @@ nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
   // Put the newly created frames into the right child list
   SetInitialSingleChild(newFrame, innerFrame);
 
-  rv = aState.AddChild(newFrame, aFrameItems, content, styleContext,
-                       aParentFrame);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  aState.AddChild(newFrame, aFrameItems, content, styleContext, aParentFrame);
 
   if (!mRootElementFrame) {
     // The frame we're constructing will be the root element frame.
@@ -2954,11 +2944,8 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
                           aState.GetGeometricParent(aStyleDisplay, aParentFrame),
                           nullptr, comboboxFrame);
 
-      rv = aState.AddChild(comboboxFrame, aFrameItems, content, styleContext,
-                           aParentFrame);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
+      aState.AddChild(comboboxFrame, aFrameItems, content, styleContext,
+                      aParentFrame);
       
       nsIComboboxControlFrame* comboBox = do_QueryFrame(comboboxFrame);
       NS_ASSERTION(comboBox, "NS_NewComboboxControlFrame returned frame that "
@@ -3068,11 +3055,8 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsFrameConstructorState& aState,
   scrollFrame->Init(aContent, geometricParent, nullptr);
 
   if (!aBuildCombobox) {
-    nsresult rv = aState.AddChild(scrollFrame, aFrameItems, aContent,
-                                  aStyleContext, aParentFrame);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+    aState.AddChild(scrollFrame, aFrameItems, aContent,
+                    aStyleContext, aParentFrame);
   }
       
   if (aBuildCombobox) {
@@ -3126,11 +3110,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
                                           NS_BLOCK_MARGIN_ROOT);
   InitAndRestoreFrame(aState, content, newFrame, nullptr, blockFrame);
 
-  nsresult rv = aState.AddChild(newFrame, aFrameItems, content, styleContext,
-                                aParentFrame);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  aState.AddChild(newFrame, aFrameItems, content, styleContext, aParentFrame);
   
   // Process children
   nsFrameConstructorSaveState absoluteSaveState;
@@ -3699,11 +3679,8 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
       newFrame = blockFrame;
     }
 
-    rv = aState.AddChild(frameToAddToList, aFrameItems, content, styleContext,
-                         aParentFrame, allowOutOfFlow, allowOutOfFlow, isPopup);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+    aState.AddChild(frameToAddToList, aFrameItems, content, styleContext,
+                    aParentFrame, allowOutOfFlow, allowOutOfFlow, isPopup);
 
 #ifdef MOZ_XUL
     // Icky XUL stuff, sadly
@@ -4483,8 +4460,7 @@ nsCSSFrameConstructor::ConstructScrollableBlock(nsFrameConstructorState& aState,
                "Scrollframe's frameItems should be exactly the scrolled frame");
   FinishBuildingScrollFrame(*aNewFrame, scrolledFrame);
 
-  rv = aState.AddChild(*aNewFrame, aFrameItems, content, styleContext,
-                       aParentFrame);
+  aState.AddChild(*aNewFrame, aFrameItems, content, styleContext, aParentFrame);
   return rv;
 }
 
@@ -4763,11 +4739,7 @@ nsCSSFrameConstructor::ConstructOuterSVG(nsFrameConstructorState& aState,
   // Put the newly created frames into the right child list
   SetInitialSingleChild(newFrame, innerFrame);
 
-  rv = aState.AddChild(newFrame, aFrameItems, content, styleContext,
-                       aParentFrame);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  aState.AddChild(newFrame, aFrameItems, content, styleContext, aParentFrame);
 
   if (!mRootElementFrame) {
     // The frame we're constructing will be the root element frame.
@@ -10598,16 +10570,12 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
     link.Next();
   }
 
-  rv = aState.AddChild(letterFrame, aResult, letterContent, aStyleContext,
-                       aParentFrame, false, true, false, true,
-                       link.PrevFrame());
+  aState.AddChild(letterFrame, aResult, letterContent, aStyleContext,
+                  aParentFrame, false, true, false, true,
+                  link.PrevFrame());
 
   if (nextTextFrame) {
-    if (NS_FAILED(rv)) {
-      nextTextFrame->Destroy();
-    } else {
-      aResult.AddChild(nextTextFrame);
-    }
+    aResult.AddChild(nextTextFrame);
   }
 }
 
@@ -11149,14 +11117,9 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   blockFrame->SetStyleContextWithoutNotification(blockStyle);
   InitAndRestoreFrame(aState, aContent, parent, nullptr, blockFrame);
 
-  nsresult rv = aState.AddChild(*aNewFrame, aFrameItems, aContent,
-                                aStyleContext,
-                                aContentParentFrame ? aContentParentFrame :
-                                                      aParentFrame);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
+  aState.AddChild(*aNewFrame, aFrameItems, aContent, aStyleContext,
+                  aContentParentFrame ? aContentParentFrame :
+                                        aParentFrame);
   if (!mRootElementFrame) {
     // The frame we're constructing will be the root element frame.
     // Set mRootElementFrame before processing children.
@@ -11179,6 +11142,7 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
 
   // Process the child content
   nsFrameItems childItems;
+  nsresult rv;
   rv = ProcessChildren(aState, aContent, aStyleContext, blockFrame, true,
                        childItems, true, aPendingBinding);
 
