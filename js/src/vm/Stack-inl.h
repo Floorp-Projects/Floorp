@@ -605,7 +605,11 @@ AbstractFramePtr::returnValue() const
 {
     if (isStackFrame())
         return asStackFrame()->returnValue();
+#ifdef JS_ION
     return *asBaselineFrame()->returnValue();
+#else
+    JS_NOT_REACHED("Invalid frame");
+#endif
 }
 
 inline void
