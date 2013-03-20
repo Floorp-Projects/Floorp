@@ -4964,7 +4964,7 @@ nsCSSFrameConstructor::AddPageBreakItem(nsIContent* aContent,
                     kNameSpaceID_None, nullptr, pseudoStyle.forget(), true);
 }
 
-nsresult
+void
 nsCSSFrameConstructor::ConstructFrame(nsFrameConstructorState& aState,
                                       nsIContent*              aContent,
                                       nsIFrame*                aParentFrame,
@@ -4993,8 +4993,6 @@ nsCSSFrameConstructor::ConstructFrame(nsFrameConstructorState& aState,
                  "This is not going to work");
     ConstructFramesFromItem(aState, iter, aParentFrame, aFrameItems);
   }
-
-  return NS_OK;
 }
 
 void
