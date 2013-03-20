@@ -7,8 +7,8 @@
         .psr    lsb
 // Section has executable code
         .section .text, "ax","progbits"
-// procedure named 'NS_InvokeByIndex_P'
-        .proc   NS_InvokeByIndex_P
+// procedure named 'NS_InvokeByIndex'
+        .proc   NS_InvokeByIndex
 // manual bundling
         .explicit
 
@@ -19,12 +19,12 @@
 //      .exclass  invoke_copy_to_stack, @fullyvisible
         .type   invoke_copy_to_stack,@function
 
-//      .exclass  NS_InvokeByIndex_P, @fullyvisible
-        .type   NS_InvokeByIndex_P,@function
+//      .exclass  NS_InvokeByIndex, @fullyvisible
+        .type   NS_InvokeByIndex,@function
 
 // XPTC_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
 //   uint32_t paramCount, nsXPTCVariant* params);
-NS_InvokeByIndex_P::
+NS_InvokeByIndex::
         .prologue
         .save ar.pfs, r37
 // allocate 4 input args, 6 local args, and 8 output args
