@@ -138,7 +138,6 @@ public:
                                    LayersBackend aBackendHint = mozilla::layers::LAYERS_NONE,
                                    LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                                    bool* aAllowRetaining = nullptr);
-    void CreateLayerManager();
 
     NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent);
 
@@ -223,6 +222,7 @@ private:
     void DispatchGestureEvent(uint32_t msg, uint32_t direction, double delta,
                               const nsIntPoint &refPoint, uint64_t time);
     void HandleSpecialKey(mozilla::AndroidGeckoEvent *ae);
+    void CreateLayerManager(int aCompositorWidth, int aCompositorHeight);
     void RedrawAll();
 
     mozilla::AndroidLayerRendererFrame mLayerRendererFrame;
