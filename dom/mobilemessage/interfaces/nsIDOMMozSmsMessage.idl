@@ -16,10 +16,6 @@ interface nsIDOMMozSmsMessage : nsISupports
 
   /**
    * Should be "received", "sending", "sent" or "error".
-   *
-   * TODO Bug 850530 Please see the IDL proposal at Bug 760065.
-   * We need to s/delivery/state in nsIDOMMozSmsMessage, which sounds
-   * a better name and can be consistent with nsIDOMMozMmsMessage.
    */
   readonly attribute DOMString delivery;
 
