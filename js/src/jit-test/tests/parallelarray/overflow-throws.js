@@ -9,4 +9,4 @@ function testOverflow() {
   }, RangeError);
 }
 
-testOverflow();
+if (getBuildConfiguration().parallelJS) testOverflow();

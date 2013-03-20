@@ -9,4 +9,5 @@ function testLength() {
   }
 }
 
-testLength();
+if (getBuildConfiguration().parallelJS)
+  testLength();

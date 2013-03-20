@@ -12,4 +12,5 @@ function buildComprehension() {
   }
 }
 
-buildComprehension();
+if (getBuildConfiguration().parallelJS)
+  buildComprehension();

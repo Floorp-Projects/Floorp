@@ -11,4 +11,4 @@ function testReduce() {
   }
 }
 
-testReduce();
+if (getBuildConfiguration().parallelJS) testReduce();

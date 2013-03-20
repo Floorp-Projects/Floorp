@@ -12,5 +12,8 @@ function testMap() {
   assertEqParallelArray(m, new ParallelArray(range(1, 64)));
 }
 
-testMap();
+if (getBuildConfiguration().parallelJS)
+  testMap();
+else
+  throw new Error();
 

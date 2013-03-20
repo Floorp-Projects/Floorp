@@ -9,4 +9,5 @@ function buildMultidim() {
   assertEqParallelArray(p, a);
 }
 
-buildMultidim();
+if (getBuildConfiguration().parallelJS)
+  buildMultidim();

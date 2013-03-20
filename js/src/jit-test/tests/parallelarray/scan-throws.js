@@ -15,4 +15,4 @@ function testScanThrows() {
 }
 
 // FIXME(bug 844886) sanity check argument types
-// testScanThrows();
+// if (getBuildConfiguration().parallelJS) testScanThrows();

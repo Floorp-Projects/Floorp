@@ -15,4 +15,5 @@ function testFilterMisc() {
   testFilter(range(0, 1024), truthy);
 }
 
-testFilterMisc();
+if (getBuildConfiguration().parallelJS)
+  testFilterMisc();

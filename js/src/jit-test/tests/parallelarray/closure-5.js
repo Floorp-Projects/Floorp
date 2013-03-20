@@ -34,4 +34,5 @@ function testClosureCreationAndInvocation() {
   assertEq(m.get(20)(1)[2], 20);
 }
 
-testClosureCreationAndInvocation();
+if (getBuildConfiguration().parallelJS)
+  testClosureCreationAndInvocation();

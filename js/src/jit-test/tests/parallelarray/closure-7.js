@@ -45,4 +45,5 @@ function testClosureCreationAndInvocation() {
   assertEq(m.get(21)(1), 20); // v == 21; x == 1 ==> inner function returns b == 20
 }
 
-testClosureCreationAndInvocation();
+if (getBuildConfiguration().parallelJS)
+  testClosureCreationAndInvocation();

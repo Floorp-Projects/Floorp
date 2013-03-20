@@ -27,4 +27,5 @@ function testHoles() {
   assertEq(g * 42, NaN);
 }
 
-testHoles();
+if (getBuildConfiguration().parallelJS)
+  testHoles();
