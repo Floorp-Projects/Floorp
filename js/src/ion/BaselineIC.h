@@ -1361,7 +1361,11 @@ class ICTypeMonitor_PrimitiveSet : public TypeCheckPrimitiveSetStub
         {}
 
         ICTypeMonitor_PrimitiveSet *updateStub() {
-            return this->TypeCheckPrimitiveSetStub::Compiler::updateStub()->toMonitorStub();
+            TypeCheckPrimitiveSetStub *stub =
+                this->TypeCheckPrimitiveSetStub::Compiler::updateStub();
+            if (!stub)
+                return NULL;
+            return stub->toMonitorStub();
         }
 
         ICTypeMonitor_PrimitiveSet *getStub(ICStubSpace *space) {
@@ -1525,7 +1529,11 @@ class ICTypeUpdate_PrimitiveSet : public TypeCheckPrimitiveSetStub
         {}
 
         ICTypeUpdate_PrimitiveSet *updateStub() {
-            return this->TypeCheckPrimitiveSetStub::Compiler::updateStub()->toUpdateStub();
+            TypeCheckPrimitiveSetStub *stub =
+                this->TypeCheckPrimitiveSetStub::Compiler::updateStub();
+            if (!stub)
+                return NULL;
+            return stub->toUpdateStub();
         }
 
         ICTypeUpdate_PrimitiveSet *getStub(ICStubSpace *space) {
