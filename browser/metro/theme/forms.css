@@ -14,7 +14,7 @@
 }
 
 #content-navigator[type="find"],
-#content-navigator[type="form"]:not([disabled="true"]) {
+#content-navigator[type="form"]:not([disabled]) {
   display: -moz-box;
 }
 
@@ -175,7 +175,7 @@
 
 /* force the autorepeat buttons to create a 'padding' when collapsed */
 #form-helper-suggestions > autorepeatbutton[collapsed="true"],
-#form-helper-suggestions > autorepeatbutton[disabled="true"] {
+#form-helper-suggestions > autorepeatbutton[disabled] {
   visibility: hidden;
 }
 

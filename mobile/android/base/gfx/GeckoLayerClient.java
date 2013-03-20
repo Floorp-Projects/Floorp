@@ -314,15 +314,15 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     /** Viewport message handler. */
     private DisplayPortMetrics handleViewportMessage(ImmutableViewportMetrics messageMetrics, ViewportMessageType type) {
         synchronized (this) {
-            ImmutableViewportMetrics metrics;
+            ImmutableViewportMetrics newMetrics;
             ImmutableViewportMetrics oldMetrics = getViewportMetrics();
 
             switch (type) {
             default:
             case UPDATE:
                 // Keep the old viewport size
-                metrics = messageMetrics.setViewportSize(oldMetrics.getWidth(), oldMetrics.getHeight());
-                if (!oldMetrics.fuzzyEquals(metrics)) {
+                newMetrics = messageMetrics.setViewportSize(oldMetrics.getWidth(), oldMetrics.getHeight());
+                if (!oldMetrics.fuzzyEquals(newMetrics)) {
                     abortPanZoomAnimation();
                 }
                 break;
@@ -331,17 +331,33 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
                 // between the rendered content (which is what Gecko tells us)
                 // and our zoom level (which may have diverged).
                 float scaleFactor = oldMetrics.zoomFactor / messageMetrics.zoomFactor;
-                metrics = oldMetrics.setPageRect(RectUtils.scale(messageMetrics.getPageRect(), scaleFactor), messageMetrics.getCssPageRect());
+                newMetrics = oldMetrics.setPageRect(RectUtils.scale(messageMetrics.getPageRect(), scaleFactor), messageMetrics.getCssPageRect());
                 break;
             }
 
-            final ImmutableViewportMetrics newMetrics = metrics;
+            final ImmutableViewportMetrics geckoMetrics = newMetrics;
             post(new Runnable() {
                 @Override
                 public void run() {
-                    mGeckoViewport = newMetrics;
+                    mGeckoViewport = geckoMetrics;
                 }
             });
+
+            // If we're meant to be scrolled to the top, take into account
+            // the current fixed layer margins and offset the local viewport
+            // accordingly.
+            // XXX We should also do this for the left on an ltr document, and
+            //     the right on an rtl document, but we don't currently have
+            //     a way of determining the text direction from Java.
+            //     This also applies to setFirstPaintViewport.
+            if (type == ViewportMessageType.UPDATE
+                    && FloatUtils.fuzzyEquals(newMetrics.viewportRectTop,
+                                              newMetrics.pageRectTop)
+                    && oldMetrics.fixedLayerMarginTop > 0) {
+                newMetrics = newMetrics.setViewportOrigin(newMetrics.viewportRectLeft,
+                                 newMetrics.pageRectTop - oldMetrics.fixedLayerMarginTop);
+            }
+
             setViewportMetrics(newMetrics, type == ViewportMessageType.UPDATE, true);
             mDisplayPort = DisplayPortCalculator.calculate(getViewportMetrics(), null);
         }
@@ -529,7 +545,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
             // If we're meant to be scrolled to the top, take into account any
             // margin set on the pan zoom controller.
-            if (offsetY == 0) {
+            if (FloatUtils.fuzzyEquals(offsetY, pageTop)) {
                 offsetY = -currentMetrics.fixedLayerMarginTop;
             }
 

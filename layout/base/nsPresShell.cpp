@@ -117,7 +117,7 @@
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
 #ifdef MOZ_MEDIA
-#include "nsHTMLMediaElement.h"
+#include "mozilla/dom/HTMLMediaElement.h"
 #endif
 #include "nsSMILAnimationController.h"
 #include "SVGContentUtils.h"

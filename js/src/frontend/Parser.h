@@ -369,7 +369,7 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
      * statements; pass ExpressionBody if the body is a single expression.
      */
     enum FunctionBodyType { StatementListBody, ExpressionBody };
-    Node functionBody(FunctionBodyType type);
+    Node functionBody(FunctionSyntaxKind kind, FunctionBodyType type);
 
     virtual bool strictMode()
     {
@@ -441,13 +441,13 @@ struct Parser : private AutoGCRooter, public StrictModeGetter
      * Additional JS parsers.
      */
     enum FunctionType { Getter, Setter, Normal };
-    bool functionArguments(Node *list, Node funcpn, bool &hasRest);
+    bool functionArguments(FunctionSyntaxKind kind, Node *list, Node funcpn, bool &hasRest);
 
     Node functionDef(HandlePropertyName name, const TokenStream::Position &start,
-                     FunctionType type, FunctionSyntaxKind kind);
+                     size_t startOffset, FunctionType type, FunctionSyntaxKind kind);
     bool functionArgsAndBody(Node pn, HandleFunction fun, HandlePropertyName funName,
-                             FunctionType type, FunctionSyntaxKind kind, bool strict,
-                             bool *becameStrict = NULL);
+                             size_t startOffset, FunctionType type, FunctionSyntaxKind kind,
+                             bool strict, bool *becameStrict = NULL);
 
     Node unaryOpExpr(ParseNodeKind kind, JSOp op);
 

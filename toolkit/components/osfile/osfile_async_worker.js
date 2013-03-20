@@ -32,10 +32,26 @@ if (this.Components) {
        let id = data.id;
        let result;
        let exn;
+       let durationMs;
        try {
          let method = data.fun;
          LOG("Calling method", method);
+         let start;
+         let options;
+         if (data.args) {
+           options = data.args[data.args.length - 1];
+         }
+         // If |outExecutionDuration| option was supplied, start measuring the
+         // duration of the operation.
+         if (typeof options === "object" && "outExecutionDuration" in options) {
+           start = Date.now();
+         }
          result = Agent[method].apply(Agent, data.args);
+         if (start) {
+           // Only record duration if the method succeeds.
+           durationMs = Date.now() - start;
+           LOG("Method took", durationMs, "MS");
+         }
          LOG("Method", method, "succeeded");
        } catch (ex) {
          exn = ex;
@@ -49,9 +65,10 @@ if (this.Components) {
          LOG("Sending positive reply", result, "id is", id);
          if (result instanceof Transfer) {
            // Take advantage of zero-copy transfers
-           self.postMessage({ok: result.data, id: id}, result.transfers);
+           self.postMessage({ok: result.data, id: id, durationMs: durationMs},
+             result.transfers);
          } else {
-           self.postMessage({ok: result, id:id});
+           self.postMessage({ok: result, id:id, durationMs: durationMs});
          }
        } else if (exn == StopIteration) {
          // StopIteration cannot be serialized automatically

@@ -37,9 +37,6 @@ enum BailoutKind
     // A bailout required to monitor the result of a VM call.
     Bailout_Monitor,
 
-    // A bailout to trigger recompilation to inline calls when the script is hot.
-    Bailout_RecompileCheck,
-
     // A bailout triggered by a bounds-check failure.
     Bailout_BoundsCheck,
 
@@ -50,9 +47,11 @@ enum BailoutKind
     Bailout_CachedShapeGuard
 };
 
+#ifdef DEBUG
 inline const char *
-BailoutKindString(BailoutKind kind) {
-    switch(kind) {
+BailoutKindString(BailoutKind kind)
+{
+    switch (kind) {
       case Bailout_Normal:
         return "Bailout_Normal";
       case Bailout_ArgumentCheck:
@@ -61,8 +60,6 @@ BailoutKindString(BailoutKind kind) {
         return "Bailout_TypeBarrier";
       case Bailout_Monitor:
         return "Bailout_Monitor";
-      case Bailout_RecompileCheck:
-        return "Bailout_RecompileCheck";
       case Bailout_BoundsCheck:
         return "Bailout_BoundsCheck";
       case Bailout_ShapeGuard:
@@ -74,6 +71,7 @@ BailoutKindString(BailoutKind kind) {
     }
     return "INVALID_BAILOUT_KIND";
 }
+#endif
 
 // The ordering of this enumeration is important: Anything < Value is a
 // specialized type. Furthermore, anything < String has trivial conversion to

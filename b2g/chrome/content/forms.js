@@ -507,6 +507,8 @@ function isContentEditable(element) {
 function getJSON(element) {
   let type = element.type || "";
   let value = element.value || "";
+  let max = element.max || "";
+  let min = element.min || "";
 
   // Treat contenteditble element as a special text area field
   if (isContentEditable(element)) {
@@ -550,7 +552,9 @@ function getJSON(element) {
     "value": value,
     "inputmode": inputmode,
     "selectionStart": range[0],
-    "selectionEnd": range[1]
+    "selectionEnd": range[1],
+    "max": max,
+    "min": min
   };
 }
 

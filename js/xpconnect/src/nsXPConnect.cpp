@@ -364,12 +364,12 @@ nsXPConnect::Collect(uint32_t reason)
     // To improve debugging, if WantAllTraces() is true all JS objects are
     // traversed.
 
-    MOZ_ASSERT(reason < js::gcreason::NUM_REASONS);
-    js::gcreason::Reason gcreason = (js::gcreason::Reason)reason;
+    MOZ_ASSERT(reason < JS::gcreason::NUM_REASONS);
+    JS::gcreason::Reason gcreason = (JS::gcreason::Reason)reason;
 
     JSRuntime *rt = GetRuntime()->GetJSRuntime();
-    js::PrepareForFullGC(rt);
-    js::GCForReason(rt, gcreason);
+    JS::PrepareForFullGC(rt);
+    JS::GCForReason(rt, gcreason);
 }
 
 NS_IMETHODIMP
@@ -495,7 +495,7 @@ private:
                            void *k, JSGCTraceKind kkind,
                            void *v, JSGCTraceKind vkind)
     {
-        MOZ_ASSERT(!js::IsIncrementalGCInProgress(trc->runtime),
+        MOZ_ASSERT(!JS::IsIncrementalGCInProgress(trc->runtime),
                    "Don't call FixWeakMappingGrayBits during a GC.");
 
         FixWeakMappingGrayBitsTracer *tracer = static_cast<FixWeakMappingGrayBitsTracer*>(trc);
@@ -2477,7 +2477,7 @@ nsXPConnect::GetTelemetryValue(JSContext *cx, jsval *rval)
 NS_IMETHODIMP
 nsXPConnect::NotifyDidPaint()
 {
-    js::NotifyDidPaint(GetRuntime()->GetJSRuntime());
+    JS::NotifyDidPaint(GetRuntime()->GetJSRuntime());
     return NS_OK;
 }
 

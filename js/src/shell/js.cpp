@@ -1750,13 +1750,15 @@ DisassembleScript(JSContext *cx, HandleScript script, HandleFunction fun, bool l
         if (fun->isHeavyweight())
             Sprint(sp, " HEAVYWEIGHT");
         if (fun->isExprClosure())
-            Sprint(sp, " EXPRESSION CLOSURE");
+            Sprint(sp, " EXPRESSION_CLOSURE");
         if (fun->isFunctionPrototype())
             Sprint(sp, " Function.prototype");
         if (fun->isSelfHostedBuiltin())
             Sprint(sp, " SELF_HOSTED");
         if (fun->isSelfHostedConstructor())
             Sprint(sp, " SELF_HOSTED_CTOR");
+        if (fun->isArrow())
+            Sprint(sp, " ARROW");
         Sprint(sp, "\n");
     }
 
@@ -3454,22 +3456,6 @@ EnableStackWalkingAssertion(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
-RelaxRootChecks(JSContext *cx, unsigned argc, jsval *vp)
-{
-    if (argc > 0) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS,
-                             "relaxRootChecks");
-        return false;
-    }
-
-#ifdef DEBUG
-    cx->mainThread().gcRelaxRootChecks = true;
-#endif
-
-    return true;
-}
-
-static JSBool
 GetMaxArgs(JSContext *cx, unsigned arg, jsval *vp)
 {
     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(StackSpace::ARGS_LENGTH_MAX));
@@ -3821,12 +3807,6 @@ static JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("getMaxArgs", GetMaxArgs, 0, 0,
 "getMaxArgs()",
 "  Return the maximum number of supported args for a call."),
-
-    JS_FN_HELP("relaxRootChecks", RelaxRootChecks, 0, 0,
-"relaxRootChecks()",
-"  Tone down the frequency with which the dynamic rooting analysis checks for\n"
-"  rooting hazards. This is helpful to reduce the time taken when interpreting\n"
-"  heavily numeric code."),
 
     JS_FN_HELP("objectEmulatingUndefined", ObjectEmulatingUndefined, 0, 0,
 "objectEmulatingUndefined()",

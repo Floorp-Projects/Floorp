@@ -741,16 +741,16 @@ XPCJSRuntime::ReleaseIncrementally(nsTArray<nsISupports *> &array)
 
 /* static */ void
 XPCJSRuntime::GCSliceCallback(JSRuntime *rt,
-                              js::GCProgress progress,
-                              const js::GCDescription &desc)
+                              JS::GCProgress progress,
+                              const JS::GCDescription &desc)
 {
     XPCJSRuntime *self = nsXPConnect::GetRuntimeInstance();
     if (!self)
         return;
 
 #ifdef MOZ_CRASHREPORTER
-    CrashReporter::SetGarbageCollecting(progress == js::GC_CYCLE_BEGIN ||
-                                        progress == js::GC_SLICE_BEGIN);
+    CrashReporter::SetGarbageCollecting(progress == JS::GC_CYCLE_BEGIN ||
+                                        progress == JS::GC_SLICE_BEGIN);
 #endif
 
     if (self->mPrevGCSliceCallback)
@@ -789,7 +789,7 @@ XPCJSRuntime::GCCallback(JSRuntime *rt, JSGCStatus status)
                 self->mReleaseRunnable->ReleaseNow(false);
 
             // Do any deferred releases of native objects.
-            if (js::WasIncrementalGC(rt)) {
+            if (JS::WasIncrementalGC(rt)) {
                 self->ReleaseIncrementally(self->mNativesToReleaseArray);
             } else {
                 DoDeferredRelease(self->mNativesToReleaseArray);
@@ -1227,7 +1227,7 @@ XPCJSRuntime::~XPCJSRuntime()
 {
     MOZ_ASSERT(!mReleaseRunnable);
 
-    js::SetGCSliceCallback(mJSRuntime, mPrevGCSliceCallback);
+    JS::SetGCSliceCallback(mJSRuntime, mPrevGCSliceCallback);
 
     xpc_DelocalizeRuntime(mJSRuntime);
 
@@ -1428,6 +1428,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSGCHeap,
                              nsIMemoryReporter::UNITS_BYTES,
                              GetGCChunkTotalBytes,
                              "Memory used by the garbage-collected JavaScript heap.")
+
 static int64_t
 GetJSSystemCompartmentCount()
 {
@@ -1466,6 +1467,22 @@ NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSUserCompartmentCount,
     "and 'js-compartments-system' might not match the number of compartments "
     "listed under 'js' if a garbage collection occurs at an inopportune time, "
     "but such cases should be rare.")
+
+static int64_t
+GetJSMainRuntimeTemporaryPeakSize()
+{
+    return JS::PeakSizeOfTemporary(nsXPConnect::GetRuntimeInstance()->GetJSRuntime());
+}
+
+// This is also a single reporter so it can be used by telemetry.
+NS_MEMORY_REPORTER_IMPLEMENT(JSMainRuntimeTemporaryPeak,
+    "js-main-runtime-temporary-peak",
+    KIND_OTHER,
+    nsIMemoryReporter::UNITS_BYTES,
+    GetJSMainRuntimeTemporaryPeakSize,
+    "The peak size of the transient storage in the main JSRuntime (the "
+    "current size of which is reported as "
+    "'explicit/js-non-window/runtime/temporary').");
 
 // The REPORT* macros do an unconditional report.  The ZCREPORT* macros are for
 // compartments and zones; they aggregate any entries smaller than
@@ -2649,7 +2666,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     JS_SetDestroyCompartmentCallback(mJSRuntime, CompartmentDestroyedCallback);
     JS_SetCompartmentNameCallback(mJSRuntime, CompartmentNameCallback);
     JS_SetGCCallback(mJSRuntime, GCCallback);
-    mPrevGCSliceCallback = js::SetGCSliceCallback(mJSRuntime, GCSliceCallback);
+    mPrevGCSliceCallback = JS::SetGCSliceCallback(mJSRuntime, GCSliceCallback);
     JS_SetFinalizeCallback(mJSRuntime, FinalizeCallback);
     JS_SetExtraGCRootsTracer(mJSRuntime, TraceBlackJS, this);
     JS_SetGrayGCRootsTracer(mJSRuntime, TraceGrayJS, this);
@@ -2696,6 +2713,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSGCHeap));
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSSystemCompartmentCount));
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSUserCompartmentCount));
+    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(JSMainRuntimeTemporaryPeak));
     NS_RegisterMemoryMultiReporter(new JSCompartmentsMultiReporter);
 
     mJSHolders.Init(512);
@@ -2922,7 +2940,7 @@ void
 XPCRootSetElem::RemoveFromRootSet(XPCLock *lock)
 {
     if (nsXPConnect *xpc = nsXPConnect::GetXPConnect())
-        js::PokeGC(xpc->GetRuntime()->GetJSRuntime());
+        JS::PokeGC(xpc->GetRuntime()->GetJSRuntime());
 
     NS_ASSERTION(mSelfp, "Must be linked");
 

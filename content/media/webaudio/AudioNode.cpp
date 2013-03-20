@@ -171,7 +171,7 @@ AudioNode::Connect(AudioNode& aDestination, uint32_t aOutput,
     ProcessedMediaStream* ps =
       static_cast<ProcessedMediaStream*>(aDestination.mStream.get());
     input->mStreamPort =
-      ps->AllocateInputPort(mStream, MediaInputPort::FLAG_BLOCK_OUTPUT);
+      ps->AllocateInputPort(mStream, MediaInputPort::FLAG_BLOCK_INPUT);
   }
 }
 

@@ -10,9 +10,14 @@
 
 class nsSMILValue;
 class nsISMILType;
-class nsISMILAnimationElement;
 class nsIContent;
 class nsAString;
+
+namespace mozilla {
+namespace dom {
+class SVGAnimationElement;
+}
+}
 
 ////////////////////////////////////////////////////////////////////////
 // nsISMILAttr: A variable targeted by SMIL for animation and can therefore have
@@ -46,7 +51,7 @@ public:
    * @return NS_OK on success or an error code if creation failed.
    */
   virtual nsresult ValueFromString(const nsAString& aStr,
-                                   const nsISMILAnimationElement* aSrcElement,
+                                   const mozilla::dom::SVGAnimationElement* aSrcElement,
                                    nsSMILValue& aValue,
                                    bool& aPreventCachingOfSandwich) const = 0;
 

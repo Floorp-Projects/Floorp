@@ -75,6 +75,9 @@ function genFunExpr(id, args, body) Pattern({ type: "FunctionExpression",
                                               params: args,
                                               body: body,
                                               generator: true })
+function arrowExpr(args, body) Pattern({ type: "ArrowExpression",
+                                         params: args,
+                                         body: body })
 
 function unExpr(op, arg) Pattern({ type: "UnaryExpression", operator: op, argument: arg })
 function binExpr(op, left, right) Pattern({ type: "BinaryExpression", operator: op, left: left, right: right })
@@ -248,6 +251,13 @@ assertExpr("foo[42]", memExpr(ident("foo"), lit(42)));
 assertExpr("(function(){})", funExpr(null, [], blockStmt([])));
 assertExpr("(function f() {})", funExpr(ident("f"), [], blockStmt([])));
 assertExpr("(function f(x,y,z) {})", funExpr(ident("f"), [ident("x"),ident("y"),ident("z")], blockStmt([])));
+assertExpr("a => a", arrowExpr([ident("a")], ident("a")));
+assertExpr("(a) => a", arrowExpr([ident("a")], ident("a")));
+assertExpr("a => b => a", arrowExpr([ident("a")], arrowExpr([ident("b")], ident("a"))));
+assertExpr("a => {}", arrowExpr([ident("a")], blockStmt([])));
+assertExpr("a => ({})", arrowExpr([ident("a")], objExpr([])));
+assertExpr("(a, b, c) => {}", arrowExpr([ident("a"), ident("b"), ident("c")], blockStmt([])));
+assertExpr("([a, b]) => {}", arrowExpr([arrPatt([ident("a"), ident("b")])], blockStmt([])));
 assertExpr("(++x)", updExpr("++", ident("x"), true));
 assertExpr("(x++)", updExpr("++", ident("x"), false));
 assertExpr("(+x)", unExpr("+", ident("x")));

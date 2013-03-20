@@ -54,6 +54,7 @@
     <dimen name="tabs_panel_list_padding">16dip</dimen>
     <dimen name="tabs_list_divider_height">2dp</dimen>
     <dimen name="tabs_sidebar_width">200dp</dimen>
+    <dimen name="tabs_tray_horizontal_height">156dp</dimen>
     <dimen name="text_selection_handle_width">30dp</dimen>
     <dimen name="text_selection_handle_height">44dp</dimen>
     <dimen name="text_selection_handle_shadow">2dp</dimen>
@@ -61,12 +62,6 @@
     <dimen name="validation_message_margin_top">6dp</dimen>
     <dimen name="widget_padding">8dp</dimen>
     <dimen name="forward_default_offset">-11dip</dimen>
-
     <dimen name="addressbar_offset_left">90dp</dimen>
     <dimen name="addressbar_offset_left_noforward">50dip</dimen>
-    <dimen name="app_defaultsize_w">632.0dip</dimen>
-    <dimen name="app_defaultsize_h">598.0dip</dimen>
-    <dimen name="app_minimumsize_w">632.0dip</dimen>
-    <dimen name="app_minimumsize_h">598.0dip</dimen>
-   
 </resources>

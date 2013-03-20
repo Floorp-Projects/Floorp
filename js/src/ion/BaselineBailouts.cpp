@@ -629,13 +629,13 @@ InitFromBailout(JSContext *cx, HandleFunction fun, HandleScript script, Snapshot
                                                       resumeAfter ? GetNextPc(pc) : pc);
     JS_ASSERT_IF(op != JSOP_FUNAPPLY || !iter.moreFrames() || resumeAfter,
                  exprStackSlots == expectedDepth);
-#endif
 
     IonSpew(IonSpew_BaselineBailouts, "      Resuming %s pc offset %d (op %s) (line %d) of %s:%d",
                 resumeAfter ? "after" : "at", (int) pcOff, js_CodeName[op],
                 PCToLineNumber(script, pc), script->filename(), (int) script->lineno);
     IonSpew(IonSpew_BaselineBailouts, "      Bailout kind: %s",
             BailoutKindString(iter.bailoutKind()));
+#endif
 
     // If this was the last inline frame, then unpacking is almost done.
     if (!iter.moreFrames()) {
@@ -1185,12 +1185,6 @@ ion::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
         // Reflow types.  But in baseline, this will happen automatically because
         // for any monitored op (or for argument checks), bailout will resume into
         // the monitoring IC which will handle the type updates.
-        break;
-      case Bailout_RecompileCheck:
-        // Recompile check.  See ion::RecompileForInlining.
-        // In reality, this should never happen because inlining is always enabled
-        // at the top-level, because usesBeforeInlining() < usesBeforeCompile.
-        JS_NOT_REACHED("Unexpected recompile check!");
         break;
       case Bailout_BoundsCheck:
         if (!HandleBoundsCheckFailure(cx, outerScript, innerScript))

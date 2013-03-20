@@ -248,7 +248,7 @@ nsHTMLEditor::DeleteRefToAnonymousNode(nsIDOMElement* aElement,
       content->UnbindFromTree();
     }
   }
-}  
+}
 
 // The following method is mostly called by a selection listener. When a
 // selection change is notified, the method is called to check if resizing

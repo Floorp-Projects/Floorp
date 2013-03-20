@@ -6,7 +6,6 @@
 #ifndef NS_SMILTIMEDELEMENT_H_
 #define NS_SMILTIMEDELEMENT_H_
 
-#include "nsISMILAnimationElement.h"
 #include "nsSMILInterval.h"
 #include "nsSMILInstanceTime.h"
 #include "nsSMILMilestone.h"
@@ -24,6 +23,12 @@ class nsSMILTimeContainer;
 class nsSMILTimeValue;
 class nsIAtom;
 
+namespace mozilla {
+namespace dom {
+class SVGAnimationElement;
+}
+}
+
 //----------------------------------------------------------------------
 // nsSMILTimedElement
 
@@ -39,7 +44,7 @@ public:
    * Sets the owning animation element which this class uses to convert between
    * container times and to register timebase elements.
    */
-  void SetAnimationElement(nsISMILAnimationElement* aElement);
+  void SetAnimationElement(mozilla::dom::SVGAnimationElement* aElement);
 
   /*
    * Returns the time container with which this timed element is associated or
@@ -51,12 +56,7 @@ public:
    * Returns the element targeted by the animation element. Needed for
    * registering event listeners against the appropriate element.
    */
-  mozilla::dom::Element* GetTargetElement()
-  {
-    return mAnimationElement ?
-        mAnimationElement->GetTargetElementContent() :
-        nullptr;
-  }
+  mozilla::dom::Element* GetTargetElement();
 
   /**
    * Methods for supporting the nsIDOMElementTimeControl interface.
@@ -535,8 +535,8 @@ protected:
   //
   // Members
   //
-  nsISMILAnimationElement*        mAnimationElement; // [weak] won't outlive
-                                                     // owner
+  mozilla::dom::SVGAnimationElement* mAnimationElement; // [weak] won't outlive
+                                                        // owner
   TimeValueSpecList               mBeginSpecs; // [strong]
   TimeValueSpecList               mEndSpecs; // [strong]
 
