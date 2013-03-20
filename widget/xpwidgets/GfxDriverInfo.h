@@ -15,6 +15,16 @@
 #define APPEND_TO_DRIVER_BLOCKLIST2(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion) \
     mDriverInfo->AppendElement(GfxDriverInfo(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion))
 
+#define APPEND_TO_DRIVER_BLOCKLIST_RANGE(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, driverVersionMax, suggestedVersion) \
+    do { \
+      MOZ_ASSERT(driverComparator == DRIVER_BETWEEN_EXCLUSIVE || \
+                 driverComparator == DRIVER_BETWEEN_INCLUSIVE || \
+                 driverComparator == DRIVER_BETWEEN_INCLUSIVE_START); \
+      GfxDriverInfo info(os, vendor, devices, feature, featureStatus, driverComparator, driverVersion, suggestedVersion); \
+      info.mDriverVersionMax = driverVersionMax; \
+      mDriverInfo->AppendElement(info); \
+    } while (false)
+
 namespace mozilla {
 namespace widget {
 
