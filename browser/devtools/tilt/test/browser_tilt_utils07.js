@@ -2,6 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+const STACK_THICKNESS = 15;
+
 function init(callback) {
   let iframe = gBrowser.ownerDocument.createElement("iframe");
 
@@ -120,73 +122,35 @@ function test() {
 
     let store = dom.traverse(iframe.contentWindow);
 
-    is(store.nodes.length, 16,
+    let expected = [
+      { name: "html",   depth: 0 * STACK_THICKNESS },
+      { name: "head",   depth: 1 * STACK_THICKNESS },
+      { name: "body",   depth: 1 * STACK_THICKNESS },
+      { name: "div",    depth: 2 * STACK_THICKNESS },
+      { name: "span",   depth: 2 * STACK_THICKNESS },
+      { name: "iframe", depth: 2 * STACK_THICKNESS },
+      { name: "span",   depth: 2 * STACK_THICKNESS },
+      { name: "iframe", depth: 2 * STACK_THICKNESS },
+      { name: "html",   depth: 3 * STACK_THICKNESS },
+      { name: "html",   depth: 3 * STACK_THICKNESS },
+      { name: "head",   depth: 4 * STACK_THICKNESS },
+      { name: "body",   depth: 4 * STACK_THICKNESS },
+      { name: "head",   depth: 4 * STACK_THICKNESS },
+      { name: "body",   depth: 4 * STACK_THICKNESS },
+      { name: "span",   depth: 5 * STACK_THICKNESS },
+      { name: "div",    depth: 5 * STACK_THICKNESS },
+    ];
+
+    is(store.nodes.length, expected.length,
       "The traverse() function didn't walk the correct number of nodes.");
-    is(store.info.length, 16,
+    is(store.info.length, expected.length,
       "The traverse() function didn't examine the correct number of nodes.");
-    is(store.info[0].name, "html",
-      "the 1st traversed node isn't the expected one.");
-    is(store.info[0].depth, 0,
-      "the 1st traversed node doesn't have the expected depth.");
-    is(store.info[1].name, "head",
-      "the 2nd traversed node isn't the expected one.");
-    is(store.info[1].depth, 1,
-      "the 2nd traversed node doesn't have the expected depth.");
-    is(store.info[2].name, "body",
-      "the 3rd traversed node isn't the expected one.");
-    is(store.info[2].depth, 1,
-      "the 3rd traversed node doesn't have the expected depth.");
-    is(store.info[3].name, "div",
-      "the 4th traversed node isn't the expected one.");
-    is(store.info[3].depth, 2,
-      "the 4th traversed node doesn't have the expected depth.");
-    is(store.info[4].name, "span",
-      "the 5th traversed node isn't the expected one.");
-    is(store.info[4].depth, 2,
-      "the 5th traversed node doesn't have the expected depth.");
-    is(store.info[5].name, "iframe",
-      "the 6th traversed node isn't the expected one.");
-    is(store.info[5].depth, 2,
-      "the 6th traversed node doesn't have the expected depth.");
-    is(store.info[6].name, "span",
-      "the 7th traversed node isn't the expected one.");
-    is(store.info[6].depth, 2,
-      "the 7th traversed node doesn't have the expected depth.");
-    is(store.info[7].name, "iframe",
-      "the 8th traversed node isn't the expected one.");
-    is(store.info[7].depth, 2,
-      "the 8th traversed node doesn't have the expected depth.");
-    is(store.info[8].name, "html",
-      "the 9th traversed node isn't the expected one.");
-    is(store.info[8].depth, 3,
-      "the 9th traversed node doesn't have the expected depth.");
-    is(store.info[9].name, "html",
-      "the 10th traversed node isn't the expected one.");
-    is(store.info[9].depth, 3,
-      "the 10th traversed node doesn't have the expected depth.");
-    is(store.info[10].name, "head",
-      "the 11th traversed node isn't the expected one.");
-    is(store.info[10].depth, 4,
-      "the 11th traversed node doesn't have the expected depth.");
-    is(store.info[11].name, "body",
-      "the 12th traversed node isn't the expected one.");
-    is(store.info[11].depth, 4,
-      "the 12th traversed node doesn't have the expected depth.");
-    is(store.info[12].name, "head",
-      "the 13th traversed node isn't the expected one.");
-    is(store.info[12].depth, 4,
-      "the 13th traversed node doesn't have the expected depth.");
-    is(store.info[13].name, "body",
-      "the 14th traversed node isn't the expected one.");
-    is(store.info[13].depth, 4,
-      "the 14th traversed node doesn't have the expected depth.");
-    is(store.info[14].name, "span",
-      "the 15th traversed node isn't the expected one.");
-    is(store.info[14].depth, 5,
-      "the 15th traversed node doesn't have the expected depth.");
-    is(store.info[15].name, "div",
-      "the 16th traversed node isn't the expected one.");
-    is(store.info[15].depth, 5,
-      "the 16th traversed node doesn't have the expected depth.");
+
+    for (let i = 0; i < expected.length; i++) {
+      is(store.info[i].name, expected[i].name,
+        "traversed node " + (i + 1) + " isn't the expected one.");
+      is(store.info[i].coord.depth, expected[i].depth,
+        "traversed node " + (i + 1) + " doesn't have the expected depth.");
+    }
   });
 }
