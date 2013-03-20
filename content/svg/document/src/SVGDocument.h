@@ -6,13 +6,13 @@
 #ifndef mozilla_dom_SVGDocument_h
 #define mozilla_dom_SVGDocument_h
 
-#include "nsXMLDocument.h"
+#include "mozilla/dom/XMLDocument.h"
 #include "nsIDOMSVGDocument.h"
 
 namespace mozilla {
 namespace dom {
 
-class SVGDocument : public nsXMLDocument,
+class SVGDocument : public XMLDocument,
                     public nsIDOMSVGDocument
 {
 public:
@@ -22,7 +22,7 @@ public:
   virtual ~SVGDocument();
 
   NS_DECL_NSIDOMSVGDOCUMENT
-  NS_FORWARD_NSIDOMDOCUMENT(nsXMLDocument::)
+  NS_FORWARD_NSIDOMDOCUMENT(mozilla::dom::XMLDocument::)
   // And explicitly import the things from nsDocument that we just shadowed
   using nsDocument::GetImplementation;
   using nsDocument::GetTitle;
