@@ -249,7 +249,7 @@ void
 nsNPAPIPlugin::PluginCrashed(const nsAString& pluginDumpID,
                              const nsAString& browserDumpID)
 {
-  nsRefPtr<nsPluginHost> host = dont_AddRef(nsPluginHost::GetInst());
+  nsRefPtr<nsPluginHost> host = nsPluginHost::GetInst();
   host->PluginCrashed(this, pluginDumpID, browserDumpID);
 }
 
@@ -888,7 +888,7 @@ _geturl(NPP npp, const char* relativeURL, const char* target)
 
     
     const char *name = nullptr;
-    nsRefPtr<nsPluginHost> host = dont_AddRef(nsPluginHost::GetInst());
+    nsRefPtr<nsPluginHost> host = nsPluginHost::GetInst();
     host->GetPluginName(inst, &name);
 
     if (name && strstr(name, "Adobe") && strstr(name, "Acrobat")) {
@@ -1623,7 +1623,7 @@ _getproperty(NPP npp, NPObject* npobj, NPIdentifier property,
   nsNPAPIPlugin* plugin = inst->GetPlugin();
   if (!plugin)
     return false;
-  nsRefPtr<nsPluginHost> host = dont_AddRef(nsPluginHost::GetInst());
+  nsRefPtr<nsPluginHost> host = nsPluginHost::GetInst();
   nsPluginTag* pluginTag = host->TagForPlugin(plugin);
   if (!pluginTag->mIsJavaPlugin)
     return true;
