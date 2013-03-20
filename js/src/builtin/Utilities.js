@@ -23,6 +23,8 @@
          JSMSG_EMPTY_ARRAY_REDUCE: false,
 */
 
+/* Utility macros */
+#define TO_UINT32(x) (x >>> 0)
 
 /* cache built-in functions before applications can change them */
 var std_isFinite = isFinite;
@@ -138,4 +140,3 @@ function assert(b, info) {
     if (!b)
         AssertionFailed(info);
 }
-
