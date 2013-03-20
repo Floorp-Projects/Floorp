@@ -1208,12 +1208,12 @@ private:
   // inline frame.
   static const FrameConstructionData* FindTextData(nsIFrame* aParentFrame);
 
-  nsresult ConstructTextFrame(const FrameConstructionData* aData,
-                              nsFrameConstructorState& aState,
-                              nsIContent*              aContent,
-                              nsIFrame*                aParentFrame,
-                              nsStyleContext*          aStyleContext,
-                              nsFrameItems&            aFrameItems);
+  void ConstructTextFrame(const FrameConstructionData* aData,
+                          nsFrameConstructorState& aState,
+                          nsIContent*              aContent,
+                          nsIFrame*                aParentFrame,
+                          nsStyleContext*          aStyleContext,
+                          nsFrameItems&            aFrameItems);
 
   // If aPossibleTextContent is a text node and doesn't have a frame, append a
   // frame construction item for it to aItems.

@@ -3205,7 +3205,7 @@ nsCSSFrameConstructor::FindTextData(nsIFrame* aParentFrame)
   return &sTextData;
 }
 
-nsresult
+void
 nsCSSFrameConstructor::ConstructTextFrame(const FrameConstructionData* aData,
                                           nsFrameConstructorState& aState,
                                           nsIContent*              aContent,
@@ -3216,9 +3216,6 @@ nsCSSFrameConstructor::ConstructTextFrame(const FrameConstructionData* aData,
   NS_PRECONDITION(aData, "Must have frame construction data");
 
   nsIFrame* newFrame = (*aData->mFunc.mCreationFunc)(mPresShell, aStyleContext);
-
-  if (MOZ_UNLIKELY(!newFrame))
-    return NS_ERROR_OUT_OF_MEMORY;
 
   InitAndRestoreFrame(aState, aContent, aParentFrame, nullptr, newFrame);
 
@@ -3243,8 +3240,6 @@ nsCSSFrameConstructor::ConstructTextFrame(const FrameConstructionData* aData,
 
   if (!aState.mCreatingExtraFrames)
     aContent->SetPrimaryFrame(newFrame);
-  
-  return NS_OK;
 }
 
 /* static */
@@ -5536,9 +5531,10 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
         item.IsWhitespace(aState))
       return NS_OK;
 
-    return ConstructTextFrame(item.mFCData, aState, item.mContent,
-                              adjParentFrame, styleContext,
-                              aFrameItems);
+    ConstructTextFrame(item.mFCData, aState, item.mContent,
+                       adjParentFrame, styleContext,
+                       aFrameItems);
+    return NS_OK;
   }
 
   // Start background loads during frame construction so that we're
