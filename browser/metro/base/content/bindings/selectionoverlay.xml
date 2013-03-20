@@ -10,8 +10,9 @@
       <html:div flex="1" class="selection-overlay-inner window-width window-height" anonid="selection-overlay-inner">
         <xul:stack>
           <html:div anonid="selection-overlay-debug" class="window-width window-height"/>
-          <xul:toolbarbutton id="selectionhandle-start" label="^" left="0" top="10" hidden="false"/>
-          <xul:toolbarbutton id="selectionhandle-end" label="^" left="100" top="10" hidden="false"/>
+          <xul:toolbarbutton id="selectionhandle-start" label="^" left="10" top="10" hidden="true"/>
+          <xul:toolbarbutton id="selectionhandle-end"   label="^" left="10" top="10" hidden="true"/>
+          <xul:toolbarbutton id="selectionhandle-caret" label="^" left="10" top="10" hidden="true"/>
         </xul:stack>
       </html:div>
     </content>

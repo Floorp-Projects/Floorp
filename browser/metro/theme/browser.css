@@ -935,18 +935,17 @@ setting[type="directory"] > .preferences-alignment {
 /* Text selection handles */
 
 #selectionhandle-start,
-#selectionhandle-end {
+#selectionhandle-end,
+#selectionhandle-caret {
   border: 0px solid gray;
   padding: 0px;
   margin-top: -30px;
   margin-left: -18px;
 }
 
-#selectionhandle-start {
-  list-style-image: url("chrome://browser/skin/images/selection-monocle.png");
-}
-
-#selectionhandle-end {
+#selectionhandle-start,
+#selectionhandle-end,
+#selectionhandle-caret {
   list-style-image: url("chrome://browser/skin/images/selection-monocle.png");
 }
 
