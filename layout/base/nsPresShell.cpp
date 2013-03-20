@@ -1701,7 +1701,7 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
   if (!rootFrame) {
     nsAutoScriptBlocker scriptBlocker;
     mFrameConstructor->BeginUpdate();
-    mFrameConstructor->ConstructRootFrame(&rootFrame);
+    rootFrame = mFrameConstructor->ConstructRootFrame();
     mFrameConstructor->SetRootFrame(rootFrame);
     mFrameConstructor->EndUpdate();
   }

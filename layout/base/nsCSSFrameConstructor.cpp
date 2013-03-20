@@ -2500,11 +2500,10 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
 }
 
 
-nsresult
-nsCSSFrameConstructor::ConstructRootFrame(nsIFrame** aNewFrame)
+nsIFrame*
+nsCSSFrameConstructor::ConstructRootFrame()
 {
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
-  NS_PRECONDITION(aNewFrame, "null out param");
 
   nsStyleSet *styleSet = mPresShell->StyleSet();
 
@@ -2543,8 +2542,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIFrame** aNewFrame)
   mFixedContainingBlock->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
   mFixedContainingBlock->MarkAsAbsoluteContainingBlock();
 
-  *aNewFrame = viewportFrame;
-  return NS_OK;
+  return viewportFrame;
 }
 
 nsresult
