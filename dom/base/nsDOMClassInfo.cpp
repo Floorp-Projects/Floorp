@@ -3606,9 +3606,14 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
     return JS_TRUE;
   }
 
+  // Crash reports from the wild seem to get here during shutdown when there's
+  // no more XPConnect singleton.
+  nsIXPConnect *xpc = XPConnect();
+  NS_ENSURE_TRUE(xpc, true);
+
   // Grab the DOM window.
   JSObject *global = JS_GetGlobalForObject(cx, obj);
-  nsISupports *globalNative = XPConnect()->GetNativeOfWrapper(cx, global);
+  nsISupports *globalNative = xpc->GetNativeOfWrapper(cx, global);
   nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(globalNative);
   MOZ_ASSERT(piWin);
   nsGlobalWindow* win = static_cast<nsGlobalWindow*>(piWin.get());
