@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 '''Given a library, dependentlibs.py prints the list of libraries it depends
-upon that are in the same directory, followed by the library itself.
+upon that are in the same directory.
 '''
 
 from optparse import OptionParser
@@ -92,7 +92,7 @@ def dependentlibs_otool(lib):
 
 def dependentlibs(lib, libpaths, func):
     '''For a given library, returns the list of recursive dependencies that can
-    be found in the given list of paths, followed by the library itself.'''
+    be found in the given list of paths'''
     assert(libpaths)
     assert(isinstance(libpaths, list))
     deps = []
@@ -129,7 +129,7 @@ def main():
     if not options.libpaths:
         options.libpaths = [os.path.dirname(lib)]
 
-    print '\n'.join(dependentlibs(lib, options.libpaths, func) + [lib])
+    print '\n'.join(dependentlibs(lib, options.libpaths, func))
 
 if __name__ == '__main__':
     main()
