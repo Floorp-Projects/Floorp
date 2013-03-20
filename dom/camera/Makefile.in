@@ -23,6 +23,7 @@ CPPSRCS = \
   DOMCameraCapabilities.cpp \
   CameraControlImpl.cpp \
   CameraRecorderProfiles.cpp \
+  CameraPreviewMediaStream.cpp \
   $(NULL)
 
 ifeq ($(MOZ_B2G_CAMERA),1)
