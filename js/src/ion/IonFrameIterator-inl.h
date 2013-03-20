@@ -9,6 +9,8 @@
 #define jsion_frame_iterator_inl_h__
 
 #include "ion/IonFrameIterator.h"
+#include "ion/Bailouts.h"
+#include "ion/Ion.h"
 
 namespace js {
 namespace ion {
@@ -47,9 +49,40 @@ SnapshotIterator::readFrameArgs(Op &op, const Value *argv, Value *scopeChain, Va
     }
 }
 
+template <AllowGC allowGC>
+inline
+InlineFrameIteratorMaybeGC<allowGC>::InlineFrameIteratorMaybeGC(
+                                JSContext *cx, const IonFrameIterator *iter)
+  : callee_(cx),
+    script_(cx)
+{
+    resetOn(iter);
+}
+
+template <AllowGC allowGC>
+inline
+InlineFrameIteratorMaybeGC<allowGC>::InlineFrameIteratorMaybeGC(
+        JSContext *cx,
+        const InlineFrameIteratorMaybeGC<allowGC> *iter)
+  : frame_(iter ? iter->frame_ : NULL),
+    framesRead_(0),
+    callee_(cx),
+    script_(cx)
+{
+    if (frame_) {
+        start_ = SnapshotIterator(*frame_);
+        // findNextFrame will iterate to the next frame and init. everything.
+        // Therefore to settle on the same frame, we report one frame less readed.
+        framesRead_ = iter->framesRead_ - 1;
+        findNextFrame();
+    }
+}
+
+template <AllowGC allowGC>
 template <class Op>
 inline void
-InlineFrameIterator::forEachCanonicalActualArg(JSContext *cx, Op op, unsigned start, unsigned count) const
+InlineFrameIteratorMaybeGC<allowGC>::forEachCanonicalActualArg(
+                JSContext *cx, Op op, unsigned start, unsigned count) const
 {
     unsigned nactual = numActualArgs();
     if (count == unsigned(-1))
@@ -74,7 +107,7 @@ InlineFrameIterator::forEachCanonicalActualArg(JSContext *cx, Op op, unsigned st
 
         // The overflown arguments are not available in current frame.
         // They are the last pushed arguments in the parent frame of this inlined frame.
-        InlineFrameIterator it(cx, this);
+        InlineFrameIteratorMaybeGC it(cx, this);
         SnapshotIterator parent_s((++it).snapshotIterator());
 
         // Skip over all slots untill we get to the last slots (= arguments slots of callee)
@@ -91,6 +124,77 @@ InlineFrameIterator::forEachCanonicalActualArg(JSContext *cx, Op op, unsigned st
         Value *argv = frame_->actualArgs();
         s.readFrameArgs(op, argv, NULL, NULL, start, nformal, end);
     }
+}
+ 
+template <AllowGC allowGC>
+inline JSObject *
+InlineFrameIteratorMaybeGC<allowGC>::scopeChain() const
+{
+    SnapshotIterator s(si_);
+
+    // scopeChain
+    Value v = s.read();
+    if (v.isObject()) {
+        JS_ASSERT_IF(script()->hasAnalysis(), script()->analysis()->usesScopeChain());
+        return &v.toObject();
+    }
+
+    return callee()->environment();
+}
+
+template <AllowGC allowGC>
+inline JSObject *
+InlineFrameIteratorMaybeGC<allowGC>::thisObject() const
+{
+    // JS_ASSERT(isConstructing(...));
+    SnapshotIterator s(si_);
+
+    // scopeChain
+    s.skip();
+
+    // In strict modes, |this| may not be an object and thus may not be
+    // readable which can either segv in read or trigger the assertion.
+    Value v = s.read();
+    JS_ASSERT(v.isObject());
+    return &v.toObject();
+}
+
+template <AllowGC allowGC>
+inline unsigned
+InlineFrameIteratorMaybeGC<allowGC>::numActualArgs() const
+{
+    // The number of actual arguments of inline frames is recovered by the
+    // iteration process. It is recovered from the bytecode because this
+    // property still hold since the for inlined frames. This property does not
+    // hold for the parent frame because it can have optimize a call to
+    // js_fun_call or js_fun_apply.
+    if (more())
+        return numActualArgs_;
+
+    return frame_->numActualArgs();
+}
+
+template <AllowGC allowGC>
+inline
+InlineFrameIteratorMaybeGC<allowGC>::InlineFrameIteratorMaybeGC(
+                                                JSContext *cx, const IonBailoutIterator *iter)
+  : frame_(iter),
+    framesRead_(0),
+    callee_(cx),
+    script_(cx)
+{
+    if (iter) {
+        start_ = SnapshotIterator(*iter);
+        findNextFrame();
+    }
+}
+
+template <AllowGC allowGC>
+inline InlineFrameIteratorMaybeGC<allowGC> &
+InlineFrameIteratorMaybeGC<allowGC>::operator++()
+{
+    findNextFrame();
+    return *this;
 }
 
 } // namespace ion
