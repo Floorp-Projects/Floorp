@@ -11116,6 +11116,45 @@ nsIDocument::Evaluate(const nsAString& aExpression, nsINode* aContextNode,
   return res.forget();
 }
 
+// This is just a hack around the fact that window.document is not
+// [Unforgeable] yet.
+bool
+nsIDocument::PostCreateWrapper(JSContext* aCx, JSObject *aNewObject)
+{
+  MOZ_ASSERT(IsDOMBinding());
+
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(GetScriptGlobalObject());
+  if (!win) {
+    // No window, nothing else to do here
+    return true;
+  }
+
+  if (this != win->GetExtantDoc()) {
+    // We're not the current document; we're also done here
+    return true;
+  }
+
+  JSAutoCompartment ac(aCx, aNewObject);
+
+  jsval winVal;
+  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+  nsresult rv = nsContentUtils::WrapNative(aCx, aNewObject, win,
+                                           &NS_GET_IID(nsIDOMWindow),
+                                           &winVal, getter_AddRefs(holder),
+                                           false);
+  if (NS_FAILED(rv)) {
+    return Throw<true>(aCx, rv);
+  }
+
+  NS_NAMED_LITERAL_STRING(doc_str, "document");
+
+  return JS_DefineUCProperty(aCx, JSVAL_TO_OBJECT(winVal),
+                             reinterpret_cast<const jschar *>
+                                             (doc_str.get()),
+                             doc_str.Length(), JS::ObjectValue(*aNewObject),
+                             JS_PropertyStub, JS_StrictPropertyStub,
+                             JSPROP_READONLY | JSPROP_ENUMERATE);
+}
 
 bool
 MarkDocumentTreeToBeInSyncOperation(nsIDocument* aDoc, void* aData)
