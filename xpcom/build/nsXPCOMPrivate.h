@@ -217,15 +217,15 @@ void LogTerm();
 #define XPCOM_SEARCH_KEY  "PATH"
 #define GRE_CONF_NAME     "gre.config"
 #define GRE_WIN_REG_LOC   L"Software\\mozilla.org\\GRE"
-#define XPCOM_DLL         "xpcom.dll"
-#define LXPCOM_DLL        L"xpcom.dll"
+#define XPCOM_DLL         XUL_DLL
+#define LXPCOM_DLL        LXUL_DLL
 #define XUL_DLL           "xul.dll"
 #define LXUL_DLL          L"xul.dll"
 
 #else // Unix
 #include <limits.h> // for PATH_MAX
 
-#define XPCOM_DLL "libxpcom" MOZ_DLL_SUFFIX
+#define XPCOM_DLL         XUL_DLL
 
 // you have to love apple..
 #ifdef XP_MACOSX  

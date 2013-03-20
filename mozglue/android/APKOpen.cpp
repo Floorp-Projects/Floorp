@@ -224,11 +224,9 @@ loadGeckoLibs(const char *apkName)
   file_ids = (char *)extractBuf("lib.id", zip);
 #endif
 
-  char *file = new char[strlen(apkName) + sizeof("!/libxpcom.so")];
-  sprintf(file, "%s!/libxpcom.so", apkName);
-  __wrap_dlopen(file, RTLD_GLOBAL | RTLD_LAZY);
-  // libxul.so is pulled from libxpcom.so, so we don't need to give the full path
-  xul_handle = __wrap_dlopen("libxul.so", RTLD_GLOBAL | RTLD_LAZY);
+  char *file = new char[strlen(apkName) + sizeof("!/libxul.so")];
+  sprintf(file, "%s!/libxul.so", apkName);
+  xul_handle = __wrap_dlopen(file, RTLD_GLOBAL | RTLD_LAZY);
   delete[] file;
 
 #ifdef MOZ_CRASHREPORTER

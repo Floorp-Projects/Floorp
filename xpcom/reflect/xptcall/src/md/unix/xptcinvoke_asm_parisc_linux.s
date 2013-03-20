@@ -12,11 +12,11 @@
 framesz:
   .equ 128
 
-.globl NS_InvokeByIndex_P
-  .type NS_InvokeByIndex_P, @function
+.globl NS_InvokeByIndex
+  .type NS_InvokeByIndex, @function
 
 
-NS_InvokeByIndex_P:
+NS_InvokeByIndex:
   .PROC
   .CALLINFO FRAME=72, CALLER,SAVE_RP, SAVE_SP, ENTRY_GR=3
   .ENTRY
@@ -104,5 +104,5 @@ NS_InvokeByIndex_P:
         NOP
   .EXIT
   .PROCEND  ;in=23,24,25,26;
-  .SIZE NS_InvokeByIndex_P, .-NS_InvokeByIndex_P
+  .SIZE NS_InvokeByIndex, .-NS_InvokeByIndex
 
