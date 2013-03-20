@@ -33,26 +33,6 @@ function ThreadActor(aHooks, aGlobal)
   this._sources = {};
   this.global = aGlobal;
 
-  /**
-   * A script cache that maps script URLs to arrays of different Debugger.Script
-   * instances that have the same URL. For example, when an inline <script> tag
-   * in a web page contains a function declaration, the JS engine creates two
-   * Debugger.Script objects, one for the function and one for the script tag
-   * as a whole. The two objects will usually have different startLine and/or
-   * lineCount properties. For the edge case where two scripts are contained in
-   * the same line we need column support.
-   *
-   * The sparse array that is mapped to each URL serves as an additional mapping
-   * from startLine numbers to Debugger.Script objects, facilitating retrieval
-   * of the scripts that contain a particular line number. For example, if a
-   * cache holds two scripts with the URL http://foo.com/ starting at lines 4
-   * and 10, then the corresponding cache will be:
-   * this._scripts: {
-   *   'http://foo.com/': [,,,,[Debugger.Script],,,,,,[Debugger.Script]]
-   * }
-   */
-  this._scripts = {};
-
   // A cache of prototype chains for objects that have received a
   // prototypeAndProperties request. Due to the way the debugger frontend works,
   // this corresponds to a cache of prototype chains that the user has been
@@ -99,7 +79,6 @@ ThreadActor.prototype = {
     }
     this.conn.removeActorPool(this._threadLifetimePool || undefined);
     this._threadLifetimePool = null;
-    this._scripts = {};
     this._sources = {};
   },
 
@@ -490,7 +469,7 @@ ThreadActor.prototype = {
 
     let location = aRequest.location;
     let line = location.line;
-    if (!this._scripts[location.url] || line < 0) {
+    if (this.dbg.findScripts({ url: location.url }).length == 0 || line < 0) {
       return { error: "noScript" };
     }
 
@@ -611,35 +590,6 @@ ThreadActor.prototype = {
       error: "noCodeAtLineColumn",
       actor: actor.actorID
     };
-  },
-
-  /**
-   * A recursive generator function for iterating over the scripts that contain
-   * the specified line, by looking through child scripts of the supplied
-   * script. As an example, an inline <script> tag has the top-level functions
-   * declared in it as its children.
-   *
-   * @param aScript Debugger.Script
-   *        The source script.
-   * @param aLine number
-   *        The line number.
-   */
-  _getContainers: function TA__getContainers(aScript, aLine) {
-    let children = aScript.getChildScripts();
-    if (children.length > 0) {
-      for (let i = 0; i < children.length; i++) {
-        let child = children[i];
-        // Iterate over the children that contain this location.
-        if (child.startLine <= aLine &&
-            child.startLine + child.lineCount > aLine) {
-          for (let j of this._getContainers(child, aLine)) {
-            yield j;
-          }
-        }
-      }
-    }
-    // Include this script in the iteration, too.
-    yield aScript;
   },
 
   /**
@@ -1187,13 +1137,6 @@ ThreadActor.prototype = {
     // TODO bug 637572: we should be dealing with sources directly, not
     // inferring them through scripts.
     this._addSource(aScript.url);
-
-    // Use a sparse array for storing the scripts for each URL in order to
-    // optimize retrieval.
-    if (!this._scripts[aScript.url]) {
-      this._scripts[aScript.url] = [];
-    }
-    this._scripts[aScript.url][aScript.startLine] = aScript;
 
     // Set any stored breakpoints.
     let existing = this._breakpointStore[aScript.url];
