@@ -865,8 +865,11 @@ class CGAddPropertyHook(CGAbstractClassHook):
             preserveArgs = "reinterpret_cast<nsISupports*>(self), self"
         else:
             preserveArgs = "self, self, NS_CYCLE_COLLECTION_PARTICIPANT(%s)" % self.descriptor.nativeType
-        return """  nsContentUtils::PreserveWrapper(%s);
-  return true;""" % preserveArgs
+        return ("  // We don't want to preserve if we don't have a wrapper.\n"
+                "  if (self->GetWrapperPreserveColor()) {\n"
+                "    nsContentUtils::PreserveWrapper(%s);\n"
+                "  }\n"
+                "  return true;" % preserveArgs)
 
 def DeferredFinalizeSmartPtr(descriptor):
     if descriptor.nativeOwnership == 'owned':
