@@ -370,7 +370,7 @@ ContentParent::JoinAllSubprocesses()
     sCanLaunchSubprocesses = false;
 }
 
-/*static*/ already_AddRefed<ContentParent>
+/*static*/ ContentParent*
 ContentParent::GetNewOrUsed(bool aForBrowserElement)
 {
     if (!gNonAppContentParents)
@@ -394,7 +394,7 @@ ContentParent::GetNewOrUsed(bool aForBrowserElement)
                           PROCESS_PRIORITY_FOREGROUND);
     p->Init();
     gNonAppContentParents->AppendElement(p);
-    return p.forget();
+    return p;
 }
 
 namespace {
@@ -465,7 +465,7 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
     }
 
     if (aContext.IsBrowserElement() || !aContext.HasOwnApp()) {
-        if (nsRefPtr<ContentParent> cp = GetNewOrUsed(aContext.IsBrowserElement())) {
+        if (ContentParent* cp = GetNewOrUsed(aContext.IsBrowserElement())) {
             nsRefPtr<TabParent> tp(new TabParent(aContext));
             tp->SetOwnerElement(aFrameElement);
             PBrowserParent* browser = cp->SendPBrowserConstructor(
