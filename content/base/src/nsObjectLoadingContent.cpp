@@ -513,8 +513,7 @@ IsPluginEnabledByExtension(nsIURI* uri, nsCString& mimeType)
     return false;
   }
 
-  nsRefPtr<nsPluginHost> pluginHost =
-    already_AddRefed<nsPluginHost>(nsPluginHost::GetInst());
+  nsRefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
 
   if (!pluginHost) {
     NS_NOTREACHED("No pluginhost");
@@ -533,8 +532,7 @@ IsPluginEnabledByExtension(nsIURI* uri, nsCString& mimeType)
 nsresult
 IsPluginEnabledForType(const nsCString& aMIMEType)
 {
-  nsRefPtr<nsPluginHost> pluginHost =
-    already_AddRefed<nsPluginHost>(nsPluginHost::GetInst());
+  nsRefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
 
   if (!pluginHost) {
     NS_NOTREACHED("No pluginhost");
@@ -566,8 +564,7 @@ nsObjectLoadingContent::MakePluginListener()
     NS_NOTREACHED("expecting a spawned plugin");
     return false;
   }
-  nsRefPtr<nsPluginHost> pluginHost =
-    already_AddRefed<nsPluginHost>(nsPluginHost::GetInst());
+  nsRefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
   if (!pluginHost) {
     NS_NOTREACHED("No pluginHost");
     return false;
@@ -748,8 +745,7 @@ nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading)
   }
 
   nsresult rv = NS_ERROR_FAILURE;
-  nsRefPtr<nsPluginHost> pluginHost =
-    already_AddRefed<nsPluginHost>(nsPluginHost::GetInst());
+  nsRefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
 
   if (!pluginHost) {
     NS_NOTREACHED("No pluginhost");
@@ -2546,8 +2542,7 @@ nsObjectLoadingContent::DoStopPlugin(nsPluginInstanceOwner* aInstanceOwner,
     aInstanceOwner->HidePluginWindow();
 #endif
 
-    nsRefPtr<nsPluginHost> pluginHost =
-      already_AddRefed<nsPluginHost>(nsPluginHost::GetInst());
+    nsRefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
     NS_ASSERTION(pluginHost, "No plugin host?");
     pluginHost->StopPluginInstance(inst);
   }
@@ -2723,8 +2718,7 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason)
   // clicked through). Otherwise, only play if click-to-play is off or if page
   // is whitelisted
 
-  nsRefPtr<nsPluginHost> pluginHost =
-    already_AddRefed<nsPluginHost>(nsPluginHost::GetInst());
+  nsRefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
 
   nsCOMPtr<nsIPluginPlayPreviewInfo> playPreviewInfo;
   bool isPlayPreviewSpecified = NS_SUCCEEDED(pluginHost->GetPlayPreviewInfo(
