@@ -1950,28 +1950,35 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                   "Memory held transiently in JSRuntime and used during "
                   "compilation.  It mostly holds parse nodes.");
 
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/jaeger-code"),
-                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.jaegerCode,
-                  "Memory used by the JaegerMonkey JIT to hold the runtime's "
-                  "generated code.");
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/jaeger"),
+                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.code.jaeger,
+                  "Memory used by the JaegerMonkey JIT to hold generated code.");
 
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/ion-code"),
-                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.ionCode,
-                  "Memory used by the IonMonkey JIT to hold the runtime's "
-                  "generated code.");
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/ion"),
+                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.code.ion,
+                  "Memory used by the IonMonkey JIT to hold generated code.");
 
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/asm.js-code"),
-                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.asmJSCode,
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/baseline"),
+                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.code.baseline,
+                  "Memory used by the Baseline JIT to hold generated code.");
+
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/asm.js"),
+                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.code.asmJS,
                   "Memory used by AOT-compiled asm.js code.");
 
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/regexp-code"),
-                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.regexpCode,
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/regexp"),
+                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.code.regexp,
                   "Memory used by the regexp JIT to hold generated code.");
 
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/unused-code"),
-                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.unusedCode,
-                  "Memory allocated by one of the JITs to hold the "
-                  "runtime's code, but which is currently unused.");
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/other"),
+                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.code.other,
+                  "Memory used by the JITs to hold generated code for "
+                  "wrappers and trampolines.");
+
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/unused"),
+                  nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.code.unused,
+                  "Memory allocated by one of the JITs to hold code, "
+                  "but which is currently unused.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/regexp-data"),
                   nsIMemoryReporter::KIND_NONHEAP, rtStats.runtime.regexpData,
