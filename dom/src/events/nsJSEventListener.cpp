@@ -13,7 +13,6 @@
 #include "nsIXPConnect.h"
 #include "nsGUIEvent.h"
 #include "nsContentUtils.h"
-#include "nsDOMScriptObjectHolder.h"
 #include "nsIMutableArray.h"
 #include "nsVariant.h"
 #include "nsIDOMBeforeUnloadEvent.h"
