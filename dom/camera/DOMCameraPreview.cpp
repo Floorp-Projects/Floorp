@@ -155,16 +155,12 @@ DOMCameraPreview::DOMCameraPreview(nsGlobalWindow* aWindow,
   DOM_CAMERA_LOGT("%s:%d : this=%p : mWidth=%d, mHeight=%d, mFramesPerSecond=%d\n", __func__, __LINE__, this, mWidth, mHeight, mFramesPerSecond);
 
   mImageContainer = LayerManager::CreateImageContainer();
-  MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
-  mStream = gm->CreateSourceStream(this);
   mWindow = aWindow;
-  mInput = GetStream()->AsSourceStream();
+  mInput = new CameraPreviewMediaStream(this);
+  mStream = mInput;
 
   mListener = new DOMCameraPreviewListener(this);
   mInput->AddListener(mListener);
-
-  mInput->AddTrack(TRACK_VIDEO, mFramesPerSecond, 0, new VideoSegment());
-  mInput->AdvanceKnownTracksTime(MEDIA_TIME_MAX);
 
   if (aWindow->GetExtantDoc()) {
     CombineWithPrincipal(aWindow->GetExtantDoc()->NodePrincipal());
@@ -180,7 +176,7 @@ DOMCameraPreview::~DOMCameraPreview()
 bool
 DOMCameraPreview::HaveEnoughBuffered()
 {
-  return mInput->HaveEnoughBuffered(TRACK_VIDEO);
+  return true;
 }
 
 bool
@@ -198,9 +194,7 @@ DOMCameraPreview::ReceiveFrame(void* aBuffer, ImageFormat aFormat, FrameBuilder 
   nsRefPtr<Image> image = mImageContainer->CreateImage(&format, 1);
   aBuilder(image, aBuffer, mWidth, mHeight);
 
-  // AppendFrame() takes over image's reference
-  mVideoSegment.AppendFrame(image.forget(), 1, gfxIntSize(mWidth, mHeight));
-  mInput->AppendToTrack(TRACK_VIDEO, &mVideoSegment);
+  mInput->SetCurrentFrame(gfxIntSize(mWidth, mHeight), image);
   return true;
 }
 
@@ -261,8 +255,8 @@ DOMCameraPreview::StopPreview()
   DOM_CAMERA_LOGI("Stopping preview stream\n");
   DOM_CAMERA_SETSTATE(STOPPING);
   mCameraControl->StopPreview();
-  mInput->EndTrack(TRACK_VIDEO);
-  mInput->Finish();
+  //mInput->EndTrack(TRACK_VIDEO);
+  //mInput->Finish();
 }
 
 void
@@ -272,8 +266,8 @@ DOMCameraPreview::SetStateStopped()
 
   // see bug 809259 and bug 817367.
   if (mState != STOPPING) {
-    mInput->EndTrack(TRACK_VIDEO);
-    mInput->Finish();
+    //mInput->EndTrack(TRACK_VIDEO);
+    //mInput->Finish();
   }
   DOM_CAMERA_SETSTATE(STOPPED);
   DOM_CAMERA_LOGI("Preview stream stopped\n");

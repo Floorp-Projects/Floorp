@@ -303,20 +303,20 @@ public:
   // a single audio output stream is used; the volumes are combined.
   // Currently only the first enabled audio track is played.
   // XXX change this so all enabled audio tracks are mixed and played.
-  void AddAudioOutput(void* aKey);
-  void SetAudioOutputVolume(void* aKey, float aVolume);
-  void RemoveAudioOutput(void* aKey);
+  virtual void AddAudioOutput(void* aKey);
+  virtual void SetAudioOutputVolume(void* aKey, float aVolume);
+  virtual void RemoveAudioOutput(void* aKey);
   // Since a stream can be played multiple ways, we need to be able to
   // play to multiple VideoFrameContainers.
   // Only the first enabled video track is played.
-  void AddVideoOutput(VideoFrameContainer* aContainer);
-  void RemoveVideoOutput(VideoFrameContainer* aContainer);
+  virtual void AddVideoOutput(VideoFrameContainer* aContainer);
+  virtual void RemoveVideoOutput(VideoFrameContainer* aContainer);
   // Explicitly block. Useful for example if a media element is pausing
   // and we need to stop its stream emitting its buffered data.
-  void ChangeExplicitBlockerCount(int32_t aDelta);
+  virtual void ChangeExplicitBlockerCount(int32_t aDelta);
   // Events will be dispatched by calling methods of aListener.
-  void AddListener(MediaStreamListener* aListener);
-  void RemoveListener(MediaStreamListener* aListener);
+  virtual void AddListener(MediaStreamListener* aListener);
+  virtual void RemoveListener(MediaStreamListener* aListener);
   // Events will be dispatched by calling methods of aListener. It is the
   // responsibility of the caller to remove aListener before it is destroyed.
   void AddMainThreadListener(MainThreadMediaStreamListener* aListener)
@@ -332,7 +332,7 @@ public:
     mMainThreadListeners.RemoveElement(aListener);
   }
   // Signal that the client is done with this MediaStream. It will be deleted later.
-  void Destroy();
+  virtual void Destroy();
   // Returns the main-thread's view of how much data has been processed by
   // this stream.
   StreamTime GetCurrentTime()
