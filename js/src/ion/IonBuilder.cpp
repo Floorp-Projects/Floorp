@@ -347,9 +347,6 @@ IonBuilder::build()
             ins->setResumePoint(current->entryResumePoint());
     }
 
-    // Recompile to inline calls if this function is hot.
-    insertRecompileCheck();
-
     if (script()->argumentsHasVarBinding()) {
         lazyArguments_ = MConstant::New(MagicValue(JS_OPTIMIZED_ARGUMENTS));
         current->add(lazyArguments_);
@@ -772,12 +769,9 @@ IonBuilder::inspectOpcode(JSOp op)
         return true;
 
     switch (op) {
-      case JSOP_LOOPENTRY:
-        insertRecompileCheck();
-        return true;
-
       case JSOP_NOP:
       case JSOP_LINENO:
+      case JSOP_LOOPENTRY:
         return true;
 
       case JSOP_LABEL:
@@ -4487,7 +4481,10 @@ IonBuilder::jsop_eval(uint32_t argc)
         MInstruction *ins = MCallDirectEval::New(scopeChain, string, thisValue);
         current->add(ins);
         current->push(ins);
-        return resumeAfter(ins);
+
+        types::StackTypeSet *barrier;
+        types::StackTypeSet *types = oracle->returnTypeSet(script(), pc, &barrier);
+        return resumeAfter(ins) && pushTypeBarrier(ins, types, barrier);
     }
 
     return jsop_call(argc, /* constructing = */ false);
@@ -4985,34 +4982,6 @@ IonBuilder::maybeInsertResume()
     current->add(ins);
 
     return resumeAfter(ins);
-}
-
-void
-IonBuilder::insertRecompileCheck()
-{
-    if (!inliningEnabled())
-        return;
-
-    if (inliningDepth_ > 0)
-        return;
-
-    // Don't recompile if we are already inlining.
-    if (script()->getUseCount() >= js_IonOptions.usesBeforeInlining())
-        return;
-
-    // Don't recompile if the oracle cannot provide inlining information
-    // or if the script has no calls.
-    if (!oracle->canInlineCalls())
-        return;
-
-    // Baseline does not handle recompile-check bailouts. We can end up here if
-    // TI reset the use count during compilation.
-    if (ion::IsBaselineEnabled(cx))
-        return;
-
-    uint32_t minUses = UsesBeforeIonRecompile(script(), pc);
-    MRecompileCheck *check = MRecompileCheck::New(minUses);
-    current->add(check);
 }
 
 static inline bool
@@ -6962,6 +6931,9 @@ bool
 IonBuilder::jsop_lambda(JSFunction *fun)
 {
     JS_ASSERT(script()->analysis()->usesScopeChain());
+    if (fun->isArrow())
+        return abort("bound arrow function");
+
     MLambda *ins = MLambda::New(current->scopeChain(), fun);
     current->add(ins);
     current->push(ins);

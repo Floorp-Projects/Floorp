@@ -424,7 +424,7 @@ interface TestExampleInterface {
   [SetterThrows] attribute boolean throwingSetterAttr;
   legacycaller short(unsigned long arg1, TestInterface arg2);
 
-  // If you add things here, add them to TestCodeGen as well
+  // If you add things here, add them to TestCodeGen and TestJSImplGen as well
 };
 
 interface TestExampleProxyInterface {

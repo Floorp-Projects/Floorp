@@ -54,7 +54,7 @@ function onStart() {
     let [win, doc] = getProfileInternals();
     let stopButton = doc.querySelector(".controlPane #stopWrapper button");
 
-    stopButton.click();
+    setTimeout(function () stopButton.click(), 100);
   });
 }
 
@@ -75,11 +75,7 @@ function onParsed() {
     }
 
     ok(sample.length > 0, "We have some items displayed");
-    if (navigator.platform.contains("Win")) {
-      todo(false, "First percentage is 100%: Disabled on Windows for intermittent failures, see bug 822287.");
-    } else {
-      is(sample[0].innerHTML, "100.0%", "First percentage is 100%");
-    }
+    is(sample[0].innerHTML, "100.0%", "First percentage is 100%");
     attemptTearDown();
   }
 

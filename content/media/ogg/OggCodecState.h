@@ -17,7 +17,7 @@
 #include <opus/opus.h>
 #include "opus/opus_multistream.h"
 // For MOZ_SAMPLE_TYPE_*
-#include "nsHTMLMediaElement.h"
+#include "mozilla/dom/HTMLMediaElement.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaDecoderReader.h"
 #endif

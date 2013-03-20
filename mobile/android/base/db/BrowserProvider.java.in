@@ -1011,13 +1011,33 @@ public class BrowserProvider extends ContentProvider {
 
             Locale locale = Locale.getDefault();
             int pos = 0;
+            Integer mobileFolderId = getMobileFolderId(db);
+            if (mobileFolderId == null) {
+                Log.e(LOGTAG, "Error creating distribution bookmarks: mobileFolderId is null");
+                return 0;
+            }
+
             for (int i = 0; i < bookmarks.length(); i++) {
                 try {
                     final JSONObject bookmark = bookmarks.getJSONObject(i);
 
                     String title = getLocalizedProperty(bookmark, "title", locale);
                     final String url = getLocalizedProperty(bookmark, "url", locale);
-                    createBookmark(db, title, url, pos);
+                    createBookmark(db, title, url, pos, mobileFolderId);
+
+                    if (bookmark.has("pinned")) {
+                        try {
+                            // Create a fake bookmark in the hidden pinned folder to pin bookmark
+                            // to about:home top sites. Pass pos as the pinned position to pin 
+                            // sites in the order that bookmarks are specified in bookmarks.json.
+                            if (bookmark.getBoolean("pinned")) {
+                                createBookmark(db, title, url, pos, Bookmarks.FIXED_PINNED_LIST_ID);
+                            }
+                        } catch (JSONException e) {
+                            Log.e(LOGTAG, "Error pinning bookmark to top sites", e);
+                        }
+                    }
+
                     pos++;
 
                     // return early if there is no icon for this bookmark
@@ -1053,6 +1073,12 @@ public class BrowserProvider extends ContentProvider {
             Field[] fields = stringsClass.getFields();
             Pattern p = Pattern.compile("^bookmarkdefaults_title_");
 
+            Integer mobileFolderId = getMobileFolderId(db);
+            if (mobileFolderId == null) {
+                Log.e(LOGTAG, "Error creating default bookmarks: mobileFolderId is null");
+                return;
+            }
+
             for (int i = 0; i < fields.length; i++) {
                 final String name = fields[i].getName();
                 Matcher m = p.matcher(name);
@@ -1066,7 +1092,7 @@ public class BrowserProvider extends ContentProvider {
                     Field urlField = stringsClass.getField(name.replace("_title_", "_url_"));
                     int urlId = urlField.getInt(null);
                     final String url = mContext.getString(urlId);
-                    createBookmark(db, title, url, pos);
+                    createBookmark(db, title, url, pos, mobileFolderId);
 
                     // create icons in a separate thread to avoid blocking about:home on startup
                     ThreadUtils.postToBackgroundThread(new Runnable() {
@@ -1090,9 +1116,9 @@ public class BrowserProvider extends ContentProvider {
             }
         }
 
-        private void createBookmark(SQLiteDatabase db, String title, String url, int pos) {
+        private void createBookmark(SQLiteDatabase db, String title, String url, int pos, int parent) {
             ContentValues bookmarkValues = new ContentValues();
-            bookmarkValues.put(Bookmarks.PARENT, guidToID(db, Bookmarks.MOBILE_FOLDER_GUID));
+            bookmarkValues.put(Bookmarks.PARENT, parent);
 
             long now = System.currentTimeMillis();
             bookmarkValues.put(Bookmarks.DATE_CREATED, now);
@@ -1296,7 +1322,11 @@ public class BrowserProvider extends ContentProvider {
             // database creation time.
             final int nInvalidSpecialEntries = invalidSpecialEntries.size();
             if (nInvalidSpecialEntries > 0) {
-                Long mobileFolderId = guidToID(db, Bookmarks.MOBILE_FOLDER_GUID);
+                Integer mobileFolderId = getMobileFolderId(db);
+                if (mobileFolderId == null) {
+                    Log.e(LOGTAG, "Error migrating invalid special folder entries: mobile folder id is null");
+                    return;
+                }
 
                 debug("Found " + nInvalidSpecialEntries + " invalid special folder entries");
                 for (int i = 0; i < nInvalidSpecialEntries; i++) {
@@ -1755,20 +1785,23 @@ public class BrowserProvider extends ContentProvider {
         }
     }
 
-    private Long guidToID(SQLiteDatabase db, String guid) {
+    private static final String[] mobileIdColumns = new String[] { Bookmarks._ID };
+    private static final String[] mobileIdSelectionArgs = new String[] { Bookmarks.MOBILE_FOLDER_GUID };
+
+    private Integer getMobileFolderId(SQLiteDatabase db) {
         Cursor c = null;
 
         try {
             c = db.query(TABLE_BOOKMARKS,
-                         new String[] { Bookmarks._ID },
+                         mobileIdColumns,
                          Bookmarks.GUID + " = ?",
-                         new String[] { guid },
+                         mobileIdSelectionArgs,
                          null, null, null);
 
             if (c == null || !c.moveToFirst())
                 return null;
 
-            return c.getLong(c.getColumnIndex(Bookmarks._ID));
+            return c.getInt(c.getColumnIndex(Bookmarks._ID));
         } finally {
             if (c != null)
                 c.close();

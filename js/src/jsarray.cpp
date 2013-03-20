@@ -2679,7 +2679,7 @@ NewArray(JSContext *cx, uint32_t length, RawObject protoArg, NewObjectKind newKi
 
     RootedObject proto(cx, protoArg);
     if (protoArg)
-        PoisonPtr(&protoArg);
+        JS::PoisonPtr(&protoArg);
 
     if (!proto && !FindProto(cx, &ArrayClass, &proto))
         return NULL;

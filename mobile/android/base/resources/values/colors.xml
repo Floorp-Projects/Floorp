@@ -12,6 +12,19 @@
   <color name="highlight_focused">#1A000000</color>
   <color name="highlight_dark">#33FFFFFF</color>
   <color name="highlight_dark_focused">#1AFFFFFF</color>
+
+  <!-- highlight on tabs button: 20% black over background_tabs_dark -->
+  <color name="highlight_tabs">#FF696D71</color>
+
+  <!-- highlight-focused on tabs button: 10% black over background_tabs_dark -->
+  <color name="highlight_tabs_focused">#FF565B60</color>
+
+  <!-- highlight on menu button: 20% black over black -->
+  <color name="highlight_menu">#FF333333</color>
+
+  <!-- highlight-focused on menu button: 10% black over black -->
+  <color name="highlight_menu_focused">#FF1A1A1A</color>
+
   <color name="autocomplete_listitem_text">#000000</color>
   <color name="splash_background">#000000</color>
   <color name="splash_msgfont">#ffffff</color>

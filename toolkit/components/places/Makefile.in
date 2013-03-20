@@ -64,6 +64,7 @@ EXTRA_JS_MODULES = \
   ColorAnalyzer_worker.js \
   ColorConversion.js \
   ClusterLib.js \
+  BookmarkJSONUtils.jsm \
   $(NULL)
 
 EXTRA_PP_JS_MODULES = \

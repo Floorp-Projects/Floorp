@@ -104,11 +104,7 @@ static int PrefChanged(const char* aPref, void* aClosure)
       gVolumeScale = std::max<double>(0, PR_strtod(utf8.get(), nullptr));
     }
   } else if (strcmp(aPref, PREF_USE_CUBEB) == 0) {
-#ifdef MOZ_WIDGET_GONK
-    bool value = Preferences::GetBool(aPref, false);
-#else
     bool value = Preferences::GetBool(aPref, true);
-#endif
     MutexAutoLock lock(*gAudioPrefsLock);
     gUseCubeb = value;
   } else if (strcmp(aPref, PREF_CUBEB_LATENCY) == 0) {

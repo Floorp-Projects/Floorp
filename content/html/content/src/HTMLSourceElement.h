@@ -9,7 +9,7 @@
 
 #include "nsIDOMHTMLSourceElement.h"
 #include "nsGenericHTMLElement.h"
-#include "nsHTMLMediaElement.h"
+#include "mozilla/dom/HTMLMediaElement.h"
 
 namespace mozilla {
 namespace dom {

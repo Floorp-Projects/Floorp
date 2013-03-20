@@ -809,10 +809,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   // SVG element classes
   NS_DEFINE_CLASSINFO_DATA(TimeEvent, nsEventSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGFEColorMatrixElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGFECompositeElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGFEConvolveMatrixElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGFEDiffuseLightingElement, nsElementSH,
@@ -1215,7 +1211,6 @@ nsIXPConnect *nsDOMClassInfo::sXPConnect = nullptr;
 nsIScriptSecurityManager *nsDOMClassInfo::sSecMan = nullptr;
 bool nsDOMClassInfo::sIsInitialized = false;
 bool nsDOMClassInfo::sDisableDocumentAllSupport = false;
-bool nsDOMClassInfo::sDisableGlobalScopePollutionSupport = false;
 
 
 jsid nsDOMClassInfo::sParent_id          = JSID_VOID;
@@ -2236,18 +2231,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(SVGFEColorMatrixElement, nsIDOMSVGFEColorMatrixElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFEColorMatrixElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
-    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(SVGFECompositeElement, nsIDOMSVGFECompositeElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFECompositeElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
-    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(SVGFEConvolveMatrixElement, nsIDOMSVGFEConvolveMatrixElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFEConvolveMatrixElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
@@ -2862,9 +2845,6 @@ nsDOMClassInfo::Init()
 
   sDisableDocumentAllSupport =
     Preferences::GetBool("browser.dom.document.all.disabled");
-
-  sDisableGlobalScopePollutionSupport =
-    Preferences::GetBool("browser.dom.global_scope_pollution.disabled");
 
   // Register new DOM bindings
   mozilla::dom::Register(nameSpaceManager);
@@ -3552,11 +3532,9 @@ nsWindowSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   return SetParentToWindow(win, parentObj);
 }
 
-// This JS class piggybacks on nsHTMLDocumentSH::ReleaseDocument()...
-
 static JSClass sGlobalScopePolluterClass = {
   "Global Scope Polluter",
-  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_NEW_RESOLVE,
+  JSCLASS_NEW_RESOLVE,
   JS_PropertyStub,
   JS_PropertyStub,
   nsWindowSH::GlobalScopePolluterGetProperty,
@@ -3564,7 +3542,7 @@ static JSClass sGlobalScopePolluterClass = {
   JS_EnumerateStub,
   (JSResolveOp)nsWindowSH::GlobalScopePolluterNewResolve,
   JS_ConvertStub,
-  nsHTMLDocumentSH::ReleaseDocument
+  nullptr
 };
 
 
@@ -3636,16 +3614,13 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
     return JS_TRUE;
   }
 
-  nsHTMLDocument *document = GetDocument(obj);
+  // Grab the DOM window.
+  JSObject *global = JS_GetGlobalForObject(cx, obj);
+  nsISupports *globalNative = XPConnect()->GetNativeOfWrapper(cx, global);
+  nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(globalNative);
+  MOZ_ASSERT(piWin);
+  nsGlobalWindow* win = static_cast<nsGlobalWindow*>(piWin.get());
 
-  if (!document) {
-    // If we don't have a document, return early.
-
-    return JS_TRUE;
-  }
-
-  nsGlobalWindow* win = static_cast<nsGlobalWindow*>(document->GetWindow());
-  NS_ENSURE_TRUE(win, JS_TRUE);
   if (win->GetLength() > 0) {
     nsCOMPtr<nsIDOMWindow> child_win = win->GetChildWindow(id);
     if (child_win) {
@@ -3678,6 +3653,15 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
 
     return JS_TRUE;
   }
+
+  //
+  // The rest of this function is for HTML documents only.
+  //
+  nsCOMPtr<nsIHTMLDocument> htmlDoc =
+    do_QueryInterface(win->GetExtantDocument());
+  if (!htmlDoc)
+    return true;
+  nsHTMLDocument *document = static_cast<nsHTMLDocument*>(htmlDoc.get());
 
   nsDependentJSString str(id);
   nsCOMPtr<nsISupports> result;
@@ -3727,11 +3711,6 @@ nsWindowSH::InvalidateGlobalScopePolluter(JSContext *cx, JSObject *obj)
     }
 
     if (JS_GetClass(proto) == &sGlobalScopePolluterClass) {
-      nsIHTMLDocument *doc = (nsIHTMLDocument *)::JS_GetPrivate(proto);
-
-      NS_IF_RELEASE(doc);
-
-      ::JS_SetPrivate(proto, nullptr);
 
       JSObject *proto_proto;
       if (!::JS_GetPrototype(cx, proto, &proto_proto)) {
@@ -3753,15 +3732,8 @@ nsWindowSH::InvalidateGlobalScopePolluter(JSContext *cx, JSObject *obj)
 
 // static
 nsresult
-nsWindowSH::InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
-                                       nsIHTMLDocument *doc)
+nsWindowSH::InstallGlobalScopePolluter(JSContext *cx, JSObject *obj)
 {
-  // If global scope pollution is disabled, or if our document is not
-  // a HTML document, do nothing
-  if (sDisableGlobalScopePollutionSupport || !doc) {
-    return NS_OK;
-  }
-
   JSAutoRequest ar(cx);
 
   JSObject *gsp = ::JS_NewObjectWithUniqueType(cx, &sGlobalScopePolluterClass, nullptr, obj);
@@ -3794,12 +3766,6 @@ nsWindowSH::InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
   // And then set the prototype of the object whose prototype was
   // Object.prototype to be the global scope polluter.
   ::JS_SplicePrototype(cx, o, gsp);
-
-  ::JS_SetPrivate(gsp, doc);
-
-  // The global scope polluter will release doc on destruction (or
-  // invalidation).
-  NS_ADDREF(doc);
 
   return NS_OK;
 }

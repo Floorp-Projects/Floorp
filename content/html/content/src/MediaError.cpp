@@ -21,7 +21,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaError)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMediaError)
 NS_INTERFACE_MAP_END
 
-MediaError::MediaError(nsHTMLMediaElement* aParent, uint16_t aCode)
+MediaError::MediaError(HTMLMediaElement* aParent, uint16_t aCode)
   : mParent(aParent)
   , mCode(aCode)
 {

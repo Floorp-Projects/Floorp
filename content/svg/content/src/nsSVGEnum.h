@@ -15,8 +15,13 @@
 #include "mozilla/Attributes.h"
 
 class nsIAtom;
-class nsISMILAnimationElement;
 class nsSMILValue;
+
+namespace mozilla {
+namespace dom {
+class SVGAnimationElement;
+}
+}
 
 typedef uint8_t nsSVGEnumValue;
 
@@ -108,7 +113,7 @@ public:
 
     // nsISMILAttr methods
     virtual nsresult ValueFromString(const nsAString& aStr,
-                                     const nsISMILAnimationElement* aSrcElement,
+                                     const mozilla::dom::SVGAnimationElement* aSrcElement,
                                      nsSMILValue& aValue,
                                      bool& aPreventCachingOfSandwich) const;
     virtual nsSMILValue GetBaseValue() const;

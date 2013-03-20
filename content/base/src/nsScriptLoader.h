@@ -12,7 +12,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIScriptElement.h"
-#include "nsIURI.h"
 #include "nsCOMArray.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
@@ -20,6 +19,7 @@
 #include "nsIStreamLoader.h"
 
 class nsScriptLoadRequest;
+class nsIURI;
 
 //////////////////////////////////////////////////////////////
 // Script loader implementation

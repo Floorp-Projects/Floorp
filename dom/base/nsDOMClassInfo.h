@@ -191,7 +191,6 @@ protected:
 
   static bool sIsInitialized;
   static bool sDisableDocumentAllSupport;
-  static bool sDisableGlobalScopePollutionSupport;
 
 public:
   static jsid sParent_id;
@@ -379,8 +378,7 @@ public:
   static JSBool GlobalScopePolluterGetProperty(JSContext *cx, JSHandleObject obj,
                                                JSHandleId id, JSMutableHandleValue vp);
   static JSBool InvalidateGlobalScopePolluter(JSContext *cx, JSObject *obj);
-  static nsresult InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
-                                             nsIHTMLDocument *doc);
+  static nsresult InstallGlobalScopePolluter(JSContext *cx, JSObject *obj);
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
     return new nsWindowSH(aData);

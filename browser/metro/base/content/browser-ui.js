@@ -591,8 +591,16 @@ var BrowserUI = {
 
   _updateButtons: function _updateButtons() {
     let browser = Browser.selectedBrowser;
-    this._back.setAttribute("disabled", !browser.canGoBack);
-    this._forward.setAttribute("disabled", !browser.canGoForward);
+    if (browser.canGoBack) {
+      this._back.removeAttribute("disabled");
+    } else {
+      this._back.setAttribute("disabled", true);
+    }
+    if (browser.canGoForward) {
+      this._forward.removeAttribute("disabled");
+    } else {
+      this._forward.setAttribute("disabled", true);
+    }
   },
 
   _updateToolbar: function _updateToolbar() {
@@ -1601,7 +1609,7 @@ var DialogUI = {
 
     let currentNode;
     let nodeIterator = xhr.responseXML.createNodeIterator(xhr.responseXML, NodeFilter.SHOW_TEXT, null, false);
-    while (currentNode = nodeIterator.nextNode()) {
+    while (!!(currentNode = nodeIterator.nextNode())) {
       let trimmed = currentNode.nodeValue.replace(/^\s\s*/, "").replace(/\s\s*$/, "");
       if (!trimmed.length)
         currentNode.parentNode.removeChild(currentNode);

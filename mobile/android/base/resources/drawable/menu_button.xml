@@ -10,11 +10,11 @@
         <selector>
 
             <item android:state_pressed="true"
-                  android:drawable="@color/highlight_dark"/>
+                  android:drawable="@color/highlight_menu"/>
 
             <item android:state_focused="true"
                   android:state_pressed="false"
-                  android:drawable="@color/highlight_dark_focused"/>
+                  android:drawable="@color/highlight_menu_focused"/>
 
             <item android:drawable="@android:color/black"/>
 

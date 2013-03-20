@@ -8357,6 +8357,8 @@ var Distribution = {
     if (this._path) {
       file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
       file.initWithPath(this._path);
+      // Store the path in a pref for DirectoryProvider to read.
+      Services.prefs.setCharPref("distribution.path", this._path);
     } else {
       // If a path isn't specified, look in the data directory:
       // /data/data/org.mozilla.xxx/distribution

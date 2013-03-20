@@ -23,7 +23,7 @@ namespace js {
 
 template <AllowGC allowGC>
 static JS_ALWAYS_INLINE JSInlineString *
-NewShortString(JSContext *cx, Latin1Chars chars)
+NewShortString(JSContext *cx, JS::Latin1Chars chars)
 {
     size_t len = chars.length();
     JS_ASSERT(JSShortString::lengthFits(len));
@@ -43,7 +43,7 @@ NewShortString(JSContext *cx, Latin1Chars chars)
 
 template <AllowGC allowGC>
 static JS_ALWAYS_INLINE JSInlineString *
-NewShortString(JSContext *cx, StableTwoByteChars chars)
+NewShortString(JSContext *cx, JS::StableTwoByteChars chars)
 {
     size_t len = chars.length();
 
@@ -67,7 +67,7 @@ NewShortString(JSContext *cx, StableTwoByteChars chars)
 
 template <AllowGC allowGC>
 static JS_ALWAYS_INLINE JSInlineString *
-NewShortString(JSContext *cx, TwoByteChars chars)
+NewShortString(JSContext *cx, JS::TwoByteChars chars)
 {
     size_t len = chars.length();
 
@@ -84,7 +84,7 @@ NewShortString(JSContext *cx, TwoByteChars chars)
             return NULL;
         jschar tmp[JSShortString::MAX_SHORT_LENGTH];
         PodCopy(tmp, chars.start().get(), len);
-        return NewShortString<CanGC>(cx, StableTwoByteChars(tmp, len));
+        return NewShortString<CanGC>(cx, JS::StableTwoByteChars(tmp, len));
     }
 
     jschar *storage = str->init(len);
@@ -233,7 +233,7 @@ JSDependentString::new_(JSContext *cx, JSLinearString *baseArg, const jschar *ch
      * is more efficient to immediately undepend here.
      */
     if (JSShortString::lengthFits(length))
-        return js::NewShortString<js::CanGC>(cx, js::TwoByteChars(chars, length));
+        return js::NewShortString<js::CanGC>(cx, JS::TwoByteChars(chars, length));
 
     JSDependentString *str = (JSDependentString *)js_NewGCString<js::NoGC>(cx);
     if (str) {

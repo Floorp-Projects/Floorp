@@ -2311,6 +2311,11 @@ AddPendingRecompile(JSContext *cx, RawScript script, jsbytecode *pc,
     RecompileInfo& info = cx->compartment->types.compiledInfo;
     if (info.outputIndex != RecompileInfo::NoCompilerRunning) {
         CompilerOutput *co = info.compilerOutput(cx);
+        if (!co) {
+            if (script->compartment() != cx->compartment)
+                MOZ_CRASH();
+            return;
+        }
         switch (co->kind()) {
           case CompilerOutput::MethodJIT:
             break;
@@ -2718,6 +2723,9 @@ TypeCompartment::growPendingArray(JSContext *cx)
 void
 TypeCompartment::processPendingRecompiles(FreeOp *fop)
 {
+    if (!pendingRecompiles)
+        return;
+
     /* Steal the list of scripts to recompile, else we will try to recursively recompile them. */
     Vector<RecompileInfo> *pending = pendingRecompiles;
     pendingRecompiles = NULL;
@@ -2818,6 +2826,8 @@ void
 TypeCompartment::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
 {
     CompilerOutput *co = info.compilerOutput(cx);
+    if (!co)
+        return;
 
     if (co->pendingRecompilation)
         return;
@@ -6854,7 +6864,7 @@ TypeCompartment::maybePurgeAnalysis(JSContext *cx, bool force)
 }
 
 static void
-SizeOfScriptTypeInferenceData(RawScript script, TypeInferenceSizes *sizes,
+SizeOfScriptTypeInferenceData(RawScript script, JS::TypeInferenceSizes *sizes,
                               JSMallocSizeOfFun mallocSizeOf)
 {
     TypeScript *typeScript = script->types;
@@ -6883,7 +6893,7 @@ Zone::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *typePool)
 }
 
 void
-JSCompartment::sizeOfTypeInferenceData(TypeInferenceSizes *sizes, JSMallocSizeOfFun mallocSizeOf)
+JSCompartment::sizeOfTypeInferenceData(JS::TypeInferenceSizes *sizes, JSMallocSizeOfFun mallocSizeOf)
 {
     sizes->analysisPool += analysisLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
 

@@ -516,7 +516,7 @@ MaybeWrapValue(JSContext* cx, JS::Value* vp)
 {
   if (vp->isString()) {
     JSString* str = vp->toString();
-    if (js::GetGCThingZone(str) != js::GetContextZone(cx)) {
+    if (JS::GetGCThingZone(str) != js::GetContextZone(cx)) {
       return JS_WrapValue(cx, vp);
     }
     return true;
@@ -1666,6 +1666,25 @@ void SetXrayExpandoChain(JSObject *obj, JSObject *chain);
 bool
 NativeToString(JSContext* cx, JSObject* wrapper, JSObject* obj, const char* pre,
                const char* post, JS::Value* v);
+
+HAS_MEMBER(JSBindingFinalized)
+
+template<class T, bool hasCallback=HasJSBindingFinalizedMember<T>::Value>
+struct JSBindingFinalized
+{
+  static void Finalized(T* self)
+  {
+  }
+};
+
+template<class T>
+struct JSBindingFinalized<T, true>
+{
+  static void Finalized(T* self)
+  {
+    self->JSBindingFinalized();
+  }
+};
 
 nsresult
 ReparentWrapper(JSContext* aCx, JSObject* aObj);
