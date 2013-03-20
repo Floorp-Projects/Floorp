@@ -3,6 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
+
 function Sanitizer() {}
 Sanitizer.prototype = {
   // warning to the caller: this one may raise an exception (e.g. bug #265028)
@@ -181,12 +185,10 @@ Sanitizer.prototype = {
     history: {
       clear: function ()
       {
-        var globalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
-                                      .getService(Components.interfaces.nsIBrowserHistory);
         if (this.range)
-          globalHistory.removeVisitsByTimeframe(this.range[0], this.range[1]);
+          PlacesUtils.history.removeVisitsByTimeframe(this.range[0], this.range[1]);
         else
-          globalHistory.removeAllPages();
+          PlacesUtils.history.removeAllPages();
         
         try {
           var os = Components.classes["@mozilla.org/observer-service;1"]

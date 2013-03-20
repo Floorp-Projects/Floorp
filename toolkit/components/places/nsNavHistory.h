@@ -78,7 +78,6 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVHISTORYSERVICE
-  NS_DECL_NSIGLOBALHISTORY2
   NS_DECL_NSIBROWSERHISTORY
   NS_DECL_NSIOBSERVER
   NS_DECL_NSPIPLACESDATABASE
@@ -448,13 +447,6 @@ protected:
   nsresult RemovePagesInternal(const nsCString& aPlaceIdsQueryString);
   nsresult CleanupPlacesOnVisitsDelete(const nsCString& aPlaceIdsQueryString);
 
-  nsresult AddURIInternal(nsIURI* aURI, PRTime aTime, bool aRedirect,
-                          bool aToplevel, nsIURI* aReferrer);
-
-  nsresult AddVisitChain(nsIURI* aURI, PRTime aTime,
-                         bool aToplevel, bool aRedirect,
-                         nsIURI* aReferrer, int64_t* aVisitID,
-                         int64_t* aSessionID);
   nsresult InternalAddNewPage(nsIURI* aURI, const nsAString& aTitle,
                               bool aHidden, bool aTyped,
                               int32_t aVisitCount, bool aCalculateFrecency,
@@ -466,7 +458,6 @@ protected:
                        int64_t* aVisitID,
                        PRTime* aTime,
                        int64_t* aSessionID);
-  bool IsURIStringVisited(const nsACString& url);
 
   /**
    * Loads all of the preferences that we use into member variables.
@@ -509,8 +500,6 @@ protected:
                          nsCOMArray<nsNavHistoryResultNode>* aResults);
 
   void TitleForDomain(const nsCString& domain, nsACString& aTitle);
-
-  nsresult SetPageTitleInternal(nsIURI* aURI, const nsAString& aTitle);
 
   nsresult FilterResultSet(nsNavHistoryQueryResultNode *aParentNode,
                            const nsCOMArray<nsNavHistoryResultNode>& aSet,
