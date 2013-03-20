@@ -59,7 +59,7 @@ public:
   // nsSVGSVGElement methods:
   virtual bool HasValidDimensions() const;
 
-  virtual mozilla::SVGAnimatedTransformList*
+  virtual nsSVGAnimatedTransformList*
     GetAnimatedTransformList(uint32_t aFlags = 0);
   virtual nsIAtom* GetTransformListAttrName() const {
     return nsGkAtoms::patternTransform;
@@ -70,7 +70,7 @@ public:
   already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
   already_AddRefed<nsIDOMSVGAnimatedEnumeration> PatternUnits();
   already_AddRefed<nsIDOMSVGAnimatedEnumeration> PatternContentUnits();
-  already_AddRefed<DOMSVGAnimatedTransformList> PatternTransform();
+  already_AddRefed<SVGAnimatedTransformList> PatternTransform();
   already_AddRefed<SVGAnimatedLength> X();
   already_AddRefed<SVGAnimatedLength> Y();
   already_AddRefed<SVGAnimatedLength> Width();
