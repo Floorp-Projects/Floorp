@@ -1297,10 +1297,10 @@ private:
    * Construct frames for the given item list and parent frame, and put the
    * resulting frames in aFrameItems.
    */
-  nsresult ConstructFramesFromItemList(nsFrameConstructorState& aState,
-                                       FrameConstructionItemList& aItems,
-                                       nsIFrame* aParentFrame,
-                                       nsFrameItems& aFrameItems);
+  void ConstructFramesFromItemList(nsFrameConstructorState& aState,
+                                   FrameConstructionItemList& aItems,
+                                   nsIFrame* aParentFrame,
+                                   nsFrameItems& aFrameItems);
   nsresult ConstructFramesFromItem(nsFrameConstructorState& aState,
                                    FCItemIterator& aItem,
                                    nsIFrame* aParentFrame,

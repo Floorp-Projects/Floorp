@@ -1963,8 +1963,8 @@ nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
     aState.PushAbsoluteContainingBlock(newFrame, absoluteSaveState);
   }
   if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
-    rv = ConstructFramesFromItemList(aState, aItem.mChildItems,
-                                     innerFrame, childItems);
+    ConstructFramesFromItemList(aState, aItem.mChildItems,
+                                innerFrame, childItems);
   } else {
     rv = ProcessChildren(aState, content, styleContext, innerFrame,
                          true, childItems, false, aItem.mPendingBinding);
@@ -2010,10 +2010,10 @@ nsCSSFrameConstructor::ConstructTableRow(nsFrameConstructorState& aState,
   InitAndRestoreFrame(aState, content, aParentFrame, nullptr, newFrame);
 
   nsFrameItems childItems;
-  nsresult rv;
+  nsresult rv = NS_OK;
   if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
-    rv = ConstructFramesFromItemList(aState, aItem.mChildItems, newFrame,
-                                     childItems);
+    ConstructFramesFromItemList(aState, aItem.mChildItems, newFrame,
+                                childItems);
   } else {
     rv = ProcessChildren(aState, content, styleContext, newFrame,
                          true, childItems, false, aItem.mPendingBinding);
@@ -2116,7 +2116,7 @@ nsCSSFrameConstructor::ConstructTableCell(nsFrameConstructorState& aState,
   InitAndRestoreFrame(aState, content, newFrame, nullptr, cellInnerFrame);
 
   nsFrameItems childItems;
-  nsresult rv;
+  nsresult rv = NS_OK;
   if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
     // Need to push ourselves as a float containing block.
     // XXXbz it might be nice to work on getting the parent
@@ -2129,8 +2129,8 @@ nsCSSFrameConstructor::ConstructTableCell(nsFrameConstructorState& aState,
       aState.PushFloatContainingBlock(cellInnerFrame, floatSaveState);
     }
 
-    rv = ConstructFramesFromItemList(aState, aItem.mChildItems, cellInnerFrame,
-                                     childItems);
+    ConstructFramesFromItemList(aState, aItem.mChildItems, cellInnerFrame,
+                                childItems);
   } else {
     // Process the child content
     rv = ProcessChildren(aState, content, styleContext, cellInnerFrame,
@@ -3699,8 +3699,8 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
       if (newFrame->IsFloatContainingBlock()) {
         aState.PushFloatContainingBlock(newFrame, floatSaveState);
       }
-      rv = ConstructFramesFromItemList(aState, aItem.mChildItems, newFrame,
-                                       childItems);
+      ConstructFramesFromItemList(aState, aItem.mChildItems, newFrame,
+                                  childItems);
     } else {
       // Process the child frames.
       rv = ProcessChildren(aState, content, styleContext, newFrame,
@@ -4728,8 +4728,8 @@ nsCSSFrameConstructor::ConstructOuterSVG(nsFrameConstructorState& aState,
 
   // Process children
   if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
-    rv = ConstructFramesFromItemList(aState, aItem.mChildItems,
-                                     innerFrame, childItems);
+    ConstructFramesFromItemList(aState, aItem.mChildItems,
+                                innerFrame, childItems);
   } else {
     rv = ProcessChildren(aState, content, styleContext, innerFrame,
                          true, childItems, false, aItem.mPendingBinding);
@@ -9875,7 +9875,7 @@ nsCSSFrameConstructor::CreateNeededTablePseudos(nsFrameConstructorState& aState,
   } while (!iter.IsDone());
 }
 
-inline nsresult
+inline void
 nsCSSFrameConstructor::ConstructFramesFromItemList(nsFrameConstructorState& aState,
                                                    FrameConstructionItemList& aItems,
                                                    nsIFrame* aParentFrame,
@@ -9900,13 +9900,13 @@ nsCSSFrameConstructor::ConstructFramesFromItemList(nsFrameConstructorState& aSta
 
   for (FCItemIterator iter(aItems); !iter.IsDone(); iter.Next()) {
     nsresult rv = ConstructFramesFromItem(aState, iter, aParentFrame, aFrameItems);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      NS_RUNTIMEABORT("Frame construction failure");
+    }
   }
 
   NS_ASSERTION(!aState.mHavePendingPopupgroup,
                "Should have proccessed it by now");
-
-  return NS_OK;
 }
 
 nsresult
@@ -10045,9 +10045,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
     ClearLazyBits(aContent->GetFirstChild(), nullptr);
   }
 
-  rv = ConstructFramesFromItemList(aState, itemsToConstruct, aFrame,
-                                   aFrameItems);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ConstructFramesFromItemList(aState, itemsToConstruct, aFrame, aFrameItems);
 
   NS_ASSERTION(!aAllowBlockStyles || !aFrame->IsBoxFrame(),
                "can't be both block and box");
@@ -11149,16 +11147,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
 
   // Process the child content
   nsFrameItems childItems;
-  nsresult rv = ConstructFramesFromItemList(aState, aItem.mChildItems, newFrame,
-                                            childItems);
-  if (NS_FAILED(rv)) {
-    // Clean up.
-    // Link up any successfully-created child frames here, so that we'll
-    // clean them up as well.
-    newFrame->SetInitialChildList(kPrincipalList, childItems);
-    newFrame->Destroy();
-    return rv;
-  }
+  ConstructFramesFromItemList(aState, aItem.mChildItems, newFrame, childItems);
 
   nsFrameList::FrameLinkEnumerator firstBlockEnumerator(childItems);
   if (!aItem.mIsAllInline) {
@@ -11173,11 +11162,9 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
     // constructed).  Just put all the kids into the single inline frame and
     // bail.
     newFrame->SetInitialChildList(kPrincipalList, childItems);
-    if (NS_SUCCEEDED(rv)) {
-      aState.AddChild(newFrame, aFrameItems, content, styleContext, aParentFrame);
-      *aNewFrame = newFrame;
-    }
-    return rv;
+    aState.AddChild(newFrame, aFrameItems, content, styleContext, aParentFrame);
+    *aNewFrame = newFrame;
+    return NS_OK;
   }
 
   // This inline frame contains several types of children. Therefore this frame
