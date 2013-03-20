@@ -21,7 +21,7 @@
 #include "nsIDocument.h"
 #include "nsIXMLContentSink.h"
 #include "nsContentCID.h"
-#include "nsXMLDocument.h"
+#include "mozilla/dom/XMLDocument.h"
 #include "nsXBLService.h"
 #include "nsXBLBinding.h"
 #include "nsXBLInsertionPoint.h"

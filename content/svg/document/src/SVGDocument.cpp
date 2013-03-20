@@ -35,10 +35,10 @@ NS_INTERFACE_TABLE_HEAD(SVGDocument)
                                 nsIDOMSVGDocument)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGDocument)
-NS_INTERFACE_MAP_END_INHERITING(nsXMLDocument)
+NS_INTERFACE_MAP_END_INHERITING(XMLDocument)
 
-NS_IMPL_ADDREF_INHERITED(SVGDocument, nsXMLDocument)
-NS_IMPL_RELEASE_INHERITED(SVGDocument, nsXMLDocument)
+NS_IMPL_ADDREF_INHERITED(SVGDocument, XMLDocument)
+NS_IMPL_RELEASE_INHERITED(SVGDocument, XMLDocument)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGDocument methods:

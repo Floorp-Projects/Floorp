@@ -196,7 +196,7 @@ nsRefMapEntry::RemoveElement(Element* aElement)
     // don't bother initializing members to 0.
 
 nsXULDocument::nsXULDocument(void)
-    : nsXMLDocument("application/vnd.mozilla.xul+xml"),
+    : XMLDocument("application/vnd.mozilla.xul+xml"),
       mDocLWTheme(Doc_Theme_Uninitialized),
       mState(eState_Master),
       mResolutionPhase(nsForwardReference::eStart)
@@ -307,7 +307,7 @@ TraverseObservers(nsIURI* aKey, nsIObserver* aData, void* aContext)
     return PL_DHASH_NEXT;
 }
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULDocument, nsXMLDocument)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULDocument, XMLDocument)
     NS_ASSERTION(!nsCCUncollectableMarker::InGeneration(cb, tmp->GetMarkedCCGeneration()),
                  "Shouldn't traverse nsXULDocument!");
     // XXX tmp->mForwardReferences?
@@ -336,7 +336,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULDocument, nsXMLDocument)
         tmp->mPendingOverlayLoadNotifications.EnumerateRead(TraverseObservers, &cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXULDocument, nsXMLDocument)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXULDocument, XMLDocument)
     delete tmp->mTemplateBuilderTable;
     tmp->mTemplateBuilderTable = nullptr;
 
@@ -344,8 +344,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXULDocument, nsXMLDocument)
     //XXX We should probably unlink all the objects we traverse.
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_ADDREF_INHERITED(nsXULDocument, nsXMLDocument)
-NS_IMPL_RELEASE_INHERITED(nsXULDocument, nsXMLDocument)
+NS_IMPL_ADDREF_INHERITED(nsXULDocument, XMLDocument)
+NS_IMPL_RELEASE_INHERITED(nsXULDocument, XMLDocument)
 
 
 DOMCI_NODE_DATA(XULDocument, nsXULDocument)
@@ -360,7 +360,7 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsXULDocument)
     NS_OFFSET_AND_INTERFACE_TABLE_END
     NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
     NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XULDocument)
-NS_INTERFACE_MAP_END_INHERITING(nsXMLDocument)
+NS_INTERFACE_MAP_END_INHERITING(XMLDocument)
 
 
 //----------------------------------------------------------------------
@@ -1882,7 +1882,7 @@ nsXULDocument::Init()
 {
     mRefMap.Init();
 
-    nsresult rv = nsXMLDocument::Init();
+    nsresult rv = XMLDocument::Init();
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Create our command dispatcher and hook it up.
@@ -3256,7 +3256,7 @@ nsXULDocument::MaybeBroadcast()
 void
 nsXULDocument::EndUpdate(nsUpdateType aUpdateType)
 {
-    nsXMLDocument::EndUpdate(aUpdateType);
+    XMLDocument::EndUpdate(aUpdateType);
 
     MaybeBroadcast();
 }
