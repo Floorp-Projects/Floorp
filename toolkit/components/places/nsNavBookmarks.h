@@ -111,10 +111,6 @@ public:
    */
   nsresult Init();
 
-  static nsNavBookmarks* GetBookmarksServiceIfAvailable() {
-    return gBookmarksService;
-  }
-
   static nsNavBookmarks* GetBookmarksService() {
     if (!gBookmarksService) {
       nsCOMPtr<nsINavBookmarksService> serv =
