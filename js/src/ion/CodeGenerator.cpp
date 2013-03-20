@@ -4484,7 +4484,7 @@ CodeGenerator::link()
     JSContext *cx = GetIonContext()->cx;
 
     Linker linker(masm);
-    IonCode *code = linker.newCode(cx);
+    IonCode *code = linker.newCode(cx, JSC::ION_CODE);
     if (!code)
         return false;
 

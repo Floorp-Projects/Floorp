@@ -965,17 +965,20 @@ selfhosting_srcs := \
 selfhosted_out_h_deps := \
   $(selfhosting_srcs) \
   $(srcdir)/js.msg \
-  $(srcdir)/builtin/macros.py \
-  $(srcdir)/builtin/js2c.py \
-  $(srcdir)/builtin/embedjs.py
+  $(srcdir)/builtin/embedjs.py \
+  $(NULL)
 
 ifeq ($(MOZ_DEBUG),1)
-selfhosting_embed_flags += -d
+selfhosting_defines += -DDEBUG
+endif
+
+ifneq (,$(MOZ_ZLIB_LIBS)$(MOZ_GLUE_LDFLAGS))
+selfhosting_defines += -DUSE_ZLIB
 endif
 
 selfhosted.out.h: $(selfhosted_out_h_deps)
-	$(PYTHON) $(srcdir)/builtin/embedjs.py $(selfhosting_embed_flags) $@ \
-	  $(srcdir)/js.msg $(srcdir)/builtin/macros.py $(selfhosting_srcs)
+	$(PYTHON) $(srcdir)/builtin/embedjs.py $(selfhosting_defines) \
+	  -p '$(CPP)' -m $(srcdir)/js.msg -o $@ $(selfhosting_srcs)
 
 ###############################################
 # BEGIN kludges for the Nitro assembler

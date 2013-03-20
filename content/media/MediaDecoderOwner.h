@@ -109,11 +109,6 @@ public:
   // ongoing.
   virtual void DownloadResumed(bool aForceNetworkLoading = false) = 0;
 
-  // Notify that enough data has arrived to start autoplaying.
-  // If the element is 'autoplay' and is ready to play back (not paused,
-  // autoplay pref enabled, etc), it should start playing back.
-  virtual void NotifyAutoplayDataReady() = 0;
-
   // Called by the media decoder to indicate whether the media cache has
   // suspended the channel.
   virtual void NotifySuspendedByCache(bool aIsSuspended) = 0;
