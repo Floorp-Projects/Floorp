@@ -316,12 +316,8 @@ nsFirstLetterFrame::CreateContinuationForFloatingParent(nsPresContext* aPresCont
     presShell->FrameManager()->GetPlaceholderFrameFor(this);
   nsIFrame* parent = placeholderFrame->GetParent();
 
-  nsIFrame* continuation;
-  rv = presShell->FrameConstructor()->
-    CreateContinuingFrame(aPresContext, aChild, parent, &continuation, aIsFluid);
-  if (NS_FAILED(rv) || !continuation) {
-    return rv;
-  }
+  nsIFrame* continuation = presShell->FrameConstructor()->
+    CreateContinuingFrame(aPresContext, aChild, parent, aIsFluid);
 
   // The continuation will have gotten the first letter style from it's
   // prev continuation, so we need to repair the style context so it

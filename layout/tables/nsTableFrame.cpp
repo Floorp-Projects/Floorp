@@ -2916,12 +2916,8 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
         if (!kidNextInFlow) {
           // The child doesn't have a next-in-flow so create a continuing
           // frame. This hooks the child into the flow
-          rv = presContext->PresShell()->FrameConstructor()->
-            CreateContinuingFrame(presContext, kidFrame, this, &kidNextInFlow);
-          if (NS_FAILED(rv)) {
-            aStatus = NS_FRAME_COMPLETE;
-            break;
-          }
+          kidNextInFlow = presContext->PresShell()->FrameConstructor()->
+            CreateContinuingFrame(presContext, kidFrame, this);
 
           // Insert the kid's new next-in-flow into our sibling list...
           mFrames.InsertFrame(nullptr, kidFrame, kidNextInFlow);
