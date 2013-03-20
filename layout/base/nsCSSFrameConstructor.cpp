@@ -2464,14 +2464,14 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
         return NS_ERROR_OUT_OF_MEMORY;
       nsFrameItems frameItems;
       // Use a null PendingBinding, since our binding is not in fact pending.
-      rv = ConstructBlock(state, display, aDocElement,
-                          state.GetGeometricParent(display,
-                                                   mDocElementContainingBlock),
-                          mDocElementContainingBlock, styleContext,
-                          &contentFrame, frameItems,
-                          display->IsPositioned(contentFrame), nullptr);
-      if (NS_FAILED(rv) || frameItems.IsEmpty())
-        return rv;
+      ConstructBlock(state, display, aDocElement,
+                     state.GetGeometricParent(display,
+                                              mDocElementContainingBlock),
+                     mDocElementContainingBlock, styleContext,
+                     &contentFrame, frameItems,
+                     display->IsPositioned(contentFrame), nullptr);
+      if (frameItems.IsEmpty())
+        return NS_OK;
       *aNewFrame = frameItems.FirstChild();
       NS_ASSERTION(frameItems.OnlyChild(), "multiple root element frames");
     }
@@ -4409,23 +4409,18 @@ nsCSSFrameConstructor::ConstructScrollableBlock(nsFrameConstructorState& aState,
     NS_NewBlockFormattingContext(mPresShell, styleContext);
 
   nsFrameItems blockItem;
-  nsresult rv = ConstructBlock(aState,
-                               scrolledContentStyle->StyleDisplay(), content,
-                               *aNewFrame, *aNewFrame, scrolledContentStyle,
-                               &scrolledFrame, blockItem,
-                               aDisplay->IsPositioned(scrolledFrame),
-                               aItem.mPendingBinding);
-  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
-    // XXXbz any cleanup needed here?
-    return rv;
-  }
+  ConstructBlock(aState, scrolledContentStyle->StyleDisplay(), content,
+                 *aNewFrame, *aNewFrame, scrolledContentStyle,
+                 &scrolledFrame, blockItem,
+                 aDisplay->IsPositioned(scrolledFrame),
+                 aItem.mPendingBinding);
 
   NS_ASSERTION(blockItem.FirstChild() == scrolledFrame,
                "Scrollframe's frameItems should be exactly the scrolled frame");
   FinishBuildingScrollFrame(*aNewFrame, scrolledFrame);
 
   aState.AddChild(*aNewFrame, aFrameItems, content, styleContext, aParentFrame);
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -4457,11 +4452,12 @@ nsCSSFrameConstructor::ConstructNonScrollableBlock(nsFrameConstructorState& aSta
     *aNewFrame = NS_NewBlockFrame(mPresShell, styleContext);
   }
 
-  return ConstructBlock(aState, aDisplay, aItem.mContent,
-                        aState.GetGeometricParent(aDisplay, aParentFrame),
-                        aParentFrame, styleContext, aNewFrame,
-                        aFrameItems, aDisplay->IsPositioned(*aNewFrame),
-                        aItem.mPendingBinding);
+  ConstructBlock(aState, aDisplay, aItem.mContent,
+                 aState.GetGeometricParent(aDisplay, aParentFrame),
+                 aParentFrame, styleContext, aNewFrame,
+                 aFrameItems, aDisplay->IsPositioned(*aNewFrame),
+                 aItem.mPendingBinding);
+  return NS_OK;
 }
 
 
@@ -10958,7 +10954,7 @@ nsCSSFrameConstructor::CreateListBoxContent(nsPresContext* aPresContext,
 
 //----------------------------------------
 
-nsresult
+void
 nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
                                       const nsStyleDisplay*    aDisplay,
                                       nsIContent*              aContent,
@@ -11024,8 +11020,6 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
 
   // Set the frame's initial child list
   blockFrame->SetInitialChildList(kPrincipalList, childItems);
-
-  return NS_OK;
 }
 
 nsresult
