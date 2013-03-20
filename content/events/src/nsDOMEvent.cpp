@@ -559,6 +559,8 @@ nsDOMEvent::InitEvent(const nsAString& aEventTypeArg, bool aCanBubbleArg, bool a
   mEvent->mFlags.mBubbles = aCanBubbleArg;
   mEvent->mFlags.mCancelable = aCancelableArg;
 
+  mEvent->mFlags.mDefaultPrevented = false;
+
   // Clearing the old targets, so that the event is targeted correctly when
   // re-dispatching it.
   mEvent->target = nullptr;
