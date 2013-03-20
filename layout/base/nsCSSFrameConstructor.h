@@ -1763,18 +1763,18 @@ private:
   // aFrameItems.  In both cases, the kids are reparented to the line frame.
   // After this call, aFrameItems holds the frames that need to become kids of
   // the block (possibly including line frames).
-  nsresult WrapFramesInFirstLineFrame(nsFrameConstructorState& aState,
-                                      nsIContent*              aBlockContent,
-                                      nsIFrame*                aBlockFrame,
-                                      nsIFrame*                aLineFrame,
-                                      nsFrameItems&            aFrameItems);
+  void WrapFramesInFirstLineFrame(nsFrameConstructorState& aState,
+                                  nsIContent*              aBlockContent,
+                                  nsIFrame*                aBlockFrame,
+                                  nsIFrame*                aLineFrame,
+                                  nsFrameItems&            aFrameItems);
 
   // Handle the case when a block with first-line style is appended to (by
   // possibly calling WrapFramesInFirstLineFrame as needed).
-  nsresult AppendFirstLineFrames(nsFrameConstructorState& aState,
-                                 nsIContent*              aContent,
-                                 nsIFrame*                aBlockFrame,
-                                 nsFrameItems&            aFrameItems);
+  void AppendFirstLineFrames(nsFrameConstructorState& aState,
+                             nsIContent*              aContent,
+                             nsIFrame*                aBlockFrame,
+                             nsFrameItems&            aFrameItems);
 
   nsresult InsertFirstLineFrames(nsFrameConstructorState& aState,
                                  nsIContent*              aContent,
