@@ -27,6 +27,6 @@
 
 <!ENTITY sync.pair.title            "Pair a Device">
 <!ENTITY sync.pair.button           "Pair a device">
-<!ENTITY sync.pair.description2     "To activate your new device, select &#x0022;Set up sync&#x0022; on the device.">
+<!ENTITY sync.pair.description      "To activate your new device, select &#x0022;Set up Sync&#x0022; on the device.">
 <!ENTITY sync.setup.close           "Close">
 <!ENTITY sync.setup.waitingdownload "Your data is now being downloaded in the background. You can close this window at any time.">
