@@ -607,6 +607,8 @@ class CallInfo
         if (callInfo.hasTypeInfo())
             setTypeInfo(callInfo.types(), callInfo.barrier());
 
+        argsBarriers_ = callInfo.argsBarriers_;
+
         return true;
     }
 
