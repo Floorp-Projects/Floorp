@@ -12,6 +12,11 @@ import re
 import fnmatch
 import subprocess
 import sys
+from mozpack.executables import (
+    get_type,
+    ELF,
+    MACHO,
+)
 
 TOOLCHAIN_PREFIX = ''
 
@@ -112,13 +117,15 @@ def main():
         global TOOLCHAIN_PREFIX
         TOOLCHAIN_PREFIX = options.toolchain_prefix
     lib = args[0]
-    ext = os.path.splitext(lib)[1]
-    if ext == '.dll':
-        func = dependentlibs_dumpbin
-    elif ext == '.so' or fnmatch.fnmatch(lib, '*.so.*'):
+    binary_type = get_type(lib)
+    if binary_type == ELF:
         func = dependentlibs_readelf
-    elif ext == '.dylib':
+    elif binary_type == MACHO:
         func = dependentlibs_otool
+    else:
+        ext = os.path.splitext(lib)[1]
+        assert(ext == '.dll')
+        func = dependentlibs_dumpbin
     if not options.libpaths:
         options.libpaths = [os.path.dirname(lib)]
 
