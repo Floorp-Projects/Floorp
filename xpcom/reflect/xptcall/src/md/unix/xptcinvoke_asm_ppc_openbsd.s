@@ -21,15 +21,15 @@
 
 	.section ".text"
 	.align 2
-	.globl NS_InvokeByIndex_P
-	.type  NS_InvokeByIndex_P,@function
+	.globl NS_InvokeByIndex
+	.type  NS_InvokeByIndex,@function
 
 //
-// NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
+// NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
 //                    uint32_t paramCount, nsXPTCVariant* params)
 //
 
-NS_InvokeByIndex_P:
+NS_InvokeByIndex:
 	stwu	sp,-32(sp)			// setup standard stack frame
 	mflr	r0				// save LR
 	stw	r3,8(sp)			// r3 <= that

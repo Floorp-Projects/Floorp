@@ -25,24 +25,24 @@
 
 
         .rename H.10.NO_SYMBOL{PR},""
-        .rename H.18.NS_InvokeByIndex_P{TC},"NS_InvokeByIndex_P"
+        .rename H.18.NS_InvokeByIndex{TC},"NS_InvokeByIndex"
 
 
 # .text section
 
         .csect  H.10.NO_SYMBOL{PR}
-        .globl  .NS_InvokeByIndex_P
-        .globl  NS_InvokeByIndex_P{DS}
+        .globl  .NS_InvokeByIndex
+        .globl  NS_InvokeByIndex{DS}
         .extern .invoke_copy_to_stack
         .extern ._ptrgl{PR}
 
 
 #
-#   NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
+#   NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
 #                   uint32_t paramCount, nsXPTCVariant* params)
 #
 
-.NS_InvokeByIndex_P:
+.NS_InvokeByIndex:
 		mflr	r0
 		stw	r31,-4(sp)
 #
@@ -117,13 +117,13 @@
 # .data section
 
         .toc                            # 0x00000038
-T.18.NS_InvokeByIndex_P:
-        .tc     H.18.NS_InvokeByIndex_P{TC},NS_InvokeByIndex_P{DS}
+T.18.NS_InvokeByIndex:
+        .tc     H.18.NS_InvokeByIndex{TC},NS_InvokeByIndex{DS}
 
-        .csect  NS_InvokeByIndex_P{DS}
-        .long   .NS_InvokeByIndex_P     # "\0\0\0\0"
+        .csect  NS_InvokeByIndex{DS}
+        .long   .NS_InvokeByIndex     # "\0\0\0\0"
         .long   TOC{TC0}                # "\0\0\0008"
         .long   0x00000000              # "\0\0\0\0"
-# End   csect   NS_InvokeByIndex_P{DS}
+# End   csect   NS_InvokeByIndex{DS}
 
 # .bss section	

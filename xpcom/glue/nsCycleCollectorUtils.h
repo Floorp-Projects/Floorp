@@ -9,7 +9,6 @@
 #include "mozilla/threads/nsThreadIDs.h"
 
 #if defined(MOZILLA_INTERNAL_API)
-#define NS_IsCycleCollectorThread NS_IsCycleCollectorThread_P
 #if defined(XP_WIN)
 bool NS_IsCycleCollectorThread();
 #elif defined(NS_TLS)
