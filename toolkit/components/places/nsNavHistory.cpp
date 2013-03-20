@@ -397,61 +397,20 @@ nsNavHistory::GetOrCreateIdForPage(nsIURI* aURI,
   nsresult rv = GetIdForPage(aURI, _pageId, _GUID);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (*_pageId == 0) {
-    // Create a new hidden, untyped and unvisited entry.
-    nsAutoString voidString;
-    voidString.SetIsVoid(true);
-    rv = InternalAddNewPage(aURI, voidString, true, false, 0, true,
-                            _pageId, _GUID);
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (*_pageId != 0) {
+    return NS_OK;
   }
 
-  return NS_OK;
-}
-
-// nsNavHistory::InternalAddNewPage
-//
-//    Adds a new page to the DB.
-//    THIS SHOULD BE THE ONLY PLACE NEW moz_places ROWS ARE
-//    CREATED. This allows us to maintain better consistency.
-//
-//    XXX this functionality is being moved to History.cpp, so
-//    in fact there *are* two places where new pages are added.
-//
-//    If non-null, the new page ID will be placed into aPageID.
-
-nsresult
-nsNavHistory::InternalAddNewPage(nsIURI* aURI,
-                                 const nsAString& aTitle,
-                                 bool aHidden,
-                                 bool aTyped,
-                                 int32_t aVisitCount,
-                                 bool aCalculateFrecency,
-                                 int64_t* aPageID,
-                                 nsACString& guid)
-{
+  // Create a new hidden, untyped and unvisited entry.
   nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-    "INSERT OR IGNORE INTO moz_places "
-      "(url, title, rev_host, hidden, typed, frecency, guid) "
-    "VALUES (:page_url, :page_title, :rev_host, :hidden, :typed, :frecency, "
-             "GENERATE_GUID()) "
+    "INSERT OR IGNORE INTO moz_places (url, rev_host, hidden, frecency, guid) "
+    "VALUES (:page_url, :rev_host, :hidden, :frecency, GENERATE_GUID()) "
   );
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
 
-  nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aURI);
+  rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aURI);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (aTitle.IsVoid()) {
-    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("page_title"));
-  }
-  else {
-    rv = stmt->BindStringByName(
-      NS_LITERAL_CSTRING("page_title"), StringHead(aTitle, TITLE_LENGTH_MAX)
-    );
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // host (reversed with trailing period)
   nsAutoString revHost;
   rv = GetReversedHostname(aURI, revHost);
@@ -462,10 +421,7 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI,
     rv = stmt->BindNullByName(NS_LITERAL_CSTRING("rev_host"));
   }
   NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("hidden"), aHidden);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("typed"), aTyped);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("hidden"), 1);
   NS_ENSURE_SUCCESS(rv, rv);
   nsAutoCString spec;
   rv = aURI->GetSpec(spec);
@@ -477,12 +433,9 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI,
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  int64_t pageId = 0;
   {
     nsCOMPtr<mozIStorageStatement> getIdStmt = mDB->GetStatement(
-      "SELECT id, url, title, rev_host, visit_count, guid "
-      "FROM moz_places "
-      "WHERE url = :page_url "
+      "SELECT id, guid FROM moz_places WHERE url = :page_url "
     );
     NS_ENSURE_STATE(getIdStmt);
     mozStorageStatementScoper getIdScoper(getIdStmt);
@@ -494,127 +447,12 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI,
     rv = getIdStmt->ExecuteStep(&hasResult);
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ASSERTION(hasResult, "hasResult is false but the call succeeded?");
-    pageId = getIdStmt->AsInt64(0);
-    rv = getIdStmt->GetUTF8String(5, guid);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  if (aCalculateFrecency) {
-    rv = UpdateFrecency(pageId);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // If the caller wants the page ID, return it.
-  if (aPageID) {
-    *aPageID = pageId;
-  }
-
-  return NS_OK;
-}
-
-// nsNavHistory::InternalAddVisit
-//
-//    Just a wrapper for inserting a new visit in the DB.
-
-nsresult
-nsNavHistory::InternalAddVisit(int64_t aPageID, int64_t aReferringVisit,
-                               int64_t aSessionID, PRTime aTime,
-                               int32_t aTransitionType, int64_t* visitID)
-{
-  nsresult rv;
-
-  {
-    nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-      "INSERT INTO moz_historyvisits "
-        "(from_visit, place_id, visit_date, visit_type, session) "
-      "VALUES (:from_visit, :page_id, :visit_date, :visit_type, :session) "
-    );
-    NS_ENSURE_STATE(stmt);
-    mozStorageStatementScoper scoper (stmt);
-  
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("from_visit"), aReferringVisit);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), aPageID);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("visit_date"), aTime);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("visit_type"), aTransitionType);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("session"), aSessionID);
-    NS_ENSURE_SUCCESS(rv, rv);
-  
-    rv = stmt->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  {
-    nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-      "SELECT id FROM moz_historyvisits "
-      "WHERE place_id = :page_id "
-        "AND visit_date = :visit_date "
-        "AND session = :session "
-    );
-    NS_ENSURE_STATE(stmt);
-    mozStorageStatementScoper scoper(stmt);
-
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), aPageID);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("visit_date"), aTime);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("session"), aSessionID);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    bool hasResult;
-    rv = stmt->ExecuteStep(&hasResult);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ASSERTION(hasResult, "hasResult is false but the call succeeded?");
-
-    rv = stmt->GetInt64(0, visitID);
+    *_pageId = getIdStmt->AsInt64(0);
+    rv = getIdStmt->GetUTF8String(1, _GUID);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;
-}
-
-
-// nsNavHistory::FindLastVisit
-//
-//    This finds the most recent visit to the given URL. If found, it will put
-//    that visit's ID and session into the respective out parameters and return
-//    true. Returns false if no visit is found.
-//
-//    This is used to compute the referring visit.
-
-bool
-nsNavHistory::FindLastVisit(nsIURI* aURI,
-                            int64_t* aVisitID,
-                            PRTime* aTime,
-                            int64_t* aSessionID)
-{
-  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-    "SELECT id, session, visit_date "
-    "FROM moz_historyvisits "
-    "WHERE place_id = (SELECT id FROM moz_places WHERE url = :page_url) "
-    "ORDER BY visit_date DESC "
-  );
-  NS_ENSURE_TRUE(stmt, false);
-  mozStorageStatementScoper scoper(stmt);
-  nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aURI);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  bool hasMore;
-  rv = stmt->ExecuteStep(&hasMore);
-  NS_ENSURE_SUCCESS(rv, false);
-  if (hasMore) {
-    rv = stmt->GetInt64(0, aVisitID);
-    NS_ENSURE_SUCCESS(rv, false);
-    rv = stmt->GetInt64(1, aSessionID);
-    NS_ENSURE_SUCCESS(rv, false);
-    rv = stmt->GetInt64(2, reinterpret_cast<int64_t*>(aTime));
-    NS_ENSURE_SUCCESS(rv, false);
-    return true;
-  }
-  return false;
 }
 
 
@@ -1243,194 +1081,6 @@ nsNavHistory::CanAddURI(nsIURI* aURI, bool* canAdd)
   *canAdd = true;
   return NS_OK;
 }
-
-// nsNavHistory::AddVisit
-//
-//    Adds or updates a page with the given URI. The ID of the new visit will
-//    be put into aVisitID.
-//
-//    THE RETURNED NEW VISIT ID MAY BE 0 indicating that this page should not be
-//    added to the history.
-
-NS_IMETHODIMP
-nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
-                       int32_t aTransitionType, bool aIsRedirect,
-                       int64_t aSessionID, int64_t* aVisitID)
-{
-  PLACES_WARN_DEPRECATED();
-  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
-  NS_ENSURE_ARG(aURI);
-  NS_ENSURE_ARG_POINTER(aVisitID);
-
-  // Filter out unwanted URIs, silently failing
-  bool canAdd = false;
-  nsresult rv = CanAddURI(aURI, &canAdd);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!canAdd) {
-    *aVisitID = 0;
-    return NS_OK;
-  }
-
-  // Embed visits are not added to database, but registered in a  session cache.
-  // For the above reason they don't have a visit id.
-  if (aTransitionType == TRANSITION_EMBED) {
-    registerEmbedVisit(aURI, GetNow());
-    *aVisitID = 0;
-    return NS_OK;
-  }
-
-  // This will prevent corruption since we have to do a two-phase add.
-  // Generally this won't do anything because AddURI has its own transaction.
-  mozStorageTransaction transaction(mDB->MainConn(), false);
-
-  // see if this is an update (revisit) or a new page
-  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-    "SELECT id, visit_count, typed, hidden, guid "
-    "FROM moz_places "
-    "WHERE url = :page_url "
-  );
-  NS_ENSURE_STATE(stmt);
-  mozStorageStatementScoper scoper(stmt);
-
-  rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-  bool alreadyVisited = false;
-  rv = stmt->ExecuteStep(&alreadyVisited);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoCString guid;
-  int64_t pageID = 0;
-  int32_t hidden;
-  int32_t typed;
-  bool newItem = false; // used to send out notifications at the end
-  if (alreadyVisited) {
-    // Update the existing entry...
-    rv = stmt->GetInt64(0, &pageID);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    int32_t oldVisitCount = 0;
-    rv = stmt->GetInt32(1, &oldVisitCount);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    int32_t oldTypedState = 0;
-    rv = stmt->GetInt32(2, &oldTypedState);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    int32_t oldHiddenState = 0;
-    rv = stmt->GetInt32(3, &oldHiddenState);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = stmt->GetUTF8String(4, guid);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // free the previous statement before we make a new one
-    stmt->Reset();
-    scoper.Abandon();
-
-    // Note that we want to unhide any hidden pages that the user explicitly
-    // types (aTransitionType == TRANSITION_TYPED) so that they will appear in
-    // the history UI (sidebar, history menu, url bar autocomplete, etc).
-    // Additionally, we don't want to hide any pages that are already unhidden.
-    hidden = oldHiddenState;
-    if (hidden == 1 &&
-        (!GetHiddenState(aIsRedirect, aTransitionType) ||
-         aTransitionType == TRANSITION_TYPED)) {
-      hidden = 0; // unhide
-    }
-
-    typed = (int32_t)(oldTypedState == 1 || (aTransitionType == TRANSITION_TYPED));
-
-    // some items may have a visit count of 0 which will not count for link
-    // visiting, so be sure to note this transition
-    if (oldVisitCount == 0)
-      newItem = true;
-
-    // update with new stats
-    nsCOMPtr<mozIStorageStatement> updateStmt = mDB->GetStatement(
-      "UPDATE moz_places "
-      "SET hidden = :hidden, typed = :typed "
-      "WHERE id = :page_id "
-    );
-    NS_ENSURE_STATE(updateStmt);
-    mozStorageStatementScoper upsateScoper(updateStmt);
-
-    rv = updateStmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), pageID);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = updateStmt->BindInt32ByName(NS_LITERAL_CSTRING("hidden"), hidden);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = updateStmt->BindInt32ByName(NS_LITERAL_CSTRING("typed"), typed);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = updateStmt->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    // New page
-    newItem = true;
-
-    // free the previous statement before we make a new one
-    stmt->Reset();
-    scoper.Abandon();
-
-    // Hide only embedded links and redirects
-    hidden = (int32_t)GetHiddenState(aIsRedirect, aTransitionType);
-    typed = (int32_t)(aTransitionType == TRANSITION_TYPED);
-
-    // set as visited once, no title
-    nsString voidString;
-    voidString.SetIsVoid(true);
-    rv = InternalAddNewPage(aURI, voidString, hidden == 1, typed == 1, 1,
-                            true, &pageID, guid);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // Get the visit id for the referrer, if it exists.
-  int64_t referringVisitID = 0;
-  int64_t referringSessionID;
-  PRTime referringTime;
-  bool referrerIsSame;
-  if (aReferringURI &&
-      NS_SUCCEEDED(aReferringURI->Equals(aURI, &referrerIsSame)) &&
-      !referrerIsSame &&
-      !FindLastVisit(aReferringURI, &referringVisitID, &referringTime, &referringSessionID)) {
-    // The referrer is not in the database and is not the same as aURI, so it
-    // must be added.
-    rv = AddVisit(aReferringURI, aTime - 1, nullptr, TRANSITION_LINK, false,
-                  aSessionID, &referringVisitID);
-    if (NS_FAILED(rv))
-      referringVisitID = 0;
-  }
-
-  rv = InternalAddVisit(pageID, referringVisitID, aSessionID, aTime,
-                        aTransitionType, aVisitID);
-  transaction.Commit();
-
-  // Update frecency (*after* the visit info is in the db)
-  // Swallow errors here, since if we've gotten this far, it's more
-  // important to notify the observers below.
-  (void)UpdateFrecency(pageID);
-
-  // Notify the visit.  Note that TRANSITION_EMBED visits are never added
-  // to the database, thus cannot be queried and we don't notify them.
-  NotifyOnVisit(aURI, *aVisitID, aTime, aSessionID, referringVisitID,
-                aTransitionType, guid, hidden);
-
-  // Normally docshell sends the link visited observer notification for us (this
-  // will tell all the documents to update their visited link coloring).
-  // However, for redirects and downloads (since we implement nsIDownloadHistory)
-  // this will not happen and we need to send it ourselves.
-  if (newItem && (aIsRedirect || aTransitionType == TRANSITION_DOWNLOAD)) {
-    nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
-    if (obsService)
-      obsService->NotifyObservers(aURI, NS_LINK_VISITED_EVENT_TOPIC, nullptr);
-  }
-
-  // Because we implement IHistory, we always have to notify about the visit.
-  History::GetService()->NotifyVisited(aURI);
-
-  return NS_OK;
-}
-
 
 // nsNavHistory::GetNewQuery
 
