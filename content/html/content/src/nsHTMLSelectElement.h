@@ -156,6 +156,14 @@ public:
   {
     SetHTMLBoolAttr(nsGkAtoms::multiple, aVal, aRv);
   }
+  uint32_t Size()
+  {
+    return GetHTMLUnsignedIntAttr(nsGkAtoms::size, 0);
+  }
+  void SetSize(uint32_t aSize, mozilla::ErrorResult& aRv)
+  {
+    SetHTMLUnsignedIntAttr(nsGkAtoms::size, aSize, aRv);
+  }
   void GetName(nsString& aName, mozilla::ErrorResult& aRv) const
   {
     GetHTMLAttr(nsGkAtoms::name, aName);
