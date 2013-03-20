@@ -137,6 +137,10 @@ Marker.prototype = {
     this._element.hidden = true;
   },
 
+  get visible() {
+    return this._element.hidden == false;
+  },
+
   position: function position(aX, aY) {
     if (aX < 0) {
       Util.dumpLn("Marker: aX is negative");
@@ -194,6 +198,7 @@ var SelectionHelperUI = {
   _msgTarget: null,
   _startMark: null,
   _endMark: null,
+  _caretMark: null,
   _target: null,
   _movement: { active: false, x:0, y: 0 },
   _activeSelectionRect: null,
@@ -213,6 +218,13 @@ var SelectionHelperUI = {
     return this._endMark;
   },
 
+  get caretMark() {
+    if (this._caretMark == null) {
+      this._caretMark = new Marker(this, "caret", "selectionhandle-caret", 0, 0);
+    }
+    return this._caretMark;
+  },
+
   get overlay() {
     return document.getElementById("selection-overlay");
   },
@@ -227,6 +239,7 @@ var SelectionHelperUI = {
     if (!aContent || this.isActive)
       return;
     this._init(aContent);
+    this._setupDebugOptions();
 
     // Set the track bounds for each marker NIY
     this.startMark.setTrackBounds(aClientX, aClientY);
@@ -240,8 +253,6 @@ var SelectionHelperUI = {
       xPos: aClientX,
       yPos: aClientY
     });
-
-    this._setupDebugOptions();
   },
 
   /*
@@ -253,6 +264,7 @@ var SelectionHelperUI = {
     if (!aContent || this.isActive)
       return;
     this._init(aContent);
+    this._setupDebugOptions();
 
     // Set the track bounds for each marker NIY
     this.startMark.setTrackBounds(aClientX, aClientY);
@@ -266,8 +278,34 @@ var SelectionHelperUI = {
       xPos: aClientX,
       yPos: aClientY
     });
+  },
 
+  /*
+   * attachToCaret
+   * 
+   * Initiates a touch caret selection session for a text input.
+   * Can be called multiple times to move the caret marker around.
+   *
+   * Note the caret marker is pretty limited in functionality. The
+   * only thing is can do is be displayed at the caret position.
+   * Once the user starts a drag, the caret marker is hidden, and
+   * the start and end markers take over. (TBD)
+   *
+   * @param aClientX, aClientY client coordiates of the tap that
+   * initiated the session.
+   */
+  attachToCaret: function attachToCaret(aContent, aClientX, aClientY) {
+    if (!aContent)
+      return;
+    if (!this.isActive)
+      this._init(aContent);
     this._setupDebugOptions();
+
+    this._selectionHandlerActive = false;
+    this._sendAsyncMessage("Browser:CaretAttach", {
+      xPos: aClientX,
+      yPos: aClientY
+    });
   },
 
   /*
@@ -314,7 +352,7 @@ var SelectionHelperUI = {
   },
 
   /*
-   * Internal
+   * Init and shutdown
    */
 
   _init: function _init(aMsgTarget) {
@@ -378,9 +416,12 @@ var SelectionHelperUI = {
       this.startMark.shutdown();
     if (this.endMark != null)
       this.endMark.shutdown();
+    if (this._caretMark != null)
+      this._caretMark.shutdown();
 
     delete this._startMark;
     delete this._endMark;
+    delete this._caretMark;
 
     this._msgTarget = null;
     this._activeSelectionRect = null;
@@ -389,6 +430,10 @@ var SelectionHelperUI = {
     this.overlay.displayDebugLayer = false;
     this.overlay.enabled = false;
   },
+
+  /*
+   * Utilities
+   */
 
   /*
    * _setupDebugOptions
@@ -436,7 +481,8 @@ var SelectionHelperUI = {
   },
 
   _checkForActiveDrag: function _checkForActiveDrag() {
-    return (this.startMark.dragging || this.endMark.dragging);
+    return (this.startMark.dragging || this.endMark.dragging ||
+            this.caretMark.dragging);
   },
 
   _hitTestSelection: function _hitTestSelection(aEvent) {
@@ -448,19 +494,51 @@ var SelectionHelperUI = {
     return false;
   },
 
+  _setCaretPositionAtPoint: function _setCaretPositionAtPoint(aX, aY) {
+    let json = this._getMarkerBaseMessage();
+    json.change = "caret";
+    json.caret.xPos = aX;
+    json.caret.yPos = aY;
+    this._sendAsyncMessage("Browser:CaretUpdate", json);
+  },
+
   /*
    * Event handlers for document events
    */
 
+  /*
+   * _onTap
+   * 
+   * Handles taps that move the current caret around text text
+   * edits. Also will clear active selection if it is present.
+   * Future: changing slection modes by tapping on a monocle.
+   */
   _onTap: function _onTap(aEvent) {
-    // Trap single clicks which if forwarded to content will clear selection.
-    aEvent.stopPropagation();
-    aEvent.preventDefault();
     if (this.startMark.hitTest(aEvent.clientX, aEvent.clientY) ||
         this.endMark.hitTest(aEvent.clientX, aEvent.clientY)) {
-      // NIY
-      // this._sendAsyncMessage("Browser:ChangeMode", {});
+      return;
     }
+
+    // If the tap is within the target element and the caret monocle is
+    // active, update the caret.
+    if (this.caretMark.visible &&
+        Util.pointWithinRect(aEvent.clientX, aEvent.clientY,
+                             this._targetElementRect)) {
+      // Move the caret
+      this._setCaretPositionAtPoint(aEvent.clientX, aEvent.clientY);
+      return;
+    }
+
+    if (this.caretMark.visible) {
+      // shutdown selection
+      this.closeEditSessionAndClear();
+      return;
+    }
+
+    // If we have active selection w/monocles, don't let random taps
+    // kill selection.
+    aEvent.stopPropagation();
+    aEvent.preventDefault();
   },
 
   /*
@@ -498,7 +576,12 @@ var SelectionHelperUI = {
       this.endMark.position(json.end.xPos, json.end.yPos);
       this.endMark.show();
     }
-    this._activeSelectionRect = json.rect;
+    if (json.updateCaret) {
+      this.caretMark.position(json.caret.xPos, json.caret.yPos);
+      this.caretMark.show();
+    }
+    this._activeSelectionRect = json.selection;
+    this._targetElementRect = json.element;
   },
 
   _onSelectionFail: function _onSelectionFail() {
@@ -530,16 +613,8 @@ var SelectionHelperUI = {
    * Events
    */
 
-  _initMouseEventFromEvent: function _initMouseEventFromEvent(aDestEvent, aSrcEvent, aType) {
-    event.initNSMouseEvent(aType, true, true, content, 0,
-                           aSrcEvent.screenX, aSrcEvent.screenY, aSrcEvent.clientX, aSrcEvent.clientY,
-                           false, false, false, false,
-                           aSrcEvent.button, aSrcEvent.relatedTarget, 1.0,
-                           Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH);
-  },
-
   handleEvent: function handleEvent(aEvent) {
-    if (this._debugEvents) {
+    if (this._debugEvents && aEvent.type != "touchmove") {
       Util.dumpLn("SelectionHelperUI:", aEvent.type);
     }
     switch (aEvent.type) {
@@ -632,25 +707,37 @@ var SelectionHelperUI = {
     return {
       start: { xPos: this.startMark.xPos, yPos: this.startMark.yPos },
       end: { xPos: this.endMark.xPos, yPos: this.endMark.yPos },
+      caret: { xPos: this.caretMark.xPos, yPos: this.caretMark.yPos },
     };
   },
 
   markerDragStart: function markerDragStart(aMarker) {
     let json = this._getMarkerBaseMessage();
     json.change = aMarker.tag;
+    if (aMarker.tag == "caret") {
+      this._sendAsyncMessage("Browser:CaretMove", json);
+      return;
+    }
     this._sendAsyncMessage("Browser:SelectionMoveStart", json);
   },
 
   markerDragStop: function markerDragStop(aMarker) {
-    //aMarker.show();
     let json = this._getMarkerBaseMessage();
     json.change = aMarker.tag;
+    if (aMarker.tag == "caret") {
+      this._sendAsyncMessage("Browser:CaretUpdate", json);
+      return;
+    }
     this._sendAsyncMessage("Browser:SelectionMoveEnd", json);
   },
 
   markerDragMove: function markerDragMove(aMarker) {
     let json = this._getMarkerBaseMessage();
     json.change = aMarker.tag;
+    if (aMarker.tag == "caret") {
+      this._sendAsyncMessage("Browser:CaretMove", json);
+      return;
+    }
     this._sendAsyncMessage("Browser:SelectionMove", json);
   },
 };
