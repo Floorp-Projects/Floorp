@@ -3474,7 +3474,7 @@ nsCSSFrameConstructor::FindCanvasData(Element* aElement,
   return &sCanvasData;
 }
 
-nsresult
+void
 nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aItem,
                                                       nsFrameConstructorState& aState,
                                                       nsIFrame* aParentFrame,
@@ -3515,7 +3515,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
   if (aState.mCreatingExtraFrames && aItem.mContent->IsHTML() &&
       aItem.mContent->Tag() == nsGkAtoms::iframe)
   {
-    return NS_OK;
+    return;
   }
 
   nsStyleContext* const styleContext = aItem.mStyleContext;
@@ -3560,8 +3560,6 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
       (allowOutOfFlow ? aState.GetGeometricParent(display, aParentFrame)
                       : aParentFrame);
 
-    nsresult rv = NS_OK;
-
     // Must init frameToAddToList to null, since it's inout
     nsIFrame* frameToAddToList = nullptr;
     if ((bits & FCDATA_MAY_NEED_SCROLLFRAME) &&
@@ -3593,10 +3591,6 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
                                                          styleContext);
       nsIFrame* blockFrame =
         NS_NewBlockFormattingContext(mPresShell, blockContext);
-      if (MOZ_UNLIKELY(!blockFrame)) {
-        primaryFrame->Destroy();
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
 
       InitAndRestoreFrame(aState, content, newFrame, nullptr, blockFrame);
 
@@ -3678,7 +3672,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
     }
 #endif
 
-    if (NS_SUCCEEDED(rv) && (bits & FCDATA_WRAP_KIDS_IN_BLOCKS)) {
+    if (bits & FCDATA_WRAP_KIDS_IN_BLOCKS) {
       nsFrameItems newItems;
       nsFrameItems currentBlockItems;
       nsIFrame* f;
@@ -3727,8 +3721,6 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
        !(bits & FCDATA_SKIP_FRAMESET)) {
     aItem.mContent->SetPrimaryFrame(primaryFrame);
   }
-
-  return NS_OK;
 }
 
 // after the node has been constructed and initialized create any
@@ -4999,9 +4991,7 @@ nsCSSFrameConstructor::ConstructFrame(nsFrameConstructorState& aState,
   for (FCItemIterator iter(items); !iter.IsDone(); iter.Next()) {
     NS_ASSERTION(iter.item().DesiredParentType() == GetParentType(aParentFrame),
                  "This is not going to work");
-    nsresult rv =
-      ConstructFramesFromItem(aState, iter, aParentFrame, aFrameItems);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ConstructFramesFromItem(aState, iter, aParentFrame, aFrameItems);
   }
 
   return NS_OK;
@@ -5437,7 +5427,7 @@ nsCSSFrameConstructor::AtLineBoundary(FCItemIterator& aIter)
   return false;
 }
 
-nsresult
+void
 nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
                                                FCItemIterator& aIter,
                                                nsIFrame* aParentFrame,
@@ -5470,12 +5460,12 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
         (item.mFCData->mBits & FCDATA_IS_LINE_PARTICIPANT) &&
         !(item.mFCData->mBits & FCDATA_IS_SVG_TEXT) &&
         item.IsWhitespace(aState))
-      return NS_OK;
+      return;
 
     ConstructTextFrame(item.mFCData, aState, item.mContent,
                        adjParentFrame, styleContext,
                        aFrameItems);
-    return NS_OK;
+    return;
   }
 
   // Start background loads during frame construction so that we're
@@ -5502,12 +5492,9 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
   }
 
   // XXXbz maybe just inline ConstructFrameFromItemInternal here or something?
-  nsresult rv = ConstructFrameFromItemInternal(item, aState, adjParentFrame,
-                                               aFrameItems);
+  ConstructFrameFromItemInternal(item, aState, adjParentFrame, aFrameItems);
 
   aState.mAdditionalStateBits = savedStateBits;
-
-  return rv;
 }
 
 
@@ -8910,9 +8897,7 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
         NS_ASSERTION(iter.item().DesiredParentType() ==
                        GetParentType(canvasFrame),
                      "This is not going to work");
-        nsresult rv =
-          ConstructFramesFromItem(state, iter, canvasFrame, fixedPlaceholders);
-        NS_ENSURE_SUCCESS(rv, rv);
+        ConstructFramesFromItem(state, iter, canvasFrame, fixedPlaceholders);
       }
     }
   }
@@ -9840,10 +9825,7 @@ nsCSSFrameConstructor::ConstructFramesFromItemList(nsFrameConstructorState& aSta
 #endif
 
   for (FCItemIterator iter(aItems); !iter.IsDone(); iter.Next()) {
-    nsresult rv = ConstructFramesFromItem(aState, iter, aParentFrame, aFrameItems);
-    if (NS_FAILED(rv)) {
-      NS_RUNTIMEABORT("Frame construction failure");
-    }
+    ConstructFramesFromItem(aState, iter, aParentFrame, aFrameItems);
   }
 
   NS_ASSERTION(!aState.mHavePendingPopupgroup,

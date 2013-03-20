@@ -1257,10 +1257,10 @@ private:
      @param aFrameItems the frame list to add the new frame (or its
                         placeholder) to.
   */
-  nsresult ConstructFrameFromItemInternal(FrameConstructionItem& aItem,
-                                          nsFrameConstructorState& aState,
-                                          nsIFrame* aParentFrame,
-                                          nsFrameItems& aFrameItems);
+  void ConstructFrameFromItemInternal(FrameConstructionItem& aItem,
+                                      nsFrameConstructorState& aState,
+                                      nsIFrame* aParentFrame,
+                                      nsFrameItems& aFrameItems);
 
   // possible flags for AddFrameConstructionItemInternal's aFlags argument
   /* Allow xbl:base to affect the tag/namespace used. */
@@ -1295,10 +1295,10 @@ private:
                                    FrameConstructionItemList& aItems,
                                    nsIFrame* aParentFrame,
                                    nsFrameItems& aFrameItems);
-  nsresult ConstructFramesFromItem(nsFrameConstructorState& aState,
-                                   FCItemIterator& aItem,
-                                   nsIFrame* aParentFrame,
-                                   nsFrameItems& aFrameItems);
+  void ConstructFramesFromItem(nsFrameConstructorState& aState,
+                               FCItemIterator& aItem,
+                               nsIFrame* aParentFrame,
+                               nsFrameItems& aFrameItems);
   static bool AtLineBoundary(FCItemIterator& aIter);
 
   nsresult CreateAnonymousFrames(nsFrameConstructorState& aState,
