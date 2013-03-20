@@ -63,7 +63,7 @@ var SettingsListener = {
 SettingsListener.init();
 
 // =================== Audio ====================
-SettingsListener.observe('audio.volume.master', 0.5, function(value) {
+SettingsListener.observe('audio.volume.master', 1.0, function(value) {
   let audioManager = Services.audioManager;
   if (!audioManager)
     return;
