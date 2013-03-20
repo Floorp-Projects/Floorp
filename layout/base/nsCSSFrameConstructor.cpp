@@ -10053,7 +10053,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
                "can't be both block and box");
 
   if (haveFirstLetterStyle) {
-    rv = WrapFramesInFirstLetterFrame(aContent, aFrame, aFrameItems);
+    WrapFramesInFirstLetterFrame(aContent, aFrame, aFrameItems);
   }
   if (haveFirstLineStyle) {
     WrapFramesInFirstLineFrame(aState, aContent, aFrame, nullptr,
@@ -10508,7 +10508,7 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
  * Create a new letter frame for aTextFrame. The letter frame will be
  * a child of aParentFrame.
  */
-nsresult
+void
 nsCSSFrameConstructor::CreateLetterFrame(nsIFrame* aBlockFrame,
                                          nsIFrame* aBlockContinuation,
                                          nsIContent* aTextContent,
@@ -10583,18 +10583,14 @@ nsCSSFrameConstructor::CreateLetterFrame(nsIFrame* aBlockFrame,
     }
     aTextContent->SetPrimaryFrame(textFrame);
   }
-
-  return NS_OK;
 }
 
-nsresult
+void
 nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
   nsIContent*              aBlockContent,
   nsIFrame*                aBlockFrame,
   nsFrameItems&            aBlockFrames)
 {
-  nsresult rv = NS_OK;
-
   aBlockFrame->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_STYLE);
 
   nsIFrame* parentFrame = nullptr;
@@ -10602,13 +10598,10 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
   nsIFrame* prevFrame = nullptr;
   nsFrameItems letterFrames;
   bool stopLooking = false;
-  rv = WrapFramesInFirstLetterFrame(aBlockFrame, aBlockFrame, aBlockFrame,
-                                    aBlockFrames.FirstChild(),
-                                    &parentFrame, &textFrame, &prevFrame,
-                                    letterFrames, &stopLooking);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  WrapFramesInFirstLetterFrame(aBlockFrame, aBlockFrame, aBlockFrame,
+                               aBlockFrames.FirstChild(),
+                               &parentFrame, &textFrame, &prevFrame,
+                               letterFrames, &stopLooking);
   if (parentFrame) {
     if (parentFrame == aBlockFrame) {
       // Take textFrame out of the block's frame list and substitute the
@@ -10624,11 +10617,9 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
       parentFrame->InsertFrames(kPrincipalList, prevFrame, letterFrames);
     }
   }
-
-  return rv;
 }
 
-nsresult
+void
 nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
   nsIFrame*                aBlockFrame,
   nsIFrame*                aBlockContinuation,
@@ -10640,8 +10631,6 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
   nsFrameItems&            aLetterFrames,
   bool*                  aStopLooking)
 {
-  nsresult rv = NS_OK;
-
   nsIFrame* prevFrame = nullptr;
   nsIFrame* frame = aParentFrameList;
 
@@ -10654,18 +10643,15 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
       nsIContent* textContent = frame->GetContent();
       if (IsFirstLetterContent(textContent)) {
         // Create letter frame to wrap up the text
-        rv = CreateLetterFrame(aBlockFrame, aBlockContinuation, textContent,
-                               aParentFrame, aLetterFrames);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
+        CreateLetterFrame(aBlockFrame, aBlockContinuation, textContent,
+                          aParentFrame, aLetterFrames);
 
         // Provide adjustment information for parent
         *aModifiedParent = aParentFrame;
         *aTextFrame = frame;
         *aPrevFrame = prevFrame;
         *aStopLooking = true;
-        return NS_OK;
+        return;
       }
     }
     else if (IsInlineFrame(frame) && frameType != nsGkAtoms::brFrame) {
@@ -10674,7 +10660,7 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
                                    kids, aModifiedParent, aTextFrame,
                                    aPrevFrame, aLetterFrames, aStopLooking);
       if (*aStopLooking) {
-        return NS_OK;
+        return;
       }
     }
     else {
@@ -10691,8 +10677,6 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
     prevFrame = frame;
     frame = nextFrame;
   }
-
-  return rv;
 }
 
 nsresult
@@ -10887,7 +10871,7 @@ nsCSSFrameConstructor::RemoveLetterFrames(nsPresContext* aPresContext,
 }
 
 // Fixup the letter frame situation for the given block
-nsresult
+void
 nsCSSFrameConstructor::RecoverLetterFrames(nsIFrame* aBlockFrame)
 {
   aBlockFrame = aBlockFrame->GetFirstContinuation();
@@ -10898,17 +10882,13 @@ nsCSSFrameConstructor::RecoverLetterFrames(nsIFrame* aBlockFrame)
   nsIFrame* prevFrame = nullptr;
   nsFrameItems letterFrames;
   bool stopLooking = false;
-  nsresult rv;
   do {
     // XXX shouldn't this bit be set already (bug 408493), assert instead?
     continuation->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_STYLE);
-    rv = WrapFramesInFirstLetterFrame(aBlockFrame, continuation, continuation,
-                                      continuation->GetFirstPrincipalChild(),
-                                      &parentFrame, &textFrame, &prevFrame,
-                                      letterFrames, &stopLooking);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+    WrapFramesInFirstLetterFrame(aBlockFrame, continuation, continuation,
+                                 continuation->GetFirstPrincipalChild(),
+                                 &parentFrame, &textFrame, &prevFrame,
+                                 letterFrames, &stopLooking);
     if (stopLooking) {
       break;
     }
@@ -10922,7 +10902,6 @@ nsCSSFrameConstructor::RecoverLetterFrames(nsIFrame* aBlockFrame)
     // Insert in the letter frame(s)
     parentFrame->InsertFrames(kPrincipalList, prevFrame, letterFrames);
   }
-  return rv;
 }
 
 //----------------------------------------------------------------------

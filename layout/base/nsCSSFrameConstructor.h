@@ -1685,15 +1685,15 @@ private:
                                  nsStyleContext*          aStyleContext,
                                  nsFrameItems&            aResult);
 
-  nsresult CreateLetterFrame(nsIFrame*                aBlockFrame,
-                             nsIFrame*                aBlockContinuation,
-                             nsIContent*              aTextContent,
-                             nsIFrame*                aParentFrame,
-                             nsFrameItems&            aResult);
+  void CreateLetterFrame(nsIFrame*                aBlockFrame,
+                         nsIFrame*                aBlockContinuation,
+                         nsIContent*              aTextContent,
+                         nsIFrame*                aParentFrame,
+                         nsFrameItems&            aResult);
 
-  nsresult WrapFramesInFirstLetterFrame(nsIContent*   aBlockContent,
-                                        nsIFrame*     aBlockFrame,
-                                        nsFrameItems& aBlockFrames);
+  void WrapFramesInFirstLetterFrame(nsIContent*   aBlockContent,
+                                    nsIFrame*     aBlockFrame,
+                                    nsFrameItems& aBlockFrames);
 
   /**
    * Looks in the block aBlockFrame for a text frame that contains the
@@ -1717,17 +1717,17 @@ private:
    *                     first-letter either because it was found or won't be
    *                     found
    */
-  nsresult WrapFramesInFirstLetterFrame(nsIFrame*     aBlockFrame,
-                                        nsIFrame*     aBlockContinuation,
-                                        nsIFrame*     aParentFrame,
-                                        nsIFrame*     aParentFrameList,
-                                        nsIFrame**    aModifiedParent,
-                                        nsIFrame**    aTextFrame,
-                                        nsIFrame**    aPrevFrame,
-                                        nsFrameItems& aLetterFrames,
-                                        bool*       aStopLooking);
+  void WrapFramesInFirstLetterFrame(nsIFrame*     aBlockFrame,
+                                    nsIFrame*     aBlockContinuation,
+                                    nsIFrame*     aParentFrame,
+                                    nsIFrame*     aParentFrameList,
+                                    nsIFrame**    aModifiedParent,
+                                    nsIFrame**    aTextFrame,
+                                    nsIFrame**    aPrevFrame,
+                                    nsFrameItems& aLetterFrames,
+                                    bool*       aStopLooking);
 
-  nsresult RecoverLetterFrames(nsIFrame* aBlockFrame);
+  void RecoverLetterFrames(nsIFrame* aBlockFrame);
 
   // 
   nsresult RemoveLetterFrames(nsPresContext*  aPresContext,
