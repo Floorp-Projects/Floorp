@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_DOMSVGANIMATEDTRANSFORMLIST_H__
-#define MOZILLA_DOMSVGANIMATEDTRANSFORMLIST_H__
+#ifndef mozilla_dom_SVGAnimatedTransformList_h
+#define mozilla_dom_SVGAnimatedTransformList_h
 
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
@@ -17,13 +17,15 @@
 namespace mozilla {
 
 class DOMSVGTransformList;
-class SVGAnimatedTransformList;
+class nsSVGAnimatedTransformList;
+
+namespace dom {
 
 /**
- * Class DOMSVGAnimatedTransformList
+ * Class SVGAnimatedTransformList
  *
  * This class is used to create the DOM tearoff objects that wrap internal
- * SVGAnimatedTransformList objects.
+ * nsSVGAnimatedTransformList objects.
  *
  * See the architecture comment in DOMSVGAnimatedLengthList.h (that's
  * LENGTH list). The comment for that class largly applies to this one too
@@ -35,36 +37,35 @@ class SVGAnimatedTransformList;
  * nulling out our pointers to them when they die (making our pointers to them
  * true weak refs).
  */
-class DOMSVGAnimatedTransformList MOZ_FINAL : public nsISupports,
-                                              public nsWrapperCache
+class SVGAnimatedTransformList MOZ_FINAL : public nsWrapperCache
 {
   friend class DOMSVGTransformList;
 
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGAnimatedTransformList)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGAnimatedTransformList)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGAnimatedTransformList)
 
   /**
-   * Factory method to create and return a DOMSVGAnimatedTransformList wrapper
-   * for a given internal SVGAnimatedTransformList object. The factory takes
+   * Factory method to create and return a SVGAnimatedTransformList wrapper
+   * for a given internal nsSVGAnimatedTransformList object. The factory takes
    * care of caching the object that it returns so that the same object can be
-   * returned for the given SVGAnimatedTransformList each time it is requested.
+   * returned for the given nsSVGAnimatedTransformList each time it is requested.
    * The cached object is only removed from the cache when it is destroyed due
    * to there being no more references to it or to any of its descendant
    * objects. If that happens, any subsequent call requesting the DOM wrapper
-   * for the SVGAnimatedTransformList will naturally result in a new
-   * DOMSVGAnimatedTransformList being returned.
+   * for the nsSVGAnimatedTransformList will naturally result in a new
+   * SVGAnimatedTransformList being returned.
    */
-  static already_AddRefed<DOMSVGAnimatedTransformList>
-    GetDOMWrapper(SVGAnimatedTransformList *aList, nsSVGElement *aElement);
+  static already_AddRefed<SVGAnimatedTransformList>
+    GetDOMWrapper(nsSVGAnimatedTransformList *aList, nsSVGElement *aElement);
 
   /**
-   * This method returns the DOMSVGAnimatedTransformList wrapper for an internal
-   * SVGAnimatedTransformList object if it currently has a wrapper. If it does
+   * This method returns the SVGAnimatedTransformList wrapper for an internal
+   * nsSVGAnimatedTransformList object if it currently has a wrapper. If it does
    * not, then nullptr is returned.
    */
-  static DOMSVGAnimatedTransformList*
-    GetDOMWrapperIfExists(SVGAnimatedTransformList *aList);
+  static SVGAnimatedTransformList*
+    GetDOMWrapperIfExists(nsSVGAnimatedTransformList *aList);
 
   /**
    * Called by internal code to notify us when we need to sync the length of
@@ -100,7 +101,7 @@ private:
    * Only our static GetDOMWrapper() factory method may create objects of our
    * type.
    */
-  explicit DOMSVGAnimatedTransformList(nsSVGElement *aElement)
+  explicit SVGAnimatedTransformList(nsSVGElement *aElement)
     : mBaseVal(nullptr)
     , mAnimVal(nullptr)
     , mElement(aElement)
@@ -108,11 +109,11 @@ private:
     SetIsDOMBinding();
   }
 
-  ~DOMSVGAnimatedTransformList();
+  ~SVGAnimatedTransformList();
 
   /// Get a reference to this DOM wrapper object's internal counterpart.
-  SVGAnimatedTransformList& InternalAList();
-  const SVGAnimatedTransformList& InternalAList() const;
+  nsSVGAnimatedTransformList& InternalAList();
+  const nsSVGAnimatedTransformList& InternalAList() const;
 
   // Weak refs to our DOMSVGTransformList baseVal/animVal objects. These objects
   // are friends and take care of clearing these pointers when they die, making
@@ -125,6 +126,7 @@ private:
   nsRefPtr<nsSVGElement> mElement;
 };
 
+} // namespace dom
 } // namespace mozilla
 
-#endif // MOZILLA_DOMSVGANIMATEDTRANSFORMLIST_H__
+#endif // mozilla_dom_SVGAnimatedTransformList_h

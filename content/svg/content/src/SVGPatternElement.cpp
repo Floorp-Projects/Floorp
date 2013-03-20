@@ -10,6 +10,7 @@
 #include "mozilla/dom/SVGAnimatedTransformList.h"
 #include "mozilla/dom/SVGPatternElement.h"
 #include "mozilla/dom/SVGPatternElementBinding.h"
+#include "nsSVGAnimatedTransformList.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Pattern)
 
