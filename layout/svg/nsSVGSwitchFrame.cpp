@@ -80,7 +80,7 @@ nsSVGSwitchFrame::Init(nsIContent* aContent,
                        nsIFrame* aPrevInFlow)
 {
   NS_ASSERTION(aContent->IsSVG(nsGkAtoms::svgSwitch),
-               "Content is not an SVG switch\n");
+               "Content is not an SVG switch");
 
   nsSVGSwitchFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
