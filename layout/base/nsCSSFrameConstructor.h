@@ -1323,11 +1323,11 @@ private:
    * frame whose content is aContent and whose parent will be aParentFrame.
    * The anonymous block is added to aNewItems and aBlockItems is cleared.
    */
-  nsresult FlushAccumulatedBlock(nsFrameConstructorState& aState,
-                                 nsIContent* aContent,
-                                 nsIFrame* aParentFrame,
-                                 nsFrameItems& aBlockItems,
-                                 nsFrameItems& aNewItems);
+  void FlushAccumulatedBlock(nsFrameConstructorState& aState,
+                             nsIContent* aContent,
+                             nsIFrame* aParentFrame,
+                             nsFrameItems& aBlockItems,
+                             nsFrameItems& aNewItems);
 
   // Function to find FrameConstructionData for aContent.  Will return
   // null if aContent is not MathML.
