@@ -14,7 +14,6 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
-Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 
 XPCOMUtils.defineLazyGetter(Services, "DOMRequest", function() {
   return Cc["@mozilla.org/dom/dom-request-service;1"].getService(Ci.nsIDOMRequestService);
@@ -455,8 +454,7 @@ ContactManager.prototype = {
             return contact;
           });
           if (DEBUG) debug("result: " + JSON.stringify(result));
-          Services.DOMRequest.fireSuccess(req.request,
-                                          ObjectWrapper.wrap(result, this._window));
+          Services.DOMRequest.fireSuccess(req.request, result);
         } else {
           if (DEBUG) debug("no request stored!" + msg.requestID);
         }
