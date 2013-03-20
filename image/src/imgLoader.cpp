@@ -2046,6 +2046,7 @@ nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, uint32_t aLeng
     aContentType.AssignLiteral(IMAGE_ICO);
   }
 
+#ifdef MOZ_WBMP
   // A well-defined type 0 WBMP file starts with an "0000 0000b" byte followed
   // by an "0xx0 0000b" byte (x = don't care).
   else if (aLength >= 2 && (static_cast<unsigned char>(aContents[0]) == 0x00 &&
@@ -2053,6 +2054,7 @@ nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, uint32_t aLeng
   {
     aContentType.AssignLiteral(IMAGE_WBMP);
   }
+#endif
 
   else {
     /* none of the above?  I give up */
