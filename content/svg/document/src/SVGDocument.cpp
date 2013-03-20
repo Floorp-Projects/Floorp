@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsSVGDocument.h"
+#include "mozilla/dom/SVGDocument.h"
 #include "nsString.h"
 #include "nsLiteralString.h"
 #include "nsIDOMSVGElement.h"
@@ -11,38 +11,41 @@
 
 using namespace mozilla::dom;
 
+DOMCI_NODE_DATA(SVGDocument, SVGDocument)
+
+namespace mozilla {
+namespace dom {
+
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGDocument::nsSVGDocument()
+SVGDocument::SVGDocument()
 {
 }
 
-nsSVGDocument::~nsSVGDocument()
+SVGDocument::~SVGDocument()
 {
 }
 
 //----------------------------------------------------------------------
 // nsISupports methods:
 
-DOMCI_NODE_DATA(SVGDocument, nsSVGDocument)
-
-NS_INTERFACE_TABLE_HEAD(nsSVGDocument)
-  NS_INTERFACE_TABLE_INHERITED1(nsSVGDocument,
+NS_INTERFACE_TABLE_HEAD(SVGDocument)
+  NS_INTERFACE_TABLE_INHERITED1(SVGDocument,
                                 nsIDOMSVGDocument)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsXMLDocument)
 
-NS_IMPL_ADDREF_INHERITED(nsSVGDocument, nsXMLDocument)
-NS_IMPL_RELEASE_INHERITED(nsSVGDocument, nsXMLDocument)
+NS_IMPL_ADDREF_INHERITED(SVGDocument, nsXMLDocument)
+NS_IMPL_RELEASE_INHERITED(SVGDocument, nsXMLDocument)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGDocument methods:
 
 /* readonly attribute DOMString domain; */
 NS_IMETHODIMP
-nsSVGDocument::GetDomain(nsAString& aDomain)
+SVGDocument::GetDomain(nsAString& aDomain)
 {
   SetDOMStringToNull(aDomain);
 
@@ -59,7 +62,7 @@ nsSVGDocument::GetDomain(nsAString& aDomain)
 
 /* readonly attribute SVGSVGElement rootElement; */
 NS_IMETHODIMP
-nsSVGDocument::GetRootElement(nsIDOMSVGElement** aRootElement)
+SVGDocument::GetRootElement(nsIDOMSVGElement** aRootElement)
 {
   *aRootElement = nullptr;
   Element* root = nsDocument::GetRootElement();
@@ -68,12 +71,12 @@ nsSVGDocument::GetRootElement(nsIDOMSVGElement** aRootElement)
 }
 
 nsresult
-nsSVGDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
+SVGDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
   NS_ASSERTION(aNodeInfo->NodeInfoManager() == mNodeInfoManager,
                "Can't import this document into another document!");
 
-  nsRefPtr<nsSVGDocument> clone = new nsSVGDocument();
+  nsRefPtr<SVGDocument> clone = new SVGDocument();
   NS_ENSURE_TRUE(clone, NS_ERROR_OUT_OF_MEMORY);
   nsresult rv = CloneDocHelper(clone.get());
   NS_ENSURE_SUCCESS(rv, rv);
@@ -81,13 +84,16 @@ nsSVGDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   return CallQueryInterface(clone.get(), aResult);
 }
 
+} // namespace dom
+} // namespace mozilla
+
 ////////////////////////////////////////////////////////////////////////
 // Exported creation functions
 
 nsresult
 NS_NewSVGDocument(nsIDocument** aInstancePtrResult)
 {
-  nsRefPtr<nsSVGDocument> doc = new nsSVGDocument();
+  nsRefPtr<SVGDocument> doc = new SVGDocument();
 
   nsresult rv = doc->Init();
   if (NS_FAILED(rv)) {
