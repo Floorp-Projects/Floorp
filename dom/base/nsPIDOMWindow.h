@@ -20,6 +20,8 @@
 #include "nsTArray.h"
 #include "nsIURI.h"
 
+#include "js/RootingAPI.h"
+
 #define DOM_WINDOW_DESTROYED_TOPIC "dom-window-destroyed"
 #define DOM_WINDOW_FROZEN_TOPIC "dom-window-frozen"
 #define DOM_WINDOW_THAWED_TOPIC "dom-window-thawed"
@@ -45,7 +47,6 @@ class nsIContent;
 class nsIDocument;
 class nsIScriptTimeoutHandler;
 struct nsTimeout;
-template <class> class nsScriptObjectHolder;
 class nsXBLPrototypeHandler;
 class nsIArray;
 class nsPIWindowRoot;
@@ -57,8 +58,8 @@ class AudioContext;
 }
 
 #define NS_PIDOMWINDOW_IID \
-{0xf30405c2, 0x5da8, 0x4339, \
-  {0x87, 0xe2, 0xfa, 0xb2, 0x51, 0x26, 0x8a, 0xe8}}
+{ 0x287be48c, 0x3a7a, 0x48ce, \
+  { 0x80, 0x0f, 0x05, 0x39, 0x52, 0x08, 0x2e, 0xe7 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -493,7 +494,7 @@ public:
 
   virtual JSObject* GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey) = 0;
   virtual void CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
-                                        nsScriptObjectHolder<JSObject>& aHandler) = 0;
+                                        JS::Handle<JSObject*> aHandler) = 0;
 
   /*
    * Get and set the currently focused element within the document. If

@@ -48,7 +48,6 @@
 #include "nsIArray.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
-#include "nsDOMScriptObjectHolder.h"
 #include "prmem.h"
 #include "WrapperFactory.h"
 #include "nsGlobalWindow.h"
@@ -1338,7 +1337,7 @@ nsJSContext::CompileScript(const PRUnichar* aText,
                            const char *aURL,
                            uint32_t aLineNo,
                            uint32_t aVersion,
-                           nsScriptObjectHolder<JSScript>& aScriptObject,
+                           JS::MutableHandle<JSScript*> aScriptObject,
                            bool aSaveSource /* = false */)
 {
   SAMPLE_LABEL_PRINTF("JS", "Compile Script", "%s", aURL ? aURL : "");
@@ -1356,14 +1355,14 @@ nsJSContext::CompileScript(const PRUnichar* aText,
     return NS_ERROR_FAILURE;
   }
 
-  aScriptObject.drop(); // ensure old object not used on failure...
+  aScriptObject.set(nullptr); // ensure old object not used on failure...
 
   // Don't compile if SecurityManager said "not ok" or aVersion is unknown.
   // Since the caller is responsible for parsing the version strings, we just
   // check it isn't JSVERSION_UNKNOWN.
   if (!ok || JSVersion(aVersion) == JSVERSION_UNKNOWN)
     return NS_OK;
-    
+
   XPCAutoRequest ar(mContext);
 
 
@@ -1384,7 +1383,8 @@ nsJSContext::CompileScript(const PRUnichar* aText,
   if (!script) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return aScriptObject.set(script);
+  aScriptObject.set(script);
+  return NS_OK;
 }
 
 nsresult
@@ -1594,7 +1594,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
 nsresult
 nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, JSObject* aScope,
                                       JSObject* aHandler,
-                                      nsScriptObjectHolder<JSObject>& aBoundHandler)
+                                      JS::MutableHandle<JSObject*> aBoundHandler)
 {
   NS_ENSURE_ARG(aHandler);
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
@@ -1650,13 +1650,14 @@ nsJSContext::Serialize(nsIObjectOutputStream* aStream, JSScript* aScriptObject)
 
 nsresult
 nsJSContext::Deserialize(nsIObjectInputStream* aStream,
-                         nsScriptObjectHolder<JSScript>& aResult)
+                         JS::MutableHandle<JSScript*> aResult)
 {
   JSScript *script;
   nsresult rv = nsContentUtils::XPConnect()->ReadScript(aStream, mContext, &script);
   if (NS_FAILED(rv)) return rv;
-    
-  return aResult.set(script);
+
+  aResult.set(script);
+  return NS_OK;
 }
 
 nsIScriptGlobalObject *
