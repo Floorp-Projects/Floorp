@@ -1417,6 +1417,15 @@ ValueToScript(JSContext *cx, jsval v, JSFunction **funp = NULL)
     if (!fun)
         return NULL;
 
+    // Unwrap bound functions.
+    while (fun->isBoundFunction()) {
+        JSObject *target = fun->getBoundFunctionTarget();
+        if (target && target->isFunction())
+            fun = target->toFunction();
+        else
+            break;
+    }
+    
     RootedScript script(cx);
     JSFunction::maybeGetOrCreateScript(cx, fun, &script);
     if (!script)
