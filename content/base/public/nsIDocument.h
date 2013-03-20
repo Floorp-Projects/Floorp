@@ -2145,6 +2145,10 @@ protected:
     mDirectionality = aDir;
   }
 
+  // All document WrapNode implementations MUST call this method.  A
+  // false return value means an exception was thrown.
+  bool PostCreateWrapper(JSContext* aCx, JSObject *aNewObject);
+
   nsCString mReferrer;
   nsString mLastModified;
 
