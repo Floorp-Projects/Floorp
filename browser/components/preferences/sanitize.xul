@@ -19,9 +19,9 @@
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             dlgbuttons="accept,cancel,help"
             ondialoghelp="openPrefsHelp()"
-            style="width: &dialog.width;;"
+            style="width: &dialog.width2;;"
             title="&sanitizePrefs2.title;"
-            onload="gSanitizeDialog.init();">
+            onload="gSanitizeDialog.onClearHistoryChanged();">
 
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/javascript" src="chrome://browser/content/preferences/sanitize.js"/>
@@ -48,33 +48,30 @@
       <caption label="&historySection.label;"/>
       <grid flex="1">
         <columns>
-          <column style="width: &column.width;"/>
+          <column style="width: &column.width2;"/>
           <column flex="1"/>
         </columns>
         <rows>
           <row>
-            <checkbox label="&itemBrowsingHistory.label;"
-                      accesskey="&itemBrowsingHistory.accesskey;"
+            <checkbox label="&itemHistoryAndDownloads.label;"
+                      accesskey="&itemHistoryAndDownloads.accesskey;"
                       preference="privacy.clearOnShutdown.history"/>
             <checkbox label="&itemCookies.label;"
                       accesskey="&itemCookies.accesskey;"
                       preference="privacy.clearOnShutdown.cookies"/>
           </row>
           <row>
-            <checkbox label="&itemDownloadHistory.label;"
-                      accesskey="&itemDownloadHistory.accesskey;"
-                      preference="privacy.clearOnShutdown.downloads"/>
             <checkbox label="&itemActiveLogins.label;"
                       accesskey="&itemActiveLogins.accesskey;"
                       preference="privacy.clearOnShutdown.sessions"/>
+            <checkbox label="&itemCache.label;"
+                      accesskey="&itemCache.accesskey;"
+                      preference="privacy.clearOnShutdown.cache"/>
           </row>
           <row>
             <checkbox label="&itemFormSearchHistory.label;"
                       accesskey="&itemFormSearchHistory.accesskey;"
                       preference="privacy.clearOnShutdown.formdata"/>
-            <checkbox label="&itemCache.label;"
-                      accesskey="&itemCache.accesskey;"
-                      preference="privacy.clearOnShutdown.cache"/>
           </row>
         </rows>
       </grid>
@@ -83,7 +80,7 @@
       <caption label="&dataSection.label;"/>
       <grid flex="1">
         <columns>
-          <column style="width: &column.width;"/>
+          <column style="width: &column.width2;"/>
           <column flex="1"/>
         </columns>
         <rows>
