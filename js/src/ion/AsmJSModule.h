@@ -512,11 +512,6 @@ class AsmJSModule
         return code_;
     }
 
-    bool pcIsInModule(void *pc) const {
-        return pc >= functionCode() &&
-               pc < (functionCode() + functionBytes());
-    }
-
     void setOperationCallbackExit(uint8_t *ptr) {
         operationCallbackExit_ = ptr;
     }
