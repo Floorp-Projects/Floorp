@@ -32,13 +32,8 @@ that require it.  -->
 <!ENTITY historySection.label         "History">
 <!ENTITY dataSection.label            "Data">
 
-<!-- LOCALIZATION NOTE (item*): itemHistoryAndDownloads.* and
-     itemBrowsingHistory.* will never be used at the same time, so they can
-     have the same accesskey. -->
 <!ENTITY itemHistoryAndDownloads.label     "Browsing &amp; Download History">
 <!ENTITY itemHistoryAndDownloads.accesskey "B">
-<!ENTITY itemBrowsingHistory.label         "Browsing History">
-<!ENTITY itemBrowsingHistory.accesskey     "B">
 <!ENTITY itemFormSearchHistory.label       "Form &amp; Search History">
 <!ENTITY itemFormSearchHistory.accesskey   "F">
 <!ENTITY itemPasswords.label               "Saved Passwords">
@@ -49,8 +44,6 @@ that require it.  -->
 <!ENTITY itemCache.accesskey               "A">
 <!ENTITY itemOfflineApps.label             "Offline Website Data">
 <!ENTITY itemOfflineApps.accesskey         "O">
-<!ENTITY itemDownloadHistory.label         "Download History">
-<!ENTITY itemDownloadHistory.accesskey     "D">
 <!ENTITY itemActiveLogins.label            "Active Logins">
 <!ENTITY itemActiveLogins.accesskey        "L">
 <!ENTITY itemSitePreferences.label         "Site Preferences">
@@ -61,5 +54,9 @@ that require it.  -->
      mockup at bug 480169 -->
 <!ENTITY sanitizeEverythingUndoWarning     "This action cannot be undone.">
 
-<!ENTITY dialog.width                 "28em">
-<!ENTITY column.width                 "14em">
+<!-- LOCALIZATION NOTE (dialog.width2): width of the Clear Recent History and
+     Clear History on Shutdown dialogs.  Should be large enough to contain
+     the item* strings above on a single line.  The column width should be set
+     at half of the dialog width. -->
+<!ENTITY dialog.width2                 "34em">
+<!ENTITY column.width2                 "17em">
