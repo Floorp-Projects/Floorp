@@ -74,6 +74,7 @@ using namespace js::types;
 
 using js::frontend::IsIdentifier;
 using mozilla::ArrayLength;
+using mozilla::DebugOnly;
 
 JS_STATIC_ASSERT(int32_t((JSObject::NELEMENTS_LIMIT - 1) * sizeof(Value)) == int64_t((JSObject::NELEMENTS_LIMIT - 1) * sizeof(Value)));
 
@@ -553,6 +554,16 @@ Reject(JSContext *cx, JSObject *obj, unsigned errorNumber, bool throwError, bool
     return JS_TRUE;
 }
 
+static bool
+Reject(JSContext *cx, HandleId id, unsigned errorNumber, bool throwError, bool *rval)
+{
+    if (throwError)
+        return Throw(cx, id, errorNumber);
+
+    *rval = false;
+    return true;
+}
+
 // See comments on CheckDefineProperty in jsobj.h.
 //
 // DefinePropertyOnObject has its own implementation of these checks.
@@ -915,41 +926,57 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
     return baseops::DefineGeneric(cx, obj, id, v, getter, setter, attrs);
 }
 
+/* ES6 20130308 draft 8.4.2.1 [[DefineOwnProperty]] */
 static JSBool
 DefinePropertyOnArray(JSContext *cx, HandleObject obj, HandleId id, const PropDesc &desc,
                       bool throwError, bool *rval)
 {
-    // Disabled until we support defining "length":
-    //uint32_t oldLen = obj->getArrayLength();
+    JS_ASSERT(obj->isArray());
 
-    if (JSID_IS_ATOM(id, cx->names().length)) {
-        /*
-         * Our optimization of storage of the length property of arrays makes
-         * it very difficult to properly implement defining the property.  For
-         * now simply throw an exception (NB: not merely Reject) on any attempt
-         * to define the "length" property, rather than attempting to implement
-         * some difficult-for-authors-to-grasp subset of that functionality.
-         */
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_DEFINE_ARRAY_LENGTH);
-        return JS_FALSE;
+    /* Step 2. */
+    if (id == NameToId(cx->names().length)) {
+        if (desc.hasConfigurable() && desc.configurable())
+            return Reject(cx, id, JSMSG_CANT_REDEFINE_PROP, throwError, rval);
+        if (desc.hasEnumerable() && desc.enumerable())
+            return Reject(cx, id, JSMSG_CANT_REDEFINE_PROP, throwError, rval);
+
+        if (desc.isAccessorDescriptor())
+            return Reject(cx, id, JSMSG_CANT_REDEFINE_PROP, throwError, rval);
+
+        unsigned attrs = obj->nativeLookup(cx, id)->attributes();
+
+        RootedValue v(cx, desc.hasValue() ? desc.value() : NumberValue(obj->getArrayLength()));
+        if (!obj->arrayLengthIsWritable()) {
+            if (desc.hasWritable() && desc.writable())
+                return Reject(cx, id, JSMSG_CANT_REDEFINE_PROP, throwError, rval);
+
+            if (desc.hasValue()) {
+                if (obj->getArrayLength() != desc.value().toNumber())
+                    return Reject(cx, id, JSMSG_CANT_REDEFINE_PROP, throwError, rval);
+            }
+        } else {
+            if (desc.hasWritable() && !desc.writable())
+                attrs = attrs | JSPROP_READONLY;
+        }
+
+        return ArraySetLength(cx, obj, id, attrs, v, throwError);
     }
 
+    /* Step 3. */
     uint32_t index;
     if (js_IdIsIndex(id, &index)) {
-        /*
-        // Disabled until we support defining "length":
-        if (index >= oldLen && lengthPropertyNotWritable())
-            return ThrowTypeError(cx, JSMSG_CANT_APPEND_TO_ARRAY);
-         */
-        if (!DefinePropertyOnObject(cx, obj, id, desc, false, rval))
-            return JS_FALSE;
-        if (!*rval)
-            return Reject(cx, obj, JSMSG_CANT_DEFINE_ARRAY_INDEX, throwError, rval);
+        /* Step 3b. */
+        uint32_t oldLen = obj->getArrayLength();
 
-        *rval = true;
-        return JS_TRUE;
+        /* Steps 3a, 3e. */
+        if (index >= oldLen && !obj->arrayLengthIsWritable())
+            return Reject(cx, obj, JSMSG_CANT_APPEND_TO_ARRAY, throwError, rval);
+
+        /* Steps 3f-j. */
+        return DefinePropertyOnObject(cx, obj, id, desc, throwError, rval);
     }
 
+    /* Step 4. */
     return DefinePropertyOnObject(cx, obj, id, desc, throwError, rval);
 }
 
@@ -1949,8 +1976,8 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
          * the new layout for the other object.
          */
 
-        unsigned acap = a->slotSpan();
-        unsigned bcap = b->slotSpan();
+        uint32_t acap = a->slotSpan();
+        uint32_t bcap = b->slotSpan();
 
         for (size_t i = 0; i < acap; i++)
             reserved.avals.infallibleAppend(a->getSlot(i));
@@ -2419,7 +2446,7 @@ JSObject::growSlots(JSContext *cx, HandleObject obj, uint32_t oldCount, uint32_t
      */
     if (!obj->hasLazyType() && !oldCount && obj->type()->newScript) {
         gc::AllocKind kind = obj->type()->newScript->allocKind;
-        unsigned newScriptSlots = gc::GetGCKindSlots(kind);
+        uint32_t newScriptSlots = gc::GetGCKindSlots(kind);
         if (newScriptSlots == obj->numFixedSlots() && gc::TryIncrementAllocKind(&kind)) {
             AutoEnterAnalysis enter(cx);
 
@@ -2503,7 +2530,7 @@ JSObject::shrinkSlots(JSContext *cx, HandleObject obj, uint32_t oldCount, uint32
 }
 
 /* static */ bool
-JSObject::sparsifyDenseElement(JSContext *cx, HandleObject obj, unsigned index)
+JSObject::sparsifyDenseElement(JSContext *cx, HandleObject obj, uint32_t index)
 {
     RootedValue value(cx, obj->getDenseElement(index));
     JS_ASSERT(!value.isMagic(JS_ELEMENTS_HOLE));
@@ -2553,18 +2580,18 @@ JSObject::sparsifyDenseElements(JSContext *cx, HandleObject obj)
 }
 
 bool
-JSObject::willBeSparseElements(unsigned requiredCapacity, unsigned newElementsHint)
+JSObject::willBeSparseElements(uint32_t requiredCapacity, uint32_t newElementsHint)
 {
     JS_ASSERT(isNative());
     JS_ASSERT(requiredCapacity > MIN_SPARSE_INDEX);
 
-    unsigned cap = getDenseCapacity();
+    uint32_t cap = getDenseCapacity();
     JS_ASSERT(requiredCapacity >= cap);
 
     if (requiredCapacity >= NELEMENTS_LIMIT)
         return true;
 
-    unsigned minimalDenseCount = requiredCapacity / SPARSE_DENSITY_RATIO;
+    uint32_t minimalDenseCount = requiredCapacity / SPARSE_DENSITY_RATIO;
     if (newElementsHint >= minimalDenseCount)
         return false;
     minimalDenseCount -= newElementsHint;
@@ -2572,9 +2599,9 @@ JSObject::willBeSparseElements(unsigned requiredCapacity, unsigned newElementsHi
     if (minimalDenseCount > cap)
         return true;
 
-    unsigned len = getDenseInitializedLength();
+    uint32_t len = getDenseInitializedLength();
     const Value *elems = getDenseElements();
-    for (unsigned i = 0; i < len; i++) {
+    for (uint32_t i = 0; i < len; i++) {
         if (!elems[i].isMagic(JS_ELEMENTS_HOLE) && !--minimalDenseCount)
             return false;
     }
@@ -2728,9 +2755,11 @@ ReallocateElements(JSObject::MaybeContext maybecx, JSObject *obj, ObjectElements
 }
 
 bool
-JSObject::growElements(MaybeContext cx, unsigned newcap)
+JSObject::growElements(MaybeContext cx, uint32_t newcap)
 {
     JS_ASSERT(isExtensible());
+    JS_ASSERT_IF(isArray() && !arrayLengthIsWritable(),
+                 newcap <= getArrayLength());
 
     /*
      * When an object with CAPACITY_DOUBLING_MAX or fewer elements needs to
@@ -2749,15 +2778,22 @@ JSObject::growElements(MaybeContext cx, unsigned newcap)
                       ? oldcap * 2
                       : oldcap + (oldcap >> 3);
 
-    uint32_t actualCapacity = Max(newcap, nextsize);
-    if (actualCapacity >= CAPACITY_CHUNK)
-        actualCapacity = JS_ROUNDUP(actualCapacity, CAPACITY_CHUNK);
-    else if (actualCapacity < SLOT_CAPACITY_MIN)
-        actualCapacity = SLOT_CAPACITY_MIN;
+    uint32_t actualCapacity;
+    if (isArray() && !arrayLengthIsWritable()) {
+        // Preserve the |capacity <= length| invariant for arrays with
+        // non-writable length.  See also js::ArraySetLength which initially
+        // enforces this requirement.
+        actualCapacity = newcap;
+    } else {
+        actualCapacity = Max(newcap, nextsize);
+        if (actualCapacity >= CAPACITY_CHUNK)
+            actualCapacity = JS_ROUNDUP(actualCapacity, CAPACITY_CHUNK);
+        else if (actualCapacity < SLOT_CAPACITY_MIN)
+            actualCapacity = SLOT_CAPACITY_MIN;
 
-    /* Don't let nelements get close to wrapping around uint32_t. */
-    if (actualCapacity >= NELEMENTS_LIMIT || actualCapacity < oldcap || actualCapacity < newcap) {
-        return false;
+        /* Don't let nelements get close to wrapping around uint32_t. */
+        if (actualCapacity >= NELEMENTS_LIMIT || actualCapacity < oldcap || actualCapacity < newcap)
+            return false;
     }
 
     uint32_t initlen = getDenseInitializedLength();
@@ -2786,7 +2822,7 @@ JSObject::growElements(MaybeContext cx, unsigned newcap)
 }
 
 void
-JSObject::shrinkElements(JSContext *cx, unsigned newcap)
+JSObject::shrinkElements(JSContext *cx, uint32_t newcap)
 {
     uint32_t oldcap = getDenseCapacity();
     JS_ASSERT(newcap <= oldcap);
@@ -3254,6 +3290,12 @@ DefinePropertyOrElement(JSContext *cx, HandleObject obj, HandleId id,
         (!obj->isIndexed() || !obj->nativeContains(cx, id)))
     {
         uint32_t index = JSID_TO_INT(id);
+        bool definesPast;
+        if (!WouldDefinePastNonwritableLength(cx, obj, index, setterIsStrict, &definesPast))
+            return false;
+        if (definesPast)
+            return true;
+
         JSObject::EnsureDenseResult result = obj->ensureDenseElements(cx, index, 1);
         if (result == JSObject::ED_FAILED)
             return false;
@@ -3262,6 +3304,21 @@ DefinePropertyOrElement(JSContext *cx, HandleObject obj, HandleId id,
             return CallAddPropertyHookDense(cx, obj->getClass(), obj, index, value);
         }
     }
+
+    if (obj->isArray()) {
+        if (id == NameToId(cx->names().length))
+            return ArraySetLength(cx, obj, id, attrs, value, setterIsStrict);
+
+        uint32_t index;
+        if (js_IdIsIndex(id, &index)) {
+            bool definesPast;
+            if (!WouldDefinePastNonwritableLength(cx, obj, index, setterIsStrict, &definesPast))
+                return false;
+            if (definesPast)
+                return true;
+        }
+    }
+
 
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
@@ -3725,6 +3782,7 @@ js_NativeGet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> pobj, Handl
     return NativeGetInline<CanGC>(cx, obj, obj, pobj, shape, getHow, vp);
 }
 
+
 JSBool
 js_NativeSet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> receiver,
              HandleShape shape, bool strict, MutableHandleValue vp)
@@ -4164,12 +4222,6 @@ JSBool
 baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
                            unsigned defineHow, MutableHandleValue vp, JSBool strict)
 {
-    unsigned attrs, flags;
-    int shortid;
-    Class *clasp;
-    PropertyOp getter;
-    StrictPropertyOp setter;
-
     JS_ASSERT((defineHow & ~(DNP_CACHE_RESULT | DNP_UNQUALIFIED)) == 0);
 
     if (JS_UNLIKELY(obj->watched())) {
@@ -4223,12 +4275,12 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
      * Now either shape is null, meaning id was not found in obj or one of its
      * prototypes; or shape is non-null, meaning id was found directly in pobj.
      */
-    attrs = JSPROP_ENUMERATE;
-    flags = 0;
-    shortid = 0;
-    clasp = obj->getClass();
-    getter = clasp->getProperty;
-    setter = clasp->setProperty;
+    unsigned attrs = JSPROP_ENUMERATE;
+    unsigned flags = 0;
+    int shortid = 0;
+    Class *clasp = obj->getClass();
+    PropertyOp getter = clasp->getProperty;
+    StrictPropertyOp setter = clasp->setProperty;
 
     if (IsImplicitDenseElement(shape)) {
         /* ES5 8.12.4 [[Put]] step 2, for a dense data property on pobj. */
@@ -4304,9 +4356,19 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
     }
 
     if (IsImplicitDenseElement(shape)) {
-        JSObject::setDenseElementWithType(cx, obj, JSID_TO_INT(id), vp);
+        uint32_t index = JSID_TO_INT(id);
+        bool definesPast;
+        if (!WouldDefinePastNonwritableLength(cx, obj, index, strict, &definesPast))
+            return false;
+        if (definesPast)
+            return true;
+
+        JSObject::setDenseElementWithType(cx, obj, index, vp);
         return true;
     }
+
+    if (obj->isArray() && id == NameToId(cx->names().length))
+        return ArraySetLength(cx, obj, id, attrs, vp, strict);
 
     if (!shape) {
         if (!obj->isExtensible()) {
@@ -5043,10 +5105,10 @@ JSObject::dump()
     fprintf(stderr, "\n");
 
     if (obj->isNative()) {
-        unsigned slots = obj->getDenseInitializedLength();
+        uint32_t slots = obj->getDenseInitializedLength();
         if (slots) {
             fprintf(stderr, "elements\n");
-            for (unsigned i = 0; i < slots; i++) {
+            for (uint32_t i = 0; i < slots; i++) {
                 fprintf(stderr, " %3d: ", i);
                 dumpValue(obj->getDenseElement(i));
                 fprintf(stderr, "\n");
@@ -5073,12 +5135,12 @@ JSObject::dump()
     if (!obj->isNative())
         fprintf(stderr, "not native\n");
 
-    unsigned reservedEnd = JSCLASS_RESERVED_SLOTS(clasp);
-    unsigned slots = obj->slotSpan();
-    unsigned stop = obj->isNative() ? reservedEnd : slots;
+    uint32_t reservedEnd = JSCLASS_RESERVED_SLOTS(clasp);
+    uint32_t slots = obj->slotSpan();
+    uint32_t stop = obj->isNative() ? reservedEnd : slots;
     if (stop > 0)
         fprintf(stderr, obj->isNative() ? "reserved slots:\n" : "slots:\n");
-    for (unsigned i = 0; i < stop; i++) {
+    for (uint32_t i = 0; i < stop; i++) {
         fprintf(stderr, " %3d ", i);
         if (i < reservedEnd)
             fprintf(stderr, "(reserved) ");
