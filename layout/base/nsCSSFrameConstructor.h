@@ -437,16 +437,15 @@ private:
                                  nsIFrame*                aParentFrame,
                                  FrameConstructionItemList& aItems);
 
-  // Construct the frames for the document element.  This must always return a
-  // singe new frame (which may, of course, have a bunch of kids).
-  // XXXbz no need to return a frame here, imo.
-  nsresult ConstructDocElementFrame(Element*                 aDocElement,
-                                    nsILayoutHistoryState*   aFrameState,
-                                    nsIFrame**               aNewFrame);
+  // Construct the frames for the document element.  This can return null if the
+  // document element is display:none, or if the document element has a
+  // not-yet-loaded XBL binding, or if it's an SVG element that's not <svg>.
+  nsIFrame* ConstructDocElementFrame(Element*                 aDocElement,
+                                     nsILayoutHistoryState*   aFrameState);
 
   // Set up our mDocElementContainingBlock correctly for the given root
   // content.
-  nsresult SetUpDocElementContainingBlock(nsIContent* aDocElement);
+  void SetUpDocElementContainingBlock(nsIContent* aDocElement);
 
   /**
    * CreateAttributeContent creates a single content/frame combination for an
