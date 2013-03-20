@@ -175,6 +175,9 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
     }
     aStream->mBuffer.AdvanceKnownTracksTime(aStream->mUpdateKnownTracksTime);
   }
+  if (aStream->mBuffer.GetEnd() > 0) {
+    aStream->mHasCurrentData = true;
+  }
   if (finished) {
     FinishStream(aStream);
   }
@@ -659,10 +662,12 @@ MediaStreamGraphImpl::RecomputeBlockingAt(const nsTArray<MediaStream*>& aStreams
 void
 MediaStreamGraphImpl::NotifyHasCurrentData(MediaStream* aStream)
 {
-  for (uint32_t j = 0; j < aStream->mListeners.Length(); ++j) {
-    MediaStreamListener* l = aStream->mListeners[j];
-    l->NotifyHasCurrentData(this,
-      GraphTimeToStreamTime(aStream, mCurrentTime) < aStream->mBuffer.GetEnd());
+  if (!aStream->mNotifiedHasCurrentData && aStream->mHasCurrentData) {
+    for (uint32_t j = 0; j < aStream->mListeners.Length(); ++j) {
+      MediaStreamListener* l = aStream->mListeners[j];
+      l->NotifyHasCurrentData(this);
+    }
+    aStream->mNotifiedHasCurrentData = true;
   }
 }
 
@@ -1576,6 +1581,9 @@ MediaStream::AddListenerImpl(already_AddRefed<MediaStreamListener> aListener)
     mNotifiedBlocked ? MediaStreamListener::BLOCKED : MediaStreamListener::UNBLOCKED);
   if (mNotifiedFinished) {
     listener->NotifyFinished(GraphImpl());
+  }
+  if (mNotifiedHasCurrentData) {
+    listener->NotifyHasCurrentData(GraphImpl());
   }
 }
 
