@@ -13,8 +13,6 @@ ac_add_options --with-gonk-toolchain-prefix="$topsrcdir/gonk-toolchain/prebuilt/
 ac_add_options --disable-elf-hack
 ac_add_options --enable-debug-symbols
 ac_add_options --enable-debug
-# IonMonkey disabled in bug 789373
-ac_add_options --disable-ion
 #ac_add_options --with-ccache
 ENABLE_MARIONETTE=1
 
