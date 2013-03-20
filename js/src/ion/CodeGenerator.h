@@ -99,6 +99,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCallDirectEval(LCallDirectEval *lir);
     bool visitDoubleToInt32(LDoubleToInt32 *lir);
     bool visitNewSlots(LNewSlots *lir);
+    bool visitNewParallelArrayVMCall(LNewParallelArray *lir);
+    bool visitNewParallelArray(LNewParallelArray *lir);
     bool visitOutOfLineNewParallelArray(OutOfLineNewParallelArray *ool);
     bool visitNewArrayCallVM(LNewArray *lir);
     bool visitNewArray(LNewArray *lir);

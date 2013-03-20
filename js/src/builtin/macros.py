@@ -214,6 +214,26 @@ macro OVERRIDE_SUBJECT(override) = ((override)[(override).length - 1]);
 # 1-based so index of 1 returns the first capture
 macro OVERRIDE_CAPTURE(override, index) = ((override)[(index)]);
 
+# The mode asserts options object for ParallelArray
+macro TRY_PARALLEL(MODE) = ((!MODE || MODE.mode === "par"));
+macro ASSERT_SEQUENTIAL_IS_OK(MODE) = do { if (MODE) AssertSequentialIsOK(MODE) } while(false);
+
+# How many items at a time do we do recomp. for parallel execution.
+# Note that filter currently assumes that this is no greater than 32
+# in order to make use of a bitset.
+const CHUNK_SHIFT = 5;
+const CHUNK_SIZE = 32;
+
+# Slice array: see ComputeAllSliceBounds() in ParallelArray.js
+macro SLICE_INFO(START, END) = START, END, START, 0;
+macro SLICE_START(ID) = ((ID << 2) + 0);
+macro SLICE_END(ID) =   ((ID << 2) + 1);
+macro SLICE_POS(ID) =   ((ID << 2) + 2);
+
+# Safe version of ARRAY.push(ELEMENT)
+macro ARRAY_PUSH(ARRAY, ELEMENT) = callFunction(std_Array_push, ARRAY, ELEMENT);
+macro ARRAY_SLICE(ARRAY, ELEMENT) = callFunction(std_Array_slice, ARRAY, ELEMENT);
+
 # PropertyDescriptor return value indices - must match
 # PropertyDescriptorIndices in runtime.cc.
 const IS_ACCESSOR_INDEX = 0;
