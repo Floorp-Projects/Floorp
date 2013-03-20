@@ -486,7 +486,7 @@ ActorPool.prototype = {
   },
 
   /**
-   * Run all cleanups previously registered with addCleanup.
+   * Run all actor cleanups.
    */
   cleanup: function AP_cleanup() {
     for each (let actor in this._cleanups) {
@@ -573,13 +573,6 @@ DebuggerServerConnection.prototype = {
    */
   removeActor: function DSC_removeActor(aActor) {
     this._actorPool.removeActor(aActor);
-  },
-
-  /**
-   * Add a cleanup to the default actor pool for this connection.
-   */
-  addCleanup: function DSC_addCleanup(aCleanup) {
-    this._actorPool.addCleanup(aCleanup);
   },
 
   /**
