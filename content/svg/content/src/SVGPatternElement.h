@@ -21,9 +21,9 @@ nsresult NS_NewSVGPatternElement(nsIContent **aResult,
                                  already_AddRefed<nsINodeInfo> aNodeInfo);
 
 namespace mozilla {
+class DOMSVGAnimatedTransformList;
 
 namespace dom {
-class SVGAnimatedTransformList;
 
 typedef nsSVGElement SVGPatternElementBase;
 
@@ -40,6 +40,8 @@ protected:
   virtual JSObject* WrapNode(JSContext *cx, JSObject *scope) MOZ_OVERRIDE;
 
 public:
+  typedef mozilla::SVGAnimatedPreserveAspectRatio SVGAnimatedPreserveAspectRatio;
+
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -57,7 +59,7 @@ public:
   // nsSVGSVGElement methods:
   virtual bool HasValidDimensions() const;
 
-  virtual nsSVGAnimatedTransformList*
+  virtual mozilla::SVGAnimatedTransformList*
     GetAnimatedTransformList(uint32_t aFlags = 0);
   virtual nsIAtom* GetTransformListAttrName() const {
     return nsGkAtoms::patternTransform;
@@ -68,7 +70,7 @@ public:
   already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
   already_AddRefed<nsIDOMSVGAnimatedEnumeration> PatternUnits();
   already_AddRefed<nsIDOMSVGAnimatedEnumeration> PatternContentUnits();
-  already_AddRefed<SVGAnimatedTransformList> PatternTransform();
+  already_AddRefed<DOMSVGAnimatedTransformList> PatternTransform();
   already_AddRefed<SVGAnimatedLength> X();
   already_AddRefed<SVGAnimatedLength> Y();
   already_AddRefed<SVGAnimatedLength> Width();
@@ -91,7 +93,7 @@ protected:
   nsSVGEnum mEnumAttributes[2];
   static EnumInfo sEnumInfo[2];
 
-  nsAutoPtr<nsSVGAnimatedTransformList> mPatternTransform;
+  nsAutoPtr<mozilla::SVGAnimatedTransformList> mPatternTransform;
 
   enum { HREF };
   nsSVGString mStringAttributes[1];

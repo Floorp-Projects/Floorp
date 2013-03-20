@@ -5,12 +5,11 @@
 
 #include "mozilla/Util.h"
 
+#include "DOMSVGAnimatedTransformList.h"
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
-#include "mozilla/dom/SVGAnimatedTransformList.h"
 #include "mozilla/dom/SVGPatternElement.h"
 #include "mozilla/dom/SVGPatternElementBinding.h"
-#include "nsSVGAnimatedTransformList.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Pattern)
 
@@ -103,12 +102,12 @@ SVGPatternElement::PatternContentUnits()
   return mEnumAttributes[PATTERNCONTENTUNITS].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<SVGAnimatedTransformList>
+already_AddRefed<DOMSVGAnimatedTransformList>
 SVGPatternElement::PatternTransform()
 {
   // We're creating a DOM wrapper, so we must tell GetAnimatedTransformList
   // to allocate the SVGAnimatedTransformList if it hasn't already done so:
-  return SVGAnimatedTransformList::GetDOMWrapper(
+  return DOMSVGAnimatedTransformList::GetDOMWrapper(
            GetAnimatedTransformList(DO_ALLOCATE), this);
 }
 
@@ -166,11 +165,11 @@ SVGPatternElement::IsAttributeMapped(const nsIAtom* name) const
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
-nsSVGAnimatedTransformList*
+SVGAnimatedTransformList*
 SVGPatternElement::GetAnimatedTransformList(uint32_t aFlags)
 {
   if (!mPatternTransform && (aFlags & DO_ALLOCATE)) {
-    mPatternTransform = new nsSVGAnimatedTransformList();
+    mPatternTransform = new SVGAnimatedTransformList();
   }
   return mPatternTransform;
 }
