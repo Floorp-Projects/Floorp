@@ -346,12 +346,11 @@ public:
    */
   void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint);
 
-  // Request to create a continuing frame
-  nsresult CreateContinuingFrame(nsPresContext* aPresContext,
-                                 nsIFrame*       aFrame,
-                                 nsIFrame*       aParentFrame,
-                                 nsIFrame**      aContinuingFrame,
-                                 bool            aIsFluid = true);
+  // Request to create a continuing frame.  This method never returns null.
+  nsIFrame* CreateContinuingFrame(nsPresContext* aPresContext,
+                                  nsIFrame*       aFrame,
+                                  nsIFrame*       aParentFrame,
+                                  bool            aIsFluid = true);
 
   // Copy over fixed frames from aParentFrame's prev-in-flow
   nsresult ReplicateFixedFrames(nsPageContentFrame* aParentFrame);
@@ -1542,13 +1541,12 @@ private:
   bool MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
                                                nsresult* aResult);
 
-  nsresult CreateContinuingOuterTableFrame(nsIPresShell*    aPresShell, 
-                                           nsPresContext*  aPresContext,
-                                           nsIFrame*        aFrame,
-                                           nsIFrame*        aParentFrame,
-                                           nsIContent*      aContent,
-                                           nsStyleContext*  aStyleContext,
-                                           nsIFrame**       aContinuingFrame);
+  nsIFrame* CreateContinuingOuterTableFrame(nsIPresShell*    aPresShell, 
+                                            nsPresContext*  aPresContext,
+                                            nsIFrame*        aFrame,
+                                            nsIFrame*        aParentFrame,
+                                            nsIContent*      aContent,
+                                            nsStyleContext*  aStyleContext);
 
   nsIFrame* CreateContinuingTableFrame(nsIPresShell*    aPresShell, 
                                        nsPresContext*  aPresContext,

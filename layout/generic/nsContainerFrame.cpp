@@ -1168,9 +1168,8 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
         if (!nif) {
           NS_ASSERTION(frameStatus & NS_FRAME_REFLOW_NEXTINFLOW,
                        "Someone forgot a REFLOW_NEXTINFLOW flag");
-          rv = aPresContext->PresShell()->FrameConstructor()->
-                 CreateContinuingFrame(aPresContext, frame, this, &nif);
-          NS_ENSURE_SUCCESS(rv, rv);
+          nif = aPresContext->PresShell()->FrameConstructor()->
+            CreateContinuingFrame(aPresContext, frame, this);
         }
         else if (!(nif->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
           // used to be a normal next-in-flow; steal it from the child list
@@ -1353,11 +1352,8 @@ nsContainerFrame::CreateNextInFlow(nsPresContext* aPresContext,
   if (nullptr == nextInFlow) {
     // Create a continuation frame for the child frame and insert it
     // into our child list.
-    nsresult rv = aPresContext->PresShell()->FrameConstructor()->
-      CreateContinuingFrame(aPresContext, aFrame, this, &nextInFlow);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+    nextInFlow = aPresContext->PresShell()->FrameConstructor()->
+      CreateContinuingFrame(aPresContext, aFrame, this);
     mFrames.InsertFrame(nullptr, aFrame, nextInFlow);
 
     NS_FRAME_LOG(NS_FRAME_TRACE_NEW_FRAMES,
