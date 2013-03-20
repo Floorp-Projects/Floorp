@@ -1085,8 +1085,7 @@
                   flex="1" contenttooltip="aHTMLTooltip"
                   tabcontainer="tabbrowser-tabs"
                   contentcontextmenu="contentAreaContextMenu"
-                  autocompletepopup="PopupAutoComplete"
-                  onclick="contentAreaClick(event, false);"/>
+                  autocompletepopup="PopupAutoComplete"/>
       <chatbar id="pinnedchats" layer="true" mousethrough="always" hidden="true"/>
       <statuspanel id="statusbar-display" inactive="true"/>
     </vbox>
