@@ -37,6 +37,7 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../base/src \
 		-I$(srcdir)/../../../events/src \
 		-I$(topsrcdir)/xpcom/ds \
+		-I$(topsrcdir)/content/svg/content/src \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

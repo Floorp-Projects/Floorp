@@ -8,6 +8,8 @@
 #include "nsLiteralString.h"
 #include "nsIDOMSVGElement.h"
 #include "mozilla/dom/Element.h"
+#include "nsSVGElement.h"
+#include "mozilla/dom/SVGDocumentBinding.h"
 
 using namespace mozilla::dom;
 
@@ -21,6 +23,7 @@ namespace dom {
 
 SVGDocument::SVGDocument()
 {
+  SetIsDOMBinding();
 }
 
 SVGDocument::~SVGDocument()
@@ -47,27 +50,52 @@ NS_IMPL_RELEASE_INHERITED(SVGDocument, XMLDocument)
 NS_IMETHODIMP
 SVGDocument::GetDomain(nsAString& aDomain)
 {
+  ErrorResult rv;
+  GetDomain(aDomain, rv);
+  return rv.ErrorCode();
+}
+
+void
+SVGDocument::GetDomain(nsAString& aDomain, ErrorResult& aRv)
+{
   SetDOMStringToNull(aDomain);
 
   if (mDocumentURI) {
     nsAutoCString domain;
     nsresult rv = mDocumentURI->GetHost(domain);
-    if (domain.IsEmpty() || NS_FAILED(rv))
-      return rv;
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return;
+    }
+    if (domain.IsEmpty()) {
+      return;
+    }
     CopyUTF8toUTF16(domain, aDomain);
   }
-
-  return NS_OK;
 }
 
 /* readonly attribute SVGSVGElement rootElement; */
 NS_IMETHODIMP
 SVGDocument::GetRootElement(nsIDOMSVGElement** aRootElement)
 {
-  *aRootElement = nullptr;
-  Element* root = nsDocument::GetRootElement();
+  ErrorResult rv;
+  nsCOMPtr<nsIDOMSVGElement> retval = do_QueryInterface(GetRootElement(rv));
+  retval.forget(aRootElement);
+  return rv.ErrorCode();
+}
 
-  return root ? CallQueryInterface(root, aRootElement) : NS_OK;
+nsSVGElement*
+SVGDocument::GetRootElement(ErrorResult& aRv)
+{
+  Element* root = nsDocument::GetRootElement();
+  if (!root) {
+    return nullptr;
+  }
+  if (!root->IsSVG()) {
+    aRv.Throw(NS_NOINTERFACE);
+    return nullptr;
+  }
+  return static_cast<nsSVGElement*>(root);
 }
 
 nsresult
@@ -82,6 +110,16 @@ SVGDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(clone.get(), aResult);
+}
+
+JSObject*
+SVGDocument::WrapNode(JSContext *aCx, JSObject *aScope)
+{
+  JSObject* obj = SVGDocumentBinding::Wrap(aCx, aScope, this);
+  if (obj && !PostCreateWrapper(aCx, obj)) {
+    return nullptr;
+  }
+  return obj;
 }
 
 } // namespace dom
