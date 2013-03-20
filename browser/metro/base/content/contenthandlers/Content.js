@@ -438,6 +438,15 @@ let Content = {
     this.formAssistant.open(element, aEvent);
     this._cancelTapHighlight();
     this.formAssistant.focusSync = false;
+
+    // A tap on a form input triggers touch input caret selection
+    if (Util.isTextInput(element) &&
+        aEvent.mozInputSource == Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH) {
+      sendAsyncMessage("Content:SelectionCaret", {
+        xPos: aEvent.clientX,
+        yPos: aEvent.clientY
+      });
+    }
   },
 
   // Checks clicks we care about - events bubbling up from about pages.
