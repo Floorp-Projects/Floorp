@@ -259,14 +259,15 @@ class SnapshotIterator : public SnapshotReader
 
 // Reads frame information in callstack order (that is, innermost frame to
 // outermost frame).
-class InlineFrameIterator
+template <AllowGC allowGC=CanGC>
+class InlineFrameIteratorMaybeGC
 {
     const IonFrameIterator *frame_;
     SnapshotIterator start_;
     SnapshotIterator si_;
     unsigned framesRead_;
-    RootedFunction callee_;
-    RootedScript script_;
+    typename MaybeRooted<JSFunction*, allowGC>::RootType callee_;
+    typename MaybeRooted<JSScript*, allowGC>::RootType script_;
     jsbytecode *pc_;
     uint32_t numActualArgs_;
 
@@ -274,9 +275,9 @@ class InlineFrameIterator
     void findNextFrame();
 
   public:
-    InlineFrameIterator(JSContext *cx, const IonFrameIterator *iter);
-    InlineFrameIterator(JSContext *cx, const IonBailoutIterator *iter);
-    InlineFrameIterator(JSContext *cx, const InlineFrameIterator *iter);
+    inline InlineFrameIteratorMaybeGC(JSContext *cx, const IonFrameIterator *iter);
+    inline InlineFrameIteratorMaybeGC(JSContext *cx, const IonBailoutIterator *iter);
+    inline InlineFrameIteratorMaybeGC(JSContext *cx, const InlineFrameIteratorMaybeGC *iter);
 
     bool more() const {
         return frame_ && framesRead_ < start_.frameCount();
@@ -288,7 +289,7 @@ class InlineFrameIterator
     JSFunction *maybeCallee() const {
         return callee_;
     }
-    unsigned numActualArgs() const;
+    inline unsigned numActualArgs() const;
 
     template <class Op>
     inline void forEachCanonicalActualArg(JSContext *cx, Op op, unsigned start, unsigned count) const;
@@ -304,18 +305,20 @@ class InlineFrameIterator
     }
     bool isFunctionFrame() const;
     bool isConstructing() const;
-    JSObject *scopeChain() const;
-    JSObject *thisObject() const;
-    InlineFrameIterator &operator++();
+    inline JSObject *scopeChain() const;
+    inline JSObject *thisObject() const;
+    inline InlineFrameIteratorMaybeGC &operator++();
 
     void dump() const;
 
     void resetOn(const IonFrameIterator *iter);
 
   private:
-    InlineFrameIterator() MOZ_DELETE;
-    InlineFrameIterator(const InlineFrameIterator &iter) MOZ_DELETE;
+    InlineFrameIteratorMaybeGC() MOZ_DELETE;
+    InlineFrameIteratorMaybeGC(const InlineFrameIteratorMaybeGC &iter) MOZ_DELETE;
 };
+typedef InlineFrameIteratorMaybeGC<CanGC> InlineFrameIterator;
+typedef InlineFrameIteratorMaybeGC<NoGC> InlineFrameIteratorNoGC;
 
 } // namespace ion
 } // namespace js

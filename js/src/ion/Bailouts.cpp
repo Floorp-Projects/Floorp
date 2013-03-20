@@ -46,18 +46,6 @@ SnapshotIterator::SnapshotIterator(const IonBailoutIterator &iter)
 {
 }
 
-InlineFrameIterator::InlineFrameIterator(JSContext *cx, const IonBailoutIterator *iter)
-  : frame_(iter),
-    framesRead_(0),
-    callee_(cx),
-    script_(cx)
-{
-    if (iter) {
-        start_ = SnapshotIterator(*iter);
-        findNextFrame();
-    }
-}
-
 void
 IonBailoutIterator::dump() const
 {
