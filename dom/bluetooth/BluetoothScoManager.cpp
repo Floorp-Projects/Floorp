@@ -173,7 +173,8 @@ BluetoothScoManager::Get()
 
 // Virtual function of class SocketConsumer
 void
-BluetoothScoManager::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage)
+BluetoothScoManager::ReceiveSocketData(BluetoothSocket* aSocket,
+                                       nsAutoPtr<UnixSocketRawData>& aMessage)
 {
   // SCO socket do nothing here
   MOZ_NOT_REACHED("This should never be called!");
@@ -255,8 +256,10 @@ BluetoothScoManager::Disconnect()
 }
 
 void
-BluetoothScoManager::OnConnectSuccess()
+BluetoothScoManager::OnConnectSuccess(BluetoothSocket* aSocket)
 {
+  MOZ_ASSERT(aSocket == mSocket);
+
   nsString address;
   mSocket->GetAddress(address);
   NotifyAudioManager(address);
@@ -265,16 +268,20 @@ BluetoothScoManager::OnConnectSuccess()
 }
 
 void
-BluetoothScoManager::OnConnectError()
+BluetoothScoManager::OnConnectError(BluetoothSocket* aSocket)
 {
+  MOZ_ASSERT(aSocket == mSocket);
+
   mSocket->Disconnect();
   mSocketStatus = mSocket->GetConnectionStatus();
   Listen();
 }
 
 void
-BluetoothScoManager::OnDisconnect()
+BluetoothScoManager::OnDisconnect(BluetoothSocket* aSocket)
 {
+  MOZ_ASSERT(aSocket == mSocket);
+
   if (mSocketStatus == SocketConnectionStatus::SOCKET_CONNECTED) {
     Listen();
 

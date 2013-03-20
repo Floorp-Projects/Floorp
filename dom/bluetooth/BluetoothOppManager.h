@@ -74,11 +74,12 @@ public:
   bool IsTransferring();
 
   // Implement interface BluetoothSocketObserver
-  void ReceiveSocketData(nsAutoPtr<mozilla::ipc::UnixSocketRawData>& aMessage)
-    MOZ_OVERRIDE;
-  void OnConnectSuccess() MOZ_OVERRIDE;
-  void OnConnectError() MOZ_OVERRIDE;
-  void OnDisconnect() MOZ_OVERRIDE;
+  void ReceiveSocketData(
+    BluetoothSocket* aSocket,
+    nsAutoPtr<mozilla::ipc::UnixSocketRawData>& aMessage) MOZ_OVERRIDE;
+  void OnConnectSuccess(BluetoothSocket* aSocket) MOZ_OVERRIDE;
+  void OnConnectError(BluetoothSocket* aSocket) MOZ_OVERRIDE;
+  void OnDisconnect(BluetoothSocket* aSocket) MOZ_OVERRIDE;
 
 private:
   BluetoothOppManager();
