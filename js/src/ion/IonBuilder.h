@@ -443,6 +443,13 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineNewDenseArray(CallInfo &callInfo);
     InliningStatus inlineNewDenseArrayForSequentialExecution(CallInfo &callInfo);
     InliningStatus inlineNewDenseArrayForParallelExecution(CallInfo &callInfo);
+    InliningStatus inlineNewParallelArray(CallInfo &callInfo);
+    InliningStatus inlineParallelArray(CallInfo &callInfo);
+    InliningStatus inlineParallelArrayTail(CallInfo &callInfo,
+                                           HandleFunction target,
+                                           MDefinition *ctor,
+                                           types::StackTypeSet *ctorTypes,
+                                           uint32_t discards);
 
     InliningStatus inlineThrowError(CallInfo &callInfo);
     InliningStatus inlineDump(CallInfo &callInfo);
