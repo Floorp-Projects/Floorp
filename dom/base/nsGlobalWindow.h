@@ -16,7 +16,6 @@
 #include "nsWeakReference.h"
 #include "nsDataHashtable.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsDOMScriptObjectHolder.h"
 
 // Interfaces Needed
 #include "nsDOMWindowList.h"
@@ -532,7 +531,7 @@ public:
 
   virtual NS_HIDDEN_(void)
     CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
-                             nsScriptObjectHolder<JSObject>& aHandler);
+                             JS::Handle<JSObject*> aHandler);
 
   virtual bool TakeFocus(bool aFocus, uint32_t aFocusMethod);
   virtual void SetReadyForFocus();
