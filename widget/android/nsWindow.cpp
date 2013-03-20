@@ -698,7 +698,7 @@ nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence,
 }
 
 void
-nsWindow::CreateLayerManager()
+nsWindow::CreateLayerManager(int aCompositorWidth, int aCompositorHeight)
 {
     if (mLayerManager) {
         return;
@@ -716,11 +716,12 @@ nsWindow::CreateLayerManager()
         if (sLayerManager) {
             return;
         }
-        CreateCompositor();
+        CreateCompositor(aCompositorWidth, aCompositorHeight);
         if (mLayerManager) {
             // for OMTC create a single layer manager and compositor that will be
             // used for all windows.
             SetCompositor(mLayerManager, mCompositorParent, mCompositorChild);
+            sCompositorPaused = false;
             return;
         }
 
@@ -875,6 +876,10 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             }
             break;
 
+        case AndroidGeckoEvent::COMPOSITOR_CREATE:
+            win->CreateLayerManager(ae->Width(), ae->Height());
+            break;
+
         case AndroidGeckoEvent::COMPOSITOR_PAUSE:
             // The compositor gets paused when the app is about to go into the
             // background. While the compositor is paused, we need to ensure that
@@ -887,8 +892,6 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             break;
 
         case AndroidGeckoEvent::COMPOSITOR_RESUME:
-            win->CreateLayerManager();
-
             // When we receive this, the compositor has already been told to
             // resume. (It turns out that waiting till we reach here to tell
             // the compositor to resume takes too long, resulting in a black

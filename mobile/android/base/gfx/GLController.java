@@ -176,7 +176,7 @@ public class GLController {
         // happen without needing to block anyhwere. Do it with a sync gecko event so that the
         // android doesn't have a chance to destroy our surface in between.
         if (mEGLSurface != null && GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
-            GeckoAppShell.sendEventToGeckoSync(GeckoEvent.createCompositorResumeEvent());
+            GeckoAppShell.sendEventToGeckoSync(GeckoEvent.createCompositorCreateEvent(mWidth, mHeight));
         }
     }
 
