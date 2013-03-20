@@ -534,6 +534,7 @@ gc::StartVerifyPreBarriers(JSRuntime *rt)
     rt->gcIncrementalState = MARK;
     rt->gcMarker.start();
 
+    rt->setNeedsBarrier(true);
     for (ZonesIter zone(rt); !zone.done(); zone.next()) {
         PurgeJITCaches(zone);
         zone->setNeedsBarrier(true, Zone::UpdateIon);
@@ -617,6 +618,7 @@ gc::EndVerifyPreBarriers(JSRuntime *rt)
         zone->setNeedsBarrier(false, Zone::UpdateIon);
         PurgeJITCaches(zone);
     }
+    rt->setNeedsBarrier(false);
 
     /*
      * We need to bump gcNumber so that the methodjit knows that jitcode has
