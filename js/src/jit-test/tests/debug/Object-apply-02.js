@@ -38,9 +38,15 @@ function test(usingApply) {
         cv = usingApply ? push.apply(arr) : push.call(arr);
         assertEq(cv.return, 4);
 
-        // you can apply Array.prototype.push to a string; it does ToObject on it.
-        cv = usingApply ? push.apply("hello", ["world"]) : push.call("hello", "world");
-        assertEq(cv.return, 6);
+        // You can apply Array.prototype.push to a string; it does ToObject on
+        // it.  But as the length property on String objects is non-writable,
+        // attempting to increase the length will throw a TypeError.
+        cv = usingApply
+             ? push.apply("hello", ["world"])
+             : push.call("hello", "world");
+        assertEq("throw" in cv, true);
+        var ex = cv.throw;
+        assertEq(frame.evalWithBindings("ex instanceof TypeError", { ex: ex }).return, true);
     };
     g.eval("var a = []; f(Array.prototype.push, a);");
     assertEq(g.a.length, 4);
