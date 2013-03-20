@@ -328,22 +328,28 @@ var Addons = {
       if (xhr.responseXML) {
         // Only allow <setting> for now
         let settings = xhr.responseXML.querySelectorAll(":root > setting");
-        for (let i = 0; i < settings.length; i++) {
-          var setting = settings[i];
-          var desc = stripTextNodes(setting).trim();
-          if (!setting.hasAttribute("desc"))
-            setting.setAttribute("desc", desc);
-          box.appendChild(setting);
+        if (settings.length > 0) {
+          for (let i = 0; i < settings.length; i++) {
+            var setting = settings[i];
+            var desc = stripTextNodes(setting).trim();
+            if (!setting.hasAttribute("desc"))
+              setting.setAttribute("desc", desc);
+            box.appendChild(setting);
+          }
+          // Send an event so add-ons can prepopulate any non-preference based
+          // settings
+          let event = document.createEvent("Events");
+          event.initEvent("AddonOptionsLoad", true, false);
+          window.dispatchEvent(event);
+  
+          // Also send a notification to match the behavior of desktop Firefox
+          let id = aListItem.getAttribute("addonID");
+          Services.obs.notifyObservers(document, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED, id);
+        } else {
+          // No options, so hide the header and reset the list item
+          detailItem.setAttribute("optionsURL", "");
+          aListItem.setAttribute("optionsURL", "");
         }
-        // Send an event so add-ons can prepopulate any non-preference based
-        // settings
-        let event = document.createEvent("Events");
-        event.initEvent("AddonOptionsLoad", true, false);
-        window.dispatchEvent(event);
-
-        // Also send a notification to match the behavior of desktop Firefox
-        let id = aListItem.getAttribute("addonID");
-        Services.obs.notifyObservers(document, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED, id);
       }
     } catch (e) { }
 
