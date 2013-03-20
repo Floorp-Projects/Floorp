@@ -3220,13 +3220,7 @@ nsCSSFrameConstructor::ConstructTextFrame(const FrameConstructionData* aData,
   if (MOZ_UNLIKELY(!newFrame))
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsresult rv = InitAndRestoreFrame(aState, aContent, aParentFrame,
-                                    nullptr, newFrame);
-
-  if (NS_FAILED(rv)) {
-    newFrame->Destroy();
-    return rv;
-  }
+  InitAndRestoreFrame(aState, aContent, aParentFrame, nullptr, newFrame);
 
   // We never need to create a view for a text frame.
 
@@ -3250,7 +3244,7 @@ nsCSSFrameConstructor::ConstructTextFrame(const FrameConstructionData* aData,
   if (!aState.mCreatingExtraFrames)
     aContent->SetPrimaryFrame(newFrame);
   
-  return rv;
+  return NS_OK;
 }
 
 /* static */
@@ -3625,9 +3619,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
       BuildScrollFrame(aState, content, styleContext, newFrame,
                        geometricParent, frameToAddToList);
     } else {
-      rv = InitAndRestoreFrame(aState, content, geometricParent, nullptr,
-                               newFrame);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "InitAndRestoreFrame failed");
+      InitAndRestoreFrame(aState, content, geometricParent, nullptr, newFrame);
       // See whether we need to create a view
       nsContainerFrame::CreateViewForFrame(newFrame, false);
       frameToAddToList = newFrame;
@@ -3656,12 +3648,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
-      rv = InitAndRestoreFrame(aState, content, newFrame, nullptr, blockFrame);
-      if (NS_FAILED(rv)) {
-        blockFrame->Destroy();
-        primaryFrame->Destroy();
-        return rv;
-      }
+      InitAndRestoreFrame(aState, content, newFrame, nullptr, blockFrame);
 
       SetInitialSingleChild(newFrame, blockFrame);
 
@@ -4500,7 +4487,7 @@ nsCSSFrameConstructor::ConstructNonScrollableBlock(nsFrameConstructorState& aSta
 }
 
 
-nsresult 
+void
 nsCSSFrameConstructor::InitAndRestoreFrame(const nsFrameConstructorState& aState,
                                            nsIContent*              aContent,
                                            nsIFrame*                aParentFrame,
@@ -4511,9 +4498,7 @@ nsCSSFrameConstructor::InitAndRestoreFrame(const nsFrameConstructorState& aState
   NS_PRECONDITION(mUpdateCount != 0,
                   "Should be in an update while creating frames");
   
-  NS_ASSERTION(aNewFrame, "Null frame cannot be initialized");
-  if (!aNewFrame)
-    return NS_ERROR_NULL_POINTER;
+  MOZ_ASSERT(aNewFrame, "Null frame cannot be initialized");
 
   // Initialize the frame
   aNewFrame->Init(aContent, aParentFrame, aPrevInFlow);
@@ -4528,8 +4513,6 @@ nsCSSFrameConstructor::InitAndRestoreFrame(const nsFrameConstructorState& aState
       mCounterManager.AddCounterResetsAndIncrements(aNewFrame)) {
     CountersDirty();
   }
-
-  return NS_OK;
 }
 
 already_AddRefed<nsStyleContext>
@@ -10183,8 +10166,8 @@ nsCSSFrameConstructor::WrapFramesInFirstLineFrame(
     aLineFrame = NS_NewFirstLineFrame(mPresShell, firstLineStyle);
 
     // Initialize the line frame
-    rv = InitAndRestoreFrame(aState, aBlockContent, aBlockFrame, nullptr,
-                             aLineFrame);
+    InitAndRestoreFrame(aState, aBlockContent, aBlockFrame, nullptr,
+                        aLineFrame);
 
     // The lineFrame will be the block's first child; the rest of the
     // frame list (after lastInlineFrame) will be the second and
@@ -10307,8 +10290,8 @@ nsCSSFrameConstructor::InsertFirstLineFrames(
             GetFirstLineStyle(aContent, parentStyle);
 
           // Initialize the line frame
-          rv = InitAndRestoreFrame(aState, aContent, aBlockFrame,
-                                   nullptr, lineFrame);
+          InitAndRestoreFrame(aState, aContent, aBlockFrame,
+                              nullptr, lineFrame);
 
           // Make sure the caller inserts the lineFrame into the
           // blocks list of children.
