@@ -2777,9 +2777,10 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
   if (isPaginated) { // paginated
     // Create the first page
     // Set the initial child lists
-    nsIFrame *pageFrame, *canvasFrame;
-    ConstructPageFrame(mPresShell, presContext, rootFrame, nullptr,
-                       pageFrame, canvasFrame);
+    nsIFrame* canvasFrame;
+    nsIFrame* pageFrame =
+      ConstructPageFrame(mPresShell, presContext, rootFrame, nullptr,
+                         canvasFrame);
     SetInitialSingleChild(rootFrame, pageFrame);
 
     // The eventual parent of the document element frame.
@@ -2798,12 +2799,11 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
   return NS_OK;
 }
 
-nsresult
+nsIFrame*
 nsCSSFrameConstructor::ConstructPageFrame(nsIPresShell*  aPresShell,
                                           nsPresContext* aPresContext,
                                           nsIFrame*      aParentFrame,
                                           nsIFrame*      aPrevPageFrame,
-                                          nsIFrame*&     aPageFrame,
                                           nsIFrame*&     aCanvasFrame)
 {
   nsStyleContext* parentStyleContext = aParentFrame->StyleContext();
@@ -2813,11 +2813,11 @@ nsCSSFrameConstructor::ConstructPageFrame(nsIPresShell*  aPresShell,
   pagePseudoStyle = styleSet->ResolveAnonymousBoxStyle(nsCSSAnonBoxes::page,
                                                        parentStyleContext);
 
-  aPageFrame = NS_NewPageFrame(aPresShell, pagePseudoStyle);
+  nsIFrame* pageFrame = NS_NewPageFrame(aPresShell, pagePseudoStyle);
 
   // Initialize the page frame and force it to have a view. This makes printing of
   // the pages easier and faster.
-  aPageFrame->Init(nullptr, aParentFrame, aPrevPageFrame);
+  pageFrame->Init(nullptr, aParentFrame, aPrevPageFrame);
 
   nsRefPtr<nsStyleContext> pageContentPseudoStyle;
   pageContentPseudoStyle =
@@ -2833,8 +2833,8 @@ nsCSSFrameConstructor::ConstructPageFrame(nsIPresShell*  aPresShell,
     prevPageContentFrame = aPrevPageFrame->GetFirstPrincipalChild();
     NS_ASSERTION(prevPageContentFrame, "missing page content frame");
   }
-  pageContentFrame->Init(nullptr, aPageFrame, prevPageContentFrame);
-  SetInitialSingleChild(aPageFrame, pageContentFrame);
+  pageContentFrame->Init(nullptr, pageFrame, prevPageContentFrame);
+  SetInitialSingleChild(pageFrame, pageContentFrame);
   mFixedContainingBlock = pageContentFrame;
   // Make it an absolute container for fixed-pos elements
   mFixedContainingBlock->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
@@ -2853,8 +2853,7 @@ nsCSSFrameConstructor::ConstructPageFrame(nsIPresShell*  aPresShell,
   }
   aCanvasFrame->Init(nullptr, pageContentFrame, prevCanvasFrame);
   SetInitialSingleChild(pageContentFrame, aCanvasFrame);
-
-  return NS_OK;
+  return pageFrame;
 }
 
 /* static */
@@ -8715,14 +8714,13 @@ nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresShell*    aPresShe
   return NS_OK;
 }
 
-nsresult
+nsIFrame*
 nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresShell* aPresShell, 
                                                   nsPresContext*  aPresContext,
                                                   nsIFrame*        aFrame,
                                                   nsIFrame*        aParentFrame,
                                                   nsIContent*      aContent,
-                                                  nsStyleContext*  aStyleContext,
-                                                  nsIFrame**       aContinuingFrame)
+                                                  nsStyleContext*  aStyleContext)
 {
   nsIFrame* newFrame = NS_NewTableFrame(aPresShell, aStyleContext);
 
@@ -8772,8 +8770,7 @@ nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresShell* aPresShell,
   // Set the table frame's initial child list
   newFrame->SetInitialChildList(kPrincipalList, childFrames);
 
-  *aContinuingFrame = newFrame;
-  return NS_OK;
+  return newFrame;
 }
 
 nsresult
@@ -8816,15 +8813,16 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (nsGkAtoms::pageFrame == frameType) {
     nsIFrame* canvasFrame;
-    rv = ConstructPageFrame(shell, aPresContext, aParentFrame, aFrame,
-                            newFrame, canvasFrame);
+    newFrame = ConstructPageFrame(shell, aPresContext, aParentFrame, aFrame,
+                                  canvasFrame);
   } else if (nsGkAtoms::tableOuterFrame == frameType) {
     rv = CreateContinuingOuterTableFrame(shell, aPresContext, aFrame, aParentFrame,
                                          content, styleContext, &newFrame);
 
   } else if (nsGkAtoms::tableFrame == frameType) {
-    rv = CreateContinuingTableFrame(shell, aPresContext, aFrame, aParentFrame,
-                                    content, styleContext, &newFrame);
+    newFrame =
+      CreateContinuingTableFrame(shell, aPresContext, aFrame, aParentFrame,
+                                 content, styleContext);
 
   } else if (nsGkAtoms::tableRowGroupFrame == frameType) {
     newFrame = NS_NewTableRowGroupFrame(shell, styleContext);

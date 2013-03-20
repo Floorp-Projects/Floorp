@@ -388,12 +388,11 @@ private:
   struct FrameConstructionItem;
   class FrameConstructionItemList;
 
-  nsresult ConstructPageFrame(nsIPresShell*  aPresShell, 
-                              nsPresContext* aPresContext,
-                              nsIFrame*      aParentFrame,
-                              nsIFrame*      aPrevPageFrame,
-                              nsIFrame*&     aPageFrame,
-                              nsIFrame*&     aCanvasFrame);
+  nsIFrame* ConstructPageFrame(nsIPresShell*  aPresShell, 
+                               nsPresContext* aPresContext,
+                               nsIFrame*      aParentFrame,
+                               nsIFrame*      aPrevPageFrame,
+                               nsIFrame*&     aCanvasFrame);
 
   /* aMinHint is the minimal change that should be made to the element */
   // XXXbz do we really need the aPrimaryFrame argument here?
@@ -1551,13 +1550,12 @@ private:
                                            nsStyleContext*  aStyleContext,
                                            nsIFrame**       aContinuingFrame);
 
-  nsresult CreateContinuingTableFrame(nsIPresShell*    aPresShell, 
-                                      nsPresContext*  aPresContext,
-                                      nsIFrame*        aFrame,
-                                      nsIFrame*        aParentFrame,
-                                      nsIContent*      aContent,
-                                      nsStyleContext*  aStyleContext,
-                                      nsIFrame**       aContinuingFrame);
+  nsIFrame* CreateContinuingTableFrame(nsIPresShell*    aPresShell, 
+                                       nsPresContext*  aPresContext,
+                                       nsIFrame*        aFrame,
+                                       nsIFrame*        aParentFrame,
+                                       nsIContent*      aContent,
+                                       nsStyleContext*  aStyleContext);
 
   //----------------------------------------
 
