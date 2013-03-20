@@ -422,10 +422,10 @@ private:
   // Construct a frame for aContent and put it in aFrameItems.  This should
   // only be used in cases when it's known that the frame won't need table
   // pseudo-frame construction and the like.
-  nsresult ConstructFrame(nsFrameConstructorState& aState,
-                          nsIContent*              aContent,
-                          nsIFrame*                aParentFrame,
-                          nsFrameItems&            aFrameItems);
+  void ConstructFrame(nsFrameConstructorState& aState,
+                      nsIContent*              aContent,
+                      nsIFrame*                aParentFrame,
+                      nsFrameItems&            aFrameItems);
 
   // Add the frame construction items for the given aContent and aParentFrame
   // to the list.  This might add more than one item in some rare cases.
