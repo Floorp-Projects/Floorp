@@ -166,7 +166,6 @@ NS_IMPL_CLASSINFO(nsNavHistory, NULL, nsIClassInfo::SINGLETON,
                   NS_NAVHISTORYSERVICE_CID)
 NS_INTERFACE_MAP_BEGIN(nsNavHistory)
   NS_INTERFACE_MAP_ENTRY(nsINavHistoryService)
-  NS_INTERFACE_MAP_ENTRY(nsIGlobalHistory2)
   NS_INTERFACE_MAP_ENTRY(nsIBrowserHistory)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -178,10 +177,9 @@ NS_INTERFACE_MAP_BEGIN(nsNavHistory)
 NS_INTERFACE_MAP_END
 
 // We don't care about flattening everything
-NS_IMPL_CI_INTERFACE_GETTER3(
+NS_IMPL_CI_INTERFACE_GETTER2(
   nsNavHistory
 , nsINavHistoryService
-, nsIGlobalHistory2
 , nsIBrowserHistory
 )
 
@@ -617,33 +615,6 @@ nsNavHistory::FindLastVisit(nsIURI* aURI,
     return true;
   }
   return false;
-}
-
-
-// nsNavHistory::IsURIStringVisited
-//
-//    Takes a URL as a string and returns true if we've visited it.
-//
-//    Be careful to always reset the statement since it will be reused.
-
-bool nsNavHistory::IsURIStringVisited(const nsACString& aURIString)
-{
-  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-    "SELECT 1 "
-    "FROM moz_places h "
-    "WHERE url = ?1 "
-      "AND last_visit_date NOTNULL "
-  );
-  NS_ENSURE_TRUE(stmt, false);
-  mozStorageStatementScoper scoper(stmt);
-
-  nsresult rv = URIBinder::Bind(stmt, 0, aURIString);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  bool hasMore = false;
-  rv = stmt->ExecuteStep(&hasMore);
-  NS_ENSURE_SUCCESS(rv, false);
-  return hasMore;
 }
 
 
@@ -1187,8 +1158,6 @@ nsNavHistory::invalidateFrecencies(const nsCString& aPlaceIdsQueryString)
 
 // Call this method before visiting a URL in order to help determine the
 // transition type of the visit.
-// Later, in AddVisitChain() the next visit to this page will be associated to
-// TRANSITION_BOOKMARK.
 //
 // @see MarkPageAsTyped
 
@@ -3113,8 +3082,6 @@ nsNavHistory::RemoveAllPages()
 
 // Call this method before visiting a URL in order to help determine the
 // transition type of the visit.
-// Later, in AddVisitChain() the next visit to this page will be associated to
-// TRANSITION_TYPED.
 //
 // @see MarkPageAsFollowedBookmark
 
@@ -3147,8 +3114,6 @@ nsNavHistory::MarkPageAsTyped(nsIURI *aURI)
 
 // Call this method before visiting a URL in order to help determine the
 // transition type of the visit.
-// Later, in AddVisitChain() the next visit to this page will be associated to
-// TRANSITION_FRAMED_LINK or TRANSITION_LINK.
 //
 // @see MarkPageAsTyped
 
@@ -3239,232 +3204,6 @@ nsNavHistory::GetCharsetForURI(nsIURI* aURI,
   return NS_OK;
 }
 
-
-// nsGlobalHistory2 ************************************************************
-
-
-// nsNavHistory::AddURI
-//
-//    This is the main method of adding history entries.
-
-NS_IMETHODIMP
-nsNavHistory::AddURI(nsIURI *aURI, bool aRedirect,
-                     bool aToplevel, nsIURI *aReferrer)
-{
-  PLACES_WARN_DEPRECATED();
-  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
-  NS_ENSURE_ARG(aURI);
-
-  // filter out any unwanted URIs
-  bool canAdd = false;
-  nsresult rv = CanAddURI(aURI, &canAdd);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!canAdd)
-    return NS_OK;
-
-  PRTime now = PR_Now();
-
-  rv = AddURIInternal(aURI, now, aRedirect, aToplevel, aReferrer);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-
-// nsNavHistory::AddURIInternal
-//
-//    This does the work of AddURI so it can be done lazily.
-
-nsresult
-nsNavHistory::AddURIInternal(nsIURI* aURI, PRTime aTime, bool aRedirect,
-                             bool aToplevel, nsIURI* aReferrer)
-{
-  mozStorageTransaction transaction(mDB->MainConn(), false);
-
-  int64_t visitID = 0;
-  int64_t sessionID = 0;
-  nsresult rv = AddVisitChain(aURI, aTime, aToplevel, aRedirect, aReferrer,
-                              &visitID, &sessionID);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return transaction.Commit();
-}
-
-
-// nsNavHistory::AddVisitChain
-//
-//    This function is sits between AddURI (which is called when a page is
-//    visited) and AddVisit (which creates the DB entries) to figure out what
-//    we should add and what are the detailed parameters that should be used
-//    (like referring visit ID and typed/bookmarked state).
-//
-//    This function walks up the referring chain and recursively calls itself,
-//    each time calling InternalAdd to create a new history entry.
-
-nsresult
-nsNavHistory::AddVisitChain(nsIURI* aURI,
-                            PRTime aTime,
-                            bool aToplevel,
-                            bool aIsRedirect,
-                            nsIURI* aReferrerURI,
-                            int64_t* aVisitID,
-                            int64_t* aSessionID)
-{
-  // This is the address that will be saved to from_visit column, will be
-  // overwritten later if needed.
-  nsCOMPtr<nsIURI> fromVisitURI = aReferrerURI;
-
-  nsAutoCString spec;
-  nsresult rv = aURI->GetSpec(spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // A visit is considered EMBED if it's in a frame and the page visit does not
-  // come from a user's action (like clicking a link), otherwise is FRAMED_LINK.
-  // An embed visit should not appear in history views.
-  // See bug 381453 for details.
-  bool isEmbedVisit = !aToplevel &&
-                        !CheckIsRecentEvent(&mRecentLink, spec);
-
-  uint32_t transitionType = 0;
-
-  if (aReferrerURI) {
-  // This page had a referrer.
-
-    // Check if the referrer has a previous visit.
-    PRTime lastVisitTime;
-    int64_t referringVisitId;
-    bool referrerHasPreviousVisit =
-      FindLastVisit(aReferrerURI, &referringVisitId, &lastVisitTime, aSessionID);
-
-    // Don't add a new visit if the referring site is the same as
-    // the new site.  This happens when a page refreshes itself.
-    // Otherwise, if the page has never been added, the visit should be
-    // registered regardless.
-    bool referrerIsSame;
-    if (NS_SUCCEEDED(aURI->Equals(aReferrerURI, &referrerIsSame)) &&
-        referrerIsSame && referrerHasPreviousVisit) {
-      // Ensure a valid session id to the chain.
-      if (aIsRedirect)
-        *aSessionID = GetNewSessionID();
-      return NS_OK;
-    }
-
-    if (!referrerHasPreviousVisit ||
-        aTime - lastVisitTime > RECENT_EVENT_THRESHOLD) {
-      // Either the referrer has no visits or the last visit is too
-      // old to be part of this session.  Thus start a new session.
-      *aSessionID = GetNewSessionID();
-    }
-
-    // Since referrer is set, this visit comes from an originating page.
-    // For top-level windows, visit is considered user-initiated and it should
-    // appear in history views.
-    // Visits to pages in frames are distinguished between user-initiated ones
-    // and automatic ones.
-    if (isEmbedVisit)
-      transitionType = nsINavHistoryService::TRANSITION_EMBED;
-    else if (!aToplevel)
-      transitionType = nsINavHistoryService::TRANSITION_FRAMED_LINK;
-    else
-      transitionType = nsINavHistoryService::TRANSITION_LINK;
-  }
-  else {
-    // When there is no referrer:
-    // - Check recent events for a typed-in uri.
-    // - Check recent events for a bookmark selection.
-    // - Otherwise mark as TRANSITION_LINK or TRANSITION_EMBED depending on
-    //   whether it happens in a frame (see above for reasoning about this).
-    // Drag and drop operations are not handled, so they will most likely
-    // be marked as links.
-    if (CheckIsRecentEvent(&mRecentTyped, spec))
-      transitionType = nsINavHistoryService::TRANSITION_TYPED;
-    else if (CheckIsRecentEvent(&mRecentBookmark, spec))
-      transitionType = nsINavHistoryService::TRANSITION_BOOKMARK;
-    else if (isEmbedVisit)
-      transitionType = nsINavHistoryService::TRANSITION_EMBED;
-    else if (!aToplevel)
-      transitionType = nsINavHistoryService::TRANSITION_FRAMED_LINK;
-    else
-      transitionType = nsINavHistoryService::TRANSITION_LINK;
-
-    // Since there is no referrer, there is no way to continue am existing
-    // session.
-    *aSessionID = GetNewSessionID();
-  }
-
-  NS_WARN_IF_FALSE(transitionType > 0, "Visit must have a transition type");
-
-  // Create the visit and update the page entry.
-  return AddVisit(aURI, aTime, fromVisitURI, transitionType,
-                  aIsRedirect, *aSessionID, aVisitID);
-}
-
-
-// nsNavHistory::IsVisited
-//
-//    Note that this ignores the "hidden" flag. This function just checks if the
-//    given page is in the DB for link coloring. The "hidden" flag affects
-//    the history list view and autocomplete.
-
-NS_IMETHODIMP
-nsNavHistory::IsVisited(nsIURI *aURI, bool *_retval)
-{
-  PLACES_WARN_DEPRECATED();
-  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
-  NS_ENSURE_ARG(aURI);
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  // if history is disabled, we can optimize
-  if (IsHistoryDisabled()) {
-    *_retval = false;
-    return NS_OK;
-  }
-
-  nsAutoCString utf8URISpec;
-  nsresult rv = aURI->GetSpec(utf8URISpec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *_retval = hasEmbedVisit(aURI) ? true : IsURIStringVisited(utf8URISpec);
-  return NS_OK;
-}
-
-// nsNavHistory::SetPageTitle
-//
-//    This sets the page title.
-//
-//    Note that we do not allow empty real titles and will silently ignore such
-//    requests. When a URL is added we give it a default title based on the
-//    URL. Most pages provide a title and it gets replaced to something better.
-//    Some pages don't: some say <title></title>, and some don't have any title
-//    element. In BOTH cases, we get SetPageTitle(URI, ""), but in both cases,
-//    our default title is more useful to the user than "(no title)".
-
-NS_IMETHODIMP
-nsNavHistory::SetPageTitle(nsIURI* aURI,
-                           const nsAString& aTitle)
-{
-  PLACES_WARN_DEPRECATED();
-  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
-  NS_ENSURE_ARG(aURI);
-
-  // if aTitle is empty we want to clear the previous title.
-  // We don't want to set it to an empty string, but to a NULL value,
-  // so we use SetIsVoid and SetPageTitleInternal will take care of that
-
-  nsresult rv;
-  if (aTitle.IsEmpty()) {
-    // Using a void string to bind a NULL in the database.
-    nsString voidString;
-    voidString.SetIsVoid(true);
-    rv = SetPageTitleInternal(aURI, voidString);
-  }
-  else {
-    rv = SetPageTitleInternal(aURI, aTitle);
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsNavHistory::GetPageTitle(nsIURI* aURI, nsAString& aTitle)
@@ -4834,87 +4573,6 @@ nsNavHistory::GetMonthYear(int32_t aMonth, int32_t aYear, nsACString& aResult)
     }
   }
   aResult.AppendLiteral("finduri-MonthYear");
-}
-
-// nsNavHistory::SetPageTitleInternal
-//
-//    Called to set the title for the given URI. Used as a
-//    backend for SetTitle.
-//
-//    Will fail for pages that are not in the DB. To clear the corresponding
-//    title, use aTitle.SetIsVoid(). Sending an empty string will save an
-//    empty string instead of clearing it.
-
-nsresult
-nsNavHistory::SetPageTitleInternal(nsIURI* aURI, const nsAString& aTitle)
-{
-  nsresult rv;
-
-  // Make sure the page exists by fetching its GUID and the old title.
-  nsAutoString title;
-  nsAutoCString guid;
-  {
-    nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-      "SELECT id, url, title, rev_host, visit_count, guid "
-      "FROM moz_places "
-      "WHERE url = :page_url "
-    );
-    NS_ENSURE_STATE(stmt);
-    mozStorageStatementScoper scoper(stmt);
-
-    rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aURI);
-    NS_ENSURE_SUCCESS(rv, rv);
-    bool hasURL = false;
-    rv = stmt->ExecuteStep(&hasURL);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!hasURL) {
-      // If the url is unknown, either the page had an embed visit, or we have
-      // never seen it.  While the former is fine, the latter is an error.
-      if (hasEmbedVisit(aURI)) {
-        return NS_OK;
-      }
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    rv = stmt->GetString(2, title);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->GetUTF8String(5, guid);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // It is actually common to set the title to be the same thing it used to
-  // be. For example, going to any web page will always cause a title to be set,
-  // even though it will often be unchanged since the last visit. In these
-  // cases, we can avoid DB writing and (most significantly) observer overhead.
-  if ((aTitle.IsVoid() && title.IsVoid()) || aTitle == title)
-    return NS_OK;
-
-  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-    "UPDATE moz_places "
-    "SET title = :page_title "
-    "WHERE url = :page_url "
-  );
-  NS_ENSURE_STATE(stmt);
-  mozStorageStatementScoper scoper(stmt);
-
-  if (aTitle.IsVoid())
-    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("page_title"));
-  else {
-    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("page_title"),
-                                StringHead(aTitle, TITLE_LENGTH_MAX));
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = stmt->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  MOZ_ASSERT(!guid.IsEmpty());
-  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                   nsINavHistoryObserver, OnTitleChanged(aURI, aTitle, guid));
-
-  return NS_OK;
 }
 
 
