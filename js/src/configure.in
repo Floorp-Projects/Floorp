@@ -2151,11 +2151,6 @@ else
     ENABLE_ION=
 fi
 
-# Disable IonMonkey for B2G, for now.
-if test "$MOZ_APP_NAME" = b2g; then
-    ENABLE_ION=
-fi
-
 if test "$ENABLE_MONOIC"; then
     AC_DEFINE(JS_MONOIC)
 fi
