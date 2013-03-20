@@ -14,12 +14,12 @@
 .text
 	.align 2
 #
-#   NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
+#   NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
 #                    uint32_t paramCount, nsXPTCVariant* params)
 #
 
-.globl __NS_InvokeByIndex	
-__NS_InvokeByIndex:
+.globl __NS_InvokeByIndex_P	
+__NS_InvokeByIndex_P:
 	mflr	r0
 	stw	r31,-4(r1)
 #

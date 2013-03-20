@@ -38,15 +38,15 @@
 	.text
 
 #	
-# _NS_InvokeByIndex(that, methodIndex, paramCount, params)
+# _NS_InvokeByIndex_P(that, methodIndex, paramCount, params)
 #                      a0       a1          a2         a3
 
-	.globl	_NS_InvokeByIndex
+	.globl	_NS_InvokeByIndex_P
 	.align	2
-	.type	_NS_InvokeByIndex,@function
-	.ent	_NS_InvokeByIndex,0
+	.type	_NS_InvokeByIndex_P,@function
+	.ent	_NS_InvokeByIndex_P,0
 	.frame	fp, FRAMESZ, ra
-_NS_InvokeByIndex:
+_NS_InvokeByIndex_P:
 	SETUP_GP
 	subu	sp, FRAMESZ
 
@@ -131,4 +131,4 @@ _NS_InvokeByIndex:
 
 	addiu	sp, FRAMESZ
 	j	ra
-END(_NS_InvokeByIndex)
+END(_NS_InvokeByIndex_P)
