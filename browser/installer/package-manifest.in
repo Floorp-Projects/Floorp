@@ -69,7 +69,6 @@
 @BINPATH@/@DLL_PREFIX@plds4@DLL_SUFFIX@
 #endif
 #endif
-@BINPATH@/@DLL_PREFIX@xpcom@DLL_SUFFIX@
 #ifdef XP_MACOSX
 @BINPATH@/XUL
 #else

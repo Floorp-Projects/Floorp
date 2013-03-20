@@ -207,7 +207,6 @@ add_tier_dir('platform', app_libxul_dirs)
 add_tier_dir('platform', app_libxul_static_dirs, static=True)
 
 add_tier_dir('platform', 'toolkit/library')
-add_tier_dir('platform', 'xpcom/stub')
 
 if CONFIG['MOZ_REPLACE_MALLOC']:
     add_tier_dir('platform', 'memory/replace')

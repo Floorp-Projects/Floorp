@@ -33,7 +33,7 @@ invoke_copy_to_stack(uint32_t paramCount, nsXPTCVariant* s, uint32_t* d)
 
 /*
   EXPORT_XPCOM_API(nsresult)
-  NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
+  NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
                    uint32_t paramCount, nsXPTCVariant* params);
 
   Each param takes at most two 4-byte words.
@@ -52,11 +52,11 @@ __asm__ (
 /* alignment here seems unimportant here; this was 16, now it's 2 which
    is what xptcstubs uses. */
 	".align 2\n\t"
-	".globl " SYMBOL_UNDERSCORE "NS_InvokeByIndex_P\n\t"
+	".globl " SYMBOL_UNDERSCORE "NS_InvokeByIndex\n\t"
 #ifndef XP_MACOSX
-	".type  " SYMBOL_UNDERSCORE "NS_InvokeByIndex_P,@function\n"
+	".type  " SYMBOL_UNDERSCORE "NS_InvokeByIndex,@function\n"
 #endif
-	SYMBOL_UNDERSCORE "NS_InvokeByIndex_P:\n\t"
+	SYMBOL_UNDERSCORE "NS_InvokeByIndex:\n\t"
 	"pushl %ebp\n\t"
 	"movl  %esp, %ebp\n\t"
 	"movl  0x10(%ebp), %eax\n\t"
@@ -92,6 +92,6 @@ __asm__ (
 	"popl  %ebp\n\t"
 	"ret\n"
 #ifndef XP_MACOSX
-	".size " SYMBOL_UNDERSCORE "NS_InvokeByIndex_P, . -" SYMBOL_UNDERSCORE "NS_InvokeByIndex_P\n\t"
+	".size " SYMBOL_UNDERSCORE "NS_InvokeByIndex, . -" SYMBOL_UNDERSCORE "NS_InvokeByIndex\n\t"
 #endif
 );
