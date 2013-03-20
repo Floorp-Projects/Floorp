@@ -727,12 +727,12 @@ static bool
 DoUseCountFallback(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *frame,
                    IonOsrTempData **infoPtr)
 {
+    JS_ASSERT(infoPtr);
+    *infoPtr = NULL;
+
     // A TI OOM will disable TI and Ion.
     if (!ion::IsEnabled(cx))
         return true;
-
-    JS_ASSERT(infoPtr);
-    *infoPtr = NULL;
 
     RootedScript script(cx, frame->script());
     jsbytecode *pc = stub->icEntry()->pc(script);
