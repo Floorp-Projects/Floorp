@@ -47,10 +47,14 @@ public:
       mappedTracksWithMatchingInputTracks.AppendElement(false);
     }
     bool allFinished = true;
+    bool allHaveCurrentData = true;
     for (uint32_t i = 0; i < mInputs.Length(); ++i) {
       MediaStream* stream = mInputs[i]->GetSource();
       if (!stream->IsFinishedOnGraphThread()) {
         allFinished = false;
+      }
+      if (!stream->HasCurrentData()) {
+        allHaveCurrentData = false;
       }
       for (StreamBuffer::TrackIter tracks(stream->GetStreamBuffer());
            !tracks.IsEnded(); tracks.Next()) {
@@ -97,6 +101,10 @@ public:
       FinishOnGraphThread();
     }
     mBuffer.AdvanceKnownTracksTime(GraphTimeToStreamTime(aTo));
+    if (allHaveCurrentData) {
+      // We can make progress if we're not blocked
+      mHasCurrentData = true;
+    }
   }
 
 protected:
