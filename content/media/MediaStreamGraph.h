@@ -128,10 +128,12 @@ public:
   virtual void NotifyBlockingChanged(MediaStreamGraph* aGraph, Blocking aBlocked) {}
 
   /**
-   * Notify that the stream has (or does not have) data in each track
-   * for the stream's current time.
+   * Notify that the stream has data in each track
+   * for the stream's current time. Once this state becomes true, it will
+   * always be true since we block stream time from progressing to times where
+   * there isn't data in each track.
    */
-  virtual void NotifyHasCurrentData(MediaStreamGraph* aGraph, bool aHasCurrentData) {}
+  virtual void NotifyHasCurrentData(MediaStreamGraph* aGraph) {}
 
   /**
    * Notify that the stream output is advancing.
@@ -268,6 +270,8 @@ public:
     , mFinished(false)
     , mNotifiedFinished(false)
     , mNotifiedBlocked(false)
+    , mHasCurrentData(false)
+    , mNotifiedHasCurrentData(false)
     , mWrapper(aWrapper)
     , mMainThreadCurrentTime(0)
     , mMainThreadFinished(false)
@@ -421,6 +425,8 @@ public:
   bool IsFinishedOnGraphThread() { return mFinished; }
   void FinishOnGraphThread();
 
+  bool HasCurrentData() { return mHasCurrentData; }
+
 protected:
   virtual void AdvanceTimeVaryingValuesToCurrentTime(GraphTime aCurrentTime, GraphTime aBlockedTime)
   {
@@ -503,6 +509,17 @@ protected:
    * indicated that the stream is blocked.
    */
   bool mNotifiedBlocked;
+  /**
+   * True if some data can be present by this stream if/when it's unblocked.
+   * Set by the stream itself on the MediaStreamGraph thread. Only changes
+   * from false to true once a stream has data, since we won't
+   * unblock it until there's more data.
+   */
+  bool mHasCurrentData;
+  /**
+   * True if mHasCurrentData is true and we've notified listeners.
+   */
+  bool mNotifiedHasCurrentData;
 
   // Temporary data for ordering streams by dependency graph
   bool mHasBeenOrdered;
