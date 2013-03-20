@@ -519,42 +519,38 @@ private:
    * Construct an outer table frame.  This is the FrameConstructionData
    * callback used for the job.
    */
-  nsresult ConstructTable(nsFrameConstructorState& aState,
-                          FrameConstructionItem&   aItem,
-                          nsIFrame*                aParentFrame,
-                          const nsStyleDisplay*    aDisplay,
-                          nsFrameItems&            aFrameItems,
-                          nsIFrame**               aNewFrame);
+  nsIFrame* ConstructTable(nsFrameConstructorState& aState,
+                           FrameConstructionItem&   aItem,
+                           nsIFrame*                aParentFrame,
+                           const nsStyleDisplay*    aDisplay,
+                           nsFrameItems&            aFrameItems);
 
   /**
    * FrameConstructionData callback used for constructing table rows.
    */
-  nsresult ConstructTableRow(nsFrameConstructorState& aState,
-                             FrameConstructionItem&   aItem,
-                             nsIFrame*                aParentFrame,
-                             const nsStyleDisplay*    aStyleDisplay,
-                             nsFrameItems&            aFrameItems,
-                             nsIFrame**               aNewFrame);
+  nsIFrame* ConstructTableRow(nsFrameConstructorState& aState,
+                              FrameConstructionItem&   aItem,
+                              nsIFrame*                aParentFrame,
+                              const nsStyleDisplay*    aStyleDisplay,
+                              nsFrameItems&            aFrameItems);
 
   /**
    * FrameConstructionData callback used for constructing table columns.
    */
-  nsresult ConstructTableCol(nsFrameConstructorState& aState,
-                             FrameConstructionItem&   aItem,
-                             nsIFrame*                aParentFrame,
-                             const nsStyleDisplay*    aStyleDisplay,
-                             nsFrameItems&            aFrameItems,
-                             nsIFrame**               aNewFrame);
+  nsIFrame* ConstructTableCol(nsFrameConstructorState& aState,
+                              FrameConstructionItem&   aItem,
+                              nsIFrame*                aParentFrame,
+                              const nsStyleDisplay*    aStyleDisplay,
+                              nsFrameItems&            aFrameItems);
 
   /**
    * FrameConstructionData callback used for constructing table cells.
    */
-  nsresult ConstructTableCell(nsFrameConstructorState& aState,
-                              FrameConstructionItem&   aItem,
-                              nsIFrame*                aParentFrame,
-                              const nsStyleDisplay*    aStyleDisplay,
-                              nsFrameItems&            aFrameItems,
-                              nsIFrame**               aNewFrame);
+  nsIFrame* ConstructTableCell(nsFrameConstructorState& aState,
+                               FrameConstructionItem&   aItem,
+                               nsIFrame*                aParentFrame,
+                               const nsStyleDisplay*    aStyleDisplay,
+                               nsFrameItems&            aFrameItems);
 
 private:
   /* An enum of possible parent types for anonymous table object construction */
@@ -607,11 +603,12 @@ private:
   /* A constructor function that's used for complicated construction tasks.
      This is expected to create the new frame, initialize it, add whatever
      needs to be added to aFrameItems (XXXbz is that really necessary?  Could
-     caller add?  Might there be cases when *aNewFrame or its placeholder is
-     not the thing that ends up in aFrameItems?  If not, would it be safe to do
-     the add into the frame construction state after processing kids?  Look
-     into this as a followup!), process children as needed, etc.  It is NOT
-     expected to deal with setting the frame on the content.
+     caller add?  Might there be cases when the returned frame or its
+     placeholder is not the thing that ends up in aFrameItems?  If not, would
+     it be safe to do the add into the frame construction state after
+     processing kids?  Look into this as a followup!), process children as
+     needed, etc.  It is NOT expected to deal with setting the frame on the
+     content.
 
      @param aState the frame construction state to use.
      @param aItem the frame construction item to use
@@ -620,16 +617,15 @@ private:
      @param aStyleDisplay the display struct from aItem's mStyleContext
      @param aFrameItems the frame list to add the new frame (or its
                         placeholder) to.
-     @param aFrame out param handing out the frame that was constructed.  This
-                   frame is what the caller will set as the frame on the content.
+     @return the frame that was constructed.  This frame is what the caller
+             will set as the frame on the content.  Guaranteed non-null.
   */
-  typedef nsresult
+  typedef nsIFrame*
     (nsCSSFrameConstructor::* FrameFullConstructor)(nsFrameConstructorState& aState,
                                                     FrameConstructionItem& aItem,
                                                     nsIFrame* aParentFrame,
                                                     const nsStyleDisplay* aStyleDisplay,
-                                                    nsFrameItems& aFrameItems,
-                                                    nsIFrame** aFrame);
+                                                    nsFrameItems& aFrameItems);
 
   /* Bits that modify the way a FrameConstructionData is handled */
 
@@ -1188,21 +1184,19 @@ protected:
 private:
   // ConstructSelectFrame puts the new frame in aFrameItems and
   // handles the kids of the select.
-  nsresult ConstructSelectFrame(nsFrameConstructorState& aState,
-                                FrameConstructionItem&   aItem,
-                                nsIFrame*                aParentFrame,
-                                const nsStyleDisplay*    aStyleDisplay,
-                                nsFrameItems&            aFrameItems,
-                                nsIFrame**               aNewFrame);
+  nsIFrame* ConstructSelectFrame(nsFrameConstructorState& aState,
+                                 FrameConstructionItem&   aItem,
+                                 nsIFrame*                aParentFrame,
+                                 const nsStyleDisplay*    aStyleDisplay,
+                                 nsFrameItems&            aFrameItems);
 
   // ConstructFieldSetFrame puts the new frame in aFrameItems and
   // handles the kids of the fieldset
-  nsresult ConstructFieldSetFrame(nsFrameConstructorState& aState,
-                                  FrameConstructionItem&   aItem,
-                                  nsIFrame*                aParentFrame,
-                                  const nsStyleDisplay*    aStyleDisplay,
-                                  nsFrameItems&            aFrameItems,
-                                  nsIFrame**               aNewFrame);
+  nsIFrame* ConstructFieldSetFrame(nsFrameConstructorState& aState,
+                                   FrameConstructionItem&   aItem,
+                                   nsIFrame*                aParentFrame,
+                                   const nsStyleDisplay*    aStyleDisplay,
+                                   nsFrameItems&            aFrameItems);
 
   // aParentFrame might be null.  If it is, that means it was an
   // inline frame.
@@ -1378,12 +1372,11 @@ private:
    * children, and its descendant frames.  This is the FrameConstructionData
    * callback used for the job.
    */
-  nsresult ConstructOuterSVG(nsFrameConstructorState& aState,
-                             FrameConstructionItem&   aItem,
-                             nsIFrame*                aParentFrame,
-                             const nsStyleDisplay*    aDisplay,
-                             nsFrameItems&            aFrameItems,
-                             nsIFrame**               aNewFrame);
+  nsIFrame* ConstructOuterSVG(nsFrameConstructorState& aState,
+                              FrameConstructionItem&   aItem,
+                              nsIFrame*                aParentFrame,
+                              const nsStyleDisplay*    aDisplay,
+                              nsFrameItems&            aFrameItems);
 
   static const FrameConstructionData* FindSVGData(Element* aElement,
                                                   nsIAtom* aTag,
@@ -1402,22 +1395,20 @@ private:
   /**
    * Construct a scrollable block frame
    */
-  nsresult ConstructScrollableBlock(nsFrameConstructorState& aState,
-                                    FrameConstructionItem&   aItem,
-                                    nsIFrame*                aParentFrame,
-                                    const nsStyleDisplay*    aDisplay,
-                                    nsFrameItems&            aFrameItems,
-                                    nsIFrame**               aNewFrame);
+  nsIFrame* ConstructScrollableBlock(nsFrameConstructorState& aState,
+                                     FrameConstructionItem&   aItem,
+                                     nsIFrame*                aParentFrame,
+                                     const nsStyleDisplay*    aDisplay,
+                                     nsFrameItems&            aFrameItems);
 
   /**
    * Construct a non-scrollable block frame
    */
-  nsresult ConstructNonScrollableBlock(nsFrameConstructorState& aState,
-                                       FrameConstructionItem&   aItem,
-                                       nsIFrame*                aParentFrame,
-                                       const nsStyleDisplay*    aDisplay,
-                                       nsFrameItems&            aFrameItems,
-                                       nsIFrame**               aNewFrame);
+  nsIFrame* ConstructNonScrollableBlock(nsFrameConstructorState& aState,
+                                        FrameConstructionItem&   aItem,
+                                        nsIFrame*                aParentFrame,
+                                        const nsStyleDisplay*    aDisplay,
+                                        nsFrameItems&            aFrameItems);
 
   /**
    * Construct the frames for the children of aContent.  "children" is defined
@@ -1606,12 +1597,11 @@ private:
                       bool                     aAbsPosContainer,
                       PendingBinding*          aPendingBinding);
 
-  nsresult ConstructInline(nsFrameConstructorState& aState,
-                           FrameConstructionItem&   aItem,
-                           nsIFrame*                aParentFrame,
-                           const nsStyleDisplay*    aDisplay,
-                           nsFrameItems&            aFrameItems,
-                           nsIFrame**               aNewFrame);
+  nsIFrame* ConstructInline(nsFrameConstructorState& aState,
+                            FrameConstructionItem&   aItem,
+                            nsIFrame*                aParentFrame,
+                            const nsStyleDisplay*    aDisplay,
+                            nsFrameItems&            aFrameItems);
 
   /**
    * Create any additional {ib} siblings needed to contain aChildItems and put
