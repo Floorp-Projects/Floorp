@@ -7,6 +7,8 @@
 #ifndef js_heap_api_h___
 #define js_heap_api_h___
 
+#include "jspubtd.h"
+
 /* These values are private to the JS engine. */
 namespace js {
 namespace gc {
@@ -43,6 +45,7 @@ const size_t CellMask = CellSize - 1;
 /* These are magic constants derived from actual offsets in gc/Heap.h. */
 const size_t ChunkMarkBitmapOffset = 1032368;
 const size_t ChunkMarkBitmapBits = 129024;
+const size_t ChunkRuntimeOffset = ChunkSize - sizeof(void*);
 
 /*
  * Live objects are marked black. How many other additional colors are available
@@ -87,6 +90,15 @@ GetGCThingMarkBitmap(const void *thing)
     addr &= ~js::gc::ChunkMask;
     addr |= js::gc::ChunkMarkBitmapOffset;
     return reinterpret_cast<uintptr_t *>(addr);
+}
+
+static JS_ALWAYS_INLINE JS::shadow::Runtime *
+GetGCThingRuntime(const void *thing)
+{
+    uintptr_t addr = uintptr_t(thing);
+    addr &= ~js::gc::ChunkMask;
+    addr |= js::gc::ChunkRuntimeOffset;
+    return *reinterpret_cast<JS::shadow::Runtime **>(addr);
 }
 
 static JS_ALWAYS_INLINE void
@@ -139,6 +151,9 @@ GCThingIsMarkedGray(void *thing)
 static JS_ALWAYS_INLINE bool
 IsIncrementalBarrierNeededOnGCThing(void *thing, JSGCTraceKind kind)
 {
+    shadow::Runtime *rt = js::gc::GetGCThingRuntime(thing);
+    if (!rt->needsBarrier_)
+        return false;
     js::Zone *zone = GetGCThingZone(thing);
     return reinterpret_cast<shadow::Zone *>(zone)->needsBarrier_;
 }
