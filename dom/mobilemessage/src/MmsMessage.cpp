@@ -31,7 +31,7 @@ NS_IMPL_ADDREF(MmsMessage)
 NS_IMPL_RELEASE(MmsMessage)
 
 MmsMessage::MmsMessage(int32_t                         aId,
-                       DeliveryState                   aState,
+                       DeliveryState                   aDelivery,
                        const nsTArray<DeliveryStatus>& aDeliveryStatus,
                        const nsAString&                aSender,
                        const nsTArray<nsString>&       aReceivers,
@@ -41,7 +41,7 @@ MmsMessage::MmsMessage(int32_t                         aId,
                        const nsAString&                aSmil,
                        const nsTArray<MmsAttachment>&  aAttachments)
   : mId(aId),
-    mState(aState),
+    mDelivery(aDelivery),
     mDeliveryStatus(aDeliveryStatus),
     mSender(aSender),
     mReceivers(aReceivers),
@@ -55,7 +55,7 @@ MmsMessage::MmsMessage(int32_t                         aId,
 
 /* static */ nsresult
 MmsMessage::Create(int32_t               aId,
-                   const nsAString&      aState,
+                   const nsAString&      aDelivery,
                    const JS::Value&      aDeliveryStatus,
                    const nsAString&      aSender,
                    const JS::Value&      aReceivers,
@@ -69,18 +69,18 @@ MmsMessage::Create(int32_t               aId,
 {
   *aMessage = nullptr;
 
-  // Set |state|.
-  DeliveryState state;
-  if (aState.Equals(DELIVERY_SENT)) {
-    state = eDeliveryState_Sent;
-  } else if (aState.Equals(DELIVERY_RECEIVED)) {
-    state = eDeliveryState_Received;
-  } else if (aState.Equals(DELIVERY_SENDING)) {
-    state = eDeliveryState_Sending;
-  } else if (aState.Equals(DELIVERY_NOT_DOWNLOADED)) {
-    state = eDeliveryState_NotDownloaded;
-  } else if (aState.Equals(DELIVERY_ERROR)) {
-    state = eDeliveryState_Error;
+  // Set |delivery|.
+  DeliveryState delivery;
+  if (aDelivery.Equals(DELIVERY_SENT)) {
+    delivery = eDeliveryState_Sent;
+  } else if (aDelivery.Equals(DELIVERY_RECEIVED)) {
+    delivery = eDeliveryState_Received;
+  } else if (aDelivery.Equals(DELIVERY_SENDING)) {
+    delivery = eDeliveryState_Sending;
+  } else if (aDelivery.Equals(DELIVERY_NOT_DOWNLOADED)) {
+    delivery = eDeliveryState_NotDownloaded;
+  } else if (aDelivery.Equals(DELIVERY_ERROR)) {
+    delivery = eDeliveryState_Error;
   } else {
     return NS_ERROR_INVALID_ARG;
   }
@@ -193,7 +193,7 @@ MmsMessage::Create(int32_t               aId,
   }
 
   nsCOMPtr<nsIDOMMozMmsMessage> message = new MmsMessage(aId,
-                                                         state,
+                                                         delivery,
                                                          deliveryStatus,
                                                          aSender,
                                                          receivers,
@@ -221,23 +221,23 @@ MmsMessage::GetId(int32_t* aId)
 }
 
 NS_IMETHODIMP
-MmsMessage::GetState(nsAString& aState)
+MmsMessage::GetDelivery(nsAString& aDelivery)
 {
-  switch (mState) {
+  switch (mDelivery) {
     case eDeliveryState_Received:
-      aState = DELIVERY_RECEIVED;
+      aDelivery = DELIVERY_RECEIVED;
       break;
     case eDeliveryState_Sending:
-      aState = DELIVERY_SENDING;
+      aDelivery = DELIVERY_SENDING;
       break;
     case eDeliveryState_Sent:
-      aState = DELIVERY_SENT;
+      aDelivery = DELIVERY_SENT;
       break;
     case eDeliveryState_Error:
-      aState = DELIVERY_ERROR;
+      aDelivery = DELIVERY_ERROR;
       break;
     case eDeliveryState_NotDownloaded:
-      aState = DELIVERY_NOT_DOWNLOADED;
+      aDelivery = DELIVERY_NOT_DOWNLOADED;
       break;
     case eDeliveryState_Unknown:
     case eDeliveryState_EndGuard:
@@ -252,8 +252,8 @@ MmsMessage::GetState(nsAString& aState)
 NS_IMETHODIMP
 MmsMessage::GetDeliveryStatus(JSContext* aCx, JS::Value* aDeliveryStatus)
 {
-  // TODO Bug 850525 It would be better to depend on the state of MmsMessage
-  // to return a more correct value. Ex, when .state = 'received', we should
+  // TODO Bug 850525 It'd be better to depend on the delivery of MmsMessage
+  // to return a more correct value. Ex, if .delivery = 'received', we should
   // also make .deliveryStatus = null, since the .deliveryStatus is useless.
   uint32_t length = mDeliveryStatus.Length();
   if (length == 0) {
