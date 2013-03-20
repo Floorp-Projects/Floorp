@@ -22,32 +22,32 @@ class SVGAnimationElement;
 }
 
 /**
- * Class SVGAnimatedTransformList
+ * Class nsSVGAnimatedTransformList
  *
  * This class is very different to the SVG DOM interface of the same name found
  * in the SVG specification. This is a lightweight internal class - see
- * DOMSVGAnimatedTransformList for the heavier DOM class that wraps instances of
+ * SVGAnimatedTransformList for the heavier DOM class that wraps instances of
  * this class and implements the SVG specification's SVGAnimatedTransformList
  * DOM interface.
  *
  * Except where noted otherwise, this class' methods take care of keeping the
  * appropriate DOM wrappers in sync (see the comment in
- * DOMSVGAnimatedTransformList::InternalBaseValListWillChangeTo) so that their
+ * SVGAnimatedTransformList::InternalBaseValListWillChangeTo) so that their
  * consumers don't need to concern themselves with that.
  */
-class SVGAnimatedTransformList
+class nsSVGAnimatedTransformList
 {
   // friends so that they can get write access to mBaseVal
   friend class DOMSVGTransform;
   friend class DOMSVGTransformList;
 
 public:
-  SVGAnimatedTransformList() : mIsAttrSet(false) { }
+  nsSVGAnimatedTransformList() : mIsAttrSet(false) { }
 
   /**
    * Because it's so important that mBaseVal and its DOMSVGTransformList wrapper
    * (if any) be kept in sync (see the comment in
-   * DOMSVGAnimatedTransformList::InternalBaseValListWillChangeTo), this method
+   * SVGAnimatedTransformList::InternalBaseValListWillChangeTo), this method
    * returns a const reference. Only our friend classes may get mutable
    * references to mBaseVal.
    */
@@ -91,7 +91,7 @@ private:
   struct SMILAnimatedTransformList : public nsISMILAttr
   {
   public:
-    SMILAnimatedTransformList(SVGAnimatedTransformList* aVal,
+    SMILAnimatedTransformList(nsSVGAnimatedTransformList* aVal,
                               nsSVGElement* aSVGElement)
       : mVal(aVal)
       , mElement(aSVGElement)
@@ -116,7 +116,7 @@ private:
     // These will stay alive because a nsISMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
-    SVGAnimatedTransformList* mVal;
+    nsSVGAnimatedTransformList* mVal;
     nsSVGElement* mElement;
   };
 };
