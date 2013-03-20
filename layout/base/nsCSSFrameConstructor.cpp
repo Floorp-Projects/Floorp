@@ -2254,10 +2254,9 @@ nsCSSFrameConstructor::PropagateScrollToViewport()
   return nullptr;
 }
 
-nsresult
+nsIFrame*
 nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocElement,
-                                                nsILayoutHistoryState*   aFrameState,
-                                                nsIFrame**               aNewFrame)
+                                                nsILayoutHistoryState*   aFrameState)
 {
   NS_PRECONDITION(mFixedContainingBlock,
                   "No viewport?  Someone forgot to call ConstructRootFrame!");
@@ -2265,8 +2264,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
                   "Unexpected mFixedContainingBlock");
   NS_PRECONDITION(!mDocElementContainingBlock,
                   "Shouldn't have a doc element containing block here");
-
-  *aNewFrame = nullptr;
 
   // Make sure to call PropagateScrollToViewport before
   // SetUpDocElementContainingBlock, since it sets up our scrollbar state
@@ -2312,15 +2309,16 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     bool resolveStyle;
     
     nsXBLService* xblService = nsXBLService::GetInstance();
-    if (!xblService)
-      return NS_ERROR_FAILURE;
+    if (!xblService) {
+      return nullptr;
+    }
 
     nsRefPtr<nsXBLBinding> binding;
     rv = xblService->LoadBindings(aDocElement, display->mBinding->GetURI(),
                                   display->mBinding->mOriginPrincipal,
                                   getter_AddRefs(binding), &resolveStyle);
     if (NS_FAILED(rv) && rv != NS_ERROR_XBL_BLOCKED)
-      return NS_OK; // Binding will load asynchronously.
+      return nullptr; // Binding will load asynchronously.
 
     if (binding) {
       // For backwards compat, keep firing the root's constructor
@@ -2347,7 +2345,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
 
   if (MOZ_UNLIKELY(display->mDisplay == NS_STYLE_DISPLAY_NONE)) {
     SetUndisplayedContent(aDocElement, styleContext);
-    return NS_OK;
+    return nullptr;
   }
 
   TreeMatchContext::AutoAncestorPusher
@@ -2369,13 +2367,14 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   // by the style system, so we can assume that display->mDisplay is
   // either NONE, BLOCK, or TABLE.
 
-  // contentFrame is the primary frame for the root element. *aNewFrame
+  // contentFrame is the primary frame for the root element. newFrame
   // is the frame that will be the child of the initial containing block.
   // These are usually the same frame but they can be different, in
   // particular if the root frame is positioned, in which case
-  // contentFrame is the out-of-flow frame and *aNewFrame is the
+  // contentFrame is the out-of-flow frame and newFrame is the
   // placeholder.
   nsIFrame* contentFrame;
+  nsIFrame* newFrame;
   bool processChildren = false;
 
   // Check whether we need to build a XUL box or SVG root frame
@@ -2384,7 +2383,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     contentFrame = NS_NewDocElementBoxFrame(mPresShell, styleContext);
     InitAndRestoreFrame(state, aDocElement, mDocElementContainingBlock, nullptr,
                         contentFrame);
-    *aNewFrame = contentFrame;
+    newFrame = contentFrame;
     processChildren = true;
   }
   else
@@ -2409,12 +2408,10 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
       contentFrame = ConstructOuterSVG(state, item, mDocElementContainingBlock,
                                        styleContext->StyleDisplay(),
                                        frameItems);
-      if (!contentFrame || frameItems.IsEmpty())
-        return NS_ERROR_FAILURE;
-      *aNewFrame = frameItems.FirstChild();
+      newFrame = frameItems.FirstChild();
       NS_ASSERTION(frameItems.OnlyChild(), "multiple root element frames");
     } else {
-      return NS_ERROR_FAILURE;
+      return nullptr;
     }
   } else {
     bool docElemIsTable = (display->mDisplay == NS_STYLE_DISPLAY_TABLE);
@@ -2438,14 +2435,10 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
       contentFrame = ConstructTable(state, item, mDocElementContainingBlock,
                                     styleContext->StyleDisplay(),
                                     frameItems);
-      if (!contentFrame || frameItems.IsEmpty())
-        return NS_ERROR_FAILURE;
-      *aNewFrame = frameItems.FirstChild();
+      newFrame = frameItems.FirstChild();
       NS_ASSERTION(frameItems.OnlyChild(), "multiple root element frames");
     } else {
       contentFrame = NS_NewBlockFormattingContext(mPresShell, styleContext);
-      if (!contentFrame)
-        return NS_ERROR_OUT_OF_MEMORY;
       nsFrameItems frameItems;
       // Use a null PendingBinding, since our binding is not in fact pending.
       ConstructBlock(state, display, aDocElement,
@@ -2454,12 +2447,13 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
                      mDocElementContainingBlock, styleContext,
                      &contentFrame, frameItems,
                      display->IsPositioned(contentFrame), nullptr);
-      if (frameItems.IsEmpty())
-        return NS_OK;
-      *aNewFrame = frameItems.FirstChild();
+      newFrame = frameItems.FirstChild();
       NS_ASSERTION(frameItems.OnlyChild(), "multiple root element frames");
     }
   }
+
+  MOZ_ASSERT(newFrame);
+  MOZ_ASSERT(contentFrame);
 
   // set the primary frame
   aDocElement->SetPrimaryFrame(contentFrame);
@@ -2494,9 +2488,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     contentFrame->SetInitialChildList(kPrincipalList, childItems);
   }
 
-  SetInitialSingleChild(mDocElementContainingBlock, *aNewFrame);
+  SetInitialSingleChild(mDocElementContainingBlock, newFrame);
 
-  return NS_OK;
+  return newFrame;
 }
 
 
@@ -2545,7 +2539,7 @@ nsCSSFrameConstructor::ConstructRootFrame()
   return viewportFrame;
 }
 
-nsresult
+void
 nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
 {
   NS_PRECONDITION(aDocElement, "No element?");
@@ -2762,8 +2756,6 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
     nsFrameList newFrameList(newFrame, newFrame);
     viewportFrame->AppendFrames(kPrincipalList, newFrameList);
   }
-
-  return NS_OK;
 }
 
 nsIFrame*
@@ -6853,8 +6845,6 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
   }
 #endif
 
-  nsresult rv = NS_OK;
-
   bool isSingleInsert = (aStartChild->GetNextSibling() == aEndChild);
   NS_ASSERTION(isSingleInsert || !aAllowLazyConstruction,
                "range insert shouldn't be lazy");
@@ -6900,10 +6890,10 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
                     "root element frame already created");
 
     // Create frames for the document element and its child elements
-    nsIFrame*               docElementFrame;
-    rv = ConstructDocElementFrame(docElement, aFrameState, &docElementFrame);
+    nsIFrame* docElementFrame =
+      ConstructDocElementFrame(docElement, aFrameState);
 
-    if (NS_SUCCEEDED(rv) && docElementFrame) {
+    if (docElementFrame) {
       InvalidateCanvasIfNeeded(mPresShell, aStartChild);
 #ifdef DEBUG
       if (gReallyNoisyContentUpdates) {
