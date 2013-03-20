@@ -1,6 +1,6 @@
-	.globl NS_InvokeByIndex_P
-	.type NS_InvokeByIndex_P, @function
-NS_InvokeByIndex_P:
+	.globl NS_InvokeByIndex
+	.type NS_InvokeByIndex, @function
+NS_InvokeByIndex:
 	push       %ebp
 	movl       %esp,%ebp
 	push       %ebx
@@ -51,5 +51,5 @@ NS_InvokeByIndex_P:
 	movl       %ebp,%esp
 	pop        %ebp
 	ret        
-	.size NS_InvokeByIndex_P, . - NS_InvokeByIndex_P
+	.size NS_InvokeByIndex, . - NS_InvokeByIndex
 

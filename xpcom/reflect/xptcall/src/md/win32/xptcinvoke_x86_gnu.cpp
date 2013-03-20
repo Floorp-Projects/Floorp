@@ -45,7 +45,7 @@ invoke_copy_to_stack(uint32_t paramCount, nsXPTCVariant* s, uint32_t* d)
 
 /*
   EXPORT_XPCOM_API(nsresult)
-  NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
+  NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
                    uint32_t paramCount, nsXPTCVariant* params);
 
   Each param takes at most two 4-byte words.
@@ -64,8 +64,8 @@ __asm__ (
 /* alignment here seems unimportant here; this was 16, now it's 2 which
    is what xptcstubs uses. */
 	".align 2\n\t"
-	".globl _NS_InvokeByIndex_P\n\t"
-	"_NS_InvokeByIndex_P:\n\t"
+	".globl _NS_InvokeByIndex\n\t"
+	"_NS_InvokeByIndex:\n\t"
 	"pushl %ebp\n\t"
 	"movl  %esp, %ebp\n\t"
 	"movl  0x10(%ebp), %eax\n\t"
@@ -101,6 +101,6 @@ __asm__ (
 	"popl  %ebp\n\t"
 	"ret\n"
 	".section .drectve\n\t"
-	".ascii \" -export:NS_InvokeByIndex_P\"\n\t"
+	".ascii \" -export:NS_InvokeByIndex\"\n\t"
 	".text\n\t"
 );
