@@ -1894,13 +1894,12 @@ PullOutCaptionFrames(nsFrameItems& aItems, nsFrameItems& aCaptions)
 // XXX Page break frames for pseudo table frames are not constructed to avoid the risk
 // associated with revising the pseudo frame mechanism. The long term solution
 // of having frames handle page-break-before/after will solve the problem. 
-nsresult
+nsIFrame*
 nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
                                       FrameConstructionItem&   aItem,
                                       nsIFrame*                aParentFrame,
                                       const nsStyleDisplay*    aDisplay,
-                                      nsFrameItems&            aFrameItems,
-                                      nsIFrame**               aNewFrame)
+                                      nsFrameItems&            aFrameItems)
 {
   NS_PRECONDITION(aDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE ||
                   aDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE_TABLE,
@@ -1979,17 +1978,15 @@ nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
     newFrame->SetInitialChildList(nsIFrame::kCaptionList, captionItems);
   }
 
-  *aNewFrame = newFrame;
-  return NS_OK;
+  return newFrame;
 }
 
-nsresult
+nsIFrame*
 nsCSSFrameConstructor::ConstructTableRow(nsFrameConstructorState& aState,
                                          FrameConstructionItem&   aItem,
                                          nsIFrame*                aParentFrame,
                                          const nsStyleDisplay*    aDisplay,
-                                         nsFrameItems&            aFrameItems,
-                                         nsIFrame**               aNewFrame)
+                                         nsFrameItems&            aFrameItems)
 {
   NS_PRECONDITION(aDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_ROW,
                   "Unexpected call");
@@ -2016,18 +2013,15 @@ nsCSSFrameConstructor::ConstructTableRow(nsFrameConstructorState& aState,
 
   newFrame->SetInitialChildList(kPrincipalList, childItems);
   aFrameItems.AddChild(newFrame);
-  *aNewFrame = newFrame;
-
-  return NS_OK;
+  return newFrame;
 }
 
-nsresult
+nsIFrame*
 nsCSSFrameConstructor::ConstructTableCol(nsFrameConstructorState& aState,
                                          FrameConstructionItem&   aItem,
                                          nsIFrame*                aParentFrame,
                                          const nsStyleDisplay*    aStyleDisplay,
-                                         nsFrameItems&            aFrameItems,
-                                         nsIFrame**               aNewFrame)
+                                         nsFrameItems&            aFrameItems)
 {
   nsIContent* const content = aItem.mContent;
   nsStyleContext* const styleContext = aItem.mStyleContext;
@@ -2039,7 +2033,6 @@ nsCSSFrameConstructor::ConstructTableCol(nsFrameConstructorState& aState,
                "Unexpected style context");
 
   aFrameItems.AddChild(colFrame);
-  *aNewFrame = colFrame;
 
   // construct additional col frames if the col frame has a span > 1
   int32_t span = colFrame->GetSpan();
@@ -2053,16 +2046,15 @@ nsCSSFrameConstructor::ConstructTableCol(nsFrameConstructorState& aState,
     newCol->SetColType(eColAnonymousCol);
   }
 
-  return NS_OK;
+  return colFrame;
 }
 
-nsresult
+nsIFrame*
 nsCSSFrameConstructor::ConstructTableCell(nsFrameConstructorState& aState,
                                           FrameConstructionItem&   aItem,
                                           nsIFrame*                aParentFrame,
                                           const nsStyleDisplay*    aDisplay,
-                                          nsFrameItems&            aFrameItems,
-                                          nsIFrame**               aNewFrame)
+                                          nsFrameItems&            aFrameItems)
 {
   NS_PRECONDITION(aDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL,
                   "Unexpected call");
@@ -2133,9 +2125,7 @@ nsCSSFrameConstructor::ConstructTableCell(nsFrameConstructorState& aState,
   cellInnerFrame->SetInitialChildList(kPrincipalList, childItems);
   SetInitialSingleChild(newFrame, cellInnerFrame);
   aFrameItems.AddChild(newFrame);
-  *aNewFrame = newFrame;
-
-  return NS_OK;
+  return newFrame;
 }
 
 static inline bool 
@@ -2375,8 +2365,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
                                       absoluteSaveState);
   }
 
-  nsresult rv;
-
   // The rules from CSS 2.1, section 9.2.4, have already been applied
   // by the style system, so we can assume that display->mDisplay is
   // either NONE, BLOCK, or TABLE.
@@ -2418,11 +2406,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
                                  nullptr, extraRef.forget(), true);
 
       nsFrameItems frameItems;
-      rv = ConstructOuterSVG(state, item, mDocElementContainingBlock,
-                             styleContext->StyleDisplay(),
-                             frameItems, &contentFrame);
-      if (NS_FAILED(rv))
-        return rv;
+      contentFrame = ConstructOuterSVG(state, item, mDocElementContainingBlock,
+                                       styleContext->StyleDisplay(),
+                                       frameItems);
       if (!contentFrame || frameItems.IsEmpty())
         return NS_ERROR_FAILURE;
       *aNewFrame = frameItems.FirstChild();
@@ -2449,11 +2435,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
 
       nsFrameItems frameItems;
       // if the document is a table then just populate it.
-      rv = ConstructTable(state, item, mDocElementContainingBlock,
-                          styleContext->StyleDisplay(),
-                          frameItems, &contentFrame);
-      if (NS_FAILED(rv))
-        return rv;
+      contentFrame = ConstructTable(state, item, mDocElementContainingBlock,
+                                    styleContext->StyleDisplay(),
+                                    frameItems);
       if (!contentFrame || frameItems.IsEmpty())
         return NS_ERROR_FAILURE;
       *aNewFrame = frameItems.FirstChild();
@@ -2889,16 +2873,13 @@ ClearLazyBits(nsIContent* aStartContent, nsIContent* aEndContent)
   }
 }
 
-nsresult
+nsIFrame*
 nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
                                             FrameConstructionItem&   aItem,
                                             nsIFrame*                aParentFrame,
                                             const nsStyleDisplay*    aStyleDisplay,
-                                            nsFrameItems&            aFrameItems,
-                                            nsIFrame**               aNewFrame)
+                                            nsFrameItems&            aFrameItems)
 {
-  nsresult rv = NS_OK;
-
   nsIContent* const content = aItem.mContent;
   nsStyleContext* const styleContext = aItem.mStyleContext;
 
@@ -2981,29 +2962,28 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
     comboboxFrame->SetInitialChildList(nsIFrame::kSelectPopupList,
                                        popupItems);
 
-    *aNewFrame = comboboxFrame;
     aState.mFrameState = historyState;
     if (aState.mFrameState) {
       // Restore frame state for the entire subtree of |comboboxFrame|.
       RestoreFrameState(comboboxFrame, aState.mFrameState);
     }
-  } else {
-    nsIFrame* listFrame = NS_NewListControlFrame(mPresShell, styleContext);
-    rv = NS_OK;
-
-    nsIFrame* scrolledFrame = NS_NewSelectsAreaFrame(
-        mPresShell, styleContext, NS_BLOCK_FLOAT_MGR);
-
-    // ******* this code stolen from Initialze ScrollFrame ********
-    // please adjust this code to use BuildScrollFrame.
-
-    InitializeSelectFrame(aState, listFrame, scrolledFrame, content,
-                          aParentFrame, styleContext, false,
-                          aItem.mPendingBinding, aFrameItems);
-
-    *aNewFrame = listFrame;
+    return comboboxFrame;
   }
-  return rv;
+
+  // Listbox, not combobox
+  nsIFrame* listFrame = NS_NewListControlFrame(mPresShell, styleContext);
+
+  nsIFrame* scrolledFrame = NS_NewSelectsAreaFrame(
+      mPresShell, styleContext, NS_BLOCK_FLOAT_MGR);
+
+  // ******* this code stolen from Initialze ScrollFrame ********
+  // please adjust this code to use BuildScrollFrame.
+
+  InitializeSelectFrame(aState, listFrame, scrolledFrame, content,
+                        aParentFrame, styleContext, false,
+                        aItem.mPendingBinding, aFrameItems);
+
+  return listFrame;
 }
 
 /**
@@ -3062,13 +3042,12 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsFrameConstructorState& aState,
   return NS_OK;
 }
 
-nsresult
+nsIFrame*
 nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
                                               FrameConstructionItem&   aItem,
                                               nsIFrame*                aParentFrame,
                                               const nsStyleDisplay*    aStyleDisplay,
-                                              nsFrameItems&            aFrameItems,
-                                              nsIFrame**               aNewFrame)
+                                              nsFrameItems&            aFrameItems)
 {
   nsIContent* const content = aItem.mContent;
   nsStyleContext* const styleContext = aItem.mStyleContext;
@@ -3131,9 +3110,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
   newFrame->AddStateBits(NS_FRAME_MAY_HAVE_GENERATED_CONTENT);
 
   // Our new frame returned is the outer frame, which is the fieldset frame.
-  *aNewFrame = newFrame; 
-
-  return NS_OK;
+  return newFrame; 
 }
 
 static nsIFrame*
@@ -3561,13 +3538,10 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
   nsIFrame* newFrame;
   nsIFrame* primaryFrame;
   if (bits & FCDATA_FUNC_IS_FULL_CTOR) {
-    nsresult rv =
+    newFrame =
       (this->*(data->mFullConstructor))(aState, aItem, aParentFrame,
-                                        display, aFrameItems, &newFrame);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
+                                        display, aFrameItems);
+    MOZ_ASSERT(newFrame, "Full constructor failed");
     primaryFrame = newFrame;
   } else {
     newFrame =
@@ -4381,23 +4355,22 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
                        ArrayLength(sDisplayData));
 }
 
-nsresult
+nsIFrame*
 nsCSSFrameConstructor::ConstructScrollableBlock(nsFrameConstructorState& aState,
                                                 FrameConstructionItem&   aItem,
                                                 nsIFrame*                aParentFrame,
                                                 const nsStyleDisplay*    aDisplay,
-                                                nsFrameItems&            aFrameItems,
-                                                nsIFrame**               aNewFrame)
+                                                nsFrameItems&            aFrameItems)
 {
   nsIContent* const content = aItem.mContent;
   nsStyleContext* const styleContext = aItem.mStyleContext;
 
-  *aNewFrame = nullptr;
+  nsIFrame* newFrame = nullptr;
   nsRefPtr<nsStyleContext> scrolledContentStyle
     = BeginBuildingScrollFrame(aState, content, styleContext,
                                aState.GetGeometricParent(aDisplay, aParentFrame),
                                nsCSSAnonBoxes::scrolledContent,
-                               false, *aNewFrame);
+                               false, newFrame);
 
   // Create our block frame
   // pass a temporary stylecontext, the correct one will be set later
@@ -4406,26 +4379,25 @@ nsCSSFrameConstructor::ConstructScrollableBlock(nsFrameConstructorState& aState,
 
   nsFrameItems blockItem;
   ConstructBlock(aState, scrolledContentStyle->StyleDisplay(), content,
-                 *aNewFrame, *aNewFrame, scrolledContentStyle,
+                 newFrame, newFrame, scrolledContentStyle,
                  &scrolledFrame, blockItem,
                  aDisplay->IsPositioned(scrolledFrame),
                  aItem.mPendingBinding);
 
   NS_ASSERTION(blockItem.FirstChild() == scrolledFrame,
                "Scrollframe's frameItems should be exactly the scrolled frame");
-  FinishBuildingScrollFrame(*aNewFrame, scrolledFrame);
+  FinishBuildingScrollFrame(newFrame, scrolledFrame);
 
-  aState.AddChild(*aNewFrame, aFrameItems, content, styleContext, aParentFrame);
-  return NS_OK;
+  aState.AddChild(newFrame, aFrameItems, content, styleContext, aParentFrame);
+  return newFrame;
 }
 
-nsresult
+nsIFrame*
 nsCSSFrameConstructor::ConstructNonScrollableBlock(nsFrameConstructorState& aState,
                                                    FrameConstructionItem&   aItem,
                                                    nsIFrame*                aParentFrame,
                                                    const nsStyleDisplay*    aDisplay,
-                                                   nsFrameItems&            aFrameItems,
-                                                   nsIFrame**               aNewFrame)
+                                                   nsFrameItems&            aFrameItems)
 {
   nsStyleContext* const styleContext = aItem.mStyleContext;
 
@@ -4435,25 +4407,26 @@ nsCSSFrameConstructor::ConstructNonScrollableBlock(nsFrameConstructorState& aSta
   // we can check it later in nsFrame::ApplyPaginatedOverflowClipping.
   bool clipPaginatedOverflow =
     (aItem.mFCData->mBits & FCDATA_FORCED_NON_SCROLLABLE_BLOCK) != 0;
+  nsIFrame* newFrame;
   if ((aDisplay->IsAbsolutelyPositionedStyle() ||
        aDisplay->IsFloatingStyle() ||
        NS_STYLE_DISPLAY_INLINE_BLOCK == aDisplay->mDisplay ||
        clipPaginatedOverflow) &&
       !aParentFrame->IsSVGText()) {
-    *aNewFrame = NS_NewBlockFormattingContext(mPresShell, styleContext);
+    newFrame = NS_NewBlockFormattingContext(mPresShell, styleContext);
     if (clipPaginatedOverflow) {
-      (*aNewFrame)->AddStateBits(NS_BLOCK_CLIP_PAGINATED_OVERFLOW);
+      newFrame->AddStateBits(NS_BLOCK_CLIP_PAGINATED_OVERFLOW);
     }
   } else {
-    *aNewFrame = NS_NewBlockFrame(mPresShell, styleContext);
+    newFrame = NS_NewBlockFrame(mPresShell, styleContext);
   }
 
   ConstructBlock(aState, aDisplay, aItem.mContent,
                  aState.GetGeometricParent(aDisplay, aParentFrame),
-                 aParentFrame, styleContext, aNewFrame,
-                 aFrameItems, aDisplay->IsPositioned(*aNewFrame),
+                 aParentFrame, styleContext, &newFrame,
+                 aFrameItems, aDisplay->IsPositioned(newFrame),
                  aItem.mPendingBinding);
-  return NS_OK;
+  return newFrame;
 }
 
 
@@ -4654,13 +4627,12 @@ nsCSSFrameConstructor::FindMathMLData(Element* aElement,
 
 // Construct an nsSVGOuterSVGFrame, the anonymous child that wraps its real
 // children, and its descendant frames.
-nsresult
+nsIFrame*
 nsCSSFrameConstructor::ConstructOuterSVG(nsFrameConstructorState& aState,
                                          FrameConstructionItem&   aItem,
                                          nsIFrame*                aParentFrame,
                                          const nsStyleDisplay*    aDisplay,
-                                         nsFrameItems&            aFrameItems,
-                                         nsIFrame**               aNewFrame)
+                                         nsFrameItems&            aFrameItems)
 {
   nsIContent* const content = aItem.mContent;
   nsStyleContext* const styleContext = aItem.mStyleContext;
@@ -4710,8 +4682,7 @@ nsCSSFrameConstructor::ConstructOuterSVG(nsFrameConstructorState& aState,
   // Set the inner wrapper frame's initial primary list
   innerFrame->SetInitialChildList(kPrincipalList, childItems);
 
-  *aNewFrame = newFrame;
-  return NS_OK;
+  return newFrame;
 }
 
 // Only outer <svg> elements can be floated or positioned.  All other SVG
@@ -11018,19 +10989,18 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   blockFrame->SetInitialChildList(kPrincipalList, childItems);
 }
 
-nsresult
+nsIFrame*
 nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
                                        FrameConstructionItem&   aItem,
                                        nsIFrame*                aParentFrame,
                                        const nsStyleDisplay*    aDisplay,
-                                       nsFrameItems&            aFrameItems,
-                                       nsIFrame**               aNewFrame)
+                                       nsFrameItems&            aFrameItems)
 {
   // If an inline frame has non-inline kids, then we chop up the child list
   // into runs of blocks and runs of inlines, create anonymous block frames to
   // contain the runs of blocks, inline frames with our style context for the
   // runs of inlines, and put all these frames, in order, into aFrameItems.  We
-  // put the first one into *aNewFrame.  The whole setup is called an {ib}
+  // return the the first one.  The whole setup is called an {ib}
   // split; in what follows "frames in the split" refers to the anonymous blocks
   // and inlines that contain our children.
   //
@@ -11127,8 +11097,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
     // bail.
     newFrame->SetInitialChildList(kPrincipalList, childItems);
     aState.AddChild(newFrame, aFrameItems, content, styleContext, aParentFrame);
-    *aNewFrame = newFrame;
-    return NS_OK;
+    return newFrame;
   }
 
   // This inline frame contains several types of children. Therefore this frame
@@ -11142,8 +11111,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
 
   CreateIBSiblings(aState, newFrame, positioned, childItems, aFrameItems);
 
-  *aNewFrame = newFrame;
-  return NS_OK;
+  return newFrame;
 }
 
 void
