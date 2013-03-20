@@ -600,6 +600,14 @@ AbstractFramePtr::setHookData(void *data) const
 #endif
 }
 
+inline Value
+AbstractFramePtr::returnValue() const
+{
+    if (isStackFrame())
+        return asStackFrame()->returnValue();
+    return *asBaselineFrame()->returnValue();
+}
+
 inline void
 AbstractFramePtr::setReturnValue(const Value &rval) const
 {

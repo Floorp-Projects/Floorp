@@ -304,7 +304,7 @@ var Addons = {
     detailItem.querySelector(".status-uninstalled").textContent =
       gStringBundle.formatStringFromName("addonStatus.uninstalled", [addon.name], 1);
 
-    let enableBtn = document.getElementById("uninstall-btn");
+    let enableBtn = document.getElementById("enable-btn");
     if (addon.appDisabled)
       enableBtn.setAttribute("disabled", "true");
     else

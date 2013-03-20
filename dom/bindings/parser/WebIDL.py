@@ -475,6 +475,12 @@ class IDLExternalInterface(IDLObjectWithIdentifier):
     def resolve(self, parentScope):
         pass
 
+    def getJSImplementation(self):
+        return None
+
+    def isJSImplemented(self):
+        return False
+
     def _getDependentObjects(self):
         return set()
 
@@ -497,6 +503,9 @@ class IDLInterface(IDLObjectWithScope):
         # self or have self as a consequential interface, including self itself.
         # Used for distinguishability checking.
         self.interfacesBasedOnSelf = set([self])
+        # self.interfacesImplementingSelf is the set of interfaces that directly
+        # have self as a consequential interface
+        self.interfacesImplementingSelf = set()
 
         IDLObjectWithScope.__init__(self, location, parentScope, name)
 
@@ -632,6 +641,7 @@ class IDLInterface(IDLObjectWithScope):
                             (member.identifier.name, self),
                             [additionalMember.location, member.location])
             self.members.extend(additionalMembers)
+            iface.interfacesImplementingSelf.add(self)
 
         for ancestor in self.getInheritedInterfaces():
             ancestor.interfacesBasedOnSelf.add(self)
@@ -773,7 +783,7 @@ class IDLInterface(IDLObjectWithScope):
         return self._callback
 
     def isSingleOperationInterface(self):
-        assert self.isCallback()
+        assert self.isCallback() or self.isJSImplemented()
         return (
             # Not inheriting from another interface
             not self.parent and
@@ -955,6 +965,17 @@ class IDLInterface(IDLObjectWithScope):
         self.parent = parent
         # Put the new members at the beginning
         self.members = members + self.members
+
+    def getJSImplementation(self):
+        classId = self.getExtendedAttribute("JSImplementation")
+        if not classId:
+            return classId
+        assert isinstance(classId, list)
+        assert len(classId) == 1
+        return classId[0]
+
+    def isJSImplemented(self):
+        return bool(self.getJSImplementation())
 
     def _getDependentObjects(self):
         deps = set(self.members)

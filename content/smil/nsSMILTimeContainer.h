@@ -6,11 +6,11 @@
 #ifndef NS_SMILTIMECONTAINER_H_
 #define NS_SMILTIMECONTAINER_H_
 
+#include "mozilla/dom/SVGAnimationElement.h"
 #include "nscore.h"
 #include "nsSMILTypes.h"
 #include "nsTPriorityQueue.h"
 #include "nsAutoPtr.h"
-#include "nsISMILAnimationElement.h"
 #include "nsSMILMilestone.h"
 
 class nsSMILTimeValue;
@@ -170,7 +170,7 @@ public:
    * @return  true if the element was successfully added, false otherwise.
    */
   bool AddMilestone(const nsSMILMilestone& aMilestone,
-                      nsISMILAnimationElement& aElement);
+                    mozilla::dom::SVGAnimationElement& aElement);
 
   /*
    * Resets the list of milestones.
@@ -188,7 +188,7 @@ public:
    */
   bool GetNextMilestoneInParentTime(nsSMILMilestone& aNextMilestone) const;
 
-  typedef nsTArray<nsRefPtr<nsISMILAnimationElement> > AnimElemArray;
+  typedef nsTArray<nsRefPtr<mozilla::dom::SVGAnimationElement> > AnimElemArray;
 
   /*
    * Removes and returns the timebase elements from the start of the list of
@@ -272,7 +272,7 @@ protected:
   struct MilestoneEntry
   {
     MilestoneEntry(nsSMILMilestone aMilestone,
-                   nsISMILAnimationElement& aElement)
+                   mozilla::dom::SVGAnimationElement& aElement)
       : mMilestone(aMilestone), mTimebase(&aElement)
     { }
 
@@ -282,7 +282,7 @@ protected:
     }
 
     nsSMILMilestone mMilestone; // In container time.
-    nsRefPtr<nsISMILAnimationElement> mTimebase;
+    nsRefPtr<mozilla::dom::SVGAnimationElement> mTimebase;
   };
 
   // Queue of elements with registered milestones. Used to update the model with

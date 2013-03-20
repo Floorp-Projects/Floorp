@@ -2607,7 +2607,7 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
     for (nsJSContext* cx = sContextList; cx; cx = cx->mNext) {
       if (!cx->mActive && cx->mContext) {
         if (JSObject* global = cx->GetNativeGlobal()) {
-          JS::SkipZoneForGC(js::GetObjectZone(global));
+          JS::SkipZoneForGC(JS::GetObjectZone(global));
         }
       }
       cx->mActive = false;

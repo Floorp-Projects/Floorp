@@ -7,7 +7,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/TimeRanges.h"
 #include "MediaResource.h"
-#include "nsHTMLMediaElement.h"
+#include "mozilla/dom/HTMLMediaElement.h"
 #include "MediaPluginHost.h"
 #include "nsXPCOMStrings.h"
 #include "nsISeekableStream.h"

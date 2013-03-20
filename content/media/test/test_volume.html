@@ -13,11 +13,11 @@
 <script class="testbody" type="text/javascript">
 
 function test(element, value, shouldThrow) {
-  var threw = false;
+  var threw = null;
   try {
     element.volume = value;
-  } catch (err if err.name == "IndexSizeError") {
-    threw = true;
+  } catch (ex) {
+    threw = ex.name;
   }
   is(shouldThrow, threw, "Case: " +element.id+ " setVolume=" + value);
 }
@@ -27,12 +27,12 @@ var ids = new Array(document.getElementById('v1'), document.getElementById('a1')
 
 for (i=0; i<ids.length; i++) {
   var element = ids[i];
-  test(element, 0.0, false);
-  test(element, 1.0, false);
-  test(element, -0.1, true);
-  test(element, 1.1, true);
-  test(element, undefined, true);
-  test(element, NaN, true);
+  test(element, 0.0, null);
+  test(element, 1.0, null);
+  test(element, -0.1, "IndexSizeError");
+  test(element, 1.1, "IndexSizeError");
+  test(element, undefined, "TypeError");
+  test(element, NaN, "TypeError");
 }  
  
 </script>

@@ -353,6 +353,11 @@ MOCHITEST_FILES = \
 		test_formData.html \
 		$(NULL)
 
+ifdef MOZ_MEDIA
+MOCHITEST_FILES += \
+		test_mozLoadFrom.html \
+		$(NULL)
+endif
 
 MOCHITEST_BROWSER_FILES = \
 		browser_bug649778.js \

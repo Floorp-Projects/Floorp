@@ -26,6 +26,7 @@ MOCHITEST_FILES = \
   test_window_indexing.html \
   test_writable-replaceable.html \
   test_domcursor.html \
+  test_named_frames.html \
   $(NULL)
 
 MOCHITEST_CHROME_FILES = \

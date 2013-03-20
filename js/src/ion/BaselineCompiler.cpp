@@ -478,7 +478,7 @@ BaselineCompiler::emitBody()
         SPEW_OPCODE();
         JSOp op = JSOp(*pc);
         IonSpew(IonSpew_BaselineOp, "Compiling op @ %d: %s",
-                (int) (pc - script->code), js_CodeName[op]);
+                int(pc - script->code), js_CodeName[op]);
 
         analyze::Bytecode *code = script->analysis()->maybeCode(pc);
 

@@ -53,7 +53,7 @@ endif
 endif
 endif
 else
-ifeq (ppc,$(CPU_ARCH))
+ifeq (ppc,$(findstring ppc,$(CPU_ARCH)))
 ifdef GNU_CC
 	CSRCS += transform-altivec.c
 	ALTIVEC_FLAGS=-maltivec

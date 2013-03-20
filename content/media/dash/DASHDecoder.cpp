@@ -10,11 +10,11 @@
  * DASH is an adaptive bitrate streaming technology where a multimedia file is
  * partitioned into one or more segments and delivered to a client using HTTP.
  *
- * Interaction with MediaDecoderStateMachine, nsHTMLMediaElement,
+ * Interaction with MediaDecoderStateMachine, HTMLMediaElement,
  * ChannelMediaResource and sub-decoders (WebMDecoder).
  *
  *
- *        MediaDecoderStateMachine      nsHTMLMediaElement
+ *        MediaDecoderStateMachine      HTMLMediaElement
  *               1 /           \ 1           / 1
  *                /             \           /
  *             1 /               \ 1       / 1
@@ -81,7 +81,7 @@
  * -- At this point the Segment media stream downloads are managed by
  *    individual |ChannelMediaResource|s and |WebMReader|s.
  *    A single |DASHDecoder| and |MediaDecoderStateMachine| manage them
- *    and communicate to |nsHTMLMediaElement|.
+ *    and communicate to |HTMLMediaElement|.
  *
  * Each |DASHRepDecoder| gets init range and index range from its MPD
  * |Representation|. |DASHRepDecoder| uses ChannelMediaResource to start the
@@ -565,7 +565,7 @@ DASHDecoder::CreateSubChannel(nsIURI* aUrl, nsIChannel** aChannel)
   NS_ENSURE_ARG(aUrl);
 
   NS_ENSURE_TRUE(mOwner, NS_ERROR_NULL_POINTER);
-  nsHTMLMediaElement* element = mOwner->GetMediaElement();
+  HTMLMediaElement* element = mOwner->GetMediaElement();
   NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsILoadGroup> loadGroup =
