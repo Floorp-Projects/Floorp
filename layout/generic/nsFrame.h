@@ -142,9 +142,9 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   // nsIFrame
-  NS_IMETHOD  Init(nsIContent*      aContent,
-                   nsIFrame*        aParent,
-                   nsIFrame*        asPrevInFlow);
+  virtual void Init(nsIContent*      aContent,
+                    nsIFrame*        aParent,
+                    nsIFrame*        asPrevInFlow) MOZ_OVERRIDE;
   NS_IMETHOD  SetInitialChildList(ChildListID        aListID,
                                   nsFrameList&       aChildList);
   NS_IMETHOD  AppendFrames(ChildListID     aListID,

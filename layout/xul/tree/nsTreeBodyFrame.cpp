@@ -155,13 +155,12 @@ AdjustForBorderPadding(nsStyleContext* aContext, nsRect& aRect)
   aRect.Deflate(borderPadding);
 }
 
-NS_IMETHODIMP
+void
 nsTreeBodyFrame::Init(nsIContent*     aContent,
                       nsIFrame*       aParent,
                       nsIFrame*       aPrevInFlow)
 {
-  nsresult rv = nsLeafBoxFrame::Init(aContent, aParent, aPrevInFlow);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsLeafBoxFrame::Init(aContent, aParent, aPrevInFlow);
 
   mIndentation = GetIndentation();
   mRowHeight = GetRowHeight();
@@ -170,8 +169,6 @@ nsTreeBodyFrame::Init(nsIContent*     aContent,
 
   mImageCache.Init(16);
   EnsureBoxObject();
-
-  return rv;
 }
 
 nsSize

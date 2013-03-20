@@ -52,7 +52,7 @@ NS_QUERYFRAME_HEAD(nsSVGForeignObjectFrame)
   NS_QUERYFRAME_ENTRY(nsISVGChildFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsSVGForeignObjectFrameBase)
 
-NS_IMETHODIMP
+void
 nsSVGForeignObjectFrame::Init(nsIContent* aContent,
                               nsIFrame*   aParent,
                               nsIFrame*   aPrevInFlow)
@@ -60,16 +60,14 @@ nsSVGForeignObjectFrame::Init(nsIContent* aContent,
   NS_ASSERTION(aContent->IsSVG(nsGkAtoms::foreignObject),
                "Content is not an SVG foreignObject!");
 
-  nsresult rv = nsSVGForeignObjectFrameBase::Init(aContent, aParent, aPrevInFlow);
+  nsSVGForeignObjectFrameBase::Init(aContent, aParent, aPrevInFlow);
   AddStateBits(aParent->GetStateBits() &
                (NS_STATE_SVG_NONDISPLAY_CHILD | NS_STATE_SVG_CLIPPATH_CHILD));
   AddStateBits(NS_FRAME_FONT_INFLATION_CONTAINER |
                NS_FRAME_FONT_INFLATION_FLOW_ROOT);
-  if (NS_SUCCEEDED(rv) &&
-      !(mState & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+  if (!(mState & NS_STATE_SVG_NONDISPLAY_CHILD)) {
     nsSVGUtils::GetOuterSVGFrame(this)->RegisterForeignObject(this);
   }
-  return rv;
 }
 
 void nsSVGForeignObjectFrame::DestroyFrom(nsIFrame* aDestructRoot)

@@ -30,9 +30,9 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
 #ifdef DEBUG
-  NS_IMETHOD Init(nsIContent* aContent,
-                  nsIFrame*   aParent,
-                  nsIFrame*   aPrevInFlow);
+  virtual void Init(nsIContent* aContent,
+                    nsIFrame*   aParent,
+                    nsIFrame*   aPrevInFlow) MOZ_OVERRIDE;
 #endif
 
   virtual bool IsFrameOfType(uint32_t aFlags) const
@@ -82,7 +82,7 @@ SVGFELeafFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 }
 
 #ifdef DEBUG
-NS_IMETHODIMP
+void
 SVGFELeafFrame::Init(nsIContent* aContent,
                      nsIFrame* aParent,
                      nsIFrame* aPrevInFlow)
@@ -91,7 +91,7 @@ SVGFELeafFrame::Init(nsIContent* aContent,
                "Trying to construct an SVGFELeafFrame for a "
                "content element that doesn't support the right interfaces");
 
-  return SVGFELeafFrameBase::Init(aContent, aParent, aPrevInFlow);
+  SVGFELeafFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
 

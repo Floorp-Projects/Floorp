@@ -22,12 +22,12 @@ NS_NewPopupSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsPopupSetFrame)
 
-NS_IMETHODIMP
+void
 nsPopupSetFrame::Init(nsIContent*      aContent,
                       nsIFrame*        aParent,
                       nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
+  nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
 
   // Normally the root box is our grandparent, but in case of wrapping
   // it can be our great-grandparent.
@@ -35,8 +35,6 @@ nsPopupSetFrame::Init(nsIContent*      aContent,
   if (rootBox) {
     rootBox->SetPopupSetFrame(this);
   }
-
-  return rv;
 }
 
 nsIAtom*

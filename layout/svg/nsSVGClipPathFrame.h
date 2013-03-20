@@ -56,9 +56,9 @@ public:
                               nsIAtom*        aAttribute,
                               int32_t         aModType);
 
-  NS_IMETHOD Init(nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIFrame*        aPrevInFlow);
+  virtual void Init(nsIContent*      aContent,
+                    nsIFrame*        aParent,
+                    nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
 
   /**
    * Get the "type" of the frame

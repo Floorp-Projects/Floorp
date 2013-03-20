@@ -24,10 +24,10 @@ public:
   NS_IMETHOD
   TransmitAutomaticData();
 
-  NS_IMETHOD
+  virtual void
   Init(nsIContent*      aContent,
        nsIFrame*        aParent,
-       nsIFrame*        aPrevInFlow);
+       nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
 
   NS_IMETHOD
   SetInitialChildList(ChildListID     aListID,
