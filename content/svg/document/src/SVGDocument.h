@@ -9,6 +9,8 @@
 #include "mozilla/dom/XMLDocument.h"
 #include "nsIDOMSVGDocument.h"
 
+class nsSVGElement;
+
 namespace mozilla {
 namespace dom {
 
@@ -30,11 +32,19 @@ public:
   using nsDocument::GetLastStyleSheetSet;
   using nsDocument::MozSetImageElement;
   using nsDocument::GetMozFullScreenElement;
+  using nsIDocument::GetLocation;
 
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_DECL_ISUPPORTS_INHERITED
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsXPCClassInfo* GetClassInfo();
+
+  // WebIDL API
+  void GetDomain(nsAString& aDomain, ErrorResult& aRv);
+  nsSVGElement* GetRootElement(ErrorResult& aRv);
+
+protected:
+  virtual JSObject* WrapNode(JSContext *aCx, JSObject *aScope) MOZ_OVERRIDE;
 };
 
 } // namespace dom
