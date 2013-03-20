@@ -952,11 +952,6 @@ void MediaDecoder::NotifySuspendedStatusChanged()
   bool suspended = mResource->IsSuspendedByCache(&activeStream);
 
   if (mOwner) {
-    if (suspended) {
-      // If this is an autoplay element, we need to kick off its autoplaying
-      // now so we consume data and hopefully free up cache space.
-      mOwner->NotifyAutoplayDataReady();
-    }
     mOwner->NotifySuspendedByCache(suspended);
     UpdateReadyStateForData();
   }
