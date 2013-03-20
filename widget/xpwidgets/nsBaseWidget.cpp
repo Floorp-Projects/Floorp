@@ -863,14 +863,19 @@ nsBaseWidget::ComputeShouldAccelerate(bool aDefault)
 
 void nsBaseWidget::CreateCompositor()
 {
+  nsIntRect rect;
+  GetBounds(rect);
+  CreateCompositor(rect.width, rect.height);
+}
+
+void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
+{
   bool renderToEGLSurface = false;
 #ifdef MOZ_ANDROID_OMTC
   renderToEGLSurface = true;
 #endif
-  nsIntRect rect;
-  GetBounds(rect);
   mCompositorParent =
-    new CompositorParent(this, renderToEGLSurface, rect.width, rect.height);
+    new CompositorParent(this, renderToEGLSurface, aWidth, aHeight);
   LayerManager* lm = CreateBasicLayerManager();
   MessageLoop *childMessageLoop = CompositorParent::CompositorLoop();
   mCompositorChild = new CompositorChild(lm);
