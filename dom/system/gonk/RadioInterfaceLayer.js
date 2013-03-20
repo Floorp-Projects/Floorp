@@ -715,10 +715,6 @@ RadioInterfaceLayer.prototype = {
       case "setCellBroadcastSearchList":
         this.handleSetCellBroadcastSearchList(message);
         break;
-      case "setRadioEnabled":
-        let lock = gSettingsService.createLock();
-        lock.set("ril.radio.disabled", !message.on, null, null);
-        break;
       default:
         throw new Error("Don't know about this message type: " +
                         message.rilMessageType);
