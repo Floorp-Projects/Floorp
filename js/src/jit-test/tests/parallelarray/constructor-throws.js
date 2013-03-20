@@ -6,4 +6,5 @@ function testThrows() {
   }, RangeError);
 }
 
-testThrows();
+if (getBuildConfiguration().parallelJS)
+  testThrows();

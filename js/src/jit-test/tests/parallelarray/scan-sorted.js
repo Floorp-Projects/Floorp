@@ -34,4 +34,4 @@ function test() {
   assertStructuralEq(scanned1, scanned2);
 }
 
-test();
+if (getBuildConfiguration().parallelJS) test();

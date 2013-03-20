@@ -43,7 +43,8 @@ var rows = 4;
 var cols = 4;
 
 // check that we get correct result
-assertParallelArrayModesEq(["seq", "par"], computeSequentially(), function(m) {
-  r = new ParallelArray([rows, cols], computeSetByRow);
-  return r.flatten();
-});
+if (getBuildConfiguration().parallelJS)
+  assertParallelArrayModesEq(["seq", "par"], computeSequentially(), function(m) {
+    r = new ParallelArray([rows, cols], computeSetByRow);
+    return r.flatten();
+  });

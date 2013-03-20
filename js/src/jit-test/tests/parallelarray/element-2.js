@@ -22,4 +22,5 @@ function testElement() {
   assertEqParallelArray(pp2.get(0), new ParallelArray());
 }
 
-testElement();
+if (getBuildConfiguration().parallelJS)
+  testElement();

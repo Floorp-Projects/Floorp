@@ -13,5 +13,5 @@ function testScatter() {
   assertEqParallelArray(r, p2);
 }
 
-testScatter();
+if (getBuildConfiguration().parallelJS) testScatter();
 

@@ -3,4 +3,4 @@ function testToString() {
   assertEq(p.toString(), "");
 }
 
-testToString();
+if (getBuildConfiguration().parallelJS) testToString();

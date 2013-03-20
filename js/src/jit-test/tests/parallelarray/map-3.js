@@ -8,5 +8,5 @@ function testMap() {
   assertEqParallelArray(m, p2);
 }
 
-testMap();
+if (getBuildConfiguration().parallelJS) testMap();
 

@@ -12,4 +12,4 @@ function testReduce() {
   assertEq(r >= 1 && r <= N, true);
 }
 
-testReduce();
+if (getBuildConfiguration().parallelJS) testReduce();
