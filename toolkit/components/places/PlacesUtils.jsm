@@ -1995,7 +1995,7 @@ this.PlacesUtils = {
   asyncGetBookmarkIds: function PU_asyncGetBookmarkIds(aURI, aCallback, aScope)
   {
     if (!this._asyncGetBookmarksStmt) {
-      let db = this.history.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
+      let db = this.history.DBConnection;
       this._asyncGetBookmarksStmt = db.createAsyncStatement(
         "SELECT b.id "
       + "FROM moz_bookmarks b "
@@ -2114,20 +2114,19 @@ AsyncStatementCancelWrapper.prototype = {
   }
 }
 
-XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "history",
-                                   "@mozilla.org/browser/nav-history-service;1",
-                                   "nsINavHistoryService");
+XPCOMUtils.defineLazyGetter(PlacesUtils, "history", function() {
+  return Cc["@mozilla.org/browser/nav-history-service;1"]
+           .getService(Ci.nsINavHistoryService)
+           .QueryInterface(Ci.nsIBrowserHistory)
+           .QueryInterface(Ci.nsPIPlacesDatabase);
+});
 
 XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "asyncHistory",
                                    "@mozilla.org/browser/history;1",
                                    "mozIAsyncHistory");
 
 XPCOMUtils.defineLazyGetter(PlacesUtils, "bhistory", function() {
-  return PlacesUtils.history.QueryInterface(Ci.nsIBrowserHistory);
-});
-
-XPCOMUtils.defineLazyGetter(PlacesUtils, "ghistory2", function() {
-  return PlacesUtils.history.QueryInterface(Ci.nsIGlobalHistory2);
+  return PlacesUtils.history;
 });
 
 XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "favicons",
