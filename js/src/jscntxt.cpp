@@ -124,16 +124,9 @@ JSRuntime::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, JS::RuntimeSizes 
 
     rtSizes->temporary = tempLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
 
-    if (execAlloc_) {
-        execAlloc_->sizeOfCode(&rtSizes->jaegerCode, &rtSizes->ionCode, &rtSizes->asmJSCode,
-                               &rtSizes->regexpCode, &rtSizes->unusedCode);
-    } else {
-        rtSizes->jaegerCode = 0;
-        rtSizes->ionCode    = 0;
-        rtSizes->asmJSCode  = 0;
-        rtSizes->regexpCode = 0;
-        rtSizes->unusedCode = 0;
-    }
+    rtSizes->code = JS::CodeSizes();
+    if (execAlloc_)
+        execAlloc_->sizeOfCode(&rtSizes->code);
 
     rtSizes->regexpData = bumpAlloc_ ? bumpAlloc_->sizeOfNonHeapData() : 0;
 
@@ -154,9 +147,10 @@ JSRuntime::sizeOfExplicitNonHeap()
     size_t n = stackSpace.sizeOf();
 
     if (execAlloc_) {
-        size_t jaegerCode, ionCode, asmJSCode, regexpCode, unusedCode;
-        execAlloc_->sizeOfCode(&jaegerCode, &ionCode, &asmJSCode, &regexpCode, &unusedCode);
-        n += jaegerCode + ionCode + asmJSCode + regexpCode + unusedCode;
+        JS::CodeSizes sizes;
+        execAlloc_->sizeOfCode(&sizes);
+        n += sizes.jaeger + sizes.ion + sizes.baseline + sizes.asmJS +
+            sizes.regexp + sizes.other + sizes.unused;
     }
 
     if (bumpAlloc_)
