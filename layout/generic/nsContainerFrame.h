@@ -113,8 +113,8 @@ public:
    * Helper method to wrap views around frames. Used by containers
    * under special circumstances (can be used by leaf frames as well)
    */
-  static nsresult CreateViewForFrame(nsIFrame* aFrame,
-                                     bool aForce);
+  static void CreateViewForFrame(nsIFrame* aFrame,
+                                 bool aForce);
 
   // Positions the frame's view based on the frame's origin
   static void PositionFrameView(nsIFrame* aKidFrame);
