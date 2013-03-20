@@ -416,14 +416,14 @@ class JSObject : public js::ObjectImpl
 
     void rollbackProperties(JSContext *cx, uint32_t slotSpan);
 
-    inline void nativeSetSlot(unsigned slot, const js::Value &value);
+    inline void nativeSetSlot(uint32_t slot, const js::Value &value);
     static inline void nativeSetSlotWithType(JSContext *cx, js::HandleObject, js::Shape *shape,
                                              const js::Value &value);
 
-    inline const js::Value &getReservedSlot(unsigned index) const;
-    inline js::HeapSlot &getReservedSlotRef(unsigned index);
-    inline void initReservedSlot(unsigned index, const js::Value &v);
-    inline void setReservedSlot(unsigned index, const js::Value &v);
+    inline const js::Value &getReservedSlot(uint32_t index) const;
+    inline js::HeapSlot &getReservedSlotRef(uint32_t index);
+    inline void initReservedSlot(uint32_t index, const js::Value &v);
+    inline void setReservedSlot(uint32_t index, const js::Value &v);
 
     /*
      * Marks this object as having a singleton type, and leave the type lazy.
@@ -571,28 +571,28 @@ class JSObject : public js::ObjectImpl
         MaybeContext(js::Allocator *alloc) : allocator(alloc), context(NULL) {}
     };
 
-    inline bool ensureElements(JSContext *cx, unsigned cap);
-    bool growElements(MaybeContext cx, unsigned newcap);
-    void shrinkElements(JSContext *cx, unsigned cap);
+    inline bool ensureElements(JSContext *cx, uint32_t cap);
+    bool growElements(MaybeContext cx, uint32_t newcap);
+    void shrinkElements(JSContext *cx, uint32_t cap);
     inline void setDynamicElements(js::ObjectElements *header);
 
     inline uint32_t getDenseCapacity();
     inline void setDenseInitializedLength(uint32_t length);
-    inline void ensureDenseInitializedLength(JSContext *cx, unsigned index, unsigned extra);
-    inline void setDenseElement(unsigned idx, const js::Value &val);
-    inline void initDenseElement(unsigned idx, const js::Value &val);
-    inline void setDenseElementMaybeConvertDouble(unsigned idx, const js::Value &val);
+    inline void ensureDenseInitializedLength(JSContext *cx, uint32_t index, uint32_t extra);
+    inline void setDenseElement(uint32_t index, const js::Value &val);
+    inline void initDenseElement(uint32_t index, const js::Value &val);
+    inline void setDenseElementMaybeConvertDouble(uint32_t index, const js::Value &val);
     static inline void setDenseElementWithType(JSContext *cx, js::HandleObject obj,
-                                               unsigned idx, const js::Value &val);
+                                               uint32_t index, const js::Value &val);
     static inline void initDenseElementWithType(JSContext *cx, js::HandleObject obj,
-                                                unsigned idx, const js::Value &val);
-    static inline void setDenseElementHole(JSContext *cx, js::HandleObject obj, unsigned idx);
+                                                uint32_t index, const js::Value &val);
+    static inline void setDenseElementHole(JSContext *cx, js::HandleObject obj, uint32_t index);
     static inline void removeDenseElementForSparseIndex(JSContext *cx, js::HandleObject obj,
-                                                        unsigned idx);
-    inline void copyDenseElements(unsigned dstStart, const js::Value *src, unsigned count);
-    inline void initDenseElements(unsigned dstStart, const js::Value *src, unsigned count);
-    inline void moveDenseElements(unsigned dstStart, unsigned srcStart, unsigned count);
-    inline void moveDenseElementsUnbarriered(unsigned dstStart, unsigned srcStart, unsigned count);
+                                                        uint32_t index);
+    inline void copyDenseElements(uint32_t dstStart, const js::Value *src, uint32_t count);
+    inline void initDenseElements(uint32_t dstStart, const js::Value *src, uint32_t count);
+    inline void moveDenseElements(uint32_t dstStart, uint32_t srcStart, uint32_t count);
+    inline void moveDenseElementsUnbarriered(uint32_t dstStart, uint32_t srcStart, uint32_t count);
     inline bool shouldConvertDoubleElements();
     inline void setShouldConvertDoubleElements();
 
@@ -607,21 +607,21 @@ class JSObject : public js::ObjectImpl
      * two cases the object is kept intact.
      */
     enum EnsureDenseResult { ED_OK, ED_FAILED, ED_SPARSE };
-    inline EnsureDenseResult ensureDenseElements(JSContext *cx, unsigned index, unsigned extra);
+    inline EnsureDenseResult ensureDenseElements(JSContext *cx, uint32_t index, uint32_t extra);
     inline EnsureDenseResult parExtendDenseElements(js::Allocator *alloc, js::Value *v,
                                                     uint32_t extra);
     template<typename MallocProviderType>
     inline EnsureDenseResult extendDenseElements(MallocProviderType *cx,
-                                                 unsigned requiredCapacity, unsigned extra);
+                                                 uint32_t requiredCapacity, uint32_t extra);
 
     /* Convert a single dense element to a sparse property. */
-    static bool sparsifyDenseElement(JSContext *cx, js::HandleObject obj, unsigned index);
+    static bool sparsifyDenseElement(JSContext *cx, js::HandleObject obj, uint32_t index);
 
     /* Convert all dense elements to sparse properties. */
     static bool sparsifyDenseElements(JSContext *cx, js::HandleObject obj);
 
     /* Small objects are dense, no matter what. */
-    static const unsigned MIN_SPARSE_INDEX = 1000;
+    static const uint32_t MIN_SPARSE_INDEX = 1000;
 
     /*
      * Element storage for an object will be sparse if fewer than 1/8 indexes
@@ -633,7 +633,7 @@ class JSObject : public js::ObjectImpl
      * Check if after growing the object's elements will be too sparse.
      * newElementsHint is an estimated number of elements to be added.
      */
-    bool willBeSparseElements(unsigned requiredCapacity, unsigned newElementsHint);
+    bool willBeSparseElements(uint32_t requiredCapacity, uint32_t newElementsHint);
 
     /*
      * After adding a sparse index to obj, see if it should be converted to use
@@ -642,6 +642,7 @@ class JSObject : public js::ObjectImpl
     static EnsureDenseResult maybeDensifySparseElements(JSContext *cx, js::HandleObject obj);
 
     /* Array specific accessors. */
+    inline bool arrayLengthIsWritable() const;
     inline uint32_t getArrayLength() const;
     static inline void setArrayLength(JSContext *cx, js::HandleObject obj, uint32_t length);
     inline void setArrayLengthInt32(uint32_t length);
