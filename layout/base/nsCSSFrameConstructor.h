@@ -73,8 +73,7 @@ private:
   nsCSSFrameConstructor& operator=(const nsCSSFrameConstructor& aCopy) MOZ_DELETE;
 
 public:
-  // XXXbz this method needs to actually return errors!
-  nsresult ConstructRootFrame(nsIFrame** aNewFrame);
+  nsIFrame* ConstructRootFrame();
 
   nsresult ReconstructDocElementHierarchy();
 
