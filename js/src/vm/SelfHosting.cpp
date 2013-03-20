@@ -30,6 +30,7 @@
 #include "selfhosted.out.h"
 
 using namespace js;
+using namespace js::selfhosted;
 
 static void
 selfHosting_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
@@ -517,8 +518,21 @@ JSRuntime::initSelfHosting(JSContext *cx)
         if (script)
             ok = Execute(cx, script, *shg.get(), &rv);
     } else {
-        const char *src = selfhosted::raw_sources;
-        uint32_t srcLen = selfhosted::GetRawScriptsSize();
+        uint32_t srcLen = GetRawScriptsSize();
+
+#ifdef USE_ZLIB
+        const unsigned char *compressed = compressedSources;
+        uint32_t compressedLen = GetCompressedSize();
+        ScopedJSFreePtr<char> src(reinterpret_cast<char *>(cx->malloc_(srcLen)));
+        if (!src || !DecompressString(compressed, compressedLen,
+                                      reinterpret_cast<unsigned char *>(src.get()), srcLen))
+        {
+            return false;
+        }
+#else
+        const char *src = rawSources;
+#endif
+
         ok = Evaluate(cx, shg, options, src, srcLen, &rv);
     }
     JS_SetErrorReporter(cx, oldReporter);
