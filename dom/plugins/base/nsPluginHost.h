@@ -63,7 +63,7 @@ public:
   nsPluginHost();
   virtual ~nsPluginHost();
 
-  static nsPluginHost* GetInst();
+  static already_AddRefed<nsPluginHost> GetInst();
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 

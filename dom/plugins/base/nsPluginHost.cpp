@@ -371,7 +371,7 @@ NS_IMPL_ISUPPORTS4(nsPluginHost,
                    nsITimerCallback,
                    nsISupportsWeakReference)
 
-nsPluginHost*
+already_AddRefed<nsPluginHost>
 nsPluginHost::GetInst()
 {
   if (!sInst) {
