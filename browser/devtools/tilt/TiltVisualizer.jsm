@@ -29,7 +29,6 @@ const INVISIBLE_ELEMENTS = {
 // weird things may happen; thus, when necessary, we'll split into groups
 const MAX_GROUP_NODES = Math.pow(2, Uint16Array.BYTES_PER_ELEMENT * 8) / 12 - 1;
 
-const STACK_THICKNESS = 15;
 const WIREFRAME_COLOR = [0, 0, 0, 0.25];
 const INTRO_TRANSITION_DURATION = 1000;
 const OUTRO_TRANSITION_DURATION = 800;
@@ -735,7 +734,6 @@ TiltVisualizer.Presenter.prototype = {
     // etc. in a separate thread, as this process may take a while
     worker.postMessage({
       maxGroupNodes: MAX_GROUP_NODES,
-      thickness: STACK_THICKNESS,
       style: TiltVisualizerStyle.nodes,
       texWidth: this._texture.width,
       texHeight: this._texture.height,
@@ -870,12 +868,12 @@ TiltVisualizer.Presenter.prototype = {
     let y = info.coord.top;
     let w = info.coord.width;
     let h = info.coord.height;
-    let z = info.depth;
+    let z = info.coord.depth + info.coord.thickness;
 
-    vec3.set([x,     y,     z * STACK_THICKNESS], highlight.v0);
-    vec3.set([x + w, y,     z * STACK_THICKNESS], highlight.v1);
-    vec3.set([x + w, y + h, z * STACK_THICKNESS], highlight.v2);
-    vec3.set([x,     y + h, z * STACK_THICKNESS], highlight.v3);
+    vec3.set([x,     y,     z], highlight.v0);
+    vec3.set([x + w, y,     z], highlight.v1);
+    vec3.set([x + w, y + h, z], highlight.v2);
+    vec3.set([x,     y + h, z], highlight.v3);
 
     this._currentSelection = aNodeIndex;
 
@@ -972,7 +970,6 @@ TiltVisualizer.Presenter.prototype = {
     // to the far clipping plane, to check for intersections with the mesh,
     // and do all the heavy lifting in a separate thread
     worker.postMessage({
-      thickness: STACK_THICKNESS,
       vertices: this._meshData.allVertices,
 
       // create the ray destined for 3D picking
