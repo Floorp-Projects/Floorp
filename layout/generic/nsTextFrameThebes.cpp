@@ -3912,7 +3912,7 @@ nsTextFrame::AccessibleType()
 
 
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP
+void
 nsTextFrame::Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow)
@@ -3933,7 +3933,7 @@ nsTextFrame::Init(nsIContent*      aContent,
 
   // We're not a continuing frame.
   // mContentOffset = 0; not necessary since we get zeroed out at init
-  return nsFrame::Init(aContent, aParent, aPrevInFlow);
+  nsFrame::Init(aContent, aParent, aPrevInFlow);
 }
 
 void
@@ -3975,9 +3975,9 @@ public:
 
   friend nsIFrame* NS_NewContinuingTextFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  NS_IMETHOD Init(nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIFrame*        aPrevInFlow);
+  virtual void Init(nsIContent*      aContent,
+                    nsIFrame*        aParent,
+                    nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
@@ -4026,14 +4026,14 @@ protected:
   nsIFrame* mPrevContinuation;
 };
 
-NS_IMETHODIMP
+void
 nsContinuingTextFrame::Init(nsIContent* aContent,
                             nsIFrame*   aParent,
                             nsIFrame*   aPrevInFlow)
 {
   NS_ASSERTION(aPrevInFlow, "Must be a continuation!");
   // NOTE: bypassing nsTextFrame::Init!!!
-  nsresult rv = nsFrame::Init(aContent, aParent, aPrevInFlow);
+  nsFrame::Init(aContent, aParent, aPrevInFlow);
 
 #ifdef IBMBIDI
   nsTextFrame* nextContinuation =
@@ -4092,8 +4092,6 @@ nsContinuingTextFrame::Init(nsIContent* aContent,
     mState |= NS_FRAME_IS_BIDI;
   } // prev frame is bidi
 #endif // IBMBIDI
-
-  return rv;
 }
 
 void

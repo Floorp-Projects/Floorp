@@ -29,12 +29,12 @@ NS_NewViewportFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(ViewportFrame)
 
-NS_IMETHODIMP
+void
 ViewportFrame::Init(nsIContent*      aContent,
                     nsIFrame*        aParent,
                     nsIFrame*        aPrevInFlow)
 {
-  nsresult rv = Super::Init(aContent, aParent, aPrevInFlow);
+  Super::Init(aContent, aParent, aPrevInFlow);
 
   nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(this);
   if (parent) {
@@ -42,8 +42,6 @@ ViewportFrame::Init(nsIContent*      aContent,
 
     mState |= state & (NS_FRAME_IN_POPUP);
   }
-
-  return rv;
 }
 
 NS_IMETHODIMP

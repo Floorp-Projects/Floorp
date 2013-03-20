@@ -54,7 +54,7 @@ nsFirstLetterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
 }
 
-NS_IMETHODIMP
+void
 nsFirstLetterFrame::Init(nsIContent*      aContent,
                          nsIFrame*        aParent,
                          nsIFrame*        aPrevInFlow)
@@ -73,7 +73,7 @@ nsFirstLetterFrame::Init(nsIContent*      aContent,
     }
   }
 
-  return nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
+  nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 
 NS_IMETHODIMP

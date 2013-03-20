@@ -28,9 +28,9 @@ public:
 
   friend nsIFrame* NS_NewTextBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  NS_IMETHOD  Init(nsIContent*      aContent,
-                   nsIFrame*        aParent,
-                   nsIFrame*        asPrevInFlow);
+  virtual void Init(nsIContent*      aContent,
+                    nsIFrame*        aParent,
+                    nsIFrame*        asPrevInFlow) MOZ_OVERRIDE;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
 

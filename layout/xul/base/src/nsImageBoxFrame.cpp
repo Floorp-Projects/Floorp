@@ -179,7 +179,7 @@ nsImageBoxFrame::DestroyFrom(nsIFrame* aDestructRoot)
 }
 
 
-NS_IMETHODIMP
+void
 nsImageBoxFrame::Init(nsIContent*      aContent,
                       nsIFrame*        aParent,
                       nsIFrame*        aPrevInFlow)
@@ -193,13 +193,11 @@ nsImageBoxFrame::Init(nsIContent*      aContent,
   }
 
   mSuppressStyleCheck = true;
-  nsresult rv = nsLeafBoxFrame::Init(aContent, aParent, aPrevInFlow);
+  nsLeafBoxFrame::Init(aContent, aParent, aPrevInFlow);
   mSuppressStyleCheck = false;
 
   UpdateLoadFlags();
   UpdateImage();
-
-  return rv;
 }
 
 void

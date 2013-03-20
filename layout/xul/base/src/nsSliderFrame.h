@@ -82,9 +82,9 @@ public:
                               nsIAtom* aAttribute,
                               int32_t aModType) MOZ_OVERRIDE;
 
-  NS_IMETHOD  Init(nsIContent*      aContent,
-                   nsIFrame*        aParent,
-                   nsIFrame*        asPrevInFlow) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*      aContent,
+                    nsIFrame*        aParent,
+                    nsIFrame*        asPrevInFlow) MOZ_OVERRIDE;
 
 
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 

@@ -4549,14 +4549,12 @@ nsCSSFrameConstructor::InitAndRestoreFrame(const nsFrameConstructorState& aState
   NS_PRECONDITION(mUpdateCount != 0,
                   "Should be in an update while creating frames");
   
-  nsresult rv = NS_OK;
-  
   NS_ASSERTION(aNewFrame, "Null frame cannot be initialized");
   if (!aNewFrame)
     return NS_ERROR_NULL_POINTER;
 
   // Initialize the frame
-  rv = aNewFrame->Init(aContent, aParentFrame, aPrevInFlow);
+  aNewFrame->Init(aContent, aParentFrame, aPrevInFlow);
   aNewFrame->AddStateBits(aState.mAdditionalStateBits);
 
   if (aState.mFrameState) {
@@ -4569,7 +4567,7 @@ nsCSSFrameConstructor::InitAndRestoreFrame(const nsFrameConstructorState& aState
     CountersDirty();
   }
 
-  return rv;
+  return NS_OK;
 }
 
 already_AddRefed<nsStyleContext>

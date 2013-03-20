@@ -118,9 +118,9 @@ public:
   NS_IMETHOD VisibilityChanged(bool aVisible) MOZ_OVERRIDE { Invalidate(); return NS_OK; }
 
   // Overridden from nsIFrame to cache our pres context.
-  NS_IMETHOD Init(nsIContent*     aContent,
-                  nsIFrame*       aParent,
-                  nsIFrame*       aPrevInFlow) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*     aContent,
+                    nsIFrame*       aParent,
+                    nsIFrame*       aPrevInFlow) MOZ_OVERRIDE;
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
   NS_IMETHOD GetCursor(const nsPoint& aPoint,

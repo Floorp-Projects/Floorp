@@ -74,16 +74,14 @@ nsDeckFrame::AttributeChanged(int32_t         aNameSpaceID,
   return rv;
 }
 
-NS_IMETHODIMP
+void
 nsDeckFrame::Init(nsIContent*     aContent,
                   nsIFrame*       aParent,
                   nsIFrame*       aPrevInFlow)
 {
-  nsresult rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
+  nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
 
   mIndex = GetSelectedIndex();
-
-  return rv;
 }
 
 void

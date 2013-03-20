@@ -37,9 +37,9 @@ public:
                               nsIAtom* aAttribute,
                               int32_t aModType) MOZ_OVERRIDE;
 
-  NS_IMETHOD Init(nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*      aContent,
+                    nsIFrame*        aParent,
+                    nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
 
   NS_IMETHOD GetCursor(const nsPoint&    aPoint,
                        nsIFrame::Cursor& aCursor) MOZ_OVERRIDE;

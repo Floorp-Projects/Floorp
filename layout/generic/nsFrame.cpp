@@ -492,7 +492,7 @@ IsFontSizeInflationContainer(nsIFrame* aFrame,
   return !isInline;
 }
 
-NS_IMETHODIMP
+void
 nsFrame::Init(nsIContent*      aContent,
               nsIFrame*        aParent,
               nsIFrame*        aPrevInFlow)
@@ -560,8 +560,6 @@ nsFrame::Init(nsIContent*      aContent,
 
   if (IsBoxWrapped())
     InitBoxMetrics(false);
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsFrame::SetInitialChildList(ChildListID     aListID,
