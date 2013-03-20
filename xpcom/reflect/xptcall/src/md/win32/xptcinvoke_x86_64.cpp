@@ -51,7 +51,7 @@ XPTC__InvokebyIndex(nsISupports* that, uint32_t methodIndex,
 
 extern "C"
 EXPORT_XPCOM_API(nsresult)
-NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
+NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
                    uint32_t paramCount, nsXPTCVariant* params)
 {
     return XPTC__InvokebyIndex(that, methodIndex, paramCount, params);

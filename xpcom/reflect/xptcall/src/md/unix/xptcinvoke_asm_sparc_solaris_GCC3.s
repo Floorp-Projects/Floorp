@@ -8,12 +8,12 @@
  * Platform specific code to invoke XPCOM methods on native objects for
  * solaris/sparc with gcc 3 ABI.
  */
-        .global NS_InvokeByIndex_P
+        .global NS_InvokeByIndex
 /*
- *  NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
+ *  NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
  *                   uint32_t paramCount, nsXPTCVariant* params);
  */
-NS_InvokeByIndex_P:
+NS_InvokeByIndex:
         save    %sp,-(64 + 32),%sp  ! room for the register window and
                                     ! struct pointer, rounded up to 0 % 32
         mov     %i2,%o0             ! paramCount

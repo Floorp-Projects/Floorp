@@ -19,21 +19,21 @@
 
 
 #
-# NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
+# NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
 #                    uint32_t paramCount, nsXPTCVariant* params)
 #
 
         .section ".toc","aw"
         .section ".text"
         .align 2
-        .globl  NS_InvokeByIndex_P
+        .globl  NS_InvokeByIndex
         .section ".opd","aw"
         .align 3
-NS_InvokeByIndex_P:
-        .quad   .NS_InvokeByIndex_P,.TOC.@tocbase
+NS_InvokeByIndex:
+        .quad   .NS_InvokeByIndex,.TOC.@tocbase
         .previous
-        .type   NS_InvokeByIndex_P,@function
-.NS_InvokeByIndex_P:
+        .type   NS_InvokeByIndex,@function
+.NS_InvokeByIndex:
         mflr    0
         std     0,16(r1)
 
@@ -126,7 +126,7 @@ NS_InvokeByIndex_P:
         mtlr    0
         blr
 
-        .size   NS_InvokeByIndex_P,.-.NS_InvokeByIndex_P
+        .size   NS_InvokeByIndex,.-.NS_InvokeByIndex
 
         # Magic indicating no need for an executable stack
         .section .note.GNU-stack, "", @progbits ; .previous

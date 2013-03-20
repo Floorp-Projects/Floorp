@@ -49,7 +49,7 @@ invoke_copy_to_stack(uint32_t* d, uint32_t paramCount, nsXPTCVariant* s)
 // a custom FPO program.
 #pragma optimize( "y", off )
 extern "C" NS_EXPORT nsresult NS_FROZENCALL
-NS_InvokeByIndex_P(nsISupports* that, uint32_t methodIndex,
+NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
                  uint32_t paramCount, nsXPTCVariant* params)
 {
     __asm {
