@@ -14,4 +14,4 @@ function testReduceThrows() {
 }
 
 // FIXME(bug 844886) sanity check argument types
-// testReduceThrows();
+// if (getBuildConfiguration().parallelJS) testReduceThrows();

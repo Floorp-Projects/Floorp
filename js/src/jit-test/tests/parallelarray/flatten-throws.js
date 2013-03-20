@@ -6,4 +6,7 @@ function testFlattenFlat() {
   var f = p.flatten();
 }
 
-testFlattenFlat();
+if (getBuildConfiguration().parallelJS)
+  testFlattenFlat();
+else
+  throw new Error();

@@ -11,5 +11,5 @@ function testScatterIdentity() {
   }
 }
 
-testScatterIdentity();
+if (getBuildConfiguration().parallelJS) testScatterIdentity();
 

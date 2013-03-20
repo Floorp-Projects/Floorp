@@ -6,5 +6,5 @@ function testScatterIdentity() {
   assertEqParallelArray(p, r);
 }
 
-testScatterIdentity();
+if (getBuildConfiguration().parallelJS) testScatterIdentity();
 

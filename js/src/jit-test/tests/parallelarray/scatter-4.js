@@ -6,5 +6,5 @@ function testScatterDefault() {
   assertEqParallelArray(r, new ParallelArray([1,9,2,9,3]));
 }
 
-testScatterDefault();
+if (getBuildConfiguration().parallelJS) testScatterDefault();
 

@@ -216,6 +216,7 @@ EXPORTS_js = \
 #
 ifeq (,$(filter beta release esr,$(MOZ_UPDATE_CHANNEL)))
 DEFINES += -DENABLE_TYPEDARRAY_MOVE
+DEFINES += -DENABLE_PARALLEL_JS
 endif
 
 ifdef ENABLE_TRACE_LOGGING

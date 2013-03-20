@@ -12,5 +12,5 @@ function testMap() {
   p.map(func, {mode: "par", expect: "disqualified"});
 }
 
-testMap();
+if (getBuildConfiguration().parallelJS) testMap();
 

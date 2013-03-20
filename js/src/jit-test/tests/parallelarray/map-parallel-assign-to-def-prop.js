@@ -6,4 +6,4 @@ function wrapInObject(v) {
     return obj;
 }
 
-compareAgainstArray(range(0, 64), "map", wrapInObject);
+if (getBuildConfiguration().parallelJS) compareAgainstArray(range(0, 64), "map", wrapInObject);
