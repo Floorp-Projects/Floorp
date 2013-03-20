@@ -10056,8 +10056,8 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
     rv = WrapFramesInFirstLetterFrame(aContent, aFrame, aFrameItems);
   }
   if (haveFirstLineStyle) {
-    rv = WrapFramesInFirstLineFrame(aState, aContent, aFrame, nullptr,
-                                    aFrameItems);
+    WrapFramesInFirstLineFrame(aState, aContent, aFrame, nullptr,
+                               aFrameItems);
   }
 
   // We might end up with first-line frames that change
@@ -10127,7 +10127,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
 // non-first-in-flow continuation of the block to which the first-line
 // belongs. So this function needs to be careful about how it uses
 // aState.
-nsresult
+void
 nsCSSFrameConstructor::WrapFramesInFirstLineFrame(
   nsFrameConstructorState& aState,
   nsIContent*              aBlockContent,
@@ -10135,8 +10135,6 @@ nsCSSFrameConstructor::WrapFramesInFirstLineFrame(
   nsIFrame*                aLineFrame,
   nsFrameItems&            aFrameItems)
 {
-  nsresult rv = NS_OK;
-
   // Find the part of aFrameItems that we want to put in the first-line
   nsFrameList::FrameLinkEnumerator link(aFrameItems);
   while (!link.AtEnd() && link.NextFrame()->IsInlineOutside()) {
@@ -10147,7 +10145,7 @@ nsCSSFrameConstructor::WrapFramesInFirstLineFrame(
 
   if (firstLineChildren.IsEmpty()) {
     // Nothing is supposed to go into the first-line; nothing to do
-    return NS_OK;
+    return;
   }
 
   if (!aLineFrame) {
@@ -10174,27 +10172,20 @@ nsCSSFrameConstructor::WrapFramesInFirstLineFrame(
                  "Bogus style context on line frame");
   }
 
-  if (aLineFrame) {
-    // Give the inline frames to the lineFrame <b>after</b> reparenting them
-    ReparentFrames(this, aLineFrame, firstLineChildren);
-    if (aLineFrame->PrincipalChildList().IsEmpty() &&
-        (aLineFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
-      aLineFrame->SetInitialChildList(kPrincipalList, firstLineChildren);
-    } else {
-      AppendFrames(aLineFrame, kPrincipalList, firstLineChildren);
-    }
+  // Give the inline frames to the lineFrame <b>after</b> reparenting them
+  ReparentFrames(this, aLineFrame, firstLineChildren);
+  if (aLineFrame->PrincipalChildList().IsEmpty() &&
+      (aLineFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+    aLineFrame->SetInitialChildList(kPrincipalList, firstLineChildren);
+  } else {
+    AppendFrames(aLineFrame, kPrincipalList, firstLineChildren);
   }
-  else {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return rv;
 }
 
 // Special routine to handle appending a new frame to a block frame's
 // child list. Takes care of placing the new frame into the right
 // place when first-line style is present.
-nsresult
+void
 nsCSSFrameConstructor::AppendFirstLineFrames(
   nsFrameConstructorState& aState,
   nsIContent*              aBlockContent,
@@ -10205,8 +10196,9 @@ nsCSSFrameConstructor::AppendFirstLineFrames(
   // created because it doesn't currently have any children.
   const nsFrameList& blockKids = aBlockFrame->PrincipalChildList();
   if (blockKids.IsEmpty()) {
-    return WrapFramesInFirstLineFrame(aState, aBlockContent,
-                                      aBlockFrame, nullptr, aFrameItems);
+    WrapFramesInFirstLineFrame(aState, aBlockContent,
+                               aBlockFrame, nullptr, aFrameItems);
+    return;
   }
 
   // Examine the last block child - if it's a first-line frame then
@@ -10217,11 +10209,11 @@ nsCSSFrameConstructor::AppendFirstLineFrames(
     // an intervening block between any first-line frame the frames
     // we are appending. Therefore, we don't need any special
     // treatment of the appended frames.
-    return NS_OK;
+    return;
   }
 
-  return WrapFramesInFirstLineFrame(aState, aBlockContent, aBlockFrame,
-                                    lastBlockKid, aFrameItems);
+  WrapFramesInFirstLineFrame(aState, aBlockContent, aBlockFrame,
+                             lastBlockKid, aFrameItems);
 }
 
 // Special routine to handle inserting a new frame into a block
