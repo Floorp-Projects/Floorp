@@ -1779,23 +1779,33 @@ class CGDefineDOMInterfaceMethod(CGAbstractMethod):
 
 """ + getConstructor)
 
-class CGPrefEnabled(CGAbstractMethod):
+class CGPrefEnabledNative(CGAbstractMethod):
     """
     A method for testing whether the preference controlling this
-    interface is enabled.  When it's not, the interface should not be
-    visible on the global.
+    interface is enabled. This delegates to PrefEnabled() on the
+    wrapped class. The interface should only be visible on the global
+    if the method returns true.
     """
     def __init__(self, descriptor):
         CGAbstractMethod.__init__(self, descriptor, 'PrefEnabled', 'bool', [])
 
-    def declare(self):
-        return CGAbstractMethod.declare(self)
-
-    def define(self):
-        return CGAbstractMethod.define(self)
-
     def definition_body(self):
         return "  return %s::PrefEnabled();" % self.descriptor.nativeType
+
+class CGPrefEnabled(CGAbstractMethod):
+    """
+    A method for testing whether the preference controlling this
+    interface is enabled. This generates code in the binding to
+    check the given preference. The interface should only be visible
+    on the global if the pref is true.
+    """
+    def __init__(self, descriptor):
+        CGAbstractMethod.__init__(self, descriptor, 'PrefEnabled', 'bool', [])
+
+    def definition_body(self):
+        pref = self.descriptor.interface.getExtendedAttribute("Pref")
+        assert isinstance(pref, list) and len(pref) == 1
+        return "  return Preferences::GetBool(\"%s\");" % pref[0]
 
 class CGIsMethod(CGAbstractMethod):
     def __init__(self, descriptor):
@@ -6645,9 +6655,11 @@ class CGDescriptor(CGThing):
             cgThings.append(CGDefineDOMInterfaceMethod(descriptor))
             if (not descriptor.interface.isExternal() and
                 # Workers stuff is never pref-controlled
-                not descriptor.workers and
-                descriptor.interface.getExtendedAttribute("PrefControlled") is not None):
-                cgThings.append(CGPrefEnabled(descriptor))
+                not descriptor.workers):
+                if descriptor.interface.getExtendedAttribute("PrefControlled") is not None:
+                    cgThings.append(CGPrefEnabledNative(descriptor))
+                elif descriptor.interface.getExtendedAttribute("Pref") is not None:
+                    cgThings.append(CGPrefEnabled(descriptor))
 
         if descriptor.concrete:
             if descriptor.proxy:
@@ -7064,7 +7076,8 @@ class CGRegisterProtos(CGAbstractMethod):
 #undef REGISTER_PROTO"""
     def _registerProtos(self):
         def getPrefCheck(desc):
-            if desc.interface.getExtendedAttribute("PrefControlled") is None:
+            if (desc.interface.getExtendedAttribute("PrefControlled") is None and
+                desc.interface.getExtendedAttribute("Pref") is None):
                 return "nullptr"
             return "%sBinding::PrefEnabled" % desc.name
         lines = []
