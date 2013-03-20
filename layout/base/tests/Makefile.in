@@ -15,7 +15,6 @@ MOCHITEST_FILES =	\
 		border_radius_hit_testing_iframe.html \
 		test_preserve3d_sorting_hit_testing.html \
 		preserve3d_sorting_hit_testing_iframe.html \
-		test_image_layers.html \
 		image_rgrg-256x256.png \
 		image_rrgg-256x256.png \
 		bug369950-subframe.xml \
