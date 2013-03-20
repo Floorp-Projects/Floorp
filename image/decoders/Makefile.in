@@ -21,8 +21,11 @@ endif # !_MSC_VER
 
 CPPSRCS = nsPNGDecoder.cpp nsJPEGDecoder.cpp nsGIFDecoder2.cpp \
           nsBMPDecoder.cpp nsICODecoder.cpp nsIconDecoder.cpp \
-          nsWBMPDecoder.cpp \
           $(NULL)
+
+ifdef MOZ_WBMP
+CPPSRCS += nsWBMPDecoder.cpp
+endif
 
 CSRCS   = iccjpeg.c \
           $(NULL)
