@@ -4010,7 +4010,8 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
   const gfx3DMatrix& newTransformMatrix =
     GetTransform(mFrame->PresContext()->AppUnitsPerDevPixel());
 
-  if (!IsFrameVisible(mFrame, newTransformMatrix)) {
+  if (mFrame->StyleDisplay()->mBackfaceVisibility == NS_STYLE_BACKFACE_VISIBILITY_HIDDEN &&
+      newTransformMatrix.IsBackfaceVisible()) {
     return nullptr;
   }
 
