@@ -167,6 +167,7 @@ static bool setSitesWithDataCapabilities(NPObject* npobj, const NPVariant* args,
 static bool getLastKeyText(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getNPNVdocumentOrigin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getMouseUpEventCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool queryContentsScaleFactor(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -228,7 +229,8 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "setSitesWithDataCapabilities",
   "getLastKeyText",
   "getNPNVdocumentOrigin",
-  "getMouseUpEventCount"
+  "getMouseUpEventCount",
+  "queryContentsScaleFactor"
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[] = {
@@ -291,7 +293,8 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   setSitesWithDataCapabilities,
   getLastKeyText,
   getNPNVdocumentOrigin,
-  getMouseUpEventCount
+  getMouseUpEventCount,
+  queryContentsScaleFactor
 };
 
 STATIC_ASSERT(ARRAY_LENGTH(sPluginMethodIdentifierNames) ==
@@ -3736,5 +3739,22 @@ bool getMouseUpEventCount(NPObject* npobj, const NPVariant* args, uint32_t argCo
   NPP npp = static_cast<TestNPObject*>(npobj)->npp;
   InstanceData* id = static_cast<InstanceData*>(npp->pdata);
   INT32_TO_NPVARIANT(id->mouseUpEventCount, *result);
+  return true;
+}
+
+bool queryContentsScaleFactor(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount != 0)
+    return false;
+
+  double scaleFactor = 1.0;
+#if defined(XP_MACOSX)
+  NPError err = NPN_GetValue(static_cast<TestNPObject*>(npobj)->npp,
+                             NPNVcontentsScaleFactor, &scaleFactor);
+  if (err != NPERR_NO_ERROR) {
+    return false;
+  }
+#endif
+  DOUBLE_TO_NPVARIANT(scaleFactor, *result);
   return true;
 }
