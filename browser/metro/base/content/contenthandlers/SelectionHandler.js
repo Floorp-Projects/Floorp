@@ -32,6 +32,10 @@ dump("### SelectionHandler.js loaded\n");
 
 */
 
+// selection node parameters for various apis
+const kSelectionNodeAnchor = 1;
+const kSelectionNodeFocus = 2;
+
 var SelectionHandler = {
   _debugEvents: false,
   _cache: {},
@@ -58,9 +62,8 @@ var SelectionHandler = {
     addMessageListener("Browser:SelectionCopy", this);
     addMessageListener("Browser:SelectionDebug", this);
     addMessageListener("Browser:CaretAttach", this);
+    addMessageListener("Browser:CaretMove", this);
     addMessageListener("Browser:CaretUpdate", this);
-    addMessageListener("Browser:CaretPosition", this);
-    addMessageListener("Browser:CaretPositionEnd", this);
   },
 
   shutdown: function shutdown() {
@@ -76,9 +79,8 @@ var SelectionHandler = {
     removeMessageListener("Browser:SelectionCopy", this);
     removeMessageListener("Browser:SelectionDebug", this);
     removeMessageListener("Browser:CaretAttach", this);
+    removeMessageListener("Browser:CaretMove", this);
     removeMessageListener("Browser:CaretUpdate", this);
-    removeMessageListener("Browser:CaretPosition", this);
-    removeMessageListener("Browser:CaretPositionEnd", this);
   },
 
   /*************************************************
@@ -207,7 +209,7 @@ var SelectionHandler = {
     
     // _handleSelectionPoint may set a scroll timer, so this must
     // be reset after the last call.
-    this.clearTimers();
+    this._clearTimers();
 
     // Update the position of our selection monocles
     this._updateSelectionUI(true, true);
@@ -315,10 +317,15 @@ var SelectionHandler = {
   },
 
   /*
-   * Selection clear event handler
+   * Selection clear message handler
+   *
+   * @param aClearFocus requests that the focus also be cleared.
    */
-  _onSelectionClear: function _onSelectionClear() {
+  _onSelectionClear: function _onSelectionClear(aClearFocus) {
     this._clearSelection();
+    if (aClearFocus && this._targetElement) {
+      this._targetElement.blur();
+    }
   },
 
   /*
@@ -365,7 +372,7 @@ var SelectionHandler = {
    * Clear existing selection if it exists and reset our internla state.
    */
   _clearSelection: function _clearSelection() {
-    this.clearTimers();
+    this._clearTimers();
     if (this._contentWindow) {
       let selection = this._getSelection();
       if (selection)
@@ -384,7 +391,7 @@ var SelectionHandler = {
    * Shuts SelectionHandler down.
    */
   _closeSelection: function _closeSelection() {
-    this.clearTimers();
+    this._clearTimers();
     this._cache = null;
     this._contentWindow = null;
     this.selectedText = "";
@@ -413,12 +420,20 @@ var SelectionHandler = {
     }
 
     // Updates this._cache content selection position data which we send over
-    // to SelectionHelperUI.
-    this._updateUIMarkerRects(selection);
+    // to SelectionHelperUI. Note updateUIMarkerRects will fail if there isn't
+    // any selection in the page. This can happen when we start a monocle drag
+    // but haven't dragged enough to create selection. Just return. 
+    try {
+      this._updateUIMarkerRects(selection);
+    } catch (ex) {
+      Util.dumpLn(ex.message);
+      return;
+    }
 
     this._cache.updateStart = aUpdateStart;
     this._cache.updateEnd = aUpdateEnd;
     this._cache.updateCaret = aUpdateCaret || false;
+    this._cache.targetIsEditable = this._targetIsEditable;
 
     // Get monocles positioned correctly
     sendAsyncMessage("Content:SelectionRange", this._cache);
@@ -585,7 +600,7 @@ var SelectionHandler = {
     this._lastMarker = aMarker;
 
     // If we aren't out-of-bounds, clear the scroll timer if it exists.
-    this.clearTimers();
+    this._clearTimers();
 
     // Adjusts the selection based on monocle movement
     this._adjustSelection(aMarker, clientPoint, aEndOfSelection);
@@ -746,12 +761,12 @@ var SelectionHandler = {
     let result = { speed: 1, trigger: false, start: false, end: false };
 
     if (orientation.left || orientation.top) {
-      this._addEditStartSelection();
+      this._addEditSelection(kSelectionNodeAnchor);
       result.speed = orientation.left + orientation.top;
       result.trigger = true;
       result.end = true;
     } else if (orientation.right || orientation.bottom) {
-      this._addEditEndSelection();
+      this._addEditSelection(kSelectionNodeFocus);
       result.speed = orientation.right + orientation.bottom;
       result.trigger = true;
       result.start = true;
@@ -772,43 +787,34 @@ var SelectionHandler = {
     this._scrollTimer.interval(timeout, this.scrollTimerCallback);
   },
 
-  /*
-   * Selection control call wrapper
-   */
-  _addEditStartSelection: function _addEditStartSelection() {
-    let selCtrl = this._getSelectController();
-    let selection = this._getSelection();
-    try {
-      this._backupRangeList();
-      selection.collapseToStart();
-      // State: focus = anchor
-      // Only step back if we can, otherwise selCtrl will exception:
-      if (selection.getRangeAt(0).startOffset > 0) {
-        selCtrl.characterMove(false, true);
-      }
-      // State: focus = (anchor - 1)
-      selection.collapseToStart();
-      // State: focus = anchor and both are -1 from the original offset
-      selCtrl.characterMove(true, true);
-      // State: focus = anchor + 1, both have been moved back one char
-      // Restore the rest of the selection:
-      this._restoreRangeList();
-      selCtrl.scrollSelectionIntoView(Ci.nsISelectionController.SELECTION_NORMAL,
-                                      Ci.nsISelectionController.SELECTION_ANCHOR_REGION,
-                                      Ci.nsISelectionController.SCROLL_SYNCHRONOUS);
-    } catch (ex) { Util.dumpLn(ex.message);}
+  _clearTimers: function _clearTimers() {
+    if (this._scrollTimer) {
+      this._scrollTimer.clear();
+    }
   },
 
   /*
-   * Selection control call wrapper
+   * _addEditSelection - selection control call wrapper for text inputs.
+   * Adds selection on the anchor or focus side of selection in a text
+   * input. Scrolls the location into view as well.
+   * (TBD: anchor side scrolling is currently broken, see bug 848594)
+   *
+   * @param const selection node identifier
    */
-  _addEditEndSelection: function _addEditEndSelection() {
+  _addEditSelection: function _addEditSelection(aLocation) {
+    let selCtrl = this._getSelectController();
     try {
-      let selCtrl = this._getSelectController();
-      selCtrl.characterMove(true, true);
-      selCtrl.scrollSelectionIntoView(Ci.nsISelectionController.SELECTION_NORMAL,
-                                      Ci.nsISelectionController.SELECTION_FOCUS_REGION,
-                                      Ci.nsISelectionController.SCROLL_SYNCHRONOUS);
+      if (aLocation == kSelectionNodeAnchor) {
+        this._targetElement.selectionStart = this._targetElement.selectionStart - 1;
+        selCtrl.scrollSelectionIntoView(Ci.nsISelectionController.SELECTION_NORMAL,
+                                        Ci.nsISelectionController.SELECTION_ANCHOR_REGION,
+                                        Ci.nsISelectionController.SCROLL_SYNCHRONOUS);
+      } else {
+        this._targetElement.selectionEnd = this._targetElement.selectionEnd + 1;
+        selCtrl.scrollSelectionIntoView(Ci.nsISelectionController.SELECTION_NORMAL,
+                                        Ci.nsISelectionController.SELECTION_FOCUS_REGION,
+                                        Ci.nsISelectionController.SCROLL_SYNCHRONOUS);
+      }
     } catch (ex) {}
   },
 
@@ -839,15 +845,6 @@ var SelectionHandler = {
       height = rects[len].bottom - rects[len].top;
     }
     return height / 2;
-  },
-
-  _findBetterLowerTextRangePoint: function _findBetterLowerTextRangePoint(aClientPoint, aHalfLineHeight) {
-    let range = this._getSelection().getRangeAt(0);
-    let clientRect = range.getBoundingClientRect();
-    if (aClientPoint.y > clientRect.bottom && clientRect.right < aClientPoint.x) {
-      aClientPoint.y = (clientRect.bottom - aHalfLineHeight);
-      this._setDebugPoint(aClientPoint, "red");
-    }
   },
 
   /*
@@ -973,6 +970,10 @@ var SelectionHandler = {
   },
 
   /*
+   * Events
+   */
+
+  /*
    * Scroll + selection advancement timer when the monocle is
    * outside the bounds of an input control.
    */
@@ -986,16 +987,6 @@ var SelectionHandler = {
         SelectionHandler._updateSelectionUI(false, true);
     }
   },
-
-  clearTimers: function clearTimers() {
-    if (this._scrollTimer) {
-      this._scrollTimer.clear();
-    }
-  },
-
-  /*
-   * Events
-   */
 
   receiveMessage: function sh_receiveMessage(aMessage) {
     if (this._debugEvents && aMessage.name != "Browser:SelectionMove") {
@@ -1044,7 +1035,7 @@ var SelectionHandler = {
         break;
 
       case "Browser:SelectionClear":
-        this._onSelectionClear();
+        this._onSelectionClear(json.clearFocus);
         break;
 
       case "Browser:SelectionDebug":

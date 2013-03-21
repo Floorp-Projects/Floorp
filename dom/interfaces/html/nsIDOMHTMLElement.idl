@@ -19,7 +19,7 @@ interface nsIDOMHTMLMenuElement;
  * with changes from the work-in-progress WHATWG HTML specification:
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
-[scriptable, uuid(56d50046-31af-4cdc-af51-217fb2fd0a4d)]
+[scriptable, uuid(6decb41e-44e6-40ca-b3cb-9ded9c1fc382)]
 interface nsIDOMHTMLElement : nsIDOMElement
 {
   // metadata attributes

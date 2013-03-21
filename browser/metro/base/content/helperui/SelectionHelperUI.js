@@ -76,6 +76,7 @@ function Marker(aParent, aTag, aElementId, xPos, yPos) {
   this._yPos = yPos;
   this._selectionHelperUI = aParent;
   this._element = document.getElementById(aElementId);
+  this._elementId = aElementId;
   // These get picked in input.js and receives drag input
   this._element.customDragger = new MarkerDragger(this);
   this.tag = aTag;
@@ -83,6 +84,7 @@ function Marker(aParent, aTag, aElementId, xPos, yPos) {
 
 Marker.prototype = {
   _element: null,
+  _elementId: "",
   _selectionHelperUI: null,
   _xPos: 0,
   _yPos: 0,
@@ -171,8 +173,12 @@ Marker.prototype = {
   moveBy: function moveBy(aDx, aDy, aClientX, aClientY) {
     this._xPos -= aDx;
     this._yPos -= aDy;
-    this._selectionHelperUI.markerDragMove(this);
-    this._setPosition();
+    let direction = (aDx < 0 || aDy < 0 ? "end" : "start");
+    // We may swap markers in markerDragMove. If markerDragMove
+    // returns true keep processing, otherwise get out of here.
+    if (this._selectionHelperUI.markerDragMove(this, direction)) {
+      this._setPosition();
+    }
   },
 
   hitTest: function hitTest(aX, aY) {
@@ -187,6 +193,23 @@ Marker.prototype = {
       return true;
     return false;
   },
+
+  swapMonocle: function swapMonocle(aCaret) {
+    let targetElement = aCaret._element;
+    let targetElementId = aCaret._elementId;
+
+    aCaret._element = this._element;
+    aCaret._element.customDragger._marker = aCaret;
+    aCaret._elementId = this._elementId;
+
+    this._xPos = aCaret._xPos;
+    this._yPos = aCaret._yPos;
+    this._element = targetElement;
+    this._element.customDragger._marker = this;
+    this._elementId = targetElementId;
+    this._element.visible = true;
+  },
+
 };
 
 /*
@@ -203,24 +226,30 @@ var SelectionHelperUI = {
   _movement: { active: false, x:0, y: 0 },
   _activeSelectionRect: null,
   _selectionHandlerActive: false,
+  _selectionMarkIds: [],
+  _targetIsEditable: false,
+
+  /*
+   * Properties
+   */
 
   get startMark() {
     if (this._startMark == null) {
-      this._startMark = new Marker(this, "start", "selectionhandle-start", 0, 0);
+      this._startMark = new Marker(this, "start", this._selectionMarkIds.pop(), 0, 0);
     }
     return this._startMark;
   },
 
   get endMark() {
     if (this._endMark == null) {
-      this._endMark = new Marker(this, "end", "selectionhandle-end", 0, 0);
+      this._endMark = new Marker(this, "end", this._selectionMarkIds.pop(), 0, 0);
     }
     return this._endMark;
   },
 
   get caretMark() {
     if (this._caretMark == null) {
-      this._caretMark = new Marker(this, "caret", "selectionhandle-caret", 0, 0);
+      this._caretMark = new Marker(this, "caret", this._selectionMarkIds.pop(), 0, 0);
     }
     return this._caretMark;
   },
@@ -228,6 +257,20 @@ var SelectionHelperUI = {
   get overlay() {
     return document.getElementById("selection-overlay");
   },
+
+  /*
+   * isActive (prop)
+   *
+   * Determines if an edit session is currently active.
+   */
+  get isActive() {
+    return (this._msgTarget &&
+            this._selectionHandlerActive);
+  },
+
+  /*
+   * Public apis
+   */
 
   /*
    * openEditSession
@@ -240,10 +283,6 @@ var SelectionHelperUI = {
       return;
     this._init(aContent);
     this._setupDebugOptions();
-
-    // Set the track bounds for each marker NIY
-    this.startMark.setTrackBounds(aClientX, aClientY);
-    this.endMark.setTrackBounds(aClientX, aClientY);
 
     // Send this over to SelectionHandler in content, they'll message us
     // back with information on the current selection. SelectionStart
@@ -266,10 +305,6 @@ var SelectionHelperUI = {
     this._init(aContent);
     this._setupDebugOptions();
 
-    // Set the track bounds for each marker NIY
-    this.startMark.setTrackBounds(aClientX, aClientY);
-    this.endMark.setTrackBounds(aClientX, aClientY);
-
     // Send this over to SelectionHandler in content, they'll message us
     // back with information on the current selection. SelectionAttach
     // takes client coordinates.
@@ -289,7 +324,7 @@ var SelectionHelperUI = {
    * Note the caret marker is pretty limited in functionality. The
    * only thing is can do is be displayed at the caret position.
    * Once the user starts a drag, the caret marker is hidden, and
-   * the start and end markers take over. (TBD)
+   * the start and end markers take over.
    *
    * @param aClientX, aClientY client coordiates of the tap that
    * initiated the session.
@@ -320,16 +355,6 @@ var SelectionHelperUI = {
   },
 
   /*
-   * isActive (prop)
-   *
-   * Determines if an edit session is currently active.
-   */
-  get isActive() {
-    return (this._msgTarget &&
-            this._selectionHandlerActive);
-  },
-
-  /*
    * closeEditSession
    *
    * Closes an active edit session and shuts down. Does not clear existing
@@ -342,12 +367,16 @@ var SelectionHelperUI = {
 
   /*
    * closeEditSessionAndClear
-   * 
+   *
    * Closes an active edit session and shuts down. Clears any selection region
    * associated with the edit session.
+   *
+   * @param aClearFocus bool indicating if the selection handler should also
+   * clear the focus element. optional, the default is false.
    */
-  closeEditSessionAndClear: function closeEditSessionAndClear() {
-    this._sendAsyncMessage("Browser:SelectionClear");
+  closeEditSessionAndClear: function closeEditSessionAndClear(aClearFocus) {
+    let clearFocus = aClearFocus || false;
+    this._sendAsyncMessage("Browser:SelectionClear", { clearFocus: clearFocus });
     this.closeEditSession();
   },
 
@@ -358,6 +387,15 @@ var SelectionHelperUI = {
   _init: function _init(aMsgTarget) {
     // store the target message manager
     this._msgTarget = aMsgTarget;
+
+    // Init our list of available monocle ids
+    this._selectionMarkIds = ["selectionhandle-mark1",
+                              "selectionhandle-mark2",
+                              "selectionhandle-mark3"];
+
+    // Init selection rect info
+    this._activeSelectionRect = Util.getCleanRect();
+    this._targetElementRect = Util.getCleanRect();
 
     // SelectionHandler messages
     messageManager.addMessageListener("Content:SelectionRange", this);
@@ -419,10 +457,11 @@ var SelectionHelperUI = {
     if (this._caretMark != null)
       this._caretMark.shutdown();
 
-    delete this._startMark;
-    delete this._endMark;
-    delete this._caretMark;
+    this._startMark = null;
+    this._endMark = null;
+    this._caretMark = null;
 
+    this._selectionMarkIds = [];
     this._msgTarget = null;
     this._activeSelectionRect = null;
     this._selectionHandlerActive = false;
@@ -434,6 +473,54 @@ var SelectionHelperUI = {
   /*
    * Utilities
    */
+
+  /*
+   * _swapCaretMarker
+   *
+   * Swap two drag markers - used when transitioning from caret mode
+   * to selection mode. We take the current caret marker (which is in a
+   * drag state) and swap it out with one of the selection markers.
+   */
+  _swapCaretMarker: function _swapCaretMarker(aDirection) {
+    let targetMark = null;
+    if (aDirection == "start")
+      targetMark = this.startMark;
+    else
+      targetMark = this.endMark;
+    let caret = this.caretMark;
+    targetMark.swapMonocle(caret);
+    let id = caret._elementId;
+    caret.shutdown();
+    this._caretMark = null;
+    this._selectionMarkIds.push(id);
+  },
+
+  /*
+   * _transitionFromCaretToSelection
+   *
+   * Transitions from caret mode to text selection mode.
+   */
+  _transitionFromCaretToSelection: function _transitionFromCaretToSelection(aDirection) {
+    // Get selection markers initialized if they aren't already
+    { let mark = this.startMark; mark = this.endMark; }
+
+    // Swap the caret marker out for the start or end marker depending
+    // on direction.
+    this._swapCaretMarker(aDirection);
+
+    let targetMark = null;
+    if (aDirection == "start")
+      targetMark = this.startMark;
+    else
+      targetMark = this.endMark;
+    // Start the selection monocle drag. SelectionHandler relies on this
+    // for getting initialized. This will also trigger a message back for
+    // monocle positioning. Note, markerDragMove is still on the stack in
+    // this call!
+    targetMark._setPosition();
+    this.markerDragStart(targetMark);
+    this.markerDragMove(targetMark, aDirection);
+  },
 
   /*
    * _setupDebugOptions
@@ -509,34 +596,53 @@ var SelectionHelperUI = {
   /*
    * _onTap
    * 
-   * Handles taps that move the current caret around text text
-   * edits. Also will clear active selection if it is present.
-   * Future: changing slection modes by tapping on a monocle.
+   * Handles taps that move the current caret around in text edits,
+   * clear active selection and focus when neccessary, or change
+   * modes.
+   * Future: changing selection modes by tapping on a monocle.
    */
   _onTap: function _onTap(aEvent) {
+    // Check for a tap on a monocle
     if (this.startMark.hitTest(aEvent.clientX, aEvent.clientY) ||
         this.endMark.hitTest(aEvent.clientX, aEvent.clientY)) {
+      aEvent.stopPropagation();
+      aEvent.preventDefault();
       return;
     }
 
-    // If the tap is within the target element and the caret monocle is
+    // Is the tap point within the bound of the target element? This
+    // is useful if we are dealing with some sort of input control.
+    // Not so much if the target is a page or div.
+    let pointInTargetElement =
+      Util.pointWithinRect(aEvent.clientX, aEvent.clientY,
+                           this._targetElementRect);
+
+    // If the tap is within an editable element and the caret monocle is
     // active, update the caret.
-    if (this.caretMark.visible &&
-        Util.pointWithinRect(aEvent.clientX, aEvent.clientY,
-                             this._targetElementRect)) {
+    if (this.caretMark.visible && pointInTargetElement) {
       // Move the caret
       this._setCaretPositionAtPoint(aEvent.clientX, aEvent.clientY);
       return;
     }
 
+    // if the target is editable and the user clicks off the target
+    // clear selection and remove focus from the input.
     if (this.caretMark.visible) {
-      // shutdown selection
-      this.closeEditSessionAndClear();
+      // shutdown and clear selection and remove focus
+      this.closeEditSessionAndClear(true);
       return;
     }
 
-    // If we have active selection w/monocles, don't let random taps
-    // kill selection.
+    // If the target is editable, we have active selection, and
+    // the user taps off the input, clear selection and shutdown.
+    if (this.startMark.visible && !pointInTargetElement &&
+        this._targetIsEditable) {
+      this.closeEditSessionAndClear(true);
+      return;
+    }
+
+    // If we have active selection in anything else don't let the event get
+    // to content. Prevents random taps from killing active selection.
     aEvent.stopPropagation();
     aEvent.preventDefault();
   },
@@ -582,6 +688,7 @@ var SelectionHelperUI = {
     }
     this._activeSelectionRect = json.selection;
     this._targetElementRect = json.element;
+    this._targetIsEditable = json.targetIsEditable;
   },
 
   _onSelectionFail: function _onSelectionFail() {
@@ -731,13 +838,17 @@ var SelectionHelperUI = {
     this._sendAsyncMessage("Browser:SelectionMoveEnd", json);
   },
 
-  markerDragMove: function markerDragMove(aMarker) {
+  markerDragMove: function markerDragMove(aMarker, aDirection) {
     let json = this._getMarkerBaseMessage();
     json.change = aMarker.tag;
     if (aMarker.tag == "caret") {
-      this._sendAsyncMessage("Browser:CaretMove", json);
-      return;
+      // We are going to transition from caret browsing mode to selection mode
+      // on a drag. So swap the caret monocle for a start or end monocle
+      // depending on the direction of the drag, and start selecting text.
+      this._transitionFromCaretToSelection(aDirection);
+      return false;
     }
     this._sendAsyncMessage("Browser:SelectionMove", json);
+    return true;
   },
 };

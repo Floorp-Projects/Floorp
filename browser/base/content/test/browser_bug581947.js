@@ -6,25 +6,25 @@ function check(aElementName, aBarred) {
   let e = doc.createElement(aElementName);
   content.appendChild(e);
 
-  ok(!FillInHTMLTooltip(e),
+  ok(!tooltip.fillInPageTooltip(e),
      "No tooltip should be shown when the element is valid");
 
   e.setCustomValidity('foo');
   if (aBarred) {
-    ok(!FillInHTMLTooltip(e),
+    ok(!tooltip.fillInPageTooltip(e),
        "No tooltip should be shown when the element is barred from constraint validation");
   } else {
-    ok(FillInHTMLTooltip(e),
+    ok(tooltip.fillInPageTooltip(e),
        e.tagName + " " +"A tooltip should be shown when the element isn't valid");
   }
 
   e.setAttribute('title', '');
-  ok (!FillInHTMLTooltip(e),
+  ok (!tooltip.fillInPageTooltip(e),
       "No tooltip should be shown if the title attribute is set");
 
   e.removeAttribute('title');
   content.setAttribute('novalidate', '');
-  ok (!FillInHTMLTooltip(e),
+  ok (!tooltip.fillInPageTooltip(e),
       "No tooltip should be shown if the novalidate attribute is set on the form owner");
   content.removeAttribute('novalidate');
 

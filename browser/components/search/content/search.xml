@@ -496,7 +496,7 @@
 
         const SUGGEST_TYPE = "application/x-suggestions+json";
         var engine = this.currentEngine;
-	var connector =
+        var connector =
             Services.io.QueryInterface(Components.interfaces.nsISpeculativeConnect);
         var searchURI = engine.getSubmission("dummy").uri;
         let callbacks = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
@@ -505,7 +505,7 @@
         connector.speculativeConnect(searchURI, callbacks);
 
         if (engine.supportsResponseType(SUGGEST_TYPE)) {
-	  var suggestURI = engine.getSubmission("dummy", SUGGEST_TYPE).uri;
+          var suggestURI = engine.getSubmission("dummy", SUGGEST_TYPE).uri;
           if (suggestURI.prePath != searchURI.prePath)
             connector.speculativeConnect(suggestURI, callbacks);
         }
