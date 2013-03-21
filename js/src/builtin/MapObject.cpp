@@ -1106,11 +1106,11 @@ MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
             RootedValue key(cx);
             if (!JSObject::getElement(cx, pairobj, pairobj, 0, &key))
                 return false;
+
             HashableValue hkey;
+            HashableValue::AutoRooter hkeyRoot(cx, &hkey);
             if (!hkey.setValue(cx, key))
                 return false;
-
-            HashableValue::AutoRooter hkeyRoot(cx, &hkey);
 
             RootedValue val(cx);
             if (!JSObject::getElement(cx, pairobj, pairobj, 1, &val))
@@ -1138,6 +1138,7 @@ MapObject::is(const Value &v)
 
 #define ARG0_KEY(cx, args, key)                                               \
     HashableValue key;                                                        \
+    HashableValue::AutoRooter keyRoot(cx, &key);                              \
     if (args.length() > 0 && !key.setValue(cx, args[0]))                      \
         return false
 
@@ -1554,6 +1555,7 @@ SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
         ForOfIterator iter(cx, args[0]);
         while (iter.next()) {
             HashableValue key;
+            HashableValue::AutoRooter hkeyRoot(cx, &key);
             if (!key.setValue(cx, iter.value()))
                 return false;
             if (!set->put(key)) {

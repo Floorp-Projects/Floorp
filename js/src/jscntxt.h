@@ -58,6 +58,8 @@ js_ReportAllocationOverflow(JSContext *cx);
 
 namespace js {
 
+typedef Rooted<JSLinearString*> RootedLinearString;
+
 struct CallsiteCloneKey {
     /* The original function that we are cloning. */
     JSFunction *original;
@@ -226,8 +228,9 @@ class SourceDataCache
 
 struct EvalCacheLookup
 {
-    JSLinearString *str;
-    JSFunction *caller;
+    EvalCacheLookup(JSContext *cx) : str(cx), caller(cx) {}
+    RootedLinearString str;
+    RootedFunction caller;
     unsigned staticLevel;
     JSVersion version;
     JSCompartment *compartment;
