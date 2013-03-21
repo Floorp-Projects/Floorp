@@ -25,7 +25,7 @@ interface nsIURI;
  * interface to mirror this interface when changing it.
  */
 
-[scriptable, uuid(b6c5ae8a-5e30-41f1-975a-be73cd6f71db)]
+[scriptable, uuid(e2ef99fe-f7d3-422f-a7b4-834e8bdde710)]
 interface nsIObjectLoadingContent : nsISupports
 {
   /**
