@@ -39,6 +39,7 @@ var std_Array_unshift = Array.prototype.unshift;
 var std_Boolean_toString = Boolean.prototype.toString;
 var Std_Date = Date;
 var std_Date_now = Date.now;
+var std_Date_valueOf = Date.prototype.valueOf;
 var std_Function_bind = Function.prototype.bind;
 var std_Function_apply = Function.prototype.apply;
 var std_Math_floor = Math.floor;

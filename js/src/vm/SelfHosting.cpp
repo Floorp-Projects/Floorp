@@ -7,6 +7,7 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
+#include "jsdate.h"
 #include "jsinterp.h"
 #include "jsnum.h"
 #include "jsobj.h"
@@ -470,19 +471,23 @@ JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ShouldForceSequential", intrinsic_ShouldForceSequential, 0,0),
     JS_FN("ParallelTestsShouldPass", intrinsic_ParallelTestsShouldPass, 0,0),
 
+    // See jsdate.h for descriptions of the date_* functions.
+    JS_FN("date_CheckThisDate", date_CheckThisDate, 2,0),
+
     // See builtin/Intl.h for descriptions of the intl_* functions.
+    JS_FN("intl_availableCalendars", intl_availableCalendars, 1,0),
+    JS_FN("intl_availableCollations", intl_availableCollations, 1,0),
     JS_FN("intl_Collator", intl_Collator, 2,0),
     JS_FN("intl_Collator_availableLocales", intl_Collator_availableLocales, 0,0),
-    JS_FN("intl_availableCollations", intl_availableCollations, 1,0),
     JS_FN("intl_CompareStrings", intl_CompareStrings, 3,0),
+    JS_FN("intl_DateTimeFormat", intl_DateTimeFormat, 2,0),
+    JS_FN("intl_DateTimeFormat_availableLocales", intl_DateTimeFormat_availableLocales, 0,0),
+    JS_FN("intl_FormatDateTime", intl_FormatDateTime, 2,0),
+    JS_FN("intl_FormatNumber", intl_FormatNumber, 2,0),
     JS_FN("intl_NumberFormat", intl_NumberFormat, 2,0),
     JS_FN("intl_NumberFormat_availableLocales", intl_NumberFormat_availableLocales, 0,0),
     JS_FN("intl_numberingSystem", intl_numberingSystem, 1,0),
-    JS_FN("intl_FormatNumber", intl_FormatNumber, 2,0),
-    JS_FN("intl_DateTimeFormat_availableLocales", intl_DateTimeFormat_availableLocales, 0,0),
-    JS_FN("intl_availableCalendars", intl_availableCalendars, 1,0),
     JS_FN("intl_patternForSkeleton", intl_patternForSkeleton, 2,0),
-    JS_FN("intl_FormatDateTime", intl_FormatDateTime, 2,0),
 
     // See jsnum.h for descriptions of the num_* functions.
     JS_FN("num_CheckThisNumber", num_CheckThisNumber, 2,0),

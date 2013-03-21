@@ -59,7 +59,7 @@ using mozilla::ArrayLength;
 
 /*
  * The JS 'Date' object is patterned after the Java 'Date' object.
- * Here is an script:
+ * Here is a script:
  *
  *    today = new Date();
  *
@@ -1392,6 +1392,26 @@ IsDate(const Value &v)
     return v.isObject() && v.toObject().hasClass(&DateClass);
 }
 
+JS_ALWAYS_INLINE bool
+date_nop(JSContext *cx, CallArgs args)
+{
+    JS_ASSERT(IsDate(args.thisv()));
+    args.rval().setUndefined();
+    return true;
+}
+
+JSBool
+date_CheckThisDate(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    // CallNonGenericMethod will handle proxies correctly and throw exceptions
+    // in the right circumstances, but will report date_CheckThisDate as the
+    // function name in the message. We need a better solution:
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=844677
+    return CallNonGenericMethod<IsDate, date_nop>(cx, args);
+}
+
 /*
  * See ECMA 15.9.5.4 thru 15.9.5.23
  */
@@ -2584,7 +2604,7 @@ date_toJSON(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-/* for Date.toLocaleString; interface to PRMJTime date struct.
+/* for Date.toLocaleFormat; interface to PRMJTime date struct.
  */
 static void
 new_explode(double timeval, PRMJTime *split, DateTimeInfo *dtInfo)
@@ -2726,7 +2746,7 @@ date_format(JSContext *cx, double date, formatspec format, MutableHandleValue rv
 }
 
 static bool
-ToLocaleHelper(JSContext *cx, HandleObject obj, const char *format, MutableHandleValue rval)
+ToLocaleFormatHelper(JSContext *cx, HandleObject obj, const char *format, MutableHandleValue rval)
 {
     double utctime = obj->getDateUTCTime().toNumber();
 
@@ -2771,6 +2791,7 @@ ToLocaleHelper(JSContext *cx, HandleObject obj, const char *format, MutableHandl
     return true;
 }
 
+#if !ENABLE_INTL_API
 static bool
 ToLocaleStringHelper(JSContext *cx, HandleObject thisObj, MutableHandleValue rval)
 {
@@ -2778,7 +2799,7 @@ ToLocaleStringHelper(JSContext *cx, HandleObject thisObj, MutableHandleValue rva
      * Use '%#c' for windows, because '%c' is backward-compatible and non-y2k
      * with msvc; '%#c' requests that a full year be used in the result string.
      */
-    return ToLocaleHelper(cx, thisObj,
+    return ToLocaleFormatHelper(cx, thisObj,
 #if defined(_WIN32) && !defined(__MWERKS__)
                           "%#c"
 #else
@@ -2823,7 +2844,7 @@ date_toLocaleDateString_impl(JSContext *cx, CallArgs args)
                                    ;
 
     RootedObject thisObj(cx, &args.thisv().toObject());
-    return ToLocaleHelper(cx, thisObj, format, args.rval());
+    return ToLocaleFormatHelper(cx, thisObj, format, args.rval());
 }
 
 static JSBool
@@ -2840,7 +2861,7 @@ date_toLocaleTimeString_impl(JSContext *cx, CallArgs args)
     JS_ASSERT(IsDate(args.thisv()));
 
     RootedObject thisObj(cx, &args.thisv().toObject());
-    return ToLocaleHelper(cx, thisObj, "%X", args.rval());
+    return ToLocaleFormatHelper(cx, thisObj, "%X", args.rval());
 }
 
 static JSBool
@@ -2849,6 +2870,7 @@ date_toLocaleTimeString(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<IsDate, date_toLocaleTimeString_impl>(cx, args);
 }
+#endif
 
 JS_ALWAYS_INLINE bool
 date_toLocaleFormat_impl(JSContext *cx, CallArgs args)
@@ -2857,8 +2879,19 @@ date_toLocaleFormat_impl(JSContext *cx, CallArgs args)
 
     RootedObject thisObj(cx, &args.thisv().toObject());
 
-    if (args.length() == 0)
-        return ToLocaleStringHelper(cx, thisObj, args.rval());
+    if (args.length() == 0) {
+        /*
+         * Use '%#c' for windows, because '%c' is backward-compatible and non-y2k
+         * with msvc; '%#c' requests that a full year be used in the result string.
+         */
+        return ToLocaleFormatHelper(cx, thisObj,
+#if defined(_WIN32) && !defined(__MWERKS__)
+                              "%#c"
+#else
+                              "%c"
+#endif
+                             , args.rval());
+    }
 
     RootedString fmt(cx, ToString<CanGC>(cx, args[0]));
     if (!fmt)
@@ -2868,7 +2901,7 @@ date_toLocaleFormat_impl(JSContext *cx, CallArgs args)
     if (!fmtbytes)
         return false;
 
-    return ToLocaleHelper(cx, thisObj, fmtbytes.ptr(), args.rval());
+    return ToLocaleFormatHelper(cx, thisObj, fmtbytes.ptr(), args.rval());
 }
 
 static JSBool
@@ -3018,9 +3051,6 @@ static JSFunctionSpec date_methods[] = {
     JS_FN("setMilliseconds",     date_setMilliseconds,    1,0),
     JS_FN("setUTCMilliseconds",  date_setUTCMilliseconds, 1,0),
     JS_FN("toUTCString",         date_toGMTString,        0,0),
-    JS_FN(js_toLocaleString_str, date_toLocaleString,     0,0),
-    JS_FN("toLocaleDateString",  date_toLocaleDateString, 0,0),
-    JS_FN("toLocaleTimeString",  date_toLocaleTimeString, 0,0),
     JS_FN("toLocaleFormat",      date_toLocaleFormat,     0,0),
     JS_FN("toDateString",        date_toDateString,       0,0),
     JS_FN("toTimeString",        date_toTimeString,       0,0),
@@ -3031,6 +3061,19 @@ static JSFunctionSpec date_methods[] = {
 #endif
     JS_FN(js_toString_str,       date_toString,           0,0),
     JS_FN(js_valueOf_str,        date_valueOf,            0,0),
+
+    // This must be at the end because of bug 853075: functions listed after
+    // self-hosted methods aren't available in self-hosted code.
+#if ENABLE_INTL_API
+         {js_toLocaleString_str, {NULL, NULL},            0,0, "Date_toLocaleString"},
+         {"toLocaleDateString",  {NULL, NULL},            0,0, "Date_toLocaleDateString"},
+         {"toLocaleTimeString",  {NULL, NULL},            0,0, "Date_toLocaleTimeString"},
+#else
+    JS_FN(js_toLocaleString_str, date_toLocaleString,     0,0),
+    JS_FN("toLocaleDateString",  date_toLocaleDateString, 0,0),
+    JS_FN("toLocaleTimeString",  date_toLocaleTimeString, 0,0),
+#endif
+
     JS_FS_END
 };
 
@@ -3261,9 +3304,6 @@ static const NativeImpl sReadOnlyDateMethods[] = {
     date_getTimezoneOffset_impl,
     date_toGMTString_impl,
     date_toISOString_impl,
-    date_toLocaleString_impl,
-    date_toLocaleDateString_impl,
-    date_toLocaleTimeString_impl,
     date_toLocaleFormat_impl,
     date_toTimeString_impl,
     date_toDateString_impl,

@@ -128,6 +128,16 @@ intl_FormatNumber(JSContext *cx, unsigned argc, Value *vp);
 /******************** DateTimeFormat ********************/
 
 /**
+ * Returns a new instance of the standard built-in DateTimeFormat constructor.
+ * Self-hosted code cannot cache this constructor (as it does for others in
+ * Utilities.js) because it is initialized after self-hosted code is compiled.
+ *
+ * Usage: dateTimeFormat = intl_DateTimeFormat(locales, options)
+ */
+extern JSBool
+intl_DateTimeFormat(JSContext *cx, unsigned argc, Value *vp);
+
+/**
  * Returns an object indicating the supported locales for date and time
  * formatting by having a true-valued property for each such locale with the
  * canonicalized language tag as the property name. The object has no
