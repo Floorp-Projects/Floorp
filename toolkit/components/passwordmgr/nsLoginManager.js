@@ -10,6 +10,37 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
+var debug = false;
+function log(...pieces) {
+    function generateLogMessage(args) {
+        let strings = ['Login Manager:'];
+
+        args.forEach(function(arg) {
+            if (typeof arg === 'string') {
+                strings.push(arg);
+            } else if (typeof arg === 'undefined') {
+                strings.push('undefined');
+            } else if (arg === null) {
+                strings.push('null');
+            } else {
+                try {
+                  strings.push(JSON.stringify(arg, null, 2));
+                } catch(err) {
+                  strings.push("<<something>>");
+                }
+            }
+        });
+        return strings.join(' ');
+    }
+
+    if (!debug)
+        return;
+
+    let message = generateLogMessage(pieces);
+    dump(message + "\n");
+    Services.console.logStringMessage(message);
+}
+
 function LoginManager() {
     this.init();
 }
@@ -53,10 +84,9 @@ LoginManager.prototype = {
                              getService(Ci.nsICategoryManager);
                 contractID = catMan.getCategoryEntry("login-manager-storage",
                                                      "nsILoginManagerStorage");
-                this.log("Found alternate nsILoginManagerStorage with " +
-                         "contract ID: " + contractID);
+                log("Found alternate nsILoginManagerStorage with contract ID:", contractID);
             } catch (e) {
-                this.log("No alternate nsILoginManagerStorage registered");
+                log("No alternate nsILoginManagerStorage registered");
             }
 
             this.__storage = Cc[contractID].
@@ -64,7 +94,7 @@ LoginManager.prototype = {
             try {
                 this.__storage.init();
             } catch (e) {
-                this.log("Initialization of storage component failed: " + e);
+                log("Initialization of storage component failed:", e);
                 this.__storage = null;
             }
         }
@@ -76,7 +106,6 @@ LoginManager.prototype = {
     _nsLoginInfo : null, // Constructor for nsILoginInfo implementation
 
     _remember : true,  // mirrors signon.rememberSignons preference
-    _debug    : false, // mirrors signon.debug
 
 
     /*
@@ -101,7 +130,7 @@ LoginManager.prototype = {
         this._prefBranch.addObserver("", this._observer, false);
 
         // Get current preference values.
-        this._debug = this._prefBranch.getBoolPref("debug");
+        debug = this._prefBranch.getBoolPref("debug");
 
         this._remember = this._prefBranch.getBoolPref("rememberSignons");
 
@@ -120,19 +149,6 @@ LoginManager.prototype = {
                        getService(Ci.nsIWebProgress);
         progress.addProgressListener(this._webProgressListener,
                                      Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
-    },
-
-
-    /*
-     * log
-     *
-     * Internal function for logging debug messages to the Error Console window
-     */
-    log : function (message) {
-        if (!this._debug)
-            return;
-        dump("Login Manager: " + message + "\n");
-        Services.console.logStringMessage("Login Manager: " + message);
     },
 
 
@@ -155,7 +171,7 @@ LoginManager.prototype = {
 
         // nsFormSubmitObserver
         notify : function (formElement, aWindow, actionURI) {
-            this._pwmgr.log("observer notified for form submission.");
+            log("observer notified for form submission.");
 
             // We're invoked before the content's |onsubmit| handlers, so we
             // can grab form data before it might be modified (see bug 257781).
@@ -163,7 +179,7 @@ LoginManager.prototype = {
             try {
                 this._pwmgr._onFormSubmit(formElement);
             } catch (e) {
-                this._pwmgr.log("Caught error in onFormSubmit: " + e);
+                log("Caught error in onFormSubmit:", e);
             }
 
             return true; // Always return true, or form submit will be canceled.
@@ -174,16 +190,15 @@ LoginManager.prototype = {
 
             if (topic == "nsPref:changed") {
                 var prefName = data;
-                this._pwmgr.log("got change to " + prefName + " preference");
+                log("got change to", prefName, "preference");
 
                 if (prefName == "debug") {
-                    this._pwmgr._debug =
-                        this._pwmgr._prefBranch.getBoolPref("debug");
+                    debug = this._pwmgr._prefBranch.getBoolPref("debug");
                 } else if (prefName == "rememberSignons") {
                     this._pwmgr._remember =
                         this._pwmgr._prefBranch.getBoolPref("rememberSignons");
                 } else {
-                    this._pwmgr.log("Oops! Pref not handled, change ignored.");
+                    log("Oops! Pref not handled, change ignored.");
                 }
             } else if (topic == "xpcom-shutdown") {
                 for (let i in this._pwmgr) {
@@ -193,7 +208,7 @@ LoginManager.prototype = {
                 }
                 this._pwmgr = null;
             } else {
-                this._pwmgr.log("Oops! Unexpected notification: " + topic);
+                log("Oops! Unexpected notification:", topic);
             }
         }
     },
@@ -230,7 +245,7 @@ LoginManager.prototype = {
             // Only process things which might have HTML forms.
             if (!(domDoc instanceof Ci.nsIDOMHTMLDocument))
                 return;
-            if (this._pwmgr._debug) {
+            if (debug) {
                 let requestName = "(null)";
                 if (aRequest) {
                     try {
@@ -239,13 +254,12 @@ LoginManager.prototype = {
                         // do nothing - leave requestName = "(null)"
                     }
                 }
-                this._pwmgr.log("onStateChange accepted: req = " + requestName +
-                                ", flags = 0x" + aStateFlags.toString(16));
+                log("onStateChange accepted: req =", requestName);
             }
 
             // Fastback doesn't fire DOMContentLoaded, so process forms now.
             if (aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING) {
-                this._pwmgr.log("onStateChange: restoring document");
+                log("onStateChange: restoring document");
                 return this._pwmgr._fillDocument(domDoc);
             }
 
@@ -280,7 +294,7 @@ LoginManager.prototype = {
             if (!event.isTrusted)
                 return;
 
-            this._pwmgr.log("domEventListener: got event " + event.type);
+            log("domEventListener: got event", event.type);
 
             switch (event.type) {
                 case "DOMContentLoaded":
@@ -309,12 +323,12 @@ LoginManager.prototype = {
                         // successfully obtain logins for the form.
                         this._pwmgr._fillForm(acForm, true, true, true, null);
                     } else {
-                        this._pwmgr.log("Oops, form changed before AC invoked");
+                        log("Oops, form changed before AC invoked");
                     }
                     return;
 
                 default:
-                    this._pwmgr.log("Oops! This event unexpected.");
+                    log("Oops! This event unexpected.");
                     return;
             }
         }
@@ -366,7 +380,7 @@ LoginManager.prototype = {
         if (logins.some(function(l) login.matches(l, true)))
             throw "This login already exists.";
 
-        this.log("Adding login: " + login);
+        log("Adding login");
         return this._storage.addLogin(login);
     },
 
@@ -377,7 +391,7 @@ LoginManager.prototype = {
      * Remove the specified login from the stored logins.
      */
     removeLogin : function (login) {
-        this.log("Removing login: " + login);
+        log("Removing login");
         return this._storage.removeLogin(login);
     },
 
@@ -388,7 +402,7 @@ LoginManager.prototype = {
      * Change the specified login to match the new login.
      */
     modifyLogin : function (oldLogin, newLogin) {
-        this.log("Modifying oldLogin: " + oldLogin + " newLogin: " + newLogin);
+        log("Modifying login");
         return this._storage.modifyLogin(oldLogin, newLogin);
     },
 
@@ -403,7 +417,7 @@ LoginManager.prototype = {
      * Returns an array of logins. If there are no logins, the array is empty.
      */
     getAllLogins : function (count) {
-        this.log("Getting a list of all logins");
+        log("Getting a list of all logins");
         return this._storage.getAllLogins(count);
     },
 
@@ -414,7 +428,7 @@ LoginManager.prototype = {
      * Remove all stored logins.
      */
     removeAllLogins : function () {
-        this.log("Removing all logins");
+        log("Removing all logins");
         this._storage.removeAllLogins();
     },
 
@@ -429,7 +443,7 @@ LoginManager.prototype = {
      * the array is empty.
      */
     getAllDisabledHosts : function (count) {
-        this.log("Getting a list of all disabled hosts");
+        log("Getting a list of all disabled hosts");
         return this._storage.getAllDisabledHosts(count);
     },
 
@@ -440,8 +454,8 @@ LoginManager.prototype = {
      * Search for the known logins for entries matching the specified criteria.
      */
     findLogins : function (count, hostname, formSubmitURL, httpRealm) {
-        this.log("Searching for logins matching host: " + hostname +
-            ", formSubmitURL: " + formSubmitURL + ", httpRealm: " + httpRealm);
+        log("Searching for logins matching host:", hostname,
+            "formSubmitURL:", formSubmitURL, "httpRealm:", httpRealm);
 
         return this._storage.findLogins(count, hostname, formSubmitURL,
                                         httpRealm);
@@ -457,7 +471,7 @@ LoginManager.prototype = {
      * Returns an array of decrypted nsILoginInfo.
      */
     searchLogins : function(count, matchData) {
-       this.log("Searching for logins");
+       log("Searching for logins");
 
         return this._storage.searchLogins(count, matchData);
     },
@@ -470,8 +484,8 @@ LoginManager.prototype = {
      * returns only the count.
      */
     countLogins : function (hostname, formSubmitURL, httpRealm) {
-        this.log("Counting logins matching host: " + hostname +
-            ", formSubmitURL: " + formSubmitURL + ", httpRealm: " + httpRealm);
+        log("Counting logins matching host:", hostname,
+            "formSubmitURL:", formSubmitURL, "httpRealm:", httpRealm);
 
         return this._storage.countLogins(hostname, formSubmitURL, httpRealm);
     },
@@ -491,7 +505,7 @@ LoginManager.prototype = {
      * Check to see if user has disabled saving logins for the host.
      */
     getLoginSavingEnabled : function (host) {
-        this.log("Checking if logins to " + host + " can be saved.");
+        log("Checking if logins to", host, "can be saved.");
         if (!this._remember)
             return false;
 
@@ -509,7 +523,7 @@ LoginManager.prototype = {
         if (hostname.indexOf("\0") != -1)
             throw "Invalid hostname";
 
-        this.log("Saving logins for " + hostname + " enabled? " + enabled);
+        log("Login saving for", hostname, "now enabled?", enabled);
         return this._storage.setLoginSavingEnabled(hostname, enabled);
     },
 
@@ -531,13 +545,13 @@ LoginManager.prototype = {
         if (!this._remember)
             return null;
 
-        this.log("AutoCompleteSearch invoked. Search is: " + aSearchString);
+        log("AutoCompleteSearch invoked. Search is:", aSearchString);
 
         var result = null;
 
         if (aPreviousResult &&
                 aSearchString.substr(0, aPreviousResult.searchString.length) == aPreviousResult.searchString) {
-            this.log("Using previous autocomplete result");
+            log("Using previous autocomplete result");
             result = aPreviousResult;
             result.wrappedJSObject.searchString = aSearchString;
 
@@ -553,12 +567,12 @@ LoginManager.prototype = {
                     aSearchString.toLowerCase() !=
                         match.substr(0, aSearchString.length).toLowerCase())
                 {
-                    this.log("Removing autocomplete entry '" + match + "'");
+                    log("Removing autocomplete entry:", match);
                     result.removeValueAt(i, false);
                 }
             }
         } else {
-            this.log("Creating new autocomplete search result.");
+            log("Creating new autocomplete search result.");
 
             var doc = aElement.ownerDocument;
             var origin = this._getPasswordOrigin(doc.documentURI);
@@ -583,7 +597,7 @@ LoginManager.prototype = {
                     matchingLogins.push(logins[i]);
                 }
             }
-            this.log(matchingLogins.length + " autocomplete logins avail.");
+            log(matchingLogins.length, "autocomplete logins avail.");
             result = new UserAutoCompleteResult(aSearchString, matchingLogins);
         }
 
@@ -627,11 +641,11 @@ LoginManager.prototype = {
 
         // If too few or too many fields, bail out.
         if (pwFields.length == 0) {
-            this.log("(form ignored -- no password fields.)");
+            log("(form ignored -- no password fields.)");
             return null;
         } else if (pwFields.length > 3) {
-            this.log("(form ignored -- too many password fields. [got " +
-                        pwFields.length + "])");
+            log("(form ignored -- too many password fields. [ got",
+                   pwFields.length, "])");
             return null;
         }
 
@@ -685,7 +699,7 @@ LoginManager.prototype = {
         }
 
         if (!usernameField)
-            this.log("(form -- no username field found)");
+            log("(form -- no username field found)");
 
 
         // If we're not submitting a form (it's a page load), there are no
@@ -720,7 +734,7 @@ LoginManager.prototype = {
                 oldPasswordField = pwFields[1].element;
             } else {
                 // We can't tell which of the 3 passwords should be saved.
-                this.log("(form ignored -- all 3 pw fields differ)");
+                log("(form ignored -- all 3 pw fields differ)");
                 return [null, null, null];
             }
         } else { // pwFields.length == 2
@@ -777,7 +791,7 @@ LoginManager.prototype = {
         if (PrivateBrowsingUtils.isWindowPrivate(win)) {
             // We won't do anything in private browsing mode anyway,
             // so there's no need to perform further checks.
-            this.log("(form submission ignored in private browsing mode)");
+            log("(form submission ignored in private browsing mode)");
             return;
         }
 
@@ -787,14 +801,13 @@ LoginManager.prototype = {
 
         var hostname = this._getPasswordOrigin(doc.documentURI);
         if (!hostname) {
-            this.log("(form submission ignored -- invalid hostname)");
+            log("(form submission ignored -- invalid hostname)");
             return;
         }
 
         var formSubmitURL = this._getActionOrigin(form)
         if (!this.getLoginSavingEnabled(hostname)) {
-            this.log("(form submission ignored -- saving is " +
-                     "disabled for: " + hostname + ")");
+            log("(form submission ignored -- saving is disabled for:", hostname, ")");
             return;
         }
 
@@ -815,7 +828,7 @@ LoginManager.prototype = {
             this._isAutocompleteDisabled(usernameField) ||
             this._isAutocompleteDisabled(newPasswordField) ||
             this._isAutocompleteDisabled(oldPasswordField)) {
-                this.log("(form submission ignored -- autocomplete=off found)");
+                log("(form submission ignored -- autocomplete=off found)");
                 return;
         }
 
@@ -837,7 +850,7 @@ LoginManager.prototype = {
             if (logins.length == 0) {
                 // Could prompt to save this as a new password-only login.
                 // This seems uncommon, and might be wrong, so ignore.
-                this.log("(no logins for this host -- pwchange ignored)");
+                log("(no logins for this host -- pwchange ignored)");
                 return;
             }
 
@@ -889,11 +902,11 @@ LoginManager.prototype = {
         }
 
         if (existingLogin) {
-            this.log("Found an existing login matching this form submission");
+            log("Found an existing login matching this form submission");
 
             // Change password if needed.
             if (existingLogin.password != formLogin.password) {
-                this.log("...passwords differ, prompting to change.");
+                log("...passwords differ, prompting to change.");
                 prompter = getPrompter(win);
                 prompter.promptToChangePassword(existingLogin, formLogin);
             } else {
@@ -942,7 +955,7 @@ LoginManager.prototype = {
         } catch (e) {
             // bug 159484 - disallow url types that don't support a hostPort.
             // (although we handle "javascript:..." as a special case above.)
-            this.log("Couldn't parse origin for " + uriString);
+            log("Couldn't parse origin for", uriString);
             realm = null;
         }
 
@@ -980,13 +993,13 @@ LoginManager.prototype = {
         // If we're currently displaying a master password prompt, defer
         // processing this document until the user handles the prompt.
         if (this.uiBusy) {
-            this.log("deferring fillDoc for " + doc.documentURI);
+            log("deferring fillDoc for", doc.documentURI);
             let self = this;
             let observer = {
                 QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
                 observe: function (subject, topic, data) {
-                    self.log("Got deferred fillDoc notification: " + topic);
+                    log("Got deferred fillDoc notification:", topic);
                     // Only run observer once.
                     Services.obs.removeObserver(this, "passwordmgr-crypto-login");
                     Services.obs.removeObserver(this, "passwordmgr-crypto-loginCanceled");
@@ -1008,8 +1021,7 @@ LoginManager.prototype = {
             return;
         }
 
-        this.log("fillDocument processing " + forms.length +
-                 " forms on " + doc.documentURI);
+        log("fillDocument processing", forms.length, "forms on", doc.documentURI);
 
         var autofillForm = !PrivateBrowsingUtils.isWindowPrivate(doc.defaultView) &&
                            this._prefBranch.getBoolPref("autofillForms");
@@ -1021,7 +1033,7 @@ LoginManager.prototype = {
         const MAX_FORMS = 40; // assumed to be an even number
         var skip_from = -1, skip_to = -1;
         if (forms.length > MAX_FORMS) {
-            this.log("fillDocument limiting number of forms filled to " + MAX_FORMS);
+            log("fillDocument limiting number of forms filled to", MAX_FORMS);
             let chunk_size = MAX_FORMS / 2;
             skip_from = chunk_size;
             skip_to   = forms.length - chunk_size;
@@ -1041,7 +1053,7 @@ LoginManager.prototype = {
                 foundLogins = null;
                 previousActionOrigin = actionOrigin;
             }
-            this.log("_fillDocument processing form[" + i + "]");
+            log("_fillDocument processing form[", i, "]");
             foundLogins = this._fillForm(form, autofillForm, false, false, foundLogins)[1];
         } // foreach form
     },
@@ -1076,7 +1088,7 @@ LoginManager.prototype = {
         if (passwordField.disabled || passwordField.readOnly ||
             usernameField && (usernameField.disabled ||
                               usernameField.readOnly)) {
-            this.log("not filling form, login fields disabled");
+            log("not filling form, login fields disabled");
             return [false, foundLogins];
         }
 
@@ -1086,9 +1098,9 @@ LoginManager.prototype = {
                 this._getPasswordOrigin(form.ownerDocument.documentURI);
             var actionOrigin = this._getActionOrigin(form);
             foundLogins = this.findLogins({}, formOrigin, actionOrigin, null);
-            this.log("found " + foundLogins.length + " matching logins.");
+            log("found", foundLogins.length, "matching logins.");
         } else {
-            this.log("reusing logins from last form.");
+            log("reusing logins from last form.");
         }
 
         // Discard logins which have username/password values that don't
@@ -1108,7 +1120,7 @@ LoginManager.prototype = {
                 var fit = (l.username.length <= maxUsernameLen &&
                            l.password.length <= maxPasswordLen);
                 if (!fit)
-                    this.log("Ignored " + l.username + " login: won't fit");
+                    log("Ignored", l.username, "login: won't fit");
 
                 return fit;
             }, this);
@@ -1149,7 +1161,7 @@ LoginManager.prototype = {
              this._isAutocompleteDisabled(passwordField))) {
 
             isFormDisabled = true;
-            this.log("form not filled, has autocomplete=off");
+            log("form not filled, has autocomplete=off");
         }
 
         // Variable such that we reduce code duplication and can be sure we
@@ -1167,8 +1179,7 @@ LoginManager.prototype = {
                 selectedLogin = matchingLogins[0];
             } else {
                 didntFillReason = "existingUsername";
-                this.log("Password not filled. None of the stored " +
-                         "logins match the username already present.");
+                log("Password not filled. None of the stored logins match the username already present.");
             }
         } else if (logins.length == 1) {
             selectedLogin = logins[0];
@@ -1186,7 +1197,7 @@ LoginManager.prototype = {
                 selectedLogin = matchingLogins[0];
             } else {
                 didntFillReason = "multipleLogins";
-                this.log("Multiple logins for form, so not filling any.");
+                log("Multiple logins for form, so not filling any.");
             }
         }
 
@@ -1202,13 +1213,13 @@ LoginManager.prototype = {
             // to fill a form, we notify observers.
             didntFillReason = "noAutofillForms";
             Services.obs.notifyObservers(form, "passwordmgr-found-form", didntFillReason);
-            this.log("autofillForms=false but form can be filled; notified observers");
+            log("autofillForms=false but form can be filled; notified observers");
         } else if (selectedLogin && isFormDisabled) {
             // For when autocomplete is off, but we still have the information
             // to fill a form, we notify observers.
             didntFillReason = "autocompleteOff";
             Services.obs.notifyObservers(form, "passwordmgr-found-form", didntFillReason);
-            this.log("autocomplete=off but form can be filled; notified observers");
+            log("autocomplete=off but form can be filled; notified observers");
         }
 
         this._notifyFoundLogins(didntFillReason, usernameField, passwordField,
@@ -1277,7 +1288,7 @@ LoginManager.prototype = {
      * Fill the form with login information if we can find it.
      */
     fillForm : function (form) {
-        this.log("fillForm processing form[id=" + form.id + "]");
+        log("fillForm processing form[ id:", form.id, "]");
         return this._fillForm(form, true, true, false, null)[0];
     },
 
@@ -1290,7 +1301,7 @@ LoginManager.prototype = {
      * the password field filled in.
      */
     _attachToInput : function (element) {
-        this.log("attaching autocomplete stuff");
+        log("attaching autocomplete stuff");
         element.addEventListener("blur",
                                 this._domEventListener, false);
         element.addEventListener("DOMAutoComplete",
