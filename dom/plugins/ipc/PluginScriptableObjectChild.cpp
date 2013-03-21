@@ -948,11 +948,7 @@ PluginScriptableObjectChild::AnswerEnumerate(InfallibleTArray<PPluginIdentifierC
     return true;
   }
 
-  if (!aProperties->SetCapacity(idCount)) {
-    PluginModuleChild::sBrowserFuncs.memfree(ids);
-    *aSuccess = false;
-    return true;
-  }
+  aProperties->SetCapacity(idCount);
 
   for (uint32_t index = 0; index < idCount; index++) {
     PluginIdentifierChild* id = static_cast<PluginIdentifierChild*>(ids[index]);
