@@ -102,6 +102,7 @@
   -moz-appearance: none;
   overflow: hidden;
   min-width: 85px;
+  max-width: 250px;
   min-height: 25px;
   border-style: solid;
   border-width: 2px 13px;

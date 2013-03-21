@@ -33,20 +33,17 @@ function createRootActor()
           this._discoverScriptsAndSources();
 
           let scripts = [];
-          for (let url in this._scripts) {
-            for (let i = 0; i < this._scripts[url].length; i++) {
-              if (!this._scripts[url][i]) {
-                continue;
-              }
-
-              let script = {
-                url: url,
-                startLine: i,
-                lineCount: this._scripts[url][i].lineCount,
-                source: this._getSource(url).form()
-              };
-              scripts.push(script);
+          for (let s of this.dbg.findScripts()) {
+            if (!s.url) {
+              continue;
             }
+            let script = {
+              url: s.url,
+              startLine: s.startLine,
+              lineCount: s.lineCount,
+              source: this._getSource(s.url).form()
+            };
+            scripts.push(script);
           }
 
           return {
