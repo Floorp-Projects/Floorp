@@ -767,8 +767,6 @@ public:
         ACTIVITY_PAUSING = 10,
         ACTIVITY_SHUTDOWN = 11,
         LOAD_URI = 12,
-        SURFACE_CREATED = 13,   // used by XUL fennec only
-        SURFACE_DESTROYED = 14, // used by XUL fennec only
         NOOP = 15,
         FORCED_RESIZE = 16, // used internally in nsAppShell/nsWindow
         ACTIVITY_START = 17,
