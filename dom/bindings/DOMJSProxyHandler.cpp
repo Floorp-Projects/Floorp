@@ -124,7 +124,8 @@ DOMProxyHandler::defineProperty(JSContext* cx, JS::Handle<JSObject *> proxy, JS:
 }
 
 bool
-DOMProxyHandler::delete_(JSContext* cx, JSObject* proxy, jsid id, bool* bp)
+DOMProxyHandler::delete_(JSContext* cx, JS::Handle<JSObject *> proxy,
+                         JS::Handle<jsid> id, bool* bp)
 {
   JSBool b = true;
 

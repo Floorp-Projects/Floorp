@@ -276,12 +276,12 @@ CrossCompartmentWrapper::getOwnPropertyNames(JSContext *cx, HandleObject wrapper
 }
 
 bool
-CrossCompartmentWrapper::delete_(JSContext *cx, JSObject *wrapperArg, jsid id, bool *bp)
+CrossCompartmentWrapper::delete_(JSContext *cx, HandleObject wrapper, HandleId id, bool *bp)
 {
-    RootedObject wrapper(cx, wrapperArg);
+    RootedId idCopy(cx, id);
     PIERCE(cx, wrapper,
-           cx->compartment->wrapId(cx, &id),
-           Wrapper::delete_(cx, wrapper, id, bp),
+           cx->compartment->wrapId(cx, idCopy.address()),
+           Wrapper::delete_(cx, wrapper, idCopy, bp),
            NOTHING);
 }
 
@@ -734,7 +734,7 @@ DeadObjectProxy::getOwnPropertyNames(JSContext *cx, HandleObject wrapper,
 }
 
 bool
-DeadObjectProxy::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
+DeadObjectProxy::delete_(JSContext *cx, HandleObject wrapper, HandleId id, bool *bp)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
     return false;

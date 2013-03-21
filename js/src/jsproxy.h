@@ -113,7 +113,7 @@ class JS_FRIEND_API(BaseProxyHandler) {
                                 PropertyDescriptor *desc) = 0;
     virtual bool getOwnPropertyNames(JSContext *cx, HandleObject proxy,
                                      AutoIdVector &props) = 0;
-    virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp) = 0;
+    virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) = 0;
     virtual bool enumerate(JSContext *cx, JSObject *proxy,
                            AutoIdVector &props) = 0;
 
@@ -167,7 +167,7 @@ public:
                                 PropertyDescriptor *desc) MOZ_OVERRIDE;
     virtual bool getOwnPropertyNames(JSContext *cx, HandleObject proxy,
                                      AutoIdVector &props) MOZ_OVERRIDE;
-    virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id,
+    virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id,
                          bool *bp) MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, JSObject *proxy,
                            AutoIdVector &props) MOZ_OVERRIDE;
@@ -218,7 +218,7 @@ class Proxy {
     static bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id, PropertyDescriptor *desc);
     static bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v);
     static bool getOwnPropertyNames(JSContext *cx, HandleObject proxy, AutoIdVector &props);
-    static bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
+    static bool delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp);
     static bool enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props);
 
     /* ES5 Harmony derived proxy traps. */

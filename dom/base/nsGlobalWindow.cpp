@@ -554,7 +554,8 @@ public:
   virtual bool getOwnPropertyNames(JSContext *cx,
                                    JS::Handle<JSObject *> proxy,
                                    JS::AutoIdVector &props) MOZ_OVERRIDE;
-  virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id,
+  virtual bool delete_(JSContext *cx, JS::Handle<JSObject *> proxy,
+                       JS::Handle<jsid> id,
                        bool *bp) MOZ_OVERRIDE;
   virtual bool enumerate(JSContext *cx, JSObject *proxy,
                          JS::AutoIdVector &props) MOZ_OVERRIDE;
@@ -692,8 +693,8 @@ nsOuterWindowProxy::getOwnPropertyNames(JSContext *cx, JS::Handle<JSObject *> pr
 }
 
 bool
-nsOuterWindowProxy::delete_(JSContext *cx, JSObject *proxy, jsid id,
-                            bool *bp)
+nsOuterWindowProxy::delete_(JSContext *cx, JS::Handle<JSObject *> proxy,
+                            JS::Handle<jsid> id, bool *bp)
 {
   if (nsCOMPtr<nsIDOMWindow> frame = GetSubframeWindow(cx, proxy, id)) {
     // Reject (which means throw if strict, else return false) the delete.
