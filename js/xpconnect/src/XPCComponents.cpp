@@ -3159,13 +3159,13 @@ extern JSBool
 XPC_WN_Helper_SetProperty(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict, JSMutableHandleValue vp);
 
 bool
-xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy,
-                                                jsid id_,
+xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext *cx,
+                                                JS::Handle<JSObject *> proxy,
+                                                JS::Handle<jsid> id,
                                                 PropertyDescriptor *desc,
                                                 unsigned flags)
 {
     JS::RootedObject obj(cx, wrappedObject(proxy));
-    JS::RootedId id(cx, id_);
 
     MOZ_ASSERT(js::GetObjectCompartment(obj) == js::GetObjectCompartment(proxy));
     if (!JS_GetPropertyDescriptorById(cx, obj, id,
@@ -3208,8 +3208,8 @@ xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy,
 
 bool
 xpc::SandboxProxyHandler::getOwnPropertyDescriptor(JSContext *cx,
-                                                   JSObject *proxy,
-                                                   jsid id,
+                                                   JS::Handle<JSObject *> proxy,
+                                                   JS::Handle<jsid> id,
                                                    PropertyDescriptor *desc,
                                                    unsigned flags)
 {

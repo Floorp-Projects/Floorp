@@ -86,9 +86,9 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
     virtual bool finalizeInBackground(HandleValue priv) MOZ_OVERRIDE;
 
     /* ES5 Harmony fundamental wrapper traps. */
-    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+    virtual bool getPropertyDescriptor(JSContext *cx, HandleObject wrapper, HandleId id,
                                        PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
-    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+    virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject wrapper, HandleId id,
                                           PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
     virtual bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
                                 PropertyDescriptor *desc) MOZ_OVERRIDE;
@@ -162,9 +162,9 @@ class JS_FRIEND_API(DeadObjectProxy) : public BaseProxyHandler
     explicit DeadObjectProxy();
 
     /* ES5 Harmony fundamental wrapper traps. */
-    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+    virtual bool getPropertyDescriptor(JSContext *cx, HandleObject wrapper, HandleId id,
                                        PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
-    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+    virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject wrapper, HandleId id,
                                           PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
     virtual bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
                                 PropertyDescriptor *desc) MOZ_OVERRIDE;
