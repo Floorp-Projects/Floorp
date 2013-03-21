@@ -10,6 +10,7 @@
 #include "jsproxy.h"
 #include "nsContentUtils.h"
 #include "nsPrincipal.h"
+#include "mozilla/Preferences.h"
 
 #include "mozilla/dom/BindingUtils.h"
 
@@ -129,6 +130,7 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
     priv->scope = this;
 
     // Determine whether to use an XBL scope or not.
+    nsIPrincipal *principal = GetPrincipal();
     mUseXBLScope = XPCJSRuntime::Get()->XBLScopesEnabled();
     if (mUseXBLScope) {
       js::Class *clasp = js::GetObjectClass(mGlobalJSObject);
@@ -137,8 +139,12 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
                      !strcmp(clasp->name, "ModalContentWindow");
     }
     if (mUseXBLScope) {
-      nsIPrincipal *principal = GetPrincipal();
       mUseXBLScope = principal && !nsContentUtils::IsSystemPrincipal(principal);
+    }
+    if (mUseXBLScope) {
+      mUseXBLScope = !nsContentUtils::AllowXULXBLForPrincipal(principal) ||
+                      Preferences::GetBool("dom.use_xbl_scopes_for_remote_xul",
+                                           false);
     }
 }
 
