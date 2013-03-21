@@ -10,7 +10,22 @@
          JSMSG_INTL_OBJECT_REINITED: false, JSMSG_INVALID_CURRENCY_CODE: false,
          JSMSG_UNDEFINED_CURRENCY: false, JSMSG_INVALID_TIME_ZONE: false,
          JSMSG_DATE_NOT_FINITE: false,
+         intl_Collator_availableLocales: false,
+         intl_availableCollations: false,
+         intl_CompareStrings: false,
+         intl_NumberFormat_availableLocales: false,
+         intl_numberingSystem: false,
+         intl_FormatNumber: false,
+         intl_DateTimeFormat_availableLocales: false,
+         intl_availableCalendars: false,
+         intl_patternForSkeleton: false,
+         intl_FormatDateTime: false,
 */
+
+/*
+ * The Intl module specified by standard ECMA-402,
+ * ECMAScript Internationalization API Specification.
+ */
 
 
 /********** Locales, Time Zones, and Currencies **********/
@@ -393,7 +408,12 @@ var oldStyleLanguageTagMappings = {
  * Spec: ECMAScript Internationalization API Specification, 6.2.4.
  */
 function DefaultLocale() {
-    var localeOfLastResort = "und";
+    // The locale of last resort is used if none of the available locales
+    // satisfies a request. "en-GB" is used based on the assumptions that
+    // English is the most common second language, that both en-GB and en-US
+    // are normally available in an implementation, and that en-GB is more
+    // representative of the English used in other locales.
+    var localeOfLastResort = "en-GB";
 
     var locale = RuntimeDefaultLocale();
     if (!IsStructurallyValidLanguageTag(locale))
@@ -852,14 +872,6 @@ function GetNumberOption(options, property, minimum, maximum, fallback) {
 }
 
 
-// ??? stub
-var runtimeAvailableLocales = (function () {
-    var o = std_Object_create(null);
-    o[RuntimeDefaultLocale()] = true;
-    return addOldStyleLanguageTags(o);
-}());
-
-
 /********** Property access for Intl objects **********/
 
 
@@ -1103,25 +1115,27 @@ function Intl_Collator_supportedLocalesOf(locales /*, options*/) {
 var collatorInternalProperties = {
     sortLocaleData: collatorSortLocaleData,
     searchLocaleData: collatorSearchLocaleData,
-    availableLocales: runtimeAvailableLocales, // stub
+    availableLocales: addOldStyleLanguageTags(intl_Collator_availableLocales()),
     relevantExtensionKeys: ["co", "kn"]
 };
 
 
 function collatorSortLocaleData(locale) {
-    // the following data may or may not match any actual locale support
+    var collations = intl_availableCollations(locale);
+    callFunction(std_Array_unshift, collations, null);
     return {
-        co: [null],
+        co: collations,
         kn: ["false", "true"]
     };
 }
 
 
 function collatorSearchLocaleData(locale) {
-    // the following data may or may not match any actual locale support
     return {
         co: [null],
         kn: ["false", "true"],
+        // In theory the default sensitivity is locale dependent;
+        // in reality the CLDR/ICU default strength is always tertiary.
         sensitivity: "variant"
     };
 }
@@ -1139,7 +1153,7 @@ function collatorCompareToBind(x, y) {
     // Step 1.a.iii-v.
     var X = ToString(x);
     var Y = ToString(y);
-    return CompareStrings(this, X, Y);
+    return intl_CompareStrings(this, X, Y);
 }
 
 
@@ -1168,23 +1182,6 @@ function Intl_Collator_compare_get() {
 
     // Step 2.
     return internals.boundCompare;
-}
-
-
-/**
- * Compares x (converted to a String value) and y (converted to a String value),
- * and returns a number less than 0 if x < y, 0 if x = y, or a number greater
- * than 0 if x > y according to the sort order for the locale and collation
- * options of this Collator object.
- *
- * Spec: ECMAScript Internationalization API Specification, 10.3.2.
- */
-function CompareStrings(collator, x, y) {
-    assert(typeof x === "string", "CompareStrings");
-    assert(typeof y === "string", "CompareStrings");
-
-    // ??? stub
-    return x.localeCompare(y);
 }
 
 
@@ -1412,15 +1409,41 @@ function Intl_NumberFormat_supportedLocalesOf(locales /*, options*/) {
  */
 var numberFormatInternalProperties = {
     localeData: numberFormatLocaleData,
-    availableLocales: runtimeAvailableLocales, // stub
+    availableLocales: addOldStyleLanguageTags(intl_NumberFormat_availableLocales()),
     relevantExtensionKeys: ["nu"]
 };
 
 
+function getNumberingSystems(locale) {
+    // ICU doesn't have an API to determine the set of numbering systems
+    // supported for a locale; it generally pretends that any numbering system
+    // can be used with any locale. Supporting a decimal numbering system
+    // (where only the digits are replaced) is easy, so we offer them all here.
+    // Algorithmic numbering systems are typically tied to one locale, so for
+    // lack of information we don't offer them. To increase chances that
+    // other software will process output correctly, we further restrict to
+    // those decimal numbering systems explicitly listed in table 2 of
+    // the ECMAScript Internationalization API Specification, 11.3.2, which
+    // in turn are those with full specifications in version 21 of Unicode
+    // Technical Standard #35 using digits that were defined in Unicode 5.0,
+    // the Unicode version supported in Windows Vista.
+    // The one thing we can find out from ICU is the default numbering system
+    // for a locale.
+    var defaultNumberingSystem = intl_numberingSystem(locale);
+    return [
+        defaultNumberingSystem,
+        "arab", "arabext", "bali", "beng", "deva",
+        "fullwide", "gujr", "guru", "hanidec", "khmr",
+        "knda", "laoo", "latn", "limb", "mlym",
+        "mong", "mymr", "orya", "tamldec", "telu",
+        "thai", "tibt"
+    ];
+}
+
+
 function numberFormatLocaleData(locale) {
-    // the following data may or may not match any actual locale support
     return {
-        nu: ["latn"]
+        nu: getNumberingSystems(locale)
     };
 }
 
@@ -1436,7 +1459,7 @@ function numberFormatFormatToBind(value) {
 
     // Step 1.a.ii-iii.
     var x = ToNumber(value);
-    return FormatNumber(this, x);
+    return intl_FormatNumber(this, x);
 }
 
 
@@ -1462,21 +1485,6 @@ function Intl_NumberFormat_format_get() {
     }
     // Step 2.
     return internals.boundFormat;
-}
-
-
-/**
- * Returns a String value representing the result of calling ToNumber(value)
- * according to the effective locale and the formatting options of this
- * NumberFormat.
- *
- * Spec: ECMAScript Internationalization API Specification, 11.3.2.
- */
-function FormatNumber(numberFormat, x) {
-    assert(typeof x === "number", "FormatNumber");
-
-    // ??? stub
-    return x.toLocaleString();
 }
 
 

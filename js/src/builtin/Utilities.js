@@ -35,6 +35,7 @@ var std_Array_push = Array.prototype.push;
 var std_Array_shift = Array.prototype.shift;
 var std_Array_slice = Array.prototype.slice;
 var std_Array_sort = Array.prototype.sort;
+var std_Array_unshift = Array.prototype.unshift;
 var std_Boolean_toString = Boolean.prototype.toString;
 var Std_Date = Date;
 var std_Date_now = Date.now;
