@@ -15,7 +15,6 @@ EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= access
 IS_COMPONENT	= 1
 MODULE_NAME	= nsAccessibilityModule
-GRE_MODULE	= 1
 LIBXUL_LIBRARY	= 1
 
 CPPSRCS		= nsAccessibilityFactory.cpp

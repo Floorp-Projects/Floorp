@@ -10,7 +10,6 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-GRE_MODULE   = 1
 
 # NOTE When adding something to this list, you probably need to add it to the
 #      storage.h file too.
