@@ -112,6 +112,35 @@ void AudioBlockCopyChannelWithScale(const float aInput[WEBAUDIO_BLOCK_SIZE],
                                     float aOutput[WEBAUDIO_BLOCK_SIZE]);
 
 /**
+ * In place gain. aScale == 1.0f should be optimized.
+ */
+void AudioBlockInPlaceScale(float aBlock[WEBAUDIO_BLOCK_SIZE],
+                            uint32_t aChannelCount,
+                            float aScale);
+
+/**
+ * Upmix a mono input to a stereo output, scaling the two output channels by two
+ * different gain value.
+ * This algorithm is specified in the WebAudio spec.
+ */
+void
+AudioBlockPanMonoToStereo(const float aInput[WEBAUDIO_BLOCK_SIZE],
+                          float aGainL, float aGainR,
+                          float aOutputL[WEBAUDIO_BLOCK_SIZE],
+                          float aOutputR[WEBAUDIO_BLOCK_SIZE]);
+/**
+ * Pan a stereo source according to right and left gain, and the position
+ * (whether the listener is on the left of the source or not).
+ * This algorithm is specified in the WebAudio spec.
+ */
+void
+AudioBlockPanStereoToStereo(const float aInputL[WEBAUDIO_BLOCK_SIZE],
+                            const float aInputR[WEBAUDIO_BLOCK_SIZE],
+                            float aGainL, float aGainR, bool aIsOnTheLeft,
+                            float aOutputL[WEBAUDIO_BLOCK_SIZE],
+                            float aOutputR[WEBAUDIO_BLOCK_SIZE]);
+
+/**
  * All methods of this class and its subclasses are called on the
  * MediaStreamGraph thread.
  */
