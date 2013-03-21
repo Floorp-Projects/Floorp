@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 766282</title>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script type="text/javascript">
+  var windowsToClose = new Array();
+
+  function closeWindows() {
+    for (var i = 0; i < windowsToClose.length; i++) {
+      windowsToClose[i].close();
+    }
+    window.open("file_iframe_sandbox_close.html", "blank_if2");
+    window.open("file_iframe_sandbox_close.html", "BC766282_if2");
+  }
+
+  // Add message listener to forward messages on to parent
+  window.addEventListener("message", receiveMessage, false);
+
+  function receiveMessage(event) {
+    switch (event.data.type) {
+      case "closeWindows":
+        closeWindows();
+        break;
+    }
+  }
+
+  function doStuff() {
+    // Open a new window via target="_blank", target="BC766282_if2" and window.open().
+    sendMouseEvent({type:'click'}, 'target_blank_if2');
+    sendMouseEvent({type:'click'}, 'target_BC766282_if2');
+
+    windowsToClose.push(window.open("file_iframe_sandbox_k_if2.html"));
+  }
+</script>
+<body onLoad="doStuff()">
+  I am navigated to from file_iframe_sandbox_k_if8.html.
+  This was opened in an iframe with "allow-scripts allow-popups allow-same-origin".
+  However allow-same-origin was removed from the iframe before navigating to me,
+  so I should only have "allow-scripts allow-popups" in force.
+  <a href="file_iframe_sandbox_k_if2.html" target="_blank" id="target_blank_if2">open window</a>
+  <a href="file_iframe_sandbox_k_if2.html" target="BC766282_if2" id="target_BC766282_if2">open window</a>
+</body>
+</html>
