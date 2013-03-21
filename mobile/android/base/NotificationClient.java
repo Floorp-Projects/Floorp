@@ -9,31 +9,20 @@ import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 
 import android.app.PendingIntent;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.os.IBinder;
 import android.text.TextUtils;
 import android.util.Log;
 
 /**
- * Client for posting notifications through the NotificationService.
+ * Client for posting notifications through a NotificationHandler.
  */
-public class NotificationServiceClient {
-    private static final String LOGTAG = "GeckoNotificationServiceClient";
+public abstract class NotificationClient {
+    private static final String LOGTAG = "GeckoNotificationClient";
 
-    private volatile NotificationService mService;
-    private final ServiceConnection mConnection = new NotificationServiceConnection();
-    private boolean mBound;
-    private final Context mContext;
+    private volatile NotificationHandler mHandler;
+    private boolean mReady;
     private final LinkedList<Runnable> mTaskQueue = new LinkedList<Runnable>();
     private final ConcurrentHashMap<Integer, UpdateRunnable> mUpdatesMap =
             new ConcurrentHashMap<Integer, UpdateRunnable>();
-
-    public NotificationServiceClient(Context context) {
-        mContext = context;
-    }
 
     /**
      * Runnable that is reused between update notifications.
@@ -75,26 +64,26 @@ public class NotificationServiceClient {
                 alertText = mAlertText;
             }
 
-            mService.update(mNotificationID, progress, progressMax, alertText);
+            mHandler.update(mNotificationID, progress, progressMax, alertText);
         }
     };
 
     /**
      * Adds a notification.
      *
-     * @see NotificationService#add(int, String, String, String, PendingIntent, PendingIntent)
+     * @see NotificationHandler#add(int, String, String, String, PendingIntent, PendingIntent)
      */
     public synchronized void add(final int notificationID, final String aImageUrl,
             final String aAlertTitle, final String aAlertText, final PendingIntent contentIntent) {
         mTaskQueue.add(new Runnable() {
             @Override
             public void run() {
-                mService.add(notificationID, aImageUrl, aAlertTitle, aAlertText, contentIntent);
+                mHandler.add(notificationID, aImageUrl, aAlertTitle, aAlertText, contentIntent);
             }
         });
         notify();
 
-        if (!mBound) {
+        if (!mReady) {
             bind();
         }
     }
@@ -102,7 +91,7 @@ public class NotificationServiceClient {
     /**
      * Updates a notification.
      *
-     * @see NotificationService#update(int, long, long, String)
+     * @see NotificationHandler#update(int, long, long, String)
      */
     public void update(final int notificationID, final long aProgress, final long aProgressMax,
             final String aAlertText) {
@@ -120,7 +109,7 @@ public class NotificationServiceClient {
         }
 
         synchronized (this) {
-            if (mBound) {
+            if (mReady) {
                 mTaskQueue.add(runnable);
                 notify();
             }
@@ -130,17 +119,17 @@ public class NotificationServiceClient {
     /**
      * Removes a notification.
      *
-     * @see NotificationService#remove(int)
+     * @see NotificationHandler#remove(int)
      */
     public synchronized void remove(final int notificationID) {
-        if (!mBound) {
+        if (!mReady) {
             return;
         }
 
         mTaskQueue.add(new Runnable() {
             @Override
             public void run() {
-                mService.remove(notificationID);
+                mHandler.remove(notificationID);
                 mUpdatesMap.remove(notificationID);
             }
         });
@@ -150,47 +139,28 @@ public class NotificationServiceClient {
     /**
      * Determines whether a notification is showing progress.
      *
-     * @see NotificationService#isProgressStyle(int)
+     * @see NotificationHandler#isProgressStyle(int)
      */
     public boolean isProgressStyle(int notificationID) {
-        final NotificationService service = mService;
-        return service != null && service.isProgressStyle(notificationID);
+        final NotificationHandler handler = mHandler;
+        return handler != null && handler.isProgressStyle(notificationID);
     }
 
-    private void bind() {
-        mBound = true;
-        final Intent intent = new Intent(mContext, NotificationService.class);
-        mContext.bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+    protected void bind() {
+        mReady = true;
     }
 
-    private void unbind() {
-        if (mBound) {
-            mBound = false;
-            mContext.unbindService(mConnection);
-            mUpdatesMap.clear();
-        }
+    protected void unbind() {
+        mReady = false;
+        mUpdatesMap.clear();
     }
 
-    class NotificationServiceConnection implements ServiceConnection, Runnable {
-        @Override
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            final NotificationService.NotificationBinder binder =
-                    (NotificationService.NotificationBinder) service;
-            mService = binder.getService();
+    protected void connectHandler(NotificationHandler handler) {
+        mHandler = handler;
+        new Thread(new NotificationRunnable()).start();
+    }
 
-            new Thread(this).start();
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-            // This is called when the connection with the service has been
-            // unexpectedly disconnected -- that is, its process crashed.
-            // Because it is running in our same process, we should never
-            // see this happen, and the correctness of this class relies on
-            // this never happening.
-            Log.e(LOGTAG, "Notification service disconnected", new Exception());
-        }
-
+    private class NotificationRunnable implements Runnable {
         @Override
         public void run() {
             Runnable r;
@@ -198,20 +168,14 @@ public class NotificationServiceClient {
                 while (true) {
                     // Synchronize polls to prevent tasks from being added to the queue
                     // during the isDone check.
-                    synchronized (NotificationServiceClient.this) {
+                    synchronized (NotificationClient.this) {
                         r = mTaskQueue.poll();
                         while (r == null) {
-                            if (mService.isDone()) {
-                                // If there are no more tasks and no notifications being
-                                // displayed, the service is disconnected. Unfortunately,
-                                // since completed download notifications are shown by
-                                // removing the progress notification and creating a new
-                                // static one, this will cause the service to be unbound
-                                // and immediately rebound when a download completes.
+                            if (mHandler.isDone()) {
                                 unbind();
                                 return;
                             }
-                            NotificationServiceClient.this.wait();
+                            NotificationClient.this.wait();
                             r = mTaskQueue.poll();
                         }
                     }
