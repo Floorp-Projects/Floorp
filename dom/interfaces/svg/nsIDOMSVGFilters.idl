@@ -21,13 +21,6 @@ interface nsIDOMSVGFilterPrimitiveStandardAttributes : nsIDOMSVGElement
     readonly attribute nsIDOMSVGAnimatedString      result;
 };
 
-[scriptable, uuid(89dca8ae-68bf-4259-a52d-b1040dc7f410)]
-interface nsIDOMSVGFEOffsetElement : nsIDOMSVGFilterPrimitiveStandardAttributes { 
-    readonly attribute nsIDOMSVGAnimatedString in1;
-    readonly attribute nsIDOMSVGAnimatedNumber dx;
-    readonly attribute nsIDOMSVGAnimatedNumber dy;
-};
-
 [scriptable, uuid(14eb581d-0e54-42b5-a595-5db6c9490277)]
 interface nsIDOMSVGFETurbulenceElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 { 

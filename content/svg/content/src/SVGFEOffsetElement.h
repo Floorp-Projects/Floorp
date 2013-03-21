@@ -6,28 +6,34 @@
 #ifndef mozilla_dom_SVGFEOffsetElement_h
 #define mozilla_dom_SVGFEOffsetElement_h
 
-#include "nsSVGFilter.h"
+#include "nsSVGFilters.h"
+#include "nsSVGNumber2.h"
+#include "nsSVGString.h"
+
+nsresult NS_NewSVGFEOffsetElement(nsIContent **aResult,
+                                  already_AddRefed<nsINodeInfo> aNodeInfo);
 
 namespace mozilla {
 namespace dom {
 
-typedef nsSVGFE nsSVGFEOffsetElementBase;
+typedef nsSVGFE SVGFEOffsetElementBase;
 
-class nsSVGFEOffsetElement : public nsSVGFEOffsetElementBase,
-                             public nsIDOMSVGFEOffsetElement
+class SVGFEOffsetElement : public SVGFEOffsetElementBase,
+                           public nsIDOMSVGElement
 {
-  friend nsresult NS_NewSVGFEOffsetElement(nsIContent **aResult,
-                                           already_AddRefed<nsINodeInfo> aNodeInfo);
+  friend nsresult (::NS_NewSVGFEOffsetElement(nsIContent **aResult,
+                                              already_AddRefed<nsINodeInfo> aNodeInfo));
 protected:
-  nsSVGFEOffsetElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsSVGFEOffsetElementBase(aNodeInfo) {}
+  SVGFEOffsetElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+    : SVGFEOffsetElementBase(aNodeInfo)
+  {
+    SetIsDOMBinding();
+  }
+  virtual JSObject* WrapNode(JSContext* aCx, JSObject* aScope) MOZ_OVERRIDE;
 
 public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
-
-  // FE Base
-  NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEOffsetElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance* aInstance,
                           const nsTArray<const Image*>& aSources,
@@ -44,19 +50,20 @@ public:
   virtual nsIntRect ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChangeBoxes,
           const nsSVGFilterInstance& aInstance);
 
-  // Offset
-  NS_DECL_NSIDOMSVGFEOFFSETELEMENT
-
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEOffsetElementBase::)
+  NS_FORWARD_NSIDOMSVGELEMENT(SVGFEOffsetElementBase::)
 
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  virtual nsXPCClassInfo* GetClassInfo();
-
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+  // WebIDL
+  already_AddRefed<nsIDOMSVGAnimatedString> In1();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> Dx();
+  already_AddRefed<nsIDOMSVGAnimatedNumber> Dy();
+
 protected:
   nsIntPoint GetOffset(const nsSVGFilterInstance& aInstance);
 
