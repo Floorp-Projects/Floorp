@@ -628,8 +628,8 @@ AutoGCRooter::trace(JSTracer *trc)
     }
 
     JS_ASSERT(tag_ >= 0);
-    MarkValueRootRange(trc, tag_, static_cast<AutoArrayRooter *>(this)->array,
-                       "JS::AutoArrayRooter.array");
+    if (Value *vp = static_cast<AutoArrayRooter *>(this)->array)
+        MarkValueRootRange(trc, tag_, vp, "JS::AutoArrayRooter.array");
 }
 
 /* static */ void
