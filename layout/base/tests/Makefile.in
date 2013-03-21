@@ -147,6 +147,8 @@ MOCHITEST_FILES =	\
 		  file_bug842853.html \
 		test_bug849219.html \
 		test_bug851485.html \
+		test_bug851445.html \
+		  bug851445_helper.html \
 		$(NULL)
 
 # Tests for bugs 441782, 467672 and 570378 don't pass reliably on Windows, because of bug 469208
