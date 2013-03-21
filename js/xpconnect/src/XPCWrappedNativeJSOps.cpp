@@ -1411,7 +1411,7 @@ XPC_WN_CallMethod(JSContext *cx, unsigned argc, jsval *vp)
     XPCNativeInterface* iface;
     XPCNativeMember*    member;
 
-    if (!XPCNativeMember::GetCallInfo(ccx, funobj, &iface, &member))
+    if (!XPCNativeMember::GetCallInfo(funobj, &iface, &member))
         return Throw(NS_ERROR_XPC_CANT_GET_METHOD_INFO, cx);
     ccx.SetCallInfo(iface, member, false);
     return XPCWrappedNative::CallMethod(ccx);
@@ -1448,7 +1448,7 @@ XPC_WN_GetterSetter(JSContext *cx, unsigned argc, jsval *vp)
     XPCNativeInterface* iface;
     XPCNativeMember*    member;
 
-    if (!XPCNativeMember::GetCallInfo(ccx, funobj, &iface, &member))
+    if (!XPCNativeMember::GetCallInfo(funobj, &iface, &member))
         return Throw(NS_ERROR_XPC_CANT_GET_METHOD_INFO, cx);
 
     ccx.SetArgsAndResultPtr(argc, JS_ARGV(cx, vp), vp);
