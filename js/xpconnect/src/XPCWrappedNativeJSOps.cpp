@@ -1383,6 +1383,33 @@ XPCNativeScriptableShared::PopulateJSClass()
 /***************************************************************************/
 /***************************************************************************/
 
+// Compatibility hack.
+//
+// XPConnect used to do all sorts of funny tricks to find the "correct"
+// |this| object for a given method (often to the detriment of proper
+// call/apply). When these tricks were removed, a fair amount of chrome
+// code broke, because it was relying on being able to grab methods off
+// some XPCOM object (like the nsITelemetry service) and invoke them without
+// a proper |this|. So, if it's quite clear that we're in this situation and
+// about to use a |this| argument that just won't work, fix things up.
+//
+// This hack is only useful for getters/setters if someone sets an XPCOM object
+// as the prototype for a vanilla JS object and expects the XPCOM attributes to
+// work on the derived object, which we really don't want to support. But we
+// handle it anyway, for now, to minimize regression risk on an already-risky
+// landing.
+MOZ_ALWAYS_INLINE JSObject*
+FixUpThisIfBroken(JSObject *obj, JSObject *funobj)
+{
+    if (MOZ_UNLIKELY(funobj &&
+        (js::GetObjectClass(js::GetObjectParent(funobj)) == &XPC_WN_NoHelper_JSClass.base) &&
+        (js::GetObjectClass(obj) != &XPC_WN_NoHelper_JSClass.base)))
+    {
+        return js::GetObjectParent(funobj);
+    }
+    return obj;
+}
+
 JSBool
 XPC_WN_CallMethod(JSContext *cx, unsigned argc, jsval *vp)
 {
@@ -1405,6 +1432,7 @@ XPC_WN_CallMethod(JSContext *cx, unsigned argc, jsval *vp)
     if (IS_SLIM_WRAPPER(obj) && !MorphSlimWrapper(cx, obj))
         return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
 
+    obj = FixUpThisIfBroken(obj, funobj);
     XPCCallContext ccx(JS_CALLER, cx, obj, funobj, JSID_VOID, argc, JS_ARGV(cx, vp), vp);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
@@ -1442,6 +1470,8 @@ XPC_WN_GetterSetter(JSContext *cx, unsigned argc, jsval *vp)
     if (IS_SLIM_WRAPPER(obj) && !MorphSlimWrapper(cx, obj))
         return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
 
+
+    obj = FixUpThisIfBroken(obj, funobj);
     XPCCallContext ccx(JS_CALLER, cx, obj, funobj, JSID_VOID, argc, JS_ARGV(cx, vp), vp);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
