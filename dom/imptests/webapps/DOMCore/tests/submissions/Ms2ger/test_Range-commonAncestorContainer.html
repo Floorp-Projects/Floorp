@@ -7,9 +7,7 @@
 test(function() {
   var range = document.createRange();
   range.detach();
-  assert_throws("INVALID_STATE_ERR", function() {
-    range.commonAncestorContainer();
-  }, "Detached Range must throw INVALID_STATE_ERR on accessing commonAncestorContainer");
+  assert_equals(range.commonAncestorContainer, document);
 }, "Detached Range")
 test(function() {
   var df = document.createDocumentFragment();
