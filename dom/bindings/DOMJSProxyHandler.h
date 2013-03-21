@@ -36,7 +36,7 @@ public:
   {
   }
 
-  bool getPropertyDescriptor(JSContext* cx, JSObject* proxy, jsid id, JSPropertyDescriptor* desc,
+  bool getPropertyDescriptor(JSContext* cx, JS::Handle<JSObject *> proxy, JS::Handle<jsid> id, JSPropertyDescriptor* desc,
                              unsigned flags) MOZ_OVERRIDE;
   bool defineProperty(JSContext* cx, JSObject* proxy, jsid id,
                       JSPropertyDescriptor* desc) MOZ_OVERRIDE;

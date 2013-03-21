@@ -29,8 +29,8 @@ class ChromeObjectWrapper : public ChromeObjectWrapperBase
     ChromeObjectWrapper() : ChromeObjectWrapperBase(0) {}
 
     /* Custom traps. */
-    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper,
-                                       jsid id, js::PropertyDescriptor *desc,
+    virtual bool getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject *> wrapper,
+                                       JS::Handle<jsid> id, js::PropertyDescriptor *desc,
                                        unsigned flags) MOZ_OVERRIDE;
     virtual bool has(JSContext *cx, JSObject *wrapper, jsid id,
                      bool *bp) MOZ_OVERRIDE;

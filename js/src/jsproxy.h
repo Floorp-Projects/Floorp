@@ -104,10 +104,11 @@ class JS_FRIEND_API(BaseProxyHandler) {
                        bool *bp);
 
     /* ES5 Harmony fundamental proxy traps. */
-    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+    virtual bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                        PropertyDescriptor *desc, unsigned flags) = 0;
-    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy,
-                                          jsid id, PropertyDescriptor *desc, unsigned flags) = 0;
+    virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy,
+                                          HandleId id, PropertyDescriptor *desc,
+                                          unsigned flags) = 0;
     virtual bool defineProperty(JSContext *cx, JSObject *proxy, jsid id,
                                 PropertyDescriptor *desc) = 0;
     virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy,
@@ -157,10 +158,10 @@ public:
     explicit DirectProxyHandler(void *family);
 
     /* ES5 Harmony fundamental proxy traps. */
-    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+    virtual bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                        PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
-    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy,
-                                          jsid id, PropertyDescriptor *desc,
+    virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy,
+                                          HandleId id, PropertyDescriptor *desc,
                                           unsigned flags) MOZ_OVERRIDE;
     virtual bool defineProperty(JSContext *cx, JSObject *proxy, jsid id,
                                 PropertyDescriptor *desc) MOZ_OVERRIDE;
@@ -206,14 +207,14 @@ public:
 class Proxy {
   public:
     /* ES5 Harmony fundamental proxy traps. */
-    static bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+    static bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                       PropertyDescriptor *desc, unsigned flags);
-    static bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, unsigned flags, jsid id,
-                                      Value *vp);
-    static bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
+    static bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, unsigned flags, HandleId id,
+                                      MutableHandleValue vp);
+    static bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                          PropertyDescriptor *desc, unsigned flags);
-    static bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, unsigned flags, jsid id,
-                                         Value *vp);
+    static bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, unsigned flags, HandleId id,
+                                         MutableHandleValue vp);
     static bool defineProperty(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc);
     static bool defineProperty(JSContext *cx, JSObject *proxy, jsid id, const Value &v);
     static bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props);

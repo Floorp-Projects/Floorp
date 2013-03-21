@@ -1414,7 +1414,8 @@ DEBUG_CheckXBLLookup(JSContext *cx, JSPropertyDescriptor *desc)
 
 template <typename Base, typename Traits>
 bool
-XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject *> wrapper,
+                                                 JS::Handle<jsid> id,
                                                  js::PropertyDescriptor *desc, unsigned flags)
 {
     assertEnteredPolicy(cx, wrapper, id);
@@ -1556,7 +1557,8 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, JSObject *wrappe
 
 template <typename Base, typename Traits>
 bool
-XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
+XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JSObject *> wrapper,
+                                                    JS::Handle<jsid> id,
                                                     PropertyDescriptor *desc, unsigned flags)
 {
     assertEnteredPolicy(cx, wrapper, id);
@@ -1579,7 +1581,7 @@ XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wra
                 return false;
         }
 
-        desc->obj = (desc->obj == obj) ? wrapper : nullptr;
+        desc->obj = (desc->obj == obj) ? wrapper.get() : nullptr; // XXX
         return JS_WrapPropertyDescriptor(cx, desc);
     }
 
@@ -1603,9 +1605,12 @@ XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, JSObject *wra
 
 template <typename Base, typename Traits>
 bool
-XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
+XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, JSObject *wrapperArg, jsid idArg,
                                           js::PropertyDescriptor *desc)
 {
+    JS::Rooted<JSObject *> wrapper(cx, wrapperArg);
+    JS::Rooted<jsid> id(cx, idArg);
+
     assertEnteredPolicy(cx, wrapper, id);
     // Redirect access straight to the wrapper if we should be transparent.
     if (XrayUtils::IsTransparent(cx, wrapper, id)) {
