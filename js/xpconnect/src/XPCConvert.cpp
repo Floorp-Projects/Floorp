@@ -1177,9 +1177,12 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
         }
 
         // is this really a native xpcom object with a wrapper?
-        XPCWrappedNative* wrapper;
-        if (nullptr != (wrapper =
-                       XPCWrappedNative::GetWrappedNativeOfJSObject(cx,obj))) {
+        JSObject *unwrapped = js::UnwrapObjectChecked(obj, /* stopAtOuter = */ false);
+        if (!unwrapped)
+            return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
+        XPCWrappedNative* wrapper = IS_WN_WRAPPER(unwrapped) ? XPCWrappedNative::Get(unwrapped)
+                                                             : nullptr;
+        if (wrapper) {
             nsISupports* supports = wrapper->GetIdentityObject();
             nsCOMPtr<nsIException> iface = do_QueryInterface(supports);
             if (iface) {
