@@ -1,0 +1,26 @@
+<html>
+<head>
+  <title>NPAPI NPNVcontentsScaleFactor Test</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+
+<body onload="runTests()">
+  <embed id="plugin" type="application/x-test" width="400" height="400"></embed>
+  <script class="testbody" type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+    function runTests() {
+      var pluginElement = document.getElementById("plugin");
+      var contentsScaleFactor;
+      var exceptionThrown = false;
+      try {
+        contentsScaleFactor = pluginElement.queryContentsScaleFactor();
+      } catch (e) {
+        exceptionThrown = true;
+      }
+      is(exceptionThrown, false, "Exception thrown getting contents scale factor.");
+      is(isNaN(contentsScaleFactor), false, "Invalid return getting contents scale factor");
+      SimpleTest.finish();
+    }
+  </script>
+</body>
+</html>
