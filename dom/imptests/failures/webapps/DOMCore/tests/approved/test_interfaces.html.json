@@ -63,7 +63,6 @@
   "Document interface: calling prepend(union) on xmlDoc with too few arguments must throw TypeError": true,
   "Document interface: xmlDoc must inherit property \"append\" with the proper type (29)": true,
   "Document interface: calling append(union) on xmlDoc with too few arguments must throw TypeError": true,
-  "DOMImplementation interface: operation createHTMLDocument(DOMString)": true,
   "DocumentFragment interface: attribute children": true,
   "DocumentFragment interface: attribute firstElementChild": true,
   "DocumentFragment interface: attribute lastElementChild": true,
