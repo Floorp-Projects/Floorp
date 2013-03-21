@@ -24,6 +24,24 @@ SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 sys.path.insert(0, SCRIPT_DIR)
 import automationutils
 
+# --------------------------------------------------------------
+# TODO: this is a hack for mozbase without virtualenv, remove with bug 849900
+#
+here = os.path.dirname(__file__)
+mozbase = os.path.realpath(os.path.join(os.path.dirname(here), 'mozbase'))
+
+try:
+    import mozcrash
+except:
+    deps = ['mozcrash',
+            'mozlog']
+    for dep in deps:
+        module = os.path.join(mozbase, dep)
+        if module not in sys.path:
+            sys.path.append(module)
+    import mozcrash
+# ---------------------------------------------------------------
+
 _DEFAULT_WEB_SERVER = "127.0.0.1"
 _DEFAULT_HTTP_PORT = 8888
 _DEFAULT_SSL_PORT = 4443
@@ -1132,7 +1150,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     return foundZombie
 
   def checkForCrashes(self, profileDir, symbolsPath):
-    return automationutils.checkForCrashes(os.path.join(profileDir, "minidumps"), symbolsPath, self.lastTestSeen)
+    return mozcrash.check_for_crashes(os.path.join(profileDir, "minidumps"), symbolsPath, test_name=self.lastTestSeen)
 
   def runApp(self, testURL, env, app, profileDir, extraArgs,
              runSSLTunnel = False, utilityPath = None,
