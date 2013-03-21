@@ -254,14 +254,14 @@ CrossCompartmentWrapper::getOwnPropertyDescriptor(JSContext *cx, HandleObject wr
 }
 
 bool
-CrossCompartmentWrapper::defineProperty(JSContext *cx, JSObject *wrapperArg, jsid id,
+CrossCompartmentWrapper::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
                                         PropertyDescriptor *desc)
 {
-    RootedObject wrapper(cx, wrapperArg);
+    RootedId idCopy(cx, id);
     AutoPropertyDescriptorRooter desc2(cx, desc);
     PIERCE(cx, wrapper,
-           cx->compartment->wrapId(cx, &id) && cx->compartment->wrap(cx, &desc2),
-           Wrapper::defineProperty(cx, wrapper, id, &desc2),
+           cx->compartment->wrapId(cx, idCopy.address()) && cx->compartment->wrap(cx, &desc2),
+           Wrapper::defineProperty(cx, wrapper, idCopy, &desc2),
            NOTHING);
 }
 
@@ -719,7 +719,7 @@ DeadObjectProxy::getOwnPropertyDescriptor(JSContext *cx, HandleObject wrapper, H
 }
 
 bool
-DeadObjectProxy::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
+DeadObjectProxy::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
                                 PropertyDescriptor *desc)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);

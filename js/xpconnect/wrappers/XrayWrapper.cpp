@@ -182,7 +182,8 @@ public:
     virtual bool resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
                                     JSObject *holder, jsid id, JSPropertyDescriptor *desc,
                                     unsigned flags);
-    static bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
+    static bool defineProperty(JSContext *cx, JS::Handle<JSObject *> wrapper,
+                               JS::Handle<jsid>,
                                PropertyDescriptor *desc,
                                PropertyDescriptor &existingDesc,
                                bool *defined);
@@ -226,7 +227,7 @@ public:
     virtual bool resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
                                     JSObject *holder, jsid id, JSPropertyDescriptor *desc,
                                     unsigned flags);
-    static bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
+    static bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
                                PropertyDescriptor *desc,
                                PropertyDescriptor &existingDesc,
                                bool *defined);
@@ -1038,7 +1039,7 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWra
 }
 
 bool
-XPCWrappedNativeXrayTraits::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
+XPCWrappedNativeXrayTraits::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
                                            PropertyDescriptor *desc,
                                            PropertyDescriptor &existingDesc,
                                            bool *defined)
@@ -1192,7 +1193,7 @@ DOMXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObjec
 }
 
 bool
-DOMXrayTraits::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
+DOMXrayTraits::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
                               PropertyDescriptor *desc,
                               PropertyDescriptor &existingDesc,
                               bool *defined)
@@ -1203,7 +1204,7 @@ DOMXrayTraits::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
     JSObject *obj= getTargetObject(wrapper);
     if (!js::IsProxy(obj))
         return true;
-    
+
     *defined = true;
     return js::GetProxyHandler(obj)->defineProperty(cx, wrapper, id, desc);
 }
@@ -1605,12 +1606,9 @@ XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JS
 
 template <typename Base, typename Traits>
 bool
-XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, JSObject *wrapperArg, jsid idArg,
+XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
                                           js::PropertyDescriptor *desc)
 {
-    JS::Rooted<JSObject *> wrapper(cx, wrapperArg);
-    JS::Rooted<jsid> id(cx, idArg);
-
     assertEnteredPolicy(cx, wrapper, id);
     // Redirect access straight to the wrapper if we should be transparent.
     if (XrayUtils::IsTransparent(cx, wrapper, id)) {
