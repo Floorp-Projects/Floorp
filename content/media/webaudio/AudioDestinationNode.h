@@ -35,6 +35,12 @@ public:
     return 0;
   }
 
+  void JSBindingFinalized()
+  {
+    // Don't do anything special for destination nodes, as they will always
+    // remain accessible through the AudioContext.
+  }
+
 };
 
 }
