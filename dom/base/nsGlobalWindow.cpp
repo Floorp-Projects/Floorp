@@ -547,8 +547,10 @@ public:
                                         JS::Handle<jsid> id,
                                         JSPropertyDescriptor* desc,
                                         unsigned flags) MOZ_OVERRIDE;
-  virtual bool defineProperty(JSContext* cx, JSObject* proxy,
-                              jsid id, JSPropertyDescriptor* desc) MOZ_OVERRIDE;
+  virtual bool defineProperty(JSContext* cx,
+                              JS::Handle<JSObject *> proxy,
+                              JS::Handle<jsid> id,
+                              JSPropertyDescriptor* desc) MOZ_OVERRIDE;
   virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy,
                                    JS::AutoIdVector &props) MOZ_OVERRIDE;
   virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id,
@@ -655,8 +657,10 @@ nsOuterWindowProxy::getOwnPropertyDescriptor(JSContext* cx,
 }
 
 bool
-nsOuterWindowProxy::defineProperty(JSContext* cx, JSObject* proxy,
-                                   jsid id, JSPropertyDescriptor* desc)
+nsOuterWindowProxy::defineProperty(JSContext* cx,
+                                   JS::Handle<JSObject *> proxy,
+                                   JS::Handle<jsid> id,
+                                   JSPropertyDescriptor* desc)
 {
   int32_t index = GetArrayIndexFromId(cx, id);
   if (IsArrayIndex(index)) {

@@ -1385,10 +1385,10 @@ class DebugScopeProxy : public BaseProxyHandler
         return true;
     }
 
-    bool defineProperty(JSContext *cx, JSObject *proxy, jsid idArg, PropertyDescriptor *desc) MOZ_OVERRIDE
+    bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
+                        PropertyDescriptor *desc) MOZ_OVERRIDE
     {
         Rooted<ScopeObject*> scope(cx, &proxy->asDebugScope().scope());
-        RootedId id(cx, idArg);
 
         bool found;
         if (!has(cx, proxy, id, &found))

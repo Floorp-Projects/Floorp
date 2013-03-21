@@ -71,7 +71,7 @@ class XrayWrapper : public Base {
     virtual bool getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JSObject *> wrapper, JS::Handle<jsid> id,
                                           js::PropertyDescriptor *desc,
                                           unsigned flags) MOZ_OVERRIDE;
-    virtual bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
+    virtual bool defineProperty(JSContext *cx, JS::Handle<JSObject *> wrapper, JS::Handle<jsid> id,
                                 js::PropertyDescriptor *desc);
     virtual bool getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
                                      js::AutoIdVector &props);
