@@ -18,6 +18,7 @@ this.EXPORTED_SYMBOLS = ["MarkupView"];
 
 Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource:///modules/devtools/CssRuleView.jsm");
+Cu.import("resource:///modules/devtools/InplaceEditor.jsm");
 Cu.import("resource:///modules/devtools/Templater.jsm");
 Cu.import("resource:///modules/devtools/Undo.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -962,7 +963,7 @@ function TextEditor(aContainer, aNode, aTemplate)
 
   aContainer.markup.template(aTemplate, this);
 
-  _editableField({
+  editableField({
     element: this.value,
     stopOnReturn: true,
     trigger: "dblclick",
@@ -1031,7 +1032,7 @@ function ElementEditor(aContainer, aNode)
   // Make the tag name editable (unless this is a document element)
   if (aNode != aNode.ownerDocument.documentElement) {
     this.tag.setAttribute("tabindex", "0");
-    _editableField({
+    editableField({
       element: this.tag,
       trigger: "dblclick",
       stopOnReturn: true,
@@ -1040,7 +1041,7 @@ function ElementEditor(aContainer, aNode)
   }
 
   // Make the new attribute space editable.
-  _editableField({
+  editableField({
     element: this.newAttr,
     trigger: "dblclick",
     stopOnReturn: true,
@@ -1120,7 +1121,7 @@ ElementEditor.prototype = {
       this.attrList.insertBefore(attr, before);
 
       // Make the attribute editable.
-      _editableField({
+      editableField({
         element: inner,
         trigger: "dblclick",
         stopOnReturn: true,

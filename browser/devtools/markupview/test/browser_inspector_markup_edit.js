@@ -18,10 +18,9 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function test() {
   let inspector;
-  let tempScope = {}
-  Cu.import("resource:///modules/devtools/CssRuleView.jsm", tempScope);
-
-  let inplaceEditor = tempScope._getInplaceEditorForSpan;
+  let {
+    getInplaceEditorForSpan: inplaceEditor
+  } = Cu.import("resource:///modules/devtools/InplaceEditor.jsm", {});
 
   waitForExplicitFinish();
 

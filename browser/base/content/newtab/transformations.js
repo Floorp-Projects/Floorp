@@ -169,37 +169,33 @@ let gTransformation = {
    *        callback - the callback to call when finished
    */
   rearrangeSites: function Transformation_rearrangeSites(aSites, aOptions) {
-    let batch;
+    let batch = [];
     let cells = gGrid.cells;
     let callback = aOptions && aOptions.callback;
     let unfreeze = aOptions && aOptions.unfreeze;
-
-    if (callback) {
-      batch = new Batch(callback);
-      callback = function () batch.pop();
-    }
 
     aSites.forEach(function (aSite, aIndex) {
       // Do not re-arrange empty cells or the dragged site.
       if (!aSite || aSite == gDrag.draggedSite)
         return;
 
-      if (batch)
-        batch.push();
+      let deferred = Promise.defer();
+      batch.push(deferred.promise);
+      let cb = function () deferred.resolve();
 
       if (!cells[aIndex])
         // The site disappeared from the grid, hide it.
-        this.hideSite(aSite, callback);
+        this.hideSite(aSite, cb);
       else if (this._getNodeOpacity(aSite.node) != 1)
         // The site disappeared before but is now back, show it.
-        this.showSite(aSite, callback);
+        this.showSite(aSite, cb);
       else
         // The site's position has changed, move it around.
-        this._moveSite(aSite, aIndex, {unfreeze: unfreeze, callback: callback});
+        this._moveSite(aSite, aIndex, {unfreeze: unfreeze, callback: cb});
     }, this);
 
-    if (batch)
-      batch.close();
+    let wait = Promise.promised(function () callback && callback());
+    wait.apply(null, batch);
   },
 
   /**
