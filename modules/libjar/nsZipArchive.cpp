@@ -30,6 +30,7 @@
 #define ZIP_ARENABLOCKSIZE (1*1024)
 
 #ifdef XP_UNIX
+    #include <sys/mman.h>
     #include <sys/types.h>
     #include <sys/stat.h>
     #include <limits.h>
@@ -165,10 +166,14 @@ nsZipHandle::nsZipHandle()
 NS_IMPL_THREADSAFE_ADDREF(nsZipHandle)
 NS_IMPL_THREADSAFE_RELEASE(nsZipHandle)
 
-nsresult nsZipHandle::Init(nsIFile *file, nsZipHandle **ret)
+nsresult nsZipHandle::Init(nsIFile *file, nsZipHandle **ret, PRFileDesc **aFd)
 {
   mozilla::AutoFDClose fd;
-  nsresult rv = file->OpenNSPRFileDesc(PR_RDONLY, 0000, &fd.rwget());
+  int32_t flags = PR_RDONLY;
+#if defined(XP_WIN)
+  flags |= nsIFile::OS_READAHEAD;
+#endif
+  nsresult rv = file->OpenNSPRFileDesc(flags, 0000, &fd.rwget());
   if (NS_FAILED(rv))
     return rv;
 
@@ -194,6 +199,11 @@ nsresult nsZipHandle::Init(nsIFile *file, nsZipHandle **ret)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+#if defined(XP_WIN)
+  if (aFd) {
+    *aFd = fd.forget();
+  }
+#endif
   handle->mMap = map;
   handle->mFile.Init(file);
   handle->mLen = (uint32_t) size;
@@ -248,7 +258,7 @@ nsZipHandle::~nsZipHandle()
 //---------------------------------------------
 //  nsZipArchive::OpenArchive
 //---------------------------------------------
-nsresult nsZipArchive::OpenArchive(nsZipHandle *aZipHandle)
+nsresult nsZipArchive::OpenArchive(nsZipHandle *aZipHandle, PRFileDesc *aFd)
 {
   mFd = aZipHandle;
 
@@ -256,7 +266,7 @@ nsresult nsZipArchive::OpenArchive(nsZipHandle *aZipHandle)
   PL_INIT_ARENA_POOL(&mArena, "ZipArena", ZIP_ARENABLOCKSIZE);
 
   //-- get table of contents for archive
-  nsresult rv = BuildFileList();
+  nsresult rv = BuildFileList(aFd);
   if (NS_SUCCEEDED(rv)) {
     if (aZipHandle->mFile)
       aZipHandle->mFile.GetURIString(mURI);
@@ -267,11 +277,20 @@ nsresult nsZipArchive::OpenArchive(nsZipHandle *aZipHandle)
 nsresult nsZipArchive::OpenArchive(nsIFile *aFile)
 {
   nsRefPtr<nsZipHandle> handle;
+#if defined(XP_WIN)
+  mozilla::AutoFDClose fd;
+  nsresult rv = nsZipHandle::Init(aFile, getter_AddRefs(handle), &fd.rwget());
+#else
   nsresult rv = nsZipHandle::Init(aFile, getter_AddRefs(handle));
+#endif
   if (NS_FAILED(rv))
     return rv;
 
+#if defined(XP_WIN)
+  return OpenArchive(handle, fd.get());
+#else
   return OpenArchive(handle);
+#endif
 }
 
 //---------------------------------------------
@@ -559,7 +578,7 @@ nsZipItem* nsZipArchive::CreateZipItem()
 //---------------------------------------------
 //  nsZipArchive::BuildFileList
 //---------------------------------------------
-nsresult nsZipArchive::BuildFileList()
+nsresult nsZipArchive::BuildFileList(PRFileDesc *aFd)
 {
   // Get archive size using end pos
   const uint8_t* buf;
@@ -569,6 +588,17 @@ MOZ_WIN_MEM_TRY_BEGIN
   uint32_t centralOffset = 4;
   if (mFd->mLen > ZIPCENTRAL_SIZE && xtolong(startp + centralOffset) == CENTRALSIG) {
     // Success means optimized jar layout from bug 559961 is in effect
+    uint32_t readaheadLength = xtolong(startp);
+    if (readaheadLength) {
+#if defined(XP_UNIX)
+      madvise(const_cast<uint8_t*>(startp), readaheadLength, MADV_WILLNEED);
+#elif defined(XP_WIN)
+      if (aFd) {
+        HANDLE hFile = (HANDLE) PR_FileDesc2NativeHandle(aFd);
+        mozilla::ReadAhead(hFile, 0, readaheadLength);
+      }
+#endif
+    }
   } else {
     for (buf = endp - ZIPEND_SIZE; buf > startp; buf--)
       {
