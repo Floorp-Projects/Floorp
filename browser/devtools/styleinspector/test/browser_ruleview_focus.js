@@ -5,9 +5,6 @@
 // Test that focus doesn't leave the style editor when adding a property
 // (bug 719916)
 
-let tempScope = {};
-Cu.import("resource:///modules/devtools/CssRuleView.jsm", tempScope);
-let inplaceEditor = tempScope._getInplaceEditorForSpan;
 let doc;
 let inspector;
 let stylePanel;
