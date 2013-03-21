@@ -20,7 +20,7 @@ extern JSBool
 obj_construct(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern JSString *
-obj_toStringHelper(JSContext *cx, JSObject *obj);
+obj_toStringHelper(JSContext *cx, HandleObject obj);
 
 } /* namespace js */
 

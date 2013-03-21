@@ -808,7 +808,7 @@ JSObject::getProto(JSContext *cx, js::HandleObject obj, js::MutableHandleObject 
 {
     if (obj->getTaggedProto().isLazy()) {
         JS_ASSERT(obj->isProxy());
-        return js::Proxy::getPrototypeOf(cx, obj, protop.address());
+        return js::Proxy::getPrototypeOf(cx, obj, protop);
     } else {
         protop.set(obj->js::ObjectImpl::getProto());
         return true;
