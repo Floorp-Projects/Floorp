@@ -1270,19 +1270,33 @@ var gBrowserInit = {
 
     // Set a sane starting width/height for all resolutions on new profiles.
     if (!document.documentElement.hasAttribute("width")) {
-      let defaultWidth = 994;
+      let defaultWidth;
       let defaultHeight;
+
+      // Very small: maximize the window
+      // Portrait  : use about full width and 3/4 height, to view entire pages
+      //             at once (without being obnoxiously tall)
+      // Widescreen: use about half width, to suggest side-by-side page view
+      // Otherwise : use 3/4 height and width
       if (screen.availHeight <= 600) {
         document.documentElement.setAttribute("sizemode", "maximized");
         defaultWidth = 610;
         defaultHeight = 450;
       }
       else {
-        // Create a narrower window for large or wide-aspect displays, to suggest
-        // side-by-side page view.
-        if (screen.availWidth >= 1600)
+        if (screen.availWidth <= screen.availHeight) {
+          defaultWidth = screen.availWidth * .9;
+          defaultHeight = screen.availHeight * .75;
+        }
+        else if (screen.availWidth >= 2048) {
           defaultWidth = (screen.availWidth / 2) - 20;
-        defaultHeight = screen.availHeight - 10;
+          defaultHeight = screen.availHeight - 10;
+        }
+        else {
+          defaultWidth = screen.availWidth * .75;
+          defaultHeight = screen.availHeight * .75;
+        }
+
 #ifdef MOZ_WIDGET_GTK2
         // On X, we're not currently able to account for the size of the window
         // border.  Use 28px as a guess (titlebar + bottom window border)
@@ -3051,96 +3065,10 @@ function getMarkupDocumentViewer()
   return gBrowser.markupDocumentViewer;
 }
 
-/**
- * Content area tooltip.
- * XXX - this must move into XBL binding/equiv! Do not want to pollute
- *       browser.js with functionality that can be encapsulated into
- *       browser widget. TEMPORARY!
- *
- * NOTE: Any changes to this routine need to be mirrored in DefaultTooltipTextProvider::GetNodeText()
- *       (located in mozilla/embedding/browser/webBrowser/nsDocShellTreeOwner.cpp)
- *       which performs the same function, but for embedded clients that
- *       don't use a XUL/JS layer. It is important that the logic of
- *       these two routines be kept more or less in sync.
- *       (pinkerton)
- **/
+// This function is obsolete. Newer code should use <tooltip page="true"/> instead.
 function FillInHTMLTooltip(tipElement)
 {
-  var retVal = false;
-  // Don't show the tooltip if the tooltip node is a document or disconnected.
-  if (!tipElement.ownerDocument ||
-      (tipElement.ownerDocument.compareDocumentPosition(tipElement) & document.DOCUMENT_POSITION_DISCONNECTED))
-    return retVal;
-
-  const XLinkNS = "http://www.w3.org/1999/xlink";
-  const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
-  var titleText = null;
-  var XLinkTitleText = null;
-  var SVGTitleText = null;
-  var lookingForSVGTitle = true;
-  var direction = tipElement.ownerDocument.dir;
-
-  // If the element is invalid per HTML5 Forms specifications and has no title,
-  // show the constraint validation error message.
-  if ((tipElement instanceof HTMLInputElement ||
-       tipElement instanceof HTMLTextAreaElement ||
-       tipElement instanceof HTMLSelectElement ||
-       tipElement instanceof HTMLButtonElement) &&
-      !tipElement.hasAttribute('title') &&
-      (!tipElement.form || !tipElement.form.noValidate)) {
-    // If the element is barred from constraint validation or valid,
-    // the validation message will be the empty string.
-    titleText = tipElement.validationMessage;
-  }
-
-  while (!titleText && !XLinkTitleText && !SVGTitleText && tipElement) {
-    if (tipElement.nodeType == Node.ELEMENT_NODE &&
-        tipElement.namespaceURI != XULNS) {
-      titleText = tipElement.getAttribute("title");
-      if ((tipElement instanceof HTMLAnchorElement ||
-           tipElement instanceof HTMLAreaElement ||
-           tipElement instanceof HTMLLinkElement ||
-           tipElement instanceof SVGAElement) && tipElement.href) {
-        XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
-      }
-      if (lookingForSVGTitle &&
-          (!(tipElement instanceof SVGElement) ||
-           tipElement.parentNode.nodeType == Node.DOCUMENT_NODE)) {
-        lookingForSVGTitle = false;
-      }
-      if (lookingForSVGTitle) {
-        for (let childNode of tipElement.childNodes) {
-          if (childNode instanceof SVGTitleElement) {
-            SVGTitleText = childNode.textContent;
-            break;
-          }
-        }
-      }
-      var defView = tipElement.ownerDocument.defaultView;
-      // XXX Work around bug 350679:
-      // "Tooltips can be fired in documents with no view".
-      if (!defView)
-        return retVal;
-      direction = defView.getComputedStyle(tipElement, "")
-        .getPropertyValue("direction");
-    }
-    tipElement = tipElement.parentNode;
-  }
-
-  var tipNode = document.getElementById("aHTMLTooltip");
-  tipNode.style.direction = direction;
-
-  [titleText, XLinkTitleText, SVGTitleText].forEach(function (t) {
-    if (t && /\S/.test(t)) {
-      // Make CRLF and CR render one line break each.
-      t = t.replace(/\r\n?/g, '\n');
-
-      tipNode.setAttribute("label", t);
-      retVal = true;
-    }
-  });
-  return retVal;
+  document.getElementById("aHTMLTooltip").fillInPageTooltip(tipElement);
 }
 
 var browserDragAndDrop = {
@@ -4263,20 +4191,19 @@ var XULBrowserWindow = {
       gFormSubmitObserver.panel.hidePopup();
     }
 
-    if (document.tooltipNode) {
+    let pageTooltip = document.getElementById("aHTMLTooltip");
+    let tooltipNode = pageTooltip.triggerNode;
+    if (tooltipNode) {
       // Optimise for the common case
       if (aWebProgress.DOMWindow == content) {
-        document.getElementById("aHTMLTooltip").hidePopup();
-        document.tooltipNode = null;
+        pageTooltip.hidePopup();
       }
       else {
-        for (let tooltipWindow =
-               document.tooltipNode.ownerDocument.defaultView;
+        for (let tooltipWindow = tooltipNode.ownerDocument.defaultView;
              tooltipWindow != tooltipWindow.parent;
              tooltipWindow = tooltipWindow.parent) {
           if (tooltipWindow == aWebProgress.DOMWindow) {
-            document.getElementById("aHTMLTooltip").hidePopup();
-            document.tooltipNode = null;
+            pageTooltip.hidePopup();
             break;
           }
         }

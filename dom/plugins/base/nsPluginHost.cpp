@@ -172,8 +172,9 @@ static const char *kPrefDisableFullPage = "plugin.disable_full_page_plugin_for_t
 // 0.13 add architecture and list of invalid plugins, bug 616271
 // 0.14 force refresh due to locale comparison fix, bug 611296
 // 0.15 force refresh due to bug in reading Java plist MIME data, bug 638171
+// 0.16 version bump to avoid importing the plugin flags in newer versions
 // The current plugin registry version (and the maximum version we know how to read)
-static const char *kPluginRegistryVersion = "0.15";
+static const char *kPluginRegistryVersion = "0.16";
 // The minimum registry version we know how to read
 static const char *kMinimumRegistryVersion = "0.9";
 
@@ -1120,8 +1121,8 @@ nsPluginHost::IsPluginEnabledForType(const char* aMimeType)
   if (!plugin)
     return NS_ERROR_FAILURE;
 
-  if (!plugin->IsEnabled()) {
-    if (plugin->HasFlag(NS_PLUGIN_FLAG_BLOCKLISTED))
+  if (!plugin->IsActive()) {
+    if (plugin->IsBlocklisted())
       return NS_ERROR_PLUGIN_BLOCKLISTED;
     else
       return NS_ERROR_PLUGIN_DISABLED;
@@ -1191,13 +1192,7 @@ nsPluginHost::GetPermissionStringForType(const nsACString &aMimeType, nsACString
     aPermissionString.AssignLiteral("plugin:");
   }
 
-  if (tag->mIsJavaPlugin) {
-    aPermissionString.Append("java");
-  } else if (tag->mIsFlashPlugin) {
-    aPermissionString.Append("flash");
-  } else {
-    aPermissionString.Append(tag->GetNiceFileName());
-  }
+  aPermissionString.Append(tag->GetNiceFileName());
 
   return NS_OK;
 }
@@ -1316,7 +1311,7 @@ nsPluginHost::GetPluginCount(uint32_t* aPluginCount)
 
   nsPluginTag* plugin = mPlugins;
   while (plugin != nullptr) {
-    if (plugin->IsEnabled()) {
+    if (plugin->IsActive()) {
       ++count;
     }
     plugin = plugin->mNext;
@@ -1334,7 +1329,7 @@ nsPluginHost::GetPlugins(uint32_t aPluginCount, nsIDOMPlugin** aPluginArray)
 
   nsPluginTag* plugin = mPlugins;
   for (uint32_t i = 0; i < aPluginCount && plugin; plugin = plugin->mNext) {
-    if (plugin->IsEnabled()) {
+    if (plugin->IsActive()) {
       nsIDOMPlugin* domPlugin = new DOMPluginImpl(plugin);
       NS_IF_ADDREF(domPlugin);
       aPluginArray[i++] = domPlugin;
@@ -1411,7 +1406,7 @@ nsPluginHost::FindPluginForType(const char* aMimeType,
 
   nsPluginTag *plugin = mPlugins;
   while (plugin) {
-    if (!aCheckEnabled || plugin->IsEnabled()) {
+    if (!aCheckEnabled || plugin->IsActive()) {
       int32_t mimeCount = plugin->mMimeTypes.Length();
       for (int32_t i = 0; i < mimeCount; i++) {
         if (0 == PL_strcasecmp(plugin->mMimeTypes[i].get(), aMimeType)) {
@@ -1440,7 +1435,7 @@ nsPluginHost::FindPluginEnabledForExtension(const char* aExtension,
 
   nsPluginTag *plugin = mPlugins;
   while (plugin) {
-    if (plugin->IsEnabled()) {
+    if (plugin->IsActive()) {
       int32_t variants = plugin->mExtensions.Length();
       for (int32_t i = 0; i < variants; i++) {
         // mExtensionsArray[cnt] is a list of extensions separated by commas
@@ -1948,14 +1943,13 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
     nsRefPtr<nsPluginTag> pluginTag;
     RemoveCachedPluginsInfo(filePath.get(), getter_AddRefs(pluginTag));
 
-    bool enabled = true;
     bool seenBefore = false;
+
     if (pluginTag) {
       seenBefore = true;
       // If plugin changed, delete cachedPluginTag and don't use cache
       if (fileModTime != pluginTag->mLastModifiedTime) {
         // Plugins has changed. Don't use cached plugin info.
-        enabled = (pluginTag->Flags() & NS_PLUGIN_FLAG_ENABLED) != 0;
         pluginTag = nullptr;
 
         // plugin file changed, flag this fact
@@ -2041,19 +2035,15 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
           // If the blocklist says the plugin is one of the click-to-play
           // states, set the click-to-play flag.
           if (state == nsIBlocklistService::STATE_BLOCKED) {
-             pluginTag->Mark(NS_PLUGIN_FLAG_BLOCKLISTED);
+             pluginTag->SetBlocklisted(true);
           }
           if (state == nsIBlocklistService::STATE_SOFTBLOCKED && !seenBefore) {
-             enabled = false;
+             pluginTag->SetDisabled(true);
           }
           if (state == nsIBlocklistService::STATE_OUTDATED && !seenBefore) {
              warnOutdated = true;
           }
         }
-      }
-
-      if (!enabled) {
-        pluginTag->UnMark(NS_PLUGIN_FLAG_ENABLED);
       }
 
       // Plugin unloading is tag-based. If we created a new tag and loaded
@@ -2119,7 +2109,7 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
       mPlugins = pluginTag;
     }
 
-    if (pluginTag->IsEnabled()) {
+    if (pluginTag->IsActive()) {
       nsAdoptingCString disableFullPage =
         Preferences::GetCString(kPrefDisableFullPage);
       for (uint32_t i = 0; i < pluginTag->mMimeTypes.Length(); i++) {
@@ -2400,7 +2390,7 @@ nsPluginHost::UpdatePluginInfo(nsPluginTag* aPluginTag)
     obsService->NotifyObservers(nullptr, "plugin-info-updated", nullptr);
 
   // Reload instances if needed
-  if (aPluginTag->IsEnabled()) {
+  if (aPluginTag->IsActive()) {
     return NS_OK;
   }
 
@@ -2545,7 +2535,7 @@ nsPluginHost::WritePluginInfo()
       PLUGIN_REGISTRY_FIELD_DELIMITER,
       false, // did store whether or not to unload in-process plugins
       PLUGIN_REGISTRY_FIELD_DELIMITER,
-      tag->Flags(),
+      0, // legacy field for flags
       PLUGIN_REGISTRY_FIELD_DELIMITER,
       PLUGIN_REGISTRY_END_OF_LINE_MARKER);
 
@@ -2605,6 +2595,10 @@ nsPluginHost::ReadPluginInfo()
 {
   const long PLUGIN_REG_MIMETYPES_ARRAY_SIZE = 12;
   const long PLUGIN_REG_MAX_MIMETYPES = 1000;
+
+  // we need to import the legacy flags from the plugin registry once
+  const bool pluginStateImported =
+    Preferences::GetDefaultBool("plugin.importedState", false);
 
   nsresult rv;
 
@@ -2735,6 +2729,9 @@ nsPluginHost::ReadPluginInfo()
 
   // Registry v0.13 and upwards includes the list of invalid plugins
   bool hasInvalidPlugins = (version >= "0.13");
+
+  // Registry v0.16 and upwards always have 0 for their plugin flags, prefs are used instead
+  const bool hasValidFlags = (version < "0.16");
 
   if (!ReadSectionHeader(reader, "PLUGINS"))
     return rv;
@@ -2874,8 +2871,11 @@ nsPluginHost::ReadPluginInfo()
     if (!tag)
       continue;
 
-    // Mark plugin as loaded from cache
-    tag->Mark(tagflag | NS_PLUGIN_FLAG_FROMCACHE);
+    // Import flags from registry into prefs for old registry versions
+    if (hasValidFlags && !pluginStateImported) {
+      tag->ImportFlagsToPrefs(tagflag);
+    }
+
     PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
       ("LoadCachedPluginsInfo : Loading Cached plugininfo for %s\n", tag->mFileName.get()));
     tag->mNext = mCachedPlugins;
@@ -2905,6 +2905,10 @@ nsPluginHost::ReadPluginInfo()
       mInvalidPlugins = invalidTag;
     }
   }
+
+  // flip the pref so we don't import the legacy flags again
+  Preferences::SetBool("plugin.importedState", true);
+
   return NS_OK;
 }
 

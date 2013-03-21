@@ -12,7 +12,7 @@ interface nsIControllers;
 interface nsIBoxObject;
 
 
-[scriptable, uuid(5d9d2e4f-a748-44f0-99d1-406384efdc5c)]
+[scriptable, uuid(d766ac03-e437-4923-9c38-001dc433be75)]
 interface nsIDOMXULElement : nsIDOMElement
 {
   attribute DOMString                 className;

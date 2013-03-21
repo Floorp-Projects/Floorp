@@ -16,7 +16,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(912423ad-00c2-4948-8f8e-4950169e516d)]
+[scriptable, uuid(ee026cb0-7f3d-464d-84b8-02c97ecad7f9)]
 interface nsIDOMHTMLFrameElement : nsIDOMHTMLElement
 {
            attribute DOMString        frameBorder;

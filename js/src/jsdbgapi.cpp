@@ -293,11 +293,12 @@ JS_ClearInterrupt(JSRuntime *rt, JSInterruptHook *hoop, void **closurep)
 /************************************************************************/
 
 JS_PUBLIC_API(JSBool)
-JS_SetWatchPoint(JSContext *cx, JSObject *obj_, jsid id,
+JS_SetWatchPoint(JSContext *cx, JSObject *obj_, jsid id_,
                  JSWatchPointHandler handler, JSObject *closure_)
 {
     assertSameCompartment(cx, obj_);
 
+    RootedId id(cx, id_);
     RootedObject origobj(cx, obj_), closure(cx, closure_);
     RootedObject obj(cx, GetInnerObject(cx, origobj));
     if (!obj)

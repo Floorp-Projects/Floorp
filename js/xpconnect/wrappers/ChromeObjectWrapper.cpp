@@ -175,7 +175,9 @@ ChromeObjectWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id,
 
     // Note that PropIsFromStandardPrototype needs to invoke getPropertyDescriptor
     // before we've fully entered the policy. Waive our policy.
-    js::AutoWaivePolicy policy(cx, wrapper, id);
+    JS::RootedObject rootedWrapper(cx, wrapper);
+    JS::RootedId rootedId(cx, id);
+    js::AutoWaivePolicy policy(cx, rootedWrapper, rootedId);
     return PropIsFromStandardPrototype(cx, wrapper, id);
 }
 

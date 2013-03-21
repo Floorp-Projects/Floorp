@@ -66,7 +66,6 @@ using namespace js::unicode;
 
 using mozilla::CheckedInt;
 
-typedef Rooted<JSLinearString*> RootedLinearString;
 typedef Handle<JSLinearString*> HandleLinearString;
 
 static JSLinearString *

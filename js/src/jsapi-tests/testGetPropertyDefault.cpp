@@ -47,11 +47,11 @@ BEGIN_TEST(testGetPropertyDefault_bug594060)
         JS::RootedObject obj(cx, JS_NewObject(cx, NULL, NULL, NULL));
         CHECK(obj);
 
-        jsid hereid;
-        CHECK(stringToId(cx, "here", &hereid));
+        JS::RootedId hereid(cx);
+        CHECK(stringToId(cx, "here", hereid.address()));
 
-        jsid nothereid;
-        CHECK(stringToId(cx, "nothere", &nothereid));
+        JS::RootedId nothereid(cx);
+        CHECK(stringToId(cx, "nothere", nothereid.address()));
 
         JS::RootedValue v0(cx, JSVAL_TRUE);
         CHECK(JS_SetPropertyById(cx, obj, hereid, v0.address()));
