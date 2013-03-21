@@ -54,6 +54,7 @@ ToolSidebar.prototype = {
     iframe.className = "iframe-" + id;
     iframe.setAttribute("flex", "1");
     iframe.setAttribute("src", url);
+    iframe.tooltip = "aHTMLTooltip";
 
     let tab = this._tabbox.tabs.appendItem();
     tab.setAttribute("label", ""); // Avoid showing "undefined" while the tab is loading
@@ -73,6 +74,11 @@ ToolSidebar.prototype = {
     tabpanel.setAttribute("id", "sidebar-panel-" + id);
     tabpanel.appendChild(iframe);
     this._tabbox.tabpanels.appendChild(tabpanel);
+
+    this._tooltip = this._panelDoc.createElementNS(XULNS, "tooltip");
+    this._tooltip.id = "aHTMLTooltip";
+    tabpanel.appendChild(this._tooltip);
+    this._tooltip.page = true;
 
     tab.linkedPanel = "sidebar-panel-" + id;
 

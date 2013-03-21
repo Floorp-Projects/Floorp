@@ -68,6 +68,7 @@ BottomHost.prototype = {
       deferred.resolve(this.frame);
     }.bind(this);
 
+    this.frame.tooltip = "aHTMLTooltip";
     this.frame.addEventListener("DOMContentLoaded", frameLoad, true);
 
     // we have to load something so we can switch documents if we have to
@@ -151,6 +152,7 @@ SidebarHost.prototype = {
     }.bind(this);
 
     this.frame.addEventListener("DOMContentLoaded", frameLoad, true);
+    this.frame.tooltip = "aHTMLTooltip";
     this.frame.setAttribute("src", "about:blank");
 
     focusTab(this.hostTab);

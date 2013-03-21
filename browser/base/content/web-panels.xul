@@ -46,7 +46,7 @@
   </commandset>
 
   <popupset id="mainPopupSet">
-    <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
+    <tooltip id="aHTMLTooltip" page="true"/>
     <menupopup id="contentAreaContextMenu" pagemenu="start"
                onpopupshowing="if (event.target != this)
                                  return true;

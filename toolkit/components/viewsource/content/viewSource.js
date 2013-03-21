@@ -700,41 +700,6 @@ function UpdateBackForwardCommands() {
     forwardBroadcaster.setAttribute("disabled", "true");
 }
 
-// FIXME copied and modified from browser.js.
-// Deduplication is part of bug 480356.
-function FillInHTMLTooltip(tipElement)
-{
-  var retVal = false;
-  var titleText = null;
-  var direction = tipElement.ownerDocument.dir;
-
-  while (!titleText && tipElement) {
-    if (tipElement.nodeType == Node.ELEMENT_NODE) {
-      titleText = tipElement.getAttribute("title");
-      var defView = tipElement.ownerDocument.defaultView;
-      // XXX Work around bug 350679:
-      // "Tooltips can be fired in documents with no view".
-      if (!defView)
-        return retVal;
-      direction = defView.getComputedStyle(tipElement, "")
-        .getPropertyValue("direction");
-    }
-    tipElement = tipElement.parentNode;
-  }
-
-  var tipNode = document.getElementById("aHTMLTooltip");
-  tipNode.style.direction = direction;
-
-  if (titleText && /\S/.test(titleText)) {
-    // Make CRLF and CR render one line break each.  
-    titleText = titleText.replace(/\r\n/g, '\n');
-    titleText = titleText.replace(/\r/g, '\n');
-    tipNode.setAttribute("label", titleText);
-    retVal = true;
-  }
-  return retVal;
-}
-
 function contextMenuShowing() {
   var isLink = false;
   var isEmail = false;
