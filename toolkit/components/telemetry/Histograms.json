@@ -2489,6 +2489,13 @@
     "extended_statistics_ok": true,
     "description": "Session restore: Time to write the session data to the file on disk (ms)"
   },
+  "FX_SESSION_RESTORE_WRITE_FILE_LONGEST_OP_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Session restore: Duration of the longest uninterruptible operation while writing session data (ms)"
+  },
   "FX_SESSION_RESTORE_CORRUPT_FILE": {
     "kind": "boolean",
     "description": "Session restore: Whether the file read on startup contained parse-able JSON"
