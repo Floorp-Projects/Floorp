@@ -313,10 +313,15 @@ var SelectionHandler = {
   },
 
   /*
-   * Selection clear event handler
+   * Selection clear message handler
+   *
+   * @param aClearFocus requests that the focus also be cleared.
    */
-  _onSelectionClear: function _onSelectionClear() {
+  _onSelectionClear: function _onSelectionClear(aClearFocus) {
     this._clearSelection();
+    if (aClearFocus && this._targetElement) {
+      this._targetElement.blur();
+    }
   },
 
   /*
@@ -424,6 +429,7 @@ var SelectionHandler = {
     this._cache.updateStart = aUpdateStart;
     this._cache.updateEnd = aUpdateEnd;
     this._cache.updateCaret = aUpdateCaret || false;
+    this._cache.targetIsEditable = this._targetIsEditable;
 
     // Get monocles positioned correctly
     sendAsyncMessage("Content:SelectionRange", this._cache);
@@ -1049,7 +1055,7 @@ var SelectionHandler = {
         break;
 
       case "Browser:SelectionClear":
-        this._onSelectionClear();
+        this._onSelectionClear(json.clearFocus);
         break;
 
       case "Browser:SelectionDebug":
