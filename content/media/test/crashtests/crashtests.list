@@ -14,3 +14,4 @@ skip-if(Android||B2G) HTTP load 795892-1.html # load failed, bug 833371 for B2G
 skip-if(Android||B2G) load 789075-1.html # load failed, bug 833371 for B2G
 load 844563.html
 load 846612.html
+load 852838.html
