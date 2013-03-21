@@ -1,3 +1,6 @@
 {
-  "DocumentType.remove": true
+  "doctype should support remove()": true,
+  "remove() should work if doctype doesn't have a parent": true,
+  "remove() should work if doctype does have a parent": true,
+  "remove() should work if doctype does have a parent and siblings": true
 }

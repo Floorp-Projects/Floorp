@@ -18,7 +18,9 @@ test(function() {
      *   the doctype argument
      *   the expected exception, or null if none
      */
+    [null, null, false, new TypeError()],
     [null, null, null, null],
+    [null, undefined, null, null],
     [null, "", null, null],
     [null, "foo", null, null],
     [null, "1foo", null, "INVALID_CHARACTER_ERR"],
@@ -33,6 +35,22 @@ test(function() {
     [null, "xml:foo", null, "NAMESPACE_ERR"],
     [null, "xmlns:foo", null, "NAMESPACE_ERR"],
     [null, "xmlfoo:bar", null, "NAMESPACE_ERR"],
+    [undefined, null, undefined, null],
+    [undefined, undefined, undefined, null],
+    [undefined, "", undefined, null],
+    [undefined, "foo", undefined, null],
+    [undefined, "1foo", undefined, "INVALID_CHARACTER_ERR"],
+    [undefined, "f1oo", undefined, null],
+    [undefined, "foo1", undefined, null],
+    [undefined, ":foo", undefined, "NAMESPACE_ERR"],
+    [undefined, "f:oo", undefined, "NAMESPACE_ERR"],
+    [undefined, "foo:", undefined, "NAMESPACE_ERR"],
+    [undefined, "xml", undefined, null],
+    [undefined, "xmlns", undefined, "NAMESPACE_ERR"],
+    [undefined, "xmlfoo", undefined, null],
+    [undefined, "xml:foo", undefined, "NAMESPACE_ERR"],
+    [undefined, "xmlns:foo", undefined, "NAMESPACE_ERR"],
+    [undefined, "xmlfoo:bar", undefined, "NAMESPACE_ERR"],
     ["http://example.com/", null, null, null],
     ["http://example.com/", "", null, null],
     ["http://example.com/", "foo", null, null],
@@ -108,35 +126,27 @@ test(function() {
     ["foo:", "xml:foo", null, "NAMESPACE_ERR"],
     ["foo:", "xmlns:foo", null, "NAMESPACE_ERR"],
     ["foo:", "xmlfoo:bar", null, null],
+    [null, null, document.implementation.createDocumentType("foo", "", ""), null],
+    [null, null, document.doctype, null], // This causes a horrible WebKit bug (now fixed in trunk).
+    [null, null, function() {
+        var foo = document.implementation.createDocumentType("foo", "", "");
+        document.implementation.createDocument(null, null, foo);
+        return foo;
+     }(), null], // DOCTYPE already associated with a document.
+    [null, null, function() {
+        var bar = document.implementation.createDocument(null, null, null);
+        return bar.implementation.createDocumentType("bar", "", "");
+     }(), null], // DOCTYPE created by a different implementation.
+    [null, null, function() {
+        var bar = document.implementation.createDocument(null, null, null);
+        var magic = bar.implementation.createDocumentType("bar", "", "");
+        bar.implementation.createDocument(null, null, magic);
+        return magic;
+     }(), null], // DOCTYPE created by a different implementation and already associated with a document.
+    [null, "foo", document.implementation.createDocumentType("foo", "", ""), null],
+    ["foo", null, document.implementation.createDocumentType("foo", "", ""), null],
+    ["foo", "bar", document.implementation.createDocumentType("foo", "", ""), null],
   ]
-
-  try { // XXX merge?!
-    var tempTests = tests.concat([
-      [null, null, document.implementation.createDocumentType("foo", "", ""), null],
-      [null, null, document.doctype, "WRONG_DOCUMENT_ERR"], // This causes a horrible WebKit bug (now fixed in trunk).
-      [null, null, function() {
-          var foo = document.implementation.createDocumentType("foo", "", "");
-          document.implementation.createDocument(null, null, foo);
-          return foo;
-       }(), "WRONG_DOCUMENT_ERR"], // DOCTYPE already associated with a document.
-      [null, null, function() {
-          var bar = document.implementation.createDocument(null, null, null);
-          return bar.implementation.createDocumentType("bar", "", "");
-       }(), null], // DOCTYPE created by a different implementation.
-      [null, null, function() {
-          var bar = document.implementation.createDocument(null, null, null);
-          var magic = bar.implementation.createDocumentType("bar", "", "");
-          bar.implementation.createDocument(null, null, magic);
-          return magic;
-       }(), "WRONG_DOCUMENT_ERR"], // DOCTYPE created by a different implementation and already associated with a document.
-      [null, "foo", document.implementation.createDocumentType("foo", "", ""), null],
-      ["foo", null, document.implementation.createDocumentType("foo", "", ""), null],
-      ["foo", "bar", document.implementation.createDocumentType("foo", "", ""), null],
-    ]);
-    tests = tempTests;
-  } catch (e) {
-    assert_unreached()
-  }
 
   tests.forEach(function(t, i) {
     test(function() {
@@ -147,14 +157,31 @@ test(function() {
         var doc = document.implementation.createDocument(namespace, qualifiedName, doctype)
         assert_equals(doc.nodeType, Node.DOCUMENT_NODE)
         assert_equals(doc.nodeType, doc.DOCUMENT_NODE)
-        if (qualifiedName === "" || qualifiedName === null) {
+        var omitRootElement = qualifiedName === null || String(qualifiedName) === ""
+        if (omitRootElement) {
           assert_equals(doc.documentElement, null)
         } else {
-          assert_not_equals(doc.documentElement, null)
-          assert_equals(doc.documentElement.nodeType, Node.ELEMENT_NODE)
+          var element = doc.documentElement
+          assert_not_equals(element, null)
+          assert_equals(element.nodeType, Node.ELEMENT_NODE)
+          assert_equals(element.ownerDocument, doc)
+          var qualified = String(qualifiedName), names = []
+          if (qualified.indexOf(":") >= 0) {
+            names = qualified.split(":", 2)
+          } else {
+            names = [null, qualified]
+          }
+          assert_equals(element.prefix, names[0])
+          assert_equals(element.localName, names[1])
+          assert_equals(element.namespaceURI, namespace === undefined ? null : namespace)
         }
-        assert_equals(doc.doctype, doctype)
-        assert_equals(doc.childNodes.length, !!qualifiedName + !!doctype)
+        if (!doctype) {
+          assert_equals(doc.doctype, null)
+        } else {
+          assert_equals(doc.doctype, doctype)
+          assert_equals(doc.doctype.ownerDocument, doc)
+        }
+        assert_equals(doc.childNodes.length, !omitRootElement + !!doctype)
       }
     }, "createDocument test " + i + ": " + t.map(function(el) { return format_value(el) }))
   })
