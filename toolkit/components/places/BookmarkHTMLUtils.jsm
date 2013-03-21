@@ -1116,7 +1116,7 @@ BookmarkExporter.prototype = {
     }
 
     try {
-      let lastCharset = PlacesUtils.history.getCharsetForURI(itemUri);
+      let lastCharset = yield PlacesUtils.getCharsetForURI(itemUri);
       if (lastCharset) {
         this._write(" LAST_CHARSET=\"" + this.escapeHtml(lastCharset) + "\"");
       }
