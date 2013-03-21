@@ -291,7 +291,14 @@ public:
   nsPoint mDestination;
   nsPoint mScrollPosAtLastPaint;
 
+  // A goal position to try to scroll to as content loads. As long as mLastPos
+  // matches the current logical scroll position, we try to scroll to mRestorePos
+  // after every reflow --- because after each time content is loaded/added to the
+  // scrollable element, there will be a reflow.
   nsPoint mRestorePos;
+  // The last logical position we scrolled to while trying to restore mRestorePos, or
+  // 0,0 when this is a new frame. Set to -1,-1 once we've scrolled for any reason
+  // other than trying to restore mRestorePos.
   nsPoint mLastPos;
 
   nsExpirationState mActivityExpirationState;
