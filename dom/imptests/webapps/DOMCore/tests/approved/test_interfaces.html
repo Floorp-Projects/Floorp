@@ -23,7 +23,7 @@ exception DOMException {
   const unsigned short NAMESPACE_ERR = 14;
   const unsigned short INVALID_ACCESS_ERR = 15;
   const unsigned short VALIDATION_ERR = 16; // historical
-  const unsigned short TYPE_MISMATCH_ERR = 17;
+  const unsigned short TYPE_MISMATCH_ERR = 17; // historical; use TypeError instead
   const unsigned short SECURITY_ERR = 18;
   const unsigned short NETWORK_ERR = 19;
   const unsigned short ABORT_ERR = 20;
@@ -35,6 +35,7 @@ exception DOMException {
   unsigned short code;
 };
 
+[Constructor(DOMString name)]
 interface DOMError {
   readonly attribute DOMString name;
 };
@@ -45,6 +46,7 @@ interface Event {
   readonly attribute EventTarget? target;
   readonly attribute EventTarget? currentTarget;
 
+  const unsigned short NONE = 0;
   const unsigned short CAPTURING_PHASE = 1;
   const unsigned short AT_TARGET = 2;
   const unsigned short BUBBLING_PHASE = 3;
@@ -58,29 +60,31 @@ interface Event {
   void preventDefault();
   readonly attribute boolean defaultPrevented;
 
-  readonly attribute boolean isTrusted;
+  [Unforgeable] readonly attribute boolean isTrusted;
   readonly attribute DOMTimeStamp timeStamp;
 
   void initEvent(DOMString type, boolean bubbles, boolean cancelable);
 };
 
 dictionary EventInit {
-  boolean bubbles;
-  boolean cancelable;
+  boolean bubbles = false;
+  boolean cancelable = false;
 };
 
 [Constructor(DOMString type, optional CustomEventInit eventInitDict)]
 interface CustomEvent : Event {
   readonly attribute any detail;
+
+  void initCustomEvent(DOMString type, boolean bubbles, boolean cancelable, any details);
 };
 
 dictionary CustomEventInit : EventInit {
-  any detail;
+  any detail = null;
 };
 
 interface EventTarget {
-  void addEventListener(DOMString type, EventListener? listener, optional boolean capture);
-  void removeEventListener(DOMString type, EventListener? listener, optional boolean capture);
+  void addEventListener(DOMString type, EventListener? callback, optional boolean capture);
+  void removeEventListener(DOMString type, EventListener? callback, optional boolean capture);
   boolean dispatchEvent(Event event);
 };
 
@@ -89,71 +93,63 @@ interface EventListener {
   void handleEvent(Event event);
 };
 
+[NoInterfaceObject]
+interface ParentNode {
+  readonly attribute HTMLCollection children;
+  readonly attribute Element? firstElementChild;
+  readonly attribute Element? lastElementChild;
+  readonly attribute unsigned long childElementCount;
+
+  void prepend((Node or DOMString)... nodes);
+  void append((Node or DOMString)... nodes);
+};
+Document implements ParentNode;
+DocumentFragment implements ParentNode;
+Element implements ParentNode;
+
+[NoInterfaceObject]
+interface ChildNode {
+  readonly attribute Element? previousElementSibling;
+  readonly attribute Element? nextElementSibling;
+
+  void before((Node or DOMString)... nodes);
+  void after((Node or DOMString)... nodes);
+  void replace((Node or DOMString)... nodes);
+  void remove();
+};
+DocumentType implements ChildNode;
+Element implements ChildNode;
+CharacterData implements ChildNode;
+
 [Constructor(MutationCallback callback)]
 interface MutationObserver {
-  void observe(Node target, optional MutationObserverInit options);
+  void observe(Node target, MutationObserverInit options);
   void disconnect();
+  sequence<MutationRecord> takeRecords();
 };
 
-[Callback]
-interface MutationCallback {
-  void handleEvent(MutationRecord[] mutations, MutationObserver observer);
-};
+callback MutationCallback = void (sequence<MutationRecord> mutations, MutationObserver observer);
 
 dictionary MutationObserverInit {
-  // Mutation types
-  boolean childList;     // If true, mutations affecting node’s childNodes are included.
-  boolean attributes;    // If true, mutations affecting element’s attributes are included.
-  boolean characterData; // If true, mutations affecting the value of CharacterData nodes are included.
-  // [Note: If none of the known mutation types is specified, an Error is thrown]
-
-  // Subtree observation
-  boolean subtree;  // If true, the observed set of nodes for this registration should include
-                    // descendants of MutationTarget (behavior described below).
-
-  // Old values
-  boolean attributeOldValue;
-  // If true, MutationRecords describing changes to attributes should
-  // contain the value of the attribute before the change. If true
-  // without attribute: true specified, an Error is thrown.
-
-  boolean characterDataOldValue;
-  // If true, MutationRecords describing changes to
-  // CharacterData nodes should contain the value
-  // of the node before the change. If true without
-  // characterData: true, an Error is thrown.
-
-  // Filtering
-  DOMString[] attributeFilter;
-  // If provided, only changes to attributes with localName equaling
-  // one of the provided strings will be delivered. If provided without
-  // attribute: true, an Error is thrown.
+  boolean childList = false;
+  boolean attributes = false;
+  boolean characterData = false;
+  boolean subtree = false;
+  boolean attributeOldValue = false;
+  boolean characterDataOldValue = false;
+  sequence<DOMString> attributeFilter;
 };
 
 interface MutationRecord {
-  // Mutation type: one of 'childList', 'attributes', or 'characterData'
   readonly attribute DOMString type;
-
-  // For childList and attributes, target is the owner node affected.
-  // For CharacterData, target is the node affected.
   readonly attribute Node target;
-
-  // For type == 'childList', Sequence of added and removed nodes in this operation.
   readonly attribute NodeList addedNodes;
   readonly attribute NodeList removedNodes;
-
-  // For type == 'childList', The siblings in childNodes immediately preceding following the first
-  // and last nodes added and/or removed.
-  readonly attribute Node previousSibling;
-  readonly attribute Node nextSibling;
-
-  // For type == 'attribute', the name and namespaceURI of the attribute affected
-  readonly attribute DOMString attributeName;
-  readonly attribute DOMString attributeNamespace;
-
-  // For type == 'attribute' or 'characterData', if requested, the value immediately
-  // preceding the mutation.
-  readonly attribute DOMString oldValue;
+  readonly attribute Node? previousSibling;
+  readonly attribute Node? nextSibling;
+  readonly attribute DOMString? attributeName;
+  readonly attribute DOMString? attributeNamespace;
+  readonly attribute DOMString? oldValue;
 };
 
 interface Node : EventTarget {
@@ -184,29 +180,30 @@ interface Node : EventTarget {
   readonly attribute Node? previousSibling;
   readonly attribute Node? nextSibling;
 
-  const unsigned short DOCUMENT_POSITION_DISCONNECTED = 0x01;
-  const unsigned short DOCUMENT_POSITION_PRECEDING = 0x02;
-  const unsigned short DOCUMENT_POSITION_FOLLOWING = 0x04;
-  const unsigned short DOCUMENT_POSITION_CONTAINS = 0x08;
-  const unsigned short DOCUMENT_POSITION_CONTAINED_BY = 0x10;
-  const unsigned short DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 0x20; // historical
-  unsigned short compareDocumentPosition(Node other);
-  boolean contains(Node? other);
-
            attribute DOMString? nodeValue;
            attribute DOMString? textContent;
-  Node insertBefore(Node node, Node? child);
-  Node appendChild(Node node);
-  Node replaceChild(Node node, Node child);
-  Node removeChild(Node child);
   void normalize();
 
   Node cloneNode(optional boolean deep);
   boolean isEqualNode(Node? node);
 
-  DOMString lookupPrefix(DOMString? namespace);
-  DOMString lookupNamespaceURI(DOMString? prefix);
+  const unsigned short DOCUMENT_POSITION_DISCONNECTED = 0x01;
+  const unsigned short DOCUMENT_POSITION_PRECEDING = 0x02;
+  const unsigned short DOCUMENT_POSITION_FOLLOWING = 0x04;
+  const unsigned short DOCUMENT_POSITION_CONTAINS = 0x08;
+  const unsigned short DOCUMENT_POSITION_CONTAINED_BY = 0x10;
+  const unsigned short DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 0x20;
+  unsigned short compareDocumentPosition(Node other);
+  boolean contains(Node? other);
+
+  DOMString? lookupPrefix(DOMString? namespace);
+  DOMString? lookupNamespaceURI(DOMString? prefix);
   boolean isDefaultNamespace(DOMString? namespace);
+
+  Node insertBefore(Node node, Node? child);
+  Node appendChild(Node node);
+  Node replaceChild(Node node, Node child);
+  Node removeChild(Node child);
 };
 
 [Constructor]
@@ -220,9 +217,9 @@ interface Document : Node {
 
   readonly attribute DocumentType? doctype;
   readonly attribute Element? documentElement;
-  NodeList getElementsByTagName(DOMString qualifiedName);
-  NodeList getElementsByTagNameNS(DOMString? namespace, DOMString localName);
-  NodeList getElementsByClassName(DOMString classNames);
+  HTMLCollection getElementsByTagName(DOMString localName);
+  HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
+  HTMLCollection getElementsByClassName(DOMString classNames);
   Element? getElementById(DOMString elementId);
 
   Element createElement(DOMString localName);
@@ -235,47 +232,33 @@ interface Document : Node {
   Node importNode(Node node, optional boolean deep);
   Node adoptNode(Node node);
 
-  Event createEvent(DOMString eventInterfaceName);
+  Event createEvent(DOMString interface);
 
   Range createRange();
 
+  // NodeFilter.SHOW_ALL = 0xFFFFFFFF
   NodeIterator createNodeIterator(Node root, optional unsigned long whatToShow, optional NodeFilter? filter);
   TreeWalker createTreeWalker(Node root, optional unsigned long whatToShow, optional NodeFilter? filter);
-
-  // NEW
-  // Invalid WebIDL https://www.w3.org/Bugs/Public/show_bug.cgi?id=15346
-  //void prepend((Node or DOMString)... nodes);
-  //void append((Node or DOMString)... nodes);
 };
 
 interface XMLDocument : Document {};
 
 interface DOMImplementation {
-  boolean hasFeature(DOMString feature, [TreatNullAs=EmptyString] DOMString version);
-
   DocumentType createDocumentType(DOMString qualifiedName, DOMString publicId, DOMString systemId);
-  XMLDocument createDocument(DOMString? namespace, DOMString qualifiedName, DocumentType? doctype);
-  Document createHTMLDocument(DOMString title);
+  XMLDocument createDocument(DOMString? namespace, [TreatNullAs=EmptyString] DOMString qualifiedName, DocumentType? doctype);
+  Document createHTMLDocument(optional DOMString title);
+
+  boolean hasFeature(DOMString feature, [TreatNullAs=EmptyString] DOMString version);
 };
 
+[Constructor]
 interface DocumentFragment : Node {
-  // NEW
-  // Invalid WebIDL https://www.w3.org/Bugs/Public/show_bug.cgi?id=15346
-  //void prepend((Node or DOMString)... nodes);
-  //void append((Node or DOMString)... nodes);
 };
 
 interface DocumentType : Node {
   readonly attribute DOMString name;
   readonly attribute DOMString publicId;
   readonly attribute DOMString systemId;
-
-  // NEW
-  // Invalid WebIDL https://www.w3.org/Bugs/Public/show_bug.cgi?id=15346
-  //void before((Node or DOMString)... nodes);
-  //void after((Node or DOMString)... nodes);
-  //void replace((Node or DOMString)... nodes);
-  void remove();
 };
 
 interface Element : Node {
@@ -298,34 +281,18 @@ interface Element : Node {
   boolean hasAttribute(DOMString name);
   boolean hasAttributeNS(DOMString? namespace, DOMString localName);
 
-  NodeList getElementsByTagName(DOMString qualifiedName);
-  NodeList getElementsByTagNameNS(DOMString? namespace, DOMString localName);
-  NodeList getElementsByClassName(DOMString classNames);
-
-  readonly attribute HTMLCollection children;
-  readonly attribute Element? firstElementChild;
-  readonly attribute Element? lastElementChild;
-  readonly attribute Element? previousElementSibling;
-  readonly attribute Element? nextElementSibling;
-  readonly attribute unsigned long childElementCount;
-
-  // NEW
-  // Invalid WebIDL https://www.w3.org/Bugs/Public/show_bug.cgi?id=15346
-  //void prepend((Node or DOMString)... nodes);
-  //void append((Node or DOMString)... nodes);
-  //void before((Node or DOMString)... nodes);
-  //void after((Node or DOMString)... nodes);
-  //void replace((Node or DOMString)... nodes);
-  void remove();
+  HTMLCollection getElementsByTagName(DOMString localName);
+  HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
+  HTMLCollection getElementsByClassName(DOMString classNames);
 };
 
 interface Attr {
-  readonly attribute DOMString name;
+  readonly attribute DOMString localName;
            attribute DOMString value;
 
+  readonly attribute DOMString name;
   readonly attribute DOMString? namespaceURI;
   readonly attribute DOMString? prefix;
-  readonly attribute DOMString localName;
 };
 
 interface CharacterData : Node {
@@ -336,15 +303,9 @@ interface CharacterData : Node {
   void insertData(unsigned long offset, DOMString data);
   void deleteData(unsigned long offset, unsigned long count);
   void replaceData(unsigned long offset, unsigned long count, DOMString data);
-
-  // NEW
-  // Invalid WebIDL https://www.w3.org/Bugs/Public/show_bug.cgi?id=15346
-  //void before((Node or DOMString)... nodes);
-  //void after((Node or DOMString)... nodes);
-  //void replace((Node or DOMString)... nodes);
-  void remove();
 };
 
+[Constructor(optional DOMString data)]
 interface Text : CharacterData {
   Text splitText(unsigned long offset);
   readonly attribute DOMString wholeText;
@@ -354,9 +315,11 @@ interface ProcessingInstruction : CharacterData {
   readonly attribute DOMString target;
 };
 
+[Constructor(optional DOMString data)]
 interface Comment : CharacterData {
 };
 
+[Constructor]
 interface Range {
   readonly attribute Node startContainer;
   readonly attribute unsigned long startOffset;
@@ -428,8 +391,7 @@ interface TreeWalker {
 
 [Callback]
 interface NodeFilter {
-
-  // Constants for acceptNode
+  // Constants for acceptNode()
   const unsigned short FILTER_ACCEPT = 1;
   const unsigned short FILTER_REJECT = 2;
   const unsigned short FILTER_SKIP = 3;
@@ -452,6 +414,7 @@ interface NodeFilter {
   unsigned short acceptNode(Node node);
 };
 
+[ArrayClass]
 interface NodeList {
   getter Node? item(unsigned long index);
   readonly attribute unsigned long length;
@@ -463,20 +426,14 @@ interface HTMLCollection {
   getter object? namedItem(DOMString name); // only returns Element
 };
 
-interface DOMStringList {
-  readonly attribute unsigned long length;
-  getter DOMString? item(unsigned long index);
-  boolean contains(DOMString string);
-};
-
 interface DOMTokenList {
   readonly attribute unsigned long length;
   getter DOMString? item(unsigned long index);
   boolean contains(DOMString token);
-  void add(DOMString token);
-  void remove(DOMString token);
-  boolean toggle(DOMString token);
-  stringifier DOMString ();
+  void add(DOMString... tokens);
+  void remove(DOMString... tokens);
+  boolean toggle(DOMString token, optional boolean force);
+  stringifier;
 };
 
 interface DOMSettableTokenList : DOMTokenList {
@@ -509,8 +466,8 @@ idlArray.add_objects({
 	ProcessingInstruction: ['xmlDoc.createProcessingInstruction("abc", "def")'],
 	Comment: ['document.createComment("abc")'],
 	Range: ['document.createRange()', 'detachedRange'],
-	NodeIterator: ['document.createNodeIterator(document.body, NodeFilter.SHOW_ALL, null)'],
-	TreeWalker: ['document.createTreeWalker(document.body, NodeFilter.SHOW_ALL, null)'],
+	NodeIterator: ['document.createNodeIterator(document.body, NodeFilter.SHOW_ALL, null, false)'],
+	TreeWalker: ['document.createTreeWalker(document.body, NodeFilter.SHOW_ALL, null, false)'],
 	NodeList: ['document.querySelectorAll("script")'],
 	HTMLCollection: ['document.body.children'],
 	DOMTokenList: ['document.body.classList'],
