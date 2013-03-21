@@ -24,7 +24,7 @@ WaiveXrayWrapper::~WaiveXrayWrapper()
 }
 
 bool
-WaiveXrayWrapper::getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject *>wrapper,
+WaiveXrayWrapper::getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*>wrapper,
                                         JS::Handle<jsid> id, js::PropertyDescriptor *desc,
                                         unsigned flags)
 {
@@ -33,7 +33,7 @@ WaiveXrayWrapper::getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject *>wra
 }
 
 bool
-WaiveXrayWrapper::getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JSObject *> wrapper,
+WaiveXrayWrapper::getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                            JS::Handle<jsid> id, js::PropertyDescriptor *desc,
                                            unsigned flags)
 {
@@ -42,26 +42,28 @@ WaiveXrayWrapper::getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JSObject *>
 }
 
 bool
-WaiveXrayWrapper::get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id,
-                        js::Value *vp)
+WaiveXrayWrapper::get(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                      JS::Handle<JSObject*> receiver, JS::Handle<jsid> id,
+                      JS::MutableHandle<JS::Value> vp)
 {
     return CrossCompartmentWrapper::get(cx, wrapper, receiver, id, vp) &&
-           WrapperFactory::WaiveXrayAndWrap(cx, vp);
+           WrapperFactory::WaiveXrayAndWrap(cx, vp.address());
 }
 
 bool
-WaiveXrayWrapper::call(JSContext *cx, JSObject *wrapper, unsigned argc, js::Value *vp)
+WaiveXrayWrapper::call(JSContext *cx, JS::Handle<JSObject*> wrapper, unsigned argc,
+                      js::Value *vp)
 {
     return CrossCompartmentWrapper::call(cx, wrapper, argc, vp) &&
            WrapperFactory::WaiveXrayAndWrap(cx, vp);
 }
 
 bool
-WaiveXrayWrapper::construct(JSContext *cx, JSObject *wrapper,
-                              unsigned argc, js::Value *argv, js::Value *rval)
+WaiveXrayWrapper::construct(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                              unsigned argc, js::Value *argv, JS::MutableHandle<JS::Value> rval)
 {
     return CrossCompartmentWrapper::construct(cx, wrapper, argc, argv, rval) &&
-           WrapperFactory::WaiveXrayAndWrap(cx, rval);
+           WrapperFactory::WaiveXrayAndWrap(cx, rval.address());
 }
 
 }
