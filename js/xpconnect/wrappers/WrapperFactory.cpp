@@ -39,6 +39,13 @@ Wrapper XrayWaiver(WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG);
 // off it.
 WaiveXrayWrapper WaiveXrayWrapper::singleton(0);
 
+bool
+WrapperFactory::IsCOW(JSObject *obj)
+{
+    return IsWrapper(obj) &&
+           Wrapper::wrapperHandler(obj) == &ChromeObjectWrapper::singleton;
+}
+
 JSObject *
 WrapperFactory::GetXrayWaiver(JSObject *obj)
 {
