@@ -15,20 +15,18 @@
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSplittableFrame)
 
-NS_IMETHODIMP
+void
 nsSplittableFrame::Init(nsIContent*      aContent,
                         nsIFrame*        aParent,
                         nsIFrame*        aPrevInFlow)
 {
-  nsresult rv = nsFrame::Init(aContent, aParent, aPrevInFlow);
+  nsFrame::Init(aContent, aParent, aPrevInFlow);
 
   if (aPrevInFlow) {
     // Hook the frame into the flow
     SetPrevInFlow(aPrevInFlow);
     aPrevInFlow->SetNextInFlow(this);
   }
-
-  return rv;
 }
 
 void

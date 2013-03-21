@@ -14,8 +14,6 @@ modules := \
   WeaveCrypto.js \
   $(NULL)
 
-MODULE = services-crypto
-
 EXTRA_COMPONENTS := \
   cryptoComponents.manifest \
   $(NULL)

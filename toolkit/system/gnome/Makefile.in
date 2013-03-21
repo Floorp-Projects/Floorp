@@ -9,7 +9,6 @@ VPATH	  = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= mozgnome
 LIBRARY_NAME	= mozgnome
 FORCE_SHARED_LIB = 1
 IS_COMPONENT	= 1

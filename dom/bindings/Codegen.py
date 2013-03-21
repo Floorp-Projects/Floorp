@@ -7605,7 +7605,9 @@ class CGNativeMember(ClassMethod):
             return (declType % "JSObject"), False, False
 
         if type.isDictionary():
-            return type.inner.identifier.name, True, True
+            typeName = CGDictionary.makeDictionaryName(type.inner,
+                                                       self.descriptor.workers)
+            return typeName, True, True
 
         assert type.isPrimitive()
 
@@ -7766,12 +7768,18 @@ class CGBindingImplClass(CGClass):
         # If we support indexed properties, then we need a Length()
         # method so we know which indices are supported.
         if descriptor.supportsIndexedProperties():
-            self.methodDecls.append(
-                CGNativeMember(descriptor, FakeMember(),
-                               "Length",
-                               (BuiltinTypes[IDLBuiltinType.Types.unsigned_long],
-                                []),
-                               { "infallible": True }))
+            # But we don't need it if we already have an infallible
+            # "length" attribute, which we often do.
+            haveLengthAttr = any(
+                m for m in iface.members if m.isAttr() and
+                CGSpecializedGetter.makeNativeName(descriptor, m) == "Length")
+            if not haveLengthAttr:
+                self.methodDecls.append(
+                    CGNativeMember(descriptor, FakeMember(),
+                                   "Length",
+                                   (BuiltinTypes[IDLBuiltinType.Types.unsigned_long],
+                                    []),
+                                   { "infallible": True }))
         # And if we support named properties we need to be able to
         # enumerate the supported names.
         if descriptor.supportsNamedProperties():

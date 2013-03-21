@@ -425,16 +425,14 @@ SplitInlineAncestors(nsIFrame* aParent,
     // Split the child list after |frame|, unless it is the last child.
     if (!frame || frame->GetNextSibling()) {
     
-      nsresult rv = presShell->FrameConstructor()->
-        CreateContinuingFrame(presContext, parent, grandparent, &newParent, false);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
+      newParent = presShell->FrameConstructor()->
+        CreateContinuingFrame(presContext, parent, grandparent, false);
 
       nsContainerFrame* container = do_QueryFrame(parent);
       nsFrameList tail = container->StealFramesAfter(frame);
 
       // Reparent views as necessary
+      nsresult rv;
       rv = nsContainerFrame::ReparentFrameViewList(presContext, tail, parent, newParent);
       if (NS_FAILED(rv)) {
         return rv;
@@ -527,11 +525,8 @@ CreateContinuation(nsIFrame*  aFrame,
     return rv;
   }
 
-  rv = presShell->FrameConstructor()->
-    CreateContinuingFrame(presContext, aFrame, parent, aNewFrame, aIsFluid);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  *aNewFrame = presShell->FrameConstructor()->
+    CreateContinuingFrame(presContext, aFrame, parent, aIsFluid);
 
   // The list name kNoReflowPrincipalList would indicate we don't want reflow
   // XXXbz this needs higher-level framelist love

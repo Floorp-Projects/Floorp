@@ -10,8 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= jemalloc
-
 EXPORTS = jemalloc_types.h
 
 ifndef MOZ_JEMALLOC3

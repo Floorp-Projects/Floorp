@@ -8,7 +8,6 @@ srcdir = @srcdir@
 VPATH = @srcdir@
 relativesrcdir = @relativesrcdir@
 
-MODULE           = dom
 LIBRARY_NAME     = dombindings_test_s
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1

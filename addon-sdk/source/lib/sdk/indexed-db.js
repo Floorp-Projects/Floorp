@@ -9,7 +9,6 @@ module.metadata = {
 };
 
 const { Cc, Ci } = require("chrome");
-const { extend } = require("./core/heritage");
 const { id } = require("./self");
 
 // placeholder, copied from bootstrap.js
@@ -46,7 +45,7 @@ let principal = Cc["@mozilla.org/scriptsecuritymanager;1"].
 	               getService(Ci.nsIScriptSecurityManager).
 	               getCodebasePrincipal(principaluri);
 
-exports.indexedDB = extend({}, {   // freeze the object
+exports.indexedDB = Object.freeze({
   open: indexedDB.openForPrincipal.bind(indexedDB, principal),
   deleteDatabase: indexedDB.deleteForPrincipal.bind(indexedDB, principal),
   cmp: indexedDB.cmp

@@ -54,3 +54,6 @@ if CONFIG['MOZ_CRASHREPORTER_INJECTOR']:
     DIRS += ['injector']
 
 TEST_TOOL_DIRS += ['test']
+
+MODULE = 'crashreporter'
+

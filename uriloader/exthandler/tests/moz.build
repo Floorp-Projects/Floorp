@@ -5,3 +5,5 @@
 
 DIRS += ['mochitest']
 
+MODULE = 'test_uriloader_exthandler'
+

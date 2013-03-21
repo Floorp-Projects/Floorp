@@ -10,8 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xpcom
-
 CPP_UNIT_TESTS	= \
                   TestCOM.cpp \
                   $(NULL)

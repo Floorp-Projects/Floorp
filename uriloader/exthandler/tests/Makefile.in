@@ -10,8 +10,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE          = test_uriloader_exthandler
-
 XPCSHELL_TESTS  = unit
 FAIL_ON_WARNINGS = 1
 

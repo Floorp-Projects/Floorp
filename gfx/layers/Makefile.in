@@ -17,7 +17,6 @@ VPATH       = \
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE         = thebes
 LIBRARY_NAME   = layers
 LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1

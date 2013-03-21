@@ -9,8 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = ipc
-
 include $(topsrcdir)/ipc/app/defs.mk
 PROGRAM = $(MOZ_CHILD_PROCESS_NAME)
 

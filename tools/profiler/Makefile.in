@@ -32,7 +32,6 @@ ifneq (,$(filter armeabi,$(ANDROID_CPU_ARCH)))
 DEFINES += -DARCH_ARMV6
 endif
 
-MODULE          = profiler
 MODULE_NAME     = nsProfilerModule
 LIBRARY_NAME    = profiler
 EXPORT_LIBRARY  = 1

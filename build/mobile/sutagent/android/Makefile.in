@@ -9,8 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = sutAgentAndroid
-
 JAVAFILES = \
   AlertLooperThread.java \
   ASMozStub.java \

@@ -33,7 +33,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsSVGTextFrame)
 //----------------------------------------------------------------------
 // nsIFrame methods
 #ifdef DEBUG
-NS_IMETHODIMP
+void
 nsSVGTextFrame::Init(nsIContent* aContent,
                      nsIFrame* aParent,
                      nsIFrame* aPrevInFlow)
@@ -41,7 +41,7 @@ nsSVGTextFrame::Init(nsIContent* aContent,
   NS_ASSERTION(aContent->IsSVG(nsGkAtoms::text),
                "Content is not an SVG text");
 
-  return nsSVGTextFrameBase::Init(aContent, aParent, aPrevInFlow);
+  nsSVGTextFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
 

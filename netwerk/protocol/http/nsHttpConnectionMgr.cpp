@@ -807,7 +807,7 @@ nsHttpConnectionMgr::ProcessAllTransactionsCB(const nsACString &key,
     return PL_DHASH_NEXT;
 }
 
-// If the global number of idle connections is preventing the opening of
+// If the global number of connections is preventing the opening of
 // new connections to a host without idle connections, then
 // close them regardless of their TTL
 PLDHashOperator
@@ -830,6 +830,30 @@ nsHttpConnectionMgr::PurgeExcessIdleConnectionsCB(const nsACString &key,
         self->ConditionallyStopPruneDeadConnectionsTimer();
     }
     return PL_DHASH_STOP;
+}
+
+// If the global number of connections is preventing the opening of
+// new connections to a host without idle connections, then
+// close any spdy asap
+PLDHashOperator
+nsHttpConnectionMgr::PurgeExcessSpdyConnectionsCB(const nsACString &key,
+                                                  nsAutoPtr<nsConnectionEntry> &ent,
+                                                  void *closure)
+{
+    if (!ent->mUsingSpdy)
+        return PL_DHASH_NEXT;
+
+    nsHttpConnectionMgr *self = static_cast<nsHttpConnectionMgr *>(closure);
+    for (uint32_t index = 0; index < ent->mActiveConns.Length(); ++index) {
+        nsHttpConnection *conn = ent->mActiveConns[index];
+        if (conn->UsingSpdy() && conn->CanReuse()) {
+            conn->DontReuse();
+            // stop on <= (particularly =) beacuse this dontreuse causes async close
+            if (self->mNumIdleConns + self->mNumActiveConns + 1 <= self->mMaxConns)
+                return PL_DHASH_STOP;
+        }
+    }
+    return PL_DHASH_NEXT;
 }
 
 PLDHashOperator
@@ -1318,6 +1342,10 @@ nsHttpConnectionMgr::MakeNewConnection(nsConnectionEntry *ent,
 
     if ((mNumIdleConns + mNumActiveConns + 1 >= mMaxConns) && mNumIdleConns)
         mCT.Enumerate(PurgeExcessIdleConnectionsCB, this);
+
+    if ((mNumIdleConns + mNumActiveConns + 1 >= mMaxConns) &&
+        mNumActiveConns && gHttpHandler->IsSpdyEnabled())
+        mCT.Enumerate(PurgeExcessSpdyConnectionsCB, this);
 
     if (AtActiveConnectionLimit(ent, trans->Caps()))
         return NS_ERROR_NOT_AVAILABLE;
@@ -2633,7 +2661,7 @@ nsHttpConnectionMgr::nsHalfOpenSocket::SetupPrimaryStreams()
                       getter_AddRefs(mStreamIn),
                       getter_AddRefs(mStreamOut),
                       false);
-    LOG(("nsHalfOpenSocket::SetupPrimaryStream [this=%p ent=%s rv=%x]",
+    LOG(("nsHalfOpenSocket::SetupPrimaryStreams [this=%p ent=%s rv=%x]",
          this, mEnt->mConnInfo->Host(), rv));
     if (NS_FAILED(rv)) {
         if (mStreamOut)
@@ -2782,13 +2810,17 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
     mTransaction->GetSecurityCallbacks(getter_AddRefs(callbacks));
     if (out == mStreamOut) {
-        TimeDuration rtt = TimeStamp::Now() - mPrimarySynStarted;
+        if (static_cast<uint32_t>(mPrimarySynRTT.ToMilliseconds()) <= 125)
+            gHttpHandler->mCacheEffectExperimentFastConn++;
+        else
+            gHttpHandler->mCacheEffectExperimentSlowConn++;
+        
         rv = conn->Init(mEnt->mConnInfo,
                         gHttpHandler->ConnMgr()->mMaxRequestDelay,
                         mSocketTransport, mStreamIn, mStreamOut,
                         callbacks,
                         PR_MillisecondsToInterval(
-                          static_cast<uint32_t>(rtt.ToMilliseconds())));
+                          static_cast<uint32_t>(mPrimarySynRTT.ToMilliseconds())));
 
         if (NS_SUCCEEDED(mSocketTransport->GetPeerAddr(&peeraddr)))
             mEnt->RecordIPFamilyPreference(peeraddr.raw.family);
@@ -2898,6 +2930,7 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
     if (mTransaction)
         mTransaction->OnTransportStatus(trans, status, progress);
 
+    // Do not process status events for the backup transport
     if (trans != mSocketTransport)
         return NS_OK;
 
@@ -2946,14 +2979,21 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
         // nsHttpConnectionMgr::Shutdown and nsSocketTransportService::Shutdown
         // where the first abandones all half open socket instances and only
         // after that the second stops the socket thread.
-        if (mEnt && !mBackupTransport && !mSynTimer)
-            SetupBackupTimer();
+        if (mEnt) {
+            // update timestamp to get a more accurate rtt
+            mPrimarySynStarted = TimeStamp::Now();
+
+            if (!mBackupTransport && !mSynTimer)
+                SetupBackupTimer();
+        }
         break;
 
     case NS_NET_STATUS_CONNECTED_TO:
         // TCP connection's up, now transfer or SSL negotiantion starts,
         // no need for backup socket
         CancelBackupTimer();
+        if (mEnt && !mPrimarySynStarted.IsNull())
+            mPrimarySynRTT = TimeStamp::Now() - mPrimarySynStarted;
         break;
 
     default:

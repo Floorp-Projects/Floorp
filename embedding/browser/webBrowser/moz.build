@@ -30,3 +30,5 @@ if CONFIG['NS_PRINTING']:
 
 XPIDL_MODULE = 'webBrowser_core'
 
+MODULE = 'webbrwsr'
+

@@ -11,8 +11,6 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE          = test_cookies
-
 MOCHITEST_FILES = \
   test_samedomain.html \
   file_testcommon.js \

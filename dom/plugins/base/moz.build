@@ -17,3 +17,5 @@ XPIDL_SOURCES += [
     'nspluginroot.idl',
 ]
 
+MODULE = 'plugin'
+

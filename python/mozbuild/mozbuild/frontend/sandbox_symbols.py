@@ -141,6 +141,16 @@ VARIABLES = {
         variables declared during configure.
         """),
 
+    'MODULE': (unicode, "",
+        """Module name.
+
+        Historically, this variable was used to describe where to install header
+        files, but that feature is now handled by EXPORTS_NAMESPACES. Currently
+        it is used as the XPIDL module name if XPIDL_MODULE is not defined, but
+        using XPIDL_MODULE directly is preferred. MODULE will likely be removed
+        in the future.
+        """),
+
     # IDL Generation.
     'XPIDL_SOURCES': (list, [],
         """XPCOM Interface Definition Files (xpidl).

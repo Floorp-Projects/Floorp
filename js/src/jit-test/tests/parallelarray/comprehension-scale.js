@@ -14,7 +14,7 @@ function buildComprehension() {
       }
     }
   }
-  var p2 = new ParallelArray(a).partition(d).partition(H);
+  var p2 = new ParallelArray(a).partition(d).partition(W);
   assertEqParallelArray(p, p2);
 }
 

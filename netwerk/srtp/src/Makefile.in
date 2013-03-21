@@ -20,7 +20,6 @@ VPATH = \
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = necko
 LIBRARY_NAME = nksrtp_s
 LIBXUL_LIBRARY = 1
 GRE_MODULE = 1

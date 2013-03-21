@@ -13,7 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 
 ifdef MOZ_XUL
 ifeq (,$(filter android qt os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
-MODULE = filepicker
 LIBRARY_NAME = fileview
 SHORT_LIBNAME = fileview
 EXPORT_LIBRARY = 1

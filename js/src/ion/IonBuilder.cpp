@@ -208,7 +208,7 @@ IonBuilder::canInlineTarget(JSFunction *target)
     }
 
     // Don't inline functions which don't have baseline scripts compiled for them.
-    if (!inlineScript->hasBaselineScript()) {
+    if (executionMode == SequentialExecution && !inlineScript->hasBaselineScript()) {
         IonSpew(IonSpew_Inlining, "Cannot inline target with no baseline jitcode");
         return false;
     }
@@ -3072,6 +3072,16 @@ IonBuilder::addTypeBarrier(uint32_t i, CallInfo &callinfo, types::StackTypeSet *
     if (needsBarrier) {
         MTypeBarrier *barrier = MTypeBarrier::New(ins, cloneTypeSet(calleeObs), Bailout_Normal);
         current->add(barrier);
+
+        // Non-matching types are boxed such as the MIRType does not conflict
+        // with the inferred type.
+        if (callerObs->getKnownTypeTag() != calleeObs->getKnownTypeTag() &&
+            ins->type() != MIRType_Value)
+        {
+            MBox *box = MBox::New(ins);
+            current->add(box);
+            ins = box;
+        }
     }
 
     if (i == 0)

@@ -86,3 +86,5 @@ if CONFIG['MOZ_METRO']:
         'nsIWinMetroUtils.idl',
     ]
 
+MODULE = 'widget'
+

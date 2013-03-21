@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE         = dom
 LIBRARY_NAME   = jsdomgeolocation_s
 LIBXUL_LIBRARY = 1
 

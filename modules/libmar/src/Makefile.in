@@ -11,7 +11,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= libmar
 LIBRARY_NAME	= mar
 HOST_LIBRARY_NAME = hostmar
 FORCE_STATIC_LIB = 1

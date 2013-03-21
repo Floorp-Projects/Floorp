@@ -11,3 +11,5 @@ XPIDL_SOURCES += [
     'nsIUTF8ConverterService.idl',
 ]
 
+MODULE = 'uconv'
+

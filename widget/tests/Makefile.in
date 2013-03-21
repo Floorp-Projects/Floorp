@@ -12,7 +12,6 @@ FAIL_ON_WARNINGS = 1
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE          = test_widget
 XPCSHELL_TESTS  = unit
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)

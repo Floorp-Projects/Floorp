@@ -98,7 +98,7 @@ exports.mix = mix;
  * implements all own properties of the given `properties` object.
  */
 function extend(prototype, properties) {
-  return freeze(create(prototype, getOwnPropertyDescriptors(properties)));
+  return create(prototype, getOwnPropertyDescriptors(properties));
 }
 exports.extend = extend;
 

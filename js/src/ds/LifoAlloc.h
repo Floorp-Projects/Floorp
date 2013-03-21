@@ -239,6 +239,12 @@ class LifoAlloc
     // Frees all held memory.
     void freeAll();
 
+    static const unsigned HUGE_ALLOCATION = 50 * 1024 * 1024;
+    void freeAllIfHugeAndUnused() {
+        if (markCount == 0 && curSize_ > HUGE_ALLOCATION)
+            freeAll();
+    }
+
     JS_ALWAYS_INLINE
     void *alloc(size_t n) {
         JS_OOM_POSSIBLY_FAIL();

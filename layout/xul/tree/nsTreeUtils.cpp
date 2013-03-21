@@ -13,12 +13,8 @@
 #include "nsINodeInfo.h"
 
 nsresult
-nsTreeUtils::TokenizeProperties(const nsAString& aProperties, nsISupportsArray* aPropertiesArray)
+nsTreeUtils::TokenizeProperties(const nsAString& aProperties, AtomArray & aPropertiesArray)
 {
-  NS_PRECONDITION(aPropertiesArray != nullptr, "null ptr");
-  if (! aPropertiesArray)
-     return NS_ERROR_NULL_POINTER;
-
   nsAString::const_iterator end;
   aProperties.EndReading(end);
 
@@ -47,7 +43,7 @@ nsTreeUtils::TokenizeProperties(const nsAString& aProperties, nsISupportsArray* 
       break;
 
     nsCOMPtr<nsIAtom> atom = do_GetAtom(Substring(first, iter));
-    aPropertiesArray->AppendElement(atom);
+    aPropertiesArray.AppendElement(atom);
   } while (iter != end);
 
   return NS_OK;

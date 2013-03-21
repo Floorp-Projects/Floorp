@@ -144,7 +144,8 @@ nsImageBoxFrame::nsImageBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext)
   mRequestRegistered(false),
   mLoadFlags(nsIRequest::LOAD_NORMAL),
   mUseSrcAttr(false),
-  mSuppressStyleCheck(false)
+  mSuppressStyleCheck(false),
+  mFireEventOnDecode(false)
 {
   MarkIntrinsicWidthsDirty();
 }
@@ -179,7 +180,7 @@ nsImageBoxFrame::DestroyFrom(nsIFrame* aDestructRoot)
 }
 
 
-NS_IMETHODIMP
+void
 nsImageBoxFrame::Init(nsIContent*      aContent,
                       nsIFrame*        aParent,
                       nsIFrame*        aPrevInFlow)
@@ -193,13 +194,11 @@ nsImageBoxFrame::Init(nsIContent*      aContent,
   }
 
   mSuppressStyleCheck = true;
-  nsresult rv = nsLeafBoxFrame::Init(aContent, aParent, aPrevInFlow);
+  nsLeafBoxFrame::Init(aContent, aParent, aPrevInFlow);
   mSuppressStyleCheck = false;
 
   UpdateLoadFlags();
   UpdateImage();
-
-  return rv;
 }
 
 void
@@ -632,6 +631,22 @@ nsresult nsImageBoxFrame::OnStartContainer(imgIRequest *request,
 
 nsresult nsImageBoxFrame::OnStopDecode(imgIRequest *request)
 {
+  if (mFireEventOnDecode) {
+    mFireEventOnDecode = false;
+
+    uint32_t reqStatus;
+    request->GetImageStatus(&reqStatus);
+    if (!(reqStatus & imgIRequest::STATUS_ERROR)) {
+      FireImageDOMEvent(mContent, NS_LOAD);
+    } else {
+      // Fire an onerror DOM event.
+      mIntrinsicSize.SizeTo(0, 0);
+      PresContext()->PresShell()->
+        FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+      FireImageDOMEvent(mContent, NS_LOAD_ERROR);
+    }
+  }
+
   nsBoxLayoutState state(PresContext());
   this->Redraw(state);
 
@@ -641,15 +656,26 @@ nsresult nsImageBoxFrame::OnStopDecode(imgIRequest *request)
 nsresult nsImageBoxFrame::OnStopRequest(imgIRequest *request,
                                         nsresult aStatus)
 {
-  if (NS_SUCCEEDED(aStatus))
-    // Fire an onload DOM event.
-    FireImageDOMEvent(mContent, NS_LOAD);
-  else {
-    // Fire an onerror DOM event.
-    mIntrinsicSize.SizeTo(0, 0);
-    PresContext()->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
-    FireImageDOMEvent(mContent, NS_LOAD_ERROR);
+  uint32_t reqStatus;
+  request->GetImageStatus(&reqStatus);
+
+  // We want to give the decoder a chance to find errors. If we haven't found
+  // an error yet and we've already started decoding, we must only fire these
+  // events after we finish decoding.
+  if (NS_SUCCEEDED(aStatus) && !(reqStatus & imgIRequest::STATUS_ERROR) &&
+      reqStatus & imgIRequest::STATUS_DECODE_STARTED) {
+    mFireEventOnDecode = true;
+  } else {
+    if (NS_SUCCEEDED(aStatus)) {
+      // Fire an onload DOM event.
+      FireImageDOMEvent(mContent, NS_LOAD);
+    } else {
+      // Fire an onerror DOM event.
+      mIntrinsicSize.SizeTo(0, 0);
+      PresContext()->PresShell()->
+        FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+      FireImageDOMEvent(mContent, NS_LOAD_ERROR);
+    }
   }
 
   return NS_OK;
@@ -675,7 +701,7 @@ nsresult nsImageBoxFrame::FrameChanged(imgIRequest *aRequest)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(nsImageBoxListener, imgINotificationObserver)
+NS_IMPL_ISUPPORTS2(nsImageBoxListener, imgINotificationObserver, imgIOnloadBlocker)
 
 nsImageBoxListener::nsImageBoxListener()
 {
@@ -692,4 +718,26 @@ nsImageBoxListener::Notify(imgIRequest *request, int32_t aType, const nsIntRect*
     return NS_OK;
 
   return mFrame->Notify(request, aType, aData);
+}
+
+/* void blockOnload (in imgIRequest aRequest); */
+NS_IMETHODIMP
+nsImageBoxListener::BlockOnload(imgIRequest *aRequest)
+{
+  if (mFrame && mFrame->GetContent() && mFrame->GetContent()->GetCurrentDoc()) {
+    mFrame->GetContent()->GetCurrentDoc()->BlockOnload();
+  }
+
+  return NS_OK;
+}
+
+/* void unblockOnload (in imgIRequest aRequest); */
+NS_IMETHODIMP
+nsImageBoxListener::UnblockOnload(imgIRequest *aRequest)
+{
+  if (mFrame && mFrame->GetContent() && mFrame->GetContent()->GetCurrentDoc()) {
+    mFrame->GetContent()->GetCurrentDoc()->UnblockOnload(false);
+  }
+
+  return NS_OK;
 }

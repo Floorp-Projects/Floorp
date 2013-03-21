@@ -10,8 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xpconnect
-
 EXPORTS		= \
 		nsAXPCNativeCallContext.h \
 		xpc_map_end.h \

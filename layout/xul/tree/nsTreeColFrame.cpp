@@ -36,14 +36,13 @@ nsTreeColFrame::~nsTreeColFrame()
 {
 }
 
-NS_IMETHODIMP
+void
 nsTreeColFrame::Init(nsIContent*      aContent,
                      nsIFrame*        aParent,
                      nsIFrame*        aPrevInFlow)
 {
-  nsresult rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
+  nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
   InvalidateColumns();
-  return rv;
 }
 
 void

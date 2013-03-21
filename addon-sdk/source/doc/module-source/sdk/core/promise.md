@@ -221,6 +221,33 @@ to observe single resolution of all of them is as simple as this:
       return items[0] + items[1] + items[2];
     });
 
+## all
+
+The `all` function is provided to consume an array of promises and return 
+a promise that will be accepted upon the acceptance of all the promises
+in the initial array. This can be used to perform an action that requires
+values from several promises, like getting user information and server
+status, for example:
+
+    const { all } = require('sdk/core/promise');
+    all([getUser, getServerStatus]).then(function (result) {
+      return result[0] + result[1]
+    });
+
+If one of the promises in the array is rejected, the rejection handler 
+handles the first failed promise and remaining promises remain unfulfilled.
+
+    const { all } = require('sdk/core/promise');
+    all([aAsync, failAsync, bAsync]).then(function (result) {
+      // success function will not be called
+      return result;
+    }, function (reason) {
+      // rejection handler called because `failAsync` promise
+      // was rejected with its reason propagated
+      return reason;
+    });
+
+
 # Making promises
 
 Everything above assumes you get a promise from somewhere else. This

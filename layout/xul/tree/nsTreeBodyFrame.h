@@ -118,9 +118,9 @@ public:
   NS_IMETHOD VisibilityChanged(bool aVisible) MOZ_OVERRIDE { Invalidate(); return NS_OK; }
 
   // Overridden from nsIFrame to cache our pres context.
-  NS_IMETHOD Init(nsIContent*     aContent,
-                  nsIFrame*       aParent,
-                  nsIFrame*       aPrevInFlow) MOZ_OVERRIDE;
+  virtual void Init(nsIContent*     aContent,
+                    nsIFrame*       aParent,
+                    nsIFrame*       aPrevInFlow) MOZ_OVERRIDE;
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
   NS_IMETHOD GetCursor(const nsPoint& aPoint,
@@ -544,7 +544,7 @@ protected: // Data Members
   nsDataHashtable<nsStringHashKey, nsTreeImageCacheEntry> mImageCache;
 
   // A scratch array used when looking up cached style contexts.
-  nsCOMPtr<nsISupportsArray> mScratchArray;
+  AtomArray mScratchArray;
 
   // The index of the first visible row and the # of rows visible onscreen.  
   // The tree only examines onscreen rows, starting from

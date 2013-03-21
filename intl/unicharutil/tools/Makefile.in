@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= ucgendat
 PROGRAM		= ucgendat
 
 CSRCS		= ucgendat.c

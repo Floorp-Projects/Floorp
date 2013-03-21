@@ -10,7 +10,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE       = nptest
 LIBRARY_NAME = nptest
 MODULE_NAME  = TestPlugin
 ifndef _MSC_VER

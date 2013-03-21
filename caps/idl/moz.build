@@ -9,3 +9,5 @@ XPIDL_SOURCES += [
     'nsISecurityCheckedComponent.idl',
 ]
 
+MODULE = 'caps'
+

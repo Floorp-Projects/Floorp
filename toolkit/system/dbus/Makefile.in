@@ -9,7 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = dbus
 LIBRARY_NAME = dbusservice
 GRE_MODULE = 1
 #EXPORT_LIBRARY = 1

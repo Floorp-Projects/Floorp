@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsScreenWin.h"
+#include "nsCoord.h"
 
 
 nsScreenWin :: nsScreenWin ( HMONITOR inScreen )
@@ -87,6 +88,43 @@ nsScreenWin :: GetAvailRect(int32_t *outLeft, int32_t *outTop, int32_t *outWidth
   
 } // GetAvailRect
 
+NS_IMETHODIMP
+nsScreenWin::GetRectDisplayPix(int32_t *outLeft,  int32_t *outTop,
+                               int32_t *outWidth, int32_t *outHeight)
+{
+  int32_t left, top, width, height;
+  nsresult rv = GetRect(&left, &top, &width, &height);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  HDC dc = ::GetDC(nullptr);
+  double scaleFactor = 96.0 / GetDeviceCaps(dc, LOGPIXELSY);
+  ::ReleaseDC(nullptr, dc);
+  *outLeft = NSToIntRound(left * scaleFactor);
+  *outTop = NSToIntRound(top * scaleFactor);
+  *outWidth = NSToIntRound(width * scaleFactor);
+  *outHeight = NSToIntRound(height * scaleFactor);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScreenWin::GetAvailRectDisplayPix(int32_t *outLeft,  int32_t *outTop,
+                                    int32_t *outWidth, int32_t *outHeight)
+{
+  int32_t left, top, width, height;
+  nsresult rv = GetAvailRect(&left, &top, &width, &height);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  HDC dc = ::GetDC(nullptr);
+  double scaleFactor = 96.0 / GetDeviceCaps(dc, LOGPIXELSY);
+  ::ReleaseDC(nullptr, dc);
+  *outLeft = NSToIntRound(left * scaleFactor);
+  *outTop = NSToIntRound(top * scaleFactor);
+  *outWidth = NSToIntRound(width * scaleFactor);
+  *outHeight = NSToIntRound(height * scaleFactor);
+  return NS_OK;
+}
 
 
 NS_IMETHODIMP 

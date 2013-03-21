@@ -31,9 +31,9 @@ protected:
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  NS_IMETHOD Init(nsIContent* aContent,
-                  nsIFrame*   aParent,
-                  nsIFrame*   aPrevInFlow);
+  virtual void Init(nsIContent* aContent,
+                    nsIFrame*   aParent,
+                    nsIFrame*   aPrevInFlow) MOZ_OVERRIDE;
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
   virtual bool IsFrameOfType(uint32_t aFlags) const
@@ -96,7 +96,7 @@ SVGFEImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
   SVGFEImageFrameBase::DestroyFrom(aDestructRoot);
 }
 
-NS_IMETHODIMP
+void
 SVGFEImageFrame::Init(nsIContent* aContent,
                         nsIFrame* aParent,
                         nsIFrame* aPrevInFlow)
@@ -114,8 +114,6 @@ SVGFEImageFrame::Init(nsIContent* aContent,
     // We assume that feImage's are always visible.
     imageLoader->IncrementVisibleCount();
   }
-
-  return NS_OK;
 }
 
 nsIAtom *

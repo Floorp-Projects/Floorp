@@ -517,7 +517,6 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
         if (mPrefObserverId != null) {
             PrefsHelper.removeObserver(mPrefObserverId);
             mPrefObserverId = null;
@@ -543,6 +542,8 @@ abstract public class BrowserApp extends GeckoApp
                 nfc.setNdefPushMessageCallback(null, this);
             }
         }
+
+        super.onDestroy();
     }
 
     @Override

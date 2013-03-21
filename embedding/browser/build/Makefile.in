@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= webbrwsr
 LIBRARY_NAME	= webbrwsr
 IS_COMPONENT	= 1
 MODULE_NAME	= Browser_Embedding_Module

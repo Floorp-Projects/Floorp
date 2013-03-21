@@ -9,7 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE          = androidproxy
 LIBRARY_NAME    = androidproxy
 
 EXPORT_LIBRARY  = 1

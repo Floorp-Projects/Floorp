@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= imgicon
 LIBRARY_NAME	= imgiconos2_s
 LIBXUL_LIBRARY = 1
 

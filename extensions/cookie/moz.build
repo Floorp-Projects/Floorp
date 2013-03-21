@@ -10,3 +10,5 @@ XPIDL_SOURCES += [
     'nsICookiePromptService.idl',
 ]
 
+MODULE = 'cookie'
+

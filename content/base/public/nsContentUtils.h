@@ -843,6 +843,11 @@ public:
   static bool IsChildOfSameType(nsIDocument* aDoc);
 
   /**
+  '* Returns true if the content-type will be rendered as plain-text.
+   */
+  static bool IsPlainTextType(const nsACString& aContentType);
+
+  /**
    * Get the script file name to use when compiling the script
    * referenced by aURI. In cases where there's no need for any extra
    * security wrapper automation the script file name that's returned

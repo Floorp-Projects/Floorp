@@ -9,7 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = browserdir
 LIBRARY_NAME = browserdir_s
 
 FORCE_STATIC_LIB = 1

@@ -296,7 +296,7 @@ nsSVGClipPathFrame::AttributeChanged(int32_t         aNameSpaceID,
                                                   aAttribute, aModType);
 }
 
-NS_IMETHODIMP
+void
 nsSVGClipPathFrame::Init(nsIContent* aContent,
                          nsIFrame* aParent,
                          nsIFrame* aPrevInFlow)
@@ -305,7 +305,7 @@ nsSVGClipPathFrame::Init(nsIContent* aContent,
                "Content is not an SVG clipPath!");
 
   AddStateBits(NS_STATE_SVG_CLIPPATH_CHILD);
-  return nsSVGClipPathFrameBase::Init(aContent, aParent, aPrevInFlow);
+  nsSVGClipPathFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
 
 nsIAtom *

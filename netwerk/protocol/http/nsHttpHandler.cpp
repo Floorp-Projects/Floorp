@@ -37,6 +37,7 @@
 #include "nsAlgorithm.h"
 #include "ASpdySession.h"
 #include "mozIApplicationClearPrivateDataParams.h"
+#include "nsIRandomGenerator.h"
 
 #include "nsIXULAppInfo.h"
 
@@ -187,6 +188,10 @@ nsHttpHandler::nsHttpHandler()
     , mConnectTimeout(90000)
     , mParallelSpeculativeConnectLimit(6)
     , mCritialRequestPrioritization(true)
+    , mCacheEffectExperimentTelemetryID(kNullTelemetryID)
+    , mCacheEffectExperimentOnce(false)
+    , mCacheEffectExperimentSlowConn(0)
+    , mCacheEffectExperimentFastConn(0)
 {
 #if defined(PR_LOGGING)
     gHttpLog = PR_NewLogModule("nsHttp");
@@ -215,6 +220,10 @@ nsHttpHandler::~nsHttpHandler()
     if (mPipelineTestTimer) {
         mPipelineTestTimer->Cancel();
         mPipelineTestTimer = nullptr;
+    }
+    if (mCacheEffectExperimentTimer) {
+        mCacheEffectExperimentTimer->Cancel();
+        mCacheEffectExperimentTimer = nullptr;
     }
 
     gHttpHandler = nullptr;
@@ -1238,6 +1247,23 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         if (NS_SUCCEEDED(rv)) {
             mAllowExperiments = cVar;
         }
+
+        if (!mCacheEffectExperimentOnce) {
+            mCacheEffectExperimentOnce = true;
+
+            // Start the Cache Efficacy Experiment for testing channels
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT            
+            if (mAllowExperiments) {
+                if (mCacheEffectExperimentTimer)
+                    mCacheEffectExperimentTimer->Cancel();
+                mCacheEffectExperimentTimer = do_CreateInstance("@mozilla.org/timer;1");
+                if (mCacheEffectExperimentTimer)
+                    mCacheEffectExperimentTimer->InitWithFuncCallback(
+                        StartCacheExperiment, this, kExperimentStartupDelay,
+                        nsITimer::TYPE_ONE_SHOT);
+            }
+#endif
+        }
     }
 
     //
@@ -1285,6 +1311,82 @@ nsHttpHandler::TimerCallback(nsITimer * aTimer, void * aClosure)
     nsRefPtr<nsHttpHandler> thisObject = static_cast<nsHttpHandler*>(aClosure);
     if (!thisObject->mPipeliningEnabled)
         thisObject->mCapabilities &= ~NS_HTTP_ALLOW_PIPELINING;
+}
+
+void
+nsHttpHandler::FinishCacheExperiment(nsITimer * aTimer, void * aClosure)
+{
+    nsRefPtr<nsHttpHandler> self = static_cast<nsHttpHandler*>(aClosure);
+    self->mCacheEffectExperimentTimer = nullptr;
+    
+    // The experiment is over.
+    self->mCacheEffectExperimentTelemetryID = kNullTelemetryID;
+    self->mUseCache = true;
+    LOG(("Cache Effect Experiment Complete\n"));
+}
+
+// The Cache Effect Experiment selects 1 of 16 sessions and divides them
+// into equal groups of cache enabled and cache disabled for a few minutes.
+// Sessions that already have their cache disabled are not selected.
+// During the time of the experiment we measure transaction times from the time
+// of channel::AsyncOpen() to the time OnStopRequest() is called. Results are
+// recorded for the matrix of {cacheEnabled, Fast/Slow-Connection}. We
+// intentionally don't record whether the cache was hit for a particular
+// transaction - just whether or not it was enabled in order to get a
+// feel for whether or not the cache helps overall performance.
+//
+void
+nsHttpHandler::StartCacheExperiment(nsITimer * aTimer, void * aClosure)
+{
+    nsRefPtr<nsHttpHandler> self = static_cast<nsHttpHandler*>(aClosure);
+
+    if (!self->AllowExperiments())
+        return;
+    if (!self->mUseCache)
+        return;
+    if (!(self->mCacheEffectExperimentFastConn + self->mCacheEffectExperimentSlowConn))
+        return;
+
+    bool selected = false;
+    bool disableCache = false;
+    uint8_t *buffer;
+
+    nsCOMPtr<nsIRandomGenerator> randomGenerator =
+        do_GetService("@mozilla.org/security/random-generator;1");
+
+    if (randomGenerator &&
+        NS_SUCCEEDED(randomGenerator->GenerateRandomBytes(1, &buffer))) {
+        if (!((*buffer) & 0x0f))
+            selected = true;
+        if (!((*buffer) & 0x10))
+            disableCache = true;
+        NS_Free(buffer);
+    }
+    if (!selected)
+        return;
+    if (disableCache)
+        self->mUseCache = false;
+
+    // consider this a fast connection if 1/3 of the connects are fast.
+    bool isFast = (self->mCacheEffectExperimentFastConn * 2) >= self->mCacheEffectExperimentSlowConn;
+    if (self->mUseCache) {
+        if (isFast)
+            self->mCacheEffectExperimentTelemetryID = Telemetry::HTTP_TRANSACTION_TIME_CONNFAST_CACHEON;
+        else
+            self->mCacheEffectExperimentTelemetryID = Telemetry::HTTP_TRANSACTION_TIME_CONNSLOW_CACHEON;
+    }
+    else {
+        if (isFast)
+            self->mCacheEffectExperimentTelemetryID = Telemetry::HTTP_TRANSACTION_TIME_CONNFAST_CACHEOFF;
+        else
+            self->mCacheEffectExperimentTelemetryID = Telemetry::HTTP_TRANSACTION_TIME_CONNSLOW_CACHEOFF;
+    }
+    
+    LOG(("Cache Effect Experiment Started ID=%X\n", self->mCacheEffectExperimentTelemetryID));
+
+    self->mCacheEffectExperimentTimer->InitWithFuncCallback(
+        FinishCacheExperiment, self, kExperimentStartupDuration,
+        nsITimer::TYPE_ONE_SHOT);
 }
 
 /**

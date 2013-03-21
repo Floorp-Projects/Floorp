@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= locale
 LIBRARY_NAME	= platlocale_s
 EXPORT_LIBRARY = 1
 FORCE_STATIC_LIB	= 1

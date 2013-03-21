@@ -8,7 +8,6 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-MODULE = widget
 GRE_MODULE	= 1
 
 include $(DEPTH)/config/autoconf.mk

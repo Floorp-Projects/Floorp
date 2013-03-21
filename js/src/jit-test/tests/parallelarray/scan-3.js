@@ -1,4 +1,3 @@
-
 function testScan() {
   // Test reduce on higher dimensional
   // XXX Can we test this better?
@@ -10,7 +9,7 @@ function testScan() {
     var r = p.reduce(f);
     var s = p.scan(f)
     for (var j = 0; j < s.length; j++)
-      assertEq(s[j].shape.length, i + 1);
+      assertEq(s.get(j).shape.length, i + 1);
     assertEq(r.shape.length, i + 1);
   }
 }

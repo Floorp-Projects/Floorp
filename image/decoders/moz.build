@@ -21,3 +21,6 @@ if toolkit == 'cocoa':
     DIRS += ['icon/mac', 'icon']
 elif toolkit == 'android':
     DIRS += ['icon/android', 'icon']
+
+MODULE = 'imgdecoders'
+

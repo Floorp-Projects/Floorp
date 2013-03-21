@@ -9,7 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE          = windowsproxy
 LIBRARY_NAME    = windowsproxy
 
 EXPORT_LIBRARY  = 1

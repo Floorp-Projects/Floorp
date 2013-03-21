@@ -10,7 +10,6 @@ FAIL_ON_WARNINGS := 1
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= content
 LIBRARY_NAME	= gkconwebm_s
 LIBXUL_LIBRARY 	= 1
 

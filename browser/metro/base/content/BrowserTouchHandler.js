@@ -22,18 +22,21 @@ const BrowserTouchHandler = {
   onContentContextMenu: function onContentContextMenu(aMessage) {
     // Note, target here is the target of the message manager message,
     // usually the browser.
-    let contextInfo = { name: aMessage.name,
-                        json: aMessage.json,
-                        target: aMessage.target };
     // Touch input selection handling
-    if (!InputSourceHelper.isPrecise && !SelectionHelperUI.isActive &&
-        SelectionHelperUI.canHandle(aMessage)) {
-      SelectionHelperUI.openEditSession(aMessage);
+    if (!InputSourceHelper.isPrecise &&
+        !SelectionHelperUI.isActive &&
+        SelectionHelperUI.canHandleContextMenuMsg(aMessage)) {
+      SelectionHelperUI.openEditSession(aMessage.target,
+                                        aMessage.json.xPos,
+                                        aMessage.json.yPos);
       return;
     }
 
     // Check to see if we have context menu item(s) that apply to what
     // was clicked on.
+    let contextInfo = { name: aMessage.name,
+                        json: aMessage.json,
+                        target: aMessage.target };
     if (ContextMenuUI.showContextMenu(contextInfo)) {
       let event = document.createEvent("Events");
       event.initEvent("CancelTouchSequence", true, false);

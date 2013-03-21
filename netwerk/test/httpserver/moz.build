@@ -7,3 +7,5 @@ XPIDL_SOURCES += [
     'nsIHttpServer.idl',
 ]
 
+MODULE = 'test_necko'
+

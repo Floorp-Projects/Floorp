@@ -65,3 +65,7 @@ contract @mozilla.org/recovery-service;1 {b3caca5d-0bb0-48c6-912b-6be6cbf08832}
 # B2GAboutRedirector
 component {920400b1-cf8f-4760-a9c4-441417b15134} B2GAboutRedirector.js
 contract @mozilla.org/network/protocol/about;1?what=certerror {920400b1-cf8f-4760-a9c4-441417b15134}
+
+# FilePicker.js
+component {436ff8f9-0acc-4b11-8ec7-e293efba3141} FilePicker.js
+contract @mozilla.org/filepicker;1 {436ff8f9-0acc-4b11-8ec7-e293efba3141}

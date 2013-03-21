@@ -11,8 +11,6 @@ FAIL_ON_WARNINGS = 1
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = test_places
-
 CPP_UNIT_TESTS = \
   test_IHistory.cpp \
   $(NULL)
