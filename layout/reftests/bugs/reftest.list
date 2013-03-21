@@ -1187,8 +1187,8 @@ fuzzy(127,2) == 448193.html 448193-ref.html
 == 455280-1.xhtml 455280-1-ref.xhtml
 skip-if(B2G) == 455826-1.html 455826-1-ref.html
 fails-if(cocoaWidget) == 456147.xul 456147-ref.html # bug 458047
-skip-if(B2G) == 456219-1a.html 456219-1-ref.html
-skip-if(B2G) == 456219-1b.html 456219-1-ref.html
+skip-if(B2G) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),1,1) == 456219-1a.html 456219-1-ref.html # bug 853273
+skip-if(B2G) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),1,1) == 456219-1b.html 456219-1-ref.html # bug 853273
 skip-if(B2G) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),1,1) == 456219-1c.html 456219-1-ref.html # bug 853273
 == 456219-2.html 456219-2-ref.html
 == 456330-1.gif 456330-1-ref.png
