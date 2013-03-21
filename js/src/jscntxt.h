@@ -1181,10 +1181,12 @@ struct JSRuntime : js::RuntimeFriendFields,
      */
     uint32_t            propertyRemovals;
 
-    /* Number localization, used by jsnum.c */
+#if !ENABLE_INTL_API
+    /* Number localization, used by jsnum.cpp. */
     const char          *thousandsSeparator;
     const char          *decimalSeparator;
     const char          *numGrouping;
+#endif
 
   private:
     js::MathCache *mathCache_;

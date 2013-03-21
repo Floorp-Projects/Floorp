@@ -23,8 +23,10 @@ namespace js {
 extern bool
 InitRuntimeNumberState(JSRuntime *rt);
 
+#if !ENABLE_INTL_API
 extern void
 FinishRuntimeNumberState(JSRuntime *rt);
+#endif
 
 } /* namespace js */
 
@@ -146,6 +148,15 @@ ToNumber(JSContext *cx, Value *vp)
 
 JSBool
 num_parseInt(JSContext *cx, unsigned argc, Value *vp);
+
+/**
+ * Checks that the this value provided meets the requirements for "this Number
+ * object" in ES5.1, 15.7.4, and throws a TypeError if not.
+ *
+ * Usage: callFunction(num_CheckThisNumber, this);
+ */
+extern JSBool
+num_CheckThisNumber(JSContext *cx, unsigned argc, js::Value *vp);
 
 }  /* namespace js */
 
