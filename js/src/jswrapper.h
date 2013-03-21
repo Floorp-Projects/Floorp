@@ -46,7 +46,7 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
      * object (via UnwrapObjectChecked) will throw. Otherwise, they will succeed.
      */
     void setSafeToUnwrap(bool safe) { mSafeToUnwrap = safe; }
-    virtual bool isSafeToUnwrap() { return mSafeToUnwrap; }
+    bool isSafeToUnwrap() { return mSafeToUnwrap; }
 
     static JSObject *New(JSContext *cx, JSObject *obj, JSObject *proto,
                          JSObject *parent, Wrapper *handler);
