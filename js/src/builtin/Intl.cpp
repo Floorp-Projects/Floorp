@@ -1546,14 +1546,11 @@ static JSFunctionSpec dateTimeFormat_methods[] = {
  * DateTimeFormat constructor.
  * Spec: ECMAScript Internationalization API Specification, 12.1
  */
-static JSBool
-DateTimeFormat(JSContext *cx, unsigned argc, Value *vp)
+static bool
+DateTimeFormat(JSContext *cx, CallArgs args, bool construct)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
     RootedObject obj(cx);
 
-    bool construct = IsConstructing(args);
     if (!construct) {
         // 12.1.2.1 step 3
         JSObject *intl = cx->global()->getOrCreateIntlObject(cx);
@@ -1597,6 +1594,21 @@ DateTimeFormat(JSContext *cx, unsigned argc, Value *vp)
     // 12.1.2.1 steps 3.a and 7
     args.rval().setObject(*obj);
     return true;
+}
+
+static JSBool
+DateTimeFormat(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return DateTimeFormat(cx, args, IsConstructing(args));
+}
+
+JSBool
+js::intl_DateTimeFormat(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 2);
+    return DateTimeFormat(cx, args, true);
 }
 
 static void

@@ -961,6 +961,7 @@ selfhosting:: selfhosted.out.h
 selfhosting_srcs := \
   $(srcdir)/builtin/Utilities.js \
   $(srcdir)/builtin/Array.js \
+  $(srcdir)/builtin/Date.js \
   $(srcdir)/builtin/Intl.js \
   $(srcdir)/builtin/IntlData.js \
   $(srcdir)/builtin/Number.js \
