@@ -2210,6 +2210,11 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
 
     nsresult rv = ccx.CanCallNow();
     if (NS_FAILED(rv)) {
+        // If the security manager is complaining then this is not really an
+        // internal error in xpconnect. So, no reason to botch the assertion.
+        NS_ASSERTION(rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO,
+                     "hmm? CanCallNow failed in XPCWrappedNative::CallMethod. "
+                     "We are finding out about this late!");
         return Throw(rv, ccx);
     }
 
