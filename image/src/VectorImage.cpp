@@ -84,11 +84,16 @@ protected:
       }
 
       mVectorImage->InvalidateObserver();
-    }
 
-    // We may have been removed from the observer list by our caller. Rather
-    // than add ourselves back here, we wait until Draw gets called, ensuring
-    // that we coalesce invalidations between Draw calls.
+      // We may have been removed from the observer list by our caller. Rather
+      // than add ourselves back here, we wait until Draw gets called, ensuring
+      // that we coalesce invalidations between Draw calls.
+    } else {
+      // Here we may also have been removed from the observer list, but since
+      // we're not sending an invalidation, Draw won't get called. We need to
+      // add ourselves back immediately.
+      ResumeListening();
+    }
   }
 
   // Private data
