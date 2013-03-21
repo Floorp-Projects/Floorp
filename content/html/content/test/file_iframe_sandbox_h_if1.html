@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests for Bug 766282</title>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+</head>
+<script type="text/javascript">
+  function ok(result, desc) {
+    window.parent.ok_wrapper(result, desc);
+  }
+
+  function doStuff() {
+    // Try to open a new window via target="_blank", target="BC766282" and window.open().
+    // The window we try to open closes itself once it opens.
+    sendMouseEvent({type:'click'}, 'target_blank');
+    sendMouseEvent({type:'click'}, 'target_BC766282');
+
+    try {
+      window.open("file_iframe_sandbox_open_window_pass.html");
+    } catch(e) {
+      ok(false, "Test 3: iframes sandboxed with allow-popups, should be able to open windows");
+    }
+  }
+</script>
+<body onLoad="doStuff()">
+  I am sandboxed but with "allow-popups allow-scripts allow-same-origin"
+
+  <a href="file_iframe_sandbox_open_window_pass.html" target="_blank" id="target_blank">open window</a>
+  <a href="file_iframe_sandbox_open_window_pass.html?BC766282" target="BC766282" id="target_BC766282">open window</a>
+</body>
+</html>

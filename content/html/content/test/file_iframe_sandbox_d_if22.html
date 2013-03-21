@@ -12,7 +12,7 @@
   function doTest() {
     try {
       window.open("file_iframe_sandbox_navigation_fail.html?" + escape(testContext), "if_parent2");
-      window.parent.parent.postMessage("test attempted", "*");
+      window.parent.parent.postMessage({type: "attempted"}, "*");
     } catch(error) {
       window.parent.parent.postMessage({ok: true, desc: testContext + "as expected, error thrown during window.open(..., \"if_parent2\")"}, "*");
     }

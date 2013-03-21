@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 838692</title>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<script type="application/javascript">
+  var test27Context = "Test 27: navigate opened window by name with anchor: ";
+  var test28Context = "Test 28: navigate opened window by name with window.open(): ";
+
+  var windowsToClose = new Array();
+
+  function closeWindows() {
+    for (var i = 0; i < windowsToClose.length; i++) {
+      windowsToClose[i].close();
+    }
+  }
+
+  // Add message listener to forward messages on to parent
+  window.addEventListener("message", receiveMessage, false);
+
+  function receiveMessage(event) {
+    switch (event.data.type) {
+      case "closeWindows":
+        closeWindows();
+        break;
+      default:
+        window.parent.postMessage(event.data, "*");
+    }
+  }
+
+  function doTest() {
+    try {
+      windowsToClose.push(window.open("about:blank", "test27window"));
+      var test27Anchor = document.getElementById("test27Anchor");
+      test27Anchor.href = "file_iframe_sandbox_window_navigation_pass.html?" + escape(test27Context);
+      sendMouseEvent({type:"click"}, "test27Anchor");
+      window.parent.postMessage({type: "attempted"}, "*");
+    } catch(error) {
+      window.parent.postMessage({ok: false, desc: test27Context + "error thrown during window.open(): " + error}, "*");
+    }
+
+    try {
+      windowsToClose.push(window.open("about:blank", "test28window"));
+      window.open("file_iframe_sandbox_window_navigation_pass.html?" + escape(test28Context), "test28window");
+      window.parent.postMessage({type: "attempted"}, "*");
+    } catch(error) {
+      window.parent.postMessage({ok: false, desc: test28Context + "error thrown during window.open(): " + error}, "*");
+    }
+  }
+</script>
+
+<body onload="doTest()">
+  I am sandboxed with 'allow-scripts allow-popups'
+
+  <a id="test27Anchor" target="test27window">Test 27 anchor</a>
+</body>
+</html>

@@ -14,13 +14,13 @@
     // Try to navigate auxiliary browsing context (window) not opened by us.
     // We should not be able to do this as we are sandboxed.
     sendMouseEvent({type:'click'}, 'navigate_window');
-    window.parent.postMessage("test attempted", "*");
+    window.parent.postMessage({type: "attempted"}, "*");
 
     // Try to navigate auxiliary browsing context (window) not opened by us, using window.open().
     // We should not be able to do this as we are sandboxed.
     try {
       window.open("file_iframe_sandbox_window_navigation_fail.html?" + escape(test20Context), "window_to_navigate2");
-      window.parent.postMessage("test attempted", "*");
+      window.parent.postMessage({type: "attempted"}, "*");
     } catch(error) {
       window.parent.postMessage({ok: true, desc: test20Context + "as expected, error thrown during window.open(..., \"window_to_navigate2\")"}, "*");
     }

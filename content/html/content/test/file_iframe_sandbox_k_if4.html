@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 766282</title>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<script type="text/javascript">
+  function doStuff() {
+    // Open a new window via target="_blank", target="BC766282_if5" and window.open().
+    sendMouseEvent({type:'click'}, 'target_blank_if5');
+    sendMouseEvent({type:'click'}, 'target_BC766282_if5');
+
+    window.open("file_iframe_sandbox_k_if5.html");
+
+    // Open a new window via target="_blank", target="BC766282_if7" and window.open().
+    sendMouseEvent({type:'click'}, 'target_blank_if7');
+    sendMouseEvent({type:'click'}, 'target_BC766282_if7');
+
+    window.open("file_iframe_sandbox_k_if7.html");
+  }
+</script>
+
+<body onLoad="doStuff()">
+  I am sandboxed with "allow-scripts allow-popups allow-same-origin allow-forms allow-top-navigation".
+  <a href="file_iframe_sandbox_k_if5.html" target="_blank" id="target_blank_if5">open window</a>
+  <a href="file_iframe_sandbox_k_if5.html" target="BC766282_if5" id="target_BC766282_if5">open window</a>
+
+  <a href="file_iframe_sandbox_k_if7.html" target="_blank" id="target_blank_if7">open window</a>
+  <a href="file_iframe_sandbox_k_if7.html" target="BC766282_if7" id="target_BC766282_if7">open window</a>
+</body>
+</html>

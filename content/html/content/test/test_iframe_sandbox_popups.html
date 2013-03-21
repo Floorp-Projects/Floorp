@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=766282
+implement allow-popups directive for iframe sandbox
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tests for Bug 766282</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// a postMessage handler that is used by sandboxed iframes without
+// 'allow-same-origin' to communicate pass/fail back to this main page.
+// it expects to be called with an object like {ok: true/false, desc:
+// <description of the test> which it then forwards to ok()
+window.addEventListener("message", receiveMessage, false);
+
+function receiveMessage(event)
+{
+  ok_wrapper(event.data.ok, event.data.desc);
+}
+
+var completedTests = 0;
+var passedTests = 0;
+
+function ok_wrapper(result, desc) {
+  ok(result, desc);
+
+  completedTests++;
+
+  if (result) {
+    passedTests++;
+  }
+
+  if (completedTests == 3) {
+    is(passedTests, completedTests, "There are " + completedTests + " popups tests that should pass");
+    SimpleTest.finish();
+  }
+}
+
+function doTest() {
+  // passes if good
+  // 1) Test that a sandboxed iframe with "allow-popups" can open a new window using the target.attribute.
+  // This is done via file_iframe_sandbox_h_if1.html which is sandboxed with "allow-popups allow-scripts allow-same-origin".
+  // The window it attempts to open calls window.opener.ok(true, ...) and file_iframe_h_if1.html has an ok()
+  // function that calls window.parent.ok_wrapper.
+
+  // passes if good
+  // 2) Test that a sandboxed iframe with "allow-popups" can open a new window using window.open.
+  // This is done via file_iframe_sandbox_h_if1.html which is sandboxed with "allow-popups allow-scripts allow-same-origin".
+  // The window it attempts to open calls window.opener.ok(true, ...) and file_iframe_h_if1.html has an ok()
+  // function that calls window.parent.ok_wrapper.
+
+  // passes if good, fails if bad
+  // 3) Test that a sandboxed iframe with "allow-popups" can open a new window using the target.attribute
+  // for a non-existing browsing context (BC766282).
+  // This is done via file_iframe_sandbox_h_if1.html which is sandboxed with "allow-popups allow-scripts allow-same-origin".
+  // The window it attempts to open calls window.opener.ok(true, ...) and file_iframe_h_if1.html has an ok()
+  // function that calls window.parent.ok_wrapper.
+}
+
+addLoadEvent(doTest);
+
+</script>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=766282">Mozilla Bug 766282</a> - implement allow-popups directive for iframe sandbox
+<p id="display"></p>
+<div id="content">
+<iframe sandbox="allow-popups allow-same-origin allow-scripts" id="if1" src="file_iframe_sandbox_h_if1.html" height="10" width="10"></iframe>
+</div>
+</body>
+</html>

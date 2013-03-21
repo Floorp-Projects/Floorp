@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 766282</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<script type="text/javascript">
+  if (window.name == "") {
+    window.name = "blank_if2";
+  }
+
+  function ok(result, message) {
+    window.opener.parent.postMessage({type: "ok", ok: result, desc: message}, "*");
+  }
+
+  function doStuff() {
+    // Check that sandboxed forms browsing context flag copied by attempting to submit a form.
+    document.getElementById('a_form').submit();
+    window.opener.parent.postMessage({type: "attempted"}, "*");
+
+    // Check that sandboxed origin browsing context flag copied by attempting to access cookies.
+    try {
+      var foo = document.cookie;
+      ok(false, "Sandboxed origin browsing context flag NOT copied to new auxiliary browsing context.");
+    } catch(error) {
+      ok(true, "Sandboxed origin browsing context flag copied to new auxiliary browsing context.");
+    }
+
+    // Check that sandboxed top-level navigation browsing context flag copied.
+    // if_3 tries to navigate this document.
+    var if_3 = document.getElementById('if_3');
+    if_3.src = "file_iframe_sandbox_k_if3.html";
+  }
+</script>
+
+<body onLoad="doStuff()">
+  I am not sandboxed directly, but opened from a sandboxed document with 'allow-scripts allow-popups'
+
+  <form method="get" action="file_iframe_sandbox_window_form_fail.html" id="a_form">
+    First name: <input type="text" name="firstname">
+    Last name: <input type="text" name="lastname">
+    <input type="submit" id="a_button">
+  </form>
+
+  <iframe id="if_3" src="about:blank" height="10" width="10"></iframe>
+
+</body>
+</html>
