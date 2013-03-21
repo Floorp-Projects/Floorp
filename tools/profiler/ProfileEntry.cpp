@@ -7,6 +7,7 @@
 #include "GeckoProfilerImpl.h"
 #include "platform.h"
 #include "nsThreadUtils.h"
+#include "nsXULAppAPI.h"
 
 // JSON
 #include "JSObjectBuilder.h"
@@ -307,8 +308,15 @@ JSCustomObject* ThreadProfile::ToJSObject(JSContext *aCx)
 }
 
 void ThreadProfile::BuildJSObject(JSAObjectBuilder& b, JSCustomObject* profile) {
+
   // Thread meta data
-  b.DefineProperty(profile, "name", mName);
+  if (XRE_GetProcessType() == GeckoProcessType_Plugin) {
+    // TODO Add the proper plugin name
+    b.DefineProperty(profile, "name", "Plugin");
+  } else {
+    b.DefineProperty(profile, "name", mName);
+  }
+
   b.DefineProperty(profile, "tid", mThreadId);
 
   JSCustomArray *samples = b.CreateArray();
