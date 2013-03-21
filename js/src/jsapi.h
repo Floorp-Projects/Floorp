@@ -4953,6 +4953,13 @@ extern JS_PUBLIC_API(JSObject *)
 JS_DecodeInterpretedFunction(JSContext *cx, const void *data, uint32_t length,
                              JSPrincipals *principals, JSPrincipals *originPrincipals);
 
+namespace JS {
+
+extern JS_PUBLIC_DATA(const HandleId) JSID_VOIDHANDLE;
+extern JS_PUBLIC_DATA(const HandleId) JSID_EMPTYHANDLE;
+
+};
+
 namespace js {
 
 /*
