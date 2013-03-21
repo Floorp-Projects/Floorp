@@ -753,6 +753,7 @@ struct JSRuntime : js::RuntimeFriendFields,
     //-------------------------------------------------------------------------
 
     bool initSelfHosting(JSContext *cx);
+    void finishSelfHosting();
     void markSelfHostingGlobal(JSTracer *trc);
     bool isSelfHostingGlobal(js::HandleObject global) {
         return global == selfHostingGlobal_;
