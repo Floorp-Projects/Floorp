@@ -6212,8 +6212,8 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
 
 class CGDOMJSProxyHandler_delete(ClassMethod):
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'proxy'),
-                Argument('jsid', 'id'),
+        args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject *>', 'proxy'),
+                Argument('JS::Handle<jsid>', 'id'),
                 Argument('bool*', 'bp')]
         ClassMethod.__init__(self, "delete_", "bool", args)
         self.descriptor = descriptor

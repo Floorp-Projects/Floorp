@@ -75,7 +75,8 @@ class XrayWrapper : public Base {
                                 js::PropertyDescriptor *desc);
     virtual bool getOwnPropertyNames(JSContext *cx, JS::Handle<JSObject *> wrapper,
                                      js::AutoIdVector &props);
-    virtual bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
+    virtual bool delete_(JSContext *cx, JS::Handle<JSObject *> wrapper,
+                         JS::Handle<jsid> id, bool *bp);
     virtual bool enumerate(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props);
 
     /* Derived proxy traps. */
