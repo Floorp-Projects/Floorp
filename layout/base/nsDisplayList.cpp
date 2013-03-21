@@ -4019,6 +4019,10 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, *mStoredList.GetChildren(),
                            aContainerParameters, &newTransformMatrix);
 
+  if (!container) {
+    return nullptr;
+  }
+
   // Add the preserve-3d flag for this layer, BuildContainerLayerFor clears all flags,
   // so we never need to explicitely unset this flag.
   if (mFrame->Preserves3D() || mFrame->Preserves3DChildren()) {
