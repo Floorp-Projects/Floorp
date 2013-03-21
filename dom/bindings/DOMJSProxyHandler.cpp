@@ -99,7 +99,7 @@ DOMProxyHandler::getPropertyDescriptor(JSContext* cx, JS::Handle<JSObject *> pro
 }
 
 bool
-DOMProxyHandler::defineProperty(JSContext* cx, JSObject* proxy, jsid id,
+DOMProxyHandler::defineProperty(JSContext* cx, JS::Handle<JSObject *> proxy, JS::Handle<jsid> id,
                                 JSPropertyDescriptor* desc)
 {
   if ((desc->attrs & JSPROP_GETTER) && desc->setter == JS_StrictPropertyStub) {

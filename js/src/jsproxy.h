@@ -109,7 +109,7 @@ class JS_FRIEND_API(BaseProxyHandler) {
     virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy,
                                           HandleId id, PropertyDescriptor *desc,
                                           unsigned flags) = 0;
-    virtual bool defineProperty(JSContext *cx, JSObject *proxy, jsid id,
+    virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
                                 PropertyDescriptor *desc) = 0;
     virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy,
                                      AutoIdVector &props) = 0;
@@ -163,7 +163,7 @@ public:
     virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy,
                                           HandleId id, PropertyDescriptor *desc,
                                           unsigned flags) MOZ_OVERRIDE;
-    virtual bool defineProperty(JSContext *cx, JSObject *proxy, jsid id,
+    virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
                                 PropertyDescriptor *desc) MOZ_OVERRIDE;
     virtual bool getOwnPropertyNames(JSContext *cx, JSObject *proxy,
                                      AutoIdVector &props) MOZ_OVERRIDE;
@@ -215,8 +215,8 @@ class Proxy {
                                          PropertyDescriptor *desc, unsigned flags);
     static bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, unsigned flags, HandleId id,
                                          MutableHandleValue vp);
-    static bool defineProperty(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc);
-    static bool defineProperty(JSContext *cx, JSObject *proxy, jsid id, const Value &v);
+    static bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id, PropertyDescriptor *desc);
+    static bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v);
     static bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props);
     static bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     static bool enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props);

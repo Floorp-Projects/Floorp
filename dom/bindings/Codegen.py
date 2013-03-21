@@ -6161,8 +6161,8 @@ return true;"""
 
 class CGDOMJSProxyHandler_defineProperty(ClassMethod):
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'proxy'),
-                Argument('jsid', 'id'),
+        args = [Argument('JSContext*', 'cx'), Argument('JS::Handle<JSObject *>', 'proxy'),
+                Argument('JS::Handle<jsid>', 'id'),
                 Argument('JSPropertyDescriptor*', 'desc')]
         ClassMethod.__init__(self, "defineProperty", "bool", args)
         self.descriptor = descriptor
