@@ -165,8 +165,6 @@ MOCHITEST_FILES_D	= \
 		test_hasAttributeNS03.html \
 		test_hasAttributeNS04.html \
 		test_hasAttributeNS05.html \
-		test_hasAttributes01.html \
-		test_hasAttributes02.html \
 		test_hc_namednodemapinvalidtype1.html \
 		test_hc_nodedocumentfragmentnormalize1.html \
 		test_hc_nodedocumentfragmentnormalize2.html \
@@ -230,10 +228,6 @@ MOCHITEST_FILES_E	= \
 		test_nodegetownerdocument01.html \
 		test_nodegetownerdocument02.html \
 		test_nodegetprefix03.html \
-		test_nodehasattributes01.html \
-		test_nodehasattributes02.html \
-		test_nodehasattributes03.html \
-		test_nodehasattributes04.html \
 		$(NULL)
 
 MOCHITEST_FILES_F	= \

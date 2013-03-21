@@ -6395,8 +6395,8 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
         if (!pn)
             return null();
 
+        RootedAtom atom(context);
         for (;;) {
-            JSAtom *atom;
             TokenKind ltok = tokenStream.getToken(TSF_KEYWORD_IS_NAME);
             switch (ltok) {
               case TOK_NUMBER:

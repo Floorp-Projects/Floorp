@@ -239,7 +239,6 @@
 @BINPATH@/components/inspector.xpt
 @BINPATH@/components/intl.xpt
 @BINPATH@/components/jar.xpt
-@BINPATH@/components/jetpack.xpt
 @BINPATH@/components/jsdebugger.xpt
 @BINPATH@/components/jsdservice.xpt
 @BINPATH@/components/jsinspector.xpt
