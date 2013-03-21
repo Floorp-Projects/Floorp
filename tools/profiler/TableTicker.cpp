@@ -16,6 +16,7 @@
 #include "shared-libraries.h"
 #include "mozilla/StackWalk.h"
 #include "TableTicker.h"
+#include "nsXULAppAPI.h"
 
 // JSON
 #include "JSObjectBuilder.h"
@@ -164,6 +165,20 @@ JSObject* TableTicker::ToJSObject(JSContext *aCx)
   return jsProfile;
 }
 
+struct SubprocessClosure {
+  JSAObjectBuilder* mBuilder;
+  JSCustomArray* mThreads;
+};
+
+void SubProcessCallback(const char* aProfile, void* aClosure)
+{
+  // Called by the observer to get their profile data included
+  // as a sub profile
+  SubprocessClosure* closure = (SubprocessClosure*)aClosure;
+
+  closure->mBuilder->ArrayPush(closure->mThreads, aProfile);
+}
+
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
 static
 JSCustomObject* BuildJavaThreadJSObject(JSAObjectBuilder& b)
@@ -255,6 +270,17 @@ void TableTicker::BuildJSObject(JSAObjectBuilder& b, JSCustomObject* profile)
 #endif
 
   SetPaused(false);
+
+  // Send a event asking any subprocesses (plugins) to
+  // give us their information
+  SubprocessClosure closure;
+  closure.mBuilder = &b;
+  closure.mThreads = threads;
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (os) {
+    nsRefPtr<ProfileSaveEvent> pse = new ProfileSaveEvent(SubProcessCallback, &closure);
+    os->NotifyObservers(pse, "profiler-subprocess", nullptr);
+  }
 }
 
 // END SaveProfileTask et al
