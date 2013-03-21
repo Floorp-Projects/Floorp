@@ -113,9 +113,10 @@ public:
    * part of the constructor 
    *
    * @param   aZipHandle  The nsZipHandle used to access the zip
+   * @param   aFd         Optional PRFileDesc for Windows readahead optimization
    * @return  status code
    */
-  nsresult OpenArchive(nsZipHandle *aZipHandle);
+  nsresult OpenArchive(nsZipHandle *aZipHandle, PRFileDesc *aFd = nullptr);
 
   /** 
    * OpenArchive 
@@ -223,7 +224,7 @@ private:
 private:
   //--- private methods ---
   nsZipItem*        CreateZipItem();
-  nsresult          BuildFileList();
+  nsresult          BuildFileList(PRFileDesc *aFd = nullptr);
   nsresult          BuildSynthetics();
 
   nsZipArchive& operator=(const nsZipArchive& rhs) MOZ_DELETE;
@@ -374,7 +375,8 @@ class nsZipHandle {
 friend class nsZipArchive;
 friend class mozilla::FileLocation;
 public:
-  static nsresult Init(nsIFile *file, nsZipHandle **ret);
+  static nsresult Init(nsIFile *file, nsZipHandle **ret,
+                       PRFileDesc **aFd = nullptr);
   static nsresult Init(nsZipArchive *zip, const char *entry,
                        nsZipHandle **ret);
 
