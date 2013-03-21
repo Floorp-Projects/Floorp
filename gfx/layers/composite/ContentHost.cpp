@@ -174,6 +174,9 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
                                           Float(tileRegionRect.width) / texRect.width,
                                           Float(tileRegionRect.height) / texRect.height);
             GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain, aOpacity, aTransform, aOffset);
+            GetCompositor()->DrawDiagnostics(gfx::Color(0.0,1.0,0.0,1.0),
+                                             rect, aClipRect, aTransform, aOffset);
+
         }
       }
     }
