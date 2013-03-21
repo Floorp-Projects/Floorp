@@ -1,4 +1,4 @@
-// |reftest| skip-if(/^Windows\x20NT\x206\.2/.test(http.oscpu))
+// |reftest| skip-if(xulRuntime.OS=="WINNT"&&isDebugBuild)
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/licenses/publicdomain/
 
