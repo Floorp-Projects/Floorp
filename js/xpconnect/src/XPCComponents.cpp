@@ -3254,7 +3254,7 @@ xpc::SandboxProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver
 }
 
 bool
-xpc::SandboxProxyHandler::keys(JSContext *cx, JSObject *proxy,
+xpc::SandboxProxyHandler::keys(JSContext *cx, JS::Handle<JSObject *> proxy,
                                AutoIdVector &props)
 {
     return BaseProxyHandler::keys(cx, proxy, props);

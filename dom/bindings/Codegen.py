@@ -5812,13 +5812,14 @@ class CGResolveOwnProperty(CGAbstractMethod):
 
 class CGEnumerateOwnProperties(CGAbstractMethod):
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'wrapper'),
+        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'wrapper_'),
                 Argument('JSObject*', 'obj'),
                 Argument('JS::AutoIdVector&', 'props')]
         CGAbstractMethod.__init__(self, descriptor, "EnumerateOwnProperties", "bool", args)
     def definition_body(self):
         return """  // We rely on getOwnPropertyNames not shadowing prototype properties by named
   // properties. If that changes we'll need to filter here.
+  JS::Rooted<JSObject *> wrapper(cx, wrapper_);
   return js::GetProxyHandler(obj)->getOwnPropertyNames(cx, wrapper, props);
 """
 
@@ -6279,7 +6280,8 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
 
 class CGDOMJSProxyHandler_getOwnPropertyNames(ClassMethod):
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'proxy'),
+        args = [Argument('JSContext*', 'cx'),
+                Argument('JS::Handle<JSObject *>', 'proxy'),
                 Argument('JS::AutoIdVector&', 'props')]
         ClassMethod.__init__(self, "getOwnPropertyNames", "bool", args)
         self.descriptor = descriptor

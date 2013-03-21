@@ -1659,7 +1659,7 @@ XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, HandleObject wrapper, H
 
 template <typename Base, typename Traits>
 bool
-XrayWrapper<Base, Traits>::getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
+XrayWrapper<Base, Traits>::getOwnPropertyNames(JSContext *cx, JS::Handle<JSObject *> wrapper,
                                                JS::AutoIdVector &props)
 {
     assertEnteredPolicy(cx, wrapper, JSID_VOID);
@@ -1782,7 +1782,8 @@ XrayWrapper<Base, Traits>::hasOwn(JSContext *cx, JSObject *wrapper, jsid id, boo
 
 template <typename Base, typename Traits>
 bool
-XrayWrapper<Base, Traits>::keys(JSContext *cx, JSObject *wrapper, JS::AutoIdVector &props)
+XrayWrapper<Base, Traits>::keys(JSContext *cx, JS::Handle<JSObject *> wrapper,
+                                JS::AutoIdVector &props)
 {
     // Skip our Base if it isn't already ProxyHandler.
     return BaseProxyHandler::keys(cx, wrapper, props);

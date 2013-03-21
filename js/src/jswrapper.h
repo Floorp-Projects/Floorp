@@ -92,7 +92,8 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
                                           PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
     virtual bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
                                 PropertyDescriptor *desc) MOZ_OVERRIDE;
-    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *wrapper, AutoIdVector &props) MOZ_OVERRIDE;
+    virtual bool getOwnPropertyNames(JSContext *cx, HandleObject wrapper,
+                                     AutoIdVector &props) MOZ_OVERRIDE;
     virtual bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp) MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, JSObject *wrapper, AutoIdVector &props) MOZ_OVERRIDE;
 
@@ -102,7 +103,7 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
     virtual bool get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, Value *vp) MOZ_OVERRIDE;
     virtual bool set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, bool strict,
                      Value *vp) MOZ_OVERRIDE;
-    virtual bool keys(JSContext *cx, JSObject *wrapper, AutoIdVector &props) MOZ_OVERRIDE;
+    virtual bool keys(JSContext *cx, HandleObject wrapper, AutoIdVector &props) MOZ_OVERRIDE;
     virtual bool iterate(JSContext *cx, JSObject *wrapper, unsigned flags, Value *vp) MOZ_OVERRIDE;
 
     /* Spidermonkey extensions. */
@@ -168,7 +169,8 @@ class JS_FRIEND_API(DeadObjectProxy) : public BaseProxyHandler
                                           PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
     virtual bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
                                 PropertyDescriptor *desc) MOZ_OVERRIDE;
-    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *wrapper, AutoIdVector &props) MOZ_OVERRIDE;
+    virtual bool getOwnPropertyNames(JSContext *cx, HandleObject wrapper,
+                                     AutoIdVector &props) MOZ_OVERRIDE;
     virtual bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp) MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, JSObject *wrapper, AutoIdVector &props) MOZ_OVERRIDE;
 

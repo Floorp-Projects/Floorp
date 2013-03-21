@@ -73,7 +73,7 @@ class XrayWrapper : public Base {
                                           unsigned flags) MOZ_OVERRIDE;
     virtual bool defineProperty(JSContext *cx, JS::Handle<JSObject *> wrapper, JS::Handle<jsid> id,
                                 js::PropertyDescriptor *desc);
-    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
+    virtual bool getOwnPropertyNames(JSContext *cx, JS::Handle<JSObject *> wrapper,
                                      js::AutoIdVector &props);
     virtual bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
     virtual bool enumerate(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props);
@@ -85,7 +85,7 @@ class XrayWrapper : public Base {
                      bool strict, js::Value *vp);
     virtual bool has(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
     virtual bool hasOwn(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
-    virtual bool keys(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props);
+    virtual bool keys(JSContext *cx, JS::Handle<JSObject *> wrapper, js::AutoIdVector &props);
     virtual bool iterate(JSContext *cx, JSObject *wrapper, unsigned flags, js::Value *vp);
 
     virtual bool call(JSContext *cx, JSObject *wrapper, unsigned argc, js::Value *vp);
@@ -127,7 +127,8 @@ public:
                      jsid id, JS::Value *vp) MOZ_OVERRIDE;
     virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver,
                      jsid id, bool strict, JS::Value *vp) MOZ_OVERRIDE;
-    virtual bool keys(JSContext *cx, JSObject *proxy, JS::AutoIdVector &props) MOZ_OVERRIDE;
+    virtual bool keys(JSContext *cx, JS::Handle<JSObject *> proxy,
+                      JS::AutoIdVector &props) MOZ_OVERRIDE;
     virtual bool iterate(JSContext *cx, JSObject *proxy, unsigned flags,
                          JS::Value *vp) MOZ_OVERRIDE;
 };
