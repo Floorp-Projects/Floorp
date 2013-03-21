@@ -122,6 +122,44 @@ StyleEditor.prototype = {
   },
 
   /**
+   * Recursively traverse imported stylesheets to find the index
+   *
+   * @param number aIndex
+   *        The index of the current sheet in the document.
+   * @param CSSStyleSheet aSheet
+   *        A stylesheet we're going to browse to look for all imported sheets.
+   */
+  _getImportedStyleSheetIndex: function SE__getImportedStyleSheetIndex(aIndex, aSheet)
+  {
+    let index = aIndex;
+    for (let j = 0; j < aSheet.cssRules.length; j++) {
+      let rule = aSheet.cssRules.item(j);
+      if (rule.type == Ci.nsIDOMCSSRule.IMPORT_RULE) {
+        // Associated styleSheet may be null if it has already been seen due to
+        // duplicate @imports for the same URL.
+        if (!rule.styleSheet) {
+          continue;
+        }
+
+        if (rule.styleSheet == this.styleSheet) {
+          this._styleSheetIndex = index;
+          return index;
+        }
+        index++;
+        index = this._getImportedStyleSheetIndex(index, rule.styleSheet);
+
+        if (this._styleSheetIndex != -1) {
+          return index;
+        }
+      } else if (rule.type != Ci.nsIDOMCSSRule.CHARSET_RULE) {
+        // @import rules must precede all others except @charset
+        return index;
+      }
+    }
+    return index;
+  },
+
+  /**
    * Retrieve the index (order) of stylesheet in the document.
    *
    * @return number
@@ -130,11 +168,20 @@ StyleEditor.prototype = {
   {
     let document = this.contentDocument;
     if (this._styleSheetIndex == -1) {
-      for (let i = 0; i < document.styleSheets.length; i++) {
-        if (document.styleSheets[i] == this.styleSheet) {
-          this._styleSheetIndex = i;
+      let index = 0;
+      let sheetIndex = 0;
+      while (sheetIndex <= document.styleSheets.length) {
+        let sheet = document.styleSheets[sheetIndex];
+        if (sheet == this.styleSheet) {
+          this._styleSheetIndex = index;
           break;
         }
+        index++;
+        index = this._getImportedStyleSheetIndex(index, sheet);
+        if (this._styleSheetIndex != -1) {
+          break;
+        }
+        sheetIndex++;
       }
     }
     return this._styleSheetIndex;

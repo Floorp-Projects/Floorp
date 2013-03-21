@@ -150,10 +150,9 @@
 
 .devtools-tab {
   -moz-appearance: none;
-  width: 47px;
-  min-width: 47px;
+  min-width: 32px;
   min-height: 32px;
-  max-width: 137px;
+  max-width: 127px;
   color: #b6babf;
   margin: 0;
   padding: 0;
@@ -163,13 +162,15 @@
   background-repeat: no-repeat;
   background-position: left, right;
   border-right: 1px solid hsla(206,37%,4%,.45);
+  -moz-box-align: center;
 }
 
 .devtools-tab > image {
   border: none;
-  -moz-margin-end: 6px;
-  -moz-margin-start: 16px;
+  -moz-margin-end: 0;
+  -moz-margin-start: 8px;
   opacity: 0.6;
+  max-height: 16px;
 }
 
 .devtools-tab > label {
