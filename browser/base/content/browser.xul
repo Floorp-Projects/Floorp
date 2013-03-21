@@ -114,7 +114,7 @@
                onpopupshowing="return FillHistoryMenu(event.target);"
                oncommand="gotoHistoryIndex(event); event.stopPropagation();"
                onclick="checkForMiddleClick(this, event);"/>
-    <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
+    <tooltip id="aHTMLTooltip" page="true"/>
 
     <!-- for search and content formfill/pw manager -->
     <panel type="autocomplete" id="PopupAutoComplete" noautofocus="true" hidden="true"/>
