@@ -1668,7 +1668,8 @@ XrayWrapper<Base, Traits>::getOwnPropertyNames(JSContext *cx, JS::Handle<JSObjec
 
 template <typename Base, typename Traits>
 bool
-XrayWrapper<Base, Traits>::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
+XrayWrapper<Base, Traits>::delete_(JSContext *cx, JS::Handle<JSObject *> wrapper,
+                                   JS::Handle<jsid> id, bool *bp)
 {
     assertEnteredPolicy(cx, wrapper, id);
     // Redirect access straight to the wrapper if we should be transparent.

@@ -40,7 +40,8 @@ public:
                              unsigned flags) MOZ_OVERRIDE;
   bool defineProperty(JSContext* cx, JS::Handle<JSObject *> proxy, JS::Handle<jsid> id,
                       JSPropertyDescriptor* desc) MOZ_OVERRIDE;
-  bool delete_(JSContext* cx, JSObject* proxy, jsid id, bool* bp) MOZ_OVERRIDE;
+  bool delete_(JSContext* cx, JS::Handle<JSObject *> proxy,
+               JS::Handle<jsid> id, bool* bp) MOZ_OVERRIDE;
   bool enumerate(JSContext* cx, JSObject* proxy, JS::AutoIdVector& props) MOZ_OVERRIDE;
   bool fix(JSContext* cx, JSObject* proxy, JS::Value* vp);
   bool has(JSContext* cx, JSObject* proxy, jsid id, bool* bp) MOZ_OVERRIDE;

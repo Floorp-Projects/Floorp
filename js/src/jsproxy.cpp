@@ -498,11 +498,11 @@ DirectProxyHandler::getOwnPropertyNames(JSContext *cx, HandleObject proxy,
 }
 
 bool
-DirectProxyHandler::delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
+DirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
 {
-    RootedValue v(cx);
     assertEnteredPolicy(cx, proxy, id);
     RootedObject target(cx, GetProxyTargetObject(proxy));
+    RootedValue v(cx);
     if (!JS_DeletePropertyById2(cx, target, id, v.address()))
         return false;
     JSBool b;
@@ -810,7 +810,7 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler {
     virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
                                 PropertyDescriptor *desc) MOZ_OVERRIDE;
     virtual bool getOwnPropertyNames(JSContext *cx, HandleObject proxy, AutoIdVector &props);
-    virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp) MOZ_OVERRIDE;
+    virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props) MOZ_OVERRIDE;
 
     /* ES5 Harmony derived proxy traps. */
@@ -912,10 +912,9 @@ ScriptedIndirectProxyHandler::getOwnPropertyNames(JSContext *cx, HandleObject pr
 }
 
 bool
-ScriptedIndirectProxyHandler::delete_(JSContext *cx, JSObject *proxy, jsid id_, bool *bp)
+ScriptedIndirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
 {
     RootedObject handler(cx, GetIndirectProxyHandlerObject(proxy));
-    RootedId id(cx, id_);
     RootedValue fval(cx), value(cx);
     return GetFundamentalTrap(cx, handler, cx->names().delete_, &fval) &&
            Trap1(cx, handler, fval, id, value.address()) &&
@@ -1070,7 +1069,7 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
     virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
                                 PropertyDescriptor *desc) MOZ_OVERRIDE;
     virtual bool getOwnPropertyNames(JSContext *cx, HandleObject proxy, AutoIdVector &props);
-    virtual bool delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp) MOZ_OVERRIDE;
+    virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props) MOZ_OVERRIDE;
 
     /* ES5 Harmony derived proxy traps. */
@@ -1726,11 +1725,8 @@ ScriptedDirectProxyHandler::getOwnPropertyNames(JSContext *cx, HandleObject prox
 
 // Proxy.[[Delete]](P, Throw)
 bool
-ScriptedDirectProxyHandler::delete_(JSContext *cx, JSObject *proxy_, jsid id_, bool *bp)
+ScriptedDirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
 {
-    RootedObject proxy(cx, proxy_);
-    RootedId id(cx, id_);
-
     // step 1
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
 
@@ -2336,12 +2332,10 @@ Proxy::getOwnPropertyNames(JSContext *cx, HandleObject proxy, AutoIdVector &prop
 }
 
 bool
-Proxy::delete_(JSContext *cx, JSObject *proxy_, jsid id_, bool *bp)
+Proxy::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
 {
     JS_CHECK_RECURSION(cx, return false);
-    BaseProxyHandler *handler = GetProxyHandler(proxy_);
-    RootedObject proxy(cx, proxy_);
-    RootedId id(cx, id_);
+    BaseProxyHandler *handler = GetProxyHandler(proxy);
     *bp = true; // default result if we refuse to perform this action
     AutoEnterPolicy policy(cx, handler, proxy, id, BaseProxyHandler::SET, true);
     if (!policy.allowed())
