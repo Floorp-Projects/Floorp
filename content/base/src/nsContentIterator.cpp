@@ -992,9 +992,7 @@ nsContentIterator::PositionAt(nsINode* aCurNode)
   // fair bit.  It's better to use Clone() if possible.
 
   // we know the depth we're down (though we may not have started at the top).
-  if (!oldParentStack.SetCapacity(mIndexes.Length() + 1)) {
-    return NS_ERROR_FAILURE;
-  }
+  oldParentStack.SetCapacity(mIndexes.Length() + 1);
 
   // We want to loop mIndexes.Length() + 1 times here, because we want to make
   // sure we include mCommonParent in the oldParentStack, for use in the next
