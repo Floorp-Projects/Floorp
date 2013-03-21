@@ -73,7 +73,7 @@ public:
                  ErrorResult& aRv);
 
   already_AddRefed<nsIDocument>
-  CreateHTMLDocument(const nsAString& aTitle, ErrorResult& aRv);
+  CreateHTMLDocument(const Optional<nsAString>& aTitle, ErrorResult& aRv);
 
 private:
   nsresult CreateDocument(const nsAString& aNamespaceURI,
