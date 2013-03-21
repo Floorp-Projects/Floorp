@@ -592,6 +592,8 @@ private:
      */
     static void Init();
 
+    static void CreateCMSOutputProfile();
+
     virtual qcms_profile* GetPlatformCMSOutputProfile();
 
     nsRefPtr<gfxASurface> mScreenReferenceSurface;
