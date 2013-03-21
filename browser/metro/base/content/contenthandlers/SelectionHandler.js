@@ -58,9 +58,8 @@ var SelectionHandler = {
     addMessageListener("Browser:SelectionCopy", this);
     addMessageListener("Browser:SelectionDebug", this);
     addMessageListener("Browser:CaretAttach", this);
+    addMessageListener("Browser:CaretMove", this);
     addMessageListener("Browser:CaretUpdate", this);
-    addMessageListener("Browser:CaretPosition", this);
-    addMessageListener("Browser:CaretPositionEnd", this);
   },
 
   shutdown: function shutdown() {
@@ -76,9 +75,8 @@ var SelectionHandler = {
     removeMessageListener("Browser:SelectionCopy", this);
     removeMessageListener("Browser:SelectionDebug", this);
     removeMessageListener("Browser:CaretAttach", this);
+    removeMessageListener("Browser:CaretMove", this);
     removeMessageListener("Browser:CaretUpdate", this);
-    removeMessageListener("Browser:CaretPosition", this);
-    removeMessageListener("Browser:CaretPositionEnd", this);
   },
 
   /*************************************************
