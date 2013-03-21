@@ -1295,8 +1295,8 @@ class MethodDefiner(PropertyDefiner):
         #       We should be able to check for special operations without an
         #       identifier. For now we check if the name starts with __
 
-        # Ignore non-static methods for callback interfaces
-        if not descriptor.interface.isCallback() or static:
+        # Ignore non-static methods for interfaces without a proto object
+        if descriptor.interface.hasInterfacePrototypeObject() or static:
             methods = [m for m in descriptor.interface.members if
                        m.isMethod() and m.isStatic() == static and
                        not m.isIdentifierLess()]
@@ -1383,8 +1383,8 @@ class AttrDefiner(PropertyDefiner):
         assert not (static and unforgeable)
         PropertyDefiner.__init__(self, descriptor, name)
         self.name = name
-        # Ignore non-static attributes for callback interfaces
-        if not descriptor.interface.isCallback() or static:
+        # Ignore non-static attributes for interfaces without a proto object
+        if descriptor.interface.hasInterfacePrototypeObject() or static:
             attributes = [m for m in descriptor.interface.members if
                           m.isAttr() and m.isStatic() == static and
                           m.isUnforgeable() == unforgeable]
